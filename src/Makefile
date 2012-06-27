@@ -1,4 +1,4 @@
-SUBDIRS = ebmc hw-cbmc trans verilog vhdl
+SUBDIRS = ebmc hw-cbmc trans verilog vhdl smvlang
 
 all: hw-cbmc ebmc
 
@@ -9,7 +9,7 @@ $(SUBDIRS):
 
 # Dependencies
 
-ebmc: trans verilog vhdl
+ebmc: trans verilog vhdl smvlang
 
-hw-cbmc: trans verilog vhdl
+hw-cbmc: trans verilog vhdl smvlang
 
