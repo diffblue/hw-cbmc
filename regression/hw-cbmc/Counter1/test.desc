@@ -1,0 +1,8 @@
+CORE
+main.c
+--decide --module top --bound 10 main.v
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
+--
+^warning: ignoring

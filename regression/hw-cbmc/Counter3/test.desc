@@ -1,0 +1,8 @@
+CORE
+main.c
+--module top --bound 10 main.v
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
+--
+^warning: ignoring
