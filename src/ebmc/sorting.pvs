@@ -1,0 +1,205 @@
+carry_and_swap: THEORY BEGIN
+
+  a, b, c, x, y: VAR bool;
+
+  carry_correct: LEMMA
+    (    a OR     b OR          NOT x) AND
+    (    a OR NOT b OR     c OR NOT x) AND
+    (    a OR NOT b OR NOT c OR     x) AND
+    (NOT a OR     b OR     c OR NOT x) AND
+    (NOT a OR     b OR NOT c OR     x) AND
+    (NOT a OR NOT b OR              x)
+    IFF
+    (x=((a AND b) OR (a AND c) OR (b AND c)));
+
+  swap_correct: LEMMA
+    (NOT x OR     c OR b) AND 
+    (NOT x OR NOT c OR a) AND
+    (NOT a OR NOT c OR x) AND
+    (NOT b OR     c OR x)
+    IFF
+    (x=((a AND c) OR (b AND NOT c)));
+
+END carry_and_swap
+
+sorting_network: THEORY BEGIN
+
+  T: NONEMPTY_TYPE;
+  k: posint;
+
+  i, j, l: VAR upto(k);
+
+  % ordering
+
+  order_exists: AXIOM
+   EXISTS (ord: [T,T -> bool]): total_order?(ord);
+
+  <=: { (ord: [T,T -> bool]) | total_order?(ord) };
+
+  ordered(n: posint, s: [below(n)->T]):bool=
+    FORALL (i: below(n-1)): s(i) <= s(i+1);
+
+  greatest_exists: LEMMA
+    FORALL (n: posint, s: [below(n)->T]):
+    EXISTS (i: below(n)): FORALL (j: below(n)): s(j) <= s(i);
+
+  greatest(n: posint, s: [below(n)->T]): below(n)=
+    choose(LAMBDA (i: below(n)): FORALL (j: below(n)): s(j) <= s(i));
+
+  greatest_correct: LEMMA
+    FORALL (n: posint, s: [below(n)->T]):
+    FORALL (i: below(n)): s(i)<=s(greatest(n, s))
+
+  permutation(n: posint, a, b: [below(n)->T]):bool=
+    EXISTS (p: (bijective?[below(n), below(n)])):
+           FORALL (i: below(n)): a(i)=b(p(i));
+
+  permutation_commutative: LEMMA
+    FORALL (n: posint, a, b: [below(n)->T]):
+    permutation(n, a, b) => permutation(n, b, a);
+
+  permutation_of_permutation: LEMMA
+    FORALL (n: posint, a, b, c: [below(n)->T]):
+    permutation(n, a, b) AND permutation(n, b, c)
+    => permutation(n, a, c);
+
+  swap(n: posint, s: [below(n)->T], i, j: below(n)):[below(n)->T]=
+    IF i=j THEN
+      s
+    ELSE
+      LAMBDA (k: below(n)):
+      COND
+        k=j->s(i),
+        k=i->s(j),
+        ELSE -> s(k)
+      ENDCOND
+    ENDIF;
+
+  swap_is_permutation: LEMMA
+    FORALL (n: posint, a: [below(n)->T], i, j: below(n)):
+    permutation(n, a, swap(n, a, i, j));
+
+  sort2(n: posint, s: [below(n)->T], j: below(n), l: below(j)):RECURSIVE [below(n)->T]=
+    LET sp=IF l=0 THEN s ELSE sort2(n, s, j, l-1) ENDIF IN
+    IF NOT (s(l)<=s(j)) THEN
+      swap(n, sp, j, l)
+    ELSE
+      sp
+    ENDIF
+    MEASURE l;
+
+  sort2_correct_permutation: LEMMA
+    FORALL (n: posint, s: [below(n)->T]):
+    FORALL (j: below(n)):
+    FORALL (l: below(j)):
+    permutation(n, s, sort2(n, s, j, l));
+
+  sort2_correct_ordered_induction: LEMMA
+    FORALL (n: posint, s: [below(n)->T]):
+    FORALL (j: below(n)):
+    FORALL (l: below(j)):
+    (l>=1=>ordered(l, LAMBDA(i: below(l)): s(i))) =>
+    ordered(l+1, LAMBDA(i: below(l+1)): sort2(n, s, j, l)(i));
+
+  sort(n: posint, s: [below(n)->T], j: below(n)):RECURSIVE [below(n)->T]=
+    IF j=0 THEN
+      s
+    ELSE
+      LET sp=sort(n, s, j-1) IN
+      sort2(n, sp, j, j-1)
+    ENDIF
+  MEASURE j;
+
+  sort_correct_permutation: LEMMA
+    FORALL (n: posint, s: [below(n)->T]):
+    FORALL (j: below(n)):
+    permutation(n, s, sort(n, s, j));
+
+  sort_correct_ordered_induction: LEMMA
+    FORALL (n: posint, s: [below(n)->T]):
+    FORALL (j: below(n)):
+    ordered(j+1, LAMBDA (i: below(j+1)): sort(n, s, j)(i));
+
+  sort_correct_ordered: LEMMA
+    FORALL (n: posint, s: [below(n)->T]):
+    ordered(n, sort(n, s, n-1));
+
+  sequence: NONEMPTY_TYPE = [upto(k)->T];
+
+  s: sequence;
+
+  permutation(a, b: sequence):bool=
+    permutation(k+1, a, b);
+
+  ordered(s: sequence):bool=
+    ordered(k+1, s);
+
+  sorted_sequence_exists: LEMMA
+    EXISTS (sp: sequence): permutation(s, sp) AND ordered(sp);
+
+  sp: { (sp: sequence) | permutation(s, sp) AND ordered(sp) };
+
+  neighbor_theorem: THEOREM
+    (EXISTS (i: below(k)): sp(i)=sp(i+1)) IFF 
+    (EXISTS l,j: l /= j AND s(l)=s(j));
+
+END sorting_network
+
+new_sorting_network: THEORY BEGIN
+
+  T: NONEMPTY_TYPE;
+  k: posint;
+
+  i, j, l: VAR upto(k);
+
+  % ordering
+
+  order_exists: AXIOM
+   EXISTS (ord: [T,T -> bool]): total_order?(ord);
+
+  <=: { (ord: [T,T -> bool]) | total_order?(ord) };
+
+  =>(a, b: T):bool=(b<=a);
+
+  <(a, b: T):bool=NOT (a=>b);
+
+  strict_is_transitive: LEMMA
+    transitive?[T](<);
+
+  ordered(n: posint, s: [below(n)->T]):bool=
+    FORALL (i: below(n-1)): s(i) <= s(i+1);
+
+  permutation(n: posint, a, b: [below(n)->T]):bool=
+    EXISTS (p: (bijective?[below(n), below(n)])):
+           FORALL (i: below(n)): a(i)=b(p(i));
+
+  sequence: NONEMPTY_TYPE = [upto(k)->T];
+
+  s: sequence;
+
+  permutation(a, b: sequence):bool=
+    permutation(k+1, a, b);
+
+  ordered(s: sequence):bool=
+    ordered(k+1, s);
+
+  sorted_sequence_exists: AXIOM
+    EXISTS (sp: sequence): permutation(s, sp) AND ordered(sp);
+
+  sp: { (sp: sequence) | permutation(s, sp) AND ordered(sp) };
+
+  sp_ord_reflexive: LEMMA
+    sp(l)<=sp(l);
+
+  trans_induct: LEMMA
+     FORALL (i: upto(j)): sp(i)<=sp(j);
+
+  neighbor_aux: LEMMA
+    (EXISTS l, j: j>=1 AND l+j<=k AND sp(l)=sp(l+j))
+    => (EXISTS (i: below(k)): sp(i)=sp(i+1))
+
+  neighbor_theorem: THEOREM
+    (EXISTS (i: below(k)): sp(i)=sp(i+1)) IFF 
+    (EXISTS l,j: l /= j AND s(l)=s(j));
+
+END new_sorting_network

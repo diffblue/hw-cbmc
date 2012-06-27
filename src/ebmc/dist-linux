@@ -1,0 +1,22 @@
+#!/bin/bash
+make
+strip ebmc
+
+VERSION=`./ebmc --version`
+VERSION_FILE=`echo $VERSION | sed "y/./-/"`
+BITS=`getconf LONG_BIT`
+
+echo $VERSION_FILE ${BITS} bits
+
+mkdir /tmp/ebmc-dist
+cp ebmc /tmp/ebmc-dist/
+cp ../../LICENSE /tmp/ebmc-dist/
+cp ./README /tmp/ebmc-dist/
+cd /tmp/ebmc-dist
+tar cfz ebmc-${VERSION_FILE}-linux-${BITS}.tgz ebmc LICENSE
+
+echo Copying.
+scp ebmc-${VERSION_FILE}-linux-${BITS}.tgz kroening@dkr0.inf.ethz.ch:/home/www/cprover.org/ebmc/download/
+
+cd /tmp
+rm -R /tmp/ebmc-dist

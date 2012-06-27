@@ -1,0 +1,40 @@
+/*******************************************************************\
+
+Module: Verilog Expression Type Checker
+
+Author: Daniel Kroening, kroening@kroening.com
+
+\*******************************************************************/
+
+#ifndef CPROVER_VERILOG_VTYPE_H
+#define CPROVER_VERILOG_VTYPE_H
+
+#include <type.h>
+
+class vtypet
+{
+public:
+  vtypet():vtype(UNKNOWN)
+  {
+  }
+
+  explicit vtypet(const typet &src);
+  inline unsigned get_width() const { return width; }
+  
+  inline bool is_bool() const { return vtype==BOOL; }
+  inline bool is_signed() const { return vtype==SIGNED; }
+  inline bool is_unsigned() const { return vtype==UNSIGNED; }
+  inline bool is_integer() const { return vtype==INTEGER; }
+  inline bool is_verilogbv() const { return vtype==VERILOGBV; }
+  inline bool is_other() const { return vtype==OTHER; }
+
+protected:
+  typedef enum { UNKNOWN, BOOL, SIGNED, UNSIGNED,
+                 INTEGER, VERILOGBV, OTHER } _vtypet;
+  _vtypet vtype;
+  unsigned width;
+};
+
+std::ostream &operator << (std::ostream &, const vtypet &);
+
+#endif
