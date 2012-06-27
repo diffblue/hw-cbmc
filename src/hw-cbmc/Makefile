@@ -1,51 +1,50 @@
 SRC = main.cpp parseoptions.cpp hw_bmc.cpp next_timeframe.cpp \
       map_vars.cpp gen_interface.cpp set_inputs.cpp
 
-OBJ+= ../cbmc/parseoptions$(OBJEXT) \
-      ../cbmc/xml_interface$(OBJEXT) \
-      ../cbmc/languages$(OBJEXT) \
-      ../cbmc/bmc$(OBJEXT) \
-      ../cbmc/bv_cbmc$(OBJEXT) \
-      ../cbmc/symex_bmc$(OBJEXT) \
-      ../cbmc/counterexample_beautification$(OBJEXT) \
-      ../cbmc/counterexample_beautification_pbs$(OBJEXT) \
-      ../cbmc/counterexample_beautification_greedy$(OBJEXT) \
-      ../cbmc/cbmc_solvers$(OBJEXT) \
-      ../cbmc/show_vcc$(OBJEXT) \
-      ../cbmc/cover$(OBJEXT) \
-      ../cbmc/dimacs$(OBJEXT) \
-      ../ansi-c/ansi-c$(LIBEXT) \
-      ../xmllang/xmllang$(LIBEXT) \
-      ../big-int/bigint$(OBJEXT) \
-      ../goto-symex/goto-symex$(LIBEXT) \
-      ../goto-programs/goto-programs$(LIBEXT) \
-      ../pointer-analysis/pointer-analysis$(LIBEXT) \
-      ../langapi/langapi$(LIBEXT) \
-      ../solvers/solvers$(LIBEXT) \
-      ../util/util$(LIBEXT) \
+OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
+      $(CBMC)/src/cbmc/xml_interface$(OBJEXT) \
+      $(CBMC)/src/cbmc/languages$(OBJEXT) \
+      $(CBMC)/src/cbmc/bmc$(OBJEXT) \
+      $(CBMC)/src/cbmc/bv_cbmc$(OBJEXT) \
+      $(CBMC)/src/cbmc/symex_bmc$(OBJEXT) \
+      $(CBMC)/src/cbmc/counterexample_beautification$(OBJEXT) \
+      $(CBMC)/src/cbmc/counterexample_beautification_pbs$(OBJEXT) \
+      $(CBMC)/src/cbmc/counterexample_beautification_greedy$(OBJEXT) \
+      $(CBMC)/src/cbmc/cbmc_solvers$(OBJEXT) \
+      $(CBMC)/src/cbmc/show_vcc$(OBJEXT) \
+      $(CBMC)/src/cbmc/cover$(OBJEXT) \
+      $(CBMC)/src/cbmc/dimacs$(OBJEXT) \
+      $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
+      $(CBMC)/src/big-int/bigint$(OBJEXT) \
+      $(CBMC)/src/goto-symex/goto-symex$(LIBEXT) \
+      $(CBMC)/src/goto-programs/goto-programs$(LIBEXT) \
+      $(CBMC)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
+      $(CBMC)/src/langapi/langapi$(LIBEXT) \
+      $(CBMC)/src/solvers/solvers$(LIBEXT) \
+      $(CBMC)/src/util/util$(LIBEXT) \
       ../trans/trans$(LIBEXT)
 
-INCLUDES= -I ../$(CHAFF) -I .. -I ../util
+include ../config.inc
+
+INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util -I ..
 
 LIBS =
 
-include ../config.inc
-include ../common
-
 all: hw-cbmc$(EXEEXT)
 
-ifneq ($(wildcard ../bv_refinement/Makefile),)
-  OBJ += ../bv_refinement/bv_refinement$(LIBEXT)
+ifneq ($(wildcard $(CBMC)/src/bv_refinement/Makefile),)
+  OBJ += $(CBMC)/src/bv_refinement/bv_refinement$(LIBEXT)
   CXXFLAGS += -DHAVE_BV_REFINEMENT
 endif
 
-ifneq ($(wildcard ../cpp/Makefile),)
-  OBJ += ../cpp/cpp$(LIBEXT)
+ifneq ($(wildcard $(CBMC)/src/cpp/Makefile),)
+  OBJ += $(CBMC)/src/cpp/cpp$(LIBEXT)
   CXXFLAGS += -DHAVE_CPP
 endif
 
-ifneq ($(wildcard ../specc/Makefile),)
-  OBJ += ../specc/specc$(LIBEXT)
+ifneq ($(wildcard $(CBMC)/src/specc/Makefile),)
+  OBJ += $(CBMC)/src/specc/specc$(LIBEXT)
   CXXFLAGS += -DHAVE_SPECC
 endif
 

@@ -1,10 +1,9 @@
 SRC = vhdl_language.cpp expr2vhdl.cpp y.tab.cpp lex.yy.cpp \
       vhdl_parser.cpp vhdl_parse_tree.cpp
 
-INCLUDES= -I .. -I ../util
-
 include ../config.inc
-include ../common
+
+INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util
 
 all: vhdl$(LIBEXT)
 

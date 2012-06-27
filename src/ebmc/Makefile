@@ -6,20 +6,19 @@ SRC = diameter.cpp main.cpp diatest.cpp show_claims.cpp \
       cegar/verify.cpp cegar/abstract.cpp cegar/refine.cpp \
       cegar/simulate.cpp       
 
-OBJ+= ../trans/trans$(LIBEXT) \
-      ../util/util$(LIBEXT) \
-      ../langapi/langapi$(LIBEXT) \
-      ../smvlang/smvlang$(LIBEXT) \
-      ../ansi-c/ansi-c$(LIBEXT) \
-      ../solvers/solvers$(LIBEXT) \
-      ../big-int/bigint$(OBJEXT)
-
-INCLUDES= -I .. -I ../util
-
-LIBS =
+OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
+      $(CBMC)/src/langapi/langapi$(LIBEXT) \
+      $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CBMC)/src/solvers/solvers$(LIBEXT) \
+      $(CBMC)/src/big-int/bigint$(OBJEXT) \
+      ../trans/trans$(LIBEXT) \
+      ../smvlang/smvlang$(LIBEXT)      
 
 include ../config.inc
-include ../common
+
+INCLUDES= -I .. -I $(CBMC)/src -I $(CBMC)/src/util
+
+LIBS =
 
 all: ebmc$(EXEEXT)
 

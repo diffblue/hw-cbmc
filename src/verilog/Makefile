@@ -6,10 +6,9 @@ SRC = verilog_language.cpp y.tab.cpp lex.yy.cpp verilog_parser.cpp \
       verilog_context.cpp verilog_parse_tree.cpp \
       verilog_flattening.cpp verilog_module.cpp vtype.cpp
 
-INCLUDES= -I .. -I ../util
-
 include ../config.inc
-include ../common
+
+INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util
 
 all: verilog$(LIBEXT)
 
