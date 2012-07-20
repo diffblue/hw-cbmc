@@ -484,7 +484,7 @@ void convert(
       if(it->rhs.is_nil())
         value_string="?";
       else
-        xml_assignment.new_element("value_expression").new_element(convert(it->rhs, ns));
+        xml_assignment.new_element("value_expression").new_element(xml(it->rhs, ns));
 
       xml_assignment.new_element("identifier").data=id2string(symbol.name);
       xml_assignment.new_element("base_name").data=id2string(symbol.base_name);
