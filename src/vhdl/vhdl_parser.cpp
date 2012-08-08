@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <stdio.h>
 #include <fstream>
+#include <iostream>
 
 #include <cout_message.h>
 
