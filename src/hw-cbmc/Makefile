@@ -8,8 +8,6 @@ OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
       $(CBMC)/src/cbmc/bv_cbmc$(OBJEXT) \
       $(CBMC)/src/cbmc/symex_bmc$(OBJEXT) \
       $(CBMC)/src/cbmc/counterexample_beautification$(OBJEXT) \
-      $(CBMC)/src/cbmc/counterexample_beautification_pbs$(OBJEXT) \
-      $(CBMC)/src/cbmc/counterexample_beautification_greedy$(OBJEXT) \
       $(CBMC)/src/cbmc/cbmc_solvers$(OBJEXT) \
       $(CBMC)/src/cbmc/show_vcc$(OBJEXT) \
       $(CBMC)/src/cbmc/cover$(OBJEXT) \
