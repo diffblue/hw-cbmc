@@ -9,6 +9,7 @@ SRC = diameter.cpp main.cpp diatest.cpp show_claims.cpp \
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/big-int/bigint$(OBJEXT) \
       ../trans/trans$(LIBEXT) \
