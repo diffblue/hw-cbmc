@@ -466,7 +466,8 @@ void convert(
     xmlt &xml_state=dest.new_element("state");
     const trans_tracet::statet &state=trace.states[t];
 
-    xml_state.new_element("timeframe").data=i2string(t);
+    xml_state.new_element("timeframe").data=i2string(t); // will go away
+    xml_state.set_attribute("timeframe", t);
     
     for(trans_tracet::statet::assignmentst::const_iterator
         it=state.assignments.begin();
