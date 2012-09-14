@@ -109,101 +109,42 @@ std::string gen_interfacet::type_to_string(const typet& type)
   {
     return "_Bool";
   }
-  else if(type.id()==ID_unsignedbv)
+  else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
   {
     unsigned width=to_unsignedbv_type(type).get_width();
     
-    // does integer type fit?
-    if(width==config.ansi_c.char_width)
-    {
-      std::string& map_ref = typedef_map["unsigned char"];
-      if(map_ref.empty())
-        stypedef << "typedef unsigned char _uchar;"<< std::endl;
-      map_ref = "_uchar";
-      return map_ref;
-    }
-    else if(width==config.ansi_c.short_int_width)
-    {
-      std::string& map_ref = typedef_map["unsigned short"];
-      if(map_ref.empty())
-        stypedef << "typedef unsigned short _ushort;" << std::endl;
-      map_ref = "_ushort";
-      return map_ref;
-    }
-    else if(width==config.ansi_c.int_width)
-    {
-      std::string& map_ref = typedef_map["unsigned int"];
-      if(map_ref.empty())
-        stypedef << "typedef unsigned int _uint;" << std::endl;
-      map_ref = "_uint";
-      return map_ref;
-    }
-    else if(width==config.ansi_c.long_int_width)
-    {
-      std::string& map_ref = typedef_map["unsigned long"];
-      if(map_ref.empty())
-        stypedef << "typedef unsigned long _ulong;" << std::endl;
-      map_ref = "_ulong";
-      return map_ref;
-    }
-
-    std::string stype_str = "_Bool";
-    std::string array_str = "["+i2string(width)+"]";
-    std::string key_str = stype_str + array_str;
-
-    std::map<std::string,std::string>::const_iterator cit =
-      typedef_map.find(key_str);
-      
-    if(cit != typedef_map.end())
-    {
-      // it's already there
-      return cit->second;
-    }
-
-    std::string new_type =
-      "_array_of_" + i2string(width) +"_Bool";
-
-    typedef_map[key_str] = new_type;
-
-    stypedef << "typedef " << stype_str << " " 
-             << new_type << array_str <<";" << std::endl;
-    return new_type;
-  }
-  else if(type.id()==ID_signedbv)
-  {
-    unsigned width=to_signedbv_type(type).get_width();
+    std::string sign=type.id()==ID_unsignedbv?"unsigned ":"signed ";
+    
+    std::string type_str=sign;
     
     // does integer type fit?
     if(width==config.ansi_c.char_width)
-      return "char";
+      type_str+="char";
     else if(width==config.ansi_c.short_int_width)
-      return "short";
+      type_str+="short int";
     else if(width==config.ansi_c.int_width)
-      return "int";
+      type_str+="int";
     else if(width==config.ansi_c.long_int_width)
-      return "long";
-
-    std::string stype_str = "_Bool";
-    std::string array_str = " ["+i2string(width)+"]";
-    std::string key_str = stype_str + array_str;
+      type_str+="long int";
+    else if(width==config.ansi_c.long_long_int_width)
+      type_str+="long long int";
+    else
+      type_str+="__CPROVER_bitvector["+i2string(width)+"]";
+    
+    std::string name="_u"+i2string(width);
 
     std::map<std::string,std::string>::const_iterator cit =
-      typedef_map.find(key_str);
+      typedef_map.find(type_str);
       
-    if(cit != typedef_map.end())
-    {
-      // it's already there
-      return cit->second;
-    }
+    if(cit!=typedef_map.end())
+      return cit->second; // it's already there
 
-    std::string new_type =
-      "_array_of_" + i2string(width) + stype_str;
+    typedef_map[type_str]=name;
 
-    typedef_map[key_str] = new_type;
+    stypedef << "typedef " << type_str << " " 
+             << name << ";" << std::endl;
 
-    stypedef << "typedef " << stype_str << " " << new_type
-             << array_str << ";" << std::endl;
-    return new_type;
+    return name;
   }
   else if(type.id()==ID_array)
   {
@@ -346,8 +287,8 @@ void gen_interfacet::gen_interface(const symbolt &module, bool has_bound)
            "extern const unsigned int bound;\n\n"
            "/* Next Timeframe  */\n"
            "\n"
-           "void next_timeframe();\n"
-           "void set_inputs();\n";
+           "void next_timeframe(void);\n"
+           "void set_inputs(void);\n";
   }
 
   std::stringstream smodule;
