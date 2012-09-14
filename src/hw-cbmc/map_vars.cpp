@@ -444,7 +444,7 @@ const symbolt &map_varst::add_array(symbolt &symbol)
   new_type.subtype()=full_type;
   
   new_symbol.type=new_type;
-  new_symbol.value.make_nil();
+  new_symbol.value=exprt(ID_nondet);
   new_symbol.name=id2string(new_symbol.name)+"_array";
   new_symbol.base_name=id2string(new_symbol.base_name)+"_array";
 
