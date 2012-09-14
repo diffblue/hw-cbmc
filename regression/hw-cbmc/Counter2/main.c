@@ -8,7 +8,7 @@ extern const unsigned int bound;
 
 struct module_top
 {
-  _Bool          var1[101];
+  __CPROVER_bool var1[101];
   unsigned long  var2;
 };
 
