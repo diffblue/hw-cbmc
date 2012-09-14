@@ -71,3 +71,8 @@ endif
 
 hw-cbmc$(EXEEXT): $(OBJ)
 	$(LINKBIN)
+
+.PHONY: hw-cbmc-mac-signed
+
+hw-cbmc-mac-signed: cbmc$(EXEEXT)
+	strip hw-cbmc$(EXEEXT) ; codesign -v -s $(OSX_IDENTITY) hw-cbmc$(EXEEXT)
