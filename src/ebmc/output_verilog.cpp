@@ -330,7 +330,7 @@ void output_verilog_rtlt::assign_symbol(
   
   const symbolt &symbol=namespacet(context).lookup(symbol_expr);
   
-  if(symbol.is_statevar)
+  if(symbol.is_state_var)
   {
     out << "  always @(";
     out << "posedge clock";
@@ -670,7 +670,7 @@ void output_verilog_netlistt::latches(const irep_idt &module)
 
     const symbolt &symbol=s_it->second;
     
-    if(symbol.is_statevar)
+    if(symbol.is_state_var)
     {
       out << "  ";
       out << "DFF l" << ++count;
@@ -721,7 +721,7 @@ void output_verilog_rtlt::latches(const irep_idt &module)
 
     const symbolt &symbol=s_it->second;
     
-    if(symbol.is_statevar)
+    if(symbol.is_state_var)
     {
       const std::string type_base=type_string_base(symbol.type);
       const std::string type_array=type_string_array(symbol.type);
@@ -769,10 +769,10 @@ void output_verilog_baset::wires(const irep_idt &module)
 
     const symbolt &symbol=s_it->second;
     
-    if(!symbol.is_statevar &&
+    if(!symbol.is_state_var &&
        !symbol.is_input &&
        !symbol.is_output &&
-       !symbol.theorem &&
+       !symbol.is_property &&
        !symbol.is_macro &&
        symbol.type.id()!=ID_integer &&
        symbol.type.id()!=ID_module &&

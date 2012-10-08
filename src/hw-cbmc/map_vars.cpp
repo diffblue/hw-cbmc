@@ -684,8 +684,8 @@ void map_varst::map_vars(const irep_idt &module)
     timeframe_symbol.base_name="timeframe";
     timeframe_symbol.name="hw-cbmc::timeframe";
     timeframe_symbol.type=index_type();
-    timeframe_symbol.static_lifetime=true;
-    timeframe_symbol.lvalue=true;
+    timeframe_symbol.is_static_lifetime=true;
+    timeframe_symbol.is_lvalue=true;
     timeframe_symbol.value=gen_zero(index_type());
 
     context.move(timeframe_symbol);
@@ -703,7 +703,7 @@ void map_varst::map_vars(const irep_idt &module)
     {
       const irep_idt &base_name=it->second.base_name;
 
-      if(it->second.static_lifetime)
+      if(it->second.is_static_lifetime)
       {
         if(base_name=="bound") // special case      
           assign_bound(it->second);

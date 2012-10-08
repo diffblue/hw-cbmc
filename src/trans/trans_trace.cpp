@@ -127,7 +127,7 @@ void compute_trans_trace(
       const symbolt &symbol=ns.lookup(it->second);
 
       if(!symbol.is_type &&
-         !symbol.theorem &&
+         !symbol.is_property &&
          symbol.type.id()!=ID_module &&
          symbol.type.id()!=ID_module_instance)
       {
@@ -1009,7 +1009,7 @@ void show_trans_trace_vcd(
     
     if(symbol.type.id()==ID_integer)
       signal_class="integer";
-    else if(symbol.is_statevar)
+    else if(symbol.is_state_var)
       signal_class="reg";
     else
       signal_class="wire";

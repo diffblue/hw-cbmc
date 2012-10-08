@@ -252,7 +252,7 @@ void gen_interfacet::gen_module(
     }
     else if(symbol.hierarchy.empty() &&
             symbol.type.id()!=ID_integer &&
-            !symbol.theorem)
+            !symbol.is_property)
     {
       os << "  " << gen_declaration(symbol)
          << ";" << std::endl;

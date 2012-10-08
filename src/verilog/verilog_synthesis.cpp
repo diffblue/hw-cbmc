@@ -313,7 +313,7 @@ void verilog_synthesist::assignment(
   // get identifier
   const symbolt &symbol=assignment_symbol(lhs);
 
-  if(!symbol.is_statevar)
+  if(!symbol.is_state_var)
   {
     err_location(lhs);
     throw "assignment to non-register";
@@ -1393,7 +1393,7 @@ void verilog_synthesist::synth_decl(
       const symbolt &symbol=lookup(lhs.get(ID_identifier));
       assignmentt &assignment=assignments[symbol.name];
 
-      if(symbol.is_statevar)
+      if(symbol.is_state_var)
       {
         synth_expr(rhs, S_CURRENT);
 
@@ -2586,7 +2586,7 @@ void verilog_synthesist::synth_assignments(
     new_value=symbol_expr(symbol, CURRENT);
   
   // see if wire is used to define itself
-  if(!symbol.is_statevar)
+  if(!symbol.is_state_var)
     post_process_wire(symbol.name, new_value);
 
   equal_exprt equality_expr;
@@ -2618,7 +2618,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
   {
     symbolt &symbol=context_lookup(*it);
     
-    if(symbol.is_statevar && !symbol.is_macro)
+    if(symbol.is_state_var && !symbol.is_macro)
     {
       assignmentt &assignment=assignments[symbol.name];
 
@@ -2626,10 +2626,10 @@ void verilog_synthesist::synth_assignments(transt &trans)
       {
         str << "Making " << symbol.name << " a wire";
         warning();
-        symbol.is_statevar=false;
+        symbol.is_state_var=false;
       }
 
-      if(symbol.is_statevar)
+      if(symbol.is_state_var)
       {
         // only state variables can be initialized
 
@@ -2687,7 +2687,7 @@ exprt verilog_synthesist::current_value(
   const symbolt &symbol,
   bool use_previous_assignments)
 {
-  if(!symbol.is_statevar)
+  if(!symbol.is_state_var)
   {
     if(use_previous_assignments)
     {

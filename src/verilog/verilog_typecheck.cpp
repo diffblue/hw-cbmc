@@ -374,7 +374,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       propagate_type(rhs, symbol.type);
       lhs.type()=symbol.type;
 
-      if(symbol.is_statevar)
+      if(symbol.is_state_var)
       {
       }
       else
@@ -639,7 +639,7 @@ void verilog_typecheckt::check_lhs(
     switch(vassign)
     {
     case A_CONTINUOUS:
-      if(symbol.is_statevar)
+      if(symbol.is_state_var)
       {
         err_location(lhs);
         throw "continuous assignment to register";
@@ -653,8 +653,8 @@ void verilog_typecheckt::check_lhs(
 
     case A_BLOCKING:
     case A_NON_BLOCKING:
-      if(!symbol.is_statevar &&
-         !symbol.lvalue)
+      if(!symbol.is_state_var &&
+         !symbol.is_lvalue)
       {
         err_location(lhs);
         throw "assignment to non-register";
@@ -880,7 +880,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   symbol.base_name=base_name;
   symbol.name=full_identifier;
   symbol.type=bool_typet();
-  symbol.theorem=true;
+  symbol.is_property=true;
   symbol.location=statement.find_location();
 
   symbolt *new_symbol;

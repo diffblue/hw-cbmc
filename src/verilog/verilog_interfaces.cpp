@@ -122,7 +122,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       else if(port_class=="output-register")
       {
         new_symbol.is_output=true;
-        new_symbol.is_statevar=true;
+        new_symbol.is_state_var=true;
       }
       else if(port_class==ID_inout)
       {
@@ -227,8 +227,8 @@ void verilog_typecheckt::interface_function_or_task(
   if(decl_class==ID_function)
   {
     symbolt return_symbol;
-    return_symbol.is_statevar=true;
-    return_symbol.lvalue=true;
+    return_symbol.is_state_var=true;
+    return_symbol.is_lvalue=true;
     return_symbol.mode=new_symbol->mode;
     return_symbol.module=new_symbol->module;
     return_symbol.base_name=new_symbol->base_name;
@@ -290,18 +290,18 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
   {
     // we treat these as unbounded integers
     type=integer_typet();
-    symbol.lvalue=true;
+    symbol.is_lvalue=true;
   }
   else if(port_class==ID_realtime)
   {
-    symbol.lvalue=true;
+    symbol.is_lvalue=true;
     type=typet("verilog_realtime");
   }
   else
   {
     convert_type(decl.type(), type);
     
-    symbol.is_statevar=true;
+    symbol.is_state_var=true;
 
     if(port_class==ID_input)
       input=true;
@@ -442,7 +442,7 @@ void verilog_typecheckt::interface_module_decl(const verilog_declt &decl)
   {
     // we treat these as unbounded integers
     type=integer_typet();
-    symbol.lvalue=true;
+    symbol.is_lvalue=true;
   }
   else if(port_class==ID_genvar)
   {
@@ -450,7 +450,7 @@ void verilog_typecheckt::interface_module_decl(const verilog_declt &decl)
   }
   else if(port_class==ID_realtime)
   {
-    symbol.lvalue=true;
+    symbol.is_lvalue=true;
     type=typet("verilog_realtime");
   }
   else
@@ -464,7 +464,7 @@ void verilog_typecheckt::interface_module_decl(const verilog_declt &decl)
     else if(port_class=="output-register")
     {
       symbol.is_output=true;
-      symbol.is_statevar=true;
+      symbol.is_state_var=true;
     }
     else if(port_class==ID_inout)
     {
@@ -472,7 +472,7 @@ void verilog_typecheckt::interface_module_decl(const verilog_declt &decl)
       symbol.is_output=true;
     }
     else if(port_class==ID_reg)
-      symbol.is_statevar=true;
+      symbol.is_state_var=true;
     else if(port_class==ID_wire)
     {
     }
@@ -552,10 +552,10 @@ void verilog_typecheckt::interface_module_decl(const verilog_declt &decl)
 
       osymbol.is_input   =symbol.is_input    || osymbol.is_input;
       osymbol.is_output  =symbol.is_output   || osymbol.is_output;
-      osymbol.is_statevar=symbol.is_statevar || osymbol.is_statevar;
+      osymbol.is_state_var=symbol.is_state_var || osymbol.is_state_var;
 
       // a register can't be an input as well
-      if(osymbol.is_input && osymbol.is_statevar)
+      if(osymbol.is_input && osymbol.is_state_var)
       {
         err_location(decl);
         str << "symbol `" << symbol.base_name

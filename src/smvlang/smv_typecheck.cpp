@@ -603,7 +603,7 @@ void smv_typecheckt::typecheck(
       if(symbol.module==module)
       {
         symbol.is_input=false;
-        symbol.is_statevar=true;
+        symbol.is_state_var=true;
       }
     }
   }
@@ -1170,7 +1170,7 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
 
     symbol.value.make_nil();
     symbol.is_input=true;
-    symbol.is_statevar=false;
+    symbol.is_state_var=false;
     symbol.type=var.type;
 
     context.add(symbol);
@@ -1215,7 +1215,7 @@ void smv_typecheckt::collect_define(const exprt &expr)
 
   symbol.value.make_nil();
   symbol.is_input=false;
-  symbol.is_statevar=false;
+  symbol.is_state_var=false;
   symbol.is_macro=false;
 
   std::pair<define_mapt::iterator, bool> result=
@@ -1389,7 +1389,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.name=id2string(smv_module.name)+"::spec"+i2string(nr++);
         spec_symbol.module=smv_module.name;
         spec_symbol.type=typet(ID_bool);
-        spec_symbol.theorem=true;
+        spec_symbol.is_property=true;
         spec_symbol.mode="SMV";
         spec_symbol.value=it->expr;
         spec_symbol.location=it->location;

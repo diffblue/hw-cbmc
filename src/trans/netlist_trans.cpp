@@ -204,14 +204,14 @@ void convert_trans_to_netlistt::map_vars(
 
     var_mapt::vart::vartypet vartype;
 
-    if(symbol.theorem)
-      continue; // ignore theorems
+    if(symbol.is_property)
+      continue; // ignore properties
     else if(symbol.type.id()==ID_module ||
             symbol.type.id()=="module_instance")
       continue; // ignore modules
     else if(symbol.is_input)
       vartype=var_mapt::vart::VAR_INPUT;
-    else if(symbol.is_statevar)
+    else if(symbol.is_state_var)
       vartype=var_mapt::vart::VAR_LATCH;
     else
       vartype=var_mapt::vart::VAR_WIRE;

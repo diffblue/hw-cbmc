@@ -394,7 +394,7 @@ bool ebmc_baset::get_model_properties()
     namespacet ns(context);
     const symbolt &symbol=ns.lookup(it->second);
 
-    if(symbol.theorem)
+    if(symbol.is_property)
     {
       try
       {
