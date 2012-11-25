@@ -291,7 +291,7 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   // built-in functions
   const irep_idt &identifier=f_op.get_identifier();
   
-  if(has_prefix(identifier.as_string(), "$"))
+  if(has_prefix(id2string(identifier), "$"))
     return convert_system_function(identifier, expr);
 
   std::string full_identifier=
