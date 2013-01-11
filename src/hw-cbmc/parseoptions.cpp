@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <get_module.h>
 
 #include <goto-programs/show_claims.h>
+#include <goto-programs/set_claims.h>
 #include <trans/show_modules.h>
 #include <cbmc/version.h>
 #include <langapi/mode.h>
@@ -79,6 +80,8 @@ int hw_cbmc_parseoptionst::doit()
 
   if(get_goto_program(options, bmc, goto_functions))
     return 6;
+
+  label_claims(goto_functions);
 
   if(cmdline.isset("show-claims"))
   {
