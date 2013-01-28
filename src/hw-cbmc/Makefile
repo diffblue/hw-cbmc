@@ -13,6 +13,7 @@ OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
       $(CBMC)/src/cbmc/cover$(OBJEXT) \
       $(CBMC)/src/cbmc/dimacs$(OBJEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CBMC)/src/assembler/assembler$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
       $(CBMC)/src/big-int/bigint$(OBJEXT) \
