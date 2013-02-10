@@ -156,18 +156,18 @@ Function: verilog_languaget::typecheck
 \*******************************************************************/
 
 bool verilog_languaget::typecheck(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const std::string &module,
   message_handlert &message_handler)
 {
   if(module=="") return false;
 
-  if(verilog_typecheck(parse_tree, context, module, message_handler))
+  if(verilog_typecheck(parse_tree, symbol_table, module, message_handler))
     return true;
     
   message_handler.print(9, "Synthesis");
 
-  if(verilog_synthesis(context, module, message_handler, options))
+  if(verilog_synthesis(symbol_table, module, message_handler, options))
     return true;
 
   return false;
@@ -186,7 +186,7 @@ Function: verilog_languaget::interfaces
 \*******************************************************************/
 
 bool verilog_languaget::interfaces(
-  contextt &context,
+  symbol_tablet &symbol_table,
   message_handlert &message_handler)
 {
   return false;

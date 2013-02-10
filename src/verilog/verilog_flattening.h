@@ -22,10 +22,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <options.h>
 
 #include "verilog_typecheck_base.h"
-#include "verilog_context.h"
+#include "verilog_symbol_table.h"
 
 bool verilog_flattening(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const irep_idt &module,
   message_handlert &message_handler,
   const optionst &options);
@@ -44,17 +44,17 @@ bool verilog_flattening(
 
 class verilog_flatteningt:
   public verilog_typecheck_baset,
-  public verilog_contextt
+  public verilog_symbol_tablet
 {
 public:
   verilog_flatteningt(
-    contextt &_context,
+    symbol_tablet &_symbol_table,
     const irep_idt &_module,
     const optionst &_options,
     message_handlert &_message_handler):
     verilog_typecheck_baset(ns, _message_handler),
-    verilog_contextt(_context),
-    ns(_context),
+    verilog_symbol_tablet(_symbol_table),
+    ns(_symbol_table),
     options(_options),
     module(_module)
   {

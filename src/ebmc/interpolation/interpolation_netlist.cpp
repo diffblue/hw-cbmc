@@ -126,7 +126,7 @@ int interpolationt_netlist::check_initial_state()
 {
   satcheckt satcheck;
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   boolbvt solver(ns,satcheck);
     // check if I AND !P is satisfiable
 
@@ -198,7 +198,7 @@ int interpolationt_netlist::iteration()
          ", bound="+i2string(bound));
         //see if induction succeeds
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(ns, interpolator);
   solver.equality_propagation=false;
@@ -324,7 +324,7 @@ bool interpolationt_netlist::reached_fixedpoint()
   }
 */
   satcheckt solver;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   bmc_mapt netlist_bmc_map_check;
   netlist_bmc_map_check.map_timeframes(working_netlist, bound+1, solver);
 
@@ -816,7 +816,7 @@ int interpolationt_netlist::induction_step()
 {
   status("Induction Step");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort satcheck;
   boolbvt solver(ns, satcheck);
   
@@ -928,7 +928,7 @@ void interpolationt_netlist::get_strengthened_interpolant(
 
 bool interpolationt_netlist::check_partition_one_implies_interpolant(const bit_interpolantt &current_inter)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(ns, interpolator);
  
@@ -961,7 +961,7 @@ bool interpolationt_netlist::check_partition_one_implies_interpolant(const bit_i
 
 bool interpolationt_netlist::check_partition_two_and_interpolant(const bit_interpolantt &current_inter)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(ns, interpolator);
 
@@ -1029,7 +1029,7 @@ else {
 //  build_property(solver, bmc_map);
 
   propt::resultt dec_result = solver.prop_solve();
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   
   switch(dec_result)
   {

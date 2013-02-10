@@ -53,7 +53,7 @@ static void reverse_partitions(
   std::cout << i_bit_2 << std::endl;
 
   satcheckt solver1;
-    //  namespacet ns(context);
+    //  namespacet ns(symbol_table);
   i_bit_1.add_variables(solver1);
   i_bit_2.add_variables(solver1);
 
@@ -78,7 +78,7 @@ static void reverse_partitions(
   }
  
   satcheckt solver2;
-    //  namespacet ns(context);
+    //  namespacet ns(symbol_table);
   i_bit_1.add_variables(solver2);
   i_bit_2.add_variables(solver2);
  

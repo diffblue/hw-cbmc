@@ -31,11 +31,11 @@ class convert_trans_to_netlistt
 {
 public:
   convert_trans_to_netlistt(
-    contextt &_context,
+    symbol_tablet &_symbol_table,
     netlistt &_dest,
     messaget &_message):
-    context(_context),
-    ns(_context),
+    symbol_table(_symbol_table),
+    ns(_symbol_table),
     dest(_dest),
     message(_message)
   {
@@ -46,7 +46,7 @@ public:
     const std::list<exprt> &properties);
   
 protected:
-  contextt &context;
+  symbol_tablet &symbol_table;
   const namespacet ns;
   netlistt &dest;
   messaget &message;
@@ -153,14 +153,14 @@ literalt convert_trans_to_netlistt::new_input()
 {
   irep_idt id="convert::input";
 
-  if(context.symbols.find(id)==context.symbols.end())
+  if(symbol_table.symbols.find(id)==symbol_table.symbols.end())
   {
     symbolt symbol;
     symbol.name=id;
     symbol.type=bool_typet();
     symbol.is_input=true;
     symbol.base_name="input";
-    context.move(symbol);
+    symbol_table.move(symbol);
   }
 
   var_mapt::vart &var=dest.var_map.map[id];
@@ -191,13 +191,13 @@ void convert_trans_to_netlistt::map_vars(
 {
   boolbv_widtht boolbv_width(ns);
 
-  forall_symbol_module_map(it, context.symbol_module_map,
+  forall_symbol_module_map(it, symbol_table.symbol_module_map,
                            module)
   {
-    contextt::symbolst::const_iterator s_it=
-      context.symbols.find(it->second);
+    symbol_tablet::symbolst::const_iterator s_it=
+      symbol_table.symbols.find(it->second);
 
-    if(s_it==context.symbols.end())
+    if(s_it==symbol_table.symbols.end())
       continue;
 
     const symbolt &symbol=s_it->second;
@@ -285,7 +285,7 @@ void convert_trans_to_netlistt::operator()(
     }
   }
 
-  const symbolt &module_symbol=namespacet(context).lookup(module);
+  const symbolt &module_symbol=namespacet(symbol_table).lookup(module);
   const transt &trans=to_trans_expr(module_symbol.value);
 
   // build the net-list
@@ -744,13 +744,13 @@ Function: convert_trans_to_netlist
 \*******************************************************************/
 
 void convert_trans_to_netlist(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const irep_idt &module,
   const std::list<exprt> &properties,
   netlistt &dest,
   messaget &message)
 {
-  convert_trans_to_netlistt c(context, dest, message);
+  convert_trans_to_netlistt c(symbol_table, dest, message);
 
   c(module, properties);
 }

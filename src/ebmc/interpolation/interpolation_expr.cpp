@@ -91,7 +91,7 @@ int interpolationt::check_initial_state()
 
   satcheckt satcheck;
   boolbvt solver(satcheck);
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
     // check if I AND !P is satisfiable
   
@@ -222,7 +222,7 @@ void interpolationt::build_variable_map(
       it!=symbols.end();
       it++)
   {
-    namespacet ns(context);
+    namespacet ns(symbol_table);
     //const symbolt &symbol=ns.lookup(*it);
     
     //exprt e0(symbol_expr(symbol));
@@ -283,7 +283,7 @@ int interpolationt::iteration()
     return 1;
   }
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(interpolator);
   solver.equality_propagation=false;
@@ -411,7 +411,7 @@ bool interpolationt::reached_fixedpoint()
   if(new_interpolant.is_false()) return true;
 
   satcheckt solver;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
     // "old" set of states
   status("interpolants.size() " + i2string(interpolants.size()));
 
@@ -587,7 +587,7 @@ void interpolationt::build_partition1(
   prop_convt &solver)
 {
   status("build_partition1");
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   if(interpolants.empty())
   {
@@ -629,7 +629,7 @@ void interpolationt::build_partition2(
   prop_convt &solver)
 {
   status("build_partition2");
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   unsigned no_timeframes=bound+1;
 
   const exprt &op_invar=trans_expr->invar();
@@ -664,7 +664,7 @@ void interpolationt::build_property(
 
   status("build_property");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   unsigned no_timeframes=bound+1;
   unsigned start;
 
@@ -755,7 +755,7 @@ bool interpolationt::check_partition_one_implies_interpolant()
 
   if(new_interpolant.is_false()) return false;
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt solver;
   boolbvt boolbv(solver);
   boolbv.equality_propagation=false;
@@ -825,7 +825,7 @@ bool interpolationt::check_partition_two_and_interpolant()
 
   if(new_interpolant.is_false()) return false;
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt solver;
   boolbvt boolbv(solver);
   boolbv.equality_propagation=false;
@@ -860,7 +860,7 @@ int interpolationt::induction_step()
 {
   status("Induction Step");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt satcheck;
   boolbvt solver(satcheck);
   

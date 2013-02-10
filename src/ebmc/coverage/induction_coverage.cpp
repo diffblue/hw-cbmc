@@ -271,7 +271,7 @@ void induction_coveraget::remove_covered(const bmc_mapt &bmc_map,
 
       solver.set_assumptions(assumptions);
       propt::resultt dec_result = solver.prop_solve();
-      namespacet ns(context);
+      namespacet ns(symbol_table);
       
       switch(dec_result)
       {
@@ -388,7 +388,7 @@ void induction_coveraget::remove_not_covered_from_scratch(const bmc_mapt &bmc_ma
       induction_test_from_scratch.total_tests++;
       propt::resultt dec_result = solver.prop_solve();
       
-      namespacet ns(context);
+      namespacet ns(symbol_table);
       
       switch(dec_result)
       {
@@ -544,7 +544,7 @@ induction_resultt induction_coveraget::is_inductive(bool force,
                                                     satcheckt &interpolator,
                                                     bool assume)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   bmc_mapt netlist_bmc_map_induction;
   netlist_bmc_map_induction.map_timeframes(netlist, 2, interpolator); //vars in tf 0 and 1
@@ -681,7 +681,7 @@ literalt induction_coveraget::unwind(
 induction_resultt induction_coveraget::is_inductive1(bool force,
                                                     satcheck_minisat_normal_prooft &interpolator)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   interpolator.set_partition_id(1);
   bmc_mapt netlist_bmc_map_induction;

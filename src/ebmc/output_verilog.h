@@ -16,11 +16,11 @@ class output_verilog_baset:public message_streamt
 {
 public:
   output_verilog_baset(
-    const contextt &_context,
+    const symbol_tablet &_symbol_table,
     std::ostream &_out,
     message_handlert &_message_handler):
     message_streamt(_message_handler),
-    context(_context), out(_out)
+    symbol_table(_symbol_table), out(_out)
   {
   }
 
@@ -29,7 +29,7 @@ public:
 protected:
   // common
 
-  const contextt &context;
+  const symbol_tablet &symbol_table;
   std::ostream &out;
   unsigned count;
 
@@ -62,10 +62,10 @@ class output_verilog_netlistt:public output_verilog_baset
 {
 public:
   output_verilog_netlistt(
-    const contextt &_context,
+    const symbol_tablet &_symbol_table,
     std::ostream &_out,
     message_handlert &_message_handler):
-    output_verilog_baset(_context, _out, _message_handler)
+    output_verilog_baset(_symbol_table, _out, _message_handler)
   {
   }
 
@@ -90,10 +90,10 @@ class output_verilog_rtlt:public output_verilog_baset
 {
 public:
   output_verilog_rtlt(
-    const contextt &_context,
+    const symbol_tablet &_symbol_table,
     std::ostream &_out,
     message_handlert &_message_handler):
-    output_verilog_baset(_context, _out, _message_handler)
+    output_verilog_baset(_symbol_table, _out, _message_handler)
   {
   }
 

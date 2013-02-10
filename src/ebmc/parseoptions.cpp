@@ -64,8 +64,8 @@ int ebmc_parseoptionst::doit()
   if(cmdline.isset("cegar"))
   {
     #if 0
-    namespacet ns(context);
-    var_mapt var_map(context, main_symbol->name);
+    namespacet ns(symbol_table);
+    var_mapt var_map(symbol_table, main_symbol->name);
 
     bmc_cegart bmc_cegar(
       var_map,

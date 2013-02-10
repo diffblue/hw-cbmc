@@ -284,14 +284,14 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
     id2string(module_identifier)+"."+
     id2string(decl.get_identifier());
 
-  contextt::symbolst::iterator result=
-    context.symbols.find(identifier);
+  symbol_tablet::symbolst::iterator result=
+    symbol_table.symbols.find(identifier);
 
-  if(result==context.symbols.end())
+  if(result==symbol_table.symbols.end())
   {
     err_location(decl);
     str << "expected to find " << decl_class << " symbol `"
-        << identifier << "' in context";
+        << identifier << "' in symbol_table";
     throw 0;
   }
   
@@ -369,7 +369,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
 
       lhs.set(ID_identifier, identifier);
 
-      symbolt &symbol=context_lookup(identifier);
+      symbolt &symbol=symbol_table_lookup(identifier);
       convert_expr(rhs);
       propagate_type(rhs, symbol.type);
       lhs.type()=symbol.type;
@@ -861,8 +861,8 @@ void verilog_typecheckt::convert_assert(exprt &statement)
     id2string(module_identifier)+
     ".property."+id2string(base_name);
 
-  if(context.symbols.find(full_identifier)!=
-     context.symbols.end())
+  if(symbol_table.symbols.find(full_identifier)!=
+     symbol_table.symbols.end())
   {
     err_location(statement);
     str << "property identifier `" << base_name << "' already used";
@@ -884,7 +884,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   symbol.location=statement.find_location();
 
   symbolt *new_symbol;
-  context.move(symbol, new_symbol);
+  symbol_table.move(symbol, new_symbol);
 }
 
 /*******************************************************************\
@@ -1398,7 +1398,7 @@ bool verilog_typecheckt::implicit_wire(
   symbol.type=typet(ID_bool); // TODO: other types?
 
   symbolt *new_symbol;
-  context.move(symbol, new_symbol);
+  symbol_table.move(symbol, new_symbol);
   symbol_ptr=new_symbol;
 
   return false;
@@ -1436,7 +1436,7 @@ Function: verilog_typecheck
 
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
-  contextt &context,
+  symbol_tablet &symbol_table,
   const std::string &module,
   message_handlert &message_handler)
 {
@@ -1452,7 +1452,7 @@ bool verilog_typecheck(
     return true;
   }
 
-  return verilog_typecheck(context, it->second->verilog_module, message_handler);
+  return verilog_typecheck(symbol_table, it->second->verilog_module, message_handler);
 }
 
 /*******************************************************************\
@@ -1468,7 +1468,7 @@ Function: verilog_typecheck
 \*******************************************************************/
 
 bool verilog_typecheck(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const verilog_modulet &verilog_module,
   message_handlert &message_handler)
 {
@@ -1487,11 +1487,11 @@ bool verilog_typecheck(
 
   symbol.type.add(ID_module_source)=verilog_module.to_irep();
   
-  // put symbol in context
+  // put symbol in symbol_table
 
   symbolt *new_symbol;
 
-  if(context.move(symbol, new_symbol))
+  if(symbol_table.move(symbol, new_symbol))
   {
     message_streamt message_stream(message_handler);
     message_stream.str << "duplicate definition of module " 
@@ -1500,6 +1500,6 @@ bool verilog_typecheck(
     throw 0;
   }
 
-  verilog_typecheckt verilog_typecheck(*new_symbol, context, message_handler);
+  verilog_typecheckt verilog_typecheck(*new_symbol, symbol_table, message_handler);
   return verilog_typecheck.typecheck_main();
 }

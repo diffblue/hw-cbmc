@@ -106,7 +106,7 @@ int k_inductiont::induction_base()
   status("Induction Base");
 
   satcheckt satcheck;
-    namespacet ns(context);
+    namespacet ns(symbol_table);
    boolbvt solver(ns, satcheck);
 
   unwind(solver, bound+1, true);
@@ -129,7 +129,7 @@ int k_inductiont::induction_base()
     {
       result("SAT: bug found");
 
-      namespacet ns(context);
+      namespacet ns(symbol_table);
       trans_tracet trans_trace;
   
       compute_trans_trace(
@@ -186,7 +186,7 @@ int k_inductiont::induction_step()
 {
   status("Induction Step");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt satcheck;
   boolbvt solver(ns, satcheck);
   

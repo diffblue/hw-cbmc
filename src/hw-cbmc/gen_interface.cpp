@@ -19,15 +19,15 @@ Author: Daniel Kroening, kroening@kroening.com
 class gen_interfacet
 {
 public:
-  gen_interfacet(contextt &_context,
+  gen_interfacet(symbol_tablet &_symbol_table,
                  std::ostream &_out,
                  std::ostream &_err):
-    context(_context), out(_out), err(_err) { }
+    symbol_table(_symbol_table), out(_out), err(_err) { }
 
   void gen_interface(const symbolt &module, bool have_bound);
 
 protected:
-  contextt &context;
+  symbol_tablet &symbol_table;
   std::ostream &out, &err;
 
   std::set<irep_idt> modules_done;
@@ -58,10 +58,10 @@ Function: gen_interfacet::lookup
 
 symbolt &gen_interfacet::lookup(const irep_idt &identifier)
 {
-  contextt::symbolst::iterator it=
-    context.symbols.find(identifier);
+  symbol_tablet::symbolst::iterator it=
+    symbol_table.symbols.find(identifier);
 
-  if(it==context.symbols.end())
+  if(it==symbol_table.symbols.end())
   {
     err << "failed to find identifier " << identifier << std::endl;
     throw 0;
@@ -215,7 +215,7 @@ void gen_interfacet::gen_module(
   std::set<irep_idt>::iterator
     in_progress_it=modules_in_progress.insert(module.name).first;
 
-  forall_symbol_module_map(it, context.symbol_module_map, module.name)
+  forall_symbol_module_map(it, symbol_table.symbol_module_map, module.name)
   {
     const symbolt &symbol=lookup(it->second);
 
@@ -233,7 +233,7 @@ void gen_interfacet::gen_module(
 
   os << "struct module_" << module.base_name << " {" << std::endl;    
 
-  forall_symbol_module_map(it, context.symbol_module_map, module.name)
+  forall_symbol_module_map(it, symbol_table.symbol_module_map, module.name)
   {
     const symbolt &symbol=lookup(it->second);
 
@@ -327,12 +327,12 @@ Function: gen_interfacet::gen_interface
 \*******************************************************************/
 
 void gen_interface(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const symbolt &module,
   bool have_bound,
   std::ostream &out,
   std::ostream &err)
 {
-  gen_interfacet gen_interface(context, out, err);
+  gen_interfacet gen_interface(symbol_table, out, err);
   gen_interface.gen_interface(module, have_bound);
 }

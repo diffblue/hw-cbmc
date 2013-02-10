@@ -90,7 +90,7 @@ Function: show_transt::show_trans_verilog_netlist
 int show_transt::show_trans_verilog_netlist(std::ostream &out)
 {
   output_verilog_netlistt output_verilog(
-    context, out, get_message_handler());
+    symbol_table, out, get_message_handler());
 
   try
   {
@@ -134,7 +134,7 @@ Function: show_transt::show_trans_verilog_rtl
 int show_transt::show_trans_verilog_rtl(std::ostream &out)
 {
   output_verilog_rtlt output_verilog(
-    context, out, get_message_handler());
+    symbol_table, out, get_message_handler());
 
   try
   {

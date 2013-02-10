@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_PROPERTY_H
 #define CPROVER_TRANS_PROPERTY_H
 
-#include <context.h>
+#include <symbol_table.h>
 #include <message.h>
 #include <namespace.h>
 

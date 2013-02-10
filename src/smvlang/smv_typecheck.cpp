@@ -26,13 +26,13 @@ class smv_typecheckt:public typecheckt
 public:
   smv_typecheckt(
     smv_parse_treet &_smv_parse_tree,
-    contextt &_context,
+    symbol_tablet &_symbol_table,
     const std::string &_module,
     bool _do_spec,
     message_handlert &_message_handler):
     typecheckt(_message_handler),
     smv_parse_tree(_smv_parse_tree),
-    context(_context),
+    symbol_table(_symbol_table),
     module(_module),
     do_spec(_do_spec)
   {
@@ -65,7 +65,7 @@ public:
 
 protected:
   smv_parse_treet &smv_parse_tree;
-  contextt &context;
+  symbol_tablet &symbol_table;
   const std::string &module;
   bool do_spec;
 
@@ -246,10 +246,10 @@ void smv_typecheckt::instantiate(
   const exprt::operandst &operands,
   const irept &location)
 {
-  contextt::symbolst::const_iterator s_it=
-    context.symbols.find(identifier);
+  symbol_tablet::symbolst::const_iterator s_it=
+    symbol_table.symbols.find(identifier);
 
-  if(s_it==context.symbols.end())
+  if(s_it==symbol_table.symbols.end())
   {
     err_location(location);
     str << "submodule `"
@@ -295,12 +295,12 @@ void smv_typecheckt::instantiate(
 
   std::set<irep_idt> var_identifiers;
 
-  forall_symbol_module_map(v_it, context.symbol_module_map, identifier)
+  forall_symbol_module_map(v_it, symbol_table.symbol_module_map, identifier)
   {
-    contextt::symbolst::const_iterator s_it2=
-      context.symbols.find(v_it->second);
+    symbol_tablet::symbolst::const_iterator s_it2=
+      symbol_table.symbols.find(v_it->second);
 
-    if(s_it2==context.symbols.end())
+    if(s_it2==symbol_table.symbols.end())
     {
       str << "symbol `" << v_it->second << "' not found";
       throw 0;
@@ -325,7 +325,7 @@ void smv_typecheckt::instantiate(
 
       var_identifiers.insert(symbol.name);
 
-      context.move(symbol);
+      symbol_table.move(symbol);
     }
   }
 
@@ -336,10 +336,10 @@ void smv_typecheckt::instantiate(
       v_it!=var_identifiers.end();
       v_it++)
   {
-    contextt::symbolst::iterator s_it2=
-      context.symbols.find(*v_it);
+    symbol_tablet::symbolst::iterator s_it2=
+      symbol_table.symbols.find(*v_it);
 
-    if(s_it2==context.symbols.end())
+    if(s_it2==symbol_table.symbols.end())
     {
       str << "symbol `" << *v_it << "' not found";
       throw 0;
@@ -584,9 +584,9 @@ void smv_typecheckt::typecheck(
     if(define_map.find(identifier)!=define_map.end())
       convert_define(identifier);
 
-    contextt::symbolst::iterator s_it=context.symbols.find(identifier);
+    symbol_tablet::symbolst::iterator s_it=symbol_table.symbols.find(identifier);
 
-    if(s_it==context.symbols.end())
+    if(s_it==symbol_table.symbols.end())
     {
       err_location(expr);
       str << "variable `" << identifier << "' not found";
@@ -1173,7 +1173,7 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
     symbol.is_state_var=false;
     symbol.type=var.type;
 
-    context.add(symbol);
+    symbol_table.add(symbol);
   }
 }
 
@@ -1202,9 +1202,9 @@ void smv_typecheckt::collect_define(const exprt &expr)
 
   const irep_idt &identifier=op0.get(ID_identifier);
 
-  contextt::symbolst::iterator it=context.symbols.find(identifier);
+  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
 
-  if(it==context.symbols.end())
+  if(it==symbol_table.symbols.end())
   {
     str << "collect_define failed to find symbol `"
         << identifier << "'";
@@ -1253,9 +1253,9 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
     throw 0;
   }
   
-  contextt::symbolst::iterator it=context.symbols.find(identifier);
+  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
 
-  if(it==context.symbols.end())
+  if(it==symbol_table.symbols.end())
   {
     str << "convert_define failed to find symbol `"
         << identifier << "'";
@@ -1372,7 +1372,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
   Forall_operands(it, trans)
     gen_and(*it);
 
-  context.move(module_symbol);
+  symbol_table.move(module_symbol);
 
   // spec
 
@@ -1394,7 +1394,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.value=it->expr;
         spec_symbol.location=it->location;
 
-        context.move(spec_symbol);
+        symbol_table.move(spec_symbol);
       }
   }
 }
@@ -1438,13 +1438,13 @@ Function: smv_typecheck
 
 bool smv_typecheck(
   smv_parse_treet &smv_parse_tree,
-  contextt &context,
+  symbol_tablet &symbol_table,
   const std::string &module,
   message_handlert &message_handler,
   bool do_spec)
 {
   smv_typecheckt smv_typecheck(
-    smv_parse_tree, context, module, do_spec, message_handler);
+    smv_parse_tree, symbol_table, module, do_spec, message_handler);
   return smv_typecheck.typecheck_main();
 }
 

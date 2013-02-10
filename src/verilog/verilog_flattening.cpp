@@ -244,12 +244,12 @@ void verilog_flatteningt::flatten_inst(verilog_instt &inst)
 {
   const irep_idt &identifier=inst.get("module");
 
-  // must be in context
+  // must be in symbol_table
   const symbolt &symbol=lookup(identifier);
     
   // make sure it's flat already
   verilog_flattening(
-    context, identifier, get_message_handler(), options);
+    symbol_table, identifier, get_message_handler(), options);
 
   assert(symbol.value.id()=="flat_verilog_module");
 
@@ -283,7 +283,7 @@ void verilog_flatteningt::flatten_inst(
   std::list<irep_idt> new_symbols;
   replace_mapt replace_map;
 
-  forall_symbol_module_map(it, context.symbol_module_map, symbol.module)
+  forall_symbol_module_map(it, symbol_table.symbol_module_map, symbol.module)
   {
     const symbolt &symbol=lookup(it->second);
 
@@ -313,7 +313,7 @@ void verilog_flatteningt::flatten_inst(
 
     new_symbol.name=full_identifier;
 
-    if(context.add(new_symbol))
+    if(symbol_table.add(new_symbol))
     {
       str << "name collision during module instantiation: "
           << new_symbol.name;
@@ -341,7 +341,7 @@ void verilog_flatteningt::flatten_inst(
       it!=new_symbols.end();
       it++)
   {
-    symbolt &symbol=context_lookup(*it);
+    symbolt &symbol=symbol_table_lookup(*it);
     replace_symbols(replace_map, symbol.value);
   }
 
@@ -433,7 +433,7 @@ Function: verilog_flatteningt::typecheck
 
 void verilog_flatteningt::typecheck()
 {
-  symbolt &symbol=context_lookup(module);
+  symbolt &symbol=symbol_table_lookup(module);
   // done already?
   if(symbol.value.id()=="flat_verilog_module") return;
   flatten_module(symbol);
@@ -452,12 +452,12 @@ Function: verilog_flattening
 \*******************************************************************/
 
 bool verilog_flattening(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const irep_idt &module,
   message_handlert &message_handler,
   const optionst &options)
 {
   verilog_flatteningt verilog_flattening(
-    context, module, options, message_handler);
+    symbol_table, module, options, message_handler);
   return verilog_flattening.typecheck_main();
 }

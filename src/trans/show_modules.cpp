@@ -28,12 +28,12 @@ Function: show_modules
 \*******************************************************************/
 
 void show_modules(
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   ui_message_handlert::uit ui)
 {
   unsigned count=0;
 
-  forall_symbols(it, context.symbols)
+  forall_symbols(it, symbol_table.symbols)
   {
     const symbolt &symbol=it->second;
   

@@ -328,7 +328,7 @@ void output_verilog_rtlt::assign_symbol(
     throw 0;
   }
   
-  const symbolt &symbol=namespacet(context).lookup(symbol_expr);
+  const symbolt &symbol=namespacet(symbol_table).lookup(symbol_expr);
   
   if(symbol.is_state_var)
   {
@@ -378,7 +378,7 @@ void output_verilog_rtlt::convert_expr(const exprt &expr)
   expr2verilogt expr2verilog;
 
   // simplify first
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   exprt tmp(expr);
   simplify(tmp,ns);
   
@@ -459,10 +459,10 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
   else if(expr.id()==ID_symbol)
   {
     const irep_idt &identifier=expr.get(ID_identifier);
-    contextt::symbolst::const_iterator s_it=
-      context.symbols.find(identifier);
+    symbol_tablet::symbolst::const_iterator s_it=
+      symbol_table.symbols.find(identifier);
     
-    if(s_it==context.symbols.end())
+    if(s_it==symbol_table.symbols.end())
     {
       err_location(expr);
       str << "symbol " << identifier << " not found"
@@ -481,10 +481,10 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
   else if(expr.id()==ID_next_symbol)
   {
     const irep_idt &identifier=expr.get(ID_identifier);
-    contextt::symbolst::const_iterator s_it=
-      context.symbols.find(identifier);
+    symbol_tablet::symbolst::const_iterator s_it=
+      symbol_table.symbols.find(identifier);
     
-    if(s_it==context.symbols.end())
+    if(s_it==symbol_table.symbols.end())
     {
       err_location(expr);
       str << "symbol " << identifier << " not found"
@@ -654,14 +654,14 @@ void output_verilog_netlistt::latches(const irep_idt &module)
 {
   bool found=false;
 
-  forall_symbol_module_map(m_it, context.symbol_module_map, module)
+  forall_symbol_module_map(m_it, symbol_table.symbol_module_map, module)
   {
     const irep_idt &identifier=m_it->second;
     
-    contextt::symbolst::const_iterator s_it=
-      context.symbols.find(identifier);
+    symbol_tablet::symbolst::const_iterator s_it=
+      symbol_table.symbols.find(identifier);
     
-    if(s_it==context.symbols.end())
+    if(s_it==symbol_table.symbols.end())
     {
       str << "failed to find symbol " << identifier
           << std::endl;
@@ -705,14 +705,14 @@ void output_verilog_rtlt::latches(const irep_idt &module)
 {
   bool found=false;
 
-  forall_symbol_module_map(m_it, context.symbol_module_map, module)
+  forall_symbol_module_map(m_it, symbol_table.symbol_module_map, module)
   {
     const irep_idt &identifier=m_it->second;
     
-    contextt::symbolst::const_iterator s_it=
-      context.symbols.find(identifier);
+    symbol_tablet::symbolst::const_iterator s_it=
+      symbol_table.symbols.find(identifier);
     
-    if(s_it==context.symbols.end())
+    if(s_it==symbol_table.symbols.end())
     {
       str << "failed to find symbol " << identifier
           << std::endl;
@@ -753,14 +753,14 @@ void output_verilog_baset::wires(const irep_idt &module)
 {
   bool found=false;
 
-  forall_symbol_module_map(m_it, context.symbol_module_map, module)
+  forall_symbol_module_map(m_it, symbol_table.symbol_module_map, module)
   {
     const irep_idt &identifier=m_it->second;
     
-    contextt::symbolst::const_iterator s_it=
-      context.symbols.find(identifier);
+    symbol_tablet::symbolst::const_iterator s_it=
+      symbol_table.symbols.find(identifier);
     
-    if(s_it==context.symbols.end())
+    if(s_it==symbol_table.symbols.end())
     {
       str << "failed to find symbol " << identifier
           << std::endl;

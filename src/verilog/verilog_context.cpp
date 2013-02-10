@@ -6,11 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include "verilog_context.h"
+#include "verilog_symbol_table.h"
 
 /*******************************************************************\
 
-Function: verilog_contextt::context_lookup
+Function: verilog_symbol_tablet::symbol_table_lookup
 
   Inputs:
 
@@ -20,11 +20,11 @@ Function: verilog_contextt::context_lookup
 
 \*******************************************************************/
 
-symbolt &verilog_contextt::context_lookup(const irep_idt &identifier)
+symbolt &verilog_symbol_tablet::symbol_table_lookup(const irep_idt &identifier)
 {
-  contextt::symbolst::iterator it=context.symbols.find(identifier);
+  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
 
-  if(it==context.symbols.end())
+  if(it==symbol_table.symbols.end())
     throw "symbol "+id2string(identifier)+" not found";
 
   return it->second;

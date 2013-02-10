@@ -138,7 +138,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       
       symbolt *s;
 
-      if(context.move(new_symbol, s))
+      if(symbol_table.move(new_symbol, s))
       {
         err_location(decl.op0());
         str << "port `" << name << "' is also declared";
@@ -211,7 +211,7 @@ void verilog_typecheckt::interface_function_or_task(
       id2string(symbol.module)+"."+
       id2string(symbol.base_name);
 
-    if(context.move(symbol, new_symbol))
+    if(symbol_table.move(symbol, new_symbol))
     {
       err_location(decl);
       str << "symbol `" << symbol.base_name
@@ -239,7 +239,7 @@ void verilog_typecheckt::interface_function_or_task(
       id2string(new_symbol->name)+"."+
       id2string(new_symbol->base_name);
 
-    context.move(return_symbol);
+    symbol_table.move(return_symbol);
   }
 
   // do the declarations within the task/function
@@ -377,9 +377,9 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
 
     if(input || output)
     {
-      contextt::symbolst::iterator s_it=
-        context.symbols.find(function_or_task_name);
-      assert(s_it!=context.symbols.end());
+      symbol_tablet::symbolst::iterator s_it=
+        symbol_table.symbols.find(function_or_task_name);
+      assert(s_it!=symbol_table.symbols.end());
       symbolt &function_or_task_symbol=s_it->second;
       code_typet::argumentst &arguments=
         to_code_type(function_or_task_symbol.type).arguments();
@@ -392,10 +392,10 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       argument.set(ID_input, input);
     }
 
-    contextt::symbolst::iterator result=
-      context.symbols.find(symbol.name);
+    symbol_tablet::symbolst::iterator result=
+      symbol_table.symbols.find(symbol.name);
       
-    if(result!=context.symbols.end())
+    if(result!=symbol_table.symbols.end())
     {
       err_location(decl);
       str << "symbol `" << symbol.base_name
@@ -403,7 +403,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       throw 0;
     }
 
-    context.add(symbol);
+    symbol_table.add(symbol);
   }
 }
 
@@ -527,11 +527,11 @@ void verilog_typecheckt::interface_module_decl(const verilog_declt &decl)
       id2string(symbol.module)+"."+
       id2string(symbol.base_name);
 
-    contextt::symbolst::iterator result=
-      context.symbols.find(symbol.name);
+    symbol_tablet::symbolst::iterator result=
+      symbol_table.symbols.find(symbol.name);
       
-    if(result==context.symbols.end())
-      context.add(symbol);
+    if(result==symbol_table.symbols.end())
+      symbol_table.add(symbol);
     else
     {
       symbolt &osymbol=result->second;
@@ -604,7 +604,7 @@ void verilog_typecheckt::interface_parameter(const exprt &expr)
 
   symbolt *new_symbol;
 
-  if(context.move(symbol, new_symbol))
+  if(symbol_table.move(symbol, new_symbol))
   {
     err_location(expr);
     str << "conflicting definition of symbol `"
@@ -691,7 +691,7 @@ void verilog_typecheckt::interface_inst(
     id2string(symbol.base_name);
   symbol.value.set(ID_module, identifier);
 
-  if(context.add(symbol))
+  if(symbol_table.add(symbol))
   {
     err_location(op);
     str << "duplicate definition of identifier `" 

@@ -231,7 +231,7 @@ void bmc_cegart::make_netlist()
   try
   {
     convert_trans_to_netlist(
-      context, main_module,
+      symbol_table, main_module,
       properties, concrete_netlist, message);
   }
   

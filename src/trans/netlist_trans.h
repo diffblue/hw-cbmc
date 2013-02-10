@@ -11,11 +11,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <namespace.h>
 #include <message.h>
-#include <context.h>
+#include <symbol_table.h>
 #include <std_expr.h>
 
 void convert_trans_to_netlist(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const irep_idt &module,
   const std::list<exprt> &properties,
   class netlistt &dest,

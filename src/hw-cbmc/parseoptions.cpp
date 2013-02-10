@@ -66,7 +66,7 @@ int hw_cbmc_parseoptionst::doit()
   if(cmdline.isset("vcd"))
     options.set_option("vcd", cmdline.getval("vcd"));
 
-  hw_bmct bmc(options, context, ui_message_handler);
+  hw_bmct bmc(options, symbol_table, ui_message_handler);
   set_verbosity(bmc);
   set_verbosity(*this);
 
@@ -85,7 +85,7 @@ int hw_cbmc_parseoptionst::doit()
 
   if(cmdline.isset("show-claims"))
   {
-    const namespacet ns(context);
+    const namespacet ns(symbol_table);
     show_claims(ns, get_ui(), goto_functions);
     return 0;
   }
@@ -123,11 +123,11 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
     try
     {
       const symbolt &symbol=
-        get_module(context, module, get_message_handler());
+        get_module(symbol_table, module, get_message_handler());
 
       if(cmdline.isset("gen-interface"))
       {
-        gen_interface(context, symbol, true, std::cout, std::cerr);
+        gen_interface(symbol_table, symbol, true, std::cout, std::cerr);
         return true;
       }
       
@@ -147,7 +147,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
       status("Mapping variables");
 
       map_vars(
-        context,
+        symbol_table,
         symbol.name,
         hw_bmc.bmc_constraints,
         ui_message_handler,
@@ -163,7 +163,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
   }
   else if(cmdline.isset("show-modules"))
   {
-    show_modules(context, get_ui());
+    show_modules(symbol_table, get_ui());
     return true;
   }
     

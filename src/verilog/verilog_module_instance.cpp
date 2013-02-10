@@ -131,10 +131,10 @@ void verilog_typecheckt::module_instance(
 
   // find base symbol
   
-  contextt::symbolst::const_iterator it=
-    context.symbols.find(module_identifier);
+  symbol_tablet::symbolst::const_iterator it=
+    symbol_table.symbols.find(module_identifier);
   
-  if(it==context.symbols.end())
+  if(it==symbol_table.symbols.end())
   {
     err_location(location);
     str << "module not found" << std::endl;
@@ -175,8 +175,8 @@ void verilog_typecheckt::module_instance(
 
   module_identifier+=suffix;
   
-  if(context.symbols.find(module_identifier)!=
-     context.symbols.end())
+  if(symbol_table.symbols.find(module_identifier)!=
+     symbol_table.symbols.end())
     return; // done already
     
   // create symbol
@@ -194,11 +194,11 @@ void verilog_typecheckt::module_instance(
   // throw away old stuff
   symbol.value.clear();
 
-  // put symbol in context
+  // put symbol in symbol_table
 
   symbolt *new_symbol;
 
-  if(context.move(symbol, new_symbol))
+  if(symbol_table.move(symbol, new_symbol))
   {
     err_location(location);
     str << "duplicate definition of module " 
@@ -208,7 +208,7 @@ void verilog_typecheckt::module_instance(
 
   // recursive call
 
-  verilog_typecheckt verilog_typecheck(*new_symbol, context, get_message_handler());
+  verilog_typecheckt verilog_typecheck(*new_symbol, symbol_table, get_message_handler());
 
   if(verilog_typecheck.typecheck_main())
     throw 0;

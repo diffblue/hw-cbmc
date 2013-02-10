@@ -148,19 +148,19 @@ Function: vhdl_languaget::typecheck
 \*******************************************************************/
 
 bool vhdl_languaget::typecheck(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const std::string &module,
   message_handlert &message_handler)
 {
   if(module=="") return false;
 
   #if 0
-  if(vhdl_typecheck(parse_tree, context, module, message_handler))
+  if(vhdl_typecheck(parse_tree, symbol_table, module, message_handler))
     return true;
     
   message_handler.print(9, "Synthesis");
 
-  if(vhdl_synthesis(context, module, message_handler, options))
+  if(vhdl_synthesis(symbol_table, module, message_handler, options))
     return true;
   #endif
 
@@ -180,7 +180,7 @@ Function: vhdl_languaget::interfaces
 \*******************************************************************/
 
 bool vhdl_languaget::interfaces(
-  contextt &context,
+  symbol_tablet &symbol_table,
   message_handlert &message_handler)
 {
   return false;

@@ -177,7 +177,7 @@ int interpolationt_word::check_initial_state()
 {
   status("Checking initial state");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt satcheck;
   boolbvt solver(ns, satcheck);
 
@@ -305,7 +305,7 @@ void interpolationt_word::build_variable_map(
       it!=symbols.end();
       it++)
   {
-    namespacet ns(context);
+    namespacet ns(symbol_table);
 
     exprt e0(*it);
     exprt e1(*it);    
@@ -394,7 +394,7 @@ int interpolationt_word::iteration()
     return 1;
   }
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(ns, interpolator);
   solver.equality_propagation=false;
@@ -540,7 +540,7 @@ bool interpolationt_word::reached_fixedpoint()
   if(new_interpolant.is_false()) return true;
 
   satcheckt solver;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   boolbvt prop_conv(ns, solver);
   build_variable_map(prop_conv);
     // "old" set of states
@@ -661,7 +661,7 @@ void interpolationt_word::get_interpolant(
       //      interpolant = do_word_interpolation.get_interpolant(1);
     }
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   simplify(interpolant, ns);
   /*  {
     
@@ -716,7 +716,7 @@ void interpolationt_word::build_partition1(
   prop_convt &solver)
 {
   status("build_partition1");
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   if(interpolants.empty())
   {
@@ -761,7 +761,7 @@ void interpolationt_word::build_partition2(
   prop_convt &solver)
 {
   status("build_partition2");
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   unsigned no_timeframes=bound+1;
 
   const exprt &op_invar=trans_expr->invar();
@@ -798,7 +798,7 @@ void interpolationt_word::build_property(
 
   status("build_property");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   unsigned no_timeframes=bound+1;
   unsigned start;
 
@@ -889,7 +889,7 @@ int interpolationt_word::induction_step()
 {
   status("Induction Step");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt satcheck;
   boolbvt solver(ns, satcheck);
   
@@ -1032,7 +1032,7 @@ void interpolationt_word::instantiate_with_if_lifting(prop_convt &solver,
 {
   exprt tmp(expr);
   
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   //  std::cout << "tmp is " << tmp.pretty() << std::endl;  
   rewrite_ift rewrite_if(tmp);
   rewrite_if();
@@ -1048,7 +1048,7 @@ literalt interpolationt_word::instantiate_convert_with_if_lifting(prop_convt &so
 {
   exprt tmp(expr);
   
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   
   rewrite_ift rewrite_if(tmp);
   rewrite_if();
@@ -1063,7 +1063,7 @@ bool interpolationt_word::check_partition_one_implies_interpolant(const exprt &t
 
   if(t.is_false()) return false;
   
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt solver;
   boolbvt boolbv(ns, solver);
   //  boolbv.equality_propagation=false;
@@ -1131,7 +1131,7 @@ bool interpolationt_word::check_partition_two_and_interpolant(const exprt &t)
 
   if(t.is_false()) return false;
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt solver;
   boolbvt boolbv(ns, solver);
   boolbv.equality_propagation=false;

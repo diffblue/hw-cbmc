@@ -166,7 +166,7 @@ int interpolation_coveraget::iteration()
   status("Iteration "+i2string(iteration_number)+
          ", bound="+i2string(bound));
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(ns, interpolator);
   solver.equality_propagation=false;
@@ -314,7 +314,7 @@ int interpolation_coveraget::induction_step()
 {
   status("Induction Step");
   
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort satcheck;
   boolbvt solver(ns, satcheck);
   
@@ -379,7 +379,7 @@ int interpolation_coveraget::induction_step()
 
 bool interpolation_coveraget::check_partition_one_implies_interpolant(const bit_interpolantt &current_inter)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(ns, interpolator);
  
@@ -417,7 +417,7 @@ bool interpolation_coveraget::check_partition_one_implies_interpolant(const bit_
 
 bool interpolation_coveraget::check_partition_two_and_interpolant(const bit_interpolantt &current_inter)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(ns, interpolator);
 
@@ -494,7 +494,7 @@ else {
 
 
   propt::resultt dec_result = solver.prop_solve();
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   
   switch(dec_result)
   {

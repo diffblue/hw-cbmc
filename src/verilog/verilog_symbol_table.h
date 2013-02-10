@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_CONTEXT_H
 #define CPROVER_VERILOG_CONTEXT_H
 
-#include <context.h>
+#include <symbol_table.h>
 
 /*******************************************************************\
 
-   Class: verilog_contextt
+   Class: verilog_symbol_tablet
 
   Inputs:
 
@@ -23,16 +23,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-class verilog_contextt
+class verilog_symbol_tablet
 {
 public:
-  verilog_contextt(contextt &_context):context(_context)
+  verilog_symbol_tablet(symbol_tablet &_symbol_table):symbol_table(_symbol_table)
   {
   }
 
 protected:
-  contextt &context;
-  symbolt &context_lookup(const irep_idt &identifier);
+  symbol_tablet &symbol_table;
+  symbolt &symbol_table_lookup(const irep_idt &identifier);
 };
 
 #endif

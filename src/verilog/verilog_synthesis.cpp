@@ -557,7 +557,7 @@ void verilog_synthesist::replace_by_wire(
     new_symbol.name=id2string(base.name)+"_"+i2string(c);
     new_symbol.base_name=id2string(base.base_name)+"_"+i2string(c);
   }
-  while(context.symbols.find(new_symbol.name)!=context.symbols.end());
+  while(symbol_table.symbols.find(new_symbol.name)!=symbol_table.symbols.end());
   
   new_symbol.type=what.type();
   new_symbol.module=base.module;
@@ -571,7 +571,7 @@ void verilog_synthesist::replace_by_wire(
   assignment.next.value=what;
   new_wires.insert(new_symbol.name);
   
-  if(context.move(new_symbol))
+  if(symbol_table.move(new_symbol))
     throw "failed to add replace_by_wire symbol";    
     
   what=symbol_expr;
@@ -774,10 +774,10 @@ symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
       const irep_idt &identifier=e->get(ID_identifier);
 
-      contextt::symbolst::iterator it=
-        context.symbols.find(identifier);
+      symbol_tablet::symbolst::iterator it=
+        symbol_table.symbols.find(identifier);
 
-      if(it==context.symbols.end())
+      if(it==symbol_table.symbols.end())
       {
         str << "assignment failed to find symbol `"
             << identifier
@@ -981,12 +981,12 @@ void verilog_synthesist::synth_inst(
 {
   const irep_idt &identifier=statement.get(ID_module);
 
-  // must be in context
+  // must be in symbol_table
   const symbolt &symbol=lookup(identifier);
   
   // make sure it's synthesized already
   verilog_synthesis(
-    context, identifier, get_message_handler(), options);
+    symbol_table, identifier, get_message_handler(), options);
 
   forall_operands(it, statement)
     expand_inst(symbol, *it, trans);
@@ -1191,7 +1191,7 @@ void verilog_synthesist::expand_inst(
 
   std::list<irep_idt> new_symbols;
 
-  forall_symbol_module_map(it, context.symbol_module_map, symbol.module)
+  forall_symbol_module_map(it, symbol_table.symbol_module_map, symbol.module)
   {
     const symbolt &symbol=lookup(it->second);
 
@@ -1219,7 +1219,7 @@ void verilog_synthesist::expand_inst(
 
       new_symbol.name=full_identifier;
 
-      if(context.add(new_symbol))
+      if(symbol_table.add(new_symbol))
       {
         str << "name collision during module instantiation: "
             << new_symbol.name << std::endl;
@@ -1244,7 +1244,7 @@ void verilog_synthesist::expand_inst(
       it!=new_symbols.end();
       it++)
   {
-    symbolt &symbol=context_lookup(*it);
+    symbolt &symbol=symbol_table_lookup(*it);
     replace_symbols(replace_map, symbol.value);
   }
 
@@ -1652,7 +1652,7 @@ void verilog_synthesist::synth_assert(
   }
 
   const irep_idt &identifier=statement.get(ID_identifier);
-  symbolt &symbol=context_lookup(identifier);
+  symbolt &symbol=symbol_table_lookup(identifier);
   
   synth_expr(symbol.value, S_CURRENT);
 }
@@ -1679,7 +1679,7 @@ void verilog_synthesist::synth_assert_module_item(
   }
 
   const irep_idt &identifier=module_item.get(ID_identifier);
-  symbolt &symbol=context_lookup(identifier);
+  symbolt &symbol=symbol_table_lookup(identifier);
   
   construct=C_OTHER;
 
@@ -2098,9 +2098,9 @@ void verilog_synthesist::synth_event_guard(
 
       irep_idt identifier="conf::clock_enable_mode";
 
-      // check context for clock guard
+      // check symbol_table for clock guard
 
-      if(context.symbols.find(identifier)!=context.symbols.end())
+      if(symbol_table.symbols.find(identifier)!=symbol_table.symbols.end())
       {
         // found! we make it a guard
 
@@ -2616,7 +2616,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
       it!=local_symbols.end();
       it++)
   {
-    symbolt &symbol=context_lookup(*it);
+    symbolt &symbol=symbol_table_lookup(*it);
     
     if(symbol.is_state_var && !symbol.is_macro)
     {
@@ -2656,7 +2656,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
       it!=new_wires.end();
       it++)
   {
-    symbolt &symbol=context_lookup(*it);
+    symbolt &symbol=symbol_table_lookup(*it);
     assignmentt &assignment=assignments[symbol.name];
 
     synth_assignments(symbol, CURRENT,
@@ -2853,7 +2853,7 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
 
   // find out about symbols of this module
 
-  forall_symbol_module_map(it, context.symbol_module_map, module)
+  forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
     local_symbols.insert(it->second);
 
   // do the module items
@@ -2912,7 +2912,7 @@ Function: verilog_synthesist::typecheck
 
 void verilog_synthesist::typecheck()
 {
-  symbolt &symbol=context_lookup(module);
+  symbolt &symbol=symbol_table_lookup(module);
   if(symbol.value.id()==ID_trans) return; // done already
   convert_module_items(symbol);
 }
@@ -2930,12 +2930,12 @@ Function: verilog_synthesis
 \*******************************************************************/
 
 bool verilog_synthesis(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const irep_idt &module,
   message_handlert &message_handler,
   const optionst &options)
 {
   verilog_synthesist verilog_synthesis(
-    context, module, options, message_handler);
+    symbol_table, module, options, message_handler);
   return verilog_synthesis.typecheck_main();
 }

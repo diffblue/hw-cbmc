@@ -113,9 +113,9 @@ void show_state(
   std::cout << "Transition system state " << timeframe << "\n";
   std::cout << "----------------------------------------------------\n";
 
-  const contextt &context=ns.get_context();
+  const symbol_tablet &symbol_table=ns.get_symbol_table();
   
-  forall_symbol_module_map(it, context.symbol_module_map, module)
+  forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
   {
     const symbolt &symbol=ns.lookup(it->second);
 

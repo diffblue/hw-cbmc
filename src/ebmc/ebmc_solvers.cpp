@@ -89,7 +89,7 @@ Function: ebmc_baset::do_dplib
 
 int ebmc_baset::do_dplib()
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   if(cmdline.isset("outfile"))
   {
@@ -126,7 +126,7 @@ Function: ebmc_baset::do_smt1
 
 int ebmc_baset::do_smt1()
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   if(cmdline.isset("outfile"))
   {
@@ -175,7 +175,7 @@ Function: ebmc_baset::do_smt2
 
 int ebmc_baset::do_smt2()
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   if(cmdline.isset("outfile"))
   {
@@ -224,7 +224,7 @@ Function: ebmc_baset::do_z3
 
 int ebmc_baset::do_z3()
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   smt1_dect smt1_dec(
     ns,
@@ -250,7 +250,7 @@ Function: ebmc_baset::do_cvc3
 
 int ebmc_baset::do_cvc3()
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   smt1_dect smt1_dec(
     ns,
@@ -276,7 +276,7 @@ Function: ebmc_baset::do_yices
 
 int ebmc_baset::do_yices()
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
   
   smt1_dect smt1_dec(
     ns,
@@ -302,7 +302,7 @@ Function: ebmc_baset::do_boolector
 
 int ebmc_baset::do_boolector()
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   smt1_dect smt1_dec(
     ns,
@@ -332,7 +332,7 @@ int ebmc_baset::do_sat()
 
   if(cmdline.isset("no-netlist"))
   {
-    const namespacet ns(context);
+    const namespacet ns(symbol_table);
     boolbvt boolbv(ns, satcheck);
     return do_ebmc(boolbv, false);
   }
@@ -355,7 +355,7 @@ Function: ebmc_baset::do_prover
 int ebmc_baset::do_prover()
 {
   #ifdef HAVE_PROVER
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
   prover_satt prover_sat(ns);
   return do_ebmc(prover_sat, false);
   #else
@@ -379,7 +379,7 @@ Function: ebmc_baset::do_lifter
 int ebmc_baset::do_lifter()
 {
   #ifdef HAVE_PROVER
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
   liftert lifter(ns);
   return do_ebmc(lifter.prop_conv(), false);
   #else

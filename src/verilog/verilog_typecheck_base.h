@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHEK_BASE_H
 #define CPROVER_VERILOG_TYPECHEK_BASE_H
 
-#include <context.h>
+#include <symbol_table.h>
 #include <typecheck.h>
 #include <mp_arith.h>
 #include <namespace_utils.h>

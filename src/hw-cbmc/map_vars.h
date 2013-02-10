@@ -11,11 +11,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
-#include <context.h>
+#include <symbol_table.h>
 #include <message.h>
 
 void map_vars(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const irep_idt &module,
   expr_listt &constraints,
   message_handlert &message,

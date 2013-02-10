@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <vector>
 #include <string>
 
-#include <context.h>
+#include <symbol_table.h>
 #include <solvers/prop/prop.h>
 
 #include "bv_varid.h"

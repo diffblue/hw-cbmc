@@ -16,9 +16,9 @@ class hw_bmct:public bmct
 public:
   hw_bmct(
     const optionst &_options,
-    const contextt &_context,
+    const symbol_tablet &_symbol_table,
     message_handlert &_message_handler):
-    bmct(_options, _context, _message_handler)
+    bmct(_options, _symbol_table, _message_handler)
   {
   }
 

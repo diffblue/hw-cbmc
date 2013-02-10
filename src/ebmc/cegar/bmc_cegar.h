@@ -17,13 +17,13 @@ class bmc_cegart
 {
 public:
   bmc_cegart(
-    contextt &_context,
+    symbol_tablet &_symbol_table,
     const irep_idt &_main_module,
     messaget &_message,
     const std::list<exprt> &_properties,
     bool _verbose):
-    context(_context),
-    ns(_context),
+    symbol_table(_symbol_table),
+    ns(_symbol_table),
     main_module(_main_module),
     message(_message),
     properties(_properties),
@@ -34,7 +34,7 @@ public:
   void bmc_cegar();
   
 protected:
-  contextt &context;
+  symbol_tablet &symbol_table;
   const namespacet ns;
   const irep_idt &main_module;
   messaget &message;

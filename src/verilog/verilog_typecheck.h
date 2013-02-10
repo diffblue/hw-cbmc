@@ -10,28 +10,28 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_VERILOG_TYPECHECK_H
 
 #include <hash_cont.h>
-#include <context.h>
+#include <symbol_table.h>
 #include <typecheck.h>
 #include <mp_arith.h>
 #include <replace_expr.h>
 
 #include "verilog_typecheck_expr.h"
 #include "verilog_parse_tree.h"
-#include "verilog_context.h"
+#include "verilog_symbol_table.h"
 
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
-  contextt &context,
+  symbol_tablet &symbol_table,
   const std::string &module,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const verilog_modulet &verilog_module,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const std::string &module_identifier,
   const exprt::operandst &parameters,
   message_handlert &message_handler);
@@ -50,16 +50,16 @@ bool verilog_typecheck(
 
 class verilog_typecheckt:
   public verilog_typecheck_exprt,
-  public verilog_contextt
+  public verilog_symbol_tablet
 {
 public:
   verilog_typecheckt(
     symbolt &_module_symbol,
-    contextt &_context,
+    symbol_tablet &_symbol_table,
     message_handlert &_message_handler):
     verilog_typecheck_exprt(ns, _message_handler),
-    verilog_contextt(_context),
-    ns(_context),
+    verilog_symbol_tablet(_symbol_table),
+    ns(_symbol_table),
     module_symbol(_module_symbol),
     assertion_counter(0)
   {}

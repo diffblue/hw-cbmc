@@ -185,7 +185,7 @@ int interpolationt_netlist_vmcai::forward_iteration()
   status("Iteration "+i2string(forward_iteration_number)+
          ", bound="+i2string(bound));
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(interpolator);
   solver.equality_propagation=false;
@@ -301,7 +301,7 @@ bool interpolationt_netlist_vmcai::reached_fixedpoint(
   }
 
   satcheckt solver;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   netlist_bmc_mapt netlist_bmc_map_check;
   netlist_bmc_map_check.map_timeframes(netlist, bound+1, solver);
 
@@ -549,7 +549,7 @@ void interpolationt_netlist_vmcai::build_forward_property(
 {
   status("interpolationt_netlist_vmcai::build_property");
 
-    //  namespacet ns(context);
+    //  namespacet ns(symbol_table);
   unsigned no_timeframes=bound+1;
 
   prop_bv.clear();
@@ -580,7 +580,7 @@ void interpolationt_netlist_vmcai::build_forward_property(
   bool interpolationt_netlist_vmcai::is_property()
   {
   satcheckt solver;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   boolbvt solverbv(solver);
  
   netlist_bmc_mapt netlist_bmc_map_init;
@@ -653,7 +653,7 @@ int interpolationt_netlist_vmcai::check_forward_reachable_states()
     return 0;
   }
   std::cout <<  "checking forward reachable states\n";
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt satcheck;
   boolbvt solver(satcheck);
   unsigned check_bound = 2;
@@ -717,7 +717,7 @@ int interpolationt_netlist_vmcai::Refine_Interpolant(
   bool forward)
 {
   std::vector<unsigned > *fault_locations = forward ? &forward_fault_locations : &backward_fault_locations; 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   status("SAT::Refine Interpolant");
   if(forward)
     forward_refinement = true;
@@ -900,7 +900,7 @@ int interpolationt_netlist_vmcai::backward_iteration()
   status("Iteration "+i2string(backward_iteration_number)+
          ", bound="+i2string(bound));
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   interpolatort interpolator;
   boolbvt solver(interpolator);
   solver.equality_propagation=false;
@@ -975,7 +975,7 @@ int interpolationt_netlist_vmcai::backward_iteration()
 
 int interpolationt_netlist_vmcai::check_backward_reachable_states()
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   satcheckt satcheck;
   boolbvt solver(satcheck);
   unsigned check_bound = 2;
@@ -1038,7 +1038,7 @@ void interpolationt_netlist_vmcai::build_backward_property(
 {
   status("build_property");
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   prop_bv.clear();
   
   bvt all_prop_bv;
@@ -1069,7 +1069,7 @@ void interpolationt_netlist_vmcai::build_backward_partition1(interpolatort &solv
   ::unwind(netlist, netlist_bmc_map, *this, solver, false, bound);
   ::unwind(netlist, netlist_bmc_map, *this, solver, false, bound-1);
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   bvt all_prop_bv;
   for(unsigned p_no=0; p_no<netlist.properties.size(); p_no++)
   {
@@ -1125,7 +1125,7 @@ void interpolationt_netlist_vmcai::check_if_interpolant_reach_intersect(
   aig_formulat &new_interpolant = interpolants->back();
 
   satcheckt solver;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   netlist_bmc_mapt netlist_bmc_map_check;
   netlist_bmc_map_check.map_timeframes(netlist, bound+1, solver);
 

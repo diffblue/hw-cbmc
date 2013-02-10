@@ -117,12 +117,12 @@ void compute_trans_trace(
 
   for(unsigned t=0; t<no_timeframes; t++)
   {
-    const contextt &context=ns.get_context();
+    const symbol_tablet &symbol_table=ns.get_symbol_table();
 
     assert(t<dest.states.size());
     trans_tracet::statet &state=dest.states[t];
     
-    forall_symbol_module_map(it, context.symbol_module_map, module)
+    forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
     {
       const symbolt &symbol=ns.lookup(it->second);
 

@@ -116,11 +116,11 @@ Function: smv_languaget::typecheck
 \*******************************************************************/
 
 bool smv_languaget::typecheck(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const std::string &module,
   message_handlert &message_handler)
 {
-  return smv_typecheck(smv_parse_tree, context, module, message_handler);
+  return smv_typecheck(smv_parse_tree, symbol_table, module, message_handler);
 }
 
 /*******************************************************************\

@@ -10,10 +10,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_TRANS_SHOW_MODULES_H
 
 #include <ui_message.h>
-#include <context.h>
+#include <symbol_table.h>
 
 void show_modules(
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   ui_message_handlert::uit ui);
 
 #endif

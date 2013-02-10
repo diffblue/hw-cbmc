@@ -69,7 +69,7 @@ Function: ebmc_baset::show_trace
 
 void ebmc_baset::show_trace(const trans_tracet &trans_trace)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   if(cmdline.isset("vcd"))
   {
@@ -125,7 +125,7 @@ int ebmc_baset::finish(prop_convt &solver)
     {
       result("SAT: bug found");
       
-      namespacet ns(context);
+      namespacet ns(symbol_table);
       trans_tracet trans_trace;
   
       compute_trans_trace(
@@ -189,7 +189,7 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
     {
       result("SAT: bug found");
       
-      namespacet ns(context);
+      namespacet ns(symbol_table);
       trans_tracet trans_trace;
 
       compute_trans_trace(
@@ -255,7 +255,7 @@ void ebmc_baset::unwind(
   unsigned _bound,
   bool initial_state)
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
   ::unwind(*trans_expr, *this, solver, _bound, ns, initial_state);
 }
 
@@ -281,7 +281,7 @@ void ebmc_baset::check_property(prop_convt &solver, bool convert_only)
 
   unwind(solver);
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   property(
     prop_expr_list,
@@ -336,7 +336,7 @@ Function: ebmc_baset::parse_property
 bool ebmc_baset::parse_property(
   const std::string &property)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   languagest languages(ns, 
     get_language_from_mode(main_symbol->mode));
@@ -388,10 +388,10 @@ bool ebmc_baset::get_model_properties()
 {
   forall_symbol_module_map(
     it,
-    context.symbol_module_map, 
+    symbol_table.symbol_module_map, 
     main_symbol->name)
   {
-    namespacet ns(context);
+    namespacet ns(symbol_table);
     const symbolt &symbol=ns.lookup(it->second);
 
     if(symbol.is_property)
@@ -506,7 +506,7 @@ bool ebmc_baset::get_main()
 
   try
   {
-    main_symbol=&get_module(context, module, get_message_handler());
+    main_symbol=&get_module(symbol_table, module, get_message_handler());
     trans_expr=&to_trans_expr(main_symbol->value);
   }
 
@@ -639,15 +639,6 @@ void ebmc_baset::report_success()
 
   switch(get_ui())
   {
-  case ui_message_handlert::OLD_GUI:
-    std::cout << "SUCCESS" << std::endl
-              << "Verification successful" << std::endl
-              << ""     << std::endl
-              << ""     << std::endl
-              << ""     << std::endl
-              << ""     << std::endl;
-    break;
-    
   case ui_message_handlert::PLAIN:
     break;
     
@@ -683,9 +674,6 @@ void ebmc_baset::report_failure()
 
   switch(get_ui())
   {
-  case ui_message_handlert::OLD_GUI:
-    break;
-    
   case ui_message_handlert::PLAIN:
     break;
     
@@ -742,7 +730,7 @@ int ebmc_baset::get_model()
 
   if(cmdline.isset("show-modules"))
   {
-    show_modules(context, get_ui());
+    show_modules(symbol_table, get_ui());
     return 0;
   }
 
@@ -893,7 +881,7 @@ void ebmc_baset::make_netlist(netlistt &netlist)
   try
   {
     convert_trans_to_netlist(
-      context, main_symbol->name, prop_expr_list, netlist, *this);
+      symbol_table, main_symbol->name, prop_expr_list, netlist, *this);
   }
   
   catch(const std::string &error_str)

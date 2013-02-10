@@ -11,10 +11,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
-#include <context.h>
+#include <symbol_table.h>
 
 void gen_interface(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const symbolt &module,
   bool have_bound,
   std::ostream &out,

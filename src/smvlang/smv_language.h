@@ -34,7 +34,7 @@ public:
     std::set<std::string> &module_set);
                  
   virtual bool typecheck(
-    contextt &context,
+    symbol_tablet &symbol_table,
     const std::string &module,
     message_handlert &message_handler);
   

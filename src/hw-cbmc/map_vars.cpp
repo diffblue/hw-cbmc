@@ -60,17 +60,17 @@ void instantiate_symbol(exprt &expr, unsigned timeframe)
 class map_varst:public message_streamt
 {
 public:
-  map_varst(contextt &_context, expr_listt &_constraints,
+  map_varst(symbol_tablet &_symbol_table, expr_listt &_constraints,
             message_handlert &_message, unsigned _no_timeframes):
     message_streamt(_message),
-    context(_context), constraints(_constraints),
+    symbol_table(_symbol_table), constraints(_constraints),
     no_timeframes(_no_timeframes)
   { }
 
   void map_vars(const irep_idt &module);
   
 protected:
-  contextt &context;
+  symbol_tablet &symbol_table;
   expr_listt &constraints;
   unsigned no_timeframes;
   std::set<irep_idt> top_level_inputs;
@@ -115,7 +115,7 @@ protected:
     mp_integer s;
     if(to_integer(size_expr, s))
     {
-      namespacet ns(context);
+      namespacet ns(symbol_table);
       str << "failed to convert array size `"
           << from_expr(ns, "", size_expr) << "'";
       error();
@@ -140,10 +140,10 @@ Function: map_varst::lookup
 
 symbolt &map_varst::lookup(const irep_idt &identifier)
 {
-  contextt::symbolst::iterator it=
-    context.symbols.find(identifier);
+  symbol_tablet::symbolst::iterator it=
+    symbol_table.symbols.find(identifier);
 
-  if(it==context.symbols.end())
+  if(it==symbol_table.symbols.end())
   {
     str << "failed to find identifier `" << identifier
         << "'";
@@ -239,7 +239,7 @@ bool map_varst::array_types_eq(
     return true;
   }
   
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   
   const typet &s1=ns.follow(type1.subtype());
   const typet &s2=ns.follow(type2.subtype());
@@ -275,7 +275,7 @@ bool map_varst::check_types_rec(
   const typet &type2,
   std::string &error_msg)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   if(type1.id()==ID_symbol)
     return check_types_rec(ns.follow(type1), type2, error_msg);
@@ -353,7 +353,7 @@ void map_varst::add_constraint_rec(
   const exprt &program_symbol,
   const exprt &module_symbol)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   const typet &t1=ns.follow(program_symbol.type());
   const typet &t2=ns.follow(module_symbol.type());
@@ -402,7 +402,7 @@ void map_varst::map_var(
   // rhs: symbol
   exprt e2=symbol_exprt(module_symbol.name, module_symbol.type);
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   ns.follow_macros(e2);
   instantiate_symbol(e2, transition);
   
@@ -423,7 +423,7 @@ Function: map_varst::add_array
 
 const symbolt &map_varst::add_array(symbolt &symbol)
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   const typet &full_type=ns.follow(symbol.type);
 
@@ -449,8 +449,8 @@ const symbolt &map_varst::add_array(symbolt &symbol)
   new_symbol.base_name=id2string(new_symbol.base_name)+"_array";
 
   symbolt *p;
-  if(context.move(new_symbol, p))
-    throw "context.move() failed";
+  if(symbol_table.move(new_symbol, p))
+    throw "symbol_table.move() failed";
     
   // change initialization
   exprt symbol_expr(ID_symbol, p->type);
@@ -520,7 +520,7 @@ void map_varst::map_var_rec(
   const exprt &expr,
   const symbolt::hierarchyt &hierarchy)
 {
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
   const typet &expr_type=ns.follow(expr.type());
   const struct_typet &struct_type=to_struct_type(expr_type);
   const struct_typet::componentst &components=struct_type.components();
@@ -546,7 +546,7 @@ void map_varst::map_var_rec(
     
     std::list<const symbolt *> symbols;
 
-    forall_symbol_module_map(s_it, context.symbol_module_map, main_module)
+    forall_symbol_module_map(s_it, symbol_table.symbol_module_map, main_module)
     {
       const symbolt &s=lookup(s_it->second);
       if(s.type.id()==ID_module) continue;
@@ -617,7 +617,7 @@ void map_varst::map_var(
 
   // check types
 
-  const namespacet ns(context);
+  const namespacet ns(symbol_table);
 
   const typet &type1=ns.follow(program_symbol.type());
   const typet &type2=ns.follow(module_symbol.type);
@@ -670,7 +670,7 @@ Function: map_varst::map_vars
 
  Outputs:
 
- Purpose: Looks through context for external ANSI-C symbols
+ Purpose: Looks through symbol_table for external ANSI-C symbols
           Calls map_var to find mapping to HDL
 
 \*******************************************************************/
@@ -688,14 +688,14 @@ void map_varst::map_vars(const irep_idt &module)
     timeframe_symbol.is_lvalue=true;
     timeframe_symbol.value=gen_zero(index_type());
 
-    context.move(timeframe_symbol);
+    symbol_table.move(timeframe_symbol);
   }
 
   const symbolt &module_symbol=lookup(module);
   
   irep_idt struct_symbol;
   
-  Forall_symbols(it, context.symbols)
+  Forall_symbols(it, symbol_table.symbols)
   {
     if(it->second.mode==ID_C ||
        it->second.mode==ID_cpp ||
@@ -739,7 +739,7 @@ void map_varst::map_vars(const irep_idt &module)
 
     exprt timeframe_expr=from_integer(0, index_type());
 
-    namespacet ns(context);
+    namespacet ns(symbol_table);
     exprt expr(ID_index, ns.follow(symbol_expr.type()).subtype());
     expr.move_to_operands(symbol_expr, timeframe_expr);
 
@@ -749,7 +749,7 @@ void map_varst::map_vars(const irep_idt &module)
     map_var_rec(module_symbol.name, expr, hierarchy);
   }
 
-  Forall_symbols(it, context.symbols)
+  Forall_symbols(it, symbol_table.symbols)
   {
     if(it->second.mode==ID_C ||
        it->second.mode==ID_cpp ||
@@ -760,13 +760,13 @@ void map_varst::map_vars(const irep_idt &module)
       if(base_name=="next_timeframe" &&
          it->second.type.id()==ID_code)
       {
-        namespacet ns(context);
+        namespacet ns(symbol_table);
         add_next_timeframe(it->second, struct_symbol, top_level_inputs, ns);
       }
       else if(base_name=="set_inputs" &&
               it->second.type.id()==ID_code)
       {
-        namespacet ns(context);
+        namespacet ns(symbol_table);
         add_set_inputs(it->second, struct_symbol, top_level_inputs, ns);
       }
     }
@@ -786,12 +786,12 @@ Function: map_vars
 \*******************************************************************/
 
 void map_vars(
-  contextt &context,
+  symbol_tablet &symbol_table,
   const irep_idt &module,
   expr_listt &constraints,
   message_handlert &message,
   unsigned no_timeframes)
 {
-  map_varst map_vars(context, constraints, message, no_timeframes);
+  map_varst map_vars(symbol_table, constraints, message, no_timeframes);
   map_vars.map_vars(module);
 }
