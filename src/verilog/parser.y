@@ -7,11 +7,11 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 \*******************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
-#include <expr_util.h>
+#include <util/expr_util.h>
 
 #include "verilog_parser.h"
 

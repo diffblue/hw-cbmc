@@ -6,10 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
 
-#include <i2string.h>
-#include <time_stopping.h>
+#include <util/i2string.h>
+#include <util/time_stopping.h>
 
 #include <trans/property.h>
 #include <trans/instantiate.h>

@@ -9,9 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_UNWIND_NETLIST_GRAPH_H
 #define CPROVER_TRANS_UNWIND_NETLIST_GRAPH_H
 
-#include <assert.h>
+#include <cassert>
 
-#include <message.h>
+#include <util/message.h>
+
 #include <solvers/sat/cnf.h>
 
 #include "netlist.h"

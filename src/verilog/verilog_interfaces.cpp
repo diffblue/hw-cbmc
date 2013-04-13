@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <set>
 
-#include <std_types.h>
+#include <util/std_types.h>
 
 #include "verilog_typecheck.h"
 #include "verilog_expr.h"

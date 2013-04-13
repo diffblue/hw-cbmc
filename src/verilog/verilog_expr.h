@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_EXPR_H
 #define CPROVER_VERILOG_EXPR_H
 
-#include <assert.h>
+#include <cassert>
 
-#include <expr.h>
+#include <util/expr.h>
 
 class hierarchical_identifier_exprt:public exprt
 {

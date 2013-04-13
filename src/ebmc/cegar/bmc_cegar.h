@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <std_expr.h>
-#include <message.h>
-#include <namespace.h>
+#include <util/std_expr.h>
+#include <util/message.h>
+#include <util/namespace.h>
 
 #include <trans/bmc_map.h>
 #include <trans/netlist.h>
