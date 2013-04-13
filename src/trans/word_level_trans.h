@@ -13,9 +13,9 @@ Purpose:
 #ifndef CPROVER_WORD_LEVEL_TRANS_H
 #define CPROVER_WORD_LEVEL_TRANS_H
 
-#include <hash_cont.h>
-#include <std_expr.h>
-#include <namespace.h>
+#include <util/hash_cont.h>
+#include <util/std_expr.h>
+#include <util/namespace.h>
 
 class word_level_transt
 {

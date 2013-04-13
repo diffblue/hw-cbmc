@@ -9,8 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 #include <set>
 
-#include <message_stream.h>
-#include <expr.h>
+#include <util/message_stream.h>
+#include <util/expr.h>
 
 class output_verilog_baset:public message_streamt
 {

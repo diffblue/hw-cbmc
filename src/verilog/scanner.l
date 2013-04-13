@@ -6,15 +6,16 @@
 static int isatty(int) { return 0; }
 #endif
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
+
+#include <util/expr.h>
 
 #define PARSER verilog_parser
 #define YYSTYPE unsigned
 
 #include "verilog_parser.h"
-#include "expr.h"
 #include "y.tab.h"
 
 int yyverilogerror(const char *error);

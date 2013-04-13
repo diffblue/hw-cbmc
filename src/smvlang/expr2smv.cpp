@@ -6,12 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <string.h>
+#include <cstring>
 
-#include <lispexpr.h>
-#include <lispirep.h>
-#include <i2string.h>
-#include <std_expr.h>
+#include <util/lispexpr.h>
+#include <util/lispirep.h>
+#include <util/i2string.h>
+#include <util/std_expr.h>
 
 #include "expr2smv.h"
 

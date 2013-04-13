@@ -1,5 +1,5 @@
 %{
-#include <i2string.h>
+#include <util/i2string.h>
 
 #include "smv_parser.h"
 #include "smv_typecheck.h"

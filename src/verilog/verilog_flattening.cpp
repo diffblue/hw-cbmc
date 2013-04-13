@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
 
-#include <std_expr.h>
+#include <util/std_expr.h>
 
 #include "expr2verilog.h"
 #include "verilog_flattening.h"

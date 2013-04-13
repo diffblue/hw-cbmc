@@ -6,13 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
-
+#include <cassert>
 #include <algorithm>
 
-#include <i2string.h>
-#include <arith_tools.h>
-#include <graph.h>
+#include <util/i2string.h>
+#include <util/arith_tools.h>
+#include <util/graph.h>
 
 #include "compute_ct.h"
 

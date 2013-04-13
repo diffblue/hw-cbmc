@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_VTYPE_H
 #define CPROVER_VERILOG_VTYPE_H
 
-#include <type.h>
+#include <util/type.h>
 
 class vtypet
 {

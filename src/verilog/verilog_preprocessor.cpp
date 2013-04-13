@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <fstream>
 
-#include <config.h>
+#include <util/config.h>
 
 #include "verilog_preprocessor.h"
 

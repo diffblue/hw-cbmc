@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_PROPERTY_H
 #define CPROVER_TRANS_PROPERTY_H
 
-#include <symbol_table.h>
-#include <message.h>
-#include <namespace.h>
+#include <util/symbol_table.h>
+#include <util/message.h>
+#include <util/namespace.h>
 
 #include <solvers/prop/prop.h>
 #include <solvers/prop/prop_conv.h>

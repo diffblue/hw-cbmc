@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <string>
 
-#include <expr.h>
+#include <util/expr.h>
 
 struct verilog_modulet
 {

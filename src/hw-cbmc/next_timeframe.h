@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <set>
 
-#include <namespace.h>
+#include <util/namespace.h>
 
 void add_next_timeframe(
   symbolt &symbol,

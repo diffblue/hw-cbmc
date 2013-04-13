@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <sstream>
 
-#include <suffix.h>
+#include <util/suffix.h>
 
 #include "vhdl_language.h"
 #include "vhdl_typecheck.h"

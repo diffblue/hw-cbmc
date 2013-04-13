@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <i2string.h>
+#include <util/i2string.h>
 
 #include "bv_varid.h"
 

@@ -9,8 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SMV_TYPECHECK_H
 #define CPROVER_SMV_TYPECHECK_H
 
-#include <symbol_table.h>
-#include <message.h>
+#include <util/symbol_table.h>
+#include <util/message.h>
 
 #include "smv_parse_tree.h"
 

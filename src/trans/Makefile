@@ -6,7 +6,7 @@ SRC = bmc_map.cpp counterexample.cpp unwind.cpp property.cpp get_trans.cpp \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util
+INCLUDES= -I $(CBMC)/src
 
 all: trans$(LIBEXT)
 

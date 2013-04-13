@@ -9,16 +9,15 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_SYNTHESIS_H
 #define CPROVER_VERILOG_SYNTHESIS_H
 
-#include <assert.h>
-
+#include <cassert>
 #include <map>
 #include <set>
 
-#include <hash_cont.h>
-#include <mp_arith.h>
-#include <string_hash.h>
-#include <options.h>
-#include <std_expr.h>
+#include <util/hash_cont.h>
+#include <util/mp_arith.h>
+#include <util/string_hash.h>
+#include <util/options.h>
+#include <util/std_expr.h>
 
 #include "verilog_typecheck_base.h"
 #include "verilog_symbol_table.h"

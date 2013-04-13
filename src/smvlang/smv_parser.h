@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SMV_PARSER_H
 #define CPROVER_SMV_PARSER_H
 
-#include <parser.h>
+#include <util/parser.h>
 
 #include "smv_parse_tree.h"
 

@@ -9,8 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_SHOW_MODULES_H
 #define CPROVER_TRANS_SHOW_MODULES_H
 
-#include <ui_message.h>
-#include <symbol_table.h>
+#include <util/ui_message.h>
+#include <util/symbol_table.h>
 
 void show_modules(
   const symbol_tablet &symbol_table,

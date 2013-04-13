@@ -3,10 +3,10 @@
 
 #include <list>
 
-#include <hash_cont.h>
-#include <irep.h>
-#include <string_hash.h>
-#include <preprocessor.h>
+#include <util/hash_cont.h>
+#include <util/irep.h>
+#include <util/string_hash.h>
+#include <util/preprocessor.h>
 
 class verilog_preprocessort:public preprocessort
 {

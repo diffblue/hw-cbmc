@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_CONTEXT_H
 #define CPROVER_VERILOG_CONTEXT_H
 
-#include <symbol_table.h>
+#include <util/symbol_table.h>
 
 /*******************************************************************\
 

@@ -6,11 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
 
-#include <namespace.h>
-#include <cout_message.h>
-#include <i2string.h>
+#include <util/namespace.h>
+#include <util/cout_message.h>
+#include <util/i2string.h>
 
 #include "instantiate.h"
 #include "property.h"

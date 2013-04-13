@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_CBMC_GEN_INTERFACE_H
 #define CPROVER_CBMC_GEN_INTERFACE_H
 
-#include <iostream>
+#include <ostream>
 
-#include <symbol_table.h>
+#include <util/symbol_table.h>
 
 void gen_interface(
   symbol_tablet &symbol_table,

@@ -6,18 +6,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <fstream>
 
-#include <i2string.h>
-#include <time_stopping.h>
-#include <get_module.h>
-#include <xml.h>
-#include <find_macros.h>
-#include <xml_irep.h>
-#include <config.h>
-#include <cmdline.h>
+#include <util/i2string.h>
+#include <util/time_stopping.h>
+#include <util/get_module.h>
+#include <util/xml.h>
+#include <util/find_macros.h>
+#include <util/xml_irep.h>
+#include <util/config.h>
+#include <util/cmdline.h>
 
 #include <solvers/flattening/boolbv.h>
 #include <trans/unwind.h>

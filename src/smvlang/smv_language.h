@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*! \defgroup gr_smvlang SMV front-end */
 
-#include <language.h>
+#include <util/language.h>
 
 #include "smv_parse_tree.h"
 

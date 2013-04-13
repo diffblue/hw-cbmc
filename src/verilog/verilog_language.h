@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_LANGUAGE_H
 #define CPROVER_VERILOG_LANGUAGE_H
 
-#include <options.h>
+#include <util/options.h>
+#include <util/language.h>
 
-#include "language.h"
 #include "verilog_parse_tree.h"
 
 class verilog_languaget:public languaget

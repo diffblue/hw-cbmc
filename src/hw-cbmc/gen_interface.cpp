@@ -9,10 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 #include <sstream>
 
-#include <i2string.h>
-#include <config.h>
-#include <arith_tools.h>
-#include <std_types.h>
+#include <util/i2string.h>
+#include <util/config.h>
+#include <util/arith_tools.h>
+#include <util/std_types.h>
 
 #include "gen_interface.h"
 

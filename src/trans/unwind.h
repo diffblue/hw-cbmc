@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_UNWIND_H
 #define CPROVER_TRANS_UNWIND_H
 
-#include <namespace.h>
-#include <message.h>
-#include <hash_cont.h>
-#include <decision_procedure.h>
-#include <std_expr.h>
+#include <util/namespace.h>
+#include <util/message.h>
+#include <util/hash_cont.h>
+#include <util/decision_procedure.h>
+#include <util/std_expr.h>
 
 // word-level
 

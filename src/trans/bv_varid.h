@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_BV_VARID_H
 #define CPROVER_TRANS_BV_VARID_H
 
-#include <irep.h>
+#include <util/irep.h>
 
 class bv_varidt
 {

@@ -6,17 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
-
+#include <cassert>
 #include <set>
 #include <algorithm>
 
-#include <expr_util.h>
-#include <location.h>
-#include <typecheck.h>
-#include <arith_tools.h>
-#include <i2string.h>
-#include <std_expr.h>
+#include <util/expr_util.h>
+#include <util/location.h>
+#include <util/typecheck.h>
+#include <util/arith_tools.h>
+#include <util/i2string.h>
+#include <util/std_expr.h>
 
 #include "smv_typecheck.h"
 #include "expr2smv.h"

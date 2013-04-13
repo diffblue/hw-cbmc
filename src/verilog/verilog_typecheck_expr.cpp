@@ -7,18 +7,17 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <ctype.h>
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <iostream>
 
-#include <arith_tools.h>
-#include <location.h>
-#include <expr_util.h>
-#include <simplify_expr.h>
-#include <namespace.h>
-#include <prefix.h>
-#include <i2string.h>
-#include <std_expr.h>
+#include <util/arith_tools.h>
+#include <util/location.h>
+#include <util/expr_util.h>
+#include <util/simplify_expr.h>
+#include <util/namespace.h>
+#include <util/prefix.h>
+#include <util/i2string.h>
+#include <util/std_expr.h>
 
 #include "expr2verilog.h"
 #include "verilog_expr.h"

@@ -9,17 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_FLATTENING_H
 #define CPROVER_VERILOG_FLATTENING_H
 
-/*
-#include <map>
-#include <set>
-
-#include <hash_cont.h>
-#include <mp_arith.h>
-#include <string_hash.h>
-#include <std_expr.h>
-*/
-
-#include <options.h>
+#include <util/options.h>
 
 #include "verilog_typecheck_base.h"
 #include "verilog_symbol_table.h"

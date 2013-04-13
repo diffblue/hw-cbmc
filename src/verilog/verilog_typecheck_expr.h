@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHEK_EXPR_H
 #define CPROVER_VERILOG_TYPECHEK_EXPR_H
 
-#include <assert.h>
+#include <cassert>
 
-#include <mp_arith.h>
-#include <namespace.h>
-#include <std_expr.h>
+#include <util/mp_arith.h>
+#include <util/namespace.h>
+#include <util/std_expr.h>
 
 #include "verilog_typecheck_base.h"
 

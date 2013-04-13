@@ -5,7 +5,8 @@
 #include <cstring>
 #include <iostream>
 
-#include "../util/dstring.h"
+#include <util/dstring.h>
+
 #include "vhdl_parser.h"
 
 #define PARSER vhdl_parser

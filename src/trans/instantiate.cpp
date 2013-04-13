@@ -6,12 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdlib.h>
-#include <assert.h>
+#include <cstdlib>
+#include <cassert>
 
-#include <expr_util.h>
-#include <std_expr.h>
-#include <i2string.h>
+#include <util/expr_util.h>
+#include <util/std_expr.h>
+#include <util/i2string.h>
 
 #include "instantiate.h"
 

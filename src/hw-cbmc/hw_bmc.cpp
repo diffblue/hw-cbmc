@@ -6,7 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <i2string.h>
 #include <cbmc/bv_cbmc.h>
 #include <trans/unwind.h>
 #include <trans/trans_trace.h>
@@ -35,9 +34,6 @@ void hw_bmct::do_unwind_module(
 
   status("Unwinding transition system "+id2string(symbol.name));
 
-  //unsigned prev_no_clauses=prop.no_clauses();
-  //unsigned prev_no_literals=prop.no_literals();
-
   ::unwind(
     to_trans_expr(symbol.value),
     *this,    // message
@@ -45,10 +41,6 @@ void hw_bmct::do_unwind_module(
     unwind_no_timeframes,
     ns,
     true);
-
-  //print(7, "Clauses: "+i2string(prop.no_clauses()-prev_no_clauses)+" "+
-  //         "Literals: "+i2string(prop.no_literals()-prev_no_literals)+
-  //         "\n");
 }
 
 /*******************************************************************\

@@ -6,18 +6,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
-
+#include <cassert>
 #include <map>
 #include <set>
 
-#include <arith_tools.h>
-#include <location.h>
-#include <expr_util.h>
-#include <simplify_expr.h>
-#include <replace_symbol.h>
-#include <i2string.h>
-#include <std_expr.h>
+#include <util/arith_tools.h>
+#include <util/location.h>
+#include <util/expr_util.h>
+#include <util/simplify_expr.h>
+#include <util/replace_symbol.h>
+#include <util/i2string.h>
+#include <util/std_expr.h>
 
 #include "expr2verilog.h"
 #include "verilog_typecheck.h"

@@ -6,10 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
 
-#include <config.h>
-#include <get_module.h>
+#include <util/config.h>
+#include <util/get_module.h>
 
 #include <goto-programs/show_claims.h>
 #include <goto-programs/set_claims.h>

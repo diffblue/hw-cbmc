@@ -6,19 +6,18 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <time.h>
-#include <assert.h>
-
+#include <ctime>
+#include <cassert>
 #include <string>
 
-#include <xml.h>
-#include <xml_expr.h>
-#include <i2string.h>
-#include <expr_util.h>
-#include <prefix.h>
-#include <arith_tools.h>
-#include <std_expr.h>
-#include <pointer_offset_size.h>
+#include <util/xml.h>
+#include <util/xml_expr.h>
+#include <util/i2string.h>
+#include <util/expr_util.h>
+#include <util/prefix.h>
+#include <util/arith_tools.h>
+#include <util/std_expr.h>
+#include <util/pointer_offset_size.h>
 
 #include <langapi/language_util.h>
 

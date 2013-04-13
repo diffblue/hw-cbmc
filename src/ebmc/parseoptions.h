@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef EBMC_PARSEOPTIONS_H
 #define EBMC_PARSEOPTIONS_H
 
-#include <parseoptions.h>
+#include <util/parseoptions.h>
 
 class ebmc_parseoptionst:public parseoptions_baset
 {

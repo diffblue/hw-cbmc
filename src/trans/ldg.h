@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <set>
 
-#include <graph.h>
+#include <util/graph.h>
 
 #include "netlist.h"
 

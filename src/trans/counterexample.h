@@ -9,8 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_BMC_COUNTEREXAMPLE_H
 #define CPROVER_BMC_COUTNEREXAMPLE_H
 
-#include <namespace.h>
-#include <message.h>
+#include <util/namespace.h>
+#include <util/message.h>
+
 #include <solvers/prop/prop.h>
 #include <langapi/language_ui.h>
 

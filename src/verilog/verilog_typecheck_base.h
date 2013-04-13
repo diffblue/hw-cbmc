@@ -9,10 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHEK_BASE_H
 #define CPROVER_VERILOG_TYPECHEK_BASE_H
 
-#include <symbol_table.h>
-#include <typecheck.h>
-#include <mp_arith.h>
-#include <namespace_utils.h>
+#include <util/symbol_table.h>
+#include <util/typecheck.h>
+#include <util/mp_arith.h>
+#include <util/namespace_utils.h>
 
 irep_idt verilog_module_symbol(const irep_idt &base_name);
 irep_idt verilog_module_name(const irep_idt &identifier);

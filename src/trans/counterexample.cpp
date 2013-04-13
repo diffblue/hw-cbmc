@@ -6,10 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
 
-#include <namespace.h>
-#include <threeval.h>
+#include <util/namespace.h>
+#include <util/threeval.h>
+
 #include <langapi/language_util.h>
 
 #include "instantiate.h"

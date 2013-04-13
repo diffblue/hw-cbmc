@@ -6,12 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <std_expr.h>
-#include <std_code.h>
-#include <namespace.h>
-#include <symbol.h>
-#include <expr_util.h>
-#include <arith_tools.h>
+#include <util/std_expr.h>
+#include <util/std_code.h>
+#include <util/namespace.h>
+#include <util/symbol.h>
+#include <util/expr_util.h>
+#include <util/arith_tools.h>
 
 #include <ansi-c/c_types.h>
 

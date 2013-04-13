@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VHDL_EXPR2VHDL_H
 #define CPROVER_VHDL_EXPR2VHDL_H
 
-#include <expr.h>
+#include <util/expr.h>
 
 class expr2vhdlt
 {

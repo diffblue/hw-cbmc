@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <iostream>
 
-#include <cout_message.h>
+#include <util/cout_message.h>
 
 #include "verilog_parser.h"
 

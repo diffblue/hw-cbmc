@@ -6,13 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
 
-#include <arith_tools.h>
-#include <location.h>
-#include <expr_util.h>
-#include <prefix.h>
-#include <std_types.h>
+#include <util/arith_tools.h>
+#include <util/location.h>
+#include <util/expr_util.h>
+#include <util/prefix.h>
+#include <util/std_types.h>
 
 #include "expr2verilog.h"
 #include "verilog_typecheck_base.h"

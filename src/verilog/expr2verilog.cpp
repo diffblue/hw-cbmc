@@ -6,15 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <sstream>
 
-#include <lispexpr.h>
-#include <lispirep.h>
-#include <i2string.h>
-#include <arith_tools.h>
-#include <std_expr.h>
+#include <util/lispexpr.h>
+#include <util/lispirep.h>
+#include <util/i2string.h>
+#include <util/arith_tools.h>
+#include <util/std_expr.h>
 
 #include "expr2verilog.h"
 #include "expr2verilog_class.h"

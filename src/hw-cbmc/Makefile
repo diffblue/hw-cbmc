@@ -28,7 +28,7 @@ OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util -I ..
+INCLUDES= -I $(CBMC)/src -I ..
 
 LIBS =
 

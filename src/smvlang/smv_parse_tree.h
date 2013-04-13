@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SMV_PARSE_TREE_H
 #define CPROVER_SMV_PARSE_TREE_H
 
-#include <hash_cont.h>
-#include <string_hash.h>
-#include <expr.h>
+#include <util/hash_cont.h>
+#include <util/string_hash.h>
+#include <util/expr.h>
 
 class smv_parse_treet
 {

@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <fstream>
 
-#include <hash_cont.h>
+#include <util/hash_cont.h>
 
 #include "show_trans.h"
 #include "ebmc_base.h"

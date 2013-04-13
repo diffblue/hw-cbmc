@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <arith_tools.h>
-#include <simplify_expr.h>
-#include <replace_symbol.h>
+#include <util/arith_tools.h>
+#include <util/simplify_expr.h>
+#include <util/replace_symbol.h>
 
 #include "verilog_typecheck.h"
 

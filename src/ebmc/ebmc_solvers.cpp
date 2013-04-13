@@ -8,8 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <fstream>
 
-#include <i2string.h>
-#include <cmdline.h>
+#include <util/i2string.h>
+#include <util/cmdline.h>
 
 #include <trans/compute_ct.h>
 

@@ -17,7 +17,7 @@ OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
 
 include ../config.inc
 
-INCLUDES= -I .. -I $(CBMC)/src -I $(CBMC)/src/util
+INCLUDES= -I .. -I $(CBMC)/src
 
 LIBS =
 

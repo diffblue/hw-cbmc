@@ -11,8 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <string>
 
-#include <parser.h>
-#include <mp_arith.h>
+#include <util/parser.h>
+#include <util/mp_arith.h>
+
 #include "vhdl_parse_tree.h"
 
 int yyvhdlparse();

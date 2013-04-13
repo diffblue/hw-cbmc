@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include "expr.h"
+#include <util/expr.h>
 
 std::string expr2vhdl(const exprt &expr);
 std::string type2vhdl(const typet &type);

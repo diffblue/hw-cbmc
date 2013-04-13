@@ -12,9 +12,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <list>
 #include <set>
 
-#include <hash_cont.h>
-#include <string_hash.h>
-#include <expr.h>
+#include <util/hash_cont.h>
+#include <util/string_hash.h>
+#include <util/expr.h>
 
 //#include "vhdl_module.h"
 

@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <xml.h>
-#include <i2string.h>
-#include <xml_irep.h>
+#include <util/xml.h>
+#include <util/i2string.h>
+#include <util/xml_irep.h>
 
 #include "ebmc_base.h"
 

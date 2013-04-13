@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VHDL_LANGUAGE_H
 #define CPROVER_VHDL_LANGUAGE_H
 
-#include <options.h>
+#include <util/options.h>
+#include <util/language.h>
 
-#include "language.h"
 #include "vhdl_parse_tree.h"
 
 class vhdl_languaget:public languaget

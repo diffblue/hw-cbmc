@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <symbol.h>
+#include <util/symbol.h>
 
 #include "get_trans.h"
 

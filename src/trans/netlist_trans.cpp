@@ -6,10 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <namespace.h>
-#include <arith_tools.h>
-#include <std_expr.h>
-#include <i2string.h>
+#include <util/namespace.h>
+#include <util/arith_tools.h>
+#include <util/std_expr.h>
+#include <util/i2string.h>
 
 #include <solvers/prop/aig_prop.h>
 #include <solvers/flattening/boolbv_width.h>

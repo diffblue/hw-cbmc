@@ -8,9 +8,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cstdlib>
 
-#include <i2string.h>
-#include <arith_tools.h>
-#include <simplify_expr.h>
+#include <util/i2string.h>
+#include <util/arith_tools.h>
+#include <util/simplify_expr.h>
 
 #include <verilog/verilog_language.h>
 #include <verilog/verilog_typecheck.h>

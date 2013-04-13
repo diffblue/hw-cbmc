@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_EXPR2VERILOG_H
 #define CPROVER_VERILOG_EXPR2VERILOG_H
 
-#include <expr.h>
+#include <util/expr.h>
 
 class expr2verilogt
 {

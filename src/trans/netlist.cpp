@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ctype.h>
 
-#include <i2string.h>
+#include <util/i2string.h>
 
 #include <solvers/flattening/boolbv_width.h>
 

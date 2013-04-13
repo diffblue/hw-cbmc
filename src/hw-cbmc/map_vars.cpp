@@ -6,15 +6,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <expr_util.h>
-#include <i2string.h>
-#include <arith_tools.h>
-#include <namespace.h>
-#include <config.h>
-#include <base_type.h>
-#include <std_expr.h>
-#include <std_code.h>
-#include <message_stream.h>
+#include <util/expr_util.h>
+#include <util/i2string.h>
+#include <util/arith_tools.h>
+#include <util/namespace.h>
+#include <util/config.h>
+#include <util/base_type.h>
+#include <util/std_expr.h>
+#include <util/std_code.h>
+#include <util/message_stream.h>
 
 #include <langapi/language_util.h>
 #include <ansi-c/c_types.h>

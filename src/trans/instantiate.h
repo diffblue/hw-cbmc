@@ -9,10 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_BMC_INSTANTIATE_H
 #define CPROVER_BMC_INSTANTIATE_H
 
-#include <hash_cont.h>
-#include <expr.h>
-#include <namespace.h>
-#include <message.h>
+#include <util/hash_cont.h>
+#include <util/expr.h>
+#include <util/namespace.h>
+#include <util/message.h>
 
 #include <solvers/flattening/boolbv.h>
 

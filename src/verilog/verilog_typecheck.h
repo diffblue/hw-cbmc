@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHECK_H
 #define CPROVER_VERILOG_TYPECHECK_H
 
-#include <hash_cont.h>
-#include <symbol_table.h>
-#include <typecheck.h>
-#include <mp_arith.h>
-#include <replace_expr.h>
+#include <util/hash_cont.h>
+#include <util/symbol_table.h>
+#include <util/typecheck.h>
+#include <util/mp_arith.h>
+#include <util/replace_expr.h>
 
 #include "verilog_typecheck_expr.h"
 #include "verilog_parse_tree.h"

@@ -4,7 +4,7 @@
 static int isatty(int) { return 0; }
 #endif
 
-#include "../util/dstring.h"
+#include <util/dstring.h>
 
 #define PARSER vhdl_parser
 #define YYSTYPE unsigned

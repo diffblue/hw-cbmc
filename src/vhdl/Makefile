@@ -3,7 +3,7 @@ SRC = vhdl_language.cpp expr2vhdl.cpp y.tab.cpp lex.yy.cpp \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util
+INCLUDES= -I $(CBMC)/src
 
 all: vhdl$(LIBEXT)
 

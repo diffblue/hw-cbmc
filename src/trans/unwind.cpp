@@ -6,10 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <namespace.h>
-#include <i2string.h>
-#include <find_symbols.h>
-#include <expr_util.h>
+#include <util/namespace.h>
+#include <util/i2string.h>
+#include <util/find_symbols.h>
+#include <util/expr_util.h>
 
 #include "instantiate.h"
 #include "unwind.h"

@@ -9,10 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_NETLIST_TRANS_H
 #define CPROVER_TRANS_NETLIST_TRANS_H
 
-#include <namespace.h>
-#include <message.h>
-#include <symbol_table.h>
-#include <std_expr.h>
+#include <util/namespace.h>
+#include <util/message.h>
+#include <util/symbol_table.h>
+#include <util/std_expr.h>
 
 void convert_trans_to_netlist(
   symbol_tablet &symbol_table,

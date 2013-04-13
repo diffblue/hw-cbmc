@@ -8,7 +8,7 @@ SRC = verilog_language.cpp y.tab.cpp lex.yy.cpp verilog_parser.cpp \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util
+INCLUDES= -I $(CBMC)/src
 
 all: verilog$(LIBEXT)
 

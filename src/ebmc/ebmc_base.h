@@ -9,8 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_EBMC_EBMC_BASE_H
 #define CPROVER_EBMC_EBMC_BASE_H
 
-#include <ui_message.h>
-#include <std_expr.h>
+#include <util/ui_message.h>
+#include <util/std_expr.h>
 
 #include <langapi/language_ui.h>
 #include <trans/netlist.h>
