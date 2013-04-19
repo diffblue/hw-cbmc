@@ -1151,10 +1151,12 @@ list_of_param_assign:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-param_assign: param_identifier '=' const_expression
-		{ init($$, ID_parameter);
-		  addswap($$, ID_identifier, $1);
-		  addswap($$, ID_value, $3); }
+param_assign: signing_opt packed_dimension_brace param_identifier '=' const_expression
+		{ // $1 and $2 implement Verilog 2000 sized parameters,
+		  // which can be ignored
+		  init($$, ID_parameter);
+		  addswap($$, ID_identifier, $3);
+		  addswap($$, ID_value, $5); }
         ;
 
 param_identifier: TOK_CHARSTR;
