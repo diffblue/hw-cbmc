@@ -7,9 +7,11 @@ Author: Himanshu Jain, hjain@cs.cmu.edu
 
 \*******************************************************************/
 
-#include <i2string.h>
+#include <util/i2string.h>
+#include <util/simplify_expr.h>
+#include <util/namespace.h>
+
 #include <verilog/expr2verilog.h>
-#include <simplify_expr.h>
 
 #include "instantiate_guards.h"
 #include "canonicalize.h"
@@ -43,8 +45,6 @@ void instantiate_predicate(
    {
      preds_used_to_simplify.insert(nr);
 
-
-
      if(abstract_state.predicate_values[nr] == 0) {
       expr.make_false();
 
@@ -62,7 +62,6 @@ void instantiate_predicate(
   }
 }
 
-
 void instantiate_guards_simplify(
   const predicatest &predicates,
   const abstract_statet &abstract_state,
@@ -72,6 +71,9 @@ void instantiate_guards_simplify(
   if (expr.type().id() != "bool" && !(expr.has_operands())) 
     return;
 
+  symbol_tablet symbol_table;
+  const namespacet ns(symbol_table);
+  
   if (expr.has_operands()) {
     if (expr.id()  == "if")
       {
@@ -79,7 +81,8 @@ void instantiate_guards_simplify(
 	//not sure if while loop is needed or not
 
 	instantiate_guards_simplify(predicates, abstract_state, expr.op0(), preds_used_to_simplify);
-	simplify (expr.op0());
+	
+	simplify(expr.op0(), ns);
 	    
 
 	//pick the appropriate branch depending on the condition
@@ -107,7 +110,7 @@ void instantiate_guards_simplify(
       }
   }
   
-  simplify(expr);
+  simplify(expr, ns);
  
   if (!expr.is_constant())
     if (expr.type().id() == "bool")

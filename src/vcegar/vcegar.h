@@ -6,6 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cmdline.h>
+#include <util/cmdline.h>
 
 int do_vcegar(const cmdlinet &cmdline);

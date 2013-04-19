@@ -10,10 +10,11 @@ Date: April 2004
 
 #include <map>
 #include <vector>
-#include <i2string.h>
-#include <namespace.h>
 
-#include <find_symbols.h>
+#include <util/i2string.h>
+#include <util/namespace.h>
+#include <util/find_symbols.h>
+
 #include <verilog/expr2verilog.h>
 #include <solvers/flattening/boolbv.h>
 #include <satqe/satqe_satcheck.h>
@@ -458,7 +459,6 @@ void abstractort::calc_abstract_trans_rel(
   std::vector<exprt> initial_predicates, final_predicates;
   std::vector<unsigned> input, output;
 
-
   for(unsigned i=0; i<cluster.size(); i++) //No test is made to test if the value
   {                                        //of a predicate does not change.    
     predicatest::statet state;
@@ -499,10 +499,10 @@ void abstractort::calc_abstract_trans_rel(
   // We will create a new SAT solver object.
 
   satqe_satcheckt satqe_satcheck;
-  satqe_satcheck.set_message_handler(message_handler);
+  satqe_satcheck.set_message_handler(get_message_handler());
    
-  boolbvt boolbv(satqe_satcheck);
-  boolbv.set_message_handler(message_handler);
+  boolbvt boolbv(ns, satqe_satcheck);
+  boolbv.set_message_handler(get_message_handler());
   
   exprt instantiated_trans(trans.trans());
   instantiate(instantiated_trans, 0, ns);
@@ -647,10 +647,10 @@ void abstractort::calc_abstract_initial_states(
   // We will create a new SAT solver object.
   
   satqe_satcheckt satqe_satcheck;
-  boolbvt boolbv(satqe_satcheck);
+  boolbvt boolbv(ns, satqe_satcheck);
 
-  boolbv.set_message_handler(message_handler);
-  satqe_satcheck.set_message_handler(message_handler);
+  boolbv.set_message_handler(get_message_handler());
+  satqe_satcheck.set_message_handler(get_message_handler());
 
   cube_sett initial;
   satqe_satcheck.set_cube_set(initial);

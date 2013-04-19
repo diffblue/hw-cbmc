@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <parseoptions.h>
+#include <util/parseoptions.h>
 
 class vcegar_parseoptionst:public parseoptions_baset
 {

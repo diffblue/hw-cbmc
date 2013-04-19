@@ -9,7 +9,7 @@ Author: Himanshu Jain
 #ifndef CPROVER_VCEGAR_SPEC
 #define CPROVER_VCEGAR_SPEC
 
-#include <expr.h>
+#include <util/expr.h>
 
 class specificationt
 {

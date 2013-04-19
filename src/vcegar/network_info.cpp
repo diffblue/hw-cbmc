@@ -6,17 +6,17 @@ Author: Himanshu Jain
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
 
-#include <cout_message.h>
+#include <util/cout_message.h>
+#include <util/simplify_expr.h>
+
 #include <verilog/expr2verilog.h>
-#include <simplify_expr.h>
 
 #include "network_info.h"
 #include "instantiate_guards.h"
 
 //#define DEBUG
-
 
 /*******************************************************************\
 
@@ -80,12 +80,13 @@ Function: lookup
 \*******************************************************************/
 
 bool network_infot::lookup(
-  const std::vector<std::set<std::string> > &vector_symbolsets,
-  const std::string &name,
+  const std::vector<std::set<irep_idt> > &vector_symbolsets,
+  const irep_idt &name,
   unsigned& nr) const
 {
-  for (unsigned i=0; i<vector_symbolsets.size(); i++) {
-    std::set<std::string>::const_iterator it = 
+  for (unsigned i=0; i<vector_symbolsets.size(); i++)
+  {
+    std::set<irep_idt>::const_iterator it = 
       vector_symbolsets[i].find(name);
     
     if (it != vector_symbolsets[i].end()) {
@@ -114,7 +115,7 @@ Function: create_network
 
 void network_infot::create_network (
   const exprt& general_constrains,
-  std::vector<std::set<std::string> > &vector_symbolsets,
+  std::vector<std::set<irep_idt> > &vector_symbolsets,
   std::vector<std::set<exprt> > &vector_exprsets,
   const var_mapt &var_map)
 {
@@ -132,22 +133,22 @@ void network_infot::create_network (
       unsigned pos0;
       unsigned pos1;
 
-      std::string id0 = "", id1 = "";
+      irep_idt id0 = "", id1 = "";
 
       bool is_symbol0=false, is_symbol1=false;
       int var_type0=-1, var_type1=-1;
       
-      if ((general_constrains.operands()[0]).id()=="symbol") {
-
-
-	id0= (general_constrains.operands()[0]).get("identifier").as_string();
+      if ((general_constrains.operands()[0]).id()==ID_symbol)
+      {
+	id0=(general_constrains.operands()[0]).get(ID_identifier);
 
 	var_type0 = get_type_integer(var_map, id0);
 	is_symbol0 = true;
       }
 	
-      if ((general_constrains.operands()[1]).id()=="symbol") {
-	id1= (general_constrains.operands()[1]).get("identifier").as_string();
+      if ((general_constrains.operands()[1]).id()==ID_symbol)
+      {
+	id1= (general_constrains.operands()[1]).get(ID_identifier);
 
 	var_type1 = get_type_integer(var_map, id1);
 	is_symbol1 = true;
@@ -156,9 +157,11 @@ void network_infot::create_network (
       assert(is_symbol0 || is_symbol1);
       assert(!(var_type0 ==4 || var_type1==4));
 
-      if (!lookup(vector_symbolsets, id0, pos0)) {
-	if (!lookup(vector_symbolsets, id1, pos1)) {
-	  std::set<std::string> new_set;
+      if (!lookup(vector_symbolsets, id0, pos0))
+      {
+	if (!lookup(vector_symbolsets, id1, pos1))
+	{
+	  std::set<irep_idt> new_set;
 
 	  if (is_symbol0)
 	    new_set.insert(id0);
@@ -242,11 +245,13 @@ Function: print_network
 
 \*******************************************************************/
 
-void network_infot::print_network (const std::vector<std::set<std::string> > &vector_symbolsets,
-				   const std::vector<std::set<exprt> > &vector_exprsets,
-				   const var_mapt &var_map) 
+void network_infot::print_network(
+  const std::vector<std::set<irep_idt> > &vector_symbolsets,
+  const std::vector<std::set<exprt> > &vector_exprsets,
+  const var_mapt &var_map) 
 {
-  for (unsigned i=0;i<vector_symbolsets.size();i++) {
+  for (unsigned i=0; i<vector_symbolsets.size(); i++)
+  {
     std::cout <<"Symbol set ["<< i<<"]\n";
     print_symbolset(vector_symbolsets[i], var_map);
     print_exprset(vector_exprsets[i]);
@@ -267,10 +272,15 @@ Function: print_symbolset
 
 \*******************************************************************/
 
-void network_infot::print_symbolset (const std::set<std::string>  &symbolset,
-		      const var_mapt &var_map) {
-  for (std::set<std::string>::const_iterator it = symbolset.begin();
-       it != symbolset.end(); it++) {
+void network_infot::print_symbolset(
+  const std::set<irep_idt> &symbolset,
+  const var_mapt &var_map)
+{
+  for(std::set<irep_idt>::const_iterator
+      it = symbolset.begin();
+      it != symbolset.end();
+      it++)
+  {
     var_mapt::vart::vartypet var_type = var_map.get_type(*it);
 
     std::cout <<*it <<"  ";
@@ -319,22 +329,16 @@ void network_infot::print_exprset (const std::set<exprt>  &exprset) {
   unsigned count = 0;
 
   for (std::set<exprt>::const_iterator it = exprset.begin();
-       it != exprset.end(); it++) {
-    std::string code="";
-    //expr2verilog(*it,code);
-    code = expr2verilog(*it);
-
-    std::cout <<" ["<<count<<"] "<<code <<"\n";
+       it != exprset.end(); it++)
+  {
+    std::string code=expr2verilog(*it);
+    std::cout << " [" << count << "] " << code << "\n";
     count ++;
   }
   
-
   if (exprset.size() > 1) 
     std::cout << "WARNING: Network has multiple definitions: \n";
-
 }
-
-
 
 /*******************************************************************\
 
@@ -348,14 +352,14 @@ Function: replace_outputs
  in terms of latches and other expressions if any.
 \*******************************************************************/
 
-void network_infot::replace_outputs 
-(exprt& property,
- const std::vector<std::set<std::string> > &vector_symbolsets,
- const std::vector<std::set<exprt> > &vector_exprsets,
- const var_mapt &var_map) const
+void network_infot::replace_outputs(
+  exprt &property,
+  const std::vector<std::set<irep_idt> > &vector_symbolsets,
+  const std::vector<std::set<exprt> > &vector_exprsets,
+  const var_mapt &var_map) const
 {
   #ifdef DEBUG
-  std::cout <<"property is "<<property<<"\n";
+  std::cout << "property is " << property << "\n";
   #endif
 
   if(property.has_operands())
@@ -363,10 +367,9 @@ void network_infot::replace_outputs
       replace_outputs(*it, vector_symbolsets, vector_exprsets, var_map);
   
 
-  if(property.id()=="symbol")
-    {
-
-      std::string module_variable = property.get("identifier").as_string();
+  if(property.id()==ID_symbol)
+  {
+      irep_idt module_variable = property.get(ID_identifier);
 
 
       var_mapt::vart::vartypet var_type = var_map.get_type(module_variable);
@@ -430,12 +433,12 @@ Function: build_next_state_function_cache
           replace outputs on the stored function. 
 \*******************************************************************/
 
-void network_infot::build_next_state_function_cache
-(const exprt &trans_rel, 
- const std::vector<std::set<std::string> > &vector_symbolsets,
- const std::vector<std::set<exprt> > &vector_exprsets,
- const var_mapt &var_map,
- next_state_function_cachet &next_state_function_cache)
+void network_infot::build_next_state_function_cache(
+  const exprt &trans_rel, 
+  const std::vector<std::set<irep_idt> > &vector_symbolsets,
+  const std::vector<std::set<exprt> > &vector_exprsets,
+  const var_mapt &var_map,
+  next_state_function_cachet &next_state_function_cache)
 {
   
   if (!trans_rel.has_operands()) return;
@@ -459,10 +462,10 @@ void network_infot::build_next_state_function_cache
 			var_map);
 	
 
-	next_state_function_cache.insert(std::pair<std::string, exprt>
-					 (t1.get("identifier").as_string(), def));
+	next_state_function_cache.insert(std::pair<irep_idt, exprt>
+					 (t1.get(ID_identifier), def));
 	
-	  return;
+        return;
       }   
     }
   
@@ -563,21 +566,18 @@ void network_infot::weakest_precondition_recur (exprt& property) const
     Forall_operands(it, property)
       weakest_precondition_recur(*it);
   
-  if(property.id()=="next_symbol")
+  if(property.id()==ID_next_symbol)
     {
-
-      const std::string &next_state_variable = property.get("identifier").as_string();
-
+      const irep_idt &next_state_variable=property.get(ID_identifier);
 
       next_state_function_cachet::const_iterator pair = 
 	next_state_function_cache.find(next_state_variable);
-      
       
       if (pair != next_state_function_cache.end()) {
 	property = pair->second;
       }
       else {
-	property.id("symbol"); 
+	property.id(ID_symbol); 
       }
     }
 }
@@ -594,7 +594,6 @@ Function: weakest_precondition
           into account.
 
 \*******************************************************************/
-
 
 void network_infot::weakest_precondition (exprt& property) const
 {
@@ -638,8 +637,9 @@ Function: weakest_precondition_recur
 
 void network_infot::weakest_precondition_recur (exprt& property, const next_state_function_cachet &ns_cache) const
 {
-  if (property.id() == "with") {
-    std::cout <<"Giving up accuracy here ! \n";
+  if (property.id() == ID_with)
+  {
+    std::cout << "Giving up accuracy here!\n";
     return;
   }
 
@@ -647,10 +647,10 @@ void network_infot::weakest_precondition_recur (exprt& property, const next_stat
     Forall_operands(it, property)
       weakest_precondition_recur(*it, ns_cache);
    
-  if(property.id()=="next_symbol")
+  if(property.id()==ID_next_symbol)
     {
 
-      const std::string &next_state_variable = property.get("identifier").as_string();
+      const irep_idt &next_state_variable=property.get(ID_identifier);
 
       next_state_function_cachet::const_iterator pair = 
 	ns_cache.find(next_state_variable);
@@ -661,11 +661,11 @@ void network_infot::weakest_precondition_recur (exprt& property, const next_stat
       }
       else {
 	#ifdef DEBUG
-	const std::string &next_state_variable = property.get("identifier");
+	const irep_idt &next_state_variable = property.get(ID_identifier);
 	
 	std::cout <<"Identifier "<<next_state_variable<<" has no next state function\n";
 	#endif
-	property.id("symbol");
+	property.id(ID_symbol);
       }
     }
 }
@@ -684,17 +684,15 @@ simplify them.
 \*******************************************************************/
 
 void network_infot::simplified_weakest_precondition(
-  exprt  &property, 
+  exprt &property, 
   const abstract_statet &abstract_state, 
   const predicatest &predicates,
   std::set<unsigned> &preds_used_to_simplify,
   bool &containsInput) const
 {
-
   next_state_function_cachet simplified_ns_funcs;
 
   rename (property);
-
 
   weakest_precondition_recur_demand(
     abstract_state, predicates,
@@ -702,13 +700,12 @@ void network_infot::simplified_weakest_precondition(
     preds_used_to_simplify,
     containsInput); 
 
-
-  simplify(property);
-
+  const symbol_tablet symbol_table;
+  const namespacet ns(symbol_table);
+  simplify(property, ns);
 
   instantiate_guards_simplify(predicates, abstract_state, 
 			      property, preds_used_to_simplify);
-
 
   #ifdef DEBUG
   std::cout <<"The size of simplified cache is "<<simplified_ns_funcs.size()<<"\n";
@@ -736,12 +733,13 @@ Date : Dec 24, 2004
 \*******************************************************************/
 
 
-void network_infot::weakest_precondition_recur_demand (const abstract_statet &abstract_state, 
-						       const predicatest &predicates,
-						       exprt& property, 
-						       next_state_function_cachet &ns_cache,
-						       std::set<unsigned> &preds_used_to_simplify,
-						       bool &containsInput) const 
+void network_infot::weakest_precondition_recur_demand(
+  const abstract_statet &abstract_state, 
+  const predicatest &predicates,
+  exprt& property, 
+  next_state_function_cachet &ns_cache,
+  std::set<unsigned> &preds_used_to_simplify,
+  bool &containsInput) const 
 {
 
   if(property.has_operands())
@@ -752,8 +750,8 @@ void network_infot::weakest_precondition_recur_demand (const abstract_statet &ab
 					containsInput);
    
   if(property.id()=="next_symbol")
-    {
-      const std::string &next_state_variable = property.get("identifier").as_string();
+  {
+    const irep_idt &next_state_variable = property.get(ID_identifier);
 
       next_state_function_cachet::const_iterator pair = 
 	ns_cache.find(next_state_variable);
@@ -797,7 +795,7 @@ void network_infot::weakest_precondition_recur_demand (const abstract_statet &ab
 	  
 
 	  //Insert simplified next state function in the cache.
-	  ns_cache.insert(std::pair<std::string, exprt>
+	  ns_cache.insert(std::pair<irep_idt, exprt>
 			  (it->first, simplify_ns));
 	  
       

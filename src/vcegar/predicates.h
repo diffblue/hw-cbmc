@@ -10,7 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_PREDICATES_H
 
 #include <set>
-#include <expr.h>
+
+#include <util/expr.h>
 
 typedef exprt predicatet;
 

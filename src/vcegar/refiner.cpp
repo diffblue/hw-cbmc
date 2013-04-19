@@ -4,20 +4,20 @@ Module: Refinement for VCEGAR. Finds new word level predicates. And
         constraints for syntactic abstraction.
 
 Author: Himanshu Jain, Daniel Kroening 
-        
 
 Date: Nov 2004
  
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
+#include <util/namespace.h>
+#include <util/cnf_simplify.h>
+#include <util/simplify_expr.h>
+#include <util/i2string.h>
+
 #include <verilog/expr2verilog.h>
-#include <namespace.h>
-#include <cnf_simplify.h>
-#include <simplify_expr.h>
-#include <i2string.h>
 
 #include "refiner.h"
 #include "discover_predicates.h"
@@ -234,7 +234,7 @@ void refinert::compute_wp_seed_predicate
     network.simplified_weakest_precondition(failed_property, spurious_counterexample[i], 
 					    predicates, preds_used_to_simplify, containsInput);
 
-    simplify (failed_property);
+    simplify(failed_property, ns);
 
     //we want to avoid avoid adding new predicates as much as possible
     //this condition is true only when we fail to find new predicates...

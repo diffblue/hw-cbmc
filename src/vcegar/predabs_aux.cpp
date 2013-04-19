@@ -6,7 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
+
+#include <solvers/prop/prop.h>
 
 #include "predabs_aux.h"
 
@@ -25,13 +27,13 @@ Function: make_pos
 \*******************************************************************/
 
 literalt make_pos(prop_convt &conv, const exprt &expr)
- {
+{
    literalt l=conv.convert(expr);
    literalt tmp=conv.prop.new_variable();
    conv.prop.set_equal(tmp, l);
    assert(!tmp.sign());
    return tmp;
- }
+}
 
 /*******************************************************************\
 
@@ -46,15 +48,14 @@ Function: uses_symbol
 \*******************************************************************/
 
 bool uses_symbol(const exprt &expr,
-                 const std::set<std::string> &symbols)
+                 const std::set<irep_idt> &symbols)
  {
   forall_operands(it, expr)
     if(uses_symbol(*it, symbols))
       return true;
 
-
-  if(expr.id()=="symbol")
-    return symbols.find(expr.get("identifier").as_string())!=symbols.end();
+  if(expr.id()==ID_symbol)
+    return symbols.find(expr.get(ID_identifier))!=symbols.end();
 
   return false;
  }

@@ -6,7 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <simplify_expr.h>
+#include <iostream>
+
+#include <util/simplify_expr.h>
+#include <util/namespace.h>
+#include <util/symbol_table.h>
+
 #include <verilog/expr2verilog.h>
 
 #include "canonicalize.h"
@@ -78,7 +83,9 @@ void canonicalize(exprt &expr, bool &negation)
     throw "canonicalize expects expression of Boolean type";
   }
 
-  simplify(expr);
+  symbol_tablet symbol_table;
+  const namespacet ns(symbol_table);
+  simplify(expr, ns);
 
   negation=false;
 

@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_PREDABS_AUX
 #define CPROVER_PREDABS_AUX
 
-
 #include <set>
 #include <string>
 
@@ -18,6 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 literalt make_pos(prop_convt &conv, const exprt &expr);
 
 bool uses_symbol(const exprt &expr,
-                 const std::set<std::string> &symbols);
+                 const std::set<irep_idt> &symbols);
 
 #endif

@@ -13,9 +13,9 @@ Date: June 2003
 
 #include <sstream>
 
-#include <message.h>
-#include <context.h>
-#include <expr.h>
+#include <util/message.h>
+#include <util/context.h>
+#include <util/expr.h>
 
 #include <verilog/expr2verilog.h>
 #include <trans/var_map.h>
@@ -24,9 +24,8 @@ Date: June 2003
 #include "abstract_trans.h"
 #include "predicates.h"
 
-typedef std::map<const std::string, exprt> next_state_function_cachet;
-typedef std::map<const std::string, exprt> symbol_function_tablet;
-
+typedef std::map<irep_idt, exprt> next_state_function_cachet;
+typedef std::map<irep_idt, exprt> symbol_function_tablet;
 
 void rename (exprt& current_pred);
   
@@ -67,7 +66,7 @@ void replace_outputs(
 void find_symbols(
   const exprt &predicate, 
   std::set<std::string>& symbols, 
-  const std::string name);
+  const irep_idt name);
 
 bool subset
 (const std::set<std::string>& set1,
@@ -110,7 +109,7 @@ void compute_pre_symbols
  std::set<std::string> &pre_symbols
  );
 
-int get_type_integer(const var_mapt &vmap, const std::string &s);
+int get_type_integer(const var_mapt &vmap, const irep_idt &s);
 
 std::ostream& operator<< (std::ostream& out,
 			  const std::vector<std::set<unsigned> > &vec_vec_unsigned);

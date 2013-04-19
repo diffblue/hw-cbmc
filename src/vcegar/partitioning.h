@@ -11,8 +11,8 @@ Date: June 2004
 #ifndef CPROVER_PARTITIONING_H
 #define CPROVER_PARTITIONING_H
 
-#include <message.h>
-#include <namespace.h>
+#include <util/message.h>
+#include <util/namespace.h>
 
 #include <trans/var_map.h>
 #include <verilog/expr2verilog.h>

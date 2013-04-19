@@ -8,10 +8,10 @@ Author: Daniel Kroening
 
 \*******************************************************************/
 
-#include "abstract_counterexample.h"
-
 #include <langapi/mode.h>
 #include <langapi/languages.h>
+
+#include "abstract_counterexample.h"
 
 /*******************************************************************\
 

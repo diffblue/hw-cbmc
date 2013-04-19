@@ -11,9 +11,9 @@ Date: June 2004
 #ifndef CPROVER_ABSTRACTOR_H
 #define CPROVER_ABSTRACTOR_H
 
-#include <message.h>
-#include <namespace.h>
-#include <cmdline.h>
+#include <util/message.h>
+#include <util/namespace.h>
+#include <util/cmdline.h>
 
 #include "concrete_trans.h"
 #include "abstract_trans.h"

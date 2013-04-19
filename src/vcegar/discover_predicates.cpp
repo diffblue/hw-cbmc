@@ -6,15 +6,15 @@ Author:  Himanshu Jain, hjain@cs.cmu.edu
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
+
+#include <util/simplify_expr.h>
+#include <util/namespace.h>
+#include <util/symbol_table.h>
 
 #include "discover_predicates.h"
 #include "canonicalize.h"
 #include "vcegar_util.h"
-#include <simplify_expr.h>
-
-
-
 
 void discover_simple_preds_simplified(const exprt &expr,
                              std::set<predicatet> &predicates,
@@ -73,7 +73,10 @@ void discover_simple_preds_simplified(const exprt &expr,
     else {
       #if 1
       exprt tmp_expr(expr);
-      simplify(tmp_expr);
+      
+      symbol_tablet symbol_table;
+      const namespacet ns(symbol_table);
+      simplify(tmp_expr, ns);
 
       if (!(tmp_expr.is_true() || tmp_expr.is_false()) && containsSymbol(tmp_expr))
 	{

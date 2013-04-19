@@ -11,9 +11,9 @@ Date: June 2003
 #ifndef CPROVER_CONCRETE_TRANS_H
 #define CPROVER_CONCRETE_TRANS_H
 
-#include <trans/var_map.h>
+#include <util/std_expr.h>
 
-#include <std_expr.h>
+#include <trans/var_map.h>
 
 class concrete_transt
 {

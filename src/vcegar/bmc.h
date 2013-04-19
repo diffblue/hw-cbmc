@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class bmct:public ebmc_baset
 {
 public:
-  bmct(cmdlinet &_cmdline):ebmc_baset(_cmdline)
+  explicit bmct(cmdlinet &_cmdline):ebmc_baset(_cmdline)
   {
   }
 

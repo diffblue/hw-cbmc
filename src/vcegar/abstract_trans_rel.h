@@ -10,12 +10,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CEGAR_ABSTRACT_TRANS_REL_H
 
 #include <set>
+
 #include <satqe/cubes.h>
 
-
 class abstract_transition_relationt
- {
- public:
+{
+public:
   cubest cubes;
   std::vector<unsigned> input_predicates;
   std::vector<unsigned> output_predicates;
@@ -28,7 +28,6 @@ class abstract_transition_relationt
     output_predicates.clear();
     unchanged_predicates.clear();
    }
- };
-
+};
 
 #endif

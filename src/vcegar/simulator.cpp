@@ -11,20 +11,20 @@ to check whether the counterexample is spurious.
 
 \*******************************************************************/
 
-#include <assert.h>
-
+#include <cassert>
 #include <iostream>
 #include <map>
 #include <fstream>
-#include <str_getline.h>
 #include <vector>
 
-#include <cnf_simplify.h>
-#include <expr_util.h>
-#include <i2string.h>
-#include <find_symbols.h>
+#include <util/cnf_simplify.h>
+#include <util/expr_util.h>
+#include <util/i2string.h>
+#include <util/find_symbols.h>
+
 #include <solvers/sat/satcheck.h>
 #include <solvers/sat/dimacs_cnf.h>
+
 #include <langapi/language_ui.h>
 
 #include <trans/property.h>
@@ -32,7 +32,6 @@ to check whether the counterexample is spurious.
 
 #include "simulator.h"
 #include "vcegar_util.h"
-
 
 /*******************************************************************\
 
@@ -45,7 +44,6 @@ Function: simulatort::print_imp_preds_set
  Purpose: 
 
 \*******************************************************************/
-
 
 void print_imp_preds_set(std::set<unsigned> &imp_preds)
 {
@@ -75,7 +73,7 @@ Function: simulatort::check_spurious_using_bmc
 \*******************************************************************/
 
 bool simulatort::check_spurious_using_bmc
- (const contextt &context,
+ (const symbol_tablet &symbol_table,
   const concrete_transt &concrete_trans,
   const abstract_counterexamplet &abstract_counterexample,
   const exprt spec_property,
@@ -88,7 +86,8 @@ bool simulatort::check_spurious_using_bmc
 
      std::list<bvt> prop_bv;
      satcheckt satcheck;
-     boolbvt solver(satcheck);
+     const namespacet ns(symbol_table);
+     boolbvt solver(ns, satcheck);
 
      const transt &trans = concrete_trans.trans_expr;
 
@@ -98,7 +97,7 @@ bool simulatort::check_spurious_using_bmc
 	     *this,
 	     solver, 
 	     bound, 
-	     namespacet(context),
+	     namespacet(symbol_table),
 	     true); //add initial state
 
 
@@ -116,9 +115,6 @@ bool simulatort::check_spurious_using_bmc
 	 exprt new_property(spec_property);
 	 properties.push_back(new_property); 
        }
-
-
-     namespacet ns(context);
 
 
      property(properties, 
@@ -270,7 +266,7 @@ Function: simulatort::generate_constrains
 \*******************************************************************/
 
  void simulatort::generate_constrains
-    (const contextt &context,
+    (const symbol_tablet &symbol_table,
      const concrete_transt &concrete_trans,
      const predicatest &predicates,
      const spurious_abstract_stepst &spurious_abstract_steps,
@@ -304,13 +300,13 @@ it creates a cluster out of them.
 \*******************************************************************/
 
  void simulatort::create_cluster
- (const contextt &context,
+ (const symbol_tablet &symbol_table,
   const std::set<unsigned> init_imp_preds,
   const std::set<unsigned> final_imp_preds,
   const predicatest &predicates,
   predicatest &cluster)
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   for(std::set<unsigned>::const_iterator it = init_imp_preds.begin();
       it != init_imp_preds.end(); it++) {
@@ -395,7 +391,7 @@ Function: simulatort::add_abstract_state_map
 \*******************************************************************/
 
 void simulatort::add_abstract_state_map(
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   const abstract_statet &abstract_state,
   const predicatest &predicates,
   const bmc_mapt& map,
@@ -404,7 +400,7 @@ void simulatort::add_abstract_state_map(
   unsigned start,
   pred_literal_mappingt &pred_literal_mapping) 
 {  
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   unsigned pred_num = 0;
   for (std::vector<bool>::const_iterator 
@@ -455,7 +451,7 @@ Function: simulatort::add_abstract_state_map
 \*******************************************************************/
 
 bool simulatort::add_abstract_state_map_transition(
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   const abstract_statet &abstract_state,
   const predicatest &predicates,
   const bmc_mapt& map,
@@ -464,7 +460,7 @@ bool simulatort::add_abstract_state_map_transition(
   unsigned start,
   pred_literal_mappingt &pred_literal_mapping) const
 {  
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   unsigned pred_num = 0;
   for (std::vector<bool>::const_iterator 
@@ -528,7 +524,7 @@ unsatisfiability can be extracted by using chaff externally.
 \*******************************************************************/
 
 bool simulatort::is_spurious_abstract_transition(
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   const concrete_transt &concrete_trans,
   const abstract_counterexamplet &abstract_counterexample,
   const predicatest &predicates,
@@ -539,7 +535,7 @@ bool simulatort::is_spurious_abstract_transition(
   unsigned stepno) 
 {
   assert(stepno < abstract_counterexample.size()-1);
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   const transt &trans = concrete_trans.trans_expr;
 
   satcheck_minisat_coret satcheck;
@@ -571,7 +567,7 @@ bool simulatort::is_spurious_abstract_transition(
 
   // Add the start abstract state
   bool b1= add_abstract_state_map_transition
-    (context, 
+    (symbol_table, 
      abstract_counterexample[stepno],
      predicates,
      map, boolbv, simplify, 0, 
@@ -586,7 +582,7 @@ bool simulatort::is_spurious_abstract_transition(
 
   // Add the end abstract state
   bool b2 = add_abstract_state_map_transition
-    (context, 
+    (symbol_table, 
      abstract_counterexample[stepno+1],
      predicates,
      map, boolbv, simplify, 1,  
@@ -642,7 +638,7 @@ bool simulatort::is_spurious_abstract_transition(
 
 
 bool simulatort::check_abstract_steps_standard
-(const contextt &context,
+(const symbol_tablet &symbol_table,
  const concrete_transt &concrete_trans,
  const abstract_counterexamplet &abstract_counterexample,
  const predicatest &predicates,
@@ -676,7 +672,7 @@ bool simulatort::check_abstract_steps_standard
 
 
     bool status =  is_spurious_abstract_transition(
-      context,
+      symbol_table,
       concrete_trans,
       abstract_counterexample,
       predicates,
@@ -764,7 +760,7 @@ Function: simulatort::check_spurious_using_simulation_standard
 \*******************************************************************/
 
 void simulatort::check_spurious_using_simulation_standard(
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   const concrete_transt &concrete_trans,
   const abstract_counterexamplet &abstract_counterexample,
   const predicatest &predicates,
@@ -778,7 +774,7 @@ void simulatort::check_spurious_using_simulation_standard(
 
   satcheck_minisat_coret satcheck;
   bmc_mapt map;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
  
   map.var_map = concrete_trans.var_map;
 
@@ -796,7 +792,7 @@ void simulatort::check_spurious_using_simulation_standard(
 	   *this,
 	   satcheck, 
 	   map, 
-	   context); 
+	   symbol_table); 
 
 
   //now start adding abstract states
@@ -811,7 +807,7 @@ void simulatort::check_spurious_using_simulation_standard(
     std::cout << abstract_counterexample[i];
     #endif
 
-    add_abstract_state_map(context, 
+    add_abstract_state_map(symbol_table, 
                            abstract_counterexample[i],
                            predicates,
                            map, satcheck, simplify, i, 

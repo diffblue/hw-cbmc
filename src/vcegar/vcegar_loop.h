@@ -14,11 +14,11 @@ Date: June 2003
 
 #include <set>
 
-#include <message.h>
-#include <langapi/language_ui.h>
+#include <util/message.h>
+#include <util/expr_util.h>
+#include <util/time_stopping.h>
 
-#include <expr_util.h>
-#include <time_stopping.h>
+#include <langapi/language_ui.h>
 
 #include "concrete_trans.h" 
 #include "modelchecker.h" 
@@ -36,7 +36,7 @@ class vcegar_loopt: public messaget
   vcegar_loopt(
     concrete_transt &_concrete_trans, 
     const specificationt &_spec,
-    const contextt &_context,
+    const symbol_tablet &_symbol_table,
     abstractort &_abstractor,
     refinert &_refiner,
     modelcheckert &_modelchecker,
@@ -49,7 +49,7 @@ class vcegar_loopt: public messaget
     messaget(_message_handler),
     concrete_trans(_concrete_trans),
     spec(_spec),
-    context(_context),
+    symbol_table(_symbol_table),
     abstractor(_abstractor),
     refiner(_refiner),
     modelchecker(_modelchecker),
@@ -138,7 +138,7 @@ class vcegar_loopt: public messaget
 
   concrete_transt &concrete_trans;
   const specificationt &spec;
-  const contextt &context;
+  const symbol_tablet &symbol_table;
   abstractort &abstractor;
   refinert &refiner;
   modelcheckert &modelchecker;

@@ -13,11 +13,11 @@ Purpose: Calculate predicates for predicate abstraction.
 #ifndef CPROVER_REFINER_H
 #define CPROVER_REFINER_H
 
-#include <assert.h>
+#include <cassert>
 
-#include <message.h>
-#include <context.h>
-#include <cmdline.h>
+#include <util/message.h>
+#include <util/symbol_table.h>
+#include <util/cmdline.h>
 
 #include "concrete_trans.h"
 #include "predicates.h"

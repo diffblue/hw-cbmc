@@ -8,18 +8,18 @@ Date: April 2004
 
 \*******************************************************************/
 
-#include <assert.h>
-
+#include <cassert>
 #include <map>
 #include <vector>
-#include <i2string.h>
+
+#include <util/i2string.h>
+#include <util/namespace.h>
+
 #include <verilog/expr2verilog.h>
-#include <namespace.h>
 
 #include "partitioning.h"
 #include "canonicalize.h"
 #include "vcegar_util.h"
-
 
 /*******************************************************************\
 
@@ -33,16 +33,14 @@ Function: print_predicate_symbol_maps
 
 \*******************************************************************/
 
-void partitioningt::print_predicate_symbol_maps 
-(
- const predicate_symbol_mapt& initial_predicates,
- const predicate_symbol_mapt& final_predicates
-) 
+void partitioningt::print_predicate_symbol_maps(
+  const predicate_symbol_mapt& initial_predicates,
+  const predicate_symbol_mapt& final_predicates) 
 {
   std::cout <<"Initial predicates and symbols in them \n";
   
- unsigned i=0;
- for (predicate_symbol_mapt::const_iterator 
+  unsigned i=0;
+  for (predicate_symbol_mapt::const_iterator 
 	it = initial_predicates.begin(); 
       it != initial_predicates.end(); it++){
    

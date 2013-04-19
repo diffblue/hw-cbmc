@@ -8,13 +8,14 @@ Date: April 2004
 
 \*******************************************************************/
 
-#include <assert.h>
-
+#include <cassert>
 #include <map>
 #include <vector>
-#include <i2string.h>
+
+#include <util/i2string.h>
+#include <util/namespace.h>
+
 #include <verilog/expr2verilog.h>
-#include <namespace.h>
 
 #include "vcegar_util.h"
 #include "canonicalize.h"
@@ -222,18 +223,16 @@ Function: find_symbols
 
 void find_symbols(
   const exprt &predicate, 
-  std::set<std::string> &symbols, 
-  const std::string name)
+  std::set<irep_idt> &symbols, 
+  const irep_idt name)
 {
   if(predicate.has_operands())
     forall_operands(it, predicate)
       find_symbols(*it, symbols, name);
   
-
-  if(predicate.id()== name)
-    symbols.insert(predicate.get("identifier").as_string());
+  if(predicate.id()==name)
+    symbols.insert(predicate.get(ID_identifier));
 }
-
 
 /*******************************************************************\
 
@@ -245,26 +244,26 @@ Outputs:
 
 Purpose: returns true if A is a subset of B,  false otherwise.
 
-
 \*******************************************************************/
 
 bool subset(
-  const std::set<std::string>& set1,
-  const std::set<std::string>& set2) 
+  const std::set<irep_idt> &set1,
+  const std::set<irep_idt> &set2) 
 {
-  for (std::set<std::string>::const_iterator it1= set1.begin();
-       it1 != set1.end(); it1++){
-    std::set<std::string>::const_iterator it2 = set2.find(*it1);
-    if (it2 == set2.end()){
+  for(std::set<irep_idt>::const_iterator it1= set1.begin();
+       it1 != set1.end(); it1++)
+  {
+    std::set<irep_idt>::const_iterator it2 = set2.find(*it1);
+    if (it2 == set2.end())
       return false;
-    }
   }
   return true;
 }
 
 
 /*******************************************************************\
-Function: get_type_as_integer
+
+Function: get_type_integer
 
  Inputs:
 
@@ -278,17 +277,16 @@ Function: get_type_as_integer
           good  as the order to WIRE and MACRO in vartypet has changed.
 \*******************************************************************/
 
-int get_type_integer(const var_mapt &vmap, const std::string &s)
+int get_type_integer(const var_mapt &vmap, const irep_idt &s)
 {
-  switch (vmap.get_type(s))
-    {
-    case var_mapt::vart::VAR_LATCH: return 1;
-    case var_mapt::vart::VAR_INPUT: return 2; 
-    case var_mapt::vart::VAR_WIRE:  return 3;
-    default: return -1;
-    }
+  switch(vmap.get_type(s))
+  {
+  case var_mapt::vart::VAR_LATCH: return 1;
+  case var_mapt::vart::VAR_INPUT: return 2; 
+  case var_mapt::vart::VAR_WIRE:  return 3;
+  default: return -1;
+  }
 }
-
 
 /*******************************************************************\
 

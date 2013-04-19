@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <i2string.h>
+#include <util/i2string.h>
 
 #include <solvers/flattening/boolbv.h>
 #include <solvers/sat/satcheck.h>
@@ -28,6 +28,7 @@ Function: bmct::do_sat
 int bmct::do_sat()
 {
   satcheckt satcheck;
-  boolbvt boolbv(satcheck);
+  const namespacet ns(symbol_table);
+  boolbvt boolbv(ns, satcheck);
   return do_ebmc(boolbv, false);
 }

@@ -7,7 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <cassert>
 
 #include <verilog/expr2verilog.h>
 

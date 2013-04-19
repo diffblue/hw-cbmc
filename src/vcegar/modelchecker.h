@@ -12,7 +12,7 @@ Date: June 2003
 #ifndef CPROVER_MODELCHECKER_H
 #define CPROVER_MODELCHECKER_H
 
-#include <message.h>
+#include <util/message.h>
 
 #include "abstract_counterexample.h"
 

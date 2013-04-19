@@ -10,12 +10,12 @@ Date: June 2003
 
 \*******************************************************************/
 
-#include <i2string.h>
 #include <iostream>
-#include <time_stopping.h>
 #include <fstream>
 
-#include <xml.h>
+#include <util/i2string.h>
+#include <util/time_stopping.h>
+#include <util/xml.h>
 
 #include <smvlang/expr2smv.h>
 
@@ -23,7 +23,6 @@ Date: June 2003
 #include "abstract_expression.h"
 #include "vcegar_util.h"
 #include "partitioning.h"
-
 
 /*******************************************************************\
 

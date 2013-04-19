@@ -16,9 +16,9 @@ to determmine whether it is spurious.
 #ifndef CPROVER_SIMULATOR_H
 #define CPROVER_SIMULATOR_H
 
-#include <message.h>
-#include <namespace.h>
-#include <cmdline.h>
+#include <util/message.h>
+#include <util/namespace.h>
+#include <util/cmdline.h>
 
 #include <solvers/sat/cnf.h>
 #include <solvers/sat/satcheck.h>
@@ -35,10 +35,9 @@ to determmine whether it is spurious.
 #include "partitioning.h"
 #include "abstract_counterexample.h"
 
-
 class simulatort:public messaget
- {
- public:
+{
+public:
   simulatort(message_handlert &_message_handler,
 	     const cmdlinet &_cmdline,
 	     const irep_idt &_module_identifier,
@@ -105,7 +104,7 @@ class simulatort:public messaget
   void out_stats(std::ostream &out);
 
 
-  bool check_spurious_using_bmc(const contextt &context,
+  bool check_spurious_using_bmc(const symbol_tablet &symbol_table,
 				const concrete_transt &concrete_trans,
 				const abstract_counterexamplet &abstract_counterexample,
 				const exprt property,
@@ -114,7 +113,7 @@ class simulatort:public messaget
 				bool simplify);
 
   bool check_abstract_steps
-    (const contextt &context,
+    (const symbol_tablet &symbol_table,
      const concrete_transt &concrete_trans,
      const abstract_counterexamplet &abstract_counterexample,
      const predicatest &predicates,
@@ -124,26 +123,22 @@ class simulatort:public messaget
      bool simplify); 
 
    void check_spurious_using_simulation_standard
-     (const contextt &context,
+     (const symbol_tablet &symbol_table,
       const concrete_transt &concrete_trans,
       const abstract_counterexamplet &abstract_counterexample,
       const predicatest &predicates,
       std::vector<std::set<unsigned> > &imp_preds_per_state,
       bool add_initial_state,
       bool verbose,
-      bool simplify) ;
-
-
-
+      bool simplify);
   
   void generate_constrains
-    (const contextt &context,
+    (const symbol_tablet &symbol_table,
      const concrete_transt &concrete_trans,
      const predicatest &predicates,
      const spurious_abstract_stepst &spurious_abstract_steps,
      abstract_transition_constrainst &abstract_transition_constrains);
   
-
   typedef std::map<unsigned, literalt> pred_literal_mappingt;
   typedef std::map<unsigned, int> pred_dimacsint_mappingt;
 
@@ -156,7 +151,7 @@ class simulatort:public messaget
 
 
   bool is_spurious_abstract_transition
-    (const contextt &context,
+    (const symbol_tablet &symbol_table,
      const concrete_transt &concrete_trans,
      const abstract_counterexamplet &abstract_counterexample,
      const predicatest &predicates,
@@ -173,7 +168,7 @@ class simulatort:public messaget
 
 
   bool check_abstract_steps_standard
-    (const contextt &context,
+    (const symbol_tablet &symbol_table,
      const concrete_transt &concrete_trans,
      const abstract_counterexamplet &abstract_counterexample,
      const predicatest &predicates,
@@ -181,7 +176,6 @@ class simulatort:public messaget
      partitioningt::pred_id_clusterst &refinement_clusters,
      bool verbose,
      bool simplify) ;
-  
    
 protected:
   struct constraintt
@@ -211,7 +205,7 @@ protected:
 
 
     void create_cluster
-      (const contextt &context,
+      (const symbol_tablet &symbol_table,
        const std::set<unsigned> init_imp_preds,
        const std::set<unsigned> final_imp_preds,
        const predicatest &predicates,
@@ -219,7 +213,7 @@ protected:
 
   
   bool add_abstract_state_map_transition(
-    const contextt &context,
+    const symbol_tablet &symbol_table,
     const abstract_statet &abstract_state,
     const predicatest &predicates,
     const bmc_mapt& map,
@@ -229,7 +223,7 @@ protected:
     pred_literal_mappingt &pred_literal_mapping) const;
   
   void add_abstract_state_map(
-    const contextt &context,
+    const symbol_tablet &symbol_table,
     const abstract_statet &abstract_state,
     const predicatest &predicates,
     const bmc_mapt& map,

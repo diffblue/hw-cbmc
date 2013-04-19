@@ -21,23 +21,25 @@ Purpose: Counter Example Guided Abstraction refinement for Verilog
 #include <memory>
 #include <fstream>
 
-#include <str_getline.h>
-#include <i2string.h>
-#include <config.h>
-#include <ui_message.h>
-#include <parseoptions.h>
-#include <namespace.h>
-#include <cnf_simplify.h>
-#include <get_module.h>
-#include <xml.h>
-#include <xml_irep.h>
+#include <util/i2string.h>
+#include <util/config.h>
+#include <util/ui_message.h>
+#include <util/parseoptions.h>
+#include <util/namespace.h>
+#include <util/cnf_simplify.h>
+#include <util/get_module.h>
+#include <util/xml.h>
+#include <util/xml_irep.h>
+#include <util/std_expr.h>
 
 #include <langapi/languages.h>
 #include <langapi/mode.h>
 #include <langapi/language_ui.h>
 #include <langapi/language_util.h>
+
 #include <solvers/sat/dimacs_cnf.h>
 #include <solvers/sat/satcheck.h>
+
 #include <verilog/verilog_language.h>
 #include <verilog/expr2verilog.h>
 
@@ -121,12 +123,12 @@ bool vcegart::get_main()
   try
   {
     const symbolt &symbol=
-      get_module(context, module, get_message_handler());
+      get_module(symbol_table, module, get_message_handler());
 
-    trans_expr=&to_trans(symbol.value);
+    trans_expr=&to_trans_expr(symbol.value);
     module_identifier=symbol.name;
  
-    status(std::string("Module identifier is ")+module_identifier.as_string());
+    status(std::string("Module identifier is ")+id2string(module_identifier));
 
     if(cmdline.isset("showtrans"))
     {
@@ -140,7 +142,7 @@ bool vcegart::get_main()
       std::cout << "Operands.size "<<op.size() << "\n";
 
       // expand defines (macros)
-      namespacet ns(context);
+      namespacet ns(symbol_table);
       ns.follow_macros(op[0]);
       ns.follow_macros(op[1]);
       ns.follow_macros(op[2]);
@@ -197,7 +199,7 @@ int vcegart::doit()
 
   if(get_main()) return 1;
 
-  map.map_vars(context, module_identifier);
+  map.map_vars(symbol_table, module_identifier);
 
   if(cmdline.isset("showvarmap"))
   {
@@ -207,7 +209,7 @@ int vcegart::doit()
 
   if(cmdline.isset("showcontext"))
   {
-    context.show(std::cout);
+    symbol_table.show(std::cout);
     return 0;
   }
 
@@ -247,13 +249,13 @@ int vcegart::doit()
     
       forall_symbol_module_map(
         it,
-        context.symbol_module_map, 
+        symbol_table.symbol_module_map, 
         module_identifier)
       {
-        namespacet ns(context);
+        namespacet ns(symbol_table);
         const symbolt &symbol=ns.lookup(it->second);
 
-        if(symbol.theorem)
+        if(symbol.is_property)
         {
           i++;
           
@@ -413,9 +415,9 @@ void vcegart::get_properties_from_file()
   std::auto_ptr<languaget> language(new verilog_languaget);
   
   std::string line;
-  namespacet ns(context);
+  namespacet ns(symbol_table);
     
-  while(str_getline(infile, line))
+  while(std::getline(infile, line))
   {
     if(line=="") continue;
     if(line[0]=='#') continue;
@@ -425,7 +427,7 @@ void vcegart::get_properties_from_file()
 
 
     if(language->to_expr(
-         line, module_identifier.as_string(),
+         line, module_identifier,
          tmp_expr, get_message_handler(), ns))
       throw "failed to parse the property";
 
@@ -474,18 +476,18 @@ void vcegart::get_user_provided_preds()
   // use auto_ptr because of the exceptions
   std::auto_ptr<languaget> language(new verilog_languaget);
   
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   
 
   const std::string module=
     cmdline.isset("module")?cmdline.getval("module"):"main";
 
   std::string modeule_indentifier;
-  const symbolt &symbol=get_module(context, module, get_message_handler());
+  const symbolt &symbol=get_module(symbol_table, module, get_message_handler());
   module_identifier=symbol.name;
     
   std::string line;
-  while(str_getline(infile, line))
+  while(std::getline(infile, line))
   {
     if(line!="" && line[0]!='#' &&
        std::string(line, 0, 2)!="//")
@@ -493,7 +495,7 @@ void vcegart::get_user_provided_preds()
       exprt expr;
       
 
-      if(language->to_expr(line, module_identifier.as_string(), expr, get_message_handler(), ns))
+      if(language->to_expr(line, module_identifier, expr, get_message_handler(), ns))
         throw "failed to parse the user provided predicates";
 
       #if 1
@@ -634,7 +636,7 @@ int vcegart::pred_abs_init()
       vcegar_loopt vcegar_loop(
         concrete_trans,
         user_provided_spec,
-        context,
+        symbol_table,
         abstractor,
         refiner,
         *modelchecker,

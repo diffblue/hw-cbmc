@@ -10,19 +10,20 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CEGAR_ABSTRACT_PREDICATE_H
 
 #include <set>
+
 #include <satqe/cubes.h>
 
 class abstract_initial_statest
- {
- public:
+{
+public:
   cubest cubes;
   std::vector<unsigned> input_predicates;
   
   void clear()
-   {
+  {
     cubes.clear();
     input_predicates.clear();
-   }
- };
+  }
+};
 
 #endif

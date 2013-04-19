@@ -6,7 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <i2string.h>
+#include <iostream>
+
+#include <util/i2string.h>
 
 #include "abstract_expression.h"
 #include "canonicalize.h"

@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DISCOVER_PREDICATES_H
 #define CPROVER_DISCOVER_PREDICATES_H
 
+#include <set>
+
 #include <verilog/expr2verilog.h>
 
 #include "predicates.h"
-
-#include <set>
 
 void discover_predicates(const exprt &expr,
                          std::set<predicatet> &predicates, 

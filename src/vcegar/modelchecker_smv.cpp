@@ -8,19 +8,18 @@ Date: June 2003
 
 \*******************************************************************/
 
-#include <assert.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdlib>
 #include <ctype.h>
-
 #include <fstream>
 #include <list>
 #include <algorithm>
 #include <vector>
 #include <sstream> 
 
-#include <str_getline.h>
+#include <util/i2string.h>
+
 #include <smvlang/expr2smv.h>
-#include <i2string.h>
 
 #include "modelchecker_smv.h"
 
@@ -51,7 +50,7 @@ bool modelchecker_smvt::read_result
     while(true)
      {
       std::string line;
-      if(!str_getline(out2, line)) break;
+      if(!std::getline(out2, line)) break;
       file.push_back(line);
      }
 
@@ -73,7 +72,7 @@ bool modelchecker_smvt::read_result
     while(true)
      {
       std::string line;
-      if(!str_getline(out1, line)) break;
+      if(!std::getline(out1, line)) break;
       file.push_back(line);
      }
 
@@ -141,7 +140,7 @@ bool modelchecker_smvt::read_result_cadence_smv(
   while(true)
   {
     std::string line;
-    if(!str_getline(out_ce, line)) break;
+    if(!std::getline(out_ce, line)) break;
     file.push_back(line);
   }
   
