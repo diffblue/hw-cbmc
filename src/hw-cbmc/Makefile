@@ -12,6 +12,7 @@ OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
       $(CBMC)/src/cbmc/show_vcc$(OBJEXT) \
       $(CBMC)/src/cbmc/cover$(OBJEXT) \
       $(CBMC)/src/cbmc/dimacs$(OBJEXT) \
+      $(CBMC)/src/cbmc/all_claims$(OBJEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
