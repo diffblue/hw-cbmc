@@ -165,7 +165,7 @@ bool verilog_languaget::typecheck(
   if(verilog_typecheck(parse_tree, symbol_table, module, message_handler))
     return true;
     
-  message_handler.print(9, "Synthesis");
+  message_handler.print(9, "Synthesis "+module);
 
   if(verilog_synthesis(symbol_table, module, message_handler, options))
     return true;
