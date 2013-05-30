@@ -14,6 +14,7 @@ OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
       $(CBMC)/src/cbmc/dimacs$(OBJEXT) \
       $(CBMC)/src/cbmc/all_claims$(OBJEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CBMC)/src/java_bytecode/java_bytecode$(LIBEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
