@@ -1,3 +1,5 @@
+%option noinput
+
 %{
 #ifdef _WIN32
 #define YY_NO_UNISTD_H
