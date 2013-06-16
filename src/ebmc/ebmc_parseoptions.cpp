@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_trans.h"
 #include "k_induction.h"
 #include "ebmc_base.h"
-#include "parseoptions.h"
+#include "ebmc_parseoptions.h"
 
 #ifdef HAVE_INTERPOLATION
 #include "interpolation/interpolation_expr.h"

@@ -22,7 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <netlist/netlist_language.h>
 #endif
 
-#include "parseoptions.h"
+#include "ebmc_parseoptions.h"
 
 /*******************************************************************\
 

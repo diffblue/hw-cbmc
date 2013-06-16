@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 */
 
-#include "parseoptions.h"
+#include "ebmc_parseoptions.h"
 
 /*******************************************************************\
 
