@@ -30,7 +30,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <smvlang/smv_language.h>
 #endif
 
-#include "parseoptions.h"
+#include "hw_cbmc_parseoptions.h"
 #include "hw_bmc.h"
 #include "map_vars.h"
 #include "gen_interface.h"

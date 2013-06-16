@@ -1,4 +1,4 @@
-SRC = main.cpp parseoptions.cpp hw_bmc.cpp next_timeframe.cpp \
+SRC = main.cpp hw_cbmc_parseoptions.cpp hw_bmc.cpp next_timeframe.cpp \
       map_vars.cpp gen_interface.cpp set_inputs.cpp
 
 OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
@@ -18,7 +18,7 @@ OBJ+= $(CBMC)/src/cbmc/parseoptions$(OBJEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
-      $(CBMC)/src/big-int/bigint$(OBJEXT) \
+      $(CBMC)/src/big-int/big-int$(LIBEXT) \
       $(CBMC)/src/goto-symex/goto-symex$(LIBEXT) \
       $(CBMC)/src/goto-programs/goto-programs$(LIBEXT) \
       $(CBMC)/src/pointer-analysis/pointer-analysis$(LIBEXT) \

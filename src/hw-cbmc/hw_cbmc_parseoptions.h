@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_HW_CBMC_PARSEOPTIONS_H
 #define CPROVER_HW_CBMC_PARSEOPTIONS_H
 
-#include <cbmc/parseoptions.h>
+#include <cbmc/cbmc_parseoptions.h>
 
 #define HW_CBMC_OPTIONS \
   "(showvarmap)(bound):(module):(show-modules)(gen-interface)"
