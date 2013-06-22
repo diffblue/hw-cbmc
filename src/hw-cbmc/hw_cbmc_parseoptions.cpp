@@ -145,7 +145,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
       // map HDL variables to C variables
       //
 
-      status("Mapping variables");
+      status() << "Mapping variables" << eom;
 
       map_vars(
         symbol_table,

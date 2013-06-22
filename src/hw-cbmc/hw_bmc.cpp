@@ -32,7 +32,7 @@ void hw_bmct::do_unwind_module(
   
   const symbolt &symbol=ns.lookup(unwind_module);
 
-  status("Unwinding transition system "+id2string(symbol.name));
+  status() << "Unwinding transition system " << symbol.name << eom;
 
   ::unwind(
     to_trans_expr(symbol.value),

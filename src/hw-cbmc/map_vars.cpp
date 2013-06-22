@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/base_type.h>
 #include <util/std_expr.h>
 #include <util/std_code.h>
-#include <util/message_stream.h>
 
 #include <langapi/language_util.h>
 #include <ansi-c/c_types.h>
@@ -57,12 +56,12 @@ void instantiate_symbol(exprt &expr, unsigned timeframe)
 
 \*******************************************************************/
 
-class map_varst:public message_streamt
+class map_varst:public messaget
 {
 public:
   map_varst(symbol_tablet &_symbol_table, expr_listt &_constraints,
             message_handlert &_message, unsigned _no_timeframes):
-    message_streamt(_message),
+    messaget(_message),
     symbol_table(_symbol_table), constraints(_constraints),
     no_timeframes(_no_timeframes)
   { }
@@ -116,9 +115,8 @@ protected:
     if(to_integer(size_expr, s))
     {
       namespacet ns(symbol_table);
-      str << "failed to convert array size `"
-          << from_expr(ns, "", size_expr) << "'";
-      error();
+      error() << "failed to convert array size `"
+              << from_expr(ns, "", size_expr) << "'" << eom;
       throw 0;
     }
     
@@ -145,9 +143,8 @@ symbolt &map_varst::lookup(const irep_idt &identifier)
 
   if(it==symbol_table.symbols.end())
   {
-    str << "failed to find identifier `" << identifier
-        << "'";
-    error();
+    error() << "failed to find identifier `" << identifier
+            << "'" << eom;
     throw 0;
   }
 
@@ -429,8 +426,8 @@ const symbolt &map_varst::add_array(symbolt &symbol)
 
   if(full_type.id()==ID_incomplete_array)
   {
-    str << "`" << symbol.display_name() << "' must not be incomplete array";
-    error();
+    error() << "`" << symbol.display_name()
+            << "' must not be incomplete array" << eom;
     throw 0;
   }
 
@@ -560,9 +557,8 @@ void map_varst::map_var_rec(
     
     if(symbols.empty())
     {
-      str << "failed to find `" << base_name << "' in module `"
-          << show_member(expr) << "'";
-      error();
+      error() << "failed to find `" << base_name << "' in module `"
+              << show_member(expr) << "'" << eom;
       throw 0;
     }
 
@@ -611,9 +607,8 @@ void map_varst::map_var(
 {
   // show to user
 
-  str << "mapping `" << show_member(program_symbol) << "' to `"
-      << module_symbol.display_name() << "'";
-  status();
+  status() << "mapping `" << show_member(program_symbol) << "' to `"
+           << module_symbol.display_name() << "'" << eom;
 
   // check types
 
@@ -625,9 +620,8 @@ void map_varst::map_var(
   std::string error_msg;
   if(check_types_rec(type1, type2, error_msg))
   {
-    str << "failed to map symbol `" << show_member(program_symbol)
-        << "' because: " << error_msg;
-    error();
+    error() <<  "failed to map symbol `" << show_member(program_symbol)
+            << "' because: " << error_msg << eom;
     throw 0;
   }
       
@@ -653,8 +647,8 @@ void map_varst::assign_bound(symbolt &symbol)
 {
   if(!symbol.is_extern)
   {
-    str << "symbol `" << symbol.display_name() << "' should be extern";
-    error();
+    error() << "symbol `" << symbol.display_name()
+            << "' should be extern" << eom;
     throw 0;
   }
 
@@ -727,8 +721,8 @@ void map_varst::map_vars(const irep_idt &module)
     
     if(!s.is_extern)
     {
-      str << "symbol `" << s.display_name() << "' should be extern";
-      error();
+      error() << "symbol `" << s.display_name()
+              << "' should be extern" << eom;
       throw 0;
     }
 
