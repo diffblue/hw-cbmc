@@ -1,4 +1,4 @@
-SRC = verilog_language.cpp y.tab.cpp lex.yy.cpp verilog_parser.cpp \
+SRC = verilog_language.cpp verilog_y.tab.cpp verilog_lex.yy.cpp verilog_parser.cpp \
       expr2verilog.cpp verilog_typecheck.cpp verilog_preprocessor.cpp \
       verilog_typecheck_expr.cpp verilog_synthesis.cpp \
       verilog_interfaces.cpp verilog_typecheck_base.cpp \
@@ -17,17 +17,17 @@ all: verilog$(LIBEXT)
 verilog$(LIBEXT): $(OBJ)
 	$(LINKLIB)
 
-y.tab.cpp: parser.y
-	$(YACC) $(YFLAGS) $$flags -pyyverilog -d parser.y -o y.tab.cpp
+verilog_y.tab.cpp: parser.y
+	$(YACC) $(YFLAGS) $$flags -pyyverilog -d parser.y -o $@
 
-y.tab.h: y.tab.cpp
-	if [ -e y.tab.hpp ] ; then mv y.tab.hpp y.tab.h ; else \
+verilog_y.tab.h: verilog_y.tab.cpp
+	if [ -e verilog_y.tab.hpp ] ; then mv verilog_y.tab.hpp verilog_y.tab.h ; else \
         mv y.tab.cpp.h y.tab.h ; fi
 
-lex.yy.cpp: scanner.l
+verilog_lex.yy.cpp: scanner.l
 	$(LEX) -Pyyverilog -o$@ scanner.l
 
 # extra dependencies
-y.tab$(OBJEXT): y.tab.cpp y.tab.h
-lex.yy$(OBJEXT): y.tab.cpp lex.yy.cpp y.tab.h
+verilog_y.tab$(OBJEXT): verilog_y.tab.cpp verilog_y.tab.h
+verilog_lex.yy$(OBJEXT): verilog_y.tab.cpp verilog_lex.yy.cpp verilog_y.tab.h
 

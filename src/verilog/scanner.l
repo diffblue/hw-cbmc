@@ -17,7 +17,7 @@ static int isatty(int) { return 0; }
 #define YYSTYPE unsigned
 
 #include "verilog_parser.h"
-#include "y.tab.h"
+#include "verilog_y.tab.h"
 
 int yyverilogerror(const char *error);
 
