@@ -77,7 +77,7 @@ int k_inductiont::do_k_induction()
 
   if(properties.empty())
   {
-    error("no properties");
+    error() << "no properties" << eom;
     return 1;
   }
 
@@ -104,7 +104,7 @@ Function: k_inductiont::induction_base
 
 int k_inductiont::induction_base()
 {
-  status("Induction Base");
+  status() << "Induction Base" << eom;
 
   satcheckt satcheck;
     namespacet ns(symbol_table);
@@ -160,11 +160,11 @@ int k_inductiont::induction_base()
     break;
 
   case decision_proceduret::D_ERROR:
-    error("Error from decision procedure");
+    error() << "Error from decision procedure" << eom;
     return 2;
 
   default:
-    error("Unexpected result from decision procedure");
+    error() << "Unexpected result from decision procedure" << eom;
     return 1;
   }
 
@@ -185,7 +185,7 @@ Function: k_inductiont::induction_step
 
 int k_inductiont::induction_step()
 {
-  status("Induction Step");
+  status() << "Induction Step" << eom;
 
   namespacet ns(symbol_table);
   satcheckt satcheck;
@@ -210,7 +210,7 @@ int k_inductiont::induction_step()
     if(property.id()!="AG" ||
        property.operands().size()!=1)
     {
-      error("unsupported property - only AGp implemented");
+      error() << "unsupported property - only AGp implemented" << eom;
       return 1;
     }
 
@@ -247,11 +247,11 @@ int k_inductiont::induction_step()
     break;
 
   case decision_proceduret::D_ERROR:
-    error("Error from decision procedure");
+    error() << "Error from decision procedure" << eom;
     return 2;
 
   default:
-    error("Unexpected result from decision procedure");
+    error() << "Unexpected result from decision procedure" << eom;
     return 1;
   }
 

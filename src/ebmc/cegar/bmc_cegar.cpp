@@ -38,7 +38,7 @@ void bmc_cegart::bmc_cegar()
 
   if(properties.empty())
   {
-    message.error("No properties given");
+    message.error() << "No properties given" << messaget::eom;
     return;
   }
 
@@ -50,9 +50,8 @@ void bmc_cegart::bmc_cegar()
   {
   }
 
-  std::cout << "CEGAR time: ";
-  output_time(current_time()-start_time, std::cout);
-  std::cout << std::endl;
+  std::cout << "CEGAR time: "
+            << (current_time()-start_time) << std::endl;
 }
 
 /*******************************************************************\
@@ -188,7 +187,7 @@ void bmc_cegart::cegar_loop()
 
     if(ct>=MAX_CT)
     {
-      message.error("CT too big -- giving up");
+      message.error() << "CT too big -- giving up" << messaget::eom;
       throw 0;
     }
     
@@ -242,6 +241,6 @@ void bmc_cegart::make_netlist()
   }
 
   if(verbose)
-    message.status("Latches: "+i2string(concrete_netlist.var_map.latches.size())+
-                   ", nodes: "+i2string(concrete_netlist.number_of_nodes()));
+    message.status() << "Latches: " << concrete_netlist.var_map.latches.size()
+                     << ", nodes: " << concrete_netlist.number_of_nodes() << messaget::eom;
 }

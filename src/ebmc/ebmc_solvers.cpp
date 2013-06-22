@@ -47,12 +47,8 @@ int ebmc_baset::do_dimacs()
   int result=do_ebmc(dimacs_cnf, true);
   if(result!=0) return result;
 
-  {
-    std::string stat_text=
-      i2string(dimacs_cnf.no_variables())+" variables and "+
-      i2string(dimacs_cnf.no_clauses())+" clauses";
-    status(stat_text);
-  }
+  status() << dimacs_cnf.no_variables() << " variables and "
+           << dimacs_cnf.no_clauses() << " clauses" << eom;
 
   if(cmdline.isset("outfile"))
   {
@@ -403,15 +399,15 @@ Function: ebmc_baset::do_compute_ct
 int ebmc_baset::do_compute_ct()
 {
   // make net-list
-  status("Making Netlist");
+  status() << "Making Netlist" << eom;
 
   netlistt netlist;
   make_netlist(netlist);
 
-  status("Latches: "+i2string(netlist.var_map.latches.size())+
-         ", nodes: "+i2string(netlist.number_of_nodes()));
+  status() << "Latches: " << netlist.var_map.latches.size()
+           << ", nodes: " << netlist.number_of_nodes() << eom;
 
-  status("Making LDG");
+  status() << "Making LDG" << eom;
   
   ldgt ldg;
   ldg.compute(netlist);

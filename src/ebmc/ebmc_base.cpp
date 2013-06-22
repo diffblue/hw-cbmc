@@ -108,15 +108,16 @@ Function: ebmc_baset::finish
 
 int ebmc_baset::finish(prop_convt &solver)
 {
-  status("Solving with "+solver.decision_procedure_text());
+  status() << "Solving with "
+           << solver.decision_procedure_text() << eom;
 
   fine_timet sat_start_time=current_time();
   
   decision_proceduret::resultt dec_result=
     solver.dec_solve();
   
-  status("Solver time: "+time2string(
-    current_time()-sat_start_time));
+  status() << "Solver time: " << (current_time()-sat_start_time)
+           << eom;
 
   switch(dec_result)
   {
@@ -174,13 +175,13 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
 {
   fine_timet sat_start_time=current_time();
   
-  status("Solving with "+solver.solver_text());
+  status() << "Solving with " << solver.solver_text() << eom;
 
   propt::resultt prop_result=
     solver.prop_solve();
   
-  status("Solver time: "+time2string(
-    current_time()-sat_start_time));
+  status() << "Solver time: " << (current_time()-sat_start_time)
+           << eom;
 
   switch(prop_result)
   {
