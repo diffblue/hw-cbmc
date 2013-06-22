@@ -709,10 +709,8 @@ void map_varst::map_vars(const irep_idt &module)
   
   if(struct_symbol=="")
   {
-    std::string text=
-      "failed to find top-module symbol `"+
-      id2string(module_symbol.base_name)+"'";
-    error(text);
+    error() << "failed to find top-module symbol `"
+            << module_symbol.base_name << "'" << eom;
     return;
   }
   

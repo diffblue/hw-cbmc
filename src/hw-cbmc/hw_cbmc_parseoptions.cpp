@@ -159,7 +159,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
   }
   else if(cmdline.isset("gen-interface"))
   {
-    error("must specify module name for gen-interface");
+    error() << "must specify module name for gen-interface" << eom;
     return true;
   }
   else if(cmdline.isset("show-modules"))
