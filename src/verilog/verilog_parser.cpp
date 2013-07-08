@@ -33,7 +33,7 @@ bool parse_verilog_file(const std::string &filename)
   std::ifstream in(filename.c_str());
   console_message_handlert console_message_handler;
 
-  verilog_parser.filename=filename;
+  verilog_parser.set_file(filename);
   verilog_parser.set_message_handler(console_message_handler);
 
   if(filename=="")

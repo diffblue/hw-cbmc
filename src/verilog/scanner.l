@@ -31,7 +31,7 @@ static void line_directive()
   // skip whitespace
   while(*tptr==' ' || *tptr=='\t') tptr++;
 
-  PARSER.line_no=atoi(tptr)-1;
+  PARSER.set_line_no(atoi(tptr)-1);
 
   // skip number
 
@@ -48,7 +48,7 @@ static void line_directive()
     while(*tptr!=0 && *tptr!='"')
       filename+=*(tptr++);
 
-    PARSER.filename=filename;
+    PARSER.set_file(filename);
   }
 }
 

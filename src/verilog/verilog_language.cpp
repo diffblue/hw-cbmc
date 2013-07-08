@@ -41,7 +41,7 @@ bool verilog_languaget::parse(
   if(preprocess(instream, path, str, message_handler))
     return true;
 
-  verilog_parser.filename=path;
+  verilog_parser.set_file(path);
   verilog_parser.in=&str;
   verilog_parser.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
@@ -279,7 +279,7 @@ bool verilog_languaget::to_expr(
   // parsing
   
   verilog_parser.clear();
-  verilog_parser.filename="";
+  verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;
   verilog_parser.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::EXPRESSION;

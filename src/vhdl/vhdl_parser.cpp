@@ -34,7 +34,7 @@ bool parse_vhdl_file(const std::string &filename)
   std::ifstream in(filename.c_str());
   console_message_handlert console_message_handler;
 
-  vhdl_parser.filename=filename;
+  vhdl_parser.set_file(filename);
   vhdl_parser.set_message_handler(console_message_handler);
 
   if(filename=="")

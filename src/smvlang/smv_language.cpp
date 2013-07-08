@@ -35,7 +35,7 @@ bool smv_languaget::parse(
   smv_parser.module->name=main_name;
   smv_parser.module->base_name="main";
 
-  smv_parser.filename=path;
+  smv_parser.set_file(path);
   smv_parser.in=&instream;
   smv_parser.set_message_handler(message_handler);
 

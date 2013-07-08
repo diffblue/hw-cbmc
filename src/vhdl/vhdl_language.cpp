@@ -35,7 +35,7 @@ bool vhdl_languaget::parse(
 {
   vhdl_parser.clear();
 
-  vhdl_parser.filename=path;
+  vhdl_parser.set_file(path);
   vhdl_parser.in=&instream;
   vhdl_parser.set_message_handler(message_handler);
   //vhdl_parser.grammar=vhdl_parsert::LANGUAGE;
@@ -272,7 +272,7 @@ bool vhdl_languaget::to_expr(
   // parsing
   
   vhdl_parser.clear();
-  vhdl_parser.filename="";
+  vhdl_parser.set_file("");
   vhdl_parser.in=&i_preprocessed;
   vhdl_parser.set_message_handler(message_handler);
   vhdl_parser.grammar=vhdl_parsert::EXPRESSION;
