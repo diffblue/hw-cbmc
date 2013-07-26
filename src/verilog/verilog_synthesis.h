@@ -255,10 +255,9 @@ protected:
     exprt &new_value,
     exprt &constraints);
 
-  void synth_case_values(
+  exprt synth_case_values(
     const exprt &values,
-    const exprt &case_operand,
-    exprt &guard);
+    const exprt &case_operand);
 
   void expand_inst(
     const symbolt &symbol,

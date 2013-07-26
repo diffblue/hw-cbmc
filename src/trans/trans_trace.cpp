@@ -281,9 +281,9 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
   else if(type.id()==ID_bool)
   {
     if(src=="0")
-      value_expr.make_false();
+      value_expr=false_exprt();
     else if(src=="1")
-      value_expr.make_true();
+      value_expr=true_exprt();
   }
   else if(type.id()==ID_array)
   {

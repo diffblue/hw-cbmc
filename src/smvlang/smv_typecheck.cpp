@@ -46,7 +46,7 @@ public:
   void convert(smv_parse_treet::mc_varst &vars);
 
   void collect_define(const exprt &expr);
-  void convert_defines(exprt &invar);
+  void convert_defines(exprt::operandst &invar);
   void convert_define(const irep_idt &identifier);
 
   typedef enum { NORMAL, NEXT } expr_modet;
@@ -755,9 +755,9 @@ void smv_typecheckt::typecheck(
         if(type.id()==ID_bool)
         {
           if(int_value==0)
-            expr.make_false();
+            expr=false_exprt();
           else if(int_value==1)
-            expr.make_true();
+            expr=true_exprt();
         }
         else if(type.id()==ID_range)
         {
@@ -793,9 +793,9 @@ void smv_typecheckt::typecheck(
       if(type.id()==ID_bool)
       {
         if(int_value==0)
-          expr.make_false();
+          expr=false_exprt();
         else if(int_value==1)
-          expr.make_true();
+          expr=true_exprt();
         else
         {
           err_location(expr);
@@ -902,9 +902,9 @@ void smv_typecheckt::typecheck(
         if(type.id()==ID_bool)
         {
           if(e.from==0)
-            expr.make_false();
+            expr=false_exprt();
           else
-            expr.make_true();
+            expr=true_exprt();
         }
         else
         {
@@ -967,9 +967,9 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
     const std::string &identifier=expr.get_string(ID_identifier);
 
     if(identifier=="TRUE")
-      expr.make_true();
+      expr=true_exprt();
     else if(identifier=="FALSE")
-      expr.make_false();
+      expr=false_exprt();
     else if(identifier.find("::")==std::string::npos)
     {
       std::string id=module+"::var::"+identifier;
@@ -1286,7 +1286,7 @@ Function: smv_typecheckt::convert_defines
 
 \*******************************************************************/
 
-void smv_typecheckt::convert_defines(exprt &invar)
+void smv_typecheckt::convert_defines(exprt::operandst &invar)
 {
   for(define_mapt::iterator it=define_map.begin();
       it!=define_map.end();
@@ -1299,7 +1299,7 @@ void smv_typecheckt::convert_defines(exprt &invar)
     equality.lhs()=exprt(ID_symbol, it->second.value.type());
     equality.lhs().set(ID_identifier, it->first);
     equality.rhs()=it->second.value;
-    invar.move_to_operands(equality);
+    invar.push_back(equality);
   }
 }
 
@@ -1336,8 +1336,8 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
   module_symbol.value=transt();
   module_symbol.value.operands().resize(3);
 
-  transt &trans=to_trans_expr(module_symbol.value);
-
+  exprt::operandst trans_invar, trans_init, trans_trans;
+  
   convert_ports(smv_module, module_symbol.type);
 
   Forall_item_list(it, smv_module.items)
@@ -1352,7 +1352,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
       collect_define(it->expr);
 
   // now turn them into INVARs
-  convert_defines(trans.invar());
+  convert_defines(trans_invar);
 
   // do the rest now
 
@@ -1362,14 +1362,17 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   Forall_item_list(it, smv_module.items)
     if(it->is_invar())
-      trans.invar().move_to_operands(it->expr);
+      trans_invar.push_back(it->expr);
     else if(it->is_init())
-      trans.init().move_to_operands(it->expr);
+      trans_init.push_back(it->expr);
     else if(it->is_trans())
-      trans.trans().move_to_operands(it->expr);
+      trans_trans.push_back(it->expr);
 
-  Forall_operands(it, trans)
-    gen_and(*it);
+  transt &trans=to_trans_expr(module_symbol.value);
+  
+  trans.invar()=conjunction(trans_invar);
+  trans.init()=conjunction(trans_init);
+  trans.trans()=conjunction(trans_trans);
 
   symbol_table.move(module_symbol);
 

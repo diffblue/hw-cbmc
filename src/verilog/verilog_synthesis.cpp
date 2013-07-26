@@ -1747,7 +1747,7 @@ void verilog_synthesist::synth_assume_module_item(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_case_values
+Function: verilog_synthesist::case_comparison
 
   Inputs:
 
@@ -1840,27 +1840,25 @@ Function: verilog_synthesist::synth_case_values
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_case_values(
+exprt verilog_synthesist::synth_case_values(
   const exprt &values,
-  const exprt &case_operand,
-  exprt &guard)
+  const exprt &case_operand)
 {
   if(values.id()==ID_default)
-  {
-    guard.make_true();
-    return;
-  }
+    return true_exprt();
 
-  guard.reserve_operands(values.operands().size());
+  exprt::operandst op;
+  
+  op.reserve(values.operands().size());
 
   forall_operands(it, values)
   {
     exprt pattern=*it;
     synth_expr(pattern, S_CURRENT);
-    guard.copy_to_operands(case_comparison(case_operand, pattern));
+    op.push_back(case_comparison(case_operand, pattern));
   }
 
-  gen_or(guard);
+  return disjunction(op);
 }
 
 /*******************************************************************\
@@ -1910,8 +1908,7 @@ void verilog_synthesist::synth_case(
     if_statement.reserve_operands(3);
     if_statement.operands().resize(2);
 
-    synth_case_values(
-      e.op0(), case_operand, if_statement.op0());
+    if_statement.op0()=synth_case_values(e.op0(), case_operand);
 
     if_statement.op1()=e.op1();
 
@@ -2067,7 +2064,7 @@ void verilog_synthesist::synth_event_guard(
   bool edge=false;
 
   // these guards are ORed
-  exprt guards; 
+  exprt::operandst guards; 
 
   forall_operands(it, event_guard_expr)
     if(it->id()==ID_posedge || it->id()==ID_negedge)
@@ -2102,7 +2099,7 @@ void verilog_synthesist::synth_event_guard(
       {
         // found! we make it a guard
 
-        guards.copy_to_operands(it->op0());
+        guards.push_back(it->op0());
 
         str << "Notice: using clock guard " << identifier << std::endl;
       }
@@ -2110,12 +2107,12 @@ void verilog_synthesist::synth_event_guard(
 
   event_guard=edge?G_CLOCK:G_COMBINATORIAL;
 
-  if(guards.operands().empty())
+  if(guards.empty())
     synth_statement(statement.body());
   else
   {
     // new guards!
-    gen_or(guards);
+    exprt guard_expr=disjunction(guards);
 
     value_mapt *old_map=value_map;
     value_mapt true_map(*value_map), false_map(*value_map);
@@ -2126,8 +2123,8 @@ void verilog_synthesist::synth_event_guard(
     synth_statement(statement.body());
 
     value_map=old_map;
-    merge(guards, true_map.current, false_map.current, false, value_map->current);
-    merge(guards, true_map.final, false_map.final, true, value_map->final);
+    merge(guard_expr, true_map.current, false_map.current, false, value_map->current);
+    merge(guard_expr, true_map.final, false_map.final, true, value_map->final);
   }
 
   event_guard=G_NONE;
@@ -2843,8 +2840,6 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
 {
   assert(symbol.value.id()==ID_verilog_module);
 
-  transt trans;
-
   // clean up
   assignments.clear();
   invars.clear();
@@ -2855,6 +2850,8 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
     local_symbols.insert(it->second);
 
   // do the module items
+  
+  transt trans;
 
   forall_operands(it, symbol.value)
     synth_module_item(
@@ -2868,9 +2865,9 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
       it++)
     trans.invar().copy_to_operands(*it);
 
-  gen_and(trans.invar()); // general
-  gen_and(trans.init());  // initial
-  gen_and(trans.trans()); // transition relation
+  trans.invar()=conjunction(trans.invar().operands());
+  trans.init()=conjunction(trans.init().operands());
+  trans.trans()=conjunction(trans.trans().operands());
   
   #if 0
   // debug
