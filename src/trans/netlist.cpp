@@ -284,7 +284,7 @@ void netlistt::output_smv(std::ostream &out) const
   {
     const aig_nodet &node=nodes[node_nr];
 
-    if(node.type==aig_nodet::AND)
+    if(node.is_and())
     {
       out << "DEFINE node" << node_nr << ":=";
       print_smv(out, node.a);
@@ -421,24 +421,17 @@ void netlistt::print_smv(
 
   if(a.sign()) out << "!";
 
-  switch(nodes[node_nr].type)
-  {
-  case aig_nodet::AND:
+  if(nodes[node_nr].is_and())
     out << "node" << node_nr;
-    break;
-    
-  case aig_nodet::VAR:
-    {
-      const bv_varidt &varid=var_map.reverse(node_nr);
-      out << id2smv(varid.id);
-      const var_mapt::mapt::const_iterator v_it=var_map.map.find(varid.id);
-      if(v_it!=var_map.map.end() && v_it->second.bits.size()!=1)
-        out << '[' << varid.bit_nr << ']';
-    }
-    break;
-    
-  default:
-    out << "unknown";
+  else if(nodes[node_nr].is_var())
+  {
+    const bv_varidt &varid=var_map.reverse(node_nr);
+    out << id2smv(varid.id);
+    const var_mapt::mapt::const_iterator v_it=var_map.map.find(varid.id);
+    if(v_it!=var_map.map.end() && v_it->second.bits.size()!=1)
+      out << '[' << varid.bit_nr << ']';
   }
+  else
+    out << "unknown";
 }
 

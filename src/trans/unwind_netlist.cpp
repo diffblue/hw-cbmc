@@ -53,7 +53,7 @@ void unwind(
   
   for(unsigned n=0; n<timeframe.size(); n++)
   {
-    const aig_nodet &node=netlist.get_node(n);
+    const aig_nodet &node=netlist.get_node(literalt(n, false));
 
     if(node.is_and() && timeframe[n].is_visible)
     {
