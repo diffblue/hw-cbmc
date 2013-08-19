@@ -12,8 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/get_module.h>
 
-#include <goto-programs/show_claims.h>
-#include <goto-programs/set_claims.h>
+#include <goto-programs/show_properties.h>
+#include <goto-programs/set_properties.h>
 #include <trans/show_modules.h>
 #include <cbmc/version.h>
 #include <langapi/mode.h>
@@ -82,16 +82,16 @@ int hw_cbmc_parseoptionst::doit()
   if(get_goto_program(options, bmc, goto_functions))
     return 6;
 
-  label_claims(goto_functions);
+  label_properties(goto_functions);
 
-  if(cmdline.isset("show-claims"))
+  if(cmdline.isset("show-properties"))
   {
     const namespacet ns(symbol_table);
-    show_claims(ns, get_ui(), goto_functions);
+    show_properties(ns, get_ui(), goto_functions);
     return 0;
   }
 
-  if(set_claims(goto_functions))
+  if(set_properties(goto_functions))
     return 7;
 
   // do actual BMC
