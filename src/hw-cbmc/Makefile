@@ -3,7 +3,7 @@ SRC = hw_cbmc_main.cpp hw_cbmc_parseoptions.cpp hw_bmc.cpp next_timeframe.cpp \
 
 OBJ+= $(CBMC)/src/cbmc/cbmc_parseoptions$(OBJEXT) \
       $(CBMC)/src/cbmc/xml_interface$(OBJEXT) \
-      $(CBMC)/src/cbmc/languages$(OBJEXT) \
+      $(CBMC)/src/cbmc/cbmc_languages$(OBJEXT) \
       $(CBMC)/src/cbmc/bmc$(OBJEXT) \
       $(CBMC)/src/cbmc/bv_cbmc$(OBJEXT) \
       $(CBMC)/src/cbmc/symex_bmc$(OBJEXT) \
