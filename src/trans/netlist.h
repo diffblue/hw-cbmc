@@ -23,6 +23,10 @@ public:
   netlistt()
   {
   }
+  
+  virtual ~netlistt()
+  {
+  }
 
   unsigned get_no_vars() const
   {
