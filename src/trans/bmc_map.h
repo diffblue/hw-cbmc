@@ -20,14 +20,14 @@ public:
   {
     literalt l=bit.current;
     if(l.is_constant()) return l;
-    return get(timeframe, l.var_no()).cond_negation(l.sign());
+    return get(timeframe, l.var_no())^l.sign();
   }
 
   inline literalt get(unsigned timeframe, const irep_idt &id, unsigned bit_nr) const
   {
     literalt l=var_map.get_current(id, bit_nr);
     if(l.is_constant()) return l;
-    return get(timeframe, l.var_no()).cond_negation(l.sign());
+    return get(timeframe, l.var_no())^l.sign();
   }
 
   // translate netlist variable to solver literal
@@ -42,7 +42,7 @@ public:
   inline literalt translate(unsigned timeframe, literalt l) const
   {
     if(l.is_constant()) return l;
-    return get(timeframe, l.var_no()).cond_negation(l.sign());
+    return get(timeframe, l.var_no())^l.sign();
   }
 
   // set the solver literal for a netlist variable
