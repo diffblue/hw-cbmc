@@ -68,8 +68,8 @@ int hw_cbmc_parseoptionst::doit()
     options.set_option("vcd", cmdline.getval("vcd"));
 
   hw_bmct bmc(options, symbol_table, ui_message_handler);
-  set_verbosity(bmc);
-  set_verbosity(*this);
+  eval_verbosity();
+  bmc.set_verbosity(get_verbosity());
 
   if(cmdline.isset("preprocess"))
   {
