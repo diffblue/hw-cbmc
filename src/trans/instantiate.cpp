@@ -42,6 +42,8 @@ public:
   typedef boolbvt SUB;
 
   // overloading
+  using boolbvt::get_literal;
+  
   virtual literalt convert_bool(const exprt &expr);
   virtual literalt get_literal(const std::string &symbol, const unsigned bit);
   virtual void convert_bitvector(const exprt &expr, bvt &bv);
@@ -289,6 +291,8 @@ public:
   typedef boolbvt SUB;
 
   // overloading
+  using boolbvt::get_literal;
+  
   virtual literalt convert_bool(const exprt &expr);
   virtual literalt get_literal(const std::string &symbol, const unsigned bit);
   virtual void convert_bitvector(const exprt &expr, bvt &bv);
