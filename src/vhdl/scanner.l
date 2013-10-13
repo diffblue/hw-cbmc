@@ -1,3 +1,4 @@
+%option nounput
 %option noinput
 
 %{
