@@ -301,7 +301,7 @@ protected:
   // disable smart variable allocation,
   // we already have literals for all variables
   virtual bool boolbv_set_equality_to_true(const equal_exprt &expr) { return true; }
-  virtual bool set_equality_to_true(const exprt &expr) { return true; }
+  virtual bool set_equality_to_true(const equal_exprt &expr) { return true; }
   
   const var_mapt &var_map;
 };
