@@ -105,7 +105,8 @@ void property(
     message.status("Adding "+i2string(properties.size())+" properties");
 
   prop_bv.clear();
-  bvt all_prop;
+
+  or_exprt::operandst all_prop;
 
   for(std::list<exprt>::const_iterator
       it=properties.begin();
@@ -139,9 +140,9 @@ void property(
 
       literalt l=solver.convert(tmp);
       prop_bv.back().push_back(l);
-      all_prop.push_back(solver.prop.lnot(l));
+      all_prop.push_back(literal_exprt(!l));
     }
   }
 
-  solver.prop.lcnf(all_prop);
+  solver.set_to(disjunction(all_prop), true);
 }

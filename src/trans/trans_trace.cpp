@@ -209,6 +209,64 @@ void compute_trans_trace_properties(
 
 /*******************************************************************\
 
+Function: compute_trans_trace_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void compute_trans_trace_properties(
+  const std::list<bvt> &prop_bv,
+  const prop_convt &solver,
+  unsigned no_timeframes,
+  trans_tracet &dest)  
+{
+  // check the properties that got violated
+
+  for(std::list<bvt>::const_iterator
+      p_it=prop_bv.begin();
+      p_it!=prop_bv.end();
+      p_it++)
+  {
+    dest.properties.push_back(trans_tracet::propertyt());
+
+    const bvt &bv=*p_it;
+    assert(bv.size()==no_timeframes);
+    
+    bool saw_unknown=false,
+         saw_failure=false;
+  
+    for(unsigned t=0; t<no_timeframes; t++)
+    {
+      tvt result=solver.l_get(bv[t]);
+
+      if(result.is_unknown())
+      {
+        saw_unknown=true;
+      }
+      else if(result.is_false())
+      {
+        dest.properties.back().failing_timeframe=t;
+        saw_failure=true;
+        break; // next property
+      }
+    }
+
+    if(saw_failure)
+      dest.properties.back().status=tvt(false);
+    else if(saw_unknown)
+      dest.properties.back().status=tvt(tvt::TV_UNKNOWN);
+    else
+      dest.properties.back().status=tvt(true);
+  }
+}
+
+/*******************************************************************\
+
 Function: compute_trans_trace
 
   Inputs:
@@ -241,7 +299,7 @@ void compute_trans_trace(
 
   compute_trans_trace_properties(
     prop_bv,
-    solver.prop,
+    solver,
     no_timeframes,
     dest);
 }
@@ -318,7 +376,7 @@ Function: compute_trans_trace
 void compute_trans_trace(
   const std::list<bvt> &prop_bv,
   const bmc_mapt &bmc_map,
-  const class propt &solver,
+  const propt &solver,
   const namespacet &ns,
   trans_tracet &dest)
 {
