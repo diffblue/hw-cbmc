@@ -177,8 +177,6 @@ std::cout << "This option is currently disabled\n";
       return ebmc_base.do_z3();
     else if(cmdline.isset("yices"))
       return ebmc_base.do_yices();
-    else if(cmdline.isset("dplib"))
-      return ebmc_base.do_dplib();
     else if(cmdline.isset("smt1"))
       return ebmc_base.do_smt1();
     else if(cmdline.isset("smt2"))

@@ -73,43 +73,6 @@ int ebmc_baset::do_dimacs()
 
 /*******************************************************************\
 
-Function: ebmc_baset::do_dplib
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::do_dplib()
-{
-  const namespacet ns(symbol_table);
-
-  if(cmdline.isset("outfile"))
-  {
-    const char *filename=cmdline.getval("outfile");
-    std::ofstream out(filename);
-  
-    if(!out)
-    {
-      std::cerr << "Failed to open `"
-                << filename
-                << "'" << std::endl;
-      return 1;
-    }
-
-    dplib_convt dplib_conv(ns, out);
-    return do_ebmc(dplib_conv, true);
-  }
-
-  dplib_dect dplib_dec(ns);
-  return do_ebmc(dplib_dec, false);
-}
-
-/*******************************************************************\
-
 Function: ebmc_baset::do_smt1
 
   Inputs:

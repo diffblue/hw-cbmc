@@ -93,7 +93,6 @@ public:
   int do_compute_ct();
   int do_dimacs();
   int do_cvc3();
-  int do_dplib();
   int do_smt1();
   int do_smt2();
   int do_boolector();
@@ -103,4 +102,5 @@ public:
   int do_prover();
   int do_lifter();
 };
+
 #endif
