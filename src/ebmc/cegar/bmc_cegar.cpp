@@ -42,7 +42,7 @@ void bmc_cegart::bmc_cegar()
     return;
   }
 
-  fine_timet start_time=current_time();
+  absolute_timet start_time=current_time();
 
   try { cegar_loop(); }
   
