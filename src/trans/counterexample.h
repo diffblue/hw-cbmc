@@ -7,7 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #ifndef CPROVER_BMC_COUNTEREXAMPLE_H
-#define CPROVER_BMC_COUTNEREXAMPLE_H
+#define CPROVER_BMC_COUNTEREXAMPLE_H
 
 #include <util/namespace.h>
 #include <util/message.h>
