@@ -6,11 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cstdlib>
 #include <iostream>
 
 #include <util/config.h>
 #include <util/get_module.h>
+#include <util/string2int.h>
 
 #include <goto-programs/show_properties.h>
 #include <goto-programs/set_properties.h>
@@ -135,7 +135,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
       hw_bmct &hw_bmc=dynamic_cast<hw_bmct &>(bmc);
 
       if(cmdline.isset("bound"))
-        hw_bmc.unwind_no_timeframes=atoi(cmdline.getval("bound"))+1;
+        hw_bmc.unwind_no_timeframes=safe_string2unsigned(cmdline.getval("bound"))+1;
       else
         hw_bmc.unwind_no_timeframes=1;
 
