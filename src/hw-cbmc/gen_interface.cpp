@@ -111,7 +111,10 @@ std::string gen_interfacet::type_to_string(const typet& type)
   }
   else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
   {
-    unsigned width=to_unsignedbv_type(type).get_width();
+    unsigned width=
+      type.id()==ID_unsignedbv?
+        to_unsignedbv_type(type).get_width():
+        to_signedbv_type(type).get_width();
     
     std::string sign=type.id()==ID_unsignedbv?"unsigned ":"signed ";
     
