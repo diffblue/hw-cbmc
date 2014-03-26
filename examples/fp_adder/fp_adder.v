@@ -167,175 +167,6 @@ module pack(
 endmodule
 
 
-// Make the decision of whether to round or not.
-module rounder(
-  input [2:0] roundingMode,
-  input result_nan_in, result_inf_in, result_zero_in, result_subnormal_in, result_sign_in,
-  input [9:0] result_exponent_in,
-  input [23:0] result_significand_in,
-  output reg result_nan, result_inf, result_zero, result_subnormal, result_sign,
-  output reg [9:0] result_exponent,
-  output reg [23:0] result_significand,
-  input guardBit_in,
-  input stickyBit_in);
-
-  reg [63:0] increment;
-  reg [63:0] incremented;  
-  reg [31:0] subnormalAmount;
-  reg do_increment;
-  reg guardBit, stickyBit;
-
-  always @(*) begin
-  
-    // copy over
-    result_nan=result_nan_in;
-    result_inf=result_inf_in;
-    result_zero=result_zero_in;
-    result_subnormal=result_subnormal_in;
-    result_sign=result_sign_in;
-    result_exponent=result_exponent_in;
-    result_significand=result_significand_in;
-    guardBit=guardBit_in;
-    stickyBit=stickyBit_in;
-    
-    increment = 1;
-
-    if (result_exponent < -150) begin
-      // Even rounding up will not make this representable; make zero.
-      result_nan = 0;
-      result_inf = 0;
-      result_zero = 1;
-      result_subnormal = 0;
-      result_exponent = 0;
-      result_significand = 0;
-    end else begin
-      if (result_exponent < -126) begin
-        // For subnormals, correct the guard and sticky bits
-
-        subnormalAmount = -(result_exponent + 126);
-
-        increment = 1 << subnormalAmount;
-        
-        stickyBit = stickyBit | guardBit | 
-          ((((1 << (subnormalAmount - 1)) - 1) & result_significand) ? 1 : 0);
-
-        guardBit = ((1 << (subnormalAmount - 1)) & result_significand) ? 1 : 0;
-
-        result_significand = result_significand & ~(increment - 1);
-      end
-
-      // Round to fixed significand length
-
-      case (roundingMode)
-        `RNE: do_increment = guardBit & (stickyBit || (result_significand & increment));
-        `RNA: do_increment = guardBit;
-        `RTP: do_increment = !result_sign && (guardBit || stickyBit);
-        `RTN: do_increment = result_sign && (guardBit || stickyBit);
-        `RTZ: do_increment = 0; // No rounding needed
-        default: do_increment = 0;
-      endcase
-      
-      // the following case corresponds to calling roundInc
-      if (do_increment) begin
-        incremented = result_significand + increment;
-
-        if (incremented == (1<<24)) begin
-          incremented = incremented >> 1;
-          result_exponent = result_exponent + 1;
-          // Note that carrying into the exponent would be possible with
-          // packed representations
-        end
-        
-        result_significand = incremented;
-      end
-
-      // Round to fixed exponent length
-      case (roundingMode)
-        `RNE:
-          if (result_exponent > 127) begin
-            // make infinity
-            result_nan = 0;
-            result_inf = 1;
-            result_zero = 0;
-            result_subnormal = 0;
-            result_exponent = 'hff;
-            result_significand = 0;            
-          end
-
-        `RNA:
-          if (result_exponent > 127) begin
-            // make infinity
-            result_nan = 0;
-            result_inf = 1;
-            result_zero = 0;
-            result_subnormal = 0;
-            result_exponent = 'hff;
-            result_significand = 0;            
-          end
-
-        `RTP:
-          if (result_exponent > 127) begin
-            if (result_sign == 0) begin
-              // make infinity
-              result_nan = 0;
-              result_inf = 1;
-              result_zero = 0;
-              result_subnormal = 0;
-              result_exponent = 'hff;
-              result_significand = 0;            
-            end else begin
-              // make max
-              result_nan = 0;
-              result_inf = 0;
-              result_zero = 0;
-              result_subnormal = 0;
-              result_exponent = 127;
-              result_significand = 'hffffff;
-            end
-          end
-        
-        `RTN:
-          if (result_exponent > 127) begin
-            if (result_sign == 1) begin
-              // make infinity
-              result_nan = 0;
-              result_inf = 1;
-              result_zero = 0;
-              result_subnormal = 0;
-              result_exponent = 'hff;
-              result_significand = 0;            
-            end else begin
-              // make max
-              result_nan = 0;
-              result_inf = 0;
-              result_zero = 0;
-              result_subnormal = 0;
-              result_exponent = 127;
-              result_significand = 'hffffff;
-            end
-          end
-
-        `RTZ:
-          if (result_exponent > 127) begin
-            // make max
-            result_nan = 0;
-            result_inf = 0;
-            result_zero = 0;
-            result_subnormal = 0;
-            result_exponent = 127;
-            result_significand = 'hffffff;
-          end
-      endcase
-
-      if (result_exponent < -126)
-        result_subnormal = 1;
-    end // if
-
-  end // always
-  
-endmodule // rounder
-
-
 module dualPathAdder(
   input isAdd,
   input [2:0] roundingMode,
@@ -354,12 +185,28 @@ module dualPathAdder(
 
   reg [9:0] larger_exponent, smaller_exponent;
   reg [23:0] larger_significand, smaller_significand;
+  reg larger_sign, smaller_sign;
+  reg larger_subnormal, smaller_subnormal;
   reg signed [10:0] exponentDifference;
   reg effectiveSubtract;
   
-  reg [31:0] lsig, ssig, sum, diff;
+  reg [31:0] lsig, ssig, sum, diff, iOnes;
+  integer i;
+  
+  // for simulating control flow in C
+  reg do_return, do_goto_extract;
+  
+  // rounder
+  reg [63:0] increment;
+  reg [63:0] incremented;  
+  reg [31:0] subnormalAmount;
+  reg do_increment;
   
   always @(*) begin
+
+    // these simulate gotos and return
+    do_return = 0;
+    do_goto_extract = 0;
 
     guardBit = 0;
     stickyBit = 0;
@@ -376,16 +223,30 @@ module dualPathAdder(
     // Order by exponent
     if ((exponentDifference > 0) || 
         ((exponentDifference == 0) && (uf_significand > ug_significand))) begin
+
       larger_exponent = uf_exponent;
       larger_significand = uf_significand;
+      larger_sign = uf_sign;
+      larger_subnormal = uf_subnormal;
+      
       smaller_exponent = ug_exponent;
       smaller_significand = ug_significand;
+      smaller_sign = ug_sign;
+      smaller_subnormal = ug_subnormal;
+
       result_sign = larger_sign;
     end else begin
+
       larger_exponent = ug_exponent;
       larger_significand = ug_significand;
+      larger_sign = ug_sign;
+      larger_subnormal = ug_subnormal;
+
       smaller_exponent = uf_exponent;
       smaller_significand = uf_significand;
+      smaller_sign = uf_sign;
+      smaller_subnormal = uf_subnormal;
+
       exponentDifference = -exponentDifference;
       result_sign = isAdd ? larger_sign : !larger_sign;
     end
@@ -436,13 +297,16 @@ module dualPathAdder(
            * = x − (−x) retains the same sign as x even when x is zero.
            */
           result_sign = (roundingMode == `RTN) ? 1 : 0;
+          
+          // we are done, do nothing else
+          do_return = 1;
 
-          //return; // No need to round
         end else if (diff & 'h02000000) begin // 26 bit result
 
           sum = diff << 1;
 
-          // goto extract;
+          // simulate goto extract
+          do_goto_extract = 1;
 
         end else begin // Some cancelation
           result_exponent = result_exponent-1;
@@ -451,14 +315,11 @@ module dualPathAdder(
           stickyBit = 0;
 
           //normaliseUp(result);
-
-          // Won't underflow due to an exciting property of subnormal
-          // numbers.  Also, clearly, won't overflow.  Furthermore,
-          // won't increment.  Thus don't need to call the rounder -- as
-          // long as the subnormal flag is correctly set.
           
           result_subnormal = (result_exponent < -126) ? 1 : 0;
-          //return;
+          
+          // done, do return
+          do_return = 1;
         end
 
       end else begin
@@ -474,55 +335,195 @@ module dualPathAdder(
         
         result_significand = larger_significand;
         result_subnormal = larger_subnormal;
-        //return;
+        do_return = 1;
         
       end else begin
         if (effectiveSubtract)
           ssig = (~ssig) + 1;
         
-        // Align
+        // Align the smaller one
         // do for 1, 2, 4, 8, 16
 
-        `ifdef 0
-          if (exponentDifference & i) {
-            uint32_t iOnes = ((1<<i) - 1);
-            stickyBit |= ((ssig & iOnes) ? 1 : 0);
-            
+        for (i = 1; i <= 26; i = i << 1) begin
+          if (exponentDifference & i) begin
+            iOnes = ((1<<i) - 1);
+            stickyBit = stickyBit | ((ssig & iOnes) ? 1 : 0);
+              
             // Sign extending shift
-            if (effectiveSubtract) {
+            if (effectiveSubtract)
               ssig = (ssig >> i) | (iOnes << (32 - i));
-            } else {
+            else
               ssig = (ssig >> i);
-            }
-        `endif
+          end
+        end
+
       end
     end
 
-    // Decimal point is after 26th bit
-    sum = lsig + ssig;
-    
-    if (effectiveSubtract) begin
-      if (sum & 'h02000000)
-        sum = sum << 1;
-      else begin
-        result_exponent = result_exponent-1;
-        sum = sum << 2;
-      end
-    end else begin
-      if (sum & 'h04000000)
-        result_exponent = result_exponent+1;
-      else
-        sum = sum << 1;
-    end
+    if (!do_return) begin
+      if(!do_goto_extract) begin
+        // Decimal point is after 26th bit
+        sum = lsig + ssig;
+        
+        if (effectiveSubtract) begin
+          if (sum & 'h02000000)
+            sum = sum << 1;
+          else begin
+            result_exponent = result_exponent-1;
+            sum = sum << 2;
+          end
+        end else begin
+          if (sum & 'h04000000)
+            result_exponent = result_exponent+1;
+          else
+            sum = sum << 1;
+        end
+      end // !do_goto_extract
 
-    // extract:
-    // Decimal point is now after the 27th bit
-    result_significand = sum >> 3;
-    guardBit = (sum >> 2) & 'h1;
-    stickyBit = stickyBit | (((sum >> 1) & 'h1) | (sum & 'h1));
-    
-    // Can be simplified as the subnormal case implies no rounding
-    //rounder(roundingMode, result, guardBit, stickyBit);
+      // "extract" target is here
+
+      // Decimal point is now after the 27th bit
+      result_significand = sum >> 3;
+      guardBit = (sum >> 2) & 'h1;
+      stickyBit = stickyBit | (((sum >> 1) & 'h1) | (sum & 'h1));
+
+      //
+      // now round
+      //
+      increment = 1;
+
+      if (result_exponent < -150) begin
+        // Even rounding up will not make this representable; make zero.
+        result_nan = 0;
+        result_inf = 0;
+        result_zero = 1;
+        result_subnormal = 0;
+        result_exponent = 0;
+        result_significand = 0;
+      end else begin
+        if (result_exponent < -126) begin
+          // For subnormals, correct the guard and sticky bits
+
+          subnormalAmount = -(result_exponent + 126);
+
+          increment = 1 << subnormalAmount;
+          
+          stickyBit = stickyBit | guardBit | 
+            ((((1 << (subnormalAmount - 1)) - 1) & result_significand) ? 1 : 0);
+
+          guardBit = ((1 << (subnormalAmount - 1)) & result_significand) ? 1 : 0;
+
+          result_significand = result_significand & ~(increment - 1);
+        end
+
+        // Round to fixed significand length
+
+        case (roundingMode)
+          `RNE: do_increment = guardBit & (stickyBit || (result_significand & increment));
+          `RNA: do_increment = guardBit;
+          `RTP: do_increment = !result_sign && (guardBit || stickyBit);
+          `RTN: do_increment = result_sign && (guardBit || stickyBit);
+          `RTZ: do_increment = 0; // No rounding needed
+          default: do_increment = 0;
+        endcase
+        
+        // the following case corresponds to calling roundInc
+        if (do_increment) begin
+          incremented = result_significand + increment;
+
+          if (incremented == (1<<24)) begin
+            incremented = incremented >> 1;
+            result_exponent = result_exponent + 1;
+            // Note that carrying into the exponent would be possible with
+            // packed representations
+          end
+          
+          result_significand = incremented;
+        end
+
+        // Round to fixed exponent length
+        case (roundingMode)
+          `RNE:
+            if (result_exponent > 127) begin
+              // make infinity
+              result_nan = 0;
+              result_inf = 1;
+              result_zero = 0;
+              result_subnormal = 0;
+              result_exponent = 'hff;
+              result_significand = 0;            
+            end
+
+          `RNA:
+            if (result_exponent > 127) begin
+              // make infinity
+              result_nan = 0;
+              result_inf = 1;
+              result_zero = 0;
+              result_subnormal = 0;
+              result_exponent = 'hff;
+              result_significand = 0;            
+            end
+
+          `RTP:
+            if (result_exponent > 127) begin
+              if (result_sign == 0) begin
+                // make infinity
+                result_nan = 0;
+                result_inf = 1;
+                result_zero = 0;
+                result_subnormal = 0;
+                result_exponent = 'hff;
+                result_significand = 0;            
+              end else begin
+                // make max
+                result_nan = 0;
+                result_inf = 0;
+                result_zero = 0;
+                result_subnormal = 0;
+                result_exponent = 127;
+                result_significand = 'hffffff;
+              end
+            end
+          
+          `RTN:
+            if (result_exponent > 127) begin
+              if (result_sign == 1) begin
+                // make infinity
+                result_nan = 0;
+                result_inf = 1;
+                result_zero = 0;
+                result_subnormal = 0;
+                result_exponent = 'hff;
+                result_significand = 0;            
+              end else begin
+                // make max
+                result_nan = 0;
+                result_inf = 0;
+                result_zero = 0;
+                result_subnormal = 0;
+                result_exponent = 127;
+                result_significand = 'hffffff;
+              end
+            end
+
+          `RTZ:
+            if (result_exponent > 127) begin
+              // make max
+              result_nan = 0;
+              result_inf = 0;
+              result_zero = 0;
+              result_subnormal = 0;
+              result_exponent = 127;
+              result_significand = 'hffffff;
+            end
+        endcase
+
+        if (result_exponent < -126)
+          result_subnormal = 1;
+      end // if
+      
+    end // !do_return
     
   end // always
 
