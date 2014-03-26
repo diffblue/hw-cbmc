@@ -20,30 +20,32 @@ module normaliseUp(
     uf_exponent = uf_exponent_in;
     uf_significand = uf_significand_in;
 
-    `ifdef 0
-    if ((0xFFFF00 & uf->significand) == 0) {
-      uf->significand <<= 16;
-      shift += 16;
-    }
-    if ((0xFF0000 & uf->significand) == 0) {
-      uf->significand <<= 8;
-      shift += 8;
-    }
-    if ((0xF00000 & uf->significand) == 0) {
-      uf->significand <<= 4;
-      shift += 4;
-    }
-    if ((0xC00000 & uf->significand) == 0) {
-      uf->significand <<= 2;
-      shift += 2;
-    }
-    if ((0x800000 & uf->significand) == 0) {
-      uf->significand <<= 1;
-      shift += 1;
-    }
+    if (('hffff00 & uf_significand) == 0) begin
+      uf_significand = uf_significand << 16;
+      shift = shift + 16;
+    end
+    
+    if (('hff0000 & uf_significand) == 0) begin
+      uf_significand = uf_significand << 8;
+      shift = shift + 8;
+    end
+    
+    if (('hf00000 & uf_significand) == 0) begin
+      uf_significand = uf_significand << 4;
+      shift = shift + 4;
+    end
+    
+    if (('hc00000 & uf_significand) == 0) begin
+      uf_significand = uf_significand << 2;
+      shift = shift + 2;
+    end
+    
+    if (('h800000 & uf_significand) == 0) begin
+      uf_significand = uf_significand << 1;
+      shift = shift + 1;
+    end
 
-    uf_exponent -= shift;
-    `endif
+    uf_exponent = uf_exponent - shift;
   end // always
 
 endmodule
@@ -68,7 +70,13 @@ module unpack(
 
     if (exponent == 0) begin
       if (significand == 0) begin
-        //makeZero(&uf);
+        // make zero
+        uf_nan = 0;
+        uf_inf = 0;
+        uf_zero = 1;
+        uf_subnormal = 0;
+        uf_exponent = 0;
+        uf_significand = 0;
         end
 
       else begin
@@ -86,16 +94,27 @@ module unpack(
 
     else if (exponent == 'hff) begin
       if (significand == 0) begin
-        //makeInf(&uf);
+        // make infinity
+        uf_nan = 0;
+        uf_inf = 1;
+        uf_zero = 0;
+        uf_subnormal = 0; 
+        uf_exponent = 'hff;
+        uf_significand = 0;
         end
       else begin
-        //makeNaN(&uf);
+        // make NaN
+        uf_nan = 1;
+        uf_inf = 0;
+        uf_zero = 0;
+        uf_subnormal = 0;
+        uf_exponent = 'hff;
+        uf_significand = 0;
         end
       end
 
     else begin
       // Normal
-
       uf_nan = 0;
       uf_inf = 0;
       uf_zero = 0;
@@ -152,130 +171,182 @@ endmodule
 
 // Perform the actual increment caused by rounding and correct the
 // exponent if needed.
-module roundInc(); //(unpackedFloat *result, uint64_t increment) {
-  `ifdef 0
-  uint32_t incremented = result->significand + increment;
+module roundInc(
+  input [9:0] result_exponent_in,
+  input [23:0] result_significand_in,
+  input [63:0] increment,
+  output reg [9:0] result_exponent,
+  output reg [23:0] result_significand);
 
-  if (incremented == (1<<24)) {
-    assert((incremented & 0x1) == 0x0);
-    incremented >>= 1;
-    ++result->exponent;
-    // Note that carrying into the exponent would be possible with
-    // packed representations
-  }
+  reg [31:0] incremented;
+  
+  always @(*) begin
+    result_exponent=result_exponent_in;
+  
+    incremented = result_significand_in + increment;
 
-  assert(incremented < (1<<24));
-  result->significand = incremented;
-  `endif
+    if (incremented == (1<<24)) begin
+      incremented = incremented >> 1;
+      result_exponent = result_exponent + 1;
+      // Note that carrying into the exponent would be possible with
+      // packed representations
+    end
+
+    result_significand = incremented;
+
+  end // always
+  
 endmodule
 
 // Make the decision of whether to round or not.
-module rounder(); // (int roundingMode, unpackedFloat *result, uint8_t guardBit, uint8_t stickyBit) {
-  `ifdef 0
+module rounder(
+  input [2:0] roundingMode,
+  input result_nan_in, result_inf_in, result_zero_in, result_subnormal_in, result_sign_in,
+  input [9:0] result_exponent_in,
+  input [23:0] result_significand_in,
+  output reg result_nan, result_inf, result_zero, result_subnormal, result_sign,
+  output reg [9:0] result_exponent,
+  output reg [23:0] result_significand,
+  input guardBit,
+  input stickyBit);
 
-  uint64_t increment = 1;
+  reg [63:0] increment;
+  reg [31:0] subnormalAmount;
 
-  if (result->exponent < -150) {
-    // Even rounding up will not make this representable
-    makeZero(result);
+  always @(*) begin
+  
+    // copy over
+    result_nan=result_nan_in;
+    result_inf=result_inf_in;
+    result_zero=result_zero_in;
+    result_subnormal=result_subnormal_in;
+    result_sign=result_sign_in;
+    result_exponent=result_exponent_in;
+    result_significand=result_significand_in;
 
-    return;
+    increment = 1;
 
-  } else if (result->exponent < -126) {
-    // For subnormals, correct the guard and sticky bits
+    if (result_exponent < -150) begin
+      // Even rounding up will not make this representable; make zero.
+      uf->nan = 0;
+      uf->inf = 0;
+      uf->zero = 1;
+      uf->subnormal = 0;
+      uf->exponent = 0;
+      uf->significand = 0;
+      end
+    else begin
+      if (result_exponent < -126) begin
+        // For subnormals, correct the guard and sticky bits
 
-    int subnormalAmount = -(result->exponent + 126);
+        subnormalAmount = -(result_exponent + 126);
 
-    increment = 1 << subnormalAmount;
-    
-    stickyBit = stickyBit | guardBit | 
-      ((((1 << (subnormalAmount - 1)) - 1) & result->significand) ? 1 : 0);
+        increment = 1 << subnormalAmount;
+        
+        //stickyBit = stickyBit | guardBit | 
+        //  ((((1 << (subnormalAmount - 1)) - 1) & result->significand) ? 1 : 0);
 
-    guardBit = ((1 << (subnormalAmount - 1)) & result->significand) ? 1 : 0;
+        //guardBit = ((1 << (subnormalAmount - 1)) & result->significand) ? 1 : 0;
 
-    result->significand &= ~(increment - 1);
+        result_significand = result_significand & ~(increment - 1);
+      end
 
-  }
+      // Round to fixed significand length
 
+      `ifdef 0
+      switch (roundingMode) {
+      case RNE :
+        if (guardBit) {
+          if (stickyBit || (result->significand & increment)) {
+            roundInc(result, increment);
+          }
+        }
+        break;
 
-  /* Round to fixed significand length */
-  switch (roundingMode) {
-  case RNE :
-    if (guardBit) {
-      if (stickyBit || (result->significand & increment)) {
-	roundInc(result, increment);
+      case RNA :
+        if (guardBit) {
+            roundInc(result, increment);
+        }
+        break;
+
+      case RTP :
+        if ((result->sign == 0) && (guardBit || stickyBit)) {
+          roundInc(result, increment);
+        }
+        break;
+
+      case RTN :
+        if ((result->sign == 1) && (guardBit || stickyBit)) {
+          roundInc(result, increment);
+        }
+        break;
+
+      case RTZ :
+        // No rounding needed
+        break;
       }
-    }
-    break;
+      `endif
 
-  case RNA :
-    if (guardBit) {
-	roundInc(result, increment);
-    }
-    break;
+      `ifdef 0
+      /* Round to fixed exponent length */
+      switch (roundingMode) {
+      case RNE :
+      case RNA :
+        if (result->exponent > 127) {
+          makeInf(result);
+        }
+        break;
 
-  case RTP :
-    if ((result->sign == 0) && (guardBit || stickyBit)) {
-      roundInc(result, increment);
-    }
-    break;
+      case RTP :
+        if (result->exponent > 127) {
+          if (result->sign == 0) {
+            makeInf(result);
+          } else {
+            makeMax(result);
+          }
+        }
+        break;
 
-  case RTN :
-    if ((result->sign == 1) && (guardBit || stickyBit)) {
-      roundInc(result, increment);
-    }
-    break;
+      case RTN :
+        if (result->exponent > 127) {
+          if (result->sign == 1) {
+            makeInf(result);
+          } else {
+            makeMax(result);
+          }
+        }
+        break;
 
-  case RTZ :
-    // No rounding needed
-    break;
-  }
-
-
-  /* Round to fixed exponent length */
-  switch (roundingMode) {
-  case RNE :
-  case RNA :
-    if (result->exponent > 127) {
-      makeInf(result);
-    }
-    break;
-
-  case RTP :
-    if (result->exponent > 127) {
-      if (result->sign == 0) {
-	makeInf(result);
-      } else {
-	makeMax(result);
+      case RTZ :
+        if (result->exponent > 127) {
+          makeMax(result);
+        }
+        break;
       }
-    }
-    break;
+      `endif
 
-  case RTN :
-    if (result->exponent > 127) {
-      if (result->sign == 1) {
-	makeInf(result);
-      } else {
-	makeMax(result);
-      }
-    }
-    break;
+      if (result_exponent < -126)
+        result_subnormal = 1;
+    end // if
 
-  case RTZ :
-    if (result->exponent > 127) {
-      makeMax(result);
-    }
-    break;
-  }
-
-  if (result->exponent < -126) {
-    result->subnormal = 1;
-  }
-  `endif
+  end // always
+  
 endmodule // rounder
 
 
-module dualPathAdder(); //int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat *ug, unpackedFloat *result) {
+module dualPathAdder(
+  input isAdd,
+  input [2:0] roundingMode,
+  input uf_nan, uf_inf, uf_zero, uf_subnormal, uf_sign,
+  input [9:0] uf_exponent,
+  input [23:0] uf_significand,
+  input ug_nan, ug_inf, ug_zero, ug_subnormal, ug_sign,
+  input [9:0] ug_exponent,
+  input [23:0] ug_significand,
+  output reg result_nan, result_inf, result_zero, result_subnormal, result_sign,
+  output reg [9:0] result_exponent,
+  output reg [23:0] result_significand);
+
   `ifdef 0
   unpackedFloat larger;
   unpackedFloat smaller;
@@ -477,8 +548,8 @@ module dualPathAdder(); //int isAdd, int roundingMode, unpackedFloat *uf, unpack
   // Can be simplified as the subnormal case implies no rounding
  rounder :
   rounder(roundingMode, result, guardBit, stickyBit);
-  
   `endif
+
 endmodule // dualPathAdder
 
 module fp_add_sub(
@@ -582,20 +653,3 @@ module fp_add_sub(
                    result_sign, result_exponent, result_significand, result);
 
 endmodule
-
-`ifdef 0
-float sub(int roundingMode, float f, float g) {
-  unpackedFloat uf = unpack(f);
-  unpackedFloat ug = unpack(g);
-  unpackedFloat result;
-
-  initUnpackedFloat(&result);
-
-  addUnit(0,roundingMode,&uf,&ug,&result);
-  //check(result);
-
-  float res = pack(result);
-
-  return res;
-}
-`endif
