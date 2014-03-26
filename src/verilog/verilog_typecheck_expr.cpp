@@ -1382,7 +1382,8 @@ void verilog_typecheck_exprt::convert_unary_expr(exprt &expr)
     expr.type()=typet(ID_bool);
     convert_expr(expr.op0());
   }
-  else if(expr.id()==ID_unary_minus || expr.id()==ID_unary_plus)
+  else if(expr.id()==ID_unary_minus ||
+          expr.id()==ID_unary_plus)
   {
     convert_expr(expr.op0());
     no_bool(expr);
