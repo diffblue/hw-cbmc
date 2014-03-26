@@ -228,12 +228,12 @@ module rounder(
 
     if (result_exponent < -150) begin
       // Even rounding up will not make this representable; make zero.
-      uf->nan = 0;
-      uf->inf = 0;
-      uf->zero = 1;
-      uf->subnormal = 0;
-      uf->exponent = 0;
-      uf->significand = 0;
+      result_nan = 0;
+      result_inf = 0;
+      result_zero = 1;
+      result_subnormal = 0;
+      result_exponent = 0;
+      result_significand = 0;
       end
     else begin
       if (result_exponent < -126) begin
@@ -580,12 +580,16 @@ module fp_add_sub(
   reg result_nan, result_inf, result_zero, result_subnormal, result_sign;
   reg [9:0] result_exponent;
   reg [23:0] result_significand;
+  
+  // internal variable
+  reg flip;
 
   always @(*) begin
 
     // Handle all the special cases
 
     if (uf_nan || ug_nan) begin
+      // make NaN
       result_nan = 1;
       result_inf = 0;
       result_zero = 0;
@@ -595,40 +599,56 @@ module fp_add_sub(
       end
 
     else if (uf_inf) begin
-      `ifdef 0
-      if ((ug->inf) && 
-          ((isAdd) ? uf->sign != ug->sign : uf->sign == ug->sign)) {
-        makeNaN(result);
-        return;
-      } else {
-        makeInf(result);
-        result->sign = uf->sign;
-        return;
-      }
-      `endif
+      if (ug_inf && 
+          ((isAdd) ? uf_sign != ug_sign : uf_sign == ug_sign)) begin
+        // make NaN
+        result_nan = 1;
+        result_inf = 0;
+        result_zero = 0;
+        result_subnormal = 0;
+        result_exponent = 'hff;
+        result_significand = 0;
+        end
+      else begin
+        // make infinity
+        result_nan = 0;
+        result_inf = 1;
+        result_zero = 0;
+        result_subnormal = 0;
+        result_exponent = 'hff;
+        result_significand = 0;                    
+        result_sign = uf_sign;
+        end
       end
 
     else if (ug_inf) begin
-      //makeInf(result);
-      //result->sign = (isAdd) ? ug->sign : ~ug->sign;
+      // make infinity
+      result_nan = 0;
+      result_inf = 1;
+      result_zero = 0;
+      result_subnormal = 0;
+      result_exponent = 'hff;
+      result_significand = 0;                    
+      result_sign = (isAdd) ? ug_sign : !ug_sign;
       end
 
     else if (uf_zero) begin
       if (ug_zero) begin
-        `ifdef 0
-        makeZero(result);
+        // make zero
+        result_nan = 0;
+        result_inf = 0;
+        result_zero = 1;
+        result_subnormal = 0;
+        result_exponent = 0;
+        result_significand = 0;
 
-        unsigned int flip = (isAdd) ? 0 : 1;
+        flip = (isAdd) ? 0 : 1;
 
-        if (roundingMode == RTN) {
-  	  result->sign = uf->sign &  (flip ^ ug->sign);
-  
-        } else {
-  	result->sign = uf->sign |  (flip ^ ug->sign);
+        if (roundingMode == `RTN)
+  	  result_sign = uf_sign & (flip ^ ug_sign);
+        else 
+          result_sign = uf_sign | (flip ^ ug_sign);
 
-        }
-        return;
-        `endif
         end
       
       else begin // ug_zero
