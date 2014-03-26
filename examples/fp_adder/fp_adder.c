@@ -135,9 +135,9 @@ void makeNaN (unpackedFloat *uf) {
 // Invariants for the use of the unpacked float
 void check (unpackedFloat uf) {
   assert(((unsigned int)uf.nan + 
-	  (unsigned int)uf.inf +
-	  (unsigned int)uf.zero +
-	  (unsigned int)uf.subnormal) <= 1);
+          (unsigned int)uf.inf +
+          (unsigned int)uf.zero +
+          (unsigned int)uf.subnormal) <= 1);
 
   if (uf.nan == 1) {
     assert(uf.exponent == 0xFF);
@@ -338,14 +338,14 @@ void rounder (int roundingMode, unpackedFloat *result, uint8_t guardBit, uint8_t
   case RNE :
     if (guardBit) {
       if (stickyBit || (result->significand & increment)) {
-	roundInc(result, increment);
+        roundInc(result, increment);
       }
     }
     break;
 
   case RNA :
     if (guardBit) {
-	roundInc(result, increment);
+      roundInc(result, increment);
     }
     break;
 
@@ -379,9 +379,9 @@ void rounder (int roundingMode, unpackedFloat *result, uint8_t guardBit, uint8_t
   case RTP :
     if (result->exponent > 127) {
       if (result->sign == 0) {
-	makeInf(result);
+        makeInf(result);
       } else {
-	makeMax(result);
+        makeMax(result);
       }
     }
     break;
@@ -389,9 +389,9 @@ void rounder (int roundingMode, unpackedFloat *result, uint8_t guardBit, uint8_t
   case RTN :
     if (result->exponent > 127) {
       if (result->sign == 1) {
-	makeInf(result);
+        makeInf(result);
       } else {
-	makeMax(result);
+        makeMax(result);
       }
     }
     break;
@@ -487,47 +487,47 @@ void dualPathAdder(int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat
 
       if (diff == 0) {  // Fully cancelled
 
-	makeZero(result);
+        makeZero(result);
 
-	/* IEEE-754 2008 says:
-	 * When the sum of two operands with opposite signs (or the
-	 * difference of two operands with like signs) is exactly
-	 * zero, the sign of that sum (or difference) shall be +0 in
-	 * all rounding-direction attributes except
-	 * roundTowardNegative; under that attribute, the sign of an
-	 * exact zero sum (or difference) shall be −0. However, x + x
-	 * = x − (−x) retains the same sign as x even when x is zero.
-	 */
-	result->sign = (roundingMode == RTN) ? 1 : 0;
-	return; // No need to round
+        /* IEEE-754 2008 says:
+         * When the sum of two operands with opposite signs (or the
+         * difference of two operands with like signs) is exactly
+         * zero, the sign of that sum (or difference) shall be +0 in
+         * all rounding-direction attributes except
+         * roundTowardNegative; under that attribute, the sign of an
+         * exact zero sum (or difference) shall be −0. However, x + x
+         * = x − (−x) retains the same sign as x even when x is zero.
+         */
+        result->sign = (roundingMode == RTN) ? 1 : 0;
+        return; // No need to round
 
       } else if (diff & 0x02000000) { // 26 bit result
 
-	sum = diff << 1;
+        sum = diff << 1;
 
-	// Sticky bits are 0
-	assert((sum & 0x3) == 0);
+        // Sticky bits are 0
+        assert((sum & 0x3) == 0);
 
-	goto extract;
+        goto extract;
 
       } else { // Some cancelation
 
-	--result->exponent;
-	result->significand = diff >> 1;
-	guardBit = 0;
-	stickyBit = 0;
+        --result->exponent;
+        result->significand = diff >> 1;
+        guardBit = 0;
+        stickyBit = 0;
 
-	normaliseUp(result);
+        normaliseUp(result);
 
-	// Won't underflow due to an exciting property of subnormal
-	// numbers.  Also, clearly, won't overflow.  Furthermore,
-	// won't increment.  Thus don't need to call the rounder -- as
-	// long as the subnormal flag is correctly set.
-	
-	//	goto rounder;
+        // Won't underflow due to an exciting property of subnormal
+        // numbers.  Also, clearly, won't overflow.  Furthermore,
+        // won't increment.  Thus don't need to call the rounder -- as
+        // long as the subnormal flag is correctly set.
+        
+        //        goto rounder;
 
-	result->subnormal = (result->exponent < -126) ? 1 : 0;
-	return;
+        result->subnormal = (result->exponent < -126) ? 1 : 0;
+        return;
       }
 
     } else {
@@ -550,25 +550,25 @@ void dualPathAdder(int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat
     } else {
       
       if (effectiveSubtract) {
-	ssig = (~ssig) + 1;
+        ssig = (~ssig) + 1;
       }
       
       // Align
       int i;
 
       for (i = 1; i <= 26; i <<= 1) {
-	if (exponentDifference & i) {
-	  uint32_t iOnes = ((1<<i) - 1);
-	  stickyBit |= ((ssig & iOnes) ? 1 : 0);
-	  
-	  // Sign extending shift
-	  if (effectiveSubtract) {
-	    ssig = (ssig >> i) | (iOnes << (32 - i));
-	  } else {
-	    ssig = (ssig >> i);
-	  }
-	  
-	}
+        if (exponentDifference & i) {
+          uint32_t iOnes = ((1<<i) - 1);
+          stickyBit |= ((ssig & iOnes) ? 1 : 0);
+          
+          // Sign extending shift
+          if (effectiveSubtract) {
+            ssig = (ssig >> i) | (iOnes << (32 - i));
+          } else {
+            ssig = (ssig >> i);
+          }
+          
+        }
       }
     }
   }
@@ -631,7 +631,7 @@ void addUnit (int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat *ug,
 
   } else if (uf->inf) {
     if ((ug->inf) && 
-	((isAdd) ? uf->sign != ug->sign : uf->sign == ug->sign)) {
+        ((isAdd) ? uf->sign != ug->sign : uf->sign == ug->sign)) {
       makeNaN(result);
       return;
     } else {
@@ -652,10 +652,10 @@ void addUnit (int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat *ug,
       unsigned int flip = (isAdd) ? 0 : 1;
 
       if (roundingMode == RTN) {
-	result->sign = uf->sign &  (flip ^ ug->sign);
+        result->sign = uf->sign &  (flip ^ ug->sign);
 
       } else {
-	result->sign = uf->sign |  (flip ^ ug->sign);
+        result->sign = uf->sign |  (flip ^ ug->sign);
 
       }
       return;
