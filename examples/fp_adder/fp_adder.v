@@ -62,7 +62,7 @@ module unpack(
 
   wire sign;
   wire [7:0] exponent;
-  wire [22:0] significand;
+  wire [23:0] significand;
 
   // split up f
   assign { sign, exponent, significand } = f;      
