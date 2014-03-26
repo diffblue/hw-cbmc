@@ -10,7 +10,7 @@
 ** and unpacking, rounding and handling of subnormal numbers.
 **
 ** To analyse with CBMC run:
-**  $ cbmc --function addSpecRNE fp_adder.c
+**  cbmc --function addSpecRNE fp_adder.c
 **
 */
 
