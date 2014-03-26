@@ -1,4 +1,5 @@
 #!/bin/bash
 
-hw-cbmc fp_adder.c fp_adder.v --module fp_add_sub --bound 1
+hw-cbmc fp_adder.c fp_adder.v --module fp_add_sub --bound 1 hw_cbmc_harness.c
+
 
