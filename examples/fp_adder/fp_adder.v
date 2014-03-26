@@ -176,13 +176,14 @@ module rounder(
   output reg result_nan, result_inf, result_zero, result_subnormal, result_sign,
   output reg [9:0] result_exponent,
   output reg [23:0] result_significand,
-  input guardBit,
-  input stickyBit);
+  input guardBit_in,
+  input stickyBit_in);
 
   reg [63:0] increment;
   reg [63:0] incremented;  
   reg [31:0] subnormalAmount;
   reg do_increment;
+  reg guardBit, stickyBit;
 
   always @(*) begin
   
@@ -194,7 +195,9 @@ module rounder(
     result_sign=result_sign_in;
     result_exponent=result_exponent_in;
     result_significand=result_significand_in;
-
+    guardBit=guardBit_in;
+    stickyBit=stickyBit_in;
+    
     increment = 1;
 
     if (result_exponent < -150) begin
@@ -213,10 +216,10 @@ module rounder(
 
         increment = 1 << subnormalAmount;
         
-        //stickyBit = stickyBit | guardBit | 
-        //  ((((1 << (subnormalAmount - 1)) - 1) & result->significand) ? 1 : 0);
+        stickyBit = stickyBit | guardBit | 
+          ((((1 << (subnormalAmount - 1)) - 1) & result_significand) ? 1 : 0);
 
-        //guardBit = ((1 << (subnormalAmount - 1)) & result->significand) ? 1 : 0;
+        guardBit = ((1 << (subnormalAmount - 1)) & result_significand) ? 1 : 0;
 
         result_significand = result_significand & ~(increment - 1);
       end
@@ -350,9 +353,11 @@ module dualPathAdder(
   reg stickyBit;
 
   reg [9:0] larger_exponent, smaller_exponent;
-  reg [23:0] larger_significand, smaller_significant;
+  reg [23:0] larger_significand, smaller_significand;
   reg signed [10:0] exponentDifference;
   reg effectiveSubtract;
+  
+  reg [31:0] lsig, ssig, sum, diff;
   
   always @(*) begin
 
@@ -368,57 +373,58 @@ module dualPathAdder(
     // Compute the difference between exponents
     exponentDifference = uf_exponent - ug_exponent;
 
-    `ifdef 0
-    /* Order by exponent */
+    // Order by exponent
     if ((exponentDifference > 0) || 
-        ((exponentDifference == 0) && (uf->significand > ug->significand))) {
-      larger = *uf;
-      smaller = *ug;
-      result->sign = larger.sign;
-
-    } else {
-      larger = *ug;
-      smaller = *uf;
+        ((exponentDifference == 0) && (uf_significand > ug_significand))) begin
+      larger_exponent = uf_exponent;
+      larger_significand = uf_significand;
+      smaller_exponent = ug_exponent;
+      smaller_significand = ug_significand;
+      result_sign = larger_sign;
+    end else begin
+      larger_exponent = ug_exponent;
+      larger_significand = ug_significand;
+      smaller_exponent = uf_exponent;
+      smaller_significand = uf_significand;
       exponentDifference = -exponentDifference;
-      result->sign = isAdd ? larger.sign : ~larger.sign;
-
-    }
-    `endif
+      result_sign = isAdd ? larger_sign : !larger_sign;
+    end
 
     result_exponent = larger_exponent;
 
     // Work out if it is an effective subtract
     effectiveSubtract = larger_sign ^ (isAdd ? 0 : 1) ^ smaller_sign;
 
-    `ifdef 0
     // 'decimal point' after the 26th bit, LSB 2 bits are 0
     // 26 so that we can cancel one and still have 24 + guard bits
-    uint32_t lsig = larger_significand << 2;
-    uint32_t ssig = smaller_significand << 2;
-    uint32_t sum = 'hffffffff;
-    `endif
+    lsig = larger_significand << 2;
+    ssig = smaller_significand << 2;
+    sum = 'hffffffff;
 
     // Split the two paths
     if (exponentDifference <= 1) begin
 
       /* Near path */
 
-      `ifdef 0
       // Align
-      ssig >>= exponentDifference;
+      ssig = ssig >> exponentDifference;
 
+      if (effectiveSubtract) begin
 
-      if (effectiveSubtract) {
+        // May have catestrophic cancelation
 
-        /* May have catestrophic cancelation */
+        diff = lsig - ssig;
 
-        uint32_t diff = lsig - ssig;
+        if (diff == 0) begin // Fully cancelled
 
-        assert((diff & 0xFC000000) == 0);  // result is up to 26 bit
-
-        if (diff == 0) {  // Fully cancelled
-
-          makeZero(result);
+          // make zero
+          
+          result_nan = 0;
+          result_inf = 0;
+          result_zero = 1;
+          result_subnormal = 0;
+          result_exponent = 0;
+          result_significand = 0;
 
           /* IEEE-754 2008 says:
            * When the sum of two operands with opposite signs (or the
@@ -429,66 +435,55 @@ module dualPathAdder(
            * exact zero sum (or difference) shall be −0. However, x + x
            * = x − (−x) retains the same sign as x even when x is zero.
            */
-          result->sign = (roundingMode == RTN) ? 1 : 0;
-          return; // No need to round
+          result_sign = (roundingMode == `RTN) ? 1 : 0;
 
-        } else if (diff & 0x02000000) { // 26 bit result
+          //return; // No need to round
+        end else if (diff & 'h02000000) begin // 26 bit result
 
           sum = diff << 1;
 
-          // Sticky bits are 0
-          assert((sum & 0x3) == 0);
+          // goto extract;
 
-          goto extract;
-
-        } else { // Some cancelation
-
-          --result->exponent;
-          result->significand = diff >> 1;
+        end else begin // Some cancelation
+          result_exponent = result_exponent-1;
+          result_significand = diff >> 1;
           guardBit = 0;
           stickyBit = 0;
 
-          normaliseUp(result);
+          //normaliseUp(result);
 
           // Won't underflow due to an exciting property of subnormal
           // numbers.  Also, clearly, won't overflow.  Furthermore,
           // won't increment.  Thus don't need to call the rounder -- as
           // long as the subnormal flag is correctly set.
           
-          //	goto rounder;
+          result_subnormal = (result_exponent < -126) ? 1 : 0;
+          //return;
+        end
 
-          result->subnormal = (result->exponent < -126) ? 1 : 0;
-          return;
-        }
-
-      } else {
-
+      end else begin
         // Near addition is the same as far addition
         // except without the need to align first.
         // Thus fall through...
-      }
-      `endif
+      end
 
     end else begin
 
-      `ifdef 0
       /* Far path */
-      if (exponentDifference > 26) {
+      if (exponentDifference > 26) begin
         
-        result->significand = larger.significand;
-        result->subnormal = larger.subnormal;
-        return;
+        result_significand = larger_significand;
+        result_subnormal = larger_subnormal;
+        //return;
         
-      } else {
-        
-        if (effectiveSubtract) {
+      end else begin
+        if (effectiveSubtract)
           ssig = (~ssig) + 1;
-        }
         
         // Align
-        int i;
+        // do for 1, 2, 4, 8, 16
 
-        for (i = 1; i <= 26; i <<= 1) {
+        `ifdef 0
           if (exponentDifference & i) {
             uint32_t iOnes = ((1<<i) - 1);
             stickyBit |= ((ssig & iOnes) ? 1 : 0);
@@ -499,42 +494,35 @@ module dualPathAdder(
             } else {
               ssig = (ssig >> i);
             }
-            
-          }
-        }
-      `endif
+        `endif
+      end
     end
 
-    `ifdef 0    
     // Decimal point is after 26th bit
     sum = lsig + ssig;
     
     if (effectiveSubtract) begin
-      if (sum & 0x02000000ul) { // 26 bit
-        sum <<= 1;
-      } else {                  // 25 bit
-        --result_exponent;
-        sum <<= 2;
-      }
-      // Decimal point is now after the 27th bit
+      if (sum & 'h02000000)
+        sum = sum << 1;
+      else begin
+        result_exponent = result_exponent-1;
+        sum = sum << 2;
       end
-    else begin
-      if (sum & 0x04000000ul)
-        ++result_exponent;
+    end else begin
+      if (sum & 'h04000000)
+        result_exponent = result_exponent+1;
       else
-        sum <<= 1;
+        sum = sum << 1;
     end
-    
-   extract:
+
+    // extract:
     // Decimal point is now after the 27th bit
     result_significand = sum >> 3;
-    guardBit = (sum >> 2) & 0x1;
-    stickyBit |= (((sum >> 1) & 0x1) | (sum & 0x1));
+    guardBit = (sum >> 2) & 'h1;
+    stickyBit = stickyBit | (((sum >> 1) & 'h1) | (sum & 'h1));
     
     // Can be simplified as the subnormal case implies no rounding
-   rounder:
-    rounder(roundingMode, result, guardBit, stickyBit);
-    `endif
+    //rounder(roundingMode, result, guardBit, stickyBit);
     
   end // always
 
