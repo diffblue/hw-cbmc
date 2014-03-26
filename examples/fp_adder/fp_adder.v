@@ -1,3 +1,5 @@
+// Rounding modes
+
 `define RNE 0
 `define RNA 1
 `define RTP 2
@@ -65,6 +67,13 @@ module unpack(
   // split up f
   assign { sign, exponent, significand } = f;      
   
+  wire [9:0] normaliseUp_exponent;
+  wire [9:0] normaliseUp_significand;
+
+  // this is used for the cae that the number is subnormal
+  normaliseUp unpack_normaliseUp(
+    -126, significand, normaliseUp_exponent, normaliseUp_significand);
+  
   always @(*) begin
     uf_sign = sign;
 
@@ -80,15 +89,14 @@ module unpack(
         end
 
       else begin
+        // subnormal
         uf_nan = 0;
         uf_inf = 0;
         uf_zero = 0;
         uf_subnormal = 1;
 
         uf_exponent = -126;
-        uf_significand = significand;
-
-        //normaliseUp(&uf);
+        uf_significand = normaliseUp_significand;
         end
       end
 
@@ -353,11 +361,11 @@ module dualPathAdder(
   uint8_t guardBit = 0;
   uint8_t stickyBit = 0;
 
-  /* Flags -- result will be normal unless otherwise marked */
-  result->nan = 0;
-  result->inf = 0;
-  result->zero = 0;
-  result->subnormal = 0;
+  // Flags -- result will be normal unless otherwise marked
+  result_nan = 0;
+  result_inf = 0;
+  result_zero = 0;
+  result_subnormal = 0;
 
   initUnpackedFloat(&larger);
   initUnpackedFloat(&smaller);
@@ -380,30 +388,19 @@ module dualPathAdder(
 
   }
 
-  result->exponent = larger.exponent;
+  result_exponent = larger_exponent;
 
-  /* Work out if it is an effective subtract */
-  /*
-  if (larger.sign == 0) {
-    negateResult = 0;
-    effectiveSubtract = ~isAdd ^ smaller.sign;
-  } else {
-    negateResult = 1;
-    effectiveSubtract = isAdd ^ smaller.sign
-  }
-  */
-  // Simplifies to ...
-
-  int effectiveSubtract = larger.sign ^ (isAdd ? 0 : 1) ^ smaller.sign;
+  // Work out if it is an effective subtract
+  int effectiveSubtract = larger_sign ^ (isAdd ? 0 : 1) ^ smaller_sign;
 
   // 'decimal point' after the 26th bit, LSB 2 bits are 0
   // 26 so that we can cancel one and still have 24 + guard bits
-  uint32_t lsig = larger.significand << 2;
-  uint32_t ssig = smaller.significand << 2;
-  uint32_t sum = 0xFFFFFFFF;
+  uint32_t lsig = larger_significand << 2;
+  uint32_t ssig = smaller_significand << 2;
+  uint32_t sum = 'hffffffff;
 
-  /* Split the two paths */
-  if (exponentDifference <= 1) {
+  // Split the two paths
+  if (exponentDifference <= 1) begin
 
     /* Near path */
 
@@ -507,46 +504,33 @@ module dualPathAdder(
     }
   }
   
-  
   // Decimal point is after 26th bit
   sum = lsig + ssig;
   
-  if (effectiveSubtract) {
-    // Due to exponent difference, sum is either 25 or 26 bit
-    assert((0xFC000000ul & sum) == 0x0);
-    assert((0x03000000ul & sum) != 0x0);
-    
+  if (effectiveSubtract) begin
     if (sum & 0x02000000ul) { // 26 bit
       sum <<= 1;
     } else {                  // 25 bit
-      --result->exponent;
+      --result_exponent;
       sum <<= 2;
     }
     // Decimal point is now after the 27th bit
-    
-  } else {
-    
-    // sum is either 26 or 27 bits
-    assert((0xF8000000ul & sum) == 0x0);
-    assert((0x06000000ul & sum) != 0x0);
-    
-    if (sum & 0x04000000ul) { // 27 bit
-      ++result->exponent;
-    } else {                  // 26 bit
+    end
+  else begin
+    if (sum & 0x04000000ul)
+      ++result_exponent;
+    else
       sum <<= 1;
-    }
-  }
-  
+  end
   
  extract:
   // Decimal point is now after the 27th bit
-  result->significand = sum >> 3;
+  result_significand = sum >> 3;
   guardBit = (sum >> 2) & 0x1;
   stickyBit |= (((sum >> 1) & 0x1) | (sum & 0x1));
   
-  
   // Can be simplified as the subnormal case implies no rounding
- rounder :
+ rounder:
   rounder(roundingMode, result, guardBit, stickyBit);
   `endif
 
@@ -651,14 +635,30 @@ module fp_add_sub(
 
         end
       
-      else begin // ug_zero
-        //*result = *ug;
-        //result->sign = (isAdd) ? result->sign : ~result->sign;
+      else begin // !ug_zero
+        // copy ug
+        result_nan=ug_nan;
+        result_inf=ug_inf;
+        result_zero=ug_zero;
+        result_subnormal=ug_subnormal;
+        result_sign=ug_sign;
+        result_exponent=ug_exponent;
+        result_significand=ug_significand;
+        
+        // adjust sign
+        result_sign = isAdd ? result_sign : !result_sign;
         end
       end
 
     else if (ug_zero) begin
-      //*result = *uf;
+      // copy uf
+      result_nan=uf_nan;
+      result_inf=uf_inf;
+      result_zero=uf_zero;
+      result_subnormal=uf_subnormal;
+      result_sign=uf_sign;
+      result_exponent=uf_exponent;
+      result_significand=uf_significand;
       end
 
     else begin
