@@ -177,34 +177,6 @@ module pack(
   
 endmodule
 
-// Perform the actual increment caused by rounding and correct the
-// exponent if needed.
-module roundInc(
-  input [9:0] result_exponent_in,
-  input [23:0] result_significand_in,
-  input [63:0] increment,
-  output reg [9:0] result_exponent,
-  output reg [23:0] result_significand);
-
-  reg [31:0] incremented;
-  
-  always @(*) begin
-    result_exponent=result_exponent_in;
-  
-    incremented = result_significand_in + increment;
-
-    if (incremented == (1<<24)) begin
-      incremented = incremented >> 1;
-      result_exponent = result_exponent + 1;
-      // Note that carrying into the exponent would be possible with
-      // packed representations
-    end
-
-    result_significand = incremented;
-
-  end // always
-  
-endmodule
 
 // Make the decision of whether to round or not.
 module rounder(
@@ -219,7 +191,9 @@ module rounder(
   input stickyBit);
 
   reg [63:0] increment;
+  reg [63:0] incremented;  
   reg [31:0] subnormalAmount;
+  reg do_increment;
 
   always @(*) begin
   
@@ -261,77 +235,64 @@ module rounder(
 
       // Round to fixed significand length
 
-      `ifdef 0
-      switch (roundingMode) {
-      case RNE :
-        if (guardBit) {
-          if (stickyBit || (result->significand & increment)) {
-            roundInc(result, increment);
-          }
-        }
-        break;
+      case (roundingMode)
+        `RNE: do_increment = guardBit & (stickyBit || (result_significand & increment));
+        `RNA: do_increment = guardBit;
+        `RTP: do_increment = !result_sign && (guardBit || stickyBit);
+        `RTN: do_increment = result_sign && (guardBit || stickyBit);
+        `RTZ: do_increment = 0; // No rounding needed
+        default: do_increment = 0;
+      endcase
+      
+      // the following case corresponds to calling roundInc
+      if (do_increment) begin
+        incremented = result_significand + increment;
 
-      case RNA :
-        if (guardBit) {
-            roundInc(result, increment);
-        }
-        break;
+        if (incremented == (1<<24)) begin
+          incremented = incremented >> 1;
+          result_exponent = result_exponent + 1;
+          // Note that carrying into the exponent would be possible with
+          // packed representations
+        end
+        
+        result_significand = incremented;
+      end
 
-      case RTP :
-        if ((result->sign == 0) && (guardBit || stickyBit)) {
-          roundInc(result, increment);
-        }
-        break;
+      // Round to fixed exponent length
+      case (roundingMode)
+        `RNE:
+          if (result_exponent > 127) begin
+            //makeInf(result);
+          end
 
-      case RTN :
-        if ((result->sign == 1) && (guardBit || stickyBit)) {
-          roundInc(result, increment);
-        }
-        break;
+        `RNA:
+          if (result_exponent > 127) begin
+            //makeInf(result);
+          end
 
-      case RTZ :
-        // No rounding needed
-        break;
-      }
-      `endif
+        `RTP:
+          if (result_exponent > 127) begin
+            if (result_sign == 0) begin
+              //makeInf(result);
+            end else begin
+              //makeMax(result);
+            end
+          end
+        
+        `RTN:
+          if (result_exponent > 127) begin
+            if (result_sign == 1) begin
+              //makeInf(result);
+            end else begin
+              // makeMax(result);
+            end
+          end
 
-      `ifdef 0
-      /* Round to fixed exponent length */
-      switch (roundingMode) {
-      case RNE :
-      case RNA :
-        if (result->exponent > 127) {
-          makeInf(result);
-        }
-        break;
-
-      case RTP :
-        if (result->exponent > 127) {
-          if (result->sign == 0) {
-            makeInf(result);
-          } else {
-            makeMax(result);
-          }
-        }
-        break;
-
-      case RTN :
-        if (result->exponent > 127) {
-          if (result->sign == 1) {
-            makeInf(result);
-          } else {
-            makeMax(result);
-          }
-        }
-        break;
-
-      case RTZ :
-        if (result->exponent > 127) {
-          makeMax(result);
-        }
-        break;
-      }
-      `endif
+        `RTZ:
+          if (result_exponent > 127) begin
+            //makeMax(result);
+          end
+      endcase
 
       if (result_exponent < -126)
         result_subnormal = 1;
