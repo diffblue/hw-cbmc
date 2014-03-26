@@ -167,8 +167,14 @@ unsigned verilog_typecheck_baset::get_width(const typet &type)
     mp_integer subtype_width=get_width(type.subtype());
     return integer2long(array_size(type)*subtype_width);
   }
+  
+  if(type.id()==ID_integer)
+  {
+    // The standard says these are at least 32 bits wide.
+    return 32;
+  }
 
-  str << "type " << type << " has unknown width" << std::endl;
+  str << "type " << type << " has unknown width";
   throw 0;
 }
 

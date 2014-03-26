@@ -8,7 +8,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ctype.h>
 #include <cstdlib>
-#include <iostream>
 
 #include <util/arith_tools.h>
 #include <util/location.h>
@@ -281,7 +280,6 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   if(expr.function().id()!=ID_symbol)
   {
     err_location(expr);
-    std::cerr << expr.function().pretty() << std::endl;
     throw "expected symbol as function argument";
   }
     
@@ -1011,8 +1009,11 @@ void verilog_typecheck_exprt::typecast(
   exprt &expr,
   const typet &dest_type)
 {
-  if(dest_type.id()==irep_idt()) return;
-  if(expr.type()==dest_type) return;
+  if(dest_type.id()==irep_idt())
+    return;
+
+  if(expr.type()==dest_type)
+    return;
 
   if(dest_type.id()==ID_integer)
   {
@@ -1031,7 +1032,8 @@ void verilog_typecheck_exprt::typecast(
 
     if(expr.type().id()==ID_bool ||
        expr.type().id()==ID_unsignedbv ||
-       expr.type().id()==ID_signedbv)
+       expr.type().id()==ID_signedbv ||
+       expr.type().id()==ID_integer)
     {
       expr.make_typecast(dest_type);
       return;
@@ -1545,16 +1547,17 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
   else if(expr.id()==ID_shl)
   {
     mp_integer i;
-    bool is_const=is_const_expression(expr.op1(), i);
+    bool distance_is_const=
+      is_const_expression(expr.op1(), i);
 
     // do *after* is_const_expression
     convert_expr(expr.op0());
     convert_expr(expr.op1());
     no_bool(expr);
 
-    if(is_const && i>=1)
+    if(distance_is_const && i>=1)
     {
-      // make wider
+      // make wider as needed
       mp_integer width=mp_integer(get_width(expr.op0().type()))+i;
       typet new_type=expr.op0().type();
       new_type.set(ID_width, integer2string(width));
