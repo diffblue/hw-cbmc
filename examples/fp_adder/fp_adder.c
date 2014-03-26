@@ -175,7 +175,7 @@ void check (unpackedFloat uf) {
 
 
 // Normalises a denormal number or deal with catastrophic cancelation
-int normaliseUp (unpackedFloat *uf) {
+void normaliseUp (unpackedFloat *uf) {
   int shift = 0;
 
   if ((0xFFFF00 & uf->significand) == 0) {
@@ -200,9 +200,7 @@ int normaliseUp (unpackedFloat *uf) {
   }
 
   uf->exponent -= shift;
-  return shift;
 }
-
 
 
 unpackedFloat unpack (float f) {
