@@ -411,7 +411,11 @@ void rounder (int roundingMode, unpackedFloat *result, uint8_t guardBit, uint8_t
 
 
 
-void dualPathAdder(int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat *ug, unpackedFloat *result) {
+void dualPathAdder(
+  int isAdd, int roundingMode,
+  const unpackedFloat uf, const unpackedFloat ug,
+  unpackedFloat *result) {
+  
   unpackedFloat larger;
   unpackedFloat smaller;
   uint8_t guardBit = 0;
@@ -427,18 +431,18 @@ void dualPathAdder(int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat
   initUnpackedFloat(&smaller);
 
   /* Compute the difference between exponents */
-  int exponentDifference = uf->exponent - ug->exponent;
+  int exponentDifference = uf.exponent - ug.exponent;
 
   /* Order by exponent */
   if ((exponentDifference > 0) || 
-      ((exponentDifference == 0) && (uf->significand > ug->significand))) {
-    larger = *uf;
-    smaller = *ug;
+      ((exponentDifference == 0) && (uf.significand > ug.significand))) {
+    larger = uf;
+    smaller = ug;
     result->sign = larger.sign;
 
   } else {
-    larger = *ug;
-    smaller = *uf;
+    larger = ug;
+    smaller = uf;
     exponentDifference = -exponentDifference;
     result->sign = isAdd ? larger.sign : ~larger.sign;
 
@@ -617,55 +621,55 @@ void dualPathAdder(int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat
 }
 
 
-
-
-
-void addUnit (int isAdd, int roundingMode, unpackedFloat *uf, unpackedFloat *ug, unpackedFloat *result) {
+void addUnit (
+  int isAdd, int roundingMode,
+  const unpackedFloat uf, const unpackedFloat ug,
+  unpackedFloat *result) {
 
   // Handle the special cases
-  if (uf->nan || ug->nan) {
+  if (uf.nan || ug.nan) {
     makeNaN(result);
     return;
 
-  } else if (uf->inf) {
-    if ((ug->inf) && 
-        ((isAdd) ? uf->sign != ug->sign : uf->sign == ug->sign)) {
+  } else if (uf.inf) {
+    if ((ug.inf) && 
+        ((isAdd) ? uf.sign != ug.sign : uf.sign == ug.sign)) {
       makeNaN(result);
       return;
     } else {
       makeInf(result);
-      result->sign = uf->sign;
+      result->sign = uf.sign;
       return;
     }
 
-  } else if (ug->inf) {
+  } else if (ug.inf) {
     makeInf(result);
-    result->sign = (isAdd) ? ug->sign : ~ug->sign;
+    result->sign = (isAdd) ? ug.sign : ~ug.sign;
     return;
 
-  } else if (uf->zero) {
-    if (ug->zero) {
+  } else if (uf.zero) {
+    if (ug.zero) {
       makeZero(result);
 
       unsigned int flip = (isAdd) ? 0 : 1;
 
       if (roundingMode == RTN) {
-        result->sign = uf->sign &  (flip ^ ug->sign);
+        result->sign = uf.sign &  (flip ^ ug.sign);
 
       } else {
-        result->sign = uf->sign |  (flip ^ ug->sign);
+        result->sign = uf.sign |  (flip ^ ug.sign);
 
       }
       return;
 
     } else {
-      *result = *ug;
+      *result = ug;
       result->sign = (isAdd) ? result->sign : ~result->sign;
       return;
     }
 
-  } else if (ug->zero) {
-    *result = *uf;
+  } else if (ug.zero) {
+    *result = uf;
     return;
 
   } else {
@@ -689,7 +693,7 @@ float add(int roundingMode, float f, float g) {
 
   initUnpackedFloat(&result);
 
-  addUnit(1,roundingMode,&uf,&ug,&result);
+  addUnit(1, roundingMode, uf, ug, &result);
   //check(result);
 
   float res = pack(result);
@@ -705,7 +709,7 @@ float sub(int roundingMode, float f, float g) {
 
   initUnpackedFloat(&result);
 
-  addUnit(0,roundingMode,&uf,&ug,&result);
+  addUnit(0, roundingMode, uf, ug, &result);
   //check(result);
 
   float res = pack(result);
