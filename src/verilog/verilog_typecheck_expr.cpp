@@ -1550,10 +1550,19 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
     mp_integer i;
     bool distance_is_const=
       is_const_expression(expr.op1(), i);
-
+      
     // do *after* is_const_expression
     convert_expr(expr.op0());
     convert_expr(expr.op1());
+    
+    // look at type of expr.op0()
+    const typet &op0_type=expr.op0().type();
+    if(op0_type.id()==ID_signedbv ||
+       op0_type.id()==ID_integer)
+      expr.id(ID_ashr);
+    else
+      expr.id(ID_lshr);
+    
     no_bool(expr);
 
     if(distance_is_const && i>=1)
@@ -1576,12 +1585,8 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
   else if(expr.id()==ID_lshr ||
           expr.id()==ID_ashr)
   {
-    convert_expr(expr.op0());
-    convert_expr(expr.op1());
-    no_bool(expr);
-    expr.type()=expr.op0().type();
-    // type is guessed for now
-    // hopefully propagate_type will fix it
+    // would only happen when re-typechecking
+    assert(0);
   }
   else if(expr.id()==ID_div || expr.id()==ID_mod)
   {
