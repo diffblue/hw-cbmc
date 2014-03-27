@@ -115,13 +115,17 @@ void verilog_typecheck_exprt::propagate_type(
     }
     else if(expr.id()==ID_shl) // does not work with shr
     {
-      if(expr.operands().size()==2)
+      // does not work with boolean
+      if(type.id()!=ID_bool)
       {
-        propagate_type(expr.op0(), type);
-        // not applicable to second operand
+        if(expr.operands().size()==2)
+        {
+          propagate_type(expr.op0(), type);
+          // not applicable to second operand
 
-        expr.type()=type;
-        return;
+          expr.type()=type;
+          return;
+        }
       }
     }
     else if(expr.id()==ID_constraint_select_one)
@@ -1558,7 +1562,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
     convert_expr(expr.op1());
     
     no_bool(expr);
-
+    
     if(distance_is_const && i>=1)
     {
       // make wider as needed
