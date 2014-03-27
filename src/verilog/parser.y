@@ -2231,7 +2231,10 @@ expression:
 	| expression TOK_GREATERGREATER expression
 		{ init($$, ID_lshr); mto($$, $1); mto($$, $3); }
 	| expression TOK_GREATERGREATERGREATER expression
-		{ init($$, ID_ashr); mto($$, $1); mto($$, $3); }
+	        // This is an arithmetic right shift for signed expressions,
+	        // and a logical right shift otherwise -- the type checker
+	        // will determine.
+		{ init($$, ID_shr); mto($$, $1); mto($$, $3); }
 	| expression TOK_QUESTION expression TOK_COLON expression
 		{ init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
 	| TOK_QSTRING
