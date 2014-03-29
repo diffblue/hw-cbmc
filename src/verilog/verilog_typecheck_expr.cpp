@@ -1553,31 +1553,48 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
   }
   else if(expr.id()==ID_shl)
   {
-    mp_integer i;
+    mp_integer op1_value;
     bool distance_is_const=
-      is_const_expression(expr.op1(), i);
+      is_const_expression(expr.op1(), op1_value);
       
     // do *after* is_const_expression
     convert_expr(expr.op0());
     convert_expr(expr.op1());
     
     no_bool(expr);
+
+    const typet &op0_type=expr.op0().type();
     
-    if(distance_is_const && i>=1)
+    expr.type()=op0_type;
+
+    if(op0_type.id()==ID_signedbv ||
+       op0_type.id()==ID_unsignedbv)
     {
-      // make wider as needed
-      mp_integer width=mp_integer(get_width(expr.op0().type()))+i;
-      typet new_type=expr.op0().type();
-      new_type.set(ID_width, integer2string(width));
-      expr.type()=new_type;
-      propagate_type(expr.op0(), new_type);
-    }
-    else
-    {
-      no_bool(expr);
-      expr.type()=expr.op0().type();
-      // type is guessed for now
-      // hopefully propagate_type will fix it
+      mp_integer op0_width=mp_integer(get_width(op0_type));
+      mp_integer new_op0_width=op0_width;
+      
+      if(distance_is_const)
+      {
+        // make wider as needed
+        if(op1_value>=1)
+          new_op0_width+=op1_value;
+      }
+      else
+      {
+        // A shift with unknown distance. We don't know how wide it
+        // will need to be. The standard suggests to make it at least 32 bits.
+      
+        if(op0_width<32)
+          new_op0_width=32;
+      }
+
+      if(new_op0_width!=op0_width)
+      {
+        typet new_type=expr.op0().type();
+        new_type.set(ID_width, integer2string(new_op0_width));
+        expr.type()=new_type;
+        propagate_type(expr.op0(), new_type);
+      }
     }
   }
   else if(expr.id()==ID_shr)
