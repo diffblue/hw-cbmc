@@ -584,7 +584,6 @@ data_type:
 	        {
                   $$=$3;
                   add_as_subtype(stack($$), stack($2));
-                  add_as_subtype(stack($$), stack($1));
                 }
 	| integer_atom_type signing_opt
 	        {
