@@ -11,6 +11,7 @@ extern struct module_fp_add_sub fp_add_sub;
 void set_inputs(void);
 
 float add(int roundingMode, float f, float g);
+int compareFloat (float f, float g);
 
 int main()
 {
@@ -27,5 +28,5 @@ int main()
   C_result=add(0, f, g);
   
   // check the output
-  assert(C_result==fp_add_sub.result);
+  assert(compareFloat(C_result, fp_add_sub.result));
 }
