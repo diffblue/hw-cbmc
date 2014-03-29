@@ -581,12 +581,22 @@ type_declaration:
 
 data_type:
 	  integer_vector_type signing_opt packed_dimension_brace
+	        {
+                  $$=$3;
+                  add_as_subtype(stack($$), stack($2));
+                  add_as_subtype(stack($$), stack($1));
+                }
 	| integer_atom_type signing_opt
+	        {
+                  $$=$1;
+                  add_as_subtype(stack($$), stack($2));
+                }
 	/*
 	| non_integer_type
 	*/
 	| struct_union packed_opt signing_opt 
 	  '{' struct_union_member_list '}' packed_dimension_brace
+	        { /* todo */ }
 	| TOK_ENUM enum_base_type_opt '{' enum_name_declaration_list '}'
 	        { init($$, ID_enum); }
 	| TOK_STRING
