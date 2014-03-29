@@ -116,10 +116,14 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       new_symbol.name=identifier;
 
       if(port_class==ID_input)
+      {
         new_symbol.is_input=true;
+      }
       else if(port_class==ID_output)
+      {
         new_symbol.is_output=true;
-      else if(port_class=="output-register")
+      }
+      else if(port_class==ID_output_register)
       {
         new_symbol.is_output=true;
         new_symbol.is_state_var=true;
@@ -304,11 +308,17 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     symbol.is_state_var=true;
 
     if(port_class==ID_input)
+    {
       input=true;
+    }
     else if(port_class==ID_output)
+    {
       output=true;
-    else if(port_class=="output-register")
+    }
+    else if(port_class==ID_output_register)
+    {
       output=true;
+    }
     else if(port_class==ID_inout)
     {
       input=true;

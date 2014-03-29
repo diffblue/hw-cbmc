@@ -912,7 +912,7 @@ module_port_output_declaration:
                   mto($$, $3); }
 	| TOK_OUTPUT data_type port_identifier
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, "output-register");
+                  stack($$).set(ID_class, ID_output_register);
                   addswap($$, ID_type, $2);
                   mto($$, $3); }
 	;
@@ -920,7 +920,7 @@ module_port_output_declaration:
 module_port_inout_declaration:
 	  TOK_INOUT port_type port_identifier
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, "inout");
+                  stack($$).set(ID_class, ID_inout);
                   addswap($$, ID_type, $2);
                   mto($$, $3); }
 	;
@@ -1190,7 +1190,7 @@ output_declaration:
                   swapop($$, $3); }
 	| TOK_OUTPUT data_type list_of_port_identifiers
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, "output-register");
+                  stack($$).set(ID_class, ID_output_register);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	;
@@ -1198,7 +1198,7 @@ output_declaration:
 inout_declaration:
 	  TOK_INOUT port_type list_of_port_identifiers
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, "inout");
+                  stack($$).set(ID_class, ID_inout);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	;
