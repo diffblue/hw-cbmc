@@ -62,7 +62,7 @@ module unpack(
 
   wire sign;
   wire [7:0] exponent;
-  wire [23:0] significand;
+  wire [22:0] significand; // no leading 1
 
   // split up f
   assign { sign, exponent, significand } = f;      
@@ -93,8 +93,8 @@ module unpack(
         uf_zero = 0;
         uf_subnormal = 1;
 
-        uf_exponent = -126;
         uf_significand = normaliseUp_significand;
+        uf_exponent = normaliseUp_exponent;
       end
     end else if (exponent == 'hff) begin
       if (significand == 0) begin
@@ -122,7 +122,7 @@ module unpack(
       uf_subnormal = 0;
 
       uf_exponent = exponent - `BIAS;
-      uf_significand = 'h800000 | significand;
+      uf_significand = 'h800000 | significand; // add leading 1
     end // if
   end // always
 endmodule
