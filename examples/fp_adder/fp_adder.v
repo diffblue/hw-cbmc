@@ -162,7 +162,7 @@ module pack(
   end // always
 
   // staple together
-  assign f = 123; //sign o exponent o significand;
+  assign f = sign o exponent o significand;
   
 endmodule
 
