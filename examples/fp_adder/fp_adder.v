@@ -162,7 +162,7 @@ module pack(
   end // always
 
   // staple together
-  assign f = sign o exponent o significand;
+  assign f = { sign, exponent, significand };
   
 endmodule
 
@@ -177,7 +177,7 @@ module dualPathAdder(
   input [9:0] ug_exponent,
   input [23:0] ug_significand,
   output reg result_nan, result_inf, result_zero, result_subnormal, result_sign,
-  output reg [9:0] result_exponent,
+  output reg signed [9:0] result_exponent,
   output reg [23:0] result_significand);
 
   reg guardBit;
@@ -201,7 +201,16 @@ module dualPathAdder(
   reg [63:0] incremented;  
   reg [31:0] subnormalAmount;
   reg do_increment;
+
+  // this is used for the case that the number is subnormal
+  reg signed [9:0] normaliseUp_exponent_in;
+  reg [23:0] normaliseUp_significand_in;
+  wire signed [9:0] normaliseUp_exponent_out;
+  wire [23:0] normaliseUp_significand_out;
   
+  normaliseUp dualPathAdder_normaliseUp(
+    result_exponent, result_significand, normaliseUp_exponent, normaliseUp_significand);
+
   always @(*) begin
 
     // these simulate gotos and return
@@ -309,12 +318,14 @@ module dualPathAdder(
           do_goto_extract = 1;
 
         end else begin // Some cancelation
-          result_exponent = result_exponent-1;
-          result_significand = diff >> 1;
+          normaliseUp_exponent_in = result_exponent-1;
+          normaliseUp_significand_in = diff >> 1;
           guardBit = 0;
           stickyBit = 0;
-
-          //normaliseUp(result);
+          
+          // we use the output form normaliseUp
+          result_exponent = normaliseUp_exponent_out;
+          result_significand = normaliseUp_significand_out;
           
           result_subnormal = (result_exponent < -126) ? 1 : 0;
           
