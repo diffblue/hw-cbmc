@@ -21,7 +21,7 @@ int main()
   fp_add_sub.f=f;
   fp_add_sub.g=g;
   fp_add_sub.isAdd=1;
-  fp_add_sub.roundingMode=1;
+  fp_add_sub.roundingMode=0;
   
   set_inputs();
   
