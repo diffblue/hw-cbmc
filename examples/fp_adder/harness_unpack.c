@@ -32,7 +32,7 @@ typedef struct _bitpattern {
   unsigned int significand:24;  // Leading 1 added
 } unpackedFloat;
 
-unpackedFloat unpack_f (float f);
+unpackedFloat unpack_float (float f);
 
 int main()
 {
@@ -42,7 +42,7 @@ int main()
   unpack.f=*(unsigned *)&f;
   set_inputs();
   
-  unpackedFloat result=unpack_f(f);
+  unpackedFloat result=unpack_float(f);
   
   // check the output
   assert(unpack.uf_sign==result.sign);

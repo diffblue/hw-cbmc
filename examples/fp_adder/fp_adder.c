@@ -203,7 +203,7 @@ void normaliseUp (unpackedFloat *uf) {
 }
 
 
-unpackedFloat unpack (float f) {
+unpackedFloat unpack_float (float f) {
   unpackedFloat uf;
   mix m;
 
@@ -687,8 +687,8 @@ void addUnit (
 
 
 float add(int roundingMode, float f, float g) {
-  unpackedFloat uf = unpack(f);
-  unpackedFloat ug = unpack(g);
+  unpackedFloat uf = unpack_float(f);
+  unpackedFloat ug = unpack_float(g);
   unpackedFloat result;
 
   initUnpackedFloat(&result);
@@ -703,8 +703,8 @@ float add(int roundingMode, float f, float g) {
 
 
 float sub(int roundingMode, float f, float g) {
-  unpackedFloat uf = unpack(f);
-  unpackedFloat ug = unpack(g);
+  unpackedFloat uf = unpack_float(f);
+  unpackedFloat ug = unpack_float(g);
   unpackedFloat result;
 
   initUnpackedFloat(&result);
@@ -730,7 +730,7 @@ void packerSpec (float f) {
   unpackedFloat uf;
   float result;
 
-  uf = unpack(f);
+  uf = unpack_float(f);
   check(uf);
   result = pack(uf);
   f = f;
