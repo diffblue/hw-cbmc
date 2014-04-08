@@ -187,8 +187,8 @@ module dualPathAdder(
   reg [23:0] larger_significand, smaller_significand;
   reg larger_sign, smaller_sign;
   reg larger_subnormal, smaller_subnormal;
-  reg signed [10:0] exponentDifference;
-  reg effectiveSubtract;
+  reg signed [31:0] exponentDifference;
+  reg signed [31:0] effectiveSubtract;
   
   reg [31:0] lsig, ssig, sum, diff, iOnes;
   integer i;
@@ -199,18 +199,15 @@ module dualPathAdder(
   // rounder
   reg [63:0] increment;
   reg [63:0] incremented;  
-  reg [31:0] subnormalAmount;
+  reg signed [31:0] subnormalAmount;
   reg do_increment;
-
   // this is used for the case that the number is subnormal
   reg signed [9:0] normaliseUp_exponent_in;
   reg [23:0] normaliseUp_significand_in;
   wire signed [9:0] normaliseUp_exponent_out;
   wire [23:0] normaliseUp_significand_out;
   
-  normaliseUp dualPathAdder_normaliseUp(
-    result_exponent, result_significand, normaliseUp_exponent, normaliseUp_significand);
-
+  normaliseUp dualPathAdder_normaliseUp(normaliseUp_exponent_in, normaliseUp_significand_in, normaliseUp_exponent_out, normaliseUp_significand_out);
   always @(*) begin
 
     // these simulate gotos and return
@@ -330,7 +327,18 @@ module dualPathAdder(
           result_subnormal = (result_exponent < -126) ? 1 : 0;
           
           // done, do return
-          do_return = 1;
+          do_return = 1; 
+             
+
+          // we use the output form normaliseUp
+          //result_exponent = normaliseUp_exponent_out;
+          //result_significand = normaliseUp_significand_out;
+          
+          result_subnormal = (result_exponent < -126) ? 1 : 0;
+          
+          // done, do return
+          do_return = 1; 
+
         end
 
       end else begin
