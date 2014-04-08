@@ -187,7 +187,7 @@ module dualPathAdder(
   reg [23:0] larger_significand, smaller_significand;
   reg larger_sign, smaller_sign;
   reg larger_subnormal, smaller_subnormal;
-  reg signed [31:0] exponentDifference;
+  reg signed [9:0] exponentDifference;
   reg signed [31:0] effectiveSubtract;
   
   reg [31:0] lsig, ssig, sum, diff, iOnes;
