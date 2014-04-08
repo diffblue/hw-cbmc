@@ -322,23 +322,11 @@ module dualPathAdder(
           
           // we use the output form normaliseUp
           result_exponent = normaliseUp_exponent_out;
-          result_significand = normaliseUp_significand_out;
-          
+          result_significand = normaliseUp_significand_out;          
           result_subnormal = (result_exponent < -126) ? 1 : 0;
           
           // done, do return
           do_return = 1; 
-             
-
-          // we use the output form normaliseUp
-          //result_exponent = normaliseUp_exponent_out;
-          //result_significand = normaliseUp_significand_out;
-          
-          result_subnormal = (result_exponent < -126) ? 1 : 0;
-          
-          // done, do return
-          do_return = 1; 
-
         end
 
       end else begin
