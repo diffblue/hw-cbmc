@@ -69,7 +69,6 @@ int hw_cbmc_parseoptionst::doit()
 
   hw_bmct bmc(options, symbol_table, ui_message_handler);
   eval_verbosity();
-  bmc.set_verbosity(get_verbosity());
 
   if(cmdline.isset("preprocess"))
   {

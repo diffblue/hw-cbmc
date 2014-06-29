@@ -51,7 +51,7 @@ ebmc_baset::ebmc_baset(const cmdlinet &_cmdline):
   main_symbol(NULL),
   trans_expr(NULL)
 {
-  set_verbosity(cmdline.isset("verbose")?9:4);
+  ui_message_handler.set_verbosity(cmdline.isset("verbose")?9:4);
 }
 
 /*******************************************************************\
@@ -531,7 +531,6 @@ Function: ebmc_baset::do_ebmc
 
 int ebmc_baset::do_ebmc(prop_convt &solver, bool convert_only)
 {
-  solver.set_verbosity(get_verbosity());
   solver.set_message_handler(get_message_handler());
 
   if(get_bound()) return 1;
