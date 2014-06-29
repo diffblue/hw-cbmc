@@ -30,14 +30,13 @@ Function: vhdl_languaget::parse
 
 bool vhdl_languaget::parse(
   std::istream &instream,
-  const std::string &path,
-  message_handlert &message_handler)
+  const std::string &path)
 {
   vhdl_parser.clear();
 
   vhdl_parser.set_file(path);
   vhdl_parser.in=&instream;
-  vhdl_parser.set_message_handler(message_handler);
+  vhdl_parser.set_message_handler(get_message_handler());
   //vhdl_parser.grammar=vhdl_parsert::LANGUAGE;
   
   //if(has_suffix(path, ".sv"))
@@ -70,11 +69,9 @@ Function: vhdl_languaget::preprocess
 bool vhdl_languaget::preprocess(
   std::istream &instream,
   const std::string &path,
-  std::ostream &outstream,
-  message_handlert &message_handler)
+  std::ostream &outstream)
 {
-  messaget message(message_handler);
-  message.error("there is no VHDL preprocessing");
+  error("there is no VHDL preprocessing");
   return true;
 }
 
@@ -149,8 +146,7 @@ Function: vhdl_languaget::typecheck
 
 bool vhdl_languaget::typecheck(
   symbol_tablet &symbol_table,
-  const std::string &module,
-  message_handlert &message_handler)
+  const std::string &module)
 {
   if(module=="") return false;
 
@@ -180,8 +176,7 @@ Function: vhdl_languaget::interfaces
 \*******************************************************************/
 
 bool vhdl_languaget::interfaces(
-  symbol_tablet &symbol_table,
-  message_handlert &message_handler)
+  symbol_tablet &symbol_table)
 {
   return false;
 }
@@ -261,7 +256,6 @@ bool vhdl_languaget::to_expr(
   const std::string &code,
   const std::string &module,
   exprt &expr,
-  message_handlert &message_handler,
   const namespacet &ns)
 {
   expr.make_nil();
@@ -274,7 +268,7 @@ bool vhdl_languaget::to_expr(
   vhdl_parser.clear();
   vhdl_parser.set_file("");
   vhdl_parser.in=&i_preprocessed;
-  vhdl_parser.set_message_handler(message_handler);
+  vhdl_parser.set_message_handler(get_message_handler());
   vhdl_parser.grammar=vhdl_parsert::EXPRESSION;
   vhdl_scanner_init();
 

@@ -25,8 +25,7 @@ Function: smv_languaget::parse
 
 bool smv_languaget::parse(
   std::istream &instream,
-  const std::string &path,
-  message_handlert &message_handler)
+  const std::string &path)
 {
   smv_parser.clear();
 
@@ -37,7 +36,7 @@ bool smv_languaget::parse(
 
   smv_parser.set_file(path);
   smv_parser.in=&instream;
-  smv_parser.set_message_handler(message_handler);
+  smv_parser.set_message_handler(get_message_handler());
 
   bool result=smv_parser.parse();
 
@@ -117,10 +116,10 @@ Function: smv_languaget::typecheck
 
 bool smv_languaget::typecheck(
   symbol_tablet &symbol_table,
-  const std::string &module,
-  message_handlert &message_handler)
+  const std::string &module)
 {
-  return smv_typecheck(smv_parse_tree, symbol_table, module, message_handler);
+  return smv_typecheck(smv_parse_tree, symbol_table, module,
+                       get_message_handler());
 }
 
 /*******************************************************************\
@@ -238,11 +237,9 @@ bool smv_languaget::to_expr(
   const std::string &code,
   const std::string &module,
   exprt &expr,
-  message_handlert &message_handler,
   const namespacet &ns)
 {
-  messaget message(message_handler);
-  message.error("not yet implemented");
+  error("not yet implemented");
   return true;
 }
 

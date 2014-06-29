@@ -345,8 +345,7 @@ bool ebmc_baset::parse_property(
   if(languages.to_expr(
     property,
     id2string(main_symbol->module),
-    expr,
-    get_message_handler()))
+    expr))
     return true;
 
   // make it AGp
