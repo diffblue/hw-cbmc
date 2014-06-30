@@ -55,26 +55,31 @@ int hw_cbmc_parseoptionst::doit()
     return 0;
   }
 
-  register_languages();
-
   //
   // command line options
   //
 
   optionst options;
   get_command_line_options(options);
-
-  if(cmdline.isset("vcd"))
-    options.set_option("vcd", cmdline.getval("vcd"));
-
-  hw_bmct bmc(options, symbol_table, ui_message_handler);
   eval_verbosity();
+
+  //
+  // Print a banner
+  //
+  status("HW-CBMC version " CBMC_VERSION);
+
+  register_languages();
 
   if(cmdline.isset("preprocess"))
   {
     preprocessing();
     return 0;
   }
+
+  if(cmdline.isset("vcd"))
+    options.set_option("vcd", cmdline.getval("vcd"));
+
+  hw_bmct bmc(options, symbol_table, ui_message_handler);
 
   goto_functionst goto_functions;
 
