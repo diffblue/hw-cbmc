@@ -956,7 +956,7 @@ expr:
        }
        | name '(' expr_list ')'
        {
-         init($$, ID_sideeffect);
+         init($$, ID_side_effect);
          stack($$).set(ID_statement, ID_function_call);
          stack($$).add(ID_operands).get_sub().swap(stack($3).get_sub());
        }

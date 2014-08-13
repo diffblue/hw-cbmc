@@ -328,16 +328,16 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   }
 
   // check arguments
-  const code_typet::argumentst &argument_types=code_type.arguments();
+  const code_typet::parameterst &parameter_types=code_type.parameters();
 
-  if(argument_types.size()!=arguments.size())
+  if(parameter_types.size()!=arguments.size())
   {
     err_location(expr);
     throw "wrong number of arguments";
   }
 
   for(unsigned i=0; i<arguments.size(); i++)
-    propagate_type(arguments[i], argument_types[i].type());
+    propagate_type(arguments[i], parameter_types[i].type());
 }
 
 /*******************************************************************\

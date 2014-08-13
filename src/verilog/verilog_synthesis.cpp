@@ -147,22 +147,22 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
     throw "function call cannot call task";
   }
   
-  const code_typet::argumentst &arguments=
-    code_type.arguments();
+  const code_typet::parameterst &parameters=
+    code_type.parameters();
     
   const exprt::operandst &actuals=
     call.op1().operands();
     
-  if(arguments.size()!=actuals.size())
+  if(parameters.size()!=actuals.size())
   {
     err_location(call);
     throw "wrong number of arguments";
   }
   
-  // do assignments to function arguments
-  for(unsigned i=0; i<arguments.size(); i++)
+  // do assignments to function parameters
+  for(unsigned i=0; i<parameters.size(); i++)
   {
-    const symbolt &a_symbol=lookup(arguments[i].get_identifier());
+    const symbolt &a_symbol=lookup(parameters[i].get_identifier());
     verilog_blocking_assignt assignment;
     assignment.lhs()=::symbol_expr(a_symbol);
     assignment.rhs()=actuals[i];
@@ -2367,23 +2367,23 @@ void verilog_synthesist::synth_task_enable(
     throw "task_enable cannot call function";
   }
   
-  const code_typet::argumentst &arguments=
-    code_type.arguments();
+  const code_typet::parameterst &parameters=
+    code_type.parameters();
 
   const exprt::operandst &actuals=
     statement.op1().operands();
     
-  if(arguments.size()!=actuals.size())
+  if(parameters.size()!=actuals.size())
   {
     err_location(statement);
     throw "wrong number of arguments";
   }
   
-  // do assignments to input arguments
-  for(unsigned i=0; i<arguments.size(); i++)
+  // do assignments to input parameters
+  for(unsigned i=0; i<parameters.size(); i++)
   {
-    const symbolt &a_symbol=lookup(arguments[i].get_identifier());
-    if(arguments[i].get_bool(ID_input))
+    const symbolt &a_symbol=lookup(parameters[i].get_identifier());
+    if(parameters[i].get_bool(ID_input))
     {
       verilog_blocking_assignt assignment;
       assignment.lhs()=::symbol_expr(a_symbol);
@@ -2395,11 +2395,11 @@ void verilog_synthesist::synth_task_enable(
 
   synth_statement(to_verilog_statement(symbol.value));
 
-  // do assignments to output arguments
-  for(unsigned i=0; i<arguments.size(); i++)
+  // do assignments to output parameters
+  for(unsigned i=0; i<parameters.size(); i++)
   {
-    const symbolt &a_symbol=lookup(arguments[i].get_identifier());
-    if(arguments[i].get_bool(ID_output))
+    const symbolt &a_symbol=lookup(parameters[i].get_identifier());
+    if(parameters[i].get_bool(ID_output))
     {
       verilog_blocking_assignt assignment;
       assignment.lhs()=actuals[i];

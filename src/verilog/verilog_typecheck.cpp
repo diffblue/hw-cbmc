@@ -765,10 +765,10 @@ void verilog_typecheckt::convert_task_enable(
   }
 
   // check arguments
-  const code_typet::argumentst &argument_types=code_type.arguments();
+  const code_typet::parameterst &parameter_types=code_type.parameters();
   exprt::operandst &arguments=statement.arguments();
   
-  if(argument_types.size()!=arguments.size())
+  if(parameter_types.size()!=arguments.size())
   {
     err_location(statement);
     throw "wrong number of arguments";
@@ -777,7 +777,7 @@ void verilog_typecheckt::convert_task_enable(
   for(unsigned i=0; i<arguments.size(); i++)
   {
     convert_expr(arguments[i]);
-    propagate_type(arguments[i], argument_types[i].type());
+    propagate_type(arguments[i], parameter_types[i].type());
   }
   
   statement.task().type()=symbol.type;

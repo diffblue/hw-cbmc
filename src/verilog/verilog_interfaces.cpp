@@ -391,15 +391,15 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
         symbol_table.symbols.find(function_or_task_name);
       assert(s_it!=symbol_table.symbols.end());
       symbolt &function_or_task_symbol=s_it->second;
-      code_typet::argumentst &arguments=
-        to_code_type(function_or_task_symbol.type).arguments();
-      arguments.push_back(code_typet::argumentt());
-      code_typet::argumentt &argument=arguments.back();
-      argument.set_base_name(symbol.base_name);
-      argument.set_identifier(symbol.name);
-      argument.type()=symbol.type;
-      argument.set(ID_output, output);
-      argument.set(ID_input, input);
+      code_typet::parameterst &parameters=
+        to_code_type(function_or_task_symbol.type).parameters();
+      parameters.push_back(code_typet::parametert());
+      code_typet::parametert &parameter=parameters.back();
+      parameter.set_base_name(symbol.base_name);
+      parameter.set_identifier(symbol.name);
+      parameter.type()=symbol.type;
+      parameter.set(ID_output, output);
+      parameter.set(ID_input, input);
     }
 
     symbol_tablet::symbolst::iterator result=
