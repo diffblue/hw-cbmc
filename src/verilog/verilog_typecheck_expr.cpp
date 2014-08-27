@@ -1224,7 +1224,7 @@ void verilog_typecheck_exprt::convert_type(
 
       dest=typet(subtype.id()==ID_signed?ID_signedbv:ID_unsignedbv);
 
-      dest.set(ID_C_location, src.find(ID_C_location));
+      dest.add_source_location()=static_cast<const source_locationt &>(src.find(ID_C_source_location));
       dest.set(ID_width, integer2string(width));
       dest.set(ID_C_little_endian, little_endian);
       dest.set(ID_C_offset, integer2string(offset));
@@ -1234,7 +1234,7 @@ void verilog_typecheck_exprt::convert_type(
       // we have an array, and do a recursive call
       dest=typet(ID_array);
       dest.set(ID_size, from_integer(width, integer_typet()));
-      dest.set(ID_C_location, src.find(ID_C_location));
+      dest.add_source_location()=static_cast<const source_locationt &>(src.find(ID_C_source_location));
       dest.set(ID_offset, from_integer(offset, integer_typet()));
       convert_type(subtype, dest.subtype());
     }
