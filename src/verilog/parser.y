@@ -44,7 +44,7 @@ Function: init
 inline static void init(exprt &expr)
 {
   expr.clear();
-  verilog_parser.set_location(expr);
+  verilog_parser.set_source_location(expr);
 }
 
 /*******************************************************************\

@@ -52,7 +52,7 @@ Function: init
 inline static void init(exprt &expr)
 {
   expr.clear();
-  PARSER.set_location(expr);
+  PARSER.set_source_location(expr);
 }
 
 /*******************************************************************\

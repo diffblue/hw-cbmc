@@ -22,7 +22,7 @@ int yysmverror(const std::string &error);
 void newlocation(YYSTYPE &x)
 {
   newstack(x);
-  PARSER.set_location(stack(x));
+  PARSER.set_source_location(stack(x));
 }
 
 %}
