@@ -49,7 +49,7 @@ void verilog_synthesist::synth_expr(
     if(v_it!=values.end())
     {
       exprt c=from_integer(v_it->second, integer_typet());
-      c.location()=expr.location();
+      c.add_source_location()=expr.source_location();
       expr=c;
     }
     else if(symbol.is_macro)
@@ -166,7 +166,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
     verilog_blocking_assignt assignment;
     assignment.lhs()=::symbol_expr(a_symbol);
     assignment.rhs()=actuals[i];
-    assignment.location()=call.location();
+    assignment.add_source_location()=call.source_location();
     synth_statement(assignment);
   }
 
@@ -239,7 +239,7 @@ void verilog_synthesist::expand_hierarchical_identifier(
 
   symbol_exprt new_symbol;
   new_symbol.type()=expr.type();
-  new_symbol.location()=expr.location();
+  new_symbol.add_source_location()=expr.source_location();
   new_symbol.set_identifier(full_identifier);
   expr.swap(new_symbol);
 }
@@ -2229,7 +2229,7 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
   verilog_blocking_assignt assignment;
   assignment.lhs()=statement.op0();
   assignment.rhs()=plus_exprt(statement.op0(), one);
-  assignment.location()=statement.location();
+  assignment.add_source_location()=statement.location();
   synth_statement(assignment);  
 }
 
@@ -2388,7 +2388,7 @@ void verilog_synthesist::synth_task_enable(
       verilog_blocking_assignt assignment;
       assignment.lhs()=::symbol_expr(a_symbol);
       assignment.rhs()=actuals[i];
-      assignment.location()=statement.location();
+      assignment.add_source_location()=statement.source_location();
       synth_statement(assignment);
     }
   }
@@ -2404,7 +2404,7 @@ void verilog_synthesist::synth_task_enable(
       verilog_blocking_assignt assignment;
       assignment.lhs()=actuals[i];
       assignment.rhs()=::symbol_expr(a_symbol);
-      assignment.location()=statement.location();
+      assignment.add_source_location()=statement.source_location();
       synth_statement(assignment);
     }
   }

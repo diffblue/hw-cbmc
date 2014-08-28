@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 
 #include <util/arith_tools.h>
-#include <util/location.h>
 #include <util/expr_util.h>
 #include <util/simplify_expr.h>
 #include <util/namespace.h>
@@ -403,7 +402,7 @@ void verilog_typecheck_exprt::convert_system_function(
       exprt tmp(ID_typecast, argument.type());
       tmp.type().id(ID_signedbv);
       tmp.move_to_operands(argument);
-      tmp.location()=expr.location();
+      tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
     else if(argument.type().id()==ID_bool)
@@ -411,7 +410,7 @@ void verilog_typecheck_exprt::convert_system_function(
       exprt tmp(ID_typecast, typet(ID_signedbv));
       tmp.type().set(ID_width, 2);
       tmp.move_to_operands(argument);
-      tmp.location()=expr.location();
+      tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
     else
@@ -445,7 +444,7 @@ void verilog_typecheck_exprt::convert_system_function(
       exprt tmp(ID_typecast, argument.type());
       tmp.type().id(ID_unsignedbv);
       tmp.move_to_operands(argument);
-      tmp.location()=expr.location();
+      tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
     else if(argument.type().id()==ID_bool)
@@ -453,7 +452,7 @@ void verilog_typecheck_exprt::convert_system_function(
       exprt tmp(ID_typecast, typet(ID_unsignedbv));
       tmp.type().set(ID_width, 1);
       tmp.move_to_operands(argument);
-      tmp.location()=expr.location();
+      tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
     else
@@ -589,10 +588,10 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
       }
       
       unsigned bits=integer2long(address_bits(int_value+1));
-      locationt location=expr.location();
+      source_locationt source_location=expr.source_location();
 
-      expr=exprt(ID_constant, typet(ID_unsignedbv));
-      expr.location()=location;
+      expr=constant_exprt(typet(ID_unsignedbv));
+      expr.add_source_location()=source_location;
       expr.type().set(ID_width, bits);
       expr.set(ID_value, integer2binary(int_value, bits));
     }
@@ -1025,14 +1024,14 @@ void verilog_typecheck_exprt::typecast(
   {
     if(expr.is_constant())
     {
-      locationt location=expr.location();
+      source_locationt source_location=expr.source_location();
       mp_integer value;
 
       if(to_integer(expr, value))
         throw "failed to convert integer constant";
 
       expr=from_integer(value, dest_type);
-      expr.location()=location;
+      expr.add_source_location()=source_location;
       return;
     }
 
@@ -1224,7 +1223,8 @@ void verilog_typecheck_exprt::convert_type(
 
       dest=typet(subtype.id()==ID_signed?ID_signedbv:ID_unsignedbv);
 
-      dest.add_source_location()=static_cast<const source_locationt &>(src.find(ID_C_source_location));
+      dest.add_source_location()=
+        static_cast<const source_locationt &>(src.find(ID_C_source_location));
       dest.set(ID_width, integer2string(width));
       dest.set(ID_C_little_endian, little_endian);
       dest.set(ID_C_offset, integer2string(offset));
@@ -1234,7 +1234,8 @@ void verilog_typecheck_exprt::convert_type(
       // we have an array, and do a recursive call
       dest=typet(ID_array);
       dest.set(ID_size, from_integer(width, integer_typet()));
-      dest.add_source_location()=static_cast<const source_locationt &>(src.find(ID_C_source_location));
+      dest.add_source_location()=
+        static_cast<const source_locationt &>(src.find(ID_C_source_location));
       dest.set(ID_offset, from_integer(offset, integer_typet()));
       convert_type(subtype, dest.subtype());
     }

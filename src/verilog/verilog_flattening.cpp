@@ -258,7 +258,7 @@ void verilog_flatteningt::flatten_inst(verilog_instt &inst)
     
   // kill it now
   exprt skip("skip");
-  skip.location()=inst.location();
+  skip.add_source_location()=inst.source_location();
   inst.swap(skip);
 }
 
