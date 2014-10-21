@@ -8,6 +8,8 @@ include ../config.inc
 
 INCLUDES= -I $(CBMC)/src
 
+CLEANFILES = trans$(LIBEXT)
+
 all: trans$(LIBEXT)
 
 ###############################################################################

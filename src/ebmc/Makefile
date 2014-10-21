@@ -20,6 +20,8 @@ INCLUDES= -I .. -I $(CBMC)/src
 
 LIBS =
 
+CLEANFILES = ebmc$(EXEEXT)
+
 all: ebmc$(EXEEXT)
 
 ifdef HYPER_RESOLUTION
@@ -66,4 +68,4 @@ endif
 ###############################################################################
 
 ebmc$(EXEEXT): $(OBJ)
-	$(CXX) $(LINKFLAGS) -o $@ $(OBJ) $(LIBS)
+	$(LINKBIN)

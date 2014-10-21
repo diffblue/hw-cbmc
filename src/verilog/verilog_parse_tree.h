@@ -28,8 +28,8 @@ public:
     
     void show(std::ostream &out) const
     {
-      out << "Typedef: " << std::endl;
-      out << std::endl;
+      out << "Typedef:\n";
+      out << "\n";
     }
   };
 

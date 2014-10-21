@@ -5,6 +5,8 @@ include ../config.inc
 
 INCLUDES= -I $(CBMC)/src
 
+CLEANFILES = vhdl$(LIBEXT) y.tab.cpp y.tab.h lex.yy.cpp y.output
+
 all: vhdl$(LIBEXT)
 
 ###############################################################################

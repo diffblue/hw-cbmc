@@ -10,6 +10,8 @@ Purpose:
 
 \*******************************************************************/
 
+#include <ostream>
+
 #include <langapi/language_util.h>
 
 #include "word_level_trans.h"

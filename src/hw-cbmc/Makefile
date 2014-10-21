@@ -12,7 +12,7 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parseoptions$(OBJEXT) \
       $(CBMC)/src/cbmc/show_vcc$(OBJEXT) \
       $(CBMC)/src/cbmc/cover$(OBJEXT) \
       $(CBMC)/src/cbmc/dimacs$(OBJEXT) \
-      $(CBMC)/src/cbmc/all_claims$(OBJEXT) \
+      $(CBMC)/src/cbmc/all_properties$(OBJEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/java_bytecode/java_bytecode$(LIBEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
@@ -33,6 +33,8 @@ include ../config.inc
 INCLUDES= -I $(CBMC)/src -I ..
 
 LIBS =
+
+CLEANFILES = hw-cbmc$(EXEEXT)
 
 all: hw-cbmc$(EXEEXT)
 

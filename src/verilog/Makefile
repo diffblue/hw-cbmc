@@ -10,6 +10,9 @@ include ../config.inc
 
 INCLUDES= -I $(CBMC)/src
 
+CLEANFILES = verilog$(LIBEXT) verilog_y.tab.h verilog_y.tab.cpp \
+             verilog_lex.yy.cpp verilog_y.output
+
 all: verilog$(LIBEXT)
 
 ###############################################################################
