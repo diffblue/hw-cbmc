@@ -134,7 +134,7 @@ std::cout << "This option is currently disabled\n";
       return do_interpolation_netlist(cmdline);
     #else
     language_uit language_ui("EBMC " EBMC_VERSION, cmdline);
-    language_ui.error("No support for interpolation linked in");
+    language_ui.error() << "No support for interpolation linked in" << messaget::eom;
     return 1; 
     #endif
   }

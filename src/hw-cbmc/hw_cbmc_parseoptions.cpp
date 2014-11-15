@@ -66,7 +66,7 @@ int hw_cbmc_parseoptionst::doit()
   //
   // Print a banner
   //
-  status("HW-CBMC version " CBMC_VERSION);
+  status() << "HW-CBMC version " CBMC_VERSION << eom;
 
   register_languages();
 

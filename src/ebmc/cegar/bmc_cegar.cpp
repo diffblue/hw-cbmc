@@ -8,7 +8,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
-#include <util/i2string.h>
 #include <util/time_stopping.h>
 
 #include <trans/property.h>
@@ -86,7 +85,8 @@ void bmc_cegart::unwind(
   // do transitions
   for(unsigned timeframe=0; timeframe<bound; timeframe++)
   {
-    if(verbose) message.status("Round "+i2string(timeframe));
+    if(verbose)
+      message.status() << "Round " << timeframe < eom;
     
     aig.clear_convert_cache();
     
@@ -147,19 +147,22 @@ Function: bmc_cegart::compute_ct
 
 unsigned bmc_cegart::compute_ct()
 {
-  message.status("Computing CT");
+  message.status() << "Computing CT" << messaget::eom;
 
-  if(verbose) message.status("Computing abstract LDG");
+  if(verbose)
+    message.status() << "Computing abstract LDG" << messaget::eom;
    
   ldgt ldg;
  
   ldg.compute(abstract_netlist);
     
-  if(verbose) message.status("Computing CT");
+  if(verbose)
+    message.status() << "Computing CT" << messaget::eom;
 
   unsigned ct=::compute_ct(ldg);
 
-  if(verbose) message.status("CT="+i2string(ct));
+  if(verbose)
+    message.status() << "CT=" << ct << messaget::eom;
 
   return ct;
 }
@@ -196,13 +199,13 @@ void bmc_cegart::cegar_loop()
     
     if(verify(bound))
     {
-      message.status("VERIFICATION SUCCESSFUL -- PROPERTY HOLDS");
+      message.status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS" << messaget::eom;
       return;
     }
 
     if(simulate(bound))
     {
-      message.status("VERIFICATION FAILED -- PROPERTY REFUTED");
+      message.status() << "VERIFICATION FAILED -- PROPERTY REFUTED" << messaget::eom;
       return;
     }
 
@@ -225,7 +228,7 @@ Function: bmc_cegart::make_netlist
 void bmc_cegart::make_netlist()
 {
   // make net-list
-  message.status("Making Netlist");
+  message.status() << "Making Netlist" << messaget::eom;
 
   try
   {
@@ -236,7 +239,7 @@ void bmc_cegart::make_netlist()
   
   catch(const std::string &error)
   {
-    message.error(error);
+    message.error() << error << messaget::eom;
     return;
   }
 

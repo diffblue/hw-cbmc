@@ -338,7 +338,8 @@ void convert_trans_to_netlistt::operator()(
       if(property.id()!=ID_AG ||
          property.operands().size()!=1)
       {
-        message.error("unsupported property - only AGp implemented");
+        message.error() << "unsupported property - only AGp implemented"
+                        << messaget::eom;
         throw 0;
       }
 

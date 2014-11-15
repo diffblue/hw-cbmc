@@ -26,20 +26,20 @@ Function: bmc_cegart::abstract
 
 void bmc_cegart::abstract()
 {
-  message.status("Abstracting");
+  message.status() << "Abstracting" << messaget::eom;
 
   if(initial_abstraction)
   {
     initial_abstraction=false;
     abstract_netlist=concrete_netlist;
     
-    if(verbose) message.status("Computing concrete LDG");
+    if(verbose) message.status() << "Computing concrete LDG" << messaget::eom;
    
     ldgt ldg;
  
     ldg.compute(concrete_netlist);
 
-    if(verbose) message.status("Computing ordering");
+    if(verbose) message.status() << "Computing ordering" << messaget::eom;
     
     latch_orderingt latch_ordering;
     latch_ordering.compute(ldg);

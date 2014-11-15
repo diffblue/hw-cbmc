@@ -128,7 +128,7 @@ int k_inductiont::induction_base()
   {
   case decision_proceduret::D_SATISFIABLE:
     {
-      result("SAT: bug found");
+      result() << "SAT: bug found" << eom;
 
       namespacet ns(symbol_table);
       trans_tracet trans_trace;
@@ -143,7 +143,7 @@ int k_inductiont::induction_base()
         trans_trace);
         
       if(get_ui()==ui_message_handlert::PLAIN)
-        result("Counterexample:\n");
+        result() << "Counterexample:\n" << eom;
 
       show_trans_trace(
         trans_trace,
@@ -156,7 +156,7 @@ int k_inductiont::induction_base()
     return 0;
 
   case decision_proceduret::D_UNSATISFIABLE:
-    result("UNSAT: No bug found within bound");
+    result() << "UNSAT: No bug found within bound" << eom;
     break;
 
   case decision_proceduret::D_ERROR:
@@ -238,11 +238,11 @@ int k_inductiont::induction_step()
   switch(dec_result)
   {
   case decision_proceduret::D_SATISFIABLE:
-    result("SAT: inductive proof failed, k-induction is inconclusive");
+    result() << "SAT: inductive proof failed, k-induction is inconclusive" << eom;
     break;
 
   case decision_proceduret::D_UNSATISFIABLE:
-    result("UNSAT: inductive proof successful, property holds");
+    result() << "UNSAT: inductive proof successful, property holds" << eom;
     report_success();
     break;
 

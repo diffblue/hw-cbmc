@@ -33,7 +33,7 @@ void unwind(
   if(add_initial_state && t==0)
   {
     // do initial state
-    message.status("Initial State");
+    message.status() << "Initial State" << messaget::eom;
     
     for(unsigned i=0; i<netlist.initial.size(); i++)
       solver.l_set_to(
@@ -45,9 +45,9 @@ void unwind(
   bool last=(t==bmc_map.timeframe_map.size()-1);
 
   if(last)
-    message.status("Transition "+i2string(t));
+    message.status() << "Transition " << t << messaget::eom;
   else
-    message.status("Transition "+i2string(t)+"->"+i2string(t+1));
+    message.status() << "Transition " << t << "->" << t+1 << messaget::eom;
   
   const bmc_mapt::timeframet &timeframe=bmc_map.timeframe_map[t];
   
@@ -143,7 +143,7 @@ void unwind_property(
 {
   if(netlist.properties.empty()) return;
 
-  message.status("Unwinding property");
+  message.status() << "Unwinding property" << messaget::eom;
   
   bvt or_bv;
   

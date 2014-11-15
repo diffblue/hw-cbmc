@@ -322,7 +322,7 @@ int ebmc_baset::do_prover()
   prover_satt prover_sat(ns);
   return do_ebmc(prover_sat, false);
   #else
-  error("Support for prover not linked in");
+  error() << "Support for prover not linked in" << eom;
   return 1;
   #endif
 }
@@ -346,7 +346,7 @@ int ebmc_baset::do_lifter()
   liftert lifter(ns);
   return do_ebmc(lifter.prop_conv(), false);
   #else
-  error("Support for lifter not linked in");
+  error() << "Support for lifter not linked in" << eom;
   return 1;
   #endif
 }

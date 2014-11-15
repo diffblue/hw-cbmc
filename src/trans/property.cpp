@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/namespace.h>
 #include <util/cout_message.h>
-#include <util/i2string.h>
 
 #include "instantiate.h"
 #include "property.h"
@@ -36,9 +35,10 @@ void property(
   const namespacet &ns)
 {
   if(properties.size()==1)
-    message.status("Adding property");
+    message.status() << "Adding property" << messaget::eom;
   else
-    message.status("Adding "+i2string(properties.size())+" properties");
+    message.status() << "Adding " << properties.size() 
+                     << " properties" << messaget::eom;
 
   prop_bv.clear();
   bvt all_prop;
@@ -57,10 +57,11 @@ void property(
   
     exprt property(*it);
 
-    if(property.id()!="AG" ||
+    if(property.id()!=ID_AG ||
        property.operands().size()!=1)
     {
-      message.error("unsupported property - only AGp implemented");
+      message.error() << "unsupported property - only AGp implemented" 
+                      << messaget::eom;
       exit(1);
     }
 
@@ -100,9 +101,10 @@ void property(
   const namespacet &ns)
 {
   if(properties.size()==1)
-    message.status("Adding property");
+    message.status() << "Adding property" << messaget::eom;
   else
-    message.status("Adding "+i2string(properties.size())+" properties");
+    message.status() << "Adding " << properties.size() 
+                     << " properties" << messaget::eom;
 
   prop_bv.clear();
 
@@ -122,10 +124,11 @@ void property(
   
     exprt property(*it);
 
-    if(property.id()!="AG" ||
+    if(property.id()!=ID_AG ||
        property.operands().size()!=1)
     {
-      message.error("unsupported property - only AGp implemented");
+      message.error() << "unsupported property - only AGp implemented"
+                      << messaget::eom;
       exit(1);
     }
 

@@ -222,7 +222,8 @@ void show_counterexample(
 
       if(result.is_unknown())
       {
-        message.warning("got unknown-valued property literal");
+        message.warning() << "got unknown-valued property literal" 
+                          << messaget::eom;
       }
       else if(result.is_false())
       {

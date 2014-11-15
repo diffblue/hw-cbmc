@@ -209,7 +209,7 @@ void verilog_preprocessort::include(const std::string &filename)
     file.close=false;
   }
 
-  error("include file `"+filename+"' not found");
+  error() << "include file `" << filename << "' not found" << eom;
   throw 0;
 }
 
@@ -306,7 +306,7 @@ void verilog_preprocessort::replace_macros(std::string &s)
 
       if(it==defines.end())
       {
-        error("unknown preprocessor macro \""+text+"\"");
+        error() << "unknown preprocessor macro \"" << text << "\"" << eom;
         throw 0;
       }
 
@@ -379,7 +379,7 @@ void verilog_preprocessort::directive()
     // is there a parameter list?
     if(*tptr=='(')
     {
-      error("`define with parameters not yet supported");
+      error() << "`define with parameters not yet supported" << eom;
       throw 0;
     }
 
@@ -470,7 +470,7 @@ void verilog_preprocessort::directive()
 
     if(conditionals.empty())
     {
-      error("`else without `ifdef/`ifndef");
+      error() << "`else without `ifdef/`ifndef" << eom;
       throw 0;
     }
 
@@ -478,7 +478,7 @@ void verilog_preprocessort::directive()
 
     if(conditional.else_part)
     {
-      error("`else without `ifdef/`ifndef");
+      error() << "`else without `ifdef/`ifndef" << eom;
       throw 0;
     }
 
@@ -491,7 +491,7 @@ void verilog_preprocessort::directive()
 
     if(conditionals.empty())
     {
-      error("`endif without `ifdef/`ifndef");
+      error() << "`endif without `ifdef/`ifndef" << eom;
       throw 0;
     }
 
@@ -513,7 +513,7 @@ void verilog_preprocessort::directive()
 
     if(tptr[0]!='"')
     {
-      error("expected file name");
+      error() << "expected file name" << eom;
       throw 0;
     }
 
@@ -526,7 +526,7 @@ void verilog_preprocessort::directive()
     {
       if(*tptr==0)
       {
-        error("expected `\"'");
+        error() << "expected `\"'" << eom;
         throw 0;
       }
 
@@ -566,7 +566,7 @@ void verilog_preprocessort::directive()
 
       if(it==defines.end())
       {
-        error("unknown preprocessor directive \""+text+"\"");
+        error() << "unknown preprocessor directive \"" << text << "\"" << eom;
         throw 0;
       }
 

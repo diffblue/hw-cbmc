@@ -7,7 +7,6 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/namespace.h>
-#include <util/i2string.h>
 #include <util/find_symbols.h>
 #include <util/expr_util.h>
 
@@ -40,7 +39,7 @@ void unwind(
 
   // general constraints
 
-  message.status("General constraints");
+  message.status() << "General constraints" << messaget::eom;
 
   if(!op_invar.is_true())
     for(unsigned c=0; c<no_timeframes; c++)
@@ -50,7 +49,7 @@ void unwind(
 
   if(initial_state)
   {
-    message.status("Initial state");
+    message.status() << "Initial state" << messaget::eom;
 
     if(!op_init.is_true())
       instantiate(decision_procedure, op_init, 0, ns);
@@ -58,12 +57,12 @@ void unwind(
 
   // transition relation
 
-  message.status("Transition relation");
+  message.status() << "Transition relation" << messaget::eom;
 
   if(!op_trans.is_true())
     for(unsigned c=0; c<no_timeframes-1; c++)
     {
-      message.status("Transition "+i2string(c)+"->"+i2string(c+1));
+      message.status() << "Transition " << c << "->" << c+1 << messaget::eom;
 
       instantiate(decision_procedure, op_trans, c, ns);
     }

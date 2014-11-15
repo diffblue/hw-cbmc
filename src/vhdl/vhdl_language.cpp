@@ -71,7 +71,7 @@ bool vhdl_languaget::preprocess(
   const std::string &path,
   std::ostream &outstream)
 {
-  error("there is no VHDL preprocessing");
+  error() << "there is no VHDL preprocessing" << eom;
   return true;
 }
 

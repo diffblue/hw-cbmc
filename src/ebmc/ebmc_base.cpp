@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <fstream>
 
-#include <util/i2string.h>
 #include <util/time_stopping.h>
 #include <util/get_module.h>
 #include <util/xml.h>
@@ -84,7 +83,7 @@ void ebmc_baset::show_trace(const trans_tracet &trans_trace)
   else
   {
     if(get_ui()==ui_message_handlert::PLAIN)
-      result("Counterexample:\n");
+      result() << "Counterexample:\n" << eom;
       
     show_trans_trace(
       trans_trace,
@@ -123,7 +122,7 @@ int ebmc_baset::finish(prop_convt &solver)
   {
   case decision_proceduret::D_SATISFIABLE:
     {
-      result("SAT: bug found");
+      result() << "SAT: bug found" << eom;
       
       namespacet ns(symbol_table);
       trans_tracet trans_trace;
@@ -143,16 +142,16 @@ int ebmc_baset::finish(prop_convt &solver)
     break;
 
   case decision_proceduret::D_UNSATISFIABLE:
-    result("UNSAT: No bug found within bound");
+    result() << "UNSAT: No bug found within bound" << eom;
     report_success();
     break;
 
   case decision_proceduret::D_ERROR:
-    error("Error from decision procedure");
+    error() << "Error from decision procedure" << eom;
     return 2;
 
   default:
-    error("Unexpected result from decision procedure");
+    error() << "Unexpected result from decision procedure" << eom;
     return 1;
   }
 
@@ -187,7 +186,7 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
   {
   case propt::P_SATISFIABLE:
     {
-      result("SAT: bug found");
+      result() << "SAT: bug found" << eom;
       
       namespacet ns(symbol_table);
       trans_tracet trans_trace;
@@ -205,16 +204,16 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
     break;
 
   case propt::P_UNSATISFIABLE:
-    result("UNSAT: No bug found within bound");
+    result() << "UNSAT: No bug found within bound" << eom;
     report_success();
     break;
 
   case propt::P_ERROR:
-    error("Error from decision procedure");
+    error() << "Error from decision procedure" << eom;
     return 2;
 
   default:
-    error("Unexpected result from decision procedure");
+    error() << "Unexpected result from decision procedure" << eom;
     return 1;
   }
 
@@ -277,7 +276,7 @@ void ebmc_baset::check_property(prop_convt &solver, bool convert_only)
     if(properties.empty())
       throw "no properties";
 
-  status("Generating Decision Problem");
+  status() << "Generating Decision Problem" << eom;
 
   unwind(solver);
 
@@ -313,7 +312,7 @@ void ebmc_baset::check_property(bmc_mapt &bmc_map, cnft &solver, bool convert_on
   netlistt netlist;
   make_netlist(netlist);
 
-  status("Unwinding Netlist");
+  status() << "Unwinding Netlist" << eom;
   
   bmc_map.map_timeframes(netlist, bound+1, solver);
 
@@ -355,8 +354,8 @@ bool ebmc_baset::parse_property(
 
   std::string string_value;
   languages.from_expr(expr, string_value);
-  status("Property: "+string_value);
-  status("Mode: "+id2string(main_symbol->mode));
+  status() << "Property: " << string_value << eom;
+  status() << "Mode: " << main_symbol->mode << eom;
 
   prop_expr_list.push_back(exprt());
   prop_expr_list.back()=expr;
@@ -400,7 +399,7 @@ bool ebmc_baset::get_model_properties()
         std::string string_value=
           from_expr(ns, symbol.name, symbol.value);
 
-        status("Property: "+string_value);
+        status() << "Property: " << string_value << eom;
 
         prop_expr_list.push_back(symbol.value);
 
@@ -414,13 +413,13 @@ bool ebmc_baset::get_model_properties()
       
       catch(const char *e)
       {
-        error(e);
+        error() << e << eom;
         return true;
       }
       
       catch(const std::string &e)
       {
-        error(e);
+        error() << e << eom;
         return true;
       }
       
@@ -437,7 +436,7 @@ bool ebmc_baset::get_model_properties()
     unsigned c=atoi(cmdline.getval("claim"));
     if(c<1 || c>properties.size())
     {
-      error("Claim number "+i2string(c)+" out of range");
+      error() << "Claim number " << c << " out of range" << eom;
       return true;
     }
 
@@ -470,7 +469,7 @@ bool ebmc_baset::get_bound()
 {
   if(!cmdline.isset("bound"))
   {
-    warning("using default bound 1");
+    warning() << "using default bound 1" << eom;
     bound=1;
     return false;
   }
@@ -479,7 +478,7 @@ bool ebmc_baset::get_bound()
 
   if(bound<1)
   {
-    error("must provide bound greater than zero");
+    error() << "must provide bound greater than zero" << eom;
     return true;
   }
 
@@ -549,13 +548,13 @@ int ebmc_baset::do_ebmc(prop_convt &solver, bool convert_only)
   
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return 10;
   }
   
   catch(const std::string &e)
   {
-    error(e);
+    error() << e << eom;
     return 10;
   }
   
@@ -601,13 +600,13 @@ int ebmc_baset::do_ebmc(cnft &solver, bool convert_only)
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return 10;
   }
   
   catch(const std::string &e)
   {
-    error(e);
+    error() << e << eom;
     return 10;
   }
   
@@ -633,7 +632,7 @@ Function: ebmc_baset::report_success
 
 void ebmc_baset::report_success()
 {
-  status("VERIFICATION SUCCESSFUL");
+  status() << "VERIFICATION SUCCESSFUL" << eom;
 
   switch(get_ui())
   {
@@ -668,7 +667,7 @@ Function: ebmc_baset::report_failure
 
 void ebmc_baset::report_failure()
 {
-  status("VERIFICATION FAILED");
+  status() << "VERIFICATION FAILED" << eom;
 
   switch(get_ui())
   {
@@ -874,7 +873,7 @@ Function: ebmc_baset::make_netlist
 void ebmc_baset::make_netlist(netlistt &netlist)
 {
   // make net-list
-  status("Generating Netlist");
+  status() << "Generating Netlist" << eom;
 
   try
   {
@@ -884,10 +883,10 @@ void ebmc_baset::make_netlist(netlistt &netlist)
   
   catch(const std::string &error_str)
   {
-    error(error_str);
+    error() << error_str << eom;
     return;
   }
 
-  status("Latches: "+i2string(netlist.var_map.latches.size())+
-         ", nodes: "+i2string(netlist.number_of_nodes()));
+  status() << "Latches: " << netlist.var_map.latches.size()
+           << ", nodes: " << netlist.number_of_nodes() << eom;
 }
