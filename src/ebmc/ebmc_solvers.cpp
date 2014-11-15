@@ -52,8 +52,8 @@ int ebmc_baset::do_dimacs()
 
   if(cmdline.isset("outfile"))
   {
-    const char *filename=cmdline.getval("outfile");
-    std::ofstream out(filename);
+    const std::string filename=cmdline.get_value("outfile");
+    std::ofstream out(filename.c_str());
   
     if(!out)
     {
@@ -89,8 +89,8 @@ int ebmc_baset::do_smt1()
 
   if(cmdline.isset("outfile"))
   {
-    const char *filename=cmdline.getval("outfile");
-    std::ofstream out(filename);
+    const std::string filename=cmdline.get_value("outfile");
+    std::ofstream out(filename.c_str());
   
     if(!out)
     {
@@ -140,8 +140,8 @@ int ebmc_baset::do_smt2()
 
   if(cmdline.isset("outfile"))
   {
-    const char *filename=cmdline.getval("outfile");
-    std::ofstream out(filename);
+    const std::string filename=cmdline.get_value("outfile");
+    std::ofstream out(filename.c_str());
   
     if(!out)
     {

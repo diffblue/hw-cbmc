@@ -202,8 +202,8 @@ int show_transt::show_trans_verilog_rtl()
 
   if(cmdline.isset("outfile"))
   {
-    const char *filename=cmdline.getval("outfile");
-    std::ofstream out(filename);
+    const std::string filename=cmdline.get_value("outfile");
+    std::ofstream out(filename.c_str());
   
     if(!out)
     {
@@ -240,8 +240,8 @@ int show_transt::show_trans_verilog_netlist()
 
   if(cmdline.isset("outfile"))
   {
-    const char *filename=cmdline.getval("outfile");
-    std::ofstream out(filename);
+    const std::string filename=cmdline.get_value("outfile");
+    std::ofstream out(filename.c_str());
   
     if(!out)
     {

@@ -6,7 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cstdlib>
 #include <fstream>
 
 #include <util/time_stopping.h>
@@ -16,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/xml_irep.h>
 #include <util/config.h>
 #include <util/cmdline.h>
+#include <util/string2int.h>
 
 #include <solvers/flattening/boolbv.h>
 #include <trans/unwind.h>
@@ -71,7 +71,7 @@ void ebmc_baset::show_trace(const trans_tracet &trans_trace)
 
   if(cmdline.isset("vcd"))
   {
-    std::string vcdfile=cmdline.getval("vcd");
+    std::string vcdfile=cmdline.get_value("vcd");
     std::ofstream vcd(vcdfile.c_str());
 
     show_trans_trace_vcd(
@@ -433,7 +433,7 @@ bool ebmc_baset::get_model_properties()
   
   if(cmdline.isset("claim"))
   {
-    unsigned c=atoi(cmdline.getval("claim"));
+    unsigned c=unsafe_string2unsigned(cmdline.get_value("claim"));
     if(c<1 || c>properties.size())
     {
       error() << "Claim number " << c << " out of range" << eom;
@@ -474,7 +474,7 @@ bool ebmc_baset::get_bound()
     return false;
   }
 
-  bound=atoi(cmdline.getval("bound"));
+  bound=unsafe_string2unsigned(cmdline.get_value("bound"));
 
   if(bound<1)
   {
@@ -500,7 +500,7 @@ Function: ebmc_baset::get_main
 bool ebmc_baset::get_main()
 {
   const std::string module=
-    cmdline.isset("module")?cmdline.getval("module"):"";
+    cmdline.get_value("module");
 
   try
   {
@@ -752,7 +752,7 @@ int ebmc_baset::get_model()
   // get properties
   if(cmdline.isset("property"))
   {
-    if(parse_property(cmdline.getval("property")))
+    if(parse_property(cmdline.get_value("property")))
       return 1;
   }
   else

@@ -77,7 +77,7 @@ int hw_cbmc_parseoptionst::doit()
   }
 
   if(cmdline.isset("vcd"))
-    options.set_option("vcd", cmdline.getval("vcd"));
+    options.set_option("vcd", cmdline.get_value("vcd"));
 
   hw_bmct bmc(options, symbol_table, ui_message_handler);
 
@@ -121,7 +121,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
   //
 
   const std::string module=
-    cmdline.isset("module")?cmdline.getval("module"):"";
+    cmdline.get_value("module");
 
   if(module!="")
   {
@@ -139,7 +139,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
       hw_bmct &hw_bmc=dynamic_cast<hw_bmct &>(bmc);
 
       if(cmdline.isset("bound"))
-        hw_bmc.unwind_no_timeframes=safe_string2unsigned(cmdline.getval("bound"))+1;
+        hw_bmc.unwind_no_timeframes=safe_string2unsigned(cmdline.get_value("bound"))+1;
       else
         hw_bmc.unwind_no_timeframes=1;
 
