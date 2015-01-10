@@ -6,7 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <assert.h>
+#include <iostream>
+#include <cassert>
 
 #include <solvers/sat/satcheck.h>
 #include <trans/counterexample.h>

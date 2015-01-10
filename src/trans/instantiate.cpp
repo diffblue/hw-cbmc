@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cstdlib>
 #include <cassert>
+#include <iostream>
 
 #include <util/expr_util.h>
 #include <util/std_expr.h>

@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include <cbmc/bv_cbmc.h>
 #include <trans/unwind.h>
 #include <trans/trans_trace.h>

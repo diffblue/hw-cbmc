@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include "version.h"
 #include "show_trans.h"
 #include "k_induction.h"

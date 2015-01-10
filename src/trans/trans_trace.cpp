@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ctime>
 #include <cassert>
 #include <string>
+#include <iostream>
 
 #include <util/xml.h>
 #include <util/xml_expr.h>

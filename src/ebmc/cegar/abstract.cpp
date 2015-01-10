@@ -6,7 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdlib.h>
+#include <iostream>
+#include <cstdlib>
 
 #include "bmc_cegar.h"
 

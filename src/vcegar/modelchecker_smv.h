@@ -12,7 +12,7 @@ Author: Daniel Kroening
 #ifndef CPROVER_MODELCHECKER_SMV_H
 #define CPROVER_MODELCHECKER_SMV_H
 
-#include <iostream>
+#include <iosfwd>
 
 #include "modelchecker.h"
 

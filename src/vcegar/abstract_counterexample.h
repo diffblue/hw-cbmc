@@ -13,7 +13,7 @@ Date: June 2003
 #ifndef CPROVER_ABSTRACT_COUNTEREXAMPLE_H
 #define CPROVER_ABSTRACT_COUNTEREXAMPLE_H
 
-#include <iostream>
+#include <iosfwd>
 #include <vector>
 #include <list>
 

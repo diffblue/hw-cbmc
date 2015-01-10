@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_NETLIST_H
 #define CPROVER_TRANS_NETLIST_H
 
-#include <iostream>
+#include <iosfwd>
 
 #include <solvers/prop/aig.h>
 
