@@ -40,7 +40,7 @@ void verilog_typecheckt::array_type(
   typet &dest)
 {
   mp_integer msb, lsb;
-  const exprt &range=(exprt &)src.find(ID_range);
+  const exprt &range=static_cast<const exprt &>(src.find(ID_range));
 
   convert_range(range, msb, lsb);
 
@@ -121,7 +121,7 @@ void verilog_typecheckt::typecheck_port_connections(
   exprt &inst,
   const symbolt &symbol)
 {
-  exprt &range=static_cast<exprt &>(inst.add(ID_range));
+  const exprt &range=static_cast<const exprt &>(inst.find(ID_range));
 
   mp_integer msb, lsb;
   
