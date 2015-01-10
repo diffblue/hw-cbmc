@@ -171,18 +171,18 @@ Function: add_as_subtype
 
 \*******************************************************************/
 
-static void add_as_subtype(exprt &dest, exprt &what)
+static void add_as_subtype(typet &dest, typet &what)
 {
   // this is recursive and quadratic-time, so not super.
   if(what.is_nil())
   {
-    // nothing
+    // do nothing
   }
   else if(dest.is_nil() || dest.id()==irep_idt())
     dest.swap(what);
   else
   {
-    exprt &subtype=static_cast<exprt &>(dest.add(ID_subtype));
+    typet &subtype=dest.subtype();
     add_as_subtype(subtype, what);
   }
 }
@@ -583,12 +583,12 @@ data_type:
 	  integer_vector_type signing_opt packed_dimension_brace
 	        {
                   $$=$3;
-                  add_as_subtype(stack($$), stack($2));
+                  add_as_subtype(stack_type($$), stack_type($2));
                 }
 	| integer_atom_type signing_opt
 	        {
                   $$=$1;
-                  add_as_subtype(stack($$), stack($2));
+                  add_as_subtype(stack_type($$), stack_type($2));
                 }
 	/*
 	| non_integer_type
@@ -682,7 +682,7 @@ packed_dimension_brace:
 	| packed_dimension_brace packed_dimension
 	  {
 	    $$=$1;
-	    add_as_subtype(stack($$), stack($2));
+	    add_as_subtype(stack_type($$), stack_type($2));
 	  }
 	;
 
@@ -692,20 +692,29 @@ unpacked_dimension_brace:
 	| unpacked_dimension_brace unpacked_dimension
 	  {
 	    $$=$1;
-	    add_as_subtype(stack($$), stack($2));
+	    add_as_subtype(stack_type($$), stack_type($2));
 	  }
 	;
 
 packed_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
-		{ init($$, ID_range); mto($$, $2); mto($$, $4); }
+		{ init($$, ID_array);
+		  stack_type($$).subtype().make_nil();
+		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
+		  range.copy_to_operands(stack($2), stack($4)); }
 	| unsized_dimension
 	;
 
 unpacked_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
-		{ init($$, ID_range); mto($$, $2); mto($$, $4); }
+		{ init($$, ID_array);
+		  stack_type($$).subtype().make_nil();
+		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
+		  range.copy_to_operands(stack($2), stack($4)); }
 	| '[' expression ']'
+	{
+	  $$=$2;
+	}
 	;
 
 unsized_dimension: '[' ']'
@@ -1179,7 +1188,7 @@ implicit_data_type:
           signing_opt packed_dimension_brace
                 {
                   $$=$2;
-                  add_as_subtype(stack($$), stack($1));
+                  add_as_subtype(stack_type($$), stack_type($1));
                 }
         ;
 
@@ -1215,7 +1224,7 @@ inout_declaration:
 port_type: net_type_or_trireg_opt signing_opt packed_dimension_brace
                 {
                   $$=$3;
-                  add_as_subtype(stack($$), stack($2));
+                  add_as_subtype(stack_type($$), stack_type($2));
                   // the net type is ignored right now
                 }
         ;
@@ -1279,9 +1288,9 @@ list_of_register_identifiers:
 
 register_name:
           register_identifier packed_dimension_brace
-          { $$=$1;
-            if(stack($2).is_not_nil())
-            { stack($$).id(ID_array); addswap($$, ID_range, $2); }
+          { 
+            $$=$1;
+            stack($$).add(ID_type)=stack($2);
           }
 	;
 
@@ -1368,9 +1377,9 @@ list_of_net_names:
 	;
 
 net_name: net_identifier packed_dimension_brace
-          { $$=$1;
-            if(stack($2).is_not_nil())
-            { stack($$).id(ID_array); addswap($$, ID_range, $2); }
+          {
+            $$=$1;
+            stack($$).add(ID_type)=stack($2);
           }
 	;
 

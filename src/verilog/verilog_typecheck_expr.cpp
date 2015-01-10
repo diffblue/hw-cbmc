@@ -1169,7 +1169,7 @@ void verilog_typecheck_exprt::convert_range(
   if(range.operands().size()!=2)
   {
     err_location(range);
-    str << "part_select expected to have two operands" << std::endl;
+    str << "range expected to have two operands" << std::endl;
     str << range;
     throw 0;
   }
@@ -1201,11 +1201,12 @@ void verilog_typecheck_exprt::convert_type(
     return;
   }
   
-  if(src.id()==ID_range)
+  if(src.id()==ID_array)
   {
-    mp_integer msb, lsb;
+    const exprt &range=static_cast<const exprt &>(src.find(ID_range));
 
-    convert_range(static_cast<const exprt &>(src), msb, lsb);
+    mp_integer msb, lsb;
+    convert_range(range, msb, lsb);
 
     bool little_endian=(lsb<=msb);
 
@@ -1213,13 +1214,14 @@ void verilog_typecheck_exprt::convert_type(
     mp_integer offset=little_endian?lsb:msb;
     
     // let's look at the subtype
-    const irept &subtype=src.find(ID_subtype);
+    const irept &subtype=
+      static_cast<const typet &>(src).subtype();
     
     if(subtype.is_nil() ||
        subtype.id()==ID_signed ||
        subtype.id()==ID_unsigned)
     {
-      // we have a bit-vector type
+      // we have a bit-vector type, not an array
 
       dest=typet(subtype.id()==ID_signed?ID_signedbv:ID_unsignedbv);
 
@@ -1231,7 +1233,7 @@ void verilog_typecheck_exprt::convert_type(
     }
     else
     {
-      // we have an array, and do a recursive call
+      // we have a genuine array, and do a recursive call
       dest=typet(ID_array);
       dest.set(ID_size, from_integer(width, integer_typet()));
       dest.add_source_location()=

@@ -39,6 +39,8 @@ void verilog_typecheckt::array_type(
   const typet &element_type,
   typet &dest)
 {
+  assert(src.id()==ID_array);
+
   mp_integer msb, lsb;
   const exprt &range=static_cast<const exprt &>(src.find(ID_range));
 
@@ -125,7 +127,7 @@ void verilog_typecheckt::typecheck_port_connections(
 
   mp_integer msb, lsb;
   
-  if(range.is_nil() || range.id()=="")
+  if(range.is_nil() || range.id()==irep_idt())
     msb=lsb=0;
   else
     convert_range(range, msb, lsb);
