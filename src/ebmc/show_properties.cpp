@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: ebmc_baset::show_claims
+Function: ebmc_baset::show_properties
 
   Inputs:
 
@@ -24,7 +24,7 @@ Function: ebmc_baset::show_claims
 
 \*******************************************************************/
 
-void ebmc_baset::show_claims()
+void ebmc_baset::show_properties()
 {
   unsigned p=1;
 
@@ -36,7 +36,7 @@ void ebmc_baset::show_claims()
     {
     case ui_message_handlert::XML_UI:
       {
-        xmlt xml("claim");
+        xmlt xml("property");
         
         xml.new_element("number").data=i2string(p);
         xml.new_element("name").data=i2string(p);

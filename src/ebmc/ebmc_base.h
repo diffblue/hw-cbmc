@@ -52,7 +52,7 @@ protected:
   
   bool parse_property(const std::string &property);
   bool get_model_properties();
-  void show_claims();
+  void show_properties();
 
   void unwind(decision_proceduret &solver);
   void unwind(decision_proceduret &solver, unsigned _bound, bool initial_state);

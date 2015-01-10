@@ -224,7 +224,7 @@ int k_inductiont::induction_step()
       solver.set_to_true(tmp);
     }
     
-    // claim: time frame k
+    // property: time frame k
     {
       exprt tmp(p);
       instantiate(tmp, no_timeframes-1, ns);

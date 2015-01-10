@@ -431,12 +431,12 @@ bool ebmc_baset::get_model_properties()
     }
   }
   
-  if(cmdline.isset("claim"))
+  if(cmdline.isset("property"))
   {
-    unsigned c=unsafe_string2unsigned(cmdline.get_value("claim"));
+    unsigned c=unsafe_string2unsigned(cmdline.get_value("property"));
     if(c<1 || c>properties.size())
     {
-      error() << "Claim number " << c << " out of range" << eom;
+      error() << "Property number " << c << " out of range" << eom;
       return true;
     }
 
@@ -791,9 +791,9 @@ int ebmc_baset::get_model()
     return 0;
   }
   
-  if(cmdline.isset("show-claims"))
+  if(cmdline.isset("show-properties"))
   {
-    show_claims();
+    show_properties();
     return 0;
   }
       
