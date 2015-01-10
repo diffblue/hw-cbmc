@@ -428,7 +428,7 @@ type:
        | TOK_ACCESS type
        {
          init($$, ID_reference);
-         stack($$).add(ID_subtype).swap(stack($2));
+         stack_type($$).subtype()=stack_type($2);
        }
        | TOK_TYPE TOK_IDENTIFIER
        {
