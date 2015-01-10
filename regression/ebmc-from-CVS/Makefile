@@ -3,7 +3,7 @@ default: tests.log
 test:
 	@./test.pl
 
-tests.log: test.pl ../ebmc
+tests.log: test.pl ../../../src/ebmc/ebmc
 	@./test.pl
 
 show:
