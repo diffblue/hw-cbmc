@@ -756,10 +756,11 @@ int ebmc_baset::get_model()
     return 0;
   }
 
-  // get properties
-  if(cmdline.isset("property"))
+  // Property given on command line?
+  if(cmdline.isset('p'))
   {
-    if(parse_property(cmdline.get_value("property")))
+    // NuSMV also uses -p
+    if(parse_property(cmdline.get_value('p')))
       return 1;
   }
   else
@@ -767,6 +768,12 @@ int ebmc_baset::get_model()
     // get properties from file
     if(get_model_properties())
       return 1;
+  }
+
+  if(cmdline.isset("show-properties"))
+  {
+    show_properties();
+    return 0;
   }
 
   if(cmdline.isset("show-netlist"))
@@ -798,12 +805,6 @@ int ebmc_baset::get_model()
     return 0;
   }
   
-  if(cmdline.isset("show-properties"))
-  {
-    show_properties();
-    return 0;
-  }
-      
   return -1; // done with the model
 }
 
