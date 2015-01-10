@@ -217,7 +217,7 @@ extern_var : variable_name EQUAL_Token QUOTE_Token
              const irep_idt &identifier=stack($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
 
-             if(var.identifier!="")
+             if(var.identifier!=irep_idt())
              {
                yyerror("variable `"+id2string(identifier)+"' already declared extern");
                YYERROR;
@@ -260,17 +260,17 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
                YYERROR;
              }
 
-             stack($$).set(ID_size, end-start+1);
-             stack($$).set(ID_offset, start);
-             stack($$).set(ID_subtype, stack($6));
+             stack_type($$).set(ID_size, end-start+1);
+             stack_type($$).set(ID_offset, start);
+             stack_type($$).subtype()=stack_type($6);
            }
            | BOOLEAN_Token { init($$, ID_bool); }
            | '{' enum_list '}' { $$=$2; }
            | NUMBER_Token DOTDOT_Token NUMBER_Token
            {
              init($$, ID_range);
-             stack($$).set(ID_from, stack($1));
-             stack($$).set(ID_to, stack($3));
+             stack_type($$).set(ID_from, stack($1));
+             stack_type($$).set(ID_to, stack($3));
            }
            | usertype
            ;
@@ -293,12 +293,12 @@ usertype   : module_name
 enum_list  : enum_element
            {
              init($$, ID_enum);
-             stack($$).add("elements").get_sub().push_back(irept(stack($1).id()));
+             stack($$).add(ID_elements).get_sub().push_back(irept(stack($1).id()));
            }
            | enum_list ',' enum_element
            {
              $$=$1;
-             stack($$).add("elements").get_sub().push_back(irept(stack($3).id())); 
+             stack($$).add(ID_elements).get_sub().push_back(irept(stack($3).id())); 
            }
            ;
 
@@ -425,7 +425,7 @@ term       : variable_name
            | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
            | NUMBER_Token { init($$, "number_constant"); stack($$).set(ID_value, stack($1).id()); }
            | CASE_Token cases ESAC_Token { $$=$2; }
-           | SWITCH_Token '(' variable_name ')' '{' switches '}' { init($$, "switch"); mto($$, $3); mto($$, $6); }
+           | SWITCH_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            | MINUS_Token term %prec UMINUS { init($$, ID_unary_minus); mto($$, $2); }
            | term PLUS_Token term    { j_binary($$, $1, ID_plus, $3); }
            | term MINUS_Token term   { j_binary($$, $1, ID_minus, $3); }
@@ -452,41 +452,41 @@ formula_list: formula { init($$); mto($$, $1); }
             ;
 
 variable_name: qstring_list
-                {
-                 const irep_idt &id=stack($1).id();
+           {
+             const irep_idt &id=stack($1).id();
 
-                 bool is_enum=(PARSER.module->enum_set.find(id)!=
-                               PARSER.module->enum_set.end());
-                 bool is_var=(PARSER.module->vars.find(id)!=
-                              PARSER.module->vars.end());
+             bool is_enum=(PARSER.module->enum_set.find(id)!=
+                           PARSER.module->enum_set.end());
+             bool is_var=(PARSER.module->vars.find(id)!=
+                          PARSER.module->vars.end());
 
-                 if(is_var && is_enum)
-                  {
-                   yyerror("identifier `"+id2string(id)+"' is ambiguous");
-                   YYERROR;
-                  }
-                 else if(is_enum)
-                  {
-                   init($$, "enum_constant");
-                   stack($$).type()=typet(ID_enum);
-                   stack($$).set(ID_value, stack($1).id());
-                  }
-                 else // not an enum, probably a variable
-                  {
-                   init($$, ID_symbol);
-                   stack($$).set(ID_identifier, stack($1).id());
-                   //PARSER.module->vars[stack($1).id()];
-                  }
-                }
-             | QUOTE_Token
-                {
-                 const irep_idt &id=stack($1).id();
+             if(is_var && is_enum)
+             {
+               yyerror("identifier `"+id2string(id)+"' is ambiguous");
+               YYERROR;
+             }
+             else if(is_enum)
+             {
+               init($$, "enum_constant");
+               stack($$).type()=typet(ID_enum);
+               stack($$).set(ID_value, stack($1).id());
+             }
+             else // not an enum, probably a variable
+             {
+               init($$, ID_symbol);
+               stack($$).set(ID_identifier, stack($1).id());
+               //PARSER.module->vars[stack($1).id()];
+             }
+           }
+           | QUOTE_Token
+           {
+             const irep_idt &id=stack($1).id();
 
-                 init($$, ID_symbol);
-                 stack($$).set(ID_identifier, id);
-                 PARSER.module->vars[id];
-                }
-             ;
+             init($$, ID_symbol);
+             stack($$).set(ID_identifier, id);
+             PARSER.module->vars[id];
+           }
+           ;
 
 qstring_list: QSTRING_Token
            {
@@ -525,18 +525,24 @@ qstring_list: QSTRING_Token
            }
            ;
 
-cases      : { init($$, "smv_cases"); }
-           | cases case { $$=$1; mto($$, $2); }
+cases      :
+           { init($$, "smv_cases"); }
+           | cases case
+           { $$=$1; mto($$, $2); }
            ;
 
-case       : formula ':' formula ';' { binary($$, $1, ID_case, $3); }
+case       : formula ':' formula ';'
+           { binary($$, $1, ID_case, $3); }
            ;
 
-switches   : { init($$, "switches"); }
-           | switches switch { $$=$1; mto($$, $2); }
+switches   :
+           { init($$, "switches"); }
+           | switches switch
+           { $$=$1; mto($$, $2); }
            ;
 
-switch     : NUMBER_Token ':' term ';' { init($$, ID_switch); mto($$, $1); mto($$, $3); }
+switch     : NUMBER_Token ':' term ';'
+           { init($$, ID_switch); mto($$, $1); mto($$, $3); }
            ;
 
 %%
