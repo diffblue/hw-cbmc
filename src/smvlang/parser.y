@@ -194,19 +194,19 @@ semi_opt   :    /* empty */
 
 section    : VAR_Token vardecls
            | VAR_Token
-           | INIT_Token formula semi_opt { PARSER.module->add_init(stack($2), stack($1).location()); }
+           | INIT_Token formula semi_opt { PARSER.module->add_init(stack($2), stack($1).source_location()); }
            | INIT_Token
-           | TRANS_Token formula semi_opt { PARSER.module->add_trans(stack($2), stack($1).location()); }
+           | TRANS_Token formula semi_opt { PARSER.module->add_trans(stack($2), stack($1).source_location()); }
            | TRANS_Token
-           | SPEC_Token formula semi_opt { PARSER.module->add_spec(stack($2), stack($1).location()); }
+           | SPEC_Token formula semi_opt { PARSER.module->add_spec(stack($2), stack($1).source_location()); }
            | SPEC_Token
            | ASSIGN_Token assignments
            | ASSIGN_Token
            | DEFINE_Token defines
            | DEFINE_Token
-           | INVAR_Token formula semi_opt { PARSER.module->add_invar(stack($2), stack($1).location()); }
+           | INVAR_Token formula semi_opt { PARSER.module->add_invar(stack($2), stack($1).source_location()); }
            | INVAR_Token
-           | FAIRNESS_Token formula semi_opt { PARSER.module->add_fairness(stack($2), stack($1).location()); }
+           | FAIRNESS_Token formula semi_opt { PARSER.module->add_fairness(stack($2), stack($1).source_location()); }
            | FAIRNESS_Token
            | EXTERN_Token extern_var semi_opt
            | EXTERN_Token
