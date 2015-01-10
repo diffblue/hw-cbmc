@@ -205,7 +205,9 @@ inline static bool is_integral_type(const typet &type)
          type.id()==ID_signedbv ||
          type.id()==ID_fixedbv ||
          type.id()==ID_floatbv ||
-         type.id()==ID_bool;
+         type.id()==ID_bool ||
+         type.id()==ID_c_bool ||
+         type.id()==ID_c_enum_tag;
 }
 
 /*******************************************************************\
