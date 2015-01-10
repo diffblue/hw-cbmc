@@ -40,7 +40,7 @@ unsigned output_verilog_baset::width(const typet &type)
   if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
     return atoi(type.get(ID_width).c_str());
   
-  std::cerr << type.id() << std::endl;
+  std::cerr << type.id() << '\n';
   assert(false);
   
   return 0; // not reached
@@ -98,7 +98,7 @@ std::string output_verilog_netlistt::make_symbol_expr(
     mp_integer i;
     if(to_integer(expr, i))
     {
-      str << "failed to convert constant: " << expr.pretty() << std::endl;
+      str << "failed to convert constant: " << expr.pretty() << '\n';
       throw 0;
     }
     
@@ -141,19 +141,19 @@ void output_verilog_netlistt::assign_symbol(
   const exprt &rhs)
 {
   if(rhs.location().is_not_nil())
-    out << "  // " << rhs.location() << std::endl;
+    out << "  // " << rhs.location() << '\n';
 
   if(is_symbol(rhs))
   {
     out << "  wire "
         << symbol_string(lhs) << " = "
-        << symbol_string(rhs) << ";" << std::endl << std::endl;
+        << symbol_string(rhs) << ";" << '\n' << '\n';
   }
   else if(rhs.is_constant())
   {
     out << "  wire "
         << symbol_string(lhs) << " = "
-        << make_symbol_expr(rhs, "") << ";" << std::endl << std::endl;
+        << make_symbol_expr(rhs, "") << ";" << '\n' << '\n';
   }
   else if(rhs.id()==ID_and ||
           rhs.id()==ID_or ||
@@ -175,7 +175,7 @@ void output_verilog_netlistt::assign_symbol(
     
     out << "  " << rhs.id() << " g" << (++count) << "("
         << symbol_string(lhs) << tmp
-        << ");" << std::endl << std::endl;
+        << ");" << '\n' << '\n';
   }
   else if(rhs.id()=="not")
   {
@@ -187,7 +187,7 @@ void output_verilog_netlistt::assign_symbol(
     
     out << "  " << rhs.id() << " g" << (++count) << "("
         << symbol_string(lhs) << tmp
-        << ");" << std::endl << std::endl;
+        << ");" << '\n' << '\n';
   }
   else if(rhs.id()=="+" || 
           rhs.id()=="-" ||
@@ -224,7 +224,7 @@ void output_verilog_netlistt::assign_symbol(
 
       out << " #(" 
           << width(rhs) << ") m" << (++count) << "(" << tmp 
-          << ");" << std::endl << std::endl;        
+          << ");" << '\n' << '\n';        
     }
   }
   else
@@ -244,14 +244,14 @@ void output_verilog_netlistt::assign_symbol(
           make_symbol_expr(*it, "");
         }
         
-        out << ");" << std::endl << std::endl;        
+        out << ");" << '\n' << '\n';        
       }
 
       p++;
     }
 
     err_location(rhs);    
-    str << "unexpected operator: " << rhs.id() << std::endl;
+    str << "unexpected operator: " << rhs.id() << '\n';
     throw 0;
   }
 }
@@ -292,7 +292,7 @@ void output_verilog_rtlt::assign_symbol(
   }
 
   if(rhs.location().is_not_nil())
-    out << "  // " << rhs.location() << std::endl;
+    out << "  // " << rhs.location() << '\n';
 
   exprt symbol_expr=lhs;
 
@@ -334,7 +334,7 @@ void output_verilog_rtlt::assign_symbol(
   {
     out << "  always @(";
     out << "posedge clock";
-    out << ")" << std::endl;
+    out << ")" << '\n';
     out << "    ";
 
     // replace the next_symbol
@@ -347,7 +347,7 @@ void output_verilog_rtlt::assign_symbol(
     convert_expr(tmp);
     out << " <= ";
     convert_expr(rhs);
-    out << ";" << std::endl;
+    out << ";" << '\n';
   }
   else
   {
@@ -355,10 +355,10 @@ void output_verilog_rtlt::assign_symbol(
     convert_expr(lhs);
     out << " = ";
     convert_expr(rhs);
-    out << ";" << std::endl;
+    out << ";" << '\n';
   }
   
-  out << std::endl;
+  out << '\n';
 }
 
 /*******************************************************************\
@@ -410,7 +410,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr.op1());
       str << "failed to convert constant "
-          << expr.op1() << std::endl;
+          << expr.op1() << '\n';
       throw 0;
     }
 
@@ -431,7 +431,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr.op1());
       str << "failed to convert constant "
-          << expr.op1() << std::endl;
+          << expr.op1() << '\n';
       throw 0;
     }
 
@@ -440,7 +440,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr.operands()[2]);
       str << "failed to convert constant "
-          << expr.operands()[2] << std::endl;
+          << expr.operands()[2] << '\n';
       throw 0;
     }
 
@@ -466,7 +466,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr);
       str << "symbol " << identifier << " not found"
-          << std::endl;
+          << '\n';
       throw 0;
     }
     
@@ -488,7 +488,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr);
       str << "symbol " << identifier << " not found"
-          << std::endl;
+          << '\n';
       throw 0;
     }
     
@@ -497,7 +497,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
   }
 
   err_location(expr);
-  str << "Not a symbol: " << expr.pretty() << std::endl;
+  str << "Not a symbol: " << expr.pretty() << '\n';
   throw 0;
 }
 
@@ -537,7 +537,7 @@ std::string output_verilog_baset::type_string_base(const typet &type)
   {
     err_location(type);
     str << "failed to convert type "
-        << type.pretty() << std::endl;
+        << type.pretty() << '\n';
     throw 0;
   }
 
@@ -604,9 +604,9 @@ void output_verilog_baset::module_header(const symbolt &symbol)
     out << ")";
   }
 
-  out << ";" << std::endl;
+  out << ";" << '\n';
 
-  out << std::endl;
+  out << '\n';
 
   //
   // port declarations
@@ -632,10 +632,10 @@ void output_verilog_baset::module_header(const symbolt &symbol)
 
     out << " " << type_str_base;
     if(!type_str_base.empty()) out << " ";
-    out << it->get("#name") << type_str_array << ";" << std::endl;
+    out << it->get("#name") << type_str_array << ";" << '\n';
   }
 
-  out << std::endl;
+  out << '\n';
 }                        
 
 /*******************************************************************\
@@ -664,7 +664,7 @@ void output_verilog_netlistt::latches(const irep_idt &module)
     if(s_it==symbol_table.symbols.end())
     {
       str << "failed to find symbol " << identifier
-          << std::endl;
+          << '\n';
       throw 0;
     }
 
@@ -680,13 +680,13 @@ void output_verilog_netlistt::latches(const irep_idt &module)
       out << ", next_" << symbol.base_name; // Q
       out << ", "; // clk
       
-      out << ");" << std::endl;
+      out << ");" << '\n';
       
       found=true;
     }
   }
   
-  if(found) out << std::endl;
+  if(found) out << '\n';
 }
 
 /*******************************************************************\
@@ -715,7 +715,7 @@ void output_verilog_rtlt::latches(const irep_idt &module)
     if(s_it==symbol_table.symbols.end())
     {
       str << "failed to find symbol " << identifier
-          << std::endl;
+          << '\n';
       throw 0;
     }
 
@@ -729,12 +729,12 @@ void output_verilog_rtlt::latches(const irep_idt &module)
       out << "  reg " << type_base;
       if(type_base!="") out << " ";
       
-      out << symbol.base_name << type_array << ";" << std::endl;
+      out << symbol.base_name << type_array << ";" << '\n';
       found=true;
     }
   }
   
-  if(found) out << std::endl;
+  if(found) out << '\n';
 }
 
 /*******************************************************************\
@@ -763,7 +763,7 @@ void output_verilog_baset::wires(const irep_idt &module)
     if(s_it==symbol_table.symbols.end())
     {
       str << "failed to find symbol " << identifier
-          << std::endl;
+          << '\n';
       throw 0;
     }
 
@@ -782,12 +782,12 @@ void output_verilog_baset::wires(const irep_idt &module)
       const std::string type_base=type_string_base(symbol.type);
       out << "  ";
       out << "wire " << type_base << (type_base==""?"":" ")
-          << symbol.base_name << ";" << std::endl;
+          << symbol.base_name << ";" << '\n';
       found=true;
     }
   }
   
-  if(found) out << std::endl;
+  if(found) out << '\n';
 }
 
 /*******************************************************************\
@@ -817,7 +817,7 @@ void output_verilog_baset::module_instantiation(const exprt &expr)
     argument_strings.push_back(make_symbol_expr(*it, hint));
   #endif
 
-  out << "  // Module instantiation " << expr.location() << std::endl;
+  out << "  // Module instantiation " << expr.location() << '\n';
   out << "  " << expr.get("module") << " ";
   out << expr.get("instance");
 
@@ -834,8 +834,8 @@ void output_verilog_baset::module_instantiation(const exprt &expr)
     out << *it;
   }
   
-  out << ");" << std::endl;
-  out << std::endl;
+  out << ");" << '\n';
+  out << '\n';
 }
 
 /*******************************************************************\
@@ -875,7 +875,7 @@ void output_verilog_baset::invariant(const exprt &expr)
   }
   else
   {
-    std::cout << "Unexpected invariant: " << expr.pretty() << std::endl;
+    std::cout << "Unexpected invariant: " << expr.pretty() << '\n';
     throw 0;
   }
 }
@@ -967,11 +967,11 @@ void output_verilog_netlistt::netlist(const symbolt &symbol)
 {
   count=0;
 
-  out << "//" << std::endl;
-  out << "// Module: " << symbol.base_name << std::endl;
-  out << "// " << symbol.location << std::endl;
-  out << "//" << std::endl;
-  out << std::endl;
+  out << "//" << '\n';
+  out << "// Module: " << symbol.base_name << '\n';
+  out << "// " << symbol.location << '\n';
+  out << "//" << '\n';
+  out << '\n';
   
   source_files(symbol);
   module_header(symbol);
@@ -980,8 +980,8 @@ void output_verilog_netlistt::netlist(const symbolt &symbol)
   invariants(symbol);  
   next_state(symbol);
 
-  out << "endmodule // end of " << symbol.base_name << std::endl;
-  out << std::endl;
+  out << "endmodule // end of " << symbol.base_name << '\n';
+  out << '\n';
 }                        
 
 /*******************************************************************\
@@ -1000,11 +1000,11 @@ void output_verilog_rtlt::rtl(const symbolt &symbol)
 {
   count=0;
 
-  out << "//" << std::endl;
-  out << "// Module: " << symbol.base_name << std::endl;
-  out << "// " << symbol.location << std::endl;
-  out << "//" << std::endl;
-  out << std::endl;
+  out << "//" << '\n';
+  out << "// Module: " << symbol.base_name << '\n';
+  out << "// " << symbol.location << '\n';
+  out << "//" << '\n';
+  out << '\n';
 
   source_files(symbol);
   module_header(symbol);
@@ -1013,8 +1013,8 @@ void output_verilog_rtlt::rtl(const symbolt &symbol)
   invariants(symbol);  
   next_state(symbol);
 
-  out << "endmodule // end of " << symbol.base_name << std::endl;
-  out << std::endl;
+  out << "endmodule // end of " << symbol.base_name << '\n';
+  out << '\n';
 }                        
 
 /*******************************************************************\
@@ -1039,7 +1039,7 @@ void output_verilog_baset::source_files(
   if(symbol.location.get_file()!="")
     files.insert(symbol.location.get_file());
 
-  out << "// Source files:" << std::endl;
+  out << "// Source files:" << '\n';
 
   for(filest::const_iterator
       it=files.begin();
@@ -1047,10 +1047,10 @@ void output_verilog_baset::source_files(
       it++)
   {
     if((*it)!="" && (*it)[0]!='<')
-      out << "//   " << *it << std::endl;
+      out << "//   " << *it << '\n';
   }
 
-  out << std::endl;  
+  out << '\n';  
 }
 
 /*******************************************************************\

@@ -59,7 +59,7 @@ int ebmc_baset::do_dimacs()
     {
       std::cerr << "Failed to open `"
                 << filename
-                << "'" << std::endl;
+                << "'" << '\n';
       return 1;
     }
 
@@ -96,7 +96,7 @@ int ebmc_baset::do_smt1()
     {
       std::cerr << "Failed to open `"
                 << filename
-                << "'" << std::endl;
+                << "'" << '\n';
       return 1;
     }
 
@@ -147,7 +147,7 @@ int ebmc_baset::do_smt2()
     {
       std::cerr << "Failed to open `"
                 << filename
-                << "'" << std::endl;
+                << "'" << '\n';
       return 1;
     }
 
@@ -379,7 +379,7 @@ int ebmc_baset::do_compute_ct()
   ldgt ldg;
   ldg.compute(netlist);
 
-  std::cout << "CT = " << compute_ct(ldg) << std::endl;
+  std::cout << "CT = " << compute_ct(ldg) << '\n';
   
   return 0;
 }

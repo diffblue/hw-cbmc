@@ -431,7 +431,7 @@ void sort_states(propt &solver, const std::vector<bvt> &states, std::vector<bvt>
 
   compare_counter=0;
   bitonicSort(solver, sorted_states, 0, sorted_states.size(), ASCENDING);
-  std::cout << "compare_counter: " << compare_counter << std::endl;
+  std::cout << "compare_counter: " << compare_counter << '\n';
 }
 
 /*******************************************************************\

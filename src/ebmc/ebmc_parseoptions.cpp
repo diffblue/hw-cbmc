@@ -39,7 +39,7 @@ int ebmc_parseoptionst::doit()
 
   if(cmdline.isset("version"))
   {
-    std::cout << EBMC_VERSION << std::endl;
+    std::cout << EBMC_VERSION << '\n';
     return 0;
   }
 

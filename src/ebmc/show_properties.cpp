@@ -53,13 +53,13 @@ void ebmc_baset::show_properties()
         location.new_element("file").data=id2string(p_it->location.get_file());
         location.new_element("line").data=id2string(p_it->location.get_line());
 
-        std::cout << xml << std::endl;
+        std::cout << xml << '\n';
       }
       break;
   
     case ui_message_handlert::PLAIN:
       std::cout << "Property " << p << ": " << p_it->expr_string
-                << std::endl;
+                << '\n';
       break;
 
     default:;

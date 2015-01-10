@@ -26,7 +26,7 @@ Function:
 
 void diatest(bool efficient, unsigned no_states, unsigned state_bits)
 {
-  std::cout << (efficient?"Efficient:":"Simple:") << std::endl;
+  std::cout << (efficient?"Efficient:":"Simple:") << '\n';
 
   dimacs_cnft solver;
 
@@ -49,10 +49,10 @@ void diatest(bool efficient, unsigned no_states, unsigned state_bits)
   else
     diameter=simple_diameter(solver, states);
 
-  std::cout << "Variables: " << solver.no_variables() << std::endl;
-  std::cout << "Clauses:   " << solver.no_clauses() << std::endl;
+  std::cout << "Variables: " << solver.no_variables() << '\n';
+  std::cout << "Clauses:   " << solver.no_clauses() << '\n';
 
-  std::cout << std::endl;
+  std::cout << '\n';
 }
 
 /*******************************************************************\
@@ -71,9 +71,9 @@ void diatest(unsigned bound, unsigned state_bits)
 {
   unsigned no_states=bound+1;
 
-  std::cout << "Testing recurrence diameter computation:" << std::endl;
-  std::cout << "States: " << no_states << std::endl;
-  std::cout << "State bits: " << state_bits << std::endl;
+  std::cout << "Testing recurrence diameter computation:" << '\n';
+  std::cout << "States: " << no_states << '\n';
+  std::cout << "State bits: " << state_bits << '\n';
   diatest(0, no_states, state_bits);
   diatest(1, no_states, state_bits);
 }
