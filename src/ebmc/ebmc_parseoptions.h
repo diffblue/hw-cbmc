@@ -19,11 +19,12 @@ public:
 
   ebmc_parseoptionst(int argc, const char **argv):
     parseoptions_baset("(diameter)(ediameter)"
-    "(diatest)(statebits):(bound):(show-parse)"
-    "(show-varmap)(dimacs)(module):(show-netlist)"
-    "(verbose)(gui)(po)(cegar)(property):(show-ldg)"
+    "(diatest)(statebits):(bound):"
+    "(show-parse)(show-varmap)(show-symbol-table)(show-netlist)"
+    "(show-ldg)(show-modules)"
+    "(dimacs)(module):"
+    "(verbose)(gui)(po)(cegar)(property):"
     "(k-induction)(2pi)(bound2):(outfile):(xml-ui)"
-    "(show-modules)"
     "(show-properties)(property):"
     "(prover)(lifter)(cvc)"
     "(version)(verilog-rtl)(verilog-netlist)"

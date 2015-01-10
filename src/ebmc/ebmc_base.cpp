@@ -744,6 +744,12 @@ int ebmc_baset::get_model()
     return 0;
   }
 
+  if(cmdline.isset("show-symbol-table"))
+  {
+    std::cout << symbol_table;
+    return 0;
+  }
+
   if(cmdline.isset("show-ldg"))
   {
     show_ldg(std::cout);
