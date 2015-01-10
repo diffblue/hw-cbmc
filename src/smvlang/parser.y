@@ -452,7 +452,7 @@ formula_list: formula { init($$); mto($$, $1); }
             ;
 
 variable_name: qstring_list
-		{
+                {
                  const irep_idt &id=stack($1).id();
 
                  bool is_enum=(PARSER.module->enum_set.find(id)!=
@@ -479,7 +479,7 @@ variable_name: qstring_list
                   }
                 }
              | QUOTE_Token
-		{
+                {
                  const irep_idt &id=stack($1).id();
 
                  init($$, ID_symbol);
