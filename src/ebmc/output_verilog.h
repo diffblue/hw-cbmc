@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
+#include <iosfwd>
 #include <set>
 
 #include <util/message_stream.h>

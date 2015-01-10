@@ -10,7 +10,6 @@ Author: Mitra Purandare
 #define CPROVER_EBMC_INTERPOLATION_WORD_H
 
 #include <cmdline.h>
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <namespace.h>
