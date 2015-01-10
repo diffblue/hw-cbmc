@@ -1,5 +1,5 @@
 main.smv
---bound 10 --claim 2
+--bound 10 --property 2
 ^SIGNAL=0$
 ^UNSAT: No bug found within bound$
 --
