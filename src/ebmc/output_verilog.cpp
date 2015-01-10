@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <cstdlib>
+#include <iostream>
 
 #include <util/i2string.h>
 #include <util/arith_tools.h>
