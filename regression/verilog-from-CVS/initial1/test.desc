@@ -1,0 +1,7 @@
+main.v
+--module main --bound 2
+^EXIT=0$
+^SIGNAL=0$
+^UNSAT: No bug found within bound$
+--
+^warning: ignoring

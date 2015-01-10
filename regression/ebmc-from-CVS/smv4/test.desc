@@ -1,0 +1,8 @@
+main.smv
+--module main
+^EXIT=2$
+^SIGNAL=0$
+is cyclic$
+^CONVERSION ERROR$
+--
+^warning: ignoring

@@ -1,0 +1,16 @@
+MODULE main
+
+VAR z: boolean;
+VAR y: boolean;
+
+ASSIGN init(z):=_tt;
+ASSIGN init(y):=0;
+ASSIGN next(z):=m;
+ASSIGN next(y):=y;
+
+DEFINE m := !y;
+DEFINE _tt := 1;
+
+-- this should hold
+
+SPEC AG z;

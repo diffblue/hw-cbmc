@@ -1,0 +1,8 @@
+MODULE main
+
+VAR xy(1): boolean;
+VAR tmp: boolean;
+
+ASSIGN xy(1):=tmp;
+
+SPEC AG xy(1)=tmp;

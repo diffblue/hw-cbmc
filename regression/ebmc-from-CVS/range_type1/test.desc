@@ -1,0 +1,6 @@
+main.smv
+--bound 10
+^SIGNAL=0$
+^UNSAT: No bug found within bound$
+--
+^warning: ignoring

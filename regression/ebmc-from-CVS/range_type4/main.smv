@@ -1,0 +1,14 @@
+MODULE main
+VAR x:0..6;
+input: boolean;
+
+ASSIGN
+  init(x) := 0;
+
+  next(x) :=
+    case
+      ~(x=5): x+1;
+      1: 0;
+    esac;
+
+SPEC AG !(x=6)

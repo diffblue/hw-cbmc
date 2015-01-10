@@ -1,0 +1,8 @@
+main.v
+--module main --bound 1
+^EXIT=0$
+^SIGNAL=0$
+^Counterexample:$
+^Property 1 violated in time frame 1$
+--
+^warning: ignoring

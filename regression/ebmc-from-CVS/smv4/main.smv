@@ -1,0 +1,11 @@
+MODULE main
+
+-- this is cyclic!
+
+DEFINE xx:=yy;
+
+DEFINE yy:=zz;
+
+DEFINE zz:=xx;
+
+SPEC AG xx;

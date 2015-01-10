@@ -1,0 +1,11 @@
+MODULE main
+
+VAR x: 0..1;
+
+INIT x=0
+
+DEFINE n:=0 union 1;
+
+ASSIGN next(x):=n;
+
+SPEC AG x=0

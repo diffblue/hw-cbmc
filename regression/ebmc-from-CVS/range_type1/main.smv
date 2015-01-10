@@ -1,0 +1,22 @@
+-- shows that loop condition fails (also with k-induction)
+
+MODULE main
+VAR x:0..6;
+input: boolean;
+
+ASSIGN
+  init(x) := 0;
+
+  next(x) :=
+    case
+      x=0 : 0;
+      x=1 : 2;
+      x=2 & input:3;
+      x=2 & !input:5;
+      x=3 : 4;
+      x=5 : 6;
+      x=6 : 2;
+      1: 4;
+    esac;
+
+SPEC AG x!=4

@@ -1,0 +1,15 @@
+MODULE main
+
+VAR z: boolean;
+VAR y: boolean;
+
+ASSIGN init(z):=1;
+ASSIGN init(y):=0;
+
+DEFINE m:=!y;
+ASSIGN next(z):=m;
+
+-- this should fail after two transitions
+-- and relies on y being non-deterministic
+SPEC AG z
+

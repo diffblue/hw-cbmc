@@ -1,0 +1,8 @@
+main.v
+--module main --bound 1 --k-induction
+^EXIT=0$
+^SIGNAL=0$
+^UNSAT: No bug found within bound$
+^UNSAT: inductive proof successful, property holds$
+--
+^warning: ignoring
