@@ -208,10 +208,10 @@ void ebmc_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *      EBMC - Copyright (C) 2001-2009 Daniel Kroening     * *\n"
+    "* *      EBMC - Copyright (C) 2001-2015 Daniel Kroening     * *\n"
     "* *                     Version " EBMC_VERSION "                         * *\n"
-    "* * Carnegie Mellon University, Computer Science Department * *\n"
-    "* *                kroening@kroening.com                    * *\n"
+    "* *     University of Oxford, Computer Science Department   * *\n"
+    "* *                  kroening@kroening.com                  * *\n"
     "\n"
     "Usage:                             Purpose:\n"
     "\n"
