@@ -213,18 +213,18 @@ section    : VAR_Token vardecls
            ;
  
 extern_var : variable_name EQUAL_Token QUOTE_Token
-{
-  const irep_idt &identifier=stack($1).get(ID_identifier);
-  smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
+           {
+             const irep_idt &identifier=stack($1).get(ID_identifier);
+             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
 
-  if(var.identifier!="")
-  {
-    yyerror("variable `"+id2string(identifier)+"' already declared extern");
-    YYERROR;
-  }
-  else
-    var.identifier=stack($3).id_string();
-}
+             if(var.identifier!="")
+             {
+               yyerror("variable `"+id2string(identifier)+"' already declared extern");
+               YYERROR;
+             }
+             else
+               var.identifier=stack($3).id_string();
+           }
            ;
 
 vardecls   : vardecl
@@ -232,12 +232,12 @@ vardecls   : vardecl
            ;
 
 module_argument: variable_name
-{
-  const irep_idt &identifier=stack($1).get(ID_identifier);
-  smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-  var.var_class=smv_parse_treet::mc_vart::ARGUMENT;
-  PARSER.module->ports.push_back(identifier);
-}
+           {
+             const irep_idt &identifier=stack($1).get(ID_identifier);
+             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
+             var.var_class=smv_parse_treet::mc_vart::ARGUMENT;
+             PARSER.module->ports.push_back(identifier);
+           }
            ;
 
 module_argument_list: module_argument
@@ -536,7 +536,7 @@ switches   : { init($$, "switches"); }
            | switches switch { $$=$1; mto($$, $2); }
            ;
 
-switch     : NUMBER_Token ':' term ';' { init($$, "switch"); mto($$, $1); mto($$, $3); }
+switch     : NUMBER_Token ':' term ';' { init($$, ID_switch); mto($$, $1); mto($$, $3); }
            ;
 
 %%
