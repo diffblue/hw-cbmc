@@ -31,7 +31,7 @@ public:
     "(compute-interpolant)(interpolation)(interpolation-vmcai)"
     "(interpolation-word)(interpolator):"
     "(smt1)(smt2)(boolector)(z3)(cvc3)(yices)"
-    "(no-netlist)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
+    "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
     "(compute-ct)(dot-netlist)(smv-netlist)(vcd):I:",
     argc, argv)
   {

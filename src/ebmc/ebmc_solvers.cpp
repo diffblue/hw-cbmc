@@ -294,14 +294,16 @@ int ebmc_baset::do_sat()
 {
   satcheckt satcheck;
 
-  if(cmdline.isset("no-netlist"))
+  if(cmdline.isset("aig"))
+  {
+    return do_ebmc(satcheck, false);
+  }
+  else
   {
     const namespacet ns(symbol_table);
     boolbvt boolbv(ns, satcheck);
     return do_ebmc(boolbv, false);
   }
-  else
-    return do_ebmc(satcheck, false);
 }
 
 /*******************************************************************\
