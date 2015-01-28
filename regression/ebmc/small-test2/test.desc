@@ -1,5 +1,5 @@
 main.smv
---bound 10
+--bound 2
 ^SIGNAL=0$
 ^Property 1 violated in time frame 2$
 --
