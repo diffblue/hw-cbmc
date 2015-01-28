@@ -1,0 +1,5 @@
+main.v
+--module main --bound 3
+^EXIT=0$
+^SIGNAL=0$
+--
