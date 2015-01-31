@@ -702,7 +702,7 @@ static mp_integer vcd_width(
         it++)
     {
       const typet &subtype=it->type();
-      mp_integer sub_size=pointer_offset_size(ns, subtype);
+      mp_integer sub_size=pointer_offset_size(subtype, ns);
       if(sub_size==-1) return -1;
       result+=sub_size;
     }
