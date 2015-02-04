@@ -30,14 +30,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <smvlang/smv_language.h>
 #endif
 
-#include "hw_cbmc_parseoptions.h"
+#include "hw_cbmc_parse_options.h"
 #include "hw_bmc.h"
 #include "map_vars.h"
 #include "gen_interface.h"
 
 /*******************************************************************\
 
-Function: hw_cbmc_parseoptionst::doit
+Function: hw_cbmc_parse_optionst::doit
 
   Inputs:
 
@@ -47,7 +47,7 @@ Function: hw_cbmc_parseoptionst::doit
 
 \*******************************************************************/
 
-int hw_cbmc_parseoptionst::doit()
+int hw_cbmc_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
@@ -104,7 +104,7 @@ int hw_cbmc_parseoptionst::doit()
 
 /*******************************************************************\
 
-Function: hw_cbmc_parseoptionst::get_modules
+Function: hw_cbmc_parse_optionst::get_modules
 
   Inputs:
 
@@ -114,7 +114,7 @@ Function: hw_cbmc_parseoptionst::get_modules
 
 \*******************************************************************/
 
-bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
+bool hw_cbmc_parse_optionst::get_modules(bmct &bmc)
 {
   //
   // unwinding of transition systems
@@ -177,7 +177,7 @@ bool hw_cbmc_parseoptionst::get_modules(bmct &bmc)
 
 /*******************************************************************\
 
-Function: hw_cbmc_parseoptionst::help
+Function: hw_cbmc_parse_optionst::help
 
   Inputs:
 
@@ -187,9 +187,9 @@ Function: hw_cbmc_parseoptionst::help
 
 \*******************************************************************/
 
-void hw_cbmc_parseoptionst::help()
+void hw_cbmc_parse_optionst::help()
 {
-  cbmc_parseoptionst::help();
+  cbmc_parse_optionst::help();
 
   std::cout <<
     "hw-cbmc also accepts the following options:\n"
@@ -202,7 +202,7 @@ void hw_cbmc_parseoptionst::help()
 
 /*******************************************************************\
 
-Function: hw_cbmc_parseoptionst::register_languages
+Function: hw_cbmc_parse_optionst::register_languages
 
   Inputs:
 
@@ -212,9 +212,9 @@ Function: hw_cbmc_parseoptionst::register_languages
 
 \*******************************************************************/
 
-void hw_cbmc_parseoptionst::register_languages()
+void hw_cbmc_parse_optionst::register_languages()
 {
-  cbmc_parseoptionst::register_languages();
+  cbmc_parse_optionst::register_languages();
 
   #ifdef HAVE_SMV
   register_language(new_smv_language);

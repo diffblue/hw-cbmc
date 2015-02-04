@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 */
 
-#include "hw_cbmc_parseoptions.h"
+#include "hw_cbmc_parse_options.h"
 
 /*******************************************************************\
 
@@ -30,6 +30,6 @@ Function: main
 
 int main(int argc, const char **argv)
 {
-  hw_cbmc_parseoptionst parseoptions(argc, argv);
-  return parseoptions.main();
+  hw_cbmc_parse_optionst parse_options(argc, argv);
+  return parse_options.main();
 }

@@ -1,7 +1,7 @@
-SRC = hw_cbmc_main.cpp hw_cbmc_parseoptions.cpp hw_bmc.cpp next_timeframe.cpp \
+SRC = hw_cbmc_main.cpp hw_cbmc_parse_options.cpp hw_bmc.cpp next_timeframe.cpp \
       map_vars.cpp gen_interface.cpp set_inputs.cpp
 
-OBJ+= $(CBMC)/src/cbmc/cbmc_parseoptions$(OBJEXT) \
+OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/cbmc/xml_interface$(OBJEXT) \
       $(CBMC)/src/cbmc/cbmc_languages$(OBJEXT) \
       $(CBMC)/src/cbmc/bmc$(OBJEXT) \
