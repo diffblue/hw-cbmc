@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_trans.h"
 #include "k_induction.h"
 #include "ebmc_base.h"
-#include "ebmc_parseoptions.h"
+#include "ebmc_parse_options.h"
 
 #ifdef HAVE_INTERPOLATION
 #include "interpolation/interpolation_expr.h"
@@ -25,7 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: ebmc_parseoptionst::doit
+Function: ebmc_parse_optionst::doit
 
   Inputs:
 
@@ -35,7 +35,7 @@ Function: ebmc_parseoptionst::doit
 
 \*******************************************************************/
 
-int ebmc_parseoptionst::doit()
+int ebmc_parse_optionst::doit()
 {
   register_languages();
 
@@ -196,7 +196,7 @@ std::cout << "This option is currently disabled\n";
 
 /*******************************************************************\
 
-Function: ebmc_parseoptionst::help
+Function: ebmc_parse_optionst::help
 
   Inputs:
 
@@ -206,7 +206,7 @@ Function: ebmc_parseoptionst::help
 
 \*******************************************************************/
 
-void ebmc_parseoptionst::help()
+void ebmc_parse_optionst::help()
 {
   std::cout <<
     "\n"

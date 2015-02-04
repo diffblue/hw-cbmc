@@ -22,11 +22,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <netlist/netlist_language.h>
 #endif
 
-#include "ebmc_parseoptions.h"
+#include "ebmc_parse_options.h"
 
 /*******************************************************************\
 
-Function: ebmc_parseoptionst::register_languages
+Function: ebmc_parse_optionst::register_languages
 
   Inputs:
 
@@ -36,7 +36,7 @@ Function: ebmc_parseoptionst::register_languages
 
 \*******************************************************************/
 
-void ebmc_parseoptionst::register_languages()
+void ebmc_parse_optionst::register_languages()
 {
   register_language(new_smv_language);
 

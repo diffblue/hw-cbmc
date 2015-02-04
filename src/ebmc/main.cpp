@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 */
 
-#include "ebmc_parseoptions.h"
+#include "ebmc_parse_options.h"
 
 /*******************************************************************\
 
@@ -32,6 +32,6 @@ Function: main
 
 int main(int argc, const char **argv)
 {
-  ebmc_parseoptionst ebmc_parseoptions(argc, argv);
-  return ebmc_parseoptions.main();
+  ebmc_parse_optionst ebmc_parse_options(argc, argv);
+  return ebmc_parse_options.main();
 }
