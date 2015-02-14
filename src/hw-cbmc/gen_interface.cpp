@@ -206,8 +206,6 @@ void gen_interfacet::gen_module(
   if(modules_done.find(module.name)!=modules_done.end())
     return;
 
-  os << '\n';
-
   if(modules_in_progress.find(module.name)!=modules_in_progress.end())
   {
     err << "cyclic module instantiation in module " << module.name
@@ -225,13 +223,11 @@ void gen_interfacet::gen_module(
     if(symbol.type.id()==ID_module_instance)
     {
       const symbolt &module_symbol=lookup(symbol.value.get(ID_module));
-      gen_module(module_symbol,os);
+      gen_module(module_symbol, os);
     }
   }
 
-  os << "/*\n"
-      << "  Module " << module.name << '\n'
-      << "*/\n"
+  os << "// Module " << module.name << '\n'
       << "\n";
 
   os << "struct module_" << module.base_name << " {\n";    
@@ -301,18 +297,14 @@ void gen_interfacet::gen_interface(
   
   gen_module(module, smodule);
   
-  out << "\n\n"
-      << "/*\n"
-      << "  Type declarations\n"
-      << "*/\n\n";
+  out << "\n"
+      << "// type declarations\n";
       
   out << stypedef.str() << '\n';
   out << smodule.str() << '\n';
 
-  out << "\n\n"
-      << "/*\n"
-      << "  Hierarchy Instantiation\n"
-      << "*/\n\n";
+  out << "\n"
+      << "// top module\n";
       
   out << "extern struct module_" << module.base_name << " "
       << module.base_name << ";\n";
