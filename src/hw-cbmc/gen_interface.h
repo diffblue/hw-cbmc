@@ -14,8 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 
 void gen_interface(
-  symbol_tablet &symbol_table,
-  const symbolt &module,
+  const symbol_tablet &symbol_table,
+  const symbolt &top_module,
   bool have_bound,
   std::ostream &out,
   std::ostream &err);

@@ -19,15 +19,15 @@ Author: Daniel Kroening, kroening@kroening.com
 class gen_interfacet
 {
 public:
-  gen_interfacet(symbol_tablet &_symbol_table,
+  gen_interfacet(const symbol_tablet &_symbol_table,
                  std::ostream &_out,
                  std::ostream &_err):
     symbol_table(_symbol_table), out(_out), err(_err) { }
 
-  void gen_interface(const symbolt &module, bool have_bound);
+  void gen_interface(const symbolt &top_module, bool have_bound);
 
 protected:
-  symbol_tablet &symbol_table;
+  const symbol_tablet &symbol_table;
   std::ostream &out, &err;
 
   std::set<irep_idt> modules_done;
@@ -36,7 +36,7 @@ protected:
   std::map<std::string, std::string> typedef_map;
   std::stringstream stypedef;
 
-  symbolt &lookup(const irep_idt &identifier);
+  const symbolt &lookup(const irep_idt &identifier);
   std::string gen_declaration(const symbolt &symbol);
 
   void gen_module(const symbolt &module, std::ostream& os);
@@ -56,9 +56,9 @@ Function: gen_interfacet::lookup
 
 \*******************************************************************/
 
-symbolt &gen_interfacet::lookup(const irep_idt &identifier)
+const symbolt &gen_interfacet::lookup(const irep_idt &identifier)
 {
-  symbol_tablet::symbolst::iterator it=
+  symbol_tablet::symbolst::const_iterator it=
     symbol_table.symbols.find(identifier);
 
   if(it==symbol_table.symbols.end())
@@ -330,12 +330,12 @@ Function: gen_interfacet::gen_interface
 \*******************************************************************/
 
 void gen_interface(
-  symbol_tablet &symbol_table,
-  const symbolt &module,
+  const symbol_tablet &symbol_table,
+  const symbolt &top_module,
   bool have_bound,
   std::ostream &out,
   std::ostream &err)
 {
   gen_interfacet gen_interface(symbol_table, out, err);
-  gen_interface.gen_interface(module, have_bound);
+  gen_interface.gen_interface(top_module, have_bound);
 }
