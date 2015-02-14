@@ -35,13 +35,6 @@ void add_next_timeframe(
   const std::set<irep_idt> &top_level_inputs,
   const namespacet &ns)
 {
-  code_blockt block;
-
-  #if 0
-  codet event("sync");
-  event.set("event", "clock");
-  #endif
-
   // the variables we use
   const symbolt &struct_symbol=ns.lookup(struct_identifier);
   const symbolt &array_symbol=ns.lookup(id2string(struct_identifier)+"_array");
@@ -50,22 +43,25 @@ void add_next_timeframe(
   // we first increase the tick
   symbol_exprt timeframe_expr=symbol_expr(timeframe_symbol);
   
-  exprt plus_expr(ID_plus, index_type());
-  plus_expr.copy_to_operands(
-    timeframe_expr, from_integer(1, index_type()));
+  const plus_exprt plus_expr(
+    timeframe_expr, from_integer(1, index_type()), index_type());
   
-  code_assignt assignment_increase(timeframe_expr, plus_expr);
+  const code_assignt assignment_increase(timeframe_expr, plus_expr);
   
-  block.move_to_operands(assignment_increase);
+  code_blockt block;
+  block.add(assignment_increase);
 
   // now assign the non-inputs in the module symbol
-  exprt index_expr(ID_index, struct_symbol.type);
-  index_expr.copy_to_operands(symbol_expr(array_symbol), symbol_expr(timeframe_symbol));
+  const index_exprt index_expr(
+    symbol_expr(array_symbol),
+    symbol_expr(timeframe_symbol),
+    struct_symbol.type);
 
   const struct_typet &struct_type=
     to_struct_type(ns.follow(struct_symbol.type));
     
-  const struct_typet::componentst &components=struct_type.components();
+  const struct_typet::componentst &components=
+    struct_type.components();
 
   for(struct_typet::componentst::const_iterator
       c_it=components.begin();
@@ -78,11 +74,11 @@ void add_next_timeframe(
     
     if(top_level_inputs.find(name)!=top_level_inputs.end()) continue;
   
-    exprt member_expr1=member_exprt(symbol_expr(struct_symbol), name, type);
-    exprt member_expr2=member_exprt(index_expr, name, type);
+    const exprt member_expr1=member_exprt(symbol_expr(struct_symbol), name, type);
+    const exprt member_expr2=member_exprt(index_expr, name, type);
   
-    code_assignt member_assignment(member_expr1, member_expr2);
-    block.move_to_operands(member_assignment);
+    const code_assignt member_assignment(member_expr1, member_expr2);
+    block.add(member_assignment);
   }
 
   // add code to symbol
