@@ -4,7 +4,7 @@ SRC = verilog_language.cpp verilog_y.tab.cpp verilog_lex.yy.cpp verilog_parser.c
       verilog_interfaces.cpp verilog_typecheck_base.cpp \
       verilog_generate.cpp verilog_module_instance.cpp \
       verilog_context.cpp verilog_parse_tree.cpp \
-      verilog_flattening.cpp verilog_module.cpp vtype.cpp
+      verilog_module.cpp vtype.cpp
 
 include ../config.inc
 
