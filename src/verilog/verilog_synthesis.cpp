@@ -965,7 +965,7 @@ void verilog_synthesist::instantiate_ports(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_inst
+Function: verilog_synthesist::synth_module_instance
 
   Inputs:
 
@@ -975,7 +975,7 @@ Function: verilog_synthesist::synth_inst
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_inst(
+void verilog_synthesist::synth_module_instance(
   const verilog_instt &statement,
   transt &trans)
 {
@@ -989,12 +989,12 @@ void verilog_synthesist::synth_inst(
     symbol_table, identifier, get_message_handler(), options);
 
   forall_operands(it, statement)
-    expand_inst(symbol, *it, trans);
+    expand_module_instance(symbol, *it, trans);
 }
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_inst_builtin
+Function: verilog_synthesist::synth_module_instance_builtin
 
   Inputs:
 
@@ -1004,7 +1004,7 @@ Function: verilog_synthesist::synth_inst_builtin
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_inst_builtin(
+void verilog_synthesist::synth_module_instance_builtin(
   const verilog_module_itemt &module_item,
   transt &trans)
 {
@@ -1168,7 +1168,7 @@ void verilog_synthesist::synth_inst_builtin(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::expand_inst
+Function: verilog_synthesist::expand_module_instance
 
   Inputs:
 
@@ -1178,7 +1178,7 @@ Function: verilog_synthesist::expand_inst
 
 \*******************************************************************/
 
-void verilog_synthesist::expand_inst(
+void verilog_synthesist::expand_module_instance(
   const symbolt &symbol,
   const exprt &op,
   transt &trans)
@@ -2512,9 +2512,9 @@ void verilog_synthesist::synth_module_item(
   else if(module_item.id()==ID_continuous_assign)
     synth_continuous_assign(to_verilog_continuous_assign(module_item), trans);
   else if(module_item.id()==ID_inst)
-    synth_inst(to_verilog_inst(module_item), trans);
+    synth_module_instance(to_verilog_inst(module_item), trans);
   else if(module_item.id()=="inst-builtin")
-    synth_inst_builtin(module_item, trans);
+    synth_module_instance_builtin(module_item, trans);
   else if(module_item.id()==ID_generate_block)
   {
     err_location(module_item);

@@ -213,8 +213,8 @@ protected:
   void synth_assume_module_item(const class verilog_module_itemt &module_item);
   void synth_continuous_assign(const class verilog_continuous_assignt &module_item, transt &trans);
   void synth_continuous_assign(exprt &lhs, exprt &rhs, transt &trans);
-  void synth_inst(const class verilog_instt &module_item, transt &trans);
-  void synth_inst_builtin(const class verilog_module_itemt &module_item, transt &trans);
+  void synth_module_instance(const class verilog_instt &module_item, transt &trans);
+  void synth_module_instance_builtin(const class verilog_module_itemt &module_item, transt &trans);
 
   // statements
   void synth_statement(const class verilog_statementt &statement);
@@ -259,7 +259,7 @@ protected:
     const exprt &values,
     const exprt &case_operand);
 
-  void expand_inst(
+  void expand_module_instance(
     const symbolt &symbol,
     const exprt &op,
     transt &trans);
