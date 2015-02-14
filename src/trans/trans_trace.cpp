@@ -990,6 +990,7 @@ void show_trans_trace_vcd(
   std::string module_name=id2string(symbol1.module);
   out << "$scope module " << vcd_identifier(module_name) << " $end\n";
 
+  #if 0 // TODO
   std::list<irep_idt> last_hierarchy;
 
   for(trans_tracet::statet::assignmentst::const_iterator
@@ -1090,6 +1091,7 @@ void show_trans_trace_vcd(
   //std::cout << "last scope " << scopes << std::endl;
   for(unsigned print = 0 ; print < last_hierarchy.size() ; print++)
     out << "$upscope $end\n";
+  #endif
     
   //  out << "$upscope $end\n";
   out << "$upscope $end\n";  
