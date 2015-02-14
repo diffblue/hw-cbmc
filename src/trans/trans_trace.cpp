@@ -961,6 +961,97 @@ static std::string vcd_suffix(
 
 /*******************************************************************\
 
+Function: vcd_hierarchy_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: 
+
+\*******************************************************************/
+
+void vcd_hierarchy_rec(
+  const namespacet &ns,
+  const std::set<irep_idt> &ids,
+  const std::string &prefix,
+  std::ostream &out,
+  unsigned depth)
+{
+  std::set<std::string> sub_modules;
+  std::set<irep_idt> signals;
+  
+  for(std::set<irep_idt>::const_iterator
+      it=ids.begin();
+      it!=ids.end();
+      it++)
+  {
+    if(has_prefix(id2string(*it), prefix))
+    {
+      std::string rest=
+        std::string(id2string(*it), prefix.size(), std::string::npos);
+      std::size_t dot_pos=rest.find('.');
+      if(dot_pos==std::string::npos)
+        signals.insert(*it);
+      else
+        sub_modules.insert(std::string(rest, 0, dot_pos));
+    }
+  }
+
+  // do signals first
+  for(std::set<irep_idt>::const_iterator
+      it=signals.begin();
+      it!=signals.end();
+      it++)
+  {
+    const symbolt &symbol=ns.lookup(*it);
+    
+    if(symbol.is_auxiliary) continue;
+
+    std::string display_name = id2string(symbol.display_name());
+    
+    std::string signal_class;
+    
+    if(symbol.type.id()==ID_integer)
+      signal_class="integer";
+    else if(symbol.is_state_var)
+      signal_class="reg";
+    else
+      signal_class="wire";
+
+    mp_integer width=vcd_width(symbol.type, ns);
+    
+    std::string suffix=vcd_suffix(symbol.type, ns);
+    
+    if(width>=1)
+      out << std::string(depth*2, ' ')
+          << "$var " << signal_class << " "
+          << width << " "
+          << vcd_identifier(display_name) << " " 
+          << vcd_identifier(display_name)
+          << (suffix==""?"":" ") << suffix
+          << " $end" << std::endl;
+  }
+  
+  // now do sub modules
+  for(std::set<std::string>::const_iterator
+      it=sub_modules.begin();
+      it!=sub_modules.end();
+      it++)
+  {
+    out << std::string(depth*2, ' ')
+        << "$scope module " << *it << " $end\n";
+
+    // recursive call
+    vcd_hierarchy_rec(ns, ids, prefix+*it+".", out, depth+1);
+    
+    out << std::string(depth*2, ' ')
+        << "$upscope $end\n";
+  }
+};
+
+/*******************************************************************\
+
 Function: show_trans_trace_vcd
 
   Inputs:
@@ -995,111 +1086,22 @@ void show_trans_trace_vcd(
 
   std::string module_name=id2string(symbol1.module);
   out << "$scope module " << vcd_identifier(module_name) << " $end\n";
-
-  #if 0 // TODO
-  std::list<irep_idt> last_hierarchy;
-
+  
+  // get identifiers
+  std::set<irep_idt> ids;
+  
   for(trans_tracet::statet::assignmentst::const_iterator
       it=state.assignments.begin();
       it!=state.assignments.end();
       it++)
   {
     assert(it->lhs.id()==ID_symbol);
-
-    const symbolt &symbol=ns.lookup(it->lhs.get(ID_identifier));
-
-    //    out << symbol.hierarchy.size() << std::endl;
-
-    if(symbol.hierarchy.size() > last_hierarchy.size())
-    {
-      symbolt::hierarchyt::const_iterator iter_hier = symbol.hierarchy.begin();
-      symbolt::hierarchyt::const_iterator iter_hier_last = last_hierarchy.begin();
-
-      unsigned pos = 0;
-
-      for(; iter_hier_last != last_hierarchy.end(); iter_hier++, iter_hier_last++)
-      {
-        if(*iter_hier != *iter_hier_last)
-        {
-          //we found a mismatch in scopes
-          //we have to put last_hierarchy.size() - pos $upscopes
-          for(unsigned upscope = 0; upscope < last_hierarchy.size() - pos; upscope++)
-            out << "$upscope " << " $end\n";
-          break;
-        }
-
-        pos++;
-      }
-
-      for(; iter_hier != symbol.hierarchy.end(); iter_hier++)	
-      {
-        unsigned pos = id2string(*(iter_hier)).find_last_of(".");
-        std::string change = id2string(*(iter_hier));
-        out << "$scope module " << change.erase(0, pos+1) << " $end\n";	
-      }
-
-    }
-    else if(symbol.hierarchy.size() <= last_hierarchy.size())
-    {
-      symbolt::hierarchyt::const_iterator iter_hier = symbol.hierarchy.begin();
-      symbolt::hierarchyt::const_iterator iter_hier_last = last_hierarchy.begin();
-
-      unsigned pos = 0;
-
-      for(; iter_hier != symbol.hierarchy.end(); iter_hier++, iter_hier_last++)
-      {
-        if(*iter_hier != *iter_hier_last)
-        {
-          //we found a mismatch in scopes
-          //we have to put last_hierarchy.size() - pos $upscopes
-          for(unsigned upscope = 0; upscope < last_hierarchy.size() - pos; upscope++)
-            out << "$upscope " << " $end\n";
-          break;
-        }
-
-        pos++;
-      }
-
-      for(; iter_hier != symbol.hierarchy.end(); iter_hier++)	
-      {
-        unsigned pos = id2string(*(iter_hier)).find_last_of(".");
-        std::string change = id2string(*(iter_hier));
-        out << "$scope module " << change.erase(0, pos+1) << " $end\n";	
-      }
-    }
-
-    std::string display_name = id2string(symbol.display_name());
-    
-    std::string signal_class;
-    
-    if(symbol.type.id()==ID_integer)
-      signal_class="integer";
-    else if(symbol.is_state_var)
-      signal_class="reg";
-    else
-      signal_class="wire";
-
-    mp_integer width=vcd_width(symbol.type, ns);
-    
-    std::string suffix=vcd_suffix(symbol.type, ns);
-    
-    if(width>=1)
-      out << "$var " << signal_class << " "
-          << width << " "
-          << vcd_identifier(display_name) << " " 
-          << vcd_identifier(display_name)
-          << (suffix==""?"":" ") << suffix
-          << " $end" << std::endl;
-
-    last_hierarchy = symbol.hierarchy;
+    ids.insert(it->lhs.get(ID_identifier));
   }
   
-  //std::cout << "last scope " << scopes << std::endl;
-  for(unsigned print = 0 ; print < last_hierarchy.size() ; print++)
-    out << "$upscope $end\n";
-  #endif
-    
-  //  out << "$upscope $end\n";
+  // split up into hierarchy
+  vcd_hierarchy_rec(ns, ids, module_name+".", out, 1);
+  
   out << "$upscope $end\n";  
 
   out << "$enddefinitions $end\n";
