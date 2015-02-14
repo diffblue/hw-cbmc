@@ -1197,25 +1197,24 @@ void verilog_synthesist::expand_module_instance(
 
     if(symbol.type.id()!=ID_module)
     {
-      // instantiate symbol
+      // instantiate the symbol
 
       symbolt new_symbol(symbol);
 
       new_symbol.module=module;
-      new_symbol.hierarchy.push_front(id2string(module)+"."+id2string(instance));
+      
+      // Identifiers are Verilog::MODULE.id.id.id
+
+      // strip old module      
+      std::string identifier_without_module=
+        std::string(id2string(symbol.name), symbol.module.size());
 
       std::string full_identifier;
 
       full_identifier=mode+"::";
       full_identifier+=id2string(verilog_module_name(module));
-
-      for(symbolt::hierarchyt::const_iterator
-          it=new_symbol.hierarchy.begin();
-          it!=new_symbol.hierarchy.end();
-          it++)
-        full_identifier+="."+id2string(lookup(*it).base_name);
-
-      full_identifier+="."+id2string(symbol.base_name);
+      full_identifier+="."+id2string(instance);
+      full_identifier+=identifier_without_module;
 
       new_symbol.name=full_identifier;
 
