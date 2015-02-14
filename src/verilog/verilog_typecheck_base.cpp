@@ -49,7 +49,7 @@ Function: verilog_module_name
 irep_idt verilog_module_name(const irep_idt &identifier)
 {
   std::string prefix="Verilog::";
-  assert(has_prefix(identifier.c_str(), prefix));
+  assert(has_prefix(id2string(identifier), prefix));
   assert(identifier.size()>=prefix.size());
   return identifier.c_str()+prefix.size();
 }
