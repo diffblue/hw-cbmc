@@ -732,6 +732,12 @@ int ebmc_baset::get_model()
     return 0;
   }
 
+  if(cmdline.isset("show-symbol-table"))
+  {
+    std::cout << symbol_table;
+    return 0;
+  }
+
   // get module name
 
   if(get_main()) return 1;
@@ -741,12 +747,6 @@ int ebmc_baset::get_model()
     netlistt netlist;
     make_netlist(netlist);
     netlist.var_map.output(std::cout);
-    return 0;
-  }
-
-  if(cmdline.isset("show-symbol-table"))
-  {
-    std::cout << symbol_table;
     return 0;
   }
 
