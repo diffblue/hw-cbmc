@@ -145,7 +145,7 @@ std::string gen_interfacet::type_to_string(const typet& type)
     typedef_map[type_str]=name;
 
     stypedef << "typedef " << type_str << " " 
-             << name << ";" << std::endl;
+             << name << ";\n";
 
     return name;
   }
@@ -176,7 +176,7 @@ std::string gen_interfacet::type_to_string(const typet& type)
     typedef_map[key_str] = new_type;
     
     stypedef << "typedef " << stype_str << " " << new_type
-             << array_str << ";" << std::endl;
+             << array_str << ";\n";
     return new_type;
   }
   else
@@ -201,12 +201,12 @@ Function: gen_interfacet::module_struct
 
 void gen_interfacet::gen_module(
   const symbolt &module,
-  std::ostream& os)
+  std::ostream &os)
 {
   if(modules_done.find(module.name)!=modules_done.end())
     return;
 
-  os << std::endl;
+  os << '\n';
 
   if(modules_in_progress.find(module.name)!=modules_in_progress.end())
   {
@@ -229,12 +229,12 @@ void gen_interfacet::gen_module(
     }
   }
 
-  os << "/*" << std::endl
-      << "  Module " << module.name << std::endl
-      << "*/" << std::endl
-      << std::endl;
+  os << "/*\n"
+      << "  Module " << module.name << '\n'
+      << "*/\n"
+      << "\n";
 
-  os << "struct module_" << module.base_name << " {" << std::endl;    
+  os << "struct module_" << module.base_name << " {\n";    
 
   forall_symbol_module_map(it, symbol_table.symbol_module_map, module.name)
   {
@@ -248,7 +248,7 @@ void gen_interfacet::gen_module(
          << module_symbol.base_name
          << " " << symbol.base_name;
 
-      os << ";" << std::endl;
+      os << ";\n";
     }
     else if(symbol.type.id()==ID_module)
     {
@@ -258,11 +258,11 @@ void gen_interfacet::gen_module(
             !symbol.is_property)
     {
       os << "  " << gen_declaration(symbol)
-         << ";" << std::endl;
+         << ";\n";
     }
   }
 
-  os << "};" << std::endl << std::endl;
+  os << "};\n\n";
 
   modules_in_progress.erase(in_progress_it);
 
@@ -281,13 +281,16 @@ Function: gen_interfacet::gen_interface
 
 \*******************************************************************/
 
-void gen_interfacet::gen_interface(const symbolt &module, bool has_bound)
+void gen_interfacet::gen_interface(
+  const symbolt &module,
+  bool has_bound)
 {
   if(has_bound)
   {
     out << "/* Unwinding Bound */\n"
            "\n"
-           "extern const unsigned int bound;\n\n"
+           "extern const unsigned int bound;\n"
+           "\n"
            "/* Next Timeframe  */\n"
            "\n"
            "void next_timeframe(void);\n"
@@ -303,8 +306,8 @@ void gen_interfacet::gen_interface(const symbolt &module, bool has_bound)
       << "  Type declarations\n"
       << "*/\n\n";
       
-  out << stypedef.str() << std::endl;
-  out << smodule.str() << std::endl;
+  out << stypedef.str() << '\n';
+  out << smodule.str() << '\n';
 
   out << "\n\n"
       << "/*\n"
@@ -312,9 +315,9 @@ void gen_interfacet::gen_interface(const symbolt &module, bool has_bound)
       << "*/\n\n";
       
   out << "extern struct module_" << module.base_name << " "
-      << module.base_name << ";" << std::endl;
+      << module.base_name << ";\n";
 
-  out << std::endl;
+  out << '\n';
 }
 
 /*******************************************************************\
