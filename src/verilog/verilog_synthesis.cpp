@@ -554,8 +554,8 @@ void verilog_synthesist::replace_by_wire(
   do
   {
     unsigned c=temporary_counter++;
-    new_symbol.name=id2string(base.name)+"_"+i2string(c);
-    new_symbol.base_name=id2string(base.base_name)+"_"+i2string(c);
+    new_symbol.name=id2string(base.name)+"_aux"+i2string(c);
+    new_symbol.base_name=id2string(base.base_name)+"_aux"+i2string(c);
   }
   while(symbol_table.symbols.find(new_symbol.name)!=symbol_table.symbols.end());
   
@@ -564,6 +564,7 @@ void verilog_synthesist::replace_by_wire(
   new_symbol.mode=base.mode;
   new_symbol.location=base.location;
   new_symbol.value=nil_exprt();
+  new_symbol.is_auxiliary=true;
 
   symbol_exprt symbol_expr(new_symbol.name, new_symbol.type);
 

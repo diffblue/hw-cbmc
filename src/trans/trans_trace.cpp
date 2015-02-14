@@ -468,6 +468,9 @@ void show_trans_state(
     assert(it->lhs.id()==ID_symbol);
 
     const symbolt &symbol=ns.lookup(it->lhs.get(ID_identifier));
+    
+    if(symbol.is_auxiliary)
+      continue;
 
     std::cout << "  " << symbol.display_name() << " = ";
 
@@ -856,6 +859,9 @@ void show_trans_state_vcd(
     assert(it->lhs.id()==ID_symbol);
 
     const symbolt &symbol=ns.lookup(it->lhs.get(ID_identifier));
+    
+    if(symbol.is_auxiliary)
+      continue;
     
     if(timeframe!=0)
       if(previous_values[symbol.name]==it->rhs)

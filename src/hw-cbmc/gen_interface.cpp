@@ -236,6 +236,9 @@ void gen_interfacet::gen_module(
   {
     const symbolt &symbol=lookup(it->second);
     
+    if(symbol.is_auxiliary)
+      continue;
+    
     if(symbol.name!=id2string(module.name)+"."+id2string(symbol.base_name))
       continue;
 
