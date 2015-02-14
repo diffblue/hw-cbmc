@@ -120,7 +120,7 @@ std::string gen_interfacet::type_to_string(const typet& type)
     
     std::string type_str=sign;
     
-    // does integer type fit?
+    // Is there some integer type that fits?
     if(width==config.ansi_c.char_width)
       type_str+="char";
     else if(width==config.ansi_c.short_int_width)
@@ -235,6 +235,9 @@ void gen_interfacet::gen_module(
   forall_symbol_module_map(it, symbol_table.symbol_module_map, module.name)
   {
     const symbolt &symbol=lookup(it->second);
+    
+    if(symbol.name!=id2string(module.name)+"."+id2string(symbol.base_name))
+      continue;
 
     if(symbol.type.id()==ID_module_instance)
     {
@@ -249,8 +252,7 @@ void gen_interfacet::gen_module(
     else if(symbol.type.id()==ID_module)
     {
     }
-    else if(symbol.hierarchy.empty() &&
-            symbol.type.id()!=ID_integer &&
+    else if(symbol.type.id()!=ID_integer &&
             !symbol.is_property)
     {
       os << "  " << gen_declaration(symbol)
