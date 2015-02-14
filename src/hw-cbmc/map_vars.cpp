@@ -167,23 +167,21 @@ void map_varst::set_transition(exprt &expr, unsigned transition)
 {
   if(expr.id()==ID_member)
   {
-    if(expr.operands().size()!=1)
-      throw "member expected to have one operand";
-
-    set_transition(expr.op0(), transition);
+    set_transition(to_member_expr(expr).struct_op(), transition);
   }
   else if(expr.id()==ID_index)
   {
-    if(expr.operands().size()!=2)
-      throw "index expected to have two operands";
-      
-    assert(expr.op0().id()==ID_symbol);
+    index_exprt &index_expr=to_index_expr(expr);
 
-    // rename!
-    expr.op0().set(ID_identifier,
-      expr.op0().get_string(ID_identifier)+"#0");
+    assert(index_expr.array().id()==ID_symbol);
+    
+    symbol_exprt &symbol=to_symbol_expr(index_expr.array());
 
-    expr.op1()=from_integer(transition, expr.op1().type());
+    // rename that symbol!
+    symbol.set_identifier(
+      id2string(symbol.get_identifier())+"#0");
+
+    index_expr.index()=from_integer(transition, index_expr.index().type());
   }
 }
 
@@ -452,11 +450,11 @@ const symbolt &map_varst::add_array(symbolt &symbol)
     throw "symbol_table.move() failed";
     
   // change initialization
-  exprt symbol_expr(ID_symbol, p->type);
-  symbol_expr.set(ID_identifier, p->name);
+  symbol_exprt symbol_expr(p->type);
+  symbol_expr.set_identifier(p->name);
   
-  symbol.value=exprt(ID_index, symbol.type);
-  symbol.value.copy_to_operands(symbol_expr, gen_zero(index_type()));
+  symbol.value=
+    index_exprt(symbol_expr, gen_zero(index_type()), symbol.type);
 
   return *p;
 }
@@ -479,23 +477,17 @@ std::string map_varst::show_member(const exprt &expr)
 
   if(expr.id()==ID_member)
   {
-    if(expr.operands().size()!=1)
-      throw "member expected to have one operand";
-
-    result=show_member(expr.op0());
+    result=show_member(to_member_expr(expr).struct_op());
     result+=".";
-    result+=expr.get_string(ID_component_name);
+    result+=id2string(to_member_expr(expr).get_component_name());
   }
   else if(expr.id()==ID_index)
   {
-    if(expr.operands().size()!=2)
-      throw "index expected to have two operands";
-
-    result=show_member(expr.op0());
+    result=show_member(to_index_expr(expr).array());
   }
   else if(expr.id()==ID_symbol)
   {
-    const symbolt &symbol=lookup(expr.get(ID_identifier));
+    const symbolt &symbol=lookup(to_symbol_expr(expr).get_identifier());
     result=id2string(symbol.display_name());
   }
 
@@ -564,9 +556,7 @@ void map_varst::map_var_rec(
       throw 0;
     }
 
-    exprt new_expr(ID_member, c_it->type());
-    new_expr.copy_to_operands(expr);
-    new_expr.set(ID_component_name, name);
+    member_exprt new_expr(expr, name, c_it->type());
     
     const symbolt &module_symbol=**symbols.begin();
     
@@ -728,14 +718,14 @@ void map_varst::map_vars(const irep_idt &module)
 
     const symbolt &array_symbol=add_array(s);
 
-    exprt symbol_expr(ID_symbol, array_symbol.type);
-    symbol_expr.set(ID_identifier, array_symbol.name);
+    symbol_exprt symbol_expr(array_symbol.type);
+    symbol_expr.set_identifier(array_symbol.name);
 
     exprt timeframe_expr=from_integer(0, index_type());
 
     namespacet ns(symbol_table);
-    exprt expr(ID_index, ns.follow(symbol_expr.type()).subtype());
-    expr.move_to_operands(symbol_expr, timeframe_expr);
+    index_exprt expr(
+      symbol_expr, timeframe_expr, ns.follow(symbol_expr.type()).subtype());
 
     top_level_inputs.clear();
 
