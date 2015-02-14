@@ -37,8 +37,13 @@ Function: instantiate_symbol
 
 void instantiate_symbol(exprt &expr, unsigned timeframe)
 {
-  if(expr.id()==ID_symbol ||
-     expr.id()==ID_nondet_symbol)
+  if(expr.id()==ID_symbol)
+  {
+    symbol_exprt &symbol_expr=to_symbol_expr(expr);
+    const irep_idt &identifier=symbol_expr.get_identifier();
+    symbol_expr.set_identifier(timeframe_identifier(timeframe, identifier));
+  }
+  else if(expr.id()==ID_nondet_symbol)
   {
     const irep_idt &identifier=expr.get(ID_identifier);
     expr.set(ID_identifier, timeframe_identifier(timeframe, identifier));
@@ -66,7 +71,7 @@ public:
     no_timeframes(_no_timeframes)
   { }
 
-  void map_vars(const irep_idt &module);
+  void map_vars(const irep_idt &top_module);
   
 protected:
   symbol_tablet &symbol_table;
@@ -79,9 +84,9 @@ protected:
   const symbolt &add_array(symbolt &symbol);
 
   void map_var_rec(
-    const irep_idt &main_module,
+    const irep_idt &top_module,
     const exprt &expr,
-    const symbolt::hierarchyt &hierarchy);
+    const irep_idt &prefix);
 
   void map_var(
     const exprt &expr,
@@ -507,9 +512,9 @@ Function: map_varst::map_var_rec
 \*******************************************************************/
 
 void map_varst::map_var_rec(
-  const irep_idt &main_module,
+  const irep_idt &top_module,
   const exprt &expr,
-  const symbolt::hierarchyt &hierarchy)
+  const irep_idt &prefix)
 {
   const namespacet ns(symbol_table);
   const typet &expr_type=ns.follow(expr.type());
@@ -535,48 +540,43 @@ void map_varst::map_var_rec(
     
     bool module_instance=ns.follow(c_it->type()).id()==ID_struct;
     
-    std::list<const symbolt *> symbols;
-
-    forall_symbol_module_map(s_it, symbol_table.symbol_module_map, main_module)
-    {
-      const symbolt &s=lookup(s_it->second);
-      if(s.type.id()==ID_module) continue;
-      if(s.base_name==base_name &&
-         hierarchy==s.hierarchy &&
-         module_instance==(s.type.id()==ID_module_instance))
-      {
-        symbols.push_back(&s);
-      }
-    }
+    irep_idt full_name=id2string(prefix)+"."+id2string(base_name);
     
-    if(symbols.empty())
+    const symbol_tablet::symbolst::const_iterator
+      sub_symbol_it=symbol_table.symbols.find(full_name);
+
+    if(sub_symbol_it==symbol_table.symbols.end())
     {
-      error() << "failed to find `" << base_name << "' in module `"
-              << show_member(expr) << "'" << eom;
+      error() << "mapping failed to find "
+              << (module_instance?"module instance":"signal")
+              << " `" << full_name << "'" << eom;
       throw 0;
     }
-
+    
+    const symbolt &sub_symbol=sub_symbol_it->second;
+    
+    if(module_instance!=(sub_symbol.type.id()==ID_module_instance))
+    {
+      error() << "type inconsistency when mapping `" << full_name << "'" << eom;
+      throw 0;
+    }
+    
     member_exprt new_expr(expr, name, c_it->type());
     
-    const symbolt &module_symbol=**symbols.begin();
-    
-    // is it another module?
-    if(module_symbol.type.id()==ID_module_instance)
+    // is it a sub-module or a signal?
+    if(module_instance)
     {
-      symbolt::hierarchyt new_hierarchy(hierarchy);
-      new_hierarchy.push_back(module_symbol.name);
-    
       // recursive call
-      map_var_rec(main_module, new_expr, new_hierarchy);
+      map_var_rec(top_module, new_expr, full_name);
     }
     else
     {
       // is it a top-level input?
-      if(hierarchy.empty() && module_symbol.is_input)
+      if(prefix==top_module && sub_symbol.is_input)
         top_level_inputs.insert(name);
       
-      // do the mapping    
-      map_var(new_expr, module_symbol);
+      // do the mapping of the signal
+      map_var(new_expr, sub_symbol);
     }
   }
 }
@@ -661,7 +661,7 @@ Function: map_varst::map_vars
 
 \*******************************************************************/
 
-void map_varst::map_vars(const irep_idt &module)
+void map_varst::map_vars(const irep_idt &top_module)
 {
   // add timeframe symbol
   {
@@ -677,7 +677,7 @@ void map_varst::map_vars(const irep_idt &module)
     symbol_table.move(timeframe_symbol);
   }
 
-  const symbolt &module_symbol=lookup(module);
+  const symbolt &top_module_symbol=lookup(top_module);
   
   irep_idt struct_symbol;
   
@@ -693,7 +693,7 @@ void map_varst::map_vars(const irep_idt &module)
       {
         if(base_name=="bound") // special case      
           assign_bound(it->second);
-        else if(base_name==module_symbol.base_name)
+        else if(base_name==top_module_symbol.base_name)
           struct_symbol=it->first;
       }
     }
@@ -702,7 +702,7 @@ void map_varst::map_vars(const irep_idt &module)
   if(struct_symbol=="")
   {
     error() << "failed to find top-module symbol `"
-            << module_symbol.base_name << "'" << eom;
+            << top_module_symbol.base_name << "'" << eom;
     return;
   }
   
@@ -729,8 +729,7 @@ void map_varst::map_vars(const irep_idt &module)
 
     top_level_inputs.clear();
 
-    symbolt::hierarchyt hierarchy;
-    map_var_rec(module_symbol.name, expr, hierarchy);
+    map_var_rec(top_module_symbol.name, expr, id2string(top_module_symbol.name));
   }
 
   Forall_symbols(it, symbol_table.symbols)
