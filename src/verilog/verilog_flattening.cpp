@@ -30,7 +30,7 @@ void verilog_flatteningt::flatten_expr(exprt &expr)
 {
   if(expr.id()==ID_symbol)
   {
-    irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    //irep_idt identifier=to_symbol_expr(expr).get_identifier();
     
   }
   else if(expr.id()==ID_function_call)
@@ -79,19 +79,19 @@ bool verilog_flatteningt::replace_symbols(
 {
   bool result=true;
 
-  if(dest.id()=="next_symbol" ||
-     dest.id()=="symbol")
+  if(dest.id()==ID_next_symbol ||
+     dest.id()==ID_symbol)
   {
     replace_mapt::const_iterator it=
-      what.find(dest.get("identifier"));
+      what.find(dest.get(ID_identifier));
 
     if(it!=what.end())
     {
-      bool is_next_symbol=dest.id()=="next_symbol";
+      bool is_next_symbol=dest.id()==ID_next_symbol;
       dest=it->second;      
 
       if(is_next_symbol)
-        replace_symbols("next_symbol", dest);
+        replace_symbols(ID_next_symbol, dest);
 
       result=false;
     }
@@ -121,7 +121,7 @@ void verilog_flatteningt::replace_symbols(
   const irep_idt &target,
   exprt &dest)
 {
-  if(dest.id()=="symbol")
+  if(dest.id()==ID_symbol)
     dest.id(target);
   else
     Forall_operands(it, dest)
@@ -146,7 +146,7 @@ void verilog_flatteningt::instantiate_port(
   const replace_mapt &replace_map)
 {
   replace_mapt::const_iterator it=
-    replace_map.find(symbol_expr.get("identifier"));
+    replace_map.find(symbol_expr.get(ID_identifier));
 
   if(it==replace_map.end())
   {
@@ -184,7 +184,7 @@ void verilog_flatteningt::instantiate_ports(
   const symbolt &symbol,
   const replace_mapt &replace_map)
 {
-  const irept::subt &ports=symbol.type.find("ports").get_sub();
+  const irept::subt &ports=symbol.type.find(ID_ports).get_sub();
 
   if(inst.operands().size()!=ports.size())
   {
@@ -200,7 +200,7 @@ void verilog_flatteningt::instantiate_ports(
 
   // named port connection?
 
-  if(inst.op0().id()=="named_port_connection")
+  if(inst.op0().id()==ID_named_port_connection)
   {
     forall_operands(o_it, inst)
     {
@@ -242,7 +242,7 @@ Function: verilog_flatteningt::flatten_inst
 
 void verilog_flatteningt::flatten_inst(verilog_instt &inst)
 {
-  const irep_idt &identifier=inst.get("module");
+  const irep_idt &identifier=inst.get(ID_module);
 
   // must be in symbol_table
   const symbolt &symbol=lookup(identifier);
@@ -257,7 +257,7 @@ void verilog_flatteningt::flatten_inst(verilog_instt &inst)
     flatten_inst(symbol, *it);
     
   // kill it now
-  exprt skip("skip");
+  exprt skip(ID_skip);
   skip.add_source_location()=inst.source_location();
   inst.swap(skip);
 }
@@ -278,7 +278,7 @@ void verilog_flatteningt::flatten_inst(
   const symbolt &symbol,
   const exprt &op)
 {
-  const irep_idt &instance=op.get("instance");
+  const irep_idt &instance=op.get(ID_instance);
 
   std::list<irep_idt> new_symbols;
   replace_mapt replace_map;
@@ -288,7 +288,7 @@ void verilog_flatteningt::flatten_inst(
     const symbolt &symbol=lookup(it->second);
 
     // don't replicate modules
-    if(symbol.type.id()=="module")
+    if(symbol.type.id()==ID_module)
       continue;
 
     // instantiate symbol
@@ -374,7 +374,7 @@ Function: verilog_flatteningt::flatten_module_item
 void verilog_flatteningt::flatten_module_item(
   verilog_module_itemt &module_item)
 {
-  if(module_item.id()=="inst")
+  if(module_item.id()==ID_inst)
     flatten_inst(to_verilog_inst(module_item));
   else
   {
@@ -397,7 +397,7 @@ Function: verilog_flatteningt::flatten_module
 
 void verilog_flatteningt::flatten_module(symbolt &symbol)
 {
-  assert(symbol.value.id()=="verilog_module");
+  assert(symbol.value.id()==ID_verilog_module);
 
   // flatten the module items
 
