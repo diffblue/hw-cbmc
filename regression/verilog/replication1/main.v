@@ -13,4 +13,8 @@ module main(in);
   always assert property2:
     {{ 1 { in }}, in } == { in, in };
 
+  // replication of something boolean
+  always assert property3:
+    {{ 1 { 1'b0 }}, in } == in;
+
 endmodule
