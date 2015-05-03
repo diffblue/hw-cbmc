@@ -1497,6 +1497,9 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
       err_location(op1);
       throw "array type not allowed here";
     } 
+    
+    if(op1.type().id()==ID_bool)
+      op1.make_typecast(unsignedbv_typet(1));
 
     unsigned width=get_width(expr.op1().type());
 
@@ -1523,13 +1526,8 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
 
       mp_integer new_width=op0*width;
 
-      if(new_width==1)
-        expr.type()=typet(ID_bool);
-      else
-      {
-        expr.type()=typet(ID_unsignedbv);
-        expr.type().set(ID_width, integer2string(new_width));
-      }
+      expr.type()=typet(ID_unsignedbv);
+      expr.type().set(ID_width, integer2string(new_width));
     }
   }
   else if(expr.id()==ID_and || expr.id()==ID_or)
