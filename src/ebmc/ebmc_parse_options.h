@@ -22,7 +22,7 @@ public:
     "(diatest)(statebits):(bound):"
     "(show-parse)(show-varmap)(show-symbol-table)(show-netlist)"
     "(show-ldg)(show-modules)"
-    "(dimacs)(module):"
+    "(dimacs)(module):(top):"
     "(verbose)(gui)(po)(cegar)"
     "(k-induction)(2pi)(bound2):(outfile):(xml-ui)"
     "(show-properties)(property):p:"

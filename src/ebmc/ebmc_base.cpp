@@ -500,12 +500,16 @@ Function: ebmc_baset::get_main
 
 bool ebmc_baset::get_main()
 {
-  const std::string module=
-    cmdline.get_value("module");
+  std::string top_module;
+  
+  if(cmdline.isset("module"))
+    top_module=cmdline.get_value("module");
+  else if(cmdline.isset("top"))
+    top_module=cmdline.get_value("top");
 
   try
   {
-    main_symbol=&get_module(symbol_table, module, get_message_handler());
+    main_symbol=&get_module(symbol_table, top_module, get_message_handler());
     trans_expr=&to_trans_expr(main_symbol->value);
   }
 
