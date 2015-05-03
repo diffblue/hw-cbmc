@@ -9,4 +9,8 @@ module main(in);
   always assert property1:
     out==(in | (in<<8) | (in<<16) | (in<<24));
 
+  // 1-replication
+  always assert property2:
+    {{ 1 { in }}, in } == { in, in };
+
 endmodule
