@@ -1778,6 +1778,10 @@ statement:
 
 statement_item:
           assert_property_statement
+        | block_reg_declaration /* added */
+        | net_declaration       /* added */
+	| event_declaration     /* added */
+	| integer_declaration   /* added */
         | blocking_assignment ';' { $$ = $1; }
 	| nonblocking_assignment ';' { $$ = $1; }
 	| case_statement
