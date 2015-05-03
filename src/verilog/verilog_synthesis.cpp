@@ -2329,7 +2329,7 @@ void verilog_synthesist::synth_forever(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_task_enable
+Function: verilog_synthesist::synth_function_call_or_task_enable
 
   Inputs:
 
@@ -2339,76 +2339,75 @@ Function: verilog_synthesist::synth_task_enable
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_task_enable(
-  const verilog_task_enablet &statement)
+void verilog_synthesist::synth_function_call_or_task_enable(
+  const verilog_function_callt &statement)
 {
-  if(statement.operands().size()!=2)
-  {
-    err_location(statement);
-    throw "task_enable expected to have two operands";
-  }
-
   // this is essentially inlined
-  const symbol_exprt &task=to_symbol_expr(statement.task());
+  const symbol_exprt &function=to_symbol_expr(statement.function());
   
-  const symbolt &symbol=lookup(task.get_identifier());
+  irep_idt identifier=function.get_identifier();
   
-  if(symbol.type.id()!=ID_code)
-  {
-    err_location(statement);
-    throw "task_enable expected task as first operand";
-  }
-  
-  const code_typet &code_type=to_code_type(symbol.type);
-
-  if(code_type.return_type()!=empty_typet())
-  {
-    err_location(statement);
-    throw "task_enable cannot call function";
-  }
-  
-  const code_typet::parameterst &parameters=
-    code_type.parameters();
-
-  const exprt::operandst &actuals=
-    statement.op1().operands();
+  // We ignore everyting that starts with a '$',
+  // e.g., $display etc
     
-  if(parameters.size()!=actuals.size())
+  if(!identifier.empty() && identifier[0]=='$')       
   {
-    err_location(statement);
-    throw "wrong number of arguments";
+    // ignore
   }
-  
-  // do assignments to input parameters
-  for(unsigned i=0; i<parameters.size(); i++)
+  else
   {
-    const symbolt &a_symbol=lookup(parameters[i].get_identifier());
-    if(parameters[i].get_bool(ID_input))
+    const symbolt &symbol=lookup(identifier);
+    
+    if(symbol.type.id()!=ID_code)
     {
-      verilog_blocking_assignt assignment;
-      assignment.lhs()=::symbol_expr(a_symbol);
-      assignment.rhs()=actuals[i];
-      assignment.add_source_location()=statement.source_location();
-      synth_statement(assignment);
+      err_location(statement);
+      throw "expected function or task as first operand";
+    }
+    
+    const code_typet &code_type=to_code_type(symbol.type);
+
+    const code_typet::parameterst &parameters=
+      code_type.parameters();
+
+    const exprt::operandst &actuals=
+      statement.op1().operands();
+      
+    if(parameters.size()!=actuals.size())
+    {
+      err_location(statement);
+      throw "wrong number of arguments";
+    }
+    
+    // do assignments to input parameters
+    for(unsigned i=0; i<parameters.size(); i++)
+    {
+      const symbolt &a_symbol=lookup(parameters[i].get_identifier());
+      if(parameters[i].get_bool(ID_input))
+      {
+        verilog_blocking_assignt assignment;
+        assignment.lhs()=::symbol_expr(a_symbol);
+        assignment.rhs()=actuals[i];
+        assignment.add_source_location()=statement.source_location();
+        synth_statement(assignment);
+      }
+    }
+
+    synth_statement(to_verilog_statement(symbol.value));
+
+    // do assignments to output parameters
+    for(unsigned i=0; i<parameters.size(); i++)
+    {
+      const symbolt &a_symbol=lookup(parameters[i].get_identifier());
+      if(parameters[i].get_bool(ID_output))
+      {
+        verilog_blocking_assignt assignment;
+        assignment.lhs()=actuals[i];
+        assignment.rhs()=::symbol_expr(a_symbol);
+        assignment.add_source_location()=statement.source_location();
+        synth_statement(assignment);
+      }
     }
   }
-
-  synth_statement(to_verilog_statement(symbol.value));
-
-  // do assignments to output parameters
-  for(unsigned i=0; i<parameters.size(); i++)
-  {
-    const symbolt &a_symbol=lookup(parameters[i].get_identifier());
-    if(parameters[i].get_bool(ID_output))
-    {
-      verilog_blocking_assignt assignment;
-      assignment.lhs()=actuals[i];
-      assignment.rhs()=::symbol_expr(a_symbol);
-      assignment.add_source_location()=statement.source_location();
-      synth_statement(assignment);
-    }
-  }
-
 }
 
 /*******************************************************************\
@@ -2460,8 +2459,8 @@ void verilog_synthesist::synth_statement(
     synth_repeat(to_verilog_repeat(statement));
   else if(statement.id()==ID_forever)
     synth_forever(to_verilog_forever(statement));
-  else if(statement.id()==ID_task_enable)
-    synth_task_enable(to_verilog_task_enable(statement));
+  else if(statement.id()==ID_function_call)
+    synth_function_call_or_task_enable(to_verilog_function_call(statement));
   else if(statement.id()==ID_preincrement ||
           statement.id()==ID_predecrement ||
           statement.id()==ID_postincrement ||

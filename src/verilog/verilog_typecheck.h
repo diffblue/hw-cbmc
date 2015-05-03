@@ -110,7 +110,7 @@ protected:
 
   // statements
   void convert_statement(class verilog_statementt &statement);
-  void convert_task_enable(class verilog_task_enablet &statement);
+  void convert_function_call_or_task_enable(class verilog_function_callt &statement);
   void convert_block(class verilog_blockt &statement);
   void convert_case(class verilog_case_baset &statement);
   void convert_if(class verilog_ift &statement);

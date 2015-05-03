@@ -431,20 +431,20 @@ extern inline verilog_ift &to_verilog_if(exprt &expr)
   return static_cast<verilog_ift &>(expr);
 }
 
-class verilog_task_enablet:public verilog_statementt
+class verilog_function_callt:public verilog_statementt
 {
 public:
-  verilog_task_enablet():verilog_statementt(ID_task_enable)
+  verilog_function_callt():verilog_statementt(ID_function_call)
   {
     operands().resize(2);
   }
 
-  exprt &task()
+  exprt &function()
   {
     return op0();
   }
 
-  const exprt &task() const
+  const exprt &function() const
   {
     return op0();
   }
@@ -460,16 +460,16 @@ public:
   }
 };
 
-extern inline const verilog_task_enablet &to_verilog_task_enable(const exprt &expr)
+extern inline const verilog_function_callt &to_verilog_function_call(const exprt &expr)
 {
-  assert(expr.id()==ID_task_enable && expr.operands().size()==2);
-  return static_cast<const verilog_task_enablet &>(expr);
+  assert(expr.id()==ID_function_call && expr.operands().size()==2);
+  return static_cast<const verilog_function_callt &>(expr);
 }
 
-extern inline verilog_task_enablet &to_verilog_task_enable(exprt &expr)
+extern inline verilog_function_callt &to_verilog_function_call(exprt &expr)
 {
-  assert(expr.id()==ID_task_enable && expr.operands().size()==2);
-  return static_cast<verilog_task_enablet &>(expr);
+  assert(expr.id()==ID_function_call && expr.operands().size()==2);
+  return static_cast<verilog_function_callt &>(expr);
 }
 
 class verilog_event_guardt:public verilog_statementt

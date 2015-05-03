@@ -732,7 +732,7 @@ void verilog_typecheckt::convert_continuous_assign(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_task_enable
+Function: verilog_typecheckt::convert_function_call_or_task_enable
 
   Inputs:
 
@@ -742,48 +742,54 @@ Function: verilog_typecheckt::convert_task_enable
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_task_enable(
-  verilog_task_enablet &statement)
+void verilog_typecheckt::convert_function_call_or_task_enable(
+  verilog_function_callt &statement)
 {
-  // look it up
-  const irep_idt identifier=
-    id2string(module_identifier)+"."+
-    id2string(to_symbol_expr(statement.task()).get_identifier());
-  
-  const symbolt &symbol=lookup(identifier);
+  irep_idt base_name=
+    to_symbol_expr(statement.function()).get_identifier();
 
-  if(symbol.type.id()!=ID_code)
-  {
-    err_location(statement);
-    throw "expected task name";
-  }
-  
-  const code_typet &code_type=to_code_type(symbol.type);
-  
-  if(code_type.return_type().id()!=ID_empty)
-  {
-    err_location(statement);
-    throw "expected task, but got function";
-  }
+  // We ignore everyting that starts with a '$',
+  // e.g., $display etc
 
-  // check arguments
-  const code_typet::parameterst &parameter_types=code_type.parameters();
-  exprt::operandst &arguments=statement.arguments();
-  
-  if(parameter_types.size()!=arguments.size())
+  if(!base_name.empty() && base_name[0]=='$')
   {
-    err_location(statement);
-    throw "wrong number of arguments";
   }
+  else
+  {
+    // look it up
+    const irep_idt identifier=
+      id2string(module_identifier)+"."+
+      id2string(base_name);
+    
+    const symbolt &symbol=lookup(identifier);
 
-  for(unsigned i=0; i<arguments.size(); i++)
-  {
-    convert_expr(arguments[i]);
-    propagate_type(arguments[i], parameter_types[i].type());
+    if(symbol.type.id()!=ID_code)
+    {
+      err_location(statement);
+      throw "expected task or function name";
+    }
+    
+    const code_typet &code_type=to_code_type(symbol.type);
+    
+    // check arguments
+    const code_typet::parameterst &parameter_types=code_type.parameters();
+    exprt::operandst &arguments=statement.arguments();
+    
+    if(parameter_types.size()!=arguments.size())
+    {
+      err_location(statement);
+      throw "wrong number of arguments";
+    }
+
+    for(unsigned i=0; i<arguments.size(); i++)
+    {
+      convert_expr(arguments[i]);
+      propagate_type(arguments[i], parameter_types[i].type());
+    }
+    
+    statement.function().type()=symbol.type;
+    statement.function().set(ID_identifier, symbol.name);
   }
-  
-  statement.task().type()=symbol.type;
-  statement.task().set(ID_identifier, symbol.name);
 }
 
 /*******************************************************************\
@@ -1249,13 +1255,13 @@ void verilog_typecheckt::convert_statement(
           statement.id()==ID_postincrement ||
           statement.id()==ID_postdecrement)
     convert_prepostincdec(statement);
-  else if(statement.id()==ID_task_enable)
-    convert_task_enable(to_verilog_task_enable(statement));
+  else if(statement.id()==ID_function_call)
+    convert_function_call_or_task_enable(to_verilog_function_call(statement));
   else
   {
     err_location(statement);
-    str << "unexpected statement:" << std::endl;
-    str << statement << std::endl;
+    str << "unexpected statement:" << '\n';
+    str << statement << '\n';
     throw 0;
   }
 }
@@ -1324,8 +1330,8 @@ void verilog_typecheckt::convert_module_item(
   else
   {
     err_location(module_item);
-    str << "unexpected module item:" << std::endl;
-    str << module_item << std::endl;
+    str << "unexpected module item:" << '\n';
+    str << module_item << '\n';
     throw 0;
   }
 }
