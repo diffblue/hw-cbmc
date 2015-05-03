@@ -1510,6 +1510,14 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
       throw 0;
     }
 
+    if(op0==0)
+    {
+      // ruled out by IEEE 1364-2001
+      err_location(expr); 
+      str << "number of replications must not be zero";
+      throw 0;
+    }
+
     {
       expr.op0()=from_integer(op0, typet(ID_natural));
 
