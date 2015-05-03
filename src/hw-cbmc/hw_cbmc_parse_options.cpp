@@ -197,7 +197,7 @@ void hw_cbmc_parse_optionst::help()
 
   std::cout <<
     "hw-cbmc also accepts the following options:\n"
-    " --module name                top module for unwinding\n"
+    " --module name                top module for unwinding (deprecated)\n"
     " --top name                   top module for unwinding\n"
     " --bound nr                   number of transitions for the module\n"
     " --gen-interface              print C for interface to module\n"
