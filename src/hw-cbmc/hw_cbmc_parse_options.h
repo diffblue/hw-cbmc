@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cbmc/cbmc_parse_options.h>
 
 #define HW_CBMC_OPTIONS \
-  "(showvarmap)(bound):(module):(show-modules)(gen-interface)"
+  "(showvarmap)(bound):(module):(top):(show-modules)(gen-interface)"
 
 class hw_cbmc_parse_optionst:public cbmc_parse_optionst
 {

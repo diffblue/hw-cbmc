@@ -120,15 +120,19 @@ bool hw_cbmc_parse_optionst::get_modules(bmct &bmc)
   // unwinding of transition systems
   //
 
-  const std::string module=
-    cmdline.get_value("module");
+  std::string top_module;
 
-  if(module!="")
+  if(cmdline.isset("module"))
+    top_module=cmdline.get_value("module");
+  else if(cmdline.isset("top"))
+    top_module=cmdline.get_value("top");
+
+  if(top_module!="")
   {
     try
     {
       const symbolt &symbol=
-        get_module(symbol_table, module, get_message_handler());
+        get_module(symbol_table, top_module, get_message_handler());
 
       if(cmdline.isset("gen-interface"))
       {
@@ -163,7 +167,7 @@ bool hw_cbmc_parse_optionst::get_modules(bmct &bmc)
   }
   else if(cmdline.isset("gen-interface"))
   {
-    error() << "must specify module name for gen-interface" << eom;
+    error() << "must specify top module name for gen-interface" << eom;
     return true;
   }
   else if(cmdline.isset("show-modules"))
@@ -194,6 +198,7 @@ void hw_cbmc_parse_optionst::help()
   std::cout <<
     "hw-cbmc also accepts the following options:\n"
     " --module name                top module for unwinding\n"
+    " --top name                   top module for unwinding\n"
     " --bound nr                   number of transitions for the module\n"
     " --gen-interface              print C for interface to module\n"
     " --vcd file                   dump error trace in VCD format\n"
