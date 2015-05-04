@@ -1313,7 +1313,7 @@ void verilog_typecheckt::convert_module_item(
     convert_continuous_assign(to_verilog_continuous_assign(module_item));
   else if(module_item.id()==ID_inst)
     convert_inst(to_verilog_inst(module_item));
-  else if(module_item.id()=="inst-builtin")
+  else if(module_item.id()==ID_inst_builtin)
     convert_inst_builtin(to_verilog_inst_builtin(module_item));
   else if(module_item.id()==ID_generate_block)
   {

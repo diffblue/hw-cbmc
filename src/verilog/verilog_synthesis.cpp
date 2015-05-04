@@ -2512,7 +2512,7 @@ void verilog_synthesist::synth_module_item(
     synth_continuous_assign(to_verilog_continuous_assign(module_item), trans);
   else if(module_item.id()==ID_inst)
     synth_module_instance(to_verilog_inst(module_item), trans);
-  else if(module_item.id()=="inst-builtin")
+  else if(module_item.id()==ID_inst_builtin)
     synth_module_instance_builtin(module_item, trans);
   else if(module_item.id()==ID_generate_block)
   {

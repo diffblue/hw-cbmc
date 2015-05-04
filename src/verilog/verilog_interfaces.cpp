@@ -742,7 +742,7 @@ void verilog_typecheckt::interface_module_item(
           module_item.id()==ID_local_parameter_decl)
     interface_parameter_decl(module_item);
   else if(module_item.id()==ID_inst ||
-          module_item.id()=="inst-builtin")
+          module_item.id()==ID_inst_builtin)
     interface_inst(module_item);
   else if(module_item.id()==ID_always)
     interface_statement(to_verilog_always(module_item).statement());

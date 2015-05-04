@@ -1549,23 +1549,23 @@ list_of_event_identifiers:
 
 gate_instantiation:
 	  cmos_switchtype delay3_opt gate_instance_brace ';'
-		{ init($$, "inst-builtin"); addswap($$, ID_module, $1); swapop($$, $3); }
+		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $3); }
 	| enable_gatetype drive_strength_opt delay3_opt gate_instance_brace ';'
-		{ init($$, "inst-builtin"); addswap($$, ID_module, $1); swapop($$, $4); }
+		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $4); }
 	| mos_switchtype delay3_opt gate_instance_brace ';'
-		{ init($$, "inst-builtin"); addswap($$, ID_module, $1); swapop($$, $3); }
+		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $3); }
 	| n_input_gatetype drive_strength_opt delay3_opt gate_instance_brace ';'
-		{ init($$, "inst-builtin"); addswap($$, ID_module, $1); swapop($$, $4); }
+		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $4); }
 	| n_output_gatetype drive_strength_opt delay3_opt gate_instance_brace ';'
-		{ init($$, "inst-builtin"); addswap($$, ID_module, $1); swapop($$, $4); }
+		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $4); }
 	| pass_en_switchtype delay3_opt gate_instance_brace ';'
-		{ init($$, "inst-builtin"); addswap($$, ID_module, $1); swapop($$, $3); }
+		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $3); }
 	| pass_switchtype gate_instance_brace ';'
-		{ init($$, "inst-builtin"); addswap($$, ID_module, $1); swapop($$, $2); }
+		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $2); }
 	| TOK_PULLDOWN pulldown_strength_opt gate_instance_brace ';'
-		{ init($$, "inst-builtin"); stack($$).set(ID_module, "pulldown"); swapop($$, $3); }
+		{ init($$, ID_inst_builtin); stack($$).set(ID_module, "pulldown"); swapop($$, $3); }
 	| TOK_PULLUP   pullup_strength_opt   gate_instance_brace ';'
-		{ init($$, "inst-builtin"); stack($$).set(ID_module, "pullup");   swapop($$, $3); }
+		{ init($$, ID_inst_builtin); stack($$).set(ID_module, "pullup");   swapop($$, $3); }
 	;
 
 cmos_switchtype:

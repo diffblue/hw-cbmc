@@ -138,20 +138,20 @@ extern inline verilog_instt &to_verilog_inst(exprt &expr)
 class verilog_inst_builtint:public verilog_module_itemt
 {
 public:
-  verilog_inst_builtint():verilog_module_itemt("inst-builtin")
+  verilog_inst_builtint():verilog_module_itemt(ID_inst_builtin)
   {
   }
 };
 
 extern inline const verilog_inst_builtint &to_verilog_inst_builtin(const exprt &expr)
 {
-  assert(expr.id()=="inst-builtin");
+  assert(expr.id()==ID_inst_builtin);
   return static_cast<const verilog_inst_builtint &>(expr);
 }
 
 extern inline verilog_inst_builtint &to_verilog_inst_builtin(exprt &expr)
 {
-  assert(expr.id()=="inst-builtin");
+  assert(expr.id()==ID_inst_builtin);
   return static_cast<verilog_inst_builtint &>(expr);
 }
 
