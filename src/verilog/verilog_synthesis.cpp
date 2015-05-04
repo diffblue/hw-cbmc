@@ -922,15 +922,6 @@ void verilog_synthesist::instantiate_ports(
 {
   const irept::subt &ports=symbol.type.find(ID_ports).get_sub();
 
-  if(inst.operands().size()!=ports.size())
-  {
-    err_location(inst);
-    str << "wrong number of ports: expected " << ports.size() 
-        << " but got " << inst.operands().size() << std::endl; 
-    str << inst.op0() << std::endl;
-    throw 0;
-  }
-
   if(inst.operands().size()==0)
     return;
 
@@ -938,6 +929,7 @@ void verilog_synthesist::instantiate_ports(
 
   if(inst.op0().id()==ID_named_port_connection)
   {
+    // no requirement that all ports are connected
     forall_operands(o_it, inst)
     {
       if(o_it->operands().size()==2)
@@ -952,6 +944,14 @@ void verilog_synthesist::instantiate_ports(
   }
   else // just a list without names
   {
+    if(inst.operands().size()!=ports.size())
+    {
+      err_location(inst);
+      str << "wrong number of ports: expected " << ports.size() 
+          << " but got " << inst.operands().size();
+      throw 0;
+    }
+
     irept::subt::const_iterator p_it=
       ports.begin();
 

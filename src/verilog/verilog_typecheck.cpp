@@ -139,30 +139,33 @@ void verilog_typecheckt::typecheck_port_connections(
      inst.operands().front().is_nil())
     inst.operands().clear();
 
-  if(inst.operands().size()!=ports.size())
+  if(inst.operands().empty())
   {
-    err_location(inst);
-    str << "wrong number of arguments: expected " << ports.size() 
-        << " but got " << inst.operands().size(); 
-    throw 0;
-  }
+    if(!ports.empty())
+    {
+      err_location(inst);
+      str << "module does not have ports";
+      throw 0;
+    }
 
-  if(inst.operands().size()==0)
     return;
+  }
 
   // named port connection?
 
-  if(inst.op0().id()=="named_port_connection")
+  if(inst.op0().id()==ID_named_port_connection)
   {
+    // We don't require that all ports are connected.
+  
     std::set<irep_idt> assigned_ports;
 
     Forall_operands(o_it, inst)
     {
-      if(o_it->id()!="named_port_connection" ||
+      if(o_it->id()!=ID_named_port_connection ||
          o_it->operands().size()!=2)
       {
         err_location(inst);
-        error("expected named_port_connection");
+        error("expected a named port connection");
         throw 0;
       }
 
@@ -209,6 +212,14 @@ void verilog_typecheckt::typecheck_port_connections(
   }
   else // just a list without names
   {
+    if(inst.operands().size()!=ports.size())
+    {
+      err_location(inst);
+      str << "wrong number of arguments: expected " << ports.size() 
+          << " but got " << inst.operands().size(); 
+      throw 0;
+    }
+
     irept::subt::const_iterator p_it=
       ports.begin();
 
