@@ -27,7 +27,7 @@ public:
   
 protected:
   virtual void register_languages();
-  virtual bool get_modules(bmct &bmc);
+  virtual int get_modules(bmct &bmc);
 };
 
 #endif

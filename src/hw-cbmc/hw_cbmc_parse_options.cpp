@@ -114,7 +114,7 @@ Function: hw_cbmc_parse_optionst::get_modules
 
 \*******************************************************************/
 
-bool hw_cbmc_parse_optionst::get_modules(bmct &bmc)
+int hw_cbmc_parse_optionst::get_modules(bmct &bmc)
 {
   //
   // unwinding of transition systems
@@ -137,7 +137,7 @@ bool hw_cbmc_parse_optionst::get_modules(bmct &bmc)
       if(cmdline.isset("gen-interface"))
       {
         gen_interface(symbol_table, symbol, true, std::cout, std::cerr);
-        return true;
+        return 0; // done
       }
       
       hw_bmct &hw_bmc=dynamic_cast<hw_bmct &>(bmc);
@@ -163,20 +163,20 @@ bool hw_cbmc_parse_optionst::get_modules(bmct &bmc)
         hw_bmc.unwind_no_timeframes);
     }
 
-    catch(int e) { return true; }
+    catch(int e) { return 6; }
   }
   else if(cmdline.isset("gen-interface"))
   {
     error() << "must specify top module name for gen-interface" << eom;
-    return true;
+    return 6;
   }
   else if(cmdline.isset("show-modules"))
   {
     show_modules(symbol_table, get_ui());
-    return true;
+    return 0; // done
   }
     
-  return false;
+  return -1; // continue
 }
 
 /*******************************************************************\
