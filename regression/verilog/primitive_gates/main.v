@@ -12,7 +12,7 @@ module main(and_in1, and_in2, or_in1, or_in2, buf_in, not_in);
   and a1[31:0] (and_out, and_in1, and_in2);
   or  o1[31:0] (or_out, or_in1, or_in2);
   buf b1[31:0] (buf_out1, buf_out2, buf_in);
-  buf [31:0] (buf_out3, buf_in);
+  buf b2[31:0] (buf_out3, buf_in);
   not n1[31:0] (not_out, not_in);
   
   always begin
