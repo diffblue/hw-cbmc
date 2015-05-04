@@ -214,7 +214,7 @@ protected:
   void synth_continuous_assign(const class verilog_continuous_assignt &module_item, transt &trans);
   void synth_continuous_assign(exprt &lhs, exprt &rhs, transt &trans);
   void synth_module_instance(const class verilog_instt &module_item, transt &trans);
-  void synth_module_instance_builtin(const class verilog_module_itemt &module_item, transt &trans);
+  void synth_module_instance_builtin(const class verilog_inst_builtint &module_item, transt &trans);
 
   // statements
   void synth_statement(const class verilog_statementt &statement);

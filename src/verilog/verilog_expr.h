@@ -96,11 +96,11 @@ extern inline verilog_statementt &to_verilog_statement(exprt &expr)
 class verilog_module_itemt:public exprt
 {
 public:
-  explicit verilog_module_itemt(const irep_idt &id):exprt(id)
+  inline explicit verilog_module_itemt(const irep_idt &id):exprt(id)
   {
   }
   
-  verilog_module_itemt()
+  inline verilog_module_itemt()
   {
   }
 };
@@ -118,9 +118,11 @@ extern inline verilog_module_itemt &to_verilog_module_item(irept &irep)
 class verilog_instt:public verilog_module_itemt
 {
 public:
-  verilog_instt():verilog_module_itemt(ID_inst)
+  inline verilog_instt():verilog_module_itemt(ID_inst)
   {
   }
+
+  inline irep_idt get_module() const { return get(ID_module); }
 };
 
 extern inline const verilog_instt &to_verilog_inst(const exprt &expr)
@@ -138,9 +140,11 @@ extern inline verilog_instt &to_verilog_inst(exprt &expr)
 class verilog_inst_builtint:public verilog_module_itemt
 {
 public:
-  verilog_inst_builtint():verilog_module_itemt(ID_inst_builtin)
+  inline verilog_inst_builtint():verilog_module_itemt(ID_inst_builtin)
   {
   }
+  
+  inline irep_idt get_module() const { return get(ID_module); }
 };
 
 extern inline const verilog_inst_builtint &to_verilog_inst_builtin(const exprt &expr)

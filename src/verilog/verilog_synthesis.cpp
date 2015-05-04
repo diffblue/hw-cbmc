@@ -980,7 +980,7 @@ void verilog_synthesist::synth_module_instance(
   const verilog_instt &statement,
   transt &trans)
 {
-  const irep_idt &identifier=statement.get(ID_module);
+  const irep_idt &identifier=statement.get_module();
 
   // must be in symbol_table
   const symbolt &symbol=lookup(identifier);
@@ -1006,10 +1006,10 @@ Function: verilog_synthesist::synth_module_instance_builtin
 \*******************************************************************/
 
 void verilog_synthesist::synth_module_instance_builtin(
-  const verilog_module_itemt &module_item,
+  const verilog_inst_builtint &module_item,
   transt &trans)
 {
-  const irep_idt &module=module_item.get(ID_module);
+  const irep_idt &module=module_item.get_module();
 
   forall_operands(it, module_item)
   {
@@ -2513,7 +2513,7 @@ void verilog_synthesist::synth_module_item(
   else if(module_item.id()==ID_inst)
     synth_module_instance(to_verilog_inst(module_item), trans);
   else if(module_item.id()==ID_inst_builtin)
-    synth_module_instance_builtin(module_item, trans);
+    synth_module_instance_builtin(to_verilog_inst_builtin(module_item), trans);
   else if(module_item.id()==ID_generate_block)
   {
     err_location(module_item);

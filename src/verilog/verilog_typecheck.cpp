@@ -416,7 +416,7 @@ Function: verilog_typecheckt::convert_inst
 
 void verilog_typecheckt::convert_inst(verilog_instt &inst)
 {
-  const irep_idt &inst_module=inst.get(ID_module);
+  const irep_idt &inst_module=inst.get_module();
 
   // must be user-defined
 
@@ -463,7 +463,7 @@ Function: verilog_typecheckt::convert_inst_builtin
 void verilog_typecheckt::convert_inst_builtin(
   verilog_inst_builtint &inst)
 {
-  const irep_idt &inst_module=inst.get(ID_module);
+  const irep_idt &inst_module=inst.get_module();
 
   Forall_operands(it, inst)
   {
