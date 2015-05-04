@@ -136,7 +136,20 @@ int hw_cbmc_parse_optionst::get_modules(bmct &bmc)
 
       if(cmdline.isset("gen-interface"))
       {
-        gen_interface(symbol_table, symbol, true, std::cout, std::cerr);
+        if(cmdline.isset("outfile"))
+        {
+          std::ofstream out(cmdline.get_value("outfile").c_str());
+          if(!out)
+          {
+            error() << "failed to open given outfile" << eom;
+            return 6;
+          }
+
+          gen_interface(symbol_table, symbol, true, out, std::cerr);
+        }
+        else
+          gen_interface(symbol_table, symbol, true, std::cout, std::cerr);
+
         return 0; // done
       }
       
