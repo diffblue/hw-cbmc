@@ -609,7 +609,7 @@ std::string expr2verilogt::convert(
 {
   precedence=22;
 
-  if(src.id()=="+")
+  if(src.id()==ID_plus)
     return convert_binary(src, "+", precedence=14);
 
   else if(src.id()==ID_if)
@@ -627,9 +627,9 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_array)
     return convert_array(src, precedence=22);
 
-  else if(src.id()=="-")
+  else if(src.id()==ID_minus)
   {
-    if(src.operands().size()<2)
+    if(src.operands().size()!=2)
       return convert_norep(src, precedence);
     else     
       return convert_binary(src, "-", precedence=14);
@@ -641,7 +641,7 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_lshr)
     return convert_binary(src, ">>", precedence=14);
 
-  else if(src.id()=="unary-")
+  else if(src.id()==ID_unary_minus)
   {
     if(src.operands().size()!=1)
       return convert_norep(src, precedence);
@@ -649,7 +649,7 @@ std::string expr2verilogt::convert(
       return convert_unary(src, "-", precedence=16);
   }
 
-  else if(src.id()=="unary+")
+  else if(src.id()==ID_unary_plus)
   {
     if(src.operands().size()!=1)
       return convert_norep(src, precedence);
@@ -669,14 +669,25 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_member)
     return convert_member(src, precedence=22);
 
-  else if(src.id()=="*" || src.id()=="/")
-    return convert_binary(src, src.id_string(), precedence=14);
+  else if(src.id()==ID_mult)
+    return convert_binary(src, "*", precedence=14);
 
-  else if(src.id()=="<" || src.id()==">" ||
-          src.id()=="<=" || src.id()==">=")
-    return convert_binary(src, src.id_string(), precedence=9);
+  else if(src.id()==ID_div)
+    return convert_binary(src, "/", precedence=14);
 
-  else if(src.id()=="=")
+  else if(src.id()==ID_lt)
+    return convert_binary(src, "<", precedence=9);
+
+  else if(src.id()==ID_gt)
+    return convert_binary(src, ">", precedence=9);
+
+  else if(src.id()==ID_le)
+    return convert_binary(src, "<=", precedence=9);
+
+  else if(src.id()==ID_ge)
+    return convert_binary(src, ">=", precedence=9);
+
+  else if(src.id()==ID_equal)
     return convert_binary(src, "==", precedence=9);
 
   else if(src.id()==ID_notequal)
@@ -706,10 +717,10 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_bitor)
     return convert_binary(src, "|", precedence=6);
 
-  else if(src.id()=="=>")
+  else if(src.id()==ID_implies)
     return convert_binary(src, "->", precedence=5);
 
-  else if(src.id()=="<=>")
+  else if(src.id()==ID_iff)
     return convert_binary(src, "<->", precedence=4);
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
