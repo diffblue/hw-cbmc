@@ -83,8 +83,9 @@ int hw_cbmc_parse_optionst::doit()
 
   goto_functionst goto_functions;
 
-  if(get_goto_program(options, bmc, goto_functions))
-    return 6;
+  int get_goto_program_ret=get_goto_program(options, bmc, goto_functions);
+  if(get_goto_program_ret!=-1)
+    return get_goto_program_ret;
 
   label_properties(goto_functions);
 
