@@ -1,5 +1,6 @@
 %{
 
+// Based on BNF Syntax at
 // http://tams-www.informatik.uni-hamburg.de/vhdl/tools/grammar/vhdl93-bnf.html
 
 #include <cstring>
