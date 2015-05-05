@@ -682,6 +682,7 @@ void verilog_typecheckt::interface_inst(
   const verilog_module_itemt &statement,
   const exprt &op)
 {
+  bool primitive=statement.id()==ID_inst_builtin;
   const exprt &range=static_cast<const exprt &>(op.find(ID_range));
 
   mp_integer msb, lsb;
@@ -699,7 +700,7 @@ void verilog_typecheckt::interface_inst(
 
   symbol.mode=mode;
   symbol.base_name=op.get(ID_instance);
-  symbol.type=typet(ID_module_instance);
+  symbol.type=typet(primitive?ID_primitive_module_instance:ID_module_instance);
   symbol.module=module_identifier;
   symbol.name=
     id2string(symbol.module)+"."+
