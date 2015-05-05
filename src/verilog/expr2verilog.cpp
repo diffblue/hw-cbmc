@@ -693,6 +693,12 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_notequal)
     return convert_binary(src, "!=", precedence=9);
 
+  else if(src.id()==ID_verilog_case_equality)
+    return convert_binary(src, "===", precedence=9);
+
+  else if(src.id()==ID_verilog_case_inequality)
+    return convert_binary(src, "!==", precedence=9);
+
   else if(src.id()==ID_not)
     return convert_unary(src, "!", precedence=16);
 
