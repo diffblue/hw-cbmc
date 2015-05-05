@@ -34,14 +34,14 @@ module main(input[31:0] in1, in2, in3);
   always assert equal_p10: (5       !=    6     ) == 1;    
 
   // logical
-  always assert logic_p1: (1'b1 && 1'b1) == 1;
-  always assert logic_p2: (1'b1 && 1'b0) == 0;
-//  always assert logic_p3: (1'b1 && 1'bx) == x;
-  always assert logic_p4: (1'b1 || 1'b0) == 1;
-  always assert logic_p5: (1'b0 || 1'b0) == 0;
-//  always assert logic_p6: (1'b0 || 1'bx) == x;
-  always assert logic_p7: (! 1'b1      ) == 0;
-  always assert logic_p8: (! 1'b0      ) == 1;
+  always assert logic_p1: (1'b1 && 1'b1) == 'b1;
+  always assert logic_p2: (1'b1 && 1'b0) == 'b0;
+  always assert logic_p3: (1'b1 && 1'bx) == 'bx;
+  always assert logic_p4: (1'b1 || 1'b0) == 'b1;
+  always assert logic_p5: (1'b0 || 1'b0) == 'b0;
+  always assert logic_p6: (1'b0 || 1'bx) == 'bx;
+  always assert logic_p7: (! 1'b1      ) == 'b0;
+  always assert logic_p8: (! 1'b0      ) == 'b1;
 
   // bit-wise
   always assert bit_p1:  ~4'b0001           == 'b1110;
@@ -61,24 +61,24 @@ module main(input[31:0] in1, in2, in3);
   always assert bit_p15: 4'b0001 ~^ 4'bz001 == 'bx111;                 
 
   // reduction
-  always assert redu_p1:   & 4'b1001 == 0;
-  always assert redu_p2:   & 4'bx111 == x;
-  always assert redu_p3:   & 4'bz111 == x;
-  always assert redu_p4:  ~& 4'b1001 == 1;
-  always assert redu_p5:  ~& 4'bx001 == 1;
-  always assert redu_p6:  ~& 4'bz001 == 1;
-  always assert redu_p7:   | 4'b1001 == 1;
-  always assert redu_p8:   | 4'bx000 == x;
-  always assert redu_p9:   | 4'bz000 == x;
-  always assert redu_p10: ~| 4'b1001 == 0;
-  always assert redu_p11: ~| 4'bx001 == 0;
-  always assert redu_p12: ~| 4'bz001 == 0;
-  always assert redu_p13:  ^ 4'b1001 == 0;
-  always assert redu_p14:  ^ 4'bx001 == x;
-  always assert redu_p15:  ^ 4'bz001 == x;
-  always assert redu_p16: ~^ 4'b1001 == 1;
-  always assert redu_p17: ~^ 4'bx001 == x;
-  always assert redu_p18: ~^ 4'bz001 == x;
+  always assert redu_p1:   & 4'b1001 == 'b0;
+  always assert redu_p2:   & 4'bx111 == 'bx;
+  always assert redu_p3:   & 4'bz111 == 'bx;
+  always assert redu_p4:  ~& 4'b1001 == 'b1;
+  always assert redu_p5:  ~& 4'bx001 == 'b1;
+  always assert redu_p6:  ~& 4'bz001 == 'b1;
+  always assert redu_p7:   | 4'b1001 == 'b1;
+  always assert redu_p8:   | 4'bx000 == 'bx;
+  always assert redu_p9:   | 4'bz000 == 'bx;
+  always assert redu_p10: ~| 4'b1001 == 'b0;
+  always assert redu_p11: ~| 4'bx001 == 'b0;
+  always assert redu_p12: ~| 4'bz001 == 'b0;
+  always assert redu_p13:  ^ 4'b1001 == 'b0;
+  always assert redu_p14:  ^ 4'bx001 == 'bx;
+  always assert redu_p15:  ^ 4'bz001 == 'bx;
+  always assert redu_p16: ~^ 4'b1001 == 'b1;
+  always assert redu_p17: ~^ 4'bx001 == 'bx;
+  always assert redu_p18: ~^ 4'bz001 == 'bx;
 
   // shift
   always assert shift_p1: 4'b1001 << 1 == 'b0010;
