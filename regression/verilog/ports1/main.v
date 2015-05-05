@@ -18,5 +18,8 @@ module main;
   
   always assert property1: bin1=='hffffffff;
   always assert property2: bin2=='hffffffff;
+
+  // output not connected  
+  M1 m1b(.in(1));
   
 endmodule
