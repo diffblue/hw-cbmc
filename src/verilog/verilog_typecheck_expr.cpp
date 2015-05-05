@@ -1549,6 +1549,16 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
 
     tc_binary_expr(expr);
   }
+  else if(expr.id()==ID_verilog_case_equality ||
+          expr.id()==ID_verilog_case_inequality)
+  {
+    expr.type()=typet(ID_bool);
+
+    Forall_operands(it, expr)
+      convert_expr(*it);
+
+    tc_binary_expr(expr);
+  }
   else if(expr.id()==ID_lt || expr.id()==ID_gt ||
           expr.id()==ID_le || expr.id()==ID_ge)
   {
