@@ -649,6 +649,14 @@ std::string expr2verilogt::convert(
       return convert_unary(src, "-", precedence=16);
   }
 
+  else if(src.id()=="unary+")
+  {
+    if(src.operands().size()!=1)
+      return convert_norep(src, precedence);
+    else     
+      return convert_unary(src, "+", precedence=16);
+  }
+
   else if(src.id()==ID_index)
     return convert_index(src, precedence=22);
 
@@ -688,6 +696,9 @@ std::string expr2verilogt::convert(
 
   else if(src.id()==ID_bitand)
     return convert_binary(src, "&", precedence=7);
+
+  else if(src.id()==ID_mod)
+    return convert_binary(src, "%", precedence=14);
 
   else if(src.id()==ID_or)
     return convert_binary(src, "||", precedence=6);
