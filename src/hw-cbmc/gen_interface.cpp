@@ -252,6 +252,9 @@ void gen_interfacet::gen_module(
 
       os << ";\n";
     }
+    else if(symbol.type.id()==ID_primitive_module_instance)
+    {
+    }
     else if(symbol.type.id()==ID_module)
     {
     }
