@@ -714,6 +714,12 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_bitand)
     return convert_binary(src, "&", precedence=7);
 
+  else if(src.id()==ID_bitxor)
+    return convert_binary(src, "^", precedence=7);
+
+  else if(src.id()==ID_bitxnor)
+    return convert_binary(src, "~^", precedence=7);
+
   else if(src.id()==ID_mod)
     return convert_binary(src, "%", precedence=14);
 
@@ -728,6 +734,24 @@ std::string expr2verilogt::convert(
 
   else if(src.id()==ID_iff)
     return convert_binary(src, "<->", precedence=4);
+
+  else if(src.id()==ID_reduction_or)
+    return convert_unary(src, "|", precedence=8);
+
+  else if(src.id()==ID_reduction_and)
+    return convert_unary(src, "&", precedence=8);
+
+  else if(src.id()==ID_reduction_nor)
+    return convert_unary(src, "~|", precedence=8);
+
+  else if(src.id()==ID_reduction_nand)
+    return convert_unary(src, "~&", precedence=8);
+
+  else if(src.id()==ID_reduction_xor)
+    return convert_unary(src, "^", precedence=8);
+
+  else if(src.id()==ID_reduction_xnor)
+    return convert_unary(src, "~^", precedence=8);
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
           src.id()==ID_AX || src.id()==ID_EX)
