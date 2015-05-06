@@ -1,13 +1,17 @@
 module m;
 
-  wire [31:0] w;
-  reg  [31:0] r, y;
+  wire clock;
 
-  always @(w) begin : my_block
+  always @(posedge clock) begin : my_block
     reg [31:0] x;
-    y=w;
+    if(x==10)
+      x=1;
+    else
+      x=x+1;
   end
   
-  always assert p1: y==w;
+  initial my_block.x=1;
+  
+  always assert p1: my_block.x>=1 && my_block.x<=10;
 
 endmodule
