@@ -8,6 +8,8 @@ module m;
       x=1;
     else
       x=x+1;
+
+    $display("my_block.x: %d", x);
   end
   
   initial my_block.x=1;
