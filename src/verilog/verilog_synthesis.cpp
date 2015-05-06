@@ -2466,6 +2466,11 @@ void verilog_synthesist::synth_statement(
           statement.id()==ID_postincrement ||
           statement.id()==ID_postdecrement)
     synth_prepostincdec(statement);
+  else if(statement.id()==ID_decl)
+  {
+    transt tmp_trans;
+    synth_decl(to_verilog_decl(statement), tmp_trans);
+  }
   else if(statement.id()==ID_skip)
   {
     // do nothing

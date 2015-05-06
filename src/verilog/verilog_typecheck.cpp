@@ -1268,6 +1268,8 @@ void verilog_typecheckt::convert_statement(
     convert_prepostincdec(statement);
   else if(statement.id()==ID_function_call)
     convert_function_call_or_task_enable(to_verilog_function_call(statement));
+  else if(statement.id()==ID_decl)
+    convert_decl(to_verilog_decl(statement));
   else
   {
     err_location(statement);
