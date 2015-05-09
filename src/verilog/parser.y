@@ -658,7 +658,7 @@ interface_identifier:
 interface_opt:
 	  /* Optional */
 	  { make_nil($$); }
-	| TOK_INTERFACE { init($$, "interface"); }
+	| TOK_INTERFACE { init($$, ID_interface); }
 	;
 	
 scope_opt:
@@ -880,7 +880,7 @@ module_parameter_port_list_opt:
 
 module_keyword:
 	  TOK_MODULE { init($$, ID_module); }
-	| TOK_MACROMODULE { init($$, "macromodule"); }
+	| TOK_MACROMODULE { init($$, ID_macromodule); }
 	;
 
 module_identifier: TOK_CHARSTR;
@@ -974,12 +974,12 @@ port_reference:
 
 bit_select:
 	  '[' expression ']'
-		{ init($$, "bit_select"); mto($$, $2); }
+		{ init($$, ID_bit_select); mto($$, $2); }
 	;
 
 part_select:
 	  '[' const_expression TOK_COLON const_expression ']'
-		{ init($$, "part_select"); mto($$, $2); mto($$, $4); }
+		{ init($$, ID_part_select); mto($$, $2); mto($$, $4); }
 	;
 
 port_identifier: TOK_CHARSTR
@@ -1020,7 +1020,7 @@ non_port_module_item:
 
 generated_instantiation:
 	  TOK_GENERATE generate_item_brace TOK_ENDGENERATE
-		{ init($$, "generate_block"); swapop($$, $2); }
+		{ init($$, ID_generate_block); swapop($$, $2); }
 	;
 
 generate_item_brace:
@@ -1040,14 +1040,14 @@ generate_item:
 
 generate_item_or_null:
 	  generate_item
-	| ';' { init($$, "generate_skip"); }
+	| ';' { init($$, ID_generate_skip); }
 	;
 
 generate_conditional_statement:
 	  TOK_IF '(' constant_expression ')' generate_item_or_null %prec LT_TOK_ELSE
-	  	{ init($$, "generate_if"); mto($$, $3); mto($$, $5); }
+	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); }
 	| TOK_IF '(' constant_expression ')' generate_item_or_null TOK_ELSE generate_item_or_null
-	  	{ init($$, "generate_if"); mto($$, $3); mto($$, $5); mto($$, $7); }
+	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); mto($$, $7); }
 	;
 
 constant_expression: expression;
@@ -1055,7 +1055,7 @@ constant_expression: expression;
 generate_case_statement:
 	  TOK_CASE '(' constant_expression ')'
 	  genvar_case_item_brace TOK_ENDCASE
-	  	{ init($$, "generate_case"); mto($$, $3); }
+	  	{ init($$, ID_generate_case); mto($$, $3); }
 	;
 
 genvar_case_item_brace:
@@ -1074,7 +1074,7 @@ generate_loop_statement:
 	              constant_expression ';'
                       genvar_assignment ')'
           generate_block
-          	{ init($$, "generate_for");
+          	{ init($$, ID_generate_for);
           	  stack($$).reserve_operands(4);
           	  mto($$, $3);
           	  mto($$, $5);
@@ -1087,14 +1087,14 @@ generate_block_identifier: TOK_CHARSTR;
 
 genvar_assignment:
 	  genvar_identifier '=' constant_expression
-	  	{ init($$, "generate_assign"); mto($$, $1); mto($$, $3); }
+	  	{ init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
 	;
 
 generate_block:
 	  TOK_BEGIN generate_item_brace TOK_END
-	  	{ init($$, "generate_block"); }
+	  	{ init($$, ID_generate_block); }
 	| TOK_BEGIN TOK_COLON generate_block_identifier generate_item_brace TOK_END
-		{ init($$, "generate_block"); stack($$).operands().swap(stack($4).operands()); }
+		{ init($$, ID_generate_block); stack($$).operands().swap(stack($4).operands()); }
 	;
 
 port_declaration:
@@ -1238,7 +1238,7 @@ net_type_or_trireg_opt:
 net_type_or_trireg:
           net_type
         | TOK_TRIREG
-                { init($$, "trireg"); }
+                { init($$, ID_trireg); }
 
 signing_opt:
 	  /* Optional */
@@ -1255,7 +1255,7 @@ automatic_opt:
 	  /* Optional */
 	        { make_nil($$); } 
 	| TOK_AUTOMATIC
-	        { init($$, "automatic"); }
+	        { init($$, ID_automatic); }
 	;
 
 list_of_port_identifiers:
@@ -1316,12 +1316,12 @@ integer_declaration:
 
 realtime_declaration:
 	  TOK_REALTIME list_of_real_identifiers ';'
-		{ init($$, ID_decl); stack($$).set(ID_class, "realtime"); swapop($$, $2); }
+		{ init($$, ID_decl); stack($$).set(ID_class, ID_realtime); swapop($$, $2); }
 	;
 
 real_declaration:
 	  TOK_REAL list_of_real_identifiers ';'
-		{ init($$, ID_decl); stack($$).set(ID_class, "realtime"); swapop($$, $2); }
+		{ init($$, ID_decl); stack($$).set(ID_class, ID_realtime); swapop($$, $2); }
 	;
 
 list_of_real_identifiers:
@@ -1442,7 +1442,7 @@ range_or_type:
 	| TOK_REAL
 		{ init($$, ID_real); }
 	| TOK_REALTIME
-		{ init($$, "realtime"); }
+		{ init($$, ID_realtime); }
 	| TOK_TIME
 		{ init($$, "time"); }
 	;
@@ -1563,19 +1563,19 @@ gate_instantiation:
 	| pass_switchtype gate_instance_brace ';'
 		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $2); }
 	| TOK_PULLDOWN pulldown_strength_opt gate_instance_brace ';'
-		{ init($$, ID_inst_builtin); stack($$).set(ID_module, "pulldown"); swapop($$, $3); }
+		{ init($$, ID_inst_builtin); stack($$).set(ID_module, ID_pulldown); swapop($$, $3); }
 	| TOK_PULLUP   pullup_strength_opt   gate_instance_brace ';'
-		{ init($$, ID_inst_builtin); stack($$).set(ID_module, "pullup");   swapop($$, $3); }
+		{ init($$, ID_inst_builtin); stack($$).set(ID_module, ID_pullup);   swapop($$, $3); }
 	;
 
 cmos_switchtype:
-	  TOK_CMOS     { init($$, "cmos"); }
-	| TOK_RCMOS    { init($$, "rcmos"); }
+	  TOK_CMOS     { init($$, ID_cmos); }
+	| TOK_RCMOS    { init($$, ID_rcmos); }
 	;
 
 enable_gatetype:
-	  TOK_BUFIF0   { init($$, "bufif0"); }
-	| TOK_BUFIF1   { init($$, "bufif1"); }
+	  TOK_BUFIF0   { init($$, ID_bufif0); }
+	| TOK_BUFIF1   { init($$, ID_bufif1); }
 	| TOK_NOTIF0   { init($$, "notif0"); }
 	| TOK_NOTIF1   { init($$, "notif1"); }
 	;
@@ -1622,7 +1622,7 @@ gate_instance_brace:
 
 gate_instance:
 	  name_of_gate_instance_opt range_opt '(' list_of_module_connections_opt ')'
-		{ init($$, ID_inst); addswap($$, "instance", $1);
+		{ init($$, ID_inst); addswap($$, ID_instance, $1);
                   swapop($$, $4);
                   addswap($$, ID_range, $2);
                 }
@@ -2312,9 +2312,9 @@ concatenation: '{' expression_brace '}'
 
 replication:
           '{' expression concatenation '}'
-		{ init($$, "replication"); mto($$, $2); mto($$, $3); }
+		{ init($$, ID_replication); mto($$, $2); mto($$, $3); }
         | '{' expression replication '}'
-		{ init($$, "replication"); mto($$, $2); mto($$, $3); }
+		{ init($$, ID_replication); mto($$, $2); mto($$, $3); }
 	;
 
 function_subroutine_call: subroutine_call
@@ -2339,7 +2339,7 @@ unsigned_number: TOK_NUMBER;
 hierarchical_identifier:
           identifier
         | hierarchical_identifier '.' identifier
-		{ init($$, "hierarchical_identifier");
+		{ init($$, ID_hierarchical_identifier);
 		  stack($$).reserve_operands(2);
 		  mto($$, $1);
 		  mto($$, $3);
