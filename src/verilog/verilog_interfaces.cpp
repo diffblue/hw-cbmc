@@ -76,7 +76,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     const irep_idt &name=decl.op0().get(ID_identifier);
     const irep_idt &port_class=decl.get(ID_class);
     
-    if(name=="")
+    if(name.empty())
     {
       err_location(*it);
       str << "empty port name (module "
@@ -97,7 +97,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       
     const symbolt *port_symbol=0;
     
-    if(port_class=="")
+    if(port_class.empty())
     {
       // find the symbol
       
@@ -531,7 +531,7 @@ void verilog_typecheckt::interface_module_decl(
       throw "unexpected declaration: "+it2->id_string();
     }
 
-    if(symbol.base_name=="")
+    if(symbol.base_name.empty())
     {
       err_location(decl);
       str << "empty symbol name";
@@ -540,6 +540,7 @@ void verilog_typecheckt::interface_module_decl(
 
     symbol.name=
       id2string(symbol.module)+"."+
+      (named_blocks.empty()?"":id2string(named_blocks.back()))+
       id2string(symbol.base_name);
 
     symbol_tablet::symbolst::iterator result=
@@ -565,8 +566,8 @@ void verilog_typecheckt::interface_module_decl(
           osymbol.type=symbol.type;
       }
 
-      osymbol.is_input   =symbol.is_input    || osymbol.is_input;
-      osymbol.is_output  =symbol.is_output   || osymbol.is_output;
+      osymbol.is_input    =symbol.is_input     || osymbol.is_input;
+      osymbol.is_output   =symbol.is_output    || osymbol.is_output;
       osymbol.is_state_var=symbol.is_state_var || osymbol.is_state_var;
 
       // a register can't be an input as well
@@ -607,7 +608,7 @@ void verilog_typecheckt::interface_parameter(const exprt &expr)
   symbol.is_macro=true;
   symbol.value=static_cast<const exprt &>(expr.find(ID_value));
 
-  if(symbol.base_name=="")
+  if(symbol.base_name.empty())
   {
     err_location(expr);
     str << "empty symbol name";
@@ -687,7 +688,7 @@ void verilog_typecheckt::interface_inst(
 
   mp_integer msb, lsb;
   
-  if(range.is_nil() || range.id()=="")
+  if(range.is_nil() || range.id().empty())
     msb=lsb=0;
   else
     convert_range(range, msb, lsb);
@@ -734,7 +735,7 @@ void verilog_typecheckt::interface_module_item(
 {
   if(module_item.id()==ID_decl)
   {
-    if(function_or_task_name=="")
+    if(function_or_task_name.empty())
       interface_module_decl(to_verilog_decl(module_item));
     else
       interface_function_or_task_decl(to_verilog_decl(module_item));
@@ -775,6 +776,10 @@ void verilog_typecheckt::interface_statement(
   }
   else if(statement.id()==ID_if)
   {
+  }
+  else if(statement.id()==ID_decl)
+  {
+    interface_module_decl(to_verilog_decl(statement));
   }
   else if(statement.id()==ID_event_guard)
   {
@@ -821,8 +826,10 @@ Function: verilog_typecheckt::interface_block
 void verilog_typecheckt::interface_block(
   const verilog_blockt &statement)
 {
-  // identifier
-  //const irep_idt &block_identifier=statement.get(ID_identifier);
+  bool is_named=statement.is_named();
+  
+  if(is_named)
+    enter_named_block(statement.get_identifier());
 
   // do decl
   const exprt &decl=static_cast<const exprt &>(
@@ -837,4 +844,7 @@ void verilog_typecheckt::interface_block(
   forall_operands(it, statement)
     interface_statement(
       static_cast<const verilog_statementt &>(*it));
+
+  if(is_named)
+    named_blocks.pop_back();
 }

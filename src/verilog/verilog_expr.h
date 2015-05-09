@@ -287,6 +287,16 @@ public:
   verilog_blockt():verilog_statementt(ID_block)
   {
   }
+  
+  inline irep_idt get_identifier() const
+  {
+    return get(ID_identifier);
+  }
+  
+  inline bool is_named() const
+  {
+    return !get(ID_identifier).empty();
+  }
 };
 
 extern inline const verilog_blockt &to_verilog_block(const exprt &expr)

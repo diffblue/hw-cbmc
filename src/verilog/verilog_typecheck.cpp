@@ -596,8 +596,17 @@ Function: verilog_typecheckt::convert_block
 
 void verilog_typecheckt::convert_block(verilog_blockt &statement)
 {
+  // these may be 'named blocks' with an identifier
+  bool is_named=statement.is_named();
+  
+  if(is_named)
+    enter_named_block(statement.get_identifier());
+
   Forall_operands(it, statement)
     convert_statement(static_cast<verilog_statementt &>(*it));
+    
+  if(is_named)
+    named_blocks.pop_back();
 }
 
 /*******************************************************************\

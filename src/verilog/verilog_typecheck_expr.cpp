@@ -26,6 +26,33 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::enter_named_block
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::enter_named_block(const irep_idt &name)
+{
+  if(name!=irep_idt())
+  {
+    if(named_blocks.empty())
+      named_blocks.push_back(id2string(name)+".");
+    else
+    {
+      irep_idt new_id=
+        id2string(named_blocks.back())+id2string(name)+".";
+      named_blocks.push_back(new_id);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::propagate_type
 
   Inputs:
@@ -520,7 +547,7 @@ void verilog_typecheck_exprt::convert_nullary_expr(exprt &expr)
   }
   else if(expr.id()==ID_symbol)
   {
-    convert_symbol(expr);
+    convert_symbol(to_symbol_expr(expr));
   }
   else if(expr.id()=="star-event")
   {
@@ -567,8 +594,31 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     }
   }
   
+  irep_idt named_block;
+  
+  // try named blocks, beginning with inner one
+  for(named_blockst::const_reverse_iterator
+      it=named_blocks.rbegin();
+      it!=named_blocks.rend();
+      it++)
+  {
+    full_identifier=
+      id2string(module_identifier)+"."+
+      id2string(*it)+
+      id2string(identifier);
+    
+    const symbolt *symbol;
+    if(!lookup(full_identifier, symbol))
+    { // found!
+      named_block=*it;
+      break;
+    }
+  }
+  
   full_identifier=
-    id2string(module_identifier)+"."+id2string(identifier);
+    id2string(module_identifier)+"."+
+    id2string(named_block)+
+    id2string(identifier);
   
   const symbolt *symbol;
   if(!lookup(full_identifier, symbol))
@@ -641,61 +691,65 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     throw "expected symbol on lhs of `.'";
   }
 
-  if(expr.op0().type().id()!=ID_module_instance)
+  if(expr.op0().type().id()==ID_module_instance)
   {
-    err_location(expr);
-    str << "expected module instance on lhs of `.', but got `"
-        << to_string(expr.op0().type()) << "'";
-    throw 0;
-  }
-  
-  const irep_idt &lhs_identifier=expr.op0().get(ID_identifier);
+    const irep_idt &lhs_identifier=expr.op0().get(ID_identifier);
 
-  // figure out which module this is
-  const symbolt *module_instance_symbol;
-  if(lookup(lhs_identifier, module_instance_symbol))
-  {
-    err_location(expr);
-    str << "failed to find module instance `"
-        << lhs_identifier << "' on lhs of `.'";
-    throw 0;
-  }
-
-  const irep_idt &module=module_instance_symbol->value.get(ID_module);
-
-  if(expr.op1().id()!=ID_symbol)
-  {
-    err_location(expr);
-    str << "expected symbol on rhs of `.', but got `"
-        << to_string(expr.op1()) << "'";
-    throw 0;
-  }
-
-  const irep_idt &rhs_identifier=expr.op1().get(ID_identifier);
-  
-  std::string full_identifier=
-    id2string(module)+"."+id2string(rhs_identifier);
-  
-  const symbolt *symbol;
-  if(!lookup(full_identifier, symbol))
-  {
-    if(symbol->type.id()==ID_genvar)
+    // figure out which module this is
+    const symbolt *module_instance_symbol;
+    if(lookup(lhs_identifier, module_instance_symbol))
     {
       err_location(expr);
-      str << "genvars must not be used in hierarchical identifiers";
+      str << "failed to find module instance `"
+          << lhs_identifier << "' on lhs of `.'";
       throw 0;
+    }
+
+    const irep_idt &module=module_instance_symbol->value.get(ID_module);
+
+    if(expr.op1().id()!=ID_symbol)
+    {
+      err_location(expr);
+      str << "expected symbol on rhs of `.', but got `"
+          << to_string(expr.op1()) << "'";
+      throw 0;
+    }
+
+    const irep_idt &rhs_identifier=expr.op1().get(ID_identifier);
+    
+    std::string full_identifier=
+      id2string(module)+"."+id2string(rhs_identifier);
+    
+    const symbolt *symbol;
+    if(!lookup(full_identifier, symbol))
+    {
+      if(symbol->type.id()==ID_genvar)
+      {
+        err_location(expr);
+        str << "genvars must not be used in hierarchical identifiers";
+        throw 0;
+      }
+      else
+      {
+        expr.type()=symbol->type;
+      }
     }
     else
     {
-      expr.type()=symbol->type;
+      err_location(expr);
+      str << "identifier `" << rhs_identifier
+          << "' not found in `" << module << "'" << std::endl;
+      str << "full identifier: " << full_identifier;
+      throw 0;
     }
   }
-  else
+  else if(expr.op0().type().id()==ID_named_block)
+  {
+  }
+  else  
   {
     err_location(expr);
-    str << "identifier `" << rhs_identifier
-        << "' not found in `" << module << "'" << std::endl;
-    str << "full identifier: " << full_identifier;
+    str << "expected module instance or named block on left-hand side of dot";
     throw 0;
   }
 }

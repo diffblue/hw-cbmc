@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
+#include <stack>
+
 #include <util/mp_arith.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
@@ -74,6 +76,11 @@ protected:
   }
 
   typet max_type(const typet &t1, const typet &t2);
+
+  // named blocks
+  typedef std::vector<irep_idt> named_blockst;
+  named_blockst named_blocks;
+  void enter_named_block(const irep_idt &);
 
 private:
   bool is_const_expression(const exprt &expr, mp_integer &value);
