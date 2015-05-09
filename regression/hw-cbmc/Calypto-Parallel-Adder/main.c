@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+
 #define TRUE 1
 #define FALSE 0
 
@@ -39,16 +40,7 @@ struct module_top {
   _u8 xavg_next;
   _u2 state;
   _u1 once;
-  _u10 xsum_in_0;
-  _u10 xsum_in_1;
-  _u8 xavg_next_2;
-  _u8 xdiff_out_3;
-  _u8 xdiff_out_4;
-  _Bool done_5;
 };
-
-
-
 
 /*
   Hierarchy Instantiation
@@ -56,7 +48,7 @@ struct module_top {
 
 extern struct module_top top;
 
-struct state_elements_top{
+struct state_elements_top {
   _Bool done;
   unsigned int once;
   unsigned short int xsum_in;
@@ -65,6 +57,7 @@ struct state_elements_top{
   unsigned int xavg_out;
   unsigned int xdiff_out;
 };
+
 struct state_elements_top  stop;
 
 void topc(_Bool clk, _Bool rst, unsigned int ser_in, _Bool *done);
@@ -87,6 +80,7 @@ void topc(_Bool clk, _Bool rst, unsigned int ser_in, _Bool *done)
     unsigned int tmp2;
     unsigned int tmp1;
     unsigned int tmp0;
+
     if(rst)
     {
       tmp0 = 0;

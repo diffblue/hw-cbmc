@@ -29,11 +29,7 @@ struct module_up_counter {
   _Bool enable;
   _Bool clk;
   _Bool reset;
-  _u8 out_0;
 };
-
-
-
 
 /*
   Hierarchy Instantiation
@@ -42,9 +38,11 @@ struct module_up_counter {
 extern struct module_up_counter up_counter;
 
 // ************* Implementation in C *******************
+
 struct state_elements_up_counter{
   unsigned char out;
 };
+
 struct state_elements_up_counter  sup_counter;
 
 void up_counter1(unsigned char *out, _Bool enable, _Bool clk, _Bool reset)
@@ -65,13 +63,13 @@ void up_counter1(unsigned char *out, _Bool enable, _Bool clk, _Bool reset)
   if(reset)
   {
     *out = tmp0 & 255;
-		sup_counter.out = tmp0 & 255;
+    sup_counter.out = tmp0 & 255;
   }
 
   else
     if(enable)
     {
-			*out = tmp1 & 255;
+      *out = tmp1 & 255;
       sup_counter.out = tmp1 & 255;
     }
 }
@@ -84,7 +82,7 @@ int main()
   _Bool reset;
   unsigned char out;
   
-	// call to C function
+  // call to C function
   up_counter1(&out, 0, clk, 1);
   // set Verilog inputs
   up_counter.enable = 0;
@@ -93,7 +91,7 @@ int main()
   next_timeframe();
   assert(up_counter.out == sup_counter.out);
   
-	// Start counting, set enable = 1
+  // Start counting, set enable = 1
   up_counter.reset = 0;
   up_counter.enable = 1;
   set_inputs();

@@ -41,16 +41,7 @@ struct module_top {
   _u8 xdiff_out;
   _u8 xavg_next;
   _u2 state;
-  _u10 xsum1_in_0;
-  _u10 xsum2_in_1;
-  _u8 xavg_next_2;
-  _u8 xdiff_out_3;
-  _u8 xdiff_out_4;
-  _Bool done_5;
 };
-
-
-
 
 /*
   Hierarchy Instantiation

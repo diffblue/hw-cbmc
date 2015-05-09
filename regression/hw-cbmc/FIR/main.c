@@ -84,40 +84,6 @@ struct module_fir_data {
   _u8 shift14;
   _u8 shift15;
   _u32 state;
-  _u8 sample_tmp_0;
-  _u19 acc_1;
-  _u19 acc_2;
-  _u19 acc_3;
-  _u19 acc_4;
-  _u19 acc_5;
-  _u19 acc_6;
-  _u19 acc_7;
-  _u19 acc_8;
-  _u19 acc_9;
-  _u19 acc_10;
-  _u19 acc_11;
-  _u19 acc_12;
-  _u19 acc_13;
-  _u19 acc_14;
-  _u19 acc_15;
-  _u19 acc_16;
-  _u8 shift15_17;
-  _u8 shift14_18;
-  _u8 shift13_19;
-  _u8 shift12_20;
-  _u8 shift11_21;
-  _u8 shift10_22;
-  _u8 shift9_23;
-  _u8 shift8_24;
-  _u8 shift7_25;
-  _u8 shift6_26;
-  _u8 shift5_27;
-  _u8 shift4_28;
-  _u8 shift3_29;
-  _u8 shift2_30;
-  _u8 shift1_31;
-  _u8 shift0_32;
-  _u32 result_33;
 };
 
 /*
@@ -137,9 +103,6 @@ struct module_top {
   struct module_fir_fsm fir_fsm1;
   struct module_fir_data fir_data1;
 };
-
-
-
 
 /*
   Hierarchy Instantiation
@@ -301,7 +264,7 @@ void fir_data(_Bool reset, unsigned int state_out, unsigned int sample, unsigned
     sfir_data.shift15 = 0;
   }
   sfir_data.result = 0;
-	*result=0;
+  *result=0;
   sfir_data.output_data_ready = FALSE;
   *output_data_ready = FALSE;
   sfir_data.state = state_out & 4294967295;
@@ -366,7 +329,7 @@ struct state_elements_fir {
   _Bool OUTPUT_DATA_READY;
   unsigned int RESULT;
   struct state_elements_fir_fsm fir_fsm1;
-	struct state_elements_fir_data fir_data1;
+  struct state_elements_fir_data fir_data1;
 };
 
 void top1(unsigned int SAMPLE, _Bool IN_VALID, _Bool RESET, _Bool CLK, _Bool *OUTPUT_DATA_READY, unsigned int *RESULT)
@@ -386,134 +349,134 @@ void top1(unsigned int SAMPLE, _Bool IN_VALID, _Bool RESET, _Bool CLK, _Bool *OU
 
 void main()
 {
-	top.RESET = 1;
-	top.IN_VALID = 0;
-	set_inputs();
-	next_timeframe();
-	//assert(top.RESULT == 0);
+  top.RESET = 1;
+  top.IN_VALID = 0;
+  set_inputs();
+  next_timeframe();
+  //assert(top.RESULT == 0);
   //assert(top.OUTPUT_DATA_READY == 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 23;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT == 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 23;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 32;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT == 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 32;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
 
 
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT == 0);
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT == 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT == 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 24;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT == 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 24;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY != 0);
   //assert(top.OUTPUT_DATA_READY != 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 24;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT == 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 24;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY != 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
   assert(top.OUTPUT_DATA_READY != 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
-  assert(top.OUTPUT_DATA_READY != 0);
-
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
   assert(top.OUTPUT_DATA_READY != 0);
 
-
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
   assert(top.OUTPUT_DATA_READY != 0);
 
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
+
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
   assert(top.OUTPUT_DATA_READY != 0);
 
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
   assert(top.OUTPUT_DATA_READY != 0);
 
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
   assert(top.OUTPUT_DATA_READY != 0);
-	
-	top.RESET = 0;
-	top.IN_VALID = 1;
-	top.SAMPLE = 54;
-	set_inputs();
-	next_timeframe();
-	assert(top.RESULT != 0);
+
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
+  assert(top.OUTPUT_DATA_READY != 0);
+  
+  top.RESET = 0;
+  top.IN_VALID = 1;
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT != 0);
   assert(top.OUTPUT_DATA_READY != 0);
 }
 

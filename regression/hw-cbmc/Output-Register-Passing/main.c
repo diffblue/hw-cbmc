@@ -1,7 +1,8 @@
-#define TRUE 1
-#define FALSE 0
 #include <assert.h>
 #include <stdio.h>
+
+#define TRUE 1
+#define FALSE 0
 
 // ********* HW-CBMC interface **********//
 /* Unwinding Bound */
@@ -21,8 +22,6 @@ void set_inputs(void);
 typedef unsigned __CPROVER_bitvector[4] _u4;
 typedef unsigned __CPROVER_bitvector[2] _u2;
 
-
-
 /*
   Module Verilog::and1
 */
@@ -32,7 +31,6 @@ struct module_and1 {
   _u4 b;
   _u4 c;
   _u4 d;
-  _u4 c_0;
 };
 
 /*
@@ -49,9 +47,6 @@ struct module_top {
   struct module_and1 A1;
   struct module_and1 A2;
 };
-
-
-
 
 /*
   Hierarchy Instantiation
@@ -81,8 +76,9 @@ struct state_elements_top stop;
 void top1(unsigned int in1, unsigned int in2)
 {
   unsigned char o1, o2;
-	unsigned char x=0;
-	unsigned char y=1;
+  unsigned char x=0;
+  unsigned char y=1;
+
   andc(in1, in2, &stop.A1.c, &o2);
   andc(stop.A1.c, in2, &stop.A2.c, &o2);
 }
