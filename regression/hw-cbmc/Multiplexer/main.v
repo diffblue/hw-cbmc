@@ -6,6 +6,7 @@ module top(select, d, q);
  integer t;
  wire [1:0] select;
  wire [3:0] d;
+
  always @(select or d)
  begin
    case(select)
@@ -15,4 +16,5 @@ module top(select, d, q);
     3: q = d[3];
    endcase
  end
+
 endmodule

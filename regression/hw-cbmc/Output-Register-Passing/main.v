@@ -3,15 +3,15 @@
 // and o2 is only output
 
 module top(in1, in2);                       
- input [3:0] in1, in2;          
- wire [3:0] in1, in2;          
- wire [3:0] o1;                                                         
- wire [3:0] o2;   
+  input [3:0] in1, in2;          
+  wire [3:0] in1, in2;          
+  wire [3:0] o1;                                                         
+  wire [3:0] o2;   
 
   parameter [1:0] x = 2'b00;
   parameter [1:0] y = 2'b01;
 
- and1 A1 (in1, in2, o1, o2);             
+  and1 A1 (in1, in2, o1, o2);             
                                 
   /* A2 is another instance of      
      ports are referenced to the       
