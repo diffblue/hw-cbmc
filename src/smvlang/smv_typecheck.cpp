@@ -320,7 +320,7 @@ void smv_typecheckt::instantiate(
       symbol.module=smv_module.name;
 
       rename_map.insert(std::pair<irep_idt, exprt>
-                        (s_it2->second.name, symbol_expr(symbol)));
+                        (s_it2->second.name, symbol.symbol_expr()));
 
       var_identifiers.insert(symbol.name);
 

@@ -142,7 +142,7 @@ void compute_trans_trace(
 
         trans_tracet::statet::assignmentt assignment;
         assignment.rhs.swap(value_expr);
-        assignment.lhs=symbol_expr(symbol);
+        assignment.lhs=symbol.symbol_expr();
       
         state.assignments.push_back(assignment);
       }
@@ -425,7 +425,7 @@ void compute_trans_trace(
       trans_tracet::statet::assignmentt &assignment=
         state.assignments.back();
 
-      assignment.lhs=symbol_expr(symbol);
+      assignment.lhs=symbol.symbol_expr();
       assignment.rhs=bitstring_to_expr(value, var.type);
       assignment.location.make_nil();
     }

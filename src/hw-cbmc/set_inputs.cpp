@@ -46,8 +46,8 @@ void add_set_inputs(
   // We now assume current input values to be equal,
   // with the goal of adding assumptions on inputs.
   const index_exprt index_expr(
-    symbol_expr(array_symbol),
-    symbol_expr(timeframe_symbol),
+    array_symbol.symbol_expr(),
+    timeframe_symbol.symbol_expr(),
     struct_symbol.type);
 
   code_blockt block;
@@ -61,7 +61,7 @@ void add_set_inputs(
       struct_type.get_component(*i_it);
     assert(component.is_not_nil());
   
-    const exprt member_expr1=member_exprt(symbol_expr(struct_symbol), *i_it, component.type());
+    const exprt member_expr1=member_exprt(struct_symbol.symbol_expr(), *i_it, component.type());
     const exprt member_expr2=member_exprt(index_expr, *i_it, component.type());
   
     const code_assumet input_assumption(equal_exprt(member_expr1, member_expr2));

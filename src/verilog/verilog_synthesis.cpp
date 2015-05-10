@@ -164,7 +164,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   {
     const symbolt &a_symbol=lookup(parameters[i].get_identifier());
     verilog_blocking_assignt assignment;
-    assignment.lhs()=::symbol_expr(a_symbol);
+    assignment.lhs()=a_symbol.symbol_expr();
     assignment.rhs()=actuals[i];
     assignment.add_source_location()=call.source_location();
     synth_statement(assignment);
@@ -177,7 +177,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
     lookup(id2string(symbol.name)+"."+
            id2string(symbol.base_name));
 
-  exprt return_value=::symbol_expr(return_symbol);
+  exprt return_value=return_symbol.symbol_expr();
 
   call.swap(return_value);
 }
@@ -2385,7 +2385,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       if(parameters[i].get_bool(ID_input))
       {
         verilog_blocking_assignt assignment;
-        assignment.lhs()=::symbol_expr(a_symbol);
+        assignment.lhs()=a_symbol.symbol_expr();
         assignment.rhs()=actuals[i];
         assignment.add_source_location()=statement.source_location();
         synth_statement(assignment);
@@ -2402,7 +2402,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       {
         verilog_blocking_assignt assignment;
         assignment.lhs()=actuals[i];
-        assignment.rhs()=::symbol_expr(a_symbol);
+        assignment.rhs()=a_symbol.symbol_expr();
         assignment.add_source_location()=statement.source_location();
         synth_statement(assignment);
       }

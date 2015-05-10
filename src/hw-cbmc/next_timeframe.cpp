@@ -41,7 +41,7 @@ void add_next_timeframe(
   const symbolt &timeframe_symbol=ns.lookup("hw-cbmc::timeframe");
   
   // we first increase the tick
-  symbol_exprt timeframe_expr=symbol_expr(timeframe_symbol);
+  symbol_exprt timeframe_expr=timeframe_symbol.symbol_expr();
   
   const plus_exprt plus_expr(
     timeframe_expr, from_integer(1, index_type()), index_type());
@@ -53,8 +53,8 @@ void add_next_timeframe(
 
   // now assign the non-inputs in the module symbol
   const index_exprt index_expr(
-    symbol_expr(array_symbol),
-    symbol_expr(timeframe_symbol),
+    array_symbol.symbol_expr(),
+    timeframe_symbol.symbol_expr(),
     struct_symbol.type);
 
   const struct_typet &struct_type=
@@ -74,7 +74,7 @@ void add_next_timeframe(
     
     if(top_level_inputs.find(name)!=top_level_inputs.end()) continue;
   
-    const exprt member_expr1=member_exprt(symbol_expr(struct_symbol), name, type);
+    const exprt member_expr1=member_exprt(struct_symbol.symbol_expr(), name, type);
     const exprt member_expr2=member_exprt(index_expr, name, type);
   
     const code_assignt member_assignment(member_expr1, member_expr2);
