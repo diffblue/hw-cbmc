@@ -743,9 +743,9 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
       throw 0;
     }
   }
-  else if(expr.op0().type().id()==ID_named_block)
-  {
-  }
+  //else if(expr.op0().type().id()==ID_named_block)
+  //{
+  //}
   else  
   {
     err_location(expr);
