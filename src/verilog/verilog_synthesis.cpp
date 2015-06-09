@@ -273,7 +273,7 @@ void verilog_synthesist::assignment(
         it!=lhs.operands().rend();
         it++)
     {
-      exprt offset_constant(ID_constant, typet(ID_natural));
+      exprt offset_constant(ID_constant, natural_typet());
       offset_constant.set(ID_value, offset);
 
       if(it->type().id()==ID_bool)
@@ -289,7 +289,7 @@ void verilog_synthesist::assignment(
       {
         unsigned width=get_width(it->type());
       
-        exprt offset_constant2(ID_constant, typet(ID_natural));
+        exprt offset_constant2(ID_constant, natural_typet());
         offset_constant2.set(ID_value, offset+width-1);
 
         exprt bit_extract(ID_extractbits, it->type());
@@ -479,7 +479,7 @@ void verilog_synthesist::assignment_rec(
     {
       exprt offset=from_integer(i-from, integer_typet());
 
-      exprt rhs_extractbit(ID_extractbit, typet(ID_bool));
+      exprt rhs_extractbit(ID_extractbit, bool_typet());
       rhs_extractbit.reserve_operands(2);
       rhs_extractbit.copy_to_operands(rhs);
       rhs_extractbit.move_to_operands(offset);
@@ -1025,7 +1025,7 @@ void verilog_synthesist::synth_module_instance_builtin(
     
       exprt constraint=*it;
       constraint.id("verilog-primitive-module");
-      constraint.type()=typet(ID_bool);
+      constraint.type()=bool_typet();
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
@@ -1040,7 +1040,7 @@ void verilog_synthesist::synth_module_instance_builtin(
     
       exprt constraint=*it;
       constraint.id("verilog-primitive-module");
-      constraint.type()=typet(ID_bool);
+      constraint.type()=bool_typet();
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
@@ -1139,7 +1139,7 @@ void verilog_synthesist::synth_module_instance_builtin(
     
       exprt constraint=*it;
       constraint.id("verilog-primitive-module");
-      constraint.type()=typet(ID_bool);
+      constraint.type()=bool_typet();
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
@@ -1152,7 +1152,7 @@ void verilog_synthesist::synth_module_instance_builtin(
     
       exprt constraint=*it;
       constraint.id("verilog-primitive-module");
-      constraint.type()=typet(ID_bool);
+      constraint.type()=bool_typet();
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
@@ -1518,7 +1518,7 @@ void verilog_synthesist::synth_continuous_assign(
         it!=lhs.operands().rend();
         it++)
     {
-      exprt offset_constant(ID_constant, typet(ID_natural));
+      exprt offset_constant(ID_constant, natural_typet());
       offset_constant.set(ID_value, offset);
 
       if(it->type().id()==ID_bool)
@@ -1534,7 +1534,7 @@ void verilog_synthesist::synth_continuous_assign(
       {
         unsigned width=get_width(it->type());
       
-        exprt offset_constant2(ID_constant, typet(ID_natural));
+        exprt offset_constant2(ID_constant, natural_typet());
         offset_constant2.set(ID_value, offset+width-1);
 
         exprt bit_extract(ID_extractbits, it->type());

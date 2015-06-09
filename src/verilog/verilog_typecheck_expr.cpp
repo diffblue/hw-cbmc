@@ -208,7 +208,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
 
   if(expr.id()==ID_event)
   {
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
 
     Forall_operands(it, expr)
       convert_expr(*it);
@@ -1251,7 +1251,7 @@ void verilog_typecheck_exprt::convert_type(
   if(src.is_nil() || src.id()==ID_reg)
   {
     // it's just a bit
-    dest=typet(ID_bool);
+    dest=bool_typet();
     return;
   }
   
@@ -1434,7 +1434,7 @@ void verilog_typecheck_exprt::convert_unary_expr(exprt &expr)
 {
   if(expr.id()==ID_not)
   {
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
     convert_expr(expr.op0());
     make_boolean(expr.op0());
   }
@@ -1442,7 +1442,7 @@ void verilog_typecheck_exprt::convert_unary_expr(exprt &expr)
           expr.id()==ID_reduction_nor || expr.id()==ID_reduction_nand ||
           expr.id()==ID_reduction_xor || expr.id()==ID_reduction_xnor)
   {
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
     convert_expr(expr.op0());
   }
   else if(expr.id()==ID_unary_minus ||
@@ -1466,6 +1466,204 @@ void verilog_typecheck_exprt::convert_unary_expr(exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::convert_extractbit_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
+{
+  assert(expr.id()==ID_extractbit);
+  
+  exprt &op0=expr.op0();
+
+  convert_expr(op0);
+
+  if(op0.type().id()==ID_array)
+  {
+    exprt &op1=expr.op1();
+    convert_expr(op1);
+    typet _index_type=index_type(op0.type());
+
+    if(_index_type!=op1.type())
+    {
+      mp_integer i;
+      if(!to_integer(op1, i))
+        op1=from_integer(i, _index_type);
+      else if(op1.is_true() || op1.is_false())
+        op1=from_integer(op1.is_true()?1:0, _index_type);
+      else
+        expr.op1().make_typecast(_index_type);
+    }
+
+    expr.type()=op0.type().subtype();
+    expr.id(ID_index);
+  }
+  else
+  {
+    unsigned width=get_width(op0.type());
+    unsigned offset=atoi(op0.type().get(ID_C_offset).c_str());
+
+    mp_integer op1;
+
+    if(is_const_expression(expr.op1(), op1))
+    {
+      if(op1<offset)
+      {
+        err_location(expr);
+        str << "bit selection below lower bound: " << op1 << "<" << offset;
+        throw 0;
+      }
+
+      if(op1>=width+offset)
+      {
+        err_location(expr); 
+        str << "bit selection out of range: " 
+            << op1 << ">=" << (width+offset);
+        throw 0;
+      }
+
+      op1-=offset;
+
+      expr.op1()=from_integer(op1, natural_typet());
+    }
+    else
+    {
+      convert_expr(expr.op1());
+    }
+
+    expr.type()=bool_typet();
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::convert_replication_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
+{
+  assert(expr.id()==ID_replication);
+  
+  exprt &op1=expr.op1();
+
+  convert_expr(op1);
+
+  if(op1.type().id()==ID_array)
+  {
+    err_location(op1);
+    throw "array type not allowed here";
+  } 
+  
+  if(op1.type().id()==ID_bool)
+    op1.make_typecast(unsignedbv_typet(1));
+
+  unsigned width=get_width(expr.op1().type());
+
+  mp_integer op0;
+  convert_const_expression(expr.op0(), op0);
+
+  if(op0<0)
+  {
+    err_location(expr); 
+    str << "number of replications must not be negative";
+    throw 0;
+  }
+
+  if(op0==0)
+  {
+    // ruled out by IEEE 1364-2001
+    err_location(expr); 
+    str << "number of replications must not be zero";
+    throw 0;
+  }
+
+  {
+    expr.op0()=from_integer(op0, natural_typet());
+
+    mp_integer new_width=op0*width;
+
+    expr.type()=typet(ID_unsignedbv);
+    expr.type().set(ID_width, integer2string(new_width));
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::convert_shl_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::convert_shl_expr(exprt &expr)
+{
+  assert(expr.id()==ID_shl);
+
+  mp_integer op1_value;
+
+  bool distance_is_const=
+    is_const_expression(expr.op1(), op1_value);
+    
+  // do *after* is_const_expression
+  convert_expr(expr.op0());
+  convert_expr(expr.op1());
+  
+  no_bool(expr);
+
+  const typet &op0_type=expr.op0().type();
+  
+  expr.type()=op0_type;
+
+  if(op0_type.id()==ID_signedbv ||
+     op0_type.id()==ID_unsignedbv)
+  {
+    mp_integer op0_width=mp_integer(get_width(op0_type));
+    mp_integer new_op0_width=op0_width;
+    
+    if(distance_is_const)
+    {
+      // make wider as needed
+      if(op1_value>=1)
+        new_op0_width+=op1_value;
+    }
+    else
+    {
+      // A shift with unknown distance. We don't know how wide it
+      // will need to be. The standard suggests to make it at least 32 bits.
+    
+      if(op0_width<32)
+        new_op0_width=32;
+    }
+
+    if(new_op0_width!=op0_width)
+    {
+      typet new_type=expr.op0().type();
+      new_type.set(ID_width, integer2string(new_op0_width));
+      expr.type()=new_type;
+      propagate_type(expr.op0(), new_type);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_binary_expr
 
   Inputs:
@@ -1479,111 +1677,9 @@ Function: verilog_typecheck_exprt::convert_binary_expr
 void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
 {
   if(expr.id()==ID_extractbit)
-  {
-    exprt &op0=expr.op0();
-
-    convert_expr(op0);
-
-    if(op0.type().id()==ID_array)
-    {
-      exprt &op1=expr.op1();
-      convert_expr(op1);
-      typet _index_type=index_type(op0.type());
-
-      if(_index_type!=op1.type())
-      {
-        mp_integer i;
-        if(!to_integer(op1, i))
-          op1=from_integer(i, _index_type);
-        else if(op1.is_true() || op1.is_false())
-          op1=from_integer(op1.is_true()?1:0, _index_type);
-        else
-          expr.op1().make_typecast(_index_type);
-      }
-
-      expr.type()=op0.type().subtype();
-      expr.id(ID_index);
-    }
-    else
-    {
-      unsigned width=get_width(op0.type());
-      unsigned offset=atoi(op0.type().get(ID_C_offset).c_str());
-
-      mp_integer op1;
-
-      if(is_const_expression(expr.op1(), op1))
-      {
-        if(op1<offset)
-        {
-          err_location(expr);
-          str << "bit selection below lower bound: " << op1 << "<" << offset;
-          throw 0;
-        }
-
-        if(op1>=width+offset)
-        {
-          err_location(expr); 
-          str << "bit selection out of range: " 
-              << op1 << ">=" << (width+offset);
-          throw 0;
-        }
-
-        op1-=offset;
-
-        expr.op1()=from_integer(op1, typet(ID_natural));
-      }
-      else
-      {
-        convert_expr(expr.op1());
-      }
-
-      expr.type()=typet(ID_bool);
-    }
-  }
+    convert_extractbit_expr(expr);
   else if(expr.id()==ID_replication)
-  {
-    exprt &op1=expr.op1();
-
-    convert_expr(op1);
-
-    if(op1.type().id()==ID_array)
-    {
-      err_location(op1);
-      throw "array type not allowed here";
-    } 
-    
-    if(op1.type().id()==ID_bool)
-      op1.make_typecast(unsignedbv_typet(1));
-
-    unsigned width=get_width(expr.op1().type());
-
-    mp_integer op0;
-    convert_const_expression(expr.op0(), op0);
-
-    if(op0<0)
-    {
-      err_location(expr); 
-      str << "number of replications must not be negative";
-      throw 0;
-    }
-
-    if(op0==0)
-    {
-      // ruled out by IEEE 1364-2001
-      err_location(expr); 
-      str << "number of replications must not be zero";
-      throw 0;
-    }
-
-    {
-      expr.op0()=from_integer(op0, typet(ID_natural));
-
-      mp_integer new_width=op0*width;
-
-      expr.type()=typet(ID_unsignedbv);
-      expr.type().set(ID_width, integer2string(new_width));
-    }
-  }
+    convert_replication_expr(expr);
   else if(expr.id()==ID_and || expr.id()==ID_or)
   {
     Forall_operands(it, expr)
@@ -1592,11 +1688,11 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
       make_boolean(*it);
     }
 
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
   }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal)
   {
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
 
     Forall_operands(it, expr)
       convert_expr(*it);
@@ -1606,7 +1702,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
   else if(expr.id()==ID_verilog_case_equality ||
           expr.id()==ID_verilog_case_inequality)
   {
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
 
     Forall_operands(it, expr)
       convert_expr(*it);
@@ -1616,7 +1712,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
   else if(expr.id()==ID_lt || expr.id()==ID_gt ||
           expr.id()==ID_le || expr.id()==ID_ge)
   {
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
 
     Forall_operands(it, expr)
       convert_expr(*it);
@@ -1625,51 +1721,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
     no_bool(expr);
   }
   else if(expr.id()==ID_shl)
-  {
-    mp_integer op1_value;
-    bool distance_is_const=
-      is_const_expression(expr.op1(), op1_value);
-      
-    // do *after* is_const_expression
-    convert_expr(expr.op0());
-    convert_expr(expr.op1());
-    
-    no_bool(expr);
-
-    const typet &op0_type=expr.op0().type();
-    
-    expr.type()=op0_type;
-
-    if(op0_type.id()==ID_signedbv ||
-       op0_type.id()==ID_unsignedbv)
-    {
-      mp_integer op0_width=mp_integer(get_width(op0_type));
-      mp_integer new_op0_width=op0_width;
-      
-      if(distance_is_const)
-      {
-        // make wider as needed
-        if(op1_value>=1)
-          new_op0_width+=op1_value;
-      }
-      else
-      {
-        // A shift with unknown distance. We don't know how wide it
-        // will need to be. The standard suggests to make it at least 32 bits.
-      
-        if(op0_width<32)
-          new_op0_width=32;
-      }
-
-      if(new_op0_width!=op0_width)
-      {
-        typet new_type=expr.op0().type();
-        new_type.set(ID_width, integer2string(new_op0_width));
-        expr.type()=new_type;
-        propagate_type(expr.op0(), new_type);
-      }
-    }
-  }
+    convert_shl_expr(expr);
   else if(expr.id()==ID_shr)
   {
     // This is the >>> expression, which turns into ID_lshr or ID_ashr
@@ -1808,8 +1860,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
     op2-=offset;
     op1-=offset;
 
-    expr.op1()=from_integer(op1, typet(ID_natural));
-    expr.op2()=from_integer(op2, typet(ID_natural));
+    expr.op1()=from_integer(op1, natural_typet());
+    expr.op2()=from_integer(op2, natural_typet());
     
     expr.type()=typet(ID_unsignedbv);
     expr.type().set(ID_width, integer2long(op1-op2+1));
