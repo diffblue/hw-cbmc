@@ -101,7 +101,7 @@ private:
   void typecast(exprt &, const typet &type);
   void tc_binary_expr(exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
-  void no_bool(exprt &);
+  void no_bool_ops(exprt &);
 };
 
 bool verilog_typecheck(

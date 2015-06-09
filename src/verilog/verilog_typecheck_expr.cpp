@@ -170,7 +170,7 @@ void verilog_typecheck_exprt::propagate_type(
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::no_bool
+Function: verilog_typecheck_exprt::no_bool_ops
 
   Inputs:
 
@@ -180,10 +180,9 @@ Function: verilog_typecheck_exprt::no_bool
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::no_bool(exprt &expr)
+void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
 {
-  typet new_type(ID_unsignedbv);
-  new_type.set(ID_width, 1);
+  unsignedbv_typet new_type(1);
 
   Forall_operands(it, expr)
     if(it->type().id()==ID_bool)
@@ -1449,7 +1448,7 @@ void verilog_typecheck_exprt::convert_unary_expr(exprt &expr)
           expr.id()==ID_unary_plus)
   {
     convert_expr(expr.op0());
-    no_bool(expr);
+    no_bool_ops(expr);
     expr.type()=expr.op0().type();
   }
   else
@@ -1625,7 +1624,7 @@ void verilog_typecheck_exprt::convert_shl_expr(exprt &expr)
   convert_expr(expr.op0());
   convert_expr(expr.op1());
   
-  no_bool(expr);
+  no_bool_ops(expr);
 
   const typet &op0_type=expr.op0().type();
   
@@ -1718,7 +1717,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
       convert_expr(*it);
 
     tc_binary_expr(expr);
-    no_bool(expr);
+    no_bool_ops(expr);
   }
   else if(expr.id()==ID_shl)
     convert_shl_expr(expr);
@@ -1729,7 +1728,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
 
     convert_expr(expr.op0());
     convert_expr(expr.op1());
-    no_bool(expr);
+    no_bool_ops(expr);
 
     const typet &op0_type=expr.op0().type();
 
@@ -1749,7 +1748,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
     // logical right shift >>
     convert_expr(expr.op0());
     convert_expr(expr.op1());
-    no_bool(expr);
+    no_bool_ops(expr);
     expr.type()=expr.op0().type();
   }
   else if(expr.id()==ID_div || expr.id()==ID_mod)
@@ -1758,7 +1757,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
       convert_expr(*it);
 
     tc_binary_expr(expr);
-    no_bool(expr);
+    no_bool_ops(expr);
 
     expr.type()=expr.op0().type();
   }
@@ -1779,7 +1778,7 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
     if(expr.id()==ID_plus ||
        expr.id()==ID_minus ||
        expr.id()==ID_mult)
-      no_bool(expr);
+      no_bool_ops(expr);
 
     expr.type()=expr.op0().type();
 
