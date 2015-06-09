@@ -157,6 +157,9 @@ std::cout << "This option is currently disabled\n";
     // return do_two_phase_induction();
   }
   
+  if(cmdline.isset("show-trans"))
+    return show_trans(cmdline);
+
   if(cmdline.isset("verilog-rtl"))
     return show_trans_verilog_rtl(cmdline);
 
@@ -254,5 +257,6 @@ void ebmc_parse_optionst::help()
     " --show-ldg                        show latch dependencies\n"
     " --smv-netlist                     show netlist in SMV format\n"
     " --dot-netlist                     show netlist in DOT format\n"
+    " --show-trans                      show transition system\n"
     "\n";
 }

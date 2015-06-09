@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/hash_cont.h>
 
+#include <verilog/expr2verilog.h>
+
 #include "show_trans.h"
 #include "ebmc_base.h"
 #include "version.h"
@@ -33,11 +35,13 @@ public:
 
   int show_trans_verilog_rtl();
   int show_trans_verilog_netlist();
+  int show_trans();
 
 protected:
   int show_trans_verilog_rtl(std::ostream &out);
   int show_trans_verilog_netlist(std::ostream &out);
   void verilog_header(std::ostream &out, const std::string &desc);
+  void print_verilog_constraints(const exprt &, std::ostream &);
 };
 
 /*******************************************************************\
@@ -186,6 +190,65 @@ void show_transt::verilog_header(
 
 /*******************************************************************\
 
+Function: show_transt::print_verilog_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_transt::print_verilog_constraints(
+  const exprt &expr,
+  std::ostream &out)
+{
+  if(expr.id()==ID_and)
+  {
+    forall_operands(it, expr)
+      print_verilog_constraints(*it, out);
+  }
+
+  out << "  " << expr2verilog(expr) << '\n';
+
+  out << '\n';
+}
+
+/*******************************************************************\
+
+Function: show_transt::show_trans
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int show_transt::show_trans()
+{
+  int result=get_model();
+  if(result!=-1) return result;
+
+  std::cout << "Initial state constraints:\n\n";
+  
+  print_verilog_constraints(trans_expr->init(), std::cout);
+
+  std::cout << "State constraints:\n\n";
+  
+  print_verilog_constraints(trans_expr->invar(), std::cout);
+
+  std::cout << "Transisition constraints:\n\n";
+  
+  print_verilog_constraints(trans_expr->trans(), std::cout);
+
+  return 0;
+}
+
+/*******************************************************************\
+
 Function: show_transt::show_trans_verilog_rtl
 
   Inputs:
@@ -258,5 +321,23 @@ int show_transt::show_trans_verilog_netlist()
     show_trans_verilog_netlist(std::cout);
 
   return 0;
+}
+
+/*******************************************************************\
+
+Function: show_trans
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int show_trans(const cmdlinet &cmdline)
+{
+  show_transt show_trans(cmdline);  
+  return show_trans.show_trans();
 }
 

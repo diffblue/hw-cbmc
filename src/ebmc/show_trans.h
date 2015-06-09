@@ -14,5 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 int show_trans_verilog_rtl(const cmdlinet &cmdline);
 int show_trans_verilog_netlist(const cmdlinet &cmdline);
 int show_trans_smv_netlist(const cmdlinet &cmdline);
+int show_trans(const cmdlinet &cmdline);
 
 #endif
