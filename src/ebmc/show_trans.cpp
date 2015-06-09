@@ -208,6 +208,7 @@ void show_transt::print_verilog_constraints(
   {
     forall_operands(it, expr)
       print_verilog_constraints(*it, out);
+    return;
   }
 
   out << "  " << expr2verilog(expr) << '\n';
