@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_expr.h"
 #include "verilog_typecheck_expr.h"
 #include "vtype.h"
+#include "verilog_types.h"
 
 /*******************************************************************\
 
@@ -1565,7 +1566,7 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
     err_location(op1);
     throw "array type not allowed here";
   } 
-  
+
   if(op1.type().id()==ID_bool)
     op1.make_typecast(unsignedbv_typet(1));
 
@@ -1592,10 +1593,12 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   {
     expr.op0()=from_integer(op0, natural_typet());
 
-    mp_integer new_width=op0*width;
+    unsigned new_width=integer2long(op0)*width;
 
-    expr.type()=typet(ID_unsignedbv);
-    expr.type().set(ID_width, integer2string(new_width));
+    if(op1.type().id()==ID_verilogbv)
+      expr.type()=verilogbv_typet(new_width);
+    else
+      expr.type()=unsignedbv_typet(new_width);
   }
 }
 

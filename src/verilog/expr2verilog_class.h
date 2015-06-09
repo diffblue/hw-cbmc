@@ -34,18 +34,16 @@ public:
     const std::string &symbol,
     unsigned precedence);
 
-  virtual std::string convert_trinary(
+  virtual std::string convert_if(
     const exprt &src,
-    const std::string &symbol1,
-    const std::string &symbol2,
     unsigned precedence);
 
   virtual std::string convert_index(
-    const exprt &src,
+    const index_exprt &src,
     unsigned precedence);
 
   virtual std::string convert_extractbit(
-    const exprt &src,
+    const extractbit_exprt &src,
     unsigned precedence);
 
   virtual std::string convert_member(
@@ -53,7 +51,7 @@ public:
     unsigned precedence);
 
   virtual std::string convert_extractbits(
-    const exprt &src,
+    const extractbits_exprt &src,
     unsigned precedence);
 
   virtual std::string convert(
@@ -75,19 +73,19 @@ public:
     unsigned &precedence);
 
   virtual std::string convert_constant(
-    const exprt &src,
+    const constant_exprt &src,
     unsigned &precedence);
 
   virtual std::string convert_typecast(
-    const exprt &src,
+    const typecast_exprt &src,
     unsigned &precedence);
 
   virtual std::string convert_concatenation(
-    const exprt &src,
+    const concatenation_exprt &src,
     unsigned precedence);
 
   virtual std::string convert_replication(
-    const exprt &src,
+    const replication_exprt &src,
     unsigned precedence);
 
   virtual std::string convert_norep(

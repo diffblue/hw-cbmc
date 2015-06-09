@@ -17,10 +17,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "expr2verilog.h"
 #include "expr2verilog_class.h"
+#include "verilog_types.h"
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_trinary
+Function: expr2verilogt::convert_if
 
   Inputs:
 
@@ -30,10 +31,8 @@ Function: expr2verilogt::convert_trinary
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_trinary(
+std::string expr2verilogt::convert_if(
   const exprt &src,
-  const std::string &symbol1,
-  const std::string &symbol2,
   unsigned precedence)
 {
   if(src.operands().size()!=3)
@@ -50,17 +49,13 @@ std::string expr2verilogt::convert_trinary(
   dest+=op0;
   if(precedence>p0) dest+=')';
 
-  dest+=' ';
-  dest+=symbol1;
-  dest+=' ';
+  dest+=" ? ";
 
   if(precedence>p1) dest+='(';
   dest+=op1;
   if(precedence>p1) dest+=')';
 
-  dest+=' ';
-  dest+=symbol2;
-  dest+=' ';
+  dest+=" : ";
 
   if(precedence>p2) dest+='(';
   dest+=op2;
@@ -162,7 +157,7 @@ Function: expr2verilogt::convert_concatenation
 \*******************************************************************/
 
 std::string expr2verilogt::convert_concatenation(
-  const exprt &src,
+  const concatenation_exprt &src,
   unsigned precedence)
 {
   if(src.operands().size()<1)
@@ -204,7 +199,7 @@ Function: expr2verilogt::convert_replication
 \*******************************************************************/
 
 std::string expr2verilogt::convert_replication(
-  const exprt &src,
+  const replication_exprt &src,
   unsigned precedence)
 {
   if(src.operands().size()!=2)
@@ -264,7 +259,7 @@ Function: expr2verilogt::convert_typecast
 \*******************************************************************/
 
 std::string expr2verilogt::convert_typecast(
-  const exprt &src,
+  const typecast_exprt &src,
   unsigned &precedence)
 {
   if(src.operands().size()==1)
@@ -292,7 +287,7 @@ Function: expr2verilogt::convert_index
 \*******************************************************************/
 
 std::string expr2verilogt::convert_index(
-  const exprt &src,
+  const index_exprt &src,
   unsigned precedence)
 {
   if(src.operands().size()!=2)
@@ -326,7 +321,7 @@ Function: expr2verilogt::convert_extractbit
 \*******************************************************************/
 
 std::string expr2verilogt::convert_extractbit(
-  const exprt &src,
+  const extractbit_exprt &src,
   unsigned precedence)
 {
   if(src.operands().size()!=2)
@@ -360,7 +355,7 @@ Function: expr2verilogt::convert_extractbits
 \*******************************************************************/
 
 std::string expr2verilogt::convert_extractbits(
-  const exprt &src,
+  const extractbits_exprt &src,
   unsigned precedence)
 {
   if(src.operands().size()!=3)
@@ -512,13 +507,13 @@ Function: expr2verilogt::convert_constant
 \*******************************************************************/
 
 std::string expr2verilogt::convert_constant(
-  const exprt &src,
+  const constant_exprt &src,
   unsigned &precedence)
 {
   precedence=22;
 
   const typet &type=src.type();
-  const std::string &value=src.get_string(ID_value);
+  const irep_idt &value=src.get_value();
   std::string dest;
 
   if(type.id()==ID_bool)
@@ -541,11 +536,11 @@ std::string expr2verilogt::convert_constant(
   }
   else if(type.id()==ID_verilogbv)
   {
-    const std::string width=src.type().get_string(ID_width);
-    return width+"'b"+src.get_string(ID_value);
+    unsigned width=to_verilogbv_type(src.type()).get_width();
+    return i2string(width)+"'b"+id2string(value);
   }
   else if(type.id()==ID_integer || type.id()==ID_natural)
-    dest=value;
+    dest=id2string(value);
   else
     return convert_norep(src, precedence);
 
@@ -613,16 +608,16 @@ std::string expr2verilogt::convert(
     return convert_binary(src, "+", precedence=14);
 
   else if(src.id()==ID_if)
-    return convert_trinary(src, "?", ":", precedence=14);
+    return convert_if(to_if_expr(src), precedence=14);
 
   else if(src.id()==ID_concatenation)
-    return convert_concatenation(src, precedence=16);
+    return convert_concatenation(to_concatenation_expr(src), precedence=16);
 
   else if(src.id()==ID_with)
     return convert_with(src, precedence=16);
 
   else if(src.id()==ID_replication)
-    return convert_replication(src, precedence=22);
+    return convert_replication(to_replication_expr(src), precedence=22);
 
   else if(src.id()==ID_array)
     return convert_array(src, precedence=22);
@@ -658,16 +653,16 @@ std::string expr2verilogt::convert(
   }
 
   else if(src.id()==ID_index)
-    return convert_index(src, precedence=22);
+    return convert_index(to_index_expr(src), precedence=22);
 
   else if(src.id()==ID_extractbit)
-    return convert_extractbit(src, precedence=22);
+    return convert_extractbit(to_extractbit_expr(src), precedence=22);
 
   else if(src.id()==ID_extractbits)
-    return convert_extractbits(src, precedence=22);
+    return convert_extractbits(to_extractbits_expr(src), precedence=22);
 
   else if(src.id()==ID_member)
-    return convert_member(src, precedence=22);
+    return convert_member(to_member_expr(src), precedence=22);
 
   else if(src.id()==ID_mult)
     return convert_binary(src, "*", precedence=14);
@@ -706,7 +701,7 @@ std::string expr2verilogt::convert(
     return convert_unary(src, "~", precedence=16);
 
   else if(src.id()==ID_typecast)
-    return convert_typecast(src, precedence);
+    return convert_typecast(to_typecast_expr(src), precedence);
 
   else if(src.id()==ID_and)
     return convert_binary(src, "&&", precedence=7);
@@ -767,7 +762,7 @@ std::string expr2verilogt::convert(
     return convert_next_symbol(src, precedence);
 
   else if(src.id()==ID_constant)
-    return convert_constant(src, precedence);
+    return convert_constant(to_constant_expr(src), precedence);
     
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);
