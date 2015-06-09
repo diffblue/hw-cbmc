@@ -389,7 +389,7 @@ int yyverilogerror(const char *error)
 %token TOK_GREATERGREATEREQUAL ">>="
 %token TOK_LESSLESSLESSEQUAL "<<<="
 %token TOK_GREATERGREATERGREATEREQUAL ">>>="
-%token TOK_HASHHASH
+%token TOK_HASHHASH         "##"
 
 /* System Verilog Keywords */
 %token TOK_ALIAS            "alias"
@@ -502,6 +502,9 @@ int yyverilogerror(const char *error)
 /* Precedence, following SystemVerilog 3.1a */
 %right TOK_MINUSGREATER // ->
 %right TOK_QUESTION TOK_COLON // ?:
+%left "##"
+%nonassoc "not"
+%left "and"
 %left TOK_OR
 %left TOK_VERTBARVERTBAR
 %left TOK_AMPERAMPER
@@ -517,6 +520,7 @@ int yyverilogerror(const char *error)
 %right TOK_TILDE TOK_EXCLAM TOK_PLUSPLUS TOK_MINUSMINUS
 %nonassoc LT_TOK_ELSE
 %nonassoc TOK_ELSE
+%right "|->" "|=>"
 
 %%
 
@@ -1855,7 +1859,7 @@ disable_statement: TOK_DISABLE hierarchical_task_or_block_identifier ';'
 	;
 
 assert_property_statement:
-          TOK_ASSERT TOK_PROPERTY '(' expression ')' action_block
+          TOK_ASSERT TOK_PROPERTY '(' property_expr ')' action_block
 		{ init($$, ID_assert); mto($$, $4); mto($$, $6); }
 	| /* this one is in because SMV does it */
 	  TOK_ASSERT property_identifier TOK_COLON expression ';'
@@ -1972,9 +1976,9 @@ procedural_timing_control:
         ;
 
 cycle_delay:
-          TOK_HASHHASH unsigned_number
-        | TOK_HASHHASH identifier
-        | TOK_HASHHASH '(' expression ')'
+          "##" unsigned_number
+        | "##" identifier
+        | "##" '(' expression ')'
         ;
 
 delay_or_event_control:
@@ -2262,6 +2266,26 @@ expression:
 	| TOK_QSTRING
 		{ init($$, ID_constant); stack($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
 	;
+
+// properties for SystemVerilog assertions
+property_expr:
+          sequence_expression
+        | "not" property_expr
+        | property_expr "or" property_expr { init($$, ID_or); mto($$, $1); mto($$, $3); }
+        | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
+        | property_expr "|->" property_expr { init($$, ID_overlapped_implication); mto($$, $1); mto($$, $3); }
+        | property_expr "|=>" property_expr { init($$, ID_non_overlapped_implication); mto($$, $1); mto($$, $3); }
+        ;
+
+sequence_expression:
+          expression
+        | "##" unsigned_number sequence_expression
+                { init($$, ID_delay); mto($$, $2); mto($$, $3); }
+        | "##" '[' unsigned_number ':' unsigned_number ']' sequence_expression
+                { init($$, ID_delay); mto($$, $3); mto($$, $5); mto($$, $7); }
+        | "##" '[' unsigned_number ':' '$' ']' sequence_expression
+                { init($$, ID_delay); mto($$, $3); mto($$, $7); }
+        ;
 
 unary_operator:
 	  TOK_TILDE        { init($$, ID_bitnot); }
