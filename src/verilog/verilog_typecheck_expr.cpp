@@ -1764,6 +1764,21 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
 
     expr.type()=expr.op0().type();
   }
+  else if(expr.id()==ID_delay)
+  {
+    expr.type()=bool_typet();
+    // TODO
+  }
+  else if(expr.id()==ID_overlapped_implication ||
+          expr.id()==ID_non_overlapped_implication)
+  {
+    assert(expr.operands().size()==2);
+    convert_expr(expr.op0());
+    make_boolean(expr.op0());
+    convert_expr(expr.op1());
+    make_boolean(expr.op1());
+    expr.type()=bool_typet();
+  }
   else if(expr.id()==ID_hierarchical_identifier)
   {
     convert_hierarchical_identifier(to_hierarchical_identifier_expr(expr));
