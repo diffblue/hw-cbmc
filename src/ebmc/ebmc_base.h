@@ -92,7 +92,7 @@ public:
   // solvers
   int do_compute_ct();
   int do_dimacs();
-  int do_cvc3();
+  int do_cvc4();
   int do_smt1();
   int do_smt2();
   int do_boolector();

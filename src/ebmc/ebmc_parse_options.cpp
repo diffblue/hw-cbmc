@@ -174,8 +174,8 @@ std::cout << "This option is currently disabled\n";
 
     if(cmdline.isset("dimacs"))
       return ebmc_base.do_dimacs();
-    else if(cmdline.isset("cvc3"))
-      return ebmc_base.do_cvc3();
+    else if(cmdline.isset("cvc4"))
+      return ebmc_base.do_cvc4();
     else if(cmdline.isset("boolector"))
       return ebmc_base.do_boolector();
     else if(cmdline.isset("z3"))
@@ -246,7 +246,7 @@ void ebmc_parse_optionst::help()
     " --smt1                            output word-level in SMT 1 format\n"
     " --smt2                            output word-level in SMT 2 format\n"
     " --boolector                       use Boolector as solver\n"
-    " --cvc3                            use CVC3 as solver\n"
+    " --cvc4                            use CVC4 as solver\n"
     " --yices                           use Yices as solver\n"
     " --z3                              use Z3 as solver\n"
     "\n"
