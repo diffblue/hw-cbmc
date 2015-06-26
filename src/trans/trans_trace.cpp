@@ -946,7 +946,8 @@ static std::string vcd_suffix(
      type.id()==ID_bv ||
      type.id()==ID_fixedbv ||
      type.id()==ID_floatbv ||
-     type.id()==ID_verilogbv)
+     type.id()==ID_verilog_signedbv ||
+     type.id()==ID_verilog_unsignedbv)
   {
     mp_integer width=vcd_width(type, ns);
     mp_integer offset=string2integer(type.get_string(ID_C_offset));

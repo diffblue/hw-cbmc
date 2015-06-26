@@ -354,17 +354,17 @@ bool ebmc_baset::parse_property(
   tmp.move_to_operands(expr);
   expr.swap(tmp);
 
-  std::string string_value;
-  languages.from_expr(expr, string_value);
-  status() << "Property: " << string_value << eom;
+  std::string expr_as_string;
+  languages.from_expr(expr, expr_as_string);
+  status() << "Property: " << expr_as_string << eom;
   status() << "Mode: " << main_symbol->mode << eom;
 
   prop_expr_list.push_back(expr);
-  prop_name_list.push_back("");
+  prop_name_list.push_back(expr_as_string);
   
   properties.push_back(propertyt());
   properties.back().expr=expr;
-  properties.back().expr_string=string_value;
+  properties.back().expr_string=expr_as_string;
   properties.back().mode=main_symbol->mode;
   properties.back().location.make_nil();
   properties.back().description="command-line assertion";
@@ -398,19 +398,19 @@ bool ebmc_baset::get_model_properties()
     {
       try
       {
-        std::string string_value=
+        std::string value_as_string=
           from_expr(ns, symbol.name, symbol.value);
 
-        status() << "Property: " << string_value << eom;
+        status() << "Property: " << value_as_string << eom;
 
         prop_expr_list.push_back(symbol.value);
-        prop_name_list.push_back(id2string(symbol.name));
+        prop_name_list.push_back(value_as_string);
 
         properties.push_back(propertyt());
         properties.back().name=symbol.name;
         properties.back().expr=symbol.value;
         properties.back().location=symbol.location;
-        properties.back().expr_string=string_value;
+        properties.back().expr_string=value_as_string;
         properties.back().mode=symbol.mode;
         properties.back().description="assertion "+id2string(symbol.display_name());
       }
