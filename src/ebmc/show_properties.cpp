@@ -40,9 +40,9 @@ void ebmc_baset::show_properties()
     case ui_message_handlert::XML_UI:
       {
         xmlt xml("property");
+        xml.set_attribute("name", id2string(p_it->name));
         
         xml.new_element("number").data=i2string(p);
-        xml.new_element("name").data=i2string(p);
         xml.new_element("expression").data=p_it->expr_string;
         xml.new_element("description").data=p_it->description;
 
