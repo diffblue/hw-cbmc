@@ -1,6 +1,6 @@
 main.smv
 --bound 2
 ^SIGNAL=0$
-^Property 1 violated in time frame 2$
+^Property .* violated in time frame 2$
 --
 ^warning: ignoring
