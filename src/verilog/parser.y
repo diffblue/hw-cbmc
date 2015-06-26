@@ -2358,7 +2358,8 @@ name_of_system_function: TOK_SYSIDENT
 		{ new_symbol($$, $1); }
 	;
 
-unsigned_number: TOK_NUMBER;
+unsigned_number: TOK_NUMBER
+        ;
 
 hierarchical_identifier:
           identifier
