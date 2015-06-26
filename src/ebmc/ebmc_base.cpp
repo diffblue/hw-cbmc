@@ -405,6 +405,7 @@ bool ebmc_baset::get_model_properties()
         prop_expr_list.push_back(symbol.value);
 
         properties.push_back(propertyt());
+        properties.back().name=symbol.name;
         properties.back().expr=symbol.value;
         properties.back().location=symbol.location;
         properties.back().expr_string=string_value;
