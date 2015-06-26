@@ -87,7 +87,7 @@ void show_state(
       else
         std::cout << value;
 
-      std::cout << std::endl;
+      std::cout << '\n';
     }
   }
 
@@ -132,7 +132,7 @@ void show_state(
       {
         std::cout << symbol.display_name() << "=";      
         std::cout << from_expr(ns, symbol.name, value_expr);
-        std::cout << std::endl;
+        std::cout << '\n';
       }
     }
   }
@@ -231,7 +231,7 @@ void show_counterexample(
         std::cout << "property "
                   << (p+1) 
                   << " violated in time frame " << t
-                  << ":" << std::endl << std::endl;
+                  << ":" << '\n' << '\n';
 
         for(unsigned x=0; x<=t; x++)
           show_state(solver, map, ns, x);

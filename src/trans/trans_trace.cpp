@@ -492,7 +492,7 @@ void show_trans_state(
         std::cout << " (" << rhs.get(ID_value) << ")";
     }
     
-    std::cout << std::endl;
+    std::cout << '\n';
   }
 
   std::cout << std::endl;
@@ -631,7 +631,7 @@ void show_trans_trace(
         {
           std::cout << "Property " << p << " violated in "
                        "time frame " << p_it->failing_timeframe
-                    << std::endl;
+                    << '\n';
         }
     }
     break;
@@ -839,7 +839,7 @@ void show_trans_state_vcd(
   const namespacet &ns,
   std::ostream &out)
 {
-  out << "#" << timeframe << std::endl;
+  out << "#" << timeframe << '\n';
 
   // build map for previous state  
   std::map<irep_idt, exprt> previous_values;
@@ -877,16 +877,16 @@ void show_trans_state_vcd(
       // booleans are special -- no space!
 
       if(it->rhs.is_true())
-        out << "1" << vcd_identifier(display_name) << std::endl;
+        out << '1' << vcd_identifier(display_name) << '\n';
       else if(it->rhs.is_false())
-        out << "0" << vcd_identifier(display_name) << std::endl;
+        out << '0' << vcd_identifier(display_name) << '\n';
       else
-        out << "x" << vcd_identifier(display_name) << std::endl;
+        out << 'x' << vcd_identifier(display_name) << '\n';
     }
     else
     {
-      out << "b" << as_vcd_binary(it->rhs, ns) << " " 
-          << vcd_identifier(display_name) << std::endl;
+      out << 'b' << as_vcd_binary(it->rhs, ns) << ' '
+          << vcd_identifier(display_name) << '\n';
     }
   }
 }
@@ -1030,7 +1030,7 @@ void vcd_hierarchy_rec(
           << vcd_identifier(display_name) << " " 
           << vcd_identifier(display_name)
           << (suffix==""?"":" ") << suffix
-          << " $end" << std::endl;
+          << " $end" << '\n';
   }
   
   // now do sub modules
@@ -1071,9 +1071,9 @@ void show_trans_trace_vcd(
 {
   time_t t;
   time(&t);
-  out << "$date\n  " << ctime(&t) << "$end" << std::endl;
+  out << "$date\n  " << ctime(&t) << "$end" << '\n';
 
-  out << "$timescale\n  1ns\n$end" << std::endl;;
+  out << "$timescale\n  1ns\n$end" << '\n';
   
   if(trace.states.empty()) return;
 
