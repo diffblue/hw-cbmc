@@ -207,6 +207,19 @@ void compute_trans_trace_properties(
     else
       dest.properties.back().status=tvt(true);
   }
+
+  // put names in
+  trans_tracet::propertiest::iterator p_it=
+    dest.properties.begin();
+  for(std::list<std::string>::const_iterator
+      n_it=prop_names.begin();
+      n_it!=prop_names.end();
+      n_it++, p_it++)
+  {
+    assert(p_it!=dest.properties.end());
+    p_it->name=*n_it;
+  }
+
 }
 
 /*******************************************************************\
@@ -266,6 +279,19 @@ void compute_trans_trace_properties(
     else
       dest.properties.back().status=tvt(true);
   }
+
+  // put names in
+  trans_tracet::propertiest::iterator p_it=
+    dest.properties.begin();
+  for(std::list<std::string>::const_iterator
+      n_it=prop_names.begin();
+      n_it!=prop_names.end();
+      n_it++, p_it++)
+  {
+    assert(p_it!=dest.properties.end());
+    p_it->name=*n_it;
+  }
+
 }
 
 /*******************************************************************\
@@ -632,8 +658,13 @@ void show_trans_trace(
           p_it++, p++)
         if(p_it->status.is_false())
         {
-          std::cout << "Property " << p << " violated in "
-                       "time frame " << p_it->failing_timeframe
+          std::cout << "Property ";
+
+          if(p_it->name.empty())
+            std::cout << '`' << p_it->name << "' ";
+
+          std::cout << "violated in time frame "
+                    << p_it->failing_timeframe
                     << '\n';
         }
     }
