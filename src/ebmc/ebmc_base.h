@@ -80,6 +80,9 @@ protected:
   typedef std::list<exprt> prop_expr_listt;
   prop_expr_listt prop_expr_list;
 
+  typedef std::list<std::string> prop_name_listt;
+  prop_name_listt prop_name_list;
+
   // the truth value of the properties in the time frames  
   std::list<bvt> prop_bv;
   

@@ -163,6 +163,7 @@ Function: compute_trans_trace_properties
 \*******************************************************************/
 
 void compute_trans_trace_properties(
+  const std::list<std::string> &prop_names,
   const std::list<bvt> &prop_bv,
   const propt &solver,
   unsigned no_timeframes,
@@ -221,6 +222,7 @@ Function: compute_trans_trace_properties
 \*******************************************************************/
 
 void compute_trans_trace_properties(
+  const std::list<std::string> &prop_names,
   const std::list<bvt> &prop_bv,
   const prop_convt &solver,
   unsigned no_timeframes,
@@ -279,6 +281,7 @@ Function: compute_trans_trace
 \*******************************************************************/
 
 void compute_trans_trace(
+  const std::list<std::string> &prop_names,
   const std::list<bvt> &prop_bv,
   const class prop_convt &solver,
   unsigned no_timeframes,
@@ -296,6 +299,7 @@ void compute_trans_trace(
   // check the properties that got violated
   
   compute_trans_trace_properties(
+    prop_names,
     prop_bv,
     solver,
     no_timeframes,
@@ -372,6 +376,7 @@ Function: compute_trans_trace
 \*******************************************************************/
 
 void compute_trans_trace(
+  const std::list<std::string> &prop_names,
   const std::list<bvt> &prop_bv,
   const bmc_mapt &bmc_map,
   const propt &solver,
@@ -431,6 +436,7 @@ void compute_trans_trace(
   // check the properties that got violated
   
   compute_trans_trace_properties(
+    prop_names,
     prop_bv,
     solver,
     bmc_map.get_no_timeframes(),

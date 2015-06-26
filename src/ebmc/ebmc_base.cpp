@@ -129,6 +129,7 @@ int ebmc_baset::finish(prop_convt &solver)
       trans_tracet trans_trace;
   
       compute_trans_trace(
+        prop_name_list,
         prop_bv,
         solver,
         bound+1,
@@ -192,6 +193,7 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
       trans_tracet trans_trace;
 
       compute_trans_trace(
+        prop_name_list,
         prop_bv,
         bmc_map,
         solver,
@@ -357,8 +359,8 @@ bool ebmc_baset::parse_property(
   status() << "Property: " << string_value << eom;
   status() << "Mode: " << main_symbol->mode << eom;
 
-  prop_expr_list.push_back(exprt());
-  prop_expr_list.back()=expr;
+  prop_expr_list.push_back(expr);
+  prop_name_list.push_back("");
   
   properties.push_back(propertyt());
   properties.back().expr=expr;
@@ -402,6 +404,7 @@ bool ebmc_baset::get_model_properties()
         status() << "Property: " << string_value << eom;
 
         prop_expr_list.push_back(symbol.value);
+        prop_name_list.push_back(id2string(symbol.name));
 
         properties.push_back(propertyt());
         properties.back().name=symbol.name;
