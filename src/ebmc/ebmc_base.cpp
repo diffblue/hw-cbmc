@@ -129,7 +129,6 @@ int ebmc_baset::finish(prop_convt &solver)
       trans_tracet trans_trace;
   
       compute_trans_trace(
-        prop_expr_list,
         prop_bv,
         solver,
         bound+1,

@@ -134,7 +134,6 @@ int k_inductiont::induction_base()
       trans_tracet trans_trace;
   
       compute_trans_trace(
-        prop_expr_list,
         prop_bv,
         solver,
         bound+1,

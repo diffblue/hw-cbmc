@@ -279,7 +279,6 @@ Function: compute_trans_trace
 \*******************************************************************/
 
 void compute_trans_trace(
-  const std::list<exprt> &properties,
   const std::list<bvt> &prop_bv,
   const class prop_convt &solver,
   unsigned no_timeframes,
@@ -296,8 +295,6 @@ void compute_trans_trace(
     
   // check the properties that got violated
   
-  assert(properties.size()==prop_bv.size());
-
   compute_trans_trace_properties(
     prop_bv,
     solver,
