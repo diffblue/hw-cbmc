@@ -240,15 +240,23 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
         throw "integer type not allowed here";
       }
       else if(it->type().id()==ID_verilogbv)
-      {
         has_verilogbv=true;
-      }
 
       width+=get_width(*it);
     }
 
     expr.type()=typet(has_verilogbv?ID_verilogbv:ID_unsignedbv);
     expr.type().set(ID_width, width);
+    
+    if(has_verilogbv)
+    {
+      Forall_operands(it, expr)
+        if(it->type().id()!=ID_verilogbv)
+        {
+          unsigned width=get_width(*it);
+          it->make_typecast(verilogbv_typet(width));
+        }
+    }
     
     // eliminate { x }
     if(expr.operands().size()==1)
