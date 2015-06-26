@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_types.h>
 
+#include "verilog_types.h"
 #include "vtype.h"
 
 /*******************************************************************\
@@ -46,10 +47,15 @@ vtypet::vtypet(const typet &type)
     width=1;
     vtype=BOOL;
   }
-  else if(type.id()==ID_verilogbv)
+  else if(type.id()==ID_verilog_signedbv)
   {
-    vtype=VERILOGBV;
-    width=type.get_int(ID_width);
+    vtype=VERILOG_SIGNED;
+    width=to_verilog_signedbv_type(type).get_width();
+  }
+  else if(type.id()==ID_verilog_unsignedbv)
+  {
+    vtype=VERILOG_UNSIGNED;
+    width=to_verilog_unsignedbv_type(type).get_width();
   }
   else 
   {
@@ -78,8 +84,10 @@ std::ostream &operator << (std::ostream &out, const vtypet &vtype)
     return out << "unsigned(" << vtype.get_width() << ")";
   else if(vtype.is_signed())
     return out << "signed(" << vtype.get_width() << ")";
-  else if(vtype.is_verilogbv())
-    return out << "verilogbv(" << vtype.get_width() << ")";
+  else if(vtype.is_verilog_signed())
+    return out << "verilog_signed(" << vtype.get_width() << ")";
+  else if(vtype.is_verilog_unsigned())
+    return out << "verilog_unsigned(" << vtype.get_width() << ")";
   else if(vtype.is_bool())
     return out << "bool";
   else

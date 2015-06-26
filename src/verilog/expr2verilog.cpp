@@ -519,9 +519,9 @@ std::string expr2verilogt::convert_constant(
   if(type.id()==ID_bool)
   {
     if(src.is_true())
-      dest+="1";
+      dest+='1';
     else
-      dest+="0";
+      dest+='0';
   }
   else if(type.id()==ID_unsignedbv ||
           type.id()==ID_signedbv)
@@ -534,9 +534,14 @@ std::string expr2verilogt::convert_constant(
     else
       dest=integer2string(i);
   }
-  else if(type.id()==ID_verilogbv)
+  else if(type.id()==ID_verilog_signedbv)
   {
-    unsigned width=to_verilogbv_type(src.type()).get_width();
+    unsigned width=to_verilog_signedbv_type(src.type()).get_width();
+    return i2string(width)+"'sb"+id2string(value);
+  }
+  else if(type.id()==ID_verilog_unsignedbv)
+  {
+    unsigned width=to_verilog_unsignedbv_type(src.type()).get_width();
     return i2string(width)+"'b"+id2string(value);
   }
   else if(type.id()==ID_integer || type.id()==ID_natural)

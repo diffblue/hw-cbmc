@@ -228,41 +228,38 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
     Forall_operands(it, expr)
     {
       convert_expr(*it);
+      
+      const typet &type=it->type();
 
-      if(it->type().id()==ID_array)
+      if(type.id()==ID_array)
       {
         err_location(*it);
         throw "array type not allowed here";
       }
-      else if(it->type().id()==ID_integer)
+      else if(type.id()==ID_integer)
       {
         err_location(*it);
         throw "integer type not allowed here";
       }
-      else if(it->type().id()==ID_verilogbv)
+      else if(type.id()==ID_verilog_signedbv ||
+              type.id()==ID_verilog_unsignedbv)
         has_verilogbv=true;
 
       width+=get_width(*it);
     }
 
-    expr.type()=typet(has_verilogbv?ID_verilogbv:ID_unsignedbv);
+    // Cocatenations are unsigned regardless of the operands
+    expr.type()=typet(has_verilogbv?ID_verilog_unsignedbv:ID_unsignedbv);
     expr.type().set(ID_width, width);
     
     if(has_verilogbv)
     {
       Forall_operands(it, expr)
-        if(it->type().id()!=ID_verilogbv)
+        if(it->type().id()!=ID_verilog_unsignedbv)
         {
           unsigned width=get_width(*it);
-          it->make_typecast(verilogbv_typet(width));
+          it->make_typecast(verilog_unsignedbv_typet(width));
         }
-    }
-    
-    // eliminate { x }
-    if(expr.operands().size()==1)
-    {
-      exprt tmp=expr.op0();
-      expr.swap(tmp);
     }
   }
   else if(expr.id()==ID_function_call)
@@ -442,9 +439,7 @@ void verilog_typecheck_exprt::convert_system_function(
     }
     else if(argument.type().id()==ID_bool)
     {
-      exprt tmp(ID_typecast, typet(ID_signedbv));
-      tmp.type().set(ID_width, 2);
-      tmp.move_to_operands(argument);
+      typecast_exprt tmp(argument, signedbv_typet(2));
       tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
@@ -476,17 +471,14 @@ void verilog_typecheck_exprt::convert_system_function(
     }
     else if(argument.type().id()==ID_signedbv)
     {
-      exprt tmp(ID_typecast, argument.type());
+      typecast_exprt tmp(argument, argument.type());
       tmp.type().id(ID_unsignedbv);
-      tmp.move_to_operands(argument);
       tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
     else if(argument.type().id()==ID_bool)
     {
-      exprt tmp(ID_typecast, typet(ID_unsignedbv));
-      tmp.type().set(ID_width, 1);
-      tmp.move_to_operands(argument);
+      typecast_exprt tmp(argument, unsignedbv_typet(1));
       tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
@@ -648,9 +640,8 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
       unsigned bits=integer2long(address_bits(int_value+1));
       source_locationt source_location=expr.source_location();
 
-      expr=constant_exprt(typet(ID_unsignedbv));
+      expr=constant_exprt(unsignedbv_typet(bits));
       expr.add_source_location()=source_location;
-      expr.type().set(ID_width, bits);
       expr.set(ID_value, integer2binary(int_value, bits));
     }
     else
@@ -781,8 +772,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     exprt new_expr;
     const std::string &value=expr.get_string(ID_value);
 
-    new_expr.type()=typet(ID_unsignedbv);
-    new_expr.type().set(ID_width, value.size()*8);
+    new_expr.type()=unsignedbv_typet(value.size()*8);
 
     std::string new_value;
 
@@ -823,7 +813,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
 
   std::string::size_type pos=rest.find('\'');
   unsigned bits=0;
-  bool bits_given(false);
+  bool bits_given=false;
 
   if(pos!=std::string::npos) // size given?
   {
@@ -841,6 +831,15 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
 
     rest=rest.substr(pos+1);
   }
+  
+  bool is_signed=false;
+  
+  // signed-flag 's' used?
+  if(rest!="" && tolower(rest[0])=='s')
+  {
+    is_signed=true;
+    rest=rest.substr(1);
+  }
 
   unsigned base=10;
 
@@ -857,6 +856,10 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
      default:  base=10;
     }
   }
+  
+  // decimal numbers are always signed
+  if(base==10)
+    is_signed=true;
 
   // check for z/x
 
@@ -957,8 +960,11 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
       bits=fvalue.size();
     }
 
-    expr.type()=typet(ID_verilogbv);
-    expr.type().set(ID_width, bits);
+    if(is_signed)
+      expr.type()=verilog_signedbv_typet(bits);
+    else
+      expr.type()=verilog_unsignedbv_typet(bits);
+    
     expr.set(ID_value, fvalue);
     expr.set(ID_C_little_endian, true);
   }
@@ -973,8 +979,11 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
       if(bits<32) bits=32;
     }
 
-    expr.type()=typet(ID_unsignedbv);
-    expr.type().set(ID_width, bits);
+    if(is_signed)
+      expr.type()=signedbv_typet(bits);
+    else
+      expr.type()=unsignedbv_typet(bits);
+
     expr.set(ID_value, integer2binary(int_value, bits));
     expr.set(ID_C_little_endian, true);
   }
@@ -1124,7 +1133,8 @@ void verilog_typecheck_exprt::typecast(
     }
     else if(dest_type.id()==ID_unsignedbv ||
             dest_type.id()==ID_signedbv ||
-            dest_type.id()==ID_verilogbv)
+            dest_type.id()==ID_verilog_unsignedbv ||
+            dest_type.id()==ID_verilog_signedbv)
     {
       expr.make_typecast(dest_type);
       return;
@@ -1133,7 +1143,8 @@ void verilog_typecheck_exprt::typecast(
   else if(expr.type().id()==ID_bool ||
           expr.type().id()==ID_unsignedbv ||
           expr.type().id()==ID_signedbv ||
-          expr.type().id()==ID_verilogbv)
+          expr.type().id()==ID_verilog_unsignedbv ||
+          expr.type().id()==ID_verilog_signedbv)
   {
     if(dest_type.id()==ID_bool)
     {
@@ -1174,7 +1185,8 @@ void verilog_typecheck_exprt::typecast(
 
       return;
     }
-    else if(dest_type.id()==ID_verilogbv)
+    else if(dest_type.id()==ID_verilog_unsignedbv ||
+            dest_type.id()==ID_verilog_signedbv)
     {
       expr.make_typecast(dest_type);
       return;
@@ -1296,7 +1308,7 @@ void verilog_typecheck_exprt::convert_type(
     else
     {
       // we have a genuine array, and do a recursive call
-      dest=typet(ID_array);
+      dest=array_typet();
       dest.set(ID_size, from_integer(width, integer_typet()));
       dest.add_source_location()=
         static_cast<const source_locationt &>(src.find(ID_C_source_location));
@@ -1374,30 +1386,31 @@ typet verilog_typecheck_exprt::max_type(
     return t1;
   else if(vt1.is_integer())
     return t0;
-  else if(vt0.is_verilogbv() || vt1.is_verilogbv())
+    
+  bool is_verilogbv=
+    vt0.is_verilog_signed() || vt0.is_verilog_unsigned() ||
+    vt1.is_verilog_signed() || vt1.is_verilog_unsigned();
+
+  // The result is unsigned if any of the operands is  
+  bool is_unsigned=
+    vt0.is_unsigned() || vt0.is_bool() || vt0.is_verilog_unsigned() ||
+    vt1.is_unsigned() || vt1.is_bool() || vt1.is_verilog_unsigned();
+  
+  unsigned max_width=std::max(vt0.get_width(), vt1.get_width());
+
+  if(is_verilogbv)
   {
-    // we might need signed and unsigned verilogbv-s
-    typet result(ID_verilogbv);
-    result.set(ID_width, std::max(vt0.get_width(), vt1.get_width()));
-    return result;
+    if(is_unsigned)
+      return verilog_unsignedbv_typet(max_width);
+    else
+      return verilog_signedbv_typet(max_width);
   }
-  else if(vt0.is_unsigned() && vt1.is_unsigned())
-    return (vt0.get_width()>=vt1.get_width())?t0:t1;
-  else if(vt0.is_signed() || vt1.is_signed())
-  {
-    signedbv_typet new_type;
-    new_type.set_width(std::max(vt0.get_width(), vt1.get_width()));
-    return new_type;
-  }
-  else if(vt0.is_bool() && (vt1.is_unsigned() || vt1.is_signed()))
-    return t1;
-  else if(vt1.is_bool() && (vt0.is_unsigned() || vt0.is_signed()))
-    return t0;
   else
   {
-    str << "t0: " << t0.pretty() << std::endl
-        << "t1: " << t1.pretty() << std::endl;
-    throw "unexpected pair of types";
+    if(is_unsigned)
+      return unsignedbv_typet(max_width);
+    else
+      return signedbv_typet(max_width);
   }
 }
 
@@ -1603,8 +1616,9 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
 
     unsigned new_width=integer2long(op0)*width;
 
-    if(op1.type().id()==ID_verilogbv)
-      expr.type()=verilogbv_typet(new_width);
+    if(op1.type().id()==ID_verilog_unsignedbv ||
+       op1.type().id()==ID_verilog_signedbv)
+      expr.type()=verilog_unsignedbv_typet(new_width);
     else
       expr.type()=unsignedbv_typet(new_width);
   }
@@ -1887,9 +1901,10 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
 
     expr.op1()=from_integer(op1, natural_typet());
     expr.op2()=from_integer(op2, natural_typet());
-    
-    expr.type()=typet(ID_unsignedbv);
-    expr.type().set(ID_width, integer2long(op1-op2+1));
+
+    // Part-select expressions are unsigned, even if the
+    // entire expression is selected!    
+    expr.type()=unsignedbv_typet(integer2long(op1-op2+1));
   }
   else if(expr.id()==ID_if)
   {

@@ -1762,7 +1762,10 @@ exprt verilog_synthesist::case_comparison(
   const exprt &pattern)
 {
   // we need to take case of ?, x, z in the pattern
-  if(pattern.type().id()==ID_verilogbv)
+  const typet &pattern_type=pattern.type();
+  
+  if(pattern_type.id()==ID_verilog_signedbv ||
+     pattern_type.id()==ID_verilog_unsignedbv)
   {
     // try to simplify the pattern
     exprt tmp=pattern;

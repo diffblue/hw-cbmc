@@ -25,12 +25,13 @@ public:
   inline bool is_signed() const { return vtype==SIGNED; }
   inline bool is_unsigned() const { return vtype==UNSIGNED; }
   inline bool is_integer() const { return vtype==INTEGER; }
-  inline bool is_verilogbv() const { return vtype==VERILOGBV; }
+  inline bool is_verilog_signed() const { return vtype==VERILOG_SIGNED; }
+  inline bool is_verilog_unsigned() const { return vtype==VERILOG_UNSIGNED; }
   inline bool is_other() const { return vtype==OTHER; }
 
 protected:
-  typedef enum { UNKNOWN, BOOL, SIGNED, UNSIGNED,
-                 INTEGER, VERILOGBV, OTHER } _vtypet;
+  typedef enum { UNKNOWN, BOOL, SIGNED, UNSIGNED, INTEGER,
+                 VERILOG_SIGNED, VERILOG_UNSIGNED, OTHER } _vtypet;
   _vtypet vtype;
   unsigned width;
 };

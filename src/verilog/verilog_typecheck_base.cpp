@@ -159,7 +159,7 @@ unsigned verilog_typecheck_baset::get_width(const typet &type)
     return 1;
 
   if(type.id()==ID_unsignedbv || type.id()==ID_signedbv ||
-     type.id()==ID_verilogbv)
+     type.id()==ID_verilog_signedbv || type.id()==ID_verilog_unsignedbv)
     return type.get_int(ID_width);
 
   if(type.id()==ID_array)
