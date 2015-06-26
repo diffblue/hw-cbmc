@@ -660,7 +660,7 @@ void show_trans_trace(
         {
           std::cout << "Property ";
 
-          if(p_it->name.empty())
+          if(!p_it->name.empty())
             std::cout << '`' << p_it->name << "' ";
 
           std::cout << "violated in time frame "
