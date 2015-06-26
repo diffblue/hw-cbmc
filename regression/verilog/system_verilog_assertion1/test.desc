@@ -3,6 +3,6 @@ main.sv
 ^EXIT=0$
 ^SIGNAL=0$
 ^Counterexample:$
-^Property 1 violated in time frame 9$
+^Property .*1.* violated in time frame 9$
 --
 ^warning: ignoring
