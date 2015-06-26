@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 
 #include <util/xml.h>
+#include <util/xml_expr.h>
 #include <util/i2string.h>
 #include <util/xml_irep.h>
 
@@ -45,15 +46,8 @@ void ebmc_baset::show_properties()
         xml.new_element("expression").data=p_it->expr_string;
         xml.new_element("description").data=p_it->description;
 
-        xmlt &location=xml.new_element();
-
         if(p_it->location.is_not_nil())
-          convert(p_it->location, location);
-
-        location.name="location";
-
-        location.new_element("file").data=id2string(p_it->location.get_file());
-        location.new_element("line").data=id2string(p_it->location.get_line());
+          xml.new_element("location")=::xml(p_it->location);
 
         std::cout << xml << '\n';
       }
