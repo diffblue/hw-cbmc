@@ -1457,16 +1457,32 @@ void verilog_typecheck_exprt::convert_unary_expr(exprt &expr)
 {
   if(expr.id()==ID_not)
   {
-    expr.type()=bool_typet();
+    // may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op0());
-    make_boolean(expr.op0());
+
+    if(expr.op0().type().id()==ID_verilog_signedbv ||
+       expr.op0().type().id()==ID_verilog_unsignedbv)
+    {
+      expr.type()=verilog_unsignedbv_typet(1);
+    }
+    else
+    {
+      expr.type()=bool_typet();
+      make_boolean(expr.op0());
+    }
   }
   else if(expr.id()==ID_reduction_or  || expr.id()==ID_reduction_and ||
           expr.id()==ID_reduction_nor || expr.id()==ID_reduction_nand ||
           expr.id()==ID_reduction_xor || expr.id()==ID_reduction_xnor)
   {
-    expr.type()=bool_typet();
+    // these may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op0());
+
+    if(expr.op0().type().id()==ID_verilog_signedbv ||
+       expr.op0().type().id()==ID_verilog_unsignedbv)
+      expr.type()=verilog_unsignedbv_typet(1);
+    else
+      expr.type()=bool_typet();
   }
   else if(expr.id()==ID_unary_minus ||
           expr.id()==ID_unary_plus)
