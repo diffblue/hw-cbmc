@@ -34,14 +34,17 @@ module main(input[31:0] in1, in2, in3);
   always assert equal_p10: (5       !=    6     ) == 1;    
 
   // logical
-  always assert logic_p1: (1'b1 && 1'b1) == 'b1;
-  always assert logic_p2: (1'b1 && 1'b0) == 'b0;
-  always assert logic_p3: (1'b1 && 1'bx) == 'bx;
-  always assert logic_p4: (1'b1 || 1'b0) == 'b1;
-  always assert logic_p5: (1'b0 || 1'b0) == 'b0;
-  always assert logic_p6: (1'b0 || 1'bx) == 'bx;
-  always assert logic_p7: (! 1'b1      ) == 'b0;
-  always assert logic_p8: (! 1'b0      ) == 'b1;
+  always assert logic_p1:  (1'b1 && 1'b1) == 'b1;
+  always assert logic_p2:  (1'b1 && 1'b0) == 'b0;
+  always assert logic_p3:  (1'b1 && 1'bx) == 'bx;
+  always assert logic_p4:  (1'b1 || 1'b0) == 'b1;
+  always assert logic_p5:  (1'b0 || 1'b0) == 'b0;
+  always assert logic_p6:  (1'b0 || 1'bx) == 'bx;
+  always assert logic_p7:  (! 1'b1      ) == 'b0;
+  always assert logic_p8:  (! 1'b0      ) == 'b1;
+  always assert logic_p9:  (!2'b10      ) == 'b0;
+  always assert logic_p10: (! 1'bx      ) == 'bx;
+  always assert logic_p11: (! 1'bz      ) == 'bx;
 
   // bit-wise
   always assert bit_p1:  ~4'b0001             == 4'b1110;
@@ -80,13 +83,18 @@ module main(input[31:0] in1, in2, in3);
   always assert redu_p17: ~^ 4'bx001 == 'bx;
   always assert redu_p18: ~^ 4'bz001 == 'bx;
 
-  // shift
-  always assert shift_p1: 4'b1001 << 1 == 4'b0010;
-  always assert shift_p2: 4'b10x1 << 1 == 4'b0x10;
-  always assert shift_p3: 4'b10z1 << 1 == 4'b0z10;
-  always assert shift_p4: 4'b1001 >> 1 == 4'b0100;
-  always assert shift_p5: 4'b10x1 >> 1 == 4'b010x;
-  always assert shift_p6: 4'b10z1 >> 1 == 4'b010z;
+  // logical shift
+  always assert shift_p1:  4'b1001 << 1 == 4'b0010;
+  always assert shift_p2:  4'b10x1 << 1 == 4'b0x10;
+  always assert shift_p3:  4'b10z1 << 1 == 4'b0z10;
+  always assert shift_p4:  4'b1001 >> 1 == 4'b0100;
+  always assert shift_p5:  4'b10x1 >> 1 == 4'b010x;
+  always assert shift_p6:  4'b10z1 >> 1 == 4'b010z;
+
+  // arithmetic shift
+  always assert shift_p7: -1 >>> 1 == -1;
+  always assert shift_p8:  1 >>> 1 == 0;
+  always assert shift_p9: -2 >>> 1 == -1;
 
   // concatenation
   always assert concat_p1: {4'b1001,4'b10x1} == 'b100110x1;
