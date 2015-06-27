@@ -44,21 +44,21 @@ module main(input[31:0] in1, in2, in3);
   always assert logic_p8: (! 1'b0      ) == 'b1;
 
   // bit-wise
-  always assert bit_p1:  ~4'b0001             == 'b1110;
-  always assert bit_p2:  ~4'bx001             == 'bx110;
-  always assert bit_p3:  ~4'bz001             == 'bx110;
-  always assert bit_p4:  (4'b0001 &  4'b1001) == 'b0001;
-  always assert bit_p5:  (4'b1001 &  4'bx001) == 'bx001;
-  always assert bit_p6:  (4'b1001 &  4'bz001) == 'bx001;
-  always assert bit_p7:  (4'b0001 |  4'b1001) == 'b1001;
-  always assert bit_p8:  (4'b0001 |  4'bx001) == 'bx001;
-  always assert bit_p9:  (4'b0001 |  4'bz001) == 'bx001;
-  always assert bit_p10: (4'b0001 ^  4'b1001) == 'b1000;
-  always assert bit_p11: (4'b0001 ^  4'bx001) == 'bx000;
-  always assert bit_p12: (4'b0001 ^  4'bz001) == 'bx000;
-  always assert bit_p13: (4'b0001 ~^ 4'b1001) == 'b0111;
-  always assert bit_p14: (4'b0001 ~^ 4'bx001) == 'bx111;
-  always assert bit_p15: (4'b0001 ~^ 4'bz001) == 'bx111;
+  always assert bit_p1:  ~4'b0001             == 4'b1110;
+  always assert bit_p2:  ~4'bx001             == 4'bx110;
+  always assert bit_p3:  ~4'bz001             == 4'bx110;
+  always assert bit_p4:  (4'b0001 &  4'b1001) == 4'b0001;
+  always assert bit_p5:  (4'b1001 &  4'bx001) == 4'bx001;
+  always assert bit_p6:  (4'b1001 &  4'bz001) == 4'bx001;
+  always assert bit_p7:  (4'b0001 |  4'b1001) == 4'b1001;
+  always assert bit_p8:  (4'b0001 |  4'bx001) == 4'bx001;
+  always assert bit_p9:  (4'b0001 |  4'bz001) == 4'bx001;
+  always assert bit_p10: (4'b0001 ^  4'b1001) == 4'b1000;
+  always assert bit_p11: (4'b0001 ^  4'bx001) == 4'bx000;
+  always assert bit_p12: (4'b0001 ^  4'bz001) == 4'bx000;
+  always assert bit_p13: (4'b0001 ~^ 4'b1001) == 4'b0111;
+  always assert bit_p14: (4'b0001 ~^ 4'bx001) == 4'bx111;
+  always assert bit_p15: (4'b0001 ~^ 4'bz001) == 4'bx111;
 
   // reduction
   always assert redu_p1:   & 4'b1001 == 'b0;
@@ -81,12 +81,12 @@ module main(input[31:0] in1, in2, in3);
   always assert redu_p18: ~^ 4'bz001 == 'bx;
 
   // shift
-  always assert shift_p1: 4'b1001 << 1 == 'b0010;
-  always assert shift_p2: 4'b10x1 << 1 == 'b0x10;
-  always assert shift_p3: 4'b10z1 << 1 == 'b0z10;
-  always assert shift_p4: 4'b1001 >> 1 == 'b0100;
-  always assert shift_p5: 4'b10x1 >> 1 == 'b010x;
-  always assert shift_p6: 4'b10z1 >> 1 == 'b010z;
+  always assert shift_p1: 4'b1001 << 1 == 4'b0010;
+  always assert shift_p2: 4'b10x1 << 1 == 4'b0x10;
+  always assert shift_p3: 4'b10z1 << 1 == 4'b0z10;
+  always assert shift_p4: 4'b1001 >> 1 == 4'b0100;
+  always assert shift_p5: 4'b10x1 >> 1 == 4'b010x;
+  always assert shift_p6: 4'b10z1 >> 1 == 4'b010z;
 
   // concatenation
   always assert concat_p1: {4'b1001,4'b10x1} == 'b100110x1;
