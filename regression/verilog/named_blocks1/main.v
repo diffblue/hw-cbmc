@@ -9,14 +9,16 @@ module m;
       x=1;
     else
       x=x+1;
-      
-    begin : other_block
-      reg [31:0] y;
-      y=20;
+
+    begin // unnamed
+      begin : other_block // named
+        reg [31:0] y;
+        y=20;
+      end
     end
 
     $display("my_block.x: %d", x);
-    $display("my_block.other.block.y: %d", y);
+    $display("my_block.other.block.y: %d", other_block.y);
   end
   
   initial my_block.x=1;
