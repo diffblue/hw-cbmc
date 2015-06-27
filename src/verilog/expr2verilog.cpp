@@ -526,11 +526,21 @@ std::string expr2verilogt::convert_constant(
   else if(type.id()==ID_unsignedbv ||
           type.id()==ID_signedbv)
   {
+    unsigned width=to_bitvector_type(type).get_width();
+  
     mp_integer i;
     to_integer(src, i);
 
     if(i>=256)
       dest="'h"+integer2string(i, 16);
+    else if(width<=7)
+    {
+      dest=i2string(width);
+      dest+="'";
+      if(type.id()==ID_signedbv) dest+='s';
+      dest+='b';
+      dest+=integer2string(i, 2);
+    }
     else
       dest=integer2string(i);
   }
