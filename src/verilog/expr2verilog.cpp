@@ -651,6 +651,9 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_lshr)
     return convert_binary(src, ">>", precedence=14);
 
+  else if(src.id()==ID_ashr)
+    return convert_binary(src, ">>>", precedence=14);
+
   else if(src.id()==ID_unary_minus)
   {
     if(src.operands().size()!=1)
