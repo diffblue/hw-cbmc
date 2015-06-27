@@ -789,7 +789,9 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     return;
   }
   else if(expr.type().id()==ID_unsignedbv ||
-          expr.type().id()==ID_signedbv)
+          expr.type().id()==ID_signedbv ||
+          expr.type().id()==ID_verilog_signedbv ||
+          expr.type().id()==ID_verilog_unsignedbv)
   {
     // done already
     return;
@@ -944,7 +946,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
         fvalue.erase(0, fvalue.size()-bits); // cut off...
       else if(fvalue.size()<bits)
       {
-        // extend
+        // extend appropriately
         char ext='0';
 
         if(fvalue.size()!=0 && (fvalue[0]=='x' || fvalue[0]=='z'))
