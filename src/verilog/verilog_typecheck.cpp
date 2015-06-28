@@ -687,7 +687,7 @@ void verilog_typecheckt::check_lhs(
   else
   {
     str << lhs << std::endl;
-    error("typechecking: failed to get identifier");
+    error("typechecking: failed to get identifier on LHS");
     throw 0;
   }
 }

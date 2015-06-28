@@ -45,7 +45,7 @@ void verilog_typecheck_exprt::enter_named_block(const irep_idt &name)
       named_blocks.push_back(id2string(name)+".");
     else
     {
-      irep_idt new_id=
+      std::string new_id=
         id2string(named_blocks.back())+id2string(name)+".";
       named_blocks.push_back(new_id);
     }
@@ -594,7 +594,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     }
   }
   
-  irep_idt named_block;
+  std::string named_block;
   
   // try named blocks, beginning with inner one
   for(named_blockst::const_reverse_iterator
@@ -617,7 +617,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
   
   full_identifier=
     id2string(module_identifier)+"."+
-    id2string(named_block)+
+    named_block+
     id2string(identifier);
   
   const symbolt *symbol;
@@ -690,10 +690,13 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     throw "expected symbol on lhs of `.'";
   }
 
+  const irep_idt &lhs_identifier=expr.op0().get(ID_identifier);
+  const irep_idt &rhs_identifier=expr.op1().get(ID_identifier);
+  
+  irep_idt full_identifier;
+    
   if(expr.op0().type().id()==ID_module_instance)
   {
-    const irep_idt &lhs_identifier=expr.op0().get(ID_identifier);
-
     // figure out which module this is
     const symbolt *module_instance_symbol;
     if(lookup(lhs_identifier, module_instance_symbol))
@@ -714,41 +717,43 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
       throw 0;
     }
 
-    const irep_idt &rhs_identifier=expr.op1().get(ID_identifier);
-    
-    std::string full_identifier=
+    full_identifier=
       id2string(module)+"."+id2string(rhs_identifier);
-    
-    const symbolt *symbol;
-    if(!lookup(full_identifier, symbol))
-    {
-      if(symbol->type.id()==ID_genvar)
-      {
-        err_location(expr);
-        str << "genvars must not be used in hierarchical identifiers";
-        throw 0;
-      }
-      else
-      {
-        expr.type()=symbol->type;
-      }
-    }
-    else
-    {
-      err_location(expr);
-      str << "identifier `" << rhs_identifier
-          << "' not found in `" << module << "'" << std::endl;
-      str << "full identifier: " << full_identifier;
-      throw 0;
-    }
   }
-  //else if(expr.op0().type().id()==ID_named_block)
-  //{
-  //}
+  else if(expr.op0().type().id()==ID_named_block)
+  {
+    full_identifier=
+      id2string(lhs_identifier)+"."+
+      id2string(rhs_identifier);
+  }
   else  
   {
     err_location(expr);
     str << "expected module instance or named block on left-hand side of dot";
+    throw 0;
+  }
+  
+  assert(!full_identifier.empty());
+
+  const symbolt *symbol;
+  if(!lookup(full_identifier, symbol))
+  {
+    if(symbol->type.id()==ID_genvar)
+    {
+      err_location(expr);
+      str << "genvars must not be used in hierarchical identifiers";
+      throw 0;
+    }
+    else
+    {
+      expr.type()=symbol->type;
+    }
+  }
+  else
+  {
+    err_location(expr);
+    str << "identifier `" << full_identifier
+        << "' not found";
     throw 0;
   }
 }

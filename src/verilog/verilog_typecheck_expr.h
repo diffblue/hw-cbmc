@@ -78,7 +78,7 @@ protected:
   typet max_type(const typet &t1, const typet &t2);
 
   // named blocks
-  typedef std::vector<irep_idt> named_blockst;
+  typedef std::vector<std::string> named_blockst;
   named_blockst named_blocks;
   void enter_named_block(const irep_idt &);
 

@@ -540,7 +540,7 @@ void verilog_typecheckt::interface_module_decl(
 
     symbol.name=
       id2string(symbol.module)+"."+
-      (named_blocks.empty()?"":id2string(named_blocks.back()))+
+      (named_blocks.empty()?"":named_blocks.back())+
       id2string(symbol.base_name);
 
     symbol_tablet::symbolst::iterator result=
@@ -829,7 +829,33 @@ void verilog_typecheckt::interface_block(
   bool is_named=statement.is_named();
   
   if(is_named)
-    enter_named_block(statement.get_identifier());
+  {
+    irep_idt identifier=statement.get_identifier();
+  
+    // need to add to symbol table
+    symbolt symbol;
+
+    symbol.mode=mode;
+    symbol.base_name=identifier;
+    symbol.type=typet(ID_named_block);
+    symbol.module=module_identifier;
+    symbol.name=
+      id2string(symbol.module)+"."+
+      (named_blocks.empty()?"":named_blocks.back())+
+      id2string(symbol.base_name);
+    symbol.value=nil_exprt();
+
+    if(symbol_table.add(symbol))
+    {
+      err_location(statement);
+      str << "duplicate definition of identifier `" 
+          << symbol.base_name << "' in module `"
+          << module_symbol.base_name << "'";
+      throw 0;
+    }    
+
+    enter_named_block(identifier);
+  }
 
   // do decl
   const exprt &decl=static_cast<const exprt &>(
