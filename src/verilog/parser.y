@@ -2108,7 +2108,6 @@ seq_block:
         | TOK_BEGIN TOK_COLON block_identifier
           statement_or_null_brace TOK_END
                 { init($$, ID_block);
-                  //addswap($$, "decl-brace", $4);
                   swapop($$, $4);
                   addswap($$, ID_identifier, $3); }
 	;
