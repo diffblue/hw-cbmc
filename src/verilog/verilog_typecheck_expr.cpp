@@ -719,12 +719,61 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
 
     full_identifier=
       id2string(module)+"."+id2string(rhs_identifier);
+
+    const symbolt *symbol;
+    if(!lookup(full_identifier, symbol))
+    {
+      if(symbol->type.id()==ID_genvar)
+      {
+        err_location(expr);
+        str << "genvars must not be used in hierarchical identifiers";
+        throw 0;
+      }
+      else
+      {
+        expr.type()=symbol->type;
+      }
+    }
+    else
+    {
+      err_location(expr);
+      str << "identifier `" << rhs_identifier
+          << "' not found in module `"
+          << module_instance_symbol->pretty_name << "'";
+      throw 0;
+    }
   }
   else if(expr.op0().type().id()==ID_named_block)
   {
     full_identifier=
       id2string(lhs_identifier)+"."+
       id2string(rhs_identifier);
+
+    const symbolt *symbol;
+    if(!lookup(full_identifier, symbol))
+    {
+      if(symbol->type.id()==ID_genvar)
+      {
+        err_location(expr);
+        str << "genvars must not be used in hierarchical identifiers";
+        throw 0;
+      }
+      else
+      {
+        source_locationt source_location=expr.source_location();
+
+        symbol_exprt symbol_expr=symbol->symbol_expr();
+        symbol_expr.add_source_location()=source_location;
+        expr.swap(symbol_expr);
+      }
+    }
+    else
+    {
+      err_location(expr);
+      str << "identifier `" << rhs_identifier
+          << "' not found in named block";
+      throw 0;
+    }
   }
   else  
   {
@@ -733,29 +782,6 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     throw 0;
   }
   
-  assert(!full_identifier.empty());
-
-  const symbolt *symbol;
-  if(!lookup(full_identifier, symbol))
-  {
-    if(symbol->type.id()==ID_genvar)
-    {
-      err_location(expr);
-      str << "genvars must not be used in hierarchical identifiers";
-      throw 0;
-    }
-    else
-    {
-      expr.type()=symbol->type;
-    }
-  }
-  else
-  {
-    err_location(expr);
-    str << "identifier `" << full_identifier
-        << "' not found";
-    throw 0;
-  }
 }
 
 /*******************************************************************\
