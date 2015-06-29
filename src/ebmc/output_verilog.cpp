@@ -124,16 +124,17 @@ Function: output_verilog_netlistt::assign_symbol
 
 struct subst_map_entryt
 {
-  const char *a, *b;
+  const irep_idt a;
+  const char *b;
 } subst_map[]=
 {
-  { ">",  "gt" },
-  { ">=", "ge" },
-  { "<",  "lt" },
-  { "<=", "le" },
-  { "=",  "eq" },
-  { "notequal", "ne" },
-  { "unary-", "unary_minus" },
+  { ID_gt, "gt" },
+  { ID_ge, "ge" },
+  { ID_lt, "lt" },
+  { ID_le, "le" },
+  { ID_equal, "eq" },
+  { ID_notequal, "ne" },
+  { ID_unary_minus, "unary_minus" },
   { NULL, NULL }
 };
 
@@ -161,7 +162,7 @@ void output_verilog_netlistt::assign_symbol(
           rhs.id()==ID_nand ||
           rhs.id()==ID_nor ||
           rhs.id()==ID_xor ||
-          rhs.id()=="xnor")
+          rhs.id()==ID_xnor)
   {
     assert(rhs.type().id()==ID_bool);
     assert(lhs.type().id()==ID_bool);
@@ -178,7 +179,7 @@ void output_verilog_netlistt::assign_symbol(
         << symbol_string(lhs) << tmp
         << ");" << '\n' << '\n';
   }
-  else if(rhs.id()=="not")
+  else if(rhs.id()==ID_not)
   {
     assert(rhs.type().id()==ID_bool);
     assert(lhs.type().id()==ID_bool);
@@ -190,9 +191,9 @@ void output_verilog_netlistt::assign_symbol(
         << symbol_string(lhs) << tmp
         << ");" << '\n' << '\n';
   }
-  else if(rhs.id()=="+" || 
-          rhs.id()=="-" ||
-          rhs.id()=="*")
+  else if(rhs.id()==ID_plus || 
+          rhs.id()==ID_minus ||
+          rhs.id()==ID_mult)
   {
     if(rhs.operands().size()==1)
       assign_symbol(lhs, rhs.op0());
@@ -216,9 +217,9 @@ void output_verilog_netlistt::assign_symbol(
     
       out << "  RTL_";
 
-      if(rhs.id()=="+")
+      if(rhs.id()==ID_plus)
         out << "add";
-      else if(rhs.id()=="-")
+      else if(rhs.id()==ID_minus)
         out << "sub";
       else
         out << "mult";
@@ -273,7 +274,7 @@ void output_verilog_rtlt::assign_symbol(
   const exprt &lhs,
   const exprt &rhs)
 {
-  if(lhs.id()=="extractbits")
+  if(lhs.id()==ID_extractbits)
   {
     assert(lhs.operands().size()==3);
 
@@ -297,7 +298,7 @@ void output_verilog_rtlt::assign_symbol(
 
   exprt symbol_expr=lhs;
 
-  if(lhs.id()=="extractbit")
+  if(lhs.id()==ID_extractbit)
   {
     if(lhs.operands().size()!=2)
     {
@@ -308,7 +309,7 @@ void output_verilog_rtlt::assign_symbol(
 
     symbol_expr=lhs.op0();
   }
-  else if(lhs.id()=="extractbits")
+  else if(lhs.id()==ID_extractbits)
   {
     if(lhs.operands().size()!=3)
     {
@@ -320,8 +321,8 @@ void output_verilog_rtlt::assign_symbol(
     symbol_expr=lhs.op0();
   }
 
-  if(symbol_expr.id()!="symbol" &&
-     symbol_expr.id()!="next_symbol")
+  if(symbol_expr.id()!=ID_symbol &&
+     symbol_expr.id()!=ID_next_symbol)
   {
     err_location(lhs);
     str << "assign_symbol expects symbol on lhs, but got `";
@@ -340,15 +341,15 @@ void output_verilog_rtlt::assign_symbol(
 
     // replace the next_symbol
     exprt tmp(lhs);
-    if(tmp.id()=="extractbit" || tmp.id()=="extractbits")
-      tmp.op0().id("symbol");
+    if(tmp.id()==ID_extractbit || tmp.id()==ID_extractbits)
+      tmp.op0().id(ID_symbol);
     else
-      tmp.id("symbol");
+      tmp.id(ID_symbol);
 
     convert_expr(tmp);
     out << " <= ";
     convert_expr(rhs);
-    out << ";" << '\n';
+    out << ';' << '\n';
   }
   else
   {
@@ -356,7 +357,7 @@ void output_verilog_rtlt::assign_symbol(
     convert_expr(lhs);
     out << " = ";
     convert_expr(rhs);
-    out << ";" << '\n';
+    out << ';' << '\n';
   }
   
   out << '\n';
@@ -421,7 +422,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     
     return
       symbol_string(expr.op0())+
-      "["+integer2string(i-offset)+"]";
+      '['+integer2string(i-offset)+']';
   }
   else if(expr.id()==ID_extractbits)
   {
@@ -454,8 +455,8 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     
     return
       symbol_string(expr.op0())+
-      "["+integer2string(to-offset)+
-      ":"+integer2string(from-offset)+"]";
+      '['+integer2string(to-offset)+
+      ':'+integer2string(from-offset)+']';
   }
   else if(expr.id()==ID_symbol)
   {
@@ -520,17 +521,17 @@ std::string output_verilog_baset::type_string_base(const typet &type)
 
   if(type.id()==ID_bool)
     return "";
-  else if(type.id()=="unsignedbv")
+  else if(type.id()==ID_unsignedbv)
   {
     unsigned width=atoi(type.get("width").c_str());
     unsigned offset=atoi(type.get("#offset").c_str());
     
-    type_string="["+i2string(width-1+offset)+":"+
-                    i2string(offset)+"]";
+    type_string='['+i2string(width-1+offset)+':'+
+                    i2string(offset)+']';
 
     return type_string;
   }
-  else if(type.id()=="array")
+  else if(type.id()==ID_array)
   {
     return type_string_base(type.subtype());
   }
@@ -559,11 +560,11 @@ Function: output_verilog_baset::type_string_array
 
 std::string output_verilog_baset::type_string_array(const typet &type)
 {
-  if(type.id()=="array")
+  if(type.id()==ID_array)
   {
     mp_integer size;
-    to_integer(static_cast<const exprt &>(type.find("size")), size);
-    return type_string_array(type.subtype())+" [0:"+integer2string(size)+"]";
+    to_integer(to_array_type(type).size(), size);
+    return type_string_array(type.subtype())+" [0:"+integer2string(size)+']';
   }
 
   return "";
@@ -585,14 +586,14 @@ void output_verilog_baset::module_header(const symbolt &symbol)
 {
   out << "module " << symbol.base_name;
 
-  const irept &ports=symbol.type.find("ports");
+  const irept &ports=symbol.type.find(ID_ports);
   
   //
   // print port in module statement
   //
   if(!ports.get_sub().empty())
   {
-    out << "(";
+    out << '(';
 
     forall_irep(it, ports.get_sub())
     {
@@ -602,10 +603,10 @@ void output_verilog_baset::module_header(const symbolt &symbol)
       out << it->get("#name");
     }
 
-    out << ")";
+    out << ')';
   }
 
-  out << ";" << '\n';
+  out << ';' << '\n';
 
   out << '\n';
 
@@ -614,8 +615,8 @@ void output_verilog_baset::module_header(const symbolt &symbol)
   //
   forall_irep(it, ports.get_sub())
   {
-    bool is_input=it->get_bool("input");
-    bool is_output=it->get_bool("output");
+    bool is_input=it->get_bool(ID_input);
+    bool is_output=it->get_bool(ID_output);
     
     out << "  ";
     
@@ -626,7 +627,7 @@ void output_verilog_baset::module_header(const symbolt &symbol)
     else
       out << "output";
 
-    const typet &type=static_cast<const typet &>(it->find("type"));
+    const typet &type=static_cast<const typet &>(it->find(ID_type));
     
     if(type.id()==ID_named_block)
       continue;
@@ -636,7 +637,7 @@ void output_verilog_baset::module_header(const symbolt &symbol)
 
     out << " " << type_str_base;
     if(!type_str_base.empty()) out << " ";
-    out << it->get("#name") << type_str_array << ";" << '\n';
+    out << it->get("#name") << type_str_array << ';' << '\n';
   }
 
   out << '\n';
@@ -733,7 +734,7 @@ void output_verilog_rtlt::latches(const irep_idt &module)
       out << "  reg " << type_base;
       if(type_base!="") out << " ";
       
-      out << symbol.base_name << type_array << ";" << '\n';
+      out << symbol.base_name << type_array << ';' << '\n';
       found=true;
     }
   }
@@ -787,7 +788,7 @@ void output_verilog_baset::wires(const irep_idt &module)
       const std::string type_base=type_string_base(symbol.type);
       out << "  ";
       out << "wire " << type_base << (type_base==""?"":" ")
-          << symbol.base_name << ";" << '\n';
+          << symbol.base_name << ';' << '\n';
       found=true;
     }
   }
@@ -823,10 +824,10 @@ void output_verilog_baset::module_instantiation(const exprt &expr)
   #endif
 
   out << "  // Module instantiation " << expr.location() << '\n';
-  out << "  " << expr.get("module") << " ";
-  out << expr.get("instance");
+  out << "  " << expr.get(ID_module) << " ";
+  out << expr.get(ID_instance);
 
-  out << "(";
+  out << '(';
 
   for(std::list<std::string>::const_iterator
       it=argument_strings.begin();
@@ -873,7 +874,7 @@ void output_verilog_baset::invariant(const exprt &expr)
   {
     // nothing to do
   }
-  else if(expr.id()=="=")
+  else if(expr.id()==ID_equal)
   {
     assert(expr.operands().size()==2);
     assign_symbol(expr.op0(), expr.op1());
@@ -899,7 +900,7 @@ Function: output_verilog_baset::invariants
 
 void output_verilog_baset::invariants(const symbolt &symbol)
 {
-  assert(symbol.value.id()=="trans" &&
+  assert(symbol.value.id()==ID_trans &&
          symbol.value.operands().size()==3);
 
   invariant(symbol.value.op0());
@@ -930,7 +931,7 @@ void output_verilog_baset::next_state(const exprt &expr)
   else if(expr.is_true())
     return;
 
-  assert(expr.id()=="=");
+  assert(expr.id()==ID_equal);
   assert(expr.operands().size()==2);
 
   assign_symbol(expr.op0(), expr.op1());  
@@ -950,7 +951,7 @@ Function: output_verilog_baset::next_state
 
 void output_verilog_baset::next_state(const symbolt &symbol)
 {
-  assert(symbol.value.id()=="trans" &&
+  assert(symbol.value.id()==ID_trans &&
          symbol.value.operands().size()==3);
 
   next_state(symbol.value.operands()[2]);
