@@ -25,4 +25,9 @@ module m;
   
   always assert p1: my_block.x>=1 && my_block.x<=10;
 
+  // Another x! Not to be confused with my_block.x.
+  reg [7:0] x;
+  
+  initial x=2;
+
 endmodule
