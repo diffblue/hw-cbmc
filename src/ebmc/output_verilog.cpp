@@ -135,7 +135,7 @@ struct subst_map_entryt
   { ID_equal, "eq" },
   { ID_notequal, "ne" },
   { ID_unary_minus, "unary_minus" },
-  { NULL, NULL }
+  { irep_idt(), NULL }
 };
 
 void output_verilog_netlistt::assign_symbol(
@@ -233,7 +233,7 @@ void output_verilog_netlistt::assign_symbol(
   {
     struct subst_map_entryt *p=subst_map;
 
-    while(p->a!=NULL)
+    while(!p->a.empty())
     {
       if(rhs.id()==subst_map->a)
       {
@@ -564,7 +564,8 @@ std::string output_verilog_baset::type_string_array(const typet &type)
   {
     mp_integer size;
     to_integer(to_array_type(type).size(), size);
-    return type_string_array(type.subtype())+" [0:"+integer2string(size)+']';
+    return type_string_array(type.subtype())+
+           " [0:"+integer2string(size)+']';
   }
 
   return "";
