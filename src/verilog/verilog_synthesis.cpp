@@ -41,7 +41,7 @@ void verilog_synthesist::synth_expr(
 {
   if(expr.id()==ID_symbol)
   {
-    const symbolt &symbol=lookup(expr.get(ID_identifier));
+    const symbolt &symbol=lookup(to_symbol_expr(expr));
     
     // does it have a value?
     valuest::const_iterator v_it=values.find(symbol.name);
@@ -131,7 +131,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   // this is essentially inlined
   const symbol_exprt &function=to_symbol_expr(call.function());
   
-  const symbolt &symbol=lookup(function.get_identifier());
+  const symbolt &symbol=lookup(function);
   
   if(symbol.type.id()!=ID_code)
   {
@@ -1390,7 +1390,7 @@ void verilog_synthesist::synth_decl(
         throw 0;
       }
 
-      const symbolt &symbol=lookup(lhs.get(ID_identifier));
+      const symbolt &symbol=lookup(to_symbol_expr(lhs));
       assignmentt &assignment=assignments[symbol.name];
 
       if(symbol.is_state_var)
