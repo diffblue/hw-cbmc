@@ -627,6 +627,9 @@ void output_verilog_baset::module_header(const symbolt &symbol)
       out << "output";
 
     const typet &type=static_cast<const typet &>(it->find("type"));
+    
+    if(type.id()==ID_named_block)
+      continue;
 
     const std::string type_str_base=type_string_base(type);
     const std::string type_str_array=type_string_array(type);
@@ -778,7 +781,8 @@ void output_verilog_baset::wires(const irep_idt &module)
        symbol.type.id()!=ID_integer &&
        symbol.type.id()!=ID_module &&
        symbol.type.id()!=ID_module_instance &&
-       symbol.type.id()!=ID_code)
+       symbol.type.id()!=ID_code &&
+       symbol.type.id()!=ID_named_block)
     {
       const std::string type_base=type_string_base(symbol.type);
       out << "  ";
