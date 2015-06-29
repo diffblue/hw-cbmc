@@ -1370,13 +1370,15 @@ void verilog_synthesist::synth_decl(
   const verilog_declt &statement,
   transt &trans)
 {
-  construct=C_INITIAL;
-  event_guard=G_NONE;
-
   forall_operands(it, statement)
   {
     if(it->id()==ID_equal)
     {
+      // These are only allowed for module-level declarations,
+      // not block-level.
+      construct=C_INITIAL;
+      event_guard=G_NONE;
+
       if(it->operands().size()!=2)
         throw "expected two operands in assignment";
 
@@ -2727,7 +2729,7 @@ exprt verilog_synthesist::current_value(
       return symbol_expr(symbol, CURRENT);
     else
     {
-      // make it some random value
+      // make it some non-deterministic value
       exprt result=exprt(ID_nondet_symbol, symbol.type);
       result.set(ID_identifier, symbol.name);
       result.set("initial_value", true);
