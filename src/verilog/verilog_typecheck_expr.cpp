@@ -810,7 +810,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     for(unsigned i=0; i<value.size(); i++)
       for(unsigned bit=0; bit<8; bit++)
       {
-        bool b=(value[i]&(1<<bit));
+        bool b=(value[i]&(1<<bit))!=0;
         new_value=(b?"1":"0")+new_value;
       }
 
