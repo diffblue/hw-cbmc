@@ -34,7 +34,7 @@ public:
   
   virtual bool parse()
   {
-    return yyverilogparse();
+    return yyverilogparse()!=0;
   }
   
   virtual void clear()
