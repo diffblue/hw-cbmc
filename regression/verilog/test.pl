@@ -10,7 +10,7 @@ use warnings;
 
 sub run($$$) {
   my ($input, $options, $output) = @_;
-  my $cmd = "ebmc $options $input &>$output";
+  my $cmd = "../../../src/ebmc/ebmc $options $input &>$output";
 
   print LOG "Running $cmd\n";
   system $cmd;
