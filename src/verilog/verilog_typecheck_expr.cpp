@@ -865,34 +865,34 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     rest=rest.substr(pos+1);
   }
   
-  bool is_signed=false;
-  
   // signed-flag 's' used?
+  bool s_flag_given=false;
+  
   if(rest!="" && tolower(rest[0])=='s')
   {
-    is_signed=true;
+    s_flag_given=true;
     rest=rest.substr(1);
   }
 
   unsigned base=10;
 
   // base given?
+  bool based=false;
 
   if(rest!="")
   {
     switch(rest[0])
     {
-     case 'b': base=2;  rest.erase(0, 1); break;
-     case 'd': base=10; rest.erase(0, 1); break;
-     case 'h': base=16; rest.erase(0, 1); break;
-     case 'o': base=8;  rest.erase(0, 1); break;
+     case 'b': based=true; base=2;  rest.erase(0, 1); break;
+     case 'd': based=true; base=10; rest.erase(0, 1); break;
+     case 'h': based=true; base=16; rest.erase(0, 1); break;
+     case 'o': based=true; base=8;  rest.erase(0, 1); break;
      default:  base=10;
     }
   }
   
-  // decimal numbers are always signed
-  if(base==10)
-    is_signed=true;
+  // based numbers are always unsigned unless 's' flag is given
+  bool is_signed=!based || s_flag_given;
 
   // check for z/x
 
