@@ -34,11 +34,12 @@ void verilog_typecheckt::module_interface()
   const irept &module_source=module_symbol.type.find(ID_module_source);
   const irept &module_items=module_source.find(ID_module_items);
 
+  // first do module items
   forall_irep(it, module_items.get_sub())
     interface_module_item(
       static_cast<const verilog_module_itemt &>(*it));
 
-  // get port names
+  // now check port names
   interface_ports(module_symbol.type.add(ID_ports).get_sub());
 }
 
@@ -170,6 +171,21 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     port_names[name]=nr;
     
     nr++;
+  }
+
+  // check that all declared ports are also in the port list
+  
+  forall_symbol_module_map(it, symbol_table.symbol_module_map, module_identifier)
+  {
+    const symbolt &symbol=lookup(it->second);
+    
+    if(symbol.is_input || symbol.is_output)
+      if(port_names.find(symbol.base_name)==port_names.end())
+      {
+        err_location(symbol.location);
+        str << "port `" << symbol.base_name << "' not in port list";
+        throw 0;
+      }
   }
 }
 
@@ -338,7 +354,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       err_location(decl);
       str << "unexpected port class: `" << port_class << "'";
       throw 0;
-    }
+    }    
   }
   
   forall_operands(it2, decl)
@@ -440,7 +456,6 @@ void verilog_typecheckt::interface_module_decl(
   symbol.mode=mode;
   symbol.module=module_identifier;
   symbol.value.make_nil();
-  
   const irep_idt &port_class=decl.get_class();
   
   if(port_class==ID_function ||
@@ -499,6 +514,7 @@ void verilog_typecheckt::interface_module_decl(
     if(it2->id()==ID_symbol)
     {
       symbol.base_name=it2->get(ID_identifier);
+      symbol.location=it2->source_location();  
       
       if(it2->type().is_nil())
         symbol.type=type;
@@ -523,6 +539,7 @@ void verilog_typecheckt::interface_module_decl(
       }
 
       symbol.base_name=it2->op0().get(ID_identifier);
+      symbol.location=it2->op0().source_location();  
       symbol.type=type;
     }
     else
@@ -547,7 +564,9 @@ void verilog_typecheckt::interface_module_decl(
       symbol_table.symbols.find(symbol.name);
       
     if(result==symbol_table.symbols.end())
+    {
       symbol_table.add(symbol);
+    }
     else
     {
       symbolt &osymbol=result->second;
