@@ -1678,12 +1678,13 @@ named_parameter_assignment_brace:
 	  	{ $$=$1; mto($$, $1); }
 	;
 
-ordered_parameter_assignment: expression;
+ordered_parameter_assignment:
+          expression;
 
 named_parameter_assignment:
 	  '.' parameter_identifier '(' expression_opt ')'
 	  	{ init($$, "named_parameter_assignment");
-	  	  stack($$).add("parameter").swap(stack($2));
+	  	  stack($$).add(ID_parameter).swap(stack($2));
 	  	  stack($$).add(ID_value).swap(stack($4));
 	  	}
 	;
