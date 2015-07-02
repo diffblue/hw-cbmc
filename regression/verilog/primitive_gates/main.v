@@ -1,4 +1,4 @@
-module main(and_in1, and_in2, or_in1, or_in2, buf_in, not_in);
+module main(and_in1, and_in2, or_in1, or_in2, or_in3, buf_in, not_in);
 
   input [31:0] and_in1, and_in2;
   wire  [31:0] and_out;
