@@ -1647,7 +1647,7 @@ name_of_gate_instance: TOK_CHARSTR;
 module_instantiation:
 	  module_identifier param_value_assign_opt module_instance_brace ';'
 		{ init($$, ID_inst);
-		  addswap($$, "parameters", $2);
+		  addswap($$, ID_parameter_assignments, $2);
                   addswap($$, ID_module, $1);
                   swapop($$, $3); }
 	;
