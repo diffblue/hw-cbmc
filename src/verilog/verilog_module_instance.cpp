@@ -72,7 +72,7 @@ void verilog_typecheckt::get_parameter_values(
   if(p_it!=parameters.end())
   {
     err_location(*p_it);
-    throw "too many parameters";
+    throw "too many parameter assignments";
   }
 }
 
@@ -125,9 +125,9 @@ Function: verilog_typecheckt::module_instance
 void verilog_typecheckt::module_instance(
   const locationt &location,
   std::string &module_identifier,
-  const exprt::operandst &parameters)
+  const exprt::operandst &parameter_assignments)
 {
-  if(parameters.empty()) return;
+  if(parameter_assignments.empty()) return;
 
   // find base symbol
   
@@ -147,7 +147,7 @@ void verilog_typecheckt::module_instance(
   
   get_parameter_values(
     base_symbol.type.find(ID_module_source),
-    parameters,
+    parameter_assignments,
     parameter_values);
 
   // create full instance symbol name
