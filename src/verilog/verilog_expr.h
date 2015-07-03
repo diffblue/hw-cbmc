@@ -124,6 +124,8 @@ public:
 
   inline irep_idt get_module() const { return get(ID_module); }
   
+  inline void set_module(const irep_idt &module) { return set(ID_module, module); }
+  
   inline exprt::operandst &parameter_assignments()
   {
     return static_cast<exprt &>(add(ID_parameter_assignments)).operands();

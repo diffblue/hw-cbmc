@@ -421,8 +421,8 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
 
   // must be user-defined
 
-  std::string identifier=
-    id2string(verilog_module_symbol(id2string(inst_module)));
+  irep_idt identifier=
+    verilog_module_symbol(id2string(inst_module));
 
   exprt::operandst &parameter_assignments=
     inst.parameter_assignments();
@@ -441,7 +441,7 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
     identifier,
     parameter_assignments);
 
-  inst.set(ID_module, identifier);
+  inst.set_module(identifier);
 
   const symbolt *module_symbol;
   if(lookup(identifier, module_symbol))

@@ -124,7 +124,7 @@ Function: verilog_typecheckt::module_instance
 
 void verilog_typecheckt::module_instance(
   const locationt &location,
-  std::string &module_identifier,
+  irep_idt &module_identifier,
   const exprt::operandst &parameter_assignments)
 {
   if(parameter_assignments.empty()) return;
@@ -137,7 +137,7 @@ void verilog_typecheckt::module_instance(
   if(it==symbol_table.symbols.end())
   {
     err_location(location);
-    str << "module not found" << std::endl;
+    str << "module not found";
     throw 0;
   }
   
@@ -173,7 +173,7 @@ void verilog_typecheckt::module_instance(
     
   suffix+=')';
 
-  module_identifier+=suffix;
+  module_identifier=id2string(module_identifier)+suffix;
   
   if(symbol_table.symbols.find(module_identifier)!=
      symbol_table.symbols.end())

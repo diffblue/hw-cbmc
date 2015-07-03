@@ -73,7 +73,7 @@ protected:
   // instances
   void module_instance(
     const locationt &location,
-    std::string &module_identifier,
+    irep_idt &module_identifier,
     const exprt::operandst &parameters);
 
   void get_parameter_values(
