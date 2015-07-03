@@ -403,6 +403,10 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
 
     if(input || output)
     {
+      // Terminology clash: these aren't called 'parameters'
+      // in Verilog terminology, but inputs and outputs.
+      // We'll use the C terminology, and call them parameters.
+      // Not to be confused with module parameters.
       symbol_tablet::symbolst::iterator s_it=
         symbol_table.symbols.find(function_or_task_name);
       assert(s_it!=symbol_table.symbols.end());
