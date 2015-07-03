@@ -424,10 +424,10 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
   std::string identifier=
     id2string(verilog_module_symbol(id2string(inst_module)));
 
-  exprt &parameter_assignments=
-    static_cast<exprt &>(inst.add(ID_parameter_assignments));
+  exprt::operandst &parameter_assignments=
+    inst.parameter_assignments();
   
-  Forall_operands(it, parameter_assignments)
+  Forall_expr(it, parameter_assignments)
   {
     if(it->id()=="named_parameter_assignment")
     {
@@ -439,7 +439,7 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
   module_instance(
     inst.location(),
     identifier,
-    parameter_assignments.operands());
+    parameter_assignments);
 
   inst.set(ID_module, identifier);
 

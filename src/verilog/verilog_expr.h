@@ -123,6 +123,16 @@ public:
   }
 
   inline irep_idt get_module() const { return get(ID_module); }
+  
+  inline exprt::operandst &parameter_assignments()
+  {
+    return static_cast<exprt &>(add(ID_parameter_assignments)).operands();
+  }
+
+  inline const exprt::operandst &parameter_assignments() const
+  {
+    return static_cast<const exprt &>(find(ID_parameter_assignments)).operands();
+  }
 };
 
 extern inline const verilog_instt &to_verilog_inst(const exprt &expr)
