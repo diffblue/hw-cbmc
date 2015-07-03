@@ -143,16 +143,17 @@ void verilog_typecheckt::set_parameter_values(
   
   irept &module_items=module_source.add(ID_module_items);
   
-  forall_irep(it, module_items.get_sub())
+  Forall_irep(it, module_items.get_sub())
     if(it->id()==ID_parameter_decl)
     {
-      Forall_operands(o_it, (exprt &)*it)
+      Forall_operands(o_it, static_cast<exprt &>(*it))
       {
-        assert(p_it!=parameter_values.end());
-        
-        exprt &value=static_cast<exprt &>(o_it->add(ID_value));
-        value=*p_it;
-        p_it++;
+        if(p_it!=parameter_values.end())
+        {
+          exprt &value=static_cast<exprt &>(o_it->add(ID_value));
+          value=*p_it;
+          p_it++;
+        }
       }
     }
 }
@@ -169,13 +170,14 @@ Function: verilog_typecheckt::parameterize_module
 
 \*******************************************************************/
 
-void verilog_typecheckt::parameterize_module(
+irep_idt verilog_typecheckt::parameterize_module(
   const locationt &location,
-  irep_idt &module_identifier,
+  const irep_idt &module_identifier,
   const exprt::operandst &parameter_assignments)
 {
   // No parameters assigned? Nothing to do.
-  if(parameter_assignments.empty()) return;
+  if(parameter_assignments.empty())
+    return module_identifier;
 
   // find base symbol
   
@@ -212,7 +214,7 @@ void verilog_typecheckt::parameterize_module(
       {
         err_location(*it);
         str << "parameter expected to be constant, but got `"
-            << to_string(*it) << "'" << std::endl;
+            << to_string(*it) << "'";
         throw 0;
       }
       else
@@ -221,17 +223,17 @@ void verilog_typecheckt::parameterize_module(
     
   suffix+=')';
 
-  module_identifier=id2string(module_identifier)+suffix;
+  irep_idt new_module_identifier=id2string(module_identifier)+suffix;
   
-  if(symbol_table.symbols.find(module_identifier)!=
+  if(symbol_table.symbols.find(new_module_identifier)!=
      symbol_table.symbols.end())
-    return; // done already
+    return new_module_identifier; // done already
     
   // create symbol
   
   symbolt symbol(base_symbol);
 
-  symbol.name=module_identifier;
+  symbol.name=new_module_identifier;
   symbol.module=symbol.name;
   
   // set parameters
@@ -249,7 +251,8 @@ void verilog_typecheckt::parameterize_module(
   if(symbol_table.move(symbol, new_symbol))
   {
     err_location(location);
-    str << "duplicate definition of module " << symbol.base_name;
+    str << "duplicate definition of parameterized module "
+        << symbol.base_name;
     throw 0;
   }
 
@@ -259,5 +262,7 @@ void verilog_typecheckt::parameterize_module(
 
   if(verilog_typecheck.typecheck_main())
     throw 0;
+
+  return new_module_identifier;
 }
 

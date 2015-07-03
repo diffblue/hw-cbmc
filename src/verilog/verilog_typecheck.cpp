@@ -421,7 +421,7 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
 
   // must be user-defined
 
-  irep_idt identifier=
+  const irep_idt identifier=
     verilog_module_symbol(id2string(inst_module));
 
   exprt::operandst &parameter_assignments=
@@ -435,15 +435,16 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
       convert_expr(*it);
   }
 
-  parameterize_module(
-    inst.location(),
-    identifier,
-    parameter_assignments);
+  irep_idt new_identifier=
+    parameterize_module(
+      inst.location(),
+      identifier,
+      parameter_assignments);
 
-  inst.set_module(identifier);
+  inst.set_module(new_identifier);
 
   const symbolt *module_symbol;
-  if(lookup(identifier, module_symbol))
+  if(lookup(new_identifier, module_symbol))
   {
     err_location(inst);
     str << "Verilog module " << identifier << " not found";

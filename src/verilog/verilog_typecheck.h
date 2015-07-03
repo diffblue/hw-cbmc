@@ -71,9 +71,9 @@ protected:
   symbolt &module_symbol;
 
   // instances
-  void parameterize_module(
+  irep_idt parameterize_module(
     const locationt &location,
-    irep_idt &module_identifier,
+    const irep_idt &module_identifier,
     const exprt::operandst &parameter_assignment);
 
   void get_parameter_values(
