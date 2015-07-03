@@ -1400,9 +1400,6 @@ void verilog_typecheckt::convert_statements()
   
   Forall_operands(it, value)
     convert_module_item(static_cast<verilog_module_itemt &>(*it));
-    
-  // get rid of source
-  module_symbol.type.remove(ID_module_source);
 }
 
 /*******************************************************************\

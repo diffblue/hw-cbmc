@@ -29,56 +29,97 @@ void verilog_typecheckt::get_parameter_values(
   const exprt::operandst &parameter_assignment,
   expr_listt &parameter_values)
 {
+  const irept &module_items=module_source.find(ID_module_items);
+  replace_symbolt replace_symbol;
+  
   // named or ordered?
   assert(!parameter_assignment.empty());
   
-  //if(parameter_assignment.front().id()==ID_named_parameter_assignment
-
-
-  exprt::operandst::const_iterator p_it=parameter_assignment.begin();
-  
-  const irept &module_items=module_source.find(ID_module_items);
-  
-  replace_symbolt replace_symbol;
-
-  forall_irep(it, module_items.get_sub())
-    if(it->id()==ID_parameter_decl)
-    {
-      forall_operands(o_it, static_cast<const exprt &>(*it))
-      {
-        const irep_idt &identifier=o_it->get(ID_identifier);
-        exprt value;
-        
-        if(p_it!=parameter_assignment.end())
-        {
-          value=*p_it;
-          p_it++;
-        }
-        else
-        {
-          value=static_cast<const exprt &>(o_it->find(ID_value));
-          // substitute other parameters
-          replace_symbol.replace(value);
-          simplify(value, ns);
-          
-          if(!value.is_constant())
-          {
-            err_location((const exprt &)(o_it->find(ID_value)));
-            str << "parameter value expected to simplify to constant, "
-                << "but got `" << to_string(value) << "'" << std::endl;
-            throw 0;
-          }
-        }
-        
-        replace_symbol.insert(identifier, value);
-        parameter_values.push_back(value);
-      }
-    }
-    
-  if(p_it!=parameter_assignment.end())
+  if(parameter_assignment.front().id()==ID_named_parameter_assignment)
   {
-    err_location(*p_it);
-    throw "too many parameter assignments";
+    std::map<irep_idt, exprt> map;
+
+    forall_expr(it, parameter_assignment)
+    {
+      irep_idt parameter=it->get(ID_parameter);
+      map[parameter]=static_cast<const exprt &>(it->find(ID_value));
+    }    
+
+    forall_irep(it, module_items.get_sub())
+      if(it->id()==ID_parameter_decl)
+      {
+        forall_operands(o_it, static_cast<const exprt &>(*it))
+        {
+          const irep_idt &identifier=o_it->get(ID_identifier);
+          exprt value;
+
+          if(map.find(identifier)!=map.end())
+            value=map[identifier];
+          else
+          {          
+            value=static_cast<const exprt &>(o_it->find(ID_value));
+            // substitute other parameters
+            replace_symbol.replace(value);
+            simplify(value, ns);
+            
+            if(!value.is_constant())
+            {
+              err_location((const exprt &)(o_it->find(ID_value)));
+              str << "parameter value expected to simplify to constant, "
+                  << "but got `" << to_string(value) << "'" << std::endl;
+              throw 0;
+            }
+          }
+          
+          replace_symbol.insert(identifier, value);
+          parameter_values.push_back(value);
+        }
+      }
+  }
+  else
+  {
+    // ordered
+    exprt::operandst::const_iterator p_it=parameter_assignment.begin();
+  
+    forall_irep(it, module_items.get_sub())
+      if(it->id()==ID_parameter_decl)
+      {
+        forall_operands(o_it, static_cast<const exprt &>(*it))
+        {
+          const irep_idt &identifier=o_it->get(ID_identifier);
+          exprt value;
+          
+          if(p_it!=parameter_assignment.end())
+          {
+            value=*p_it;
+            p_it++;
+          }
+          else
+          {
+            value=static_cast<const exprt &>(o_it->find(ID_value));
+            // substitute other parameters
+            replace_symbol.replace(value);
+            simplify(value, ns);
+            
+            if(!value.is_constant())
+            {
+              err_location((const exprt &)(o_it->find(ID_value)));
+              str << "parameter value expected to simplify to constant, "
+                  << "but got `" << to_string(value) << "'" << std::endl;
+              throw 0;
+            }
+          }
+          
+          replace_symbol.insert(identifier, value);
+          parameter_values.push_back(value);
+        }
+      }
+      
+    if(p_it!=parameter_assignment.end())
+    {
+      err_location(*p_it);
+      throw "too many parameter assignments";
+    }
   }
 }
 
@@ -208,8 +249,7 @@ void verilog_typecheckt::parameterize_module(
   if(symbol_table.move(symbol, new_symbol))
   {
     err_location(location);
-    str << "duplicate definition of module " 
-        << symbol.base_name << std::endl;
+    str << "duplicate definition of module " << symbol.base_name;
     throw 0;
   }
 
