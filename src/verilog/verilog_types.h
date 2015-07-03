@@ -85,4 +85,20 @@ inline verilog_unsignedbv_typet &to_verilog_unsignedbv_type(typet &type)
   return static_cast<verilog_unsignedbv_typet &>(type);
 }
 
+class module_typet:public typet
+{
+public:
+  inline module_typet():typet(ID_module)
+  {
+  }
+};
+
+class genvar_typet:public typet
+{
+public:
+  inline genvar_typet():typet(ID_genvar)
+  {
+  }
+};
+
 #endif

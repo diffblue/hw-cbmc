@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_typecheck.h"
 #include "verilog_expr.h"
+#include "verilog_types.h"
 
 /*******************************************************************\
 
@@ -223,7 +224,7 @@ void verilog_typecheckt::interface_function_or_task(
     else
       return_type=empty_typet();
     
-    symbol.type=typet(ID_code);
+    symbol.type=code_typet();
     symbol.type.add(ID_return_type)=return_type;
 
     symbol.base_name=decl.get_identifier();
@@ -315,7 +316,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
   else if(port_class==ID_realtime)
   {
     symbol.is_lvalue=true;
-    type=typet("verilog_realtime");
+    type=typet(ID_verilog_realtime);
   }
   else
   {
@@ -476,12 +477,12 @@ void verilog_typecheckt::interface_module_decl(
   }
   else if(port_class==ID_genvar)
   {
-    type=typet(ID_genvar);
+    type=genvar_typet();
   }
   else if(port_class==ID_realtime)
   {
     symbol.is_lvalue=true;
-    type=typet("verilog_realtime");
+    type=typet(ID_verilog_realtime);
   }
   else
   {

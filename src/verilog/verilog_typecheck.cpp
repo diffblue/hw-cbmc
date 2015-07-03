@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "verilog_typecheck.h"
 #include "verilog_expr.h"
+#include "verilog_types.h"
 
 /*******************************************************************\
 
@@ -57,11 +58,11 @@ void verilog_typecheckt::array_type(
     throw "array size must be positive";
   }
 
-  dest=typet(ID_array);
+  dest=array_typet();
   dest.subtype()=element_type;
 
-  dest.set(ID_size, from_integer(size, typet(ID_natural)));
-  dest.set(ID_offset, from_integer(offset, typet(ID_natural)));
+  dest.set(ID_size, from_integer(size, natural_typet()));
+  dest.set(ID_offset, from_integer(offset, natural_typet()));
   dest.set(ID_C_little_endian, little_endian);
 }
 
@@ -744,7 +745,7 @@ void verilog_typecheckt::convert_continuous_assign(
       throw 0;
     }
 
-    it->type()=typet(ID_bool);
+    it->type()=bool_typet();
 
     exprt &lhs=it->op0();
     exprt &rhs=it->op1();
@@ -1261,7 +1262,7 @@ void verilog_typecheckt::convert_statement(
     convert_assign(to_verilog_assign(statement), false);
   else if(statement.id()==ID_if)
     convert_if(to_verilog_if(statement));
-  else if(statement.id()=="event_guard")
+  else if(statement.id()==ID_event_guard)
     convert_event_guard(to_verilog_event_guard(statement));
   else if(statement.id()==ID_delay)
     convert_delay(to_verilog_delay(statement));
@@ -1431,7 +1432,7 @@ bool verilog_typecheckt::implicit_wire(
   symbol.value.make_nil();
   symbol.base_name=identifier;
   symbol.name=full_identifier;
-  symbol.type=typet(ID_bool); // TODO: other types?
+  symbol.type=bool_typet(); // TODO: other types?
 
   symbolt *new_symbol;
   symbol_table.move(symbol, new_symbol);
@@ -1488,7 +1489,8 @@ bool verilog_typecheck(
     return true;
   }
 
-  return verilog_typecheck(symbol_table, it->second->verilog_module, message_handler);
+  return verilog_typecheck(
+    symbol_table, it->second->verilog_module, message_handler);
 }
 
 /*******************************************************************\
@@ -1514,7 +1516,7 @@ bool verilog_typecheck(
 
   symbol.mode=ID_Verilog;
   symbol.base_name=verilog_module.name;
-  symbol.type=typet(ID_module);
+  symbol.type=module_typet();
   symbol.name=verilog_module_symbol(verilog_module.name);
   symbol.base_name=verilog_module.name;
   symbol.pretty_name=verilog_module.name;
