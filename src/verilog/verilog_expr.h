@@ -333,6 +333,16 @@ public:
   }
 };
 
+extern inline const verilog_case_baset &to_verilog_case_base(const exprt &expr)
+{
+  return static_cast<const verilog_case_baset &>(expr);
+}
+
+extern inline verilog_case_baset &to_verilog_case_base(exprt &expr)
+{
+  return static_cast<verilog_case_baset &>(expr);
+}
+
 class verilog_case_itemt:public exprt
 {
 public:

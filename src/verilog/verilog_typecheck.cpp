@@ -1248,7 +1248,7 @@ void verilog_typecheckt::convert_statement(
   else if(statement.id()==ID_case ||
           statement.id()==ID_casex ||
           statement.id()==ID_casez)
-    convert_case(static_cast<verilog_case_baset &>(statement));
+    convert_case(to_verilog_case_base(statement));
   else if(statement.id()==ID_blocking_assign)
     convert_assign(to_verilog_assign(statement), true);
   else if(statement.id()==ID_continuous_assign)
