@@ -1683,7 +1683,7 @@ ordered_parameter_assignment:
 
 named_parameter_assignment:
 	  '.' parameter_identifier '(' expression_opt ')'
-	  	{ init($$, "named_parameter_assignment");
+	  	{ init($$, ID_named_parameter_assignment);
 	  	  stack($$).add(ID_parameter).swap(stack($2));
 	  	  stack($$).add(ID_value).swap(stack($4));
 	  	}

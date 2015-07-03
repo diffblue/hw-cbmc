@@ -26,10 +26,16 @@ Function: verilog_typecheckt::get_parameter_values
 
 void verilog_typecheckt::get_parameter_values(
   const irept &module_source,
-  const exprt::operandst &parameters,
+  const exprt::operandst &parameter_assignment,
   expr_listt &parameter_values)
 {
-  exprt::operandst::const_iterator p_it=parameters.begin();
+  // named or ordered?
+  assert(!parameter_assignment.empty());
+  
+  //if(parameter_assignment.front().id()==ID_named_parameter_assignment
+
+
+  exprt::operandst::const_iterator p_it=parameter_assignment.begin();
   
   const irept &module_items=module_source.find(ID_module_items);
   
@@ -43,7 +49,7 @@ void verilog_typecheckt::get_parameter_values(
         const irep_idt &identifier=o_it->get(ID_identifier);
         exprt value;
         
-        if(p_it!=parameters.end())
+        if(p_it!=parameter_assignment.end())
         {
           value=*p_it;
           p_it++;
@@ -69,7 +75,7 @@ void verilog_typecheckt::get_parameter_values(
       }
     }
     
-  if(p_it!=parameters.end())
+  if(p_it!=parameter_assignment.end())
   {
     err_location(*p_it);
     throw "too many parameter assignments";
@@ -112,7 +118,7 @@ void verilog_typecheckt::set_parameter_values(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::module_instance
+Function: verilog_typecheckt::parameterize_module
 
   Inputs:
 
@@ -122,11 +128,12 @@ Function: verilog_typecheckt::module_instance
 
 \*******************************************************************/
 
-void verilog_typecheckt::module_instance(
+void verilog_typecheckt::parameterize_module(
   const locationt &location,
   irep_idt &module_identifier,
   const exprt::operandst &parameter_assignments)
 {
+  // No parameters assigned? Nothing to do.
   if(parameter_assignments.empty()) return;
 
   // find base symbol

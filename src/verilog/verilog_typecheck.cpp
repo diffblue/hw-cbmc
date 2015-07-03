@@ -429,14 +429,13 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
   
   Forall_expr(it, parameter_assignments)
   {
-    if(it->id()=="named_parameter_assignment")
-    {
-    }
+    if(it->id()==ID_named_parameter_assignment)
+      convert_expr(static_cast<exprt &>(it->add(ID_value)));
     else
       convert_expr(*it);
   }
 
-  module_instance(
+  parameterize_module(
     inst.location(),
     identifier,
     parameter_assignments);

@@ -71,14 +71,14 @@ protected:
   symbolt &module_symbol;
 
   // instances
-  void module_instance(
+  void parameterize_module(
     const locationt &location,
     irep_idt &module_identifier,
-    const exprt::operandst &parameters);
+    const exprt::operandst &parameter_assignment);
 
   void get_parameter_values(
     const irept &module_source,
-    const exprt::operandst &parameters,
+    const exprt::operandst &parameter_assignment,
     expr_listt &parameter_values);
 
   void set_parameter_values(
