@@ -26,7 +26,7 @@ public:
     message_handlert &_message_handler):
     typecheckt(_message_handler),
     namespace_utilst(_ns),
-    mode("Verilog")
+    mode(ID_Verilog)
   { }
 
   // overloaded to use verilog syntax
@@ -35,7 +35,7 @@ public:
   virtual std::string to_string(const exprt &expr);
 
 protected:
-  std::string mode;
+  const irep_idt mode;
   
   void convert_type(const irept &src, typet &dest);
   virtual unsigned get_width(const exprt &expr) { return get_width(expr.type()); }

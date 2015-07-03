@@ -1512,7 +1512,7 @@ bool verilog_typecheck(
 
   symbolt symbol;
 
-  symbol.mode="Verilog";
+  symbol.mode=ID_Verilog;
   symbol.base_name=verilog_module.name;
   symbol.type=typet(ID_module);
   symbol.name=verilog_module_symbol(verilog_module.name);

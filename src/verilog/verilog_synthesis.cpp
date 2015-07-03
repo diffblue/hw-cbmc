@@ -1212,7 +1212,7 @@ void verilog_synthesist::expand_module_instance(
 
       std::string full_identifier;
 
-      full_identifier=mode+"::";
+      full_identifier=id2string(mode)+"::";
       full_identifier+=id2string(verilog_module_name(module));
       full_identifier+="."+id2string(instance);
       full_identifier+=identifier_without_module;
