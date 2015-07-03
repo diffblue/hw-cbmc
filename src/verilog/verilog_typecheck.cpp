@@ -442,18 +442,25 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
       parameter_assignments);
 
   inst.set_module(new_identifier);
-
-  const symbolt *module_symbol;
-  if(lookup(new_identifier, module_symbol))
+  
+  // get the instance symbols
+  forall_operands(it, inst)
   {
-    err_location(inst);
-    str << "Verilog module " << identifier << " not found";
-    throw 0;
+    irep_idt instance_identifier=
+      id2string(module_symbol.name)+"."+id2string(it->get(ID_instance));
+  
+    symbolt &instance_symbol=symbol_table_lookup(instance_identifier);
+  
+    // fix the module in the instance symbol
+    instance_symbol.value.set(ID_module, new_identifier);
   }
+  
+  const symbolt &parameterized_module_symbol=
+    symbol_table_lookup(new_identifier);
 
   // check the arguments
   Forall_operands(it, inst)
-    typecheck_port_connections(*it, *module_symbol);
+    typecheck_port_connections(*it, parameterized_module_symbol);
 }
 
 /*******************************************************************\
