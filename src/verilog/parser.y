@@ -1110,7 +1110,7 @@ port_declaration:
 module_or_generate_item:
  	  attribute_instance_brace module_or_generate_item_declaration { $$=$2; }
  	// | attribute_instance_brace parameter override { $$=$2; }
- 	| attribute_instance_brace parameter_declaration { $$=$2; /* TODO */ }
+ 	| attribute_instance_brace parameter_declaration { $$=$2; }
  	| attribute_instance_brace continuous_assign { $$=$2; }
         | attribute_instance_brace gate_instantiation { $$=$2; }
  	// | attribute_instance_brace udp_instantiation { $$=$2; }
@@ -1119,7 +1119,7 @@ module_or_generate_item:
  	| attribute_instance_brace always_construct { $$=$2; }
  	| attribute_instance_brace concurrent_assert_statement { $$=$2; }
  	| attribute_instance_brace concurrent_cover_statement { $$=$2; }
-	| attribute_instance_brace concurrent_assertion_item_declaration
+	| attribute_instance_brace concurrent_assertion_item_declaration { $$=$2; }
         ;
 
 module_or_generate_item_declaration:
@@ -1641,14 +1641,14 @@ name_of_gate_instance_opt:
 name_of_gate_instance: TOK_CHARSTR;
 
 /*
- * Module instantiation.
+ * Module instantiation
  */
 
 module_instantiation:
 	  module_identifier param_value_assign_opt module_instance_brace ';'
 		{ init($$, ID_inst);
-		  addswap($$, ID_parameter_assignments, $2);
                   addswap($$, ID_module, $1);
+		  addswap($$, ID_parameter_assignments, $2);
                   swapop($$, $3); }
 	;
 
@@ -1668,14 +1668,14 @@ ordered_parameter_assignment_brace:
 	  ordered_parameter_assignment
 	  	{ init($$); mto($$, $1); }
 	| ordered_parameter_assignment_brace ',' ordered_parameter_assignment
-	  	{ $$=$1; mto($$, $1); }
+	  	{ $$=$1; mto($$, $3); }
 	;
 
 named_parameter_assignment_brace:
 	  named_parameter_assignment
 	  	{ init($$); mto($$, $1); }
 	| named_parameter_assignment_brace ',' named_parameter_assignment
-	  	{ $$=$1; mto($$, $1); }
+	  	{ $$=$1; mto($$, $3); }
 	;
 
 ordered_parameter_assignment:

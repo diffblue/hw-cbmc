@@ -429,10 +429,19 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
   
   Forall_expr(it, parameter_assignments)
   {
+    // these must be constants
     if(it->id()==ID_named_parameter_assignment)
-      convert_expr(static_cast<exprt &>(it->add(ID_value)));
+    {
+      mp_integer v_int;
+      convert_const_expression(static_cast<exprt &>(it->add(ID_value)), v_int);
+      it->add(ID_value)=from_integer(v_int, integer_typet());
+    }
     else
-      convert_expr(*it);
+    {
+      mp_integer v_int;
+      convert_const_expression(*it, v_int);
+      *it=from_integer(v_int, integer_typet());
+    }
   }
 
   irep_idt new_identifier=
