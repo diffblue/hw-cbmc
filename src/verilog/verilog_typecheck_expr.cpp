@@ -655,7 +655,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     err_location(expr);
     str << "implicit definition of wire "
         << full_identifier;
-    warning();
+    warning_msg();
     expr.type()=symbol->type;
     expr.set(ID_identifier, symbol->name);
   }
@@ -1900,17 +1900,19 @@ bool verilog_typecheck(
 
   catch(int e)
   {
-    verilog_typecheck_expr.error();
+    verilog_typecheck_expr.error_msg();
   }
 
   catch(const char *e)
   {
-    verilog_typecheck_expr.error(e);
+    verilog_typecheck_expr.str << e;
+    verilog_typecheck_expr.error_msg();
   }
 
   catch(const std::string &e)
   {
-    verilog_typecheck_expr.error(e);
+    verilog_typecheck_expr.str << e;
+    verilog_typecheck_expr.error_msg();
   }
   
   return verilog_typecheck_expr.get_error_found();

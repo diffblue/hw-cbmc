@@ -166,7 +166,8 @@ void verilog_typecheckt::typecheck_port_connections(
          o_it->operands().size()!=2)
       {
         err_location(inst);
-        error("expected a named port connection");
+        str << "expected a named port connection";
+        error_msg();
         throw 0;
       }
 
@@ -711,7 +712,8 @@ void verilog_typecheckt::check_lhs(
   else
   {
     str << lhs << std::endl;
-    error("typechecking: failed to get identifier on LHS");
+    str << "typechecking: failed to get identifier on LHS";
+    error_msg();
     throw 0;
   }
 }
@@ -757,7 +759,8 @@ void verilog_typecheckt::convert_continuous_assign(
     if(it->id()!=ID_equal || it->operands().size()!=2)
     {
       err_location(*it);
-      error("malformed continuous assignment");
+      str << "malformed continuous assignment";
+      error_msg();
       throw 0;
     }
 
@@ -884,7 +887,8 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   if(statement.operands().size()!=2)
   {
     err_location(statement);
-    error("assert statement expected to have two operands");
+    str << "assert statement expected to have two operands";
+    error_msg();
     return;
   }
   
@@ -917,7 +921,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   {
     err_location(statement);
     str << "property identifier `" << base_name << "' already used";
-    error();
+    error_msg();
     return; // continue with error
   }
 
@@ -955,7 +959,8 @@ void verilog_typecheckt::convert_assume(exprt &statement)
   if(statement.operands().size()!=2)
   {
     err_location(statement);
-    error("assume statement expected to have two operands");
+    str << "assume statement expected to have two operands";
+    error_msg();
     return;
   }
   
@@ -1354,7 +1359,8 @@ void verilog_typecheckt::convert_module_item(
   {
     // should be gone already
     err_location(module_item);
-    error("unexpected generate_block module item");
+    str << "unexpected generate_block module item";
+    error_msg();
     throw 0;
   }
   else if(module_item.id()=="set_genvars")
@@ -1498,7 +1504,7 @@ bool verilog_typecheck(
   {
     message_streamt message_stream(message_handler);
     message_stream.str << "module `" << module << "' not found";
-    message_stream.error();
+    message_stream.error_msg();
     return true;
   }
 
@@ -1547,7 +1553,7 @@ bool verilog_typecheck(
     message_streamt message_stream(message_handler);
     message_stream.str << "duplicate definition of module " 
                        << symbol.base_name;
-    message_stream.error();
+    message_stream.error_msg();
     throw 0;
   }
 

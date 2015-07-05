@@ -790,9 +790,9 @@ symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
     }
     else
     {
-      str << *e << std::endl;
+      str << *e << '\n';
       str << "synthesis: failed to get identifier";
-      error();
+      error_msg();
       throw 0;
     }
   }
@@ -1778,7 +1778,7 @@ exprt verilog_synthesist::case_comparison(
     {
       err_location(pattern);
       str << "unexpected case pattern: " << to_string(tmp);
-      warning();
+      warning_msg();
     }
     else
     {
@@ -2441,7 +2441,8 @@ void verilog_synthesist::synth_statement(
   else if(statement.id()==ID_continuous_assign)
   {
     err_location(statement);
-    error("synthesis of procedural continuous assignment not supported");
+    str << "synthesis of procedural continuous assignment not supported";
+    error_msg();
     throw 0;
   }
   else if(statement.id()==ID_assert)
@@ -2629,7 +2630,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
       if(assignment.type==G_COMBINATORIAL)
       {
         str << "Making " << symbol.name << " a wire";
-        warning();
+        warning_msg();
         symbol.is_state_var=false;
       }
 

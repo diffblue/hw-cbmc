@@ -105,19 +105,21 @@ int show_transt::show_trans_verilog_netlist(std::ostream &out)
   
   catch(const std::string &e)
   {
-    output_verilog.error(e);
+    output_verilog.str << e;
+    output_verilog.error_msg();
     return 1;
   }
   
   catch(const char *e)
   {
-    output_verilog.error(e);
+    output_verilog.str << e;
+    output_verilog.error_msg();
     return 1;
   }
   
   catch(int)
   {
-    output_verilog.error();
+    output_verilog.error_msg();
     return 1;
   }
 
@@ -149,19 +151,21 @@ int show_transt::show_trans_verilog_rtl(std::ostream &out)
   
   catch(const std::string &e)
   {
-    output_verilog.error(e);
+    output_verilog.str << e;
+    output_verilog.error_msg();
     return 1;
   }
   
   catch(const char *e)
   {
-    output_verilog.error(e);
+    output_verilog.str << e;
+    output_verilog.error_msg();
     return 1;
   }
   
   catch(int)
   {
-    output_verilog.error();
+    output_verilog.error_msg();
     return 1;
   }
 

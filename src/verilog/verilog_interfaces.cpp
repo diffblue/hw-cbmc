@@ -148,7 +148,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       {
         err_location(decl.op0());
         str << "port `" << name << "' is also declared";
-        warning();
+        warning_msg();
       }
       
       port_symbol=s;
