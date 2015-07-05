@@ -8,9 +8,9 @@ module test(in1, in2);
   wire [3:0] o2;   
   wire [3:0] tmp = P;
  
-  my_m #( .Ptop(P), .Qtop(Q) ) t1(in1, in2, o1, o2); 
+  my_m #( .Ptop(P), .Qtop(Q) ) m_instance(in1, in2, o1, o2); 
  
-  assert property1: (tmp == 4); // successful
+  assert property1: tmp == 4; // should pass
 
 endmodule                       
                                      
@@ -23,6 +23,8 @@ module my_m(a, b, c, d);
   output [Ptop-1:0] c;
   output [Ptop-1:0] d;
 
-  wire [3:0] tmp1 = Ptop; // tmp1 should be 4 now  
+  wire [3:0] tmp_in_m = Ptop; // tmp1 should be 4 now  
+  
+  assert property2: tmp_in_m == 4; // should pass
 
 endmodule
