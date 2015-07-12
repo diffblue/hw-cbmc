@@ -174,7 +174,7 @@ void smv_typecheckt::convert_ports(
   smv_parse_treet::modulet &smv_module,
   typet &dest)
 {
-  irept::subt &ports=dest.add("ports").get_sub();
+  irept::subt &ports=dest.add(ID_ports).get_sub();
 
   ports.reserve(smv_module.ports.size());
 
@@ -265,7 +265,7 @@ void smv_typecheckt::instantiate(
         << "' not a module";
   }
 
-  const irept::subt &ports=s_it->second.type.find("ports").get_sub();
+  const irept::subt &ports=s_it->second.type.find(ID_ports).get_sub();
 
   // do the arguments/ports
 
@@ -618,7 +618,7 @@ void smv_typecheckt::typecheck(
     if(!type.is_nil())
       expr.type()=type;
   }
-  else if(expr.id()=="constraint_select_one")
+  else if(expr.id()==ID_constraint_select_one)
   {
     typecheck_op(expr, type, mode);
 
@@ -997,21 +997,13 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
       throw 0;
     }
 
-    expr.operands().insert(
-      expr.operands().begin(),
-      static_cast<const exprt &>(get_nil_irep()));
-
     std::string identifier=
       module+"::var::"+i2string(nondet_count++);
 
-    expr.op0().clear();
-    expr.op0().id(ID_nondet_symbol);
-    expr.op0().set(ID_identifier, identifier);
-    expr.op0().type().make_nil();
-
+    expr.set(ID_identifier, identifier);
     expr.set("#smv_nondet_choice", true);
 
-    expr.id("constraint_select_one");
+    expr.id(ID_constraint_select_one);
   }
   else if(expr.id()=="smv_cases") // cases
   {
