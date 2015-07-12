@@ -10,7 +10,7 @@ use warnings;
 
 sub run($$$) {
   my ($input, $options, $output) = @_;
-  my $cmd = "../../../src/ebmc/ebmc $options $input &>$output";
+  my $cmd = "../../../src/ebmc/ebmc $options $input >$output 2>&1";
 
   print LOG "Running $cmd\n";
   system $cmd;
@@ -80,7 +80,7 @@ sub test($$) {
 	$included = !$included;
       } else {
 	my $r;
-	system "grep '$result' '$output' &>/dev/null";
+	system "grep '$result' '$output' >/dev/null";
 	$r = ($included ? $? != 0 : $? == 0);
 	if($r) {
 	  print LOG "$result [FAILED]\n";
