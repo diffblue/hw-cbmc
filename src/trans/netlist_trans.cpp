@@ -207,7 +207,7 @@ void convert_trans_to_netlistt::map_vars(
     if(symbol.is_property)
       continue; // ignore properties
     else if(symbol.type.id()==ID_module ||
-            symbol.type.id()=="module_instance")
+            symbol.type.id()==ID_module_instance)
       continue; // ignore modules
     else if(symbol.is_input)
       vartype=var_mapt::vart::VAR_INPUT;
@@ -483,7 +483,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       lhs_mapt::iterator it=lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "failed to find `"+bv_varid.as_string()+"' in lhs_map";
+        throw "lhs_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
       
       // we only need to do wires
       if(!it->second.var->is_wire()) return;
@@ -642,7 +642,7 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     bv_varidt bv_varid;
     bv_varid.id=lhs.get(ID_identifier);
-
+    
     for(bv_varid.bit_nr=lhs_from;
         bv_varid.bit_nr!=(lhs_to+1);
         bv_varid.bit_nr++)
@@ -651,7 +651,7 @@ void convert_trans_to_netlistt::add_equality_rec(
         lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "failed to find `"+bv_varid.as_string()+"' in lhs_map";
+        throw "add_equality_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
 
       lhs_entryt &lhs_entry=it->second;
       const var_mapt::vart &var=*lhs_entry.var;
@@ -682,24 +682,23 @@ void convert_trans_to_netlistt::add_equality_rec(
   }
   else if(lhs.id()==ID_extractbits)
   {
-    mp_integer new_lhs_from, new_lhs_to;
+    mp_integer op1, op2;
 
     assert(lhs.operands().size()==3);
 
-    if(to_integer(lhs.op1(), new_lhs_from))
-      assert(false);
+    if(to_integer(lhs.op1(), op1))
+      throw std::string("failed to convert extractbits op1");
     
-    if(to_integer(lhs.op2(), new_lhs_to))
-      assert(false);
+    if(to_integer(lhs.op2(), op2))
+      throw std::string("failed to convert extractbits op2");
     
-    if(new_lhs_from>new_lhs_to) std::swap(new_lhs_from, new_lhs_to);
+    if(op1<op2)
+      throw std::string("extractbits op1<op2");
 
-    assert(new_lhs_from<=new_lhs_to);
+    unsigned new_lhs_to=lhs_from+integer2long(op1);
+    unsigned new_lhs_from=lhs_from+integer2long(op2);
     
-    lhs_from=lhs_from+integer2long(new_lhs_from);
-    lhs_to=lhs_from+integer2long(new_lhs_to);
-    
-    add_equality_rec(src, lhs.op0(), lhs_from, lhs_to, rhs_entry);
+    add_equality_rec(src, lhs.op0(), new_lhs_from, new_lhs_to, rhs_entry);
   }
   else
     constraint_list.push_back(src);
