@@ -14,7 +14,7 @@ module main(clk);
   initial x=0;
   
   always @(posedge clk) begin
-    my_task1;    
+    my_task1;
     my_task2(5);
   end
   
