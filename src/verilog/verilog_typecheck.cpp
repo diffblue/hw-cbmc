@@ -690,7 +690,7 @@ void verilog_typecheckt::check_lhs(
         err_location(lhs);
         throw "continuous assignment to register";
       }
-      else if(symbol.is_input)
+      else if(symbol.is_input && !symbol.is_output)
       {
         err_location(lhs);
         throw "continuous assignment to input";
