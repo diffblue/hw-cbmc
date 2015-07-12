@@ -188,7 +188,7 @@ std::string expr2verilogt::convert_concatenation(
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_constraint_select_one
+Function: expr2verilogt::convert_function
 
   Inputs:
 
@@ -198,15 +198,13 @@ Function: expr2verilogt::convert_constraint_select_one
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_constraint_select_one(
-  const exprt &src,
-  unsigned precedence)
+std::string expr2verilogt::convert_function(
+  const std::string &name,
+  const exprt &src)
 {
-  if(src.operands().size()<1)
-    return convert_norep(src, precedence);
-
   bool first=true;
-  std::string dest="$ND(";
+  std::string dest=name;
+  dest+="(";
 
   forall_operands(it, src)
   {
@@ -217,10 +215,7 @@ std::string expr2verilogt::convert_constraint_select_one(
 
     unsigned p;
     std::string op=convert(*it, p);
-
-    if(precedence>p) dest+='(';
     dest+=op;
-    if(precedence>p) dest+=')';
   }
 
   dest+=")";
@@ -825,7 +820,13 @@ std::string expr2verilogt::convert(
     return convert_constant(to_constant_expr(src), precedence);
     
   else if(src.id()==ID_constraint_select_one)
-    return convert_constraint_select_one(src, precedence=22);
+    return convert_function("$ND", src);
+    
+  else if(src.id()==ID_onehot)
+    return convert_function("$onehot", src);
+    
+  else if(src.id()==ID_onehot0)
+    return convert_function("$onehot0", src);
     
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);

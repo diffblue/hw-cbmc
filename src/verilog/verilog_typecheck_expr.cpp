@@ -514,8 +514,42 @@ void verilog_typecheck_exprt::convert_system_function(
 
     exprt select_one(ID_constraint_select_one, type);
     select_one.operands()=arguments;
+    select_one.set(ID_identifier, identifier);
     
     expr.swap(select_one);
+  }
+  else if(identifier=="$onehot") // SystemVerilog
+  {
+    if(arguments.size()!=1)
+    {
+      err_location(expr);
+      str << "$onehot takes one argument";
+      throw 0;
+    }
+    
+    // the meaning is 'exactly one bit is high'
+    predicate_exprt onehot(ID_onehot, arguments.front());
+    onehot.add_source_location()=expr.source_location();
+    
+    expr.swap(onehot);
+  }
+  else if(identifier=="$onehot0") // SystemVerilog
+  {
+    if(arguments.size()!=1)
+    {
+      err_location(expr);
+      str << "$onehot takes one argument";
+      throw 0;
+    }
+    
+    std::string identifier=
+      id2string(module_identifier)+"::nondet::"+i2string(nondet_count++);
+
+    // the meaning is 'at most one bit is high'
+    predicate_exprt onehot0(ID_onehot0, arguments.front());
+    onehot0.add_source_location()=expr.source_location();
+    
+    expr.swap(onehot0);
   }
   else
   {
