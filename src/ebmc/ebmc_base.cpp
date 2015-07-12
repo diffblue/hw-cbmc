@@ -51,8 +51,11 @@ ebmc_baset::ebmc_baset(const cmdlinet &_cmdline):
   main_symbol(NULL),
   trans_expr(NULL)
 {
-  ui_message_handler.set_verbosity(
-    unsafe_string2unsigned(cmdline.get_value("verbosity")));
+  if(cmdline.isset("verbosity"))
+    ui_message_handler.set_verbosity(
+      unsafe_string2unsigned(cmdline.get_value("verbosity")));
+  else
+    ui_message_handler.set_verbosity(messaget::M_STATUS); // default
 }
 
 /*******************************************************************\
@@ -117,8 +120,8 @@ int ebmc_baset::finish(prop_convt &solver)
   decision_proceduret::resultt dec_result=
     solver.dec_solve();
   
-  status() << "Solver time: " << (current_time()-sat_start_time)
-           << eom;
+  statistics() << "Solver time: " << (current_time()-sat_start_time)
+               << eom;
 
   switch(dec_result)
   {
@@ -181,8 +184,8 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
   propt::resultt prop_result=
     solver.prop_solve();
   
-  status() << "Solver time: " << (current_time()-sat_start_time)
-           << eom;
+  statistics() << "Solver time: " << (current_time()-sat_start_time)
+               << eom;
 
   switch(prop_result)
   {
@@ -917,8 +920,8 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
     return true;
   }
 
-  status() << "Latches: " << netlist.var_map.latches.size()
-           << ", nodes: " << netlist.number_of_nodes() << eom;
+  statistics() << "Latches: " << netlist.var_map.latches.size()
+               << ", nodes: " << netlist.number_of_nodes() << eom;
            
   return false;
 }

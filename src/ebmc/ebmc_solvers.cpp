@@ -48,8 +48,8 @@ int ebmc_baset::do_dimacs()
   int result=do_ebmc(dimacs_cnf, true);
   if(result!=0) return result;
 
-  status() << dimacs_cnf.no_variables() << " variables and "
-           << dimacs_cnf.no_clauses() << " clauses" << eom;
+  statistics() << dimacs_cnf.no_variables() << " variables and "
+               << dimacs_cnf.no_clauses() << " clauses" << eom;
 
   if(cmdline.isset("outfile"))
   {
@@ -58,9 +58,9 @@ int ebmc_baset::do_dimacs()
   
     if(!out)
     {
-      std::cerr << "Failed to open `"
-                << filename
-                << "'" << '\n';
+      error() << "Failed to open `"
+              << filename
+              << "'" << messaget::eom;
       return 1;
     }
 
