@@ -104,5 +104,15 @@ module main(input[31:0] in1, in2, in3);
   // replication
   always assert repli_p1: {4{4'b1001}}      == 'b1001100110011001;
   always assert repli_p2: {4{4'b1001,1'bz}} == 'b1001z1001z1001z1001z;
+  
+  // conditional
+  always assert cond_p1: (1'b0 ? 1'b1 : 1'b0) === 1'b0;
+  always assert cond_p2: (1'b1 ? 1'b1 : 1'b0) === 1'b1;
+  always assert cond_p3: (1'bz ? 1'b1 : 1'b0) === 1'bx;
+  always assert cond_p4: (1'bx ? 1'b1 : 1'b0) === 1'bx;
+  always assert cond_p5: (1'b1 ? 1'b1 : 1'bz) === 1'b1;
+  always assert cond_p6: (1'b1 ? 1'b1 : 1'bx) === 1'b1;
+  always assert cond_p7: (1'b0 ? 1'b1 : 1'bz) === 1'bz;
+  always assert cond_p8: (1'b0 ? 1'b1 : 1'bx) === 1'bx;
 
 endmodule
