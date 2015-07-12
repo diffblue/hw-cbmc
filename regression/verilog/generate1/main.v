@@ -7,9 +7,9 @@ module M1(out);
   genvar i;
 
   generate
-    for (i=0; i<31; i=i+1) begin:bit
+    for (i=0; i<=31; i=i+1) begin:bit
       always @x
-        out[i] = (i>=8);
+        out[i] = (i<8);
     end
   endgenerate
 
@@ -24,9 +24,9 @@ module M2(out);
     // genvar inside generate
     genvar i;
 
-    for (i=0; i<31; i=i+1) begin:bit
+    for (i=0; i<=31; i=i+1) begin:bit
       always @x
-        out[i] = (i>=8);
+        out[i] = (i<8);
     end
   endgenerate
 
