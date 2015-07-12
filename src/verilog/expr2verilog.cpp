@@ -188,6 +188,48 @@ std::string expr2verilogt::convert_concatenation(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_constraint_select_one
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_constraint_select_one(
+  const exprt &src,
+  unsigned precedence)
+{
+  if(src.operands().size()<1)
+    return convert_norep(src, precedence);
+
+  bool first=true;
+  std::string dest="$ND(";
+
+  forall_operands(it, src)
+  {
+    if(first)
+      first=false;
+    else
+      dest+=", ";
+
+    unsigned p;
+    std::string op=convert(*it, p);
+
+    if(precedence>p) dest+='(';
+    dest+=op;
+    if(precedence>p) dest+=')';
+  }
+
+  dest+=")";
+
+  return dest;
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_replication
 
   Inputs:
@@ -781,6 +823,9 @@ std::string expr2verilogt::convert(
 
   else if(src.id()==ID_constant)
     return convert_constant(to_constant_expr(src), precedence);
+    
+  else if(src.id()==ID_constraint_select_one)
+    return convert_constraint_select_one(src, precedence=22);
     
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);

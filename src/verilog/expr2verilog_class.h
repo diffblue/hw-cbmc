@@ -84,6 +84,10 @@ public:
     const concatenation_exprt &src,
     unsigned precedence);
 
+  virtual std::string convert_constraint_select_one(
+    const exprt &src,
+    unsigned precedence);
+
   virtual std::string convert_replication(
     const replication_exprt &src,
     unsigned precedence);
