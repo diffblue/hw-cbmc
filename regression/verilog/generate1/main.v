@@ -1,4 +1,4 @@
-module M1 (out);
+module M1(out);
   output [31:0] out;
   reg [31:0] out;
   wire x;
@@ -15,7 +15,7 @@ module M1 (out);
 
 endmodule
 
-module M2 (out);
+module M2(out);
   output [31:0] out;
   reg [31:0] out;
   wire x;
