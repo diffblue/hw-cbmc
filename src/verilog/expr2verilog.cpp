@@ -591,7 +591,8 @@ std::string expr2verilogt::convert_constant(
     unsigned width=to_verilog_unsignedbv_type(src.type()).get_width();
     return i2string(width)+"'b"+id2string(value);
   }
-  else if(type.id()==ID_integer || type.id()==ID_natural)
+  else if(type.id()==ID_integer || type.id()==ID_natural ||
+          type.id()==ID_range)
     dest=id2string(value);
   else
     return convert_norep(src, precedence);
