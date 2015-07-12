@@ -170,6 +170,8 @@ void compute_trans_trace_properties(
   trans_tracet &dest)  
 {
   // check the properties that got violated
+  
+  assert(prop_names.size()==prop_bv.size());
 
   for(std::list<bvt>::const_iterator
       p_it=prop_bv.begin();
@@ -208,7 +210,7 @@ void compute_trans_trace_properties(
       dest.properties.back().status=tvt(true);
   }
 
-  // put names in
+  // put property names in
   trans_tracet::propertiest::iterator p_it=
     dest.properties.begin();
   for(std::list<std::string>::const_iterator
@@ -242,6 +244,8 @@ void compute_trans_trace_properties(
   trans_tracet &dest)  
 {
   // check the properties that got violated
+
+  assert(prop_names.size()==prop_bv.size());
 
   for(std::list<bvt>::const_iterator
       p_it=prop_bv.begin();
@@ -315,6 +319,8 @@ void compute_trans_trace(
   const irep_idt &module,
   trans_tracet &dest)  
 {
+  assert(prop_names.size()==prop_bv.size());
+
   compute_trans_trace(
     solver,
     no_timeframes,
@@ -409,6 +415,8 @@ void compute_trans_trace(
   const namespacet &ns,
   trans_tracet &dest)
 {
+  assert(prop_names.size()==prop_bv.size());
+
   dest.states.reserve(bmc_map.get_no_timeframes());
   
   for(unsigned t=0; t<bmc_map.get_no_timeframes(); t++)

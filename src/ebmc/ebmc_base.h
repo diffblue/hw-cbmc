@@ -90,7 +90,7 @@ protected:
   void report_success();
   
   void show_ldg(std::ostream &out);
-  void make_netlist(netlistt &netlist);  
+  bool make_netlist(netlistt &netlist);  
 
 public:  
   // solvers

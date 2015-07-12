@@ -372,7 +372,7 @@ int ebmc_baset::do_compute_ct()
   status() << "Making Netlist" << eom;
 
   netlistt netlist;
-  make_netlist(netlist);
+  if(make_netlist(netlist)) return 1;
 
   status() << "Latches: " << netlist.var_map.latches.size()
            << ", nodes: " << netlist.number_of_nodes() << eom;
