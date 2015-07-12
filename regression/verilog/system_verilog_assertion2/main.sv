@@ -7,7 +7,7 @@ module main();
   
   always @(posedge clk) x<=x+1;
 
-  assert property (x!=10);
+  my_label: assert property (x!=10);
 
   //assert property (@(posedge clk) x!=10);
 
