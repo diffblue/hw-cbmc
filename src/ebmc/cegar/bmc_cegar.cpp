@@ -38,7 +38,7 @@ void bmc_cegart::bmc_cegar()
 
   if(properties.empty())
   {
-    message.error() << "No properties given" << messaget::eom;
+    error() << "No properties given" << eom;
     return;
   }
 
@@ -86,7 +86,7 @@ void bmc_cegart::unwind(
   // do transitions
   for(unsigned timeframe=0; timeframe<bound; timeframe++)
   {
-    message.status() << "Round " << timeframe < eom;
+    status() << "Round " << timeframe << eom;
     
     aig.clear_convert_cache();
     
@@ -146,19 +146,19 @@ Function: bmc_cegart::compute_ct
 
 unsigned bmc_cegart::compute_ct()
 {
-  message.status() << "Computing CT" << messaget::eom;
+  status() << "Computing CT" << eom;
 
-  message.status() << "Computing abstract LDG" << messaget::eom;
+  status() << "Computing abstract LDG" << eom;
    
   ldgt ldg;
  
   ldg.compute(abstract_netlist);
     
-  message.status() << "Computing CT" << messaget::eom;
+  status() << "Computing CT" << eom;
 
   unsigned ct=::compute_ct(ldg);
 
-  message.status() << "CT=" << ct << messaget::eom;
+  result() << "CT=" << ct << eom;
 
   return ct;
 }
@@ -186,7 +186,7 @@ void bmc_cegart::cegar_loop()
 
     if(ct>=MAX_CT)
     {
-      message.error() << "CT too big -- giving up" << messaget::eom;
+      error() << "CT too big -- giving up" << eom;
       throw 0;
     }
     
@@ -195,13 +195,13 @@ void bmc_cegart::cegar_loop()
     
     if(verify(bound))
     {
-      message.status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS" << messaget::eom;
+      status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS" << eom;
       return;
     }
 
     if(simulate(bound))
     {
-      message.status() << "VERIFICATION FAILED -- PROPERTY REFUTED" << messaget::eom;
+      status() << "VERIFICATION FAILED -- PROPERTY REFUTED" << eom;
       return;
     }
 
@@ -224,22 +224,22 @@ Function: bmc_cegart::make_netlist
 void bmc_cegart::make_netlist()
 {
   // make net-list
-  message.status() << "Making Netlist" << messaget::eom;
+  status() << "Making Netlist" << eom;
 
   try
   {
     convert_trans_to_netlist(
       symbol_table, main_module,
-      properties, concrete_netlist, message.get_message_handler());
+      properties, concrete_netlist, get_message_handler());
   }
   
-  catch(const std::string &error)
+  catch(const std::string &error_msg)
   {
-    message.error() << error << messaget::eom;
+    error() << error_msg << eom;
     return;
   }
 
-  message.statistics() 
+  statistics() 
     << "Latches: " << concrete_netlist.var_map.latches.size()
-    << ", nodes: " << concrete_netlist.number_of_nodes() << messaget::eom;
+    << ", nodes: " << concrete_netlist.number_of_nodes() << eom;
 }

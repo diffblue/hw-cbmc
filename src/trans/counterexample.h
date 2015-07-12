@@ -22,14 +22,14 @@ Author: Daniel Kroening, kroening@kroening.com
 void show_counterexample(
   const std::list<exprt> &properties,
   const std::list<bvt> &prop_bv,
-  messaget &message,
+  message_handlert &,
   const propt &solver,
   const bmc_mapt &map,
   const namespacet &ns,
   language_uit::uit ui);
 
 void show_counterexample(
-  messaget &message,
+  message_handlert &,
   const propt &solver,
   const bmc_mapt &map,
   const namespacet &ns,
@@ -38,7 +38,7 @@ void show_counterexample(
 // word-level
 
 void show_counterexample(
-  messaget &message,
+  message_handlert &,
   const class decision_proceduret &solver,
   unsigned no_timeframes,
   const namespacet &ns,

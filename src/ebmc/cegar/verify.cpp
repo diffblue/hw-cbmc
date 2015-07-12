@@ -24,32 +24,31 @@ Function: bmc_cegart::verify
 
 bool bmc_cegart::verify(unsigned bound)
 {
-  message.status() << "Checking Abstract Model (bound="
-                   << bound << ")" << messaget::eom;
+  status() << "Checking Abstract Model (bound=" << bound << ")" << eom;
 
   satcheckt satcheck;
   cnft &solver=satcheck;
 
   unwind(bound, abstract_netlist, solver);
   
-  message.status() << "Running " << solver.solver_text() << messaget::eom;
+  status() << "Running " << solver.solver_text() << eom;
 
   switch(solver.prop_solve())
   {
   case propt::P_SATISFIABLE:
-    message.status() << "SAT: bug found within bound" << messaget::eom;
+    status() << "SAT: bug found within bound" << eom;
     break;
 
   case propt::P_UNSATISFIABLE:
-    message.status() << "UNSAT: No bug found within bound" << messaget::eom;
+    status() << "UNSAT: No bug found within bound" << eom;
     return true;
 
   case propt::P_ERROR:
-    message.error() << "Error from SAT solver" << messaget::eom;
+    error() << "Error from SAT solver" << eom;
     throw 0;
 
   default:
-    message.error() << "Unexpected result from SAT solver" << messaget::eom;
+    error() << "Unexpected result from SAT solver" << eom;
     throw 0;
   }
   

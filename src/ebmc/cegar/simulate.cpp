@@ -28,34 +28,35 @@ Function: bmc_cegart::simulate
 
 bool bmc_cegart::simulate(unsigned bound)
 {
-  message.status() << "Simulating Counterexample" << messaget::eom;
+  status() << "Simulating Counterexample" << eom;
 
   satcheckt satcheck;
   cnft &solver=satcheck;
 
   unwind(bound, concrete_netlist, solver);
   
-  message.status() << "Running " << solver.solver_text() << messaget::eom;
+  status() << "Running " << solver.solver_text() << eom;
     
   switch(solver.prop_solve())
   {
   case propt::P_SATISFIABLE:
-    message.status() << "SAT: bug found within bound" << messaget::eom;
+    status() << "SAT: bug found within bound" << eom;
 
-    show_counterexample(properties, prop_bv, message, solver, bmc_map,
-                        ns, ui_message_handlert::PLAIN);
+    show_counterexample(
+      properties, prop_bv, get_message_handler(), solver, bmc_map,
+      ns, ui_message_handlert::PLAIN);
     return true;
 
   case propt::P_UNSATISFIABLE:
-    message.status() << "UNSAT: No bug found within bound" << messaget::eom;
+    status() << "UNSAT: No bug found within bound" << eom;
     break;
 
   case propt::P_ERROR:
-    std::cerr << "Error from SAT solver\n";
+    error() << "Error from SAT solver" << eom;
     throw 0;
 
   default:
-    std::cerr << "Unexpected result from SAT solver\n";
+    error() << "Unexpected result from SAT solver" << eom;
     throw 0;
   }
   

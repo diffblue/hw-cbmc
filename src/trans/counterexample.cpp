@@ -153,7 +153,7 @@ Function: show_counterexample
 \*******************************************************************/
 
 void show_counterexample(
-  messaget &message,
+  message_handlert &message_handler,
   const propt &solver,
   const bmc_mapt &map,
   const namespacet &ns,
@@ -176,7 +176,7 @@ Function: show_counterexample
 \*******************************************************************/
 
 void show_counterexample(
-  messaget &message,
+  message_handlert &message_handler,
   const decision_proceduret &solver,
   unsigned no_timeframes,
   const namespacet &ns,
@@ -202,13 +202,14 @@ Function: show_counterexample
 void show_counterexample(
   const std::list<exprt> &properties,
   const std::list<bvt> &prop_bv,
-  messaget &message,
+  message_handlert &message_handler,
   const propt &solver,
   const bmc_mapt &map,
   const namespacet &ns,
   language_uit::uit ui)
 {
   unsigned p=0;
+  messaget message(message_handler);
 
   for(std::list<bvt>::const_iterator p_it=prop_bv.begin();
       p_it!=prop_bv.end();
