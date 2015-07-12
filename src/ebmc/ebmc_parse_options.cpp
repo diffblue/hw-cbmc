@@ -74,8 +74,7 @@ int ebmc_parse_optionst::doit()
       *trans_expr,
       ns,
       *this,
-      prop_expr_list,
-      cmdline.isset("verbose"));
+      prop_expr_list);
 
     bmc_cegar.bmc_cegar();
     #endif
