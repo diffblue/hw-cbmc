@@ -371,8 +371,8 @@ bool ebmc_baset::parse_property(
 
   std::string expr_as_string;
   languages.from_expr(expr, expr_as_string);
-  status() << "Property: " << expr_as_string << eom;
-  status() << "Mode: " << main_symbol->mode << eom;
+  debug() << "Property: " << expr_as_string << eom;
+  debug() << "Mode: " << main_symbol->mode << eom;
 
   prop_expr_list.push_back(expr);
   prop_name_list.push_back(expr_as_string);
@@ -416,7 +416,7 @@ bool ebmc_baset::get_model_properties()
         std::string value_as_string=
           from_expr(ns, symbol.name, symbol.value);
 
-        status() << "Property: " << value_as_string << eom;
+        debug() << "Property: " << value_as_string << eom;
 
         prop_expr_list.push_back(symbol.value);
         prop_name_list.push_back(value_as_string);
