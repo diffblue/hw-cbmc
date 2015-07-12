@@ -19,6 +19,6 @@ void convert_trans_to_netlist(
   const irep_idt &module,
   const std::list<exprt> &properties,
   class netlistt &dest,
-  messaget &message);
+  message_handlert &message_handler);
 
 #endif

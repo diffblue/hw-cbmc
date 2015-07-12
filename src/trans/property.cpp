@@ -29,11 +29,13 @@ Function: property
 void property(
   const std::list<exprt> &properties,
   std::list<bvt> &prop_bv,
-  messaget &message,
+  message_handlert &message_handler,
   propt &solver,
   const bmc_mapt &map,
   const namespacet &ns)
 {
+  messaget message(message_handler);
+
   if(properties.size()==1)
     message.status() << "Adding property" << messaget::eom;
   else
@@ -71,7 +73,7 @@ void property(
 
     for(unsigned c=0; c<map.get_no_timeframes(); c++)
     {
-      literalt l=instantiate_convert(solver, map, p, c, c+1, ns, message);
+      literalt l=instantiate_convert(solver, map, p, c, c+1, ns, message_handler);
       prop_bv.back().push_back(l);
       all_prop.push_back(solver.lnot(l));
     }
@@ -95,11 +97,13 @@ Function: property
 void property(
   const std::list<exprt> &properties,
   std::list<bvt> &prop_bv,
-  messaget &message,
+  message_handlert &message_handler,
   prop_convt &solver,
   unsigned no_timeframes,
   const namespacet &ns)
 {
+  messaget message(message_handler);
+
   if(properties.size()==1)
     message.status() << "Adding property" << messaget::eom;
   else

@@ -291,7 +291,7 @@ void ebmc_baset::check_property(prop_convt &solver, bool convert_only)
   property(
     prop_expr_list,
     prop_bv,
-    *this, // message
+    get_message_handler(),
     solver,
     bound+1,
     ns);
@@ -909,7 +909,7 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
   try
   {
     convert_trans_to_netlist(
-      symbol_table, main_symbol->name, prop_expr_list, netlist, *this);
+      symbol_table, main_symbol->name, prop_expr_list, netlist, get_message_handler());
       
     assert(prop_expr_list.size()==netlist.properties.size());
   }

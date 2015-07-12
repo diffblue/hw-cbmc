@@ -230,7 +230,7 @@ void bmc_cegart::make_netlist()
   {
     convert_trans_to_netlist(
       symbol_table, main_module,
-      properties, concrete_netlist, message);
+      properties, concrete_netlist, message.get_message_handler());
   }
   
   catch(const std::string &error)

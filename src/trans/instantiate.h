@@ -22,22 +22,22 @@ void instantiate_constraint(
   propt &solver,
   const var_mapt &var_map,
   const exprt &expr,
-  const namespacet &ns,
-  messaget &message);
+  const namespacet &,
+  message_handlert &);
 
 literalt instantiate_convert(
   propt &solver,
   const var_mapt &var_map,
   const exprt &expr,
-  const namespacet &ns,
-  messaget &message);
+  const namespacet &,
+  message_handlert &);
   
 void instantiate_convert(
   propt &solver,
   const var_mapt &var_map,
   const exprt &expr,
-  const namespacet &ns,
-  messaget &message,
+  const namespacet &,
+  message_handlert &,
   bvt &bv);
 
 void instantiate_constraint(
@@ -45,24 +45,24 @@ void instantiate_constraint(
   const bmc_mapt &bmc_map,
   const exprt &expr,
   unsigned current, unsigned next,
-  const namespacet &ns,
-  messaget &message);
+  const namespacet &,
+  message_handlert &);
 
 literalt instantiate_convert(
   propt &solver,
   const bmc_mapt &bmc_map,
   const exprt &expr,
   unsigned current, unsigned next,
-  const namespacet &ns,
-  messaget &message);
+  const namespacet &,
+  message_handlert &);
   
 void instantiate_convert(
   propt &solver,
   const bmc_mapt &bmc_map,
   const exprt &expr,
   unsigned current, unsigned next,
-  const namespacet &ns,
-  messaget &message,
+  const namespacet &,
+  message_handlert &,
   bvt &bv);
 
 // word level
@@ -71,18 +71,18 @@ void instantiate(
   decision_proceduret &decision_procedure,
   const exprt &expr,
   unsigned current,
-  const namespacet &ns);
+  const namespacet &);
 
 literalt instantiate_convert(
   prop_convt &prop_conv,
   const exprt &expr,
   unsigned current,
-  const namespacet &ns);
+  const namespacet &);
 
 void instantiate(
   exprt &expr,
   unsigned current,
-  const namespacet &ns);
+  const namespacet &);
 
 std::string timeframe_identifier(
   unsigned timeframe,

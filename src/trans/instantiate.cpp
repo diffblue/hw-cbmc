@@ -77,11 +77,11 @@ void instantiate_constraint(
   const exprt &expr,
   unsigned current, unsigned next,
   const namespacet &ns,
-  messaget &message)
+  message_handlert &message_handler)
 {
   instantiate_bmc_mapt i(ns, solver, bmc_map, current, next);
 
-  i.set_message_handler(message.get_message_handler());
+  i.set_message_handler(message_handler);
 
   try
   {
@@ -119,11 +119,11 @@ literalt instantiate_convert(
   const exprt &expr,
   unsigned current, unsigned next,
   const namespacet &ns,
-  messaget &message)
+  message_handlert &message_handler)
 {
   instantiate_bmc_mapt i(ns, solver, bmc_map, current, next);
 
-  i.set_message_handler(message.get_message_handler());
+  i.set_message_handler(message_handler);
 
   try
   {
@@ -161,12 +161,12 @@ void instantiate_convert(
   const exprt &expr,
   unsigned current, unsigned next,
   const namespacet &ns,
-  messaget &message,
+  message_handlert &message_handler,
   bvt &bv)
 {
   instantiate_bmc_mapt i(ns, solver, bmc_map, current, next);
 
-  i.set_message_handler(message.get_message_handler());
+  i.set_message_handler(message_handler);
 
   try
   {
@@ -324,11 +324,11 @@ void instantiate_constraint(
   const var_mapt &var_map,
   const exprt &expr,
   const namespacet &ns,
-  messaget &message)
+  message_handlert &message_handler)
 {
   instantiate_var_mapt i(ns, solver, var_map);
 
-  i.set_message_handler(message.get_message_handler());
+  i.set_message_handler(message_handler);
 
   try
   {
@@ -365,11 +365,11 @@ literalt instantiate_convert(
   const var_mapt &var_map,
   const exprt &expr,
   const namespacet &ns,
-  messaget &message)
+  message_handlert &message_handler)
 {
   instantiate_var_mapt i(ns, solver, var_map);
 
-  i.set_message_handler(message.get_message_handler());
+  i.set_message_handler(message_handler);
 
   try
   {
@@ -406,12 +406,12 @@ void instantiate_convert(
   const var_mapt &var_map,
   const exprt &expr,
   const namespacet &ns,
-  messaget &message,
+  message_handlert &message_handler,
   bvt &bv)
 {
   instantiate_var_mapt i(ns, solver, var_map);
 
-  i.set_message_handler(message.get_message_handler());
+  i.set_message_handler(message_handler);
 
   try
   {

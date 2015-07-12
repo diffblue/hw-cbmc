@@ -27,17 +27,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-class convert_trans_to_netlistt
+class convert_trans_to_netlistt:public messaget
 {
 public:
   convert_trans_to_netlistt(
     symbol_tablet &_symbol_table,
     netlistt &_dest,
-    messaget &_message):
+    message_handlert &_message_handler):
+    messaget(_message_handler),
     symbol_table(_symbol_table),
     ns(_symbol_table),
-    dest(_dest),
-    message(_message)
+    dest(_dest)
   {
   }
 
@@ -49,7 +49,6 @@ protected:
   symbol_tablet &symbol_table;
   const namespacet ns;
   netlistt &dest;
-  messaget &message;
   
   literalt new_input();
 
@@ -290,7 +289,7 @@ void convert_trans_to_netlistt::operator()(
 
   // build the net-list
   aig_prop_baset aig_prop(dest);
-  aig_prop.set_message_handler(message.get_message_handler());
+  aig_prop.set_message_handler(get_message_handler());
 
   // extract constraints from transition relation
   add_constraint(trans.invar());
@@ -316,7 +315,7 @@ void convert_trans_to_netlistt::operator()(
   
   // initial state
   dest.initial.push_back(instantiate_convert(
-    aig_prop, dest.var_map, trans.init(), ns, message));
+    aig_prop, dest.var_map, trans.init(), ns, get_message_handler()));
 
   // properties
   dest.properties.reserve(properties.size());
@@ -338,15 +337,15 @@ void convert_trans_to_netlistt::operator()(
       if(property.id()!=ID_AG ||
          property.operands().size()!=1)
       {
-        message.error() << "unsupported property - only AGp implemented"
-                        << messaget::eom;
+        error() << "unsupported property - only AGp implemented"
+                << messaget::eom;
         throw 0;
       }
 
       const exprt &p=property.op0();
 
       l=instantiate_convert(
-        aig_prop, dest.var_map, p, ns, message);
+        aig_prop, dest.var_map, p, ns, get_message_handler());
     }
 
     dest.properties.push_back(l);
@@ -376,7 +375,7 @@ void convert_trans_to_netlistt::convert_constraints(propt &prop)
       it++)
   {
     literalt l=
-      instantiate_convert(prop, dest.var_map, *it, ns, message);
+      instantiate_convert(prop, dest.var_map, *it, ns, get_message_handler());
     transition_constraints.push_back(l);
   }
 }
@@ -568,7 +567,8 @@ literalt convert_trans_to_netlistt::convert_rhs(
 
     // now we can convert
     instantiate_convert(
-      prop, dest.var_map, rhs_entry.expr, ns, message, rhs_entry.bv);
+      prop, dest.var_map, rhs_entry.expr, ns,
+      get_message_handler(), rhs_entry.bv);
       
     assert(rhs_entry.bv.size()==rhs_entry.width);
   }
@@ -748,9 +748,9 @@ void convert_trans_to_netlist(
   const irep_idt &module,
   const std::list<exprt> &properties,
   netlistt &dest,
-  messaget &message)
+  message_handlert &message_handler)
 {
-  convert_trans_to_netlistt c(symbol_table, dest, message);
+  convert_trans_to_netlistt c(symbol_table, dest, message_handler);
 
   c(module, properties);
 }

@@ -112,11 +112,10 @@ int k_inductiont::induction_base()
 
   unwind(solver, bound+1, true);
 
-
   property(
     prop_expr_list,
     prop_bv,
-    *this, // message
+    get_message_handler(),
     solver,
     bound+1,
     ns);

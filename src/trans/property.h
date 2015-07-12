@@ -22,18 +22,18 @@ Author: Daniel Kroening, kroening@kroening.com
 void property(
   const std::list<exprt> &properties,
   std::list<bvt> &prop_bv,
-  messaget &message,
+  message_handlert &,
   propt &solver,
   const bmc_mapt &map,
-  const namespacet &ns);
+  const namespacet &);
 
 // word-level
 void property(
   const std::list<exprt> &properties,
   std::list<bvt> &prop_bv,
-  messaget &message,
+  message_handlert &,
   prop_convt &solver,
   unsigned no_timeframes,
-  const namespacet &ns);
+  const namespacet &);
 
 #endif
