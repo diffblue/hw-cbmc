@@ -10,7 +10,8 @@ module M1 (out);
     for (i=0; i<31; i=i+1) begin:bit
       always @x
         out[i] = (i>=8);
-    end endgenerate
+    end
+  endgenerate
 
 endmodule
 
@@ -20,14 +21,12 @@ module M2 (out);
   wire x;
   
   generate
-    begin
-      // genvar inside generate
-      genvar i;
+    // genvar inside generate
+    genvar i;
 
-      for (i=0; i<31; i=i+1) begin:bit
-        always @x
-          out[i] = (i>=8);
-      end
+    for (i=0; i<31; i=i+1) begin:bit
+      always @x
+        out[i] = (i>=8);
     end
   endgenerate
 
