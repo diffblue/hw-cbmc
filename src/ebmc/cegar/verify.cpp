@@ -32,19 +32,16 @@ bool bmc_cegart::verify(unsigned bound)
 
   unwind(bound, abstract_netlist, solver);
   
-  if(verbose)
-    message.status() << "Running " << solver.solver_text() << messaget::eom;
+  message.status() << "Running " << solver.solver_text() << messaget::eom;
 
   switch(solver.prop_solve())
   {
   case propt::P_SATISFIABLE:
-    if(verbose)
-      message.status() << "SAT: bug found within bound" << messaget::eom;
+    message.status() << "SAT: bug found within bound" << messaget::eom;
     break;
 
   case propt::P_UNSATISFIABLE:
-    if(verbose)
-      message.status() << "UNSAT: No bug found within bound" << messaget::eom;
+    message.status() << "UNSAT: No bug found within bound" << messaget::eom;
     return true;
 
   case propt::P_ERROR:

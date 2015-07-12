@@ -20,14 +20,12 @@ public:
     symbol_tablet &_symbol_table,
     const irep_idt &_main_module,
     messaget &_message,
-    const std::list<exprt> &_properties,
-    bool _verbose):
+    const std::list<exprt> &_properties):
     symbol_table(_symbol_table),
     ns(_symbol_table),
     main_module(_main_module),
     message(_message),
-    properties(_properties),
-    verbose(_verbose)
+    properties(_properties)
   {
   }
 
@@ -39,8 +37,6 @@ protected:
   const irep_idt &main_module;
   messaget &message;
   const std::list<exprt> &properties;
-  
-  bool verbose;
   
   bmc_mapt bmc_map;
   netlistt concrete_netlist, abstract_netlist;

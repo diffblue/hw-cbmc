@@ -86,8 +86,7 @@ void bmc_cegart::unwind(
   // do transitions
   for(unsigned timeframe=0; timeframe<bound; timeframe++)
   {
-    if(verbose)
-      message.status() << "Round " << timeframe < eom;
+    message.status() << "Round " << timeframe < eom;
     
     aig.clear_convert_cache();
     
@@ -129,8 +128,7 @@ void bmc_cegart::unwind(
   
   // do the property
   property(properties, prop_bv, message, prop,
-           bmc_map, ns, verbose);
-           
+           bmc_map, ns);
   #endif
 }
 
@@ -150,20 +148,17 @@ unsigned bmc_cegart::compute_ct()
 {
   message.status() << "Computing CT" << messaget::eom;
 
-  if(verbose)
-    message.status() << "Computing abstract LDG" << messaget::eom;
+  message.status() << "Computing abstract LDG" << messaget::eom;
    
   ldgt ldg;
  
   ldg.compute(abstract_netlist);
     
-  if(verbose)
-    message.status() << "Computing CT" << messaget::eom;
+  message.status() << "Computing CT" << messaget::eom;
 
   unsigned ct=::compute_ct(ldg);
 
-  if(verbose)
-    message.status() << "CT=" << ct << messaget::eom;
+  message.status() << "CT=" << ct << messaget::eom;
 
   return ct;
 }
@@ -244,7 +239,7 @@ void bmc_cegart::make_netlist()
     return;
   }
 
-  if(verbose)
-    message.status() << "Latches: " << concrete_netlist.var_map.latches.size()
-                     << ", nodes: " << concrete_netlist.number_of_nodes() << messaget::eom;
+  message.statistics() 
+    << "Latches: " << concrete_netlist.var_map.latches.size()
+    << ", nodes: " << concrete_netlist.number_of_nodes() << messaget::eom;
 }

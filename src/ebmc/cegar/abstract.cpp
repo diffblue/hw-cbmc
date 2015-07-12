@@ -34,13 +34,13 @@ void bmc_cegart::abstract()
     initial_abstraction=false;
     abstract_netlist=concrete_netlist;
     
-    if(verbose) message.status() << "Computing concrete LDG" << messaget::eom;
+    message.status() << "Computing concrete LDG" << messaget::eom;
    
     ldgt ldg;
  
     ldg.compute(concrete_netlist);
 
-    if(verbose) message.status() << "Computing ordering" << messaget::eom;
+    message.status() << "Computing ordering" << messaget::eom;
     
     latch_orderingt latch_ordering;
     latch_ordering.compute(ldg);
