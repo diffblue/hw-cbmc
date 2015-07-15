@@ -1766,10 +1766,24 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
 
     expr.type()=expr.op0().type();
   }
-  else if(expr.id()==ID_delay)
+  else if(expr.id()==ID_cycle_delay)
   {
     expr.type()=bool_typet();
-    // TODO
+    if(expr.operands().size()==2) // #1 something
+    {
+      convert_expr(expr.op0());
+      convert_expr(expr.op1());
+      make_boolean(expr.op1());
+    }
+    else if(expr.operands().size()==3) // #[1:2] something
+    {
+      convert_expr(expr.op0());
+      convert_expr(expr.op1());
+      convert_expr(expr.op2());
+      make_boolean(expr.op2());
+    }
+    else
+      throw "delay expression with unexpected number of operands";
   }
   else if(expr.id()==ID_overlapped_implication ||
           expr.id()==ID_non_overlapped_implication)

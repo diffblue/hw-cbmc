@@ -1977,9 +1977,12 @@ procedural_timing_control:
         ;
 
 cycle_delay:
-          "##" unsigned_number
+          "##" number
+                { init($$, ID_cycle_delay); mto($$, $2); }
         | "##" identifier
+                { init($$, ID_cycle_delay); mto($$, $2); }
         | "##" '(' expression ')'
+                { init($$, ID_cycle_delay); mto($$, $3); }
         ;
 
 delay_or_event_control:
@@ -1991,11 +1994,11 @@ delay_or_event_control:
 
 delay_control:
 	  '#' delay_value
-		{ init($$, "delay"); mto($$, $2); }
+		{ init($$, ID_delay); mto($$, $2); }
 	// | '#' variable_identifier
-	// 	{ init($$, "delay"); mto($$, $2); }
+	// 	{ init($$, ID_delay); mto($$, $2); }
 	| '#' '(' mintypmax_expression ')'
-		{ init($$, "delay"); mto($$, $2); }
+		{ init($$, ID_delay); mto($$, $2); }
 	;
 
 event_control:
@@ -2269,7 +2272,7 @@ expression:
 
 // properties for SystemVerilog assertions
 property_expr:
-          sequence_expression
+          sequence_expr
         | "not" property_expr
         | property_expr "or" property_expr { init($$, ID_or); mto($$, $1); mto($$, $3); }
         | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
@@ -2277,14 +2280,23 @@ property_expr:
         | property_expr "|=>" property_expr { init($$, ID_non_overlapped_implication); mto($$, $1); mto($$, $3); }
         ;
 
-sequence_expression:
+sequence_expr:
           expression
-        | "##" unsigned_number sequence_expression
-                { init($$, ID_delay); mto($$, $2); mto($$, $3); }
-        | "##" '[' unsigned_number ':' unsigned_number ']' sequence_expression
-                { init($$, ID_delay); mto($$, $3); mto($$, $5); mto($$, $7); }
-        | "##" '[' unsigned_number ':' '$' ']' sequence_expression
-                { init($$, ID_delay); mto($$, $3); mto($$, $7); }
+        | cycle_delay_range sequence_expr
+                { $$=$1; mto($$, $2); }
+        | expression cycle_delay_range sequence_expr
+                { $$=$1; mto($$, $1); mto($$, $3); }
+        | "first_match" '(' sequence_expr ')'
+        | expression "throughout" sequence_expr
+        ;
+
+cycle_delay_range:
+          "##" number
+                { init($$, ID_cycle_delay); mto($$, $2); }
+        | "##" '[' number ':' number ']'
+                { init($$, ID_cycle_delay); mto($$, $3); mto($$, $5); }
+        | "##" '[' number ':' '$' ']'
+                { init($$, ID_cycle_delay); mto($$, $3); }
         ;
 
 unary_operator:
