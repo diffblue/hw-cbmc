@@ -9,9 +9,9 @@ module main(input clk);
   always @(posedge clk) y<=y+2;
 
   assert property (x==0 |-> y==0);
-  assert property (x==0 |=> y==1);
+  assert property (x==0 |=> y==2);
   assert property (x==0 |-> y==0 ##1 y==2);
   assert property (x==0 |-> ##1 x==1);
-  assert property (x==1 |-> ##[1:10] y==4);
+  assert property (x==1 |-> ##[1:10] y==20);
 
 endmodule

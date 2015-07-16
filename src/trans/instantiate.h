@@ -18,6 +18,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "bmc_map.h"
 
+// bit-level
+
 void instantiate_constraint(
   propt &solver,
   const var_mapt &var_map,

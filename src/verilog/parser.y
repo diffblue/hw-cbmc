@@ -2286,7 +2286,7 @@ sequence_expr:
         | cycle_delay_range sequence_expr
                 { $$=$1; mto($$, $2); }
         | expression cycle_delay_range sequence_expr
-                { init($$, "cycle_delay_and"); mto($$, $1); mto($2, $3); mto($$, $2); }
+                { init($$, ID_cycle_delay_and); mto($$, $1); mto($2, $3); mto($$, $2); }
         | "first_match" '(' sequence_expr ')'
                 { init($$, "first_match"); mto($$, $3); }
         | expression "throughout" sequence_expr

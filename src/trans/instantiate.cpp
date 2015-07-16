@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/std_expr.h>
 #include <util/i2string.h>
+#include <util/arith_tools.h>
 
 #include "instantiate.h"
 
@@ -209,6 +210,78 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       throw "expected one-bit result";
 
     return result[0];
+  }
+  else if(expr.id()==ID_overlapped_implication)
+  {
+    // same as regular implication
+    if(expr.operands().size()==2)
+      return prop.limplies(convert_bool(expr.op0()),
+                           convert_bool(expr.op1()));
+  }
+  else if(expr.id()==ID_non_overlapped_implication)
+  {
+    // right-hand side is shifted by one tick
+    if(expr.operands().size()==2)
+    {
+      literalt lhs=convert_bool(expr.op0());
+      unsigned old_current=current;
+      unsigned old_next=next;
+      literalt rhs=convert_bool(expr.op1());
+      // restore      
+      current=old_current;
+      next=old_next;
+      return prop.limplies(lhs, rhs);
+    }
+  }
+  else if(expr.id()==ID_cycle_delay) // ##[1:2] something
+  {
+    if(expr.operands().size()==3)
+    {
+      unsigned old_current=current;
+      unsigned old_next=next;
+      literalt result;
+
+      if(expr.op1().is_nil())
+      {
+        mp_integer offset;
+        if(to_integer(expr.op0(), offset))
+          throw "failed to convert cycle_delay offset";
+
+        current=old_current+integer2long(offset);
+        next=old_next+integer2long(offset);
+        result=convert_bool(expr.op2());
+      }
+      else
+      {
+        mp_integer from, to;
+        if(to_integer(expr.op0(), from) ||
+           to_integer(expr.op1(), to))
+          throw "failed to convert cycle_delay offsets";
+          
+        // this is an 'or'
+        bvt disjuncts;
+        
+        for(mp_integer offset=from; offset<to; ++offset)
+        {
+          current=old_current+integer2long(offset);
+          next=old_next+integer2long(offset);
+          disjuncts.push_back(convert_bool(expr.op2()));
+        }
+        
+        result=prop.lor(disjuncts);
+      }
+
+      // restore      
+      current=old_current;
+      next=old_next;
+      return result;
+    }
+  }
+  else if(expr.id()==ID_cycle_delay_and)
+  {
+    if(expr.operands().size()==2)
+      return prop.land(convert_bool(expr.op0()),
+                       convert_bool(expr.op1()));
   }
 
   return SUB::convert_bool(expr);
@@ -567,7 +640,6 @@ protected:
   
   void instantiate_rec(exprt &expr);
   void instantiate_rec(typet &expr);
-
 };
 
 /*******************************************************************\
@@ -599,6 +671,74 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     {
       expr.set(ID_identifier, timeframe_identifier(current, identifier));
     }
+  }
+  else if(expr.id()==ID_overlapped_implication)
+  {
+    // same as regular implication
+    expr.id(ID_implies);
+
+    Forall_operands(it, expr)
+      instantiate_rec(*it);
+  }
+  else if(expr.id()==ID_non_overlapped_implication)
+  {
+    // right-hand side is shifted by one tick
+    if(expr.operands().size()==2)
+    {
+      expr.id(ID_implies);
+      instantiate_rec(expr.op0());
+      unsigned old_current=current;
+      current++;
+      instantiate_rec(expr.op1());
+      current=old_current;
+    }
+  }
+  else if(expr.id()==ID_cycle_delay) // ##[1:2] something
+  {
+    if(expr.operands().size()==3)
+    {
+      unsigned old_current=current;
+
+      if(expr.op1().is_nil())
+      {
+        mp_integer offset;
+        if(to_integer(expr.op0(), offset))
+          throw "failed to convert cycle_delay offset";
+
+        current=old_current+integer2long(offset);
+        instantiate_rec(expr.op2());
+        expr=expr.op2();
+      }
+      else
+      {
+        mp_integer from, to;
+        if(to_integer(expr.op0(), from) ||
+           to_integer(expr.op1(), to))
+          throw "failed to convert cycle_delay offsets";
+          
+        // this is an 'or'
+        exprt::operandst disjuncts;
+        
+        for(mp_integer offset=from; offset<to; ++offset)
+        {
+          current=old_current+integer2long(offset);
+          disjuncts.push_back(expr.op2());
+          instantiate_rec(disjuncts.back());
+        }
+        
+        expr=disjunction(disjuncts);
+      }
+
+      // restore      
+      current=old_current;
+    }
+  }
+  else if(expr.id()==ID_cycle_delay_and)
+  {
+    // much like regular and
+    expr.id(ID_and);
+    Forall_operands(it, expr)
+      instantiate_rec(*it);
   }
   else
   {

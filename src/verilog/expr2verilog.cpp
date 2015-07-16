@@ -107,6 +107,44 @@ std::string expr2verilogt::convert_cycle_delay(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_cycle_delay_and
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_cycle_delay_and(
+  const exprt &src,
+  unsigned precedence)
+{
+  if(src.operands().size()!=2)
+    return convert_norep(src, precedence);
+
+  std::string dest;
+
+  unsigned p0, p1;  
+  std::string op0=convert(src.op0(), p0);
+  std::string op1=convert(src.op1(), p1);
+
+  if(precedence>p0) dest+='(';
+  dest+=op0;
+  if(precedence>p0) dest+=')';
+
+  dest+=' ';
+
+  if(precedence>p1) dest+='(';
+  dest+=op1;
+  if(precedence>p1) dest+=')';
+
+  return dest;
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_binary
 
   Inputs:
@@ -880,6 +918,10 @@ std::string expr2verilogt::convert(
     
   else if(src.id()==ID_cycle_delay)
     return convert_cycle_delay(src, precedence=3);
+    // not sure about precedence
+    
+  else if(src.id()==ID_cycle_delay_and)
+    return convert_cycle_delay_and(src, precedence=3);
     // not sure about precedence
     
   // no VERILOG language expression for internal representation 

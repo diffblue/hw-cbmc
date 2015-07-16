@@ -103,6 +103,10 @@ public:
   virtual std::string convert_cycle_delay(
     const exprt &src,
     unsigned precedence);
+
+  virtual std::string convert_cycle_delay_and(
+    const exprt &src,
+    unsigned precedence);
 };
 
 #endif
