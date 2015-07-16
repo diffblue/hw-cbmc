@@ -280,8 +280,8 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
     switch(no_op)
     {
      case 0: convert_nullary_expr(expr); break;
-     case 1: convert_unary_expr  (expr); break;
-     case 2: convert_binary_expr (expr); break;
+     case 1: convert_unary_expr  (to_unary_expr(expr)); break;
+     case 2: convert_binary_expr (to_binary_expr(expr)); break;
      case 3: convert_trinary_expr(expr); break;
      default:
       err_location(expr);
@@ -1447,7 +1447,7 @@ Function: verilog_typecheck_exprt::convert_unary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_unary_expr(exprt &expr)
+void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
 {
   if(expr.id()==ID_not)
   {
@@ -1675,7 +1675,7 @@ Function: verilog_typecheck_exprt::convert_binary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
+void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
 {
   if(expr.id()==ID_extractbit)
     convert_extractbit_expr(expr);
@@ -1765,25 +1765,6 @@ void verilog_typecheck_exprt::convert_binary_expr(exprt &expr)
     no_bool_ops(expr);
 
     expr.type()=expr.op0().type();
-  }
-  else if(expr.id()==ID_cycle_delay)
-  {
-    expr.type()=bool_typet();
-    if(expr.operands().size()==2) // #1 something
-    {
-      convert_expr(expr.op0());
-      convert_expr(expr.op1());
-      make_boolean(expr.op1());
-    }
-    else if(expr.operands().size()==3) // #[1:2] something
-    {
-      convert_expr(expr.op0());
-      convert_expr(expr.op1());
-      convert_expr(expr.op2());
-      make_boolean(expr.op2());
-    }
-    else
-      throw "delay expression with unexpected number of operands";
   }
   else if(expr.id()==ID_overlapped_implication ||
           expr.id()==ID_non_overlapped_implication)
@@ -1911,6 +1892,15 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
     expr.type()=expr.op1().type();
 
     return;
+  }
+  else if(expr.id()==ID_cycle_delay) // #[1:2] something
+  {
+    expr.type()=bool_typet();
+    assert(expr.operands().size()==3);
+    convert_expr(expr.op0());
+    if(expr.op1().is_not_nil()) convert_expr(expr.op1());
+    convert_expr(expr.op2());
+    make_boolean(expr.op2());
   }
   else
   {

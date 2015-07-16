@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <cstring>
 
 #include <util/expr_util.h>
+#include <util/std_expr.h>
 
 #include "verilog_parser.h"
 
@@ -2285,17 +2286,19 @@ sequence_expr:
         | cycle_delay_range sequence_expr
                 { $$=$1; mto($$, $2); }
         | expression cycle_delay_range sequence_expr
-                { $$=$1; mto($$, $1); mto($$, $3); }
+                { init($$, "cycle_delay_and"); mto($$, $1); mto($2, $3); mto($$, $2); }
         | "first_match" '(' sequence_expr ')'
+                { init($$, "first_match"); mto($$, $3); }
         | expression "throughout" sequence_expr
+                { init($$, "throughout"); mto($$, $1); mto($$, $3); }
         ;
 
 cycle_delay_range:
           "##" number
-                { init($$, ID_cycle_delay); mto($$, $2); }
-        | "##" '[' number ':' number ']'
+                { init($$, ID_cycle_delay); mto($$, $2); stack($$).operands().push_back(nil_exprt()); }
+        | "##" '[' number TOK_COLON number ']'
                 { init($$, ID_cycle_delay); mto($$, $3); mto($$, $5); }
-        | "##" '[' number ':' '$' ']'
+        | "##" '[' number TOK_COLON '$' ']'
                 { init($$, ID_cycle_delay); mto($$, $3); }
         ;
 

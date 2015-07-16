@@ -88,8 +88,8 @@ private:
   void convert_symbol(exprt &);
   void convert_hierarchical_identifier(class hierarchical_identifier_exprt &);
   void convert_nullary_expr(exprt &);
-  void convert_unary_expr  (exprt &);
-  void convert_binary_expr (exprt &);
+  void convert_unary_expr  (unary_exprt &);
+  void convert_binary_expr (binary_exprt &);
   void convert_trinary_expr(exprt &);
   void convert_expr_function_call(class function_call_exprt &);
   void convert_system_function(const irep_idt &identifier,

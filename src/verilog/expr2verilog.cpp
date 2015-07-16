@@ -80,39 +80,27 @@ std::string expr2verilogt::convert_cycle_delay(
   const exprt &src,
   unsigned precedence)
 {
-  if(src.operands().size()!=2 &&
-     src.operands().size()!=3)
+  if(src.operands().size()!=3)
     return convert_norep(src, precedence);
 
   std::string dest="##";
   
-  if(src.operands().size()==2)
-  {
-    unsigned p1;
+  unsigned p2;
 
-    std::string op0=convert(src.op0());
-    std::string op1=convert(src.op1(), p1);
+  std::string op0=convert(src.op0());
+  std::string op1=convert(src.op1());
+  std::string op2=convert(src.op2(), p2);
 
-    dest+=op0+" ";
+  if(src.op1().is_nil())
+    dest+=op0;
+  else
+    dest+='['+op0+':'+op1+']';
+    
+  dest+=' ';
 
-    if(precedence>p1) dest+='(';
-    dest+=op1;
-    if(precedence>p1) dest+=')';
-  }
-  else if(src.operands().size()==3)
-  {
-    unsigned p2;
-
-    std::string op0=convert(src.op0());
-    std::string op1=convert(src.op1());
-    std::string op2=convert(src.op2(), p2);
-
-    dest+="["+op0+":"+op1+"] ";
-
-    if(precedence>p2) dest+='(';
-    dest+=op2;
-    if(precedence>p2) dest+=')';
-  }
+  if(precedence>p2) dest+='(';
+  dest+=op2;
+  if(precedence>p2) dest+=')';
 
   return dest;
 }
