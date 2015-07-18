@@ -143,7 +143,7 @@ void property(
     for(unsigned c=0; c<no_timeframes; c++)
     {
       exprt tmp(p);
-      instantiate(tmp, c, ns);
+      instantiate(tmp, c, no_timeframes, ns);
 
       literalt l=solver.convert(tmp);
       prop_bv.back().push_back(l);

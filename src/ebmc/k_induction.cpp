@@ -219,14 +219,14 @@ int k_inductiont::induction_step()
     for(unsigned c=0; c<no_timeframes-1; c++)
     {
       exprt tmp(p);
-      instantiate(tmp, c, ns);
+      instantiate(tmp, c, no_timeframes-1, ns);
       solver.set_to_true(tmp);
     }
     
     // property: time frame k
     {
       exprt tmp(p);
-      instantiate(tmp, no_timeframes-1, ns);
+      instantiate(tmp, no_timeframes-1, no_timeframes, ns);
       solver.set_to_false(tmp);
     }    
   }

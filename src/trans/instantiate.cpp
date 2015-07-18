@@ -622,9 +622,10 @@ class wl_instantiatet
 {
 public:
   wl_instantiatet(
-    unsigned _current,
+    unsigned _current, unsigned _no_timeframes,
     const namespacet &_ns):
     current(_current),
+    no_timeframes(_no_timeframes),
     ns(_ns)
   {
   }
@@ -635,7 +636,7 @@ public:
   }
 
 protected:
-  unsigned current;
+  unsigned current, no_timeframes;
   const namespacet &ns;
   
   void instantiate_rec(exprt &expr);
@@ -712,8 +713,16 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       else
       {
         mp_integer from, to;
-        if(to_integer(expr.op0(), from) ||
-           to_integer(expr.op1(), to))
+        
+        if(to_integer(expr.op0(), from))
+          throw "failed to convert sva_cycle_delay offsets";
+          
+        if(expr.op1().id()==ID_infinity)
+        {
+          assert(no_timeframes!=0);
+          to=no_timeframes-1;
+        }
+        else if(to_integer(expr.op1(), to))
           throw "failed to convert sva_cycle_delay offsets";
           
         // this is an 'or'
@@ -777,10 +786,10 @@ Function: instantiate
 
 void instantiate(
   exprt &expr,
-  unsigned current,
+  unsigned current, unsigned no_timeframes,
   const namespacet &ns)
 {
-  wl_instantiatet wl_instantiate(current, ns);
+  wl_instantiatet wl_instantiate(current, no_timeframes, ns);
   wl_instantiate.instantiate(expr);
 }
 
@@ -799,11 +808,11 @@ Function: instantiate
 void instantiate(
   decision_proceduret &decision_procedure,
   const exprt &expr,
-  unsigned current,
+  unsigned current, unsigned no_timeframes,
   const namespacet &ns)
 {
   exprt tmp(expr);
-  instantiate(tmp, current, ns);
+  instantiate(tmp, current, no_timeframes, ns);
   decision_procedure.set_to_true(tmp);
 }
 
@@ -823,9 +832,10 @@ literalt instantiate_convert(
   prop_convt &prop_conv,
   const exprt &expr,
   unsigned current,
+  unsigned no_timeframes,
   const namespacet &ns)
 {
   exprt tmp(expr);
-  instantiate(tmp, current, ns);
+  instantiate(tmp, current, no_timeframes, ns);
   return prop_conv.convert(tmp);
 }

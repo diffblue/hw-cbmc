@@ -72,7 +72,7 @@ void instantiate_convert(
 void instantiate(
   decision_proceduret &decision_procedure,
   const exprt &expr,
-  unsigned current,
+  unsigned current, unsigned no_timeframes,
   const namespacet &);
 
 literalt instantiate_convert(
@@ -83,7 +83,7 @@ literalt instantiate_convert(
 
 void instantiate(
   exprt &expr,
-  unsigned current,
+  unsigned current, unsigned no_timeframes,
   const namespacet &);
 
 std::string timeframe_identifier(

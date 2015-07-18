@@ -43,7 +43,7 @@ void unwind(
 
   if(!op_invar.is_true())
     for(unsigned c=0; c<no_timeframes; c++)
-      instantiate(decision_procedure, op_invar, c, ns);
+      instantiate(decision_procedure, op_invar, c, no_timeframes, ns);
 
   // initial state
 
@@ -52,7 +52,7 @@ void unwind(
     message.status() << "Initial state" << messaget::eom;
 
     if(!op_init.is_true())
-      instantiate(decision_procedure, op_init, 0, ns);
+      instantiate(decision_procedure, op_init, 0, no_timeframes, ns);
   }
 
   // transition relation
@@ -64,6 +64,6 @@ void unwind(
     {
       message.status() << "Transition " << c << "->" << c+1 << messaget::eom;
 
-      instantiate(decision_procedure, op_trans, c, ns);
+      instantiate(decision_procedure, op_trans, c, no_timeframes, ns);
     }
 }
