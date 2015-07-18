@@ -581,7 +581,7 @@ void verilog_typecheck_exprt::convert_nullary_expr(exprt &expr)
   {
     convert_symbol(to_symbol_expr(expr));
   }
-  else if(expr.id()=="star-event")
+  else if(expr.id()==ID_verilog_star_event)
   {
   }
   else

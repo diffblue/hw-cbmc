@@ -1449,7 +1449,7 @@ range_or_type:
 	| TOK_REALTIME
 		{ init($$, ID_realtime); }
 	| TOK_TIME
-		{ init($$, "time"); }
+		{ init($$, ID_time); }
 	;
 
 function_item_declaration_brace:
@@ -1504,7 +1504,7 @@ block_item_declaration:
 
 attribute_instance_brace:
 	  /* Optional */
-		{ init($$, "verilog_attribute"); }
+		{ init($$, ID_verilog_attribute); }
 	| attribute_instance_brace attribute_instance
 		{ $$=$1;
 		  Forall_irep(it, stack($2).get_sub())
@@ -1581,8 +1581,8 @@ cmos_switchtype:
 enable_gatetype:
 	  TOK_BUFIF0   { init($$, ID_bufif0); }
 	| TOK_BUFIF1   { init($$, ID_bufif1); }
-	| TOK_NOTIF0   { init($$, "notif0"); }
-	| TOK_NOTIF1   { init($$, "notif1"); }
+	| TOK_NOTIF0   { init($$, ID_notif0); }
+	| TOK_NOTIF1   { init($$, ID_notif1); }
 	;
 
 mos_switchtype:
@@ -1701,7 +1701,7 @@ module_instance_brace:
 
 module_instance:
 	  name_of_instance '(' list_of_module_connections_opt ')'
-		{ init($$, ID_inst); addswap($$, "instance", $1); swapop($$, $3); }
+		{ init($$, ID_inst); addswap($$, ID_instance, $1); swapop($$, $3); }
 	;
 
 name_of_instance: { init($$, "$_&#ANON" + PARSER.get_dummy_id());}
@@ -1739,7 +1739,7 @@ named_port_connection_brace:
 
 named_port_connection:
 	  '.' port_identifier '(' expression_opt ')'
-		{ init($$, "named_port_connection");
+		{ init($$, ID_named_port_connection);
                   mto($$, $2);
                   mto($$, $4); }
 	;
@@ -1847,7 +1847,7 @@ hierarchical_event_identifier: event_identifier;
 
 par_block:
 	  TOK_FORK statement_or_null_brace TOK_JOIN
-		{ init($$, "fork"); swapop($$, $2); }
+		{ init($$, ID_fork); swapop($$, $2); }
         | TOK_FORK TOK_COLON block_identifier
           statement_or_null_brace TOK_JOIN
                 { init($$, ID_block);
@@ -1857,7 +1857,7 @@ par_block:
 	;
 
 disable_statement: TOK_DISABLE hierarchical_task_or_block_identifier ';'
-		{ init($$, "disable"); mto($$, $2); }
+		{ init($$, ID_disable); mto($$, $2); }
 	;
 
 assert_property_statement:
@@ -1880,7 +1880,7 @@ assert_property_statement:
 property_identifier: TOK_CHARSTR;
 
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
-		{ init($$, "cover"); mto($$, $4); mto($$, $6); }
+		{ init($$, ID_cover); mto($$, $4); mto($$, $6); }
 	;
 
 action_block:
@@ -1916,19 +1916,19 @@ hierarchical_task_or_block_identifier: task_identifier;
 hierarchical_tf_identifier: hierarchical_identifier;
 
 wait_statement: TOK_WAIT '(' expression ')' statement_or_null
-		{ init($$, "wait"); mto($$, $3); mto($$, $5); }
+		{ init($$, ID_wait); mto($$, $3); mto($$, $5); }
 	;
 
 procedural_continuous_assignments:
 	  TOK_ASSIGN variable_assignment
 		{ init($$, ID_continuous_assign); mto($$, $2); }
 	| TOK_DEASSIGN variable_lvalue
-		{ init($$, "deassign"); mto($$, $2); }
+		{ init($$, ID_deassign); mto($$, $2); }
 	| TOK_FORCE variable_assignment
-		{ init($$, "force"); swapop($$, $2); }
+		{ init($$, ID_force); swapop($$, $2); }
 	/* | TOK_FORCE net_assignment */
 	| TOK_RELEASE variable_lvalue
-		{ init($$, "release"); mto($$, $2); }
+		{ init($$, ID_release); mto($$, $2); }
 	/* | TOK_RELEASE net_lvalue */
 	;
 
@@ -2004,21 +2004,21 @@ delay_control:
 
 event_control:
 	  '@' event_identifier
-		{ init($$, "event_guard"); mto($$, $2); }
+		{ init($$, ID_event_guard); mto($$, $2); }
 	| '@' '(' ored_event_expression ')'
-		{ init($$, "event_guard"); mto($$, $3); }
+		{ init($$, ID_event_guard); mto($$, $3); }
 	| '@' TOK_ASTERIC
-		{ init($$, "event_guard");
+		{ init($$, ID_event_guard);
 		  stack($$).operands().resize(1);
-	          stack($$).op0().id("star-event"); }
+	          stack($$).op0().id(ID_verilog_star_event); }
 	| '@' '(' TOK_ASTERIC ')'
-		{ init($$, "event_guard");
+		{ init($$, ID_event_guard);
 		  stack($$).operands().resize(1);
-	          stack($$).op0().id("star-event"); }
+	          stack($$).op0().id(ID_verilog_star_event); }
 	| '@' TOK_PARENASTERIC ')'
-		{ init($$, "event_guard");
+		{ init($$, ID_event_guard);
 		  stack($$).operands().resize(1);
-	          stack($$).op0().id("star-event"); }
+	          stack($$).op0().id(ID_verilog_star_event); }
 	;
 
 event_identifier:
@@ -2028,7 +2028,7 @@ event_identifier:
 
 ored_event_expression:
 	  event_expression
-		{ init($$, "event"); mto($$, $1); }
+		{ init($$, ID_event); mto($$, $1); }
 	| ored_event_expression TOK_OR event_expression
 		{ $$=$1; mto($$, $3); }
 	| ored_event_expression ',' event_expression
@@ -2039,9 +2039,9 @@ event_expression:
 	  expression
 		{ $$=$1; }
 	| TOK_POSEDGE expression
-		{ init($$, "posedge"); mto($$, $2); }
+		{ init($$, ID_posedge); mto($$, $2); }
 	| TOK_NEGEDGE expression
-		{ init($$, "negedge"); mto($$, $2); }
+		{ init($$, ID_negedge); mto($$, $2); }
 	;
 
 conditional_statement:
@@ -2072,14 +2072,14 @@ case_item_brace:
 
 case_item:
 	  expression_brace TOK_COLON statement_or_null
-		{ init($$, "case_item"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_case_item); mto($$, $1); mto($$, $3); }
 	| TOK_DEFAULT TOK_COLON statement_or_null
-		{ init($$, "case_item");
+		{ init($$, ID_case_item);
                   stack($$).operands().resize(1);
                   stack($$).op0().id(ID_default);
                   mto($$, $3); }
 	| TOK_DEFAULT statement_or_null
-		{ init($$, "case_item");
+		{ init($$, ID_case_item);
                   stack($$).operands().resize(1);
                   stack($$).op0().id(ID_default);
                   mto($$, $2); }
@@ -2231,9 +2231,9 @@ expression:
 	| expression TOK_EXCLAMEQUAL expression
 		{ init($$, ID_notequal); mto($$, $1); mto($$, $3); }
 	| expression TOK_EQUALEQUALEQUAL expression
-		{ init($$, "verilog_case_equality"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_case_equality); mto($$, $1); mto($$, $3); }
 	| expression TOK_EXCLAMEQUALEQUAL expression
-		{ init($$, "verilog_case_inequality"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_case_inequality); mto($$, $1); mto($$, $3); }
 	| expression TOK_AMPERAMPER expression
 		{ init($$, ID_and); mto($$, $1); mto($$, $3); }
 	| expression TOK_VERTBARVERTBAR expression
@@ -2253,7 +2253,7 @@ expression:
 	| expression TOK_CARET expression
 		{ init($$, ID_bitxor); mto($$, $1); mto($$, $3); }
 	| expression TOK_TILDECARET expression
-		{ init($$, "bitxnor"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_bitxnor); mto($$, $1); mto($$, $3); }
 	| expression TOK_LESSLESS expression
 		{ init($$, ID_shl); mto($$, $1); mto($$, $3); }
 	| expression TOK_LESSLESSLESS expression
@@ -2459,7 +2459,7 @@ charge_strength_opt:
 	;
 
 specify_block: TOK_SPECIFY specify_item_brace TOK_ENDSPECIFY
-		{ init($$, "specify"); } 
+		{ init($$, ID_specify); } 
 	;
 
 specify_item_brace:
