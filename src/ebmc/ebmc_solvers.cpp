@@ -293,6 +293,7 @@ Function: ebmc_baset::do_sat
 int ebmc_baset::do_sat()
 {
   satcheckt satcheck;
+  satcheck.set_message_handler(get_message_handler());
 
   if(cmdline.isset("aig"))
   {
