@@ -584,6 +584,9 @@ void verilog_typecheck_exprt::convert_nullary_expr(exprt &expr)
   else if(expr.id()==ID_verilog_star_event)
   {
   }
+  else if(expr.id()==ID_infinity)
+  {
+  }
   else
   {
     err_location(expr);
@@ -1893,7 +1896,7 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
 
     return;
   }
-  else if(expr.id()==ID_cycle_delay) // #[1:2] something
+  else if(expr.id()==ID_sva_cycle_delay) // #[1:2] something
   {
     expr.type()=bool_typet();
     assert(expr.operands().size()==3);

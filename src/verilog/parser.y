@@ -501,12 +501,12 @@ int yyverilogerror(const char *error)
 %token TOK_SCANNER_ERROR
 
 /* Precedence, following SystemVerilog 3.1a */
-%right TOK_MINUSGREATER // ->
+%right "->"
 %right TOK_QUESTION TOK_COLON // ?:
 %left "##"
 %nonassoc "not"
 %left "and"
-%left TOK_OR
+%left "or"
 %left TOK_VERTBARVERTBAR
 %left TOK_AMPERAMPER
 %left TOK_VERTBAR
@@ -1979,11 +1979,11 @@ procedural_timing_control:
 
 cycle_delay:
           "##" number
-                { init($$, ID_cycle_delay); mto($$, $2); }
+                { init($$, ID_verilog_cycle_delay); mto($$, $2); }
         | "##" identifier
-                { init($$, ID_cycle_delay); mto($$, $2); }
+                { init($$, ID_verilog_cycle_delay); mto($$, $2); }
         | "##" '(' expression ')'
-                { init($$, ID_cycle_delay); mto($$, $3); }
+                { init($$, ID_verilog_cycle_delay); mto($$, $3); }
         ;
 
 delay_or_event_control:
@@ -2286,20 +2286,20 @@ sequence_expr:
         | cycle_delay_range sequence_expr
                 { $$=$1; mto($$, $2); }
         | expression cycle_delay_range sequence_expr
-                { init($$, ID_cycle_delay_and); mto($$, $1); mto($2, $3); mto($$, $2); }
+                { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
         | "first_match" '(' sequence_expr ')'
-                { init($$, "first_match"); mto($$, $3); }
+                { init($$, ID_sva_sequence_first_match); mto($$, $3); }
         | expression "throughout" sequence_expr
-                { init($$, "throughout"); mto($$, $1); mto($$, $3); }
+                { init($$, ID_sva_sequence_throughout); mto($$, $1); mto($$, $3); }
         ;
 
 cycle_delay_range:
           "##" number
-                { init($$, ID_cycle_delay); mto($$, $2); stack($$).operands().push_back(nil_exprt()); }
+                { init($$, ID_sva_cycle_delay); mto($$, $2); stack($$).operands().push_back(nil_exprt()); }
         | "##" '[' number TOK_COLON number ']'
-                { init($$, ID_cycle_delay); mto($$, $3); mto($$, $5); }
+                { init($$, ID_sva_cycle_delay); mto($$, $3); mto($$, $5); }
         | "##" '[' number TOK_COLON '$' ']'
-                { init($$, ID_cycle_delay); mto($$, $3); }
+                { init($$, ID_sva_cycle_delay); mto($$, $3); stack($$).copy_to_operands(exprt(ID_infinity)); }
         ;
 
 unary_operator:

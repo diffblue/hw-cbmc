@@ -233,7 +233,7 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       return prop.limplies(lhs, rhs);
     }
   }
-  else if(expr.id()==ID_cycle_delay) // ##[1:2] something
+  else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
     if(expr.operands().size()==3)
     {
@@ -245,7 +245,7 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       {
         mp_integer offset;
         if(to_integer(expr.op0(), offset))
-          throw "failed to convert cycle_delay offset";
+          throw "failed to convert sva_cycle_delay offset";
 
         current=old_current+integer2long(offset);
         next=old_next+integer2long(offset);
@@ -256,7 +256,7 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
         mp_integer from, to;
         if(to_integer(expr.op0(), from) ||
            to_integer(expr.op1(), to))
-          throw "failed to convert cycle_delay offsets";
+          throw "failed to convert sva_cycle_delay offsets";
           
         // this is an 'or'
         bvt disjuncts;
@@ -277,7 +277,7 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       return result;
     }
   }
-  else if(expr.id()==ID_cycle_delay_and)
+  else if(expr.id()==ID_sva_sequence_concatenation)
   {
     if(expr.operands().size()==2)
       return prop.land(convert_bool(expr.op0()),
@@ -693,7 +693,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       current=old_current;
     }
   }
-  else if(expr.id()==ID_cycle_delay) // ##[1:2] something
+  else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
     if(expr.operands().size()==3)
     {
@@ -703,7 +703,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       {
         mp_integer offset;
         if(to_integer(expr.op0(), offset))
-          throw "failed to convert cycle_delay offset";
+          throw "failed to convert sva_cycle_delay offset";
 
         current=old_current+integer2long(offset);
         instantiate_rec(expr.op2());
@@ -714,7 +714,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         mp_integer from, to;
         if(to_integer(expr.op0(), from) ||
            to_integer(expr.op1(), to))
-          throw "failed to convert cycle_delay offsets";
+          throw "failed to convert sva_cycle_delay offsets";
           
         // this is an 'or'
         exprt::operandst disjuncts;
@@ -733,7 +733,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       current=old_current;
     }
   }
-  else if(expr.id()==ID_cycle_delay_and)
+  else if(expr.id()==ID_sva_sequence_concatenation)
   {
     // much like regular and
     expr.id(ID_and);

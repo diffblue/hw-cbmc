@@ -100,11 +100,11 @@ public:
     const exprt &src,
     unsigned precedence);
 
-  virtual std::string convert_cycle_delay(
+  virtual std::string convert_sva_cycle_delay(
     const exprt &src,
     unsigned precedence);
 
-  virtual std::string convert_cycle_delay_and(
+  virtual std::string convert_sva_sequence_concatenation(
     const exprt &src,
     unsigned precedence);
 };

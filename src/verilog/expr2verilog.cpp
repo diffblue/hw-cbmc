@@ -66,7 +66,7 @@ std::string expr2verilogt::convert_if(
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_cycle_delay
+Function: expr2verilogt::convert_sva_cycle_delay
 
   Inputs:
 
@@ -76,7 +76,7 @@ Function: expr2verilogt::convert_cycle_delay
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_cycle_delay(
+std::string expr2verilogt::convert_sva_cycle_delay(
   const exprt &src,
   unsigned precedence)
 {
@@ -93,6 +93,8 @@ std::string expr2verilogt::convert_cycle_delay(
 
   if(src.op1().is_nil())
     dest+=op0;
+  else if(src.op1().id()==ID_infinity)
+    dest+='['+op0+':'+'$'+']';
   else
     dest+='['+op0+':'+op1+']';
     
@@ -107,7 +109,7 @@ std::string expr2verilogt::convert_cycle_delay(
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_cycle_delay_and
+Function: expr2verilogt::convert_sva_sequence_concatenation
 
   Inputs:
 
@@ -117,7 +119,7 @@ Function: expr2verilogt::convert_cycle_delay_and
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_cycle_delay_and(
+std::string expr2verilogt::convert_sva_sequence_concatenation(
   const exprt &src,
   unsigned precedence)
 {
@@ -916,12 +918,12 @@ std::string expr2verilogt::convert(
     return convert_binary(src, "|=>", precedence=3);
     // not sure about precedence
     
-  else if(src.id()==ID_cycle_delay)
-    return convert_cycle_delay(src, precedence=3);
+  else if(src.id()==ID_sva_cycle_delay)
+    return convert_sva_cycle_delay(src, precedence=3);
     // not sure about precedence
     
-  else if(src.id()==ID_cycle_delay_and)
-    return convert_cycle_delay_and(src, precedence=3);
+  else if(src.id()==ID_sva_sequence_concatenation)
+    return convert_sva_sequence_concatenation(src, precedence=3);
     // not sure about precedence
     
   // no VERILOG language expression for internal representation 
