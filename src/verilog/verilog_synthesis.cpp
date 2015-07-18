@@ -261,9 +261,10 @@ void verilog_synthesist::assignment(
   const exprt &rhs,
   bool blocking)
 {
-  if(lhs.id()==ID_concatenation) // split it up
-                                // TODO: split it up more intelligently
+  if(lhs.id()==ID_concatenation) // split it up                                
   {
+    // TODO: split it up more intelligently;
+    // bit-wise is wasteful.
     unsigned offset=0;
     
     // do it from right to left
@@ -1597,10 +1598,11 @@ void verilog_synthesist::synth_assign(
     throw "assign statement expected to have two operands";
   }
 
-  if(construct!=C_ALWAYS && construct!=C_INITIAL)
+  if(construct!=C_ALWAYS &&
+     construct!=C_INITIAL)
   {
     err_location(statement);
-    throw "unexpected assign statement";
+    throw "unexpected assignment statement";
   }
   
   const exprt &lhs=statement.op0();
