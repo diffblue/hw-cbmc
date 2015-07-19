@@ -501,12 +501,13 @@ int yyverilogerror(const char *error)
 %token TOK_SCANNER_ERROR
 
 /* Precedence, following SystemVerilog 3.1a */
-%right "->"
-%right TOK_QUESTION TOK_COLON // ?:
-%left "##"
-%nonassoc "not"
-%left "and"
+/* Bison expects these in order of increasing precedence. */
+%right "|->" "|=>"
 %left "or"
+%left "and"
+%nonassoc "not"
+%left "##"
+%right TOK_QUESTION TOK_COLON // ?:
 %left TOK_VERTBARVERTBAR
 %left TOK_AMPERAMPER
 %left TOK_VERTBAR
@@ -521,7 +522,7 @@ int yyverilogerror(const char *error)
 %right TOK_TILDE TOK_EXCLAM TOK_PLUSPLUS TOK_MINUSMINUS
 %nonassoc LT_TOK_ELSE
 %nonassoc TOK_ELSE
-%right "|->" "|=>"
+%right "->"
 
 %%
 
@@ -2274,7 +2275,7 @@ expression:
 // properties for SystemVerilog assertions
 property_expr:
           sequence_expr
-        | "not" property_expr
+        | "not" property_expr { init($$, ID_not); mto($$, $2); }
         | property_expr "or" property_expr { init($$, ID_or); mto($$, $1); mto($$, $3); }
         | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
         | property_expr "|->" property_expr { init($$, ID_overlapped_implication); mto($$, $1); mto($$, $3); }
