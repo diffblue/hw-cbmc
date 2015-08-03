@@ -171,7 +171,7 @@ Function: verilog_typecheckt::parameterize_module
 \*******************************************************************/
 
 irep_idt verilog_typecheckt::parameterize_module(
-  const locationt &location,
+  const source_locationt &location,
   const irep_idt &module_identifier,
   const exprt::operandst &parameter_assignments)
 {

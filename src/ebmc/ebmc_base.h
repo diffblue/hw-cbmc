@@ -63,7 +63,7 @@ protected:
   {
   public:
     irep_idt name;
-    locationt location;
+    source_locationt location;
     std::string expr_string;
     irep_idt mode;
     exprt expr;

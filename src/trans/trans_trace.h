@@ -30,9 +30,9 @@ public:
     public:
       exprt lhs;
       exprt rhs;
-      locationt location;
+      source_locationt location;
       
-      assignmentt():location(static_cast<const locationt &>(get_nil_irep()))
+      assignmentt():location(source_locationt::nil())
       {
       }
     };

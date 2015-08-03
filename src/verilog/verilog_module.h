@@ -18,7 +18,7 @@ struct verilog_modulet
   irep_idt name;
   exprt ports;
   exprt module_items;
-  locationt location;
+  source_locationt location;
   
   irept to_irep() const
   {

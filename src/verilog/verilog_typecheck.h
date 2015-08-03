@@ -72,7 +72,7 @@ protected:
 
   // instances
   irep_idt parameterize_module(
-    const locationt &location,
+    const source_locationt &location,
     const irep_idt &module_identifier,
     const exprt::operandst &parameter_assignment);
 
