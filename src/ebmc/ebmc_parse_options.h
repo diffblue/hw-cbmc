@@ -26,11 +26,11 @@ public:
     "(verbosity):(gui)(po)(cegar)"
     "(k-induction)(2pi)(bound2):(outfile):(xml-ui)"
     "(show-properties)(property):p:"
-    "(prover)(lifter)"
+    "(reset):"
     "(version)(verilog-rtl)(verilog-netlist)"
     "(compute-interpolant)(interpolation)(interpolation-vmcai)"
     "(interpolation-word)(interpolator):"
-    "(smt1)(smt2)(boolector)(z3)(cvc4)(yices)"
+    "(smt1)(smt2)(boolector)(z3)(cvc4)(yices)(prover)(lifter)"
     "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
     "(compute-ct)(dot-netlist)(smv-netlist)(vcd):I:",
     argc, argv)

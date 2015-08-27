@@ -22,13 +22,7 @@ module top(
         end
     end
 
-// *********************************************************************************************
-// ebmc shows a counterexample now for p1 but the property actually holds in Jasper.
-// So, this is due to the reset problem. If we force the design to be reset in 
-// first cycle and then take it out of the reset for formal analysis, then we can 
-// solve this problem. Or we could silently pass this giving a warning "insufficient unwinding"
-// *********************************************************************************************
-
+// the below holds if the design is reset properly
 p1: assert property (reset_n == 1 |-> ##1 data == 0); 
 
 endmodule

@@ -32,7 +32,8 @@ protected:
   const cmdlinet &cmdline;
 
   const symbolt *main_symbol;
-  const transt *trans_expr; // transition system expression
+  transt trans_expr; // transition system expression
+  
   bool get_main();
   bool get_bound();
     

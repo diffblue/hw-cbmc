@@ -239,15 +239,15 @@ int show_transt::show_trans()
 
   std::cout << "Initial state constraints:\n\n";
   
-  print_verilog_constraints(trans_expr->init(), std::cout);
+  print_verilog_constraints(trans_expr.init(), std::cout);
 
   std::cout << "State constraints:\n\n";
   
-  print_verilog_constraints(trans_expr->invar(), std::cout);
+  print_verilog_constraints(trans_expr.invar(), std::cout);
 
   std::cout << "Transisition constraints:\n\n";
   
-  print_verilog_constraints(trans_expr->trans(), std::cout);
+  print_verilog_constraints(trans_expr.trans(), std::cout);
 
   return 0;
 }

@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/cmdline.h>
 #include <util/string2int.h>
+#include <util/expr_util.h>
 
 #include <solvers/flattening/boolbv.h>
 #include <trans/unwind.h>
@@ -26,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans/ldg.h>
 #include <trans/netlist_trans.h>
 #include <trans/unwind_netlist.h>
+
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
 #include <langapi/languages.h>
@@ -48,8 +50,7 @@ Function: ebmc_baset::ebmc_baset
 ebmc_baset::ebmc_baset(const cmdlinet &_cmdline):
   language_uit("EBMC " EBMC_VERSION, _cmdline),
   cmdline(_cmdline),
-  main_symbol(NULL),
-  trans_expr(NULL)
+  main_symbol(NULL)
 {
   if(cmdline.isset("verbosity"))
     ui_message_handler.set_verbosity(
@@ -261,7 +262,7 @@ void ebmc_baset::unwind(
   bool initial_state)
 {
   const namespacet ns(symbol_table);
-  ::unwind(*trans_expr, *this, solver, _bound, ns, initial_state);
+  ::unwind(trans_expr, *this, solver, _bound, ns, initial_state);
 }
 
 /*******************************************************************\
@@ -528,7 +529,7 @@ bool ebmc_baset::get_main()
   try
   {
     main_symbol=&get_module(symbol_table, top_module, get_message_handler());
-    trans_expr=&to_trans_expr(main_symbol->value);
+    trans_expr=to_trans_expr(main_symbol->value);
   }
 
   catch(int e)
@@ -776,6 +777,22 @@ int ebmc_baset::get_model()
   {
     show_ldg(std::cout);
     return 0;
+  }
+  
+  // --reset given?
+  if(cmdline.isset("reset"))
+  {
+    namespacet ns(symbol_table);
+    exprt reset_constraint=to_expr(ns, main_symbol->name, cmdline.get_value("reset"));
+
+    // true in initial state
+    trans_expr.init()=and_exprt(trans_expr.init(), reset_constraint);
+    
+    // and not anymore afterwards
+    exprt reset_next_state=reset_constraint;
+    make_next_state(reset_next_state);
+    
+    trans_expr.trans()=and_exprt(trans_expr.trans(), not_exprt(reset_next_state));
   }
 
   // Property given on command line?
