@@ -156,8 +156,26 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
 {
   init(expr, ID_extractbits);
   mto(expr, identifier);
-  stack(expr).move_to_operands(stack(range).op0(),
-                               stack(range).op1());
+  
+  if(stack(range).id()==ID_part_select)
+  {
+    stack(expr).move_to_operands(stack(range).op0(),
+                                 stack(range).op1());
+  }
+  else if(stack(range).id()==ID_indexed_part_select_plus)
+  {
+    exprt offset=minus_exprt(stack(range).op1(), gen_one(integer_typet()));
+    stack(expr).copy_to_operands(stack(range).op0(),
+                                 plus_exprt(stack(range).op0(), offset));
+  }
+  else if(stack(range).id()==ID_indexed_part_select_minus)
+  {
+    exprt offset=minus_exprt(stack(range).op1(), gen_one(integer_typet()));
+    stack(expr).copy_to_operands(stack(range).op0(),
+                                 minus_exprt(stack(range).op1(), offset));
+  }
+  else
+    assert(false);
 }
 
 /*******************************************************************\
