@@ -96,11 +96,11 @@ int hw_cbmc_parse_optionst::doit()
   }
 
   prop_convt &prop_conv=cbmc_solver->prop_conv();
-  bmct bmc(options, symbol_table, ui_message_handler, prop_conv);
+  hw_bmct hw_bmc(options, symbol_table, ui_message_handler, prop_conv);
 
   goto_functionst goto_functions;
 
-  int get_goto_program_ret=get_goto_program(options, bmc, goto_functions);
+  int get_goto_program_ret=get_goto_program(options, hw_bmc, goto_functions);
   if(get_goto_program_ret!=-1)
     return get_goto_program_ret;
 
@@ -117,7 +117,7 @@ int hw_cbmc_parse_optionst::doit()
     return 7;
 
   // do actual BMC
-  return do_bmc(bmc, goto_functions);
+  return do_bmc(hw_bmc, goto_functions);
 }
 
 /*******************************************************************\

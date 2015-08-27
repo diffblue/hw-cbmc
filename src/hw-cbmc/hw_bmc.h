@@ -26,8 +26,7 @@ public:
   irep_idt unwind_module;
   unsigned unwind_no_timeframes;
 
-  virtual void do_unwind_module(
-    decision_proceduret &decision_procedure);
+  virtual void do_unwind_module();
 
   virtual void show_unwind_trace();
     

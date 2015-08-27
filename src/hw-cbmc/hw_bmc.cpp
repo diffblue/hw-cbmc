@@ -26,8 +26,7 @@ Function: hw_bmct::do_unwind_module
 
 \*******************************************************************/
 
-void hw_bmct::do_unwind_module(
-  decision_proceduret &decision_procedure)
+void hw_bmct::do_unwind_module()
 {
   if(unwind_module=="" ||
      unwind_no_timeframes==0) return;
@@ -41,7 +40,7 @@ void hw_bmct::do_unwind_module(
   ::unwind(
     to_trans_expr(symbol.value),
     *this,    // message
-    decision_procedure,
+    prop_conv,
     unwind_no_timeframes,
     ns,
     true);
