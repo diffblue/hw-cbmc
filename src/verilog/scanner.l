@@ -231,6 +231,16 @@ void verilog_scanner_init()
                           else
                             yyverilogerror("+= is a System Verilog operator");
                         }
+<GRAMMAR>"+:"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                            return TOK_PLUSCOLON;
+                          else
+                            yyverilogerror("+: is a System Verilog operator");
+                        }
+<GRAMMAR>"-:"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                            return TOK_MINUSCOLON;
+                          else
+                            yyverilogerror("-: is a System Verilog operator");
+                        }
 <GRAMMAR>"-="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_MINUSEQUAL;
                           else
@@ -410,6 +420,7 @@ void verilog_scanner_init()
 <GRAMMAR>$skew          { return TOK_SKEW; }
 
   /* System Verilog Keywords */
+<GRAMMAR>accept_on	{ SYSTEM_VERILOG_KEYWORD(TOK_ACCEPT_ON); }
 <GRAMMAR>alias		{ SYSTEM_VERILOG_KEYWORD(TOK_ALIAS); }
 <GRAMMAR>always_comb	{ SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_COMB); }
 <GRAMMAR>always_ff	{ SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_FF); }
@@ -424,6 +435,7 @@ void verilog_scanner_init()
 <GRAMMAR>break		{ SYSTEM_VERILOG_KEYWORD(TOK_BREAK); }
 <GRAMMAR>byte		{ SYSTEM_VERILOG_KEYWORD(TOK_BYTE); }
 <GRAMMAR>chandle	{ SYSTEM_VERILOG_KEYWORD(TOK_CHANDLE); }
+<GRAMMAR>checker	{ SYSTEM_VERILOG_KEYWORD(TOK_CHECKER); }
 <GRAMMAR>class		{ SYSTEM_VERILOG_KEYWORD(TOK_CLASS); }
 <GRAMMAR>clocking	{ SYSTEM_VERILOG_KEYWORD(TOK_CLOCKING); }
 <GRAMMAR>const		{ SYSTEM_VERILOG_KEYWORD(TOK_CONST); }
@@ -445,6 +457,7 @@ void verilog_scanner_init()
 <GRAMMAR>endproperty	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDPROPERTY); }
 <GRAMMAR>endsequence	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDSEQUENCE); }
 <GRAMMAR>enum		{ VIS_VERILOG_KEYWORD(TOK_ENUM); }
+<GRAMMAR>eventually     { SYSTEM_VERILOG_KEYWORD(TOK_EVENTUALLY); }
 <GRAMMAR>expect		{ SYSTEM_VERILOG_KEYWORD(TOK_EXPECT); }
 <GRAMMAR>export		{ SYSTEM_VERILOG_KEYWORD(TOK_EXPORT); }
 <GRAMMAR>extends	{ SYSTEM_VERILOG_KEYWORD(TOK_EXTENDS); }
@@ -468,6 +481,7 @@ void verilog_scanner_init()
 <GRAMMAR>matches	{ SYSTEM_VERILOG_KEYWORD(TOK_MATCHES); }
 <GRAMMAR>modport	{ SYSTEM_VERILOG_KEYWORD(TOK_MODPORT); }
 <GRAMMAR>new		{ SYSTEM_VERILOG_KEYWORD(TOK_NEW); }
+<GRAMMAR>nexttime	{ SYSTEM_VERILOG_KEYWORD(TOK_NEXTTIME); }
 <GRAMMAR>null		{ SYSTEM_VERILOG_KEYWORD(TOK_NULL); }
 <GRAMMAR>package	{ SYSTEM_VERILOG_KEYWORD(TOK_PACKAGE); }
 <GRAMMAR>packed		{ SYSTEM_VERILOG_KEYWORD(TOK_PACKED); }
@@ -482,6 +496,11 @@ void verilog_scanner_init()
 <GRAMMAR>randsequence	{ SYSTEM_VERILOG_KEYWORD(TOK_RANDSEQUENCE); }
 <GRAMMAR>ref		{ SYSTEM_VERILOG_KEYWORD(TOK_REF); }
 <GRAMMAR>return		{ SYSTEM_VERILOG_KEYWORD(TOK_RETURN); }
+<GRAMMAR>s_always       { SYSTEM_VERILOG_KEYWORD(TOK_S_ALWAYS); }
+<GRAMMAR>s_eventually   { SYSTEM_VERILOG_KEYWORD(TOK_S_EVENTUALLY); }
+<GRAMMAR>s_nexttime     { SYSTEM_VERILOG_KEYWORD(TOK_S_NEXTTIME); }
+<GRAMMAR>s_until        { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL); }
+<GRAMMAR>s_until_with   { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL_WITH); }
 <GRAMMAR>sequence	{ SYSTEM_VERILOG_KEYWORD(TOK_SEQUENCE); }
 <GRAMMAR>shortint	{ SYSTEM_VERILOG_KEYWORD(TOK_SHORTINT); }
 <GRAMMAR>shortreal	{ SYSTEM_VERILOG_KEYWORD(TOK_SHORTREAL); }
@@ -499,6 +518,8 @@ void verilog_scanner_init()
 <GRAMMAR>typedef	{ VIS_VERILOG_KEYWORD(TOK_TYPEDEF); }
 <GRAMMAR>union		{ SYSTEM_VERILOG_KEYWORD(TOK_UNION); }
 <GRAMMAR>unique		{ SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE); }
+<GRAMMAR>until          { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL); }
+<GRAMMAR>until_with     { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL_WITH); }
 <GRAMMAR>var		{ SYSTEM_VERILOG_KEYWORD(TOK_VAR); }
 <GRAMMAR>virtual	{ SYSTEM_VERILOG_KEYWORD(TOK_VIRTUAL); }
 <GRAMMAR>void		{ SYSTEM_VERILOG_KEYWORD(TOK_VOID); }

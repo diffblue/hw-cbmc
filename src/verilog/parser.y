@@ -379,7 +379,9 @@ int yyverilogerror(const char *error)
 %token TOK_PLUSPLUS         "++"
 %token TOK_MINUSMINUS       "--"
 %token TOK_PLUSEQUAL        "+="
+%token TOK_PLUSCOLON        "+:"
 %token TOK_MINUSEQUAL       "-="
+%token TOK_MINUSCOLON       "-:"
 %token TOK_ASTERICEQUAL     "*="
 %token TOK_SLASHEQUAL       "/="
 %token TOK_PERCENTEQUAL     "%="
@@ -393,6 +395,7 @@ int yyverilogerror(const char *error)
 %token TOK_HASHHASH         "##"
 
 /* System Verilog Keywords */
+%token TOK_ACCEPT_ON        "accept_on"
 %token TOK_ALIAS            "alias"
 %token TOK_ALWAYS_COMB      "always_comb"
 %token TOK_ALWAYS_FF        "always_ff"
@@ -407,6 +410,7 @@ int yyverilogerror(const char *error)
 %token TOK_BREAK            "break"
 %token TOK_BYTE             "byte"
 %token TOK_CHANDLE          "chandle"
+%token TOK_CHECKER          "checker"
 %token TOK_CLASS            "class"
 %token TOK_CLOCKING         "clocking"
 %token TOK_CONFIG           "config"
@@ -430,6 +434,7 @@ int yyverilogerror(const char *error)
 %token TOK_ENDPROPERTY      "endproperty"
 %token TOK_ENDSEQUENCE      "endsequence"
 %token TOK_ENUM             "enum"
+%token TOK_EVENTUALLY       "eventually"
 %token TOK_EXPECT           "expect"
 %token TOK_EXPORT           "export"
 %token TOK_EXTENDS          "extends"
@@ -453,6 +458,7 @@ int yyverilogerror(const char *error)
 %token TOK_MATCHES          "matches"
 %token TOK_MODPORT          "modport"
 %token TOK_NEW              "new"
+%token TOK_NEXTTIME         "nexttime"
 %token TOK_NULL             "null"
 %token TOK_PACKAGE          "package"
 %token TOK_PACKED           "packed"
@@ -467,6 +473,11 @@ int yyverilogerror(const char *error)
 %token TOK_RANDSEQUENCE     "randsequence"
 %token TOK_REF              "ref"
 %token TOK_RETURN           "return"
+%token TOK_S_ALWAYS         "s_always"
+%token TOK_S_EVENTUALLY     "s_eventually"
+%token TOK_S_NEXTTIME       "s_nexttime"
+%token TOK_S_UNTIL          "s_until"
+%token TOK_S_UNTIL_WITH     "s_until_with"
 %token TOK_SEQUENCE         "sequence"
 %token TOK_SHORTINT         "shortint"
 %token TOK_SHORTREAL        "shortreal"
@@ -484,6 +495,8 @@ int yyverilogerror(const char *error)
 %token TOK_TYPEDEF          "typedef"
 %token TOK_UNION            "union"
 %token TOK_UNIQUE           "unique"
+%token TOK_UNTIL            "until"
+%token TOK_UNTIL_WITH       "until_with"
 %token TOK_VAR              "var"
 %token TOK_VIRTUAL          "virtual"
 %token TOK_VOID             "void"
@@ -986,6 +999,13 @@ bit_select:
 part_select:
 	  '[' const_expression TOK_COLON const_expression ']'
 		{ init($$, ID_part_select); mto($$, $2); mto($$, $4); }
+	;
+
+indexed_part_select:
+	  '[' const_expression TOK_PLUSCOLON const_expression ']'
+		{ init($$, ID_indexed_part_select_plus); mto($$, $2); mto($$, $4); }
+        | '[' const_expression TOK_MINUSCOLON const_expression ']'
+		{ init($$, ID_indexed_part_select_minus); mto($$, $2); mto($$, $4); }
 	;
 
 port_identifier: TOK_CHARSTR
@@ -2160,6 +2180,8 @@ variable_lvalue:
 	  indexed_variable_lvalue
 	| indexed_variable_lvalue part_select
 		{ extractbits($$, $1, $2); }
+	| indexed_variable_lvalue indexed_part_select
+		{ extractbits($$, $1, $2); }
         | concatenation
           /* more generous than the rule below to avoid conflict */
         /*
@@ -2331,6 +2353,8 @@ inc_or_dec_expression:
 primary:  primary_literal
         | indexed_variable_lvalue
 	| indexed_variable_lvalue part_select
+		{ extractbits($$, $1, $2); }
+	| indexed_variable_lvalue indexed_part_select
 		{ extractbits($$, $1, $2); }
 	| concatenation 
         | replication
