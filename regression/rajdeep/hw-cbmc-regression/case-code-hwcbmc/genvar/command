@@ -1,0 +1,1 @@
+hw-cbmc main.v --module top --gen-interface

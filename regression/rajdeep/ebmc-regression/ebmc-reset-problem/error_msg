@@ -1,0 +1,160 @@
+// Property fails because of the reset problem
+
+Parsing main.sv
+Converting
+Type-checking Verilog::top
+Generating Decision Problem
+General constraints
+Initial state
+Transition relation
+Transition 0->1
+Transition 1->2
+Transition 2->3
+Transition 3->4
+Transition 4->5
+Transition 5->6
+Transition 6->7
+Transition 7->8
+Transition 8->9
+Transition 9->10
+Adding property
+Solving with propositional reduction
+643 variables, 1574 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+SAT: bug found
+Counterexample:
+
+Transition system state 0
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 151 (10010111)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 98 (01100010)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 1
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 85 (01010101)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 32 (00100000)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 2
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 89 (01011001)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 36 (00100100)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 3
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 55 (00110111)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 2 (00000010)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 4
+----------------------------------------------------
+  Verilog::top.data_shifted = 1 (00000001)
+  Verilog::top.A_plus = 87 (01010111)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 34 (00100010)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 5
+----------------------------------------------------
+  Verilog::top.data_shifted = 1 (00000001)
+  Verilog::top.A_plus = 57 (00111001)
+  Verilog::top.data = 1 (00000001)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 4 (00000100)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 6
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 57 (00111001)
+  Verilog::top.data = 1 (00000001)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 4 (00000100)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 7
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 59 (00111011)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 6 (00000110)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 8
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 57 (00111001)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 4 (00000100)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 9
+----------------------------------------------------
+  Verilog::top.data_shifted = 0 (00000000)
+  Verilog::top.A_plus = 59 (00111011)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 0
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 6 (00000110)
+  Verilog::top.load_i = 0
+  Verilog::top.shift_i = 1
+  Verilog::top.serial_o = ?
+
+Transition system state 10
+----------------------------------------------------
+  Verilog::top.data_shifted = ?
+  Verilog::top.A_plus = 69 (01000101)
+  Verilog::top.data = 0 (00000000)
+  Verilog::top.reset_n = 1
+  Verilog::top.clk = ?
+  Verilog::top.A_i = 16 (00010000)
+  Verilog::top.load_i = ?
+  Verilog::top.shift_i = ?
+  Verilog::top.serial_o = ?
+
+Property `AG (top.reset_n == 1 |-> ##1 top.data == 0)' violated in time frame 10
+VERIFICATION FAILED
