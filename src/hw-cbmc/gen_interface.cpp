@@ -182,7 +182,7 @@ std::string gen_interfacet::type_to_string(const typet& type)
   else
   {
     // what else can it be?
-    err << "Case " << type.id() << " not implemented";
+    err << "Case " << type.id() << " not implemented" << std::endl;
     throw 0;
   }
 }
@@ -256,6 +256,9 @@ void gen_interfacet::gen_module(
     {
     }
     else if(symbol.type.id()==ID_module)
+    {
+    }
+    else if(symbol.type.id()==ID_code)
     {
     }
     else if(symbol.type.id()!=ID_integer &&
