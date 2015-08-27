@@ -55,6 +55,7 @@ sub test($$) {
   my $output = $input;
   $output =~ s/\.smv$/.out/;
   $output =~ s/\.v$/.out/;
+  $output =~ s/\.sv$/.out/;
 
   if($output eq $input) {
     print("Error in test file -- $test\n");

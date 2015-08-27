@@ -1,5 +1,5 @@
 main.sv
---module top --bound 10
+--module top --bound 10 --reset reset_n
 ^EXIT=0$
 ^SIGNAL=0$
-
+--
