@@ -232,6 +232,7 @@ void ebmc_parse_optionst::help()
     " --show-properties                 list the properties in the model\n"
     " --property <id>                   check the property with given ID\n"
     " -I path                           set include path\n"
+    " --reset <expr>                    set up module reset\n"
     "\n"
     "Methods:\n"
     " --k-induction                     do k-induction with k=bound\n"
