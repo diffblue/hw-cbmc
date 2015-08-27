@@ -2280,6 +2280,8 @@ property_expr:
         | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
         | property_expr "|->" property_expr { init($$, ID_overlapped_implication); mto($$, $1); mto($$, $3); }
         | property_expr "|=>" property_expr { init($$, ID_non_overlapped_implication); mto($$, $1); mto($$, $3); }
+        | event_control '(' property_expr ')'
+                { $$=$3; }
         ;
 
 sequence_expr:
