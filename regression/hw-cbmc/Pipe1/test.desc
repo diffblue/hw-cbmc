@@ -1,6 +1,6 @@
 CORE
 main.c
---decide --module top main.v --bound 2
+--module top main.v --bound 2
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

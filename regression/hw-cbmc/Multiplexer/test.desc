@@ -1,6 +1,6 @@
 CORE
 main.c
---decide --module top --bound 5 main.v
+--module top --bound 5 main.v
 ^EXIT=0$
 ^SIGNAL=0$
 
