@@ -232,12 +232,12 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
       if(type.id()==ID_array)
       {
         err_location(*it);
-        throw "array type not allowed here";
+        throw "array type not allowed in concatenation";
       }
       else if(type.id()==ID_integer)
       {
         err_location(*it);
-        throw "integer type not allowed here";
+        throw "integer type not allowed in concatenation";
       }
       else if(type.id()==ID_verilog_signedbv ||
               type.id()==ID_verilog_unsignedbv)
@@ -1600,7 +1600,7 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   if(op1.type().id()==ID_array)
   {
     err_location(op1);
-    throw "array type not allowed here";
+    throw "array type not allowed in replication";
   } 
 
   if(op1.type().id()==ID_bool)
@@ -1843,7 +1843,7 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
     if(op0.type().id()==ID_array)
     {
       err_location(op0);
-      throw "array type not allowed here";
+      throw "array type not allowed in extraction";
     }
 
     unsigned width=get_width(op0.type());
