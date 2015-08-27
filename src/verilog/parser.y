@@ -536,6 +536,8 @@ int yyverilogerror(const char *error)
 %nonassoc LT_TOK_ELSE
 %nonassoc TOK_ELSE
 %right "->"
+%left TOK_ALWAYS TOK_EVENTUALLY TOK_NEXTTIME TOK_UNTIL TOK_UNTIL_WITH
+%left TOK_S_ALWAYS TOK_S_EVENTUALLY TOK_S_NEXTTIME TOK_S_UNTIL TOK_S_UNTIL_WITH
 
 %%
 
@@ -1163,10 +1165,12 @@ package_or_generate_item_declaration:
 	
 concurrent_assertion_item_declaration: property_declaration;
 
-property_declaration: TOK_PROPERTY property_identifier TOK_ENDPROPERTY;
+property_declaration:
+          TOK_PROPERTY property_identifier TOK_ENDPROPERTY
+        ;
 
 genvar_declaration:
-	 TOK_GENVAR list_of_genvar_identifiers ';'
+	  TOK_GENVAR list_of_genvar_identifiers ';'
 		{ init($$, ID_decl); stack($$).set(ID_class, ID_genvar); swapop($$, $2); }
 	;
 
@@ -2304,6 +2308,16 @@ property_expr:
         | property_expr "|=>" property_expr { init($$, ID_non_overlapped_implication); mto($$, $1); mto($$, $3); }
         | event_control '(' property_expr ')'
                 { $$=$3; }
+        | TOK_ALWAYS property_expr       { init($$, "SV_always"); mto($$, $2); }
+        | TOK_EVENTUALLY property_expr   { init($$, "SV_eventually"); mto($$, $2); }
+        | TOK_NEXTTIME property_expr     { init($$, "SV_nexttime"); mto($$, $2); }
+        | TOK_S_ALWAYS property_expr     { init($$, "SV_s_always"); mto($$, $2); }
+        | TOK_S_EVENTUALLY property_expr { init($$, "SV_s_eventually"); mto($$, $2); }
+        | TOK_S_NEXTTIME property_expr   { init($$, "SV_s_nexttime"); mto($$, $2); }
+        | TOK_S_UNTIL property_expr      { init($$, "SV_s_until"); mto($$, $2); }
+        | TOK_S_UNTIL_WITH property_expr { init($$, "SV_s_until_with"); mto($$, $2); }
+        | TOK_UNTIL property_expr        { init($$, "SV_until"); mto($$, $2); }
+        | TOK_UNTIL_WITH property_expr   { init($$, "SV_until_with"); mto($$, $2); }
         ;
 
 sequence_expr:
