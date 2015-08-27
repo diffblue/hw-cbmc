@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/set_properties.h>
 #include <trans/show_modules.h>
 #include <cbmc/version.h>
+#include <cbmc/cbmc_solvers.h>
 #include <langapi/mode.h>
 
 #ifdef HAVE_VERILOG
@@ -79,7 +80,23 @@ int hw_cbmc_parse_optionst::doit()
   if(cmdline.isset("vcd"))
     options.set_option("vcd", cmdline.get_value("vcd"));
 
-  hw_bmct bmc(options, symbol_table, ui_message_handler);
+  cbmc_solverst cbmc_solvers(options, symbol_table, ui_message_handler);
+  cbmc_solvers.set_ui(get_ui());
+  std::unique_ptr<cbmc_solverst::solvert> cbmc_solver;
+  
+  try
+  {
+    cbmc_solver=cbmc_solvers.get_solver();
+  }
+  
+  catch(const char *error_msg)
+  {
+    error() << error_msg << eom;
+    return 1;
+  }
+
+  prop_convt &prop_conv=cbmc_solver->prop_conv();
+  bmct bmc(options, symbol_table, ui_message_handler, prop_conv);
 
   goto_functionst goto_functions;
 

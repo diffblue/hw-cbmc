@@ -62,8 +62,7 @@ Function: hw_bmct::show_unwind_trace
 
 \*******************************************************************/
 
-void hw_bmct::show_unwind_trace(
-  const prop_convt &prop_conv)
+void hw_bmct::show_unwind_trace()
 {
   if(unwind_module=="" ||
      unwind_no_timeframes==0) return;

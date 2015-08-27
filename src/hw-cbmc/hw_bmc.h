@@ -17,8 +17,9 @@ public:
   hw_bmct(
     const optionst &_options,
     const symbol_tablet &_symbol_table,
-    message_handlert &_message_handler):
-    bmct(_options, _symbol_table, _message_handler)
+    message_handlert &_message_handler,
+    prop_convt &_prop_conv):
+    bmct(_options, _symbol_table, _message_handler, _prop_conv)
   {
   }
 
@@ -28,13 +29,12 @@ public:
   virtual void do_unwind_module(
     decision_proceduret &decision_procedure);
 
-  virtual void show_unwind_trace(
-    const prop_convt &prop_conv);
+  virtual void show_unwind_trace();
     
-  virtual void error_trace(const prop_convt &prop_conv)
+  virtual void error_trace()
   {
-    bmct::error_trace(prop_conv);
-    show_unwind_trace(prop_conv);
+    bmct::error_trace();
+    show_unwind_trace();
   }
 };
 
