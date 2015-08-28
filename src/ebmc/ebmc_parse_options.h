@@ -30,7 +30,7 @@ public:
     "(version)(verilog-rtl)(verilog-netlist)"
     "(compute-interpolant)(interpolation)(interpolation-vmcai)"
     "(interpolation-word)(interpolator):"
-    "(smt1)(smt2)(boolector)(z3)(cvc4)(yices)(prover)(lifter)"
+    "(smt1)(smt2)(boolector)(z3)(cvc4)(yices)(mathsat)(prover)(lifter)"
     "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
     "(compute-ct)(dot-netlist)(smv-netlist)(vcd):I:",
     argc, argv)

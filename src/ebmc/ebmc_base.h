@@ -101,6 +101,7 @@ public:
   int do_smt1();
   int do_smt2();
   int do_boolector();
+  int do_mathsat();
   int do_yices();
   int do_z3();
   int do_sat();

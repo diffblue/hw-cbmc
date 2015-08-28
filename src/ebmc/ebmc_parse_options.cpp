@@ -179,6 +179,8 @@ std::cout << "This option is currently disabled\n";
       return ebmc_base.do_boolector();
     else if(cmdline.isset("z3"))
       return ebmc_base.do_z3();
+    else if(cmdline.isset("mathsat"))
+      return ebmc_base.do_mathsat();
     else if(cmdline.isset("yices"))
       return ebmc_base.do_yices();
     else if(cmdline.isset("smt1"))
@@ -247,6 +249,7 @@ void ebmc_parse_optionst::help()
     " --smt2                            output word-level SMT 2 formula\n"
     " --boolector                       use Boolector as solver\n"
     " --cvc4                            use CVC4 as solver\n"
+    " --mathsat                         use MathSAT as solver\n"
     " --yices                           use Yices as solver\n"
     " --z3                              use Z3 as solver\n"
     "\n"
