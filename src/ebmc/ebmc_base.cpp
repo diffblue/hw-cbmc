@@ -453,7 +453,15 @@ bool ebmc_baset::get_model_properties()
   
   if(cmdline.isset("property"))
   {
-    unsigned c=unsafe_string2unsigned(cmdline.get_value("property"));
+    std::string property=cmdline.get_value("property");
+    
+    if(property=="" || !isdigit(property[0]))
+    {
+      error() << "Property is expected to be a number" << eom;
+      return true;
+    }
+  
+    unsigned c=unsafe_string2unsigned(property);
     if(c<1 || c>properties.size())
     {
       error() << "Property number " << c << " out of range" << eom;
