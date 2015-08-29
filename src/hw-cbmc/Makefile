@@ -13,6 +13,7 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/cbmc/cover$(OBJEXT) \
       $(CBMC)/src/cbmc/cbmc_dimacs$(OBJEXT) \
       $(CBMC)/src/cbmc/all_properties$(OBJEXT) \
+      $(CBMC)/src/goto-instrument/full_slicer$(OBJEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/java_bytecode/java_bytecode$(LIBEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
