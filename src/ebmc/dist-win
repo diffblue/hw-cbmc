@@ -10,7 +10,7 @@ echo $VERSION_FILE
 
 mkdir /tmp/ebmc-dist
 cp ./ebmc.exe /tmp/ebmc-dist/
-cp ../../LICENSE /tmp/ebmc-dist/LICENSE.txt
+cp ~/progr/cbmc/trunk/LICENSE /tmp/ebmc-dist/LICENSE.txt
 unix2dos /tmp/ebmc-dist/LICENSE.txt
 cp ./README /tmp/ebmc-dist/README.txt
 unix2dos /tmp/ebmc-dist/README.txt
@@ -18,7 +18,7 @@ cd /tmp/ebmc-dist
 zip -9 ebmc-${VERSION_FILE}-win.zip ebmc.exe LICENSE.txt README.txt
 
 echo Copying.
-scp ebmc-${VERSION_FILE}-win.zip kroening@dkr0.inf.ethz.ch:/home/www/cprover.org/ebmc/download/
+scp ebmc-${VERSION_FILE}-win.zip kroening@dkr-srv.cs.ox.ac.uk:/srv/www/cprover.org/ebmc/download/
 
 cd /tmp
 rm -R /tmp/ebmc-dist
