@@ -8,12 +8,12 @@ include ../config.inc
 
 INCLUDES= -I $(CBMC)/src
 
-CLEANFILES = trans$(LIBEXT)
+CLEANFILES = trans-netlist$(LIBEXT)
 
-all: trans$(LIBEXT)
+all: trans-netlist$(LIBEXT)
 
 ###############################################################################
 
-trans$(LIBEXT): $(OBJ)
+trans-netlist$(LIBEXT): $(OBJ)
 	$(LINKLIB)
 
