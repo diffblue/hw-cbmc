@@ -12,7 +12,7 @@ OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/big-int/big-int$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
-      ../trans/trans$(LIBEXT) \
+      ../trans-word-level/trans-word-level$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT)      
 
 include ../config.inc

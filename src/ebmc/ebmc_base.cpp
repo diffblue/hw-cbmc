@@ -25,8 +25,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/netlist_trans.h>
 #include <trans-netlist/unwind_netlist.h>
-#include <trans/unwind.h>
-#include <trans/show_modules.h>
+#include <trans-word-level/unwind.h>
+#include <trans-word-level/show_modules.h>
 
 #include <langapi/language_util.h>
 #include <langapi/mode.h>

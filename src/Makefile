@@ -1,4 +1,4 @@
-SUBDIRS = ebmc hw-cbmc trans trans-netlist verilog vhdl smvlang
+SUBDIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang
 
 all: hw-cbmc ebmc
 
@@ -10,9 +10,9 @@ $(SUBDIRS):
 
 # Dependencies
 
-ebmc: trans trans-netlist verilog vhdl smvlang
+ebmc: trans-word-level trans-netlist verilog vhdl smvlang
 
-hw-cbmc: trans trans-netlist verilog vhdl smvlang
+hw-cbmc: trans-word-level trans-netlist verilog vhdl smvlang
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 

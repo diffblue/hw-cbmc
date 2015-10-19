@@ -29,7 +29,7 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
-      ../trans/trans$(LIBEXT)
+      ../trans-word-level/trans-word-level$(LIBEXT)
 
 include ../config.inc
 

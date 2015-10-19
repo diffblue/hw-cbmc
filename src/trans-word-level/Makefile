@@ -4,12 +4,12 @@ include ../config.inc
 
 INCLUDES= -I $(CBMC)/src
 
-CLEANFILES = trans$(LIBEXT)
+CLEANFILES = trans-word-level$(LIBEXT)
 
-all: trans$(LIBEXT)
+all: trans-word-level$(LIBEXT)
 
 ###############################################################################
 
-trans$(LIBEXT): $(OBJ)
+trans-word-level$(LIBEXT): $(OBJ)
 	$(LINKLIB)
 
