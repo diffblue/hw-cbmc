@@ -447,7 +447,7 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
 
   irep_idt new_identifier=
     parameterize_module(
-      inst.location(),
+      inst.source_location(),
       identifier,
       parameter_assignments);
 
@@ -936,7 +936,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   symbol.name=full_identifier;
   symbol.type=bool_typet();
   symbol.is_property=true;
-  symbol.location=statement.find_location();
+  symbol.location=statement.find_source_location();
 
   symbolt *new_symbol;
   symbol_table.move(symbol, new_symbol);

@@ -221,7 +221,7 @@ void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
                   inst.get(ID_identifier),
                   it->first,
                   inst.operands(),
-                  inst.find_location());
+                  inst.find_source_location());
     }
   }
 }

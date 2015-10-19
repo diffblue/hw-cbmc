@@ -164,7 +164,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     ports[nr].set("#name", name);
     ports[nr].id(ID_symbol);
     ports[nr].set(ID_identifier, identifier);
-    ports[nr].set(ID_C_source_location, decl.op0().location());
+    ports[nr].set(ID_C_source_location, decl.op0().source_location());
     ports[nr].set(ID_type, port_symbol->type);
     ports[nr].set(ID_input, port_symbol->is_input);
     ports[nr].set(ID_output, port_symbol->is_output);

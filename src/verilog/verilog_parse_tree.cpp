@@ -41,7 +41,7 @@ void verilog_parse_treet::create_module(
 
   new_module.name=name.id();
   new_module.ports.swap(ports);
-  new_module.location=((exprt &)module_keyword).location();
+  new_module.location=((const exprt &)module_keyword).source_location();
   new_module.module_items.swap(module_items);
 
   // add to module map  

@@ -2236,7 +2236,7 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
   verilog_blocking_assignt assignment;
   assignment.lhs()=statement.op0();
   assignment.rhs()=plus_exprt(statement.op0(), one);
-  assignment.add_source_location()=statement.location();
+  assignment.add_source_location()=statement.source_location();
   synth_statement(assignment);  
 }
 
