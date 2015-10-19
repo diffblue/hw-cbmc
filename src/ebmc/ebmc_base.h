@@ -13,9 +13,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include <langapi/language_ui.h>
-#include <trans/netlist.h>
-#include <trans/trans_trace.h>
-#include <trans/bmc_map.h>
+#include <trans-netlist/netlist.h>
+#include <trans-netlist/trans_trace.h>
+#include <trans-netlist/bmc_map.h>
 #include <solvers/prop/prop_conv.h>
 #include <solvers/sat/cnf.h>
 

@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <trans/ldg.h>
+#include <trans-netlist/ldg.h>
 
 class latch_orderingt
 {

@@ -28,6 +28,7 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/cegis/cegis$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
+      ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans/trans$(LIBEXT)
 
 include ../config.inc

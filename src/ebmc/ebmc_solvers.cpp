@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/i2string.h>
 #include <util/cmdline.h>
 
-#include <trans/compute_ct.h>
+#include <trans-netlist/compute_ct.h>
 
 #include <solvers/cvc/cvc_dec.h>
 #include <solvers/dplib/dplib_dec.h>

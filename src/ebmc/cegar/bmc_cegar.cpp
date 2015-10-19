@@ -11,12 +11,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/time_stopping.h>
 
-#include <trans/property.h>
-#include <trans/instantiate.h>
-#include <trans/unwind_netlist.h>
-#include <trans/ldg.h>
-#include <trans/compute_ct.h>
-#include <trans/netlist_trans.h>
+#include <trans-netlist/property.h>
+#include <trans-netlist/instantiate.h>
+#include <trans-netlist/unwind_netlist.h>
+#include <trans-netlist/ldg.h>
+#include <trans-netlist/netlist_trans.h>
+#include <trans-netlist/compute_ct.h>
 
 #include "bmc_cegar.h"
 

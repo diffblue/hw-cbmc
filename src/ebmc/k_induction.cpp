@@ -6,9 +6,9 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
-#include <trans/instantiate.h>
-#include <trans/property.h>
-#include <trans/trans_trace.h>
+#include <trans-netlist/instantiate.h>
+#include <trans-netlist/property.h>
+#include <trans-netlist/trans_trace.h>
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/boolbv.h>

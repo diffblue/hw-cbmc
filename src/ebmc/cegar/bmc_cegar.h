@@ -10,8 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/message.h>
 #include <util/namespace.h>
 
-#include <trans/bmc_map.h>
-#include <trans/netlist.h>
+#include <trans-netlist/bmc_map.h>
+#include <trans-netlist/netlist.h>
 
 class bmc_cegart:public messaget
 {

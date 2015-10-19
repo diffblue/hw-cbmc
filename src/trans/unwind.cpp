@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/find_symbols.h>
 #include <util/expr_util.h>
 
-#include "instantiate.h"
+#include "../trans-netlist/instantiate.h"
 #include "unwind.h"
 
 /*******************************************************************\

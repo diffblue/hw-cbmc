@@ -20,13 +20,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 
 #include <solvers/flattening/boolbv.h>
+#include <trans-netlist/property.h>
+#include <trans-netlist/trans_trace.h>
+#include <trans-netlist/ldg.h>
+#include <trans-netlist/netlist_trans.h>
+#include <trans-netlist/unwind_netlist.h>
 #include <trans/unwind.h>
-#include <trans/property.h>
-#include <trans/trans_trace.h>
 #include <trans/show_modules.h>
-#include <trans/ldg.h>
-#include <trans/netlist_trans.h>
-#include <trans/unwind_netlist.h>
 
 #include <langapi/language_util.h>
 #include <langapi/mode.h>

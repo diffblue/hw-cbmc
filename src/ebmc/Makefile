@@ -11,6 +11,7 @@ OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/big-int/big-int$(LIBEXT) \
+      ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans/trans$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT)      
 
