@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/time_stopping.h>
 
-#include <trans-netlist/property.h>
+#include <trans-netlist/property_netlist.h>
 #include <trans-netlist/instantiate.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-netlist/ldg.h>

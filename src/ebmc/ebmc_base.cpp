@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 
 #include <solvers/flattening/boolbv.h>
-#include <trans-netlist/property.h>
+#include <trans-word-level/property_word_level.h>
 #include <trans-netlist/trans_trace.h>
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/netlist_trans.h>
