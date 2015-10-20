@@ -142,8 +142,8 @@ void output_verilog_netlistt::assign_symbol(
   const exprt &lhs,
   const exprt &rhs)
 {
-  if(rhs.location().is_not_nil())
-    out << "  // " << rhs.location() << '\n';
+  if(rhs.source_location().is_not_nil())
+    out << "  // " << rhs.source_location() << '\n';
 
   if(is_symbol(rhs))
   {
@@ -293,8 +293,8 @@ void output_verilog_rtlt::assign_symbol(
     }
   }
 
-  if(rhs.location().is_not_nil())
-    out << "  // " << rhs.location() << '\n';
+  if(rhs.source_location().is_not_nil())
+    out << "  // " << rhs.source_location() << '\n';
 
   exprt symbol_expr=lhs;
 
@@ -824,7 +824,7 @@ void output_verilog_baset::module_instantiation(const exprt &expr)
     argument_strings.push_back(make_symbol_expr(*it, hint));
   #endif
 
-  out << "  // Module instantiation " << expr.location() << '\n';
+  out << "  // Module instantiation " << expr.source_location() << '\n';
   out << "  " << expr.get(ID_module) << " ";
   out << expr.get(ID_instance);
 
@@ -1076,7 +1076,7 @@ void output_verilog_baset::get_source_files(
   const exprt &expr,
   filest &files)
 {
-  const irep_idt &file=expr.location().get_file();
+  const irep_idt &file=expr.source_location().get_file();
   
   if(file!="")
     files.insert(file);
