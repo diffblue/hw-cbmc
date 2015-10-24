@@ -27,6 +27,63 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: bitstring_to_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt bitstring_to_expr(const std::string &src, const typet &type)
+{
+  exprt value_expr;
+  value_expr.make_nil();
+
+  if(type.id()==ID_range ||
+     type.id()==ID_unsignedbv ||
+     type.id()==ID_signedbv)
+  {
+    value_expr=constant_exprt(type);
+
+    if(type.id()==ID_range)
+    {
+      mp_integer i=binary2integer(src, false);
+      mp_integer from=string2integer(type.get_string(ID_from));
+      value_expr.set(ID_value, integer2string(i+from));
+    }
+    else
+      value_expr.set(ID_value, src);
+  }
+  else if(type.id()==ID_bool)
+  {
+    if(src=="0")
+      value_expr=false_exprt();
+    else if(src=="1")
+      value_expr=true_exprt();
+  }
+  else if(type.id()==ID_array)
+  {
+    const array_typet &array_type=to_array_type(type);
+    value_expr=exprt(ID_array, array_type);
+    mp_integer size;
+    to_integer(array_type.size(), size);
+    unsigned size_int=integer2long(size);
+    value_expr.operands().resize(size_int);
+    unsigned op_width=src.size()/size_int;
+
+    for(unsigned i=0; i<size_int; i++)
+      value_expr.operands()[size_int-i-1]=bitstring_to_expr(
+        std::string(src, i*op_width, op_width), array_type.subtype());
+  }
+  
+  return value_expr;
+}
+
+/*******************************************************************\
+
 Function: compute_trans_trace
 
   Inputs:

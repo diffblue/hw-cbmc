@@ -70,8 +70,6 @@ void compute_trans_trace_properties(
   unsigned no_timeframes,
   trans_tracet &dest);
   
-exprt bitstring_to_expr(const std::string &, const typet &);
-
 // outputting traces
   
 void show_trans_trace(
