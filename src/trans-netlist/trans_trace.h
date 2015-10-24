@@ -6,14 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_TRANS_COUNTEREXAMPLE_H
-#define CPROVER_TRANS_COUNTEREXAMPLE_H
+#ifndef CPROVER_TRANS_TRACE_H
+#define CPROVER_TRANS_TRACE_H
 
 #include <util/hash_cont.h>
 #include <util/ui_message.h>
 #include <util/threeval.h>
 #include <util/namespace.h>
-#include <util/decision_procedure.h>
 
 #include "bmc_map.h"
 
