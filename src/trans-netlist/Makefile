@@ -1,4 +1,4 @@
-SRC = bmc_map.cpp counterexample.cpp property_netlist.cpp \
+SRC = bmc_map.cpp counterexample_netlist.cpp property_netlist.cpp \
       instantiate.cpp netlist.cpp \
       var_map.cpp unwind_netlist.cpp ldg.cpp compute_ct.cpp \
       trans_trace.cpp trans_to_netlist.cpp \

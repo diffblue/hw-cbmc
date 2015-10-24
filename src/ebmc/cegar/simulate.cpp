@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cassert>
 
 #include <solvers/sat/satcheck.h>
-#include <trans-netlist/counterexample.h>
+#include <trans-netlist/counterexample_netlist.h>
 
 #include "bmc_cegar.h"
 

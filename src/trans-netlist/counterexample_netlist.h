@@ -35,14 +35,4 @@ void show_counterexample(
   const namespacet &ns,
   language_uit::uit ui);
 
-// word-level
-
-void show_counterexample(
-  message_handlert &,
-  const class decision_proceduret &solver,
-  unsigned no_timeframes,
-  const namespacet &ns,
-  const std::string &module,
-  language_uit::uit ui);
-
 #endif

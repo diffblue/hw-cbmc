@@ -1,5 +1,5 @@
 SRC = get_trans.cpp show_modules.cpp unwind.cpp	word_level_trans.cpp \
-      property_word_level.cpp
+      property_word_level.cpp counterexample_word_level.cpp
 
 include ../config.inc
 
