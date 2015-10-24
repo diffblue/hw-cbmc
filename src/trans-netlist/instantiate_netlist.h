@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_BMC_INSTANTIATE_H
-#define CPROVER_BMC_INSTANTIATE_H
+#ifndef CPROVER_BMC_INSTANTIATE_NETLIST_H
+#define CPROVER_BMC_INSTANTIATE_NETLIST_H
 
 #include <util/hash_cont.h>
 #include <util/expr.h>
@@ -67,6 +67,7 @@ void instantiate_convert(
   message_handlert &,
   bvt &bv);
 
+#if 0
 // word level
 
 void instantiate(
@@ -89,5 +90,6 @@ void instantiate(
 std::string timeframe_identifier(
   unsigned timeframe,
   const irep_idt &identifier);
+#endif
 
 #endif
