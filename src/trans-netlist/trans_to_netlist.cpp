@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/flattening/boolbv_width.h>
 
 #include "netlist.h"
-#include "netlist_trans.h"
+#include "trans_to_netlist.h"
 #include "instantiate.h"
 
 /*******************************************************************\

@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/message.h>
 #include <util/symbol_table.h>
-#include <util/std_expr.h>
+#include <util/expr.h>
 
 void convert_trans_to_netlist(
   symbol_tablet &symbol_table,

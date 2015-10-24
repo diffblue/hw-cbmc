@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/property_word_level.h>
 #include <trans-netlist/trans_trace.h>
 #include <trans-netlist/ldg.h>
-#include <trans-netlist/netlist_trans.h>
+#include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-word-level/unwind.h>
 #include <trans-word-level/show_modules.h>

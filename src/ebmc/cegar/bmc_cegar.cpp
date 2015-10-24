@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/instantiate.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-netlist/ldg.h>
-#include <trans-netlist/netlist_trans.h>
+#include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/compute_ct.h>
 
 #include "bmc_cegar.h"
