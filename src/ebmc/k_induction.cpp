@@ -6,7 +6,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
-#include <trans-netlist/instantiate.h>
+#include <trans-netlist/instantiate_netlist.h>
 #include <trans-word-level/property_word_level.h>
 #include <trans-netlist/trans_trace.h>
 

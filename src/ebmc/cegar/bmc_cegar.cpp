@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/time_stopping.h>
 
 #include <trans-netlist/property_netlist.h>
-#include <trans-netlist/instantiate.h>
+#include <trans-netlist/instantiate_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/trans_to_netlist.h>

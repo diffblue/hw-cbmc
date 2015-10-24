@@ -22,7 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 
-#include "instantiate.h"
+#include "instantiate_netlist.h"
 #include "trans_trace.h"
 
 /*******************************************************************\

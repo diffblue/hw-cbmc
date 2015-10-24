@@ -8,14 +8,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cstdlib>
 #include <cassert>
-#include <iostream>
 
 #include <util/expr_util.h>
 #include <util/std_expr.h>
 #include <util/i2string.h>
 #include <util/arith_tools.h>
 
-#include "instantiate.h"
+#include "instantiate_netlist.h"
 
 /*******************************************************************\
 
@@ -91,13 +90,13 @@ void instantiate_constraint(
 
   catch(const char *err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 
   catch(const std::string &err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 }
@@ -133,13 +132,13 @@ literalt instantiate_convert(
 
   catch(const char *err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 
   catch(const std::string &err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 }
@@ -176,13 +175,13 @@ void instantiate_convert(
 
   catch(const char *err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 
   catch(const std::string &err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 }
@@ -410,13 +409,13 @@ void instantiate_constraint(
 
   catch(const char *err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 
   catch(const std::string &err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 }
@@ -451,13 +450,13 @@ literalt instantiate_convert(
 
   catch(const char *err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 
   catch(const std::string &err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 }
@@ -493,13 +492,13 @@ void instantiate_convert(
 
   catch(const char *err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 
   catch(const std::string &err)
   {
-    std::cerr << err << std::endl;
+    messaget(message_handler).error() << err << messaget::eom;
     exit(1);
   }
 }

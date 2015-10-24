@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "netlist.h"
 #include "trans_to_netlist.h"
-#include "instantiate.h"
+#include "instantiate_netlist.h"
 
 /*******************************************************************\
 

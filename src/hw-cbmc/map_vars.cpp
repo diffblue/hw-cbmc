@@ -17,7 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 #include <ansi-c/c_types.h>
-#include <trans-netlist/instantiate.h>
+#include <trans-netlist/instantiate_netlist.h>
 
 #include "map_vars.h"
 #include "next_timeframe.h"

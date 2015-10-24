@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/cout_message.h>
 
-#include "../trans-netlist/instantiate.h"
+#include "../trans-netlist/instantiate_netlist.h"
 #include "property_word_level.h"
 
 /*******************************************************************\

@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 
-#include "../trans-netlist/instantiate.h"
+#include "../trans-netlist/instantiate_netlist.h"
 
 #include "counterexample_word_level.h"
 
