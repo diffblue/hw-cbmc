@@ -22,9 +22,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 
-#include "instantiate_netlist.h"
-#include "../trans-word-level/instantiate_word_level.h"
-#include "trans_trace.h"
+#include "instantiate_word_level.h"
+#include "trans_trace_word_level.h"
 
 /*******************************************************************\
 

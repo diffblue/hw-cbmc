@@ -15,8 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/decision_procedure.h>
 
-#include <solvers/prop/literal.h>
-
 #include "bmc_map.h"
 
 class trans_tracet
@@ -66,35 +64,14 @@ public:
   unsigned get_min_failing_timeframe() const;
 };
 
-// word-level without properties
-
-void compute_trans_trace(
-  const decision_proceduret &decision_procedure,
+void compute_trans_trace_properties(
+  const std::list<std::string> &prop_names,
+  const std::list<bvt> &prop_bv,
+  const propt &solver,
   unsigned no_timeframes,
-  const namespacet &ns,
-  const irep_idt &module,
   trans_tracet &dest);
-
-// word-level with properties
   
-void compute_trans_trace(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
-  const class prop_convt &solver,
-  unsigned no_timeframes,
-  const namespacet &ns,
-  const irep_idt &module,
-  trans_tracet &dest);
-
-// bit-level netlists
-
-void compute_trans_trace(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
-  const bmc_mapt &bmc_map,
-  const class propt &solver,
-  const namespacet &ns,
-  trans_tracet &dest);
+exprt bitstring_to_expr(const std::string &, const typet &);
 
 // outputting traces
   

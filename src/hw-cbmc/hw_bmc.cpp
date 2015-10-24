@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cbmc/bv_cbmc.h>
 #include <trans-word-level/unwind.h>
-#include <trans-netlist/trans_trace.h>
+#include <trans-word-level/trans_trace_word_level.h>
 
 #include "hw_bmc.h"
 

@@ -20,11 +20,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 
 #include <solvers/flattening/boolbv.h>
-#include <trans-word-level/property_word_level.h>
-#include <trans-netlist/trans_trace.h>
+#include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
+#include <trans-word-level/trans_trace_word_level.h>
+#include <trans-word-level/property_word_level.h>
 #include <trans-word-level/unwind.h>
 #include <trans-word-level/show_modules.h>
 
