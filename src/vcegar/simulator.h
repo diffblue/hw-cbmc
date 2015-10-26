@@ -23,10 +23,10 @@ to determmine whether it is spurious.
 #include <solvers/sat/cnf.h>
 #include <solvers/sat/satcheck.h>
 
-#include <trans/bmc_map.h>
-#include <trans/var_map.h>
-#include <trans/instantiate.h>
-#include <trans/unwind.h>
+#include <trans-netlist/bmc_map.h>
+#include <trans-netlist/var_map.h>
+#include <trans-netlist/instantiate_netlist.h>
+#include <trans-netlist/unwind_netlist.h>
 
 #include "concrete_counterexample.h"
 #include "concrete_trans.h"

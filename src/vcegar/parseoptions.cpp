@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include "bmc.h"
 #include "parseoptions.h"
 #include "vcegar.h"

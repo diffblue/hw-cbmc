@@ -24,7 +24,6 @@ Purpose: Counter Example Guided Abstraction refinement for Verilog
 #include <util/i2string.h>
 #include <util/config.h>
 #include <util/ui_message.h>
-#include <util/parseoptions.h>
 #include <util/namespace.h>
 #include <util/cnf_simplify.h>
 #include <util/get_module.h>
@@ -38,7 +37,7 @@ Purpose: Counter Example Guided Abstraction refinement for Verilog
 #include <langapi/language_util.h>
 
 #include <solvers/sat/dimacs_cnf.h>
-#include <solvers/sat/satcheck.h>
+#include <solvers/sat/satcheck_minisat.h>
 
 #include <verilog/verilog_language.h>
 #include <verilog/expr2verilog.h>
@@ -81,7 +80,7 @@ protected:
   unsigned max_iterations()
   {
     if(cmdline.isset("i"))
-      return atoi(cmdline.getval("i"));
+      return atoi(cmdline.get_value("i"));
 
     return 1;    
   }
@@ -118,7 +117,7 @@ Function: vcegart::get_main
 bool vcegart::get_main()
 {
   const std::string module=
-    cmdline.isset("module")?cmdline.getval("module"):"main";
+    cmdline.isset("module")?cmdline.get_value("module"):"main";
 
   try
   {
@@ -128,7 +127,7 @@ bool vcegart::get_main()
     trans_expr=&to_trans_expr(symbol.value);
     module_identifier=symbol.name;
  
-    status(std::string("Module identifier is ")+id2string(module_identifier));
+    status() << "Module identifier is " << module_identifier << eom;
 
     if(cmdline.isset("showtrans"))
     {
@@ -179,7 +178,7 @@ int vcegart::doit()
 {
   if(parse()) return 1;
 
-  status("Parsing done");
+  status() << "Parsing done" << eom;
 
   if(cmdline.isset("showparse"))
   {
@@ -193,7 +192,7 @@ int vcegart::doit()
 
   if(typecheck()) return 2;
 
-  status("typechecking done");
+  status() << "typechecking done" << eom;
 
   // get module name
 
@@ -228,13 +227,13 @@ int vcegart::doit()
   
     catch(const char *e)
     {
-      error(e);
+      error() << e << eom;
       return 1;
     }
 
     catch(const std::string &e)
     {
-      error(e);
+      error() << e << eom;
       return 1;
     }
   }
@@ -244,7 +243,7 @@ int vcegart::doit()
 
     try
     {
-      unsigned c=atoi(cmdline.getval("claim"));
+      unsigned c=atoi(cmdline.get_value("claim"));
       unsigned i=0;
     
       forall_symbol_module_map(
@@ -264,7 +263,7 @@ int vcegart::doit()
             std::string string_value=
               from_expr(ns, symbol.name, symbol.value);
 
-            status("Property: "+string_value);
+            status() << "Property: " << string_value << eom;
 
             specs.push_back(specificationt());
             specificationt &spec=specs.back();
@@ -277,7 +276,7 @@ int vcegart::doit()
       
       if(specs.empty())
       {
-        error("Claim number "+i2string(c)+" out of range");
+        error() << "Claim number " << c << " out of range" << eom;
         return true;
       }
 
@@ -291,19 +290,19 @@ int vcegart::doit()
   
     catch(const char *e)
     {
-      error(e);
+      error() << e << eom;
       return 1;
     }
 
     catch(const std::string &e)
     {
-      error(e);
+      error() << e << eom;
       return 1;
     }
   }
   else
   {
-    error("Please specify what property to verify");
+    error() << "Please specify what property to verify" << eom;
     return 1;
   }
   
@@ -336,7 +335,7 @@ void vcegart::get_initial_predicates()
     if(!cmdline.isset("init-pred"))
       initp = 1;
     else 
-      initp=atoi(cmdline.getval("init-pred"));
+      initp=atoi(cmdline.get_value("init-pred"));
     
     switch(initp)
     {
@@ -348,7 +347,7 @@ void vcegart::get_initial_predicates()
         if(!cmdline.isset("discover"))
           discover = 3;
         else 
-          discover=atoi(cmdline.getval("discover"));
+          discover=atoi(cmdline.get_value("discover"));
   
         assert(discover==1 || discover==2 || 
                discover==3 || discover==4);
@@ -365,7 +364,7 @@ void vcegart::get_initial_predicates()
        
         if(cmdline.isset("verbose"))
         {
-          status("Initial set of predicates");
+          status() << "Initial set of predicates" << eom;
            
           int count =0;
           for(std::set<predicatet>::const_iterator
@@ -374,8 +373,8 @@ void vcegart::get_initial_predicates()
               p_it++)
           {
             count++;
-            status(std::string("[")+i2string(count)+std::string("]")+expr2verilog(*p_it));
-            status("--------------");
+            status() <<  "[" << count << "]" << expr2verilog(*p_it) << eom;
+            status() << "--------------" << eom;
           }
         }
         break;
@@ -383,7 +382,7 @@ void vcegart::get_initial_predicates()
       
     case 2:
       {
-        status("Using the property itself as the initial predicate");
+        status() << "Using the property itself as the initial predicate" << eom;
 
         exprt init_pred(it->property);
         it->preds_from_property.push_back(init_pred);
@@ -406,10 +405,10 @@ Function: vcegart::get_properties_from_file
 
 void vcegart::get_properties_from_file()
 {
-  std::ifstream infile(cmdline.getval("p"));
+  std::ifstream infile(cmdline.get_value("p"));
   
   if(!infile)
-    throw std::string("failed to open ")+cmdline.getval("p");
+    throw std::string("failed to open ")+cmdline.get_value("p");
   
   // use auto_ptr because of the exceptions
   std::auto_ptr<languaget> language(new verilog_languaget);
@@ -441,7 +440,7 @@ void vcegart::get_properties_from_file()
     }
     
     if(cmdline.isset("verbose"))
-      status(std::string("Added the property: ")+line);
+      status() << "Added the property: " << line << eom;
 
     specificationt spec;
     spec.property_string = line;
@@ -451,7 +450,7 @@ void vcegart::get_properties_from_file()
   }
   
   if(cmdline.isset("verbose"))
-    status("Total number of properties added "+i2string(specs.size()));
+    status() << "Total number of properties added " << specs.size() << eom;
 }
 
 /*******************************************************************\
@@ -468,10 +467,10 @@ Function: vcegart::get_user_provided_preds
 
 void vcegart::get_user_provided_preds()
 {
-  std::ifstream infile(cmdline.getval("pred"));
+  std::ifstream infile(cmdline.get_value("pred"));
   
   if(!infile)
-    throw std::string("failed to open ")+cmdline.getval("pred");
+    throw std::string("failed to open ")+cmdline.get_value("pred");
   
   // use auto_ptr because of the exceptions
   std::auto_ptr<languaget> language(new verilog_languaget);
@@ -480,7 +479,7 @@ void vcegart::get_user_provided_preds()
   
 
   const std::string module=
-    cmdline.isset("module")?cmdline.getval("module"):"main";
+    cmdline.isset("module")?cmdline.get_value("module"):"main";
 
   std::string modeule_indentifier;
   const symbolt &symbol=get_module(symbol_table, module, get_message_handler());
@@ -514,16 +513,15 @@ void vcegart::get_user_provided_preds()
     }
   }
 
-  status(std::string("Total number of predicates added")+
-         i2string(user_provided_preds.size()));
+  status() << "Total number of predicates added " << user_provided_preds.size() << eom;
    
   #if 1
-  status("Predicates discovered from the predicate file are");
+  status() << "Predicates discovered from the predicate file are" << eom;
    
   for(unsigned i=0;i<user_provided_preds.size();i++)
   {
-    status(std::string("[")+i2string(i)+std::string("] ")+expr2verilog(user_provided_preds[i]));
-    status("--------------");
+    status() << "[" << i << "] " << expr2verilog(user_provided_preds[i]) << eom;
+    status() << "--------------" << eom;
   }
   #endif
 }
@@ -546,7 +544,7 @@ modelcheckert *vcegart::select_modelchecker(
 {
   std::string name=
     cmdline.isset("modelchecker")?
-      cmdline.getval("modelchecker"):"cadencesmv";
+      cmdline.get_value("modelchecker"):"cadencesmv";
 
   bool verbose = cmdline.isset("verbose");
   bool claim   = cmdline.isset("claim");
@@ -580,7 +578,7 @@ int vcegart::pred_abs_init()
   int verbosity=4;
 
   if(cmdline.isset("v")) 
-    verbosity = atoi(cmdline.getval("v"));
+    verbosity = atoi(cmdline.get_value("v"));
   
 
   //Parsing and typecheking has already been done
@@ -599,7 +597,7 @@ int vcegart::pred_abs_init()
   
   if (cmdline.isset("num-threads"))
     {
-      num_threads = atoi(cmdline.getval("num-threads"));
+      num_threads = atoi(cmdline.get_value("num-threads"));
       
       if (num_threads <= 0)
 	throw "Expected number of threads to be greater than zero\n";
@@ -613,7 +611,7 @@ int vcegart::pred_abs_init()
   {
     user_provided_spec = *it;
     
-    status("Verififying property: "+it->property_string);
+    status() << "Verififying property: " << it->property_string << eom;
     
     try
     {
@@ -660,13 +658,13 @@ int vcegart::pred_abs_init()
     
     catch(const char *e)
     {
-      error(e);
+      error() << e << eom;
       return 1;
     }
     
     catch(const std::string e)
     {
-      error(e);
+      error() << e << eom;
       return 1;
     }
   }

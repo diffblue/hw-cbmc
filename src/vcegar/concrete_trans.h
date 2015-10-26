@@ -13,7 +13,7 @@ Date: June 2003
 
 #include <util/std_expr.h>
 
-#include <trans/var_map.h>
+#include <trans-netlist/var_map.h>
 
 class concrete_transt
 {

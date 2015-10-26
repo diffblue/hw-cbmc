@@ -38,7 +38,7 @@ Function: vcegar_loopt::report_success
 
 void vcegar_loopt::report_success()
 {
-  status("VERIFICATION SUCCESSFUL");
+  status() << "VERIFICATION SUCCESSFUL" << eom;
 
   switch(ui)
   {
@@ -82,7 +82,7 @@ Function: ebmc_baset::report_failure
 
 void vcegar_loopt::report_failure()
 {
-  status("VERIFICATION FAILED");
+  status() << "VERIFICATION FAILED" << eom;
 
   switch(ui)
   {
@@ -125,7 +125,7 @@ void vcegar_loopt::obtain_abstract_property()
   int initp = 1; //default
   
   if(cmdline.isset("init-pred"))
-    initp=atoi(cmdline.getval("init-pred"));
+    initp=atoi(cmdline.get_value("init-pred"));
   
   assert(initp == 1 || initp ==2);
 
@@ -145,12 +145,10 @@ void vcegar_loopt::obtain_abstract_property()
   
   abstractor.abstract_trans.abstract_spec.property_string 
     = spec.property_string;
-
   
-  if (verbose)
-    status("Property string "+abstractor.abstract_trans.abstract_spec.property_string);
-  
-  
+  if(verbose)
+    status() << "Property string " << abstractor.abstract_trans.abstract_spec.property_string << eom;
+    
   abstractor.abstract_trans.abstract_spec.property 
     = property;
 
@@ -175,27 +173,27 @@ void vcegar_loopt::print_stats(
   const fine_timet &mc_time,
   const fine_timet &ref_time) 
 {
-  status("Machine name");
+  status() << "Machine name" << eom;
 
-  status("#No. of iterations done: "+i2string(iterations));
-  status("#Max no. of iterations : "+i2string(max_iterations));
-  status("#Total number of predicates needed: "+i2string(predicates.size()));
-  status("#Partitioning technique: "+i2string(abstractor.partitioning_strategy));
-  status("#Total #trans clusters ["+i2string(abstractor.num_trans_clusters)+"] "+
-	 "Max trans cluster size ["+i2string(abstractor.max_trans_cluster_size)+"]");
+  status() << "#No. of iterations done: " << iterations << eom;
+  status() << "#Max no. of iterations : " << max_iterations << eom;
+  status() << "#Total number of predicates needed: " << predicates.size() << eom;
+  status() << "#Partitioning technique: " << abstractor.partitioning_strategy << eom;
+  status() << "#Total #trans clusters [" << abstractor.num_trans_clusters << "] "
+           << "Max trans cluster size [" << abstractor.max_trans_cluster_size << "]" << eom;
   
-  status("#Total time: "+time2string(current_time()-start_time));
-  status("#Abstraction time: "+time2string(abs_time));
-  status("#Abstract model checking time: "+time2string(mc_time));
-  status("#Simulation and Refinement time: "+time2string(ref_time));
+  status() << "#Total time: " << time2string(current_time()-start_time) << eom;
+  status() << "#Abstraction time: " << time2string(abs_time) << eom;
+  status() << "#Abstract model checking time: " << time2string(mc_time) << eom;
+  status() << "#Simulation and Refinement time: " << time2string(ref_time) << eom;
 
   //for LaTeX resuts 
-  status("#BENCH   &"+time2string(current_time()-start_time)+" & "+
-	 time2string(abs_time)+ " & "+time2string(mc_time)+" & "+
-	 time2string(ref_time)+ " & "+i2string(predicates.size())+"/"+
-	 i2string(abstractor.max_trans_cluster_size)+ " & "+i2string(iterations)+
-	 " & "+i2string(iteration_spurious_transition)+"/"+
-	 i2string(iteration_weakest_precondition));
+  status() << "#BENCH   &" << time2string(current_time()-start_time) << " & "
+           << time2string(abs_time) << " & " << time2string(mc_time) << " & "
+           << time2string(ref_time) << " & " << predicates.size() << "/"
+           << abstractor.max_trans_cluster_size << " & " << iterations
+           << " & " << iteration_spurious_transition) << "/"
+           << iteration_weakest_precondition << eom;
 }
 
 /*******************************************************************\
@@ -216,20 +214,20 @@ void vcegar_loopt::additional_stats(
   const fine_timet &unsat_time,
   const fine_timet &wp_time) 
 {
-  status("#Breakup of simulation and refinement time:");
+  status() << "#Breakup of simulation and refinement time:" << eom;
 
-  status("#Simulating abstract transition steps: "+time2string(spurious_trans_time));
-  status("#Simulating the counterexample using BMC: "+time2string(bmc_time));
-  status("#Simulating the spurious counterexample for unsat core: "+time2string(unsat_time));
-  status("#Obtaining word level predicates using simplified weakest pre-conditions: "+
-	 time2string(wp_time));
+  status() << "#Simulating abstract transition steps: " << time2string(spurious_trans_time) << eom;
+  status() << "#Simulating the counterexample using BMC: " << time2string(bmc_time) << eom;
+  status() << "#Simulating the spurious counterexample for unsat core: " << time2string(unsat_time) << eom;
+  status() << "#Obtaining word level predicates using simplified weakest pre-conditions: "
+           << time2string(wp_time) << eom;
+
   abstractor.out_stats(std::cout); 
   simulator.out_stats(std::cout); 
-  status("#Refinement due to spurious transition: "+i2string(iteration_spurious_transition));
-  status("#Refinement due to weakest pre-conditions: "+i2string(iteration_weakest_precondition)+" and "+
-	 i2string(iteration_weakest_precondition_extra));
 
-
+  status() << "#Refinement due to spurious transition: " << iteration_spurious_transition << eom;
+  status() << "#Refinement due to weakest pre-conditions: " << iteration_weakest_precondition << " and "
+	   << iteration_weakest_precondition_extra << eom;
 }
 
 /*******************************************************************\
@@ -246,7 +244,7 @@ Function: vcegar_loopt::go
 
 void vcegar_loopt::go()
 {
-  status("*** Starting Verilog CEGAR Loop ***");
+  status() << "*** Starting Verilog CEGAR Loop ***" << eom;
      
   fine_timet start_time=current_time();
   fine_timet abs_time=0; //for creating abstraction 
@@ -277,7 +275,7 @@ void vcegar_loopt::go()
     concrete_trans.var_map, context);
 
   if(verbose)
-    status("Network built"); 
+    status() < <"Network built" << eom; 
 
   #ifdef DEBUG   
   network.print_members();

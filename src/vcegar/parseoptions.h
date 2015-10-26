@@ -6,16 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/parseoptions.h>
+#include <util/parse_options.h>
 
-class vcegar_parseoptionst:public parseoptions_baset
+class vcegar_parseoptionst:public parse_options_baset
 {
 public:
   virtual int doit();
   virtual void help();
 
   vcegar_parseoptionst(int argc, const char **argv):
-    parseoptions_baset(
+    parse_options_baset(
       "(bmc)(showcubes)(noconstrain)"
       "(nowpcons)(refine1)(nocache)(siege)"
       "(bound):(showparse)(p):(partition): (abstraction):"

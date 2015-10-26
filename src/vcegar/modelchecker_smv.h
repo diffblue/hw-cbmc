@@ -31,18 +31,18 @@ class modelchecker_smvt:public modelcheckert
     {
       switch(engine)
 	{
-	case CMU_SMV:     status("Using the modelchecker: CMU_SMV"); 
+	case CMU_SMV:     status() << "Using the modelchecker: CMU_SMV" << eom; 
 	  break;
-	case NUSMV:       status("Using the modelchecker: NUSMV"); 
+	case NUSMV:       status() << "Using the modelchecker: NUSMV" << eom; 
 	  break;
-	case CADENCE_SMV: status("Using the modelchecker: CADENCE_SMV");
+	case CADENCE_SMV: status() << "Using the modelchecker: CADENCE_SMV" << eom;
 	  break;
 	default:
 	  throw "Unknown modelchecker  \n";
 	}
       
       if (absref3)
-	status("Absref3 set to true for Cadence SMV");
+	status() << "Absref3 set to true for Cadence SMV" << eom;
     }
 
   // A return value of TRUE means the program is correct,

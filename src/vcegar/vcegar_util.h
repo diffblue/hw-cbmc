@@ -14,11 +14,11 @@ Date: June 2003
 #include <sstream>
 
 #include <util/message.h>
-#include <util/context.h>
+#include <util/symbol_table.h>
 #include <util/expr.h>
 
 #include <verilog/expr2verilog.h>
-#include <trans/var_map.h>
+#include <trans-netlist/var_map.h>
 
 #include "concrete_trans.h"
 #include "abstract_trans.h"

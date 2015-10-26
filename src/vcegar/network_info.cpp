@@ -37,7 +37,7 @@ void network_infot::create(
   const var_mapt &var_map)
 {
    exprt copy_constraints(constraints);
-   namespacet ns(context);
+   namespacet ns(symbol_table);
    ns.follow_macros(copy_constraints);
 
    create_network(copy_constraints, 
@@ -700,7 +700,7 @@ void network_infot::simplified_weakest_precondition(
     preds_used_to_simplify,
     containsInput); 
 
-  const symbol_tablet symbol_table;
+  symbol_tablet symbol_table;
   const namespacet ns(symbol_table);
   simplify(property, ns);
 

@@ -17,7 +17,7 @@ Date: July 2004
 #include <util/symbol_table.h>
 #include <util/namespace.h>
 
-#include <trans/var_map.h>
+#include <trans-netlist/var_map.h>
 #include <verilog/expr2verilog.h>
 
 #include "concrete_trans.h"
@@ -33,7 +33,7 @@ class network_infot
   next_state_function_cachet next_state_function_cache;
  
   const var_mapt &var_map;
-  const contextt &context;
+  const symbol_tablet &symbol_table;
 
   void create_network (const exprt& general_constrains,
 		       std::vector<std::set<irep_idt> > &vector_symbolsets,
@@ -91,9 +91,9 @@ class network_infot
   network_infot(const exprt& constraints, 
 		const exprt& trans, 
 		const var_mapt& _var_map,
-		const contextt& _context):
+		const symbol_tablet& _symbol_table):
     var_map(_var_map),
-    context (_context)
+    symbol_table (_symbol_table)
     { 
       create (constraints, trans, var_map);
     }

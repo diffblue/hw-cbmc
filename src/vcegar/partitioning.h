@@ -14,7 +14,7 @@ Date: June 2004
 #include <util/message.h>
 #include <util/namespace.h>
 
-#include <trans/var_map.h>
+#include <trans-netlist/var_map.h>
 #include <verilog/expr2verilog.h>
 
 #include "concrete_trans.h"

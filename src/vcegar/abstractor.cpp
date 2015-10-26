@@ -18,8 +18,8 @@ Date: April 2004
 #include <verilog/expr2verilog.h>
 #include <solvers/flattening/boolbv.h>
 #include <satqe/satqe_satcheck.h>
-#include <trans/instantiate.h>
-#include <trans/unwind.h>
+#include <trans-netlist/instantiate_netlist.h>
+#include <trans-netlist/unwind_netlist.h>
 
 #include "abstractor.h"
 #include "predabs_aux.h"

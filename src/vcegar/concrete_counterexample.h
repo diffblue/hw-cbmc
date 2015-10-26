@@ -12,7 +12,7 @@ Date: June 2003
 #ifndef CPROVER_CONCRETE_COUNTEREXAMPLE_H
 #define CPROVER_CONCRETE_COUNTEREXAMPLE_H
 
-#include <trans/trans_trace.h>
+#include <trans-netlist/trans_trace_netlist.h>
 
 typedef trans_tracet concrete_counterexamplet;
                           
