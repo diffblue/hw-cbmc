@@ -206,7 +206,7 @@ void compute_trans_trace_properties(
     if(saw_failure)
       dest.properties.back().status=tvt(false);
     else if(saw_unknown)
-      dest.properties.back().status=tvt(tvt::TV_UNKNOWN);
+      dest.properties.back().status=tvt::unknown();
     else
       dest.properties.back().status=tvt(true);
   }
@@ -280,7 +280,7 @@ void compute_trans_trace_properties(
     if(saw_failure)
       dest.properties.back().status=tvt(false);
     else if(saw_unknown)
-      dest.properties.back().status=tvt(tvt::TV_UNKNOWN);
+      dest.properties.back().status=tvt::unknown();
     else
       dest.properties.back().status=tvt(true);
   }

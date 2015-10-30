@@ -59,8 +59,8 @@ void show_state(
 
         switch(solver.l_get(l).get_value())
         {
-         case tvt::TV_TRUE: ch='1'; break;
-         case tvt::TV_FALSE: ch='0'; break;
+         case tvt::tv_enumt::TV_TRUE: ch='1'; break;
+         case tvt::tv_enumt::TV_FALSE: ch='0'; break;
          default: ch='?'; break;
         }
 
