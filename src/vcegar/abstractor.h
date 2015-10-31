@@ -38,7 +38,7 @@ public:
     if(!cmdline.isset("partition"))
       partitioning_strategy = 6; //default
     else 
-      partitioning_strategy=atoi(cmdline.getval("partition"));
+      partitioning_strategy=atoi(cmdline.get_value("partition").c_str());
      
     #ifdef DEBUG
     std::cout <<"partitioning_strategy is: "<<partitioning_strategy<<"\n";
