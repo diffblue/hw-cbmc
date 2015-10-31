@@ -18,7 +18,7 @@ Date: April 2004
 #include <verilog/expr2verilog.h>
 #include <solvers/flattening/boolbv.h>
 #include <satqe/satqe_satcheck.h>
-#include <trans-netlist/instantiate_netlist.h>
+#include <trans-word-level/instantiate_word_level.h>
 #include <trans-netlist/unwind_netlist.h>
 
 #include "abstractor.h"
@@ -262,7 +262,7 @@ void abstractort::calc_trans_rel_abstraction(
   pred_clusters.clear();
    
   if(verbose)
-    status("Computing partitioned transition relation of the abstraction");
+    status() << "Computing partitioned transition relation of the abstraction" << eom;
    
   partition.partition_predicates(
     predicates, 
@@ -718,14 +718,14 @@ Function: abstractort::out_cache_stats
 
 void abstractort::out_stats(std::ostream &out)
 {
-  status("#Cache sizes: "+i2string(trans_cubes_cache.size())+","+
-	 i2string(refine_cubes_cache.size())+","+
-	 i2string(init_cubes_cache.size()));
-  status("#[hits/access] Trans cache:["+i2string(trans_cache_num_hits)+"/"+
-	 i2string(trans_cache_num_access)+"], "+
-	 "Refine cache:["+i2string(pred_id_cache_num_hits)+"/"+
-	 i2string(pred_id_cache_num_access)+"], "+
-	 "Init cache:["+i2string(init_cache_num_hits)+"/"+
-	 i2string(init_cache_num_access)+"]");
+  status() << "#Cache sizes: " << trans_cubes_cache.size() << ","
+           << refine_cubes_cache.size() << ","
+           << init_cubes_cache.size();
+  status() << "#[hits/access] Trans cache:[" << trans_cache_num_hits
+           << "/" << trans_cache_num_access << "], "
+           << "Refine cache:[" << pred_id_cache_num_hits << "/"
+           << pred_id_cache_num_access << "], "
+           << "Init cache:[" << init_cache_num_hits << "/"
+           << init_cache_num_access << "]";
 }
 
