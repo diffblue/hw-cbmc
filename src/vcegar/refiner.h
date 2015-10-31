@@ -39,7 +39,7 @@ class refinert:public messaget
        #endif
      }
      else 
-       discover=atoi(cmdline.getval("discover"));
+       discover=atoi(cmdline.get_value("discover").c_str());
      
      #ifdef DEBUG
      std::cout <<"discover is: "<<discover<<"\n";
@@ -74,7 +74,7 @@ class refinert:public messaget
   // Calculates the initial set of predicates for the given program
   void init_preds(predicatest &predicates, 
 		  const concrete_transt &concrete_trans, 
-		  const contextt &context); // context is for DEBUG
+		  const symbol_tablet &symbol_table); // symbol_table is for DEBUG
 
   // Calculates the initial set of predicates for the given program
   void init_preds(predicatest &predicates, 
@@ -84,7 +84,7 @@ class refinert:public messaget
  void spurious_ce(predicatest &predicates,
 		  const concrete_transt &concrete_trans,
 		  const abstract_counterexamplet &spurious_counterexample,
-		  const contextt &context,
+		  const symbol_tablet &symbol_table,
 		  const exprt property,
 		  const network_infot &network,
 		  std::vector<std::set<unsigned> > &imp_preds_per_state,
@@ -94,7 +94,7 @@ class refinert:public messaget
  void generate_predicates
    (predicatest &predicates, 
     const abstract_counterexamplet &spurious_counterexample,
-    const contextt &context, 
+    const symbol_tablet &symbol_table, 
     const network_infot &network,
     std::vector<std::set<unsigned> > &imp_preds_per_state,
     weakest_precondition_constrainst &weakest_precondition_constrains,
@@ -103,7 +103,7 @@ class refinert:public messaget
  void compute_wp_seed_predicate
    (predicatest &predicates, 
     const abstract_counterexamplet &spurious_counterexample,
-    const contextt &context, 
+    const symbol_tablet &symbol_table, 
     const network_infot &network,
     weakest_precondition_constrainst &weakest_precondition_constrains, //constraints relating a predicate and its wp
     unsigned pred_num, //we will take wp of this

@@ -42,13 +42,11 @@ Function: refinert::init_preds
 
 void refinert::init_preds(predicatest &predicates, 
 			  const concrete_transt &concrete_trans, 
-			  const contextt &context // only for DEBUG
+			  const symbol_tablet &symbol_table // only for DEBUG
 			  )
- {
-  status("Calculating initial set of predicates");
-  
-  return;
- }
+{
+  status() << "Calculating initial set of predicates" << eom;
+}
 
 /*******************************************************************\
 
@@ -64,25 +62,23 @@ Function: refinert::init_preds
 
 void refinert::init_preds(predicatest &predicates, 
 			  const std::vector<exprt> &initial_predicates)
- {
-   #ifdef DEBUG
-  status("Using provided set of initial predicates");
+{
+  #ifdef DEBUG
+  status() << "Using provided set of initial predicates" << eom;
   #endif
 
   for(std::vector<predicatet>::const_iterator
       p_it=initial_predicates.begin();
       p_it!=initial_predicates.end();
       p_it++)
-   {
+  {
     bool negation;
     exprt p(*p_it);
     canonicalize(p, negation);
     predicates.lookup(p);
-   }
+  }
 
- }
-
-
+}
 
 /*******************************************************************\
 
@@ -204,7 +200,7 @@ Function: refinert::compute_wp_seed_predicate
 void refinert::compute_wp_seed_predicate
  (predicatest &predicates, 
   const abstract_counterexamplet &spurious_counterexample,
-  const contextt &context, 
+  const symbol_tablet &symbol_table, 
   const network_infot &network,
   weakest_precondition_constrainst &weakest_precondition_constrains,
   unsigned pred_num, //we will take wp of this
@@ -213,7 +209,7 @@ void refinert::compute_wp_seed_predicate
   bool generate_extra_preds
   )
 {
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   
   exprt failed_property(predicates[pred_num]);
   ns.follow_macros(failed_property);
@@ -283,8 +279,8 @@ void refinert::compute_wp_seed_predicate
       }
     }
     
-    if (verbose)
-      status("Before refinement #predicates "+i2string(predicates.size()));
+    if(verbose)
+      status() << "Before refinement #predicates " << predicates.size() << eom;
     
 
     for(std::set<predicatet>::const_iterator it= predicate_set.begin();
@@ -337,7 +333,7 @@ void refinert::compute_wp_seed_predicate
       }
 
     if (verbose)
-      status("After refinement #predicates "+i2string(predicates.size()));
+      status() << "After refinement #predicates " << predicates.size() << eom;
 
 
     
@@ -373,7 +369,7 @@ Function: refinert::generate_predicates
 void refinert::generate_predicates
  (predicatest &predicates, 
   const abstract_counterexamplet &spurious_counterexample,
-  const contextt &context, 
+  const symbol_tablet &symbol_table, 
   const network_infot &network,
   std::vector<std::set<unsigned> > &imp_preds_per_state,
   weakest_precondition_constrainst &weakest_precondition_constrains,
@@ -394,7 +390,7 @@ void refinert::generate_predicates
 
       compute_wp_seed_predicate(predicates, 
 				spurious_counterexample,
-				context, 
+				symbol_table, 
 				network,
 				weakest_precondition_constrains,
 				*it,
@@ -424,7 +420,7 @@ void refinert::spurious_ce
  (predicatest &predicates, 
   const concrete_transt &concrete_trans,
   const abstract_counterexamplet &spurious_counterexample,
-  const contextt &context, 
+  const symbol_tablet &symbol_table, 
   const exprt property,
   const network_infot &network,
   std::vector<std::set<unsigned> > &imp_preds_per_state,
@@ -433,7 +429,8 @@ void refinert::spurious_ce
   )
  {
    if (verbose)
-     status("Size of spurious counterexample "+i2string(spurious_counterexample.size()));
+     status() << "Size of spurious counterexample "
+              << spurious_counterexample.size() << eom;
 
    
    #ifdef DEBUG
@@ -442,7 +439,7 @@ void refinert::spurious_ce
 
    generate_predicates(predicates, 
 		       spurious_counterexample,
-		       context, 
+		       symbol_table, 
 		       network,
 		       imp_preds_per_state,
 		       weakest_precondition_constrains, 
