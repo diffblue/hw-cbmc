@@ -62,7 +62,7 @@ public:
      else 
        {
 	 use_gcr_size = 1;
-	 max_cluster_size = atoi(cmdline.getval("gcrsize"));
+	 max_cluster_size = atoi(cmdline.get_val("gcrsize").c_str());
        }
 
      if(!cmdline.isset("one_cex_only"))

@@ -27,8 +27,9 @@ to check whether the counterexample is spurious.
 
 #include <langapi/language_ui.h>
 
-#include <trans/property.h>
-#include <trans/counterexample.h>
+#include <trans-word-level/property_word_level.h>
+#include <trans-word-level/instantiate_word_level.h>
+#include <trans-netlist/counterexample_netlist.h>
 
 #include "simulator.h"
 #include "vcegar_util.h"
@@ -135,7 +136,7 @@ bool simulatort::check_spurious_using_bmc
 	 std::cout << std::endl;
 	 #endif
 
-	 status("Running "+satcheck.solver_text());
+	 status() << "Running " << satcheck.solver_text() << eom;
        }
      
      switch(satcheck.prop_solve())
@@ -342,11 +343,11 @@ Function: abstractort::out_cache_stats
 
 void simulatort::out_stats(std::ostream &out)
 {
-  status("#Not spurious cache hits "+ i2string(not_spurious_cache_hits)+
- 	 " simulated "+
-         i2string(num_steps_checked)+", spurious "+
-	 i2string(num_spurious_steps)+", new constraints "+
-         i2string(num_constraints_found));
+  status() << "#Not spurious cache hits " << not_spurious_cache_hits
+           << " simulated " << num_steps_checked
+           << ", spurious " << num_spurious_steps
+           << ", new constraints " << num_constraints_found
+           << eom;
 }
 
 /*******************************************************************\
@@ -597,7 +598,7 @@ bool simulatort::is_spurious_abstract_transition(
 
   
   if (verbose)
-    status("Running "+satcheck.solver_text()); 
+    status() << "Running " << satcheck.solver_text() << eom;
 
   switch(satcheck.prop_solve())
     {
