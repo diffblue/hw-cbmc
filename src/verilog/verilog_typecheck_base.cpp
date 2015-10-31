@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cassert>
 
 #include <util/arith_tools.h>
-#include <util/location.h>
 #include <util/expr_util.h>
 #include <util/prefix.h>
 #include <util/std_types.h>

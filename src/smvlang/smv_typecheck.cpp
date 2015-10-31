@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 
 #include <util/expr_util.h>
-#include <util/location.h>
 #include <util/typecheck.h>
 #include <util/arith_tools.h>
 #include <util/i2string.h>

@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 #include <util/arith_tools.h>
-#include <util/location.h>
 #include <util/expr_util.h>
 #include <util/simplify_expr.h>
 #include <util/replace_symbol.h>

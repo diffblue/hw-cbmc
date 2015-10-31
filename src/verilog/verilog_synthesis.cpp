@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/i2string.h>
 #include <util/arith_tools.h>
-#include <util/location.h>
 #include <util/expr_util.h>
 #include <util/simplify_expr.h>
 #include <util/identifier.h>
