@@ -55,7 +55,7 @@ bool modelchecker_smvt::read_result
      }
 
     if(!file.empty())
-      warning("NuSMV error see vcegar_tmp_smv_out2");
+      warning() << "NuSMV error see vcegar_tmp_smv_out2" << eom;
    }
 
   // now read output
@@ -99,10 +99,10 @@ bool modelchecker_smvt::read_result
         else if(std::string(*it, it->size()-8)=="is false")
          {
           // produce counterexample
-          status("NuSMV produced counterexample");
+          status() << "NuSMV produced counterexample" << eom;
 	  read_counterexample(file, it, abstract_trans,
 			      counterexample);
-          status("NuSMV counterexample sucessfully read");
+          status() << "NuSMV counterexample sucessfully read" << eom;
 
           // show it
           if (verbose) std::cout << counterexample;
@@ -159,7 +159,7 @@ bool modelchecker_smvt::read_result_cadence_smv(
       else if(std::string(*it, it->size()-1)=="0")
       {
         // produce counterexample
-        status("Cadence SMV produced counterexample");
+        status() << "Cadence SMV produced counterexample" << eom;
 	
         read_counterexample_cadence_smv(
           file, it, abstract_trans,
@@ -1283,11 +1283,11 @@ bool modelchecker_smvt::check
       {
       case NUSMV:
 	command="NuSMV -f ";
-	status(std::string("Running NuSMV: ")+command);
+	status() << "Running NuSMV: " << command << eom;
 	break;
 
       case  CMU_SMV:
-	status(std::string("Running CMU SMV: ")+command);
+	status() << "Running CMU SMV: " << command << eom;
 	command="smv";
 	break;
 
@@ -1299,7 +1299,7 @@ bool modelchecker_smvt::check
 	if (absref3)
 	  command+=" -absref3 ";
 
-	status(std::string("Running Cadence SMV: ")+command);
+	status() << "Running Cadence SMV: " << command << eom;
 	break;
 
       default:
@@ -1324,8 +1324,8 @@ bool modelchecker_smvt::check
   }
   
   if (verbose)
-  status("Length of the abstract counterexample is "+
-	 i2string(counterexample.size()));
+  status() << "Length of the abstract counterexample is "
+           << counterexample.size() << eom;
 
   int count;
   for (std::vector<abstract_statet>::const_iterator it =
