@@ -1,3 +1,5 @@
+#include <assert.h>
+
 /* unwinding bound */
 
 void next_timeframe();
