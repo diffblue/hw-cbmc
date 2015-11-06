@@ -115,8 +115,15 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       expr.id(ID_implies);
       instantiate_rec(expr.op0());
       unsigned old_current=current;
+      
       current++;
-      instantiate_rec(expr.op1());
+      
+      // Do we exceed the bound? Make it 'true'
+      if(current>=no_timeframes)
+        expr.op1()=true_exprt();
+      else
+        instantiate_rec(expr.op1());
+
       current=old_current;
     }
   }
@@ -133,7 +140,13 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
           throw "failed to convert sva_cycle_delay offset";
 
         current=old_current+integer2long(offset);
-        instantiate_rec(expr.op2());
+        
+        // Do we exceed the bound? Make it 'true'
+        if(current>=no_timeframes)
+          expr.op2()=true_exprt();
+        else
+          instantiate_rec(expr.op2());
+
         expr=expr.op2();
       }
       else
@@ -151,14 +164,22 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         else if(to_integer(expr.op1(), to))
           throw "failed to convert sva_cycle_delay offsets";
           
-        // this is an 'or'
+        // This is an 'or', and we let it fail if the bound is too small.
+        
         exprt::operandst disjuncts;
         
         for(mp_integer offset=from; offset<to; ++offset)
         {
           current=old_current+integer2long(offset);
-          disjuncts.push_back(expr.op2());
-          instantiate_rec(disjuncts.back());
+
+          if(current>=no_timeframes)
+          {
+          }
+          else
+          {
+            disjuncts.push_back(expr.op2());
+            instantiate_rec(disjuncts.back());
+          }
         }
         
         expr=disjunction(disjuncts);
