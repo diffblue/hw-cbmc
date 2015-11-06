@@ -1,3 +1,5 @@
+#include <assert.h>
+
 /* unwinding bound */
 
 extern const unsigned int bound;
