@@ -974,9 +974,9 @@ std::string expr2verilogt::convert(const typet &type)
     {
       std::string dest;
       if(type.id()==ID_unsignedbv)
-        dest="bv";
+        dest="";
       else if(type.id()==ID_signedbv)
-        dest="signed bv";
+        dest="signed ";
 
       dest+='[';
       
@@ -1012,7 +1012,7 @@ std::string expr2verilogt::convert(const typet &type)
     return "genvar";
   else if(type.id()==ID_integer)
     return "integer";
-  else if(type.id()==ID_real)
+  else if(type.id()==ID_real || type.id()==ID_verilog_realtime)
     return "real";
 
   return "IREP("+type.to_string()+")";
