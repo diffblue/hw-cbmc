@@ -1261,6 +1261,11 @@ void verilog_typecheck_exprt::typecast(
       expr.make_typecast(dest_type);
       return;
     }
+    else if(dest_type.id()==ID_verilog_realtime)
+    {
+      expr.make_typecast(dest_type);
+      return;
+    }
   }
 
   err_location(expr);
@@ -1386,6 +1391,12 @@ typet verilog_typecheck_exprt::max_type(
   else if(vt1.is_integer())
     return t0;
     
+  // If one of the operands is a real, we return the real.
+  if(vt0.is_verilog_realtime())
+    return t0;
+  else if(vt1.is_verilog_realtime())
+    return t1;
+
   bool is_verilogbv=
     vt0.is_verilog_signed() || vt0.is_verilog_unsigned() ||
     vt1.is_verilog_signed() || vt1.is_verilog_unsigned();

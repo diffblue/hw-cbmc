@@ -101,4 +101,12 @@ public:
   }
 };
 
+class verilog_realtime_typet:public typet
+{
+public:
+  inline verilog_realtime_typet():typet(ID_verilog_realtime)
+  {
+  }
+};
+
 #endif

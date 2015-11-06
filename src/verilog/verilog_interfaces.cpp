@@ -316,7 +316,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
   else if(port_class==ID_realtime)
   {
     symbol.is_lvalue=true;
-    type=typet(ID_verilog_realtime);
+    type=verilog_realtime_typet();
   }
   else
   {
@@ -482,7 +482,7 @@ void verilog_typecheckt::interface_module_decl(
   else if(port_class==ID_realtime)
   {
     symbol.is_lvalue=true;
-    type=typet(ID_verilog_realtime);
+    type=verilog_realtime_typet();
   }
   else
   {

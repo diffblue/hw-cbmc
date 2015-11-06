@@ -57,6 +57,11 @@ vtypet::vtypet(const typet &type)
     vtype=VERILOG_UNSIGNED;
     width=to_verilog_unsignedbv_type(type).get_width();
   }
+  else if(type.id()==ID_verilog_realtime)
+  {
+    vtype=VERILOG_REALTIME;
+    width=0;
+  }
   else 
   {
     width=0;
@@ -78,19 +83,31 @@ Function: operator <<
 
 std::ostream &operator << (std::ostream &out, const vtypet &vtype)
 {
-  if(vtype.is_integer())
+  switch(vtype.vtype)
+  {
+  case vtypet::INTEGER:
     return out << "integer";
-  else if(vtype.is_unsigned())
+    
+  case vtypet::UNSIGNED:
     return out << "unsigned(" << vtype.get_width() << ")";
-  else if(vtype.is_signed())
+
+  case vtypet::SIGNED:
     return out << "signed(" << vtype.get_width() << ")";
-  else if(vtype.is_verilog_signed())
+  
+  case vtypet::VERILOG_SIGNED:
     return out << "verilog_signed(" << vtype.get_width() << ")";
-  else if(vtype.is_verilog_unsigned())
+
+  case vtypet::VERILOG_UNSIGNED:
     return out << "verilog_unsigned(" << vtype.get_width() << ")";
-  else if(vtype.is_bool())
+
+  case vtypet::BOOL:
     return out << "bool";
-  else
+
+  case vtypet::VERILOG_REALTIME:
+    return out << "bool";
+
+  default:
     return out << "?";
+  }
 }
 
