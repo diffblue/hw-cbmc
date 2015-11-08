@@ -1,0 +1,6 @@
+CORE
+harness.c
+main.v --module vmain --bound 10
+^EXIT=0$
+^SIGNAL=0$
+--
