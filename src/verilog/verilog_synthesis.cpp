@@ -312,7 +312,7 @@ void verilog_synthesist::assignment(
  
   // get identifier
   const symbolt &symbol=assignment_symbol(lhs);
-
+  
   if(!symbol.is_state_var)
   {
     err_location(lhs);
@@ -327,6 +327,7 @@ void verilog_synthesist::assignment(
 
   {
     event_guardt new_type;
+
     if(construct==C_ALWAYS)  
       new_type=event_guard;
     else
@@ -339,7 +340,9 @@ void verilog_synthesist::assignment(
     else if(assignment.type!=new_type)
     {
       err_location(lhs);
-      str << "conflicting assignment types (new: "
+      str << "conflicting assignment types for `"
+          << symbol.base_name
+          << "' (new: "
           << as_string(new_type) << ", old: "
           << as_string(assignment.type) << ")";
       throw 0;      
