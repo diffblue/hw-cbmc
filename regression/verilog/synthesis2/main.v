@@ -31,7 +31,8 @@ module main_testbench;
 
   initial begin
     for(i=0; i<10; i=i+1) begin
-      $display("var1: %2d, var2: %2d", my_main.var1, my_main.var2);
+      $display("var0: %2d, var1: %2d, var2: %2d", 
+               my_main.var0, my_main.var1, my_main.var2);
       clk=0; #1; clk=1; #1;
     end
   end
