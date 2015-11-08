@@ -1,10 +1,15 @@
 module main(input clk);
-  reg [31:0] var1, var2;
+  reg [31:0] var0, var1, var2;
 
+  initial var0=0;  
   initial var1=0;  
   initial var2=0;
 
-  // var1 should be a latch
+  // var0 should be a wire
+  always @var2
+    var0=var2*2;
+
+  // var1 should be a latch, as the old value is used
   always @var2
     if(var2[0]==0)
       var1=var2;
@@ -14,7 +19,8 @@ module main(input clk);
     var2=var2+1;
 
   // should pass
-  //always assert p1: var1[0]==0;
+  always assert p0: var0[0]==0;
+  always assert p1: var1[0]==0;
 
 endmodule
 
