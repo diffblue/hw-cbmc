@@ -4,12 +4,12 @@ module main(input clk);
   initial var1=0;  
   initial var2=0;
 
-  // this should be a latch
+  // var1 should be a latch
   always @var2
     if(var2[0]==0)
       var1=var2;
 
-  // this sould be a flip-flop
+  // var2 sould be a flip-flop
   always @(posedge clk)
     var2=var2+1;
 
