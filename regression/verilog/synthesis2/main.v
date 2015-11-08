@@ -1,7 +1,6 @@
 module main(input clk);
   reg [31:0] var0, var1, var2;
 
-  initial var0=0;  
   initial var1=0;  
   initial var2=0;
 
