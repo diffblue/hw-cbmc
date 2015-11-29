@@ -67,6 +67,21 @@ protected:
   
   void instantiate_rec(exprt &expr);
   void instantiate_rec(typet &expr);
+  
+  class save_currentt
+  {
+  public:
+    inline explicit save_currentt(unsigned &_c):c(_c), saved(c)
+    {
+    }
+    
+    inline ~save_currentt()
+    {
+      c=saved; // restore
+    }
+    
+    unsigned &c, saved;
+  };
 };
 
 /*******************************************************************\
@@ -114,24 +129,25 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     {
       expr.id(ID_implies);
       instantiate_rec(expr.op0());
-      unsigned old_current=current;
+      
+      save_currentt save_current(current);
       
       current++;
       
-      // Do we exceed the bound? Make it 'true'
+      // Do we exceed the bound? Make it 'true',
+      // works on NNF only
       if(current>=no_timeframes)
         expr.op1()=true_exprt();
       else
         instantiate_rec(expr.op1());
-
-      current=old_current;
     }
   }
   else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
     if(expr.operands().size()==3)
     {
-      unsigned old_current=current;
+      // save the current time frame, we'll change it
+      save_currentt save_current(current);
 
       if(expr.op1().is_nil())
       {
@@ -139,7 +155,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         if(to_integer(expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
-        current=old_current+integer2long(offset);
+        current=save_current.saved+integer2long(offset);
         
         // Do we exceed the bound? Make it 'true'
         if(current>=no_timeframes)
@@ -170,7 +186,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         
         for(mp_integer offset=from; offset<to; ++offset)
         {
-          current=old_current+integer2long(offset);
+          current=save_current.saved+integer2long(offset);
 
           if(current>=no_timeframes)
           {
@@ -184,9 +200,6 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         
         expr=disjunction(disjuncts);
       }
-
-      // restore      
-      current=old_current;
     }
   }
   else if(expr.id()==ID_sva_sequence_concatenation)
@@ -198,30 +211,98 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
   }
   else if(expr.id()==ID_sva_always)
   {
+    assert(expr.operands().size()==1);
+    
+    // save the current time frame, we'll change it
+    save_currentt save_current(current);
+    
+    exprt::operandst conjuncts;
+
+    for(; current<no_timeframes; current++)
+    {
+      conjuncts.push_back(expr.op0());
+      instantiate_rec(conjuncts.back());
+    }
+    
+    expr=conjunction(conjuncts);
   }
-  else if(expr.id()==ID_sva_nexttime)
+  else if(expr.id()==ID_sva_nexttime ||
+          expr.id()==ID_sva_s_nexttime)
   {
+    assert(expr.operands().size()==1);
+    
+    // save the current time frame, we'll change it
+    save_currentt save_current(current);
+    
+    current++;
+    
+    if(current<no_timeframes)
+    {
+      expr=expr.op0();
+      instantiate_rec(expr);
+    }
+    else
+      expr=true_exprt(); // works on NNF only
   }
-  else if(expr.id()==ID_sva_s_nexttime)
+  else if(expr.id()==ID_sva_eventually ||
+          expr.id()==ID_sva_s_eventually)
   {
+    assert(expr.operands().size()==1);
+    
+    // we need a !p lasso to refute Fp
+
+    #if 0    
+    // save the current time frame, we'll change it
+    save_currentt save_current(current);
+    
+    exprt::operandst disjuncts;
+
+    for(; current<no_timeframes; current++)
+    {
+      disjuncts.push_back(expr.op0());
+      instantiate_rec(disjuncts.back());
+    }
+    
+    expr=disjunction(disjuncts);
+    #endif
   }
-  else if(expr.id()==ID_sva_eventually)
+  else if(expr.id()==ID_sva_until ||
+          expr.id()==ID_sva_s_until)
   {
+    // non-overlapping until
+  
+    assert(expr.operands().size()==2);
+    
+    // we need a lasso to refute these
+    
+    #if 0
+    // save the current time frame, we'll change it
+    save_currentt save_current(current);
+    
+    // we expand: p U q <=> q || (p && X(p U q))
+    exprt tmp_q=expr.op1();
+    instantiate_rec(tmp_q);
+    
+    exprt expansion=expr.op0();
+    instantiate_rec(expansion);
+    
+    current++;
+    
+    if(current<no_timeframes)
+    {
+      exprt tmp=expr;
+      instantiate_rec(tmp);
+      expansion=and_exprt(expansion, tmp);
+    }
+    
+    expr=or_exprt(tmp_q, expansion);
+    #endif
   }
-  else if(expr.id()==ID_sva_s_eventually)
+  else if(expr.id()==ID_sva_until_with ||
+          expr.id()==ID_sva_s_until_with)
   {
-  }
-  else if(expr.id()==ID_sva_until)
-  {
-  }
-  else if(expr.id()==ID_sva_s_until)
-  {
-  }
-  else if(expr.id()==ID_sva_until_with)
-  {
-  }
-  else if(expr.id()==ID_sva_s_until_with)
-  {
+    // overlapping until
+  
   }
   else
   {

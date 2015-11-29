@@ -1,0 +1,6 @@
+main.sv
+--bound 10
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
+--
+^warning: ignoring

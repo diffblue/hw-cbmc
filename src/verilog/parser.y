@@ -2332,10 +2332,10 @@ property_expr:
         | TOK_S_ALWAYS property_expr     { init($$, "sva_s_always"); mto($$, $2); }
         | TOK_S_EVENTUALLY property_expr { init($$, "sva_s_eventually"); mto($$, $2); }
         | TOK_S_NEXTTIME property_expr   { init($$, "sva_s_nexttime"); mto($$, $2); }
-        | TOK_S_UNTIL property_expr      { init($$, "sva_s_until"); mto($$, $2); }
-        | TOK_S_UNTIL_WITH property_expr { init($$, "sva_s_until_with"); mto($$, $2); }
-        | TOK_UNTIL property_expr        { init($$, "sva_until"); mto($$, $2); }
-        | TOK_UNTIL_WITH property_expr   { init($$, "sva_until_with"); mto($$, $2); }
+        | property_expr TOK_S_UNTIL property_expr      { init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
+        | property_expr TOK_S_UNTIL_WITH property_expr { init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
+        | property_expr TOK_UNTIL property_expr        { init($$, "sva_until"); mto($$, $1); mto($$, $3); }
+        | property_expr TOK_UNTIL_WITH property_expr   { init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
         ;
 
 sequence_expr:

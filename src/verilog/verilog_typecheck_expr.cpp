@@ -1499,6 +1499,17 @@ void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
     no_bool_ops(expr);
     expr.type()=expr.op0().type();
   }
+  else if(expr.id()==ID_sva_always ||
+          expr.id()==ID_sva_nexttime ||
+          expr.id()==ID_sva_s_nexttime ||
+          expr.id()==ID_sva_eventually ||
+          expr.id()==ID_sva_s_eventually)
+  {
+    assert(expr.operands().size()==1);
+    convert_expr(expr.op0());
+    make_boolean(expr.op0());
+    expr.type()=bool_typet();
+  }
   else
   {
     convert_expr(expr.op0());
@@ -1781,28 +1792,17 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
     expr.type()=expr.op0().type();
   }
   else if(expr.id()==ID_sva_overlapped_implication ||
-          expr.id()==ID_sva_non_overlapped_implication)
+          expr.id()==ID_sva_non_overlapped_implication ||
+          expr.id()==ID_sva_until ||
+          expr.id()==ID_sva_s_until ||
+          expr.id()==ID_sva_until_with ||
+          expr.id()==ID_sva_s_until_with)
   {
     assert(expr.operands().size()==2);
     convert_expr(expr.op0());
     make_boolean(expr.op0());
     convert_expr(expr.op1());
     make_boolean(expr.op1());
-    expr.type()=bool_typet();
-  }
-  else if(expr.id()==ID_sva_always ||
-          expr.id()==ID_sva_nexttime ||
-          expr.id()==ID_sva_s_nexttime ||
-          expr.id()==ID_sva_eventually ||
-          expr.id()==ID_sva_s_eventually ||
-          expr.id()==ID_sva_until ||
-          expr.id()==ID_sva_s_until ||
-          expr.id()==ID_sva_until_with ||
-          expr.id()==ID_sva_s_until_with)
-  {
-    assert(expr.operands().size()==1);
-    convert_expr(expr.op0());
-    make_boolean(expr.op0());
     expr.type()=bool_typet();
   }
   else if(expr.id()==ID_hierarchical_identifier)
