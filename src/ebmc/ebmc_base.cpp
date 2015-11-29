@@ -366,10 +366,13 @@ bool ebmc_baset::parse_property(
     expr))
     return true;
 
-  // make it AGp
-  exprt tmp("AG", typet("bool"));
-  tmp.move_to_operands(expr);
-  expr.swap(tmp);
+  // We give it an implict always, as in SVA
+  
+  if(expr.id()!=ID_sva_always)
+  {
+    unary_predicate_exprt tmp(ID_sva_always, expr);
+    expr.swap(tmp);
+  }
 
   std::string expr_as_string;
   languages.from_expr(expr, expr_as_string);

@@ -896,9 +896,13 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   convert_expr(cond);
   make_boolean(cond);
   
-  // make it AGp
-  exprt property(ID_AG, bool_typet());
-  property.move_to_operands(cond);
+  // There is an implicit 'always'
+  exprt property;
+  
+  if(cond.id()==ID_sva_always)
+    property=cond;
+  else
+    property=unary_predicate_exprt(ID_sva_always, cond);
   
   assertion_counter++;
   

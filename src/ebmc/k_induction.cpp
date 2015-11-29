@@ -206,12 +206,14 @@ int k_inductiont::induction_step()
   
     exprt property(it->expr);
 
-    if(property.id()!="AG" ||
-       property.operands().size()!=1)
+    if(property.id()!=ID_sva_always &&
+       property.id()!="AG")
     {
-      error() << "unsupported property - only AGp implemented" << eom;
+      error() << "unsupported property - only SVA always or AG implemented" << eom;
       return 1;
     }
+    
+    assert(property.operands().size()==1);
 
     const exprt &p=property.op0();
 

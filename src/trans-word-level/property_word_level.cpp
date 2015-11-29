@@ -59,13 +59,15 @@ void property(
   
     exprt property(*it);
 
-    if(property.id()!=ID_AG ||
-       property.operands().size()!=1)
+    if(property.id()!=ID_AG &&
+       property.id()!=ID_sva_always)
     {
-      message.error() << "unsupported property - only AGp implemented"
+      message.error() << "unsupported property - only SVA always implemented"
                       << messaget::eom;
       exit(1);
     }
+
+    assert(property.operands().size()==1);
 
     const exprt &p=property.op0();
     

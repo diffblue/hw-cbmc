@@ -2322,20 +2322,20 @@ property_expr:
         | "not" property_expr { init($$, ID_not); mto($$, $2); }
         | property_expr "or" property_expr { init($$, ID_or); mto($$, $1); mto($$, $3); }
         | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
-        | property_expr "|->" property_expr { init($$, ID_overlapped_implication); mto($$, $1); mto($$, $3); }
-        | property_expr "|=>" property_expr { init($$, ID_non_overlapped_implication); mto($$, $1); mto($$, $3); }
+        | property_expr "|->" property_expr { init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
+        | property_expr "|=>" property_expr { init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
         | event_control '(' property_expr ')'
                 { $$=$3; }
-        | TOK_ALWAYS property_expr       { init($$, "SV_always"); mto($$, $2); }
-        | TOK_EVENTUALLY property_expr   { init($$, "SV_eventually"); mto($$, $2); }
-        | TOK_NEXTTIME property_expr     { init($$, "SV_nexttime"); mto($$, $2); }
-        | TOK_S_ALWAYS property_expr     { init($$, "SV_s_always"); mto($$, $2); }
-        | TOK_S_EVENTUALLY property_expr { init($$, "SV_s_eventually"); mto($$, $2); }
-        | TOK_S_NEXTTIME property_expr   { init($$, "SV_s_nexttime"); mto($$, $2); }
-        | TOK_S_UNTIL property_expr      { init($$, "SV_s_until"); mto($$, $2); }
-        | TOK_S_UNTIL_WITH property_expr { init($$, "SV_s_until_with"); mto($$, $2); }
-        | TOK_UNTIL property_expr        { init($$, "SV_until"); mto($$, $2); }
-        | TOK_UNTIL_WITH property_expr   { init($$, "SV_until_with"); mto($$, $2); }
+        | TOK_ALWAYS property_expr       { init($$, "sva_always"); mto($$, $2); }
+        | TOK_EVENTUALLY property_expr   { init($$, "sva_eventually"); mto($$, $2); }
+        | TOK_NEXTTIME property_expr     { init($$, "sva_nexttime"); mto($$, $2); }
+        | TOK_S_ALWAYS property_expr     { init($$, "sva_s_always"); mto($$, $2); }
+        | TOK_S_EVENTUALLY property_expr { init($$, "sva_s_eventually"); mto($$, $2); }
+        | TOK_S_NEXTTIME property_expr   { init($$, "sva_s_nexttime"); mto($$, $2); }
+        | TOK_S_UNTIL property_expr      { init($$, "sva_s_until"); mto($$, $2); }
+        | TOK_S_UNTIL_WITH property_expr { init($$, "sva_s_until_with"); mto($$, $2); }
+        | TOK_UNTIL property_expr        { init($$, "sva_until"); mto($$, $2); }
+        | TOK_UNTIL_WITH property_expr   { init($$, "sva_until_with"); mto($$, $2); }
         ;
 
 sequence_expr:

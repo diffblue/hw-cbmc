@@ -209,14 +209,14 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
 
     return result[0];
   }
-  else if(expr.id()==ID_overlapped_implication)
+  else if(expr.id()==ID_sva_overlapped_implication)
   {
     // same as regular implication
     if(expr.operands().size()==2)
       return prop.limplies(convert_bool(expr.op0()),
                            convert_bool(expr.op1()));
   }
-  else if(expr.id()==ID_non_overlapped_implication)
+  else if(expr.id()==ID_sva_non_overlapped_implication)
   {
     // right-hand side is shifted by one tick
     if(expr.operands().size()==2)
@@ -274,6 +274,33 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       next=old_next;
       return result;
     }
+  }
+  else if(expr.id()==ID_sva_always)
+  {
+  }
+  else if(expr.id()==ID_sva_nexttime)
+  {
+  }
+  else if(expr.id()==ID_sva_s_nexttime)
+  {
+  }
+  else if(expr.id()==ID_sva_eventually)
+  {
+  }
+  else if(expr.id()==ID_sva_s_eventually)
+  {
+  }
+  else if(expr.id()==ID_sva_until)
+  {
+  }
+  else if(expr.id()==ID_sva_s_until)
+  {
+  }
+  else if(expr.id()==ID_sva_until_with)
+  {
+  }
+  else if(expr.id()==ID_sva_s_until_with)
+  {
   }
   else if(expr.id()==ID_sva_sequence_concatenation)
   {

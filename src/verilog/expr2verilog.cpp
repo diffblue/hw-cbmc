@@ -306,6 +306,30 @@ std::string expr2verilogt::convert_function(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_sva
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_sva(
+  const std::string &name,
+  const exprt &src)
+{
+  if(src.operands().size()==1)
+    return name+" "+convert(src.op0());
+  else if(src.operands().size()==2)
+    return convert(src.op0())+" "+name+" "+convert(src.op1());
+  else
+    return "?";
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_replication
 
   Inputs:
@@ -910,11 +934,11 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_onehot0)
     return convert_function("$onehot0", src);
 
-  else if(src.id()==ID_overlapped_implication)
+  else if(src.id()==ID_sva_overlapped_implication)
     return convert_binary(src, "|->", precedence=3);
     // not sure about precedence
     
-  else if(src.id()==ID_non_overlapped_implication)
+  else if(src.id()==ID_sva_non_overlapped_implication)
     return convert_binary(src, "|=>", precedence=3);
     // not sure about precedence
     
@@ -926,6 +950,33 @@ std::string expr2verilogt::convert(
     return convert_sva_sequence_concatenation(src, precedence=3);
     // not sure about precedence
     
+  else if(src.id()==ID_sva_always)
+    return convert_sva("always", src);
+
+  else if(src.id()==ID_sva_nexttime)
+    return convert_sva("nexttime", src);
+
+  else if(src.id()==ID_sva_s_nexttime)
+    return convert_sva("s_nexttime", src);
+
+  else if(src.id()==ID_sva_eventually)
+    return convert_sva("eventually", src);
+
+  else if(src.id()==ID_sva_s_eventually)
+    return convert_sva("s_eventually", src);
+
+  else if(src.id()==ID_sva_until)
+    return convert_sva("until", src);
+
+  else if(src.id()==ID_sva_s_until)
+    return convert_sva("s_until", src);
+
+  else if(src.id()==ID_sva_until_with)
+    return convert_sva("until_with", src);
+
+  else if(src.id()==ID_sva_s_until_with)
+    return convert_sva("s_until_with", src);
+
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);
 }

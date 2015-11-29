@@ -333,13 +333,15 @@ void convert_trans_to_netlistt::operator()(
       l=const_literal(false);
     else
     {
-      if(property.id()!=ID_AG ||
-         property.operands().size()!=1)
+      if(property.id()!=ID_AG &&
+         property.id()!=ID_sva_always)
       {
-        error() << "unsupported property - only AGp implemented"
+        error() << "unsupported property - only SVA always implemented"
                 << messaget::eom;
         throw 0;
       }
+
+      assert(property.operands().size()==1);
 
       const exprt &p=property.op0();
 

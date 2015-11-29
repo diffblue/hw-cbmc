@@ -99,7 +99,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       expr.set(ID_identifier, timeframe_identifier(current, identifier));
     }
   }
-  else if(expr.id()==ID_overlapped_implication)
+  else if(expr.id()==ID_sva_overlapped_implication)
   {
     // same as regular implication
     expr.id(ID_implies);
@@ -107,7 +107,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     Forall_operands(it, expr)
       instantiate_rec(*it);
   }
-  else if(expr.id()==ID_non_overlapped_implication)
+  else if(expr.id()==ID_sva_non_overlapped_implication)
   {
     // right-hand side is shifted by one tick
     if(expr.operands().size()==2)
@@ -195,6 +195,33 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     expr.id(ID_and);
     Forall_operands(it, expr)
       instantiate_rec(*it);
+  }
+  else if(expr.id()==ID_sva_always)
+  {
+  }
+  else if(expr.id()==ID_sva_nexttime)
+  {
+  }
+  else if(expr.id()==ID_sva_s_nexttime)
+  {
+  }
+  else if(expr.id()==ID_sva_eventually)
+  {
+  }
+  else if(expr.id()==ID_sva_s_eventually)
+  {
+  }
+  else if(expr.id()==ID_sva_until)
+  {
+  }
+  else if(expr.id()==ID_sva_s_until)
+  {
+  }
+  else if(expr.id()==ID_sva_until_with)
+  {
+  }
+  else if(expr.id()==ID_sva_s_until_with)
+  {
   }
   else
   {
