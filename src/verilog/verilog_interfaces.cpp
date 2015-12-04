@@ -383,7 +383,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     else if(it2->id()==ID_array)
     {
       symbol.base_name=it2->get(ID_identifier);
-      array_type(*it2, type, symbol.type);
+      symbol.type=array_type(*it2, type);
     }
     else
     {
@@ -524,7 +524,7 @@ void verilog_typecheckt::interface_module_decl(
       if(it2->type().is_nil())
         symbol.type=type;
       else if(it2->type().id()==ID_array)
-        array_type(it2->type(), type, symbol.type);
+        symbol.type=array_type(it2->type(), type);
       else
       {
         str << "unexpected type on declarator";

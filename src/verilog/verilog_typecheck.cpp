@@ -34,13 +34,12 @@ Function: verilog_typecheckt::array_type
 
 \*******************************************************************/
 
-void verilog_typecheckt::array_type(
+array_typet verilog_typecheckt::array_type(
   const irept &src,
-  const typet &element_type,
-  typet &dest)
+  const typet &element_type)
 {
   assert(src.id()==ID_array);
-
+  
   mp_integer msb, lsb;
   const exprt &range=static_cast<const exprt &>(src.find(ID_range));
 
@@ -56,13 +55,24 @@ void verilog_typecheckt::array_type(
     err_location(src);
     throw "array size must be positive";
   }
+  
+  const typet src_subtype=
+    static_cast<const typet &>(src).subtype();
+  
+  typet array_subtype;
+  
+  // may need to go recursive
+  if(src_subtype.is_nil())
+    array_subtype=element_type;
+  else
+    array_subtype=array_type(src_subtype, element_type);
 
-  dest=array_typet();
-  dest.subtype()=element_type;
-
-  dest.set(ID_size, from_integer(size, natural_typet()));
-  dest.set(ID_offset, from_integer(offset, natural_typet()));
-  dest.set(ID_C_little_endian, little_endian);
+  const exprt size_expr=from_integer(size, natural_typet());
+  array_typet result(array_subtype, size_expr);
+  result.set(ID_offset, from_integer(offset, natural_typet()));
+  result.set(ID_C_little_endian, little_endian);
+  
+  return result;
 }
 
 /*******************************************************************\

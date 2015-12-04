@@ -99,10 +99,9 @@ protected:
   void interface_statement(const class verilog_statementt &statement);
   void interface_function_or_task(const class verilog_declt &decl);
 
-  void array_type(
+  array_typet array_type(
     const irept &src,
-    const typet &element_type,
-    typet &dest);
+    const typet &element_type);
 
   // type checking
   
