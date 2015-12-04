@@ -867,6 +867,9 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_and)
     return convert_binary(src, "&&", precedence=7);
 
+  else if(src.id()==ID_power)
+    return convert_binary(src, "**", precedence=15);
+
   else if(src.id()==ID_bitand)
     return convert_binary(src, "&", precedence=7);
 

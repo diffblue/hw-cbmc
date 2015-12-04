@@ -191,6 +191,7 @@ void verilog_scanner_init()
 <GRAMMAR>"!=="          { return TOK_EXCLAMEQUALEQUAL; }
 <GRAMMAR>"&&"           { return TOK_AMPERAMPER; }
 <GRAMMAR>"||"           { return TOK_VERTBARVERTBAR; }
+<GRAMMAR>"**"           { return TOK_ASTERICASTERIC; }
 <GRAMMAR>"<"            { return TOK_LESS; }
 <GRAMMAR>"<="           { return TOK_LESSEQUAL; }
 <GRAMMAR>">"            { return TOK_GREATER; }

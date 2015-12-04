@@ -81,6 +81,7 @@ void verilog_typecheck_exprt::propagate_type(
        expr.id()==ID_minus ||
        expr.id()==ID_mult || 
        expr.id()==ID_div || 
+       expr.id()==ID_power ||
        expr.id()==ID_unary_minus ||
        expr.id()==ID_unary_plus)
     {
@@ -1821,7 +1822,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
 
     if(expr.id()==ID_plus ||
        expr.id()==ID_minus ||
-       expr.id()==ID_mult)
+       expr.id()==ID_mult ||
+       expr.id()==ID_power)
       no_bool_ops(expr);
 
     expr.type()=expr.op0().type();

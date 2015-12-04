@@ -255,6 +255,7 @@ int yyverilogerror(const char *error)
 %token TOK_EQUALEQUALEQUAL  "==="
 %token TOK_EXCLAMEQUALEQUAL "!=="
 %token TOK_AMPERAMPER       "&&"
+%token TOK_ASTERICASTERIC   "**"
 %token TOK_VERTBARVERTBAR   "||"
 %token TOK_LESS             "<"
 %token TOK_LESSEQUAL        "<="
@@ -551,6 +552,7 @@ int yyverilogerror(const char *error)
 %left TOK_ASTERIC TOK_SLASH TOK_PERCENT
 %left TOK_ASTERICASTERIC
 %right TOK_TILDE TOK_EXCLAM TOK_PLUSPLUS TOK_MINUSMINUS
+%nonassoc UNARY_MINUS UNARY_PLUS
 %nonassoc LT_TOK_ELSE
 %nonassoc TOK_ELSE
 %right "->"
@@ -2261,9 +2263,9 @@ expression:
 		{ init($$, ID_plus); mto($$, $1); mto($$, $3); }
 	| expression TOK_MINUS expression
 		{ init($$, ID_minus); mto($$, $1); mto($$, $3); }
-	| TOK_PLUS expression
+	| TOK_PLUS expression %prec UNARY_PLUS
 		{ init($$, ID_unary_plus); mto($$, $2); }
-	| TOK_MINUS expression
+	| TOK_MINUS expression %prec UNARY_MINUS
 		{ init($$, ID_unary_minus); mto($$, $2); }
 	| expression TOK_ASTERIC expression
 		{ init($$, ID_mult); mto($$, $1); mto($$, $3); }
@@ -2281,6 +2283,8 @@ expression:
 		{ init($$, ID_verilog_case_inequality); mto($$, $1); mto($$, $3); }
 	| expression TOK_AMPERAMPER expression
 		{ init($$, ID_and); mto($$, $1); mto($$, $3); }
+	| expression TOK_ASTERICASTERIC expression
+		{ init($$, ID_power); mto($$, $1); mto($$, $3); }
 	| expression TOK_VERTBARVERTBAR expression
 		{ init($$, ID_or); mto($$, $1); mto($$, $3); }
 	| expression TOK_LESS expression
