@@ -1,3 +1,4 @@
+CORE
 main.smv
 --bound 10 --property 2
 ^SIGNAL=0$

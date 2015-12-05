@@ -1,3 +1,4 @@
+CORE
 main.v
 --bound 2
 ^EXIT=0$

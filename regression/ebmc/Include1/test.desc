@@ -1,3 +1,4 @@
+CORE
 main.v
 --module main --bound 20 -I subdir
 ^EXIT=0$

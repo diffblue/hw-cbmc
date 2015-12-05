@@ -1,3 +1,4 @@
+CORE
 main.v
 --module main --bound 3 --aig
 ^EXIT=0$

@@ -1,3 +1,4 @@
+CORE
 main.smv
 --module main
 ^EXIT=2$

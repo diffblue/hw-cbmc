@@ -1,3 +1,4 @@
+CORE
 main.sv
 --module top --bound 10
 ^EXIT=0$
