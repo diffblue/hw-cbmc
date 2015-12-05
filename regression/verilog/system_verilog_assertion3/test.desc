@@ -1,3 +1,4 @@
+CORE
 main.sv
 --module main --bound 1
 ^EXIT=0$

@@ -1,3 +1,4 @@
+KNOWNBUG
 main.v
 --bound 5
 ^EXIT=0$

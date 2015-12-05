@@ -1,3 +1,4 @@
+KNOWNBUG
 main.v
 --module main --bound 10
 ^EXIT=0$

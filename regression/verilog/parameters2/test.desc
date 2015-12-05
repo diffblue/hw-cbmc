@@ -1,3 +1,4 @@
+CORE
 main.v
 --bound 1 --top test
 ^EXIT=0$
