@@ -80,8 +80,8 @@ BDDnode::BDDnode(
   unsigned _var, unsigned _node_number,
   const BDD &_low, const BDD &_high):
   mgr(_mgr), var(_var), node_number(_node_number),
-  low(_low), high(_high),
-  reference_counter(0)
+  reference_counter(0),
+  low(_low), high(_high)
 {
 }
 
