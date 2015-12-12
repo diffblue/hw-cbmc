@@ -1,5 +1,5 @@
 // A minimalistic BDD library, following Bryant's original paper
-// and Andersen's lecture notes
+// and Henrik Reif Andersen's lecture notes
 //
 // Written by Daniel Kroening on the 28th of September 2009
 
