@@ -954,3 +954,57 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
            
   return false;
 }
+
+/*******************************************************************\
+
+Function: ebmc_baset::report_results
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ebmc_baset::report_results()
+{
+  if(get_ui()==ui_message_handlert::XML_UI)
+  {
+    for(const propertyt &property : properties)
+    {
+      xmlt xml_result("result");
+      xml_result.set_attribute("property", property.name);
+      
+      switch(property.status)
+      {
+      case propertyt::statust::SUCCESS: xml_result.set_attribute("status", "SUCCESS"); break;
+      case propertyt::statust::FAILURE: xml_result.set_attribute("status", "FAILURE"); break;
+      case propertyt::statust::UNKNOWN: xml_result.set_attribute("status", "UNKNOWN"); break;
+      }
+
+      std::cout << xml_result << "\n";
+    }
+  }
+  else
+  {
+    status() << eom;
+    status() << "** Results:" << eom;
+
+    for(const propertyt &property : properties)
+    {
+      status() << "[" << property.name << "] "
+               << property.description << ": ";
+
+      switch(property.status)
+      {
+      case propertyt::statust::SUCCESS: status() << "SUCCESS"; break;
+      case propertyt::statust::FAILURE: status() << "FAILURE"; break;
+      case propertyt::statust::UNKNOWN: status() << "UNKNOWN"; break;
+      }
+               
+      status() << eom;
+    }
+  }
+}
+

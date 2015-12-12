@@ -69,9 +69,9 @@ protected:
     irep_idt mode;
     exprt expr;
     std::string description;
-    enum class outcomet { PASS, FAIL, UNKNOWN } outcome;
+    enum class statust { SUCCESS, FAILURE, UNKNOWN } status;
     
-    propertyt():outcome(outcomet::UNKNOWN)
+    propertyt():status(statust::UNKNOWN)
     {
     }
   };
@@ -90,6 +90,7 @@ protected:
   
   void report_failure();
   void report_success();
+  void report_results();
   
   void show_ldg(std::ostream &out);
   bool make_netlist(netlistt &netlist);  
