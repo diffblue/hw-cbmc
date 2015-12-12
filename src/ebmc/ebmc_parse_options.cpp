@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "version.h"
 #include "show_trans.h"
 #include "k_induction.h"
+#include "bdd_engine.h"
 #include "ebmc_base.h"
 #include "ebmc_parse_options.h"
 
@@ -94,9 +95,11 @@ int ebmc_parse_optionst::doit()
 #endif
   }
   
-  
   if(cmdline.isset("k-induction"))
     return do_k_induction(cmdline);
+
+  if(cmdline.isset("bdd"))
+    return do_bdd(cmdline);
 
  if(cmdline.isset("interpolation-word"))
   {
