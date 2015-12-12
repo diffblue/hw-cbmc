@@ -172,6 +172,57 @@ void mgr::DumpTikZ(
   out << "\\end{tikzpicture}\n";
 }
 
+class apply
+{
+public:
+  inline explicit apply(bool (*_fkt)(bool, bool)):fkt(_fkt)
+  {
+  }
+  
+  BDD operator()(const BDD &x, const BDD &y) { return APP(x, y); }
+
+protected:
+  bool (*fkt)(bool, bool);
+  BDD APP(const BDD &x, const BDD &y);
+
+  typedef std::map<std::pair<unsigned, unsigned>, BDD> Gt;
+  Gt G;
+};
+
+BDD apply::APP(const BDD &x, const BDD &y)
+{
+  assert(x.node!=NULL && y.node!=NULL);
+  assert(x.node->mgr==y.node->mgr);
+
+  // dynamic programming
+  std::pair<unsigned, unsigned> key(x.node_number(), y.node_number());  
+  Gt::const_iterator G_it=G.find(key);
+  if(G_it!=G.end()) return G_it->second;
+
+  mgr *mgr=x.node->mgr;
+  
+  BDD u;
+
+  if(x.is_constant() && y.is_constant())
+    u=BDD(fkt(x.is_true(), y.is_true())?mgr->True():mgr->False());
+  else if(x.var()==y.var())
+    u=mgr->mk(x.var(),
+              APP(x.low(), y.low()),
+              APP(x.high(), y.high()));
+  else if(x.var()<y.var())
+    u=mgr->mk(x.var(),
+              APP(x.low(), y),
+              APP(x.high(), y));
+  else /* x.var() > y.var() */
+    u=mgr->mk(y.var(),
+              APP(x, y.low()),
+              APP(x, y.high()));
+
+  G[key]=u;
+    
+  return u;
+}
+
 bool equal_fkt(bool x, bool y)
 {
   return x==y;
@@ -179,7 +230,7 @@ bool equal_fkt(bool x, bool y)
 
 BDD BDD::operator ==(const BDD &other) const
 {
-  return apply(equal_fkt, *this, other);
+  return apply(equal_fkt)(*this, other);
 }
 
 bool xor_fkt(bool x, bool y)
@@ -189,7 +240,7 @@ bool xor_fkt(bool x, bool y)
 
 BDD BDD::operator ^(const BDD &other) const
 {
-  return apply(xor_fkt, *this, other);
+  return apply(xor_fkt)(*this, other);
 }
 
 BDD BDD::operator !() const
@@ -204,7 +255,7 @@ bool and_fkt(bool x, bool y)
 
 BDD BDD::operator &(const BDD &other) const
 {
-  return apply(and_fkt, *this, other);
+  return apply(and_fkt)(*this, other);
 }
 
 bool or_fkt(bool x, bool y)
@@ -214,7 +265,7 @@ bool or_fkt(bool x, bool y)
 
 BDD BDD::operator |(const BDD &other) const
 {
-  return apply(or_fkt, *this, other);
+  return apply(or_fkt)(*this, other);
 }
 
 mgr::mgr()
@@ -302,48 +353,45 @@ void mgr::DumpTable(std::ostream &out) const
   }
 }
 
-BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y)
+class restrictt
 {
-  assert(x.node!=NULL && y.node!=NULL);
-  assert(x.node->mgr==y.node->mgr);
-
-  mgr *mgr=x.node->mgr;
+public:
+  inline restrictt(const unsigned _var, const bool _value):
+    var(_var), value(_value)
+  {
+  }
   
-  BDD u;
+  BDD operator()(const BDD &u) { return RES(u); }
 
-  if(x.is_constant() && y.is_constant())
-    u=BDD(fkt(x.is_true(), y.is_true())?mgr->True():mgr->False());
-  else if(x.var()==y.var())
-    u=mgr->mk(x.var(),
-              apply(fkt, x.low(), y.low()),
-              apply(fkt, x.high(), y.high()));
-  else if(x.var()<y.var())
-    u=mgr->mk(x.var(),
-              apply(fkt, x.low(), y),
-              apply(fkt, x.high(), y));
-  else /* x.var() > y.var() */
-    u=mgr->mk(y.var(),
-              apply(fkt, x, y.low()),
-              apply(fkt, x, y.high()));
-    
-  return u;
-}
+protected:
+  const unsigned var;
+  const bool value;
+  
+  BDD RES(const BDD &u);
+};
 
-BDD restrict(const BDD &u, const unsigned var, const bool value)
+BDD restrictt::RES(const BDD &u)
 {
   // replace 'var' in 'u' by constant 'value'
 
   assert(u.node!=NULL);
   mgr *mgr=u.node->mgr;
+  
+  BDD t;
 
   if(u.var()>var)
-    return u;
+    t=u;
   else if(u.var()<var)
-    return mgr->mk(u.var(),
-                   restrict(u.low(), var, value),
-                   restrict(u.high(), var, value));
+    t=mgr->mk(u.var(), RES(u.low()), RES(u.high()));
   else // u.var()==var
-    return restrict(value?u.high():u.low(), var, value);
+    t=RES(value?u.high():u.low());
+    
+  return t;
+}
+
+BDD restrict(const BDD &u, unsigned var, const bool value)
+{
+  return restrictt(var, value)(u);
 }
 
 BDD exists(const BDD &u, const unsigned var)

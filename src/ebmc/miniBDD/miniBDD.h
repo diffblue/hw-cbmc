@@ -117,7 +117,6 @@ protected:
   freet free;
 };
 
-BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y);
 BDD restrict(const BDD &u, unsigned var, const bool value);
 BDD exists(const BDD &u, unsigned var);
 BDD substitute(const BDD &where, unsigned var, const BDD &by_what);
