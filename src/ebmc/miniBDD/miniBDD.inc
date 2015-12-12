@@ -2,6 +2,9 @@
 
 // inline functions
 
+namespace miniBDD
+{
+
 BDD::BDD():node(NULL)
 {
 }
@@ -121,3 +124,5 @@ mgr::reverse_keyt::reverse_keyt(
   var(_var), low(_low.node->node_number), high(_high.node->node_number)
 {
 }
+
+} // namespace miniBDD
