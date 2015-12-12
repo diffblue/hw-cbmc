@@ -38,18 +38,17 @@ BDD miniBDD_mgr::Var(const std::string &label)
 
 void miniBDD_mgr::DumpDot(std::ostream &out, bool suppress_zero) const
 {
-  out << "digraph BDD {" << std::endl;
+  out << "digraph BDD {\n";
 
-  out << "center = true;" << std::endl;
+  out << "center = true;\n";
   
-  out << "{ rank = same; { node [style=invis]; \"T\" };" << std::endl;
+  out << "{ rank = same; { node [style=invis]; \"T\" };\n";
   
   if(!suppress_zero)
-    out << "  { node [shape=box,fontsize=24]; \"0\"; }" << std::endl;
+    out << "  { node [shape=box,fontsize=24]; \"0\"; }\n";
     
-  out << "  { node [shape=box,fontsize=24]; \"1\"; }" << std::endl
-      << "}" << std::endl
-      << std::endl;
+  out << "  { node [shape=box,fontsize=24]; \"1\"; }\n"
+      << "}\n\n";
       
   for(unsigned v=0; v<var_table.size(); v++)
   {
@@ -62,10 +61,10 @@ void miniBDD_mgr::DumpDot(std::ostream &out, bool suppress_zero) const
       if(u->var==(v+1) && u->reference_counter!=0)
         out << '"' << u->node_number << "\"; ";
     
-    out << "}" << std::endl;
+    out << "}\n";
   }
 
-  out << std::endl;
+  out << '\n';
 
   out << "{ edge [style = invis];";
 
@@ -73,9 +72,9 @@ void miniBDD_mgr::DumpDot(std::ostream &out, bool suppress_zero) const
     out << " \" " << var_table[v].label
         << " \" ->";
   
-  out << " \"T\"; }" << std::endl;
+  out << " \"T\"; }\n";
   
-  out << std::endl;
+  out << '\n';
 
   forall_nodes(u)
   {
@@ -85,19 +84,17 @@ void miniBDD_mgr::DumpDot(std::ostream &out, bool suppress_zero) const
     if(!suppress_zero || u->high.node_number()!=0)
       out << '"' << u->node_number << '"' << " -> "
           << '"' << u->high.node_number() << '"'
-          << " [style=solid,arrowsize=\".75\"];"
-          << std::endl;
+          << " [style=solid,arrowsize=\".75\"];\n";
         
     if(!suppress_zero || u->low.node_number()!=0)
       out << '"' << u->node_number << '"' << " -> "
           << '"' << u->low.node_number() << '"'
-          << " [style=dashed,arrowsize=\".75\"];"
-          << std::endl;
+          << " [style=dashed,arrowsize=\".75\"];\n";
 
-    out << std::endl;
+    out << '\n';
   }
   
-  out << "}" << std::endl;
+  out << "}\n";
 }
 
 void miniBDD_mgr::DumpTikZ(
@@ -105,10 +102,10 @@ void miniBDD_mgr::DumpTikZ(
   bool suppress_zero,
   bool node_numbers) const
 {
-  out << "\\begin{tikzpicture}[node distance=1cm]" << std::endl;
+  out << "\\begin{tikzpicture}[node distance=1cm]\n";
   
   out << "  \\tikzstyle{BDDnode}=[circle,draw=black,"
-         "inner sep=0pt,minimum size=5mm]" << std::endl;
+         "inner sep=0pt,minimum size=5mm]\n";
 
   for(unsigned v=0; v<var_table.size(); v++)
   {
@@ -118,7 +115,7 @@ void miniBDD_mgr::DumpTikZ(
       out << "below of=v" << var_table[v-1].label;
 
     out << "] (v" << var_table[v].label << ") {$\\mathit{"
-        << var_table[v].label << "}$};" << std::endl;
+        << var_table[v].label << "}$};\n";
 
     unsigned previous=0;
 
@@ -135,28 +132,28 @@ void miniBDD_mgr::DumpTikZ(
 
         out << "] (n" << u->node_number << ") {";
         if(node_numbers) out << "\\small $" << u->node_number << "$";
-        out << "};" << std::endl;
+        out << "};\n";
         previous=u->node_number;
       }
     }
     
-    out << std::endl;
+    out << '\n';
   }
 
-  out << std::endl;
+  out << '\n';
 
-  out << "  % terminals" << std::endl;
+  out << "  % terminals\n";
   out << "  \\node[draw=black, style=rectangle, below of=v"
       << var_table.back().label
-      << ", xshift=1cm] (n1) {$1$};" << std::endl;
+      << ", xshift=1cm] (n1) {$1$};\n";
     
   if(!suppress_zero)
-    out << "  \\node[draw=black, style=rectangle, left of=n1] (n0) {$0$};" << std::endl;
+    out << "  \\node[draw=black, style=rectangle, left of=n1] (n0) {$0$};\n";
 
-  out << std::endl;
+  out << '\n';
 
-  out << "  % edges" << std::endl;
-  out << std::endl;
+  out << "  % edges\n";
+  out << '\n';
 
   forall_nodes(u)
   {
@@ -164,17 +161,17 @@ void miniBDD_mgr::DumpTikZ(
     {
       if(!suppress_zero || u->low.node_number()!=0)
         out << "  \\draw[->,dashed] (n" << u->node_number << ") -> (n"
-            << u->low.node_number() << ");" << std::endl;
+            << u->low.node_number() << ");\n";
           
       if(!suppress_zero || u->high.node_number()!=0)
         out << "  \\draw[->] (n" << u->node_number << ") -> (n"
-            << u->high.node_number() << ");" << std::endl;
+            << u->high.node_number() << ");\n";
     }
   }
 
-  out << std::endl;
+  out << '\n';
   
-  out << "\\end{tikzpicture}" << std::endl;
+  out << "\\end{tikzpicture}\n";
 }
 
 bool equal_fkt(bool x, bool y)
@@ -271,7 +268,7 @@ bool operator < (const miniBDD_mgr::reverse_keyt &x,
 void miniBDD_mgr::DumpTable(std::ostream &out) const
 {
   out << "\\# & \\mathit{var} & \\mathit{low} &"
-         " \\mathit{high} \\\\\\hline" << std::endl;
+         " \\mathit{high} \\\\\\hline\n";
 
   forall_nodes(it)
   {
@@ -288,7 +285,7 @@ void miniBDD_mgr::DumpTable(std::ostream &out) const
           
     if(it->node_number==1) out << "\\hline";
 
-    out << " % " << it->reference_counter << std::endl;
+    out << " % " << it->reference_counter << '\n';
   }
 }
 
