@@ -6,8 +6,6 @@
 #ifndef miniBDD_H
 #define miniBDD_H
 
-#include <cassert>
-#include <iostream>
 #include <list>
 #include <vector>
 #include <map>

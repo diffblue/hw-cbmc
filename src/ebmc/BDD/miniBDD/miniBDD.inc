@@ -1,3 +1,5 @@
+#include <cassert>
+
 // inline functions
 
 BDD::BDD():node(NULL)
