@@ -11,7 +11,7 @@ BDD::BDD(const BDD &x):node(x.node)
   if(node!=NULL) node->add_reference();
 }
 
-BDD::BDD(BDDnode *_node):node(_node)
+BDD::BDD(class node *_node):node(_node)
 {
   if(node!=NULL) node->add_reference();
 }
@@ -77,8 +77,17 @@ const BDD &BDD::high() const
   return node->high;
 }
 
-BDDnode::BDDnode(
-  miniBDD_mgr *_mgr,
+void BDD::clear()
+{
+  if(node!=NULL)
+  {
+    node->remove_reference();
+    node=NULL;
+  }
+}
+
+node::node(
+  class mgr *_mgr,
   unsigned _var, unsigned _node_number,
   const BDD &_low, const BDD &_high):
   mgr(_mgr), var(_var), node_number(_node_number),
@@ -87,27 +96,27 @@ BDDnode::BDDnode(
 {
 }
 
-miniBDD_mgr::var_table_entryt::var_table_entryt(
+mgr::var_table_entryt::var_table_entryt(
   const std::string &_label):label(_label)
 {
 }
 
-const BDD &miniBDD_mgr::True() const
+const BDD &mgr::True() const
 {
   return true_bdd;
 }
 
-const BDD &miniBDD_mgr::False() const
+const BDD &mgr::False() const
 {
   return false_bdd;
 }
   
-void BDDnode::add_reference()
+void node::add_reference()
 {
   reference_counter++;
 }
   
-miniBDD_mgr::reverse_keyt::reverse_keyt(
+mgr::reverse_keyt::reverse_keyt(
   unsigned _var, const BDD &_low, const BDD &_high):
   var(_var), low(_low.node->node_number), high(_high.node->node_number)
 {

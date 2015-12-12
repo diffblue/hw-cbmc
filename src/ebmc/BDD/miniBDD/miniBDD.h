@@ -11,6 +11,9 @@
 #include <map>
 #include <string>
 
+namespace miniBDD
+{
+
 class BDD
 {
 public:
@@ -36,23 +39,22 @@ public:
   inline const BDD &low() const;
   inline const BDD &high() const;
   inline unsigned node_number() const;
-  
-  void clear();
+  inline void clear();
 
   // internal  
-  explicit inline BDD(class BDDnode *_node);
-  class BDDnode *node;
+  explicit inline BDD(class node *_node);
+  class node *node;
 };
 
-class BDDnode
+class node
 {
 public:
-  class miniBDD_mgr *mgr;
+  class mgr *mgr;
   unsigned var, node_number, reference_counter;
   BDD low, high;
   
-  inline BDDnode(
-    class miniBDD_mgr *_mgr,
+  inline node(
+    class mgr *_mgr,
     unsigned _var, unsigned _node_number,
     const BDD &_low, const BDD &_high);
 
@@ -60,11 +62,11 @@ public:
   void remove_reference();
 };
 
-class miniBDD_mgr
+class mgr
 {
 public:
-  miniBDD_mgr();
-  ~miniBDD_mgr();
+  mgr();
+  ~mgr();
 
   BDD Var(const std::string &label);
 
@@ -76,13 +78,13 @@ public:
   inline const BDD &False() const;
   
   friend class BDD;
-  friend class BDDnode;
+  friend class node;
   
   // create a node (consulting the reverse-map)
   BDD mk(unsigned var, const BDD &low, const BDD &high);
 
 protected:
-  typedef std::list<BDDnode> nodest;
+  typedef std::list<node> nodest;
   nodest nodes;
   BDD true_bdd, false_bdd;
   
@@ -105,16 +107,15 @@ protected:
   
   friend bool operator < (const reverse_keyt &x, const reverse_keyt &y);
   
-  typedef std::map<reverse_keyt, BDDnode *> reverse_mapt;
+  typedef std::map<reverse_keyt, node *> reverse_mapt;
   reverse_mapt reverse_map;
 };
 
 BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y);
 
-#define forall_nodes(it) for(nodest::const_iterator it=nodes.begin(); \
-  it!=nodes.end(); it++)
-
 // inline functions
 #include "miniBDD.inc"
+
+} // namespace miniBDD
 
 #endif

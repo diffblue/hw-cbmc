@@ -2,9 +2,11 @@
 
 #include "miniBDD.h"
 
+using namespace miniBDD;
+
 void test1()
 {
-  miniBDD_mgr mgr;
+  mgr mgr;
 
   BDD x=mgr.Var("x");
   BDD y=mgr.Var("y");
@@ -20,7 +22,7 @@ void test1()
 
 void test2()
 {
-  miniBDD_mgr mgr;
+  mgr mgr;
   
   BDD a=mgr.Var("a");
   BDD b=mgr.Var("b");
@@ -39,7 +41,7 @@ void test2()
 
 void test3()
 {
-  miniBDD_mgr mgr;
+  mgr mgr;
   
   BDD final=mgr.Var("x") & mgr.Var("y");
 

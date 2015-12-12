@@ -4,16 +4,13 @@
 
 #include "miniBDD.h"
 
-void BDD::clear()
-{
-  if(node!=NULL)
-  {
-    node->remove_reference();
-    node=NULL;
-  }
-}
+#define forall_nodes(it) for(nodest::const_iterator it=nodes.begin(); \
+  it!=nodes.end(); it++)
 
-void BDDnode::remove_reference()
+namespace miniBDD
+{
+
+void node::remove_reference()
 {
   assert(reference_counter!=0);
   
@@ -21,14 +18,14 @@ void BDDnode::remove_reference()
 
   if(reference_counter==0 && node_number>=2)
   {
-    miniBDD_mgr::reverse_keyt reverse_key(var, low, high);
+    mgr::reverse_keyt reverse_key(var, low, high);
     mgr->reverse_map.erase(reverse_key);
     low.clear();
     high.clear();
   } 
 }
 
-BDD miniBDD_mgr::Var(const std::string &label)
+BDD mgr::Var(const std::string &label)
 {
   var_table.push_back(var_table_entryt(label));
   true_bdd.node->var=var_table.size()+1;
@@ -36,7 +33,7 @@ BDD miniBDD_mgr::Var(const std::string &label)
   return mk(var_table.size(), false_bdd, true_bdd);
 }
 
-void miniBDD_mgr::DumpDot(std::ostream &out, bool suppress_zero) const
+void mgr::DumpDot(std::ostream &out, bool suppress_zero) const
 {
   out << "digraph BDD {\n";
 
@@ -97,7 +94,7 @@ void miniBDD_mgr::DumpDot(std::ostream &out, bool suppress_zero) const
   out << "}\n";
 }
 
-void miniBDD_mgr::DumpTikZ(
+void mgr::DumpTikZ(
   std::ostream &out,
   bool suppress_zero,
   bool node_numbers) const
@@ -219,20 +216,20 @@ BDD BDD::operator |(const BDD &other) const
   return apply(or_fkt, *this, other);
 }
 
-miniBDD_mgr::miniBDD_mgr()
+mgr::mgr()
 {
   // add true/false nodes
-  nodes.push_back(BDDnode(this, 0, 0, BDD(), BDD()));
+  nodes.push_back(node(this, 0, 0, BDD(), BDD()));
   false_bdd=BDD(&nodes.back());
-  nodes.push_back(BDDnode(this, 1, 1, BDD(), BDD()));
+  nodes.push_back(node(this, 1, 1, BDD(), BDD()));
   true_bdd=BDD(&nodes.back());
 }
 
-miniBDD_mgr::~miniBDD_mgr()
+mgr::~mgr()
 {
 }
 
-BDD miniBDD_mgr::mk(unsigned var, const BDD &low, const BDD &high)
+BDD mgr::mk(unsigned var, const BDD &low, const BDD &high)
 {
   assert(var<=var_table.size());
 
@@ -248,15 +245,15 @@ BDD miniBDD_mgr::mk(unsigned var, const BDD &low, const BDD &high)
     else
     {
       unsigned new_number=nodes.back().node_number+1;
-      nodes.push_back(BDDnode(this, var, new_number, low, high));
+      nodes.push_back(node(this, var, new_number, low, high));
       reverse_map[reverse_key]=&nodes.back();
       return BDD(&nodes.back());
     }
   }
 }
 
-bool operator < (const miniBDD_mgr::reverse_keyt &x,
-                 const miniBDD_mgr::reverse_keyt &y)
+bool operator < (const mgr::reverse_keyt &x,
+                 const mgr::reverse_keyt &y)
 {
   if(x.var<y.var) return true;
   if(x.var>y.var) return false;
@@ -265,7 +262,7 @@ bool operator < (const miniBDD_mgr::reverse_keyt &x,
   return x.high<y.high;
 }
 
-void miniBDD_mgr::DumpTable(std::ostream &out) const
+void mgr::DumpTable(std::ostream &out) const
 {
   out << "\\# & \\mathit{var} & \\mathit{low} &"
          " \\mathit{high} \\\\\\hline\n";
@@ -294,7 +291,7 @@ BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y)
   assert(x.node!=NULL && y.node!=NULL);
   assert(x.node->mgr==y.node->mgr);
 
-  miniBDD_mgr *mgr=x.node->mgr;
+  mgr *mgr=x.node->mgr;
   
   BDD u;
 
@@ -321,7 +318,7 @@ BDD restrict(const BDD &u, const unsigned var, const bool value)
   // replace 'var' in 'u' by constant 'value'
 
   assert(u.node!=NULL);
-  miniBDD_mgr *mgr=u.node->mgr;
+  mgr *mgr=u.node->mgr;
 
   if(u.var()>var)
     return u;
@@ -333,3 +330,4 @@ BDD restrict(const BDD &u, const unsigned var, const bool value)
     return restrict(value?u.high():u.low(), var, value);
 }
 
+} // namespace miniBDD
