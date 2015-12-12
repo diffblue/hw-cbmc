@@ -59,10 +59,12 @@ protected:
   void allocate_vars(const var_mapt &);
   void build_trans(const netlistt &);
   
-  static inline BDD aig2bdd(
+  inline BDD aig2bdd(
     literalt l,
-    const std::vector<BDD> &BDDs)
+    const std::vector<BDD> &BDDs) const
   {
+    if(l.is_true()) return mgr.True();
+    if(l.is_false()) return mgr.False();
     assert(l.var_no()<BDDs.size());
     BDD result=BDDs[l.var_no()];
     if(l.sign()) result=!result;
@@ -247,7 +249,7 @@ Function: bdd_enginet::check_property
 
 \*******************************************************************/
 
-void bdd_enginet::check_property(propertyt &property, const BDD &bdd)
+void bdd_enginet::check_property(propertyt &property, const BDD &p)
 {
   status() << "Checking " << property.description << eom;
   property.status=propertyt::statust::UNKNOWN;
@@ -255,17 +257,20 @@ void bdd_enginet::check_property(propertyt &property, const BDD &bdd)
   // Start with !p, and go backwards until saturation or we hit an
   // initial state.
 
-  BDD states=!bdd;
+  BDD states=!p;
   unsigned iteration=0;
 
-  #if 0
   while(true)
   {
     iteration++;
     statistics() << "Iteration " << iteration << eom;
     
     // do we have an initial state?
-    BDD intersection=states&initial_BDD;
+    BDD intersection=states;
+    
+    for(const auto &i : initial_BDDs)
+      intersection=states & i;
+
     if(!intersection.is_false())
     {
       property.status=propertyt::statust::FAILURE;
@@ -277,7 +282,10 @@ void bdd_enginet::check_property(propertyt &property, const BDD &bdd)
     BDD states_next=current_to_next(states);
 
     // now conjoin with transition relation
-    BDD conjunction=transition_BDD & states_next;
+    BDD conjunction=states_next;
+    
+    for(const auto &t : transition_BDDs)
+      conjunction = conjunction & t;
     
     // now project away 'next' variables
     BDD pre_image=project_next(conjunction);
@@ -295,7 +303,6 @@ void bdd_enginet::check_property(propertyt &property, const BDD &bdd)
 
     states=set_union;
   }
-  #endif
 }
 
 /*******************************************************************\
@@ -334,6 +341,13 @@ void bdd_enginet::build_trans(const netlistt &netlist)
       assert(it!=vars.end());
       BDDs[i]=it->second.current;
     }
+  }
+  
+  // add the next-state variable constraints
+  for(const auto &v : vars)
+  {
+    literalt next=netlist.var_map.get_next(v.first);
+    transition_BDDs.push_back(aig2bdd(next, BDDs)==v.second.next);
   }
   
   // initial state conditions
