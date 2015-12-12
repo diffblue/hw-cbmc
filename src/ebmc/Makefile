@@ -4,7 +4,7 @@ SRC = diameter.cpp main.cpp diatest.cpp show_properties.cpp \
       cegar/bmc_cegar.cpp cegar/latch_ordering.cpp \
       cegar/verify.cpp cegar/abstract.cpp cegar/refine.cpp \
       cegar/simulate.cpp \
-      BDD/miniBDD/miniBDD.cpp
+      miniBDD/miniBDD.cpp
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
