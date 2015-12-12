@@ -112,6 +112,7 @@ protected:
 };
 
 BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y);
+BDD restrict(const BDD &u, const unsigned var, const bool value);
 
 // inline functions
 #include "miniBDD.inc"
