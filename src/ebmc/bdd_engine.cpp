@@ -259,6 +259,8 @@ void bdd_enginet::check_property(propertyt &property, const BDD &p)
 
   BDD states=!p;
   unsigned iteration=0;
+  
+  std::size_t peak_bdd_nodes=0;
 
   while(true)
   {
@@ -302,7 +304,12 @@ void bdd_enginet::check_property(propertyt &property, const BDD &p)
     }
 
     states=set_union;
+
+    peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
   }
+
+  statistics() << "Peak BDD nodes: "
+               << peak_bdd_nodes << eom;
 }
 
 /*******************************************************************\
