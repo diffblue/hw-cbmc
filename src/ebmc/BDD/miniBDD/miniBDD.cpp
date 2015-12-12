@@ -1,5 +1,7 @@
 #include <cassert>
 
+#include <iostream>
+
 #include "miniBDD.h"
 
 void BDD::clear()
@@ -315,5 +317,22 @@ BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y)
               apply(fkt, x, y.high()));
     
   return u;
+}
+
+BDD restrict(const BDD &u, const unsigned var, const bool value)
+{
+  // replace 'var' in 'u' by constant 'value'
+
+  assert(u.node!=NULL);
+  miniBDD_mgr *mgr=y.node->mgr;
+
+  if(u.var()>var)
+    return u;
+  else if(u.var()<var)
+    return mgr->mk(u.var(),
+                   restrict(u.low(), var, value),
+                   restrict(u.high(), var, value));
+  else // u.var()==var
+    return restrict(value?u.high():u.low(), var, value);
 }
 
