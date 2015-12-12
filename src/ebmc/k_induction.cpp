@@ -32,7 +32,8 @@ public:
   }
 
   int do_k_induction();
-  
+
+protected:  
   int induction_base();
   int induction_step();
 };
