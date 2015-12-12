@@ -34,8 +34,29 @@ protected:
   miniBDD::mgr mgr;
 
   typedef miniBDD::BDD BDD;
-  std::vector<BDD> transition_BDDs, initial_BDDs, properties_BDDs;
+  std::vector<BDD> initial_BDDs, transition_BDDs, properties_BDDs;
   
+  class vart
+  {
+  public:
+    BDD current, next;
+  };
+  
+  // this is our BDD variable ordering
+  class ordering
+  {
+  public:
+    bool operator()(const bv_varidt &a, const bv_varidt &b) const
+    {
+      if(a.bit_nr==b.bit_nr) return a.id<b.id;
+      return a.bit_nr<b.bit_nr;
+    }
+  };
+  
+  typedef std::map<bv_varidt, vart, ordering> varst;
+  varst vars;
+  
+  void allocate_vars(const var_mapt &);
   void build_trans(const netlistt &);
   
   static inline BDD aig2bdd(
@@ -49,6 +70,9 @@ protected:
   }
   
   void check_property(propertyt &, const BDD &);
+  
+  BDD current_to_next(const BDD &) const;
+  BDD project_next(const BDD &) const;
 };
 
 /*******************************************************************\
@@ -98,6 +122,7 @@ int bdd_enginet::operator()()
 
     status() << "Building BDD for netlist" << eom;
     
+    allocate_vars(netlist.var_map);
     build_trans(netlist);
     
     // netlist no longer needed
@@ -132,6 +157,86 @@ int bdd_enginet::operator()()
 
 /*******************************************************************\
 
+Function: bdd_enginet::allocate_vars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void bdd_enginet::allocate_vars(const var_mapt &var_map)
+{
+  // gather variables according to variable ordering
+  for(auto &it : var_map.map)
+  {
+    if(it.second.is_latch() || it.second.is_input())
+    {
+      for(unsigned bit_nr=0; bit_nr<it.second.bits.size(); bit_nr++)
+      {
+        bv_varidt bv_varid(it.first, bit_nr);
+        vars[bv_varid];
+      }
+    }
+  }
+  
+  // now allocate BBD variables
+  for(auto &it : vars)
+  {
+    std::string s=it.first.as_string();
+    it.second.current=mgr.Var(s);
+    it.second.next=mgr.Var(s+"'");
+  }
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::current_to_next
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_enginet::BDD bdd_enginet::current_to_next(const BDD &bdd) const
+{
+  BDD tmp=bdd;
+
+  for(const auto &v : vars)
+    tmp=substitute(tmp, v.second.current.var(), v.second.next);
+
+  return tmp;
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::project_next
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
+{
+  BDD tmp=bdd;
+
+  for(const auto &v : vars)
+    tmp=exists(tmp, v.second.next.var());
+
+  return tmp;
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::check_property
 
   Inputs:
@@ -150,24 +255,47 @@ void bdd_enginet::check_property(propertyt &property, const BDD &bdd)
   // Start with !p, and go backwards until saturation or we hit an
   // initial state.
 
-  BDD frontier=!bdd;
+  BDD states=!bdd;
   unsigned iteration=0;
 
-  while(!frontier.is_false())
+  #if 0
+  while(true)
   {
     iteration++;
     statistics() << "Iteration " << iteration << eom;
     
-    // make the frontier be expressed 
+    // do we have an initial state?
+    BDD intersection=states&initial_BDD;
+    if(!intersection.is_false())
+    {
+      property.status=propertyt::statust::FAILURE;
+      status() << "Property refuted" << eom;
+      break;
+    }
+    
+    // make the states be expressed in terms of 'next' variables
+    BDD states_next=current_to_next(states);
 
-    BDD pre_image;
-    frontier=mgr.False();
+    // now conjoin with transition relation
+    BDD conjunction=transition_BDD & states_next;
+    
+    // now project away 'next' variables
+    BDD pre_image=project_next(conjunction);
+
+    // compute union
+    BDD set_union=states | pre_image;
+
+    // have we saturated?
+    if((set_union==states).is_true())
+    {
+      property.status=propertyt::statust::SUCCESS;
+      status() << "Property holds" << eom;
+      break;
+    }
+
+    states=set_union;
   }
-  
-  // Frontier empty, property holds
-  property.status=propertyt::statust::SUCCESS;
-  
-  status() << "Property holds" << eom;
+  #endif
 }
 
 /*******************************************************************\
@@ -199,12 +327,12 @@ void bdd_enginet::build_trans(const netlistt &netlist)
     
       BDDs[i]=a & b;
     }
-    else // variable
+    else // current-state variable
     {
-      std::string description=
-        netlist.var_map.reverse(i).as_string();
-         
-      BDDs[i]=mgr.Var(description);
+      bv_varidt id=netlist.var_map.reverse(i);
+      varst::const_iterator it=vars.find(id);
+      assert(it!=vars.end());
+      BDDs[i]=it->second.current;
     }
   }
   
