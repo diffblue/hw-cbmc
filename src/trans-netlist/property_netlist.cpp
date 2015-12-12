@@ -77,7 +77,7 @@ void property(
     {
       literalt l=instantiate_convert(solver, map, p, c, c+1, ns, message_handler);
       prop_bv.back().push_back(l);
-      all_prop.push_back(solver.lnot(l));
+      all_prop.push_back(!l);
     }
   }
 

@@ -332,7 +332,7 @@ bool interpolationt_netlist_vmcai::reached_fixedpoint(
       literalt l = netlist_bmc_map.translate(bound, netlist.properties[p_no]);
       all_prop_bv.push_back(l);
     }
-    l_init = solver.lnot(solver.land(all_prop_bv));
+    l_init = !solver.land(all_prop_bv);
   }
   std::cout << "performing OR\n";
   l_old=solver.lor(l_old, l_init);
@@ -1091,7 +1091,7 @@ void interpolationt_netlist_vmcai::build_backward_partition1(interpolatort &solv
     bmc_mapt bmc_map_inter;
     netlist_bmc_map.build_bmc_map(netlist, bmc_map_inter);
 
-    literalt l_prop = solver.lnot(solver.land(all_prop_bv));
+    literalt l_prop = !solver.land(all_prop_bv);
     or_bv.push_back(l_prop);
 
     literalt l_prev = union_previous_interpolants(bmc_map_inter, solver, false);

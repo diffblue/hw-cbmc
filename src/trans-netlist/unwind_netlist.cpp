@@ -160,7 +160,7 @@ void unwind_property(
         t++)
     {
       literalt l=bmc_map.translate(t, netlist.properties[p]);
-      or_bv.push_back(solver.lnot(l));
+      or_bv.push_back(!l);
       prop_bv.back().push_back(l);
     }
 

@@ -34,7 +34,7 @@ protected:
   miniBDD::mgr mgr;
 
   typedef miniBDD::BDD BDD;
-  std::vector<BDD> transition, initial, properties;
+  std::vector<BDD> transition_BDDs, initial_BDDs, properties_BDDs;
   
   void build_trans(const netlistt &);
   
@@ -47,6 +47,8 @@ protected:
     if(l.sign()) result=!result;
     return result;
   }
+  
+  void check_property(propertyt &, const BDD &);
 };
 
 /*******************************************************************\
@@ -116,7 +118,56 @@ int bdd_enginet::operator()()
     return 1;
   }
 
+  unsigned p_nr=0;
+  for(propertyt &p : properties)
+  {
+    check_property(p, properties_BDDs[p_nr]);
+    p_nr++;
+  }
+  
+  report_results();
+
   return 0;
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::check_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void bdd_enginet::check_property(propertyt &property, const BDD &bdd)
+{
+  status() << "Checking " << property.description << eom;
+  property.status=propertyt::statust::UNKNOWN;
+
+  // Start with !p, and go backwards until saturation or we hit an
+  // initial state.
+
+  BDD frontier=!bdd;
+  unsigned iteration=0;
+
+  while(!frontier.is_false())
+  {
+    iteration++;
+    statistics() << "Iteration " << iteration << eom;
+    
+    // make the frontier be expressed 
+
+    BDD pre_image;
+    frontier=mgr.False();
+  }
+  
+  // Frontier empty, property holds
+  property.status=propertyt::statust::SUCCESS;
+  
+  status() << "Property holds" << eom;
 }
 
 /*******************************************************************\
@@ -159,13 +210,13 @@ void bdd_enginet::build_trans(const netlistt &netlist)
   
   // initial state conditions
   for(literalt l : netlist.initial)
-    initial.push_back(aig2bdd(l, BDDs));
+    initial_BDDs.push_back(aig2bdd(l, BDDs));
     
   // transition conditions
   for(literalt l : netlist.transition)
-    transition.push_back(aig2bdd(l, BDDs));
+    transition_BDDs.push_back(aig2bdd(l, BDDs));
     
   // properties
   for(literalt l : netlist.properties)
-    properties.push_back(aig2bdd(l, BDDs));
+    properties_BDDs.push_back(aig2bdd(l, BDDs));
 }

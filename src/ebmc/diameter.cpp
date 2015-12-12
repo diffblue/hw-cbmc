@@ -64,7 +64,7 @@ literalt simple_diameter(propt &solver, const std::vector<bvt> &states)
     for(unsigned j=i+1; j<states.size(); j++)
       comparators.push_back(comparator(solver, states[i], states[j]));
 
-  return solver.lnot(solver.lor(comparators));
+  return !solver.lor(comparators);
 }
 
 /*******************************************************************\
@@ -461,5 +461,5 @@ literalt efficient_diameter(propt &solver, const std::vector<bvt> &states)
     comparators[i]=
     comparator(solver, sorted_states[i], sorted_states[i+1]);
 
-  return solver.lnot(solver.lor(comparators));
+  return !solver.lor(comparators);
 }
