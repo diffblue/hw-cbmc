@@ -22,6 +22,7 @@ void node::remove_reference()
     mgr->reverse_map.erase(reverse_key);
     low.clear();
     high.clear();
+    mgr->free.push(this);
   } 
 }
 
@@ -244,10 +245,25 @@ BDD mgr::mk(unsigned var, const BDD &low, const BDD &high)
       return BDD(it->second);
     else
     {
-      unsigned new_number=nodes.back().node_number+1;
-      nodes.push_back(node(this, var, new_number, low, high));
-      reverse_map[reverse_key]=&nodes.back();
-      return BDD(&nodes.back());
+      node *n;
+
+      if(free.empty())
+      {
+        unsigned new_number=nodes.back().node_number+1;
+        nodes.push_back(node(this, var, new_number, low, high));
+        n=&nodes.back();
+      }
+      else // reuse a node
+      {
+        n=free.top();
+        free.pop();
+        n->var=var;
+        n->low=low;
+        n->high=high;
+      }
+      
+      reverse_map[reverse_key]=n;
+      return BDD(n);
     }
   }
 }

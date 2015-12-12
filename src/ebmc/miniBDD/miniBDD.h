@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <stack>
 
 namespace miniBDD
 {
@@ -82,7 +83,9 @@ public:
   
   // create a node (consulting the reverse-map)
   BDD mk(unsigned var, const BDD &low, const BDD &high);
-
+  
+  inline std::size_t number_of_nodes();
+  
 protected:
   typedef std::list<node> nodest;
   nodest nodes;
@@ -109,6 +112,9 @@ protected:
   
   typedef std::map<reverse_keyt, node *> reverse_mapt;
   reverse_mapt reverse_map;
+  
+  typedef std::stack<node *> freet;
+  freet free;
 };
 
 BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y);
