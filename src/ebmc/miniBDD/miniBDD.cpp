@@ -346,4 +346,21 @@ BDD restrict(const BDD &u, const unsigned var, const bool value)
     return restrict(value?u.high():u.low(), var, value);
 }
 
+BDD exists(const BDD &u, const unsigned var)
+{
+  // u[var/0] OR u[var/1]
+  return restrict(u, var, false) |
+         restrict(u, var, true);
+}
+
+BDD substitute(const BDD &t, unsigned var, const BDD &tp)
+{
+  // t[var/tp] =
+  //  ( tp & t[var/1]) |
+  //  (!tp & t[var/0])
+
+  return ( tp & restrict(t, var, true)) |
+         (!tp & restrict(t, var, false));
+}
+
 } // namespace miniBDD
