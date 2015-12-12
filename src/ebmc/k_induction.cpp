@@ -31,7 +31,7 @@ public:
   {
   }
 
-  int do_k_induction();
+  int operator()();
 
 protected:  
   int induction_base();
@@ -52,9 +52,7 @@ Function: do_k_induction
 
 int do_k_induction(const cmdlinet &cmdline)
 {
-  k_inductiont k_induction(cmdline);
-  
-  return k_induction.do_k_induction();
+  return k_inductiont(cmdline)();
 }
 
 /*******************************************************************\
@@ -69,7 +67,7 @@ Function: k_inductiont::do_k_induction
 
 \*******************************************************************/
 
-int k_inductiont::do_k_induction()
+int k_inductiont::operator()()
 {
   if(get_bound()) return 1;
 
