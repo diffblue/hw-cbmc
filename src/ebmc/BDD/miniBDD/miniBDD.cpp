@@ -299,7 +299,7 @@ BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y)
   BDD u;
 
   if(x.is_constant() && y.is_constant())
-    u=BDD(fkt(x.is_true(), y.is_true())?mgr->true_bdd:mgr->false_bdd);
+    u=BDD(fkt(x.is_true(), y.is_true())?mgr->True():mgr->False());
   else if(x.var()==y.var())
     u=mgr->mk(x.var(),
               apply(fkt, x.low(), y.low()),
@@ -321,7 +321,7 @@ BDD restrict(const BDD &u, const unsigned var, const bool value)
   // replace 'var' in 'u' by constant 'value'
 
   assert(u.node!=NULL);
-  miniBDD_mgr *mgr=y.node->mgr;
+  miniBDD_mgr *mgr=u.node->mgr;
 
   if(u.var()>var)
     return u;

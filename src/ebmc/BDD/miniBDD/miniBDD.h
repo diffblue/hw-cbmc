@@ -28,9 +28,6 @@ public:
   // copy operator
   inline BDD &operator=(const BDD &);
   
-  friend class miniBDD_mgr;
-  friend BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y);
-  
   inline bool is_constant() const;
   inline bool is_true() const;
   inline bool is_false() const;
@@ -41,8 +38,8 @@ public:
   inline unsigned node_number() const;
   
   void clear();
-  
-protected:
+
+  // internal  
   explicit inline BDD(class BDDnode *_node);
   class BDDnode *node;
 };
@@ -75,12 +72,15 @@ public:
   void DumpTikZ(std::ostream &out, bool supress_zero=false, bool node_numbers=true) const;
   void DumpTable(std::ostream &out) const;
 
-  inline const BDD &True();
-  inline const BDD &False();
+  inline const BDD &True() const;
+  inline const BDD &False() const;
   
   friend class BDD;
   friend class BDDnode;
   
+  // create a node (consulting the reverse-map)
+  BDD mk(unsigned var, const BDD &low, const BDD &high);
+
 protected:
   typedef std::list<BDDnode> nodest;
   nodest nodes;
@@ -103,15 +103,10 @@ protected:
       unsigned _var, const BDD &_low, const BDD &_high);
   };
   
+  friend bool operator < (const reverse_keyt &x, const reverse_keyt &y);
+  
   typedef std::map<reverse_keyt, BDDnode *> reverse_mapt;
   reverse_mapt reverse_map;
-  
-  friend bool operator < (const reverse_keyt &x, const reverse_keyt &y);
-
-  // create a node (consulting the reverse-map)
-  BDD mk(unsigned var, const BDD &low, const BDD &high);
-
-  friend BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y);
 };
 
 BDD apply(bool (*fkt)(bool x, bool y), const BDD &x, const BDD &y);

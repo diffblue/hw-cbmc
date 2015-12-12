@@ -92,12 +92,12 @@ miniBDD_mgr::var_table_entryt::var_table_entryt(
 {
 }
 
-const BDD &miniBDD_mgr::True()
+const BDD &miniBDD_mgr::True() const
 {
   return true_bdd;
 }
 
-const BDD &miniBDD_mgr::False()
+const BDD &miniBDD_mgr::False() const
 {
   return false_bdd;
 }
