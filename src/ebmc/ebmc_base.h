@@ -69,8 +69,9 @@ protected:
     irep_idt mode;
     exprt expr;
     std::string description;
+    enum class outcomet { PASS, FAIL, UNKNOWN } outcome;
     
-    propertyt()
+    propertyt():outcome(outcomet::UNKNOWN)
     {
     }
   };
