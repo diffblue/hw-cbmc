@@ -6,14 +6,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
-#if 0
-#include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/property_word_level.h>
-#include <trans-word-level/trans_trace_word_level.h>
-
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/boolbv.h>
-#endif
+#include <iostream>
 
 #include "miniBDD/miniBDD.h"
 
@@ -90,12 +83,6 @@ int bdd_enginet::operator()()
   int result=get_model();
   if(result!=-1) return result;
 
-  if(properties.empty())
-  {
-    error() << "no properties" << eom;
-    return 1;
-  }
-
   {  
     status() << "Building netlist" << eom;
 
@@ -112,6 +99,21 @@ int bdd_enginet::operator()()
     build_trans(netlist);
     
     // netlist no longer needed
+  }
+  
+  statistics() << "BDD nodes: "
+               << mgr.number_of_nodes() << eom;
+  
+  if(cmdline.isset("show-bdds"))
+  {
+    mgr.DumpTable(std::cout);
+    return 0;
+  }
+
+  if(properties.empty())
+  {
+    error() << "no properties" << eom;
+    return 1;
   }
 
   return 0;

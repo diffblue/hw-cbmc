@@ -98,7 +98,8 @@ int ebmc_parse_optionst::doit()
   if(cmdline.isset("k-induction"))
     return do_k_induction(cmdline);
 
-  if(cmdline.isset("bdd"))
+  if(cmdline.isset("bdd") ||
+     cmdline.isset("show-bdds"))
     return do_bdd(cmdline);
 
  if(cmdline.isset("interpolation-word"))

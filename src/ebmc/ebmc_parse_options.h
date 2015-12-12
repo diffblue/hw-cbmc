@@ -21,7 +21,7 @@ public:
     parse_options_baset("(diameter)(ediameter)"
     "(diatest)(statebits):(bound):"
     "(show-parse)(show-varmap)(show-symbol-table)(show-netlist)"
-    "(show-ldg)(show-modules)(show-trans)"
+    "(show-ldg)(show-modules)(show-trans)(show-bdds)"
     "(show-properties)(property):p:"
     "(dimacs)(module):(top):"
     "(po)(cegar)(k-induction)(2pi)(bound2):"
