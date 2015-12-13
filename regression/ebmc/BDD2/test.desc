@@ -1,0 +1,8 @@
+CORE
+main.sv
+--module main --bdd
+^EXIT=0$
+^SIGNAL=0$
+^\[Verilog::main.property.my_prop1\] assertion Verilog::main.property.my_prop1: SUCCESS$
+^\[Verilog::main.property.my_prop2\] assertion Verilog::main.property.my_prop2: FAILURE$
+--
