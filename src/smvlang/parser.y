@@ -423,7 +423,7 @@ term       : variable_name
            | DEC_Token '(' term ')' { init($$, "dec"); mto($$, $3); }
            | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
            | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
-           | NUMBER_Token { init($$, "number_constant"); stack($$).set(ID_value, stack($1).id()); }
+           | NUMBER_Token { init($$, ID_constant); stack($$).set(ID_value, stack($1).id()); stack($$).type()=typet(ID_integer); }
            | CASE_Token cases ESAC_Token { $$=$2; }
            | SWITCH_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            | MINUS_Token term %prec UMINUS { init($$, ID_unary_minus); mto($$, $2); }

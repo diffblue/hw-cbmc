@@ -731,9 +731,62 @@ void smv_typecheckt::typecheck(
   }
   else if(expr.id()==ID_constant)
   {
-    // already done, but maybe need to change the type
-    if(type.is_not_nil() && type!=expr.type())
+    if(expr.type().id()==ID_integer)
     {
+      const std::string &value=expr.get_string(ID_value);
+
+      mp_integer int_value=string2integer(value);
+
+      if(type.is_nil())
+      {
+        expr.type()=typet(ID_range);
+        expr.type().set(ID_from, integer2string(int_value));
+        expr.type().set(ID_to, integer2string(int_value));
+        expr.id(ID_constant);
+      }
+      else
+      {
+        expr.type()=type;
+
+        if(type.id()==ID_bool)
+        {
+          if(int_value==0)
+            expr=false_exprt();
+          else if(int_value==1)
+            expr=true_exprt();
+          else
+          {
+            err_location(expr);
+            str << "expected 0 or 1 here, but got " << value;
+            throw 0;
+          }
+        }
+        else if(type.id()==ID_range)
+        {
+          smv_ranget smv_range;
+          convert_type(type, smv_range);
+
+          if(int_value<smv_range.from || int_value>smv_range.to)
+          {
+            err_location(expr);
+            str << "expected " << smv_range.from << ".." << smv_range.to 
+                << " here, but got " << value;
+            throw 0;
+          }
+
+          expr.id(ID_constant);
+        }
+        else
+        {
+          err_location(expr);
+          str << "Unexpected constant: " << value;
+          throw 0;
+        }
+      }
+    }
+    else if(type.is_not_nil() && type!=expr.type())
+    {
+      // already done, but maybe need to change the type
       mp_integer int_value;
       bool have_int_value=false;
       
@@ -768,59 +821,6 @@ void smv_typecheckt::typecheck(
             expr.set(ID_value, integer2string(int_value));
           }
         }
-      }
-    }
-  }
-  else if(expr.id()=="number_constant")
-  {
-    const std::string &value=expr.get_string(ID_value);
-
-    mp_integer int_value=string2integer(value);
-
-    if(type.is_nil())
-    {
-      expr.type()=typet(ID_range);
-      expr.type().set(ID_from, integer2string(int_value));
-      expr.type().set(ID_to, integer2string(int_value));
-      expr.id(ID_constant);
-    }
-    else
-    {
-      expr.type()=type;
-
-      if(type.id()==ID_bool)
-      {
-        if(int_value==0)
-          expr=false_exprt();
-        else if(int_value==1)
-          expr=true_exprt();
-        else
-        {
-          err_location(expr);
-          str << "expected 0 or 1 here, but got " << value;
-          throw 0;
-        }
-      }
-      else if(type.id()==ID_range)
-      {
-        smv_ranget smv_range;
-        convert_type(type, smv_range);
-
-        if(int_value<smv_range.from || int_value>smv_range.to)
-        {
-          err_location(expr);
-          str << "expected " << smv_range.from << ".." << smv_range.to 
-              << " here, but got " << value;
-          throw 0;
-        }
-
-        expr.id(ID_constant);
-      }
-      else
-      {
-        err_location(expr);
-        str << "Unexpected constant: " << value;
-        throw 0;
       }
     }
   }
