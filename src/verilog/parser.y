@@ -638,7 +638,7 @@ data_type:
 	  '{' struct_union_member_list '}' packed_dimension_brace
 	        { /* todo */ }
 	| TOK_ENUM enum_base_type_opt '{' enum_name_declaration_list '}'
-	        { init($$, ID_enum); }
+	        { init($$, ID_c_enum); }
 	| TOK_STRING
 	        { init($$, ID_string); }
 	| TOK_CHANDLE
