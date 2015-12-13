@@ -550,7 +550,7 @@ void smv_typecheckt::type_union(
   if((type1.id()==ID_bool || type2.id()==ID_bool) &&
      range1.is_bool())
   {
-    dest=typet(ID_bool);
+    dest=bool_typet();
   }
   else
     range1.to_type(dest);
@@ -610,7 +610,7 @@ void smv_typecheckt::typecheck(
           expr.id()==ID_xor ||
           expr.id()==ID_not)
   {
-    typecheck_op(expr, typet(ID_bool), mode);
+    typecheck_op(expr, bool_typet(), mode);
   }
   else if(expr.id()==ID_nondet_symbol)
   {
@@ -645,7 +645,7 @@ void smv_typecheckt::typecheck(
       throw 0;
     }
 
-    typecheck_op(expr, typet(ID_bool), mode);
+    typecheck_op(expr, bool_typet(), mode);
   }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal ||
           expr.id()==ID_lt || expr.id()==ID_le ||
@@ -661,7 +661,7 @@ void smv_typecheckt::typecheck(
       throw 0;
     }
 
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
 
     exprt &op0=expr.op0(),
           &op1=expr.op1();
@@ -836,7 +836,7 @@ void smv_typecheckt::typecheck(
       Forall_operands(it, expr)
       {
         if(condition)
-          typecheck(*it, typet(ID_bool), mode);
+          typecheck(*it, bool_typet(), mode);
         else
         {
           typecheck(*it, static_cast<const typet &>(get_nil_irep()), mode);
@@ -855,7 +855,7 @@ void smv_typecheckt::typecheck(
       Forall_operands(it, expr)
       {
         if(condition)
-          typecheck(*it, typet(ID_bool), mode);
+          typecheck(*it, bool_typet(), mode);
         else
           typecheck(*it, expr.type(), mode);
 
@@ -869,12 +869,12 @@ void smv_typecheckt::typecheck(
     if(expr.operands().size()!=1)
     {
       err_location(expr);
-      str << "Expected one operand for " << expr.id_string()
+      str << "Expected one operand for " << expr.id()
           << " operator";
       throw 0;
     }
 
-    expr.type()=typet(ID_bool);
+    expr.type()=bool_typet();
 
     typecheck(expr.op0(), expr.type(), mode);
   }
@@ -1381,7 +1381,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.base_name=smv_module.base_name;
         spec_symbol.name=id2string(smv_module.name)+"::spec"+i2string(nr++);
         spec_symbol.module=smv_module.name;
-        spec_symbol.type=typet(ID_bool);
+        spec_symbol.type=bool_typet();
         spec_symbol.is_property=true;
         spec_symbol.mode="SMV";
         spec_symbol.value=it->expr;
