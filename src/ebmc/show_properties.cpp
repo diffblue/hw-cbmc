@@ -54,7 +54,7 @@ void ebmc_baset::show_properties()
       break;
   
     case ui_message_handlert::PLAIN:
-      std::cout << "Property " << p << ": " << p_it->expr_string
+      std::cout << p_it->name << ": " << p_it->expr_string
                 << '\n';
       break;
 

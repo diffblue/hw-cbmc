@@ -460,27 +460,27 @@ bool ebmc_baset::get_model_properties()
   if(cmdline.isset("property"))
   {
     std::string property=cmdline.get_value("property");
+
+    unsigned p_nr=0;
+
+    for(propertiest::const_iterator p_it=properties.begin();
+        p_it!=properties.end();
+        p_it++, p_nr++)
+      if(p_it->name==property)
+        break;
     
-    if(property=="" || !isdigit(property[0]))
+    if(p_nr==properties.size())
     {
-      error() << "Property is expected to be a number" << eom;
-      return true;
-    }
-  
-    unsigned c=unsafe_string2unsigned(property);
-    if(c<1 || c>properties.size())
-    {
-      error() << "Property number " << c << " out of range" << eom;
+      error() << "Property " << property << " not found" << eom;
       return true;
     }
 
-    unsigned p_nr=1;
     for(prop_expr_listt::iterator
         it=prop_expr_list.begin();
         it!=prop_expr_list.end();
-        it++, p_nr++)
+        it++, p_nr--)
     {
-      if(p_nr!=c) it->make_true();
+      if(p_nr==0) { it->make_true(); break; }
     }
   }
   
@@ -1029,7 +1029,7 @@ void ebmc_baset::report_results()
     for(const propertyt &property : properties)
     {
       status() << "[" << property.name << "] "
-               << property.description << ": ";
+               << property.expr_string << ": ";
 
       switch(property.status)
       {
