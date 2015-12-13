@@ -107,7 +107,7 @@ protected:
     }
   };
   
-  void convert_type(const typet &type, smv_ranget &dest);
+  smv_ranget convert_type(const typet &type);
   void convert(smv_parse_treet::modulet::itemt &item);
   void typecheck(smv_parse_treet::modulet::itemt &item);
 
@@ -491,8 +491,10 @@ Function: smv_typecheckt::convert_type
 
 \*******************************************************************/
 
-void smv_typecheckt::convert_type(const typet &src, smv_ranget &dest)
+smv_typecheckt::smv_ranget smv_typecheckt::convert_type(const typet &src)
 {
+  smv_ranget dest;
+  
   if(src.id()==ID_bool)
   {
     dest.from=0;
@@ -521,6 +523,8 @@ void smv_typecheckt::convert_type(const typet &src, smv_ranget &dest)
     str << "Unexpected type: `" << to_string(src) << "'";
     throw 0;
   }
+  
+  return dest;
 }
 
 /*******************************************************************\
@@ -544,10 +548,19 @@ typet smv_typecheckt::type_union(
 
   if(type2.is_nil())
     return type1;
+    
+  // both enums?
+  if(type1.id()==ID_enum && type2.id()==ID_enum)
+  {
+    if(type2.find(ID_elements).get_sub().empty())
+      return type1;
   
-  smv_ranget range1, range2;
-  convert_type(type1, range1);
-  convert_type(type2, range2);
+    if(type1.find(ID_elements).get_sub().empty())
+      return type2;
+  }
+  
+  smv_ranget range1=convert_type(type1);
+  smv_ranget range2=convert_type(type2);
 
   range1.make_union(range2);
   
@@ -706,8 +719,7 @@ void smv_typecheckt::typecheck(
 
         forall_operands(it, expr)
         {
-          smv_ranget smv_range;
-          convert_type(it->type(), smv_range);
+          smv_ranget smv_range=convert_type(it->type());
 
           if(minus && !first)
           {
@@ -768,8 +780,7 @@ void smv_typecheckt::typecheck(
         }
         else if(type.id()==ID_range)
         {
-          smv_ranget smv_range;
-          convert_type(type, smv_range);
+          smv_ranget smv_range=convert_type(type);
 
           if(int_value<smv_range.from || int_value>smv_range.to)
           {
@@ -894,9 +905,8 @@ void smv_typecheckt::typecheck(
 
   if(!type.is_nil() && expr.type()!=type)
   {
-    smv_ranget e, t;
-    convert_type(expr.type(), e);
-    convert_type(type, t);
+    smv_ranget e=convert_type(expr.type());
+    smv_ranget t=convert_type(type);
 
     if(e.is_contained_in(t))
     {
