@@ -368,7 +368,8 @@ bool expr2smvt::convert_constant(
   }
   else if(type.id()==ID_integer ||
           type.id()==ID_natural ||
-          type.id()==ID_range)
+          type.id()==ID_range ||
+          type.id()==ID_enum)
     dest=value;
   else
     return convert_norep(src, dest, precedence);

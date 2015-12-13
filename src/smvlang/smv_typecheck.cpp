@@ -543,6 +543,8 @@ typet smv_typecheckt::type_union(
   const typet &type1,
   const typet &type2)
 {
+  if(type1==type2) return type1;
+
   if(type1.is_nil())
     return type2;
 
@@ -751,7 +753,6 @@ void smv_typecheckt::typecheck(
     if(expr.type().id()==ID_integer)
     {
       const std::string &value=expr.get_string(ID_value);
-
       mp_integer int_value=string2integer(value);
 
       if(type.is_nil())
@@ -759,7 +760,6 @@ void smv_typecheckt::typecheck(
         expr.type()=typet(ID_range);
         expr.type().set(ID_from, integer2string(int_value));
         expr.type().set(ID_to, integer2string(int_value));
-        expr.id(ID_constant);
       }
       else
       {
@@ -789,8 +789,6 @@ void smv_typecheckt::typecheck(
                 << " here, but got " << value;
             throw 0;
           }
-
-          expr.id(ID_constant);
         }
         else
         {
@@ -798,6 +796,14 @@ void smv_typecheckt::typecheck(
           str << "Unexpected constant: " << value;
           throw 0;
         }
+      }
+    }
+    else if(expr.type().id()==ID_enum)
+    {
+      if(type.id()==ID_enum)
+      {
+        if(expr.type().find(ID_elements).get_sub().empty())
+          expr.type()=type;
       }
     }
     else if(type.is_not_nil() && type!=expr.type())
@@ -813,7 +819,7 @@ void smv_typecheckt::typecheck(
       }
       else if(expr.type().id()==ID_range)
       {
-        int_value=string2integer(id2string(expr.get(ID_value)));
+        int_value=string2integer(expr.get_string(ID_value));
         have_int_value=true;
       }
 
@@ -890,7 +896,7 @@ void smv_typecheckt::typecheck(
     }
 
     expr.type()=bool_typet();
-
+    
     typecheck(expr.op0(), expr.type(), mode);
   }
   else if(expr.id()==ID_typecast)
