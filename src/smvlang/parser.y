@@ -467,7 +467,7 @@ variable_name: qstring_list
              }
              else if(is_enum)
              {
-               init($$, "enum_constant");
+               init($$, ID_constant);
                stack($$).type()=typet(ID_enum);
                stack($$).set(ID_value, stack($1).id());
              }
