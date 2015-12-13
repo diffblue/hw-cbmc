@@ -474,13 +474,15 @@ bool ebmc_baset::get_model_properties()
       error() << "Property " << property << " not found" << eom;
       return true;
     }
+    
+    unsigned i=0;
 
     for(prop_expr_listt::iterator
         it=prop_expr_list.begin();
         it!=prop_expr_list.end();
-        it++, p_nr--)
+        it++, i++)
     {
-      if(p_nr==0) { it->make_true(); break; }
+      if(i!=p_nr) it->make_true();
     }
   }
   
