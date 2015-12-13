@@ -46,11 +46,12 @@ int ebmc_parse_optionst::doit()
     return 0;
   }
 
-  #if 0
   if(cmdline.isset("diatest"))
   {
-    if(get_bound()) return 1;
+    std::cout << "This option is currently disabled\n";
+    return 1;
 
+    #if 0
     if(!cmdline.isset("statebits"))
     {
       error("error: must provide number of state bits");
@@ -61,11 +62,14 @@ int ebmc_parse_optionst::doit()
     diatest(bound, atoi(cmdline.getval("statebits")));
 
     return 0;
+    #endif
   }
-  #endif
   
   if(cmdline.isset("cegar"))
   {
+    std::cout << "This option is currently disabled\n";
+    return 1;
+
     #if 0
     namespacet ns(symbol_table);
     var_mapt var_map(symbol_table, main_symbol->name);
@@ -78,21 +82,24 @@ int ebmc_parse_optionst::doit()
       prop_expr_list);
 
     bmc_cegar.bmc_cegar();
-    #endif
     return 0;
+    #endif
   }
 
   if(cmdline.isset("coverage"))
   {
-#ifdef HAVE_INTERPOLATION
+    std::cout << "This option is currently disabled\n";
+    return 1;
+
+    #if 0
     std::cout << "found coverage\n";
-//    return do_coverage(cmdline);
-//    if(do_coverage)
-//    {
+    //    return do_coverage(cmdline);
+    //    if(do_coverage)
+    //    {
       coveraget coverage(cmdline);
       return coverage.measure_coverage();
-//    }
-#endif
+    //    }
+    #endif
   }
   
   if(cmdline.isset("k-induction"))
@@ -102,41 +109,41 @@ int ebmc_parse_optionst::doit()
      cmdline.isset("show-bdds"))
     return do_bdd(cmdline);
 
- if(cmdline.isset("interpolation-word"))
+  if(cmdline.isset("interpolation-word"))
   {
-  std::cout << "This option is currently disabled\n";
-  return 1;
-//#ifdef HAVE_INTERPOLATION
-//    return do_interpolation_word(cmdline);
-//#else
-//    language_uit language_ui("EBMC " EBMC_VERSION, cmdline);
-//    language_ui.error("No support for interpolation linked in");
-//    return 1; 
-//#endif
+    std::cout << "This option is currently disabled\n";
+    return 1;
+    //#ifdef HAVE_INTERPOLATION
+    //    return do_interpolation_word(cmdline);
+    //#else
+    //    language_uit language_ui("EBMC " EBMC_VERSION, cmdline);
+    //    language_ui.error("No support for interpolation linked in");
+    //    return 1; 
+    //#endif
   }
 
   if(cmdline.isset("interpolation-vmcai"))
   {
-std::cout << "This option is currently disabled\n";
-  return 1;
+    std::cout << "This option is currently disabled\n";
+    return 1;
 
-/*    #ifdef HAVE_INTERPOLATION
+    /*    #ifdef HAVE_INTERPOLATION
     return do_interpolation_netlist_vmcai(cmdline);
     #else
     language_uit language_ui(cmdline);
     language_ui.error("No support for interpolation linked in");
     return 1; 
     #endif
-*/
+    */
   }
 
   if(cmdline.isset("interpolation"))
   {
     #ifdef HAVE_INTERPOLATION
-      //  if(cmdline.isset("no-netlist"))
-//      return do_interpolation(cmdline);
-//    else
-      return do_interpolation_netlist(cmdline);
+    //  if(cmdline.isset("no-netlist"))
+    //      return do_interpolation(cmdline);
+    //    else
+    return do_interpolation_netlist(cmdline);
     #else
     language_uit language_ui("EBMC " EBMC_VERSION, cmdline);
     language_ui.error() << "No support for interpolation linked in" << messaget::eom;
@@ -144,7 +151,7 @@ std::cout << "This option is currently disabled\n";
     #endif
   }
 
-/*  if(cmdline.isset("compute-interpolant"))
+  /*  if(cmdline.isset("compute-interpolant"))
   {
     #ifdef HAVE_INTERPOLATION
     return compute_interpolant(cmdline);
@@ -154,7 +161,8 @@ std::cout << "This option is currently disabled\n";
     return 1; 
     #endif
   }
-*/
+  */
+
   if(cmdline.isset("2pi"))
   {
     // return do_two_phase_induction();
