@@ -439,7 +439,7 @@ bool expr2smvt::convert(
   else if(src.id()==ID_implies)
     return convert_binary(src, dest, "->", precedence=2);
 
-  else if(src.id()=="<=>")
+  else if(src.id()==ID_iff)
     return convert_binary(src, dest, "<->", precedence=3);
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
@@ -539,7 +539,7 @@ bool type2smv(const typet &type, std::string &code)
   }
   else if(type.id()==ID_enum)
   {
-    const irept &elements=type.find("elements");
+    const irept &elements=type.find(ID_elements);
     code="{ ";
     bool first=true;
     forall_irep(it, elements.get_sub())
