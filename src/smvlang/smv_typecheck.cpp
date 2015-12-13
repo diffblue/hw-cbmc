@@ -124,10 +124,9 @@ protected:
     const exprt::operandst &operands,
     const irept &location);
     
-  void type_union(
+  typet type_union(
     const typet &type1,
-    const typet &type2,
-    typet &dest);
+    const typet &type2);
 
   typedef std::map<irep_idt, exprt> rename_mapt;
 
@@ -536,22 +535,15 @@ Function: smv_typecheckt::type_union
 
 \*******************************************************************/
 
-void smv_typecheckt::type_union(
+typet smv_typecheckt::type_union(
   const typet &type1,
-  const typet &type2,
-  typet &dest)
+  const typet &type2)
 {
   if(type1.is_nil())
-  {
-    dest=type2;
-    return;
-  }
+    return type2;
 
   if(type2.is_nil())
-  {
-    dest=type1;
-    return;
-  }
+    return type1;
   
   smv_ranget range1, range2;
   convert_type(type1, range1);
@@ -562,10 +554,14 @@ void smv_typecheckt::type_union(
   if((type1.id()==ID_bool || type2.id()==ID_bool) &&
      range1.is_bool())
   {
-    dest=bool_typet();
+    return bool_typet();
   }
   else
-    range1.to_type(dest);
+  {
+    typet tmp;
+    range1.to_type(tmp);
+    return tmp;
+  }
 }
 
 /*******************************************************************\
@@ -638,8 +634,7 @@ void smv_typecheckt::typecheck(
 
     forall_operands(it, expr)
     {
-      typet tmp;
-      type_union(it->type(), op_type, tmp);
+      typet tmp=type_union(it->type(), op_type);
       op_type=tmp;
     }
     
@@ -678,9 +673,7 @@ void smv_typecheckt::typecheck(
     exprt &op0=expr.op0(),
           &op1=expr.op1();
           
-    typet op_type;
-
-    type_union(op0.type(), op1.type(), op_type);
+    typet op_type=type_union(op0.type(), op1.type());
     
     typecheck(op0, op_type, mode);
     typecheck(op1, op_type, mode);
@@ -851,7 +844,7 @@ void smv_typecheckt::typecheck(
         else
         {
           typecheck(*it, static_cast<const typet &>(get_nil_irep()), mode);
-          type_union(expr.type(), it->type(), expr.type());
+          expr.type()=type_union(expr.type(), it->type());
         }
 
         condition=!condition;
