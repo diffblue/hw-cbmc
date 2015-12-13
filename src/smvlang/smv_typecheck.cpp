@@ -455,7 +455,7 @@ void smv_typecheckt::typecheck_op(
   if(expr.operands().size()==0)
   {
     err_location(expr);
-    str << "Expected operands for " << expr.id_string()
+    str << "Expected operands for " << expr.id()
         << " operator";
     throw 0;
   }
@@ -1009,7 +1009,7 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
     if(expr.operands().size()<1)
     {
       err_location(expr);
-      str << "Expected at least one operand for " << expr.id_string()
+      str << "Expected at least one operand for " << expr.id()
           << " expression";
       throw 0;
     }
