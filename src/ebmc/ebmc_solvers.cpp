@@ -12,8 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/i2string.h>
 #include <util/cmdline.h>
 
-#include <trans-netlist/compute_ct.h>
-
 #include <solvers/cvc/cvc_dec.h>
 #include <solvers/dplib/dplib_dec.h>
 #include <solvers/smt1/smt1_dec.h>
@@ -380,37 +378,3 @@ int ebmc_baset::do_lifter()
   return 1;
   #endif
 }
-
-/*******************************************************************\
-
-Function: ebmc_baset::do_compute_ct
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::do_compute_ct()
-{
-  // make net-list
-  status() << "Making Netlist" << eom;
-
-  netlistt netlist;
-  if(make_netlist(netlist)) return 1;
-
-  status() << "Latches: " << netlist.var_map.latches.size()
-           << ", nodes: " << netlist.number_of_nodes() << eom;
-
-  status() << "Making LDG" << eom;
-  
-  ldgt ldg;
-  ldg.compute(netlist);
-
-  std::cout << "CT = " << compute_ct(ldg) << '\n';
-  
-  return 0;
-}
-

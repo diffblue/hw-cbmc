@@ -18,12 +18,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/cmdline.h>
 #include <util/string2int.h>
 #include <util/expr_util.h>
+#include <util/decision_procedure.h>
 
-#include <solvers/flattening/boolbv.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
+#include <trans-netlist/compute_ct.h>
+
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/property_word_level.h>
 #include <trans-word-level/unwind.h>
@@ -953,6 +955,39 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
                << ", nodes: " << netlist.number_of_nodes() << eom;
            
   return false;
+}
+
+/*******************************************************************\
+
+Function: ebmc_baset::do_compute_ct
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int ebmc_baset::do_compute_ct()
+{
+  // make net-list
+  status() << "Making Netlist" << eom;
+
+  netlistt netlist;
+  if(make_netlist(netlist)) return 1;
+
+  status() << "Latches: " << netlist.var_map.latches.size()
+           << ", nodes: " << netlist.number_of_nodes() << eom;
+
+  status() << "Making LDG" << eom;
+  
+  ldgt ldg;
+  ldg.compute(netlist);
+
+  std::cout << "CT = " << compute_ct(ldg) << '\n';
+  
+  return 0;
 }
 
 /*******************************************************************\

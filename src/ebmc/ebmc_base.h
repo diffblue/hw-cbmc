@@ -27,7 +27,6 @@ public:
 
   int get_model();
 
-
 protected:
   const cmdlinet &cmdline;
 
@@ -109,6 +108,7 @@ public:
   int do_sat();
   int do_prover();
   int do_lifter();
+  int do_bdd();
 };
 
 #endif
