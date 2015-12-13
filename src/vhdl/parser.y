@@ -412,7 +412,7 @@ type:
        | name 
        | '(' enumeration_literal_list ')'
        {
-         init($$, ID_enum);
+         init($$, ID_enumeration);
        }
        | TOK_RANGE expr updown expr
        {
