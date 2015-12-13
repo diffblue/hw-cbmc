@@ -369,7 +369,7 @@ bool expr2smvt::convert_constant(
   else if(type.id()==ID_integer ||
           type.id()==ID_natural ||
           type.id()==ID_range ||
-          type.id()==ID_enum)
+          type.id()==ID_enumeration)
     dest=value;
   else
     return convert_norep(src, dest, precedence);
@@ -538,12 +538,12 @@ bool type2smv(const typet &type, std::string &code)
     code+=" of ";
     code+=tmp;
   }
-  else if(type.id()==ID_enum)
+  else if(type.id()==ID_enumeration)
   {
-    const irept &elements=type.find(ID_elements);
+    const irept::subt &elements=to_enumeration_type(type).elements();
     code="{ ";
     bool first=true;
-    forall_irep(it, elements.get_sub())
+    forall_irep(it, elements)
     {
       if(first) first=false; else code+=", ";
       code+=it->id_string();

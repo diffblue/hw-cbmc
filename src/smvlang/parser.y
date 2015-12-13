@@ -292,7 +292,7 @@ usertype   : module_name
 
 enum_list  : enum_element
            {
-             init($$, ID_enum);
+             init($$, ID_enumeration);
              stack($$).add(ID_elements).get_sub().push_back(irept(stack($1).id()));
            }
            | enum_list ',' enum_element
@@ -468,7 +468,7 @@ variable_name: qstring_list
              else if(is_enum)
              {
                init($$, ID_constant);
-               stack($$).type()=typet(ID_enum);
+               stack($$).type()=typet(ID_enumeration);
                stack($$).set(ID_value, stack($1).id());
              }
              else // not an enum, probably a variable

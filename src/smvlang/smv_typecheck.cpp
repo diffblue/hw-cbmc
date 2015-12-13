@@ -505,12 +505,12 @@ smv_typecheckt::smv_ranget smv_typecheckt::convert_type(const typet &src)
     dest.from=string2integer(src.get_string(ID_from));
     dest.to=string2integer(src.get_string(ID_to));
   }
-  else if(src.id()==ID_enum)
+  else if(src.id()==ID_enumeration)
   {
     dest.from=0;
 
     std::size_t number_of_elements=
-      src.find(ID_elements).get_sub().size();
+      to_enumeration_type(src).elements().size();
       
     if(number_of_elements==0)
       dest.to=0;
@@ -552,12 +552,12 @@ typet smv_typecheckt::type_union(
     return type1;
     
   // both enums?
-  if(type1.id()==ID_enum && type2.id()==ID_enum)
+  if(type1.id()==ID_enumeration && type2.id()==ID_enumeration)
   {
-    if(type2.find(ID_elements).get_sub().empty())
+    if(to_enumeration_type(type2).elements().empty())
       return type1;
   
-    if(type1.find(ID_elements).get_sub().empty())
+    if(to_enumeration_type(type1).elements().empty())
       return type2;
   }
   
@@ -798,11 +798,11 @@ void smv_typecheckt::typecheck(
         }
       }
     }
-    else if(expr.type().id()==ID_enum)
+    else if(expr.type().id()==ID_enumeration)
     {
-      if(type.id()==ID_enum)
+      if(type.id()==ID_enumeration)
       {
-        if(expr.type().find(ID_elements).get_sub().empty())
+        if(to_enumeration_type(expr.type()).elements().empty())
           expr.type()=type;
       }
     }
