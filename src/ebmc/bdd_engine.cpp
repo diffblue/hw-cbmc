@@ -273,6 +273,8 @@ void bdd_enginet::check_property(propertyt &property, const BDD &p)
     for(const auto &i : initial_BDDs)
       intersection=states & i;
 
+    peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
+
     if(!intersection.is_false())
     {
       property.status=propertyt::statust::FAILURE;
