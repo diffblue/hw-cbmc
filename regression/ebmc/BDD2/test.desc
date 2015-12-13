@@ -3,6 +3,6 @@ main.sv
 --module main --bdd
 ^EXIT=0$
 ^SIGNAL=0$
-^\[Verilog::main.property.my_prop1\] assertion Verilog::main.property.my_prop1: SUCCESS$
-^\[Verilog::main.property.my_prop2\] assertion Verilog::main.property.my_prop2: FAILURE$
+^\[Verilog::main.property.my_prop1\] always main.counter < 199: SUCCESS$
+^\[Verilog::main.property.my_prop2\] always main.counter < 198: FAILURE$
 --
