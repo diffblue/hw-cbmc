@@ -504,6 +504,18 @@ void smv_typecheckt::convert_type(const typet &src, smv_ranget &dest)
     dest.from=string2integer(src.get_string(ID_from));
     dest.to=string2integer(src.get_string(ID_to));
   }
+  else if(src.id()==ID_enum)
+  {
+    dest.from=0;
+
+    std::size_t number_of_elements=
+      src.find(ID_elements).get_sub().size();
+      
+    if(number_of_elements==0)
+      dest.to=0;
+    else
+      dest.to=(long long)number_of_elements-1;
+  }
   else
   {
     err_location(src);
@@ -540,7 +552,7 @@ void smv_typecheckt::type_union(
     dest=type1;
     return;
   }
-
+  
   smv_ranget range1, range2;
   convert_type(type1, range1);
   convert_type(type2, range2);
