@@ -725,8 +725,7 @@ void smv_typecheckt::typecheck(
     else if(type.id()!=ID_range)
     {
       err_location(expr);
-      str << "Expected number type for "
-          << to_string(expr);
+      str << "Expected number type for " << to_string(expr);
       throw 0;
     }
   }
@@ -1214,7 +1213,7 @@ void smv_typecheckt::collect_define(const exprt &expr)
   if(!result.second)
   {
     err_location(expr);
-    str << "symbol `" << identifier << "' defined twice" << std::endl;
+    str << "symbol `" << identifier << "' defined twice";
     throw 0;
   }  
 }
