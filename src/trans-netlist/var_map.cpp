@@ -205,17 +205,36 @@ void var_mapt::output(std::ostream &out) const
       out << "  " << it->first;
       if(var.bits.size()!=1) out << "[" << i << "]";
       out << "=";
-      literalt l=var.bits[i].current;
-      if(l.is_true())
+
+      literalt l_c=var.bits[i].current;
+
+      if(l_c.is_true())
         out << "true";
-      else if(l.is_false())
+      else if(l_c.is_false())
         out << "false";
       else
       {
-        if(l.sign()) out << "!";
-        out << l.var_no();
+        if(l_c.sign()) out << "!";
+        out << l_c.var_no();
       }
       
+      if(var.vartype==vart::VAR_LATCH)
+      {
+        out << "->";
+        
+        literalt l_n=var.bits[i].next;
+
+        if(l_n.is_true())
+          out << "true";
+        else if(l_n.is_false())
+          out << "false";
+        else
+        {
+          if(l_n.sign()) out << "!";
+          out << l_n.var_no();
+        }
+      }
+       
       out << " ";
 
       switch(var.vartype)
