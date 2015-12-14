@@ -193,7 +193,7 @@ Function: var_mapt::output
 
 void var_mapt::output(std::ostream &out) const
 {
-  out << "Variable map:" << std::endl;
+  out << "Variable map:" << '\n';
 
   for(mapt::const_iterator it=map.begin();
       it!=map.end(); it++)
@@ -227,17 +227,13 @@ void var_mapt::output(std::ostream &out) const
        case vart::VAR_UNDEF: out << "(?)"; break;
       }
 
-      out << std::endl;
+      out << '\n';
     }
   }
 
-  out << std::endl
-      << "Total no. of variable bits: " << reverse_map.size()
-      << std::endl
-      << "Total no. of latch bits: " << latches.size()
-      << std::endl
-      << "Total no. of input bits: " << inputs.size()
-      << std::endl
-      << "Total no. of output bits: " << outputs.size()
-      << std::endl;
+  out << '\n'
+      << "Total no. of variable bits: " << reverse_map.size() << '\n'
+      << "Total no. of latch bits: " << latches.size() << '\n'
+      << "Total no. of input bits: " << inputs.size() << '\n'
+      << "Total no. of output bits: " << outputs.size() << '\n';
 }
