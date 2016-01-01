@@ -86,11 +86,6 @@ public:
   
   inline std::size_t number_of_nodes();
   
-protected:
-  typedef std::list<node> nodest;
-  nodest nodes;
-  BDD true_bdd, false_bdd;
-  
   struct var_table_entryt
   {
     std::string label;
@@ -99,6 +94,11 @@ protected:
 
   typedef std::vector<var_table_entryt> var_tablet;
   var_tablet var_table;  
+  
+protected:
+  typedef std::list<node> nodest;
+  nodest nodes;
+  BDD true_bdd, false_bdd;
   
   // this is our reverse-map for nodes
   struct reverse_keyt
@@ -120,6 +120,7 @@ protected:
 BDD restrict(const BDD &u, unsigned var, const bool value);
 BDD exists(const BDD &u, unsigned var);
 BDD substitute(const BDD &where, unsigned var, const BDD &by_what);
+std::string cubes(const BDD &u);
 
 } // namespace miniBDD
 

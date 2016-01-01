@@ -411,4 +411,39 @@ BDD substitute(const BDD &t, unsigned var, const BDD &tp)
          (!tp & restrict(t, var, false));
 }
 
+void cubes(const BDD &u, const std::string &path, std::string &result)
+{
+  if(u.is_false())
+    return;
+  else if(u.is_true())
+  {
+    result+=path;
+    result+='\n';
+    return;
+  }
+
+  mgr *mgr=u.node->mgr;
+  std::string path_low=path;
+  std::string path_high=path;
+  if(!path.empty()) { path_low+=" & "; path_high+=" & "; }
+  path_low+='!'+mgr->var_table[u.var()-1].label;
+  path_high+=mgr->var_table[u.var()-1].label;
+  cubes(u.low(), path_low, result);
+  cubes(u.high(), path_high, result);
+}
+
+std::string cubes(const BDD &u)
+{
+  if(u.is_false())
+    return "false\n";
+  else if(u.is_true())
+    return "true\n";
+  else
+  {
+    std::string result;
+    cubes(u, "", result);
+    return result;
+  }
+}
+
 } // namespace miniBDD
