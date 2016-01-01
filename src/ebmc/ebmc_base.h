@@ -68,7 +68,7 @@ protected:
     irep_idt mode;
     exprt expr;
     std::string description;
-    enum class statust { SUCCESS, FAILURE, UNKNOWN } status;
+    enum class statust { DISABLED, SUCCESS, FAILURE, UNKNOWN } status;
     
     propertyt():status(statust::UNKNOWN)
     {

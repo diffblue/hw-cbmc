@@ -461,6 +461,10 @@ bool ebmc_baset::get_model_properties()
   {
     std::string property=cmdline.get_value("property");
 
+    for(auto & p : properties)
+      if(p.name!=property)
+        p.status=propertyt::statust::DISABLED;
+
     unsigned p_nr=0;
 
     for(propertiest::const_iterator p_it=properties.begin();
@@ -1010,6 +1014,9 @@ void ebmc_baset::report_results()
   {
     for(const propertyt &property : properties)
     {
+      if(property.status==propertyt::statust::DISABLED)
+        continue;
+      
       xmlt xml_result("result");
       xml_result.set_attribute("property", property.name);
       
@@ -1018,6 +1025,7 @@ void ebmc_baset::report_results()
       case propertyt::statust::SUCCESS: xml_result.set_attribute("status", "SUCCESS"); break;
       case propertyt::statust::FAILURE: xml_result.set_attribute("status", "FAILURE"); break;
       case propertyt::statust::UNKNOWN: xml_result.set_attribute("status", "UNKNOWN"); break;
+      case propertyt::statust::DISABLED:;
       }
 
       std::cout << xml_result << "\n";
@@ -1030,6 +1038,9 @@ void ebmc_baset::report_results()
 
     for(const propertyt &property : properties)
     {
+      if(property.status==propertyt::statust::DISABLED)
+        continue;
+      
       status() << "[" << property.name << "] "
                << property.expr_string << ": ";
 
@@ -1038,6 +1049,7 @@ void ebmc_baset::report_results()
       case propertyt::statust::SUCCESS: status() << "SUCCESS"; break;
       case propertyt::statust::FAILURE: status() << "FAILURE"; break;
       case propertyt::statust::UNKNOWN: status() << "UNKNOWN"; break;
+      case propertyt::statust::DISABLED:;
       }
                
       status() << eom;

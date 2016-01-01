@@ -251,6 +251,9 @@ Function: bdd_enginet::check_property
 
 void bdd_enginet::check_property(propertyt &property, const BDD &p)
 {
+  if(property.status==propertyt::statust::DISABLED)
+    return;
+
   status() << "Checking " << property.description << eom;
   property.status=propertyt::statust::UNKNOWN;
 
