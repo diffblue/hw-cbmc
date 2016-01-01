@@ -7,7 +7,6 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <cassert>
-#include <iostream>
 
 #include <util/time_stopping.h>
 
@@ -50,8 +49,8 @@ void bmc_cegart::bmc_cegar()
   {
   }
 
-  std::cout << "CEGAR time: "
-            << (current_time()-start_time) << std::endl;
+  statistics() << "CEGAR time: "
+               << (current_time()-start_time) << eom;
 }
 
 /*******************************************************************\
@@ -125,11 +124,11 @@ void bmc_cegart::unwind(
 
   instantiate(prop, bmc_map, initial_state_predicate, 0, 1,
               false, ns);
+  #endif
   
   // do the property
-  property(properties, prop_bv, message, prop,
+  property(properties, prop_bv, get_message_handler(), prop,
            bmc_map, ns);
-  #endif
 }
 
 /*******************************************************************\
@@ -162,6 +161,7 @@ unsigned bmc_cegart::compute_ct()
 
   return ct;
 }
+
 /*******************************************************************\
 
 Function: bmc_cegart::cegar_loop
