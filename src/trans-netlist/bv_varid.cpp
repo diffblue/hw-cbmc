@@ -24,5 +24,9 @@ Function: bv_varidt::as_string
 
 std::string bv_varidt::as_string() const
 {
-  return id2string(id)+'['+i2string(bit_nr)+']';
+  std::string tmp=id2string(id)+'['+i2string(bit_nr)+']';
+  if(state==statet::CURRENT)
+    return tmp;
+  else
+    return "next("+tmp+')';
 }

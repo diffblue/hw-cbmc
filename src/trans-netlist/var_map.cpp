@@ -30,24 +30,24 @@ void var_mapt::add(
   unsigned bit_nr,
   const vart &var)
 {
-  unsigned v=var.bits[bit_nr].current.var_no();
+  unsigned v_current=var.bits[bit_nr].current.var_no();
 
   switch(var.vartype)
   {
   case vart::VAR_LATCH:
-    latches.insert(v);
+    latches.insert(v_current);
     break;
             
   case vart::VAR_INPUT:
-    inputs.insert(v);
+    inputs.insert(v_current);
     break;
     
   case vart::VAR_OUTPUT:
-    outputs.insert(v);
+    outputs.insert(v_current);
     break;
     
   case vart::VAR_WIRE:
-    wires.insert(v);
+    wires.insert(v_current);
     break;
     
   default:;
@@ -56,9 +56,10 @@ void var_mapt::add(
   
   if(var.is_latch() || var.is_input())
   {
-    bv_varidt &reverse=reverse_map[v];
+    bv_varidt &reverse=reverse_map[v_current];
     reverse.id=id;
     reverse.bit_nr=bit_nr;
+    reverse.state=bv_varidt::statet::CURRENT;
   }
 }
 

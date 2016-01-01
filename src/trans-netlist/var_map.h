@@ -77,9 +77,12 @@ public:
     return get_bit(id, bit_nr).current;
   }
 
-  inline literalt get_current(const bv_varidt &varid) const
+  inline literalt operator[](const bv_varidt &varid) const
   {
-    return get_current(varid.id, varid.bit_nr);
+    if(varid.state==bv_varidt::statet::CURRENT)
+      return get_current(varid.id, varid.bit_nr);
+    else
+      return get_next(varid.id, varid.bit_nr);
   }
   
   inline literalt get_next(const irep_idt &id, unsigned bit_nr) const
@@ -87,11 +90,6 @@ public:
     return get_bit(id, bit_nr).next;
   }
 
-  inline literalt get_next(const bv_varidt &varid) const
-  {
-    return get_next(varid.id, varid.bit_nr);
-  }
-  
   typedef std::set<unsigned> var_sett;
 
   var_sett latches, inputs, outputs, wires;
