@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_BV_VARID_H
 #define CPROVER_TRANS_BV_VARID_H
 
+#include <iosfwd>
+
 #include <util/irep.h>
 
 class bv_varidt
@@ -45,6 +47,11 @@ public:
   
   std::string as_string() const;
 };
+
+static inline std::ostream & operator<< (std::ostream &out, const bv_varidt &v)
+{
+  return out << v.as_string();
+}
  
 struct bv_varidt_hash
 {
