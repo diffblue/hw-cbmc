@@ -8,7 +8,7 @@ module main(input clk, input [31:0] a);
 
   initial counter=0;
   
-  my_prop1: assert property (counter<199);
-  my_prop2: assert property (counter<198);
+  my_prop1: assert property (counter<199); // should pass
+  my_prop2: assert property (counter<198); // should fail
 
 endmodule 
