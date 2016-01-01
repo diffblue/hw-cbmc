@@ -39,6 +39,7 @@ protected:
   class vart
   {
   public:
+    bool is_input;
     BDD current, next;
   };
   
@@ -75,6 +76,7 @@ protected:
   
   BDD current_to_next(const BDD &) const;
   BDD project_next(const BDD &) const;
+  BDD project_input(const BDD &) const;
 };
 
 /*******************************************************************\
@@ -179,7 +181,7 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
       for(unsigned bit_nr=0; bit_nr<it.second.bits.size(); bit_nr++)
       {
         bv_varidt bv_varid(it.first, bit_nr);
-        vars[bv_varid];
+        vars[bv_varid].is_input=it.second.is_input();
       }
     }
   }
@@ -239,6 +241,29 @@ bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
 
 /*******************************************************************\
 
+Function: bdd_enginet::project_input
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_enginet::BDD bdd_enginet::project_input(const BDD &bdd) const
+{
+  BDD tmp=bdd;
+
+  for(const auto &v : vars)
+    if(v.second.is_input)
+      tmp=exists(tmp, v.second.current.var());
+
+  return tmp;
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::check_property
 
   Inputs:
@@ -249,7 +274,9 @@ Function: bdd_enginet::check_property
 
 \*******************************************************************/
 
-void bdd_enginet::check_property(propertyt &property, const BDD &p)
+void bdd_enginet::check_property(
+  propertyt &property,
+  const BDD &p)
 {
   if(property.status==propertyt::statust::DISABLED)
     return;
@@ -259,7 +286,7 @@ void bdd_enginet::check_property(propertyt &property, const BDD &p)
 
   // Start with !p, and go backwards until saturation or we hit an
   // initial state.
-
+  
   BDD states=!p;
   unsigned iteration=0;
   
@@ -269,12 +296,12 @@ void bdd_enginet::check_property(propertyt &property, const BDD &p)
   {
     iteration++;
     statistics() << "Iteration " << iteration << eom;
-    
+
     // do we have an initial state?
     BDD intersection=states;
     
     for(const auto &i : initial_BDDs)
-      intersection=states & i;
+      intersection=intersection & i;
 
     peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
 
@@ -295,10 +322,13 @@ void bdd_enginet::check_property(propertyt &property, const BDD &p)
       conjunction = conjunction & t;
     
     // now project away 'next' variables
-    BDD pre_image=project_next(conjunction);
+    BDD pre_image1=project_next(conjunction);
+    
+    // now project away 'input' variables
+    BDD pre_image2=project_input(pre_image1);
 
     // compute union
-    BDD set_union=states | pre_image;
+    BDD set_union=states | pre_image2;
 
     // have we saturated?
     if((set_union==states).is_true())
