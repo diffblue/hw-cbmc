@@ -3,7 +3,7 @@ main.smv
 --bdd
 ^EXIT=0$
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
-^UNSAT: inductive proof successful, property holds$
+
+^\[smv::main::spec1\] AG (!main::var::some_var = off): SUCCESS$
 --
 ^warning: ignoring
