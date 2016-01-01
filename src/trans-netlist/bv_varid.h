@@ -18,7 +18,6 @@ class bv_varidt
 public:
   irep_idt id;
   unsigned bit_nr;
-  enum class statet { CURRENT, NEXT } state;
   
   friend bool operator==(const bv_varidt &i1, const bv_varidt &i2)
   {
@@ -35,14 +34,12 @@ public:
    
   inline bv_varidt(
     const irep_idt &_id,
-    unsigned _bit_nr,
-    statet _state):
+    unsigned _bit_nr):
     id(_id),
-    bit_nr(_bit_nr),
-    state(_state)
+    bit_nr(_bit_nr)
   { }
    
-  inline bv_varidt():bit_nr(0), state(statet::CURRENT)
+  inline bv_varidt():bit_nr(0)
   { }
   
   std::string as_string() const;
@@ -56,7 +53,7 @@ static inline std::ostream & operator<< (std::ostream &out, const bv_varidt &v)
 struct bv_varidt_hash
 {
   size_t operator()(const bv_varidt &bv_varid) const
-  { return hash_string(bv_varid.id)^bv_varid.bit_nr^unsigned(bv_varid.state); }
+  { return hash_string(bv_varid.id)^bv_varid.bit_nr; }
 };
  
 #endif

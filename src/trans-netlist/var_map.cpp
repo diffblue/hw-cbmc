@@ -59,7 +59,6 @@ void var_mapt::add(
     bv_varidt &reverse=reverse_map[v_current];
     reverse.id=id;
     reverse.bit_nr=bit_nr;
-    reverse.state=bv_varidt::statet::CURRENT;
   }
 }
 

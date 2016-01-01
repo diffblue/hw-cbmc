@@ -270,7 +270,6 @@ void convert_trans_to_netlistt::operator()(
   {
     bv_varidt bv_varid;
     bv_varid.id=v_it->first;
-    bv_varid.state=bv_varidt::statet::CURRENT;
     var_mapt::vart &var=v_it->second;
 
     for(bv_varid.bit_nr=0;
@@ -476,7 +475,6 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     bv_varidt bv_varid;
     
     bv_varid.id=to_symbol_expr(expr).get_identifier();
-    bv_varid.state=bv_varidt::statet::CURRENT;
 
     for(bv_varid.bit_nr=from;
         bv_varid.bit_nr<=to;
@@ -645,7 +643,6 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     bv_varidt bv_varid;
     bv_varid.id=lhs.get(ID_identifier);
-    bv_varid.state=bv_varidt::statet::CURRENT;
     
     for(bv_varid.bit_nr=lhs_from;
         bv_varid.bit_nr!=(lhs_to+1);
