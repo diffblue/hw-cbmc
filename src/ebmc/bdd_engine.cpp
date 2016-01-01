@@ -178,7 +178,7 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
     {
       for(unsigned bit_nr=0; bit_nr<it.second.bits.size(); bit_nr++)
       {
-        bv_varidt bv_varid(it.first, bit_nr);
+        bv_varidt bv_varid(it.first, bit_nr, bv_varidt::statet::CURRENT);
         vars[bv_varid];
       }
     }
@@ -355,7 +355,9 @@ void bdd_enginet::build_trans(const netlistt &netlist)
   // add the next-state variable constraints
   for(const auto &v : vars)
   {
-    literalt next=netlist.var_map.get_next(v.first);
+    bv_varidt varid=v.first;
+    varid.state=bv_varidt::statet::NEXT;
+    literalt next=netlist.var_map[varid];
     transition_BDDs.push_back(aig2bdd(next, BDDs)==v.second.next);
   }
   
