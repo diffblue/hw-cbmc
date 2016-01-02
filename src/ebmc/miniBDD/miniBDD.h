@@ -121,6 +121,7 @@ BDD restrict(const BDD &u, unsigned var, const bool value);
 BDD exists(const BDD &u, unsigned var);
 BDD substitute(const BDD &where, unsigned var, const BDD &by_what);
 std::string cubes(const BDD &u);
+bool OneSat(const BDD &v, std::map<unsigned, bool> &assignment);
 
 } // namespace miniBDD
 

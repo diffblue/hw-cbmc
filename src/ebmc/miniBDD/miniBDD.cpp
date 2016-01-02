@@ -446,4 +446,20 @@ std::string cubes(const BDD &u)
   }
 }
 
+bool OneSat(const BDD &v, std::map<unsigned, bool> &assignment)
+{
+  // http://www.ecs.umass.edu/ece/labs/vlsicad/ece667/reading/somenzi99bdd.pdf
+  if(v.is_true())
+    return true;
+  else if(v.is_false())
+    return false;
+  else
+  {
+    assignment[v.var()]=true;
+    if(OneSat(v.high(), assignment)) return true;
+    assignment[v.var()]=false;
+    return OneSat(v.low(), assignment);    
+  }
+}
+
 } // namespace miniBDD
