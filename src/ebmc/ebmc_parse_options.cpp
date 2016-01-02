@@ -242,6 +242,7 @@ void ebmc_parse_optionst::help()
     " --top <module>                    set top module\n"
     " -p <expr>                         specify a property\n"
     " --outfile <name>                  set output file name (default: stdout)\n"
+    " --trace                           generate a trace for failing properties\n"
     " --vcd <vcd filename>              generate traces in VCD format\n"
     " --show-properties                 list the properties in the model\n"
     " --property <id>                   check the property with given ID\n"
