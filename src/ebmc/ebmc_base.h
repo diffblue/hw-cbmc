@@ -73,6 +73,8 @@ protected:
     propertyt():status(statust::UNKNOWN)
     {
     }
+    
+    trans_tracet counterexample;
   };
 
   typedef std::list<propertyt> propertiest;

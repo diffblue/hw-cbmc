@@ -76,6 +76,11 @@ protected:
   
   BDD current_to_next(const BDD &) const;
   BDD project_next(const BDD &) const;
+
+  void compute_counterexample(
+    propertyt &property,
+    const BDD &initial_states,
+    const BDD &p);
 };
 
 /*******************************************************************\
@@ -240,6 +245,35 @@ bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
 
 /*******************************************************************\
 
+Function: bdd_enginet::compute_counterexample
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void bdd_enginet::compute_counterexample(
+  propertyt &property,
+  const BDD &initial_states,
+  const BDD &p)
+{
+  status() << "Computing counterexample" << eom;
+  
+  std::map<unsigned, bool> assignment;
+  
+  OneSat(initial_states, assignment);
+
+  //for(const auto &v : vars)
+  {
+    //bool value=assignment[v.second.current.var()];
+  }
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::check_property
 
   Inputs:
@@ -285,6 +319,7 @@ void bdd_enginet::check_property(
     {
       property.status=propertyt::statust::FAILURE;
       status() << "Property refuted" << eom;
+      compute_counterexample(property, intersection, p);
       break;
     }
     
