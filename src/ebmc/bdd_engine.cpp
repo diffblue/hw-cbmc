@@ -76,7 +76,6 @@ protected:
   
   BDD current_to_next(const BDD &) const;
   BDD project_next(const BDD &) const;
-  BDD project_input(const BDD &) const;
 };
 
 /*******************************************************************\
@@ -241,29 +240,6 @@ bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
 
 /*******************************************************************\
 
-Function: bdd_enginet::project_input
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::project_input(const BDD &bdd) const
-{
-  BDD tmp=bdd;
-
-  for(const auto &v : vars)
-    if(v.second.is_input)
-      tmp=exists(tmp, v.second.current.var());
-
-  return tmp;
-}
-
-/*******************************************************************\
-
 Function: bdd_enginet::check_property
 
   Inputs:
@@ -322,13 +298,10 @@ void bdd_enginet::check_property(
       conjunction = conjunction & t;
     
     // now project away 'next' variables
-    BDD pre_image1=project_next(conjunction);
+    BDD pre_image=project_next(conjunction);
     
-    // now project away 'input' variables
-    BDD pre_image2=project_input(pre_image1);
-
     // compute union
-    BDD set_union=states | pre_image2;
+    BDD set_union=states | pre_image;
 
     // have we saturated?
     if((set_union==states).is_true())
@@ -385,12 +358,14 @@ void bdd_enginet::build_trans(const netlistt &netlist)
     }
   }
   
-  // add the next-state variable constraints
+  // Add the next-state variable constraints for
+  // the state-holding elements.
   for(const auto &v : vars)
-  {
-    literalt next=netlist.var_map.get_next(v.first);
-    transition_BDDs.push_back(aig2bdd(next, BDDs)==v.second.next);
-  }
+    if(!v.second.is_input)
+    {
+      literalt next=netlist.var_map.get_next(v.first);
+      transition_BDDs.push_back(aig2bdd(next, BDDs)==v.second.next);
+    }
   
   // initial state conditions
   for(literalt l : netlist.initial)
