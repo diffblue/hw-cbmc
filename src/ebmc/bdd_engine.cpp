@@ -10,6 +10,10 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "miniBDD/miniBDD.h"
 
+#include <solvers/sat/satcheck.h>
+#include <trans-netlist/unwind_netlist.h>
+#include <trans-netlist/trans_trace_netlist.h>
+
 #include "ebmc_base.h"
 #include "bdd_engine.h"
 
@@ -31,6 +35,7 @@ public:
   int operator()();
 
 protected:
+  netlistt netlist;
   miniBDD::mgr mgr;
 
   typedef miniBDD::BDD BDD;
@@ -58,7 +63,7 @@ protected:
   varst vars;
   
   void allocate_vars(const var_mapt &);
-  void build_trans(const netlistt &);
+  void build_trans();
   
   inline BDD aig2bdd(
     literalt l,
@@ -75,12 +80,13 @@ protected:
   void check_property(propertyt &, const BDD &);
   
   BDD current_to_next(const BDD &) const;
+  BDD next_to_current(const BDD &) const;
   BDD project_next(const BDD &) const;
+  BDD project_current(const BDD &) const;
 
   void compute_counterexample(
-    propertyt &property,
-    const BDD &initial_states,
-    const BDD &p);
+    propertyt &,
+    unsigned bound);
 };
 
 /*******************************************************************\
@@ -120,8 +126,6 @@ int bdd_enginet::operator()()
   {  
     status() << "Building netlist" << eom;
 
-    netlistt netlist;
-
     if(make_netlist(netlist))
     {
       error() << "Failed to build netlist" << eom;
@@ -131,9 +135,7 @@ int bdd_enginet::operator()()
     status() << "Building BDD for netlist" << eom;
     
     allocate_vars(netlist.var_map);
-    build_trans(netlist);
-    
-    // netlist no longer needed
+    build_trans();
   }
   
   statistics() << "BDD nodes: "
@@ -223,6 +225,28 @@ bdd_enginet::BDD bdd_enginet::current_to_next(const BDD &bdd) const
 
 /*******************************************************************\
 
+Function: bdd_enginet::next_to_current
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_enginet::BDD bdd_enginet::next_to_current(const BDD &bdd) const
+{
+  BDD tmp=bdd;
+
+  for(const auto &v : vars)
+    tmp=substitute(tmp, v.second.next.var(), v.second.current);
+
+  return tmp;
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::project_next
 
   Inputs:
@@ -245,6 +269,28 @@ bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
 
 /*******************************************************************\
 
+Function: bdd_enginet::project_current
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_enginet::BDD bdd_enginet::project_current(const BDD &bdd) const
+{
+  BDD tmp=bdd;
+
+  for(const auto &v : vars)
+    tmp=exists(tmp, v.second.current.var());
+
+  return tmp;
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::compute_counterexample
 
   Inputs:
@@ -257,19 +303,34 @@ Function: bdd_enginet::compute_counterexample
 
 void bdd_enginet::compute_counterexample(
   propertyt &property,
-  const BDD &initial_states,
-  const BDD &p)
+  unsigned bound)
 {
   status() << "Computing counterexample" << eom;
-  
-  std::map<unsigned, bool> assignment;
-  
-  OneSat(initial_states, assignment);
 
-  //for(const auto &v : vars)
-  {
-    //bool value=assignment[v.second.current.var()];
-  }
+  bmc_mapt bmc_map;
+
+  satcheckt solver;
+  bmc_map.map_timeframes(netlist, bound, solver);
+
+  ::unwind(netlist, bmc_map, *this, solver);
+  ::unwind_property(netlist, bmc_map, *this, prop_bv, solver);
+  
+  propt::resultt prop_result=
+    solver.prop_solve();
+
+  if(prop_result!=propt::P_SATISFIABLE)
+    throw "unexpected result from SAT solver";
+
+  namespacet ns(symbol_table);
+  trans_tracet trans_trace;
+
+  compute_trans_trace(
+    prop_name_list,
+    prop_bv,
+    bmc_map,
+    solver,
+    ns,
+    property.counterexample);
 }
 
 /*******************************************************************\
@@ -319,7 +380,7 @@ void bdd_enginet::check_property(
     {
       property.status=propertyt::statust::FAILURE;
       status() << "Property refuted" << eom;
-      compute_counterexample(property, intersection, p);
+      compute_counterexample(property, iteration);
       break;
     }
     
@@ -367,7 +428,7 @@ Function: bdd_enginet::build_trans
 
 \*******************************************************************/
 
-void bdd_enginet::build_trans(const netlistt &netlist)
+void bdd_enginet::build_trans()
 {
   std::vector<BDD> BDDs;
   BDDs.resize(netlist.nodes.size());
