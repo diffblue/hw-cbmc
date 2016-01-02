@@ -71,7 +71,12 @@ void compute_trans_trace_properties(
   trans_tracet &dest);
   
 // outputting traces
-  
+
+void convert(
+  const namespacet &,
+  const trans_tracet &,
+  class xmlt &);
+        
 void show_trans_trace(
   const trans_tracet &trace,
   messaget &message,

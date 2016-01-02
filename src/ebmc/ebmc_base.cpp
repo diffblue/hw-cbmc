@@ -1010,15 +1010,17 @@ Function: ebmc_baset::report_results
 
 void ebmc_baset::report_results()
 {
+  const namespacet ns(symbol_table);
+
   if(get_ui()==ui_message_handlert::XML_UI)
   {
     for(const propertyt &property : properties)
     {
       if(property.status==propertyt::statust::DISABLED)
         continue;
-      
+        
       xmlt xml_result("result");
-      xml_result.set_attribute("property", property.name);
+      xml_result.set_attribute("property", id2string(property.name));
       
       switch(property.status)
       {
@@ -1027,8 +1029,11 @@ void ebmc_baset::report_results()
       case propertyt::statust::UNKNOWN: xml_result.set_attribute("status", "UNKNOWN"); break;
       case propertyt::statust::DISABLED:;
       }
+      
+      if(property.status==propertyt::statust::FAILURE)
+        convert(ns, property.counterexample, xml_result.new_element());
 
-      std::cout << xml_result << "\n";
+      std::cout << xml_result << '\n' << std::flush;
     }
   }
   else
@@ -1053,6 +1058,14 @@ void ebmc_baset::report_results()
       }
                
       status() << eom;
+      
+      if(property.status==propertyt::statust::FAILURE &&
+         cmdline.isset("trace"))
+      {
+        status() << "Counterexample:\n" << eom;
+        show_trans_trace(
+          property.counterexample, *this, ns, get_ui());
+      }
     }
   }
 }

@@ -410,11 +410,12 @@ Function: convert
 \*******************************************************************/
 
 void convert(
-  const trans_tracet &trace,
-  unsigned last_time_frame,
   const namespacet &ns,
+  const trans_tracet &trace,
   xmlt &dest)
 {
+  unsigned last_time_frame=trace.get_max_failing_timeframe();
+
   dest=xmlt("trans_trace");
   
   dest.new_element("mode").data=trace.mode;
@@ -465,32 +466,6 @@ void convert(
       #endif
     }
   }
-
-  {
-    unsigned p=1;
-
-    for(trans_tracet::propertiest::const_iterator
-        p_it=trace.properties.begin();
-        p_it!=trace.properties.end();
-        p_it++, p++)
-    {
-      xmlt &xml_claim_status=dest.new_element("claim-status");
-      
-      xml_claim_status.new_element("claim").data=i2string(p);
-      
-      if(p_it->status.is_false())
-      {
-        xml_claim_status.new_element("time_frame").data=
-          i2string(p_it->failing_timeframe);
-
-        xml_claim_status.new_element("status").data="false";
-      }
-      else if(p_it->status.is_true())
-        xml_claim_status.new_element("status").data="true";
-      else
-        xml_claim_status.new_element("status").data="unknown";
-    }
-  }
 }
 
 /*******************************************************************\
@@ -511,15 +486,15 @@ void show_trans_trace(
   const namespacet &ns,
   ui_message_handlert::uit ui)
 {
-  unsigned l=trace.get_max_failing_timeframe();
-
   switch(ui)
   {
   case ui_message_handlert::PLAIN:
-    for(unsigned t=0; t<=l; t++)
-      show_trans_state(t, trace.states[t], ns);
-
     {
+      unsigned l=trace.get_max_failing_timeframe();
+
+      for(unsigned t=0; t<=l; t++)
+        show_trans_state(t, trace.states[t], ns);
+
       unsigned p=1;
 
       for(trans_tracet::propertiest::const_iterator
@@ -544,7 +519,7 @@ void show_trans_trace(
     {
       xmlt xml;
       
-      convert(trace, l, ns, xml);
+      convert(ns, trace, xml);
       
       xml.output(std::cout);
     }

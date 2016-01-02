@@ -86,7 +86,7 @@ protected:
 
   void compute_counterexample(
     propertyt &,
-    unsigned bound);
+    unsigned number_of_timeframes);
 };
 
 /*******************************************************************\
@@ -303,14 +303,14 @@ Function: bdd_enginet::compute_counterexample
 
 void bdd_enginet::compute_counterexample(
   propertyt &property,
-  unsigned bound)
+  unsigned number_of_timeframes)
 {
   status() << "Computing counterexample" << eom;
 
   bmc_mapt bmc_map;
 
   satcheckt solver;
-  bmc_map.map_timeframes(netlist, bound, solver);
+  bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
 
   ::unwind(netlist, bmc_map, *this, solver);
   ::unwind_property(netlist, bmc_map, *this, prop_bv, solver);
