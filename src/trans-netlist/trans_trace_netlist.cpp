@@ -95,15 +95,12 @@ Function: compute_trans_trace
 \*******************************************************************/
 
 void compute_trans_trace(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
+  const bvt &prop_bv,
   const bmc_mapt &bmc_map,
   const propt &solver,
   const namespacet &ns,
   trans_tracet &dest)
 {
-  assert(prop_names.size()==prop_bv.size());
-
   dest.states.reserve(bmc_map.get_no_timeframes());
   
   for(unsigned t=0; t<bmc_map.get_no_timeframes(); t++)
@@ -152,15 +149,11 @@ void compute_trans_trace(
       assignment.rhs=bitstring_to_expr(value, var.type);
       assignment.location.make_nil();
     }
-  }
 
-  // check the properties that got violated
-  
-  compute_trans_trace_properties(
-    prop_names,
-    prop_bv,
-    solver,
-    bmc_map.get_no_timeframes(),
-    dest);
+    // check the property
+    assert(t<prop_bv.size());
+    tvt result=solver.l_get(prop_bv[t]);
+    state.property_failed=result.is_false();
+  }
 }         
           

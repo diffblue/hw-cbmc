@@ -121,48 +121,67 @@ int ebmc_baset::finish(prop_convt &solver)
 
   absolute_timet sat_start_time=current_time();
   
-  decision_proceduret::resultt dec_result=
-    solver.dec_solve();
+  // Use assumptions to check the properties separately
   
+  for(propertyt &property : properties)
+  {
+    status() << "Checking " << property.description << eom;
+    
+    property(property.expr, property.timeframe_literals,
+             get_message_handler(), solver, bound+1, ns)
+  
+    or_exprt or_expr;
+    
+    for(auto l : property.timeframe_literals)
+      or_expr.operands().push_back(literal_exprt(!l));
+  
+    bvt assumptions;
+    assumptions.push_back(solver.convert(or_expr));
+    solver.set_assumptions(assumptions);
+  
+    decision_proceduret::resultt dec_result=
+      solver.dec_solve();
+
+    switch(dec_result)
+    {
+    case decision_proceduret::D_SATISFIABLE:
+      {
+        result() << "SAT: counterexample found" << eom;
+        
+        property.status=propertyt::statust::FAILURE;
+
+        namespacet ns(symbol_table);
+        trans_tracet trans_trace;
+    
+        compute_trans_trace(
+          property.timeframe_literals,
+          solver,
+          bound+1,
+          ns,
+          main_symbol->name,
+          property.counterexample);
+      }
+      break;
+
+    case decision_proceduret::D_UNSATISFIABLE:
+      result() << "UNSAT: No counterexample found within bound" << eom;
+      property.status=propertyt::statust::SUCCESS;
+      break;
+
+    case decision_proceduret::D_ERROR:
+      error() << "Error from decision procedure" << eom;
+      return 2;
+
+    default:
+      error() << "Unexpected result from decision procedure" << eom;
+      return 1;
+    }
+  }
+
   statistics() << "Solver time: " << (current_time()-sat_start_time)
                << eom;
 
-  switch(dec_result)
-  {
-  case decision_proceduret::D_SATISFIABLE:
-    {
-      result() << "SAT: bug found" << eom;
-      
-      namespacet ns(symbol_table);
-      trans_tracet trans_trace;
-  
-      compute_trans_trace(
-        prop_name_list,
-        prop_bv,
-        solver,
-        bound+1,
-        ns,
-        main_symbol->name,
-        trans_trace);
-      
-      show_trace(trans_trace);
-      report_failure();
-    }
-    break;
-
-  case decision_proceduret::D_UNSATISFIABLE:
-    result() << "UNSAT: No bug found within bound" << eom;
-    report_success();
-    break;
-
-  case decision_proceduret::D_ERROR:
-    error() << "Error from decision procedure" << eom;
-    return 2;
-
-  default:
-    error() << "Unexpected result from decision procedure" << eom;
-    return 1;
-  }
+  report_results();
 
   return 0;
 }
@@ -185,160 +204,58 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
   
   status() << "Solving with " << solver.solver_text() << eom;
 
-  propt::resultt prop_result=
-    solver.prop_solve();
+  for(propertyt &property : properties)
+  {
+    status() << "Checking " << property.description << eom;
   
+    bvt assumptions;
+    assumptions.push_back(!solver.land(property.timeframe_literals));
+    solver.set_assumptions(assumptions);
+  
+    propt::resultt prop_result=
+      solver.prop_solve();
+    
+    switch(prop_result)
+    {
+    case propt::P_SATISFIABLE:
+      {
+        result() << "SAT: counterexample found" << eom;
+        
+        property.status=propertyt::statust::FAILURE;
+
+        namespacet ns(symbol_table);
+        trans_tracet trans_trace;
+
+        compute_trans_trace(
+          property.timeframe_literals,
+          bmc_map,
+          solver,
+          ns,
+          property.counterexample);
+      }
+      break;
+
+    case propt::P_UNSATISFIABLE:
+      result() << "UNSAT: No counterexample found within bound" << eom;
+      property.status=propertyt::statust::SUCCESS;
+      break;
+
+    case propt::P_ERROR:
+      error() << "Error from decision procedure" << eom;
+      return 2;
+
+    default:
+      error() << "Unexpected result from decision procedure" << eom;
+      return 1;
+    }
+  }
+    
   statistics() << "Solver time: " << (current_time()-sat_start_time)
                << eom;
 
-  switch(prop_result)
-  {
-  case propt::P_SATISFIABLE:
-    {
-      result() << "SAT: bug found" << eom;
-      
-      namespacet ns(symbol_table);
-      trans_tracet trans_trace;
-
-      compute_trans_trace(
-        prop_name_list,
-        prop_bv,
-        bmc_map,
-        solver,
-        ns,
-        trans_trace);
-
-      show_trace(trans_trace);
-      report_failure();
-    }
-    break;
-
-  case propt::P_UNSATISFIABLE:
-    result() << "UNSAT: No bug found within bound" << eom;
-    report_success();
-    break;
-
-  case propt::P_ERROR:
-    error() << "Error from decision procedure" << eom;
-    return 2;
-
-  default:
-    error() << "Unexpected result from decision procedure" << eom;
-    return 1;
-  }
+  report_results();
 
   return 0;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::unwind
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::unwind(decision_proceduret &solver)
-{
-  unwind(solver, bound+1, true);
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::unwind
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::unwind(
-  decision_proceduret &solver,
-  unsigned _bound,
-  bool initial_state)
-{
-  const namespacet ns(symbol_table);
-  ::unwind(trans_expr, *this, solver, _bound, ns, initial_state);
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::check_property
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::check_property(prop_convt &solver, bool convert_only)
-{
-  if(!convert_only)
-    if(properties.empty())
-      throw "no properties";
-
-  status() << "Generating Decision Problem" << eom;
-
-  unwind(solver);
-
-  namespacet ns(symbol_table);
-
-  property(
-    prop_expr_list,
-    prop_bv,
-    get_message_handler(),
-    solver,
-    bound+1,
-    ns);
-    
-  assert(prop_expr_list.size()==prop_bv.size());
-  assert(prop_expr_list.size()==prop_name_list.size());
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::check_property
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::check_property(
-  bmc_mapt &bmc_map,
-  cnft &solver,
-  bool convert_only)
-{
-  if(!convert_only)
-    if(properties.empty())
-      throw "no properties";
-    
-  netlistt netlist;
-  if(make_netlist(netlist))
-    throw 0;
-
-  assert(netlist.properties.size()==prop_expr_list.size());
-
-  status() << "Unwinding Netlist" << eom;
-  
-  bmc_map.map_timeframes(netlist, bound+1, solver);
-
-  ::unwind(netlist, bmc_map, *this, solver);
-  ::unwind_property(netlist, bmc_map, *this, prop_bv, solver);
-  
-  assert(prop_bv.size()==prop_expr_list.size());
 }
 
 /*******************************************************************\
@@ -381,9 +298,6 @@ bool ebmc_baset::parse_property(
   debug() << "Property: " << expr_as_string << eom;
   debug() << "Mode: " << main_symbol->mode << eom;
 
-  prop_expr_list.push_back(expr);
-  prop_name_list.push_back(expr_as_string);
-  
   properties.push_back(propertyt());
   properties.back().expr=expr;
   properties.back().expr_string=expr_as_string;
@@ -425,10 +339,8 @@ bool ebmc_baset::get_model_properties()
 
         debug() << "Property: " << value_as_string << eom;
 
-        prop_expr_list.push_back(symbol.value);
-        prop_name_list.push_back(value_as_string);
-
         properties.push_back(propertyt());
+        properties.back().number=properties.size()-1;
         properties.back().name=symbol.name;
         properties.back().expr=symbol.value;
         properties.back().location=symbol.location;
@@ -462,31 +374,22 @@ bool ebmc_baset::get_model_properties()
     std::string property=cmdline.get_value("property");
 
     for(auto & p : properties)
-      if(p.name!=property)
-        p.status=propertyt::statust::DISABLED;
+      p.status=propertyt::statust::DISABLED;
+      
+    bool found=false;
 
-    unsigned p_nr=0;
-
-    for(propertiest::const_iterator p_it=properties.begin();
-        p_it!=properties.end();
-        p_it++, p_nr++)
-      if(p_it->name==property)
+    for(auto & p : properties)
+      if(p.name==property)
+      {
+        found=true;
+        p.status=propertyt::statust::UNKNOWN;
         break;
+      }
     
-    if(p_nr==properties.size())
+    if(!found)
     {
       error() << "Property " << property << " not found" << eom;
       return true;
-    }
-    
-    unsigned i=0;
-
-    for(prop_expr_listt::iterator
-        it=prop_expr_list.begin();
-        it!=prop_expr_list.end();
-        it++, i++)
-    {
-      if(i!=p_nr) it->make_true();
     }
   }
   
@@ -582,7 +485,14 @@ int ebmc_baset::do_ebmc(prop_convt &solver, bool convert_only)
 
   try
   {
-    check_property(solver, convert_only);
+    if(!convert_only)
+      if(properties.empty())
+        throw "no properties";
+
+    status() << "Generating Decision Problem" << eom;
+
+    const namespacet ns(symbol_table);
+    ::unwind(trans_expr, *this, solver, bound+1, ns, true);
 
     if(convert_only)
       result=0;
@@ -634,7 +544,19 @@ int ebmc_baset::do_ebmc(cnft &solver, bool convert_only)
   {
     bmc_mapt bmc_map;
   
-    check_property(bmc_map, solver, convert_only);
+    if(!convert_only)
+      if(properties.empty())
+        throw "no properties";
+      
+    netlistt netlist;
+    if(make_netlist(netlist))
+      throw 0;
+
+    status() << "Unwinding Netlist" << eom;
+    
+    bmc_map.map_timeframes(netlist, bound+1, solver);
+
+    ::unwind(netlist, bmc_map, *this, solver);
     
     if(convert_only)
       result=0;
@@ -660,76 +582,6 @@ int ebmc_baset::do_ebmc(cnft &solver, bool convert_only)
   }  
 
   return result;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::report_success
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::report_success()
-{
-  status() << "VERIFICATION SUCCESSFUL" << eom;
-
-  switch(get_ui())
-  {
-  case ui_message_handlert::PLAIN:
-    break;
-    
-  case ui_message_handlert::XML_UI:
-    {
-      xmlt xml("cprover-status");
-      xml.data="SUCCESS";
-      std::cout << xml;
-      std::cout << std::endl;
-    }
-    break;
-    
-  default:
-    assert(false);
-  }
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::report_failure
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::report_failure()
-{
-  status() << "VERIFICATION FAILED" << eom;
-
-  switch(get_ui())
-  {
-  case ui_message_handlert::PLAIN:
-    break;
-    
-  case ui_message_handlert::XML_UI:
-    {
-      xmlt xml("cprover-status");
-      xml.data="FAILURE";
-      std::cout << xml;
-      std::cout << std::endl;
-    }
-    break;
-    
-  default:
-    assert(false);
-  }
 }
 
 /*******************************************************************\
@@ -945,10 +797,14 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
 
   try
   {
+    std::list<exprt> property_expr_list;
+    
+    for(const auto &property : properties)
+      property_expr_list.push_back(property.expr);
+  
     convert_trans_to_netlist(
-      symbol_table, main_symbol->name, prop_expr_list, netlist, get_message_handler());
-      
-    assert(prop_expr_list.size()==netlist.properties.size());
+      symbol_table, main_symbol->name, property_expr_list,
+      netlist, get_message_handler());
   }
   
   catch(const std::string &error_str)

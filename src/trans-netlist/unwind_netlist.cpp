@@ -137,37 +137,16 @@ Function: unwind_property
 void unwind_property(
   const netlistt &netlist,
   const bmc_mapt &bmc_map,
-  messaget &message,
-  std::list<bvt> &prop_bv,
-  cnft &solver)  
+  unsigned property_nr,
+  bvt &prop_bv)
 {
-  if(netlist.properties.empty()) return;
+  prop_bv.resize(bmc_map.timeframe_map.size());
 
-  message.status() << "Unwinding property" << messaget::eom;
-  
-  bvt or_bv;
-  
-  or_bv.reserve(
-    netlist.properties.size()*bmc_map.timeframe_map.size());
-
-  for(unsigned p=0; p<netlist.properties.size(); p++)
+  for(unsigned t=0;
+      t<bmc_map.timeframe_map.size();
+      t++)
   {
-    prop_bv.push_back(bvt());
-    prop_bv.back().reserve(bmc_map.timeframe_map.size());
-
-    for(unsigned t=0;
-        t<bmc_map.timeframe_map.size();
-        t++)
-    {
-      literalt l=bmc_map.translate(t, netlist.properties[p]);
-      or_bv.push_back(!l);
-      prop_bv.back().push_back(l);
-    }
-
-    assert(prop_bv.back().size()==bmc_map.timeframe_map.size());
+    literalt l=bmc_map.translate(t, netlist.properties[property_nr]);
+    prop_bv[t]=l;
   }
-  
-  assert(prop_bv.size()==netlist.properties.size());  
-    
-  solver.lcnf(or_bv);
 }

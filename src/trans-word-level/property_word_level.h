@@ -15,8 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/prop/prop_conv.h>
 
 void property(
-  const std::list<exprt> &properties,
-  std::list<bvt> &prop_bv,
+  const exprt &property_expr,
+  bvt &prop_bv,
   message_handlert &,
   prop_convt &solver,
   unsigned no_timeframes,

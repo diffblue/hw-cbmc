@@ -313,7 +313,7 @@ void bdd_enginet::compute_counterexample(
   bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
 
   ::unwind(netlist, bmc_map, *this, solver);
-  ::unwind_property(netlist, bmc_map, *this, prop_bv, solver);
+  ::unwind_property(netlist, bmc_map, property.number, property.timeframe_literals);
   
   propt::resultt prop_result=
     solver.prop_solve();
@@ -325,8 +325,7 @@ void bdd_enginet::compute_counterexample(
   trans_tracet trans_trace;
 
   compute_trans_trace(
-    prop_name_list,
-    prop_bv,
+    property.timeframe_literals,
     bmc_map,
     solver,
     ns,

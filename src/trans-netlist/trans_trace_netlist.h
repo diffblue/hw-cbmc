@@ -12,8 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "trans_trace.h"
 
 void compute_trans_trace(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
+  const bvt &prop_bv,
   const bmc_mapt &bmc_map,
   const class propt &solver,
   const namespacet &ns,

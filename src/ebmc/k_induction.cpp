@@ -109,6 +109,7 @@ int k_inductiont::induction_base()
     namespacet ns(symbol_table);
    boolbvt solver(ns, satcheck);
 
+  #if 0
   unwind(solver, bound+1, true);
 
   property(
@@ -118,6 +119,7 @@ int k_inductiont::induction_base()
     solver,
     bound+1,
     ns);
+  #endif
 
   decision_proceduret::resultt dec_result=
     solver.dec_solve();
@@ -130,7 +132,8 @@ int k_inductiont::induction_base()
 
       namespacet ns(symbol_table);
       trans_tracet trans_trace;
-  
+
+      #if 0  
       compute_trans_trace(
         prop_name_list,
         prop_bv,
@@ -139,6 +142,7 @@ int k_inductiont::induction_base()
         ns,
         main_symbol->name,
         trans_trace);
+      #endif
         
       if(get_ui()==ui_message_handlert::PLAIN)
         result() << "Counterexample:\n" << eom;
@@ -149,7 +153,7 @@ int k_inductiont::induction_base()
         ns,
         get_ui());
         
-      report_failure();
+      //report_failure();
     }
     return 0;
 
@@ -192,8 +196,9 @@ int k_inductiont::induction_step()
   unsigned no_timeframes=bound+1;
 
   // *no* initial state
+  #if 0
   unwind(solver, no_timeframes, false);
-
+  #endif
 
   for(std::list<propertyt>::const_iterator
       it=properties.begin();
@@ -243,7 +248,7 @@ int k_inductiont::induction_step()
 
   case decision_proceduret::D_UNSATISFIABLE:
     result() << "UNSAT: inductive proof successful, property holds" << eom;
-    report_success();
+    //report_success();
     break;
 
   case decision_proceduret::D_ERROR:

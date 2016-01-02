@@ -41,9 +41,6 @@ protected:
 
   void show_trace(const trans_tracet &trans_trace);
   
-  void check_property(prop_convt &solver, bool convert_only);
-  void check_property(bmc_mapt &bmc_map, cnft &solver, bool convert_only);
-
   // word-level
   int do_ebmc(prop_convt &solver, bool convert_only);
 
@@ -54,23 +51,22 @@ protected:
   bool get_model_properties();
   void show_properties();
 
-  void unwind(decision_proceduret &solver);
-  void unwind(decision_proceduret &solver, unsigned _bound, bool initial_state);
-  
   unsigned bound;
 
   struct propertyt
   {
   public:
+    unsigned number;
     irep_idt name;
     source_locationt location;
     std::string expr_string;
     irep_idt mode;
     exprt expr;
+    bvt timeframe_literals;
     std::string description;
     enum class statust { DISABLED, SUCCESS, FAILURE, UNKNOWN } status;
     
-    propertyt():status(statust::UNKNOWN)
+    propertyt():number(0), status(statust::UNKNOWN)
     {
     }
     
@@ -80,17 +76,6 @@ protected:
   typedef std::list<propertyt> propertiest;
   propertiest properties;
   
-  typedef std::list<exprt> prop_expr_listt;
-  prop_expr_listt prop_expr_list;
-
-  typedef std::list<std::string> prop_name_listt;
-  prop_name_listt prop_name_list;
-
-  // the truth value of the properties in the time frames  
-  std::list<bvt> prop_bv;
-  
-  void report_failure();
-  void report_success();
   void report_results();
   
   void show_ldg(std::ostream &out);

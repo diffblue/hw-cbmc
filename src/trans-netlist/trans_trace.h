@@ -36,6 +36,12 @@ public:
 
     typedef std::list<assignmentt> assignmentst;
     assignmentst assignments;
+    
+    bool property_failed;
+    
+    statet():property_failed(false)
+    {
+    }
   };
 
   // one state per timeframe
@@ -45,17 +51,6 @@ public:
   // mode of whole trace
   std::string mode;
   
-  // properties
-  struct propertyt
-  {
-    std::string name;
-    tvt status;
-    unsigned failing_timeframe;
-  };
-  
-  typedef std::list<propertyt> propertiest;
-  propertiest properties;
-
   // returns the latest failing timeframe  
   unsigned get_max_failing_timeframe() const;
 
@@ -63,13 +58,6 @@ public:
   unsigned get_min_failing_timeframe() const;
 };
 
-void compute_trans_trace_properties(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
-  const propt &solver,
-  unsigned no_timeframes,
-  trans_tracet &dest);
-  
 // outputting traces
 
 void convert(

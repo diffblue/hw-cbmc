@@ -23,8 +23,7 @@ void compute_trans_trace(
 // word-level with properties
   
 void compute_trans_trace(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
+  const bvt &prop_bv,
   const class prop_convt &solver,
   unsigned no_timeframes,
   const namespacet &ns,

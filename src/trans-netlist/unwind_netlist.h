@@ -36,8 +36,7 @@ void unwind(
 void unwind_property(
   const netlistt &netlist,
   const bmc_mapt &bmc_map,
-  messaget &message,
-  std::list<bvt> &prop_bv,
-  cnft &solver);
+  unsigned property_nr,
+  bvt &prop_bv);
 
 #endif

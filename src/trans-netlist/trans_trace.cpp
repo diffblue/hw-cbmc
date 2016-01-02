@@ -40,19 +40,12 @@ Function: trans_tracet::get_max_failing_timeframe
 
 unsigned trans_tracet::get_max_failing_timeframe() const
 {
-  assert(!states.empty());
-  if(properties.empty()) return states.size()-1;
-  
   unsigned max=0;
   
-  for(propertiest::const_iterator
-      it=properties.begin();
-      it!=properties.end();
-      it++)
+  for(unsigned t=0; t<states.size(); t++)
   {
-    if(it->status.is_false() &&
-       it->failing_timeframe>max)
-      max=it->failing_timeframe;
+    if(states[t].property_failed)
+      max=t;
   }
   
   return max;
@@ -72,21 +65,11 @@ Function: trans_tracet::get_min_failing_timeframe
 
 unsigned trans_tracet::get_min_failing_timeframe() const
 {
-  assert(!states.empty());
-  if(properties.empty()) return states.size()-1;
-  
-  unsigned min=states.size()-1;
-  
-  for(propertiest::const_iterator
-      it=properties.begin();
-      it!=properties.end();
-      it++)
-  {
-    if(it->status.is_false() && it->failing_timeframe<min)
-      min=it->failing_timeframe;
-  }
-  
-  return min;
+  for(unsigned t=0; t<states.size(); t++)
+    if(states[t].property_failed)
+      return t;
+
+  return 0;
 }
 
 /*******************************************************************\
@@ -101,6 +84,7 @@ Function: compute_trans_trace
 
 \*******************************************************************/
 
+#if 0
 void compute_trans_trace(
   const decision_proceduret &decision_procedure,
   unsigned no_timeframes,
@@ -150,194 +134,7 @@ void compute_trans_trace(
     }
   }
 }
-
-/*******************************************************************\
-
-Function: compute_trans_trace_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void compute_trans_trace_properties(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
-  const propt &solver,
-  unsigned no_timeframes,
-  trans_tracet &dest)  
-{
-  // check the properties that got violated
-  
-  assert(prop_names.size()==prop_bv.size());
-
-  for(std::list<bvt>::const_iterator
-      p_it=prop_bv.begin();
-      p_it!=prop_bv.end();
-      p_it++)
-  {
-    dest.properties.push_back(trans_tracet::propertyt());
-
-    const bvt &bv=*p_it;
-    assert(bv.size()==no_timeframes);
-    
-    bool saw_unknown=false,
-         saw_failure=false;
-  
-    for(unsigned t=0; t<no_timeframes; t++)
-    {
-      tvt result=solver.l_get(bv[t]);
-
-      if(result.is_unknown())
-      {
-        saw_unknown=true;
-      }
-      else if(result.is_false())
-      {
-        dest.properties.back().failing_timeframe=t;
-        saw_failure=true;
-        break; // next property
-      }
-    }
-
-    if(saw_failure)
-      dest.properties.back().status=tvt(false);
-    else if(saw_unknown)
-      dest.properties.back().status=tvt::unknown();
-    else
-      dest.properties.back().status=tvt(true);
-  }
-
-  // put property names in
-  trans_tracet::propertiest::iterator p_it=
-    dest.properties.begin();
-  for(std::list<std::string>::const_iterator
-      n_it=prop_names.begin();
-      n_it!=prop_names.end();
-      n_it++, p_it++)
-  {
-    assert(p_it!=dest.properties.end());
-    p_it->name=*n_it;
-  }
-
-}
-
-/*******************************************************************\
-
-Function: compute_trans_trace_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void compute_trans_trace_properties(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
-  const prop_convt &solver,
-  unsigned no_timeframes,
-  trans_tracet &dest)  
-{
-  // check the properties that got violated
-
-  assert(prop_names.size()==prop_bv.size());
-
-  for(std::list<bvt>::const_iterator
-      p_it=prop_bv.begin();
-      p_it!=prop_bv.end();
-      p_it++)
-  {
-    dest.properties.push_back(trans_tracet::propertyt());
-
-    const bvt &bv=*p_it;
-    assert(bv.size()==no_timeframes);
-    
-    bool saw_unknown=false,
-         saw_failure=false;
-  
-    for(unsigned t=0; t<no_timeframes; t++)
-    {
-      tvt result=solver.l_get(bv[t]);
-
-      if(result.is_unknown())
-      {
-        saw_unknown=true;
-      }
-      else if(result.is_false())
-      {
-        dest.properties.back().failing_timeframe=t;
-        saw_failure=true;
-        break; // next property
-      }
-    }
-
-    if(saw_failure)
-      dest.properties.back().status=tvt(false);
-    else if(saw_unknown)
-      dest.properties.back().status=tvt::unknown();
-    else
-      dest.properties.back().status=tvt(true);
-  }
-
-  // put names in
-  trans_tracet::propertiest::iterator p_it=
-    dest.properties.begin();
-  for(std::list<std::string>::const_iterator
-      n_it=prop_names.begin();
-      n_it!=prop_names.end();
-      n_it++, p_it++)
-  {
-    assert(p_it!=dest.properties.end());
-    p_it->name=*n_it;
-  }
-
-}
-
-/*******************************************************************\
-
-Function: compute_trans_trace
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void compute_trans_trace(
-  const std::list<std::string> &prop_names,
-  const std::list<bvt> &prop_bv,
-  const class prop_convt &solver,
-  unsigned no_timeframes,
-  const namespacet &ns,
-  const irep_idt &module,
-  trans_tracet &dest)  
-{
-  assert(prop_names.size()==prop_bv.size());
-
-  compute_trans_trace(
-    solver,
-    no_timeframes,
-    ns,
-    module,
-    dest);
-    
-  // check the properties that got violated
-  
-  compute_trans_trace_properties(
-    prop_names,
-    prop_bv,
-    solver,
-    no_timeframes,
-    dest);
-}
+#endif
 
 /*******************************************************************\
 
@@ -414,7 +211,7 @@ void convert(
   const trans_tracet &trace,
   xmlt &dest)
 {
-  unsigned last_time_frame=trace.get_max_failing_timeframe();
+  unsigned last_time_frame=trace.get_min_failing_timeframe();
 
   dest=xmlt("trans_trace");
   
@@ -490,28 +287,10 @@ void show_trans_trace(
   {
   case ui_message_handlert::PLAIN:
     {
-      unsigned l=trace.get_max_failing_timeframe();
+      unsigned l=trace.get_min_failing_timeframe();
 
       for(unsigned t=0; t<=l; t++)
         show_trans_state(t, trace.states[t], ns);
-
-      unsigned p=1;
-
-      for(trans_tracet::propertiest::const_iterator
-          p_it=trace.properties.begin();
-          p_it!=trace.properties.end();
-          p_it++, p++)
-        if(p_it->status.is_false())
-        {
-          std::cout << "Property ";
-
-          if(!p_it->name.empty())
-            std::cout << '`' << p_it->name << "' ";
-
-          std::cout << "violated in time frame "
-                    << p_it->failing_timeframe
-                    << '\n';
-        }
     }
     break;
     
@@ -986,7 +765,7 @@ void show_trans_trace_vcd(
 
   out << "$enddefinitions $end\n";
   
-  unsigned l=trace.get_max_failing_timeframe();
+  unsigned l=trace.get_min_failing_timeframe();
   
   // initial state
 
