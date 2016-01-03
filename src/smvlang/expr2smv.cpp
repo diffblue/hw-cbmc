@@ -428,6 +428,9 @@ bool expr2smvt::convert(
   else if(src.id()==ID_equal)
     return convert_binary(src, dest, "=", precedence=11);
 
+  else if(src.id()==ID_notequal)
+    return convert_binary(src, dest, "!=", precedence=11);
+
   else if(src.id()==ID_not)
     return convert_unary(src, dest, "!", precedence=6);
 
