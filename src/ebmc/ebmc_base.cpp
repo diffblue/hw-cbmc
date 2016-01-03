@@ -137,11 +137,13 @@ int ebmc_baset::finish(prop_convt &solver)
     
     for(auto l : property.timeframe_literals)
       or_expr.operands().push_back(literal_exprt(!l));
-  
+      
+    literalt property_literal=solver.convert(or_expr);
+    
     bvt assumptions;
-    assumptions.push_back(solver.convert(or_expr));
+    assumptions.push_back(property_literal);
     solver.set_assumptions(assumptions);
-  
+
     decision_proceduret::resultt dec_result=
       solver.dec_solve();
 
@@ -215,9 +217,11 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
     
     ::property(property.expr, property.timeframe_literals,
                get_message_handler(), solver, bmc_map, ns);
+               
+    literalt property_literal=!solver.land(property.timeframe_literals);
   
     bvt assumptions;
-    assumptions.push_back(!solver.land(property.timeframe_literals));
+    assumptions.push_back(property_literal);
     solver.set_assumptions(assumptions);
   
     propt::resultt prop_result=

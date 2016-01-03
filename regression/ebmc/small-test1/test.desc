@@ -1,7 +1,7 @@
 CORE
 main.smv
---bound 10
+--bound 10 --trace
 ^SIGNAL=0$
-^Property .*1.* violated in time frame 1$
+^\[smv::main::spec1\] AG main::var::x = 1: FAILURE$
 --
 ^warning: ignoring

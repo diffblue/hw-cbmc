@@ -2,6 +2,6 @@ CORE
 main.smv
 --bound 10
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
+^\[smv::main::spec1\] AG main::var::x != 4: SUCCESS$
 --
 ^warning: ignoring

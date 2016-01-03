@@ -3,6 +3,6 @@ main.v
 --bound 2
 ^EXIT=0$
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
+^\[Verilog::main.property.prop1\] always main.x == 3: SUCCESS$
 --
 ^warning: ignoring

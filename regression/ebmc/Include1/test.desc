@@ -1,9 +1,9 @@
 CORE
 main.v
---module main --bound 20 -I subdir
+--module main --bound 20 -I subdir --trace
 ^EXIT=0$
 ^SIGNAL=0$
 ^Counterexample:$
-^Property .*1.* violated in time frame 9$
+^\[Verilog::main.property.property1\] always main.x != 10: FAILURE
 --
 ^warning: ignoring
