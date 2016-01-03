@@ -117,6 +117,22 @@ Function: ebmc_baset::finish
 
 int ebmc_baset::finish(prop_convt &solver)
 {
+  // convert the properties
+  
+  for(propertyt &property : properties)
+  {
+    status() << "Checking " << property.description << eom;
+    
+    const namespacet ns(symbol_table);
+    
+    ::property(property.expr, property.timeframe_literals,
+               get_message_handler(), solver, bound+1, ns);
+               
+    // freeze for incremental usage
+    for(auto l : property.timeframe_literals)
+      solver.set_frozen(l);
+  }
+  
   status() << "Solving with "
            << solver.decision_procedure_text() << eom;
 
@@ -128,11 +144,6 @@ int ebmc_baset::finish(prop_convt &solver)
   {
     status() << "Checking " << property.description << eom;
     
-    const namespacet ns(symbol_table);
-    
-    ::property(property.expr, property.timeframe_literals,
-               get_message_handler(), solver, bound+1, ns);
-  
     or_exprt or_expr;
     
     for(auto l : property.timeframe_literals)
@@ -205,6 +216,19 @@ Function: ebmc_baset::finish
 
 int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
 {
+  // convert the properties
+  for(propertyt &property : properties)
+  {
+    const namespacet ns(symbol_table);
+    
+    ::property(property.expr, property.timeframe_literals,
+               get_message_handler(), solver, bmc_map, ns);
+
+    // freeze for incremental usage
+    for(auto l : property.timeframe_literals)
+      solver.set_frozen(l);
+  }
+  
   absolute_timet sat_start_time=current_time();
   
   status() << "Solving with " << solver.solver_text() << eom;
@@ -213,11 +237,6 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
   {
     status() << "Checking " << property.description << eom;
   
-    const namespacet ns(symbol_table);
-    
-    ::property(property.expr, property.timeframe_literals,
-               get_message_handler(), solver, bmc_map, ns);
-               
     literalt property_literal=!solver.land(property.timeframe_literals);
   
     bvt assumptions;
