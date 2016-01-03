@@ -121,7 +121,8 @@ int ebmc_baset::finish(prop_convt &solver)
   
   for(propertyt &property : properties)
   {
-    status() << "Checking " << property.description << eom;
+    if(property.is_disabled())
+      continue;
     
     const namespacet ns(symbol_table);
     
@@ -142,6 +143,9 @@ int ebmc_baset::finish(prop_convt &solver)
   
   for(propertyt &property : properties)
   {
+    if(property.is_disabled())
+      continue;
+    
     status() << "Checking " << property.description << eom;
     
     or_exprt or_expr;
@@ -167,7 +171,6 @@ int ebmc_baset::finish(prop_convt &solver)
         property.status=propertyt::statust::FAILURE;
 
         namespacet ns(symbol_table);
-        trans_tracet trans_trace;
     
         compute_trans_trace(
           property.timeframe_literals,
@@ -219,6 +222,9 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
   // convert the properties
   for(propertyt &property : properties)
   {
+    if(property.is_disabled())
+      continue;
+    
     const namespacet ns(symbol_table);
     
     ::property(property.expr, property.timeframe_literals,
@@ -235,6 +241,9 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
 
   for(propertyt &property : properties)
   {
+    if(property.is_disabled())
+      continue;
+    
     status() << "Checking " << property.description << eom;
   
     literalt property_literal=!solver.land(property.timeframe_literals);
@@ -255,7 +264,6 @@ int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
         property.status=propertyt::statust::FAILURE;
 
         namespacet ns(symbol_table);
-        trans_tracet trans_trace;
 
         compute_trans_trace(
           property.timeframe_literals,

@@ -66,7 +66,17 @@ protected:
     std::string description;
     enum class statust { DISABLED, SUCCESS, FAILURE, UNKNOWN } status;
     
-    propertyt():number(0), status(statust::UNKNOWN)
+    inline bool is_disabled() const
+    {
+      return status==statust::DISABLED;
+    }
+    
+    inline void disable()
+    {
+      status=statust::DISABLED;
+    }
+    
+    inline propertyt():number(0), status(statust::UNKNOWN)
     {
     }
     

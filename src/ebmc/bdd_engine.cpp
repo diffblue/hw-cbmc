@@ -348,7 +348,7 @@ void bdd_enginet::check_property(
   propertyt &property,
   const BDD &p)
 {
-  if(property.status==propertyt::statust::DISABLED)
+  if(property.is_disabled())
     return;
 
   status() << "Checking " << property.description << eom;
