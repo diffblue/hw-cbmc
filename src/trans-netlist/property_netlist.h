@@ -19,8 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "bmc_map.h"
 
 void property(
-  const std::list<exprt> &properties,
-  std::list<bvt> &prop_bv,
+  const exprt &property_expr,
+  bvt &prop_bv,
   message_handlert &,
   propt &solver,
   const bmc_mapt &map,

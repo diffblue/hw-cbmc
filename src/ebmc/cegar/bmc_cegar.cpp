@@ -124,11 +124,11 @@ void bmc_cegart::unwind(
 
   instantiate(prop, bmc_map, initial_state_predicate, 0, 1,
               false, ns);
-  #endif
   
   // do the property
   property(properties, prop_bv, get_message_handler(), prop,
            bmc_map, ns);
+  #endif
 }
 
 /*******************************************************************\
