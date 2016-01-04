@@ -4,5 +4,6 @@ main.v
 ^EXIT=0$
 ^SIGNAL=0$
 ^\[Verilog::main.property.property1\] .* SUCCESS$
+^\[Verilog::main.property.property2\] .* UNKNOWN$
 --
 ^warning: ignoring
