@@ -90,6 +90,11 @@ protected:
       status=statust::SUCCESS;
     }
     
+    inline void make_unknown()
+    {
+      status=statust::UNKNOWN;
+    }
+    
     inline propertyt():number(0), status(statust::UNKNOWN)
     {
     }

@@ -189,7 +189,7 @@ int k_inductiont::induction_step()
     {
     case decision_proceduret::D_SATISFIABLE:
       result() << "SAT: inductive proof failed, k-induction is inconclusive" << eom;
-      p_it.make_failure();
+      p_it.make_unknown();
       break;
 
     case decision_proceduret::D_UNSATISFIABLE:
