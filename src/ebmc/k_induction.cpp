@@ -9,6 +9,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/property_word_level.h>
 #include <trans-word-level/trans_trace_word_level.h>
+#include <trans-word-level/unwind.h>
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/boolbv.h>
@@ -106,12 +107,12 @@ int k_inductiont::induction_base()
   status() << "Induction Base" << eom;
 
   satcheckt satcheck;
-    namespacet ns(symbol_table);
-   boolbvt solver(ns, satcheck);
+  const namespacet ns(symbol_table);
+  boolbvt solver(ns, satcheck);
+
+  unwind(trans_expr, *this, solver, bound+1, ns, true);
 
   #if 0
-  unwind(solver, bound+1, true);
-
   property(
     prop_expr_list,
     prop_bv,
@@ -189,29 +190,24 @@ int k_inductiont::induction_step()
 {
   status() << "Induction Step" << eom;
 
-  namespacet ns(symbol_table);
+  const namespacet ns(symbol_table);
   satcheckt satcheck;
   boolbvt solver(ns, satcheck);
   
   unsigned no_timeframes=bound+1;
 
   // *no* initial state
-  #if 0
-  unwind(solver, no_timeframes, false);
-  #endif
+  unwind(trans_expr, *this, solver, no_timeframes, ns, false);
 
-  for(std::list<propertyt>::const_iterator
-      it=properties.begin();
-      it!=properties.end();
-      it++)
+  for(const auto &p_it : properties)
   {
-    if(it->expr.is_true())
+    if(p_it.expr.is_true())
       continue;
   
-    exprt property(it->expr);
+    exprt property(p_it.expr);
 
     if(property.id()!=ID_sva_always &&
-       property.id()!="AG")
+       property.id()!=ID_AG)
     {
       error() << "unsupported property - only SVA always or AG implemented" << eom;
       return 1;
