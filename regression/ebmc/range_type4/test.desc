@@ -1,6 +1,7 @@
 CORE
 main.smv
 --bound 10
+^EXIT=0$
 ^SIGNAL=0$
 ^\[smv::main::spec1\] AG (!main::var::x = 6): SUCCESS$
 --

@@ -200,9 +200,9 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
   statistics() << "Solver time: " << (current_time()-sat_start_time)
                << eom;
 
-  report_results();
-
-  return 0;
+  // We return '0' if the property holds,
+  // and '10' if it is violated.
+  return property_failure()?10:0; 
 }
 
 /*******************************************************************\
@@ -292,9 +292,9 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
   statistics() << "Solver time: " << (current_time()-sat_start_time)
                << eom;
 
-  report_results();
-
-  return 0;
+  // We return '0' if the property holds,
+  // and '10' if it is violated.
+  return property_failure()?10:0; 
 }
 
 /*******************************************************************\
@@ -536,7 +536,10 @@ int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
     if(convert_only)
       result=0;
     else
+    {
       result=finish_bmc(solver);
+      report_results();
+    }
   }
   
   catch(const char *e)
@@ -600,7 +603,10 @@ int ebmc_baset::do_bmc(cnft &solver, bool convert_only)
     if(convert_only)
       result=0;
     else
+    {
       result=finish_bmc(bmc_map, solver);
+      report_results();
+    }
   }
 
   catch(const char *e)

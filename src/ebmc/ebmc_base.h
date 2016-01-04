@@ -71,6 +71,11 @@ protected:
       return status==statust::DISABLED;
     }
     
+    inline bool is_failure() const
+    {
+      return status==statust::FAILURE;
+    }
+    
     inline void disable()
     {
       status=statust::DISABLED;
@@ -85,6 +90,14 @@ protected:
 
   typedef std::list<propertyt> propertiest;
   propertiest properties;
+  
+  bool property_failure() const
+  {
+    for(const auto &p : properties)
+      if(p.is_failure()) return true;
+
+    return false;
+  }
   
   void report_results();
   

@@ -1,7 +1,11 @@
 CORE
 main.sv
 --bound 10
+^EXIT=0$
 ^SIGNAL=0$
-^VERIFICATION SUCCESSFUL$
+^\[Verilog::top.property.p0\] .* SUCCESS
+^\[Verilog::top.property.p1\] .* SUCCESS
+^\[Verilog::top.property.p2\] .* SUCCESS
+^\[Verilog::top.property.p3\] .* SUCCESS
 --
 ^warning: ignoring

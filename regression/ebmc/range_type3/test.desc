@@ -1,8 +1,9 @@
 CORE
 main.smv
 --bound 10 --trace
+^EXIT=10$
 ^SIGNAL=0$
-^\[smv::main::spec1\] AG main::var::x = 0: FAILURE$
+^\[smv::main::spec1\] .* FAILURE$
 ^Counterexample:$
 --
 ^warning: ignoring

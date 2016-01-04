@@ -1,7 +1,8 @@
 CORE
 main.smv
 --bound 10 --property smv::main::spec2
+^EXIT=0$
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
+^\[smv::main::spec2\] .* SUCCESS
 --
 ^warning: ignoring

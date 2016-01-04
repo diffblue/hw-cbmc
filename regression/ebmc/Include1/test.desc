@@ -1,7 +1,7 @@
 CORE
 main.v
 --module main --bound 20 -I subdir --trace
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
 ^\[Verilog::main.property.property1\] always main.x != 10: FAILURE
