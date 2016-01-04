@@ -1,9 +1,9 @@
 CORE
 main.sv
---module main --bound 20
-^EXIT=0$
+--module main --bound 20 --trace
+^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
-^Property .*1.* violated in time frame 9$
+^\[Verilog::main.property.my_label\] .* FAILURE$
 --
 ^warning: ignoring

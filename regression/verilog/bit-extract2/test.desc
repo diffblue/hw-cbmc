@@ -1,9 +1,9 @@
 CORE
 main.v
---module main --bound 1
-^EXIT=0$
+--module main --bound 1 --trace
+^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
-^Property .* violated in time frame 1$
+^\[Verilog::main.property.property1\] .* FAILURE$
 --
 ^warning: ignoring

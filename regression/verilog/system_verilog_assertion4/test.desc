@@ -3,6 +3,5 @@ main.sv
 --module main --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
 --
 ^warning: ignoring

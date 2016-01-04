@@ -3,6 +3,6 @@ arbiter_change.v
 --bound 5
 ^EXIT=0$
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
+^\[Verilog::main.property.p1\] .* SUCCESS$
 --
 ^warning: ignoring

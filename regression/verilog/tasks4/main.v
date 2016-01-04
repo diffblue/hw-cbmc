@@ -13,7 +13,8 @@ module main(clk);
   always @(posedge clk) begin
     my_task1(x, x);
   end
-  
+
+  // fails after 3 ticks  
   always assert property1: x<3;
   
 endmodule

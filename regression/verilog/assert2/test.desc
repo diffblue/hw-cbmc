@@ -1,9 +1,9 @@
 CORE
 main.v
 --module main --bound 20
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
-^Counterexample:$
-^Property .* violated in time frame 9$
+^\[Verilog::main.s_ok.property.eq\] .* SUCCESS$
+^\[Verilog::main.s_fail.property.eq\] .* FAILURE$
 --
 ^warning: ignoring
