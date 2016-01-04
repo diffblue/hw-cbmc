@@ -36,7 +36,6 @@ protected:
   bool get_main();
   bool get_bound();
     
-
   void show_trace(const trans_tracet &trans_trace);
   
   // word-level
@@ -79,6 +78,16 @@ protected:
     inline void disable()
     {
       status=statust::DISABLED;
+    }
+    
+    inline void make_failure()
+    {
+      status=statust::FAILURE;
+    }
+    
+    inline void make_success()
+    {
+      status=statust::SUCCESS;
     }
     
     inline propertyt():number(0), status(statust::UNKNOWN)

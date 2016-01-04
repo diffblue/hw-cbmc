@@ -377,7 +377,7 @@ void bdd_enginet::check_property(
 
     if(!intersection.is_false())
     {
-      property.status=propertyt::statust::FAILURE;
+      property.make_failure();
       status() << "Property refuted" << eom;
       compute_counterexample(property, iteration);
       break;
@@ -401,7 +401,7 @@ void bdd_enginet::check_property(
     // have we saturated?
     if((set_union==states).is_true())
     {
-      property.status=propertyt::statust::SUCCESS;
+      property.make_success();
       status() << "Property holds" << eom;
       break;
     }

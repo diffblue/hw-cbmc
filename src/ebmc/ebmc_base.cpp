@@ -168,7 +168,7 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
       {
         result() << "SAT: counterexample found" << eom;
         
-        property.status=propertyt::statust::FAILURE;
+        property.make_failure();
 
         namespacet ns(symbol_table);
     
@@ -184,7 +184,7 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
 
     case decision_proceduret::D_UNSATISFIABLE:
       result() << "UNSAT: No counterexample found within bound" << eom;
-      property.status=propertyt::statust::SUCCESS;
+      property.make_success();
       break;
 
     case decision_proceduret::D_ERROR:
@@ -261,7 +261,7 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
       {
         result() << "SAT: counterexample found" << eom;
         
-        property.status=propertyt::statust::FAILURE;
+        property.make_failure();
 
         namespacet ns(symbol_table);
 
@@ -276,7 +276,7 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
 
     case propt::P_UNSATISFIABLE:
       result() << "UNSAT: No counterexample found within bound" << eom;
-      property.status=propertyt::statust::SUCCESS;
+      property.make_success();
       break;
 
     case propt::P_ERROR:
@@ -931,7 +931,7 @@ void ebmc_baset::report_results()
       case propertyt::statust::DISABLED:;
       }
       
-      if(property.status==propertyt::statust::FAILURE)
+      if(property.is_failure())
         convert(ns, property.counterexample, xml_result.new_element());
 
       std::cout << xml_result << '\n' << std::flush;
@@ -960,7 +960,7 @@ void ebmc_baset::report_results()
                
       status() << eom;
       
-      if(property.status==propertyt::statust::FAILURE &&
+      if(property.is_failure() &&
          cmdline.isset("trace"))
       {
         status() << "Counterexample:\n" << eom;

@@ -87,6 +87,9 @@ int k_inductiont::operator()()
 
   // do induction step
   result=induction_step();
+  
+  report_results();
+  
   return result;
 }
 
@@ -110,68 +113,12 @@ int k_inductiont::induction_base()
   const namespacet ns(symbol_table);
   boolbvt solver(ns, satcheck);
 
-  unwind(trans_expr, *this, solver, bound+1, ns, true);
-
-  #if 0
-  property(
-    prop_expr_list,
-    prop_bv,
-    get_message_handler(),
-    solver,
-    bound+1,
-    ns);
-  #endif
-
-  decision_proceduret::resultt dec_result=
-    solver.dec_solve();
+  int result=finish_bmc(solver);
   
-  switch(dec_result)
-  {
-  case decision_proceduret::D_SATISFIABLE:
-    {
-      result() << "SAT: bug found" << eom;
-
-      namespacet ns(symbol_table);
-      trans_tracet trans_trace;
-
-      #if 0  
-      compute_trans_trace(
-        prop_name_list,
-        prop_bv,
-        solver,
-        bound+1,
-        ns,
-        main_symbol->name,
-        trans_trace);
-      #endif
-        
-      if(get_ui()==ui_message_handlert::PLAIN)
-        result() << "Counterexample:\n" << eom;
-
-      show_trans_trace(
-        trans_trace,
-        *this, // message
-        ns,
-        get_ui());
-        
-      //report_failure();
-    }
-    return 0;
-
-  case decision_proceduret::D_UNSATISFIABLE:
-    result() << "UNSAT: No bug found within bound" << eom;
-    break;
-
-  case decision_proceduret::D_ERROR:
-    error() << "Error from decision procedure" << eom;
-    return 2;
-
-  default:
-    error() << "Unexpected result from decision procedure" << eom;
-    return 1;
-  }
-
-  return -1;
+  if(result!=0 && result!=10)
+    return result;
+  else
+    return -1;
 }
 
 /*******************************************************************\
@@ -190,20 +137,20 @@ int k_inductiont::induction_step()
 {
   status() << "Induction Step" << eom;
 
-  const namespacet ns(symbol_table);
-  satcheckt satcheck;
-  boolbvt solver(ns, satcheck);
-  
   unsigned no_timeframes=bound+1;
 
-  // *no* initial state
-  unwind(trans_expr, *this, solver, no_timeframes, ns, false);
-
-  for(const auto &p_it : properties)
+  for(auto &p_it : properties)
   {
-    if(p_it.expr.is_true())
+    if(p_it.is_disabled())
       continue;
   
+    const namespacet ns(symbol_table);
+    satcheckt satcheck;
+    boolbvt solver(ns, satcheck);
+    
+    // *no* initial state
+    unwind(trans_expr, *this, solver, no_timeframes, ns, false);
+
     exprt property(p_it.expr);
 
     if(property.id()!=ID_sva_always &&
@@ -231,30 +178,33 @@ int k_inductiont::induction_step()
       instantiate(tmp, no_timeframes-1, no_timeframes, ns);
       solver.set_to_false(tmp);
     }    
+
+    decision_proceduret::resultt dec_result=
+      solver.dec_solve();
+    
+    switch(dec_result)
+    {
+    case decision_proceduret::D_SATISFIABLE:
+      result() << "SAT: inductive proof failed, k-induction is inconclusive" << eom;
+      p_it.make_failure();
+      break;
+
+    case decision_proceduret::D_UNSATISFIABLE:
+      result() << "UNSAT: inductive proof successful, property holds" << eom;
+      p_it.make_success();
+      break;
+
+    case decision_proceduret::D_ERROR:
+      error() << "Error from decision procedure" << eom;
+      return 2;
+
+    default:
+      error() << "Unexpected result from decision procedure" << eom;
+      return 1;
+    }
   }
 
-  decision_proceduret::resultt dec_result=
-    solver.dec_solve();
-  
-  switch(dec_result)
-  {
-  case decision_proceduret::D_SATISFIABLE:
-    result() << "SAT: inductive proof failed, k-induction is inconclusive" << eom;
-    break;
-
-  case decision_proceduret::D_UNSATISFIABLE:
-    result() << "UNSAT: inductive proof successful, property holds" << eom;
-    //report_success();
-    break;
-
-  case decision_proceduret::D_ERROR:
-    error() << "Error from decision procedure" << eom;
-    return 2;
-
-  default:
-    error() << "Unexpected result from decision procedure" << eom;
-    return 1;
-  }
-
-  return 0;
+  // We return '0' if the property holds,
+  // and '10' if it is violated.
+  return property_failure()?10:0; 
 }
