@@ -113,6 +113,8 @@ int k_inductiont::induction_base()
   const namespacet ns(symbol_table);
   boolbvt solver(ns, satcheck);
 
+  ::unwind(trans_expr, *this, solver, bound+1, ns, true);
+
   int result=finish_bmc(solver);
   
   if(result!=0 && result!=10)
@@ -141,7 +143,8 @@ int k_inductiont::induction_step()
 
   for(auto &p_it : properties)
   {
-    if(p_it.is_disabled())
+    if(p_it.is_disabled() ||
+       p_it.is_failure())
       continue;
   
     const namespacet ns(symbol_table);
