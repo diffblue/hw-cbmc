@@ -42,10 +42,10 @@ protected:
   void show_trace(const trans_tracet &trans_trace);
   
   // word-level
-  int do_ebmc(prop_convt &solver, bool convert_only);
+  int do_bmc(prop_convt &solver, bool convert_only);
 
   // bit-level
-  int do_ebmc(cnft &solver, bool convert_only);
+  int do_bmc(cnft &solver, bool convert_only);
   
   bool parse_property(const std::string &property);
   bool get_model_properties();

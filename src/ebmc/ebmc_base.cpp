@@ -504,7 +504,7 @@ bool ebmc_baset::get_main()
 
 /*******************************************************************\
 
-Function: ebmc_baset::do_ebmc
+Function: ebmc_baset::do_bmc
 
   Inputs:
 
@@ -514,7 +514,7 @@ Function: ebmc_baset::do_ebmc
 
 \*******************************************************************/
 
-int ebmc_baset::do_ebmc(prop_convt &solver, bool convert_only)
+int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
 {
   solver.set_message_handler(get_message_handler());
 
@@ -561,7 +561,7 @@ int ebmc_baset::do_ebmc(prop_convt &solver, bool convert_only)
 
 /*******************************************************************\
 
-Function: ebmc_baset::do_ebmc
+Function: ebmc_baset::do_bmc
 
   Inputs:
 
@@ -571,7 +571,7 @@ Function: ebmc_baset::do_ebmc
 
 \*******************************************************************/
 
-int ebmc_baset::do_ebmc(cnft &solver, bool convert_only)
+int ebmc_baset::do_bmc(cnft &solver, bool convert_only)
 {
   solver.set_message_handler(get_message_handler());
 

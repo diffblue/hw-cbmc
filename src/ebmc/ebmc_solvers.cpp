@@ -43,7 +43,7 @@ Function: ebmc_baset::do_dimacs
 int ebmc_baset::do_dimacs()
 {
   dimacs_cnft dimacs_cnf;
-  int result=do_ebmc(dimacs_cnf, true);
+  int result=do_bmc(dimacs_cnf, true);
   if(result!=0) return result;
 
   statistics() << dimacs_cnf.no_variables() << " variables and "
@@ -107,7 +107,7 @@ int ebmc_baset::do_smt1()
       smt1_convt::Z3,
       out);
      
-    return do_ebmc(smt1_conv, true);
+    return do_bmc(smt1_conv, true);
   }
 
   smt1_convt smt1_conv(
@@ -118,7 +118,7 @@ int ebmc_baset::do_smt1()
     smt1_convt::Z3,
     std::cout);
    
-  return do_ebmc(smt1_conv, true);
+  return do_bmc(smt1_conv, true);
 }
 
 /*******************************************************************\
@@ -158,7 +158,7 @@ int ebmc_baset::do_smt2()
       smt2_convt::Z3,
       out);
      
-    return do_ebmc(smt2_conv, true);
+    return do_bmc(smt2_conv, true);
   }
 
   smt2_convt smt2_conv(
@@ -169,7 +169,7 @@ int ebmc_baset::do_smt2()
     smt2_convt::Z3,
     std::cout);
    
-  return do_ebmc(smt2_conv, true);
+  return do_bmc(smt2_conv, true);
 }
 
 /*******************************************************************\
@@ -195,7 +195,7 @@ int ebmc_baset::do_mathsat()
     "QF_AUFBV",
     smt2_dect::MATHSAT);
                      
-  return do_ebmc(smt2_dec, false);
+  return do_bmc(smt2_dec, false);
 }
 
 /*******************************************************************\
@@ -221,7 +221,7 @@ int ebmc_baset::do_z3()
     "QF_AUFBV",
     smt2_dect::Z3);
                      
-  return do_ebmc(smt2_dec, false);
+  return do_bmc(smt2_dec, false);
 }
 
 /*******************************************************************\
@@ -247,7 +247,7 @@ int ebmc_baset::do_cvc4()
     "QF_AUFBV",
     smt2_dect::CVC4);
                      
-  return do_ebmc(smt2_dec, false);
+  return do_bmc(smt2_dec, false);
 }
 
 /*******************************************************************\
@@ -273,7 +273,7 @@ int ebmc_baset::do_yices()
     "QF_AUFBV",
     smt2_dect::YICES);
                      
-  return do_ebmc(smt2_dec, false);
+  return do_bmc(smt2_dec, false);
 }
 
 /*******************************************************************\
@@ -299,7 +299,7 @@ int ebmc_baset::do_boolector()
     "QF_AUFBV",
     smt1_dect::BOOLECTOR);
                      
-  return do_ebmc(smt1_dec, false);
+  return do_bmc(smt1_dec, false);
 }
 
 /*******************************************************************\
@@ -321,13 +321,13 @@ int ebmc_baset::do_sat()
 
   if(cmdline.isset("aig"))
   {
-    return do_ebmc(satcheck, false);
+    return do_bmc(satcheck, false);
   }
   else
   {
     const namespacet ns(symbol_table);
     boolbvt boolbv(ns, satcheck);
-    return do_ebmc(boolbv, false);
+    return do_bmc(boolbv, false);
   }
 }
 
@@ -348,7 +348,7 @@ int ebmc_baset::do_prover()
   #ifdef HAVE_PROVER
   const namespacet ns(symbol_table);
   prover_satt prover_sat(ns);
-  return do_ebmc(prover_sat, false);
+  return do_bmc(prover_sat, false);
   #else
   error() << "Support for prover not linked in" << eom;
   return 1;
@@ -372,7 +372,7 @@ int ebmc_baset::do_lifter()
   #ifdef HAVE_PROVER
   const namespacet ns(symbol_table);
   liftert lifter(ns);
-  return do_ebmc(lifter.prop_conv(), false);
+  return do_bmc(lifter.prop_conv(), false);
   #else
   error() << "Support for lifter not linked in" << eom;
   return 1;
