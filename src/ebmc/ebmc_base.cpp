@@ -105,7 +105,7 @@ void ebmc_baset::show_trace(const trans_tracet &trans_trace)
 
 /*******************************************************************\
 
-Function: ebmc_baset::finish
+Function: ebmc_baset::finish_bmc
 
   Inputs:
 
@@ -115,7 +115,7 @@ Function: ebmc_baset::finish
 
 \*******************************************************************/
 
-int ebmc_baset::finish(prop_convt &solver)
+int ebmc_baset::finish_bmc(prop_convt &solver)
 {
   // convert the properties
   
@@ -207,7 +207,7 @@ int ebmc_baset::finish(prop_convt &solver)
 
 /*******************************************************************\
 
-Function: ebmc_baset::finish
+Function: ebmc_baset::finish_bmc
 
   Inputs:
 
@@ -217,7 +217,7 @@ Function: ebmc_baset::finish
 
 \*******************************************************************/
 
-int ebmc_baset::finish(const bmc_mapt &bmc_map, propt &solver)
+int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
 {
   // convert the properties
   for(propertyt &property : properties)
@@ -536,7 +536,7 @@ int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
     if(convert_only)
       result=0;
     else
-      result=finish(solver);
+      result=finish_bmc(solver);
   }
   
   catch(const char *e)
@@ -600,7 +600,7 @@ int ebmc_baset::do_bmc(cnft &solver, bool convert_only)
     if(convert_only)
       result=0;
     else
-      result=finish(bmc_map, solver);
+      result=finish_bmc(bmc_map, solver);
   }
 
   catch(const char *e)

@@ -36,16 +36,16 @@ protected:
   bool get_main();
   bool get_bound();
     
-  int finish(prop_convt &solver);
-  int finish(const bmc_mapt &bmc_map, propt &solver);
 
   void show_trace(const trans_tracet &trans_trace);
   
   // word-level
   int do_bmc(prop_convt &solver, bool convert_only);
+  int finish_bmc(prop_convt &solver);
 
   // bit-level
   int do_bmc(cnft &solver, bool convert_only);
+  int finish_bmc(const bmc_mapt &bmc_map, propt &solver);
   
   bool parse_property(const std::string &property);
   bool get_model_properties();
