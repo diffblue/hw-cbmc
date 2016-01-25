@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <ostream>
+
 #include "vhdl_parse_tree.h"
 //#include "vhdl_typecheck_base.h"
 
@@ -134,19 +136,49 @@ Function: vhdl_parse_treet::itemt::show
 
 void vhdl_parse_treet::itemt::show(std::ostream &out) const
 {
-  #if 0
   switch(type)
   {
-  case itemt::MODULE:
-    vhdl_module.show(out);
+  case itemt::ARCHITECTURE:
+    out << "ARCHITECTURE " << pretty_name(name);
+    out << '\n';
     break;
     
-  case itemt::TYPEDEF:
-    vhdl_typedef.show(out);
+  case itemt::ENTITY:
+    out << "ENTITY " << pretty_name(name);
+    out << '\n';
+    break;
+    
+  case itemt::USE:
+    out << "USE ";
+    out << '\n';
+    break;
+    
+  case itemt::LIBRARY:
+    out << "LIBRARY ";
+    out << '\n';
     break;
     
   default:
     assert(false);
   }
-  #endif
+}
+
+/*******************************************************************\
+
+Function: vhdl_parse_treet::itemt::pretty_name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string vhdl_parse_treet::itemt::pretty_name(const irept &name)
+{
+  if(name.id()==ID_symbol)
+    return name.get_string(ID_identifier);
+  else
+    return "?";
 }

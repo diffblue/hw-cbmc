@@ -27,6 +27,8 @@ public:
     typedef enum { ARCHITECTURE, ENTITY, USE, LIBRARY } item_typet;
     item_typet type;
     
+    irept name;
+    
     bool is_architecture() const
     {
       return type==ARCHITECTURE;
@@ -48,6 +50,7 @@ public:
     }
     
     void show(std::ostream &out) const;
+    static std::string pretty_name(const irept &);
   };
   
   typedef std::list<itemt> itemst;

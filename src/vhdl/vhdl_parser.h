@@ -42,6 +42,12 @@ public:
   }
   
   std::vector<std::string> comments;
+  
+  inline vhdl_parse_treet::itemt &new_item()
+  {
+    parse_tree.items.push_back(vhdl_parse_treet::itemt());
+    return parse_tree.items.back();
+  }
 };
 
 extern vhdl_parsert vhdl_parser;

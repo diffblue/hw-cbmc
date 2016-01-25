@@ -112,17 +112,31 @@ inline static void init(YYSTYPE &expr, const irep_idt &id)
 
 %}
 
-%right '='
-%left ORL
-%left ANDL
-%left TOK_OR
-%left TOK_XOR
-%left TOK_AND
+%{
+// http://www.csee.umbc.edu/portal/help/VHDL/operator.html
+%}
+
+%left TOK_OR TOK_NOR
+%left TOK_XOR TOK_XNOR
+%left TOK_AND TOK_NAND
 %left TOK_MOD
-%left '<' '>' BIGEQ LESSEQ NOTEQ EQUAL
+%left '=' TOK_NE '<' '>' TOK_GE TOK_LE
 %left '+' '-' '&'
+%right UMINUS UPLUS
 %left '*' '/'
-%right UMINUS UPLUS NOTL TOK_NOT
+%left TOK_DOUBLE_STAR 
+%right TOK_ABS TOK_NOT
+
+%token TOK_ARROW "=>"     
+%token TOK_DOUBLE_DOT ".."     
+%token TOK_DOUBLE_STAR "**"
+%token TOK_ASSIGN ":="
+%token TOK_NE "/="
+%token TOK_GE ">="
+%token TOK_LE "<="
+%token TOK_LEFT_LABEL_BRACKET "<<"
+%token TOK_RIGHT_LABEL_BRACKET ">>"
+%token TOK_BOX "<>"
 
 %token TOK_ABS "ABS"
 %token TOK_ACCESS "ACCESS" 
@@ -314,6 +328,8 @@ primary_unit:
 
 package_declaration:
          TOK_PACKAGE name TOK_IS package_declarative_part TOK_END ';'
+       {
+       }
        ;
        
 package_declarative_part:
@@ -326,6 +342,8 @@ secondary_unit:
 
 package:
          TOK_PACKAGE TOK_BODY name TOK_IS package_body_declarative_part TOK_END ';'
+       {
+       }
        ;
 
 package_body_declarative_part:
@@ -334,15 +352,22 @@ package_body_declarative_part:
 entity_declaration:
          TOK_ENTITY name TOK_IS TOK_END name_opt ';'
        {
-         //PARSER.new_entity();
+         vhdl_parse_treet::itemt &e=PARSER.new_item();
+         e.type=vhdl_parse_treet::itemt::ENTITY;
+         e.name=stack($2);
        }
        | TOK_ENTITY name TOK_IS TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
        {
-         //PARSER.new_entity();
+         vhdl_parse_treet::itemt &e=PARSER.new_item();
+         e.type=vhdl_parse_treet::itemt::ENTITY;
+         e.name=stack($2);
        }
        | TOK_ENTITY name TOK_IS TOK_GENERIC '(' generic_list ')' ';'
          TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
        {
+         vhdl_parse_treet::itemt &e=PARSER.new_item();
+         e.type=vhdl_parse_treet::itemt::ENTITY;
+         e.name=stack($2);
        }
        ;
 
@@ -520,6 +545,9 @@ architecture:
          TOK_ARCHITECTURE name TOK_OF name TOK_IS architecture_decl_list
          TOK_BEGIN architecture_body TOK_END name_opt ';'
        {
+         vhdl_parse_treet::itemt &a=PARSER.new_item();
+         a.type=vhdl_parse_treet::itemt::ARCHITECTURE;
+         a.name=stack($2);
        }
        ;
 
@@ -581,10 +609,10 @@ architecture_body:
        ;
 
 architecture_item:
-         signal '<' '=' sigvalue
+         signal TOK_LE sigvalue
        {
        }
-       | TOK_WITH expr TOK_SELECT signal '<' '=' with_list ';'
+       | TOK_WITH expr TOK_SELECT signal TOK_LE with_list ';'
        {
        }
        | name ':' name TOK_PORT TOK_MAP '(' map_list ')' ';'
@@ -604,7 +632,7 @@ architecture_item:
          TOK_PROCESS name_opt ';'
        {
        }
-       | label_opt TOK_IF conditional_expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
+       | label_opt TOK_IF expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
        }
        | label_opt TOK_FOR signal TOK_IN expr TOK_TO expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
@@ -699,16 +727,16 @@ process_body:
        ;
 
 process_item:
-         signal ':' '=' expr ';'
+         signal TOK_ASSIGN expr ';'
        {
          init($$, ID_code);
          stack($$).set(ID_statement, ID_assign);
          stack($$).move_to_operands(stack($1), stack($4));
        }
-       | signal '<' '=' sigvalue
+       | signal TOK_LE sigvalue
        {
        }
-       | TOK_IF conditional_expr TOK_THEN process_body elsepart TOK_END TOK_IF ';'
+       | TOK_IF expr TOK_THEN process_body elsepart TOK_END TOK_IF ';'
        {
          init($$, ID_code);
          stack($$).set(ID_statement, ID_ifthenelse);
@@ -757,7 +785,7 @@ elsepart:
        {
          init($$, ID_nil);
        }
-       | TOK_ELSIF conditional_expr TOK_THEN process_body elsepart
+       | TOK_ELSIF expr TOK_THEN process_body elsepart
        {
          init($$, ID_code);
          stack($$).set(ID_statement, ID_ifthenelse);
@@ -814,12 +842,12 @@ sigvalue:
        {
          $$=$1;
        }
-       | expr delay_opt TOK_WHEN conditional_expr ';'
+       | expr delay_opt TOK_WHEN expr ';'
        {
          init($$, ID_when);
          stack($$).move_to_operands(stack($1), stack($4));
        }
-       | expr delay_opt TOK_WHEN conditional_expr TOK_ELSE sigvalue
+       | expr delay_opt TOK_WHEN expr TOK_ELSE sigvalue
        {
          init($$, ID_when);
          stack($$).move_to_operands(stack($1), stack($4), stack($6));
@@ -898,7 +926,7 @@ choices:
        ;
 
 element_association:
-         choices '=' '>' expr
+         choices TOK_ARROW expr
        ;
 
 element_association_list:
@@ -977,14 +1005,29 @@ expr:
          init($$, ID_and);
          stack($$).move_to_operands(stack($1), stack($3));
        }
+       | expr TOK_NAND expr
+       {
+         init($$, ID_nand);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
        | expr TOK_OR expr
        {
          init($$, ID_or);
          stack($$).move_to_operands(stack($1), stack($3));
        }
+       | expr TOK_NOR expr
+       {
+         init($$, ID_nor);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
        | expr TOK_XOR expr
        {
          init($$, ID_xor);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_XNOR expr
+       {
+         init($$, ID_xnor);
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | name '(' expr_list ')'
@@ -997,6 +1040,37 @@ expr:
        {
          $$=$2;
        }
+       | expr '=' expr
+       {
+         init($$, ID_equal);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr '>' expr
+       {
+         init($$, ID_gt);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_GE expr
+       {
+         init($$, ID_ge);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr '<' expr
+       {
+         init($$, ID_lt);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_LE expr
+       {
+         init($$, ID_le);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_NE expr
+       {
+         init($$, ID_notequal);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       ;
        ;
 
 expr_list:
@@ -1009,61 +1083,5 @@ expr_list:
        {
          $$=$1;
          mts($$, $3);
-       }
-       ;
-
-conditional_expr: 
-         comparison 
-       | '(' conditional_expr ')'
-       {
-         $$=$2;
-       }
-       | conditional_expr TOK_AND conditional_expr %prec ANDL
-       {
-         init($$, ID_and);
-         stack($$).move_to_operands(stack($1), stack($3));
-       }
-       | conditional_expr TOK_OR conditional_expr %prec ORL
-       {
-         init($$, ID_or);
-         stack($$).move_to_operands(stack($1), stack($3));
-       }
-       | TOK_NOT conditional_expr %prec NOTL
-       {
-         init($$, ID_not);
-         mto($$, $2);
-       }
-       ;
-
-comparison:
-         expr '=' expr %prec EQUAL
-       {
-         init($$, ID_equal);
-         stack($$).move_to_operands(stack($1), stack($3));
-       }
-       | expr '>' expr
-       {
-         init($$, ID_gt);
-         stack($$).move_to_operands(stack($1), stack($3));
-       }
-       | expr '>' '=' expr %prec BIGEQ
-       {
-         init($$, ID_ge);
-         stack($$).move_to_operands(stack($1), stack($4));
-       }
-       | expr '<' expr
-       {
-         init($$, ID_lt);
-         stack($$).move_to_operands(stack($1), stack($3));
-       }
-       | expr '<' '=' expr %prec LESSEQ
-       {
-         init($$, ID_le);
-         stack($$).move_to_operands(stack($1), stack($4));
-       }
-       | expr '/' '=' expr %prec NOTEQ
-       {
-         init($$, ID_notequal);
-         stack($$).move_to_operands(stack($1), stack($4));
        }
        ;

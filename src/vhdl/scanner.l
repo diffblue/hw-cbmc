@@ -39,6 +39,17 @@ void vhdl_scanner_init()
   vhdl_parser.comments.push_back(std::string(tmp, 0, tmp2-tmp));
 }                                                
 
+"=>"            { return TOK_ARROW; }
+".."            { return TOK_DOUBLE_DOT; }
+"**"            { return TOK_DOUBLE_STAR; }
+":="            { return TOK_ASSIGN; }
+"/="            { return TOK_NE; }
+">="            { return TOK_GE; }
+"<="            { return TOK_LE; }
+"<<"            { return TOK_LEFT_LABEL_BRACKET; }
+">>"            { return TOK_RIGHT_LABEL_BRACKET; }
+"<>"            { return TOK_BOX; }
+
 [ \n\r\t] { /* eat */ }
 
 "ABS"           { return TOK_ABS; }

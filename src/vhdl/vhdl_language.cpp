@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <sstream>
-
 #include <util/suffix.h>
 
 #include "vhdl_language.h"
@@ -39,9 +37,6 @@ bool vhdl_languaget::parse(
   vhdl_parser.set_message_handler(get_message_handler());
   //vhdl_parser.grammar=vhdl_parsert::LANGUAGE;
   
-  //if(has_suffix(path, ".sv"))
-  //  vhdl_parser.mode=vhdl_parsert::SYSTEM_VERILOG;
-
   vhdl_scanner_init();
 
   bool result=vhdl_parser.parse();
@@ -127,6 +122,15 @@ Function: vhdl_languaget::modules_provided
 void vhdl_languaget::modules_provided(
   std::set<std::string> &module_set)
 {
+  for(auto const &i : parse_tree.items)
+  {
+    if(i.type==vhdl_parse_treet::itemt::ARCHITECTURE)
+    {
+      module_set.insert(
+        vhdl_parse_treet::itemt::pretty_name(i.name));
+    }
+  }
+
   #if 0
   parse_tree.modules_provided(module_set);
   #endif
@@ -150,12 +154,12 @@ bool vhdl_languaget::typecheck(
 {
   if(module=="") return false;
 
-  #if 0
-  if(vhdl_typecheck(parse_tree, symbol_table, module, message_handler))
+  if(vhdl_typecheck(parse_tree, symbol_table, module, get_message_handler()))
     return true;
     
-  message_handler.print(9, "Synthesis");
+  debug() << "Synthesis" << eom;
 
+  #if 0
   if(vhdl_synthesis(symbol_table, module, message_handler, options))
     return true;
   #endif

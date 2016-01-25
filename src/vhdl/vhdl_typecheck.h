@@ -10,8 +10,15 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_VHDL_TYPECHECK_H
 
 #include <util/symbol_table.h>
+#include <util/message.h>
 
-bool convert_vhdl(void *root, symbol_tablet &symbol_table, std::string &error);
+#include "vhdl_parse_tree.h"
+
+bool vhdl_typecheck(
+  vhdl_parse_treet &,
+  symbol_tablet &,
+  const std::string &module,
+  message_handlert &);
 
 #endif
 
