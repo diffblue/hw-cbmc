@@ -54,7 +54,7 @@ sub test($$$$$) {
   $options =~ s/$ign//g if(defined($ign));
 
   my $output = $input;
-  $output =~ s/\.(v|sv|smv|c|i|cpp|ii|xml)$/.out/;
+  $output =~ s/\.(v|sv|smv|c|i|cpp|ii|xml|vhd)$/.out/;
 
   if($output eq $input) {
     print("Error in test file -- $test\n");
