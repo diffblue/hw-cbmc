@@ -729,6 +729,27 @@ process_item:
        | TOK_NULL ';'
        {
        }
+       | label_opt TOK_ASSERT expr assert_report_opt assert_severity_opt ';'
+       {
+       }
+       ;
+
+assert_report_opt:
+         /* Empty */
+       {
+       }
+       | TOK_REPORT expr
+       {
+       }
+       ;
+
+assert_severity_opt:
+         /* Empty */
+       {
+       }
+       | TOK_SEVERITY expr
+       {
+       }
        ;
 
 elsepart:
