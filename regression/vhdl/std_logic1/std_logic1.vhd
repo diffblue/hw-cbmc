@@ -1,27 +1,27 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity Combinational1_ent is
-end Combinational1_ent;  
+entity std_logic1_ent is
+end std_logic1_ent;  
 
-architecture Combinational1_test of Combinational1_ent is 
+architecture std_logic1_test of std_logic1_ent is 
 
 signal a, b, c: std_logic;
 
 begin 
 
   process begin
-    a:='1' or   '0'; assert(a='1');
-    a:='0' or   '0'; assert(a='0');
-    a:='1' nor  '0'; assert(a='0');
-    a:='0' nor  '0'; assert(a='1');
-    a:='1' and  '0'; assert(a='0');
-    a:='1' and  '1'; assert(a='1');
-    a:='1' nand '0'; assert(a='1');
-    a:='1' nand '1'; assert(a='0');
-    a:='1' xor  '0'; assert(a='1');
-    a:='1' xnor '0'; assert(a='0');
-    a:=not '0';      assert(a='1');
+    a:='1' or   '0'; assert a='1';
+    a:='0' or   '0'; assert a='0';
+    a:='1' nor  '0'; assert a='0';
+    a:='0' nor  '0'; assert a='1';
+    a:='1' and  '0'; assert a='0';
+    a:='1' and  '1'; assert a='1';
+    a:='1' nand '0'; assert a='1';
+    a:='1' nand '1'; assert a='0';
+    a:='1' xor  '0'; assert a='1';
+    a:='1' xnor '0'; assert a='0';
+    a:=not '0';      assert a='1';
   end process;
 
 end OR_beh;
