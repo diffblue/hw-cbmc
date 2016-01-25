@@ -134,7 +134,7 @@ void verilog_scanner_init()
 <GRAMMAR>"\""	{ BEGIN(STRING);	/* begin string literal state */
 		  newstack(yyveriloglval);
                   verilog_parser.string_literal.clear();
-		 }
+		}
 
 <STRING>{
    "\""		{ BEGIN(GRAMMAR);	/* end string state, back GRAMMAR */
