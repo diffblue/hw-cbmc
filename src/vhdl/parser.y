@@ -332,7 +332,11 @@ package_body_declarative_part:
        ;
 
 entity_declaration:
-         TOK_ENTITY name TOK_IS TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
+         TOK_ENTITY name TOK_IS TOK_END name_opt ';'
+       {
+         //PARSER.new_entity();
+       }
+       | TOK_ENTITY name TOK_IS TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
        {
          //PARSER.new_entity();
        }
@@ -590,7 +594,14 @@ architecture_item:
          TOK_PORT TOK_MAP '(' map_list ')' ';'
        {
        }
-       | label_opt TOK_PROCESS '(' signal_list ')' process_decl_list TOK_BEGIN process_body TOK_END TOK_PROCESS name_opt ';'
+       | label_opt TOK_PROCESS '(' signal_list ')' process_decl_list
+         TOK_BEGIN process_body TOK_END
+         TOK_PROCESS name_opt ';'
+       {
+       }
+       | label_opt TOK_PROCESS
+         TOK_BEGIN process_body TOK_END
+         TOK_PROCESS name_opt ';'
        {
        }
        | label_opt TOK_IF conditional_expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
