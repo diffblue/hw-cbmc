@@ -40,7 +40,6 @@ void vhdl_scanner_init()
 }                                                
 
 "=>"            { return TOK_ARROW; }
-".."            { return TOK_DOUBLE_DOT; }
 "**"            { return TOK_DOUBLE_STAR; }
 ":="            { return TOK_ASSIGN; }
 "/="            { return TOK_NE; }

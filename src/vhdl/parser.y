@@ -116,19 +116,15 @@ inline static void init(YYSTYPE &expr, const irep_idt &id)
 // http://www.csee.umbc.edu/portal/help/VHDL/operator.html
 %}
 
-%left TOK_OR TOK_NOR
-%left TOK_XOR TOK_XNOR
-%left TOK_AND TOK_NAND
-%left TOK_MOD
+%left TOK_OR TOK_NOR TOK_XOR TOK_XNOR TOK_AND TOK_NAND
 %left '=' TOK_NE '<' '>' TOK_GE TOK_LE
+%left TOK_SLL TOK_SRL TOK_SLA TOK_SRA TOK_ROL TOK_ROR
 %left '+' '-' '&'
 %right UMINUS UPLUS
-%left '*' '/'
-%left TOK_DOUBLE_STAR 
-%right TOK_ABS TOK_NOT
+%left TOK_MOD '*' '/'
+%right TOK_DOUBLE_STAR TOK_ABS TOK_NOT
 
-%token TOK_ARROW "=>"     
-%token TOK_DOUBLE_DOT ".."     
+%token TOK_ARROW "=>"
 %token TOK_DOUBLE_STAR "**"
 %token TOK_ASSIGN ":="
 %token TOK_NE "/="
@@ -978,6 +974,36 @@ expr:
        | expr '-' expr
        {
          init($$, ID_minus);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_SLL expr
+       {
+         init($$, ID_shl);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_SRL expr
+       {
+         init($$, ID_lshr);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_SLA expr
+       {
+         init($$, ID_shl);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_SRA expr
+       {
+         init($$, ID_ashr);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_ROL expr
+       {
+         init($$, ID_rol);
+         stack($$).move_to_operands(stack($1), stack($3));
+       }
+       | expr TOK_ROR expr
+       {
+         init($$, ID_ror);
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr '*' expr
