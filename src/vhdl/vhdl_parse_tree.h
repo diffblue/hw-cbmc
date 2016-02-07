@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef VHDL_PARSE_TREE_H
-#define VHDL_PARSE_TREE_H
+#ifndef CPROVER_VHDL_PARSE_TREE_H
+#define CPROVER_VHDL_PARSE_TREE_H
 
 #include <list>
 #include <set>

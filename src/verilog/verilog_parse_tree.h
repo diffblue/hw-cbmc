@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef VERILOG_PARSE_TREE_H
-#define VERILOG_PARSE_TREE_H
+#ifndef CPROVER_VERILOG_PARSE_TREE_H
+#define CPROVER_VERILOG_PARSE_TREE_H
 
 #include <list>
 #include <set>
