@@ -20,6 +20,11 @@ Function: vhdl_convert
 
 \*******************************************************************/
 
-exprt vhdl_convert(const vhdl_parse_treet &parse_tree)
+exprt vhdl_convert(const vhdl_parse_treet::itemt &item)
 {
+  exprt module(ID_module);
+  
+//  for(
+  
+  return module;
 }
