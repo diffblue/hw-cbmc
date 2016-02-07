@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "vhdl_typecheck.h"
 #include "vhdl_typecheck_class.h"
+#include "vhdl_convert.h"
 
 #if 0
 /*******************************************************************\
@@ -1508,6 +1509,7 @@ bool vhdl_typecheck(
   symbol.base_name=module;
   symbol.pretty_name=module;
   symbol.module=symbol.name;
+  symbol.value=vhdl_convert(parse_tree);
 
   // put symbol in symbol_table
 

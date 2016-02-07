@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ostream>
 
 #include "vhdl_parse_tree.h"
-//#include "vhdl_typecheck_base.h"
 
 /*******************************************************************\
 
