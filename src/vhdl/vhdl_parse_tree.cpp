@@ -135,31 +135,30 @@ Function: vhdl_parse_treet::itemt::show
 
 void vhdl_parse_treet::itemt::show(std::ostream &out) const
 {
-  switch(type)
+  irep_idt type=get_item_type();
+  
+  if(type=="architecture")
   {
-  case itemt::ARCHITECTURE:
-    out << "ARCHITECTURE " << pretty_name(name);
+    out << "ARCHITECTURE " << pretty_name(get_name());
     out << '\n';
-    break;
-    
-  case itemt::ENTITY:
-    out << "ENTITY " << pretty_name(name);
+  }
+  else if(type=="entity")
+  {
+    out << "ENTITY " << pretty_name(get_name());
     out << '\n';
-    break;
-    
-  case itemt::USE:
+  }
+  else if(type=="use")
+  {
     out << "USE ";
     out << '\n';
-    break;
-    
-  case itemt::LIBRARY:
+  }
+  else if(type=="library")
+  {
     out << "LIBRARY ";
     out << '\n';
-    break;
-    
-  default:
-    assert(false);
   }
+  else
+    assert(false);
 }
 
 /*******************************************************************\

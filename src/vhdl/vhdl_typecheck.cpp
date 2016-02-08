@@ -1465,6 +1465,96 @@ bool vhdl_typecheckt::implicit_wire(
 
 /*******************************************************************\
 
+Function: vhdl_typecheckt::typecheck_architecture_entity
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_architecture_entity()
+{
+}
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::typecheck_architecture_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_architecture_decl()
+{
+}
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::typecheck_architecture_body
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_architecture_body()
+{
+}
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::typecheck_architecture
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_architecture(
+  const vhdl_parse_treet::itemt &item)
+{
+  // create symbol
+
+  symbolt symbol;
+  
+  symbol.mode=ID_VHDL;
+  symbol.name="vhdl::"+id2string(module_name);
+  symbol.type=typet(ID_module);
+  symbol.base_name=module_name;
+  symbol.pretty_name=module_name;
+  symbol.module=symbol.name;
+
+  // put symbol in symbol_table
+
+  symbolt *new_symbol;
+
+  if(symbol_table.move(symbol, new_symbol))
+  {
+    str << "duplicate definition of module " 
+        << symbol.base_name;
+    throw 0;
+  }
+
+  typecheck_architecture_entity();
+  typecheck_architecture_decl();
+  typecheck_architecture_body();
+}
+
+/*******************************************************************\
+
 Function: vhdl_typecheckt::typecheck
 
   Inputs:
@@ -1477,8 +1567,15 @@ Function: vhdl_typecheckt::typecheck
 
 void vhdl_typecheckt::typecheck()
 {
-  //module_interface();
-  //convert_statements();
+  // find the module in the parse tree
+
+  for(const auto & item : parse_tree.items)
+    if(item.is_architecture() &&
+       module_name==item.get_pretty_name())
+    {
+      typecheck_architecture(item);
+      return;
+    }
 }
 
 /*******************************************************************\
@@ -1494,37 +1591,13 @@ Function: vhdl_typecheck
 \*******************************************************************/
 
 bool vhdl_typecheck(
-  vhdl_parse_treet &parse_tree,
+  const vhdl_parse_treet &parse_tree,
   symbol_tablet &symbol_table,
   const std::string &module,
   message_handlert &message_handler)
 {
-  // create symbol
-
-  symbolt symbol;
-  
-  symbol.mode=ID_VHDL;
-  symbol.name="vhdl::"+module;
-  symbol.type=typet(ID_module);
-  symbol.base_name=module;
-  symbol.pretty_name=module;
-  symbol.module=symbol.name;
-  //symbol.value=vhdl_convert(parse_tree);
-
-  // put symbol in symbol_table
-
-  symbolt *new_symbol;
-
-  if(symbol_table.move(symbol, new_symbol))
-  {
-    message_streamt message_stream(message_handler);
-    message_stream.str << "duplicate definition of module " 
-                       << symbol.base_name;
-    message_stream.error_msg();
-    throw 0;
-  }
-
-  vhdl_typecheckt vhdl_typecheck(*new_symbol, symbol_table, message_handler);
+  vhdl_typecheckt vhdl_typecheck(
+    parse_tree, module, symbol_table, message_handler);
   return vhdl_typecheck.typecheck_main();
 }
 

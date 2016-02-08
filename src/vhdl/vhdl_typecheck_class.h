@@ -28,12 +28,15 @@ class vhdl_typecheckt:public typecheckt
 {
 public:
   vhdl_typecheckt(
-    symbolt &_module_symbol,
+    const vhdl_parse_treet &_parse_tree,
+    const irep_idt &_module_name,
     symbol_tablet &_symbol_table,
     message_handlert &_message_handler):
     typecheckt(_message_handler),
     ns(_symbol_table),
-    module_symbol(_module_symbol)
+    parse_tree(_parse_tree),
+    module_name(_module_name),
+    symbol_table(_symbol_table)
   {
   }
 
@@ -41,8 +44,17 @@ public:
 
 protected:
   const namespacet ns;
-  symbolt &module_symbol;
+  const vhdl_parse_treet &parse_tree;
+  const irep_idt &module_name;
+  symbol_tablet &symbol_table;
 
+  void typecheck_architecture(
+    const vhdl_parse_treet::itemt &);
+  
+  void typecheck_architecture_entity();
+  void typecheck_architecture_decl();
+  void typecheck_architecture_body();
+  
   #if 0
   // instances
   irep_idt parameterize_module(

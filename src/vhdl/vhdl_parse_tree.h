@@ -21,47 +21,30 @@ Author: Daniel Kroening, kroening@kroening.com
 class vhdl_parse_treet
 {
 public:
-  struct itemt
+  struct itemt:public exprt
   {
   public:
-    typedef enum { ARCHITECTURE, ENTITY, USE, LIBRARY } item_typet;
-    item_typet type;
-    
-    irept name;
-    
-    bool is_architecture() const
-    {
-      return type==ARCHITECTURE;
-    }
+    irep_idt get_item_type() const { return get("item_type"); }
+    void set_item_type(const irep_idt &item_type) { set("item_type", item_type); }
 
-    bool is_entity() const
-    {
-      return type==ENTITY;
-    }
-    
-    bool is_use() const
-    {
-      return type==USE;
-    }
-    
-    bool is_library() const
-    {
-      return type==LIBRARY;
-    }
+    void set_name(const irept &name) { set(ID_name, name); }    
+    irept get_name() const { return find(ID_name); }
     
     void show(std::ostream &out) const;
     static std::string pretty_name(const irept &);
+    std::string get_pretty_name() const { return pretty_name(get_name()); }
+    
+    bool is_architecture() const { return get("item_type")=="architecture"; }
+    bool is_entity() const { return get("item_type")=="entity"; }
+    bool is_use() const { return get("item_type")=="use"; }
+    bool is_library() const { return get("item_type")=="library"; }
   };
   
   typedef std::list<itemt> itemst;
   itemst items;
-
-  // for parsing expressions
-  exprt expr;
   
   void clear()
   {
-    expr.clear();
     items.clear();
   }
 
@@ -82,7 +65,6 @@ public:
   void swap(vhdl_parse_treet &parse_tree)
   {
     parse_tree.items.swap(items);
-    parse_tree.expr.swap(expr);
     parse_tree.module_map.swap(module_map);
   }
 

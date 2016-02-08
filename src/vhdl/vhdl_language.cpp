@@ -124,16 +124,12 @@ void vhdl_languaget::modules_provided(
 {
   for(auto const &i : parse_tree.items)
   {
-    if(i.type==vhdl_parse_treet::itemt::ARCHITECTURE)
+    if(i.is_architecture())
     {
       module_set.insert(
-        vhdl_parse_treet::itemt::pretty_name(i.name));
+        vhdl_parse_treet::itemt::pretty_name(i.get_name()));
     }
   }
-
-  #if 0
-  parse_tree.modules_provided(module_set);
-  #endif
 }
              
 /*******************************************************************\
@@ -279,7 +275,7 @@ bool vhdl_languaget::to_expr(
   bool result=vhdl_parser.parse();
   if(result) return true;
 
-  expr.swap(vhdl_parser.parse_tree.expr);
+  //expr.swap(vhdl_parser.parse_tree.expr);
 
   #if 0
   // typecheck it

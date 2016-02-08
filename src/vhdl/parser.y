@@ -348,22 +348,19 @@ package_body_declarative_part:
 entity_declaration:
          TOK_ENTITY name TOK_IS TOK_END name_opt ';'
        {
-         vhdl_parse_treet::itemt &e=PARSER.new_item();
-         e.type=vhdl_parse_treet::itemt::ENTITY;
-         e.name=stack($2);
+         vhdl_parse_treet::itemt &e=PARSER.new_entity_item();
+         e.set_name(stack($2));
        }
        | TOK_ENTITY name TOK_IS TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
        {
-         vhdl_parse_treet::itemt &e=PARSER.new_item();
-         e.type=vhdl_parse_treet::itemt::ENTITY;
-         e.name=stack($2);
+         vhdl_parse_treet::itemt &e=PARSER.new_entity_item();
+         e.set_name(stack($2));
        }
        | TOK_ENTITY name TOK_IS TOK_GENERIC '(' generic_list ')' ';'
          TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
        {
-         vhdl_parse_treet::itemt &e=PARSER.new_item();
-         e.type=vhdl_parse_treet::itemt::ENTITY;
-         e.name=stack($2);
+         vhdl_parse_treet::itemt &e=PARSER.new_entity_item();
+         e.set_name(stack($2));
        }
        ;
 
@@ -541,9 +538,11 @@ architecture:
          TOK_ARCHITECTURE name TOK_OF name TOK_IS architecture_decl_list
          TOK_BEGIN architecture_body TOK_END name_opt ';'
        {
-         vhdl_parse_treet::itemt &a=PARSER.new_item();
-         a.type=vhdl_parse_treet::itemt::ARCHITECTURE;
-         a.name=stack($2);
+         vhdl_parse_treet::itemt &a=PARSER.new_architecture_item();
+         a.set_name(stack($2));
+         a.set("entity", stack($4));
+         a.set(ID_decl, stack($6));
+         a.set(ID_body, stack($8));
        }
        ;
 

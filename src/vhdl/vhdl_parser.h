@@ -48,6 +48,34 @@ public:
     parse_tree.items.push_back(vhdl_parse_treet::itemt());
     return parse_tree.items.back();
   }
+
+  inline vhdl_parse_treet::itemt &new_entity_item()
+  {
+    parse_tree.items.push_back(vhdl_parse_treet::itemt());
+    parse_tree.items.back().set_item_type("entity");
+    return parse_tree.items.back();
+  }
+
+  inline vhdl_parse_treet::itemt &new_use_item()
+  {
+    parse_tree.items.push_back(vhdl_parse_treet::itemt());
+    parse_tree.items.back().set_item_type("use");
+    return parse_tree.items.back();
+  }
+
+  inline vhdl_parse_treet::itemt &new_architecture_item()
+  {
+    parse_tree.items.push_back(vhdl_parse_treet::itemt());
+    parse_tree.items.back().set_item_type("architecture");
+    return parse_tree.items.back();
+  }
+
+  inline vhdl_parse_treet::itemt &new_library_item()
+  {
+    parse_tree.items.push_back(vhdl_parse_treet::itemt());
+    parse_tree.items.back().set_item_type("library");
+    return parse_tree.items.back();
+  }
 };
 
 extern vhdl_parsert vhdl_parser;

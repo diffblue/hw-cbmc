@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "vhdl_parse_tree.h"
 
 bool vhdl_typecheck(
-  vhdl_parse_treet &,
+  const vhdl_parse_treet &,
   symbol_tablet &,
   const std::string &module,
   message_handlert &);
