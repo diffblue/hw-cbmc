@@ -38,6 +38,10 @@ void var_mapt::add(
     latches.insert(v_current);
     break;
             
+  case vart::VAR_NONDET:
+    nondets.insert(v_current);
+    break;
+            
   case vart::VAR_INPUT:
     inputs.insert(v_current);
     break;
@@ -241,6 +245,7 @@ void var_mapt::output(std::ostream &out) const
       {
        case vart::VAR_INPUT: out << "(input)"; break;
        case vart::VAR_LATCH: out << "(latch)"; break;
+       case vart::VAR_NONDET: out << "(nondet)"; break;
        case vart::VAR_WIRE:  out << "(wire)"; break;
        case vart::VAR_OUTPUT:out << "(output)"; break;
        case vart::VAR_UNDEF: out << "(?)"; break;
@@ -253,6 +258,7 @@ void var_mapt::output(std::ostream &out) const
   out << '\n'
       << "Total no. of variable bits: " << reverse_map.size() << '\n'
       << "Total no. of latch bits: " << latches.size() << '\n'
+      << "Total no. of nondet bits: " << nondets.size() << '\n'
       << "Total no. of input bits: " << inputs.size() << '\n'
       << "Total no. of output bits: " << outputs.size() << '\n';
 }

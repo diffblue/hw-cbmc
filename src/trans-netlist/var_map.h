@@ -26,7 +26,7 @@ public:
   struct vart
   {
     typedef enum { VAR_UNDEF, VAR_LATCH, VAR_INPUT,
-                   VAR_OUTPUT, VAR_WIRE } vartypet;
+                   VAR_OUTPUT, VAR_WIRE, VAR_NONDET } vartypet;
     vartypet vartype;
     typet type;
     irep_idt mode;
@@ -34,6 +34,7 @@ public:
     bool is_latch() const { return vartype==VAR_LATCH; }
     bool is_input() const { return vartype==VAR_INPUT; }
     bool is_wire() const { return vartype==VAR_WIRE; }
+    bool is_nondet() const { return vartype==VAR_NONDET; }
     
     struct bitt
     {
@@ -94,7 +95,7 @@ public:
   
   typedef std::set<unsigned> var_sett;
 
-  var_sett latches, inputs, outputs, wires;
+  var_sett latches, inputs, outputs, wires, nondets;
   
   var_mapt()
   {
