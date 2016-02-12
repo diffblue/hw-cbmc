@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_TRACE_NETLIST_H
 #define CPROVER_TRANS_TRACE_NETLIST_H
 
+#include "bmc_map.h"
 #include "trans_trace.h"
 
 void compute_trans_trace(

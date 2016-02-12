@@ -6,6 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/symbol_table.h>
 #include <util/arith_tools.h>
 
 #include "instantiate_word_level.h"
