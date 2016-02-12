@@ -14,8 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/threeval.h>
 #include <util/namespace.h>
 
-#include "bmc_map.h"
-
 class trans_tracet
 {
 public:
