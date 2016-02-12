@@ -107,6 +107,7 @@ public:
     other.latches.swap(latches);
     other.inputs.swap(inputs);
     other.outputs.swap(outputs);
+    other.nondets.swap(nondets);
     other.wires.swap(wires);
     other.map.swap(map);
   }
@@ -116,6 +117,7 @@ public:
     reverse_map.clear();
     latches.clear();
     inputs.clear();
+    nondets.clear();
     outputs.clear();
     wires.clear();
     map.clear();
