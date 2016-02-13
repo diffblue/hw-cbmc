@@ -60,10 +60,16 @@ void unwind(
   message.status() << "Transition relation" << messaget::eom;
 
   if(!op_trans.is_true())
-    for(unsigned c=0; c<no_timeframes-1; c++)
+    for(unsigned t=0; t<no_timeframes; t++)
     {
-      message.status() << "Transition " << c << "->" << c+1 << messaget::eom;
+      // do transitions
+      bool last=(t==no_timeframes-1);
 
-      instantiate(decision_procedure, op_trans, c, no_timeframes, ns);
+      if(last)
+        message.status() << "Transition " << t << messaget::eom;
+      else
+        message.status() << "Transition " << t << "->" << t+1 << messaget::eom;
+                  
+      instantiate(decision_procedure, op_trans, t, no_timeframes, ns);
     }
 }
