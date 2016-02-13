@@ -30,8 +30,8 @@ void netlistt::print(std::ostream &out) const
 {
   var_map.output(out);
 
-  out << std::endl;
-  out << "Next state functions:" << std::endl;
+  out << '\n';
+  out << "Next state functions:" << '\n';
 
   for(var_mapt::mapt::const_iterator
       it=var_map.map.begin();
@@ -49,41 +49,34 @@ void netlistt::print(std::ostream &out) const
 
         print(out, var.bits[i].next);
 
-        out << std::endl;
+        out << '\n';
       }
     }
   }
 
-  out << std::endl;
+  out << '\n';
 
-  out << "Initial state: " << std::endl;
+  out << "Initial state: " << '\n';
 
   for(unsigned i=0; i<initial.size(); i++)
   {
     out << "  ";
     print(out, initial[i]);
-    out << std::endl;
+    out << '\n';
   }
 
-  out << std::endl;
+  out << '\n';
 
-  out << "Transition constraints: " << std::endl;
+  out << "Transition constraints: " << '\n';
 
   for(unsigned i=0; i<transition.size(); i++)
   {
     out << "  ";
     print(out, transition[i]);
-    out << std::endl;
+    out << '\n';
   }
   
-  out << std::endl;
-
-  for(unsigned i=0; i<properties.size(); i++)
-  {
-    out << "Property " << (i+1) << ": ";
-    print(out, properties[i]);
-    out << std::endl;
-  }
+  out << '\n' << std::flush;
 }
 
 /*******************************************************************\
@@ -202,7 +195,7 @@ void netlistt::output_dot(std::ostream &out) const
       literalt next=var.bits.front().next;
 
       out << "next" << v << " [shape=box,label=\""
-          << dot_id(id2string(it->first)) << "'\"]" << std::endl;
+          << dot_id(id2string(it->first)) << "'\"]" << '\n';
 
       if(next.is_constant())
         out << "TRUE";
@@ -211,7 +204,7 @@ void netlistt::output_dot(std::ostream &out) const
 
       out << " -> next" << v;
       if(next.sign()) out << " [arrowhead=odiamond]";
-      out << std::endl;
+      out << '\n';
     }
   }
 }
@@ -230,11 +223,11 @@ Function: netlistt::output_smv
 
 void netlistt::output_smv(std::ostream &out) const
 {
-  out << "MODULE main" << std::endl;
+  out << "MODULE main" << '\n';
 
-  out << std::endl;
-  out << "-- Variables" << std::endl;
-  out << std::endl;
+  out << '\n';
+  out << "-- Variables" << '\n';
+  out << '\n';
 
   for(var_mapt::mapt::const_iterator
       it=var_map.map.begin();
@@ -249,14 +242,14 @@ void netlistt::output_smv(std::ostream &out) const
       {
         out << "VAR " << id2smv(it->first);
         if(var.bits.size()!=1) out << "[" << i << "]";
-        out << ": boolean;" << std::endl;
+        out << ": boolean;" << '\n';
       }
     }
   }
 
-  out << std::endl;
-  out << "-- Inputs" << std::endl;
-  out << std::endl;
+  out << '\n';
+  out << "-- Inputs" << '\n';
+  out << '\n';
 
   for(var_mapt::mapt::const_iterator
       it=var_map.map.begin();
@@ -271,14 +264,14 @@ void netlistt::output_smv(std::ostream &out) const
       {
         out << "VAR " << id2smv(it->first);
         if(var.bits.size()!=1) out << "[" << i << "]";
-        out << ": boolean;" << std::endl;
+        out << ": boolean;" << '\n';
       }
     }
   }
 
-  out << std::endl;
-  out << "-- AND Nodes" << std::endl;
-  out << std::endl;
+  out << '\n';
+  out << "-- AND Nodes" << '\n';
+  out << '\n';
 
   for(unsigned node_nr=0; node_nr<nodes.size(); node_nr++)
   {
@@ -290,13 +283,13 @@ void netlistt::output_smv(std::ostream &out) const
       print_smv(out, node.a);
       out << " & ";
       print_smv(out, node.b);
-      out << ";" << std::endl;
+      out << ";" << '\n';
     }
   }
 
-  out << std::endl;
-  out << "-- Next state functions" << std::endl;
-  out << std::endl;
+  out << '\n';
+  out << "-- Next state functions" << '\n';
+  out << '\n';
 
   for(var_mapt::mapt::const_iterator
       it=var_map.map.begin();
@@ -313,42 +306,42 @@ void netlistt::output_smv(std::ostream &out) const
         if(var.bits.size()!=1) out << "[" << i << "]";
         out << "):=";
         print_smv(out, var.bits[i].next);
-        out << ";" << std::endl;
+        out << ";" << '\n';
       }
     }
   }
 
-  out << std::endl;
-  out << "-- Initial state" << std::endl;
-  out << std::endl;
+  out << '\n';
+  out << "-- Initial state" << '\n';
+  out << '\n';
 
   for(unsigned i=0; i<initial.size(); i++)
   {
     out << "INIT ";
     print_smv(out, initial[i]);
-    out << std::endl;
+    out << '\n';
   }
 
-  out << std::endl;
-  out << "-- TRANS" << std::endl;
-  out << std::endl;
+  out << '\n';
+  out << "-- TRANS" << '\n';
+  out << '\n';
 
   for(unsigned i=0; i<transition.size(); i++)
   {
     out << "TRANS ";
     print_smv(out, transition[i]);
-    out << std::endl;
+    out << '\n';
   }
 
-  out << std::endl;
-  out << "-- Properties" << std::endl;
-  out << std::endl;
+  out << '\n';
+  out << "-- Properties" << '\n';
+  out << '\n';
   
   for(unsigned i=0; i<properties.size(); i++)
   {
     out << "SPEC AG ";
     print_smv(out, properties[i]);
-    out << std::endl;
+    out << '\n';
   }
 }
 
