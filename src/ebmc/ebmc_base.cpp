@@ -24,7 +24,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
-#include <trans-netlist/property_netlist.h>
 #include <trans-netlist/compute_ct.h>
 
 #include <trans-word-level/trans_trace_word_level.h>
@@ -227,8 +226,8 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
     
     const namespacet ns(symbol_table);
     
-    ::property(property.expr, property.timeframe_literals,
-               get_message_handler(), solver, bmc_map, ns);
+    ::unwind_property(property.expr, property.timeframe_literals,
+                      get_message_handler(), solver, bmc_map, ns);
 
     // freeze for incremental usage
     for(auto l : property.timeframe_literals)

@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cassert>
 
 #include <util/message.h>
+#include <util/namespace.h>
 
 #include <solvers/sat/cnf.h>
 
@@ -32,6 +33,14 @@ void unwind(
   cnft &solver,
   bool add_initial_state,
   unsigned timeframe);
+
+void unwind_property(
+  const exprt &property_expr,
+  bvt &prop_bv,
+  message_handlert &,
+  propt &solver,
+  const bmc_mapt &map,
+  const namespacet &);
 
 void unwind_property(
   const netlistt &netlist,
