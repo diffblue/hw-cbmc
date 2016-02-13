@@ -43,7 +43,8 @@ protected:
   miniBDD::mgr mgr;
 
   typedef miniBDD::BDD BDD;
-  std::vector<BDD> initial_BDDs, transition_BDDs, properties_BDDs;
+  std::vector<BDD> constraints_BDDs, initial_BDDs,
+                   transition_BDDs, properties_BDDs;
   
   class vart
   {
@@ -127,7 +128,7 @@ int bdd_enginet::operator()()
       properties_nodes.reserve(properties.size());
       for(const propertyt &p : properties)
         properties_nodes.push_back(convert_property(p));
-
+        
       status() << "Building BDD for netlist" << eom;
       
       allocate_vars(netlist.var_map);
@@ -430,6 +431,9 @@ void bdd_enginet::check_property(
   BDD states=!p;
   unsigned iteration=0;
   
+  for(const auto &c : constraints_BDDs)
+    states = states & c;
+
   std::size_t peak_bdd_nodes=0;
 
   while(true)
@@ -462,6 +466,9 @@ void bdd_enginet::check_property(
     for(const auto &t : transition_BDDs)
       conjunction = conjunction & t;
     
+    for(const auto &c : constraints_BDDs)
+      conjunction = conjunction & c;
+
     // now project away 'next' variables
     BDD pre_image=project_next(conjunction);
     
@@ -532,6 +539,10 @@ void bdd_enginet::build_trans()
       transition_BDDs.push_back(aig2bdd(next, BDDs)==v.second.next);
     }
   
+  // general AIG conditions
+  for(literalt l : netlist.constraints)
+    constraints_BDDs.push_back(aig2bdd(l, BDDs));
+    
   // initial state conditions
   for(literalt l : netlist.initial)
     initial_BDDs.push_back(aig2bdd(l, BDDs));
