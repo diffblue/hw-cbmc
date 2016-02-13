@@ -162,7 +162,9 @@ int bdd_enginet::operator()()
   
   report_results();
 
-  return 0;
+  // We return '0' if the property holds,
+  // and '10' if it is violated.
+  return property_failure()?10:0;
 }
 
 /*******************************************************************\
