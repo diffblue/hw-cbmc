@@ -835,13 +835,8 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
 
   try
   {
-    std::list<exprt> property_expr_list;
-    
-    for(const auto &property : properties)
-      property_expr_list.push_back(property.expr);
-  
     convert_trans_to_netlist(
-      symbol_table, main_symbol->name, property_expr_list,
+      symbol_table, main_symbol->name,
       netlist, get_message_handler());
   }
   

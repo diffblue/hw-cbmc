@@ -10,9 +10,11 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "miniBDD/miniBDD.h"
 
+#include <solvers/prop/aig_prop.h>
 #include <solvers/sat/satcheck.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
+#include <trans-netlist/instantiate_netlist.h>
 
 #include "ebmc_base.h"
 #include "bdd_engine.h"
@@ -36,6 +38,8 @@ public:
 
 protected:
   netlistt netlist;
+  bvt properties_nodes;
+  
   miniBDD::mgr mgr;
 
   typedef miniBDD::BDD BDD;
@@ -78,6 +82,7 @@ protected:
   }
   
   void check_property(propertyt &, const BDD &);
+  literalt convert_property(const propertyt &);
   
   BDD current_to_next(const BDD &) const;
   BDD next_to_current(const BDD &) const;
@@ -88,23 +93,6 @@ protected:
     propertyt &,
     unsigned number_of_timeframes);
 };
-
-/*******************************************************************\
-
-Function: do_bdd
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int do_bdd(const cmdlinet &cmdline)
-{
-  return bdd_enginet(cmdline)();
-}
 
 /*******************************************************************\
 
@@ -131,6 +119,12 @@ int bdd_enginet::operator()()
       error() << "Failed to build netlist" << eom;
       return 2;
     }
+    
+    status() << "Building netlist for properties" << eom;
+    
+    properties_nodes.reserve(properties.size());
+    for(const propertyt &p : properties)
+      properties_nodes.push_back(convert_property(p));
 
     status() << "Building BDD for netlist" << eom;
     
@@ -319,7 +313,8 @@ void bdd_enginet::compute_counterexample(
   bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
 
   ::unwind(netlist, bmc_map, *this, solver);
-  ::unwind_property(netlist, bmc_map, property.number, property.timeframe_literals);
+  ::unwind_property(bmc_map, properties_nodes[property.number],
+                    property.timeframe_literals);
   
   // we need the propertyt to fail in one of the timeframes
   bvt clause=property.timeframe_literals;
@@ -341,6 +336,47 @@ void bdd_enginet::compute_counterexample(
     solver,
     ns,
     property.counterexample);
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::convert_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+literalt bdd_enginet::convert_property(const propertyt &property)
+{
+  if(property.expr.is_true())
+    return const_literal(true);
+  else if(property.expr.is_false())
+    return const_literal(false);
+  else if(property.expr.id()==ID_AG ||
+          property.expr.id()==ID_sva_always)
+  {
+    assert(property.expr.operands().size()==1);
+
+    const exprt &p=property.expr.op0();
+
+    aig_prop_baset aig_prop(netlist);
+    aig_prop.set_message_handler(get_message_handler());
+    
+    const namespacet ns(symbol_table);
+    
+    return instantiate_convert(
+      aig_prop, netlist.var_map, p, ns, get_message_handler());
+  }
+  else
+  {
+    error() << "unsupported property - only SVA always implemented"
+            << messaget::eom;
+    throw 0;
+  }
 }
 
 /*******************************************************************\
@@ -482,6 +518,24 @@ void bdd_enginet::build_trans()
     transition_BDDs.push_back(aig2bdd(l, BDDs));
     
   // properties
-  for(literalt l : netlist.properties)
+  for(literalt l : properties_nodes)
     properties_BDDs.push_back(aig2bdd(l, BDDs));
 }
+
+/*******************************************************************\
+
+Function: do_bdd
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int do_bdd(const cmdlinet &cmdline)
+{
+  return bdd_enginet(cmdline)();
+}
+

@@ -53,9 +53,6 @@ public:
   bvt initial;
   bvt transition;
   
-  // properties, also given as netlist literals
-  bvt properties;
-  
 protected:
   static std::string id2smv(const irep_idt &id);
   void print_smv(std::ostream &out, literalt l) const;

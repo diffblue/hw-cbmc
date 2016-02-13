@@ -332,17 +332,6 @@ void netlistt::output_smv(std::ostream &out) const
     print_smv(out, transition[i]);
     out << '\n';
   }
-
-  out << '\n';
-  out << "-- Properties" << '\n';
-  out << '\n';
-  
-  for(unsigned i=0; i<properties.size(); i++)
-  {
-    out << "SPEC AG ";
-    print_smv(out, properties[i]);
-    out << '\n';
-  }
 }
 
 /*******************************************************************\

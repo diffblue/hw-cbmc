@@ -39,13 +39,12 @@ void unwind_property(
   bvt &prop_bv,
   message_handlert &,
   propt &solver,
-  const bmc_mapt &map,
+  const bmc_mapt &,
   const namespacet &);
 
 void unwind_property(
-  const netlistt &netlist,
-  const bmc_mapt &bmc_map,
-  unsigned property_nr,
+  const bmc_mapt &,
+  literalt property_node,
   bvt &prop_bv);
 
 #endif

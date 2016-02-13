@@ -136,9 +136,8 @@ Function: unwind_property
 \*******************************************************************/
 
 void unwind_property(
-  const netlistt &netlist,
   const bmc_mapt &bmc_map,
-  unsigned property_nr,
+  literalt property_node,
   bvt &prop_bv)
 {
   prop_bv.resize(bmc_map.timeframe_map.size());
@@ -147,7 +146,7 @@ void unwind_property(
       t<bmc_map.timeframe_map.size();
       t++)
   {
-    literalt l=bmc_map.translate(t, netlist.properties[property_nr]);
+    literalt l=bmc_map.translate(t, property_node);
     prop_bv[t]=l;
   }
 }

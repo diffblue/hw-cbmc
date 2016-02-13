@@ -40,9 +40,7 @@ public:
   {
   }
 
-  void operator()(
-    const irep_idt &module,
-    const std::list<exprt> &properties);
+  void operator()(const irep_idt &module);
   
 protected:
   symbol_tablet &symbol_table;
@@ -250,9 +248,7 @@ Function: convert_trans_to_netlistt::operator()
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::operator()(
-  const irep_idt &module,
-  const std::list<exprt> &properties)
+void convert_trans_to_netlistt::operator()(const irep_idt &module)
 {
   // setup
   lhs_map.clear();
@@ -283,7 +279,7 @@ void convert_trans_to_netlistt::operator()(
     }
   }
 
-  const symbolt &module_symbol=namespacet(symbol_table).lookup(module);
+  const symbolt &module_symbol=ns.lookup(module);
   const transt &trans=to_trans_expr(module_symbol.value);
 
   // build the net-list
@@ -316,42 +312,6 @@ void convert_trans_to_netlistt::operator()(
   dest.initial.push_back(instantiate_convert(
     aig_prop, dest.var_map, trans.init(), ns, get_message_handler()));
 
-  // properties
-  dest.properties.reserve(properties.size());
-
-  for(std::list<exprt>::const_iterator
-      it=properties.begin();
-      it!=properties.end();
-      it++)
-  {
-    exprt property(*it);
-    literalt l;
-
-    if(property.is_true())
-      l=const_literal(true);
-    else if(property.is_false())
-      l=const_literal(false);
-    else
-    {
-      if(property.id()!=ID_AG &&
-         property.id()!=ID_sva_always)
-      {
-        error() << "unsupported property - only SVA always implemented"
-                << messaget::eom;
-        throw 0;
-      }
-
-      assert(property.operands().size()==1);
-
-      const exprt &p=property.op0();
-
-      l=instantiate_convert(
-        aig_prop, dest.var_map, p, ns, get_message_handler());
-    }
-
-    dest.properties.push_back(l);
-  }
-  
   // find the nondet nodes
   for(unsigned n=0; n<dest.nodes.size(); n++)
   {
@@ -769,11 +729,10 @@ Function: convert_trans_to_netlist
 void convert_trans_to_netlist(
   symbol_tablet &symbol_table,
   const irep_idt &module,
-  const std::list<exprt> &properties,
   netlistt &dest,
   message_handlert &message_handler)
 {
   convert_trans_to_netlistt c(symbol_table, dest, message_handler);
 
-  c(module, properties);
+  c(module);
 }
