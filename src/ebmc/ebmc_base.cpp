@@ -458,12 +458,6 @@ bool ebmc_baset::get_bound()
 
   bound=unsafe_string2unsigned(cmdline.get_value("bound"));
 
-  if(bound<1)
-  {
-    error() << "must provide bound greater than zero" << eom;
-    return true;
-  }
-
   return false;
 }
 
