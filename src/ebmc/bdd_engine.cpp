@@ -108,57 +108,65 @@ Function: bdd_enginet::operator()
 
 int bdd_enginet::operator()()
 {
-  int result=get_model();
-  if(result!=-1) return result;
+  try
+  {
+    int result=get_model();
+    if(result!=-1) return result;
 
-  {  
-    status() << "Building netlist" << eom;
+    {  
+      status() << "Building netlist" << eom;
 
-    if(make_netlist(netlist))
-    {
-      error() << "Failed to build netlist" << eom;
-      return 2;
+      if(make_netlist(netlist))
+      {
+        error() << "Failed to build netlist" << eom;
+        return 2;
+      }
+      
+      status() << "Building netlist for properties" << eom;
+      
+      properties_nodes.reserve(properties.size());
+      for(const propertyt &p : properties)
+        properties_nodes.push_back(convert_property(p));
+
+      status() << "Building BDD for netlist" << eom;
+      
+      allocate_vars(netlist.var_map);
+      build_trans();
     }
     
-    status() << "Building netlist for properties" << eom;
+    statistics() << "BDD nodes: "
+                 << mgr.number_of_nodes() << eom;
     
-    properties_nodes.reserve(properties.size());
-    for(const propertyt &p : properties)
-      properties_nodes.push_back(convert_property(p));
+    if(cmdline.isset("show-bdds"))
+    {
+      mgr.DumpTable(std::cout);
+      return 0;
+    }
 
-    status() << "Building BDD for netlist" << eom;
+    if(properties.empty())
+    {
+      error() << "no properties" << eom;
+      return 1;
+    }
+
+    unsigned p_nr=0;
+    for(propertyt &p : properties)
+    {
+      check_property(p, properties_BDDs[p_nr]);
+      p_nr++;
+    }
     
-    allocate_vars(netlist.var_map);
-    build_trans();
-  }
-  
-  statistics() << "BDD nodes: "
-               << mgr.number_of_nodes() << eom;
-  
-  if(cmdline.isset("show-bdds"))
-  {
-    mgr.DumpTable(std::cout);
-    return 0;
-  }
+    report_results();
 
-  if(properties.empty())
+    // We return '0' if the property holds,
+    // and '10' if it is violated.
+    return property_failure()?10:0;
+  }
+  catch(const char *error_msg)
   {
-    error() << "no properties" << eom;
+    error() << error_msg << eom;
     return 1;
   }
-
-  unsigned p_nr=0;
-  for(propertyt &p : properties)
-  {
-    check_property(p, properties_BDDs[p_nr]);
-    p_nr++;
-  }
-  
-  report_results();
-
-  // We return '0' if the property holds,
-  // and '10' if it is violated.
-  return property_failure()?10:0;
 }
 
 /*******************************************************************\
@@ -324,8 +332,16 @@ void bdd_enginet::compute_counterexample(
   propt::resultt prop_result=
     solver.prop_solve();
 
-  if(prop_result!=propt::P_SATISFIABLE)
+  switch(prop_result)
+  {
+  case propt::P_SATISFIABLE: break; // this is what we want
+  
+  case propt::P_UNSATISFIABLE:
+    throw "SAT solver says UNSAT!";
+    
+  default:
     throw "unexpected result from SAT solver";
+  }
 
   namespacet ns(symbol_table);
   trans_tracet trans_trace;
