@@ -65,7 +65,6 @@ public:
   struct nodet
   {
     literalt solver_literal;
-    bool is_visible;
   };
 
   typedef std::vector<nodet> timeframet;

@@ -41,7 +41,6 @@ void bmc_mapt::map_timeframes(
     {
       literalt solver_literal=solver.new_variable();
       timeframe[n].solver_literal=solver_literal;
-      timeframe[n].is_visible=true;
 
       // keep a reverse map for variable nodes
       if(netlist.nodes[n].is_var())

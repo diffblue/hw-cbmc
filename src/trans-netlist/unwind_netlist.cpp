@@ -56,7 +56,7 @@ void unwind(
   {
     const aig_nodet &node=netlist.get_node(literalt(n, false));
 
-    if(node.is_and() && timeframe[n].is_visible)
+    if(node.is_and())
     {
       literalt la=bmc_map.translate(t, node.a);
       literalt lb=bmc_map.translate(t, node.b);
@@ -89,11 +89,9 @@ void unwind(
           literalt l_from=bit.next;
           literalt l_to=bit.current;
 
-          if(l_from.is_constant() ||
-             bmc_map.timeframe_map[t][l_from.var_no()].is_visible)
-            solver.set_equal(
-              bmc_map.translate(t, l_from),
-              bmc_map.translate(t+1, l_to));
+          solver.set_equal(
+            bmc_map.translate(t, l_from),
+            bmc_map.translate(t+1, l_to));
         }
       }
     }
