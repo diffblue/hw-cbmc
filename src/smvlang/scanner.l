@@ -83,6 +83,9 @@ void newlocation(YYSTYPE &x)
 "EX"		return EX_Token;
 "E"		return E_Token;
 "A"		return A_Token;
+"F"		return F_Token;
+"X"		return X_Token;
+"G"		return G_Token;
 "U"		return U_Token;
 "next"		return NEXT_Token;
 "init"		return init_Token;

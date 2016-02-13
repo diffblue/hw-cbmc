@@ -916,7 +916,8 @@ void smv_typecheckt::typecheck(
   } 
   else if(expr.id()==ID_AG || expr.id()==ID_AX || expr.id()==ID_AF || 
           expr.id()==ID_EG || expr.id()==ID_EX || expr.id()==ID_EF ||
-          expr.id()==ID_A || expr.id()==ID_E)
+          expr.id()==ID_A || expr.id()==ID_E || expr.id()==ID_X ||
+          expr.id()==ID_F || expr.id()==ID_G)
   {
     if(expr.operands().size()!=1)
     {
