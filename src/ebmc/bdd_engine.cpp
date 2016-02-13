@@ -319,6 +319,11 @@ void bdd_enginet::compute_counterexample(
   ::unwind(netlist, bmc_map, *this, solver);
   ::unwind_property(netlist, bmc_map, property.number, property.timeframe_literals);
   
+  // we need the propertyt to fail in one of the timeframes
+  bvt clause=property.timeframe_literals;
+  for(auto & l : clause) l=!l;
+  solver.lcnf(clause);
+  
   propt::resultt prop_result=
     solver.prop_solve();
 
