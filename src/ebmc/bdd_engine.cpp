@@ -68,7 +68,7 @@ protected:
   varst vars;
   
   void allocate_vars(const var_mapt &);
-  void build_trans();
+  void build_BDDs();
   
   inline BDD aig2bdd(
     literalt l,
@@ -132,7 +132,7 @@ int bdd_enginet::operator()()
       status() << "Building BDD for netlist" << eom;
       
       allocate_vars(netlist.var_map);
-      build_trans();
+      build_BDDs();
     }
     
     statistics() << "BDD nodes: "
@@ -494,7 +494,7 @@ void bdd_enginet::check_property(
 
 /*******************************************************************\
 
-Function: bdd_enginet::build_trans
+Function: bdd_enginet::build_BDDs
 
   Inputs:
 
@@ -504,7 +504,7 @@ Function: bdd_enginet::build_trans
 
 \*******************************************************************/
 
-void bdd_enginet::build_trans()
+void bdd_enginet::build_BDDs()
 {
   std::vector<BDD> BDDs;
   BDDs.resize(netlist.nodes.size());
