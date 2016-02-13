@@ -7,8 +7,8 @@ DEFINE NET_tmp9:=NET_FLAT_1|0;
 
 SPEC AG NET_FLAT_1
 
-VAR X: boolean;
+VAR myX: boolean;
 
-ASSIGN next(X):=(NET_FLAT_0 <-> NET_FLAT_1);
+ASSIGN next(myX):=(NET_FLAT_0 <-> NET_FLAT_1);
 
 SPEC AG NET_tmp9
