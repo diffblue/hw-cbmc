@@ -9,8 +9,9 @@ ASSIGN next(z):=m;
 ASSIGN next(y):=y;
 
 DEFINE m := !y;
-DEFINE _tt := 1;
+DEFINE _tt := TRUE;
 
 -- this should hold
 
-SPEC AG z;
+SPEC AG z
+
