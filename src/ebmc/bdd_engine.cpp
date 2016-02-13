@@ -379,7 +379,7 @@ literalt bdd_enginet::convert_property(const propertyt &property)
 
     const exprt &p=property.expr.op0();
 
-    aig_prop_baset aig_prop(netlist);
+    aig_prop_constraintt aig_prop(netlist);
     aig_prop.set_message_handler(get_message_handler());
     
     const namespacet ns(symbol_table);

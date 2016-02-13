@@ -283,7 +283,7 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
   const transt &trans=to_trans_expr(module_symbol.value);
 
   // build the net-list
-  aig_prop_baset aig_prop(dest);
+  aig_prop_constraintt aig_prop(dest);
   aig_prop.set_message_handler(get_message_handler());
 
   // extract constraints from transition relation

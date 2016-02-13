@@ -66,11 +66,13 @@ void unwind(
     }
   }
 
+  // general AIG constraints
+  for(const auto & c : netlist.constraints)
+    solver.l_set_to(bmc_map.translate(t, c), true);
+
   // transition constraints
-  for(unsigned i=0; i<netlist.transition.size(); i++)
-    solver.l_set_to(
-      bmc_map.translate(t, netlist.transition[i]),
-      true);
+  for(const auto & c : netlist.transition)
+    solver.l_set_to(bmc_map.translate(t, c), true);
 
   if(!last)
   {     

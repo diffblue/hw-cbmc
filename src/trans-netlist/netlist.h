@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "var_map.h"
 
-class netlistt:public aigt
+class netlistt:public aig_plus_constraintst
 {
 public:
   var_mapt var_map;
