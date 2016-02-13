@@ -140,6 +140,13 @@ int bdd_enginet::operator()()
     if(cmdline.isset("show-bdds"))
     {
       mgr.DumpTable(std::cout);
+      std::cout << '\n';
+      
+      std::cout << "Properties:";
+      for(const auto & l : properties_BDDs)
+        std::cout << ' ' << l.node_number();
+      std::cout << '\n';
+        
       return 0;
     }
 
