@@ -43,7 +43,20 @@ public:
   bool convert(const typet &src, std::string &dest);
 };
 
-/* SMV Operator Precedences:
+/*
+ From http://www.cs.cmu.edu/~modelcheck/smv/smvmanual.ps
+
+The order of precedence from high to low is
+  * /
+  + -
+  mod
+  = != < > <= >=
+  !
+  &
+  |
+  -> <->
+
+ SMV Operator Precedences:
 
  1 %left  COMMA
  2 %right IMPLIES
