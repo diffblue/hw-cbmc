@@ -182,12 +182,15 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
   // gather variables according to variable ordering
   for(auto &it : var_map.map)
   {
-    if(it.second.is_latch() || it.second.is_input())
+    if(it.second.is_latch() ||
+       it.second.is_input() ||
+       it.second.is_nondet())
     {
       for(unsigned bit_nr=0; bit_nr<it.second.bits.size(); bit_nr++)
       {
         bv_varidt bv_varid(it.first, bit_nr);
-        vars[bv_varid].is_input=it.second.is_input();
+        vars[bv_varid].is_input=
+          it.second.is_input() || it.second.is_nondet();
       }
     }
   }
@@ -305,7 +308,8 @@ void bdd_enginet::compute_counterexample(
   propertyt &property,
   unsigned number_of_timeframes)
 {
-  status() << "Computing counterexample" << eom;
+  status() << "Computing counterexample with " << number_of_timeframes 
+           << " timeframe(s)" << eom;
 
   bmc_mapt bmc_map;
 
@@ -436,7 +440,7 @@ void bdd_enginet::build_trans()
   {
     const netlistt::nodet &n=netlist.nodes[i];
   
-    // A node is either an 'and' or a variable
+    // A node is either an 'and' or a variable/nondet
     if(n.is_and())
     {
       BDD a=aig2bdd(n.a, BDDs);
@@ -444,7 +448,7 @@ void bdd_enginet::build_trans()
     
       BDDs[i]=a & b;
     }
-    else // current-state variable
+    else // current-state variable or nondet
     {
       bv_varidt id=netlist.var_map.reverse(i);
       varst::const_iterator it=vars.find(id);

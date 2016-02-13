@@ -45,6 +45,12 @@ public:
     typedef std::vector<bitt> bitst;
     bitst bits;
     
+    inline bitt &add_bit()
+    {
+      bits.push_back(bitt());
+      return bits.back();
+    }
+    
     vart():vartype(VAR_UNDEF)
     {
     }

@@ -351,6 +351,28 @@ void convert_trans_to_netlistt::operator()(
 
     dest.properties.push_back(l);
   }
+  
+  // find the nondet nodes
+  for(unsigned n=0; n<dest.nodes.size(); n++)
+  {
+    if(dest.nodes[n].is_var())
+    {
+      const var_mapt::reverse_mapt::const_iterator it=
+        dest.var_map.reverse_map.find(n);
+      
+      if(it==dest.var_map.reverse_map.end())
+      {
+        bv_varidt varid;
+        varid.id="nondet";
+        varid.bit_nr=dest.var_map.nondets.size();
+        var_mapt::vart &var=dest.var_map.map[varid.id];
+        var.add_bit().current=literalt(n, false);
+        var.vartype=var_mapt::vart::VAR_NONDET;
+        dest.var_map.reverse_map[n]=varid;
+        dest.var_map.nondets.insert(n);
+      }
+    }
+  }
 }
 
 /*******************************************************************\
