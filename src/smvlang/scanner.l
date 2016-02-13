@@ -72,9 +72,18 @@ void newlocation(YYSTYPE &x)
 "MODULE"	{ newlocation(yysmvlval); return MODULE_Token; }
 "EXTERN"	{ newlocation(yysmvlval); return EXTERN_Token; }
 
+"FALSE"		{ newlocation(yysmvlval); return FALSE_Token; }
+"TRUE"		{ newlocation(yysmvlval); return TRUE_Token; }
+
 "AG"		return AG_Token;
 "AF"		return AF_Token;
 "AX"		return AX_Token;
+"EG"		return EG_Token;
+"EF"		return EF_Token;
+"EX"		return EX_Token;
+"E"		return E_Token;
+"A"		return A_Token;
+"U"		return U_Token;
 "next"		return NEXT_Token;
 "init"		return init_Token;
 "case"		return CASE_Token;
@@ -82,7 +91,10 @@ void newlocation(YYSTYPE &x)
 "switch"	return SWITCH_Token;
 "array"		return ARRAY_Token;
 "of"		return OF_Token;
+"in"		return IN_Token;
+"notin"		return NOTIN_Token;
 "boolean"	return BOOLEAN_Token;
+"mod"           return MOD_Token;
 "union"		return UNION_Token;
 ".."		return DOTDOT_Token;
 "XOR"		return XOR_Token;

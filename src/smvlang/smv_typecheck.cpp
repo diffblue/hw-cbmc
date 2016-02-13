@@ -105,6 +105,33 @@ protected:
     {
       return from==to;
     }
+    
+    smv_ranget &operator+(const smv_ranget &other)
+    {
+      from+=other.from;
+      to+=other.to;
+      return *this;
+    }
+
+    smv_ranget &operator-(const smv_ranget &other)
+    {
+      from-=other.from;
+      to-=other.to;
+      return *this;
+    }
+
+    smv_ranget &operator*(const smv_ranget &other)
+    {
+      mp_integer p1=from*other.from;
+      mp_integer p2=from*other.to;
+      mp_integer p3=to*other.from;
+      mp_integer p4=to*other.to;
+
+      from=std::min(p1, std::min(p2, std::min(p3, p4)));
+      to=std::max(p1, std::max(p2, std::max(p3, p4)));
+      
+      return *this;
+    }
   };
   
   smv_ranget convert_type(const typet &type);
@@ -704,11 +731,18 @@ void smv_typecheckt::typecheck(
       }
     }
   }
-  else if(expr.id()==ID_plus || expr.id()==ID_minus)
+  else if(expr.id()==ID_plus || expr.id()==ID_minus ||
+          expr.id()==ID_mult || expr.id()==ID_div ||
+          expr.id()==ID_mod)
   {
-    bool minus=expr.id()==ID_minus;
-
     typecheck_op(expr, type, mode);
+    
+    if(expr.operands().size()!=2)
+    {
+      err_location(expr);
+      str << "Expected two operands for " << expr;
+      throw 0;
+    }
     
     if(type.is_nil())
     {
@@ -717,26 +751,22 @@ void smv_typecheckt::typecheck(
       {
         // find proper type for precise arithmetic
         smv_ranget new_range;
-        bool first=true;
 
-        forall_operands(it, expr)
-        {
-          smv_ranget smv_range=convert_type(it->type());
-
-          if(minus && !first)
-          {
-            smv_range.from.negate();
-            smv_range.to.negate();
-          }
-
-          if(smv_range.to<smv_range.from)
-            std::swap(smv_range.to, smv_range.from);
-
-          new_range.to+=smv_range.to;
-          new_range.from+=smv_range.from;
-
-          if(first) first=false;
-        }
+        smv_ranget smv_range0=convert_type(expr.op0().type());
+        smv_ranget smv_range1=convert_type(expr.op1().type());
+        
+        if(expr.id()==ID_plus)
+          new_range=smv_range0+smv_range1;
+        else if(expr.id()==ID_minus)
+          new_range=smv_range0-smv_range1;
+        else if(expr.id()==ID_mult)
+          new_range=smv_range0*smv_range1;
+        else if(expr.id()==ID_div)
+          new_range=smv_range0;
+        else if(expr.id()==ID_mod)
+          new_range=smv_range1;
+        else
+          assert(false);
 
         new_range.to_type(expr.type());
       }
@@ -885,7 +915,8 @@ void smv_typecheckt::typecheck(
     }
   } 
   else if(expr.id()==ID_AG || expr.id()==ID_AX || expr.id()==ID_AF || 
-          expr.id()==ID_EG || expr.id()==ID_EX || expr.id()==ID_EF)
+          expr.id()==ID_EG || expr.id()==ID_EX || expr.id()==ID_EF ||
+          expr.id()==ID_A || expr.id()==ID_E)
   {
     if(expr.operands().size()!=1)
     {
@@ -901,6 +932,14 @@ void smv_typecheckt::typecheck(
   }
   else if(expr.id()==ID_typecast)
   {
+  }
+  else if(expr.id()=="smv_setin")
+  {
+    expr.type()=bool_typet();
+  }
+  else if(expr.id()=="smv_setnotin")
+  {
+    expr.type()=bool_typet();
   }
   else
   {
