@@ -1,0 +1,9 @@
+MODULE main
+
+VAR some_var: 1..10;
+
+ASSIGN next(some_var) := { 2, 3, 8 };
+
+INIT some_var=2
+
+SPEC AG (some_var>=2 & some_var<=5) -- fails
