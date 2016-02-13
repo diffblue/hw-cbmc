@@ -31,7 +31,10 @@ void unwind(
   bool add_initial_state,
   unsigned t)
 {
-  if(add_initial_state && t==0)
+  bool first=(t==0);
+  bool last=(t==bmc_map.timeframe_map.size()-1);
+
+  if(add_initial_state && first)
   {
     // do initial state
     message.status() << "Initial State" << messaget::eom;
@@ -43,8 +46,6 @@ void unwind(
   }
 
   // do transitions
-  bool last=(t==bmc_map.timeframe_map.size()-1);
-
   if(last)
     message.status() << "Transition " << t << messaget::eom;
   else
