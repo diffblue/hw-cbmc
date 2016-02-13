@@ -8,7 +8,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "vhdl_typecheck.h"
 #include "vhdl_typecheck_class.h"
-#include "vhdl_convert.h"
 
 #if 0
 /*******************************************************************\
