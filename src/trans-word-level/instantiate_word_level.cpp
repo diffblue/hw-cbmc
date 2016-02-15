@@ -251,20 +251,20 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     
     // we need a !p lasso to refute Fp
 
-    #if 0    
     // save the current time frame, we'll change it
     save_currentt save_current(current);
     
-    exprt::operandst disjuncts;
+    exprt::operandst conjuncts;
 
     for(; current<no_timeframes; current++)
     {
-      disjuncts.push_back(expr.op0());
-      instantiate_rec(disjuncts.back());
+      conjuncts.push_back(not_exprt(expr.op0()));
+      instantiate_rec(conjuncts.back());
     }
     
-    expr=disjunction(disjuncts);
-    #endif
+    // TODO: add conjunct for lasso
+    
+    expr=conjunction(conjuncts);
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
@@ -275,10 +275,10 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     
     // we need a lasso to refute these
     
-    #if 0
     // save the current time frame, we'll change it
     save_currentt save_current(current);
     
+    #if 0
     // we expand: p U q <=> q || (p && X(p U q))
     exprt tmp_q=expr.op1();
     instantiate_rec(tmp_q);
