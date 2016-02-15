@@ -506,11 +506,11 @@ void bdd_enginet::check_property(propertyt &property)
 
 Function: bdd_enginet::property2BDD
 
-  Inputs:
+  Inputs: a property expression
 
- Outputs:
+ Outputs: a BDD for a set of states
 
- Purpose:
+ Purpose: compute states that satisfy a particular property
 
 \*******************************************************************/
 
