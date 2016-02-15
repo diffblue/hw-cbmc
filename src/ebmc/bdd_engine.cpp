@@ -190,6 +190,10 @@ int bdd_enginet::operator()()
     error() << error_msg << eom;
     return 1;
   }
+  catch(int)
+  {
+    return 1;
+  }
 }
 
 /*******************************************************************\
@@ -476,14 +480,14 @@ void bdd_enginet::check_property(propertyt &property)
   {
     BDD states=!property2BDD(property.expr);
 
-    for(const auto &c : constraints_BDDs)
-      states = states & c;
-
     // do we have an initial state?
     BDD intersection=states;
       
     for(const auto &i : initial_BDDs)
-      intersection=intersection & i;
+      intersection = intersection & i;
+
+    for(const auto &c : constraints_BDDs)
+      intersection = intersection & c;
 
     if(!intersection.is_false())
     {
@@ -517,7 +521,15 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
   else if(expr.is_false())
     return mgr.False();
   else if(expr.id()==ID_not)
+  {
     return !property2BDD(to_not_expr(expr).op());
+  }
+  else if(expr.id()==ID_implies ||
+          expr.id()==ID_sva_overlapped_implication)
+  {
+    assert(expr.operands().size()==2);
+    return !property2BDD(expr.op0()) | property2BDD(expr.op1());
+  }
   else if(expr.id()==ID_and)
   {
     BDD result=mgr.True();
@@ -532,7 +544,77 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
       result = result | property2BDD(op);
     return result;
   }
-  #if 0
+  else if(expr.id()==ID_sva_non_overlapped_implication)
+  {
+    assert(expr.operands().size()==2);
+    
+    // use sva_nexttime for this
+    unary_predicate_exprt tmp(ID_sva_nexttime, expr.op1());
+    return !property2BDD(expr.op0()) | property2BDD(tmp);
+  }
+  else if(expr.id()==ID_sva_nexttime)
+  {
+    assert(expr.operands().size()==1);
+
+    // recursive call
+    const exprt &sub_expr=expr.op0();
+    BDD p=property2BDD(sub_expr);
+
+    // make 'p' be expressed in terms of 'next' variables
+    BDD p_next=current_to_next(p);
+
+    // now conjoin with transition relation
+    BDD conjunction=p_next;
+    
+    for(const auto &t : transition_BDDs)
+      conjunction = conjunction & t;
+    
+    for(const auto &c : constraints_BDDs)
+      conjunction = conjunction & c;
+
+    // now project away 'next' variables
+    BDD pre_image=project_next(conjunction);
+        
+    return pre_image;
+  }
+  else if(expr.id()==ID_sva_eventually)
+  {
+    assert(expr.operands().size()==1);
+
+    // recursive call
+    const exprt &sub_expr=expr.op0();
+    BDD p=property2BDD(sub_expr);
+    BDD states=p;
+    
+    while(true)
+    {
+      // make 'states' be expressed in terms of 'next' variables
+      BDD states_next=current_to_next(p);
+
+      // now conjoin with transition relation
+      BDD conjunction=states_next;
+      
+      for(const auto &t : transition_BDDs)
+        conjunction = conjunction & t;
+      
+      for(const auto &c : constraints_BDDs)
+        conjunction = conjunction & c;
+
+      // now project away 'next' variables
+      BDD pre_image=project_next(conjunction);
+      
+      // compute intersection
+      BDD set_intersection=states & pre_image;
+
+      // have we saturated?
+      if((set_intersection==states).is_true())
+        break;
+
+      states=set_intersection;
+    }
+    
+    return states;
+  }
   else if(expr.id()==ID_AG ||
           expr.id()==ID_sva_always)
   {
@@ -541,10 +623,37 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
     // recursive call
     const exprt &sub_expr=expr.op0();
     BDD p=property2BDD(sub_expr);
+    BDD states=p;
+    
+    while(true)
+    {
+      // make 'states' be expressed in terms of 'next' variables
+      BDD states_next=current_to_next(p);
 
-    return mgr.False();
+      // now conjoin with transition relation
+      BDD conjunction=states_next;
+      
+      for(const auto &t : transition_BDDs)
+        conjunction = conjunction & t;
+      
+      for(const auto &c : constraints_BDDs)
+        conjunction = conjunction & c;
+
+      // now project away 'next' variables
+      BDD pre_image=project_next(conjunction);
+      
+      // compute union
+      BDD set_union=states | pre_image;
+
+      // have we saturated?
+      if((set_union==states).is_true())
+        break;
+
+      states=set_union;
+    }
+    
+    return states;
   }
-  #endif
   else
   {
     atomic_propositionst::const_iterator it=
@@ -576,8 +685,13 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
   if(expr.id()==ID_and ||
      expr.id()==ID_or ||
      expr.id()==ID_not ||
+     expr.id()==ID_implies ||
      expr.id()==ID_AG ||
-     expr.id()==ID_sva_always)
+     expr.id()==ID_sva_always ||
+     expr.id()==ID_sva_overlapped_implication ||
+     expr.id()==ID_sva_non_overlapped_implication ||
+     expr.id()==ID_sva_nexttime ||
+     expr.id()==ID_sva_eventually)
   {
     for(const auto & op : expr.operands())
       get_atomic_propositions(op);
