@@ -8,8 +8,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include <iostream>
 
-#include "miniBDD/miniBDD.h"
-
+#include <solvers/miniBDD/miniBDD.h>
 #include <solvers/prop/aig_prop.h>
 #include <solvers/sat/satcheck.h>
 
