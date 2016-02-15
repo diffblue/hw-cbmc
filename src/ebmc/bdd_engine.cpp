@@ -12,9 +12,12 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include <solvers/prop/aig_prop.h>
 #include <solvers/sat/satcheck.h>
+
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/instantiate_netlist.h>
+
+#include <langapi/language_util.h>
 
 #include "ebmc_base.h"
 #include "bdd_engine.h"
@@ -38,13 +41,24 @@ public:
 
 protected:
   netlistt netlist;
-  bvt properties_nodes;
-  
-  miniBDD::mgr mgr;
 
+  // the Manager must appear before any BDDs
+  // to do the cleanup in the right order
+  miniBDD::mgr mgr;
+  
   typedef miniBDD::BDD BDD;
+  
+  struct atomic_propositiont
+  {
+    literalt l;
+    BDD bdd;
+  };
+
+  typedef std::map<exprt, atomic_propositiont> atomic_propositionst;
+  atomic_propositionst atomic_propositions;
+  
   std::vector<BDD> constraints_BDDs, initial_BDDs,
-                   transition_BDDs, properties_BDDs;
+                   transition_BDDs;
   
   class vart
   {
@@ -81,9 +95,10 @@ protected:
     if(l.sign()) result=!result;
     return result;
   }
-  
-  void check_property(propertyt &, const BDD &);
-  literalt convert_property(const propertyt &);
+
+  void get_atomic_propositions(const exprt &);  
+  void check_property(propertyt &);
+  BDD property2BDD(const exprt &);
   
   BDD current_to_next(const BDD &) const;
   BDD next_to_current(const BDD &) const;
@@ -123,11 +138,10 @@ int bdd_enginet::operator()()
         return 2;
       }
       
-      status() << "Building netlist for properties" << eom;
+      status() << "Building netlist for atomic propositions" << eom;
       
-      properties_nodes.reserve(properties.size());
       for(const propertyt &p : properties)
-        properties_nodes.push_back(convert_property(p));
+        get_atomic_propositions(p.expr);
         
       status() << "Building BDD for netlist" << eom;
       
@@ -143,9 +157,14 @@ int bdd_enginet::operator()()
       mgr.DumpTable(std::cout);
       std::cout << '\n';
       
-      std::cout << "Properties:";
-      for(const auto & l : properties_BDDs)
-        std::cout << ' ' << l.node_number();
+      std::cout << "Atomic propositions:\n";
+      for(const auto & a : atomic_propositions)
+      {
+        std::string as_string=
+          from_expr(namespacet(symbol_table), irep_idt(), a.first);
+        std::cout << '`' << as_string << "' -> " << a.second.bdd.node_number();
+      }
+
       std::cout << '\n';
         
       return 0;
@@ -157,12 +176,8 @@ int bdd_enginet::operator()()
       return 1;
     }
 
-    unsigned p_nr=0;
     for(propertyt &p : properties)
-    {
-      check_property(p, properties_BDDs[p_nr]);
-      p_nr++;
-    }
+      check_property(p);
     
     report_results();
 
@@ -327,10 +342,12 @@ void bdd_enginet::compute_counterexample(
 
   satcheckt solver;
   bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
+  
+  const namespacet ns(symbol_table);
 
   ::unwind(netlist, bmc_map, *this, solver);
-  ::unwind_property(bmc_map, properties_nodes[property.number],
-                    property.timeframe_literals);
+  ::unwind_property(property.expr, property.timeframe_literals,
+                    get_message_handler(), solver, bmc_map, ns);
   
   // we need the propertyt to fail in one of the timeframes
   bvt clause=property.timeframe_literals;
@@ -351,7 +368,6 @@ void bdd_enginet::compute_counterexample(
     throw "unexpected result from SAT solver";
   }
 
-  namespacet ns(symbol_table);
   trans_tracet trans_trace;
 
   compute_trans_trace(
@@ -360,47 +376,6 @@ void bdd_enginet::compute_counterexample(
     solver,
     ns,
     property.counterexample);
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::convert_property
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-literalt bdd_enginet::convert_property(const propertyt &property)
-{
-  if(property.expr.is_true())
-    return const_literal(true);
-  else if(property.expr.is_false())
-    return const_literal(false);
-  else if(property.expr.id()==ID_AG ||
-          property.expr.id()==ID_sva_always)
-  {
-    assert(property.expr.operands().size()==1);
-
-    const exprt &p=property.expr.op0();
-
-    aig_prop_constraintt aig_prop(netlist);
-    aig_prop.set_message_handler(get_message_handler());
-    
-    const namespacet ns(symbol_table);
-    
-    return instantiate_convert(
-      aig_prop, netlist.var_map, p, ns, get_message_handler());
-  }
-  else
-  {
-    error() << "unsupported property - only SVA always implemented"
-            << messaget::eom;
-    throw 0;
-  }
 }
 
 /*******************************************************************\
@@ -415,9 +390,7 @@ Function: bdd_enginet::check_property
 
 \*******************************************************************/
 
-void bdd_enginet::check_property(
-  propertyt &property,
-  const BDD &p)
+void bdd_enginet::check_property(propertyt &property)
 {
   if(property.is_disabled())
     return;
@@ -425,71 +398,212 @@ void bdd_enginet::check_property(
   status() << "Checking " << property.description << eom;
   property.status=propertyt::statust::UNKNOWN;
 
-  // Start with !p, and go backwards until saturation or we hit an
-  // initial state.
-  
-  BDD states=!p;
-  unsigned iteration=0;
-  
-  for(const auto &c : constraints_BDDs)
-    states = states & c;
+  // special treatment for always
 
-  std::size_t peak_bdd_nodes=0;
-
-  while(true)
+  if(property.expr.id()==ID_AG ||
+     property.expr.id()==ID_sva_always)
   {
-    iteration++;
-    statistics() << "Iteration " << iteration << eom;
+    assert(property.expr.operands().size()==1);
+
+    // recursive call
+    const exprt &sub_expr=property.expr.op0();
+    BDD p=property2BDD(sub_expr);
+
+    // Start with !p, and go backwards until saturation or we hit an
+    // initial state.
+    
+    BDD states=!p;
+    unsigned iteration=0;
+    
+    for(const auto &c : constraints_BDDs)
+      states = states & c;
+
+    std::size_t peak_bdd_nodes=0;
+
+    while(true)
+    {
+      iteration++;
+      statistics() << "Iteration " << iteration << eom;
+
+      // do we have an initial state?
+      BDD intersection=states;
+      
+      for(const auto &i : initial_BDDs)
+        intersection=intersection & i;
+
+      peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
+
+      if(!intersection.is_false())
+      {
+        property.make_failure();
+        status() << "Property refuted" << eom;
+        compute_counterexample(property, iteration);
+        break;
+      }
+      
+      // make the states be expressed in terms of 'next' variables
+      BDD states_next=current_to_next(states);
+
+      // now conjoin with transition relation
+      BDD conjunction=states_next;
+      
+      for(const auto &t : transition_BDDs)
+        conjunction = conjunction & t;
+      
+      for(const auto &c : constraints_BDDs)
+        conjunction = conjunction & c;
+
+      // now project away 'next' variables
+      BDD pre_image=project_next(conjunction);
+      
+      // compute union
+      BDD set_union=states | pre_image;
+
+      // have we saturated?
+      if((set_union==states).is_true())
+      {
+        property.make_success();
+        status() << "Property holds" << eom;
+        break;
+      }
+
+      states=set_union;
+
+      peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
+    }
+  }
+  else
+  {
+    BDD states=!property2BDD(property.expr);
+
+    for(const auto &c : constraints_BDDs)
+      states = states & c;
 
     // do we have an initial state?
     BDD intersection=states;
-    
+      
     for(const auto &i : initial_BDDs)
       intersection=intersection & i;
-
-    peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
 
     if(!intersection.is_false())
     {
       property.make_failure();
       status() << "Property refuted" << eom;
-      compute_counterexample(property, iteration);
-      break;
     }
-    
-    // make the states be expressed in terms of 'next' variables
-    BDD states_next=current_to_next(states);
-
-    // now conjoin with transition relation
-    BDD conjunction=states_next;
-    
-    for(const auto &t : transition_BDDs)
-      conjunction = conjunction & t;
-    
-    for(const auto &c : constraints_BDDs)
-      conjunction = conjunction & c;
-
-    // now project away 'next' variables
-    BDD pre_image=project_next(conjunction);
-    
-    // compute union
-    BDD set_union=states | pre_image;
-
-    // have we saturated?
-    if((set_union==states).is_true())
+    else
     {
       property.make_success();
       status() << "Property holds" << eom;
-      break;
     }
+  }
+}
 
-    states=set_union;
+/*******************************************************************\
 
-    peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
+Function: bdd_enginet::property2BDD
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
+{
+  if(expr.is_true())
+    return mgr.True();
+  else if(expr.is_false())
+    return mgr.False();
+  else if(expr.id()==ID_not)
+    return !property2BDD(to_not_expr(expr).op());
+  else if(expr.id()==ID_and)
+  {
+    BDD result=mgr.True();
+    for(const auto & op : expr.operands())
+      result = result & property2BDD(op);
+    return result;
+  }
+  else if(expr.id()==ID_or)
+  {
+    BDD result=mgr.False();
+    for(const auto & op : expr.operands())
+      result = result | property2BDD(op);
+    return result;
+  }
+  #if 0
+  else if(expr.id()==ID_AG ||
+          expr.id()==ID_sva_always)
+  {
+    assert(expr.operands().size()==1);
+
+    // recursive call
+    const exprt &sub_expr=expr.op0();
+    BDD p=property2BDD(sub_expr);
+
+    return mgr.False();
+  }
+  #endif
+  else
+  {
+    atomic_propositionst::const_iterator it=
+      atomic_propositions.find(expr);
+    
+    if(it!=atomic_propositions.end())
+      return it->second.bdd;
   }
 
-  statistics() << "Peak BDD nodes: "
-               << peak_bdd_nodes << eom;
+  error() << "unsupported property -- `" << expr.id()
+          << "' not implemented" << messaget::eom;
+  throw 0;
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::get_atomic_propositions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void bdd_enginet::get_atomic_propositions(const exprt &expr)
+{
+  if(expr.id()==ID_and ||
+     expr.id()==ID_or ||
+     expr.id()==ID_not ||
+     expr.id()==ID_AG ||
+     expr.id()==ID_sva_always)
+  {
+    for(const auto & op : expr.operands())
+      get_atomic_propositions(op);
+  }
+  else
+  {
+    // do we have it already?  
+    if(atomic_propositions.find(expr)!=
+       atomic_propositions.end())
+      return; // yes
+  
+    assert(expr.type().id()==ID_bool);
+
+    aig_prop_constraintt aig_prop(netlist);
+    aig_prop.set_message_handler(get_message_handler());
+    
+    const namespacet ns(symbol_table);
+    
+    literalt l=instantiate_convert(
+      aig_prop, netlist.var_map, expr, ns, get_message_handler());
+    
+    atomic_propositiont &a=atomic_propositions[expr];
+    
+    a.l=l;
+    a.bdd=mgr.False();
+  }
 }
 
 /*******************************************************************\
@@ -550,10 +664,10 @@ void bdd_enginet::build_BDDs()
   // transition conditions
   for(literalt l : netlist.transition)
     transition_BDDs.push_back(aig2bdd(l, BDDs));
-    
-  // properties
-  for(literalt l : properties_nodes)
-    properties_BDDs.push_back(aig2bdd(l, BDDs));
+
+  // atomic propositions
+  for(auto & p : atomic_propositions)
+    p.second.bdd=aig2bdd(p.second.l, BDDs);
 }
 
 /*******************************************************************\
