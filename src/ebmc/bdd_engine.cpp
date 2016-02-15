@@ -21,6 +21,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "ebmc_base.h"
 #include "bdd_engine.h"
+#include "negate_property.h"
 
 /*******************************************************************\
 
@@ -478,7 +479,10 @@ void bdd_enginet::check_property(propertyt &property)
   }
   else
   {
-    BDD states=!property2BDD(property.expr);
+    // We check whether the BDD for the negation of the property
+    // contains an initial state.
+    exprt negation=negate_property(property.expr);
+    BDD states=property2BDD(negation);
 
     // do we have an initial state?
     BDD intersection=states;

@@ -1,6 +1,7 @@
 SRC = diameter.cpp main.cpp diatest.cpp show_properties.cpp \
       k_induction.cpp ebmc_base.cpp ebmc_solvers.cpp bdd_engine.cpp \
       ebmc_parse_options.cpp show_trans.cpp ebmc_languages.cpp \
+      negate_property.cpp \
       cegar/bmc_cegar.cpp cegar/latch_ordering.cpp \
       cegar/verify.cpp cegar/abstract.cpp cegar/refine.cpp \
       cegar/simulate.cpp \
