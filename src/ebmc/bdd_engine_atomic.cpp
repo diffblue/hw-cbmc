@@ -41,6 +41,10 @@ public:
 
 protected:
   netlistt netlist;
+
+  // the Manager must appear before any BDDs
+  // to do the cleanup in the right order
+  miniBDD::mgr mgr;
   
   typedef miniBDD::BDD BDD;
   
@@ -53,8 +57,6 @@ protected:
   typedef std::map<exprt, atomic_propositiont> atomic_propositionst;
   atomic_propositionst atomic_propositions;
   
-  miniBDD::mgr mgr;
-
   std::vector<BDD> constraints_BDDs, initial_BDDs,
                    transition_BDDs;
   
