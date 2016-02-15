@@ -278,7 +278,6 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     // save the current time frame, we'll change it
     save_currentt save_current(current);
     
-    #if 0
     // we expand: p U q <=> q || (p && X(p U q))
     exprt tmp_q=expr.op1();
     instantiate_rec(tmp_q);
@@ -296,7 +295,25 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     }
     
     expr=or_exprt(tmp_q, expansion);
-    #endif
+  }
+  else if(expr.id()==ID_sva_until_with ||
+          expr.id()==ID_sva_s_until_with)
+  {
+    // overlapping until
+  
+    assert(expr.operands().size()==2);
+    
+    // we rewrite using 'next'
+    exprt tmp=expr;
+    if(expr.id()==ID_sva_until_with)
+      tmp.id(ID_sva_until);
+    else
+      tmp.id(ID_sva_s_until);
+
+    tmp.op1()=unary_predicate_exprt(ID_sva_nexttime, tmp.op1());
+    
+    instantiate_rec(tmp);
+    expr=tmp;
   }
   else if(expr.id()==ID_sva_until_with ||
           expr.id()==ID_sva_s_until_with)
