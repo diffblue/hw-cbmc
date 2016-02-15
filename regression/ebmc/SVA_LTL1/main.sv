@@ -14,7 +14,9 @@ module top(input clock, input i1);
   p0: assert property (my_bit);
   p1: assert property (always my_bit);
   p2: assert property (counter==3 |-> nexttime counter==4);
-  p3: assert property (counter==3 |=> nexttime counter==5);
+  p3: assert property (counter==3 |=> counter==4);
+  p4: assert property (counter==3 |=> nexttime counter==5);
+  p5: assert property (eventually counter==8);
 
 endmodule
 
