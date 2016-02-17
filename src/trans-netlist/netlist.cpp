@@ -41,7 +41,7 @@ void netlistt::print(std::ostream &out) const
 
     for(unsigned i=0; i<var.bits.size(); i++)
     {
-      if(var.vartype==var_mapt::vart::VAR_LATCH)
+      if(var.is_latch())
       {
         out << "  NEXT(" << it->first;
         if(var.bits.size()!=1) out << "[" << i << "]";
@@ -188,7 +188,7 @@ void netlistt::output_dot(std::ostream &out) const
   {
     const var_mapt::vart &var=it->second;
 
-    if(var.vartype==var_mapt::vart::VAR_LATCH)
+    if(var.is_latch())
     {
       assert(var.bits.size()==1);
       unsigned v=var.bits.front().current.var_no();
@@ -300,7 +300,7 @@ void netlistt::output_smv(std::ostream &out) const
 
     for(unsigned i=0; i<var.bits.size(); i++)
     {
-      if(var.vartype==var_mapt::vart::VAR_LATCH)
+      if(var.is_latch())
       {
         out << "ASSIGN next(" << id2smv(it->first);
         if(var.bits.size()!=1) out << "[" << i << "]";

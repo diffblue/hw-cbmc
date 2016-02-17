@@ -34,23 +34,23 @@ void var_mapt::add(
 
   switch(var.vartype)
   {
-  case vart::VAR_LATCH:
+  case vart::vartypet::LATCH:
     latches.insert(v_current);
     break;
             
-  case vart::VAR_NONDET:
+  case vart::vartypet::NONDET:
     nondets.insert(v_current);
     break;
             
-  case vart::VAR_INPUT:
+  case vart::vartypet::INPUT:
     inputs.insert(v_current);
     break;
     
-  case vart::VAR_OUTPUT:
+  case vart::vartypet::OUTPUT:
     outputs.insert(v_current);
     break;
     
-  case vart::VAR_WIRE:
+  case vart::vartypet::WIRE:
     wires.insert(v_current);
     break;
     
@@ -222,7 +222,7 @@ void var_mapt::output(std::ostream &out) const
         out << l_c.var_no();
       }
       
-      if(var.vartype==vart::VAR_LATCH)
+      if(var.vartype==vart::vartypet::LATCH)
       {
         out << "->";
         
@@ -243,12 +243,12 @@ void var_mapt::output(std::ostream &out) const
 
       switch(var.vartype)
       {
-       case vart::VAR_INPUT: out << "(input)"; break;
-       case vart::VAR_LATCH: out << "(latch)"; break;
-       case vart::VAR_NONDET: out << "(nondet)"; break;
-       case vart::VAR_WIRE:  out << "(wire)"; break;
-       case vart::VAR_OUTPUT:out << "(output)"; break;
-       case vart::VAR_UNDEF: out << "(?)"; break;
+       case vart::vartypet::INPUT: out << "(input)"; break;
+       case vart::vartypet::LATCH: out << "(latch)"; break;
+       case vart::vartypet::NONDET: out << "(nondet)"; break;
+       case vart::vartypet::WIRE:  out << "(wire)"; break;
+       case vart::vartypet::OUTPUT:out << "(output)"; break;
+       case vart::vartypet::UNDEF: out << "(?)"; break;
       }
 
       out << '\n';

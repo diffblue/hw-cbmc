@@ -25,16 +25,16 @@ class var_mapt
 public:
   struct vart
   {
-    typedef enum { VAR_UNDEF, VAR_LATCH, VAR_INPUT,
-                   VAR_OUTPUT, VAR_WIRE, VAR_NONDET } vartypet;
+    enum class vartypet { UNDEF, LATCH, INPUT,
+                          OUTPUT, WIRE, NONDET };
     vartypet vartype;
     typet type;
     irep_idt mode;
     
-    bool is_latch() const { return vartype==VAR_LATCH; }
-    bool is_input() const { return vartype==VAR_INPUT; }
-    bool is_wire() const { return vartype==VAR_WIRE; }
-    bool is_nondet() const { return vartype==VAR_NONDET; }
+    inline bool is_latch() const { return vartype==vartypet::LATCH; }
+    inline bool is_input() const { return vartype==vartypet::INPUT; }
+    inline bool is_wire() const { return vartype==vartypet::WIRE; }
+    inline bool is_nondet() const { return vartype==vartypet::NONDET; }
     
     struct bitt
     {
@@ -51,7 +51,7 @@ public:
       return bits.back();
     }
     
-    vart():vartype(VAR_UNDEF)
+    inline vart():vartype(vartypet::UNDEF)
     {
     }
   };

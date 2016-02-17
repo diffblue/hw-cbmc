@@ -160,7 +160,7 @@ literalt convert_trans_to_netlistt::new_input()
   }
 
   var_mapt::vart &var=dest.var_map.map[id];
-  var.vartype=var_mapt::vart::VAR_INPUT;
+  var.vartype=var_mapt::vart::vartypet::INPUT;
   var.type=bool_typet();
   var.bits.push_back(var_mapt::vart::bitt());
   var_mapt::vart::bitt &bit=var.bits.back();
@@ -206,11 +206,11 @@ void convert_trans_to_netlistt::map_vars(
             symbol.type.id()==ID_module_instance)
       continue; // ignore modules
     else if(symbol.is_input)
-      vartype=var_mapt::vart::VAR_INPUT;
+      vartype=var_mapt::vart::vartypet::INPUT;
     else if(symbol.is_state_var)
-      vartype=var_mapt::vart::VAR_LATCH;
+      vartype=var_mapt::vart::vartypet::LATCH;
     else
-      vartype=var_mapt::vart::VAR_WIRE;
+      vartype=var_mapt::vart::vartypet::WIRE;
 
     unsigned size=boolbv_width(symbol.type);
     
@@ -327,7 +327,7 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
         varid.bit_nr=dest.var_map.nondets.size();
         var_mapt::vart &var=dest.var_map.map[varid.id];
         var.add_bit().current=literalt(n, false);
-        var.vartype=var_mapt::vart::VAR_NONDET;
+        var.vartype=var_mapt::vart::vartypet::NONDET;
         dest.var_map.reverse_map[n]=varid;
         dest.var_map.nondets.insert(n);
       }
