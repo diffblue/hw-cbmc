@@ -51,9 +51,9 @@ protected:
   void typecheck_architecture(
     const vhdl_parse_treet::itemt &);
   
-  void typecheck_architecture_entity();
-  void typecheck_architecture_decl();
-  void typecheck_architecture_body();
+  void typecheck_architecture_entity(irept &);
+  void typecheck_architecture_decl(irept &);
+  void typecheck_architecture_body(irept &);
   
   #if 0
   // instances

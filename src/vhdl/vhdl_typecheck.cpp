@@ -1474,7 +1474,7 @@ Function: vhdl_typecheckt::typecheck_architecture_entity
 
 \*******************************************************************/
 
-void vhdl_typecheckt::typecheck_architecture_entity()
+void vhdl_typecheckt::typecheck_architecture_entity(irept &entity)
 {
 }
 
@@ -1490,7 +1490,7 @@ Function: vhdl_typecheckt::typecheck_architecture_decl
 
 \*******************************************************************/
 
-void vhdl_typecheckt::typecheck_architecture_decl()
+void vhdl_typecheckt::typecheck_architecture_decl(irept &decl)
 {
 }
 
@@ -1506,8 +1506,9 @@ Function: vhdl_typecheckt::typecheck_architecture_body
 
 \*******************************************************************/
 
-void vhdl_typecheckt::typecheck_architecture_body()
+void vhdl_typecheckt::typecheck_architecture_body(irept &body)
 {
+  throw body.pretty();
 }
 
 /*******************************************************************\
@@ -1546,10 +1547,14 @@ void vhdl_typecheckt::typecheck_architecture(
         << symbol.base_name;
     throw 0;
   }
-
-  typecheck_architecture_entity();
-  typecheck_architecture_decl();
-  typecheck_architecture_body();
+  
+  irept entity=item.find("entity");
+  irept decl=item.find(ID_decl);
+  irept body=item.find(ID_body);
+  
+  typecheck_architecture_entity(entity);
+  typecheck_architecture_decl(decl);
+  typecheck_architecture_body(body);
 }
 
 /*******************************************************************\
