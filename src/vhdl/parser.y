@@ -594,7 +594,7 @@ s_list:
 architecture_body:
          /* Empty */
        {
-         init($$);
+         init($$, ID_body);
        }
        | architecture_body architecture_item
        {
@@ -606,35 +606,47 @@ architecture_body:
 architecture_item:
          signal TOK_LE sigvalue
        {
+         $$=$2;
+         mto($$, $1);
+         mto($$, $3);
        }
        | TOK_WITH expr TOK_SELECT signal TOK_LE with_list ';'
        {
+         $$=$1;
        }
        | name ':' name TOK_PORT TOK_MAP '(' map_list ')' ';'
        {
+         $$=$5;
        }
        | name ':' name TOK_GENERIC TOK_MAP '(' generic_map_list ')'
          TOK_PORT TOK_MAP '(' map_list ')' ';'
        {
+         $$=$5;
        }
        | label_opt TOK_PROCESS '(' signal_list ')' process_decl_list
          TOK_BEGIN process_body TOK_END
          TOK_PROCESS name_opt ';'
        {
+         $$=$2;
        }
        | label_opt TOK_PROCESS
          TOK_BEGIN process_body TOK_END
          TOK_PROCESS name_opt ';'
        {
+         $$=$2;
+         
        }
        | label_opt TOK_IF expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
+         $$=$2;
        }
        | label_opt TOK_FOR signal TOK_IN expr TOK_TO expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
+         $$=$2;
        }
        | label_opt TOK_FOR signal TOK_IN expr TOK_DOWNTO expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
+         $$=$2;
        }
        ;
 
