@@ -759,7 +759,7 @@ Function: expr2vhdlt::convert
 std::string expr2vhdlt::convert(const typet &type)
 {
   if(type.id()==ID_bool)
-    return "bool";
+    return "boolean";
   else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
   {
     unsigned width=to_bitvector_type(type).get_width();
