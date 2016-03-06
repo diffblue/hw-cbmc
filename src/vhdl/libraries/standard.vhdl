@@ -53,11 +53,11 @@ package STANDARD is
 
   type INTEGER is range -2147483647 to 2147483647;
 
-  type REAL is range $-. to $+.;
+  type REAL is range 0 to 0;
 
   -- Predefined type TIME:
 
-  type TIME is range $- to $+
+  type TIME is range 0 to 0
 	units
 		fs;			-- femtosecond
 		ps	=  1000 fs;	-- picosecond
@@ -73,7 +73,7 @@ package STANDARD is
 
   -- A function that returns the current simulation time:
 
-  impure function NOW return DELAY_LENGTH;
+  --impure function NOW return DELAY_LENGTH;
 
   -- Predefined numeric subtypes:
 
@@ -82,9 +82,9 @@ package STANDARD is
 
   -- Predefined array types:
 
-  type STRING is array (POSITIVE range <>) of CHARACTER;
+  --type STRING is array (POSITIVE range <>) of CHARACTER;
 
-  type BIT_VECTOR is array (NATURAL range <>) of BIT;
+  --type BIT_VECTOR is array (NATURAL range <>) of BIT;
 
   -- The predefined types for opening files:
 
