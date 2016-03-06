@@ -36,9 +36,25 @@ Function: yyvhdlerror
 
 \*******************************************************************/
 
+extern YYSTYPE yyvhdllval;
+
 int yyvhdlerror(const char *error_str)
 {
-  PARSER.parse_error(error_str, yyvhdltext);
+  std::string tmp=error_str;
+  if(yyvhdltext[0]!=0)
+  {
+    tmp+=" before `";
+    tmp+=yyvhdltext;
+    tmp+='\'';
+  }
+    
+  source_locationt source_location;
+  source_location.set_column(yyvhdllval.column);
+  source_location.set_line(yyvhdllval.line);
+  source_location.set_file(yyvhdllval.file);
+
+  PARSER.print(1, tmp, -1, source_location);
+                  
   return strlen(error_str)+1;
 }
 
