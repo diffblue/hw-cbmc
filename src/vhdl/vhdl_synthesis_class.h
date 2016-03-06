@@ -31,6 +31,7 @@ public:
 protected:
   symbol_tablet &symbol_table;
   const irep_idt &module;
+  const symbolt *module_symbol;
 
   unsigned property_counter;
   

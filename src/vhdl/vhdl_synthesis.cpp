@@ -50,13 +50,15 @@ void vhdl_synthesist::synth_code(const codet &code)
     new_symbol.type=bool_typet();
     new_symbol.value=code.op0();
     new_symbol.location=code.source_location();
-    new_symbol.module=module;
+    new_symbol.module=module_symbol->name;
+    new_symbol.pretty_name=
+      id2string(module_symbol->pretty_name)+"."+id2string(new_symbol.base_name);
 
     if(code.op1().id()==ID_constant &&
        code.op1().type().id()==ID_string)
     {
       const constant_exprt &constant_expr=to_constant_expr(code.op1());
-      new_symbol.location.set_comment(constant_expr.get_value());
+      new_symbol.location.set_comment("assertion "+id2string(constant_expr.get_value()));
     }
     
     if(symbol_table.move(new_symbol))
@@ -148,6 +150,7 @@ bool vhdl_synthesist::operator()()
     }
     
     symbolt &symbol=s_it->second;
+    module_symbol=&symbol;
 
     property_counter=0;
     
