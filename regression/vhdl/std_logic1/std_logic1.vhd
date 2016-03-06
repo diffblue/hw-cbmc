@@ -24,4 +24,4 @@ begin
     a:=not '0';      assert a='1' report "not 0";
   end process;
 
-end OR_beh;
+end std_logic1_test;
