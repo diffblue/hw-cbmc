@@ -1572,8 +1572,7 @@ void vhdl_typecheckt::convert_to_type(exprt &expr, const typet &type)
 {
   if(expr.type()==type) return; // already done
 
-  typecast_exprt typecast(expr, type);
-  expr=typecast;
+  expr=typecast_exprt(expr, type);
 }
 
 /*******************************************************************\
@@ -1609,6 +1608,11 @@ void vhdl_typecheckt::typecheck_code_assert(codet &code)
     //message_location(code.op1());
     error() << "report clause expects string argument" << eom;
     throw 0;
+  }
+
+  // op2 is the severity level or nil
+  if(code.op2().is_nil())
+  {
   }
 }
 
@@ -1747,8 +1751,8 @@ void vhdl_typecheckt::typecheck_architecture(
   typecheck_architecture_decl(decl);
   typecheck_architecture_body(body);
   
-  new_symbol->value=static_cast<const exprt &>(item);
   new_symbol->value.id(ID_module);
+  new_symbol->value.set(ID_body, body);
 }
 
 /*******************************************************************\

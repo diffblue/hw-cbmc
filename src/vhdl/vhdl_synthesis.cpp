@@ -24,8 +24,6 @@ Function: vhdl_synthesist::synth_code
 
 \*******************************************************************/
 
-#include <iostream>
-
 void vhdl_synthesist::synth_code(const codet &code)
 {
   const irep_idt &statement=code.get_statement();
@@ -39,6 +37,9 @@ void vhdl_synthesist::synth_code(const codet &code)
   else if(statement==ID_assert)
   {
     assert(code.operands().size()==3);
+    
+    // There is an implicit 'always'
+    exprt property=unary_predicate_exprt(ID_AG, code.op0());
   
     // we'll add a property symbol
     symbolt new_symbol;
@@ -48,7 +49,7 @@ void vhdl_synthesist::synth_code(const codet &code)
     new_symbol.is_property=true;
     new_symbol.mode="VHDL";
     new_symbol.type=bool_typet();
-    new_symbol.value=code.op0();
+    new_symbol.value=property;
     new_symbol.location=code.source_location();
     new_symbol.module=module_symbol->name;
     new_symbol.pretty_name=
