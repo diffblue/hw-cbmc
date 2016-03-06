@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "vhdl_language.h"
 #include "vhdl_typecheck.h"
 #include "vhdl_synthesis.h"
+#include "vhdl_std_packages.h"
 #include "expr2vhdl.h"
 #include "vhdl_parser.h"
 
@@ -149,6 +150,8 @@ bool vhdl_languaget::typecheck(
   const std::string &module)
 {
   if(module=="") return false;
+  
+  vhdl_std_packages(symbol_table, get_message_handler());
   
   if(vhdl_typecheck(parse_tree, symbol_table, module, get_message_handler()))
     return true;
