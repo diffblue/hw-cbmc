@@ -6,6 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/i2string.h>
 #include <util/std_expr.h>
 
 #include "vhdl_synthesis.h"
@@ -23,6 +24,8 @@ Function: vhdl_synthesist::synth_code
 
 \*******************************************************************/
 
+#include <iostream>
+
 void vhdl_synthesist::synth_code(const codet &code)
 {
   const irep_idt &statement=code.get_statement();
@@ -35,6 +38,32 @@ void vhdl_synthesist::synth_code(const codet &code)
   }
   else if(statement==ID_assert)
   {
+    assert(code.operands().size()==3);
+  
+    // we'll add a property symbol
+    symbolt new_symbol;
+    
+    new_symbol.base_name="property"+i2string(++property_counter);
+    new_symbol.name=id2string(module)+"."+id2string(new_symbol.base_name);
+    new_symbol.is_property=true;
+    new_symbol.mode="VHDL";
+    new_symbol.type=bool_typet();
+    new_symbol.value=code.op0();
+    new_symbol.location=code.source_location();
+    new_symbol.module=module;
+
+    if(code.op1().id()==ID_constant &&
+       code.op1().type().id()==ID_string)
+    {
+      const constant_exprt &constant_expr=to_constant_expr(code.op1());
+      new_symbol.location.set_comment(constant_expr.get_value());
+    }
+    
+    if(symbol_table.move(new_symbol))
+    {
+      error() << "failed to add property symbol" << eom;
+      throw 0;
+    }
   }
   else
   {
@@ -56,9 +85,13 @@ Function: vhdl_synthesist::synth_module
 
 \*******************************************************************/
 
-void vhdl_synthesist::synth_module(const exprt &module)
+void vhdl_synthesist::synth_module(const irept &module)
 {
-  for(auto & op : module.operands())
+  assert(module.id()==ID_module);
+  
+  const exprt &body=static_cast<const exprt &>(module.find(ID_body));
+
+  for(auto & op : body.operands())
   {
     if(op.id()==ID_process)
       synth_process(op);
@@ -115,6 +148,8 @@ bool vhdl_synthesist::operator()()
     }
     
     symbolt &symbol=s_it->second;
+
+    property_counter=0;
     
     synth_module(symbol.value);
     

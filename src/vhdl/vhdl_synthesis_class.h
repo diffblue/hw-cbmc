@@ -31,8 +31,10 @@ public:
 protected:
   symbol_tablet &symbol_table;
   const irep_idt &module;
+
+  unsigned property_counter;
   
-  void synth_module(const exprt &);
+  void synth_module(const irept &);
   void synth_process(const exprt &);
   void synth_code(const codet &);
   
