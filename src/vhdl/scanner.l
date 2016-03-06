@@ -164,8 +164,7 @@ void vhdl_scanner_init()
 
 \'[0-9A-Za-z]\' { 
   set_loc();
-  yytext[2]=0;
-  yyvhdllval.text=yytext+1;
+  yyvhdllval.text=std::string(yytext, 1, 1);
   return TOK_CHAR;
 }
 
