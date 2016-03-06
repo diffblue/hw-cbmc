@@ -541,6 +541,10 @@ std::string expr2vhdlt::convert_constant(
   }
   else if(type.id()==ID_integer || type.id()==ID_natural)
     dest=value;
+  else if(type.id()==ID_char)
+  {
+    dest='\''+value+'\'';
+  }
   else
     return convert_norep(src, precedence);
 
