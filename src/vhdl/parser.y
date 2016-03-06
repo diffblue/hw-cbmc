@@ -529,20 +529,35 @@ architecture_decl_list:
 architecture_decl:
          TOK_SIGNAL s_list ':' type ';'
        {
+         init($$, ID_signal);
+         $1.set_location(stack($$));
+         stack($$).get_sub().swap(stack($2).get_sub());
+         stack($$).type()=stack_type($4);
        }
        | TOK_CONSTANT name ':' type ':' '=' expr ';'
        {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         mts($$, $2);
+         mts($$, $7);
+         stack($$).type()=stack_type($4);
        }
        | TOK_TYPE name TOK_IS '(' s_list ')' ';'
        {
+         init($$, ID_enumeration);
+         $1.set_location(stack($$));
+         mts($$, $2);
+         mts($$, $5);
        }
        | TOK_COMPONENT name TOK_PORT
          '(' port_list ')' ';' TOK_END TOK_COMPONENT ';'
        {
+         init($$, ID_component);
        }
        | TOK_COMPONENT name TOK_GENERIC '(' generic_list ')' ';' 
          TOK_PORT '(' port_list ')' ';' TOK_END TOK_COMPONENT ';'
        {
+         init($$, ID_component);
        }
        ;
 

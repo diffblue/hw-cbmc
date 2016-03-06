@@ -38,7 +38,7 @@ protected:
   void synth_module(const irept &);
   void synth_process(const exprt &);
   void synth_code(const codet &);
-  
+
   std::vector<exprt> trans, init, invar;
 };
 

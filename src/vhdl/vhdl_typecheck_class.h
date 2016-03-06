@@ -46,6 +46,7 @@ protected:
   const namespacet ns;
   const vhdl_parse_treet &parse_tree;
   const irep_idt &module_name;
+  symbolt *module_symbol;
   symbol_tablet &symbol_table;
   
   void typecheck_architecture(
@@ -58,6 +59,7 @@ protected:
   void typecheck_code_assert(class codet &);
   void typecheck_code_assign(class codet &);
   void typecheck_expr(exprt &);
+  void typecheck_type(typet &);
   void convert_to_type(exprt &, const typet &);
   
   #if 0
@@ -190,6 +192,8 @@ protected:
   // counter for assertions
   unsigned assertion_counter;
   #endif
+  
+  static dstring to_lower(const dstring &);
 };
 
 #endif

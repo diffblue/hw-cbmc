@@ -6,11 +6,32 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <algorithm>
+
 #include <util/std_code.h>
 #include <util/std_expr.h>
 
 #include "vhdl_typecheck.h"
 #include "vhdl_typecheck_class.h"
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::to_lower
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+dstring vhdl_typecheckt::to_lower(const dstring &src)
+{
+  std::string data=id2string(src);
+  std::transform(data.begin(), data.end(), data.begin(), ::tolower);
+  return data;
+}
 
 #if 0
 /*******************************************************************\
@@ -1495,6 +1516,43 @@ Function: vhdl_typecheckt::typecheck_architecture_decl
 
 void vhdl_typecheckt::typecheck_architecture_decl(irept &decl)
 {
+  for(auto & d : decl.get_sub())
+  {
+    if(d.id()==ID_enumeration)
+    {
+    }
+    else if(d.id()==ID_signal)
+    {
+      typet &type=static_cast<typet &>(d.add(ID_type));
+      typecheck_type(type);
+    
+      for(auto & s : d.get_sub())
+      {
+        symbolt new_symbol;
+      
+        new_symbol.base_name=s.get(ID_identifier);
+        new_symbol.name=
+          id2string(module_symbol->name)+"."+
+          id2string(new_symbol.base_name);
+        new_symbol.type=type;
+        new_symbol.mode=module_symbol->mode;
+      
+        symbol_table.move(new_symbol);
+      }
+    }
+    else if(d.id()==ID_component)
+    {
+    }
+    else if(d.id()==ID_constant)
+    {
+    }
+    else
+    {
+      error() << "unexpected declaration in architecture: "
+              << d.id() << eom;
+      throw 0;
+    }
+  }
 }
 
 /*******************************************************************\
@@ -1531,7 +1589,24 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
   {
     symbol_exprt &symbol_expr=to_symbol_expr(expr);
     irep_idt identifier=symbol_expr.get_identifier();
-    (void)identifier;
+    
+    // look up in symbol table
+    irep_idt full_identifier=
+      id2string(module_symbol->name)+"."+
+      id2string(to_lower(identifier));
+
+    symbol_tablet::symbolst::const_iterator s_it=
+      symbol_table.symbols.find(full_identifier);
+    
+    if(s_it==symbol_table.symbols.end())
+    {
+      error() << "symbol `" << identifier << "' not found"
+              << eom;
+      throw 0;
+    }
+
+    symbol_expr.set_identifier(full_identifier);
+    symbol_expr.type()=s_it->second.type;
   }
   else if(expr.id()==ID_constant)
   {
@@ -1549,6 +1624,11 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
           expr.id()==ID_le || expr.id()==ID_ge ||
           expr.id()==ID_lt || expr.id()==ID_gt)
   {
+    assert(expr.operands().size()==2);
+    
+    typecheck_expr(expr.op0());
+    typecheck_expr(expr.op1());
+  
     // result is always boolean
     expr.type()=bool_typet();
   }
@@ -1571,6 +1651,15 @@ Function: vhdl_typecheckt::convert_to_type
 void vhdl_typecheckt::convert_to_type(exprt &expr, const typet &type)
 {
   if(expr.type()==type) return; // already done
+
+  if(expr.id()==ID_constant)
+  {
+    //const irep_idt &value=to_constant_expr(expr).get_value();
+
+    if(type.id()==ID_bool)
+    {
+    }
+  }
 
   expr=typecast_exprt(expr, type);
 }
@@ -1633,6 +1722,43 @@ void vhdl_typecheckt::typecheck_code_assign(codet &code)
   typecheck_expr(code.op0());
   typecheck_expr(code.op1());
   convert_to_type(code.op1(), code.op0().type());
+}
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::typecheck_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_type(typet &type)
+{
+  if(type.id()==ID_symbol)
+  {
+    const irep_idt identifier=to_lower(type.get(ID_identifier));
+    if(identifier=="boolean")
+    {
+      source_locationt source_location=type.source_location();
+      type=bool_typet();
+      type.add_source_location()=source_location;
+    }
+    else
+    {
+      error() << "unknown type `"
+              << type.get(ID_identifier) << "'" << eom;
+      throw 0;
+    }
+  }
+  else
+  {
+    error() << "unexpected type: " << type.id() << eom;
+    throw 0;
+  }
 }
 
 /*******************************************************************\
@@ -1742,6 +1868,8 @@ void vhdl_typecheckt::typecheck_architecture(
             << symbol.base_name << eom;
     throw 0;
   }
+  
+  module_symbol=new_symbol;
   
   irept entity=item.find(ID_entity);
   irept decl=item.find(ID_decl);
