@@ -355,6 +355,13 @@ package_declarative_item:
          mts($$, $2);
          mts($$, $4);
        }
+       | TOK_ATTRIBUTE name ':' type ';'
+       {
+         init($$, "attribute");
+         $1.set_location(stack($$));
+         mts($$, $2);
+         mts($$, $4);
+       }
        ;
 
 physical_units_opt:
