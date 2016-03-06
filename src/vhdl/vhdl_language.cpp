@@ -149,13 +149,15 @@ bool vhdl_languaget::typecheck(
   const std::string &module)
 {
   if(module=="") return false;
-
+  
   if(vhdl_typecheck(parse_tree, symbol_table, module, get_message_handler()))
     return true;
     
   debug() << "Synthesis" << eom;
 
-  if(vhdl_synthesis(symbol_table, module, get_message_handler()))
+  std::string module2="vhdl::"+module;
+
+  if(vhdl_synthesis(symbol_table, module2, get_message_handler()))
     return true;
 
   return false;

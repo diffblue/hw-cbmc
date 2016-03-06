@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_VHDL_SYNTHESIS_CLASS_H
 
 #include <util/symbol_table.h>
+#include <util/std_code.h>
 #include <util/message.h>
 
 class vhdl_synthesist:public messaget
@@ -30,6 +31,12 @@ public:
 protected:
   symbol_tablet &symbol_table;
   const irep_idt &module;
+  
+  void synth_module(const exprt &);
+  void synth_process(const exprt &);
+  void synth_code(const codet &);
+  
+  std::vector<exprt> trans, init, invar;
 };
 
 #endif
