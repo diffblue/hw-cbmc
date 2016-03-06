@@ -274,6 +274,7 @@ name:
          stack($$).set(ID_identifier, $1.text);
        }
        | selected_name
+       | name '\'' TOK_IDENTIFIER
        ;
        
 selected_name:
@@ -313,8 +314,70 @@ package_declaration:
        ;
        
 package_declarative_part:
+         /* Empty */
+       {
+         init($$);
+       }
+       | package_declarative_part package_declarative_item
+       {
+         $$=$1;
+         mts($$, $2);
+       }
+       ;
+       
+package_declarative_item:
+         TOK_CONSTANT name ':' type ':' '=' expr ';'
+       {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         mts($$, $2);
+         mts($$, $7);
+         stack($$).type()=stack_type($4);
+       }
+       | TOK_TYPE name TOK_IS type physical_units_opt ';'
+       {
+         init($$, ID_enumeration);
+         $1.set_location(stack($$));
+         mts($$, $2);
+         mts($$, $5);
+       }
+       | TOK_SUBTYPE name TOK_IS name ';'
+       {
+         init($$, "subtype");
+         $1.set_location(stack($$));
+         mts($$, $2);
+         mts($$, $4);
+       }
+       | TOK_SUBTYPE name TOK_IS name TOK_RANGE expr updown expr ';'
+       {
+         init($$, "subtype");
+         $1.set_location(stack($$));
+         mts($$, $2);
+         mts($$, $4);
+       }
        ;
 
+physical_units_opt:
+         /* Empty */
+       {
+         init($$);
+       }
+       | TOK_UNITS name ';' secondary_physical_units TOK_END TOK_UNITS name_opt
+       {
+         init($$);
+       }
+       ;
+
+secondary_physical_units:
+         /* Empty */
+       {
+         init($$);
+       }
+       | secondary_physical_units name '=' TOK_NATURAL name ';'
+       {
+       }
+       ;
+       
 secondary_unit:
          architecture
        | package
@@ -408,13 +471,6 @@ type:
        | name '(' expr ')'
        {
        }
-       | name '(' name '\'' TOK_RANGE ')'
-       {
-       }
-       | name '(' name '\'' TOK_IDENTIFIER ')'
-       {
-         // relevant for id'event
-       }
        | name 
        | '(' enumeration_literal_list ')'
        {
@@ -505,16 +561,24 @@ enumeration_literal_list:
        ;
 
 enumeration_literal:
-         TOK_IDENTIFIER
+         name
        | TOK_CHAR
+       {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         stack($$).set(ID_type, ID_char);
+         stack($$).set(ID_value, $1.text);
+       }
        ;
 
 updown: 
          TOK_DOWNTO
        {
+         init($$, "downto");
        }
        | TOK_TO
        {
+         init($$, "to");
        }
        ;
 
@@ -558,7 +622,7 @@ architecture_decl:
          mts($$, $7);
          stack($$).type()=stack_type($4);
        }
-       | TOK_TYPE name TOK_IS '(' s_list ')' ';'
+       | TOK_TYPE name TOK_IS '(' enumeration_literal_list ')' ';'
        {
          init($$, ID_enumeration);
          $1.set_location(stack($$));
@@ -1025,6 +1089,14 @@ expr:
          $1.set_location(stack($$));
          stack($$).set(ID_type, ID_natural);
          stack($$).set(ID_value, $1.text);
+       }
+       | TOK_NATURAL name
+       {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         stack($$).set(ID_type, ID_natural);
+         stack($$).set(ID_value, $1.text);
+         // the name is a unit
        }
        | TOK_NATURAL TOK_BASED_INTEGER
        {
