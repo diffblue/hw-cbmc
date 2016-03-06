@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "expr2verilog.h"
 #include "verilog_synthesis.h"
+#include "verilog_synthesis_class.h"
 #include "verilog_expr.h"
 
 /*******************************************************************\
