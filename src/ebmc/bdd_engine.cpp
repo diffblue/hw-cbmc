@@ -399,7 +399,7 @@ void bdd_enginet::check_property(propertyt &property)
   if(property.is_disabled())
     return;
 
-  status() << "Checking " << property.description << eom;
+  status() << "Checking " << property.name << eom;
   property.status=propertyt::statust::UNKNOWN;
 
   // special treatment for always

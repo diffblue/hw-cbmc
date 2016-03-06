@@ -145,7 +145,7 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
     if(property.is_disabled())
       continue;
     
-    status() << "Checking " << property.description << eom;
+    status() << "Checking " << property.name << eom;
     
     or_exprt or_expr;
     
@@ -243,7 +243,7 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
     if(property.is_disabled())
       continue;
     
-    status() << "Checking " << property.description << eom;
+    status() << "Checking " << property.name << eom;
   
     literalt property_literal=!solver.land(property.timeframe_literals);
   
@@ -342,6 +342,7 @@ bool ebmc_baset::parse_property(
   properties.back().mode=main_symbol->mode;
   properties.back().location.make_nil();
   properties.back().description="command-line assertion";
+  properties.back().name="command-line assertion";
   
   return false;
 }
@@ -379,12 +380,12 @@ bool ebmc_baset::get_model_properties()
 
         properties.push_back(propertyt());
         properties.back().number=properties.size()-1;
-        properties.back().name=symbol.name;
+        properties.back().name=symbol.pretty_name;
         properties.back().expr=symbol.value;
         properties.back().location=symbol.location;
         properties.back().expr_string=value_as_string;
         properties.back().mode=symbol.mode;
-        properties.back().description="assertion "+id2string(symbol.display_name());
+        properties.back().description=id2string(symbol.location.get_comment());
       }
       
       catch(const char *e)
