@@ -164,7 +164,6 @@ void vhdl_scanner_init()
 
 \'[0-9A-Za-z]\' { 
   set_loc();
-  yyvhdllval.text=yytext;
   return TOK_CHAR;
 }
 

@@ -574,7 +574,8 @@ architecture_body:
 architecture_item:
          signal TOK_LE sigvalue
        {
-         $$=$2;
+         init($$, ID_continuous_assign);
+         $2.set_location(stack($$));
          mto($$, $1);
          mto($$, $3);
        }
@@ -597,7 +598,7 @@ architecture_item:
        {
          init($$, ID_process);
          $2.set_location(stack($$));
-         mto($$, $8);
+         stack($$).operands().swap(stack($8).operands());
        }
        | label_opt TOK_PROCESS
          TOK_BEGIN process_body TOK_END
@@ -605,22 +606,32 @@ architecture_item:
        {
          init($$, ID_process);
          $2.set_location(stack($$));
-         mto($$, $4);
+         stack($$).operands().swap(stack($4).operands());
        }
        | label_opt TOK_IF expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
-         init($$, ID_ifthenelse);
+         init($$, ID_generate_if);
          $2.set_location(stack($$));
+         mto($$, $3);
+         mto($$, $5);
        }
        | label_opt TOK_FOR signal TOK_IN expr TOK_TO expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
-         init($$, ID_for);
+         init($$, ID_generate_for);
          $2.set_location(stack($$));
+         mto($$, $3);
+         mto($$, $5);
+         mto($$, $7);
+         mto($$, $9);
        }
        | label_opt TOK_FOR signal TOK_IN expr TOK_DOWNTO expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
-         init($$, ID_for);
+         init($$, ID_generate_for);
          $2.set_location(stack($$));
+         mto($$, $3);
+         mto($$, $5);
+         mto($$, $7);
+         mto($$, $9);
        }
        ;
 
@@ -713,11 +724,16 @@ process_item:
          init($$, ID_code);
          $2.set_location(stack($$));
          stack($$).set(ID_statement, ID_assign);
-         stack($$).move_to_operands(stack($1), stack($4));
+         mto($$, $1);
+         mto($$, $3);
        }
        | signal TOK_LE sigvalue
        {
+         init($$, ID_code);
          $2.set_location(stack($$));
+         stack($$).set(ID_statement, ID_continuous_assign);
+         mto($$, $1);
+         mto($$, $3);
        }
        | TOK_IF expr TOK_THEN process_body elsepart TOK_END TOK_IF ';'
        {
@@ -748,6 +764,9 @@ process_item:
        }
        | TOK_CASE expr TOK_IS cases TOK_END TOK_CASE ';'
        {
+         init($$, ID_code);
+         $1.set_location(stack($$));
+         stack($$).set(ID_statement, ID_switch_case);
        }
        | TOK_EXIT ';'
        {
@@ -761,25 +780,32 @@ process_item:
        | label_opt TOK_ASSERT expr assert_report_opt assert_severity_opt ';'
        {
          init($$, ID_code); $2.set_location(stack($$));
-         stack($$).set(ID_statement, ID_assert); mto($$, $3);
+         stack($$).set(ID_statement, ID_assert);
+         mto($$, $3);
+         mto($$, $4);
+         mto($$, $5);
        }
        ;
 
 assert_report_opt:
          /* Empty */
        {
+         init($$, ID_nil);
        }
        | TOK_REPORT expr
        {
+         $$=$2;
        }
        ;
 
 assert_severity_opt:
          /* Empty */
        {
+         init($$, ID_nil);
        }
        | TOK_SEVERITY expr
        {
+         $$=$2;
        }
        ;
 
@@ -803,6 +829,7 @@ elsepart:
 cases: 
          TOK_WHEN with_value_list '=' '>' process_body cases
        {
+         init($$, ID_when);
        }
        | TOK_WHEN TOK_OTHERS '=' '>' process_body
        {
@@ -942,18 +969,38 @@ expr:
          signal
        | TOK_STRING 
        {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         stack($$).set(ID_type, ID_string);
+         stack($$).set(ID_value, $1.text);
        }
        | TOK_BIT_STRING 
        {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         stack($$).set(ID_type, ID_string);
+         stack($$).set(ID_value, $1.text);
        }
        | TOK_CHAR
        {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         stack($$).set(ID_type, ID_char);
+         stack($$).set(ID_value, $1.text);
        }
        | TOK_NATURAL
        {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         stack($$).set(ID_type, ID_natural);
+         stack($$).set(ID_value, $1.text);
        }
        | TOK_NATURAL TOK_BASED_INTEGER
        {
+         init($$, ID_constant);
+         $1.set_location(stack($$));
+         stack($$).set(ID_type, ID_natural);
+         stack($$).set(ID_value, $1.text);
        }
        | '(' element_association_list ')'
        {
@@ -961,111 +1008,133 @@ expr:
        | expr '&' expr
        { // Vector chaining
          init($$, ID_concatenation);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | '-' expr %prec UMINUS
        {
          init($$, ID_unary_minus);
+         $1.set_location(stack($$));
          mto($$, $2);
        }
        | '+' expr %prec UPLUS
        {
          init($$, ID_unary_plus);
+         $1.set_location(stack($$));
          mto($$, $2);
        }
        | expr '+' expr
        {
          init($$, ID_plus);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr '-' expr
        {
          init($$, ID_minus);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_SLL expr
        {
          init($$, ID_shl);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_SRL expr
        {
          init($$, ID_lshr);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_SLA expr
        {
          init($$, ID_shl);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_SRA expr
        {
          init($$, ID_ashr);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_ROL expr
        {
          init($$, ID_rol);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_ROR expr
        {
          init($$, ID_ror);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr '*' expr
        {
          init($$, ID_mult);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr '/' expr
        {
          init($$, ID_div);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_MOD expr
        {
          init($$, ID_mod);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | TOK_NOT expr
        {
          init($$, ID_not);
+         $1.set_location(stack($$));
          mto($$, $2);
        }
        | expr TOK_AND expr
        {
          init($$, ID_and);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_NAND expr
        {
          init($$, ID_nand);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_OR expr
        {
          init($$, ID_or);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_NOR expr
        {
          init($$, ID_nor);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_XOR expr
        {
          init($$, ID_xor);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_XNOR expr
        {
          init($$, ID_xnor);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | name '(' expr_list ')'
        {
          init($$, ID_side_effect);
+         $2.set_location(stack($$));
          stack($$).set(ID_statement, ID_function_call);
          stack($$).add(ID_operands).get_sub().swap(stack($3).get_sub());
        }
@@ -1076,34 +1145,39 @@ expr:
        | expr '=' expr
        {
          init($$, ID_equal);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr '>' expr
        {
          init($$, ID_gt);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_GE expr
        {
          init($$, ID_ge);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr '<' expr
        {
          init($$, ID_lt);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_LE expr
        {
          init($$, ID_le);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
        | expr TOK_NE expr
        {
          init($$, ID_notequal);
+         $2.set_location(stack($$));
          stack($$).move_to_operands(stack($1), stack($3));
        }
-       ;
        ;
 
 expr_list:

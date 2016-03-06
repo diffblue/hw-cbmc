@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/std_code.h>
+#include <util/std_expr.h>
+
 #include "vhdl_typecheck.h"
 #include "vhdl_typecheck_class.h"
 
@@ -1496,6 +1499,123 @@ void vhdl_typecheckt::typecheck_architecture_decl(irept &decl)
 
 /*******************************************************************\
 
+Function: vhdl_typecheckt::typecheck_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_expr(exprt &expr)
+{
+  if(expr.id()==ID_and || expr.id()==ID_nand ||
+     expr.id()==ID_or  || expr.id()==ID_nor ||
+     expr.id()==ID_xor || expr.id()==ID_xnor)
+  {
+    assert(expr.operands().size()==2);
+    for(auto & op : expr.operands())
+      typecheck_expr(op);
+
+    expr.type()=expr.op0().type();
+  }
+  else if(expr.id()==ID_not)
+  {
+    assert(expr.operands().size()==1);
+    typecheck_expr(expr.op0());
+    expr.type()=expr.op0().type();
+  }
+  else if(expr.id()==ID_symbol)
+  {
+    symbol_exprt &symbol_expr=to_symbol_expr(expr);
+    irep_idt identifier=symbol_expr.get_identifier();
+    (void)identifier;
+  }
+  else if(expr.id()==ID_constant)
+  {
+    irep_idt type=expr.type().id();
+    if(type==ID_char)
+    {
+    }
+    else if(type==ID_natural)
+    {
+    }
+    else
+      throw "unexpected constant of type: "+id2string(type);
+  }
+  else if(expr.id()==ID_equal || expr.id()==ID_notequal ||
+          expr.id()==ID_le || expr.id()==ID_ge ||
+          expr.id()==ID_lt || expr.id()==ID_gt)
+  {
+    // result is always boolean
+    expr.type()=bool_typet();
+  }
+  else
+    throw "unexpected expression: "+expr.id_string();
+}
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::convert_to_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::convert_to_type(exprt &expr, const typet &type)
+{
+  if(expr.type()==type) return; // already done
+
+  typecast_exprt typecast(expr, type);
+  expr=typecast;
+}
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::typecheck_code
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_code(codet &code)
+{
+  irep_idt statement=code.get_statement();
+  
+  if(statement==ID_assert)
+  {
+    assert(code.operands().size()==3);
+    typecheck_expr(code.op0());
+    convert_to_type(code.op1(), bool_typet());
+  }
+  else if(statement==ID_assign)
+  {
+    typecheck_expr(code.op0());
+    typecheck_expr(code.op1());
+    convert_to_type(code.op1(), code.op0().type());
+  }
+  else if(statement==ID_continuous_assign)
+  {
+    typecheck_expr(code.op0());
+    typecheck_expr(code.op1());
+    convert_to_type(code.op1(), code.op0().type());
+  }
+  else
+    throw "unexpected statement: "+id2string(statement);
+}
+
+/*******************************************************************\
+
 Function: vhdl_typecheckt::typecheck_architecture_body
 
   Inputs:
@@ -1506,9 +1626,32 @@ Function: vhdl_typecheckt::typecheck_architecture_body
 
 \*******************************************************************/
 
-void vhdl_typecheckt::typecheck_architecture_body(irept &body)
+void vhdl_typecheckt::typecheck_architecture_body(exprt &body)
 {
-  throw body.pretty();
+  for(auto & it : body.operands())
+  {
+    if(it.id()==ID_process)
+    {
+      for(auto & it2 : it.operands())
+      {
+        typecheck_code(to_code(it2));
+      }
+    }
+    else if(it.id()==ID_generate_if)
+    {
+      throw "generate_if yet to be impleneted";
+    }
+    else if(it.id()==ID_generate_for)
+    {
+      throw "generate_for yet to be impleneted";
+    }
+    else if(it.id()==ID_continuous_assign)
+    {
+      throw "continous assignment yet to be implemented";
+    }
+    else
+      throw "unexpected item in architecture body: "+it.id_string();
+  }
 }
 
 /*******************************************************************\
@@ -1550,7 +1693,7 @@ void vhdl_typecheckt::typecheck_architecture(
   
   irept entity=item.find(ID_entity);
   irept decl=item.find(ID_decl);
-  irept body=item.find(ID_body);
+  exprt body=static_cast<const exprt &>(item.find(ID_body));
   
   typecheck_architecture_entity(entity);
   typecheck_architecture_decl(decl);

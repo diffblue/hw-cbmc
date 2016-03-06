@@ -53,7 +53,10 @@ protected:
   
   void typecheck_architecture_entity(irept &);
   void typecheck_architecture_decl(irept &);
-  void typecheck_architecture_body(irept &);
+  void typecheck_architecture_body(exprt &);
+  void typecheck_code(class codet &);
+  void typecheck_expr(exprt &);
+  void convert_to_type(exprt &, const typet &);
   
   #if 0
   // instances
