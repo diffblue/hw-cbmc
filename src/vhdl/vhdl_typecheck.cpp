@@ -1548,7 +1548,7 @@ void vhdl_typecheckt::typecheck_architecture(
     throw 0;
   }
   
-  irept entity=item.find("entity");
+  irept entity=item.find(ID_entity);
   irept decl=item.find(ID_decl);
   irept body=item.find(ID_body);
   

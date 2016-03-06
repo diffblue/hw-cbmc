@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef VHDL_PARSER_H
-#define VHDL_PARSER_H
+#ifndef CPROVER_VHDL_PARSER_H
+#define CPROVER_VHDL_PARSER_H
 
 #include <string>
 
@@ -75,6 +75,29 @@ public:
     parse_tree.items.push_back(vhdl_parse_treet::itemt());
     parse_tree.items.back().set_item_type("library");
     return parse_tree.items.back();
+  }
+  
+  struct yystypet
+  {
+    irep_idt text;
+    irep_idt file;
+    unsigned line, column;
+    unsigned stack_index;
+
+    void set_location(irept &dest)
+    {
+      source_locationt &loc=static_cast<exprt &>(dest).add_source_location();
+      loc.set_file(file);
+      loc.set_line(line);
+      loc.set_column(column);
+    }
+  };
+
+  inline void set_location(yystypet &dest, unsigned token_length) const
+  {
+    dest.file=get_file();
+    dest.line=get_line_no();
+    dest.column=get_column()-token_length;
   }
 };
 

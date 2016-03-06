@@ -11,11 +11,15 @@
 #include "vhdl_parser.h"
 
 #define PARSER vhdl_parser
-#define YYSTYPE unsigned
-#define YYSTYPE_IS_TRIVIAL 1
+#define YYSTYPE vhdl_parsert::yystypet
+
+#undef stack
+#undef stack_type
+#define stack(x) (PARSER.stack[x.stack_index])
+#define stack_type(x) (static_cast<typet &>(static_cast<irept &>(PARSER.stack[x.stack_index])))
 
 #define mto(x, y) stack(x).move_to_operands(stack(y))
-#define mts(x, y) stack(x).move_to_sub((irept &)stack(y))
+#define mts(x, y) stack(x).move_to_sub(stack(y))
 
 int yyvhdllex();
 extern char *yyvhdltext;
@@ -50,46 +54,9 @@ Function: init
 
 \*******************************************************************/
 
-inline static void init(exprt &expr)
-{
-  expr.clear();
-  PARSER.set_source_location(expr);
-}
-
-/*******************************************************************\
-
-Function: init
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 inline static void init(YYSTYPE &expr)
 {
-  newstack(expr);
-  init(stack(expr));
-}
-
-/*******************************************************************\
-
-Function: make_nil
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-inline static void make_nil(YYSTYPE &expr)
-{
-  newstack(expr);
-  stack(expr).make_nil();
+  newstack(expr.stack_index);
 }
 
 /*******************************************************************\
@@ -286,10 +253,9 @@ name_list:
 name:
          TOK_IDENTIFIER
        {
-         $$=$1;
-         irep_idt id=stack($$).id();
-         stack($$).id(ID_symbol);
-         stack($$).set(ID_identifier, id);
+         init($$, ID_symbol);
+         $1.set_location(stack($$));
+         stack($$).set(ID_identifier, $1.text);
        }
        | selected_name
        ;
@@ -298,13 +264,15 @@ selected_name:
          name '.' TOK_IDENTIFIER
        {
          init($$, ID_member);
-         stack($$).move_to_operands(stack($1));
-         stack($$).set(ID_component_name, stack($3).id());
+         mto($$, $1);
+         $2.set_location(stack($$));
+         stack($$).set(ID_component_name, $3.text);
        }
        | name '.' TOK_ALL
        {
          init($$, ID_all);
-         stack($$).move_to_operands(stack($1));
+         $2.set_location(stack($$));
+         mto($$, $1);
        }
        ;
        
@@ -540,7 +508,7 @@ architecture:
        {
          vhdl_parse_treet::itemt &a=PARSER.new_architecture_item();
          a.set_name(stack($2));
-         a.set("entity", stack($4));
+         a.set(ID_entity, stack($4));
          a.set(ID_decl, stack($6));
          a.set(ID_body, stack($8));
        }
@@ -627,26 +595,32 @@ architecture_item:
          TOK_BEGIN process_body TOK_END
          TOK_PROCESS name_opt ';'
        {
-         $$=$2;
+         init($$, ID_process);
+         $2.set_location(stack($$));
+         mto($$, $8);
        }
        | label_opt TOK_PROCESS
          TOK_BEGIN process_body TOK_END
          TOK_PROCESS name_opt ';'
        {
-         $$=$2;
-         
+         init($$, ID_process);
+         $2.set_location(stack($$));
+         mto($$, $4);
        }
        | label_opt TOK_IF expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
-         $$=$2;
+         init($$, ID_ifthenelse);
+         $2.set_location(stack($$));
        }
        | label_opt TOK_FOR signal TOK_IN expr TOK_TO expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
-         $$=$2;
+         init($$, ID_for);
+         $2.set_location(stack($$));
        }
        | label_opt TOK_FOR signal TOK_IN expr TOK_DOWNTO expr TOK_GENERATE architecture_body TOK_END TOK_GENERATE name_opt ';'
        {
-         $$=$2;
+         init($$, ID_for);
+         $2.set_location(stack($$));
        }
        ;
 
@@ -737,35 +711,57 @@ process_item:
          signal TOK_ASSIGN expr ';'
        {
          init($$, ID_code);
+         $2.set_location(stack($$));
          stack($$).set(ID_statement, ID_assign);
          stack($$).move_to_operands(stack($1), stack($4));
        }
        | signal TOK_LE sigvalue
        {
+         $2.set_location(stack($$));
        }
        | TOK_IF expr TOK_THEN process_body elsepart TOK_END TOK_IF ';'
        {
          init($$, ID_code);
+         $1.set_location(stack($$));
          stack($$).set(ID_statement, ID_ifthenelse);
          stack($$).move_to_operands(stack($2), stack($4), stack($5));
        }
        | TOK_FOR signal TOK_IN expr TOK_TO expr TOK_LOOP process_body TOK_END TOK_LOOP ';'
        {
+         init($$, ID_code);
+         $1.set_location(stack($$));
+         stack($$).set(ID_statement, ID_for);
+         mto($$, $2);
+         mto($$, $4);
+         mto($$, $6);
+         mto($$, $8);
        }
        | TOK_FOR signal TOK_IN expr TOK_DOWNTO expr TOK_LOOP process_body TOK_END TOK_LOOP ';'
        {
+         init($$, ID_code);
+         $1.set_location(stack($$));
+         stack($$).set(ID_statement, ID_for);
+         mto($$, $2);
+         mto($$, $4);
+         mto($$, $6);
+         mto($$, $8);
        }
        | TOK_CASE expr TOK_IS cases TOK_END TOK_CASE ';'
        {
        }
        | TOK_EXIT ';'
        {
+         init($$, ID_code);
+         $1.set_location(stack($$));
+         stack($$).set(ID_statement, "exit");
        }
        | TOK_NULL ';'
        {
        }
        | label_opt TOK_ASSERT expr assert_report_opt assert_severity_opt ';'
        {
+         init($$, ID_code); $2.set_location(stack($$));
+         stack($$).set(ID_statement, ID_assert); mto($$, $3);
        }
        ;
 
