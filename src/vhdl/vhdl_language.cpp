@@ -155,10 +155,8 @@ bool vhdl_languaget::typecheck(
     
   debug() << "Synthesis" << eom;
 
-  #if 0
-  if(vhdl_synthesis(symbol_table, module, message_handler, options))
+  if(vhdl_synthesis(symbol_table, module, get_message_handler()))
     return true;
-  #endif
 
   return false;
 }

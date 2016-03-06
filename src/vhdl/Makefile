@@ -1,5 +1,6 @@
 SRC = vhdl_language.cpp expr2vhdl.cpp vhdl_y.tab.cpp vhdl_lex.yy.cpp \
-      vhdl_parser.cpp vhdl_parse_tree.cpp vhdl_typecheck.cpp
+      vhdl_parser.cpp vhdl_parse_tree.cpp vhdl_typecheck.cpp \
+      vhdl_synthesis.cpp
 
 include ../config.inc
 
