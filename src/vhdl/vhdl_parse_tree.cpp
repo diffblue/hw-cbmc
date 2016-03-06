@@ -157,6 +157,11 @@ void vhdl_parse_treet::itemt::show(std::ostream &out) const
     out << "LIBRARY ";
     out << '\n';
   }
+  else if(type=="package")
+  {
+    out << "PACKAGE " << pretty_name(get_name());
+    out << '\n';
+  }
   else
     assert(false);
 }

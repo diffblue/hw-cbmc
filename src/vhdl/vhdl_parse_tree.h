@@ -38,6 +38,7 @@ public:
     bool is_entity() const { return get("item_type")=="entity"; }
     bool is_use() const { return get("item_type")=="use"; }
     bool is_library() const { return get("item_type")=="library"; }
+    bool is_package() const { return get("item_type")=="package"; }
   };
   
   typedef std::list<itemt> itemst;

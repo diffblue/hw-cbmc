@@ -308,8 +308,12 @@ primary_unit:
        ;
 
 package_declaration:
-         TOK_PACKAGE name TOK_IS package_declarative_part TOK_END ';'
+         TOK_PACKAGE name TOK_IS package_declarative_part TOK_END name_opt ';'
        {
+         vhdl_parse_treet::itemt &a=PARSER.new_package_item();
+         $1.set_location(a);
+         a.set_name(stack($2));
+         a.set(ID_decl, stack($4));
        }
        ;
        
@@ -594,6 +598,7 @@ architecture:
          TOK_BEGIN architecture_body TOK_END name_opt ';'
        {
          vhdl_parse_treet::itemt &a=PARSER.new_architecture_item();
+         $1.set_location(a);
          a.set_name(stack($2));
          a.set(ID_entity, stack($4));
          a.set(ID_decl, stack($6));
