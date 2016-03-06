@@ -137,11 +137,12 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
   {
     symbol_exprt &symbol_expr=to_symbol_expr(expr);
     irep_idt identifier=symbol_expr.get_identifier();
+    irep_idt to_lower_identifier=to_lower(identifier);
     
     // look up in symbol table
     irep_idt full_identifier=
       id2string(module_symbol->name)+"."+
-      id2string(to_lower(identifier));
+      id2string(to_lower_identifier);
 
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(full_identifier);
