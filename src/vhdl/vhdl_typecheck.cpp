@@ -1578,6 +1578,61 @@ void vhdl_typecheckt::convert_to_type(exprt &expr, const typet &type)
 
 /*******************************************************************\
 
+Function: vhdl_typecheckt::typecheck_code_assert
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_code_assert(codet &code)
+{
+  assert(code.operands().size()==3);
+  
+  // op0 is the assertion
+  typecheck_expr(code.op0());
+  convert_to_type(code.op0(), bool_typet());
+
+  // op1 must be a string (the report) or nil
+  if(code.op1().is_nil())
+  {
+  }
+  else if(code.op1().id()==ID_constant &&
+          code.op1().type().id()==ID_string)
+  {
+  }
+  else
+  {
+    //message_location(code.op1());
+    error() << "report clause expects string argument" << eom;
+    throw 0;
+  }
+}
+
+/*******************************************************************\
+
+Function: vhdl_typecheckt::typecheck_code_assign
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void vhdl_typecheckt::typecheck_code_assign(codet &code)
+{
+  typecheck_expr(code.op0());
+  typecheck_expr(code.op1());
+  convert_to_type(code.op1(), code.op0().type());
+}
+
+/*******************************************************************\
+
 Function: vhdl_typecheckt::typecheck_code
 
   Inputs:
@@ -1593,17 +1648,9 @@ void vhdl_typecheckt::typecheck_code(codet &code)
   irep_idt statement=code.get_statement();
   
   if(statement==ID_assert)
-  {
-    assert(code.operands().size()==3);
-    typecheck_expr(code.op0());
-    convert_to_type(code.op1(), bool_typet());
-  }
+    typecheck_code_assert(code);
   else if(statement==ID_assign)
-  {
-    typecheck_expr(code.op0());
-    typecheck_expr(code.op1());
-    convert_to_type(code.op1(), code.op0().type());
-  }
+    typecheck_code_assign(code);
   else if(statement==ID_continuous_assign)
   {
     typecheck_expr(code.op0());
@@ -1679,6 +1726,7 @@ void vhdl_typecheckt::typecheck_architecture(
   symbol.base_name=module_name;
   symbol.pretty_name=module_name;
   symbol.module=symbol.name;
+  symbol.mode="VHDL";
 
   // put symbol in symbol_table
 
@@ -1686,8 +1734,8 @@ void vhdl_typecheckt::typecheck_architecture(
 
   if(symbol_table.move(symbol, new_symbol))
   {
-    str << "duplicate definition of module " 
-        << symbol.base_name;
+    error() << "duplicate definition of module " 
+            << symbol.base_name << eom;
     throw 0;
   }
   
@@ -1698,11 +1746,14 @@ void vhdl_typecheckt::typecheck_architecture(
   typecheck_architecture_entity(entity);
   typecheck_architecture_decl(decl);
   typecheck_architecture_body(body);
+  
+  new_symbol->value=static_cast<const exprt &>(item);
+  new_symbol->value.id(ID_module);
 }
 
 /*******************************************************************\
 
-Function: vhdl_typecheckt::typecheck
+Function: vhdl_typecheckt::operator()
 
   Inputs:
 
@@ -1712,17 +1763,25 @@ Function: vhdl_typecheckt::typecheck
 
 \*******************************************************************/
 
-void vhdl_typecheckt::typecheck()
+bool vhdl_typecheckt::operator()()
 {
   // find the module in the parse tree
-
-  for(const auto & item : parse_tree.items)
-    if(item.is_architecture() &&
-       module_name==item.get_pretty_name())
-    {
-      typecheck_architecture(item);
-      return;
-    }
+  
+  try
+  {
+    for(const auto & item : parse_tree.items)
+      if(item.is_architecture() &&
+         module_name==item.get_pretty_name())
+      {
+        typecheck_architecture(item);
+        return false;
+      }
+  }
+  catch(...)
+  {
+  }
+  
+  return true;
 }
 
 /*******************************************************************\
@@ -1743,8 +1802,7 @@ bool vhdl_typecheck(
   const std::string &module,
   message_handlert &message_handler)
 {
-  vhdl_typecheckt vhdl_typecheck(
-    parse_tree, module, symbol_table, message_handler);
-  return vhdl_typecheck.typecheck_main();
+  return vhdl_typecheckt(
+    parse_tree, module, symbol_table, message_handler)();
 }
 

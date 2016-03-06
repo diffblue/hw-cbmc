@@ -24,7 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-class vhdl_typecheckt:public typecheckt
+class vhdl_typecheckt:public messaget
 {
 public:
   vhdl_typecheckt(
@@ -32,7 +32,7 @@ public:
     const irep_idt &_module_name,
     symbol_tablet &_symbol_table,
     message_handlert &_message_handler):
-    typecheckt(_message_handler),
+    messaget(_message_handler),
     ns(_symbol_table),
     parse_tree(_parse_tree),
     module_name(_module_name),
@@ -40,14 +40,14 @@ public:
   {
   }
 
-  virtual void typecheck();
+  bool operator()();
 
 protected:
   const namespacet ns;
   const vhdl_parse_treet &parse_tree;
   const irep_idt &module_name;
   symbol_tablet &symbol_table;
-
+  
   void typecheck_architecture(
     const vhdl_parse_treet::itemt &);
   
@@ -55,6 +55,8 @@ protected:
   void typecheck_architecture_decl(irept &);
   void typecheck_architecture_body(exprt &);
   void typecheck_code(class codet &);
+  void typecheck_code_assert(class codet &);
+  void typecheck_code_assign(class codet &);
   void typecheck_expr(exprt &);
   void convert_to_type(exprt &, const typet &);
   
