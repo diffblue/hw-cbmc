@@ -22,7 +22,15 @@ void vhdl_scanner_init()
 
 %}
 
+%x GRAMMAR
+%s STRING
+%s ESCAPED_IDENTIFIER
+
 %%
+
+<INITIAL>.|\n { BEGIN GRAMMAR; yyless(0); }
+
+<GRAMMAR>{
 
 "--".*\n|"--".* {
   // we actually collect comments!
@@ -150,10 +158,10 @@ void vhdl_scanner_init()
 "XNOR"          { set_loc(); return TOK_XNOR; }
 "XOR"           { set_loc(); return TOK_XOR; }
 
-\"[ \!#-~]*\" {
+\" { 
   set_loc();
-  yyvhdllval.text=yytext;
-  return TOK_STRING;
+  PARSER.scanner_buffer.clear();
+  BEGIN(STRING);
 }
 
 [bBoOxX]\"[ \!#-~]*\" {
@@ -180,6 +188,12 @@ void vhdl_scanner_init()
   return TOK_IDENTIFIER;
 } 
 
+\\ { 
+  BEGIN(ESCAPED_IDENTIFIER);
+  set_loc();
+  PARSER.scanner_buffer.clear();
+}
+
 [0-9]+ { 
   set_loc();
   yyvhdllval.text=yytext;
@@ -187,6 +201,37 @@ void vhdl_scanner_init()
 }
 
 . { set_loc(); return yytext[0]; }
+
+} // end of <GRAMMAR>
+
+<STRING>{
+\"\" {
+  // escaped double quote
+  PARSER.scanner_buffer+='\\';
+}
+\" {
+  // end of string
+  yyvhdllval.text=PARSER.scanner_buffer;
+  BEGIN(GRAMMAR);
+  return TOK_STRING;
+}
+. { PARSER.scanner_buffer+=yytext[0]; }
+}
+
+<ESCAPED_IDENTIFIER>{
+\\\\ {
+  // escaped backslash
+  PARSER.scanner_buffer+='\\';
+}
+\\ { 
+  // end of escaped identifier
+  PARSER.scanner_buffer+='\\';
+  yyvhdllval.text=PARSER.scanner_buffer;
+  BEGIN(GRAMMAR);
+  return TOK_IDENTIFIER;
+}
+. { PARSER.scanner_buffer+=yytext[0]; }
+} // end of <ESCAPED_IDENTIFIER>
 
 %%
 

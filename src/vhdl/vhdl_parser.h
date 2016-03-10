@@ -106,6 +106,9 @@ public:
     dest.line=get_line_no();
     dest.column=get_column()-token_length;
   }
+  
+  // for escaped identifiers and string literals
+  std::string scanner_buffer;
 };
 
 extern vhdl_parsert vhdl_parser;
