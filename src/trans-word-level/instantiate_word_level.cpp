@@ -204,7 +204,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
   }
   else if(expr.id()==ID_sva_sequence_concatenation)
   {
-    // much like regular and
+    // much like regular 'and'
     expr.id(ID_and);
     Forall_operands(it, expr)
       instantiate_rec(*it);
@@ -254,17 +254,17 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     // save the current time frame, we'll change it
     save_currentt save_current(current);
     
-    exprt::operandst conjuncts;
+    exprt::operandst disjuncts;
 
     for(; current<no_timeframes; current++)
     {
-      conjuncts.push_back(not_exprt(expr.op0()));
-      instantiate_rec(conjuncts.back());
+      disjuncts.push_back(not_exprt(expr.op0()));
+      instantiate_rec(disjuncts.back());
     }
     
     // TODO: add conjunct for lasso
     
-    expr=conjunction(conjuncts);
+    expr=disjunction(disjuncts);
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
@@ -314,12 +314,6 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     
     instantiate_rec(tmp);
     expr=tmp;
-  }
-  else if(expr.id()==ID_sva_until_with ||
-          expr.id()==ID_sva_s_until_with)
-  {
-    // overlapping until
-  
   }
   else
   {

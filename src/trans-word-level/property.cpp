@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 
 #include "instantiate_word_level.h"
-#include "property_word_level.h"
+#include "property.h"
 
 /*******************************************************************\
 
