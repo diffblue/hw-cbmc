@@ -86,7 +86,7 @@ void var_mapt::build_reverse_map()
        it++)
   {
     const vart &var=it->second;
-    for(unsigned bit_nr=0; bit_nr<var.bits.size(); bit_nr++)
+    for(std::size_t bit_nr=0; bit_nr<var.bits.size(); bit_nr++)
       add(it->first, bit_nr, var);
   }
 }
@@ -204,7 +204,7 @@ void var_mapt::output(std::ostream &out) const
   {
     const vart &var=it->second;
 
-    for(unsigned i=0; i<var.bits.size(); i++)
+    for(std::size_t i=0; i<var.bits.size(); i++)
     {
       out << "  " << it->first;
       if(var.bits.size()!=1) out << "[" << i << "]";

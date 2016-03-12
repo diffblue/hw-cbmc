@@ -55,7 +55,7 @@ protected:
     bool converted;
     exprt expr;
     bvt bv;
-    unsigned width;
+    std::size_t width;
     
     rhs_entryt():converted(false)
     {
@@ -77,13 +77,13 @@ protected:
   {
   public:
     rhs_entryt *entry;
-    unsigned bit_number;
+    std::size_t bit_number;
     
     rhst():entry(0)
     {
     }
 
-    rhst(rhs_entryt &_entry, unsigned _nr):entry(&_entry), bit_number(_nr)
+    rhst(rhs_entryt &_entry, std::size_t _nr):entry(&_entry), bit_number(_nr)
     {
     }
   };
@@ -113,7 +113,7 @@ protected:
   void add_equality_rec(
     const equal_exprt &src,
     const exprt &lhs,
-    unsigned lhs_from, unsigned lhs_to,
+    std::size_t lhs_from, std::size_t lhs_to,
     rhs_entryt &rhs_entry);
 
   literalt convert_rhs(const rhst &rhs, propt &prop);
@@ -122,8 +122,8 @@ protected:
 
   void convert_lhs_rec(
     const exprt &expr,
-    unsigned from,
-    unsigned to,
+    std::size_t from,
+    std::size_t to,
     propt &prop);
 
   void convert_constraints(propt &prop);
@@ -212,7 +212,7 @@ void convert_trans_to_netlistt::map_vars(
     else
       vartype=var_mapt::vart::vartypet::WIRE;
 
-    unsigned size=boolbv_width(symbol.type);
+    std::size_t size=boolbv_width(symbol.type);
     
     if(size==0)
       continue;
@@ -223,7 +223,7 @@ void convert_trans_to_netlistt::map_vars(
     var.mode=symbol.mode;
     var.bits.resize(size);
     
-    for(unsigned bit=0; bit<size; bit++)
+    for(std::size_t bit=0; bit<size; bit++)
     {
       // just initialize with something
       var.bits[bit].current=const_literal(false);
@@ -313,7 +313,7 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
     aig_prop, dest.var_map, trans.init(), ns, get_message_handler()));
 
   // find the nondet nodes
-  for(unsigned n=0; n<dest.nodes.size(); n++)
+  for(std::size_t n=0; n<dest.nodes.size(); n++)
   {
     if(dest.nodes[n].is_var())
     {
@@ -447,7 +447,7 @@ Function: convert_trans_to_netlistt::convert_lhs_rec
 
 void convert_trans_to_netlistt::convert_lhs_rec(
   const exprt &expr,
-  unsigned from, unsigned to,
+  std::size_t from, std::size_t to,
   propt &prop)
 {
   assert(from<=to);
@@ -513,7 +513,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
   // default
   forall_operands(it, expr)
   {
-    unsigned width=boolbv_width(it->type());
+    std::size_t width=boolbv_width(it->type());
     
     if(width==0)
       continue;
@@ -591,7 +591,7 @@ void convert_trans_to_netlistt::add_equality(const equal_exprt &src)
   
   assert(rhs_entry.width!=0);
 
-  unsigned lhs_width=boolbv_width(lhs.type());
+  std::size_t lhs_width=boolbv_width(lhs.type());
 
   assert(lhs_width==rhs_entry.width);
 
@@ -613,7 +613,7 @@ Function: convert_trans_to_netlistt::add_equality_rec
 void convert_trans_to_netlistt::add_equality_rec(
   const equal_exprt &src,
   const exprt &lhs,
-  unsigned lhs_from, unsigned lhs_to,
+  std::size_t lhs_from, std::size_t lhs_to,
   rhs_entryt &rhs_entry)
 {
   assert(lhs_from<=lhs_to);
@@ -647,7 +647,7 @@ void convert_trans_to_netlistt::add_equality_rec(
         return;
       }
 
-      unsigned rhs_bit_nr=bv_varid.bit_nr-lhs_from;
+      std::size_t rhs_bit_nr=bv_varid.bit_nr-lhs_from;
       lhs_entry.equal_to.push_back(rhst(rhs_entry, rhs_bit_nr));
     }
   }
@@ -678,8 +678,8 @@ void convert_trans_to_netlistt::add_equality_rec(
     if(op1<op2)
       throw std::string("extractbits op1<op2");
 
-    unsigned new_lhs_to=lhs_from+integer2long(op1);
-    unsigned new_lhs_from=lhs_from+integer2long(op2);
+    std::size_t new_lhs_to=lhs_from+integer2long(op1);
+    std::size_t new_lhs_from=lhs_from+integer2long(op2);
     
     add_equality_rec(src, lhs.op0(), new_lhs_from, new_lhs_to, rhs_entry);
   }

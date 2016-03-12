@@ -70,11 +70,11 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
     value_expr=exprt(ID_array, array_type);
     mp_integer size;
     to_integer(array_type.size(), size);
-    unsigned size_int=integer2long(size);
+    std::size_t size_int=integer2long(size);
     value_expr.operands().resize(size_int);
-    unsigned op_width=src.size()/size_int;
+    std::size_t op_width=src.size()/size_int;
 
-    for(unsigned i=0; i<size_int; i++)
+    for(std::size_t i=0; i<size_int; i++)
       value_expr.operands()[size_int-i-1]=bitstring_to_expr(
         std::string(src, i*op_width, op_width), array_type.subtype());
   }

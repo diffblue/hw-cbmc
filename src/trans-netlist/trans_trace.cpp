@@ -181,7 +181,7 @@ void show_trans_state(
        rhs.type().id()==ID_signedbv ||
        rhs.type().id()==ID_bv)
     {
-      unsigned width=rhs.type().get_int(ID_width);
+      std::size_t width=to_bitvector_type(rhs.type()).get_width();
       
       if(width>=2 && width<=32 &&
          rhs.id()==ID_constant)

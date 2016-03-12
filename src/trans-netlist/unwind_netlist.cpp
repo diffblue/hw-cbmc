@@ -39,10 +39,8 @@ void unwind(
     // do initial state
     message.status() << "Initial State" << messaget::eom;
     
-    for(unsigned i=0; i<netlist.initial.size(); i++)
-      solver.l_set_to(
-        bmc_map.translate(0, netlist.initial[i]),
-        true);
+    for(const auto & n : netlist.initial)
+      solver.l_set_to(bmc_map.translate(0, n), true);
   }
 
   // do transitions
@@ -53,7 +51,7 @@ void unwind(
   
   const bmc_mapt::timeframet &timeframe=bmc_map.timeframe_map[t];
   
-  for(unsigned n=0; n<timeframe.size(); n++)
+  for(std::size_t n=0; n<timeframe.size(); n++)
   {
     const aig_nodet &node=netlist.get_node(literalt(n, false));
 
@@ -85,7 +83,7 @@ void unwind(
       const var_mapt::vart &var=v_it->second;
       if(var.is_latch())
       {
-        for(unsigned bit_nr=0; bit_nr<var.bits.size(); bit_nr++)
+        for(std::size_t bit_nr=0; bit_nr<var.bits.size(); bit_nr++)
         {
           const var_mapt::vart::bitt &bit=var.bits[bit_nr];
           

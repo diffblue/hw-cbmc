@@ -217,7 +217,9 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
        it.second.is_input() ||
        it.second.is_nondet())
     {
-      for(unsigned bit_nr=0; bit_nr<it.second.bits.size(); bit_nr++)
+      for(std::size_t bit_nr=0;
+          bit_nr<it.second.bits.size();
+          bit_nr++)
       {
         bv_varidt bv_varid(it.first, bit_nr);
         vars[bv_varid].is_input=
@@ -744,7 +746,7 @@ void bdd_enginet::build_BDDs()
   std::vector<BDD> BDDs;
   BDDs.resize(netlist.nodes.size());
 
-  for(unsigned i=0; i<netlist.nodes.size(); i++)
+  for(std::size_t i=0; i<netlist.nodes.size(); i++)
   {
     const netlistt::nodet &n=netlist.nodes[i];
   

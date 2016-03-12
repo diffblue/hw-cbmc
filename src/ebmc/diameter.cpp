@@ -32,7 +32,7 @@ literalt comparator(propt &solver, const bvt &a, const bvt &b)
   bvt xors;
   xors.resize(a.size());
 
-  for(unsigned i=0; i<a.size(); i++)
+  for(std::size_t i=0; i<a.size(); i++)
     xors[i]=solver.lxor(a[i], b[i]);
 
   literalt literal=solver.lor(xors);
@@ -60,8 +60,8 @@ literalt simple_diameter(propt &solver, const std::vector<bvt> &states)
 
   comparators.reserve(states.size()*states.size());
 
-  for(unsigned i=0; i<states.size(); i++)
-    for(unsigned j=i+1; j<states.size(); j++)
+  for(std::size_t i=0; i<states.size(); i++)
+    for(std::size_t j=i+1; j<states.size(); j++)
       comparators.push_back(comparator(solver, states[i], states[j]));
 
   return !solver.lor(comparators);
@@ -159,7 +159,7 @@ literalt ordering(propt &solver, const bvt &a, const bvt &b)
 
   literalt carry=solver.lor(a[0], neg(b[0]));
 
-  for(unsigned i=1; i<a.size(); i++)
+  for(std::size_t i=1; i<a.size(); i++)
     carry=gen_carry(solver, a[i], neg(b[i]), carry);
 
   return carry;
@@ -237,7 +237,7 @@ bvt swap(propt &solver, const bvt &a, const bvt &b, literalt c)
   bvt result;
   result.resize(a.size());
 
-  for(unsigned i=0; i<a.size(); i++)
+  for(std::size_t i=0; i<a.size(); i++)
     result[i]=select(solver, a[i], b[i], c);
 
   return result;
@@ -300,7 +300,7 @@ void compare(propt &solver, std::vector<bvt> &v, int i, int j, bool dir)
   literalt s=const_literal(false), // true: sorting direction fixed
            t=const_literal(false); // true: sorting direction is *b*
 
-  for(unsigned i=0; i<a.size(); i++)
+  for(std::size_t i=0; i<a.size(); i++)
   {
     literalt _a=a[i], _b=b[i];
 
@@ -457,7 +457,7 @@ literalt efficient_diameter(propt &solver, const std::vector<bvt> &states)
 
   comparators.resize(sorted_states.size()-1);
 
-  for(unsigned i=0; i<sorted_states.size()-1; i++)
+  for(std::size_t i=0; i<sorted_states.size()-1; i++)
     comparators[i]=
     comparator(solver, sorted_states[i], sorted_states[i+1]);
 

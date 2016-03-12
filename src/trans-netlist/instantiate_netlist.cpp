@@ -330,7 +330,7 @@ void instantiate_bmc_mapt::convert_bitvector(const exprt &expr, bvt &bv)
   {
     const irep_idt &identifier=expr.get(ID_identifier);
 
-    unsigned width=boolbv_width(expr.type());
+    std::size_t width=boolbv_width(expr.type());
 
     if(width!=0)
     {
@@ -338,7 +338,7 @@ void instantiate_bmc_mapt::convert_bitvector(const exprt &expr, bvt &bv)
 
       bv.resize(width);
 
-      for(unsigned i=0; i<width; i++)
+      for(std::size_t i=0; i<width; i++)
         bv[i]=bmc_map.get(timeframe, identifier, i);
 
       return;
@@ -576,13 +576,13 @@ void instantiate_var_mapt::convert_bitvector(const exprt &expr, bvt &bv)
     bool next=(expr.id()==ID_next_symbol);
     const irep_idt &identifier=expr.get(ID_identifier);
 
-    unsigned width=boolbv_width(expr.type());
+    std::size_t width=boolbv_width(expr.type());
 
     if(width!=0)
     {
       bv.resize(width);
 
-      for(unsigned i=0; i<width; i++)
+      for(std::size_t i=0; i<width; i++)
         bv[i]=next?var_map.get_next(identifier, i)
                   :var_map.get_current(identifier, i);
 

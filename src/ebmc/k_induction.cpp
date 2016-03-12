@@ -7,7 +7,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 \*******************************************************************/
 
 #include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/property_word_level.h>
+#include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 

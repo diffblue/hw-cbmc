@@ -27,7 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/compute_ct.h>
 
 #include <trans-word-level/trans_trace_word_level.h>
-#include <trans-word-level/property_word_level.h>
+#include <trans-word-level/property.h>
 #include <trans-word-level/unwind.h>
 #include <trans-word-level/show_modules.h>
 
@@ -380,7 +380,12 @@ bool ebmc_baset::get_model_properties()
 
         properties.push_back(propertyt());
         properties.back().number=properties.size()-1;
-        properties.back().name=symbol.pretty_name;
+
+        if(symbol.pretty_name.empty())
+          properties.back().name=symbol.name;
+        else
+          properties.back().name=symbol.pretty_name;
+
         properties.back().expr=symbol.value;
         properties.back().location=symbol.location;
         properties.back().expr_string=value_as_string;
@@ -794,11 +799,11 @@ void ebmc_baset::show_ldg(std::ostream &out)
   {
     const var_mapt::vart &var=it->second;
 
-    for(unsigned i=0; i<var.bits.size(); i++)
+    for(std::size_t i=0; i<var.bits.size(); i++)
     {
       if(var.is_latch())
       {
-        unsigned v=var.bits[i].current.var_no();
+        literalt::var_not v=var.bits[i].current.var_no();
 
         out << "  " << it->first
             << "[" << i << "] = " << v << ":";

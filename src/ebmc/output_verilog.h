@@ -50,12 +50,12 @@ protected:
 
   void source_files(const symbolt &symbol);
 
-  unsigned width(const exprt &expr)
+  std::size_t width(const exprt &expr)
   {
     return width(expr.type());
   }
 
-  unsigned width(const typet &type);
+  std::size_t width(const typet &type);
 };
 
 class output_verilog_netlistt:public output_verilog_baset

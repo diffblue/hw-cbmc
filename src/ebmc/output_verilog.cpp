@@ -33,13 +33,13 @@ Function: output_verilog_baset::width
 
 \*******************************************************************/
 
-unsigned output_verilog_baset::width(const typet &type)
+std::size_t output_verilog_baset::width(const typet &type)
 {
   if(type.id()==ID_bool)
     return 1;
     
   if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
-    return atoi(type.get(ID_width).c_str());
+    return to_bitvector_type(type).get_width();
   
   std::cerr << type.id() << '\n';
   assert(false);
@@ -103,7 +103,7 @@ std::string output_verilog_netlistt::make_symbol_expr(
       throw 0;
     }
     
-    unsigned w=width(expr);
+    std::size_t w=width(expr);
     return i2string(w)+"'b"+integer2binary(i, w);
   }
   
@@ -416,7 +416,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
       throw 0;
     }
 
-    unsigned offset=atoi(expr.op0().type().get("#offset").c_str());
+    std::size_t offset=atoi(expr.op0().type().get("#offset").c_str());
     
     assert(i>=offset);
     
@@ -446,7 +446,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
       throw 0;
     }
 
-    unsigned offset=atoi(expr.op0().type().get("#offset").c_str());
+    std::size_t offset=atoi(expr.op0().type().get("#offset").c_str());
     
     assert(from>=offset);
     assert(to>=offset);
@@ -523,8 +523,8 @@ std::string output_verilog_baset::type_string_base(const typet &type)
     return "";
   else if(type.id()==ID_unsignedbv)
   {
-    unsigned width=atoi(type.get("width").c_str());
-    unsigned offset=atoi(type.get("#offset").c_str());
+    std::size_t width=to_unsignedbv_type(type).get_width();
+    std::size_t offset=atoi(type.get("#offset").c_str());
     
     type_string='['+i2string(width-1+offset)+':'+
                     i2string(offset)+']';
