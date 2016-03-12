@@ -43,6 +43,7 @@ Function: ebmc_baset::do_dimacs
 int ebmc_baset::do_dimacs()
 {
   dimacs_cnft dimacs_cnf;
+  
   int result=do_bmc(dimacs_cnf, true);
   if(result!=0) return result;
 
@@ -318,6 +319,8 @@ int ebmc_baset::do_sat()
 {
   satcheckt satcheck;
   satcheck.set_message_handler(get_message_handler());
+  
+  status() << "Using " << satcheck.solver_text() << eom;
 
   if(cmdline.isset("aig"))
   {
