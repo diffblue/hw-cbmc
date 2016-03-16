@@ -26,7 +26,6 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
       $(CBMC)/src/analyses/analyses$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
-      $(CBMC)/src/cegis/cegis$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
       ../trans-netlist/trans_trace$(OBJEXT) \
