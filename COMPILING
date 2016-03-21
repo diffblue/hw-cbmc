@@ -1,1 +1,10 @@
-ebmc release 4.2 compiles against CBMC release 5.2
+This compiles against the release of CBMC with the same release number. To
+get the CBMC sources, do
+
+svn co http://www.cprover.org/svn/cbmc/trunk cbmc-trunk
+
+and then edit src/config.inc to point the variable CBMC to that directory.
+Then follow the instructions at
+
+http://www.cprover.org/svn/cbmc/trunk/COMPILING
+
