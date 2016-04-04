@@ -76,6 +76,11 @@ ifneq ($(wildcard ../netlist/Makefile),)
   CXXFLAGS += -DHAVE_NETLIST
 endif
 
+ifneq ($(wildcard $(CBMC)/src/jsil/Makefile),)
+  OBJ += $(CBMC)/src/jsil/jsil$(LIBEXT)
+  CXXFLAGS += -DHAVE_JSIL
+endif
+
 ###############################################################################
 
 hw-cbmc$(EXEEXT): $(OBJ)
