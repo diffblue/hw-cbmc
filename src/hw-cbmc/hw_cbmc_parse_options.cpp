@@ -19,21 +19,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cbmc/cbmc_solvers.h>
 #include <langapi/mode.h>
 
-#include <ansi-c/ansi_c_language.h>
-#include <cpp/cpp_language.h>
-
-#ifdef HAVE_VERILOG
-#include <verilog/verilog_language.h>
-#endif
-
-#ifdef HAVE_VHDL
-#include <vhdl/vhdl_language.h>
-#endif
-
-#ifdef HAVE_SMV
-#include <smvlang/smv_language.h>
-#endif
-
 #include "hw_cbmc_parse_options.h"
 #include "hw_bmc.h"
 #include "map_vars.h"
@@ -237,35 +222,5 @@ void hw_cbmc_parse_optionst::help()
     " --gen-interface              print C for interface to module\n"
     " --vcd file                   dump error trace in VCD format\n"
     "\n";
-}
-
-/*******************************************************************\
-
-Function: hw_cbmc_parse_optionst::register_languages
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void hw_cbmc_parse_optionst::register_languages()
-{
-  register_language(new_ansi_c_language);
-  register_language(new_cpp_language);
-    
-  #ifdef HAVE_SMV
-  register_language(new_smv_language);
-  #endif
-  
-  #ifdef HAVE_VERILOG
-  register_language(new_verilog_language);
-  #endif
-  
-  #ifdef HAVE_VHDL
-  register_language(new_vhdl_language);
-  #endif
 }
 

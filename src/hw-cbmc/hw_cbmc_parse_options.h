@@ -26,7 +26,6 @@ public:
   }
   
 protected:
-  virtual void register_languages();
   virtual int get_modules(bmct &bmc);
 };
 

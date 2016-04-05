@@ -1,9 +1,8 @@
 SRC = hw_cbmc_main.cpp hw_cbmc_parse_options.cpp hw_bmc.cpp next_timeframe.cpp \
-      map_vars.cpp gen_interface.cpp set_inputs.cpp
+      map_vars.cpp gen_interface.cpp set_inputs.cpp hw_cbmc_languages.cpp
 
 OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/cbmc/xml_interface$(OBJEXT) \
-      $(CBMC)/src/cbmc/cbmc_languages$(OBJEXT) \
       $(CBMC)/src/cbmc/bmc$(OBJEXT) \
       $(CBMC)/src/cbmc/bv_cbmc$(OBJEXT) \
       $(CBMC)/src/cbmc/symex_bmc$(OBJEXT) \
@@ -16,7 +15,6 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/goto-instrument/full_slicer$(OBJEXT) \
       $(CBMC)/src/goto-instrument/nondet_static$(OBJEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
-      $(CBMC)/src/java_bytecode/java_bytecode$(LIBEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
@@ -74,11 +72,6 @@ endif
 ifneq ($(wildcard ../netlist/Makefile),)
   OBJ += ../netlist/netlist$(LIBEXT)
   CXXFLAGS += -DHAVE_NETLIST
-endif
-
-ifneq ($(wildcard $(CBMC)/src/jsil/Makefile),)
-  OBJ += $(CBMC)/src/jsil/jsil$(LIBEXT)
-  CXXFLAGS += -DHAVE_JSIL
 endif
 
 ###############################################################################
