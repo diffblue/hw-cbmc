@@ -19,7 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "smv_typecheck.h"
 #include "expr2smv.h"
 
-class smv_typecheckt:public typecheckt
+class smv_typecheckt:public legacy_typecheckt
 {
 public:
   smv_typecheckt(
@@ -28,7 +28,7 @@ public:
     const std::string &_module,
     bool _do_spec,
     message_handlert &_message_handler):
-    typecheckt(_message_handler),
+    legacy_typecheckt(_message_handler),
     smv_parse_tree(_smv_parse_tree),
     symbol_table(_symbol_table),
     module(_module),

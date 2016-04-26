@@ -17,14 +17,14 @@ Author: Daniel Kroening, kroening@kroening.com
 irep_idt verilog_module_symbol(const irep_idt &base_name);
 irep_idt verilog_module_name(const irep_idt &identifier);
 
-class verilog_typecheck_baset:public typecheckt,
+class verilog_typecheck_baset:public legacy_typecheckt,
                               public namespace_utilst
 {
 public:
   verilog_typecheck_baset(
     const namespacet &_ns,
     message_handlert &_message_handler):
-    typecheckt(_message_handler),
+    legacy_typecheckt(_message_handler),
     namespace_utilst(_ns),
     mode(ID_Verilog)
   { }
