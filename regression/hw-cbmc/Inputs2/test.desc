@@ -6,6 +6,6 @@ main.v --module top --bound 4
 ^\[main.assertion.2\] assertion top.variable == (unsigned long int)10: OK$
 ^\[main.assertion.3\] assertion top.variable == (unsigned long int)20: OK$
 ^\[main.assertion.4\] assertion top.variable == (unsigned long int)10: OK$
-^\[main.assertion.5\] assertion top.variable == (unsigned long int)100: FAIURE$
+^\[main.assertion.5\] assertion top.variable == (unsigned long int)100: FAILURE$
 --
 ^warning: ignoring
