@@ -2,10 +2,10 @@ CORE
 main.c
 main.v --module top --bound 4
 ^SIGNAL=0$
-^\[main.assertion.1\] assertion top.variable == (unsigned long int)0: OK$
-^\[main.assertion.2\] assertion top.variable == (unsigned long int)10: OK$
-^\[main.assertion.3\] assertion top.variable == (unsigned long int)20: OK$
-^\[main.assertion.4\] assertion top.variable == (unsigned long int)10: OK$
+^\[main.assertion.1\] assertion top.variable == (unsigned long int)0: SUCCESS$
+^\[main.assertion.2\] assertion top.variable == (unsigned long int)10: SUCCESS$
+^\[main.assertion.3\] assertion top.variable == (unsigned long int)20: SUCCESS$
+^\[main.assertion.4\] assertion top.variable == (unsigned long int)10: SUCCESS$
 ^\[main.assertion.5\] assertion top.variable == (unsigned long int)100: FAILURE$
 --
 ^warning: ignoring
