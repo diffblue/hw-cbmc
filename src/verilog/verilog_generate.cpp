@@ -113,7 +113,8 @@ void verilog_typecheckt::elaborate_generate_if(
      statement.operands().size()!=2)
   {
     err_location(statement);
-    throw "generate_for expects two or three operands";
+    error() << "generate_for expects two or three operands" << eom;
+    throw 0;
   }
   
   mp_integer condition;
@@ -153,7 +154,7 @@ void verilog_typecheckt::elaborate_generate_assign(
   if(statement.op0().id()!="symbol")
   {
     err_location(statement.op0());
-    str << "expected symbol on left hand side of assignment";
+    error() << "expected symbol on left hand side of assignment" << eom;
     throw 0;
   }
   
@@ -164,7 +165,7 @@ void verilog_typecheckt::elaborate_generate_assign(
   if(it==genvars.end())
   {
     err_location(statement.op0());
-    str << "expected genvar on left hand side of assignment";
+    error() << "expected genvar on left hand side of assignment" << eom;
     throw 0;
   }
   
@@ -175,7 +176,7 @@ void verilog_typecheckt::elaborate_generate_assign(
   if(rhs<0)
   {
     err_location(statement.op1());
-    str << "must not assign negative value to genvar";
+    error() << "must not assign negative value to genvar" << eom;
     throw 0;
   }
   
