@@ -1,10 +1,15 @@
-This compiles against the release of CBMC with the same release number. To
+1) This compiles against the release of CBMC with the same release number. To
 get the CBMC sources, do
 
-svn co http://www.cprover.org/svn/cbmc/trunk cbmc-trunk
+git clone http://www.github.com/diffblue/cbmc cbmc-git
 
-and then edit src/config.inc to point the variable CBMC to that directory.
-Then follow the instructions at
+2) Then do
 
-http://www.cprover.org/svn/cbmc/trunk/COMPILING
+cp src/config.inc.template src/config.inc
 
+3) Edit src/config.inc to point the variable CBMC to the directory created
+in step 1.
+
+4) Then follow the instructions at
+
+https://raw.githubusercontent.com/diffblue/cbmc/master/COMPILING
