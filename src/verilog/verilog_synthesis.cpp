@@ -1295,12 +1295,9 @@ void verilog_synthesist::expand_module_instance(
 
   // replace identifiers in macros
 
-  for(std::list<irep_idt>::const_iterator
-      it=new_symbols.begin();
-      it!=new_symbols.end();
-      it++)
+  for(const auto & it : new_symbols)
   {
-    symbolt &symbol=symbol_table_lookup(*it);
+    symbolt &symbol=symbol_table_lookup(it);
     replace_symbols(replace_map, symbol.value);
   }
 
@@ -1356,13 +1353,10 @@ void verilog_synthesist::synth_always(
 
   synth_statement(module_item.statement());
 
-  for(std::set<irep_idt>::const_iterator it=
-      value_map->final.changed.begin();
-      it!=value_map->final.changed.end();
-      it++)
+  for(const auto & it : value_map->final.changed)
   {
-    assignmentt &assignment=assignments[*it];
-    assignment.next.value=value_map->final.symbol_map[*it];
+    assignmentt &assignment=assignments[it];
+    assignment.next.value=value_map->final.symbol_map[it];
     assignment.next.move_assignments();
   }
 
@@ -1399,13 +1393,10 @@ void verilog_synthesist::synth_initial(
 
   synth_statement(module_item.statement());
   
-  for(std::set<irep_idt>::const_iterator it=
-      value_map->final.changed.begin();
-      it!=value_map->final.changed.end();
-      it++)
+  for(const auto & it : value_map->final.changed)
   {
-    assignmentt &assignment=assignments[*it];
-    assignment.init.value=value_map->final.symbol_map[*it];
+    assignmentt &assignment=assignments[it];
+    assignment.init.value=value_map->final.symbol_map[it];
     assignment.init.move_assignments();    
   }
 
@@ -2096,12 +2087,9 @@ void verilog_synthesist::merge(
   changed.insert(true_map.changed.begin(), true_map.changed.end());
   changed.insert(false_map.changed.begin(), false_map.changed.end());
 
-  for(std::set<irep_idt>::const_iterator
-      it=changed.begin();
-      it!=changed.end();
-      it++)
+  for(const auto & it : changed)
   {
-    const symbolt &symbol=lookup(*it);
+    const symbolt &symbol=lookup(it);
 
     exprt true_value=current_value(true_map, symbol, use_previous_assignments);
     exprt false_value=current_value(false_map, symbol, use_previous_assignments);
@@ -2710,12 +2698,9 @@ Function: verilog_synthesist::synth_assignments
 
 void verilog_synthesist::synth_assignments(transt &trans)
 {
-  for(local_symbolst::const_iterator
-      it=local_symbols.begin();
-      it!=local_symbols.end();
-      it++)
+  for(const auto & it : local_symbols)
   {
-    symbolt &symbol=symbol_table_lookup(*it);
+    symbolt &symbol=symbol_table_lookup(it);
     
     if(symbol.is_state_var && !symbol.is_macro)
     {
@@ -2750,12 +2735,9 @@ void verilog_synthesist::synth_assignments(transt &trans)
     }
   }
   
-  for(local_symbolst::const_iterator
-      it=new_wires.begin();
-      it!=new_wires.end();
-      it++)
+  for(const auto & it : new_wires)
   {
-    symbolt &symbol=symbol_table_lookup(*it);
+    symbolt &symbol=symbol_table_lookup(it);
     assignmentt &assignment=assignments[symbol.name];
 
     synth_assignments(symbol, CURRENT,
@@ -2963,11 +2945,8 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
 
   synth_assignments(trans);
   
-  for(std::list<exprt>::const_iterator
-      it=invars.begin();
-      it!=invars.end();
-      it++)
-    trans.invar().copy_to_operands(*it);
+  for(const auto & it : invars)
+    trans.invar().copy_to_operands(it);
 
   trans.invar()=conjunction(trans.invar().operands());
   trans.init()=conjunction(trans.init().operands());
