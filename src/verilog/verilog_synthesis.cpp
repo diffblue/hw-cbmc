@@ -314,6 +314,12 @@ void verilog_synthesist::assignment(
   // get identifier
   const symbolt &symbol=assignment_symbol(lhs);
   
+  if(symbol.type.id()==ID_verilog_realtime)
+  {
+    // we silently ignore these
+    return;
+  }
+  
   if(!symbol.is_state_var)
   {
     err_location(lhs);
