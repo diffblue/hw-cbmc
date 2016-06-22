@@ -318,11 +318,20 @@ Function: expr2verilogt::convert_function_call
 
 std::string expr2verilogt::convert_function_call(const exprt &src)
 {
+  if(src.operands().size()!=2)
+  {
+    unsigned p;
+    return convert_norep(src, p);
+  }
+
+  unsigned p;  
+  std::string fkt=convert(src.op0(), p);
+
+  std::string dest=fkt;
   bool first=true;
-  std::string dest="FKT";
   dest+="(";
 
-  forall_operands(it, src)
+  for(const auto & op : src.op1().operands())
   {
     if(first)
       first=false;
@@ -330,8 +339,7 @@ std::string expr2verilogt::convert_function_call(const exprt &src)
       dest+=", ";
 
     unsigned p;
-    std::string op=convert(*it, p);
-    dest+=op;
+    dest+=convert(op, p);
   }
 
   dest+=")";
