@@ -97,7 +97,7 @@ void verilog_typecheckt::typecheck_port_connection(
   if(!symbol.is_input && !symbol.is_output)
   {
     err_location(op);
-    str << "port `" << symbol.name
+    error() << "port `" << symbol.name
         << "' is neither input nor output";
     throw 0;
   }
@@ -154,7 +154,7 @@ void verilog_typecheckt::typecheck_port_connections(
     if(!ports.empty())
     {
       err_location(inst);
-      str << "module does not have ports";
+      error() << "module does not have ports";
       throw 0;
     }
 
@@ -175,7 +175,7 @@ void verilog_typecheckt::typecheck_port_connections(
          o_it->operands().size()!=2)
       {
         err_location(inst);
-        str << "expected a named port connection";
+        error() << "expected a named port connection";
         error_msg();
         throw 0;
       }
@@ -195,7 +195,7 @@ void verilog_typecheckt::typecheck_port_connections(
          assigned_ports.end())
       {
         err_location(*o_it);
-        str << "port name " << name << " assigned twice";
+        error() << "port name " << name << " assigned twice";
         throw 0;
       }
 
@@ -214,7 +214,7 @@ void verilog_typecheckt::typecheck_port_connections(
       if(!found)
       {
         err_location(*o_it);
-        str << "port name " << identifier << " not found";
+        error() << "port name " << identifier << " not found";
         throw 0;
       }
 
@@ -226,7 +226,7 @@ void verilog_typecheckt::typecheck_port_connections(
     if(inst.operands().size()!=ports.size())
     {
       err_location(inst);
-      str << "wrong number of arguments: expected " << ports.size() 
+      error() << "wrong number of arguments: expected " << ports.size() 
           << " but got " << inst.operands().size(); 
       throw 0;
     }
@@ -313,7 +313,7 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
   if(result==symbol_table.symbols.end())
   {
     err_location(decl);
-    str << "expected to find " << decl_class << " symbol `"
+    error() << "expected to find " << decl_class << " symbol `"
         << identifier << "' in symbol_table";
     throw 0;
   }
@@ -381,7 +381,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
 
       if(lhs.id()!=ID_symbol)
       {
-        str << "expected symbol on left hand side of assignment, "
+        error() << "expected symbol on left hand side of assignment, "
             << " but got `" << to_string(lhs) << "'";
         throw 0;
       }
@@ -405,7 +405,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
         if(!symbol.value.is_nil())
         {
           err_location(*it);
-          str << "Net " << identifier << " is assigned twice";
+          error() << "Net " << identifier << " is assigned twice";
           throw 0;
         }
       }
@@ -530,7 +530,7 @@ void verilog_typecheckt::convert_inst_builtin(
       if(instance.operands().size()<2)
       {
         err_location(instance);
-        str << "Primitive gate " << inst_module
+        error() << "Primitive gate " << inst_module
             << " expects at least two operands";
         throw 0;
       }
@@ -541,7 +541,7 @@ void verilog_typecheckt::convert_inst_builtin(
       if(instance.operands().size()<2)
       {
         err_location(instance);
-        str << "Primitive gate " << inst_module
+        error() << "Primitive gate " << inst_module
             << " expects at least two operands";
         throw 0;
       }
@@ -561,7 +561,7 @@ void verilog_typecheckt::convert_inst_builtin(
     else
     {
       err_location(inst);
-      str << "Unknown primitive Verilog module "
+      error() << "Unknown primitive Verilog module "
           << inst_module;
       throw 0;
     }
@@ -720,8 +720,8 @@ void verilog_typecheckt::check_lhs(
   }
   else
   {
-    str << lhs << std::endl;
-    str << "typechecking: failed to get identifier on LHS";
+    error() << lhs << std::endl;
+    error() << "typechecking: failed to get identifier on LHS";
     error_msg();
     throw 0;
   }
@@ -768,7 +768,7 @@ void verilog_typecheckt::convert_continuous_assign(
     if(it->id()!=ID_equal || it->operands().size()!=2)
     {
       err_location(*it);
-      str << "malformed continuous assignment";
+      error() << "malformed continuous assignment";
       error_msg();
       throw 0;
     }
@@ -896,7 +896,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   if(statement.operands().size()!=2)
   {
     err_location(statement);
-    str << "assert statement expected to have two operands";
+    error() << "assert statement expected to have two operands";
     error_msg();
     return;
   }
@@ -933,7 +933,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
      symbol_table.symbols.end())
   {
     err_location(statement);
-    str << "property identifier `" << base_name << "' already used";
+    error() << "property identifier `" << base_name << "' already used";
     error_msg();
     return; // continue with error
   }
@@ -973,7 +973,7 @@ void verilog_typecheckt::convert_assume(exprt &statement)
   if(statement.operands().size()!=2)
   {
     err_location(statement);
-    str << "assume statement expected to have two operands";
+    error() << "assume statement expected to have two operands";
     error_msg();
     return;
   }
@@ -1325,8 +1325,8 @@ void verilog_typecheckt::convert_statement(
   else
   {
     err_location(statement);
-    str << "unexpected statement:" << '\n';
-    str << statement << '\n';
+    error() << "unexpected statement:" << '\n';
+    error() << statement << '\n';
     throw 0;
   }
 }
@@ -1373,7 +1373,7 @@ void verilog_typecheckt::convert_module_item(
   {
     // should be gone already
     err_location(module_item);
-    str << "unexpected generate_block module item";
+    error() << "unexpected generate_block module item";
     error_msg();
     throw 0;
   }
@@ -1396,8 +1396,8 @@ void verilog_typecheckt::convert_module_item(
   else
   {
     err_location(module_item);
-    str << "unexpected module item:" << '\n';
-    str << module_item << '\n';
+    error() << "unexpected module item:" << '\n';
+    error() << module_item << '\n';
     throw 0;
   }
 }
@@ -1517,7 +1517,7 @@ bool verilog_typecheck(
   if(it==parse_tree.module_map.end())
   {
     message_streamt message_stream(message_handler);
-    message_stream.str << "module `" << module << "' not found";
+    message_stream.error() << "module `" << module << "' not found";
     message_stream.error_msg();
     return true;
   }
@@ -1565,7 +1565,7 @@ bool verilog_typecheck(
   if(symbol_table.move(symbol, new_symbol))
   {
     message_streamt message_stream(message_handler);
-    message_stream.str << "duplicate definition of module " 
+    message_stream.error() << "duplicate definition of module " 
                        << symbol.base_name;
     message_stream.error_msg();
     throw 0;

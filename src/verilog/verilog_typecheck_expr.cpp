@@ -217,7 +217,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
     if(expr.operands().size()==0)
     {
       err_location(expr);
-      str << "concatenation expected to have at least one operand";
+      error() << "concatenation expected to have at least one operand" << eom;
       throw 0;
     }
     
@@ -286,7 +286,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
      case 3: convert_trinary_expr(expr); break;
      default:
       err_location(expr);
-      str << "no conversion for expression " << expr;
+      error() << "no conversion for expression " << expr << eom;
       throw 0;
     }
   }
@@ -334,14 +334,14 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   if(lookup(full_identifier, symbol))
   {
     err_location(f_op);
-    str << "unknown function `" << identifier << "'";
+    error() << "unknown function `" << identifier << "'" << eom;
     throw 0;
   }
 
   if(symbol->type.id()!=ID_code)
   {
     err_location(f_op);
-    str << "expected function name";
+    error() << "expected function name" << eom;
     throw 0;
   }
 
@@ -387,7 +387,7 @@ void verilog_typecheck_exprt::convert_constraint_select_one(exprt &expr)
   if(expr.operands().size()<2)
   {
     err_location(expr);
-    str << "constraint_select_one takes at least two operands";
+    error() << "constraint_select_one takes at least two operands" << eom;
     throw 0;
   }
 }
@@ -416,7 +416,7 @@ void verilog_typecheck_exprt::convert_system_function(
     if(arguments.size()!=1)
     {
       err_location(expr);
-      str << "$signed takes one argument";
+      error() << "$signed takes one argument" << eom;
       throw 0;
     }
     
@@ -445,8 +445,8 @@ void verilog_typecheck_exprt::convert_system_function(
     else
     {
       err_location(expr);
-      str << "$signed takes an unsigned bit-vector as argument, but got `"
-          << to_string(argument.type()) << '\'';
+      error() << "$signed takes an unsigned bit-vector as argument, but got `"
+              << to_string(argument.type()) << '\'' << eom;
       throw 0;
     }
   }
@@ -456,7 +456,7 @@ void verilog_typecheck_exprt::convert_system_function(
     if(arguments.size()!=1)
     {
       err_location(expr);
-      str << "$unsigned takes one argument";
+      error() << "$unsigned takes one argument" << eom;
       throw 0;
     }
     
@@ -484,8 +484,8 @@ void verilog_typecheck_exprt::convert_system_function(
     else
     {
       err_location(expr);
-      str << "$unsigned takes an unsigned bit-vector as argument, but got `"
-          << to_string(argument.type()) << '\'';
+      error() << "$unsigned takes an unsigned bit-vector as argument, but got `"
+              << to_string(argument.type()) << '\'' << eom;
       throw 0;
     }
   }
@@ -496,7 +496,7 @@ void verilog_typecheck_exprt::convert_system_function(
     if(arguments.size()<1)
     {
       err_location(expr);
-      str << "$ND takes at least one argument";
+      error() << "$ND takes at least one argument" << eom;
       throw 0;
     }
     
@@ -524,7 +524,7 @@ void verilog_typecheck_exprt::convert_system_function(
     if(arguments.size()!=1)
     {
       err_location(expr);
-      str << "$onehot takes one argument";
+      error() << "$onehot takes one argument" << eom;
       throw 0;
     }
     
@@ -539,7 +539,7 @@ void verilog_typecheck_exprt::convert_system_function(
     if(arguments.size()!=1)
     {
       err_location(expr);
-      str << "$onehot takes one argument";
+      error() << "$onehot takes one argument" << eom;
       throw 0;
     }
     
@@ -555,7 +555,7 @@ void verilog_typecheck_exprt::convert_system_function(
   else
   {
     err_location(expr.function());
-    str << "unknown system function `" << identifier << "'";
+    error() << "unknown system function `" << identifier << "'" << eom;
     throw 0;
   }
 }
@@ -591,7 +591,7 @@ void verilog_typecheck_exprt::convert_nullary_expr(exprt &expr)
   else
   {
     err_location(expr);
-    str << "no conversion for no-operand expression " << expr;
+    error() << "no conversion for no-operand expression " << expr << eom;
     throw 0;
   }
 }
@@ -670,7 +670,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
       if(int_value<0)
       {
         err_location(expr);
-        str << "invalid genvar value";
+        error() << "invalid genvar value" << eom;
         throw 0;
       }
       
@@ -691,8 +691,8 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
   {
     // this should become an error
     err_location(expr);
-    str << "implicit definition of wire "
-        << full_identifier;
+    error() << "implicit definition of wire "
+            << full_identifier << eom;
     warning_msg();
     expr.type()=symbol->type;
     expr.set(ID_identifier, symbol->name);
@@ -700,7 +700,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
   else
   {
     err_location(expr);
-    str << "unknown identifier " << identifier;
+    error() << "unknown identifier " << identifier << eom;
     throw 0;
   }
 }
@@ -740,8 +740,8 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     if(lookup(lhs_identifier, module_instance_symbol))
     {
       err_location(expr);
-      str << "failed to find module instance `"
-          << lhs_identifier << "' on lhs of `.'";
+      error() << "failed to find module instance `"
+              << lhs_identifier << "' on lhs of `.'" << eom;
       throw 0;
     }
 
@@ -750,8 +750,8 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     if(expr.op1().id()!=ID_symbol)
     {
       err_location(expr);
-      str << "expected symbol on rhs of `.', but got `"
-          << to_string(expr.op1()) << '\'';
+      error() << "expected symbol on rhs of `.', but got `"
+              << to_string(expr.op1()) << '\'' << eom;
       throw 0;
     }
 
@@ -764,7 +764,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
       if(symbol->type.id()==ID_genvar)
       {
         err_location(expr);
-        str << "genvars must not be used in hierarchical identifiers";
+        error() << "genvars must not be used in hierarchical identifiers" << eom;
         throw 0;
       }
       else
@@ -775,9 +775,9 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     else
     {
       err_location(expr);
-      str << "identifier `" << rhs_identifier
-          << "' not found in module `"
-          << module_instance_symbol->pretty_name << "'";
+      error() << "identifier `" << rhs_identifier
+              << "' not found in module `"
+              << module_instance_symbol->pretty_name << "'" << eom;
       throw 0;
     }
   }
@@ -793,7 +793,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
       if(symbol->type.id()==ID_genvar)
       {
         err_location(expr);
-        str << "genvars must not be used in hierarchical identifiers";
+        error() << "genvars must not be used in hierarchical identifiers" << eom;
         throw 0;
       }
       else
@@ -808,15 +808,15 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     else
     {
       err_location(expr);
-      str << "identifier `" << rhs_identifier
-          << "' not found in named block";
+      error() << "identifier `" << rhs_identifier
+              << "' not found in named block" << eom;
       throw 0;
     }
   }
   else  
   {
     err_location(expr);
-    str << "expected module instance or named block on left-hand side of dot";
+    error() << "expected module instance or named block on left-hand side of dot" << eom;
     throw 0;
   }
   
@@ -1001,7 +1001,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
 
     default:
       err_location(expr);
-      str << "cannot convert " << value;
+      error() << "cannot convert " << value << eom;
       throw 0;
     }
 
@@ -1093,8 +1093,8 @@ void verilog_typecheck_exprt::convert_const_expression(
   else if(to_integer(tmp, value))
   {
     err_location(expr);
-    str << "expected constant expression, but got `"
-        << to_string(tmp) << '\'';
+    error() << "expected constant expression, but got `"
+            << to_string(tmp) << '\'' << eom;
     throw 0;
   }
 }
@@ -1270,8 +1270,8 @@ void verilog_typecheck_exprt::typecast(
   }
 
   err_location(expr);
-  str << "failed to convert `" << to_string(expr.type()) 
-      << "' to `" << to_string(dest_type) << "'";
+  error() << "failed to convert `" << to_string(expr.type()) 
+          << "' to `" << to_string(dest_type) << "'" << eom;
   throw 0;
 }
 
@@ -1319,8 +1319,8 @@ void verilog_typecheck_exprt::convert_range(
   if(range.operands().size()!=2)
   {
     err_location(range);
-    str << "range expected to have two operands" << std::endl;
-    str << range;
+    error() << "range expected to have two operands\n";
+    error() << range << eom;
     throw 0;
   }
 
@@ -1349,9 +1349,9 @@ void verilog_typecheck_exprt::tc_binary_expr(
   if(new_type.is_nil())
   {
     err_location(expr);
-    str << "expected operands of compatible type but got:\n";
-    str << "  " << to_string(op0.type()) << '\n'
-        << "  " << to_string(op1.type());
+    error() << "expected operands of compatible type but got:\n";
+    error() << "  " << to_string(op0.type()) << '\n'
+            << "  " << to_string(op1.type()) << eom;
     throw 0;
   }
 
@@ -1442,8 +1442,8 @@ void verilog_typecheck_exprt::tc_binary_expr(exprt &expr)
   if(expr.operands().size()!=2)
   {
     err_location(expr);
-    str << "operator " << expr.id_string()
-        << " takes two operands";
+    error() << "operator " << expr.id_string()
+            << " takes two operands" << eom;
     throw 0;
   }
 
@@ -1575,15 +1575,16 @@ void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
       if(op1<offset)
       {
         err_location(expr);
-        str << "bit selection below lower bound: " << op1 << "<" << offset;
+        error() << "bit selection below lower bound: "
+                << op1 << "<" << offset << eom;
         throw 0;
       }
 
       if(op1>=width+offset)
       {
         err_location(expr); 
-        str << "bit selection out of range: " 
-            << op1 << ">=" << (width+offset);
+        error() << "bit selection out of range: " 
+                << op1 << ">=" << (width+offset) << eom;
         throw 0;
       }
 
@@ -1637,7 +1638,7 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   if(op0<0)
   {
     err_location(expr); 
-    str << "number of replications must not be negative";
+    error() << "number of replications must not be negative" << eom;
     throw 0;
   }
 
@@ -1645,7 +1646,7 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   {
     // ruled out by IEEE 1364-2001
     err_location(expr); 
-    str << "number of replications must not be zero";
+    error() << "number of replications must not be zero" << eom;
     throw 0;
   }
 
@@ -1890,15 +1891,15 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
     if(op2<offset)
     {
       err_location(expr); 
-      str << "bit selection below offset";
+      error() << "bit selection below offset" << eom;
       throw 0;
     }
 
     if(op1>=width+offset)
     {
       err_location(expr); 
-      str << "bit selection out of range: " 
-          << op1 << ">=" << (width+offset);
+      error() << "bit selection out of range: " 
+              << op1 << ">=" << (width+offset) << eom;
       throw 0;
     }
 
@@ -1936,7 +1937,7 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
   else
   {
     err_location(expr);
-    str << "no conversion for trinary expression " << expr;
+    error() << "no conversion for trinary expression " << expr << eom;
     throw 0;
   }
 }
@@ -1974,13 +1975,13 @@ bool verilog_typecheck(
 
   catch(const char *e)
   {
-    verilog_typecheck_expr.str << e;
+    verilog_typecheck_expr.error() << e;
     verilog_typecheck_expr.error_msg();
   }
 
   catch(const std::string &e)
   {
-    verilog_typecheck_expr.str << e;
+    verilog_typecheck_expr.error() << e;
     verilog_typecheck_expr.error_msg();
   }
   

@@ -65,8 +65,8 @@ void verilog_typecheckt::get_parameter_values(
             if(!value.is_constant())
             {
               err_location((const exprt &)(o_it->find(ID_value)));
-              str << "parameter value expected to simplify to constant, "
-                  << "but got `" << to_string(value) << "'" << std::endl;
+              error() << "parameter value expected to simplify to constant, "
+                      << "but got `" << to_string(value) << "'" << eom;
               throw 0;
             }
           }
@@ -104,8 +104,8 @@ void verilog_typecheckt::get_parameter_values(
             if(!value.is_constant())
             {
               err_location((const exprt &)(o_it->find(ID_value)));
-              str << "parameter value expected to simplify to constant, "
-                  << "but got `" << to_string(value) << "'" << std::endl;
+              error() << "parameter value expected to simplify to constant, "
+                      << "but got `" << to_string(value) << "'" << eom;
               throw 0;
             }
           }
@@ -187,7 +187,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   if(it==symbol_table.symbols.end())
   {
     err_location(location);
-    str << "module not found";
+    error() << "module not found" << eom;
     throw 0;
   }
   
@@ -213,8 +213,8 @@ irep_idt verilog_typecheckt::parameterize_module(
       if(to_integer(*it, i))
       {
         err_location(*it);
-        str << "parameter expected to be constant, but got `"
-            << to_string(*it) << "'";
+        error() << "parameter expected to be constant, but got `"
+                << to_string(*it) << "'" << eom;
         throw 0;
       }
       else
@@ -251,8 +251,8 @@ irep_idt verilog_typecheckt::parameterize_module(
   if(symbol_table.move(symbol, new_symbol))
   {
     err_location(location);
-    str << "duplicate definition of parameterized module "
-        << symbol.base_name;
+    error() << "duplicate definition of parameterized module "
+            << symbol.base_name << eom;
     throw 0;
   }
 
