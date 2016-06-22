@@ -8,8 +8,9 @@ main.sv
 ^\[Verilog::top.property.p2\] .* SUCCESS$
 ^\[Verilog::top.property.p3\] .* SUCCESS$
 ^\[Verilog::top.property.p4\] .* SUCCESS$
-^\[Verilog::top.property.p5\] .* SUCCESS$
+^\[Verilog::top.property.p5\] .* FAILURE$
 ^\[Verilog::top.property.p6\] .* SUCCESS$
 ^\[Verilog::top.property.p7\] .* SUCCESS$
+^\[Verilog::top.property.p8\] .* SUCCESS$
 --
 ^warning: ignoring

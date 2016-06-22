@@ -35,6 +35,26 @@ irep_idt verilog_module_symbol(const irep_idt &base_name)
 
 /*******************************************************************\
 
+Function: strip_verilog_prefix
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt strip_verilog_prefix(const irep_idt &identifier)
+{
+  std::string prefix="Verilog::";
+  assert(has_prefix(id2string(identifier), prefix));
+  assert(identifier.size()>=prefix.size());
+  return identifier.c_str()+prefix.size();
+}
+
+/*******************************************************************\
+
 Function: verilog_module_name
 
   Inputs:
@@ -47,10 +67,7 @@ Function: verilog_module_name
 
 irep_idt verilog_module_name(const irep_idt &identifier)
 {
-  std::string prefix="Verilog::";
-  assert(has_prefix(id2string(identifier), prefix));
-  assert(identifier.size()>=prefix.size());
-  return identifier.c_str()+prefix.size();
+  return strip_verilog_prefix(identifier);
 }
 
 /*******************************************************************\

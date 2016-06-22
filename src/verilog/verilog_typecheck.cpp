@@ -950,7 +950,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   symbol.type=bool_typet();
   symbol.is_property=true;
   symbol.location=statement.find_source_location();
-  symbol.pretty_name=full_identifier;
+  symbol.pretty_name=strip_verilog_prefix(full_identifier);
 
   symbolt *new_symbol;
   symbol_table.move(symbol, new_symbol);

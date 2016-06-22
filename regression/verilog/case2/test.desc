@@ -3,6 +3,6 @@ main.v
 --module main --bound 1
 ^EXIT=0$
 ^SIGNAL=0$
-^\[Verilog::main.property.p1\] .* SUCCESS$
+^\[main.property.p1\] .* SUCCESS$
 --
 ^warning: ignoring

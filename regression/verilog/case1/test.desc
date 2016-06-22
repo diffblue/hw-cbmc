@@ -4,6 +4,6 @@ main.v
 ^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
-^\[Verilog::main.property.p1\] .* FAILURE$
+^\[main.property.p1\] .* FAILURE$
 --
 ^warning: ignoring

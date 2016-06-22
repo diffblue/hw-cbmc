@@ -3,7 +3,7 @@ main.v
 --bound 1
 ^EXIT=0$
 ^SIGNAL=0$
-^\[Verilog::main.property.property1\] .* SUCCESS$
-^\[Verilog::main.property.property2\] .* SUCCESS$
+^\[main.property.property1\] .* SUCCESS$
+^\[main.property.property2\] .* SUCCESS$
 --
 ^warning: ignoring

@@ -1199,7 +1199,7 @@ void verilog_synthesist::expand_module_instance(
   forall_symbol_module_map(it, symbol_table.symbol_module_map, symbol.module)
   {
     const symbolt &symbol=lookup(it->second);
-
+    
     if(symbol.type.id()!=ID_module)
     {
       // instantiate the symbol
@@ -1221,6 +1221,7 @@ void verilog_synthesist::expand_module_instance(
       full_identifier+="."+id2string(instance);
       full_identifier+=identifier_without_module;
 
+      new_symbol.pretty_name=strip_verilog_prefix(full_identifier);
       new_symbol.name=full_identifier;
 
       if(symbol_table.add(new_symbol))

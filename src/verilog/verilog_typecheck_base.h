@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 irep_idt verilog_module_symbol(const irep_idt &base_name);
 irep_idt verilog_module_name(const irep_idt &identifier);
+irep_idt strip_verilog_prefix(const irep_idt &identifier);
 
 class verilog_typecheck_baset:public legacy_typecheckt,
                               public namespace_utilst

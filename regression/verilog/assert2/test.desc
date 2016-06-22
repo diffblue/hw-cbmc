@@ -3,7 +3,7 @@ main.v
 --module main --bound 20
 ^EXIT=10$
 ^SIGNAL=0$
-^\[Verilog::main.s_ok.property.eq\] .* SUCCESS$
-^\[Verilog::main.s_fail.property.eq\] .* FAILURE$
+^\[main.s_ok.property.eq\] .* SUCCESS$
+^\[main.s_fail.property.eq\] .* FAILURE$
 --
 ^warning: ignoring
