@@ -445,8 +445,8 @@ void verilog_typecheck_exprt::convert_system_function(
     else
     {
       err_location(expr);
-      str << "$signed takes an unsigned bit-vector as argument, but got "
-          << to_string(argument.type());
+      str << "$signed takes an unsigned bit-vector as argument, but got `"
+          << to_string(argument.type()) << '\'';
       throw 0;
     }
   }
@@ -484,8 +484,8 @@ void verilog_typecheck_exprt::convert_system_function(
     else
     {
       err_location(expr);
-      str << "$unsigned takes an unsigned bit-vector as argument, but got "
-          << to_string(argument.type());
+      str << "$unsigned takes an unsigned bit-vector as argument, but got `"
+          << to_string(argument.type()) << '\'';
       throw 0;
     }
   }
@@ -751,7 +751,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     {
       err_location(expr);
       str << "expected symbol on rhs of `.', but got `"
-          << to_string(expr.op1()) << "'";
+          << to_string(expr.op1()) << '\'';
       throw 0;
     }
 
@@ -1093,8 +1093,8 @@ void verilog_typecheck_exprt::convert_const_expression(
   else if(to_integer(tmp, value))
   {
     err_location(expr);
-    str << "expected constant expression, but got "
-        << to_string(tmp);
+    str << "expected constant expression, but got `"
+        << to_string(tmp) << '\'';
     throw 0;
   }
 }
