@@ -306,6 +306,41 @@ std::string expr2verilogt::convert_function(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_function_call
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_function_call(const exprt &src)
+{
+  bool first=true;
+  std::string dest="FKT";
+  dest+="(";
+
+  forall_operands(it, src)
+  {
+    if(first)
+      first=false;
+    else
+      dest+=", ";
+
+    unsigned p;
+    std::string op=convert(*it, p);
+    dest+=op;
+  }
+
+  dest+=")";
+
+  return dest;
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_sva
 
   Inputs:
@@ -979,6 +1014,9 @@ std::string expr2verilogt::convert(
 
   else if(src.id()==ID_sva_s_until_with)
     return convert_sva("s_until_with", src);
+    
+  else if(src.id()==ID_function_call)
+    return convert_function_call(src);
 
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);

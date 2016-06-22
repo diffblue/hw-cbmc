@@ -111,6 +111,8 @@ public:
   virtual std::string convert_sva_sequence_concatenation(
     const exprt &src,
     unsigned precedence);
+
+  virtual std::string convert_function_call(const exprt &src);
 };
 
 #endif
