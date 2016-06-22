@@ -3,14 +3,14 @@ main.sv
 --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
-^\[Verilog::top.property.p0\] .* SUCCESS$
-^\[Verilog::top.property.p1\] .* SUCCESS$
-^\[Verilog::top.property.p2\] .* SUCCESS$
-^\[Verilog::top.property.p3\] .* SUCCESS$
-^\[Verilog::top.property.p4\] .* SUCCESS$
-^\[Verilog::top.property.p5\] .* FAILURE$
-^\[Verilog::top.property.p6\] .* SUCCESS$
-^\[Verilog::top.property.p7\] .* SUCCESS$
-^\[Verilog::top.property.p8\] .* SUCCESS$
+^\[top.property.p0\] .* SUCCESS$
+^\[top.property.p1\] .* SUCCESS$
+^\[top.property.p2\] .* SUCCESS$
+^\[top.property.p3\] .* SUCCESS$
+^\[top.property.p4\] .* SUCCESS$
+^\[top.property.p5\] .* SUCCESS$
+^\[top.property.p6\] .* SUCCESS$
+^\[top.property.p7\] .* SUCCESS$
+^\[top.property.p8\] .* SUCCESS$
 --
 ^warning: ignoring

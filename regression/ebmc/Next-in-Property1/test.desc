@@ -3,5 +3,5 @@ main.sv
 --module top --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
-^\[Verilog::top.property.p1\] always top.counter\[0\] |-> ##1 top.counter <= 5: SUCCESS$
+^\[top.property.p1\] always top.counter\[0\] |-> ##1 top.counter <= 5: SUCCESS$
 --
