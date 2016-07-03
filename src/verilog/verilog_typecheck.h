@@ -88,16 +88,16 @@ protected:
   // interfaces
   void module_interface();
   void interface_ports(irept::subt &ports);
-  void interface_module_decl(const class verilog_declt &decl);
-  void interface_function_or_task_decl(const class verilog_declt &decl);
+  void interface_module_decl(const class verilog_declt &);
+  void interface_function_or_task_decl(const class verilog_declt &);
   void interface_parameter(const exprt &expr);
   void interface_parameter_decl(const exprt &statement);
-  void interface_inst(const class verilog_module_itemt &statement);
-  void interface_inst(const class verilog_module_itemt &statement, const exprt &op);
-  void interface_module_item(const class verilog_module_itemt &module_item);
-  void interface_block(const class verilog_blockt &statement);
-  void interface_statement(const class verilog_statementt &statement);
-  void interface_function_or_task(const class verilog_declt &decl);
+  void interface_inst(const class verilog_module_itemt &);
+  void interface_inst(const class verilog_module_itemt &, const exprt &op);
+  void interface_module_item(const class verilog_module_itemt &);
+  void interface_block(const class verilog_blockt &);
+  void interface_statement(const class verilog_statementt &);
+  void interface_function_or_task(const class verilog_declt &);
 
   array_typet array_type(
     const irept &src,
@@ -108,35 +108,35 @@ protected:
   typedef enum { A_CONTINUOUS, A_BLOCKING, A_NON_BLOCKING } vassignt;
 
   // statements
-  void convert_statement(class verilog_statementt &statement);
-  void convert_function_call_or_task_enable(class verilog_function_callt &statement);
-  void convert_block(class verilog_blockt &statement);
-  void convert_case(class verilog_case_baset &statement);
-  void convert_if(class verilog_ift &statement);
-  void convert_event_guard(class verilog_event_guardt &statement);
-  void convert_delay(class verilog_delayt &statement);
-  void convert_for(class verilog_fort &statement);
-  void convert_forever(class verilog_forevert &statement);
-  void convert_while(class verilog_whilet &statement);
-  void convert_repeat(class verilog_repeatt &statement);
-  void convert_assign(class verilog_assignt &statement, bool blocking);
+  void convert_statement(class verilog_statementt &);
+  void convert_function_call_or_task_enable(class verilog_function_callt &);
+  void convert_block(class verilog_blockt &);
+  void convert_case(class verilog_case_baset &);
+  void convert_if(class verilog_ift &);
+  void convert_event_guard(class verilog_event_guardt &);
+  void convert_delay(class verilog_delayt &);
+  void convert_for(class verilog_fort &);
+  void convert_forever(class verilog_forevert &);
+  void convert_while(class verilog_whilet &);
+  void convert_repeat(class verilog_repeatt &);
+  void convert_assign(class verilog_assignt &, bool blocking);
   void convert_procedural_continuous_assign(
-    class verilog_procedural_continuous_assignt &statement);
-  void convert_prepostincdec(class verilog_statementt &statement);
+    class verilog_procedural_continuous_assignt &);
+  void convert_prepostincdec(class verilog_statementt &);
   
   // module items
-  void convert_decl(class verilog_declt &module_item);
-  void convert_function_or_task(class verilog_declt &decl);
-  void convert_inst(class verilog_instt &module_item);
-  void convert_inst_builtin(class verilog_inst_builtint &module_item);
-  void convert_always(class verilog_alwayst &module_item);
-  void convert_initial(class verilog_initialt &module_item);
-  void convert_continuous_assign(class verilog_continuous_assignt &module_item);
+  void convert_decl(class verilog_declt &);
+  void convert_function_or_task(class verilog_declt &);
+  void convert_inst(class verilog_instt &);
+  void convert_inst_builtin(class verilog_inst_builtint &);
+  void convert_always(class verilog_alwayst &);
+  void convert_initial(class verilog_initialt &);
+  void convert_continuous_assign(class verilog_continuous_assignt &);
   void convert_assert(exprt &statement);
   void convert_assume(exprt &statement);
   void check_lhs(const exprt &lhs, vassignt vassign);
   void convert_assignments(exprt &trans);
-  void convert_module_item(class verilog_module_itemt &module_item);
+  void convert_module_item(class verilog_module_itemt &);
 
   void integer_expr(exprt &expr);
 
@@ -195,6 +195,10 @@ protected:
     else
       value=it->second;
   }
+  
+  // elaboration (expansion) of tasks and functions
+  void expand_task(class verilog_function_callt &);
+  void expand_function(class verilog_function_callt &);
   
   // counter for assertions
   unsigned assertion_counter;
