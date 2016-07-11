@@ -46,7 +46,7 @@ public:
   
   virtual literalt convert_bool(const exprt &expr);
   virtual literalt get_literal(const std::string &symbol, const unsigned bit);
-  virtual void convert_bitvector(const exprt &expr, bvt &bv);
+  virtual bvt convert_bitvector(const exprt &expr);
    
 protected:   
   // disable smart variable allocation,
@@ -169,7 +169,7 @@ void instantiate_convert(
 
   try
   {
-    i.convert_bitvector(expr, bv);
+    bv=i.convert_bitvector(expr);
   }
 
   catch(const char *err)
@@ -201,8 +201,7 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
 {
   if(expr.id()==ID_symbol || expr.id()==ID_next_symbol)
   {
-    bvt result;
-    convert_bitvector(expr, result);
+    bvt result=convert_bitvector(expr);
 
     if(result.size()!=1)
       throw "expected one-bit result";
@@ -324,7 +323,7 @@ Function: instantiate_bmc_mapt::convert_bitvector
 
 \*******************************************************************/
 
-void instantiate_bmc_mapt::convert_bitvector(const exprt &expr, bvt &bv)
+bvt instantiate_bmc_mapt::convert_bitvector(const exprt &expr)
 {
   if(expr.id()==ID_symbol || expr.id()==ID_next_symbol)
   {
@@ -336,16 +335,17 @@ void instantiate_bmc_mapt::convert_bitvector(const exprt &expr, bvt &bv)
     {
       unsigned timeframe=(expr.id()==ID_symbol)?current:next;
 
+      bvt bv;
       bv.resize(width);
 
       for(std::size_t i=0; i<width; i++)
         bv[i]=bmc_map.get(timeframe, identifier, i);
 
-      return;
+      return bv;
     }
   }
 
-  return SUB::convert_bitvector(expr, bv);
+  return SUB::convert_bitvector(expr);
 }
 
 /*******************************************************************\
@@ -394,7 +394,7 @@ public:
   
   virtual literalt convert_bool(const exprt &expr);
   virtual literalt get_literal(const std::string &symbol, const unsigned bit);
-  virtual void convert_bitvector(const exprt &expr, bvt &bv);
+  virtual bvt convert_bitvector(const exprt &expr);
    
 protected:   
   // disable smart variable allocation,
@@ -513,7 +513,7 @@ void instantiate_convert(
 
   try
   {
-    i.convert_bitvector(expr, bv);
+    bv=i.convert_bitvector(expr);
   }
 
   catch(const char *err)
@@ -545,8 +545,7 @@ literalt instantiate_var_mapt::convert_bool(const exprt &expr)
 {
   if(expr.id()==ID_symbol || expr.id()==ID_next_symbol)
   {
-    bvt result;
-    convert_bitvector(expr, result);
+    bvt result=convert_bitvector(expr);
 
     if(result.size()!=1)
       throw "expected one-bit result";
@@ -569,7 +568,7 @@ Function: instantiate_var_mapt::convert_bitvector
 
 \*******************************************************************/
 
-void instantiate_var_mapt::convert_bitvector(const exprt &expr, bvt &bv)
+bvt instantiate_var_mapt::convert_bitvector(const exprt &expr)
 {
   if(expr.id()==ID_symbol || expr.id()==ID_next_symbol)
   {
@@ -580,17 +579,18 @@ void instantiate_var_mapt::convert_bitvector(const exprt &expr, bvt &bv)
 
     if(width!=0)
     {
+      bvt bv;
       bv.resize(width);
 
       for(std::size_t i=0; i<width; i++)
         bv[i]=next?var_map.get_next(identifier, i)
                   :var_map.get_current(identifier, i);
 
-      return;
+      return bv;
     }
   }
 
-  return SUB::convert_bitvector(expr, bv);
+  return SUB::convert_bitvector(expr);
 }
 
 /*******************************************************************\
