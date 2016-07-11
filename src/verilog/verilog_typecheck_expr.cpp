@@ -233,12 +233,14 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
       if(type.id()==ID_array)
       {
         err_location(*it);
-        throw "array type not allowed in concatenation";
+        error() << "array type not allowed in concatenation" << eom;
+        throw 0;
       }
       else if(type.id()==ID_integer)
       {
         err_location(*it);
-        throw "integer type not allowed in concatenation";
+        error() << "integer type not allowed in concatenation" << eom;
+        throw 0;
       }
       else if(type.id()==ID_verilog_signedbv ||
               type.id()==ID_verilog_unsignedbv)
@@ -316,7 +318,8 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   if(expr.function().id()!=ID_symbol)
   {
     err_location(expr);
-    throw "expected symbol as function argument";
+    error() << "expected symbol as function argument" << eom;
+    throw 0;
   }
     
   symbol_exprt &f_op=to_symbol_expr(expr.function());
@@ -354,7 +357,8 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   if(code_type.return_type().id()==ID_empty)
   {
     err_location(f_op);
-    throw "expected function, but got task";
+    error() << "expected function, but got task" << eom;
+    throw 0;
   }
 
   // check arguments
@@ -363,7 +367,8 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   if(parameter_types.size()!=arguments.size())
   {
     err_location(expr);
-    throw "wrong number of arguments";
+    error() << "wrong number of arguments" << eom;
+    throw 0;
   }
 
   for(unsigned i=0; i<arguments.size(); i++)
@@ -690,16 +695,15 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
   else if(!implicit_wire(identifier, symbol))
   {
     // this should become an error
-    err_location(expr);
-    error() << "implicit definition of wire "
-            << full_identifier << eom;
-    warning_msg();
+    warning().source_location=expr.source_location();
+    warning() << "implicit definition of wire "
+              << full_identifier << eom;
     expr.type()=symbol->type;
     expr.set(ID_identifier, symbol->name);
   }
   else
   {
-    err_location(expr);
+    error().source_location=expr.source_location();
     error() << "unknown identifier " << identifier << eom;
     throw 0;
   }
@@ -725,7 +729,8 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
   if(expr.op0().id()!=ID_symbol)
   {
     err_location(expr);
-    throw "expected symbol on lhs of `.'";
+    error() << "expected symbol on lhs of `.'" << eom;
+    throw 0;
   }
 
   const irep_idt &lhs_identifier=expr.op0().get(ID_identifier);
@@ -896,7 +901,8 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
       if(bits==0)
       {
         err_location(expr);
-        throw "zero-length bit vector not allowed";
+        error() << "zero-length bit vector not allowed" << eom;
+        throw 0;
       }
     }
 
@@ -1170,7 +1176,10 @@ void verilog_typecheck_exprt::typecast(
       mp_integer value;
 
       if(to_integer(expr, value))
-        throw "failed to convert integer constant";
+      {
+        error() << "failed to convert integer constant" << eom;
+        throw 0;
+      }
 
       expr=from_integer(value, dest_type);
       expr.add_source_location()=source_location;
@@ -1624,8 +1633,9 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   if(op1.type().id()==ID_array)
   {
     err_location(op1);
-    throw "array type not allowed in replication";
-  } 
+    error() << "array type not allowed in replication" << eom;
+    throw 0;
+  }
 
   if(op1.type().id()==ID_bool)
     op1.make_typecast(unsignedbv_typet(1));
@@ -1872,7 +1882,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
     if(op0.type().id()==ID_array)
     {
       err_location(op0);
-      throw "array type not allowed in extraction";
+      error() << "array type not allowed in extraction" << eom;
+      throw 0;
     }
 
     unsigned width=get_width(op0.type());
@@ -1970,19 +1981,17 @@ bool verilog_typecheck(
 
   catch(int e)
   {
-    verilog_typecheck_expr.error_msg();
+    verilog_typecheck_expr.error();
   }
 
   catch(const char *e)
   {
-    verilog_typecheck_expr.error() << e;
-    verilog_typecheck_expr.error_msg();
+    verilog_typecheck_expr.error() << e << message_streamt::eom;
   }
 
   catch(const std::string &e)
   {
-    verilog_typecheck_expr.error() << e;
-    verilog_typecheck_expr.error_msg();
+    verilog_typecheck_expr.error() << e << message_streamt::eom;
   }
   
   return verilog_typecheck_expr.get_error_found();

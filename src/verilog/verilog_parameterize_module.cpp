@@ -118,7 +118,8 @@ void verilog_typecheckt::get_parameter_values(
     if(p_it!=parameter_assignment.end())
     {
       err_location(*p_it);
-      throw "too many parameter assignments";
+      error() << "too many parameter assignments" << eom;
+      throw 0;
     }
   }
 }
@@ -186,7 +187,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   
   if(it==symbol_table.symbols.end())
   {
-    err_location(location);
+    error().source_location=location;
     error() << "module not found" << eom;
     throw 0;
   }
@@ -250,7 +251,7 @@ irep_idt verilog_typecheckt::parameterize_module(
 
   if(symbol_table.move(symbol, new_symbol))
   {
-    err_location(location);
+    error().source_location=location;
     error() << "duplicate definition of parameterized module "
             << symbol.base_name << eom;
     throw 0;

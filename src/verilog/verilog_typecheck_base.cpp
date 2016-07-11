@@ -121,7 +121,10 @@ mp_integer verilog_typecheck_baset::array_size(const typet &type)
   mp_integer size;
 
   if(type.id()!=ID_array)
-    throw "array_size expected array type";
+  {
+    error() << "array_size expected array type" << eom;
+    throw 0;
+  }
 
   if(to_integer(to_array_type(type).size(), size))
   {

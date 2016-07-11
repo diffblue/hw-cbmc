@@ -76,7 +76,8 @@ void verilog_typecheck_exprt::convert_type(
   }
   else
   {
-    err_location(src);
-    throw "unexpected type: `"+src.id_string()+"'";
+    error().source_location=static_cast<const typet &>(src).source_location();
+    error() << "unexpected type: `" << src.id() << "'" << eom;
+    throw 0;
   }
 }

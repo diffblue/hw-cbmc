@@ -80,7 +80,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     
     if(name.empty())
     {
-      err_location(*it);
+      error().source_location=static_cast<const exprt &>(*it).source_location();
       error() << "empty port name (module "
               << module_symbol.base_name << ')' << eom;
       throw 0;
@@ -146,9 +146,8 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
 
       if(symbol_table.move(new_symbol, s))
       {
-        err_location(decl.op0());
-        error() << "port `" << name << "' is also declared" << eom;
-        warning_msg();
+        warning().source_location=decl.op0().source_location();
+        warning() << "port `" << name << "' is also declared" << eom;
       }
       
       port_symbol=s;
@@ -184,7 +183,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     if(symbol.is_input || symbol.is_output)
       if(port_names.find(symbol.base_name)==port_names.end())
       {
-        err_location(symbol.location);
+        error().source_location=symbol.location;
         error() << "port `" << symbol.base_name
                 << "' not in port list" << eom;
         throw 0;
@@ -393,7 +392,8 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     else
     {
       err_location(*it2);
-      throw "unexpected declaration: "+it2->id_string();
+      error() << "unexpected declaration: " << it2->id() << eom;
+      throw 0;
     }
 
     if(symbol.base_name=="")
@@ -540,7 +540,10 @@ void verilog_typecheckt::interface_module_decl(
     else if(it2->id()==ID_equal)
     {
       if(it2->operands().size()!=2)
-        throw "expected two operands in assignment";
+      {
+        error() << "expected two operands in assignment" << eom;
+        throw 0;
+      }
 
       if(it2->op0().id()!=ID_symbol)
       {
@@ -556,7 +559,8 @@ void verilog_typecheckt::interface_module_decl(
     else
     {
       err_location(*it2);
-      throw "unexpected declaration: "+it2->id_string();
+      error() << "unexpected declaration: " << it2->id() << eom;
+      throw 0;
     }
 
     if(symbol.base_name.empty())
@@ -820,7 +824,10 @@ void verilog_typecheckt::interface_statement(
   else if(statement.id()==ID_event_guard)
   {
     if(statement.operands().size()!=2)
-      throw "event_guard expected to have two operands";
+    {
+      error() << "event_guard expected to have two operands" << eom;
+      throw 0;
+    }
 
     interface_statement(
       to_verilog_event_guard(statement).body());
@@ -828,7 +835,10 @@ void verilog_typecheckt::interface_statement(
   else if(statement.id()==ID_delay)
   {
     if(statement.operands().size()!=2)
-      throw "delay expected to have two operands";
+    {
+      error() << "delay expected to have two operands" << eom;
+      throw 0;
+    }
 
     interface_statement(
       to_verilog_delay(statement).body());

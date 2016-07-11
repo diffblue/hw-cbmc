@@ -148,7 +148,8 @@ void verilog_typecheckt::elaborate_generate_assign(
   if(statement.operands().size()!=2)
   {
     err_location(statement);
-    throw "generate_assign expects two operands";
+    error() << "generate_assign expects two operands" << eom;
+    throw 0;
   }
   
   if(statement.op0().id()!="symbol")
@@ -202,7 +203,8 @@ void verilog_typecheckt::elaborate_generate_for(
   if(statement.operands().size()!=4)
   {
     err_location(statement);
-    throw "generate_for expects four operands";
+    error() << "generate_for expects four operands" << eom;
+    throw 0;
   }
   
   elaborate_generate_assign(statement.op0(), dest);

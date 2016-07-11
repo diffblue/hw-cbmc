@@ -847,7 +847,6 @@ symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
     {
       error() << *e << '\n';
       error() << "synthesis: failed to get identifier" << eom;
-      error_msg();
       throw 0;
     }
   }
@@ -1842,9 +1841,8 @@ exprt verilog_synthesist::case_comparison(
     
     if(tmp.id()!=ID_constant)
     {
-      err_location(pattern);
-      error() << "unexpected case pattern: " << to_string(tmp) << eom;
-      warning_msg();
+      warning().source_location=pattern.source_location();
+      warning() << "unexpected case pattern: " << to_string(tmp) << eom;
     }
     else
     {
@@ -2131,7 +2129,8 @@ void verilog_synthesist::synth_event_guard(
   if(event_guard!=G_NONE)
   {
     err_location(statement);
-    throw "event guard already specified";
+    error() << "event guard already specified" << eom;
+    throw 0;
   }
 
   const exprt &event_guard_expr=statement.guard();
@@ -2522,9 +2521,8 @@ void verilog_synthesist::synth_statement(
     synth_assign(statement, true);
   else if(statement.id()==ID_continuous_assign)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "synthesis of procedural continuous assignment not supported" << eom;
-    error_msg();
     throw 0;
   }
   else if(statement.id()==ID_assert)
@@ -2708,8 +2706,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
 
       if(assignment.type==G_COMBINATORIAL)
       {
-        error() << "Making " << symbol.name << " a wire" << eom;
-        warning_msg();
+        warning() << "Making " << symbol.name << " a wire" << eom;
         symbol.is_state_var=false;
       }
 
