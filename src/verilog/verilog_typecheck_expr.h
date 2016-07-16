@@ -82,11 +82,16 @@ protected:
   named_blockst named_blocks;
   void enter_named_block(const irep_idt &);
 
-private:
   // elaboration (expansion) of constant expressions and functions
   bool is_const_expression(const exprt &, mp_integer &value);
   exprt elaborate_const_expression(const exprt &);
 
+  virtual exprt elaborate_const_function_call(const class function_call_exprt &)
+  {
+    assert(false);
+  }
+
+private:
   void convert_constant(constant_exprt &);
   void convert_symbol(exprt &);
   void convert_hierarchical_identifier(class hierarchical_identifier_exprt &);

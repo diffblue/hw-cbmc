@@ -1129,41 +1129,8 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
   {
     const function_call_exprt &function_call=
       to_function_call_expr(expr);
-  
-    function_call_exprt::argumentst arguments=
-      function_call.arguments();
 
-    // elaborate the arguments
-    for(auto & a : arguments)
-      a=elaborate_const_expression(a);
-
-    // find the function
-    if(function_call.function().id()!=ID_symbol)
-    {
-      error().source_location=expr.source_location();
-      error() << "expected function symbol, but got `"
-              << to_string(function_call.function()) << '\'' << eom;
-      throw 0;
-    }
-
-    #if 0    
-    const symbolt &function_symbol=
-      ns().lookup(to_symbol_expr(function_call.function()));
-
-    // typecheck it
-    verilog_declt decl=to_verilog_decl(function_symbol.value);
-
-    irept::subt &declarations=decl.declarations();
-  
-    Forall_irep(it, declarations)
-      convert_decl(static_cast<verilog_declt &>(*it));
-
-    function_or_task_name=symbol.name;
-    convert_statement(decl.body());
-    function_or_task_name="";
-    #endif
-
-    return expr;
+    return elaborate_const_function_call(function_call);  
   }
   else
   {

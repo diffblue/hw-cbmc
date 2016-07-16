@@ -195,6 +195,10 @@ protected:
     else
       value=it->second;
   }
+
+  // const functions
+  exprt elaborate_const_function_call(const class function_call_exprt &);
+  void verilog_interpreter(const class verilog_statementt &);
   
   // counter for assertions
   unsigned assertion_counter;

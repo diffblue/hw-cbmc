@@ -348,6 +348,61 @@ Function: verilog_typecheckt::convert_decl
 
 \*******************************************************************/
 
+exprt verilog_typecheckt::elaborate_const_function_call(
+  const function_call_exprt &function_call)
+{
+  function_call_exprt::argumentst arguments=
+    function_call.arguments();
+
+  // elaborate the arguments
+  for(auto & a : arguments)
+    a=elaborate_const_expression(a);
+
+  // find the function
+  if(function_call.function().id()!=ID_symbol)
+  {
+    error().source_location=function_call.source_location();
+    error() << "expected function symbol, but got `"
+            << to_string(function_call.function()) << '\'' << eom;
+    throw 0;
+  }
+
+  const symbolt &function_symbol=
+    ns.lookup(to_symbol_expr(function_call.function()));
+
+  // typecheck it
+  verilog_declt decl=to_verilog_decl(function_symbol.value);
+
+  irept::subt &declarations=decl.declarations();
+
+  Forall_irep(it, declarations)
+    convert_decl(static_cast<verilog_declt &>(*it));
+
+  function_or_task_name=function_symbol.name;
+  convert_statement(decl.body());
+
+  // interpret it
+  verilog_interpreter(decl.body());
+
+  function_or_task_name="";
+  
+  // get return value
+
+  return nil_exprt();
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::convert_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void verilog_typecheckt::convert_decl(verilog_declt &decl)
 {
   irep_idt decl_class=decl.get_class();

@@ -20,3 +20,6 @@ Function: verilog_typecheckt::verilog_interpreter
 
 \*******************************************************************/
 
+void verilog_typecheckt::verilog_interpreter(const verilog_statementt &statement)
+{
+}
