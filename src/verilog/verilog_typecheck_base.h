@@ -38,7 +38,6 @@ public:
 protected:
   const irep_idt mode;
   
-  void convert_type(const irept &src, typet &dest);
   virtual unsigned get_width(const exprt &expr) { return get_width(expr.type()); }
   virtual unsigned get_width(const typet &type);
   mp_integer array_size(const typet &type);
