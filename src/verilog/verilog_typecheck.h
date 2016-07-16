@@ -196,10 +196,6 @@ protected:
       value=it->second;
   }
   
-  // elaboration (expansion) of tasks and functions
-  void expand_task(class verilog_function_callt &);
-  void expand_function(class verilog_function_callt &);
-  
   // counter for assertions
   unsigned assertion_counter;
 };

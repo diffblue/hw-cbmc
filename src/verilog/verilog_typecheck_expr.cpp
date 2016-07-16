@@ -1090,7 +1090,7 @@ void verilog_typecheck_exprt::convert_const_expression(
   // this could be large
   propagate_type(tmp, integer_typet());
   
-  simplify(tmp, ns());
+  tmp=elaborate_const_expression(tmp);
 
   if(tmp.is_true())
     value=1;
@@ -1103,6 +1103,79 @@ void verilog_typecheck_exprt::convert_const_expression(
             << to_string(tmp) << '\'' << eom;
     throw 0;
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::elaborate_const_expression
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
+{
+  if(expr.id()==ID_constant)
+    return expr;
+  else if(expr.id()==ID_symbol)
+  {
+    return expr;
+  }
+  else if(expr.id()==ID_function_call)
+  {
+    return elaborate_function_call(to_function_call_expr(expr));
+  }
+  else
+  {
+    exprt tmp=expr;
+    
+    for(auto & e : tmp.operands())
+      e=elaborate_const_expression(e);
+    
+    simplify(tmp, ns());
+    return tmp;
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::elaborate_function_call
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::elaborate_function_call(
+  const function_call_exprt &expr)
+{
+  function_call_exprt::argumentst arguments=
+    expr.arguments();
+
+  // elaborate the arguments
+  for(auto & a : arguments)
+    a=elaborate_const_expression(a);
+
+  // find the function
+  if(expr.function().id()!=ID_symbol)
+  {
+    error().source_location=expr.source_location();
+    error() << "expected function symbol, but got `"
+            << to_string(expr.function()) << '\'' << eom;
+    throw 0;
+  }
+
+  //const symbolt &function_symbol=
+  //  ns().lookup(to_symbol_expr(expr.function()));
+
+  return expr;
 }
 
 /*******************************************************************\

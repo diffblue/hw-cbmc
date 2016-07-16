@@ -47,13 +47,15 @@ public:
 
   exprt &function() { return op0(); }
   const exprt &function() const { return op0(); }
+  
+  typedef exprt::operandst argumentst;
 
-  exprt::operandst &arguments()
+  argumentst &arguments()
   {
     return op1().operands();
   }
 
-  const exprt::operandst &arguments() const
+  const argumentst &arguments() const
   {
     return op1().operands();
   }
