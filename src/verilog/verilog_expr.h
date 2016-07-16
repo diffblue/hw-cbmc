@@ -848,6 +848,18 @@ public:
   }
 };
 
+extern inline const verilog_blocking_assignt &to_verilog_blocking_assign(const exprt &expr)
+{
+  assert(expr.id()==ID_blocking_assign);
+  return static_cast<const verilog_blocking_assignt &>(expr);
+}
+
+extern inline verilog_blocking_assignt &to_verilog_blocking_assign(exprt &expr)
+{
+  assert(expr.id()==ID_blocking_assign);
+  return static_cast<verilog_blocking_assignt &>(expr);
+}
+
 class verilog_non_blocking_assignt:public verilog_assignt
 {
 public:
@@ -855,6 +867,18 @@ public:
   {
   }
 };
+
+extern inline const verilog_non_blocking_assignt &to_verilog_non_blocking_assign(const exprt &expr)
+{
+  assert(expr.id()==ID_non_blocking_assign);
+  return static_cast<const verilog_non_blocking_assignt &>(expr);
+}
+
+extern inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
+{
+  assert(expr.id()==ID_non_blocking_assign);
+  return static_cast<verilog_non_blocking_assignt &>(expr);
+}
 
 class verilog_assertt:public verilog_statementt
 {

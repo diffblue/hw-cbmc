@@ -696,7 +696,7 @@ void verilog_typecheckt::convert_block(verilog_blockt &statement)
     enter_named_block(statement.get_identifier());
 
   Forall_operands(it, statement)
-    convert_statement(static_cast<verilog_statementt &>(*it));
+    convert_statement(to_verilog_statement(*it));
     
   if(is_named)
     named_blocks.pop_back();
