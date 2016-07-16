@@ -83,11 +83,9 @@ protected:
   void enter_named_block(const irep_idt &);
 
 private:
-  // elaboration (expansion) of expressions, tasks and functions
+  // elaboration (expansion) of constant expressions and functions
   bool is_const_expression(const exprt &, mp_integer &value);
   exprt elaborate_const_expression(const exprt &);
-  void elaborate_task(class verilog_function_callt &);
-  exprt elaborate_function_call(const class function_call_exprt &);  
 
   void convert_constant(constant_exprt &);
   void convert_symbol(exprt &);

@@ -1127,7 +1127,43 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
   }
   else if(expr.id()==ID_function_call)
   {
-    return elaborate_function_call(to_function_call_expr(expr));
+    const function_call_exprt &function_call=
+      to_function_call_expr(expr);
+  
+    function_call_exprt::argumentst arguments=
+      function_call.arguments();
+
+    // elaborate the arguments
+    for(auto & a : arguments)
+      a=elaborate_const_expression(a);
+
+    // find the function
+    if(function_call.function().id()!=ID_symbol)
+    {
+      error().source_location=expr.source_location();
+      error() << "expected function symbol, but got `"
+              << to_string(function_call.function()) << '\'' << eom;
+      throw 0;
+    }
+
+    #if 0    
+    const symbolt &function_symbol=
+      ns().lookup(to_symbol_expr(function_call.function()));
+
+    // typecheck it
+    verilog_declt decl=to_verilog_decl(function_symbol.value);
+
+    irept::subt &declarations=decl.declarations();
+  
+    Forall_irep(it, declarations)
+      convert_decl(static_cast<verilog_declt &>(*it));
+
+    function_or_task_name=symbol.name;
+    convert_statement(decl.body());
+    function_or_task_name="";
+    #endif
+
+    return expr;
   }
   else
   {
@@ -1139,43 +1175,6 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
     simplify(tmp, ns());
     return tmp;
   }
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheck_exprt::elaborate_function_call
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt verilog_typecheck_exprt::elaborate_function_call(
-  const function_call_exprt &expr)
-{
-  function_call_exprt::argumentst arguments=
-    expr.arguments();
-
-  // elaborate the arguments
-  for(auto & a : arguments)
-    a=elaborate_const_expression(a);
-
-  // find the function
-  if(expr.function().id()!=ID_symbol)
-  {
-    error().source_location=expr.source_location();
-    error() << "expected function symbol, but got `"
-            << to_string(expr.function()) << '\'' << eom;
-    throw 0;
-  }
-
-  //const symbolt &function_symbol=
-  //  ns().lookup(to_symbol_expr(expr.function()));
-
-  return expr;
 }
 
 /*******************************************************************\

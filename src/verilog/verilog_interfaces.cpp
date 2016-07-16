@@ -216,7 +216,7 @@ void verilog_typecheckt::interface_function_or_task(
 
     symbol.mode=mode;
     symbol.module=module_identifier;
-    symbol.value.make_nil();
+    symbol.value=decl;
 
     typet return_type;
 
