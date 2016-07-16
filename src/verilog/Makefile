@@ -3,7 +3,7 @@ SRC = verilog_language.cpp verilog_y.tab.cpp verilog_lex.yy.cpp verilog_parser.c
       verilog_typecheck_expr.cpp verilog_synthesis.cpp \
       verilog_interfaces.cpp verilog_typecheck_base.cpp \
       verilog_generate.cpp verilog_parameterize_module.cpp \
-      verilog_context.cpp verilog_parse_tree.cpp \
+      verilog_symbol_table.cpp verilog_parse_tree.cpp \
       verilog_module.cpp vtype.cpp verilog_typecheck_type.cpp \
       verilog_interpreter.cpp
 
