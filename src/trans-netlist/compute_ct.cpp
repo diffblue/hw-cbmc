@@ -45,8 +45,8 @@ public:
   
 protected:
   void collapse_scc(
-    const std::vector<unsigned> &scc_nr,
-    unsigned i);
+    const std::vector<graph::node_indext> &scc_nr,
+    std::size_t i);
 
   mp_integer longest_path(unsigned start);
 };
@@ -151,8 +151,8 @@ void component_grapht::transform()
 {
   // find SCCs
   
-  std::vector<unsigned> scc_nr;
-  unsigned number_of_sccs=SCCs(scc_nr);
+  std::vector<graph::node_indext> scc_nr;
+  std::size_t number_of_sccs=SCCs(scc_nr);
 
   #if 0
   for(unsigned n=0; n<nodes.size(); n++)
@@ -177,8 +177,8 @@ Function: component_grapht::collapse_scc
 \*******************************************************************/
 
 void component_grapht::collapse_scc(
-  const std::vector<unsigned> &scc_nr,
-  unsigned i)
+  const std::vector<graph::node_indext> &scc_nr,
+  std::size_t i)
 {
   std::set<unsigned> latches;
 
