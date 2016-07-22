@@ -354,20 +354,6 @@ exprt verilog_typecheckt::elaborate_const_function_call(
   const function_call_exprt::argumentst &arguments=
     function_call.arguments();
 
-  // elaborate the arguments
-  for(const auto & a : arguments)
-  {
-    exprt value=elaborate_const_expression(a);
-    if(!value.is_constant())
-    {
-      error().source_location=a.source_location();
-      error() << "constant function argument is not constant" << eom;
-      throw 0;
-    }
-    
-    
-  }
-
   // find the function
   if(function_call.function().id()!=ID_symbol)
   {
@@ -390,6 +376,40 @@ exprt verilog_typecheckt::elaborate_const_function_call(
 
   function_or_task_name=function_symbol.name;
   convert_statement(decl.body());
+  
+  const code_typet &code_type=
+    to_code_type(function_symbol.type);
+
+  const code_typet::parameterst &parameters=
+    code_type.parameters();
+    
+  if(parameters.size()!=arguments.size())
+  {
+    error().source_location=function_call.source_location();
+    error() << "function call has wrong number of arguments" << eom;
+    throw 0;
+  }
+  
+  // elaborate the arguments of the call and assign to parameter
+  
+  varst old_vars;
+  
+  for(std::size_t i=0; i<arguments.size(); i++)
+  {
+    exprt value=elaborate_const_expression(arguments[i]);
+
+    if(!value.is_constant())
+    {
+      error().source_location=arguments[i].source_location();
+      error() << "constant function argument is not constant" << eom;
+      throw 0;
+    }
+    
+    irep_idt p_identifier=parameters[i].get_identifier();
+
+    old_vars[p_identifier]=var_value(p_identifier);
+    vars[p_identifier]=value;
+  }
 
   // interpret it
   verilog_interpreter(decl.body());
