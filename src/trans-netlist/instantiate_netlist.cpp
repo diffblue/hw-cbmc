@@ -244,8 +244,8 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
         if(to_integer(expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
-        current=old_current+integer2long(offset);
-        next=old_next+integer2long(offset);
+        current=old_current+integer2ulong(offset);
+        next=old_next+integer2ulong(offset);
         result=convert_bool(expr.op2());
       }
       else
@@ -260,8 +260,8 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
         
         for(mp_integer offset=from; offset<to; ++offset)
         {
-          current=old_current+integer2long(offset);
-          next=old_next+integer2long(offset);
+          current=old_current+integer2ulong(offset);
+          next=old_next+integer2ulong(offset);
           disjuncts.push_back(convert_bool(expr.op2()));
         }
         

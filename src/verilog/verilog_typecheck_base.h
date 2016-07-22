@@ -38,8 +38,8 @@ public:
 protected:
   const irep_idt mode;
   
-  virtual unsigned get_width(const exprt &expr) { return get_width(expr.type()); }
-  virtual unsigned get_width(const typet &type);
+  virtual std::size_t get_width(const exprt &expr) { return get_width(expr.type()); }
+  virtual std::size_t get_width(const typet &type);
   mp_integer array_size(const typet &type);
   mp_integer array_offset(const typet &type);
   typet index_type(const typet &array_type);

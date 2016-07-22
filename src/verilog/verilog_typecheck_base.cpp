@@ -174,7 +174,7 @@ Function: verilog_typecheck_baset::get_width
 
 \*******************************************************************/
 
-unsigned verilog_typecheck_baset::get_width(const typet &type)
+std::size_t verilog_typecheck_baset::get_width(const typet &type)
 {
   if(type.id()==ID_bool)
     return 1;
@@ -186,7 +186,7 @@ unsigned verilog_typecheck_baset::get_width(const typet &type)
   if(type.id()==ID_array)
   {
     mp_integer subtype_width=get_width(type.subtype());
-    return integer2long(array_size(type)*subtype_width);
+    return integer2size_t(array_size(type)*subtype_width);
   }
   
   if(type.id()==ID_integer)
@@ -213,9 +213,9 @@ Function: verilog_typecheck_baset::index_type
 
 typet verilog_typecheck_baset::index_type(const typet &array_type)
 {
-  typet result(ID_unsignedbv);
-  result.set(ID_width,
-    integer2long(
+  unsignedbv_typet result;
+  result.set_width(
+    integer2size_t(
       address_bits(array_size(array_type)+array_offset(array_type))));
   return result;
 }

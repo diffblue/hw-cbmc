@@ -155,7 +155,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         if(to_integer(expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
-        current=save_current.saved+integer2long(offset);
+        current=save_current.saved+integer2ulong(offset);
         
         // Do we exceed the bound? Make it 'true'
         if(current>=no_timeframes)
@@ -186,7 +186,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         
         for(mp_integer offset=from; offset<to; ++offset)
         {
-          current=save_current.saved+integer2long(offset);
+          current=save_current.saved+integer2ulong(offset);
 
           if(current>=no_timeframes)
           {

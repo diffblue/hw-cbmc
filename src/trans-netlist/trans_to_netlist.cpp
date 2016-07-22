@@ -482,7 +482,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     mp_integer i;
     if(!to_integer(expr.op1(), i)) // constant?
     {
-      from=integer2long(i);
+      from=integer2size_t(i);
       convert_lhs_rec(expr.op0(), from, from, prop);
       return;
     }
@@ -500,8 +500,8 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     
       assert(new_from<=new_to);
     
-      from=integer2long(new_from);
-      to=integer2long(new_to);
+      from=integer2size_t(new_from);
+      to=integer2size_t(new_to);
     
       convert_lhs_rec(expr.op0(), from, to, prop);
       return;
@@ -660,7 +660,7 @@ void convert_trans_to_netlistt::add_equality_rec(
     if(to_integer(lhs.op1(), i))
       assert(false);
 
-    lhs_from=lhs_from+integer2long(i);
+    lhs_from=lhs_from+integer2size_t(i);
     add_equality_rec(src, lhs.op0(), lhs_from, lhs_from, rhs_entry);
   }
   else if(lhs.id()==ID_extractbits)
@@ -678,8 +678,8 @@ void convert_trans_to_netlistt::add_equality_rec(
     if(op1<op2)
       throw std::string("extractbits op1<op2");
 
-    std::size_t new_lhs_to=lhs_from+integer2long(op1);
-    std::size_t new_lhs_from=lhs_from+integer2long(op2);
+    std::size_t new_lhs_to=lhs_from+integer2size_t(op1);
+    std::size_t new_lhs_from=lhs_from+integer2size_t(op2);
     
     add_equality_rec(src, lhs.op0(), new_lhs_from, new_lhs_to, rhs_entry);
   }

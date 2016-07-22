@@ -322,7 +322,7 @@ unsigned component_grapht::ct()
   if(max_val>MAX_CT)
     return MAX_CT;
     
-  return integer2long(max_val);
+  return integer2ulong(max_val);
 }
 
 /*******************************************************************\

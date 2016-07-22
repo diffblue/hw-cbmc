@@ -70,7 +70,7 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
     value_expr=exprt(ID_array, array_type);
     mp_integer size;
     to_integer(array_type.size(), size);
-    std::size_t size_int=integer2long(size);
+    std::size_t size_int=integer2size_t(size);
     value_expr.operands().resize(size_int);
     std::size_t op_width=src.size()/size_int;
 

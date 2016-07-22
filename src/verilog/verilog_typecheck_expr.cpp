@@ -679,7 +679,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
         throw 0;
       }
       
-      unsigned bits=integer2long(address_bits(int_value+1));
+      std::size_t bits=integer2size_t(address_bits(int_value+1));
       source_locationt source_location=expr.source_location();
 
       exprt result=from_integer(int_value, unsignedbv_typet(bits));
@@ -1051,7 +1051,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     
     if(!bits_given)
     {
-      bits=integer2long(address_bits(int_value+1));
+      bits=integer2size_t(address_bits(int_value+1));
       // we do a 32-bit minimum
       if(bits<32) bits=32;
     }
@@ -1702,7 +1702,7 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   {
     expr.op0()=from_integer(op0, natural_typet());
 
-    unsigned new_width=integer2long(op0)*width;
+    std::size_t new_width=integer2size_t(op0)*width;
 
     if(op1.type().id()==ID_verilog_unsignedbv ||
        op1.type().id()==ID_verilog_signedbv)
@@ -1961,7 +1961,7 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
 
     // Part-select expressions are unsigned, even if the
     // entire expression is selected!    
-    expr.type()=unsignedbv_typet(integer2long(op1-op2+1));
+    expr.type()=unsignedbv_typet(integer2size_t(op1-op2+1));
   }
   else if(expr.id()==ID_if)
   {
