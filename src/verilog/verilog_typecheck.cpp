@@ -351,12 +351,22 @@ Function: verilog_typecheckt::convert_decl
 exprt verilog_typecheckt::elaborate_const_function_call(
   const function_call_exprt &function_call)
 {
-  function_call_exprt::argumentst arguments=
+  const function_call_exprt::argumentst &arguments=
     function_call.arguments();
 
   // elaborate the arguments
-  for(auto & a : arguments)
-    a=elaborate_const_expression(a);
+  for(const auto & a : arguments)
+  {
+    exprt value=elaborate_const_expression(a);
+    if(!value.is_constant())
+    {
+      error().source_location=a.source_location();
+      error() << "constant function argument is not constant" << eom;
+      throw 0;
+    }
+    
+    
+  }
 
   // find the function
   if(function_call.function().id()!=ID_symbol)

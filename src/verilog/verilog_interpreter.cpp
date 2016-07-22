@@ -32,6 +32,12 @@ void verilog_typecheckt::verilog_interpreter(
       to_verilog_blocking_assign(statement);
 
     exprt rhs=elaborate_const_expression(assign.rhs());
+    if(!rhs.is_constant())
+    {
+      error().source_location=assign.rhs().source_location();
+      error() << "right-hand side of assignment is not constant" << eom;
+      throw 0;
+    }
 
   }
   else if(statement.id()==ID_block)
