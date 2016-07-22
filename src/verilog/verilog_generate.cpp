@@ -44,19 +44,19 @@ void verilog_typecheckt::elaborate_generate_item(
   const exprt &statement,
   exprt::operandst &dest)
 {
-  if(statement.id()=="generate_block")
+  if(statement.id()==ID_generate_block)
     elaborate_generate_block(statement, dest);
-  else if(statement.id()=="generate_case")
+  else if(statement.id()==ID_generate_case)
     elaborate_generate_case(statement, dest);
-  else if(statement.id()=="generate_if")
+  else if(statement.id()==ID_generate_if)
     elaborate_generate_if(statement, dest);
-  else if(statement.id()=="generate_for")
+  else if(statement.id()==ID_generate_for)
     elaborate_generate_for(statement, dest);
-  else if(statement.id()=="decl" &&
-          statement.get("class")=="genvar")
+  else if(statement.id()==ID_decl &&
+          statement.get(ID_class)==ID_genvar)
   {
     forall_operands(it, statement)
-      genvars[it->get("identifier")]=-1;
+      genvars[it->get(ID_identifier)]=-1;
   }
   else
   {
