@@ -169,10 +169,6 @@ protected:
     const irep_idt &identifier,
     const symbolt *&symbol);
     
-  // override parameter values
-  typedef std::map<std::string, exprt> overridest;
-  overridest overrides;
-  
   // generate constructs
   void elaborate_generate_assign(const exprt &statement, exprt::operandst &dest);
   void elaborate_generate_block(const exprt &statement, exprt::operandst &dest);
