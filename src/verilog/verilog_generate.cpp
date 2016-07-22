@@ -65,10 +65,8 @@ void verilog_typecheckt::elaborate_generate_item(
     tmp.copy_to_operands(statement);
     irept &variables=tmp.add("variables");
     
-    for(genvarst::const_iterator it=genvars.begin();
-        it!=genvars.end();
-        it++)
-      variables.set(it->first, integer2string(it->second));
+    for(const auto & it : genvars)
+      variables.set(it.first, integer2string(it.second));
 
     dest.push_back(exprt());
     dest.back().swap(tmp);
