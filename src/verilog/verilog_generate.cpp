@@ -152,14 +152,14 @@ void verilog_typecheckt::elaborate_generate_assign(
     throw 0;
   }
   
-  if(statement.op0().id()!="symbol")
+  if(statement.op0().id()!=ID_symbol)
   {
     err_location(statement.op0());
     error() << "expected symbol on left hand side of assignment" << eom;
     throw 0;
   }
   
-  const irep_idt &identifier=statement.op0().get("identifier");
+  const irep_idt &identifier=statement.op0().get(ID_identifier);
   
   genvarst::iterator it=genvars.find(identifier);
   
