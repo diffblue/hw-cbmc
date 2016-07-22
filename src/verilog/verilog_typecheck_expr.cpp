@@ -667,7 +667,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     // found!
     if(symbol->type.id()==ID_genvar)
     {
-      // This is a constant
+      // This must be a constant.
       mp_integer int_value;
 
       genvar_value(identifier, int_value);
@@ -688,8 +688,20 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     }
     else
     {
-      expr.type()=symbol->type;
-      expr.set(ID_identifier, full_identifier);
+      // This may be a constant.
+      exprt value=var_value(identifier);
+      
+      if(value.is_nil())
+      {
+        expr.type()=symbol->type;
+        expr.set(ID_identifier, full_identifier);
+      }
+      else
+      {
+        source_locationt source_location=expr.source_location();
+        expr=value;
+        expr.add_source_location()=source_location;
+      }
     }
   }
   else if(!implicit_wire(identifier, symbol))

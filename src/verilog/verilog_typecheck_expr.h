@@ -64,6 +64,11 @@ protected:
     assert(false);
   }
     
+  virtual exprt var_value(const irep_idt &identifier)
+  {
+    assert(false);
+  }
+    
   virtual bool implicit_wire(
     const irep_idt &identifier,
     const symbolt *&symbol)

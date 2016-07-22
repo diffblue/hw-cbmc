@@ -191,6 +191,19 @@ protected:
     else
       value=it->second;
   }
+  
+  // interpreter state
+  typedef std::map<irep_idt, exprt> varst;
+  varst vars;
+  
+  virtual exprt var_value(const irep_idt &identifier)
+  {
+    varst::const_iterator it=vars.find(identifier);
+    if(it==vars.end())
+      return nil_exprt();
+    else
+      return it->second;
+  }
 
   // const functions
   exprt elaborate_const_function_call(const class function_call_exprt &);
