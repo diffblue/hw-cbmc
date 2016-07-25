@@ -660,7 +660,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     id2string(module_identifier)+"."+
     named_block+
     id2string(identifier);
-  
+
   const symbolt *symbol;
   if(!lookup(full_identifier, symbol))
   { 
@@ -688,20 +688,8 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     }
     else
     {
-      // This may be a constant.
-      exprt value=var_value(identifier);
-      
-      if(value.is_nil())
-      {
-        expr.type()=symbol->type;
-        expr.set(ID_identifier, full_identifier);
-      }
-      else
-      {
-        source_locationt source_location=expr.source_location();
-        expr=value;
-        expr.add_source_location()=source_location;
-      }
+      expr.type()=symbol->type;
+      expr.set(ID_identifier, full_identifier);
     }
   }
   else if(!implicit_wire(identifier, symbol))
@@ -1135,6 +1123,22 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
     return expr;
   else if(expr.id()==ID_symbol)
   {
+    const irep_idt &identifier=to_symbol_expr(expr).get_identifier();
+    
+    exprt value=var_value(identifier);
+    
+    #if 0
+    status() << "READ " << identifier << " = " << to_string(value) << eom;
+    #endif
+      
+    if(value.is_not_nil())
+    {
+      source_locationt source_location=expr.source_location();
+      exprt tmp=value;
+      tmp.add_source_location()=source_location;
+      return tmp;
+    }
+
     return expr;
   }
   else if(expr.id()==ID_function_call)

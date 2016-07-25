@@ -409,6 +409,10 @@ exprt verilog_typecheckt::elaborate_const_function_call(
 
     old_vars[p_identifier]=var_value(p_identifier);
     vars[p_identifier]=value;
+    
+    #if 0
+    status() << "ASSIGN " << p_identifier << " <- " << to_string(value) << eom;
+    #endif
   }
 
   // interpret it
@@ -418,7 +422,11 @@ exprt verilog_typecheckt::elaborate_const_function_call(
   
   // get return value
 
-  return nil_exprt();
+  exprt return_value=var_value(
+    id2string(function_symbol.name)+"."+
+    id2string(function_symbol.base_name));
+
+  return return_value;
 }
 
 /*******************************************************************\

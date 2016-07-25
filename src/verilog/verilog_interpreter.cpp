@@ -39,6 +39,16 @@ void verilog_typecheckt::verilog_interpreter(
       throw 0;
     }
 
+    if(assign.lhs().id()==ID_symbol)
+    {
+      const irep_idt &identifier=
+        to_symbol_expr(assign.lhs()).get_identifier();
+      vars[identifier]=rhs;
+      
+      #if 0
+      status() << "ASSIGN " << identifier << " <- " << to_string(rhs) << eom;
+      #endif
+    }
   }
   else if(statement.id()==ID_block)
   {
@@ -48,21 +58,31 @@ void verilog_typecheckt::verilog_interpreter(
   else if(statement.id()==ID_for)
   {
     const verilog_fort &verilog_for=to_verilog_for(statement);
+
     verilog_interpreter(verilog_for.initialization());
     
     while(true)
     {
       exprt cond=elaborate_const_expression(verilog_for.condition());
       
-      mp_integer cond_i;
-      if(to_integer(cond, cond_i))
+      if(cond.is_false())
+        break;
+      else if(cond.is_true())
       {
-        error().source_location=verilog_for.source_location();
-        error() << "for condition is not constant" << eom;
-        throw 0;
       }
+      else
+      {
+        mp_integer cond_i;
       
-      if(cond_i==0) break;
+        if(to_integer(cond, cond_i))
+        {
+          error().source_location=verilog_for.source_location();
+          error() << "for condition is not constant: " << cond.pretty() << eom;
+          throw 0;
+        }
+
+        if(cond_i==0) break;
+      }
 
       verilog_interpreter(verilog_for.body());
       verilog_interpreter(verilog_for.inc_statement());
