@@ -1469,9 +1469,9 @@ function_declaration:
           function_item_declaration_brace statement TOK_ENDFUNCTION
 		{ init($$, ID_decl);
                   stack($$).set(ID_class, ID_function); 
-                  addswap($$, ID_signed, $3);
-		  addswap($$, ID_range, $4);
-		  addswap($$, ID_symbol, $5);
+                  addswap($$, ID_type, $4);
+                  add_as_subtype(stack_type($4), stack_type($3));
+                  addswap($$, ID_symbol, $5);
 		  addswap($$, ID_ports, $6);
 		  addswap($$, "declarations", $8);
 		  addswap($$, ID_body, $9);
@@ -1486,7 +1486,7 @@ range_or_type_opt:
 	;
 
 range_or_type:
-	  range
+	  packed_dimension
 	| TOK_INTEGER
 		{ init($$, ID_integer); }
 	| TOK_REAL
