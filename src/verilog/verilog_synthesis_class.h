@@ -284,8 +284,8 @@ protected:
 
   void replace_by_wire(exprt &expr, const symbolt &base);
     
-  // This map contains the values of all variables used
-  // for the elaboration.
+  // This map contains the values of all variables
+  // fixed to a constant during synthesis.
   typedef std::map<irep_idt, mp_integer> valuest;
   valuest values;
   
