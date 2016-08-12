@@ -1,0 +1,36 @@
+============
+Minor things
+===========
+
+*) Add a file describing options
+
+*) Polish 'makefile'
+
+=====================================
+Changes of the current implementation
+=====================================
+
+*) Implement actual removal of subsumed clauses
+   (currently they are just marked in ignored by the algorithm)
+
+*) Add code exploiting invariant constraints (that is allowed by the
+   new AIG format)
+
+====================================
+Improvements of the basic algorithm
+====================================
+
+*) Implement a more advanced technique
+   of inductive clause generalization based
+   on the notion of CTGs (counterexamples
+   To Generalizations)
+
+
+*) Implement IC3 with stuttering
+
+
+*) Fix the hole in IC3 that hurts
+   its convergence rate 
+
+
+

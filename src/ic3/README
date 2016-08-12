@@ -1,0 +1,23 @@
+*) To create a binary called 'ic3' run
+
+   cd minisat ; make ; cd ..
+
+   make 
+
+
+*) Synopsys
+
+
+   ic3 file_name [b] [options]
+
+  'file_name' is the circuit + property specified in the BLIF or AIG
+   format.  If parameter 'b' follows the file name, then the file is
+   assumed to be given in the BLIF format Otherwise, ic3 expects
+   the file to be in  the AIG format
+
+
+ *) To list options run 'ic3' without any parameters
+
+
+   
+

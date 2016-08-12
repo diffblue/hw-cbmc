@@ -1,0 +1,137 @@
+/******************************************************
+
+Module: Reading in a sequential circuit specified in the
+        BLIF formula (Part 4)
+
+Author: Eugene Goldberg, eu.goldberg@gmail.com
+
+******************************************************/
+#include <iostream>
+#include <vector>
+#include <set>
+#include <map>
+#include <algorithm>
+#include <queue>
+#include <assert.h>
+#include "dnf_io.hh"
+#include "ccircuit.hh"
+#include "r0ead_blif.hh"
+
+
+/*===================================
+
+    F I N I S H _ S P E C _ B U F F 
+
+  ==================================*/
+void finish_spec_buff(Circuit *N,int gate_ind)
+{
+
+  Gate &G = N->get_gate(gate_ind);
+
+  G.func_type = BUFFER;
+
+  DNF &F = G.F;
+  DNF &R = G.R;
+
+  if ((F.size()+ R.size()) != 1) {
+    printf("wrong buffer\n");
+    std::cout << G.Gate_name << std::endl;;
+  }
+
+  assert(F.size() == 1);
+
+  set_input_polarity(F[0],G);
+  G.Polarity.push_back(0); // direct output   
+
+} /* end of function finish_spec_buff */
+
+/*============================================
+
+     A D D _ S P E C _ B U F F _ C U B E
+
+  =============================================*/
+void add_spec_buff_cube(Circuit *N,int gate_ind)
+{
+
+  Gate &G = N->get_gate(gate_ind);
+  assert(G.F.size() == 0);
+  assert(G.R.size() == 0);
+  CUBE C;
+  C.push_back(1);
+  G.F.push_back(C);
+
+} /* end of function add_spec_buff_cube */
+
+/*======================================
+
+      F O R M _ F A N I N _ L I S T
+
+  ======================================*/
+void form_fanin_list(Circuit *N,int gate_ind)
+{
+  Gate &G = N->get_gate(gate_ind);
+
+  G.ninputs = 1;
+  CUBE &Fanin_list = G.Fanin_list;
+
+  Fanin_list.clear();
+
+  assert(G.seed_gate >= 0);
+
+  Fanin_list.push_back(G.seed_gate);
+
+
+} /* end of function form_fanin_list */
+
+
+/*========================================
+
+       F O R M _ O U T P U T _ N A M E
+
+  =========================================*/
+void form_output_name(CCUBE &Name,Circuit *N,int gate_ind)
+{
+  Name =  N->Spec_buff_name;
+
+  char buff[MAX_NAME];
+  Gate &G = N->get_gate(gate_ind);
+
+  assert(G.spec_buff_ind >= 0);
+
+  sprintf(buff,"%d",G.spec_buff_ind);
+
+  for (int i=0; ; i++) {
+    if (buff[i] == 0) break;
+    Name.push_back(buff[i]);
+  }
+} /* end of function form_output_name */
+
+/*==================================
+
+  S T A R T _ S P E C _ B U F F
+
+  =================================*/
+void start_spec_buff(Circuit *N,int gate_ind)
+{
+
+
+  // form the right output name
+  CCUBE Name;
+  form_output_name(Name,N,gate_ind);
+
+  // form the list of fanin gates
+  form_fanin_list(N,gate_ind);
+
+  Gate &G =  N->Gate_list[gate_ind];
+  G.gate_type = UNDEFINED;
+  G.level_from_inputs = -1; // initialize topological level
+  G.level_from_outputs = -1;
+  G.flags.active = 1; // mark G as an active  gate
+  G.flags.output = 0;
+  G.flags.transition = 0;
+  G.flags.output_function = 0;
+  G.flags.feeds_latch = 0;
+  G.Gate_name =  Name; 
+
+} /* end of function start_spec_buff */
+
