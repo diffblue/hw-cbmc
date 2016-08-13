@@ -1,0 +1,7 @@
+CORE
+visbakery.aig
+
+^property FAILED
+^verification is ok
+--
+^verification failed

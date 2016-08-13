@@ -1,0 +1,7 @@
+CORE
+ringp0.aig
+
+^property FAILED
+^verification is ok
+--
+^verification failed

@@ -1,0 +1,7 @@
+CORE
+pdtvispeterson.blif
+b
+^property HOLDS
+^verification is ok
+--
+^verification failed

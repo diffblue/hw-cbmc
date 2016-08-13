@@ -1,0 +1,7 @@
+CORE
+eijks208o.aig
+
+^property HOLDS
+^verification is ok
+--
+^verification failed
