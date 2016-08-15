@@ -177,7 +177,7 @@ void smv_languaget::show_parse(std::ostream &out)
     forall_item_list(it, module.items)
     {
       out << "    TYPE: " << to_string(it->item_type) << std::endl;
-      out << "    EXPR: " << it->expr << std::endl;
+      out << "    EXPR: " << it->expr.pretty() << std::endl;
       out << std::endl;
     }
   }

@@ -24,19 +24,19 @@ Function: verilog_modulet::show
 
 void verilog_modulet::show(std::ostream &out) const
 {
-  out << "Module: " << name << std::endl;
+  out << "Module: " << name << '\n';
 
-  out << "  Ports:" << std::endl;
+  out << "  Ports:\n";
 
   forall_irep(it, ports.get_sub())
-    out << "    " << *it << std::endl;
+    out << "    " << it->pretty() << '\n';
 
   out << std::endl;
 
-  out << "  Module items:" << std::endl;
+  out << "  Module items:\n";
 
   forall_irep(it, module_items.get_sub())
-    out << "    " << *it << std::endl;
+    out << "    " << it->pretty() << '\n';
 
-  out << std::endl;
+  out << '\n';
 }

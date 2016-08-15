@@ -128,8 +128,7 @@ mp_integer verilog_typecheck_baset::array_size(const typet &type)
 
   if(to_integer(to_array_type(type).size(), size))
   {
-    error() << "failed to get array size of type `" << type
-            << '\'' << eom;
+    error() << "failed to get array size of array type" << eom;
     throw 0;
   }
 
@@ -154,8 +153,8 @@ mp_integer verilog_typecheck_baset::array_offset(const typet &type)
 
   if(to_integer(static_cast<const exprt &>(type.find(ID_offset)), offset))
   {
-    error() << "failed to get array offset of type `" << type
-            << '\'' << eom;
+    error() << "failed to get array offset of type `"
+            << type.id() << '\'' << eom;
     throw 0;
   }
 
@@ -195,7 +194,8 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
     return 32;
   }
 
-  error() << "type `" << type << "' has unknown width";
+  error() << "type `" << type.id() << "' has unknown width"
+          << eom;
   throw 0;
 }
 

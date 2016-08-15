@@ -707,7 +707,7 @@ void smv_typecheckt::typecheck(
     if(expr.operands().size()!=2)
     {
       err_location(expr);
-      error() << "Expected two operands for " << expr << eom;
+      error() << "Expected two operands for " << expr.id() << eom;
       throw 0;
     }
 
@@ -741,7 +741,7 @@ void smv_typecheckt::typecheck(
     if(expr.operands().size()!=2)
     {
       err_location(expr);
-      error() << "Expected two operands for " << expr << eom;
+      error() << "Expected two operands for " << expr.id() << eom;
       throw 0;
     }
     
@@ -946,7 +946,7 @@ void smv_typecheckt::typecheck(
   else
   {
     err_location(expr);
-    error() << "No type checking for " << expr << eom;
+    error() << "No type checking for " << expr.id() << eom;
     throw 0;
   }
 

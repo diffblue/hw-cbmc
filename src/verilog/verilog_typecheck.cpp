@@ -826,7 +826,6 @@ void verilog_typecheckt::check_lhs(
   }
   else
   {
-    error() << lhs << eom;
     error() << "typechecking: failed to get identifier on LHS" << eom;
     throw 0;
   }
@@ -1438,8 +1437,7 @@ void verilog_typecheckt::convert_statement(
   else
   {
     err_location(statement);
-    error() << "unexpected statement:" << '\n';
-    error() << statement << '\n';
+    error() << "unexpected statement:" << statement.id() << eom;
     throw 0;
   }
 }
@@ -1511,8 +1509,7 @@ void verilog_typecheckt::convert_module_item(
   else
   {
     err_location(module_item);
-    error() << "unexpected module item:" << '\n';
-    error() << module_item << '\n';
+    error() << "unexpected module item:" << module_item.id() << eom;
     throw 0;
   }
 }

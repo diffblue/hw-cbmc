@@ -412,7 +412,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr.op1());
       str << "failed to convert constant "
-          << expr.op1() << '\n';
+          << expr.op1().pretty() << '\n';
       throw 0;
     }
 
@@ -433,7 +433,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr.op1());
       str << "failed to convert constant "
-          << expr.op1() << '\n';
+          << expr.op1().pretty() << '\n';
       throw 0;
     }
 
@@ -442,7 +442,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     {
       err_location(expr.operands()[2]);
       str << "failed to convert constant "
-          << expr.operands()[2] << '\n';
+          << expr.operands()[2].pretty() << '\n';
       throw 0;
     }
 

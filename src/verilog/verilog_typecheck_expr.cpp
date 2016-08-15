@@ -288,7 +288,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
      case 3: convert_trinary_expr(expr); break;
      default:
       error().source_location=expr.source_location();
-      error() << "no conversion for expression " << expr << eom;
+      error() << "no conversion for expression " << expr.id() << eom;
       throw 0;
     }
   }
@@ -596,7 +596,8 @@ void verilog_typecheck_exprt::convert_nullary_expr(exprt &expr)
   else
   {
     error().source_location=expr.source_location();
-    error() << "no conversion for no-operand expression " << expr << eom;
+    error() << "no conversion for no-operand expression "
+            << expr.id() << eom;
     throw 0;
   }
 }
@@ -1383,8 +1384,7 @@ void verilog_typecheck_exprt::convert_range(
   if(range.operands().size()!=2)
   {
     err_location(range);
-    error() << "range expected to have two operands\n";
-    error() << range << eom;
+    error() << "range expected to have two operands" << eom;
     throw 0;
   }
 
@@ -2003,7 +2003,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
   else
   {
     error().source_location=expr.source_location();
-    error() << "no conversion for trinary expression " << expr << eom;
+    error() << "no conversion for trinary expression "
+            << expr.id() << eom;
     throw 0;
   }
 }

@@ -613,7 +613,7 @@ std::string expr2verilogt::convert_norep(
   unsigned &precedence)
 {
   precedence=22;
-  return src.to_string();
+  return src.pretty();
 }
 
 /*******************************************************************\
@@ -1115,7 +1115,7 @@ std::string expr2verilogt::convert(const typet &type)
   else if(type.id()==ID_real || type.id()==ID_verilog_realtime)
     return "real";
 
-  return "IREP("+type.to_string()+")";
+  return "IREP("+type.pretty()+")";
 }
 
 /*******************************************************************\

@@ -295,7 +295,7 @@ bool expr2smvt::convert_norep(
   unsigned &precedence)
 {
   precedence=SMV_MAX_PRECEDENCE;
-  dest=src.to_string();
+  dest=src.pretty();
   return false;
 }
 

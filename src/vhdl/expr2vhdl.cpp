@@ -433,7 +433,7 @@ std::string expr2vhdlt::convert_norep(
   unsigned &precedence)
 {
   precedence=22;
-  return src.to_string();
+  return src.pretty();
 }
 
 /*******************************************************************\
@@ -811,7 +811,7 @@ std::string expr2vhdlt::convert(const typet &type)
   else if(type.id()==ID_real)
     return "real";
 
-  return "IREP("+type.to_string()+")";
+  return "IREP("+type.pretty()+")";
 }
 
 /*******************************************************************\

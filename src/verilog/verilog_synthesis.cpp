@@ -845,7 +845,6 @@ symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
     }
     else
     {
-      error() << *e << '\n';
       error() << "synthesis: failed to get identifier" << eom;
       throw 0;
     }
@@ -937,12 +936,14 @@ void verilog_synthesist::instantiate_port(
   const replace_mapt &replace_map,
   transt &trans)
 {
+  irep_idt identifier=symbol_expr.get(ID_identifier);
+
   replace_mapt::const_iterator it=
-    replace_map.find(symbol_expr.get(ID_identifier));
+    replace_map.find(identifier);
 
   if(it==replace_map.end())
   {
-    error() << "failed to find " << symbol_expr << " in replace_map"
+    error() << "failed to find " << identifier << " in replace_map"
             << eom;
     throw 0;
   }
