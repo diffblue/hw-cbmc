@@ -16,6 +16,7 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/goto-instrument/cover$(OBJEXT) \
       $(CBMC)/src/goto-instrument/nondet_static$(OBJEXT) \
       $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CBMC)/src/cpp/cpp$(LIBEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
@@ -43,11 +44,6 @@ all: hw-cbmc$(EXEEXT)
 ifneq ($(wildcard $(CBMC)/src/bv_refinement/Makefile),)
   OBJ += $(CBMC)/src/bv_refinement/bv_refinement$(LIBEXT)
   CXXFLAGS += -DHAVE_BV_REFINEMENT
-endif
-
-ifneq ($(wildcard $(CBMC)/src/cpp/Makefile),)
-  OBJ += $(CBMC)/src/cpp/cpp$(LIBEXT)
-  CXXFLAGS += -DHAVE_CPP
 endif
 
 ifneq ($(wildcard $(CBMC)/src/specc/Makefile),)
