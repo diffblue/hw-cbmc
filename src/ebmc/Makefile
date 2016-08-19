@@ -8,8 +8,8 @@ SRC = diameter.cpp main.cpp diatest.cpp show_properties.cpp \
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
-      $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
-      $(CBMC)/src/linking/linking$(LIBEXT) \
+      $(CBMC)/src/ansi-c/string_constant$(OBJEXT) \
+      $(CBMC)/src/ansi-c/c_types$(OBJEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/big-int/big-int$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
