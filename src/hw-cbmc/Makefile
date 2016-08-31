@@ -6,6 +6,7 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/cbmc/bmc$(OBJEXT) \
       $(CBMC)/src/cbmc/bv_cbmc$(OBJEXT) \
       $(CBMC)/src/cbmc/symex_bmc$(OBJEXT) \
+      $(CBMC)/src/cbmc/fault_localization$(OBJEXT) \
       $(CBMC)/src/cbmc/counterexample_beautification$(OBJEXT) \
       $(CBMC)/src/cbmc/cbmc_solvers$(OBJEXT) \
       $(CBMC)/src/cbmc/show_vcc$(OBJEXT) \
