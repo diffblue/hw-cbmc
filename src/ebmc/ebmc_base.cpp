@@ -36,7 +36,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/languages.h>
 
 #include "ebmc_base.h"
-#include "version.h"
+#include "ebmc_version.h"
 
 /*******************************************************************\
 
@@ -50,8 +50,10 @@ Function: ebmc_baset::ebmc_baset
 
 \*******************************************************************/
 
-ebmc_baset::ebmc_baset(const cmdlinet &_cmdline):
-  language_uit("EBMC " EBMC_VERSION, _cmdline),
+ebmc_baset::ebmc_baset(
+  const cmdlinet &_cmdline,
+  ui_message_handlert &_ui_message_handler):
+  language_uit(_cmdline, _ui_message_handler),
   cmdline(_cmdline),
   main_symbol(NULL)
 {

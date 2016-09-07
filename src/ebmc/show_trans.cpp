@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "show_trans.h"
 #include "ebmc_base.h"
-#include "version.h"
+#include "ebmc_version.h"
 #include "output_verilog.h"
 
 /*******************************************************************\
@@ -29,7 +29,10 @@ Author: Daniel Kroening, kroening@kroening.com
 class show_transt:public ebmc_baset
 {
 public:
-  show_transt(const cmdlinet &cmdline):ebmc_baset(cmdline)
+  show_transt(
+    const cmdlinet &cmdline,
+    ui_message_handlert &ui_message_handler):
+    ebmc_baset(cmdline, ui_message_handler)
   {
   }
 
@@ -56,9 +59,11 @@ Function: show_trans_verilog_netlist
 
 \*******************************************************************/
 
-int show_trans_verilog_netlist(const cmdlinet &cmdline)
+int show_trans_verilog_netlist(
+  const cmdlinet &cmdline,
+  ui_message_handlert &ui_message_handler)
 {
-  show_transt show_trans(cmdline);  
+  show_transt show_trans(cmdline, ui_message_handler);  
   return show_trans.show_trans_verilog_netlist();
 }
 
@@ -74,9 +79,11 @@ Function: show_trans_verilog_rtl
 
 \*******************************************************************/
 
-int show_trans_verilog_rtl(const cmdlinet &cmdline)
+int show_trans_verilog_rtl(
+  const cmdlinet &cmdline,
+  ui_message_handlert &ui_message_handler)
 {
-  show_transt show_trans(cmdline);  
+  show_transt show_trans(cmdline, ui_message_handler);  
   return show_trans.show_trans_verilog_rtl();
 }
 
@@ -340,9 +347,11 @@ Function: show_trans
 
 \*******************************************************************/
 
-int show_trans(const cmdlinet &cmdline)
+int show_trans(
+  const cmdlinet &cmdline,
+  ui_message_handlert &ui_message_handler)
 {
-  show_transt show_trans(cmdline);  
+  show_transt show_trans(cmdline, ui_message_handler);
   return show_trans.show_trans();
 }
 

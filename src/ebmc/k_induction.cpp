@@ -28,7 +28,10 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 class k_inductiont:public ebmc_baset
 {
 public:
-  k_inductiont(const cmdlinet &cmdline):ebmc_baset(cmdline)
+  k_inductiont(
+    const cmdlinet &_cmdline,
+    ui_message_handlert &_ui_message_handler):
+    ebmc_baset(_cmdline, _ui_message_handler)
   {
   }
 
@@ -51,9 +54,11 @@ Function: do_k_induction
 
 \*******************************************************************/
 
-int do_k_induction(const cmdlinet &cmdline)
+int do_k_induction(
+  const cmdlinet &cmdline,
+  ui_message_handlert &ui_message_handler)
 {
-  return k_inductiont(cmdline)();
+  return k_inductiont(cmdline, ui_message_handler)();
 }
 
 /*******************************************************************\

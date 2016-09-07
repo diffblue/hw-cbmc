@@ -22,7 +22,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class ebmc_baset:public language_uit
 {
 public:
-  ebmc_baset(const cmdlinet &_cmdline);
+  ebmc_baset(const cmdlinet &_cmdline,
+             ui_message_handlert &_ui_message_handler);
   virtual ~ebmc_baset() { }
 
   int get_model();

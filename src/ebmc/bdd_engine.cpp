@@ -33,7 +33,10 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 class bdd_enginet:public ebmc_baset
 {
 public:
-  bdd_enginet(const cmdlinet &cmdline):ebmc_baset(cmdline)
+  bdd_enginet(
+    const cmdlinet &cmdline,
+    ui_message_handlert &ui_message_handler):
+    ebmc_baset(cmdline, ui_message_handler)
   {
   }
 
@@ -805,8 +808,10 @@ Function: do_bdd
 
 \*******************************************************************/
 
-int do_bdd(const cmdlinet &cmdline)
+int do_bdd(
+  const cmdlinet &cmdline,
+  ui_message_handlert &ui_message_handler)
 {
-  return bdd_enginet(cmdline)();
+  return bdd_enginet(cmdline, ui_message_handler)();
 }
 

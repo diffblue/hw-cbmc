@@ -10,6 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #define EBMC_PARSEOPTIONS_H
 
 #include <util/parse_options.h>
+#include <util/ui_message.h>
+
+#include "ebmc_version.h"
 
 class ebmc_parse_optionst:public parse_options_baset
 {
@@ -33,7 +36,8 @@ public:
     "(smt1)(smt2)(boolector)(z3)(cvc4)(yices)(mathsat)(prover)(lifter)"
     "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
     "(compute-ct)(dot-netlist)(smv-netlist)(vcd):I:",
-    argc, argv)
+    argc, argv),
+    ui_message_handler("EBMC " EBMC_VERSION)
   {
   }
    
@@ -41,6 +45,8 @@ public:
   
 protected:
   void register_languages();
+  
+  ui_message_handlert ui_message_handler;
 };
 
 #endif

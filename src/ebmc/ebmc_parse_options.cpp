@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
-#include "version.h"
+#include "ebmc_version.h"
 #include "show_trans.h"
 #include "k_induction.h"
 #include "bdd_engine.h"
@@ -103,11 +103,11 @@ int ebmc_parse_optionst::doit()
   }
   
   if(cmdline.isset("k-induction"))
-    return do_k_induction(cmdline);
+    return do_k_induction(cmdline, ui_message_handler);
 
   if(cmdline.isset("bdd") ||
      cmdline.isset("show-bdds"))
-    return do_bdd(cmdline);
+    return do_bdd(cmdline, ui_message_handler);
 
   if(cmdline.isset("interpolation-word"))
   {
@@ -145,8 +145,8 @@ int ebmc_parse_optionst::doit()
     //    else
     return do_interpolation_netlist(cmdline);
     #else
-    language_uit language_ui("EBMC " EBMC_VERSION, cmdline);
-    language_ui.error() << "No support for interpolation linked in" << messaget::eom;
+    messaget message(ui_message_handler);
+    message.error() << "No support for interpolation linked in" << messaget::eom;
     return 1; 
     #endif
   }
@@ -169,16 +169,16 @@ int ebmc_parse_optionst::doit()
   }
   
   if(cmdline.isset("show-trans"))
-    return show_trans(cmdline);
+    return show_trans(cmdline, ui_message_handler);
 
   if(cmdline.isset("verilog-rtl"))
-    return show_trans_verilog_rtl(cmdline);
+    return show_trans_verilog_rtl(cmdline, ui_message_handler);
 
   if(cmdline.isset("verilog-netlist"))
-    return show_trans_verilog_netlist(cmdline);
+    return show_trans_verilog_netlist(cmdline, ui_message_handler);
 
   {
-    ebmc_baset ebmc_base(cmdline);
+    ebmc_baset ebmc_base(cmdline, ui_message_handler);
   
     int result=ebmc_base.get_model();
     if(result!=-1) return result;

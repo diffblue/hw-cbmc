@@ -10,7 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_EBMC_K_INDUCTION_H
 
 #include <util/cmdline.h>
+#include <util/ui_message.h>
 
-int do_k_induction(const cmdlinet &cmdline);
+int do_k_induction(const cmdlinet &, ui_message_handlert &);
 
 #endif

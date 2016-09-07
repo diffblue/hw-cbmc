@@ -26,7 +26,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include "ebmc_base.h"
-#include "version.h"
+#include "ebmc_version.h"
 
 /*******************************************************************\
 
