@@ -1,6 +1,6 @@
-============
+==============
 Minor things
-===========
+==============
 
 *) Add a file describing options
 
@@ -10,8 +10,8 @@ Minor things
 Changes of the current implementation
 =====================================
 
-*) Implement actual removal of subsumed clauses
-   (currently they are just marked in ignored by the algorithm)
+*) Implement actual removal of subsumed clauses (currently they are
+   just marked in ignored by the algorithm)
 
 *) Add code exploiting invariant constraints (that is allowed by the
    new AIG format)
@@ -19,13 +19,6 @@ Changes of the current implementation
 ====================================
 Improvements of the basic algorithm
 ====================================
-
-*) Implement a more advanced technique
-   of inductive clause generalization based
-   on the notion of CTGs (counterexamples
-   To Generalizations)
-
-
 *) Implement IC3 with stuttering
 
 

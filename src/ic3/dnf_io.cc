@@ -11,6 +11,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <queue>
 #include <algorithm>
+#include <map>
 #include "dnf_io.hh"
 
 
@@ -219,9 +220,10 @@ int read_dimacs1(FILE *fp,DNF &D,int &num_vars)
 	s.insert(v);
 	cube.push_back(v);
            
-	if (abs(v) > nvars)
-	  {fprintf(stderr,"variable number (%d) exceeds the declared number of variables (%d)\n",v,nvars);
-	    exit(1);
+	if (abs(v) > nvars) {
+	  fprintf(stderr,"variable number (%d) exceeds the declared ",v);
+          fprintf(stderr,"number of variables (%d)\n",nvars);
+	  exit(1);
 	  }
       } else {// symbol 0 (end of cube) is read in
 	if (!empty_cube) 

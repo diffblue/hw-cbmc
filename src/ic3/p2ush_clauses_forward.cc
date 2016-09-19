@@ -28,11 +28,10 @@ void CompInfo::push_clauses_forward()
   }
 
   int min_tf = 1;
-  
+ 
   assert(tf_lind < Time_frames.size());
   init_fields();
-  for (int i=min_tf; i <= tf_lind; i++) {
- 
+  for (int i=min_tf; i <= tf_lind; i++) { 
     CUBE Pushed;
     CUBE &Clauses = Time_frames[i].Clauses;
     for (int j=0; j  < Clauses.size();j++) { 
@@ -50,7 +49,7 @@ void CompInfo::push_clauses_forward()
       }
 
      
-      if (F[clause_ind].size() > C.size()) {
+      if (F[clause_ind].size() > C.size()) {	 
 	int ans = replace_or_add_clause(clause_ind,C,i);
 	if (ans == RESTORE) {
 	  C = F[clause_ind];
@@ -60,10 +59,10 @@ void CompInfo::push_clauses_forward()
 	  add_copies(i,C);
 	}
 	else if (ans == ADD1) {
-	  add_fclause1(C,i+1);
+	  add_fclause1(C,i+1,PUSH_STATE);
 	  continue;
 	}
-	else if (ans == ADD2) {
+	else if (ans == ADD2) {	 
 	  add_fclause2(C,i+1,true);
 	  add_copies(i,C);
 	  continue;}
@@ -88,15 +87,15 @@ void CompInfo::push_clauses_forward()
     } /* for j */
     
 
-   
-    add_new_clauses(Time_frames[i+1].Slvr,Pushed);   
-   
+    add_new_clauses(Time_frames[i+1].Slvr,Pushed);
+
     if (Time_frames[i].num_bnd_cls == 0) {
       inv_ind = i;
       printf("All clauses of Bnd[%d] are pushed forward\n",inv_ind);
-      break;}  
+      break;}
+   
   }
-
+ 
 } /* end of function push_clauses_forward */
 
 
@@ -130,7 +129,7 @@ bool CompInfo::push_clause(CLAUSE &C,int tf_ind,int clause_ind)
   CLAUSE C0;
   gen_assump_clause(C0,Slvr,Assmps);
   conv_to_pres_state(C,C0);
-  if (!corr_clause(C)) modif_ind_clause(C,F[clause_ind]);
+  if (!corr_clause(C)) modif_ind_clause(C,F[clause_ind]);  
   return(true);
 } /* end of function push_clause */
 
@@ -177,9 +176,8 @@ int CompInfo::replace_or_add_clause(int clause_ind,CLAUSE &C,int tf_ind)
       if (span1 <= tf_ind) { // push forward an existing clause
 	num_add1_cases++;
 	return(ADD1);}
-      else if (span1 < span) {
-	// pushing forward does not make sense and replacement is incorrect
-	num_restore_cases++;
+      else if (span1 < span) { // pushing forward does not make sense 
+	num_restore_cases++; // and replacement is incorrect
 	return(RESTORE);
       }
 

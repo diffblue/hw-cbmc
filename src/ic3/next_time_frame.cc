@@ -17,7 +17,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-
 /*================================
 
   N E X T _ T I M E _ F R A M E
@@ -39,7 +38,6 @@ int CompInfo::next_time_frame()
     printf("F.size() = %d, #inact. clauses %d\n",(int) F.size(),num_inact_cls);
   }
   
-  
 
   int ret_val = 2;
   
@@ -47,8 +45,6 @@ int CompInfo::next_time_frame()
   empty_cnts();
   init_bst_sat_solver();
  
-
-
   while (true) {
     bool sat_form = check_sat1(Bst_sat);
     if (sat_form == false) {
@@ -56,17 +52,19 @@ int CompInfo::next_time_frame()
       break;}
 
     CUBE Nst,St,Inps;
-    extr_next_state(Nst,Bst_sat);
+    extr_cut_assgns1(Nst,Next_svars,Bst_sat);
     extr_next_inps(Inps,Bst_sat);
+    
     conv_to_pres_state(St,Nst);
     CLAUSE Bst_cube;
     lift_bad_state(Bst_cube,St,Inps);
     CUBE Pst;
-    extr_pres_state(Pst,Bst_sat);
+    extr_cut_assgns1(Pst,Pres_svars,Bst_sat);
     Inps.clear();
-    extr_pres_inps(Inps,Bst_sat);
+    extr_cut_assgns1(Inps,Inp_vars,Bst_sat);
     CUBE Gst_cube;
     lift_good_state(Gst_cube,Pst,Inps,Bst_cube);
+   
 
     CNF G;  
     int min_tf;
@@ -101,9 +99,8 @@ int CompInfo::next_time_frame()
   simplify_tf_solvers();
   Lgs_sat.Mst->simplify();
   push_clauses_forward(); 
+ 
   if (inv_ind >= 0) return(0);    
-  
-
 
   if (Time_frames[tf_lind].num_bnd_cls == 0) {
     inv_ind = tf_lind;
@@ -139,7 +136,6 @@ bool CompInfo::time_to_terminate() {
 void CompInfo::add_time_frame()
 {
 
-  //printf("add_time_frame\n");
   TimeFrame Tf;
  
   Tf.num_pbss = 0;

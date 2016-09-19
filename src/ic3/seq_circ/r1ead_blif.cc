@@ -24,7 +24,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   The function reads in the specified specified
   by  'fp' and returns a pointer to a circuit
   ==================================================*/
-Circuit  *read_blif(FILE *fp,reader_state &r)
+Circuit  *read_blif(FILE *fp,NamesOfLatches &Latches,reader_state &r)
 {CCUBE buf;
 
 
@@ -131,7 +131,7 @@ Circuit  *read_blif(FILE *fp,reader_state &r)
       case DOT_END:  // '.end' line?
 	goto FINISH_CIRCUIT;
       case DOT_LATCH:
-	{int answer = add_latch(buf,N,gate_ind);
+	{int answer = add_latch(buf,Latches,N,gate_ind);
 	  if (answer == 0)
 	    {error_message(WRONG_SYNTAX,buf);
 	      exit(syn_error);

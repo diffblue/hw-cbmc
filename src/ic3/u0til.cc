@@ -160,3 +160,43 @@ void CompInfo::print_bnd_sets1()
     printf("\n");
   }
 } /* end of function print_bnd_sets1 */
+
+/*==============================================
+
+  E X T R _ C U T _ A S S G N S 1
+
+  ASSUMPTIONS:
+  1) Vars contains variables
+
+  ===============================================*/
+void CompInfo::extr_cut_assgns1(CUBE &Assgns,CUBE &Vars,SatSolver &Slvr)
+{
+
+  MboolVec &S = Slvr.Mst->model;
+  for (int i=0; i < Vars.size(); i++) {
+    int var_ind = Vars[i]-1;
+    if (S[var_ind] == Mtrue) Assgns.push_back(var_ind+1);
+    else Assgns.push_back(-(var_ind+1));
+  }
+
+} /* end of function extr_cut_assgns1 */
+
+/*==============================================
+
+  E X T R _ C U T _ A S S G N S 2
+
+  ASSUMPTIONS:
+  1) Lits contains literals rather than variables
+
+  ===============================================*/
+void CompInfo::extr_cut_assgns2(CUBE &Assgns,CUBE &Lits,SatSolver &Slvr)
+{
+
+  MboolVec &S = Slvr.Mst->model;
+  for (int i=0; i < Lits.size(); i++) {
+    int var_ind = abs(Lits[i])-1;
+    if (S[var_ind] == Mtrue) Assgns.push_back(var_ind+1);
+    else Assgns.push_back(-(var_ind+1));
+  }
+
+} /* end of function extr_cut_assgns2 */

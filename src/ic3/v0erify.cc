@@ -16,7 +16,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
-
 /*================================
 
   V E R _ T R A N S _ I N V
@@ -63,7 +62,7 @@ bool CompInfo::ver_invar(CNF &H,CUBE &Old_nums)
   if (sat_form) {
     printf("bad state is reachable: ");
     CUBE St,Nst,Pst;
-    extr_next_state(Nst,Gen_sat);
+    extr_cut_assgns1(Nst,Next_svars,Gen_sat);
     conv_to_pres_state(St,Nst);
     std::cout << St << std::endl;
     return(false);
@@ -84,6 +83,7 @@ bool CompInfo::ver_invar(CNF &H,CUBE &Old_nums)
   ======================================*/
 bool CompInfo::ver_ind_clauses2(CNF &H,CUBE &Old_nums)
 {
+ 
   for (int i=0; i < H.size(); i++) {
     CLAUSE C;
     conv_to_next_state(C,H[i]);
@@ -93,11 +93,13 @@ bool CompInfo::ver_ind_clauses2(CNF &H,CUBE &Old_nums)
     if (sat_form) {
       printf("verification failed\n");
       printf("Inv & T does not imply F'[%d]\n",Old_nums[i]);
-      printf("F[%d]-> ",Old_nums[i]); std::cout << H[i] << std::endl;
-      printf("F'[%d]-> ",Old_nums[i]);std::cout << C << std::endl;
+      printf("F[%d]-> ",Old_nums[i]); 
+      std::cout << H[i] << std::endl;
+      printf("F'[%d]-> ",Old_nums[i]); 
+      std::cout << C << std::endl;
       print_clause_state(Old_nums[i]);
       CUBE St0,St1;
-      print_bnd_sets1();   
+      print_bnd_sets1();    
       return(false);
     }
   }
@@ -178,9 +180,9 @@ bool CompInfo::ver_ini_states(CNF &H)
 void CompInfo::find_wrong_transition(CUBE &St0,CUBE &St1,SatSolver &Slvr)
 {
 
-  extr_pres_state(St0,Slvr);
+  extr_cut_assgns1(St0,Pres_svars,Slvr);
   CUBE St;
-  extr_next_state(St,Slvr);
+  extr_cut_assgns1(St,Next_svars,Slvr);
   conv_to_pres_state(St1,St);
 
 } /* end of function find_wrong_transition */
@@ -193,6 +195,7 @@ void CompInfo::find_wrong_transition(CUBE &St0,CUBE &St1,SatSolver &Slvr)
   ====================================*/
 bool CompInfo::ver_ind_clauses1(CNF &H)
 {
+ 
   for (int i=0; i < H.size(); i++) {
 
     MvecLits Assmps;

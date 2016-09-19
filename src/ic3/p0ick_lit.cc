@@ -1,7 +1,7 @@
 /******************************************************
 
 Module:  Picking a literal to remove when generalizing
-         an inductive clause
+         an inductive clause (Part 1)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -201,37 +201,3 @@ void CompInfo::scale_factor_down(float min_act)
   factor = 1.;
 
 } /* end of function scale_factor_down */
-
-/*============================================
-
-  C O M P U T E _ R E C _ L I T _ A C T
-
-  ============================================*/
-void CompInfo::comput_rec_lit_act(int curr_tf)
-{
-
-  int num_clauses = 10;
-
-  for (int i=0; i < Pres_svars.size(); i++) {
-    int var_ind = Pres_svars[i]-1;
-    Tmp_act0[var_ind] = 0.;
-    Tmp_act1[var_ind] = 0.;
-  }
-
-  CUBE &Clauses = Time_frames[curr_tf].Clauses;
-
-  int count = 0;
-  for (int i=Clauses.size()-1; i>=0; i--) {
-    int clause_ind = Clauses[i];
-    if (Clause_info[clause_ind].active == 0) continue;
-   
-    CLAUSE &C = F[clause_ind];    
-    for (int j=0; j < C.size(); j++)  {
-      int var_ind = abs(C[j])-1;    
-      if (C[j] < 0) Tmp_act0[var_ind] += 1;
-      else Tmp_act1[var_ind] += 1;
-    }
-    if (++count >= num_clauses) break;
-  }
-
-} /* end of function comput_rec_lit_act */

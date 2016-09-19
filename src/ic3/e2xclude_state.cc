@@ -17,31 +17,29 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 
+/*============================================
 
-/*=================================
-
-  L N G S T _ I N D _ C L A U S E
+   F I N D _ I N D _ S U B C L A U S E _ C T I
 
   If (reset_flag == 'false'),
   Icb_sat is not reset when
   formula is unsatisfaible
 
-  =================================*/
-bool CompInfo::lngst_ind_clause(CLAUSE &C,SatSolver &Slvr,CLAUSE &C0,
-                               char st_descr)
+  ==========================================*/
+bool CompInfo::find_ind_subclause_cti(CLAUSE &C,SatSolver &Slvr,CLAUSE &C0,char st_descr)
 {
 
   if (verbose > 2) {
     printf("%*c",6,' ');
-    printf("lngst_ind_clause\n");
+    printf("find_ind_sub_clause_cti\n");
   }
   C = C0;
 
 
   // MAIN LOOP
 
+  //int count = 0;
   while(true)  {
-  
     // add assumptions
     MvecLits Assmps;
     Mlit act_lit;  
@@ -52,7 +50,7 @@ bool CompInfo::lngst_ind_clause(CLAUSE &C,SatSolver &Slvr,CLAUSE &C0,
     else add_negated_assumps2(Assmps,C,true);
 
     // run a SAT-check
-
+   
     bool sat_form = check_sat2(Slvr,Assmps);
 
   
@@ -60,6 +58,7 @@ bool CompInfo::lngst_ind_clause(CLAUSE &C,SatSolver &Slvr,CLAUSE &C0,
     if (sat_form == false) {// C is the longest inductive clause
       CLAUSE C1,C2;
       gen_assump_clause(C1,Slvr,Assmps);
+     
       conv_to_pres_state(C2,C1);
       if (!corr_clause(C2)) modif_ind_clause(C2,C);     
       C = C2;
@@ -69,34 +68,35 @@ bool CompInfo::lngst_ind_clause(CLAUSE &C,SatSolver &Slvr,CLAUSE &C0,
 
     // inductive clause is not found yet
     CUBE St;
-    extr_pres_state(St,Slvr);
+    extr_cut_assgns1(St,Pres_svars,Slvr);
 
     release_lit(Slvr,~act_lit);
 
-    adjust_clause(C,St);
+    adjust_clause1(C,St);
     bool ok = corr_clause(C);
     if (!ok)  return(false);
    
   }
-} /* end of function lngst_ind_clause */
+} /* end of function find_ind_subclause_cti */
 
 
 /*===============================
 
-  C O R R _ C L A U S E
+      C O R R _ C L A U S E
 
-  Returns 'true' if no initial
-  state falsifies C. Otherwise,
+   Returns 'true' if no initial
+   state falsifies C. Otherwise,
   returns 'false'
 
-  ASSUMPTIONS:
-  The set of initial states forms
-  a cube
+   ASSUMPTIONS:
+    The set of initial states forms
+    a cube
 
   ===============================*/
 bool CompInfo::corr_clause(CLAUSE &C)
 {
 
+  
   htable_lits.change_marker(); // increment or reset the hash table marker 
   htable_lits.started_using();
 
@@ -130,14 +130,19 @@ bool CompInfo::corr_clause(CLAUSE &C)
 
 /*=====================================
 
-  A D J U S T _ C L A U S E
+      A D J U S T _ C L A U S E 1
 
   This function remove the literals of C
   that are satisfied by 'St'. So on
   exit, clause C is falsified by 'St'
 
+  ASSUMPTIONS: 
+    St is a complete assignment. So the set
+    of variables assigned in 'St' contains
+    every variable of C.
+
   =====================================*/
-void CompInfo::adjust_clause(CLAUSE &C,CUBE &St)
+void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
 {
 
   if (verbose > 3) {
@@ -177,6 +182,6 @@ void CompInfo::adjust_clause(CLAUSE &C,CUBE &St)
   C.resize(C.size()-shift);
   htable_lits.done_using();
 
-} /* end of function adjust_clause */
+} /* end of function adjust_clause1 */
 
 

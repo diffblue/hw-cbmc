@@ -15,20 +15,17 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
-
 /*==============================
 
-  C I _ I N I T
+    C I _ I N I T
 
   ===============================*/
 void CompInfo::ci_init()
 {
 
- 
   add_time_frame();
   add_time_frame();
  
-  
   assert(max_pres_svar > 0);
   Lit_act0.assign(max_pres_svar,0.);
   Lit_act1.assign(max_pres_svar,0.);
@@ -62,20 +59,23 @@ void CompInfo::ci_init()
   num_gstate_cubes = 0; 
   length_gstate_cubes = 0.; 
   old_state_cnt = 0;
+  triv_old_st_cnt = 0;
   new_state_cnt = 0;
   root_state_cnt = 0;
-
+  tot_ctg_cnt = 0;
+  succ_ctg_cnt = 0;
+  
 } /* end of function ci_init */
 
 /*=============================================
 
-  F O R M _ S H O R T _ P R O P E R T Y
+   F O R M _ S H O R T _ P R O P E R T Y
 
-  Does to 'Short_pop' what 'form_property'
-  does to 'Prop'.
+   Does to 'Short_pop' what 'form_property'
+   does to 'Prop'.
  
-  Uses the same assumptions as 
-  'form_property'
+   Uses the same assumptions as 
+   'form_property'
 
   ============================================*/
 void CompInfo::form_short_property()
@@ -88,17 +88,17 @@ void CompInfo::form_short_property()
 
 /*==================================
 
-  F O R M _ P R O P E R T Y
+     F O R M _ P R O P E R T Y
 
 
-  ASSUMPTIONS:
-  1) Currently 'Prop' specifies the
-  bad states in terms of present
-  variables
+ ASSUMPTIONS:
+   1) Currently 'Prop' specifies the
+      bad states in terms of present
+      variables
 
-  2) The negation comes down to 
-  changing the polarity of the last
-  unit cube
+   2) The negation comes down to 
+      changing the polarity of the last
+      unit cube
   ==================================*/
 void CompInfo::form_property()
 {
@@ -111,15 +111,15 @@ void CompInfo::form_property()
 
 /*=================================
 
-  F O R M _ B A D _ S T A T E S
+     F O R M _ B A D _ S T A T E S
 
   This function forms 'BadStates'
   in terms of the next  state variables
 
-  ASSUMPTIONS:
-  1) Currently 'Prop' specifies the
-  bad states in terms of present
-  variables
+ ASSUMPTIONS:
+   1) Currently 'Prop' specifies the
+      bad states in terms of present
+      variables
 
   ===============================*/
 void CompInfo::form_bad_states()
@@ -138,7 +138,7 @@ void CompInfo::form_bad_states()
 void CompInfo::form_bad_states0(CNF &Bstates)
 {
 
-  htable_lits.change_marker(); // increment or reset the hash table marker 
+  htable_lits.change_marker(); 
   htable_lits.started_using();
 
   int marker = htable_lits.marker;
@@ -177,13 +177,12 @@ void CompInfo::form_bad_states0(CNF &Bstates)
     Bstates.push_back(Res);
   }
   
-  
   htable_lits.done_using();
 } /* end of function form_bad_states0 */
 
 /*==============================
 
-  F O R M _ C E X
+         F O R M _ C E X
 
   ==============================*/
 void CompInfo::form_cex()
@@ -213,7 +212,7 @@ void CompInfo::form_cex()
     bool sat_form = check_sat2(Gen_sat,Assmps);
     assert(sat_form);
     CUBE Nst,St;
-    extr_next_state(Nst,Gen_sat);
+    extr_cut_assgns1(Nst,Next_svars,Gen_sat);
     conv_to_pres_state(St,Nst);
     Cex.push_back(St);
   }
@@ -221,11 +220,11 @@ void CompInfo::form_cex()
   delete_solver(Gen_sat);
 } /* end of function form_cex */
 
-/*====================================
+/*========================================
 
-    F O R M _ I N I T _ S T
+           F O R M _ I N I T _ S T
 
-  ==================================*/
+  =========================================*/
 void CompInfo::form_init_st(CUBE &St_cube)
 {
 
@@ -243,7 +242,7 @@ void CompInfo::form_init_st(CUBE &St_cube)
   if (St_cube.size() != Ist.size()) {
     p();
     printf("St_cube.size() = %d, Ist_.size() = %d\n",
-           (int) St_cube.size(), (int) Ist.size());
+        (int) St_cube.size(), (int) Ist.size());
     std::cout << "St_cube-> " << St_cube << std::endl;
     exit(1);
   }

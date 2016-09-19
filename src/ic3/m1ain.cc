@@ -15,24 +15,25 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-
 hsh_tbl htable_lits;
 long long gcount = 0;
 
 
 /*========================
 
-  M I C 3
+       M I C 3
 
-  Returns: 
-  0 - property holds
-  1 - property failed
-  2 - undecided
+   Returns: 
+    0 - property holds
+    1 - property failed
+    2 - undecided
 
   =======================*/
 int CompInfo::mic3()
 {
 
+  check_conv_tbl(Pres_svars,Pres_to_next,true);
+  check_conv_tbl(Next_svars,Next_to_pres,false);
   htable_lits.hsh_init(4*max_num_vars+1);
   form_bad_states();
   form_property();
@@ -45,6 +46,8 @@ int CompInfo::mic3()
   ok = check_two_state_cex();
   if (!ok) return(1);
 
+
+  if (ctg_flag) form_coi_array();
   tf_lind = 1;
  
 
@@ -61,7 +64,7 @@ int CompInfo::mic3()
     if (verbose > 1) {
       print_bnd_sets1();     
     }
-   
+    
     if ((res == 0) || (res == 1)) {
       ret_val = res;
       goto FINISH; }
@@ -87,9 +90,9 @@ int CompInfo::mic3()
 
 /*===================
 
-  M A I N
+      M A I N
 
-  ====================*/
+====================*/
 int  main(int argc,char *argv[])
 {
   CompInfo Ci;
@@ -101,14 +104,9 @@ int  main(int argc,char *argv[])
     exit(0);}
 
   Ci.init_parameters();
-  char file_type = 'a';
-  if (argc > 2) 
-    if (argv[2][0] == 'b')
-      file_type = 'b';
+  Ci.read_input(argv[1]);  
   
-  Ci.read_input(argv[1],file_type);
- 
-  Ci.read_parameters(argc,argv,file_type);
+  Ci.read_parameters(argc,argv);
   bool ok = Ci.check_init_states();
   assert(ok);
   Ci.assgn_var_type();
@@ -163,7 +161,7 @@ int  main(int argc,char *argv[])
 
 /*=================================
 
-  C H E C K _ I N I T _ S T A T E S
+   C H E C K _ I N I T _ S T A T E S
   
   =================================*/
 bool CompInfo::check_init_states()

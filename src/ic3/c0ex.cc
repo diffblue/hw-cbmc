@@ -15,12 +15,11 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*==========================================
 
-/*=================================
+  F O R M _ I N P _ T R A C E
 
-    F O R M _ I N P _ T R A C E
-
-  ================================*/
+  ===========================================*/
 void CompInfo::form_inp_trace(DNF &Inp_trace)
 {
 
@@ -40,8 +39,8 @@ void CompInfo::form_inp_trace(DNF &Inp_trace)
 
   C H E C K _ O N E _ S T A T E _ C E X
 
-  This function checks if the initial 
-  states are good
+  This function checks if the initial states
+  are good
 
   ==========================================*/
 bool CompInfo::check_one_state_cex()
@@ -58,9 +57,10 @@ bool CompInfo::check_one_state_cex()
   // add Bad states
 
   add_bad_states(Gen_sat);
- 
+
 
   bool sat_form = check_sat1(Gen_sat);
+
   bool ok = true;
   if (sat_form) {
     form_one_state_cex(Gen_sat);
@@ -106,46 +106,45 @@ bool CompInfo::check_two_state_cex()
   
 
 
-/*=======================================
+/*=========================================
 
   F O R M _ T W O _ S T A T E _ C E X
 
-  =====================================*/
+  =========================================*/
 void CompInfo::form_two_state_cex(SatSolver &Slvr)
 {
 
   CUBE A,B;
 
-  extr_pres_state(A,Slvr);
+  extr_cut_assgns1(A,Pres_svars,Slvr);
   Cex.push_back(A);
 
   A.clear();
-  extr_next_state(B,Slvr);
+  extr_cut_assgns1(B,Next_svars,Slvr);
   conv_to_pres_state(A,B);
   Cex.push_back(A);
- 
   
 } /* end of function form_two_state_cex */
 
-/*======================================
+/*=========================================
 
   F O R M _ O N E_ S T A T E _ C E X
 
-  ======================================*/
+  =========================================*/
 void CompInfo::form_one_state_cex(SatSolver &Slvr)
 {
 
   CUBE A;
-  extr_pres_state(A,Slvr);
+  extr_cut_assgns1(A,Pres_svars,Slvr);
   Cex.push_back(A);
 
 } /* end of function form_one_state_cex */
 
-/*==========================
+/*=====================================
 
   A D D _ N E G _ P R O P
 
-  =========================*/
+  ====================================*/
 void CompInfo::add_neg_prop(SatSolver &Slvr)
 {
   for (int i=0; i < Prop.size()-1; i++) {
@@ -157,11 +156,11 @@ void CompInfo::add_neg_prop(SatSolver &Slvr)
   accept_new_clause(Slvr,C);
 } /* end of function add_neg_prop */
 
-/*================================
+/*=====================================
 
   A D D _ B A D _ S T A T E S
 
-  ================================*/
+  ====================================*/
 void CompInfo::add_bad_states(SatSolver &Slvr)
 {
   add_neg_prop(Slvr);

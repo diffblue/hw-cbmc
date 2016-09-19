@@ -12,6 +12,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <algorithm>
 #include <queue>
+#include <map>
 #include "dnf_io.hh"
 const int factor = 1000;
 
@@ -51,7 +52,7 @@ void print_num_with_commas(const int &num)
   with commas
 
   =====================================================*/
-void my_printf(char *format,...)
+void my_printf(const char *format,...)
 {
 
   va_list ap;

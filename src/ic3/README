@@ -8,12 +8,12 @@
 *) Synopsys
 
 
-   ic3 file_name [b] [options]
+   ic3 file_name  [options]
 
-  'file_name' is the circuit + property specified in the BLIF or AIG
-   format.  If parameter 'b' follows the file name, then the file is
-   assumed to be given in the BLIF format Otherwise, ic3 expects
-   the file to be in  the AIG format
+  'file_name' gives the name of the file specifying 'circuit +
+   property' in the AIG or BLIF format.  If 'file_name' has extension
+   '.aig' (respectively '.blif') the file is assumed to be given in
+   the AIG (respectively BLIF) format.
 
 
  *) To list options run 'ic3' without any parameters

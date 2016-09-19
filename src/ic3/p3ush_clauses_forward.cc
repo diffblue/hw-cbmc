@@ -62,6 +62,7 @@ void CompInfo::add_one_copy(int tf_ind,CLAUSE &C)
 } /* end of function add_one_copy */
 
 
+
 /*====================================
 
        I N I T _ F I E L D S
@@ -77,5 +78,3 @@ void CompInfo::init_fields()
   }
 
 } /* end of function init_fields */
-
-

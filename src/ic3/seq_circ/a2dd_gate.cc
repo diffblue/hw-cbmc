@@ -71,10 +71,8 @@ int assign_output_pin_number(std::map<CCUBE,int> &pin_list,
     pin_list[name] = pin_num;
     G.flags.active = 0;
     G.gate_type = UNDEFINED;   
-    if (latch) {
-      G.latch_feeds_latch = false;  
+    if (latch) 
       G.gate_type = LATCH;
-    }
     gate_list.push_back(G); // add one more gate 
   }
   else { /* an 'old' pin */

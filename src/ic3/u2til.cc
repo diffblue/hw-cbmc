@@ -18,14 +18,14 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 /*=================================
 
-  A D D _ F C L A U S E 2
+        A D D _ F C L A U S E 2
 
-  In contrast to 'add_fclause1'
-  we assume that clause C is a 
-  new one
+   In contrast to 'add_fclause1'
+   we assume that clause C is a 
+   new one
 
   =================================*/
-void CompInfo::add_fclause2(CLAUSE C,int last_ind,bool upd_activity)
+void CompInfo::add_fclause2(CLAUSE &C,int last_ind,bool upd_activity)
 {
 
   ClauseInfo el;
@@ -33,7 +33,6 @@ void CompInfo::add_fclause2(CLAUSE C,int last_ind,bool upd_activity)
   my_assert(C.size() > 0);
 
   sort(C.begin(),C.end());
-
  
   assert((last_ind >= 0) && (last_ind < Time_frames.size()));
   Time_frames[last_ind].num_bnd_cls++;
@@ -57,7 +56,25 @@ void CompInfo::add_fclause2(CLAUSE C,int last_ind,bool upd_activity)
 
 } /* end of function add_fclause2 */
 
+/*=======================
 
+   S E T _ D I F F
+
+  On exit, set 'Res' 
+  is equal to 'A \ B'
+
+  ====================*/
+void set_diff(SCUBE &Res,SCUBE &A,SCUBE &B)
+{
+
+  SCUBE::iterator pnt;
+
+  for (pnt = A.begin(); pnt != A.end(); pnt++) 
+    if (B.find(*pnt) == B.end())
+      Res.insert(*pnt);
+
+
+} /* end of function set_diff */
 
 /*===================================
 
@@ -87,8 +104,7 @@ void CompInfo::build_new_clause_table()
   for (int i=0; i < F.size(); i++) 
     Clause_table[F[i]] = i;
   
-
- // check that F does not have duplicate clauses
+// check that F does not have duplicate clauses
   assert(Clause_table.size() == F.size()); 
 
 } /* end of function build_new_clause_table */
@@ -96,7 +112,7 @@ void CompInfo::build_new_clause_table()
 
 /*====================================
 
-  C L E A N _ F O R M U L A
+      C L E A N _ F O R M U L A
 
   ==================================*/
 void CompInfo::clean_formula()
@@ -123,29 +139,29 @@ void CompInfo::clean_formula()
 
 /*======================================
 
-  R E C O M P _ T F _ C L S _ S E T S
+    R E C O M P _ T F _ C L S _ S E T S
 
-  ======================================*/
+ ======================================*/
 void CompInfo::recomp_tf_cls_sets()
 {
 
-  for (int i=0; i < Time_frames.size(); i++) 
-    Time_frames[i].Clauses.clear();
+ for (int i=0; i < Time_frames.size(); i++) 
+   Time_frames[i].Clauses.clear();
 
-  assert(F.size() == Clause_info.size());
+ assert(F.size() == Clause_info.size());
 
-  for (int i=0; i < F.size(); i++) {   
-    int span = Clause_info[i].span;
-    for (int j=1; j <= span; j++) 
-      Time_frames[j].Clauses.push_back(i);
-  }
+ for (int i=0; i < F.size(); i++) {   
+   int span = Clause_info[i].span;
+   for (int j=1; j <= span; j++) 
+     Time_frames[j].Clauses.push_back(i);
+ }
 
 } /* end of function recomp_tf_cls_sets */
 
 
 /*=====================================================
 
-  U P D _ A C T _ L I T _ C N T S
+       U P D _ A C T _ L I T _ C N T S
 
   =====================================================*/
 void CompInfo::upd_act_lit_cnts(CLAUSE &C,int last_ind)
@@ -167,7 +183,6 @@ void CompInfo::upd_act_lit_cnts(CLAUSE &C,int last_ind)
   }
 
   
- 
   for (int i=0; i < C.size(); i++) {
     int var_ind = abs(C[i])-1;
     if (C[i] < 0) Lit_act0[var_ind] += incr;

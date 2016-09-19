@@ -16,32 +16,29 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 
-
 /*============================================
 
   A D D _ N E G A T E D _ A S S U M P S 2
 
   ASSUMPTION:
-  1) Clause 'C' is specified in temrs of
-  present state vars
+    1) Clause 'C' is specified in temrs of
+       present state vars
 
-  ============================================*/
+ ============================================*/
 void CompInfo::add_negated_assumps2(MvecLits &Assmps,CLAUSE &C,bool sort)
 {
  
- 
   CLAUSE Cn;
-  if ((ind_cls_sort_mode == NO_SORT) || ((lit_pick_heur == MIXED)
-					 && (Time_frames.size() < cut_off_tf))) {   
+  if (ind_cls_sort_mode == NO_SORT) {   
     conv_to_next_state(Cn,C);
     add_negated_assumps1(Assmps,Cn);
     return; }
 
+
   CLAUSE C1; 
   if (sort)  
-    sort_in_activity(C1,C,ind_cls_sort_mode,false);
+     sort_in_activity(C1,C,ind_cls_sort_mode,false);
   else C1 = C;
-
   
   conv_to_next_state(Cn,C1);
   add_negated_assumps1(Assmps,Cn);
@@ -51,7 +48,7 @@ void CompInfo::add_negated_assumps2(MvecLits &Assmps,CLAUSE &C,bool sort)
 
 /*===========================================
 
-  A D D _ N E G A T E D _ A S S U M P S 1
+     A D D _ N E G A T E D _ A S S U M P S 1
 
   ==========================================*/
 void CompInfo::add_negated_assumps1(MvecLits &Assmps,CLAUSE &C)
@@ -67,9 +64,9 @@ void CompInfo::add_negated_assumps1(MvecLits &Assmps,CLAUSE &C)
 
 /*=================================
 
-  R E L E A S E _ L I T 
+      R E L E A S E _ L I T 
 
-  =================================*/
+ =================================*/
 void CompInfo::release_lit(SatSolver &Slvr,Mlit lit)
 {
 
@@ -81,27 +78,25 @@ void CompInfo::release_lit(SatSolver &Slvr,Mlit lit)
 
 /*=============================
 
-  A D D _ A S S U M P S 2 
+     A D D _ A S S U M P S 2 
 
   ============================*/
 void CompInfo::add_assumps2(MvecLits &Assmps,CUBE &St)
 {
 
-  if ((lift_sort_mode == NO_SORT) || ((lit_pick_heur == MIXED)
-      && (Time_frames.size() < cut_off_tf))) {   
+  if (lift_sort_mode == NO_SORT) {
     add_assumps1(Assmps,St);
     return;
   }
 
   CUBE St1;
   sort_in_activity(St1,St,lift_sort_mode,false);
-
   add_assumps1(Assmps,St1);
 } /* end of function add_assumps2 */
 
 /*=============================
 
-  A D D _ A S S U M P S 3
+     A D D _ A S S U M P S 3
 
   ============================*/
 void CompInfo::add_assumps3(MvecLits &Assmps,CUBE &St)
@@ -118,7 +113,7 @@ void CompInfo::add_assumps3(MvecLits &Assmps,CUBE &St)
 
 /*=============================
 
-  A D D _ A S S U M P S 1 
+     A D D _ A S S U M P S 1 
 
   ============================*/
 void CompInfo::add_assumps1(MvecLits &Assmps,CUBE &St)
@@ -134,13 +129,12 @@ void CompInfo::add_assumps1(MvecLits &Assmps,CUBE &St)
 
 
 
-/*====================================
+/*======================================
 
-  S O R T _ I N _ A C T I V I T Y
+    S O R T _ I N _ A C T I V I T Y
 
-  =====================================*/
-void CompInfo::sort_in_activity(CLAUSE &C1,CLAUSE &C,
-                               int sort_mode,bool reverse)
+========================================*/
+void CompInfo::sort_in_activity(CLAUSE &C1,CLAUSE &C,int sort_mode,bool reverse)
 {
 
   //  form pairs
@@ -163,7 +157,6 @@ void CompInfo::sort_in_activity(CLAUSE &C1,CLAUSE &C,
   if (reverse) stable_sort(V.begin(),V.end(),sel_least_act());
   else stable_sort(V.begin(),V.end(),sel_most_act());
   
- 
 
   if (sort_mode == FULL_SORT) full_sort(C1,C,V);
   else {
@@ -175,12 +168,13 @@ void CompInfo::sort_in_activity(CLAUSE &C1,CLAUSE &C,
 
 } /* end of function sort_in_activity */
 
-/*=======================
+/*=======================================
 
-  F U L L _ S O R T
+        F U L L _ S O R T
 
-  ======================*/
+  ========================================*/
 void CompInfo::full_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V) {
+
   C1.assign(C.size(),0);
   for (int i=0; i < V.size(); i++) {
     int old_ind = V[i].second;

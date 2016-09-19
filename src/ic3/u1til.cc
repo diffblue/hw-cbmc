@@ -17,63 +17,32 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 
-/*===========================================
-
-  E X T R _ P R E S  _ S T A T E
-
-  ============================================*/
-void CompInfo::extr_pres_state(CUBE &A,SatSolver &Slvr)
-{
-  
- 
-  MboolVec &S = Slvr.Mst->model;
-  for (int i=0; i < Pres_svars.size(); i++) {
-    int var_ind = Pres_svars[i]-1;
-    if (S[var_ind] == Mtrue) A.push_back(var_ind+1);
-    else A.push_back(-(var_ind+1));
-  }
-
-} /* end of function extr_pres_state */
-
-
-/*===========================================
-
-  E X T R _ N E X T  _ S T A T E
-
-  ============================================*/
-void CompInfo::extr_next_state(CUBE &A,SatSolver &Slvr)
-{
-  MboolVec &S = Slvr.Mst->model;
-
-  for (int i=0; i < Next_svars.size(); i++) {
-    int var_ind = Next_svars[i]-1;
-    if (S[var_ind] == Mtrue) A.push_back(var_ind+1);
-    else A.push_back(-(var_ind+1));
-  }
-} /* end of function extr_next_state */
 
 /*=================================
 
-  A D D _ F C L A U S E 1
+       A D D _ F C L A U S E 1
 
   =================================*/
-void CompInfo::add_fclause1(CLAUSE C,int last_ind)
+void CompInfo::add_fclause1(CLAUSE &C,int last_ind,char st_descr)
 {
 
   ClauseInfo el;
   int clause_ind = F.size();
-  my_assert(C.size() > 0);
+  assert(C.size() > 0);
 
   sort(C.begin(),C.end());
+ 
   int clause_ind1 = -1;
   int prev_tf_ind = -1;
 
   if (Clause_table.find(C) != Clause_table.end()) {
     clause_ind1  = Clause_table[C];
     prev_tf_ind = Clause_info[clause_ind1].span;
-    update_fclause(clause_ind1,last_ind);
+    if (update_fclause(clause_ind1,last_ind) == false) 
+      return;
     goto NEXT;
   }
+
  
   assert((last_ind >= 0) && (last_ind < Time_frames.size()));
   Time_frames[last_ind].num_bnd_cls++;
@@ -89,12 +58,17 @@ void CompInfo::add_fclause1(CLAUSE C,int last_ind)
   
   Clause_table[C] = F.size();
 
-  F.push_back(C);
 
+
+  F.push_back(C);
+  
+
+ 
   upd_act_lit_cnts(C,last_ind);
+  
+
 
  NEXT:
-
   int start_ind = 1;
   if (prev_tf_ind >= 0) {
     start_ind = prev_tf_ind+1;
@@ -110,25 +84,23 @@ void CompInfo::add_fclause1(CLAUSE C,int last_ind)
 
 /*=========================================
 
-  U P D A T E _ F C L A U S E
+       U P D A T E _ F C L A U S E
 
   ========================================*/
-void CompInfo::update_fclause(int clause_ind,int tf_ind)
+bool CompInfo::update_fclause(int clause_ind,int tf_ind)
 {
 
   Time_frames[tf_ind].num_bnd_cls++;
+
   ClauseInfo &el = Clause_info[clause_ind];
-  if (el.span >= tf_ind) {
-    p();
-    printf("updating clause F[%d]: ",clause_ind);
-    printf("F.size() = %d\n",(int) F.size());
-    std::cout << F[clause_ind] << std::endl;
-    printf("el.span = %d,tf_ind = %d\n",el.span,tf_ind);
-    exit(1);
-  }
+  if (el.span >= tf_ind) 
+    return(false);
+ 
 
   Time_frames[el.span].num_bnd_cls--;
   el.span = tf_ind;
+
+  return(true);
 
 } /* end of function update_fclause */
 
@@ -150,8 +122,8 @@ void read_numbers(char *buf,int &num1,int &num2)
   int loc_pnt = 0;
   while (true)
     {char c = buf[pnt++];
-      if (c == ' ') break;
-      loc_buf[loc_pnt++] = c;
+     if (c == ' ') break;
+     loc_buf[loc_pnt++] = c;
     }
 
   loc_buf[loc_pnt] = 0;
@@ -160,25 +132,25 @@ void read_numbers(char *buf,int &num1,int &num2)
   // skip spaces
   while (true)
     {char c = buf[pnt];
-      if (c == ' ') pnt++;
-      else break;
+     if (c == ' ') pnt++;
+     else break;
     }
 
-  // read in the second number
+    // read in the second number
   loc_pnt = 0;
   while (true)
     {char c = buf[pnt++];
-      if (c == ' ')  break;
-      if (c == '\n') break;
-      loc_buf[loc_pnt++] = c;
+     if (c == ' ')  break;
+     if (c == '\n') break;
+     loc_buf[loc_pnt++] = c;
     }
-  loc_buf[loc_pnt] = 0;
-  num2 = atoi(loc_buf);
+loc_buf[loc_pnt] = 0;
+ num2 = atoi(loc_buf);
 } /* end of function read_numbers */
 
 /*========================
 
-  M Y _ A S S E R T
+    M Y _ A S S E R T
 
   ======================*/
 void my_assert(bool cond)

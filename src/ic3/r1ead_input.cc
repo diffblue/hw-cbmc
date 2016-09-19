@@ -20,11 +20,13 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 /*==============================
 
-     F O R M _ I N V S
+        F O R M _ I N V S
 
   =============================*/
 void CompInfo::form_invs(Circuit *N)
 {
+
+
 
   CDNF Pin_names;
 
@@ -35,8 +37,6 @@ void CompInfo::form_invs(Circuit *N)
     Pin_names.clear();
     form_inv_names(Pin_names,lit);
     int gate_ind = start_new_gate(N,Pin_names);
-  
-    // add cube specifying functionality
     CUBE C;
     C.push_back(-1);
     Gate &G = N->get_gate(gate_ind);
@@ -49,15 +49,16 @@ void CompInfo::form_invs(Circuit *N)
 
 /*===================================
 
-  A D D _ N E W _ L A T C H
+        A D D _ N E W _ L A T C H
 
-  This function is similar to
-  'add_latch' of file 
-  'seq_circ/a3dd_gate.cc'
+   This function is similar to
+   'add_latch' of file 
+   'seq_circ/a3dd_gate.cc'
 
   ====================================*/
-void CompInfo::add_new_latch(Circuit *N,aiger_symbol &S)
+void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S)
 {
+
   int init_value;
 
   switch (S.reset) {
@@ -71,13 +72,13 @@ void CompInfo::add_new_latch(Circuit *N,aiger_symbol &S)
     break;
   }
 
+ // process the output name
   CCUBE Latch_name;
+  form_latch_name(Latch_name,S); 
  
-  // process the output name
-  char Buff[MAX_NAME];
-  sprintf(Buff,"l%d",S.lit);
-  conv_to_vect(Latch_name,Buff);
+ 
   int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,N->Gate_list,true);
+ 
  
 
   N->ngates++; // increment the number of gates 
@@ -90,14 +91,15 @@ void CompInfo::add_new_latch(Circuit *N,aiger_symbol &S)
   form_next_symb(Next_name,S.next);
   //  process  the  input name
   {
-    pin_num = assign_input_pin_number2(N,Next_name, N->Gate_list); 
+    pin_num = assign_input_pin_number2(Latches,N,Next_name,N->Gate_list);
+
     Gate &G = N->get_gate(gate_ind);   
     G.Fanin_list.push_back(pin_num); 
     if (G.gate_type == INPUT) printf("INPUT\n");
     if (N->get_gate(gate_ind).gate_type == INPUT){
 // we don't accept files in which the output of a latch is also a primary input
       printf("the output of latch  "); 
-      print_name1(Latch_name); printf("\n");
+      print_name(&Latch_name); printf("\n");
       printf("is also an input variable\n");
       exit(1);
     }
@@ -108,9 +110,7 @@ void CompInfo::add_new_latch(Circuit *N,aiger_symbol &S)
     Form a latch node
     ---------------------------------------*/ 
  
-// old reference may have changed, so we need to get a fresh one
   Gate &G = N->get_gate(gate_ind); 
-  
   G.ninputs = 1;
   G.func_type = BUFFER;
   G.gate_type = LATCH;
@@ -123,25 +123,33 @@ void CompInfo::add_new_latch(Circuit *N,aiger_symbol &S)
   G.flags.output_function = 0;
   G.Gate_name =  Latch_name; 
   G.init_value = init_value;
-
+  
 } /* end of function add_new_latch */
 
 /*===================================
 
-  F O R M _ L A T C H E S
+       F O R M _ L A T C H E S
 
   ==================================*/
 void CompInfo::form_latches(Circuit *N,aiger &Aig)
 {
 
-  // mark latched literal
 
-  for (int i=0; i < Aig.num_latches; i++)
+// mark latched literal
+
+  NamesOfLatches Latches;
+
+  for (int i=0; i < Aig.num_latches; i++) {
     Lats.insert(Aig.latches[i].lit);
+    CCUBE Latch_name;
+    form_latch_name(Latch_name,Aig.latches[i]);
+    Latches[Latch_name] = 1;
+  }
 
   for (int i=0; i < Aig.num_latches; i++) 
-    add_new_latch(N,Aig.latches[i]);
- 
+    add_new_latch(Latches,N,Aig.latches[i]);
+  
+  
 
 } /* end of function form_latches */
 
@@ -166,15 +174,15 @@ void CompInfo::form_output(int &outp_lit,Circuit *N,aiger &Aig)
 
 
 
-/*================================
+/*===================================
 
-      F O R M _ I N P U T S
+        F O R M _ I N P U T S
 
-  ================================*/
+====================================*/
 void CompInfo::form_inputs(Circuit *N,aiger &Aig)
 {
 
-  for (int i=0; i < Aig.num_inputs; i++) {
+ for (int i=0; i < Aig.num_inputs; i++) {
     int lit = Aig.inputs[i].lit;
     char Inp_name[MAX_NAME];
     sprintf(Inp_name,"i%d",lit);
@@ -184,11 +192,12 @@ void CompInfo::form_inputs(Circuit *N,aiger &Aig)
     add_input(Name,N,N->ninputs);
   }
   
+
 } /* end of function form_inputs */
 
 /*===============================
 
-    C O N V _ T O _ V E C T
+     C O N V _ T O _ V E C T
 
   =============================*/
 void conv_to_vect(CCUBE &Name1,const char *Name0)

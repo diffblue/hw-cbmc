@@ -24,21 +24,23 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::print_header()
 {
 
-  printf("mic3 circ file_type [C|c|d||e|i|n|r|x] [a'num] ['D'num] ['g'num] ['m'val] ['o' name] ['s'num]\n");
-  printf("          ['Sl'num] ['Si'num] ['t'num] ['T'num] ['v'num] \n");
+  printf("ic3 circ [b|C|c|d||e|g|i|n|r|x] ['a'num] ['D'num] ['G'num] ['h'val] \n");
+  printf("          ['m'val] ['o' name] ['s'num] ['Sl'num] ['Si'num] ['t'num]\n");
+  printf("          ['T'num] ['v'num] \n\n");
   printf("circ     - name of the file containing the initial circuit\n");
-  printf("file_type - symbol 'a' (aiger file) or 'b' (blif format file)\n");
   printf("'a'num   - num specifies the activity update mode\n");
+  printf("'b'      - the ctg_flag is set to off\n");
   printf("C        - print inductive and local clauses\n");
   printf("c        - print out the counterexample found (if any)\n");
   printf("d        - is used for debugging purposes\n");
   printf("'D'num   - specifies heuristics used to pick a literal\n");
   printf("           0 - random (default), 1 - inactive lit \n");
-  printf("           2 - inactive var, 3 - BerkMin like heuristic\n");
+  printf("           2 - inactive var, 3 - fixed order\n");
   printf("e        - set the selector variables to 1 (used for debugging)\n");
   printf("'g'num   - sets the maximal value of gcount (used for debugging)\n");
   printf("'i'num   - print out the invariant found (if any)\n");
   printf("           if 'num == 1', then only inductive clauses are printed out\n");
+  printf("j        - use joins in  generalization of inductive clauses when 'ctg_flag' is off\n");
   printf("'m'val   - value is a real number specifying the value of the multiplier\n");
   printf("'n'      - does not print any statistics\n");
   printf("o name   - print the result to a file with the root name 'name'\n");
@@ -83,8 +85,13 @@ void CompInfo::init_parameters()
   multiplier = 1.05;
   factor = 1.;
   max_act_val = 10000.;
-  cut_off_tf = 5;
   max_num_elems = 10;
+  ctg_flag = true;
+  max_ctg_cnt = 3;
+  max_rec_depth = 1;
+  grl_heur = NO_JOINS;
+  max_coi_depth = 10;
+
 } /* end of function init_parameters */
 
 
@@ -93,17 +100,18 @@ void CompInfo::init_parameters()
   R E A D _ P A R A M E T E R S
 
   =====================================*/
-void CompInfo::read_parameters(int argc,char *argv[],char file_type)
+void CompInfo::read_parameters(int argc,char *argv[])
 {
-
-  int start = (file_type == 'a')?2:3; 
-  for (int i=start; i < argc; i++) 
+  for (int i=2; i < argc; i++) 
     switch(argv[i][0]){
     case 'a':
       act_upd_mode = atoi(argv[i]+1);
       assert(act_upd_mode >=  NO_ACT_UPD);
       assert(act_upd_mode <= MINISAT_ACT_UPD);
-      break;      
+      break;
+    case 'b':
+      ctg_flag = false;
+      break;
     case 'C':
       print_clauses_flag = true;
       break;
@@ -116,7 +124,7 @@ void CompInfo::read_parameters(int argc,char *argv[],char file_type)
     case 'D':
       lit_pick_heur = atoi(argv[i]+1);
       assert(lit_pick_heur >= RAND_LIT);
-      assert(lit_pick_heur <= MIXED);
+      assert(lit_pick_heur <= FIXED_ORDER);
       break;
     case 'e':
       selector = 1;
@@ -128,6 +136,9 @@ void CompInfo::read_parameters(int argc,char *argv[],char file_type)
       print_inv_flag = true;
       if (strlen(argv[i]) > 1)
         print_only_ind_clauses = 1;
+      break;
+    case 'j':
+      grl_heur = WITH_JOINS;
       break;  
     case 'm':
       multiplier = atof(argv[i]+1);
@@ -173,7 +184,7 @@ void CompInfo::read_parameters(int argc,char *argv[],char file_type)
     case 'T':
       time_limit = atoi(argv[i]+1);
       assert(time_limit > 0);
-      break;   
+      break;      
     case 'v':
       verbose = atoi(argv[i]+1);
       break;

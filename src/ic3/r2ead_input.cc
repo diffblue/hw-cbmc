@@ -18,12 +18,48 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 
+/*====================================
 
-/*========================================
+       F I N D _ F I L E _ T Y P E
 
-         S T A R T _ N E W _ G A T E
+  ===================================*/
+void find_file_type(char &file_type,char *fname)
+{
 
- =========================================*/
+  int len = strlen(fname);
+  
+  char rev_fname[MAX_NAME];
+  assert(MAX_NAME >= len+1);
+ 
+
+  // reverse file name
+  int j = 0;
+  for (int i=len-1; i >=0; i--) 
+    rev_fname[j++] = fname[i];
+
+  rev_fname[j] = 0;
+
+  if (len < 4) goto ERROR;
+   
+  if (strncmp(rev_fname,"gia.",4) == 0) file_type = 'a';
+  else {
+    if (len == 4) goto ERROR;
+    if (strncmp(rev_fname,"filb.",5) == 0) file_type = 'b';
+    else goto ERROR;
+  }
+
+  return;
+
+ ERROR:
+  printf("wrong file extension %s\n",fname);
+  exit(1);
+} /* end of function find_file_type */
+
+/*=====================================================
+
+          S T A R T _ N E W _ G A T E
+
+ ======================================================*/
 int CompInfo::start_new_gate(Circuit *N,CDNF &Pin_names)
 {
 
@@ -31,15 +67,17 @@ int CompInfo::start_new_gate(Circuit *N,CDNF &Pin_names)
   // process the output name
  
 
-  int pin_num = assign_output_pin_number(N->Pin_list,Pin_names.back(),N->Gate_list,false);
+  int pin_num = assign_output_pin_number(N->Pin_list,Pin_names.back(),
+                              N->Gate_list,false);
 
   N->ngates++; // increment the number of gates 
   int gate_ind = pin_num;
 
   //  process  the  input names
   for (int j=0; j < Pin_names.size()-1;j++) {
-    int pin_num = assign_input_pin_number1(N->Pin_list,Pin_names[j],N->Gate_list);
-    Gate &G =   N->Gate_list[gate_ind];
+    int pin_num = assign_input_pin_number1(N->Pin_list,
+					   Pin_names[j],N->Gate_list);
+    Gate &G =  N->Gate_list[gate_ind];
     G.Fanin_list.push_back(pin_num);   
   }
 
@@ -57,7 +95,7 @@ int CompInfo::start_new_gate(Circuit *N,CDNF &Pin_names)
    }
  }
  
- Gate &G =   N->Gate_list[gate_ind];
+ Gate &G =  N->Gate_list[gate_ind];
  G.gate_type = UNDEFINED;
  G.level_from_inputs = -1; // initialize topological level
  G.level_from_outputs = -1;
@@ -139,8 +177,7 @@ void CompInfo::form_next_symb(CCUBE &Name,int next_lit)
       sprintf(Buff,"ni%d",next_lit-1);
     else  if (Lats.find(next_lit-1) != Lats.end()) 
       sprintf(Buff,"nl%d",next_lit-1);
-    else 
-      sprintf(Buff,"na%d",next_lit-1);
+    else sprintf(Buff,"na%d",next_lit-1);
     conv_to_vect(Name,Buff);
     return;
   }
@@ -187,9 +224,9 @@ void CompInfo::check_conv_tbl(CUBE &Vars,CUBE &Tbl,bool pres_svars)
     int var_ind = Vars[i]-1;
     if (Tbl[var_ind] == -1) {
       if (pres_svars) 
-	printf("no match for present state variable %d\n",var_ind+1);
+          printf("no match for present state variable %d\n",var_ind+1);
       else 
-	printf("no match for next state variable %d\n",var_ind+1);
+        printf("no match for next state variable %d\n",var_ind+1);
       exit(1);
     }
   }

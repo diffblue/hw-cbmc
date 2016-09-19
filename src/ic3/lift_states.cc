@@ -17,14 +17,13 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-
 /*=======================================
 
   L I F T _ G O O D_ S T A T E
 
   ======================================*/
-void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,CUBE &Inps,
-			       CUBE &Nst_cube)
+void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
+			       CUBE &Inps,CUBE &Nst_cube)
 {
 
   // add unit clauses specifying inputs
@@ -50,7 +49,6 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,CUBE &Inps,
     std::cout << "Inps-> " << Inps << std::endl;
     std::cout << "Prs_st-> " << Prs_st << std::endl;
     std::cout << "Mapped_cube-> " << Mapped_cube << std::endl;
-    fprint_srt_dnf(Simp_PrTr,(char *) "simp.cnf");    
     exit(100);
   }
   
@@ -71,6 +69,7 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,CUBE &Inps,
 void CompInfo::lift_bad_state(CUBE &Bst_cube,CUBE &St,CUBE &Inps)
 {
 
+  
   TrivMclause Assmps;
   add_assumps1(Assmps,Inps);
 
@@ -100,6 +99,7 @@ void CompInfo::lift_bad_state(CUBE &Bst_cube,CUBE &St,CUBE &Inps)
   ========================================*/
 void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
 {
+
  
   Minisat::Solver *Mst = Slvr.Mst;
   for (int i=0; i < St.size(); i++) {
@@ -108,7 +108,6 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
       St_cube.push_back(St[i]); 
     } 	
   }	
-
   
 } /* end of function gen_state_cube */
 
@@ -134,32 +133,7 @@ void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
   
 } /* end of function add_cls_excl_st_cube */
 
-/*=============================================
 
-  E X T R _ P R E S  _ I N P S
-
-  This function returns the set of assignments
-  to pres state time frame inputs
-
-  ASSUMPTIONS:
-  1) Sat-solver 'S' just proved formula satisfiable
-  2) Assignment returned by 'S' is actually the
-  negation of a satisfying assignment
-    
-  =============================================*/
-void CompInfo::extr_pres_inps(CUBE &Inps,SatSolver &Slvr)
-{
-
-
-  MboolVec &S = Slvr.Mst->model;
-
-  for (int i=0; i < Inp_vars.size(); i++) {
-    int var_ind = Inp_vars[i]-1;
-    if (S[var_ind] == Mtrue) Inps.push_back(var_ind+1);
-    else Inps.push_back(-(var_ind+1));
-  }
-
-} /* end of function extr_pres_inps */
 
 /*=============================================
 

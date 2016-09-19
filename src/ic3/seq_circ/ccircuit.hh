@@ -60,7 +60,6 @@ public:
   int seed_gate; // if 'seed_gate >= 0', it points to a gate feeding more than one latch
   int spec_buff_ind;  // if 'spec_buff_ind >= 0' it specifies the index of the special buffer index
   bool inp_feeds_latch; // is used when an input feeds more than one latch
-  bool latch_feeds_latch; // is used when a latches feeds more than one latch
 };
 
 typedef std::vector <Gate> GCUBE;

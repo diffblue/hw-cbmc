@@ -16,18 +16,22 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*================================
 
-/*==========================
+      I N C R _ S H O R T
 
-  I N C R _ S H O R T
-
-  =========================*/
-void CompInfo::incr_short(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr)
+ ================================*/
+void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,char st_descr,int rec_depth)
 {
+
   if (verbose > 1) {
     printf("%*c",6,' ');
     printf("incr_short\n");
   }
+
+  // if (ctg_flag)
+  //   if (rec_depth == 0)     printf("incr_short\n");
+  //   else printf("  incr_short\n");
 
   SatSolver &Slvr = Time_frames[curr_tf].Slvr; 
   int impr_count = 0;
@@ -37,65 +41,60 @@ void CompInfo::incr_short(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr)
   CLAUSE Curr = C0;
 
   SCUBE Tried;
+  SCUBE Failed_lits;
+
   int max_tries = 4;
   if (C0.size()  < max_tries) 
     max_tries = C0.size();
   int num_tries = 0;
 
-  
   while (true) {
-  
-    if (num_tries > max_tries)
+    if (num_tries > max_tries) 
+      return;
+    
+    if (Curr.size() <= Tried.size())
       return;
 
-    if (Curr.size() == Tried.size()) return;
+    int lit = pick_lit_to_remove(Curr,Tried,curr_tf);
 
+ // remove literal
    
-    int lit;
-    switch (lit_pick_heur) {
-    case RAND_LIT:
-      lit = find_rand_lit(Curr,Tried);
-      break;
-    case INACT_LIT:
-      lit = find_inact_lit(Curr,Tried,Lit_act0,Lit_act1);
-      break;
-    case INACT_VAR:
-      lit = find_inact_var(Curr,Tried,Lit_act0,Lit_act1);
-      break;
-    case RECENT_LITS:
-      comput_rec_lit_act(curr_tf);
-      lit = find_inact_var(Curr,Tried,Tmp_act0,Tmp_act1);
-      break;
-    case MIXED:
-      if (Time_frames.size() < cut_off_tf) lit = find_rand_lit(Curr,Tried);
-      else lit = find_inact_var(Curr,Tried,Lit_act0,Lit_act1);
-      break;
-    default:
-      printf("lit_pick_heur = %d\n",lit_pick_heur);
-      exit(100);
-    }
-
-    // remove literal
     rem_lit(Curr,lit);
     Tried.insert(lit);
+   
     bool ok = corr_clause(Curr);
     if (!ok) {
       Curr.push_back(lit);
       num_tries++;
+      if (ctg_flag) Failed_lits.insert(lit);
       continue;
     }
-    
+       
+
     CLAUSE C1;
-    ok = lngst_ind_clause(C1,Slvr,Curr,st_descr); 
+    if ((ctg_flag == false) || (curr_tf == 0)) {  
+      if (grl_heur == NO_JOINS)
+	ok = triv_ind_cls_proc(C1,Curr,curr_tf);
+      else {
+	assert(grl_heur == WITH_JOINS);
+	ok = find_ind_subclause_cti(C1,Slvr,Curr,st_descr);
+      }
+    }
+    else 
+      ok =  find_ind_subclause_ctg(C1,curr_tf,Curr,st_descr,
+                 rec_depth,Failed_lits);
+ 
+
     if (!ok) {
       failed_impr++;
+      if (ctg_flag) Failed_lits.insert(lit);
       Curr.push_back(lit);
       num_tries++;
       continue;
     }
 
     succ_impr++;
-   
+ 
     if (++impr_count > max_num_impr) max_num_impr = impr_count;
     C = C1;
     if (C.size() == 1) return;
@@ -110,15 +109,15 @@ void CompInfo::incr_short(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr)
 
 /*============================================
 
-     M O D I F _ L O C _ C L A U S E
+         M O D I F _ L O C _ C L A U S E
 
-  Currently local clause C excludes an initial
-  state. This function expands clause C to 
-  make it satisfy all initial states while 
-  still excluding state St
+   Currently local clause C excludes an initial
+   state. This function expands clause C to 
+   make it satisfy all initial states while 
+   still excluding state St
 
   ASSUMPIONS:
-  1) The set of initial states forms a cube
+    1) The set of initial states forms a cube
 
   ===========================================*/
 void CompInfo::modif_loc_clause(CLAUSE &C,CUBE &St)
@@ -128,7 +127,7 @@ void CompInfo::modif_loc_clause(CLAUSE &C,CUBE &St)
   // find a variable where 'St' has the oposite
   // value of all initial states
 
-  htable_lits.change_marker(); // increment or reset the hash table marker 
+  htable_lits.change_marker();
   htable_lits.started_using();
 
   int marker = htable_lits.marker;
@@ -164,7 +163,7 @@ void CompInfo::modif_loc_clause(CLAUSE &C,CUBE &St)
 
 /*========================================
 
-  F O R M _ L N G S T _ C L A U S E
+        F O R M _ L N G S T _ C L A U S E
 
   =========================================*/
 void form_lngst_clause(CLAUSE &C0,CUBE &St)
@@ -178,14 +177,13 @@ void form_lngst_clause(CLAUSE &C0,CUBE &St)
 
 /*==============================
 
-  F I N D _ R A N D _ L I T
+    F I N D _ R A N D _ L I T
 
   ============================*/
 int CompInfo::find_rand_lit(CLAUSE &Curr,SCUBE &Tried)
 {
 
   while (true) {
-   
     int ind = lrand48() % Curr.size();
     int lit = Curr[ind];
     if (Tried.find(lit) == Tried.end()) 
@@ -196,7 +194,7 @@ int CompInfo::find_rand_lit(CLAUSE &Curr,SCUBE &Tried)
 
 /*=======================
 
-    R E M _ L I T
+       R E M _ L I T
 
   ======================*/
 void CompInfo::rem_lit(CLAUSE &Curr,int lit) {

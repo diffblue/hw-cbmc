@@ -18,7 +18,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 /*=======================================
 
-  P R I N T _ L I F T I N G _ S T A T
+   P R I N T _ L I F T I N G _ S T A T
 
   ======================================*/
 void CompInfo::print_lifting_stat()
@@ -38,7 +38,7 @@ void CompInfo::print_lifting_stat()
 
 /*==============================
 
-  P R I N T _ F L A G S
+     P R I N T _ F L A G S
 
   ============================*/
 void CompInfo::print_flags()
@@ -46,7 +46,7 @@ void CompInfo::print_flags()
 
   printf("rem_subsumed_flag = %d\n",rem_subsumed_flag);
 
-  //  print heuristic for picking a literal
+  //  LIT_PICK_HEUR
   // 
   printf("lit_pick_heur = ");
   switch (lit_pick_heur) {
@@ -59,18 +59,15 @@ void CompInfo::print_flags()
   case INACT_VAR:
     printf("INACT_VAR\n");
     break;
-  case RECENT_LITS:
-    printf("RECENT_LITS\n");
-    break;
-  case MIXED:
-    printf("MIXED\n");
+  case FIXED_ORDER:
+    printf("FIXED_ORDER\n");
     break;
   default:
     assert(false);
   }
 
 
-  //  print activity update mode
+  //  ACT_UPD_MODE
   // 
   printf("act_upd_mode = ");
   switch (act_upd_mode) {
@@ -99,13 +96,24 @@ void CompInfo::print_flags()
  
   print_sort_mode("ind_cls_sort_mode",ind_cls_sort_mode);
 
+  printf("selector = %d\n",selector);
+  printf("ctg_flag = %d\n",ctg_flag);
+
+  // print state of generalization heuristic
+  printf("generalization heuristic = ");
+  if (grl_heur == NO_JOINS) printf("NO_JOINS\n");
+  else {
+    assert(grl_heur == WITH_JOINS);
+    printf("WITH_JOINS\n");
+  }
+
 
 
 } /* end of function print_flags */
 
 /*=============================================
 
-  P R I N T _ S O R T _ M O D E
+       P R I N T _ S O R T _ M O D E
 
   =============================================*/
 void CompInfo::print_sort_mode(const char *mode_name,int sort_mode) 

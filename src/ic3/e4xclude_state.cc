@@ -16,10 +16,40 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*=========================================
+
+    P I C K _ L I T _ T O _ R E M O V E
+
+  ========================================*/
+int CompInfo::pick_lit_to_remove(CLAUSE &Curr,SCUBE &Tried,int curr_tf)
+{
+
+  int lit;
+  switch (lit_pick_heur) {
+  case RAND_LIT:
+    lit = find_rand_lit(Curr,Tried);
+    break;
+  case INACT_LIT:
+    lit = find_inact_lit(Curr,Tried,Lit_act0,Lit_act1);
+    break;
+  case INACT_VAR:
+    lit = find_inact_var(Curr,Tried,Lit_act0,Lit_act1);
+    break;
+  case FIXED_ORDER:
+    lit = fxd_ord_lit(Curr,Tried);
+    break;
+  default:
+    printf("lit_pick_heur = %d\n",lit_pick_heur);
+    exit(100);
+  }
+
+  return(lit);
+
+} /* end of function pick_lit_to_remove */
 
 /*=======================================
 
-  G E N _ A S S U M P _ C L A U S E
+     G E N _ A S S U M P _ C L A U S E
 
   =======================================*/
 void CompInfo::gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps)
@@ -29,8 +59,7 @@ void CompInfo::gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps)
   for (int i=0; i < Assmps.size(); i++) {
     Mlit L = ~Assmps[i];
     if (S->conflict.has(L)) {
-      // skip activation literals (if any)
-      if (Minisat::var(L) >= Slvr.init_num_vars) continue; 
+      if (Minisat::var(L) >= Slvr.init_num_vars) continue; // skip activation literals (if any)
       int lit = mlit_to_lit(S,L);
       C.push_back(lit);
     }
@@ -40,7 +69,7 @@ void CompInfo::gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps)
 } /* end of function gen_assump_clause */
 /*=========================================
 
-  F O R M _ R E S _ C N F 
+     F O R M _ R E S _ C N F 
 
   This function returns a clause implied 
   by the formula of 'Time_frames[tf_ind].Slvr'
@@ -48,8 +77,8 @@ void CompInfo::gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps)
   if optimized in length
 
   ASSUMPTIONS:
-  1) Every state of 'St_cube' falsifies a
-  clause of 'Time_frames[tf_ind].Slvr'
+   1) Every state of 'St_cube' falsifies a
+      clause of 'Time_frames[tf_ind].Slvr'
 
   ========================================*/
 void CompInfo::form_res_cnf(CNF &G,int tf_ind,CUBE &St_cube)
@@ -69,7 +98,7 @@ void CompInfo::form_res_cnf(CNF &G,int tf_ind,CUBE &St_cube)
 
 /*=============================================
 
-  C O N T _ I N I T _ S T A T E S
+      C O N T _ I N I T _ S T A T E S
 
   =============================================*/
 bool CompInfo::cont_init_states(CUBE &St_cube) {
@@ -82,7 +111,7 @@ bool CompInfo::cont_init_states(CUBE &St_cube) {
 
 /*====================================================
 
-  O B L I G _ I S _ A C T I V E
+        O B L I G _ I S _ A C T I V E
 
   =====================================================*/
 bool CompInfo::oblig_is_active(int tf_ind,CUBE &St_cube)
@@ -103,11 +132,11 @@ bool CompInfo::oblig_is_active(int tf_ind,CUBE &St_cube)
 
 /*====================================
 
-  A D D _ N E W _ E L E M
+      A D D _ N E W _ E L E M
 
   =====================================*/
-void CompInfo::add_new_elem(CUBE &St_cube,CUBE &Inp_assgn,int tf_ind,int dist,
-			    int succ_ind,char descr)
+void CompInfo::add_new_elem(CUBE &St_cube,CUBE &Inp_assgn,
+	      int tf_ind,int dist,int succ_ind,char descr)
 {
 
   OblTableElem Dummy;
@@ -119,6 +148,8 @@ void CompInfo::add_new_elem(CUBE &St_cube,CUBE &Inp_assgn,int tf_ind,int dist,
   El.dist = dist;
   El.succ_ind = succ_ind;
   El.st_descr = descr;
+ 
+
   if (descr == NEW_STATE) new_state_cnt++;
   else if (descr == OLD_STATE)
     old_state_cnt++;
@@ -126,7 +157,7 @@ void CompInfo::add_new_elem(CUBE &St_cube,CUBE &Inp_assgn,int tf_ind,int dist,
     assert(descr == ROOT_STATE);
     root_state_cnt++;
   }
-
+  
   PqElem El1;
   El1.tf_ind = tf_ind;
   El1.tbl_ind = Obl_table.size()-1;

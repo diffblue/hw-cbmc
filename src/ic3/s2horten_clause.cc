@@ -15,16 +15,16 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-
-
 /*==================================
 
-  S H O R T E N _ C L A U S E
+     S H O R T E N _ C L A U S E
 
   =================================*/
-void CompInfo::shorten_clause(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr)
+void CompInfo::shorten_clause(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr,
+                              int rec_depth)
 {
 
+  assert(curr_tf < Time_frames.size());
   CLAUSE B0 = C0;
   
   while (true) {
@@ -36,15 +36,16 @@ void CompInfo::shorten_clause(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr)
     break;
   }
 
-  incr_short(C,curr_tf,B0,st_descr);
-
+ 
+  incr_short(C,B0,curr_tf,st_descr,rec_depth);
+ 
 } /* end of function shorten_clause */
 
-/*======================================
+/*=========================================
 
-  A D D _ M I S S I N G _ L I T S
+       A D D _ M I S S I N G _ L I T S
 
-  =====================================*/
+  ========================================*/
 int CompInfo::add_missing_lits(CLAUSE &C,CLAUSE &B)
 {
 
@@ -54,21 +55,22 @@ int CompInfo::add_missing_lits(CLAUSE &C,CLAUSE &B)
   int count = 0;
   for (int i=0; i < B.size(); i++) 
     if (S.find(B[i]) == S.end()) {
-      C.push_back(B[i]);
-      count++;
-    }
+	C.push_back(B[i]);
+	count++;
+      }
 
   return(count);    
 } /* end of function add_missing_lits */
 
-/*===============================
+/*===========================================
 
-  F I N D _ F I X E D _ P N T
+        F I N D _ F I X E D _ P N T
 
-  ==============================*/
+  ============================================*/
 void CompInfo::find_fixed_pnt(CLAUSE &C,CLAUSE &C0,SatSolver &Slvr,
-                              char st_descr)
+                             char st_descr)
 {
+
   while (true) {
     // add state related clauses
     Mlit act_lit;
@@ -80,8 +82,9 @@ void CompInfo::find_fixed_pnt(CLAUSE &C,CLAUSE &C0,SatSolver &Slvr,
     else add_negated_assumps2(Assmps,C0,true);
 
     // run a SAT-check
-    
+         
     bool sat_form = check_sat2(Slvr,Assmps);
+  
     assert(sat_form == false);
     CLAUSE B;
     gen_assump_clause(B,Slvr,Assmps);
@@ -93,13 +96,14 @@ void CompInfo::find_fixed_pnt(CLAUSE &C,CLAUSE &C0,SatSolver &Slvr,
   }
 
 
+
 } /* end of function find_fixed_pnt */
 
-/*=========================
+/*=============================
 
-    R A N D _ I N I T
+       R A N D _ I N I T
 
-  =========================*/
+  ============================*/
 void CompInfo::rand_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried_lits)
 {
    
@@ -114,9 +118,9 @@ void CompInfo::rand_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried_lits)
 
 } /* end of function rand_init */
 
-/*=====================================
+/*======================================
 
-  F I N D _ A V A I L _ L I T S
+     F I N D _ A V A I L _ L I T S
 
   ====================================*/
 void CompInfo::find_avail_lits(CUBE &Avail_lits,CLAUSE &C)
@@ -137,20 +141,23 @@ void CompInfo::find_avail_lits(CUBE &Avail_lits,CLAUSE &C)
 
 /*=====================================
 
-  C O M P O S _ S H O R T
+        C O M P O S _ S H O R T
 
   ASSUMPTION: 
-  1) Initial states are specified
-  by a CNF consisting of unit 
-  clauses
+   1) Initial states are specified
+      by a CNF consisting of unit 
+      clauses
 
   ==================================*/
 void CompInfo::compos_short(CLAUSE &C,CLAUSE &C0,int curr_tf,char st_descr)
 {
 
   
+  assert(curr_tf < Time_frames.size());
+  assert(curr_tf >= 0);
   int num_tries = 0;
   C = C0;
+
 
   int max_num_tries = 3;
 
@@ -174,22 +181,23 @@ void CompInfo::compos_short(CLAUSE &C,CLAUSE &C0,int curr_tf,char st_descr)
     case INACT_VAR:
       act_var_init(B,Avail_lits,Tried_lits,Lit_act0,Lit_act1);
       break;
-    case RECENT_LITS:
-      comput_rec_lit_act(curr_tf);
-      act_var_init(B,Avail_lits,Tried_lits,Tmp_act0,Tmp_act1);
-      break;
-    case MIXED:
-      if (Time_frames.size() < cut_off_tf) rand_init(B,Avail_lits,Tried_lits);
-      else act_var_init(B,Avail_lits,Tried_lits,Lit_act0,Lit_act1);
+    case FIXED_ORDER:
+      fxd_ord_init(B,Avail_lits,Tried_lits);
       break;
     default:
       assert(false);
     }
 
     find_fixed_pnt(B,C0,Slvr,st_descr);
+   
     if (B.size() < C.size()) C = B;
     if (C.size() < 10) break;
     num_tries++;
   }
 
+
 }/* end of function compos_short */
+
+
+
+
