@@ -14,11 +14,9 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
-
-
 /*======================================
 
-  A D D _ T F 0 _ C L A U S E S
+      A D D _ T F 0 _ C L A U S E S
 
   =======================================*/
 void CompInfo::add_tf0_clauses(SatSolver &Slvr)
@@ -32,31 +30,37 @@ void CompInfo::add_tf0_clauses(SatSolver &Slvr)
 
   
   // freeze variables
-  for (int i=0; i < max_num_vars0; i++) 
-    if (Var_type[i] != INTERN)
-      Sslvr->setFrozen(i,true);
+  for (int i=0; i < max_num_vars0; i++) {
+    if (Var_info[i].type == INTERN) 
+      if (Var_info[i].value == 2) continue;
+    
+    Sslvr->setFrozen(i,true);
+  }
 
   CNF Ext_clauses;
 
-  load_clauses(Ext_clauses,Sslvr,Tr);
+  load_clauses1(Ext_clauses,Sslvr,Tr);
   Sslvr->eliminate(true);
 
   accept_new_clauses(Slvr,Ist);
   accept_simplified_form(Slvr,Sslvr);
   accept_new_clauses(Slvr,Ext_clauses);
-  delete Sslvr;  // delete this instance of SimpSolver
+  delete Sslvr;  
 
 } /* end of function add_tf0_clauses */
 
 /*=============================
 
-  A S S G N _ V A R _ T Y P E
+   A S S I G N _ V A R _ T Y P E
 
   ==============================*/
-void CompInfo::assgn_var_type()
+void CompInfo::assign_var_type()
 {
 
-  Var_type.assign(max_num_vars,INTERN);
+  VarInfo el;
+  el.type = INTERN;
+  el.value = 2;
+  Var_info.assign(max_num_vars,el);
 
   SCUBE Pres_svars_set;
   SCUBE Next_svars_set;
@@ -66,20 +70,20 @@ void CompInfo::assgn_var_type()
   array_to_set(Next_svars_set,Next_svars);
   array_to_set(Inp_vars_set,Inp_vars);
 
-  for (int i=0; i < Var_type.size(); i++) {
+  for (int i=0; i < Var_info.size(); i++) {
 
     if (Pres_svars_set.find(i+1) != Pres_svars_set.end()) {
-      Var_type[i] = PRES_ST;
+      Var_info[i].type = PRES_ST;
       continue;
     }
 
     if (Next_svars_set.find(i+1) != Next_svars_set.end()) {
-      Var_type[i] = NEXT_ST;
+      Var_info[i].type = NEXT_ST;
       continue;
     }
 
     if (Inp_vars_set.find(i+1) != Inp_vars_set.end()) {
-      Var_type[i] = INP;
+      Var_info[i].type = INP;
       continue;
     }
 
@@ -95,7 +99,7 @@ void CompInfo::assgn_var_type()
 void CompInfo::init_time_frame_solver(int tf_ind)
 {
 
-  
+ 
   SatSolver &Slvr = Time_frames[tf_ind].Slvr;
   char Name[MAX_NAME];
   sprintf(Name,"Tf_sat%d",tf_ind);
@@ -134,8 +138,14 @@ void CompInfo::init_lgs_sat_solver()
   std::string Name = "Lgs_sat";
   init_sat_solver(Lgs_sat,max_num_vars0,Name);
   assert(Simp_PrTr.size() > 0);
-  accept_new_clauses(Lgs_sat,Simp_PrTr);
+
+  if (Constr_nilits.size() == 0) {
+    accept_new_clauses(Lgs_sat,Simp_PrTr);
+    return;}
+
   
+  form_spec_simp_pr_tr(Lgs_sat);
+
 
 } /* end of function init_lgs_sat_solver */
 
@@ -149,18 +159,25 @@ void CompInfo::init_bst_sat_solver()
   std::string Name = "Bst_sat";
   init_sat_solver(Bst_sat,max_num_vars,Name);
 
-  // accept property
+  // accept property and transition relation
+
   if (use_short_prop)  accept_new_clauses(Bst_sat,Short_prop);
   else accept_new_clauses(Bst_sat,Prop); 
 
-  accept_new_clauses(Bst_sat,Tr); // accept transition relation
-//accept negation of property (bad states)                                         
+  accept_new_clauses(Bst_sat,Tr); 
+ 
+// accept negation of property (bad states)
   accept_new_clauses(Bst_sat,Bad_states); 
-
+ 
   CUBE &Clauses = Time_frames[tf_lind].Clauses;
   for (int i=0; i < Clauses.size();i++) {
     int clause_ind = Clauses[i];
     accept_new_clause(Bst_sat,F[clause_ind]);
   }
 } /* end of function init_bst_sat_solver */
+
+
+
+
+
 

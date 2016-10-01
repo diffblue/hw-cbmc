@@ -21,45 +21,82 @@ public:
 
   
   Circuit *N; // circuit whose safety proprety is to be checked
-  CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable 
-                    //assigned to the output of gate 'gate_ind'
+  char file_format; // specifies whether the circuit is specified in the BLIF
+                    //  or AIGER format
+  int prop_ind; // specifeis the index of the property to be checked 
+                //(used only in the AIGER format)
+  CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to the output 
+                    //of gate 'gate_ind'
  
   int num_circ_vars; // number of variables assigned to gates of N
 
   CUBE Pres_svars; // array specifying the current state variables
   CUBE Next_svars; // array specifying the next state variables
-  DNF Coi_svars; // Coi_svars[i] specifies the variables that 
-                 // are in the cone of influence in the time frame 
-                 //that is 'i' transitions away from a bad state
+  DNF Coi_svars; // Coi_svars[i] spec. the vars that are in the cone influence
+                // in the time frame that is 'i' trans. away from a bad state
   
   CUBE Inp_vars; // array specifying the list of input variables
+
+  // constr related
+  SCUBE Aig_clits; // Stores the literals listed in 'aiger->constraints'
+
+// Constr_gates specify literals listed in 'aiger->constraints' in terms of 
+// gates of circuit N. Constr_gates[gate_ind] == 0 (respectively 1) corresponds
+// to the positive (respectively negative) literal of the variable 'gate_ind+1'
+
+  ConstrGates Constr_gates; 
+
+// specify input literals listed in 'aiger->constraints' in terms of vars 
+// of circuit N i.e. combinational input and present state variables 
+  CUBE Constr_ilits; 
+
+// 'Constr_nilits' specify non-input lit.  listed in 'aiger->constraints' 
+// in terms of N i.e. combinational internal and next state variables. 
+// For ever present state variable listed in 'Constr_ilits', the corresponding 
+// next state variable is added to 'Constr_nilits'
+
+  SCUBE Constr_nilits; 
+  bool vac_true; // set to 'true', if the init. states do not sat. the constr.
+                 // in this case, the property is vacuously true
+  
+  SCUBE Constr_ps_lits;//spec. constr. pres. state lits (used when lift. a state)
+  SCUBE Constr_inp_lits; // specifies constrained input lits
+
+  bool constr_flag; // if 'constr_flag == true', then literals listed in 
+                    //'Constr_lits' are used to constrain the search space
+  
+  //
 
   CNF Prop; // property (expressed in terms of present state variables)
   int num_prop_vars; // number of variables in 'Prop'
 
-  CNF Short_prop; //property without clauses shared with the transition relation
+  CNF Short_prop; // property without clauses shared with the transition relation
 
   CNF Simp_PrTr; //  Prop/Short_prop plus Tr after simplfication
   int max_num_vars0; // max(max(num_ist_vars,num_bst_vars),num_tr_var)
   int max_num_vars; // max_num_vars0 plus variables that take into account 
                     // that property is specified in terms of present and
-                   // next state variables
+                    // next state variables
+
   int max_pres_svar; // specifies the largest present state variable
 
   CUBE Next_to_pres; // Next_pres[i] equals  the  index of the present state
-                    // variable corresponding to next state variable 'i'
-                   // if 'i' is not a state variable Next_pres[i] = -1
+  // variable corresponding to next state variable 'i'
+  // if 'i' is not a state variable Next_pres[i] = -1
   CUBE Pres_to_next; // Pres_next[i] equals  the  index of the next state 
                      // variable corresponding to present state variable 'i'
-                    // if 'i' is not a state variable Next_pres[i] = -1
+                     // if 'i' is not a state variable Next_pres[i] = -1
+
+  
 
   // Aiger related
 
   SCUBE Inps; // Stores literals specifying inputs
   SCUBE Lats; // Stores literals specifying latches
   SCUBE Invs; // Stores literals specifying additional invertors
-  int const_flags; // is used to record the info on whether constant 0 or 1 
-                   // have been used
+  int const_flags; // is used to record the info on whether constant 0 or 1 have been
+                   // used
+
 
   //--------------- basic data
 
@@ -70,6 +107,7 @@ public:
 
   DNF Flits1; // the same as 'Flits0' but for positive literals
 
+
   FltCube Lit_act0; // Lit_act0[i] describes the presence of the negative 
                     //literal of variable  'i+1' in clauses of F
   FltCube Lit_act1; // Lit_act1[i] describes the presence of the positive 
@@ -77,6 +115,7 @@ public:
 
   FltCube Tmp_act0;
   FltCube Tmp_act1;
+
 
   std::vector <TimeFrame> Time_frames; // Time_frames[i] specifies data 
                                        // members of i-th time frame
@@ -87,8 +126,8 @@ public:
 
   int tf_lind; // (lind stands for Largest IND) specifies the value of the 
                // latest time frame for which an approximation is built
-  std::vector <VarType> Var_type; // Var_type[i] specifies the type of 
-                                 //variable 'i+1'
+
+  std::vector <VarInfo> Var_info; // Var_type[i] gives information about variable 'i+1'
 
   PrQueue Pr_queue; // priority queue of proof obligations
   OblTable Obl_table; // table of proof obligations
@@ -109,7 +148,7 @@ public:
   int max_num_elems; // used in the PART_SORT sorting mode
   
 
-  // --------------- Parameters controlling algorithm's behavior
+ // --------------- Parameters controlling algorithm's behavior
  
   bool print_inv_flag; // if true, the invariant found by the program 
                        // (if any) is printed out
@@ -157,8 +196,13 @@ public:
   
 
  
+ 
   
  
+
+  // ------------- Debugging
+  CUBE Glob_lits; 
+  
   //
   // public methods
   //
@@ -167,11 +211,12 @@ public:
   void read_input(char *fname);
   void blif_format_model(char *fname); 
   void aig_format_model(char *fname);
-  void form_circ_from_aig(aiger &Aig_descr,int prop_ind);
+  void form_circ_from_aig(aiger &Aig_descr);
   void init_parameters();
   void read_parameters(int argc,char *argv[]);
   bool check_init_states();
-  void assgn_var_type();
+  void assign_var_type();
+  void assign_value();
   void print_invariant(bool only_new_clauses);
   void print_fclauses();
   bool ver_trans_inv();
@@ -180,7 +225,7 @@ public:
   void fprint_cex2();
   bool ver_cex();
   void print_stat();
-
+  void find_file_format(char *fname);
   //  
   // Sat-solver related
   //
@@ -188,7 +233,6 @@ public:
   void delete_solver(SatSolver &Slvr);
   void accept_new_clause(SatSolver &Slvr,CLAUSE &C);
   void accept_new_clauses(SatSolver &Slvr,CNF &H);
-
 
 protected:
 
@@ -229,6 +273,7 @@ protected:
   int num_restore_cases; //                             or RESTORE
   int num_replaced_cases; //                             or REPLACED
 
+
  
 
 
@@ -236,14 +281,14 @@ protected:
 
 
   SatSolver Gen_sat;  // A sat-solver used for miscellaneous SAT jobs
-  SatSolver Bst_sat;  // A sat-solver used for finding a bad state rechable
-                      //  from an F_j-state
+  SatSolver Bst_sat;  // A sat-solver used for finding a bad state rechable 
+                      // from an F_j-state
   SatSolver Lbs_sat; // A sat-solver used for lifting a bad state
   SatSolver Lgs_sat; // A sat-solver used for lifting a good state
   SatSolver Dbg_sat; // A sat-solver used for debugging
 
-  NameTable Name_table; // Table with the names of Sat-solvers for which 
-                        //'init_sat_solver' were invoked
+  NameTable Name_table; // Table with the names of Sat-solvers for
+                        //  which 'init_sat_solver' were invoked
 
  // ------------- init data
 
@@ -255,7 +300,7 @@ protected:
 
  // protected methods
 
- #include "i4nline.hh"
+ #include "i5nline.hh"
 
  #include "m2ethods.hh"
 
@@ -284,8 +329,7 @@ void extract_latch_name(CCUBE &Lname,CCUBE &Buff);
 void print_names_of_latches(NamesOfLatches &Latches);
 void form_latch_name(CCUBE &Latch_name,aiger_symbol &S);
 bool ident_arrays(CUBE &A,CUBE &B);
-void find_file_type(char &file_type,char *fname);
-void set_diff(SCUBE &Res,SCUBE &A,SCUBE &B);
+
 
 extern long long gcount;
 extern hsh_tbl htable_lits;
@@ -322,6 +366,7 @@ const char NEW_STATE = 1;
 const char ROOT_STATE = 2;
 const char PUSH_STATE = 3;
 const char CTG_STATE = 4;
+const char UNKNOWN_STATE = 5;
 
 // values of 'grl_heur'
 const int NO_JOINS = 0;

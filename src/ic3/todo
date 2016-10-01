@@ -1,7 +1,6 @@
 ==============
 Minor things
 ==============
-
 *) Add a file describing options
 
 *) Polish 'makefile'
@@ -13,9 +12,6 @@ Changes of the current implementation
 *) Implement actual removal of subsumed clauses (currently they are
    just marked in ignored by the algorithm)
 
-*) Add code exploiting invariant constraints (that is allowed by the
-   new AIG format)
-
 ====================================
 Improvements of the basic algorithm
 ====================================
@@ -24,6 +20,11 @@ Improvements of the basic algorithm
 
 *) Fix the hole in IC3 that hurts
    its convergence rate 
+
+*) Implement proving a property
+   incrementally (by partitioning
+   the target property)
+
 
 
 

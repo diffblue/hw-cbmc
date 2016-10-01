@@ -30,6 +30,8 @@ void  CompInfo::gen_cnfs(char *fname,bool print_flag)
   int shift = total_ngates - N->nlatches; // we subtract latches
  
   assign_var_indexes();
+
+  
  
   char fname1[MAX_NAME];
 
@@ -40,12 +42,10 @@ void  CompInfo::gen_cnfs(char *fname,bool print_flag)
     print_var_indexes(fname1);
   }
 
-  int out_var_ind;
-
   gen_initial_state_cubes();
 
   gen_trans_rel(0);
-
+  
   gen_out_fun(Prop,0,false);
   gen_out_fun(Short_prop,0,true);
  

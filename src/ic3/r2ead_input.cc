@@ -17,13 +17,12 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
-
 /*====================================
 
-       F I N D _ F I L E _ T Y P E
+   F I N D _ F I L E _ F O R M A T
 
   ===================================*/
-void find_file_type(char &file_type,char *fname)
+void CompInfo::find_file_format(char *fname)
 {
 
   int len = strlen(fname);
@@ -39,12 +38,13 @@ void find_file_type(char &file_type,char *fname)
 
   rev_fname[j] = 0;
 
+
   if (len < 4) goto ERROR;
    
-  if (strncmp(rev_fname,"gia.",4) == 0) file_type = 'a';
+  if (strncmp(rev_fname,"gia.",4) == 0) file_format = 'a';
   else {
     if (len == 4) goto ERROR;
-    if (strncmp(rev_fname,"filb.",5) == 0) file_type = 'b';
+    if (strncmp(rev_fname,"filb.",5) == 0) file_format = 'b';
     else goto ERROR;
   }
 
@@ -53,33 +53,35 @@ void find_file_type(char &file_type,char *fname)
  ERROR:
   printf("wrong file extension %s\n",fname);
   exit(1);
-} /* end of function find_file_type */
+} /* end of function find_file_format */
 
 /*=====================================================
 
           S T A R T _ N E W _ G A T E
 
  ======================================================*/
-int CompInfo::start_new_gate(Circuit *N,CDNF &Pin_names)
+void CompInfo::start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names)
 {
 
  
   // process the output name
  
 
-  int pin_num = assign_output_pin_number(N->Pin_list,Pin_names.back(),
-                              N->Gate_list,false);
+  int gate_ind = assign_output_pin_number(N->Pin_list,Pin_names.back(),
+                                          N->Gate_list,false);
 
   N->ngates++; // increment the number of gates 
-  int gate_ind = pin_num;
 
   //  process  the  input names
   for (int j=0; j < Pin_names.size()-1;j++) {
-    int pin_num = assign_input_pin_number1(N->Pin_list,
-					   Pin_names[j],N->Gate_list);
+    int pin_num = assign_input_pin_number1(N->Pin_list,Pin_names[j],
+                                           N->Gate_list);
     Gate &G =  N->Gate_list[gate_ind];
-    G.Fanin_list.push_back(pin_num);   
+    G.Fanin_list.push_back(pin_num); 
+    Gate_inds.push_back(pin_num);  
   }
+
+  Gate_inds.push_back(gate_ind);
 
  /*-------------------------------------
        Form a gate node
@@ -106,7 +108,6 @@ int CompInfo::start_new_gate(Circuit *N,CDNF &Pin_names)
  G.flags.feeds_latch = 0;
  G.Gate_name =  Pin_names.back(); 
 
- return(gate_ind);
 } /* end of function start_new_gate */
 
 
@@ -224,9 +225,9 @@ void CompInfo::check_conv_tbl(CUBE &Vars,CUBE &Tbl,bool pres_svars)
     int var_ind = Vars[i]-1;
     if (Tbl[var_ind] == -1) {
       if (pres_svars) 
-          printf("no match for present state variable %d\n",var_ind+1);
+	printf("no match for present state variable %d\n",var_ind+1);
       else 
-        printf("no match for next state variable %d\n",var_ind+1);
+	printf("no match for next state variable %d\n",var_ind+1);
       exit(1);
     }
   }

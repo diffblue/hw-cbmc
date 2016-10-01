@@ -47,7 +47,7 @@ bool CompInfo::ext_clause(CLAUSE &C)
 {
 
   for (int i=0; i < C.size(); i++) 
-    if (Var_type[abs(C[i])-1] == INTERN) 
+    if (Var_info[abs(C[i])-1].type == INTERN) 
       return(false); // clause contains an internal variable
 
   return(true);
@@ -74,11 +74,11 @@ void CompInfo::accept_simplified_form(SatSolver &Slvr,
   }
 
 } /* end of function accept_simplified_form */
-/*=======================================================
+/*==================================================
 
-  C O P Y _  S I M P L I F I E D _ F O R M 
+     C O P Y _  S I M P L I F I E D _ F O R M 
 
-  ======================================================*/
+  ================================================*/
 void CompInfo::copy_simplified_form(Minisat::SimpSolver *Sslvr,
                                    CNF &Ext_clauses,CNF &Uclauses)
 {
@@ -108,7 +108,7 @@ void CompInfo::copy_simplified_form(Minisat::SimpSolver *Sslvr,
 
 /*======================================
 
-  A D D _ T F 1 _ C L A U S E S
+     A D D _ T F 1 _ C L A U S E S
 
   =======================================*/
 void CompInfo::add_tf1_clauses(SatSolver &Slvr)
@@ -121,19 +121,21 @@ void CompInfo::add_tf1_clauses(SatSolver &Slvr)
   }
 
   // freeze variables
-  for (int i=0; i < max_num_vars0; i++) 
-    if (Var_type[i] != INTERN)
-      Sslvr->setFrozen(i,true);
+  for (int i=0; i < max_num_vars0; i++) {
+    if (Var_info[i].type == INTERN) 
+      if (Var_info[i].value == 2) continue;
+    
+    Sslvr->setFrozen(i,true);
+  }
+
 
   CNF Ext_clauses;
 
-  if (use_short_prop)  load_clauses(Ext_clauses,Sslvr,Short_prop);
-  else load_clauses(Ext_clauses,Sslvr,Short_prop);
+  if (use_short_prop)  load_clauses1(Ext_clauses,Sslvr,Short_prop);
+  else load_clauses1(Ext_clauses,Sslvr,Short_prop);
 
-  load_clauses(Ext_clauses,Sslvr,Tr);
+  load_clauses1(Ext_clauses,Sslvr,Tr);
 
-  // printf("Ext_clauses.size() = %d\n",Ext_clauses.size());
-  // print_dnf(Ext_clauses);
   Sslvr->eliminate(true);
 
   CNF Uclauses;
@@ -142,16 +144,16 @@ void CompInfo::add_tf1_clauses(SatSolver &Slvr)
   accept_new_clauses(Slvr,Ext_clauses);
   accept_new_clauses(Slvr,Uclauses);
   copy_simplified_form(Sslvr,Ext_clauses,Uclauses);
-  delete Sslvr;  // delete this instance of SimpSolver
+  delete Sslvr;  
 } /* end of function add_tf1_clauses */
 
 
 /*==============================
 
-    L O A D _ C L A U S E S 
+    L O A D _ C L A U S E S 1
 
   =============================*/
-void CompInfo::load_clauses(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A)
+void CompInfo::load_clauses1(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A)
 {
   for (int i=0; i < A.size(); i++) {
     CLAUSE &C = A[i];
@@ -164,7 +166,7 @@ void CompInfo::load_clauses(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A)
     conv_to_mclause(M,C);
     Sslvr->addClause(M);
   }
-} /* end of function load_clauses */
+} /* end of function load_clauses1 */
 
 
 /*=================================

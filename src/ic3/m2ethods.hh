@@ -22,7 +22,7 @@ bool gen_ind_clause(CLAUSE &C,CUBE &St,int tf_ind,char st_descr);
 bool find_ind_subclause_cti(CLAUSE &C,SatSolver &Slvr,CLAUSE &C0,char st_descr);
 void incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,char st_descr,int rec_depth);
 void shorten_clause(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr,
-                    int rec_depth);
+                   int rec_depth);
 void add_new_clauses(SatSolver &Slvr,CUBE &Clauses);
 void adjust_clause1(CLAUSE &C,CUBE &St);
 bool corr_clause(CLAUSE &C);
@@ -39,6 +39,10 @@ bool check_transition(CUBE &St0,CUBE &St1);
 bool check_bad_state(CUBE &St);
 bool find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Erl_st,CUBE &Prev_inps,
                          CUBE &St_cube);
+void check_conds();
+void check_non_impl(CNF &Fn,CNF &H,int tf_ind);
+void check_trans_cond(CNF &Fc,CNF &Fn);
+void form_bnd_form(CNF &H,int i);
 void find_wrong_transition(CUBE &St0,CUBE &St1,SatSolver &Slvr);
 void add_neg_prop(SatSolver &Slvr);
 void modif_loc_clause(CLAUSE &C,CUBE &St);
@@ -100,10 +104,10 @@ int find_inact_lit(CLAUSE &Curr,SCUBE &Tried,FltCube &Act0,FltCube &Act1);
 int find_inact_var(CLAUSE &Curr,SCUBE &Tried,FltCube &Act0,FltCube &Act1);
 void upd_act_lit_cnts(CLAUSE &C,int last_ind);
 void scale_factor_down(float min_act);
-void act_lit_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried_lits,FltCube &Act0,
-                  FltCube &Act1);
-void act_var_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried_lits,FltCube &Act0,
-                  FltCube &Act1);
+void act_lit_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried_lits,
+                  FltCube &Act0,FltCube &Act1);
+void act_var_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried_lits,
+                  FltCube &Act0,FltCube &Act1);
 void sort_in_activity(CLAUSE &C1,CLAUSE &C,int sort_mode,bool reverse);
 //
 //
@@ -112,7 +116,7 @@ void add_tf1_clauses(SatSolver &Slvr);
 void add_tf2_clauses(SatSolver &Slvr);
 bool ext_clause(CLAUSE &C);
 void conv_to_mclause(TrivMclause &A, CLAUSE &C);
-void load_clauses(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A);
+void load_clauses1(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A);
 void accept_simplified_form(SatSolver &Slvr,Minisat::SimpSolver *Sslvr);
 void copy_simplified_form(Minisat::SimpSolver *Sslvr,CNF &Ext_clauses,
                           CNF &Uclauses);
@@ -147,14 +151,14 @@ void form_consts(Circuit *N);
 void add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S);
 void form_next_symb(CCUBE &Name,int lit);
 void form_inv_names(CDNF &Pin_names,int lit);
-int start_new_gate(Circuit *N,CDNF &Pin_names);
+void start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names);
 void form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,aiger_and &Aig_gate);
 void add_gate_inp_name(CCUBE &Name,int lit,CUBE &Pol);
 void add_gate_out_name(CCUBE &Name,int lit,CUBE &Pol);
 void form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol);
 //
 bool find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr,
-                           int rec_depth,SCUBE &Failed_lits);
+                            int rec_depth,SCUBE &Failed_lits);
 bool exclude_ctg(CUBE &St,int curr_tf,int rec_depth);
 bool triv_ind_cls(int tf_ind,CUBE &St);
 int latest_succ_tf_ind(int tf_ind,CLAUSE &C);
@@ -171,6 +175,18 @@ void extr_cut_assgns1(CUBE &Assgns,CUBE &Vars,SatSolver &Slvr);
 void extr_cut_assgns2(CUBE &Assgns,CUBE &Lits,SatSolver &Slv);
 void fxd_ord_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried);
 int fxd_ord_lit(CUBE &Curr,SCUBE &Tried);
+void store_constraints(aiger &A);
+int upd_gate_constr_tbl(int lit,int gate_ind);
+void upd_gate_constrs(aiger_and &Aig_gate,CUBE &Gate_inds);
+bool check_constr_lits(int &fnd_lit,int lit);
+void form_constr_lits();
+void add_constrs();
+void rem_constr_lits(CUBE &Lits1,CUBE &Lits0,SCUBE &Constr_lits);
+void add_constr_lits(CUBE &St_cube);
+bool init_st_satisfy_constrs();
+void form_spec_simp_pr_tr(SatSolver &Slvr);
+void load_clauses2(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A,
+                   int num_clauses);
 void print_bnd_sets1();
 void print_clause_state(int clause_ind);
 //

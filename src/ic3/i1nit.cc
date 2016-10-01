@@ -46,6 +46,7 @@ void CompInfo::ci_init()
   num_add2_cases = 0;
   num_restore_cases = 0;
   num_replaced_cases = 0;
+ 
 
   for (int i=0; i < max_pres_svar; i++) {
     CUBE Dummy;
@@ -64,7 +65,8 @@ void CompInfo::ci_init()
   root_state_cnt = 0;
   tot_ctg_cnt = 0;
   succ_ctg_cnt = 0;
-  
+  vac_true = false;
+ 
 } /* end of function ci_init */
 
 /*=============================================
@@ -138,6 +140,7 @@ void CompInfo::form_bad_states()
 void CompInfo::form_bad_states0(CNF &Bstates)
 {
 
+
   htable_lits.change_marker(); 
   htable_lits.started_using();
 
@@ -207,10 +210,11 @@ void CompInfo::form_cex()
 
   for (int i=0; i < Inp_trace.size(); i++) {
     MvecLits Assmps;
-    add_assumps1(Assmps,Cex[i]);
+    add_assumps1(Assmps,Cex[i]);  
     add_assumps1(Assmps,Inp_trace[i]);
     bool sat_form = check_sat2(Gen_sat,Assmps);
     assert(sat_form);
+   
     CUBE Nst,St;
     extr_cut_assgns1(Nst,Next_svars,Gen_sat);
     conv_to_pres_state(St,Nst);
@@ -239,11 +243,22 @@ void CompInfo::form_init_st(CUBE &St_cube)
       St_cube.push_back(U[0]);
   }
 
-  if (St_cube.size() != Ist.size()) {
-    p();
-    printf("St_cube.size() = %d, Ist_.size() = %d\n",
-        (int) St_cube.size(), (int) Ist.size());
-    std::cout << "St_cube-> " << St_cube << std::endl;
-    exit(1);
+  int diff = Pres_svars.size() - St_cube.size();
+  assert(diff >= 0);
+
+  if (diff > 0) {
+    SCUBE S1;
+    array_to_set(S1,St_cube);
+    for (int i=0; i < Pres_svars.size(); i++) {
+      int lit = Pres_svars[i];
+      if (S1.find(lit) != S1.end()) continue;
+      if (S1.find(-lit) != S1.end()) continue;
+      St_cube.push_back(lit);
+    }
+   
   }
+
+  assert(Pres_svars.size() == St_cube.size());
+
+
 } /* end of function form_init_st */

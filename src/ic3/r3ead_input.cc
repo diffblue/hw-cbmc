@@ -129,11 +129,11 @@ void CompInfo::form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,
 
 } /* end of function from_gate_pin_names */
 
-/*=================================
+/*===============================
 
-  F O R M _ G A T E S
+      F O R M _ G A T E S
 
-  ================================*/
+  =============================*/
 void CompInfo::form_gates(Circuit *N,aiger &Aig)
 {
 
@@ -142,16 +142,18 @@ void CompInfo::form_gates(Circuit *N,aiger &Aig)
     CDNF Pin_names;
     CUBE Pol;
     form_gate_pin_names(Pin_names,Pol,Aig_gate);
-    int gate_ind = start_new_gate(N,Pin_names);
-    form_gate_fun(N,gate_ind,Pol);
-    finish_gate(N,gate_ind);
+    CUBE Gate_inds;
+    start_new_gate(Gate_inds,N,Pin_names);
+    upd_gate_constrs(Aig_gate,Gate_inds);
+    form_gate_fun(N,Gate_inds.back(),Pol);
+    finish_gate(N,Gate_inds.back());
   }
 
 } /* end of function form_gates */
 
 /*====================================
 
-  F O R M _ O U T P _ B U F
+    F O R M _ O U T P _ B U F
 
   ===================================*/
 void CompInfo::form_outp_buf(CDNF &Out_names,Circuit *N,int outp_lit)
@@ -177,25 +179,28 @@ void CompInfo::form_outp_buf(CDNF &Out_names,Circuit *N,int outp_lit)
   else sprintf(Buff,"a%d",olit);
   
   conv_to_vect(Pin_names[0],Buff);
-  conv_to_vect(Pin_names[1],"o0");
+  char buff[MAX_NAME];
+  sprintf(buff,"p%d",prop_ind);
+  conv_to_vect(Pin_names[1],buff);
   Out_names.push_back(Pin_names[1]);
 
-  int gate_ind = start_new_gate(N,Pin_names);
+  CUBE Gate_inds;
+  start_new_gate(Gate_inds,N,Pin_names);
   // add cube specifying functionality
   CUBE C;
   if (outp_lit == olit) C.push_back(1);
   else C.push_back(-1);
 
-  Gate &G = N->get_gate(gate_ind);
+  Gate &G = N->get_gate(Gate_inds.back());
   G.F.push_back(C);
 
-  finish_gate(N,gate_ind);
+  finish_gate(N,Gate_inds.back());
 
 } /* end of function form_outp_buf */
 
 /*===================================
 
-  F O R M _ C O N S T S
+        F O R M _ C O N S T S
 
   ====================================*/
 void CompInfo::form_consts(Circuit *N)
@@ -206,8 +211,9 @@ void CompInfo::form_consts(Circuit *N)
     CDNF Pin_names;
     Pin_names.push_back(Dummy);
     conv_to_vect(Pin_names[0],"c0");
-    int gate_ind = start_new_gate(N,Pin_names);
-    finish_gate(N,gate_ind);
+    CUBE Gate_inds;
+    start_new_gate(Gate_inds,N,Pin_names);
+    finish_gate(N,Gate_inds.back());
   }
 
   if (const_flags & 2) {
@@ -215,11 +221,12 @@ void CompInfo::form_consts(Circuit *N)
     CDNF Pin_names;
     Pin_names.push_back(Dummy);
     conv_to_vect(Pin_names[0],"c1");
-    int gate_ind = start_new_gate(N,Pin_names);
+    CUBE Gate_inds;
+    start_new_gate(Gate_inds,N,Pin_names);
     CUBE C;
-    Gate &G = N->get_gate(gate_ind);
+    Gate &G = N->get_gate(Gate_inds.back());
     G.F.push_back(C);
-    finish_gate(N,gate_ind);
+    finish_gate(N,Gate_inds.back());
   }
 
 } /* end of functin form_consts */

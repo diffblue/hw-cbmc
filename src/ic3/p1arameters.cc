@@ -18,48 +18,52 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 /*==============================
 
-  P R I N T _ H E A D E R
+     P R I N T _ H E A D E R
 
   =============================*/
 void CompInfo::print_header()
 {
 
-  printf("ic3 circ [b|C|c|d||e|g|i|n|r|x] ['a'num] ['D'num] ['G'num] ['h'val] \n");
-  printf("          ['m'val] ['o' name] ['s'num] ['Sl'num] ['Si'num] ['t'num]\n");
-  printf("          ['T'num] ['v'num] \n\n");
+  printf("mic3 circ [b|C|c|d||e|g|i|n|N|r|x] ['a'num] ['D'num] ['g'num]\n");
+  printf("          ['h'val] ['m'val] ['o' name] ['p'num] ['s'num] ['Sl'num]\n"); 
+  printf("           ['Si'num] ['t'num] ['T'num] ['v'num] \n\n");
   printf("circ     - name of the file containing the initial circuit\n");
   printf("'a'num   - num specifies the activity update mode\n");
-  printf("'b'      - the ctg_flag is set to off\n");
+  printf("b        - sets ctg_flag to false\n");
   printf("C        - print inductive and local clauses\n");
   printf("c        - print out the counterexample found (if any)\n");
   printf("d        - is used for debugging purposes\n");
   printf("'D'num   - specifies heuristics used to pick a literal\n");
   printf("           0 - random (default), 1 - inactive lit \n");
-  printf("           2 - inactive var, 3 - fixed order\n");
+  printf("           2 - inactive var, 3 - BerkMin like heuristic\n");
   printf("e        - set the selector variables to 1 (used for debugging)\n");
+  printf("g        - set ctg_flag on\n");
   printf("'g'num   - sets the maximal value of gcount (used for debugging)\n");
   printf("'i'num   - print out the invariant found (if any)\n");
-  printf("           if 'num == 1', then only inductive clauses are printed out\n");
-  printf("j        - use joins in  generalization of inductive clauses when 'ctg_flag' is off\n");
-  printf("'m'val   - value is a real number specifying the value of the multiplier\n");
+  printf("           if 'num == 1', only inductive clauses are printed out\n");
+  printf("j        - use joins in general. of ind. clauses if 'ctg_flag==0'\n");
+  printf("'m'val   - value is a real number used when comp. var. activity\n");
   printf("'n'      - does not print any statistics\n");
+  printf("'N'      - set constr_flag to 'false'\n");
   printf("o name   - print the result to a file with the root name 'name'\n");
+  printf("'p'num   - num specifies the property index to check \n");
+  printf("           (if circuit is specified in the AIGER format)\n");
   printf("'r'      - remove subsumed clauses\n");
   printf("'R'      - initial randomization is on\n");
   printf("'s'num   - print statistics, num specifying the level of detail\n");
-  printf("'Sl'num  - 'num' specifies literal ordering procedure when lifting a state\n");
-  printf("'Si'num  - 'num' specifies literal ordering procedure when building an ind. clause\n");
+  printf("'Sl'num  - 'num' spec. literal ordering when lifting a state\n");
+  printf("'Si'num  - 'num' spec. literal ordering when gener. an ind. clause\n");
   printf("'t'num   - stop after num-th time frame is finished\n");
   printf("'T'num   - terminate after 'num' seconds\n");
-  printf("'v'num   - print out computation with the level of details  specified by 'num'\n");
+  printf("'v'num   - level of verbosity is  specified by 'num'\n");
   printf("'x'      - print out counterexample as a cnf formula\n");
 } /* end of function print_header */
 
 /*=====================================
 
-  I N I T _ P A R A M E T E R S
+     I N I T _ P A R A M E T E R S
 
-  =====================================*/
+ =====================================*/
 void CompInfo::init_parameters()
 {
 
@@ -91,27 +95,30 @@ void CompInfo::init_parameters()
   max_rec_depth = 1;
   grl_heur = NO_JOINS;
   max_coi_depth = 10;
+  prop_ind = 0;
+  constr_flag = true;
 
-} /* end of function init_parameters */
+  } /* end of function init_parameters */
 
 
 /*=====================================
 
-  R E A D _ P A R A M E T E R S
+      R E A D _ P A R A M E T E R S
 
-  =====================================*/
+ =====================================*/
 void CompInfo::read_parameters(int argc,char *argv[])
 {
+ 
   for (int i=2; i < argc; i++) 
     switch(argv[i][0]){
     case 'a':
       act_upd_mode = atoi(argv[i]+1);
       assert(act_upd_mode >=  NO_ACT_UPD);
       assert(act_upd_mode <= MINISAT_ACT_UPD);
-      break;
+      break;  
     case 'b':
       ctg_flag = false;
-      break;
+      break;    
     case 'C':
       print_clauses_flag = true;
       break;
@@ -147,10 +154,17 @@ void CompInfo::read_parameters(int argc,char *argv[])
     case 'n':
       statistics  = false;
       break;
+    case 'N':
+      constr_flag = false;
+      break;
     case 'o':
       assert(i+1 < argc);
       strcpy(out_file,argv[i+1]);
       i++;
+      break;
+    case 'p':
+      prop_ind = atoi(argv[i]+1);
+      assert(prop_ind >= 0);
       break;
     case 'r':
       rem_subsumed_flag = true;

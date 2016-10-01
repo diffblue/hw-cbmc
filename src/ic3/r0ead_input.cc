@@ -17,28 +17,25 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "r0ead_blif.hh"
 #include "m0ic3.hh"
+
 /*==========================
 
-  R E A D _ I N P U T
+    R E A D _ I N P U T
 
   =========================*/
 void CompInfo::read_input(char *fname) {
-  
-  char file_type;
-  find_file_type(file_type,fname);
 
 
-  if (file_type == 'b') blif_format_model(fname);
-  else if (file_type == 'a') aig_format_model(fname);
+  if (file_format == 'b')  blif_format_model(fname);
+  else if (file_format == 'a') aig_format_model(fname);
   else assert(false); // shouldn't reach this line
-  
-
-
 
   assert(N->noutputs == 1);
   assert(N->nlatches > 0);
   
+  
   gen_cnfs(fname,false);
+ 
 
   num_tr_vars = find_max_var(Tr);
   num_ist_vars = find_max_var(Ist);
@@ -46,61 +43,75 @@ void CompInfo::read_input(char *fname) {
 
   int tmp = std::max(num_ist_vars,num_prop_vars);
   max_num_vars0 = std::max(tmp,num_tr_vars);
-  max_num_vars = max_num_vars0 +  num_prop_vars; // we need to take into account
-  // that property needs to be specified in two time frames
+  max_num_vars = max_num_vars0 + num_prop_vars; // we need to take into account
+                      // that property needs to be specified in two time frames
 
   build_arrays();
+ 
   form_max_pres_svar();
+
+  form_constr_lits();
+  add_constrs();
   
 } /* end of function read_input */
 
 
 /*==============================================
 
-  F O R M _ C I R C _ F R O M _ A I G
+        F O R M _ C I R C _ F R O M _ A I G
 
   =============================================*/
-void CompInfo::form_circ_from_aig(aiger &Aig,int prop_ind) 
+void CompInfo::form_circ_from_aig(aiger &Aig) 
 {
+
+  if (Aig.num_outputs > 0) {
+    assert(Aig.num_bad == 0);
+    assert(prop_ind < Aig.num_outputs);
+  }
+  else {// Aig.num_outputs == 0
+    assert(Aig.num_bad > 0);
+    assert(prop_ind < Aig.num_bad);
+  }
+
 
   N = create_circuit();
   
   const_flags = 0;
-
+  store_constraints(Aig);
   form_inputs(N,Aig);
   int outp_lit;
   form_output(outp_lit,N,Aig);
   form_latches(N,Aig);
+  
   form_gates(N,Aig);
+ 
   CDNF Out_names;
   form_outp_buf(Out_names,N,outp_lit);
   form_invs(N);
   form_consts(N);
  
   add_spec_buffs(N);
-
  
   fill_fanout_lists(N);
+ 
   
   
   assign_gate_type(N,Out_names,true);
 
   // assign topological levels and other flags
   assign_levels_from_inputs(N);
+// check_levels_from_inputs(N,true);
   set_trans_output_fun_flags(N);
   set_feeds_latch_flag(N,true,true);
   assign_levels_from_outputs(N);
-
+// check_levels_from_outputs(N,true);
  
 } /* end of function form_circ_from_aig */
 
 
-
-
-
 /*=================================
 
-  F O R M _ T A B L E
+       F O R M _ T A B L E
 
   ================================*/
 void form_table(CUBE &Table1,CUBE &Table0,int max_num_vars)
@@ -119,10 +130,11 @@ void form_table(CUBE &Table1,CUBE &Table0,int max_num_vars)
 
 /*=============================
 
-  B U I L D _ A R R A Y S
+    B U I L D _ A R R A Y S
 
   ============================*/
 void CompInfo::build_arrays() {
+  // printf("build_arrays\n");
   form_pres_state_vars();  
   form_next_state_vars();
   form_inp_vars(); 
@@ -136,7 +148,7 @@ void CompInfo::build_arrays() {
 
   ======================================*/
 void CompInfo::form_max_pres_svar() {
-
+  //  printf("form_max_pres_svar\n");
   int max = -1;
 
   for (int i=0; i < Pres_svars.size();i++) 
@@ -148,16 +160,17 @@ void CompInfo::form_max_pres_svar() {
 
 /*======================================
 
-  B L I F _ F O R M A T _ M O D E L
+    B L I F _ F O R M A T _ M O D E L
 
   ======================================*/
 void CompInfo::blif_format_model(char *fname) 
 {
   reader_state r;
 
-
+  assert(prop_ind == 0);
   NamesOfLatches Latches; // Array will contain names of latches
   read_names_of_latches(Latches,fname);
+ 
 
   FILE *fp = fopen(fname,"r");
 
@@ -168,7 +181,6 @@ void CompInfo::blif_format_model(char *fname)
 
   r.rem_dupl_opt = true;
  
-
   N = read_blif(fp,Latches,r);
   fclose(fp);
 } /* end of function blif_format_model */
@@ -176,13 +188,13 @@ void CompInfo::blif_format_model(char *fname)
 
 /*=========================================
 
-  A I G _ F O R M A T _ M O D E L
+      A I G _ F O R M A T _ M O D E L
 
   ==========================================*/
 void CompInfo::aig_format_model(char *fname) 
 {
 
-  // read AIGER model
+ // read AIGER model
   aiger *Aig_descr = aiger_init();
  
 
@@ -197,13 +209,8 @@ void CompInfo::aig_format_model(char *fname)
     std::cout << Error << std::endl;
     exit(100);}
  
-  form_circ_from_aig(*Aig_descr,0);
-
+  form_circ_from_aig(*Aig_descr);
   aiger_reset(Aig_descr);
   Circuit *N = this->N;
 
 } /* end of function aig_format_model */
-
-
-
-

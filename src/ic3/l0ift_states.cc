@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Lifting states (i.e. turning states into 
-        cubes of states)
+Module: Lifting states, i.e. turning states into 
+        cubes of states (Part 1)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -16,19 +16,20 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
-
 /*=======================================
 
-  L I F T _ G O O D_ S T A T E
+     L I F T _ G O O D_ S T A T E
 
-  ======================================*/
-void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
-			       CUBE &Inps,CUBE &Nst_cube)
+ ======================================*/
+void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,CUBE &Inps,
+                               CUBE &Nst_cube)
 {
 
   // add unit clauses specifying inputs
   MvecLits Assmps;
-  add_assumps1(Assmps,Inps);
+  CUBE Inps1;
+  rem_constr_lits(Inps1,Inps,Constr_inp_lits);
+  add_assumps1(Assmps,Inps1);
   
 
   // add clause excluding next state cube
@@ -41,7 +42,10 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
   add_cls_excl_st_cube(act_lit,Lgs_sat,Mapped_cube);
  
   Assmps.push(act_lit);
-  add_assumps2(Assmps,Prs_st);
+
+  CUBE Prs_st1;
+  rem_constr_lits(Prs_st1,Prs_st,Constr_ps_lits);  
+  add_assumps2(Assmps,Prs_st1);
   
   bool sat_form = check_sat2(Lgs_sat,Assmps);
   if (sat_form) {
@@ -51,19 +55,22 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
     std::cout << "Mapped_cube-> " << Mapped_cube << std::endl;
     exit(100);
   }
+
   
-  gen_state_cube(Gst_cube,Prs_st,Lgs_sat);
+  gen_state_cube(Gst_cube,Prs_st1,Lgs_sat);
 
   release_lit(Lgs_sat,~act_lit);
 
   num_gstate_cubes++;
   length_gstate_cubes += Gst_cube.size();
+  add_constr_lits(Gst_cube);
+
 
 } /* end of function lift_good_state */
 
 /*========================================
 
-  L I F T _ B A D _ S T A T E 
+      L I F T _ B A D _ S T A T E 
 
   =========================================*/
 void CompInfo::lift_bad_state(CUBE &Bst_cube,CUBE &St,CUBE &Inps)
@@ -71,32 +78,40 @@ void CompInfo::lift_bad_state(CUBE &Bst_cube,CUBE &St,CUBE &Inps)
 
   
   TrivMclause Assmps;
-  add_assumps1(Assmps,Inps);
 
-  add_assumps2(Assmps,St);
+  CUBE Inps1;
+  rem_constr_lits(Inps1,Inps,Constr_inp_lits);
+
+  add_assumps1(Assmps,Inps1);
+
+  CUBE St1;
+  rem_constr_lits(St1,St,Constr_ps_lits);
+  add_assumps2(Assmps,St1);
 
  
   bool sat_form = check_sat2(Lbs_sat,Assmps);
  
   assert(sat_form == false);
 
-  gen_state_cube(Bst_cube,St,Lbs_sat);
+  gen_state_cube(Bst_cube,St1,Lbs_sat);
  
   num_bstate_cubes++;
   length_bstate_cubes += Bst_cube.size();
+
+  add_constr_lits(Bst_cube);
 
 } /* end of function lift_bad_state */
 
 
 /*==========================================
 
-  G E N _ S T A T E _ C U B E 
+    G E N _ S T A T E _ C U B E 
  
-  ASSUMPTIONS:
-  1) Formula S.D is unsatisfiable
-  2) S.Proof is a proof of that
+   ASSUMPTIONS:
+    1) Formula S.D is unsatisfiable
+    2) S.Proof is a proof of that
 
-  ========================================*/
+ ========================================*/
 void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
 {
 
@@ -109,12 +124,13 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
     } 	
   }	
   
+  
 } /* end of function gen_state_cube */
 
 
 /*==========================================
 
-  A D D _ C L S _ E X C L _ S T _ C U B E
+   A D D _ C L S _ E X C L _ S T _ C U B E
 
   ===========================================*/
 void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
@@ -123,6 +139,7 @@ void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
   act_lit = Minisat::mkLit(Slvr.Mst->newVar(),false);
   int lit = Minisat::var(act_lit)+1;
   C.push_back(-lit);
+
 
   for (int i=0; i < St.size(); i++) {
     int var_ind = abs(St[i])-1;
@@ -137,19 +154,19 @@ void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
 
 /*=============================================
 
-  E X T R _ N E X T _ I N P S
+        E X T R _ N E X T _ I N P S
 
-  This function returns the set of assignments
-  to next state time frame inputs mapped to present
-  state time frame.
+ This function returns the set of assignments
+ to next state time frame inputs mapped to present
+ state time frame.
 
   ASSUMPTIONS:
-  1) Sat-solver 'S' just proved formula satisfiable
-  2) Input variables of the next state time frame
-  are those of the present time frame shifted
-  by 'max_num_vars0'
-  3) Assignment returned by 'S' is actually the
-  negation of a satisfying assignment
+ 1) Sat-solver 'S' just proved formula satisfiable
+ 2) Input variables of the next state time frame
+    are those of the present time frame shifted
+    by 'max_num_vars0'
+ 3) Assignment returned by 'S' is actually the
+    negation of a satisfying assignment
     
   =============================================*/
 void CompInfo::extr_next_inps(CUBE &Inps,SatSolver &Slvr)

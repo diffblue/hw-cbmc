@@ -59,6 +59,14 @@ public:
 }; 
 
 //
+// VarInfo
+//
+struct VarInfo{
+  VarType type;  // type of the variable
+  int value;  // sets the value to 0 or 1 for a fixed variable. Otherwise the value is 2
+};
+
+//
 //  OblTable
 //
 struct OblTableElem {

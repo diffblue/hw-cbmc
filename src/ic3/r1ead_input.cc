@@ -17,7 +17,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
-
 /*==============================
 
         F O R M _ I N V S
@@ -25,7 +24,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   =============================*/
 void CompInfo::form_invs(Circuit *N)
 {
-
 
 
   CDNF Pin_names;
@@ -36,13 +34,14 @@ void CompInfo::form_invs(Circuit *N)
     int lit = *pnt;
     Pin_names.clear();
     form_inv_names(Pin_names,lit);
-    int gate_ind = start_new_gate(N,Pin_names);
+    CUBE Gate_inds;
+    start_new_gate(Gate_inds,N,Pin_names);
     CUBE C;
     C.push_back(-1);
-    Gate &G = N->get_gate(gate_ind);
+    Gate &G = N->get_gate(Gate_inds.back());
     G.F.push_back(C);
 
-    finish_gate(N,gate_ind);
+    finish_gate(N,Gate_inds.back());
   }
 
 } /* end of function form_invs */
@@ -56,7 +55,8 @@ void CompInfo::form_invs(Circuit *N)
    'seq_circ/a3dd_gate.cc'
 
   ====================================*/
-void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S)
+void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,
+                             aiger_symbol &S)
 {
 
   int init_value;
@@ -77,7 +77,9 @@ void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S)
   form_latch_name(Latch_name,S); 
  
  
-  int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,N->Gate_list,true);
+  int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,
+               N->Gate_list,true);
+  upd_gate_constr_tbl(S.lit,pin_num);
  
  
 
@@ -92,13 +94,15 @@ void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S)
   //  process  the  input name
   {
     pin_num = assign_input_pin_number2(Latches,N,Next_name,N->Gate_list);
+    if (S.next & 1 == 0)
+      upd_gate_constr_tbl(S.next,pin_num);
 
     Gate &G = N->get_gate(gate_ind);   
     G.Fanin_list.push_back(pin_num); 
     if (G.gate_type == INPUT) printf("INPUT\n");
-    if (N->get_gate(gate_ind).gate_type == INPUT){
 // we don't accept files in which the output of a latch is also a primary input
-      printf("the output of latch  "); 
+    if (N->get_gate(gate_ind).gate_type == INPUT){
+      printf("the output of latch  ");  
       print_name(&Latch_name); printf("\n");
       printf("is also an input variable\n");
       exit(1);
@@ -111,19 +115,20 @@ void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S)
     ---------------------------------------*/ 
  
   Gate &G = N->get_gate(gate_ind); 
+  
   G.ninputs = 1;
   G.func_type = BUFFER;
   G.gate_type = LATCH;
   G.level_from_inputs = 0; // initialize topological level 
   G.level_from_outputs = 0;
   G.flags.active = 1; // mark G as an active  gate
-  G.flags.output = 0; 
+  G.flags.output = 0;
   G.flags.transition = 0;
   G.flags.feeds_latch = 0;
   G.flags.output_function = 0;
   G.Gate_name =  Latch_name; 
   G.init_value = init_value;
-  
+ 
 } /* end of function add_new_latch */
 
 /*===================================
@@ -133,7 +138,6 @@ void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S)
   ==================================*/
 void CompInfo::form_latches(Circuit *N,aiger &Aig)
 {
-
 
 // mark latched literal
 
@@ -153,22 +157,33 @@ void CompInfo::form_latches(Circuit *N,aiger &Aig)
 
 } /* end of function form_latches */
 
-/*=============================
+/*==========================================================
 
-  F O R M _ O U T P U T
+             F O R M _ O U T P U T
 
-  =============================*/
+  ASSUMPTIONS:
+
+  1) Aig.num_bad > 0 or Aig.num_outputs > 0
+  2) Aig.num_bad == 0 or Aig.num_outputs == 0
+  3) if (Aig.num_bad > 0) then prop_ind < Aig.num_bad
+  4) If (Aig.num_outputs > 0) then prop_ind < Aig.num_outputs
+
+  ===========================================================*/
 void CompInfo::form_output(int &outp_lit,Circuit *N,aiger &Aig)
 {
 
-  if (Aig.num_bad == 0) outp_lit = Aig.outputs[0].lit;
-  else  outp_lit = Aig.bad[0].lit;
+  if (Aig.num_bad == 0) outp_lit = Aig.outputs[prop_ind].lit;
+  else  outp_lit = Aig.bad[prop_ind].lit;
 
   if (outp_lit <= 1) {
     assert(outp_lit >= 0);
     if (outp_lit == 0) const_flags = const_flags | 1;
     else if (outp_lit == 1) const_flags = const_flags | 2;
   }
+
+  int fnd_lit;
+  bool found = check_constr_lits(fnd_lit,outp_lit);
+  assert(!found);
 
 } /* end of function form_output */
 
@@ -190,6 +205,7 @@ void CompInfo::form_inputs(Circuit *N,aiger &Aig)
     conv_to_vect(Name,Inp_name);
     Inps.insert(lit);
     add_input(Name,N,N->ninputs);
+    upd_gate_constr_tbl(lit,N->ninputs);
   }
   
 

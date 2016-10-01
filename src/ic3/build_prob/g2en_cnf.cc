@@ -18,6 +18,29 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
+/*==================================
+
+      A D D _ C O N S T R S
+
+  ==================================*/
+void CompInfo::add_constrs() 
+{
+  printf("adding %d unit constraints\n",(int) Constr_ilits.size() + Constr_nilits.size());
+  for (int i=0; i < Constr_ilits.size(); i++) {
+    CLAUSE U;
+    U.push_back(Constr_ilits[i]);
+    Tr.push_back(U);
+  }
+
+  SCUBE::iterator pnt;
+  for (pnt = Constr_nilits.begin(); pnt != Constr_nilits.end(); pnt++) {
+    CLAUSE U;
+    U.push_back(*pnt);
+    Tr.push_back(U);
+  }
+
+} /* end of function add_constrs */
+
 /*==============================
 
   E M P T Y _ C U B E

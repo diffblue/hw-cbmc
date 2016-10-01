@@ -15,6 +15,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+
 hsh_tbl htable_lits;
 long long gcount = 0;
 
@@ -34,14 +35,20 @@ int CompInfo::mic3()
 
   check_conv_tbl(Pres_svars,Pres_to_next,true);
   check_conv_tbl(Next_svars,Next_to_pres,false);
+ 
   htable_lits.hsh_init(4*max_num_vars+1);
   form_bad_states();
   form_property();
   if (use_short_prop) form_short_property();
  
   ci_init();
-  bool ok = check_one_state_cex();
-  if (!ok) return(1);
+  bool ok = init_st_satisfy_constrs();
+  if (!ok) {
+    vac_true = true;
+    return(0); // property holds
+  }
+  ok = check_one_state_cex();
+  if (!ok) return(1); // property does not hold
 
   ok = check_two_state_cex();
   if (!ok) return(1);
@@ -60,11 +67,11 @@ int CompInfo::mic3()
     int res = next_time_frame();
     print_time_frame_stat();
     fflush(stdout);
-   
+
     if (verbose > 1) {
       print_bnd_sets1();     
     }
-    
+  
     if ((res == 0) || (res == 1)) {
       ret_val = res;
       goto FINISH; }
@@ -88,6 +95,7 @@ int CompInfo::mic3()
 
 } /* end of function mic3 */
 
+
 /*===================
 
       M A I N
@@ -103,13 +111,15 @@ int  main(int argc,char *argv[])
     Ci.print_header();
     exit(0);}
 
+  Ci.find_file_format(argv[1]);
   Ci.init_parameters();
+  Ci.read_parameters(argc,argv);
   Ci.read_input(argv[1]);  
   
-  Ci.read_parameters(argc,argv);
   bool ok = Ci.check_init_states();
   assert(ok);
-  Ci.assgn_var_type();
+  Ci.assign_var_type();
+  Ci.assign_value();
   get_runtime (usrtime0, systime0);
   int res = Ci.mic3();
   get_runtime (usrtime, systime);  
@@ -118,7 +128,13 @@ int  main(int argc,char *argv[])
   printf("\n");
   switch (res) {
   case 0: {
-    printf("property HOLDS\n");   
+    printf("property HOLDS\n");  
+    if (Ci.vac_true) {
+      printf("It is vacuously true\n");
+      ret_val = 2;
+      Ci.statistics = false;
+      break;
+    }
     if (Ci.print_inv_flag) 
       Ci.print_invariant(Ci.print_only_ind_clauses);
     if (Ci.print_clauses_flag)
@@ -174,4 +190,29 @@ bool CompInfo::check_init_states()
 
 } /* end of function check_init_states */
 
+/*===============================================
+   
+  I N I T _ S T _ S A T I S F Y _ C O N S T R S
 
+   returns 'true' if the initial states satisfy
+   the constraints
+
+  ==============================================*/
+bool CompInfo::init_st_satisfy_constrs() 
+{
+  for (int i=0; i < Ist.size(); i++) {
+    CLAUSE &C = Ist[i];
+    assert(C.size() == 1);
+    int lit = C[0];
+    if (lit < 0) {
+      if (Var_info[-lit-1].value == 1)
+	return(false);
+    }
+    else // lit > 0
+      if (Var_info[lit-1].value == 0)
+	return(false);
+  }
+
+  return(true);
+
+} /* end of function init_st_satisfy_constrs */

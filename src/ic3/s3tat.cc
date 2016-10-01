@@ -98,6 +98,7 @@ void CompInfo::print_flags()
 
   printf("selector = %d\n",selector);
   printf("ctg_flag = %d\n",ctg_flag);
+  printf("constr_flag = %d\n",constr_flag);
 
   // print state of generalization heuristic
   printf("generalization heuristic = ");
