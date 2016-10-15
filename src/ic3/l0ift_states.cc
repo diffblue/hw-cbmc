@@ -16,13 +16,14 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
+
 /*=======================================
 
      L I F T _ G O O D_ S T A T E
 
  ======================================*/
-void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,CUBE &Inps,
-                               CUBE &Nst_cube)
+void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
+                               CUBE &Inps,CUBE &Nst_cube)
 {
 
   // add unit clauses specifying inputs
@@ -55,15 +56,15 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,CUBE &Inps,
     std::cout << "Mapped_cube-> " << Mapped_cube << std::endl;
     exit(100);
   }
-
   
+
   gen_state_cube(Gst_cube,Prs_st1,Lgs_sat);
 
   release_lit(Lgs_sat,~act_lit);
 
   num_gstate_cubes++;
   length_gstate_cubes += Gst_cube.size();
-  add_constr_lits(Gst_cube);
+  add_constr_lits1(Gst_cube);
 
 
 } /* end of function lift_good_state */
@@ -76,7 +77,6 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,CUBE &Inps,
 void CompInfo::lift_bad_state(CUBE &Bst_cube,CUBE &St,CUBE &Inps)
 {
 
-  
   TrivMclause Assmps;
 
   CUBE Inps1;
@@ -91,14 +91,18 @@ void CompInfo::lift_bad_state(CUBE &Bst_cube,CUBE &St,CUBE &Inps)
  
   bool sat_form = check_sat2(Lbs_sat,Assmps);
  
-  assert(sat_form == false);
+  if (sat_form) {
+    assert(Fun_coi_lits.size() > 0);
+    Bst_cube = St;
+    return;
+  }
 
   gen_state_cube(Bst_cube,St1,Lbs_sat);
  
   num_bstate_cubes++;
   length_bstate_cubes += Bst_cube.size();
 
-  add_constr_lits(Bst_cube);
+  add_constr_lits1(Bst_cube);
 
 } /* end of function lift_bad_state */
 
@@ -116,6 +120,7 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
 {
 
  
+ 
   Minisat::Solver *Mst = Slvr.Mst;
   for (int i=0; i < St.size(); i++) {
     Mlit L = conv_to_mlit(St[i]);
@@ -124,13 +129,12 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
     } 	
   }	
   
-  
 } /* end of function gen_state_cube */
 
 
 /*==========================================
 
-   A D D _ C L S _ E X C L _ S T _ C U B E
+  A D D _ C L S _ E X C L _ S T _ C U B E
 
   ===========================================*/
 void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
@@ -144,6 +148,16 @@ void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
   for (int i=0; i < St.size(); i++) {
     int var_ind = abs(St[i])-1;
     C.push_back(-St[i]);
+  }
+
+ 
+  // add literals constraining internal variables
+
+  for (int i=0; i < Tr_coi_lits.size(); i++) {
+    int lit = Tr_coi_lits[i];
+    int var_ind = abs(lit)-1;
+    assert (Var_info[var_ind].type == INTERN);
+    C.push_back(-lit);
   }
 
   accept_new_clause(Slvr,C);

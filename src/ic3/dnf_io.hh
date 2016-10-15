@@ -16,8 +16,7 @@ typedef CUBE CLAUSE;
 typedef std::set<int> SCUBE;
 typedef DNF CNF;
 typedef std::vector <float> FltCube;
-typedef std::map<CCUBE,int> NamesOfLatches;
-typedef std::map<int,char> ConstrGates;
+
 
 #define BUF_SIZE 1000
 #define MAX_NUM 20

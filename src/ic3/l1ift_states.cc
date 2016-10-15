@@ -33,10 +33,10 @@ void CompInfo::rem_constr_lits(CUBE &Lits1,CUBE &Lits0,SCUBE &Constr_lits)
 
 /*============================================
 
-       A D D _ C O N S T R _ L I T S
+       A D D _ C O N S T R _ L I T S 1
 
   =============================================*/
-void CompInfo::add_constr_lits(CUBE &St_cube)
+void CompInfo::add_constr_lits1(CUBE &St_cube)
 {
 
   SCUBE::iterator pnt;
@@ -44,4 +44,4 @@ void CompInfo::add_constr_lits(CUBE &St_cube)
   for (pnt = Constr_ps_lits.begin(); pnt != Constr_ps_lits.end(); pnt++)
     St_cube.push_back(*pnt);
 
-} /* end of function add_constr_lits */
+} /* end of function add_constr_lits1 */

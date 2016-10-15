@@ -1,7 +1,7 @@
 /******************************************************
 
 Module: Reading circuit from a BLIF or AIG file
-        (part 5)
+        (part 6)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -16,6 +16,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "r0ead_blif.hh"
 #include "m0ic3.hh"
+
 /*==============================
 
       A S S I G N _ V A L U E
@@ -59,10 +60,10 @@ void CompInfo::form_constr_lits()
   int count = 0;
   for (pnt = Constr_gates.begin(); pnt!= Constr_gates.end(); pnt++) {
     int gate_ind = pnt->first;
-    char polarity = pnt->second;
+    char neg_lit = pnt->second.neg_lit;
     int var = Gate_to_var[gate_ind];
     int lit;
-    if (polarity == 0) lit = var;
+    if (neg_lit == 0) lit = var;
     else lit = -var;
 
     Gate &G = N->get_gate(gate_ind);
@@ -71,14 +72,24 @@ void CompInfo::form_constr_lits()
 	Constr_ilits.push_back(lit);
 	Constr_inp_lits.insert(lit);
       }
-      else  // the gate is neither latch
-	Constr_nilits.insert(lit); //  nor combinational input
+      else { // the gate is neither latch nor combinational input
+	Constr_nilits.insert(lit); 
+	bool cond = (pnt->second.tran_coi || pnt->second.fun_coi);
+	if (cond == false) {
+	  p();
+	  printf("pnt->second.tran_coi = %d\n",pnt->second.tran_coi);
+	  printf("pnt->second.fun_coi = %d\n",pnt->second.fun_coi);
+	  exit(100);
+	}
+	if (pnt->second.tran_coi)  Fun_coi_lits.push_back(lit);
+	if (pnt->second.fun_coi) Tr_coi_lits.push_back(lit);}
       continue;
     }
    
     assert(G.gate_type == LATCH);
    
     Constr_ps_lits.insert(lit);
+    Constr_ilits.push_back(lit);
     int nxt_var_ind = Pres_to_next[var-1];
     int nxt_var_lit;
     if (lit < 0) nxt_var_lit = -(nxt_var_ind+1);

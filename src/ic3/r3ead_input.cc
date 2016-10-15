@@ -1,7 +1,7 @@
 /******************************************************
 
 Module: Reading circuit from a BLIF or AIG file
-        (part 3)
+        (part 4)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 

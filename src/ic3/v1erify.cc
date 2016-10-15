@@ -94,6 +94,7 @@ bool CompInfo::check_bad_state(CUBE &St)
   std::string Name = "Gen_sat";
   init_sat_solver(Gen_sat,max_num_vars,Name);
   add_neg_prop(Gen_sat);
+  add_constr_lits2(Gen_sat);
   MvecLits Assmps;
   add_assumps1(Assmps,St);
   bool sat_form = check_sat2(Gen_sat,Assmps);
@@ -161,19 +162,25 @@ bool CompInfo::check_init_state(CUBE &St)
 
 
 
+/*======================================
 
-/*==============================================
+     A D D _ C O N S T R _ L I T S 2 
 
-  P R I N T _ C L A U S E _ S T A T E
-
-  ===============================================*/
-void CompInfo::print_clause_state(int clause_ind)
+  =====================================*/
+void CompInfo::add_constr_lits2(SatSolver &Slvr)
 {
 
-  if (clause_ind >= F.size()) return;
-  printf("F[%d]: ",clause_ind);
-  if (Clause_info[clause_ind].active == 0) printf("inact, ");
-  else printf(" ");
-  printf("span = %d\n",Clause_info[clause_ind].span);
+  for (int i=0; i < Constr_ilits.size(); i++) {
+    CLAUSE U;
+    U.push_back(Constr_ilits[i]);
+    accept_new_clause(Slvr,U);
+  }
 
-} /* end of function print_clause_state */
+  SCUBE::iterator pnt;
+  for (pnt = Constr_nilits.begin(); pnt != Constr_nilits.end(); pnt++) {
+    CLAUSE U;
+    U.push_back(*pnt);
+    accept_new_clause(Slvr,U);
+  }
+
+} /* end of function add_constr_lits2 */

@@ -44,6 +44,8 @@ void  CompInfo::gen_cnfs(char *fname,bool print_flag)
 
   gen_initial_state_cubes();
 
+  set_constr_flag();
+
   gen_trans_rel(0);
   
   gen_out_fun(Prop,0,false);
@@ -89,7 +91,8 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
     if (G.gate_type == INPUT) continue;
     if (G.gate_type == LATCH) continue;
 // skip the gates that are not part of the output function
-    if (G.flags.output_function == 0) continue; 
+    if (G.flags.output_function == 0) 
+      if (G.flags.fun_constr == 0) continue; 
     if (short_version)
 // skip the gates that are shared by transition relation and out function
       if (G.flags.transition) continue; 

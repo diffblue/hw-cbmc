@@ -12,6 +12,8 @@ Changes of the current implementation
 *) Implement actual removal of subsumed clauses (currently they are
    just marked in ignored by the algorithm)
 
+*) Improve the performance of the algorithm
+   on constrained examples
 ====================================
 Improvements of the basic algorithm
 ====================================

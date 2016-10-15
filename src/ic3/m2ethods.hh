@@ -182,13 +182,18 @@ bool check_constr_lits(int &fnd_lit,int lit);
 void form_constr_lits();
 void add_constrs();
 void rem_constr_lits(CUBE &Lits1,CUBE &Lits0,SCUBE &Constr_lits);
-void add_constr_lits(CUBE &St_cube);
+void add_constr_lits1(CUBE &St_cube);
 bool init_st_satisfy_constrs();
 void form_spec_simp_pr_tr(SatSolver &Slvr);
 void load_clauses2(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A,
                    int num_clauses);
 void print_bnd_sets1();
 void print_clause_state(int clause_ind);
+void add_constr_nilits(CNF &Bad_states);
+void add_constr_lits2(SatSolver &Slvr);
+void set_constr_flag();
+void gen_constr_coi(CUBE &Gates,bool &tran_flag,bool &fun_flag,CUBE &Stack);
+void mark_constr_gates(CUBE &Gates,bool tran_flag,bool fun_flag);
 //
 // member functions
 void gen_trans_rel(int shift);

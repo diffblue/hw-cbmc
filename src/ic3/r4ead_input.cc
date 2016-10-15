@@ -1,7 +1,7 @@
 /******************************************************
 
 Module: Reading circuit from a BLIF or AIG file
-        (part 4)
+        (part 5)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -16,7 +16,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "r0ead_blif.hh"
 #include "m0ic3.hh"
-
 
 /*=========================================
 
@@ -43,12 +42,14 @@ void CompInfo::upd_gate_constrs(aiger_and &Aig_gate,CUBE &Gate_inds)
       had no entry for 'gate_ind'
     2 if 'Constr_gates' has an entry for 'gate_ind'
 
-  ======================================================*/
+  =======================================================*/
 int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
 {
 
   if (Constr_gates.find(gate_ind) != Constr_gates.end())
     return(2);
+
+  
 
   int fnd_lit;
   bool found = check_constr_lits(fnd_lit,lit);
@@ -56,8 +57,8 @@ int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
   if (!found) return(0);
   assert(lit > 1);
 
-  if (fnd_lit & 1) Constr_gates[gate_ind] = 1;
-  else Constr_gates[gate_ind] = 0;
+  if (fnd_lit & 1) Constr_gates[gate_ind].neg_lit = 1;
+  else Constr_gates[gate_ind].neg_lit = 0;
   
   return(1);
 
@@ -108,7 +109,7 @@ void read_names_of_latches(NamesOfLatches &Latches,char *fname)
 
     CCUBE Buff;
     int ret_val = read_string(fp,Buff);
-    int res = parse_string(Buff);
+    int res = parse_string(Buff);   
     if (res == 2) continue; // not  '.latch' or '.names' commands
     if (res == 1) break; // Buff contains command '.names'
     if (ret_val == -1) { // EOF symbol is returned 
@@ -136,6 +137,7 @@ void read_names_of_latches(NamesOfLatches &Latches,char *fname)
 void extract_latch_name(CCUBE &Lname,CCUBE &Buff) 
 {
 
+  
   int pnt = 6;
 
   // reach the next_state name

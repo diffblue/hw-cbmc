@@ -128,6 +128,7 @@ void CompInfo::form_bad_states()
 {
 
   form_bad_states0(Bad_states);
+  add_constr_nilits(Bad_states);
   
 } /* end of function form_bad_states */
 
@@ -140,8 +141,8 @@ void CompInfo::form_bad_states()
 void CompInfo::form_bad_states0(CNF &Bstates)
 {
 
-
-  htable_lits.change_marker(); 
+  
+  htable_lits.change_marker(); // increment or reset the hash table marker 
   htable_lits.started_using();
 
   int marker = htable_lits.marker;
@@ -180,6 +181,7 @@ void CompInfo::form_bad_states0(CNF &Bstates)
     Bstates.push_back(Res);
   }
   
+  // print_dnf(Bstates,(char *) "bst.cnf");
   htable_lits.done_using();
 } /* end of function form_bad_states0 */
 
@@ -210,11 +212,10 @@ void CompInfo::form_cex()
 
   for (int i=0; i < Inp_trace.size(); i++) {
     MvecLits Assmps;
-    add_assumps1(Assmps,Cex[i]);  
+    add_assumps1(Assmps,Cex[i]);     
     add_assumps1(Assmps,Inp_trace[i]);
     bool sat_form = check_sat2(Gen_sat,Assmps);
     assert(sat_form);
-   
     CUBE Nst,St;
     extr_cut_assgns1(Nst,Next_svars,Gen_sat);
     conv_to_pres_state(St,Nst);

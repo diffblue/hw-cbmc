@@ -59,7 +59,8 @@ void CompInfo::gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps)
   for (int i=0; i < Assmps.size(); i++) {
     Mlit L = ~Assmps[i];
     if (S->conflict.has(L)) {
-      if (Minisat::var(L) >= Slvr.init_num_vars) continue; // skip activation literals (if any)
+    // skip activation literals (if any)
+      if (Minisat::var(L) >= Slvr.init_num_vars) continue; 
       int lit = mlit_to_lit(S,L);
       C.push_back(lit);
     }

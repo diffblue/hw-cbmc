@@ -26,7 +26,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   formula is unsatisfaible
 
   ==========================================*/
-bool CompInfo::find_ind_subclause_cti(CLAUSE &C,SatSolver &Slvr,CLAUSE &C0,char st_descr)
+bool CompInfo::find_ind_subclause_cti(CLAUSE &C,SatSolver &Slvr,
+                                      CLAUSE &C0,char st_descr)
 {
 
   if (verbose > 2) {

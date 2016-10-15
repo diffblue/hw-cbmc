@@ -97,7 +97,6 @@ bool CompInfo::ver_ind_clauses2(CNF &H,CUBE &Old_nums)
       std::cout << H[i] << std::endl;
       printf("F'[%d]-> ",Old_nums[i]); 
       std::cout << C << std::endl;
-      print_clause_state(Old_nums[i]);
       CUBE St0,St1;
       print_bnd_sets1();    
       return(false);

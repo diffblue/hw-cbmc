@@ -82,7 +82,7 @@ int form_index(CUBE &C)
 
 /*================================================
 
-  G E N _ T R A N S _ R E L
+     G E N _ T R A N S _ R E L
 
   This function is obtained from 'add_time_frame'
   and 'shift' is a "legacy parameter".
@@ -96,7 +96,8 @@ void CompInfo::gen_trans_rel(int shift)
     if (G.gate_type == INPUT) continue;
     if (G.gate_type == LATCH) continue;
 // skip the gates that are not part of the transition function
-    if (G.flags.transition == 0) continue; 
+    if (G.flags.transition == 0) 
+      if (G.flags.tran_constr == 0) continue; 
     int var_ind = Gate_to_var[i]-1;
     switch (G.func_type)
       {case CONST:
@@ -170,3 +171,45 @@ void CompInfo::print_var_indexes(char *fname)
    fclose(fp);
 
 }/* end of function print_var_indexes */
+
+/*=========================================
+
+      S E T _ C O N S T R _ F L A G
+
+  ==========================================*/
+void CompInfo::set_constr_flag()
+{
+
+  for (int i=0; i < N->Gate_list.size();i++) {
+    Gate &G = N->get_gate(i);
+    G.flags.label = 0;  
+    G.flags.fun_constr = 0;
+    G.flags.tran_constr = 0;}
+
+
+  ConstrGates::iterator pnt;
+
+  for (pnt = Constr_gates.begin(); pnt!=Constr_gates.end(); pnt++)  {
+    CUBE Gates;
+    CUBE Stack;
+    int gate_ind = pnt->first;
+    Gate &G = N->get_gate(gate_ind);
+    if (G.gate_type == LATCH) continue;
+    if (G.gate_type == INPUT) continue;
+    Stack.push_back(gate_ind);
+    bool tran_flag,fun_flag;
+    //    printf("gate_ind = %d\n",gate_ind);
+    gen_constr_coi(Gates,tran_flag,fun_flag,Stack);
+    assert(tran_flag || fun_flag);
+    mark_constr_gates(Gates,tran_flag,fun_flag);
+    if (tran_flag) Constr_gates[gate_ind].tran_coi = 1;
+    else Constr_gates[gate_ind].tran_coi = 0;
+    if (fun_flag) Constr_gates[gate_ind].fun_coi = 1;
+    else Constr_gates[gate_ind].fun_coi = 0;
+  }
+  
+
+
+} /* end of function set_constr_flag */
+
+

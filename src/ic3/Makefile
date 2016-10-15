@@ -19,8 +19,8 @@ vpath %.c aiger
 INC_DIR = -I. -Ibuild_prob -Iseq_circ -Iminisat -Iminisat/minisat/core -Iminisat/minisat/mtl -Iminisat/minisat/simp -Iaiger
 
 
-BUILD_PROB =   obj/g0en_cnf.o obj/g1en_cnf.o \
-               obj/g2en_cnf.o \
+BUILD_PROB =   obj/g3en_cnf.o \
+               obj/g0en_cnf.o obj/g1en_cnf.o obj/g2en_cnf.o \
                obj/assign_indexes.o obj/build_arrays.o
 
 SEQ_CIRC = obj/r3ead_blif.o \
@@ -28,7 +28,7 @@ SEQ_CIRC = obj/r3ead_blif.o \
            obj/c3irc_util.o obj/l1ast_touch.o  \
            obj/a3dd_gate.o  obj/preamble.o  \
            obj/r1ead_blif.o  obj/circuit.o obj/a2dd_gate.o\
-           obj/finish_gate.o obj/l0ast_touch.o  
+           obj/finish_gate.o obj/l0ast_touch.o 
 
 
 OBJ_ROOT = obj/i4nit_sat_solvers.o \
@@ -67,7 +67,7 @@ LINK_OPTIONS =
 
 LIB_PATH = 	minisat/build/release/lib
 
-$(PROG_NAME) :  minisat/build/dynamic/lib/libminisat.so $(OBJ) 
+$(PROG_NAME) :  minisat/build/dynamic/lib/libminisat.so $(OBJ_ROOT) $(AIGER) $(SEQ_CIRC) $(BUILD_PROB)  
 	$(CXX)  $(LINK_OPTIONS) $(ARCH_FLAG)  $(OBJ) 	$(LIB_PATH)/libminisat.a -o  $(PROG_NAME)
 
 clean : 

@@ -6,6 +6,14 @@ Module: Basic types (gate, circuit and so on)
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+struct ConstrGateInfo {
+  unsigned neg_lit:1;
+  unsigned fun_coi:1;
+  unsigned tran_coi:1;
+};
+typedef std::map<CCUBE,int> NamesOfLatches;
+typedef std::map<int,ConstrGateInfo> ConstrGates;
+
 // TRUTH_TABLE means neither "CONST",'BUFFER','AND','OR' gate and the cubes describing the ON-set have no don't cares
 enum Func_type {CONST,BUFFER,AND,OR,TRUTH_TABLE,COMPLEX};
 enum Gate_type {INPUT,GATE,LATCH,UNDEFINED};
@@ -23,8 +31,19 @@ struct GateFlagsType {
                            // (and so this gate is a part of transition relation)
   unsigned output_function : 1; // is set to 1 if there is a path from the output of this gate to a primary output
                                 // (and so this gate is a part of the circuit specifying the output function
+  unsigned fun_constr:1; // is set to 1 if 
+                         // a) the output and transition flags are set to 0
+                        // b) this gate in the cone of influence of a constrained gate
+                        // c) this cone of influence has a gate with 'output_function' set to 1
+
+  unsigned tran_constr:1; // the same as 'fun_constr' with the exception of the last condition
+                          // ...
+                          // c*) this cone of influence has a gate with 'transition' set to 1
+
+  
   unsigned feeds_latch: 1; // is set to 1 if the output of the gate feeds a latch
-  unsigned redund :1; // is set to 1 when the gate describes a latch that is redudnant
+  unsigned redund :1; // is set to 1 when the gate describes a latch that is redudnant   
+  
 };
 
 /*=============================

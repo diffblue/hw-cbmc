@@ -21,7 +21,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
       I N C R _ S H O R T
 
  ================================*/
-void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,char st_descr,int rec_depth)
+void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
+                          char st_descr,int rec_depth)
 {
 
   if (verbose > 1) {

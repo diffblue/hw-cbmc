@@ -53,6 +53,7 @@ void CompInfo::form_spec_simp_pr_tr(SatSolver &Slvr)
 
   load_clauses2(Ext_clauses,Sslvr,Tr,num_clauses);
 
+
   Sslvr->eliminate(true);
 
   CNF Uclauses;
@@ -61,7 +62,8 @@ void CompInfo::form_spec_simp_pr_tr(SatSolver &Slvr)
   accept_new_clauses(Slvr,Ext_clauses);
   accept_new_clauses(Slvr,Uclauses);
   
-  delete Sslvr;  
+  delete Sslvr;  // delete this instance of SimpSolver
+
 
 } /* end of function form_spec_simp_pr_tr */
 
@@ -85,3 +87,26 @@ void CompInfo::load_clauses2(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,
     Sslvr->addClause(M);
   }
 } /* end of function load_clauses2 */
+
+
+/*===================================
+
+  A D D _ C O N S T R _ N I L I T S
+
+  =================================*/
+void CompInfo::add_constr_nilits(CNF &Bad_states)
+{
+
+  SCUBE::iterator pnt;
+
+  for (pnt = Constr_nilits.begin(); pnt != Constr_nilits.end(); pnt++) {
+    int lit = *pnt;
+    int var_ind = abs(lit)-1;
+    if (Var_info[var_ind].type == NEXT_ST) continue;
+    CLAUSE U;
+    if (lit > 0) U.push_back(lit + max_num_vars0);
+    else U.push_back(-(-lit + max_num_vars0));
+    Bad_states.push_back(U);
+  }
+
+} /* end of function add_constr_nilits */

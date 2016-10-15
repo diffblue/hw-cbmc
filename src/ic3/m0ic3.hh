@@ -56,6 +56,13 @@ public:
 // next state variable is added to 'Constr_nilits'
 
   SCUBE Constr_nilits; 
+
+  CUBE Fun_coi_lits; // lists literals of 'Constr_nilits' that are in the coi
+                     //  of the property
+
+  CUBE Tr_coi_lits; // lists literals of 'Constr_nilits' that are in the coi
+                    //  of the transitive relation
+
   bool vac_true; // set to 'true', if the init. states do not sat. the constr.
                  // in this case, the property is vacuously true
   
