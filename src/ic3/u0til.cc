@@ -9,6 +9,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <iostream>
 #include <sys/resource.h>
 #include "Solver.h"
 #include "SimpSolver.h"

@@ -13,6 +13,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <queue>
 #include <map>
+#include <iostream>
 #include "dnf_io.hh"
 const int factor = 1000;
 

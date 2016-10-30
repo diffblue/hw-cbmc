@@ -10,12 +10,47 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <iostream>
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "r0ead_blif.hh"
 #include "m0ic3.hh"
+
+/*============================================
+
+       E X T R A C T _ L A T C H _ N A M E
+
+   ASSUMPTIONS:
+    1) Buff starts with '.latch' 
+
+  ==========================================*/
+void extract_latch_name(CCUBE &Lname,CCUBE &Buff) 
+{
+
+  int pnt = 6;
+
+  
+  skip_blanks(Buff,pnt);
+
+  assert (pnt < Buff.size());
+
+
+  // skip the next state name
+  CCUBE Tmp;
+  copy_name(Buff,Tmp,pnt);
+
+  assert (pnt < Buff.size());
+  
+  // reach the latch name
+  skip_blanks(Buff,pnt);
+
+  // read the latch name
+  copy_name(Buff,Lname,pnt);
+ 
+
+} /* end of function extract_latch_name */
 
 /*==============================
 

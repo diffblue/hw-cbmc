@@ -114,7 +114,8 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
     Time_frames[curr_tf].tot_num_ctis++;
     Time_frames[curr_tf].num_rcnt_ctis++;
    
-    bool state_found = find_prev_state_cube(C,curr_tf,Erl_st_cube,Erl_inps,St_cube);
+    bool state_found = find_prev_state_cube(C,curr_tf,Erl_st_cube,Erl_inps,
+                       St_cube);
 
     if (state_found == 0) {
       p();
@@ -182,7 +183,8 @@ void CompInfo::add_new_clauses(SatSolver &Slvr,CUBE &Clauses)
   is found. Otherwise, returns 'false'
 
   ==========================================*/
-bool CompInfo::find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Prv_st_cube,CUBE &Prev_inps,CUBE &St_cube) 
+bool CompInfo::find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Prv_st_cube,
+                                    CUBE &Prev_inps,CUBE &St_cube) 
 
 {
 
@@ -210,7 +212,7 @@ bool CompInfo::find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Prv_st_cube,CUBE
     CUBE St0;
     extr_cut_assgns1(St0,Pres_svars,Slvr);
     extr_cut_assgns1(Prev_inps,Inp_vars,Slvr);
-    lift_good_state(Prv_st_cube,St0,Prev_inps,St_cube);
+    lift_good_state(Prv_st_cube,St0,Prev_inps,Nst_cube);
     if (verbose > 2) {
       printf("%*c",6,' ');
       printf("Prv. state cube is found: ");

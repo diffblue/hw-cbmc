@@ -21,6 +21,11 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
      L I F T _ G O O D_ S T A T E
 
+ ASSUMPTIONS:
+
+   1) Nst_cube is given in terms of next
+      state variables
+
  ======================================*/
 void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
                                CUBE &Inps,CUBE &Nst_cube)
@@ -34,13 +39,10 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
   
 
   // add clause excluding next state cube
-  CUBE Mapped_cube;
-
- 
-  conv_to_next_state(Mapped_cube,Nst_cube);
+  
   
   Mlit act_lit;  
-  add_cls_excl_st_cube(act_lit,Lgs_sat,Mapped_cube);
+  add_cls_excl_st_cube(act_lit,Lgs_sat,Nst_cube);
  
   Assmps.push(act_lit);
 
@@ -53,7 +55,7 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
     p();
     std::cout << "Inps-> " << Inps << std::endl;
     std::cout << "Prs_st-> " << Prs_st << std::endl;
-    std::cout << "Mapped_cube-> " << Mapped_cube << std::endl;
+    std::cout << "Nst_cube-> " << Nst_cube << std::endl;
     exit(100);
   }
   

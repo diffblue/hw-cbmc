@@ -12,6 +12,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include <algorithm>
 #include <map>
+#include <stdio.h>
 #include "dnf_io.hh"
 
 

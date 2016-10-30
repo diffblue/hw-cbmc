@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <iostream>
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
@@ -160,7 +161,7 @@ bool CompInfo::find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,
     bool succ;
     if ((ctg_cnt < max_ctg_cnt) && (rec_depth < max_rec_depth))    {
       CUBE Nxt_cube;
-      use_coi_to_drop_svars(Nxt_cube,Nxt_st,curr_tf);
+      use_coi_to_drop_svars(Nxt_cube,Nxt_st,tf_lind-curr_tf-1);
       lift_ctg_state(Ctg_cube,Ctg_st,Inps,Nxt_cube);
       ctg_cnt++;
       tot_ctg_cnt++;

@@ -108,7 +108,7 @@ bool CompInfo::ver_ind_clauses2(CNF &H,CUBE &Old_nums)
 
 /*=============================
 
-  G E N _ F O R M 1
+      G E N _ F O R M 1
 
   ==============================*/
 void CompInfo::gen_form1(CNF &H,int k) 

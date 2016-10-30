@@ -27,7 +27,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 Circuit  *read_blif(FILE *fp,NamesOfLatches &Latches,reader_state &r)
 {CCUBE buf;
 
-
   Circuit *N = create_circuit(); // create a circuit 
 
   // ------------------------------------------
@@ -41,7 +40,7 @@ Circuit  *read_blif(FILE *fp,NamesOfLatches &Latches,reader_state &r)
       error_message(WRONG_EOF,buf);  // eof occured too early 
       exit(eof_error);
     }
-    
+  
     if (blank_line(buf))
       continue;
     if (set_model(buf,N)==0) {
@@ -130,14 +129,16 @@ Circuit  *read_blif(FILE *fp,NamesOfLatches &Latches,reader_state &r)
 	}
       case DOT_END:  // '.end' line?
 	goto FINISH_CIRCUIT;
-      case DOT_LATCH:
-	{int answer = add_latch(buf,Latches,N,gate_ind);
-	  if (answer == 0)
-	    {error_message(WRONG_SYNTAX,buf);
-	      exit(syn_error);
-	    }
+      case DOT_LATCH: {
+	  int answer = add_latch(buf,Latches,N,gate_ind);
+	  if (answer == 1) 
+	    error_message("command .latch has to have 3 parameters",buf);
+	  else if (answer == 2)
+	    error_message("the initial value of a latch must be 0,1 or 2 (dc)",
+                          buf);
+	  if (answer != 0) exit(syn_error);	  
 	  continue;
-	}
+      }
       case WRONG:
 	{error_message(WRONG_SYNTAX,buf);
 	  exit(syn_error);
@@ -172,7 +173,6 @@ Circuit  *read_blif(FILE *fp,NamesOfLatches &Latches,reader_state &r)
 void add_spec_buffs(Circuit *N) 
 {
 
-  //  printf("add_spec_buffs\n");
   if (N->num_spec_buffs == 0) return;
 
   gen_spec_buff_name(N);

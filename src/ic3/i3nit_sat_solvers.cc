@@ -9,6 +9,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <iostream>
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
@@ -132,7 +133,7 @@ void CompInfo::add_tf1_clauses(SatSolver &Slvr)
   CNF Ext_clauses;
 
   if (use_short_prop)  load_clauses1(Ext_clauses,Sslvr,Short_prop);
-  else load_clauses1(Ext_clauses,Sslvr,Short_prop);
+  else load_clauses1(Ext_clauses,Sslvr,Prop);
 
   load_clauses1(Ext_clauses,Sslvr,Tr);
 

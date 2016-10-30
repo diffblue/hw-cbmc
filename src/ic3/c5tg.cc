@@ -21,24 +21,23 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
      U S E _ C O I _ T O _ D R O P _ S V A R S
 
+  ASSUMPTIONS:
+     1) Nxt_st is specified in terms of next state
+        variables
+
   =================================================*/
-void CompInfo::use_coi_to_drop_svars(CUBE &Nxt_cube,CUBE &Nxt_st,int curr_tf)
+void CompInfo::use_coi_to_drop_svars(CUBE &Nxt_cube,CUBE &Nxt_st,int dist)
 {
 
   
-  if (curr_tf >= tf_lind) {
-    p();
-    printf("curr_tf = %d, tf_lind = %d\n",curr_tf,tf_lind);
-    exit(100);
-  }
+  assert(dist >= 0);
 
-
-  if (tf_lind - curr_tf -1 >=  Coi_svars.size()) {
+  if (dist >=  Coi_svars.size()) {
     Nxt_cube = Nxt_st;
     return;
   }
 
-  CUBE &Vars = Coi_svars[tf_lind-curr_tf-1];
+  CUBE &Vars = Coi_svars[dist];
 
   // mark Coi vars
   htable_lits.change_marker();

@@ -25,6 +25,7 @@ int create_inputs(CCUBE &buf,Circuit *N);
 void add_input(CCUBE &name,Circuit *N,int inp_gate_num);
 int create_outputs(CCUBE &buf,CDNF &Out_names);
 void error_message(err_type error_name,CCUBE &buf);
+void error_message(const char *message,CCUBE &buf);
 void add_new_cube(CCUBE &buf,Circuit *N,int &gate_ind);
 void finish_gate(Circuit *N,int &gate_ind);
 void start_gate(CCUBE &buf,Circuit *N,int &gate_ind);

@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <iostream>
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
@@ -31,7 +32,7 @@ void CompInfo::upd_gate_constrs(aiger_and &Aig_gate,CUBE &Gate_inds)
 
 } /* end of function upd_gate_constrs */
 
-/*=======================================================
+/*=====================================================
 
       U P D _ G A T E _ C O N S T R _ T B L
 
@@ -42,7 +43,7 @@ void CompInfo::upd_gate_constrs(aiger_and &Aig_gate,CUBE &Gate_inds)
       had no entry for 'gate_ind'
     2 if 'Constr_gates' has an entry for 'gate_ind'
 
-  =======================================================*/
+  =====================================================*/
 int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
 {
 
@@ -109,14 +110,10 @@ void read_names_of_latches(NamesOfLatches &Latches,char *fname)
 
     CCUBE Buff;
     int ret_val = read_string(fp,Buff);
-    int res = parse_string(Buff);   
-    if (res == 2) continue; // not  '.latch' or '.names' commands
-    if (res == 1) break; // Buff contains command '.names'
-    if (ret_val == -1) { // EOF symbol is returned 
-      printf("an early end-of-file\n");
-      exit(1);
-    }
-    assert(res == 0); // assert that Buff contains command '.latch'
+    if (ret_val == -1) break;
+    int res = parse_string(Buff);
+    if (res == 0) continue; // not  '.latch' or '.names' commands   
+    assert(res == 1); // assert that Buff contains command '.latch'
     CCUBE Lname;
     extract_latch_name(Lname,Buff);
     Latches[Lname] = 0; 
@@ -126,50 +123,7 @@ void read_names_of_latches(NamesOfLatches &Latches,char *fname)
 
 } /* end of function read_names_of_latches */
 
-/*============================================
 
-       E X T R A C T _ L A T C H _ N A M E
-
-   ASSUMPTIONS:
-    1) Buff starts with '.latch' 
-
-  ==========================================*/
-void extract_latch_name(CCUBE &Lname,CCUBE &Buff) 
-{
-
-  
-  int pnt = 6;
-
-  // reach the next_state name
-  for (; pnt < Buff.size(); pnt++)    
-    if (isalnum(Buff[pnt])) break;
-
-  
-
-  assert (pnt < Buff.size());
-
-
-  // skip the next state name
-  for (; pnt < Buff.size(); pnt++) 
-    if (!isalnum(Buff[pnt])) break;
-
-
-  assert (pnt < Buff.size());
-  
-  // reach the latch name
-  for (; pnt < Buff.size(); pnt++)    
-    if (isalnum(Buff[pnt])) break;
-
-
-  // read the latch name
-
-  for (; pnt < Buff.size(); pnt++)
-    if (isalnum(Buff[pnt])) 
-      Lname.push_back(Buff[pnt]);
-    else 
-      break;
-
-} /* end of function extract_latch_name */
 
 
 /*===================================
@@ -177,24 +131,23 @@ void extract_latch_name(CCUBE &Lname,CCUBE &Buff)
         P A R S E _ S T R I N G
 
   returns 
-   0   if Buff contains '.latch'
-   1   if Buff contains '.names'
-   2   Otherwise
+   1  if Buff contains '.latch'
+   0   Otherwise
 
   =================================*/
 int parse_string(CCUBE &Buff) 
 {
 
+  if (Buff.size() == 0) return(0);
   char Command[7];
 
   for (int i=0; i < 6; i++) 
     Command[i] = Buff[i];
   Command[6] = 0;
 
-  if (strcmp(Command,".latch") == 0) return(0);
-  if (strcmp(Command,".names") == 0) return(1);
+  if (strcmp(Command,".latch") == 0) return(1);
 
-  return(2);
+  return(0);
 
 } /* end of function parse_string */
 

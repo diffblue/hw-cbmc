@@ -12,6 +12,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <queue>
 #include <assert.h>
+#include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "r0ead_blif.hh"
@@ -36,6 +37,22 @@ void error_message(err_type error_name,CCUBE &buf)
    default: assert(false); // shouldn't reach this line
  
    }
+
+
+}/* end of function error_message */
+
+
+/*=============================================
+
+           E R R O R _ M E S S A G E
+
+===============================================*/
+void error_message(const char *message,CCUBE &buf)
+{
+
+  printf("%s\n",message); 
+  print_name(&buf); printf("\n");
+   
 
 
 }/* end of function error_message */
@@ -108,6 +125,7 @@ int blank_line(CCUBE &buf)
 /*=======================================
 
   S K I P _ B L A N K S
+
   The function skips spaces and tabulation
   symbols
   =========================================*/
@@ -119,3 +137,4 @@ void skip_blanks(CCUBE &buf,int &i)
     else
       break;
 }/* end of function skip_blanks */
+

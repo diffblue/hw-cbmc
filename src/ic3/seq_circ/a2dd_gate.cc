@@ -12,6 +12,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <queue>
 #include <assert.h>
+#include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "r0ead_blif.hh"

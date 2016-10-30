@@ -115,8 +115,9 @@ void CompInfo::gen_trans_rel(int shift)
       case TRUTH_TABLE: 
 	add_truth_table_gate_cubes(Tr,i,shift);         
 	break;
-      case COMPLEX: printf("complex gate\n");
-	exit(1);
+      case COMPLEX: 
+        add_complex_gate_cubes(Tr,i,shift);
+	break;
       default:   printf("wrong gate type\n");
 	exit(1);
       }

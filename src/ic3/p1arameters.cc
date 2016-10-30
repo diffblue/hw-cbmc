@@ -9,6 +9,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <iostream>
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
@@ -24,7 +25,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::print_header()
 {
 
-  printf("mic3 circ [b|C|c|d||e|g|i|n|N|r|x] ['a'num] ['D'num] ['g'num]\n");
+  printf("mic3 circ [b|C|c|d||e|i|n|N|r|x] ['a'num] ['D'num] ['g'num]\n");
   printf("          ['h'val] ['m'val] ['o' name] ['p'num] ['s'num] ['Sl'num]\n"); 
   printf("           ['Si'num] ['t'num] ['T'num] ['v'num] \n\n");
   printf("circ     - name of the file containing the initial circuit\n");
@@ -37,7 +38,6 @@ void CompInfo::print_header()
   printf("           0 - random (default), 1 - inactive lit \n");
   printf("           2 - inactive var, 3 - BerkMin like heuristic\n");
   printf("e        - set the selector variables to 1 (used for debugging)\n");
-  printf("g        - set ctg_flag on\n");
   printf("'g'num   - sets the maximal value of gcount (used for debugging)\n");
   printf("'i'num   - print out the invariant found (if any)\n");
   printf("           if 'num == 1', only inductive clauses are printed out\n");

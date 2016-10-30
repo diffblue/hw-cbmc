@@ -49,6 +49,7 @@ void  CompInfo::gen_cnfs(char *fname,bool print_flag)
   gen_trans_rel(0);
   
   gen_out_fun(Prop,0,false);
+
   gen_out_fun(Short_prop,0,true);
  
 }/* end of function gen_cnfs */
@@ -113,8 +114,9 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
       case TRUTH_TABLE:         
 	add_truth_table_gate_cubes(H,i,shift);                 
 	break;
-      case COMPLEX: printf("complex gate\n");
-	exit(1);
+      case COMPLEX: 
+        add_complex_gate_cubes(H,i,shift);
+	break;     
       default:   printf("wrong gate type\n");
 	exit(1);
       }

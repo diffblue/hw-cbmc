@@ -62,8 +62,9 @@ int CompInfo::next_time_frame()
     extr_cut_assgns1(Pst,Pres_svars,Bst_sat);
     Inps.clear();
     extr_cut_assgns1(Inps,Inp_vars,Bst_sat);
-    CUBE Gst_cube;
-    lift_good_state(Gst_cube,Pst,Inps,Bst_cube);
+    CUBE Gst_cube,Nxt_bst_cube;
+    conv_to_next_state(Nxt_bst_cube,Bst_cube);
+    lift_good_state(Gst_cube,Pst,Inps,Nxt_bst_cube);
    
 
     CNF G;  

@@ -170,7 +170,7 @@ void form_coi_array();
 void form_coi(CUBE &Coi,CUBE &Stack,hsh_tbl &Htbl);
 void conv_gates_to_svars(DNF &Coi_arr);
 void form_stack(CUBE &Stack,CUBE &Latches);
-void use_coi_to_drop_svars(CUBE &Nxt_cube,CUBE &Nxt_st,int curr_tf);
+void use_coi_to_drop_svars(CUBE &Nxt_cube,CUBE &Nxt_st,int dist);
 void extr_cut_assgns1(CUBE &Assgns,CUBE &Vars,SatSolver &Slvr);
 void extr_cut_assgns2(CUBE &Assgns,CUBE &Lits,SatSolver &Slv);
 void fxd_ord_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried);
@@ -210,13 +210,29 @@ void form_property_gates(CUBE &Gates);
 void print_files(char *root);
 
 //
-//  print out gates
+//  form CNF formulas
 void add_or_gate_cubes(DNF &F,int gate_ind,int shift);
 void add_truth_table_gate_cubes(DNF &F,int gate_ind,int shift);
 void add_const_gate_cube(DNF &F,int gate_ind,int shift);
 void add_and_gate_cubes(DNF &F,int gate_ind,int shift);
 void  add_buffer_gate_cubes(DNF &F,int gate_ind,int shift);
 void  gen_initial_state_cubes();
+void  add_complex_gate_cubes(DNF &F,int gate_ind,int shift);
+
+//  generate a complement
+
+void find_complem(DNF &R,DNF &F,int num_vars);
+void conv_to_mterm(CUBE &M,int i,int num_vars);
+bool eval_to_1(DNF &F,CUBE &M);
+void expand_mterm(CUBE &C,DNF &F,CUBE &M,DNF &Lits0,DNF &Lits1);
+void find_lit_presence(DNF &F,DNF &Lits0,DNF &Lits1);
+int pick_best_lit(CUBE &A,CUBE &M,CCUBE &Marked,DNF &Lits0,DNF &Lits1);
+void mark_cubes(CCUBE &Marked,CUBE &Cubes);
+bool cube_covers_mterm(CUBE &C,CUBE &M);
+int newly_marked(CCUBE &Marked,DNF &Lits0,DNF &Lits1,int lit);
+void check_overlapping_compl(DNF &R,DNF &F);
+bool overlap_compl(CUBE &A,CUBE &B);
+void check_completeness(DNF &R, DNF &F,int num_vars);
 
 // debugging methods
 void print_var_indexes();

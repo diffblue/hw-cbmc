@@ -19,7 +19,7 @@ vpath %.c aiger
 INC_DIR = -I. -Ibuild_prob -Iseq_circ -Iminisat -Iminisat/minisat/core -Iminisat/minisat/mtl -Iminisat/minisat/simp -Iaiger
 
 
-BUILD_PROB =   obj/g3en_cnf.o \
+BUILD_PROB =   obj/g3en_cnf.o obj/c1omplem.o obj/c2omplem.o \
                obj/g0en_cnf.o obj/g1en_cnf.o obj/g2en_cnf.o \
                obj/assign_indexes.o obj/build_arrays.o
 

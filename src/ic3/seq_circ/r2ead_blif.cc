@@ -14,6 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "r0ead_blif.hh"
@@ -168,14 +169,14 @@ int read_string(FILE *fp,CCUBE &buf)
 
   /*----------------------------------------------
     Read the current line and
-    all the extention lines
+    all the extension lines
     -------------------------------------------------*/
   while (true) {
-    int extention = 0;
+    int extension = 0;
     if (fgets(aux_buf,MAX_LINE,fp) == NULL)
       return(-1);
-    if (aux_buf[strlen(aux_buf)-2] == '\\') // extention line?
-      extention = 1;      
+    if (aux_buf[strlen(aux_buf)-2] == '\\') // extension line?
+      extension = 1;      
   
     int size = strlen(aux_buf);
     if (size == MAX_LINE-1) { // line is too long?
@@ -185,14 +186,16 @@ int read_string(FILE *fp,CCUBE &buf)
 
     for (int i=0; i < size;i++) {
       char symb = aux_buf[i];       
-      if ((symb == '#') || (symb == '\\') || (symb == '\n'))
+      if ((symb == '#') ||  (symb == '\n'))
 	break; 
+      if ((symb == '\\') && (extension > 0)) break;
       buf.push_back(aux_buf[i]);
     }   
 
-    if (!extention)
+    if (!extension)
       break;
   }
+
   return(1);     
 
 } /* end of function read_string */
