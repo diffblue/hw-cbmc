@@ -518,31 +518,55 @@ Function: ebmc_baset::do_bmc
 int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
 {
   solver.set_message_handler(get_message_handler());
-
-  if(get_bound()) return 1;
   
   int result;
 
   try
   {
-    if(!convert_only)
-      if(properties.empty())
-        throw "no properties";
-
-    status() << "Generating Decision Problem" << eom;
-
-    const namespacet ns(symbol_table);
-    ::unwind(trans_expr, *this, solver, bound+1, ns, true);
-
-    if(convert_only)
-      result=0;
-    else
+    if(cmdline.isset("max-bound"))
     {
-      result=finish_bmc(solver);
+      if(convert_only)
+        throw "please set a specific bound";
+        
+      const unsigned max_bound=
+        unsafe_string2unsigned(cmdline.get_value("max-bound"));
+    
+      for(bound=1; bound<=max_bound; bound++)
+      {
+        status() << "Doing BMC with bound " << bound << eom;
+        
+        #if 0
+        const namespacet ns(symbol_table);
+        ::unwind(trans_expr, *this, solver, bound+1, ns, true);
+        result=finish_bmc(solver);
+        #endif
+      }
+
       report_results();
     }
+    else
+    {
+      if(get_bound()) return 1;
+    
+      if(!convert_only)
+        if(properties.empty())
+          throw "no properties";
+
+      status() << "Generating Decision Problem" << eom;
+
+      const namespacet ns(symbol_table);
+      ::unwind(trans_expr, *this, solver, bound+1, ns, true);
+
+      if(convert_only)
+        result=0;
+      else
+      {
+        result=finish_bmc(solver);
+        report_results();
+      }
+    }
   }
-  
+    
   catch(const char *e)
   {
     error() << e << eom;

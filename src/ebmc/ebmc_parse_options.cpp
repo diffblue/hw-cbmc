@@ -238,6 +238,7 @@ void ebmc_parse_optionst::help()
     "\n"
     "Additonal options:\n"
     " --bound <nr>                      set bound (default: 1)\n"
+    // " --max-bound <nr>                  set maximum bound\n"
     " --module <module>                 set top module (deprecated)\n"
     " --top <module>                    set top module\n"
     " -p <expr>                         specify a property\n"
