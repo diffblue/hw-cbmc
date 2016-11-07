@@ -22,7 +22,7 @@ public:
 
   ebmc_parse_optionst(int argc, const char **argv):
     parse_options_baset("(diameter)(ediameter)"
-    "(diatest)(statebits):(bound):"
+    "(diatest)(statebits):(bound):(max-bound):"
     "(show-parse)(show-varmap)(show-symbol-table)(show-netlist)"
     "(show-ldg)(show-modules)(show-trans)(show-bdds)"
     "(show-properties)(property):p:(trace)"

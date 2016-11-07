@@ -1628,9 +1628,9 @@ bool verilog_typecheck(
     
   if(it==parse_tree.module_map.end())
   {
-    message_streamt message_stream(message_handler);
-    message_stream.error() << "module `" << module 
-                           << "' not found" << message_streamt::eom;
+    messaget message(message_handler);
+    message.error() << "module `" << module 
+                    << "' not found" << messaget::eom;
     return true;
   }
 
@@ -1676,9 +1676,9 @@ bool verilog_typecheck(
 
   if(symbol_table.move(symbol, new_symbol))
   {
-    message_streamt message_stream(message_handler);
-    message_stream.error() << "duplicate definition of module " 
-                           << symbol.base_name << message_streamt::eom;
+    messaget message(message_handler);
+    message.error() << "duplicate definition of module " 
+                    << symbol.base_name << messaget::eom;
     throw 0;
   }
 

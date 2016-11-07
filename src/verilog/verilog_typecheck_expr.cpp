@@ -2042,12 +2042,12 @@ bool verilog_typecheck(
 
   catch(const char *e)
   {
-    verilog_typecheck_expr.error() << e << message_streamt::eom;
+    verilog_typecheck_expr.error() << e << messaget::eom;
   }
 
   catch(const std::string &e)
   {
-    verilog_typecheck_expr.error() << e << message_streamt::eom;
+    verilog_typecheck_expr.error() << e << messaget::eom;
   }
   
   return verilog_typecheck_expr.get_error_found();

@@ -99,7 +99,7 @@ std::string output_verilog_netlistt::make_symbol_expr(
     mp_integer i;
     if(to_integer(expr, i))
     {
-      str << "failed to convert constant: " << expr.pretty() << '\n';
+      error() << "failed to convert constant: " << expr.pretty() << eom;
       throw 0;
     }
     
@@ -252,8 +252,8 @@ void output_verilog_netlistt::assign_symbol(
       p++;
     }
 
-    err_location(rhs);    
-    str << "unexpected operator: " << rhs.id() << '\n';
+    error().source_location=rhs.find_source_location();
+    error() << "unexpected operator: " << rhs.id() << eom;
     throw 0;
   }
 }
@@ -302,8 +302,8 @@ void output_verilog_rtlt::assign_symbol(
   {
     if(lhs.operands().size()!=2)
     {
-      err_location(lhs);
-      str << "extractbit takes two operands";
+      error().source_location=lhs.find_source_location();
+      error() << "extractbit takes two operands" << eom;
       throw 0;
     }
 
@@ -313,8 +313,8 @@ void output_verilog_rtlt::assign_symbol(
   {
     if(lhs.operands().size()!=3)
     {
-      err_location(lhs);
-      str << "extractbits takes three operands";
+      error().source_location=lhs.find_source_location();
+      error() << "extractbits takes three operands" << eom;
       throw 0;
     }
 
@@ -324,9 +324,9 @@ void output_verilog_rtlt::assign_symbol(
   if(symbol_expr.id()!=ID_symbol &&
      symbol_expr.id()!=ID_next_symbol)
   {
-    err_location(lhs);
-    str << "assign_symbol expects symbol on lhs, but got `";
-    str << expr2verilog(symbol_expr) << "'";
+    error().source_location=lhs.find_source_location();
+    error() << "assign_symbol expects symbol on lhs, but got `"
+            << expr2verilog(symbol_expr) << "'" << eom;
     throw 0;
   }
   
@@ -410,9 +410,9 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     mp_integer i;
     if(to_integer(expr.op1(), i))
     {
-      err_location(expr.op1());
-      str << "failed to convert constant "
-          << expr.op1().pretty() << '\n';
+      error().source_location=expr.op1().find_source_location();
+      error() << "failed to convert constant "
+              << expr.op1().pretty() << eom;
       throw 0;
     }
 
@@ -431,18 +431,18 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     mp_integer from;
     if(to_integer(expr.op1(), from))
     {
-      err_location(expr.op1());
-      str << "failed to convert constant "
-          << expr.op1().pretty() << '\n';
+      error().source_location=expr.op1().find_source_location();
+      error() << "failed to convert constant "
+              << expr.op1().pretty() << eom;
       throw 0;
     }
 
     mp_integer to;
     if(to_integer(expr.operands()[2], to))
     {
-      err_location(expr.operands()[2]);
-      str << "failed to convert constant "
-          << expr.operands()[2].pretty() << '\n';
+      error().source_location=expr.operands()[2].find_source_location();
+      error() << "failed to convert constant "
+              << expr.operands()[2].pretty() << eom;
       throw 0;
     }
 
@@ -466,9 +466,9 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     
     if(s_it==symbol_table.symbols.end())
     {
-      err_location(expr);
-      str << "symbol " << identifier << " not found"
-          << '\n';
+      error().source_location=expr.find_source_location();
+      error() << "symbol " << identifier << " not found"
+              << eom;
       throw 0;
     }
     
@@ -488,9 +488,9 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     
     if(s_it==symbol_table.symbols.end())
     {
-      err_location(expr);
-      str << "symbol " << identifier << " not found"
-          << '\n';
+      error().source_location=expr.find_source_location();
+      error() << "symbol " << identifier << " not found"
+              << eom;
       throw 0;
     }
     
@@ -498,8 +498,8 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     return "next_"+id2string(symbol.base_name);
   }
 
-  err_location(expr);
-  str << "Not a symbol: " << expr.pretty() << '\n';
+  error().source_location=expr.find_source_location();
+  error() << "Not a symbol: " << expr.pretty() << eom;
   throw 0;
 }
 
@@ -537,9 +537,9 @@ std::string output_verilog_baset::type_string_base(const typet &type)
   }
   else
   {
-    err_location(type);
-    str << "failed to convert type "
-        << type.pretty() << '\n';
+    error().source_location=type.source_location();
+    error() << "failed to convert type "
+            << type.pretty() << eom;
     throw 0;
   }
 
@@ -669,8 +669,7 @@ void output_verilog_netlistt::latches(const irep_idt &module)
     
     if(s_it==symbol_table.symbols.end())
     {
-      str << "failed to find symbol " << identifier
-          << '\n';
+      error() << "failed to find symbol " << identifier << eom;
       throw 0;
     }
 
@@ -720,8 +719,7 @@ void output_verilog_rtlt::latches(const irep_idt &module)
     
     if(s_it==symbol_table.symbols.end())
     {
-      str << "failed to find symbol " << identifier
-          << '\n';
+      error() << "failed to find symbol " << identifier << eom;
       throw 0;
     }
 
@@ -768,8 +766,7 @@ void output_verilog_baset::wires(const irep_idt &module)
     
     if(s_it==symbol_table.symbols.end())
     {
-      str << "failed to find symbol " << identifier
-          << '\n';
+      error() << "failed to find symbol " << identifier << eom;
       throw 0;
     }
 

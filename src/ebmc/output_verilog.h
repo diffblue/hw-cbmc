@@ -9,17 +9,17 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iosfwd>
 #include <set>
 
-#include <util/message_stream.h>
+#include <util/message.h>
 #include <util/expr.h>
 
-class output_verilog_baset:public message_streamt
+class output_verilog_baset:public messaget
 {
 public:
   output_verilog_baset(
     const symbol_tablet &_symbol_table,
     std::ostream &_out,
     message_handlert &_message_handler):
-    message_streamt(_message_handler),
+    messaget(_message_handler),
     symbol_table(_symbol_table), out(_out)
   {
   }
