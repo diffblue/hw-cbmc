@@ -2938,9 +2938,11 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   
   transt trans;
 
-  forall_operands(it, symbol.value)
-    synth_module_item(
-      static_cast<const verilog_module_itemt &>(*it), trans);
+  for(const auto & it : symbol.value.operands())
+  {
+    const auto & module_item=static_cast<const verilog_module_itemt &>(it);
+    synth_module_item(module_item, trans);
+  }
 
   synth_assignments(trans);
   
