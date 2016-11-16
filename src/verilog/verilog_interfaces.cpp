@@ -497,7 +497,7 @@ void verilog_typecheckt::interface_module_decl(
       symbol.is_input=true;
     else if(port_class==ID_output)
       symbol.is_output=true;
-    else if(port_class=="output-register")
+    else if(port_class==ID_output_register)
     {
       symbol.is_output=true;
       symbol.is_state_var=true;
