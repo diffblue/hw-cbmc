@@ -65,18 +65,18 @@ void verilog_synthesist::synth_expr(
     {
       switch(symbol_state)
       {
-      case symbol_statet::S_SYMBOL:
+      case symbol_statet::SYMBOL:
         break;
 
-      case symbol_statet::S_CURRENT:
+      case symbol_statet::CURRENT:
         expr=current_value(symbol);
         break;
 
-      case symbol_statet::S_FINAL:
+      case symbol_statet::FINAL:
         expr=final_value(symbol);
         break;
 
-      case symbol_statet::S_NONE:
+      case symbol_statet::NONE:
         err_location(expr);
         error() << "symbols not allowed here" << eom;
         throw 0;
@@ -122,8 +122,8 @@ Function: verilog_synthesist::expand_function_call
 void verilog_synthesist::expand_function_call(function_call_exprt &call)
 {
   // check some restrictions
-  if(construct!=constructt::C_INITIAL &&
-     construct!=constructt::C_ALWAYS)
+  if(construct!=constructt::INITIAL &&
+     construct!=constructt::ALWAYS)
   {
     err_location(call);
     error() << "function call not allowed here" << eom;
@@ -333,7 +333,7 @@ void verilog_synthesist::assignment(
     throw 0;
   }
 
-  if(construct==constructt::C_ALWAYS &&
+  if(construct==constructt::ALWAYS &&
      event_guard==event_guardt::NONE)
   {
     err_location(lhs);
@@ -344,7 +344,7 @@ void verilog_synthesist::assignment(
   {
     event_guardt new_type;
 
-    if(construct==constructt::C_ALWAYS)  
+    if(construct==constructt::ALWAYS)  
       new_type=event_guard;
     else
       new_type=event_guardt::CLOCK;
@@ -366,7 +366,7 @@ void verilog_synthesist::assignment(
     
     membert member;
     assignment_member_rec(lhs, member,
-      (construct==constructt::C_INITIAL)?assignment.init:assignment.next);
+      (construct==constructt::INITIAL)?assignment.init:assignment.next);
   }
 
   {
@@ -439,10 +439,10 @@ void verilog_synthesist::assignment_rec(
     new_rhs.move_to_operands(rhs);
 
     // do the array
-    synth_expr(new_rhs.op0(), symbol_statet::S_FINAL);
+    synth_expr(new_rhs.op0(), symbol_statet::FINAL);
 
     // do the index
-    synth_expr(new_rhs.op1(), symbol_statet::S_CURRENT);
+    synth_expr(new_rhs.op1(), symbol_statet::CURRENT);
     
     // do the value
     assignment_rec(lhs_array, new_rhs, new_value); // recursive call
@@ -496,7 +496,7 @@ void verilog_synthesist::assignment_rec(
     exprt synth_lhs_bv(lhs_bv);
 
     // do the array, but just once
-    synth_expr(synth_lhs_bv, symbol_statet::S_FINAL);
+    synth_expr(synth_lhs_bv, symbol_statet::FINAL);
 
     exprt last_value;
     last_value.make_nil();
@@ -1240,7 +1240,7 @@ void verilog_synthesist::expand_module_instance(
   const exprt &op,
   transt &trans)
 {
-  construct=constructt::C_OTHER;
+  construct=constructt::OTHER;
 
   const irep_idt &instance=op.get(ID_instance);
 
@@ -1346,7 +1346,7 @@ void verilog_synthesist::synth_always(
     throw 0;
   }
 
-  construct=constructt::C_ALWAYS;
+  construct=constructt::ALWAYS;
   event_guard=event_guardt::NONE;
 
   value_mapt always_value_map;
@@ -1386,7 +1386,7 @@ void verilog_synthesist::synth_initial(
     throw 0;
   }
 
-  construct=constructt::C_INITIAL;
+  construct=constructt::INITIAL;
   event_guard=event_guardt::NONE;
 
   value_mapt initial_value_map;
@@ -1426,7 +1426,7 @@ void verilog_synthesist::synth_decl(
     {
       // These are only allowed for module-level declarations,
       // not block-level.
-      construct=constructt::C_INITIAL;
+      construct=constructt::INITIAL;
       event_guard=event_guardt::NONE;
 
       if(it->operands().size()!=2)
@@ -1450,7 +1450,7 @@ void verilog_synthesist::synth_decl(
 
       if(symbol.is_state_var)
       {
-        synth_expr(rhs, symbol_statet::S_CURRENT);
+        synth_expr(rhs, symbol_statet::CURRENT);
 
         if(assignment.type==event_guardt::NONE)
           assignment.type=event_guardt::CLOCK;
@@ -1473,8 +1473,8 @@ void verilog_synthesist::synth_decl(
       }
       else
       {
-        synth_expr(lhs, symbol_statet::S_SYMBOL);
-        synth_expr(rhs, symbol_statet::S_SYMBOL);
+        synth_expr(lhs, symbol_statet::SYMBOL);
+        synth_expr(rhs, symbol_statet::SYMBOL);
 
         if(assignment.type==event_guardt::NONE)
           assignment.type=event_guardt::COMBINATORIAL;
@@ -1526,7 +1526,7 @@ void verilog_synthesist::synth_continuous_assign(
   const verilog_continuous_assignt &module_item,
   transt &trans)
 {
-  construct=constructt::C_OTHER;
+  construct=constructt::OTHER;
 
   forall_operands(it, module_item)
   {
@@ -1540,8 +1540,8 @@ void verilog_synthesist::synth_continuous_assign(
     exprt lhs=it->op0();
     exprt rhs=it->op1();
     
-    synth_expr(lhs, symbol_statet::S_SYMBOL);
-    synth_expr(rhs, symbol_statet::S_SYMBOL);
+    synth_expr(lhs, symbol_statet::SYMBOL);
+    synth_expr(rhs, symbol_statet::SYMBOL);
 
     synth_continuous_assign(lhs, rhs, trans);
   }
@@ -1656,8 +1656,8 @@ void verilog_synthesist::synth_assign(
     throw 0;
   }
 
-  if(construct!=constructt::C_ALWAYS &&
-     construct!=constructt::C_INITIAL)
+  if(construct!=constructt::ALWAYS &&
+     construct!=constructt::INITIAL)
   {
     err_location(statement);
     error() << "unexpected assignment statement" << eom;
@@ -1667,7 +1667,7 @@ void verilog_synthesist::synth_assign(
   const exprt &lhs=statement.op0();
   exprt rhs=statement.op1();
 
-  synth_expr(rhs, symbol_statet::S_CURRENT);
+  synth_expr(rhs, symbol_statet::CURRENT);
 
   // elaborate now?
   if(lhs.type().id()==ID_integer)
@@ -1720,7 +1720,7 @@ void verilog_synthesist::synth_assert(
   const irep_idt &identifier=statement.get(ID_identifier);
   symbolt &symbol=symbol_table_lookup(identifier);
   
-  synth_expr(symbol.value, symbol_statet::S_CURRENT);
+  synth_expr(symbol.value, symbol_statet::CURRENT);
 }
 
 /*******************************************************************\
@@ -1748,9 +1748,9 @@ void verilog_synthesist::synth_assert_module_item(
   const irep_idt &identifier=module_item.get(ID_identifier);
   symbolt &symbol=symbol_table_lookup(identifier);
   
-  construct=constructt::C_OTHER;
+  construct=constructt::OTHER;
 
-  synth_expr(symbol.value, symbol_statet::S_SYMBOL);
+  synth_expr(symbol.value, symbol_statet::SYMBOL);
 }
 
 /*******************************************************************\
@@ -1777,9 +1777,9 @@ void verilog_synthesist::synth_assume(
   
   exprt condition=statement.condition();
 
-  construct=constructt::C_OTHER;
+  construct=constructt::OTHER;
 
-  synth_expr(condition, symbol_statet::S_CURRENT);
+  synth_expr(condition, symbol_statet::CURRENT);
 
   // add it as an invariant
   invars.push_back(condition);
@@ -1808,7 +1808,7 @@ void verilog_synthesist::synth_assume_module_item(
   }
 
   exprt condition=module_item.op0();
-  synth_expr(condition, symbol_statet::S_SYMBOL);
+  synth_expr(condition, symbol_statet::SYMBOL);
 
   // add it as an invariant
   invars.push_back(condition);
@@ -1925,7 +1925,7 @@ exprt verilog_synthesist::synth_case_values(
   forall_operands(it, values)
   {
     exprt pattern=*it;
-    synth_expr(pattern, symbol_statet::S_CURRENT);
+    synth_expr(pattern, symbol_statet::CURRENT);
     op.push_back(case_comparison(case_operand, pattern));
   }
 
@@ -1957,7 +1957,7 @@ void verilog_synthesist::synth_case(
   exprt case_operand=statement.op0();
 
   // do the argument of the case
-  synth_expr(case_operand, symbol_statet::S_CURRENT);
+  synth_expr(case_operand, symbol_statet::CURRENT);
   
   // we convert the rest to if-then-else
   exprt start;
@@ -2022,7 +2022,7 @@ void verilog_synthesist::synth_if(
   }
 
   exprt if_operand=statement.condition();
-  synth_expr(if_operand, symbol_statet::S_CURRENT);
+  synth_expr(if_operand, symbol_statet::CURRENT);
 
   if(if_operand.is_true())
   {
@@ -2261,7 +2261,7 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
   {  
     exprt tmp_guard=statement.condition();
     tmp_guard.make_typecast(bool_typet());
-    synth_expr(tmp_guard, symbol_statet::S_CURRENT);
+    synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
  
     if(!tmp_guard.is_constant())
@@ -2340,7 +2340,7 @@ void verilog_synthesist::synth_while(
   {  
     exprt tmp_guard=statement.condition();
     tmp_guard.make_typecast(bool_typet());
-    synth_expr(tmp_guard, symbol_statet::S_CURRENT);
+    synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
  
     if(!tmp_guard.is_constant())
@@ -2774,7 +2774,7 @@ exprt verilog_synthesist::current_value(
       // see if we have a previous assignment
       const assignmentt &assignment=assignments[symbol.name];
       const exprt &value=
-        (construct==constructt::C_INITIAL)?
+        (construct==constructt::INITIAL)?
           assignment.init.value:
           assignment.next.value;
 
@@ -2797,14 +2797,14 @@ exprt verilog_synthesist::current_value(
       // see if we have a previous assignment
       const assignmentt &assignment=assignments[symbol.name];
       const exprt &value=
-        (construct==constructt::C_INITIAL)?
+        (construct==constructt::INITIAL)?
           assignment.init.value:assignment.next.value;
 
       if(value.is_not_nil())
         return value; // done
     }
 
-    if(construct==constructt::C_ALWAYS)
+    if(construct==constructt::ALWAYS)
       return symbol_expr(symbol, CURRENT);
     else
     {

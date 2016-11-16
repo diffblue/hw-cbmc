@@ -113,8 +113,8 @@ protected:
   typedef std::list<exprt> invarst;
   invarst invars;
 
-  enum class constructt { C_INITIAL, C_ALWAYS, C_OTHER };
-  enum class symbol_statet { S_NONE, S_SYMBOL, S_CURRENT, S_FINAL };
+  enum class constructt { INITIAL, ALWAYS, OTHER };
+  enum class symbol_statet { NONE, SYMBOL, CURRENT, FINAL };
   constructt construct;
   event_guardt event_guard;
  
