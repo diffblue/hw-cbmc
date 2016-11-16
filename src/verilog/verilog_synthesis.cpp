@@ -755,12 +755,9 @@ void verilog_synthesist::add_assignment_member(
   assignmentt::datat &data)
 {
   // see if we conflict with any previous assignment
-  for(member_listt::const_iterator
-      it=data.assigned_previous.begin();
-      it!=data.assigned_previous.end();
-      it++)
+  for(const auto & it : data.assigned_previous)
   {
-    if(!disjoint(member, *it))
+    if(!disjoint(member, it))
     {
       error().source_location=lhs.source_location();
       error() << "conflict with previous assignment" << eom;
