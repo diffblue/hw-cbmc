@@ -1477,8 +1477,8 @@ void verilog_synthesist::synth_decl(
         synth_expr(rhs, symbol_statet::SYMBOL);
 
         if(assignment.type==event_guardt::NONE)
-          assignment.type=event_guardt::COMBINATORIAL;
-        else if(assignment.type!=event_guardt::COMBINATORIAL)
+          assignment.type=event_guardt::COMBINATIONAL;
+        else if(assignment.type!=event_guardt::COMBINATIONAL)
         {
           error().source_location=statement.source_location();
           error() << "variable is clocked" << eom;
@@ -1621,8 +1621,8 @@ void verilog_synthesist::synth_continuous_assign(
   assignmentt &assignment=assignments[symbol.name];
 
   if(assignment.type==event_guardt::NONE)
-    assignment.type=event_guardt::COMBINATORIAL;
-  else if(assignment.type!=event_guardt::COMBINATORIAL)
+    assignment.type=event_guardt::COMBINATIONAL;
+  else if(assignment.type!=event_guardt::COMBINATIONAL)
   {
     error().source_location=lhs.source_location();
     error() << "variable is clocked" << eom;
@@ -2184,7 +2184,7 @@ void verilog_synthesist::synth_event_guard(
       }
     }
 
-  event_guard=edge?event_guardt::CLOCK:event_guardt::COMBINATORIAL;
+  event_guard=edge?event_guardt::CLOCK:event_guardt::COMBINATIONAL;
 
   if(guards.empty())
     synth_statement(statement.body());
@@ -2706,7 +2706,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
     {
       assignmentt &assignment=assignments[symbol.name];
 
-      if(assignment.type==event_guardt::COMBINATORIAL)
+      if(assignment.type==event_guardt::COMBINATIONAL)
       {
         warning() << "Making " << symbol.name << " a wire" << eom;
         symbol.is_state_var=false;

@@ -60,12 +60,12 @@ protected:
   const namespacet ns;
   const optionst &options;
  
-  enum class event_guardt { NONE, CLOCK, COMBINATORIAL };
+  enum class event_guardt { NONE, CLOCK, COMBINATIONAL };
   
   inline std::string as_string(event_guardt g)
   {
     return g==event_guardt::CLOCK?"clocked":
-           g==event_guardt::COMBINATORIAL?"combinatorial":
+           g==event_guardt::COMBINATIONAL?"combinational":
            "";
   }
   
