@@ -60,12 +60,12 @@ protected:
   const namespacet ns;
   const optionst &options;
  
-  typedef enum { G_NONE, G_CLOCK, G_COMBINATORIAL } event_guardt;
+  enum class event_guardt { NONE, CLOCK, COMBINATORIAL };
   
   inline std::string as_string(event_guardt g)
   {
-    return g==G_CLOCK?"clocked":
-           g==G_COMBINATORIAL?"combinatorial":
+    return g==event_guardt::CLOCK?"clocked":
+           g==event_guardt::COMBINATORIAL?"combinatorial":
            "";
   }
   
@@ -101,7 +101,7 @@ protected:
     // only relevant for 'next'
     event_guardt type;
 
-    assignmentt():type(G_NONE)
+    assignmentt():type(event_guardt::NONE)
     {
     }
   };
@@ -113,8 +113,8 @@ protected:
   typedef std::list<exprt> invarst;
   invarst invars;
 
-  typedef enum { C_INITIAL, C_ALWAYS, C_OTHER } constructt;
-  typedef enum { S_NONE, S_SYMBOL, S_CURRENT, S_FINAL } symbol_statet;
+  enum class constructt { C_INITIAL, C_ALWAYS, C_OTHER };
+  enum class symbol_statet { S_NONE, S_SYMBOL, S_CURRENT, S_FINAL };
   constructt construct;
   event_guardt event_guard;
  
