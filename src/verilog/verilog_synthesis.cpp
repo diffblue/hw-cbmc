@@ -316,7 +316,7 @@ void verilog_synthesist::assignment(
     
     return;
   }
- 
+  
   // get identifier
   const symbolt &symbol=assignment_symbol(lhs);
   
@@ -348,7 +348,7 @@ void verilog_synthesist::assignment(
       new_type=event_guard;
     else
       new_type=event_guardt::CLOCK;
-
+      
     assignmentt &assignment=assignments[symbol.name];
 
     if(assignment.type==event_guardt::NONE)
@@ -2934,7 +2934,7 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
     local_symbols.insert(it->second);
 
-  // do the module items
+  // now convert the module items
   
   transt trans;
 
