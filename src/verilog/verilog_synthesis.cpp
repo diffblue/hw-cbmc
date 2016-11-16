@@ -77,7 +77,7 @@ void verilog_synthesist::synth_expr(
         break;
 
       case symbol_statet::NONE:
-        err_location(expr);
+        error().source_location=expr.source_location();
         error() << "symbols not allowed here" << eom;
         throw 0;
       }
@@ -125,7 +125,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   if(construct!=constructt::INITIAL &&
      construct!=constructt::ALWAYS)
   {
-    err_location(call);
+    error().source_location=call.source_location();
     error() << "function call not allowed here" << eom;
     throw 0;
   }
@@ -137,7 +137,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   
   if(symbol.type.id()!=ID_code)
   {
-    err_location(call);
+    error().source_location=call.source_location();
     error() << "function call expects function argument" << eom;
     throw 0;
   }
@@ -146,7 +146,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
 
   if(code_type.return_type()==empty_typet())
   {
-    err_location(call);
+    error().source_location=call.source_location();
     error() << "function call cannot call task" << eom;
     throw 0;
   }
@@ -159,7 +159,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
     
   if(parameters.size()!=actuals.size())
   {
-    err_location(call);
+    error().source_location=call.source_location();
     error() << "wrong number of arguments" << eom;
     throw 0;
   }
@@ -207,14 +207,14 @@ void verilog_synthesist::expand_hierarchical_identifier(
 
   if(expr.op0().id()!=ID_symbol)
   {
-    err_location(expr);
+    error().source_location=expr.source_location();
     error() << "synthesis expected symbol on lhs of `.'" << eom;
     throw 0;
   }
 
   if(expr.op0().type().id()!=ID_module_instance)
   {
-    err_location(expr);
+    error().source_location=expr.source_location();
     error() << "synthesis expected module instance on lhs of `.', but got `"
             << to_string(expr.op0().type()) << '\'' << eom;
     throw 0;
@@ -226,7 +226,7 @@ void verilog_synthesist::expand_hierarchical_identifier(
 
   if(expr.op1().id()!=ID_symbol)
   {
-    err_location(expr);
+    error().source_location=expr.source_location();
     error() << "synthesis expected symbol on rhs of `.', but got `"
             << to_string(expr.op1()) << '\'' << eom;
     throw 0;
@@ -308,7 +308,7 @@ void verilog_synthesist::assignment(
       }
       else
       {
-        err_location(*it);
+        error().source_location=it->source_location();
         error() << "assignment to type `" << to_string(it->type())
                 << "' not supported" << eom;
       }
@@ -328,7 +328,7 @@ void verilog_synthesist::assignment(
   
   if(!symbol.is_state_var)
   {
-    err_location(lhs);
+    error().source_location=lhs.source_location();
     error() << "assignment to non-register" << eom;
     throw 0;
   }
@@ -336,7 +336,7 @@ void verilog_synthesist::assignment(
   if(construct==constructt::ALWAYS &&
      event_guard==event_guardt::NONE)
   {
-    err_location(lhs);
+    error().source_location=lhs.source_location();
     error() << "permanent assignment without event guard" << eom;
     throw 0;
   }
@@ -355,7 +355,7 @@ void verilog_synthesist::assignment(
       assignment.type=new_type;
     else if(assignment.type!=new_type)
     {
-      err_location(lhs);
+      error().source_location=lhs.source_location();
       error() << "conflicting assignment types for `"
               << symbol.base_name
               << "' (new: "
@@ -465,14 +465,14 @@ void verilog_synthesist::assignment_rec(
 
     if(to_integer(lhs_index_one, from))
     {
-      err_location(lhs_index_one);
+      error().source_location=lhs_index_one.source_location();
       error() << "failed to convert range" << eom;
       throw 0;
     }
 
     if(to_integer(lhs_index_two, to))
     {
-      err_location(lhs_index_two);
+      error().source_location=lhs_index_two.source_location();
       error() << "failed to convert range" << eom;
       throw 0;
     }
@@ -675,14 +675,14 @@ void verilog_synthesist::assignment_member_rec(
 
     if(to_integer(lhs_index_one, from))
     {
-      err_location(lhs_index_one);
+      error().source_location=lhs_index_one.source_location();
       error() << "failed to convert range" << eom;
       throw 0;
     }
 
     if(to_integer(lhs_index_two, to))
     {
-      err_location(lhs_index_two);
+      error().source_location=lhs_index_two.source_location();
       error() << "failed to convert range" << eom;
       throw 0;
     }
@@ -762,7 +762,7 @@ void verilog_synthesist::add_assignment_member(
   {
     if(!disjoint(member, *it))
     {
-      err_location(lhs);
+      error().source_location=lhs.source_location();
       error() << "conflict with previous assignment" << eom;
       throw 0;
     }
@@ -1002,7 +1002,7 @@ void verilog_synthesist::instantiate_ports(
   {
     if(inst.operands().size()!=ports.size())
     {
-      err_location(inst);
+      error().source_location=inst.source_location();
       error() << "wrong number of ports: expected " << ports.size() 
               << " but got " << inst.operands().size() << eom;
       throw 0;
@@ -1216,7 +1216,7 @@ void verilog_synthesist::synth_module_instance_builtin(
     }
     else
     {
-      err_location(module_item);
+      error().source_location=module_item.source_location();
       error() << "do not know how to synthesize " << module << eom;
       throw 0;
     }
@@ -1309,7 +1309,7 @@ void verilog_synthesist::expand_module_instance(
 
     if(tmp.id()!=ID_trans || tmp.operands().size()!=3)
     {
-      err_location(op);
+      error().source_location=op.source_location();
       error() << "Expected transition system, but got `"
               << tmp.id() << '\'' << eom;
       throw 0;
@@ -1341,7 +1341,7 @@ void verilog_synthesist::synth_always(
 {
   if(module_item.operands().size()!=1)
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "always module item expected to have one operand" << eom;
     throw 0;
   }
@@ -1381,7 +1381,7 @@ void verilog_synthesist::synth_initial(
 {
   if(module_item.operands().size()!=1)
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "initial module item expected to have one operand" << eom;
     throw 0;
   }
@@ -1456,14 +1456,14 @@ void verilog_synthesist::synth_decl(
           assignment.type=event_guardt::CLOCK;
         else if(assignment.type!=event_guardt::CLOCK)
         {
-          err_location(statement);
+          error().source_location=statement.source_location();
           error() << "variable is combinational" << eom;
           throw 0;
         }
 
         if(!assignment.init.value.is_nil())
         {
-          err_location(statement);
+          error().source_location=statement.source_location();
           error() << "variable already has initial value" << eom;
           throw 0;
         }
@@ -1480,7 +1480,7 @@ void verilog_synthesist::synth_decl(
           assignment.type=event_guardt::COMBINATORIAL;
         else if(assignment.type!=event_guardt::COMBINATORIAL)
         {
-          err_location(statement);
+          error().source_location=statement.source_location();
           error() << "variable is clocked" << eom;
           throw 0;
         }
@@ -1532,7 +1532,7 @@ void verilog_synthesist::synth_continuous_assign(
   {
     if(it->id()!=ID_equal || it->operands().size()!=2)
     {
-      err_location(*it);
+      error().source_location=it->source_location();
       error() << "unexpected continuous assignment" << eom;
       throw 0;
     }
@@ -1604,7 +1604,7 @@ void verilog_synthesist::synth_continuous_assign(
       }
       else
       {
-        err_location(*it);
+        error().source_location=it->source_location();
         error() << "continuous assignment to type `"
                 << to_string(it->type())
                 << "' not supported" << eom;
@@ -1624,7 +1624,7 @@ void verilog_synthesist::synth_continuous_assign(
     assignment.type=event_guardt::COMBINATORIAL;
   else if(assignment.type!=event_guardt::COMBINATORIAL)
   {
-    err_location(lhs);
+    error().source_location=lhs.source_location();
     error() << "variable is clocked" << eom;
     throw 0;
   }
@@ -1651,7 +1651,7 @@ void verilog_synthesist::synth_assign(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "assign statement expected to have two operands" << eom;
     throw 0;
   }
@@ -1659,7 +1659,7 @@ void verilog_synthesist::synth_assign(
   if(construct!=constructt::ALWAYS &&
      construct!=constructt::INITIAL)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "unexpected assignment statement" << eom;
     throw 0;
   }
@@ -1677,14 +1677,14 @@ void verilog_synthesist::synth_assign(
 
     if(to_integer(rhs, i))
     {
-      err_location(rhs);
+      error().source_location=rhs.source_location();
       error() << "synthesis expects constant on rhs" << eom;
       throw 0;
     }
     
     if(lhs.id()!=ID_symbol)
     {
-      err_location(lhs);
+      error().source_location=lhs.source_location();
       error() << "synthesis expects symbol on lhs" << eom;
       throw 0;
     }
@@ -1712,7 +1712,7 @@ void verilog_synthesist::synth_assert(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "assert statement expected to have two operands" << eom;
     throw 0;
   }
@@ -1740,7 +1740,7 @@ void verilog_synthesist::synth_assert_module_item(
 {
   if(module_item.operands().size()!=2)
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "assert module_item expected to have two operands" << eom;
     throw 0;
   }
@@ -1770,7 +1770,7 @@ void verilog_synthesist::synth_assume(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "assume statement expected to have two operands" << eom;
     throw 0;
   }
@@ -1802,7 +1802,7 @@ void verilog_synthesist::synth_assume_module_item(
 {
   if(module_item.operands().size()!=2)
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "assume module item expected to have two operands" << eom;
     throw 0;
   }
@@ -1949,7 +1949,7 @@ void verilog_synthesist::synth_case(
 {
   if(statement.operands().size()<1)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "case statement expected to have at least one operand" << eom;
     throw 0;
   }
@@ -1975,7 +1975,7 @@ void verilog_synthesist::synth_case(
 
     if(e.operands().size()!=2)
     {
-      err_location(e);
+      error().source_location=e.source_location();
       error() << "case_item expected to have two operands" << eom;
       throw 0;
     }
@@ -2016,7 +2016,7 @@ void verilog_synthesist::synth_if(
   if(statement.operands().size()!=2 &&
      statement.operands().size()!=3)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "if statement expected to have two or three operands" << eom;
     throw 0;
   }
@@ -2123,14 +2123,14 @@ void verilog_synthesist::synth_event_guard(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "event_guard expected to have two operands" << eom;
     throw 0;
   }
 
   if(event_guard!=event_guardt::NONE)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "event guard already specified" << eom;
     throw 0;
   }
@@ -2149,14 +2149,14 @@ void verilog_synthesist::synth_event_guard(
 
       if(it->operands().size()!=1)
       {
-        err_location(*it);
+        error().source_location=it->source_location();
         error() << "pos/negedge expected to have one operand" << eom;
         throw 0;
       }
 
       if(it->op0().id()!=ID_symbol)
       {
-        err_location(*it);
+        error().source_location=it->source_location();
         error() << "pos/negedge expected to have symbol as operand, "
                    "but got "+it->op0().pretty();
         throw 0;
@@ -2164,7 +2164,7 @@ void verilog_synthesist::synth_event_guard(
 
       if(it->op0().type().id()!=ID_bool)
       {
-        err_location(*it);
+        error().source_location=it->source_location();
         error() << "pos/negedge expected to have Boolean as operand, "
                    "but got "+to_string(it->op0().type());
         throw 0;
@@ -2226,7 +2226,7 @@ void verilog_synthesist::synth_delay(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "delay expected to have two operands" << eom;
     throw 0;
   }
@@ -2250,7 +2250,7 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
 {
   if(statement.operands().size()!=4)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "for expected to have four operands" << eom;
     throw 0;
   }
@@ -2266,7 +2266,7 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
  
     if(!tmp_guard.is_constant())
     {
-      err_location(statement.op1());
+      error().source_location=statement.op1().source_location();
       error() << "synthesis failed to evaluate loop guard: `"
               << expr2verilog(tmp_guard) << '\'' << eom;
       throw 0;
@@ -2299,7 +2299,7 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
 {
   if(statement.operands().size()!=1)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     throw statement.id_string()+" expected to have one operand";
   }
 
@@ -2331,7 +2331,7 @@ void verilog_synthesist::synth_while(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "while expected to have two operands" << eom;
     throw 0;
   }
@@ -2345,7 +2345,7 @@ void verilog_synthesist::synth_while(
  
     if(!tmp_guard.is_constant())
     {
-      err_location(statement.op1());
+      error().source_location=statement.op1().source_location();
       error() << "synthesis failed to evaluate loop guard: `"
               << expr2verilog(tmp_guard) << '\'' << eom;
       throw 0;
@@ -2376,12 +2376,12 @@ void verilog_synthesist::synth_repeat(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "repeat expected to have two operands" << eom;
     throw 0;
   }
 
-  err_location(statement);
+  error().source_location=statement.source_location();
   error() << "cannot synthesize `repeat'" << eom;
   throw 0;
 }
@@ -2403,12 +2403,12 @@ void verilog_synthesist::synth_forever(
 {
   if(statement.operands().size()!=1)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "forever expected to have one operand" << eom;
     throw 0;
   }
 
-  err_location(statement);
+  error().source_location=statement.source_location();
   error() << "cannot synthesize `forever'" << eom;
   throw 0;
 }
@@ -2446,7 +2446,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     
     if(symbol.type.id()!=ID_code)
     {
-      err_location(statement);
+      error().source_location=statement.source_location();
       error() << "expected function or task as first operand" << eom;
       throw 0;
     }
@@ -2461,7 +2461,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       
     if(parameters.size()!=actuals.size())
     {
-      err_location(statement);
+      error().source_location=statement.source_location();
       error() << "wrong number of arguments" << eom;
       throw 0;
     }
@@ -2565,7 +2565,7 @@ void verilog_synthesist::synth_statement(
   }
   else
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "unexpected statement during synthesis: "
             << statement.id() << eom;
     throw 0;
@@ -2609,7 +2609,7 @@ void verilog_synthesist::synth_module_item(
     synth_module_instance_builtin(to_verilog_inst_builtin(module_item), trans);
   else if(module_item.id()==ID_generate_block)
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "unexpected generate module item during synthesis" << eom;
     throw 0;
   }
@@ -2623,7 +2623,7 @@ void verilog_synthesist::synth_module_item(
   }
   else
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "unexpected module item during synthesis: "
             << module_item.id() << eom;
     throw 0;
