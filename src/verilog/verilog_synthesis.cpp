@@ -280,7 +280,8 @@ void verilog_synthesist::assignment(
         it!=lhs.operands().rend();
         it++)
     {
-      exprt offset_constant(ID_constant, natural_typet());
+      constant_exprt offset_constant;
+      offset_constant.type()=natural_typet();
       offset_constant.set(ID_value, offset);
 
       if(it->type().id()==ID_bool)
@@ -296,11 +297,12 @@ void verilog_synthesist::assignment(
       {
         unsigned width=get_width(it->type());
       
-        exprt offset_constant2(ID_constant, natural_typet());
+        constant_exprt offset_constant2;
+        offset_constant2.type()=natural_typet();
         offset_constant2.set(ID_value, offset+width-1);
 
-        exprt bit_extract(ID_extractbits, it->type());
-        bit_extract.copy_to_operands(rhs, offset_constant, offset_constant2);
+        extractbits_exprt bit_extract(
+          rhs, offset_constant, offset_constant2, it->type());
         
         assignment(*it, bit_extract, blocking);
         
@@ -1575,7 +1577,8 @@ void verilog_synthesist::synth_continuous_assign(
         it!=lhs.operands().rend();
         it++)
     {
-      exprt offset_constant(ID_constant, natural_typet());
+      constant_exprt offset_constant;
+      offset_constant.type()=natural_typet();
       offset_constant.set(ID_value, offset);
 
       if(it->type().id()==ID_bool)
@@ -1591,7 +1594,8 @@ void verilog_synthesist::synth_continuous_assign(
       {
         unsigned width=get_width(it->type());
       
-        exprt offset_constant2(ID_constant, natural_typet());
+        constant_exprt offset_constant2;
+        offset_constant2.type()=natural_typet();
         offset_constant2.set(ID_value, offset+width-1);
 
         exprt bit_extract(ID_extractbits, it->type());
