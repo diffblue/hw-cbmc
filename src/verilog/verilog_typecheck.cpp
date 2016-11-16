@@ -96,7 +96,7 @@ void verilog_typecheckt::typecheck_port_connection(
 
   if(!symbol.is_input && !symbol.is_output)
   {
-    err_location(op);
+    error().source_location=op.source_location();
     error() << "port `" << symbol.name
         << "' is neither input nor output";
     throw 0;
@@ -153,7 +153,7 @@ void verilog_typecheckt::typecheck_port_connections(
   {
     if(!ports.empty())
     {
-      err_location(inst);
+      error().source_location=inst.source_location();
       error() << "module does not have ports";
       throw 0;
     }
@@ -174,7 +174,7 @@ void verilog_typecheckt::typecheck_port_connections(
       if(o_it->id()!=ID_named_port_connection ||
          o_it->operands().size()!=2)
       {
-        err_location(inst);
+        error().source_location=inst.source_location();
         error() << "expected a named port connection" << eom;
         throw 0;
       }
@@ -193,7 +193,7 @@ void verilog_typecheckt::typecheck_port_connections(
       if(assigned_ports.find(name)!=
          assigned_ports.end())
       {
-        err_location(*o_it);
+        error().source_location=o_it->source_location();
         error() << "port name " << name << " assigned twice";
         throw 0;
       }
@@ -212,7 +212,7 @@ void verilog_typecheckt::typecheck_port_connections(
 
       if(!found)
       {
-        err_location(*o_it);
+        error().source_location=o_it->source_location();
         error() << "port name " << identifier << " not found";
         throw 0;
       }
@@ -224,7 +224,7 @@ void verilog_typecheckt::typecheck_port_connections(
   {
     if(inst.operands().size()!=ports.size())
     {
-      err_location(inst);
+      error().source_location=inst.source_location();
       error() << "wrong number of arguments: expected " << ports.size() 
           << " but got " << inst.operands().size(); 
       throw 0;
@@ -311,7 +311,7 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
 
   if(result==symbol_table.symbols.end())
   {
-    err_location(decl);
+    error().source_location=decl.source_location();
     error() << "expected to find " << decl_class << " symbol `"
         << identifier << "' in symbol_table";
     throw 0;
@@ -499,7 +499,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       {
         if(!symbol.value.is_nil())
         {
-          err_location(*it);
+          error().source_location=it->source_location();
           error() << "Net " << identifier << " is assigned twice";
           throw 0;
         }
@@ -624,9 +624,9 @@ void verilog_typecheckt::convert_inst_builtin(
     {
       if(instance.operands().size()<2)
       {
-        err_location(instance);
+        error().source_location=instance.source_location();
         error() << "Primitive gate " << inst_module
-            << " expects at least two operands";
+                << " expects at least two operands";
         throw 0;
       }
     }
@@ -635,9 +635,9 @@ void verilog_typecheckt::convert_inst_builtin(
     {
       if(instance.operands().size()<2)
       {
-        err_location(instance);
+        error().source_location=instance.source_location();
         error() << "Primitive gate " << inst_module
-            << " expects at least two operands";
+                << " expects at least two operands";
         throw 0;
       }
     }
@@ -655,9 +655,9 @@ void verilog_typecheckt::convert_inst_builtin(
     }
     else
     {
-      err_location(inst);
+      error().source_location=inst.source_location();
       error() << "Unknown primitive Verilog module "
-          << inst_module;
+              << inst_module;
       throw 0;
     }
   }
@@ -680,7 +680,7 @@ void verilog_typecheckt::convert_always(
 {
   if(module_item.operands().size()!=1)
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "always statement expected to have one operand" << eom;
     throw 0;
   }
@@ -705,7 +705,7 @@ void verilog_typecheckt::convert_initial(
 {
   if(module_item.operands().size()!=1)
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "initial statement expected to have one operand" << eom;
     throw 0;
   }
@@ -799,13 +799,13 @@ void verilog_typecheckt::check_lhs(
     case A_CONTINUOUS:
       if(symbol.is_state_var)
       {
-        err_location(lhs);
+        error().source_location=lhs.source_location();
         error() << "continuous assignment to register" << eom;
         throw 0;
       }
       else if(symbol.is_input && !symbol.is_output)
       {
-        err_location(lhs);
+        error().source_location=lhs.source_location();
         error() << "continuous assignment to input" << eom;
         throw 0;
       }
@@ -816,7 +816,7 @@ void verilog_typecheckt::check_lhs(
       if(!symbol.is_state_var &&
          !symbol.is_lvalue)
       {
-        err_location(lhs);
+        error().source_location=lhs.source_location();
         error() << "assignment to non-register" << eom;
         throw 0;
       }
@@ -871,7 +871,7 @@ void verilog_typecheckt::convert_continuous_assign(
   {
     if(it->id()!=ID_equal || it->operands().size()!=2)
     {
-      err_location(*it);
+      error().source_location=it->source_location();
       error() << "malformed continuous assignment" << eom;
       throw 0;
     }
@@ -924,7 +924,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
 
     if(symbol.type.id()!=ID_code)
     {
-      err_location(statement);
+      error().source_location=statement.source_location();
       error() << "expected task or function name" << eom;
       throw 0;
     }
@@ -937,7 +937,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
     
     if(parameter_types.size()!=arguments.size())
     {
-      err_location(statement);
+      error().source_location=statement.source_location();
       error() << "wrong number of arguments" << eom;
       throw 0;
     }
@@ -971,7 +971,7 @@ void verilog_typecheckt::convert_assign(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "assign statement expected to have two operands" << eom;
     throw 0;
   }
@@ -1001,7 +1001,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "assert statement expected to have two operands" << eom;
     return;
   }
@@ -1037,7 +1037,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   if(symbol_table.symbols.find(full_identifier)!=
      symbol_table.symbols.end())
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "property identifier `" << base_name
             << "' already used" << eom;
     return; // continue with error
@@ -1077,7 +1077,7 @@ void verilog_typecheckt::convert_assume(exprt &statement)
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "assume statement expected to have two operands" << eom;
     return;
   }
@@ -1132,7 +1132,7 @@ void verilog_typecheckt::convert_case(
 {
   if(statement.operands().size()<1)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "case statement expected to have at least one operand" << eom;
     throw 0;
   }
@@ -1168,7 +1168,7 @@ void verilog_typecheckt::convert_if(verilog_ift &statement)
   if(statement.operands().size()!=2 &&
      statement.operands().size()!=3)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "if statement expected to have two or three operands" << eom;
     throw 0;
   }
@@ -1201,7 +1201,7 @@ void verilog_typecheckt::convert_event_guard(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "event_guard expected to have two operands" << eom;
     throw 0;
   }
@@ -1230,7 +1230,7 @@ void verilog_typecheckt::convert_delay(verilog_delayt &statement)
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "delay expected to have two operands" << eom;
     throw 0;
   }
@@ -1254,7 +1254,7 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
 {
   if(statement.operands().size()!=4)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "for expected to have four operands" << eom;
     throw 0;
   }
@@ -1285,7 +1285,7 @@ void verilog_typecheckt::convert_prepostincdec(verilog_statementt &statement)
 {
   if(statement.operands().size()!=1)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     throw statement.id_string()+" expected to have one operand";
   }
 
@@ -1309,7 +1309,7 @@ void verilog_typecheckt::convert_while(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "while expected to have two operands" << eom;
     throw 0;
   }
@@ -1338,7 +1338,7 @@ void verilog_typecheckt::convert_repeat(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "repeat expected to have two operands" << eom;
     throw 0;
   }
@@ -1367,7 +1367,7 @@ void verilog_typecheckt::convert_forever(
 {
   if(statement.operands().size()!=1)
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "forever expected to have one operand" << eom;
     throw 0;
   }
@@ -1436,7 +1436,7 @@ void verilog_typecheckt::convert_statement(
     convert_decl(to_verilog_decl(statement));
   else
   {
-    err_location(statement);
+    error().source_location=statement.source_location();
     error() << "unexpected statement:" << statement.id() << eom;
     throw 0;
   }
@@ -1483,7 +1483,7 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id()==ID_generate_block)
   {
     // should be gone already
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "unexpected generate_block module item" << eom;
     throw 0;
   }
@@ -1508,7 +1508,7 @@ void verilog_typecheckt::convert_module_item(
   }
   else
   {
-    err_location(module_item);
+    error().source_location=module_item.source_location();
     error() << "unexpected module item:" << module_item.id() << eom;
     throw 0;
   }
