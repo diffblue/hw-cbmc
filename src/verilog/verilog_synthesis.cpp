@@ -641,10 +641,12 @@ void verilog_synthesist::assignment_member_rec(
       error() << "index takes two operands" << eom;
       throw 0;
     }
+    
+    exprt tmp_lhs_op1=simplify_expr(lhs.op1(), ns);
       
     // constant index?
     mp_integer index;
-    if(to_integer(lhs.op1(), index))
+    if(to_integer(tmp_lhs_op1, index))
     {
       // done
       add_assignment_member(lhs, member, data);
