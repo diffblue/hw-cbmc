@@ -2309,10 +2309,19 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
   // stupid implementation
   exprt one=
     from_integer(1, statement.op0().type());
+    
+  bool increment=
+    statement.id()==ID_preincrement ||
+    statement.id()==ID_postincrement;
   
   verilog_blocking_assignt assignment;
   assignment.lhs()=statement.op0();
-  assignment.rhs()=plus_exprt(statement.op0(), one);
+  
+  if(increment)
+    assignment.rhs()=plus_exprt(statement.op0(), one);
+  else
+    assignment.rhs()=minus_exprt(statement.op0(), one);
+  
   assignment.add_source_location()=statement.source_location();
   synth_statement(assignment);  
 }
