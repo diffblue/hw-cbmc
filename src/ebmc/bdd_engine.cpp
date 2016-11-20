@@ -133,8 +133,6 @@ int bdd_enginet::operator()()
     if(result!=-1) return result;
 
     {  
-      status() << "Building netlist" << eom;
-
       if(make_netlist(netlist))
       {
         error() << "Failed to build netlist" << eom;
