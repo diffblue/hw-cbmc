@@ -249,16 +249,18 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
   {
     assert(expr.operands().size()==1);
     
-    // we need a !p lasso to refute Fp
+    // For Fp to hold, we need at least one state
+    // from the current point in time that satisfies 'p',
+    // and there needs to be a lasso around it.
 
     // save the current time frame, we'll change it
     save_currentt save_current(current);
     
     exprt::operandst disjuncts;
-
+    
     for(; current<no_timeframes; current++)
     {
-      disjuncts.push_back(not_exprt(expr.op0()));
+      disjuncts.push_back(expr.op0());
       instantiate_rec(disjuncts.back());
     }
     
