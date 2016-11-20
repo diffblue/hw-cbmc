@@ -19,6 +19,28 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog_class.h"
 #include "verilog_types.h"
 
+// Precedences (higher means binds more strongly):
+// 
+// 18  [ ]  bit-select  ( )  parenthesis  ::   .
+// 17  unary !  ~  &  |  ~&  ~|  ^  ~^  ^~  +  -
+// 16  **  power
+// 15  *  /  %
+// 14  + -
+// 13  <<  >>  <<<  >>>
+// 12  >  >=  <  <=
+// 11  ==  !=  ===  !==  ==?  !=?
+// 10  & 
+//  9  ^  ~^  ^~ (binary)
+//  8  |
+//  7  &&
+//  6  ||
+//  5  ?:
+//  4  ->
+//  3  = += -= etc.
+//  2  { } concatenation
+//  1  {{ }} replication
+//  0  SVA stuff
+
 /*******************************************************************\
 
 Function: expr2verilogt::convert_if
@@ -803,25 +825,25 @@ std::string expr2verilogt::convert(
   const exprt &src,
   unsigned &precedence)
 {
-  precedence=22;
+  precedence=20; // max
 
   if(src.id()==ID_plus)
     return convert_binary(src, "+", precedence=14);
 
   else if(src.id()==ID_if)
-    return convert_if(to_if_expr(src), precedence=14);
+    return convert_if(to_if_expr(src), precedence=5);
 
   else if(src.id()==ID_concatenation)
-    return convert_concatenation(to_concatenation_expr(src), precedence=16);
+    return convert_concatenation(to_concatenation_expr(src), precedence=2);
 
   else if(src.id()==ID_with)
-    return convert_with(src, precedence=16);
+    return convert_with(src, precedence);
 
   else if(src.id()==ID_replication)
-    return convert_replication(to_replication_expr(src), precedence=22);
+    return convert_replication(to_replication_expr(src), precedence=1);
 
   else if(src.id()==ID_array)
-    return convert_array(src, precedence=22);
+    return convert_array(src, precedence);
 
   else if(src.id()==ID_minus)
   {
@@ -832,77 +854,67 @@ std::string expr2verilogt::convert(
   }
 
   else if(src.id()==ID_shl)
-    return convert_binary(src, "<<", precedence=14);
+    return convert_binary(src, "<<", precedence=13);
 
   else if(src.id()==ID_lshr)
-    return convert_binary(src, ">>", precedence=14);
+    return convert_binary(src, ">>", precedence=13);
 
   else if(src.id()==ID_ashr)
-    return convert_binary(src, ">>>", precedence=14);
+    return convert_binary(src, ">>>", precedence=13);
 
   else if(src.id()==ID_unary_minus)
-  {
-    if(src.operands().size()!=1)
-      return convert_norep(src, precedence);
-    else     
-      return convert_unary(src, "-", precedence=16);
-  }
+    return convert_unary(src, "-", precedence=17);
 
   else if(src.id()==ID_unary_plus)
-  {
-    if(src.operands().size()!=1)
-      return convert_norep(src, precedence);
-    else     
-      return convert_unary(src, "+", precedence=16);
-  }
+    return convert_unary(src, "+", precedence=17);
 
   else if(src.id()==ID_index)
-    return convert_index(to_index_expr(src), precedence=22);
+    return convert_index(to_index_expr(src), precedence=18);
 
   else if(src.id()==ID_extractbit)
-    return convert_extractbit(to_extractbit_expr(src), precedence=22);
+    return convert_extractbit(to_extractbit_expr(src), precedence=18);
 
   else if(src.id()==ID_extractbits)
-    return convert_extractbits(to_extractbits_expr(src), precedence=22);
+    return convert_extractbits(to_extractbits_expr(src), precedence=18);
 
   else if(src.id()==ID_member)
-    return convert_member(to_member_expr(src), precedence=22);
+    return convert_member(to_member_expr(src), precedence=18);
 
   else if(src.id()==ID_mult)
-    return convert_binary(src, "*", precedence=14);
+    return convert_binary(src, "*", precedence=15);
 
   else if(src.id()==ID_div)
-    return convert_binary(src, "/", precedence=14);
+    return convert_binary(src, "/", precedence=15);
 
   else if(src.id()==ID_lt)
-    return convert_binary(src, "<", precedence=9);
+    return convert_binary(src, "<", precedence=12);
 
   else if(src.id()==ID_gt)
-    return convert_binary(src, ">", precedence=9);
+    return convert_binary(src, ">", precedence=12);
 
   else if(src.id()==ID_le)
-    return convert_binary(src, "<=", precedence=9);
+    return convert_binary(src, "<=", precedence=12);
 
   else if(src.id()==ID_ge)
-    return convert_binary(src, ">=", precedence=9);
+    return convert_binary(src, ">=", precedence=12);
 
   else if(src.id()==ID_equal)
-    return convert_binary(src, "==", precedence=9);
+    return convert_binary(src, "==", precedence=11);
 
   else if(src.id()==ID_notequal)
-    return convert_binary(src, "!=", precedence=9);
+    return convert_binary(src, "!=", precedence=11);
 
   else if(src.id()==ID_verilog_case_equality)
-    return convert_binary(src, "===", precedence=9);
+    return convert_binary(src, "===", precedence=11);
 
   else if(src.id()==ID_verilog_case_inequality)
-    return convert_binary(src, "!==", precedence=9);
+    return convert_binary(src, "!==", precedence=11);
 
   else if(src.id()==ID_not)
-    return convert_unary(src, "!", precedence=16);
+    return convert_unary(src, "!", precedence=17);
 
   else if(src.id()==ID_bitnot)
-    return convert_unary(src, "~", precedence=16);
+    return convert_unary(src, "~", precedence=17);
 
   else if(src.id()==ID_typecast)
     return convert_typecast(to_typecast_expr(src), precedence);
@@ -911,53 +923,53 @@ std::string expr2verilogt::convert(
     return convert_binary(src, "&&", precedence=7);
 
   else if(src.id()==ID_power)
-    return convert_binary(src, "**", precedence=15);
+    return convert_binary(src, "**", precedence=16);
 
   else if(src.id()==ID_bitand)
-    return convert_binary(src, "&", precedence=7);
+    return convert_binary(src, "&", precedence=10);
 
   else if(src.id()==ID_bitxor)
-    return convert_binary(src, "^", precedence=7);
+    return convert_binary(src, "^", precedence=9);
 
   else if(src.id()==ID_bitxnor)
-    return convert_binary(src, "~^", precedence=7);
+    return convert_binary(src, "~^", precedence=9);
 
   else if(src.id()==ID_mod)
-    return convert_binary(src, "%", precedence=14);
+    return convert_binary(src, "%", precedence=15);
 
   else if(src.id()==ID_or)
     return convert_binary(src, "||", precedence=6);
 
   else if(src.id()==ID_bitor)
-    return convert_binary(src, "|", precedence=6);
+    return convert_binary(src, "|", precedence=8);
 
   else if(src.id()==ID_implies)
-    return convert_binary(src, "->", precedence=5);
+    return convert_binary(src, "|->", precedence=0);
 
   else if(src.id()==ID_iff)
-    return convert_binary(src, "<->", precedence=4);
+    return convert_binary(src, "<->", precedence=0);
 
   else if(src.id()==ID_reduction_or)
-    return convert_unary(src, "|", precedence=8);
+    return convert_unary(src, "|", precedence=17);
 
   else if(src.id()==ID_reduction_and)
-    return convert_unary(src, "&", precedence=8);
+    return convert_unary(src, "&", precedence=17);
 
   else if(src.id()==ID_reduction_nor)
-    return convert_unary(src, "~|", precedence=8);
+    return convert_unary(src, "~|", precedence=17);
 
   else if(src.id()==ID_reduction_nand)
-    return convert_unary(src, "~&", precedence=8);
+    return convert_unary(src, "~&", precedence=17);
 
   else if(src.id()==ID_reduction_xor)
-    return convert_unary(src, "^", precedence=8);
+    return convert_unary(src, "^", precedence=17);
 
   else if(src.id()==ID_reduction_xnor)
-    return convert_unary(src, "~^", precedence=8);
+    return convert_unary(src, "~^", precedence=17);
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
           src.id()==ID_AX || src.id()==ID_EX)
-    return convert_unary(src, src.id_string()+" ", precedence=4);
+    return convert_unary(src, src.id_string()+" ", precedence=0);
 
   else if(src.id()==ID_symbol)
     return convert_symbol(src, precedence);
@@ -981,19 +993,19 @@ std::string expr2verilogt::convert(
     return convert_function("$onehot0", src);
 
   else if(src.id()==ID_sva_overlapped_implication)
-    return convert_binary(src, "|->", precedence=3);
+    return convert_binary(src, "|->", precedence=0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_non_overlapped_implication)
-    return convert_binary(src, "|=>", precedence=3);
+    return convert_binary(src, "|=>", precedence=0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_cycle_delay)
-    return convert_sva_cycle_delay(src, precedence=3);
+    return convert_sva_cycle_delay(src, precedence=0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_sequence_concatenation)
-    return convert_sva_sequence_concatenation(src, precedence=3);
+    return convert_sva_sequence_concatenation(src, precedence=0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_always)
