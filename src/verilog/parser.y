@@ -1162,6 +1162,7 @@ module_or_generate_item:
  	| attribute_instance_brace initial_construct { $$=$2; }
  	| attribute_instance_brace always_construct { $$=$2; }
  	| attribute_instance_brace concurrent_assert_statement { $$=$2; }
+ 	| attribute_instance_brace concurrent_assume_statement { $$=$2; }
  	| attribute_instance_brace concurrent_cover_statement { $$=$2; }
 	| attribute_instance_brace concurrent_assertion_item_declaration { $$=$2; }
         ;
@@ -1829,6 +1830,7 @@ statement:
 
 statement_item:
           assert_property_statement
+        | assume_property_statement
         | block_reg_declaration /* added */
         | net_declaration       /* added */
 	| event_declaration     /* added */
@@ -1914,6 +1916,11 @@ assert_property_statement:
 		  stack($$).op0().swap(stack($4)); stack($$).op1().make_nil();
 		  stack($$).set(ID_identifier, stack($2).id());
 		} 
+	;
+
+assume_property_statement:
+          TOK_ASSUME TOK_PROPERTY '(' property_expr ')' action_block
+		{ init($$, ID_assume); mto($$, $4); mto($$, $6); }
 	| /* this one is in because SMV does it */
 	  TOK_ASSUME property_identifier TOK_COLON expression ';'
 		{ init($$, ID_assume); stack($$).operands().resize(2);
@@ -1938,6 +1945,15 @@ action_block:
 concurrent_assert_statement:
           assert_property_statement
         | block_identifier TOK_COLON assert_property_statement
+		{ 
+		  $$=$3;
+		  stack($$).set(ID_identifier, stack($1).id());
+		}
+	;
+
+concurrent_assume_statement:
+          assume_property_statement
+        | block_identifier TOK_COLON assume_property_statement
 		{ 
 		  $$=$3;
 		  stack($$).set(ID_identifier, stack($1).id());
