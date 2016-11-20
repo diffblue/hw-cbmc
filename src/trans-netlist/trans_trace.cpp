@@ -92,21 +92,18 @@ void show_trans_state(
   std::cout << "Transition system state " << timeframe << "\n";
   std::cout << "----------------------------------------------------\n";
 
-  for(trans_tracet::statet::assignmentst::const_iterator
-      it=state.assignments.begin();
-      it!=state.assignments.end();
-      it++)
+  for(const auto & a : state.assignments)
   {
-    assert(it->lhs.id()==ID_symbol);
+    assert(a.lhs.id()==ID_symbol);
 
-    const symbolt &symbol=ns.lookup(it->lhs.get(ID_identifier));
+    const symbolt &symbol=ns.lookup(to_symbol_expr(a.lhs));
     
     if(symbol.is_auxiliary)
       continue;
 
     std::cout << "  " << symbol.display_name() << " = ";
 
-    const exprt &rhs=it->rhs;
+    const exprt &rhs=a.rhs;
 
     if(rhs.is_nil())
       std::cout << "?";
@@ -163,23 +160,20 @@ void convert(
     xml_state.new_element("timeframe").data=i2string(t); // will go away
     xml_state.set_attribute("timeframe", t);
     
-    for(trans_tracet::statet::assignmentst::const_iterator
-        it=state.assignments.begin();
-        it!=state.assignments.end();
-        it++)
+    for(const auto & a : state.assignments)
     {
       xmlt &xml_assignment=xml_state.new_element("assignment");
 
-      assert(it->lhs.id()==ID_symbol);
-      const symbolt &symbol=ns.lookup(it->lhs.get(ID_identifier));
+      assert(a.lhs.id()==ID_symbol);
+      const symbolt &symbol=ns.lookup(to_symbol_expr(a.lhs));
 
-      std::string value_string=from_expr(ns, symbol.name, it->rhs);
+      std::string value_string=from_expr(ns, symbol.name, a.rhs);
       std::string type_string=from_type(ns, symbol.name, symbol.type);
 
-      if(it->rhs.is_nil())
+      if(a.rhs.is_nil())
         value_string="?";
       else
-        xml_assignment.new_element("value_expression").new_element(xml(it->rhs, ns));
+        xml_assignment.new_element("value_expression").new_element(xml(a.rhs, ns));
 
       xml_assignment.new_element("identifier").data=id2string(symbol.name);
       xml_assignment.new_element("base_name").data=id2string(symbol.base_name);
@@ -189,11 +183,11 @@ void convert(
       xml_assignment.new_element("mode").data=id2string(symbol.mode);
 
       #if 0
-      if(it->location.is_not_nil())
+      if(a.location.is_not_nil())
       {
         xmlt &xml_location=xml_assignment.new_element();
 
-        convert(it->location, xml_location);
+        convert(a.location, xml_location);
         xml_location.name="location";
       }
       #endif
@@ -293,12 +287,9 @@ static mp_integer vcd_width(
       
     mp_integer result=0;
     
-    for(struct_typet::componentst::const_iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
+    for(const auto & it : components)
     {
-      const typet &subtype=it->type();
+      const typet &subtype=it.type();
       mp_integer sub_size=pointer_offset_size(subtype, ns);
       if(sub_size==-1) return -1;
       result+=sub_size;
@@ -438,48 +429,43 @@ void show_trans_state_vcd(
   // build map for previous state  
   std::map<irep_idt, exprt> previous_values;
 
-  for(trans_tracet::statet::assignmentst::const_iterator
-      it=previous_state.assignments.begin();
-      it!=previous_state.assignments.end();
-      it++)
-    previous_values[it->lhs.get(ID_identifier)]=it->rhs;
+  for(const auto & a : previous_state.assignments)
+    previous_values[a.lhs.get(ID_identifier)]=a.rhs;
 
   // now dump current state
-  for(trans_tracet::statet::assignmentst::const_iterator
-      it=current_state.assignments.begin();
-      it!=current_state.assignments.end();
-      it++)
+  for(const auto & a : current_state.assignments)
   {
-    assert(it->lhs.id()==ID_symbol);
+    assert(a.lhs.id()==ID_symbol);
 
-    const symbolt &symbol=ns.lookup(it->lhs.get(ID_identifier));
+    const symbolt &symbol=
+      ns.lookup(to_symbol_expr(a.lhs));
     
     if(symbol.is_auxiliary)
       continue;
     
     if(timeframe!=0)
-      if(previous_values[symbol.name]==it->rhs)
+      if(previous_values[symbol.name]==a.rhs)
         continue; // value didn't change!
   
-    if(it->rhs.is_nil()) // no value
+    if(a.rhs.is_nil()) // no value
       continue;
   
     std::string display_name=id2string(symbol.display_name());
 
-    if(it->lhs.type().id()==ID_bool)
+    if(a.lhs.type().id()==ID_bool)
     {
       // booleans are special -- no space!
 
-      if(it->rhs.is_true())
+      if(a.rhs.is_true())
         out << '1' << vcd_identifier(display_name) << '\n';
-      else if(it->rhs.is_false())
+      else if(a.rhs.is_false())
         out << '0' << vcd_identifier(display_name) << '\n';
       else
         out << 'x' << vcd_identifier(display_name) << '\n';
     }
     else
     {
-      out << 'b' << as_vcd_binary(it->rhs, ns) << ' '
+      out << 'b' << as_vcd_binary(a.rhs, ns) << ' '
           << vcd_identifier(display_name) << '\n';
     }
   }
@@ -576,30 +562,24 @@ void vcd_hierarchy_rec(
   std::set<std::string> sub_modules;
   std::set<irep_idt> signals;
   
-  for(std::set<irep_idt>::const_iterator
-      it=ids.begin();
-      it!=ids.end();
-      it++)
+  for(const auto & it : ids)
   {
-    if(has_prefix(id2string(*it), prefix))
+    if(has_prefix(id2string(it), prefix))
     {
       std::string rest=
-        std::string(id2string(*it), prefix.size(), std::string::npos);
+        std::string(id2string(it), prefix.size(), std::string::npos);
       std::size_t dot_pos=rest.find('.');
       if(dot_pos==std::string::npos)
-        signals.insert(*it);
+        signals.insert(it);
       else
         sub_modules.insert(std::string(rest, 0, dot_pos));
     }
   }
 
   // do signals first
-  for(std::set<irep_idt>::const_iterator
-      it=signals.begin();
-      it!=signals.end();
-      it++)
+  for(const auto & it : signals)
   {
-    const symbolt &symbol=ns.lookup(*it);
+    const symbolt &symbol=ns.lookup(it);
     
     if(symbol.is_auxiliary) continue;
 
@@ -629,16 +609,13 @@ void vcd_hierarchy_rec(
   }
   
   // now do sub modules
-  for(std::set<std::string>::const_iterator
-      it=sub_modules.begin();
-      it!=sub_modules.end();
-      it++)
+  for(const auto & identifier : sub_modules)
   {
     out << std::string(depth*2, ' ')
-        << "$scope module " << *it << " $end\n";
+        << "$scope module " << identifier << " $end\n";
 
     // recursive call
-    vcd_hierarchy_rec(ns, ids, prefix+*it+".", out, depth+1);
+    vcd_hierarchy_rec(ns, ids, prefix+identifier+".", out, depth+1);
     
     out << std::string(depth*2, ' ')
         << "$upscope $end\n";
@@ -685,13 +662,10 @@ void show_trans_trace_vcd(
   // get identifiers
   std::set<irep_idt> ids;
   
-  for(trans_tracet::statet::assignmentst::const_iterator
-      it=state.assignments.begin();
-      it!=state.assignments.end();
-      it++)
+  for(const auto & a : state.assignments)
   {
-    assert(it->lhs.id()==ID_symbol);
-    ids.insert(it->lhs.get(ID_identifier));
+    assert(a.lhs.id()==ID_symbol);
+    ids.insert(to_symbol_expr(a.lhs).get_identifier());
   }
   
   // split up into hierarchy
