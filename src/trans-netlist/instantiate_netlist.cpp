@@ -552,6 +552,13 @@ literalt instantiate_var_mapt::convert_bool(const exprt &expr)
 
     return result[0];
   }
+  else if(expr.id()==ID_sva_overlapped_implication)
+  {
+    // same as regular implication
+    if(expr.operands().size()==2)
+      return prop.limplies(convert_bool(expr.op0()),
+                           convert_bool(expr.op1()));
+  }
 
   return SUB::convert_bool(expr);
 }
