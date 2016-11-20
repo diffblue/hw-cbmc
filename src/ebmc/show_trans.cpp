@@ -248,7 +248,7 @@ int show_transt::show_trans()
   
   print_verilog_constraints(trans_expr.invar(), std::cout);
 
-  std::cout << "Transisition constraints:\n\n";
+  std::cout << "Transition constraints:\n\n";
   
   print_verilog_constraints(trans_expr.trans(), std::cout);
 
