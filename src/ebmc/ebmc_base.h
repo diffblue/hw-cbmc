@@ -37,8 +37,6 @@ protected:
   bool get_main();
   bool get_bound();
     
-  void show_trace(const trans_tracet &trans_trace);
-  
   // word-level
   int do_bmc(prop_convt &solver, bool convert_only);
   int finish_bmc(prop_convt &solver);

@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/string2int.h>
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
+#include <util/unicode.h>
 
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/ldg.h>
@@ -62,46 +63,6 @@ ebmc_baset::ebmc_baset(
       unsafe_string2unsigned(cmdline.get_value("verbosity")));
   else
     ui_message_handler.set_verbosity(messaget::M_STATUS); // default
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::show_trace
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::show_trace(const trans_tracet &trans_trace)
-{
-  namespacet ns(symbol_table);
-
-  if(cmdline.isset("vcd"))
-  {
-    std::string vcdfile=cmdline.get_value("vcd");
-    std::ofstream vcd(vcdfile.c_str());
-
-    show_trans_trace_vcd(
-      trans_trace,
-      *this, // message
-      ns,
-      vcd);
-  }
-  else
-  {
-    if(get_ui()==ui_message_handlert::PLAIN)
-      result() << "Counterexample:\n" << eom;
-      
-    show_trans_trace(
-      trans_trace,
-      *this, // message
-      ns,
-      get_ui());
-  }
 }
 
 /*******************************************************************\
@@ -989,5 +950,30 @@ void ebmc_baset::report_results()
       }
     }
   }
+
+  if(cmdline.isset("vcd"))
+  {
+    for(const propertyt &property : properties)
+    {
+      if(property.is_failure())
+      {
+        std::string vcdfile=cmdline.get_value("vcd");
+        #ifdef _MSC_VER
+        std::ofstream vcd(widen(vcdfile));
+        #else    
+        std::ofstream vcd(vcdfile);
+        #endif
+
+        show_trans_trace_vcd(
+          property.counterexample,
+          *this, // message
+          ns,
+          vcd);
+
+        break;
+      }
+    }
+  }
+
 }
 
