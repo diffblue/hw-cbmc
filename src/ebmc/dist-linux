@@ -10,7 +10,7 @@ echo $VERSION_FILE ${BITS} bits
 
 mkdir /tmp/ebmc-dist
 cp ebmc /tmp/ebmc-dist/
-cp ~/progr/cbmc/trunk/LICENSE /tmp/ebmc-dist/
+cp ~/progr/cbmc-git/LICENSE /tmp/ebmc-dist/
 cp ./README /tmp/ebmc-dist/
 cd /tmp/ebmc-dist
 tar cfz ebmc-${VERSION_FILE}-linux-${BITS}.tgz ebmc LICENSE
