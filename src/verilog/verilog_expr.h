@@ -775,6 +775,47 @@ extern inline verilog_procedural_continuous_assignt &to_verilog_procedural_conti
   return static_cast<verilog_procedural_continuous_assignt &>(expr);
 }
 
+class verilog_forcet:public verilog_statementt
+{
+public:
+  verilog_forcet():verilog_statementt(ID_force)
+  {
+    operands().resize(2);
+  }
+
+  const exprt &lhs() const
+  {
+    return op0();
+  }
+
+  const exprt &rhs() const
+  {
+    return op1();
+  }
+  
+  exprt &lhs()
+  {
+    return op0();
+  }
+
+  exprt &rhs()
+  {
+    return op1();
+  }
+};
+
+extern inline const verilog_forcet &to_verilog_force(const exprt &expr)
+{
+  assert(expr.id()==ID_force && expr.operands().size()==2);
+  return static_cast<const verilog_forcet &>(expr);
+}
+
+extern inline verilog_forcet &to_verilog_force(exprt &expr)
+{
+  assert(expr.id()==ID_force && expr.operands().size()==2);
+  return static_cast<verilog_forcet &>(expr);
+}
+
 class verilog_continuous_assignt:public verilog_module_itemt
 {
 public:
@@ -799,32 +840,39 @@ class verilog_assignt:public verilog_statementt
 {
 public:
   // both blocking and non-blocking
-  verilog_assignt()
+  inline verilog_assignt()
   {
     operands().resize(2);
   }
 
-  verilog_assignt(const irep_idt &_id):verilog_statementt(_id)
+  inline verilog_assignt(const irep_idt &_id):verilog_statementt(_id)
   {
     operands().resize(2);
   }
   
-  const exprt &lhs() const
+  inline verilog_assignt(
+    const irep_idt &_id,
+    const exprt &_lhs, const exprt &_rhs):verilog_statementt(_id)
+  {
+    copy_to_operands(_lhs, _rhs);
+  }
+  
+  inline const exprt &lhs() const
   {
     return op0();
   }
 
-  const exprt &rhs() const
+  inline const exprt &rhs() const
   {
     return op1();
   }
   
-  exprt &lhs()
+  inline exprt &lhs()
   {
     return op0();
   }
 
-  exprt &rhs()
+  inline exprt &rhs()
   {
     return op1();
   }
@@ -844,6 +892,12 @@ class verilog_blocking_assignt:public verilog_assignt
 {
 public:
   verilog_blocking_assignt():verilog_assignt(ID_blocking_assign)
+  {
+  }
+
+  verilog_blocking_assignt(
+    const exprt &_lhs, const exprt &_rhs):
+    verilog_assignt(ID_blocking_assign, _lhs, _rhs)
   {
   }
 };
