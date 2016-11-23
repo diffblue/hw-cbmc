@@ -199,36 +199,36 @@ protected:
     assignmentt::datat &data);
 
   // module items
-  virtual void convert_module_items(symbolt &symbol);
-  void synth_module_item(const class verilog_module_itemt &module_item, transt &trans);
-  void synth_always(const class verilog_alwayst &module_item);
-  void synth_initial(const class verilog_initialt &module_item);
-  void synth_assert_module_item(const class verilog_module_itemt &module_item);
-  void synth_assume_module_item(const class verilog_module_itemt &module_item);
-  void synth_continuous_assign(const class verilog_continuous_assignt &module_item, transt &trans);
-  void synth_continuous_assign(exprt &lhs, exprt &rhs, transt &trans);
-  void synth_module_instance(const class verilog_instt &module_item, transt &trans);
-  void synth_module_instance_builtin(const class verilog_inst_builtint &module_item, transt &trans);
+  virtual void convert_module_items(symbolt &);
+  void synth_module_item(const class verilog_module_itemt &, transt &);
+  void synth_always(const class verilog_alwayst &);
+  void synth_initial(const class verilog_initialt &);
+  void synth_assert_module_item(const class verilog_module_itemt &);
+  void synth_assume_module_item(const class verilog_module_itemt &);
+  void synth_continuous_assign(const class verilog_continuous_assignt &, transt &);
+  void synth_continuous_assign(exprt &lhs, exprt &rhs, transt &);
+  void synth_module_instance(const class verilog_instt &, transt &);
+  void synth_module_instance_builtin(const class verilog_inst_builtint &, transt &);
 
   // statements
-  void synth_statement(const class verilog_statementt &statement);
-  void synth_decl(const class verilog_declt &statement, transt &trans);
-  void synth_block(const class verilog_blockt &statement);
-  void synth_case(const class verilog_statementt &statement);
-  void synth_if(const class verilog_ift &statement);
-  void synth_event_guard(const class verilog_event_guardt &statement);
-  void synth_delay(const class verilog_delayt &statement);
-  void synth_for(const class verilog_fort &statement);
-  void synth_forever(const class verilog_forevert &statement);
-  void synth_while(const class verilog_whilet &statement);
-  void synth_repeat(const class verilog_repeatt &statement);
-  void synth_function_call_or_task_enable(const class verilog_function_callt &statement);
+  void synth_statement(const class verilog_statementt &);
+  void synth_decl(const class verilog_declt &, transt &);
+  void synth_block(const class verilog_blockt &);
+  void synth_case(const class verilog_statementt &);
+  void synth_if(const class verilog_ift &);
+  void synth_event_guard(const class verilog_event_guardt &);
+  void synth_delay(const class verilog_delayt &);
+  void synth_for(const class verilog_fort &);
+  void synth_forever(const class verilog_forevert &);
+  void synth_while(const class verilog_whilet &);
+  void synth_repeat(const class verilog_repeatt &);
+  void synth_function_call_or_task_enable(const class verilog_function_callt &);
   void synth_expr(exprt &expr, symbol_statet symbol_state);
-  void synth_assign(const exprt &statement, bool blocking);
-  void synth_assert(const class verilog_assertt &statement);
-  void synth_assume(const class verilog_assumet &statement);
-  void synth_prepostincdec(const class verilog_statementt &statement);
-  void synth_assignments(transt &trans);
+  void synth_assign(const exprt &, bool blocking);
+  void synth_assert(const class verilog_assertt &);
+  void synth_assume(const class verilog_assumet &);
+  void synth_prepostincdec(const class verilog_statementt &);
+  void synth_assignments(transt &);
 
   void post_process_initial(exprt &constraints);
   void post_process_wire(const irep_idt &identifier, exprt &expr);
