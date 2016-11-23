@@ -249,9 +249,11 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
   {
     assert(expr.operands().size()==1);
     
-    // For Fp to hold, we need at least one state
-    // from the current point in time that satisfies 'p',
-    // and there needs to be a lasso around it.
+    // For Fp to hold, we need one of the following:
+    // (1) at least one state from the current point
+    //     in time satisfies 'p' OR
+    // (2) no state from now on is repeated
+    //     (which means 'p' can still hold later)
 
     // save the current time frame, we'll change it
     save_currentt save_current(current);
@@ -263,8 +265,8 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       disjuncts.push_back(expr.op0());
       instantiate_rec(disjuncts.back());
     }
-    
-    // TODO: add conjunct for lasso
+
+    // TODO: add disjunct for lasso
     
     expr=disjunction(disjuncts);
   }
