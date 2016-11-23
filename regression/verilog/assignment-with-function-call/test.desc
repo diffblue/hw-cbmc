@@ -1,0 +1,10 @@
+CORE
+main.sv
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[main.property.property1\] .* SUCCESS$
+^\[main.property.property2\] .* SUCCESS$
+^\[main.property.property3\] .* SUCCESS$
+--
+^warning: ignoring
