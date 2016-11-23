@@ -1,0 +1,8 @@
+KNOWNBUG
+main.v
+
+^EXIT=0$
+^SIGNAL=0$
+^UNSAT: No bug found within bound$
+--
+^warning: ignoring
