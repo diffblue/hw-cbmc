@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.sv
 --bound 1
 ^EXIT=0$
