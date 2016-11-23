@@ -1447,47 +1447,23 @@ void verilog_synthesist::synth_decl(
       }
 
       const symbolt &symbol=lookup(to_symbol_expr(lhs));
-      assignmentt &assignment=assignments[symbol.name];
 
       if(symbol.is_state_var)
       {
-        synth_expr(rhs, symbol_statet::CURRENT);
-
-        if(assignment.type==event_guardt::NONE)
-          assignment.type=event_guardt::CLOCK;
-        else if(assignment.type!=event_guardt::CLOCK)
-        {
-          error().source_location=statement.source_location();
-          error() << "variable is combinational" << eom;
-          throw 0;
-        }
-
-        if(!assignment.init.value.is_nil())
-        {
-          error().source_location=statement.source_location();
-          error() << "variable already has initial value" << eom;
-          throw 0;
-        }
-
-        assignment.init.value=rhs;
-        assignment.init.assigned_previous.push_back(membert());
+        // much like: initial LHS=RHS;
+        verilog_initialt initial;
+        initial.statement()=verilog_blocking_assignt(lhs, rhs);
+        initial.statement().add_source_location()=it->source_location();
+        initial.add_source_location()=it->source_location();
+        synth_initial(initial);
       }
       else
       {
-        synth_expr(lhs, symbol_statet::SYMBOL);
-        synth_expr(rhs, symbol_statet::SYMBOL);
-
-        if(assignment.type==event_guardt::NONE)
-          assignment.type=event_guardt::COMBINATIONAL;
-        else if(assignment.type!=event_guardt::COMBINATIONAL)
-        {
-          error().source_location=statement.source_location();
-          error() << "variable is clocked" << eom;
-          throw 0;
-        }
-
-        equal_exprt equality(lhs, rhs);
-        trans.invar().move_to_operands(equality);
+        // much like a continuous assignment
+        verilog_continuous_assignt assign;
+        assign.add_source_location()=it->source_location();
+        assign.copy_to_operands(*it);
+        synth_continuous_assign(assign, trans);
       }
     }
   }
