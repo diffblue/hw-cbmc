@@ -56,17 +56,19 @@ public:
   {
   }
   
-  void instantiate(exprt &expr)
+  inline exprt operator()(const exprt &expr)
   {
-    instantiate_rec(expr);
+    exprt tmp=expr;
+    instantiate_rec(tmp);
+    return tmp;
   }
 
 protected:
   unsigned current, no_timeframes;
   const namespacet &ns;
   
-  void instantiate_rec(exprt &expr);
-  void instantiate_rec(typet &expr);
+  void instantiate_rec(exprt &);
+  void instantiate_rec(typet &);
   
   class save_currentt
   {
@@ -360,7 +362,5 @@ exprt instantiate(
   const namespacet &ns)
 {
   wl_instantiatet wl_instantiate(current, no_timeframes, ns);
-  exprt tmp=expr;
-  wl_instantiate.instantiate(tmp);
-  return tmp;
+  return wl_instantiate(expr);
 }
