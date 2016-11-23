@@ -987,12 +987,12 @@ void verilog_synthesist::instantiate_ports(
   if(inst.op0().id()==ID_named_port_connection)
   {
     // no requirement that all ports are connected
-    forall_operands(o_it, inst)
+    for(const auto &o_it : inst.operands())
     {
-      if(o_it->operands().size()==2)
+      if(o_it.operands().size()==2)
       {
-        const exprt &op0=o_it->op0();
-        const exprt &op1=o_it->op1();
+        const exprt &op0=o_it.op0();
+        const exprt &op1=o_it.op1();
 
         if(op1.is_not_nil())
           instantiate_port(op0, op1, replace_map, trans);
@@ -1012,9 +1012,9 @@ void verilog_synthesist::instantiate_ports(
     irept::subt::const_iterator p_it=
       ports.begin();
 
-    forall_operands(o_it, inst)
+    for(const auto &o_it : inst.operands())
     {
-      instantiate_port((exprt &)(*p_it), *o_it,
+      instantiate_port((exprt &)(*p_it), o_it,
                        replace_map, trans);
       p_it++;
     }
