@@ -1463,7 +1463,7 @@ void verilog_synthesist::synth_decl(
         verilog_continuous_assignt assign;
         assign.add_source_location()=it->source_location();
         assign.copy_to_operands(*it);
-        synth_continuous_assign(assign, trans);
+        synth_continuous_assign(assign);
       }
     }
   }
@@ -1500,8 +1500,7 @@ Function: verilog_synthesist::synth_continuous_assign
 \*******************************************************************/
 
 void verilog_synthesist::synth_continuous_assign(
-  const verilog_continuous_assignt &module_item,
-  transt &trans)
+  const verilog_continuous_assignt &module_item)
 {
   construct=constructt::OTHER;
 
@@ -1514,19 +1513,29 @@ void verilog_synthesist::synth_continuous_assign(
       throw 0;
     }
 
-    exprt lhs=it->op0();
-    exprt rhs=it->op1();
-    
-    synth_expr(lhs, symbol_statet::SYMBOL);
-    synth_expr(rhs, symbol_statet::SYMBOL);
+    // we basically re-write this into an always block:
+    // assign x=y;  -->   always @(*) force x=y;
+    verilog_forcet assignment;
 
-    synth_continuous_assign(lhs, rhs, trans);
+    assignment.lhs()=it->op0();
+    assignment.rhs()=it->op1();
+    assignment.add_source_location()=module_item.source_location();    
+    
+    verilog_event_guardt event_guard;
+    event_guard.add_source_location()=module_item.source_location();
+    event_guard.body()=assignment;
+    
+    verilog_alwayst always;
+    always.add_source_location()=module_item.source_location();
+    always.statement()=event_guard;
+
+    synth_always(always);
   }
 }
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_continuous_assign
+Function: verilog_synthesist::synth_force
 
   Inputs:
 
@@ -1536,10 +1545,26 @@ Function: verilog_synthesist::synth_continuous_assign
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_continuous_assign(
-  exprt &lhs,
-  exprt &rhs,
-  transt &trans)
+void verilog_synthesist::synth_force(const verilog_forcet &statement)
+{
+  synth_force_rec(statement.lhs(), statement.rhs());
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::synth_force
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::synth_force_rec(
+  const exprt &lhs,
+  const exprt &rhs)
 {
   if(lhs.id()==ID_concatenation)
   {
@@ -1548,7 +1573,7 @@ void verilog_synthesist::synth_continuous_assign(
     
     // do it from right to left
     
-    for(exprt::operandst::reverse_iterator
+    for(exprt::operandst::const_reverse_iterator
         it=lhs.operands().rbegin();
         it!=lhs.operands().rend();
         it++)
@@ -1563,7 +1588,7 @@ void verilog_synthesist::synth_continuous_assign(
         bit_extract.copy_to_operands(rhs, offset_constant);
         offset++;
 
-        synth_continuous_assign(*it, bit_extract, trans);
+        synth_force_rec(*it, bit_extract);
       }
       else if(it->type().id()==ID_signedbv ||
               it->type().id()==ID_unsignedbv)
@@ -1577,7 +1602,7 @@ void verilog_synthesist::synth_continuous_assign(
         exprt bit_extract(ID_extractbits, it->type());
         bit_extract.copy_to_operands(rhs, offset_constant, offset_constant2);
         
-        synth_continuous_assign(*it, bit_extract, trans);
+        synth_force_rec(*it, bit_extract);
         
         offset+=width;
       }
@@ -1608,8 +1633,11 @@ void verilog_synthesist::synth_continuous_assign(
     throw 0;
   }
 
-  equal_exprt equality(lhs, rhs);
-  trans.invar().move_to_operands(equality);
+  exprt rhs_synth=rhs;
+  synth_expr(rhs_synth, symbol_statet::CURRENT);  
+
+  equal_exprt equality(lhs, rhs_synth);
+  invars.push_back(equality);
 }
 
 /*******************************************************************\
@@ -2521,6 +2549,8 @@ void verilog_synthesist::synth_statement(
     synth_assume(to_verilog_assume(statement));
   else if(statement.id()==ID_non_blocking_assign)
     synth_assign(statement, false);
+  else if(statement.id()==ID_force)
+    synth_force(to_verilog_force(statement));
   else if(statement.id()==ID_if)
     synth_if(to_verilog_if(statement));
   else if(statement.id()==ID_event_guard)
@@ -2590,7 +2620,7 @@ void verilog_synthesist::synth_module_item(
   else if(module_item.id()==ID_initial)
     synth_initial(to_verilog_initial(module_item));
   else if(module_item.id()==ID_continuous_assign)
-    synth_continuous_assign(to_verilog_continuous_assign(module_item), trans);
+    synth_continuous_assign(to_verilog_continuous_assign(module_item));
   else if(module_item.id()==ID_inst)
     synth_module_instance(to_verilog_inst(module_item), trans);
   else if(module_item.id()==ID_inst_builtin)

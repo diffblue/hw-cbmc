@@ -205,8 +205,8 @@ protected:
   void synth_initial(const class verilog_initialt &);
   void synth_assert_module_item(const class verilog_module_itemt &);
   void synth_assume_module_item(const class verilog_module_itemt &);
-  void synth_continuous_assign(const class verilog_continuous_assignt &, transt &);
-  void synth_continuous_assign(exprt &lhs, exprt &rhs, transt &);
+  void synth_continuous_assign(const class verilog_continuous_assignt &);
+  void synth_force_rec(exprt &lhs, exprt &rhs, transt &);
   void synth_module_instance(const class verilog_instt &, transt &);
   void synth_module_instance_builtin(const class verilog_inst_builtint &, transt &);
 
@@ -219,6 +219,8 @@ protected:
   void synth_event_guard(const class verilog_event_guardt &);
   void synth_delay(const class verilog_delayt &);
   void synth_for(const class verilog_fort &);
+  void synth_force(const class verilog_forcet &);
+  void synth_force_rec(const exprt &lhs, const exprt &rhs);
   void synth_forever(const class verilog_forevert &);
   void synth_while(const class verilog_whilet &);
   void synth_repeat(const class verilog_repeatt &);
