@@ -965,6 +965,29 @@ Function: verilog_typecheckt::convert_assign
 
 \*******************************************************************/
 
+void verilog_typecheckt::convert_force(verilog_forcet &statement)
+{
+  exprt &lhs=statement.lhs();
+  exprt &rhs=statement.rhs();
+
+  convert_expr(lhs);
+  convert_expr(rhs);
+  propagate_type(rhs, lhs.type());
+  //check_lhs(lhs, blocking?A_BLOCKING:A_NON_BLOCKING);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::convert_assign
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void verilog_typecheckt::convert_assign(
   verilog_assignt &statement,
   bool blocking)
@@ -1434,6 +1457,8 @@ void verilog_typecheckt::convert_statement(
     convert_function_call_or_task_enable(to_verilog_function_call(statement));
   else if(statement.id()==ID_decl)
     convert_decl(to_verilog_decl(statement));
+  else if(statement.id()==ID_force)
+    convert_force(to_verilog_force(statement));
   else
   {
     error().source_location=statement.source_location();

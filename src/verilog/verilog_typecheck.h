@@ -116,6 +116,7 @@ protected:
   void convert_event_guard(class verilog_event_guardt &);
   void convert_delay(class verilog_delayt &);
   void convert_for(class verilog_fort &);
+  void convert_force(class verilog_forcet &);
   void convert_forever(class verilog_forevert &);
   void convert_while(class verilog_whilet &);
   void convert_repeat(class verilog_repeatt &);
