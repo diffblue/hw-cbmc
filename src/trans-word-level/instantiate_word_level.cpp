@@ -354,58 +354,13 @@ Function: instantiate
 
 \*******************************************************************/
 
-void instantiate(
-  exprt &expr,
+exprt instantiate(
+  const exprt &expr,
   unsigned current, unsigned no_timeframes,
   const namespacet &ns)
 {
   wl_instantiatet wl_instantiate(current, no_timeframes, ns);
-  wl_instantiate.instantiate(expr);
-}
-
-/*******************************************************************\
-
-Function: instantiate
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void instantiate(
-  decision_proceduret &decision_procedure,
-  const exprt &expr,
-  unsigned current, unsigned no_timeframes,
-  const namespacet &ns)
-{
-  exprt tmp(expr);
-  instantiate(tmp, current, no_timeframes, ns);
-  decision_procedure.set_to_true(tmp);
-}
-
-/*******************************************************************\
-
-Function: instantiate_convert
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-literalt instantiate_convert(
-  prop_convt &prop_conv,
-  const exprt &expr,
-  unsigned current,
-  unsigned no_timeframes,
-  const namespacet &ns)
-{
-  exprt tmp(expr);
-  instantiate(tmp, current, no_timeframes, ns);
-  return prop_conv.convert(tmp);
+  exprt tmp=expr;
+  wl_instantiate.instantiate(tmp);
+  return tmp;
 }

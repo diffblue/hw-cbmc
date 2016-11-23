@@ -175,15 +175,15 @@ int k_inductiont::induction_step()
     // assumption: time frames 0,...,k-1
     for(unsigned c=0; c<no_timeframes-1; c++)
     {
-      exprt tmp(p);
-      instantiate(tmp, c, no_timeframes-1, ns);
+      exprt tmp=
+        instantiate(p, c, no_timeframes-1, ns);
       solver.set_to_true(tmp);
     }
     
     // property: time frame k
     {
-      exprt tmp(p);
-      instantiate(tmp, no_timeframes-1, no_timeframes, ns);
+      exprt tmp=
+        instantiate(p, no_timeframes-1, no_timeframes, ns);
       solver.set_to_false(tmp);
     }    
 

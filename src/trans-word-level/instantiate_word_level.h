@@ -11,20 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <solvers/prop/prop_conv.h>
 
-void instantiate(
-  decision_proceduret &decision_procedure,
+exprt instantiate(
   const exprt &expr,
-  unsigned current, unsigned no_timeframes,
-  const namespacet &);
-
-literalt instantiate_convert(
-  prop_convt &prop_conv,
-  const exprt &expr,
-  unsigned current,
-  const namespacet &);
-
-void instantiate(
-  exprt &expr,
   unsigned current, unsigned no_timeframes,
   const namespacet &);
 
