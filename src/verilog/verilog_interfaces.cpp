@@ -141,6 +141,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       new_symbol.value.make_nil();
       convert_type(decl.type(), new_symbol.type);
       new_symbol.base_name=name;
+      new_symbol.pretty_name=strip_verilog_prefix(new_symbol.name);
       
       symbolt *s;
 
@@ -232,6 +233,7 @@ void verilog_typecheckt::interface_function_or_task(
     symbol.name=
       id2string(symbol.module)+"."+
       id2string(symbol.base_name);
+    symbol.pretty_name=strip_verilog_prefix(symbol.name);
 
     if(symbol_table.move(symbol, new_symbol))
     {
@@ -260,6 +262,8 @@ void verilog_typecheckt::interface_function_or_task(
     return_symbol.name=
       id2string(new_symbol->name)+"."+
       id2string(new_symbol->base_name);
+
+    return_symbol.pretty_name=strip_verilog_prefix(return_symbol.name);
 
     symbol_table.move(return_symbol);
   }
@@ -406,6 +410,8 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     symbol.name=
       id2string(function_or_task_name)+"."+
       id2string(symbol.base_name);
+
+    symbol.pretty_name=strip_verilog_prefix(symbol.name);
 
     if(input || output)
     {
@@ -575,6 +581,9 @@ void verilog_typecheckt::interface_module_decl(
       (named_blocks.empty()?"":named_blocks.back())+
       id2string(symbol.base_name);
 
+    symbol.pretty_name=
+      strip_verilog_prefix(symbol.name);
+
     symbol_tablet::symbolst::iterator result=
       symbol_table.symbols.find(symbol.name);
       
@@ -638,6 +647,8 @@ void verilog_typecheckt::interface_parameter(const exprt &expr)
 
   symbol.name=id2string(symbol.module)+"."+
               id2string(symbol.base_name);
+
+  symbol.pretty_name=strip_verilog_prefix(symbol.name);
 
   symbol.is_macro=true;
   symbol.value=static_cast<const exprt &>(expr.find(ID_value));
@@ -740,6 +751,7 @@ void verilog_typecheckt::interface_inst(
   symbol.name=
     id2string(symbol.module)+"."+
     id2string(symbol.base_name);
+  symbol.pretty_name=strip_verilog_prefix(symbol.name);
   symbol.value.set(ID_module, identifier);
 
   if(symbol_table.add(symbol))
@@ -889,6 +901,7 @@ void verilog_typecheckt::interface_block(
       id2string(symbol.module)+"."+
       (named_blocks.empty()?"":named_blocks.back())+
       id2string(symbol.base_name);
+    symbol.pretty_name=strip_verilog_prefix(symbol.name);
     symbol.value=nil_exprt();
 
     if(symbol_table.add(symbol))

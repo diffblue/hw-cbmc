@@ -1603,6 +1603,7 @@ bool verilog_typecheckt::implicit_wire(
   symbol.base_name=identifier;
   symbol.name=full_identifier;
   symbol.type=bool_typet(); // TODO: other types?
+  symbol.pretty_name=strip_verilog_prefix(full_identifier);
 
   symbolt *new_symbol;
   symbol_table.move(symbol, new_symbol);
