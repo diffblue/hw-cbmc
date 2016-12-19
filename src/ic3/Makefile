@@ -67,7 +67,7 @@ LINK_OPTIONS =
 
 LIB_PATH = 	minisat/build/release/lib
 
-$(PROG_NAME) :  minisat/build/dynamic/lib/libminisat.so $(OBJ_ROOT) $(AIGER) $(SEQ_CIRC) $(BUILD_PROB)  
+$(PROG_NAME) :  $(OBJ_ROOT) $(AIGER) $(SEQ_CIRC) $(BUILD_PROB)  
 	$(CXX)  $(LINK_OPTIONS) $(ARCH_FLAG)  $(OBJ) 	$(LIB_PATH)/libminisat.a -o  $(PROG_NAME)
 
 clean : 
