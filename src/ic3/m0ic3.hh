@@ -5,6 +5,9 @@ Module: IC3 types
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+
+#include <string>
+
 #include "aux_types.hh"
 extern "C" {
 #include "aiger.h"
