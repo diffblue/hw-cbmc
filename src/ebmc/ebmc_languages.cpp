@@ -18,10 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <vhdl/vhdl_language.h>
 #endif
 
-#ifdef HAVE_NETLIST
-#include <netlist/netlist_language.h>
-#endif
-
 #include <aiger/aiger_language.h>
 
 #include "ebmc_parse_options.h"
@@ -42,10 +38,6 @@ void ebmc_parse_optionst::register_languages()
 {
   register_language(new_smv_language);
 
-  #ifdef HAVE_NETLIST
-  register_language(new_netlist_language);
-  #endif
-  
   #ifdef HAVE_VERILOG
   register_language(new_verilog_language);
   #endif

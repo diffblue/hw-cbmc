@@ -40,11 +40,6 @@ ifneq ($(wildcard ../vhdl/Makefile),)
   CXXFLAGS += -DHAVE_VHDL
 endif
 
-ifneq ($(wildcard ../netlist/Makefile),)
-  OBJ += ../netlist/netlist$(LIBEXT)
-  CXXFLAGS += -DHAVE_NETLIST
-endif
-
 include ../config.inc
 
 INCLUDES= -I .. -I $(CBMC)/src
