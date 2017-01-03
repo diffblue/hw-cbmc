@@ -17,58 +17,56 @@ Author: Daniel Kroening, kroening@kroening.com
 class vhdl_languaget:public languaget
 {
 public:
-  virtual bool preprocess(
+  bool preprocess(
     std::istream &instream,
     const std::string &path,
-    std::ostream &outstream);
+    std::ostream &outstream) override;
 
-  virtual bool parse(
+  bool parse(
     std::istream &instream,
-    const std::string &path);
+    const std::string &path) override;
              
-  virtual void dependencies(
+  void dependencies(
     const std::string &module,
-    std::set<std::string> &module_set);
+    std::set<std::string> &module_set) override;
                             
-  virtual void modules_provided(
-    std::set<std::string> &module_set);
+  void modules_provided(
+    std::set<std::string> &module_set) override;
 
-  virtual bool interfaces(
-    symbol_tablet &symbol_table);
+  bool interfaces(
+    symbol_tablet &symbol_table) override;
 
-  virtual bool typecheck(
+  bool typecheck(
     symbol_tablet &symbol_table,
-    const std::string &module);
+    const std::string &module) override;
   
-  virtual void show_parse(std::ostream &out);
+  void show_parse(std::ostream &out) override;
   
-  virtual ~vhdl_languaget() { }
+  ~vhdl_languaget() override { }
   
-  virtual bool from_expr(
+  bool from_expr(
     const exprt &expr, std::string &code,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual bool from_type(
+  bool from_type(
     const typet &type, std::string &code,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual bool to_expr(
+  bool to_expr(
     const std::string &code,
     const std::string &module,
     exprt &expr,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual languaget *new_language()
+  languaget *new_language() override
   { return new vhdl_languaget; }
    
-  virtual std::string id() const { return "VHDL"; }
-  virtual std::string description() const { return "VHDL"; }
+  std::string id() const override { return "VHDL"; }
+  std::string description() const override { return "VHDL"; }
 
-  virtual std::set<std::string> extensions() const
-  { std::set<std::string> s;
-    s.insert("vhd");
-    s.insert("vhdl");
-    return s;
+  std::set<std::string> extensions() const override
+  { 
+    return { "vhd", "vhdl" };
   }
 
   vhdl_parse_treet &get_parse_tree()

@@ -17,57 +17,57 @@ Author: Daniel Kroening, kroening@kroening.com
 class verilog_languaget:public languaget
 {
 public:
-  virtual bool preprocess(
+  bool preprocess(
     std::istream &instream,
     const std::string &path,
-    std::ostream &outstream);
+    std::ostream &outstream) override;
 
-  virtual bool parse(
+  bool parse(
     std::istream &instream,
-    const std::string &path);
+    const std::string &path) override;
              
-  virtual void dependencies(
+  void dependencies(
     const std::string &module,
-    std::set<std::string> &module_set);
+    std::set<std::string> &module_set) override;
                             
-  virtual void modules_provided(
-    std::set<std::string> &module_set);
+  void modules_provided(
+    std::set<std::string> &module_set) override;
 
-  virtual bool interfaces(
-    symbol_tablet &symbol_table);
+  bool interfaces(
+    symbol_tablet &symbol_table) override;
     
-  virtual bool typecheck(
+  bool typecheck(
     symbol_tablet &symbol_table,
-    const std::string &module);
+    const std::string &module) override;
   
-  virtual void show_parse(std::ostream &out);
+  void show_parse(std::ostream &out) override;
   
-  virtual ~verilog_languaget() { }
+  ~verilog_languaget() override { }
   
-  virtual bool from_expr(
+  bool from_expr(
     const exprt &expr, std::string &code,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual bool from_type(
+  bool from_type(
     const typet &type, std::string &code,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual bool to_expr(
+  bool to_expr(
     const std::string &code,
     const std::string &module,
     exprt &expr,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual languaget *new_language()
+  languaget *new_language() override
   { return new verilog_languaget; }
    
-  virtual std::string id() const { return "Verilog"; }
-  virtual std::string description() const { return "Verilog"; }
-  virtual std::set<std::string> extensions() const
-  { std::set<std::string> s;
-    s.insert("v");
-    s.insert("sv");
-    return s; }
+  std::string id() const override { return "Verilog"; }
+  std::string description() const override { return "Verilog"; }
+
+  std::set<std::string> extensions() const override
+  { 
+    return { "v", "sv" };
+  }
 
   verilog_parse_treet &get_parse_tree()
   {

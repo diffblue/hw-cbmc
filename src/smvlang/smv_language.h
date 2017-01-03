@@ -21,47 +21,50 @@ Author: Daniel Kroening, kroening@kroening.com
 class smv_languaget:public languaget
 {
 public:
-  virtual bool parse(
+  bool parse(
     std::istream &instream,
-    const std::string &path);
+    const std::string &path) override;
 
-  virtual void dependencies(
+  void dependencies(
     const std::string &module,
-    std::set<std::string> &module_set);
+    std::set<std::string> &module_set) override;
 
-  virtual void modules_provided(
-    std::set<std::string> &module_set);
+  void modules_provided(
+    std::set<std::string> &module_set) override;
                  
-  virtual bool typecheck(
+  bool typecheck(
     symbol_tablet &symbol_table,
-    const std::string &module);
+    const std::string &module) override;
   
-  virtual void show_parse(std::ostream &out);
+  void show_parse(std::ostream &out) override;
   
-  virtual ~smv_languaget() { }
+  ~smv_languaget() override { }
   
-  virtual bool from_expr(
+  bool from_expr(
     const exprt &expr,
     std::string &code,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual bool from_type(
+  bool from_type(
     const typet &type,
     std::string &code,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
-  virtual bool to_expr(
+  bool to_expr(
     const std::string &code,
     const std::string &module,
     exprt &expr,
-    const namespacet &ns);
+    const namespacet &ns) override;
                        
-  virtual std::string id() const { return "SMV"; }
-  virtual std::string description() const { return "SMV"; }
-  virtual std::set<std::string> extensions() const
-  { std::set<std::string> s; s.insert("smv"); return s; }
+  std::string id() const override { return "SMV"; }
+  std::string description() const override { return "SMV"; }
+
+  std::set<std::string> extensions() const override
+  {
+    return { "smv" }; 
+  }
   
-  virtual languaget *new_language()
+  languaget *new_language() override
   { return new smv_languaget; }
      
   smv_parse_treet smv_parse_tree;
