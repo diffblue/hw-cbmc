@@ -22,6 +22,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <netlist/netlist_language.h>
 #endif
 
+#include <aiger/aiger_language.h>
+
 #include "ebmc_parse_options.h"
 
 /*******************************************************************\
@@ -51,5 +53,7 @@ void ebmc_parse_optionst::register_languages()
   #ifdef HAVE_VHDL
   register_language(new_vhdl_language);
   #endif
+  
+  register_language(new_aiger_language);
 }
 
