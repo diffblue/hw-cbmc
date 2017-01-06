@@ -9,7 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SMV_PARSE_TREE_H
 #define CPROVER_SMV_PARSE_TREE_H
 
-#include <util/hash_cont.h>
+#include <unordered_set>
+#include <unordered_map>
+
 #include <util/string_hash.h>
 #include <util/expr.h>
 
@@ -29,8 +31,8 @@ public:
     }
   };
    
-  typedef hash_map_cont<irep_idt, mc_vart, irep_id_hash> mc_varst;
-  typedef hash_set_cont<irep_idt, irep_id_hash> enum_sett;
+  typedef std::unordered_map<irep_idt, mc_vart, irep_id_hash> mc_varst;
+  typedef std::unordered_set<irep_idt, irep_id_hash> enum_sett;
 
   struct modulet
   {
@@ -156,7 +158,7 @@ public:
     modulet():used(false) { }
   };
    
-  typedef hash_map_cont<irep_idt, modulet, irep_id_hash> modulest;
+  typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
   
   modulest modules;
   

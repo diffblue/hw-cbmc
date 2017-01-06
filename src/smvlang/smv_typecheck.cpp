@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/typecheck.h>
 #include <util/arith_tools.h>
-#include <util/i2string.h>
 #include <util/std_expr.h>
 
 #include "smv_typecheck.h"
@@ -179,7 +178,7 @@ protected:
     }
   };
   
-  typedef hash_map_cont<irep_idt, definet, irep_id_hash> define_mapt;
+  typedef std::unordered_map<irep_idt, definet, irep_id_hash> define_mapt;
   define_mapt define_map;
 };
 
@@ -1059,7 +1058,7 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
     }
 
     std::string identifier=
-      module+"::var::"+i2string(nondet_count++);
+      module+"::var::"+std::to_string(nondet_count++);
 
     expr.set(ID_identifier, identifier);
     expr.set("#smv_nondet_choice", true);
@@ -1441,7 +1440,8 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         symbolt spec_symbol;
 
         spec_symbol.base_name=smv_module.base_name;
-        spec_symbol.name=id2string(smv_module.name)+"::spec"+i2string(nr++);
+        spec_symbol.name=id2string(smv_module.name)+
+                         "::spec"+std::to_string(nr++);
         spec_symbol.module=smv_module.name;
         spec_symbol.type=bool_typet();
         spec_symbol.is_property=true;

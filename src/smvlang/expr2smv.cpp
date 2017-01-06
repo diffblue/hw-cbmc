@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
-#include <util/i2string.h>
 #include <util/std_expr.h>
 
 #include "expr2smv.h"

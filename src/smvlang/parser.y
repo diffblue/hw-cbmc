@@ -1,6 +1,4 @@
 %{
-#include <util/i2string.h>
-
 #include "smv_parser.h"
 #include "smv_typecheck.h"
 
@@ -258,7 +256,7 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
 
              if(end < start)
              {
-               yyerror("array must end with number >= `"+i2string(start)+"'");
+               yyerror("array must end with number >= `"+std::to_string(start)+"'");
                YYERROR;
              }
 
