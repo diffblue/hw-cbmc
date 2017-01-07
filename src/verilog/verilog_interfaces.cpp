@@ -103,7 +103,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     {
       // find the symbol
       
-      if(lookup(identifier, port_symbol))
+      if(ns.lookup(identifier, port_symbol))
       {
         err_location(decl.op0());
         error() << "port `" << name << "' not declared" << eom;
@@ -179,7 +179,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
   
   forall_symbol_module_map(it, symbol_table.symbol_module_map, module_identifier)
   {
-    const symbolt &symbol=lookup(it->second);
+    const symbolt &symbol=ns.lookup(it->second);
     
     if(symbol.is_input || symbol.is_output)
       if(port_names.find(symbol.base_name)==port_names.end())

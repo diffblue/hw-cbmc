@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 #include <util/namespace.h>
 #include <util/prefix.h>
-#include <util/i2string.h>
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
@@ -334,7 +333,7 @@ void verilog_typecheck_exprt::convert_expr_function_call(
     id2string(module_identifier)+"."+id2string(identifier);
 
   const symbolt *symbol;
-  if(lookup(full_identifier, symbol))
+  if(ns.lookup(full_identifier, symbol))
   {
     err_location(f_op);
     error() << "unknown function `" << identifier << "'" << eom;
@@ -514,7 +513,7 @@ void verilog_typecheck_exprt::convert_system_function(
     }
 
     std::string identifier=
-      id2string(module_identifier)+"::nondet::"+i2string(nondet_count++);
+      id2string(module_identifier)+"::nondet::"+std::to_string(nondet_count++);
 
     typet type=arguments.front().type();
 
@@ -549,7 +548,7 @@ void verilog_typecheck_exprt::convert_system_function(
     }
     
     std::string identifier=
-      id2string(module_identifier)+"::nondet::"+i2string(nondet_count++);
+      id2string(module_identifier)+"::nondet::"+std::to_string(nondet_count++);
 
     // the meaning is 'at most one bit is high'
     predicate_exprt onehot0(ID_onehot0, arguments.front());
@@ -628,7 +627,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
       "."+id2string(identifier);
     
     const symbolt *symbol;
-    if(!lookup(full_identifier, symbol))
+    if(!ns.lookup(full_identifier, symbol))
     { // found!
       expr.type()=symbol->type;
       expr.set(ID_identifier, full_identifier);
@@ -650,7 +649,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
       id2string(identifier);
     
     const symbolt *symbol;
-    if(!lookup(full_identifier, symbol))
+    if(!ns.lookup(full_identifier, symbol))
     { // found!
       named_block=*it;
       break;
@@ -663,7 +662,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     id2string(identifier);
 
   const symbolt *symbol;
-  if(!lookup(full_identifier, symbol))
+  if(!ns.lookup(full_identifier, symbol))
   { 
     // found!
     if(symbol->type.id()==ID_genvar)
@@ -743,7 +742,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
   {
     // figure out which module this is
     const symbolt *module_instance_symbol;
-    if(lookup(lhs_identifier, module_instance_symbol))
+    if(ns.lookup(lhs_identifier, module_instance_symbol))
     {
       error().source_location=expr.source_location();
       error() << "failed to find module instance `"
@@ -765,7 +764,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
       id2string(module)+"."+id2string(rhs_identifier);
 
     const symbolt *symbol;
-    if(!lookup(full_identifier, symbol))
+    if(!ns.lookup(full_identifier, symbol))
     {
       if(symbol->type.id()==ID_genvar)
       {
@@ -794,7 +793,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
       id2string(rhs_identifier);
 
     const symbolt *symbol;
-    if(!lookup(full_identifier, symbol))
+    if(!ns.lookup(full_identifier, symbol))
     {
       if(symbol->type.id()==ID_genvar)
       {

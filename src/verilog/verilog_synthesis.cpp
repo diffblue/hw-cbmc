@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <set>
 
-#include <util/i2string.h>
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
 #include <util/simplify_expr.h>
@@ -41,7 +40,7 @@ void verilog_synthesist::synth_expr(
 {
   if(expr.id()==ID_symbol)
   {
-    const symbolt &symbol=lookup(to_symbol_expr(expr));
+    const symbolt &symbol=ns.lookup(to_symbol_expr(expr));
     
     // does it have a value?
     valuest::const_iterator v_it=values.find(symbol.name);
@@ -133,7 +132,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   // this is essentially inlined
   const symbol_exprt &function=to_symbol_expr(call.function());
   
-  const symbolt &symbol=lookup(function);
+  const symbolt &symbol=ns.lookup(function);
   
   if(symbol.type.id()!=ID_code)
   {
@@ -167,7 +166,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   // do assignments to function parameters
   for(unsigned i=0; i<parameters.size(); i++)
   {
-    const symbolt &a_symbol=lookup(parameters[i].get_identifier());
+    const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
     verilog_blocking_assignt assignment;
     assignment.lhs()=a_symbol.symbol_expr();
     assignment.rhs()=actuals[i];
@@ -179,8 +178,8 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   
   // replace function call by return value symbol
   const symbolt &return_symbol=
-    lookup(id2string(symbol.name)+"."+
-           id2string(symbol.base_name));
+    ns.lookup(id2string(symbol.name)+"."+
+              id2string(symbol.base_name));
 
   exprt return_value=return_symbol.symbol_expr();
 
@@ -586,8 +585,8 @@ void verilog_synthesist::replace_by_wire(
   do
   {
     unsigned c=temporary_counter++;
-    new_symbol.name=id2string(base.name)+"_aux"+i2string(c);
-    new_symbol.base_name=id2string(base.base_name)+"_aux"+i2string(c);
+    new_symbol.name=id2string(base.name)+"_aux"+std::to_string(c);
+    new_symbol.base_name=id2string(base.base_name)+"_aux"+std::to_string(c);
   }
   while(symbol_table.symbols.find(new_symbol.name)!=symbol_table.symbols.end());
   
@@ -1040,7 +1039,7 @@ void verilog_synthesist::synth_module_instance(
   const irep_idt &identifier=statement.get_module();
 
   // must be in symbol_table
-  const symbolt &symbol=lookup(identifier);
+  const symbolt &symbol=ns.lookup(identifier);
   
   // make sure it's synthesized already
   verilog_synthesis(
@@ -1251,7 +1250,7 @@ void verilog_synthesist::expand_module_instance(
 
   forall_symbol_module_map(it, symbol_table.symbol_module_map, symbol.module)
   {
-    const symbolt &symbol=lookup(it->second);
+    const symbolt &symbol=ns.lookup(it->second);
     
     if(symbol.type.id()!=ID_module)
     {
@@ -1446,7 +1445,7 @@ void verilog_synthesist::synth_decl(
         throw 0;
       }
 
-      const symbolt &symbol=lookup(to_symbol_expr(lhs));
+      const symbolt &symbol=ns.lookup(to_symbol_expr(lhs));
 
       if(symbol.is_state_var)
       {
@@ -2096,7 +2095,7 @@ void verilog_synthesist::merge(
 
   for(const auto & it : changed)
   {
-    const symbolt &symbol=lookup(it);
+    const symbolt &symbol=ns.lookup(it);
 
     exprt true_value=current_value(true_map, symbol, use_previous_assignments);
     exprt false_value=current_value(false_map, symbol, use_previous_assignments);
@@ -2458,7 +2457,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
   }
   else
   {
-    const symbolt &symbol=lookup(identifier);
+    const symbolt &symbol=ns.lookup(identifier);
     
     if(symbol.type.id()!=ID_code)
     {
@@ -2485,7 +2484,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     // do assignments to input parameters
     for(unsigned i=0; i<parameters.size(); i++)
     {
-      const symbolt &a_symbol=lookup(parameters[i].get_identifier());
+      const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
       if(parameters[i].get_bool(ID_input))
       {
         verilog_blocking_assignt assignment;
@@ -2501,7 +2500,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     // do assignments to output parameters
     for(unsigned i=0; i<parameters.size(); i++)
     {
-      const symbolt &a_symbol=lookup(parameters[i].get_identifier());
+      const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
       if(parameters[i].get_bool(ID_output))
       {
         verilog_blocking_assignt assignment;

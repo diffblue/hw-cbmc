@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 
 #include <util/xml.h>
-#include <util/i2string.h>
 #include <util/xml_irep.h>
 
 #include "show_modules.h"
@@ -46,8 +45,8 @@ void show_modules(
       case ui_message_handlert::XML_UI:
         {
           xmlt xml("module");
-          xml.new_element("number").data=i2string(count); // will go away
-          xml.set_attribute("number", i2string(count));
+          xml.new_element("number").data=std::to_string(count); // will go away
+          xml.set_attribute("number", std::to_string(count));
         
           xmlt &l=xml.new_element();
           convert(symbol.location, l);

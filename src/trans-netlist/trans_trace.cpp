@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/xml.h>
 #include <util/xml_expr.h>
-#include <util/i2string.h>
 #include <util/expr_util.h>
 #include <util/prefix.h>
 #include <util/arith_tools.h>
@@ -157,7 +156,7 @@ void convert(
     xmlt &xml_state=dest.new_element("state");
     const trans_tracet::statet &state=trace.states[t];
 
-    xml_state.new_element("timeframe").data=i2string(t); // will go away
+    xml_state.new_element("timeframe").data=std::to_string(t); // will go away
     xml_state.set_attribute("timeframe", t);
     
     for(const auto & a : state.assignments)

@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/xml.h>
 #include <util/xml_expr.h>
-#include <util/i2string.h>
 #include <util/expr_util.h>
 #include <util/prefix.h>
 #include <util/arith_tools.h>

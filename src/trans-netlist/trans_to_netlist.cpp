@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/arith_tools.h>
 #include <util/std_expr.h>
-#include <util/i2string.h>
 
 #include <solvers/prop/aig_prop.h>
 #include <solvers/flattening/boolbv_width.h>

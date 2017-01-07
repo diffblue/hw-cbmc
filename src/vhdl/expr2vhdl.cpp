@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
-#include <util/i2string.h>
 #include <util/arith_tools.h>
 #include <util/std_expr.h>
 
@@ -778,15 +777,15 @@ std::string expr2vhdlt::convert(const typet &type)
       
       if(little_endian)
       {
-        dest+=i2string(offset+width-1);
+        dest+=std::to_string(offset+width-1);
         dest+=":";
-        dest+=i2string(offset);
+        dest+=std::to_string(offset);
       }
       else
       {
-        dest+=i2string(offset);
+        dest+=std::to_string(offset);
         dest+=":";
-        dest+=i2string(offset+width-1);
+        dest+=std::to_string(offset+width-1);
       }
 
       dest+="]";

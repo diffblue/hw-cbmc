@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <list>
 #include <set>
 
-#include <util/hash_cont.h>
 #include <util/string_hash.h>
 
 #include "verilog_module.h"
@@ -98,7 +97,7 @@ public:
   void modules_provided(
     std::set<std::string> &module_set) const;
 
-  typedef hash_map_cont<irep_idt, itemst::iterator, irep_id_hash> module_mapt;
+  typedef std::unordered_map<irep_idt, itemst::iterator, irep_id_hash> module_mapt;
   module_mapt module_map;
   
   void build_module_map();

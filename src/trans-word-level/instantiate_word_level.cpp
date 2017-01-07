@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cassert>
 
 #include <util/arith_tools.h>
-#include <util/i2string.h>
 
 #include "instantiate_word_level.h"
 
@@ -29,7 +28,7 @@ std::string timeframe_identifier(
   unsigned timeframe,
   const irep_idt &identifier)
 {
-  return id2string(identifier)+"@"+i2string(timeframe);
+  return id2string(identifier)+"@"+std::to_string(timeframe);
 }
 
 /*******************************************************************\

@@ -9,24 +9,22 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHEK_BASE_H
 #define CPROVER_VERILOG_TYPECHEK_BASE_H
 
+#include <util/namespace.h>
 #include <util/symbol_table.h>
 #include <util/typecheck.h>
 #include <util/mp_arith.h>
-#include <util/namespace_utils.h>
 
 irep_idt verilog_module_symbol(const irep_idt &base_name);
 irep_idt verilog_module_name(const irep_idt &identifier);
 irep_idt strip_verilog_prefix(const irep_idt &identifier);
 
-class verilog_typecheck_baset:public typecheckt,
-                              public namespace_utilst
+class verilog_typecheck_baset:public typecheckt
 {
 public:
   verilog_typecheck_baset(
     const namespacet &_ns,
     message_handlert &_message_handler):
     typecheckt(_message_handler),
-    namespace_utilst(_ns),
     mode(ID_Verilog)
   { }
 

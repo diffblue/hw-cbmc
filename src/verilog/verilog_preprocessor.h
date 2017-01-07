@@ -3,7 +3,6 @@
 
 #include <list>
 
-#include <util/hash_cont.h>
 #include <util/irep.h>
 #include <util/string_hash.h>
 #include <util/preprocessor.h>
@@ -26,7 +25,7 @@ public:
   virtual ~verilog_preprocessort() { }
 
 protected:
-  typedef hash_map_cont<std::string, std::string, string_hash>
+  typedef std::unordered_map<std::string, std::string, string_hash>
     definest;
     
   definest defines;

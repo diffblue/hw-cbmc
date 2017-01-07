@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/simplify_expr.h>
 #include <util/replace_symbol.h>
-#include <util/i2string.h>
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
@@ -92,7 +91,7 @@ void verilog_typecheckt::typecheck_port_connection(
   const exprt &port)
 {
   const symbolt &symbol=
-    lookup(port.get(ID_identifier));
+    ns.lookup(port.get(ID_identifier));
 
   if(!symbol.is_input && !symbol.is_output)
   {
@@ -787,12 +786,7 @@ void verilog_typecheckt::check_lhs(
   }
   else if(lhs.id()==ID_symbol)
   {
-    // get identifier
-
-    irep_idt identifier=
-      to_symbol_expr(lhs).get_identifier();
-
-    const symbolt &symbol=lookup(identifier);
+    const symbolt &symbol=ns.lookup(to_symbol_expr(lhs));
 
     switch(vassign)
     {
@@ -920,7 +914,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       id2string(module_identifier)+"."+
       id2string(base_name);
     
-    const symbolt &symbol=lookup(identifier);
+    const symbolt &symbol=ns.lookup(identifier);
 
     if(symbol.type.id()!=ID_code)
     {
@@ -1049,7 +1043,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   irep_idt base_name;
   
   if(identifier=="")
-    base_name=i2string(assertion_counter);
+    base_name=std::to_string(assertion_counter);
   else
     base_name=identifier;
   

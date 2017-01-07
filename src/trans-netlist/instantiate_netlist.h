@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_BMC_INSTANTIATE_NETLIST_H
 #define CPROVER_BMC_INSTANTIATE_NETLIST_H
 
-#include <util/hash_cont.h>
 #include <util/expr.h>
 #include <util/namespace.h>
 #include <util/message.h>

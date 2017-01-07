@@ -6,7 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/i2string.h>
 #include <util/std_expr.h>
 
 #include "vhdl_synthesis.h"
@@ -44,7 +43,7 @@ void vhdl_synthesist::synth_code(const codet &code)
     // we'll add a property symbol
     symbolt new_symbol;
     
-    new_symbol.base_name="property"+i2string(++property_counter);
+    new_symbol.base_name="property"+std::to_string(++property_counter);
     new_symbol.name=id2string(module)+"."+id2string(new_symbol.base_name);
     new_symbol.is_property=true;
     new_symbol.mode="VHDL";

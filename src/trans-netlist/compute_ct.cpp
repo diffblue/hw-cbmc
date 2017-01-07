@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cassert>
 #include <algorithm>
 
-#include <util/i2string.h>
 #include <util/arith_tools.h>
 #include <util/graph.h>
 

@@ -13,7 +13,6 @@ Purpose:
 #ifndef CPROVER_WORD_LEVEL_TRANS_H
 #define CPROVER_WORD_LEVEL_TRANS_H
 
-#include <util/hash_cont.h>
 #include <util/std_expr.h>
 #include <util/namespace.h>
 
@@ -35,7 +34,7 @@ public:
   
   void output(std::ostream &out);
 
-  typedef hash_map_cont<irep_idt, exprt, irep_id_hash> next_state_functionst;
+  typedef std::unordered_map<irep_idt, exprt, irep_id_hash> next_state_functionst;
   next_state_functionst next_state_functions;
 
 protected:

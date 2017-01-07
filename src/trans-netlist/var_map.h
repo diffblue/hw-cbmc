@@ -62,7 +62,7 @@ public:
   
   vart::vartypet get_type(const irep_idt &id) const;
 
-  typedef hash_map_cont<irep_idt, vart, irep_id_hash> mapt;
+  typedef std::unordered_map<irep_idt, vart, irep_id_hash> mapt;
   mapt map;
   
   typedef std::map<unsigned, bv_varidt> reverse_mapt;

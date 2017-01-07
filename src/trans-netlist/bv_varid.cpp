@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/i2string.h>
-
 #include "bv_varid.h"
 
 /*******************************************************************\
@@ -24,5 +22,5 @@ Function: bv_varidt::as_string
 
 std::string bv_varidt::as_string() const
 {
-  return id2string(id)+'['+i2string(bit_nr)+']';
+  return id2string(id)+'['+std::to_string(bit_nr)+']';
 }

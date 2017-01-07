@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/i2string.h>
-
 #include "unwind_netlist.h"
 #include "instantiate_netlist.h"
 

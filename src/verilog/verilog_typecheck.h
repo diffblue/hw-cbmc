@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHECK_H
 #define CPROVER_VERILOG_TYPECHECK_H
 
-#include <util/hash_cont.h>
 #include <util/symbol_table.h>
 #include <util/typecheck.h>
 #include <util/mp_arith.h>

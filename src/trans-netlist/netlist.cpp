@@ -8,8 +8,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ctype.h>
 
-#include <util/i2string.h>
-
 #include <solvers/flattening/boolbv_width.h>
 
 #include "netlist.h"
@@ -142,7 +140,7 @@ std::string netlistt::label(unsigned v) const
   const bv_varidt &varid=var_map.reverse(v);
   const var_mapt::mapt::const_iterator v_it=var_map.map.find(varid.id);
   if(v_it!=var_map.map.end() && v_it->second.bits.size()!=1)
-    return id2string(varid.id)+'['+i2string(varid.bit_nr)+']';
+    return id2string(varid.id)+'['+std::to_string(varid.bit_nr)+']';
   else
     return id2string(varid.id);
 }
@@ -363,7 +361,7 @@ std::string netlistt::id2smv(const irep_idt &id)
     else
     {
       result+='$';
-      result+=i2string(ch);
+      result+=std::to_string(ch);
       result+='$';
     }
   }

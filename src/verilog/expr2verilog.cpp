@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
-#include <util/i2string.h>
 #include <util/arith_tools.h>
 #include <util/std_expr.h>
 
@@ -742,7 +741,7 @@ std::string expr2verilogt::convert_constant(
       dest="'h"+integer2string(i, 16);
     else if(width<=7)
     {
-      dest=i2string(width);
+      dest=std::to_string(width);
       dest+="'";
       if(type.id()==ID_signedbv) dest+='s';
       dest+='b';
@@ -754,12 +753,12 @@ std::string expr2verilogt::convert_constant(
   else if(type.id()==ID_verilog_signedbv)
   {
     unsigned width=to_verilog_signedbv_type(src.type()).get_width();
-    return i2string(width)+"'sb"+id2string(value);
+    return std::to_string(width)+"'sb"+id2string(value);
   }
   else if(type.id()==ID_verilog_unsignedbv)
   {
     unsigned width=to_verilog_unsignedbv_type(src.type()).get_width();
-    return i2string(width)+"'b"+id2string(value);
+    return std::to_string(width)+"'b"+id2string(value);
   }
   else if(type.id()==ID_integer || type.id()==ID_natural ||
           type.id()==ID_range)
@@ -1094,15 +1093,15 @@ std::string expr2verilogt::convert(const typet &type)
       
       if(little_endian)
       {
-        dest+=i2string(offset+width-1);
+        dest+=std::to_string(offset+width-1);
         dest+=":";
-        dest+=i2string(offset);
+        dest+=std::to_string(offset);
       }
       else
       {
-        dest+=i2string(offset);
+        dest+=std::to_string(offset);
         dest+=":";
-        dest+=i2string(offset+width-1);
+        dest+=std::to_string(offset+width-1);
       }
 
       dest+="]";

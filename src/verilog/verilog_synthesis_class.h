@@ -11,9 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 #include <map>
-#include <set>
+#include <unordered_set>
 
-#include <util/hash_cont.h>
 #include <util/mp_arith.h>
 #include <util/string_hash.h>
 #include <util/options.h>
@@ -173,7 +172,7 @@ protected:
                                              
   const irep_idt &module;
 
-  typedef hash_set_cont<irep_idt, irep_id_hash> local_symbolst;
+  typedef std::unordered_set<irep_idt, irep_id_hash> local_symbolst;
   local_symbolst local_symbols, new_wires;
 
   void assignment(
