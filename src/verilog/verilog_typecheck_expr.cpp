@@ -1085,7 +1085,7 @@ void verilog_typecheck_exprt::convert_const_expression(
   exprt tmp(expr);
 
   convert_expr(tmp);
-  follow_macros(tmp);
+  ns.follow_macros(tmp);
 
   // this could be large
   propagate_type(tmp, integer_typet());
@@ -1155,7 +1155,7 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
     for(auto & e : tmp.operands())
       e=elaborate_const_expression(e);
     
-    simplify(tmp, ns());
+    simplify(tmp, ns);
     return tmp;
   }
 }
@@ -1179,9 +1179,9 @@ bool verilog_typecheck_exprt::is_const_expression(
   exprt tmp(expr);
 
   convert_expr(tmp);
-  follow_macros(tmp);
+  ns.follow_macros(tmp);
 
-  simplify(tmp, ns());
+  simplify(tmp, ns);
 
   if(tmp.is_true())
   {

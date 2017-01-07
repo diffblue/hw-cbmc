@@ -7,7 +7,6 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/expr_util.h>
-#include <util/i2string.h>
 #include <util/arith_tools.h>
 #include <util/namespace.h>
 #include <util/config.h>
@@ -324,7 +323,7 @@ bool map_varst::check_types_rec(
     {
       error_msg = "array size (" + integer2string(size1) + ") " +
                   "does not match bit vector size (" +
-                   i2string(width2) + ") (E5)";
+                   std::to_string(width2) + ") (E5)";
       return 0;
     }
     

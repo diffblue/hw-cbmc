@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <iostream>
 
-#include <util/i2string.h>
 #include <util/arith_tools.h>
 #include <util/simplify_expr.h>
 
@@ -104,7 +103,7 @@ std::string output_verilog_netlistt::make_symbol_expr(
     }
     
     std::size_t w=width(expr);
-    return i2string(w)+"'b"+integer2binary(i, w);
+    return std::to_string(w)+"'b"+integer2binary(i, w);
   }
   
   return "TODO";
@@ -526,8 +525,8 @@ std::string output_verilog_baset::type_string_base(const typet &type)
     std::size_t width=to_unsignedbv_type(type).get_width();
     std::size_t offset=atoi(type.get("#offset").c_str());
     
-    type_string='['+i2string(width-1+offset)+':'+
-                    i2string(offset)+']';
+    type_string='['+std::to_string(width-1+offset)+':'+
+                    std::to_string(offset)+']';
 
     return type_string;
   }

@@ -25,6 +25,7 @@ public:
     const namespacet &_ns,
     message_handlert &_message_handler):
     typecheckt(_message_handler),
+    ns(_ns),
     mode(ID_Verilog)
   { }
 
@@ -34,6 +35,7 @@ public:
   virtual std::string to_string(const exprt &expr);
 
 protected:
+  const namespacet &ns;
   const irep_idt mode;
   
   virtual std::size_t get_width(const exprt &expr) { return get_width(expr.type()); }

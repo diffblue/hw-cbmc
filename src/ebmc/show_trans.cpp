@@ -9,8 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <iostream>
 
-#include <util/hash_cont.h>
-
 #include <verilog/expr2verilog.h>
 
 #include "show_trans.h"

@@ -7,7 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <iosfwd>
-#include <set>
+#include <unordered_set>
 
 #include <util/message.h>
 #include <util/expr.h>
@@ -45,7 +45,7 @@ protected:
   void next_state(const symbolt &symbol);
   virtual void assign_symbol(const exprt &lhs, const exprt &rhs)=0;
     
-  typedef hash_set_cont<irep_idt, irep_id_hash> filest;
+  typedef std::unordered_set<irep_idt, irep_id_hash> filest;
   void get_source_files(const exprt &expr, filest &dest);
 
   void source_files(const symbolt &symbol);

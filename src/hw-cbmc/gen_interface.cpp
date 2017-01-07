@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 #include <sstream>
 
-#include <util/i2string.h>
 #include <util/config.h>
 #include <util/arith_tools.h>
 #include <util/std_types.h>
@@ -132,9 +131,9 @@ std::string gen_interfacet::type_to_string(const typet& type)
     else if(width==config.ansi_c.long_long_int_width)
       type_str+="long long int";
     else
-      type_str+="__CPROVER_bitvector["+i2string(width)+"]";
+      type_str+="__CPROVER_bitvector["+std::to_string(width)+"]";
     
-    std::string name="_u"+i2string(width);
+    std::string name="_u"+std::to_string(width);
 
     std::map<std::string,std::string>::const_iterator cit =
       typedef_map.find(type_str);

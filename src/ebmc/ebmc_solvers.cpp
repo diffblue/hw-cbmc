@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <iostream>
 
-#include <util/i2string.h>
 #include <util/cmdline.h>
 
 #include <solvers/cvc/cvc_dec.h>
