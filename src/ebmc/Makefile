@@ -15,7 +15,8 @@ OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT) \
-      ../aiger/aiger$(LIBEXT)
+      ../aiger/aiger$(LIBEXT) \
+      ../ic3/libic3$(LIBEXT)   
 
 ifdef MODULE_INTERPOLATION
   CXXFLAGS += -DHAVE_INTERPOLATION
@@ -44,7 +45,7 @@ include ../config.inc
 
 INCLUDES= -I .. -I $(CBMC)/src
 
-LIBS =
+LIBS = ../ic3/minisat/build/release/lib/libminisat.a
 
 CLEANFILES = ebmc$(EXEEXT)
 

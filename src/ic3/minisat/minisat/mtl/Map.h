@@ -23,7 +23,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "minisat/mtl/IntTypes.h"
 #include "minisat/mtl/Vec.h"
 
-namespace Minisat {
+namespace IctMinisat {
 
 //=================================================================================================
 // Default hash/equals functions

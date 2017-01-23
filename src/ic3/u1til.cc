@@ -51,7 +51,6 @@ void CompInfo::add_fclause1(CLAUSE &C,int last_ind,char st_descr)
   el.span = last_ind;
   el.active = 1;
   el.skip = 0;
-  el.delay = 0;
 
   Clause_info.push_back(el);
   
@@ -162,3 +161,44 @@ void my_assert(bool cond)
 } /* end of function my_assert */
 
 
+/*=================================
+
+   C H E C K _ I N I T _ S T A T E S
+  
+  =================================*/
+bool CompInfo::check_init_states()
+{
+
+  for (int i=0; i < Ist.size();i++)
+    if (Ist[i].size() != 1) return(false);
+
+  return(true);
+
+} /* end of function check_init_states */
+
+/*===============================================
+   
+  I N I T _ S T _ S A T I S F Y _ C O N S T R S
+
+   returns 'true' if the initial states satisfy
+   the constraints
+
+  ==============================================*/
+bool CompInfo::init_st_satisfy_constrs() 
+{
+  for (int i=0; i < Ist.size(); i++) {
+    CLAUSE &C = Ist[i];
+    assert(C.size() == 1);
+    int lit = C[0];
+    if (lit < 0) {
+      if (Var_info[-lit-1].value == 1)
+	return(false);
+    }
+    else // lit > 0
+      if (Var_info[lit-1].value == 0)
+	return(false);
+  }
+
+  return(true);
+
+} /* end of function init_st_satisfy_constrs */

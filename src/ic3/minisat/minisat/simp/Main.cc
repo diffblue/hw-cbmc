@@ -27,7 +27,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "minisat/core/Dimacs.h"
 #include "minisat/simp/SimpSolver.h"
 
-using namespace Minisat;
+using namespace IctMinisat;
 
 //=================================================================================================
 

@@ -23,10 +23,10 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::add_tf0_clauses(SatSolver &Slvr)
 {
 
-  Minisat::SimpSolver *Sslvr = new Minisat::SimpSolver();
+  IctMinisat::SimpSolver *Sslvr = new IctMinisat::SimpSolver();
 
   for (int i = 0; i < max_num_vars0; i++) {
-    Minisat::Var nv = Sslvr->newVar();    
+    IctMinisat::Var nv = Sslvr->newVar();    
   }
 
   

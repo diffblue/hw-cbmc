@@ -15,7 +15,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
+
 
 
 
@@ -94,6 +94,7 @@ int check_levels_of_outputs(Gate &G,Circuit *N,int &level,
 
       all_assigned = false; // mark the fact that fanout contains unass. gates
       if (G1.gate_type != LATCH)  
+
 // add the gate to the stack unless it is a latch
 	stack.push_back(Fanout_list[i]); 
     }
@@ -150,7 +151,7 @@ int assign_levels_from_outputs1(Circuit *N,int inp_num)
   return(1);
 
 }/* end of function assign_levels_from_outputs1 */
-/*==============================================================
+/*=================================================================
 
   A S S I G N _ L E V E S _ F R O M _ O U T P U T S
 
@@ -168,7 +169,7 @@ int assign_levels_from_outputs1(Circuit *N,int inp_num)
 
   3) N->max_levels is already set (when computing levels
   from inputs)
-  ==============================================================*/
+  ================================================================*/
 void assign_levels_from_outputs(Circuit *N)
 {
   clear_labels(N); 
@@ -280,8 +281,8 @@ int assign_levels_from_inputs1(Circuit *N,int out_num)
 
   A S S I G N _ L E V E S _ F R O M _ I N P U T S
 
-  This function assign topological levels to the gates. Levels are
-  numbered   from inputs (an input node is assigned level 0).
+  This function assign topological levels to the gates. Levels 
+  are numbered   from inputs (an input node is assigned level 0).
  
   The function also checks if N is asyclic. 
   ==============================================================*/

@@ -1,5 +1,4 @@
-#CXXFLAGS = -std=c++0x  -Wno-literal-suffix  -Wno-write-strings -O3
-CXXFLAGS = -std=c++0x  -Wno-literal-suffix -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3
+CXXFLAGS = -std=c++0x  -Wno-literal-suffix -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3 $(INC_DIR)
 CXFLAGS = $(INC_DIR)
 CFLAGS =   -O3  $(INC_DIR) 
 CXX = g++
@@ -13,65 +12,78 @@ vpath %.cc seq_circ
 vpath %.hh seq_circ
 vpath %.cc build_prob
 vpath %.hh build_prob
-vpath %.h aiger
-vpath %.c aiger
-
-INC_DIR = -I. -Ibuild_prob -Iseq_circ -Iminisat -Iminisat/minisat/core -Iminisat/minisat/mtl -Iminisat/minisat/simp -Iaiger
 
 
-BUILD_PROB =   obj/g3en_cnf.o obj/c1omplem.o obj/c2omplem.o \
-               obj/g0en_cnf.o obj/g1en_cnf.o obj/g2en_cnf.o \
-               obj/assign_indexes.o obj/build_arrays.o
+include ../config.inc
 
-SEQ_CIRC = obj/r3ead_blif.o \
-           obj/r2ead_blif.o  obj/c2irc_util.o \
-           obj/c3irc_util.o obj/l1ast_touch.o  \
-           obj/a3dd_gate.o  obj/preamble.o  \
-           obj/r1ead_blif.o  obj/circuit.o obj/a2dd_gate.o\
-           obj/finish_gate.o obj/l0ast_touch.o 
+MINISAT_INC = -Iminisat -Iminisat/minisat/core -Iminisat/minisat/mtl -Iminisat/minisat/simp 
 
+INC_DIR = -I. -Ibuild_prob -Iseq_circ $(MINISAT_INC) -I$(CBMC)/src -I../ -I../ebmc -I../trans-netlist
 
-OBJ_ROOT = obj/i4nit_sat_solvers.o \
-           obj/l1ift_states.o obj/r5ead_input.o  \
-           obj/r4ead_input.o obj/c4oi.o \
-           obj/c5tg.o obj/c2tg.o obj/r3ead_input.o \
-           obj/r2ead_input.o obj/r1ead_input.o obj/r0ead_input.o \
-           obj/dnf_io.o  obj/m1ain.o obj/p1arameters.o \
-           obj/i3nit_sat_solvers.o obj/interface.o obj/u3til.o \
-           obj/s3tat.o obj/p5ick_lit.o obj/p0ick_lit.o \
-           obj/find_red_cls.o obj/u2til.o  obj/e5xclude_state.o \
-           obj/p3ush_clauses_forward.o obj/i2nit_sat_solvers.o obj/l0ift_states.o \
-           obj/u1til.o obj/s2horten_clause.o obj/u0til.o \
-           obj/e4xclude_state.o obj/s1tat.o \
-           obj/e3xclude_state.o obj/v1erify.o \
-           obj/o1utput.o obj/v0erify.o \
-           obj/p2ush_clauses_forward.o obj/e2xclude_state.o \
-           obj/e1xclude_state.o obj/c1onv_vars.o \
-           obj/c0ex.o obj/i1nit.o obj/next_time_frame.o \
-           obj/hash_table.o \
-           obj/my_printf.o
+OBJ_DIR = .
+
+BUILD_PROB =   $(OBJ_DIR)/g3en_cnf.o  $(OBJ_DIR)/g0en_cnf.o $(OBJ_DIR)/g1en_cnf.o \
+               $(OBJ_DIR)/g2en_cnf.o $(OBJ_DIR)/assign_indexes.o $(OBJ_DIR)/build_arrays.o
+
+SEQ_CIRC = $(OBJ_DIR)/p1rint_blif.o $(OBJ_DIR)/p2rint_blif.o $(OBJ_DIR)/finish_gate.o \
+           $(OBJ_DIR)/a2dd_gate.o  $(OBJ_DIR)/a3dd_gate.o  $(OBJ_DIR)/c2irc_util.o \
+           $(OBJ_DIR)/circuit.o $(OBJ_DIR)/a4dd_spec_buffs.o  $(OBJ_DIR)/a5dd_spec_buffs.o  \
+           $(OBJ_DIR)/l0ast_touch.o $(OBJ_DIR)/l1ast_touch.o 
+     
 
 
-AIGER = obj/aiger.o 
 
-OBJ =   $(BUILD_PROB) $(OBJ_ROOT) $(SEQ_CIRC)  $(AIGER)
+OBJ_ROOT = $(OBJ_DIR)/g2ate_ord.o $(OBJ_DIR)/i4nit_sat_solvers.o $(OBJ_DIR)/l1ift_states.o \
+           $(OBJ_DIR)/r5ead_input.o  $(OBJ_DIR)/r4ead_input.o $(OBJ_DIR)/c4oi.o \
+           $(OBJ_DIR)/c5tg.o $(OBJ_DIR)/c2tg.o $(OBJ_DIR)/r3ead_input.o \
+           $(OBJ_DIR)/r2ead_input.o $(OBJ_DIR)/r1ead_input.o $(OBJ_DIR)/r0ead_input.o \
+           $(OBJ_DIR)/dnf_io.o  $(OBJ_DIR)/m1ain.o $(OBJ_DIR)/p1arameters.o \
+           $(OBJ_DIR)/i3nit_sat_solvers.o $(OBJ_DIR)/interface.o $(OBJ_DIR)/u3til.o \
+           $(OBJ_DIR)/s3tat.o $(OBJ_DIR)/p5ick_lit.o $(OBJ_DIR)/p0ick_lit.o \
+           $(OBJ_DIR)/find_red_cls.o $(OBJ_DIR)/u2til.o  $(OBJ_DIR)/e5xclude_state.o \
+           $(OBJ_DIR)/p3ush_clauses_forward.o $(OBJ_DIR)/i2nit_sat_solvers.o $(OBJ_DIR)/l0ift_states.o \
+           $(OBJ_DIR)/u1til.o $(OBJ_DIR)/s2horten_clause.o $(OBJ_DIR)/u0til.o \
+           $(OBJ_DIR)/e4xclude_state.o $(OBJ_DIR)/s1tat.o  $(OBJ_DIR)/e3xclude_state.o \
+           $(OBJ_DIR)/v1erify.o $(OBJ_DIR)/o1utput.o $(OBJ_DIR)/v0erify.o \
+           $(OBJ_DIR)/p2ush_clauses_forward.o $(OBJ_DIR)/e2xclude_state.o \
+           $(OBJ_DIR)/e1xclude_state.o $(OBJ_DIR)/c1onv_vars.o \
+           $(OBJ_DIR)/c0ex.o $(OBJ_DIR)/i1nit.o $(OBJ_DIR)/next_time_frame.o \
+           $(OBJ_DIR)/hash_table.o  $(OBJ_DIR)/my_printf.o
 
 
-obj/%.o : %.cc m0ic3.hh dnf_io.hh  m2ethods.hh aux_types.hh i5nline.hh r0ead_blif.hh ccircuit.hh
-	$(CXX) -c $(CXXFLAGS) $(INC_DIR) $< -o $@
-obj/%.o : %.c
+OBJ =      $(OBJ_ROOT) $(BUILD_PROB) $(SEQ_CIRC)
+
+H_FILES1 = m0ic3.hh dnf_io.hh  m2ethods.hh aux_types.hh i5nline.hh
+H_FILES2 = ccircuit.hh ebmc_ic3_interface.hh more_fun_prot.hh
+$(OBJ_DIR)/%.o : %.cc  $(H_FILES1) $(H_FILES2)
+	$(CXX) -c $(CXXFLAGS)  $< -o $@
+$(OBJ_DIR)/%.o : %.c
 	$(CC) -c $(ARCH_FLAG) $(CFLAGS) $< -o $@
 
+CLEANFILES = $(PROG_NAME)
 
 LINK_OPTIONS =
 
 LIB_PATH = 	minisat/build/release/lib
 
-$(PROG_NAME) :  $(OBJ_ROOT) $(AIGER) $(SEQ_CIRC) $(BUILD_PROB)  
-	$(CXX)  $(LINK_OPTIONS) $(ARCH_FLAG)  $(OBJ) 	$(LIB_PATH)/libminisat.a -o  $(PROG_NAME)
 
-clean : 
-	rm -f obj/*.o  ic3 aic3 *~
+all : libic3.a make_minisat
+
+libic3.a: $(OBJ)
+	ar rc $@ $(OBJ)
+	ranlib $@
+
+make_minisat: 
+	cd minisat; make
+
+clean : clean_ic3 clean_minisat
+
+clean_ic3:
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d ic3 aic3 libic3.a *~
+
+clean_minisat:
+	cd minisat; make clean
+
 debug   :
 	make "CXXFLAGS=-g $(CXFLAGS)" all
 prof : 

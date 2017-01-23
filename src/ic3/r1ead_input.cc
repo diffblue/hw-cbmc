@@ -11,12 +11,93 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+
+#include <solvers/prop/aig_prop.h>
+#include <trans-netlist/instantiate_netlist.h>
+#include "ebmc_base.h"
+
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
 #include "m0ic3.hh"
+
+#include "ebmc_ic3_interface.hh"
+
+/*===================================
+
+  F O R M _ L A T C H E D _ G A T E S
+
+  ==================================*/
+void ic3_enginet::form_latched_gates()
+{
+
+   ebmc_form_latches();
+
+// mark latched literals
+
+  NamesOfLatches Latches;
+
+  var_mapt &vm = netlist.var_map;
+
+  for(var_mapt::mapt::const_iterator it=vm.map.begin();
+      it!=vm.map.end(); it++)    {
+    const var_mapt::vart &var=it->second; 
+     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
+       continue;
+
+    literalt lit =var.bits[0].current;
+    Ci.Lats.insert(lit.get());
+    CCUBE Latch_name;
+    form_latch_name(Latch_name,lit.get());
+    Latches[Latch_name] = 1;
+  }
+
+ for(var_mapt::mapt::const_iterator it=vm.map.begin();
+      it!=vm.map.end(); it++)    {
+    const var_mapt::vart &var=it->second; 
+     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
+       continue;
+
+    literalt lit =var.bits[0].current;
+    int init_val = Latch_val[lit.var_no()];
+    literalt next_lit = var.bits[0].next;
+    add_new_latch(Latches,init_val,lit.get(),next_lit);
+  }
+
+  
+} /* end of function form_latched_gates */
+
+/*====================================
+
+      F I N D _ P R O P _ L I T
+
+  ====================================*/
+void ic3_enginet::find_prop_lit()
+{
+  assert(properties.size() == 1);
+  propertyt Prop = properties.front();
+
+  assert(Prop.expr.operands().size()==1);
+  exprt Oper = Prop.expr.op0();
+  
+  assert(Oper.id() == ID_not); 
+  exprt Oper1 = Oper.op0();
+
+  assert(Oper1.type().id()==ID_bool);
+
+  aig_prop_constraintt aig_prop(netlist);
+  aig_prop.set_message_handler(get_message_handler());
+    
+  const namespacet ns(symbol_table);
+    
+  prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper1, ns,
+			     get_message_handler());
+
+  if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
+  else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;
+  
+} /* end of function find_prop_lit */
 
 /*==============================
 
@@ -56,31 +137,21 @@ void CompInfo::form_invs(Circuit *N)
    'seq_circ/a3dd_gate.cc'
 
   ====================================*/
-void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,
-                             aiger_symbol &S)
+void ic3_enginet::add_new_latch(NamesOfLatches &Latches,
+				int init_val,int pres_lit_val,literalt &next_lit)
 {
 
-  int init_value;
 
-  switch (S.reset) {
-  case 0:
-  case 1:
-    init_value = S.reset;
-    break;
-  default:
-    assert(S.reset == S.lit);
-    init_value = 2;
-    break;
-  }
+  Circuit *N = Ci.N;
 
- // process the output name
+  // process the output name
   CCUBE Latch_name;
-  form_latch_name(Latch_name,S); 
+  form_latch_name(Latch_name,pres_lit_val); 
  
  
   int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,
                N->Gate_list,true);
-  upd_gate_constr_tbl(S.lit,pin_num);
+  Ci.upd_gate_constr_tbl(pres_lit_val,pin_num);
  
  
 
@@ -91,12 +162,12 @@ void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,
 
   CCUBE Next_name;
 
-  form_next_symb(Next_name,S.next);
+  form_next_symb(Next_name,next_lit);
   //  process  the  input name
   {
     pin_num = assign_input_pin_number2(Latches,N,Next_name,N->Gate_list);
-    if (S.next & 1 == 0)
-      upd_gate_constr_tbl(S.next,pin_num);
+    if (next_lit.sign() == 0)
+      Ci.upd_gate_constr_tbl(next_lit.get(),pin_num);
 
     Gate &G = N->get_gate(gate_ind);   
     G.Fanin_list.push_back(pin_num); 
@@ -128,89 +199,10 @@ void CompInfo::add_new_latch(NamesOfLatches &Latches,Circuit *N,
   G.flags.feeds_latch = 0;
   G.flags.output_function = 0;
   G.Gate_name =  Latch_name; 
-  G.init_value = init_value;
+  G.init_value = init_val;
  
 } /* end of function add_new_latch */
 
-/*===================================
-
-       F O R M _ L A T C H E S
-
-  ==================================*/
-void CompInfo::form_latches(Circuit *N,aiger &Aig)
-{
-
-// mark latched literal
-
-  NamesOfLatches Latches;
-
-  for (int i=0; i < Aig.num_latches; i++) {
-    Lats.insert(Aig.latches[i].lit);
-    CCUBE Latch_name;
-    form_latch_name(Latch_name,Aig.latches[i]);
-    Latches[Latch_name] = 1;
-  }
-
-  for (int i=0; i < Aig.num_latches; i++) 
-    add_new_latch(Latches,N,Aig.latches[i]);
-  
-  
-
-} /* end of function form_latches */
-
-/*==========================================================
-
-             F O R M _ O U T P U T
-
-  ASSUMPTIONS:
-
-  1) Aig.num_bad > 0 or Aig.num_outputs > 0
-  2) Aig.num_bad == 0 or Aig.num_outputs == 0
-  3) if (Aig.num_bad > 0) then prop_ind < Aig.num_bad
-  4) If (Aig.num_outputs > 0) then prop_ind < Aig.num_outputs
-
-  ===========================================================*/
-void CompInfo::form_output(int &outp_lit,Circuit *N,aiger &Aig)
-{
-
-  if (Aig.num_bad == 0) outp_lit = Aig.outputs[prop_ind].lit;
-  else  outp_lit = Aig.bad[prop_ind].lit;
-
-  if (outp_lit <= 1) {
-    assert(outp_lit >= 0);
-    if (outp_lit == 0) const_flags = const_flags | 1;
-    else if (outp_lit == 1) const_flags = const_flags | 2;
-  }
-
-  int fnd_lit;
-  bool found = check_constr_lits(fnd_lit,outp_lit);
-  assert(!found);
-
-} /* end of function form_output */
-
-
-
-/*===================================
-
-        F O R M _ I N P U T S
-
-====================================*/
-void CompInfo::form_inputs(Circuit *N,aiger &Aig)
-{
-
- for (int i=0; i < Aig.num_inputs; i++) {
-    int lit = Aig.inputs[i].lit;
-    char Inp_name[MAX_NAME];
-    sprintf(Inp_name,"i%d",lit);
-    CCUBE Name;
-    conv_to_vect(Name,Inp_name);
-    Inps.insert(lit);
-    add_input(Name,N,N->ninputs);
-    upd_gate_constr_tbl(lit,N->ninputs);
-  }
-  
-
-} /* end of function form_inputs */
 
 /*===============================
 
@@ -219,12 +211,10 @@ void CompInfo::form_inputs(Circuit *N,aiger &Aig)
   =============================*/
 void conv_to_vect(CCUBE &Name1,const char *Name0)
 {
-
   Name1.clear();
   for (int i=0; ;i++) {
     if (Name0[i] == 0) break;
     Name1.push_back(Name0[i]);
   }
-
 
 } /* end of function conv_to_vect */

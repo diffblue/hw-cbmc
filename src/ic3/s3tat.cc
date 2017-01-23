@@ -93,10 +93,11 @@ void CompInfo::print_flags()
   else if (sorted_objects == VARS) printf("VARS\n");
   else assert(false);
 
-  print_sort_mode("lift_sort_mode",lift_sort_mode);
+  print_induct_lift_sort_mode("lift_sort_mode",lift_sort_mode);
  
-  print_sort_mode("ind_cls_sort_mode",ind_cls_sort_mode);
+  print_induct_lift_sort_mode("ind_cls_sort_mode",ind_cls_sort_mode);
 
+  print_gate_sort_mode();
   printf("selector = %d\n",selector);
   printf("ctg_flag = %d\n",ctg_flag);
   printf("constr_flag = %d\n",constr_flag);
@@ -113,12 +114,13 @@ void CompInfo::print_flags()
 
 } /* end of function print_flags */
 
-/*=============================================
 
-       P R I N T _ S O R T _ M O D E
+/*==========================================================
 
-  =============================================*/
-void CompInfo::print_sort_mode(const char *mode_name,int sort_mode) 
+    P R I N T _ I N D U C T _ L I F T _ S O R T _ M O D E
+
+  =========================================================*/
+void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode) 
 {
   printf("%s = ",mode_name);
   switch (sort_mode) {
@@ -135,4 +137,34 @@ void CompInfo::print_sort_mode(const char *mode_name,int sort_mode)
   default:
     assert(false);
   }
-} /* end of function print_sort_mode */
+} /* end of function print_induct_lift_sort_mode */
+
+/*===========================================
+
+  P R I N T _ G A T E _ S O R T _ M O D E
+
+  =========================================*/
+void CompInfo::print_gate_sort_mode()
+{
+
+  printf("gate_sort_mode = ");
+  switch (gate_sort_mode) {
+  case INIT_SORT:
+    printf("INIT_SORT");
+    break;
+  case INPS_FIRST:
+    printf("INPS_FIRST");
+    break;
+  case OUTS_FIRST:
+    printf("OUTS_FIRST");
+    break;
+  case RAND_SORT:
+    printf("RAND_SORT");
+    break;
+  default:
+    assert(false);
+  }
+
+  printf("\n");
+
+} /* end of function print_gate_sort_mode */

@@ -42,7 +42,6 @@ void CompInfo::add_fclause2(CLAUSE &C,int last_ind,bool upd_activity)
   el.span = last_ind;
   el.active = 1;
   el.skip = 0;
-  el.delay = 0;
 
   Clause_info.push_back(el);
   

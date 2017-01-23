@@ -15,7 +15,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
 /*==================================
@@ -25,7 +24,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ==================================*/
 void CompInfo::add_constrs() 
 {
-  printf("adding %d unit constraints\n",(int) Constr_ilits.size() + Constr_nilits.size());
+  printf("adding %d unit constraints\n",(int) (Constr_ilits.size() +
+					       Constr_nilits.size()));
   for (int i=0; i < Constr_ilits.size(); i++) {
     CLAUSE U;
     U.push_back(Constr_ilits[i]);
@@ -92,33 +92,35 @@ void CompInfo::gen_trans_rel(int shift)
 {
 
   for (int i=0; i < N->Gate_list.size();i++) {
-    Gate &G =  N->Gate_list[i];
+    int gate_ind = Ordering[i];
+    Gate &G =  N->Gate_list[gate_ind];
     if (G.gate_type == INPUT) continue;
     if (G.gate_type == LATCH) continue;
 // skip the gates that are not part of the transition function
     if (G.flags.transition == 0) 
       if (G.flags.tran_constr == 0) continue; 
-    int var_ind = Gate_to_var[i]-1;
+    int var_ind = Gate_to_var[gate_ind]-1;
     switch (G.func_type)
       {case CONST:
-	  add_const_gate_cube(Tr,i,shift);
+	  add_const_gate_cube(Tr,gate_ind,shift);
 	  break;
       case AND:   
-	add_and_gate_cubes(Tr,i,shift);
+	add_and_gate_cubes(Tr,gate_ind,shift);
 	break;
       case OR:  
-	add_or_gate_cubes(Tr,i,shift);
+	add_or_gate_cubes(Tr,gate_ind,shift);
 	break;
       case BUFFER: 
-	add_buffer_gate_cubes(Tr,i,shift);
+	add_buffer_gate_cubes(Tr,gate_ind,shift);
 	break;
       case TRUTH_TABLE: 
-	add_truth_table_gate_cubes(Tr,i,shift);         
+	add_truth_table_gate_cubes(Tr,gate_ind,shift);         
 	break;
       case COMPLEX: 
-        add_complex_gate_cubes(Tr,i,shift);
-	break;
-      default:   printf("wrong gate type\n");
+        printf("complex gates are not allowed\n");
+	exit(1);
+      default:   
+        printf("wrong gate type\n");
 	exit(1);
       }
   }
@@ -199,7 +201,7 @@ void CompInfo::set_constr_flag()
     if (G.gate_type == INPUT) continue;
     Stack.push_back(gate_ind);
     bool tran_flag,fun_flag;
-    //    printf("gate_ind = %d\n",gate_ind);
+
     gen_constr_coi(Gates,tran_flag,fun_flag,Stack);
     assert(tran_flag || fun_flag);
     mark_constr_gates(Gates,tran_flag,fun_flag);

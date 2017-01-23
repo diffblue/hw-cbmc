@@ -31,9 +31,6 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
     printf("incr_short\n");
   }
 
-  // if (ctg_flag)
-  //   if (rec_depth == 0)     printf("incr_short\n");
-  //   else printf("  incr_short\n");
 
   SatSolver &Slvr = Time_frames[curr_tf].Slvr; 
   int impr_count = 0;

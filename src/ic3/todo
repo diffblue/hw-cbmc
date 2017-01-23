@@ -1,32 +1,54 @@
-==============
-Minor things
-==============
-*) Add a file describing options
+=====================
 
-*) Polish 'makefile'
+Finishing integration
+with ebmc
+=====================
+
+*) Add processing external constraints (like AIGER format constraints
+   that are handled by the current stand-alone version of IC3)
+
+*) Add the ability to specify multiple properties (like this is done
+   in the current stand-alone version of IC3)
+
+*) Add code freeing memory allocated by the Verilog reader after IC3
+   converted this information into its internal data
+   structure. (Keeping this memory is too expensive for large
+   examples.)
+
+*) Add the ability to specify parameters that control the stand-alone
+   version of IC3
+
 
 =====================================
 Changes of the current implementation
 =====================================
 
-*) Implement actual removal of subsumed clauses (currently they are
-   just marked in ignored by the algorithm)
+*) Print out more time-frame statistics  (time taken
+   to finish a time frame, average size of inductive clauses,
+   averages size of cubes generalizing bad states etc)
 
-*) Improve the performance of the algorithm
-   on constrained examples
+*) Optimize the procedure of building the longest inductive clause for
+   the case of designs with a large number of latches
+
+*) Try more aggressive generalization of a bad state (on top
+   of using the state-lifting technique)
+
+*) Implement actual removal of subsumed clauses (currently they are
+   just marked and ignored by the algorithm)
+
+
 ====================================
 Improvements of the basic algorithm
 ====================================
-*) Implement IC3 with stuttering
 
+*) Implement the version of IC3 that fixes the problem with
+   convergence rate (by computing reachability of good states breaking
+   induction)
 
-*) Fix the hole in IC3 that hurts
-   its convergence rate 
+*) Implement a "dual" IC3 where one over-approximates the set of
+   states from which a bad state is reachable in j transitions (rather
+   than the set of states reachable in j transitions from initial
+   states).
 
-*) Implement proving a property
-   incrementally (by partitioning
-   the target property)
-
-
-
+*) Implement a version of IC3 where one employs depth-first search
 

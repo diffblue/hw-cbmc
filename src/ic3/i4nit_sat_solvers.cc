@@ -30,10 +30,10 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::form_spec_simp_pr_tr(SatSolver &Slvr)
 {
 
- Minisat::SimpSolver *Sslvr = new Minisat::SimpSolver();
+ IctMinisat::SimpSolver *Sslvr = new IctMinisat::SimpSolver();
 
   for (int i = 0; i < max_num_vars0; i++) {
-    Minisat::Var nv = Sslvr->newVar();    
+    IctMinisat::Var nv = Sslvr->newVar();    
   }
 
   // freeze variables
@@ -73,7 +73,7 @@ void CompInfo::form_spec_simp_pr_tr(SatSolver &Slvr)
     L O A D _ C L A U S E S 2
 
   =============================*/
-void CompInfo::load_clauses2(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,
+void CompInfo::load_clauses2(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,
                              CNF &A,int num_clauses)
 {
   for (int i=0; i < num_clauses; i++) {

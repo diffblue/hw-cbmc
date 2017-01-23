@@ -21,7 +21,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include "minisat/mtl/Vec.h"
 
-namespace Minisat {
+namespace IctMinisat {
 
     template<class T> struct MkIndexDefault {
         typename vec<T>::Size operator()(T t) const { return (typename vec<T>::Size)t; }
@@ -102,5 +102,5 @@ namespace Minisat {
     #endif
 
 //=================================================================================================
-} // namespace Minisat
+} // namespace IctMinisat
 #endif

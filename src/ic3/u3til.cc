@@ -57,8 +57,8 @@ void CompInfo::add_negated_assumps1(MvecLits &Assmps,CLAUSE &C)
 
   for (int i=0; i < C.size(); i++) {
     int lit = C[i];
-    if (lit < 0) Assmps.push(Minisat::mkLit(-lit-1,false));
-    else Assmps.push(Minisat::mkLit(lit-1,true));
+    if (lit < 0) Assmps.push(IctMinisat::mkLit(-lit-1,false));
+    else Assmps.push(IctMinisat::mkLit(lit-1,true));
   }
     
 } /* end of function add_negated_assumps1 */
@@ -105,8 +105,8 @@ void CompInfo::add_assumps3(MvecLits &Assmps,CUBE &St)
 
   for (int i=St.size()-1; i >= 0; i--) {
     int lit = St[i];
-    if (lit < 0) Assmps.push(Minisat::mkLit(-lit-1,true));
-    else Assmps.push(Minisat::mkLit(lit-1,false));
+    if (lit < 0) Assmps.push(IctMinisat::mkLit(-lit-1,true));
+    else Assmps.push(IctMinisat::mkLit(lit-1,false));
   }
     
 } /* end of function add_assumps3 */
@@ -122,8 +122,8 @@ void CompInfo::add_assumps1(MvecLits &Assmps,CUBE &St)
 
   for (int i=0; i < St.size(); i++) {
     int lit = St[i];
-    if (lit < 0) Assmps.push(Minisat::mkLit(-lit-1,true));
-    else Assmps.push(Minisat::mkLit(lit-1,false));
+    if (lit < 0) Assmps.push(IctMinisat::mkLit(-lit-1,true));
+    else Assmps.push(IctMinisat::mkLit(lit-1,false));
   }
     
 } /* end of function add_assumps1 */

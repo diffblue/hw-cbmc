@@ -75,7 +75,6 @@ void CompInfo::init_fields()
   for (int i=0; i < F.size(); i++) {
     if (Clause_info[i].active == 0) continue;
     Clause_info[i].skip = 0;
-    Clause_info[i].delay = 0;
   }
 
 } /* end of function init_fields */

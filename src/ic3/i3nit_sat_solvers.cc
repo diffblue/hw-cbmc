@@ -22,10 +22,10 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   G E N _ U N I T _ C L A U S E S
 
   ========================================*/
-void CompInfo::gen_unit_clauses(Minisat::SimpSolver *Sslvr,CNF &Uclauses)
+void CompInfo::gen_unit_clauses(IctMinisat::SimpSolver *Sslvr,CNF &Uclauses)
 {
 
-  for (Minisat::TrailIterator pnt = Sslvr->trailBegin(); 
+  for (IctMinisat::TrailIterator pnt = Sslvr->trailBegin(); 
        pnt != Sslvr->trailEnd(); ++pnt) {
     int lit = mlit_to_lit(Sslvr,*pnt);
     CLAUSE U;
@@ -61,14 +61,14 @@ bool CompInfo::ext_clause(CLAUSE &C)
 
   =================================================*/
 void CompInfo::accept_simplified_form(SatSolver &Slvr,
-                                      Minisat::SimpSolver *Sslvr)
+                                      IctMinisat::SimpSolver *Sslvr)
 {
 
-  Minisat::Solver *S = Slvr.Mst;
-  for (Minisat::ClauseIterator pnt = Sslvr->clausesBegin(); 
+  IctMinisat::Solver *S = Slvr.Mst;
+  for (IctMinisat::ClauseIterator pnt = Sslvr->clausesBegin(); 
        pnt != Sslvr->clausesEnd(); ++pnt) {
-    const Minisat::Clause &M = *pnt;
-    Minisat::vec<Minisat::Lit> C;
+    const IctMinisat::Clause &M = *pnt;
+    IctMinisat::vec<IctMinisat::Lit> C;
     for (int i = 0; i < M.size(); i++)
       C.push(M[i]);
     S->addClause(C);
@@ -80,18 +80,18 @@ void CompInfo::accept_simplified_form(SatSolver &Slvr,
      C O P Y _  S I M P L I F I E D _ F O R M 
 
   ================================================*/
-void CompInfo::copy_simplified_form(Minisat::SimpSolver *Sslvr,
+void CompInfo::copy_simplified_form(IctMinisat::SimpSolver *Sslvr,
                                    CNF &Ext_clauses,CNF &Uclauses)
 {
 
   assert(Simp_PrTr.size() == 0);
-  for (Minisat::ClauseIterator pnt = Sslvr->clausesBegin(); 
+  for (IctMinisat::ClauseIterator pnt = Sslvr->clausesBegin(); 
        pnt != Sslvr->clausesEnd(); ++pnt) {
-    const Minisat::Clause &M = *pnt;
+    const IctMinisat::Clause &M = *pnt;
     CLAUSE C;
     for (int i = 0; i < M.size(); i++)      {
-      int lit = Minisat::var(M[i])+1;
-      if (Minisat::sign(M[i])) lit = -lit;
+      int lit = IctMinisat::var(M[i])+1;
+      if (IctMinisat::sign(M[i])) lit = -lit;
       C.push_back(lit);
     }
     Simp_PrTr.push_back(C);
@@ -115,10 +115,10 @@ void CompInfo::copy_simplified_form(Minisat::SimpSolver *Sslvr,
 void CompInfo::add_tf1_clauses(SatSolver &Slvr)
 {
 
-  Minisat::SimpSolver *Sslvr = new Minisat::SimpSolver();
+  IctMinisat::SimpSolver *Sslvr = new IctMinisat::SimpSolver();
 
   for (int i = 0; i < max_num_vars0; i++) {
-    Minisat::Var nv = Sslvr->newVar();    
+    IctMinisat::Var nv = Sslvr->newVar();    
   }
 
   // freeze variables
@@ -154,7 +154,7 @@ void CompInfo::add_tf1_clauses(SatSolver &Slvr)
     L O A D _ C L A U S E S 1
 
   =============================*/
-void CompInfo::load_clauses1(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A)
+void CompInfo::load_clauses1(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,CNF &A)
 {
   for (int i=0; i < A.size(); i++) {
     CLAUSE &C = A[i];
@@ -178,8 +178,8 @@ void CompInfo::load_clauses1(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A)
 void CompInfo::conv_to_mclause(TrivMclause &A, CLAUSE &C) {
 
   for (int i=0; i < C.size(); i++) {
-    if (C[i] > 0) A.push(Minisat::mkLit(C[i]-1,false));
-    else A.push(Minisat::mkLit(-C[i]-1,true));
+    if (C[i] > 0) A.push(IctMinisat::mkLit(C[i]-1,false));
+    else A.push(IctMinisat::mkLit(-C[i]-1,true));
 
   }
 

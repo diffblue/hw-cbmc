@@ -8,15 +8,15 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 typedef std::pair<CUBE,int> StatePair;
 typedef std::pair<int,int> LenInd;
 typedef std::pair<float,int> ActInd;
-typedef Minisat::vec<Minisat::Lit> TrivMclause;
-typedef Minisat::Lit Mlit;
+typedef IctMinisat::vec<IctMinisat::Lit> TrivMclause;
+typedef IctMinisat::Lit Mlit;
 typedef TrivMclause MvecLits;
-typedef Minisat::Clause ComplMclause;
-typedef Minisat::lbool Mbool;
-typedef Minisat::vec<Mbool> MboolVec;
-const Mbool Mtrue = Minisat::l_True;
-const Mbool Mfalse = Minisat::l_False;
-const Mbool Mundef = Minisat::l_Undef;
+typedef IctMinisat::Clause ComplMclause;
+typedef IctMinisat::lbool Mbool;
+typedef IctMinisat::vec<Mbool> MboolVec;
+const Mbool Mtrue = IctMinisat::l_True;
+const Mbool Mfalse = IctMinisat::l_False;
+const Mbool Mundef = IctMinisat::l_Undef;
 
 enum PrevOper {INIT, DELETE};
 enum VarType {INP,PRES_ST,NEXT_ST,INTERN};
@@ -47,7 +47,8 @@ class hsh_tbl {
 public:  
   int marker;
   CUBE Table;
-  bool in_use; // is used as a semafor to prevent using the same hash table by two different agents
+  bool in_use; // is used as a semafor to prevent using the same hash table 
+               // by two different agents
   // functions
   void  change_marker(void);
   void hsh_init(int nelems);
@@ -63,7 +64,8 @@ public:
 //
 struct VarInfo{
   VarType type;  // type of the variable
-  int value;  // sets the value to 0 or 1 for a fixed variable. Otherwise the value is 2
+  int value;  // sets the value to 0 or 1 for a fixed variable. 
+              // Otherwise the value is 2
 };
 
 //
@@ -108,13 +110,14 @@ typedef std::priority_queue<PqElem,std::vector <PqElem>, pq_compare> PrQueue;
 
 struct ClauseInfo 
 {  
-  int  span;    // specifies the span of cube. If span = j,  F_j is the latest formula where 
-  // the clause at hand is present
-  unsigned active : 1; // is set to 0 if clause C=F[curr_ind] is strictly subsumed by a clause
-                       // obtained after pushing clause C to the next time frame
-  unsigned skip : 1; // if set to 1, this clause should be ignored when pushing clauses forward
-  unsigned delay : 1; // if set to 1, this clause should be ingored until the time frame where it
-                      // is boundary
+  int  span;    // specifies the span of cube. If span = j, F_j is the latest
+                // formula where  the clause at hand is present
+  unsigned active : 1; // is set to 0 if clause C=F[curr_ind] is strictly 
+                       //subsumed by a clause obtained after pushing clause C 
+                       // to the next time frame
+  unsigned skip : 1; // if set to 1, this clause should be ignored when 
+                     // pushing clauses forward
+ 
 };
 
 
@@ -125,7 +128,7 @@ struct ClauseInfo
 struct SatSolver
 { 
   std::string Name; // name of the SAT-solver
-  Minisat::Solver *Mst; // an instance of Minisat
+  IctMinisat::Solver *Mst; // an instance of IctMinisat
   int tot_num_calls; // total number of times 'Mst' is called
   int num_calls; // number of calls since the last 'init_sat_solver' operation
   int init_num_vars;  // the initial number of variables
@@ -141,17 +144,19 @@ struct SatSolver
 struct TimeFrame
 {
 
-  SatSolver Slvr; // a copy of Minisat
+  SatSolver Slvr; // a copy of IctMinisat
   CUBE Clauses; // specifies the clauses of the current time frame
   // some clauses listed in 'Tf_cls' may be inactive
-  int num_bnd_cls; // specifies number of boundary clauses of the current time frame
+  int num_bnd_cls; // specifies number of boundary clauses of the 
+                   // current time frame
 
-  int num_pbss; // number of Pre-Bad_States (states that are one transition away from a bad state)
+  int num_pbss; // number of Pre-Bad_States (states that are one 
+                // transition away from a bad state)
 
   int tot_num_ctis; // total number of Counterexamples-To-Induction 
 
-  int num_rcnt_ctis; // number of Cti-s generated in the current time frame when processing the latest
-                     // time frame
+  int num_rcnt_ctis; // number of Cti-s generated in the current time frame 
+                     // when processing the latest time frame
   
  
 };

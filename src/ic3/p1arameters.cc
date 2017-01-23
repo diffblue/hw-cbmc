@@ -16,7 +16,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-
 /*==============================
 
      P R I N T _ H E A D E R
@@ -27,7 +26,7 @@ void CompInfo::print_header()
 
   printf("mic3 circ [b|C|c|d||e|i|n|N|r|x] ['a'num] ['D'num] ['g'num]\n");
   printf("          ['h'val] ['m'val] ['o' name] ['p'num] ['s'num] ['Sl'num]\n"); 
-  printf("           ['Si'num] ['t'num] ['T'num] ['v'num] \n\n");
+  printf("           ['Si'num] ['Sg'num]['t'num] ['T'num] ['v'num] \n\n");
   printf("circ     - name of the file containing the initial circuit\n");
   printf("'a'num   - num specifies the activity update mode\n");
   printf("b        - sets ctg_flag to false\n");
@@ -53,6 +52,7 @@ void CompInfo::print_header()
   printf("'s'num   - print statistics, num specifying the level of detail\n");
   printf("'Sl'num  - 'num' spec. literal ordering when lifting a state\n");
   printf("'Si'num  - 'num' spec. literal ordering when gener. an ind. clause\n");
+  printf("'Sg'num  - 'num' spec. gate ordering used to generate CNF formulas\n");
   printf("'t'num   - stop after num-th time frame is finished\n");
   printf("'T'num   - terminate after 'num' seconds\n");
   printf("'v'num   - level of verbosity is  specified by 'num'\n");
@@ -86,6 +86,7 @@ void CompInfo::init_parameters()
   sorted_objects = VARS;
   lift_sort_mode = FULL_SORT;
   ind_cls_sort_mode = FULL_SORT;
+  gate_sort_mode = INPS_FIRST;
   multiplier = 1.05;
   factor = 1.;
   max_act_val = 10000.;
@@ -99,116 +100,3 @@ void CompInfo::init_parameters()
   constr_flag = true;
 
   } /* end of function init_parameters */
-
-
-/*=====================================
-
-      R E A D _ P A R A M E T E R S
-
- =====================================*/
-void CompInfo::read_parameters(int argc,char *argv[])
-{
- 
-  for (int i=2; i < argc; i++) 
-    switch(argv[i][0]){
-    case 'a':
-      act_upd_mode = atoi(argv[i]+1);
-      assert(act_upd_mode >=  NO_ACT_UPD);
-      assert(act_upd_mode <= MINISAT_ACT_UPD);
-      break;  
-    case 'b':
-      ctg_flag = false;
-      break;    
-    case 'C':
-      print_clauses_flag = true;
-      break;
-    case 'c':
-      print_cex_flag = 1;
-      break;
-    case 'd':
-      use_short_prop = false;
-      break;
-    case 'D':
-      lit_pick_heur = atoi(argv[i]+1);
-      assert(lit_pick_heur >= RAND_LIT);
-      assert(lit_pick_heur <= FIXED_ORDER);
-      break;
-    case 'e':
-      selector = 1;
-      break;
-    case 'g':
-      gcount_max = atoi(argv[i]+1);
-      break;
-    case 'i':
-      print_inv_flag = true;
-      if (strlen(argv[i]) > 1)
-        print_only_ind_clauses = 1;
-      break;
-    case 'j':
-      grl_heur = WITH_JOINS;
-      break;  
-    case 'm':
-      multiplier = atof(argv[i]+1);
-      assert(multiplier > 1);
-      break;  
-    case 'n':
-      statistics  = false;
-      break;
-    case 'N':
-      constr_flag = false;
-      break;
-    case 'o':
-      assert(i+1 < argc);
-      strcpy(out_file,argv[i+1]);
-      i++;
-      break;
-    case 'p':
-      prop_ind = atoi(argv[i]+1);
-      assert(prop_ind >= 0);
-      break;
-    case 'r':
-      rem_subsumed_flag = true;
-      break;
-    case 'R':
-      srand48(time(0));
-      break;
-    case 's':
-      if (strlen(argv[i]) > 1) {
-	stat_data = atoi(argv[i]+1);
-	assert(stat_data >= 0);
-      }
-      break; 
-    case 'S':
-      if (argv[i][1] == 'l') {
-        lift_sort_mode = atoi(argv[i]+2);
-	assert(lift_sort_mode >= NO_SORT);
-	assert(lift_sort_mode <= PART_SORT);
-      }
-      else if (argv[i][1] == 'i') {
-	ind_cls_sort_mode = atoi(argv[i]+2);
-	assert(ind_cls_sort_mode >= NO_SORT);
-	assert(ind_cls_sort_mode <= PART_SORT);
-      }
-      else assert(false);
-      break;      
-    case 't':
-      fin_tf = atoi(argv[i]+1);
-      assert(fin_tf > 0);
-      break;
-    case 'T':
-      time_limit = atoi(argv[i]+1);
-      assert(time_limit > 0);
-      break;      
-    case 'v':
-      verbose = atoi(argv[i]+1);
-      break;
-    case 'x':
-      print_cex_flag = 2;
-      break;
-    default:
-      printf("unknown parameter %s",argv[i]);
-      exit(1);
-    }
-
-} /* end of function read_parameters */
-

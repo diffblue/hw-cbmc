@@ -11,50 +11,17 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+
+#include "ebmc_base.h"
+
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
-/*====================================
+#include "ebmc_ic3_interface.hh"
 
-   F I N D _ F I L E _ F O R M A T
-
-  ===================================*/
-void CompInfo::find_file_format(char *fname)
-{
-
-  int len = strlen(fname);
-  
-  char rev_fname[MAX_NAME];
-  assert(MAX_NAME >= len+1);
- 
-
-  // reverse file name
-  int j = 0;
-  for (int i=len-1; i >=0; i--) 
-    rev_fname[j++] = fname[i];
-
-  rev_fname[j] = 0;
-
-
-  if (len < 4) goto ERROR;
-   
-  if (strncmp(rev_fname,"gia.",4) == 0) file_format = 'a';
-  else {
-    if (len == 4) goto ERROR;
-    if (strncmp(rev_fname,"filb.",5) == 0) file_format = 'b';
-    else goto ERROR;
-  }
-
-  return;
-
- ERROR:
-  printf("wrong file extension %s\n",fname);
-  exit(1);
-} /* end of function find_file_format */
 
 /*=====================================================
 
@@ -156,37 +123,39 @@ void CompInfo::form_inv_names(CDNF &Pin_names,int lit)
         F O R M _ N E X T _ S Y M B
 
   ======================================*/
-void CompInfo::form_next_symb(CCUBE &Name,int next_lit)
+void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
 {
 
-  if (next_lit <= 1) {
-    if (next_lit == 0) {
+  if (next_lit.is_constant()) {
+    if (next_lit.is_false()) {
       conv_to_vect(Name,"c0");
-      const_flags = const_flags | 1;
+      Ci.const_flags = Ci.const_flags | 1;
     }
-    else if (next_lit == 1) {
+    else {
+      assert(next_lit.is_true());
       conv_to_vect(Name,"c1");
-      const_flags = const_flags | 2;
+      Ci.const_flags = Ci.const_flags | 2;
     }
     return;
   }
 
-  char Buff[MAX_NAME];
 
-  if (next_lit & 1) {
-    Invs.insert(next_lit-1);
-    if (Inps.find(next_lit-1) != Inps.end()) 
-      sprintf(Buff,"ni%d",next_lit-1);
-    else  if (Lats.find(next_lit-1) != Lats.end()) 
-      sprintf(Buff,"nl%d",next_lit-1);
-    else sprintf(Buff,"na%d",next_lit-1);
+  char Buff[MAX_NAME];
+  int nlit = next_lit.get();
+  if (next_lit.sign()) {   
+    Ci.Invs.insert(nlit-1);
+    if (Ci.Inps.find(nlit-1) != Ci.Inps.end()) 
+      sprintf(Buff,"ni%d",nlit-1);
+    else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end()) 
+      sprintf(Buff,"nl%d",nlit-1);
+    else sprintf(Buff,"na%d",nlit-1);
     conv_to_vect(Name,Buff);
     return;
   }
 
-  if (Inps.find(next_lit) != Inps.end()) sprintf(Buff,"i%d",next_lit);
-  else if (Lats.find(next_lit) != Lats.end()) sprintf(Buff,"l%d",next_lit);
-  else sprintf(Buff,"a%d",next_lit);
+  if (Ci.Inps.find(nlit) != Ci.Inps.end()) sprintf(Buff,"i%d",nlit);
+  else if (Ci.Lats.find(nlit) != Ci.Lats.end()) sprintf(Buff,"l%d",nlit);
+  else sprintf(Buff,"a%d",nlit);
 
   conv_to_vect(Name,Buff);
 

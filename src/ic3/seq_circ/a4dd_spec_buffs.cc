@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading in a sequential circuit specified in the
-        BLIF formula (Part 3)
+Module: Treating the case when a gate feeds more
+        that one latch (Part 1)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -17,7 +17,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
+
 
 /*=========================================
 
@@ -129,90 +129,4 @@ int spec_buff_gate_ind(Circuit *N,int ind)
 
 
 
-/*=========================================
-
-  I D E N T I F Y _ C O M M A N D
-
-  =========================================*/
-Command_type  identify_command(CCUBE &buf)
-{
-  int i=0;
-  if (compare(buf,".end",i)) return(DOT_END);
-  i = 0;
-  if (compare(buf,".names",i)) return(DOT_NAMES);
-  i = 0;
-  if (compare(buf,".latch",i)) return(DOT_LATCH);
-  return(WRONG);
-
-} /* end of function identify_command */
-
-
-/*============================================================
-
-  R E A D _ S T R I N G 
- 
-  The function returns -1  if eof  occured during reading
-  and no symbols has been read into buf
-
-  Otherwise it returns 1.
-
-  The function read in the next line of the file referenced by fp.
-  It also reads all the extention lines (if any).
-  It then removes from the buf the comment sign "#" and all the
-  symbols after it. It also removes the end-of-line symbol ('/n' )
-
-  ==============================================================*/
-int read_string(FILE *fp,CCUBE &buf)
-{char aux_buf[MAX_LINE];
-
-  buf.clear(); 
-
-  /*----------------------------------------------
-    Read the current line and
-    all the extension lines
-    -------------------------------------------------*/
-  while (true) {
-    int extension = 0;
-    if (fgets(aux_buf,MAX_LINE,fp) == NULL)
-      return(-1);
-    if (aux_buf[strlen(aux_buf)-2] == '\\') // extension line?
-      extension = 1;      
-  
-    int size = strlen(aux_buf);
-    if (size == MAX_LINE-1) { // line is too long?
-      printf("increase the value of MAX_LINE\n");
-      exit(1);
-    }
-
-    for (int i=0; i < size;i++) {
-      char symb = aux_buf[i];       
-      if ((symb == '#') ||  (symb == '\n'))
-	break; 
-      if ((symb == '\\') && (extension > 0)) break;
-      buf.push_back(aux_buf[i]);
-    }   
-
-    if (!extension)
-      break;
-  }
-
-  return(1);     
-
-} /* end of function read_string */
-
-
-
-/*====================================
-
-      R E A D E R _ S T A T E
-
-  ==================================*/
-reader_state::reader_state(void)
-{
-  ignore_missing_end = true;
-  add_buffers = true;
-  unfinished_gate = false;
-  check_fanout_free_inputs = false;
-  ignore_errors = false;
-} /* end of function read_state */
 

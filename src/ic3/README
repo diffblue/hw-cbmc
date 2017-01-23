@@ -1,44 +1,14 @@
-*) To create a binary called 'ic3' run
+*) This directory contains the code of a model checker that is 
+   a variation of Aaron Bradley's IC3.  It is incorporated into
+   ebmc. To invoke IC3, run
 
-   cd minisat ; make ; cd ..
+   ebmc verilog_file --ic3
 
-   make 
+*) Integration is not over yet. This current version is missing two
+   features that has been implemented in the stand-alone version.
+   The current version assumes that the input verilog file specifies
+   only one property and has no constraints.
 
-
-*) Synopsys
-
-
-   ic3 file_name  [options]
-
-  'file_name' gives the name of the file specifying 'circuit +
-   property' in the AIG or BLIF format.  If 'file_name' has extension
-   '.aig' (respectively '.blif') the file is assumed to be given in
-   the AIG (respectively BLIF) format.
-
-
-*) To list options run 'ic3' without any parameters
-
-
-   
-*) For a multi-property example, to check  k-th property, run
-
-  ic3 file_name p'k'
-
-  Property count starts with 0. So, to check  the very first property, run
-
-  ic3 file_name p0
-
-  If no parameter p'k' is specified, ic3 assumes that k = 0.
-
-
-*) To ignore constraints of 'file_name' (if any), use option N.
-   Sometimes, using constrains slows ic3 down.   If a property holds
-   with option N, it also holds in a smaller search space specified by
-   the constraints.
-
-   However, if a property does not hold with option N, it may still
-   hold if constraints are taken into account. So, one needs to run
-   this example again without option N.
 
   
 

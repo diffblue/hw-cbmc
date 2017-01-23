@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading in a sequential circuit specified in the
-        BLIF formula (Part 4)
+Module: Treating the case when a gate feeds more
+        that one latch (Part 2)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -16,7 +16,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
+
 
 
 /*===================================
@@ -135,4 +135,22 @@ void start_spec_buff(Circuit *N,int gate_ind)
   G.Gate_name =  Name; 
 
 } /* end of function start_spec_buff */
+
+
+/*==================================
+
+  A D D _ S P E C _ B U F F S
+
+  =================================*/
+void add_spec_buffs(Circuit *N) 
+{
+
+  if (N->num_spec_buffs == 0) return;
+
+  gen_spec_buff_name(N);
+
+  for (int i=0; i < N->num_spec_buffs; i++) 
+    add_one_spec_buff(N,i);
+
+} /* end of function add_spec_buffs */
 

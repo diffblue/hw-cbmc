@@ -88,7 +88,8 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
 
   int count = 0;
   for (int i=0; i < N->Gate_list.size();i++) {
-    Gate &G =  N->Gate_list[i];
+    int gate_ind = Ordering[i];
+    Gate &G =  N->Gate_list[gate_ind];
     if (G.gate_type == INPUT) continue;
     if (G.gate_type == LATCH) continue;
 // skip the gates that are not part of the output function
@@ -97,27 +98,28 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
     if (short_version)
 // skip the gates that are shared by transition relation and out function
       if (G.flags.transition) continue; 
-    int var_ind = Gate_to_var[i]-1;
+    int var_ind = Gate_to_var[gate_ind]-1;
     switch (G.func_type)
       {case CONST:
-	  add_const_gate_cube(H,i,shift);
+	  add_const_gate_cube(H,gate_ind,shift);
 	  break;
       case AND:   	
-	add_and_gate_cubes(H,i,shift);       
+	add_and_gate_cubes(H,gate_ind,shift);       
 	break;
       case OR:         
-	add_or_gate_cubes(H,i,shift);      
+	add_or_gate_cubes(H,gate_ind,shift);      
 	break;
       case BUFFER:    
-	add_buffer_gate_cubes(H,i,shift);    
+	add_buffer_gate_cubes(H,gate_ind,shift);    
 	break;
       case TRUTH_TABLE:         
-	add_truth_table_gate_cubes(H,i,shift);                 
+	add_truth_table_gate_cubes(H,gate_ind,shift);                 
 	break;
       case COMPLEX: 
-        add_complex_gate_cubes(H,i,shift);
-	break;     
-      default:   printf("wrong gate type\n");
+        printf("complex gates are not allowed\n");
+	exit(1);
+      default:   
+	printf("wrong gate type\n");
 	exit(1);
       }
   }

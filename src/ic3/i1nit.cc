@@ -181,7 +181,6 @@ void CompInfo::form_bad_states0(CNF &Bstates)
     Bstates.push_back(Res);
   }
   
-  // print_dnf(Bstates,(char *) "bst.cnf");
   htable_lits.done_using();
 } /* end of function form_bad_states0 */
 

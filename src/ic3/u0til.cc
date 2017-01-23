@@ -120,7 +120,7 @@ void CompInfo::part_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V) {
 void CompInfo::add_temp_clause(Mlit &act_lit,SatSolver &Slvr,CLAUSE &C)
 {
 
-  act_lit = Minisat::mkLit(Slvr.Mst->newVar(),false);
+  act_lit = IctMinisat::mkLit(Slvr.Mst->newVar(),false);
   TrivMclause A;
   conv_to_mclause(A,C);
   A.push(~act_lit);

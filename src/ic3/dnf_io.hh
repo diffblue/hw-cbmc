@@ -35,8 +35,6 @@ bool operator()(int x,int y)
   {return abs(x) < abs(y);}
 }; /* end of class comp_lits */
 
-int read_dimacs1(FILE *fp,DNF &D,int &num_vars); 
-int read_dimacs(char *fname,DNF &D,int &num_vars);
 std::ostream &operator<<(std::ostream &os,CUBE const &v);
 std::ostream &operator<<(std::ostream &os,CCUBE const &v);
 std::ostream &operator<<(std::ostream &os,SCUBE &v);

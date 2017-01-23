@@ -5,13 +5,8 @@ Module: IC3 types
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
-
-#include <string>
-
 #include "aux_types.hh"
-extern "C" {
-#include "aiger.h"
-}
+
 extern int debug_flag;
 /*================================
 
@@ -24,12 +19,15 @@ public:
 
   
   Circuit *N; // circuit whose safety proprety is to be checked
-  char file_format; // specifies whether the circuit is specified in the BLIF
-                    //  or AIGER format
-  int prop_ind; // specifeis the index of the property to be checked 
-                //(used only in the AIGER format)
-  CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to the output 
-                    //of gate 'gate_ind'
+  CUBE Ordering; // Ordering[i] specifies the order of a gate used to
+                 // generate CNF formulas. For every input gate and latch
+                 // Ordering[i] == i
+ 
+  int prop_ind; // specifies the index of the property to be checked 
+                // to be implemented for the integrated version
+   
+  CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to 
+                    // the output of gate 'gate_ind'
  
   int num_circ_vars; // number of variables assigned to gates of N
 
@@ -41,19 +39,18 @@ public:
   CUBE Inp_vars; // array specifying the list of input variables
 
   // constr related
-  SCUBE Aig_clits; // Stores the literals listed in 'aiger->constraints'
 
-// Constr_gates specify literals listed in 'aiger->constraints' in terms of 
+// Constr_gates specify constrained literals in terms of 
 // gates of circuit N. Constr_gates[gate_ind] == 0 (respectively 1) corresponds
 // to the positive (respectively negative) literal of the variable 'gate_ind+1'
 
   ConstrGates Constr_gates; 
 
-// specify input literals listed in 'aiger->constraints' in terms of vars 
+// specify constrained input literals  in terms of vars 
 // of circuit N i.e. combinational input and present state variables 
   CUBE Constr_ilits; 
 
-// 'Constr_nilits' specify non-input lit.  listed in 'aiger->constraints' 
+// 'Constr_nilits' specify constrained literals that are not input ones
 // in terms of N i.e. combinational internal and next state variables. 
 // For ever present state variable listed in 'Constr_ilits', the corresponding 
 // next state variable is added to 'Constr_nilits'
@@ -69,7 +66,8 @@ public:
   bool vac_true; // set to 'true', if the init. states do not sat. the constr.
                  // in this case, the property is vacuously true
   
-  SCUBE Constr_ps_lits;//spec. constr. pres. state lits (used when lift. a state)
+  SCUBE Constr_ps_lits;//spec. constr. pres. state lits 
+                       // (used when lift. a state)
   SCUBE Constr_inp_lits; // specifies constrained input lits
 
   bool constr_flag; // if 'constr_flag == true', then literals listed in 
@@ -80,7 +78,8 @@ public:
   CNF Prop; // property (expressed in terms of present state variables)
   int num_prop_vars; // number of variables in 'Prop'
 
-  CNF Short_prop; // property without clauses shared with the transition relation
+  CNF Short_prop; // property without clauses shared with the transition 
+                  // relation
 
   CNF Simp_PrTr; //  Prop/Short_prop plus Tr after simplfication
   int max_num_vars0; // max(max(num_ist_vars,num_bst_vars),num_tr_var)
@@ -99,13 +98,13 @@ public:
 
   
 
-  // Aiger related
+  // Used in convertion of verilog description to gates
 
   SCUBE Inps; // Stores literals specifying inputs
   SCUBE Lats; // Stores literals specifying latches
   SCUBE Invs; // Stores literals specifying additional invertors
-  int const_flags; // is used to record the info on whether constant 0 or 1 have been
-                   // used
+  int const_flags; // is used to record the info on whether constant 0 or 1 
+                   //have been used
 
 
   //--------------- basic data
@@ -137,7 +136,8 @@ public:
   int tf_lind; // (lind stands for Largest IND) specifies the value of the 
                // latest time frame for which an approximation is built
 
-  std::vector <VarInfo> Var_info; // Var_type[i] gives information about variable 'i+1'
+  std::vector <VarInfo> Var_info; // Var_type[i] gives information about 
+                                  // variable 'i+1'
 
   PrQueue Pr_queue; // priority queue of proof obligations
   OblTable Obl_table; // table of proof obligations
@@ -193,6 +193,8 @@ public:
                       // are sorted when lifting a state
   int ind_cls_sort_mode; // value of this variable controls how assumptions 
                          // are sorted when looking for an inductive clause
+  int gate_sort_mode; // value of this variable controls the ordering of
+                      // gates of the circuit used to generate formulas
   int max_coi_depth; // the maximum number of time frames unfolded when 
                      // computing the cone of influence
   bool ctg_flag; // if 'true' generalization based on computing counterexamples
@@ -203,8 +205,9 @@ public:
   int max_rec_depth; // this variables how hard IC3 tries to eliminate an ctg
   int grl_heur; // controls whether joins are used in the generalization 
                 // procedure when 'ctg_flag == false'
-  
 
+  int num_tr_vars; // number of variables in 'Tr'
+  int num_ist_vars; // number of variables in 'Ist'
  
  
   
@@ -216,14 +219,12 @@ public:
   //
   // public methods
   //
-  void print_header();
+
+  int run_ic3();
   int mic3();
-  void read_input(char *fname);
-  void blif_format_model(char *fname); 
-  void aig_format_model(char *fname);
-  void form_circ_from_aig(aiger &Aig_descr);
   void init_parameters();
-  void read_parameters(int argc,char *argv[]);
+  void print_header();
+  void blif_format_model(char *fname); 
   bool check_init_states();
   void assign_var_type();
   void assign_value();
@@ -236,6 +237,7 @@ public:
   bool ver_cex();
   void print_stat();
   void find_file_format(char *fname);
+  void order_gates();
   //  
   // Sat-solver related
   //
@@ -243,6 +245,18 @@ public:
   void delete_solver(SatSolver &Slvr);
   void accept_new_clause(SatSolver &Slvr,CLAUSE &C);
   void accept_new_clauses(SatSolver &Slvr,CNF &H);
+  // 
+  //  to bridge ic3 and ebmc
+
+  void gen_cnfs(char *fname,bool print_flag);
+  void build_arrays();
+  void form_max_pres_svar();
+  void form_var_nums();
+  int upd_gate_constr_tbl(int lit,int gate_ind);
+  void start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names);
+  void form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol);
+  void form_invs(Circuit *N);
+  void form_consts(Circuit *N);
 
 protected:
 
@@ -303,10 +317,10 @@ protected:
  // ------------- init data
 
   CNF Tr; // transition relation
-  int num_tr_vars; // number of variables in 'Tr'
+ 
 
   CNF Ist; // initial states
-  int num_ist_vars; // number of variables in 'Ist'
+ 
 
  // protected methods
 
@@ -332,14 +346,12 @@ void my_assert(bool cond);
 void find_latch(Circuit *N,Gate &G,int &latch_ind);
 void conv_to_vect(CCUBE &Name1,const char *Name0);
 bool overlap(CUBE &A,CLAUSE &B);
-void print_blif3(const char *fname, Circuit *N);
-void read_names_of_latches(NamesOfLatches &Latches,char *fname);
 int parse_string(CCUBE &Buff);
-void extract_latch_name(CCUBE &Lname,CCUBE &Buff);
 void print_names_of_latches(NamesOfLatches &Latches);
-void form_latch_name(CCUBE &Latch_name,aiger_symbol &S);
+void form_latch_name(CCUBE &Latch_name,int lit);
 bool ident_arrays(CUBE &A,CUBE &B);
-
+void print_ebmc_blif();
+void print_blif2(FILE *fp,Circuit *N);
 
 extern long long gcount;
 extern hsh_tbl htable_lits;
@@ -369,6 +381,11 @@ const int NO_SORT = 0;
 const int FULL_SORT = 1;
 const int PART_SORT = 2;
 
+// values of 'gate_sort_mode'
+const int INIT_SORT = 0;
+const int INPS_FIRST = 1;
+const int OUTS_FIRST = 2;
+const int RAND_SORT = 3;
 
 // values of 'st_descr'
 const char OLD_STATE = 0;
@@ -382,10 +399,6 @@ const char UNKNOWN_STATE = 5;
 const int NO_JOINS = 0;
 const int WITH_JOINS = 1;
 
-
-#define p() {printf("\n-----------------\n"); \
-            printf("%s, line %d, ",__FILE__,__LINE__); \
-            printf("Assertion failure\n");}
 
 
 const int  MAX_MARKER = 1000000; // used in hash tables

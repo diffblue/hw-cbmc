@@ -21,7 +21,7 @@ const int factor = 1000;
 
     P R I N T _ N U M _ W I T H _ C O M M A S
 
-  =================================================*/
+  ================================================*/
 void print_num_with_commas(const int &num)
 {
 

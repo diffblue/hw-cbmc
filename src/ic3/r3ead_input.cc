@@ -11,17 +11,19 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+
+#include "ebmc_base.h"
+
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
-
+#include "ebmc_ic3_interface.hh"
 /*====================================
 
-  F O R M _ G A T E _ F U N
+     F O R M _ G A T E _ F U N
 
   ==================================*/
 void CompInfo::form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol)
@@ -41,21 +43,22 @@ void CompInfo::form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol)
 } /* end of function form_gate_fun */
 
 
-/*============================================
+/*======================================
 
   A D D _ G A T E _  O U T _ N A M E
 
-  =============================================*/
-void CompInfo::add_gate_out_name(CCUBE &Name,int lit,CUBE &Pol)
+  =====================================*/
+void ic3_enginet::add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol)
 {
 
   unsigned lit1;
-  if (lit & 1) {
+  unsigned lit_val = lit.get();
+  if (lit.sign()) {
     Pol.push_back(0);
-    lit1 = lit-1;}
+    lit1 = lit_val-1;}
   else {
     Pol.push_back(1);
-    lit1 = lit;}
+    lit1 = lit_val;}
 
   char Buff[MAX_NAME];
   sprintf(Buff,"a%d",lit1);
@@ -69,37 +72,39 @@ void CompInfo::add_gate_out_name(CCUBE &Name,int lit,CUBE &Pol)
   A D D _ G A T E _ I N P _ N A M E
 
   ========================================*/
-void CompInfo::add_gate_inp_name(CCUBE &Name,int lit,CUBE &Pol)
+void ic3_enginet::add_gate_inp_name(CCUBE &Name,literalt &lit,CUBE &Pol)
 {
 
-  if (lit <= 1) {
-    if (lit == 0) {
+  if (lit.is_constant()) {
+    if (lit.is_false()) {
       conv_to_vect(Name,"c0");
-      const_flags = const_flags | 1;
+      Ci.const_flags = Ci.const_flags | 1;
       Pol.push_back(1);
     }
-    else if  (lit == 1) {
+    else {
+      assert(lit.is_true());
       conv_to_vect(Name,"c1");
-      const_flags = const_flags | 2;
+      Ci.const_flags = Ci.const_flags | 2;
       Pol.push_back(1);
     }
     return;
   }
-
+  
+  unsigned lit_val = lit.get();
   unsigned lit1;
-  if (lit & 1) {
+  if (lit.sign()) {
     Pol.push_back(0);
-    lit1 = lit-1;}
+    lit1 = lit_val-1;}
   else {
     Pol.push_back(1);
-    lit1 = lit;}
+    lit1 = lit_val;}
 
   char Buff[MAX_NAME];
-  if (Inps.find(lit1) != Inps.end()) {
+  if (Ci.Inps.find(lit1) != Ci.Inps.end()) {
     sprintf(Buff,"i%d",lit1);
     conv_to_vect(Name,Buff);
   }
-  else if (Lats.find(lit1) != Lats.end()) {
+  else if (Ci.Lats.find(lit1) != Ci.Lats.end()) {
     sprintf(Buff,"l%d",lit1);
     conv_to_vect(Name,Buff);
   }
@@ -115,18 +120,24 @@ void CompInfo::add_gate_inp_name(CCUBE &Name,int lit,CUBE &Pol)
   F O R M _ G A T E _ P I N _ N A M E S
 
   =========================================*/
-void CompInfo::form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,
-                                   aiger_and &Aig_gate)
+void ic3_enginet::form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,
+                                    int node_ind)
 {
   for (int i=0; i < 3; i++) {
     CCUBE Dummy;
     Pin_names.push_back(Dummy);
   }
 
-  add_gate_inp_name(Pin_names[0],Aig_gate.rhs0,Pol);
-  add_gate_inp_name(Pin_names[1],Aig_gate.rhs1,Pol);
-  add_gate_out_name(Pin_names[2],Aig_gate.lhs,Pol);
+  aigt::nodest &Nodes = netlist.nodes;
+  aigt::nodet &Nd = Nodes[node_ind];
+ 
 
+  add_gate_inp_name(Pin_names[0],Nd.a,Pol);
+  add_gate_inp_name(Pin_names[1],Nd.b,Pol);
+
+  literalt gt_lit(node_ind,false);
+
+  add_gate_out_name(Pin_names[2],gt_lit,Pol);
 
 } /* end of function from_gate_pin_names */
 
@@ -135,20 +146,26 @@ void CompInfo::form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,
       F O R M _ G A T E S
 
   =============================*/
-void CompInfo::form_gates(Circuit *N,aiger &Aig)
+void ic3_enginet::form_gates()
 {
 
-  for (int i=0; i < Aig.num_ands; i++) {
-    aiger_and &Aig_gate = Aig.ands[i];
+  Circuit *N = Ci.N;
+  aigt::nodest &Nodes = netlist.nodes;
+ 
+  for (int i=0; i <= max_var; i++) {   
+    aigt::nodet &Nd = Nodes[i];
+    if (Nd.is_var()) continue;
+    //   print_lit(Nd.a.var_no(),Nd.a.sign());
     CDNF Pin_names;
-    CUBE Pol;
-    form_gate_pin_names(Pin_names,Pol,Aig_gate);
+    CUBE Pol;    
+    form_gate_pin_names(Pin_names,Pol,i);
     CUBE Gate_inds;
-    start_new_gate(Gate_inds,N,Pin_names);
-    upd_gate_constrs(Aig_gate,Gate_inds);
-    form_gate_fun(N,Gate_inds.back(),Pol);
+    Ci.start_new_gate(Gate_inds,N,Pin_names);
+    upd_gate_constrs(i,Gate_inds);
+    Ci.form_gate_fun(N,Gate_inds.back(),Pol);
     finish_gate(N,Gate_inds.back());
   }
+  
 
 } /* end of function form_gates */
 
@@ -157,39 +174,40 @@ void CompInfo::form_gates(Circuit *N,aiger &Aig)
     F O R M _ O U T P _ B U F
 
   ===================================*/
-void CompInfo::form_outp_buf(CDNF &Out_names,Circuit *N,int outp_lit)
+void ic3_enginet::form_outp_buf(CDNF &Out_names)
 {
 
-  int olit = outp_lit;
-  if (outp_lit > 1) 
-    if (outp_lit & 1) olit--;
+  int olit = prop_l.get();
+  if (prop_l.is_constant() == 0) 
+    if (prop_l.sign()) olit--;
   
 
-  assert(Inps.find(olit) == Inps.end());
+  assert(Ci.Inps.find(olit) == Ci.Inps.end());
   bool latch = false;
-  if (Lats.find(olit) != Lats.end()) latch = true;
+  if (Ci.Lats.find(olit) != Ci.Lats.end()) latch = true;
 
   CDNF Pin_names;
   CCUBE Dummy;
   Pin_names.push_back(Dummy);
   Pin_names.push_back(Dummy);
   char Buff[MAX_NAME];
-  if (olit == 0)  sprintf(Buff,"c0");
-  else if (olit == 1) sprintf(Buff,"c1");
+  if (prop_l.is_false())  sprintf(Buff,"c0");
+  else if (prop_l.is_true()) sprintf(Buff,"c1");
   else  if (latch) sprintf(Buff,"l%d",olit);
   else sprintf(Buff,"a%d",olit);
   
   conv_to_vect(Pin_names[0],Buff);
   char buff[MAX_NAME];
-  sprintf(buff,"p%d",prop_ind);
+  sprintf(buff,"p%d",Ci.prop_ind);
   conv_to_vect(Pin_names[1],buff);
   Out_names.push_back(Pin_names[1]);
 
+  Circuit *N = Ci.N;
   CUBE Gate_inds;
-  start_new_gate(Gate_inds,N,Pin_names);
+  Ci.start_new_gate(Gate_inds,N,Pin_names);
   // add cube specifying functionality
   CUBE C;
-  if (outp_lit == olit) C.push_back(1);
+  if (prop_l.get() == olit) C.push_back(1);
   else C.push_back(-1);
 
   Gate &G = N->get_gate(Gate_inds.back());

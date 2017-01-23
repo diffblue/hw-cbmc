@@ -123,7 +123,7 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
 
  
  
-  Minisat::Solver *Mst = Slvr.Mst;
+  IctMinisat::Solver *Mst = Slvr.Mst;
   for (int i=0; i < St.size(); i++) {
     Mlit L = conv_to_mlit(St[i]);
     if (Mst->conflict.has(~L)) {
@@ -142,8 +142,8 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
 void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
 {
   CLAUSE C;
-  act_lit = Minisat::mkLit(Slvr.Mst->newVar(),false);
-  int lit = Minisat::var(act_lit)+1;
+  act_lit = IctMinisat::mkLit(Slvr.Mst->newVar(),false);
+  int lit = IctMinisat::var(act_lit)+1;
   C.push_back(-lit);
 
 

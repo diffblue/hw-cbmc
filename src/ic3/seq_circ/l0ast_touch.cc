@@ -16,7 +16,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
+
 
 /*========================================
 
@@ -45,10 +45,12 @@ void fill_fanout_lists(Circuit *N)
 
       if (G1.flags.active == 0) {
 	std::cout << "when processing the inputs of the gate ";
-        print_name1(G.Gate_name); std::cout << std::endl;
-	std::cout << "it is found that  gate "; print_name1(G1.Gate_name);
+        print_name1(G.Gate_name); 
+        std::cout << std::endl;
+	std::cout << "it is found that  gate ";
+        print_name1(G1.Gate_name);
         std::cout << " is not defined" << std::endl;
-	exit(1);
+	exit(100);
       }
     }
   }
@@ -62,7 +64,7 @@ void fill_fanout_lists(Circuit *N)
  
   The function checks if there are "hanging" inputs
   ====================================================*/
-void  check_fanout_free_inputs(Circuit *N,reader_state &r)
+void  check_fanout_free_inputs(Circuit *N)
 {CUBE &Inputs= N->Inputs;
 
   for (int i=0; i < Inputs.size();i++) {
@@ -90,10 +92,12 @@ void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt)
  
   for (int i=0; i < Out_names.size();i++) {
     CCUBE &name = Out_names[i];
-    if (N->Pin_list.find(name) == N->Pin_list.end())
-      {std::cout << "false output "; print_name(&name); std::cout << std::endl;
-	exit(1);
-      }
+    if (N->Pin_list.find(name) == N->Pin_list.end()) {
+      std::cout << "false output "; 
+      print_name(&name); 
+      std::cout << std::endl;
+      exit(1);
+    }
     int gate_num = N->Pin_list[name];
     N->Outputs.push_back(gate_num); // record the gate as a circuit output
     Gate &G = N->get_gate(gate_num);

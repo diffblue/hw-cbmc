@@ -14,10 +14,11 @@ struct ConstrGateInfo {
 typedef std::map<CCUBE,int> NamesOfLatches;
 typedef std::map<int,ConstrGateInfo> ConstrGates;
 
-// TRUTH_TABLE means neither "CONST",'BUFFER','AND','OR' gate and the cubes describing the ON-set have no don't cares
+// TRUTH_TABLE means neither "CONST",'BUFFER','AND','OR' gate 
+// and the cubes describing the ON-set have no don't cares
 enum Func_type {CONST,BUFFER,AND,OR,TRUTH_TABLE,COMPLEX};
 enum Gate_type {INPUT,GATE,LATCH,UNDEFINED};
-enum Command_type {DOT_NAMES,DOT_LATCH,DOT_END,WRONG};
+
 // INPUT - primary input,   
 // GATE means a combinational gate
 // LATCH means latch
@@ -26,23 +27,30 @@ enum Command_type {DOT_NAMES,DOT_LATCH,DOT_END,WRONG};
 struct GateFlagsType {
   unsigned active : 1; // a deletion flag
   unsigned label : 1; // used to mark gates during search 
-  unsigned output : 1; // is set to one if the output of the gate is also the output of the circuit
-  unsigned transition : 1; // is set to 1 if there is a path from the output of this gate to a latch 
-                           // (and so this gate is a part of transition relation)
-  unsigned output_function : 1; // is set to 1 if there is a path from the output of this gate to a primary output
-                                // (and so this gate is a part of the circuit specifying the output function
+  unsigned output : 1; // is set to one if the output of the gate is 
+                       // also the output of the circuit
+  unsigned transition : 1; // is set to 1 if there is a path from the 
+                           // output of this gate to a latch (and so this
+                           // gate is a part of transition relation)
+  unsigned output_function : 1; // is set to 1 if there is a path from the 
+                                // output of this gate to a primary output
+                                // (and so this gate is a part of the circuit
+                                // specifying the output function
   unsigned fun_constr:1; // is set to 1 if 
                          // a) the output and transition flags are set to 0
-                        // b) this gate in the cone of influence of a constrained gate
-                        // c) this cone of influence has a gate with 'output_function' set to 1
+                         // b) this gate is in the cone of influence of a 
+                         //     constrained gate
+                         // c) this cone of influence has a gate with 
+                         //    'output_function' set to 1
 
-  unsigned tran_constr:1; // the same as 'fun_constr' with the exception of the last condition
+  unsigned tran_constr:1; // the same as 'fun_constr' with the exception 
+                          // of the last condition
                           // ...
-                          // c*) this cone of influence has a gate with 'transition' set to 1
+                          // c*) this cone of influence has a gate with 
+                          //     'transition' set to 1
 
   
-  unsigned feeds_latch: 1; // is set to 1 if the output of the gate feeds a latch
-  unsigned redund :1; // is set to 1 when the gate describes a latch that is redudnant   
+  unsigned feeds_latch: 1; // is set to 1 if gate's output feeds a latch
   
 };
 
@@ -62,22 +70,25 @@ public:
   char init_value; // used for latches
   GateFlagsType flags; // used to set property flags
   //  char active; // deletion flag 
-  int level_from_inputs; // topological level of the gate giving the length of the longest path from an input to this gate.
+  int level_from_inputs; // topological level of the gate giving the length of 
+                         // the longest path from an input to this gate.
                          //  It is equal to 0 for the input gates and latches.
-  int level_from_outputs; //  topological level of the gate giving the length of the longest path from an output 
-                          // It is equal to 0 for output nodes that do not feed other outputs and for the latches 
+  int level_from_outputs; //  topological level of the gate giving the length 
+                          // of the longest path from an output 
+                          // It is equal to 0 for output nodes that do not 
+                          // feed other outputs and for the latches 
   CCUBE Gate_name; // gate name
-  // char label; // just a variable to mark this node during search
-  // F and R DNFs are non-empty only if the Func_type of the gate is COMPLEX
+  
   DNF F; // the ON-set 
   DNF R; // the OFF-set
-  int eq_class_rep; // specifies the latch that was non-redundant at the time the current latch was proved
-  // redundant
 
-  // the two data members below are used for special buffers used to address the problem of gates
-  // feeding more than one latch
-  int seed_gate; // if 'seed_gate >= 0', it points to a gate feeding more than one latch
-  int spec_buff_ind;  // if 'spec_buff_ind >= 0' it specifies the index of the special buffer index
+
+  // the two data members below are used for special buffers used to address
+  //  the problem of gates feeding more than one latch
+  int seed_gate; // if 'seed_gate >= 0', it points to a gate feeding more 
+                 // than one latch
+  int spec_buff_ind;  // if 'spec_buff_ind >= 0' it specifies the index of
+                      // the special buffer index
   bool inp_feeds_latch; // is used when an input feeds more than one latch
 };
 
@@ -116,8 +127,12 @@ public:
   //
 
   inline  Gate &get_gate(int gate_num){return(this->Gate_list[gate_num]);};
-  inline bool ext_gate(Gate &G) {return((G.flags.output == 1) && (G.Fanout_list.size() == 0));};
-  inline bool ext_int_gate(Gate &G) {return((G.flags.output == 1) && (G.Fanout_list.size() > 0));};
+  inline bool ext_gate(Gate &G) {
+    return((G.flags.output == 1) && (G.Fanout_list.size() == 0));
+  };
+  inline bool ext_int_gate(Gate &G) {
+    return((G.flags.output == 1) && (G.Fanout_list.size() > 0));
+  };
   inline bool output_gate(Gate &G) {return(G.flags.output == 1);};
   bool mark_duplicates(Gate &G);
   bool print_without_duplicates();
@@ -138,19 +153,12 @@ public:
 
 #define MAX_LINE 10000
 
-class reader_state
-{
-public:
-  bool ignore_missing_end; // go on if the .blif file does have the '.end' command
-  bool add_buffers; // if there is an input and output with the same name add a buffer gate
-  bool check_fanout_free_inputs; // is set to false by default
-  bool unfinished_gate; // is set to true when '.names' command occurs. 
-  bool rem_dupl_opt; // is set to 'true' if elimination of multiple-fanout of a gate feeding latches is required
-  bool ignore_errors; // if true, results of (some) correctness assertions are ignored
-  reader_state(void);
-};
+
 
 #define n() {printf("\n");}
+#define p() {printf("\n-----------------\n"); \
+            printf("%s, line %d, ",__FILE__,__LINE__); \
+            printf("Assertion failure\n");}
 //
 // constants
 //
@@ -188,4 +196,6 @@ void my_printf(char *format,...);
 void remove_unobserv_gates(Circuit *N);
 void print_header1(Circuit *N);
 void print_names2(Circuit *N,CUBE &gates);
+
+#include "more_fun_prot.hh"
 

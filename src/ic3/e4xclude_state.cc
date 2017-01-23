@@ -56,12 +56,12 @@ int CompInfo::pick_lit_to_remove(CLAUSE &Curr,SCUBE &Tried,int curr_tf)
 void CompInfo::gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps)
 {
 
-  Minisat::Solver *S = Slvr.Mst;
+  IctMinisat::Solver *S = Slvr.Mst;
   for (int i=0; i < Assmps.size(); i++) {
     Mlit L = ~Assmps[i];
     if (S->conflict.has(L)) {
     // skip activation literals (if any)
-      if (Minisat::var(L) >= Slvr.init_num_vars) continue; 
+      if (IctMinisat::var(L) >= Slvr.init_num_vars) continue; 
       int lit = mlit_to_lit(S,L);
       C.push_back(lit);
     }

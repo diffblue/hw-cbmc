@@ -11,46 +11,41 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+
+#include "ebmc_base.h"
+
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
-/*============================================
+#include "ebmc_ic3_interface.hh"
 
-       E X T R A C T _ L A T C H _ N A M E
+/*==================================
 
-   ASSUMPTIONS:
-    1) Buff starts with '.latch' 
+   C O M P _ N U M _ N O D E S
 
-  ==========================================*/
-void extract_latch_name(CCUBE &Lname,CCUBE &Buff) 
+  ==================================*/
+void ic3_enginet::comp_num_nodes()
 {
 
-  int pnt = 6;
-
-  
-  skip_blanks(Buff,pnt);
-
-  assert (pnt < Buff.size());
-
-
-  // skip the next state name
-  CCUBE Tmp;
-  copy_name(Buff,Tmp,pnt);
-
-  assert (pnt < Buff.size());
-  
-  // reach the latch name
-  skip_blanks(Buff,pnt);
-
-  // read the latch name
-  copy_name(Buff,Lname,pnt);
+  aigt::nodest &Nodes = netlist.nodes;
+  var_mapt &vm = netlist.var_map;
+  assert(vm.map.size() >= Nodes.size());
  
+  for(var_mapt::mapt::const_iterator it=vm.map.begin();
+      it!=vm.map.end(); it++)    {
+    const var_mapt::vart &var=it->second; 
+    assert(var.bits.size() == 1);
+    literalt l_c=var.bits[0].current;
+    if (l_c.is_constant()) continue;   
+    unsigned ind = l_c.var_no();
+    if (ind > max_var) max_var = ind;
+  }
 
-} /* end of function extract_latch_name */
+} /* end of function comp_num_nodes */
+
 
 /*==============================
 
@@ -142,14 +137,5 @@ void CompInfo::form_constr_lits()
   =======================================*/
 bool CompInfo::check_constr_lits(int &fnd_lit,int lit)
 {
-  fnd_lit = lit;
-  bool found = (Aig_clits.find(lit) != Aig_clits.end());
- 
-  if (!found)  {
-    if (lit & 1)    fnd_lit = lit-1;
-    else fnd_lit = lit +1;
-    found = (Aig_clits.find(fnd_lit) != Aig_clits.end());
-  }
-
-  return(found);
+  
 } /* end of function check_constr_lits */

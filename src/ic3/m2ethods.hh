@@ -87,7 +87,6 @@ void add_fclause2(CLAUSE &C,int last_ind,bool upd_activity);
 void init_fields();
 //
 //
-void form_max_pres_svar();
 void remove_clause(int clause_ind);
 int rem_redund_clauses();
 void sort_in_length(CUBE &Old_nums);
@@ -116,9 +115,9 @@ void add_tf1_clauses(SatSolver &Slvr);
 void add_tf2_clauses(SatSolver &Slvr);
 bool ext_clause(CLAUSE &C);
 void conv_to_mclause(TrivMclause &A, CLAUSE &C);
-void load_clauses1(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A);
-void accept_simplified_form(SatSolver &Slvr,Minisat::SimpSolver *Sslvr);
-void copy_simplified_form(Minisat::SimpSolver *Sslvr,CNF &Ext_clauses,
+void load_clauses1(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,CNF &A);
+void accept_simplified_form(SatSolver &Slvr,IctMinisat::SimpSolver *Sslvr);
+void copy_simplified_form(IctMinisat::SimpSolver *Sslvr,CNF &Ext_clauses,
                           CNF &Uclauses);
 void add_assumps1(MvecLits &Assmps,CUBE &St);
 void add_assumps2(MvecLits &Assmps,CUBE &St);
@@ -133,29 +132,14 @@ void add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St);
 void add_temp_clause(Mlit &act_lit,SatSolver &Slvr,CLAUSE &C);
 void simplify_tf_solvers();
 void print_tf_assgns(int tf_ind);
-void gen_unit_clauses(Minisat::SimpSolver *Sslvr,CNF &Uclauses);
+void gen_unit_clauses(IctMinisat::SimpSolver *Sslvr,CNF &Uclauses);
 void print_slv_stat(SatSolver &Slvr);
-void build_arrays();
-void print_sort_mode(const char *mode_name,int sort_mode) ;
+void print_induct_lift_sort_mode(const char *mode_name,int sort_mode);
 void full_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V);
 void part_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V);
 void print_lifting_stat();
 //
-void form_inputs(Circuit *N,aiger &Aig);
-void form_output(int &outp_lit,Circuit *N,aiger &Aig);
-void form_latches(Circuit *N,aiger &Aig);
-void form_gates(Circuit *N,aiger &Aig);
-void form_outp_buf(CDNF &Out_names,Circuit *N,int outp_lit);
-void form_invs(Circuit *N);
-void form_consts(Circuit *N);
-void add_new_latch(NamesOfLatches &Latches,Circuit *N,aiger_symbol &S);
-void form_next_symb(CCUBE &Name,int lit);
 void form_inv_names(CDNF &Pin_names,int lit);
-void start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names);
-void form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,aiger_and &Aig_gate);
-void add_gate_inp_name(CCUBE &Name,int lit,CUBE &Pol);
-void add_gate_out_name(CCUBE &Name,int lit,CUBE &Pol);
-void form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol);
 //
 bool find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr,
                             int rec_depth,SCUBE &Failed_lits);
@@ -175,9 +159,7 @@ void extr_cut_assgns1(CUBE &Assgns,CUBE &Vars,SatSolver &Slvr);
 void extr_cut_assgns2(CUBE &Assgns,CUBE &Lits,SatSolver &Slv);
 void fxd_ord_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried);
 int fxd_ord_lit(CUBE &Curr,SCUBE &Tried);
-void store_constraints(aiger &A);
-int upd_gate_constr_tbl(int lit,int gate_ind);
-void upd_gate_constrs(aiger_and &Aig_gate,CUBE &Gate_inds);
+void store_constraints();
 bool check_constr_lits(int &fnd_lit,int lit);
 void form_constr_lits();
 void add_constrs();
@@ -185,7 +167,7 @@ void rem_constr_lits(CUBE &Lits1,CUBE &Lits0,SCUBE &Constr_lits);
 void add_constr_lits1(CUBE &St_cube);
 bool init_st_satisfy_constrs();
 void form_spec_simp_pr_tr(SatSolver &Slvr);
-void load_clauses2(CNF &Ext_clauses,Minisat::SimpSolver *Sslvr,CNF &A,
+void load_clauses2(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,CNF &A,
                    int num_clauses);
 void print_bnd_sets1();
 void print_clause_state(int clause_ind);
@@ -197,7 +179,6 @@ void mark_constr_gates(CUBE &Gates,bool tran_flag,bool fun_flag);
 //
 // member functions
 void gen_trans_rel(int shift);
-void gen_cnfs(char *fname,bool print_flag);
 void gen_out_fun(DNF &H,int shift,bool short_version);
 void form_pres_state_vars();
 void form_next_state_vars();
@@ -217,23 +198,14 @@ void add_const_gate_cube(DNF &F,int gate_ind,int shift);
 void add_and_gate_cubes(DNF &F,int gate_ind,int shift);
 void  add_buffer_gate_cubes(DNF &F,int gate_ind,int shift);
 void  gen_initial_state_cubes();
-void  add_complex_gate_cubes(DNF &F,int gate_ind,int shift);
 
-//  generate a complement
-
-void find_complem(DNF &R,DNF &F,int num_vars);
-void conv_to_mterm(CUBE &M,int i,int num_vars);
-bool eval_to_1(DNF &F,CUBE &M);
-void expand_mterm(CUBE &C,DNF &F,CUBE &M,DNF &Lits0,DNF &Lits1);
-void find_lit_presence(DNF &F,DNF &Lits0,DNF &Lits1);
-int pick_best_lit(CUBE &A,CUBE &M,CCUBE &Marked,DNF &Lits0,DNF &Lits1);
-void mark_cubes(CCUBE &Marked,CUBE &Cubes);
-bool cube_covers_mterm(CUBE &C,CUBE &M);
-int newly_marked(CCUBE &Marked,DNF &Lits0,DNF &Lits1,int lit);
-void check_overlapping_compl(DNF &R,DNF &F);
-bool overlap_compl(CUBE &A,CUBE &B);
-void check_completeness(DNF &R, DNF &F,int num_vars);
 
 // debugging methods
 void print_var_indexes();
 void print_var_indexes(char *name);
+//
+void init_gate_order();
+void gate_sort_inps_first();
+void gate_sort_outs_first();
+void rand_gate_order();
+void print_gate_sort_mode();

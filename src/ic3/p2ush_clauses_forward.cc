@@ -54,7 +54,6 @@ void CompInfo::push_clauses_forward()
 	int ans = replace_or_add_clause(clause_ind,C,i);
 	if (ans == RESTORE) {
 	  C = F[clause_ind];
-	  Clause_info[clause_ind].delay = 1;
 	}
 	else if (ans == REPLACED) {
 	  add_copies(i,C);
@@ -69,10 +68,9 @@ void CompInfo::push_clauses_forward()
 	  continue;}
       }
       else  // C.size() == F[clause_ind.size()
-	if (Clause_info[clause_ind].span < i) {
-	  Clause_info[clause_ind].delay = 1;
+	if (Clause_info[clause_ind].span < i) 
 	  continue;
-	}
+	
 
    
    

@@ -78,9 +78,9 @@ void CompInfo::init_sat_solver(SatSolver &Slvr,int nvars,std::string &Id_name)
    
 
   Slvr.prev_oper = INIT;
-  Minisat::Solver *S = new Minisat::Solver();
+  IctMinisat::Solver *S = new IctMinisat::Solver();
   for (int i = 0; i < nvars; ++i) 
-    Minisat::Var nv = S->newVar();
+    IctMinisat::Var nv = S->newVar();
 
   Slvr.init_num_vars = S->nVars();
   Slvr.num_rel_vars = 0;

@@ -10,15 +10,148 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+
+#include "ebmc_base.h"
+
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+#include "ebmc_ic3_interface.hh"
 
 hsh_tbl htable_lits;
 long long gcount = 0;
+
+
+/*=====================
+
+       D O _ I C 3
+
+  ====================*/
+int do_ic3(const cmdlinet &cmdline,
+	   ui_message_handlert &ui_message_handler)
+
+{
+  return(ic3_enginet(cmdline,ui_message_handler)());
+} /* end of function do_ic3 */
+
+/*==================================
+
+    O P E R A T O R
+
+   (functionall call reloading)
+  =================================*/
+int ic3_enginet::operator()()
+
+{
+
+  try    {
+    int result=get_model();
+    if(result!=-1) return result;
+
+    if(make_netlist(netlist))     {
+      error() << "Failed to build netlist" << eom;
+      return 2;
+    }
+      
+    if(properties.empty())   {
+      error() << "no properties" << eom;
+      return 1;
+    }
+  }
+
+  catch(const char *error_msg)    {
+    error() << error_msg << eom;
+    return 1;
+  }
+  catch(int)    {
+    return 1;
+  }
+
+  max_var = 0;
+  const0 = false;
+  const1 = false;
+  
+ 
+  Ci.init_parameters();
+  // read_parameters(argc,argv);
+  read_ebmc_input(); 
+ 
+  return(Ci.run_ic3());
+
+} /* end of function operator */
+
+/* ======================
+
+       R U N _ I C 3
+
+   ====================*/
+int CompInfo::run_ic3()
+{
+  double usrtime0=0.,systime0=0.;
+  double usrtime=0.,systime=0.;
+ 
+  
+  bool ok = check_init_states();
+  assert(ok);
+  assign_var_type();
+  assign_value();
+  get_runtime (usrtime0, systime0);
+  int res = mic3();
+  get_runtime (usrtime, systime);  
+
+  int ret_val;
+  printf("\n");
+  switch (res) {
+  case 0: {
+    printf("property HOLDS\n");  
+    if (vac_true) {
+      printf("It is vacuously true\n");
+      ret_val = 2;
+      statistics = false;
+      break;
+    }
+    if (print_inv_flag) 
+      print_invariant(print_only_ind_clauses);
+    if (print_clauses_flag)
+      print_fclauses();
+    bool ok = ver_trans_inv();
+    if (ok) ret_val = 2;
+    else ret_val = 12;
+    break;}
+  case 1: {
+    printf("property FAILED\n");
+    form_cex();  
+    if (print_cex_flag == 1)
+      fprint_cex1();
+    else if (print_cex_flag == 2)
+      fprint_cex2();
+    if (print_clauses_flag) {
+      print_invariant(true);
+    }
+    bool ok = ver_cex();
+    if (ok)  ret_val = 1;
+    else ret_val = 11;
+    break;}
+  case 2:
+    printf("UNDECided\n");
+    ret_val = 3;
+    if (print_clauses_flag) 
+      print_fclauses();
+    break;
+  default:
+    assert(false);
+  }
+  if (statistics) {
+    printf("*********\n");
+    if ((stat_data > 0) && (ret_val < 10)) print_stat();
+    printf("total time is %.2f sec.\n",usrtime-usrtime0);
+  }
+  return(ret_val);
+} /* end of function run_ic3 */
+
 
 
 /*========================
@@ -95,125 +228,3 @@ int CompInfo::mic3()
   return(ret_val);
 
 } /* end of function mic3 */
-
-
-/*===================
-
-      M A I N
-
-====================*/
-int  main(int argc,char *argv[])
-{
-  CompInfo Ci;
-  double usrtime0=0.,systime0=0.;
-  double usrtime=0.,systime=0.;
-
-  if (argc == 1) {
-    Ci.print_header();
-    exit(0);}
-
-  Ci.find_file_format(argv[1]);
-  Ci.init_parameters();
-  Ci.read_parameters(argc,argv);
-  Ci.read_input(argv[1]);  
-  
-  bool ok = Ci.check_init_states();
-  assert(ok);
-  Ci.assign_var_type();
-  Ci.assign_value();
-  get_runtime (usrtime0, systime0);
-  int res = Ci.mic3();
-  get_runtime (usrtime, systime);  
-
-  int ret_val;
-  printf("\n");
-  switch (res) {
-  case 0: {
-    printf("property HOLDS\n");  
-    if (Ci.vac_true) {
-      printf("It is vacuously true\n");
-      ret_val = 2;
-      Ci.statistics = false;
-      break;
-    }
-    if (Ci.print_inv_flag) 
-      Ci.print_invariant(Ci.print_only_ind_clauses);
-    if (Ci.print_clauses_flag)
-      Ci.print_fclauses();
-    bool ok = Ci.ver_trans_inv();
-    if (ok) ret_val = 2;
-    else ret_val = 12;
-    break;}
-  case 1: {
-    printf("property FAILED\n");
-    Ci.form_cex();  
-    if (Ci.print_cex_flag == 1)
-      Ci.fprint_cex1();
-    else if (Ci.print_cex_flag == 2)
-      Ci.fprint_cex2();
-    if (Ci.print_clauses_flag) {
-      Ci.print_invariant(true);
-    }
-    bool ok = Ci.ver_cex();
-    if (ok)  ret_val = 1;
-    else ret_val = 11;
-    break;}
-  case 2:
-    printf("UNDECided\n");
-    ret_val = 3;
-    if (Ci.print_clauses_flag) 
-      Ci.print_fclauses();
-    break;
-  default:
-    assert(false);
-  }
-  if (Ci.statistics) {
-    printf("*********\n");
-    if ((Ci.stat_data > 0) && (ret_val < 10)) Ci.print_stat();
-    printf("total time is %.2f sec.\n",usrtime-usrtime0);
-  }
-  exit(ret_val);
-} /* end of function main */
-
-
-/*=================================
-
-   C H E C K _ I N I T _ S T A T E S
-  
-  =================================*/
-bool CompInfo::check_init_states()
-{
-
-  for (int i=0; i < Ist.size();i++)
-    if (Ist[i].size() != 1) return(false);
-
-  return(true);
-
-} /* end of function check_init_states */
-
-/*===============================================
-   
-  I N I T _ S T _ S A T I S F Y _ C O N S T R S
-
-   returns 'true' if the initial states satisfy
-   the constraints
-
-  ==============================================*/
-bool CompInfo::init_st_satisfy_constrs() 
-{
-  for (int i=0; i < Ist.size(); i++) {
-    CLAUSE &C = Ist[i];
-    assert(C.size() == 1);
-    int lit = C[0];
-    if (lit < 0) {
-      if (Var_info[-lit-1].value == 1)
-	return(false);
-    }
-    else // lit > 0
-      if (Var_info[lit-1].value == 0)
-	return(false);
-  }
-
-  return(true);
-
-} /* end of function init_st_satisfy_constrs */

@@ -1,6 +1,6 @@
 /******************************************************
 
-Module: Functions for creating and updating
+Module: Functions dealing with
         DNF/CNF formulas
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
@@ -141,141 +141,7 @@ void print_cube(FILE *fp,CUBE &C)
 
 
 
-/*=======================================================
 
-  R E A D _ D I M A C S 1
-
-  Returns 0 if formula's format checked out ok.
-  In the case of a "minor" problem returns 1.
-  In the  case of "severe" problems the "exit"
-  function is called
-
-  ========================================================*/
-int read_dimacs1(FILE *fp,DNF &D,int &num_vars) 
-{
-  int nvars,ncubes,c;
-  char buf[BUF_SIZE];
-  CUBE cube;
-  int ret_value=0;
-  /* -------------------------------
-     Read in the  number of variables
-     and cubes skipping comments
-     --------------------------------*/
-  while (1)
-    {if (fgets(buf,BUF_SIZE,fp) == (char *) NULL)
-	{std::cout << "eof is encountered\n";
-	  exit(1);
-	}
-      
-      switch (buf[0])
-        {case 'c': /* comment */
-            continue; /* read in next line */
-	case 'p':  /* the first informative line */
-	  c = sscanf(buf,"p cnf %d %d", &nvars, &ncubes);
-	  assert((nvars >= 0) && (ncubes >= 0));
-	  if ((c == EOF) || (c != 2))
-	    {std::cout << "wrong format " << buf << std::endl;
-	      exit(1);
-	    }
-	  goto START;
-        default:
-	  {std::cout << "wrong format " << buf <<  std::endl;
-            exit(1);
-	  } 
-	}
-    }
-  /* --------------------------
-
-     Read in the DNF
-
-     -------------------------*/
- START:  
-  SCUBE s; 
-  int count=1;
-  int empty_cube=0;
-
-  while (c != EOF)  {
-    int v;
-    
- 
-    c = fscanf(fp,"%d", &v);
-    if (c == 1) {
-      if (v!=0) {
-	if (s.find(-1*v)!=s.end()){ 
-	  // in the current cube we have already seen the opposite literal
-	  empty_cube = 1;
-	  ret_value = 1;
-	  fprintf(stderr,"cube number %d is empty!\n",count);
-	  goto read_next;
-              
-	}
-           	
-	if (s.find(v)!=s.end()){ 
-	  // in the current cube we have already seen the same literal
-
-	  ret_value = 1;
-	  goto read_next; // just skip adding the literal to the current cube
-	}
-	// none of the two alternatives above has happened
-	// so we add literal v to s and add v to the current cube  
-	s.insert(v);
-	cube.push_back(v);
-           
-	if (abs(v) > nvars) {
-	  fprintf(stderr,"variable number (%d) exceeds the declared ",v);
-          fprintf(stderr,"number of variables (%d)\n",nvars);
-	  exit(1);
-	  }
-      } else {// symbol 0 (end of cube) is read in
-	if (!empty_cube) 
-	  // we allow cube-universe but ignore cubes with contradictory literals
-	  D.push_back(cube);
-	count++;
-	cube.clear();
-	s.clear();
-	empty_cube = 0;
-      }
-              
-    }	 
-  read_next:;
-  }/* end of the while loop */
-
-  fclose(fp);
-  if (D.size() > unsigned(ncubes))    {
-    fprintf(stderr,"the seen number of cubes (%d) exceeds ",(int) D.size());
-    fprintf(stderr,"the declared number of cubes (%d)\n",ncubes);
-    exit(1);
-  }
-
-  num_vars = nvars;
-  //  D.ncubes =  ncubes;
-
-  return (ret_value);  
-}/* end of function read_dimacs1 */
-
-
-
-
-/*==============================
-
-  R E A D _ D I M A C S
-
-  =============================*/
-int read_dimacs(char *fname,DNF &F,int &num_vars) 
-{ 
-  FILE *fp;
- 
-
-  fp = fopen(fname,"r");
-  if (fp == NULL) 
-    {
-      std::cout << "cannot open file " << fname << std::endl;
-      exit(1);
-    }
-  
-  return(read_dimacs1(fp,F, num_vars));
-  
-} /* end of function read_dimacs */
 
 
  
@@ -284,7 +150,6 @@ int read_dimacs(char *fname,DNF &F,int &num_vars)
   O P E R A T O R < <
 
   for type SCUBE
-
 
   ===========================================*/
 

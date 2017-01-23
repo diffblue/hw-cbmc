@@ -13,7 +13,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
+
 
 
 /*====================================

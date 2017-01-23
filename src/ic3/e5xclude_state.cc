@@ -34,6 +34,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 bool CompInfo::adjust_clause2(CLAUSE &C,CUBE &St_cube,SCUBE &Failed_lits)
 {
 
+  if (St_cube.size() == 0) return(false);
+
   if (verbose > 3) {
     printf("%*c",9,' ');
     printf("expand_clause\n");
@@ -171,6 +173,7 @@ bool CompInfo::find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,
 	continue;
       }
     }
+    // else Ctg_cube = Ctg_st;
 
     bool ok;
     ok = adjust_clause2(C,Ctg_cube,Failed_lits);

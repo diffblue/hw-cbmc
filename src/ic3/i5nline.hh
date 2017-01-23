@@ -13,8 +13,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 inline Mlit conv_to_mlit(int lit)
 {
 
-  if (lit < 0) return(Minisat::mkLit(-lit-1,true));
-  return(Minisat::mkLit(lit-1,false));
+  if (lit < 0) return(IctMinisat::mkLit(-lit-1,true));
+  return(IctMinisat::mkLit(lit-1,false));
 
 } /* end of function conv_to_mlit */
 
@@ -23,7 +23,7 @@ inline Mlit conv_to_mlit(int lit)
   M L I T _T O _ L I T
 
   ===============================*/
-inline int mlit_to_lit(Minisat::Solver *Slvr,Mlit L)
+inline int mlit_to_lit(IctMinisat::Solver *Slvr,Mlit L)
 {
   assert(var(L) < Slvr->nVars());
   int lit = var(L)+1;

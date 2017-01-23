@@ -13,7 +13,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
+
 
 /*===================================
 
@@ -95,14 +95,16 @@ void fill_up_levels(Circuit *N, DNF &Level_gates)
 
   GCUBE &Gate_list = N->Gate_list;
  
-  for (int i=0; i <= N->max_levels; i++) {
+  for (int i=0; i <= N->max_levels+1; i++) {
     CUBE dummy;
     Level_gates.push_back(dummy);
   }
 
   for (int i=0; i < Gate_list.size();i++) {
     Gate &G = Gate_list[i];
-    Level_gates[G.level_from_inputs].push_back(i);
+    int level = G.level_from_inputs;
+    if (level < 0) level = N->max_levels+1;
+    Level_gates[level].push_back(i);
   }
 
 } /* end of function fill_up_levels */

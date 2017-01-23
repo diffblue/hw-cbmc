@@ -11,24 +11,34 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+
+#include "ebmc_base.h"
+
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-#include "r0ead_blif.hh"
 #include "m0ic3.hh"
 
+#include "ebmc_ic3_interface.hh"
 /*=========================================
 
       U P D _ G A T E _ C O N S T R S
 
   =======================================*/
-void CompInfo::upd_gate_constrs(aiger_and &Aig_gate,CUBE &Gate_inds) 
+void ic3_enginet::upd_gate_constrs(int node_ind,CUBE &Gate_inds) 
 {
   assert(Gate_inds.size() == 3);
-  upd_gate_constr_tbl(Aig_gate.rhs0,Gate_inds[0]);
-  upd_gate_constr_tbl(Aig_gate.rhs1,Gate_inds[1]);
-  upd_gate_constr_tbl(Aig_gate.lhs,Gate_inds[2]);
+
+  aigt::nodest &Nodes = netlist.nodes;
+  aigt::nodet &Nd = Nodes[node_ind];
+
+  Ci.upd_gate_constr_tbl(Nd.a.get(),Gate_inds[0]);
+  Ci.upd_gate_constr_tbl(Nd.b.get(),Gate_inds[1]);
+
+  literalt gt_lit(node_ind,false);
+
+  Ci.upd_gate_constr_tbl(gt_lit.get(),Gate_inds[2]);
 
 } /* end of function upd_gate_constrs */
 
@@ -47,21 +57,6 @@ void CompInfo::upd_gate_constrs(aiger_and &Aig_gate,CUBE &Gate_inds)
 int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
 {
 
-  if (Constr_gates.find(gate_ind) != Constr_gates.end())
-    return(2);
-
-  
-
-  int fnd_lit;
-  bool found = check_constr_lits(fnd_lit,lit);
-     
-  if (!found) return(0);
-  assert(lit > 1);
-
-  if (fnd_lit & 1) Constr_gates[gate_ind].neg_lit = 1;
-  else Constr_gates[gate_ind].neg_lit = 0;
-  
-  return(1);
 
 } /* end of function proc_lit_if_constr */
 
@@ -70,13 +65,9 @@ int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
    S T O R E _ C O N S T R A I N T S
 
   ======================================*/
-void CompInfo::store_constraints(aiger &A)
+void CompInfo::store_constraints()
 {
 
-  if (constr_flag == false) return;
-
-  for (int i=0; i < A.num_constraints; i++)
-    Aig_clits.insert(A.constraints[i].lit);
 
 } /* end of function store_constraints */
 
@@ -85,44 +76,12 @@ void CompInfo::store_constraints(aiger &A)
        F O R M _ L A T C H _ N A M E
 
  ======================================*/
-void form_latch_name(CCUBE &Latch_name,aiger_symbol &S) 
+void form_latch_name(CCUBE &Latch_name,int lit) 
 {
   char Buff[MAX_NAME];
-  sprintf(Buff,"l%d",S.lit);
+  sprintf(Buff,"l%d",lit);
   conv_to_vect(Latch_name,Buff);
 } /* end of function form_latch_name */
-
-/*========================================================
-
-       R E A D _ N A M E S _ O F _ L A T C H E S
-
-  =========================================================*/
-void read_names_of_latches(NamesOfLatches &Latches,char *fname)
-{
-
-  FILE *fp = fopen(fname,"r");
-
-  if (fp ==NULL) {
-    printf("file %s open failure\n",fname);
-    exit(1);}
-
-  while (true) {
-
-    CCUBE Buff;
-    int ret_val = read_string(fp,Buff);
-    if (ret_val == -1) break;
-    int res = parse_string(Buff);
-    if (res == 0) continue; // not  '.latch' or '.names' commands   
-    assert(res == 1); // assert that Buff contains command '.latch'
-    CCUBE Lname;
-    extract_latch_name(Lname,Buff);
-    Latches[Lname] = 0; 
-  }
-
-  fclose(fp);
-
-} /* end of function read_names_of_latches */
-
 
 
 
@@ -168,3 +127,76 @@ void print_names_of_latches(NamesOfLatches &Latches)
     printf("\n"); 
   }
 } /* end of function print_names_of_latches */
+
+/*======================================
+
+     E B M C _ F O R M _ L A T C H E S
+
+  =====================================*/
+void ic3_enginet::ebmc_form_latches()
+{
+
+  var_mapt &vm = netlist.var_map;
+
+  for(var_mapt::mapt::const_iterator it=vm.map.begin();
+      it!=vm.map.end(); it++)    {
+    const var_mapt::vart &var=it->second; 
+     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
+       continue;
+
+    assert(var.bits.size() == 1);
+    literalt lit =var.bits[0].current;
+    Latch_val[lit.var_no()] = 2; // set the value of the latch to a don't care     
+  }
+
+  // set initial values
+  bvt Ist_lits;
+  gen_ist_lits(Ist_lits);
+ 
+  for (int i=0; i < Ist_lits.size(); i++) {
+    literalt &lit = Ist_lits[i];
+    int var_num = lit.var_no();
+    assert(Latch_val.find(var_num) != Latch_val.end());
+    if (lit.sign()) Latch_val[var_num] = 0;
+    else Latch_val[var_num] = 1;
+  }
+
+} /* end of function ebmc_form_latches */
+
+/*==================================
+
+       G E N _ I S T _ L I T S
+
+  =================================*/
+void ic3_enginet::gen_ist_lits(bvt &Ist_lits)
+{
+
+  std::set <literalt> Visited;
+  assert(netlist.initial.size() == 1);
+  literalt start_lit = netlist.initial[0];
+  
+  bvt stack;
+  aigt::nodest &Nodes = netlist.nodes;
+  stack.push_back(start_lit);
+
+  while (stack.size() > 0) {
+
+    literalt lit = stack.back();
+    int var_num = lit.var_no();
+    stack.pop_back();
+    if (Visited.find(lit) != Visited.end()) 
+      continue;
+    assert(var_num < Nodes.size());
+    aigt::nodet &Nd = Nodes[var_num];
+
+    if (Nd.is_var()) {
+      Ist_lits.push_back(lit);
+      continue;
+    }
+
+    Visited.insert(lit);
+    stack.push_back(Nd.a);
+    stack.push_back(Nd.b);
+  }
+
+} /* end of function gen_ist_lits */
