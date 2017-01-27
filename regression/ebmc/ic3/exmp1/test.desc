@@ -1,7 +1,7 @@
 CORE
-ringp0.aig
-
-^property FAILED
+pdtvispeterson.sv
+--ic3
+^property HOLDS
 ^verification is ok
 --
 ^verification failed

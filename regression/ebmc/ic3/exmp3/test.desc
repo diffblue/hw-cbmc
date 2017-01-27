@@ -1,6 +1,6 @@
 CORE
-visbakery.aig
-
+viseisenberg.sv
+--ic3
 ^property FAILED
 ^verification is ok
 --

@@ -1,7 +1,0 @@
-CORE
-mentorbm1.aig
-p4
-^property HOLDS
-^verification is ok
---
-^verification failed

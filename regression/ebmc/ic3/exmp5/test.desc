@@ -1,6 +1,6 @@
 CORE
-viseisenberg.aig
-
+ringp0.sv
+--ic3
 ^property FAILED
 ^verification is ok
 --
