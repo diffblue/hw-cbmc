@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading circuit from a BLIF or AIG file
-        (part 6)
+Module: Converting Verilog description into an internal
+        circuit presentation (part 6)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -22,29 +22,131 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 #include "ebmc_ic3_interface.hh"
 
-/*==================================
+/*================================
 
-   C O M P _ N U M _ N O D E S
+   B A N N E D  _ E X P R
+
+  ================================*/
+bool ic3_enginet::banned_expr(exprt &expr) {
+
+  if(expr.id()==ID_AG ||
+     expr.id()==ID_sva_always ||
+     expr.id()==ID_sva_overlapped_implication ||
+     expr.id()==ID_sva_non_overlapped_implication ||
+     expr.id()==ID_sva_nexttime ||
+     expr.id()==ID_sva_eventually ||
+     expr.id()==ID_sva_until ||
+     expr.id()==ID_sva_s_until ||
+     expr.id()==ID_sva_until_with ||
+     expr.id()==ID_sva_s_until_with)
+    return(true);
+
+  return(false);
+} /* end of function expr_ident */
+
+/*====================================
+
+      P R I N T _ E X P R _ I D
 
   ==================================*/
-void ic3_enginet::comp_num_nodes()
+void ic3_enginet::print_expr_id(exprt &expr)
 {
 
-  aigt::nodest &Nodes = netlist.nodes;
-  var_mapt &vm = netlist.var_map;
-  assert(vm.map.size() >= Nodes.size());
+  bool found = false;
+  printf("-------------\n");
+  if(expr.id()==ID_and) {
+    printf("ID_and\n");
+    found = true; }
+  if (expr.id()==ID_or) {
+    printf("ID_or\n");
+    found = true; }
+  if (expr.id()==ID_not) {
+    printf("ID_not\n");
+    found = true; }
+  if (expr.id()==ID_implies) {
+    printf("ID_implies\n");
+    found = true; }
+  if (expr.id()==ID_AG) {
+    printf("ID_AG\n");
+    found = true; }
+  if (expr.id()==ID_sva_always){
+    printf("ID_sva_always\n");
+    found = true; }
+  if (expr.id()==ID_sva_overlapped_implication) {
+    printf("ID_sva_overlapped_implication\n");
+    found = true; }
+  if (expr.id()==ID_sva_non_overlapped_implication) {
+    printf("ID_sva_non_overlapped_implication\n");
+    found = true; }
+  if (expr.id()==ID_sva_nexttime){
+    printf("ID_sva_nexttime\n");
+    found = true; }
+  if (expr.id()==ID_sva_eventually){
+    printf("ID_sva_eventually\n");
+    found = true; }
+  if (expr.id()==ID_sva_until) {
+    printf("ID_sva_until\n");
+    found = true;}
+  if (expr.id()==ID_sva_s_until) {
+    printf("ID_sva_s_until\n");
+    found = true;  }
+  if (expr.id()==ID_sva_until_with) {
+    printf("ID_sva_until_with\n");
+    found = true; }
+  if (expr.id()==ID_sva_s_until_with) {
+    printf("ID_sva_s__until_with\n");
+    found = true; }
  
-  for(var_mapt::mapt::const_iterator it=vm.map.begin();
-      it!=vm.map.end(); it++)    {
-    const var_mapt::vart &var=it->second; 
-    assert(var.bits.size() == 1);
-    literalt l_c=var.bits[0].current;
-    if (l_c.is_constant()) continue;   
-    unsigned ind = l_c.var_no();
-    if (ind > max_var) max_var = ind;
+  if (!found) {
+    printf("unknown expression\n");
+    exit(100);
   }
 
-} /* end of function comp_num_nodes */
+  printf("\n");
+
+} /* end of function print_expr_id */
+
+/*==========================================
+
+      F O R M _ N E G _ O R I G _ N A M E
+
+  ===========================================*/
+void ic3_enginet::form_neg_orig_name(CCUBE &Name,literalt &next_lit)
+{
+
+  int nlit = next_lit.get();
+  
+  Ci.Invs.insert(nlit-1);
+  bool ok = form_orig_name(Name,next_lit,true);
+  Name.insert(Name.begin(),'n');
+  
+
+} /* end of function form_neg_orig_name */
+
+
+/*===============================
+           
+   F O R M _ O R I G _ N A M E
+
+  The function returns 'true' if
+  'lit' has an original name
+
+  ===============================*/
+bool ic3_enginet::form_orig_name(CCUBE &Name,literalt &lit,bool subtract)
+{
+
+  int var_num = lit.var_no();
+  if (Gn[var_num].size() > 0) {
+    conv_to_vect(Name,Gn[lit.var_no()]);
+    return(true);
+  }
+
+  char buf[MAX_NAME];
+  if (subtract) sprintf(buf,"a%d",lit.get()-1);
+  else sprintf(buf,"a%d",lit.get());   
+  conv_to_vect(Name,buf);
+  return(false);
+} /* end of function form_orig_name */
 
 
 /*==============================

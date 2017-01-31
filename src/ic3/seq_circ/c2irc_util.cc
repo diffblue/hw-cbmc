@@ -78,10 +78,12 @@ void  print_gate_type(FILE *fp,Circuit *N,Gate &G)
   P R I N T _ N A M E 1
 
   ====================================*/
-void print_name1(CCUBE &name)
+void print_name1(CCUBE &name,bool cr)
 {
   for (int i=0; i < name.size();i++)
     printf("%c",name[i]);
+
+  if (cr) printf("\n");
 
 }/* end of function print_name1 */
 

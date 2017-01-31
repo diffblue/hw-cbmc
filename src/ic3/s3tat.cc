@@ -168,3 +168,27 @@ void CompInfo::print_gate_sort_mode()
   printf("\n");
 
 } /* end of function print_gate_sort_mode */
+
+/*===========================================
+
+         I N I T _ I N D _ C L S
+
+  This function returns the number of clauses
+  of Ist that have been pushed from the 
+  initial time frame
+
+  Assumptions: 
+   1) The first 'Ist.size()' clauses of 'F'
+      specify the initial states
+ ============================================*/
+int CompInfo::init_ind_cls()
+{
+
+  int count = 0;
+  for (int i=0; i < Ist.size(); i++) 
+    if (Clause_info[i].span > 0) count++;
+
+  
+  return(count);
+
+} /* end of function init_ind_cls */

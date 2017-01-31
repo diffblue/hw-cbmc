@@ -139,8 +139,6 @@ void full_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V);
 void part_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V);
 void print_lifting_stat();
 //
-void form_inv_names(CDNF &Pin_names,int lit);
-//
 bool find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr,
                             int rec_depth,SCUBE &Failed_lits);
 bool exclude_ctg(CUBE &St,int curr_tf,int rec_depth);
@@ -177,7 +175,7 @@ void set_constr_flag();
 void gen_constr_coi(CUBE &Gates,bool &tran_flag,bool &fun_flag,CUBE &Stack);
 void mark_constr_gates(CUBE &Gates,bool tran_flag,bool fun_flag);
 //
-// member functions
+// 
 void gen_trans_rel(int shift);
 void gen_out_fun(DNF &H,int shift,bool short_version);
 void form_pres_state_vars();
@@ -189,6 +187,7 @@ void assign_var_indexes();
 void add_last_cube(DNF &F);
 void form_property_gates(CUBE &Gates);
 void print_files(char *root);
+int init_ind_cls();
 
 //
 //  form CNF formulas

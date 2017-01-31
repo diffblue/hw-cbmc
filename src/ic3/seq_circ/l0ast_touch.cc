@@ -44,14 +44,14 @@ void fill_fanout_lists(Circuit *N)
       //  check if G1 is a hanging input 
 
       if (G1.flags.active == 0) {
-	std::cout << "when processing the inputs of the gate ";
+	std::cout << "**   when processing the inputs of the gate ";
         print_name1(G.Gate_name); 
         std::cout << std::endl;
 	std::cout << "it is found that  gate ";
         print_name1(G1.Gate_name);
         std::cout << " is not defined" << std::endl;
-	exit(100);
-      }
+	//	exit(100);
+      }     
     }
   }
 

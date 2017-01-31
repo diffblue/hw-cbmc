@@ -15,8 +15,8 @@ public:
   GateNames Gn;
   literalt prop_l;
   LatchVal Latch_val;
-  unsigned max_var;
   bool const0,const1;
+  bool orig_names;
 
   int operator()();
   void read_ebmc_input();  
@@ -27,7 +27,7 @@ public:
   void form_inputs();
   void form_latched_gates();
   void add_new_latch(NamesOfLatches &Latches,
-  		   int init_val,int pres_lit_val,literalt &next_lit);
+  		   int init_val,literalt &pres_lit,literalt &next_lit);
   void form_next_symb(CCUBE &Name,literalt &next_lit);
   void form_gates();
   void form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,int node_ind);
@@ -35,18 +35,23 @@ public:
   void add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol);
   void upd_gate_constrs(int node_ind,CUBE &Gate_inds);
   void form_outp_buf(CDNF &Out_names);
-  void comp_num_nodes();
-
+  void form_latch_name(CCUBE &Latch_name,literalt &lit);
+  //
+ 
+  void print_lit1(unsigned var,bool sign);
+  void print_lit2(unsigned var,bool sign);
+  void print_nodes();
+  void form_orig_names();
+  void form_neg_orig_name(CCUBE &Name,literalt &next_lit);
+  bool form_orig_name(CCUBE &Name,literalt &lit,bool subtract = false);
+  void form_inv_names(CDNF &Pin_names,int lit);
+  void form_invs();
+  void print_expr_id(exprt &E);
+  bool banned_expr(exprt &expr);
 protected:
   netlistt netlist;
  
 
 };
-
-
-
-
-
-
-
-
+//
+void short_name(std::string &Sname,irep_idt &Lname);

@@ -30,7 +30,8 @@ void CompInfo::print_stat()
   if (inv_ind >= 0)   printf("inv_ind = %d\n",inv_ind);
   my_printf("#inputs = %m, #outputs = %m, #latches = %m, #gates = %m\n",
 	    N->ninputs,N->noutputs,N->nlatches, N->ngates);
-  printf("total number of generated clauses is %d\n",(int) F.size()-Ist.size());
+  printf("total number of generated clauses is %d\n",(int) F.size()- 
+         (int) Ist.size() + init_ind_cls());
 
 
   my_printf("orig_ind_cls = %m, succ_impr = %m, failed_impr = %m\n",

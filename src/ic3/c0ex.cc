@@ -61,9 +61,9 @@ bool CompInfo::check_one_state_cex()
 
 
   bool sat_form = check_sat1(Gen_sat);
-
   bool ok = true;
   if (sat_form) {
+    printf("an initial state does not satisfy the property\n");
     form_one_state_cex(Gen_sat);
     max_num_tfs = 0;
     ok = false;

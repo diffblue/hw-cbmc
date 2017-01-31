@@ -255,7 +255,6 @@ public:
   int upd_gate_constr_tbl(int lit,int gate_ind);
   void start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names);
   void form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol);
-  void form_invs(Circuit *N);
   void form_consts(Circuit *N);
 
 protected:
@@ -345,13 +344,13 @@ void read_numbers(char *buf,int &num1,int &num2);
 void my_assert(bool cond);
 void find_latch(Circuit *N,Gate &G,int &latch_ind);
 void conv_to_vect(CCUBE &Name1,const char *Name0);
+void conv_to_vect(CCUBE &Name1,std::string &Name0);
 bool overlap(CUBE &A,CLAUSE &B);
 int parse_string(CCUBE &Buff);
 void print_names_of_latches(NamesOfLatches &Latches);
-void form_latch_name(CCUBE &Latch_name,int lit);
 bool ident_arrays(CUBE &A,CUBE &B);
-void print_ebmc_blif();
 void print_blif2(FILE *fp,Circuit *N);
+void print_blif3(const char *Name,Circuit *N);
 
 extern long long gcount;
 extern hsh_tbl htable_lits;

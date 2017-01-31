@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading circuit from a BLIF or AIG file
-        (part 2)
+Module: Converting Verilog description into an internal
+        circuit presentation (part 2)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -43,26 +43,30 @@ void ic3_enginet::form_latched_gates()
   for(var_mapt::mapt::const_iterator it=vm.map.begin();
       it!=vm.map.end(); it++)    {
     const var_mapt::vart &var=it->second; 
-     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
-       continue;
+    if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
+      continue;
 
-    literalt lit =var.bits[0].current;
-    Ci.Lats.insert(lit.get());
-    CCUBE Latch_name;
-    form_latch_name(Latch_name,lit.get());
-    Latches[Latch_name] = 1;
+    for (int j=0; j < var.bits.size(); j++) {
+      literalt lit =var.bits[j].current;
+      Ci.Lats.insert(lit.get());
+      CCUBE Latch_name;
+      form_latch_name(Latch_name,lit);
+      Latches[Latch_name] = 1;
+    }
   }
 
- for(var_mapt::mapt::const_iterator it=vm.map.begin();
+  for(var_mapt::mapt::const_iterator it=vm.map.begin();
       it!=vm.map.end(); it++)    {
     const var_mapt::vart &var=it->second; 
-     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
-       continue;
+    if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
+      continue;
 
-    literalt lit =var.bits[0].current;
-    int init_val = Latch_val[lit.var_no()];
-    literalt next_lit = var.bits[0].next;
-    add_new_latch(Latches,init_val,lit.get(),next_lit);
+    for (int j=0; j < var.bits.size(); j++) {
+      literalt lit =var.bits[j].current;
+      int init_val = Latch_val[lit.var_no()];
+      literalt next_lit = var.bits[j].next;
+      add_new_latch(Latches,init_val,lit,next_lit);
+    }
   }
 
   
@@ -78,20 +82,26 @@ void ic3_enginet::find_prop_lit()
   assert(properties.size() == 1);
   propertyt Prop = properties.front();
 
+  assert(Prop.expr.id()==ID_sva_always);    
+
   assert(Prop.expr.operands().size()==1);
+
   exprt Oper = Prop.expr.op0();
-  
-  assert(Oper.id() == ID_not); 
-  exprt Oper1 = Oper.op0();
 
-  assert(Oper1.type().id()==ID_bool);
-
+  bool found = banned_expr(Oper);
+  if (found) {
+    printf("verification of properties of this type by IC3\n");
+    printf("is not implemented yet\n");
+    exit(100);
+  }
+  assert(Oper.type().id()==ID_bool);
+ 
   aig_prop_constraintt aig_prop(netlist);
   aig_prop.set_message_handler(get_message_handler());
     
   const namespacet ns(symbol_table);
-    
-  prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper1, ns,
+
+  prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
 			     get_message_handler());
 
   if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
@@ -104,7 +114,7 @@ void ic3_enginet::find_prop_lit()
         F O R M _ I N V S
 
   =============================*/
-void CompInfo::form_invs(Circuit *N)
+void ic3_enginet::form_invs()
 {
 
 
@@ -112,12 +122,16 @@ void CompInfo::form_invs(Circuit *N)
 
   SCUBE::iterator pnt;
 
+  SCUBE &Invs = Ci.Invs;
+
+  Circuit *N = Ci.N;
+
   for (pnt = Invs.begin(); pnt != Invs.end(); pnt++) {
     int lit = *pnt;
     Pin_names.clear();
     form_inv_names(Pin_names,lit);
     CUBE Gate_inds;
-    start_new_gate(Gate_inds,N,Pin_names);
+    Ci.start_new_gate(Gate_inds,N,Pin_names);
     CUBE C;
     C.push_back(-1);
     Gate &G = N->get_gate(Gate_inds.back());
@@ -137,8 +151,8 @@ void CompInfo::form_invs(Circuit *N)
    'seq_circ/a3dd_gate.cc'
 
   ====================================*/
-void ic3_enginet::add_new_latch(NamesOfLatches &Latches,
-				int init_val,int pres_lit_val,literalt &next_lit)
+void ic3_enginet::add_new_latch(NamesOfLatches &Latches, int init_val,
+				literalt &pres_lit,literalt &next_lit)
 {
 
 
@@ -146,12 +160,12 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches,
 
   // process the output name
   CCUBE Latch_name;
-  form_latch_name(Latch_name,pres_lit_val); 
+  form_latch_name(Latch_name,pres_lit); 
  
  
   int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,
                N->Gate_list,true);
-  Ci.upd_gate_constr_tbl(pres_lit_val,pin_num);
+  Ci.upd_gate_constr_tbl(pres_lit.get(),pin_num);
  
  
 
@@ -171,11 +185,11 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches,
 
     Gate &G = N->get_gate(gate_ind);   
     G.Fanin_list.push_back(pin_num); 
-    if (G.gate_type == INPUT) printf("INPUT\n");
+
 // we don't accept files in which the output of a latch is also a primary input
-    if (N->get_gate(gate_ind).gate_type == INPUT){
+    if (G.gate_type == INPUT){
       printf("the output of latch  ");  
-      print_name(&Latch_name); printf("\n");
+      print_name1(Latch_name,true);
       printf("is also an input variable\n");
       exit(1);
     }
@@ -216,5 +230,19 @@ void conv_to_vect(CCUBE &Name1,const char *Name0)
     if (Name0[i] == 0) break;
     Name1.push_back(Name0[i]);
   }
+
+} /* end of function conv_to_vect */
+
+/*===============================
+
+     C O N V _ T O _ V E C T
+
+  =============================*/
+void conv_to_vect(CCUBE &Name1,std::string &Name0)
+{
+  Name1.clear();
+  for (int i=0; i < Name0.size() ;i++) 
+    Name1.push_back(Name0[i]);
+  
 
 } /* end of function conv_to_vect */

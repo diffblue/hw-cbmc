@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading circuit from a BLIF or AIG file
-        (part 4)
+Module: Converting Verilog description into an internal
+        circuit presentation (part 4)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -60,6 +60,10 @@ void ic3_enginet::add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol)
     Pol.push_back(1);
     lit1 = lit_val;}
 
+  if (orig_names) {
+    form_orig_name(Name,lit);
+    return;
+  }
   char Buff[MAX_NAME];
   sprintf(Buff,"a%d",lit1);
   conv_to_vect(Name,Buff);
@@ -98,6 +102,11 @@ void ic3_enginet::add_gate_inp_name(CCUBE &Name,literalt &lit,CUBE &Pol)
   else {
     Pol.push_back(1);
     lit1 = lit_val;}
+
+  if (orig_names) {
+    form_orig_name(Name,lit,lit.sign());
+    return;
+  }
 
   char Buff[MAX_NAME];
   if (Ci.Inps.find(lit1) != Ci.Inps.end()) {
@@ -152,10 +161,9 @@ void ic3_enginet::form_gates()
   Circuit *N = Ci.N;
   aigt::nodest &Nodes = netlist.nodes;
  
-  for (int i=0; i <= max_var; i++) {   
+  for (int i=0; i <  Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];
     if (Nd.is_var()) continue;
-    //   print_lit(Nd.a.var_no(),Nd.a.sign());
     CDNF Pin_names;
     CUBE Pol;    
     form_gate_pin_names(Pin_names,Pol,i);
@@ -191,12 +199,25 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   Pin_names.push_back(Dummy);
   Pin_names.push_back(Dummy);
   char Buff[MAX_NAME];
-  if (prop_l.is_false())  sprintf(Buff,"c0");
-  else if (prop_l.is_true()) sprintf(Buff,"c1");
-  else  if (latch) sprintf(Buff,"l%d",olit);
-  else sprintf(Buff,"a%d",olit);
+  if (prop_l.is_false())  {
+     sprintf(Buff,"c0");
+     conv_to_vect(Pin_names[0],Buff);
+     goto NEXT;  }
+  if (prop_l.is_true()) {
+     sprintf(Buff,"c1");
+     conv_to_vect(Pin_names[0],Buff);
+     goto NEXT;
+  }
   
-  conv_to_vect(Pin_names[0],Buff);
+  if (orig_names) 
+    form_orig_name(Pin_names[0],prop_l,prop_l.sign());
+  else {
+    if (latch) sprintf(Buff,"l%d",olit);
+    else sprintf(Buff,"a%d",olit);
+    conv_to_vect(Pin_names[0],Buff);
+  }
+
+ NEXT:
   char buff[MAX_NAME];
   sprintf(buff,"p%d",Ci.prop_ind);
   conv_to_vect(Pin_names[1],buff);
@@ -207,8 +228,11 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   Ci.start_new_gate(Gate_inds,N,Pin_names);
   // add cube specifying functionality
   CUBE C;
-  if (prop_l.get() == olit) C.push_back(1);
-  else C.push_back(-1);
+  // making the buffer an invertor
+  if (prop_l.is_constant()) C.push_back(-1);
+  else 
+    if (prop_l.sign()) C.push_back(1);
+    else C.push_back(-1);
 
   Gate &G = N->get_gate(Gate_inds.back());
   G.F.push_back(C);

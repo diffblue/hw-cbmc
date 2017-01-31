@@ -174,7 +174,7 @@ void print_gate_name(Gate &G);
 void print_gate_name1(Gate &G);
 void fprint_name(FILE *fp,CCUBE &name);
 void  print_levels(Circuit *N);
-void print_name1(CCUBE &name);
+void print_name1(CCUBE &name,bool cr = false);
 void print_subcircuit(Circuit *N,CCUBE &name);
 void rename_gates(Circuit *N,char C);
 void print_tr_rel(Circuit *N,char *root);

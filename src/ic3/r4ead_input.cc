@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading circuit from a BLIF or AIG file
-        (part 5)
+Module: Converting Verilog description into an internal
+        circuit presentation (part 5)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -76,10 +76,15 @@ void CompInfo::store_constraints()
        F O R M _ L A T C H _ N A M E
 
  ======================================*/
-void form_latch_name(CCUBE &Latch_name,int lit) 
+void ic3_enginet::form_latch_name(CCUBE &Latch_name,literalt &lit) 
 {
+  if (orig_names) {
+    bool ok = form_orig_name(Latch_name,lit);
+    assert(ok);        
+    return; }
+
   char Buff[MAX_NAME];
-  sprintf(Buff,"l%d",lit);
+  sprintf(Buff,"l%d",lit.get());
   conv_to_vect(Latch_name,Buff);
 } /* end of function form_latch_name */
 
@@ -141,12 +146,13 @@ void ic3_enginet::ebmc_form_latches()
   for(var_mapt::mapt::const_iterator it=vm.map.begin();
       it!=vm.map.end(); it++)    {
     const var_mapt::vart &var=it->second; 
-     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
-       continue;
+    if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
+      continue;
 
-    assert(var.bits.size() == 1);
-    literalt lit =var.bits[0].current;
-    Latch_val[lit.var_no()] = 2; // set the value of the latch to a don't care     
+    for (int j=0; j < var.bits.size(); j++) {
+      literalt lit =var.bits[j].current;
+      Latch_val[lit.var_no()] = 2; // set the value of the latch to a don't care     
+    }
   }
 
   // set initial values

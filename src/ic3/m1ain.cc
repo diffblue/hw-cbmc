@@ -19,6 +19,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+#include <util/cmdline.h>
 #include "ebmc_ic3_interface.hh"
 
 hsh_tbl htable_lits;
@@ -70,15 +71,13 @@ int ic3_enginet::operator()()
     return 1;
   }
 
-  max_var = 0;
   const0 = false;
   const1 = false;
+  orig_names = false;
   
- 
   Ci.init_parameters();
   // read_parameters(argc,argv);
   read_ebmc_input(); 
- 
   return(Ci.run_ic3());
 
 } /* end of function operator */

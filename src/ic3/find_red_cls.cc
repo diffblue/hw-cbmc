@@ -101,9 +101,10 @@ void CompInfo::sort_in_length(CUBE &Old_nums)
 void CompInfo::remove_clause(int clause_ind)
 {
   
-  int span = Clause_info[clause_ind].span;
   Clause_info[clause_ind].active = 0;
   num_inact_cls++;
+  int span = Clause_info[clause_ind].span;
+  Time_frames[span].num_bnd_cls--;
   ClauseTable::iterator pnt = Clause_table.find(F[clause_ind]);
   assert(pnt != Clause_table.end());
   Clause_table.erase(pnt);

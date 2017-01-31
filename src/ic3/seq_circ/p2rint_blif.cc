@@ -65,3 +65,17 @@ void print_blif2(FILE *fp,Circuit *N)
 
 }/* end of function print_blif2 */
 
+/*========================
+
+   P R I N T _ B L I F 3
+
+==========================*/
+void print_blif3(const char *fname, Circuit *N)
+{
+
+  FILE *fp = fopen(fname,"w");
+  assert(fp!= NULL);
+  print_blif2(fp,N);
+  fclose(fp);
+
+} /* end of function print_blif3 */

@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading circuit from a BLIF or AIG file
-        (part 1)
+Module: Converting Verilog description into an internal
+        circuit presentation (part 1)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -20,6 +20,37 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ebmc_base.h"
 #include "ebmc_ic3_interface.hh"
 
+/*=================================
+
+    R E A D _ E B M C _ I N P U T
+
+  ===============================*/
+void ic3_enginet::read_ebmc_input()
+{
+ 
+  form_orig_names();
+ 
+  form_circ_from_ebmc();
+  
+  assert(Ci.N->noutputs == 1);
+  assert(Ci.N->nlatches > 0);
+  
+  Ci.order_gates();  
+  Ci.gen_cnfs("",false);
+ 
+
+  Ci.form_var_nums();
+ 
+
+  Ci.build_arrays();
+ 
+  Ci.form_max_pres_svar();
+
+  //  Ci.form_constr_lits();
+  //  Ci.add_constrs();
+  
+} /* end of function read_ebmc_input */
+
 /*==============================================
 
         F O R M _ C I R C _ F R O M _ E B M C
@@ -33,7 +64,6 @@ void ic3_enginet::form_circ_from_ebmc()
   
   Ci.const_flags = 0;
 
-  comp_num_nodes();
 
   //   store_constraints();
 
@@ -42,12 +72,12 @@ void ic3_enginet::form_circ_from_ebmc()
   find_prop_lit();
  
   form_latched_gates();
-  
-  form_gates();
  
+  form_gates();
+
   CDNF Out_names;
   form_outp_buf(Out_names);
-  Ci.form_invs(N);
+  form_invs();
   Ci.form_consts(N);
  
   add_spec_buffs(N);
@@ -80,16 +110,22 @@ void ic3_enginet::form_inputs()
       it!=vm.map.end(); it++)    {
     const var_mapt::vart &var=it->second;
     if (var.is_input() == false) continue;
-    assert(var.bits.size() == 1);
-    literalt lit =var.bits[0].current;
-    int lit_val = lit.get();
-    char Inp_name[MAX_NAME];
-    sprintf(Inp_name,"i%d",lit_val);
-    CCUBE Name;
-    conv_to_vect(Name,Inp_name);
-    Ci.Inps.insert(lit_val);
-    add_input(Name,N,N->ninputs);
-    Ci.upd_gate_constr_tbl(lit_val,N->ninputs);
+    for (int j=0; j < var.bits.size(); j++) {  
+      literalt lit =var.bits[j].current;
+      int lit_val = lit.get();    
+      CCUBE Name;
+      if (orig_names) {
+	bool ok = form_orig_name(Name,lit);
+	assert(ok);}      
+      else {
+	char Inp_name[MAX_NAME];
+	sprintf(Inp_name,"i%d",lit_val);   
+	conv_to_vect(Name,Inp_name);
+      }
+      Ci.Inps.insert(lit_val);
+      add_input(Name,N,N->ninputs);
+      Ci.upd_gate_constr_tbl(lit_val,N->ninputs);
+    }
   }
   
 
@@ -97,34 +133,7 @@ void ic3_enginet::form_inputs()
 
 
 
-/*=================================
 
-    R E A D _ E B M C _ I N P U T
-
-  ===============================*/
-void ic3_enginet::read_ebmc_input()
-{
- 
-  form_circ_from_ebmc();
-  
-  assert(Ci.N->noutputs == 1);
-  assert(Ci.N->nlatches > 0);
-  
-  Ci.order_gates();  
-  Ci.gen_cnfs("",false);
- 
-
-  Ci.form_var_nums();
- 
-
-  Ci.build_arrays();
- 
-  Ci.form_max_pres_svar();
-
-  //  Ci.form_constr_lits();
-  // Ci.add_constrs();
-  
-} /* end of function read_ebmc_input */
 
 
 /*=================================

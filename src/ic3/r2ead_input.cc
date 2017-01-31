@@ -1,7 +1,7 @@
 /******************************************************
 
-Module: Reading circuit from a BLIF or AIG file
-        (part 3)
+Module: Converting Verilog description into an internal
+        circuit presentation (part 3)
 
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
@@ -84,34 +84,46 @@ void CompInfo::start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names)
          F O R M _ I N V _ N A M E S 
 
   ===========================================*/
-void CompInfo::form_inv_names(CDNF &Pin_names,int lit)
+void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
 {
   
-    assert ((lit & 1) == 0);
-    char Buff[MAX_NAME];
-    CCUBE Dummy;
-    Pin_names.push_back(Dummy);
-    Pin_names.push_back(Dummy);
-    if (Inps.find(lit) != Inps.end()) {
-      sprintf(Buff,"i%d",lit);
-      conv_to_vect(Pin_names[0],Buff);
-      sprintf(Buff,"ni%d",lit);
-      conv_to_vect(Pin_names[1],Buff);
-      return;
-    }
+  assert ((lit & 1) == 0);
+  char Buff[MAX_NAME];
+  CCUBE Dummy;
+  Pin_names.push_back(Dummy);
+  Pin_names.push_back(Dummy);
+  if (orig_names) {
+    literalt Lit = literalt(lit >> 1,true);
+    form_orig_name(Pin_names[0],Lit,true); 
+    Pin_names[1] = Pin_names[0];
+    Pin_names[1].insert(Pin_names[1].begin(),'n');
+    return;
+  }
 
-    if (Lats.find(lit) != Lats.end()) {
-      sprintf(Buff,"l%d",lit);
-      conv_to_vect(Pin_names[0],Buff);
-      sprintf(Buff,"nl%d",lit);
-      conv_to_vect(Pin_names[1],Buff);
-      return;
-    }
 
-    sprintf(Buff,"a%d",lit);
+  SCUBE &Inps = Ci.Inps;
+
+  if (Inps.find(lit) != Inps.end()) {
+    sprintf(Buff,"i%d",lit);
     conv_to_vect(Pin_names[0],Buff);
-    sprintf(Buff,"na%d",lit);
+    sprintf(Buff,"ni%d",lit);
     conv_to_vect(Pin_names[1],Buff);
+    return;
+  }
+
+  SCUBE &Lats = Ci.Lats;
+  if (Lats.find(lit) != Lats.end()) {
+    sprintf(Buff,"l%d",lit);
+    conv_to_vect(Pin_names[0],Buff);
+    sprintf(Buff,"nl%d",lit);
+    conv_to_vect(Pin_names[1],Buff);
+    return;
+  }
+
+  sprintf(Buff,"a%d",lit);
+  conv_to_vect(Pin_names[0],Buff);
+  sprintf(Buff,"na%d",lit);
+  conv_to_vect(Pin_names[1],Buff);
    
 
 } /* end of function form_inv_names */
@@ -141,8 +153,14 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
 
 
   char Buff[MAX_NAME];
-  int nlit = next_lit.get();
+  int nlit;
+ 
+
+  nlit = next_lit.get();
   if (next_lit.sign()) {   
+    if (orig_names) {
+      form_neg_orig_name(Name,next_lit);
+      return;}
     Ci.Invs.insert(nlit-1);
     if (Ci.Inps.find(nlit-1) != Ci.Inps.end()) 
       sprintf(Buff,"ni%d",nlit-1);
@@ -153,10 +171,15 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
     return;
   }
 
+
+  if (orig_names) {
+    form_orig_name(Name,next_lit);
+    return;
+  }
+     
   if (Ci.Inps.find(nlit) != Ci.Inps.end()) sprintf(Buff,"i%d",nlit);
   else if (Ci.Lats.find(nlit) != Ci.Lats.end()) sprintf(Buff,"l%d",nlit);
   else sprintf(Buff,"a%d",nlit);
-
   conv_to_vect(Name,Buff);
 
 } /* end of function form_next_symb */

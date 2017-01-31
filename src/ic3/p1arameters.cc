@@ -25,8 +25,9 @@ void CompInfo::print_header()
 {
 
   printf("mic3 circ [b|C|c|d||e|i|n|N|r|x] ['a'num] ['D'num] ['g'num]\n");
-  printf("          ['h'val] ['m'val] ['o' name] ['p'num] ['s'num] ['Sl'num]\n"); 
-  printf("           ['Si'num] ['Sg'num]['t'num] ['T'num] ['v'num] \n\n");
+  printf("          ['h'val] ['m'val] ['o' name] ['p'num] ['s'num] ['Sl'num]"); 
+  printf("\n");
+  printf("          ['Si'num] ['Sg'num]['t'num] ['T'num] ['v'num] \n\n");
   printf("circ     - name of the file containing the initial circuit\n");
   printf("'a'num   - num specifies the activity update mode\n");
   printf("b        - sets ctg_flag to false\n");
@@ -68,12 +69,12 @@ void CompInfo::init_parameters()
 {
 
   print_inv_flag = false;
+  print_only_ind_clauses = 0;
   print_cex_flag = 0;
   strcpy(out_file,"res");
   verbose = 0;
   gcount_max = -1;
   fin_tf = -1;
-  print_only_ind_clauses = 0;
   time_limit = -1;
   use_short_prop = true;
   stat_data = 1;
