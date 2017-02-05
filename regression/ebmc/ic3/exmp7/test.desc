@@ -1,0 +1,7 @@
+CORE
+bobmiterbm1multi.sv
+--ic3 --prop 1032
+^property HOLDS
+^verification is ok
+--
+^verification failed

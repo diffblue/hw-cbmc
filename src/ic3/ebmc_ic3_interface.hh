@@ -48,6 +48,9 @@ public:
   void form_invs();
   void print_expr_id(exprt &E);
   bool banned_expr(exprt &expr);
+  bool find_prop(propertyt &Prop);
+  void read_parameters();
+  void print_header();
 protected:
   netlistt netlist;
  

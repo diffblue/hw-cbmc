@@ -24,6 +24,46 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 #include "ebmc_ic3_interface.hh"
 
+/*====================================
+
+      F I N D _ P R O P _ L I T
+
+  ====================================*/
+void ic3_enginet::find_prop_lit()
+{
+
+  propertyt Prop;
+  bool found = find_prop(Prop);
+
+  assert(found);
+  assert(Prop.expr.id()==ID_sva_always);    
+
+  assert(Prop.expr.operands().size()==1);
+
+  exprt Oper = Prop.expr.op0();
+
+  found = banned_expr(Oper);
+  if (found) {
+    printf("verification of properties of this type by IC3\n");
+    printf("is not implemented yet\n");
+    exit(100);
+  }
+  assert(Oper.type().id()==ID_bool);
+ 
+  aig_prop_constraintt aig_prop(netlist);
+  aig_prop.set_message_handler(get_message_handler());
+    
+  const namespacet ns(symbol_table);
+
+  prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
+			     get_message_handler());
+
+  if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
+  else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;
+  
+} /* end of function find_prop_lit */
+
+
 /*===================================
 
   F O R M _ L A T C H E D _ G A T E S
@@ -72,42 +112,6 @@ void ic3_enginet::form_latched_gates()
   
 } /* end of function form_latched_gates */
 
-/*====================================
-
-      F I N D _ P R O P _ L I T
-
-  ====================================*/
-void ic3_enginet::find_prop_lit()
-{
-  assert(properties.size() == 1);
-  propertyt Prop = properties.front();
-
-  assert(Prop.expr.id()==ID_sva_always);    
-
-  assert(Prop.expr.operands().size()==1);
-
-  exprt Oper = Prop.expr.op0();
-
-  bool found = banned_expr(Oper);
-  if (found) {
-    printf("verification of properties of this type by IC3\n");
-    printf("is not implemented yet\n");
-    exit(100);
-  }
-  assert(Oper.type().id()==ID_bool);
- 
-  aig_prop_constraintt aig_prop(netlist);
-  aig_prop.set_message_handler(get_message_handler());
-    
-  const namespacet ns(symbol_table);
-
-  prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
-			     get_message_handler());
-
-  if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
-  else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;
-  
-} /* end of function find_prop_lit */
 
 /*==============================
 
@@ -246,3 +250,4 @@ void conv_to_vect(CCUBE &Name1,std::string &Name0)
   
 
 } /* end of function conv_to_vect */
+

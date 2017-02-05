@@ -10,54 +10,51 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+
+#include "ebmc_base.h"
+
 #include "Solver.h"
 #include "SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+#include <util/cmdline.h>
+#include "ebmc_ic3_interface.hh"
+
+/*=====================================
+
+      R E A D _ P A R A M E T E R S
+
+ =====================================*/
+void ic3_enginet::read_parameters()
+{
+
+  if (cmdline.isset("h")) {
+    print_header();
+    exit(0);
+  }
+
+  if (cmdline.isset("prop")) {
+    std::string sval = cmdline.get_value("prop");
+    Ci.prop_ind = stoi(sval);
+    assert(Ci.prop_ind >= 0);
+  }
+
+} /* end of function read_parameters */
+
 /*==============================
 
      P R I N T _ H E A D E R
 
   =============================*/
-void CompInfo::print_header()
+void ic3_enginet::print_header()
 {
 
-  printf("mic3 circ [b|C|c|d||e|i|n|N|r|x] ['a'num] ['D'num] ['g'num]\n");
-  printf("          ['h'val] ['m'val] ['o' name] ['p'num] ['s'num] ['Sl'num]"); 
-  printf("\n");
-  printf("          ['Si'num] ['Sg'num]['t'num] ['T'num] ['v'num] \n\n");
-  printf("circ     - name of the file containing the initial circuit\n");
-  printf("'a'num   - num specifies the activity update mode\n");
-  printf("b        - sets ctg_flag to false\n");
-  printf("C        - print inductive and local clauses\n");
-  printf("c        - print out the counterexample found (if any)\n");
-  printf("d        - is used for debugging purposes\n");
-  printf("'D'num   - specifies heuristics used to pick a literal\n");
-  printf("           0 - random (default), 1 - inactive lit \n");
-  printf("           2 - inactive var, 3 - BerkMin like heuristic\n");
-  printf("e        - set the selector variables to 1 (used for debugging)\n");
-  printf("'g'num   - sets the maximal value of gcount (used for debugging)\n");
-  printf("'i'num   - print out the invariant found (if any)\n");
-  printf("           if 'num == 1', only inductive clauses are printed out\n");
-  printf("j        - use joins in general. of ind. clauses if 'ctg_flag==0'\n");
-  printf("'m'val   - value is a real number used when comp. var. activity\n");
-  printf("'n'      - does not print any statistics\n");
-  printf("'N'      - set constr_flag to 'false'\n");
-  printf("o name   - print the result to a file with the root name 'name'\n");
-  printf("'p'num   - num specifies the property index to check \n");
-  printf("           (if circuit is specified in the AIGER format)\n");
-  printf("'r'      - remove subsumed clauses\n");
-  printf("'R'      - initial randomization is on\n");
-  printf("'s'num   - print statistics, num specifying the level of detail\n");
-  printf("'Sl'num  - 'num' spec. literal ordering when lifting a state\n");
-  printf("'Si'num  - 'num' spec. literal ordering when gener. an ind. clause\n");
-  printf("'Sg'num  - 'num' spec. gate ordering used to generate CNF formulas\n");
-  printf("'t'num   - stop after num-th time frame is finished\n");
-  printf("'T'num   - terminate after 'num' seconds\n");
-  printf("'v'num   - level of verbosity is  specified by 'num'\n");
-  printf("'x'      - print out counterexample as a cnf formula\n");
+  printf("ebmc verilog_file --ic3 [--p | --prop N]\n");
+  printf("p      -  print out information about available options\n");
+  printf("prop N -  check property number N (count starts with 0)\n");
+  
 } /* end of function print_header */
 
 /*=====================================
@@ -101,3 +98,4 @@ void CompInfo::init_parameters()
   constr_flag = true;
 
   } /* end of function init_parameters */
+

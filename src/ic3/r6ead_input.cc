@@ -23,6 +23,35 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ebmc_base.h"
 #include "ebmc_ic3_interface.hh"
 
+
+/*=============================
+
+       F I N D _ P R O P
+
+  ===========================*/
+bool ic3_enginet::find_prop(propertyt &Prop)
+{
+
+  if (Ci.prop_ind >=  properties.size()) {
+    printf("the design has only %d properties\n",(int) properties.size());
+    exit(100);
+  }
+  
+  for(const auto &p : properties) {
+    std::string Sn;
+    irep_idt Nm = p.name;
+    short_name(Sn,Nm);
+    int ind = stoi(Sn);
+    if (ind-1 == Ci.prop_ind) {
+      Prop = p;
+      return(true);
+    }
+  }
+
+  return(false);
+
+} /* end of function find_prop */
+
 /*==================================
 
     F O R M _ O R I G _ N A M E S

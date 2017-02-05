@@ -261,7 +261,7 @@ void ebmc_parse_optionst::help()
     "Methods:\n"
     " --k-induction                     do k-induction with k=bound\n"
     " --bdd                             use (unbounded) BDD engine\n"
-    " --ic3                             use IC3 engine\n"
+    " --ic3  [--prop <nr>]              use IC3 engine to check property number <nr>\n"
     //" --interpolation                   use bit-level interpolants\n"
     //" --interpolation-word              use word-level interpolants\n"
     //" --diameter                        perform recurrence diameter test\n"

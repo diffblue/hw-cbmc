@@ -32,7 +32,7 @@ public:
     "(reset):"
     "(version)(verilog-rtl)(verilog-netlist)"
     "(compute-interpolant)(interpolation)(interpolation-vmcai)"
-    "(ic3)"
+    "(ic3)(prop):(h)"
     "(interpolation-word)(interpolator):(bdd)"
     "(smt1)(smt2)(boolector)(z3)(cvc4)(yices)(mathsat)(prover)(lifter)"
     "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"

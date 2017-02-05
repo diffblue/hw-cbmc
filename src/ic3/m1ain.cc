@@ -48,6 +48,10 @@ int ic3_enginet::operator()()
 
 {
 
+
+  Ci.init_parameters();
+  read_parameters();
+
   try    {
     int result=get_model();
     if(result!=-1) return result;
@@ -75,8 +79,7 @@ int ic3_enginet::operator()()
   const1 = false;
   orig_names = false;
   
-  Ci.init_parameters();
-  // read_parameters(argc,argv);
+  
   read_ebmc_input(); 
   return(Ci.run_ic3());
 
