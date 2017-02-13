@@ -80,7 +80,8 @@ int ic3_enginet::operator()()
   orig_names = false;
   
   
-  read_ebmc_input(); 
+  read_ebmc_input();
+  //  printf("Constr_gates.size() = %d\n",Ci.Constr_gates.size()); 
   return(Ci.run_ic3());
 
 } /* end of function operator */

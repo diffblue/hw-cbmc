@@ -40,6 +40,10 @@ public:
 
   // constr related
 
+  ConstrNames Cgate_names; // Stores the names of constrained gates listed in 'file.cnstr'
+                        // Cgate_names["gate_name"] specifies gate polarity (1 means negation)
+  SCUBE Init_clits; // Stores the constrained literals of the Verilog description
+
 // Constr_gates specify constrained literals in terms of 
 // gates of circuit N. Constr_gates[gate_ind] == 0 (respectively 1) corresponds
 // to the positive (respectively negative) literal of the variable 'gate_ind+1'
@@ -70,10 +74,8 @@ public:
                        // (used when lift. a state)
   SCUBE Constr_inp_lits; // specifies constrained input lits
 
-  bool constr_flag; // if 'constr_flag == true', then literals listed in 
-                    //'Constr_lits' are used to constrain the search space
-  
-  //
+  bool constr_flag; // if 'constr_flag == true', then 'ic3' is run with option
+                    // --constr
 
   CNF Prop; // property (expressed in terms of present state variables)
   int num_prop_vars; // number of variables in 'Prop'
@@ -256,6 +258,8 @@ public:
   void start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names);
   void form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol);
   void form_consts(Circuit *N);
+  void form_constr_lits();
+  void add_constrs();
 
 protected:
 

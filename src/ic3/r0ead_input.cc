@@ -17,7 +17,9 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+
 #include "ebmc_base.h"
+#include <util/cmdline.h>
 #include "ebmc_ic3_interface.hh"
 
 /*=================================
@@ -27,6 +29,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ===============================*/
 void ic3_enginet::read_ebmc_input()
 {
+
+  store_constraints(cmdline.args[0]);
  
   form_orig_names();
  
@@ -46,8 +50,8 @@ void ic3_enginet::read_ebmc_input()
  
   Ci.form_max_pres_svar();
 
-  //  Ci.form_constr_lits();
-  //  Ci.add_constrs();
+  Ci.form_constr_lits();
+  Ci.add_constrs();
   
 } /* end of function read_ebmc_input */
 
@@ -64,8 +68,6 @@ void ic3_enginet::form_circ_from_ebmc()
   
   Ci.const_flags = 0;
 
-
-  //   store_constraints();
 
   form_inputs();
 

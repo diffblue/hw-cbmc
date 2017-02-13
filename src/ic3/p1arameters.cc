@@ -41,6 +41,10 @@ void ic3_enginet::read_parameters()
     assert(Ci.prop_ind >= 0);
   }
 
+  if (cmdline.isset("constr")) 
+    Ci.constr_flag = true;
+
+
 } /* end of function read_parameters */
 
 /*==============================
@@ -85,6 +89,7 @@ void CompInfo::init_parameters()
   lift_sort_mode = FULL_SORT;
   ind_cls_sort_mode = FULL_SORT;
   gate_sort_mode = INPS_FIRST;
+  // gate_sort_mode = INIT_SORT;
   multiplier = 1.05;
   factor = 1.;
   max_act_val = 10000.;
@@ -95,7 +100,7 @@ void CompInfo::init_parameters()
   grl_heur = NO_JOINS;
   max_coi_depth = 10;
   prop_ind = 0;
-  constr_flag = true;
+  constr_flag = false;
 
   } /* end of function init_parameters */
 

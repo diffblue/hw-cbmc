@@ -51,6 +51,10 @@ public:
   bool find_prop(propertyt &Prop);
   void read_parameters();
   void print_header();
+  void form_init_constr_lits();
+  void store_constraints(const std::string &fname);
+  void read_constraints(const std::string &fname);
+
 protected:
   netlistt netlist;
  

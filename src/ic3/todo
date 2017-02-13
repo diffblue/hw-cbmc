@@ -4,12 +4,6 @@ Finishing integration
 with ebmc
 =====================
 
-*) Add processing external constraints (like AIGER format constraints
-   that are handled by the current stand-alone version of IC3)
-
-*) Add the ability to specify multiple properties (like this is done
-   in the current stand-alone version of IC3)
-
 *) Add code freeing memory allocated by the Verilog reader after IC3
    converted this information into its internal data
    structure. (Keeping this memory is too expensive for large
@@ -30,9 +24,6 @@ Changes of the current implementation
 *) Optimize the procedure of building the longest inductive clause for
    the case of designs with a large number of latches
 
-*) Try more aggressive generalization of a bad state (on top
-   of using the state-lifting technique)
-
 *) Implement actual removal of subsumed clauses (currently they are
    just marked and ignored by the algorithm)
 
@@ -40,6 +31,10 @@ Changes of the current implementation
 ====================================
 Improvements of the basic algorithm
 ====================================
+
+*) Write a perl script meant for efficiently checking multiple
+   properties. The idea is to check properties one by one re-using
+   information found when proving (or disproving) previous properties.
 
 *) Implement the version of IC3 that fixes the problem with
    convergence rate (by computing reachability of good states breaking

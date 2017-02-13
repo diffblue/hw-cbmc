@@ -1,0 +1,7 @@
+CORE
+sm98a7multi.sv
+--ic3 --prop 1 --constr
+^property FAILED 
+^verification is ok
+--
+^verification failed

@@ -58,6 +58,22 @@ int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
 {
 
 
+  if (Constr_gates.find(gate_ind) != Constr_gates.end())
+    return(2);
+
+
+  int fnd_lit;
+  bool found = check_constr_lits(fnd_lit,lit);
+     
+  if (!found) return(0);
+  assert(lit > 1);
+
+  if (fnd_lit & 1) Constr_gates[gate_ind].neg_lit = 1;
+  else Constr_gates[gate_ind].neg_lit = 0;
+  
+  return(1);
+
+
 } /* end of function proc_lit_if_constr */
 
 /*=====================================
@@ -65,9 +81,13 @@ int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
    S T O R E _ C O N S T R A I N T S
 
   ======================================*/
-void CompInfo::store_constraints()
+void ic3_enginet::store_constraints(const std::string &fname)
 {
 
+  if (Ci.constr_flag == false) return;
+
+  read_constraints(fname);
+  form_init_constr_lits();
 
 } /* end of function store_constraints */
 

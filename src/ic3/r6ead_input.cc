@@ -21,9 +21,62 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <solvers/prop/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
 #include "ebmc_base.h"
+#include <util/cmdline.h>
 #include "ebmc_ic3_interface.hh"
 
+/*===================================
 
+      R E A D _ N E X T _ N A M E
+
+  =================================*/
+bool read_next_name(CCUBE &Name,bool &neg,FILE *fp)
+{
+  neg = false;
+  while (true) {
+    int c = fgetc(fp);
+    if (c == EOF) break;
+    if (c == '\n') break;
+    if ((c == ' ') && (Name.size() > 0)) break;
+    if (c == '~') {
+      neg = true;
+      continue;}
+    Name.push_back(c);
+  }
+
+} /* end of function read_next_name */
+
+/*========================================
+
+       R E A D _ C O N S T R A I N T S
+
+  ========================================*/
+void ic3_enginet::read_constraints(const std::string &source_name)
+{
+
+  char fname[MAX_NAME];
+  int size = source_name.size();
+  assert(size < MAX_NAME-10);
+  source_name.copy(fname,size);
+  fname[size] = 0;
+  
+  strcat(fname,".cnstr");
+
+  FILE *fp = fopen(fname,"r");
+  if (fp == NULL) {
+    printf("file %s listing constraints is missing\n",fname);
+    exit(100);
+  }
+
+  while (true) {
+    CCUBE Name;
+    bool neg;
+    bool ok = read_next_name(Name,neg,fp);
+    if (Name.size() == 0) break;   
+    if (neg)     Ci.Cgate_names[Name] = 1;
+    else Ci.Cgate_names[Name] = 0;
+  }
+
+} /* end of function read_constraints */
 /*=============================
 
        F I N D _ P R O P
@@ -33,7 +86,8 @@ bool ic3_enginet::find_prop(propertyt &Prop)
 {
 
   if (Ci.prop_ind >=  properties.size()) {
-    printf("the design has only %d properties\n",(int) properties.size());
+    std::cout << "file " << cmdline.args[0] << " specifies only ";
+    std::cout  << properties.size() << " properties\n";
     exit(100);
   }
   
@@ -85,7 +139,7 @@ void ic3_enginet::form_orig_names()
       }
 
       assert(ind < Nodes.size());
-      Gn[ind] = Sname; 
+      Gn[ind] = Sname;    
     }
   }
 

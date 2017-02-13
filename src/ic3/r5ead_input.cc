@@ -158,6 +158,8 @@ void CompInfo::assign_value()
 {
 
   // assign value to input literals
+
+  //  std::cout << "Constr_ilits-> " << Constr_ilits << std::endl;
   for (int i=0; i < Constr_ilits.size(); i++) {
     int lit = Constr_ilits[i];
     int var_ind = abs(lit)-1;
@@ -239,5 +241,16 @@ void CompInfo::form_constr_lits()
   =======================================*/
 bool CompInfo::check_constr_lits(int &fnd_lit,int lit)
 {
+
+  fnd_lit = lit;
+  bool found = (Init_clits.find(lit) != Init_clits.end());
+ 
+  if (!found)  {
+    if (lit & 1)    fnd_lit = lit-1;
+    else fnd_lit = lit +1;
+    found = (Init_clits.find(fnd_lit) != Init_clits.end());
+  }
+
+  return(found);
   
 } /* end of function check_constr_lits */

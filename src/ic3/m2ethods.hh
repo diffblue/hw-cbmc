@@ -157,10 +157,7 @@ void extr_cut_assgns1(CUBE &Assgns,CUBE &Vars,SatSolver &Slvr);
 void extr_cut_assgns2(CUBE &Assgns,CUBE &Lits,SatSolver &Slv);
 void fxd_ord_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried);
 int fxd_ord_lit(CUBE &Curr,SCUBE &Tried);
-void store_constraints();
 bool check_constr_lits(int &fnd_lit,int lit);
-void form_constr_lits();
-void add_constrs();
 void rem_constr_lits(CUBE &Lits1,CUBE &Lits0,SCUBE &Constr_lits);
 void add_constr_lits1(CUBE &St_cube);
 bool init_st_satisfy_constrs();
@@ -208,3 +205,5 @@ void gate_sort_inps_first();
 void gate_sort_outs_first();
 void rand_gate_order();
 void print_gate_sort_mode();
+
+
