@@ -6,7 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/expr_util.h>
 #include <util/arith_tools.h>
 #include <util/namespace.h>
 #include <util/config.h>
@@ -458,7 +457,7 @@ const symbolt &map_varst::add_array(symbolt &symbol)
   symbol_expr.set_identifier(p->name);
   
   symbol.value=
-    index_exprt(symbol_expr, gen_zero(index_type()), symbol.type);
+    index_exprt(symbol_expr, from_integer(0, index_type()), symbol.type);
 
   return *p;
 }
@@ -671,7 +670,7 @@ void map_varst::map_vars(const irep_idt &top_module)
     timeframe_symbol.type=index_type();
     timeframe_symbol.is_static_lifetime=true;
     timeframe_symbol.is_lvalue=true;
-    timeframe_symbol.value=gen_zero(index_type());
+    timeframe_symbol.value=from_integer(0, index_type());
 
     symbol_table.move(timeframe_symbol);
   }
