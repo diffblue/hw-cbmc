@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <cstdlib>
 #include <cstring>
 
-#include <util/expr_util.h>
+#include <util/arith_tools.h>
 #include <util/std_expr.h>
 
 #include "verilog_parser.h"
@@ -164,13 +164,13 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
   }
   else if(stack(range).id()==ID_indexed_part_select_plus)
   {
-    exprt offset=minus_exprt(stack(range).op1(), gen_one(integer_typet()));
+    exprt offset=minus_exprt(stack(range).op1(), from_integer(1, integer_typet()));
     stack(expr).copy_to_operands(stack(range).op0(),
                                  plus_exprt(stack(range).op0(), offset));
   }
   else if(stack(range).id()==ID_indexed_part_select_minus)
   {
-    exprt offset=minus_exprt(gen_one(integer_typet()), stack(range).op1());
+    exprt offset=minus_exprt(from_integer(1, integer_typet()), stack(range).op1());
     stack(expr).copy_to_operands(stack(range).op0(),
                                  plus_exprt(stack(range).op0(), offset));
   }
