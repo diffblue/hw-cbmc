@@ -12,8 +12,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <queue>
 
-#include "Solver.h"
-#include "SimpSolver.h"
+#include "minisat/core/Solver.h"
+#include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"

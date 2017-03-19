@@ -87,7 +87,7 @@ double IctMinisat::memUsed() {
     malloc_statistics_t t;
     malloc_zone_statistics(NULL, &t);
     return (double)t.max_size_in_use / (1024*1024); }
-double IctMinisat::memUsedPeak() { return memUsed(); }
+double IctMinisat::memUsedPeak(bool) { return memUsed(); }
 
 #else
 double IctMinisat::memUsed()     { return 0; }

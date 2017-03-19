@@ -16,7 +16,7 @@ vpath %.hh build_prob
 
 include ../config.inc
 
-MINISAT_INC = -Iminisat -Iminisat/minisat/core -Iminisat/minisat/mtl -Iminisat/minisat/simp 
+MINISAT_INC = -Iminisat
 
 INC_DIR = -I. -Ibuild_prob -Iseq_circ $(MINISAT_INC) -I$(CBMC)/src -I../ -I../ebmc -I../trans-netlist
 
@@ -75,7 +75,7 @@ libic3.a: $(OBJ)
 	ranlib $@
 
 make_minisat: 
-	cd minisat; make
+	cd minisat; make lr
 
 clean : clean_ic3 clean_minisat
 

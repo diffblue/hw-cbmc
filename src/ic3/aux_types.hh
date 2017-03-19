@@ -5,6 +5,9 @@ Module: Auxiliary types
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+
+#include <string>
+
 typedef std::pair<CUBE,int> StatePair;
 typedef std::pair<int,int> LenInd;
 typedef std::pair<float,int> ActInd;
