@@ -1,4 +1,4 @@
-SUBDIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3
+SUBDIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger
 
 all: hw-cbmc ebmc
 
@@ -10,7 +10,7 @@ $(SUBDIRS):
 
 # Dependencies
 
-ebmc: trans-word-level trans-netlist verilog vhdl smvlang ic3
+ebmc: trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger
 
 hw-cbmc: trans-word-level trans-netlist verilog vhdl smvlang
 

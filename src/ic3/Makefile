@@ -1,4 +1,4 @@
-CXXFLAGS = -std=c++0x  -Wno-literal-suffix -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3 $(INC_DIR)
+CXXFLAGS = -Wno-literal-suffix -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3 $(INC_DIR)
 CXFLAGS = $(INC_DIR)
 CFLAGS =   -O3  $(INC_DIR) 
 CXX = g++
@@ -16,9 +16,9 @@ vpath %.hh build_prob
 
 include ../config.inc
 
-MINISAT_INC = -Iminisat
+MINISAT_INC = minisat
 
-INC_DIR = -I. -Ibuild_prob -Iseq_circ $(MINISAT_INC) -I$(CBMC)/src -I../ -I../ebmc -I../trans-netlist
+INC_DIR = -I. -Ibuild_prob -Iseq_circ -I$(MINISAT_INC) -I$(CBMC)/src -I../ -I../ebmc -I../trans-netlist
 
 OBJ_DIR = .
 
