@@ -1,0 +1,6 @@
+CORE
+non_inductive.sv
+--ic3 --prop 0
+^property HOLDS$
+^verification is ok
+--
