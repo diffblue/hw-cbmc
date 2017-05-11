@@ -1,6 +1,8 @@
 %option nounput
 
 %{
+#include <util/pragma_wdeprecated_register.def>
+
 #ifdef _WIN32
 #define YY_NO_UNISTD_H
 static int isatty(int) { return 0; }
