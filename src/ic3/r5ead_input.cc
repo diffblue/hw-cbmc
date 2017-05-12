@@ -191,7 +191,6 @@ void CompInfo::form_constr_lits()
 
   ConstrGates::iterator pnt;
 
-  int count = 0;
   for (pnt = Constr_gates.begin(); pnt!= Constr_gates.end(); pnt++) {
     int gate_ind = pnt->first;
     char neg_lit = pnt->second.neg_lit;

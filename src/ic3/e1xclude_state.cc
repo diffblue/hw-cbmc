@@ -30,7 +30,6 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
   }
 
 
-  int count = 0;
   assert(Pr_queue.empty());
   Obl_table.clear();
 
@@ -207,7 +206,6 @@ bool CompInfo::find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Prv_st_cube,
   bool sat_form = check_sat2(Slvr,Assmps);
  
   
-  bool ok = true;
   if (sat_form) {
     CUBE St0;
     extr_cut_assgns1(St0,Pres_svars,Slvr);

@@ -58,7 +58,6 @@ void my_printf(const char *format,...)
 {
 
   va_list ap;
-  int i;
 
   va_start(ap,format); // n is the last parameter before the '...' 
                        // in the function header

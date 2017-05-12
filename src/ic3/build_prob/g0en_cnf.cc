@@ -96,7 +96,6 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
     if (short_version)
 // skip the gates that are shared by transition relation and out function
       if (G.flags.transition) continue; 
-    int var_ind = Gate_to_var[gate_ind]-1;
     switch (G.func_type)
       {case CONST:
 	  add_const_gate_cube(H,gate_ind,shift);
