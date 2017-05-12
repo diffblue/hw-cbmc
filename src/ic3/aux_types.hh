@@ -8,6 +8,14 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 #include <string>
 
+#ifndef UNUSED
+#ifdef _MSC_VER
+#define UNUSED
+#else
+#define UNUSED __attribute__((unused))
+#endif
+#endif
+
 typedef std::pair<CUBE,int> StatePair;
 typedef std::pair<int,int> LenInd;
 typedef std::pair<float,int> ActInd;
