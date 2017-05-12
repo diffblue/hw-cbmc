@@ -117,7 +117,7 @@ void ic3_enginet::form_neg_orig_name(CCUBE &Name,literalt &next_lit)
   int nlit = next_lit.get();
   
   Ci.Invs.insert(nlit-1);
-  bool ok = form_orig_name(Name,next_lit,true);
+  form_orig_name(Name,next_lit,true);
   Name.insert(Name.begin(),'n');
   
 

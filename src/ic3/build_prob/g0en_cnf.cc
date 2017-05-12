@@ -24,14 +24,9 @@ int debug_flag=0;
   G E N _ C N F S
 
   =====================*/
-void  CompInfo::gen_cnfs(char *fname,bool print_flag)
+void  CompInfo::gen_cnfs(const char *fname,bool print_flag)
 {  
-  int total_ngates = N->Gate_list.size();  
-  int shift = total_ngates - N->nlatches; // we subtract latches
- 
   assign_var_indexes();
-
-  
  
   char fname1[MAX_NAME];
 

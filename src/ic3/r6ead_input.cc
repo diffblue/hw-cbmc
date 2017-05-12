@@ -29,7 +29,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
       R E A D _ N E X T _ N A M E
 
   =================================*/
-bool read_next_name(CCUBE &Name,bool &neg,FILE *fp)
+void read_next_name(CCUBE &Name,bool &neg,FILE *fp)
 {
   neg = false;
   while (true) {
@@ -70,7 +70,7 @@ void ic3_enginet::read_constraints(const std::string &source_name)
   while (true) {
     CCUBE Name;
     bool neg;
-    bool ok = read_next_name(Name,neg,fp);
+    read_next_name(Name,neg,fp);
     if (Name.size() == 0) break;   
     if (neg)     Ci.Cgate_names[Name] = 1;
     else Ci.Cgate_names[Name] = 0;

@@ -39,8 +39,9 @@ void ic3_enginet::read_ebmc_input()
   assert(Ci.N->noutputs == 1);
   assert(Ci.N->nlatches > 0);
   
-  Ci.order_gates();  
-  Ci.gen_cnfs("",false);
+  Ci.order_gates();
+  std::string empty;
+  Ci.gen_cnfs(empty.c_str(), false);
  
 
   Ci.form_var_nums();
