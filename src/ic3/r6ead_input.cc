@@ -96,7 +96,9 @@ bool ic3_enginet::find_prop(propertyt &Prop)
     irep_idt Nm = p.name;
     short_name(Sn,Nm);
     int ind = stoi(Sn);
-    if (ind-1 == Ci.prop_ind) {
+    assert(ind>0 && "Property Index must be greater than 0");
+    size_t index=(size_t) ind;
+    if (index-1 == Ci.prop_ind) {
       Prop = p;
       return(true);
     }
@@ -115,9 +117,9 @@ void ic3_enginet::form_orig_names()
 {
 
   aigt::nodest &Nodes = netlist.nodes;
-  int max_lit = (Nodes.size() << 1)+1;
+  size_t max_lit = (Nodes.size() << 1)+1;
 
-  for (int i=0; i <= max_lit; i++) 
+  for (size_t i=0; i <= max_lit; i++) 
     Gn.push_back("");
 
   var_mapt &vm = netlist.var_map;
@@ -125,7 +127,7 @@ void ic3_enginet::form_orig_names()
       it!=vm.map.end(); it++)    {
     const var_mapt::vart &var=it->second; 
     if (var.is_wire()) continue;
-    for (int j=0; j < var.bits.size(); j++) {
+    for (size_t j=0; j < var.bits.size(); j++) {
       literalt l_c=var.bits[j].current;
       if (l_c.is_constant()) continue;
       unsigned ind = l_c.var_no();
@@ -134,7 +136,7 @@ void ic3_enginet::form_orig_names()
       short_name(Sname,Lname);
       if (var.bits.size() > 1) {
 	char buf[100];
-	sprintf(buf,"[%d]",j);
+	sprintf(buf,"[%zu]",j);
 	Sname += buf;
       }
 
@@ -155,14 +157,14 @@ void ic3_enginet::print_nodes()
 {
 
   aigt::nodest &Nodes = netlist.nodes;
-  for (int i=0; i <= Nodes.size(); i++) {  
+  for (size_t i=0; i <= Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];
     if (Nd.is_var()) {
-      printf("Nd%d: (var)\n",i);
+      printf("Nd%zu: (var)\n",i);
       continue;
     }
     
-    printf("Nd%d = ",i);
+    printf("Nd%zu = ",i);
     print_lit2(Nd.a.var_no(),Nd.a.sign());
     printf(" & ");
     print_lit2(Nd.b.var_no(),Nd.b.sign());

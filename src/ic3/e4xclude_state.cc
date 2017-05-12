@@ -190,14 +190,14 @@ void CompInfo::modif_ind_clause(CLAUSE &C1,CLAUSE &C)
 
   SCUBE Lits_Ist;
 
-  for (int i=0; i < Ist.size(); i++) {
+  for (size_t i=0; i < Ist.size(); i++) {
     CUBE &U = Ist[i];
     assert(U.size() == 1);
     Lits_Ist.insert(U[0]);
   }
   
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     if (Lits_Ist.find(C[i]) == Lits_Ist.end())
       continue;
     C1.push_back(C[i]);

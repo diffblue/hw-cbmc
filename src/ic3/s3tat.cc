@@ -132,7 +132,7 @@ void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode)
     break;
   case PART_SORT:
     printf("PART_SORT\n");
-    printf("    max_num_elems = %d\n",max_num_elems);
+    printf("    max_num_elems = %zu\n",max_num_elems);
     break;
   default:
     assert(false);
@@ -185,7 +185,7 @@ int CompInfo::init_ind_cls()
 {
 
   int count = 0;
-  for (int i=0; i < Ist.size(); i++) 
+  for (size_t i=0; i < Ist.size(); i++) 
     if (Clause_info[i].span > 0) count++;
 
   

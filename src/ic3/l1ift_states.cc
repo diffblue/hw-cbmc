@@ -25,7 +25,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::rem_constr_lits(CUBE &Lits1,CUBE &Lits0,SCUBE &Constr_lits)
 {
 
-  for (int i=0; i < Lits0.size(); i++) 
+  for (size_t i=0; i < Lits0.size(); i++) 
     if (Constr_lits.find(Lits0[i]) == Constr_lits.end())
       Lits1.push_back(Lits0[i]);
 

@@ -124,7 +124,7 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
  
  
   IctMinisat::Solver *Mst = Slvr.Mst;
-  for (int i=0; i < St.size(); i++) {
+  for (size_t i=0; i < St.size(); i++) {
     Mlit L = conv_to_mlit(St[i]);
     if (Mst->conflict.has(~L)) {
       St_cube.push_back(St[i]); 
@@ -147,15 +147,15 @@ void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
   C.push_back(-lit);
 
 
-  for (int i=0; i < St.size(); i++) {
-    int var_ind = abs(St[i])-1;
+  for (size_t i=0; i < St.size(); i++) {
+    UNUSED int var_ind = abs(St[i])-1;
     C.push_back(-St[i]);
   }
 
  
   // add literals constraining internal variables
 
-  for (int i=0; i < Tr_coi_lits.size(); i++) {
+  for (size_t i=0; i < Tr_coi_lits.size(); i++) {
     int lit = Tr_coi_lits[i];
     int var_ind = abs(lit)-1;
     assert (Var_info[var_ind].type == INTERN);
@@ -190,9 +190,9 @@ void CompInfo::extr_next_inps(CUBE &Inps,SatSolver &Slvr)
 
   MboolVec &S = Slvr.Mst->model;
 
-  for (int i=0; i < Inp_vars.size(); i++) {
-    int orig_var_ind = Inp_vars[i]-1;
-    int var_ind = orig_var_ind + max_num_vars0;
+  for (size_t i=0; i < Inp_vars.size(); i++) {
+    size_t orig_var_ind = Inp_vars[i]-1;
+    size_t var_ind = orig_var_ind + max_num_vars0;
     assert(var_ind < max_num_vars);
     if (S[var_ind] == Mtrue) Inps.push_back(orig_var_ind+1);
     else Inps.push_back(-(orig_var_ind+1));

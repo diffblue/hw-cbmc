@@ -32,7 +32,7 @@ void CompInfo::ci_init()
   Tmp_act0.assign(max_pres_svar,0);
   Tmp_act1.assign(max_pres_svar,0);
 
-  for (int i=0; i < Ist.size(); i++) 
+  for (size_t i=0; i < Ist.size(); i++) 
     add_fclause2(Ist[i],0,false);
  
 
@@ -150,14 +150,14 @@ void CompInfo::form_bad_states0(CNF &Bstates)
 
   // mark present state variables
 
-  for (int i=0; i < Pres_svars.size(); i++) {
+  for (size_t i=0; i < Pres_svars.size(); i++) {
     int var_ind = Pres_svars[i]-1;
     Table[var_ind] = marker; }
 
-  for (int i=0; i < Prop.size(); i++) {
+  for (size_t i=0; i < Prop.size(); i++) {
     CLAUSE &C = Prop[i];
     CLAUSE Res;
-    for (int j=0; j < C.size(); j++) {
+    for (size_t j=0; j < C.size(); j++) {
       int var_ind = abs(C[j])-1;
 
       // a present state variable
@@ -209,7 +209,7 @@ void CompInfo::form_cex()
   DNF Inp_trace;
   form_inp_trace(Inp_trace);
 
-  for (int i=0; i < Inp_trace.size(); i++) {
+  for (size_t i=0; i < Inp_trace.size(); i++) {
     MvecLits Assmps;
     add_assumps1(Assmps,Cex[i]);     
     add_assumps1(Assmps,Inp_trace[i]);
@@ -236,7 +236,7 @@ void CompInfo::form_init_st(CUBE &St_cube)
 
   array_to_set(S,St_cube);
 
-  for (int i=0; i < Ist.size(); i++)  {
+  for (size_t i=0; i < Ist.size(); i++)  {
     CLAUSE &U = Ist[i];
     assert(U.size() == 1);
     if (S.find(U[0]) == S.end())
@@ -249,7 +249,7 @@ void CompInfo::form_init_st(CUBE &St_cube)
   if (diff > 0) {
     SCUBE S1;
     array_to_set(S1,St_cube);
-    for (int i=0; i < Pres_svars.size(); i++) {
+    for (size_t i=0; i < Pres_svars.size(); i++) {
       int lit = Pres_svars[i];
       if (S1.find(lit) != S1.end()) continue;
       if (S1.find(-lit) != S1.end()) continue;

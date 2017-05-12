@@ -25,7 +25,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 ===========================================*/
 void CompInfo::form_inp_vars()
 {
-  for (int i=0; i < N->Inputs.size();i++) {
+  for (size_t i=0; i < N->Inputs.size();i++) {
     int gate_ind = N->Inputs[i];
     int var = Gate_to_var[gate_ind];      
     Inp_vars.push_back(var);
@@ -41,7 +41,7 @@ void CompInfo::form_inp_vars()
 ===============================================*/
 void CompInfo::form_pres_state_vars()
 {
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G = N->get_gate(i);
     if (G.gate_type != LATCH) continue;
     int var = Gate_to_var[i];      
@@ -59,7 +59,7 @@ void CompInfo::form_pres_state_vars()
 void CompInfo::form_next_state_vars()
 {
 
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
      Gate &G = N->get_gate(i);
       if (G.flags.feeds_latch == 0) continue;
       int var = Gate_to_var[i];      
@@ -79,7 +79,7 @@ void CompInfo::form_next_to_pres_conv()
 
   CUBE Pairs;
   
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G = N->get_gate(i);
     if (G.flags.feeds_latch == 0) continue;
     int next_var = Gate_to_var[i]; 
@@ -104,7 +104,7 @@ void CompInfo::form_pres_to_next_conv()
 
   CUBE Pairs;
   
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G = N->get_gate(i);
     if (G.flags.feeds_latch == 0) continue;
     int next_var = Gate_to_var[i]; 

@@ -30,13 +30,13 @@ int CompInfo::rem_redund_clauses()
   form_lit_arrays(Old_nums);
  
 
-  for (int i=0; i < Old_nums.size(); i++) {
+  for (size_t i=0; i < Old_nums.size(); i++) {
     int clause_ind = Old_nums[i];
     if (Clause_info[clause_ind].active == 0) continue;
     CUBE Subsumed;
     check_for_subsumed_clauses1(Subsumed,clause_ind);
     count += Subsumed.size();
-    for (int j=0; j < Subsumed.size(); j++) 
+    for (size_t j=0; j < Subsumed.size(); j++)
       remove_clause(Subsumed[j]);
   }
 
@@ -60,7 +60,7 @@ void CompInfo::form_lit_arrays(CUBE &Old_nums)
     int clause_ind = Old_nums[i];
     if (Clause_info[clause_ind].active == 0) continue;
     CLAUSE &C = F[clause_ind];
-    for (int j=0; j < C.size(); j++) {
+    for (size_t j=0; j < C.size(); j++) {
       int var_ind = abs(C[j])-1;
       if (C[j] < 0) Flits0[var_ind].push_back(clause_ind);
       else Flits1[var_ind].push_back(clause_ind);
@@ -80,13 +80,13 @@ void CompInfo::sort_in_length(CUBE &Old_nums)
   // form pairs
   std::vector <LenInd> V;
 
-  for (int i=0; i < F.size(); i++) {
+  for (size_t i=0; i < F.size(); i++) {
     V.push_back(std::make_pair(F[i].size(),i));
   }
 
   sort(V.begin(),V.end(),compare_len());
 
-  for (int i=0; i < V.size(); i++)
+  for (size_t i=0; i < V.size(); i++)
     Old_nums.push_back(V[i].second);
 
 } /* end of function sort_in_length */
@@ -121,7 +121,7 @@ void CompInfo::check_for_subsumed_clauses1(CUBE &Subsumed,int clause_ind0)
 
 
   CLAUSE &C = F[clause_ind0];
-  int span0 = Clause_info[clause_ind0].span;
+  size_t span0 = Clause_info[clause_ind0].span;
   int ind = find_best_ind2(C);
 
   CUBE *pClauses;
@@ -131,8 +131,8 @@ void CompInfo::check_for_subsumed_clauses1(CUBE &Subsumed,int clause_ind0)
   if (lit < 0) pClauses = &Flits0[-lit-1];
   else pClauses = &Flits1[lit-1];
 
-  int len = C.size();
-  for (int i=0; i < pClauses->size(); i++) {
+  size_t len = C.size();
+  for (size_t i=0; i < pClauses->size(); i++) {
     int clause_ind1 = (*pClauses)[i];
     if (Clause_info[clause_ind1].active == 0) continue;
     if (Clause_info[clause_ind1].span > span0) continue;
@@ -156,11 +156,11 @@ void CompInfo::check_for_subsumed_clauses1(CUBE &Subsumed,int clause_ind0)
 int CompInfo::find_best_ind2(CLAUSE &C)
 {
 
-  int min_size = F.size()+1;
+  size_t min_size = F.size()+1;
   int min_ind = -1;
 
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int lit = C[i];
     int var_ind = abs(lit)-1;
     if (lit < 0) {
@@ -189,7 +189,7 @@ void CompInfo::mark_literals(hsh_tbl &Ht,CLAUSE &C)
   int marker = htable_lits.marker;
   CUBE &Table = htable_lits.Table;
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int var_ind = abs(C[i])-1;
     if (C[i] < 0) Table[var_ind] = marker;
     else Table[var_ind+max_num_vars] = marker;

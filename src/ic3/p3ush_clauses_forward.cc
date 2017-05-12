@@ -25,7 +25,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::simplify_tf_solvers()
 {
 
-  for (int i=1; i < Time_frames.size(); i++)
+  for (size_t i=1; i < Time_frames.size(); i++)
     Time_frames[i].Slvr.Mst->simplify();
 
 } /* end of function simplify_tf_solvers */
@@ -72,7 +72,7 @@ void CompInfo::add_one_copy(int tf_ind,CLAUSE &C)
 void CompInfo::init_fields()
 {
 
-  for (int i=0; i < F.size(); i++) {
+  for (size_t i=0; i < F.size(); i++) {
     if (Clause_info[i].active == 0) continue;
     Clause_info[i].skip = 0;
   }

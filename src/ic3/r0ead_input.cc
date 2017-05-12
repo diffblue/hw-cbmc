@@ -112,7 +112,7 @@ void ic3_enginet::form_inputs()
       it!=vm.map.end(); it++)    {
     const var_mapt::vart &var=it->second;
     if (var.is_input() == false) continue;
-    for (int j=0; j < var.bits.size(); j++) {  
+    for (size_t j=0; j < var.bits.size(); j++) {  
       literalt lit =var.bits[j].current;
       int lit_val = lit.get();    
       CCUBE Name;
@@ -147,7 +147,7 @@ void form_table(CUBE &Table1,CUBE &Table0,int max_num_vars)
 {
   Table1.assign(max_num_vars,-1);
 
-  for (int i=0; i < Table0.size(); i++,i++) {
+  for (size_t i=0; i < Table0.size(); i++,i++) {
     int var_ind_from = Table0[i]-1;
     int var_ind_to = Table0[i+1]-1;
     assert(var_ind_from < max_num_vars);
@@ -180,7 +180,7 @@ void CompInfo::form_max_pres_svar() {
 
   int max = -1;
 
-  for (int i=0; i < Pres_svars.size();i++) 
+  for (size_t i=0; i < Pres_svars.size();i++) 
     if (Pres_svars[i] > max) max = Pres_svars[i];
 
   max_pres_svar = max;

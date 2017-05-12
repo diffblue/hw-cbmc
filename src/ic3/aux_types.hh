@@ -69,7 +69,7 @@ public:
   void hsh_init(int nelems);
   void clean();
   void add_elem(void);
-  int size();
+  size_t size();
   void started_using(void);
   void done_using(void);
 }; 
@@ -125,7 +125,7 @@ typedef std::priority_queue<PqElem,std::vector <PqElem>, pq_compare> PrQueue;
 
 struct ClauseInfo 
 {  
-  int  span;    // specifies the span of cube. If span = j, F_j is the latest
+  size_t  span;    // specifies the span of cube. If span = j, F_j is the latest
                 // formula where  the clause at hand is present
   unsigned active : 1; // is set to 0 if clause C=F[curr_ind] is strictly 
                        //subsumed by a clause obtained after pushing clause C 

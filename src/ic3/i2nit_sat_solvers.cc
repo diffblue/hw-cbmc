@@ -25,13 +25,13 @@ void CompInfo::add_tf0_clauses(SatSolver &Slvr)
 
   IctMinisat::SimpSolver *Sslvr = new IctMinisat::SimpSolver();
 
-  for (int i = 0; i < max_num_vars0; i++) {
-    IctMinisat::Var nv = Sslvr->newVar();    
+  for (size_t i = 0; i < max_num_vars0; i++) {
+    UNUSED IctMinisat::Var nv = Sslvr->newVar();
   }
 
   
   // freeze variables
-  for (int i=0; i < max_num_vars0; i++) {
+  for (size_t i=0; i < max_num_vars0; i++) {
     if (Var_info[i].type == INTERN) 
       if (Var_info[i].value == 2) continue;
     
@@ -71,7 +71,7 @@ void CompInfo::assign_var_type()
   array_to_set(Next_svars_set,Next_svars);
   array_to_set(Inp_vars_set,Inp_vars);
 
-  for (int i=0; i < Var_info.size(); i++) {
+  for (size_t i=0; i < Var_info.size(); i++) {
 
     if (Pres_svars_set.find(i+1) != Pres_svars_set.end()) {
       Var_info[i].type = PRES_ST;
@@ -129,7 +129,7 @@ void CompInfo::init_lbs_sat_solver()
   std::string Name = "Lbs_sat";
   init_sat_solver(Lbs_sat,max_num_vars0,Name);
 
-  for (int i=0; i < Prop.size()-1; i++) 
+  for (size_t i=0; i < Prop.size()-1; i++) 
     accept_new_clause(Lbs_sat,Prop[i]);
 
   CLAUSE U = Prop.back();
@@ -138,7 +138,7 @@ void CompInfo::init_lbs_sat_solver()
 
  // add literals constraining internal variables
 
-  for (int i=0; i < Fun_coi_lits.size(); i++) {
+  for (size_t i=0; i < Fun_coi_lits.size(); i++) {
     int lit = Fun_coi_lits[i];
     int var_ind = abs(lit)-1;
     assert (Var_info[var_ind].type == INTERN);
@@ -150,7 +150,7 @@ void CompInfo::init_lbs_sat_solver()
   // add constraints on comb. input and pres. state
   // variables
 
- for (int i=0; i < Constr_ilits.size(); i++) {
+ for (size_t i=0; i < Constr_ilits.size(); i++) {
     CLAUSE U1;
     U1.push_back(Constr_ilits[i]);
     accept_new_clause(Lbs_sat,U1);
@@ -200,7 +200,7 @@ void CompInfo::init_bst_sat_solver()
   accept_new_clauses(Bst_sat,Bad_states); // accept negation of property 
   
   CUBE &Clauses = Time_frames[tf_lind].Clauses;
-  for (int i=0; i < Clauses.size();i++) {
+  for (size_t i=0; i < Clauses.size();i++) {
     int clause_ind = Clauses[i];
     accept_new_clause(Bst_sat,F[clause_ind]);
   }

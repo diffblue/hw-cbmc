@@ -32,10 +32,10 @@ void fill_fanout_lists(Circuit *N)
 {
 
   GCUBE &Gate_list = N->Gate_list;
-  for (int i=0; i < Gate_list.size();i++) {
+  for (size_t i=0; i < Gate_list.size();i++) {
     Gate &G=Gate_list[i];
     // enumerate all the fanin nodes
-    for (int j=0; j < G.Fanin_list.size();j++) {
+    for (size_t j=0; j < G.Fanin_list.size();j++) {
       int k = G.Fanin_list[j];
       Gate &G1 = Gate_list[k]; // G1 is a fanin node of G
       // add numeric label of gate G to the fanout list of G1
@@ -67,7 +67,7 @@ void fill_fanout_lists(Circuit *N)
 void  check_fanout_free_inputs(Circuit *N)
 {CUBE &Inputs= N->Inputs;
 
-  for (int i=0; i < Inputs.size();i++) {
+  for (size_t i=0; i < Inputs.size();i++) {
     Gate &I =  N->Gate_list[Inputs[i]];
     if (I.Fanout_list.size() == 0) {
       std::cout << "input "; 
@@ -90,7 +90,7 @@ void  check_fanout_free_inputs(Circuit *N)
 void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt)
 { 
  
-  for (int i=0; i < Out_names.size();i++) {
+  for (size_t i=0; i < Out_names.size();i++) {
     CCUBE &name = Out_names[i];
     if (N->Pin_list.find(name) == N->Pin_list.end()) {
       std::cout << "false output "; 
@@ -114,7 +114,7 @@ void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt)
   // assign gate types to the rest of the gates
   //
 
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G =  N->Gate_list[i];
     if (G.gate_type != UNDEFINED)
       continue;
@@ -150,7 +150,7 @@ void set_output_function_flag(Circuit *N,CUBE &stack)
 
   if (G.gate_type == INPUT) return;
 
-  for (int i=0; i < G.ninputs; i++) {
+  for (size_t i=0; i < G.ninputs; i++) {
     int fanin_gate_ind = G.Fanin_list[i];
     stack.push_back(fanin_gate_ind);
     set_output_function_flag(N,stack);
@@ -179,7 +179,7 @@ void set_transition_flag(Circuit *N,CUBE &stack)
 
   if (G.gate_type == INPUT) return;
 
-  for (int i=0; i < G.ninputs; i++) {
+  for (size_t i=0; i < G.ninputs; i++) {
     int fanin_gate_ind = G.Fanin_list[i];
     stack.push_back(fanin_gate_ind);
     set_transition_flag(N,stack);
@@ -206,7 +206,7 @@ void set_trans_output_fun_flags(Circuit *N)
   // mark the transition gates
   assert(N->Latches.size() == N->nlatches);
   clear_labels(N); // we do not need to clear labels in each iteration
-  for (int i=0; i < N->Latches.size();i++)  {
+  for (size_t i=0; i < N->Latches.size();i++)  {
     stack.clear();
     stack.push_back(N->Latches[i]);
     set_transition_flag(N,stack);
@@ -215,7 +215,7 @@ void set_trans_output_fun_flags(Circuit *N)
   // mark the gates of the output relation
   assert(N->Outputs.size() == N->noutputs);
   clear_labels(N); // we do not need to clear labels in each iteration
-  for (int i=0; i < N->Outputs.size();i++) {
+  for (size_t i=0; i < N->Outputs.size();i++) {
     stack.clear();
     stack.push_back(N->Outputs[i]);
     set_output_function_flag(N,stack);
@@ -238,7 +238,7 @@ bool feeds_only_one_latch(Circuit *N,Gate &G)
 { int num_of_latches = 0;
   CUBE Latches;
 
-  for (int i=0; i < G.Fanout_list.size(); i++) {
+  for (size_t i=0; i < G.Fanout_list.size(); i++) {
     int gate_ind =  G.Fanout_list[i];
     Gate &G1 = N->get_gate(gate_ind);
     if (G1.gate_type == LATCH) {
@@ -251,7 +251,7 @@ bool feeds_only_one_latch(Circuit *N,Gate &G)
     printf("error when checking the fanout of the gate ");
     print_name1(G.Gate_name); printf("\n");
     printf("total number of latches is %d\n",num_of_latches);
-    for (int i=0; i < Latches.size(); i++) {
+    for (size_t i=0; i < Latches.size(); i++) {
       Gate &G1 = N->get_gate(Latches[i]);
       print_gate_name(G1);
       printf("\n");
@@ -272,7 +272,7 @@ bool feeds_only_one_latch(Circuit *N,Gate &G)
   =============================================*/
 void set_feeds_latch_flag(Circuit *N,bool ignore_errors,bool rem_dupl_opt)
 {
-  for (int i=0; i < N->Latches.size();i++)   { 
+  for (size_t i=0; i < N->Latches.size();i++)   { 
     int gate_ind = N->Latches[i];
     Gate &G = N->get_gate(gate_ind);
     int gate_ind1 = G.Fanin_list[0];

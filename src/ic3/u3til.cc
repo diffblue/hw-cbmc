@@ -55,7 +55,7 @@ void CompInfo::add_negated_assumps2(MvecLits &Assmps,CLAUSE &C,bool sort)
 void CompInfo::add_negated_assumps1(MvecLits &Assmps,CLAUSE &C)
 {
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int lit = C[i];
     if (lit < 0) Assmps.push(IctMinisat::mkLit(-lit-1,false));
     else Assmps.push(IctMinisat::mkLit(lit-1,true));
@@ -120,7 +120,7 @@ void CompInfo::add_assumps3(MvecLits &Assmps,CUBE &St)
 void CompInfo::add_assumps1(MvecLits &Assmps,CUBE &St)
 {
 
-  for (int i=0; i < St.size(); i++) {
+  for (size_t i=0; i < St.size(); i++) {
     int lit = St[i];
     if (lit < 0) Assmps.push(IctMinisat::mkLit(-lit-1,true));
     else Assmps.push(IctMinisat::mkLit(lit-1,false));
@@ -141,7 +141,7 @@ void CompInfo::sort_in_activity(CLAUSE &C1,CLAUSE &C,int sort_mode,bool reverse)
   //  form pairs
   std::vector <ActInd> V;
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     float act_value;
     int var_ind = abs(C[i])-1;
     if (sorted_objects == LITS) {
@@ -177,7 +177,7 @@ void CompInfo::sort_in_activity(CLAUSE &C1,CLAUSE &C,int sort_mode,bool reverse)
 void CompInfo::full_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V) {
 
   C1.assign(C.size(),0);
-  for (int i=0; i < V.size(); i++) {
+  for (size_t i=0; i < V.size(); i++) {
     int old_ind = V[i].second;
     C1[i] = C[old_ind];
   }

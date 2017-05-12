@@ -27,7 +27,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void finish_levels_from_outputs(Circuit *N)
 {
 
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G = N->Gate_list[i];
     if (G.level_from_outputs < 0)
       G.level_from_outputs = N->max_levels;	
@@ -44,7 +44,7 @@ void finish_levels_from_outputs(Circuit *N)
 void print_levels_from_outputs(Circuit *N)
 {
 
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G =  N->Gate_list[i];
     print_name1(G.Gate_name);
     printf(": %d\n",G.level_from_outputs);
@@ -74,7 +74,7 @@ int check_levels_of_outputs(Gate &G,Circuit *N,int &level,
   bool all_assigned = true;
   level = -1;
  
-  for (int i=0; i < Fanout_list.size();i++)
+  for (size_t i=0; i < Fanout_list.size();i++)
     {Gate &G1 = N->Gate_list[Fanout_list[i]];
 
       if (G1.gate_type != LATCH) all_latches = false;
@@ -174,8 +174,7 @@ void assign_levels_from_outputs(Circuit *N)
 {
   clear_labels(N); 
 
-  for (int i=0; i < N->Inputs.size();i++) {
-    Gate &G = N->get_gate(N->Inputs[i]);
+  for (size_t i=0; i < N->Inputs.size();i++) {
     if (assign_levels_from_outputs1(N,N->Inputs[i]) == 0) {
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 
@@ -185,8 +184,7 @@ void assign_levels_from_outputs(Circuit *N)
   }
 
  
-  for (int i=0; i < N->Latches.size();i++) {
-    Gate &G = N->get_gate(N->Latches[i]);
+  for (size_t i=0; i < N->Latches.size();i++) {
     if (assign_levels_from_outputs1(N,N->Latches[i]) == 0) {
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 
@@ -218,7 +216,7 @@ int check_levels_of_inputs(Gate &G,Circuit *N,int &level,
 { CUBE &Fanin_list = G.Fanin_list;
   bool all_assigned = true;
   level = -1;
-  for (int i=0; i < Fanin_list.size();i++) {
+  for (size_t i=0; i < Fanin_list.size();i++) {
     Gate &G1 = N->Gate_list[Fanin_list[i]];
     if (G1.level_from_inputs >= 0) {
       if ((G1.level_from_inputs > level) && (all_assigned))
@@ -268,8 +266,8 @@ int assign_levels_from_inputs1(Circuit *N,int out_num)
     if (level >= 0) {
       if (G.gate_type != LATCH) G.level_from_inputs = level + 1;    
       // level of G equals the maximum level of an input plus 1
-      stack.pop_back(); 
-      if (G.level_from_inputs > N->max_levels)
+      stack.pop_back();
+      if (G.level_from_inputs > (int) N->max_levels)
 	N->max_levels = G.level_from_inputs;
     }
   }
@@ -290,7 +288,7 @@ void assign_levels_from_inputs(Circuit *N)
 {
   clear_labels(N); 
 
-  for (int i=0; i < N->Outputs.size();i++)
+  for (size_t i=0; i < N->Outputs.size();i++)
     if (assign_levels_from_inputs1(N,N->Outputs[i]) == 0) {
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 
@@ -298,7 +296,7 @@ void assign_levels_from_inputs(Circuit *N)
       exit(1);
     }
 
-  for (int i=0; i < N->Latches.size();i++)
+  for (size_t i=0; i < N->Latches.size();i++)
     if (assign_levels_from_inputs1(N, N->Latches[i]) == 0) {
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 

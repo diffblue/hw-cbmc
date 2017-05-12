@@ -23,8 +23,8 @@ public:
                  // generate CNF formulas. For every input gate and latch
                  // Ordering[i] == i
  
-  int prop_ind; // specifies the index of the property to be checked 
-                // to be implemented for the integrated version
+  size_t prop_ind; // specifies the index of the property to be checked 
+                   // to be implemented for the integrated version
    
   CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to 
                     // the output of gate 'gate_ind'
@@ -84,8 +84,8 @@ public:
                   // relation
 
   CNF Simp_PrTr; //  Prop/Short_prop plus Tr after simplfication
-  int max_num_vars0; // max(max(num_ist_vars,num_bst_vars),num_tr_var)
-  int max_num_vars; // max_num_vars0 plus variables that take into account 
+  size_t max_num_vars0; // max(max(num_ist_vars,num_bst_vars),num_tr_var)
+  size_t max_num_vars; // max_num_vars0 plus variables that take into account 
                     // that property is specified in terms of present and
                     // next state variables
 
@@ -157,7 +157,7 @@ public:
   float factor; // specifies the current increment when choosing a literal 
   float max_act_val; // if the value of 'max_act_val' is accided the value 
                      // of 'factor' is scaled down
-  int max_num_elems; // used in the PART_SORT sorting mode
+  size_t max_num_elems; // used in the PART_SORT sorting mode
   
 
  // --------------- Parameters controlling algorithm's behavior
@@ -197,7 +197,7 @@ public:
                          // are sorted when looking for an inductive clause
   int gate_sort_mode; // value of this variable controls the ordering of
                       // gates of the circuit used to generate formulas
-  int max_coi_depth; // the maximum number of time frames unfolded when 
+  size_t max_coi_depth; // the maximum number of time frames unfolded when 
                      // computing the cone of influence
   bool ctg_flag; // if 'true' generalization based on computing counterexamples
                 //  to generalization is applied
@@ -250,7 +250,7 @@ public:
   // 
   //  to bridge ic3 and ebmc
 
-  void gen_cnfs(char *fname,bool print_flag);
+  void gen_cnfs(const char *fname,bool print_flag);
   void build_arrays();
   void form_max_pres_svar();
   void form_var_nums();

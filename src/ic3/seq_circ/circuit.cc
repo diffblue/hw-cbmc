@@ -24,7 +24,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void clear_labels(Circuit *N)
 {GCUBE &Gate_list = N->Gate_list;
 
-  for (int i=0; i < Gate_list.size();i++)
+  for (size_t i=0; i < Gate_list.size();i++)
     Gate_list[i].flags.label = 0;  
   
 } /* end of function clear_labels */

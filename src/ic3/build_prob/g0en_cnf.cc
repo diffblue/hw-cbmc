@@ -62,7 +62,7 @@ void  CompInfo::add_last_cube(DNF &F)
 {
   // find the output gate
   int gate_ind=-1;
-  for (int i=0; i < N->Gate_list.size(); i++) {
+  for (size_t i=0; i < N->Gate_list.size(); i++) {
     Gate &G =  N->Gate_list[i];
     if (G.flags.output == 1) {
       gate_ind = i;
@@ -85,9 +85,7 @@ void  CompInfo::add_last_cube(DNF &F)
   =========================*/
 void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
 {
-
-  int count = 0;
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     int gate_ind = Ordering[i];
     Gate &G =  N->Gate_list[gate_ind];
     if (G.gate_type == INPUT) continue;
@@ -137,7 +135,7 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
   ====================================================*/
 void  CompInfo::gen_initial_state_cubes()
 {
-  for (int i=0; i < N->Latches.size();i++) {
+  for (size_t i=0; i < N->Latches.size();i++) {
     int gate_ind = N->Latches[i];
     Gate &G = N->get_gate(gate_ind);
     assert(G.gate_type == LATCH);
@@ -199,7 +197,7 @@ void CompInfo::add_buffer_gate_cubes(DNF &F,int gate_ind,int shift)
   Gate &G = N->Gate_list[gate_ind];
 
 
-  for (int i=0; i < G.Fanin_list.size();i++) {
+  for (size_t i=0; i < G.Fanin_list.size();i++) {
     int gate_ind1 =  G.Fanin_list[i];
     int var_ind = Gate_to_var[gate_ind1];
     var_indexes.push_back(var_ind);

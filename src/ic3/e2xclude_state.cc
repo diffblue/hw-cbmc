@@ -105,14 +105,14 @@ bool CompInfo::corr_clause(CLAUSE &C)
   int marker = htable_lits.marker;
   CUBE &Table = htable_lits.Table;
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int var_ind = abs(C[i])-1;
     if (C[i] < 0) Table[var_ind] = marker;
     else Table[var_ind+max_num_vars] = marker;
   }
   
 
-  for (int i=0; i < Ist.size(); i++) {
+  for (size_t i=0; i < Ist.size(); i++) {
     CLAUSE &A = Ist[i];
     int var_ind = abs(A[0])-1;
     if ((Table[var_ind] == marker) && (A[0] < 0)) {
@@ -157,14 +157,14 @@ void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
   int marker = htable_lits.marker;
   CUBE &Table = htable_lits.Table;
 
-  for (int i=0; i < St.size(); i++) {
+  for (size_t i=0; i < St.size(); i++) {
     int var_ind = abs(St[i])-1;
     if (St[i] < 0) Table[var_ind] = marker;
     else Table[var_ind+max_num_vars] = marker;
   }
 
   int shift = 0;
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int var_ind = abs(C[i])-1;
     if ((Table[var_ind] == marker) && (C[i] < 0)) {
       shift++;

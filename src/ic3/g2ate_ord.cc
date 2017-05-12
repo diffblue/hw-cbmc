@@ -30,10 +30,11 @@ void CompInfo::gate_sort_outs_first()
 
   fill_up_levels(N,Level_gates);
 
-  for (int i=Level_gates.size()-1; i >= 0; i--) {
-    CUBE &Level = Level_gates[i];
+  const size_t gates=Level_gates.size();
+  for (size_t i=0; i < gates; i++) {
+    CUBE &Level = Level_gates[(gates-i)-1];
  
-    for (int j=0; j < Level.size();j++) 
+    for (size_t j=0; j < Level.size();j++) 
       Ordering.push_back(Level[j]);
       
   }
@@ -55,10 +56,10 @@ void CompInfo::gate_sort_inps_first()
 
   fill_up_levels(N,Level_gates);
 
-  for (int i=0; i < Level_gates.size(); i++) {
+  for (size_t i=0; i < Level_gates.size(); i++) {
     CUBE &Level = Level_gates[i];
  
-    for (int j=0; j < Level.size();j++) 
+    for (size_t j=0; j < Level.size();j++) 
       Ordering.push_back(Level[j]);
       
   }
@@ -74,19 +75,21 @@ void CompInfo::gate_sort_inps_first()
   =======================================*/
 void CompInfo::rand_gate_order()
 {
-  int count = N->Gate_list.size();
+  size_t count = N->Gate_list.size();
 
-  int shift = N->ninputs + N->nlatches;
-  int range = N->Gate_list.size() - shift;
+  size_t shift = N->ninputs + N->nlatches;
+  size_t range = N->Gate_list.size() - shift;
   init_gate_order();
   while (count-- > 0) {
-    int gate_ind1 = lrand48() % range;
-    int gate_ind2 = lrand48() % range;
-    if (gate_ind1 == gate_ind2) 
+    size_t gate_ind1 = lrand48() % range;
+    size_t gate_ind2 = lrand48() % range;
+    if (gate_ind1 == gate_ind2)
+    {
       if (gate_ind1 == 0) gate_ind2 = 1;
       else // gate_ind1 > 0
 	gate_ind2 = gate_ind1 - 1;
-    int copy = Ordering[gate_ind1];
+    }
+    size_t copy = Ordering[gate_ind1];
     Ordering[gate_ind1] = Ordering[gate_ind2];
     Ordering[gate_ind2] = copy;
   }
@@ -102,7 +105,7 @@ void CompInfo::rand_gate_order()
   =======================================*/
 void CompInfo::init_gate_order()
 {
-  for (int i=0; i < N->Gate_list.size(); i++) 
+  for (size_t i=0; i < N->Gate_list.size(); i++) 
     Ordering.push_back(i);
 
 } /* end of function init_gate_order */

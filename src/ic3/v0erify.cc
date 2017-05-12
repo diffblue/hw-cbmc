@@ -55,7 +55,7 @@ bool CompInfo::ver_invar(CNF &H,CUBE &Old_nums)
   accept_new_clauses(Gen_sat,H);
   accept_new_clauses(Gen_sat,Tr);
 
-  for (int i=0; i < Bad_states.size(); i++) 
+  for (size_t i=0; i < Bad_states.size(); i++) 
     accept_new_clause(Gen_sat,Bad_states[i]);
 
   bool sat_form = check_sat1(Gen_sat);
@@ -84,7 +84,7 @@ bool CompInfo::ver_invar(CNF &H,CUBE &Old_nums)
 bool CompInfo::ver_ind_clauses2(CNF &H,CUBE &Old_nums)
 {
  
-  for (int i=0; i < H.size(); i++) {
+  for (size_t i=0; i < H.size(); i++) {
     CLAUSE C;
     conv_to_next_state(C,H[i]);
     MvecLits Assmps;
@@ -115,9 +115,9 @@ void CompInfo::gen_form1(CNF &H,int k)
 {
   assert(k >= 0);
  
-  for (int i=0; i < F.size(); i++) {
+  for (size_t i=0; i < F.size(); i++) {
     if (Clause_info[i].active == 0) continue;
-    if (Clause_info[i].span < k) continue;
+    if (Clause_info[i].span < (size_t) k) continue;
     H.push_back(F[i]);
   }
 
@@ -195,7 +195,7 @@ void CompInfo::find_wrong_transition(CUBE &St0,CUBE &St1,SatSolver &Slvr)
 bool CompInfo::ver_ind_clauses1(CNF &H)
 {
  
-  for (int i=0; i < H.size(); i++) {
+  for (size_t i=0; i < H.size(); i++) {
 
     MvecLits Assmps;
     add_negated_assumps1(Assmps,H[i]);
@@ -203,7 +203,7 @@ bool CompInfo::ver_ind_clauses1(CNF &H)
     bool sat_form = check_sat2(Gen_sat,Assmps);
     if (sat_form) {
       printf("verification failed\n");  
-      printf("clause F[%d] excludes an initial state: ",i);
+      printf("clause F[%zu] excludes an initial state: ", i);
       std::cout << H[i] << std::endl;
       return(false);
     }

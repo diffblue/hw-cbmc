@@ -52,7 +52,7 @@ void CompInfo::form_property_gates(CUBE &Gates)
     Gates.push_back(gt_ind);
 
       
-    for (int i=0; i < G.Fanin_list.size();i++)  {
+    for (size_t i=0; i < G.Fanin_list.size();i++)  {
       int fanin_ind = G.Fanin_list[i];
       Buffer.push_back(fanin_ind);
     }
@@ -73,7 +73,7 @@ void find_latch(Circuit *N,Gate &G,int &latch_ind)
 {
   
 
-  for (int i=0; i < G.Fanout_list.size();i++) {
+  for (size_t i=0; i < G.Fanout_list.size();i++) {
     int gate_ind = G.Fanout_list[i];
     Gate &G1 = N->get_gate(gate_ind);
     if (G1.gate_type == LATCH) {
@@ -96,8 +96,7 @@ void CompInfo::assign_var_indexes()
 
   Gate_to_var.assign(N->Gate_list.size(),-1);
   int curr_index = 1;
-  for (int i=0; i < N->Gate_list.size();i++) {
-    Gate &G = N->get_gate(i);
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate_to_var[i]=curr_index++;
   }
 

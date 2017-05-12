@@ -160,9 +160,9 @@ void CompInfo::assign_value()
   // assign value to input literals
 
   //  std::cout << "Constr_ilits-> " << Constr_ilits << std::endl;
-  for (int i=0; i < Constr_ilits.size(); i++) {
+  for (size_t i=0; i < Constr_ilits.size(); i++) {
     int lit = Constr_ilits[i];
-    int var_ind = abs(lit)-1;
+    size_t var_ind = abs(lit)-1;
     assert(var_ind < max_num_vars);
     if (lit < 0) Var_info[var_ind].value = 0;
     else Var_info[var_ind].value = 1;
@@ -174,7 +174,7 @@ void CompInfo::assign_value()
 
   for (pnt = Constr_nilits.begin(); pnt != Constr_nilits.end(); pnt++) {
     int lit = *pnt;
-    int var_ind = abs(lit)-1;
+    size_t var_ind = abs(lit)-1;
     assert(var_ind < max_num_vars);
     if (lit < 0) Var_info[var_ind].value = 0;
     else Var_info[var_ind].value = 1;

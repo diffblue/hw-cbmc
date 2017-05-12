@@ -91,10 +91,10 @@ int correct_dnf(DNF &F)
 {CCUBE mark(F.size());
   int var;
 
-  for (int i=0; i < F.size();i++)
+  for (size_t i=0; i < F.size();i++)
     mark[i] = 0;
 
-  for (int i=0; i < F.size();i++) {
+  for (size_t i=0; i < F.size();i++) {
     CUBE &C= F[i];
     if (C.size() != 1)
       return(0);
@@ -120,10 +120,12 @@ int or_gate(Gate &G)
     return(0);
 
   if (F.size()!= 0)
+  {
     if (correct_dnf(F))
       return(1);
     else
       return(0);
+  }
  
   if (correct_dnf(R))
     return(1);
@@ -147,7 +149,7 @@ void finish_or_gate(Gate &G)
   // direct output
   DNF &F1=G.F;
   if (F1.size() > 0) {
-    for (int i=0; i < F1.size();i++)
+    for (size_t i=0; i < F1.size();i++)
       set_input_polarity(F1[i],G);
     G.Polarity.push_back(0); 
     return;
@@ -157,7 +159,7 @@ void finish_or_gate(Gate &G)
   
   DNF &R1= G.R;
   if (R1.size() > 0) {
-    for (int i=0; i < R1.size();i++)
+    for (size_t i=0; i < R1.size();i++)
       set_input_polarity(R1[i],G);
     G.Polarity.push_back(1); 
     return;
@@ -183,11 +185,12 @@ int and_gate(Gate &G)
     return(0);
 
   if (F.size()!= 0)
+  {
     if (F[0].size() == G.ninputs) // the only cube of F  has all the literals
       return(1);
     else
       return(0);
- 
+  }
   if (R[0].size() == G.ninputs) // the only cube of R has all the literals 
     return(1);
   else
@@ -213,7 +216,7 @@ void finish_and_gate(Gate &G)
   DNF &F1= G.F;
   if (F1.size() > 0) {
     CUBE &C = F1[0];
-      for (int i=0; i < C.size();i++)
+      for (size_t i=0; i < C.size();i++)
 	if (C[i] > 0)
 	  G.Polarity.push_back(0);
 	else
@@ -227,7 +230,7 @@ void finish_and_gate(Gate &G)
   DNF &R1= G.R;
   if (R1.size() > 0) {
     CUBE &C = R1[0];
-      for (int i=0; i < C.size();i++)
+      for (size_t i=0; i < C.size();i++)
 	if (C[i] > 0)
 	  G.Polarity.push_back(0);
 	else
@@ -250,7 +253,7 @@ bool truth_table(Gate &G)
 {
   DNF &F = G.F;
   
-  for (int i=0; i < F.size();i++)
+  for (size_t i=0; i < F.size();i++)
     if (F[i].size() != G.ninputs) return(false);  
 
   return(true);

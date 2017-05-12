@@ -166,7 +166,7 @@ bool CompInfo::gen_ind_clause(CLAUSE &Res,CUBE &St,int tf_ind,char st_descr)
 void CompInfo::add_new_clauses(SatSolver &Slvr,CUBE &Clauses)
 {
 
-  for (int i=0; i < Clauses.size(); i++)  {
+  for (size_t i=0; i < Clauses.size(); i++)  {
     int clause_ind = Clauses[i];
     assert(clause_ind >= 0);
     accept_new_clause(Slvr,F[clause_ind]);

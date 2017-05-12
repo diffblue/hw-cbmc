@@ -54,7 +54,7 @@ void hsh_tbl::change_marker(void)
   assert(!in_use);
   if (marker >= MAX_MARKER)
     {marker = 1;
-      for (int i=0; i < Table.size();i++)
+      for (size_t i=0; i < Table.size();i++)
 	Table[i] = 0;
       return;
     }
@@ -88,7 +88,7 @@ void hsh_tbl::hsh_init(int nelems)
 void hsh_tbl::clean()
 
 { marker = 1;
-  for (int i=0; i < Table.size(); i++)
+  for (size_t i=0; i < Table.size(); i++)
     Table[i]=0;
 } /* end of function clean */
 
@@ -115,7 +115,7 @@ void hsh_tbl::add_elem(void)
   The function allocates memory
   for one more elem.
   ========================================*/
-int hsh_tbl::size(void)
+size_t hsh_tbl::size(void)
 {
   return(Table.size());
 
