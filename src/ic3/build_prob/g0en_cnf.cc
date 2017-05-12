@@ -149,7 +149,7 @@ void  CompInfo::gen_initial_state_cubes()
       break;
     case 2:
       break;
-    defaul:
+    default:
       assert(false);
     }
     if (C.size() > 0) 
