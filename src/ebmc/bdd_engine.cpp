@@ -534,7 +534,7 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
           expr.id()==ID_sva_overlapped_implication)
   {
     assert(expr.operands().size()==2);
-    return !property2BDD(expr.op0()) | property2BDD(expr.op1());
+    return (!property2BDD(expr.op0())) | property2BDD(expr.op1());
   }
   else if(expr.id()==ID_and)
   {
@@ -556,7 +556,7 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
     
     // use sva_nexttime for this
     unary_predicate_exprt tmp(ID_sva_nexttime, expr.op1());
-    return !property2BDD(expr.op0()) | property2BDD(tmp);
+    return (!property2BDD(expr.op0())) | property2BDD(tmp);
   }
   else if(expr.id()==ID_sva_nexttime)
   {
