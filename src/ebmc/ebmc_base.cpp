@@ -480,7 +480,7 @@ int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
 {
   solver.set_message_handler(get_message_handler());
   
-  int result;
+  int result=0;
 
   try
   {
