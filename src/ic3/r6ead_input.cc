@@ -90,20 +90,18 @@ bool ic3_enginet::find_prop(propertyt &Prop)
     std::cout  << properties.size() << " properties\n";
     exit(100);
   }
-  
-  for(const auto &p : properties) {
-    std::string Sn;
-    irep_idt Nm = p.name;
-    short_name(Sn,Nm);
-    int ind = stoi(Sn);
-    if (ind-1 == Ci.prop_ind) {
+
+  size_t idx=0;
+  for(const auto &p : properties)
+  {
+    if(idx == Ci.prop_ind)
+    {
       Prop = p;
       return(true);
     }
+    idx++;
   }
-
-  return(false);
-
+  return false;
 } /* end of function find_prop */
 
 /*==================================
