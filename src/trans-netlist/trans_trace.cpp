@@ -123,7 +123,7 @@ void show_trans_state(
     std::cout << '\n';
   }
 
-  std::cout << std::endl;
+  std::cout << '\n' << std::flush;
 }
 
 /*******************************************************************\
