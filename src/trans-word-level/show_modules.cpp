@@ -42,7 +42,7 @@ void show_modules(
 
       switch(ui)
       {
-      case ui_message_handlert::XML_UI:
+      case ui_message_handlert::uit::XML_UI:
         {
           xmlt xml("module");
           xml.new_element("number").data=std::to_string(count); // will go away
@@ -67,7 +67,7 @@ void show_modules(
   
         break;
       
-      case ui_message_handlert::PLAIN:
+      case ui_message_handlert::uit::PLAIN:
         std::cout << "Module " << count << ":" << std::endl;
 
         std::cout << "  Location:   " << symbol.location << std::endl;

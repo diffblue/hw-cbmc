@@ -214,7 +214,7 @@ void show_trans_trace(
 {
   switch(ui)
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     {
       unsigned l=trace.get_min_failing_timeframe();
 
@@ -223,7 +223,7 @@ void show_trans_trace(
     }
     break;
     
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
     {
       xmlt xml;
       
