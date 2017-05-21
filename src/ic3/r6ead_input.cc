@@ -92,9 +92,8 @@ bool ic3_enginet::find_prop(propertyt &Prop)
   }
   
   for(const auto &p : properties) {
-    std::string Sn;
     irep_idt Nm = p.name;
-    short_name(Sn,Nm);
+    std::string Sn = short_name(Nm);
     int ind = stoi(Sn);
     assert(ind>0 && "Property Index must be greater than 0");
     size_t index=(size_t) ind;
@@ -131,8 +130,7 @@ void ic3_enginet::form_orig_names()
       if (l_c.is_constant()) continue;
       unsigned ind = l_c.var_no();
       irep_idt Lname = it->first;
-      std::string Sname;
-      short_name(Sname,Lname);
+      std::string Sname = short_name(Lname);
       if (var.bits.size() > 1) {
 	char buf[100];
 	sprintf(buf,"[%zu]",j);
@@ -205,13 +203,17 @@ void ic3_enginet::print_lit2(unsigned var,bool sign)
        S H O R T _ N A M E
 
   ==============================*/
-void short_name(std::string &Sname, const irep_idt &Lname)
-{
 
+std::string short_name(const irep_idt &Lname)
+{
+  std::string Sname;
+  
   for (int i=Lname.size()-1; i >= 0; i--) {
     if (Lname[i] == '.') break;
     Sname.push_back(Lname[i]);
   }
   std::reverse(Sname.begin(),Sname.end());
+  
+  return Sname;
 } /* end of function short_name */
 
