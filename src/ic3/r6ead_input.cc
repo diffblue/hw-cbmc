@@ -205,7 +205,7 @@ void ic3_enginet::print_lit2(unsigned var,bool sign)
        S H O R T _ N A M E
 
   ==============================*/
-void short_name(std::string &Sname,irep_idt &Lname)
+void short_name(std::string &Sname, const irep_idt &Lname)
 {
 
   for (int i=Lname.size()-1; i >= 0; i--) {

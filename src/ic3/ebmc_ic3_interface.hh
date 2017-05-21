@@ -61,4 +61,4 @@ protected:
 
 };
 //
-void short_name(std::string &Sname,irep_idt &Lname);
+void short_name(std::string &Sname, const irep_idt &Lname);
