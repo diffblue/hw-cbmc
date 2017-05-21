@@ -1,5 +1,5 @@
 
-CXXFLAGS = -std=c++0x -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3 $(INC_DIR)
+CXXFLAGS = -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3 $(INC_DIR)
 
 CXFLAGS = $(INC_DIR)
 CFLAGS =   -O3  $(INC_DIR) 
@@ -18,7 +18,7 @@ include ../config.inc
 
 MINISAT_INC = minisat
 
-INC_DIR = -I . -I build_prob -I seq_circ -I $(MINISAT_INC) -I $(CBMC)/src -I ../ -I ../ebmc -I ../trans-netlist
+INC_DIR = -I . -I build_prob -I seq_circ -I $(MINISAT_INC) -I $(CBMC)/src -I ../
 
 OBJ_DIR = .
 

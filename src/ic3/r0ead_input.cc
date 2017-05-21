@@ -18,7 +18,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 
-#include "ebmc_base.h"
+#include <ebmc/ebmc_base.h>
 #include <util/cmdline.h>
 #include "ebmc_ic3_interface.hh"
 

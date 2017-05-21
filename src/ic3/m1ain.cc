@@ -11,7 +11,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
-#include "ebmc_base.h"
+#include <ebmc/ebmc_base.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
