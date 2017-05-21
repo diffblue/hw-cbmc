@@ -47,7 +47,7 @@ void CompInfo::gen_unit_clauses(IctMinisat::SimpSolver *Sslvr,CNF &Uclauses)
 bool CompInfo::ext_clause(CLAUSE &C)
 {
 
-  for (int i=0; i < C.size(); i++) 
+  for (size_t i=0; i < C.size(); i++) 
     if (Var_info[abs(C[i])-1].type == INTERN) 
       return(false); // clause contains an internal variable
 
@@ -97,10 +97,10 @@ void CompInfo::copy_simplified_form(IctMinisat::SimpSolver *Sslvr,
     Simp_PrTr.push_back(C);
   }
 
-  for (int i=0; i < Ext_clauses.size(); i++)
+  for (size_t i=0; i < Ext_clauses.size(); i++)
     Simp_PrTr.push_back(Ext_clauses[i]);
 
-  for (int i=0; i < Uclauses.size(); i++)
+  for (size_t i=0; i < Uclauses.size(); i++)
     Simp_PrTr.push_back(Uclauses[i]);
 
 } /* end of function copy_simplified_form */
@@ -117,12 +117,12 @@ void CompInfo::add_tf1_clauses(SatSolver &Slvr)
 
   IctMinisat::SimpSolver *Sslvr = new IctMinisat::SimpSolver();
 
-  for (int i = 0; i < max_num_vars0; i++) {
-    IctMinisat::Var nv = Sslvr->newVar();    
+  for (size_t i = 0; i < max_num_vars0; i++) {
+    UNUSED IctMinisat::Var nv = Sslvr->newVar();    
   }
 
   // freeze variables
-  for (int i=0; i < max_num_vars0; i++) {
+  for (size_t i=0; i < max_num_vars0; i++) {
     if (Var_info[i].type == INTERN) 
       if (Var_info[i].value == 2) continue;
     
@@ -156,7 +156,7 @@ void CompInfo::add_tf1_clauses(SatSolver &Slvr)
   =============================*/
 void CompInfo::load_clauses1(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,CNF &A)
 {
-  for (int i=0; i < A.size(); i++) {
+  for (size_t i=0; i < A.size(); i++) {
     CLAUSE &C = A[i];
     if (ext_clause(C)) {
       Ext_clauses.push_back(C);
@@ -177,7 +177,7 @@ void CompInfo::load_clauses1(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,CNF 
   ===============================*/
 void CompInfo::conv_to_mclause(TrivMclause &A, CLAUSE &C) {
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     if (C[i] > 0) A.push(IctMinisat::mkLit(C[i]-1,false));
     else A.push(IctMinisat::mkLit(-C[i]-1,true));
 

@@ -34,12 +34,12 @@ void print_blif2(FILE *fp,Circuit *N)
  
   //  print out latches
   CUBE &Latches = N->Latches;
-  for (int i=0; i < Latches.size(); i++)  {
+  for (size_t i=0; i < Latches.size(); i++)  {
     Gate &G = N->get_gate(Latches[i]);
     print_latch(fp,N,G);
   }
  
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G = N->get_gate(i);
     switch (G.gate_type)
       {case INPUT: 

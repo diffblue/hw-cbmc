@@ -25,7 +25,7 @@ void CompInfo::shorten_clause(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr,
                               int rec_depth)
 {
 
-  assert(curr_tf < Time_frames.size());
+  assert(curr_tf>=0 && (size_t) curr_tf < Time_frames.size());
   CLAUSE B0 = C0;
   
   while (true) {
@@ -54,7 +54,7 @@ int CompInfo::add_missing_lits(CLAUSE &C,CLAUSE &B)
   array_to_set(S,C);
 
   int count = 0;
-  for (int i=0; i < B.size(); i++) 
+  for (size_t i=0; i < B.size(); i++) 
     if (S.find(B[i]) == S.end()) {
 	C.push_back(B[i]);
 	count++;
@@ -128,13 +128,13 @@ void CompInfo::find_avail_lits(CUBE &Avail_lits,CLAUSE &C)
 {
 
   SCUBE S;
-  for (int i=0; i < Ist.size(); i++) {
+  for (size_t i=0; i < Ist.size(); i++) {
     assert(Ist[i].size() == 1);
     CLAUSE &U = Ist[i];
     S.insert(U[0]);
   }
 
-  for (int i=0; i < C.size(); i++) 
+  for (size_t i=0; i < C.size(); i++) 
     if (S.find(C[i]) != S.end())
       Avail_lits.push_back(C[i]);
 
@@ -154,13 +154,12 @@ void CompInfo::compos_short(CLAUSE &C,CLAUSE &C0,int curr_tf,char st_descr)
 {
 
   
-  assert(curr_tf < Time_frames.size());
   assert(curr_tf >= 0);
-  int num_tries = 0;
+  assert((size_t) curr_tf < Time_frames.size());
+  size_t num_tries = 0;
   C = C0;
 
-
-  int max_num_tries = 3;
+  size_t max_num_tries = 3;
 
   CUBE Avail_lits;
   find_avail_lits(Avail_lits,C0); 

@@ -47,10 +47,10 @@ void CompInfo::fprint_cex1()
   FILE *fp = fopen(fname,"w");
   assert(fp != NULL);
 
-  for (int i=0; i < Cex.size(); i++) {
-    fprintf(fp,"S%d: ",i);
+  for (size_t i=0; i < Cex.size(); i++) {
+    fprintf(fp,"S%zu: ",i);
     CUBE &C = Cex[i];
-    for (int k=0; k < C.size(); k++) {
+    for (size_t k=0; k < C.size(); k++) {
       if (k!=0) fprintf(fp," ");
       if (C[k] > 0) fprintf(fp," ");
       fprintf(fp,"%d",C[k]);
@@ -101,7 +101,7 @@ void CompInfo::print_fclauses()
 
   CNF Res;
 
-  for (int i=Ist.size()-1; i < F.size(); i++) {
+  for (size_t i=Ist.size()-1; i < F.size(); i++) {
     if (Clause_info[i].active == 0) continue;
     Res.push_back(F[i]);
   }

@@ -32,12 +32,12 @@ void CompInfo::form_spec_simp_pr_tr(SatSolver &Slvr)
 
  IctMinisat::SimpSolver *Sslvr = new IctMinisat::SimpSolver();
 
-  for (int i = 0; i < max_num_vars0; i++) {
-    IctMinisat::Var nv = Sslvr->newVar();    
+  for (size_t i = 0; i < max_num_vars0; i++) {
+    UNUSED IctMinisat::Var nv = Sslvr->newVar();
   }
 
   // freeze variables
-  for (int i=0; i < max_num_vars0; i++) {
+  for (size_t i=0; i < max_num_vars0; i++) {
     if (Var_info[i].type == INTERN) 
       if (Var_info[i].value == 2) continue;
     

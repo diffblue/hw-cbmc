@@ -31,7 +31,7 @@ void print_blif(FILE *fp,Circuit *N)
   circ_print_header(fp,N);
  //  print out the gates
 
-  for (int i=0; i < N->Gate_list.size();i++)
+  for (size_t i=0; i < N->Gate_list.size();i++)
    {Gate &G = N->Gate_list[i];
      switch (G.gate_type)
        {case INPUT: 
@@ -79,7 +79,7 @@ void print_latch(FILE *fp,Circuit *N,Gate &G)
 void print_names(FILE *fp,Circuit *N,CUBE &gates)
 {int count=0;
 
- for (int i=0; i < gates.size();i++)
+ for (size_t i=0; i < gates.size();i++)
    {count++;
     Gate &G =  N->Gate_list[gates[i]];
     fprint_name(fp,G.Gate_name);
@@ -106,13 +106,13 @@ void print_cube(FILE *fp,CUBE &C,int ninputs)
  for (int i=0; i < ninputs; i++)
    L.push_back(2);
 
- for (int i=0; i < C.size();i++)
+ for (size_t i=0; i < C.size();i++)
    if (C[i] < 0)
      L[(-1*C[i])-1]=0;
    else
      L[C[i]-1]=1;
     
- for (int i=0; i < L.size();i++)
+ for (size_t i=0; i < L.size();i++)
    {switch (L[i])
      {case 0:
         fprintf(fp,"0");
@@ -156,12 +156,12 @@ void print_gate(FILE *fp,Circuit *N,Gate &G)
 
  // print the cubes of the ON-set
 
- for (int i=0; i < G.F.size();i++) {
+ for (size_t i=0; i < G.F.size();i++) {
    print_cube(fp,G.F[i],G.ninputs);
    fprintf(fp," 1\n");
  }
  // print the cubes of the OFF-set
- for (int i=0; i < G.R.size();i++) {
+ for (size_t i=0; i < G.R.size();i++) {
    print_cube(fp,G.R[i],G.ninputs);
    fprintf(fp," 0\n");
  }   

@@ -25,7 +25,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ======================================*/
 void CompInfo::mark_constr_gates(CUBE &Gates,bool tran_flag,bool fun_flag)
 {
-  for (int i=0; i < Gates.size(); i++) {
+  for (size_t i=0; i < Gates.size(); i++) {
     int gate_ind = Gates[i];
     Gate &G = N->get_gate(gate_ind);
     if (tran_flag) G.flags.tran_constr = 1;
@@ -74,12 +74,12 @@ void CompInfo::gen_constr_coi(CUBE &Gates,bool &tran_flag,bool &fun_flag,
     Gates.push_back(gate_ind);    
 
     // add fanin gates to the stack
-    for (int i=0; i < G.Fanin_list.size(); i++) 
+    for (size_t i=0; i < G.Fanin_list.size(); i++) 
       Stack.push_back(G.Fanin_list[i]);
   }
 
   // remove label of Labelled
-  for (int i=0; i < Labelled.size(); i++) {
+  for (size_t i=0; i < Labelled.size(); i++) {
     Gate &G = N->get_gate(Labelled[i]);
     G.flags.label = 0;
   }

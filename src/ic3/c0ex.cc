@@ -148,7 +148,7 @@ void CompInfo::form_one_state_cex(SatSolver &Slvr)
   ====================================*/
 void CompInfo::add_neg_prop(SatSolver &Slvr)
 {
-  for (int i=0; i < Prop.size()-1; i++) {
+  for (size_t i=0; i < Prop.size()-1; i++) {
     accept_new_clause(Slvr,Prop[i]);
   }
   CLAUSE C = Prop.back();

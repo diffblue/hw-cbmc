@@ -86,7 +86,7 @@ void ic3_enginet::form_latched_gates()
     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
       continue;
 
-    for (int j=0; j < var.bits.size(); j++) {
+    for (size_t j=0; j < var.bits.size(); j++) {
       literalt lit =var.bits[j].current;
       Ci.Lats.insert(lit.get());
       CCUBE Latch_name;
@@ -101,7 +101,7 @@ void ic3_enginet::form_latched_gates()
     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
       continue;
 
-    for (int j=0; j < var.bits.size(); j++) {
+    for (size_t j=0; j < var.bits.size(); j++) {
       literalt lit =var.bits[j].current;
       int init_val = Latch_val[lit.var_no()];
       literalt next_lit = var.bits[j].next;
@@ -230,11 +230,8 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches, int init_val,
 void conv_to_vect(CCUBE &Name1,const char *Name0)
 {
   Name1.clear();
-  for (int i=0; ;i++) {
-    if (Name0[i] == 0) break;
+  for (size_t i=0; Name0[i]!=0; i++)
     Name1.push_back(Name0[i]);
-  }
-
 } /* end of function conv_to_vect */
 
 /*===============================
@@ -245,7 +242,7 @@ void conv_to_vect(CCUBE &Name1,const char *Name0)
 void conv_to_vect(CCUBE &Name1,std::string &Name0)
 {
   Name1.clear();
-  for (int i=0; i < Name0.size() ;i++) 
+  for (size_t i=0; i < Name0.size(); i++) 
     Name1.push_back(Name0[i]);
   
 

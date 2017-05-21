@@ -147,7 +147,6 @@ void CompInfo::add_time_frame()
   Time_frames.push_back(Tf);
 
   init_time_frame_solver(Time_frames.size()-1); 
-  int ind = Time_frames.size()-1;
 
 } /* end of function add_time_frame */
 

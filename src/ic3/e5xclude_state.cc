@@ -46,14 +46,14 @@ bool CompInfo::adjust_clause2(CLAUSE &C,CUBE &St_cube,SCUBE &Failed_lits)
   int marker = htable_lits.marker;
   CUBE &Table = htable_lits.Table;
 
-  for (int i=0; i < St_cube.size(); i++) {
+  for (size_t i=0; i < St_cube.size(); i++) {
     int var_ind = abs(St_cube[i])-1;
     if (St_cube[i] < 0) Table[var_ind] = marker;
     else Table[var_ind+max_num_vars] = marker;
   }
 
   int shift = 0;
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int var_ind = abs(C[i])-1;
     if ((Table[var_ind+max_num_vars] == marker) && (C[i] < 0)) {
       C[i-shift] = C[i]; // value assigned to 'var_ind+1'  of 'St_cube' 
@@ -226,7 +226,7 @@ bool CompInfo::subsumes(CLAUSE &C,hsh_tbl &Ht)
   int marker = Ht.marker;
   CUBE &Table = Ht.Table;
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int var_ind = abs(C[i])-1;
     if (C[i] < 0) {
       if (Table[var_ind] != marker) 

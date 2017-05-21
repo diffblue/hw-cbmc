@@ -26,7 +26,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::fxd_ord_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried)
 {
 
-  for (int i=0; i < Avail_lits.size(); i++) {
+  for (size_t i=0; i < Avail_lits.size(); i++) {
     int lit = Avail_lits[i];
     if (Tried.find(lit) == Tried.end()) {
       B.push_back(lit);
@@ -46,7 +46,7 @@ void CompInfo::fxd_ord_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried)
 int CompInfo::fxd_ord_lit(CUBE &Curr,SCUBE &Tried)
 {
 
-  for (int i=0; i < Curr.size(); i++) {
+  for (size_t i=0; i < Curr.size(); i++) {
     int lit = Curr[i];
     if (Tried.find(lit) == Tried.end())
       return(lit);

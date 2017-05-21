@@ -93,7 +93,7 @@ void print_set(SCUBE &s)
 
   ==========================*/
 void print_cube(CUBE &C) {
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     if (i > 0) printf(" ");
     printf("%d",C[i]);
   }
@@ -108,7 +108,7 @@ void print_cube(CUBE &C) {
   ================================*/
 void print_cube(CCUBE &C)
 {
-  for (int i=0; i < C.size(); i++)
+  for (size_t i=0; i < C.size(); i++)
     printf("%d ",C[i]);
 
   printf("\n");
@@ -121,7 +121,7 @@ void print_cube(CCUBE &C)
   ===========================*/
 void print_cube(FILE *fp,CCUBE &C)
 {
-  for (int i=0; i < C.size(); i++)
+  for (size_t i=0; i < C.size(); i++)
     fprintf(fp,"%d ",C[i]);
 
   fprintf(fp,"\n");
@@ -134,7 +134,7 @@ void print_cube(FILE *fp,CCUBE &C)
   ===========================*/
 void print_cube(FILE *fp,CUBE &C)
 {
-  for (int i=0; i < C.size(); i++)
+  for (size_t i=0; i < C.size(); i++)
     fprintf(fp,"%d ",C[i]);
 
 }/* end of function print_cube */
@@ -207,7 +207,7 @@ void print_dnf(DNF &D,CUBE &Cube_nums)
 
 {
   printf("p cnf %d %d\n",find_max_var(D),(int) Cube_nums.size());
-  for (int i = 0; i < Cube_nums.size();i++)
+  for (size_t i = 0; i < Cube_nums.size();i++)
     print_cube(D[Cube_nums[i]]);
 } /* end of function print_dnf */
 
@@ -224,7 +224,7 @@ void print_dnf(DNF &D,CUBE &Cube_nums)
 void print_dnf1(DNF &D,CCUBE &Active_cubes)
 {
 
-  for (int i = 0; i < D.size();i++)
+  for (size_t i = 0; i < D.size();i++)
     if (Active_cubes[i]) print_cube(D[i]);
     
 } /* end of function print_dnf1 */
@@ -240,7 +240,7 @@ void print_dnf1(DNF &D,CCUBE &Active_cubes)
 void print_dnf(DNF &D,FILE *fp)
 {
   fprintf(fp,"p cnf %d %d\n",find_max_var(D),(int) D.size());
-  for (int i = 0; i < D.size();i++)
+  for (size_t i = 0; i < D.size();i++)
     fprint_cube(fp,D[i]);
  
 } /* end of function print_dnf */
@@ -299,7 +299,7 @@ void print_dnf(DNF &D,int nvars,char *fname)
     }
    
   fprintf(fp,"p cnf %d %d\n",nvars,(int) D.size());
-  for (int i = 0; i < D.size();i++)
+  for (size_t i = 0; i < D.size();i++)
     fprint_cube(fp,D[i]);
   fclose(fp);
 } /* end of function print_dnf */
@@ -315,7 +315,7 @@ void print_dnf(DNF &D,int nvars,char *fname)
 void print_dnf(DNF &D) {
 
   printf("p cnf %d %d\n",find_max_var(D),(int) D.size());
-  for (int i = 0; i < D.size();i++)
+  for (size_t i = 0; i < D.size();i++)
     print_cube(D[i]);
 } /* end of function print_dnf */
 
@@ -347,7 +347,7 @@ void print_dnf(DNF &D,int start,int finish) {
 void print_dnf(DNF &D,unsigned int threshold)
 {
   printf("p cnf %d %d\n",find_max_var(D),(int) D.size());
-  for (int i = 0; i < D.size();i++)
+  for (size_t i = 0; i < D.size();i++)
     if (D[i].size() <= threshold)
       print_cube(D[i]);
 
@@ -362,8 +362,9 @@ void print_dnf(DNF &D,unsigned int threshold)
   prints cubes in the reverse order
   ==================================*/
 void print_dnf1(DNF &D) {
-  for (int i = D.size()-1; i >= 0;i--)
-    print_cube(D[i]);
+  size_t D_size=D.size();
+  for (size_t i = 0; i < D_size; i++)
+    print_cube(D[D_size-i-1]);
 } /* end of function print_dnf1 */
 
 /*=============================
@@ -377,7 +378,7 @@ void print_dnf2(DNF &D,int start_num)
 
 {
   printf("p cnf %d %d\n",find_max_var(D),(int) D.size());
-  for (int i = 0; i < D.size();i++) {
+  for (size_t i = 0; i < D.size();i++) {
     std::cout << start_num+i << "/ ";
     print_cube(D[i]);
   }
@@ -393,14 +394,13 @@ void print_dnf2(DNF &D,int start_num)
 void print_dnf3(DNF &D,char *fname,int start_num)
 
 {CUBE cube;
-  unsigned int i;
 
   FILE *fp = fopen(fname,"w");
   assert(fp != NULL);
 
   fprintf(fp,"p cnf %d %d\n",find_max_var(D),(int) D.size());
-  for (i = 0; i < D.size();i++)   {
-    fprintf(fp,"%d/ ",start_num+i);
+  for (size_t i = 0; i < D.size();i++)   {
+    fprintf(fp,"%zu/ ", start_num+i);
     fprint_cube(fp,D[i]);
   }
   fclose(fp);
@@ -414,7 +414,7 @@ void print_dnf3(DNF &D,char *fname,int start_num)
 
   ==========================*/
 void fprint_cube(FILE *fp,CUBE &C) {
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     if (i > 0) fprintf(fp," ");
     fprintf(fp,"%d",C[i]);
   }
@@ -429,8 +429,8 @@ void fprint_cube(FILE *fp,CUBE &C) {
   add DNF F to F1
   =====================*/
 void add_dnf(DNF &F1,DNF &F)
-{int i;
-  for (i = 0; i < F.size();i++)
+{
+  for (size_t i = 0; i < F.size();i++)
     F1.push_back(F[i]);
 } /* end of function add_dnf */
 
@@ -495,7 +495,7 @@ void print_dnf(DNF &D,char *fname,int num_vars)
   }
    
   fprintf(fp,"p cnf %d %d\n",num_vars,(int) D.size());
-  for (int i = 0; i < D.size();i++)
+  for (size_t i = 0; i < D.size();i++)
     fprint_cube(fp,D[i]);
 
   fclose(fp);
@@ -537,7 +537,7 @@ void print_srt_dnf(DNF &D) {
 
 
   printf("p cnf %d %d\n",find_max_var(D),(int) D.size());
-  for (int i=0; i < D.size(); i++)
+  for (size_t i=0; i < D.size(); i++)
     print_srt_cube(D[i]);
 
 } /* end of function print_srt_dnf */
@@ -556,7 +556,7 @@ void fprint_srt_dnf(DNF &D,char *fname) {
   }
 
   fprintf(fp,"p cnf %d %d\n",find_max_var(D),(int) D.size());
-  for (int i=0; i < D.size(); i++)
+  for (size_t i=0; i < D.size(); i++)
     fprint_srt_cube(fp,D[i]);
 
   fclose(fp);

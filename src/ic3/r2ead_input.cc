@@ -41,7 +41,7 @@ void CompInfo::start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names)
   N->ngates++; // increment the number of gates 
 
   //  process  the  input names
-  for (int j=0; j < Pin_names.size()-1;j++) {
+  for (size_t j=0; j < Pin_names.size()-1;j++) {
     int pin_num = assign_input_pin_number1(N->Pin_list,Pin_names[j],
                                            N->Gate_list);
     Gate &G =  N->Gate_list[gate_ind];
@@ -200,7 +200,7 @@ void CompInfo::check_overlapping()
   
   array_to_set(S,Pres_svars);
 
-  for (int i=0; i < Inp_vars.size(); i++) 
+  for (size_t i=0; i < Inp_vars.size(); i++) 
     assert(S.find(Inp_vars[i]) == S.end());
   
 
@@ -214,7 +214,7 @@ void CompInfo::check_overlapping()
 void CompInfo::check_conv_tbl(CUBE &Vars,CUBE &Tbl,bool pres_svars)
 {
 
-  for (int i=0; i < Vars.size(); i++)  {
+  for (size_t i=0; i < Vars.size(); i++)  {
     int var_ind = Vars[i]-1;
     if (Tbl[var_ind] == -1) {
       if (pres_svars) 

@@ -32,7 +32,7 @@ void CompInfo::act_lit_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried,
   float max_act_lit;
   int max_lit = 0;
 
-  for (int i=0; i < Avail_lits.size(); i++) {
+  for (size_t i=0; i < Avail_lits.size(); i++) {
     int lit = Avail_lits[i];
     if (Tried.find(lit) != Tried.end()) continue;    
     int var_ind = abs(lit)-1;
@@ -75,7 +75,7 @@ void CompInfo::act_var_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried,
   int max_lit = 0;
   int count_eq = 0;
 
-  for (int i=0; i < Avail_lits.size(); i++) {
+  for (size_t i=0; i < Avail_lits.size(); i++) {
     int lit = Avail_lits[i];
     if (Tried.find(lit) != Tried.end()) continue;    
     int var_ind = abs(lit)-1;
@@ -112,10 +112,19 @@ int CompInfo::find_inact_lit(CLAUSE &Curr,SCUBE &Tried,
   float min_act_lit;
   int min_lit = 0;
 
-  for (int i=0; i < Curr.size(); i++) {
-    int lit = Curr[i];
+  // get first to guarantee initialization of min_act_lit;
+  int lit=Curr[0];
+  assert(lit!=0);
+  // if not, then min_lit equal to 0 would not initialize min_act_lit and its
+  // value would be read before being initialized
+  assert(Tried.find(lit)==Tried.end());
+  size_t var_ind=abs(lit)-1;
+  min_act_lit=lit<0?Act0[var_ind]:Act1[var_ind];
+
+  for (size_t i=1; i < Curr.size(); i++) {
+    lit = Curr[i];
     if (Tried.find(lit) != Tried.end()) continue;    
-    int var_ind = abs(lit)-1;
+    var_ind = abs(lit)-1;
 
     if (min_lit == 0) { 
       min_lit = lit;
@@ -155,10 +164,20 @@ int CompInfo::find_inact_var(CLAUSE &Curr,SCUBE &Tried,FltCube &Act0,
   int min_lit = 0;
   int count_eq = 0;
 
-  for (int i=0; i < Curr.size(); i++) {
-    int lit = Curr[i];
+  // get first to guarantee initialization of min_act_lit;
+  int lit=Curr[0];
+  assert(lit!=0);
+  // if not, then min_lit equal to 0 would not initialize min_var_act and its
+  // value would be read before being initialized
+  assert(Tried.find(lit)==Tried.end());
+  size_t var_ind=abs(lit)-1;
+  min_var_act=Act0[var_ind]+Act1[var_ind];
+  min_lit=lit;
+
+  for (size_t i=1; i < Curr.size(); i++) {
+    lit = Curr[i];
     if (Tried.find(lit) != Tried.end()) continue;    
-    int var_ind = abs(lit)-1;
+    var_ind = abs(lit)-1;
 
     if (min_lit == 0) { 
       min_lit = lit;

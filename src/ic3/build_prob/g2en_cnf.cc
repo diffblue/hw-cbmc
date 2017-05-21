@@ -26,7 +26,7 @@ void CompInfo::add_constrs()
 {
   printf("adding %d unit constraints\n",(int) (Constr_ilits.size() +
 					       Constr_nilits.size()));
-  for (int i=0; i < Constr_ilits.size(); i++) {
+  for (size_t i=0; i < Constr_ilits.size(); i++) {
     CLAUSE U;
     U.push_back(Constr_ilits[i]);
     Tr.push_back(U);
@@ -53,7 +53,7 @@ void CompInfo::add_constrs()
 bool empty_cube(CUBE &C)
 {SCUBE Lits;
 
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     if (Lits.find(-C[i]) != Lits.end())
       return(true); // empty cube
     Lits.insert(C[i]);
@@ -71,7 +71,7 @@ bool empty_cube(CUBE &C)
 int form_index(CUBE &C)
 {
   int result = 0;
-  for (int i=0; i < C.size();i++)
+  for (size_t i=0; i < C.size();i++)
     {assert(abs(C[i]) == i+1);
       if (C[i] > 0)  result |= 1 << i;
     }
@@ -91,7 +91,7 @@ int form_index(CUBE &C)
 void CompInfo::gen_trans_rel(int shift)
 {
 
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     int gate_ind = Ordering[i];
     Gate &G =  N->Gate_list[gate_ind];
     if (G.gate_type == INPUT) continue;
@@ -99,7 +99,6 @@ void CompInfo::gen_trans_rel(int shift)
 // skip the gates that are not part of the transition function
     if (G.flags.transition == 0) 
       if (G.flags.tran_constr == 0) continue; 
-    int var_ind = Gate_to_var[gate_ind]-1;
     switch (G.func_type)
       {case CONST:
 	  add_const_gate_cube(Tr,gate_ind,shift);
@@ -146,11 +145,11 @@ void CompInfo::print_var_indexes(char *fname)
   marked_vars.assign(2*N->Gate_list.size(),0);
 
    // print var indexes in topological order
-   for (int i=0; i <= N->max_levels; i++)
+   for (size_t i=0; i <= N->max_levels; i++)
      {fprintf(fp,"--------------------------------------\n");
-       fprintf(fp,"topological level %d\n",i);
+       fprintf(fp,"topological level %zu\n",i);
       CUBE &Gates = topol_levels[i];
-      for (int j=0; j < Gates.size(); j++)
+      for (size_t j=0; j < Gates.size(); j++)
 	{int gate_ind = Gates[j];
 	 Gate &G = N->get_gate(gate_ind);
          switch (G.gate_type)
@@ -183,7 +182,7 @@ void CompInfo::print_var_indexes(char *fname)
 void CompInfo::set_constr_flag()
 {
 
-  for (int i=0; i < N->Gate_list.size();i++) {
+  for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G = N->get_gate(i);
     G.flags.label = 0;  
     G.flags.fun_constr = 0;

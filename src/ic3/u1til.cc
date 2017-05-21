@@ -44,7 +44,7 @@ void CompInfo::add_fclause1(CLAUSE &C,int last_ind,char st_descr)
   }
 
  
-  assert((last_ind >= 0) && (last_ind < Time_frames.size()));
+  assert((last_ind >= 0) && ((size_t) last_ind < Time_frames.size()));
   Time_frames[last_ind].num_bnd_cls++;
 
   
@@ -92,7 +92,8 @@ bool CompInfo::update_fclause(int clause_ind,int tf_ind)
   Time_frames[tf_ind].num_bnd_cls++;
 
   ClauseInfo &el = Clause_info[clause_ind];
-  if (el.span >= tf_ind) 
+  assert(tf_ind>0);
+  if (el.span >= (size_t) tf_ind) 
     return(false);
  
 
@@ -169,7 +170,7 @@ void my_assert(bool cond)
 bool CompInfo::check_init_states()
 {
 
-  for (int i=0; i < Ist.size();i++)
+  for (size_t i=0; i < Ist.size();i++)
     if (Ist[i].size() != 1) return(false);
 
   return(true);
@@ -186,7 +187,7 @@ bool CompInfo::check_init_states()
   ==============================================*/
 bool CompInfo::init_st_satisfy_constrs() 
 {
-  for (int i=0; i < Ist.size(); i++) {
+  for (size_t i=0; i < Ist.size(); i++) {
     CLAUSE &C = Ist[i];
     assert(C.size() == 1);
     int lit = C[0];

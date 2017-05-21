@@ -41,7 +41,7 @@ void CompInfo::form_coi_array()
   Coi_arr.push_back(Coi);
 
 
-  int level = 0;
+  size_t level = 0;
   while (true) {
     if (Coi_arr.size() > max_coi_depth) break;
     CUBE Dcoi;
@@ -64,10 +64,10 @@ void CompInfo::form_coi_array()
 void CompInfo::conv_gates_to_svars(DNF &Coi_arr)
 {
   
-  for (int i=0; i < Coi_arr.size(); i++) {
+  for (size_t i=0; i < Coi_arr.size(); i++) {
     CUBE &Gate_inds = Coi_arr[i];
     CUBE Vars;
-    for (int j=0; j < Gate_inds.size(); j++) {
+    for (size_t j=0; j < Gate_inds.size(); j++) {
       int var = Gate_to_var[Gate_inds[j]];
       Vars.push_back(var);
     }
@@ -86,7 +86,7 @@ void CompInfo::form_stack(CUBE &Stack,CUBE &Latches)
 {
 
   Stack.clear();
-  for (int i=0; i < Latches.size(); i++) {
+  for (size_t i=0; i < Latches.size(); i++) {
     int gate_ind = Latches[i];
     Gate &G = N->get_gate(gate_ind);
     assert(G.Fanin_list.size() == 1);
@@ -112,7 +112,7 @@ void CompInfo::form_coi(CUBE &Coi,CUBE &Stack,hsh_tbl &Htbl)
   CUBE &Table = Htbl.Table;
  
 
-  for (int i=0; i < Stack.size(); i++) 
+  for (size_t i=0; i < Stack.size(); i++) 
     Table[Stack[i]] = marker;
  
 
@@ -133,7 +133,7 @@ void CompInfo::form_coi(CUBE &Coi,CUBE &Stack,hsh_tbl &Htbl)
     }   
     // add fanin gates   
     int added = 0;
-    for (int i=0; i < G.ninputs; i++) {
+    for (size_t i=0; i < G.ninputs; i++) {
       int gate_ind1 = G.Fanin_list[i];
       if (Table[gate_ind1] == marker) continue;
       Gate &G1 = N->get_gate(gate_ind1);

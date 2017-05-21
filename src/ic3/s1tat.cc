@@ -71,7 +71,7 @@ float CompInfo::average()
 {
 
   float total = 0.;
-  for (int i=Ist.size(); i < F.size(); i++) {
+  for (size_t i=Ist.size(); i < F.size(); i++) {
     total += F[i].size();
   }
 
@@ -171,7 +171,7 @@ void CompInfo::print_time_frame_sat_stat(int &time_frame_calls)
 
   time_frame_calls = 0;
 
-  for (int i=0; i < Time_frames.size(); i++) 
+  for (size_t i=0; i < Time_frames.size(); i++) 
     time_frame_calls += Time_frames[i].Slvr.num_calls;
 
   my_printf("Time frame SAT-solvers: %m calls\n",time_frame_calls); 

@@ -169,7 +169,7 @@ void ic3_enginet::ebmc_form_latches()
     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
       continue;
 
-    for (int j=0; j < var.bits.size(); j++) {
+    for (size_t j=0; j < var.bits.size(); j++) {
       literalt lit =var.bits[j].current;
       Latch_val[lit.var_no()] = 2; // set the value of the latch to a don't care     
     }
@@ -179,7 +179,7 @@ void ic3_enginet::ebmc_form_latches()
   bvt Ist_lits;
   gen_ist_lits(Ist_lits);
  
-  for (int i=0; i < Ist_lits.size(); i++) {
+  for (size_t i=0; i < Ist_lits.size(); i++) {
     literalt &lit = Ist_lits[i];
     int var_num = lit.var_no();
     assert(Latch_val.find(var_num) != Latch_val.end());
@@ -208,7 +208,7 @@ void ic3_enginet::gen_ist_lits(bvt &Ist_lits)
   while (stack.size() > 0) {
 
     literalt lit = stack.back();
-    int var_num = lit.var_no();
+    size_t var_num = lit.var_no();
     stack.pop_back();
     if (Visited.find(lit) != Visited.end()) 
       continue;

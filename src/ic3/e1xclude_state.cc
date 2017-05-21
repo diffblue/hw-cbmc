@@ -30,7 +30,6 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
   }
 
 
-  int count = 0;
   assert(Pr_queue.empty());
   Obl_table.clear();
 
@@ -166,7 +165,7 @@ bool CompInfo::gen_ind_clause(CLAUSE &Res,CUBE &St,int tf_ind,char st_descr)
 void CompInfo::add_new_clauses(SatSolver &Slvr,CUBE &Clauses)
 {
 
-  for (int i=0; i < Clauses.size(); i++)  {
+  for (size_t i=0; i < Clauses.size(); i++)  {
     int clause_ind = Clauses[i];
     assert(clause_ind >= 0);
     accept_new_clause(Slvr,F[clause_ind]);
@@ -207,7 +206,6 @@ bool CompInfo::find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Prv_st_cube,
   bool sat_form = check_sat2(Slvr,Assmps);
  
   
-  bool ok = true;
   if (sat_form) {
     CUBE St0;
     extr_cut_assgns1(St0,Pres_svars,Slvr);

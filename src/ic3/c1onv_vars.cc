@@ -31,7 +31,7 @@ void CompInfo::conv_to_next_state(CUBE &A,CUBE &B)
 {
 
 
-  for (int i=0; i < B.size(); i++) {
+  for (size_t i=0; i < B.size(); i++) {
     int var_ind = abs(B[i])-1;
     int var_ind1 = Pres_to_next[var_ind];
     assert(var_ind1 >= 0);
@@ -54,7 +54,7 @@ void CompInfo::conv_to_next_state(CUBE &A,CUBE &B)
 void CompInfo::conv_to_pres_state(CUBE &A,CUBE &B)
 {
  
-  for (int i=0; i < B.size(); i++) {
+  for (size_t i=0; i < B.size(); i++) {
     int var_ind = abs(B[i])-1;
     int var_ind1 = Next_to_pres[var_ind];
     assert(var_ind1 >= 0);

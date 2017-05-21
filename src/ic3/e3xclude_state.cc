@@ -42,10 +42,10 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
   SCUBE Tried;
   SCUBE Failed_lits;
 
-  int max_tries = 4;
+  size_t max_tries = 4;
   if (C0.size()  < max_tries) 
     max_tries = C0.size();
-  int num_tries = 0;
+  size_t num_tries = 0;
 
   while (true) {
     if (num_tries > max_tries) 
@@ -132,7 +132,7 @@ void CompInfo::modif_loc_clause(CLAUSE &C,CUBE &St)
   int marker = htable_lits.marker;
   CUBE &Table = htable_lits.Table;
 
-  for (int i=0; i < St.size(); i++) {
+  for (size_t i=0; i < St.size(); i++) {
     int var_ind = abs(St[i])-1;
     if (St[i] < 0) Table[var_ind] = marker;
     else {
@@ -142,7 +142,7 @@ void CompInfo::modif_loc_clause(CLAUSE &C,CUBE &St)
   }
   
   int lit = 0;
-  for (int i=0; i < Ist.size(); i++) {
+  for (size_t i=0; i < Ist.size(); i++) {
     CLAUSE &A = Ist[i];
     int var_ind = abs(A[0])-1;
     if ((Table[var_ind] == marker) && (A[0] > 0)) {
@@ -168,7 +168,7 @@ void CompInfo::modif_loc_clause(CLAUSE &C,CUBE &St)
 void form_lngst_clause(CLAUSE &C0,CUBE &St)
 {
 
-  for (int i=0; i < St.size(); i++) 
+  for (size_t i=0; i < St.size(); i++) 
     C0.push_back(-St[i]);
 
 } /* end of function form_lngst_clause */
@@ -199,7 +199,7 @@ int CompInfo::find_rand_lit(CLAUSE &Curr,SCUBE &Tried)
 void CompInfo::rem_lit(CLAUSE &Curr,int lit) {
 
   bool found = false;
-  for (int i=0; i < Curr.size(); i++) {
+  for (size_t i=0; i < Curr.size(); i++) {
     if (Curr[i] == lit) {
       found = true;
       continue; }

@@ -38,7 +38,7 @@ void ic3_enginet::read_parameters()
   if (cmdline.isset("prop")) {
     std::string sval = cmdline.get_value("prop");
     Ci.prop_ind = stoi(sval);
-    assert(Ci.prop_ind >= 0);
+    // assert(Ci.prop_ind >= 0);
   }
 
   if (cmdline.isset("constr")) 

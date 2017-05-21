@@ -29,13 +29,13 @@ void CompInfo::push_clauses_forward()
   }
 
   int min_tf = 1;
- 
-  assert(tf_lind < Time_frames.size());
+
+  assert(tf_lind>=0 && (size_t) tf_lind < Time_frames.size());
   init_fields();
-  for (int i=min_tf; i <= tf_lind; i++) { 
+  for (size_t i=min_tf; i <= (size_t) tf_lind; i++) { 
     CUBE Pushed;
     CUBE &Clauses = Time_frames[i].Clauses;
-    for (int j=0; j  < Clauses.size();j++) { 
+    for (size_t j=0; j  < Clauses.size();j++) { 
       int clause_ind = Clauses[j];
       if (Clause_info[clause_ind].active == 0) continue;
       if (Clause_info[clause_ind].skip) continue;
@@ -167,11 +167,13 @@ int CompInfo::replace_or_add_clause(int clause_ind,CLAUSE &C,int tf_ind)
   }
   
   if (tf_ind < span)
+  {
     if (clause_ind == -1) { // C is a new clause
       num_add2_cases++;
       return(ADD2);  
     }
     else // C exists
+    {
       if (span1 <= tf_ind) { // push forward an existing clause
 	num_add1_cases++;
 	return(ADD1);}
@@ -179,6 +181,8 @@ int CompInfo::replace_or_add_clause(int clause_ind,CLAUSE &C,int tf_ind)
 	num_restore_cases++; // and replacement is incorrect
 	return(RESTORE);
       }
+    }
+  }
 
   assert(pnt2 != Clause_table.end());
  
@@ -194,13 +198,12 @@ int CompInfo::replace_or_add_clause(int clause_ind,CLAUSE &C,int tf_ind)
 
 
   assert(clause_ind1 >= 0);
-  assert(clause_ind1 < F.size());
-
+  assert((size_t) clause_ind1 < F.size());
 
   Clause_info[clause_ind1].active = 0;
   num_inact_cls++;
-  
-  assert(span1 <= Clause_info[clause_ind].span);
+
+  assert(span1>=0 && (size_t) span1 <= Clause_info[clause_ind].span);
 
   Time_frames[span1].num_bnd_cls--;
   

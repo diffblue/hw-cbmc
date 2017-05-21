@@ -59,12 +59,12 @@ bool name_clash(CCUBE &Root_name,Circuit *N,int gate_ind)
 
   if (Root_name.size() > Gate_name.size()) return(false); 
 
-  for (int i=0; i < Root_name.size(); i++)
+  for (size_t i=0; i < Root_name.size(); i++)
     if (Gate_name[i] != Root_name[i]) return(false);
 
   int count = 0;
 
-  for (int i=Root_name.size(); i < Gate_name.size(); i++) {
+  for (size_t i=Root_name.size(); i < Gate_name.size(); i++) {
     char symb = Gate_name[i];
     if ((symb >= '0') && (symb <= '9')) {
       count++;
@@ -92,7 +92,7 @@ void gen_spec_buff_name(Circuit *N)
 
   while (true) {
     bool clash = false;
-    for (int i=0; i < Gate_list.size(); i++) {
+    for (size_t i=0; i < Gate_list.size(); i++) {
       if (name_clash(Spec_buff_name,N,i)) {
 	clash = true;
 	Spec_buff_name.push_back('z'); // add one more letter to the name

@@ -27,7 +27,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   =========================================*/
 void CompInfo::accept_new_clauses(SatSolver &Slvr,DNF &H)
 {
-  for (int i=0; i < H.size(); i++)
+  for (size_t i=0; i < H.size(); i++)
     accept_new_clause(Slvr,H[i]);
 
 } /* end of function accept_new_clauses */
@@ -83,23 +83,23 @@ void CompInfo::part_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V) {
   Marked.assign(C.size(),0);
 
 
-  int min_size0 = (max_num_elems < C.size())? max_num_elems : C.size();
+  size_t min_size0 = (max_num_elems < C.size())? max_num_elems : C.size();
 
-  int min_size = min_size0;
-  for (int i=0; i < min_size0; i++) 
+  size_t min_size = min_size0;
+  for (size_t i=0; i < min_size0; i++) 
     if (V[i].first < 0.1) {
       min_size = i;
       break;
     }
 
-  for (int i=0; i < min_size; i++) {
+  for (size_t i=0; i < min_size; i++) {
     int old_ind = V[i].second;
     C1.push_back(C[old_ind]);
     Marked[old_ind] = 1;
    
   }
  
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     if (Marked[i]) continue;
     C1.push_back(C[i]);
   }
@@ -135,7 +135,7 @@ void CompInfo::add_temp_clause(Mlit &act_lit,SatSolver &Slvr,CLAUSE &C)
   ==================================*/
 void array_to_set(SCUBE &A,CUBE &B)
 {
-  for (int i=0; i < B.size(); i++)
+  for (size_t i=0; i < B.size(); i++)
     A.insert(B[i]);
 
 } /* end of function array_to_set */
@@ -149,14 +149,14 @@ void array_to_set(SCUBE &A,CUBE &B)
 void CompInfo::print_bnd_sets1()
 {
 
-  for (int i=0; i < Time_frames.size(); i++) {
-    printf("Bnd[%d]: ",i);
+  for (size_t i=0; i < Time_frames.size(); i++) {
+    printf("Bnd[%zu]: ",i);
     int count = 0;
-    for (int j=0; j < F.size(); j++) {
+    for (size_t j=0; j < F.size(); j++) {
       if (Clause_info[j].active == 0) continue;
       if (Clause_info[j].span != i) continue;
       if (count++ > 0) printf(" ");
-      printf("%d",j);
+      printf("%zu",j);
     }
     printf("\n");
   }
@@ -174,7 +174,7 @@ void CompInfo::extr_cut_assgns1(CUBE &Assgns,CUBE &Vars,SatSolver &Slvr)
 {
 
   MboolVec &S = Slvr.Mst->model;
-  for (int i=0; i < Vars.size(); i++) {
+  for (size_t i=0; i < Vars.size(); i++) {
     int var_ind = Vars[i]-1;
     if (S[var_ind] == Mtrue) Assgns.push_back(var_ind+1);
     else Assgns.push_back(-(var_ind+1));
@@ -194,7 +194,7 @@ void CompInfo::extr_cut_assgns2(CUBE &Assgns,CUBE &Lits,SatSolver &Slvr)
 {
 
   MboolVec &S = Slvr.Mst->model;
-  for (int i=0; i < Lits.size(); i++) {
+  for (size_t i=0; i < Lits.size(); i++) {
     int var_ind = abs(Lits[i])-1;
     if (S[var_ind] == Mtrue) Assgns.push_back(var_ind+1);
     else Assgns.push_back(-(var_ind+1));

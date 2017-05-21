@@ -1,4 +1,6 @@
-CXXFLAGS = -Wno-literal-suffix -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3 $(INC_DIR)
+
+CXXFLAGS = -std=c++0x -Wno-write-strings -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -O3 $(INC_DIR)
+
 CXFLAGS = $(INC_DIR)
 CFLAGS =   -O3  $(INC_DIR) 
 CXX = g++

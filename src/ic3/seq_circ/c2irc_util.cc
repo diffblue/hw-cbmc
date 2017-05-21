@@ -35,7 +35,7 @@ void print_gate_name(Gate &G)
   ====================================*/
 void print_name(CCUBE *name)
 {
-  for (int i=0; i < name->size();i++)
+  for (size_t i=0; i < name->size();i++)
     printf("%c",(*name)[i]);
 
 }/* end of function print_name */
@@ -80,7 +80,7 @@ void  print_gate_type(FILE *fp,Circuit *N,Gate &G)
   ====================================*/
 void print_name1(CCUBE &name,bool cr)
 {
-  for (int i=0; i < name.size();i++)
+  for (size_t i=0; i < name.size();i++)
     printf("%c",name[i]);
 
   if (cr) printf("\n");
@@ -97,12 +97,12 @@ void fill_up_levels(Circuit *N, DNF &Level_gates)
 
   GCUBE &Gate_list = N->Gate_list;
  
-  for (int i=0; i <= N->max_levels+1; i++) {
+  for (size_t i=0; i <= N->max_levels+1; i++) {
     CUBE dummy;
     Level_gates.push_back(dummy);
   }
 
-  for (int i=0; i < Gate_list.size();i++) {
+  for (size_t i=0; i < Gate_list.size();i++) {
     Gate &G = Gate_list[i];
     int level = G.level_from_inputs;
     if (level < 0) level = N->max_levels+1;
@@ -123,14 +123,14 @@ void  print_levels(Circuit *N)
 
   fill_up_levels(N,Level_gates);
 
-  for (int i=0; i < Level_gates.size(); i++) {
-    printf("level %d:  ",i);
+  for (size_t i=0; i < Level_gates.size(); i++) {
+    printf("level %zu:  ",i);
     CUBE &Level = Level_gates[i];
  
-    for (int j=0; j < Level.size();j++) {
+    for (size_t j=0; j < Level.size();j++) {
       Gate &G = Gate_list[Level[j]];
       print_name1(G.Gate_name);
-      printf("(%d)",(int) G.Fanout_list.size());
+      printf("(%zu)", G.Fanout_list.size());
       printf(" ");
     }
     printf("\n");
@@ -145,7 +145,7 @@ void  print_levels(Circuit *N)
   ================================*/
 void fprint_name(FILE *fp,CCUBE &name)
 {
-  for (int i=0; i < name.size();i++)
+  for (size_t i=0; i < name.size();i++)
     fprintf(fp,"%c",name[i]);
 
 }/* end of function fprint_name */

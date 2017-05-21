@@ -35,7 +35,7 @@ void CompInfo::add_fclause2(CLAUSE &C,int last_ind,bool upd_activity)
 
   sort(C.begin(),C.end());
  
-  assert((last_ind >= 0) && (last_ind < Time_frames.size()));
+  assert((last_ind >= 0) && ((size_t) last_ind < Time_frames.size()));
   Time_frames[last_ind].num_bnd_cls++;
 
   
@@ -101,7 +101,7 @@ void CompInfo::build_new_clause_table()
 
   Clause_table.clear();
 
-  for (int i=0; i < F.size(); i++) 
+  for (size_t i=0; i < F.size(); i++) 
     Clause_table[F[i]] = i;
   
 // check that F does not have duplicate clauses
@@ -120,7 +120,7 @@ void CompInfo::clean_formula()
 
   int shift = 0;
 
-  for (int i=0; i < F.size(); i++) {
+  for (size_t i=0; i < F.size(); i++) {
     if (Clause_info[i].active == 0) {
       shift++;
       continue;
@@ -145,12 +145,12 @@ void CompInfo::clean_formula()
 void CompInfo::recomp_tf_cls_sets()
 {
 
- for (int i=0; i < Time_frames.size(); i++) 
+ for (size_t i=0; i < Time_frames.size(); i++) 
    Time_frames[i].Clauses.clear();
 
  assert(F.size() == Clause_info.size());
 
- for (int i=0; i < F.size(); i++) {   
+ for (size_t i=0; i < F.size(); i++) {   
    int span = Clause_info[i].span;
    for (int j=1; j <= span; j++) 
      Time_frames[j].Clauses.push_back(i);
@@ -183,7 +183,7 @@ void CompInfo::upd_act_lit_cnts(CLAUSE &C,int last_ind)
   }
 
   
-  for (int i=0; i < C.size(); i++) {
+  for (size_t i=0; i < C.size(); i++) {
     int var_ind = abs(C[i])-1;
     if (C[i] < 0) Lit_act0[var_ind] += incr;
     else Lit_act1[var_ind] += incr;

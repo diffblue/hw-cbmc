@@ -35,9 +35,10 @@ void print_num_with_commas(const int &num)
       Num = quotient;
     }
 
-  for (int i=parts.size()-1; i >= 0; i--)
-    {if (i ==  parts.size()-1) printf("%d",parts[i]);
-      else printf("%03d",parts[i]);
+  size_t parts_size=parts.size();
+  for (size_t i=0; i < parts_size; i++)
+    {if (i ==  0) printf("%d",parts[parts_size-i-1]);
+      else printf("%03d",parts[parts_size-i-1]);
      
       if (i != 0) printf(",");
     }
@@ -57,7 +58,6 @@ void my_printf(const char *format,...)
 {
 
   va_list ap;
-  int i;
 
   va_start(ap,format); // n is the last parameter before the '...' 
                        // in the function header

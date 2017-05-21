@@ -32,7 +32,7 @@ void CompInfo::form_gate_fun(Circuit *N,int gate_ind,CUBE &Pol)
   assert(Pol.size() == 3);
   CUBE C;
 
-  for (int i=0; i < Pol.size()-1; i++) {  
+  for (size_t i=0; i < Pol.size()-1; i++) {  
     if (Pol[i] == 0) C.push_back(-(i+1));
     else C.push_back((i+1));  
   }
@@ -161,7 +161,7 @@ void ic3_enginet::form_gates()
   Circuit *N = Ci.N;
   aigt::nodest &Nodes = netlist.nodes;
  
-  for (int i=0; i <  Nodes.size(); i++) {  
+  for (size_t i=0; i <  Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];
     if (Nd.is_var()) continue;
     CDNF Pin_names;
@@ -219,7 +219,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
 
  NEXT:
   char buff[MAX_NAME];
-  sprintf(buff,"p%d",Ci.prop_ind);
+  sprintf(buff,"p%zu",Ci.prop_ind);
   conv_to_vect(Pin_names[1],buff);
   Out_names.push_back(Pin_names[1]);
 

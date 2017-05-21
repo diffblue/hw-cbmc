@@ -32,7 +32,7 @@ void CompInfo::use_coi_to_drop_svars(CUBE &Nxt_cube,CUBE &Nxt_st,int dist)
   
   assert(dist >= 0);
 
-  if (dist >=  Coi_svars.size()) {
+  if ((size_t) dist >=  Coi_svars.size()) {
     Nxt_cube = Nxt_st;
     return;
   }
@@ -45,7 +45,7 @@ void CompInfo::use_coi_to_drop_svars(CUBE &Nxt_cube,CUBE &Nxt_st,int dist)
   int marker = htable_lits.marker;
   CUBE &Table = htable_lits.Table;
 
-  for (int i=0; i < Vars.size(); i++) {
+  for (size_t i=0; i < Vars.size(); i++) {
     int pres_var_ind = Vars[i]-1;
     int nxt_var_ind = Pres_to_next[pres_var_ind];
     assert(nxt_var_ind >= 0);
@@ -54,7 +54,7 @@ void CompInfo::use_coi_to_drop_svars(CUBE &Nxt_cube,CUBE &Nxt_st,int dist)
 
 
   // keep only marked variables
-  for (int i=0; i < Nxt_st.size(); i++) {
+  for (size_t i=0; i < Nxt_st.size(); i++) {
     int var_ind = abs(Nxt_st[i])-1;
     if (Table[var_ind] == marker) Nxt_cube.push_back(Nxt_st[i]);
   }

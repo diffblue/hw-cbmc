@@ -3,6 +3,8 @@
 
 %{
 #include <util/pragma_wdeprecated_register.def>
+#include <util/pragma_wsign_compare.def>
+#include <util/pragma_wnull_conversion.def>
 
 #ifdef _WIN32
 #define YY_NO_UNISTD_H

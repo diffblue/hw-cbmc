@@ -255,7 +255,7 @@ Function: compare
 
 \*******************************************************************/
 
-#define bool unsigned
+//#define bool unsigned
 #define ASCENDING 1   // sorting direction
 #define DESCENDING 0
 

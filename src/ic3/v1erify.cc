@@ -32,9 +32,9 @@ void CompInfo::gen_form2(CNF &H,CUBE &Old_nums,int k)
 {
   assert(k >= 0);
  
-  for (int i=0; i < F.size(); i++) {
+  for (size_t i=0; i < F.size(); i++) {
     if (Clause_info[i].active == 0) continue;
-    if (Clause_info[i].span < k) continue;
+    if (Clause_info[i].span < (size_t) k) continue;
     H.push_back(F[i]);
     Old_nums.push_back(i);
   }
@@ -63,11 +63,11 @@ bool CompInfo::ver_cex()
   init_sat_solver(Gen_sat,max_num_vars,Name);
   accept_new_clauses(Gen_sat,Tr);
 
-  for (int i=0; i < Cex.size()-1; i++) {
+  for (size_t i=0; i < Cex.size()-1; i++) {
     bool ok = check_transition(Cex[i],Cex[i+1]);
     if (!ok) {
       printf("verfication failed\n");
-      printf("wrong transition S%d -> S%d\n",i,i+1);
+      printf("wrong transition S%zu -> S%zu\n",i,i+1);
       return(false);
     }
   }
@@ -170,7 +170,7 @@ bool CompInfo::check_init_state(CUBE &St)
 void CompInfo::add_constr_lits2(SatSolver &Slvr)
 {
 
-  for (int i=0; i < Constr_ilits.size(); i++) {
+  for (size_t i=0; i < Constr_ilits.size(); i++) {
     CLAUSE U;
     U.push_back(Constr_ilits[i]);
     accept_new_clause(Slvr,U);

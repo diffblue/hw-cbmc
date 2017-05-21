@@ -61,7 +61,7 @@ struct GateFlagsType {
   ==============================*/
 class Gate {
 public:
-  int ninputs; // number of inputs
+  size_t ninputs; // number of inputs
   Func_type func_type; // whether it is  a BUFFER, AND  or OR gate or COMPLEX
   Gate_type gate_type; // the possible types are:  input, gate, latch, undefined
   CCUBE Polarity; // set polarity of inputs and output
@@ -101,12 +101,12 @@ typedef std::vector <Gate> GCUBE;
 class Circuit
 {
 public:
-  int ninputs; // number of primary inputs
-  int noutputs; // number of primary outputs
-  int nlatches; // number of latches
-  int ngates; // contains the number of gates (not counting input nodes)
-  int nconstants; // number of constants
-  int max_levels; // contains the maximal topological level of a gate
+  size_t ninputs; // number of primary inputs
+  size_t noutputs; // number of primary outputs
+  size_t nlatches; // number of latches
+  size_t ngates; // contains the number of gates (not counting input nodes)
+  size_t nconstants; // number of constants
+  size_t max_levels; // contains the maximal topological level of a gate
   GCUBE Gate_list; // list of gates (includes input nodes and latches)
   CCUBE Circuit_name; /* circuit name */
   CUBE Inputs; // numeric  labels of input nodes
