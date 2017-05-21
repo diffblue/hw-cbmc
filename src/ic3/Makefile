@@ -20,7 +20,7 @@ include ../config.inc
 
 MINISAT_INC = minisat
 
-INC_DIR = -I. -Ibuild_prob -Iseq_circ -I$(MINISAT_INC) -I$(CBMC)/src -I../ -I../ebmc -I../trans-netlist
+INC_DIR = -I . -I build_prob -I seq_circ -I $(MINISAT_INC) -I $(CBMC)/src -I ../ -I ../ebmc -I ../trans-netlist
 
 OBJ_DIR = .
 
