@@ -102,7 +102,7 @@ bool ic3_enginet::find_prop(propertyt &Prop)
       Prop = p;
       return(true);
     }
-    idx++;
+    //idx++;
   }
   return false;
 } /* end of function find_prop */
