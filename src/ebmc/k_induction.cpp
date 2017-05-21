@@ -192,17 +192,17 @@ int k_inductiont::induction_step()
     
     switch(dec_result)
     {
-    case decision_proceduret::D_SATISFIABLE:
+    case decision_proceduret::resultt::D_SATISFIABLE:
       result() << "SAT: inductive proof failed, k-induction is inconclusive" << eom;
       p_it.make_unknown();
       break;
 
-    case decision_proceduret::D_UNSATISFIABLE:
+    case decision_proceduret::resultt::D_UNSATISFIABLE:
       result() << "UNSAT: inductive proof successful, property holds" << eom;
       p_it.make_success();
       break;
 
-    case decision_proceduret::D_ERROR:
+    case decision_proceduret::resultt::D_ERROR:
       error() << "Error from decision procedure" << eom;
       return 2;
 

@@ -35,15 +35,15 @@ bool bmc_cegart::verify(unsigned bound)
 
   switch(solver.prop_solve())
   {
-  case propt::P_SATISFIABLE:
+  case propt::resultt::P_SATISFIABLE:
     status() << "SAT: bug found within bound" << eom;
     break;
 
-  case propt::P_UNSATISFIABLE:
+  case propt::resultt::P_UNSATISFIABLE:
     status() << "UNSAT: No bug found within bound" << eom;
     return true;
 
-  case propt::P_ERROR:
+  case propt::resultt::P_ERROR:
     error() << "Error from SAT solver" << eom;
     throw 0;
 

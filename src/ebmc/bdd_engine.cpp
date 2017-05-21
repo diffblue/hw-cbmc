@@ -366,9 +366,9 @@ void bdd_enginet::compute_counterexample(
 
   switch(prop_result)
   {
-  case propt::P_SATISFIABLE: break; // this is what we want
+  case propt::resultt::P_SATISFIABLE: break; // this is what we want
   
-  case propt::P_UNSATISFIABLE:
+  case propt::resultt::P_UNSATISFIABLE:
     throw "SAT solver says UNSAT!";
     
   default:

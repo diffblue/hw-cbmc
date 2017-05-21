@@ -126,7 +126,7 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
 
     switch(dec_result)
     {
-    case decision_proceduret::D_SATISFIABLE:
+    case decision_proceduret::resultt::D_SATISFIABLE:
       {
         result() << "SAT: counterexample found" << eom;
         
@@ -144,12 +144,12 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
       }
       break;
 
-    case decision_proceduret::D_UNSATISFIABLE:
+    case decision_proceduret::resultt::D_UNSATISFIABLE:
       result() << "UNSAT: No counterexample found within bound" << eom;
       property.make_success();
       break;
 
-    case decision_proceduret::D_ERROR:
+    case decision_proceduret::resultt::D_ERROR:
       error() << "Error from decision procedure" << eom;
       return 2;
 
@@ -219,7 +219,7 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
     
     switch(prop_result)
     {
-    case propt::P_SATISFIABLE:
+    case propt::resultt::P_SATISFIABLE:
       {
         result() << "SAT: counterexample found" << eom;
         
@@ -236,12 +236,12 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
       }
       break;
 
-    case propt::P_UNSATISFIABLE:
+    case propt::resultt::P_UNSATISFIABLE:
       result() << "UNSAT: No counterexample found within bound" << eom;
       property.make_success();
       break;
 
-    case propt::P_ERROR:
+    case propt::resultt::P_ERROR:
       error() << "Error from decision procedure" << eom;
       return 2;
 
@@ -894,7 +894,7 @@ void ebmc_baset::report_results()
 {
   const namespacet ns(symbol_table);
 
-  if(get_ui()==ui_message_handlert::XML_UI)
+  if(get_ui()==ui_message_handlert::uit::XML_UI)
   {
     for(const propertyt &property : properties)
     {

@@ -38,19 +38,19 @@ bool bmc_cegart::simulate(unsigned bound)
     
   switch(solver.prop_solve())
   {
-  case propt::P_SATISFIABLE:
+  case propt::resultt::P_SATISFIABLE:
     status() << "SAT: bug found within bound" << eom;
 
     show_counterexample(
       properties, prop_bv, get_message_handler(), solver, bmc_map,
-      ns, ui_message_handlert::PLAIN);
+      ns, ui_message_handlert::uit::PLAIN);
     return true;
 
-  case propt::P_UNSATISFIABLE:
+  case propt::resultt::P_UNSATISFIABLE:
     status() << "UNSAT: No bug found within bound" << eom;
     break;
 
-  case propt::P_ERROR:
+  case propt::resultt::P_ERROR:
     error() << "Error from SAT solver" << eom;
     throw 0;
 

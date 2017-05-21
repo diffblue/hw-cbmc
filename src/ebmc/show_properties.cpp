@@ -34,7 +34,7 @@ void ebmc_baset::show_properties()
   {
     switch(get_ui())
     {
-    case ui_message_handlert::XML_UI:
+    case ui_message_handlert::uit::XML_UI:
       {
         xmlt xml("property");
         xml.set_attribute("name", id2string(p.name));
@@ -50,7 +50,7 @@ void ebmc_baset::show_properties()
       }
       break;
   
-    case ui_message_handlert::PLAIN:
+    case ui_message_handlert::uit::PLAIN:
       std::cout << p.name << ": ";
       std::cout << p.expr_string;
       if(!p.description.empty())
