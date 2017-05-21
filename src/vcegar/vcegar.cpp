@@ -21,11 +21,9 @@ Purpose: Counter Example Guided Abstraction refinement for Verilog
 #include <memory>
 #include <fstream>
 
-#include <util/i2string.h>
 #include <util/config.h>
 #include <util/ui_message.h>
 #include <util/namespace.h>
-#include <util/cnf_simplify.h>
 #include <util/get_module.h>
 #include <util/xml.h>
 #include <util/xml_irep.h>

@@ -7,7 +7,6 @@ Author: Himanshu Jain, hjain@cs.cmu.edu
 
 \*******************************************************************/
 
-#include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <util/namespace.h>
 

@@ -11,7 +11,6 @@ Date: April 2004
 #include <map>
 #include <vector>
 
-#include <util/i2string.h>
 #include <util/namespace.h>
 #include <util/find_symbols.h>
 

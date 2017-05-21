@@ -13,7 +13,6 @@ Date: June 2003
 #include <iostream>
 #include <fstream>
 
-#include <util/i2string.h>
 #include <util/time_stopping.h>
 #include <util/xml.h>
 

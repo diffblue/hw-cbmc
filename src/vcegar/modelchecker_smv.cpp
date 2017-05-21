@@ -17,8 +17,6 @@ Date: June 2003
 #include <vector>
 #include <sstream> 
 
-#include <util/i2string.h>
-
 #include <smvlang/expr2smv.h>
 
 #include "modelchecker_smv.h"

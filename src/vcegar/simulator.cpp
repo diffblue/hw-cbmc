@@ -19,7 +19,6 @@ to check whether the counterexample is spurious.
 
 #include <util/cnf_simplify.h>
 #include <util/expr_util.h>
-#include <util/i2string.h>
 #include <util/find_symbols.h>
 
 #include <solvers/sat/satcheck.h>

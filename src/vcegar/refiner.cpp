@@ -15,7 +15,6 @@ Date: Nov 2004
 #include <util/namespace.h>
 #include <util/cnf_simplify.h>
 #include <util/simplify_expr.h>
-#include <util/i2string.h>
 
 #include <verilog/expr2verilog.h>
 

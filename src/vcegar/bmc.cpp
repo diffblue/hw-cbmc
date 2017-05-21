@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/i2string.h>
-
 #include <solvers/flattening/boolbv.h>
 #include <solvers/sat/satcheck.h>
 
