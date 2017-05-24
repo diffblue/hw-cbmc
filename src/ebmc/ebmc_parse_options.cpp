@@ -262,7 +262,7 @@ void ebmc_parse_optionst::help()
     " --k-induction                     do k-induction with k=bound\n"
     " --bdd                             use (unbounded) BDD engine\n"
     " --ic3 [options]                   use IC3 engine with options described below\n"
-    "       --prop <nr>                   check property number <nr>\n"
+    "       --property <nr>                   check property number <nr>\n"
     "       --constr                      use constraints specified in 'file.cnstr'\n"
     //" --interpolation                   use bit-level interpolants\n"
     //" --interpolation-word              use word-level interpolants\n"

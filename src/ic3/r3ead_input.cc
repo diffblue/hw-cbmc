@@ -219,7 +219,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
 
  NEXT:
   char buff[MAX_NAME];
-  sprintf(buff,"p%zu",Ci.prop_ind);
+  sprintf(buff,"%s",Ci.prop_name.c_str());
   conv_to_vect(Pin_names[1],buff);
   Out_names.push_back(Pin_names[1]);
 

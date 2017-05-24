@@ -85,24 +85,23 @@ void ic3_enginet::read_constraints(const std::string &source_name)
 bool ic3_enginet::find_prop(propertyt &Prop)
 {
 
-  if (Ci.prop_ind >=  properties.size()) {
-    std::cout << "file " << cmdline.args[0] << " specifies only ";
-    std::cout  << properties.size() << " properties\n";
-    exit(100);
+  assert(properties.size() > 0);
+
+  if ((properties.size() == 1) && (Ci.prop_name.size() == 0)) {
+    Prop = properties.front();
+    Ci.prop_name = id2string(Prop.name);
+    return(true);
   }
-  
-  for(const auto &p : properties) {
-    irep_idt Nm = p.name;
-    std::string Sn = short_name(Nm);
-    int ind = stoi(Sn);
-    assert(ind>0 && "Property Index must be greater than 0");
-    size_t index=(size_t) ind;
-    if (index-1 == Ci.prop_ind) {
+    
+  for(const auto &p : properties) 
+    if (p.status==propertyt::statust::UNKNOWN) {
+      assert(p.name == Ci.prop_name);
       Prop = p;
       return(true);
     }
-    //idx++;
-  }
+    
+   
+  
   return false;
 } /* end of function find_prop */
 
