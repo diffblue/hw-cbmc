@@ -35,11 +35,9 @@ void ic3_enginet::read_parameters()
     exit(0);
   }
 
-  if (cmdline.isset("prop")) {
-    std::string sval = cmdline.get_value("prop");
-    Ci.prop_ind = stoi(sval);
-    // assert(Ci.prop_ind >= 0);
-  }
+  if (cmdline.isset("property")) 
+    Ci.prop_name = cmdline.get_value("property");
+  
 
   if (cmdline.isset("constr")) 
     Ci.constr_flag = true;
@@ -55,10 +53,9 @@ void ic3_enginet::read_parameters()
 void ic3_enginet::print_header()
 {
 
-  printf("ebmc verilog_file --ic3 [--p | --prop N]\n");
-  printf("p      -  print out information about available options\n");
-  printf("prop N -  check property number N (count starts with 0)\n");
-  
+  printf("ebmc verilog_file --ic3 [--prop nm] [--constr]\n");
+  printf("prop nm - check property with name 'nm'\n");
+  printf("constr  - use constraints listed in 'verilog_file.cnstr'\n");
 } /* end of function print_header */
 
 /*=====================================
@@ -99,7 +96,6 @@ void CompInfo::init_parameters()
   max_rec_depth = 1;
   grl_heur = NO_JOINS;
   max_coi_depth = 10;
-  prop_ind = 0;
   constr_flag = false;
 
   } /* end of function init_parameters */

@@ -23,8 +23,8 @@ public:
                  // generate CNF formulas. For every input gate and latch
                  // Ordering[i] == i
  
-  size_t prop_ind; // specifies the index of the property to be checked 
-                   // to be implemented for the integrated version
+  std::string prop_name; // specifies the name of the property to be checked 
+                   
    
   CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to 
                     // the output of gate 'gate_ind'

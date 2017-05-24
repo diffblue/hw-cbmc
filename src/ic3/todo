@@ -3,6 +3,7 @@
 Finishing integration
 with ebmc
 =====================
+*) Eliminate the bug in generating constrained formulas
 
 *) Add code freeing memory allocated by the Verilog reader after IC3
    converted this information into its internal data
