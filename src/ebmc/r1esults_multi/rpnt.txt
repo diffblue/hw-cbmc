@@ -1,0 +1,17 @@
+exmp mentorbm1 prop. 1 property HOLDS
+exmp mentorbm1 prop. 2 property HOLDS
+exmp mentorbm1 prop. 9 property HOLDS
+exmp sm98a7multi prop. 3 property FAILED
+exmp sm98tcas16multi prop. 1 property FAILED
+exmp sm98tcas16multi prop. 2 property HOLDS
+exmp sm98tcas16tmulti prop. 2 property HOLDS
+exmp sm98tcas16tmulti prop. 4 property FAILED
+exmp sm98tcas16tmulti prop. 6 property FAILED
+exmp sm98tcasmulti prop. 1 property FAILED
+exmp sm98tcasmulti prop. 2 property HOLDS
+exmp sm98tcasmulti prop. 5 property FAILED
+exmp sm98tcasmulti prop. 6 property FAILED
+exmp sm98tcastmulti prop. 2 property HOLDS
+exmp sm98tcastmulti prop. 4 property FAILED
+exmp sm98tcastmulti prop. 5 property FAILED
+exmp sm98tcastmulti prop. 6 property FAILED
