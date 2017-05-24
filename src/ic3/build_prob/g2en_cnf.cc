@@ -202,7 +202,9 @@ void CompInfo::set_constr_flag()
     bool tran_flag,fun_flag;
 
     gen_constr_coi(Gates,tran_flag,fun_flag,Stack);
-    assert(tran_flag || fun_flag);
+    tran_flag = true;
+    fun_flag = true;  
+  
     mark_constr_gates(Gates,tran_flag,fun_flag);
     if (tran_flag) Constr_gates[gate_ind].tran_coi = 1;
     else Constr_gates[gate_ind].tran_coi = 0;

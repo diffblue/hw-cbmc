@@ -66,10 +66,10 @@ void CompInfo::gen_constr_coi(CUBE &Gates,bool &tran_flag,bool &fun_flag,
       fun_flag = true;
       skip = true;
     }
-    if (G.flags.transition > 0) {
+
+    if (G.flags.transition > 0) 
       tran_flag = true;
-      skip = true;
-    }
+     
     if (skip) continue;
     Gates.push_back(gate_ind);    
 
