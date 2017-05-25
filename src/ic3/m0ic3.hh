@@ -397,8 +397,8 @@ const int RAND_SORT = 3;
 const char OLD_STATE = 0;
 const char NEW_STATE = 1;
 const char ROOT_STATE = 2;
-const char PUSH_STATE = 3;
-const char CTG_STATE = 4;
+const char CTG_STATE = 3;
+const char PUSH_STATE = 4;
 const char UNKNOWN_STATE = 5;
 
 // values of 'grl_heur'

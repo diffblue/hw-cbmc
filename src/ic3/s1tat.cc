@@ -130,14 +130,15 @@ void CompInfo::print_time_frame_stat()
     printf("finished time frame number %d\n",(int) Time_frames.size()-1);
   }
 
+  TimeFrame &Tf = Time_frames[tf_lind];
   if (verbose > 0) 
     printf("new derived clauses Bnd[%d]=%d, Bnd[%d]=%d\n",tf_lind,
-           Time_frames[tf_lind].num_bnd_cls,tf_lind+1,
+           Tf.num_bnd_cls,tf_lind+1,
 	   Time_frames[tf_lind+1].num_bnd_cls);
 
 
   if (verbose > 0)  {
-    printf("num_pbs-s: %d\n",Time_frames[tf_lind].num_pbss);
+    printf("num_pbs-s: %d\n",Tf.num_pbss);
 
     printf("Cti-s:\n");
     int count = 0;
@@ -158,6 +159,7 @@ void CompInfo::print_time_frame_stat()
   if (verbose > 0) 
     my_printf("F.size() = %m, num. inact. clauses  = %m\n",(int) F.size(), 
               num_inact_cls);
+  printf("num. seen (redund) cls = %d (%d)\n",Tf.num_seen_cls,Tf.num_redund_cls);
 } /* end of function print_time_frame_stat*/
 
 

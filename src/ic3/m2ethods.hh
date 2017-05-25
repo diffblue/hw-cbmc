@@ -9,7 +9,7 @@ void form_short_property();
 void form_bad_states();
 void form_bad_states0(CNF &Bstates);
 void exclude_state_cube(CNF &G,int &min_tf,CUBE &St,CUBE &Inps);
-void push_clauses_forward();
+void push_clauses_forward(bool triv_time_frame);
 void init_time_frame_solver(int tf_ind);
 void init_bst_sat_solver();
 void init_lbs_sat_solver();

@@ -184,7 +184,10 @@ struct TimeFrame
 
   int num_rcnt_ctis; // number of Cti-s generated in the current time frame 
                      // when processing the latest time frame
-  
+
+  int num_seen_cls; // number of new cti or ctg clauses that are already in formula F
+  int num_redund_cls; // number of new cti/ctg clauses that are already in formula F
+                      // and cannot be added to any time frame
  
 };
 
