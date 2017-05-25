@@ -86,6 +86,11 @@ int hw_cbmc_parse_optionst::doit()
   prop_convt &prop_conv=cbmc_solver->prop_conv();
   hw_bmct hw_bmc(options, symbol_table, ui_message_handler, prop_conv);
 
+  if(cmdline.isset("bound"))
+    hw_bmc.unwind_no_timeframes=safe_string2unsigned(cmdline.get_value("bound"))+1;
+  else
+    hw_bmc.unwind_no_timeframes=1;
+
   goto_functionst goto_functions;
 
   int get_goto_program_ret=get_goto_program(options, hw_bmc, goto_functions);
@@ -160,11 +165,6 @@ int hw_cbmc_parse_optionst::get_modules(bmct &bmc)
       }
       
       hw_bmct &hw_bmc=dynamic_cast<hw_bmct &>(bmc);
-
-      if(cmdline.isset("bound"))
-        hw_bmc.unwind_no_timeframes=safe_string2unsigned(cmdline.get_value("bound"))+1;
-      else
-        hw_bmc.unwind_no_timeframes=1;
 
       hw_bmc.unwind_module=symbol.name;
 
