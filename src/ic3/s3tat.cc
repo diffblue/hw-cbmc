@@ -102,13 +102,7 @@ void CompInfo::print_flags()
   printf("ctg_flag = %d\n",ctg_flag);
   printf("constr_flag = %d\n",constr_flag);
 
-  // print state of generalization heuristic
-  printf("generalization heuristic = ");
-  if (grl_heur == NO_JOINS) printf("NO_JOINS\n");
-  else {
-    assert(grl_heur == WITH_JOINS);
-    printf("WITH_JOINS\n");
-  }
+ 
 
 
 

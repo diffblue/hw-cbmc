@@ -32,7 +32,6 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
   }
 
 
-  SatSolver &Slvr = Time_frames[curr_tf].Slvr; 
   int impr_count = 0;
   C = C0;
   if (C.size() == 1) return;
@@ -71,17 +70,11 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
        
 
     CLAUSE C1;
-    if ((ctg_flag == false) || (curr_tf == 0)) {  
-      if (grl_heur == NO_JOINS)
-	ok = triv_ind_cls_proc(C1,Curr,curr_tf);
-      else {
-	assert(grl_heur == WITH_JOINS);
-	ok = find_ind_subclause_cti(C1,Slvr,Curr,st_descr);
-      }
-    }
+    if ((ctg_flag == false) || (curr_tf == 0)) 
+      ok = triv_ind_cls_proc(C1,Curr,curr_tf);
     else 
       ok =  find_ind_subclause_ctg(C1,curr_tf,Curr,st_descr,
-                 rec_depth,Failed_lits);
+				   rec_depth,Failed_lits);
  
 
     if (!ok) {

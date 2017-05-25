@@ -163,6 +163,9 @@ void CompInfo::add_new_elem(CUBE &St_cube,CUBE &Inp_assgn,
   PqElem El1;
   El1.tf_ind = tf_ind;
   El1.tbl_ind = Obl_table.size()-1;
+  El1.dist = dist;
+  El1.sort_mode = 1;
+  
   Pr_queue.push(El1);
 
 } /* end of function add_new_elem */

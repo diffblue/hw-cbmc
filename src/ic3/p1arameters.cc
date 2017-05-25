@@ -43,6 +43,8 @@ void ic3_enginet::read_parameters()
     Ci.constr_flag = true;
 
 
+  if (cmdline.isset("new-mode"))
+    Ci.standard_mode = false;
 } /* end of function read_parameters */
 
 /*==============================
@@ -86,7 +88,6 @@ void CompInfo::init_parameters()
   lift_sort_mode = FULL_SORT;
   ind_cls_sort_mode = FULL_SORT;
   gate_sort_mode = INPS_FIRST;
-  // gate_sort_mode = INIT_SORT;
   multiplier = 1.05;
   factor = 1.;
   max_act_val = 10000.;
@@ -94,9 +95,9 @@ void CompInfo::init_parameters()
   ctg_flag = true;
   max_ctg_cnt = 3;
   max_rec_depth = 1;
-  grl_heur = NO_JOINS;
   max_coi_depth = 10;
   constr_flag = false;
-
+  standard_mode = true;
+  
   } /* end of function init_parameters */
 
