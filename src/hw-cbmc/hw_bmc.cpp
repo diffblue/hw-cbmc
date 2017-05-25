@@ -33,8 +33,8 @@ void hw_bmct::do_unwind_module()
   
   const symbolt &symbol=ns.lookup(unwind_module);
 
-  status() << "Unwinding transition system " << symbol.name
-           << " with " << unwind_no_timeframes
+  status() << "Unwinding transition system `" << symbol.name
+           << "' with " << unwind_no_timeframes
            << " time frames" << eom;
 
   ::unwind(
