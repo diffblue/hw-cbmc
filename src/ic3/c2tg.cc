@@ -78,3 +78,21 @@ int CompInfo::latest_succ_tf_ind(int tf_ind,CLAUSE &C)
 
   return(tf_lind);
 } /* end of function latest_succ_tf_ind */
+
+/*=======================================
+
+         F O R M _ N X T _ C U B E
+
+  =====================================*/
+void CompInfo::form_nxt_cube(CUBE &Nxt_cube,CLAUSE &C)
+{
+
+  for (size_t i=0;i < C.size(); i++) {
+    int var_ind = abs(C[i])-1;
+    int nxt_var_ind = Pres_to_next[var_ind];
+    assert(nxt_var_ind >=0);
+    int lit = (C[i] > 0)?-(nxt_var_ind+1):(nxt_var_ind+1);
+    Nxt_cube.push_back(lit);
+  }
+
+} /* end of function form_nxt_cube */
