@@ -86,16 +86,15 @@ int hw_cbmc_parse_optionst::doit()
   prop_convt &prop_conv=cbmc_solver->prop_conv();
   hw_bmct hw_bmc(options, symbol_table, ui_message_handler, prop_conv);
 
-  if(cmdline.isset("bound"))
-    hw_bmc.unwind_no_timeframes=safe_string2unsigned(cmdline.get_value("bound"))+1;
-  else
-    hw_bmc.unwind_no_timeframes=1;
-
   goto_functionst goto_functions;
 
-  int get_goto_program_ret=get_goto_program(options, hw_bmc, goto_functions);
+  int get_goto_program_ret=get_goto_program(
+    options, hw_bmc.bmc_constraints, goto_functions);
   if(get_goto_program_ret!=-1)
     return get_goto_program_ret;
+
+  hw_bmc.unwind_no_timeframes=get_bound();
+  hw_bmc.unwind_module=get_top_module();
 
   label_properties(goto_functions);
 
@@ -115,6 +114,54 @@ int hw_cbmc_parse_optionst::doit()
 
 /*******************************************************************\
 
+Function: hw_cbmc_parse_optionst::get_top_module
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: add additional (synchonous) modules
+
+\*******************************************************************/
+
+irep_idt hw_cbmc_parse_optionst::get_top_module()
+{
+  std::string top_module;
+
+  if(cmdline.isset("module"))
+    top_module=cmdline.get_value("module");
+  else if(cmdline.isset("top"))
+    top_module=cmdline.get_value("top");
+
+  if(top_module=="")
+    return irep_idt();
+
+  return get_module(
+    symbol_table, top_module, get_message_handler()).name;
+}
+
+/*******************************************************************\
+
+Function: hw_cbmc_parse_optionst::get_bound
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: add additional (synchonous) modules
+
+\*******************************************************************/
+
+unsigned hw_cbmc_parse_optionst::get_bound()
+{
+  if(cmdline.isset("bound"))
+    return safe_string2unsigned(cmdline.get_value("bound"))+1;
+  else
+    return 1;
+}
+
+/*******************************************************************\
+
 Function: hw_cbmc_parse_optionst::get_modules
 
   Inputs:
@@ -125,28 +172,23 @@ Function: hw_cbmc_parse_optionst::get_modules
 
 \*******************************************************************/
 
-int hw_cbmc_parse_optionst::get_modules(bmct &bmc)
+int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
 {
   //
   // unwinding of transition systems
   //
 
-  std::string top_module;
+  irep_idt top_module=get_top_module();
 
-  if(cmdline.isset("module"))
-    top_module=cmdline.get_value("module");
-  else if(cmdline.isset("top"))
-    top_module=cmdline.get_value("top");
-
-  if(top_module!="")
+  if(!top_module.empty())
   {
     try
     {
-      const symbolt &symbol=
-        get_module(symbol_table, top_module, get_message_handler());
-
       if(cmdline.isset("gen-interface"))
       {
+        const symbolt &symbol=
+          namespacet(symbol_table).lookup(top_module);
+
         if(cmdline.isset("outfile"))
         {
           std::ofstream out(cmdline.get_value("outfile").c_str());
@@ -164,10 +206,6 @@ int hw_cbmc_parse_optionst::get_modules(bmct &bmc)
         return 0; // done
       }
       
-      hw_bmct &hw_bmc=dynamic_cast<hw_bmct &>(bmc);
-
-      hw_bmc.unwind_module=symbol.name;
-
       //
       // map HDL variables to C variables
       //
@@ -176,10 +214,10 @@ int hw_cbmc_parse_optionst::get_modules(bmct &bmc)
 
       map_vars(
         symbol_table,
-        symbol.name,
-        hw_bmc.bmc_constraints,
-        ui_message_handler,
-        hw_bmc.unwind_no_timeframes);
+        top_module,
+        bmc_constraints,
+        get_message_handler(),
+        get_bound());
     }
 
     catch(int e) { return 6; }

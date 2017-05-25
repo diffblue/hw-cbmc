@@ -27,7 +27,10 @@ public:
   }
   
 protected:
-  virtual int get_modules(bmct &bmc);
+  virtual int get_modules(expr_listt &bmc_constraints);
+
+  irep_idt get_top_module();
+  unsigned get_bound();
 };
 
 #endif
