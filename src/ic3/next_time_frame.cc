@@ -44,13 +44,15 @@ int CompInfo::next_time_frame()
   add_time_frame();
   empty_cnts();
   init_bst_sat_solver();
- 
+
+  bool triv_time_frame = true;
   while (true) {
     bool sat_form = check_sat1(Bst_sat);
     if (sat_form == false) {
       ret_val = 2;
       break;}
 
+    triv_time_frame = false;
     CUBE Nst,St,Inps;
     extr_cut_assgns1(Nst,Next_svars,Bst_sat);
     extr_next_inps(Inps,Bst_sat);
@@ -99,7 +101,7 @@ int CompInfo::next_time_frame()
   if (rem_subsumed_flag) rem_redund_clauses();  
   simplify_tf_solvers();
   Lgs_sat.Mst->simplify();
-  push_clauses_forward(); 
+  push_clauses_forward(triv_time_frame); 
  
   if (inv_ind >= 0) return(0);    
 
@@ -143,6 +145,8 @@ void CompInfo::add_time_frame()
   Tf.tot_num_ctis = 0;
   Tf.num_rcnt_ctis = 0;
   Tf.num_bnd_cls = 0;
+  Tf.num_seen_cls = 0;
+  Tf.num_redund_cls = 0;
 
   Time_frames.push_back(Tf);
 

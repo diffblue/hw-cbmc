@@ -6,19 +6,18 @@
 *) add code to the procedures affected by
    the value of 'standard_mode'
 
-  +) set_long_param("min_cls",0);
+
   +) set_short_param2("act_upd_mode",BRAD_ACT_UPD);
-  +) set_long_param("comp_short",0);
+
  
   +) set_long_param("brad_obl",1);
   +) set_long_param("act_obl",0);  
-  +) set_long_param("sort_mode",1);
   +) set_long_param("dyn_push",1);
   +) set_long_param("mult_tried",0);
 
 *) add 'standard_mode' field
 
-*) add parameter --new_mode
+
 
 *) modify pushing for trivial time frames
 
@@ -52,9 +51,17 @@
 *) add code to the procedures affected by
    the value of 'standard_mode'
 *) remove 'tf_ind' from 'exclude_state_cube'
-*) update the way obligations are sorted
-   in the priority queue
 *) add code updating the fields of an element
    of priorty queue below
      dist; 
      sort_mode;
+*) add parameter --new_mode
+
+*) update the way obligations are sorted
+   in the priority queue
+    +) set_long_param("comp_short",0);
+    +) set_long_param("sort_mode",1);
+    +) set_long_param("min_cls",0);
+
+
+
