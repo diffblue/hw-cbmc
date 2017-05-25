@@ -12,9 +12,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/base_type.h>
 #include <util/std_expr.h>
 #include <util/std_code.h>
+#include <util/c_types.h>
 
 #include <langapi/language_util.h>
-#include <ansi-c/c_types.h>
 #include <trans-word-level/instantiate_word_level.h>
 
 #include "map_vars.h"
