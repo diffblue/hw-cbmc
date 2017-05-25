@@ -161,7 +161,10 @@ public:
   
 
  // --------------- Parameters controlling algorithm's behavior
- 
+
+  bool standard_mode; // if true, the algorithm simulates Bradley's version
+                      // of ic3 published in 2013
+  
   bool print_inv_flag; // if true, the invariant found by the program 
                        // (if any) is printed out
   char print_cex_flag; // 0 - counterexample (cex) is not printed out, 

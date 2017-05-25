@@ -98,25 +98,37 @@ struct OblTableElem {
 typedef std::vector <OblTableElem> OblTable;
 
 
+
 //
 //  PrQueue
 //
 struct PqElem {
-  int tf_ind; // time frame index
+  int tf_ind; // time frame index, the same value as in OblTableElem
+  int dist; //  the same value as in OblTableElem
   int tbl_ind; // index of this element in 'Obl_table'
+  int sort_mode; // specifies the sorting mode
 };
 
 
-class pq_compare
-{
+class pq_compare {
 public:
   bool operator() (PqElem &A, PqElem &B)
   {
-    return (A.tf_ind  > B.tf_ind);
+    if (A.tf_ind  > B.tf_ind) return(true);
+    if (A.tf_ind  < B.tf_ind) return(false);
+    if (A.dist > B.dist) return(true);
+    if (A.sort_mode == 0) return(false);
+    if (A.sort_mode == 1) {
+      if (A.tbl_ind > B.tbl_ind) return(true);
+      else return(false);}
+    assert(A.sort_mode == 2);
+    if (A.tbl_ind < B.tbl_ind) return(true);
+    else return(false);
   }
 };
 
 typedef std::priority_queue<PqElem,std::vector <PqElem>, pq_compare> PrQueue;
+
 
 
 //

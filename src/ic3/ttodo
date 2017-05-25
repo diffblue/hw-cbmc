@@ -1,0 +1,60 @@
+=====================
+
+     T O   D O
+ 
+=====================
+*) add code to the procedures affected by
+   the value of 'standard_mode'
+
+  +) set_long_param("min_cls",0);
+  +) set_short_param2("act_upd_mode",BRAD_ACT_UPD);
+  +) set_long_param("comp_short",0);
+ 
+  +) set_long_param("brad_obl",1);
+  +) set_long_param("act_obl",0);  
+  +) set_long_param("sort_mode",1);
+  +) set_long_param("dyn_push",1);
+  +) set_long_param("mult_tried",0);
+
+*) add 'standard_mode' field
+
+*) add parameter --new_mode
+
+*) modify pushing for trivial time frames
+
+*) add parameter --stat
+
+*) add perl script that checks all the properties in a straightforward way
+
+*) remove grl_heur flag and the related code
+
+*) remove all the extra files I have added (scripts and so on)
+
+
+
+*) add code freeing memory allocated by the Verilog reader after IC3
+   converted this information into its internal data
+   structure. (Keeping this memory is too expensive for large
+   examples.)
+
+=================
+
+    D O N E
+
+=================
+*) get rid of 'prop_ind'
+*) modify 'find_prop'
+*) replace '--prop' with '--property'
+*) modify regression tests
+*) eliminate the bug in generating constrained formulas
+*) remove the performance bug caused by insufficient lifting
+   of CTG-states
+*) add code to the procedures affected by
+   the value of 'standard_mode'
+*) remove 'tf_ind' from 'exclude_state_cube'
+*) update the way obligations are sorted
+   in the priority queue
+*) add code updating the fields of an element
+   of priorty queue below
+     dist; 
+     sort_mode;
