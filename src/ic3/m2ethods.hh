@@ -128,7 +128,7 @@ bool check_sat2(SatSolver &Slvr,MvecLits &Assmps);
 void add_negated_assumps1(MvecLits &Assmps,CLAUSE &C);
 void add_negated_assumps2(MvecLits &Assmps,CLAUSE &C,bool sort);
 void gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps);
-void add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St);
+void add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St,bool add_cnstr_lits);
 void add_temp_clause(Mlit &act_lit,SatSolver &Slvr,CLAUSE &C);
 void simplify_tf_solvers();
 void print_tf_assgns(int tf_ind);
