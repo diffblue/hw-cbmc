@@ -101,7 +101,7 @@ void CompInfo::print_flags()
   printf("selector = %d\n",selector);
   printf("ctg_flag = %d\n",ctg_flag);
   printf("constr_flag = %d\n",constr_flag);
-
+  printf("standard_mode = %d\n",standard_mode);
  
 
 

@@ -11,11 +11,10 @@
 
  
   +) set_long_param("brad_obl",1);
-  +) set_long_param("act_obl",0);  
   +) set_long_param("dyn_push",1);
-  +) set_long_param("mult_tried",0);
 
-*) add 'standard_mode' field
+
+
 
 
 
@@ -56,12 +55,12 @@
      dist; 
      sort_mode;
 *) add parameter --new_mode
+*) add 'standard_mode' field
 
 *) update the way obligations are sorted
    in the priority queue
     +) set_long_param("comp_short",0);
     +) set_long_param("sort_mode",1);
     +) set_long_param("min_cls",0);
-
-
-
+    +) set_long_param("act_obl",0);
+    +) set_long_param("mult_tried",0);

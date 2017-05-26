@@ -63,8 +63,8 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
     int succ_ind = Obl_table[tbl_ind].succ_ind;
 
     bool ok = true;
-    if (standard_mode)
-      ok = oblig_is_active(curr_tf+1,St_cube);
+  
+    ok = oblig_is_active(curr_tf+1,St_cube);
 
     if (!ok) {
       if (st_descr == OLD_STATE) triv_old_st_cnt++;

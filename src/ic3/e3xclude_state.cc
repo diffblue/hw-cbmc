@@ -45,12 +45,13 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
   if (C0.size()  < max_tries) 
     max_tries = C0.size();
   size_t num_tries = 0;
-
+  size_t loc_failed = 0;
+  
   while (true) {
     if (num_tries > max_tries) 
       return;
     
-    if (Curr.size() <= Tried.size())
+    if (Curr.size() <= loc_failed)
       return;
 
     int lit = pick_lit_to_remove(Curr,Tried,curr_tf);
@@ -64,6 +65,7 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
     if (!ok) {
       Curr.push_back(lit);
       num_tries++;
+      loc_failed++;
       if (ctg_flag) Failed_lits.insert(lit);
       continue;
     }
@@ -79,6 +81,7 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
 
     if (!ok) {
       failed_impr++;
+      loc_failed++;
       if (ctg_flag) Failed_lits.insert(lit);
       Curr.push_back(lit);
       num_tries++;
@@ -92,6 +95,10 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
     if (C.size() == 1) return;
     Curr = C1;
     num_tries = 0;
+    if (!standard_mode) {
+      Tried.clear();
+      loc_failed = 0;
+    }
     Tried.clear();
     if (C1.size() < max_tries) max_tries = C1.size();
   }
