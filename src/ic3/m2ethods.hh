@@ -186,7 +186,7 @@ void form_property_gates(CUBE &Gates);
 void print_files(char *root);
 int init_ind_cls();
 void form_nxt_cube(CUBE &Nxt_cube,CLAUSE &C);
-
+int push_on_the_fly(int last_ind,CLAUSE &C,char st_desc);
 //
 //  form CNF formulas
 void add_or_gate_cubes(DNF &F,int gate_ind,int shift);

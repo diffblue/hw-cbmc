@@ -10,8 +10,7 @@
   +) set_short_param2("act_upd_mode",BRAD_ACT_UPD);
 
  
-  +) set_long_param("brad_obl",1);
-  +) set_long_param("dyn_push",1);
+ 
 
 
 
@@ -64,3 +63,5 @@
     +) set_long_param("min_cls",0);
     +) set_long_param("act_obl",0);
     +) set_long_param("mult_tried",0);
+    +) set_long_param("brad_obl",1);
+    +) set_long_param("dyn_push",1);

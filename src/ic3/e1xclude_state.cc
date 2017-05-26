@@ -61,10 +61,8 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
     int st_ind = tf_lind + 1 - dist;
     
     int succ_ind = Obl_table[tbl_ind].succ_ind;
-
-    bool ok = true;
   
-    ok = oblig_is_active(curr_tf+1,St_cube);
+    bool ok = oblig_is_active(curr_tf+1,St_cube);
 
     if (!ok) {
       if (st_descr == OLD_STATE) triv_old_st_cnt++;
@@ -88,21 +86,30 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
 	std::cout  << C << std::endl;
       }
 
-      int tf_ind1 = curr_tf+1;
-      if (tf_ind1 < tf_lind) {
-	CUBE Inps = Obl_table[tbl_ind].Inp_assgn;
-	add_new_elem(St_cube,Inps,tf_ind1+1,dist,succ_ind,OLD_STATE);
-      }
-     
-      
-      if (succ_ind == -1) {
+      if (succ_ind == -1) 
 	G.push_back(C);
-	add_fclause1(C,curr_tf+1,st_descr);	 
-	continue;
-      } 
-	 
-      // the set of obligations is not empty yet      
-      add_fclause1(C,curr_tf+1,st_descr);
+            
+  // the set of obligations is not empty yet
+      
+      int tf_ind1 = curr_tf+1;
+
+      if (standard_mode)
+	tf_ind1 = push_on_the_fly(curr_tf+1,C,st_descr);
+
+      add_fclause1(C,tf_ind1,st_descr);
+
+      if (standard_mode) {
+	if (tf_ind1 <= tf_lind) {
+	  CUBE Inps = Obl_table[tbl_ind].Inp_assgn;
+	  add_new_elem(St_cube,Inps,tf_ind1,dist,succ_ind,OLD_STATE);
+	}
+      }
+      else
+	if (tf_ind1 < tf_lind) {
+	  CUBE Inps = Obl_table[tbl_ind].Inp_assgn;
+	  add_new_elem(St_cube,Inps,tf_ind1+1,dist,succ_ind,OLD_STATE);
+	}
+     
       continue;
     }
     
