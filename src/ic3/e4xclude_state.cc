@@ -119,7 +119,7 @@ bool CompInfo::cont_init_states(CUBE &St_cube) {
 bool CompInfo::oblig_is_active(int tf_ind,CUBE &St_cube)
 {
 
-  if (tf_ind >  tf_lind) return(false);
+  if ((size_t) tf_ind >= Time_frames.size()) return(false);
 
   SatSolver &Slvr = Time_frames[tf_ind].Slvr;
 
