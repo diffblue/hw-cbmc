@@ -264,8 +264,10 @@ void ebmc_parse_optionst::help()
     " --ic3 [options]                   use IC3 engine with options described below\n"
     "       --property <nm>                  check property named <nm>\n"
     "       --constr                         use constraints specified in 'file.cnstr'\n"
-    "       --help                           print out help information\n"
+    "       --h                              print out help information\n"
     "       --new-mode                       new mode is switched on\n"
+    "       --aiger                          print out the instance in aiger format\n"
+    
     //" --interpolation                   use bit-level interpolants\n"
     //" --interpolation-word              use word-level interpolants\n"
     //" --diameter                        perform recurrence diameter test\n"

@@ -185,9 +185,19 @@ void ic3_enginet::form_gates()
 void ic3_enginet::form_outp_buf(CDNF &Out_names)
 {
 
-  int olit = prop_l.get();
-  if (prop_l.is_constant() == 0) 
-    if (prop_l.sign()) olit--;
+ 
+  unsigned olit = prop_l.get();
+
+  Ci.const_false_prop = false;
+  Ci.const_true_prop = false;
+  
+  if (prop_l.is_constant() == 0)
+    if (prop_l.sign()) 
+       olit--;
+    
+  
+ 
+ 
   
 
   assert(Ci.Inps.find(olit) == Ci.Inps.end());
@@ -200,13 +210,15 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   Pin_names.push_back(Dummy);
   char Buff[MAX_NAME];
   if (prop_l.is_false())  {
-     sprintf(Buff,"c0");
-     conv_to_vect(Pin_names[0],Buff);
-     goto NEXT;  }
+    Ci.const_false_prop = true;
+    sprintf(Buff,"c0");
+    conv_to_vect(Pin_names[0],Buff);
+    goto NEXT;  }
   if (prop_l.is_true()) {
-     sprintf(Buff,"c1");
-     conv_to_vect(Pin_names[0],Buff);
-     goto NEXT;
+    Ci.const_true_prop = true;
+    sprintf(Buff,"c1");
+    conv_to_vect(Pin_names[0],Buff);
+    goto NEXT;
   }
   
   if (orig_names) 
