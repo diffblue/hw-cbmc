@@ -24,7 +24,9 @@ public:
                  // Ordering[i] == i
  
   std::string prop_name; // specifies the name of the property to be checked 
-                   
+  bool const_true_prop; // if 'true', the property is a constant 'true'
+  bool const_false_prop; // if true, the property is a constant 'false'
+ 
    
   CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to 
                     // the output of gate 'gate_ind'
@@ -263,6 +265,7 @@ public:
   void form_consts(Circuit *N);
   void form_constr_lits();
   void add_constrs();
+  void print_aiger_format();
 
 protected:
 

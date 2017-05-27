@@ -81,6 +81,12 @@ int ic3_enginet::operator()()
   
   
   read_ebmc_input();
+  if (cmdline.isset("aiger")) {
+    printf("converting to aiger format\n");
+    Ci.print_aiger_format();
+    exit(0);
+  }
+  
   //  printf("Constr_gates.size() = %d\n",Ci.Constr_gates.size()); 
   return(Ci.run_ic3());
 

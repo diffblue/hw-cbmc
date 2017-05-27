@@ -3,6 +3,11 @@
      T O   D O
  
 =====================
+*) polish the header part of 'm4y_aiger_print.cc
+   and 'm5y_aiger_print.cc' (take into account
+   Matthias' PR)
+
+
 *) add code to the procedures affected by
    the value of 'standard_mode'
 
@@ -13,17 +18,9 @@
  
 
 
-
-
-
-
-*) modify pushing for trivial time frames
-
 *) add parameter --stat
 
 *) add perl script that checks all the properties in a straightforward way
-
-*) remove grl_heur flag and the related code
 
 *) remove all the extra files I have added (scripts and so on)
 
@@ -65,3 +62,8 @@
     +) set_long_param("mult_tried",0);
     +) set_long_param("brad_obl",1);
     +) set_long_param("dyn_push",1);
+*) modify pushing for trivial time frames
+*) remove grl_heur flag and the related code
+*) remove add_final_gates
+*) add option to print out the circuit in
+   the aiger format

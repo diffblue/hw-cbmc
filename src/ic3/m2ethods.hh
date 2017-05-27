@@ -206,5 +206,19 @@ void gate_sort_inps_first();
 void gate_sort_outs_first();
 void rand_gate_order();
 void print_gate_sort_mode();
-
-
+//
+//  related to printing out circuit in aiger format
+void check_circuit(int &num_buffs,int &num_consts);
+void print_aiger_header(FILE *fp,int max_var,int num_gates);
+void print_aiger_inps(FILE *fp);
+void print_aiger_latches(FILE *fp);
+int find_aiger_lit1(int gate_ind,char polarity);
+int find_aiger_lit2(int gate_ind,char polarity);
+void print_aiger_gates(FILE *fp,DNF &Gates);
+void add_aiger_and_gate(DNF &Gates,int gate_ind);
+void add_aiger_buffer(DNF &Gates,int gate_ind);
+void print_aiger_output(FILE *fp,DNF &Gates,int out_ind);
+int form_aiger_gates(DNF &Gates);
+void add_triplet(DNF &Gates,int olit,int lit0,int lit1);
+int find_max_aiger_var(DNF &Gates);
+void print_aiger_constrs(FILE *fp);
