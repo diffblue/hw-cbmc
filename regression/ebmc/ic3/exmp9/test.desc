@@ -2,6 +2,6 @@ CORE
 sm98a7multi.sv
 --ic3 --property sm98a7multi.property.2 --constr
 ^property FAILED
-^verification is ok
+^cex verification is ok
 --
-^verification failed
+^cex verification failed

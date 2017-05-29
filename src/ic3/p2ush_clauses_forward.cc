@@ -69,7 +69,7 @@ void CompInfo::push_clauses_forward(bool triv_time_frame)
 	  add_copies(i,C);
 	  continue;}
       }
-      else  // C.size() == F[clause_ind.size()
+      else  // C.size() == F[clause_ind].size()
 	if (Clause_info[clause_ind].span < i) 
 	  continue;
 	

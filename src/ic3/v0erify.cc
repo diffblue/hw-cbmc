@@ -32,7 +32,7 @@ bool CompInfo::ver_trans_inv()
   if (!ok) return(false);
   ok = ver_invar(H,Old_nums);
   if (!ok) return(false);
-  printf("verification is ok\n");
+  printf("inductive invariant verification is ok\n");
   return(true);
 } /* end of function ver_trans_inv */
 
@@ -91,7 +91,7 @@ bool CompInfo::ver_ind_clauses2(CNF &H,CUBE &Old_nums)
     add_negated_assumps1(Assmps,C);   
     bool sat_form = check_sat2(Gen_sat,Assmps);
     if (sat_form) {
-      printf("verification failed\n");
+      printf("inductive invariant verification failed\n");
       printf("Inv & T does not imply F'[%d]\n",Old_nums[i]);
       printf("F[%d]-> ",Old_nums[i]); 
       std::cout << H[i] << std::endl;
@@ -139,7 +139,7 @@ bool CompInfo::ver_prop()
 
   bool sat_form = check_sat1(Gen_sat);
   if (sat_form) {
-    printf("verification failed\n");
+    printf("inductive invariant verification failed\n");
     printf("Ist does not imply Prop\n");
     return(false);
   }
@@ -202,7 +202,7 @@ bool CompInfo::ver_ind_clauses1(CNF &H)
    
     bool sat_form = check_sat2(Gen_sat,Assmps);
     if (sat_form) {
-      printf("verification failed\n");  
+      printf("inductive invariant verification failed\n");  
       printf("clause F[%zu] excludes an initial state: ", i);
       std::cout << H[i] << std::endl;
       return(false);

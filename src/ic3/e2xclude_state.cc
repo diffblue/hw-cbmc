@@ -152,7 +152,7 @@ void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
     printf("%*c",9,' ');
     printf("expand_clause\n");
   }
-  htable_lits.change_marker(); // increment or reset the hash table marker 
+  htable_lits.change_marker(); 
   htable_lits.started_using();
 
   int marker = htable_lits.marker;
