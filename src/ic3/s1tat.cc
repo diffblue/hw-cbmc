@@ -159,7 +159,8 @@ void CompInfo::print_time_frame_stat()
   if (verbose > 0) 
     my_printf("F.size() = %m, num. inact. clauses  = %m\n",(int) F.size(), 
               num_inact_cls);
-  printf("num. seen (redund) cls = %d (%d)\n",Tf.num_seen_cls,Tf.num_redund_cls);
+  //  printf("num. seen (redund) cls = %d (%d)\n",Tf.num_seen_cls,
+  // Tf.num_redund_cls);
 } /* end of function print_time_frame_stat*/
 
 

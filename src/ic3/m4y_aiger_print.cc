@@ -1,29 +1,22 @@
-#include <iostream>
-#include <list>
-#include <vector>
+/******************************************************
+
+Module: Printing circuit in text version of aiger format  
+        (Part 1)
+
+Author: Eugene Goldberg, eu.goldberg@gmail.com
+
+******************************************************/
 #include <queue>
 #include <set>
 #include <map>
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
-#include <string.h>
-#include <time.h>
 #include <algorithm>
-#include <ctime>
-#include <climits>
-#include <cassert>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
+#include <iostream>
 
 #include <ebmc/ebmc_base.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 
-
-using namespace std;
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
@@ -39,9 +32,8 @@ void CompInfo::print_aiger_format()
   int num_consts;
   int num_buffs;
   check_circuit(num_buffs,num_consts);
-  // printf("num_buffs = %d\n",num_buffs);
   assert(num_consts <= 2);
-  string full_name;
+  std::string full_name;
   assert(strlen(out_file) > 0);
   full_name = out_file;
   full_name += ".aag";

@@ -2,6 +2,6 @@ CORE
 pdtvispeterson.sv
 --ic3
 ^property HOLDS
-^verification is ok
+^inductive invariant verification is ok
 --
-^verification failed
+^inductive invariant verification failed

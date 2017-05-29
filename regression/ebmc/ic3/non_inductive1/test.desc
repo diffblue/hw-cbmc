@@ -2,5 +2,6 @@ CORE
 non_inductive.sv
 --ic3 --property main.property.p0
 ^property HOLDS$
-^verification is ok
+^inductive invariant verification is ok
 --
+^inductive invariant verification failed

@@ -139,7 +139,8 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
   A D D _ C L S _ E X C L _ S T _ C U B E
 
   ===========================================*/
-void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St,bool add_cnstr_lits)
+void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St,
+				    bool add_cnstr_lits)
 {
   CLAUSE C;
   act_lit = IctMinisat::mkLit(Slvr.Mst->newVar(),false);
