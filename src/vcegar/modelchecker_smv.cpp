@@ -164,7 +164,7 @@ bool modelchecker_smvt::read_result_cadence_smv(
           counterexample);
 
 
-        print(9, "Cadence SMV counterexample sucessfully read");
+        debug() << "Cadence SMV counterexample sucessfully read" << eom;
 
         return false;
       }
