@@ -162,7 +162,7 @@ bool verilog_languaget::typecheck(
   if(verilog_typecheck(parse_tree, symbol_table, module, get_message_handler()))
     return true;
     
-  print(9, "Synthesis "+module);
+  debug() << "Synthesis " << module << eom;
 
   if(verilog_synthesis(symbol_table, module, get_message_handler(), options))
     return true;

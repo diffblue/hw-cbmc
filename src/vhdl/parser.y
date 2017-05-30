@@ -53,7 +53,8 @@ int yyvhdlerror(const char *error_str)
   source_location.set_line(yyvhdllval.line);
   source_location.set_file(yyvhdllval.file);
 
-  PARSER.print(1, tmp, -1, source_location);
+  PARSER.error().source_location=source_location;
+  PARSER.error() << tmp << messaget::eom;
                   
   return strlen(error_str)+1;
 }
