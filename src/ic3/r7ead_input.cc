@@ -25,6 +25,41 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 /*=========================================
 
+        A D D _ P S E U D O _ I N P S
+
+  ==========================================*/
+void ic3_enginet::add_pseudo_inps(Circuit *N)
+{
+
+
+  GCUBE &Gate_list = N->Gate_list;
+  for (size_t i=0; i < Gate_list.size();i++) {
+    Gate &G=Gate_list[i];
+    if (G.flags.active) continue;
+    // printf("inactive gate: ");
+    // print_name1(G.Gate_name,true);
+
+    G.func_type = BUFFER;
+    G.gate_type = INPUT;
+    G.flags.active = 1; // mark this input as active 
+    G.flags.output = 0;
+    G.flags.transition = 0;
+    G.flags.output_function = 0;
+    G.flags.feeds_latch = 0;
+    G.level_from_inputs = 0; // set the topological level to 0
+    G.inp_feeds_latch = false;
+ 
+    //   Add it to the circuit
+   
+    N->Inputs.push_back(i);
+    N->ninputs++; // increment the number of inputs
+   
+  }
+
+} /*end of function add_pseudo_inps */
+
+/*=========================================
+
  F O R M _ I N I T _ C O N S T R _ L I T S
 
   ==========================================*/

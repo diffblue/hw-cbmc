@@ -105,6 +105,8 @@ void ic3_enginet::form_latched_gates()
       literalt lit =var.bits[j].current;
       int init_val = Latch_val[lit.var_no()];
       literalt next_lit = var.bits[j].next;
+      // int lit_val = next_lit.get();
+      // printf("next st. var: %d\n",lit_val);
       add_new_latch(Latches,init_val,lit,next_lit);
     }
   }
