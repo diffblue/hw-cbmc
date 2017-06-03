@@ -147,7 +147,11 @@ void ic3_enginet::form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,
   literalt gt_lit(node_ind,false);
 
   add_gate_out_name(Pin_names[2],gt_lit,Pol);
-
+  // print_name1(Pin_names[2]);
+  // printf(": "); print_name1(Pin_names[0]);
+  // printf(" "); print_name1(Pin_names[1],true);
+  // printf(" Pin_names[0].size() = %d, Pin_names[1].size() = %d\n",(int) Pin_names[0].size(),
+  // 	 (int) Pin_names[1].size());
 } /* end of function from_gate_pin_names */
 
 /*===============================
@@ -160,10 +164,17 @@ void ic3_enginet::form_gates()
 
   Circuit *N = Ci.N;
   aigt::nodest &Nodes = netlist.nodes;
- 
+
   for (size_t i=0; i <  Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];
-    if (Nd.is_var()) continue;
+    if (Nd.is_var()) {
+      // printf("skipping a var node\n");
+      // literalt gt_lit(i,false);
+      // unsigned lit_val = gt_lit.get();
+      // printf("lit_val = %u\n",lit_val);
+      // printf("i = %zu\n",i);
+      continue;
+    }
     CDNF Pin_names;
     CUBE Pol;    
     form_gate_pin_names(Pin_names,Pol,i);

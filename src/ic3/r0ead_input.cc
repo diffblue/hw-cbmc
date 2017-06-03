@@ -75,9 +75,9 @@ void ic3_enginet::form_circ_from_ebmc()
   find_prop_lit();
  
   form_latched_gates();
- 
-  form_gates();
 
+  form_gates();
+ 
   CDNF Out_names;
   form_outp_buf(Out_names);
   form_invs();
@@ -85,6 +85,7 @@ void ic3_enginet::form_circ_from_ebmc()
  
   add_spec_buffs(N);
 
+  add_pseudo_inps(N);
  
   fill_fanout_lists(N);
   assign_gate_type(N,Out_names,true);
@@ -115,7 +116,8 @@ void ic3_enginet::form_inputs()
     if (var.is_input() == false) continue;
     for (size_t j=0; j < var.bits.size(); j++) {  
       literalt lit =var.bits[j].current;
-      int lit_val = lit.get();    
+      int lit_val = lit.get();
+      //      printf("lit_val = %d\n",lit_val);
       CCUBE Name;
       if (orig_names) {
 	bool ok = form_orig_name(Name,lit);

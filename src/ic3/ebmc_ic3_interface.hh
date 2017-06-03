@@ -1,5 +1,6 @@
 typedef std::vector<std::string> GateNames;
 typedef std::map<int,int> LatchVal;
+typedef std::map<int,int> NondetVars;
 //
 class ic3_enginet:public ebmc_baset
 {
@@ -15,6 +16,7 @@ public:
   GateNames Gn;
   literalt prop_l;
   LatchVal Latch_val;
+  NondetVars Nondet_vars;
   bool const0,const1;
   bool orig_names;
 
@@ -54,7 +56,7 @@ public:
   void form_init_constr_lits();
   void store_constraints(const std::string &fname);
   void read_constraints(const std::string &fname);
-
+  void add_pseudo_inps(Circuit *N);
 protected:
   netlistt netlist;
  

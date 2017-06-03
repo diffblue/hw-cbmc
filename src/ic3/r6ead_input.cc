@@ -87,7 +87,7 @@ bool ic3_enginet::find_prop(propertyt &Prop)
 
   assert(properties.size() > 0);
 
-  if ((properties.size() == 1) && (Ci.prop_name.size() == 0)) {
+  if ((properties.size() >= 1) && (Ci.prop_name.size() == 0)) {
     Prop = properties.front();
     Ci.prop_name = id2string(Prop.name);
     return(true);
