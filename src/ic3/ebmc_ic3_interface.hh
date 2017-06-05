@@ -43,6 +43,7 @@ public:
   void print_lit1(unsigned var,bool sign);
   void print_lit2(unsigned var,bool sign);
   void print_nodes();
+  void print_var_map();
   void form_orig_names();
   void form_neg_orig_name(CCUBE &Name,literalt &next_lit);
   bool form_orig_name(CCUBE &Name,literalt &lit,bool subtract = false);

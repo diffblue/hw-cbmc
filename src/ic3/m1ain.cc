@@ -79,8 +79,10 @@ int ic3_enginet::operator()()
   const1 = false;
   orig_names = false;
   
-  
+  // print_nodes();
+  // print_var_map();
   read_ebmc_input();
+  //print_blif3("tst.blif",Ci.N);
   if (cmdline.isset("aiger")) {
     printf("converting to aiger format\n");
     Ci.print_aiger_format();

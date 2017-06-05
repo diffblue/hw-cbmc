@@ -23,6 +23,37 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <ebmc/ebmc_base.h>
 #include "ebmc_ic3_interface.hh"
 
+/*=====================================
+
+       P R I N T _ V A R _ M A P
+
+  =====================================*/
+void ic3_enginet::print_var_map()
+{
+
+
+  var_mapt &vm = netlist.var_map;
+
+  for(var_mapt::mapt::const_iterator it=vm.map.begin();
+      it!=vm.map.end(); it++)    {
+    const var_mapt::vart &var=it->second;
+    if (var.is_input()) printf("input: ");
+    else if (var.is_latch()) printf("latch: ");
+    else if (var.is_nondet()) printf("nondet: ");
+    else if (var.is_wire()) printf("wire:" );
+    else assert(false);
+    
+    for (size_t j=0; j < var.bits.size(); j++) {
+      if (j > 0) printf(", ");
+      literalt lit =var.bits[j].current;
+      unsigned lit_val = lit.get();
+      printf("[%zu] = %u",j,lit_val);
+    }
+    printf("\n");
+  }
+  
+
+} /* end of function print_var_map */
 /*=========================================
 
         A D D _ P S E U D O _ I N P S

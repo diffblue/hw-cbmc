@@ -58,6 +58,9 @@ void ic3_enginet::find_prop_lit()
   prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
 			     get_message_handler());
 
+  // int var_num = prop_l.var_no();
+  // printf("var_num = %d\n",var_num);
+  
   if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
   else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;
   
