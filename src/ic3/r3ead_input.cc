@@ -205,11 +205,6 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   if (prop_l.is_constant() == 0)
     if (prop_l.sign()) 
        olit--;
-    
-  
- 
- 
-  
 
   assert(Ci.Inps.find(olit) == Ci.Inps.end());
   bool latch = false;

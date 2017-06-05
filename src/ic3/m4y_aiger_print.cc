@@ -176,8 +176,8 @@ void CompInfo::print_aiger_header(FILE *fp,int max_var,int num_gates)
   fprintf(fp,"aag ");
 
   fprintf(fp,"%d ",max_var); 
-  fprintf(fp,"%d ",N->ninputs);
-  fprintf(fp,"%d ",N->nlatches);
+  fprintf(fp,"%zu ",N->ninputs);
+  fprintf(fp,"%zu ",N->nlatches);
   fprintf(fp,"1 ");
   fprintf(fp,"%d",num_gates);
   if (Constr_gates.size() == 0)  fprintf(fp,"\n");
@@ -220,9 +220,9 @@ void CompInfo::check_circuit(int &num_buffs,int &num_consts)
       cond |= (G.func_type == CONST);
       if (!cond)      {
         p();
-	printf("i = %d\n",i);
-	printf("N->Gate_list.size() = %d\n",(int) N->Gate_list.size());
-	printf("G.ninputs = %d\n",G.ninputs);
+	printf("i = %zu\n",i);
+	printf("N->Gate_list.size() = %zu\n", N->Gate_list.size());
+	printf("G.ninputs = %zu\n",G.ninputs);
 	exit(100);
       }
     }
