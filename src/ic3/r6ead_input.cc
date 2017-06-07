@@ -152,6 +152,7 @@ void ic3_enginet::form_orig_names()
 void ic3_enginet::print_nodes()
 {
 
+  printf("\n-----  Nodes ------\n");
   aigt::nodest &Nodes = netlist.nodes;
   for (size_t i=0; i <= Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];

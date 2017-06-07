@@ -21,6 +21,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 #include "ebmc_ic3_interface.hh"
+
+
 /*=========================================
 
       U P D _ G A T E _ C O N S T R S
@@ -84,6 +86,7 @@ int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
 void ic3_enginet::store_constraints(const std::string &fname)
 {
 
+  add_verilog_conv_constrs();
   if (Ci.constr_flag == false) return;
 
   read_constraints(fname);
@@ -241,7 +244,7 @@ void ic3_enginet::gen_ist_lits(bvt &Ist_lits)
       continue;
     if (var_num >= Nodes.size()) {
       p();
-      printf("var_num = %d\n",var_num);
+      printf("var_num = %zd\n",var_num);
       printf("Nodes.size() = %zu\n",Nodes.size());
       exit(100);
     }

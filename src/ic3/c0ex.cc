@@ -59,6 +59,9 @@ bool CompInfo::check_one_state_cex()
 
   add_bad_states(Gen_sat);
 
+  // add constraints
+  accept_constrs(Gen_sat);
+
 
   bool sat_form = check_sat1(Gen_sat);
   bool ok = true;
@@ -157,13 +160,34 @@ void CompInfo::add_neg_prop(SatSolver &Slvr)
   accept_new_clause(Slvr,C);
 } /* end of function add_neg_prop */
 
-/*=====================================
+/*==================================
 
-  A D D _ B A D _ S T A T E S
+    A D D _ B A D _ S T A T E S
 
-  ====================================*/
+  ================================*/
 void CompInfo::add_bad_states(SatSolver &Slvr)
 {
   add_neg_prop(Slvr);
 
+} /* end of function add_bad_states */
+
+/*===================================
+
+    A C C E P T _ C O N S T R S
+
+ ==================================*/
+void CompInfo::accept_constrs(SatSolver &Slvr)
+{
+  for (size_t i=0; i < Constr_ilits.size(); i++) {
+    CLAUSE U;
+    U.push_back(Constr_ilits[i]);
+    accept_new_clause(Slvr,U);
+  }
+
+  SCUBE::iterator pnt;
+  for (pnt = Constr_nilits.begin(); pnt != Constr_nilits.end(); pnt++) {
+    CLAUSE U;
+    U.push_back(*pnt);
+    accept_new_clause(Slvr,U);
+  }
 } /* end of function add_bad_states */
