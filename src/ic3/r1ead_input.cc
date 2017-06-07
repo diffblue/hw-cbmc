@@ -63,6 +63,9 @@ void ic3_enginet::find_prop_lit()
   
   if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
   else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;
+
+  // print_lit(std::cout,prop_l);
+  // printf("\n");
   
 } /* end of function find_prop_lit */
 

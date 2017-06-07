@@ -161,6 +161,7 @@ bool CompInfo::ver_ini_states(CNF &H)
   
   accept_new_clauses(Gen_sat,Ist);  
 
+  accept_constrs(Gen_sat);
   bool ok = ver_prop();
   if (!ok) return(false);
 

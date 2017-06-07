@@ -23,37 +23,85 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <ebmc/ebmc_base.h>
 #include "ebmc_ic3_interface.hh"
 
+
 /*=====================================
 
        P R I N T _ V A R _ M A P
 
-  =====================================*/
-void ic3_enginet::print_var_map()
+ =====================================*/
+void ic3_enginet::print_var_map(std::ostream &out)
 {
 
 
-  var_mapt &vm = netlist.var_map;
+  printf("\n-----  Var Map ------\n");
 
+  var_mapt &vm = netlist.var_map;
   for(var_mapt::mapt::const_iterator it=vm.map.begin();
-      it!=vm.map.end(); it++)    {
-    const var_mapt::vart &var=it->second;
-    if (var.is_input()) printf("input: ");
-    else if (var.is_latch()) printf("latch: ");
-    else if (var.is_nondet()) printf("nondet: ");
-    else if (var.is_wire()) printf("wire:" );
-    else assert(false);
-    
-    for (size_t j=0; j < var.bits.size(); j++) {
-      if (j > 0) printf(", ");
-      literalt lit =var.bits[j].current;
-      unsigned lit_val = lit.get();
-      printf("[%zu] = %u",j,lit_val);
+      it!=vm.map.end(); it++)
+    {
+      const var_mapt::vart &var=it->second;
+
+      for(std::size_t i=0; i<var.bits.size(); i++)
+	{
+	  out << "  " << it->first;
+	  if(var.bits.size()!=1) out << "[" << i << "]";
+	  out << "=";
+
+	  literalt l_c=var.bits[i].current;
+
+	  if(l_c.is_true())
+	    out << "true";
+	  else if(l_c.is_false())
+	    out << "false";
+	  else
+	    {
+	      if(l_c.sign()) out << "!";
+	      out << l_c.var_no();
+	    }
+      
+	  if(var.vartype==var_mapt::vart::vartypet::LATCH)
+	    {
+	      out << "->";
+        
+	      literalt l_n=var.bits[i].next;
+
+	      if(l_n.is_true())
+		out << "true";
+	      else if(l_n.is_false())
+		out << "false";
+	      else
+		{
+		  if(l_n.sign()) out << "!";
+		  out << l_n.var_no();
+		}
+	    }
+       
+	  out << " ";
+
+	  switch(var.vartype)
+	    {
+	    case var_mapt::vart::vartypet::INPUT: out << "(input)"; break;
+	    case var_mapt::vart::vartypet::LATCH: out << "(latch)"; break;
+	    case var_mapt::vart::vartypet::NONDET: out << "(nondet)"; break;
+	    case var_mapt::vart::vartypet::WIRE:  out << "(wire)"; break;
+	    case var_mapt::vart::vartypet::OUTPUT:out << "(output)"; break;
+	    case var_mapt::vart::vartypet::UNDEF: out << "(?)"; break;
+	    }
+
+	  out << '\n';
+	}
     }
-    printf("\n");
-  }
+
+  out << '\n'
+      << "Total no. of variable bits: " << vm.reverse_map.size() << '\n'
+      << "Total no. of latch bits: " << vm.latches.size() << '\n'
+      << "Total no. of nondet bits: " << vm.nondets.size() << '\n'
+      << "Total no. of input bits: " << vm.inputs.size() << '\n'
+      << "Total no. of output bits: " << vm.outputs.size() << '\n';
+
   
 
-} /* end of function print_var_map */
+    } /* end of function print_var_map */
 /*=========================================
 
         A D D _ P S E U D O _ I N P S

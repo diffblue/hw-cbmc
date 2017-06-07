@@ -137,10 +137,6 @@ void ic3_enginet::form_inputs()
 } /* end of function form_inputs */
 
 
-
-
-
-
 /*=================================
 
        F O R M _ T A B L E
@@ -189,10 +185,6 @@ void CompInfo::form_max_pres_svar() {
   max_pres_svar = max;
 } /* end of function form_max_pres_svar */
 
-
-
-
-
 /*===================================
 
       F O R M _ V A R _ N U M S
@@ -209,3 +201,20 @@ void CompInfo::form_var_nums()
   max_num_vars = max_num_vars0 + num_prop_vars; // we need to take into account
   // that property needs to be specified in two time frames
 } /* end of function form_var_nums */
+
+/*================================================
+
+   A D D _ V E R I L O G _ C O N V _ C O N S T R S
+
+  ================================================*/
+void ic3_enginet::add_verilog_conv_constrs()
+{
+
+  for(literalt lit : netlist.constraints) {
+    if (lit.is_constant()) continue;
+    std::cout << "constraint literal " << lit.get() << "\n";
+     Ci.Init_clits.insert(lit.get());
+  }
+
+
+} /* end of function add_verlig_conv_constrs */
