@@ -572,8 +572,9 @@ void abstractort::calc_abstract_trans_rel(
     throw "unexpected result from predabs_sat1.solve()";
   }
 
-  print(9, "Generated "+
-    i2string(trans_cube_set.no_insertions())+" cube(s)");
+  debug() <<"Generated "
+          << i2string(trans_cube_set.no_insertions()) << " cube(s)"
+          << eom;
 
   if(show_cubes)
     std::cout << trans_cube_set;
@@ -693,8 +694,9 @@ void abstractort::calc_abstract_initial_states(
   }
 
   // std::cout<<" The abstract transition relation \n";
-  print(9, "Generated "+
-    i2string(initial.no_insertions())+" cube(s)\n");
+  debug() << "Generated " <<
+          << i2string(initial.no_insertions()) <, " cube(s)\n"
+          << eom;
 
   if(show_cubes)
     std::cout << initial;
