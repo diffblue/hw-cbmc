@@ -250,6 +250,9 @@ Function: hw_cbmc_parse_optionst::help
 
 void hw_cbmc_parse_optionst::help()
 {
+  std::cout <<
+    "* *  hw-cbmc is protected in part by U.S. patent 7,225,417  * *";
+
   cbmc_parse_optionst::help();
 
   std::cout <<
