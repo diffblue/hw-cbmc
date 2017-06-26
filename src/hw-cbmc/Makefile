@@ -11,7 +11,6 @@ OBJ+= $(CBMC)/src/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CBMC)/src/cbmc/cbmc_solvers$(OBJEXT) \
       $(CBMC)/src/cbmc/show_vcc$(OBJEXT) \
       $(CBMC)/src/cbmc/bmc_cover$(OBJEXT) \
-      $(CBMC)/src/cbmc/symex_coverage$(OBJEXT) \
       $(CBMC)/src/cbmc/cbmc_dimacs$(OBJEXT) \
       $(CBMC)/src/cbmc/all_properties$(OBJEXT) \
       $(CBMC)/src/goto-instrument/full_slicer$(OBJEXT) \

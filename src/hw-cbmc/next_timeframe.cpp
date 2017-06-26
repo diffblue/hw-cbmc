@@ -12,7 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol.h>
 #include <util/expr_util.h>
 #include <util/arith_tools.h>
-#include <util/c_types.h>
+
+#include <ansi-c/c_types.h>
 
 #include "next_timeframe.h"
 
