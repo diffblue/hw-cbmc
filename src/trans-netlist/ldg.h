@@ -22,7 +22,7 @@ public:
   literalt next_state;
 };
 
-class ldgt:public grapht<ldg_nodet>
+class ldgt:public graph<ldg_nodet>
 {
 public:
   typedef std::set<unsigned> latchest;

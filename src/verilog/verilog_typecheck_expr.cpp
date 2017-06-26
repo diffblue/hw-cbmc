@@ -2026,8 +2026,8 @@ bool verilog_typecheck(
   message_handlert &message_handler,
   const namespacet &ns)
 {
-  const unsigned errors_before=
-    message_handler.get_message_count(messaget::M_ERROR);
+  //const unsigned errors_before=0;
+  //  message_handler.get_message_count(messaget::M_ERROR);
 
   verilog_typecheck_exprt verilog_typecheck_expr(
     ns, module_identifier, message_handler);
@@ -2052,5 +2052,6 @@ bool verilog_typecheck(
     verilog_typecheck_expr.error() << e << messaget::eom;
   }
 
-  return message_handler.get_message_count(messaget::M_ERROR)!=errors_before;
+  return verilog_typecheck_expr.get_error_found();
+  // return message_count(messaget::M_ERROR)!=errors_before;
 }

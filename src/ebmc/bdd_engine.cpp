@@ -47,9 +47,10 @@ protected:
 
   // the Manager must appear before any BDDs
   // to do the cleanup in the right order
+  typedef miniBDD::mgr mini_bdd_mgrt;
   mini_bdd_mgrt mgr;
   
-  typedef mini_bddt BDD;
+  typedef miniBDD::BDD BDD;
   
   struct atomic_propositiont
   {
