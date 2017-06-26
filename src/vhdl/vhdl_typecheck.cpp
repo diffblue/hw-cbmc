@@ -26,13 +26,12 @@ Function: vhdl_typecheckt::to_lower
 
 \*******************************************************************/
 
-dstringt vhdl_typecheckt::to_lower(const dstringt &src)
+irep_idt vhdl_typecheckt::to_lower(const irep_idt &src)
 {
   std::string data=id2string(src);
   std::transform(data.begin(), data.end(), data.begin(), ::tolower);
   return data;
 }
-
 
 /*******************************************************************\
 

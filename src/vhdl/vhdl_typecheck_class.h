@@ -193,7 +193,7 @@ protected:
   unsigned assertion_counter;
   #endif
   
-  static dstringt to_lower(const dstringt &);
+  static irep_idt to_lower(const irep_idt &);
 };
 
 #endif
