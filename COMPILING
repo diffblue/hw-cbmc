@@ -1,15 +1,16 @@
-1) This compiles against the release of CBMC with the same release number. To
-get the CBMC sources, do
+1) This compiles against CBMC release 5.6,
+   which is provided as a git submodule. To get the CBMC sources, do
 
-git clone http://www.github.com/diffblue/cbmc cbmc-git
+git submodule init
+git submodule update
 
 2) Then do
 
-cp src/config.inc.template src/config.inc
+cd lib/cbmc
 
-3) Edit src/config.inc to point the variable CBMC to the directory created
-in step 1.
+and follow the instructions in the file COMPILING.
 
-4) Then follow the instructions at
+3) The do
 
-https://raw.githubusercontent.com/diffblue/cbmc/master/COMPILING
+cd ../../src
+make
