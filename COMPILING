@@ -1,4 +1,4 @@
-1) This compiles against a particular release of CBMC,
+1) This compiles against CBMC release 5.6,
    which is provided as a git submodule. To get the CBMC sources, do
 
 git submodule init
