@@ -95,6 +95,7 @@ protected:
     if(l.is_false()) return mgr.False();
     assert(l.var_no()<BDDs.size());
     BDD result=BDDs[l.var_no()];
+    assert(result.is_initialized());
     if(l.sign()) result=!result;
     return result;
   }
