@@ -38,7 +38,7 @@ public:
     "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
     "(compute-ct)(dot-netlist)(smv-netlist)(vcd):I:",
     argc, argv),
-    ui_message_handler(cmdline, "EBMC " EBMC_VERSION)
+    ui_message_handler(ui_message_handlert::PLAIN, "EBMC " EBMC_VERSION)
   {
   }
    

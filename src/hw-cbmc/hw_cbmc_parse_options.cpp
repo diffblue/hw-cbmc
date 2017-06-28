@@ -89,7 +89,7 @@ int hw_cbmc_parse_optionst::doit()
   goto_functionst goto_functions;
 
   int get_goto_program_ret=get_goto_program(
-    options, hw_bmc.bmc_constraints, goto_functions);
+    options, hw_bmc, goto_functions);
   if(get_goto_program_ret!=-1)
     return get_goto_program_ret;
 

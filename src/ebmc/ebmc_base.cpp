@@ -54,7 +54,7 @@ Function: ebmc_baset::ebmc_baset
 ebmc_baset::ebmc_baset(
   const cmdlinet &_cmdline,
   ui_message_handlert &_ui_message_handler):
-  language_uit(_cmdline, _ui_message_handler),
+  language_uit("EBMC " EBMC_VERSION, _cmdline),
   cmdline(_cmdline),
   main_symbol(NULL)
 {
