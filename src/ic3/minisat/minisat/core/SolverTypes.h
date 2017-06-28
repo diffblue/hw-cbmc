@@ -144,10 +144,10 @@ class Clause {
         unsigned has_extra : 1;
         unsigned reloced   : 1;
         unsigned size      : 27; }                        header;
-#include <util/pragma_push.def>
-#include <util/pragma_wzero_length_array.def>
+// #include <util/pragma_push.def>
+// #include <util/pragma_wzero_length_array.def>
   union { Lit lit; float act; uint32_t abs; CRef rel; } data[0];
-#include <util/pragma_pop.def>
+// #include <util/pragma_pop.def>
 
     friend class ClauseAllocator;
 
