@@ -257,19 +257,21 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     //     (which means 'p' can still hold later)
 
     // save the current time frame, we'll change it
-    save_currentt save_current(current);
     
     exprt::operandst disjuncts;
-    
-    for(; current<no_timeframes; current++)
-    {
-      disjuncts.push_back(expr.op0());
-      instantiate_rec(disjuncts.back());
-    }
 
-    // TODO: add disjunct for lasso
-    
-    expr=disjunction(disjuncts);
+    if(current==0)
+    {
+      save_currentt save_current(current);
+      for(; current<no_timeframes; current++)
+      {
+        disjuncts.push_back(expr.op0());
+        instantiate_rec(disjuncts.back());
+      }
+      expr=disjunction(disjuncts);
+    }
+    else
+      expr=true_exprt();
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
