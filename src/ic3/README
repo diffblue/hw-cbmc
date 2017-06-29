@@ -2,12 +2,8 @@
    a variation of Aaron Bradley's IC3.  It is incorporated into
    ebmc. To invoke IC3, run
 
-   ebmc verilog_file --ic3
+   ebmc verilog_file --ic3 [options]
 
-*) Integration is not over yet. This current version is missing two
-   features that has been implemented in the stand-alone version.
-   The current version assumes that the input verilog file specifies
-   only one property and has no constraints.
 
 
   

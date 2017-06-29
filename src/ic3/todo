@@ -3,7 +3,6 @@
 Finishing integration
 with ebmc
 =====================
-
 *) Add code freeing memory allocated by the Verilog reader after IC3
    converted this information into its internal data
    structure. (Keeping this memory is too expensive for large
@@ -21,8 +20,6 @@ Changes of the current implementation
    to finish a time frame, average size of inductive clauses,
    averages size of cubes generalizing bad states etc)
 
-*) Optimize the procedure of building the longest inductive clause for
-   the case of designs with a large number of latches
 
 *) Implement actual removal of subsumed clauses (currently they are
    just marked and ignored by the algorithm)
@@ -32,18 +29,21 @@ Changes of the current implementation
 Improvements of the basic algorithm
 ====================================
 
-*) Write a perl script meant for efficiently checking multiple
-   properties. The idea is to check properties one by one re-using
-   information found when proving (or disproving) previous properties.
+*) Implement a version of IC3 that combines property strengthening and
+   property relaxation. Combining strenthening and relation allows one
+   to "emulate" an algorithm that employs depth-first search.
 
-*) Implement the version of IC3 that fixes the problem with
-   convergence rate (by computing reachability of good states breaking
-   induction)
 
 *) Implement a "dual" IC3 where one over-approximates the set of
    states from which a bad state is reachable in j transitions (rather
    than the set of states reachable in j transitions from initial
    states).
 
-*) Implement a version of IC3 where one employs depth-first search
+*) Implement the version of IC3 that fixes the problem with
+   convergence rate (by computing reachability of good states breaking
+   induction)
+
+
+
+
 

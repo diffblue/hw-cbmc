@@ -9,7 +9,7 @@ void form_short_property();
 void form_bad_states();
 void form_bad_states0(CNF &Bstates);
 void exclude_state_cube(CNF &G,int &min_tf,CUBE &St,CUBE &Inps);
-void push_clauses_forward();
+void push_clauses_forward(bool triv_time_frame);
 void init_time_frame_solver(int tf_ind);
 void init_bst_sat_solver();
 void init_lbs_sat_solver();
@@ -128,7 +128,7 @@ bool check_sat2(SatSolver &Slvr,MvecLits &Assmps);
 void add_negated_assumps1(MvecLits &Assmps,CLAUSE &C);
 void add_negated_assumps2(MvecLits &Assmps,CLAUSE &C,bool sort);
 void gen_assump_clause(CLAUSE &C,SatSolver &Slvr,MvecLits &Assmps);
-void add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St);
+void add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St,bool add_cnstr_lits);
 void add_temp_clause(Mlit &act_lit,SatSolver &Slvr,CLAUSE &C);
 void simplify_tf_solvers();
 void print_tf_assgns(int tf_ind);
@@ -185,7 +185,9 @@ void add_last_cube(DNF &F);
 void form_property_gates(CUBE &Gates);
 void print_files(char *root);
 int init_ind_cls();
-
+void form_nxt_cube(CUBE &Nxt_cube,CLAUSE &C);
+int push_on_the_fly(int last_ind,CLAUSE &C,char st_desc);
+void accept_constrs(SatSolver &Slvr);
 //
 //  form CNF formulas
 void add_or_gate_cubes(DNF &F,int gate_ind,int shift);
@@ -205,5 +207,19 @@ void gate_sort_inps_first();
 void gate_sort_outs_first();
 void rand_gate_order();
 void print_gate_sort_mode();
-
-
+//
+//  related to printing out circuit in aiger format
+void check_circuit(int &num_buffs,int &num_consts);
+void print_aiger_header(FILE *fp,int max_var,int num_gates);
+void print_aiger_inps(FILE *fp);
+void print_aiger_latches(FILE *fp);
+int find_aiger_lit1(int gate_ind,char polarity);
+int find_aiger_lit2(int gate_ind,char polarity);
+void print_aiger_gates(FILE *fp,DNF &Gates);
+void add_aiger_and_gate(DNF &Gates,int gate_ind);
+void add_aiger_buffer(DNF &Gates,int gate_ind);
+void print_aiger_output(FILE *fp,DNF &Gates,int out_ind);
+int form_aiger_gates(DNF &Gates);
+void add_triplet(DNF &Gates,int olit,int lit0,int lit1);
+int find_max_aiger_var(DNF &Gates);
+void print_aiger_constrs(FILE *fp);

@@ -40,6 +40,7 @@ int assign_input_pin_number1(std::map<CCUBE,int> &pin_list,
     pin_list[name] = pin_num;
     G.flags.active = 0;
     G.gate_type = UNDEFINED;
+    G.Gate_name = name;
     gate_list.push_back(G); // add one more gate 
   }
   else /* an 'old' pin */

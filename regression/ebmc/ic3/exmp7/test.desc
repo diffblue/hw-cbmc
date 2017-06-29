@@ -1,7 +1,7 @@
 CORE
 bobmiterbm1multi.sv
---ic3 --prop 1032
+--ic3 --property bobmiterbm1multi.property.1033
 ^property HOLDS
-^verification is ok
+^inductive invariant verification is ok
 --
-^verification failed
+^inductive invariant verification failed

@@ -2,6 +2,6 @@ CORE
 ringp0.sv
 --ic3
 ^property FAILED
-^verification is ok
+^cex verification is ok
 --
-^verification failed
+^cex verification failed

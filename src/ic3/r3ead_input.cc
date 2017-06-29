@@ -147,7 +147,11 @@ void ic3_enginet::form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,
   literalt gt_lit(node_ind,false);
 
   add_gate_out_name(Pin_names[2],gt_lit,Pol);
-
+  // print_name1(Pin_names[2]);
+  // printf(": "); print_name1(Pin_names[0]);
+  // printf(" "); print_name1(Pin_names[1],true);
+  // printf(" Pin_names[0].size() = %d, Pin_names[1].size() = %d\n",(int) Pin_names[0].size(),
+  // 	 (int) Pin_names[1].size());
 } /* end of function from_gate_pin_names */
 
 /*===============================
@@ -160,10 +164,17 @@ void ic3_enginet::form_gates()
 
   Circuit *N = Ci.N;
   aigt::nodest &Nodes = netlist.nodes;
- 
+
   for (size_t i=0; i <  Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];
-    if (Nd.is_var()) continue;
+    if (Nd.is_var()) {
+      // printf("skipping a var node\n");
+      // literalt gt_lit(i,false);
+      // unsigned lit_val = gt_lit.get();
+      // printf("lit_val = %u\n",lit_val);
+      // printf("i = %zu\n",i);
+      continue;
+    }
     CDNF Pin_names;
     CUBE Pol;    
     form_gate_pin_names(Pin_names,Pol,i);
@@ -185,10 +196,15 @@ void ic3_enginet::form_gates()
 void ic3_enginet::form_outp_buf(CDNF &Out_names)
 {
 
-  int olit = prop_l.get();
-  if (prop_l.is_constant() == 0) 
-    if (prop_l.sign()) olit--;
+ 
+  unsigned olit = prop_l.get();
+
+  Ci.const_false_prop = false;
+  Ci.const_true_prop = false;
   
+  if (prop_l.is_constant() == 0)
+    if (prop_l.sign()) 
+       olit--;
 
   assert(Ci.Inps.find(olit) == Ci.Inps.end());
   bool latch = false;
@@ -200,13 +216,15 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   Pin_names.push_back(Dummy);
   char Buff[MAX_NAME];
   if (prop_l.is_false())  {
-     sprintf(Buff,"c0");
-     conv_to_vect(Pin_names[0],Buff);
-     goto NEXT;  }
+    Ci.const_false_prop = true;
+    sprintf(Buff,"c0");
+    conv_to_vect(Pin_names[0],Buff);
+    goto NEXT;  }
   if (prop_l.is_true()) {
-     sprintf(Buff,"c1");
-     conv_to_vect(Pin_names[0],Buff);
-     goto NEXT;
+    Ci.const_true_prop = true;
+    sprintf(Buff,"c1");
+    conv_to_vect(Pin_names[0],Buff);
+    goto NEXT;
   }
   
   if (orig_names) 
@@ -219,7 +237,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
 
  NEXT:
   char buff[MAX_NAME];
-  sprintf(buff,"p%zu",Ci.prop_ind);
+  sprintf(buff,"%s",Ci.prop_name.c_str());
   conv_to_vect(Pin_names[1],buff);
   Out_names.push_back(Pin_names[1]);
 

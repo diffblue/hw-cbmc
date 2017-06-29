@@ -36,10 +36,14 @@ void CompInfo::add_fclause1(CLAUSE &C,int last_ind,char st_descr)
   int prev_tf_ind = -1;
 
   if (Clause_table.find(C) != Clause_table.end()) {
+    TimeFrame &Tf = Time_frames[tf_lind];
+    if (st_descr <= CTG_STATE) Tf.num_seen_cls++;
     clause_ind1  = Clause_table[C];
     prev_tf_ind = Clause_info[clause_ind1].span;
-    if (update_fclause(clause_ind1,last_ind) == false) 
+    if (update_fclause(clause_ind1,last_ind) == false) {
+      if (st_descr <= CTG_STATE) Tf.num_redund_cls++;
       return;
+    }
     goto NEXT;
   }
 

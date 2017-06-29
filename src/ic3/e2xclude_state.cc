@@ -69,6 +69,7 @@ bool CompInfo::find_ind_subclause_cti(CLAUSE &C,SatSolver &Slvr,
     }
 
     // inductive clause is not found yet
+    if (standard_mode) return(false);
     CUBE St;
     extr_cut_assgns1(St,Pres_svars,Slvr);
 
@@ -151,7 +152,7 @@ void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
     printf("%*c",9,' ');
     printf("expand_clause\n");
   }
-  htable_lits.change_marker(); // increment or reset the hash table marker 
+  htable_lits.change_marker(); 
   htable_lits.started_using();
 
   int marker = htable_lits.marker;

@@ -58,8 +58,14 @@ void ic3_enginet::find_prop_lit()
   prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
 			     get_message_handler());
 
+  // int var_num = prop_l.var_no();
+  // printf("var_num = %d\n",var_num);
+  
   if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
   else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;
+
+  // print_lit(std::cout,prop_l);
+  // printf("\n");
   
 } /* end of function find_prop_lit */
 
@@ -105,6 +111,8 @@ void ic3_enginet::form_latched_gates()
       literalt lit =var.bits[j].current;
       int init_val = Latch_val[lit.var_no()];
       literalt next_lit = var.bits[j].next;
+      // int lit_val = next_lit.get();
+      // printf("next st. var: %d\n",lit_val);
       add_new_latch(Latches,init_val,lit,next_lit);
     }
   }

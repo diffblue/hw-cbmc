@@ -44,35 +44,34 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
       printf("Pr_queue.size() = %d\n",(int) Pr_queue.size());
     }
 
-    int obl_tf = Pr_queue.top().tf_ind;
+    int curr_tf = Pr_queue.top().tf_ind;
     int tbl_ind = Pr_queue.top().tbl_ind;
     
     if (verbose > 1)
-      printf("obl_tf = %d, tbl_ind = %d, min_tf = %d\n",obl_tf,tbl_ind, min_tf);
+      printf("curr_tf = %d, tbl_ind = %d, min_tf = %d\n",curr_tf,tbl_ind, min_tf);
 
     CUBE St_cube  =  Obl_table[tbl_ind].St_cb;
     char st_descr = Obl_table[tbl_ind].st_descr;
 
 
-    if (obl_tf == 0) 
+    if (curr_tf == 0) 
       if (cont_init_states(St_cube)) return;
 
     int dist = Obl_table[tbl_ind].dist;
     int st_ind = tf_lind + 1 - dist;
-
-    curr_tf = obl_tf;
+    
     int succ_ind = Obl_table[tbl_ind].succ_ind;
-
-    bool ok = oblig_is_active(obl_tf+1,St_cube);
+  
+    bool ok = oblig_is_active(curr_tf+1,St_cube);
 
     if (!ok) {
       if (st_descr == OLD_STATE) triv_old_st_cnt++;
       Pr_queue.pop();     
-      if (succ_ind < 0) form_res_cnf(G,obl_tf+1,St_cube);
+      if (succ_ind < 0) form_res_cnf(G,curr_tf+1,St_cube);
       continue;}
 
    
-    if (obl_tf < min_tf) min_tf = obl_tf;
+    if (curr_tf < min_tf) min_tf = curr_tf;
 
     
    
@@ -87,21 +86,30 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
 	std::cout  << C << std::endl;
       }
 
- 
-      if (obl_tf + 2 < tf_lind + 1) {
-	CUBE Inps = Obl_table[tbl_ind].Inp_assgn;
-	add_new_elem(St_cube,Inps,obl_tf+2,dist,succ_ind,OLD_STATE);
-      }
-     
-      
-      if (succ_ind == -1) {
+      if (succ_ind == -1) 
 	G.push_back(C);
-	add_fclause1(C,curr_tf+1,st_descr);	 
-	continue;
-      } 
-	 
-      // the set of obligations is not empty yet      
-      add_fclause1(C,curr_tf+1,st_descr);
+            
+  // the set of obligations is not empty yet
+      
+      int tf_ind1 = curr_tf+1;
+
+      if (standard_mode)
+	tf_ind1 = push_on_the_fly(curr_tf+1,C,st_descr);
+
+      add_fclause1(C,tf_ind1,st_descr);
+
+      if (standard_mode) {
+	if (tf_ind1 <= tf_lind) {
+	  CUBE Inps = Obl_table[tbl_ind].Inp_assgn;
+	  add_new_elem(St_cube,Inps,tf_ind1,dist,succ_ind,OLD_STATE);
+	}
+      }
+      else
+	if (tf_ind1 < tf_lind) {
+	  CUBE Inps = Obl_table[tbl_ind].Inp_assgn;
+	  add_new_elem(St_cube,Inps,tf_ind1+1,dist,succ_ind,OLD_STATE);
+	}
+     
       continue;
     }
     

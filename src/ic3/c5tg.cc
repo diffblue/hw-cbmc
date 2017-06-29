@@ -81,8 +81,11 @@ void CompInfo::lift_ctg_state(CUBE &Ctg_cube,CUBE &Ctg_st,CUBE &Inps,
   add_assumps1(Assmps,Inps);
   
 
-  Mlit act_lit;  
-  add_cls_excl_st_cube(act_lit,Lgs_sat,Nst_cube);
+  Mlit act_lit;
+  if (standard_mode) 
+    add_cls_excl_st_cube(act_lit,Lgs_sat,Nst_cube,false);
+  else
+    add_cls_excl_st_cube(act_lit,Lgs_sat,Nst_cube,true);
  
   Assmps.push(act_lit);
   add_assumps2(Assmps,Ctg_st);

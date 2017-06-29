@@ -75,9 +75,9 @@ void ic3_enginet::form_circ_from_ebmc()
   find_prop_lit();
  
   form_latched_gates();
- 
-  form_gates();
 
+  form_gates();
+ 
   CDNF Out_names;
   form_outp_buf(Out_names);
   form_invs();
@@ -85,6 +85,7 @@ void ic3_enginet::form_circ_from_ebmc()
  
   add_spec_buffs(N);
 
+  add_pseudo_inps(N);
  
   fill_fanout_lists(N);
   assign_gate_type(N,Out_names,true);
@@ -115,7 +116,8 @@ void ic3_enginet::form_inputs()
     if (var.is_input() == false) continue;
     for (size_t j=0; j < var.bits.size(); j++) {  
       literalt lit =var.bits[j].current;
-      int lit_val = lit.get();    
+      int lit_val = lit.get();
+      //      printf("lit_val = %d\n",lit_val);
       CCUBE Name;
       if (orig_names) {
 	bool ok = form_orig_name(Name,lit);
@@ -133,10 +135,6 @@ void ic3_enginet::form_inputs()
   
 
 } /* end of function form_inputs */
-
-
-
-
 
 
 /*=================================
@@ -187,10 +185,6 @@ void CompInfo::form_max_pres_svar() {
   max_pres_svar = max;
 } /* end of function form_max_pres_svar */
 
-
-
-
-
 /*===================================
 
       F O R M _ V A R _ N U M S
@@ -207,3 +201,20 @@ void CompInfo::form_var_nums()
   max_num_vars = max_num_vars0 + num_prop_vars; // we need to take into account
   // that property needs to be specified in two time frames
 } /* end of function form_var_nums */
+
+/*================================================
+
+   A D D _ V E R I L O G _ C O N V _ C O N S T R S
+
+  ================================================*/
+void ic3_enginet::add_verilog_conv_constrs()
+{
+
+  for(literalt lit : netlist.constraints) {
+    if (lit.is_constant()) continue;
+    std::cout << "constraint literal " << lit.get() << "\n";
+     Ci.Init_clits.insert(lit.get());
+  }
+
+
+} /* end of function add_verlig_conv_constrs */
