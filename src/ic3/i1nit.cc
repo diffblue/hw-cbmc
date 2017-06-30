@@ -165,9 +165,11 @@ void CompInfo::form_bad_states0(CNF &Bstates)
 	int var_ind1 = Pres_to_next[var_ind];
 	if (var_ind1 < 0) {
 	  p();
-	  printf("Pres_svars.size() = %d\n",(int) Pres_svars.size());
-	  printf("Next_svars.size() = %d\n",(int) Next_svars.size());
-	  exit(100);
+	  std::cout << "Pres_svars.size() = " << Pres_svars.size() 
+		    << std::endl;
+	  std::cout << "Next_svars.size() = " << Next_svars.size()
+		    << std::endl;
+	  throw(ERROR1);
 	}
 	if (C[j] < 0) Res.push_back(-(var_ind1+1));
 	else Res.push_back(var_ind1+1);

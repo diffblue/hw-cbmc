@@ -71,17 +71,16 @@ int ic3_enginet::operator()()
   const1 = false;
   orig_names = false;
   
-  // print_nodes();
-  // print_var_map(std::cout);
+  
   read_ebmc_input();
-  // print_blif3("tst.blif",Ci.N);
+  
   if (cmdline.isset("aiger")) {
-    printf("converting to aiger format\n");
+    std::cout << "converting to aiger format\n";
     Ci.print_aiger_format();
-    exit(0);
+    exit(EARLY_EXIT);
   }
   
-  //  printf("Constr_gates.size() = %d\n",Ci.Constr_gates.size()); 
+  
   return(Ci.run_ic3());
 
   }
@@ -91,8 +90,8 @@ int ic3_enginet::operator()()
     error() << error_msg << eom;
     return ERROR1;
   }
-  catch(int)    {
-    return ERROR1;
+  catch(int err_num)    {
+    return err_num;
   }
 
 } /* end of function operator */
@@ -117,12 +116,12 @@ int CompInfo::run_ic3()
   get_runtime (usrtime, systime);  
 
   int ret_val;
-  printf("\n");
+  std::cout << "\n";
   switch (res) {
   case 0: {
-    printf("property HOLDS\n");  
+    std::cout << "property HOLDS\n";
     if (vac_true) {
-      printf("It is vacuously true\n");
+      std::cout << "It is vacuously true\n";
       ret_val = 2;
       statistics = false;
       break;
@@ -136,7 +135,7 @@ int CompInfo::run_ic3()
     else ret_val = 12;
     break;}
   case 1: {
-    printf("property FAILED\n");
+    std::cout << "property FAILED\n";
     form_cex();  
     if (print_cex_flag == 1)
       fprint_cex1();
@@ -150,7 +149,7 @@ int CompInfo::run_ic3()
     else ret_val = 11;
     break;}
   case 2:
-    printf("UNDECided\n");
+    std::cout << "UNDECided\n";
     ret_val = 3;
     if (print_clauses_flag) 
       print_fclauses();
@@ -159,9 +158,11 @@ int CompInfo::run_ic3()
     assert(false);
   }
   if (statistics) {
-    printf("*********\n");
+    std::cout << "*********\n";
     if ((stat_data > 0) && (ret_val < 10)) print_stat();
-    printf("total time is %.2f sec.\n",usrtime-usrtime0);
+    std::cout << std::fixed;
+    std::cout.precision(1);
+    std::cout << "total time is " << usrtime-usrtime0 << " sec.\n";
   }
   return(ret_val);
 } /* end of function run_ic3 */

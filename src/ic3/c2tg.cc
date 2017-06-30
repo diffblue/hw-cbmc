@@ -31,9 +31,11 @@ bool CompInfo::exclude_ctg(CUBE &St,int curr_tf,int rec_depth)
 {
 
   if (verbose > 2) {
-    printf("   exclude_ctg\n");
+    std::cout << "   exclude_ctg\n";
     std::cout << "    St-> " << St << std::endl;
-    printf("curr_tf = %d, rec_depth = %d\n",curr_tf,rec_depth);}
+    std::cout << "curr_tf = " << curr_tf << ", rec_depth = " << rec_depth
+	      << std::endl;
+    }
 
   
   

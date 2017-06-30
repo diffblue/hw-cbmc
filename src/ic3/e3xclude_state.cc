@@ -27,8 +27,8 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
 {
 
   if (verbose > 1) {
-    printf("%*c",6,' ');
-    printf("incr_short\n");
+    std::cout << std::string(6,' ');
+    std::cout << "incr_short\n";
   }
 
 
@@ -122,7 +122,7 @@ void CompInfo::incr_short(CLAUSE &C,CLAUSE &C0,int curr_tf,
 void CompInfo::modif_loc_clause(CLAUSE &C,CUBE &St)
 {
 
-  if (verbose > 1) printf("correcting local clause\n");
+  if (verbose > 1) std::cout << "correcting local clause\n";
   // find a variable where 'St' has the oposite
   // value of all initial states
 
