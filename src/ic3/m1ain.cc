@@ -58,22 +58,14 @@ int ic3_enginet::operator()()
 
     if(make_netlist(netlist))     {
       error() << "Failed to build netlist" << eom;
-      return 2;
+      return ERROR1;
     }
       
     if(properties.empty())   {
       error() << "no properties" << eom;
-      return 1;
+      return ERROR1;
     }
-  }
-
-  catch(const char *error_msg)    {
-    error() << error_msg << eom;
-    return 1;
-  }
-  catch(int)    {
-    return 1;
-  }
+ 
 
   const0 = false;
   const1 = false;
@@ -91,6 +83,17 @@ int ic3_enginet::operator()()
   
   //  printf("Constr_gates.size() = %d\n",Ci.Constr_gates.size()); 
   return(Ci.run_ic3());
+
+  }
+
+  // catch blocks
+  catch(const char *error_msg)    {
+    error() << error_msg << eom;
+    return ERROR1;
+  }
+  catch(int)    {
+    return ERROR1;
+  }
 
 } /* end of function operator */
 

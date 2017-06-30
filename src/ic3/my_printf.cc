@@ -35,12 +35,12 @@ void print_num_with_commas(const int &num)
       Num = quotient;
     }
 
-  size_t parts_size=parts.size();
-  for (size_t i=0; i < parts_size; i++)
-    {if (i ==  0) printf("%d",parts[parts_size-i-1]);
-      else printf("%03d",parts[parts_size-i-1]);
+  size_t num_of_parts=parts.size();
+  for (size_t i=0; i < num_of_parts; i++)
+    {if (i ==  0) printf("%d",parts[num_of_parts-i-1]);
+      else printf("%03d",parts[num_of_parts-i-1]);
      
-      if (i != 0) printf(",");
+      if (i != num_of_parts-1) printf(",");
     }
 } /* end of function print_num_with_commas */
 

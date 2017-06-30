@@ -34,9 +34,11 @@ void ic3_enginet::find_prop_lit()
 
   propertyt Prop;
   bool found = find_prop(Prop);
-
   assert(found);
-  assert(Prop.expr.id()==ID_sva_always);    
+
+  if (Prop.expr.id()!=ID_sva_always) {
+    throw("unsupported property - only SVA always is implemented");
+  }
 
   assert(Prop.expr.operands().size()==1);
 

@@ -1,8 +1,0 @@
-CORE
-main.sv
---module main --bdd
-^EXIT=10$
-^SIGNAL=0$
-^\[main.property.my_prop1\] always main.counter < 199: SUCCESS$
-^\[main.property.my_prop2\] always main.counter < 198: FAILURE$
---
