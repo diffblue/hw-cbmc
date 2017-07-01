@@ -88,7 +88,7 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
 {
   
   assert ((lit & 1) == 0);
-  char Buff[MAX_NAME];
+  
   CCUBE Dummy;
   Pin_names.push_back(Dummy);
   Pin_names.push_back(Dummy);
@@ -100,30 +100,41 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
     return;
   }
 
-
+  std::ostringstream Buff;
   SCUBE &Inps = Ci.Inps;
 
+  
+       
+  
+	
   if (Inps.find(lit) != Inps.end()) {
-    sprintf(Buff,"i%d",lit);
-    conv_to_vect(Pin_names[0],Buff);
-    sprintf(Buff,"ni%d",lit);
-    conv_to_vect(Pin_names[1],Buff);
+    Buff << "i" << lit;
+    //    std::string Inp_name = Buff.str();
+    conv_to_vect(Pin_names[0],Buff.str());
+    
+    Buff.clear();
+    Buff << "ni" << lit;
+    conv_to_vect(Pin_names[1],Buff.str());
     return;
   }
 
   SCUBE &Lats = Ci.Lats;
   if (Lats.find(lit) != Lats.end()) {
-    sprintf(Buff,"l%d",lit);
-    conv_to_vect(Pin_names[0],Buff);
-    sprintf(Buff,"nl%d",lit);
-    conv_to_vect(Pin_names[1],Buff);
+    Buff << "l" << lit;
+    conv_to_vect(Pin_names[0],Buff.str());
+    
+    Buff.clear();
+    Buff << "nl" << lit;
+    conv_to_vect(Pin_names[1],Buff.str());
     return;
   }
 
-  sprintf(Buff,"a%d",lit);
-  conv_to_vect(Pin_names[0],Buff);
-  sprintf(Buff,"na%d",lit);
-  conv_to_vect(Pin_names[1],Buff);
+  Buff << "a" << lit;
+  conv_to_vect(Pin_names[0],Buff.str());
+  
+  Buff.clear();
+  Buff << "na" << lit;
+  conv_to_vect(Pin_names[1],Buff.str());
    
 
 } /* end of function form_inv_names */
@@ -152,7 +163,8 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
   }
 
 
-  char Buff[MAX_NAME];
+  
+  std::ostringstream Buff;
   int nlit;
  
 
@@ -162,12 +174,12 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
       form_neg_orig_name(Name,next_lit);
       return;}
     Ci.Invs.insert(nlit-1);
-    if (Ci.Inps.find(nlit-1) != Ci.Inps.end()) 
-      sprintf(Buff,"ni%d",nlit-1);
-    else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end()) 
-      sprintf(Buff,"nl%d",nlit-1);
-    else sprintf(Buff,"na%d",nlit-1);
-    conv_to_vect(Name,Buff);
+    if (Ci.Inps.find(nlit-1) != Ci.Inps.end())
+      Buff << "ni" << nlit-1;
+    else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end())
+      Buff << "nl" << nlit-1;
+    else Buff << "na" << nlit-1;
+    conv_to_vect(Name,Buff.str());
     return;
   }
 
@@ -176,11 +188,12 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
     form_orig_name(Name,next_lit);
     return;
   }
-     
-  if (Ci.Inps.find(nlit) != Ci.Inps.end()) sprintf(Buff,"i%d",nlit);
-  else if (Ci.Lats.find(nlit) != Ci.Lats.end()) sprintf(Buff,"l%d",nlit);
-  else sprintf(Buff,"a%d",nlit);
-  conv_to_vect(Name,Buff);
+
+  Buff.clear();
+  if (Ci.Inps.find(nlit) != Ci.Inps.end()) Buff << "i" << nlit;
+  else if (Ci.Lats.find(nlit) != Ci.Lats.end()) Buff << "l" << nlit;
+  else Buff << "a" << nlit;
+  conv_to_vect(Name,Buff.str());
 
 } /* end of function form_next_symb */
 
@@ -218,10 +231,12 @@ void CompInfo::check_conv_tbl(CUBE &Vars,CUBE &Tbl,bool pres_svars)
     int var_ind = Vars[i]-1;
     if (Tbl[var_ind] == -1) {
       if (pres_svars) 
-	printf("no match for present state variable %d\n",var_ind+1);
+	std::cout << "no match for present state variable " << var_ind+1
+		  << std::endl;
       else 
-	printf("no match for next state variable %d\n",var_ind+1);
-      exit(1);
+	std::cout << "no match for next state variable "<< var_ind+1
+		  << std::endl;
+      throw(ERROR1);
     }
   }
 

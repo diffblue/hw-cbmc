@@ -208,7 +208,7 @@ void CompInfo::check_circuit(int &num_buffs,int &num_consts)
     if (!cond) {
       p();
       print_func_type(G);
-      exit(100);
+      throw(ERROR1);
     } 
 
     if (G.func_type == CONST) num_consts++;
@@ -220,10 +220,11 @@ void CompInfo::check_circuit(int &num_buffs,int &num_consts)
       cond |= (G.func_type == CONST);
       if (!cond)      {
         p();
-	printf("i = %zu\n",i);
-	printf("N->Gate_list.size() = %zu\n", N->Gate_list.size());
-	printf("G.ninputs = %zu\n",G.ninputs);
-	exit(100);
+	std::cout << "i = " << i << std::endl;
+	std::cout << "N->Gate_list.size() = " << N->Gate_list.size()
+		  << std::endl;
+	std::cout << "G.ninputs = " << G.ninputs << std::endl;
+	throw(ERROR1);
       }
     }
   }

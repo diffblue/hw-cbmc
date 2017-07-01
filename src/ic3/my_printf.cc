@@ -36,12 +36,12 @@ void print_num_with_commas(const int &num)
     }
 
   size_t num_of_parts=parts.size();
-  for (size_t i=0; i < num_of_parts; i++)
-    {if (i ==  0) printf("%d",parts[num_of_parts-i-1]);
-      else printf("%03d",parts[num_of_parts-i-1]);
+  for (size_t i=0; i < num_of_parts; i++) {
+    if (i ==  0) std::cout << parts[num_of_parts-i-1];
+    else std::cout << parts[num_of_parts-i-1];
      
-      if (i != num_of_parts-1) printf(",");
-    }
+    if (i != num_of_parts-1) std::cout << ",";
+  }
 } /* end of function print_num_with_commas */
 
 /*=====================================================
@@ -63,12 +63,14 @@ void my_printf(const char *format,...)
                        // in the function header
   while (*format) {
     int c = *format++;
-    if (c != '%') {printf("%c",c); continue;}
+    if (c != '%') {
+      std::cout << (char) c; 
+      continue;
+    }
     int spec = *format++;
     assert(spec == 'm');
     int num = va_arg(ap,int);
     print_num_with_commas(num);      
-    //    printf("%d",num);    
   }
   va_end(ap);
 

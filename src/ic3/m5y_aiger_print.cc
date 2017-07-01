@@ -162,29 +162,29 @@ void print_func_type(Gate &G)
 
   switch (G.func_type) {
   case CONST:
-    printf("CONST");
+    std::cout << "CONST";
     break;
   case BUFFER:
-    printf("BUFFER");
+    std::cout << "BUFFER";
     break;
   case AND:
-    printf("AND");
+    std::cout << "AND";
     break;
   case OR:
-    printf("OR");
+    std::cout << "OR";
     break;
   case TRUTH_TABLE:
-    printf("TRUTH_TABLE");
+    std::cout << "TRUTH_TABLE";
     break;
   case COMPLEX:
-    printf("COMPLEX");
+    std::cout << "COMPLEX";
     break;
   default:
-    printf("wrong value of func_type\n");
-    exit(100);
+    std::cout <<"wrong value of func_type\n";
+    throw(ERROR1);
   }
 
-  printf("\n");
+  std::cout << "\n";
 
 } /* end of function print_func_type */
 

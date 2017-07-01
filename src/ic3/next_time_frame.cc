@@ -32,10 +32,11 @@ int CompInfo::next_time_frame()
 {
 
   if (verbose == 0) {
-    printf("-------------\n");
-    printf("next_time_frame\n");
-    printf("tf_lind = %d\n",tf_lind);
-    printf("F.size() = %d, #inact. clauses %d\n",(int) F.size(),num_inact_cls);
+    std::cout << "-------------\n";
+    std::cout << "next_time_frame\n";
+    std::cout << "tf_lind = " << tf_lind << std::endl;
+    std::cout << "F.size() = " << F.size() <<  ", #inact. clauses "
+	      << num_inact_cls << std::endl;
   }
   
 
@@ -73,7 +74,8 @@ int CompInfo::next_time_frame()
     int min_tf;
     exclude_state_cube(G,min_tf,Gst_cube,Inps);
     if (verbose > 0) 
-      if (min_tf < tf_lind - 1) printf("min_tf = %d\n",min_tf);
+      if (min_tf < tf_lind - 1) std::cout << "min_tf = " << min_tf
+					  << std::endl;
     Time_frames[tf_lind].num_pbss++;
     if (time_to_terminate()) return(3);
     
@@ -86,9 +88,9 @@ int CompInfo::next_time_frame()
     assert(Pr_queue.size() == 0);
     if (verbose >= 3) {
       if (G.size() == 1) {
-	printf("inductive clause F[%d] is generated: ",(int) F.size());
+	std::cout << "inductive clause F[" << F.size() << "] is generated: ";
 	std::cout << G[0] << std::endl;}
-      else printf("%d inductive CLAUSES are generated\n",(int) G.size());
+      else std::cout << G.size() << " inductive CLAUSES are generated\n";
     }
 
     accept_new_clauses(Bst_sat,G);

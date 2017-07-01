@@ -355,6 +355,7 @@ void my_assert(bool cond);
 void find_latch(Circuit *N,Gate &G,int &latch_ind);
 void conv_to_vect(CCUBE &Name1,const char *Name0);
 void conv_to_vect(CCUBE &Name1,std::string &Name0);
+void conv_to_vect(CCUBE &Name1,const std::string &Name0);
 bool overlap(CUBE &A,CLAUSE &B);
 int parse_string(CCUBE &Buff);
 void print_names_of_latches(NamesOfLatches &Latches);

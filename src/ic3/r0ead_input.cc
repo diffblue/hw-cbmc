@@ -117,14 +117,14 @@ void ic3_enginet::form_inputs()
     for (size_t j=0; j < var.bits.size(); j++) {  
       literalt lit =var.bits[j].current;
       int lit_val = lit.get();
-      //      printf("lit_val = %d\n",lit_val);
       CCUBE Name;
       if (orig_names) {
 	bool ok = form_orig_name(Name,lit);
 	assert(ok);}      
       else {
-	char Inp_name[MAX_NAME];
-	sprintf(Inp_name,"i%d",lit_val);   
+	std::ostringstream Buff;
+        Buff << "i" << lit_val;
+        std::string Inp_name = Buff.str();       
 	conv_to_vect(Name,Inp_name);
       }
       Ci.Inps.insert(lit_val);

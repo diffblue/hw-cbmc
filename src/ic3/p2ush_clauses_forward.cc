@@ -24,8 +24,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::push_clauses_forward(bool triv_time_frame)
 {
   if (verbose == 0) {
-    printf("%*c",3,' ');
-    printf("push_clauses_forward\n");  
+    std::cout << std::string(3,' ');
+    std::cout << "push_clauses_forward\n";
   }
 
   int min_tf = 1;
@@ -92,7 +92,8 @@ void CompInfo::push_clauses_forward(bool triv_time_frame)
 
     if (Time_frames[i].num_bnd_cls == 0) {
       inv_ind = i;
-      printf("All clauses of Bnd[%d] are pushed forward\n",inv_ind);
+      std::cout << "All clauses of Bnd[" << inv_ind
+		<< "] are pushed forward\n";
       break;}
    
   }
