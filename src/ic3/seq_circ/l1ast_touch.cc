@@ -15,7 +15,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 
 
@@ -179,7 +179,7 @@ void assign_levels_from_outputs(Circuit *N)
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 
       std::cout << "' has a cycle\n";
-      exit(1);
+      throw(ERROR1);
     }
   }
 
@@ -189,7 +189,7 @@ void assign_levels_from_outputs(Circuit *N)
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 
       std::cout << "' has a cycle\n";
-      exit(1);
+      throw(ERROR1);
     }
   }
 
@@ -293,7 +293,7 @@ void assign_levels_from_inputs(Circuit *N)
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 
       std::cout << "' has a cycle\n";
-      exit(1);
+      throw(ERROR1);
     }
 
   for (size_t i=0; i < N->Latches.size();i++)
@@ -301,6 +301,6 @@ void assign_levels_from_inputs(Circuit *N)
       std::cout << "Circuit '"; 
       print_name1(N->Circuit_name); 
       std::cout << "' has a cycle\n";
-      exit(1);
+      throw(ERROR1);
     }
 }/* end of function assign_levels_from_inputs */

@@ -56,7 +56,7 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
     std::cout << "Inps-> " << Inps << std::endl;
     std::cout << "Prs_st-> " << Prs_st << std::endl;
     std::cout << "Nst_cube-> " << Nst_cube << std::endl;
-    exit(100);
+    throw(ERROR1);
   }
   
 

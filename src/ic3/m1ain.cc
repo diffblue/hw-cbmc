@@ -77,7 +77,7 @@ int ic3_enginet::operator()()
   if (cmdline.isset("aiger")) {
     std::cout << "converting to aiger format\n";
     Ci.print_aiger_format();
-    exit(EARLY_EXIT);
+    throw(EARLY_EXIT);
   }
   
   
@@ -91,6 +91,7 @@ int ic3_enginet::operator()()
     return ERROR1;
   }
   catch(int err_num)    {
+    std::cout << "exception number " << err_num << "\n";
     return err_num;
   }
 

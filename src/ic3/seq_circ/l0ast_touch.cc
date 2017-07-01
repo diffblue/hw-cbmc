@@ -50,7 +50,7 @@ void fill_fanout_lists(Circuit *N)
 	std::cout << "it is found that  gate ";
         print_name1(G1.Gate_name);
         std::cout << " is not defined" << std::endl;
-	//	exit(100);
+	throw(ERROR1);
       }     
     }
   }
@@ -96,7 +96,7 @@ void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt)
       std::cout << "false output "; 
       print_name(&name); 
       std::cout << std::endl;
-      exit(1);
+      throw(ERROR1);
     }
     int gate_num = N->Pin_list[name];
     N->Outputs.push_back(gate_num); // record the gate as a circuit output
@@ -123,7 +123,7 @@ void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt)
 	std::cout << "gate "; 
 	print_name1(G.Gate_name); 
 	std::cout << " does not fan out\n";
-	exit(1);
+	throw(ERROR1);
       }
     G.gate_type = GATE;
   }

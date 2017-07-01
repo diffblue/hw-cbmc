@@ -67,7 +67,7 @@ void  print_gate_type(FILE *fp,Circuit *N,Gate &G)
     break;
   default:
     fprintf(fp,"wrong switch value\n");
-    exit(1);
+    throw(ERROR1);
   }
 
 

@@ -41,7 +41,7 @@ int CompInfo::pick_lit_to_remove(CLAUSE &Curr,SCUBE &Tried,int curr_tf)
     break;
   default:
     std::cout << "lit_pick_heur = " << lit_pick_heur << std::endl;
-    exit(100);
+    throw(ERROR1);
   }
 
   return(lit);

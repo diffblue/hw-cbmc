@@ -180,7 +180,7 @@ void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
   if (shift == 0) {
     p();
     print_bnd_sets1();
-    exit(1); }
+    throw(ERROR1); }
 
   C.resize(C.size()-shift);
   htable_lits.done_using();

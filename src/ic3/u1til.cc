@@ -161,7 +161,7 @@ void my_assert(bool cond)
 {
   if (!cond) {
     p();
-    exit(100);
+    throw(ERROR1);
   }
 } /* end of function my_assert */
 

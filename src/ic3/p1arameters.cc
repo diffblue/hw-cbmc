@@ -32,7 +32,7 @@ void ic3_enginet::read_parameters()
 
   if (cmdline.isset("h")) {
     print_header();
-    exit(0);
+    throw(EARLY_EXIT);
   }
 
   if (cmdline.isset("property")) 

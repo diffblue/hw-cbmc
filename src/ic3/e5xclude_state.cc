@@ -74,7 +74,7 @@ bool CompInfo::adjust_clause2(CLAUSE &C,CUBE &St_cube,SCUBE &Failed_lits)
 
   if (shift == 0) {
     p();
-    exit(1); }
+    throw(ERROR1); }
 
   C.resize(C.size()-shift);
   htable_lits.done_using();

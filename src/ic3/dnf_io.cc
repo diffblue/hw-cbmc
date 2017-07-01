@@ -14,7 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <stdio.h>
 #include "dnf_io.hh"
-
+#include "s0hared_consts.hh"
 
 /*========================================
 
@@ -260,7 +260,7 @@ void print_dnf(DNF &D,char *fname)
   fp = fopen(fname,"w");
   if (fp == NULL) {
     std::cout << "cannot open file " << fname << std::endl;
-    exit(1);}
+    throw(ERROR2);}
      
    
   print_dnf(D,fp);  
@@ -295,7 +295,7 @@ void print_dnf(DNF &D,int nvars,char *fname)
   fp = fopen(fname,"w");
   if (fp == NULL) 
     {std::cout << "cannot open file " << fname << std::endl;
-      exit(1);
+      throw(ERROR2);
     }
    
   fprintf(fp,"p cnf %d %d\n",nvars,(int) D.size());
@@ -451,7 +451,7 @@ void print_dnf(DNF &D,char *fname,int start,int finish)
   fp = fopen(fname,"w");
   if (fp == NULL) {
     printf("cannot open file %s\n",fname);
-    exit(1);}
+    throw(ERROR2);}
      
   // note that in the line below we compute find_max_var for
   //   the whole DNF formula
@@ -491,7 +491,7 @@ void print_dnf(DNF &D,char *fname,int num_vars)
   fp = fopen(fname,"w");
   if (fp == NULL) {
     std::cout << "cannot open file " << fname << std::endl;
-    exit(1);
+    throw(ERROR2);
   }
    
   fprintf(fp,"p cnf %d %d\n",num_vars,(int) D.size());
@@ -552,7 +552,7 @@ void fprint_srt_dnf(DNF &D,char *fname) {
   FILE *fp = fopen(fname,"w");
   if (fp == NULL) {
     printf("failed to open file %s\n",fname);
-    exit(1);
+    throw(ERROR2);
   }
 
   fprintf(fp,"p cnf %d %d\n",find_max_var(D),(int) D.size());
