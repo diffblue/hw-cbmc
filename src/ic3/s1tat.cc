@@ -26,13 +26,12 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::print_stat()
 {
 
-  printf("num of time frames = %d\n",max_num_tfs);
-  if (inv_ind >= 0)   printf("inv_ind = %d\n",inv_ind);
+  std::cout << "num of time frames = " << max_num_tfs << "\n";
+  if (inv_ind >= 0)   std::cout << "inv_ind = " << inv_ind << "\n";
   my_printf("#inputs = %m, #outputs = %m, #latches = %m, #gates = %m\n",
 	    N->ninputs,N->noutputs,N->nlatches, N->ngates);
-  printf("total number of generated clauses is %d\n",(int) F.size()- 
-         (int) Ist.size() + init_ind_cls());
-
+  std::cout << "total number of generated clauses is " <<  F.size()- 
+    Ist.size() + init_ind_cls() << "\n";
 
   my_printf("orig_ind_cls = %m, succ_impr = %m, failed_impr = %m\n",
             orig_ind_cls,succ_impr,failed_impr);
@@ -40,16 +39,19 @@ void CompInfo::print_stat()
 
   // print the total average size
 
-  printf("Aver. clause size = %.1f\n",average());
+  std::cout << std::fixed;
+  std::cout.precision(1);
+  std::cout << "Aver. clause size = " << average() << "\n";
 
-  printf("max. num. improv. of an ind. clause is %d\n",max_num_impr);
+  std::cout << "max. num. improv. of an ind. clause is " << max_num_impr << "\n";
   my_printf("#add1 = %m, #add2 = %m, #replaced = %m, #restore = %m\n",
             num_add1_cases,num_add2_cases,num_replaced_cases,num_restore_cases);
   print_sat_stat();
 
   print_flags();
 
-  printf("muliplier = %.2f\n",multiplier);
+  std::cout.precision(2);
+  std::cout << "muliplier = " << multiplier << "\n";
 
   print_lifting_stat();
   my_printf("root_state_cnt = %m, new_state_cnt = %m, old_state_cnt = %m",
@@ -112,7 +114,7 @@ void CompInfo::print_one_sat_stat(SatSolver &S)
     return;
 
   std::cout << S.Name << ": ";
-  printf("%d calls\n",S.tot_num_calls);
+  std::cout << S.tot_num_calls <<  " calls\n";
 
 } /* end of function print_one_sat_stat */
 
@@ -126,31 +128,31 @@ void CompInfo::print_time_frame_stat()
 {
 
   if (verbose > 0) {
-    printf("------------------\n");
-    printf("finished time frame number %d\n",(int) Time_frames.size()-1);
+    std::cout << "------------------\n";
+    std::cout << "finished time frame number " << Time_frames.size()-1 << "\n";
   }
 
   TimeFrame &Tf = Time_frames[tf_lind];
   if (verbose > 0) 
-    printf("new derived clauses Bnd[%d]=%d, Bnd[%d]=%d\n",tf_lind,
-           Tf.num_bnd_cls,tf_lind+1,
-	   Time_frames[tf_lind+1].num_bnd_cls);
+    std::cout << "new derived clauses Bnd[" << tf_lind <<"]=" << Tf.num_bnd_cls
+	      << ", Bnd[" << tf_lind+1 << "]="
+	      << Time_frames[tf_lind+1].num_bnd_cls << "\n";
 
 
   if (verbose > 0)  {
-    printf("num_pbs-s: %d\n",Tf.num_pbss);
+    std::cout << "num_pbs-s: " << Tf.num_pbss << "\n";
 
-    printf("Cti-s:\n");
+    std::cout << "Cti-s:\n";
     int count = 0;
     for (int i=tf_lind; i >=0; i--) {
       if (Time_frames[i].num_rcnt_ctis == 0) continue;
-      if (count++ > 0) printf(", ");    
-      printf("Tf[%d] = %d",i,Time_frames[i].num_rcnt_ctis);
-      if (count % 10 == 0) printf("\n"); 
+      if (count++ > 0) std::cout << ", ";  
+      std::cout << "Tf[" << i << "] = " << Time_frames[i].num_rcnt_ctis << "\n";
+      if (count % 10 == 0) std::cout << "\n"; 
     }
 
     if (verbose > 0)
-      if (count % 10 != 0)  printf("\n");
+      if (count % 10 != 0)  std::cout << "\n";
   }
  
   int time_frame_calls;
@@ -159,8 +161,7 @@ void CompInfo::print_time_frame_stat()
   if (verbose > 0) 
     my_printf("F.size() = %m, num. inact. clauses  = %m\n",(int) F.size(), 
               num_inact_cls);
-  //  printf("num. seen (redund) cls = %d (%d)\n",Tf.num_seen_cls,
-  // Tf.num_redund_cls);
+ 
 } /* end of function print_time_frame_stat*/
 
 

@@ -14,6 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include <map>
 #include <iostream>
+#include <iomanip>
 #include "dnf_io.hh"
 const int factor = 1000;
 
@@ -38,7 +39,8 @@ void print_num_with_commas(const int &num)
   size_t num_of_parts=parts.size();
   for (size_t i=0; i < num_of_parts; i++) {
     if (i ==  0) std::cout << parts[num_of_parts-i-1];
-    else std::cout << parts[num_of_parts-i-1];
+    else std::cout << std::setfill('0') <<  std::setw(3)
+		   << parts[num_of_parts-i-1];
      
     if (i != num_of_parts-1) std::cout << ",";
   }

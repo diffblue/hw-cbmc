@@ -33,7 +33,7 @@ void ic3_enginet::print_var_map(std::ostream &out)
 {
 
 
-  printf("\n-----  Var Map ------\n");
+  std::cout << "\n-----  Var Map ------\n";
 
   var_mapt &vm = netlist.var_map;
   for(var_mapt::mapt::const_iterator it=vm.map.begin();
@@ -115,8 +115,6 @@ void ic3_enginet::add_pseudo_inps(Circuit *N)
   for (size_t i=0; i < Gate_list.size();i++) {
     Gate &G=Gate_list[i];
     if (G.flags.active) continue;
-    // printf("inactive gate: ");
-    // print_name1(G.Gate_name,true);
 
     G.func_type = BUFFER;
     G.gate_type = INPUT;

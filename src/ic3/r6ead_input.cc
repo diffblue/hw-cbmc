@@ -53,18 +53,14 @@ void read_next_name(CCUBE &Name,bool &neg,FILE *fp)
 void ic3_enginet::read_constraints(const std::string &source_name)
 {
 
-  char fname[MAX_NAME];
-  int size = source_name.size();
-  assert(size < MAX_NAME-10);
-  source_name.copy(fname,size);
-  fname[size] = 0;
+  std::string fname = source_name;
   
-  strcat(fname,".cnstr");
+  fname += ".cnstr";  
 
-  FILE *fp = fopen(fname,"r");
+  FILE *fp = fopen(fname.c_str(),"r");
   if (fp == NULL) {
-    printf("file %s listing constraints is missing\n",fname);
-    exit(100);
+    std::cout << "file " << fname << " listing constraints is missing\n";
+    throw(ERROR1);
   }
 
   while (true) {
@@ -131,9 +127,9 @@ void ic3_enginet::form_orig_names()
       irep_idt Lname = it->first;
       std::string Sname = short_name(Lname);
       if (var.bits.size() > 1) {
-	char buf[100];
-	sprintf(buf,"[%zu]",j);
-	Sname += buf;
+	std::ostringstream Buff;
+	Buff << "[" << j << "]";
+	Sname += Buff.str();
       }
 
       assert(ind < Nodes.size());
@@ -152,20 +148,20 @@ void ic3_enginet::form_orig_names()
 void ic3_enginet::print_nodes()
 {
 
-  printf("\n-----  Nodes ------\n");
+  std::cout << "\n-----  Nodes ------\n";
   aigt::nodest &Nodes = netlist.nodes;
   for (size_t i=0; i <= Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];
     if (Nd.is_var()) {
-      printf("Nd%zu: (var)\n",i);
+      std::cout << "Nd" << i << " (var)\n";
       continue;
     }
     
-    printf("Nd%zu = ",i);
+    std::cout << "Nd" << i << " = ";
     print_lit2(Nd.a.var_no(),Nd.a.sign());
-    printf(" & ");
+    std::cout <<  " & ";
     print_lit2(Nd.b.var_no(),Nd.b.sign());
-    printf("\n");    
+    std::cout << "\n";
 
   }
 
@@ -193,8 +189,8 @@ void ic3_enginet::print_lit1(unsigned var,bool sign)
 void ic3_enginet::print_lit2(unsigned var,bool sign)
 {
 
-  if (sign) printf("!");
-  printf("v%d",var);
+  if (sign) std::cout << "!";
+  std::cout << "v" << var;
 
 } /* end of function print_lit2 */
 

@@ -53,56 +53,56 @@ void ic3_enginet::print_expr_id(exprt &expr)
 {
 
   bool found = false;
-  printf("-------------\n");
+  std::cout << "-------------\n";
   if(expr.id()==ID_and) {
-    printf("ID_and\n");
+    std::cout << "ID_and\n";
     found = true; }
   if (expr.id()==ID_or) {
-    printf("ID_or\n");
+    std::cout << "ID_or\n";
     found = true; }
   if (expr.id()==ID_not) {
-    printf("ID_not\n");
+    std::cout << "ID_not\n";
     found = true; }
   if (expr.id()==ID_implies) {
-    printf("ID_implies\n");
+    std::cout << "ID_implies\n";
     found = true; }
   if (expr.id()==ID_AG) {
-    printf("ID_AG\n");
+    std::cout << "ID_AG\n";
     found = true; }
   if (expr.id()==ID_sva_always){
-    printf("ID_sva_always\n");
+    std::cout << "ID_sva_always\n";
     found = true; }
   if (expr.id()==ID_sva_overlapped_implication) {
-    printf("ID_sva_overlapped_implication\n");
+    std::cout << "ID_sva_overlapped_implication\n";
     found = true; }
   if (expr.id()==ID_sva_non_overlapped_implication) {
-    printf("ID_sva_non_overlapped_implication\n");
+    std::cout << "ID_sva_non_overlapped_implication\n";
     found = true; }
   if (expr.id()==ID_sva_nexttime){
-    printf("ID_sva_nexttime\n");
+    std::cout << "ID_sva_nexttime\n";
     found = true; }
   if (expr.id()==ID_sva_eventually){
-    printf("ID_sva_eventually\n");
+    std::cout << "ID_sva_eventually\n";
     found = true; }
   if (expr.id()==ID_sva_until) {
-    printf("ID_sva_until\n");
+    std::cout << "ID_sva_until\n";
     found = true;}
   if (expr.id()==ID_sva_s_until) {
-    printf("ID_sva_s_until\n");
+    std::cout << "ID_sva_s_until\n";
     found = true;  }
   if (expr.id()==ID_sva_until_with) {
-    printf("ID_sva_until_with\n");
+    std::cout << "ID_sva_until_with\n";
     found = true; }
   if (expr.id()==ID_sva_s_until_with) {
-    printf("ID_sva_s__until_with\n");
+    std::cout << "ID_sva_s__until_with\n";
     found = true; }
  
   if (!found) {
-    printf("unknown expression\n");
-    exit(100);
+    std::cout << "unknown expression\n";
+    throw(ERROR1);
   }
 
-  printf("\n");
+  std::cout << "\n";
 
 } /* end of function print_expr_id */
 
@@ -141,10 +141,10 @@ bool ic3_enginet::form_orig_name(CCUBE &Name,literalt &lit,bool subtract)
     return(true);
   }
 
-  char buf[MAX_NAME];
-  if (subtract) sprintf(buf,"a%d",lit.get()-1);
-  else sprintf(buf,"a%d",lit.get());   
-  conv_to_vect(Name,buf);
+  std::ostringstream Buff;
+  if (subtract) Buff << "a" << lit.get()-1;
+  else Buff << "a" << lit.get();
+  conv_to_vect(Name,Buff.str());
   return(false);
 } /* end of function form_orig_name */
 
@@ -159,7 +159,6 @@ void CompInfo::assign_value()
 
   // assign value to input literals
 
-  //  std::cout << "Constr_ilits-> " << Constr_ilits << std::endl;
   for (size_t i=0; i < Constr_ilits.size(); i++) {
     int lit = Constr_ilits[i];
     size_t var_ind = abs(lit)-1;
@@ -210,9 +209,11 @@ void CompInfo::form_constr_lits()
 	bool cond = (pnt->second.tran_coi || pnt->second.fun_coi);
 	if (cond == false) {
 	  p();
-	  printf("pnt->second.tran_coi = %d\n",pnt->second.tran_coi);
-	  printf("pnt->second.fun_coi = %d\n",pnt->second.fun_coi);
-	  exit(100);
+	  std::cout << "pnt->second.tran_coi = " << pnt->second.tran_coi
+		    << std::endl;
+	  std::cout << "pnt->second.fun_coi =" << pnt->second.fun_coi
+		    << std::endl;
+	  throw(ERROR1);
 	}
 	if (pnt->second.tran_coi)  Fun_coi_lits.push_back(lit);
 	if (pnt->second.fun_coi) Tr_coi_lits.push_back(lit);}

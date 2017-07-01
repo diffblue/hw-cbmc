@@ -100,41 +100,51 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
     return;
   }
 
-  std::ostringstream Buff;
+  
   SCUBE &Inps = Ci.Inps;
 
-  
-       
-  
 	
   if (Inps.find(lit) != Inps.end()) {
-    Buff << "i" << lit;
-    //    std::string Inp_name = Buff.str();
-    conv_to_vect(Pin_names[0],Buff.str());
-    
-    Buff.clear();
-    Buff << "ni" << lit;
-    conv_to_vect(Pin_names[1],Buff.str());
+    {
+      std::ostringstream Buff;
+      Buff << "i" << lit;
+      conv_to_vect(Pin_names[0],Buff.str());
+    }
+
+    {
+      std::ostringstream Buff;
+      Buff << "ni" << lit;
+      conv_to_vect(Pin_names[1],Buff.str());
+    }
     return;
   }
 
   SCUBE &Lats = Ci.Lats;
   if (Lats.find(lit) != Lats.end()) {
-    Buff << "l" << lit;
-    conv_to_vect(Pin_names[0],Buff.str());
-    
-    Buff.clear();
-    Buff << "nl" << lit;
-    conv_to_vect(Pin_names[1],Buff.str());
+    {
+      std::ostringstream Buff;
+      Buff << "l" << lit;
+      conv_to_vect(Pin_names[0],Buff.str());
+    }
+    {
+      std::ostringstream Buff;
+      Buff << "nl" << lit;
+      conv_to_vect(Pin_names[1],Buff.str());
+    }
     return;
   }
 
-  Buff << "a" << lit;
-  conv_to_vect(Pin_names[0],Buff.str());
-  
-  Buff.clear();
-  Buff << "na" << lit;
-  conv_to_vect(Pin_names[1],Buff.str());
+  {
+    std::ostringstream Buff;
+    Buff << "a" << lit;
+    conv_to_vect(Pin_names[0],Buff.str());
+  }
+
+  {
+    std::ostringstream Buff;
+    Buff << "na" << lit;
+    conv_to_vect(Pin_names[1],Buff.str());
+  }
    
 
 } /* end of function form_inv_names */
@@ -164,23 +174,27 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
 
 
   
-  std::ostringstream Buff;
+  
   int nlit;
  
 
   nlit = next_lit.get();
-  if (next_lit.sign()) {   
-    if (orig_names) {
-      form_neg_orig_name(Name,next_lit);
-      return;}
-    Ci.Invs.insert(nlit-1);
-    if (Ci.Inps.find(nlit-1) != Ci.Inps.end())
-      Buff << "ni" << nlit-1;
-    else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end())
-      Buff << "nl" << nlit-1;
-    else Buff << "na" << nlit-1;
-    conv_to_vect(Name,Buff.str());
-    return;
+
+  {
+    std::ostringstream Buff;
+    if (next_lit.sign()) {   
+      if (orig_names) {
+	form_neg_orig_name(Name,next_lit);
+	return;}
+      Ci.Invs.insert(nlit-1);
+      if (Ci.Inps.find(nlit-1) != Ci.Inps.end())
+	Buff << "ni" << nlit-1;
+      else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end())
+	Buff << "nl" << nlit-1;
+      else Buff << "na" << nlit-1;
+      conv_to_vect(Name,Buff.str());
+      return;
+    }
   }
 
 
@@ -189,11 +203,13 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
     return;
   }
 
-  Buff.clear();
-  if (Ci.Inps.find(nlit) != Ci.Inps.end()) Buff << "i" << nlit;
-  else if (Ci.Lats.find(nlit) != Ci.Lats.end()) Buff << "l" << nlit;
-  else Buff << "a" << nlit;
-  conv_to_vect(Name,Buff.str());
+  {
+    std::ostringstream Buff;
+    if (Ci.Inps.find(nlit) != Ci.Inps.end()) Buff << "i" << nlit;
+    else if (Ci.Lats.find(nlit) != Ci.Lats.end()) Buff << "l" << nlit;
+    else Buff << "a" << nlit;
+    conv_to_vect(Name,Buff.str());
+  }
 
 } /* end of function form_next_symb */
 

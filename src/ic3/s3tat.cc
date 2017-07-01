@@ -30,8 +30,10 @@ void CompInfo::print_lifting_stat()
 
   float av_bc_size = length_bstate_cubes / num_bstate_cubes;
   float av_gc_size = length_gstate_cubes / num_gstate_cubes;
-  printf("#svars = %d, aver. bst. cube = %.1f, aver. gst. cube = %.1f\n",
-	 (int) Pres_svars.size(),av_bc_size,av_gc_size);
+  std::cout << std::fixed;
+  std::cout.precision(1);
+  std::cout << "#svars = " << Pres_svars.size() << ", aver. bst. cube = "
+	    << av_bc_size << ", aver. gst. cube = " << av_gc_size << "\n";
  
 
 } /* end of function print_lifting_stat */
@@ -45,23 +47,23 @@ void CompInfo::print_lifting_stat()
 void CompInfo::print_flags()
 {
 
-  printf("rem_subsumed_flag = %d\n",rem_subsumed_flag);
+  std::cout << "rem_subsumed_flag = " << rem_subsumed_flag << "\n";
 
   //  LIT_PICK_HEUR
   // 
-  printf("lit_pick_heur = ");
+  std::cout << "lit_pick_heur = ";
   switch (lit_pick_heur) {
   case RAND_LIT:
-    printf("RAND_LIT\n");
+    std::cout << "RAND_LIT\n";
     break;
   case INACT_LIT:
-    printf("INACT_LIT\n");
+    std::cout << "INACT_LIT\n";
     break;
   case INACT_VAR:
-    printf("INACT_VAR\n");
+    std::cout << "INACT_VAR\n";
     break;
   case FIXED_ORDER:
-    printf("FIXED_ORDER\n");
+    std::cout << "FIXED_ORDER\n";
     break;
   default:
     assert(false);
@@ -70,16 +72,16 @@ void CompInfo::print_flags()
 
   //  ACT_UPD_MODE
   // 
-  printf("act_upd_mode = ");
+  std::cout << "act_upd_mode = ";
   switch (act_upd_mode) {
   case NO_ACT_UPD:
-    printf("NO_ACT_UPD\n");
+    std::cout << "NO_ACT_UPD\n";
     break;
   case TF_ACT_UPD:
-    printf("TF_ACT_UPD\n");
+    std::cout << "TF_ACT_UPD\n";
     break;
   case MINISAT_ACT_UPD:
-    printf("MINISAT_ACT_UPD\n");
+    std::cout << "MINISAT_ACT_UPD\n";
     break;
   default:
     assert(false);
@@ -88,9 +90,9 @@ void CompInfo::print_flags()
   //  print sort modes
   // 
 
-  printf("sorted objects = ");
-  if (sorted_objects == LITS) printf("LITS\n");
-  else if (sorted_objects == VARS) printf("VARS\n");
+  std::cout << "sorted objects = ";
+  if (sorted_objects == LITS) std::cout << "LITS\n";
+  else if (sorted_objects == VARS) std::cout << "VARS\n";
   else assert(false);
 
   print_induct_lift_sort_mode("lift_sort_mode",lift_sort_mode);
@@ -98,10 +100,10 @@ void CompInfo::print_flags()
   print_induct_lift_sort_mode("ind_cls_sort_mode",ind_cls_sort_mode);
 
   print_gate_sort_mode();
-  printf("selector = %d\n",selector);
-  printf("ctg_flag = %d\n",ctg_flag);
-  printf("constr_flag = %d\n",constr_flag);
-  printf("standard_mode = %d\n",standard_mode);
+  std::cout << "selector = " << selector << "\n";
+  std::cout << "ctg_flag = " << ctg_flag << "\n";
+  std::cout << "constr_flag = " << constr_flag << "\n";
+  std::cout << "standard_mode = " << standard_mode << "\n";
  
 
 
@@ -116,17 +118,17 @@ void CompInfo::print_flags()
   =========================================================*/
 void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode) 
 {
-  printf("%s = ",mode_name);
+  std::cout << std::string(mode_name) << "= ";
   switch (sort_mode) {
   case NO_SORT:
-    printf("NO_SORT\n");
+    std::cout << "NO_SORT\n";
     break;
   case FULL_SORT:
-    printf("FULL_SORT\n");
+    std::cout << "FULL_SORT\n";
     break;
   case PART_SORT:
-    printf("PART_SORT\n");
-    printf("    max_num_elems = %zu\n",max_num_elems);
+    std::cout << "PART_SORT\n";
+    std::cout << "max_num_elems = " << max_num_elems << "\n";
     break;
   default:
     assert(false);
@@ -141,25 +143,25 @@ void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode)
 void CompInfo::print_gate_sort_mode()
 {
 
-  printf("gate_sort_mode = ");
+  std::cout << "gate_sort_mode = ";
   switch (gate_sort_mode) {
   case INIT_SORT:
-    printf("INIT_SORT");
+    std::cout << "INIT_SORT";
     break;
   case INPS_FIRST:
-    printf("INPS_FIRST");
+    std::cout << "INPS_FIRST";
     break;
   case OUTS_FIRST:
-    printf("OUTS_FIRST");
+    std::cout << "OUTS_FIRST";
     break;
   case RAND_SORT:
-    printf("RAND_SORT");
+    std::cout << "RAND_SORT";
     break;
   default:
     assert(false);
   }
 
-  printf("\n");
+  std::cout << "\n";
 
 } /* end of function print_gate_sort_mode */
 
