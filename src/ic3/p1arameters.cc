@@ -71,7 +71,7 @@ void CompInfo::init_parameters()
   print_inv_flag = false;
   print_only_ind_clauses = 0;
   print_cex_flag = 0;
-  strcpy(out_file,"res");
+  out_file = "res";
   verbose = 0;
   gcount_max = -1;
   fin_tf = -1;

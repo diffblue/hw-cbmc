@@ -28,13 +28,13 @@ void  CompInfo::gen_cnfs(const char *fname,bool print_flag)
 {  
   assign_var_indexes();
  
-  char fname1[MAX_NAME];
+  std::string fname1;
 
   if (print_flag) {
     // print index file
-    strcpy(fname1,fname);
-    strcat(fname1,".ind");
-    print_var_indexes(fname1);
+    fname1 = fname;
+    fname1 += ".ind";
+    print_var_indexes(fname1.c_str());
   }
 
   gen_initial_state_cubes();

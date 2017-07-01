@@ -24,9 +24,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::fprint_cex2()
 {
 
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  strcat(fname,".cex.cnf");  
+  std::string fname = out_file;
+  fname += ".cex.cnf";
   
   print_dnf(Cex,fname);
 
@@ -41,10 +40,10 @@ void CompInfo::fprint_cex2()
 void CompInfo::fprint_cex1()
 {
 
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  strcat(fname,".cex.txt");  
-  FILE *fp = fopen(fname,"w");
+  std::string fname = out_file;
+  fname += ".cex.txt";
+  
+  FILE *fp = fopen(fname.c_str(),"w");
   assert(fp != NULL);
 
   for (size_t i=0; i < Cex.size(); i++) {
@@ -78,10 +77,10 @@ void CompInfo::print_invariant(bool only_new_clauses)
   if (Cex.size() == 0)
     assert(Time_frames[inv_ind].num_bnd_cls == 0);
   add_dnf(Res,H);
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  if (inv_ind < 0) strcat(fname,".clauses.cnf");
-  else strcat(fname,".inv.cnf");  
+  std::string fname = out_file;
+  
+  if (inv_ind < 0) fname += ".clauses.cnf";
+  else fname +=".inv.cnf";
   print_dnf(Res,fname);
 
 } /* end of function print_invariant */
@@ -95,9 +94,8 @@ void CompInfo::print_fclauses()
 {
 
 
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  strcat(fname,".clauses.cnf"); 
+  std::string fname = out_file;
+  fname += ".clauses.cnf";
 
   CNF Res;
 

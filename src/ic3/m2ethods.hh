@@ -200,7 +200,7 @@ void  gen_initial_state_cubes();
 
 // debugging methods
 void print_var_indexes();
-void print_var_indexes(char *name);
+void print_var_indexes(const char *name);
 //
 void init_gate_order();
 void gate_sort_inps_first();

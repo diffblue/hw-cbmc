@@ -18,9 +18,6 @@ typedef DNF CNF;
 typedef std::vector <float> FltCube;
 
 
-#define BUF_SIZE 1000
-#define MAX_NUM 20
-
 
 /*========================
 
@@ -48,7 +45,8 @@ void print_dnf3(DNF &D,char *fname,int start_num=0);
 void print_dnf(DNF &D,const char *fname);
 // print DNF D in the dimacs format the number of variables is 
 // computed by the value of the largest literal number
-void print_dnf(DNF &D,char *fname); 
+void print_dnf(DNF &D,char *fname);
+void print_dnf(DNF &D,std::string &Name);
 void print_dnf(DNF &D,FILE *fp); 
 void print_dnf(DNF &D,int nvars,char *fname);// print DNF D in the dimacs format 
 void print_dnf(DNF &D,CUBE &cube_nums);

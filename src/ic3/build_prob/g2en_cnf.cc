@@ -131,7 +131,7 @@ void CompInfo::gen_trans_rel(int shift)
    P R I N T _ V A R _ I N D E X E S
 
 ====================================*/
-void CompInfo::print_var_indexes(char *fname)
+void CompInfo::print_var_indexes(const char *fname)
 {
 
 

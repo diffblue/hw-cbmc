@@ -172,7 +172,8 @@ public:
   char print_cex_flag; // 0 - counterexample (cex) is not printed out, 
                        // 1 - cex is printed out as a text file
                        // 2 - cex is printed out as a CNF formula
-  char out_file[MAX_NAME]; // the root name of the output file
+  std::string out_file; // the root name of the output file
+ 
   int verbose; // specifies the level details to be printed out
   int gcount_max; // specifies the maximum value of gcount 
                   // (used for debugging)
@@ -350,7 +351,6 @@ void form_lngst_clause(CLAUSE &C0,CUBE &St);
 void get_runtime (double &usrtime, double &systime);
 void my_printf(const char *format,...);
 void state_to_clauses(CNF &K,CUBE &A);
-void read_numbers(char *buf,int &num1,int &num2);
 void my_assert(bool cond);
 void find_latch(Circuit *N,Gate &G,int &latch_ind);
 void conv_to_vect(CCUBE &Name1,const char *Name0);

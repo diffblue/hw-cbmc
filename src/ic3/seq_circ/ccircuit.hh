@@ -151,8 +151,6 @@ public:
   void print_no_fanout_gates();
 };
 
-#define MAX_LINE 10000
-
 
 
 #define n() {printf("\n");}
@@ -163,7 +161,6 @@ public:
 // constants
 //
 const int  NAMES_MAX = 10;
-const int MAX_NAME = 100;
 
 //
 //  functions   

@@ -573,3 +573,18 @@ void fprint_srt_dnf(DNF &D,const char *fname) {
   fprint_srt_dnf(D,(char *) fname);
 
 } /* end of function fprint_srt_dnf */
+
+/*=================================
+
+  P R I N T _ D N F
+
+  prints D   to the file "fname" 
+  in the dimacs format
+   
+  ==================================*/
+void print_dnf(DNF &D,std::string &Name)
+{
+
+  print_dnf(D,Name.c_str());
+
+} /* end of function print_dnf */
