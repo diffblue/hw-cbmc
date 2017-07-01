@@ -16,7 +16,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 /*========================================
 
@@ -248,15 +248,15 @@ bool feeds_only_one_latch(Circuit *N,Gate &G)
   }
  
   if (num_of_latches != 1) {
-    printf("error when checking the fanout of the gate ");
-    print_name1(G.Gate_name); printf("\n");
-    printf("total number of latches is %d\n",num_of_latches);
+    std::cout << "error when checking the fanout of the gate ";
+    print_name1(G.Gate_name); std::cout << "\n";
+    std::cout << "total number of latches is " << num_of_latches << "\n";
     for (size_t i=0; i < Latches.size(); i++) {
       Gate &G1 = N->get_gate(Latches[i]);
       print_gate_name(G1);
-      printf("\n");
+      std::cout << "\n";
     }
-    exit(1);
+    throw(ERROR1);
   }
   return(num_of_latches == 1);
 } /* end of function feeds_only_one_latch */

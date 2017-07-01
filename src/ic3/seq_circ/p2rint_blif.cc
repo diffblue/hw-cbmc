@@ -17,6 +17,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <assert.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
+#include "s0hared_consts.hh"
 
 /*=======================================
 
@@ -51,10 +52,10 @@ void print_blif2(FILE *fp,Circuit *N)
 	break;
       case UNDEFINED: 
 	p();
-	printf("type of gate ");
+	std::cout << "type of gate ";
 	print_name(&G.Gate_name);
-	printf(" is UNDEFINED\n");
-	exit(100);
+	std::cout << " is UNDEFINED\n";
+	throw(ERROR1);
       default:
 	assert(false);
       }

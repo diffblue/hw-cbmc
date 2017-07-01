@@ -24,8 +24,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ==================================*/
 void CompInfo::add_constrs() 
 {
-  printf("adding %d unit constraints\n",(int) (Constr_ilits.size() +
-					       Constr_nilits.size()));
+  std::cout << "adding " << Constr_ilits.size() + Constr_nilits.size()
+	    << "unit constraints\n";
   for (size_t i=0; i < Constr_ilits.size(); i++) {
     CLAUSE U;
     U.push_back(Constr_ilits[i]);
@@ -116,11 +116,11 @@ void CompInfo::gen_trans_rel(int shift)
 	add_truth_table_gate_cubes(Tr,gate_ind,shift);         
 	break;
       case COMPLEX: 
-        printf("complex gates are not allowed\n");
-	exit(1);
+        std::cout << "complex gates are not allowed\n";
+	throw(ERROR1);
       default:   
-        printf("wrong gate type\n");
-	exit(1);
+        std::cout << "wrong gate type\n";
+	throw(ERROR1);
       }
   }
 

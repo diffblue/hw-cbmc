@@ -47,7 +47,7 @@ void print_levels_from_outputs(Circuit *N)
   for (size_t i=0; i < N->Gate_list.size();i++) {
     Gate &G =  N->Gate_list[i];
     print_name1(G.Gate_name);
-    printf(": %d\n",G.level_from_outputs);
+    std::cout << ": " << G.level_from_outputs << "\n";
   }
 
  
@@ -88,7 +88,7 @@ int check_levels_of_outputs(Gate &G,Circuit *N,int &level,
    
       if (G1.flags.label != 0) {
 	print_name1(G1.Gate_name); 
-        printf(" is visited but no level is assigned\n");
+        std::cout <<  "is visited but no level is assigned\n";
 	return(0); // G1 is in the stack, there is a loop in the circuit
       }
 

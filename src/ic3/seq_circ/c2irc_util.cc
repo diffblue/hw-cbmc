@@ -13,7 +13,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 /*===================================
 
@@ -22,7 +22,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ====================================*/
 void print_gate_name(Gate &G)
 {
-  printf("gate "); 
+  std::cout << "gate "; 
   print_name1(G.Gate_name);
 
 }/* end of function print_gate_name */
@@ -36,7 +36,7 @@ void print_gate_name(Gate &G)
 void print_name(CCUBE *name)
 {
   for (size_t i=0; i < name->size();i++)
-    printf("%c",(*name)[i]);
+    std::cout << (*name)[i];
 
 }/* end of function print_name */
 
@@ -81,9 +81,9 @@ void  print_gate_type(FILE *fp,Circuit *N,Gate &G)
 void print_name1(CCUBE &name,bool cr)
 {
   for (size_t i=0; i < name.size();i++)
-    printf("%c",name[i]);
+    std::cout << name[i];
 
-  if (cr) printf("\n");
+  if (cr) std::cout << "\n";
 
 }/* end of function print_name1 */
 
@@ -124,16 +124,16 @@ void  print_levels(Circuit *N)
   fill_up_levels(N,Level_gates);
 
   for (size_t i=0; i < Level_gates.size(); i++) {
-    printf("level %zu:  ",i);
+    std::cout << "level " << i << ":  ";
     CUBE &Level = Level_gates[i];
  
     for (size_t j=0; j < Level.size();j++) {
       Gate &G = Gate_list[Level[j]];
       print_name1(G.Gate_name);
-      printf("(%zu)", G.Fanout_list.size());
-      printf(" ");
+      std::cout << "(" << G.Fanout_list.size() << ")";
+      std::cout << " ";
     }
-    printf("\n");
+    std::cout << "\n";
   }
 
 } /* end of function print_levels */

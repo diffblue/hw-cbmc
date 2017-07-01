@@ -15,7 +15,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 
 /*==========================================================
@@ -80,10 +80,10 @@ int assign_output_pin_number(std::map<CCUBE,int> &pin_list,
   else { /* an 'old' pin */
     pin_num=pin_list[name]; // add to input list the current gate input      
     if (gate_list[pin_num].flags.active == 1) {
-      printf("two gates have the same name "); 
+      std::cout << "two gates have the same name "; 
       print_name1(name); 
-      printf("\n");
-      exit(1);         
+      std::cout << "\n";
+      throw(ERROR1);   
     }
   }
   return(pin_num);

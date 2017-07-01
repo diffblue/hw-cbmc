@@ -6,7 +6,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 #include "aux_types.hh"
-
+#include "s0hared_consts.hh"
 extern int debug_flag;
 /*================================
 
@@ -409,9 +409,7 @@ const char UNKNOWN_STATE = 5;
 const int NO_JOINS = 0;
 const int WITH_JOINS = 1;
 
-// termination values
-const int ERROR1 = 100; // termination cased by an error
-const int EARLY_EXIT = 50; // normal early exit
+
 
 const int  MAX_MARKER = 1000000; // used in hash tables
 

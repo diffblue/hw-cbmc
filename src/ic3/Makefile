@@ -52,7 +52,7 @@ OBJ_ROOT = $(OBJ_DIR)/m5y_aiger_print.o \
 
 OBJ =      $(OBJ_ROOT) $(BUILD_PROB) $(SEQ_CIRC)
 
-H_FILES1 = m0ic3.hh dnf_io.hh  m2ethods.hh aux_types.hh i5nline.hh
+H_FILES1 = m0ic3.hh dnf_io.hh  m2ethods.hh aux_types.hh i5nline.hh s0hared_consts.hh
 H_FILES2 = ccircuit.hh ebmc_ic3_interface.hh more_fun_prot.hh
 $(OBJ_DIR)/%.o : %.cc  $(H_FILES1) $(H_FILES2)
 	$(CXX) -c $(CXXFLAGS)  $< -o $@

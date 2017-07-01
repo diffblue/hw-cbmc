@@ -7,6 +7,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <set>
 #include <map>
@@ -35,7 +36,7 @@ void finish_spec_buff(Circuit *N,int gate_ind)
   DNF &R = G.R;
 
   if ((F.size()+ R.size()) != 1) {
-    printf("wrong buffer\n");
+    std::cout << "wrong buffer\n";
     std::cout << G.Gate_name << std::endl;;
   }
 
@@ -94,17 +95,16 @@ void form_output_name(CCUBE &Name,Circuit *N,int gate_ind)
 {
   Name =  N->Spec_buff_name;
 
-  char buff[MAX_NAME];
+  std::ostringstream Buff;
   Gate &G = N->get_gate(gate_ind);
 
   assert(G.spec_buff_ind >= 0);
 
-  sprintf(buff,"%d",G.spec_buff_ind);
+  Buff << G.spec_buff_ind;
 
-  for (int i=0; ; i++) {
-    if (buff[i] == 0) break;
-    Name.push_back(buff[i]);
-  }
+  for(size_t i=0;i < Buff.str().size();i++) 
+    Name.push_back(Buff.str()[i]);
+
 } /* end of function form_output_name */
 
 /*==================================

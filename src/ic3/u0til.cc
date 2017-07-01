@@ -106,8 +106,9 @@ void CompInfo::part_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V) {
 
   if (C.size() != C1.size()) {
     p();
-    printf("C.size() = %d, C1.size() = %d\n",(int) C.size(), (int) C1.size());
-    exit(100);
+    std::cout << "C.size() = " << C.size() << ", C1.size() = " <<  C1.size()
+	      << "\n";
+    throw(ERROR1);
   }
   
 } /* end of function part_sort */
@@ -150,15 +151,15 @@ void CompInfo::print_bnd_sets1()
 {
 
   for (size_t i=0; i < Time_frames.size(); i++) {
-    printf("Bnd[%zu]: ",i);
+    std::cout << "Bnd[" << i << "]: ";
     int count = 0;
     for (size_t j=0; j < F.size(); j++) {
       if (Clause_info[j].active == 0) continue;
       if (Clause_info[j].span != i) continue;
-      if (count++ > 0) printf(" ");
-      printf("%zu",j);
+      if (count++ > 0) std::cout << " ";
+      std::cout << j;
     }
-    printf("\n");
+    std::cout << "\n";
   }
 } /* end of function print_bnd_sets1 */
 

@@ -108,11 +108,11 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
 	add_truth_table_gate_cubes(H,gate_ind,shift);                 
 	break;
       case COMPLEX: 
-        printf("complex gates are not allowed\n");
-	exit(1);
+	std::cout << "complex gates are not allowed\n";
+	throw(ERROR1);
       default:   
-	printf("wrong gate type\n");
-	exit(1);
+	std::cout << "wrong gate type\n";
+	throw(ERROR1);
       }
   }
 

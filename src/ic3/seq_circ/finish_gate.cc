@@ -14,7 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 
 /*==============================================
@@ -60,11 +60,11 @@ void finish_buffer(Gate &G)
   DNF &R = G.R;
 
   if ((F.size()+ R.size()) != 1) {
-    printf("wrong buffer\n");
+    std::cout << "wrong buffer\n";
     std::cout << G.Gate_name << std::endl;
-    printf("F.size() = %d\n",(int) F.size());
-    printf("R.size() = %d\n",(int) R.size());
-    exit(100);
+    std::cout << "F.size() = " << F.size() << "\n";
+    std::cout << "R.size() = " << R.size() << "\n";
+    throw(ERROR1);
   }
 
   // direct output
