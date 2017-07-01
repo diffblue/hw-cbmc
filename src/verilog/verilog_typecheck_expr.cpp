@@ -6,8 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <ctype.h>
+#include <cctype>
 #include <cstdlib>
+#include <algorithm>
 
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
