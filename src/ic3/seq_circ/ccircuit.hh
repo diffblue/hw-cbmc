@@ -142,9 +142,9 @@ public:
   void print_fanout_distrib(CUBE &A);
   void find_remaining_red_latches();
   void clean_latches();
-  void print_names1(FILE *fp,CUBE &gates,bool latch_flag);
-  void print_latch1(FILE *fp,Gate &G);
-  void print_gate1(FILE *fp,Gate &G);
+  void print_names1(std::ofstream &Out_str,CUBE &gates,bool latch_flag);
+  void print_latch1(std::ofstream &Out_str,Gate &G);
+  void print_gate1(std::ofstream &Out_str,Gate &G);
   void find_eq_class_reps();
   void finish_marking_red_latches();
   int find_rep(Gate &G);
@@ -166,34 +166,29 @@ const int  NAMES_MAX = 10;
 //  functions   
 //
 void clear_labels(Circuit *N);
-void print_gate(FILE *fp,Circuit *N,Gate &G);
+void print_gate(std::ofstream &Out_str,Circuit *N,Gate &G);
 void print_gate_name(Gate &G);
 void print_gate_name1(Gate &G);
-void fprint_name(FILE *fp,CCUBE &name);
+void fprint_name(std::ofstream &Out_sr,CCUBE &name);
 void  print_levels(Circuit *N);
 void print_name1(CCUBE &name,bool cr = false);
 void print_subcircuit(Circuit *N,CCUBE &name);
 void rename_gates(Circuit *N,char C);
-void print_tr_rel(Circuit *N,char *root);
-void print_tr_rel_header(Circuit *N,FILE *Tr_rel,char *root);
 void print_st_vars(Circuit *N,char *root);
 void print_inp_vars(Circuit *N,char *root);
-void print_const(FILE *fp,Circuit *N,Gate &G);
+void print_const(std::ofstream &Out_str,Circuit *N,Gate &G);
 void self_looping_latches(Circuit *N);
 bool feeds_only_property(Circuit *N,Gate &G);
 bool feeds_only_latches_or_property(Circuit *N,Gate &G);
 void print_latch_stat(Circuit *N);
 void form_spec_latches(Circuit *N,CUBE &Spec_latches);
-void add_spec_latches(FILE *Tr_rel,Circuit *N,CUBE &Spec_latches);
 int get_fanout_latch(Circuit *N,CUBE &Fanout_gates);
-void print_gates_for_spec_latches(FILE *Tr_rel,Circuit *N,CUBE &Spec_latches);
-void print_latch_fed_by_input(FILE *Tr_rel,Gate &G1,Gate &G,int loc_ind);
-void print_latch_fed_by_const(FILE *Tr_rel,Gate &G1,Gate &G,int loc_ind);
 void my_printf(char *format,...);
 void remove_unobserv_gates(Circuit *N);
 void print_header1(Circuit *N);
 void print_names2(Circuit *N,CUBE &gates);
 void print_func_type(Gate &G);
+void  print_gate_type(std::ofstream &Out_str,Circuit *N,Gate &G);
 
 #include "more_fun_prot.hh"
 

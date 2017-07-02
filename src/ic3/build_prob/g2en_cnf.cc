@@ -6,6 +6,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 #include <iostream>
+#include <fstream>
 #include <set>
 #include <map>
 #include <algorithm>
@@ -126,17 +127,21 @@ void CompInfo::gen_trans_rel(int shift)
 
 } /* end of function gen_trans_rel */
 
+ 
+
 /*====================================
 
-   P R I N T _ V A R _ I N D E X E S
+  P R I N T _ V A R _ I N D E X E S
 
-====================================*/
+  ====================================*/
 void CompInfo::print_var_indexes(const char *fname)
 {
 
 
-  FILE *fp = fopen(fname,"w");
-  assert(fp != NULL);
+  std::ofstream Out_str(fname,std::ios::out);
+  if (!Out_str) {
+    std::cout << "cannot open file " << std::string(fname) << "\n";
+    throw(ERROR2);}
 
   DNF topol_levels;
   
@@ -144,33 +149,33 @@ void CompInfo::print_var_indexes(const char *fname)
   CCUBE marked_vars;
   marked_vars.assign(2*N->Gate_list.size(),0);
 
-   // print var indexes in topological order
-   for (size_t i=0; i <= N->max_levels; i++)
-     {fprintf(fp,"--------------------------------------\n");
-       fprintf(fp,"topological level %zu\n",i);
-      CUBE &Gates = topol_levels[i];
-      for (size_t j=0; j < Gates.size(); j++)
-	{int gate_ind = Gates[j];
-	 Gate &G = N->get_gate(gate_ind);
-         switch (G.gate_type)
-	   {case LATCH: fprintf(fp,"L: ");
-	                break;
-	   case INPUT: fprintf(fp,"I: ");
-	                break;
-	   case GATE: fprintf(fp,"G: ");
-	               break;
-           default: assert(false);
-           }
-         fprint_name(fp,G.Gate_name);
-         fprintf(fp,"  %d\n",Gate_to_var[gate_ind]);
-	 int tmp = Gate_to_var[gate_ind];
-	 if (marked_vars[tmp] != 0)
-	   {fprintf(fp,"variable %d is shared!!\n",tmp);
-	   }
-         marked_vars[tmp] = 1;
+  // print var indexes in topological order
+  for (size_t i=0; i <= N->max_levels; i++) {    
+    Out_str << "--------------------------------------\n";
+    Out_str << "topological level " << i << "\n";
+    CUBE &Gates = topol_levels[i];
+    for (size_t j=0; j < Gates.size(); j++) {
+      int gate_ind = Gates[j];
+      Gate &G = N->get_gate(gate_ind);
+      switch (G.gate_type)
+	{case LATCH: Out_str << "L: ";
+	    break;
+	case INPUT: Out_str << "I: ";
+	  break;
+	case GATE: Out_str << "G: ";
+	  break;
+	default: assert(false);
 	}
-     }
-   fclose(fp);
+      fprint_name(Out_str,G.Gate_name);
+      Out_str << "  " << Gate_to_var[gate_ind] << "\n";
+      int tmp = Gate_to_var[gate_ind];
+      if (marked_vars[tmp] != 0) 
+	Out_str << "variable " << tmp <<  " is shared!!\n";
+	  
+    marked_vars[tmp] = 1;
+  }
+}
+Out_str.close();
 
 }/* end of function print_var_indexes */
 

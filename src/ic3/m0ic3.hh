@@ -361,7 +361,8 @@ bool overlap(CUBE &A,CLAUSE &B);
 int parse_string(CCUBE &Buff);
 void print_names_of_latches(NamesOfLatches &Latches);
 bool ident_arrays(CUBE &A,CUBE &B);
-void print_blif2(FILE *fp,Circuit *N);
+void print_blif(std::ofstream &Out_str,Circuit *N);
+void print_blif2(std::ofstream &Out_str,Circuit *N);
 void print_blif3(const char *Name,Circuit *N);
 
 extern long long gcount;

@@ -5,6 +5,7 @@ Module:  Printing circuit in the BLIF format (Part 1)
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 ******************************************************/
 #include <iostream>
+#include <fstream>
 #include <list>
 #include <vector>
 #include <set>
@@ -24,11 +25,11 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
  Prints out circuit N in the blif format
 ====================================*/
-void print_blif(FILE *fp,Circuit *N)
+void print_blif(std::ofstream &Out_str,Circuit *N)
 {
   
   // print first three comands 
-  circ_print_header(fp,N);
+  circ_print_header(Out_str,N);
  //  print out the gates
 
   for (size_t i=0; i < N->Gate_list.size();i++)
@@ -37,18 +38,18 @@ void print_blif(FILE *fp,Circuit *N)
        {case INPUT: 
             break;
        case LATCH:
-	 print_latch(fp,N,G);
+	 print_latch(Out_str,N,G);
          break;
        case GATE:
-         if (G.func_type == CONST) print_const(fp,N,G);
-         else  print_gate(fp,N,G);
+         if (G.func_type == CONST) print_const(Out_str,N,G);
+         else  print_gate(Out_str,N,G);
          break;
        default: 
          assert(false); // we shouldn't reach this line
        }
    }
  //  print out the '.end' command
- fprintf(fp,".end\n");
+ Out_str << ".end\n";
 
 }/* end of function print_blif */
 
@@ -58,14 +59,18 @@ void print_blif(FILE *fp,Circuit *N)
       P R I N T _ L A T C H
 
 =======================================*/
-void print_latch(FILE *fp,Circuit *N,Gate &G)
+void print_latch(std::ofstream &Out_str,Circuit *N,Gate &G)
 {
- fprintf(fp,".latch ");
- print_names(fp,N,G.Fanin_list);
- fprintf(fp," "); fprint_name(fp,G.Gate_name);
+ Out_str << ".latch ";
+ print_names(Out_str,N,G.Fanin_list);
+ Out_str << " ";
+ fprint_name(Out_str,G.Gate_name);
 
  assert((G.init_value >= 0) && (G.init_value <= 4));
- fprintf(fp," %d\n",G.init_value);
+ if (G.init_value == 0)  Out_str <<  " 0\n";
+ else if (G.init_value == 1) Out_str << " 1\n";
+ else if (G.init_value == 2) Out_str << " 2\n";
+ else Out_str << " 3\n";
 
 
 }/*end of function print_latch */
@@ -76,22 +81,22 @@ void print_latch(FILE *fp,Circuit *N,Gate &G)
         P R I N T _ N A M E S
 
 ===========================================*/
-void print_names(FILE *fp,Circuit *N,CUBE &gates)
+void print_names(std::ofstream &Out_str,Circuit *N,CUBE &gates)
 {int count=0;
 
- for (size_t i=0; i < gates.size();i++)
-   {count++;
+  for (size_t i=0; i < gates.size();i++) {
+    count++;
     Gate &G =  N->Gate_list[gates[i]];
-    fprint_name(fp,G.Gate_name);
+    fprint_name(Out_str,G.Gate_name);
     if (i != gates.size()-1) // put a space if it is not the last name
-       fprintf(fp," ");
-// every NAMES_MAX names we add the extension symbol 
- // unless it is the last name 
-    if ((count == NAMES_MAX) && (i != gates.size()-1)) 
-      {count = 0; 
-       fprintf(fp,"\\\n");
-      }
-   }
+      Out_str << " ";
+  // every NAMES_MAX names we add the extension symbol 
+  // unless it is the last name 
+  if ((count == NAMES_MAX) && (i != gates.size()-1)) {
+    count = 0; 
+    Out_str << "\\\n";
+  }
+}
 
 } /* end of function print_names */
 
@@ -100,7 +105,7 @@ void print_names(FILE *fp,Circuit *N,CUBE &gates)
           P R I N T _ C U B E 
 
 =================================*/
-void print_cube(FILE *fp,CUBE &C,int ninputs)
+void print_cube(std::ofstream &Out_str,CUBE &C,int ninputs)
 {CCUBE L;
 
  for (int i=0; i < ninputs; i++)
@@ -115,13 +120,13 @@ void print_cube(FILE *fp,CUBE &C,int ninputs)
  for (size_t i=0; i < L.size();i++)
    {switch (L[i])
      {case 0:
-        fprintf(fp,"0");
+        Out_str << "0";
         break;
       case 1:
-        fprintf(fp,"1");
+        Out_str << "1";
         break;
       case 2:
-        fprintf(fp,"-");
+        Out_str << "-";
         break;
      }
    }
@@ -131,14 +136,14 @@ void print_cube(FILE *fp,CUBE &C,int ninputs)
       P R I N T _ C O N S T
 
 =======================================*/
-void print_const(FILE *fp,Circuit *N,Gate &G)
+void print_const(std::ofstream &Out_str,Circuit *N,Gate &G)
 {
   // print the .names command
- fprintf(fp,".names ");
- fprint_name(fp,G.Gate_name);
- fprintf(fp,"\n");
+ Out_str << ".names ";
+ fprint_name(Out_str,G.Gate_name);
+ Out_str << "\n";
  
- if (G.F.size() == 1) fprintf(fp,"1\n");
+ if (G.F.size() == 1) Out_str << "1\n";
 
 }/* end of function print_const */
 /*=======================================
@@ -146,24 +151,25 @@ void print_const(FILE *fp,Circuit *N,Gate &G)
       P R I N T _ G A T E
 
 =======================================*/
-void print_gate(FILE *fp,Circuit *N,Gate &G)
+void print_gate(std::ofstream &Out_str,Circuit *N,Gate &G)
 {
   // print the .names command
- fprintf(fp,".names ");
- print_names(fp,N,G.Fanin_list);
- fprintf(fp," "); fprint_name(fp,G.Gate_name);
- fprintf(fp,"\n");
+ Out_str << ".names ";
+ print_names(Out_str,N,G.Fanin_list);
+ Out_str << " ";
+ fprint_name(Out_str,G.Gate_name);
+ Out_str << "\n";
 
  // print the cubes of the ON-set
 
  for (size_t i=0; i < G.F.size();i++) {
-   print_cube(fp,G.F[i],G.ninputs);
-   fprintf(fp," 1\n");
+   print_cube(Out_str,G.F[i],G.ninputs);
+   Out_str << " 1\n";
  }
  // print the cubes of the OFF-set
  for (size_t i=0; i < G.R.size();i++) {
-   print_cube(fp,G.R[i],G.ninputs);
-   fprintf(fp," 0\n");
+   print_cube(Out_str,G.R[i],G.ninputs);
+   Out_str << " 0\n";
  }   
 
 
@@ -176,21 +182,24 @@ void print_gate(FILE *fp,Circuit *N,Gate &G)
  The function prints the head
  of a blif file
 ======================================*/
-void circ_print_header(FILE *fp,Circuit *N)
+void circ_print_header(std::ofstream &Out_str,Circuit *N)
 {
 // print out the '.model' command
- fprintf(fp,".model ");
- fprint_name(fp,N->Circuit_name);
- fprintf(fp,"\n");
+ Out_str << ".model ";
+ if (N->Circuit_name.size() > 0)
+   fprint_name(Out_str,N->Circuit_name);
+ else
+   Out_str << "seq_circ";
+ Out_str << "\n";
 
  // print out the '.inputs' command
- fprintf(fp,".inputs ");
- print_names(fp,N,N->Inputs);
- fprintf(fp,"\n");
+ Out_str << ".inputs ";
+ print_names(Out_str,N,N->Inputs);
+ Out_str << "\n";
  // print out the '.outputs' command
- fprintf(fp,".outputs ");
- print_names(fp,N,N->Outputs);
- fprintf(fp,"\n");
+ Out_str << ".outputs ";
+ print_names(Out_str,N,N->Outputs);
+ Out_str << "\n";
 }/* end of function circ_print_header */
 
 
