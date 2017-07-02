@@ -115,6 +115,12 @@ public:
 
   CNF F; // set of all inductive cubes
 
+
+  CNF Tr; // transition relation
+ 
+
+  CNF Ist; // initial states
+
   DNF Flits0; // 'Flits0' specifies clauses of F (in terms of indexes of F) that 
                  // contain the negative literal of 'i+1'
 
@@ -324,12 +330,7 @@ protected:
   NameTable Name_table; // Table with the names of Sat-solvers for
                         //  which 'init_sat_solver' were invoked
 
- // ------------- init data
-
-  CNF Tr; // transition relation
  
-
-  CNF Ist; // initial states
  
 
  // protected methods

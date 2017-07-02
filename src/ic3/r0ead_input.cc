@@ -42,7 +42,6 @@ void ic3_enginet::read_ebmc_input()
   Ci.order_gates();
   std::string empty;
   Ci.gen_cnfs(empty.c_str(), false);
- 
 
   Ci.form_var_nums();
  
