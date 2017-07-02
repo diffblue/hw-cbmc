@@ -210,16 +210,16 @@ void print_gate_sort_mode();
 //
 //  related to printing out circuit in aiger format
 void check_circuit(int &num_buffs,int &num_consts);
-void print_aiger_header(FILE *fp,int max_var,int num_gates);
-void print_aiger_inps(FILE *fp);
-void print_aiger_latches(FILE *fp);
+void print_aiger_header(std::ofstream &Out_str,int max_var,int num_gates);
+void print_aiger_inps(std::ofstream &Out_str);
+void print_aiger_latches(std::ofstream &Out_str);
 int find_aiger_lit1(int gate_ind,char polarity);
 int find_aiger_lit2(int gate_ind,char polarity);
-void print_aiger_gates(FILE *fp,DNF &Gates);
+void print_aiger_gates(std::ofstream &Out_str,DNF &Gates);
 void add_aiger_and_gate(DNF &Gates,int gate_ind);
 void add_aiger_buffer(DNF &Gates,int gate_ind);
-void print_aiger_output(FILE *fp,DNF &Gates,int out_ind);
+void print_aiger_output(std::ofstream &Out_str,DNF &Gates,int out_ind);
 int form_aiger_gates(DNF &Gates);
 void add_triplet(DNF &Gates,int olit,int lit0,int lit1);
 int find_max_aiger_var(DNF &Gates);
-void print_aiger_constrs(FILE *fp);
+void print_aiger_constrs(std::ofstream &Out_str);

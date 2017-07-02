@@ -11,6 +11,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #include <ebmc/ebmc_base.h>
 
@@ -38,20 +39,23 @@ void CompInfo::print_aiger_format()
   full_name = out_file;
   full_name += ".aag";
 
-  FILE *fp = fopen(full_name.c_str(),"w");
-  assert(fp!= NULL);
+  std::ofstream Out_str(full_name.c_str(),std::ios::out);
+  if (!Out_str) {
+    std::cout << "cannot open file " << full_name << "\n";
+    throw(ERROR2);}
+
   
   DNF Gates;
   int out_ind = form_aiger_gates(Gates);
 
   int max_var = find_max_aiger_var(Gates);
-  print_aiger_header(fp,max_var,Gates.size());
-  print_aiger_inps(fp);
-  print_aiger_latches(fp);
-  print_aiger_output(fp,Gates,out_ind);
-  print_aiger_constrs(fp);
-  print_aiger_gates(fp,Gates);
-  fclose(fp);
+  print_aiger_header(Out_str,max_var,Gates.size());
+  print_aiger_inps(Out_str);
+  print_aiger_latches(Out_str);
+  print_aiger_output(Out_str,Gates,out_ind);
+  print_aiger_constrs(Out_str);
+  print_aiger_gates(Out_str,Gates);
+  Out_str.close();
 } /* end of function print_aiger_format */
 
 /*=======================================
@@ -128,22 +132,23 @@ int CompInfo::find_aiger_lit2(int gate_ind,char polarity)
     P R I N T _ A I G E R _ L A T C H E S
 
   ======================================*/
-void CompInfo::print_aiger_latches(FILE *fp)
+void CompInfo::print_aiger_latches(std::ofstream &Out_str)
 {
 
   for (size_t i=0; i < N->Latches.size(); i++) {
     int gate_ind = N->Latches[i];
     int lit = (gate_ind+1) << 1;
-    fprintf(fp,"%d ",lit);
+    Out_str << lit << " ";
     Gate &G = N->get_gate(gate_ind);
     assert(G.Fanin_list.size() == 1);
     int next_lit = find_aiger_lit1(G.Fanin_list[0],0);
-    fprintf(fp,"%d ",next_lit);
+    Out_str << next_lit << " ";
     if (G.init_value == 2) {
-      fprintf(fp,"%d\n",lit);
+      Out_str << lit << "\n";
       continue;}
     assert((G.init_value == 0) || (G.init_value == 1));
-    fprintf(fp,"%d\n",G.init_value);
+    if (G.init_value == 0)  Out_str <<  "0\n";
+    else Out_str << "1\n";
   }
 
 } /* end of function print_aiger_latches */
@@ -154,12 +159,12 @@ void CompInfo::print_aiger_latches(FILE *fp)
     P R I N T _ A I G E R _ I N P S
 
   ======================================*/
-void CompInfo::print_aiger_inps(FILE *fp)
+void CompInfo::print_aiger_inps(std::ofstream &Out_str)
 {
 
   for (size_t i=0; i < N->Inputs.size(); i++) {
     int gate_ind = N->Inputs[i];
-    fprintf(fp,"%d\n",(gate_ind+1)<<1);
+    Out_str << ((gate_ind+1) << 1) << "\n";
   }
 
 } /* end of function print_aiger_inps */
@@ -170,18 +175,18 @@ void CompInfo::print_aiger_inps(FILE *fp)
     P R I N T _ A I G E R _ H E A D E R
 
   ======================================*/
-void CompInfo::print_aiger_header(FILE *fp,int max_var,int num_gates)
+void CompInfo::print_aiger_header(std::ofstream &Out_str,int max_var,int num_gates)
 {
 
-  fprintf(fp,"aag ");
+  Out_str << "aag ";
 
-  fprintf(fp,"%d ",max_var); 
-  fprintf(fp,"%zu ",N->ninputs);
-  fprintf(fp,"%zu ",N->nlatches);
-  fprintf(fp,"1 ");
-  fprintf(fp,"%d",num_gates);
-  if (Constr_gates.size() == 0)  fprintf(fp,"\n");
-  else fprintf(fp," 0 %d\n",(int) Constr_gates.size());
+  Out_str << max_var << " "; 
+  Out_str << N->ninputs << " ";
+  Out_str << N->nlatches << " ";
+  Out_str << "1 ";
+  Out_str << num_gates;
+  if (Constr_gates.size() == 0)  Out_str << "\n";
+  else Out_str << " 0 " << Constr_gates.size() << "\n";
 } /* end of function print_aiger_header*/
 
 

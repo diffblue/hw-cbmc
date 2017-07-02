@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -42,22 +43,24 @@ void CompInfo::fprint_cex1()
 
   std::string fname = out_file;
   fname += ".cex.txt";
-  
-  FILE *fp = fopen(fname.c_str(),"w");
-  assert(fp != NULL);
+
+  std::ofstream Out_str(fname.c_str(),std::ios::out);
+  if (!Out_str) {
+    std::cout << "cannot open file " << fname << "\n";
+    throw(ERROR2);}
 
   for (size_t i=0; i < Cex.size(); i++) {
-    fprintf(fp,"S%zu: ",i);
+    Out_str << "S" << i << ": ";
     CUBE &C = Cex[i];
     for (size_t k=0; k < C.size(); k++) {
-      if (k!=0) fprintf(fp," ");
-      if (C[k] > 0) fprintf(fp," ");
-      fprintf(fp,"%d",C[k]);
+      if (k!=0) Out_str << " ";
+      if (C[k] > 0) Out_str << " ";
+      Out_str << C[k];
     }
-    fprintf(fp,"\n");
+    Out_str << "\n";
   }
 
-  fclose(fp);
+  Out_str.close();
 
 } /* end of function fprint_cex1 */
 

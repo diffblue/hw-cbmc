@@ -11,6 +11,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #include <ebmc/ebmc_base.h>
 
@@ -26,7 +27,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
      P R I N T _ A I G E R _ C O N S T R S
 
   ============================================*/
-void CompInfo::print_aiger_constrs(FILE *fp)
+void CompInfo::print_aiger_constrs(std::ofstream &Out_str)
 {
 
   ConstrGates::iterator pnt;
@@ -35,7 +36,7 @@ void CompInfo::print_aiger_constrs(FILE *fp)
     int gate_ind = pnt->first;
     char neg_lit = pnt->second.neg_lit;
     int lit = find_aiger_lit2(gate_ind,neg_lit);
-    fprintf(fp,"%d\n",lit);
+    Out_str << lit << "\n";
   }
 } /* end of function print_aiger_constrs */
 
@@ -44,13 +45,13 @@ void CompInfo::print_aiger_constrs(FILE *fp)
      P R I N T _ A I G E R _ G A T E S
 
   ==========================================*/
-void CompInfo::print_aiger_gates(FILE *fp,DNF &Gates)
+void CompInfo::print_aiger_gates(std::ofstream &Out_str,DNF &Gates)
 {
 
   for (size_t i=0; i < Gates.size(); i++) {
     CUBE &C = Gates[i];
     assert(C.size() == 3);
-    fprintf(fp,"%d %d %d\n",C[0],C[1],C[2]);
+    Out_str << C[0] << " " << C[1] << " " << C[2] << "\n";
   }
 
 } /* end of function print_aiger_gates */
@@ -98,7 +99,7 @@ int CompInfo::find_max_aiger_var(DNF &Gates)
       P R I N T _ A I G E R _ O U T P U T
 
   ==========================================*/
-void CompInfo::print_aiger_output(FILE *fp,DNF &Gates,int out_ind)
+void CompInfo::print_aiger_output(std::ofstream &Out_str,DNF &Gates,int out_ind)
 {
   CUBE &C  = Gates[out_ind];
   assert(C.size() == 3);
@@ -113,7 +114,9 @@ void CompInfo::print_aiger_output(FILE *fp,DNF &Gates,int out_ind)
     if ((C[1] == 0) || (C[2] == 0)) // at least one of the inputs is 0
       lit++;
   }
-  fprintf(fp,"%d\n",lit);
+
+  Out_str << lit << "\n";
+  
 } /* end of function print_aiger_output */
 
 /*=============================================
