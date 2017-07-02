@@ -79,11 +79,14 @@ int ic3_enginet::operator()()
     Ci.print_aiger_format();
     throw(EARLY_EXIT);
   }
-  
+
+  netlistt().swap(this->netlist);
   
   return(Ci.run_ic3());
 
   }
+
+  
 
   // catch blocks
   catch(const char *error_msg)    {
