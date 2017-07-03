@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_trans.h"
 #include "k_induction.h"
 #include "bdd_engine.h"
-#include "ic3_engine.h"
 #include "ebmc_base.h"
 #include "ebmc_parse_options.h"
 
@@ -102,10 +101,6 @@ int ebmc_parse_optionst::doit()
     //    }
     #endif
   }
-  
-
-  if(cmdline.isset("ic3"))
-    return do_ic3(cmdline, ui_message_handler);
   
   if(cmdline.isset("k-induction"))
     return do_k_induction(cmdline, ui_message_handler);
@@ -261,12 +256,6 @@ void ebmc_parse_optionst::help()
     "Methods:\n"
     " --k-induction                     do k-induction with k=bound\n"
     " --bdd                             use (unbounded) BDD engine\n"
-    " --ic3 [options]                   use IC3 engine with options described below\n"
-    "       --prop <nr>                   check property number <nr>\n"
-    "       --constr                      use constraints specified in 'file.cnstr'\n"
-    //" --interpolation                   use bit-level interpolants\n"
-    //" --interpolation-word              use word-level interpolants\n"
-    //" --diameter                        perform recurrence diameter test\n"
     "\n"
     "Solvers:\n"
     " --aig                             bit-level SAT with AIGs\n"
