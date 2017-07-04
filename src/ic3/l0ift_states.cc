@@ -42,7 +42,7 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
   
   
   Mlit act_lit;  
-  add_cls_excl_st_cube(act_lit,Lgs_sat,Nst_cube);
+  add_cls_excl_st_cube(act_lit,Lgs_sat,Nst_cube,true);
  
   Assmps.push(act_lit);
 
@@ -139,7 +139,8 @@ void CompInfo::gen_state_cube(CUBE &St_cube,CUBE &St,SatSolver &Slvr)
   A D D _ C L S _ E X C L _ S T _ C U B E
 
   ===========================================*/
-void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
+void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St,
+				    bool add_cnstr_lits)
 {
   CLAUSE C;
   act_lit = IctMinisat::mkLit(Slvr.Mst->newVar(),false);
@@ -155,12 +156,17 @@ void CompInfo::add_cls_excl_st_cube(Mlit &act_lit,SatSolver &Slvr,CUBE &St)
  
   // add literals constraining internal variables
 
-  for (size_t i=0; i < Tr_coi_lits.size(); i++) {
-    int lit = Tr_coi_lits[i];
-    int var_ind = abs(lit)-1;
-    assert (Var_info[var_ind].type == INTERN);
-    C.push_back(-lit);
+  if (add_cnstr_lits) {
+    SCUBE::iterator pnt;
+    for (pnt = Constr_nilits.begin(); pnt != Constr_nilits.end(); pnt++) {
+      int lit = *pnt;
+      int var_ind = abs(lit)-1;
+      if (Var_info[var_ind].type != INTERN) continue;
+      C.push_back(-lit);
+    }
   }
+ 
+  
 
   accept_new_clause(Slvr,C);
   

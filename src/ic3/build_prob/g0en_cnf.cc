@@ -86,8 +86,8 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
     if (G.gate_type == INPUT) continue;
     if (G.gate_type == LATCH) continue;
 // skip the gates that are not part of the output function
-    if (G.flags.output_function == 0) 
-      if (G.flags.fun_constr == 0) continue; 
+    if (G.flags.output_function == 0)
+       if ((G.flags.fun_constr == 0) && (G.flags.tran_constr == 0)) 
     if (short_version)
 // skip the gates that are shared by transition relation and out function
       if (G.flags.transition) continue; 

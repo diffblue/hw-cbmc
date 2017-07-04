@@ -3,4 +3,3 @@ main.v
 --module main --bound 10 
 ^EXIT=0$
 ^SIGNAL=0$
-

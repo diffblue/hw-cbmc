@@ -184,3 +184,17 @@ void CompInfo::full_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V) {
 } /* end of function full_sort */
 
 
+/*===================================
+
+     P U S H _ O N _ T H E _ F L Y
+
+  =================================*/
+int CompInfo::push_on_the_fly(int last_ind,CLAUSE &C,char st_desc)
+{
+
+  int tf_ind = latest_succ_tf_ind(last_ind,C);
+  if (tf_ind < 0) tf_ind = last_ind-1;
+
+  return(tf_ind+1);
+
+} /* end of function push_on_the_fly */

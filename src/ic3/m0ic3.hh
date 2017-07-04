@@ -23,8 +23,10 @@ public:
                  // generate CNF formulas. For every input gate and latch
                  // Ordering[i] == i
  
-  size_t prop_ind; // specifies the index of the property to be checked 
-                   // to be implemented for the integrated version
+  std::string prop_name; // specifies the name of the property to be checked 
+  bool const_true_prop; // if 'true', the property is a constant 'true'
+  bool const_false_prop; // if true, the property is a constant 'false'
+ 
    
   CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to 
                     // the output of gate 'gate_ind'
@@ -161,7 +163,10 @@ public:
   
 
  // --------------- Parameters controlling algorithm's behavior
- 
+
+  bool standard_mode; // if true, the algorithm simulates Bradley's version
+                      // of ic3 published in 2013
+  
   bool print_inv_flag; // if true, the invariant found by the program 
                        // (if any) is printed out
   char print_cex_flag; // 0 - counterexample (cex) is not printed out, 
@@ -260,6 +265,7 @@ public:
   void form_consts(Circuit *N);
   void form_constr_lits();
   void add_constrs();
+  void print_aiger_format();
 
 protected:
 
@@ -394,8 +400,8 @@ const int RAND_SORT = 3;
 const char OLD_STATE = 0;
 const char NEW_STATE = 1;
 const char ROOT_STATE = 2;
-const char PUSH_STATE = 3;
-const char CTG_STATE = 4;
+const char CTG_STATE = 3;
+const char PUSH_STATE = 4;
 const char UNKNOWN_STATE = 5;
 
 // values of 'grl_heur'

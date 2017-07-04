@@ -27,8 +27,9 @@ void CompInfo::shorten_clause(CLAUSE &C,int curr_tf,CLAUSE &C0,char st_descr,
 
   assert(curr_tf>=0 && (size_t) curr_tf < Time_frames.size());
   CLAUSE B0 = C0;
-  
+
   while (true) {
+    if (standard_mode) break;
     if (B0.size() < 10) break;
     CLAUSE B;  
     compos_short(B,B0,curr_tf,st_descr);

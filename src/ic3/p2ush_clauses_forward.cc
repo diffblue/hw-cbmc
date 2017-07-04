@@ -21,7 +21,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   P U S H _ C L A U S E S _ F O R W A R D
 
   ===========================================*/
-void CompInfo::push_clauses_forward()
+void CompInfo::push_clauses_forward(bool triv_time_frame)
 {
   if (verbose == 0) {
     printf("%*c",3,' ');
@@ -32,6 +32,8 @@ void CompInfo::push_clauses_forward()
 
   assert(tf_lind>=0 && (size_t) tf_lind < Time_frames.size());
   init_fields();
+
+  if (triv_time_frame) min_tf = tf_lind;
   for (size_t i=min_tf; i <= (size_t) tf_lind; i++) { 
     CUBE Pushed;
     CUBE &Clauses = Time_frames[i].Clauses;
@@ -67,7 +69,7 @@ void CompInfo::push_clauses_forward()
 	  add_copies(i,C);
 	  continue;}
       }
-      else  // C.size() == F[clause_ind.size()
+      else  // C.size() == F[clause_ind].size()
 	if (Clause_info[clause_ind].span < i) 
 	  continue;
 	

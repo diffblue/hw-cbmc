@@ -1,0 +1,8 @@
+CORE
+example4.sv
+--bound 10 
+SUCCESS$
+FAILURE$
+^EXIT=10$
+^SIGNAL=0$
+

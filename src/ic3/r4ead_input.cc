@@ -21,6 +21,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 #include "ebmc_ic3_interface.hh"
+
+
 /*=========================================
 
       U P D _ G A T E _ C O N S T R S
@@ -84,6 +86,7 @@ int CompInfo::upd_gate_constr_tbl(int lit,int gate_ind)
 void ic3_enginet::store_constraints(const std::string &fname)
 {
 
+  add_verilog_conv_constrs();
   if (Ci.constr_flag == false) return;
 
   read_constraints(fname);
@@ -165,16 +168,35 @@ void ic3_enginet::ebmc_form_latches()
 
   for(var_mapt::mapt::const_iterator it=vm.map.begin();
       it!=vm.map.end(); it++)    {
-    const var_mapt::vart &var=it->second; 
+    const var_mapt::vart &var=it->second;
+    
+    if (var.vartype ==var_mapt::vart::vartypet::NONDET) {
+      assert(var.bits.size() > 0);
+      int val = (var.bits.size() == 1)?1:2;
+      for (size_t i=0; i < var.bits.size(); i++) {
+	literalt lit = var.bits[i].current;
+	int var_num = lit.var_no();
+	Nondet_vars[var_num] = val;
+      }
+      continue;
+    }
+    
     if (var.vartype !=var_mapt::vart::vartypet::LATCH) 
       continue;
 
     for (size_t j=0; j < var.bits.size(); j++) {
       literalt lit =var.bits[j].current;
-      Latch_val[lit.var_no()] = 2; // set the value of the latch to a don't care     
+      int var_num = lit.var_no();
+      Latch_val[var_num] = 2; // set the value of the latch to a don't care
+      //      printf("latch val: %d\n",var_num);
     }
   }
 
+  if (Latch_val.size() == 0) {
+    printf("there are no latches\n");
+    //    printf("Nondet_vars.size() = %d\n",(int) Nondet_vars.size());
+    exit(100);
+  }
   // set initial values
   bvt Ist_lits;
   gen_ist_lits(Ist_lits);
@@ -182,7 +204,14 @@ void ic3_enginet::ebmc_form_latches()
   for (size_t i=0; i < Ist_lits.size(); i++) {
     literalt &lit = Ist_lits[i];
     int var_num = lit.var_no();
-    assert(Latch_val.find(var_num) != Latch_val.end());
+    if (Latch_val.find(var_num) == Latch_val.end()) {
+      p();
+      printf("Latch %d is not found\n",var_num);
+      printf("Latch_val.size() = %zu\n",Latch_val.size());
+      printf("Ist_lits.size() = %zu\n",Ist_lits.size());
+      printf("i = %zu\n",i);
+      exit(100);
+    }
     if (lit.sign()) Latch_val[var_num] = 0;
     else Latch_val[var_num] = 1;
   }
@@ -208,15 +237,24 @@ void ic3_enginet::gen_ist_lits(bvt &Ist_lits)
   while (stack.size() > 0) {
 
     literalt lit = stack.back();
+    assert(lit.is_constant() == false);
     size_t var_num = lit.var_no();
     stack.pop_back();
     if (Visited.find(lit) != Visited.end()) 
       continue;
-    assert(var_num < Nodes.size());
+    if (var_num >= Nodes.size()) {
+      p();
+      printf("var_num = %zd\n",var_num);
+      printf("Nodes.size() = %zu\n",Nodes.size());
+      exit(100);
+    }
     aigt::nodet &Nd = Nodes[var_num];
 
     if (Nd.is_var()) {
       Ist_lits.push_back(lit);
+      // literalt gt_lit(var_num,false);
+      // unsigned lit_val = gt_lit.get();
+      // printf("init st: lit_val = %u\n",lit_val);
       continue;
     }
 

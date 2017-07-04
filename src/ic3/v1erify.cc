@@ -78,7 +78,7 @@ bool CompInfo::ver_cex()
   if (!ok) return(false);
 
  FINISH:
-  printf("verification is ok\n");
+  printf("cex verification is ok\n");
   return(true);
 } /* end of function ver_cex */
 
@@ -99,7 +99,7 @@ bool CompInfo::check_bad_state(CUBE &St)
   add_assumps1(Assmps,St);
   bool sat_form = check_sat2(Gen_sat,Assmps);
   if (sat_form == false) {
-    printf("verification failed\n");
+    printf("cex verification failed\n");
     printf("last state of Cex is a good one\n");
     std::cout << "St-> " << St << std::endl;
     printf("sat_form = %d\n",sat_form);
@@ -150,7 +150,7 @@ bool CompInfo::check_init_state(CUBE &St)
   
   bool sat_form = check_sat2(Gen_sat,Assmps);
   if (sat_form == false) {
-    printf("verification failed\n");
+    printf("cex verification failed\n");
     printf("Cex starts with a non-initial state\n");
     return(false);
   }

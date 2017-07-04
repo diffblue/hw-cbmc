@@ -159,12 +159,13 @@ bool CompInfo::find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,
     release_lit(Slvr,~act_lit);
 
     CUBE Ctg_cube;
-  
     bool succ;
-    if ((ctg_cnt < max_ctg_cnt) && (rec_depth < max_rec_depth))    {
-      CUBE Nxt_cube;
-      use_coi_to_drop_svars(Nxt_cube,Nxt_st,tf_lind-curr_tf-1);
-      lift_ctg_state(Ctg_cube,Ctg_st,Inps,Nxt_cube);
+    CUBE Nxt_cube;
+    form_nxt_cube(Nxt_cube,C);
+  
+    lift_ctg_state(Ctg_cube,Ctg_st,Inps,Nxt_cube);
+    bool cond = (ctg_cnt < max_ctg_cnt) && (rec_depth < max_rec_depth);
+    if (cond && (curr_tf > 1))    { 
       ctg_cnt++;
       tot_ctg_cnt++;
       succ = exclude_ctg(Ctg_cube,curr_tf,rec_depth);
@@ -173,7 +174,7 @@ bool CompInfo::find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,
 	continue;
       }
     }
-    // else Ctg_cube = Ctg_st;
+   
 
     bool ok;
     ok = adjust_clause2(C,Ctg_cube,Failed_lits);
