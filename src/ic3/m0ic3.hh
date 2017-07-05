@@ -7,6 +7,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 ******************************************************/
 #include "aux_types.hh"
 #include "s0hared_consts.hh"
+#include <ebmc/ebmc_base.h>
+
 extern int debug_flag;
 /*================================
 
@@ -17,7 +19,7 @@ class CompInfo
 {
 public:
 
-  
+  messaget *M;
   Circuit *N; // circuit whose safety proprety is to be checked
   CUBE Ordering; // Ordering[i] specifies the order of a gate used to
                  // generate CNF formulas. For every input gate and latch

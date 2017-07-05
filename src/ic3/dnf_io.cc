@@ -261,17 +261,16 @@ void print_dnf(DNF &D,std::ofstream &Out_str)
   in the dimacs format
    
   ==================================*/
-void print_dnf(DNF &D,char *fname)
+bool print_dnf(DNF &D,char *fname)
 {
   
   std::ofstream Out_str(fname,std::ios::out);
-  if (!Out_str) {
-    std::cout << "cannot open file " << std::string(fname) << "\n";
-    throw(ERROR2);}
-     
+  if (!Out_str) return(false);
    
+     
   print_dnf(D,Out_str);  
   Out_str.close();
+  return(true);
 
 } /* end of function print_dnf */
 
@@ -280,34 +279,12 @@ void print_dnf(DNF &D,char *fname)
   P R I N T _ D N F
 
   ======================*/
-
-void print_dnf(DNF &D,const char *fname)
+bool print_dnf(DNF &D,const char *fname)
 {
-  print_dnf(D,(char *) fname);
+  bool success = print_dnf(D,(char *) fname);
+  return(success);
 } /* end of function print_dnf */
 
-/*=================================
-
-  P R I N T _ D N F
-
-  prints D   to the file "fname" 
-  in the dimacs format
-   
-  ==================================*/
-void print_dnf(DNF &D,int nvars,char *fname)
-
-{ 
-
-  std::ofstream Out_str(fname,std::ios::out);
-  if (!Out_str) {
-    std::cout << "cannot open file " << std::string(fname) << "\n";
-    throw(ERROR2);}
-
-  Out_str << "p cnf " << nvars << " " << D.size() << "\n";
-  for (size_t i = 0; i < D.size();i++)
-    fprint_cube(Out_str,D[i]);
-  Out_str.close();
-} /* end of function print_dnf */
 
 /*=================================
 
@@ -433,18 +410,7 @@ void print_srt_cube(CUBE &C) {
 
 } /* end of function print_srt_cube */
 
-/*================================
 
-  F P R I N T _ S R T _ C U B E
-
-  =================================*/
-void fprint_srt_cube(std::ofstream &Out_str,CUBE &C) {
-
-  CUBE A = C;
-  sort(A.begin(),A.end());
-  fprint_cube(Out_str,A);
-
-} /* end of function fprint_srt_cube */
 
 /*================================
 
@@ -460,36 +426,6 @@ void print_srt_dnf(DNF &D) {
 
 } /* end of function print_srt_dnf */
 
-/*================================
-
-  F P R I N T _ S R T _ D N F
-
-  =================================*/
-void fprint_srt_dnf(DNF &D,char *fname) {
-
-   std::ofstream Out_str(fname,std::ios::out);
-  if (!Out_str) {
-    std::cout << "cannot open file " << std::string(fname) << "\n";
-    throw(ERROR2);}
-
-  Out_str << "p cnf " << find_max_var(D) << " " << D.size() << "\n";
-  for (size_t i=0; i < D.size(); i++)
-    fprint_srt_cube(Out_str,D[i]);
-
-  Out_str.close();
-} /* end of function fprint_srt_dnf */
-
-
-/*================================
-
-  F P R I N T _ S R T _ D N F
-
-  =================================*/
-void fprint_srt_dnf(DNF &D,const char *fname) {
-
-  fprint_srt_dnf(D,(char *) fname);
-
-} /* end of function fprint_srt_dnf */
 
 /*=================================
 
@@ -499,9 +435,10 @@ void fprint_srt_dnf(DNF &D,const char *fname) {
   in the dimacs format
    
   ==================================*/
-void print_dnf(DNF &D,std::string &Name)
+bool print_dnf(DNF &D,std::string &Name)
 {
 
-  print_dnf(D,Name.c_str());
+  bool success = print_dnf(D,Name.c_str());
+  return(success);
 
 } /* end of function print_dnf */

@@ -28,7 +28,11 @@ void CompInfo::fprint_cex2()
   std::string fname = out_file;
   fname += ".cex.cnf";
   
-  print_dnf(Cex,fname);
+  bool success = print_dnf(Cex,fname);
+  if (!success) {
+    M->error() << "cannot open file " << fname << M->eom;
+    throw(ERROR2);
+  }
 
 } /* end of function fprint_cex2 */
 
@@ -84,7 +88,11 @@ void CompInfo::print_invariant(bool only_new_clauses)
   
   if (inv_ind < 0) fname += ".clauses.cnf";
   else fname +=".inv.cnf";
-  print_dnf(Res,fname);
+  bool success = print_dnf(Res,fname);
+  if (!success) {
+    M->error() << "cannot open file " << fname << M->eom;
+    throw(ERROR2);
+  }
 
 } /* end of function print_invariant */
 
@@ -107,6 +115,10 @@ void CompInfo::print_fclauses()
     Res.push_back(F[i]);
   }
 
-  print_dnf(Res,fname);
+  bool success = print_dnf(Res,fname);
+  if (!success) {
+    M->error() << "cannot open file " << fname << M->eom;
+    throw(ERROR2);
+  }
 
 } /* end of function print_fclauses */

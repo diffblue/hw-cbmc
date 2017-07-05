@@ -26,7 +26,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::add_constrs() 
 {
   std::cout << "adding " << Constr_ilits.size() + Constr_nilits.size()
-	    << "unit constraints\n";
+	    << " unit constraints\n";
   for (size_t i=0; i < Constr_ilits.size(); i++) {
     CLAUSE U;
     U.push_back(Constr_ilits[i]);

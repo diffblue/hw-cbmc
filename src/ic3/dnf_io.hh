@@ -41,13 +41,12 @@ void print_dnf(DNF &D,int start,int finish);
 void print_dnf1(DNF &D);
 void print_dnf1(DNF &D,CCUBE &Active_cubes);
 void print_dnf2(DNF &D,int start_num=0);
-void print_dnf(DNF &D,const char *fname);
+bool print_dnf(DNF &D,const char *fname);
 // print DNF D in the dimacs format the number of variables is 
 // computed by the value of the largest literal number
-void print_dnf(DNF &D,char *fname);
-void print_dnf(DNF &D,std::string &Name);
+bool print_dnf(DNF &D,char *fname);
+bool print_dnf(DNF &D,std::string &Name);
 void print_dnf(DNF &D,std::ofstream &Out_str);
-void print_dnf(DNF &D,int nvars,char *fname);// print DNF D in the dimacs format 
 void print_dnf(DNF &D,CUBE &cube_nums);
 void print_dnf(DNF &D,unsigned int threshold);
 void print_set(SCUBE &S);
@@ -58,13 +57,10 @@ void print_cube(std::ofstream &Out_str,CUBE &C);
 void print_cube(CCUBE &C);
 void add_dnf(DNF &F1,DNF &F);
 void print_srt_cube(CUBE &C);
-void fprint_srt_cube(std::ofstream &Out_str,CUBE &C);
 void print_srt_dnf(DNF &D);
-void fprint_srt_dnf(DNF &D,char *fname);
-void fprint_srt_dnf(DNF &D,const char *fname);
+
 //
 //  
 //
-void print_dnf(DNF &D,std::ofstream &Out_str);
 void fprint_cube(std::ofstream &Out_str,CUBE &C);
 

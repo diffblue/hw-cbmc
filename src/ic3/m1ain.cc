@@ -48,19 +48,42 @@ int ic3_enginet::operator()()
 
 {
 
-
   Ci.init_parameters();
   read_parameters();
 
+
   try    {
     int result=get_model();
+
+    // std::cout << "verbosity-> " << ui_message_handler.get_verbosity() << std::endl;
+    //  ui_message_handler.set_verbosity(10);
+    messaget message(ui_message_handler);
+    Ci.M = &message;
+  
+    message.error() << "message.error" << messaget::eom;
+    message.status() << "message.status" << messaget::eom;
+
+  
+    
     if(result!=-1) return result;
+
+    // error() << "error: converting to aiger format\n";
+    // status() << "status: converting to aiger format\n";
+    // std::cout << "cout: converting to aiger format\n";
 
     if(make_netlist(netlist))     {
       error() << "Failed to build netlist" << eom;
-      return ERROR1;
+      throw(ERROR1);
     }
-      
+
+    // error() << "error: converting to aiger format\n";
+    // status() << "status: converting to aiger format\n";
+    // std::cout << "cout: converting to aiger format\n";
+    //std::cout << "verbosity-> " << ui_message_handler.get_verbosity() << std::endl;
+    message.error() << "message.error" << messaget::eom;
+    message.status() << "message.status" << messaget::eom;
+   
+    
     if(properties.empty())   {
       error() << "no properties" << eom;
       return ERROR1;
@@ -71,11 +94,13 @@ int ic3_enginet::operator()()
   const1 = false;
   orig_names = false;
   
-  
+   
+    
   read_ebmc_input();
   
   if (cmdline.isset("aiger")) {
-    std::cout << "converting to aiger format\n";
+    error() << "converting to aiger format\n";
+    std::cout << "converting\n";
     Ci.print_aiger_format();
     throw(EARLY_EXIT);
   }

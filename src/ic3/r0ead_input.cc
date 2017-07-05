@@ -39,7 +39,6 @@ void ic3_enginet::read_ebmc_input()
   assert(Ci.N->noutputs == 1);
   assert(Ci.N->nlatches > 0);
 
-  print_blif3("tmp.blif",Ci.N);
   Ci.order_gates();
   std::string empty;
   Ci.gen_cnfs(empty.c_str(), false);

@@ -15,6 +15,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
+#include <langapi/language_util.h>
+#include <util/message.h>
 
 /*==========================================
 
@@ -66,7 +68,7 @@ bool CompInfo::check_one_state_cex()
   bool sat_form = check_sat1(Gen_sat);
   bool ok = true;
   if (sat_form) {
-    std::cout << "an initial state does not satisfy the property\n";
+    M->result() << "an initial state does not satisfy the property" << M->eom;
     form_one_state_cex(Gen_sat);
     max_num_tfs = 0;
     ok = false;

@@ -257,6 +257,7 @@ void ebmc_parse_optionst::help()
     " --property <id>                   check the property with given ID\n"
     " -I path                           set include path\n"
     " --reset <expr>                    set up module reset\n"
+    " --verbosity <nr>                  set verbosity level (default: 6)\n"
     "\n"
     "Methods:\n"
     " --k-induction                     do k-induction with k=bound\n"

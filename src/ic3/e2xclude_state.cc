@@ -31,10 +31,6 @@ bool CompInfo::find_ind_subclause_cti(CLAUSE &C,SatSolver &Slvr,
                                       CLAUSE &C0,char st_descr)
 {
 
-  if (verbose > 2) {
-    std::cout << std::string(6,' ');
-    std::cout << "find_ind_sub_clause_cti\n";
-  }
   C = C0;
 
 
@@ -148,10 +144,6 @@ bool CompInfo::corr_clause(CLAUSE &C)
 void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
 {
 
-  if (verbose > 3) {
-    std::cout << std::string(9,' ');
-    std::cout << "expand_clause\n";
-  }
   htable_lits.change_marker(); 
   htable_lits.started_using();
 

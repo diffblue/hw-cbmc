@@ -29,15 +29,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
  =======================================*/
 bool CompInfo::exclude_ctg(CUBE &St,int curr_tf,int rec_depth)
 {
-
-  if (verbose > 2) {
-    std::cout << "   exclude_ctg\n";
-    std::cout << "    St-> " << St << std::endl;
-    std::cout << "curr_tf = " << curr_tf << ", rec_depth = " << rec_depth
-	      << std::endl;
-    }
-
-  
   
   CLAUSE C0;
   form_lngst_clause(C0,St);

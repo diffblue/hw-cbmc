@@ -26,7 +26,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::print_stat()
 {
 
-  std::cout << "num of time frames = " << max_num_tfs << "\n";
+  M->statistics() << "num of time frames = " << max_num_tfs << M->eom;
   if (inv_ind >= 0)   std::cout << "inv_ind = " << inv_ind << "\n";
   my_printf("#inputs = %m, #outputs = %m, #latches = %m, #gates = %m\n",
 	    N->ninputs,N->noutputs,N->nlatches, N->ngates);

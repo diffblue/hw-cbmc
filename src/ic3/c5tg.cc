@@ -93,9 +93,9 @@ void CompInfo::lift_ctg_state(CUBE &Ctg_cube,CUBE &Ctg_st,CUBE &Inps,
   bool sat_form = check_sat2(Lgs_sat,Assmps);
   if (sat_form) {
     p();
-    std::cout << "Ctg_st.size() = " << Ctg_st.size() << ", Nst_cube.size() = " 
-	      << Nst_cube.size() << std::endl;
-    std::cout << "tf_lind = " << tf_lind << std::endl;
+    M->error() << "Ctg_st.size() = " << Ctg_st.size() << ", Nst_cube.size() = " 
+	       << Nst_cube.size() << M->eom;
+    M->error() << "tf_lind = " << tf_lind << M->eom;
     throw(ERROR1);
   }
     
