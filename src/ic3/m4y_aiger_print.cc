@@ -14,6 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <fstream>
 
 #include <ebmc/ebmc_base.h>
+#include <util/message.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -41,7 +42,7 @@ void CompInfo::print_aiger_format()
 
   std::ofstream Out_str(full_name.c_str(),std::ios::out);
   if (!Out_str) {
-    std::cout << "cannot open file " << full_name << "\n";
+    M->error() << "cannot open file " << full_name << M->eom;
     throw(ERROR2);}
 
   
@@ -212,7 +213,7 @@ void CompInfo::check_circuit(int &num_buffs,int &num_consts)
     cond |= (G.func_type == CONST);
     if (!cond) {
       p();
-      print_func_type(G);
+      print_func_type(G,messaget::M_ERROR);
       throw(ERROR1);
     } 
 
@@ -225,10 +226,10 @@ void CompInfo::check_circuit(int &num_buffs,int &num_consts)
       cond |= (G.func_type == CONST);
       if (!cond)      {
         p();
-	std::cout << "i = " << i << std::endl;
-	std::cout << "N->Gate_list.size() = " << N->Gate_list.size()
-		  << std::endl;
-	std::cout << "G.ninputs = " << G.ninputs << std::endl;
+	M->error() << "i = " << i << M->eom;
+	M->error() << "N->Gate_list.size() = " << N->Gate_list.size()
+		   << M->eom;
+	M->error() << "G.ninputs = " << G.ninputs << M->eom;
 	throw(ERROR1);
       }
     }

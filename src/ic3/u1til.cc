@@ -16,7 +16,24 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*=================================
 
+      I V E C T _ T O _ S T R
+
+  =================================*/
+
+std::string ivect_to_str(CUBE &A)
+{
+
+  std::string Res;
+
+  for (size_t i=0; i < A.size(); i++) {
+    if (i > 0) Res += " ";
+    Res += std::to_string(A[i]);
+  }
+
+  return(Res);
+} /* end of function ivect_to_str */
 
 /*=================================
 

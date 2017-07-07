@@ -352,7 +352,6 @@ void array_to_set(SCUBE &A,CUBE &B);
 bool all_elems_smaller_than(int &err_ind,CUBE &A,int max);
 void form_lngst_clause(CLAUSE &C0,CUBE &St);
 void get_runtime (double &usrtime, double &systime);
-void my_printf(const char *format,...);
 void state_to_clauses(CNF &K,CUBE &A);
 void my_assert(bool cond);
 void find_latch(Circuit *N,Gate &G,int &latch_ind);
@@ -366,6 +365,7 @@ bool ident_arrays(CUBE &A,CUBE &B);
 void print_blif(std::ofstream &Out_str,Circuit *N);
 void print_blif2(std::ofstream &Out_str,Circuit *N);
 void print_blif3(const char *Name,Circuit *N);
+std::string ivect_to_str(CUBE &A);
 
 extern long long gcount;
 extern hsh_tbl htable_lits;

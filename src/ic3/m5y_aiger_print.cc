@@ -14,6 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <fstream>
 
 #include <ebmc/ebmc_base.h>
+#include <util/message.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -160,34 +161,35 @@ void CompInfo::add_aiger_buffer(DNF &Gates,int gate_ind)
   P R I N T _ F U N C _ T Y P E
 
   ================================*/
-void print_func_type(Gate &G) 
+void CompInfo::print_func_type(Gate &G,unsigned message_level) 
 {
 
+  messaget::mstreamt &Ms = M->get_mstream(message_level);
   switch (G.func_type) {
   case CONST:
-    std::cout << "CONST";
+    Ms << "CONST";
     break;
   case BUFFER:
-    std::cout << "BUFFER";
+    Ms << "BUFFER";
     break;
   case AND:
-    std::cout << "AND";
+    Ms << "AND";
     break;
   case OR:
-    std::cout << "OR";
+    Ms << "OR";
     break;
   case TRUTH_TABLE:
-    std::cout << "TRUTH_TABLE";
+    Ms << "TRUTH_TABLE";
     break;
   case COMPLEX:
-    std::cout << "COMPLEX";
+    Ms << "COMPLEX";
     break;
   default:
-    std::cout <<"wrong value of func_type\n";
+    Ms <<"wrong value of func_type\n";
     throw(ERROR1);
   }
 
-  std::cout << "\n";
+  Ms << M->eom;
 
 } /* end of function print_func_type */
 

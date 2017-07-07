@@ -187,7 +187,6 @@ void my_printf(char *format,...);
 void remove_unobserv_gates(Circuit *N);
 void print_header1(Circuit *N);
 void print_names2(Circuit *N,CUBE &gates);
-void print_func_type(Gate &G);
 void  print_gate_type(std::ofstream &Out_str,Circuit *N,Gate &G);
 
 #include "more_fun_prot.hh"

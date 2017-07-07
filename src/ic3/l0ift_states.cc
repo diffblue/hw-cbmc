@@ -53,9 +53,9 @@ void CompInfo::lift_good_state(CUBE &Gst_cube,CUBE &Prs_st,
   bool sat_form = check_sat2(Lgs_sat,Assmps);
   if (sat_form) {
     p();
-    std::cout << "Inps-> " << Inps << std::endl;
-    std::cout << "Prs_st-> " << Prs_st << std::endl;
-    std::cout << "Nst_cube-> " << Nst_cube << std::endl;
+    M->error() << "Inps-> " << ivect_to_str(Inps) << M->eom;
+    M->error() << "Prs_st-> " << ivect_to_str(Prs_st) << M->eom;
+    M->error() << "Nst_cube-> " << ivect_to_str(Nst_cube) << M->eom;
     throw(ERROR1);
   }
   

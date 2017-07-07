@@ -223,3 +223,7 @@ int form_aiger_gates(DNF &Gates);
 void add_triplet(DNF &Gates,int olit,int lit0,int lit1);
 int find_max_aiger_var(DNF &Gates);
 void print_aiger_constrs(std::ofstream &Out_str);
+//
+void print_func_type(Gate &G,unsigned message_level);
+void my_printf(unsigned message_level,const char *format,...);
+void print_num_with_commas(unsigned message_level,const int &num);

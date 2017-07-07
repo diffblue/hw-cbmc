@@ -36,10 +36,6 @@ bool CompInfo::adjust_clause2(CLAUSE &C,CUBE &St_cube,SCUBE &Failed_lits)
 
   if (St_cube.size() == 0) return(false);
 
-  if (verbose > 3) {
-    std::cout << std::string(9,' ');
-    std::cout << "expand_clause\n";
-  }
   htable_lits.change_marker(); 
   htable_lits.started_using();
 
@@ -110,9 +106,6 @@ bool CompInfo::find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,
 		       	char st_descr,int rec_depth,SCUBE &Failed_lits)
 {
 
-  if (verbose > 2) {
-    std::cout << "find_ind_subclause_ctg\n";
-}
 
   SatSolver &Slvr = Time_frames[curr_tf].Slvr;
 
