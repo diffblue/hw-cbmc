@@ -11,8 +11,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
-#include <ebmc/ebmc_base.h>
-
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -58,31 +56,15 @@ int ic3_enginet::operator()()
  
     int result=get_model();
 
-    // std::cout << "verbosity-> " << ui_message_handler.get_verbosity() << std::endl;
-    //  ui_message_handler.set_verbosity(10);
-   
-  
-    message.error() << "message.error" << messaget::eom;
-    message.status() << "message.status" << messaget::eom;  
     
     if(result!=-1) return result;
 
-    // error() << "error: converting to aiger format\n";
-    // status() << "status: converting to aiger format\n";
-    // std::cout << "cout: converting to aiger format\n";
 
     if(make_netlist(netlist))     {
-      error() << "Failed to build netlist" << eom;
+      Ci.M->error() << "Failed to build netlist" << Ci.M->eom;
       throw(ERROR1);
     }
-
-    // error() << "error: converting to aiger format\n";
-    // status() << "status: converting to aiger format\n";
-    // std::cout << "cout: converting to aiger format\n";
-    //std::cout << "verbosity-> " << ui_message_handler.get_verbosity() << std::endl;
-    message.error() << "message.error" << messaget::eom;
-    message.status() << "message.status" << messaget::eom;
-   
+  
     
     if(properties.empty())   {
       error() << "no properties" << eom;
@@ -99,8 +81,7 @@ int ic3_enginet::operator()()
   read_ebmc_input();
   
   if (cmdline.isset("aiger")) {
-    error() << "converting to aiger format\n";
-    std::cout << "converting\n";
+    Ci.M->status() << "converting to aiger format" << Ci.M->eom;
     Ci.print_aiger_format();
     throw(EARLY_EXIT);
   }
@@ -115,12 +96,12 @@ int ic3_enginet::operator()()
 
   // catch blocks
   catch(const char *error_msg)    {
-    error() << error_msg << eom;
+    Ci.M->error() << error_msg << Ci.M->eom;
     return ERROR1;
   }
   catch(int err_num)    {
     if (err_num != EARLY_EXIT)
-      std::cout << "exception number " << err_num << "\n";
+      Ci.M->error() << "exception number " << err_num << Ci.M->eom;
     return err_num;
   }
 
@@ -146,12 +127,12 @@ int CompInfo::run_ic3()
   get_runtime (usrtime, systime);  
 
   int ret_val;
-  std::cout << "\n";
+  M->result() << M->eom;
   switch (res) {
   case 0: {
-    std::cout << "property HOLDS\n";
+    M->result() << "property HOLDS" << M->eom;
     if (vac_true) {
-      std::cout << "It is vacuously true\n";
+      M->result() << "It is vacuously true" << M->eom;
       ret_val = 2;
       statistics = false;
       break;
@@ -165,7 +146,7 @@ int CompInfo::run_ic3()
     else ret_val = 12;
     break;}
   case 1: {
-    std::cout << "property FAILED\n";
+    M->result() << "property FAILED" << M->eom;
     form_cex();  
     if (print_cex_flag == 1)
       fprint_cex1();
@@ -179,7 +160,7 @@ int CompInfo::run_ic3()
     else ret_val = 11;
     break;}
   case 2:
-    std::cout << "UNDECided\n";
+    M->result() << "UNDECided" << M->eom;
     ret_val = 3;
     if (print_clauses_flag) 
       print_fclauses();
@@ -188,11 +169,11 @@ int CompInfo::run_ic3()
     assert(false);
   }
   if (statistics) {
-    std::cout << "*********\n";
+    M->result() << "*********" << M->eom;
     if ((stat_data > 0) && (ret_val < 10)) print_stat();
-    std::cout << std::fixed;
-    std::cout.precision(1);
-    std::cout << "total time is " << usrtime-usrtime0 << " sec.\n";
+    M->result() << std::fixed;
+    M->result().precision(1);
+    M->result() << "total time is " << usrtime-usrtime0 << " sec." << M->eom;
   }
   return(ret_val);
 } /* end of function run_ic3 */
@@ -245,11 +226,7 @@ int CompInfo::mic3()
     max_num_tfs = tf_lind;
     int res = next_time_frame();
     print_time_frame_stat();
-    fflush(stdout);
-
-    if (verbose > 1) {
-      print_bnd_sets1();     
-    }
+    fflush(stdout);   
   
     if ((res == 0) || (res == 1)) {
       ret_val = res;

@@ -15,7 +15,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <iostream>
 #include <iomanip>
-#include <util/message.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"

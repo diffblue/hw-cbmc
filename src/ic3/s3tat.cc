@@ -30,10 +30,10 @@ void CompInfo::print_lifting_stat()
 
   float av_bc_size = length_bstate_cubes / num_bstate_cubes;
   float av_gc_size = length_gstate_cubes / num_gstate_cubes;
-  std::cout << std::fixed;
-  std::cout.precision(1);
-  std::cout << "#svars = " << Pres_svars.size() << ", aver. bst. cube = "
-	    << av_bc_size << ", aver. gst. cube = " << av_gc_size << "\n";
+  M->statistics() << std::fixed;
+  M->statistics().precision(1);
+  M->statistics() << "#svars = " << Pres_svars.size() << ", aver. bst. cube = "
+	    << av_bc_size << ", aver. gst. cube = " << av_gc_size << M->eom;
  
 
 } /* end of function print_lifting_stat */
@@ -47,23 +47,23 @@ void CompInfo::print_lifting_stat()
 void CompInfo::print_flags()
 {
 
-  std::cout << "rem_subsumed_flag = " << rem_subsumed_flag << "\n";
+  M->statistics() << "rem_subsumed_flag = " << rem_subsumed_flag << M->eom;
 
   //  LIT_PICK_HEUR
   // 
-  std::cout << "lit_pick_heur = ";
+  M->statistics() << "lit_pick_heur = ";
   switch (lit_pick_heur) {
   case RAND_LIT:
-    std::cout << "RAND_LIT\n";
+    M->statistics() << "RAND_LIT" << M->eom;
     break;
   case INACT_LIT:
-    std::cout << "INACT_LIT\n";
+    M->statistics() << "INACT_LIT" << M->eom;
     break;
   case INACT_VAR:
-    std::cout << "INACT_VAR\n";
+    M->statistics() << "INACT_VAR" << M->eom;
     break;
   case FIXED_ORDER:
-    std::cout << "FIXED_ORDER\n";
+    M->statistics() << "FIXED_ORDER" << M->eom;
     break;
   default:
     assert(false);
@@ -72,16 +72,16 @@ void CompInfo::print_flags()
 
   //  ACT_UPD_MODE
   // 
-  std::cout << "act_upd_mode = ";
+  M->statistics() << "act_upd_mode = ";
   switch (act_upd_mode) {
   case NO_ACT_UPD:
-    std::cout << "NO_ACT_UPD\n";
+    M->statistics() << "NO_ACT_UPD" << M->eom;
     break;
   case TF_ACT_UPD:
-    std::cout << "TF_ACT_UPD\n";
+    M->statistics() << "TF_ACT_UPD" << M->eom;
     break;
   case MINISAT_ACT_UPD:
-    std::cout << "MINISAT_ACT_UPD\n";
+    M->statistics() << "MINISAT_ACT_UPD" << M->eom;
     break;
   default:
     assert(false);
@@ -90,9 +90,9 @@ void CompInfo::print_flags()
   //  print sort modes
   // 
 
-  std::cout << "sorted objects = ";
-  if (sorted_objects == LITS) std::cout << "LITS\n";
-  else if (sorted_objects == VARS) std::cout << "VARS\n";
+  M->statistics() << "sorted objects = ";
+  if (sorted_objects == LITS) M->statistics() << "LITS" << M->eom;
+  else if (sorted_objects == VARS) M->statistics() << "VARS" << M->eom;
   else assert(false);
 
   print_induct_lift_sort_mode("lift_sort_mode",lift_sort_mode);
@@ -100,10 +100,10 @@ void CompInfo::print_flags()
   print_induct_lift_sort_mode("ind_cls_sort_mode",ind_cls_sort_mode);
 
   print_gate_sort_mode();
-  std::cout << "selector = " << selector << "\n";
-  std::cout << "ctg_flag = " << ctg_flag << "\n";
-  std::cout << "constr_flag = " << constr_flag << "\n";
-  std::cout << "standard_mode = " << standard_mode << "\n";
+  M->statistics() << "selector = " << selector  << M->eom;
+  M->statistics() << "ctg_flag = " << ctg_flag  << M->eom;
+  M->statistics() << "constr_flag = " << constr_flag  << M->eom;
+  M->statistics() << "standard_mode = " << standard_mode  << M->eom;
  
 
 
@@ -118,17 +118,17 @@ void CompInfo::print_flags()
   =========================================================*/
 void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode) 
 {
-  std::cout << std::string(mode_name) << "= ";
+  M->statistics() << std::string(mode_name) << "= ";
   switch (sort_mode) {
   case NO_SORT:
-    std::cout << "NO_SORT\n";
+    M->statistics() << "NO_SORT" << M->eom;
     break;
   case FULL_SORT:
-    std::cout << "FULL_SORT\n";
+    M->statistics() << "FULL_SORT" << M->eom;
     break;
   case PART_SORT:
-    std::cout << "PART_SORT\n";
-    std::cout << "max_num_elems = " << max_num_elems << "\n";
+    M->statistics() << "PART_SORT" << M->eom;
+    M->statistics() << "max_num_elems = " << max_num_elems << "" << M->eom;
     break;
   default:
     assert(false);
@@ -143,25 +143,25 @@ void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode)
 void CompInfo::print_gate_sort_mode()
 {
 
-  std::cout << "gate_sort_mode = ";
+  M->statistics() << "gate_sort_mode = ";
   switch (gate_sort_mode) {
   case INIT_SORT:
-    std::cout << "INIT_SORT";
+    M->statistics() << "INIT_SORT";
     break;
   case INPS_FIRST:
-    std::cout << "INPS_FIRST";
+    M->statistics() << "INPS_FIRST";
     break;
   case OUTS_FIRST:
-    std::cout << "OUTS_FIRST";
+    M->statistics() << "OUTS_FIRST";
     break;
   case RAND_SORT:
-    std::cout << "RAND_SORT";
+    M->statistics() << "RAND_SORT";
     break;
   default:
     assert(false);
   }
 
-  std::cout << "\n";
+  M->statistics()  << M->eom;
 
 } /* end of function print_gate_sort_mode */
 

@@ -16,7 +16,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
-#include <util/message.h>
 
 /*==============================
 

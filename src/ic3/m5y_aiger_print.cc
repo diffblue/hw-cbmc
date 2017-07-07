@@ -13,9 +13,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <iostream>
 #include <fstream>
 
-#include <ebmc/ebmc_base.h>
-#include <util/message.h>
-
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 

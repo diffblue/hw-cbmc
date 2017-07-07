@@ -171,7 +171,7 @@ void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
 
   if (shift == 0) {
     p();
-    print_bnd_sets1();
+    print_bnd_sets1(messaget::M_ERROR);
     throw(ERROR1); }
 
   C.resize(C.size()-shift);

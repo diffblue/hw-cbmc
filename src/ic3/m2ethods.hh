@@ -164,7 +164,6 @@ bool init_st_satisfy_constrs();
 void form_spec_simp_pr_tr(SatSolver &Slvr);
 void load_clauses2(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,CNF &A,
                    int num_clauses);
-void print_bnd_sets1();
 void print_clause_state(int clause_ind);
 void add_constr_nilits(CNF &Bad_states);
 void add_constr_lits2(SatSolver &Slvr);
@@ -227,3 +226,4 @@ void print_aiger_constrs(std::ofstream &Out_str);
 void print_func_type(Gate &G,unsigned message_level);
 void my_printf(unsigned message_level,const char *format,...);
 void print_num_with_commas(unsigned message_level,const int &num);
+void print_bnd_sets1(unsigned message_level);

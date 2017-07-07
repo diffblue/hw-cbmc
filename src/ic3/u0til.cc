@@ -11,6 +11,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 #include <sys/resource.h>
+
+
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -106,8 +108,8 @@ void CompInfo::part_sort(CLAUSE &C1,CLAUSE &C, std::vector <ActInd> &V) {
 
   if (C.size() != C1.size()) {
     p();
-    std::cout << "C.size() = " << C.size() << ", C1.size() = " <<  C1.size()
-	      << "\n";
+    M->error() << "C.size() = " << C.size() << ", C1.size() = " <<  C1.size()
+	       << M->eom;
     throw(ERROR1);
   }
   
@@ -147,19 +149,20 @@ void array_to_set(SCUBE &A,CUBE &B)
   P R I N T _ B N D _ S E T S 1
 
   ===================================*/
-void CompInfo::print_bnd_sets1()
+void CompInfo::print_bnd_sets1(unsigned message_level)
 {
 
+  messaget::mstreamt &Ms = M->get_mstream(message_level);
   for (size_t i=0; i < Time_frames.size(); i++) {
-    std::cout << "Bnd[" << i << "]: ";
+    Ms << "Bnd[" << i << "]: ";
     int count = 0;
     for (size_t j=0; j < F.size(); j++) {
       if (Clause_info[j].active == 0) continue;
       if (Clause_info[j].span != i) continue;
-      if (count++ > 0) std::cout << " ";
-      std::cout << j;
+      if (count++ > 0) Ms << " ";
+      Ms << j;
     }
-    std::cout << "\n";
+    Ms << M->eom;
   }
 } /* end of function print_bnd_sets1 */
 

@@ -21,7 +21,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <solvers/prop/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
 #include <util/cmdline.h>
-#include <ebmc/ebmc_base.h>
 #include "ebmc_ic3_interface.hh"
 
 /*===================================

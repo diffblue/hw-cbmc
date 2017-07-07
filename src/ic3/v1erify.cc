@@ -54,7 +54,7 @@ bool CompInfo::ver_cex()
   assert(Cex.size() > 0);
 
   bool ok = check_init_state(Cex[0]);
-  std::cout << "Cex.size() = " << Cex.size() << "\n";
+  M->result() << "Cex.size() = " << Cex.size() << M->eom;
   if (!ok) return(false);
 
   std::string Name = "Gen_sat";
@@ -66,8 +66,8 @@ bool CompInfo::ver_cex()
   for (size_t i=0; i < Cex.size()-1; i++) {
     bool ok = check_transition(Cex[i],Cex[i+1]);
     if (!ok) {
-      std::cout << "verfication failed\n";
-      std::cout << "wrong transition S" << i << "-> S" << i+1 << "\n";
+      M->error() << "verfication failed" << M->eom;
+      M->error() << "wrong transition S" << i << "-> S" << i+1 << M->eom;
       return(false);
     }
   }
@@ -78,7 +78,7 @@ bool CompInfo::ver_cex()
   if (!ok) return(false);
 
  FINISH:
-  std::cout << "cex verification is ok\n";
+  M->result() << "cex verification is ok" << M->eom;
   return(true);
 } /* end of function ver_cex */
 
@@ -99,10 +99,10 @@ bool CompInfo::check_bad_state(CUBE &St)
   add_assumps1(Assmps,St);
   bool sat_form = check_sat2(Gen_sat,Assmps);
   if (sat_form == false) {
-    std::cout << "cex verification failed\n";
-    std::cout << "last state of Cex is a good one\n";
-    std::cout << "St-> " << St << std::endl;
-    std::cout << "sat_form = " << sat_form << "\n";
+    M->error() << "cex verification failed" << M->eom;
+    M->error() << "last state of Cex is a good one" << M->eom;
+    M->error() << "St-> " << ivect_to_str(St) << M->eom;;
+    M->error() << "sat_form = " << sat_form << M->eom;
     return(false); }
 
   delete_solver(Gen_sat);
@@ -150,8 +150,8 @@ bool CompInfo::check_init_state(CUBE &St)
   
   bool sat_form = check_sat2(Gen_sat,Assmps);
   if (sat_form == false) {
-    std::cout << "cex verification failed\n";
-    std::cout << "Cex starts with a non-initial state\n";
+    M->error() << "cex verification failed" << M->eom;
+    M->error() << "Cex starts with a non-initial state" << M->eom;
     return(false);
   }
 
