@@ -59,7 +59,8 @@ void ic3_enginet::read_constraints(const std::string &source_name)
 
   FILE *fp = fopen(fname.c_str(),"r");
   if (fp == NULL) {
-    std::cout << "file " << fname << " listing constraints is missing\n";
+    Ci.M->error() << "file " << fname << " listing constraints is missing"
+	       << Ci.M->eom;
     throw(ERROR1);
   }
 

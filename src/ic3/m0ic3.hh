@@ -366,6 +366,7 @@ void print_blif(std::ofstream &Out_str,Circuit *N);
 void print_blif2(std::ofstream &Out_str,Circuit *N);
 void print_blif3(const char *Name,Circuit *N);
 std::string ivect_to_str(CUBE &A);
+std::string cvect_to_str(CCUBE &A);
 
 extern long long gcount;
 extern hsh_tbl htable_lits;

@@ -29,11 +29,11 @@ void CompInfo::print_stat()
 
   unsigned ms_lev = messaget::M_STATISTICS;
   M->statistics() << "num of time frames = " << max_num_tfs << M->eom;
-  if (inv_ind >= 0)   M->statistics() << "inv_ind = " << inv_ind << "\n";
+  if (inv_ind >= 0)   M->statistics() << "inv_ind = " << inv_ind << M->eom;
   my_printf(ms_lev,"#inputs = %m, #outputs = %m, #latches = %m, #gates = %m\n",
 	    N->ninputs,N->noutputs,N->nlatches, N->ngates);
-  std::cout << "total number of generated clauses is " <<  F.size()- 
-    Ist.size() + init_ind_cls() << "\n";
+  M->statistics() << "total number of generated clauses is " <<  F.size()- 
+    Ist.size() + init_ind_cls() << M->eom;
 
   my_printf(ms_lev,"orig_ind_cls = %m, succ_impr = %m, failed_impr = %m\n",
             orig_ind_cls,succ_impr,failed_impr);
@@ -41,19 +41,19 @@ void CompInfo::print_stat()
 
   // print the total average size
 
-  std::cout << std::fixed;
-  std::cout.precision(1);
-  std::cout << "Aver. clause size = " << average() << "\n";
+  M->statistics() << std::fixed;
+  M->statistics().precision(1);
+  M->statistics() << "Aver. clause size = " << average() << M->eom;
 
-  std::cout << "max. num. improv. of an ind. clause is " << max_num_impr << "\n";
+  M->statistics() << "max. num. improv. of an ind. clause is " << max_num_impr << M->eom;
   my_printf(ms_lev,"#add1 = %m, #add2 = %m, #replaced = %m, #restore = %m\n",
             num_add1_cases,num_add2_cases,num_replaced_cases,num_restore_cases);
   print_sat_stat();
 
   print_flags();
 
-  std::cout.precision(2);
-  std::cout << "muliplier = " << multiplier << "\n";
+  M->statistics().precision(2);
+  M->statistics() << "muliplier = " << multiplier << M->eom;
 
   print_lifting_stat();
   my_printf(ms_lev,"root_state_cnt = %m, new_state_cnt = %m, old_state_cnt = %m",
@@ -115,8 +115,8 @@ void CompInfo::print_one_sat_stat(SatSolver &S)
   if (Name_table.find(S.Name) == Name_table.end()) 
     return;
 
-  std::cout << S.Name << ": ";
-  std::cout << S.tot_num_calls <<  " calls\n";
+  M->statistics() << S.Name << ": ";
+  M->statistics() << S.tot_num_calls <<  " calls" << M->eom;
 
 } /* end of function print_one_sat_stat */
 
@@ -128,43 +128,10 @@ void CompInfo::print_one_sat_stat(SatSolver &S)
   ========================================*/
 void CompInfo::print_time_frame_stat()
 {
-
-  unsigned ms_lev = messaget::M_STATISTICS;
-  
-  if (verbose > 0) {
-    std::cout << "------------------\n";
-    std::cout << "finished time frame number " << Time_frames.size()-1 << "\n";
-  }
-
-  TimeFrame &Tf = Time_frames[tf_lind];
-  if (verbose > 0) 
-    std::cout << "new derived clauses Bnd[" << tf_lind <<"]=" << Tf.num_bnd_cls
-	      << ", Bnd[" << tf_lind+1 << "]="
-	      << Time_frames[tf_lind+1].num_bnd_cls << "\n";
-
-
-  if (verbose > 0)  {
-    std::cout << "num_pbs-s: " << Tf.num_pbss << "\n";
-
-    std::cout << "Cti-s:\n";
-    int count = 0;
-    for (int i=tf_lind; i >=0; i--) {
-      if (Time_frames[i].num_rcnt_ctis == 0) continue;
-      if (count++ > 0) std::cout << ", ";  
-      std::cout << "Tf[" << i << "] = " << Time_frames[i].num_rcnt_ctis << "\n";
-      if (count % 10 == 0) std::cout << "\n"; 
-    }
-
-    if (verbose > 0)
-      if (count % 10 != 0)  std::cout << "\n";
-  }
- 
+    
   int time_frame_calls;
-  if (verbose > -1) print_time_frame_sat_stat(time_frame_calls);
+  print_time_frame_sat_stat(time_frame_calls);
 
-  if (verbose > 0) 
-    my_printf(ms_lev,"F.size() = %m, num. inact. clauses  = %m\n",(int) F.size(), 
-              num_inact_cls);
  
 } /* end of function print_time_frame_stat*/
 

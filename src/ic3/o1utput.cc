@@ -50,7 +50,7 @@ void CompInfo::fprint_cex1()
 
   std::ofstream Out_str(fname.c_str(),std::ios::out);
   if (!Out_str) {
-    std::cout << "cannot open file " << fname << "\n";
+    M->error() << "cannot open file " << fname << M->eom;
     throw(ERROR2);}
 
   for (size_t i=0; i < Cex.size(); i++) {

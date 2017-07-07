@@ -31,15 +31,13 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 int CompInfo::next_time_frame()
 {
 
-  if (verbose == 0) {
-    std::cout << "-------------\n";
-    std::cout << "next_time_frame\n";
-    std::cout << "tf_lind = " << tf_lind << std::endl;
-    std::cout << "F.size() = " << F.size() <<  ", #inact. clauses "
-	      << num_inact_cls << std::endl;
-  }
-  
-
+ 
+  M->status() << "-------------" << M->eom;
+  M->status() << "next_time_frame" << M->eom;
+  M->status() << "tf_lind = " << tf_lind << M->eom;
+  M->status() << "F.size() = " << F.size() <<  ", #inact. clauses "
+	    << num_inact_cls << M->eom;
+ 
   int ret_val = 2;
   
   add_time_frame();
@@ -73,9 +71,7 @@ int CompInfo::next_time_frame()
     CNF G;  
     int min_tf;
     exclude_state_cube(G,min_tf,Gst_cube,Inps);
-    if (verbose > 0) 
-      if (min_tf < tf_lind - 1) std::cout << "min_tf = " << min_tf
-					  << std::endl;
+   
     Time_frames[tf_lind].num_pbss++;
     if (time_to_terminate()) return(3);
     
@@ -86,13 +82,6 @@ int CompInfo::next_time_frame()
     // no counterexample
    
     assert(Pr_queue.size() == 0);
-    if (verbose >= 3) {
-      if (G.size() == 1) {
-	std::cout << "inductive clause F[" << F.size() << "] is generated: ";
-	std::cout << G[0] << std::endl;}
-      else std::cout << G.size() << " inductive CLAUSES are generated\n";
-    }
-
     accept_new_clauses(Bst_sat,G);
   }
 

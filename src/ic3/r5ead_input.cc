@@ -44,67 +44,7 @@ bool ic3_enginet::banned_expr(exprt &expr) {
   return(false);
 } /* end of function expr_ident */
 
-/*====================================
 
-      P R I N T _ E X P R _ I D
-
-  ==================================*/
-void ic3_enginet::print_expr_id(exprt &expr)
-{
-
-  bool found = false;
-  std::cout << "-------------\n";
-  if(expr.id()==ID_and) {
-    std::cout << "ID_and\n";
-    found = true; }
-  if (expr.id()==ID_or) {
-    std::cout << "ID_or\n";
-    found = true; }
-  if (expr.id()==ID_not) {
-    std::cout << "ID_not\n";
-    found = true; }
-  if (expr.id()==ID_implies) {
-    std::cout << "ID_implies\n";
-    found = true; }
-  if (expr.id()==ID_AG) {
-    std::cout << "ID_AG\n";
-    found = true; }
-  if (expr.id()==ID_sva_always){
-    std::cout << "ID_sva_always\n";
-    found = true; }
-  if (expr.id()==ID_sva_overlapped_implication) {
-    std::cout << "ID_sva_overlapped_implication\n";
-    found = true; }
-  if (expr.id()==ID_sva_non_overlapped_implication) {
-    std::cout << "ID_sva_non_overlapped_implication\n";
-    found = true; }
-  if (expr.id()==ID_sva_nexttime){
-    std::cout << "ID_sva_nexttime\n";
-    found = true; }
-  if (expr.id()==ID_sva_eventually){
-    std::cout << "ID_sva_eventually\n";
-    found = true; }
-  if (expr.id()==ID_sva_until) {
-    std::cout << "ID_sva_until\n";
-    found = true;}
-  if (expr.id()==ID_sva_s_until) {
-    std::cout << "ID_sva_s_until\n";
-    found = true;  }
-  if (expr.id()==ID_sva_until_with) {
-    std::cout << "ID_sva_until_with\n";
-    found = true; }
-  if (expr.id()==ID_sva_s_until_with) {
-    std::cout << "ID_sva_s__until_with\n";
-    found = true; }
- 
-  if (!found) {
-    std::cout << "unknown expression\n";
-    throw(ERROR1);
-  }
-
-  std::cout << "\n";
-
-} /* end of function print_expr_id */
 
 /*==========================================
 
@@ -209,10 +149,10 @@ void CompInfo::form_constr_lits()
 	bool cond = (pnt->second.tran_coi || pnt->second.fun_coi);
 	if (cond == false) {
 	  p();
-	  std::cout << "pnt->second.tran_coi = " << pnt->second.tran_coi
-		    << std::endl;
-	  std::cout << "pnt->second.fun_coi =" << pnt->second.fun_coi
-		    << std::endl;
+	  M->error() << "pnt->second.tran_coi = " << pnt->second.tran_coi
+		    << M->eom;
+	  M->error() << "pnt->second.fun_coi =" << pnt->second.fun_coi
+		    << M->eom;
 	  throw(ERROR1);
 	}
 	if (pnt->second.tran_coi)  Fun_coi_lits.push_back(lit);

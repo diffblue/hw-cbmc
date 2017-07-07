@@ -13,6 +13,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <iostream>
 
 #include <ebmc/ebmc_base.h>
+#include <util/message.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -192,7 +193,8 @@ void ic3_enginet::ebmc_form_latches()
   }
 
   if (Latch_val.size() == 0) {
-    std::cout << "there are no latches\n";   
+    messaget *M = Ci.M;
+    M->error() << "there are no latches" << M->eom;
     throw(ERROR1);
   }
   // set initial values
@@ -204,10 +206,11 @@ void ic3_enginet::ebmc_form_latches()
     int var_num = lit.var_no();
     if (Latch_val.find(var_num) == Latch_val.end()) {
       p();
-      std::cout << "Latch " << var_num << " is not found\n";
-      std::cout << "Latch_val.size() = " << Latch_val.size() << std::endl;
-      std::cout << "Ist_lits.size() = " << Ist_lits.size() << std::endl;
-      std::cout << "i = " << i << std::endl;
+      messaget *M = Ci.M;
+      M->error() << "Latch " << var_num << " is not found" << M->eom;
+      M->error() << "Latch_val.size() = " << Latch_val.size() << M->eom;
+      M->error() << "Ist_lits.size() = " << Ist_lits.size() << M->eom;
+      M->error() << "i = " << i << M->eom;
       throw(ERROR1);
     }
     if (lit.sign()) Latch_val[var_num] = 0;
@@ -242,8 +245,9 @@ void ic3_enginet::gen_ist_lits(bvt &Ist_lits)
       continue;
     if (var_num >= Nodes.size()) {
       p();
-      std::cout << "var_num = " << var_num << std::endl;
-      std::cout << "Nodes.size() = " << Nodes.size() << std::endl;
+      messaget *M = Ci.M;
+      M->error() << "var_num = " << var_num << M->eom;
+      M->error() << "Nodes.size() = " << Nodes.size() << M->eom;
       throw(ERROR1);
     }
     aigt::nodet &Nd = Nodes[var_num];

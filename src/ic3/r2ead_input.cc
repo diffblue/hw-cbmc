@@ -247,11 +247,11 @@ void CompInfo::check_conv_tbl(CUBE &Vars,CUBE &Tbl,bool pres_svars)
     int var_ind = Vars[i]-1;
     if (Tbl[var_ind] == -1) {
       if (pres_svars) 
-	std::cout << "no match for present state variable " << var_ind+1
-		  << std::endl;
+	M->error() << "no match for present state variable " << var_ind+1
+		  << M->eom;
       else 
-	std::cout << "no match for next state variable "<< var_ind+1
-		  << std::endl;
+	M->error() << "no match for next state variable "<< var_ind+1
+		  << M->eom;
       throw(ERROR1);
     }
   }

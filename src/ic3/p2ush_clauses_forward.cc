@@ -23,11 +23,9 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ===========================================*/
 void CompInfo::push_clauses_forward(bool triv_time_frame)
 {
-  if (verbose == 0) {
-    std::cout << std::string(3,' ');
-    std::cout << "push_clauses_forward\n";
-  }
-
+  
+  M->status() << "pushing clauses forward" << M->eom;
+  
   int min_tf = 1;
 
   assert(tf_lind>=0 && (size_t) tf_lind < Time_frames.size());
@@ -92,8 +90,8 @@ void CompInfo::push_clauses_forward(bool triv_time_frame)
 
     if (Time_frames[i].num_bnd_cls == 0) {
       inv_ind = i;
-      std::cout << "All clauses of Bnd[" << inv_ind
-		<< "] are pushed forward\n";
+      M->status() << "All clauses of Bnd[" << inv_ind
+		  << "] are pushed forward" << M->eom;
       break;}
    
   }

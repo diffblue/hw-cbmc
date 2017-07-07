@@ -49,7 +49,6 @@ public:
   bool form_orig_name(CCUBE &Name,literalt &lit,bool subtract = false);
   void form_inv_names(CDNF &Pin_names,int lit);
   void form_invs();
-  void print_expr_id(exprt &E);
   bool banned_expr(exprt &expr);
   bool find_prop(propertyt &Prop);
   void read_parameters();

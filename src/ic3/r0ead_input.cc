@@ -210,8 +210,7 @@ void ic3_enginet::add_verilog_conv_constrs()
 {
 
   for(literalt lit : netlist.constraints) {
-    if (lit.is_constant()) continue;
-    std::cout << "constraint literal " << lit.get() << "\n";
+    if (lit.is_constant()) continue;   
      Ci.Init_clits.insert(lit.get());
   }
 

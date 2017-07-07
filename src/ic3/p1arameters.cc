@@ -55,9 +55,11 @@ void ic3_enginet::read_parameters()
 void ic3_enginet::print_header()
 {
 
-  std::cout << "ebmc verilog_file --ic3 [--prop nm] [--constr]\n";
-  std::cout << "prop nm - check property with name 'nm'\n";
-  std::cout << "constr  - use constraints listed in 'verilog_file.cnstr'\n";
+  messaget *M = Ci.M;
+  M->status() << "ebmc verilog_file --ic3 [--prop nm] [--constr]"  << M->eom;
+  M->status() << "prop nm - check property with name 'nm'"  << M->eom;
+  M->status() << "constr  - use constraints listed in 'verilog_file.cnstr'"
+	      << M->eom;
 } /* end of function print_header */
 
 /*=====================================

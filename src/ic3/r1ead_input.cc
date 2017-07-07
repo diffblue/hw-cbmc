@@ -15,6 +15,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <solvers/prop/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
 #include <ebmc/ebmc_base.h>
+#include <util/message.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -23,6 +24,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 #include "ebmc_ic3_interface.hh"
+
 
 /*====================================
 
@@ -46,8 +48,9 @@ void ic3_enginet::find_prop_lit()
 
   found = banned_expr(Oper);
   if (found) {
-    std::cout << "verification of properties of this type by IC3\n";
-    std::cout << "is not implemented yet\n";
+    messaget *M = Ci.M;
+    M->error() << "verification of properties of this type by IC3" << M->eom;
+    M->error() << "is not implemented yet" << M->eom;
     throw(ERROR1);
   }
   assert(Oper.type().id()==ID_bool);
@@ -196,9 +199,10 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches, int init_val,
 
 // we don't accept files in which the output of a latch is also a primary input
     if (G.gate_type == INPUT){
-      std::cout << "the output of latch  ";
-      print_name1(Latch_name,true);
-      std::cout << "is also an input variable\n";
+      messaget *M = Ci.M;
+      M->error() << "the output of latch  ";
+      M->error() << cvect_to_str(Latch_name) << M->eom;
+      M->error() << "is also an input variable" << M->eom;
       throw(ERROR1);
     }
   }

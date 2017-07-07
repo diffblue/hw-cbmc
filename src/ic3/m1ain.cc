@@ -48,22 +48,22 @@ int ic3_enginet::operator()()
 
 {
 
-  Ci.init_parameters();
-  read_parameters();
+  messaget message(ui_message_handler);
+  Ci.M = &message;
 
 
   try    {
+    Ci.init_parameters();
+    read_parameters();
+ 
     int result=get_model();
 
     // std::cout << "verbosity-> " << ui_message_handler.get_verbosity() << std::endl;
     //  ui_message_handler.set_verbosity(10);
-    messaget message(ui_message_handler);
-    Ci.M = &message;
+   
   
     message.error() << "message.error" << messaget::eom;
-    message.status() << "message.status" << messaget::eom;
-
-  
+    message.status() << "message.status" << messaget::eom;  
     
     if(result!=-1) return result;
 
@@ -119,7 +119,8 @@ int ic3_enginet::operator()()
     return ERROR1;
   }
   catch(int err_num)    {
-    std::cout << "exception number " << err_num << "\n";
+    if (err_num != EARLY_EXIT)
+      std::cout << "exception number " << err_num << "\n";
     return err_num;
   }
 
