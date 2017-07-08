@@ -25,8 +25,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ==================================*/
 void CompInfo::add_constrs() 
 {
-  std::cout << "adding " << Constr_ilits.size() + Constr_nilits.size()
-	    << " unit constraints\n";
+  M->status() << "adding " << Constr_ilits.size() + Constr_nilits.size()
+	      << " unit constraints" << M->eom;
   for (size_t i=0; i < Constr_ilits.size(); i++) {
     CLAUSE U;
     U.push_back(Constr_ilits[i]);
@@ -117,10 +117,10 @@ void CompInfo::gen_trans_rel(int shift)
 	add_truth_table_gate_cubes(Tr,gate_ind,shift);         
 	break;
       case COMPLEX: 
-        std::cout << "complex gates are not allowed\n";
+        M->error() << "complex gates are not allowed" << M->eom;
 	throw(ERROR1);
       default:   
-        std::cout << "wrong gate type\n";
+        M->error() << "wrong gate type" << M->eom;
 	throw(ERROR1);
       }
   }
@@ -140,7 +140,7 @@ void CompInfo::print_var_indexes(const char *fname)
 
   std::ofstream Out_str(fname,std::ios::out);
   if (!Out_str) {
-    std::cout << "cannot open file " << std::string(fname) << "\n";
+    M->error() << "cannot open file " << std::string(fname) << M->eom;
     throw(ERROR2);}
 
   DNF topol_levels;

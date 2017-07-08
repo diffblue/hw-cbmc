@@ -53,7 +53,7 @@ void finish_constant(Gate &G)
   The function fills up the polarities
   and sets the function  type
   =========================================*/
-void finish_buffer(Gate &G)
+void finish_buffer(Gate &G,messaget &M)
 {G.func_type = BUFFER;
 
   DNF &F = G.F;
@@ -280,7 +280,7 @@ void finish_unknown_gate(Gate &G)
   In particular it determines gate type and fills up
   the polarities
   ==================================================*/
-void finish_gate(Circuit *N,int &gate_ind)
+void finish_gate(Circuit *N,int &gate_ind,messaget &M)
 {
 
   Gate &G=  N->Gate_list[gate_ind];
@@ -292,7 +292,7 @@ void finish_gate(Circuit *N,int &gate_ind)
 
   // is it a BUFFER?
   if (G.ninputs == 1) {
-    finish_buffer(G);
+    finish_buffer(G,M);
     return;
   }
  

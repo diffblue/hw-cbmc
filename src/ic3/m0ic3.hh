@@ -363,8 +363,8 @@ int parse_string(CCUBE &Buff);
 void print_names_of_latches(NamesOfLatches &Latches);
 bool ident_arrays(CUBE &A,CUBE &B);
 void print_blif(std::ofstream &Out_str,Circuit *N);
-void print_blif2(std::ofstream &Out_str,Circuit *N);
-void print_blif3(const char *Name,Circuit *N);
+void print_blif2(std::ofstream &Out_str,Circuit *N,messaget &M);
+void print_blif3(const char *Name,Circuit *N,messaget &M);
 std::string ivect_to_str(CUBE &A);
 std::string cvect_to_str(CCUBE &A);
 

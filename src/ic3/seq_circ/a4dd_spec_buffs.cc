@@ -24,12 +24,12 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   A D D _ O N E _ S P E C _ B U F F
 
   ==========================================*/
-void add_one_spec_buff(Circuit *N,int ind) 
+void add_one_spec_buff(Circuit *N,int ind,messaget &M) 
 {
   int gate_ind = spec_buff_gate_ind(N,ind);
   start_spec_buff(N,gate_ind);
   add_spec_buff_cube(N,gate_ind);
-  finish_spec_buff(N,gate_ind);
+  finish_spec_buff(N,gate_ind,M);
 
 } /* end of function add_one_spec_buff */
 

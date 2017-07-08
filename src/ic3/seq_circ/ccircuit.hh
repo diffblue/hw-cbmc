@@ -6,6 +6,7 @@ Module: Basic types (gate, circuit and so on)
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+#include <util/message.h>
 struct ConstrGateInfo {
   unsigned neg_lit:1;
   unsigned fun_coi:1;
@@ -188,6 +189,6 @@ void remove_unobserv_gates(Circuit *N);
 void print_header1(Circuit *N);
 void print_names2(Circuit *N,CUBE &gates);
 void  print_gate_type(std::ofstream &Out_str,Circuit *N,Gate &G);
-
+std::string cvect_to_str(CCUBE &A);
 #include "more_fun_prot.hh"
 

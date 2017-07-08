@@ -28,7 +28,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
  function guarantees that all latches
  are printed out one by one
 ========================================*/
-void print_blif2(std::ofstream &Out_str,Circuit *N)
+void print_blif2(std::ofstream &Out_str,Circuit *N,messaget &M)
 {
   
   // print first three commands 
@@ -53,9 +53,9 @@ void print_blif2(std::ofstream &Out_str,Circuit *N)
 	break;
       case UNDEFINED: 
 	p();
-	std::cout << "type of gate ";
-	print_name(&G.Gate_name);
-	std::cout << " is UNDEFINED\n";
+	M.error() << "type of gate ";
+	M.error() << cvect_to_str(G.Gate_name);
+	M.error() << " is UNDEFINED" << M.eom;
 	throw(ERROR1);
       default:
 	assert(false);
@@ -72,15 +72,15 @@ void print_blif2(std::ofstream &Out_str,Circuit *N)
    P R I N T _ B L I F 3
 
 ==========================*/
-void print_blif3(const char *fname, Circuit *N)
+void print_blif3(const char *fname, Circuit *N,messaget &M)
 {
 
   std::ofstream Out_str(fname,std::ios::out);
   if (!Out_str) {
-    std::cout << "cannot open file " << std::string(fname) << "\n";
+    M.error() << "cannot open file " << std::string(fname) << M.eom;
     throw(ERROR2);}
   
-  print_blif2(Out_str,N);
+  print_blif2(Out_str,N,M);
   Out_str.close();
 
 } /* end of function print_blif3 */

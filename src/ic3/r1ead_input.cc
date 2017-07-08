@@ -146,7 +146,7 @@ void ic3_enginet::form_invs()
     Gate &G = N->get_gate(Gate_inds.back());
     G.F.push_back(C);
 
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*Ci.M);
   }
 
 } /* end of function form_invs */
@@ -173,7 +173,7 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches, int init_val,
  
  
   int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,
-               N->Gate_list,true);
+					 N->Gate_list,true,*Ci.M);
   Ci.upd_gate_constr_tbl(pres_lit.get(),pin_num);
  
  

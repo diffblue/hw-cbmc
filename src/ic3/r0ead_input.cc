@@ -79,18 +79,18 @@ void ic3_enginet::form_circ_from_ebmc()
   form_invs();
   Ci.form_consts(N);
  
-  add_spec_buffs(N);
+  add_spec_buffs(N,*Ci.M);
 
   add_pseudo_inps(N);
  
-  fill_fanout_lists(N);
-  assign_gate_type(N,Out_names,true);
+  fill_fanout_lists(N,*Ci.M);
+  assign_gate_type(N,Out_names,true,*Ci.M);
   //   assign topological levels and other flags
-  assign_levels_from_inputs(N);
+  assign_levels_from_inputs(N,*Ci.M);
   // check_levels_from_inputs(N,true);
   set_trans_output_fun_flags(N);
-  set_feeds_latch_flag(N,true,true);
-  assign_levels_from_outputs(N);
+  set_feeds_latch_flag(N,true,true,*Ci.M);
+  assign_levels_from_outputs(N,*Ci.M);
   // check_levels_from_outputs(N,true);
 
 } /* end of function form_circ_from_ebmc */

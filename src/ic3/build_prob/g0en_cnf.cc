@@ -17,8 +17,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-int debug_flag=0;
-
 /*======================
 
   G E N _ C N F S
@@ -108,10 +106,10 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
 	add_truth_table_gate_cubes(H,gate_ind,shift);                 
 	break;
       case COMPLEX: 
-	std::cout << "complex gates are not allowed\n";
+	M->error() << "complex gates are not allowed" << M->eom;
 	throw(ERROR1);
       default:   
-	std::cout << "wrong gate type\n";
+	M->error() << "wrong gate type" << M->eom;
 	throw(ERROR1);
       }
   }
@@ -171,7 +169,6 @@ void  CompInfo::add_const_gate_cube(DNF &F,int gate_ind,int shift)
   assert(G.F.size() < 2);
   if (G.F.size() == 1) C.push_back(var_ind + shift);
   else if (G.F.size() == 0) C.push_back(-(var_ind + shift));
-  if (debug_flag) std::cout << C << " 0\n";
 
   F.push_back(C);
 
@@ -206,7 +203,6 @@ void CompInfo::add_buffer_gate_cubes(DNF &F,int gate_ind,int shift)
   else C.push_back(-(var_indexes[0]+shift));
   C.push_back(-(var_indexes[1]+shift)); 
   F.push_back(C);
-  if (debug_flag) std::cout << C << " 0\n";
 
   // second cube
   C.clear();
@@ -214,6 +210,5 @@ void CompInfo::add_buffer_gate_cubes(DNF &F,int gate_ind,int shift)
   else C.push_back(var_indexes[0]+shift);
   C.push_back(var_indexes[1]+shift);
   F.push_back(C);
-  if (debug_flag) std::cout << C << " 0\n";
 
 } /* end of function add_buffer_gate_cubes */

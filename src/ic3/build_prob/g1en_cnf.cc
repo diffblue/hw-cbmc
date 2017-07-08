@@ -66,7 +66,6 @@ void  CompInfo::add_or_gate_cubes(DNF &F,int gate_ind,int shift)
     if (G.Polarity[i] == 0)   C.push_back(var_indexes[i]+shift); 
     else C.push_back(-(var_indexes[i]+shift)); 
   C.push_back(-(var_indexes.back()+shift));
-  if (debug_flag) std::cout << C << " 0\n";
   if (!empty_cube(C))  F.push_back(C);
 
   //
@@ -78,7 +77,6 @@ void  CompInfo::add_or_gate_cubes(DNF &F,int gate_ind,int shift)
       if (G.Polarity[i] == 0)   C.push_back(-(var_indexes[i]+shift)); 
       else C.push_back(var_indexes[i]+shift); 
       C.push_back(var_indexes.back()+shift);
-      if (debug_flag) std::cout << C << " 0\n";
       if (!empty_cube(C)) F.push_back(C);
     }
 
@@ -115,7 +113,6 @@ void CompInfo::add_and_gate_cubes(DNF &F,int gate_ind,int shift)
     if (G.Polarity[i] == 0)   C.push_back(-(var_indexes[i]+shift)); 
     else C.push_back(var_indexes[i]+shift); 
   C.push_back(var_indexes.back()+shift);
-  if (debug_flag) std::cout << C << " 0\n";
   if (!empty_cube(C))  F.push_back(C);
 
   //
@@ -127,7 +124,6 @@ void CompInfo::add_and_gate_cubes(DNF &F,int gate_ind,int shift)
     if (G.Polarity[i] == 0)   C.push_back(var_indexes[i]+shift); 
     else C.push_back(-(var_indexes[i]+shift)); 
     C.push_back(-(var_indexes.back()+shift));
-    if (debug_flag) std::cout << C << " 0\n";
     if (!empty_cube(C)) F.push_back(C);
   }
 

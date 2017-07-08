@@ -173,7 +173,7 @@ void ic3_enginet::form_gates()
     Ci.start_new_gate(Gate_inds,N,Pin_names);
     upd_gate_constrs(i,Gate_inds);
     Ci.form_gate_fun(N,Gate_inds.back(),Pol);
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*Ci.M);
   }
   
 
@@ -246,7 +246,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   Gate &G = N->get_gate(Gate_inds.back());
   G.F.push_back(C);
 
-  finish_gate(N,Gate_inds.back());
+  finish_gate(N,Gate_inds.back(),*Ci.M);
 
 } /* end of function form_outp_buf */
 
@@ -265,7 +265,7 @@ void CompInfo::form_consts(Circuit *N)
     conv_to_vect(Pin_names[0],"c0");
     CUBE Gate_inds;
     start_new_gate(Gate_inds,N,Pin_names);
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*M);
   }
 
   if (const_flags & 2) {
@@ -278,7 +278,7 @@ void CompInfo::form_consts(Circuit *N)
     CUBE C;
     Gate &G = N->get_gate(Gate_inds.back());
     G.F.push_back(C);
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*M);
   }
 
 } /* end of functin form_consts */

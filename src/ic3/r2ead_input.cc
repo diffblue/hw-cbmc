@@ -34,7 +34,7 @@ void CompInfo::start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names)
  
 
   int gate_ind = assign_output_pin_number(N->Pin_list,Pin_names.back(),
-                                          N->Gate_list,false);
+                                          N->Gate_list,false,*M);
 
   N->ngates++; // increment the number of gates 
 
