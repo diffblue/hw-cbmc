@@ -126,10 +126,8 @@ void ic3_enginet::form_orig_names()
       unsigned ind = l_c.var_no();
       irep_idt Lname = it->first;
       std::string Sname = short_name(Lname);
-      if (var.bits.size() > 1) {
-	std::ostringstream Buff;
-	Buff << "[" << j << "]";
-	Sname += Buff.str();
+      if (var.bits.size() > 1) {             
+	Sname +=  "[" + std::to_string(j) + "]";
       }
 
       assert(ind < Nodes.size());

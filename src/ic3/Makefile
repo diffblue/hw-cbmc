@@ -23,7 +23,7 @@ INC_DIR = -I . -I build_prob -I seq_circ -I $(MINISAT_INC) -I $(CBMC)/src -I ../
 OBJ_DIR = .
 
 BUILD_PROB =   $(OBJ_DIR)/g3en_cnf.o  $(OBJ_DIR)/g0en_cnf.o $(OBJ_DIR)/g1en_cnf.o \
-               $(OBJ_DIR)/g2en_cnf.o $(OBJ_DIR)/assign_indexes.o $(OBJ_DIR)/build_arrays.o
+               $(OBJ_DIR)/g2en_cnf.o $(OBJ_DIR)/assign_indices.o $(OBJ_DIR)/build_arrays.o
 
 SEQ_CIRC = $(OBJ_DIR)/p1rint_blif.o $(OBJ_DIR)/p2rint_blif.o $(OBJ_DIR)/finish_gate.o \
            $(OBJ_DIR)/a2dd_gate.o  $(OBJ_DIR)/a3dd_gate.o  $(OBJ_DIR)/c2irc_util.o \

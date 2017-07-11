@@ -79,10 +79,11 @@ bool ic3_enginet::form_orig_name(CCUBE &Name,literalt &lit,bool subtract)
     return(true);
   }
 
-  std::ostringstream Buff;
-  if (subtract) Buff << "a" << lit.get()-1;
-  else Buff << "a" << lit.get();
-  conv_to_vect(Name,Buff.str());
+  std::string Str_name;
+ 
+  if (subtract) Str_name = "a" + std::to_string(lit.get()-1);
+  else Str_name = "a" + std::to_string(lit.get());
+  conv_to_vect(Name,Str_name);
   return(false);
 } /* end of function form_orig_name */
 

@@ -24,7 +24,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
    In contrast to 'gen_form1' this
    function returns array 'Old_nums'
-   specifying the indexes of clauses
+   specifying the indices of clauses
    of H in F.
 
   ===================================*/

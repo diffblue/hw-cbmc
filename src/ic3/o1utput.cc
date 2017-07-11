@@ -25,13 +25,12 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::fprint_cex2()
 {
 
-  std::string fname = out_file;
-  fname += ".cex.cnf";
+  std::string fname(out_file + ".cex.cnf");
   
   bool success = print_dnf(Cex,fname);
   if (!success) {
     M->error() << "cannot open file " << fname << M->eom;
-    throw(ERROR2);
+    throw ERROR2;
   }
 
 } /* end of function fprint_cex2 */
@@ -45,8 +44,7 @@ void CompInfo::fprint_cex2()
 void CompInfo::fprint_cex1()
 {
 
-  std::string fname = out_file;
-  fname += ".cex.txt";
+  std::string fname(out_file + ".cex.txt");
 
   std::ofstream Out_str(fname.c_str(),std::ios::out);
   if (!Out_str) {
@@ -84,7 +82,7 @@ void CompInfo::print_invariant(bool only_new_clauses)
   if (Cex.size() == 0)
     assert(Time_frames[inv_ind].num_bnd_cls == 0);
   add_dnf(Res,H);
-  std::string fname = out_file;
+  std::string fname(out_file);
   
   if (inv_ind < 0) fname += ".clauses.cnf";
   else fname +=".inv.cnf";
@@ -105,8 +103,7 @@ void CompInfo::print_fclauses()
 {
 
 
-  std::string fname = out_file;
-  fname += ".clauses.cnf";
+  std::string fname(out_file + ".clauses.cnf");
 
   CNF Res;
 

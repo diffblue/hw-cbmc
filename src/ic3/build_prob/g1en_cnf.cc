@@ -43,29 +43,29 @@ void  CompInfo::add_or_gate_cubes(DNF &F,int gate_ind,int shift)
 {
 
 
-  // form indexes 
-  CUBE var_indexes;
+  // form indices 
+  CUBE var_indices;
   Gate &G =  N->Gate_list[gate_ind];
 
 
   for (size_t i=0; i < G.Fanin_list.size();i++) {
     int gate_ind1 = G.Fanin_list[i];
     int var_ind = Gate_to_var[gate_ind1];
-    var_indexes.push_back(var_ind);
+    var_indices.push_back(var_ind);
   }
 
 
   // add the output var
-  var_indexes.push_back(Gate_to_var[gate_ind]);
+  var_indices.push_back(Gate_to_var[gate_ind]);
 
   //
   // generate the long clause
   //
   CUBE C;
   for (size_t i=0; i <  G.Fanin_list.size();i++)
-    if (G.Polarity[i] == 0)   C.push_back(var_indexes[i]+shift); 
-    else C.push_back(-(var_indexes[i]+shift)); 
-  C.push_back(-(var_indexes.back()+shift));
+    if (G.Polarity[i] == 0)   C.push_back(var_indices[i]+shift); 
+    else C.push_back(-(var_indices[i]+shift)); 
+  C.push_back(-(var_indices.back()+shift));
   if (!empty_cube(C))  F.push_back(C);
 
   //
@@ -74,9 +74,9 @@ void  CompInfo::add_or_gate_cubes(DNF &F,int gate_ind,int shift)
   //
   for (size_t i=0; i < G.Fanin_list.size();i++)
     {C.clear();
-      if (G.Polarity[i] == 0)   C.push_back(-(var_indexes[i]+shift)); 
-      else C.push_back(var_indexes[i]+shift); 
-      C.push_back(var_indexes.back()+shift);
+      if (G.Polarity[i] == 0)   C.push_back(-(var_indices[i]+shift)); 
+      else C.push_back(var_indices[i]+shift); 
+      C.push_back(var_indices.back()+shift);
       if (!empty_cube(C)) F.push_back(C);
     }
 
@@ -91,18 +91,18 @@ void  CompInfo::add_or_gate_cubes(DNF &F,int gate_ind,int shift)
 void CompInfo::add_and_gate_cubes(DNF &F,int gate_ind,int shift)
 {
 
-  // form indexes 
-  CUBE var_indexes;
+  // form indices 
+  CUBE var_indices;
   Gate &G =  N->Gate_list[gate_ind];
     
   for (size_t i=0; i < G.Fanin_list.size();i++) {
     int gate_ind1 = G.Fanin_list[i];
     int var_ind = Gate_to_var[gate_ind1];
-    var_indexes.push_back(var_ind);
+    var_indices.push_back(var_ind);
   }
 
   // add the output var
-  var_indexes.push_back(Gate_to_var[gate_ind]);
+  var_indices.push_back(Gate_to_var[gate_ind]);
  
 
   //
@@ -110,9 +110,9 @@ void CompInfo::add_and_gate_cubes(DNF &F,int gate_ind,int shift)
   //
   CUBE C;
   for (size_t i=0; i < G.Fanin_list.size();i++)
-    if (G.Polarity[i] == 0)   C.push_back(-(var_indexes[i]+shift)); 
-    else C.push_back(var_indexes[i]+shift); 
-  C.push_back(var_indexes.back()+shift);
+    if (G.Polarity[i] == 0)   C.push_back(-(var_indices[i]+shift)); 
+    else C.push_back(var_indices[i]+shift); 
+  C.push_back(var_indices.back()+shift);
   if (!empty_cube(C))  F.push_back(C);
 
   //
@@ -121,9 +121,9 @@ void CompInfo::add_and_gate_cubes(DNF &F,int gate_ind,int shift)
   //
   for (size_t i=0; i < G.Fanin_list.size();i++) {
     C.clear();
-    if (G.Polarity[i] == 0)   C.push_back(var_indexes[i]+shift); 
-    else C.push_back(-(var_indexes[i]+shift)); 
-    C.push_back(-(var_indexes.back()+shift));
+    if (G.Polarity[i] == 0)   C.push_back(var_indices[i]+shift); 
+    else C.push_back(-(var_indices[i]+shift)); 
+    C.push_back(-(var_indices.back()+shift));
     if (!empty_cube(C)) F.push_back(C);
   }
 
@@ -137,19 +137,19 @@ void CompInfo::add_and_gate_cubes(DNF &F,int gate_ind,int shift)
 void  CompInfo::add_truth_table_gate_cubes(DNF &F,int gate_ind,int shift)
 {
 
-  // form indexes 
-  CUBE var_indexes;
+  // form indices 
+  CUBE var_indices;
   Gate &G =  N->Gate_list[gate_ind];
 
  
   for (size_t i=0; i < G.Fanin_list.size();i++) {
     int gate_ind1 = G.Fanin_list[i];
     int var_ind = Gate_to_var[gate_ind1];
-    var_indexes.push_back(var_ind);
+    var_indices.push_back(var_ind);
   }
 
   // add the output var
-  var_indexes.push_back(Gate_to_var[gate_ind]);
+  var_indices.push_back(Gate_to_var[gate_ind]);
 
   CUBE TT(1 << G.ninputs);
   for (size_t i=0; i < TT.size(); i++)
@@ -166,10 +166,10 @@ void  CompInfo::add_truth_table_gate_cubes(DNF &F,int gate_ind,int shift)
     CUBE &C = D[i];
     CUBE C1;
     for (size_t j=0; j < C.size(); j++) {
-      C1.push_back(var_indexes[abs(C[j])-1]+shift);
+      C1.push_back(var_indices[abs(C[j])-1]+shift);
       if (C[j] > 0) C1[j] = -C1[j];
     }
-    C1.push_back(var_indexes.back()+shift);
+    C1.push_back(var_indices.back()+shift);
     if (!empty_cube(C1)) F.push_back(C1);
   }
 
@@ -180,10 +180,10 @@ void  CompInfo::add_truth_table_gate_cubes(DNF &F,int gate_ind,int shift)
       if (TT[i] == 1) continue;
       make_cube(i,G.ninputs,C);
       for (size_t j=0; j < C.size(); j++)
-	{C1.push_back(var_indexes[abs(C[j])-1]+shift);
+	{C1.push_back(var_indices[abs(C[j])-1]+shift);
 	  if (C[j] >  0) C1[j] = -C1[j];
 	}
-      C1.push_back(var_indexes.back()+shift);
+      C1.push_back(var_indices.back()+shift);
       C1.back() = -C1.back();
       if (!empty_cube(C1)) F.push_back(C1);
     }

@@ -88,10 +88,10 @@ void find_latch(Circuit *N,Gate &G,int &latch_ind)
 
 /*=============================================
 
-  A S S I G N _ V A R _ I N D E X E S
+  A S S I G N _ V A R _ I N D I C E S 
 
   =============================================*/
-void CompInfo::assign_var_indexes()
+void CompInfo::assign_var_indices()
 {
 
   Gate_to_var.assign(N->Gate_list.size(),-1);
@@ -101,4 +101,4 @@ void CompInfo::assign_var_indexes()
   }
 
   num_circ_vars = curr_index-1;
-} /* end of function assign_var_indexes */
+} /* end of function assign_var_indices */

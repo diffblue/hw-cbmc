@@ -33,7 +33,7 @@ void CompInfo::print_aiger_format()
   check_circuit(num_buffs,num_consts);
   assert(num_consts <= 2);
   std::string full_name;
-  assert(out_file.size() > 0);
+  assert(!out_file.empty());
   full_name = out_file;
   full_name += ".aag";
 

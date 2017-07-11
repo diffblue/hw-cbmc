@@ -93,7 +93,7 @@ void CompInfo::gen_trans_rel(int shift)
 {
 
   for (size_t i=0; i < N->Gate_list.size();i++) {
-    int gate_ind = Ordering[i];
+    unsigned gate_ind = Ordering[i];
     Gate &G =  N->Gate_list[gate_ind];
     if (G.gate_type == INPUT) continue;
     if (G.gate_type == LATCH) continue;
@@ -131,16 +131,15 @@ void CompInfo::gen_trans_rel(int shift)
 
 /*====================================
 
-  P R I N T _ V A R _ I N D E X E S
+  P R I N T _ V A R _ I N D I C E S
 
   ====================================*/
-void CompInfo::print_var_indexes(const char *fname)
+void CompInfo::print_var_indices(const std::string &fname)
 {
 
-
-  std::ofstream Out_str(fname,std::ios::out);
+  std::ofstream Out_str(fname.c_str(),std::ios::out);
   if (!Out_str) {
-    M->error() << "cannot open file " << std::string(fname) << M->eom;
+    M->error() << "cannot open file " << fname << M->eom;
     throw(ERROR2);}
 
   DNF topol_levels;
@@ -149,13 +148,13 @@ void CompInfo::print_var_indexes(const char *fname)
   CCUBE marked_vars;
   marked_vars.assign(2*N->Gate_list.size(),0);
 
-  // print var indexes in topological order
+  // print var indices in topological order
   for (size_t i=0; i <= N->max_levels; i++) {    
     Out_str << "--------------------------------------\n";
     Out_str << "topological level " << i << "\n";
     CUBE &Gates = topol_levels[i];
     for (size_t j=0; j < Gates.size(); j++) {
-      int gate_ind = Gates[j];
+      unsigned gate_ind = Gates[j];
       Gate &G = N->get_gate(gate_ind);
       switch (G.gate_type)
 	{case LATCH: Out_str << "L: ";
@@ -168,16 +167,16 @@ void CompInfo::print_var_indexes(const char *fname)
 	}
       fprint_name(Out_str,G.Gate_name);
       Out_str << "  " << Gate_to_var[gate_ind] << "\n";
-      int tmp = Gate_to_var[gate_ind];
+      unsigned tmp = Gate_to_var[gate_ind];
       if (marked_vars[tmp] != 0) 
 	Out_str << "variable " << tmp <<  " is shared!!\n";
 	  
-    marked_vars[tmp] = 1;
+      marked_vars[tmp] = 1;
+    }
   }
-}
-Out_str.close();
+  Out_str.close();
 
-}/* end of function print_var_indexes */
+}/* end of function print_var_indices */
 
 /*=========================================
 
@@ -199,7 +198,7 @@ void CompInfo::set_constr_flag()
   for (pnt = Constr_gates.begin(); pnt!=Constr_gates.end(); pnt++)  {
     CUBE Gates;
     CUBE Stack;
-    int gate_ind = pnt->first;
+    unsigned gate_ind = pnt->first;
     Gate &G = N->get_gate(gate_ind);
     if (G.gate_type == LATCH) continue;
     if (G.gate_type == INPUT) continue;

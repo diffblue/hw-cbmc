@@ -24,15 +24,12 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   =====================*/
 void  CompInfo::gen_cnfs(const char *fname,bool print_flag)
 {  
-  assign_var_indexes();
+  assign_var_indices();
  
-  std::string fname1;
 
   if (print_flag) {
     // print index file
-    fname1 = fname;
-    fname1 += ".ind";
-    print_var_indexes(fname1.c_str());
+    print_var_indices(std::string(fname)+".ind");
   }
 
   gen_initial_state_cubes();
@@ -160,7 +157,7 @@ void  CompInfo::gen_initial_state_cubes()
 void  CompInfo::add_const_gate_cube(DNF &F,int gate_ind,int shift)
 {
 
-  // form indexes 
+  // form indices 
   Gate &G =  N->Gate_list[gate_ind];
  
   int var_ind = Gate_to_var[gate_ind] + shift;
@@ -183,32 +180,32 @@ void  CompInfo::add_const_gate_cube(DNF &F,int gate_ind,int shift)
 void CompInfo::add_buffer_gate_cubes(DNF &F,int gate_ind,int shift)
 {
 
-  // form indexes 
-  CUBE var_indexes;
+  // form indices 
+  CUBE var_indices;
   Gate &G = N->Gate_list[gate_ind];
 
 
   for (size_t i=0; i < G.Fanin_list.size();i++) {
     int gate_ind1 =  G.Fanin_list[i];
     int var_ind = Gate_to_var[gate_ind1];
-    var_indexes.push_back(var_ind);
+    var_indices.push_back(var_ind);
   }
 
   // add the output var
-  var_indexes.push_back(Gate_to_var[gate_ind]);
+  var_indices.push_back(Gate_to_var[gate_ind]);
 
   CUBE C;
   // first cube
-  if (G.Polarity[0] == 0)  C.push_back(var_indexes[0]+shift);  
-  else C.push_back(-(var_indexes[0]+shift));
-  C.push_back(-(var_indexes[1]+shift)); 
+  if (G.Polarity[0] == 0)  C.push_back(var_indices[0]+shift);  
+  else C.push_back(-(var_indices[0]+shift));
+  C.push_back(-(var_indices[1]+shift)); 
   F.push_back(C);
 
   // second cube
   C.clear();
-  if (G.Polarity[0] == 0)  C.push_back(-(var_indexes[0]+shift));  
-  else C.push_back(var_indexes[0]+shift);
-  C.push_back(var_indexes[1]+shift);
+  if (G.Polarity[0] == 0)  C.push_back(-(var_indices[0]+shift));  
+  else C.push_back(var_indices[0]+shift);
+  C.push_back(var_indices[1]+shift);
   F.push_back(C);
 
 } /* end of function add_buffer_gate_cubes */

@@ -96,15 +96,15 @@ void form_output_name(CCUBE &Name,Circuit *N,int gate_ind)
 {
   Name =  N->Spec_buff_name;
 
-  std::ostringstream Buff;
+  
   Gate &G = N->get_gate(gate_ind);
 
   assert(G.spec_buff_ind >= 0);
 
-  Buff << G.spec_buff_ind;
+  std::string Str = std::to_string(G.spec_buff_ind);
 
-  for(size_t i=0;i < Buff.str().size();i++) 
-    Name.push_back(Buff.str()[i]);
+  for(size_t i=0;i < Str.size();i++) 
+    Name.push_back(Str[i]);
 
 } /* end of function form_output_name */
 

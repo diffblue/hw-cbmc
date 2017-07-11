@@ -179,7 +179,7 @@ void form_next_state_vars();
 void form_inp_vars();
 void form_pres_to_next_conv();
 void form_next_to_pres_conv();
-void assign_var_indexes();
+void assign_var_indices();
 void add_last_cube(DNF &F);
 void form_property_gates(CUBE &Gates);
 void print_files(char *root);
@@ -198,8 +198,8 @@ void  gen_initial_state_cubes();
 
 
 // debugging methods
-void print_var_indexes();
-void print_var_indexes(const char *name);
+void print_var_indices();
+void print_var_indices(const std::string &fname);
 //
 void init_gate_order();
 void gate_sort_inps_first();
