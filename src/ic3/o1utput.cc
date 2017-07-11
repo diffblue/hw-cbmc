@@ -102,7 +102,6 @@ void CompInfo::print_invariant(bool only_new_clauses)
 void CompInfo::print_fclauses()
 {
 
-
   std::string fname(out_file + ".clauses.cnf");
 
   CNF Res;

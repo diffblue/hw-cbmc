@@ -52,15 +52,13 @@ void read_next_name(CCUBE &Name,bool &neg,FILE *fp)
 void ic3_enginet::read_constraints(const std::string &source_name)
 {
 
-  std::string fname = source_name;
-  
-  fname += ".cnstr";  
+  std::string fname(source_name+".cnstr");
 
   FILE *fp = fopen(fname.c_str(),"r");
   if (fp == NULL) {
     Ci.M->error() << "file " << fname << " listing constraints is missing"
 	       << Ci.M->eom;
-    throw(ERROR1);
+    throw ERROR1;
   }
 
   while (true) {
@@ -125,7 +123,7 @@ void ic3_enginet::form_orig_names()
       if (l_c.is_constant()) continue;
       unsigned ind = l_c.var_no();
       irep_idt Lname = it->first;
-      std::string Sname = short_name(Lname);
+      std::string Sname(short_name(Lname));
       if (var.bits.size() > 1) {             
 	Sname +=  "[" + std::to_string(j) + "]";
       }
@@ -197,7 +195,6 @@ void ic3_enginet::print_lit2(unsigned var,bool sign)
        S H O R T _ N A M E
 
   ==============================*/
-
 std::string short_name(const irep_idt &Lname)
 {
   std::string Sname;

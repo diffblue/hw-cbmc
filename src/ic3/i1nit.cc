@@ -201,7 +201,7 @@ void CompInfo::form_cex()
   form_init_st(St_cube);
   Cex.push_back(St_cube);
  
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   accept_new_clauses(Gen_sat,Tr);

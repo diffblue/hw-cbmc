@@ -118,8 +118,8 @@ void ic3_enginet::form_inputs()
 	bool ok = form_orig_name(Name,lit);
 	assert(ok);}      
       else {
-	std::string Inp_name = "i" + std::to_string(lit_val);
-        conv_to_vect(Name,Inp_name);
+	std::string Inp_name("i" + std::to_string(lit_val));
+        Name = conv_to_vect(Inp_name);
       }
       Ci.Inps.insert(lit_val);
       add_input(Name,N,N->ninputs);

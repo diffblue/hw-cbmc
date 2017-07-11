@@ -34,7 +34,7 @@ void gen_fake_name(CCUBE &fake_name,int ind)
   fake_name.clear();
   fake_name.push_back(1); // add a non-character symbol
   
-  std::string Str = std::to_string(ind);
+  std::string Str(std::to_string(ind));
 
   for(size_t i=0;i < Str.size();i++) 
     fake_name.push_back(Str[i]);

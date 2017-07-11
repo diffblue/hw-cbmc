@@ -240,17 +240,17 @@ void conv_to_vect(CCUBE &Name1,const char *Name0)
     Name1.push_back(Name0[i]);
 } /* end of function conv_to_vect */
 
+
 /*===============================
 
      C O N V _ T O _ V E C T
 
   =============================*/
-void conv_to_vect(CCUBE &Name1,std::string &Name0)
+CCUBE conv_to_vect(std::string &Name)
 {
-  Name1.clear();
-  for (size_t i=0; i < Name0.size(); i++) 
-    Name1.push_back(Name0[i]);
-  
+
+  CCUBE V(Name.begin(),Name.end());
+  return(V);  
 
 } /* end of function conv_to_vect */
 
@@ -259,12 +259,11 @@ void conv_to_vect(CCUBE &Name1,std::string &Name0)
      C O N V _ T O _ V E C T
 
   =============================*/
-void conv_to_vect(CCUBE &Name1,const std::string &Name0)
+CCUBE conv_to_vect(const std::string &Name)
 {
-  Name1.clear();
-  for (size_t i=0; i < Name0.size(); i++) 
-    Name1.push_back(Name0[i]);
-  
+ 
+  CCUBE V(Name.begin(),Name.end());
+  return(V);  
 
 } /* end of function conv_to_vect */
 

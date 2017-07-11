@@ -101,14 +101,14 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
   
   SCUBE &Inps = Ci.Inps;
 
-	
+  std::string Name;
   if (Inps.find(lit) != Inps.end()) {
     {
-      std::string Name = "i" + std::to_string(lit);
-      conv_to_vect(Pin_names[0],Name);
+      Name = "i" + std::to_string(lit);
+      Pin_names[0] = conv_to_vect(Name);
    
       Name = "ni" + std::to_string(lit);
-      conv_to_vect(Pin_names[1],Name);
+      Pin_names[1] = conv_to_vect(Name);
     }
     return;
   }
@@ -116,20 +116,20 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
   SCUBE &Lats = Ci.Lats;
   if (Lats.find(lit) != Lats.end()) {
     {  
-      std::string Name = "l" + std::to_string(lit);
-      conv_to_vect(Pin_names[0],Name);
+      Name = "l" + std::to_string(lit);
+      Pin_names[0] = conv_to_vect(Name);
   
       Name = "nl" + std::to_string(lit);
-      conv_to_vect(Pin_names[1],Name);
+      Pin_names[1] = conv_to_vect(Name);
     }
     return;
   }
 
 
-  std::string Name = "a" + std::to_string(lit);
-  conv_to_vect(Pin_names[0],Name);
+  Name = "a" + std::to_string(lit);
+  Pin_names[0] = conv_to_vect(Name);
   Name = "na" + std::to_string(lit);
-  conv_to_vect(Pin_names[1],Name);
+  Pin_names[1] = conv_to_vect(Name);
 
    
 
@@ -179,7 +179,7 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
       Str_name = "nl" + std::to_string(nlit-1);
     else 
       Str_name = "na" + std::to_string(nlit-1);
-    conv_to_vect(Name,Str_name);
+    Name = conv_to_vect(Str_name);
     return;
   }
  
@@ -191,14 +191,13 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
   }
 
 
-
   if (Ci.Inps.find(nlit) != Ci.Inps.end())
     Str_name = "i" + std::to_string(nlit);
   else if (Ci.Lats.find(nlit) != Ci.Lats.end())
     Str_name = "l" + std::to_string(nlit);
   else
     Str_name = "a" + std::to_string(nlit);
-  conv_to_vect(Name,Str_name);
+  Name = conv_to_vect(Str_name);
   
 
 } /* end of function form_next_symb */

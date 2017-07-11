@@ -63,8 +63,8 @@ void ic3_enginet::add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol)
     return;
   }
 
-  std::string Str_name = "a" + std::to_string(lit1);
-  conv_to_vect(Name,Str_name);
+  std::string Str_name("a" + std::to_string(lit1));
+  Name = conv_to_vect(Str_name);
 
 } /* end of function add_gate_out_name */
 
@@ -110,15 +110,15 @@ void ic3_enginet::add_gate_inp_name(CCUBE &Name,literalt &lit,CUBE &Pol)
   std::string Str_name;
   if (Ci.Inps.find(lit1) != Ci.Inps.end()) {
     Str_name = "i" + std::to_string(lit1);
-    conv_to_vect(Name,Str_name);
+    Name = conv_to_vect(Str_name);
   }
   else if (Ci.Lats.find(lit1) != Ci.Lats.end()) {
     Str_name = "l" + std::to_string(lit1);
-    conv_to_vect(Name,Str_name);
+    Name = conv_to_vect(Str_name);
   }
   else {
     Str_name = "a" + std::to_string(lit1);
-    conv_to_vect(Name,Str_name);
+    Name = conv_to_vect(Str_name);
   }
 
 } /* end of function add_gate_inp_name */
@@ -225,12 +225,12 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
       Str_name = "l" + std::to_string(olit);
     else
       Str_name = "a" + std::to_string(olit);
-    conv_to_vect(Pin_names[0],Str_name);
+    Pin_names[0] = conv_to_vect(Str_name);
   }
 
  NEXT:
  
-  conv_to_vect(Pin_names[1],Ci.prop_name);
+  Pin_names[1] = conv_to_vect(Ci.prop_name);
   Out_names.push_back(Pin_names[1]);
 
   Circuit *N = Ci.N;

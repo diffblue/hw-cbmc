@@ -151,9 +151,8 @@ void ic3_enginet::form_init_constr_lits()
     literalt l_c=var.bits[0].current;
     if (l_c.is_constant()) continue;
     irep_idt Lname = it->first;
-    std::string Sname = short_name(Lname);
-    CCUBE K;
-    conv_to_vect(K,Sname);    
+    std::string Sname(short_name(Lname));
+    CCUBE K = conv_to_vect(Sname);
     if (Ci.Cgate_names.find(K) != Ci.Cgate_names.end())  {
       literalt lit = l_c;
       if (Ci.Cgate_names[K] != l_c.sign()) lit = !l_c;

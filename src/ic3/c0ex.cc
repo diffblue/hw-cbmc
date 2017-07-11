@@ -50,7 +50,7 @@ bool CompInfo::check_one_state_cex()
 
   int num_vars = std::max(num_ist_vars,num_prop_vars);
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,num_vars,Name);
 
   // add formulas Ist
@@ -87,7 +87,7 @@ bool CompInfo::check_two_state_cex()
 {
 
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   // add formulas Ist, Tr and Bad_states

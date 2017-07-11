@@ -104,7 +104,7 @@ void CompInfo::init_time_frame_solver(int tf_ind)
   SatSolver &Slvr = Time_frames[tf_ind].Slvr;
 
 
-  std::string Slv_name = "Tf_sat" + std::to_string(tf_ind);
+  std::string Slv_name("Tf_sat" + std::to_string(tf_ind));
   
   init_sat_solver(Slvr,max_num_vars0,Slv_name);
   
@@ -128,7 +128,7 @@ void CompInfo::init_time_frame_solver(int tf_ind)
 void CompInfo::init_lbs_sat_solver()
 {
 
-  std::string Name = "Lbs_sat";
+  std::string Name("Lbs_sat");
   init_sat_solver(Lbs_sat,max_num_vars0,Name);
 
   for (size_t i=0; i < Prop.size()-1; i++) 
@@ -168,7 +168,7 @@ void CompInfo::init_lbs_sat_solver()
 void CompInfo::init_lgs_sat_solver()
 {
 
-  std::string Name = "Lgs_sat";
+  std::string Name("Lgs_sat");
   init_sat_solver(Lgs_sat,max_num_vars0,Name);
   assert(Simp_PrTr.size() > 0);
 
@@ -189,7 +189,7 @@ void CompInfo::init_lgs_sat_solver()
   ======================================*/
 void CompInfo::init_bst_sat_solver()
 {
-  std::string Name = "Bst_sat";
+  std::string Name("Bst_sat");
   init_sat_solver(Bst_sat,max_num_vars,Name);
 
   // accept property and transition relation

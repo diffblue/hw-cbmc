@@ -57,7 +57,7 @@ bool CompInfo::ver_cex()
   M->result() << "Cex.size() = " << Cex.size() << M->eom;
   if (!ok) return(false);
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   if (Cex.size() == 1) goto FINISH;
   
   init_sat_solver(Gen_sat,max_num_vars,Name);
@@ -91,7 +91,7 @@ bool CompInfo::ver_cex()
 bool CompInfo::check_bad_state(CUBE &St)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
   add_neg_prop(Gen_sat);
   add_constr_lits2(Gen_sat);
@@ -140,7 +140,7 @@ bool CompInfo::check_transition(CUBE &St0,CUBE &St1)
 bool CompInfo::check_init_state(CUBE &St)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   accept_new_clauses(Gen_sat,Ist);

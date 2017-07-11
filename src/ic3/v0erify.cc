@@ -44,7 +44,7 @@ bool CompInfo::ver_trans_inv()
 bool CompInfo::ver_invar(CNF &H,CUBE &Old_nums)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   // add property
@@ -157,7 +157,7 @@ bool CompInfo::ver_prop()
 bool CompInfo::ver_ini_states(CNF &H)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
   
   accept_new_clauses(Gen_sat,Ist);  

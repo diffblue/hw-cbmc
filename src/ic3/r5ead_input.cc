@@ -75,7 +75,7 @@ bool ic3_enginet::form_orig_name(CCUBE &Name,literalt &lit,bool subtract)
 
   int var_num = lit.var_no();
   if (Gn[var_num].size() > 0) {
-    conv_to_vect(Name,Gn[lit.var_no()]);
+    Name = conv_to_vect(Gn[lit.var_no()]);
     return(true);
   }
 
@@ -83,7 +83,7 @@ bool ic3_enginet::form_orig_name(CCUBE &Name,literalt &lit,bool subtract)
  
   if (subtract) Str_name = "a" + std::to_string(lit.get()-1);
   else Str_name = "a" + std::to_string(lit.get());
-  conv_to_vect(Name,Str_name);
+  Name = conv_to_vect(Str_name);
   return(false);
 } /* end of function form_orig_name */
 

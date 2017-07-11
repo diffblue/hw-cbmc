@@ -32,10 +32,8 @@ void CompInfo::print_aiger_format()
   int num_buffs;
   check_circuit(num_buffs,num_consts);
   assert(num_consts <= 2);
-  std::string full_name;
   assert(!out_file.empty());
-  full_name = out_file;
-  full_name += ".aag";
+  std::string full_name(out_file += ".aag");
 
   std::ofstream Out_str(full_name.c_str(),std::ios::out);
   if (!Out_str) {

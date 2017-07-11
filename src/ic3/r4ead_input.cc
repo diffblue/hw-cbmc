@@ -104,8 +104,8 @@ void ic3_enginet::form_latch_name(CCUBE &Latch_name,literalt &lit)
     assert(ok);        
     return; }
 
-  std::string Str_name = "l" + std::to_string(lit.get());
-  conv_to_vect(Latch_name,Str_name);
+  std::string Str_name("l" + std::to_string(lit.get()));
+  Latch_name = conv_to_vect(Str_name);
 } /* end of function form_latch_name */
 
 
