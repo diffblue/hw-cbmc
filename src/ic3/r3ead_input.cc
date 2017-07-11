@@ -63,9 +63,8 @@ void ic3_enginet::add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol)
     return;
   }
 
-  std::ostringstream Buff;
-  Buff << "a" << lit1;
-  conv_to_vect(Name,Buff.str());
+  std::string Str_name = "a" + std::to_string(lit1);
+  conv_to_vect(Name,Str_name);
 
 } /* end of function add_gate_out_name */
 
@@ -107,19 +106,19 @@ void ic3_enginet::add_gate_inp_name(CCUBE &Name,literalt &lit,CUBE &Pol)
     return;
   }
 
-  std::ostringstream Buff;
-  
+ 
+  std::string Str_name;
   if (Ci.Inps.find(lit1) != Ci.Inps.end()) {
-    Buff << "i" << lit1;
-    conv_to_vect(Name,Buff.str());
+    Str_name = "i" + std::to_string(lit1);
+    conv_to_vect(Name,Str_name);
   }
   else if (Ci.Lats.find(lit1) != Ci.Lats.end()) {
-    Buff << "l" << lit1;
-    conv_to_vect(Name,Buff.str());
+    Str_name = "l" + std::to_string(lit1);
+    conv_to_vect(Name,Str_name);
   }
   else {
-    Buff << "a" << lit1;
-    conv_to_vect(Name,Buff.str());
+    Str_name = "a" + std::to_string(lit1);
+    conv_to_vect(Name,Str_name);
   }
 
 } /* end of function add_gate_inp_name */
@@ -206,7 +205,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   Pin_names.push_back(Dummy);
   Pin_names.push_back(Dummy);
 
-  std::ostringstream Buff;
+  std::string Str_name;
  
   if (prop_l.is_false())  {
     Ci.const_false_prop = true;
@@ -222,9 +221,11 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   if (orig_names) 
     form_orig_name(Pin_names[0],prop_l,prop_l.sign());
   else {
-    if (latch) Buff << "l" << olit;
-    else Buff << "a" << olit;
-    conv_to_vect(Pin_names[0],Buff.str());
+    if (latch)
+      Str_name = "l" + std::to_string(olit);
+    else
+      Str_name = "a" + std::to_string(olit);
+    conv_to_vect(Pin_names[0],Str_name);
   }
 
  NEXT:

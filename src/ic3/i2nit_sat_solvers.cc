@@ -104,10 +104,7 @@ void CompInfo::init_time_frame_solver(int tf_ind)
   SatSolver &Slvr = Time_frames[tf_ind].Slvr;
 
 
-  std::ostringstream Buff;
-  Buff << "Tf_sat" << tf_ind;
-  std::string Slv_name = Buff.str();
-
+  std::string Slv_name = "Tf_sat" + std::to_string(tf_ind);
   
   init_sat_solver(Slvr,max_num_vars0,Slv_name);
   

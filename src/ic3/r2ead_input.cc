@@ -104,45 +104,33 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
 	
   if (Inps.find(lit) != Inps.end()) {
     {
-      std::ostringstream Buff;
-      Buff << "i" << lit;
-      conv_to_vect(Pin_names[0],Buff.str());
-    }
-
-    {
-      std::ostringstream Buff;
-      Buff << "ni" << lit;
-      conv_to_vect(Pin_names[1],Buff.str());
+      std::string Name = "i" + std::to_string(lit);
+      conv_to_vect(Pin_names[0],Name);
+   
+      Name = "ni" + std::to_string(lit);
+      conv_to_vect(Pin_names[1],Name);
     }
     return;
   }
 
   SCUBE &Lats = Ci.Lats;
   if (Lats.find(lit) != Lats.end()) {
-    {
-      std::ostringstream Buff;
-      Buff << "l" << lit;
-      conv_to_vect(Pin_names[0],Buff.str());
-    }
-    {
-      std::ostringstream Buff;
-      Buff << "nl" << lit;
-      conv_to_vect(Pin_names[1],Buff.str());
+    {  
+      std::string Name = "l" + std::to_string(lit);
+      conv_to_vect(Pin_names[0],Name);
+  
+      Name = "nl" + std::to_string(lit);
+      conv_to_vect(Pin_names[1],Name);
     }
     return;
   }
 
-  {
-    std::ostringstream Buff;
-    Buff << "a" << lit;
-    conv_to_vect(Pin_names[0],Buff.str());
-  }
 
-  {
-    std::ostringstream Buff;
-    Buff << "na" << lit;
-    conv_to_vect(Pin_names[1],Buff.str());
-  }
+  std::string Name = "a" + std::to_string(lit);
+  conv_to_vect(Pin_names[0],Name);
+  Name = "na" + std::to_string(lit);
+  conv_to_vect(Pin_names[1],Name);
+
    
 
 } /* end of function form_inv_names */
@@ -179,18 +167,19 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
   nlit = next_lit.get();
 
   {
-    std::ostringstream Buff;
+    std::string Str_name;
     if (next_lit.sign()) {   
       if (orig_names) {
 	form_neg_orig_name(Name,next_lit);
 	return;}
       Ci.Invs.insert(nlit-1);
       if (Ci.Inps.find(nlit-1) != Ci.Inps.end())
-	Buff << "ni" << nlit-1;
+        Str_name = "ni" + std::to_string(nlit-1);
       else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end())
-	Buff << "nl" << nlit-1;
-      else Buff << "na" << nlit-1;
-      conv_to_vect(Name,Buff.str());
+        Str_name = "nl" + std::to_string(nlit-1);
+      else 
+        Str_name = "na" + std::to_string(nlit-1);
+      conv_to_vect(Name,Str_name);
       return;
     }
   }

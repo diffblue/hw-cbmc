@@ -32,7 +32,7 @@ bool CompInfo::ver_trans_inv()
   if (!ok) return(false);
   ok = ver_invar(H,Old_nums);
   if (!ok) return(false);
-  M->error() << "inductive invariant verification is ok" << M->eom;
+  M->result() << "inductive invariant verification is ok" << M->eom;
   return(true);
 } /* end of function ver_trans_inv */
 
