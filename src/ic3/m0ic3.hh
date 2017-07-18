@@ -274,7 +274,7 @@ public:
   void form_consts(Circuit *N);
   void form_constr_lits();
   void add_constrs();
-  void print_aiger_format();
+  void print_aiger_format(std::vector <literalt> &All_plits,bool orig_names);
 
 protected:
 

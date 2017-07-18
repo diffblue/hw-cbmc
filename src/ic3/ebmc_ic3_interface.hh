@@ -60,7 +60,7 @@ public:
   void print_lit(std::ostream& out,literalt a);
   std::string print_string(const irep_idt &id);
   void add_verilog_conv_constrs();
-  
+  void all_prop_lits(std::vector <literalt> &All_props);
 protected:
   netlistt netlist;
  

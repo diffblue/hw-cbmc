@@ -81,11 +81,13 @@ int ic3_enginet::operator()()
 
 
       read_ebmc_input();
-
+     
       if(cmdline.isset("aiger"))
         {
           Ci.M->status() << "converting to aiger format" << Ci.M->eom;
-          Ci.print_aiger_format();
+          std::vector<literalt> All_plits;
+          all_prop_lits(All_plits);
+          Ci.print_aiger_format(All_plits,orig_names);
           throw EARLY_EXIT;
         }
 

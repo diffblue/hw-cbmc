@@ -209,7 +209,9 @@ void print_gate_sort_mode();
 //
 //  related to printing out circuit in aiger format
 void check_circuit(int &num_buffs,int &num_consts);
-void print_aiger_header(std::ofstream &Out_str,int max_var,int num_gates);
+void print_aiger_header(std::ofstream &Out_str,
+                        std::vector <literalt> &All_plits,
+                        int max_var,int num_gates);
 void print_aiger_inps(std::ofstream &Out_str);
 void print_aiger_latches(std::ofstream &Out_str);
 int find_aiger_lit1(int gate_ind,char polarity);
@@ -227,3 +229,7 @@ void print_func_type(Gate &G,unsigned message_level);
 void my_printf(unsigned message_level,const char *format,...);
 void print_num_with_commas(unsigned message_level,const int &num);
 void print_bnd_sets1(unsigned message_level);
+void print_aiger_props(std::ofstream &Out_str,
+                       std::vector <literalt> &All_plits,
+                       bool orig_names);
+void form_prop_gate_name(CCUBE &Name,literalt &lit,CUBE &Pol,bool orig_names);

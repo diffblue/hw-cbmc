@@ -25,7 +25,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
  P R I N T _ A I G E R _ F O R M A T
 
   ====================================*/
-void CompInfo::print_aiger_format()
+void CompInfo::print_aiger_format(std::vector <literalt> &All_plits,bool orig_names)
 {
 
   int num_consts;
@@ -45,10 +45,13 @@ void CompInfo::print_aiger_format()
   int out_ind = form_aiger_gates(Gates);
 
   int max_var = find_max_aiger_var(Gates);
-  print_aiger_header(Out_str,max_var,Gates.size());
+  print_aiger_header(Out_str,All_plits,max_var,Gates.size());
   print_aiger_inps(Out_str);
   print_aiger_latches(Out_str);
-  print_aiger_output(Out_str,Gates,out_ind);
+  if (All_plits.size() == 1) 
+    print_aiger_output(Out_str,Gates,out_ind);
+  else
+    print_aiger_props(Out_str,All_plits,orig_names);
   print_aiger_constrs(Out_str);
   print_aiger_gates(Out_str,Gates);
   Out_str.close();
@@ -171,7 +174,9 @@ void CompInfo::print_aiger_inps(std::ofstream &Out_str)
     P R I N T _ A I G E R _ H E A D E R
 
   ======================================*/
-void CompInfo::print_aiger_header(std::ofstream &Out_str,int max_var,int num_gates)
+void CompInfo::print_aiger_header(std::ofstream &Out_str,
+                                  std::vector <literalt> &All_plits,
+                                  int max_var,int num_gates)
 {
 
   Out_str << "aag ";
@@ -179,10 +184,15 @@ void CompInfo::print_aiger_header(std::ofstream &Out_str,int max_var,int num_gat
   Out_str << max_var << " "; 
   Out_str << N->ninputs << " ";
   Out_str << N->nlatches << " ";
-  Out_str << "1 ";
+  if (All_plits.size() == 1)
+    Out_str << "1 ";
+  else Out_str << All_plits.size() << " ";
   Out_str << num_gates;
   if (Constr_gates.size() == 0)  Out_str << "\n";
-  else Out_str << " 0 " << Constr_gates.size() << "\n";
+  else if (All_plits.size() == 1)  Out_str << " 0 " <<
+                                  Constr_gates.size() << "\n";
+  else Out_str << " " << All_plits.size() << " " <<
+       Constr_gates.size() << "\n";
 } /* end of function print_aiger_header*/
 
 

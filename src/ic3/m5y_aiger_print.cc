@@ -20,6 +20,38 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*============================================
+
+      P R I N T _ A I G E R _ P R O P S
+
+  ============================================*/
+void CompInfo::print_aiger_props(std::ofstream &Out_str,
+                                 std::vector <literalt> &All_plits,
+                                 bool orig_names)
+{
+
+  
+  for (size_t i=0; i < All_plits.size(); i++) {
+    std::cout << "i = " << i << "\n";
+    CCUBE Name;
+    CUBE Pol;
+    form_prop_gate_name(Name,All_plits[i],Pol,orig_names);
+    if (N->Pin_list.find(Name) == N->Pin_list.end()) {
+      p();
+      print_name1(Name,true);
+      M->error() << cvect_to_str(Name) << M->eom;
+      print_blif3("tst.blif",N,*M);
+      throw ERROR1;
+    }
+    int gate_ind = N->Pin_list[Name];
+    int lit = find_aiger_lit1(gate_ind,Pol.back());
+    Out_str << lit << "\n";
+  }
+
+
+
+} /* end of function print_aiger_props */
+
 /*===========================================
 
      P R I N T _ A I G E R _ C O N S T R S
@@ -190,3 +222,54 @@ void CompInfo::print_func_type(Gate &G,unsigned message_level)
 
 } /* end of function print_func_type */
 
+
+/*=======================================
+
+   F O R M _ P R O P _ G A T E _ N A M E
+
+  ========================================*/
+void CompInfo::form_prop_gate_name(CCUBE &Name,literalt &lit,CUBE &Pol,
+                                   bool orig_names)
+{
+
+  if (lit.is_constant()) {
+    if (lit.is_false()) {
+      conv_to_vect(Name,"c0");
+      const_flags = const_flags | 1;
+      Pol.push_back(0);
+    }
+    else {
+      assert(lit.is_true());
+      conv_to_vect(Name,"c1");
+      const_flags = const_flags | 2;
+      Pol.push_back(0);
+    }
+    return;
+  }
+  
+  unsigned lit_val = lit.get();
+  unsigned lit1;
+  if (lit.sign()) {
+    Pol.push_back(1);
+    lit1 = lit_val-1;}
+  else {
+    Pol.push_back(0);
+    lit1 = lit_val;}
+
+  assert(!orig_names);
+ 
+  std::string Str_name;
+  if (Inps.find(lit1) != Inps.end()) {
+    Str_name = "i" + std::to_string(lit1);
+    Name = conv_to_vect(Str_name);
+  }
+  else if (Lats.find(lit1) != Lats.end()) {
+    Str_name = "l" + std::to_string(lit1);
+    Name = conv_to_vect(Str_name);
+  }
+  else {
+    Str_name = "a" + std::to_string(lit1);
+    Name = conv_to_vect(Str_name);
+  }
+
+} /* end of function form_prop_gate_name */

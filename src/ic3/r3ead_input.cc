@@ -68,7 +68,6 @@ void ic3_enginet::add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol)
 
 } /* end of function add_gate_out_name */
 
-
 /*=======================================
 
   A D D _ G A T E _ I N P _ N A M E
@@ -122,6 +121,7 @@ void ic3_enginet::add_gate_inp_name(CCUBE &Name,literalt &lit,CUBE &Pol)
   }
 
 } /* end of function add_gate_inp_name */
+
 
 /*=========================================
 

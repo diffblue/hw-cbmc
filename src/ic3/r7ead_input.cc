@@ -22,12 +22,64 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <trans-netlist/instantiate_netlist.h>
 #include "ebmc_ic3_interface.hh"
 
+/*====================================
+
+     A L L _ P R O P _ L I T S
+
+  ====================================*/
+void ic3_enginet::all_prop_lits(std::vector <literalt> &All_props)
+{
+
+  aig_prop_constraintt aig_prop(netlist);
+  aig_prop.set_message_handler(get_message_handler());
+    
+  const namespacet ns(symbol_table);
+  for(const auto &Prop : properties)
+    {
+      
+
+      if (Prop.expr.id()!=ID_sva_always) {
+        throw("unsupported property - only SVA always is implemented");
+      }
+
+      assert(Prop.expr.operands().size()==1);
+
+      exprt Oper = Prop.expr.op0();
+
+      bool found = banned_expr(Oper);
+      if (found) {
+        messaget *M = Ci.M;
+        M->error() << "verification of properties of this type by IC3" << M->eom;
+        M->error() << "is not implemented yet" << M->eom;
+        throw(ERROR1);
+      }
+      assert(Oper.type().id()==ID_bool);
+ 
+      // aig_prop_constraintt aig_prop(netlist);
+      // aig_prop.set_message_handler(get_message_handler());
+    
+      // const namespacet ns(symbol_table);
+
+      prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
+                                 get_message_handler());
+
+ 
+      printf("property literal %u\n",prop_l.get());
+      assert(!prop_l.is_false());
+      assert(!prop_l.is_true());    
+
+      All_props.push_back(prop_l);
+      
+    }
+  
+} /* end of function find_prop_lit */
+
 
 /*=====================================
 
-       P R I N T _ V A R _ M A P
+  P R I N T _ V A R _ M A P
 
- =====================================*/
+  =====================================*/
 void ic3_enginet::print_var_map(std::ostream &out)
 {
 
@@ -100,10 +152,10 @@ void ic3_enginet::print_var_map(std::ostream &out)
 
   
 
-    } /* end of function print_var_map */
+} /* end of function print_var_map */
 /*=========================================
 
-        A D D _ P S E U D O _ I N P S
+  A D D _ P S E U D O _ I N P S
 
   ==========================================*/
 void ic3_enginet::add_pseudo_inps(Circuit *N)
@@ -136,7 +188,7 @@ void ic3_enginet::add_pseudo_inps(Circuit *N)
 
 /*=========================================
 
- F O R M _ I N I T _ C O N S T R _ L I T S
+  F O R M _ I N I T _ C O N S T R _ L I T S
 
   ==========================================*/
 void ic3_enginet::form_init_constr_lits()
