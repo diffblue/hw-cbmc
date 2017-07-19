@@ -82,7 +82,8 @@ int assign_output_pin_number(std::map<CCUBE,int> &pin_list,
   else { /* an 'old' pin */
     pin_num=pin_list[name]; // add to input list the current gate input      
     if (gate_list[pin_num].flags.active == 1) {
-      M.error() << "two gates have the same name " << M.eom; 
+      M.error() << "two gates have the same name " << M.eom;
+      std::cout << "name.size() " << name.size() << "\n";
       M.error() << cvect_to_str(name) << M.eom;
       throw(ERROR1);   
     }

@@ -79,15 +79,13 @@ int ic3_enginet::operator()()
       orig_names = false;
 
 
-
-      read_ebmc_input();
+      std::vector <literalt> Plits;
+      read_ebmc_input(Plits);
      
       if(cmdline.isset("aiger"))
         {
-          Ci.M->status() << "converting to aiger format" << Ci.M->eom;
-          std::vector<literalt> All_plits;
-          all_prop_lits(All_plits);
-          Ci.print_aiger_format(All_plits,orig_names);
+          Ci.M->status() << "converting to aiger format" << Ci.M->eom;     
+          Ci.print_aiger_format(Plits,orig_names);
           throw EARLY_EXIT;
         }
 

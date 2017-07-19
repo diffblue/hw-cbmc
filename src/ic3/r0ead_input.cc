@@ -24,16 +24,17 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
     R E A D _ E B M C _ I N P U T
 
   ===============================*/
-void ic3_enginet::read_ebmc_input()
+void ic3_enginet::read_ebmc_input(std::vector <literalt> &All_plits)
 {
 
   store_constraints(cmdline.args[0]);
  
   form_orig_names();
  
-  form_circ_from_ebmc();
-  
-  assert(Ci.N->noutputs == 1);
+  form_circ_from_ebmc(All_plits);
+
+  if(cmdline.isset("aiger") == 0)
+    assert(Ci.N->noutputs == 1);
   assert(Ci.N->nlatches > 0);
 
   Ci.order_gates();
@@ -57,7 +58,7 @@ void ic3_enginet::read_ebmc_input()
         F O R M _ C I R C _ F R O M _ E B M C
 
   =============================================*/
-void ic3_enginet::form_circ_from_ebmc() 
+void ic3_enginet::form_circ_from_ebmc(std::vector <literalt> &Plits) 
 {
 
   Circuit *N = create_circuit();
@@ -68,14 +69,27 @@ void ic3_enginet::form_circ_from_ebmc()
 
   form_inputs();
 
-  find_prop_lit();
+
+  std::vector<std::string> Pnames;
+  if(cmdline.isset("aiger")) all_prop_lits(Plits,Pnames);
+  else  find_prop_lit();
  
+ 
+  
   form_latched_gates();
 
   form_gates();
  
   CDNF Out_names;
-  form_outp_buf(Out_names);
+  if (cmdline.isset("aiger") == 0) 
+    form_outp_buf(Out_names,prop_l,Ci.prop_name);
+  else {
+    for (size_t i = 0; i < Plits.size(); i++) {
+      form_outp_buf(Out_names,Plits[i],Pnames[i]);
+      printf("output name ");
+      print_name1(Out_names.back(),true);
+    }
+  }
   form_invs();
   Ci.form_consts(N);
  

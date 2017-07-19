@@ -21,11 +21,11 @@ public:
   bool orig_names;
 
   int operator()();
-  void read_ebmc_input();  
+  void read_ebmc_input(std::vector <literalt> &All_plits);  
   void find_prop_lit();
   void ebmc_form_latches();
   void gen_ist_lits(bvt &Ist_lits);
-  void form_circ_from_ebmc();
+  void form_circ_from_ebmc(std::vector <literalt> &All_plits);
   void form_inputs();
   void form_latched_gates();
   void add_new_latch(NamesOfLatches &Latches,
@@ -36,7 +36,8 @@ public:
   void add_gate_inp_name(CCUBE &Name,literalt &lit,CUBE &Pol);
   void add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol);
   void upd_gate_constrs(int node_ind,CUBE &Gate_inds);
-  void form_outp_buf(CDNF &Out_names);
+  void form_outp_buf(CDNF &Out_names,literalt &prop_lit,
+                     std::string &Prop_name);
   void form_latch_name(CCUBE &Latch_name,literalt &lit);
   //
  
@@ -60,7 +61,8 @@ public:
   void print_lit(std::ostream& out,literalt a);
   std::string print_string(const irep_idt &id);
   void add_verilog_conv_constrs();
-  void all_prop_lits(std::vector <literalt> &All_props);
+  void all_prop_lits(std::vector <literalt> &Plits,
+                     std::vector <std::string> &Pnames);
 protected:
   netlistt netlist;
  

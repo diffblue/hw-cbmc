@@ -80,7 +80,7 @@ void  check_fanout_free_inputs(Circuit *N,messaget &M)
 }/* end of function check_fanout_free_inputs */
 /*=======================================================
 
-  A S S I G N _ G A T E _ T Y P E 
+     A S S I G N _ G A T E _ T Y P E 
 
   The funciton assigns the GATE type to gates that
   are still have the type UNDEFINED. It also sets 

@@ -183,17 +183,20 @@ void ic3_enginet::form_gates()
     F O R M _ O U T P _ B U F
 
   ===================================*/
-void ic3_enginet::form_outp_buf(CDNF &Out_names)
+void ic3_enginet::form_outp_buf(CDNF &Out_names,literalt &prop_lit,
+                                std::string &Prop_name)
 {
 
  
-  unsigned olit = prop_l.get();
+  unsigned olit = prop_lit.get();
+ 
+  std::cout << "olit " << olit << "\n";
 
   Ci.const_false_prop = false;
   Ci.const_true_prop = false;
   
-  if (prop_l.is_constant() == 0)
-    if (prop_l.sign()) 
+  if (prop_lit.is_constant() == 0)
+    if (prop_lit.sign()) 
        olit--;
 
   assert(Ci.Inps.find(olit) == Ci.Inps.end());
@@ -207,11 +210,11 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
 
   std::string Str_name;
  
-  if (prop_l.is_false())  {
+  if (prop_lit.is_false())  {
     Ci.const_false_prop = true;
     conv_to_vect(Pin_names[0],"c0");
     goto NEXT;  }
-  if (prop_l.is_true()) {
+  if (prop_lit.is_true()) {
     Ci.const_true_prop = true;
     conv_to_vect(Pin_names[0],"c1");
     goto NEXT;
@@ -219,7 +222,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
 
  
   if (orig_names) 
-    form_orig_name(Pin_names[0],prop_l,prop_l.sign());
+    form_orig_name(Pin_names[0],prop_lit,prop_lit.sign());
   else {
     if (latch)
       Str_name = "l" + std::to_string(olit);
@@ -230,7 +233,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
 
  NEXT:
  
-  Pin_names[1] = conv_to_vect(Ci.prop_name);
+  Pin_names[1] = conv_to_vect(Prop_name);
   Out_names.push_back(Pin_names[1]);
 
   Circuit *N = Ci.N;
@@ -239,9 +242,9 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   // add cube specifying functionality
   CUBE C;
   // making the buffer an invertor
-  if (prop_l.is_constant()) C.push_back(-1);
+  if (prop_lit.is_constant()) C.push_back(-1);
   else 
-    if (prop_l.sign()) C.push_back(1);
+    if (prop_lit.sign()) C.push_back(1);
     else C.push_back(-1);
 
   Gate &G = N->get_gate(Gate_inds.back());

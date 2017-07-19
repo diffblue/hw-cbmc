@@ -27,13 +27,14 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
      A L L _ P R O P _ L I T S
 
   ====================================*/
-void ic3_enginet::all_prop_lits(std::vector <literalt> &All_props)
+void ic3_enginet::all_prop_lits(std::vector <literalt> &Plits,
+                                std::vector <std::string> &Pnames)
 {
 
-  aig_prop_constraintt aig_prop(netlist);
-  aig_prop.set_message_handler(get_message_handler());
+  // aig_prop_constraintt aig_prop(netlist);
+  // aig_prop.set_message_handler(get_message_handler());
     
-  const namespacet ns(symbol_table);
+  // const namespacet ns(symbol_table);
   for(const auto &Prop : properties)
     {
       
@@ -55,10 +56,10 @@ void ic3_enginet::all_prop_lits(std::vector <literalt> &All_props)
       }
       assert(Oper.type().id()==ID_bool);
  
-      // aig_prop_constraintt aig_prop(netlist);
-      // aig_prop.set_message_handler(get_message_handler());
+      aig_prop_constraintt aig_prop(netlist);
+      aig_prop.set_message_handler(get_message_handler());
     
-      // const namespacet ns(symbol_table);
+      const namespacet ns(symbol_table);
 
       prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
                                  get_message_handler());
@@ -68,11 +69,12 @@ void ic3_enginet::all_prop_lits(std::vector <literalt> &All_props)
       assert(!prop_l.is_false());
       assert(!prop_l.is_true());    
 
-      All_props.push_back(prop_l);
+      Plits.push_back(prop_l);
+      Pnames.push_back(id2string(Prop.name));
       
     }
   
-} /* end of function find_prop_lit */
+} /* end of function all_prop_lits */
 
 
 /*=====================================

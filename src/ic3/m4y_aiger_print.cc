@@ -66,7 +66,7 @@ int CompInfo::form_aiger_gates(DNF &Gates)
 {
 
   int ind = -1;
-  assert(N->Outputs.size() == 1);
+  assert(N->Outputs.size() > 0);
   size_t out_gate_ind = N->Outputs[0];
   for (size_t i=0; i < N->Gate_list.size(); i++) {
     Gate &G = N->Gate_list[i];
