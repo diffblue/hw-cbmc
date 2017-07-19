@@ -179,6 +179,7 @@ void CompInfo::print_aiger_header(std::ofstream &Out_str,
                                   int max_var,int num_gates)
 {
 
+  printf("Constr_gates.size() = %d\n",(int) Constr_gates.size());
   Out_str << "aag ";
 
   Out_str << max_var << " "; 
@@ -186,11 +187,12 @@ void CompInfo::print_aiger_header(std::ofstream &Out_str,
   Out_str << N->nlatches << " ";
   if (All_plits.size() == 1)
     Out_str << "1 ";
-  else Out_str << All_plits.size() << " ";
+  else Out_str << "0 ";
   Out_str << num_gates;
-  if (Constr_gates.size() == 0)  Out_str << "\n";
-  else if (All_plits.size() == 1)  Out_str << " 0 " <<
-                                  Constr_gates.size() << "\n";
+
+  if (All_plits.size() == 1)
+    if (Constr_gates.size() == 0)  Out_str << "\n";
+    else  Out_str << " 0 " << Constr_gates.size() << "\n";
   else Out_str << " " << All_plits.size() << " " <<
        Constr_gates.size() << "\n";
 } /* end of function print_aiger_header*/
