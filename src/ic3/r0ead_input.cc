@@ -86,8 +86,8 @@ void ic3_enginet::form_circ_from_ebmc(std::vector <literalt> &Plits)
   else {
     for (size_t i = 0; i < Plits.size(); i++) {
       form_outp_buf(Out_names,Plits[i],Pnames[i]);
-      printf("output name ");
-      print_name1(Out_names.back(),true);
+      //      printf("output name ");
+      //      print_name1(Out_names.back(),true);
     }
   }
   form_invs();

@@ -190,7 +190,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names,literalt &prop_lit,
  
   unsigned olit = prop_lit.get();
  
-  std::cout << "olit " << olit << "\n";
+  // std::cout << "olit " << olit << "\n";
 
   Ci.const_false_prop = false;
   Ci.const_true_prop = false;

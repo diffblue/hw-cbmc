@@ -24,6 +24,11 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
       P R I N T _ A I G E R _ P R O P S
 
+   Aiger format checks for satisfiability
+   (property literal is always 0)
+   while verilog format checks for validity
+   (property literal is always 1)
+
   ============================================*/
 void CompInfo::print_aiger_props(std::ofstream &Out_str,
                                  std::vector <literalt> &All_plits,
@@ -32,15 +37,14 @@ void CompInfo::print_aiger_props(std::ofstream &Out_str,
 
   
   for (size_t i=0; i < All_plits.size(); i++) {
-    std::cout << "i = " << i << "\n";
+    //std::cout << "i = " << i << "\n";
     CCUBE Name;
     CUBE Pol;
-    form_prop_gate_name(Name,All_plits[i],Pol,orig_names);
+    form_prop_gate_name(Name,All_plits[i],Pol,orig_names);  
     if (N->Pin_list.find(Name) == N->Pin_list.end()) {
       p();
       print_name1(Name,true);
-      M->error() << cvect_to_str(Name) << M->eom;
-      print_blif3("tst.blif",N,*M);
+      M->error() << cvect_to_str(Name) << M->eom;     
       throw ERROR1;
     }
     int gate_ind = N->Pin_list[Name];
@@ -236,13 +240,13 @@ void CompInfo::form_prop_gate_name(CCUBE &Name,literalt &lit,CUBE &Pol,
     if (lit.is_false()) {
       conv_to_vect(Name,"c0");
       const_flags = const_flags | 1;
-      Pol.push_back(0);
+      Pol.push_back(1);
     }
     else {
       assert(lit.is_true());
       conv_to_vect(Name,"c1");
       const_flags = const_flags | 2;
-      Pol.push_back(0);
+      Pol.push_back(1);
     }
     return;
   }
@@ -250,10 +254,10 @@ void CompInfo::form_prop_gate_name(CCUBE &Name,literalt &lit,CUBE &Pol,
   unsigned lit_val = lit.get();
   unsigned lit1;
   if (lit.sign()) {
-    Pol.push_back(1);
+    Pol.push_back(0);
     lit1 = lit_val-1;}
   else {
-    Pol.push_back(0);
+    Pol.push_back(1);
     lit1 = lit_val;}
 
   assert(!orig_names);

@@ -81,7 +81,7 @@ int ic3_enginet::operator()()
 
       std::vector <literalt> Plits;
       read_ebmc_input(Plits);
-     
+      // print_blif3("tst.blif",Ci.N,*(Ci.M));
       if(cmdline.isset("aiger"))
         {
           Ci.M->status() << "converting to aiger format" << Ci.M->eom;     

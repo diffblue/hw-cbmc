@@ -65,7 +65,7 @@ void ic3_enginet::all_prop_lits(std::vector <literalt> &Plits,
                                  get_message_handler());
 
  
-      printf("property literal %u\n",prop_l.get());
+      //      printf("property literal %u\n",prop_l.get());
       assert(!prop_l.is_false());
       assert(!prop_l.is_true());    
 
