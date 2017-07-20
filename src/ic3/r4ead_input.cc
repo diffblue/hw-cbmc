@@ -235,6 +235,11 @@ void ic3_enginet::gen_ist_lits(bvt &Ist_lits)
 
     literalt lit = stack.back();
     assert(lit.is_constant() == false);
+    // if (lit.is_constant()) {
+    //   printf("skipping constant init. literal\n");
+    //   stack.pop_back();
+    //   continue;
+    // }
     size_t var_num = lit.var_no();
     stack.pop_back();
     if (Visited.find(lit) != Visited.end()) 
