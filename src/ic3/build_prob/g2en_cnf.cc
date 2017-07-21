@@ -72,9 +72,10 @@ int form_index(CUBE &C)
 {
   int result = 0;
   for (size_t i=0; i < C.size();i++)
-    {assert(abs(C[i]) == i+1);
-      if (C[i] > 0)  result |= 1 << i;
-    }
+  {
+    assert((size_t) abs(C[i]) == i+1);
+    if (C[i] > 0)  result |= 1 << i;
+  }
 
   return(result);
 
