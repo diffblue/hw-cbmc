@@ -116,7 +116,8 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
       or_expr.operands().push_back(literal_exprt(!l));
       
     literalt property_literal=solver.convert(or_expr);
-    
+    solver.set_frozen(property_literal);
+
     bvt assumptions;
     assumptions.push_back(property_literal);
     solver.set_assumptions(assumptions);
