@@ -1,4 +1,3 @@
-typedef std::vector<std::string> GateNames;
 typedef std::map<int,int> LatchVal;
 typedef std::map<int,int> NondetVars;
 //
@@ -14,11 +13,15 @@ public:
 
   CompInfo Ci;
   GateNames Gn;
+  GateToLit Gate_to_lit; // Gate_to_lit[gate_ind] specifies the literal of
+                         // ic3_enginet's netlist corresponding to N->Gate_list[gate_ind]
+                         // It is currently used only for latches
   literalt prop_l;
   LatchVal Latch_val;
   NondetVars Nondet_vars;
   bool const0,const1;
   bool orig_names;
+  
 
   int operator()();
   void read_ebmc_input(std::vector <literalt> &All_plits);  

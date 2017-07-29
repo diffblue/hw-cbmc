@@ -5,7 +5,7 @@ module main(clk);
    reg [word_size:0] A1[nelems-1:0];
    reg [word_size:0] A2[nelems-1:0];
    reg     finished1,finished2;
-   reg     equiv;
+   reg     equiv,equiv0;
    reg [word_size:0] Tmp1,Tmp2;
    integer   i;
    reg       swap1,swap2;
@@ -24,6 +24,7 @@ module main(clk);
         finished1 = 0;
         finished2 = 0;
         equiv = 0;
+        equiv0 = 0;
         swap1 = 0;
         swap2 = 0;
         for (i=0; i < nelems;i=i+1)
@@ -69,16 +70,18 @@ module main(clk);
    end 
 
    always @(posedge clk) begin
-      // if(finished1 && finished2)
-      //   begin
       equiv = 1;
+      equiv0 = 1;
       for (i = 0; i < nelems-1; i=i+1)
-        equiv = equiv && (A1[i] == A2[i]);
-      //  end
+        begin
+           equiv0 = equiv0 && (A1[i][9] == A2[i][9]);
+           equiv = equiv && (A1[i] == A2[i]);
+        end;
    end
    
    p0:  assert property (!finished1 || !finished2 || equiv);
-   p1:  assert property (!finished1 || !finished2 || (A1[0] == A2[0]));
+   p1:  assert property (!finished1 || !finished2 || equiv0);
+  // p1:  assert property (!finished1 || !finished2 || (A1[0] == A2[0]));
    //p1:  assert property (!finished1 || (A1[0] < A1[1]) || (A1[0] == A1[1]));
    p2:  assert property (!finished1 || !finished2 || (A1[1] == A2[1]));
    p3:  assert property (!finished1 || !finished2 || (A1[2] == A2[2]));

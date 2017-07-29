@@ -33,6 +33,7 @@ typedef std::map<CLAUSE,int> ClauseTable;
 typedef std::map<std::string,int> NameTable;
 typedef std::map<CCUBE,int> ConstrNames;
 
+
 enum PrevOper {INIT, DELETE};
 enum VarType {INP,PRES_ST,NEXT_ST,INTERN};
 class compare_len {

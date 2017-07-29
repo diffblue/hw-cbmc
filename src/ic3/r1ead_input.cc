@@ -174,6 +174,7 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches, int init_val,
  
   int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,
 					 N->Gate_list,true,*Ci.M);
+  Gate_to_lit[pin_num] = pres_lit;
   Ci.upd_gate_constr_tbl(pres_lit.get(),pin_num);
  
  

@@ -54,7 +54,8 @@ module main(clk);
         end
       sorted = 1;
       for (i = 0; i < nelems-1; i=i+1)
-        sorted = sorted & ((A[i] < A[i+1]) || (A[i] == A[i+1]));
+        sorted = sorted && ((A[i] < A[i+1]) || (A[i] == A[i+1]));
+      assert  ((finished == 0) || (sorted == 1));
    end //
    
 
@@ -63,15 +64,16 @@ module main(clk);
 
    p0: assert property (sum == init_sum);
    p1: assert property (sum[7] == init_sum[7]);
-   p2: assert property (!finished || sorted);
-   p3:  assert property (!finished || (A[0] < A[1]) || (A[0] == A[1]));
-   p4:  assert property (!finished || (A[1] <= A[2]));
-   p5:  assert property (!finished || (A[2] <= A[3]));
-   p6:  assert property (!finished || (A[3] <= A[4]));
-   p7:  assert property (!finished || (A[4] <= A[5]));
-   p8:  assert property (!finished || (A[5] <= A[6]));
-   p9:  assert property (!finished || (A[6] <= A[7]));
-   p10:  assert property (!finished || (A[7] <= A[8]));
-   p11:  assert property (!finished || (A[8] <= A[9]));
+   p2: assert property (!finished);
+ 
+   p4:  assert property (!finished || (A[0] < A[1]) || (A[0] == A[1]));
+   p5:  assert property (!finished || (A[1] < A[2]) || (A[1] == A[2]));
+   p6:  assert property (!finished || (A[2] <= A[3]));
+   p7:  assert property (!finished || (A[3] <= A[4]));
+   // p8:  assert property (!finished || (A[4] <= A[5]));
+   // p9:  assert property (!finished || (A[5] <= A[6]));
+   // p10:  assert property (!finished || (A[6] <= A[7]));
+   // p11:  assert property (!finished || (A[7] <= A[8]));
+   // p12:  assert property (!finished || (A[8] <= A[9]));
   
 endmodule 

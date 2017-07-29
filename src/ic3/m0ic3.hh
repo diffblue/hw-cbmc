@@ -10,6 +10,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <ebmc/ebmc_base.h>
 
 extern int debug_flag;
+typedef std::map<int,literalt> GateToLit;
+typedef std::vector<std::string> GateNames;
 /*================================
 
   C L A S S   C O M P _ I N F O
@@ -32,6 +34,8 @@ public:
    
   CUBE Gate_to_var; // gate_to_var[gate_ind] gives the variable assigned to 
                     // the output of gate 'gate_ind'
+  
+                         
  
   int num_circ_vars; // number of variables assigned to gates of N
 
@@ -236,7 +240,7 @@ public:
   // public methods
   //
 
-  int run_ic3();
+  int run_ic3(GateNames &Gn,GateToLit &Gate_to_lit);
   int mic3();
   void init_parameters();
   void print_header();
@@ -244,7 +248,8 @@ public:
   bool check_init_states();
   void assign_var_type();
   void assign_value();
-  void print_invariant(bool only_new_clauses);
+  void print_invariant(bool only_new_clauses,GateNames &Gn,
+                       GateToLit &Gate_to_lit,bool orig_names);
   void print_fclauses();
   bool ver_trans_inv();
   void form_cex();

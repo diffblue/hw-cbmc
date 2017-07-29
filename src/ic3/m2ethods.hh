@@ -233,3 +233,7 @@ void print_aiger_props(std::ofstream &Out_str,
                        std::vector <literalt> &All_plits,
                        bool orig_names);
 void form_prop_gate_name(CCUBE &Name,literalt &lit,CUBE &Pol,bool orig_names);
+bool print_symb_dnf(CNF &A,std::string &fname,GateNames &Gn,
+                    GateToLit &Gate_to_lit);
+void print_symb_clause(CLAUSE &C,std::ofstream &Out_str,GateNames &Gn,
+                       GateToLit &Gate_to_lit);

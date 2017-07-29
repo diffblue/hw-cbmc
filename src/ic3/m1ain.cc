@@ -91,7 +91,7 @@ int ic3_enginet::operator()()
 
       netlistt().swap(this->netlist);
 
-      return(Ci.run_ic3());
+      return(Ci.run_ic3(Gn,Gate_to_lit));
     }
 
 
@@ -115,7 +115,7 @@ int ic3_enginet::operator()()
    R U N _ I C 3
 
    ====================*/
-int CompInfo::run_ic3()
+int CompInfo::run_ic3(GateNames &Gn,GateToLit &Gate_to_lit)
 {
   double usrtime0=0., systime0=0.;
   double usrtime=0., systime=0.;
@@ -143,8 +143,9 @@ int CompInfo::run_ic3()
             statistics = false;
             break;
           }
+        //        print_invariant(true,Gn,Gate_to_lit,true);
         if(print_inv_flag)
-          print_invariant(print_only_ind_clauses);
+          print_invariant(print_only_ind_clauses,Gn,Gate_to_lit,true);
         if(print_clauses_flag)
           print_fclauses();
         bool ok = ver_trans_inv();
@@ -163,7 +164,7 @@ int CompInfo::run_ic3()
         else if(print_cex_flag == 2)
           fprint_cex2();
         if(print_clauses_flag)
-          print_invariant(true);
+          print_invariant(true,Gn,Gate_to_lit,false);
 
         bool ok = ver_cex();
         if(ok)

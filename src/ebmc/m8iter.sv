@@ -1,29 +1,35 @@
-module main(out1, out2, enable ,clk, reset);
-output [7:0] out1;
-output [7:0] out2;
-input enable, clk, reset;
-reg [7:0] out1;
-reg [7:0] out2;
-initial begin
- out1 = 8'b0;
- out2 = 8'b0;
-end
-always @(posedge clk) begin
-if (reset) begin
-  out1 = 8'b0;
-  out2 = 8'b0;
-end else if (enable) begin
-  out1 = out1 + 1;
-  out2 = out2 + 1;
-end
-end
-   assert property (out1 == out2);
-   assert property (out1[0] == out2[0]);
-   assert property (out1[1] == out2[1]);
-   assert property (out1[2] == out2[2]);
-   assert property (out1[3] == out2[3]);
-   assert property (out1[4] == out2[4]);
-   assert property (out1[5] == out2[5]);
-   assert property (out1[6] == out2[6]);
-   assert property (out1[7] == out2[7]);
+module main(out1,out2,enable ,clk, reset);
+   parameter ms_bit = 7;
+   parameter thresh1 = 50;
+   parameter thresh2 = thresh1 + 10;
+   input             enable, clk, reset;
+   output            out1,out2;
+   reg [ms_bit:0]    sum1;
+   reg [ms_bit:0]    sum2;
+   integer           i;
+   initial begin
+      for (i=0; i <= ms_bit; i=i+1) begin
+         sum1[i] = 'b0;
+         sum2[i] = 'b0;
+      end
+   end
+   always @(posedge clk) begin
+      if (enable) begin
+         if (sum1 >= thesh1) sum1 = 0;
+         else sum1 = sum1 + 1;
+         if (sum2 >= thresh2) sum2 = 0;
+         else sum2 = sum2 + 1;
+      end              
+   end
+   assign out1 = (sum1 != thresh2 + 1);
+   assign out2 = (sum2 != thresh2 + 1);
+   p0: assert property (out1 == out2);
+   // assert property (sum1[0] == sum2[0]);
+   // assert property (sum1[1] == sum2[1]);
+   // assert property (sum1[2] == sum2[2]);
+   // assert property (sum1[3] == sum2[3]);
+   // assert property (sum1[4] == sum2[4]);
+   // assert property (sum1[5] == sum2[5]);
+   // assert property (sum1[6] == sum2[6]);
+   // assert property (sum1[7] == sum2[7]);
 endmodule 

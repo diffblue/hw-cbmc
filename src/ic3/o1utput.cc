@@ -17,6 +17,62 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*====================================
+
+  P R I N T _ S Y M B _ C L A U S E
+
+  ===================================*/
+void CompInfo::print_symb_clause(CLAUSE &C,std::ofstream &Out_str,GateNames &Gn,
+                                 GateToLit &Gate_to_lit)
+{
+  for (size_t i=0; i < C.size(); i++) {
+    int var_ind = abs(C[i])-1;
+    int gate_ind = var_ind;
+   
+    if (Gate_to_lit.find(gate_ind) == Gate_to_lit.end()) {
+      p();
+      M->error() << "gate_ind " << gate_ind << " is not found in";
+      M->error() << " Gate_to_lit" << M->eom;     
+      throw ERROR1;
+    }
+    literalt lit = Gate_to_lit[gate_ind];
+    unsigned ind = lit.var_no();
+    if (ind >= Gn.size()) {
+      p();
+      M->error() << "ind = " << ind << M->eom;
+      M->error() << "Gn.size() = " << Gn.size() << M->eom;
+      throw ERROR1;
+    }
+    if (i != 0) Out_str << " ";
+    if (C[i] < 0) Out_str << "~";
+    Out_str << Gn[ind];
+  }
+
+  Out_str << "\n";
+
+}/* end of function print_symb_clause */
+
+/*=========================================
+
+        P R I N T _ S Y M B _ D N F
+
+  =======================================*/
+bool CompInfo::print_symb_dnf(CNF &A,std::string &fname,GateNames &Gn,
+                              GateToLit &Gate_to_lit)
+{
+
+  std::ofstream Out_str(fname,std::ios::out);
+  if (!Out_str) return(false);
+
+  for (size_t i=0; i < A.size(); i++) {
+    CLAUSE &C = A[i];
+    print_symb_clause(C,Out_str,Gn,Gate_to_lit);
+
+  }
+  Out_str.close();
+  return(true);
+} /* end of function print_symb_dnf */
+
 /*================================
 
   F P R I N T _ C E X 2
@@ -72,7 +128,8 @@ void CompInfo::fprint_cex1()
   P R I N T _ I N V A R I A N T
 
   ==================================*/
-void CompInfo::print_invariant(bool only_new_clauses)
+void CompInfo::print_invariant(bool only_new_clauses,GateNames &Gn,
+                               GateToLit &Gate_to_lit,bool orig_names)
 {
 
   CNF H;
@@ -86,7 +143,9 @@ void CompInfo::print_invariant(bool only_new_clauses)
   
   if (inv_ind < 0) fname += ".clauses.cnf";
   else fname +=".inv.cnf";
-  bool success = print_dnf(Res,fname);
+  bool success;
+  if (orig_names) success = print_symb_dnf(Res,fname,Gn,Gate_to_lit);
+  else success = print_dnf(Res,fname);
   if (!success) {
     M->error() << "cannot open file " << fname << M->eom;
     throw(ERROR2);
