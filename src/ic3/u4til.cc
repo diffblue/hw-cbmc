@@ -16,16 +16,57 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*=====================================
+
+        P R I N T _ B R A N C H
+
+  ====================================*/
+void CompInfo::print_branch(CUBE &Vars,size_t num,GateNames &Gn,
+                            GateToLit &Gate_to_lit)
+{
+
+  for (size_t i=0; i < Vars.size(); i++) {
+    int var_ind =  Vars[i]-1;
+    int gate_ind = var_ind;
+    assert(Gate_to_lit.find(gate_ind) != Gate_to_lit.end());
+    literalt lit = Gate_to_lit[gate_ind];
+    unsigned ind = lit.var_no();
+    assert(ind <= Gn.size());
+    
+    printf(" || ");
+    if ((num & (1 << i)) == 0)  std::cout << "~";                               
+    std::cout << Gn[ind];
+  }
 
 
 
-void CompInfo::print_branch_props(CUBE &Vars,GateNames &Gn,
+} /* end of function print_branch */
+
+/*====================================================
+
+          P R I N T _ B R A N C H _ P R O P S
+
+  ====================================================*/
+void CompInfo::print_branch_props(int num,GateNames &Gn,
                                   GateToLit &Gate_to_lit)
 {
 
 
+  CUBE Vars;
 
-}
+  find_most_act(Vars,num);
+  
+  size_t max_val = 1 << Vars.size();
+
+  for (size_t i=0; i < max_val; i++) {
+    printf("assert property (~p0 ");
+    print_branch(Vars,i,Gn,Gate_to_lit);
+    printf(");\n");
+  }
+
+  
+
+} /* end of function print_branch_props */
 
 
 
@@ -85,7 +126,7 @@ void CompInfo::find_most_act(CUBE &Vars,int num)
   std::vector <ActInd> V;
   
   sort_bst_activity(V);
-  print_sorted_act(V);
+  //print_sorted_act(V);
   
   for (int i=0; i < num; i++) 
     Vars.push_back(V[i].second);

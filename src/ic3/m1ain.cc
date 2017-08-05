@@ -191,6 +191,8 @@ int CompInfo::run_ic3(GateNames &Gn,GateToLit &Gate_to_lit)
       M->result().precision(1);
       M->result() << "total time is " << usrtime-usrtime0 << " sec." << M->eom;
     }
+
+  print_branch_props(4,Gn,Gate_to_lit);
   return(ret_val);
 } /* end of function run_ic3 */
 
@@ -278,6 +280,5 @@ int CompInfo::mic3()
   delete_solver(Lbs_sat);
   delete_solver(Lgs_sat);
   CUBE Vars;
-  find_most_act(Vars,10);
   return(ret_val);
 } /* end of function mic3 */

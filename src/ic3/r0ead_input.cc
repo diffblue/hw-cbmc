@@ -90,6 +90,7 @@ void ic3_enginet::form_circ_from_ebmc(std::vector <literalt> &Plits)
       //      print_name1(Out_names.back(),true);
     }
   }
+  //print_name1(Out_names[0]); printf("\n");
   form_invs();
   Ci.form_consts(N);
  

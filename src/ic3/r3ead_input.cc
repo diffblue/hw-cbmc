@@ -220,7 +220,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names,literalt &prop_lit,
     goto NEXT;
   }
 
- 
+
   if (orig_names) 
     form_orig_name(Pin_names[0],prop_lit,prop_lit.sign());
   else {
@@ -232,7 +232,8 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names,literalt &prop_lit,
   }
 
  NEXT:
- 
+
+  print_name1(Pin_names[0]); printf("\n");
   Pin_names[1] = conv_to_vect(Prop_name);
   Out_names.push_back(Pin_names[1]);
 
