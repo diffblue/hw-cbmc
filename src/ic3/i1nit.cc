@@ -29,8 +29,8 @@ void CompInfo::ci_init()
   assert(max_pres_svar > 0);
   Lit_act0.assign(max_pres_svar,0.);
   Lit_act1.assign(max_pres_svar,0.);
-  Tmp_act0.assign(max_pres_svar,0);
-  Tmp_act1.assign(max_pres_svar,0);
+  Bst_act0.assign(max_pres_svar,0);
+  Bst_act1.assign(max_pres_svar,0);
 
   for (size_t i=0; i < Ist.size(); i++) 
     add_fclause2(Ist[i],0,false);

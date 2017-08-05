@@ -30,7 +30,7 @@ SEQ_CIRC = $(OBJ_DIR)/p1rint_blif.o $(OBJ_DIR)/p2rint_blif.o $(OBJ_DIR)/finish_g
            $(OBJ_DIR)/circuit.o $(OBJ_DIR)/a4dd_spec_buffs.o  $(OBJ_DIR)/a5dd_spec_buffs.o  \
            $(OBJ_DIR)/l0ast_touch.o $(OBJ_DIR)/l1ast_touch.o 
      
-OBJ_ROOT = $(OBJ_DIR)/m5y_aiger_print.o \
+OBJ_ROOT = $(OBJ_DIR)/u4til.o $(OBJ_DIR)/m5y_aiger_print.o \
            $(OBJ_DIR)/m4y_aiger_print.o  $(OBJ_DIR)/r7ead_input.o $(OBJ_DIR)/r6ead_input.o  \
            $(OBJ_DIR)/g2ate_ord.o $(OBJ_DIR)/i4nit_sat_solvers.o $(OBJ_DIR)/l1ift_states.o \
            $(OBJ_DIR)/r5ead_input.o  $(OBJ_DIR)/r4ead_input.o $(OBJ_DIR)/c4oi.o \

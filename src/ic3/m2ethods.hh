@@ -237,3 +237,11 @@ bool print_symb_dnf(CNF &A,std::string &fname,GateNames &Gn,
                     GateToLit &Gate_to_lit);
 void print_symb_clause(CLAUSE &C,std::ofstream &Out_str,GateNames &Gn,
                        GateToLit &Gate_to_lit);
+//
+//
+void upd_bst_activity(CUBE &S);
+void find_most_act(CUBE &Vars,int num);
+void print_branch_props(CUBE &Vars,GateNames &Gn,
+                                  GateToLit &Gate_to_lit);
+void sort_bst_activity(std::vector <ActInd> &V);
+void print_sorted_act(std::vector <ActInd> &V);

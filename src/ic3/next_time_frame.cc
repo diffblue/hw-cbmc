@@ -61,6 +61,7 @@ int CompInfo::next_time_frame()
     lift_bad_state(Bst_cube,St,Inps);
     CUBE Pst;
     extr_cut_assgns1(Pst,Pres_svars,Bst_sat);
+    upd_bst_activity(Pst);
     Inps.clear();
     extr_cut_assgns1(Inps,Inp_vars,Bst_sat);
     CUBE Gst_cube,Nxt_bst_cube;

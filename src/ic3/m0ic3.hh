@@ -133,13 +133,15 @@ public:
   DNF Flits1; // the same as 'Flits0' but for positive literals
 
 
+  FltCube Bst_act0; // Bst_act0[i] specifies the number of bad states considered by IC3
+                    // where the negative literal of variable 'i+1' was present
+  FltCube Bst_act1;  // the same as Bst_act0 but for positive literals
+  
   FltCube Lit_act0; // Lit_act0[i] describes the presence of the negative 
                     //literal of variable  'i+1' in clauses of F
   FltCube Lit_act1; // Lit_act1[i] describes the presence of the positive 
                     //literal of variable  'i+1' in clauses of F
 
-  FltCube Tmp_act0;
-  FltCube Tmp_act1;
 
 
   std::vector <TimeFrame> Time_frames; // Time_frames[i] specifies data 

@@ -277,5 +277,7 @@ int CompInfo::mic3()
   M->status() << "-------------" << M->eom;
   delete_solver(Lbs_sat);
   delete_solver(Lgs_sat);
+  CUBE Vars;
+  find_most_act(Vars,10);
   return(ret_val);
 } /* end of function mic3 */
