@@ -136,6 +136,13 @@ public:
   FltCube Bst_act0; // Bst_act0[i] specifies the number of bad states considered by IC3
                     // where the negative literal of variable 'i+1' was present
   FltCube Bst_act1;  // the same as Bst_act0 but for positive literals
+
+  int num_bstates; // counts the number of bad state cubes considered by IC3
+
+  int max_num_bstates; // specifies the maximum number of bstate cubes to be considered
+
+  int num_addit_pvars; // specifies the number of state variables used to generate
+                     // extra properties
   
   FltCube Lit_act0; // Lit_act0[i] describes the presence of the negative 
                     //literal of variable  'i+1' in clauses of F
@@ -421,7 +428,7 @@ const char UNKNOWN_STATE = 5;
 const int NO_JOINS = 0;
 const int WITH_JOINS = 1;
 
-
+const int MAX_NUM_BSTATES = 100000000;
 
 const int  MAX_MARKER = 1000000; // used in hash tables
 

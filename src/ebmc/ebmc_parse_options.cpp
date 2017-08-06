@@ -268,6 +268,8 @@ void ebmc_parse_optionst::help()
     "       --h                              print out help information\n"
     "       --new-mode                       new mode is switched on\n"
     "       --aiger                          print out the instance in aiger format\n"
+    "       --bad-states <nm>                                                      \n"
+    "       --gen-props <nm>                 add properties that involve <nm> state variables\n"
     
     //" --interpolation                   use bit-level interpolants\n"
     //" --interpolation-word              use word-level interpolants\n"

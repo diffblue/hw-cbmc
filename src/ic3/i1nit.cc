@@ -66,7 +66,7 @@ void CompInfo::ci_init()
   tot_ctg_cnt = 0;
   succ_ctg_cnt = 0;
   vac_true = false;
- 
+  num_bstates = 0;
 } /* end of function ci_init */
 
 /*=============================================

@@ -62,6 +62,10 @@ int CompInfo::next_time_frame()
     CUBE Pst;
     extr_cut_assgns1(Pst,Pres_svars,Bst_sat);
     upd_bst_activity(Pst);
+    if (num_bstates++ > max_num_bstates) {
+      ret_val = 3;
+      break;}
+      
     Inps.clear();
     extr_cut_assgns1(Inps,Inp_vars,Bst_sat);
     CUBE Gst_cube,Nxt_bst_cube;

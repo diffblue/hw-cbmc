@@ -43,6 +43,13 @@ void ic3_enginet::read_parameters()
 
   if (cmdline.isset("new-mode"))
     Ci.standard_mode = false;
+
+  if (cmdline.isset("gen-props")) 
+    Ci.num_addit_pvars = stoi(cmdline.get_value("gen-props"));
+
+  if (cmdline.isset("bad-states")) 
+    Ci.max_num_bstates = stoi(cmdline.get_value("bad-states"));
+ 
 } /* end of function read_parameters */
 
 /*==============================
@@ -98,6 +105,7 @@ void CompInfo::init_parameters()
   max_coi_depth = 10;
   constr_flag = false;
   standard_mode = true;
-  
+  max_num_bstates = MAX_NUM_BSTATES;
+  num_addit_pvars = -1;
   } /* end of function init_parameters */
 
