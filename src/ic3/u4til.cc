@@ -16,6 +16,45 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*====================================================
+
+        P R I N T _ O N E _ B R A N C H _ P R O P
+
+  ====================================================*/
+void CompInfo::print_one_branch_prop(int num,GateNames &Gn,
+                                  GateToLit &Gate_to_lit)
+{
+
+
+  CUBE Vars;
+
+  find_most_act(Vars,num);
+  
+ 
+  printf("assert property (~p0 ");
+
+
+  for (size_t i=0; i < Vars.size(); i++) {
+    int var_ind =  Vars[i]-1;
+    int gate_ind = var_ind;
+    assert(Gate_to_lit.find(gate_ind) != Gate_to_lit.end());
+    literalt lit = Gate_to_lit[gate_ind];
+    unsigned ind = lit.var_no();
+    assert(ind <= Gn.size());
+    
+    printf(" || ");
+    if (lrand48() % 2)  std::cout << "~";                               
+    std::cout << Gn[ind];
+  }
+
+
+  printf(");\n");
+  
+
+  
+
+} /* end of function print_one_branch_prop */
+
 /*=====================================
 
         P R I N T _ B R A N C H

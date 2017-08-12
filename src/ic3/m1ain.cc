@@ -193,7 +193,8 @@ int CompInfo::run_ic3(GateNames &Gn,GateToLit &Gate_to_lit)
     }
 
   if (num_addit_pvars > 0) 
-    print_branch_props(num_addit_pvars,Gn,Gate_to_lit);
+    //    print_branch_props(num_addit_pvars,Gn,Gate_to_lit);
+     print_one_branch_prop(num_addit_pvars,Gn,Gate_to_lit);
   
   return(ret_val);
 } /* end of function run_ic3 */

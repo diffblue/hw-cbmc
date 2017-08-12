@@ -247,3 +247,5 @@ void sort_bst_activity(std::vector <ActInd> &V);
 void print_sorted_act(std::vector <ActInd> &V);
 void print_branch(CUBE &Vars,size_t i,GateNames &Gn,
                   GateToLit &Gate_to_lit);
+void print_one_branch_prop(int num,GateNames &Gn,
+                                     GateToLit &Gate_to_lit);
