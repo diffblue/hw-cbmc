@@ -1,0 +1,32 @@
+language: cpp
+
+matrix:
+  include:
+
+    # Ubuntu Linux with glibc using g++
+    - os: linux
+      sudo: false
+      compiler: gcc
+      cache: ccache
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libwww-perl
+            - g++-6
+
+install:
+  - (cd lib/cbmc/src ; make minisat2-download)
+  - (cd src; cp config.inc.template config.inc)
+  - export CXX="ccache g++-6"
+
+script:
+  - (cd lib/cbmc/src ; make)
+  - (cd src ; make)
+  - (cd regression/ebmc; make test)
+  - (cd regression/verilog; make test)
+  - (cd regression/hw-cbmc; make test)
+
+before_cache:
+  - ccache -s
