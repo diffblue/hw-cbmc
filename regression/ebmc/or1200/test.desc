@@ -1,0 +1,8 @@
+CORE
+or1200_if.v
+ -module or1200_if -p "if_pc==1"
+^EXIT=10$
+^SIGNAL=0$
+\[command-line assertion\] always or1200_if\.if_pc == 1: FAILURE
+--
+^warning: ignoring
