@@ -276,8 +276,9 @@ bool ebmc_baset::parse_property(
 {
   namespacet ns(symbol_table);
 
-  languagest languages(ns, 
-    get_language_from_mode(main_symbol->mode));
+  languaget* language=get_language_from_mode(main_symbol->mode);
+  language->set_message_handler(get_message_handler());
+  languagest languages(ns, language);
 
   exprt expr;
   if(languages.to_expr(
