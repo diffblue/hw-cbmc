@@ -32,9 +32,9 @@ void show_modules(
 {
   unsigned count=0;
 
-  forall_symbols(it, symbol_table.symbols)
+  for(const auto &s : symbol_table.symbols)
   {
-    const symbolt &symbol=it->second;
+    const symbolt &symbol=s.second;
   
     if(symbol.type.id()==ID_module)
     {
