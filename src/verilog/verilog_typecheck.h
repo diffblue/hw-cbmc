@@ -78,11 +78,11 @@ protected:
   void get_parameter_values(
     const irept &module_source,
     const exprt::operandst &parameter_assignment,
-    expr_listt &parameter_values);
+    std::list<exprt> &parameter_values);
 
   void set_parameter_values(
     irept &module_source,
-    const expr_listt &parameter_values);
+    const std::list<exprt> &parameter_values);
 
   // interfaces
   void module_interface();
