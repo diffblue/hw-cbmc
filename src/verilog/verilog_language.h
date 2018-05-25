@@ -60,6 +60,11 @@ public:
     exprt &expr,
     const namespacet &ns) override;
 
+  bool generate_support_functions(symbol_tablet &) override
+  {
+    return false;
+  }
+
   std::unique_ptr<languaget> new_language() override
   { return util_make_unique<verilog_languaget>(); }
    
