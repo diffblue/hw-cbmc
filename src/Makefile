@@ -1,4 +1,4 @@
-SUBDIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger cprover
+SUBDIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger
 
 CPROVER_DIR = lib/cbmc/src
 export CPROVER_DIR
@@ -13,14 +13,15 @@ $(SUBDIRS):
 
 # Dependencies
 
-ebmc: trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger cprover
+ebmc: trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger cprover.dir
 
-hw-cbmc: trans-word-level trans-netlist verilog vhdl smvlang cprover
+hw-cbmc: trans-word-level trans-netlist verilog vhdl smvlang cprover.dir
 
 # building cbmc proper
 .PHONY: cprover.dir
-cprover:
-	$(MAKE) $(MAKEARGS) -C ../$(CPROVER_DIR)
+cprover.dir:
+	$(MAKE) $(MAKEARGS) -C ../$(CPROVER_DIR) \
+	CXXFLAGS='-D"LOCAL_IREP_IDS=<../../../src/hw_cbmc_irep_ids.h>" -Wall -pedantic -Werror -Wno-deprecated-declarations'
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 
