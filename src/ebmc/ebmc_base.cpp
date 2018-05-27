@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <iostream>
 
-#include <util/time_stopping.h>
 #include <util/get_module.h>
 #include <util/xml.h>
 #include <util/find_macros.h>
@@ -34,7 +33,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
-#include <langapi/languages.h>
 
 #include "ebmc_base.h"
 #include "ebmc_version.h"
@@ -99,7 +97,7 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
   status() << "Solving with "
            << solver.decision_procedure_text() << eom;
 
-  absolute_timet sat_start_time=current_time();
+  auto sat_start_time = std::chrono::steady_clock::now();
   
   // Use assumptions to check the properties separately
   
@@ -159,8 +157,12 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
     }
   }
 
-  statistics() << "Solver time: " << (current_time()-sat_start_time)
-               << eom;
+  auto sat_stop_time = std::chrono::steady_clock::now();
+
+  statistics()
+     << "Solver time: "
+     << std::chrono::duration<double>(current_time()-sat_start_time).count()
+     << eom;
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
