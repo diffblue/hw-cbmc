@@ -39,6 +39,27 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: make_next_state
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void make_next_state(exprt &expr)
+{
+  Forall_operands(it, expr)
+    make_next_state(*it);
+
+  if(expr.id()==ID_symbol)
+    expr.id(ID_next_symbol);
+}
+
+/*******************************************************************\
+
 Function: ebmc_baset::ebmc_baset
 
   Inputs:
