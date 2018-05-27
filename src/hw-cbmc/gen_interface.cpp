@@ -215,7 +215,9 @@ void gen_interfacet::gen_module(
   std::set<irep_idt>::iterator
     in_progress_it=modules_in_progress.insert(module.name).first;
 
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, module.name)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module.name);
+           it!=symbol_table.symbol_module_map.upper_bound(module.name);
+           it++)
   {
     const symbolt &symbol=lookup(it->second);
 
@@ -231,7 +233,9 @@ void gen_interfacet::gen_module(
 
   os << "struct module_" << module.base_name << " {\n";    
 
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, module.name)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module.name);
+           it!=symbol_table.symbol_module_map.upper_bound(module.name);
+           it++)
   {
     const symbolt &symbol=lookup(it->second);
     
