@@ -3,7 +3,9 @@ SRC = smv_language.cpp smv_parser.cpp smv_typecheck.cpp expr2smv.cpp \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CBMC)/src -I ..
+
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 CLEANFILES = smvlang$(LIBEXT) y.tab.h y.tab.cpp lex.yy.cpp y.tab.cpp.output y.output
 

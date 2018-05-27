@@ -45,6 +45,8 @@ include ../config.inc
 
 INCLUDES= -I .. -I $(CBMC)/src
 
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
+
 LIBS = ../ic3/minisat/build/release/lib/libminisat.a
 
 CLEANFILES = ebmc$(EXEEXT)

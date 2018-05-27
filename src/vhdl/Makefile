@@ -4,7 +4,9 @@ SRC = vhdl_language.cpp expr2vhdl.cpp vhdl_y.tab.cpp vhdl_lex.yy.cpp \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CBMC)/src -I ..
+
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 CLEANFILES = vhdl$(LIBEXT) vhdl_y.tab.cpp vhdl_y.tab.h vhdl_lex.yy.cpp y.output
 

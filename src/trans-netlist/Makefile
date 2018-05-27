@@ -6,7 +6,9 @@ SRC = bmc_map.cpp counterexample_netlist.cpp \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CBMC)/src -I ..
+
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 CLEANFILES = trans-netlist$(LIBEXT)
 

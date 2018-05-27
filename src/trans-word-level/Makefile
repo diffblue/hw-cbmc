@@ -4,7 +4,9 @@ SRC = get_trans.cpp show_modules.cpp unwind.cpp	word_level_trans.cpp \
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CBMC)/src -I ..
+
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 CLEANFILES = trans-word-level$(LIBEXT)
 

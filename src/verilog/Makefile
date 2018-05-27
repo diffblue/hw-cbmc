@@ -9,7 +9,9 @@ SRC = verilog_language.cpp verilog_y.tab.cpp verilog_lex.yy.cpp verilog_parser.c
 
 include ../config.inc
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CBMC)/src -I ..
+
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 CLEANFILES = verilog$(LIBEXT) verilog_y.tab.h verilog_y.tab.cpp \
              verilog_lex.yy.cpp verilog_y.output
