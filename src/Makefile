@@ -1,21 +1,23 @@
-SUBDIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger
+DIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger
 
 CPROVER_DIR = lib/cbmc/src
 export CPROVER_DIR
 
-all: hw-cbmc ebmc
+all: hw-cbmc.dir ebmc.dir
 
-.PHONY: $(SUBDIRS)
 .PHONY: clean
 
-$(SUBDIRS):
-	$(MAKE) -C $@
+$(patsubst %, %.dir, $(DIRS)):
+	## Entering $(basename $@)
+	$(MAKE) $(MAKEARGS) -C $(basename $@)
 
 # Dependencies
 
-ebmc: trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger cprover.dir
+ebmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir vhdl.dir \
+      smvlang.dir ic3.dir aiger.dir cprover.dir
 
-hw-cbmc: trans-word-level trans-netlist verilog vhdl smvlang cprover.dir
+hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
+         vhdl.dir smvlang.dir cprover.dir
 
 # building cbmc proper
 .PHONY: cprover.dir
