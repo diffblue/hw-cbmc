@@ -161,7 +161,7 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
 
   statistics()
      << "Solver time: "
-     << std::chrono::duration<double>(current_time()-sat_start_time).count()
+     << std::chrono::duration<double>(sat_stop_time-sat_start_time).count()
      << eom;
 
   // We return '0' if the property holds,
@@ -198,9 +198,9 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
     for(auto l : property.timeframe_literals)
       solver.set_frozen(l);
   }
-  
-  absolute_timet sat_start_time=current_time();
-  
+
+  auto sat_start_time = std::chrono::steady_clock::now();  
+
   status() << "Solving with " << solver.solver_text() << eom;
 
   for(propertyt &property : properties)
@@ -252,9 +252,13 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
       return 1;
     }
   }
+
+  auto sat_stop_time = std::chrono::steady_clock::now();  
     
-  statistics() << "Solver time: " << (current_time()-sat_start_time)
-               << eom;
+  statistics()
+    << "Solver time: "
+    << std::chrono::duration<double>(sat_stop_time-sat_start_time).count()
+    << eom;
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
