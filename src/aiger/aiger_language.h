@@ -79,6 +79,6 @@ public:
   }
 };
  
-languaget *new_aiger_language();
+std::unique_ptr<languaget> new_aiger_language();
 
 #endif

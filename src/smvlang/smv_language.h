@@ -77,6 +77,6 @@ public:
   smv_parse_treet smv_parse_tree;
 };
 
-languaget *new_smv_language();
+std::unique_ptr<languaget> new_smv_language();
  
 #endif

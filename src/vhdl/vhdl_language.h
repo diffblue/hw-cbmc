@@ -92,6 +92,6 @@ protected:
   vhdl_parse_treet parse_tree;
 };
  
-languaget *new_vhdl_language();
+std::unique_ptr<languaget> new_vhdl_language();
 
 #endif

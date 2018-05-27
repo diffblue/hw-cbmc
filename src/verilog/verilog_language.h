@@ -92,6 +92,6 @@ protected:
   verilog_parse_treet parse_tree;
 };
  
-languaget *new_verilog_language();
+std::unique_ptr<languaget> new_verilog_language();
 
 #endif
