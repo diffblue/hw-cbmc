@@ -1,10 +1,23 @@
-SRC = diameter.cpp main.cpp diatest.cpp show_properties.cpp \
-      k_induction.cpp ebmc_base.cpp ebmc_solvers.cpp bdd_engine.cpp \
-      ebmc_parse_options.cpp show_trans.cpp ebmc_languages.cpp \
+SRC = \
+      bdd_engine.cpp \
+      cegar/abstract.cpp \
+      cegar/bmc_cegar.cpp \
+      cegar/latch_ordering.cpp \
+      cegar/refine.cpp \
+      cegar/simulate.cpp \
+      cegar/verify.cpp \
+      diameter.cpp \
+      diatest.cpp \
+      ebmc_base.cpp \
+      ebmc_languages.cpp \
+      ebmc_parse_options.cpp \
+      ebmc_solvers.cpp \
+      k_induction.cpp \
+      main.cpp \
       negate_property.cpp \
-      cegar/bmc_cegar.cpp cegar/latch_ordering.cpp \
-      cegar/verify.cpp cegar/abstract.cpp cegar/refine.cpp \
-      cegar/simulate.cpp
+      show_properties.cpp \
+      show_trans.cpp \
+      #empty line
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
