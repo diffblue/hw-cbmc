@@ -21,8 +21,8 @@ SRC = \
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
-      $(CBMC)/src/ansi-c/string_constant$(OBJEXT) \
       $(CBMC)/src/util/c_types$(OBJEXT) \
+      $(CBMC)/src/goto-programs/system_library_symbols$(OBJEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/big-int/big-int$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
