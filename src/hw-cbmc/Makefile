@@ -37,6 +37,8 @@ include ../config.inc
 
 INCLUDES= -I $(CBMC)/src -I ..
 
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
+
 LIBS =
 
 CLEANFILES = hw-cbmc$(EXEEXT)
