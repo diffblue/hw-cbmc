@@ -255,8 +255,8 @@ Function: new_smv_language
 
 \*******************************************************************/
   
-languaget *new_smv_language()
+std::unique_ptr<languaget> new_smv_language()
 {
-  return new smv_languaget;
+  return util_make_unique<smv_languaget>();
 }
 
