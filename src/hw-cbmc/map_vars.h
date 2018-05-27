@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 void map_vars(
   symbol_tablet &symbol_table,
   const irep_idt &module,
-  expr_listt &constraints,
+  std::list<exprt> &constraints,
   message_handlert &message,
   unsigned no_timeframes);
 

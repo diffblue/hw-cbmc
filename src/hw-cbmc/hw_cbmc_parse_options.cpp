@@ -172,7 +172,7 @@ Function: hw_cbmc_parse_optionst::get_modules
 
 \*******************************************************************/
 
-int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
+int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints)
 {
   //
   // unwinding of transition systems

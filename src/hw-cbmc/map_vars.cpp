@@ -62,7 +62,7 @@ void instantiate_symbol(exprt &expr, unsigned timeframe)
 class map_varst:public messaget
 {
 public:
-  map_varst(symbol_tablet &_symbol_table, expr_listt &_constraints,
+  map_varst(symbol_tablet &_symbol_table, std::list<exprt> &_constraints,
             message_handlert &_message, unsigned _no_timeframes):
     messaget(_message),
     symbol_table(_symbol_table), constraints(_constraints),
@@ -73,7 +73,7 @@ public:
   
 protected:
   symbol_tablet &symbol_table;
-  expr_listt &constraints;
+  std::list<exprt> &constraints;
   unsigned no_timeframes;
   std::set<irep_idt> top_level_inputs;
 
@@ -769,7 +769,7 @@ Function: map_vars
 void map_vars(
   symbol_tablet &symbol_table,
   const irep_idt &module,
-  expr_listt &constraints,
+  std::list<exprt> &constraints,
   message_handlert &message,
   unsigned no_timeframes)
 {
