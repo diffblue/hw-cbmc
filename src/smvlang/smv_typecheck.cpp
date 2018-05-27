@@ -319,7 +319,9 @@ void smv_typecheckt::instantiate(
 
   std::set<irep_idt> var_identifiers;
 
-  forall_symbol_module_map(v_it, symbol_table.symbol_module_map, identifier)
+  for(auto v_it=symbol_table.symbol_module_map.lower_bound(identifier);
+      v_it!=symbol_table.symbol_module_map.upper_bound(identifier);
+      v_it++)
   {
     symbol_tablet::symbolst::const_iterator s_it2=
       symbol_table.symbols.find(v_it->second);
@@ -360,16 +362,16 @@ void smv_typecheckt::instantiate(
       v_it!=var_identifiers.end();
       v_it++)
   {
-    symbol_tablet::symbolst::iterator s_it2=
-      symbol_table.symbols.find(*v_it);
+    auto s_it2=
+      symbol_table.get_writeable(*v_it);
 
-    if(s_it2==symbol_table.symbols.end())
+    if(s_it2==nullptr)
     {
       error() << "symbol `" << *v_it << "' not found" << eom;
       throw 0;
     }
 
-    symbolt &symbol=s_it2->second;
+    symbolt &symbol=*s_it2;
 
     if(!symbol.value.is_nil())
     {
@@ -632,16 +634,16 @@ void smv_typecheckt::typecheck(
     if(define_map.find(identifier)!=define_map.end())
       convert_define(identifier);
 
-    symbol_tablet::symbolst::iterator s_it=symbol_table.symbols.find(identifier);
+    auto s_it=symbol_table.get_writeable(identifier);
 
-    if(s_it==symbol_table.symbols.end())
+    if(s_it==nullptr)
     {
       error().source_location=expr.find_source_location();
       error() << "variable `" << identifier << "' not found" << eom;
       throw 0;
     }
 
-    symbolt &symbol=s_it->second;
+    symbolt &symbol=*s_it;
     
     assert(symbol.type.is_not_nil());
     expr.type()=symbol.type;
@@ -1253,16 +1255,16 @@ void smv_typecheckt::collect_define(const exprt &expr)
 
   const irep_idt &identifier=op0.get(ID_identifier);
 
-  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
+  auto it=symbol_table.get_writeable(identifier);
 
-  if(it==symbol_table.symbols.end())
+  if(it==nullptr)
   {
     error() << "collect_define failed to find symbol `"
             << identifier << "'" << eom;
     throw 0;
   }
 
-  symbolt &symbol=it->second;
+  symbolt &symbol=*it;
 
   symbol.value.make_nil();
   symbol.is_input=false;
@@ -1304,16 +1306,16 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
     throw 0;
   }
   
-  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
+  auto it=symbol_table.get_writeable(identifier);
 
-  if(it==symbol_table.symbols.end())
+  if(it==nullptr)
   {
     error() << "convert_define failed to find symbol `"
             << identifier << "'" << eom;
     throw 0;
   }
 
-  symbolt &symbol=it->second;
+  symbolt &symbol=*it;
 
   d.in_progress=true;
   

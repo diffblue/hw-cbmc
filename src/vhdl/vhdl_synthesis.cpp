@@ -61,7 +61,7 @@ void vhdl_synthesist::synth_code(const codet &code)
       new_symbol.location.set_comment("assertion "+id2string(constant_expr.get_value()));
     }
     
-    if(symbol_table.move(new_symbol))
+    if(symbol_table.add(new_symbol))
     {
       error() << "failed to add property symbol" << eom;
       throw 0;
@@ -140,16 +140,15 @@ bool vhdl_synthesist::operator()()
 {
   try
   {
-    symbol_tablet::symbolst::iterator s_it=
-      symbol_table.symbols.find(module);
+    auto s_it=symbol_table.get_writeable(module);
 
-    if(s_it==symbol_table.symbols.end())
+    if(s_it==nullptr)
     {
       error() << "module `" << module << "' not found" << eom;
       throw 0;
     }
     
-    symbolt &symbol=s_it->second;
+    symbolt &symbol=*s_it;
     module_symbol=&symbol;
 
     property_counter=0;
