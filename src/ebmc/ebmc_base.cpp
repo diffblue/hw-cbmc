@@ -330,10 +330,9 @@ Function: ebmc_baset::get_model_properties
 
 bool ebmc_baset::get_model_properties()
 {
-  forall_symbol_module_map(
-    it,
-    symbol_table.symbol_module_map, 
-    main_symbol->name)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(main_symbol->name);
+      it!=symbol_table.symbol_module_map.upper_bound(main_symbol->name);
+      it++)
   {
     namespacet ns(symbol_table);
     const symbolt &symbol=ns.lookup(it->second);
