@@ -27,7 +27,7 @@ public:
   }
   
 protected:
-  virtual int get_modules(expr_listt &bmc_constraints);
+  virtual int get_modules(std::list<exprt> &bmc_constraints);
 
   irep_idt get_top_module();
   unsigned get_bound();
