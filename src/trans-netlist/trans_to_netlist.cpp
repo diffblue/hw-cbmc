@@ -155,7 +155,7 @@ literalt convert_trans_to_netlistt::new_input()
     symbol.type=bool_typet();
     symbol.is_input=true;
     symbol.base_name="input";
-    symbol_table.move(symbol);
+    symbol_table.add(symbol);
   }
 
   var_mapt::vart &var=dest.var_map.map[id];
@@ -186,8 +186,9 @@ void convert_trans_to_netlistt::map_vars(
 {
   boolbv_widtht boolbv_width(ns);
 
-  forall_symbol_module_map(it, symbol_table.symbol_module_map,
-                           module)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module);
+      it!=symbol_table.symbol_module_map.upper_bound(module);
+      it++)
   {
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(it->second);

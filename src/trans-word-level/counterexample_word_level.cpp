@@ -37,7 +37,9 @@ void show_state(
 
   const symbol_tablet &symbol_table=ns.get_symbol_table();
   
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module);
+      it!=symbol_table.symbol_module_map.upper_bound(module);
+      it++)
   {
     const symbolt &symbol=ns.lookup(it->second);
 
