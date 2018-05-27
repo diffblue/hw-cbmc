@@ -1857,8 +1857,7 @@ exprt verilog_synthesist::case_comparison(
       exprt new_case_operand=case_operand;
 
       // the pattern has the max type
-      unsignedbv_typet new_type;
-      new_type.set_width(pattern.type().get_int(ID_width));
+      unsignedbv_typet new_type(pattern.type().get_int(ID_width));
       new_case_operand.make_typecast(new_type);
     
       // we are using masking!
