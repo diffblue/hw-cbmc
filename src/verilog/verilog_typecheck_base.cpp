@@ -213,9 +213,7 @@ Function: verilog_typecheck_baset::index_type
 
 typet verilog_typecheck_baset::index_type(const typet &array_type)
 {
-  unsignedbv_typet result;
-  result.set_width(
+  return unsignedbv_typet(
     integer2size_t(
       address_bits(array_size(array_type)+array_offset(array_type))));
-  return result;
 }
