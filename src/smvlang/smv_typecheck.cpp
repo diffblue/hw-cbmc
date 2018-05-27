@@ -349,7 +349,7 @@ void smv_typecheckt::instantiate(
 
       var_identifiers.insert(symbol.name);
 
-      symbol_table.move(symbol);
+      symbol_table.add(symbol);
     }
   }
 
@@ -1377,56 +1377,58 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   // transition relation
 
-  symbolt module_symbol;
+  {
+    symbolt module_symbol;
 
-  module_symbol.base_name=smv_module.base_name;
-  module_symbol.pretty_name=smv_module.base_name;
-  module_symbol.name=smv_module.name;
-  module_symbol.module=module_symbol.name;
-  module_symbol.type=typet(ID_module);
-  module_symbol.mode="SMV";
-  module_symbol.value=transt();
-  module_symbol.value.operands().resize(3);
+    module_symbol.base_name=smv_module.base_name;
+    module_symbol.pretty_name=smv_module.base_name;
+    module_symbol.name=smv_module.name;
+    module_symbol.module=module_symbol.name;
+    module_symbol.type=typet(ID_module);
+    module_symbol.mode="SMV";
+    module_symbol.value=transt();
+    module_symbol.value.operands().resize(3);
 
-  exprt::operandst trans_invar, trans_init, trans_trans;
-  
-  convert_ports(smv_module, module_symbol.type);
+    exprt::operandst trans_invar, trans_init, trans_trans;
 
-  Forall_item_list(it, smv_module.items)
-    convert(*it);
+    convert_ports(smv_module, module_symbol.type);
 
-  flatten_hierarchy(smv_module);
-  
-  // we first need to collect all the defines
+    Forall_item_list(it, smv_module.items)
+      convert(*it);
 
-  Forall_item_list(it, smv_module.items)
-    if(it->is_define())
-      collect_define(it->expr);
+    flatten_hierarchy(smv_module);
 
-  // now turn them into INVARs
-  convert_defines(trans_invar);
+    // we first need to collect all the defines
 
-  // do the rest now
+    Forall_item_list(it, smv_module.items)
+      if(it->is_define())
+        collect_define(it->expr);
 
-  Forall_item_list(it, smv_module.items)
-    if(!it->is_define())
-      typecheck(*it);
+    // now turn them into INVARs
+    convert_defines(trans_invar);
 
-  Forall_item_list(it, smv_module.items)
-    if(it->is_invar())
-      trans_invar.push_back(it->expr);
-    else if(it->is_init())
-      trans_init.push_back(it->expr);
-    else if(it->is_trans())
-      trans_trans.push_back(it->expr);
+    // do the rest now
 
-  transt &trans=to_trans_expr(module_symbol.value);
-  
-  trans.invar()=conjunction(trans_invar);
-  trans.init()=conjunction(trans_init);
-  trans.trans()=conjunction(trans_trans);
+    Forall_item_list(it, smv_module.items)
+      if(!it->is_define())
+        typecheck(*it);
 
-  symbol_table.move(module_symbol);
+    Forall_item_list(it, smv_module.items)
+      if(it->is_invar())
+        trans_invar.push_back(it->expr);
+      else if(it->is_init())
+        trans_init.push_back(it->expr);
+      else if(it->is_trans())
+        trans_trans.push_back(it->expr);
+
+    transt &trans=to_trans_expr(module_symbol.value);
+
+    trans.invar()=conjunction(trans_invar);
+    trans.init()=conjunction(trans_init);
+    trans.trans()=conjunction(trans_trans);
+
+    symbol_table.add(module_symbol);
+  }
 
   // spec
 
@@ -1449,7 +1451,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.value=it->expr;
         spec_symbol.location=it->location;
 
-        symbol_table.move(spec_symbol);
+        symbol_table.add(spec_symbol);
       }
   }
 }
