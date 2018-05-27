@@ -203,8 +203,6 @@ int ebmc_parse_optionst::doit()
       return ebmc_base.do_mathsat();
     else if(cmdline.isset("yices"))
       return ebmc_base.do_yices();
-    else if(cmdline.isset("smt1"))
-      return ebmc_base.do_smt1();
     else if(cmdline.isset("smt2"))
       return ebmc_base.do_smt2();
     else if(cmdline.isset("prover"))
