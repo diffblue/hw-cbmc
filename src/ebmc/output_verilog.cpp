@@ -329,7 +329,8 @@ void output_verilog_rtlt::assign_symbol(
     throw 0;
   }
   
-  const symbolt &symbol=namespacet(symbol_table).lookup(symbol_expr);
+  const symbolt &symbol=
+    namespacet(symbol_table).lookup(symbol_expr.get(ID_identifier));
   
   if(symbol.is_state_var)
   {
@@ -659,7 +660,9 @@ void output_verilog_netlistt::latches(const irep_idt &module)
 {
   bool found=false;
 
-  forall_symbol_module_map(m_it, symbol_table.symbol_module_map, module)
+  for(auto m_it=symbol_table.symbol_module_map.lower_bound(module);
+      m_it!=symbol_table.symbol_module_map.lower_bound(module);
+      m_it++)
   {
     const irep_idt &identifier=m_it->second;
     
@@ -709,7 +712,9 @@ void output_verilog_rtlt::latches(const irep_idt &module)
 {
   bool found=false;
 
-  forall_symbol_module_map(m_it, symbol_table.symbol_module_map, module)
+  for(auto m_it=symbol_table.symbol_module_map.lower_bound(module);
+      m_it!=symbol_table.symbol_module_map.upper_bound(module);
+      m_it++)
   {
     const irep_idt &identifier=m_it->second;
     
@@ -756,7 +761,9 @@ void output_verilog_baset::wires(const irep_idt &module)
 {
   bool found=false;
 
-  forall_symbol_module_map(m_it, symbol_table.symbol_module_map, module)
+  for(auto m_it=symbol_table.symbol_module_map.lower_bound(module);
+      m_it!=symbol_table.symbol_module_map.upper_bound(module);
+      m_it++)
   {
     const irep_idt &identifier=m_it->second;
     
