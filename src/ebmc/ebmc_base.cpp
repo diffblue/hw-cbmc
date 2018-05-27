@@ -282,14 +282,14 @@ bool ebmc_baset::parse_property(
 {
   namespacet ns(symbol_table);
 
-  languagest languages(ns, 
-    get_language_from_mode(main_symbol->mode));
+  auto language = get_language_from_mode(main_symbol->mode);
 
   exprt expr;
-  if(languages.to_expr(
+  if(language->to_expr(
     property,
     id2string(main_symbol->module),
-    expr))
+    expr,
+    ns))
     return true;
 
   // We give it an implict always, as in SVA
@@ -301,7 +301,7 @@ bool ebmc_baset::parse_property(
   }
 
   std::string expr_as_string;
-  languages.from_expr(expr, expr_as_string);
+  language->from_expr(expr, expr_as_string, ns);
   debug() << "Property: " << expr_as_string << eom;
   debug() << "Mode: " << main_symbol->mode << eom;
 
