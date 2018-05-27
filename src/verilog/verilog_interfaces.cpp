@@ -177,7 +177,9 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
 
   // check that all declared ports are also in the port list
   
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, module_identifier)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module_identifier);
+           it!=symbol_table.symbol_module_map.upper_bound(module_identifier);
+           it++)
   {
     const symbolt &symbol=ns.lookup(it->second);
     
@@ -265,7 +267,7 @@ void verilog_typecheckt::interface_function_or_task(
 
     return_symbol.pretty_name=strip_verilog_prefix(return_symbol.name);
 
-    symbol_table.move(return_symbol);
+    symbol_table.add(return_symbol);
   }
 
   // do the declarations within the task/function
@@ -419,10 +421,9 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       // in Verilog terminology, but inputs and outputs.
       // We'll use the C terminology, and call them parameters.
       // Not to be confused with module parameters.
-      symbol_tablet::symbolst::iterator s_it=
-        symbol_table.symbols.find(function_or_task_name);
-      assert(s_it!=symbol_table.symbols.end());
-      symbolt &function_or_task_symbol=s_it->second;
+      auto s_it=symbol_table.get_writeable(function_or_task_name);
+      CHECK_RETURN(s_it!=nullptr);
+      symbolt &function_or_task_symbol=*s_it;
       code_typet::parameterst &parameters=
         to_code_type(function_or_task_symbol.type).parameters();
       parameters.push_back(code_typet::parametert());
@@ -434,7 +435,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       parameter.set(ID_input, input);
     }
 
-    symbol_tablet::symbolst::iterator result=
+    symbol_tablet::symbolst::const_iterator result=
       symbol_table.symbols.find(symbol.name);
       
     if(result!=symbol_table.symbols.end())
@@ -584,16 +585,15 @@ void verilog_typecheckt::interface_module_decl(
     symbol.pretty_name=
       strip_verilog_prefix(symbol.name);
 
-    symbol_tablet::symbolst::iterator result=
-      symbol_table.symbols.find(symbol.name);
+    auto result=symbol_table.get_writeable(symbol.name);
       
-    if(result==symbol_table.symbols.end())
+    if(result==nullptr)
     {
       symbol_table.add(symbol);
     }
     else
     {
-      symbolt &osymbol=result->second;
+      symbolt &osymbol=*result;
       
       if(osymbol.type.id()==ID_code)
       {

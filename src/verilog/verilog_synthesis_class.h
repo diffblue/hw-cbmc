@@ -185,7 +185,7 @@ protected:
     exprt &rhs,
     exprt &new_value);
 
-  symbolt &assignment_symbol(const exprt &lhs);
+  const symbolt &assignment_symbol(const exprt &lhs);
 
   void assignment_member_rec(
     const exprt &lhs,

@@ -603,7 +603,7 @@ void verilog_synthesist::replace_by_wire(
   assignment.next.value=what;
   new_wires.insert(new_symbol.name);
   
-  if(symbol_table.move(new_symbol))
+  if(symbol_table.add(new_symbol))
   {
     error() << "failed to add replace_by_wire symbol" << eom;
     throw 0;
@@ -783,7 +783,7 @@ Function: verilog_synthesist::assignment_symbol
 
 \*******************************************************************/
 
-symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
+const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 {
   const exprt *e=&lhs;
 
@@ -831,7 +831,7 @@ symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
       const irep_idt &identifier=e->get(ID_identifier);
 
-      symbol_tablet::symbolst::iterator it=
+      symbol_tablet::symbolst::const_iterator it=
         symbol_table.symbols.find(identifier);
 
       if(it==symbol_table.symbols.end())
@@ -1248,7 +1248,9 @@ void verilog_synthesist::expand_module_instance(
 
   std::list<irep_idt> new_symbols;
 
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, symbol.module)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(symbol.module);
+      it!=symbol_table.symbol_module_map.upper_bound(symbol.module);
+      it++)
   {
     const symbolt &symbol=ns.lookup(it->second);
     
@@ -1619,7 +1621,7 @@ void verilog_synthesist::synth_force_rec(
 
   // get symbol
 
-  symbolt &symbol=assignment_symbol(lhs);
+  const symbolt &symbol=assignment_symbol(lhs);
 
   assignmentt &assignment=assignments[symbol.name];
 
@@ -2950,7 +2952,9 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
 
   // find out about symbols of this module
 
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module);
+      it!=symbol_table.symbol_module_map.upper_bound(module);
+      it++)
     local_symbols.insert(it->second);
 
   // now convert the module items
