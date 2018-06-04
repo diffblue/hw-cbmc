@@ -66,12 +66,13 @@ void verilog_typecheck_exprt::convert_type(
     else
     {
       // we have a genuine array, and do a recursive call
-      dest=array_typet();
-      dest.set(ID_size, from_integer(width, integer_typet()));
+      typet array_subtype;
+      convert_type(subtype, array_subtype);
+      exprt size=from_integer(width, integer_typet());
+      dest=array_typet(array_subtype, size);
       dest.add_source_location()=
         static_cast<const source_locationt &>(src.find(ID_C_source_location));
       dest.set(ID_offset, from_integer(offset, integer_typet()));
-      convert_type(subtype, dest.subtype());
     }
   }
   else
