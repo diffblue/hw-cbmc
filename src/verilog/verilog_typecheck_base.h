@@ -31,15 +31,15 @@ public:
 
   // overloaded to use verilog syntax
   
-  virtual std::string to_string(const typet &type);
-  virtual std::string to_string(const exprt &expr);
+  std::string to_string(const typet &type);
+  std::string to_string(const exprt &expr);
 
 protected:
   const namespacet &ns;
   const irep_idt mode;
   
-  virtual std::size_t get_width(const exprt &expr) { return get_width(expr.type()); }
-  virtual std::size_t get_width(const typet &type);
+  std::size_t get_width(const exprt &expr) { return get_width(expr.type()); }
+  std::size_t get_width(const typet &type);
   mp_integer array_size(const typet &type);
   mp_integer array_offset(const typet &type);
   typet index_type(const typet &array_type);
