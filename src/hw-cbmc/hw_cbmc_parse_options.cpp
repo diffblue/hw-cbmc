@@ -116,6 +116,8 @@ int hw_cbmc_parse_optionst::doit()
   // do actual BMC
   return do_bmc(hw_bmc, goto_functions);
   #endif
+
+  return false;
 }
 
 /*******************************************************************\
@@ -143,7 +145,7 @@ irep_idt hw_cbmc_parse_optionst::get_top_module()
     return irep_idt();
 
   return get_module(
-    symbol_table, top_module, get_message_handler()).name;
+    goto_model.symbol_table, top_module, get_message_handler()).name;
 }
 
 /*******************************************************************\
@@ -194,7 +196,7 @@ int hw_cbmc_parse_optionst::get_modules(
       if(cmdline.isset("gen-interface"))
       {
         const symbolt &symbol=
-          namespacet(symbol_table).lookup(top_module);
+          namespacet(goto_model.symbol_table).lookup(top_module);
 
         if(cmdline.isset("outfile"))
         {
@@ -205,10 +207,10 @@ int hw_cbmc_parse_optionst::get_modules(
             return 6;
           }
 
-          gen_interface(symbol_table, symbol, true, out, std::cerr);
+          gen_interface(goto_model.symbol_table, symbol, true, out, std::cerr);
         }
         else
-          gen_interface(symbol_table, symbol, true, std::cout, std::cerr);
+          gen_interface(goto_model.symbol_table, symbol, true, std::cout, std::cerr);
 
         return 0; // done
       }
@@ -220,7 +222,7 @@ int hw_cbmc_parse_optionst::get_modules(
       status() << "Mapping variables" << eom;
 
       map_vars(
-        symbol_table,
+        goto_model.symbol_table,
         top_module,
         bmc_constraints,
         get_message_handler(),
@@ -236,7 +238,7 @@ int hw_cbmc_parse_optionst::get_modules(
   }
   else if(cmdline.isset("show-modules"))
   {
-    show_modules(symbol_table, ui_message_handler.get_ui());
+    show_modules(goto_model.symbol_table, ui_message_handler.get_ui());
     return 0; // done
   }
     

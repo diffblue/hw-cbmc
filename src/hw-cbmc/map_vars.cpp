@@ -439,9 +439,7 @@ const symbolt &map_varst::add_array(symbolt &symbol)
 
   exprt array_size=from_integer(no_timeframes, index_type());
   
-  array_typet new_type;
-  new_type.size()=array_size;
-  new_type.subtype()=full_type;
+  array_typet new_type(full_type, array_size);
   
   new_symbol.type=new_type;
   new_symbol.value=exprt(ID_nondet);
