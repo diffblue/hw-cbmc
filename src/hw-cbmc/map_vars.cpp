@@ -680,8 +680,7 @@ void map_varst::map_vars(const irep_idt &top_module)
   Forall_symbols(it, symbol_table.symbols)
   {
     if(it->second.mode==ID_C ||
-       it->second.mode==ID_cpp ||
-       it->second.mode==ID_SpecC)
+       it->second.mode==ID_cpp)
     {
       const irep_idt &base_name=it->second.base_name;
 
@@ -731,8 +730,7 @@ void map_varst::map_vars(const irep_idt &top_module)
   Forall_symbols(it, symbol_table.symbols)
   {
     if(it->second.mode==ID_C ||
-       it->second.mode==ID_cpp ||
-       it->second.mode==ID_SpecC)
+       it->second.mode==ID_cpp)
     {
       const irep_idt &base_name=it->second.base_name;
 
