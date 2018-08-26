@@ -11,11 +11,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/get_module.h>
 #include <util/string2int.h>
+#include <util/version.h>
 
 #include <goto-programs/show_properties.h>
 #include <goto-programs/set_properties.h>
 #include <trans-word-level/show_modules.h>
-#include <cbmc/version.h>
 #include <cbmc/cbmc_solvers.h>
 #include <langapi/mode.h>
 
