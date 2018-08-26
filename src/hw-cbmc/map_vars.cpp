@@ -62,7 +62,7 @@ void instantiate_symbol(exprt &expr, unsigned timeframe)
 class map_varst:public messaget
 {
 public:
-  map_varst(symbol_tablet &_symbol_table, expr_listt &_constraints,
+  map_varst(symbol_tablet &_symbol_table, std::list<exprt> &_constraints,
             message_handlert &_message, unsigned _no_timeframes):
     messaget(_message),
     symbol_table(_symbol_table), constraints(_constraints),
@@ -73,7 +73,7 @@ public:
   
 protected:
   symbol_tablet &symbol_table;
-  expr_listt &constraints;
+  std::list<exprt> &constraints;
   unsigned no_timeframes;
   std::set<irep_idt> top_level_inputs;
 
@@ -439,9 +439,7 @@ const symbolt &map_varst::add_array(symbolt &symbol)
 
   exprt array_size=from_integer(no_timeframes, index_type());
   
-  array_typet new_type;
-  new_type.size()=array_size;
-  new_type.subtype()=full_type;
+  array_typet new_type(full_type, array_size);
   
   new_symbol.type=new_type;
   new_symbol.value=exprt(ID_nondet);
@@ -682,8 +680,7 @@ void map_varst::map_vars(const irep_idt &top_module)
   Forall_symbols(it, symbol_table.symbols)
   {
     if(it->second.mode==ID_C ||
-       it->second.mode==ID_cpp ||
-       it->second.mode==ID_SpecC)
+       it->second.mode==ID_cpp)
     {
       const irep_idt &base_name=it->second.base_name;
 
@@ -733,8 +730,7 @@ void map_varst::map_vars(const irep_idt &top_module)
   Forall_symbols(it, symbol_table.symbols)
   {
     if(it->second.mode==ID_C ||
-       it->second.mode==ID_cpp ||
-       it->second.mode==ID_SpecC)
+       it->second.mode==ID_cpp)
     {
       const irep_idt &base_name=it->second.base_name;
 
@@ -769,7 +765,7 @@ Function: map_vars
 void map_vars(
   symbol_tablet &symbol_table,
   const irep_idt &module,
-  expr_listt &constraints,
+  std::list<exprt> &constraints,
   message_handlert &message,
   unsigned no_timeframes)
 {

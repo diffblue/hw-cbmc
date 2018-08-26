@@ -139,7 +139,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       new_symbol.mode=mode;
       new_symbol.module=module_identifier;
       new_symbol.value.make_nil();
-      convert_type(decl.type(), new_symbol.type);
+      new_symbol.type=convert_type(decl.type());
       new_symbol.base_name=name;
       new_symbol.pretty_name=strip_verilog_prefix(new_symbol.name);
       
@@ -224,7 +224,7 @@ void verilog_typecheckt::interface_function_or_task(
     typet return_type;
 
     if(decl_class==ID_function)
-      convert_type(decl.type(), return_type);
+      return_type=convert_type(decl.type());
     else
       return_type=empty_typet();
     
@@ -327,7 +327,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
   }
   else
   {
-    convert_type(decl.type(), type);
+    type=convert_type(decl.type());
     
     symbol.is_state_var=true;
 
@@ -498,7 +498,7 @@ void verilog_typecheckt::interface_module_decl(
   }
   else
   {
-    convert_type(decl.type(), type);
+    type=convert_type(decl.type());
 
     if(port_class==ID_input)
       symbol.is_input=true;

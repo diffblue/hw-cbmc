@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/mode.h>
 
 #include "hw_cbmc_parse_options.h"
-#include "hw_bmc.h"
+//#include "hw_bmc.h"
 #include "map_vars.h"
 #include "gen_interface.h"
 
@@ -50,7 +50,9 @@ int hw_cbmc_parse_optionst::doit()
 
   optionst options;
   get_command_line_options(options);
-  eval_verbosity();
+
+  eval_verbosity(
+    cmdline.get_value("verbosity"), messaget::M_STATISTICS, ui_message_handler);
 
   //
   // Print a banner
@@ -68,8 +70,10 @@ int hw_cbmc_parse_optionst::doit()
   if(cmdline.isset("vcd"))
     options.set_option("vcd", cmdline.get_value("vcd"));
 
+  symbol_tablet symbol_table;
+
   cbmc_solverst cbmc_solvers(options, symbol_table, ui_message_handler);
-  cbmc_solvers.set_ui(get_ui());
+  cbmc_solvers.set_ui(ui_message_handler.get_ui());
   std::unique_ptr<cbmc_solverst::solvert> cbmc_solver;
   
   try
@@ -83,6 +87,7 @@ int hw_cbmc_parse_optionst::doit()
     return 1;
   }
 
+  #if 0
   prop_convt &prop_conv=cbmc_solver->prop_conv();
   hw_bmct hw_bmc(options, symbol_table, ui_message_handler, prop_conv);
 
@@ -110,6 +115,9 @@ int hw_cbmc_parse_optionst::doit()
 
   // do actual BMC
   return do_bmc(hw_bmc, goto_functions);
+  #endif
+
+  return false;
 }
 
 /*******************************************************************\
@@ -137,7 +145,7 @@ irep_idt hw_cbmc_parse_optionst::get_top_module()
     return irep_idt();
 
   return get_module(
-    symbol_table, top_module, get_message_handler()).name;
+    goto_model.symbol_table, top_module, get_message_handler()).name;
 }
 
 /*******************************************************************\
@@ -172,7 +180,8 @@ Function: hw_cbmc_parse_optionst::get_modules
 
 \*******************************************************************/
 
-int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
+int hw_cbmc_parse_optionst::get_modules(
+  std::list<exprt> &bmc_constraints)
 {
   //
   // unwinding of transition systems
@@ -187,7 +196,7 @@ int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
       if(cmdline.isset("gen-interface"))
       {
         const symbolt &symbol=
-          namespacet(symbol_table).lookup(top_module);
+          namespacet(goto_model.symbol_table).lookup(top_module);
 
         if(cmdline.isset("outfile"))
         {
@@ -198,10 +207,10 @@ int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
             return 6;
           }
 
-          gen_interface(symbol_table, symbol, true, out, std::cerr);
+          gen_interface(goto_model.symbol_table, symbol, true, out, std::cerr);
         }
         else
-          gen_interface(symbol_table, symbol, true, std::cout, std::cerr);
+          gen_interface(goto_model.symbol_table, symbol, true, std::cout, std::cerr);
 
         return 0; // done
       }
@@ -213,7 +222,7 @@ int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
       status() << "Mapping variables" << eom;
 
       map_vars(
-        symbol_table,
+        goto_model.symbol_table,
         top_module,
         bmc_constraints,
         get_message_handler(),
@@ -229,7 +238,7 @@ int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
   }
   else if(cmdline.isset("show-modules"))
   {
-    show_modules(symbol_table, get_ui());
+    show_modules(goto_model.symbol_table, ui_message_handler.get_ui());
     return 0; // done
   }
     

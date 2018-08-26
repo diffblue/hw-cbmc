@@ -6,9 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
-
-#include <util/time_stopping.h>
+#include "bmc_cegar.h"
 
 #include <trans-netlist/instantiate_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
@@ -16,7 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/compute_ct.h>
 
-#include "bmc_cegar.h"
+#include <cassert>
+#include <chrono>
 
 /*******************************************************************\
 
@@ -40,7 +39,7 @@ void bmc_cegart::bmc_cegar()
     return;
   }
 
-  absolute_timet start_time=current_time();
+  auto start_time=std::chrono::steady_clock::now();
 
   try { cegar_loop(); }
   
@@ -48,8 +47,12 @@ void bmc_cegart::bmc_cegar()
   {
   }
 
-  statistics() << "CEGAR time: "
-               << (current_time()-start_time) << eom;
+  auto stop_time = std::chrono::steady_clock::now();
+
+  statistics()
+    << "CEGAR time: "
+    << std::chrono::duration<double>(stop_time-start_time).count()
+    << eom;
 }
 
 /*******************************************************************\

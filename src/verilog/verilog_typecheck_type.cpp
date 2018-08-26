@@ -22,15 +22,12 @@ Function: verilog_typecheck_exprt::convert_type
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_type(
-  const irept &src,
-  typet &dest)
+typet verilog_typecheck_exprt::convert_type(const irept &src)
 {
   if(src.is_nil() || src.id()==ID_reg)
   {
     // it's just a bit
-    dest=bool_typet();
-    return;
+    return bool_typet();
   }
   
   if(src.id()==ID_array)
@@ -55,24 +52,28 @@ void verilog_typecheck_exprt::convert_type(
     {
       // we have a bit-vector type, not an array
 
-      dest=typet(subtype.id()==ID_signed?ID_signedbv:ID_unsignedbv);
+      bitvector_typet dest(subtype.id()==ID_signed?ID_signedbv:ID_unsignedbv);
 
       dest.add_source_location()=
         static_cast<const source_locationt &>(src.find(ID_C_source_location));
-      dest.set(ID_width, integer2string(width));
+      dest.set_width(integer2size_t(width));
       dest.set(ID_C_little_endian, little_endian);
       dest.set(ID_C_offset, integer2string(offset));
+
+      return dest;
     }
     else
     {
       // we have a genuine array, and do a recursive call
-      typet array_subtype;
-      convert_type(subtype, array_subtype);
-      exprt size=from_integer(width, integer_typet());
-      dest=array_typet(array_subtype, size);
-      dest.add_source_location()=
+      const exprt size=from_integer(width, integer_typet());
+      typet s=convert_type(subtype);
+
+      array_typet result(s, size);
+      result.add_source_location()=
         static_cast<const source_locationt &>(src.find(ID_C_source_location));
-      dest.set(ID_offset, from_integer(offset, integer_typet()));
+      result.set(ID_offset, from_integer(offset, integer_typet()));
+
+      return result;
     }
   }
   else

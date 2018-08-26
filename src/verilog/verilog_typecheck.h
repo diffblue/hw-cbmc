@@ -63,7 +63,7 @@ public:
     assertion_counter(0)
   {}
 
-  virtual void typecheck();
+  void typecheck() override;
 
 protected:
   const namespacet ns;
@@ -163,8 +163,10 @@ protected:
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const std::string &target, exprt &dest);
 
+  // to be overridden
   virtual void convert_statements();
 
+  // to be overridden
   virtual bool implicit_wire(
     const irep_idt &identifier,
     const symbolt *&symbol);
@@ -181,6 +183,7 @@ protected:
   typedef std::map<irep_idt, mp_integer> genvarst;
   genvarst genvars;
 
+  // to be overridden
   virtual void genvar_value(
     const irep_idt &identifier,
     mp_integer &value)
@@ -206,7 +209,7 @@ protected:
   }
 
   // const functions
-  exprt elaborate_const_function_call(const class function_call_exprt &);
+  exprt elaborate_const_function_call(const class function_call_exprt &) override;
   void verilog_interpreter(const class verilog_statementt &);
   
   // counter for assertions

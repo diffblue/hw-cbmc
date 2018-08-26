@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <iostream>
 
-#include <util/time_stopping.h>
 #include <util/get_module.h>
 #include <util/xml.h>
 #include <util/find_macros.h>
@@ -34,10 +33,30 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
-#include <langapi/languages.h>
 
 #include "ebmc_base.h"
 #include "ebmc_version.h"
+
+/*******************************************************************\
+
+Function: make_next_state
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void make_next_state(exprt &expr)
+{
+  Forall_operands(it, expr)
+    make_next_state(*it);
+
+  if(expr.id()==ID_symbol)
+    expr.id(ID_next_symbol);
+}
 
 /*******************************************************************\
 
@@ -99,7 +118,7 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
   status() << "Solving with "
            << solver.decision_procedure_text() << eom;
 
-  absolute_timet sat_start_time=current_time();
+  auto sat_start_time = std::chrono::steady_clock::now();
   
   // Use assumptions to check the properties separately
   
@@ -159,8 +178,12 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
     }
   }
 
-  statistics() << "Solver time: " << (current_time()-sat_start_time)
-               << eom;
+  auto sat_stop_time = std::chrono::steady_clock::now();
+
+  statistics()
+     << "Solver time: "
+     << std::chrono::duration<double>(sat_stop_time-sat_start_time).count()
+     << eom;
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
@@ -196,9 +219,9 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
     for(auto l : property.timeframe_literals)
       solver.set_frozen(l);
   }
-  
-  absolute_timet sat_start_time=current_time();
-  
+
+  auto sat_start_time = std::chrono::steady_clock::now();  
+
   status() << "Solving with " << solver.solver_text() << eom;
 
   for(propertyt &property : properties)
@@ -250,9 +273,13 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
       return 1;
     }
   }
+
+  auto sat_stop_time = std::chrono::steady_clock::now();  
     
-  statistics() << "Solver time: " << (current_time()-sat_start_time)
-               << eom;
+  statistics()
+    << "Solver time: "
+    << std::chrono::duration<double>(sat_stop_time-sat_start_time).count()
+    << eom;
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
@@ -276,14 +303,14 @@ bool ebmc_baset::parse_property(
 {
   namespacet ns(symbol_table);
 
-  languagest languages(ns, 
-    get_language_from_mode(main_symbol->mode));
+  auto language = get_language_from_mode(main_symbol->mode);
 
   exprt expr;
-  if(languages.to_expr(
+  if(language->to_expr(
     property,
     id2string(main_symbol->module),
-    expr))
+    expr,
+    ns))
     return true;
 
   // We give it an implict always, as in SVA
@@ -295,7 +322,7 @@ bool ebmc_baset::parse_property(
   }
 
   std::string expr_as_string;
-  languages.from_expr(expr, expr_as_string);
+  language->from_expr(expr, expr_as_string, ns);
   debug() << "Property: " << expr_as_string << eom;
   debug() << "Mode: " << main_symbol->mode << eom;
 
@@ -324,10 +351,9 @@ Function: ebmc_baset::get_model_properties
 
 bool ebmc_baset::get_model_properties()
 {
-  forall_symbol_module_map(
-    it,
-    symbol_table.symbol_module_map, 
-    main_symbol->name)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(main_symbol->name);
+      it!=symbol_table.symbol_module_map.upper_bound(main_symbol->name);
+      it++)
   {
     namespacet ns(symbol_table);
     const symbolt &symbol=ns.lookup(it->second);

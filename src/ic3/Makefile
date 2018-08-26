@@ -20,6 +20,8 @@ MINISAT_INC = minisat
 
 INC_DIR = -I . -I build_prob -I seq_circ -I $(MINISAT_INC) -I $(CBMC)/src -I ../
 
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
+
 OBJ_DIR = .
 
 BUILD_PROB =   $(OBJ_DIR)/g3en_cnf.o  $(OBJ_DIR)/g0en_cnf.o $(OBJ_DIR)/g1en_cnf.o \

@@ -1,3 +1,4 @@
 [submodule "CBMC"]
 	path = lib/cbmc
 	url = https://github.com/diffblue/cbmc.git
+	ignore = dirty
