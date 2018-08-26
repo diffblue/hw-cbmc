@@ -10,9 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/std_expr.h>
 
-#include <solvers/prop/aig_prop.h>
 #include <solvers/flattening/boolbv_width.h>
 
+#include "aig_prop.h"
 #include "netlist.h"
 #include "trans_to_netlist.h"
 #include "instantiate_netlist.h"

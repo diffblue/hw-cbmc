@@ -11,8 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iosfwd>
 
-#include <solvers/prop/aig.h>
-
+#include "aig.h"
 #include "var_map.h"
 
 class netlistt:public aig_plus_constraintst

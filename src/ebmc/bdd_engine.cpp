@@ -10,9 +10,9 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <algorithm>
 
 #include <solvers/miniBDD/miniBDD.h>
-#include <solvers/prop/aig_prop.h>
 #include <solvers/sat/satcheck.h>
 
+#include <trans-netlist/aig_prop.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/instantiate_netlist.h>
