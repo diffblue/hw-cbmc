@@ -11,13 +11,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <string>
 #include <iostream>
 
-#include <util/xml.h>
-#include <util/xml_expr.h>
+#include <goto-programs/xml_expr.h>
+
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
-#include <util/prefix.h>
-#include <util/arith_tools.h>
-#include <util/std_expr.h>
 #include <util/pointer_offset_size.h>
+#include <util/prefix.h>
+#include <util/std_expr.h>
+#include <util/xml.h>
 
 #include <langapi/language_util.h>
 
@@ -232,9 +233,9 @@ void show_trans_trace(
       xml.output(std::cout);
     }
     break;
-    
-  default:
-    assert(false);
+    case ui_message_handlert::uit::JSON_UI:
+    default:
+      assert(false);
   }
 }
 
@@ -289,7 +290,7 @@ static mp_integer vcd_width(
     for(const auto & it : components)
     {
       const typet &subtype=it.type();
-      mp_integer sub_size=pointer_offset_size(subtype, ns);
+      mp_integer sub_size = *pointer_offset_size(subtype, ns);
       if(sub_size==-1) return -1;
       result+=sub_size;
     }

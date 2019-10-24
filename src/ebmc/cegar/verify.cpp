@@ -26,7 +26,7 @@ bool bmc_cegart::verify(unsigned bound)
 {
   status() << "Checking Abstract Model (bound=" << bound << ")" << eom;
 
-  satcheckt satcheck;
+  satcheckt satcheck{*message_handler};
   cnft &solver=satcheck;
 
   unwind(bound, abstract_netlist, solver);

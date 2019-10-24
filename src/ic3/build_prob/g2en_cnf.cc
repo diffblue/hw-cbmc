@@ -71,9 +71,10 @@ bool empty_cube(CUBE &C)
 int form_index(CUBE &C)
 {
   int result = 0;
-  for (size_t i=0; i < C.size();i++)
-    {assert(abs(C[i]) == i+1);
-      if (C[i] > 0)  result |= 1 << i;
+  for (size_t i = 0; i < C.size(); i++) {
+    assert((size_t)abs(C[i]) == i + 1);
+    if (C[i] > 0)
+      result |= 1 << i;
     }
 
   return(result);
@@ -159,6 +160,7 @@ void CompInfo::print_var_indexes(char *fname)
 	                break;
 	   case GATE: fprintf(fp,"G: ");
 	               break;
+           case UNDEFINED:
            default: assert(false);
            }
          fprint_name(fp,G.Gate_name);

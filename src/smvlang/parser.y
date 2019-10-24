@@ -1,6 +1,7 @@
 %{
 #include "smv_parser.h"
 #include "smv_typecheck.h"
+#include "util/std_types.h"
 
 #define YYSTYPE unsigned
 #define PARSER smv_parser
@@ -22,26 +23,23 @@ extern char *yytext;
 
 /*------------------------------------------------------------------------*/
 
-#define mto(x, y) stack(x).move_to_operands(stack(y))
-#define binary(x, y, id, z) { init(x, id); \
-  stack(x).move_to_operands(stack(y), stack(z)); }
+#define mto(x, y) stack_expr(x).move_to_operands(stack_expr(y))
 
-/*******************************************************************\
+  /*******************************************************************\
 
-Function: init
+  Function: init
 
-  Inputs:
+    Inputs:
 
- Outputs:
+   Outputs:
 
- Purpose:
+   Purpose:
 
-\*******************************************************************/
+  \*******************************************************************/
 
-static void init(exprt &expr)
-{
-  expr.clear();
-  PARSER.set_source_location(expr);
+  static void init(exprt & expr) {
+    expr.clear();
+    PARSER.set_source_location(expr);
 }
 
 /*******************************************************************\
@@ -59,7 +57,7 @@ Function: init
 static void init(YYSTYPE &expr)
 {
   newstack(expr);
-  init(stack(expr));
+  init(stack_expr(expr));
 }
 
 /*******************************************************************\
@@ -74,39 +72,65 @@ Function: init
 
 \*******************************************************************/
 
-static void init(YYSTYPE &expr, const irep_idt &id)
+ static void init(YYSTYPE &expr, const irep_idt &id)
 {
   init(expr);
-  stack(expr).id(id);
+  stack_expr(expr).id(id);
 }
 
-/*******************************************************************\
+ /// binary TODO[docu]
+ static void binary(YYSTYPE & x_result, YYSTYPE & y_lhs, const irep_idt &id,
+                    YYSTYPE &z_rhs, const typet &t)
+ {
+   init(x_result, id);
+   stack_expr(x_result).type() = t;
+   auto &lhs = stack_expr(y_lhs);
+   auto &rhs = stack_expr(z_rhs);
+   DATA_INVARIANT(lhs.type().id() != ID_nil || rhs.type().id() != ID_nil,
+                  "binary expr without types");
+   if (lhs.type().id() == ID_nil)
+     lhs.type() = rhs.type();
+   if (rhs.type().id() == ID_nil)
+     rhs.type() = lhs.type();
+   stack_expr(x_result).add_to_operands(std::move(lhs), std::move(rhs));
+ }
 
-Function: j_binary
+ /// binary TODO[docu]
+ static void binary_arith(YYSTYPE & x_result, YYSTYPE & y_lhs,
+                          const irep_idt &id, YYSTYPE &z_rhs)
+ {
+   init(x_result, id);
+   auto &lhs = stack_expr(y_lhs);
+   DATA_INVARIANT(lhs.type().id() != ID_nil, "arith expr without lhs type");
+   stack_expr(x_result).type() = lhs.type();
+   auto &rhs = stack_expr(z_rhs);
+   if (rhs.type().id() == ID_nil)
+     rhs.type() = lhs.type();
+   stack_expr(x_result).add_to_operands(std::move(lhs), std::move(rhs));
+ }
 
-  Inputs:
+ /*******************************************************************\
 
- Outputs:
+ Function: j_binary
 
- Purpose:
+   Inputs:
 
-\*******************************************************************/
+  Outputs:
 
-static void j_binary(YYSTYPE &dest, YYSTYPE &op1,
-                     const irep_idt &id, YYSTYPE &op2)
-{
-  if(stack(op1).id()==id)
-  {
-    dest=op1;
-    mto(dest, op2);
-  }
-  else if(stack(op2).id()==id)
-  {
-    dest=op2;
-    mto(dest, op1);
-  }
-  else
-    binary(dest, op1, id, op2);
+  Purpose:
+
+ \*******************************************************************/
+
+ static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id,
+                      YYSTYPE &op2, const typet &t) {
+   if (stack_expr(op1).id() == id) {
+     dest = op1;
+     mto(dest, op2);
+   } else if (stack_expr(op2).id() == id) {
+     dest = op2;
+     mto(dest, op1);
+   } else
+     binary(dest, op1, id, op2, t);
 }
 
 /*******************************************************************\
@@ -123,10 +147,10 @@ Function: new_module
 
 static void new_module(YYSTYPE &module)
 {
-  const std::string name=smv_module_symbol(stack(module).id_string());
+  const std::string name=smv_module_symbol(stack_expr(module).id_string());
   PARSER.module=&PARSER.parse_tree.modules[name];
   PARSER.module->name=name;
-  PARSER.module->base_name=stack(module).id_string();
+  PARSER.module->base_name=stack_expr(module).id_string();
   PARSER.module->used=true;
 }
 
@@ -165,7 +189,7 @@ static void new_module(YYSTYPE &module)
 %%
 
 start      : modules
-           | formula { PARSER.module->add_spec(stack($1));
+           | formula { PARSER.module->add_spec(stack_expr($1));
                        PARSER.module->used=true; }
            ;
 
@@ -194,19 +218,19 @@ semi_opt   :    /* empty */
 
 section    : VAR_Token vardecls
            | VAR_Token
-           | INIT_Token formula semi_opt { PARSER.module->add_init(stack($2), stack($1).source_location()); }
+           | INIT_Token formula semi_opt { PARSER.module->add_init(stack_expr($2), stack_expr($1).source_location()); }
            | INIT_Token
-           | TRANS_Token formula semi_opt { PARSER.module->add_trans(stack($2), stack($1).source_location()); }
+           | TRANS_Token formula semi_opt { PARSER.module->add_trans(stack_expr($2), stack_expr($1).source_location()); }
            | TRANS_Token
-           | SPEC_Token formula semi_opt { PARSER.module->add_spec(stack($2), stack($1).source_location()); }
+           | SPEC_Token formula semi_opt { PARSER.module->add_spec(stack_expr($2), stack_expr($1).source_location()); }
            | SPEC_Token
            | ASSIGN_Token assignments
            | ASSIGN_Token
            | DEFINE_Token defines
            | DEFINE_Token
-           | INVAR_Token formula semi_opt { PARSER.module->add_invar(stack($2), stack($1).source_location()); }
+           | INVAR_Token formula semi_opt { PARSER.module->add_invar(stack_expr($2), stack_expr($1).source_location()); }
            | INVAR_Token
-           | FAIRNESS_Token formula semi_opt { PARSER.module->add_fairness(stack($2), stack($1).source_location()); }
+           | FAIRNESS_Token formula semi_opt { PARSER.module->add_fairness(stack_expr($2), stack_expr($1).source_location()); }
            | FAIRNESS_Token
            | EXTERN_Token extern_var semi_opt
            | EXTERN_Token
@@ -214,7 +238,7 @@ section    : VAR_Token vardecls
  
 extern_var : variable_name EQUAL_Token QUOTE_Token
            {
-             const irep_idt &identifier=stack($1).get(ID_identifier);
+             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
 
              if(var.identifier!=irep_idt())
@@ -223,7 +247,7 @@ extern_var : variable_name EQUAL_Token QUOTE_Token
                YYERROR;
              }
              else
-               var.identifier=stack($3).id_string();
+               var.identifier=stack_expr($3).id_string();
            }
            ;
 
@@ -233,7 +257,7 @@ vardecls   : vardecl
 
 module_argument: variable_name
            {
-             const irep_idt &identifier=stack($1).get(ID_identifier);
+             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
              var.var_class=smv_parse_treet::mc_vart::ARGUMENT;
              PARSER.module->ports.push_back(identifier);
@@ -251,8 +275,8 @@ module_argument_list_opt: /* empty */
 type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
            {
              init($$, ID_array);
-             int start=atoi(stack($2).id().c_str());
-             int end=atoi(stack($4).id().c_str());
+             int start=atoi(stack_expr($2).id().c_str());
+             int end=atoi(stack_expr($4).id().c_str());
 
              if(end < start)
              {
@@ -268,9 +292,10 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
            | '{' enum_list '}' { $$=$2; }
            | NUMBER_Token DOTDOT_Token NUMBER_Token
            {
-             init($$, ID_range);
-             stack_type($$).set(ID_from, stack($1));
-             stack_type($$).set(ID_to, stack($3));
+             init($$, ID_signedbv);
+             stack_type($$).set(ID_width, 32);
+             //stack_type($$).set(ID_from, stack_expr($1));
+             //stack_type($$).set(ID_to, stack_expr($3));
            }
            | usertype
            ;
@@ -278,46 +303,46 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
 usertype   : module_name
            {
              init($$, "submodule");
-             stack($$).set(ID_identifier,
-                           smv_module_symbol(stack($1).id_string()));
+             stack_expr($$).set(ID_identifier,
+                           smv_module_symbol(stack_expr($1).id_string()));
            }
            | module_name '(' formula_list ')'
            {
              init($$, "submodule");
-             stack($$).set(ID_identifier,
-                           smv_module_symbol(stack($1).id_string()));
-             stack($$).operands().swap(stack($3).operands());
+             stack_expr($$).set(ID_identifier,
+                           smv_module_symbol(stack_expr($1).id_string()));
+             stack_expr($$).operands().swap(stack_expr($3).operands());
            }
            ;
 
 enum_list  : enum_element
            {
              init($$, ID_enumeration);
-             stack($$).add(ID_elements).get_sub().push_back(irept(stack($1).id()));
+             stack_expr($$).add(ID_elements).get_sub().push_back(irept(stack_expr($1).id()));
            }
            | enum_list ',' enum_element
            {
              $$=$1;
-             stack($$).add(ID_elements).get_sub().push_back(irept(stack($3).id())); 
+             stack_expr($$).add(ID_elements).get_sub().push_back(irept(stack_expr($3).id())); 
            }
            ;
 
 enum_element: STRING_Token
            {
              $$=$1;
-             PARSER.module->enum_set.insert(stack($1).id_string());
+             PARSER.module->enum_set.insert(stack_expr($1).id_string());
            }
            ;
 
 vardecl    : variable_name ':' type ';'
 {
-  const irep_idt &identifier=stack($1).get(ID_identifier);
+  const irep_idt &identifier=stack_expr($1).get(ID_identifier);
   smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
 
   switch(var.var_class)
   {
   case smv_parse_treet::mc_vart::UNKNOWN:
-    var.type=(typet &)stack($3);
+    var.type=(typet &)stack_expr($3);
     var.var_class=smv_parse_treet::mc_vart::DECLARED;
     break;
 
@@ -350,19 +375,19 @@ assignments: assignment
 
 assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            {
-             binary($$, $3, ID_equal, $6);
+             binary($$, $3, ID_equal, $6, bool_typet{});
 
-             if(stack($1).id()=="next")
+             if(stack_expr($1).id()=="next")
              {
-               exprt &op=stack($$).op0();
+               exprt &op=stack_expr($$).op0();
                exprt tmp("smv_next");
                tmp.operands().resize(1);
                tmp.op0().swap(op);
                tmp.swap(op);
-               PARSER.module->add_trans(stack($$));
+               PARSER.module->add_trans(stack_expr($$));
              }
              else
-               PARSER.module->add_init(stack($$));
+               PARSER.module->add_init(stack_expr($$));
            }
            ;
 
@@ -379,7 +404,7 @@ defines:     define
 
 define     : assignment_var BECOMES_Token formula ';'
 {
-  const irep_idt &identifier=stack($1).get(ID_identifier);
+  const irep_idt &identifier=stack_expr($1).get(ID_identifier);
   smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
 
   switch(var.var_class)
@@ -407,8 +432,8 @@ define     : assignment_var BECOMES_Token formula ';'
     assert(false);
   }
 
-  binary($$, $1, ID_equal, $3);
-  PARSER.module->add_define(stack($$));
+  binary($$, $1, ID_equal, $3, bool_typet{});
+  PARSER.module->add_define(stack_expr($$));
 }
 ;
 
@@ -418,27 +443,27 @@ formula    : term
 term       : variable_name
            | NEXT_Token '(' term ')'  { init($$, "smv_next"); mto($$, $3); }
            | '(' formula ')'          { $$=$2; }
-           | '{' formula_list '}'     { $$=$2; stack($$).id("smv_nondet_choice"); }
+           | '{' formula_list '}'     { $$=$2; stack_expr($$).id("smv_nondet_choice"); }
            | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
            | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
-           | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
+           | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5, stack_expr($5).type()); }
            | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
-           | NUMBER_Token             { init($$, ID_constant); stack($$).set(ID_value, stack($1).id()); stack($$).type()=typet(ID_integer); }
-           | TRUE_Token               { init($$, ID_constant); stack($$).set(ID_value, ID_true); stack($$).type()=typet(ID_bool); }
-           | FALSE_Token              { init($$, ID_constant); stack($$).set(ID_value, ID_false); stack($$).type()=typet(ID_bool); }
+| NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=signedbv_typet{32}; }
+           | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
+           | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
            | CASE_Token cases ESAC_Token { $$=$2; }
            | SWITCH_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            | MINUS_Token term %prec UMINUS { init($$, ID_unary_minus); mto($$, $2); }
-           | term MOD_Token term      { binary($$, $1, ID_mod, $3); }
-           | term TIMES_Token term    { binary($$, $1, ID_mult, $3); }
-           | term DIVIDE_Token term   { binary($$, $1, ID_div, $3); }
-           | term PLUS_Token term     { binary($$, $1, ID_plus, $3); }
-           | term MINUS_Token term    { binary($$, $1, ID_minus, $3); }
-           | term EQUIV_Token term    { binary($$, $1, ID_equal, $3); }
-           | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3); }
-           | term XOR_Token term      { j_binary($$, $1, ID_xor, $3); }
-           | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
-           | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
+           | term MOD_Token term      { binary_arith($$, $1, ID_mod, $3); }
+           | term TIMES_Token term    { binary_arith($$, $1, ID_mult, $3); }
+           | term DIVIDE_Token term   { binary_arith($$, $1, ID_div, $3); }
+           | term PLUS_Token term     { binary_arith($$, $1, ID_plus, $3); }
+           | term MINUS_Token term    { binary_arith($$, $1, ID_minus, $3); }
+           | term EQUIV_Token term    { binary($$, $1, ID_equal, $3, bool_typet{}); }
+           | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3, bool_typet{}); }
+           | term XOR_Token term      { j_binary($$, $1, ID_xor, $3, bool_typet{}); }
+           | term OR_Token term       { j_binary($$, $1, ID_or, $3, bool_typet{}); }
+           | term AND_Token term      { j_binary($$, $1, ID_and, $3, bool_typet{}); }
            | NOT_Token term           { init($$, ID_not); mto($$, $2); }
            | AX_Token  term           { init($$, ID_AX);  mto($$, $2); }
            | AF_Token  term           { init($$, ID_AF);  mto($$, $2); }
@@ -451,16 +476,16 @@ term       : variable_name
            | F_Token  term            { init($$, ID_F);  mto($$, $2); }
            | G_Token  term            { init($$, ID_G);  mto($$, $2); }
            | X_Token  term            { init($$, ID_X);  mto($$, $2); }
-           | term U_Token term        { binary($$, $1, ID_U, $3); }
-           | term EQUAL_Token    term { binary($$, $1, ID_equal,  $3); }
-           | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3); }
-           | term LT_Token       term { binary($$, $1, ID_lt,  $3); }
-           | term LE_Token       term { binary($$, $1, ID_le, $3); }
-           | term GT_Token       term { binary($$, $1, ID_gt,  $3); }
-           | term GE_Token       term { binary($$, $1, ID_ge, $3); }
-           | term UNION_Token    term { binary($$, $1, "smv_union", $3); }
-           | term IN_Token       term { binary($$, $1, "smv_setin", $3); }
-           | term NOTIN_Token    term { binary($$, $1, "smv_setnotin", $3); }
+           | term U_Token term        { binary($$, $1, ID_U, $3, stack_expr($1).type()); }
+           | term EQUAL_Token    term { binary($$, $1, ID_equal,  $3, bool_typet{}); }
+           | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3, bool_typet{}); }
+           | term LT_Token       term { binary($$, $1, ID_lt,  $3, bool_typet{}); }
+           | term LE_Token       term { binary($$, $1, ID_le, $3, bool_typet{}); }
+           | term GT_Token       term { binary($$, $1, ID_gt,  $3, bool_typet{}); }
+           | term GE_Token       term { binary($$, $1, ID_ge, $3, bool_typet{}); }
+           | term UNION_Token    term { binary($$, $1, "smv_union", $3, bool_typet{}); }
+           | term IN_Token       term { binary($$, $1, "smv_setin", $3, bool_typet{}); }
+           | term NOTIN_Token    term { binary($$, $1, "smv_setnotin", $3, bool_typet{}); }
            ;
 
 formula_list: formula { init($$); mto($$, $1); }
@@ -469,7 +494,7 @@ formula_list: formula { init($$); mto($$, $1); }
 
 variable_name: qstring_list
            {
-             const irep_idt &id=stack($1).id();
+             const irep_idt &id=stack_expr($1).id();
 
              bool is_enum=(PARSER.module->enum_set.find(id)!=
                            PARSER.module->enum_set.end());
@@ -484,58 +509,61 @@ variable_name: qstring_list
              else if(is_enum)
              {
                init($$, ID_constant);
-               stack($$).type()=typet(ID_enumeration);
-               stack($$).set(ID_value, stack($1).id());
+               stack_expr($$).type()=typet(ID_enumeration);
+               stack_expr($$).set(ID_value, id);
              }
              else // not an enum, probably a variable
              {
                init($$, ID_symbol);
-               stack($$).set(ID_identifier, stack($1).id());
-               //PARSER.module->vars[stack($1).id()];
+               stack_expr($$).set(ID_identifier, id);
+               auto var_it = PARSER.module->vars.find(id);
+               if(var_it!= PARSER.module->vars.end())
+                 stack_expr($$).type()=var_it->second.type;
+               //PARSER.module->vars[stack_expr($1).id()];
              }
            }
            | QUOTE_Token
            {
-             const irep_idt &id=stack($1).id();
+             const irep_idt &id=stack_expr($1).id();
 
              init($$, ID_symbol);
-             stack($$).set(ID_identifier, id);
+             stack_expr($$).set(ID_identifier, id);
              PARSER.module->vars[id];
            }
            ;
 
 qstring_list: QSTRING_Token
            {
-             init($$, std::string(stack($1).id_string(), 1)); // remove backslash
+             init($$, std::string(stack_expr($1).id_string(), 1)); // remove backslash
            }
            | STRING_Token
            | qstring_list DOT_Token QSTRING_Token
            {
-             std::string id(stack($1).id_string());
+             std::string id(stack_expr($1).id_string());
              id+=".";
-             id+=std::string(stack($3).id_string(), 1); // remove backslash
+             id+=std::string(stack_expr($3).id_string(), 1); // remove backslash
              init($$, id);
            }
            | qstring_list DOT_Token STRING_Token
            {
-             std::string id(stack($1).id_string());
+             std::string id(stack_expr($1).id_string());
              id+=".";
-             id+=stack($3).id_string();
+             id+=stack_expr($3).id_string();
              init($$, id);
            }
            | qstring_list '[' NUMBER_Token ']'
            {
-             std::string id(stack($1).id_string());
+             std::string id(stack_expr($1).id_string());
              id+="[";
-             id+=stack($3).id_string();
+             id+=stack_expr($3).id_string();
              id+="]";
              init($$, id);
            }
            | qstring_list '(' NUMBER_Token ')'
            {
-             std::string id(stack($1).id_string());
+             std::string id(stack_expr($1).id_string());
              id+="(";
-             id+=stack($3).id_string();
+             id+=stack_expr($3).id_string();
              id+=")";
              init($$, id);
            }
@@ -548,7 +576,7 @@ cases      :
            ;
 
 case       : formula ':' formula ';'
-           { binary($$, $1, ID_case, $3); }
+           { binary($$, $1, ID_case, $3, stack_expr($3).type()); }
            ;
 
 switches   :

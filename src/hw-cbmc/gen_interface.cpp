@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <sstream>
 
 #include <util/config.h>
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/std_types.h>
 
 #include "gen_interface.h"

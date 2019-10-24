@@ -1,8 +1,9 @@
 SRC = aiger_language.cpp
 
-include ../config.inc
+include $(CPROVER_DIR)/config.inc
+include $(CPROVER_DIR)/common
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CPROVER_DIR)
 
 CLEANFILES = 
 

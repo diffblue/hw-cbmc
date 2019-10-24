@@ -28,16 +28,14 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 class k_inductiont:public ebmc_baset
 {
 public:
-  k_inductiont(
-    const cmdlinet &_cmdline,
-    ui_message_handlert &_ui_message_handler):
-    ebmc_baset(_cmdline, _ui_message_handler)
-  {
-  }
+  k_inductiont(const cmdlinet &_cmdline,
+               ui_message_handlert &_ui_message_handler)
+      : ebmc_baset(_cmdline, _ui_message_handler), ns{symbol_table} {}
 
   int operator()();
 
-protected:  
+protected:
+  namespacet ns;
   int induction_base();
   int induction_step();
 };
@@ -112,13 +110,13 @@ Function: k_inductiont::induction_base
 
 int k_inductiont::induction_base()
 {
+  PRECONDITION(trans_expr.has_value());
   status() << "Induction Base" << eom;
 
-  satcheckt satcheck;
-  const namespacet ns(symbol_table);
-  boolbvt solver(ns, satcheck);
+  satcheckt satcheck{*message_handler};
+  boolbvt solver(ns, satcheck, *message_handler);
 
-  ::unwind(trans_expr, *this, solver, bound+1, ns, true);
+  ::unwind(*trans_expr, *message_handler, solver, bound + 1, ns, true);
 
   int result=finish_bmc(solver);
   
@@ -142,6 +140,7 @@ Function: k_inductiont::induction_step
 
 int k_inductiont::induction_step()
 {
+  PRECONDITION(trans_expr.has_value());
   status() << "Induction Step" << eom;
 
   unsigned no_timeframes=bound+1;
@@ -151,13 +150,12 @@ int k_inductiont::induction_step()
     if(p_it.is_disabled() ||
        p_it.is_failure())
       continue;
-  
-    const namespacet ns(symbol_table);
-    satcheckt satcheck;
-    boolbvt solver(ns, satcheck);
-    
+
+    satcheckt satcheck{*message_handler};
+    boolbvt solver(ns, satcheck, *message_handler);
+
     // *no* initial state
-    unwind(trans_expr, *this, solver, no_timeframes, ns, false);
+    unwind(*trans_expr, *message_handler, solver, no_timeframes, ns, false);
 
     exprt property(p_it.expr);
 

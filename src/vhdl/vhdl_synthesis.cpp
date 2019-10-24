@@ -6,6 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/mathematical_expr.h>
 #include <util/std_expr.h>
 
 #include "vhdl_synthesis.h"
@@ -154,13 +155,10 @@ bool vhdl_synthesist::operator()()
     property_counter=0;
     
     synth_module(symbol.value);
-    
-    transt trans_expr;
 
-    trans_expr.invar()=conjunction(invar);
-    trans_expr.init()=conjunction(init);
-    trans_expr.trans()=conjunction(trans);
-    
+    transt trans_expr{ID_trans, conjunction(invar), conjunction(init),
+                      conjunction(trans), symbol.type};
+
     symbol.value=trans_expr;
     
     return false;

@@ -6,19 +6,19 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 
-#include <util/get_module.h>
-#include <util/xml.h>
-#include <util/find_macros.h>
-#include <util/xml_irep.h>
-#include <util/config.h>
 #include <util/cmdline.h>
-#include <util/string2int.h>
+#include <util/config.h>
 #include <util/expr_util.h>
-#include <util/decision_procedure.h>
+#include <util/find_macros.h>
+#include <util/get_module.h>
+#include <util/string2int.h>
 #include <util/unicode.h>
+#include <util/xml.h>
+#include <util/xml_irep.h>
 
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/ldg.h>
@@ -49,10 +49,9 @@ Function: make_next_state
 
 \*******************************************************************/
 
-void make_next_state(exprt &expr)
-{
-  Forall_operands(it, expr)
-    make_next_state(*it);
+void make_next_state(exprt &expr) {
+  for (auto &sub_expression : expr.operands())
+    make_next_state(sub_expression);
 
   if(expr.id()==ID_symbol)
     expr.id(ID_next_symbol);
@@ -70,18 +69,15 @@ Function: ebmc_baset::ebmc_baset
 
 \*******************************************************************/
 
-ebmc_baset::ebmc_baset(
-  const cmdlinet &_cmdline,
-  ui_message_handlert &_ui_message_handler):
-  language_uit(_cmdline, _ui_message_handler),
-  cmdline(_cmdline),
-  main_symbol(NULL)
-{
+ebmc_baset::ebmc_baset(const cmdlinet &_cmdline,
+                       ui_message_handlert &_ui_message_handler)
+    : messaget(_ui_message_handler), symbol_table{}, cmdline(_cmdline),
+      main_symbol(NULL) {
   if(cmdline.isset("verbosity"))
-    ui_message_handler.set_verbosity(
-      unsafe_string2unsigned(cmdline.get_value("verbosity")));
+    message_handler->set_verbosity(
+        unsafe_string2unsigned(cmdline.get_value("verbosity")));
   else
-    ui_message_handler.set_verbosity(messaget::M_STATUS); // default
+    message_handler->set_verbosity(messaget::M_STATUS); // default
 }
 
 /*******************************************************************\
@@ -96,8 +92,7 @@ Function: ebmc_baset::finish_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::finish_bmc(prop_convt &solver)
-{
+int ebmc_baset::finish_bmc(prop_conv_solvert &solver) {
   // convert the properties
   
   for(propertyt &property : properties)
@@ -133,23 +128,21 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
     
     for(auto l : property.timeframe_literals)
       or_expr.operands().push_back(literal_exprt(!l));
-      
-    literalt property_literal=solver.convert(or_expr);
-    
-    bvt assumptions;
-    assumptions.push_back(property_literal);
-    solver.set_assumptions(assumptions);
+
+    auto converted_or = solver.convert(or_expr);
+    solver.push({literal_exprt{converted_or}});
 
     decision_proceduret::resultt dec_result=
       solver.dec_solve();
+
+    solver.pop();
 
     switch(dec_result)
     {
     case decision_proceduret::resultt::D_SATISFIABLE:
       {
-        result() << "SAT: counterexample found" << eom;
-        
         property.make_failure();
+        result() << "SAT: counterexample found" << messaget::eom;
 
         namespacet ns(symbol_table);
     
@@ -164,16 +157,17 @@ int ebmc_baset::finish_bmc(prop_convt &solver)
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE:
-      result() << "UNSAT: No counterexample found within bound" << eom;
+      result() << "UNSAT: No counterexample found within bound"
+               << messaget::eom;
       property.make_success();
       break;
 
     case decision_proceduret::resultt::D_ERROR:
-      error() << "Error from decision procedure" << eom;
+      error() << "Error from decision procedure" << messaget::eom;
       return 2;
 
     default:
-      error() << "Unexpected result from decision procedure" << eom;
+      error() << "Unexpected result from decision procedure" << messaget::eom;
       return 1;
     }
   }
@@ -228,9 +222,9 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
   {
     if(property.is_disabled())
       continue;
-    
-    status() << "Checking " << property.name << eom;
-  
+
+    status() << "Checking " << property.name << messaget::eom;
+
     literalt property_literal=!solver.land(property.timeframe_literals);
   
     bvt assumptions;
@@ -244,9 +238,8 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
     {
     case propt::resultt::P_SATISFIABLE:
       {
-        result() << "SAT: counterexample found" << eom;
-        
         property.make_failure();
+        result() << "SAT: counterexample found" << messaget::eom;
 
         namespacet ns(symbol_table);
 
@@ -260,16 +253,17 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
       break;
 
     case propt::resultt::P_UNSATISFIABLE:
-      result() << "UNSAT: No counterexample found within bound" << eom;
+      result() << "UNSAT: No counterexample found within bound"
+               << messaget::eom;
       property.make_success();
       break;
 
     case propt::resultt::P_ERROR:
-      error() << "Error from decision procedure" << eom;
+      error() << "Error from decision procedure" << messaget::eom;
       return 2;
 
     default:
-      error() << "Unexpected result from decision procedure" << eom;
+      error() << "Unexpected result from decision procedure" << messaget::eom;
       return 1;
     }
   }
@@ -502,10 +496,7 @@ Function: ebmc_baset::do_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
-{
-  solver.set_message_handler(get_message_handler());
-  
+int ebmc_baset::do_bmc(prop_conv_solvert &solver, bool convert_only) {
   int result=0;
 
   try
@@ -524,7 +515,8 @@ int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
         
         #if 0
         const namespacet ns(symbol_table);
-        ::unwind(trans_expr, *this, solver, bound+1, ns, true);
+        CHECK_RETURN(trans_expr.has_value());
+        ::unwind(*trans_expr, *message_handler, solver, bound+1, ns, true);
         result=finish_bmc(solver);
         #endif
       }
@@ -542,7 +534,8 @@ int ebmc_baset::do_bmc(prop_convt &solver, bool convert_only)
       status() << "Generating Decision Problem" << eom;
 
       const namespacet ns(symbol_table);
-      ::unwind(trans_expr, *this, solver, bound+1, ns, true);
+      CHECK_RETURN(trans_expr.has_value());
+      ::unwind(*trans_expr, *message_handler, solver, bound + 1, ns, true);
 
       if(convert_only)
         result=0;
@@ -588,8 +581,6 @@ Function: ebmc_baset::do_bmc
 
 int ebmc_baset::do_bmc(cnft &solver, bool convert_only)
 {
-  solver.set_message_handler(get_message_handler());
-
   if(get_bound()) return 1;
 
   int result;
@@ -680,7 +671,8 @@ int ebmc_baset::get_model()
 
   if(cmdline.isset("show-modules"))
   {
-    show_modules(symbol_table, get_ui());
+    show_modules(symbol_table,
+                 static_cast<ui_message_handlert *>(message_handler)->get_ui());
     return 0;
   }
 
@@ -715,13 +707,17 @@ int ebmc_baset::get_model()
     exprt reset_constraint=to_expr(ns, main_symbol->name, cmdline.get_value("reset"));
 
     // true in initial state
-    trans_expr.init()=and_exprt(trans_expr.init(), reset_constraint);
-    
+    CHECK_RETURN(trans_expr.has_value());
+    transt new_trans_expr = *trans_expr;
+    new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
+
     // and not anymore afterwards
     exprt reset_next_state=reset_constraint;
     make_next_state(reset_next_state);
-    
-    trans_expr.trans()=and_exprt(trans_expr.trans(), not_exprt(reset_next_state));
+
+    new_trans_expr.trans() =
+        and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
+    *trans_expr = new_trans_expr;
   }
 
   // Property given on command line?
@@ -920,8 +916,8 @@ void ebmc_baset::report_results()
 {
   const namespacet ns(symbol_table);
 
-  if(get_ui()==ui_message_handlert::uit::XML_UI)
-  {
+  if (static_cast<ui_message_handlert *>(message_handler)->get_ui() ==
+      ui_message_handlert::uit::XML_UI) {
     for(const propertyt &property : properties)
     {
       if(property.status==propertyt::statust::DISABLED)
@@ -972,7 +968,8 @@ void ebmc_baset::report_results()
       {
         status() << "Counterexample:\n" << eom;
         show_trans_trace(
-          property.counterexample, *this, ns, get_ui());
+            property.counterexample, *this, ns,
+            static_cast<ui_message_handlert *>(message_handler)->get_ui());
       }
     }
   }
@@ -1003,3 +1000,65 @@ void ebmc_baset::report_results()
 
 }
 
+bool ebmc_baset::parse() {
+  for (unsigned i = 0; i < cmdline.args.size(); i++) {
+    if (parse(cmdline.args[i]))
+      return true;
+  }
+  return false;
+}
+
+bool ebmc_baset::parse(const std::string &filename) {
+#ifdef _MSC_VER
+  std::ifstream infile(widen(filename));
+#else
+  std::ifstream infile(filename);
+#endif
+
+  if (!infile) {
+    error() << "failed to open input file `" << filename << "'" << eom;
+    return true;
+  }
+
+  auto &lf = language_files.add_file(filename);
+  lf.filename = filename;
+  lf.language = get_language_from_filename(filename);
+
+  if (lf.language == nullptr) {
+    source_locationt location;
+    location.set_file(filename);
+    error().source_location = location;
+    error() << "failed to figure out type of file" << eom;
+    return true;
+  }
+
+  languaget &language = *lf.language;
+  language.set_message_handler(get_message_handler());
+
+  status() << "Parsing " << filename << eom;
+
+  if (language.parse(infile, filename)) {
+    if (static_cast<ui_message_handlert *>(message_handler)->get_ui() ==
+        ui_message_handlert::uit::PLAIN)
+      std::cerr << "PARSING ERROR\n";
+
+    return true;
+  }
+
+  lf.get_modules();
+
+  return false;
+}
+
+bool ebmc_baset::typecheck() {
+  status() << "Converting" << eom;
+
+  language_files.set_message_handler(*message_handler);
+
+  if (language_files.typecheck(symbol_table)) {
+    error() << "CONVERSION ERROR" << eom;
+    return true;
+  }
+
+  return false;
+}

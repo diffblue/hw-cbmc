@@ -26,7 +26,7 @@ int yysmverror(const std::string &error);
 void newlocation(YYSTYPE &x)
 {
   newstack(x);
-  PARSER.set_source_location(stack(x));
+  PARSER.set_source_location(stack_expr(x));
 }
 
 %}
@@ -108,23 +108,23 @@ void newlocation(YYSTYPE &x)
 
 [\$A-Za-z_][A-Za-z0-9_\$#-]*	{
                   newstack(yysmvlval);
-                  stack(yysmvlval).id(yytext);
+                  stack_expr(yysmvlval).id(yytext);
 		  return STRING_Token;
 		}
 \\[A-Za-z0-9_\$#-]*	{
                   newstack(yysmvlval);
-                  stack(yysmvlval).id(yytext);
+                  stack_expr(yysmvlval).id(yytext);
 		  return QSTRING_Token;
 		}
 [0-9][0-9]*	{
                   newstack(yysmvlval);
-                  stack(yysmvlval).id(yytext);
+                  stack_expr(yysmvlval).id(yytext);
 		  return NUMBER_Token;
 		}
 \"[^\"]*\"      {
                   newstack(yysmvlval);
                   std::string tmp(yytext);
-                  stack(yysmvlval).id(std::string(tmp, 1, tmp.size()-2));
+                  stack_expr(yysmvlval).id(std::string(tmp, 1, tmp.size()-2));
                   return QUOTE_Token;
                 }
 

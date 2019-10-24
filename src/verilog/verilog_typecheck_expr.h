@@ -56,23 +56,15 @@ protected:
     const exprt &range,
     mp_integer &msb,
     mp_integer &lsb);
-    
-  void genvar_value(
-    const irep_idt &identifier,
-    mp_integer &value)
-  {
+
+  virtual void genvar_value(const irep_idt &identifier, mp_integer &value) {
     assert(false);
   }
-    
-  exprt var_value(const irep_idt &identifier)
-  {
-    assert(false);
-  }
-    
-  bool implicit_wire(
-    const irep_idt &identifier,
-    const symbolt *&symbol)
-  {
+
+  virtual exprt var_value(const irep_idt &identifier) { assert(false); }
+
+  virtual bool implicit_wire(const irep_idt &identifier,
+                             const symbolt *&symbol) {
     return true;
   }
    

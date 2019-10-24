@@ -10,10 +10,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <set>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
-#include <util/simplify_expr.h>
 #include <util/replace_symbol.h>
+#include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"

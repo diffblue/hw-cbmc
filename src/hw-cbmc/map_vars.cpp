@@ -6,13 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/arith_tools.h>
-#include <util/namespace.h>
-#include <util/config.h>
 #include <util/base_type.h>
-#include <util/std_expr.h>
-#include <util/std_code.h>
 #include <util/c_types.h>
+#include <util/config.h>
+#include <util/ebmc_util.h>
+#include <util/namespace.h>
+#include <util/std_code.h>
+#include <util/std_expr.h>
 
 #include <langapi/language_util.h>
 #include <trans-word-level/instantiate_word_level.h>
@@ -141,17 +141,14 @@ Function: map_varst::lookup
 
 symbolt &map_varst::lookup(const irep_idt &identifier)
 {
-  symbol_tablet::symbolst::iterator it=
-    symbol_table.symbols.find(identifier);
-
-  if(it==symbol_table.symbols.end())
-  {
+  auto it = symbol_table.get_writeable(identifier);
+  if (it == nullptr) {
     error() << "failed to find identifier `" << identifier
             << "'" << eom;
     throw 0;
   }
 
-  return it->second;
+  return *it;
 }
 
 /*******************************************************************\
@@ -670,26 +667,23 @@ void map_varst::map_vars(const irep_idt &top_module)
     timeframe_symbol.is_lvalue=true;
     timeframe_symbol.value=from_integer(0, index_type());
 
-    symbol_table.move(timeframe_symbol);
+    symbol_table.add(timeframe_symbol);
   }
 
   const symbolt &top_module_symbol=lookup(top_module);
   
   irep_idt struct_symbol;
-  
-  Forall_symbols(it, symbol_table.symbols)
-  {
-    if(it->second.mode==ID_C ||
-       it->second.mode==ID_cpp)
-    {
-      const irep_idt &base_name=it->second.base_name;
 
-      if(it->second.is_static_lifetime)
-      {
-        if(base_name=="bound") // special case      
-          assign_bound(it->second);
+  for (auto &entry : symbol_table) {
+    symbolt &symbol = symbol_table.get_writeable_ref(entry.first);
+    if (symbol.mode == ID_C || symbol.mode == ID_cpp) {
+      const irep_idt &base_name = symbol.base_name;
+
+      if (symbol.is_static_lifetime) {
+        if (base_name == "bound") // special case
+          assign_bound(symbol);
         else if(base_name==top_module_symbol.base_name)
-          struct_symbol=it->first;
+          struct_symbol = entry.first;
       }
     }
   }
@@ -727,24 +721,16 @@ void map_varst::map_vars(const irep_idt &top_module)
     map_var_rec(top_module_symbol.name, expr, id2string(top_module_symbol.name));
   }
 
-  Forall_symbols(it, symbol_table.symbols)
-  {
-    if(it->second.mode==ID_C ||
-       it->second.mode==ID_cpp)
-    {
-      const irep_idt &base_name=it->second.base_name;
-
-      if(base_name=="next_timeframe" &&
-         it->second.type.id()==ID_code)
-      {
+  for (const auto &entry : symbol_table) {
+    if (entry.second.mode == ID_C || entry.second.mode == ID_cpp) {
+      const irep_idt &base_name = entry.second.base_name;
+      symbolt &symbol = symbol_table.get_writeable_ref(entry.first);
+      if (base_name == "next_timeframe" && symbol.type.id() == ID_code) {
         namespacet ns(symbol_table);
-        add_next_timeframe(it->second, struct_symbol, top_level_inputs, ns);
-      }
-      else if(base_name=="set_inputs" &&
-              it->second.type.id()==ID_code)
-      {
+        add_next_timeframe(symbol, struct_symbol, top_level_inputs, ns);
+      } else if (base_name == "set_inputs" && symbol.type.id() == ID_code) {
         namespacet ns(symbol_table);
-        add_set_inputs(it->second, struct_symbol, top_level_inputs, ns);
+        add_set_inputs(symbol, struct_symbol, top_level_inputs, ns);
       }
     }
   }
@@ -762,13 +748,9 @@ Function: map_vars
 
 \*******************************************************************/
 
-void map_vars(
-  symbol_tablet &symbol_table,
-  const irep_idt &module,
-  std::list<exprt> &constraints,
-  message_handlert &message,
-  unsigned no_timeframes)
-{
+void map_vars(symbol_tablet &symbol_table, const irep_idt &module,
+              std::list<exprt> &constraints, message_handlert &message,
+              unsigned no_timeframes) {
   map_varst map_vars(symbol_table, constraints, message, no_timeframes);
   map_vars.map_vars(module);
 }

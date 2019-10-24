@@ -12,9 +12,9 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
-#include <solvers/prop/aig_prop.h>
-#include <trans-netlist/instantiate_netlist.h>
 #include <ebmc/ebmc_base.h>
+#include <trans-netlist/aig_prop.h>
+#include <trans-netlist/instantiate_netlist.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -49,10 +49,10 @@ void ic3_enginet::find_prop_lit()
     exit(100);
   }
   assert(Oper.type().id()==ID_bool);
- 
-  aig_prop_constraintt aig_prop(netlist);
-  aig_prop.set_message_handler(get_message_handler());
-    
+
+  aig_prop_constraintt aig_prop(netlist, get_message_handler());
+
+  symbol_tablet symbol_table{};
   const namespacet ns(symbol_table);
 
   prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,

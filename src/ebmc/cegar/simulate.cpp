@@ -29,7 +29,7 @@ bool bmc_cegart::simulate(unsigned bound)
 {
   status() << "Simulating Counterexample" << eom;
 
-  satcheckt satcheck;
+  satcheckt satcheck{*message_handler};
   cnft &solver=satcheck;
 
   unwind(bound, concrete_netlist, solver);
@@ -41,9 +41,8 @@ bool bmc_cegart::simulate(unsigned bound)
   case propt::resultt::P_SATISFIABLE:
     status() << "SAT: bug found within bound" << eom;
 
-    show_counterexample(
-      properties, prop_bv, get_message_handler(), solver, bmc_map,
-      ns, ui_message_handlert::uit::PLAIN);
+    show_counterexample(properties, prop_bv, get_message_handler(), solver,
+                        bmc_map, ns);
     return true;
 
   case propt::resultt::P_UNSATISFIABLE:

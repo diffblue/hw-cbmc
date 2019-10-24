@@ -106,6 +106,8 @@ std::ostream &operator << (std::ostream &out, const vtypet &vtype)
   case vtypet::VERILOG_REALTIME:
     return out << "bool";
 
+  case vtypet::UNKNOWN:
+  case vtypet::OTHER:
   default:
     return out << "?";
   }

@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "unwind_netlist.h"
 #include "instantiate_netlist.h"
 
+#include <util/ebmc_util.h>
+
 /*******************************************************************\
 
 Function: unwind
@@ -57,8 +59,8 @@ void unwind(
     {
       literalt la=bmc_map.translate(t, node.a);
       literalt lb=bmc_map.translate(t, node.b);
-    
-      solver.gate_and(la, lb, timeframe[n].solver_literal);
+
+      cnf_gate_and(solver, la, lb, timeframe[n].solver_literal);
     }
   }
 

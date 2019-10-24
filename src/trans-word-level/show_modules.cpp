@@ -76,7 +76,11 @@ void show_modules(
         std::cout << "  Name:       " << symbol.display_name() << std::endl
                   << std::endl;
         break;
-      
+
+      case ui_message_handlert::uit::JSON_UI:
+        assert(false);
+        break;
+
       default:
         assert(false);
       }

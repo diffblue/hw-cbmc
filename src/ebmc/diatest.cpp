@@ -24,11 +24,11 @@ Function:
 
 \*******************************************************************/
 
-void diatest(bool efficient, unsigned no_states, unsigned state_bits)
-{
+void diatest(bool efficient, unsigned no_states, unsigned state_bits,
+             message_handlert &message_handler) {
   std::cout << (efficient?"Efficient:":"Simple:") << '\n';
 
-  dimacs_cnft solver;
+  dimacs_cnft solver{message_handler};
 
   std::vector<bvt> states;
 
@@ -67,13 +67,13 @@ Function:
 
 \*******************************************************************/
 
-void diatest(unsigned bound, unsigned state_bits)
-{
+void diatest(unsigned bound, unsigned state_bits,
+             message_handlert &message_handler) {
   unsigned no_states=bound+1;
 
   std::cout << "Testing recurrence diameter computation:" << '\n';
   std::cout << "States: " << no_states << '\n';
   std::cout << "State bits: " << state_bits << '\n';
-  diatest(0, no_states, state_bits);
-  diatest(1, no_states, state_bits);
+  diatest(0, no_states, state_bits, message_handler);
+  diatest(1, no_states, state_bits, message_handler);
 }

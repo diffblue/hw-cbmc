@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 
 #include "instantiate_word_level.h"
 
@@ -156,8 +156,8 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         if(to_integer(expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
-        current=save_current.saved+integer2ulong(offset);
-        
+        current = save_current.saved + offset.to_ulong();
+
         // Do we exceed the bound? Make it 'true'
         if(current>=no_timeframes)
           expr.op2()=true_exprt();
@@ -187,7 +187,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         
         for(mp_integer offset=from; offset<to; ++offset)
         {
-          current=save_current.saved+integer2ulong(offset);
+          current = save_current.saved + offset.to_ulong();
 
           if(current>=no_timeframes)
           {

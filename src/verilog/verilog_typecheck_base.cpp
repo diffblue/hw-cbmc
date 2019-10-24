@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/prefix.h>
 #include <util/std_types.h>
@@ -185,7 +185,7 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
   if(type.id()==ID_array)
   {
     mp_integer subtype_width=get_width(type.subtype());
-    return integer2size_t(array_size(type)*subtype_width);
+    return (array_size(type) * subtype_width).to_ulong();
   }
   
   if(type.id()==ID_integer)
@@ -213,7 +213,6 @@ Function: verilog_typecheck_baset::index_type
 
 typet verilog_typecheck_baset::index_type(const typet &array_type)
 {
-  return unsignedbv_typet(
-    integer2size_t(
-      address_bits(array_size(array_type)+array_offset(array_type))));
+  return unsignedbv_typet(address_bits(
+      (array_size(array_type) + array_offset(array_type)).to_ulong()));
 }
