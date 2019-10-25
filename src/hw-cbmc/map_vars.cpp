@@ -694,7 +694,9 @@ void map_varst::map_vars(const irep_idt &top_module)
             << top_module_symbol.base_name << "'" << eom;
     return;
   }
-  
+
+  namespacet ns(symbol_table);
+
   {
     symbolt &s=lookup(struct_symbol);
     
@@ -712,7 +714,6 @@ void map_varst::map_vars(const irep_idt &top_module)
 
     exprt timeframe_expr=from_integer(0, index_type());
 
-    namespacet ns(symbol_table);
     index_exprt expr(
       symbol_expr, timeframe_expr, ns.follow(symbol_expr.type()).subtype());
 
@@ -725,6 +726,8 @@ void map_varst::map_vars(const irep_idt &top_module)
     if (entry.second.mode == ID_C || entry.second.mode == ID_cpp) {
       const irep_idt &base_name = entry.second.base_name;
       symbolt &symbol = symbol_table.get_writeable_ref(entry.first);
+      if (symbol.type.id() == ID_struct_tag)
+        symbol.type = ns.follow(symbol.type);
       if (base_name == "next_timeframe" && symbol.type.id() == ID_code) {
         namespacet ns(symbol_table);
         add_next_timeframe(symbol, struct_symbol, top_level_inputs, ns);

@@ -17,9 +17,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-checker/goto_verifier.h>
 #include <goto-checker/multi_path_symex_checker.h>
 #include <goto-checker/solver_factory.h>
+
+#include <goto-programs/goto_convert_functions.h>
 #include <goto-programs/set_properties.h>
 #include <goto-programs/show_properties.h>
+
 #include <langapi/mode.h>
+
 #include <trans-word-level/show_modules.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
@@ -74,8 +78,6 @@ int hw_cbmc_parse_optionst::doit()
   if(cmdline.isset("vcd"))
     options.set_option("vcd", cmdline.get_value("vcd"));
 
-  symbol_tablet symbol_table;
-
   std::unique_ptr<goto_verifiert> verifier = nullptr;
   verifier = util_make_unique<
       all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>>(
@@ -87,18 +89,33 @@ int hw_cbmc_parse_optionst::doit()
   prop_convt &prop_conv =
       static_cast<prop_convt &>(*my_solver->decision_procedure_ptr);
 
-  goto_functionst &goto_functions = goto_model.goto_functions;
   int get_goto_program_ret =
       get_goto_program(goto_model, options, cmdline, ui_message_handler);
   if (get_goto_program_ret != -1)
     return get_goto_program_ret;
 
+  std::list<exprt> constraints;
+  int get_modules_ret = get_modules(constraints);
+  if (get_modules_ret != -1)
+    return get_modules_ret;
+
+  goto_convert(goto_model.symbol_table, goto_model.goto_functions,
+               ui_message_handler);
+
   unwind_no_timeframes = get_bound();
   unwind_module = get_top_module();
-
   do_unwind_module(prop_conv);
 
-  label_properties(goto_functions);
+  // the 'extra constraints'
+  if (!constraints.empty()) {
+    log.status() << "converting constraints" << messaget::eom;
+
+    for (const auto &constraint : constraints) {
+      prop_conv.set_to_true(constraint);
+    }
+  }
+
+  label_properties(goto_model.goto_functions);
 
   if (cmdline.isset("show-properties")) {
     show_properties(goto_model, ui_message_handler);
@@ -112,7 +129,6 @@ int hw_cbmc_parse_optionst::doit()
 
   const resultt result = (*verifier)();
   verifier->report();
-  show_unwind_trace(options, prop_conv);
   return result_to_exit_code(result);
 }
 
