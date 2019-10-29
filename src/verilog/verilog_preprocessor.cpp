@@ -6,11 +6,73 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <algorithm>
 #include <fstream>
 
 #include <util/config.h>
 
 #include "verilog_preprocessor.h"
+
+void verilog_preprocessort::definet::replace_substring(
+    std::string &source, const std::string &orig_sub,
+    const std::string &new_sub) const {
+  PRECONDITION(!orig_sub.empty());
+  PRECONDITION(!new_sub.empty());
+
+  std::size_t index = 0;
+  auto const orig_sub_size = orig_sub.size();
+  auto const new_sub_size = new_sub.size();
+
+  while (true) {
+    index = source.find(orig_sub, index);
+    if (index == std::string::npos)
+      break;
+
+    source.replace(index, orig_sub_size, new_sub);
+    index += new_sub_size;
+  }
+}
+
+std::string verilog_preprocessort::definet::replace_macro(
+    const std::string &arg_string) const {
+  std::vector<std::string> arguments =
+      split_string(arg_string, ',', true, true);
+  PRECONDITION(arguments.size() == parameters.size());
+
+  if (parameters.size() == 1 && parameters.back().empty())
+    return value;
+
+  auto longer_first = [](const std::string &left, const std::string &right) {
+    if (left.size() > right.size())
+      return true;
+    return std::lexicographical_compare(left.begin(), left.end(), right.begin(),
+                                        right.end());
+  };
+
+  std::map<std::string, std::string, decltype(longer_first)> param_to_arg{
+      longer_first};
+
+  for (std::size_t i = 0; i < parameters.size(); ++i) {
+    param_to_arg.emplace(parameters[i], arguments[i]);
+  }
+
+  std::string result_value = value;
+  for (auto const &param_arg_pair : param_to_arg) {
+    replace_substring(result_value, param_arg_pair.first,
+                      param_arg_pair.second);
+  }
+  return result_value;
+}
+
+optionalt<std::size_t>
+verilog_preprocessort::find_define(const std::string &name) const {
+  std::size_t define_index = 0;
+  for (; define_index != defines.size(); ++define_index) {
+    if (defines[define_index].identifier == name)
+      return define_index;
+  }
+  return {};
+}
 
 /*******************************************************************\
 
@@ -301,18 +363,42 @@ void verilog_preprocessort::replace_macros(std::string &s)
         i++;
 
       std::string text(s, start, i-start);
+      std::string arg_string;
 
-      definest::const_iterator it=defines.find(text);
+      unsigned i_before_whitespace_skip = i;
+      // skip whitespace
+      while (s[i] == ' ' || s[i] == '\t' || s[i] == '\n')
+        ++i;
 
-      if(it==defines.end())
-      {
+      // maybe read the arguments
+      if (s[i] == '(') {
+        std::size_t level = 0;
+
+        // find the matching parenthesis, everything between is the argument
+        // list
+        while (s[++i] != ')' || level != 0) {
+          arg_string += s[i];
+
+          if (s[i] == '(')
+            ++level;
+          else if (s[i] == ')')
+            --level;
+        }
+        // now s[i]==')' -> let's move one more
+        ++i;
+      } else {
+        // just in case the whitespace was important
+        i = i_before_whitespace_skip;
+      }
+
+      auto maybe_define_index = find_define(text);
+      if (!maybe_define_index.has_value()) {
         error() << "unknown preprocessor macro \"" << text << "\"" << eom;
         throw 0;
       }
 
       // found it! replace it!
-
-      dest+=it->second;
+      dest += defines[*maybe_define_index].replace_macro(arg_string);
     }
     else
     {
@@ -353,6 +439,40 @@ void verilog_preprocessort::directive()
     }
   }
 
+  std::string arg_string;
+
+  size_t unget_counter = 0;
+  // skip whitespace
+  while (files.back().in->get(ch)) {
+    ++unget_counter;
+    if (ch == ' ' || ch == '\t' || ch == '\n')
+      ;
+    else
+      break;
+  }
+
+  // maybe read the arguments
+  if (ch == '(') {
+    std::size_t level = 0;
+
+    // find the matching parenthesis, everything between is the argument
+    // list
+    while (files.back().in->get(ch)) {
+      if (level == 0 && ch == ')') {
+        break;
+      }
+      arg_string += ch;
+      if (ch == '(')
+        ++level;
+      else if (ch == ')')
+        --level;
+    }
+  } else {
+    // just in case the whitespace was important
+    while (unget_counter-- > 0)
+      files.back().in->unget();
+  }
+
   std::string line;
 
   if(text=="define")
@@ -367,7 +487,7 @@ void verilog_preprocessort::directive()
     // skip whitespace
     while(*tptr==' ' || *tptr=='\t') tptr++;
 
-    std::string identifier, value;
+    std::string identifier, param_string, value;
 
     // copy identifier
     while(isalnum(*tptr) || *tptr=='$' || *tptr=='_')
@@ -379,8 +499,9 @@ void verilog_preprocessort::directive()
     // is there a parameter list?
     if(*tptr=='(')
     {
-      error() << "`define with parameters not yet supported" << eom;
-      throw 0;
+      while (*(++tptr) != ')')
+        param_string.push_back(*tptr);
+      ++tptr; // get past the closing parenthesis
     }
 
     // skip whitespace
@@ -401,7 +522,7 @@ void verilog_preprocessort::directive()
               << "< = >" << value << "<" << std::endl;
     #endif
 
-    defines[identifier]=value;
+    defines.emplace_back(identifier, param_string, value);
   }
   else if(text=="undef")
   {
@@ -424,13 +545,9 @@ void verilog_preprocessort::directive()
       tptr++;
     }
 
-    definest::iterator it=defines.find(identifier);
-
-    if(it!=defines.end())
-    {
-      // found it! remove it!
-
-      defines.erase(it);
+    auto maybe_define_index = find_define(identifier);
+    if (maybe_define_index.has_value()) {
+      defines.erase(defines.begin() + *maybe_define_index);
     }
   }
   else if(text=="ifdef" || text=="ifndef")
@@ -451,15 +568,15 @@ void verilog_preprocessort::directive()
       tptr++;
     }
 
-    definest::iterator it=defines.find(identifier);
+    auto maybe_define_index = find_define(identifier);
 
     conditionalt conditional;
     
     if(text=="ifdef")
-      conditional.condition=(it!=defines.end());
+      conditional.condition = maybe_define_index.has_value();
     else
-      conditional.condition=(it==defines.end());
-    
+      conditional.condition = !maybe_define_index.has_value();
+
     conditional.previous_condition=condition;
     conditionals.push_back(conditional);
     condition=conditional.get_cond();
@@ -562,17 +679,15 @@ void verilog_preprocessort::directive()
 
     if(condition)
     {
-      definest::const_iterator it=defines.find(text);
-
-      if(it==defines.end())
-      {
+      auto maybe_define_index = find_define(text);
+      if (!maybe_define_index.has_value()) {
         error() << "unknown preprocessor directive \"" << text << "\"" << eom;
         throw 0;
       }
 
       // found it! replace it!
 
-      out << it->second;
+      out << defines[*maybe_define_index].replace_macro(arg_string);
     }
   }
 }

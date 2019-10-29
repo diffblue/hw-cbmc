@@ -4,8 +4,9 @@
 #include <list>
 
 #include <util/irep.h>
-#include <util/string_hash.h>
 #include <util/preprocessor.h>
+#include <util/string_hash.h>
+#include <util/string_utils.h>
 
 class verilog_preprocessort:public preprocessort
 {
@@ -25,11 +26,27 @@ public:
   virtual ~verilog_preprocessort() { }
 
 protected:
-  typedef std::unordered_map<std::string, std::string, string_hash>
-    definest;
-    
-  definest defines;
-  
+  struct definet {
+    std::string identifier;
+    std::vector<std::string> parameters;
+    std::string value;
+
+    definet(const std::string &identifier, const std::string &param_string,
+            const std::string &value)
+        : identifier(identifier),
+          parameters(split_string(param_string, ',', true, true)),
+          value(value) {}
+
+    void replace_substring(std::string &source, const std::string &orig_sub,
+                           const std::string &new_sub) const;
+
+    std::string replace_macro(const std::string &arg_string) const;
+  };
+
+  std::vector<definet> defines;
+
+  optionalt<std::size_t> find_define(const std::string &name) const;
+
   virtual void directive();
   virtual void replace_macros(std::string &s);
   virtual void include(const std::string &filename);
