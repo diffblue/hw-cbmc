@@ -496,18 +496,35 @@ void verilog_preprocessort::directive()
       tptr++;
     }
 
+    auto old_tptr = tptr;
+    // maybe skip whitespace between name and paramlist
+    while (*tptr == ' ' || *tptr == '\t' || *tptr == '\n')
+      tptr++;
+
     // is there a parameter list?
     if(*tptr=='(')
     {
+      // we don't expect any extra parentheses inside parameter list
       while (*(++tptr) != ')')
         param_string.push_back(*tptr);
       ++tptr; // get past the closing parenthesis
-    }
+    } else
+      tptr = old_tptr;
 
     // skip whitespace
     while(*tptr==' ' || *tptr=='\t') tptr++;
 
     value=tptr;
+    // handle multi-line macros
+    while (value.back() == '\\') {
+      value.pop_back();
+      files.back().getline(line);
+      tptr = line.c_str();
+      // remove indentation
+      while (*tptr == ' ' || *tptr == '\t')
+        tptr++;
+      value += tptr;
+    }
 
     // remove trailing whitespace
 

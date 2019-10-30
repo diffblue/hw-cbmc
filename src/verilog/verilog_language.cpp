@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <sstream>
+#include <iostream>
 
 #include <util/suffix.h>
 
@@ -39,6 +40,10 @@ bool verilog_languaget::parse(
 
   if(preprocess(instream, path, str))
     return true;
+
+  std::cerr << "--------------------------------------------------\n";
+  std::cerr << str.str();
+  std::cerr << "\n--------------------------------------------------\n";
 
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
