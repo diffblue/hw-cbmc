@@ -50,17 +50,18 @@ void add_next_timeframe(
   code_blockt block;
   block.add(assignment_increase);
 
-  // now assign the non-inputs in the module symbol
-  const index_exprt index_expr(
-    array_symbol.symbol_expr(),
-    timeframe_symbol.symbol_expr(),
-    struct_symbol.type);
+  const struct_typet &struct_type =
+      to_struct_type(ns.follow(struct_symbol.type));
 
-  const struct_typet &struct_type=
-    to_struct_type(ns.follow(struct_symbol.type));
-    
+  // now assign the non-inputs in the module symbol
+  const index_exprt index_expr(array_symbol.symbol_expr(),
+                               timeframe_symbol.symbol_expr(), struct_type);
+
   const struct_typet::componentst &components=
     struct_type.components();
+
+  symbol_exprt struct_symbol_expr{struct_type};
+  struct_symbol_expr.set_identifier(struct_symbol.name);
 
   for(struct_typet::componentst::const_iterator
       c_it=components.begin();
@@ -72,10 +73,11 @@ void add_next_timeframe(
     const typet &type=c_it->type();
     
     if(top_level_inputs.find(name)!=top_level_inputs.end()) continue;
-  
-    const exprt member_expr1=member_exprt(struct_symbol.symbol_expr(), name, type);
+
+    const exprt member_expr1 = member_exprt(struct_symbol_expr, name, type);
     const exprt member_expr2=member_exprt(index_expr, name, type);
-  
+
+    CHECK_RETURN(member_expr1.op0().type() == member_expr2.op0().type());
     const code_assignt member_assignment(member_expr1, member_expr2);
     block.add(member_assignment);
   }

@@ -10,10 +10,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 #include <algorithm>
 
-#include <util/expr_util.h>
-#include <util/typecheck.h>
 #include <util/arith_tools.h>
+#include <util/expr_util.h>
+#include <util/mathematical_expr.h>
 #include <util/std_expr.h>
+#include <util/typecheck.h>
 
 #include "smv_typecheck.h"
 #include "expr2smv.h"
@@ -332,12 +333,8 @@ void smv_typecheckt::instantiate(
       throw 0;
     }
 
-    if(port_identifiers.find(s_it2->second.name)!=
-       port_identifiers.end())
-    {
-    }
-    else if(s_it2->second.type.id()==ID_module)
-    {
+    if (port_identifiers.find(s_it2->first) != port_identifiers.end()) {
+    } else if (s_it2->second.type.id() == ID_module) {
     }
     else
     {
@@ -346,8 +343,8 @@ void smv_typecheckt::instantiate(
       symbol.name=new_prefix+id2string(symbol.base_name);
       symbol.module=smv_module.name;
 
-      rename_map.insert(std::pair<irep_idt, exprt>
-                        (s_it2->second.name, symbol.symbol_expr()));
+      rename_map.insert(
+          std::pair<irep_idt, exprt>(s_it2->first, symbol.symbol_expr()));
 
       var_identifiers.insert(symbol.name);
 
@@ -1165,6 +1162,10 @@ void smv_typecheckt::typecheck(
     mode=TRANS;
     break;
 
+  case smv_parse_treet::modulet::itemt::DEFINE:
+  case smv_parse_treet::modulet::itemt::INVAR:
+  case smv_parse_treet::modulet::itemt::FAIRNESS:
+  case smv_parse_treet::modulet::itemt::SPEC:
   default:
     mode=OTHER;
   }
@@ -1349,10 +1350,8 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
     convert_define(it->first);
 
     // generate constraint
-    equal_exprt equality;
-    equality.lhs()=exprt(ID_symbol, it->second.value.type());
-    equality.lhs().set(ID_identifier, it->first);
-    equality.rhs()=it->second.value;
+    equal_exprt equality{symbol_exprt{it->first, it->second.value.type()},
+                         it->second.value};
     invar.push_back(equality);
   }
 }
@@ -1388,46 +1387,45 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
     module_symbol.module=module_symbol.name;
     module_symbol.type=typet(ID_module);
     module_symbol.mode="SMV";
-    module_symbol.value=transt();
-    module_symbol.value.operands().resize(3);
 
     exprt::operandst trans_invar, trans_init, trans_trans;
 
     convert_ports(smv_module, module_symbol.type);
 
-    Forall_item_list(it, smv_module.items)
-      convert(*it);
+    for (auto &item : smv_module.items) {
+      convert(item);
+    }
 
     flatten_hierarchy(smv_module);
 
     // we first need to collect all the defines
 
-    Forall_item_list(it, smv_module.items)
-      if(it->is_define())
-        collect_define(it->expr);
-
+    for (auto &item : smv_module.items) {
+      if (item.is_define())
+        collect_define(item.expr);
+    }
     // now turn them into INVARs
     convert_defines(trans_invar);
 
     // do the rest now
 
-    Forall_item_list(it, smv_module.items)
-      if(!it->is_define())
-        typecheck(*it);
+    for (auto &item : smv_module.items) {
+      if (item.is_define())
+        typecheck(item);
+    }
 
-    Forall_item_list(it, smv_module.items)
-      if(it->is_invar())
-        trans_invar.push_back(it->expr);
-      else if(it->is_init())
-        trans_init.push_back(it->expr);
-      else if(it->is_trans())
-        trans_trans.push_back(it->expr);
+    for (const auto &item : smv_module.items) {
+      if (item.is_invar())
+        trans_invar.push_back(item.expr);
+      else if (item.is_init())
+        trans_init.push_back(item.expr);
+      else if (item.is_trans())
+        trans_trans.push_back(item.expr);
+    }
 
-    transt &trans=to_trans_expr(module_symbol.value);
-
-    trans.invar()=conjunction(trans_invar);
-    trans.init()=conjunction(trans_init);
-    trans.trans()=conjunction(trans_trans);
+    module_symbol.value =
+        transt{ID_trans, conjunction(trans_invar), conjunction(trans_init),
+               conjunction(trans_trans), module_symbol.type};
 
     symbol_table.add(module_symbol);
   }

@@ -167,10 +167,9 @@ protected:
   virtual void convert_statements();
 
   // to be overridden
-  virtual bool implicit_wire(
-    const irep_idt &identifier,
-    const symbolt *&symbol);
-    
+  bool implicit_wire(const irep_idt &identifier,
+                     const symbolt *&symbol) override;
+
   // generate constructs
   void elaborate_generate_assign(const exprt &statement, exprt::operandst &dest);
   void elaborate_generate_block(const exprt &statement, exprt::operandst &dest);
@@ -184,10 +183,7 @@ protected:
   genvarst genvars;
 
   // to be overridden
-  virtual void genvar_value(
-    const irep_idt &identifier,
-    mp_integer &value)
-  {
+  void genvar_value(const irep_idt &identifier, mp_integer &value) override {
     genvarst::const_iterator it=genvars.find(identifier);
     if(it==genvars.end())
       value=-1;
@@ -198,9 +194,8 @@ protected:
   // interpreter state
   typedef std::map<irep_idt, exprt> varst;
   varst vars;
-  
-  virtual exprt var_value(const irep_idt &identifier)
-  {
+
+  exprt var_value(const irep_idt &identifier) override {
     varst::const_iterator it=vars.find(identifier);
     if(it==vars.end())
       return nil_exprt();

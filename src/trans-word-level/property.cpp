@@ -25,14 +25,9 @@ Function: property
 
 \*******************************************************************/
 
-void property(
-  const exprt &property_expr,
-  bvt &prop_bv,
-  message_handlert &message_handler,
-  prop_convt &solver,
-  unsigned no_timeframes,
-  const namespacet &ns)
-{
+void property(const exprt &property_expr, bvt &prop_bv,
+              message_handlert &message_handler, prop_conv_solvert &solver,
+              unsigned no_timeframes, const namespacet &ns) {
   messaget message(message_handler);
 
   if(property_expr.is_true())

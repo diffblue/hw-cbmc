@@ -11,13 +11,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <string>
 #include <iostream>
 
-#include <util/xml.h>
-#include <util/xml_expr.h>
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
-#include <util/prefix.h>
-#include <util/arith_tools.h>
-#include <util/std_expr.h>
 #include <util/pointer_offset_size.h>
+#include <util/prefix.h>
+#include <util/std_expr.h>
+#include <util/xml.h>
 
 #include <langapi/language_util.h>
 
@@ -45,16 +44,14 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
      type.id()==ID_unsignedbv ||
      type.id()==ID_signedbv)
   {
-    value_expr=constant_exprt(type);
-
     if(type.id()==ID_range)
     {
       mp_integer i=binary2integer(src, false);
       mp_integer from=string2integer(type.get_string(ID_from));
-      value_expr.set(ID_value, integer2string(i+from));
+      value_expr = constant_exprt{integer2string(i + from), type};
     }
     else
-      value_expr.set(ID_value, src);
+      value_expr = constant_exprt{src, type};
   }
   else if(type.id()==ID_bool)
   {
@@ -69,7 +66,7 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
     value_expr=exprt(ID_array, array_type);
     mp_integer size;
     to_integer(array_type.size(), size);
-    std::size_t size_int=integer2size_t(size);
+    std::size_t size_int = size.to_ulong();
     value_expr.operands().resize(size_int);
     std::size_t op_width=src.size()/size_int;
 
@@ -133,6 +130,7 @@ void compute_trans_trace(
         {
          case tvt::tv_enumt::TV_TRUE: ch='1'; break;
          case tvt::tv_enumt::TV_FALSE: ch='0'; break;
+         case tvt::tv_enumt::TV_UNKNOWN:
          default: ch='?'; break;
         }
 

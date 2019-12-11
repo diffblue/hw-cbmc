@@ -9,7 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_TRACE_WORD_LEVEL_H
 #define CPROVER_TRANS_TRACE_WORD_LEVEL_H
 
+#include <solvers/decision_procedure.h>
+
 #include "../trans-netlist/trans_trace.h"
+#include <solvers/prop/prop.h>
 
 // word-level without properties
 

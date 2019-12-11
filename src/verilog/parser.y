@@ -11,8 +11,9 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <cstdlib>
 #include <cstring>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/std_expr.h>
+#include <util/c_types.h>
 
 #include "verilog_parser.h"
 
@@ -22,10 +23,10 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 //#define YYDEBUG 1
 
-#define mto(x, y) stack(x).move_to_operands(stack(y))
-#define mts(x, y) stack(x).move_to_sub((irept &)stack(y))
-#define swapop(x, y) stack(x).operands().swap(stack(y).operands())
-#define addswap(x, y, z) stack(x).add(y).swap(stack(z))
+#define mto(x, y) stack_expr(x).move_to_operands(stack_expr(y))
+#define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
+#define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
+#define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
 
 int yyveriloglex();
 extern char *yyverilogtext;
@@ -63,7 +64,7 @@ Function: init
 inline static void init(YYSTYPE &expr)
 {
   newstack(expr);
-  init(stack(expr));
+  init(stack_expr(expr));
 }
 
 /*******************************************************************\
@@ -81,7 +82,7 @@ Function: make_nil
 inline static void make_nil(YYSTYPE &expr)
 {
   newstack(expr);
-  stack(expr).make_nil();
+  stack_expr(expr).make_nil();
 }
 
 /*******************************************************************\
@@ -99,7 +100,7 @@ Function: init
 inline static void init(YYSTYPE &expr, const irep_idt &id)
 {
   init(expr);
-  stack(expr).id(id);
+  stack_expr(expr).id(id);
 }
 
 /*******************************************************************\
@@ -137,7 +138,7 @@ static void extractbit(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &part)
 {
   init(expr, ID_extractbit);
   mto(expr, identifier);
-  stack(expr).move_to_operands(stack(part).op0());
+  stack_expr(expr).move_to_operands(stack_expr(part).op0());
 }
 
 /*******************************************************************\
@@ -157,22 +158,22 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
   init(expr, ID_extractbits);
   mto(expr, identifier);
   
-  if(stack(range).id()==ID_part_select)
+  if(stack_expr(range).id()==ID_part_select)
   {
-    stack(expr).move_to_operands(stack(range).op0(),
-                                 stack(range).op1());
+    stack_expr(expr).move_to_operands(stack_expr(range).op0(),
+                                 stack_expr(range).op1());
   }
-  else if(stack(range).id()==ID_indexed_part_select_plus)
+  else if(stack_expr(range).id()==ID_indexed_part_select_plus)
   {
-    exprt offset=minus_exprt(stack(range).op1(), from_integer(1, integer_typet()));
-    stack(expr).copy_to_operands(stack(range).op0(),
-                                 plus_exprt(stack(range).op0(), offset));
+    exprt offset=minus_exprt(stack_expr(range).op1(), from_integer(1, integer_typet{}));
+    stack_expr(expr).copy_to_operands(stack_expr(range).op0(),
+                                 plus_exprt(stack_expr(range).op0(), offset));
   }
-  else if(stack(range).id()==ID_indexed_part_select_minus)
+  else if(stack_expr(range).id()==ID_indexed_part_select_minus)
   {
-    exprt offset=minus_exprt(from_integer(1, integer_typet()), stack(range).op1());
-    stack(expr).copy_to_operands(stack(range).op0(),
-                                 plus_exprt(stack(range).op0(), offset));
+    exprt offset=minus_exprt(from_integer(1, integer_typet{}), stack_expr(range).op1());
+    stack_expr(expr).copy_to_operands(stack_expr(range).op0(),
+                                 plus_exprt(stack_expr(range).op0(), offset));
   }
   else
     assert(false);
@@ -565,9 +566,9 @@ int yyverilogerror(const char *error)
 
 grammar:  TOK_PARSE_LANGUAGE { /*yydebug=1;*/ } source_text
         | TOK_PARSE_EXPRESSION expression
-           { PARSER.parse_tree.expr.swap(stack($2)); }
+           { PARSER.parse_tree.expr.swap(stack_expr($2)); }
         | TOK_PARSE_TYPE reg_declaration
-           { PARSER.parse_tree.expr.swap(stack($2)); }
+           { PARSER.parse_tree.expr.swap(stack_expr($2)); }
         ;
 
 source_text: description_brace;
@@ -617,7 +618,7 @@ bind_directive:
 	
 type_declaration:
 	  TOK_TYPEDEF data_type type_identifier ';'
-	  	{ PARSER.parse_tree.create_typedef(stack($2), stack($3)); }
+	  	{ PARSER.parse_tree.create_typedef(stack_expr($2), stack_expr($3)); }
 	;
 
 data_type:
@@ -742,7 +743,7 @@ packed_dimension:
 		{ init($$, ID_array);
 		  stack_type($$).subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
-		  range.copy_to_operands(stack($2), stack($4)); }
+		  range.copy_to_operands(stack_expr($2), stack_expr($4)); }
 	| unsized_dimension
 	;
 
@@ -751,7 +752,7 @@ unpacked_dimension:
 		{ init($$, ID_array);
 		  stack_type($$).subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
-		  range.copy_to_operands(stack($2), stack($4)); }
+		  range.copy_to_operands(stack_expr($2), stack_expr($4)); }
 	| '[' expression ']'
 	{
 	  $$=$2;
@@ -847,20 +848,20 @@ module_declaration:
           module_nonansi_header module_item_brace TOK_ENDMODULE module_identifier_opt
           {
             PARSER.parse_tree.create_module(
-              stack($1).operands()[0],
-              stack($1).operands()[1],
-              stack($1).operands()[2],
-              stack($1).operands()[4],
-              stack($2));
+              stack_expr($1).operands()[0],
+              stack_expr($1).operands()[1],
+              stack_expr($1).operands()[2],
+              stack_expr($1).operands()[4],
+              stack_expr($2));
           }
         | module_ansi_header module_item_brace TOK_ENDMODULE module_identifier_opt
           {
             PARSER.parse_tree.create_module(
-              stack($1).operands()[0],
-              stack($1).operands()[1],
-              stack($1).operands()[2],
-              stack($1).operands()[4],
-              stack($2));
+              stack_expr($1).operands()[0],
+              stack_expr($1).operands()[1],
+              stack_expr($1).operands()[2],
+              stack_expr($1).operands()[4],
+              stack_expr($2));
           }
         | TOK_EXTERN module_nonansi_header
           /* ignored for now */
@@ -880,12 +881,12 @@ module_nonansi_header:
 	  module_parameter_port_list_opt
 	  list_of_ports_opt ';'          
           { 
-            init($$); stack($$).operands().resize(5);
-            stack($$).operands()[0].swap(stack($1));
-            stack($$).operands()[1].swap(stack($2));
-            stack($$).operands()[2].swap(stack($3));
-            stack($$).operands()[3].swap(stack($4));
-            stack($$).operands()[4].swap(stack($5));
+            init($$); stack_expr($$).operands().resize(5);
+            stack_expr($$).operands()[0].swap(stack_expr($1));
+            stack_expr($$).operands()[1].swap(stack_expr($2));
+            stack_expr($$).operands()[2].swap(stack_expr($3));
+            stack_expr($$).operands()[3].swap(stack_expr($4));
+            stack_expr($$).operands()[4].swap(stack_expr($5));
           }
         ;
 
@@ -896,12 +897,12 @@ module_ansi_header:
 	  module_parameter_port_list_opt
 	  list_of_port_declarations ';'
           { 
-            init($$); stack($$).operands().resize(5);
-            stack($$).operands()[0].swap(stack($1));
-            stack($$).operands()[1].swap(stack($2));
-            stack($$).operands()[2].swap(stack($3));
-            stack($$).operands()[3].swap(stack($4));
-            stack($$).operands()[4].swap(stack($5));
+            init($$); stack_expr($$).operands().resize(5);
+            stack_expr($$).operands()[0].swap(stack_expr($1));
+            stack_expr($$).operands()[1].swap(stack_expr($2));
+            stack_expr($$).operands()[2].swap(stack_expr($3));
+            stack_expr($$).operands()[3].swap(stack_expr($4));
+            stack_expr($$).operands()[4].swap(stack_expr($5));
           }
         ;
 
@@ -940,12 +941,12 @@ port_declaration_brace:
 	| port_declaration_brace ',' port_identifier
 		{ $$=$1;
 		  exprt decl(ID_decl);
-		  decl.move_to_operands(stack($3));
+		  decl.move_to_operands(stack_expr($3));
 		  // grab the type and class from previous!
-		  const irept &prev=stack($$).get_sub().back();
+		  const irept &prev=stack_expr($$).get_sub().back();
                   decl.set(ID_type, prev.find(ID_type));
                   decl.set(ID_class, prev.find(ID_class));
-		  stack($$).move_to_sub(decl);
+		  stack_expr($$).move_to_sub(decl);
 		}
 	;
 
@@ -958,7 +959,7 @@ module_port_declaration:
 module_port_input_declaration:
 	  TOK_INPUT port_type port_identifier
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_input);
+                  stack_expr($$).set(ID_class, ID_input);
                   addswap($$, ID_type, $2);
                   mto($$, $3); }
 	;
@@ -966,12 +967,12 @@ module_port_input_declaration:
 module_port_output_declaration:
 	  TOK_OUTPUT port_type port_identifier
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_output);
+                  stack_expr($$).set(ID_class, ID_output);
                   addswap($$, ID_type, $2);
                   mto($$, $3); }
 	| TOK_OUTPUT data_type port_identifier
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_output_register);
+                  stack_expr($$).set(ID_class, ID_output_register);
                   addswap($$, ID_type, $2);
                   mto($$, $3); }
 	;
@@ -979,7 +980,7 @@ module_port_output_declaration:
 module_port_inout_declaration:
 	  TOK_INOUT port_type port_identifier
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_inout);
+                  stack_expr($$).set(ID_class, ID_inout);
                   addswap($$, ID_type, $2);
                   mto($$, $3); }
 	;
@@ -992,7 +993,7 @@ port_brace:
 	;
 
 port:	  port_expression_opt
-		{ if(stack($1).is_nil())
+		{ if(stack_expr($1).is_nil())
 		    $$=$1;
 		  else { init($$, ID_decl);  mto($$, $1); }
 		}
@@ -1123,7 +1124,7 @@ generate_loop_statement:
                       genvar_assignment ')'
           generate_block
           	{ init($$, ID_generate_for);
-          	  stack($$).reserve_operands(4);
+          	  stack_expr($$).reserve_operands(4);
           	  mto($$, $3);
           	  mto($$, $5);
           	  mto($$, $7);
@@ -1142,7 +1143,7 @@ generate_block:
 	  TOK_BEGIN generate_item_brace TOK_END
 	  	{ init($$, ID_generate_block); }
 	| TOK_BEGIN TOK_COLON generate_block_identifier generate_item_brace TOK_END
-		{ init($$, ID_generate_block); stack($$).operands().swap(stack($4).operands()); }
+		{ init($$, ID_generate_block); stack_expr($$).operands().swap(stack_expr($4).operands()); }
 	;
 
 port_declaration:
@@ -1192,7 +1193,7 @@ property_declaration:
 
 genvar_declaration:
 	  TOK_GENVAR list_of_genvar_identifiers ';'
-		{ init($$, ID_decl); stack($$).set(ID_class, ID_genvar); swapop($$, $2); }
+		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
 	;
 
 list_of_genvar_identifiers:
@@ -1246,7 +1247,7 @@ implicit_data_type:
 input_declaration:
 	  TOK_INPUT port_type list_of_port_identifiers
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_input);
+                  stack_expr($$).set(ID_class, ID_input);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	;
@@ -1254,12 +1255,12 @@ input_declaration:
 output_declaration:
 	  TOK_OUTPUT port_type list_of_port_identifiers
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_output);
+                  stack_expr($$).set(ID_class, ID_output);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	| TOK_OUTPUT data_type list_of_port_identifiers
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_output_register);
+                  stack_expr($$).set(ID_class, ID_output_register);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	;
@@ -1267,7 +1268,7 @@ output_declaration:
 inout_declaration:
 	  TOK_INOUT port_type list_of_port_identifiers
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_inout);
+                  stack_expr($$).set(ID_class, ID_inout);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	;
@@ -1311,15 +1312,15 @@ automatic_opt:
 
 list_of_port_identifiers:
 	  port_identifier unpacked_dimension_brace
-		{ init($$); stack($1).type().swap(stack($2)); mto($$, $1); }
+		{ init($$); stack_expr($1).type().swap(stack_expr($2)); mto($$, $1); }
 	| list_of_port_identifiers ',' port_identifier unpacked_dimension_brace
-		{ $$=$1;    stack($3).type().swap(stack($4)); mto($$, $3); }
+		{ $$=$1;    stack_expr($3).type().swap(stack_expr($4)); mto($$, $3); }
 	;
 
 reg_declaration:
 	  TOK_REG data_type_or_implicit list_of_register_identifiers ';'
 		{ init($$, ID_decl);
-		  stack($$).set(ID_class, ID_reg);
+		  stack_expr($$).set(ID_class, ID_reg);
                   addswap($$, ID_type, $2);
 		  swapop($$, $3); }
 	;
@@ -1341,7 +1342,7 @@ register_name:
           register_identifier packed_dimension_brace
           { 
             $$=$1;
-            stack($$).add(ID_type)=stack($2);
+            stack_expr($$).add(ID_type)=stack_expr($2);
           }
 	;
 
@@ -1362,17 +1363,17 @@ range:	part_select;
 
 integer_declaration:
 	  TOK_INTEGER list_of_register_identifiers ';'
-		{ init($$, ID_decl); stack($$).set(ID_class, ID_integer); swapop($$, $2); }
+		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_integer); swapop($$, $2); }
 	;
 
 realtime_declaration:
 	  TOK_REALTIME list_of_real_identifiers ';'
-		{ init($$, ID_decl); stack($$).set(ID_class, ID_realtime); swapop($$, $2); }
+		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_realtime); swapop($$, $2); }
 	;
 
 real_declaration:
 	  TOK_REAL list_of_real_identifiers ';'
-		{ init($$, ID_decl); stack($$).set(ID_class, ID_realtime); swapop($$, $2); }
+		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_realtime); swapop($$, $2); }
 	;
 
 list_of_real_identifiers:
@@ -1430,7 +1431,7 @@ list_of_net_names:
 net_name: net_identifier packed_dimension_brace
           {
             $$=$1;
-            stack($$).add(ID_type)=stack($2);
+            stack_expr($$).add(ID_type)=stack_expr($2);
           }
 	;
 
@@ -1469,7 +1470,7 @@ function_declaration:
 	  function_identifier list_of_ports_opt ';'
           function_item_declaration_brace statement TOK_ENDFUNCTION
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_function); 
+                  stack_expr($$).set(ID_class, ID_function); 
                   addswap($$, ID_type, $4);
                   add_as_subtype(stack_type($4), stack_type($3));
                   addswap($$, ID_symbol, $5);
@@ -1515,7 +1516,7 @@ task_declaration:
 	  task_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
 		{ init($$, ID_decl);
-                  stack($$).set(ID_class, ID_task); 
+                  stack_expr($$).set(ID_class, ID_task); 
 		  addswap($$, ID_symbol, $2);
 		  addswap($$, ID_ports, $3);
 		  addswap($$, "declarations", $5);
@@ -1553,8 +1554,8 @@ attribute_instance_brace:
 		{ init($$, ID_verilog_attribute); }
 	| attribute_instance_brace attribute_instance
 		{ $$=$1;
-		  Forall_irep(it, stack($2).get_sub())
-		    stack($$).move_to_sub(*it);
+		  Forall_irep(it, stack_expr($2).get_sub())
+		    stack_expr($$).move_to_sub(*it);
 		}
         ;
 
@@ -1571,11 +1572,11 @@ attr_spec_list:
 
 attr_spec: attr_name '=' constant_expression
 		{ init($$, "attribute");
-		  stack($$).add(ID_name).swap(stack($1));
-		  stack($$).add(ID_value).swap(stack($3));
+		  stack_expr($$).add(ID_name).swap(stack_expr($1));
+		  stack_expr($$).add(ID_value).swap(stack_expr($3));
 		}
 	| attr_name
-		{ init($$, "attribute"); stack($$).add(ID_name).swap(stack($1)); }
+		{ init($$, "attribute"); stack_expr($$).add(ID_name).swap(stack_expr($1)); }
 	;
 
 attr_name: identifier
@@ -1614,9 +1615,9 @@ gate_instantiation:
 	| pass_switchtype gate_instance_brace ';'
 		{ init($$, ID_inst_builtin); addswap($$, ID_module, $1); swapop($$, $2); }
 	| TOK_PULLDOWN pulldown_strength_opt gate_instance_brace ';'
-		{ init($$, ID_inst_builtin); stack($$).set(ID_module, ID_pulldown); swapop($$, $3); }
+		{ init($$, ID_inst_builtin); stack_expr($$).set(ID_module, ID_pulldown); swapop($$, $3); }
 	| TOK_PULLUP   pullup_strength_opt   gate_instance_brace ';'
-		{ init($$, ID_inst_builtin); stack($$).set(ID_module, ID_pullup);   swapop($$, $3); }
+		{ init($$, ID_inst_builtin); stack_expr($$).set(ID_module, ID_pullup);   swapop($$, $3); }
 	;
 
 cmos_switchtype:
@@ -1731,8 +1732,8 @@ ordered_parameter_assignment:
 named_parameter_assignment:
 	  '.' parameter_identifier '(' expression_opt ')'
 	  	{ init($$, ID_named_parameter_assignment);
-	  	  stack($$).add(ID_parameter).swap(stack($2));
-	  	  stack($$).add(ID_value).swap(stack($4));
+	  	  stack_expr($$).add(ID_parameter).swap(stack_expr($2));
+	  	  stack_expr($$).add(ID_value).swap(stack_expr($4));
 	  	}
 	;
 
@@ -1866,18 +1867,18 @@ subroutine_call:
 tf_call:
           hierarchical_tf_identifier '(' expression_brace ')'
 		{ init($$, ID_function_call);
-		  stack($$).operands().reserve(2);
+		  stack_expr($$).operands().reserve(2);
 		  mto($$, $1); mto($$, $3); }
         ;
 
 system_tf_call:
 	  system_task_name
 		{ init($$, ID_function_call);
-		  stack($$).operands().resize(2);
-		  stack($$).operands()[0].swap(stack($1)); }
+		  stack_expr($$).operands().resize(2);
+		  stack_expr($$).operands()[0].swap(stack_expr($1)); }
         | system_task_name '(' expression_brace ')'
 		{ init($$, ID_function_call);
-		  stack($$).operands().reserve(2);
+		  stack_expr($$).operands().reserve(2);
 		  mto($$, $1); mto($$, $3); }
         ;
 
@@ -1912,9 +1913,9 @@ assert_property_statement:
 		{ init($$, ID_assert); mto($$, $4); mto($$, $6); }
 	| /* this one is in because SMV does it */
 	  TOK_ASSERT property_identifier TOK_COLON expression ';'
-		{ init($$, ID_assert); stack($$).operands().resize(2);
-		  stack($$).op0().swap(stack($4)); stack($$).op1().make_nil();
-		  stack($$).set(ID_identifier, stack($2).id());
+		{ init($$, ID_assert); stack_expr($$).operands().resize(2);
+		  stack_expr($$).op0().swap(stack_expr($4)); stack_expr($$).op1().make_nil();
+		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
 		} 
 	;
 
@@ -1923,9 +1924,9 @@ assume_property_statement:
 		{ init($$, ID_assume); mto($$, $4); mto($$, $6); }
 	| /* this one is in because SMV does it */
 	  TOK_ASSUME property_identifier TOK_COLON expression ';'
-		{ init($$, ID_assume); stack($$).operands().resize(2);
-		  stack($$).op0().swap(stack($4)); stack($$).op1().make_nil();
-		  stack($$).set(ID_identifier, stack($2).id());
+		{ init($$, ID_assume); stack_expr($$).operands().resize(2);
+		  stack_expr($$).op0().swap(stack_expr($4)); stack_expr($$).op1().make_nil();
+		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
 		} 
 	;
 
@@ -1938,8 +1939,8 @@ cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
 action_block:
           statement_or_null %prec LT_TOK_ELSE
         | statement_or_null TOK_ELSE statement 
-                { init($$, "action-else"); stack($$).operands().resize(2);
-                  stack($$).op0().swap(stack($0)); stack($$).op1().swap(stack($2)); }
+                { init($$, "action-else"); stack_expr($$).operands().resize(2);
+                  stack_expr($$).op0().swap(stack_expr($0)); stack_expr($$).op1().swap(stack_expr($2)); }
 	;
 
 concurrent_assert_statement:
@@ -1947,7 +1948,7 @@ concurrent_assert_statement:
         | block_identifier TOK_COLON assert_property_statement
 		{ 
 		  $$=$3;
-		  stack($$).set(ID_identifier, stack($1).id());
+		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
 		}
 	;
 
@@ -1956,7 +1957,7 @@ concurrent_assume_statement:
         | block_identifier TOK_COLON assume_property_statement
 		{ 
 		  $$=$3;
-		  stack($$).set(ID_identifier, stack($1).id());
+		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
 		}
 	;
 
@@ -1964,7 +1965,7 @@ concurrent_cover_statement: cover_property_statement
         | block_identifier TOK_COLON cover_property_statement
 		{ 
 		  $$=$3;
-		  stack($$).set(ID_identifier, stack($1).id());
+		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
 		}
 	;
 
@@ -2070,16 +2071,16 @@ event_control:
 		{ init($$, ID_event_guard); mto($$, $3); }
 	| '@' TOK_ASTERIC
 		{ init($$, ID_event_guard);
-		  stack($$).operands().resize(1);
-	          stack($$).op0().id(ID_verilog_star_event); }
+		  stack_expr($$).operands().resize(1);
+	          stack_expr($$).op0().id(ID_verilog_star_event); }
 	| '@' '(' TOK_ASTERIC ')'
 		{ init($$, ID_event_guard);
-		  stack($$).operands().resize(1);
-	          stack($$).op0().id(ID_verilog_star_event); }
+		  stack_expr($$).operands().resize(1);
+	          stack_expr($$).op0().id(ID_verilog_star_event); }
 	| '@' TOK_PARENASTERIC ')'
 		{ init($$, ID_event_guard);
-		  stack($$).operands().resize(1);
-	          stack($$).op0().id(ID_verilog_star_event); }
+		  stack_expr($$).operands().resize(1);
+	          stack_expr($$).op0().id(ID_verilog_star_event); }
 	;
 
 event_identifier:
@@ -2115,13 +2116,13 @@ conditional_statement:
 case_statement:
 	  TOK_CASE '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_case);  mto($$, $3);
-                  Forall_operands(it, stack($5)) stack($$).move_to_operands(*it); }
+                  Forall_operands(it, stack_expr($5)) stack_expr($$).move_to_operands(*it); }
 	| TOK_CASEX '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_casex); mto($$, $3);
-                  Forall_operands(it, stack($5)) stack($$).move_to_operands(*it); }
+                  Forall_operands(it, stack_expr($5)) stack_expr($$).move_to_operands(*it); }
 	| TOK_CASEZ '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_casez); mto($$, $3);
-                  Forall_operands(it, stack($5)) stack($$).move_to_operands(*it); }
+                  Forall_operands(it, stack_expr($5)) stack_expr($$).move_to_operands(*it); }
 	;
 
 case_item_brace:
@@ -2136,13 +2137,13 @@ case_item:
 		{ init($$, ID_case_item); mto($$, $1); mto($$, $3); }
 	| TOK_DEFAULT TOK_COLON statement_or_null
 		{ init($$, ID_case_item);
-                  stack($$).operands().resize(1);
-                  stack($$).op0().id(ID_default);
+                  stack_expr($$).operands().resize(1);
+                  stack_expr($$).op0().id(ID_default);
                   mto($$, $3); }
 	| TOK_DEFAULT statement_or_null
 		{ init($$, ID_case_item);
-                  stack($$).operands().resize(1);
-                  stack($$).op0().id(ID_default);
+                  stack_expr($$).operands().resize(1);
+                  stack_expr($$).op0().id(ID_default);
                   mto($$, $2); }
 	;
 
@@ -2206,7 +2207,7 @@ task_identifier: hierarchical_identifier
 
 system_task_name: TOK_SYSIDENT
                 { init($$, ID_symbol);
-                  stack($$).set(ID_identifier, stack($1).id());
+                  stack_expr($$).set(ID_identifier, stack_expr($1).id());
                 }
         ;
 
@@ -2333,7 +2334,7 @@ expression:
 	| expression TOK_QUESTION expression TOK_COLON expression
 		{ init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
 	| TOK_QSTRING
-		{ init($$, ID_constant); stack($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
+		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
 	;
 
 // properties for SystemVerilog assertions
@@ -2372,11 +2373,11 @@ sequence_expr:
 
 cycle_delay_range:
           "##" number
-                { init($$, ID_sva_cycle_delay); mto($$, $2); stack($$).operands().push_back(nil_exprt()); }
+                { init($$, ID_sva_cycle_delay); mto($$, $2); stack_expr($$).operands().push_back(nil_exprt()); }
         | "##" '[' number TOK_COLON number ']'
                 { init($$, ID_sva_cycle_delay); mto($$, $3); mto($$, $5); }
         | "##" '[' number TOK_COLON '$' ']'
-                { init($$, ID_sva_cycle_delay); mto($$, $3); stack($$).copy_to_operands(exprt(ID_infinity)); }
+                { init($$, ID_sva_cycle_delay); mto($$, $3); stack_expr($$).copy_to_operands(exprt(ID_infinity)); }
         ;
 
 unary_operator:
@@ -2459,7 +2460,7 @@ hierarchical_identifier:
           identifier
         | hierarchical_identifier '.' identifier
 		{ init($$, ID_hierarchical_identifier);
-		  stack($$).reserve_operands(2);
+		  stack_expr($$).reserve_operands(2);
 		  mto($$, $1);
 		  mto($$, $3);
 		}

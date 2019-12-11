@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <solvers/prop/prop_conv.h>
 
+#include <util/namespace.h>
+
 exprt instantiate(
   const exprt &expr,
   unsigned current, unsigned no_timeframes,

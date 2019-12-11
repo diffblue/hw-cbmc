@@ -9,9 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <sstream>
 
+#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
-#include <util/arith_tools.h>
 #include <util/std_expr.h>
 
 #include "expr2vhdl.h"

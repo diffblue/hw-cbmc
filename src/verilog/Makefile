@@ -7,10 +7,10 @@ SRC = verilog_language.cpp verilog_y.tab.cpp verilog_lex.yy.cpp verilog_parser.c
       verilog_module.cpp vtype.cpp verilog_typecheck_type.cpp \
       verilog_interpreter.cpp
 
-include ../config.inc
+include $(CPROVER_DIR)/config.inc
+include $(CPROVER_DIR)/common
 
-INCLUDES= -I $(CBMC)/src -I ..
-
+INCLUDES= -I $(CPROVER_DIR) -I ..
 CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 CLEANFILES = verilog$(LIBEXT) verilog_y.tab.h verilog_y.tab.cpp \

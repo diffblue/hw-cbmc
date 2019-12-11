@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/arith_tools.h>
-#include <util/simplify_expr.h>
+#include <util/ebmc_util.h>
 #include <util/replace_symbol.h>
+#include <util/simplify_expr.h>
 
 #include "verilog_typecheck.h"
 
@@ -64,14 +64,14 @@ void verilog_typecheckt::get_parameter_values(
             
             if(!value.is_constant())
             {
-              err_location((const exprt &)(o_it->find(ID_value)));
+              error().source_location = value.source_location();
               error() << "parameter value expected to simplify to constant, "
                       << "but got `" << to_string(value) << "'" << eom;
               throw 0;
             }
           }
-          
-          replace_symbol.insert(identifier, value);
+
+          replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
           parameter_values.push_back(value);
         }
       }
@@ -103,21 +103,21 @@ void verilog_typecheckt::get_parameter_values(
             
             if(!value.is_constant())
             {
-              err_location((const exprt &)(o_it->find(ID_value)));
+              error().source_location = value.source_location();
               error() << "parameter value expected to simplify to constant, "
                       << "but got `" << to_string(value) << "'" << eom;
               throw 0;
             }
           }
-          
-          replace_symbol.insert(identifier, value);
+
+          replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
           parameter_values.push_back(value);
         }
       }
       
     if(p_it!=parameter_assignment.end())
     {
-      err_location(*p_it);
+      error().source_location = p_it->source_location();
       error() << "too many parameter assignments" << eom;
       throw 0;
     }
@@ -205,6 +205,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   std::string suffix="(";
   
   bool first=true;
+
   for(const auto &pv : parameter_values)
     if(pv.is_not_nil())
     {
@@ -213,13 +214,12 @@ irep_idt verilog_typecheckt::parameterize_module(
       mp_integer i;
       if(to_integer(pv, i))
       {
-        err_location(pv);
+        error().source_location = pv.source_location();
         error() << "parameter expected to be constant, but got `"
                 << to_string(pv) << "'" << eom;
         throw 0;
-      }
-      else
-        suffix+=integer2string(i);
+      } else
+        suffix += i.to_ulong();
     }
     
   suffix+=')';

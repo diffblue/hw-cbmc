@@ -18,11 +18,12 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-#include <solvers/prop/aig_prop.h>
+#include <trans-netlist/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
-#include <ebmc/ebmc_base.h>
-#include "ebmc_ic3_interface.hh"
 
+#include <ebmc/ebmc_base.h>
+
+#include "ebmc_ic3_interface.hh"
 
 /*=====================================
 

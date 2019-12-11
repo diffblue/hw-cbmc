@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 
 #include "verilog_typecheck_expr.h"
 
@@ -56,7 +56,7 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
 
       dest.add_source_location()=
         static_cast<const source_locationt &>(src.find(ID_C_source_location));
-      dest.set_width(integer2size_t(width));
+      dest.set_width(width.to_ulong());
       dest.set(ID_C_little_endian, little_endian);
       dest.set(ID_C_offset, integer2string(offset));
 

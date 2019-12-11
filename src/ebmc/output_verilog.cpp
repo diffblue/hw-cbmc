@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <iostream>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/simplify_expr.h>
 
 #include <verilog/verilog_language.h>

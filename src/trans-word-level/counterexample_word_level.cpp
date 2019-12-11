@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "instantiate_word_level.h"
 #include "counterexample_word_level.h"
 
+#include <util/symbol_table.h>
+
 /*******************************************************************\
 
 Function: show_state
@@ -74,14 +76,10 @@ Function: show_counterexample
 
 \*******************************************************************/
 
-void show_counterexample(
-  message_handlert &message_handler,
-  const decision_proceduret &solver,
-  unsigned no_timeframes,
-  const namespacet &ns,
-  const std::string &module,
-  language_uit::uit ui)
-{
+void show_counterexample(message_handlert &message_handler,
+                         const decision_proceduret &solver,
+                         unsigned no_timeframes, const namespacet &ns,
+                         const std::string &module) {
   for(unsigned t=0; t<no_timeframes; t++)
     show_state(solver, ns, module, t);
 }

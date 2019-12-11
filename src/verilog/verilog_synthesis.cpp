@@ -11,10 +11,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <set>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
-#include <util/simplify_expr.h>
 #include <util/identifier.h>
+#include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
@@ -242,10 +242,8 @@ void verilog_synthesist::expand_hierarchical_identifier(
   // item may be later.
   // The type checker already checked that it's fine.
 
-  symbol_exprt new_symbol;
-  new_symbol.type()=expr.type();
+  symbol_exprt new_symbol{full_identifier, expr.type()};
   new_symbol.add_source_location()=expr.source_location();
-  new_symbol.set_identifier(full_identifier);
   expr.swap(new_symbol);
 }
 
@@ -279,9 +277,7 @@ void verilog_synthesist::assignment(
         it!=lhs.operands().rend();
         it++)
     {
-      constant_exprt offset_constant;
-      offset_constant.type()=natural_typet();
-      offset_constant.set(ID_value, offset);
+      constant_exprt offset_constant{std::to_string(offset), natural_typet{}};
 
       if(it->type().id()==ID_bool)
       {
@@ -295,14 +291,14 @@ void verilog_synthesist::assignment(
               it->type().id()==ID_unsignedbv)
       {
         unsigned width=get_width(it->type());
-      
-        constant_exprt offset_constant2;
-        offset_constant2.type()=natural_typet();
-        offset_constant2.set(ID_value, offset+width-1);
 
-        extractbits_exprt bit_extract(
-          rhs, offset_constant, offset_constant2, it->type());
-        
+        constant_exprt offset_constant2{std::to_string(offset + width - 1),
+                                        natural_typet{}};
+
+        // extractbits requires that upper >= lower, i.e. op1 >= op2
+        extractbits_exprt bit_extract(rhs, offset_constant2, offset_constant,
+                                      it->type());
+
         assignment(*it, bit_extract, blocking);
         
         offset+=width;
@@ -464,8 +460,7 @@ void verilog_synthesist::assignment_rec(
 
     mp_integer from, to;
 
-    if(to_integer(lhs_index_one, from))
-    {
+    if (to_integer(lhs_index_one, from)) {
       error().source_location=lhs_index_one.source_location();
       error() << "failed to convert range" << eom;
       throw 0;
@@ -1113,9 +1108,8 @@ void verilog_synthesist::synth_module_instance_builtin(
 
       if(instance.operands().size()==2)
       {
-        equal_exprt constraint;
-        constraint.lhs()=instance.operands()[0];
-        constraint.rhs()=instance.operands().back();
+        equal_exprt constraint{instance.operands()[0],
+                               instance.operands().back()};
         trans.invar().move_to_operands(constraint);
       }
       else
@@ -1158,10 +1152,9 @@ void verilog_synthesist::synth_module_instance_builtin(
 
       for(unsigned i=0; i<instance.operands().size()-1; i++)
       {
-        equal_exprt constraint;
-        constraint.lhs()=instance.operands()[i];
-        constraint.rhs()=instance.operands().back();
-    
+        equal_exprt constraint{instance.operands()[i],
+                               instance.operands().back()};
+
         assert(trans.operands().size()==3);
         trans.invar().move_to_operands(constraint);
       }
@@ -1177,11 +1170,9 @@ void verilog_synthesist::synth_module_instance_builtin(
       
         if(instance.type().id()!=ID_bool)
           op.id("bit"+op.id_string());
-      
-        equal_exprt constraint;
-        constraint.lhs()=op;
-        constraint.rhs()=instance.operands().back();
-    
+
+        equal_exprt constraint{op, instance.operands().back()};
+
         assert(trans.operands().size()==3);
         trans.invar().move_to_operands(constraint);
       }
@@ -1418,10 +1409,7 @@ Function: verilog_synthesist::synth_decl
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_decl(
-  const verilog_declt &statement,
-  transt &trans)
-{
+void verilog_synthesist::synth_decl(const verilog_declt &statement) {
   forall_operands(it, statement)
   {
     if(it->id()==ID_equal)
@@ -1579,9 +1567,7 @@ void verilog_synthesist::synth_force_rec(
         it!=lhs.operands().rend();
         it++)
     {
-      constant_exprt offset_constant;
-      offset_constant.type()=natural_typet();
-      offset_constant.set(ID_value, offset);
+      constant_exprt offset_constant{std::to_string(offset), natural_typet{}};
 
       if(it->type().id()==ID_bool)
       {
@@ -1595,10 +1581,9 @@ void verilog_synthesist::synth_force_rec(
               it->type().id()==ID_unsignedbv)
       {
         unsigned width=get_width(it->type());
-      
-        constant_exprt offset_constant2;
-        offset_constant2.type()=natural_typet();
-        offset_constant2.set(ID_value, offset+width-1);
+
+        constant_exprt offset_constant2{std::to_string(offset + width - 1),
+                                        natural_typet{}};
 
         exprt bit_extract(ID_extractbits, it->type());
         bit_extract.copy_to_operands(rhs, offset_constant, offset_constant2);
@@ -1873,9 +1858,8 @@ exprt verilog_synthesist::case_comparison(
            new_pattern_value[i]=='z' ||
            new_pattern_value[i]=='x')
           new_pattern_value[i]='0';
-    
-      constant_exprt new_pattern(new_type);
-      new_pattern.set_value(new_pattern_value);
+
+      constant_exprt new_pattern{new_pattern_value, new_type};
 
       std::string new_mask_value=
         id2string(to_constant_expr(tmp).get_value());
@@ -1889,12 +1873,12 @@ exprt verilog_synthesist::case_comparison(
         else
           new_mask_value[i]='1';
 
-      constant_exprt new_mask(new_type);
-      new_mask.set_value(new_mask_value);
-    
-      exprt bitand_expr=bitand_exprt(new_case_operand, new_mask);
-    
-      return equal_exprt(bitand_expr, new_pattern);
+      constant_exprt new_mask{new_mask_value, new_type};
+
+      exprt bitand_expr =
+          bitand_exprt{new_case_operand, binary_to_hex(new_mask)};
+
+      return equal_exprt{bitand_expr, binary_to_hex(new_pattern)};
     }
   }
 
@@ -2102,12 +2086,8 @@ void verilog_synthesist::merge(
     exprt false_value=current_value(false_map, symbol, use_previous_assignments);
     
     // this is a phi-node equivalent
-    if_exprt value;
-    value.type()=symbol.type;
-    value.cond()=guard;
-    value.true_case().swap(true_value);
-    value.false_case().swap(false_value);
-    
+    if_exprt value{guard, true_value, false_value, symbol.type};
+
     dest.symbol_map[symbol.name].swap(value);
     dest.changed.insert(symbol.name);
   }
@@ -2574,8 +2554,7 @@ void verilog_synthesist::synth_statement(
     synth_prepostincdec(statement);
   else if(statement.id()==ID_decl)
   {
-    transt tmp_trans;
-    synth_decl(to_verilog_decl(statement), tmp_trans);
+    synth_decl(to_verilog_decl(statement));
   }
   else if(statement.id()==ID_skip)
   {
@@ -2610,7 +2589,7 @@ void verilog_synthesist::synth_module_item(
   {
   }
   else if(module_item.id()==ID_decl)
-    synth_decl(to_verilog_decl(module_item), trans);
+    synth_decl(to_verilog_decl(module_item));
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
   {
@@ -2694,10 +2673,7 @@ void verilog_synthesist::synth_assignments(
   if(!symbol.is_state_var)
     post_process_wire(symbol.name, new_value);
 
-  equal_exprt equality_expr;
-
-  equality_expr.lhs()=symbol_expr(symbol, curr_or_next);
-  equality_expr.rhs().swap(new_value);
+  equal_exprt equality_expr{symbol_expr(symbol, curr_or_next), new_value};
 
   constraints.move_to_operands(equality_expr);
 }
@@ -2895,7 +2871,7 @@ void verilog_synthesist::post_process_initial(exprt &constraints)
         if(counters.count(rhs)==1)
         {
           // not used elsewhere
-          it->make_true();
+          it->set(ID_value, ID_true);
         }
       }
     }
@@ -2958,8 +2934,9 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
     local_symbols.insert(it->second);
 
   // now convert the module items
-  
-  transt trans;
+
+  transt trans{ID_trans, conjunction({}), conjunction({}), conjunction({}),
+               symbol.type};
 
   for(const auto & it : symbol.value.operands())
   {
