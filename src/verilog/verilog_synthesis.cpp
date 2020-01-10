@@ -947,7 +947,7 @@ void verilog_synthesist::instantiate_port(
   equal_exprt equality(it->second, value);
 
   if(equality.op0().type()!=equality.op1().type())
-    equality.op0().make_typecast(equality.op1().type());
+    equality.op0() = typecast_exprt{equality.op0(), equality.op1().type()};
 
   trans.invar().move_to_operands(equality);
 }
@@ -1845,8 +1845,8 @@ exprt verilog_synthesist::case_comparison(
 
       // the pattern has the max type
       unsignedbv_typet new_type(pattern.type().get_int(ID_width));
-      new_case_operand.make_typecast(new_type);
-    
+      new_case_operand = typecast_exprt{new_case_operand, new_type};
+
       // we are using masking!
     
       std::string new_pattern_value=
@@ -2247,7 +2247,7 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
   while(true)
   {  
     exprt tmp_guard=statement.condition();
-    tmp_guard.make_typecast(bool_typet());
+    tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
     synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
  
@@ -2335,7 +2335,7 @@ void verilog_synthesist::synth_while(
   while(true)
   {  
     exprt tmp_guard=statement.condition();
-    tmp_guard.make_typecast(bool_typet());
+    tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
     synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
  

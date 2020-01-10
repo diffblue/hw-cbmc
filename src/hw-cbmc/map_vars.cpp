@@ -365,8 +365,7 @@ void map_varst::add_constraint_rec(
   else
   {
     // we assume that the typecast will work out
-    exprt e2_tmp=module_symbol;
-    e2_tmp.make_typecast(program_symbol.type());
+    exprt e2_tmp = typecast_exprt{module_symbol, program_symbol.type()};
 
     constraints.push_back(
       equal_exprt(program_symbol, e2_tmp));

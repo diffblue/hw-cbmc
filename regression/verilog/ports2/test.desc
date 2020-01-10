@@ -1,10 +1,7 @@
 CORE
 main.v
 --module main --bound 1
-^EXIT=10$
+^EXIT=0$
 ^SIGNAL=0$
-^\[main.property.property1\] always main.data0 == 200: SUCCESS$
-^\[main.m1.property.1\] always main.m1.data == 100: FAILURE$
-^\[main.m2.property.1\] always main.m2.data == 100: SUCCESS$
 --
 ^warning: ignoring

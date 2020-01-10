@@ -971,7 +971,7 @@ void smv_typecheckt::typecheck(
         }
       }
       else
-        expr.make_typecast(type);
+        expr = typecast_exprt{expr, type};
 
       return;      
     }

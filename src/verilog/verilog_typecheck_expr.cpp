@@ -184,9 +184,8 @@ void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
 {
   unsignedbv_typet new_type(1);
 
-  Forall_operands(it, expr)
-    if(it->type().id()==ID_bool)
-      it->make_typecast(new_type);
+  Forall_operands(it, expr) if (it->type().id() == ID_bool) *it =
+      typecast_exprt{*it, new_type};
 }
 
 /*******************************************************************\
@@ -259,7 +258,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
         if(it->type().id()!=ID_verilog_unsignedbv)
         {
           unsigned width=get_width(*it);
-          it->make_typecast(verilog_unsignedbv_typet(width));
+          *it = typecast_exprt{*it, verilog_unsignedbv_typet{width}};
         }
     }
   }
@@ -1247,7 +1246,7 @@ void verilog_typecheck_exprt::typecast(
        expr.type().id()==ID_signedbv ||
        expr.type().id()==ID_integer)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
@@ -1271,7 +1270,7 @@ void verilog_typecheck_exprt::typecast(
             dest_type.id()==ID_verilog_unsignedbv ||
             dest_type.id()==ID_verilog_signedbv)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
@@ -1311,24 +1310,24 @@ void verilog_typecheck_exprt::typecast(
       {
         mp_integer i;
         if(to_integer(expr, i))
-          expr.make_typecast(dest_type);
+          expr = typecast_exprt{expr, dest_type};
         else
           expr=from_integer(i, dest_type);
       }
       else
-        expr.make_typecast(dest_type);
+        expr = typecast_exprt{expr, dest_type};
 
       return;
     }
     else if(dest_type.id()==ID_verilog_unsignedbv ||
             dest_type.id()==ID_verilog_signedbv)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
     else if(dest_type.id()==ID_verilog_realtime)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
@@ -1359,7 +1358,7 @@ void verilog_typecheck_exprt::make_boolean(exprt &expr)
     if(!to_integer(expr, value))
       expr.make_bool(value!=0);
     else
-      expr.make_typecast(bool_typet());
+      expr = typecast_exprt{expr, bool_typet{}};
   }
 }
 
@@ -1619,7 +1618,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
       else if(op1.is_true() || op1.is_false())
         op1=from_integer(op1.is_true()?1:0, _index_type);
       else
-        expr.op1().make_typecast(_index_type);
+        expr.op1() = typecast_exprt{expr.op1(), _index_type};
     }
 
     expr.type()=op0.type().subtype();
@@ -1691,7 +1690,7 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   }
 
   if(op1.type().id()==ID_bool)
-    op1.make_typecast(unsignedbv_typet(1));
+    op1 = typecast_exprt{op1, unsignedbv_typet{1}};
 
   unsigned width=get_width(expr.op1().type());
 
