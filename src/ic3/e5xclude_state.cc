@@ -36,10 +36,6 @@ bool CompInfo::adjust_clause2(CLAUSE &C,CUBE &St_cube,SCUBE &Failed_lits)
 
   if (St_cube.size() == 0) return(false);
 
-  if (verbose > 3) {
-    printf("%*c",9,' ');
-    printf("expand_clause\n");
-  }
   htable_lits.change_marker(); 
   htable_lits.started_using();
 
@@ -74,7 +70,7 @@ bool CompInfo::adjust_clause2(CLAUSE &C,CUBE &St_cube,SCUBE &Failed_lits)
 
   if (shift == 0) {
     p();
-    exit(1); }
+    throw(ERROR1); }
 
   C.resize(C.size()-shift);
   htable_lits.done_using();
@@ -110,9 +106,6 @@ bool CompInfo::find_ind_subclause_ctg(CLAUSE &C,int curr_tf,CLAUSE &C0,
 		       	char st_descr,int rec_depth,SCUBE &Failed_lits)
 {
 
-  if (verbose > 2) {
-    printf("find_ind_subclause_ctg\n");
-}
 
   SatSolver &Slvr = Time_frames[curr_tf].Slvr;
 

@@ -40,8 +40,8 @@ int CompInfo::pick_lit_to_remove(CLAUSE &Curr,SCUBE &Tried,int curr_tf)
     lit = fxd_ord_lit(Curr,Tried);
     break;
   default:
-    printf("lit_pick_heur = %d\n",lit_pick_heur);
-    exit(100);
+    M->error() << "lit_pick_heur = " << lit_pick_heur << M->eom;
+    throw(ERROR1);
   }
 
   return(lit);

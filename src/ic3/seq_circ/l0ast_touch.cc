@@ -16,7 +16,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 /*========================================
 
@@ -28,7 +28,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   as gates nor inputs
  
   ====================================-====*/
-void fill_fanout_lists(Circuit *N)
+void fill_fanout_lists(Circuit *N,messaget &M)
 {
 
   GCUBE &Gate_list = N->Gate_list;
@@ -44,13 +44,12 @@ void fill_fanout_lists(Circuit *N)
       //  check if G1 is a hanging input 
 
       if (G1.flags.active == 0) {
-	std::cout << "**   when processing the inputs of the gate ";
-        print_name1(G.Gate_name); 
-        std::cout << std::endl;
-	std::cout << "it is found that  gate ";
-        print_name1(G1.Gate_name);
-        std::cout << " is not defined" << std::endl;
-	//	exit(100);
+	M.error() << "**   when processing the inputs of the gate ";
+        M.error() << cvect_to_str(G.Gate_name) << M.eom;
+	M.error() << "it is found that  gate ";
+        M.error() << cvect_to_str(G1.Gate_name);
+        M.error() << " is not defined" << M.eom;
+	throw(ERROR1);
       }     
     }
   }
@@ -64,15 +63,16 @@ void fill_fanout_lists(Circuit *N)
  
   The function checks if there are "hanging" inputs
   ====================================================*/
-void  check_fanout_free_inputs(Circuit *N)
+void  check_fanout_free_inputs(Circuit *N,messaget &M)
 {CUBE &Inputs= N->Inputs;
 
   for (size_t i=0; i < Inputs.size();i++) {
     Gate &I =  N->Gate_list[Inputs[i]];
     if (I.Fanout_list.size() == 0) {
-      std::cout << "input "; 
-      print_name1(I.Gate_name); 
-      std::cout << " does not fan out\n";
+      M.error() << "input "; 
+      M.error() << cvect_to_str(I.Gate_name); 
+      M.error() << " does not fan out" << M.eom;
+      throw(ERROR1);
     }
 
   }
@@ -87,16 +87,15 @@ void  check_fanout_free_inputs(Circuit *N)
   the 'G.flags.output' flag if G is a primary output
  
   ======================================================*/
-void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt)
+void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt,messaget &M)
 { 
  
   for (size_t i=0; i < Out_names.size();i++) {
     CCUBE &name = Out_names[i];
     if (N->Pin_list.find(name) == N->Pin_list.end()) {
-      std::cout << "false output "; 
-      print_name(&name); 
-      std::cout << std::endl;
-      exit(1);
+      M.error() << "false output "; 
+      M.error() << cvect_to_str(name) << M.eom;
+      throw(ERROR1);
     }
     int gate_num = N->Pin_list[name];
     N->Outputs.push_back(gate_num); // record the gate as a circuit output
@@ -120,10 +119,10 @@ void assign_gate_type(Circuit *N,CDNF &Out_names,bool rem_dupl_opt)
       continue;
     if (!rem_dupl_opt)
       if (G.Fanout_list.size() == 0) {
-	std::cout << "gate "; 
-	print_name1(G.Gate_name); 
-	std::cout << " does not fan out\n";
-	exit(1);
+	M.error() << "gate "; 
+	M.error() << cvect_to_str(G.Gate_name); 
+	M.error() << " does not fan out" << M.eom;
+	throw(ERROR1);
       }
     G.gate_type = GATE;
   }
@@ -234,7 +233,7 @@ void set_trans_output_fun_flags(Circuit *N)
   Otherwise, returns 'false'
 
   ===============================================*/
-bool feeds_only_one_latch(Circuit *N,Gate &G)
+bool feeds_only_one_latch(Circuit *N,Gate &G,messaget &M)
 { int num_of_latches = 0;
   CUBE Latches;
 
@@ -248,15 +247,14 @@ bool feeds_only_one_latch(Circuit *N,Gate &G)
   }
  
   if (num_of_latches != 1) {
-    printf("error when checking the fanout of the gate ");
-    print_name1(G.Gate_name); printf("\n");
-    printf("total number of latches is %d\n",num_of_latches);
+    M.error() << "error when checking the fanout of the gate ";
+    M.error() << cvect_to_str(G.Gate_name) << M.eom;
+    M.error() << "total number of latches is " << num_of_latches << M.eom;
     for (size_t i=0; i < Latches.size(); i++) {
       Gate &G1 = N->get_gate(Latches[i]);
-      print_gate_name(G1);
-      printf("\n");
+      M.error() << cvect_to_str(G1.Gate_name) << M.eom;
     }
-    exit(1);
+    throw(ERROR1);
   }
   return(num_of_latches == 1);
 } /* end of function feeds_only_one_latch */
@@ -270,7 +268,8 @@ bool feeds_only_one_latch(Circuit *N,Gate &G)
   latch
 
   =============================================*/
-void set_feeds_latch_flag(Circuit *N,bool ignore_errors,bool rem_dupl_opt)
+void set_feeds_latch_flag(Circuit *N,bool ignore_errors,bool rem_dupl_opt,
+			  messaget &M)
 {
   for (size_t i=0; i < N->Latches.size();i++)   { 
     int gate_ind = N->Latches[i];
@@ -278,7 +277,7 @@ void set_feeds_latch_flag(Circuit *N,bool ignore_errors,bool rem_dupl_opt)
     int gate_ind1 = G.Fanin_list[0];
     Gate &G1 = N->get_gate(gate_ind1);
     if (!ignore_errors)
-      if (!rem_dupl_opt) assert(feeds_only_one_latch(N,G1));
+      if (!rem_dupl_opt) assert(feeds_only_one_latch(N,G1,M));
     G1.flags.feeds_latch = 1;
   }
 

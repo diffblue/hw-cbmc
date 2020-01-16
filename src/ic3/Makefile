@@ -23,7 +23,7 @@ INC_DIR = -I . -I build_prob -I seq_circ -I $(MINISAT_INC) -I $(CBMC)/src -I ../
 OBJ_DIR = .
 
 BUILD_PROB =   $(OBJ_DIR)/g3en_cnf.o  $(OBJ_DIR)/g0en_cnf.o $(OBJ_DIR)/g1en_cnf.o \
-               $(OBJ_DIR)/g2en_cnf.o $(OBJ_DIR)/assign_indexes.o $(OBJ_DIR)/build_arrays.o
+               $(OBJ_DIR)/g2en_cnf.o $(OBJ_DIR)/assign_indices.o $(OBJ_DIR)/build_arrays.o
 
 SEQ_CIRC = $(OBJ_DIR)/p1rint_blif.o $(OBJ_DIR)/p2rint_blif.o $(OBJ_DIR)/finish_gate.o \
            $(OBJ_DIR)/a2dd_gate.o  $(OBJ_DIR)/a3dd_gate.o  $(OBJ_DIR)/c2irc_util.o \
@@ -52,7 +52,7 @@ OBJ_ROOT = $(OBJ_DIR)/m5y_aiger_print.o \
 
 OBJ =      $(OBJ_ROOT) $(BUILD_PROB) $(SEQ_CIRC)
 
-H_FILES1 = m0ic3.hh dnf_io.hh  m2ethods.hh aux_types.hh i5nline.hh
+H_FILES1 = m0ic3.hh dnf_io.hh  m2ethods.hh aux_types.hh i5nline.hh s0hared_consts.hh
 H_FILES2 = ccircuit.hh ebmc_ic3_interface.hh more_fun_prot.hh
 $(OBJ_DIR)/%.o : %.cc  $(H_FILES1) $(H_FILES2)
 	$(CXX) -c $(CXXFLAGS)  $< -o $@

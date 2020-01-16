@@ -23,12 +23,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ======================================*/
 void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
 {
-  if (verbose > 1)  {
-    printf("======\n");
-    printf("   exclude_state_cube\n");
-    std::cout << St0_cube << std::endl;
-  }
-
+ 
 
   assert(Pr_queue.empty());
   Obl_table.clear();
@@ -40,15 +35,10 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
   add_new_elem(St0_cube,Inps0,curr_tf,1,-1,ROOT_STATE);
   min_tf = curr_tf; 
   while (Pr_queue.size() > 0) {   
-    if (verbose > 1)  {
-      printf("Pr_queue.size() = %d\n",(int) Pr_queue.size());
-    }
 
     int curr_tf = Pr_queue.top().tf_ind;
     int tbl_ind = Pr_queue.top().tbl_ind;
     
-    if (verbose > 1)
-      printf("curr_tf = %d, tbl_ind = %d, min_tf = %d\n",curr_tf,tbl_ind, min_tf);
 
     CUBE St_cube  =  Obl_table[tbl_ind].St_cb;
     char st_descr = Obl_table[tbl_ind].st_descr;
@@ -81,11 +71,7 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
 
     if (found) { // inductive clause is found      
       Pr_queue.pop();
-      if (verbose > 1) 	{	 
-	printf("Inductive clause F[%d] is found ",(int) F.size());
-	std::cout  << C << std::endl;
-      }
-
+   
       if (succ_ind == -1) 
 	G.push_back(C);
             
@@ -126,8 +112,9 @@ void CompInfo::exclude_state_cube(CNF &G,int &min_tf,CUBE &St0_cube,CUBE &Inps0)
 
     if (state_found == 0) {
       p();
-      printf("st_ind = %d, curr_tf = %d\n",st_ind,curr_tf);
-      exit(100);
+      M->error() << "st_ind = " << st_ind << ", curr_tf = " << curr_tf 
+		 << M->eom;
+      throw(ERROR1);
     }
     
     add_new_elem(Erl_st_cube,Erl_inps,curr_tf-1,dist+1,tbl_ind,NEW_STATE);
@@ -197,12 +184,6 @@ bool CompInfo::find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Prv_st_cube,
 
   SatSolver &Slvr = Time_frames[curr_tf].Slvr;
  
-
-  if (verbose > 1) {
-    printf("%*c",6,' ');
-    printf("find_prev_state_cube\n");
-    printf("curr_tf = %d\n",curr_tf);
-  }
  
   CUBE Nst_cube;
   conv_to_next_state(Nst_cube,St_cube);
@@ -218,12 +199,7 @@ bool CompInfo::find_prev_state_cube(CLAUSE &C,int curr_tf,CUBE &Prv_st_cube,
     CUBE St0;
     extr_cut_assgns1(St0,Pres_svars,Slvr);
     extr_cut_assgns1(Prev_inps,Inp_vars,Slvr);
-    lift_good_state(Prv_st_cube,St0,Prev_inps,Nst_cube);
-    if (verbose > 2) {
-      printf("%*c",6,' ');
-      printf("Prv. state cube is found: ");
-      std::cout << Prv_st_cube << std::endl;
-    }
+    lift_good_state(Prv_st_cube,St0,Prev_inps,Nst_cube);    
     return(true);
   }
 

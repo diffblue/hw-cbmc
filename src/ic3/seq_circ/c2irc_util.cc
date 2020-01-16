@@ -6,6 +6,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <set>
 #include <map>
@@ -13,7 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 /*===================================
 
@@ -22,7 +23,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
   ====================================*/
 void print_gate_name(Gate &G)
 {
-  printf("gate "); 
+  std::cout << "gate "; 
   print_name1(G.Gate_name);
 
 }/* end of function print_gate_name */
@@ -36,7 +37,7 @@ void print_gate_name(Gate &G)
 void print_name(CCUBE *name)
 {
   for (size_t i=0; i < name->size();i++)
-    printf("%c",(*name)[i]);
+    std::cout << (*name)[i];
 
 }/* end of function print_name */
 
@@ -45,29 +46,29 @@ void print_name(CCUBE *name)
   P R I N T _ G A T E _ T Y P E 
 
   ==========================================*/
-void  print_gate_type(FILE *fp,Circuit *N,Gate &G)
+void  print_gate_type(std::ofstream &Out_str,Circuit *N,Gate &G)
 {
   switch (G.gate_type) {
   case INPUT:
-    fprintf(fp,"INPUT\n");
+    Out_str << "INPUT\n";
     break;
   case GATE:
     if (!N->output_gate(G))
-      fprintf(fp,"INTERNAL gate\n");
+      Out_str << "INTERNAL gate\n";
     else if (N->ext_gate(G))
-      fprintf(fp,"EXTERNAL gate\n");
+      Out_str << "EXTERNAL gate\n";
     else if (N->ext_int_gate(G))
-      fprintf(fp,"EXTERNAL INTERANL gate\n");
+      Out_str << "EXTERNAL INTERANL gate\n";
     break;
   case LATCH:
-    fprintf(fp,"LATCH\n");
+    Out_str << "LATCH\n";
     break;
   case UNDEFINED:
-    fprintf(fp,"UNDEFINED gate\n");
+    Out_str << "UNDEFINED gate\n";
     break;
   default:
-    fprintf(fp,"wrong switch value\n");
-    exit(1);
+    Out_str << "wrong switch value\n";
+    throw(ERROR1);
   }
 
 
@@ -81,9 +82,9 @@ void  print_gate_type(FILE *fp,Circuit *N,Gate &G)
 void print_name1(CCUBE &name,bool cr)
 {
   for (size_t i=0; i < name.size();i++)
-    printf("%c",name[i]);
+    std::cout << name[i];
 
-  if (cr) printf("\n");
+  if (cr) std::cout << "\n";
 
 }/* end of function print_name1 */
 
@@ -124,16 +125,16 @@ void  print_levels(Circuit *N)
   fill_up_levels(N,Level_gates);
 
   for (size_t i=0; i < Level_gates.size(); i++) {
-    printf("level %zu:  ",i);
+    std::cout << "level " << i << ":  ";
     CUBE &Level = Level_gates[i];
  
     for (size_t j=0; j < Level.size();j++) {
       Gate &G = Gate_list[Level[j]];
       print_name1(G.Gate_name);
-      printf("(%zu)", G.Fanout_list.size());
-      printf(" ");
+      std::cout << "(" << G.Fanout_list.size() << ")";
+      std::cout << " ";
     }
-    printf("\n");
+    std::cout << "\n";
   }
 
 } /* end of function print_levels */
@@ -143,9 +144,9 @@ void  print_levels(Circuit *N)
   F P R I N T _ N A M E 
 
   ================================*/
-void fprint_name(FILE *fp,CCUBE &name)
+void fprint_name(std::ofstream &Out_str,CCUBE &name)
 {
   for (size_t i=0; i < name.size();i++)
-    fprintf(fp,"%c",name[i]);
+    Out_str << name[i];
 
 }/* end of function fprint_name */

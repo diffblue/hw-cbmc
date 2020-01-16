@@ -165,9 +165,9 @@ void CompInfo::form_bad_states0(CNF &Bstates)
 	int var_ind1 = Pres_to_next[var_ind];
 	if (var_ind1 < 0) {
 	  p();
-	  printf("Pres_svars.size() = %d\n",(int) Pres_svars.size());
-	  printf("Next_svars.size() = %d\n",(int) Next_svars.size());
-	  exit(100);
+	  M->error() << "Pres_svars.size() = " << Pres_svars.size() <<	   
+               "Next_svars.size() = " << Next_svars.size() << M->eom;
+	  throw ERROR1;
 	}
 	if (C[j] < 0) Res.push_back(-(var_ind1+1));
 	else Res.push_back(var_ind1+1);
@@ -201,7 +201,7 @@ void CompInfo::form_cex()
   form_init_st(St_cube);
   Cex.push_back(St_cube);
  
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   accept_new_clauses(Gen_sat,Tr);

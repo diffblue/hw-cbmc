@@ -16,9 +16,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
-
-
-#include <ebmc/ebmc_base.h>
 #include <util/cmdline.h>
 #include "ebmc_ic3_interface.hh"
 
@@ -38,11 +35,10 @@ void ic3_enginet::read_ebmc_input()
   
   assert(Ci.N->noutputs == 1);
   assert(Ci.N->nlatches > 0);
-  
+
   Ci.order_gates();
   std::string empty;
   Ci.gen_cnfs(empty.c_str(), false);
- 
 
   Ci.form_var_nums();
  
@@ -83,18 +79,18 @@ void ic3_enginet::form_circ_from_ebmc()
   form_invs();
   Ci.form_consts(N);
  
-  add_spec_buffs(N);
+  add_spec_buffs(N,*Ci.M);
 
   add_pseudo_inps(N);
  
-  fill_fanout_lists(N);
-  assign_gate_type(N,Out_names,true);
+  fill_fanout_lists(N,*Ci.M);
+  assign_gate_type(N,Out_names,true,*Ci.M);
   //   assign topological levels and other flags
-  assign_levels_from_inputs(N);
+  assign_levels_from_inputs(N,*Ci.M);
   // check_levels_from_inputs(N,true);
   set_trans_output_fun_flags(N);
-  set_feeds_latch_flag(N,true,true);
-  assign_levels_from_outputs(N);
+  set_feeds_latch_flag(N,true,true,*Ci.M);
+  assign_levels_from_outputs(N,*Ci.M);
   // check_levels_from_outputs(N,true);
 
 } /* end of function form_circ_from_ebmc */
@@ -117,15 +113,13 @@ void ic3_enginet::form_inputs()
     for (size_t j=0; j < var.bits.size(); j++) {  
       literalt lit =var.bits[j].current;
       int lit_val = lit.get();
-      //      printf("lit_val = %d\n",lit_val);
       CCUBE Name;
       if (orig_names) {
 	bool ok = form_orig_name(Name,lit);
 	assert(ok);}      
       else {
-	char Inp_name[MAX_NAME];
-	sprintf(Inp_name,"i%d",lit_val);   
-	conv_to_vect(Name,Inp_name);
+	std::string Inp_name("i" + std::to_string(lit_val));
+        Name = conv_to_vect(Inp_name);
       }
       Ci.Inps.insert(lit_val);
       add_input(Name,N,N->ninputs);
@@ -211,8 +205,7 @@ void ic3_enginet::add_verilog_conv_constrs()
 {
 
   for(literalt lit : netlist.constraints) {
-    if (lit.is_constant()) continue;
-    std::cout << "constraint literal " << lit.get() << "\n";
+    if (lit.is_constant()) continue;   
      Ci.Init_clits.insert(lit.get());
   }
 

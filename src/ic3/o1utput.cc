@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -24,11 +25,13 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::fprint_cex2()
 {
 
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  strcat(fname,".cex.cnf");  
+  std::string fname(out_file + ".cex.cnf");
   
-  print_dnf(Cex,fname);
+  bool success = print_dnf(Cex,fname);
+  if (!success) {
+    M->error() << "cannot open file " << fname << M->eom;
+    throw ERROR2;
+  }
 
 } /* end of function fprint_cex2 */
 
@@ -41,24 +44,25 @@ void CompInfo::fprint_cex2()
 void CompInfo::fprint_cex1()
 {
 
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  strcat(fname,".cex.txt");  
-  FILE *fp = fopen(fname,"w");
-  assert(fp != NULL);
+  std::string fname(out_file + ".cex.txt");
+
+  std::ofstream Out_str(fname.c_str(),std::ios::out);
+  if (!Out_str) {
+    M->error() << "cannot open file " << fname << M->eom;
+    throw(ERROR2);}
 
   for (size_t i=0; i < Cex.size(); i++) {
-    fprintf(fp,"S%zu: ",i);
+    Out_str << "S" << i << ": ";
     CUBE &C = Cex[i];
     for (size_t k=0; k < C.size(); k++) {
-      if (k!=0) fprintf(fp," ");
-      if (C[k] > 0) fprintf(fp," ");
-      fprintf(fp,"%d",C[k]);
+      if (k!=0) Out_str << " ";
+      if (C[k] > 0) Out_str << " ";
+      Out_str << C[k];
     }
-    fprintf(fp,"\n");
+    Out_str << "\n";
   }
 
-  fclose(fp);
+  Out_str.close();
 
 } /* end of function fprint_cex1 */
 
@@ -78,11 +82,15 @@ void CompInfo::print_invariant(bool only_new_clauses)
   if (Cex.size() == 0)
     assert(Time_frames[inv_ind].num_bnd_cls == 0);
   add_dnf(Res,H);
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  if (inv_ind < 0) strcat(fname,".clauses.cnf");
-  else strcat(fname,".inv.cnf");  
-  print_dnf(Res,fname);
+  std::string fname(out_file);
+  
+  if (inv_ind < 0) fname += ".clauses.cnf";
+  else fname +=".inv.cnf";
+  bool success = print_dnf(Res,fname);
+  if (!success) {
+    M->error() << "cannot open file " << fname << M->eom;
+    throw(ERROR2);
+  }
 
 } /* end of function print_invariant */
 
@@ -94,10 +102,7 @@ void CompInfo::print_invariant(bool only_new_clauses)
 void CompInfo::print_fclauses()
 {
 
-
-  char fname[MAX_NAME];
-  strcpy(fname,out_file);
-  strcat(fname,".clauses.cnf"); 
+  std::string fname(out_file + ".clauses.cnf");
 
   CNF Res;
 
@@ -106,6 +111,10 @@ void CompInfo::print_fclauses()
     Res.push_back(F[i]);
   }
 
-  print_dnf(Res,fname);
+  bool success = print_dnf(Res,fname);
+  if (!success) {
+    M->error() << "cannot open file " << fname << M->eom;
+    throw(ERROR2);
+  }
 
 } /* end of function print_fclauses */

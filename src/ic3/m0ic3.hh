@@ -6,6 +6,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 #include "aux_types.hh"
+#include "s0hared_consts.hh"
+#include <ebmc/ebmc_base.h>
 
 extern int debug_flag;
 /*================================
@@ -17,7 +19,7 @@ class CompInfo
 {
 public:
 
-  
+  messaget *M;
   Circuit *N; // circuit whose safety proprety is to be checked
   CUBE Ordering; // Ordering[i] specifies the order of a gate used to
                  // generate CNF formulas. For every input gate and latch
@@ -115,6 +117,12 @@ public:
 
   CNF F; // set of all inductive cubes
 
+
+  CNF Tr; // transition relation
+ 
+
+  CNF Ist; // initial states
+
   DNF Flits0; // 'Flits0' specifies clauses of F (in terms of indexes of F) that 
                  // contain the negative literal of 'i+1'
 
@@ -172,7 +180,8 @@ public:
   char print_cex_flag; // 0 - counterexample (cex) is not printed out, 
                        // 1 - cex is printed out as a text file
                        // 2 - cex is printed out as a CNF formula
-  char out_file[MAX_NAME]; // the root name of the output file
+  std::string out_file; // the root name of the output file
+ 
   int verbose; // specifies the level details to be printed out
   int gcount_max; // specifies the maximum value of gcount 
                   // (used for debugging)
@@ -323,12 +332,7 @@ protected:
   NameTable Name_table; // Table with the names of Sat-solvers for
                         //  which 'init_sat_solver' were invoked
 
- // ------------- init data
-
-  CNF Tr; // transition relation
  
-
-  CNF Ist; // initial states
  
 
  // protected methods
@@ -348,19 +352,21 @@ void array_to_set(SCUBE &A,CUBE &B);
 bool all_elems_smaller_than(int &err_ind,CUBE &A,int max);
 void form_lngst_clause(CLAUSE &C0,CUBE &St);
 void get_runtime (double &usrtime, double &systime);
-void my_printf(const char *format,...);
 void state_to_clauses(CNF &K,CUBE &A);
-void read_numbers(char *buf,int &num1,int &num2);
 void my_assert(bool cond);
 void find_latch(Circuit *N,Gate &G,int &latch_ind);
 void conv_to_vect(CCUBE &Name1,const char *Name0);
-void conv_to_vect(CCUBE &Name1,std::string &Name0);
+CCUBE conv_to_vect(std::string &Name);
+CCUBE conv_to_vect(const std::string &Name);
 bool overlap(CUBE &A,CLAUSE &B);
 int parse_string(CCUBE &Buff);
 void print_names_of_latches(NamesOfLatches &Latches);
 bool ident_arrays(CUBE &A,CUBE &B);
-void print_blif2(FILE *fp,Circuit *N);
-void print_blif3(const char *Name,Circuit *N);
+void print_blif(std::ofstream &Out_str,Circuit *N);
+void print_blif2(std::ofstream &Out_str,Circuit *N,messaget &M);
+void print_blif3(const char *Name,Circuit *N,messaget &M);
+std::string ivect_to_str(CUBE &A);
+std::string cvect_to_str(CCUBE &A);
 
 extern long long gcount;
 extern hsh_tbl htable_lits;

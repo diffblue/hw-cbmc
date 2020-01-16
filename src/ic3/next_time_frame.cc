@@ -31,14 +31,13 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 int CompInfo::next_time_frame()
 {
 
-  if (verbose == 0) {
-    printf("-------------\n");
-    printf("next_time_frame\n");
-    printf("tf_lind = %d\n",tf_lind);
-    printf("F.size() = %d, #inact. clauses %d\n",(int) F.size(),num_inact_cls);
-  }
-  
-
+ 
+  M->status() << "-------------" << M->eom;
+  M->status() << "next_time_frame" << M->eom;
+  M->status() << "tf_lind = " << tf_lind << M->eom;
+  M->status() << "F.size() = " << F.size() <<  ", #inact. clauses "
+	    << num_inact_cls << M->eom;
+ 
   int ret_val = 2;
   
   add_time_frame();
@@ -72,8 +71,7 @@ int CompInfo::next_time_frame()
     CNF G;  
     int min_tf;
     exclude_state_cube(G,min_tf,Gst_cube,Inps);
-    if (verbose > 0) 
-      if (min_tf < tf_lind - 1) printf("min_tf = %d\n",min_tf);
+   
     Time_frames[tf_lind].num_pbss++;
     if (time_to_terminate()) return(3);
     
@@ -84,13 +82,6 @@ int CompInfo::next_time_frame()
     // no counterexample
    
     assert(Pr_queue.size() == 0);
-    if (verbose >= 3) {
-      if (G.size() == 1) {
-	printf("inductive clause F[%d] is generated: ",(int) F.size());
-	std::cout << G[0] << std::endl;}
-      else printf("%d inductive CLAUSES are generated\n",(int) G.size());
-    }
-
     accept_new_clauses(Bst_sat,G);
   }
 

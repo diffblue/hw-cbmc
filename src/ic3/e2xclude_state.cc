@@ -31,10 +31,6 @@ bool CompInfo::find_ind_subclause_cti(CLAUSE &C,SatSolver &Slvr,
                                       CLAUSE &C0,char st_descr)
 {
 
-  if (verbose > 2) {
-    printf("%*c",6,' ');
-    printf("find_ind_sub_clause_cti\n");
-  }
   C = C0;
 
 
@@ -148,10 +144,6 @@ bool CompInfo::corr_clause(CLAUSE &C)
 void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
 {
 
-  if (verbose > 3) {
-    printf("%*c",9,' ');
-    printf("expand_clause\n");
-  }
   htable_lits.change_marker(); 
   htable_lits.started_using();
 
@@ -179,8 +171,8 @@ void CompInfo::adjust_clause1(CLAUSE &C,CUBE &St)
 
   if (shift == 0) {
     p();
-    print_bnd_sets1();
-    exit(1); }
+    print_bnd_sets1(messaget::M_ERROR);
+    throw(ERROR1); }
 
   C.resize(C.size()-shift);
   htable_lits.done_using();

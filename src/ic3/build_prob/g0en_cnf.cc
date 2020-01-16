@@ -17,8 +17,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-int debug_flag=0;
-
 /*======================
 
   G E N _ C N F S
@@ -26,15 +24,12 @@ int debug_flag=0;
   =====================*/
 void  CompInfo::gen_cnfs(const char *fname,bool print_flag)
 {  
-  assign_var_indexes();
+  assign_var_indices();
  
-  char fname1[MAX_NAME];
 
   if (print_flag) {
     // print index file
-    strcpy(fname1,fname);
-    strcat(fname1,".ind");
-    print_var_indexes(fname1);
+    print_var_indices(std::string(fname)+".ind");
   }
 
   gen_initial_state_cubes();
@@ -108,11 +103,11 @@ void CompInfo::gen_out_fun(DNF &H,int shift,bool short_version)
 	add_truth_table_gate_cubes(H,gate_ind,shift);                 
 	break;
       case COMPLEX: 
-        printf("complex gates are not allowed\n");
-	exit(1);
+	M->error() << "complex gates are not allowed" << M->eom;
+	throw(ERROR1);
       default:   
-	printf("wrong gate type\n");
-	exit(1);
+	M->error() << "wrong gate type" << M->eom;
+	throw(ERROR1);
       }
   }
 
@@ -162,7 +157,7 @@ void  CompInfo::gen_initial_state_cubes()
 void  CompInfo::add_const_gate_cube(DNF &F,int gate_ind,int shift)
 {
 
-  // form indexes 
+  // form indices 
   Gate &G =  N->Gate_list[gate_ind];
  
   int var_ind = Gate_to_var[gate_ind] + shift;
@@ -171,7 +166,6 @@ void  CompInfo::add_const_gate_cube(DNF &F,int gate_ind,int shift)
   assert(G.F.size() < 2);
   if (G.F.size() == 1) C.push_back(var_ind + shift);
   else if (G.F.size() == 0) C.push_back(-(var_ind + shift));
-  if (debug_flag) std::cout << C << " 0\n";
 
   F.push_back(C);
 
@@ -186,34 +180,32 @@ void  CompInfo::add_const_gate_cube(DNF &F,int gate_ind,int shift)
 void CompInfo::add_buffer_gate_cubes(DNF &F,int gate_ind,int shift)
 {
 
-  // form indexes 
-  CUBE var_indexes;
+  // form indices 
+  CUBE var_indices;
   Gate &G = N->Gate_list[gate_ind];
 
 
   for (size_t i=0; i < G.Fanin_list.size();i++) {
     int gate_ind1 =  G.Fanin_list[i];
     int var_ind = Gate_to_var[gate_ind1];
-    var_indexes.push_back(var_ind);
+    var_indices.push_back(var_ind);
   }
 
   // add the output var
-  var_indexes.push_back(Gate_to_var[gate_ind]);
+  var_indices.push_back(Gate_to_var[gate_ind]);
 
   CUBE C;
   // first cube
-  if (G.Polarity[0] == 0)  C.push_back(var_indexes[0]+shift);  
-  else C.push_back(-(var_indexes[0]+shift));
-  C.push_back(-(var_indexes[1]+shift)); 
+  if (G.Polarity[0] == 0)  C.push_back(var_indices[0]+shift);  
+  else C.push_back(-(var_indices[0]+shift));
+  C.push_back(-(var_indices[1]+shift)); 
   F.push_back(C);
-  if (debug_flag) std::cout << C << " 0\n";
 
   // second cube
   C.clear();
-  if (G.Polarity[0] == 0)  C.push_back(-(var_indexes[0]+shift));  
-  else C.push_back(var_indexes[0]+shift);
-  C.push_back(var_indexes[1]+shift);
+  if (G.Polarity[0] == 0)  C.push_back(-(var_indices[0]+shift));  
+  else C.push_back(var_indices[0]+shift);
+  C.push_back(var_indices[1]+shift);
   F.push_back(C);
-  if (debug_flag) std::cout << C << " 0\n";
 
 } /* end of function add_buffer_gate_cubes */

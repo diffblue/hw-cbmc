@@ -11,8 +11,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
-#include <ebmc/ebmc_base.h>
-
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -32,7 +30,7 @@ void ic3_enginet::read_parameters()
 
   if (cmdline.isset("h")) {
     print_header();
-    exit(0);
+    throw(EARLY_EXIT);
   }
 
   if (cmdline.isset("property")) 
@@ -55,9 +53,11 @@ void ic3_enginet::read_parameters()
 void ic3_enginet::print_header()
 {
 
-  printf("ebmc verilog_file --ic3 [--prop nm] [--constr]\n");
-  printf("prop nm - check property with name 'nm'\n");
-  printf("constr  - use constraints listed in 'verilog_file.cnstr'\n");
+  messaget *M = Ci.M;
+  M->status() << "ebmc verilog_file --ic3 [--prop nm] [--constr]"  << M->eom;
+  M->status() << "prop nm - check property with name 'nm'"  << M->eom;
+  M->status() << "constr  - use constraints listed in 'verilog_file.cnstr'"
+	      << M->eom;
 } /* end of function print_header */
 
 /*=====================================
@@ -71,7 +71,7 @@ void CompInfo::init_parameters()
   print_inv_flag = false;
   print_only_ind_clauses = 0;
   print_cex_flag = 0;
-  strcpy(out_file,"res");
+  out_file = "res";
   verbose = 0;
   gcount_max = -1;
   fin_tf = -1;

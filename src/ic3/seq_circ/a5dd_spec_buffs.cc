@@ -7,6 +7,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <set>
 #include <map>
@@ -16,7 +17,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 
 /*===================================
@@ -24,7 +25,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
     F I N I S H _ S P E C _ B U F F 
 
   ==================================*/
-void finish_spec_buff(Circuit *N,int gate_ind)
+void finish_spec_buff(Circuit *N,int gate_ind,messaget &M)
 {
 
   Gate &G = N->get_gate(gate_ind);
@@ -35,8 +36,9 @@ void finish_spec_buff(Circuit *N,int gate_ind)
   DNF &R = G.R;
 
   if ((F.size()+ R.size()) != 1) {
-    printf("wrong buffer\n");
-    std::cout << G.Gate_name << std::endl;;
+    M.error() << "wrong buffer " << M.eom;
+    M.error() << cvect_to_str(G.Gate_name) << M.eom;
+    throw(ERROR1);
   }
 
   assert(F.size() == 1);
@@ -94,17 +96,16 @@ void form_output_name(CCUBE &Name,Circuit *N,int gate_ind)
 {
   Name =  N->Spec_buff_name;
 
-  char buff[MAX_NAME];
+  
   Gate &G = N->get_gate(gate_ind);
 
   assert(G.spec_buff_ind >= 0);
 
-  sprintf(buff,"%d",G.spec_buff_ind);
+  std::string Str(std::to_string(G.spec_buff_ind));
 
-  for (int i=0; ; i++) {
-    if (buff[i] == 0) break;
-    Name.push_back(buff[i]);
-  }
+  for(size_t i=0;i < Str.size();i++) 
+    Name.push_back(Str[i]);
+
 } /* end of function form_output_name */
 
 /*==================================
@@ -142,7 +143,7 @@ void start_spec_buff(Circuit *N,int gate_ind)
   A D D _ S P E C _ B U F F S
 
   =================================*/
-void add_spec_buffs(Circuit *N) 
+void add_spec_buffs(Circuit *N,messaget &M) 
 {
 
   if (N->num_spec_buffs == 0) return;
@@ -150,7 +151,7 @@ void add_spec_buffs(Circuit *N)
   gen_spec_buff_name(N);
 
   for (int i=0; i < N->num_spec_buffs; i++) 
-    add_one_spec_buff(N,i);
+    add_one_spec_buff(N,i,M);
 
 } /* end of function add_spec_buffs */
 

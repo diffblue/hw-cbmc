@@ -17,7 +17,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-
 /*==============================
 
   P R I N T _ S T A T
@@ -26,39 +25,43 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 void CompInfo::print_stat()
 {
 
-  printf("num of time frames = %d\n",max_num_tfs);
-  if (inv_ind >= 0)   printf("inv_ind = %d\n",inv_ind);
-  my_printf("#inputs = %m, #outputs = %m, #latches = %m, #gates = %m\n",
+
+  unsigned ms_lev = messaget::M_STATISTICS;
+  M->statistics() << "num of time frames = " << max_num_tfs << M->eom;
+  if (inv_ind >= 0)   M->statistics() << "inv_ind = " << inv_ind << M->eom;
+  my_printf(ms_lev,"#inputs = %m, #outputs = %m, #latches = %m, #gates = %m\n",
 	    N->ninputs,N->noutputs,N->nlatches, N->ngates);
-  printf("total number of generated clauses is %d\n",(int) F.size()- 
-         (int) Ist.size() + init_ind_cls());
+  M->statistics() << "total number of generated clauses is " <<  F.size()- 
+    Ist.size() + init_ind_cls() << M->eom;
 
-
-  my_printf("orig_ind_cls = %m, succ_impr = %m, failed_impr = %m\n",
+  my_printf(ms_lev,"orig_ind_cls = %m, succ_impr = %m, failed_impr = %m\n",
             orig_ind_cls,succ_impr,failed_impr);
   
 
   // print the total average size
 
-  printf("Aver. clause size = %.1f\n",average());
+  M->statistics() << std::fixed;
+  M->statistics().precision(1);
+  M->statistics() << "Aver. clause size = " << average() << M->eom;
 
-  printf("max. num. improv. of an ind. clause is %d\n",max_num_impr);
-  my_printf("#add1 = %m, #add2 = %m, #replaced = %m, #restore = %m\n",
+  M->statistics() << "max. num. improv. of an ind. clause is " << max_num_impr << M->eom;
+  my_printf(ms_lev,"#add1 = %m, #add2 = %m, #replaced = %m, #restore = %m\n",
             num_add1_cases,num_add2_cases,num_replaced_cases,num_restore_cases);
   print_sat_stat();
 
   print_flags();
 
-  printf("muliplier = %.2f\n",multiplier);
+  M->statistics().precision(2);
+  M->statistics() << "muliplier = " << multiplier << M->eom;
 
   print_lifting_stat();
-  my_printf("root_state_cnt = %m, new_state_cnt = %m, old_state_cnt = %m",
+  my_printf(ms_lev,"root_state_cnt = %m, new_state_cnt = %m, old_state_cnt = %m",
             root_state_cnt,new_state_cnt,old_state_cnt);
-  my_printf(" (triv = %m, rem = %m)\n",triv_old_st_cnt,
+  my_printf(ms_lev," (triv = %m, rem = %m)\n",triv_old_st_cnt,
             old_state_cnt-triv_old_st_cnt);
 
  
-  my_printf("#CTGs = %m, #excluded CTGS = %m\n",tot_ctg_cnt,succ_ctg_cnt);
+  my_printf(ms_lev,"#CTGs = %m, #excluded CTGS = %m\n",tot_ctg_cnt,succ_ctg_cnt);
 } /* end of function print_stat */
 
 
@@ -111,8 +114,8 @@ void CompInfo::print_one_sat_stat(SatSolver &S)
   if (Name_table.find(S.Name) == Name_table.end()) 
     return;
 
-  std::cout << S.Name << ": ";
-  printf("%d calls\n",S.tot_num_calls);
+  M->statistics() << S.Name << ": ";
+  M->statistics() << S.tot_num_calls <<  " calls" << M->eom;
 
 } /* end of function print_one_sat_stat */
 
@@ -124,43 +127,11 @@ void CompInfo::print_one_sat_stat(SatSolver &S)
   ========================================*/
 void CompInfo::print_time_frame_stat()
 {
-
-  if (verbose > 0) {
-    printf("------------------\n");
-    printf("finished time frame number %d\n",(int) Time_frames.size()-1);
-  }
-
-  TimeFrame &Tf = Time_frames[tf_lind];
-  if (verbose > 0) 
-    printf("new derived clauses Bnd[%d]=%d, Bnd[%d]=%d\n",tf_lind,
-           Tf.num_bnd_cls,tf_lind+1,
-	   Time_frames[tf_lind+1].num_bnd_cls);
-
-
-  if (verbose > 0)  {
-    printf("num_pbs-s: %d\n",Tf.num_pbss);
-
-    printf("Cti-s:\n");
-    int count = 0;
-    for (int i=tf_lind; i >=0; i--) {
-      if (Time_frames[i].num_rcnt_ctis == 0) continue;
-      if (count++ > 0) printf(", ");    
-      printf("Tf[%d] = %d",i,Time_frames[i].num_rcnt_ctis);
-      if (count % 10 == 0) printf("\n"); 
-    }
-
-    if (verbose > 0)
-      if (count % 10 != 0)  printf("\n");
-  }
- 
+    
   int time_frame_calls;
-  if (verbose > -1) print_time_frame_sat_stat(time_frame_calls);
+  print_time_frame_sat_stat(time_frame_calls);
 
-  if (verbose > 0) 
-    my_printf("F.size() = %m, num. inact. clauses  = %m\n",(int) F.size(), 
-              num_inact_cls);
-  //  printf("num. seen (redund) cls = %d (%d)\n",Tf.num_seen_cls,
-  // Tf.num_redund_cls);
+ 
 } /* end of function print_time_frame_stat*/
 
 
@@ -172,13 +143,14 @@ void CompInfo::print_time_frame_stat()
 void CompInfo::print_time_frame_sat_stat(int &time_frame_calls)
 {
 
+  unsigned ms_lev = messaget::M_STATISTICS;
   time_frame_calls = 0;
 
   for (size_t i=0; i < Time_frames.size(); i++) 
     time_frame_calls += Time_frames[i].Slvr.num_calls;
 
-  my_printf("Time frame SAT-solvers: %m calls\n",time_frame_calls); 
-  my_printf("Push clause SAT-solving: %m calls\n",num_push_clause_calls);
+  my_printf(ms_lev,"Time frame SAT-solvers: %m calls\n",time_frame_calls); 
+  my_printf(ms_lev,"Push clause SAT-solving: %m calls\n",num_push_clause_calls);
 
 } /* end of function print_time_frame_sat_stat */
 
@@ -190,6 +162,7 @@ void CompInfo::print_time_frame_sat_stat(int &time_frame_calls)
 void CompInfo::print_all_calls(int time_frame_calls)
 {
 
+  unsigned ms_lev = messaget::M_STATISTICS;
   int all_calls = time_frame_calls;
   if (Name_table.find(Gen_sat.Name) != Name_table.end()) 
     all_calls += Gen_sat.tot_num_calls;
@@ -205,7 +178,7 @@ void CompInfo::print_all_calls(int time_frame_calls)
 
 
 
-  my_printf("all solvers: %m calls\n",all_calls);
+  my_printf(ms_lev,"all solvers: %m calls\n",all_calls);
 
 } /* end of function print_all_calls */
 

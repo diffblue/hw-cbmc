@@ -30,8 +30,10 @@ void CompInfo::print_lifting_stat()
 
   float av_bc_size = length_bstate_cubes / num_bstate_cubes;
   float av_gc_size = length_gstate_cubes / num_gstate_cubes;
-  printf("#svars = %d, aver. bst. cube = %.1f, aver. gst. cube = %.1f\n",
-	 (int) Pres_svars.size(),av_bc_size,av_gc_size);
+  M->statistics() << std::fixed;
+  M->statistics().precision(1);
+  M->statistics() << "#svars = " << Pres_svars.size() << ", aver. bst. cube = "
+	    << av_bc_size << ", aver. gst. cube = " << av_gc_size << M->eom;
  
 
 } /* end of function print_lifting_stat */
@@ -45,23 +47,23 @@ void CompInfo::print_lifting_stat()
 void CompInfo::print_flags()
 {
 
-  printf("rem_subsumed_flag = %d\n",rem_subsumed_flag);
+  M->statistics() << "rem_subsumed_flag = " << rem_subsumed_flag << M->eom;
 
   //  LIT_PICK_HEUR
   // 
-  printf("lit_pick_heur = ");
+  M->statistics() << "lit_pick_heur = ";
   switch (lit_pick_heur) {
   case RAND_LIT:
-    printf("RAND_LIT\n");
+    M->statistics() << "RAND_LIT" << M->eom;
     break;
   case INACT_LIT:
-    printf("INACT_LIT\n");
+    M->statistics() << "INACT_LIT" << M->eom;
     break;
   case INACT_VAR:
-    printf("INACT_VAR\n");
+    M->statistics() << "INACT_VAR" << M->eom;
     break;
   case FIXED_ORDER:
-    printf("FIXED_ORDER\n");
+    M->statistics() << "FIXED_ORDER" << M->eom;
     break;
   default:
     assert(false);
@@ -70,16 +72,16 @@ void CompInfo::print_flags()
 
   //  ACT_UPD_MODE
   // 
-  printf("act_upd_mode = ");
+  M->statistics() << "act_upd_mode = ";
   switch (act_upd_mode) {
   case NO_ACT_UPD:
-    printf("NO_ACT_UPD\n");
+    M->statistics() << "NO_ACT_UPD" << M->eom;
     break;
   case TF_ACT_UPD:
-    printf("TF_ACT_UPD\n");
+    M->statistics() << "TF_ACT_UPD" << M->eom;
     break;
   case MINISAT_ACT_UPD:
-    printf("MINISAT_ACT_UPD\n");
+    M->statistics() << "MINISAT_ACT_UPD" << M->eom;
     break;
   default:
     assert(false);
@@ -88,9 +90,9 @@ void CompInfo::print_flags()
   //  print sort modes
   // 
 
-  printf("sorted objects = ");
-  if (sorted_objects == LITS) printf("LITS\n");
-  else if (sorted_objects == VARS) printf("VARS\n");
+  M->statistics() << "sorted objects = ";
+  if (sorted_objects == LITS) M->statistics() << "LITS" << M->eom;
+  else if (sorted_objects == VARS) M->statistics() << "VARS" << M->eom;
   else assert(false);
 
   print_induct_lift_sort_mode("lift_sort_mode",lift_sort_mode);
@@ -98,10 +100,10 @@ void CompInfo::print_flags()
   print_induct_lift_sort_mode("ind_cls_sort_mode",ind_cls_sort_mode);
 
   print_gate_sort_mode();
-  printf("selector = %d\n",selector);
-  printf("ctg_flag = %d\n",ctg_flag);
-  printf("constr_flag = %d\n",constr_flag);
-  printf("standard_mode = %d\n",standard_mode);
+  M->statistics() << "selector = " << selector  << M->eom;
+  M->statistics() << "ctg_flag = " << ctg_flag  << M->eom;
+  M->statistics() << "constr_flag = " << constr_flag  << M->eom;
+  M->statistics() << "standard_mode = " << standard_mode  << M->eom;
  
 
 
@@ -116,17 +118,17 @@ void CompInfo::print_flags()
   =========================================================*/
 void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode) 
 {
-  printf("%s = ",mode_name);
+  M->statistics() << std::string(mode_name) << "= ";
   switch (sort_mode) {
   case NO_SORT:
-    printf("NO_SORT\n");
+    M->statistics() << "NO_SORT" << M->eom;
     break;
   case FULL_SORT:
-    printf("FULL_SORT\n");
+    M->statistics() << "FULL_SORT" << M->eom;
     break;
   case PART_SORT:
-    printf("PART_SORT\n");
-    printf("    max_num_elems = %zu\n",max_num_elems);
+    M->statistics() << "PART_SORT" << M->eom;
+    M->statistics() << "max_num_elems = " << max_num_elems << "" << M->eom;
     break;
   default:
     assert(false);
@@ -141,25 +143,25 @@ void CompInfo::print_induct_lift_sort_mode(const char *mode_name,int sort_mode)
 void CompInfo::print_gate_sort_mode()
 {
 
-  printf("gate_sort_mode = ");
+  M->statistics() << "gate_sort_mode = ";
   switch (gate_sort_mode) {
   case INIT_SORT:
-    printf("INIT_SORT");
+    M->statistics() << "INIT_SORT";
     break;
   case INPS_FIRST:
-    printf("INPS_FIRST");
+    M->statistics() << "INPS_FIRST";
     break;
   case OUTS_FIRST:
-    printf("OUTS_FIRST");
+    M->statistics() << "OUTS_FIRST";
     break;
   case RAND_SORT:
-    printf("RAND_SORT");
+    M->statistics() << "RAND_SORT";
     break;
   default:
     assert(false);
   }
 
-  printf("\n");
+  M->statistics()  << M->eom;
 
 } /* end of function print_gate_sort_mode */
 

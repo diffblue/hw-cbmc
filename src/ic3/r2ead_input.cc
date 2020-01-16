@@ -12,8 +12,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
-#include <ebmc/ebmc_base.h>
-
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -36,7 +34,7 @@ void CompInfo::start_new_gate(CUBE &Gate_inds,Circuit *N,CDNF &Pin_names)
  
 
   int gate_ind = assign_output_pin_number(N->Pin_list,Pin_names.back(),
-                                          N->Gate_list,false);
+                                          N->Gate_list,false,*M);
 
   N->ngates++; // increment the number of gates 
 
@@ -88,7 +86,7 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
 {
   
   assert ((lit & 1) == 0);
-  char Buff[MAX_NAME];
+  
   CCUBE Dummy;
   Pin_names.push_back(Dummy);
   Pin_names.push_back(Dummy);
@@ -100,30 +98,39 @@ void ic3_enginet::form_inv_names(CDNF &Pin_names,int lit)
     return;
   }
 
-
+  
   SCUBE &Inps = Ci.Inps;
 
+  std::string Name;
   if (Inps.find(lit) != Inps.end()) {
-    sprintf(Buff,"i%d",lit);
-    conv_to_vect(Pin_names[0],Buff);
-    sprintf(Buff,"ni%d",lit);
-    conv_to_vect(Pin_names[1],Buff);
+    {
+      Name = "i" + std::to_string(lit);
+      Pin_names[0] = conv_to_vect(Name);
+   
+      Name = "ni" + std::to_string(lit);
+      Pin_names[1] = conv_to_vect(Name);
+    }
     return;
   }
 
   SCUBE &Lats = Ci.Lats;
   if (Lats.find(lit) != Lats.end()) {
-    sprintf(Buff,"l%d",lit);
-    conv_to_vect(Pin_names[0],Buff);
-    sprintf(Buff,"nl%d",lit);
-    conv_to_vect(Pin_names[1],Buff);
+    {  
+      Name = "l" + std::to_string(lit);
+      Pin_names[0] = conv_to_vect(Name);
+  
+      Name = "nl" + std::to_string(lit);
+      Pin_names[1] = conv_to_vect(Name);
+    }
     return;
   }
 
-  sprintf(Buff,"a%d",lit);
-  conv_to_vect(Pin_names[0],Buff);
-  sprintf(Buff,"na%d",lit);
-  conv_to_vect(Pin_names[1],Buff);
+
+  Name = "a" + std::to_string(lit);
+  Pin_names[0] = conv_to_vect(Name);
+  Name = "na" + std::to_string(lit);
+  Pin_names[1] = conv_to_vect(Name);
+
    
 
 } /* end of function form_inv_names */
@@ -152,35 +159,46 @@ void ic3_enginet::form_next_symb(CCUBE &Name,literalt &next_lit)
   }
 
 
-  char Buff[MAX_NAME];
+  
+  
   int nlit;
  
 
   nlit = next_lit.get();
+
+ 
+  std::string Str_name;
   if (next_lit.sign()) {   
     if (orig_names) {
       form_neg_orig_name(Name,next_lit);
       return;}
     Ci.Invs.insert(nlit-1);
-    if (Ci.Inps.find(nlit-1) != Ci.Inps.end()) 
-      sprintf(Buff,"ni%d",nlit-1);
-    else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end()) 
-      sprintf(Buff,"nl%d",nlit-1);
-    else sprintf(Buff,"na%d",nlit-1);
-    conv_to_vect(Name,Buff);
+    if (Ci.Inps.find(nlit-1) != Ci.Inps.end())
+      Str_name = "ni" + std::to_string(nlit-1);
+    else  if (Ci.Lats.find(nlit-1) != Ci.Lats.end())
+      Str_name = "nl" + std::to_string(nlit-1);
+    else 
+      Str_name = "na" + std::to_string(nlit-1);
+    Name = conv_to_vect(Str_name);
     return;
   }
+ 
 
 
   if (orig_names) {
     form_orig_name(Name,next_lit);
     return;
   }
-     
-  if (Ci.Inps.find(nlit) != Ci.Inps.end()) sprintf(Buff,"i%d",nlit);
-  else if (Ci.Lats.find(nlit) != Ci.Lats.end()) sprintf(Buff,"l%d",nlit);
-  else sprintf(Buff,"a%d",nlit);
-  conv_to_vect(Name,Buff);
+
+
+  if (Ci.Inps.find(nlit) != Ci.Inps.end())
+    Str_name = "i" + std::to_string(nlit);
+  else if (Ci.Lats.find(nlit) != Ci.Lats.end())
+    Str_name = "l" + std::to_string(nlit);
+  else
+    Str_name = "a" + std::to_string(nlit);
+  Name = conv_to_vect(Str_name);
+  
 
 } /* end of function form_next_symb */
 
@@ -218,10 +236,12 @@ void CompInfo::check_conv_tbl(CUBE &Vars,CUBE &Tbl,bool pres_svars)
     int var_ind = Vars[i]-1;
     if (Tbl[var_ind] == -1) {
       if (pres_svars) 
-	printf("no match for present state variable %d\n",var_ind+1);
+	M->error() << "no match for present state variable " << var_ind+1
+		  << M->eom;
       else 
-	printf("no match for next state variable %d\n",var_ind+1);
-      exit(1);
+	M->error() << "no match for next state variable "<< var_ind+1
+		  << M->eom;
+      throw(ERROR1);
     }
   }
 

@@ -12,8 +12,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
-#include <ebmc/ebmc_base.h>
-
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -106,9 +104,8 @@ void ic3_enginet::form_latch_name(CCUBE &Latch_name,literalt &lit)
     assert(ok);        
     return; }
 
-  char Buff[MAX_NAME];
-  sprintf(Buff,"l%d",lit.get());
-  conv_to_vect(Latch_name,Buff);
+  std::string Str_name("l" + std::to_string(lit.get()));
+  Latch_name = conv_to_vect(Str_name);
 } /* end of function form_latch_name */
 
 
@@ -152,7 +149,7 @@ void print_names_of_latches(NamesOfLatches &Latches)
   for (pnt = Latches.begin(); pnt != Latches.end(); pnt++) {
     CCUBE A = pnt->first;
     print_name(&A);
-    printf("\n"); 
+    std::cout << "\n"; 
   }
 } /* end of function print_names_of_latches */
 
@@ -188,14 +185,13 @@ void ic3_enginet::ebmc_form_latches()
       literalt lit =var.bits[j].current;
       int var_num = lit.var_no();
       Latch_val[var_num] = 2; // set the value of the latch to a don't care
-      //      printf("latch val: %d\n",var_num);
     }
   }
 
   if (Latch_val.size() == 0) {
-    printf("there are no latches\n");
-    //    printf("Nondet_vars.size() = %d\n",(int) Nondet_vars.size());
-    exit(100);
+    messaget *M = Ci.M;
+    M->error() << "there are no latches" << M->eom;
+    throw(ERROR1);
   }
   // set initial values
   bvt Ist_lits;
@@ -206,11 +202,12 @@ void ic3_enginet::ebmc_form_latches()
     int var_num = lit.var_no();
     if (Latch_val.find(var_num) == Latch_val.end()) {
       p();
-      printf("Latch %d is not found\n",var_num);
-      printf("Latch_val.size() = %zu\n",Latch_val.size());
-      printf("Ist_lits.size() = %zu\n",Ist_lits.size());
-      printf("i = %zu\n",i);
-      exit(100);
+      messaget *M = Ci.M;
+      M->error() << "Latch " << var_num << " is not found" << M->eom;
+      M->error() << "Latch_val.size() = " << Latch_val.size() << M->eom;
+      M->error() << "Ist_lits.size() = " << Ist_lits.size() << M->eom;
+      M->error() << "i = " << i << M->eom;
+      throw(ERROR1);
     }
     if (lit.sign()) Latch_val[var_num] = 0;
     else Latch_val[var_num] = 1;
@@ -244,17 +241,15 @@ void ic3_enginet::gen_ist_lits(bvt &Ist_lits)
       continue;
     if (var_num >= Nodes.size()) {
       p();
-      printf("var_num = %zd\n",var_num);
-      printf("Nodes.size() = %zu\n",Nodes.size());
-      exit(100);
+      messaget *M = Ci.M;
+      M->error() << "var_num = " << var_num << M->eom;
+      M->error() << "Nodes.size() = " << Nodes.size() << M->eom;
+      throw(ERROR1);
     }
     aigt::nodet &Nd = Nodes[var_num];
 
     if (Nd.is_var()) {
-      Ist_lits.push_back(lit);
-      // literalt gt_lit(var_num,false);
-      // unsigned lit_val = gt_lit.get();
-      // printf("init st: lit_val = %u\n",lit_val);
+      Ist_lits.push_back(lit);    
       continue;
     }
 

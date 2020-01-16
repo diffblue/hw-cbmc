@@ -24,7 +24,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
    In contrast to 'gen_form1' this
    function returns array 'Old_nums'
-   specifying the indexes of clauses
+   specifying the indices of clauses
    of H in F.
 
   ===================================*/
@@ -54,10 +54,10 @@ bool CompInfo::ver_cex()
   assert(Cex.size() > 0);
 
   bool ok = check_init_state(Cex[0]);
-  printf("Cex.size() = %d\n",(int) Cex.size());
+  M->result() << "Cex.size() = " << Cex.size() << M->eom;
   if (!ok) return(false);
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   if (Cex.size() == 1) goto FINISH;
   
   init_sat_solver(Gen_sat,max_num_vars,Name);
@@ -66,8 +66,8 @@ bool CompInfo::ver_cex()
   for (size_t i=0; i < Cex.size()-1; i++) {
     bool ok = check_transition(Cex[i],Cex[i+1]);
     if (!ok) {
-      printf("verfication failed\n");
-      printf("wrong transition S%zu -> S%zu\n",i,i+1);
+      M->error() << "verfication failed" << M->eom;
+      M->error() << "wrong transition S" << i << "-> S" << i+1 << M->eom;
       return(false);
     }
   }
@@ -78,7 +78,7 @@ bool CompInfo::ver_cex()
   if (!ok) return(false);
 
  FINISH:
-  printf("cex verification is ok\n");
+  M->result() << "cex verification is ok" << M->eom;
   return(true);
 } /* end of function ver_cex */
 
@@ -91,7 +91,7 @@ bool CompInfo::ver_cex()
 bool CompInfo::check_bad_state(CUBE &St)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
   add_neg_prop(Gen_sat);
   add_constr_lits2(Gen_sat);
@@ -99,10 +99,10 @@ bool CompInfo::check_bad_state(CUBE &St)
   add_assumps1(Assmps,St);
   bool sat_form = check_sat2(Gen_sat,Assmps);
   if (sat_form == false) {
-    printf("cex verification failed\n");
-    printf("last state of Cex is a good one\n");
-    std::cout << "St-> " << St << std::endl;
-    printf("sat_form = %d\n",sat_form);
+    M->error() << "cex verification failed" << M->eom;
+    M->error() << "last state of Cex is a good one" << M->eom;
+    M->error() << "St-> " << ivect_to_str(St) << M->eom;;
+    M->error() << "sat_form = " << sat_form << M->eom;
     return(false); }
 
   delete_solver(Gen_sat);
@@ -140,7 +140,7 @@ bool CompInfo::check_transition(CUBE &St0,CUBE &St1)
 bool CompInfo::check_init_state(CUBE &St)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   accept_new_clauses(Gen_sat,Ist);
@@ -150,8 +150,8 @@ bool CompInfo::check_init_state(CUBE &St)
   
   bool sat_form = check_sat2(Gen_sat,Assmps);
   if (sat_form == false) {
-    printf("cex verification failed\n");
-    printf("Cex starts with a non-initial state\n");
+    M->error() << "cex verification failed" << M->eom;
+    M->error() << "Cex starts with a non-initial state" << M->eom;
     return(false);
   }
 

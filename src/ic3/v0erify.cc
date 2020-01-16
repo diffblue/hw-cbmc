@@ -32,7 +32,7 @@ bool CompInfo::ver_trans_inv()
   if (!ok) return(false);
   ok = ver_invar(H,Old_nums);
   if (!ok) return(false);
-  printf("inductive invariant verification is ok\n");
+  M->result() << "inductive invariant verification is ok" << M->eom;
   return(true);
 } /* end of function ver_trans_inv */
 
@@ -44,7 +44,7 @@ bool CompInfo::ver_trans_inv()
 bool CompInfo::ver_invar(CNF &H,CUBE &Old_nums)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   // add property
@@ -60,11 +60,11 @@ bool CompInfo::ver_invar(CNF &H,CUBE &Old_nums)
 
   bool sat_form = check_sat1(Gen_sat);
   if (sat_form) {
-    printf("bad state is reachable: ");
+    M->error() << "bad state is reachable: ";
     CUBE St,Nst,Pst;
     extr_cut_assgns1(Nst,Next_svars,Gen_sat);
     conv_to_pres_state(St,Nst);
-    std::cout << St << std::endl;
+    M->error() << ivect_to_str(St) << M->eom;
     return(false);
   }
   
@@ -91,14 +91,15 @@ bool CompInfo::ver_ind_clauses2(CNF &H,CUBE &Old_nums)
     add_negated_assumps1(Assmps,C);   
     bool sat_form = check_sat2(Gen_sat,Assmps);
     if (sat_form) {
-      printf("inductive invariant verification failed\n");
-      printf("Inv & T does not imply F'[%d]\n",Old_nums[i]);
-      printf("F[%d]-> ",Old_nums[i]); 
-      std::cout << H[i] << std::endl;
-      printf("F'[%d]-> ",Old_nums[i]); 
-      std::cout << C << std::endl;
+      M->error() << "inductive invariant verification failed" << M->eom;
+      M->error() << "Inv & T does not imply F'[" << Old_nums[i] << "]"
+		 << M->eom;
+      M->error() << "F[" << Old_nums[i] << "]-> "; 
+      M->error() << H[i] << M->eom;
+      M->error() << "F'[" << Old_nums[i] << "]-> ";
+      M->error() << C << M->eom;
       CUBE St0,St1;
-      print_bnd_sets1();    
+      print_bnd_sets1(messaget::M_ERROR);    
       return(false);
     }
   }
@@ -139,8 +140,8 @@ bool CompInfo::ver_prop()
 
   bool sat_form = check_sat1(Gen_sat);
   if (sat_form) {
-    printf("inductive invariant verification failed\n");
-    printf("Ist does not imply Prop\n");
+    M->error() << "inductive invariant verification failed" << M->eom;
+    M->error() << "Ist does not imply Prop" << M->eom;
     return(false);
   }
 
@@ -156,7 +157,7 @@ bool CompInfo::ver_prop()
 bool CompInfo::ver_ini_states(CNF &H)
 {
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
   
   accept_new_clauses(Gen_sat,Ist);  
@@ -203,9 +204,9 @@ bool CompInfo::ver_ind_clauses1(CNF &H)
    
     bool sat_form = check_sat2(Gen_sat,Assmps);
     if (sat_form) {
-      printf("inductive invariant verification failed\n");  
-      printf("clause F[%zu] excludes an initial state: ", i);
-      std::cout << H[i] << std::endl;
+      M->error() << "inductive invariant verification failed" << M->eom;
+      M->error() << "clause F[" << i << "] excludes an initial state: ";
+      M->error() << ivect_to_str(H[i]) << M->eom;
       return(false);
     }
   }

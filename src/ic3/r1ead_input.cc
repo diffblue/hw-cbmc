@@ -14,7 +14,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 #include <solvers/prop/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
-#include <ebmc/ebmc_base.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -23,6 +22,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 #include "ebmc_ic3_interface.hh"
+
 
 /*====================================
 
@@ -34,9 +34,11 @@ void ic3_enginet::find_prop_lit()
 
   propertyt Prop;
   bool found = find_prop(Prop);
-
   assert(found);
-  assert(Prop.expr.id()==ID_sva_always);    
+
+  if (Prop.expr.id()!=ID_sva_always) {
+    throw("unsupported property - only SVA always is implemented");
+  }
 
   assert(Prop.expr.operands().size()==1);
 
@@ -44,9 +46,10 @@ void ic3_enginet::find_prop_lit()
 
   found = banned_expr(Oper);
   if (found) {
-    printf("verification of properties of this type by IC3\n");
-    printf("is not implemented yet\n");
-    exit(100);
+    messaget *M = Ci.M;
+    M->error() << "verification of properties of this type by IC3" << M->eom;
+    M->error() << "is not implemented yet" << M->eom;
+    throw(ERROR1);
   }
   assert(Oper.type().id()==ID_bool);
  
@@ -58,14 +61,10 @@ void ic3_enginet::find_prop_lit()
   prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
 			     get_message_handler());
 
-  // int var_num = prop_l.var_no();
-  // printf("var_num = %d\n",var_num);
+ 
   
   if (prop_l.is_false()) Ci.const_flags = Ci.const_flags | 1;
-  else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;
-
-  // print_lit(std::cout,prop_l);
-  // printf("\n");
+  else if (prop_l.is_true()) Ci.const_flags = Ci.const_flags | 2;  
   
 } /* end of function find_prop_lit */
 
@@ -110,9 +109,7 @@ void ic3_enginet::form_latched_gates()
     for (size_t j=0; j < var.bits.size(); j++) {
       literalt lit =var.bits[j].current;
       int init_val = Latch_val[lit.var_no()];
-      literalt next_lit = var.bits[j].next;
-      // int lit_val = next_lit.get();
-      // printf("next st. var: %d\n",lit_val);
+      literalt next_lit = var.bits[j].next;    
       add_new_latch(Latches,init_val,lit,next_lit);
     }
   }
@@ -149,7 +146,7 @@ void ic3_enginet::form_invs()
     Gate &G = N->get_gate(Gate_inds.back());
     G.F.push_back(C);
 
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*Ci.M);
   }
 
 } /* end of function form_invs */
@@ -176,7 +173,7 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches, int init_val,
  
  
   int pin_num = assign_output_pin_number(N->Pin_list,Latch_name,
-               N->Gate_list,true);
+					 N->Gate_list,true,*Ci.M);
   Ci.upd_gate_constr_tbl(pres_lit.get(),pin_num);
  
  
@@ -200,10 +197,11 @@ void ic3_enginet::add_new_latch(NamesOfLatches &Latches, int init_val,
 
 // we don't accept files in which the output of a latch is also a primary input
     if (G.gate_type == INPUT){
-      printf("the output of latch  ");  
-      print_name1(Latch_name,true);
-      printf("is also an input variable\n");
-      exit(1);
+      messaget *M = Ci.M;
+      M->error() << "the output of latch  ";
+      M->error() << cvect_to_str(Latch_name) << M->eom;
+      M->error() << "is also an input variable" << M->eom;
+      throw(ERROR1);
     }
   }
   
@@ -242,17 +240,30 @@ void conv_to_vect(CCUBE &Name1,const char *Name0)
     Name1.push_back(Name0[i]);
 } /* end of function conv_to_vect */
 
+
 /*===============================
 
      C O N V _ T O _ V E C T
 
   =============================*/
-void conv_to_vect(CCUBE &Name1,std::string &Name0)
+CCUBE conv_to_vect(std::string &Name)
 {
-  Name1.clear();
-  for (size_t i=0; i < Name0.size(); i++) 
-    Name1.push_back(Name0[i]);
-  
+
+  CCUBE V(Name.begin(),Name.end());
+  return(V);  
+
+} /* end of function conv_to_vect */
+
+/*===============================
+
+     C O N V _ T O _ V E C T
+
+  =============================*/
+CCUBE conv_to_vect(const std::string &Name)
+{
+ 
+  CCUBE V(Name.begin(),Name.end());
+  return(V);  
 
 } /* end of function conv_to_vect */
 

@@ -16,6 +16,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+
 /*==========================================
 
   F O R M _ I N P _ T R A C E
@@ -49,7 +50,7 @@ bool CompInfo::check_one_state_cex()
 
   int num_vars = std::max(num_ist_vars,num_prop_vars);
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,num_vars,Name);
 
   // add formulas Ist
@@ -66,7 +67,7 @@ bool CompInfo::check_one_state_cex()
   bool sat_form = check_sat1(Gen_sat);
   bool ok = true;
   if (sat_form) {
-    printf("an initial state does not satisfy the property\n");
+    M->result() << "an initial state does not satisfy the property" << M->eom;
     form_one_state_cex(Gen_sat);
     max_num_tfs = 0;
     ok = false;
@@ -86,7 +87,7 @@ bool CompInfo::check_two_state_cex()
 {
 
 
-  std::string Name = "Gen_sat";
+  std::string Name("Gen_sat");
   init_sat_solver(Gen_sat,max_num_vars,Name);
 
   // add formulas Ist, Tr and Bad_states

@@ -14,7 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <stdio.h>
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 
 /*==============================================
@@ -53,18 +53,18 @@ void finish_constant(Gate &G)
   The function fills up the polarities
   and sets the function  type
   =========================================*/
-void finish_buffer(Gate &G)
+void finish_buffer(Gate &G,messaget &M)
 {G.func_type = BUFFER;
 
   DNF &F = G.F;
   DNF &R = G.R;
 
   if ((F.size()+ R.size()) != 1) {
-    printf("wrong buffer\n");
+    std::cout << "wrong buffer\n";
     std::cout << G.Gate_name << std::endl;
-    printf("F.size() = %d\n",(int) F.size());
-    printf("R.size() = %d\n",(int) R.size());
-    exit(100);
+    std::cout << "F.size() = " << F.size() << "\n";
+    std::cout << "R.size() = " << R.size() << "\n";
+    throw(ERROR1);
   }
 
   // direct output
@@ -280,7 +280,7 @@ void finish_unknown_gate(Gate &G)
   In particular it determines gate type and fills up
   the polarities
   ==================================================*/
-void finish_gate(Circuit *N,int &gate_ind)
+void finish_gate(Circuit *N,int &gate_ind,messaget &M)
 {
 
   Gate &G=  N->Gate_list[gate_ind];
@@ -292,7 +292,7 @@ void finish_gate(Circuit *N,int &gate_ind)
 
   // is it a BUFFER?
   if (G.ninputs == 1) {
-    finish_buffer(G);
+    finish_buffer(G,M);
     return;
   }
  

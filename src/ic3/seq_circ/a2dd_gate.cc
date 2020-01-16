@@ -13,9 +13,10 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include <assert.h>
 #include <stdio.h>
+
 #include "dnf_io.hh"
 #include "ccircuit.hh"
-
+#include "s0hared_consts.hh"
 
 
 /*==========================================================
@@ -62,7 +63,8 @@ int assign_input_pin_number1(std::map<CCUBE,int> &pin_list,
   a new gate is added to gate_list
   =========================================================*/
 int assign_output_pin_number(std::map<CCUBE,int> &pin_list,
-			     CCUBE &name,GCUBE &gate_list,bool latch)
+			     CCUBE &name,GCUBE &gate_list,bool latch,
+			     messaget &M)
 {int pin_num;
   Gate G;
 
@@ -80,10 +82,9 @@ int assign_output_pin_number(std::map<CCUBE,int> &pin_list,
   else { /* an 'old' pin */
     pin_num=pin_list[name]; // add to input list the current gate input      
     if (gate_list[pin_num].flags.active == 1) {
-      printf("two gates have the same name "); 
-      print_name1(name); 
-      printf("\n");
-      exit(1);         
+      M.error() << "two gates have the same name " << M.eom; 
+      M.error() << cvect_to_str(name) << M.eom;
+      throw(ERROR1);   
     }
   }
   return(pin_num);

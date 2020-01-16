@@ -20,7 +20,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 #include <solvers/prop/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
-#include <ebmc/ebmc_base.h>
 #include "ebmc_ic3_interface.hh"
 
 
@@ -33,7 +32,7 @@ void ic3_enginet::print_var_map(std::ostream &out)
 {
 
 
-  printf("\n-----  Var Map ------\n");
+  std::cout << "\n-----  Var Map ------\n";
 
   var_mapt &vm = netlist.var_map;
   for(var_mapt::mapt::const_iterator it=vm.map.begin();
@@ -115,8 +114,6 @@ void ic3_enginet::add_pseudo_inps(Circuit *N)
   for (size_t i=0; i < Gate_list.size();i++) {
     Gate &G=Gate_list[i];
     if (G.flags.active) continue;
-    // printf("inactive gate: ");
-    // print_name1(G.Gate_name,true);
 
     G.func_type = BUFFER;
     G.gate_type = INPUT;
@@ -154,9 +151,8 @@ void ic3_enginet::form_init_constr_lits()
     literalt l_c=var.bits[0].current;
     if (l_c.is_constant()) continue;
     irep_idt Lname = it->first;
-    std::string Sname = short_name(Lname);
-    CCUBE K;
-    conv_to_vect(K,Sname);    
+    std::string Sname(short_name(Lname));
+    CCUBE K = conv_to_vect(Sname);
     if (Ci.Cgate_names.find(K) != Ci.Cgate_names.end())  {
       literalt lit = l_c;
       if (Ci.Cgate_names[K] != l_c.sign()) lit = !l_c;

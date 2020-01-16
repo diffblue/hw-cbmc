@@ -93,10 +93,10 @@ void CompInfo::lift_ctg_state(CUBE &Ctg_cube,CUBE &Ctg_st,CUBE &Inps,
   bool sat_form = check_sat2(Lgs_sat,Assmps);
   if (sat_form) {
     p();
-    printf("Ctg_st.size() = %d, Nst_cube.size() = %d\n",(int) Ctg_st.size(),
-          (int) Nst_cube.size());    
-    printf("tf_lind = %d\n",tf_lind);
-    exit(1);
+    M->error() << "Ctg_st.size() = " << Ctg_st.size() << ", Nst_cube.size() = " 
+	       << Nst_cube.size() << M->eom;
+    M->error() << "tf_lind = " << tf_lind << M->eom;
+    throw(ERROR1);
   }
     
   gen_state_cube(Ctg_cube,Ctg_st,Lgs_sat);

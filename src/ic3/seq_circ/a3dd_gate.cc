@@ -6,6 +6,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 #include <iostream>
+#include <sstream>
 #include <list>
 #include <vector>
 #include <set>
@@ -13,6 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <string>
 #include <algorithm>
 #include <queue>
+
 
 #include <stdio.h>
 #include <assert.h>
@@ -31,15 +33,12 @@ void gen_fake_name(CCUBE &fake_name,int ind)
 
   fake_name.clear();
   fake_name.push_back(1); // add a non-character symbol
-  char buf[MAX_NAME];
-
-  sprintf(buf,"%d",ind);
-
-  for(int i=0; ;i++) {
-    if (buf[i] == 0) break;
-    fake_name.push_back(buf[i]);
-  }
   
+  std::string Str(std::to_string(ind));
+
+  for(size_t i=0;i < Str.size();i++) 
+    fake_name.push_back(Str[i]);
+    
 
 } /* end of function gen_fake_name */
 

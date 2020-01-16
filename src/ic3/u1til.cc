@@ -16,7 +16,41 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+/*=================================
 
+      C V E C T _ T O _ S T R
+
+  =================================*/
+std::string cvect_to_str(CCUBE &A)
+{
+
+  std::string Res;
+
+  for (size_t i=0; i < A.size(); i++) {
+    if (i > 0) Res += " ";
+    Res += std::to_string(A[i]);
+  }
+
+  return(Res);
+} /* end of function cvect_to_str */
+
+/*=================================
+
+      I V E C T _ T O _ S T R
+
+  =================================*/
+std::string ivect_to_str(CUBE &A)
+{
+
+  std::string Res;
+
+  for (size_t i=0; i < A.size(); i++) {
+    if (i > 0) Res += " ";
+    Res += std::to_string(A[i]);
+  }
+
+  return(Res);
+} /* end of function ivect_to_str */
 
 /*=================================
 
@@ -111,46 +145,7 @@ bool CompInfo::update_fclause(int clause_ind,int tf_ind)
 
 
 
-/*==========================
 
-  R E A D _ N U M B E R S
-
-  =========================*/
-void read_numbers(char *buf,int &num1,int &num2)
-{
-  int pnt=0;
-
-  char loc_buf[MAX_NAME+1];
-
-  // read in the first number
-  int loc_pnt = 0;
-  while (true)
-    {char c = buf[pnt++];
-     if (c == ' ') break;
-     loc_buf[loc_pnt++] = c;
-    }
-
-  loc_buf[loc_pnt] = 0;
-  num1 = atoi(loc_buf);
-
-  // skip spaces
-  while (true)
-    {char c = buf[pnt];
-     if (c == ' ') pnt++;
-     else break;
-    }
-
-    // read in the second number
-  loc_pnt = 0;
-  while (true)
-    {char c = buf[pnt++];
-     if (c == ' ')  break;
-     if (c == '\n') break;
-     loc_buf[loc_pnt++] = c;
-    }
-loc_buf[loc_pnt] = 0;
- num2 = atoi(loc_buf);
-} /* end of function read_numbers */
 
 /*========================
 
@@ -161,7 +156,7 @@ void my_assert(bool cond)
 {
   if (!cond) {
     p();
-    exit(100);
+    throw(ERROR1);
   }
 } /* end of function my_assert */
 

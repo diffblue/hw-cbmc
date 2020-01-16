@@ -164,7 +164,6 @@ bool init_st_satisfy_constrs();
 void form_spec_simp_pr_tr(SatSolver &Slvr);
 void load_clauses2(CNF &Ext_clauses,IctMinisat::SimpSolver *Sslvr,CNF &A,
                    int num_clauses);
-void print_bnd_sets1();
 void print_clause_state(int clause_ind);
 void add_constr_nilits(CNF &Bad_states);
 void add_constr_lits2(SatSolver &Slvr);
@@ -180,7 +179,7 @@ void form_next_state_vars();
 void form_inp_vars();
 void form_pres_to_next_conv();
 void form_next_to_pres_conv();
-void assign_var_indexes();
+void assign_var_indices();
 void add_last_cube(DNF &F);
 void form_property_gates(CUBE &Gates);
 void print_files(char *root);
@@ -199,8 +198,8 @@ void  gen_initial_state_cubes();
 
 
 // debugging methods
-void print_var_indexes();
-void print_var_indexes(char *name);
+void print_var_indices();
+void print_var_indices(const std::string &fname);
 //
 void init_gate_order();
 void gate_sort_inps_first();
@@ -210,16 +209,21 @@ void print_gate_sort_mode();
 //
 //  related to printing out circuit in aiger format
 void check_circuit(int &num_buffs,int &num_consts);
-void print_aiger_header(FILE *fp,int max_var,int num_gates);
-void print_aiger_inps(FILE *fp);
-void print_aiger_latches(FILE *fp);
+void print_aiger_header(std::ofstream &Out_str,int max_var,int num_gates);
+void print_aiger_inps(std::ofstream &Out_str);
+void print_aiger_latches(std::ofstream &Out_str);
 int find_aiger_lit1(int gate_ind,char polarity);
 int find_aiger_lit2(int gate_ind,char polarity);
-void print_aiger_gates(FILE *fp,DNF &Gates);
+void print_aiger_gates(std::ofstream &Out_str,DNF &Gates);
 void add_aiger_and_gate(DNF &Gates,int gate_ind);
 void add_aiger_buffer(DNF &Gates,int gate_ind);
-void print_aiger_output(FILE *fp,DNF &Gates,int out_ind);
+void print_aiger_output(std::ofstream &Out_str,DNF &Gates,int out_ind);
 int form_aiger_gates(DNF &Gates);
 void add_triplet(DNF &Gates,int olit,int lit0,int lit1);
 int find_max_aiger_var(DNF &Gates);
-void print_aiger_constrs(FILE *fp);
+void print_aiger_constrs(std::ofstream &Out_str);
+//
+void print_func_type(Gate &G,unsigned message_level);
+void my_printf(unsigned message_level,const char *format,...);
+void print_num_with_commas(unsigned message_level,const int &num);
+void print_bnd_sets1(unsigned message_level);

@@ -12,8 +12,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
-#include <ebmc/ebmc_base.h>
-
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -64,9 +62,9 @@ void ic3_enginet::add_gate_out_name(CCUBE &Name,literalt &lit,CUBE &Pol)
     form_orig_name(Name,lit);
     return;
   }
-  char Buff[MAX_NAME];
-  sprintf(Buff,"a%d",lit1);
-  conv_to_vect(Name,Buff);
+
+  std::string Str_name("a" + std::to_string(lit1));
+  Name = conv_to_vect(Str_name);
 
 } /* end of function add_gate_out_name */
 
@@ -108,18 +106,19 @@ void ic3_enginet::add_gate_inp_name(CCUBE &Name,literalt &lit,CUBE &Pol)
     return;
   }
 
-  char Buff[MAX_NAME];
+ 
+  std::string Str_name;
   if (Ci.Inps.find(lit1) != Ci.Inps.end()) {
-    sprintf(Buff,"i%d",lit1);
-    conv_to_vect(Name,Buff);
+    Str_name = "i" + std::to_string(lit1);
+    Name = conv_to_vect(Str_name);
   }
   else if (Ci.Lats.find(lit1) != Ci.Lats.end()) {
-    sprintf(Buff,"l%d",lit1);
-    conv_to_vect(Name,Buff);
+    Str_name = "l" + std::to_string(lit1);
+    Name = conv_to_vect(Str_name);
   }
   else {
-    sprintf(Buff,"a%d",lit1);
-    conv_to_vect(Name,Buff);
+    Str_name = "a" + std::to_string(lit1);
+    Name = conv_to_vect(Str_name);
   }
 
 } /* end of function add_gate_inp_name */
@@ -147,11 +146,7 @@ void ic3_enginet::form_gate_pin_names(CDNF &Pin_names,CUBE &Pol,
   literalt gt_lit(node_ind,false);
 
   add_gate_out_name(Pin_names[2],gt_lit,Pol);
-  // print_name1(Pin_names[2]);
-  // printf(": "); print_name1(Pin_names[0]);
-  // printf(" "); print_name1(Pin_names[1],true);
-  // printf(" Pin_names[0].size() = %d, Pin_names[1].size() = %d\n",(int) Pin_names[0].size(),
-  // 	 (int) Pin_names[1].size());
+  
 } /* end of function from_gate_pin_names */
 
 /*===============================
@@ -167,12 +162,7 @@ void ic3_enginet::form_gates()
 
   for (size_t i=0; i <  Nodes.size(); i++) {  
     aigt::nodet &Nd = Nodes[i];
-    if (Nd.is_var()) {
-      // printf("skipping a var node\n");
-      // literalt gt_lit(i,false);
-      // unsigned lit_val = gt_lit.get();
-      // printf("lit_val = %u\n",lit_val);
-      // printf("i = %zu\n",i);
+    if (Nd.is_var()) {   
       continue;
     }
     CDNF Pin_names;
@@ -182,7 +172,7 @@ void ic3_enginet::form_gates()
     Ci.start_new_gate(Gate_inds,N,Pin_names);
     upd_gate_constrs(i,Gate_inds);
     Ci.form_gate_fun(N,Gate_inds.back(),Pol);
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*Ci.M);
   }
   
 
@@ -214,31 +204,33 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   CCUBE Dummy;
   Pin_names.push_back(Dummy);
   Pin_names.push_back(Dummy);
-  char Buff[MAX_NAME];
+
+  std::string Str_name;
+ 
   if (prop_l.is_false())  {
     Ci.const_false_prop = true;
-    sprintf(Buff,"c0");
-    conv_to_vect(Pin_names[0],Buff);
+    conv_to_vect(Pin_names[0],"c0");
     goto NEXT;  }
   if (prop_l.is_true()) {
     Ci.const_true_prop = true;
-    sprintf(Buff,"c1");
-    conv_to_vect(Pin_names[0],Buff);
+    conv_to_vect(Pin_names[0],"c1");
     goto NEXT;
   }
-  
+
+ 
   if (orig_names) 
     form_orig_name(Pin_names[0],prop_l,prop_l.sign());
   else {
-    if (latch) sprintf(Buff,"l%d",olit);
-    else sprintf(Buff,"a%d",olit);
-    conv_to_vect(Pin_names[0],Buff);
+    if (latch)
+      Str_name = "l" + std::to_string(olit);
+    else
+      Str_name = "a" + std::to_string(olit);
+    Pin_names[0] = conv_to_vect(Str_name);
   }
 
  NEXT:
-  char buff[MAX_NAME];
-  sprintf(buff,"%s",Ci.prop_name.c_str());
-  conv_to_vect(Pin_names[1],buff);
+ 
+  Pin_names[1] = conv_to_vect(Ci.prop_name);
   Out_names.push_back(Pin_names[1]);
 
   Circuit *N = Ci.N;
@@ -255,7 +247,7 @@ void ic3_enginet::form_outp_buf(CDNF &Out_names)
   Gate &G = N->get_gate(Gate_inds.back());
   G.F.push_back(C);
 
-  finish_gate(N,Gate_inds.back());
+  finish_gate(N,Gate_inds.back(),*Ci.M);
 
 } /* end of function form_outp_buf */
 
@@ -274,7 +266,7 @@ void CompInfo::form_consts(Circuit *N)
     conv_to_vect(Pin_names[0],"c0");
     CUBE Gate_inds;
     start_new_gate(Gate_inds,N,Pin_names);
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*M);
   }
 
   if (const_flags & 2) {
@@ -287,7 +279,7 @@ void CompInfo::form_consts(Circuit *N)
     CUBE C;
     Gate &G = N->get_gate(Gate_inds.back());
     G.F.push_back(C);
-    finish_gate(N,Gate_inds.back());
+    finish_gate(N,Gate_inds.back(),*M);
   }
 
 } /* end of functin form_consts */
