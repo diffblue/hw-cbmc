@@ -78,11 +78,11 @@ void show_modules(
         break;
 
       case ui_message_handlert::uit::JSON_UI:
-        assert(false);
+        UNREACHABLE;
         break;
 
       default:
-        assert(false);
+        UNREACHABLE;
       }
     }
   }

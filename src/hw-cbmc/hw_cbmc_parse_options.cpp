@@ -84,11 +84,8 @@ int hw_cbmc_parse_optionst::doit()
       all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>>(
       options, ui_message_handler, goto_model);
 
-  solver_factoryt sf{options, namespacet{goto_model.symbol_table},
-                     ui_message_handler, false};
-  auto my_solver = sf.get_solver();
-  prop_convt &prop_conv =
-      static_cast<prop_convt &>(*my_solver->decision_procedure_ptr);
+  // TODO : implement custom goto-checker/verifier that would support
+  // do-unwind-module and add-constraints (see below)
 
   int get_goto_program_ret =
       get_goto_program(goto_model, options, cmdline, ui_message_handler);
@@ -107,14 +104,16 @@ int hw_cbmc_parse_optionst::doit()
 
   unwind_no_timeframes = get_bound();
   unwind_module = get_top_module();
-  do_unwind_module(prop_conv);
+
+  // TODO : reimplement `do_module_unwind` inside the new custom verifier
 
   // the 'extra constraints'
   if (!constraints.empty()) {
     log.status() << "converting constraints" << messaget::eom;
 
     for (const auto &constraint : constraints) {
-      prop_conv.set_to_true(constraint);
+      // TODO : include the extra constraints using the new custom verifier
+      // interface
     }
   }
 
@@ -128,8 +127,6 @@ int hw_cbmc_parse_optionst::doit()
     return 7;
 
   // do actual BMC
-  // return do_bmc(hw_bmc, goto_functions);
-
   const resultt result = (*verifier)();
   verifier->report();
   return result_to_exit_code(result);
