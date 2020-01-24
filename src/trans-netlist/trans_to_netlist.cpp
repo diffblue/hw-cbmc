@@ -6,13 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/namespace.h>
 #include <util/arith_tools.h>
+#include <util/ebmc_util.h>
+#include <util/namespace.h>
 #include <util/std_expr.h>
 
-#include <solvers/prop/aig_prop.h>
 #include <solvers/flattening/boolbv_width.h>
 
+#include "aig_prop.h"
 #include "netlist.h"
 #include "trans_to_netlist.h"
 #include "instantiate_netlist.h"
@@ -54,8 +55,8 @@ protected:
     bool converted;
     exprt expr;
     bvt bv;
-    std::size_t width;
-    
+    std::size_t width = 0;
+
     rhs_entryt():converted(false)
     {
     }
@@ -155,7 +156,7 @@ literalt convert_trans_to_netlistt::new_input()
     symbol.type=bool_typet();
     symbol.is_input=true;
     symbol.base_name="input";
-    symbol_table.move(symbol);
+    symbol_table.add(symbol);
   }
 
   var_mapt::vart &var=dest.var_map.map[id];
@@ -186,53 +187,44 @@ void convert_trans_to_netlistt::map_vars(
 {
   boolbv_widtht boolbv_width(ns);
 
-  forall_symbol_module_map(it, symbol_table.symbol_module_map,
-                           module)
-  {
-    symbol_tablet::symbolst::const_iterator s_it=
-      symbol_table.symbols.find(it->second);
-
-    if(s_it==symbol_table.symbols.end())
-      continue;
-
-    const symbolt &symbol=s_it->second;
-
+  auto update_dest_var_map = [&dest, &boolbv_width](const symbolt &symbol) {
     var_mapt::vart::vartypet vartype;
 
-    if(symbol.is_property)
-      continue; // ignore properties
-    else if(symbol.type.id()==ID_module ||
-            symbol.type.id()==ID_module_instance)
-      continue; // ignore modules
-    else if(symbol.is_input)
-      vartype=var_mapt::vart::vartypet::INPUT;
-    else if(symbol.is_state_var)
-      vartype=var_mapt::vart::vartypet::LATCH;
+    if (symbol.is_property)
+      return; // ignore properties
+    else if (symbol.type.id() == ID_module ||
+             symbol.type.id() == ID_module_instance)
+      return; // ignore modules
+    else if (symbol.is_input)
+      vartype = var_mapt::vart::vartypet::INPUT;
+    else if (symbol.is_state_var)
+      vartype = var_mapt::vart::vartypet::LATCH;
     else
-      vartype=var_mapt::vart::vartypet::WIRE;
+      vartype = var_mapt::vart::vartypet::WIRE;
 
-    std::size_t size=boolbv_width(symbol.type);
-    
-    if(size==0)
-      continue;
+    std::size_t size = boolbv_width(symbol.type);
 
-    var_mapt::vart &var=dest.var_map.map[symbol.name];
-    var.vartype=vartype;
-    var.type=symbol.type;
-    var.mode=symbol.mode;
+    if (size == 0)
+      return;
+
+    var_mapt::vart &var = dest.var_map.map[symbol.name];
+    var.vartype = vartype;
+    var.type = symbol.type;
+    var.mode = symbol.mode;
     var.bits.resize(size);
-    
-    for(std::size_t bit=0; bit<size; bit++)
-    {
+
+    for (std::size_t bit = 0; bit < size; bit++) {
       // just initialize with something
-      var.bits[bit].current=const_literal(false);
-      var.bits[bit].next=const_literal(false);
-        
+      var.bits[bit].current = const_literal(false);
+      var.bits[bit].next = const_literal(false);
+
       // we already know the numbers of inputs and latches
-      if(var.is_input() || var.is_latch())
-        var.bits[bit].current=dest.new_var_node();
+      if (var.is_input() || var.is_latch())
+        var.bits[bit].current = dest.new_var_node();
     }
-  }
+  };
+
+  for_all_module_symbols(symbol_table, module, update_dest_var_map);
 }
 
 /*******************************************************************\
@@ -282,8 +274,7 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
   const transt &trans=to_trans_expr(module_symbol.value);
 
   // build the net-list
-  aig_prop_constraintt aig_prop(dest);
-  aig_prop.set_message_handler(get_message_handler());
+  aig_prop_constraintt aig_prop(dest, get_message_handler());
 
   // extract constraints from transition relation
   add_constraint(trans.invar());
@@ -481,7 +472,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     mp_integer i;
     if(!to_integer(expr.op1(), i)) // constant?
     {
-      from=integer2size_t(i);
+      from = i.to_ulong();
       convert_lhs_rec(expr.op0(), from, from, prop);
       return;
     }
@@ -498,10 +489,10 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       if(new_from>new_to) std::swap(new_from, new_to);
     
       assert(new_from<=new_to);
-    
-      from=integer2size_t(new_from);
-      to=integer2size_t(new_to);
-    
+
+      from = new_from.to_ulong();
+      to = new_to.to_ulong();
+
       convert_lhs_rec(expr.op0(), from, to, prop);
       return;
     }
@@ -659,7 +650,7 @@ void convert_trans_to_netlistt::add_equality_rec(
     if(to_integer(lhs.op1(), i))
       assert(false);
 
-    lhs_from=lhs_from+integer2size_t(i);
+    lhs_from = lhs_from + i.to_ulong();
     add_equality_rec(src, lhs.op0(), lhs_from, lhs_from, rhs_entry);
   }
   else if(lhs.id()==ID_extractbits)
@@ -677,9 +668,9 @@ void convert_trans_to_netlistt::add_equality_rec(
     if(op1<op2)
       throw std::string("extractbits op1<op2");
 
-    std::size_t new_lhs_to=lhs_from+integer2size_t(op1);
-    std::size_t new_lhs_from=lhs_from+integer2size_t(op2);
-    
+    std::size_t new_lhs_to = lhs_from + op1.to_ulong();
+    std::size_t new_lhs_from = lhs_from + op2.to_ulong();
+
     add_equality_rec(src, lhs.op0(), new_lhs_from, new_lhs_to, rhs_entry);
   }
   else

@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 
 #include "verilog_expr.h"
 #include "verilog_typecheck.h"

@@ -84,7 +84,7 @@ void vhdl_typecheckt::typecheck_architecture_decl(irept &decl)
         new_symbol.type=type;
         new_symbol.mode=module_symbol->mode;
       
-        symbol_table.move(new_symbol);
+        symbol_table.add(new_symbol);
       }
     }
     else if(d.id()==ID_component)

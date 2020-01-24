@@ -9,10 +9,10 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <iostream>
 #include <algorithm>
 
-#include <solvers/miniBDD/miniBDD.h>
-#include <solvers/prop/aig_prop.h>
+#include <solvers/bdd/miniBDD/miniBDD.h>
 #include <solvers/sat/satcheck.h>
 
+#include <trans-netlist/aig_prop.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/instantiate_netlist.h>
@@ -349,7 +349,7 @@ void bdd_enginet::compute_counterexample(
 
   bmc_mapt bmc_map;
 
-  satcheckt solver;
+  satcheckt solver{*message_handler};
   bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
   
   const namespacet ns(symbol_table);
@@ -372,7 +372,7 @@ void bdd_enginet::compute_counterexample(
   
   case propt::resultt::P_UNSATISFIABLE:
     throw "SAT solver says UNSAT!";
-    
+  case propt::resultt::P_ERROR:
   default:
     throw "unexpected result from SAT solver";
   }
@@ -717,9 +717,8 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
   
     assert(expr.type().id()==ID_bool);
 
-    aig_prop_constraintt aig_prop(netlist);
-    aig_prop.set_message_handler(get_message_handler());
-    
+    aig_prop_constraintt aig_prop(netlist, *message_handler);
+
     const namespacet ns(symbol_table);
     
     literalt l=instantiate_convert(

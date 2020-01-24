@@ -63,7 +63,7 @@ public:
     assertion_counter(0)
   {}
 
-  virtual void typecheck();
+  void typecheck() override;
 
 protected:
   const namespacet ns;
@@ -78,11 +78,11 @@ protected:
   void get_parameter_values(
     const irept &module_source,
     const exprt::operandst &parameter_assignment,
-    expr_listt &parameter_values);
+    std::list<exprt> &parameter_values);
 
   void set_parameter_values(
     irept &module_source,
-    const expr_listt &parameter_values);
+    const std::list<exprt> &parameter_values);
 
   // interfaces
   void module_interface();
@@ -163,12 +163,13 @@ protected:
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const std::string &target, exprt &dest);
 
+  // to be overridden
   virtual void convert_statements();
 
-  virtual bool implicit_wire(
-    const irep_idt &identifier,
-    const symbolt *&symbol);
-    
+  // to be overridden
+  bool implicit_wire(const irep_idt &identifier,
+                     const symbolt *&symbol) override;
+
   // generate constructs
   void elaborate_generate_assign(const exprt &statement, exprt::operandst &dest);
   void elaborate_generate_block(const exprt &statement, exprt::operandst &dest);
@@ -181,10 +182,8 @@ protected:
   typedef std::map<irep_idt, mp_integer> genvarst;
   genvarst genvars;
 
-  virtual void genvar_value(
-    const irep_idt &identifier,
-    mp_integer &value)
-  {
+  // to be overridden
+  void genvar_value(const irep_idt &identifier, mp_integer &value) override {
     genvarst::const_iterator it=genvars.find(identifier);
     if(it==genvars.end())
       value=-1;
@@ -195,9 +194,8 @@ protected:
   // interpreter state
   typedef std::map<irep_idt, exprt> varst;
   varst vars;
-  
-  virtual exprt var_value(const irep_idt &identifier)
-  {
+
+  exprt var_value(const irep_idt &identifier) override {
     varst::const_iterator it=vars.find(identifier);
     if(it==vars.end())
       return nil_exprt();
@@ -206,7 +204,7 @@ protected:
   }
 
   // const functions
-  exprt elaborate_const_function_call(const class function_call_exprt &);
+  exprt elaborate_const_function_call(const class function_call_exprt &) override;
   void verilog_interpreter(const class verilog_statementt &);
   
   // counter for assertions

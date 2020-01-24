@@ -1,22 +1,38 @@
-SRC = diameter.cpp main.cpp diatest.cpp show_properties.cpp \
-      k_induction.cpp ebmc_base.cpp ebmc_solvers.cpp bdd_engine.cpp \
-      ebmc_parse_options.cpp show_trans.cpp ebmc_languages.cpp \
+SRC = \
+      bdd_engine.cpp \
+      cegar/abstract.cpp \
+      cegar/bmc_cegar.cpp \
+      cegar/latch_ordering.cpp \
+      cegar/refine.cpp \
+      cegar/simulate.cpp \
+      cegar/verify.cpp \
+      diameter.cpp \
+      diatest.cpp \
+      ebmc_base.cpp \
+      ebmc_languages.cpp \
+      ebmc_parse_options.cpp \
+      ebmc_solvers.cpp \
+      k_induction.cpp \
+      main.cpp \
       negate_property.cpp \
-      cegar/bmc_cegar.cpp cegar/latch_ordering.cpp \
-      cegar/verify.cpp cegar/abstract.cpp cegar/refine.cpp \
-      cegar/simulate.cpp
+      show_properties.cpp \
+      show_trans.cpp \
+      #empty line
 
-OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
-      $(CBMC)/src/langapi/langapi$(LIBEXT) \
-      $(CBMC)/src/ansi-c/string_constant$(OBJEXT) \
-      $(CBMC)/src/util/c_types$(OBJEXT) \
-      $(CBMC)/src/solvers/solvers$(LIBEXT) \
-      $(CBMC)/src/big-int/big-int$(LIBEXT) \
+OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
+      $(CPROVER_DIR)/langapi/langapi$(LIBEXT) \
+      $(CPROVER_DIR)/goto-programs/system_library_symbols$(OBJEXT) \
+      $(CPROVER_DIR)/solvers/solvers$(LIBEXT) \
+      $(CPROVER_DIR)/big-int/big-int$(LIBEXT) \
+      $(CPROVER_DIR)/util/c_types$(OBJEXT) \
+      $(CPROVER_DIR)/goto-programs/xml_expr$(OBJEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT) \
       ../aiger/aiger$(LIBEXT) \
-      ../ic3/libic3$(LIBEXT)   
+      ../ic3/libic3$(LIBEXT) \
+      ../trans-netlist/aig$(OBJEXT) \
+      ../trans-netlist/aig_prop$(OBJEXT)
 
 ifdef MODULE_INTERPOLATION
   CXXFLAGS += -DHAVE_INTERPOLATION
@@ -41,9 +57,12 @@ ifneq ($(wildcard ../vhdl/Makefile),)
   CXXFLAGS += -DHAVE_VHDL
 endif
 
-include ../config.inc
+include $(CPROVER_DIR)/config.inc
+include $(CPROVER_DIR)/common
 
-INCLUDES= -I .. -I $(CBMC)/src
+INCLUDES= -I $(CPROVER_DIR) -I ..
+
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 LIBS = ../ic3/minisat/build/release/lib/libminisat.a
 

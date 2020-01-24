@@ -6,12 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 
+#include <util/ebmc_util.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
-#include <util/arith_tools.h>
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
@@ -474,7 +475,7 @@ std::string expr2verilogt::convert_typecast(
     //const typet &to=src.type();
 
     // just ignore them for now
-    return convert(src.op0(), precedence);
+    return convert(src.op(), precedence);
   }
 
   return convert_norep(src, precedence);
@@ -568,7 +569,7 @@ std::string expr2verilogt::convert_extractbits(
     return convert_norep(src, precedence);
 
   unsigned p;
-  std::string op=convert(src.op0(), p);
+  std::string op = convert(src.src(), p);
 
   std::string dest;
   if(precedence>p) dest+='(';
@@ -576,9 +577,9 @@ std::string expr2verilogt::convert_extractbits(
   if(precedence>p) dest+=')';
 
   dest+='[';
-  dest+=convert(src.op1());
+  dest += convert(src.upper());
   dest+=':';
-  dest+=convert(src.op2());
+  dest += convert(src.lower());
   dest+=']';
 
   return dest;
@@ -735,7 +736,7 @@ std::string expr2verilogt::convert_constant(
     unsigned width=to_bitvector_type(type).get_width();
   
     mp_integer i;
-    to_integer(src, i);
+    to_integer(binary_to_hex(src), i);
 
     if(i>=256)
       dest="'h"+integer2string(i, 16);

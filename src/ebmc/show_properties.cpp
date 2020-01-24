@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 
 #include <util/xml.h>
-#include <util/xml_expr.h>
 #include <util/xml_irep.h>
 
 #include "ebmc_base.h"
@@ -32,8 +31,7 @@ void ebmc_baset::show_properties()
 
   for(const auto & p : properties)
   {
-    switch(get_ui())
-    {
+    switch (static_cast<ui_message_handlert *>(message_handler)->get_ui()) {
     case ui_message_handlert::uit::XML_UI:
       {
         xmlt xml("property");
@@ -57,7 +55,7 @@ void ebmc_baset::show_properties()
         std::cout << " (" << p.description << ")";
       std::cout << '\n';
       break;
-
+    case ui_message_handlert::uit::JSON_UI:
     default:;
     }
     

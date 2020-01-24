@@ -16,6 +16,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_base.h"
 #include "ebmc_parse_options.h"
 
+#include <util/config.h>
+#include <util/exit_codes.h>
+
 #ifdef HAVE_INTERPOLATION
 #include "interpolation/interpolation_expr.h"
 #include "interpolation/interpolation_netlist.h"
@@ -39,6 +42,10 @@ Function: ebmc_parse_optionst::doit
 
 int ebmc_parse_optionst::doit()
 {
+  if (config.set(cmdline)) {
+    usage_error();
+    exit(CPROVER_EXIT_USAGE_ERROR);
+  }
   register_languages();
 
   if(cmdline.isset("version"))
@@ -193,6 +200,7 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("dimacs"))
       return ebmc_base.do_dimacs();
+    /*
     else if(cmdline.isset("cvc4"))
       return ebmc_base.do_cvc4();
     else if(cmdline.isset("boolector"))
@@ -203,10 +211,9 @@ int ebmc_parse_optionst::doit()
       return ebmc_base.do_mathsat();
     else if(cmdline.isset("yices"))
       return ebmc_base.do_yices();
-    else if(cmdline.isset("smt1"))
-      return ebmc_base.do_smt1();
     else if(cmdline.isset("smt2"))
       return ebmc_base.do_smt2();
+    */
     else if(cmdline.isset("prover"))
       return ebmc_base.do_prover();
     else if(cmdline.isset("lifter"))

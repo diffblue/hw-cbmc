@@ -303,8 +303,8 @@ Function: new_vhdl_language
 
 \*******************************************************************/
   
-languaget *new_vhdl_language()
+std::unique_ptr<languaget> new_vhdl_language()
 {
-  return new vhdl_languaget;
+  return util_make_unique<vhdl_languaget>();
 }
 

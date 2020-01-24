@@ -9,8 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_LANGUAGE_H
 #define CPROVER_VERILOG_LANGUAGE_H
 
+#include <util/make_unique.h>
 #include <util/options.h>
-#include <util/language.h>
+
+#include <langapi/language.h>
 
 #include "verilog_parse_tree.h"
 
@@ -58,8 +60,13 @@ public:
     exprt &expr,
     const namespacet &ns) override;
 
-  languaget *new_language() override
-  { return new verilog_languaget; }
+  bool generate_support_functions(symbol_tablet &) override
+  {
+    return false;
+  }
+
+  std::unique_ptr<languaget> new_language() override
+  { return util_make_unique<verilog_languaget>(); }
    
   std::string id() const override { return "Verilog"; }
   std::string description() const override { return "Verilog"; }
@@ -85,6 +92,6 @@ protected:
   verilog_parse_treet parse_tree;
 };
  
-languaget *new_verilog_language();
+std::unique_ptr<languaget> new_verilog_language();
 
 #endif

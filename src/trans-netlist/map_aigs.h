@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_MAP_AIGS_H
 #define CPROVER_TRANS_MAP_AIGS_H
 
-#include <solvers/prop/aig.h>
+#include "aig.h"
 
 #if 0
 #include "bmc_map.h"

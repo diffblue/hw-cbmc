@@ -46,7 +46,9 @@ void compute_trans_trace(
     assert(t<dest.states.size());
     trans_tracet::statet &state=dest.states[t];
     
-    forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
+    for(auto it=symbol_table.symbol_module_map.lower_bound(module);
+        it!=symbol_table.symbol_module_map.upper_bound(module);
+        it++)
     {
       const symbolt &symbol=ns.lookup(it->second);
 

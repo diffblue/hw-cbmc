@@ -9,18 +9,27 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 
 #include <util/config.h>
+#include <util/exit_codes.h>
 #include <util/get_module.h>
 #include <util/string2int.h>
+#include <util/version.h>
 
-#include <goto-programs/show_properties.h>
+#include <goto-checker/all_properties_verifier_with_trace_storage.h>
+#include <goto-checker/goto_verifier.h>
+#include <goto-checker/multi_path_symex_checker.h>
+#include <goto-checker/solver_factory.h>
+
+#include <goto-programs/goto_convert_functions.h>
 #include <goto-programs/set_properties.h>
-#include <trans-word-level/show_modules.h>
-#include <cbmc/version.h>
-#include <cbmc/cbmc_solvers.h>
+#include <goto-programs/show_properties.h>
+
 #include <langapi/mode.h>
 
+#include <trans-word-level/show_modules.h>
+#include <trans-word-level/trans_trace_word_level.h>
+#include <trans-word-level/unwind.h>
+
 #include "hw_cbmc_parse_options.h"
-#include "hw_bmc.h"
 #include "map_vars.h"
 #include "gen_interface.h"
 
@@ -50,66 +59,77 @@ int hw_cbmc_parse_optionst::doit()
 
   optionst options;
   get_command_line_options(options);
-  eval_verbosity();
+
+  messaget::eval_verbosity(cmdline.get_value("verbosity"),
+                           messaget::M_STATISTICS, ui_message_handler);
 
   //
   // Print a banner
   //
-  status() << "HW-CBMC version " CBMC_VERSION << eom;
+  log.status() << "HW-CBMC version " << CBMC_VERSION << messaget::eom;
 
   register_languages();
 
   if(cmdline.isset("preprocess"))
   {
-    preprocessing();
+    preprocessing(options);
     return 0;
   }
 
   if(cmdline.isset("vcd"))
     options.set_option("vcd", cmdline.get_value("vcd"));
 
-  cbmc_solverst cbmc_solvers(options, symbol_table, ui_message_handler);
-  cbmc_solvers.set_ui(get_ui());
-  std::unique_ptr<cbmc_solverst::solvert> cbmc_solver;
-  
-  try
-  {
-    cbmc_solver=cbmc_solvers.get_solver();
-  }
-  
-  catch(const char *error_msg)
-  {
-    error() << error_msg << eom;
-    return 1;
-  }
+  std::unique_ptr<goto_verifiert> verifier = nullptr;
+  verifier = util_make_unique<
+      all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>>(
+      options, ui_message_handler, goto_model);
 
-  prop_convt &prop_conv=cbmc_solver->prop_conv();
-  hw_bmct hw_bmc(options, symbol_table, ui_message_handler, prop_conv);
+  // TODO : implement custom goto-checker/verifier that would support
+  // do-unwind-module and add-constraints (see below)
 
-  goto_functionst goto_functions;
-
-  int get_goto_program_ret=get_goto_program(
-    options, hw_bmc.bmc_constraints, goto_functions);
-  if(get_goto_program_ret!=-1)
+  int get_goto_program_ret =
+      get_goto_program(goto_model, options, cmdline, ui_message_handler);
+  if (get_goto_program_ret != -1)
     return get_goto_program_ret;
 
-  hw_bmc.unwind_no_timeframes=get_bound();
-  hw_bmc.unwind_module=get_top_module();
+  std::list<exprt> constraints;
+  int get_modules_ret = get_modules(constraints);
+  if (get_modules_ret != -1)
+    return get_modules_ret;
 
-  label_properties(goto_functions);
+  goto_convert(goto_model.symbol_table, goto_model.goto_functions,
+               ui_message_handler);
+  if (cbmc_parse_optionst::process_goto_program(goto_model, options, log))
+    return CPROVER_EXIT_INTERNAL_ERROR;
 
-  if(cmdline.isset("show-properties"))
-  {
-    const namespacet ns(symbol_table);
-    show_properties(ns, get_ui(), goto_functions);
-    return 0;
+  unwind_no_timeframes = get_bound();
+  unwind_module = get_top_module();
+
+  // TODO : reimplement `do_module_unwind` inside the new custom verifier
+
+  // the 'extra constraints'
+  if (!constraints.empty()) {
+    log.status() << "converting constraints" << messaget::eom;
+
+    for (const auto &constraint : constraints) {
+      // TODO : include the extra constraints using the new custom verifier
+      // interface
+    }
   }
 
-  if(set_properties(goto_functions))
+  label_properties(goto_model.goto_functions);
+
+  if (cmdline.isset("show-properties")) {
+    show_properties(goto_model, ui_message_handler);
+    return 0;
+  }
+  if (set_properties())
     return 7;
 
   // do actual BMC
-  return do_bmc(hw_bmc, goto_functions);
+  const resultt result = (*verifier)();
+  verifier->report();
+  return result_to_exit_code(result);
 }
 
 /*******************************************************************\
@@ -136,8 +156,8 @@ irep_idt hw_cbmc_parse_optionst::get_top_module()
   if(top_module=="")
     return irep_idt();
 
-  return get_module(
-    symbol_table, top_module, get_message_handler()).name;
+  return get_module(goto_model.symbol_table, top_module, ui_message_handler)
+      .name;
 }
 
 /*******************************************************************\
@@ -172,8 +192,7 @@ Function: hw_cbmc_parse_optionst::get_modules
 
 \*******************************************************************/
 
-int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
-{
+int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
   //
   // unwinding of transition systems
   //
@@ -186,22 +205,22 @@ int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
     {
       if(cmdline.isset("gen-interface"))
       {
-        const symbolt &symbol=
-          namespacet(symbol_table).lookup(top_module);
+        const symbolt &symbol =
+            namespacet(goto_model.symbol_table).lookup(top_module);
 
         if(cmdline.isset("outfile"))
         {
           std::ofstream out(cmdline.get_value("outfile").c_str());
           if(!out)
           {
-            error() << "failed to open given outfile" << eom;
+            log.error() << "failed to open given outfile" << messaget::eom;
             return 6;
           }
 
-          gen_interface(symbol_table, symbol, true, out, std::cerr);
+          gen_interface(goto_model.symbol_table, symbol, true, out, std::cerr);
         }
         else
-          gen_interface(symbol_table, symbol, true, std::cout, std::cerr);
+          gen_interface(goto_model.symbol_table, symbol, true, std::cout, std::cerr);
 
         return 0; // done
       }
@@ -210,26 +229,23 @@ int hw_cbmc_parse_optionst::get_modules(expr_listt &bmc_constraints)
       // map HDL variables to C variables
       //
 
-      status() << "Mapping variables" << eom;
+      log.status() << "Mapping variables" << messaget::eom;
 
-      map_vars(
-        symbol_table,
-        top_module,
-        bmc_constraints,
-        get_message_handler(),
-        get_bound());
+      map_vars(goto_model.symbol_table, top_module, bmc_constraints,
+               ui_message_handler, get_bound());
     }
 
     catch(int e) { return 6; }
   }
   else if(cmdline.isset("gen-interface"))
   {
-    error() << "must specify top module name for gen-interface" << eom;
+    log.error() << "must specify top module name for gen-interface"
+                << messaget::eom;
     return 6;
   }
   else if(cmdline.isset("show-modules"))
   {
-    show_modules(symbol_table, get_ui());
+    show_modules(goto_model.symbol_table, ui_message_handler.get_ui());
     return 0; // done
   }
     
@@ -265,3 +281,42 @@ void hw_cbmc_parse_optionst::help()
     "\n";
 }
 
+void hw_cbmc_parse_optionst::do_unwind_module(prop_convt &prop_conv) {
+  if (unwind_module == "" || unwind_no_timeframes == 0)
+    return;
+
+  namespacet ns{goto_model.symbol_table};
+  const symbolt &symbol = ns.lookup(unwind_module);
+
+  log.status() << "Unwinding transition system `" << symbol.name << "' with "
+               << unwind_no_timeframes << " time frames" << messaget::eom;
+
+  //  auto dp= get_decision_procedure();
+
+  ::unwind(to_trans_expr(symbol.value), ui_message_handler, prop_conv,
+           unwind_no_timeframes, ns, true);
+
+  log.status() << "Unwinding transition system done" << messaget::eom;
+}
+
+void hw_cbmc_parse_optionst::show_unwind_trace(const optionst &options,
+                                               const prop_convt &prop_conv) {
+  if (unwind_module == "" || unwind_no_timeframes == 0)
+    return;
+
+  trans_tracet trans_trace;
+  namespacet ns{goto_model.symbol_table};
+  compute_trans_trace(prop_conv, unwind_no_timeframes, ns, unwind_module,
+                      trans_trace);
+
+  if (options.get_option("vcd") != "") {
+    if (options.get_option("vcd") == "-")
+      show_trans_trace_vcd(trans_trace, log, ns, std::cout);
+    else {
+      std::ofstream out(options.get_option("vcd").c_str());
+      show_trans_trace_vcd(trans_trace, log, ns, out);
+    }
+  }
+
+  show_trans_trace(trans_trace, log, ns, ui_message_handler.get_ui());
+}

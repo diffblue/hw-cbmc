@@ -10,11 +10,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <algorithm>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
-#include <util/simplify_expr.h>
 #include <util/namespace.h>
 #include <util/prefix.h>
+#include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
@@ -184,9 +184,8 @@ void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
 {
   unsignedbv_typet new_type(1);
 
-  Forall_operands(it, expr)
-    if(it->type().id()==ID_bool)
-      it->make_typecast(new_type);
+  Forall_operands(it, expr) if (it->type().id() == ID_bool) *it =
+      typecast_exprt{*it, new_type};
 }
 
 /*******************************************************************\
@@ -232,13 +231,13 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
 
       if(type.id()==ID_array)
       {
-        err_location(*it);
+        error().source_location = it->source_location();
         error() << "array type not allowed in concatenation" << eom;
         throw 0;
       }
       else if(type.id()==ID_integer)
       {
-        err_location(*it);
+        error().source_location = it->source_location();
         error() << "integer type not allowed in concatenation" << eom;
         throw 0;
       }
@@ -259,7 +258,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
         if(it->type().id()!=ID_verilog_unsignedbv)
         {
           unsigned width=get_width(*it);
-          it->make_typecast(verilog_unsignedbv_typet(width));
+          *it = typecast_exprt{*it, verilog_unsignedbv_typet{width}};
         }
     }
   }
@@ -336,14 +335,14 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   const symbolt *symbol;
   if(ns.lookup(full_identifier, symbol))
   {
-    err_location(f_op);
+    error().source_location = f_op.source_location();
     error() << "unknown function `" << identifier << "'" << eom;
     throw 0;
   }
 
   if(symbol->type.id()!=ID_code)
   {
-    err_location(f_op);
+    error().source_location = f_op.source_location();
     error() << "expected function name" << eom;
     throw 0;
   }
@@ -356,7 +355,7 @@ void verilog_typecheck_exprt::convert_expr_function_call(
   
   if(code_type.return_type().id()==ID_empty)
   {
-    err_location(f_op);
+    error().source_location = f_op.source_location();
     error() << "expected function, but got task" << eom;
     throw 0;
   }
@@ -559,7 +558,7 @@ void verilog_typecheck_exprt::convert_system_function(
   }
   else
   {
-    err_location(expr.function());
+    error().source_location = expr.function().source_location();
     error() << "unknown system function `" << identifier << "'" << eom;
     throw 0;
   }
@@ -679,8 +678,8 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
         error() << "invalid genvar value" << eom;
         throw 0;
       }
-      
-      std::size_t bits=integer2size_t(address_bits(int_value+1));
+
+      std::size_t bits = address_bits(int_value + 1);
       source_locationt source_location=expr.source_location();
 
       exprt result=from_integer(int_value, unsignedbv_typet(bits));
@@ -1052,7 +1051,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     
     if(!bits_given)
     {
-      bits=integer2size_t(address_bits(int_value+1));
+      bits = address_bits(int_value + 1);
       // we do a 32-bit minimum
       if(bits<32) bits=32;
     }
@@ -1062,7 +1061,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     else
       expr.type()=unsignedbv_typet(bits);
 
-    expr.set(ID_value, integer2binary(int_value, bits));
+    expr.set(ID_value, integer2bvrep(int_value, bits));
     expr.set(ID_C_little_endian, true);
   }
 }
@@ -1247,7 +1246,7 @@ void verilog_typecheck_exprt::typecast(
        expr.type().id()==ID_signedbv ||
        expr.type().id()==ID_integer)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
@@ -1259,8 +1258,7 @@ void verilog_typecheck_exprt::typecast(
     {
       // do not use typecast here
       // we actually only want the lowest bit
-      unsignedbv_typet tmp_type;
-      tmp_type.set_width(1);
+      unsignedbv_typet tmp_type(1);
       exprt tmp(ID_extractbit, bool_typet());
       exprt no_expr=from_integer(0, integer_typet());
       tmp.copy_to_operands(typecast_exprt(expr, tmp_type), no_expr);
@@ -1272,7 +1270,7 @@ void verilog_typecheck_exprt::typecast(
             dest_type.id()==ID_verilog_unsignedbv ||
             dest_type.id()==ID_verilog_signedbv)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
@@ -1312,24 +1310,24 @@ void verilog_typecheck_exprt::typecast(
       {
         mp_integer i;
         if(to_integer(expr, i))
-          expr.make_typecast(dest_type);
+          expr = typecast_exprt{expr, dest_type};
         else
           expr=from_integer(i, dest_type);
       }
       else
-        expr.make_typecast(dest_type);
+        expr = typecast_exprt{expr, dest_type};
 
       return;
     }
     else if(dest_type.id()==ID_verilog_unsignedbv ||
             dest_type.id()==ID_verilog_signedbv)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
     else if(dest_type.id()==ID_verilog_realtime)
     {
-      expr.make_typecast(dest_type);
+      expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
@@ -1360,7 +1358,7 @@ void verilog_typecheck_exprt::make_boolean(exprt &expr)
     if(!to_integer(expr, value))
       expr.make_bool(value!=0);
     else
-      expr.make_typecast(bool_typet());
+      expr = typecast_exprt{expr, bool_typet{}};
   }
 }
 
@@ -1383,7 +1381,7 @@ void verilog_typecheck_exprt::convert_range(
 {
   if(range.operands().size()!=2)
   {
-    err_location(range);
+    error().source_location = range.source_location();
     error() << "range expected to have two operands" << eom;
     throw 0;
   }
@@ -1531,17 +1529,16 @@ void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
   if(expr.id()==ID_not)
   {
     // may produce an 'x' if the operand is a verilog_bv
-    convert_expr(expr.op0());
+    convert_expr(expr.op());
 
-    if(expr.op0().type().id()==ID_verilog_signedbv ||
-       expr.op0().type().id()==ID_verilog_unsignedbv)
-    {
+    if (expr.op().type().id() == ID_verilog_signedbv ||
+        expr.op().type().id() == ID_verilog_unsignedbv) {
       expr.type()=verilog_unsignedbv_typet(1);
     }
     else
     {
       expr.type()=bool_typet();
-      make_boolean(expr.op0());
+      make_boolean(expr.op());
     }
   }
   else if(expr.id()==ID_reduction_or  || expr.id()==ID_reduction_and ||
@@ -1549,10 +1546,10 @@ void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
           expr.id()==ID_reduction_xor || expr.id()==ID_reduction_xnor)
   {
     // these may produce an 'x' if the operand is a verilog_bv
-    convert_expr(expr.op0());
+    convert_expr(expr.op());
 
-    if(expr.op0().type().id()==ID_verilog_signedbv ||
-       expr.op0().type().id()==ID_verilog_unsignedbv)
+    if (expr.op().type().id() == ID_verilog_signedbv ||
+        expr.op().type().id() == ID_verilog_unsignedbv)
       expr.type()=verilog_unsignedbv_typet(1);
     else
       expr.type()=bool_typet();
@@ -1560,9 +1557,9 @@ void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
   else if(expr.id()==ID_unary_minus ||
           expr.id()==ID_unary_plus)
   {
-    convert_expr(expr.op0());
+    convert_expr(expr.op());
     no_bool_ops(expr);
-    expr.type()=expr.op0().type();
+    expr.type() = expr.op().type();
   }
   else if(expr.id()==ID_sva_always ||
           expr.id()==ID_sva_nexttime ||
@@ -1571,14 +1568,14 @@ void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
           expr.id()==ID_sva_s_eventually)
   {
     assert(expr.operands().size()==1);
-    convert_expr(expr.op0());
-    make_boolean(expr.op0());
+    convert_expr(expr.op());
+    make_boolean(expr.op());
     expr.type()=bool_typet();
   }
   else
   {
-    convert_expr(expr.op0());
-    expr.type()=expr.op0().type();
+    convert_expr(expr.op());
+    expr.type() = expr.op().type();
 
     // check boolean operators
 
@@ -1621,7 +1618,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
       else if(op1.is_true() || op1.is_false())
         op1=from_integer(op1.is_true()?1:0, _index_type);
       else
-        expr.op1().make_typecast(_index_type);
+        expr.op1() = typecast_exprt{expr.op1(), _index_type};
     }
 
     expr.type()=op0.type().subtype();
@@ -1687,13 +1684,13 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
 
   if(op1.type().id()==ID_array)
   {
-    err_location(op1);
+    error().source_location = op1.source_location();
     error() << "array type not allowed in replication" << eom;
     throw 0;
   }
 
   if(op1.type().id()==ID_bool)
-    op1.make_typecast(unsignedbv_typet(1));
+    op1 = typecast_exprt{op1, unsignedbv_typet{1}};
 
   unsigned width=get_width(expr.op1().type());
 
@@ -1718,7 +1715,7 @@ void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
   {
     expr.op0()=from_integer(op0, natural_typet());
 
-    std::size_t new_width=integer2size_t(op0)*width;
+    std::size_t new_width = op0.to_ulong() * width;
 
     if(op1.type().id()==ID_verilog_unsignedbv ||
        op1.type().id()==ID_verilog_signedbv)
@@ -1936,7 +1933,7 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
 
     if(op0.type().id()==ID_array)
     {
-      err_location(op0);
+      error().source_location = op0.source_location();
       error() << "array type not allowed in extraction" << eom;
       throw 0;
     }
@@ -1976,8 +1973,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
     expr.op2()=from_integer(op2, natural_typet());
 
     // Part-select expressions are unsigned, even if the
-    // entire expression is selected!    
-    expr.type()=unsignedbv_typet(integer2size_t(op1-op2+1));
+    // entire expression is selected!
+    expr.type() = unsignedbv_typet((op1 - op2).to_ulong() + 1);
   }
   else if(expr.id()==ID_if)
   {

@@ -11,7 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*! \defgroup gr_smvlang SMV front-end */
 
-#include <util/language.h>
+#include <langapi/language.h>
+
+#include <util/make_unique.h>
 
 #include "smv_parse_tree.h"
 
@@ -56,6 +58,11 @@ public:
     exprt &expr,
     const namespacet &ns) override;
                        
+  bool generate_support_functions(symbol_tablet &) override
+  {
+    return false;
+  }
+
   std::string id() const override { return "SMV"; }
   std::string description() const override { return "SMV"; }
 
@@ -64,12 +71,12 @@ public:
     return { "smv" }; 
   }
   
-  languaget *new_language() override
-  { return new smv_languaget; }
+  std::unique_ptr<languaget> new_language() override
+  { return util_make_unique<smv_languaget>(); }
      
   smv_parse_treet smv_parse_tree;
 };
 
-languaget *new_smv_language();
+std::unique_ptr<languaget> new_smv_language();
  
 #endif

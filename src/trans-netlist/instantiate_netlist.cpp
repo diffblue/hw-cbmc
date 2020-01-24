@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <cassert>
 
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/std_expr.h>
-#include <util/arith_tools.h>
 
 #include "instantiate_netlist.h"
 
@@ -26,19 +26,13 @@ Author: Daniel Kroening, kroening@kroening.com
 class instantiate_bmc_mapt:public boolbvt
 {
 public:
-  instantiate_bmc_mapt(
-    const namespacet &_ns,
-    propt &solver,
-    const bmc_mapt &_bmc_map,
-    unsigned _current,
-    unsigned _next):
-    boolbvt(_ns, solver),
-    bmc_map(_bmc_map),
-    current(_current),
-    next(_next)
-  {
-  }
-  
+  instantiate_bmc_mapt(const namespacet &_ns, propt &solver,
+                       message_handlert &message_handler,
+                       const bmc_mapt &_bmc_map, unsigned _current,
+                       unsigned _next)
+      : boolbvt(_ns, solver, message_handler), bmc_map(_bmc_map),
+        current(_current), next(_next) {}
+
   typedef boolbvt SUB;
 
   // overloading
@@ -78,9 +72,7 @@ void instantiate_constraint(
   const namespacet &ns,
   message_handlert &message_handler)
 {
-  instantiate_bmc_mapt i(ns, solver, bmc_map, current, next);
-
-  i.set_message_handler(message_handler);
+  instantiate_bmc_mapt i(ns, solver, message_handler, bmc_map, current, next);
 
   try
   {
@@ -120,9 +112,7 @@ literalt instantiate_convert(
   const namespacet &ns,
   message_handlert &message_handler)
 {
-  instantiate_bmc_mapt i(ns, solver, bmc_map, current, next);
-
-  i.set_message_handler(message_handler);
+  instantiate_bmc_mapt i(ns, solver, message_handler, bmc_map, current, next);
 
   try
   {
@@ -163,9 +153,7 @@ void instantiate_convert(
   message_handlert &message_handler,
   bvt &bv)
 {
-  instantiate_bmc_mapt i(ns, solver, bmc_map, current, next);
-
-  i.set_message_handler(message_handler);
+  instantiate_bmc_mapt i(ns, solver, message_handler, bmc_map, current, next);
 
   try
   {
@@ -244,8 +232,8 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
         if(to_integer(expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
-        current=old_current+integer2ulong(offset);
-        next=old_next+integer2ulong(offset);
+        current = old_current + offset.to_ulong();
+        next = old_next + offset.to_ulong();
         result=convert_bool(expr.op2());
       }
       else
@@ -260,8 +248,8 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
         
         for(mp_integer offset=from; offset<to; ++offset)
         {
-          current=old_current+integer2ulong(offset);
-          next=old_next+integer2ulong(offset);
+          current = old_current + offset.to_ulong();
+          next = old_next + offset.to_ulong();
           disjuncts.push_back(convert_bool(expr.op2()));
         }
         
@@ -378,15 +366,11 @@ literalt instantiate_bmc_mapt::get_literal(
 class instantiate_var_mapt:public boolbvt
 {
 public:
-  instantiate_var_mapt(
-    const namespacet &_ns,
-    propt &solver,
-    const var_mapt &_var_map):
-    boolbvt(_ns, solver),
-    var_map(_var_map)
-  {
-  }
-  
+  instantiate_var_mapt(const namespacet &_ns, propt &solver,
+                       message_handlert &message_handler,
+                       const var_mapt &_var_map)
+      : boolbvt(_ns, solver, message_handler), var_map(_var_map) {}
+
   typedef boolbvt SUB;
 
   // overloading
@@ -424,9 +408,7 @@ void instantiate_constraint(
   const namespacet &ns,
   message_handlert &message_handler)
 {
-  instantiate_var_mapt i(ns, solver, var_map);
-
-  i.set_message_handler(message_handler);
+  instantiate_var_mapt i(ns, solver, message_handler, var_map);
 
   try
   {
@@ -465,9 +447,7 @@ literalt instantiate_convert(
   const namespacet &ns,
   message_handlert &message_handler)
 {
-  instantiate_var_mapt i(ns, solver, var_map);
-
-  i.set_message_handler(message_handler);
+  instantiate_var_mapt i(ns, solver, message_handler, var_map);
 
   try
   {
@@ -507,9 +487,7 @@ void instantiate_convert(
   message_handlert &message_handler,
   bvt &bv)
 {
-  instantiate_var_mapt i(ns, solver, var_map);
-
-  i.set_message_handler(message_handler);
+  instantiate_var_mapt i(ns, solver, message_handler, var_map);
 
   try
   {

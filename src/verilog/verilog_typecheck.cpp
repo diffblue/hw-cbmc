@@ -10,10 +10,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <set>
 
-#include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/expr_util.h>
-#include <util/simplify_expr.h>
 #include <util/replace_symbol.h>
+#include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
@@ -305,10 +305,9 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
     id2string(module_identifier)+"."+
     id2string(decl.get_identifier());
 
-  symbol_tablet::symbolst::iterator result=
-    symbol_table.symbols.find(identifier);
+  auto result=symbol_table.get_writeable(identifier);
 
-  if(result==symbol_table.symbols.end())
+  if(result==nullptr)
   {
     error().source_location=decl.source_location();
     error() << "expected to find " << decl_class << " symbol `"
@@ -316,7 +315,7 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
     throw 0;
   }
   
-  symbolt &symbol=result->second;
+  symbolt &symbol=*result;
   
   decl.set_identifier(symbol.name);
 

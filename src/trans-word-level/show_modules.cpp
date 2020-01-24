@@ -32,9 +32,9 @@ void show_modules(
 {
   unsigned count=0;
 
-  forall_symbols(it, symbol_table.symbols)
+  for(const auto &s : symbol_table.symbols)
   {
-    const symbolt &symbol=it->second;
+    const symbolt &symbol=s.second;
   
     if(symbol.type.id()==ID_module)
     {
@@ -76,9 +76,13 @@ void show_modules(
         std::cout << "  Name:       " << symbol.display_name() << std::endl
                   << std::endl;
         break;
-      
+
+      case ui_message_handlert::uit::JSON_UI:
+        UNREACHABLE;
+        break;
+
       default:
-        assert(false);
+        UNREACHABLE;
       }
     }
   }

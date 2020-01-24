@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "instantiate_word_level.h"
 #include "counterexample_word_level.h"
 
+#include <util/symbol_table.h>
+
 /*******************************************************************\
 
 Function: show_state
@@ -37,7 +39,9 @@ void show_state(
 
   const symbol_tablet &symbol_table=ns.get_symbol_table();
   
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, module)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module);
+      it!=symbol_table.symbol_module_map.upper_bound(module);
+      it++)
   {
     const symbolt &symbol=ns.lookup(it->second);
 
@@ -72,14 +76,10 @@ Function: show_counterexample
 
 \*******************************************************************/
 
-void show_counterexample(
-  message_handlert &message_handler,
-  const decision_proceduret &solver,
-  unsigned no_timeframes,
-  const namespacet &ns,
-  const std::string &module,
-  language_uit::uit ui)
-{
+void show_counterexample(message_handlert &message_handler,
+                         const decision_proceduret &solver,
+                         unsigned no_timeframes, const namespacet &ns,
+                         const std::string &module) {
   for(unsigned t=0; t<no_timeframes; t++)
     show_state(solver, ns, module, t);
 }

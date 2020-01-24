@@ -237,18 +237,19 @@ int show_transt::show_trans()
 {
   int result=get_model();
   if(result!=-1) return result;
+  PRECONDITION(trans_expr.has_value());
 
   std::cout << "Initial state constraints:\n\n";
-  
-  print_verilog_constraints(trans_expr.init(), std::cout);
+
+  print_verilog_constraints(trans_expr->init(), std::cout);
 
   std::cout << "State constraints:\n\n";
-  
-  print_verilog_constraints(trans_expr.invar(), std::cout);
+
+  print_verilog_constraints(trans_expr->invar(), std::cout);
 
   std::cout << "Transition constraints:\n\n";
-  
-  print_verilog_constraints(trans_expr.trans(), std::cout);
+
+  print_verilog_constraints(trans_expr->trans(), std::cout);
 
   return 0;
 }

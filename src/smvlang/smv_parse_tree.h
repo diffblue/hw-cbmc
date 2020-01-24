@@ -169,9 +169,4 @@ public:
 #define forall_item_list(it, expr) \
   for(smv_parse_treet::modulet::item_listt::const_iterator it=(expr).begin(); \
       it!=(expr).end(); it++)
-
-#define Forall_item_list(it, expr) \
-  for(smv_parse_treet::modulet::item_listt::iterator it=(expr).begin(); \
-      it!=(expr).end(); it++)
-
 #endif

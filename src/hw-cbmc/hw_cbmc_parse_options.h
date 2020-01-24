@@ -25,9 +25,22 @@ public:
     cbmc_parse_optionst(argc, argv, HW_CBMC_OPTIONS)
   {
   }
-  
+
+  irep_idt unwind_module;
+  unsigned unwind_no_timeframes;
+
+  virtual void do_unwind_module(prop_convt &prop_conv);
+
+  virtual void show_unwind_trace(const optionst &options,
+                                 const prop_convt &prop_conv);
+
+  virtual void error_trace(const optionst &options,
+                           const prop_convt &prop_conv) {
+    show_unwind_trace(options, prop_conv);
+  }
+
 protected:
-  virtual int get_modules(expr_listt &bmc_constraints);
+  virtual int get_modules(std::list<exprt> &bmc_constraints);
 
   irep_idt get_top_module();
   unsigned get_bound();

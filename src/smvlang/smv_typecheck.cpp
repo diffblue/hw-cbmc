@@ -10,10 +10,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 #include <algorithm>
 
-#include <util/expr_util.h>
-#include <util/typecheck.h>
 #include <util/arith_tools.h>
+#include <util/expr_util.h>
+#include <util/mathematical_expr.h>
 #include <util/std_expr.h>
+#include <util/typecheck.h>
 
 #include "smv_typecheck.h"
 #include "expr2smv.h"
@@ -319,7 +320,9 @@ void smv_typecheckt::instantiate(
 
   std::set<irep_idt> var_identifiers;
 
-  forall_symbol_module_map(v_it, symbol_table.symbol_module_map, identifier)
+  for(auto v_it=symbol_table.symbol_module_map.lower_bound(identifier);
+      v_it!=symbol_table.symbol_module_map.upper_bound(identifier);
+      v_it++)
   {
     symbol_tablet::symbolst::const_iterator s_it2=
       symbol_table.symbols.find(v_it->second);
@@ -330,12 +333,8 @@ void smv_typecheckt::instantiate(
       throw 0;
     }
 
-    if(port_identifiers.find(s_it2->second.name)!=
-       port_identifiers.end())
-    {
-    }
-    else if(s_it2->second.type.id()==ID_module)
-    {
+    if (port_identifiers.find(s_it2->first) != port_identifiers.end()) {
+    } else if (s_it2->second.type.id() == ID_module) {
     }
     else
     {
@@ -344,12 +343,12 @@ void smv_typecheckt::instantiate(
       symbol.name=new_prefix+id2string(symbol.base_name);
       symbol.module=smv_module.name;
 
-      rename_map.insert(std::pair<irep_idt, exprt>
-                        (s_it2->second.name, symbol.symbol_expr()));
+      rename_map.insert(
+          std::pair<irep_idt, exprt>(s_it2->first, symbol.symbol_expr()));
 
       var_identifiers.insert(symbol.name);
 
-      symbol_table.move(symbol);
+      symbol_table.add(symbol);
     }
   }
 
@@ -360,16 +359,16 @@ void smv_typecheckt::instantiate(
       v_it!=var_identifiers.end();
       v_it++)
   {
-    symbol_tablet::symbolst::iterator s_it2=
-      symbol_table.symbols.find(*v_it);
+    auto s_it2=
+      symbol_table.get_writeable(*v_it);
 
-    if(s_it2==symbol_table.symbols.end())
+    if(s_it2==nullptr)
     {
       error() << "symbol `" << *v_it << "' not found" << eom;
       throw 0;
     }
 
-    symbolt &symbol=s_it2->second;
+    symbolt &symbol=*s_it2;
 
     if(!symbol.value.is_nil())
     {
@@ -632,16 +631,16 @@ void smv_typecheckt::typecheck(
     if(define_map.find(identifier)!=define_map.end())
       convert_define(identifier);
 
-    symbol_tablet::symbolst::iterator s_it=symbol_table.symbols.find(identifier);
+    auto s_it=symbol_table.get_writeable(identifier);
 
-    if(s_it==symbol_table.symbols.end())
+    if(s_it==nullptr)
     {
       error().source_location=expr.find_source_location();
       error() << "variable `" << identifier << "' not found" << eom;
       throw 0;
     }
 
-    symbolt &symbol=s_it->second;
+    symbolt &symbol=*s_it;
     
     assert(symbol.type.is_not_nil());
     expr.type()=symbol.type;
@@ -972,7 +971,7 @@ void smv_typecheckt::typecheck(
         }
       }
       else
-        expr.make_typecast(type);
+        expr = typecast_exprt{expr, type};
 
       return;      
     }
@@ -1163,6 +1162,10 @@ void smv_typecheckt::typecheck(
     mode=TRANS;
     break;
 
+  case smv_parse_treet::modulet::itemt::DEFINE:
+  case smv_parse_treet::modulet::itemt::INVAR:
+  case smv_parse_treet::modulet::itemt::FAIRNESS:
+  case smv_parse_treet::modulet::itemt::SPEC:
   default:
     mode=OTHER;
   }
@@ -1253,16 +1256,16 @@ void smv_typecheckt::collect_define(const exprt &expr)
 
   const irep_idt &identifier=op0.get(ID_identifier);
 
-  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
+  auto it=symbol_table.get_writeable(identifier);
 
-  if(it==symbol_table.symbols.end())
+  if(it==nullptr)
   {
     error() << "collect_define failed to find symbol `"
             << identifier << "'" << eom;
     throw 0;
   }
 
-  symbolt &symbol=it->second;
+  symbolt &symbol=*it;
 
   symbol.value.make_nil();
   symbol.is_input=false;
@@ -1304,16 +1307,16 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
     throw 0;
   }
   
-  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
+  auto it=symbol_table.get_writeable(identifier);
 
-  if(it==symbol_table.symbols.end())
+  if(it==nullptr)
   {
     error() << "convert_define failed to find symbol `"
             << identifier << "'" << eom;
     throw 0;
   }
 
-  symbolt &symbol=it->second;
+  symbolt &symbol=*it;
 
   d.in_progress=true;
   
@@ -1347,10 +1350,8 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
     convert_define(it->first);
 
     // generate constraint
-    equal_exprt equality;
-    equality.lhs()=exprt(ID_symbol, it->second.value.type());
-    equality.lhs().set(ID_identifier, it->first);
-    equality.rhs()=it->second.value;
+    equal_exprt equality{symbol_exprt{it->first, it->second.value.type()},
+                         it->second.value};
     invar.push_back(equality);
   }
 }
@@ -1377,56 +1378,57 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   // transition relation
 
-  symbolt module_symbol;
+  {
+    symbolt module_symbol;
 
-  module_symbol.base_name=smv_module.base_name;
-  module_symbol.pretty_name=smv_module.base_name;
-  module_symbol.name=smv_module.name;
-  module_symbol.module=module_symbol.name;
-  module_symbol.type=typet(ID_module);
-  module_symbol.mode="SMV";
-  module_symbol.value=transt();
-  module_symbol.value.operands().resize(3);
+    module_symbol.base_name=smv_module.base_name;
+    module_symbol.pretty_name=smv_module.base_name;
+    module_symbol.name=smv_module.name;
+    module_symbol.module=module_symbol.name;
+    module_symbol.type=typet(ID_module);
+    module_symbol.mode="SMV";
 
-  exprt::operandst trans_invar, trans_init, trans_trans;
-  
-  convert_ports(smv_module, module_symbol.type);
+    exprt::operandst trans_invar, trans_init, trans_trans;
 
-  Forall_item_list(it, smv_module.items)
-    convert(*it);
+    convert_ports(smv_module, module_symbol.type);
 
-  flatten_hierarchy(smv_module);
-  
-  // we first need to collect all the defines
+    for (auto &item : smv_module.items) {
+      convert(item);
+    }
 
-  Forall_item_list(it, smv_module.items)
-    if(it->is_define())
-      collect_define(it->expr);
+    flatten_hierarchy(smv_module);
 
-  // now turn them into INVARs
-  convert_defines(trans_invar);
+    // we first need to collect all the defines
 
-  // do the rest now
+    for (auto &item : smv_module.items) {
+      if (item.is_define())
+        collect_define(item.expr);
+    }
+    // now turn them into INVARs
+    convert_defines(trans_invar);
 
-  Forall_item_list(it, smv_module.items)
-    if(!it->is_define())
-      typecheck(*it);
+    // do the rest now
 
-  Forall_item_list(it, smv_module.items)
-    if(it->is_invar())
-      trans_invar.push_back(it->expr);
-    else if(it->is_init())
-      trans_init.push_back(it->expr);
-    else if(it->is_trans())
-      trans_trans.push_back(it->expr);
+    for (auto &item : smv_module.items) {
+      if (item.is_define())
+        typecheck(item);
+    }
 
-  transt &trans=to_trans_expr(module_symbol.value);
-  
-  trans.invar()=conjunction(trans_invar);
-  trans.init()=conjunction(trans_init);
-  trans.trans()=conjunction(trans_trans);
+    for (const auto &item : smv_module.items) {
+      if (item.is_invar())
+        trans_invar.push_back(item.expr);
+      else if (item.is_init())
+        trans_init.push_back(item.expr);
+      else if (item.is_trans())
+        trans_trans.push_back(item.expr);
+    }
 
-  symbol_table.move(module_symbol);
+    module_symbol.value =
+        transt{ID_trans, conjunction(trans_invar), conjunction(trans_init),
+               conjunction(trans_trans), module_symbol.type};
+
+    symbol_table.add(module_symbol);
+  }
 
   // spec
 
@@ -1449,7 +1451,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.value=it->expr;
         spec_symbol.location=it->location;
 
-        symbol_table.move(spec_symbol);
+        symbol_table.add(spec_symbol);
       }
   }
 }

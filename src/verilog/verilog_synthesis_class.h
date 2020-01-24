@@ -13,10 +13,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <unordered_set>
 
+#include <util/mathematical_expr.h>
 #include <util/mp_arith.h>
-#include <util/string_hash.h>
 #include <util/options.h>
 #include <util/std_expr.h>
+#include <util/string_hash.h>
 
 #include "verilog_typecheck_base.h"
 #include "verilog_symbol_table.h"
@@ -185,7 +186,7 @@ protected:
     exprt &rhs,
     exprt &new_value);
 
-  symbolt &assignment_symbol(const exprt &lhs);
+  const symbolt &assignment_symbol(const exprt &lhs);
 
   void assignment_member_rec(
     const exprt &lhs,
@@ -211,7 +212,7 @@ protected:
 
   // statements
   void synth_statement(const class verilog_statementt &);
-  void synth_decl(const class verilog_declt &, transt &);
+  void synth_decl(const class verilog_declt &);
   void synth_block(const class verilog_blockt &);
   void synth_case(const class verilog_statementt &);
   void synth_if(const class verilog_ift &);

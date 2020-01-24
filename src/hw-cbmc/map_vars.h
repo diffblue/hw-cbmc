@@ -12,11 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 #include <util/message.h>
 
-void map_vars(
-  symbol_tablet &symbol_table,
-  const irep_idt &module,
-  expr_listt &constraints,
-  message_handlert &message,
-  unsigned no_timeframes);
+void map_vars(symbol_tablet &symbol_table, const irep_idt &module,
+              std::list<exprt> &constraints, message_handlert &message,
+              unsigned no_timeframes);
 
 #endif

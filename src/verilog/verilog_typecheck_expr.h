@@ -50,33 +50,25 @@ protected:
 
   void propagate_type(exprt &expr, const typet &type);
 
-  virtual void convert_type(const irept &src, typet &dest);
+  typet convert_type(const irept &src);
 
-  virtual void convert_range(
+  void convert_range(
     const exprt &range,
     mp_integer &msb,
     mp_integer &lsb);
-    
-  virtual void genvar_value(
-    const irep_idt &identifier,
-    mp_integer &value)
-  {
+
+  virtual void genvar_value(const irep_idt &identifier, mp_integer &value) {
     assert(false);
   }
-    
-  virtual exprt var_value(const irep_idt &identifier)
-  {
-    assert(false);
-  }
-    
-  virtual bool implicit_wire(
-    const irep_idt &identifier,
-    const symbolt *&symbol)
-  {
+
+  virtual exprt var_value(const irep_idt &identifier) { assert(false); }
+
+  virtual bool implicit_wire(const irep_idt &identifier,
+                             const symbolt *&symbol) {
     return true;
   }
    
-  virtual void typecheck()
+  void typecheck() override
   {
   }
 
@@ -91,6 +83,7 @@ protected:
   bool is_const_expression(const exprt &, mp_integer &value);
   exprt elaborate_const_expression(const exprt &);
 
+  // to be overridden
   virtual exprt elaborate_const_function_call(const class function_call_exprt &)
   {
     assert(false);

@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <set>
 
+#include <util/ebmc_util.h>
 #include <util/std_types.h>
 
 #include "verilog_typecheck.h"
@@ -89,7 +90,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     if(port_names.find(name)!=
        port_names.end())
     {
-      err_location(decl.op0());
+      error().source_location = decl.op0().source_location();
       error() << "duplicate port name: `" << name << '\'' << eom;
       throw 0;
     }
@@ -105,7 +106,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       
       if(ns.lookup(identifier, port_symbol))
       {
-        err_location(decl.op0());
+        error().source_location = decl.op0().source_location();
         error() << "port `" << name << "' not declared" << eom;
         throw 0;
       }
@@ -139,7 +140,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       new_symbol.mode=mode;
       new_symbol.module=module_identifier;
       new_symbol.value.make_nil();
-      convert_type(decl.type(), new_symbol.type);
+      new_symbol.type = convert_type(decl.type());
       new_symbol.base_name=name;
       new_symbol.pretty_name=strip_verilog_prefix(new_symbol.name);
       
@@ -156,7 +157,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
 
     if(!port_symbol->is_input && !port_symbol->is_output)
     {
-      err_location(decl.op0());
+      error().source_location = decl.op0().source_location();
       error() << "port `" << name 
               << "' not declared as input or output" << eom;
       throw 0;
@@ -177,7 +178,9 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
 
   // check that all declared ports are also in the port list
   
-  forall_symbol_module_map(it, symbol_table.symbol_module_map, module_identifier)
+  for(auto it=symbol_table.symbol_module_map.lower_bound(module_identifier);
+           it!=symbol_table.symbol_module_map.upper_bound(module_identifier);
+           it++)
   {
     const symbolt &symbol=ns.lookup(it->second);
     
@@ -222,12 +225,11 @@ void verilog_typecheckt::interface_function_or_task(
     typet return_type;
 
     if(decl_class==ID_function)
-      convert_type(decl.type(), return_type);
+      return_type = convert_type(decl.type());
     else
       return_type=empty_typet();
-    
-    symbol.type=code_typet();
-    symbol.type.add(ID_return_type)=return_type;
+
+    symbol.type = code_typet{{}, return_type};
 
     symbol.base_name=decl.get_identifier();
     symbol.name=
@@ -237,7 +239,7 @@ void verilog_typecheckt::interface_function_or_task(
 
     if(symbol_table.move(symbol, new_symbol))
     {
-      err_location(decl);
+      error().source_location = decl.source_location();
       error() << "symbol `" << symbol.base_name
               << "' is already declared" << eom;
       throw 0;
@@ -265,7 +267,7 @@ void verilog_typecheckt::interface_function_or_task(
 
     return_symbol.pretty_name=strip_verilog_prefix(return_symbol.name);
 
-    symbol_table.move(return_symbol);
+    symbol_table.add(return_symbol);
   }
 
   // do the declarations within the task/function
@@ -308,7 +310,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
      port_class==ID_task ||
      port_class==ID_genvar)
   {
-    err_location(decl);
+    error().source_location = decl.source_location();
     error() << "this kind of declaration is not expected here" << eom;
     throw 0;
   }
@@ -325,8 +327,8 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
   }
   else
   {
-    convert_type(decl.type(), type);
-    
+    type = convert_type(decl.type());
+
     symbol.is_state_var=true;
 
     if(port_class==ID_input)
@@ -351,13 +353,13 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     }
     else if(port_class==ID_wire)
     {
-      err_location(decl);
+      error().source_location = decl.source_location();
       error() << "wires are not allowed here" << eom;
       throw 0;
     }
     else
     {
-      err_location(decl);
+      error().source_location = decl.source_location();
       error() << "unexpected port class: `" << port_class << '\'' << eom;
       throw 0;
     }    
@@ -395,14 +397,14 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     }
     else
     {
-      err_location(*it2);
+      error().source_location = it2->source_location();
       error() << "unexpected declaration: " << it2->id() << eom;
       throw 0;
     }
 
     if(symbol.base_name=="")
     {
-      err_location(decl);
+      error().source_location = decl.source_location();
       error() << "empty symbol name" << eom;
       throw 0;
     }
@@ -419,10 +421,9 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       // in Verilog terminology, but inputs and outputs.
       // We'll use the C terminology, and call them parameters.
       // Not to be confused with module parameters.
-      symbol_tablet::symbolst::iterator s_it=
-        symbol_table.symbols.find(function_or_task_name);
-      assert(s_it!=symbol_table.symbols.end());
-      symbolt &function_or_task_symbol=s_it->second;
+      auto s_it=symbol_table.get_writeable(function_or_task_name);
+      CHECK_RETURN(s_it!=nullptr);
+      symbolt &function_or_task_symbol=*s_it;
       code_typet::parameterst &parameters=
         to_code_type(function_or_task_symbol.type).parameters();
       parameters.push_back(code_typet::parametert());
@@ -434,12 +435,12 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       parameter.set(ID_input, input);
     }
 
-    symbol_tablet::symbolst::iterator result=
+    symbol_tablet::symbolst::const_iterator result=
       symbol_table.symbols.find(symbol.name);
       
     if(result!=symbol_table.symbols.end())
     {
-      err_location(decl);
+      error().source_location = decl.source_location();
       error() << "symbol `" << symbol.base_name
               << "' is already declared" << eom;
       throw 0;
@@ -497,7 +498,7 @@ void verilog_typecheckt::interface_module_decl(
   }
   else
   {
-    convert_type(decl.type(), type);
+    type=convert_type(decl.type());
 
     if(port_class==ID_input)
       symbol.is_input=true;
@@ -564,14 +565,14 @@ void verilog_typecheckt::interface_module_decl(
     }
     else
     {
-      err_location(*it2);
+      error().source_location = it2->source_location();
       error() << "unexpected declaration: " << it2->id() << eom;
       throw 0;
     }
 
     if(symbol.base_name.empty())
     {
-      err_location(decl);
+      error().source_location = decl.source_location();
       error() << "empty symbol name" << eom;
       throw 0;
     }
@@ -584,20 +585,19 @@ void verilog_typecheckt::interface_module_decl(
     symbol.pretty_name=
       strip_verilog_prefix(symbol.name);
 
-    symbol_tablet::symbolst::iterator result=
-      symbol_table.symbols.find(symbol.name);
+    auto result=symbol_table.get_writeable(symbol.name);
       
-    if(result==symbol_table.symbols.end())
+    if(result==nullptr)
     {
       symbol_table.add(symbol);
     }
     else
     {
-      symbolt &osymbol=result->second;
+      symbolt &osymbol=*result;
       
       if(osymbol.type.id()==ID_code)
       {
-        err_location(decl);
+        error().source_location = decl.source_location();
         error() << "symbol `" << symbol.base_name
                 << "' is already declared" << eom;
         throw 0;
@@ -616,7 +616,7 @@ void verilog_typecheckt::interface_module_decl(
       // a register can't be an input as well
       if(osymbol.is_input && osymbol.is_state_var)
       {
-        err_location(decl);
+        error().source_location = decl.source_location();
         error() << "symbol `" << symbol.base_name
                 << "' is declared both as input and as register" << eom;
         throw 0;
@@ -655,7 +655,7 @@ void verilog_typecheckt::interface_parameter(const exprt &expr)
 
   if(symbol.base_name.empty())
   {
-    err_location(expr);
+    error().source_location = expr.source_location();
     error() << "empty symbol name" << eom;
     throw 0;
   }
@@ -667,7 +667,7 @@ void verilog_typecheckt::interface_parameter(const exprt &expr)
 
   if(symbol_table.move(symbol, new_symbol))
   {
-    err_location(expr);
+    error().source_location = expr.source_location();
     error() << "conflicting definition of symbol `"
             << symbol.base_name << '\'' << eom;
     throw 0;
@@ -756,7 +756,7 @@ void verilog_typecheckt::interface_inst(
 
   if(symbol_table.add(symbol))
   {
-    err_location(op);
+    error().source_location = op.source_location();
     error() << "duplicate definition of identifier `" 
             << symbol.base_name << "' in module `"
             << module_symbol.base_name << '\'' << eom;
@@ -906,7 +906,7 @@ void verilog_typecheckt::interface_block(
 
     if(symbol_table.add(symbol))
     {
-      err_location(statement);
+      error().source_location = statement.source_location();
       error() << "duplicate definition of identifier `" 
               << symbol.base_name << "' in module `"
               << module_symbol.base_name << '\'' << eom;

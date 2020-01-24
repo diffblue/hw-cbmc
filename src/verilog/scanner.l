@@ -61,7 +61,7 @@ static void preprocessor()
 
 }
 
-#define IDENTIFIER { newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_CHARSTR; }
+#define IDENTIFIER { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_CHARSTR; }
 #define SYSTEM_VERILOG_KEYWORD(x) \
   { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \
       return x; \
@@ -142,7 +142,7 @@ void verilog_scanner_init()
 
 <STRING>{
    "\""		{ BEGIN(GRAMMAR);	/* end string state, back GRAMMAR */
-                  stack(yyveriloglval).id(verilog_parser.string_literal);
+                  stack_expr(yyveriloglval).id(verilog_parser.string_literal);
 		  return TOK_QSTRING;
 		}
 
@@ -543,16 +543,16 @@ void verilog_scanner_init()
 <GRAMMAR>\`{Word}	{ preprocessor(); continue; }
 <GRAMMAR>\f		{ /* ignore */ }
 
-<GRAMMAR>\${Word}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_SYSIDENT; }
-<GRAMMAR>{Binary}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Octal}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Decimal}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Hexdecimal}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Number}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Real}		{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{RealExp}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext); return TOK_NUMBER; }
+<GRAMMAR>\${Word}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_SYSIDENT; }
+<GRAMMAR>{Binary}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+<GRAMMAR>{Octal}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+<GRAMMAR>{Decimal}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+<GRAMMAR>{Hexdecimal}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+<GRAMMAR>{Number}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+<GRAMMAR>{Real}		{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+<GRAMMAR>{RealExp}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 <GRAMMAR>{Word}		{ IDENTIFIER; }
-<GRAMMAR>{EscapedWord}	{ newstack(yyveriloglval); stack(yyveriloglval).id(yytext+1); return TOK_CHARSTR; }
+<GRAMMAR>{EscapedWord}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext+1); return TOK_CHARSTR; }
 <GRAMMAR>.		{ return yytext[0]; }
 
 %%

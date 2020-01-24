@@ -43,6 +43,7 @@ void print_blif(FILE *fp,Circuit *N)
          if (G.func_type == CONST) print_const(fp,N,G);
          else  print_gate(fp,N,G);
          break;
+       case UNDEFINED:
        default: 
          assert(false); // we shouldn't reach this line
        }

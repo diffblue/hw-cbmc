@@ -61,6 +61,7 @@ void show_state(
         {
          case tvt::tv_enumt::TV_TRUE: ch='1'; break;
          case tvt::tv_enumt::TV_FALSE: ch='0'; break;
+         case tvt::tv_enumt::TV_UNKNOWN:
          default: ch='?'; break;
         }
 
@@ -107,13 +108,8 @@ Function: show_counterexample
 
 \*******************************************************************/
 
-void show_counterexample(
-  message_handlert &message_handler,
-  const propt &solver,
-  const bmc_mapt &map,
-  const namespacet &ns,
-  language_uit::uit ui)
-{
+void show_counterexample(message_handlert &message_handler, const propt &solver,
+                         const bmc_mapt &map, const namespacet &ns) {
   for(unsigned t=0; t<map.get_no_timeframes(); t++)
     show_state(solver, map, ns, t);
 }
@@ -130,15 +126,10 @@ Function: show_counterexample
 
 \*******************************************************************/
 
-void show_counterexample(
-  const std::list<exprt> &properties,
-  const std::list<bvt> &prop_bv,
-  message_handlert &message_handler,
-  const propt &solver,
-  const bmc_mapt &map,
-  const namespacet &ns,
-  language_uit::uit ui)
-{
+void show_counterexample(const std::list<exprt> &properties,
+                         const std::list<bvt> &prop_bv,
+                         message_handlert &message_handler, const propt &solver,
+                         const bmc_mapt &map, const namespacet &ns) {
   unsigned p=0;
   messaget message(message_handler);
 

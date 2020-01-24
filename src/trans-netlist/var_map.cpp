@@ -53,7 +53,8 @@ void var_mapt::add(
   case vart::vartypet::WIRE:
     wires.insert(v_current);
     break;
-    
+
+  case vart::vartypet::UNDEF:
   default:;
     break;
   }

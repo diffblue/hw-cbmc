@@ -219,8 +219,8 @@ Function: new_aiger_language
 
 \*******************************************************************/
   
-languaget *new_aiger_language()
+std::unique_ptr<languaget> new_aiger_language()
 {
-  return new aiger_languaget;
+  return util_make_unique<aiger_languaget>();
 }
 

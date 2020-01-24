@@ -110,7 +110,7 @@ void verilog_typecheckt::elaborate_generate_if(
   if(statement.operands().size()!=3 &&
      statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location = statement.source_location();
     error() << "generate_for expects two or three operands" << eom;
     throw 0;
   }
@@ -145,14 +145,14 @@ void verilog_typecheckt::elaborate_generate_assign(
 {
   if(statement.operands().size()!=2)
   {
-    err_location(statement);
+    error().source_location = statement.source_location();
     error() << "generate_assign expects two operands" << eom;
     throw 0;
   }
   
   if(statement.op0().id()!=ID_symbol)
   {
-    err_location(statement.op0());
+    error().source_location = statement.op0().source_location();
     error() << "expected symbol on left hand side of assignment" << eom;
     throw 0;
   }
@@ -163,7 +163,7 @@ void verilog_typecheckt::elaborate_generate_assign(
   
   if(it==genvars.end())
   {
-    err_location(statement.op0());
+    error().source_location = statement.op0().source_location();
     error() << "expected genvar on left hand side of assignment" << eom;
     throw 0;
   }
@@ -174,7 +174,7 @@ void verilog_typecheckt::elaborate_generate_assign(
   
   if(rhs<0)
   {
-    err_location(statement.op1());
+    error().source_location = statement.op1().source_location();
     error() << "must not assign negative value to genvar" << eom;
     throw 0;
   }
@@ -200,7 +200,7 @@ void verilog_typecheckt::elaborate_generate_for(
 {
   if(statement.operands().size()!=4)
   {
-    err_location(statement);
+    error().source_location = statement.source_location();
     error() << "generate_for expects four operands" << eom;
     throw 0;
   }

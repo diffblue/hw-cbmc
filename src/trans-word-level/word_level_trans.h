@@ -13,8 +13,9 @@ Purpose:
 #ifndef CPROVER_WORD_LEVEL_TRANS_H
 #define CPROVER_WORD_LEVEL_TRANS_H
 
-#include <util/std_expr.h>
+#include <util/mathematical_expr.h>
 #include <util/namespace.h>
+#include <util/std_expr.h>
 
 class word_level_transt
 {

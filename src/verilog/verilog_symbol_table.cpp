@@ -22,10 +22,10 @@ Function: verilog_symbol_tablet::symbol_table_lookup
 
 symbolt &verilog_symbol_tablet::symbol_table_lookup(const irep_idt &identifier)
 {
-  symbol_tablet::symbolst::iterator it=symbol_table.symbols.find(identifier);
+  auto it=symbol_table.get_writeable(identifier);
 
-  if(it==symbol_table.symbols.end())
+  if(it==nullptr)
     throw "symbol "+id2string(identifier)+" not found";
 
-  return it->second;
+  return *it;
 }
