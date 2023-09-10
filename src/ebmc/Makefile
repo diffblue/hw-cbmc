@@ -57,8 +57,7 @@ ifneq ($(wildcard ../vhdl/Makefile),)
   CXXFLAGS += -DHAVE_VHDL
 endif
 
-include $(CPROVER_DIR)/config.inc
-include $(CPROVER_DIR)/common
+include ../config.inc
 
 INCLUDES= -I $(CPROVER_DIR) -I ..
 
