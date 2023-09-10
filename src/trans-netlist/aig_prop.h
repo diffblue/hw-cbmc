@@ -77,9 +77,9 @@ public:
     dest.constraints.push_back(a ^ !value);
   }
 
-  void set_assignment(literalt a, bool value) {}
-  bool is_in_conflict(literalt l) const { return false; }
-  resultt do_prop_solve() { return resultt{}; }
+  void set_assignment(literalt a, bool value) override {}
+  bool is_in_conflict(literalt l) const override { return false; }
+  resultt do_prop_solve() override { return resultt{}; }
 };
 
 class aig_prop_solvert : public aig_prop_constraintt {
