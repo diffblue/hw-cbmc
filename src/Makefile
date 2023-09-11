@@ -25,7 +25,7 @@ hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
 .PHONY: cprover.dir
 cprover.dir:
 	$(MAKE) $(MAKEARGS) -C $(CPROVER_DIR) \
-  CP_EXTRA_CXXFLAGS='-D"LOCAL_IREP_IDS=<$(EBMC_DIR)/hw_cbmc_irep_ids.h>"'
+  CP_EXTRA_CXXFLAGS='-D"LOCAL_IREP_IDS=<$(EBMC_DIR)/hw_cbmc_irep_ids.h>" -Wno-range-loop-construct -Wno-unused-but-set-variable -Wno-unused-variable'
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 

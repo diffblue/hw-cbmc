@@ -37,8 +37,7 @@ OBJ+= $(CPROVER_DIR)/goto-checker/goto-checker$(LIBEXT) \
       ../trans-netlist/trans_trace$(OBJEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT)
 
-include $(CPROVER_DIR)/config.inc
-include $(CPROVER_DIR)/common
+include ../config.inc
 
 INCLUDES= -I $(CPROVER_DIR) -I ..
 

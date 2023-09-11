@@ -16,17 +16,13 @@ all: smvlang$(LIBEXT)
 smvlang$(LIBEXT): $(OBJ)
 	$(LINKLIB)
 
-y.tab.cpp: parser.y
-	$(YACC) $(YFLAGS) $$flags -pyysmv -d parser.y -o y.tab.cpp
-
-y.tab.h: y.tab.cpp
-	if [ -e y.tab.hpp ] ; then mv y.tab.hpp y.tab.h ; else \
-        mv y.tab.cpp.h y.tab.h ; fi
+smv_y.tab.cpp: parser.y
+	$(YACC) $(YFLAGS) $$flags -pyysmv --defines=smv_y.tab.h -d parser.y -o $@
 
 lex.yy.cpp: scanner.l
 	$(LEX) -Pyysmv -olex.yy.cpp scanner.l
 
 # extra dependencies
-y.tab$(OBJEXT): y.tab.cpp y.tab.h
-lex.yy$(OBJEXT): y.tab.cpp lex.yy.cpp y.tab.h
+smv_y.tab$(OBJEXT): smv_y.tab.cpp smv_y.tab.h
+lex.yy$(OBJEXT): smv_y.tab.cpp lex.yy.cpp smv_y.tab.h
 

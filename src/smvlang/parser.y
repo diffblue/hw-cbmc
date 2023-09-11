@@ -6,7 +6,7 @@
 #define YYSTYPE unsigned
 #define PARSER smv_parser
 
-#include "y.tab.h"
+#include "smv_y.tab.h"
 
 #define YYMAXDEPTH 200000
 #define YYSTYPE_IS_TRIVIAL 1

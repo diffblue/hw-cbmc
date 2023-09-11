@@ -19,7 +19,7 @@ static int isatty(int) { return 0; }
 #define YYSTYPE unsigned
 
 #include "smv_parser.h"
-#include "y.tab.h"
+#include "smv_y.tab.h"
 
 int yysmverror(const std::string &error);
 
