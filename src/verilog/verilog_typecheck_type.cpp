@@ -60,7 +60,7 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
       dest.set(ID_C_little_endian, little_endian);
       dest.set(ID_C_offset, integer2string(offset));
 
-      return dest;
+      return std::move(dest);
     }
     else
     {
@@ -73,7 +73,7 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
         static_cast<const source_locationt &>(src.find(ID_C_source_location));
       result.set(ID_offset, from_integer(offset, integer_typet()));
 
-      return result;
+      return std::move(result);
     }
   }
   else
