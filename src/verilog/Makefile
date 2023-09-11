@@ -26,6 +26,8 @@ verilog$(LIBEXT): $(OBJ)
 verilog_y.tab.cpp: parser.y
 	$(YACC) $(YFLAGS) $$flags -pyyverilog --defines=verilog_y.tab.h -d parser.y -o $@
 
+verilog_y.tab.h: verilog_y.tab.cpp
+
 verilog_lex.yy.cpp: scanner.l
 	$(LEX) -Pyyverilog -o$@ scanner.l
 
