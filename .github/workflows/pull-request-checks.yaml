@@ -1,0 +1,97 @@
+name: Build and Test HW-CBMC
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  # This job takes approximately 15 minutes
+  check-ubuntu-20_04-make-gcc:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -yq gcc gdb g++ jq flex bison libxml2-utils ccache cmake z3
+      - name: Confirm z3 solver is available and log the version installed
+        run: z3 --version
+      - name: Prepare ccache
+        uses: actions/cache@v3
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-20.04-make-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-20.04-make-${{ github.ref }}
+            ${{ runner.os }}-20.04-make
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get minisat
+        run: |
+          sudo apt-get install libwww-perl
+          make -C lib/cbmc/src minisat2-download
+      - name: Build with make
+        run: make -C src -j2 CXX="ccache g++"
+      - name: Run the ebmc tests
+        run: make -C regression/ebmc test
+      - name: Run the verilog tests
+        run: make -C regression/verilog test
+      - name: Print ccache stats
+        run: ccache -s
+
+  # This job takes approximately ? minutes
+  check-ubuntu-20_04-make-clang:
+    runs-on: ubuntu-20.04
+    env:
+      CC: "ccache /usr/bin/clang"
+      CXX: "ccache /usr/bin/clang++ -Wno-unknown-warning-option -Wno-range-loop-construct"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -yq clang-10 clang++-10 gdb jq flex bison libxml2-utils cpanminus ccache z3
+          cpanm Thread::Pool::Simple
+      - name: Confirm z3 solver is available and log the version installed
+        run: z3 --version
+      - name: Prepare ccache
+        uses: actions/cache@v3
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-20.04-make-clang-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-20.04-make-clang-${{ github.ref }}
+            ${{ runner.os }}-20.04-make-clang
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get minisat
+        run: |
+          sudo apt-get install libwww-perl
+          make -C lib/cbmc/src minisat2-download
+      - name: Build with make
+        run: |
+          # expected to fail now
+          # make -C src -j2
+      - name: Print ccache stats
+        run: ccache -s
