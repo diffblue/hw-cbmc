@@ -15,6 +15,8 @@ $(patsubst %, %.dir, $(DIRS)):
 
 # Dependencies
 
+vhdl.dir: cprover.dir
+
 ebmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir vhdl.dir \
       smvlang.dir ic3.dir aiger.dir cprover.dir
 
