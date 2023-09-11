@@ -8,7 +8,7 @@ include $(CPROVER_DIR)/common
 INCLUDES= -I $(CPROVER_DIR) -I ..
 CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
-CLEANFILES = vhdl$(LIBEXT) vhdl_y.tab.cpp vhdl_y.tab.h vhdl_lex.yy.cpp y.output
+CLEANFILES = vhdl$(LIBEXT) vhdl_y.tab.cpp vhdl_y.tab.h vhdl_lex.yy.cpp vhdl_y.output
 
 all: vhdl$(LIBEXT)
 
@@ -18,11 +18,9 @@ vhdl$(LIBEXT): $(OBJ)
 	$(LINKLIB)
 
 vhdl_y.tab.cpp: parser.y
-	$(YACC) $(YFLAGS) $$flags -pyyvhdl -d parser.y -o $@
+	$(YACC) $(YFLAGS) $$flags -pyyvhdl --defines=vhdl_y.tab.h -d parser.y -o $@
 
 vhdl_y.tab.h: vhdl_y.tab.cpp
-	if [ -e vhdl_y.tab.hpp ] ; then mv vhdl_y.tab.hpp $@ ; else \
-        mv vhdl_y.tab.cpp.h $@ ; fi
 
 vhdl_lex.yy.cpp: scanner.l
 	$(LEX) -i -Pyyvhdl -o$@ scanner.l

@@ -1,5 +1,5 @@
 SRC = smv_language.cpp smv_parser.cpp smv_typecheck.cpp expr2smv.cpp \
-      y.tab.cpp lex.yy.cpp smv_parse_tree.cpp
+      smv_y.tab.cpp lex.yy.cpp smv_parse_tree.cpp
 
 include $(CPROVER_DIR)/config.inc
 include $(CPROVER_DIR)/common
@@ -7,7 +7,7 @@ include $(CPROVER_DIR)/common
 INCLUDES= -I $(CPROVER_DIR) -I ..
 CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
-CLEANFILES = smvlang$(LIBEXT) y.tab.h y.tab.cpp lex.yy.cpp y.tab.cpp.output y.output
+CLEANFILES = smvlang$(LIBEXT) y.tab.h y.tab.cpp lex.yy.cpp smv_y.tab.cpp.output smv_y.output
 
 all: smvlang$(LIBEXT)
 
@@ -18,6 +18,8 @@ smvlang$(LIBEXT): $(OBJ)
 
 smv_y.tab.cpp: parser.y
 	$(YACC) $(YFLAGS) $$flags -pyysmv --defines=smv_y.tab.h -d parser.y -o $@
+
+smv_y.tab.h: smv_y.tab.cpp
 
 lex.yy.cpp: scanner.l
 	$(LEX) -Pyysmv -olex.yy.cpp scanner.l
