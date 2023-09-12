@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 main.smv
 --module main --bound 2 --k-induction
 ^EXIT=0$
