@@ -44,7 +44,7 @@ public:
 
   size_t no_variables() const override { return dest.number_of_nodes(); }
 
-  const std::string solver_text() override {
+  std::string solver_text() const override {
     return "conversion into and-inverter graph";
   }
 
@@ -89,7 +89,7 @@ public:
 
   aig_plus_constraintst aig;
 
-  const std::string solver_text() override {
+  std::string solver_text() const override {
     return "conversion into and-inverter graph followed by " +
            solver.solver_text();
   }
