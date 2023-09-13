@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <algorithm>
 
+#include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/mathematical_types.h>

@@ -6,6 +6,9 @@ Module: Some type synonyms and prototypes of functions
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+
+#include <iosfwd>
+
 typedef std::vector<int> CUBE;
 typedef std::vector<CUBE> DNF;
 typedef std::vector<bool> bool_vector;

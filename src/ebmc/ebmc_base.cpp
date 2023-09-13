@@ -6,19 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <chrono>
-#include <fstream>
-#include <iostream>
-
-#include <util/cmdline.h>
-#include <util/config.h>
-#include <util/expr_util.h>
-#include <util/find_macros.h>
-#include <util/get_module.h>
-#include <util/string2int.h>
-#include <util/unicode.h>
-#include <util/xml.h>
-#include <util/xml_irep.h>
+#include "ebmc_base.h"
+#include "ebmc_version.h"
 
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/ldg.h>
@@ -31,11 +20,25 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/unwind.h>
 #include <trans-word-level/show_modules.h>
 
+#include <langapi/language.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
 
-#include "ebmc_base.h"
-#include "ebmc_version.h"
+#include <solvers/prop/literal_expr.h>
+
+#include <util/cmdline.h>
+#include <util/config.h>
+#include <util/expr_util.h>
+#include <util/find_macros.h>
+#include <util/get_module.h>
+#include <util/string2int.h>
+#include <util/unicode.h>
+#include <util/xml.h>
+#include <util/xml_irep.h>
+
+#include <chrono>
+#include <fstream>
+#include <iostream>
 
 /*******************************************************************\
 
