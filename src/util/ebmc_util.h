@@ -14,16 +14,6 @@
 
 #include <solvers/sat/cnf.h>
 
-class integer_typet : public typet {
-public:
-  integer_typet() : typet(ID_integer) {}
-};
-
-class natural_typet : public typet {
-public:
-  natural_typet() : typet(ID_natural) {}
-};
-
 template <typename F>
 void for_all_module_symbols(const symbol_tablet &symbol_table,
                             const irep_idt &module_name, F &&f) {

@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/ebmc_util.h>
+#include <util/mathematical_types.h>
 
 #include "verilog_typecheck_expr.h"
 

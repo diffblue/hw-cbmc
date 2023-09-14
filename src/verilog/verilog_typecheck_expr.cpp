@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
+#include <util/mathematical_types.h>
 #include <util/namespace.h>
 #include <util/prefix.h>
 #include <util/simplify_expr.h>

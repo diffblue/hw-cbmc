@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 #include <util/ebmc_util.h>
+#include <util/mathematical_types.h>
 #include <util/std_types.h>
 
 #include "verilog_typecheck.h"
