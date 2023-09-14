@@ -11,10 +11,10 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <cstdlib>
 #include <cstring>
 
+#include <util/arith_tools.h>
 #include <util/ebmc_util.h>
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
-#include <util/c_types.h>
 
 #include "verilog_parser.h"
 
@@ -139,7 +139,7 @@ static void extractbit(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &part)
 {
   init(expr, ID_extractbit);
   mto(expr, identifier);
-  stack_expr(expr).add_to_operands(std::move(stack_expr(part).op0()));
+  stack_expr(expr).add_to_operands(std::move(to_unary_expr(stack_expr(part)).op()));
 }
 
 /*******************************************************************\
@@ -161,20 +161,23 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
   
   if(stack_expr(range).id()==ID_part_select)
   {
-    stack_expr(expr).add_to_operands(std::move(stack_expr(range).op0()),
-                                 std::move(stack_expr(range).op1()));
+    auto &part_select = to_binary_expr(stack_expr(range));
+    stack_expr(expr).add_to_operands(std::move(part_select.op0()),
+                                 std::move(part_select.op1()));
   }
   else if(stack_expr(range).id()==ID_indexed_part_select_plus)
   {
-    exprt offset=minus_exprt(stack_expr(range).op1(), from_integer(1, integer_typet{}));
-    stack_expr(expr).add_to_operands(stack_expr(range).op0(),
-                                 plus_exprt(stack_expr(range).op0(), offset));
+    auto &part_select = to_binary_expr(stack_expr(range));
+    exprt offset=minus_exprt(part_select.op1(), from_integer(1, integer_typet{}));
+    stack_expr(expr).add_to_operands(part_select.op0());
+    stack_expr(expr).add_to_operands(plus_exprt(part_select.op0(), offset));
   }
   else if(stack_expr(range).id()==ID_indexed_part_select_minus)
   {
-    exprt offset=minus_exprt(from_integer(1, integer_typet{}), stack_expr(range).op1());
-    stack_expr(expr).add_to_operands(stack_expr(range).op0(),
-                                 plus_exprt(stack_expr(range).op0(), offset));
+    auto &part_select = to_binary_expr(stack_expr(range));
+    exprt offset=minus_exprt(from_integer(1, integer_typet{}), part_select.op1());
+    stack_expr(expr).add_to_operands(part_select.op0());
+    stack_expr(expr).add_to_operands(plus_exprt(part_select.op0(), offset));
   }
   else
     assert(false);
@@ -203,7 +206,7 @@ static void add_as_subtype(typet &dest, typet &what)
     dest.swap(what);
   else
   {
-    typet &subtype=dest.subtype();
+    typet &subtype=to_type_with_subtype(dest).subtype();
     add_as_subtype(subtype, what);
   }
 }
@@ -744,7 +747,8 @@ packed_dimension:
 		{ init($$, ID_array);
 		  stack_type($$).subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
-		  range.add_to_operands(stack_expr($2), stack_expr($4)); }
+		  range.add_to_operands(stack_expr($2));
+		  range.add_to_operands(stack_expr($4)); }
 	| unsized_dimension
 	;
 
@@ -753,7 +757,8 @@ unpacked_dimension:
 		{ init($$, ID_array);
 		  stack_type($$).subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
-		  range.add_to_operands(stack_expr($2), stack_expr($4)); }
+		  range.add_to_operands(stack_expr($2));
+		  range.add_to_operands(stack_expr($4)); }
 	| '[' expression ']'
 	{
 	  $$=$2;
@@ -1915,7 +1920,8 @@ assert_property_statement:
 	| /* this one is in because SMV does it */
 	  TOK_ASSERT property_identifier TOK_COLON expression ';'
 		{ init($$, ID_assert); stack_expr($$).operands().resize(2);
-		  stack_expr($$).op0().swap(stack_expr($4)); stack_expr($$).op1().make_nil();
+		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
+		  to_binary_expr(stack_expr($$)).op1().make_nil();
 		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
 		} 
 	;
@@ -1926,7 +1932,8 @@ assume_property_statement:
 	| /* this one is in because SMV does it */
 	  TOK_ASSUME property_identifier TOK_COLON expression ';'
 		{ init($$, ID_assume); stack_expr($$).operands().resize(2);
-		  stack_expr($$).op0().swap(stack_expr($4)); stack_expr($$).op1().make_nil();
+		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
+		  to_binary_expr(stack_expr($$)).op1().make_nil();
 		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
 		} 
 	;
@@ -1941,7 +1948,8 @@ action_block:
           statement_or_null %prec LT_TOK_ELSE
         | statement_or_null TOK_ELSE statement 
                 { init($$, "action-else"); stack_expr($$).operands().resize(2);
-                  stack_expr($$).op0().swap(stack_expr($0)); stack_expr($$).op1().swap(stack_expr($2)); }
+                  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($0));
+                  to_binary_expr(stack_expr($$)).op1().swap(stack_expr($2)); }
 	;
 
 concurrent_assert_statement:
@@ -2073,15 +2081,15 @@ event_control:
 	| '@' TOK_ASTERIC
 		{ init($$, ID_event_guard);
 		  stack_expr($$).operands().resize(1);
-	          stack_expr($$).op0().id(ID_verilog_star_event); }
+	          to_unary_expr(stack_expr($$)).op().id(ID_verilog_star_event); }
 	| '@' '(' TOK_ASTERIC ')'
 		{ init($$, ID_event_guard);
 		  stack_expr($$).operands().resize(1);
-	          stack_expr($$).op0().id(ID_verilog_star_event); }
+	          to_unary_expr(stack_expr($$)).op().id(ID_verilog_star_event); }
 	| '@' TOK_PARENASTERIC ')'
 		{ init($$, ID_event_guard);
 		  stack_expr($$).operands().resize(1);
-	          stack_expr($$).op0().id(ID_verilog_star_event); }
+	          to_unary_expr(stack_expr($$)).op().id(ID_verilog_star_event); }
 	;
 
 event_identifier:
@@ -2117,13 +2125,16 @@ conditional_statement:
 case_statement:
 	  TOK_CASE '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_case);  mto($$, $3);
-                  Forall_operands(it, stack_expr($5)) stack_expr($$).add_to_operands(std::move(*it)); }
+                  Forall_operands(it, stack_expr($5))
+                    stack_expr($$).add_to_operands(std::move(*it)); }
 	| TOK_CASEX '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_casex); mto($$, $3);
-                  Forall_operands(it, stack_expr($5)) stack_expr($$).add_to_operands(std::move(*it)); }
+                  Forall_operands(it, stack_expr($5))
+                    stack_expr($$).add_to_operands(std::move(*it)); }
 	| TOK_CASEZ '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_casez); mto($$, $3);
-                  Forall_operands(it, stack_expr($5)) stack_expr($$).add_to_operands(std::move(*it)); }
+                  Forall_operands(it, stack_expr($5))
+                    stack_expr($$).add_to_operands(std::move(*it)); }
 	;
 
 case_item_brace:
@@ -2139,12 +2150,12 @@ case_item:
 	| TOK_DEFAULT TOK_COLON statement_or_null
 		{ init($$, ID_case_item);
                   stack_expr($$).operands().resize(1);
-                  stack_expr($$).op0().id(ID_default);
+                  to_unary_expr(stack_expr($$)).op().id(ID_default);
                   mto($$, $3); }
 	| TOK_DEFAULT statement_or_null
 		{ init($$, ID_case_item);
                   stack_expr($$).operands().resize(1);
-                  stack_expr($$).op0().id(ID_default);
+                  to_unary_expr(stack_expr($$)).op().id(ID_default);
                   mto($$, $2); }
 	;
 

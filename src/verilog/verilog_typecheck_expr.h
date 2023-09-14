@@ -96,14 +96,14 @@ private:
   void convert_nullary_expr(exprt &);
   void convert_unary_expr  (unary_exprt &);
   void convert_binary_expr (binary_exprt &);
-  void convert_trinary_expr(exprt &);
+  void convert_trinary_expr(ternary_exprt &);
   void convert_expr_function_call(class function_call_exprt &);
   void convert_system_function(const irep_idt &identifier,
                                class function_call_exprt &);
   void convert_constraint_select_one(exprt &);
-  void convert_extractbit_expr(exprt &);
-  void convert_replication_expr(exprt &);
-  void convert_shl_expr(exprt &);
+  void convert_extractbit_expr(extractbit_exprt &);
+  void convert_replication_expr(replication_exprt &);
+  void convert_shl_expr(shl_exprt &);
   void typecast(exprt &, const typet &type);
   void tc_binary_expr(exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);

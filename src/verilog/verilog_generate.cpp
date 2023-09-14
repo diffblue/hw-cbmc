@@ -111,20 +111,20 @@ void verilog_typecheckt::elaborate_generate_if(
      statement.operands().size()!=2)
   {
     error().source_location = statement.source_location();
-    error() << "generate_for expects two or three operands" << eom;
+    error() << "generate_if expects two or three operands" << eom;
     throw 0;
   }
   
   mp_integer condition;
-  convert_const_expression(statement.op0(), condition);
+  convert_const_expression(to_multi_ary_expr(statement).op0(), condition);
 
   if(condition==0)
   {
     if(statement.operands().size()==3)
-      elaborate_generate_item(statement.op2(), dest);
+      elaborate_generate_item(to_multi_ary_expr(statement).op2(), dest);
   }
   else
-    elaborate_generate_item(statement.op1(), dest);
+    elaborate_generate_item(to_multi_ary_expr(statement).op1(), dest);
 }
 
 /*******************************************************************\
@@ -149,32 +149,33 @@ void verilog_typecheckt::elaborate_generate_assign(
     error() << "generate_assign expects two operands" << eom;
     throw 0;
   }
-  
-  if(statement.op0().id()!=ID_symbol)
+
+  if(to_binary_expr(statement).lhs().id() != ID_symbol)
   {
-    error().source_location = statement.op0().source_location();
+    error().source_location = to_binary_expr(statement).lhs().source_location();
     error() << "expected symbol on left hand side of assignment" << eom;
     throw 0;
   }
-  
-  const irep_idt &identifier=statement.op0().get(ID_identifier);
-  
+
+  const irep_idt &identifier =
+    to_symbol_expr(to_binary_expr(statement).lhs()).get_identifier();
+
   genvarst::iterator it=genvars.find(identifier);
   
   if(it==genvars.end())
   {
-    error().source_location = statement.op0().source_location();
+    error().source_location = to_binary_expr(statement).lhs().source_location();
     error() << "expected genvar on left hand side of assignment" << eom;
     throw 0;
   }
   
   mp_integer rhs;
-  
-  convert_const_expression(statement.op1(), rhs);
-  
+
+  convert_const_expression(to_binary_expr(statement).rhs(), rhs);
+
   if(rhs<0)
   {
-    error().source_location = statement.op1().source_location();
+    error().source_location = to_binary_expr(statement).rhs().source_location();
     error() << "must not assign negative value to genvar" << eom;
     throw 0;
   }
@@ -204,18 +205,18 @@ void verilog_typecheckt::elaborate_generate_for(
     error() << "generate_for expects four operands" << eom;
     throw 0;
   }
-  
-  elaborate_generate_assign(statement.op0(), dest);
+
+  elaborate_generate_assign(to_multi_ary_expr(statement).op0(), dest);
 
   while(true)
   {
     mp_integer condition;
-    convert_const_expression(statement.op1(), condition);
-  
+    convert_const_expression(to_multi_ary_expr(statement).op1(), condition);
+
     if(condition==0) break;
     
     // order is important!
-    elaborate_generate_item(statement.op3(), dest);
-    elaborate_generate_assign(statement.op2(), dest);
+    elaborate_generate_item(to_multi_ary_expr(statement).op3(), dest);
+    elaborate_generate_assign(to_multi_ary_expr(statement).op2(), dest);
   }
 }

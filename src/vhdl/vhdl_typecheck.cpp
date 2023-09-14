@@ -124,13 +124,12 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
     for(auto & op : expr.operands())
       typecheck_expr(op);
 
-    expr.type()=expr.op0().type();
+    expr.type() = to_binary_expr(expr).op0().type();
   }
   else if(expr.id()==ID_not)
   {
-    assert(expr.operands().size()==1);
-    typecheck_expr(expr.op0());
-    expr.type()=expr.op0().type();
+    typecheck_expr(to_not_expr(expr).op());
+    expr.type() = to_not_expr(expr).op().type();
   }
   else if(expr.id()==ID_symbol)
   {
@@ -173,10 +172,10 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
           expr.id()==ID_lt || expr.id()==ID_gt)
   {
     assert(expr.operands().size()==2);
-    
-    typecheck_expr(expr.op0());
-    typecheck_expr(expr.op1());
-  
+
+    typecheck_expr(to_binary_expr(expr).lhs());
+    typecheck_expr(to_binary_expr(expr).rhs());
+
     // result is always boolean
     expr.type()=bool_typet();
   }

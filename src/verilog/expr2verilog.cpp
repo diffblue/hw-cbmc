@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "expr2verilog.h"
 #include "expr2verilog_class.h"
+#include "verilog_expr.h"
 #include "verilog_types.h"
 
 // Precedences (higher means binds more strongly):
@@ -53,9 +54,7 @@ Function: expr2verilogt::convert_if
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_if(
-  const exprt &src,
-  unsigned precedence)
+std::string expr2verilogt::convert_if(const if_exprt &src, unsigned precedence)
 {
   if(src.operands().size()!=3)
     return convert_norep(src, precedence);
@@ -142,7 +141,7 @@ Function: expr2verilogt::convert_sva_sequence_concatenation
 \*******************************************************************/
 
 std::string expr2verilogt::convert_sva_sequence_concatenation(
-  const exprt &src,
+  const binary_exprt &src,
   unsigned precedence)
 {
   if(src.operands().size()!=2)
@@ -180,7 +179,7 @@ Function: expr2verilogt::convert_binary
 \*******************************************************************/
 
 std::string expr2verilogt::convert_binary(
-  const exprt &src,
+  const multi_ary_exprt &src,
   const std::string &symbol,
   unsigned precedence)
 {
@@ -224,15 +223,14 @@ Function: expr2verilogt::convert_with
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_with(
-  const exprt &src,
-  unsigned precedence)
+std::string
+expr2verilogt::convert_with(const with_exprt &src, unsigned precedence)
 {
   if(src.operands().size()<1)
     return convert_norep(src, precedence);
 
   unsigned p;
-  std::string dest="("+convert(src.op0(), p);
+  std::string dest = "(" + convert(src.old(), p);
 
   for(unsigned i=1; i<src.operands().size(); i+=2)
   {
@@ -338,7 +336,7 @@ Function: expr2verilogt::convert_function_call
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_function_call(const exprt &src)
+std::string expr2verilogt::convert_function_call(const function_call_exprt &src)
 {
   if(src.operands().size()!=2)
   {
@@ -386,9 +384,13 @@ std::string expr2verilogt::convert_sva(
   const exprt &src)
 {
   if(src.operands().size()==1)
-    return name+" "+convert(src.op0());
+    return name + " " + convert(to_unary_expr(src).op());
   else if(src.operands().size()==2)
-    return convert(src.op0())+" "+name+" "+convert(src.op1());
+  {
+    auto &binary_expr = to_binary_expr(src);
+    return convert(binary_expr.op0()) + " " + name + " " +
+           convert(binary_expr.op1());
+  }
   else
     return "?";
 }
@@ -435,7 +437,7 @@ Function: expr2verilogt::convert_unary
 \*******************************************************************/
 
 std::string expr2verilogt::convert_unary(
-  const exprt &src,
+  const unary_exprt &src,
   const std::string &symbol,
   unsigned precedence)
 {
@@ -443,7 +445,7 @@ std::string expr2verilogt::convert_unary(
     return convert_norep(src, precedence);
     
   unsigned p;
-  std::string op=convert(src.op0(), p);
+  std::string op = convert(src.op(), p);
 
   std::string dest=symbol;
   if(precedence>p) dest+='(';
@@ -597,15 +599,14 @@ Function: expr2verilogt::convert_member
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_member(
-  const exprt &src,
-  unsigned precedence)
+std::string
+expr2verilogt::convert_member(const member_exprt &src, unsigned precedence)
 {
   if(src.operands().size()!=1)
     return convert_norep(src, precedence);
 
   unsigned p;
-  std::string op=convert(src.op0(), p);
+  std::string op = convert(src.compound(), p);
 
   std::string dest;
   if(precedence>p) dest+='(';
@@ -613,7 +614,7 @@ std::string expr2verilogt::convert_member(
   if(precedence>p) dest+=')';
 
   dest+='.';
-  dest+=src.get_string(ID_component_name);
+  dest += id2string(src.get_component_name());
 
   return dest;
 }
@@ -828,7 +829,7 @@ std::string expr2verilogt::convert(
   precedence=20; // max
 
   if(src.id()==ID_plus)
-    return convert_binary(src, "+", precedence=14);
+    return convert_binary(to_multi_ary_expr(src), "+", precedence = 14);
 
   else if(src.id()==ID_if)
     return convert_if(to_if_expr(src), precedence=5);
@@ -837,7 +838,7 @@ std::string expr2verilogt::convert(
     return convert_concatenation(to_concatenation_expr(src), precedence=2);
 
   else if(src.id()==ID_with)
-    return convert_with(src, precedence);
+    return convert_with(to_with_expr(src), precedence);
 
   else if(src.id()==ID_replication)
     return convert_replication(to_replication_expr(src), precedence=1);
@@ -849,24 +850,24 @@ std::string expr2verilogt::convert(
   {
     if(src.operands().size()!=2)
       return convert_norep(src, precedence);
-    else     
-      return convert_binary(src, "-", precedence=14);
+    else
+      return convert_binary(to_multi_ary_expr(src), "-", precedence = 14);
   }
 
   else if(src.id()==ID_shl)
-    return convert_binary(src, "<<", precedence=13);
+    return convert_binary(to_multi_ary_expr(src), "<<", precedence = 13);
 
   else if(src.id()==ID_lshr)
-    return convert_binary(src, ">>", precedence=13);
+    return convert_binary(to_multi_ary_expr(src), ">>", precedence = 13);
 
   else if(src.id()==ID_ashr)
-    return convert_binary(src, ">>>", precedence=13);
+    return convert_binary(to_multi_ary_expr(src), ">>>", precedence = 13);
 
   else if(src.id()==ID_unary_minus)
-    return convert_unary(src, "-", precedence=17);
+    return convert_unary(to_unary_minus_expr(src), "-", precedence = 17);
 
   else if(src.id()==ID_unary_plus)
-    return convert_unary(src, "+", precedence=17);
+    return convert_unary(to_unary_plus_expr(src), "+", precedence = 17);
 
   else if(src.id()==ID_index)
     return convert_index(to_index_expr(src), precedence=18);
@@ -881,95 +882,96 @@ std::string expr2verilogt::convert(
     return convert_member(to_member_expr(src), precedence=18);
 
   else if(src.id()==ID_mult)
-    return convert_binary(src, "*", precedence=15);
+    return convert_binary(to_multi_ary_expr(src), "*", precedence = 15);
 
   else if(src.id()==ID_div)
-    return convert_binary(src, "/", precedence=15);
+    return convert_binary(to_multi_ary_expr(src), "/", precedence = 15);
 
   else if(src.id()==ID_lt)
-    return convert_binary(src, "<", precedence=12);
+    return convert_binary(to_multi_ary_expr(src), "<", precedence = 12);
 
   else if(src.id()==ID_gt)
-    return convert_binary(src, ">", precedence=12);
+    return convert_binary(to_multi_ary_expr(src), ">", precedence = 12);
 
   else if(src.id()==ID_le)
-    return convert_binary(src, "<=", precedence=12);
+    return convert_binary(to_multi_ary_expr(src), "<=", precedence = 12);
 
   else if(src.id()==ID_ge)
-    return convert_binary(src, ">=", precedence=12);
+    return convert_binary(to_multi_ary_expr(src), ">=", precedence = 12);
 
   else if(src.id()==ID_equal)
-    return convert_binary(src, "==", precedence=11);
+    return convert_binary(to_multi_ary_expr(src), "==", precedence = 11);
 
   else if(src.id()==ID_notequal)
-    return convert_binary(src, "!=", precedence=11);
+    return convert_binary(to_multi_ary_expr(src), "!=", precedence = 11);
 
   else if(src.id()==ID_verilog_case_equality)
-    return convert_binary(src, "===", precedence=11);
+    return convert_binary(to_multi_ary_expr(src), "===", precedence = 11);
 
   else if(src.id()==ID_verilog_case_inequality)
-    return convert_binary(src, "!==", precedence=11);
+    return convert_binary(to_multi_ary_expr(src), "!==", precedence = 11);
 
   else if(src.id()==ID_not)
-    return convert_unary(src, "!", precedence=17);
+    return convert_unary(to_not_expr(src), "!", precedence = 17);
 
   else if(src.id()==ID_bitnot)
-    return convert_unary(src, "~", precedence=17);
+    return convert_unary(to_bitnot_expr(src), "~", precedence = 17);
 
   else if(src.id()==ID_typecast)
     return convert_typecast(to_typecast_expr(src), precedence);
 
   else if(src.id()==ID_and)
-    return convert_binary(src, "&&", precedence=7);
+    return convert_binary(to_multi_ary_expr(src), "&&", precedence = 7);
 
   else if(src.id()==ID_power)
-    return convert_binary(src, "**", precedence=16);
+    return convert_binary(to_multi_ary_expr(src), "**", precedence = 16);
 
   else if(src.id()==ID_bitand)
-    return convert_binary(src, "&", precedence=10);
+    return convert_binary(to_multi_ary_expr(src), "&", precedence = 10);
 
   else if(src.id()==ID_bitxor)
-    return convert_binary(src, "^", precedence=9);
+    return convert_binary(to_multi_ary_expr(src), "^", precedence = 9);
 
   else if(src.id()==ID_bitxnor)
-    return convert_binary(src, "~^", precedence=9);
+    return convert_binary(to_multi_ary_expr(src), "~^", precedence = 9);
 
   else if(src.id()==ID_mod)
-    return convert_binary(src, "%", precedence=15);
+    return convert_binary(to_multi_ary_expr(src), "%", precedence = 15);
 
   else if(src.id()==ID_or)
-    return convert_binary(src, "||", precedence=6);
+    return convert_binary(to_multi_ary_expr(src), "||", precedence = 6);
 
   else if(src.id()==ID_bitor)
-    return convert_binary(src, "|", precedence=8);
+    return convert_binary(to_multi_ary_expr(src), "|", precedence = 8);
 
   else if(src.id()==ID_implies)
-    return convert_binary(src, "|->", precedence=0);
+    return convert_binary(to_multi_ary_expr(src), "|->", precedence = 0);
 
   else if(src.id()==ID_iff)
-    return convert_binary(src, "<->", precedence=0);
+    return convert_binary(to_multi_ary_expr(src), "<->", precedence = 0);
 
   else if(src.id()==ID_reduction_or)
-    return convert_unary(src, "|", precedence=17);
+    return convert_unary(to_unary_expr(src), "|", precedence = 17);
 
   else if(src.id()==ID_reduction_and)
-    return convert_unary(src, "&", precedence=17);
+    return convert_unary(to_unary_expr(src), "&", precedence = 17);
 
   else if(src.id()==ID_reduction_nor)
-    return convert_unary(src, "~|", precedence=17);
+    return convert_unary(to_unary_expr(src), "~|", precedence = 17);
 
   else if(src.id()==ID_reduction_nand)
-    return convert_unary(src, "~&", precedence=17);
+    return convert_unary(to_unary_expr(src), "~&", precedence = 17);
 
   else if(src.id()==ID_reduction_xor)
-    return convert_unary(src, "^", precedence=17);
+    return convert_unary(to_unary_expr(src), "^", precedence = 17);
 
   else if(src.id()==ID_reduction_xnor)
-    return convert_unary(src, "~^", precedence=17);
+    return convert_unary(to_unary_expr(src), "~^", precedence = 17);
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
           src.id()==ID_AX || src.id()==ID_EX)
-    return convert_unary(src, src.id_string()+" ", precedence=0);
+    return convert_unary(
+      to_unary_expr(src), src.id_string() + " ", precedence = 0);
 
   else if(src.id()==ID_symbol)
     return convert_symbol(src, precedence);
@@ -993,11 +995,11 @@ std::string expr2verilogt::convert(
     return convert_function("$onehot0", src);
 
   else if(src.id()==ID_sva_overlapped_implication)
-    return convert_binary(src, "|->", precedence=0);
+    return convert_binary(to_multi_ary_expr(src), "|->", precedence = 0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_non_overlapped_implication)
-    return convert_binary(src, "|=>", precedence=0);
+    return convert_binary(to_multi_ary_expr(src), "|=>", precedence = 0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_cycle_delay)
@@ -1005,7 +1007,8 @@ std::string expr2verilogt::convert(
     // not sure about precedence
     
   else if(src.id()==ID_sva_sequence_concatenation)
-    return convert_sva_sequence_concatenation(src, precedence=0);
+    return convert_sva_sequence_concatenation(
+      to_binary_expr(src), precedence = 0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_always)
@@ -1036,7 +1039,7 @@ std::string expr2verilogt::convert(
     return convert_sva("s_until_with", src);
     
   else if(src.id()==ID_function_call)
-    return convert_function_call(src);
+    return convert_function_call(to_function_call_expr(src));
 
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);

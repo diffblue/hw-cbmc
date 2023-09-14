@@ -84,7 +84,7 @@ exprt negate_property(const exprt &expr)
   {
     // rewrite using 'next'
     assert(expr.operands().size()==2);
-    unary_predicate_exprt next(ID_sva_nexttime, expr.op1());
+    unary_predicate_exprt next(ID_sva_nexttime, to_binary_expr(expr).rhs());
     binary_exprt result=to_binary_expr(expr);
     result.op1()=negate_property(next);
     return std::move(result);

@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <set>
 
+#include <util/arith_tools.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/mathematical_types.h>
@@ -165,7 +166,7 @@ void verilog_typecheckt::typecheck_port_connections(
 
   // named port connection?
 
-  if(inst.op0().id()==ID_named_port_connection)
+  if(to_multi_ary_expr(inst).op0().id() == ID_named_port_connection)
   {
     // We don't require that all ports are connected.
   
@@ -181,16 +182,15 @@ void verilog_typecheckt::typecheck_port_connections(
         throw 0;
       }
 
-      exprt &op=o_it->op1();
-      const irep_idt &name=
-        o_it->op0().get(ID_identifier);
+      exprt &op = to_binary_expr(*o_it).op1();
+      const irep_idt &name = to_binary_expr(*o_it).op0().get(ID_identifier);
 
       bool found=false;
 
       std::string identifier=
         id2string(symbol.module)+"."+id2string(name);
 
-      o_it->op0().set(ID_identifier, identifier);
+      to_binary_expr(*o_it).op0().set(ID_identifier, identifier);
 
       if(assigned_ports.find(name)!=
          assigned_ports.end())
@@ -207,7 +207,7 @@ void verilog_typecheckt::typecheck_port_connections(
           auto &p_expr = static_cast<const exprt &>(port);
           found=true;
           typecheck_port_connection(op, p_expr);
-          o_it->op0().type()=p_expr.type();
+          to_binary_expr(*o_it).op0().type() = p_expr.type();
           break;
         }
       }
@@ -472,8 +472,8 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
         throw 0;
       }
 
-      exprt &lhs=it->op0();
-      exprt &rhs=it->op1();
+      exprt &lhs = to_equal_expr(*it).lhs();
+      exprt &rhs = to_equal_expr(*it).rhs();
 
       if(lhs.id()!=ID_symbol)
       {
@@ -767,7 +767,7 @@ void verilog_typecheckt::check_lhs(
       throw 0;
     }
 
-    check_lhs(lhs.op0(), vassign);
+    check_lhs(to_extractbit_expr(lhs).src(), vassign);
   }
   else if(lhs.id()==ID_extractbits)
   {
@@ -777,7 +777,7 @@ void verilog_typecheckt::check_lhs(
       throw 0;
     }
 
-    check_lhs(lhs.op0(), vassign);
+    check_lhs(to_extractbits_expr(lhs).src(), vassign);
   }
   else if(lhs.id()==ID_concatenation)
   {
@@ -874,8 +874,8 @@ void verilog_typecheckt::convert_continuous_assign(
 
     it->type()=bool_typet();
 
-    exprt &lhs=it->op0();
-    exprt &rhs=it->op1();
+    exprt &lhs = to_binary_expr(*it).lhs();
+    exprt &rhs = to_binary_expr(*it).rhs();
 
     convert_expr(lhs);
     convert_expr(rhs);
@@ -995,8 +995,8 @@ void verilog_typecheckt::convert_assign(
     throw 0;
   }
 
-  exprt &lhs=statement.op0();
-  exprt &rhs=statement.op1();
+  exprt &lhs = to_binary_expr(statement).lhs();
+  exprt &rhs = to_binary_expr(statement).rhs();
 
   convert_expr(lhs);
   convert_expr(rhs);
@@ -1024,8 +1024,8 @@ void verilog_typecheckt::convert_assert(exprt &statement)
     error() << "assert statement expected to have two operands" << eom;
     return;
   }
-  
-  exprt &cond=statement.op0();
+
+  exprt &cond = to_binary_expr(statement).op0();
 
   convert_expr(cond);
   make_boolean(cond);
@@ -1100,8 +1100,8 @@ void verilog_typecheckt::convert_assume(exprt &statement)
     error() << "assume statement expected to have two operands" << eom;
     return;
   }
-  
-  exprt &cond=statement.op0();
+
+  exprt &cond = to_binary_expr(statement).op0();
 
   convert_expr(cond);
   make_boolean(cond);
@@ -1308,7 +1308,7 @@ void verilog_typecheckt::convert_prepostincdec(verilog_statementt &statement)
     throw statement.id_string()+" expected to have one operand";
   }
 
-  convert_expr(statement.op0());
+  convert_expr(to_unary_expr(statement).op());
 }
 
 /*******************************************************************\
@@ -1522,7 +1522,7 @@ void verilog_typecheckt::convert_module_item(
     }
       
     exprt tmp;
-    tmp.swap(module_item.op0());
+    tmp.swap(to_unary_expr(module_item).op());
     module_item.swap(tmp);
     convert_module_item(module_item);
   }

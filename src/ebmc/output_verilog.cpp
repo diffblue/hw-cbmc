@@ -60,11 +60,13 @@ Function: output_verilog_netlistt::is_symbol
 
 bool output_verilog_netlistt::is_symbol(const exprt &expr) const
 {
-  if(expr.id()==ID_extractbit ||
-     expr.id()==ID_extractbits)
+  if(expr.id() == ID_extractbit)
   {
-    assert(expr.operands().size()>=1);
-    return is_symbol(expr.op0());
+    return is_symbol(to_extractbit_expr(expr).src());
+  }
+  else if(expr.id() == ID_extractbits)
+  {
+    return is_symbol(to_extractbits_expr(expr).src());
   }
   else if(expr.id()==ID_symbol)
   {
@@ -182,10 +184,9 @@ void output_verilog_netlistt::assign_symbol(
   {
     assert(rhs.type().id()==ID_bool);
     assert(lhs.type().id()==ID_bool);
-    assert(rhs.operands().size()==1);
 
-    std::string tmp=make_symbol_expr(rhs.op0(), "");
-    
+    std::string tmp = make_symbol_expr(to_not_expr(rhs).op(), "");
+
     out << "  " << rhs.id() << " g" << (++count) << "("
         << symbol_string(lhs) << tmp
         << ");" << '\n' << '\n';
@@ -195,7 +196,7 @@ void output_verilog_netlistt::assign_symbol(
           rhs.id()==ID_mult)
   {
     if(rhs.operands().size()==1)
-      assign_symbol(lhs, rhs.op0());
+      assign_symbol(lhs, to_multi_ary_expr(rhs).op0());
     else
     {
       std::string tmp;
@@ -203,15 +204,15 @@ void output_verilog_netlistt::assign_symbol(
       assert(rhs.operands().size()!=0);
 
       if(rhs.operands().size()==2)
-        tmp=make_symbol_expr(rhs.op0(), "")+", "+
-            make_symbol_expr(rhs.op1(), "");
+        tmp = make_symbol_expr(to_multi_ary_expr(rhs).op0(), "") + ", " +
+              make_symbol_expr(to_multi_ary_expr(rhs).op1(), "");
       else
       {
         exprt tmp_rhs(rhs);
         tmp_rhs.operands().erase(tmp_rhs.operands().begin());
-        
-        tmp=make_symbol_expr(rhs.op0(), "")+", "+
-            make_symbol_expr(tmp_rhs, "");
+
+        tmp = make_symbol_expr(to_multi_ary_expr(rhs).op0(), "") + ", " +
+              make_symbol_expr(tmp_rhs, "");
       }
     
       out << "  RTL_";
@@ -275,19 +276,18 @@ void output_verilog_rtlt::assign_symbol(
 {
   if(lhs.id()==ID_extractbits)
   {
-    assert(lhs.operands().size()==3);
+    auto &lhs_extractbits = to_extractbits_expr(lhs);
 
     // redundant?
     mp_integer from, to;
 
     if(
-      !to_integer_non_constant(lhs.op1(), to) &&
-      !to_integer_non_constant(lhs.op2(), from))
+      !to_integer_non_constant(lhs_extractbits.upper(), to) &&
+      !to_integer_non_constant(lhs_extractbits.lower(), from))
     {
-      if(from==0 &&
-         to==width(lhs.op0().type())-1)
+      if(from == 0 && to == width(lhs_extractbits.src().type()) - 1)
       {
-        assign_symbol(lhs.op0(), rhs);
+        assign_symbol(lhs_extractbits.src(), rhs);
         return;
       }
     }
@@ -307,7 +307,7 @@ void output_verilog_rtlt::assign_symbol(
       throw 0;
     }
 
-    symbol_expr=lhs.op0();
+    symbol_expr = to_extractbit_expr(lhs).src();
   }
   else if(lhs.id()==ID_extractbits)
   {
@@ -318,7 +318,7 @@ void output_verilog_rtlt::assign_symbol(
       throw 0;
     }
 
-    symbol_expr=lhs.op0();
+    symbol_expr = to_extractbits_expr(lhs).src();
   }
 
   if(symbol_expr.id()!=ID_symbol &&
@@ -342,8 +342,10 @@ void output_verilog_rtlt::assign_symbol(
 
     // replace the next_symbol
     exprt tmp(lhs);
-    if(tmp.id()==ID_extractbit || tmp.id()==ID_extractbits)
-      tmp.op0().id(ID_symbol);
+    if(tmp.id() == ID_extractbit)
+      to_extractbit_expr(tmp).src().id(ID_symbol);
+    else if(tmp.id() == ID_extractbits)
+      to_extractbits_expr(tmp).src().id(ID_symbol);
     else
       tmp.id(ID_symbol);
 
@@ -406,62 +408,58 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
   
   if(expr.id()==ID_extractbit)
   {
-    assert(expr.operands().size()==2);
+    auto &src = to_extractbit_expr(expr).src();
+    auto &index = to_extractbit_expr(expr).index();
 
     mp_integer i;
-    if(to_integer_non_constant(expr.op1(), i))
+    if(to_integer_non_constant(index, i))
     {
-      error().source_location=expr.op1().find_source_location();
-      error() << "failed to convert constant "
-              << expr.op1().pretty() << eom;
+      error().source_location = index.find_source_location();
+      error() << "failed to convert constant " << index.pretty() << eom;
       throw 0;
     }
 
-    std::size_t offset=atoi(expr.op0().type().get("#offset").c_str());
-    
+    std::size_t offset = atoi(src.type().get("#offset").c_str());
+
     assert(i>=offset);
-    
-    return
-      symbol_string(expr.op0())+
-      '['+integer2string(i-offset)+']';
+
+    return symbol_string(src) + '[' + integer2string(i - offset) + ']';
   }
   else if(expr.id()==ID_extractbits)
   {
-    assert(expr.operands().size()==3);
+    auto &src = to_extractbits_expr(expr).src();
+    auto &upper = to_extractbits_expr(expr).upper();
+    auto &lower = to_extractbits_expr(expr).lower();
 
     mp_integer from;
-    if(to_integer_non_constant(expr.op1(), from))
+    if(to_integer_non_constant(upper, from))
     {
-      error().source_location=expr.op1().find_source_location();
-      error() << "failed to convert constant "
-              << expr.op1().pretty() << eom;
+      error().source_location = upper.find_source_location();
+      error() << "failed to convert constant " << upper.pretty() << eom;
       throw 0;
     }
 
     mp_integer to;
-    if(to_integer_non_constant(expr.operands()[2], to))
+    if(to_integer_non_constant(lower, to))
     {
-      error().source_location=expr.operands()[2].find_source_location();
-      error() << "failed to convert constant "
-              << expr.operands()[2].pretty() << eom;
+      error().source_location = lower.find_source_location();
+      error() << "failed to convert constant " << lower.pretty() << eom;
       throw 0;
     }
 
-    std::size_t offset=atoi(expr.op0().type().get("#offset").c_str());
-    
+    std::size_t offset = atoi(src.type().get("#offset").c_str());
+
     assert(from>=offset);
     assert(to>=offset);
     
     assert(to>=from);
-    
-    return
-      symbol_string(expr.op0())+
-      '['+integer2string(to-offset)+
-      ':'+integer2string(from-offset)+']';
+
+    return symbol_string(src) + '[' + integer2string(to - offset) + ':' +
+           integer2string(from - offset) + ']';
   }
   else if(expr.id()==ID_symbol)
   {
-    const irep_idt &identifier=expr.get(ID_identifier);
+    const irep_idt &identifier = to_symbol_expr(expr).get_identifier();
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(identifier);
     
@@ -885,8 +883,8 @@ void output_verilog_baset::invariant(const exprt &expr)
   }
   else if(expr.id()==ID_equal)
   {
-    assert(expr.operands().size()==2);
-    assign_symbol(expr.op0(), expr.op1());
+    auto &equal_expr = to_equal_expr(expr);
+    assign_symbol(equal_expr.lhs(), equal_expr.rhs());
   }
   else
   {
@@ -941,9 +939,9 @@ void output_verilog_baset::next_state(const exprt &expr)
     return;
 
   assert(expr.id()==ID_equal);
-  assert(expr.operands().size()==2);
 
-  assign_symbol(expr.op0(), expr.op1());  
+  auto &equal_expr = to_equal_expr(expr);
+  assign_symbol(equal_expr.lhs(), equal_expr.rhs());
 }
 
 /*******************************************************************\

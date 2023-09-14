@@ -74,10 +74,11 @@ void add_next_timeframe(
     
     if(top_level_inputs.find(name)!=top_level_inputs.end()) continue;
 
-    const exprt member_expr1 = member_exprt(struct_symbol_expr, name, type);
-    const exprt member_expr2=member_exprt(index_expr, name, type);
+    const auto member_expr1 = member_exprt(struct_symbol_expr, name, type);
+    const auto member_expr2 = member_exprt(index_expr, name, type);
 
-    CHECK_RETURN(member_expr1.op0().type() == member_expr2.op0().type());
+    CHECK_RETURN(
+      member_expr1.compound().type() == member_expr2.compound().type());
     const code_assignt member_assignment(member_expr1, member_expr2);
     block.add(member_assignment);
   }

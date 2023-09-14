@@ -200,18 +200,19 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
   {
     // same as regular implication
     if(expr.operands().size()==2)
-      return prop.limplies(convert_bool(expr.op0()),
-                           convert_bool(expr.op1()));
+      return prop.limplies(
+        convert_bool(to_binary_expr(expr).op0()),
+        convert_bool(to_binary_expr(expr).op1()));
   }
   else if(expr.id()==ID_sva_non_overlapped_implication)
   {
     // right-hand side is shifted by one tick
     if(expr.operands().size()==2)
     {
-      literalt lhs=convert_bool(expr.op0());
+      literalt lhs = convert_bool(to_binary_expr(expr).lhs());
       unsigned old_current=current;
       unsigned old_next=next;
-      literalt rhs=convert_bool(expr.op1());
+      literalt rhs = convert_bool(to_binary_expr(expr).rhs());
       // restore      
       current=old_current;
       next=old_next;
@@ -242,8 +243,10 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
         if(
           to_integer_non_constant(expr.op0(), from) ||
           to_integer_non_constant(expr.op1(), to))
+        {
           throw "failed to convert sva_cycle_delay offsets";
-          
+        }
+
         // this is an 'or'
         bvt disjuncts;
         
@@ -293,8 +296,9 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
   else if(expr.id()==ID_sva_sequence_concatenation)
   {
     if(expr.operands().size()==2)
-      return prop.land(convert_bool(expr.op0()),
-                       convert_bool(expr.op1()));
+      return prop.land(
+        convert_bool(to_binary_expr(expr).op0()),
+        convert_bool(to_binary_expr(expr).op1()));
   }
 
   return SUB::convert_bool(expr);
@@ -535,8 +539,9 @@ literalt instantiate_var_mapt::convert_bool(const exprt &expr)
   {
     // same as regular implication
     if(expr.operands().size()==2)
-      return prop.limplies(convert_bool(expr.op0()),
-                           convert_bool(expr.op1()));
+      return prop.limplies(
+        convert_bool(to_binary_expr(expr).op0()),
+        convert_bool(to_binary_expr(expr).op1()));
   }
 
   return SUB::convert_bool(expr);

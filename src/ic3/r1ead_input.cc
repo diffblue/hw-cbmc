@@ -36,11 +36,9 @@ void ic3_enginet::find_prop_lit()
   bool found = find_prop(Prop);
 
   assert(found);
-  assert(Prop.expr.id()==ID_sva_always);    
+  assert(Prop.expr.id() == ID_sva_always);
 
-  assert(Prop.expr.operands().size()==1);
-
-  exprt Oper = Prop.expr.op0();
+  exprt Oper = to_unary_expr(Prop.expr).op();
 
   found = banned_expr(Oper);
   if (found) {

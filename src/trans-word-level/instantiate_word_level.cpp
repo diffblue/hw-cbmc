@@ -129,8 +129,8 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     if(expr.operands().size()==2)
     {
       expr.id(ID_implies);
-      instantiate_rec(expr.op0());
-      
+      instantiate_rec(to_binary_expr(expr).op0());
+
       save_currentt save_current(current);
       
       current++;
@@ -138,9 +138,9 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       // Do we exceed the bound? Make it 'true',
       // works on NNF only
       if(current>=no_timeframes)
-        expr.op1()=true_exprt();
+        to_binary_expr(expr).op1() = true_exprt();
       else
-        instantiate_rec(expr.op1());
+        instantiate_rec(to_binary_expr(expr).op1());
     }
   }
   else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
@@ -169,7 +169,6 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       else
       {
         mp_integer from, to;
-
         if(to_integer_non_constant(expr.op0(), from))
           throw "failed to convert sva_cycle_delay offsets";
           
@@ -221,7 +220,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
 
     for(; current<no_timeframes; current++)
     {
-      conjuncts.push_back(expr.op0());
+      conjuncts.push_back(to_unary_expr(expr).op());
       instantiate_rec(conjuncts.back());
     }
     
@@ -239,7 +238,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     
     if(current<no_timeframes)
     {
-      expr=expr.op0();
+      expr = to_unary_expr(expr).op();
       instantiate_rec(expr);
     }
     else
@@ -265,7 +264,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       save_currentt save_current(current);
       for(; current<no_timeframes; current++)
       {
-        disjuncts.push_back(expr.op0());
+        disjuncts.push_back(to_unary_expr(expr).op());
         instantiate_rec(disjuncts.back());
       }
       expr=disjunction(disjuncts);
@@ -286,10 +285,10 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     save_currentt save_current(current);
     
     // we expand: p U q <=> q || (p && X(p U q))
-    exprt tmp_q=expr.op1();
+    exprt tmp_q = to_binary_expr(expr).op1();
     instantiate_rec(tmp_q);
-    
-    exprt expansion=expr.op0();
+
+    exprt expansion = to_binary_expr(expr).op0();
     instantiate_rec(expansion);
     
     current++;
@@ -311,7 +310,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     assert(expr.operands().size()==2);
     
     // we rewrite using 'next'
-    exprt tmp=expr;
+    binary_exprt tmp = to_binary_expr(expr);
     if(expr.id()==ID_sva_until_with)
       tmp.id(ID_sva_until);
     else
