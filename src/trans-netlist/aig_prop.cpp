@@ -24,7 +24,8 @@ literalt aig_prop_baset::land(const bvt &bv) {
 
   // Introduces N-1 extra nodes for N bits
   // See convert_node for where this overhead is removed
-  forall_literals(it, bv) literal = land(*it, literal);
+  for(auto bv_lit : bv)
+    literal = land(bv_lit, literal);
 
   return literal;
 }
@@ -34,7 +35,8 @@ literalt aig_prop_baset::lor(const bvt &bv) {
 
   // Introduces N-1 extra nodes for N bits
   // See convert_node for where this overhead is removed
-  forall_literals(it, bv) literal = land(neg(*it), literal);
+  for(auto bv_lit : bv)
+    literal = land(neg(bv_lit), literal);
 
   return neg(literal);
 }
@@ -42,7 +44,8 @@ literalt aig_prop_baset::lor(const bvt &bv) {
 literalt aig_prop_baset::lxor(const bvt &bv) {
   literalt literal = const_literal(false);
 
-  forall_literals(it, bv) literal = lxor(*it, literal);
+  for(auto bv_lit : bv)
+    literal = lxor(bv_lit, literal);
 
   return literal;
 }
@@ -458,8 +461,9 @@ void aig_prop_solvert::convert_node(unsigned n, const aigt::nodet &node,
       bvt lits(2);
       lits[1] = neg(o);
 
-      forall_literals(it, body) {
-        lits[0] = pos(*it);
+      for(auto body_lit : body)
+      {
+        lits[0] = pos(body_lit);
         solver.lcnf(lits);
       }
     }
@@ -467,7 +471,8 @@ void aig_prop_solvert::convert_node(unsigned n, const aigt::nodet &node,
     if (n_neg) {
       bvt lits;
 
-      forall_literals(it, body) lits.push_back(neg(*it));
+      for(auto body_lit : body)
+        lits.push_back(neg(body_lit));
 
       lits.push_back(pos(o));
       solver.lcnf(lits);
