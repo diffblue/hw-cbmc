@@ -1554,8 +1554,8 @@ attribute_instance_brace:
 		{ init($$, ID_verilog_attribute); }
 	| attribute_instance_brace attribute_instance
 		{ $$=$1;
-		  Forall_irep(it, stack_expr($2).get_sub())
-		    stack_expr($$).move_to_sub(*it);
+		  for(auto &attr : stack_expr($2).get_sub())
+		    stack_expr($$).move_to_sub(attr);
 		}
         ;
 

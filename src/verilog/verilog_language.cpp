@@ -113,12 +113,12 @@ void verilog_languaget::dependencies(
     // dependencies on other Verilog modules
     
     const verilog_modulet &module=(it->second)->verilog_module;
- 
-    forall_irep(it2, module.module_items.get_sub())
+
+    for(auto &item : module.module_items.get_sub())
     {
-      if(it2->id()==ID_inst)
+      if(item.id() == ID_inst)
         module_set.insert(
-          id2string(verilog_module_symbol(it2->get_string(ID_module))));
+          id2string(verilog_module_symbol(item.get_string(ID_module))));
     }
   }
 }

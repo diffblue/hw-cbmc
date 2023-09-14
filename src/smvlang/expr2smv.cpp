@@ -558,10 +558,10 @@ bool type2smv(const typet &type, std::string &code)
     const irept::subt &elements=to_enumeration_type(type).elements();
     code="{ ";
     bool first=true;
-    forall_irep(it, elements)
+    for(auto &element : elements)
     {
       if(first) first=false; else code+=", ";
-      code+=it->id_string();
+      code += element.id_string();
     }
     code+=" }";
   }

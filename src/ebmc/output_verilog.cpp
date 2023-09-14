@@ -596,12 +596,15 @@ void output_verilog_baset::module_header(const symbolt &symbol)
   {
     out << '(';
 
-    forall_irep(it, ports.get_sub())
+    bool first = true;
+    for(auto &port : ports.get_sub())
     {
-      if(it!=ports.get_sub().begin())
+      if(first)
+        first = false;
+      else
         out << ", ";
 
-      out << it->get("#name");
+      out << port.get("#name");
     }
 
     out << ')';
@@ -614,11 +617,11 @@ void output_verilog_baset::module_header(const symbolt &symbol)
   //
   // port declarations
   //
-  forall_irep(it, ports.get_sub())
+  for(auto &port : ports.get_sub())
   {
-    bool is_input=it->get_bool(ID_input);
-    bool is_output=it->get_bool(ID_output);
-    
+    bool is_input = port.get_bool(ID_input);
+    bool is_output = port.get_bool(ID_output);
+
     out << "  ";
     
     if(is_input && is_output)
@@ -628,8 +631,8 @@ void output_verilog_baset::module_header(const symbolt &symbol)
     else
       out << "output";
 
-    const typet &type=static_cast<const typet &>(it->find(ID_type));
-    
+    const typet &type = static_cast<const typet &>(port.find(ID_type));
+
     if(type.id()==ID_named_block)
       continue;
 
@@ -638,7 +641,7 @@ void output_verilog_baset::module_header(const symbolt &symbol)
 
     out << " " << type_str_base;
     if(!type_str_base.empty()) out << " ";
-    out << it->get("#name") << type_str_array << ';' << '\n';
+    out << port.get("#name") << type_str_array << ';' << '\n';
   }
 
   out << '\n';

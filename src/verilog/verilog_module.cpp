@@ -28,15 +28,15 @@ void verilog_modulet::show(std::ostream &out) const
 
   out << "  Ports:\n";
 
-  forall_irep(it, ports.get_sub())
-    out << "    " << it->pretty() << '\n';
+  for(auto &port : ports.get_sub())
+    out << "    " << port.pretty() << '\n';
 
   out << std::endl;
 
   out << "  Module items:\n";
 
-  forall_irep(it, module_items.get_sub())
-    out << "    " << it->pretty() << '\n';
+  for(auto &item : module_items.get_sub())
+    out << "    " << item.pretty() << '\n';
 
   out << '\n';
 }
