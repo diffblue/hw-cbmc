@@ -719,6 +719,8 @@ void smv_typecheckt::typecheck(
     typecheck(op0, op_type, mode);
     typecheck(op1, op_type, mode);
 
+    INVARIANT(op0.type() == op1.type(), "type of operands of relational operators");
+
     if(expr.id()==ID_lt || expr.id()==ID_le ||
        expr.id()==ID_gt || expr.id()==ID_ge)
     {
@@ -1407,13 +1409,13 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
     // now turn them into INVARs
     convert_defines(trans_invar);
 
-    // do the rest now
-
+    // do the rest now: typecheck
     for (auto &item : smv_module.items) {
-      if (item.is_define())
+      if (!item.is_define())
         typecheck(item);
     }
 
+    // copy to transition system
     for (const auto &item : smv_module.items) {
       if (item.is_invar())
         trans_invar.push_back(item.expr);

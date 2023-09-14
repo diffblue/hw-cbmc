@@ -1,7 +1,9 @@
 %{
 #include "smv_parser.h"
 #include "smv_typecheck.h"
-#include "util/std_types.h"
+
+#include <util/mathematical_types.h>
+#include <util/std_types.h>
 
 #define YYSTYPE unsigned
 #define PARSER smv_parser
@@ -86,12 +88,6 @@ Function: init
    stack_expr(x_result).type() = t;
    auto &lhs = stack_expr(y_lhs);
    auto &rhs = stack_expr(z_rhs);
-   DATA_INVARIANT(lhs.type().id() != ID_nil || rhs.type().id() != ID_nil,
-                  "binary expr without types");
-   if (lhs.type().id() == ID_nil)
-     lhs.type() = rhs.type();
-   if (rhs.type().id() == ID_nil)
-     rhs.type() = lhs.type();
    stack_expr(x_result).add_to_operands(std::move(lhs), std::move(rhs));
  }
 
@@ -104,8 +100,6 @@ Function: init
    DATA_INVARIANT(lhs.type().id() != ID_nil, "arith expr without lhs type");
    stack_expr(x_result).type() = lhs.type();
    auto &rhs = stack_expr(z_rhs);
-   if (rhs.type().id() == ID_nil)
-     rhs.type() = lhs.type();
    stack_expr(x_result).add_to_operands(std::move(lhs), std::move(rhs));
  }
 
@@ -292,8 +286,9 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
            | '{' enum_list '}' { $$=$2; }
            | NUMBER_Token DOTDOT_Token NUMBER_Token
            {
-             init($$, ID_signedbv);
-             stack_type($$).set(ID_width, 32);
+             init($$, ID_range);
+             stack_type($$).set(ID_from, stack_expr($1));
+             stack_type($$).set(ID_to, stack_expr($3));
            }
            | usertype
            ;
@@ -446,7 +441,7 @@ term       : variable_name
            | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
            | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5, stack_expr($5).type()); }
            | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
-| NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=signedbv_typet{32}; }
+           | NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
            | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
            | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
            | CASE_Token cases ESAC_Token { $$=$2; }

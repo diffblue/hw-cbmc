@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 main.smv
 --bound 10 --property smv::main::spec2
 ^EXIT=0$
