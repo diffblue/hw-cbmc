@@ -43,7 +43,7 @@ bool verilog_languaget::parse(
 
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
-  verilog_parser.set_message_handler(get_message_handler());
+  verilog_parser.log.set_message_handler(get_message_handler());
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
   
   if(has_suffix(path, ".sv"))
@@ -276,7 +276,7 @@ bool verilog_languaget::to_expr(
   verilog_parser.clear();
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;
-  verilog_parser.set_message_handler(get_message_handler());
+  verilog_parser.log.set_message_handler(get_message_handler());
   verilog_parser.grammar=verilog_parsert::EXPRESSION;
   verilog_scanner_init();
 
