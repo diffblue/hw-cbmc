@@ -1,7 +1,0 @@
-CBMC = ../../lib/cbmc
-
-CXXFLAGS += -Wno-error=range-loop-construct -Wno-unused-variable -Wno-error=unused-but-set-variable
-
-include $(CBMC)/src/config.inc
-include $(CBMC)/src/common
-
