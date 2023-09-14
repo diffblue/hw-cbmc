@@ -96,7 +96,7 @@ std::string output_verilog_netlistt::make_symbol_expr(
   if(expr.is_constant())
   {
     mp_integer i;
-    if(to_integer_non_constant(expr, i))
+    if(to_integer(to_constant_expr(expr), i))
     {
       error() << "failed to convert constant: " << expr.pretty() << eom;
       throw 0;

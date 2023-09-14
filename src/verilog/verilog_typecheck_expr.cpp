@@ -1231,7 +1231,7 @@ void verilog_typecheck_exprt::typecast(
       source_locationt source_location=expr.source_location();
       mp_integer value;
 
-      if(to_integer_non_constant(expr, value))
+      if(to_integer(to_constant_expr(expr), value))
       {
         error() << "failed to convert integer constant" << eom;
         throw 0;
@@ -1310,7 +1310,7 @@ void verilog_typecheck_exprt::typecast(
       else if(expr.is_constant())
       {
         mp_integer i;
-        if(to_integer_non_constant(expr, i))
+        if(to_integer(to_constant_expr(expr), i))
           expr = typecast_exprt{expr, dest_type};
         else
           expr=from_integer(i, dest_type);
