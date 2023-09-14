@@ -36,18 +36,6 @@ void for_all_module_symbols(const symbol_tablet &symbol_table,
                 });
 }
 
-inline signedbv_typet int32_type() {
-  signedbv_typet result(32);
-  result.set(ID_C_c_type, ID_signed_int);
-  return result;
-}
-
-inline unsignedbv_typet uint64_type() {
-  unsignedbv_typet result(64);
-  result.set(ID_C_c_type, ID_unsigned_long_int);
-  return result;
-}
-
 inline bool to_integer(const exprt &expr, mp_integer &int_value) {
   if (!can_cast_expr<constant_exprt>(expr))
     return true;
