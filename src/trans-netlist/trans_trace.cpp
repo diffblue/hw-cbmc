@@ -273,8 +273,8 @@ static mp_integer vcd_width(
 
     // constant?
     mp_integer i;
-    
-    if(to_integer(size, i))
+
+    if(to_integer_non_constant(size, i))
       return -1; // we cannot distinguish the elements
     
     return sub*i;
@@ -335,7 +335,7 @@ static std::string as_vcd_binary(
     else if(type.id()==ID_integer)
     {
       mp_integer i;
-      if(!to_integer(expr, i))
+      if(!to_integer_non_constant(expr, i))
         return integer2binary(i, 32); // 32 is hardwired
     }
   }
@@ -515,8 +515,8 @@ static std::string vcd_suffix(
 
     // constant?
     mp_integer i;
-    
-    if(to_integer(size, i))
+
+    if(to_integer_non_constant(size, i))
       return ""; // we cannot distinguish the elements
 
     mp_integer left_bound, right_bound;

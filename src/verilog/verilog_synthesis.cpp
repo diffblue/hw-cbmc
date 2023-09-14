@@ -461,13 +461,14 @@ void verilog_synthesist::assignment_rec(
 
     mp_integer from, to;
 
-    if (to_integer(lhs_index_one, from)) {
+    if(to_integer_non_constant(lhs_index_one, from))
+    {
       error().source_location=lhs_index_one.source_location();
       error() << "failed to convert range" << eom;
       throw 0;
     }
 
-    if(to_integer(lhs_index_two, to))
+    if(to_integer_non_constant(lhs_index_two, to))
     {
       error().source_location=lhs_index_two.source_location();
       error() << "failed to convert range" << eom;
@@ -643,7 +644,7 @@ void verilog_synthesist::assignment_member_rec(
       
     // constant index?
     mp_integer index;
-    if(to_integer(tmp_lhs_op1, index))
+    if(to_integer_non_constant(tmp_lhs_op1, index))
     {
       // done
       add_assignment_member(lhs, member, data);
@@ -672,14 +673,14 @@ void verilog_synthesist::assignment_member_rec(
 
     mp_integer from, to;
 
-    if(to_integer(lhs_index_one, from))
+    if(to_integer_non_constant(lhs_index_one, from))
     {
       error().source_location=lhs_index_one.source_location();
       error() << "failed to convert range" << eom;
       throw 0;
     }
 
-    if(to_integer(lhs_index_two, to))
+    if(to_integer_non_constant(lhs_index_two, to))
     {
       error().source_location=lhs_index_two.source_location();
       error() << "failed to convert range" << eom;
@@ -1669,7 +1670,7 @@ void verilog_synthesist::synth_assign(
     mp_integer i;
     simplify(rhs, ns);
 
-    if(to_integer(rhs, i))
+    if(to_integer_non_constant(rhs, i))
     {
       error().source_location=rhs.source_location();
       error() << "synthesis expects constant on rhs" << eom;

@@ -96,7 +96,7 @@ std::string output_verilog_netlistt::make_symbol_expr(
   if(expr.is_constant())
   {
     mp_integer i;
-    if(to_integer(expr, i))
+    if(to_integer_non_constant(expr, i))
     {
       error() << "failed to convert constant: " << expr.pretty() << eom;
       throw 0;
@@ -280,8 +280,9 @@ void output_verilog_rtlt::assign_symbol(
     // redundant?
     mp_integer from, to;
 
-    if(!to_integer(lhs.op1(), to) &&
-       !to_integer(lhs.op2(), from))
+    if(
+      !to_integer_non_constant(lhs.op1(), to) &&
+      !to_integer_non_constant(lhs.op2(), from))
     {
       if(from==0 &&
          to==width(lhs.op0().type())-1)
@@ -408,7 +409,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     assert(expr.operands().size()==2);
 
     mp_integer i;
-    if(to_integer(expr.op1(), i))
+    if(to_integer_non_constant(expr.op1(), i))
     {
       error().source_location=expr.op1().find_source_location();
       error() << "failed to convert constant "
@@ -429,7 +430,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     assert(expr.operands().size()==3);
 
     mp_integer from;
-    if(to_integer(expr.op1(), from))
+    if(to_integer_non_constant(expr.op1(), from))
     {
       error().source_location=expr.op1().find_source_location();
       error() << "failed to convert constant "
@@ -438,7 +439,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     }
 
     mp_integer to;
-    if(to_integer(expr.operands()[2], to))
+    if(to_integer_non_constant(expr.operands()[2], to))
     {
       error().source_location=expr.operands()[2].find_source_location();
       error() << "failed to convert constant "
@@ -563,7 +564,7 @@ std::string output_verilog_baset::type_string_array(const typet &type)
   if(type.id()==ID_array)
   {
     mp_integer size;
-    to_integer(to_array_type(type).size(), size);
+    to_integer_non_constant(to_array_type(type).size(), size);
     return type_string_array(type.subtype())+
            " [0:"+integer2string(size)+']';
   }

@@ -532,7 +532,7 @@ std::string expr2vhdlt::convert_constant(
           type.id()==ID_signedbv)
   {
     mp_integer i;
-    to_integer(src, i);
+    to_integer_non_constant(src, i);
 
     if(i>=256)
       dest="'h"+integer2string(i, 16);

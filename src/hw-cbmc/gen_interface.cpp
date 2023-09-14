@@ -154,7 +154,7 @@ std::string gen_interfacet::type_to_string(const typet& type)
       to_array_type(type).size();
  
     mp_integer size = 0;
-    to_integer(size_expr, size);
+    to_integer_non_constant(size_expr, size);
 
     std::string stype_str = type_to_string(type.subtype());
     std::string array_str = "[" + integer2string(size)+"]" ;

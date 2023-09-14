@@ -26,7 +26,10 @@ void for_all_module_symbols(const symbol_tablet &symbol_table,
                 });
 }
 
-inline bool to_integer(const exprt &expr, mp_integer &int_value) {
+// This function is legacy, and will be gradually removed.
+// Consider to_integer(constant_exprt, mp_integer &) or numerical_cast<mp_integer>(...).
+inline bool to_integer_non_constant(const exprt &expr, mp_integer &int_value)
+{
   if (!can_cast_expr<constant_exprt>(expr))
     return true;
 

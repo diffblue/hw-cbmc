@@ -212,7 +212,7 @@ irep_idt verilog_typecheckt::parameterize_module(
       if(first) first=false; else suffix+=",";
       
       mp_integer i;
-      if(to_integer(pv, i))
+      if(to_integer_non_constant(pv, i))
       {
         error().source_location = pv.source_location();
         error() << "parameter expected to be constant, but got `"

@@ -73,8 +73,8 @@ void verilog_typecheckt::verilog_interpreter(
       else
       {
         mp_integer cond_i;
-      
-        if(to_integer(cond, cond_i))
+
+        if(to_integer_non_constant(cond, cond_i))
         {
           error().source_location=verilog_for.source_location();
           error() << "for condition is not constant: " << cond.pretty() << eom;

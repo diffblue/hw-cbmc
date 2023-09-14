@@ -115,7 +115,7 @@ protected:
     const exprt &size_expr=type.size();
 
     mp_integer s;
-    if(to_integer(size_expr, s))
+    if(to_integer_non_constant(size_expr, s))
     {
       namespacet ns(symbol_table);
       error() << "failed to convert array size `"
