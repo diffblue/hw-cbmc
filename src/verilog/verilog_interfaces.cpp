@@ -37,9 +37,9 @@ void verilog_typecheckt::module_interface()
   const irept &module_items=module_source.find(ID_module_items);
 
   // first do module items
-  forall_irep(it, module_items.get_sub())
+  for(auto &module_item : module_items.get_sub())
     interface_module_item(
-      static_cast<const verilog_module_itemt &>(*it));
+      static_cast<const verilog_module_itemt &>(module_item));
 
   // now check port names
   interface_ports(module_symbol.type.add(ID_ports).get_sub());
@@ -67,11 +67,11 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
 
   unsigned nr=0;
 
-  forall_irep(it, module_ports.get_sub())
+  for(auto &port : module_ports.get_sub())
   {
-    assert(it->id()==ID_decl);
-    
-    const verilog_declt &decl=to_verilog_decl(*it);
+    assert(port.id() == ID_decl);
+
+    const verilog_declt &decl = to_verilog_decl(port);
 
     assert(decl.operands().size()==1);
     assert(decl.op0().id()==ID_symbol);
@@ -81,7 +81,8 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     
     if(name.empty())
     {
-      error().source_location=static_cast<const exprt &>(*it).source_location();
+      error().source_location =
+        static_cast<const exprt &>(port).source_location();
       error() << "empty port name (module "
               << module_symbol.base_name << ')' << eom;
       throw 0;
@@ -273,10 +274,10 @@ void verilog_typecheckt::interface_function_or_task(
   // do the declarations within the task/function
 
   const irept::subt &declarations=decl.declarations();
-  
-  forall_irep(it, declarations)
-    interface_module_item(to_verilog_module_item(*it));
-      
+
+  for(auto &decl : declarations)
+    interface_module_item(to_verilog_module_item(decl));
+
   interface_statement(decl.body());
     
   function_or_task_name="";  
@@ -798,9 +799,8 @@ void verilog_typecheckt::interface_module_item(
     interface_statement(to_verilog_initial(module_item).statement());
   else if(module_item.id()==ID_generate_block)
   {
-    forall_irep(it, module_item.get_sub())
-      interface_module_item(
-        static_cast<const verilog_module_itemt &>(*it));
+    for(auto &item : module_item.get_sub())
+      interface_module_item(static_cast<const verilog_module_itemt &>(item));
   }
 }
 

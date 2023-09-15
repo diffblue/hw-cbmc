@@ -197,11 +197,11 @@ void verilog_typecheckt::typecheck_port_connections(
         throw 0;
       }
 
-      forall_irep(p_it, ports)
+      for(auto &port : ports)
       {
-        if(p_it->get(ID_identifier)==identifier)
+        if(port.get(ID_identifier) == identifier)
         {
-          const exprt &p_expr=(exprt &)(*p_it);
+          auto &p_expr = static_cast<const exprt &>(port);
           found=true;
           typecheck_port_connection(op, p_expr);
           o_it->op0().type()=p_expr.type();
@@ -320,11 +320,11 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
   decl.set_identifier(symbol.name);
 
   irept::subt &declarations=decl.declarations();
-  
-  Forall_irep(it, declarations)
+
+  for(auto &decl : declarations)
   {
-    assert(it->id()==ID_decl);
-    convert_decl(static_cast<verilog_declt &>(*it));
+    assert(decl.id() == ID_decl);
+    convert_decl(static_cast<verilog_declt &>(decl));
   }
 
   function_or_task_name=symbol.name;
@@ -369,8 +369,8 @@ exprt verilog_typecheckt::elaborate_const_function_call(
 
   irept::subt &declarations=decl.declarations();
 
-  Forall_irep(it, declarations)
-    convert_decl(static_cast<verilog_declt &>(*it));
+  for(auto &decl : declarations)
+    convert_decl(static_cast<verilog_declt &>(decl));
 
   function_or_task_name=function_symbol.name;
   convert_statement(decl.body());
@@ -1559,9 +1559,8 @@ void verilog_typecheckt::convert_statements()
 
   // do the generate stuff
 
-  forall_irep(it, module_items.get_sub())
-    elaborate_generate_item(
-      static_cast<const exprt &>(*it), value.operands());
+  for(auto &item : module_items.get_sub())
+    elaborate_generate_item(static_cast<const exprt &>(item), value.operands());
 
   // typecheck
   

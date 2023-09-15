@@ -43,12 +43,12 @@ void verilog_typecheckt::get_parameter_values(
     {
       irep_idt parameter=it->get(ID_parameter);
       map[parameter]=static_cast<const exprt &>(it->find(ID_value));
-    }    
+    }
 
-    forall_irep(it, module_items.get_sub())
-      if(it->id()==ID_parameter_decl)
+    for(auto &item : module_items.get_sub())
+      if(item.id() == ID_parameter_decl)
       {
-        forall_operands(o_it, static_cast<const exprt &>(*it))
+        forall_operands(o_it, static_cast<const exprt &>(item))
         {
           const irep_idt &identifier=o_it->get(ID_identifier);
           exprt value;
@@ -80,11 +80,11 @@ void verilog_typecheckt::get_parameter_values(
   {
     // ordered
     exprt::operandst::const_iterator p_it=parameter_assignment.begin();
-  
-    forall_irep(it, module_items.get_sub())
-      if(it->id()==ID_parameter_decl)
+
+    for(auto &item : module_items.get_sub())
+      if(item.id() == ID_parameter_decl)
       {
-        forall_operands(o_it, static_cast<const exprt &>(*it))
+        forall_operands(o_it, static_cast<const exprt &>(item))
         {
           const irep_idt &identifier=o_it->get(ID_identifier);
           exprt value;
@@ -143,11 +143,11 @@ void verilog_typecheckt::set_parameter_values(
   auto p_it=parameter_values.begin();
   
   irept &module_items=module_source.add(ID_module_items);
-  
-  Forall_irep(it, module_items.get_sub())
-    if(it->id()==ID_parameter_decl)
+
+  for(auto &module_item : module_items.get_sub())
+    if(module_item.id() == ID_parameter_decl)
     {
-      Forall_operands(o_it, static_cast<exprt &>(*it))
+      Forall_operands(o_it, static_cast<exprt &>(module_item))
       {
         if(p_it!=parameter_values.end())
         {
