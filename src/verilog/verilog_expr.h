@@ -852,12 +852,11 @@ public:
   {
     operands().resize(2);
   }
-  
-  inline verilog_assignt(
-    const irep_idt &_id,
-    const exprt &_lhs, const exprt &_rhs):verilog_statementt(_id)
+
+  inline verilog_assignt(const irep_idt &_id, exprt _lhs, exprt _rhs)
+    : verilog_statementt(_id)
   {
-    copy_to_operands(_lhs, _rhs);
+    add_to_operands(std::move(_lhs), std::move(_rhs));
   }
   
   inline const exprt &lhs() const

@@ -283,7 +283,7 @@ void verilog_synthesist::assignment(
       if(it->type().id()==ID_bool)
       {
         exprt bit_extract(ID_extractbit, it->type());
-        bit_extract.copy_to_operands(rhs, offset_constant);
+        bit_extract.add_to_operands(rhs, offset_constant);
         offset++;
 
         assignment(*it, bit_extract, blocking);
@@ -432,8 +432,8 @@ void verilog_synthesist::assignment_rec(
     exprt new_rhs(ID_with, lhs_array.type());
 
     new_rhs.reserve_operands(3);
-    new_rhs.copy_to_operands(lhs_array);
-    new_rhs.copy_to_operands(lhs_index);
+    new_rhs.add_to_operands(lhs_array);
+    new_rhs.add_to_operands(lhs_index);
     new_rhs.move_to_operands(rhs);
 
     // do the array
@@ -506,14 +506,14 @@ void verilog_synthesist::assignment_rec(
 
       exprt rhs_extractbit(ID_extractbit, bool_typet());
       rhs_extractbit.reserve_operands(2);
-      rhs_extractbit.copy_to_operands(rhs);
+      rhs_extractbit.add_to_operands(rhs);
       rhs_extractbit.move_to_operands(offset);
 
       exprt count=from_integer(i, integer_typet());
 
       exprt new_rhs(ID_with, lhs_bv.type());
       new_rhs.reserve_operands(3);
-      new_rhs.copy_to_operands(synth_lhs_bv);
+      new_rhs.add_to_operands(synth_lhs_bv);
       new_rhs.move_to_operands(count);
       new_rhs.move_to_operands(rhs_extractbit);
 
@@ -1121,11 +1121,15 @@ void verilog_synthesist::synth_module_instance_builtin(
           exprt op(module, instance.type());
 
           if(i==1)
-            op.copy_to_operands(instance.operands()[i],
-                                instance.operands()[i+1]);
+          {
+            op.add_to_operands(
+              instance.operands()[i], instance.operands()[i + 1]);
+          }
           else
-            op.copy_to_operands(instance.operands()[0],
-                                instance.operands()[i+1]);
+          {
+            op.add_to_operands(
+              instance.operands()[0], instance.operands()[i + 1]);
+          }
 
           if(instance.type().id()!=ID_bool)
             op.id("bit"+op.id_string());
@@ -1168,8 +1172,8 @@ void verilog_synthesist::synth_module_instance_builtin(
       for(unsigned i=0; i<instance.operands().size()-1; i++)
       {
         exprt op(ID_not, instance.type());
-        op.copy_to_operands(instance.operands()[i]);
-      
+        op.add_to_operands(instance.operands()[i]);
+
         if(instance.type().id()!=ID_bool)
           op.id("bit"+op.id_string());
 
@@ -1453,7 +1457,7 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
         // much like a continuous assignment
         verilog_continuous_assignt assign;
         assign.add_source_location()=it->source_location();
-        assign.copy_to_operands(*it);
+        assign.add_to_operands(*it);
         synth_continuous_assign(assign);
       }
     }
@@ -1574,7 +1578,7 @@ void verilog_synthesist::synth_force_rec(
       if(it->type().id()==ID_bool)
       {
         exprt bit_extract(ID_extractbit, it->type());
-        bit_extract.copy_to_operands(rhs, offset_constant);
+        bit_extract.add_to_operands(rhs, offset_constant);
         offset++;
 
         synth_force_rec(*it, bit_extract);
@@ -1588,8 +1592,8 @@ void verilog_synthesist::synth_force_rec(
                                         natural_typet{}};
 
         exprt bit_extract(ID_extractbits, it->type());
-        bit_extract.copy_to_operands(rhs, offset_constant, offset_constant2);
-        
+        bit_extract.add_to_operands(rhs, offset_constant, offset_constant2);
+
         synth_force_rec(*it, bit_extract);
         
         offset+=width;
@@ -2949,7 +2953,7 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   synth_assignments(trans);
   
   for(const auto & it : invars)
-    trans.invar().copy_to_operands(it);
+    trans.invar().add_to_operands(it);
 
   trans.invar()=conjunction(trans.invar().operands());
   trans.init()=conjunction(trans.init().operands());

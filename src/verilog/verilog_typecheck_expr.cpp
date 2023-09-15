@@ -1262,7 +1262,7 @@ void verilog_typecheck_exprt::typecast(
       unsignedbv_typet tmp_type(1);
       exprt tmp(ID_extractbit, bool_typet());
       exprt no_expr=from_integer(0, integer_typet());
-      tmp.copy_to_operands(typecast_exprt(expr, tmp_type), no_expr);
+      tmp.add_to_operands(typecast_exprt(expr, tmp_type), no_expr);
       expr.swap(tmp);
       return;
     }

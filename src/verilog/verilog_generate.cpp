@@ -62,7 +62,7 @@ void verilog_typecheckt::elaborate_generate_item(
   {
     // no need for elaboration
     exprt tmp("set_genvars");
-    tmp.copy_to_operands(statement);
+    tmp.add_to_operands(statement);
     irept &variables=tmp.add("variables");
     
     for(const auto & it : genvars)
