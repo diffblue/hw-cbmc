@@ -13,26 +13,29 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/expr.h>
 
-class hierarchical_identifier_exprt:public exprt
+/// The syntax for these A.B, where A is a module identifier and B
+/// is an identifier within that module.
+class hierarchical_identifier_exprt : public binary_exprt
 {
 public:
-  hierarchical_identifier_exprt():exprt(ID_hierarchical_identifier)
+  hierarchical_identifier_exprt() : binary_exprt(ID_hierarchical_identifier)
   {
-    operands().resize(2);
   }
 };
 
 extern inline const hierarchical_identifier_exprt
   &to_hierarchical_identifier_expr(const exprt &expr)
 {
-  assert(expr.id()==ID_hierarchical_identifier && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_hierarchical_identifier);
+  binary_exprt::check(expr);
   return static_cast<const hierarchical_identifier_exprt &>(expr);
 }
 
 extern inline hierarchical_identifier_exprt
   &to_hierarchical_identifier_expr(exprt &expr)
 {
-  assert(expr.id()==ID_hierarchical_identifier && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_hierarchical_identifier);
+  binary_exprt::check(expr);
   return static_cast<hierarchical_identifier_exprt &>(expr);
 }
 
