@@ -24,7 +24,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 //#define YYDEBUG 1
 
-#define mto(x, y) stack_expr(x).move_to_operands(stack_expr(y))
+#define mto(x, y) stack_expr(x).add_to_operands(std::move(stack_expr(y)))
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
@@ -139,7 +139,7 @@ static void extractbit(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &part)
 {
   init(expr, ID_extractbit);
   mto(expr, identifier);
-  stack_expr(expr).move_to_operands(stack_expr(part).op0());
+  stack_expr(expr).add_to_operands(std::move(stack_expr(part).op0()));
 }
 
 /*******************************************************************\
@@ -161,8 +161,8 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
   
   if(stack_expr(range).id()==ID_part_select)
   {
-    stack_expr(expr).move_to_operands(stack_expr(range).op0(),
-                                 stack_expr(range).op1());
+    stack_expr(expr).add_to_operands(std::move(stack_expr(range).op0()),
+                                 std::move(stack_expr(range).op1()));
   }
   else if(stack_expr(range).id()==ID_indexed_part_select_plus)
   {
@@ -942,7 +942,7 @@ port_declaration_brace:
 	| port_declaration_brace ',' port_identifier
 		{ $$=$1;
 		  exprt decl(ID_decl);
-		  decl.move_to_operands(stack_expr($3));
+		  decl.add_to_operands(std::move(stack_expr($3)));
 		  // grab the type and class from previous!
 		  const irept &prev=stack_expr($$).get_sub().back();
                   decl.set(ID_type, prev.find(ID_type));
@@ -2117,13 +2117,13 @@ conditional_statement:
 case_statement:
 	  TOK_CASE '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_case);  mto($$, $3);
-                  Forall_operands(it, stack_expr($5)) stack_expr($$).move_to_operands(*it); }
+                  Forall_operands(it, stack_expr($5)) stack_expr($$).add_to_operands(std::move(*it)); }
 	| TOK_CASEX '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_casex); mto($$, $3);
-                  Forall_operands(it, stack_expr($5)) stack_expr($$).move_to_operands(*it); }
+                  Forall_operands(it, stack_expr($5)) stack_expr($$).add_to_operands(std::move(*it)); }
 	| TOK_CASEZ '(' expression ')' case_item_brace TOK_ENDCASE
 		{ init($$, ID_casez); mto($$, $3);
-                  Forall_operands(it, stack_expr($5)) stack_expr($$).move_to_operands(*it); }
+                  Forall_operands(it, stack_expr($5)) stack_expr($$).add_to_operands(std::move(*it)); }
 	;
 
 case_item_brace:

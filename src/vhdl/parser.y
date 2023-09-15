@@ -18,7 +18,9 @@
 #define stack(x) (PARSER.stack[x.stack_index])
 #define stack_type(x) (static_cast<typet &>(static_cast<irept &>(PARSER.stack[x.stack_index])))
 
-#define mto(x, y) stack(x).move_to_operands(stack(y))
+#define mto(x, y) stack(x).add_to_operands(std::move(stack(y)))
+#define mto2(dest, s1, s2) stack(dest).add_to_operands(std::move(stack(s1)), std::move(stack(s2)))
+#define mto3(dest, s1, s2, s3) stack(dest).add_to_operands(std::move(stack(s1)), std::move(stack(s2)), std::move(stack(s3)))
 #define mts(x, y) stack(x).move_to_sub(stack(y))
 
 int yyvhdllex();
@@ -848,7 +850,7 @@ process_item:
          init($$, ID_code);
          $1.set_location(stack($$));
          stack($$).set(ID_statement, ID_ifthenelse);
-         stack($$).move_to_operands(stack($2), stack($4), stack($5));
+         mto3($$, $2, $4, $5);
        }
        | TOK_FOR signal TOK_IN expr TOK_TO expr TOK_LOOP process_body TOK_END TOK_LOOP ';'
        {
@@ -926,7 +928,7 @@ elsepart:
        {
          init($$, ID_code);
          stack($$).set(ID_statement, ID_ifthenelse);
-         stack($$).move_to_operands(stack($2), stack($4), stack($5));
+         mto3($$, $2, $4, $5);
        }
        | TOK_ELSE process_body
        {
@@ -983,12 +985,12 @@ sigvalue:
        | expr delay_opt TOK_WHEN expr ';'
        {
          init($$, ID_when);
-         stack($$).move_to_operands(stack($1), stack($4));
+         mto2($$, $1, $4);
        }
        | expr delay_opt TOK_WHEN expr TOK_ELSE sigvalue
        {
          init($$, ID_when);
-         stack($$).move_to_operands(stack($1), stack($4), stack($6));
+         mto3($$, $1, $4, $6);
        }
        ;
 
@@ -1045,7 +1047,7 @@ signal:
        | name '(' expr updown expr ')'
        {
          init($$, ID_extractbits);
-         stack($$).move_to_operands(stack($1), stack($3), stack($5));
+         mto3($$, $1, $3, $5);
        }
        | name '(' name '\'' TOK_RANGE ')'
        {
@@ -1125,7 +1127,7 @@ expr:
        { // Vector chaining
          init($$, ID_concatenation);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | '-' expr %prec UMINUS
        {
@@ -1143,67 +1145,67 @@ expr:
        {
          init($$, ID_plus);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr '-' expr
        {
          init($$, ID_minus);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_SLL expr
        {
          init($$, ID_shl);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_SRL expr
        {
          init($$, ID_lshr);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_SLA expr
        {
          init($$, ID_shl);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_SRA expr
        {
          init($$, ID_ashr);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_ROL expr
        {
          init($$, ID_rol);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_ROR expr
        {
          init($$, ID_ror);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr '*' expr
        {
          init($$, ID_mult);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr '/' expr
        {
          init($$, ID_div);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_MOD expr
        {
          init($$, ID_mod);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | TOK_NOT expr
        {
@@ -1215,37 +1217,37 @@ expr:
        {
          init($$, ID_and);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_NAND expr
        {
          init($$, ID_nand);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_OR expr
        {
          init($$, ID_or);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_NOR expr
        {
          init($$, ID_nor);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_XOR expr
        {
          init($$, ID_xor);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_XNOR expr
        {
          init($$, ID_xnor);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | name '(' expr_list ')'
        {
@@ -1262,37 +1264,37 @@ expr:
        {
          init($$, ID_equal);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr '>' expr
        {
          init($$, ID_gt);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_GE expr
        {
          init($$, ID_ge);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr '<' expr
        {
          init($$, ID_lt);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_LE expr
        {
          init($$, ID_le);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        | expr TOK_NE expr
        {
          init($$, ID_notequal);
          $2.set_location(stack($$));
-         stack($$).move_to_operands(stack($1), stack($3));
+         mto2($$, $1, $3);
        }
        ;
 

@@ -437,7 +437,7 @@ void verilog_typecheck_exprt::convert_system_function(
     {
       exprt tmp(ID_typecast, argument.type());
       tmp.type().id(ID_signedbv);
-      tmp.move_to_operands(argument);
+      tmp.add_to_operands(std::move(argument));
       tmp.add_source_location()=expr.source_location();
       expr.swap(tmp);
     }
@@ -1298,7 +1298,7 @@ void verilog_typecheck_exprt::typecast(
 
       exprt tmp(ID_extractbit, bool_typet());
       exprt no_expr=from_integer(0, integer_typet());
-      tmp.move_to_operands(expr, no_expr);
+      tmp.add_to_operands(std::move(expr), std::move(no_expr));
       expr.swap(tmp);
       return;
     }

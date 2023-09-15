@@ -434,7 +434,7 @@ void verilog_synthesist::assignment_rec(
     new_rhs.reserve_operands(3);
     new_rhs.add_to_operands(lhs_array);
     new_rhs.add_to_operands(lhs_index);
-    new_rhs.move_to_operands(rhs);
+    new_rhs.add_to_operands(std::move(rhs));
 
     // do the array
     synth_expr(new_rhs.op0(), symbol_statet::FINAL);
@@ -507,15 +507,15 @@ void verilog_synthesist::assignment_rec(
       exprt rhs_extractbit(ID_extractbit, bool_typet());
       rhs_extractbit.reserve_operands(2);
       rhs_extractbit.add_to_operands(rhs);
-      rhs_extractbit.move_to_operands(offset);
+      rhs_extractbit.add_to_operands(std::move(offset));
 
       exprt count=from_integer(i, integer_typet());
 
       exprt new_rhs(ID_with, lhs_bv.type());
       new_rhs.reserve_operands(3);
       new_rhs.add_to_operands(synth_lhs_bv);
-      new_rhs.move_to_operands(count);
-      new_rhs.move_to_operands(rhs_extractbit);
+      new_rhs.add_to_operands(std::move(count));
+      new_rhs.add_to_operands(std::move(rhs_extractbit));
 
       // do the value
       assignment_rec(lhs_bv, new_rhs, new_value); // recursive call
@@ -530,8 +530,8 @@ void verilog_synthesist::assignment_rec(
         assert(last_value.id()==ID_with);
         assert(last_value.operands().size()>=3);
 
-        last_value.move_to_operands(new_value.op1());
-        last_value.move_to_operands(new_value.op2());
+        last_value.add_to_operands(std::move(new_value.op1()));
+        last_value.add_to_operands(std::move(new_value.op2()));
       }
     }
 
@@ -554,8 +554,8 @@ void verilog_synthesist::assignment_rec(
     tmp.swap(new_value.op0());
 
     tmp.reserve_operands(tmp.operands().size()+2);
-    tmp.move_to_operands(new_value.op1());
-    tmp.move_to_operands(new_value.op2());
+    tmp.add_to_operands(std::move(new_value.op1()));
+    tmp.add_to_operands(std::move(new_value.op2()));
 
     new_value.swap(tmp);
   }
@@ -951,7 +951,7 @@ void verilog_synthesist::instantiate_port(
   if(equality.op0().type()!=equality.op1().type())
     equality.op0() = typecast_exprt{equality.op0(), equality.op1().type()};
 
-  trans.invar().move_to_operands(equality);
+  trans.invar().add_to_operands(std::move(equality));
 }
 
 /*******************************************************************\
@@ -1082,7 +1082,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
-      trans.invar().move_to_operands(constraint);
+      trans.invar().add_to_operands(std::move(constraint));
     }
     else if(module==ID_nmos ||
             module==ID_pmos ||
@@ -1097,7 +1097,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
-      trans.invar().move_to_operands(constraint);
+      trans.invar().add_to_operands(std::move(constraint));
     }
     else if(module==ID_and ||
             module==ID_nand ||
@@ -1112,7 +1112,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       {
         equal_exprt constraint{instance.operands()[0],
                                instance.operands().back()};
-        trans.invar().move_to_operands(constraint);
+        trans.invar().add_to_operands(std::move(constraint));
       }
       else
       {
@@ -1136,12 +1136,12 @@ void verilog_synthesist::synth_module_instance_builtin(
 
           equal_exprt constraint(instance.op0(), op);
           assert(trans.operands().size()==3);
-          trans.invar().move_to_operands(constraint);
+          trans.invar().add_to_operands(std::move(constraint));
         }
       }
-      
+
       /*assert(instance.operands().size()!=3);      
-      op.move_to_operands(instance.op1(), instance.op2());
+      op.add_to_operands(std::move(instance.op1()), std::move(instance.op2()));
       
       if(instance.type().id()!=ID_bool)
         op.id("bit"+op.id_string());
@@ -1149,7 +1149,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       equal_exprt constraint(instance.op0(), op);
     
       assert(trans.operands().size()!=3);
-      trans.invar().move_to_operands(constraint);
+      trans.invar().add_to_operands(std::move(constraint));
       */
     }
     else if(module==ID_buf)
@@ -1162,7 +1162,7 @@ void verilog_synthesist::synth_module_instance_builtin(
                                instance.operands().back()};
 
         assert(trans.operands().size()==3);
-        trans.invar().move_to_operands(constraint);
+        trans.invar().add_to_operands(std::move(constraint));
       }
     }
     else if(module==ID_not)
@@ -1180,7 +1180,7 @@ void verilog_synthesist::synth_module_instance_builtin(
         equal_exprt constraint{op, instance.operands().back()};
 
         assert(trans.operands().size()==3);
-        trans.invar().move_to_operands(constraint);
+        trans.invar().add_to_operands(std::move(constraint));
       }
     }
     else if(module=="tranif0" ||
@@ -1196,7 +1196,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
-      trans.invar().move_to_operands(constraint);
+      trans.invar().add_to_operands(std::move(constraint));
     }
     else if(module=="tran"  ||
             module=="rtran")
@@ -1209,7 +1209,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.set(ID_module, module);
     
       assert(trans.operands().size()==3);
-      trans.invar().move_to_operands(constraint);
+      trans.invar().add_to_operands(std::move(constraint));
     }
     else
     {
@@ -1317,7 +1317,7 @@ void verilog_synthesist::expand_module_instance(
     replace_symbols(replace_map, tmp);
 
     for(unsigned i=0; i<3; i++)
-      trans.operands()[i].move_to_operands(tmp.operands()[i]);
+      trans.operands()[i].add_to_operands(std::move(tmp.operands()[i]));
   }
 
   instantiate_ports(instance, op, symbol, replace_map, trans);
@@ -1985,7 +1985,7 @@ void verilog_synthesist::synth_case(
 
     if_statement.op1()=e.op1();
 
-    last_if->move_to_operands(if_statement);
+    last_if->add_to_operands(std::move(if_statement));
     last_if=&last_if->operands().back();
   }
 
@@ -2681,7 +2681,7 @@ void verilog_synthesist::synth_assignments(
 
   equal_exprt equality_expr{symbol_expr(symbol, curr_or_next), new_value};
 
-  constraints.move_to_operands(equality_expr);
+  constraints.add_to_operands(std::move(equality_expr));
 }
 
 /*******************************************************************\
