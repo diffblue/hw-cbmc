@@ -1091,8 +1091,8 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
       exprt &condition=it->op0();
       exprt &value=it->op1();
 
-      expr.move_to_operands(condition);
-      expr.move_to_operands(value);
+      expr.add_to_operands(std::move(condition));
+      expr.add_to_operands(std::move(value));
     }
 
     expr.id(ID_cond);

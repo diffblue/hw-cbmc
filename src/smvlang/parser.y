@@ -25,7 +25,7 @@ extern char *yytext;
 
 /*------------------------------------------------------------------------*/
 
-#define mto(x, y) stack_expr(x).move_to_operands(stack_expr(y))
+#define mto(x, y) stack_expr(x).add_to_operands(std::move(stack_expr(y)))
 
   /*******************************************************************\
 
