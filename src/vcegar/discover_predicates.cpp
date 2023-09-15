@@ -185,8 +185,8 @@ void gen_lhs_eq_rhs_preds(const std::set<exprt> &lhs_assignment,
        exprt new_definition_expr(*it2);
        
        exprt new_predicate("=", typet("bool"));
-       new_predicate.copy_to_operands(new_variable_expr);
-       new_predicate.copy_to_operands(new_definition_expr);
+       new_predicate.add_to_operands(new_variable_expr);
+       new_predicate.add_to_operands(new_definition_expr);
        predicates.insert(new_predicate);
        
     }

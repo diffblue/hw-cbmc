@@ -103,19 +103,17 @@ bool simulatort::check_spurious_using_bmc
 
      std::list<exprt> properties;
 
-     
-     if (!cmdline.isset("claim"))
-       {
-	 exprt new_property("AG");
-	 new_property.copy_to_operands(spec_property);
-	 properties.push_back(new_property); 
-       }
+     if(!cmdline.isset("claim"))
+     {
+       exprt new_property("AG");
+       new_property.add_to_operands(spec_property);
+       properties.push_back(new_property);
+     }
      else
-       {
-	 exprt new_property(spec_property);
-	 properties.push_back(new_property); 
-       }
-
+     {
+       exprt new_property(spec_property);
+       properties.push_back(new_property);
+     }
 
      property(properties, 
 	      prop_bv, 

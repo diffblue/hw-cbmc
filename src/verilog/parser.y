@@ -167,13 +167,13 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
   else if(stack_expr(range).id()==ID_indexed_part_select_plus)
   {
     exprt offset=minus_exprt(stack_expr(range).op1(), from_integer(1, integer_typet{}));
-    stack_expr(expr).copy_to_operands(stack_expr(range).op0(),
+    stack_expr(expr).add_to_operands(stack_expr(range).op0(),
                                  plus_exprt(stack_expr(range).op0(), offset));
   }
   else if(stack_expr(range).id()==ID_indexed_part_select_minus)
   {
     exprt offset=minus_exprt(from_integer(1, integer_typet{}), stack_expr(range).op1());
-    stack_expr(expr).copy_to_operands(stack_expr(range).op0(),
+    stack_expr(expr).add_to_operands(stack_expr(range).op0(),
                                  plus_exprt(stack_expr(range).op0(), offset));
   }
   else
@@ -744,7 +744,7 @@ packed_dimension:
 		{ init($$, ID_array);
 		  stack_type($$).subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
-		  range.copy_to_operands(stack_expr($2), stack_expr($4)); }
+		  range.add_to_operands(stack_expr($2), stack_expr($4)); }
 	| unsized_dimension
 	;
 
@@ -753,7 +753,7 @@ unpacked_dimension:
 		{ init($$, ID_array);
 		  stack_type($$).subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
-		  range.copy_to_operands(stack_expr($2), stack_expr($4)); }
+		  range.add_to_operands(stack_expr($2), stack_expr($4)); }
 	| '[' expression ']'
 	{
 	  $$=$2;
@@ -2378,7 +2378,7 @@ cycle_delay_range:
         | "##" '[' number TOK_COLON number ']'
                 { init($$, ID_sva_cycle_delay); mto($$, $3); mto($$, $5); }
         | "##" '[' number TOK_COLON '$' ']'
-                { init($$, ID_sva_cycle_delay); mto($$, $3); stack_expr($$).copy_to_operands(exprt(ID_infinity)); }
+                { init($$, ID_sva_cycle_delay); mto($$, $3); stack_expr($$).add_to_operands(exprt(ID_infinity)); }
         ;
 
 unary_operator:
