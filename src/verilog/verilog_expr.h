@@ -36,13 +36,11 @@ extern inline hierarchical_identifier_exprt
   return static_cast<hierarchical_identifier_exprt &>(expr);
 }
 
-class function_call_exprt:public exprt
+class function_call_exprt : public binary_exprt
 {
 public:
-  function_call_exprt()
+  function_call_exprt() : binary_exprt(ID_function_call)
   {
-    id(ID_function_call);
-    operands().resize(2);
   }
 
   exprt &function() { return op0(); }
@@ -63,13 +61,15 @@ public:
 
 extern inline const function_call_exprt &to_function_call_expr(const exprt &expr)
 {
-  assert(expr.id()==ID_function_call && expr.operands().size()>=1);
+  PRECONDITION(expr.id() == ID_function_call);
+  binary_exprt::check(expr);
   return static_cast<const function_call_exprt &>(expr);
 }
 
 extern inline function_call_exprt &to_function_call_expr(exprt &expr)
 {
-  assert(expr.id()==ID_function_call && expr.operands().size()>=1);
+  PRECONDITION(expr.id() == ID_function_call);
+  binary_exprt::check(expr);
   return static_cast<function_call_exprt &>(expr);
 }
 
