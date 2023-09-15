@@ -229,7 +229,7 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       if(expr.op1().is_nil())
       {
         mp_integer offset;
-        if(to_integer(expr.op0(), offset))
+        if(to_integer_non_constant(expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
         current = old_current + offset.to_ulong();
@@ -239,8 +239,9 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       else
       {
         mp_integer from, to;
-        if(to_integer(expr.op0(), from) ||
-           to_integer(expr.op1(), to))
+        if(
+          to_integer_non_constant(expr.op0(), from) ||
+          to_integer_non_constant(expr.op1(), to))
           throw "failed to convert sva_cycle_delay offsets";
           
         // this is an 'or'

@@ -1097,7 +1097,7 @@ void verilog_typecheck_exprt::convert_const_expression(
     value=1;
   else if(tmp.is_false())
     value=0;
-  else if(to_integer(tmp, value))
+  else if(to_integer_non_constant(tmp, value))
   {
     error().source_location=expr.source_location();
     error() << "expected constant expression, but got `"
@@ -1194,7 +1194,7 @@ bool verilog_typecheck_exprt::is_const_expression(
     value=0;
     return true;
   }
-  else if(!to_integer(tmp, value))
+  else if(!to_integer_non_constant(tmp, value))
   {
     return true;
   }
@@ -1231,7 +1231,7 @@ void verilog_typecheck_exprt::typecast(
       source_locationt source_location=expr.source_location();
       mp_integer value;
 
-      if(to_integer(expr, value))
+      if(to_integer(to_constant_expr(expr), value))
       {
         error() << "failed to convert integer constant" << eom;
         throw 0;
@@ -1310,7 +1310,7 @@ void verilog_typecheck_exprt::typecast(
       else if(expr.is_constant())
       {
         mp_integer i;
-        if(to_integer(expr, i))
+        if(to_integer(to_constant_expr(expr), i))
           expr = typecast_exprt{expr, dest_type};
         else
           expr=from_integer(i, dest_type);
@@ -1356,7 +1356,7 @@ void verilog_typecheck_exprt::make_boolean(exprt &expr)
   if(expr.type().id()!=ID_bool)
   {
     mp_integer value;
-    if(!to_integer(expr, value))
+    if(!to_integer_non_constant(expr, value))
       expr = make_boolean_expr(value != 0);
     else
       expr = typecast_exprt{expr, bool_typet{}};
@@ -1614,7 +1614,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
     if(_index_type!=op1.type())
     {
       mp_integer i;
-      if(!to_integer(op1, i))
+      if(!to_integer_non_constant(op1, i))
         op1=from_integer(i, _index_type);
       else if(op1.is_true() || op1.is_false())
         op1=from_integer(op1.is_true()?1:0, _index_type);

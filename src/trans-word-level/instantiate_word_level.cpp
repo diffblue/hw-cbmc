@@ -153,7 +153,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       if(expr.op1().is_nil())
       {
         mp_integer offset;
-        if(to_integer(expr.op0(), offset))
+        if(to_integer_non_constant(expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
         current = save_current.saved + offset.to_ulong();
@@ -169,8 +169,8 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       else
       {
         mp_integer from, to;
-        
-        if(to_integer(expr.op0(), from))
+
+        if(to_integer_non_constant(expr.op0(), from))
           throw "failed to convert sva_cycle_delay offsets";
           
         if(expr.op1().id()==ID_infinity)
@@ -178,7 +178,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
           assert(no_timeframes!=0);
           to=no_timeframes-1;
         }
-        else if(to_integer(expr.op1(), to))
+        else if(to_integer_non_constant(expr.op1(), to))
           throw "failed to convert sva_cycle_delay offsets";
           
         // This is an 'or', and we let it fail if the bound is too small.

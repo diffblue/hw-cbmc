@@ -470,7 +470,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     assert(expr.operands().size()==2);
 
     mp_integer i;
-    if(!to_integer(expr.op1(), i)) // constant?
+    if(!to_integer_non_constant(expr.op1(), i)) // constant?
     {
       from = i.to_ulong();
       convert_lhs_rec(expr.op0(), from, from, prop);
@@ -483,8 +483,9 @@ void convert_trans_to_netlistt::convert_lhs_rec(
 
     assert(expr.operands().size()==3);
 
-    if(!to_integer(expr.op1(), new_from) &&
-       !to_integer(expr.op2(), new_to))
+    if(
+      !to_integer_non_constant(expr.op1(), new_from) &&
+      !to_integer_non_constant(expr.op2(), new_to))
     {
       if(new_from>new_to) std::swap(new_from, new_to);
     
@@ -647,7 +648,7 @@ void convert_trans_to_netlistt::add_equality_rec(
     assert(lhs_to==lhs_from);
 
     mp_integer i;
-    if(to_integer(lhs.op1(), i))
+    if(to_integer_non_constant(lhs.op1(), i))
       assert(false);
 
     lhs_from = lhs_from + i.to_ulong();
@@ -659,10 +660,10 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     assert(lhs.operands().size()==3);
 
-    if(to_integer(lhs.op1(), op1))
+    if(to_integer_non_constant(lhs.op1(), op1))
       throw std::string("failed to convert extractbits op1");
-    
-    if(to_integer(lhs.op2(), op2))
+
+    if(to_integer_non_constant(lhs.op2(), op2))
       throw std::string("failed to convert extractbits op2");
     
     if(op1<op2)

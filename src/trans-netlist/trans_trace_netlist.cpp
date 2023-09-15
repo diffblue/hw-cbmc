@@ -65,7 +65,7 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
     const array_typet &array_type=to_array_type(type);
     value_expr=exprt(ID_array, array_type);
     mp_integer size;
-    to_integer(array_type.size(), size);
+    to_integer_non_constant(array_type.size(), size);
     std::size_t size_int = size.to_ulong();
     value_expr.operands().resize(size_int);
     std::size_t op_width=src.size()/size_int;

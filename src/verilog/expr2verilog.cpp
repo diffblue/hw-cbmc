@@ -736,7 +736,7 @@ std::string expr2verilogt::convert_constant(
     unsigned width=to_bitvector_type(type).get_width();
   
     mp_integer i;
-    to_integer(binary_to_hex(src), i);
+    to_integer_non_constant(binary_to_hex(src), i);
 
     if(i>=256)
       dest="'h"+integer2string(i, 16);

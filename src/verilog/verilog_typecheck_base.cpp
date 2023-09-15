@@ -126,7 +126,7 @@ mp_integer verilog_typecheck_baset::array_size(const typet &type)
     throw 0;
   }
 
-  if(to_integer(to_array_type(type).size(), size))
+  if(to_integer_non_constant(to_array_type(type).size(), size))
   {
     error() << "failed to get array size of array type" << eom;
     throw 0;
@@ -151,7 +151,8 @@ mp_integer verilog_typecheck_baset::array_offset(const typet &type)
 {
   mp_integer offset;
 
-  if(to_integer(static_cast<const exprt &>(type.find(ID_offset)), offset))
+  if(to_integer_non_constant(
+       static_cast<const exprt &>(type.find(ID_offset)), offset))
   {
     error() << "failed to get array offset of type `"
             << type.id() << '\'' << eom;
