@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <cstring>
 
 #include <util/ebmc_util.h>
+#include <util/mathematical_types.h>
 #include <util/std_expr.h>
 #include <util/c_types.h>
 

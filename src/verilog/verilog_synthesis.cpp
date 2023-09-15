@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/identifier.h>
+#include <util/mathematical_types.h>
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
