@@ -1292,7 +1292,7 @@ void verilog_typecheck_exprt::typecast(
         const std::string &value=expr.get_string(ID_value);
         // least significant bit is last
         assert(value.size()!=0);
-        expr.make_bool(value[value.size()-1]=='1');
+        expr = make_boolean_expr(value[value.size() - 1] == '1');
         return;
       }
 
@@ -1357,7 +1357,7 @@ void verilog_typecheck_exprt::make_boolean(exprt &expr)
   {
     mp_integer value;
     if(!to_integer(expr, value))
-      expr.make_bool(value!=0);
+      expr = make_boolean_expr(value != 0);
     else
       expr = typecast_exprt{expr, bool_typet{}};
   }
