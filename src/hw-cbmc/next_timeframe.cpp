@@ -45,7 +45,7 @@ void add_next_timeframe(
   const plus_exprt plus_expr(
     timeframe_expr, from_integer(1, index_type()), index_type());
   
-  const code_assignt assignment_increase(timeframe_expr, plus_expr);
+  const code_frontend_assignt assignment_increase(timeframe_expr, plus_expr);
   
   code_blockt block;
   block.add(assignment_increase);
@@ -79,7 +79,7 @@ void add_next_timeframe(
 
     CHECK_RETURN(
       member_expr1.compound().type() == member_expr2.compound().type());
-    const code_assignt member_assignment(member_expr1, member_expr2);
+    const code_frontend_assignt member_assignment(member_expr1, member_expr2);
     block.add(member_assignment);
   }
 
@@ -87,6 +87,6 @@ void add_next_timeframe(
   symbol.value=block;
 
   // hide and inline
-  symbol.type.set(ID_C_hide, true);
+  //symbol.type.set(ID_C_hide, true);
   symbol.type.set(ID_C_inlined, true);
 }
