@@ -6,7 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/base_type.h>
 #include <util/c_types.h>
 #include <util/config.h>
 #include <util/ebmc_util.h>
@@ -249,7 +248,7 @@ bool map_varst::array_types_eq(
     return array_types_eq(to_array_type(s1), to_array_type(s2), error_msg);
 
   // we are strict: the subtype needs to be identical
-  if(!base_type_eq(s1, s2, ns))
+  if(s1 != s2)
   {
     error_msg = "array subtypes differ (E2)";
     return true;
@@ -285,7 +284,7 @@ bool map_varst::check_types_rec(
     return check_types_rec(type1, ns.follow(type2), error_msg);
 
   // type is the same?
-  if(base_type_eq(type1, type2, ns))
+  if(type1 == type2)
     return false;
 
   // anything between integral types is fine
