@@ -18,15 +18,18 @@ Author: Daniel Kroening, kroening@kroening.com
 class gen_interfacet
 {
 public:
-  gen_interfacet(const symbol_tablet &_symbol_table,
-                 std::ostream &_out,
-                 std::ostream &_err):
-    symbol_table(_symbol_table), out(_out), err(_err) { }
+  gen_interfacet(
+    const symbol_table_baset &_symbol_table,
+    std::ostream &_out,
+    std::ostream &_err)
+    : symbol_table(_symbol_table), out(_out), err(_err)
+  {
+  }
 
   void gen_interface(const symbolt &top_module, bool have_bound);
 
 protected:
-  const symbol_tablet &symbol_table;
+  const symbol_table_baset &symbol_table;
   std::ostream &out, &err;
 
   std::set<irep_idt> modules_done;
@@ -57,7 +60,7 @@ Function: gen_interfacet::lookup
 
 const symbolt &gen_interfacet::lookup(const irep_idt &identifier)
 {
-  symbol_tablet::symbolst::const_iterator it=
+  symbol_table_baset::symbolst::const_iterator it =
     symbol_table.symbols.find(identifier);
 
   if(it==symbol_table.symbols.end())
@@ -342,7 +345,7 @@ Function: gen_interfacet::gen_interface
 \*******************************************************************/
 
 void gen_interface(
-  const symbol_tablet &symbol_table,
+  const symbol_table_baset &symbol_table,
   const symbolt &top_module,
   bool have_bound,
   std::ostream &out,

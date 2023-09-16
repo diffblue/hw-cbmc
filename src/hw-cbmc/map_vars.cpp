@@ -62,17 +62,21 @@ void instantiate_symbol(exprt &expr, unsigned timeframe)
 class map_varst:public messaget
 {
 public:
-  map_varst(symbol_tablet &_symbol_table, std::list<exprt> &_constraints,
-            message_handlert &_message, unsigned _no_timeframes):
-    messaget(_message),
-    symbol_table(_symbol_table), constraints(_constraints),
-    no_timeframes(_no_timeframes)
+  map_varst(
+    symbol_table_baset &_symbol_table,
+    std::list<exprt> &_constraints,
+    message_handlert &_message,
+    unsigned _no_timeframes)
+    : messaget(_message),
+      symbol_table(_symbol_table),
+      constraints(_constraints),
+      no_timeframes(_no_timeframes)
   { }
 
   void map_vars(const irep_idt &top_module);
   
 protected:
-  symbol_tablet &symbol_table;
+  symbol_table_baset &symbol_table;
   std::list<exprt> &constraints;
   unsigned no_timeframes;
   std::set<irep_idt> top_level_inputs;
@@ -533,9 +537,9 @@ void map_varst::map_var_rec(
     bool module_instance=ns.follow(c_it->type()).id()==ID_struct;
     
     irep_idt full_name=id2string(prefix)+"."+id2string(base_name);
-    
-    const symbol_tablet::symbolst::const_iterator
-      sub_symbol_it=symbol_table.symbols.find(full_name);
+
+    const symbol_table_baset::symbolst::const_iterator sub_symbol_it =
+      symbol_table.symbols.find(full_name);
 
     if(sub_symbol_it==symbol_table.symbols.end())
     {
@@ -750,9 +754,13 @@ Function: map_vars
 
 \*******************************************************************/
 
-void map_vars(symbol_tablet &symbol_table, const irep_idt &module,
-              std::list<exprt> &constraints, message_handlert &message,
-              unsigned no_timeframes) {
+void map_vars(
+  symbol_table_baset &symbol_table,
+  const irep_idt &module,
+  std::list<exprt> &constraints,
+  message_handlert &message,
+  unsigned no_timeframes)
+{
   map_varst map_vars(symbol_table, constraints, message, no_timeframes);
   map_vars.map_vars(module);
 }

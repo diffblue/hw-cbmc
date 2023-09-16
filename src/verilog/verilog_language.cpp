@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <sstream>
 
 #include <util/suffix.h>
+#include <util/symbol_table.h>
 
 #include "verilog_language.h"
 #include "verilog_typecheck.h"

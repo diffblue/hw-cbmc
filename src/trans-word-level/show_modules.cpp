@@ -27,7 +27,7 @@ Function: show_modules
 \*******************************************************************/
 
 void show_modules(
-  const symbol_tablet &symbol_table,
+  const symbol_table_baset &symbol_table,
   ui_message_handlert::uit ui)
 {
   unsigned count=0;

@@ -8,9 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "vhdl_std_packages.h"
 
-bool vhdl_std_packages(
-  symbol_tablet &,
-  message_handlert &)
+bool vhdl_std_packages(symbol_table_baset &, message_handlert &)
 {
   return false;
 }

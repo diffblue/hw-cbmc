@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/symbol_table.h>
 #include <util/message.h>
+#include <util/symbol_table.h>
 
 void load_vhdl_library(
   const irep_idt &name,

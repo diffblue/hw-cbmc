@@ -828,7 +828,7 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
       const irep_idt &identifier=e->get(ID_identifier);
 
-      symbol_tablet::symbolst::const_iterator it=
+      symbol_table_baset::symbolst::const_iterator it =
         symbol_table.symbols.find(identifier);
 
       if(it==symbol_table.symbols.end())
@@ -3015,7 +3015,7 @@ Function: verilog_synthesis
 \*******************************************************************/
 
 bool verilog_synthesis(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const irep_idt &module,
   message_handlert &message_handler,
   const optionst &options)

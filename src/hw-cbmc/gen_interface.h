@@ -11,10 +11,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ostream>
 
-#include <util/symbol_table.h>
+#include <util/symbol_table_base.h>
 
 void gen_interface(
-  const symbol_tablet &symbol_table,
+  const symbol_table_baset &,
   const symbolt &top_module,
   bool have_bound,
   std::ostream &out,

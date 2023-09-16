@@ -9,16 +9,16 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_VAR_MAP_H
 #define CPROVER_TRANS_VAR_MAP_H
 
+#include "bv_varid.h"
+
+#include <solvers/prop/prop.h>
+
+#include <util/type.h>
+
 #include <map>
 #include <set>
 #include <vector>
 #include <string>
-
-#include <util/symbol_table.h>
-
-#include <solvers/prop/prop.h>
-
-#include "bv_varid.h"
 
 class var_mapt
 {

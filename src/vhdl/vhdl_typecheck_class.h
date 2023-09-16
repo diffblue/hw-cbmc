@@ -30,13 +30,13 @@ public:
   vhdl_typecheckt(
     const vhdl_parse_treet &_parse_tree,
     const irep_idt &_module_name,
-    symbol_tablet &_symbol_table,
-    message_handlert &_message_handler):
-    messaget(_message_handler),
-    ns(_symbol_table),
-    parse_tree(_parse_tree),
-    module_name(_module_name),
-    symbol_table(_symbol_table)
+    symbol_table_baset &_symbol_table,
+    message_handlert &_message_handler)
+    : messaget(_message_handler),
+      ns(_symbol_table),
+      parse_tree(_parse_tree),
+      module_name(_module_name),
+      symbol_table(_symbol_table)
   {
   }
 
@@ -47,8 +47,8 @@ protected:
   const vhdl_parse_treet &parse_tree;
   const irep_idt &module_name;
   symbolt *module_symbol;
-  symbol_tablet &symbol_table;
-  
+  symbol_table_baset &symbol_table;
+
   void typecheck_architecture(
     const vhdl_parse_treet::itemt &);
   

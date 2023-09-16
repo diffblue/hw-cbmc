@@ -9,10 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHECK_H
 #define CPROVER_VERILOG_TYPECHECK_H
 
-#include <util/symbol_table.h>
-#include <util/typecheck.h>
 #include <util/mp_arith.h>
 #include <util/replace_expr.h>
+#include <util/symbol_table_base.h>
+#include <util/typecheck.h>
 
 #include "verilog_typecheck_expr.h"
 #include "verilog_parse_tree.h"
@@ -20,17 +20,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
-  symbol_tablet &symbol_table,
+  symbol_table_baset &,
   const std::string &module,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &,
   const verilog_modulet &verilog_module,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &,
   const std::string &module_identifier,
   const exprt::operandst &parameters,
   message_handlert &message_handler);
@@ -54,13 +54,13 @@ class verilog_typecheckt:
 public:
   verilog_typecheckt(
     symbolt &_module_symbol,
-    symbol_tablet &_symbol_table,
-    message_handlert &_message_handler):
-    verilog_typecheck_exprt(ns, _message_handler),
-    verilog_symbol_tablet(_symbol_table),
-    ns(_symbol_table),
-    module_symbol(_module_symbol),
-    assertion_counter(0)
+    symbol_table_baset &_symbol_table,
+    message_handlert &_message_handler)
+    : verilog_typecheck_exprt(ns, _message_handler),
+      verilog_symbol_tablet(_symbol_table),
+      ns(_symbol_table),
+      module_symbol(_module_symbol),
+      assertion_counter(0)
   {}
 
   void typecheck() override;

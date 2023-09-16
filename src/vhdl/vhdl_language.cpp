@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/suffix.h>
+#include <util/symbol_table.h>
 
 #include "vhdl_language.h"
 #include "vhdl_typecheck.h"

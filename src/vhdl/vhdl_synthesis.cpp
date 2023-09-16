@@ -182,7 +182,7 @@ Function: vhdl_synthesis
 \*******************************************************************/
 
 bool vhdl_synthesis(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const irep_idt &module,
   message_handlert &message_handler)
 {

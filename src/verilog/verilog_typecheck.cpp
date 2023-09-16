@@ -1637,7 +1637,7 @@ Function: verilog_typecheck
 
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module,
   message_handlert &message_handler)
 {
@@ -1670,7 +1670,7 @@ Function: verilog_typecheck
 \*******************************************************************/
 
 bool verilog_typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const verilog_modulet &verilog_module,
   message_handlert &message_handler)
 {
