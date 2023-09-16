@@ -946,12 +946,8 @@ void verilog_synthesist::instantiate_port(
     throw 0;
   }
 
-  equal_exprt equality(it->second, value);
-
-  if(equality.op0().type()!=equality.op1().type())
-    equality.op0() = typecast_exprt{equality.op0(), equality.op1().type()};
-
-  trans.invar().add_to_operands(std::move(equality));
+  trans.invar().add_to_operands(equal_exprt(
+    typecast_exprt::conditional_cast(it->second, value.type()), value));
 }
 
 /*******************************************************************\
