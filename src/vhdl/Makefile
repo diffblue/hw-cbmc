@@ -32,7 +32,7 @@ vhdl_lex.yy$(OBJEXT): vhdl_y.tab.cpp vhdl_lex.yy.cpp vhdl_y.tab.h
 # libraries
 
 library_standard.inc: libraries/standard.vhdl
-	$(CPROVER_DIR)/ansi-c/file_converter$(EXEEXT) < $< > $@
+	$(CPROVER_DIR)/ansi-c/file_converter$(EXEEXT) $< > $@
 
 vhdl_libraries.cpp: library_standard.inc
 
