@@ -39,7 +39,6 @@ jobs:
         run: ccache -z --max-size=500M
       - name: Get minisat
         run: |
-          sudo apt-get install libwww-perl
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make -C src -j2 CXX="ccache g++"
@@ -87,7 +86,6 @@ jobs:
         run: ccache -z --max-size=500M
       - name: Get minisat
         run: |
-          sudo apt-get install libwww-perl
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: |
