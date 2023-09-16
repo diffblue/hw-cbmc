@@ -54,8 +54,8 @@ jobs:
   check-ubuntu-20_04-make-clang:
     runs-on: ubuntu-20.04
     env:
-      CC: "ccache /usr/bin/clang"
-      CXX: "ccache /usr/bin/clang++ -Wno-unknown-warning-option -Wno-range-loop-construct"
+      CC: "ccache clang"
+      CXX: "ccache clang++"
     steps:
       - uses: actions/checkout@v3
         with:
@@ -91,7 +91,10 @@ jobs:
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: |
-          # expected to fail now
-          # make -C src -j2
+          make CXX="ccache clang++" -C src -j2
+      - name: Run the ebmc tests
+        run: make -C regression/ebmc test
+      - name: Run the verilog tests
+        run: make -C regression/verilog test
       - name: Print ccache stats
         run: ccache -s
