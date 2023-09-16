@@ -13,9 +13,9 @@ Date: June 2003
 
 #include <sstream>
 
-#include <util/message.h>
-#include <util/symbol_table.h>
 #include <util/expr.h>
+#include <util/message.h>
+#include <util/symbol_table_base.h>
 
 #include <verilog/expr2verilog.h>
 #include <trans-netlist/var_map.h>

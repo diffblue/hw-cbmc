@@ -143,9 +143,9 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
       id2string(module_symbol->name)+"."+
       id2string(to_lower_identifier);
 
-    symbol_tablet::symbolst::const_iterator s_it=
+    symbol_table_baset::symbolst::const_iterator s_it =
       symbol_table.symbols.find(full_identifier);
-    
+
     if(s_it==symbol_table.symbols.end())
     {
       error() << "symbol `" << identifier << "' not found"
@@ -478,7 +478,7 @@ Function: vhdl_typecheck
 
 bool vhdl_typecheck(
   const vhdl_parse_treet &parse_tree,
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module,
   message_handlert &message_handler)
 {

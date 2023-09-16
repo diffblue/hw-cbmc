@@ -30,20 +30,20 @@ class convert_trans_to_netlistt:public messaget
 {
 public:
   convert_trans_to_netlistt(
-    symbol_tablet &_symbol_table,
+    symbol_table_baset &_symbol_table,
     netlistt &_dest,
-    message_handlert &_message_handler):
-    messaget(_message_handler),
-    symbol_table(_symbol_table),
-    ns(_symbol_table),
-    dest(_dest)
+    message_handlert &_message_handler)
+    : messaget(_message_handler),
+      symbol_table(_symbol_table),
+      ns(_symbol_table),
+      dest(_dest)
   {
   }
 
   void operator()(const irep_idt &module);
   
 protected:
-  symbol_tablet &symbol_table;
+  symbol_table_baset &symbol_table;
   const namespacet ns;
   netlistt &dest;
   
@@ -718,7 +718,7 @@ Function: convert_trans_to_netlist
 \*******************************************************************/
 
 void convert_trans_to_netlist(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const irep_idt &module,
   netlistt &dest,
   message_handlert &message_handler)

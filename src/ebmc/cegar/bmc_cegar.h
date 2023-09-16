@@ -17,22 +17,22 @@ class bmc_cegart:public messaget
 {
 public:
   bmc_cegart(
-    symbol_tablet &_symbol_table,
+    symbol_table_baset &_symbol_table,
     const irep_idt &_main_module,
     message_handlert &_message_handler,
-    const std::list<exprt> &_properties):
-    messaget(_message_handler),
-    symbol_table(_symbol_table),
-    ns(_symbol_table),
-    main_module(_main_module),
-    properties(_properties)
+    const std::list<exprt> &_properties)
+    : messaget(_message_handler),
+      symbol_table(_symbol_table),
+      ns(_symbol_table),
+      main_module(_main_module),
+      properties(_properties)
   {
   }
 
   void bmc_cegar();
   
 protected:
-  symbol_tablet &symbol_table;
+  symbol_table_baset &symbol_table;
   const namespacet ns;
   const irep_idt &main_module;
   const std::list<exprt> &properties;

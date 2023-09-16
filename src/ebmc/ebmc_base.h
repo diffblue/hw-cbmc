@@ -11,18 +11,19 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <fstream>
 
-#include <util/cmdline.h>
-#include <util/mathematical_expr.h>
-#include <util/message.h>
-#include <util/std_expr.h>
-#include <util/ui_message.h>
-
 #include <langapi/language_file.h>
 #include <solvers/prop/prop_conv_solver.h>
 #include <solvers/sat/cnf.h>
 #include <trans-netlist/bmc_map.h>
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_trace.h>
+
+#include <util/cmdline.h>
+#include <util/mathematical_expr.h>
+#include <util/message.h>
+#include <util/std_expr.h>
+#include <util/symbol_table.h>
+#include <util/ui_message.h>
 
 class ebmc_baset : public messaget {
 public:

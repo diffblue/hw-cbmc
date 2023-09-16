@@ -14,8 +14,8 @@ Date: July 2004
 #define CPROVER_NETWORK_INFO_H
 
 #include <util/message.h>
-#include <util/symbol_table.h>
 #include <util/namespace.h>
+#include <util/symbol_table_base.h>
 
 #include <trans-netlist/var_map.h>
 #include <verilog/expr2verilog.h>
@@ -33,7 +33,7 @@ class network_infot
   next_state_function_cachet next_state_function_cache;
  
   const var_mapt &var_map;
-  const symbol_tablet &symbol_table;
+  const symbol_table_baset &symbol_table;
 
   void create_network (const exprt& general_constrains,
 		       std::vector<std::set<irep_idt> > &vector_symbolsets,
@@ -87,15 +87,14 @@ class network_infot
  
 
  public:
-  
-  network_infot(const exprt& constraints, 
-		const exprt& trans, 
-		const var_mapt& _var_map,
-		const symbol_tablet& _symbol_table):
-    var_map(_var_map),
-    symbol_table (_symbol_table)
-    { 
-      create (constraints, trans, var_map);
+   network_infot(
+     const exprt &constraints,
+     const exprt &trans,
+     const var_mapt &_var_map,
+     const symbol_table_baset &_symbol_table)
+     : var_map(_var_map), symbol_table(_symbol_table)
+   {
+     create(constraints, trans, var_map);
     }
   
   ~network_infot() { }

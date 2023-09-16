@@ -40,17 +40,17 @@ class verilog_synthesist:
 {
 public:
   verilog_synthesist(
-    symbol_tablet &_symbol_table,
+    symbol_table_baset &_symbol_table,
     const irep_idt &_module,
     const optionst &_options,
-    message_handlert &_message_handler):
-    verilog_typecheck_baset(ns, _message_handler),
-    verilog_symbol_tablet(_symbol_table),
-    ns(_symbol_table),
-    options(_options),
-    value_map(NULL),
-    module(_module),
-    temporary_counter(0)
+    message_handlert &_message_handler)
+    : verilog_typecheck_baset(ns, _message_handler),
+      verilog_symbol_tablet(_symbol_table),
+      ns(_symbol_table),
+      options(_options),
+      value_map(NULL),
+      module(_module),
+      temporary_counter(0)
   {
   }
 

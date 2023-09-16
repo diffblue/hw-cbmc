@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "smv_parser.h"
 #include "expr2smv.h"
 
+#include <util/symbol_table.h>
+
 /*******************************************************************\
 
 Function: smv_languaget::parse

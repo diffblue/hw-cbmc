@@ -24,15 +24,15 @@ class smv_typecheckt:public typecheckt
 public:
   smv_typecheckt(
     smv_parse_treet &_smv_parse_tree,
-    symbol_tablet &_symbol_table,
+    symbol_table_baset &_symbol_table,
     const std::string &_module,
     bool _do_spec,
-    message_handlert &_message_handler):
-    typecheckt(_message_handler),
-    smv_parse_tree(_smv_parse_tree),
-    symbol_table(_symbol_table),
-    module(_module),
-    do_spec(_do_spec)
+    message_handlert &_message_handler)
+    : typecheckt(_message_handler),
+      smv_parse_tree(_smv_parse_tree),
+      symbol_table(_symbol_table),
+      module(_module),
+      do_spec(_do_spec)
   {
     nondet_count=0;
   }
@@ -63,7 +63,7 @@ public:
 
 protected:
   smv_parse_treet &smv_parse_tree;
-  symbol_tablet &symbol_table;
+  symbol_table_baset &symbol_table;
   const std::string &module;
   bool do_spec;
 
@@ -270,7 +270,7 @@ void smv_typecheckt::instantiate(
   const exprt::operandst &operands,
   const source_locationt &location)
 {
-  symbol_tablet::symbolst::const_iterator s_it=
+  symbol_table_baset::symbolst::const_iterator s_it =
     symbol_table.symbols.find(identifier);
 
   if(s_it==symbol_table.symbols.end())
@@ -324,7 +324,7 @@ void smv_typecheckt::instantiate(
       v_it!=symbol_table.symbol_module_map.upper_bound(identifier);
       v_it++)
   {
-    symbol_tablet::symbolst::const_iterator s_it2=
+    symbol_table_baset::symbolst::const_iterator s_it2 =
       symbol_table.symbols.find(v_it->second);
 
     if(s_it2==symbol_table.symbols.end())
@@ -1497,7 +1497,7 @@ Function: smv_typecheck
 
 bool smv_typecheck(
   smv_parse_treet &smv_parse_tree,
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module,
   message_handlert &message_handler,
   bool do_spec)

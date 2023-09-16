@@ -9,9 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_TRACE_H
 #define CPROVER_TRANS_TRACE_H
 
-#include <util/ui_message.h>
-#include <util/threeval.h>
+#include <util/expr.h>
 #include <util/namespace.h>
+#include <util/threeval.h>
+#include <util/ui_message.h>
 
 class trans_tracet
 {
