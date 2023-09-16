@@ -1056,9 +1056,7 @@ bool ebmc_baset::parse(const std::string &filename) {
 bool ebmc_baset::typecheck() {
   status() << "Converting" << eom;
 
-  language_files.set_message_handler(*message_handler);
-
-  if (language_files.typecheck(symbol_table)) {
+  if (language_files.typecheck(symbol_table, *message_handler)) {
     error() << "CONVERSION ERROR" << eom;
     return true;
   }
