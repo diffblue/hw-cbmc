@@ -50,35 +50,35 @@ exprt negate_property(const exprt &expr)
     binary_exprt result=to_binary_expr(expr);
     result.id(ID_and);
     result.op1()=negate_property(result.op1());
-    return result;
+    return std::move(result);
   }
   else if(expr.id()==ID_AG)
   {
     unary_exprt result=to_unary_expr(expr);
     result.id(ID_EF);
     result.op()=negate_property(result.op());
-    return result;
+    return std::move(result);
   }
   else if(expr.id()==ID_sva_always)
   {
     unary_exprt result=to_unary_expr(expr);
     result.id(ID_sva_eventually);
     result.op()=negate_property(result.op());
-    return result;
+    return std::move(result);
   }
   else if(expr.id()==ID_AF)
   {
     unary_exprt result=to_unary_expr(expr);
     result.id(ID_EG);
     result.op()=negate_property(result.op());
-    return result;
+    return std::move(result);
   }
   else if(expr.id()==ID_sva_eventually)
   {
     unary_exprt result=to_unary_expr(expr);
     result.id(ID_sva_always);
     result.op()=negate_property(result.op());
-    return result;
+    return std::move(result);
   }
   else if(expr.id()==ID_sva_non_overlapped_implication)
   {
@@ -87,13 +87,13 @@ exprt negate_property(const exprt &expr)
     unary_predicate_exprt next(ID_sva_nexttime, expr.op1());
     binary_exprt result=to_binary_expr(expr);
     result.op1()=negate_property(next);
-    return result;
+    return std::move(result);
   }
   else if(expr.id()==ID_sva_nexttime)
   {
     unary_exprt result=to_unary_expr(expr);
     result.op()=negate_property(result.op());
-    return result;
+    return std::move(result);
   }
   else
     return not_exprt(expr);
