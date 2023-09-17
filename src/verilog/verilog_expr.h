@@ -17,10 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 /// is an identifier within that module.
 class hierarchical_identifier_exprt : public binary_exprt
 {
-public:
-  hierarchical_identifier_exprt() : binary_exprt(ID_hierarchical_identifier)
-  {
-  }
 };
 
 extern inline const hierarchical_identifier_exprt
@@ -42,10 +38,6 @@ extern inline hierarchical_identifier_exprt
 class function_call_exprt : public binary_exprt
 {
 public:
-  function_call_exprt() : binary_exprt(ID_function_call)
-  {
-  }
-
   exprt &function() { return op0(); }
   const exprt &function() const { return op0(); }
   
