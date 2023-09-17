@@ -266,10 +266,11 @@ static mp_integer vcd_width(
     return string2integer(type.get_string(ID_width));
   else if(type.id()==ID_array)
   {
-    mp_integer sub=vcd_width(type.subtype(), ns);
-  
+    auto &array_type = to_array_type(type);
+    mp_integer sub = vcd_width(array_type.subtype(), ns);
+
     // get size
-    const exprt &size=to_array_type(type).size();
+    const exprt &size = array_type.size();
 
     // constant?
     mp_integer i;
@@ -511,7 +512,8 @@ static std::string vcd_suffix(
   else if(type.id()==ID_array)
   {
     // get size
-    const exprt &size=to_array_type(type).size();
+    auto &array_type = to_array_type(type);
+    const exprt &size = array_type.size();
 
     // constant?
     mp_integer i;
@@ -523,8 +525,9 @@ static std::string vcd_suffix(
     left_bound=0;
     right_bound=left_bound+i-1;
 
-    return"["+integer2string(left_bound)+":"+integer2string(right_bound)+"]"+
-          vcd_suffix(type.subtype(), ns);
+    return "[" + integer2string(left_bound) + ":" +
+           integer2string(right_bound) + "]" +
+           vcd_suffix(array_type.subtype(), ns);
   }
   else if(type.id()==ID_bool)
     return "";

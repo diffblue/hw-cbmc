@@ -153,13 +153,13 @@ std::string gen_interfacet::type_to_string(const typet& type)
   }
   else if(type.id()==ID_array)
   {
-    const exprt &size_expr=
-      to_array_type(type).size();
- 
+    auto &array_type = to_array_type(type);
+    const exprt &size_expr = array_type.size();
+
     mp_integer size = 0;
     to_integer_non_constant(size_expr, size);
 
-    std::string stype_str = type_to_string(type.subtype());
+    std::string stype_str = type_to_string(array_type.subtype());
     std::string array_str = "[" + integer2string(size)+"]" ;
     std::string key_str = stype_str + array_str;
 

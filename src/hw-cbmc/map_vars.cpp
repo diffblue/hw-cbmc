@@ -298,7 +298,7 @@ bool map_varst::check_types_rec(
       return array_types_eq(to_array_type(type1), to_array_type(type2), error_msg);
 
     // bool-array is mapped to bit-vector
-    if(type1.subtype().id()!=ID_bool)
+    if(to_array_type(type1).subtype().id() != ID_bool)
     {
       error_msg = "type `" + from_type(ns, "", type1) +
                   "' does not match type `" + from_type(ns, "", type2) +
@@ -718,7 +718,9 @@ void map_varst::map_vars(const irep_idt &top_module)
     exprt timeframe_expr=from_integer(0, index_type());
 
     index_exprt expr(
-      symbol_expr, timeframe_expr, ns.follow(symbol_expr.type()).subtype());
+      symbol_expr,
+      timeframe_expr,
+      to_array_type(ns.follow(symbol_expr.type())).subtype());
 
     top_level_inputs.clear();
 
