@@ -44,9 +44,11 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
     mp_integer offset=little_endian?lsb:msb;
     
     // let's look at the subtype
-    const irept &subtype=
-      static_cast<const typet &>(src).subtype();
-    
+    const auto subtype =
+      static_cast<const typet &>(src).has_subtype()
+        ? static_cast<const type_with_subtypet &>(src).subtype()
+        : typet(ID_nil);
+
     if(subtype.is_nil() ||
        subtype.id()==ID_signed ||
        subtype.id()==ID_unsigned)

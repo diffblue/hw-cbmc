@@ -185,7 +185,7 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
 
   if(type.id()==ID_array)
   {
-    mp_integer subtype_width=get_width(type.subtype());
+    mp_integer subtype_width = get_width(to_array_type(type).subtype());
     return (array_size(type) * subtype_width).to_ulong();
   }
   

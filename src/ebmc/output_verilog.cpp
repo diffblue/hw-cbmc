@@ -534,7 +534,7 @@ std::string output_verilog_baset::type_string_base(const typet &type)
   }
   else if(type.id()==ID_array)
   {
-    return type_string_base(type.subtype());
+    return type_string_base(to_array_type(type).subtype());
   }
   else
   {
@@ -563,10 +563,11 @@ std::string output_verilog_baset::type_string_array(const typet &type)
 {
   if(type.id()==ID_array)
   {
+    auto &array_type = to_array_type(type);
     mp_integer size;
-    to_integer_non_constant(to_array_type(type).size(), size);
-    return type_string_array(type.subtype())+
-           " [0:"+integer2string(size)+']';
+    to_integer_non_constant(array_type.size(), size);
+    return type_string_array(array_type.subtype()) +
+           " [0:" + integer2string(size) + ']';
   }
 
   return "";

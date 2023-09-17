@@ -1111,13 +1111,14 @@ std::string expr2verilogt::convert(const typet &type)
   }
   else if(type.id()==ID_array)
   {
+    auto &array_type = to_array_type(type);
     std::string dest="array [";
-    
-    dest+=convert(to_array_type(type).size());
+
+    dest += convert(array_type.size());
 
     dest+="] of ";
-    dest+=convert(type.subtype());
-    
+    dest += convert(array_type.subtype());
+
     return dest;
   }
   else if(type.id()==ID_genvar)

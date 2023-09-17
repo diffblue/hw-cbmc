@@ -55,10 +55,12 @@ array_typet verilog_typecheckt::array_type(
     error().source_location=range.find_source_location();
     error() << "array size must be positive" << eom;
   }
-  
-  const typet src_subtype=
-    static_cast<const typet &>(src).subtype();
-  
+
+  const typet src_subtype =
+    static_cast<const typet &>(src).has_subtype()
+      ? static_cast<const type_with_subtypet &>(src).subtype()
+      : typet(ID_nil);
+
   typet array_subtype;
   
   // may need to go recursive
