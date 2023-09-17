@@ -281,7 +281,7 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
 
              stack_type($$).set(ID_size, end-start+1);
              stack_type($$).set(ID_offset, start);
-             stack_type($$).subtype()=stack_type($6);
+             stack_type($$).add_subtype()=stack_type($6);
            }
            | BOOLEAN_Token { init($$, ID_bool); }
            | '{' enum_list '}' { $$=$2; }

@@ -505,7 +505,7 @@ type:
        | TOK_ACCESS type
        {
          init($$, ID_reference);
-         stack_type($$).subtype()=stack_type($2);
+         stack_type($$).add_subtype()=stack_type($2);
        }
        | TOK_TYPE TOK_IDENTIFIER
        {

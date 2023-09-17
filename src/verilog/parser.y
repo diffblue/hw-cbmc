@@ -745,7 +745,7 @@ unpacked_dimension_brace:
 packed_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
 		{ init($$, ID_array);
-		  stack_type($$).subtype().make_nil();
+		  stack_type($$).add_subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
 		  range.add_to_operands(stack_expr($2));
 		  range.add_to_operands(stack_expr($4)); }
@@ -755,7 +755,7 @@ packed_dimension:
 unpacked_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
 		{ init($$, ID_array);
-		  stack_type($$).subtype().make_nil();
+		  stack_type($$).add_subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
 		  range.add_to_operands(stack_expr($2));
 		  range.add_to_operands(stack_expr($4)); }
