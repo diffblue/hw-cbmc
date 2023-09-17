@@ -147,7 +147,7 @@ Function: vhdl_languaget::typecheck
 \*******************************************************************/
 
 bool vhdl_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module)
 {
   if(module=="") return false;
@@ -179,8 +179,7 @@ Function: vhdl_languaget::interfaces
 
 \*******************************************************************/
 
-bool vhdl_languaget::interfaces(
-  symbol_tablet &symbol_table)
+bool vhdl_languaget::interfaces(symbol_table_baset &symbol_table)
 {
   return false;
 }

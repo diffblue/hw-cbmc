@@ -155,7 +155,7 @@ Function: verilog_languaget::typecheck
 \*******************************************************************/
 
 bool verilog_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module)
 {
   if(module=="") return false;
@@ -183,7 +183,7 @@ Function: verilog_languaget::interfaces
 
 \*******************************************************************/
 
-bool verilog_languaget::interfaces(symbol_tablet &symbol_table)
+bool verilog_languaget::interfaces(symbol_table_baset &)
 {
   return false;
 }

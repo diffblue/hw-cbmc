@@ -106,7 +106,7 @@ Function: aiger_languaget::typecheck
 \*******************************************************************/
 
 bool aiger_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module)
 {
   return true;
@@ -124,8 +124,7 @@ Function: aiger_languaget::interfaces
 
 \*******************************************************************/
 
-bool aiger_languaget::interfaces(
-  symbol_tablet &symbol_table)
+bool aiger_languaget::interfaces(symbol_table_baset &symbol_table)
 {
   return false;
 }

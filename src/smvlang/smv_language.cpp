@@ -117,7 +117,7 @@ Function: smv_languaget::typecheck
 \*******************************************************************/
 
 bool smv_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module)
 {
   return smv_typecheck(smv_parse_tree, symbol_table, module,
