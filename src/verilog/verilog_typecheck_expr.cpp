@@ -1621,7 +1621,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
         op1 = typecast_exprt{op1, _index_type};
     }
 
-    expr.type() = to_array_type(op0.type()).subtype();
+    expr.type() = to_array_type(op0.type()).element_type();
     expr.id(ID_index);
   }
   else

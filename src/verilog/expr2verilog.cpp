@@ -1120,7 +1120,7 @@ std::string expr2verilogt::convert(const typet &type)
     dest += convert(array_type.size());
 
     dest+="] of ";
-    dest += convert(array_type.subtype());
+    dest += convert(array_type.element_type());
 
     return dest;
   }
