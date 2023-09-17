@@ -412,10 +412,8 @@ void bdd_enginet::check_property(propertyt &property)
   if(property.expr.id()==ID_AG ||
      property.expr.id()==ID_sva_always)
   {
-    assert(property.expr.operands().size()==1);
-
     // recursive call
-    const exprt &sub_expr=property.expr.op0();
+    const exprt &sub_expr = to_unary_expr(property.expr).op();
     BDD p=property2BDD(sub_expr);
 
     // Start with !p, and go backwards until saturation or we hit an
@@ -535,8 +533,8 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
   else if(expr.id()==ID_implies ||
           expr.id()==ID_sva_overlapped_implication)
   {
-    assert(expr.operands().size()==2);
-    return (!property2BDD(expr.op0())) | property2BDD(expr.op1());
+    return (!property2BDD(to_binary_expr(expr).lhs())) |
+           property2BDD(to_binary_expr(expr).rhs());
   }
   else if(expr.id()==ID_and)
   {
@@ -554,18 +552,14 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
   }
   else if(expr.id()==ID_sva_non_overlapped_implication)
   {
-    assert(expr.operands().size()==2);
-    
     // use sva_nexttime for this
-    unary_predicate_exprt tmp(ID_sva_nexttime, expr.op1());
-    return (!property2BDD(expr.op0())) | property2BDD(tmp);
+    unary_predicate_exprt tmp(ID_sva_nexttime, to_binary_expr(expr).rhs());
+    return (!property2BDD(to_binary_expr(expr).lhs())) | property2BDD(tmp);
   }
   else if(expr.id()==ID_sva_nexttime)
   {
-    assert(expr.operands().size()==1);
-
     // recursive call
-    const exprt &sub_expr=expr.op0();
+    const exprt &sub_expr = to_unary_expr(expr).op();
     BDD p=property2BDD(sub_expr);
 
     // make 'p' be expressed in terms of 'next' variables
@@ -587,10 +581,8 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
   }
   else if(expr.id()==ID_sva_eventually)
   {
-    assert(expr.operands().size()==1);
-
     // recursive call
-    const exprt &sub_expr=expr.op0();
+    const exprt &sub_expr = to_unary_expr(expr).op();
     BDD p=property2BDD(sub_expr);
     BDD states=p;
     
@@ -626,10 +618,8 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
   else if(expr.id()==ID_AG ||
           expr.id()==ID_sva_always)
   {
-    assert(expr.operands().size()==1);
-
     // recursive call
-    const exprt &sub_expr=expr.op0();
+    const exprt &sub_expr = to_unary_expr(expr).op();
     BDD p=property2BDD(sub_expr);
     BDD states=p;
     

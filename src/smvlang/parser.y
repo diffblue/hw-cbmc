@@ -3,6 +3,7 @@
 #include "smv_typecheck.h"
 
 #include <util/mathematical_types.h>
+#include <util/std_expr.h>
 #include <util/std_types.h>
 
 #define YYSTYPE unsigned
@@ -372,10 +373,8 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
 
              if(stack_expr($1).id()=="next")
              {
-               exprt &op=stack_expr($$).op0();
-               exprt tmp("smv_next");
-               tmp.operands().resize(1);
-               tmp.op0().swap(op);
+               exprt &op=to_binary_expr(stack_expr($$)).op0();
+               unary_exprt tmp("smv_next", std::move(op));
                tmp.swap(op);
                PARSER.module->add_trans(stack_expr($$));
              }

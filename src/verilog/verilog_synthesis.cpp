@@ -95,11 +95,10 @@ void verilog_synthesist::synth_expr(
   }
   else if(expr.id()==ID_typecast)
   {
-    assert(expr.operands().size()==1);
-    synth_expr(expr.op0(), symbol_state);
+    synth_expr(to_typecast_expr(expr).op(), symbol_state);
 
     // we perform some form of simplification for these
-    if(expr.op0().is_constant())
+    if(to_typecast_expr(expr).op().is_constant())
       simplify(expr, ns);
   }
   else if(expr.has_operands())
@@ -283,7 +282,8 @@ void verilog_synthesist::assignment(
       if(it->type().id()==ID_bool)
       {
         exprt bit_extract(ID_extractbit, it->type());
-        bit_extract.add_to_operands(rhs, offset_constant);
+        bit_extract.add_to_operands(rhs);
+        bit_extract.add_to_operands(offset_constant);
         offset++;
 
         assignment(*it, bit_extract, blocking);
@@ -421,27 +421,22 @@ void verilog_synthesist::assignment_rec(
       throw 0;
     }
 
-    const exprt &lhs_array = lhs.op0();
-    const exprt &lhs_index = lhs.op1();
+    const exprt &lhs_array = to_binary_expr(lhs).op0();
+    const exprt &lhs_index = to_binary_expr(lhs).op1();
 
     // turn
     //   a[i]=e
     // into
     //   a'==a WITH [i:=e]
 
-    exprt new_rhs(ID_with, lhs_array.type());
-
-    new_rhs.reserve_operands(3);
-    new_rhs.add_to_operands(lhs_array);
-    new_rhs.add_to_operands(lhs_index);
-    new_rhs.add_to_operands(std::move(rhs));
+    with_exprt new_rhs(lhs_array, lhs_index, rhs);
 
     // do the array
-    synth_expr(new_rhs.op0(), symbol_statet::FINAL);
+    synth_expr(new_rhs.old(), symbol_statet::FINAL);
 
     // do the index
-    synth_expr(new_rhs.op1(), symbol_statet::CURRENT);
-    
+    synth_expr(new_rhs.where(), symbol_statet::CURRENT);
+
     // do the value
     assignment_rec(lhs_array, new_rhs, new_value); // recursive call
   }
@@ -455,9 +450,9 @@ void verilog_synthesist::assignment_rec(
       throw 0;
     }
 
-    const exprt &lhs_bv        = lhs.op0();
-    const exprt &lhs_index_one = lhs.op1();
-    const exprt &lhs_index_two = lhs.op2();
+    const exprt &lhs_bv = to_extractbits_expr(lhs).src();
+    const exprt &lhs_index_one = to_extractbits_expr(lhs).upper();
+    const exprt &lhs_index_two = to_extractbits_expr(lhs).lower();
 
     mp_integer from, to;
 
@@ -530,8 +525,9 @@ void verilog_synthesist::assignment_rec(
         assert(last_value.id()==ID_with);
         assert(last_value.operands().size()>=3);
 
-        last_value.add_to_operands(std::move(new_value.op1()));
-        last_value.add_to_operands(std::move(new_value.op2()));
+        last_value.add_to_operands(std::move(to_with_expr(new_value).where()));
+        last_value.add_to_operands(
+          std::move(to_with_expr(new_value).new_value()));
       }
     }
 
@@ -639,9 +635,9 @@ void verilog_synthesist::assignment_member_rec(
       error() << "index takes two operands" << eom;
       throw 0;
     }
-    
-    exprt tmp_lhs_op1=simplify_expr(lhs.op1(), ns);
-      
+
+    exprt tmp_lhs_op1 = simplify_expr(to_binary_expr(lhs).op1(), ns);
+
     // constant index?
     mp_integer index;
     if(to_integer_non_constant(tmp_lhs_op1, index))
@@ -653,7 +649,7 @@ void verilog_synthesist::assignment_member_rec(
     {
       // do the value
       member.push_back(index);
-      assignment_member_rec(lhs.op0(), member, data);
+      assignment_member_rec(to_binary_expr(lhs).op0(), member, data);
       member.pop_back();
     }
   }
@@ -667,9 +663,9 @@ void verilog_synthesist::assignment_member_rec(
       throw 0;
     }
 
-    const exprt &lhs_bv        = lhs.op0();
-    const exprt &lhs_index_one = lhs.op1();
-    const exprt &lhs_index_two = lhs.op2();
+    const exprt &lhs_bv = to_extractbits_expr(lhs).src();
+    const exprt &lhs_index_one = to_extractbits_expr(lhs).upper();
+    const exprt &lhs_index_two = to_extractbits_expr(lhs).lower();
 
     mp_integer from, to;
 
@@ -793,9 +789,9 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
         error() << "index takes two operands" << eom;
         throw 0;
       }
-        
-      e=&e->op0();
-      
+
+      e = &to_index_expr(*e).op0();
+
       if(e->type().id()!=ID_array)
       {
         error() << "index expects array operand" << eom;
@@ -810,7 +806,7 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
         throw 0;
       }
 
-      e=&e->op0();
+      e = &to_extractbit_expr(*e).src();
     }
     else if(e->id()==ID_extractbits)
     {
@@ -820,7 +816,7 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
         throw 0;
       }
 
-      e=&e->op0();
+      e = &to_extractbits_expr(*e).src();
     }
     else if(e->id()==ID_symbol)
     {
@@ -976,15 +972,15 @@ void verilog_synthesist::instantiate_ports(
 
   // named port connection?
 
-  if(inst.op0().id()==ID_named_port_connection)
+  if(to_multi_ary_expr(inst).op0().id() == ID_named_port_connection)
   {
     // no requirement that all ports are connected
     for(const auto &o_it : inst.operands())
     {
       if(o_it.operands().size()==2)
       {
-        const exprt &op0=o_it.op0();
-        const exprt &op1=o_it.op1();
+        const exprt &op0 = to_binary_expr(o_it).op0();
+        const exprt &op1 = to_binary_expr(o_it).op1();
 
         if(op1.is_not_nil())
           instantiate_port(op0, op1, replace_map, trans);
@@ -1118,19 +1114,19 @@ void verilog_synthesist::synth_module_instance_builtin(
 
           if(i==1)
           {
-            op.add_to_operands(
-              instance.operands()[i], instance.operands()[i + 1]);
+            op.add_to_operands(instance.operands()[i]);
+            op.add_to_operands(instance.operands()[i + 1]);
           }
           else
           {
-            op.add_to_operands(
-              instance.operands()[0], instance.operands()[i + 1]);
+            op.add_to_operands(instance.operands()[0]);
+            op.add_to_operands(instance.operands()[i + 1]);
           }
 
           if(instance.type().id()!=ID_bool)
             op.id("bit"+op.id_string());
 
-          equal_exprt constraint(instance.op0(), op);
+          equal_exprt constraint(to_multi_ary_expr(instance).op0(), op);
           assert(trans.operands().size()==3);
           trans.invar().add_to_operands(std::move(constraint));
         }
@@ -1427,8 +1423,8 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
         throw 0;
       }
 
-      exprt lhs=it->op0();
-      exprt rhs=it->op1();
+      exprt lhs = to_equal_expr(*it).op0();
+      exprt rhs = to_equal_expr(*it).op1();
 
       if(lhs.id()!=ID_symbol)
       {
@@ -1508,8 +1504,8 @@ void verilog_synthesist::synth_continuous_assign(
     // assign x=y;  -->   always @(*) force x=y;
     verilog_forcet assignment;
 
-    assignment.lhs()=it->op0();
-    assignment.rhs()=it->op1();
+    assignment.lhs() = to_equal_expr(*it).lhs();
+    assignment.rhs() = to_equal_expr(*it).rhs();
     assignment.add_source_location()=module_item.source_location();    
     
     verilog_event_guardt event_guard;
@@ -1573,25 +1569,17 @@ void verilog_synthesist::synth_force_rec(
 
       if(it->type().id()==ID_bool)
       {
-        exprt bit_extract(ID_extractbit, it->type());
-        bit_extract.add_to_operands(rhs, offset_constant);
+        extractbit_exprt bit_extract(rhs, offset);
         offset++;
-
         synth_force_rec(*it, bit_extract);
       }
       else if(it->type().id()==ID_signedbv ||
               it->type().id()==ID_unsignedbv)
       {
         unsigned width=get_width(it->type());
-
-        constant_exprt offset_constant2{std::to_string(offset + width - 1),
-                                        natural_typet{}};
-
-        exprt bit_extract(ID_extractbits, it->type());
-        bit_extract.add_to_operands(rhs, offset_constant, offset_constant2);
-
+        extractbits_exprt bit_extract(
+          rhs, offset, offset + width - 1, it->type());
         synth_force_rec(*it, bit_extract);
-        
         offset+=width;
       }
       else
@@ -1658,9 +1646,9 @@ void verilog_synthesist::synth_assign(
     error() << "unexpected assignment statement" << eom;
     throw 0;
   }
-  
-  const exprt &lhs=statement.op0();
-  exprt rhs=statement.op1();
+
+  const exprt &lhs = to_binary_expr(statement).op0();
+  exprt rhs = to_binary_expr(statement).op1();
 
   synth_expr(rhs, symbol_statet::CURRENT);
 
@@ -1802,7 +1790,7 @@ void verilog_synthesist::synth_assume_module_item(
     throw 0;
   }
 
-  exprt condition=module_item.op0();
+  exprt condition = to_binary_expr(module_item).op0();
   synth_expr(condition, symbol_statet::SYMBOL);
 
   // add it as an invariant
@@ -1947,7 +1935,7 @@ void verilog_synthesist::synth_case(
     throw 0;
   }
 
-  exprt case_operand=statement.op0();
+  exprt case_operand = to_multi_ary_expr(statement).op0();
 
   // do the argument of the case
   synth_expr(case_operand, symbol_statet::CURRENT);
@@ -1975,11 +1963,9 @@ void verilog_synthesist::synth_case(
 
     exprt if_statement(ID_if);
     if_statement.reserve_operands(3);
-    if_statement.operands().resize(2);
-
-    if_statement.op0()=synth_case_values(e.op0(), case_operand);
-
-    if_statement.op1()=e.op1();
+    if_statement.add_to_operands(
+      synth_case_values(to_binary_expr(e).op0(), case_operand));
+    if_statement.add_to_operands(to_binary_expr(e).op1());
 
     last_if->add_to_operands(std::move(if_statement));
     last_if=&last_if->operands().back();
@@ -1988,7 +1974,8 @@ void verilog_synthesist::synth_case(
   // synthesize the new if-then-else
 
   if(!start.operands().empty())
-    synth_statement(static_cast<verilog_statementt &>(start.op0()));
+    synth_statement(
+      static_cast<verilog_statementt &>(to_multi_ary_expr(start).op0()));
 }
 
 /*******************************************************************\
@@ -2143,19 +2130,21 @@ void verilog_synthesist::synth_event_guard(
         throw 0;
       }
 
-      if(it->op0().id()!=ID_symbol)
+      if(to_unary_expr(*it).op().id() != ID_symbol)
       {
         error().source_location=it->source_location();
         error() << "pos/negedge expected to have symbol as operand, "
-                   "but got "+it->op0().pretty();
+                   "but got " +
+                     to_unary_expr(*it).op().pretty();
         throw 0;
       }
 
-      if(it->op0().type().id()!=ID_bool)
+      if(to_unary_expr(*it).op().type().id() != ID_bool)
       {
         error().source_location=it->source_location();
         error() << "pos/negedge expected to have Boolean as operand, "
-                   "but got "+to_string(it->op0().type());
+                   "but got " +
+                     to_string(to_unary_expr(*it).op().type());
         throw 0;
       }
 
@@ -2167,7 +2156,7 @@ void verilog_synthesist::synth_event_guard(
       {
         // found! we make it a guard
 
-        guards.push_back(it->op0());
+        guards.push_back(to_unary_expr(*it).op());
 
         error() << "Notice: using clock guard " << identifier << eom;
       }
@@ -2255,7 +2244,8 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
  
     if(!tmp_guard.is_constant())
     {
-      error().source_location=statement.op1().source_location();
+      error().source_location =
+        to_multi_ary_expr(statement).op1().source_location();
       error() << "synthesis failed to evaluate loop guard: `"
               << expr2verilog(tmp_guard) << '\'' << eom;
       throw 0;
@@ -2292,22 +2282,23 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
     throw statement.id_string()+" expected to have one operand";
   }
 
+  const auto &op = to_unary_expr(statement).op();
+
   // stupid implementation
-  exprt one=
-    from_integer(1, statement.op0().type());
-    
+  exprt one = from_integer(1, op.type());
+
   bool increment=
     statement.id()==ID_preincrement ||
     statement.id()==ID_postincrement;
   
   verilog_blocking_assignt assignment;
-  assignment.lhs()=statement.op0();
-  
+  assignment.lhs() = op;
+
   if(increment)
-    assignment.rhs()=plus_exprt(statement.op0(), one);
+    assignment.rhs() = plus_exprt(op, one);
   else
-    assignment.rhs()=minus_exprt(statement.op0(), one);
-  
+    assignment.rhs() = minus_exprt(op, one);
+
   assignment.add_source_location()=statement.source_location();
   synth_statement(assignment);  
 }
@@ -2343,7 +2334,7 @@ void verilog_synthesist::synth_while(
  
     if(!tmp_guard.is_constant())
     {
-      error().source_location=statement.op1().source_location();
+      error().source_location = statement.body().source_location();
       error() << "synthesis failed to evaluate loop guard: `"
               << expr2verilog(tmp_guard) << '\'' << eom;
       throw 0;
@@ -2454,9 +2445,8 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     const code_typet::parameterst &parameters=
       code_type.parameters();
 
-    const exprt::operandst &actuals=
-      statement.op1().operands();
-      
+    const exprt::operandst &actuals = statement.arguments();
+
     if(parameters.size()!=actuals.size())
     {
       error().source_location=statement.source_location();
@@ -2858,17 +2848,16 @@ void verilog_synthesist::post_process_initial(exprt &constraints)
   {
     if(it->id()==ID_equal && it->operands().size()==2)
     {
-      exprt &lhs=it->op0(),
-            &rhs=it->op1();
+      exprt &lhs = to_equal_expr(*it).lhs(), &rhs = to_equal_expr(*it).rhs();
 
-      #if 0
+#if 0
       if(lhs.id()==ID_symbol && 
          rhs.id()==ID_nondet_symbol &&
          lhs.get(ID_identifier)==rhs.get(ID_identifier))
-      #else
+#else
       if(lhs.id()==ID_symbol && 
          rhs.id()==ID_nondet_symbol)
-      #endif
+#endif
       {
         if(counters.count(rhs)==1)
         {

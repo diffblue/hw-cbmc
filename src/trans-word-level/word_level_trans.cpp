@@ -56,8 +56,8 @@ void word_level_transt::read_trans_rec(const exprt &expr)
   }
   else if(expr.id()==ID_equal)
   {
-    assert(expr.operands().size()==2);
-    equality(expr.op0(), expr.op1());
+    auto &equal_expr = to_equal_expr(expr);
+    equality(equal_expr.lhs(), equal_expr.rhs());
   }
   else
     throw "word_level_transt: unexpected proposition "

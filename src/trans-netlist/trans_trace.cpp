@@ -359,9 +359,8 @@ static std::string as_vcd_binary(
     return result;
   }
   else if(expr.id()==ID_union)
-  { 
-    assert(expr.operands().size()==1);
-    return as_vcd_binary(expr.op0(), ns);
+  {
+    return as_vcd_binary(to_union_expr(expr).op(), ns);
   }
 
   // build "xxx"

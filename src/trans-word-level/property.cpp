@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 
 #include <util/namespace.h>
+#include <util/std_expr.h>
 
 #include "instantiate_word_level.h"
 #include "property.h"
@@ -44,10 +45,8 @@ void property(const exprt &property_expr, bvt &prop_bv,
     exit(1);
   }
 
-  assert(property_expr.operands().size()==1);
+  const exprt &p = to_unary_expr(property_expr).op();
 
-  const exprt &p=property_expr.op0();
-  
   for(unsigned c=0; c<no_timeframes; c++)
   {
     exprt tmp=

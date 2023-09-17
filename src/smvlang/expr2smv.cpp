@@ -21,9 +21,14 @@ public:
 
   bool convert_binary(const exprt &src, std::string &dest, const std::string &symbol, unsigned precedence);
 
-  bool convert_unary(const exprt &src, std::string &dest, const std::string &symbol, unsigned precedence);
+  bool convert_unary(
+    const unary_exprt &,
+    std::string &dest,
+    const std::string &symbol,
+    unsigned precedence);
 
-  bool convert_index(const exprt &src, std::string &dest, unsigned precedence);
+  bool
+  convert_index(const index_exprt &, std::string &dest, unsigned precedence);
 
   bool convert(const exprt &src, std::string &dest, unsigned &precedence);
 
@@ -218,17 +223,16 @@ Function: expr2smvt::convert_unary
 \*******************************************************************/
 
 bool expr2smvt::convert_unary(
-  const exprt &src, std::string &dest,
+  const unary_exprt &src,
+  std::string &dest,
   const std::string &symbol,
   unsigned precedence)
 {
-  if(src.operands().size()!=1)
-    return convert_norep(src, dest, precedence);
-    
   std::string op;
   unsigned p;
 
-  if(convert(src.op0(), op, p)) return true;
+  if(convert(src.op(), op, p))
+    return true;
 
   dest+=symbol;
   if(precedence>p) dest+='(';
@@ -251,13 +255,10 @@ Function: expr2smvt::convert_index
 \*******************************************************************/
 
 bool expr2smvt::convert_index(
-  const exprt &src,
+  const index_exprt &src,
   std::string &dest,
   unsigned precedence)
 {
-  if(src.operands().size()!=2)
-    return convert_norep(src, dest, precedence);
-
   std::string op;
   unsigned p;
 
@@ -423,12 +424,13 @@ bool expr2smvt::convert(
   {
     if(src.operands().size()!=1)
       return convert_norep(src, dest, precedence);
-    else     
-      return convert_unary(src, dest, "-", precedence=17);
+    else
+      return convert_unary(
+        to_unary_minus_expr(src), dest, "-", precedence = 17);
   }
 
   else if(src.id()==ID_index)
-    return convert_index(src, dest, precedence=20);
+    return convert_index(to_index_expr(src), dest, precedence = 20);
 
   else if(src.id()==ID_mult || src.id()==ID_div)
     return convert_binary(src, dest, src.id_string(), precedence=16);
@@ -444,7 +446,7 @@ bool expr2smvt::convert(
     return convert_binary(src, dest, "!=", precedence=11);
 
   else if(src.id()==ID_not)
-    return convert_unary(src, dest, "!", precedence=6);
+    return convert_unary(to_not_expr(src), dest, "!", precedence = 6);
 
   else if(src.id()==ID_and)
     return convert_binary(src, dest, "&", precedence=5);
@@ -460,7 +462,8 @@ bool expr2smvt::convert(
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
           src.id()==ID_AX || src.id()==ID_EX)
-    return convert_unary(src, dest, src.id_string()+" ", precedence=7);
+    return convert_unary(
+      to_unary_expr(src), dest, src.id_string() + " ", precedence = 7);
 
   else if(src.id()==ID_symbol)
     return convert_symbol(src, dest, precedence);

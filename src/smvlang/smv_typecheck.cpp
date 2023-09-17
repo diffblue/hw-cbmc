@@ -711,9 +711,8 @@ void smv_typecheckt::typecheck(
 
     expr.type()=bool_typet();
 
-    exprt &op0=expr.op0(),
-          &op1=expr.op1();
-          
+    exprt &op0 = to_binary_expr(expr).op0(), &op1 = to_binary_expr(expr).op1();
+
     typet op_type=type_union(op0.type(), op1.type());
     
     typecheck(op0, op_type, mode);
@@ -753,9 +752,9 @@ void smv_typecheckt::typecheck(
         // find proper type for precise arithmetic
         smv_ranget new_range;
 
-        smv_ranget smv_range0=convert_type(expr.op0().type());
-        smv_ranget smv_range1=convert_type(expr.op1().type());
-        
+        smv_ranget smv_range0 = convert_type(to_binary_expr(expr).op0().type());
+        smv_ranget smv_range1 = convert_type(to_binary_expr(expr).op1().type());
+
         if(expr.id()==ID_plus)
           new_range=smv_range0+smv_range1;
         else if(expr.id()==ID_minus)
@@ -929,8 +928,8 @@ void smv_typecheckt::typecheck(
     }
 
     expr.type()=bool_typet();
-    
-    typecheck(expr.op0(), expr.type(), mode);
+
+    typecheck(to_unary_expr(expr).op(), expr.type(), mode);
   }
   else if(expr.id()==ID_typecast)
   {
@@ -1013,7 +1012,7 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
     assert(expr.operands().size()==1);
 
     exprt tmp;
-    tmp.swap(expr.op0());
+    tmp.swap(to_unary_expr(expr).op());
     expr.swap(tmp);
 
     convert(expr, NEXT);
@@ -1088,8 +1087,8 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
         throw "case expected to have two operands";
       }
 
-      exprt &condition=it->op0();
-      exprt &value=it->op1();
+      exprt &condition = to_binary_expr(*it).op0();
+      exprt &value = to_binary_expr(*it).op1();
 
       expr.add_to_operands(std::move(condition));
       expr.add_to_operands(std::move(value));
@@ -1250,8 +1249,8 @@ void smv_typecheckt::collect_define(const exprt &expr)
   if(expr.id()!=ID_equal || expr.operands().size()!=2)
     throw "collect_define expects equality";
 
-  const exprt &op0=expr.op0();
-  const exprt &op1=expr.op1();
+  const exprt &op0 = to_equal_expr(expr).op0();
+  const exprt &op1 = to_equal_expr(expr).op1();
 
   if(op0.id()!=ID_symbol)
     throw "collect_define expects symbol on left hand side";

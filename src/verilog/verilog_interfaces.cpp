@@ -75,9 +75,10 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     const verilog_declt &decl = to_verilog_decl(port);
 
     assert(decl.operands().size()==1);
-    assert(decl.op0().id()==ID_symbol);
-    
-    const irep_idt &name=decl.op0().get(ID_identifier);
+    const auto &declarator = to_unary_expr(decl).op();
+    assert(declarator.id() == ID_symbol);
+
+    const irep_idt &name = to_symbol_expr(declarator).get_identifier();
     const irep_idt &port_class=decl.get(ID_class);
     
     if(name.empty())
@@ -92,7 +93,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     if(port_names.find(name)!=
        port_names.end())
     {
-      error().source_location = decl.op0().source_location();
+      error().source_location = declarator.source_location();
       error() << "duplicate port name: `" << name << '\'' << eom;
       throw 0;
     }
@@ -108,7 +109,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
       
       if(ns.lookup(identifier, port_symbol))
       {
-        error().source_location = decl.op0().source_location();
+        error().source_location = declarator.source_location();
         error() << "port `" << name << "' not declared" << eom;
         throw 0;
       }
@@ -150,7 +151,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
 
       if(symbol_table.move(new_symbol, s))
       {
-        warning().source_location=decl.op0().source_location();
+        warning().source_location = declarator.source_location();
         warning() << "port `" << name << "' is also declared" << eom;
       }
       
@@ -159,7 +160,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
 
     if(!port_symbol->is_input && !port_symbol->is_output)
     {
-      error().source_location = decl.op0().source_location();
+      error().source_location = declarator.source_location();
       error() << "port `" << name 
               << "' not declared as input or output" << eom;
       throw 0;
@@ -168,7 +169,7 @@ void verilog_typecheckt::interface_ports(irept::subt &ports)
     ports[nr].set("#name", name);
     ports[nr].id(ID_symbol);
     ports[nr].set(ID_identifier, identifier);
-    ports[nr].set(ID_C_source_location, decl.op0().source_location());
+    ports[nr].set(ID_C_source_location, declarator.source_location());
     ports[nr].set(ID_type, port_symbol->type);
     ports[nr].set(ID_input, port_symbol->is_input);
     ports[nr].set(ID_output, port_symbol->is_output);
@@ -382,14 +383,16 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
         throw 0;
       }
 
-      if(it2->op0().id()!=ID_symbol)
+      if(to_equal_expr(*it2).lhs().id() != ID_symbol)
       {
         error() << "expected symbol on left hand side of assignment"
-                   " but got `" << to_string(it2->op0()) << '\'' << eom;
+                   " but got `"
+                << to_string(to_equal_expr(*it2).lhs()) << '\'' << eom;
         throw 0;
       }
 
-      symbol.base_name=it2->op0().get(ID_identifier);
+      symbol.base_name =
+        to_symbol_expr(to_equal_expr(*it2).lhs()).get_identifier();
       symbol.type=type;
     }
     else if(it2->id()==ID_array)
@@ -428,11 +431,10 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       symbolt &function_or_task_symbol=*s_it;
       code_typet::parameterst &parameters=
         to_code_type(function_or_task_symbol.type).parameters();
-      parameters.push_back(code_typet::parametert());
+      parameters.push_back(code_typet::parametert(symbol.type));
       code_typet::parametert &parameter=parameters.back();
       parameter.set_base_name(symbol.base_name);
       parameter.set_identifier(symbol.name);
-      parameter.type()=symbol.type;
       parameter.set(ID_output, output);
       parameter.set(ID_input, input);
     }
@@ -554,15 +556,16 @@ void verilog_typecheckt::interface_module_decl(
         throw 0;
       }
 
-      if(it2->op0().id()!=ID_symbol)
+      if(to_binary_expr(*it2).op0().id() != ID_symbol)
       {
         error() << "expected symbol on left hand side of assignment"
-                   " but got `" << to_string(it2->op0()) << '\'' << eom;
+                   " but got `"
+                << to_string(to_binary_expr(*it2).op0()) << '\'' << eom;
         throw 0;
       }
 
-      symbol.base_name=it2->op0().get(ID_identifier);
-      symbol.location=it2->op0().source_location();  
+      symbol.base_name = to_binary_expr(*it2).op0().get(ID_identifier);
+      symbol.location = to_binary_expr(*it2).op0().source_location();
       symbol.type=type;
     }
     else

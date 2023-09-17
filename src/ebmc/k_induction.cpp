@@ -165,10 +165,8 @@ int k_inductiont::induction_step()
       error() << "unsupported property - only SVA always or AG implemented" << eom;
       return 1;
     }
-    
-    assert(property.operands().size()==1);
 
-    const exprt &p=property.op0();
+    const exprt &p = to_unary_expr(property).op();
 
     // assumption: time frames 0,...,k-1
     for(unsigned c=0; c<no_timeframes-1; c++)

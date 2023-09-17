@@ -133,8 +133,8 @@ void verilog_typecheck_exprt::propagate_type(
     {
       if(expr.operands().size()==3)
       {
-        propagate_type(expr.op1(), type);
-        propagate_type(expr.op2(), type);
+        propagate_type(to_if_expr(expr).true_case(), type);
+        propagate_type(to_if_expr(expr).false_case(), type);
 
         expr.type()=type;
         return;
@@ -147,7 +147,7 @@ void verilog_typecheck_exprt::propagate_type(
       {
         if(expr.operands().size()==2)
         {
-          propagate_type(expr.op0(), type);
+          propagate_type(to_binary_expr(expr).op0(), type);
           // not applicable to second operand
 
           expr.type()=type;
@@ -285,7 +285,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
      case 0: convert_nullary_expr(expr); break;
      case 1: convert_unary_expr  (to_unary_expr(expr)); break;
      case 2: convert_binary_expr (to_binary_expr(expr)); break;
-     case 3: convert_trinary_expr(expr); break;
+     case 3: convert_trinary_expr(static_cast<ternary_exprt &>(expr)); break;
      default:
       error().source_location=expr.source_location();
       error() << "no conversion for expression " << expr.id() << eom;
@@ -534,7 +534,7 @@ void verilog_typecheck_exprt::convert_system_function(
     }
     
     // the meaning is 'exactly one bit is high'
-    predicate_exprt onehot(ID_onehot, arguments.front());
+    unary_predicate_exprt onehot(ID_onehot, arguments.front());
     onehot.add_source_location()=expr.source_location();
     
     expr.swap(onehot);
@@ -552,7 +552,7 @@ void verilog_typecheck_exprt::convert_system_function(
       id2string(module_identifier)+"::nondet::"+std::to_string(nondet_count++);
 
     // the meaning is 'at most one bit is high'
-    predicate_exprt onehot0(ID_onehot0, arguments.front());
+    unary_predicate_exprt onehot0(ID_onehot0, arguments.front());
     onehot0.add_source_location()=expr.source_location();
     
     expr.swap(onehot0);
@@ -1262,7 +1262,7 @@ void verilog_typecheck_exprt::typecast(
       unsignedbv_typet tmp_type(1);
       exprt tmp(ID_extractbit, bool_typet());
       exprt no_expr=from_integer(0, integer_typet());
-      tmp.add_to_operands(typecast_exprt(expr, tmp_type), no_expr);
+      tmp.add_to_operands(typecast_exprt(expr, tmp_type), std::move(no_expr));
       expr.swap(tmp);
       return;
     }
@@ -1387,8 +1387,8 @@ void verilog_typecheck_exprt::convert_range(
     throw 0;
   }
 
-  convert_const_expression(range.op0(), msb);
-  convert_const_expression(range.op1(), lsb);
+  convert_const_expression(to_binary_expr(range).op0(), msb);
+  convert_const_expression(to_binary_expr(range).op1(), lsb);
 }
 
 /*******************************************************************\
@@ -1510,7 +1510,7 @@ void verilog_typecheck_exprt::tc_binary_expr(exprt &expr)
     throw 0;
   }
 
-  tc_binary_expr(expr, expr.op0(), expr.op1());
+  tc_binary_expr(expr, to_binary_expr(expr).op0(), to_binary_expr(expr).op1());
 }
 
 /*******************************************************************\
@@ -1597,17 +1597,15 @@ Function: verilog_typecheck_exprt::convert_extractbit_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
+void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
 {
-  assert(expr.id()==ID_extractbit);
-  
-  exprt &op0=expr.op0();
+  exprt &op0 = expr.op0();
 
   convert_expr(op0);
 
   if(op0.type().id()==ID_array)
   {
-    exprt &op1=expr.op1();
+    exprt &op1 = to_extractbit_expr(expr).index();
     convert_expr(op1);
     typet _index_type=index_type(op0.type());
 
@@ -1619,7 +1617,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
       else if(op1.is_true() || op1.is_false())
         op1=from_integer(op1.is_true()?1:0, _index_type);
       else
-        expr.op1() = typecast_exprt{expr.op1(), _index_type};
+        op1 = typecast_exprt{op1, _index_type};
     }
 
     expr.type() = to_array_type(op0.type()).subtype();
@@ -1632,7 +1630,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
 
     mp_integer op1;
 
-    if(is_const_expression(expr.op1(), op1))
+    if(is_const_expression(to_extractbit_expr(expr).op1(), op1))
     {
       if(op1<offset)
       {
@@ -1652,11 +1650,11 @@ void verilog_typecheck_exprt::convert_extractbit_expr(exprt &expr)
 
       op1-=offset;
 
-      expr.op1()=from_integer(op1, natural_typet());
+      to_extractbit_expr(expr).op1() = from_integer(op1, natural_typet());
     }
     else
     {
-      convert_expr(expr.op1());
+      convert_expr(to_extractbit_expr(expr).op1());
     }
 
     expr.type()=bool_typet();
@@ -1675,10 +1673,8 @@ Function: verilog_typecheck_exprt::convert_replication_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_replication_expr(exprt &expr)
+void verilog_typecheck_exprt::convert_replication_expr(replication_exprt &expr)
 {
-  assert(expr.id()==ID_replication);
-  
   exprt &op1=expr.op1();
 
   convert_expr(op1);
@@ -1738,10 +1734,8 @@ Function: verilog_typecheck_exprt::convert_shl_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_shl_expr(exprt &expr)
+void verilog_typecheck_exprt::convert_shl_expr(shl_exprt &expr)
 {
-  assert(expr.id()==ID_shl);
-
   convert_expr(expr.op0());
   convert_expr(expr.op1());
   
@@ -1768,9 +1762,9 @@ Function: verilog_typecheck_exprt::convert_binary_expr
 void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
 {
   if(expr.id()==ID_extractbit)
-    convert_extractbit_expr(expr);
+    convert_extractbit_expr(to_extractbit_expr(expr));
   else if(expr.id()==ID_replication)
-    convert_replication_expr(expr);
+    convert_replication_expr(to_replication_expr(expr));
   else if(expr.id()==ID_and || expr.id()==ID_or)
   {
     Forall_operands(it, expr)
@@ -1812,17 +1806,17 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
     no_bool_ops(expr);
   }
   else if(expr.id()==ID_shl)
-    convert_shl_expr(expr);
+    convert_shl_expr(to_shl_expr(expr));
   else if(expr.id()==ID_shr)
   {
     // This is the >>> expression, which turns into ID_lshr or ID_ashr
     // depending on type of first operand.
 
-    convert_expr(expr.op0());
-    convert_expr(expr.op1());
+    convert_expr(to_binary_expr(expr).op0());
+    convert_expr(to_binary_expr(expr).op1());
     no_bool_ops(expr);
 
-    const typet &op0_type=expr.op0().type();
+    const typet &op0_type = to_binary_expr(expr).op0().type();
 
     if(op0_type.id()==ID_signedbv ||
        op0_type.id()==ID_verilog_signedbv ||
@@ -1841,8 +1835,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
   else if(expr.id()==ID_lshr)
   {
     // logical right shift >>
-    convert_expr(expr.op0());
-    convert_expr(expr.op1());
+    convert_expr(to_binary_expr(expr).op0());
+    convert_expr(to_binary_expr(expr).op1());
     no_bool_ops(expr);
     expr.type()=expr.op0().type();
   }
@@ -1864,10 +1858,11 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
           expr.id()==ID_sva_s_until_with)
   {
     assert(expr.operands().size()==2);
-    convert_expr(expr.op0());
-    make_boolean(expr.op0());
-    convert_expr(expr.op1());
-    make_boolean(expr.op1());
+    auto &binary_expr = to_binary_expr(expr);
+    convert_expr(binary_expr.op0());
+    make_boolean(binary_expr.op0());
+    convert_expr(binary_expr.op1());
+    make_boolean(binary_expr.op1());
     expr.type()=bool_typet();
   }
   else if(expr.id()==ID_hierarchical_identifier)
@@ -1924,7 +1919,7 @@ Function: verilog_typecheck_exprt::convert_trinary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_trinary_expr(exprt &expr)
+void verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt &expr)
 {
   if(expr.id()==ID_extractbits)
   {
