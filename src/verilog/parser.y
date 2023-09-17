@@ -162,8 +162,8 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
   if(stack_expr(range).id()==ID_part_select)
   {
     auto &part_select = to_binary_expr(stack_expr(range));
-    stack_expr(expr).add_to_operands(std::move(part_select.op0()),
-                                 std::move(part_select.op1()));
+    stack_expr(expr).add_to_operands(std::move(part_select.op0()));
+    stack_expr(expr).add_to_operands(std::move(part_select.op1()));
   }
   else if(stack_expr(range).id()==ID_indexed_part_select_plus)
   {
