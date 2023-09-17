@@ -1512,10 +1512,9 @@ void verilog_typecheckt::convert_module_item(
   {
     genvars.clear();
     const irept &variables=module_item.find("variables");
-    forall_named_irep(it, variables.get_named_sub())
-      genvars[name2string(it->first)]=
-        string2integer(it->second.id_string());
-      
+    for(auto &var : variables.get_named_sub())
+      genvars[id2string(var.first)] = string2integer(var.second.id_string());
+
     if(module_item.operands().size()!=1)
     {
       error() << "set_genvars expects one operand" << eom;
