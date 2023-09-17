@@ -286,7 +286,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
      case 0: convert_nullary_expr(expr); break;
      case 1: convert_unary_expr  (to_unary_expr(expr)); break;
      case 2: convert_binary_expr (to_binary_expr(expr)); break;
-     case 3: convert_trinary_expr(static_cast<ternary_exprt &>(expr)); break;
+     case 3: convert_trinary_expr(to_ternary_expr(expr)); break;
      default:
       error().source_location=expr.source_location();
       error() << "no conversion for expression " << expr.id() << eom;

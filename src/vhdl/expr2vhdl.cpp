@@ -31,14 +31,11 @@ Function: expr2vhdlt::convert_trinary
 \*******************************************************************/
 
 std::string expr2vhdlt::convert_trinary(
-  const exprt &src,
+  const ternary_exprt &src,
   const std::string &symbol1,
   const std::string &symbol2,
   unsigned precedence)
 {
-  if(src.operands().size()!=3)
-    return convert_norep(src, precedence);
-
   std::string dest;
   unsigned p0, p1, p2;
 
@@ -126,15 +123,13 @@ Function: expr2vhdlt::convert_with
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_with(
-  const exprt &src,
-  unsigned precedence)
+std::string expr2vhdlt::convert_with(const with_exprt &src, unsigned precedence)
 {
   if(src.operands().size()<1)
     return convert_norep(src, precedence);
 
   unsigned p;
-  std::string dest="("+convert(src.op0(), p);
+  std::string dest = "(" + convert(src.old(), p);
 
   for(unsigned i=1; i<src.operands().size(); i+=2)
   {
@@ -162,12 +157,9 @@ Function: expr2vhdlt::convert_concatenation
 \*******************************************************************/
 
 std::string expr2vhdlt::convert_concatenation(
-  const exprt &src,
+  const concatenation_exprt &src,
   unsigned precedence)
 {
-  if(src.operands().size()<1)
-    return convert_norep(src, precedence);
-
   bool first=true;
   std::string dest="{ ";
 
@@ -204,12 +196,9 @@ Function: expr2vhdlt::convert_replication
 \*******************************************************************/
 
 std::string expr2vhdlt::convert_replication(
-  const exprt &src,
+  const replication_exprt &src,
   unsigned precedence)
 {
-  if(src.operands().size()!=2)
-    return convert_norep(src, precedence);
-
   std::string dest="{ ";
 
   dest+=convert(src.op0());
@@ -233,15 +222,12 @@ Function: expr2vhdlt::convert_unary
 \*******************************************************************/
 
 std::string expr2vhdlt::convert_unary(
-  const exprt &src,
+  const unary_exprt &src,
   const std::string &symbol,
   unsigned precedence)
 {
-  if(src.operands().size()!=1)
-    return convert_norep(src, precedence);
-    
   unsigned p;
-  std::string op=convert(src.op0(), p);
+  std::string op = convert(src.op(), p);
 
   std::string dest=symbol;
   if(precedence>p) dest+='(';
@@ -263,20 +249,14 @@ Function: expr2vhdlt::convert_typecast
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_typecast(
-  const exprt &src,
-  unsigned &precedence)
+std::string
+expr2vhdlt::convert_typecast(const typecast_exprt &src, unsigned &precedence)
 {
-  if(src.operands().size()==1)
-  {
-    //const typet &from=src.op0().type();
-    //const typet &to=src.type();
+  //const typet &from=src.op0().type();
+  //const typet &to=src.type();
 
-    // just ignore them for now
-    return convert(src.op0(), precedence);
-  }
-
-  return convert_norep(src, precedence);
+  // just ignore them for now
+  return convert(src.op(), precedence);
 }
 
 /*******************************************************************\
@@ -291,13 +271,9 @@ Function: expr2vhdlt::convert_index
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_index(
-  const exprt &src,
-  unsigned precedence)
+std::string
+expr2vhdlt::convert_index(const index_exprt &src, unsigned precedence)
 {
-  if(src.operands().size()!=2)
-    return convert_norep(src, precedence);
-
   unsigned p;
   std::string op=convert(src.op0(), p);
 
@@ -325,13 +301,9 @@ Function: expr2vhdlt::convert_extractbit
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_extractbit(
-  const exprt &src,
-  unsigned precedence)
+std::string
+expr2vhdlt::convert_extractbit(const extractbit_exprt &src, unsigned precedence)
 {
-  if(src.operands().size()!=2)
-    return convert_norep(src, precedence);
-
   unsigned p;
   std::string op=convert(src.op0(), p);
 
@@ -360,14 +332,11 @@ Function: expr2vhdlt::convert_extractbits
 \*******************************************************************/
 
 std::string expr2vhdlt::convert_extractbits(
-  const exprt &src,
+  const extractbits_exprt &src,
   unsigned precedence)
 {
-  if(src.operands().size()!=3)
-    return convert_norep(src, precedence);
-
   unsigned p;
-  std::string op=convert(src.op0(), p);
+  std::string op = convert(src.src(), p);
 
   std::string dest;
   if(precedence>p) dest+='(';
@@ -375,9 +344,9 @@ std::string expr2vhdlt::convert_extractbits(
   if(precedence>p) dest+=')';
 
   dest+='[';
-  dest+=convert(src.op1());
+  dest += convert(src.upper());
   dest+=':';
-  dest+=convert(src.op2());
+  dest += convert(src.lower());
   dest+=']';
 
   return dest;
@@ -395,15 +364,11 @@ Function: expr2vhdlt::convert_member
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_member(
-  const exprt &src,
-  unsigned precedence)
+std::string
+expr2vhdlt::convert_member(const member_exprt &src, unsigned precedence)
 {
-  if(src.operands().size()!=1)
-    return convert_norep(src, precedence);
-
   unsigned p;
-  std::string op=convert(src.op0(), p);
+  std::string op = convert(src.compound(), p);
 
   std::string dest;
   if(precedence>p) dest+='(';
@@ -448,13 +413,12 @@ Function: expr2vhdlt::convert_symbol
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_symbol(
-  const exprt &src,
-  unsigned &precedence)
+std::string
+expr2vhdlt::convert_symbol(const symbol_exprt &src, unsigned &precedence)
 {
   precedence=22;
-  std::string dest=src.get_string(ID_identifier);
- 
+  std::string dest = id2string(src.get_identifier());
+
   if(std::string(dest, 0, 9)=="Verilog::")
     dest.erase(0, 9);
 
@@ -477,7 +441,10 @@ std::string expr2vhdlt::convert_nondet_symbol(
   const exprt &src,
   unsigned &precedence)
 {
-  return "nondet("+convert_symbol(src, precedence)+")";
+  return "nondet(" +
+         convert_symbol(
+           symbol_exprt(src.get(ID_identifier), src.type()), precedence) +
+         ")";
 }
 
 /*******************************************************************\
@@ -496,7 +463,10 @@ std::string expr2vhdlt::convert_next_symbol(
   const exprt &src,
   unsigned &precedence)
 {
-  return "next("+convert_symbol(src, precedence)+")";
+  return "next(" +
+         convert_symbol(
+           symbol_exprt(src.get(ID_identifier), src.type()), precedence) +
+         ")";
 }
 
 /*******************************************************************\
@@ -511,14 +481,13 @@ Function: expr2vhdlt::convert_constant
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_constant(
-  const exprt &src,
-  unsigned &precedence)
+std::string
+expr2vhdlt::convert_constant(const constant_exprt &src, unsigned &precedence)
 {
   precedence=22;
 
   const typet &type=src.type();
-  const std::string &value=src.get_string(ID_value);
+  const std::string &value = id2string(src.get_value());
   std::string dest;
 
   if(type.id()==ID_bool)
@@ -563,9 +532,8 @@ Function: expr2vhdlt::convert_array
 
 \*******************************************************************/
 
-std::string expr2vhdlt::convert_array(
-  const exprt &src,
-  unsigned precedence)
+std::string
+expr2vhdlt::convert_array(const array_exprt &src, unsigned precedence)
 {
   std::string dest="{ ";
 
@@ -612,19 +580,19 @@ std::string expr2vhdlt::convert(
     return convert_binary(src, "+", precedence=14);
 
   else if(src.id()==ID_if)
-    return convert_trinary(src, "?", ":", precedence=14);
+    return convert_trinary(to_if_expr(src), "?", ":", precedence = 14);
 
   else if(src.id()==ID_concatenation)
-    return convert_concatenation(src, precedence=16);
+    return convert_concatenation(to_concatenation_expr(src), precedence = 16);
 
   else if(src.id()==ID_with)
-    return convert_with(src, precedence=16);
+    return convert_with(to_with_expr(src), precedence = 16);
 
   else if(src.id()==ID_replication)
-    return convert_replication(src, precedence=22);
+    return convert_replication(to_replication_expr(src), precedence = 22);
 
   else if(src.id()==ID_array)
-    return convert_array(src, precedence=22);
+    return convert_array(to_array_expr(src), precedence = 22);
 
   else if(src.id()=="-")
   {
@@ -640,25 +608,25 @@ std::string expr2vhdlt::convert(
   else if(src.id()==ID_lshr)
     return convert_binary(src, ">>", precedence=14);
 
-  else if(src.id()=="unary-")
+  else if(src.id() == ID_unary_minus)
   {
     if(src.operands().size()!=1)
       return convert_norep(src, precedence);
-    else     
-      return convert_unary(src, "-", precedence=16);
+    else
+      return convert_unary(to_unary_minus_expr(src), "-", precedence = 16);
   }
 
   else if(src.id()==ID_index)
-    return convert_index(src, precedence=22);
+    return convert_index(to_index_expr(src), precedence = 22);
 
   else if(src.id()==ID_extractbit)
-    return convert_extractbit(src, precedence=22);
+    return convert_extractbit(to_extractbit_expr(src), precedence = 22);
 
   else if(src.id()==ID_extractbits)
-    return convert_extractbits(src, precedence=22);
+    return convert_extractbits(to_extractbits_expr(src), precedence = 22);
 
   else if(src.id()==ID_member)
-    return convert_member(src, precedence=22);
+    return convert_member(to_member_expr(src), precedence = 22);
 
   else if(src.id()=="*" || src.id()=="/")
     return convert_binary(src, src.id_string(), precedence=14);
@@ -671,16 +639,16 @@ std::string expr2vhdlt::convert(
     return convert_binary(src, "==", precedence=9);
 
   else if(src.id()==ID_notequal)
-    return convert_binary(src, "!=", precedence=9);
+    return convert_binary(to_notequal_expr(src), "!=", precedence = 9);
 
   else if(src.id()==ID_not)
-    return convert_unary(src, "!", precedence=16);
+    return convert_unary(to_not_expr(src), "!", precedence = 16);
 
   else if(src.id()==ID_bitnot)
-    return convert_unary(src, "~", precedence=16);
+    return convert_unary(to_bitnot_expr(src), "~", precedence = 16);
 
   else if(src.id()==ID_typecast)
-    return convert_typecast(src, precedence);
+    return convert_typecast(to_typecast_expr(src), precedence);
 
   else if(src.id()==ID_and)
     return convert_binary(src, "&&", precedence=7);
@@ -702,10 +670,11 @@ std::string expr2vhdlt::convert(
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
           src.id()==ID_AX || src.id()==ID_EX)
-    return convert_unary(src, src.id_string()+" ", precedence=4);
+    return convert_unary(
+      to_unary_expr(src), src.id_string() + " ", precedence = 4);
 
   else if(src.id()==ID_symbol)
-    return convert_symbol(src, precedence);
+    return convert_symbol(to_symbol_expr(src), precedence);
 
   else if(src.id()==ID_nondet_symbol)
     return convert_nondet_symbol(src, precedence);
@@ -714,8 +683,8 @@ std::string expr2vhdlt::convert(
     return convert_next_symbol(src, precedence);
 
   else if(src.id()==ID_constant)
-    return convert_constant(src, precedence);
-    
+    return convert_constant(to_constant_expr(src), precedence);
+
   else if(src.id()=="vhdl-constant")
   {
     const std::string width=src.type().get_string(ID_width);

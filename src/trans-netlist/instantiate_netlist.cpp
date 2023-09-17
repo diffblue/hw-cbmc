@@ -227,22 +227,22 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
       unsigned old_next=next;
       literalt result;
 
-      if(expr.op1().is_nil())
+      if(to_ternary_expr(expr).op1().is_nil())
       {
         mp_integer offset;
-        if(to_integer_non_constant(expr.op0(), offset))
+        if(to_integer_non_constant(to_ternary_expr(expr).op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
         current = old_current + offset.to_ulong();
         next = old_next + offset.to_ulong();
-        result=convert_bool(expr.op2());
+        result = convert_bool(to_ternary_expr(expr).op2());
       }
       else
       {
         mp_integer from, to;
         if(
-          to_integer_non_constant(expr.op0(), from) ||
-          to_integer_non_constant(expr.op1(), to))
+          to_integer_non_constant(to_ternary_expr(expr).op0(), from) ||
+          to_integer_non_constant(to_ternary_expr(expr).op1(), to))
         {
           throw "failed to convert sva_cycle_delay offsets";
         }
@@ -254,7 +254,7 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
         {
           current = old_current + offset.to_ulong();
           next = old_next + offset.to_ulong();
-          disjuncts.push_back(convert_bool(expr.op2()));
+          disjuncts.push_back(convert_bool(to_ternary_expr(expr).op2()));
         }
         
         result=prop.lor(disjuncts);

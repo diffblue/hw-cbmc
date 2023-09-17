@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_EXPR2VERILOG_H
 #define CPROVER_VERILOG_EXPR2VERILOG_H
 
+#include <util/bitvector_expr.h>
 #include <util/std_expr.h>
 
 class expr2verilogt
@@ -91,7 +92,7 @@ public:
   virtual std::string convert_with(const with_exprt &, unsigned precedence);
 
   virtual std::string
-  convert_sva_cycle_delay(const exprt &, unsigned precedence);
+  convert_sva_cycle_delay(const ternary_exprt &, unsigned precedence);
 
   virtual std::string
   convert_sva_sequence_concatenation(const binary_exprt &, unsigned precedence);

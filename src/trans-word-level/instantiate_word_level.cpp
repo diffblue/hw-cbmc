@@ -150,34 +150,34 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       // save the current time frame, we'll change it
       save_currentt save_current(current);
 
-      if(expr.op1().is_nil())
+      if(to_ternary_expr(expr).op1().is_nil())
       {
         mp_integer offset;
-        if(to_integer_non_constant(expr.op0(), offset))
+        if(to_integer_non_constant(to_ternary_expr(expr).op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
         current = save_current.saved + offset.to_ulong();
 
         // Do we exceed the bound? Make it 'true'
         if(current>=no_timeframes)
-          expr.op2()=true_exprt();
+          to_ternary_expr(expr).op2() = true_exprt();
         else
-          instantiate_rec(expr.op2());
+          instantiate_rec(to_ternary_expr(expr).op2());
 
-        expr=expr.op2();
+        expr = to_ternary_expr(expr).op2();
       }
       else
       {
         mp_integer from, to;
-        if(to_integer_non_constant(expr.op0(), from))
+        if(to_integer_non_constant(to_ternary_expr(expr).op0(), from))
           throw "failed to convert sva_cycle_delay offsets";
-          
-        if(expr.op1().id()==ID_infinity)
+
+        if(to_ternary_expr(expr).op1().id() == ID_infinity)
         {
           assert(no_timeframes!=0);
           to=no_timeframes-1;
         }
-        else if(to_integer_non_constant(expr.op1(), to))
+        else if(to_integer_non_constant(to_ternary_expr(expr).op1(), to))
           throw "failed to convert sva_cycle_delay offsets";
           
         // This is an 'or', and we let it fail if the bound is too small.
@@ -193,7 +193,7 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
           }
           else
           {
-            disjuncts.push_back(expr.op2());
+            disjuncts.push_back(to_ternary_expr(expr).op2());
             instantiate_rec(disjuncts.back());
           }
         }

@@ -910,7 +910,7 @@ void output_verilog_baset::invariants(const symbolt &symbol)
   assert(symbol.value.id()==ID_trans &&
          symbol.value.operands().size()==3);
 
-  invariant(symbol.value.op0());
+  invariant(to_ternary_expr(symbol.value).op0());
 }
 
 /*******************************************************************\

@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VHDL_EXPR2VHDL_H
 #define CPROVER_VHDL_EXPR2VHDL_H
 
-#include <util/expr.h>
+#include <util/bitvector_expr.h>
 
 class expr2vhdlt
 {
@@ -20,9 +20,7 @@ public:
 
   virtual std::string convert(const typet &type);
 
-  virtual std::string convert_array(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string convert_array(const array_exprt &, unsigned precedence);
 
   virtual std::string convert_binary(
     const exprt &src,
@@ -30,31 +28,25 @@ public:
     unsigned precedence);
 
   virtual std::string convert_unary(
-    const exprt &src,
+    const unary_exprt &,
     const std::string &symbol,
     unsigned precedence);
 
   virtual std::string convert_trinary(
-    const exprt &src,
+    const ternary_exprt &,
     const std::string &symbol1,
     const std::string &symbol2,
     unsigned precedence);
 
-  virtual std::string convert_index(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string convert_index(const index_exprt &, unsigned precedence);
 
-  virtual std::string convert_extractbit(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string
+  convert_extractbit(const extractbit_exprt &, unsigned precedence);
 
-  virtual std::string convert_member(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string convert_member(const member_exprt &, unsigned precedence);
 
-  virtual std::string convert_extractbits(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string
+  convert_extractbits(const extractbits_exprt &, unsigned precedence);
 
   virtual std::string convert(
     const exprt &src,
@@ -62,9 +54,8 @@ public:
 
   virtual std::string convert(const exprt &src);
 
-  virtual std::string convert_symbol(
-    const exprt &src,
-    unsigned &precedence);
+  virtual std::string
+  convert_symbol(const symbol_exprt &, unsigned &precedence);
 
   virtual std::string convert_nondet_symbol(
     const exprt &src,
@@ -74,29 +65,23 @@ public:
     const exprt &src,
     unsigned &precedence);
 
-  virtual std::string convert_constant(
-    const exprt &src,
-    unsigned &precedence);
+  virtual std::string
+  convert_constant(const constant_exprt &, unsigned &precedence);
 
-  virtual std::string convert_typecast(
-    const exprt &src,
-    unsigned &precedence);
+  virtual std::string
+  convert_typecast(const typecast_exprt &, unsigned &precedence);
 
-  virtual std::string convert_concatenation(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string
+  convert_concatenation(const concatenation_exprt &, unsigned precedence);
 
-  virtual std::string convert_replication(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string
+  convert_replication(const replication_exprt &, unsigned precedence);
 
   virtual std::string convert_norep(
     const exprt &src,
     unsigned &precedence);
 
-  virtual std::string convert_with(
-    const exprt &src,
-    unsigned precedence);
+  virtual std::string convert_with(const with_exprt &, unsigned precedence);
 };
 
 #endif
