@@ -71,6 +71,6 @@ void add_set_inputs(
   symbol.value=block;
 
   // hide and inline
-  symbol.type.set(ID_C_hide, true);
+  // symbol.type.set(ID_C_hide, true);
   symbol.type.set(ID_C_inlined, true);
 }

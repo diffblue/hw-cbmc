@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <stack>
 
+#include <util/bitvector_expr.h>
 #include <util/mp_arith.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>

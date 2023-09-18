@@ -159,7 +159,7 @@ std::string gen_interfacet::type_to_string(const typet& type)
     mp_integer size = 0;
     to_integer_non_constant(size_expr, size);
 
-    std::string stype_str = type_to_string(array_type.subtype());
+    std::string stype_str = type_to_string(array_type.element_type());
     std::string array_str = "[" + integer2string(size)+"]" ;
     std::string key_str = stype_str + array_str;
 

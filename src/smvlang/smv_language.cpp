@@ -38,7 +38,7 @@ bool smv_languaget::parse(
 
   smv_parser.set_file(path);
   smv_parser.in=&instream;
-  smv_parser.set_message_handler(get_message_handler());
+  smv_parser.log.set_message_handler(get_message_handler());
 
   bool result=smv_parser.parse();
 
@@ -117,7 +117,7 @@ Function: smv_languaget::typecheck
 \*******************************************************************/
 
 bool smv_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module)
 {
   return smv_typecheck(smv_parse_tree, symbol_table, module,

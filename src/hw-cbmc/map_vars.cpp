@@ -6,7 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/base_type.h>
 #include <util/c_types.h>
 #include <util/config.h>
 #include <util/ebmc_util.h>
@@ -241,15 +240,15 @@ bool map_varst::array_types_eq(
   }
   
   namespacet ns(symbol_table);
-  
-  const typet &s1=ns.follow(type1.subtype());
-  const typet &s2=ns.follow(type2.subtype());
-  
+
+  const typet &s1 = ns.follow(type1.element_type());
+  const typet &s2 = ns.follow(type2.element_type());
+
   if(s1.id()==ID_array && s2.id()==ID_array)
     return array_types_eq(to_array_type(s1), to_array_type(s2), error_msg);
 
   // we are strict: the subtype needs to be identical
-  if(!base_type_eq(s1, s2, ns))
+  if(s1 != s2)
   {
     error_msg = "array subtypes differ (E2)";
     return true;
@@ -285,7 +284,7 @@ bool map_varst::check_types_rec(
     return check_types_rec(type1, ns.follow(type2), error_msg);
 
   // type is the same?
-  if(base_type_eq(type1, type2, ns))
+  if(type1 == type2)
     return false;
 
   // anything between integral types is fine
@@ -298,7 +297,7 @@ bool map_varst::check_types_rec(
       return array_types_eq(to_array_type(type1), to_array_type(type2), error_msg);
 
     // bool-array is mapped to bit-vector
-    if(to_array_type(type1).subtype().id() != ID_bool)
+    if(to_array_type(type1).element_type().id() != ID_bool)
     {
       error_msg = "type `" + from_type(ns, "", type1) +
                   "' does not match type `" + from_type(ns, "", type2) +
@@ -720,7 +719,7 @@ void map_varst::map_vars(const irep_idt &top_module)
     index_exprt expr(
       symbol_expr,
       timeframe_expr,
-      to_array_type(ns.follow(symbol_expr.type())).subtype());
+      to_array_type(ns.follow(symbol_expr.type())).element_type());
 
     top_level_inputs.clear();
 

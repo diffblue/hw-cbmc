@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include <util/arith_tools.h>
+#include <util/bitvector_types.h>
 #include <util/std_types.h>
 #include <util/symbol_table.h>
 

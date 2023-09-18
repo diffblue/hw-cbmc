@@ -6,6 +6,7 @@ OBJ+= $(CPROVER_DIR)/goto-checker/goto-checker$(LIBEXT) \
       $(CPROVER_DIR)/cbmc/cbmc_parse_options$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/cover$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/cover_basic_blocks$(OBJEXT) \
+      $(CPROVER_DIR)/goto-instrument/cover_instrument_assume$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/cover_instrument_other$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/cover_instrument_mcdc$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/cover_instrument_decision$(OBJEXT) \

@@ -114,6 +114,7 @@ int hw_cbmc_parse_optionst::doit()
     for (const auto &constraint : constraints) {
       // TODO : include the extra constraints using the new custom verifier
       // interface
+      (void)constraint;
     }
   }
 

@@ -35,7 +35,7 @@ bool parse_vhdl_file(const std::string &filename)
   console_message_handlert console_message_handler;
 
   vhdl_parser.set_file(filename);
-  vhdl_parser.set_message_handler(console_message_handler);
+  vhdl_parser.log.set_message_handler(console_message_handler);
 
   if(filename=="")
     vhdl_parser.in=&std::cin;

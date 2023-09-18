@@ -18,6 +18,9 @@ CLEANFILES = verilog$(LIBEXT) verilog_y.tab.h verilog_y.tab.cpp \
 
 all: verilog$(LIBEXT)
 
+# override -Werror to silence expected warnings
+YFLAGS += -Wno-error=other
+
 ###############################################################################
 
 verilog$(LIBEXT): $(OBJ)

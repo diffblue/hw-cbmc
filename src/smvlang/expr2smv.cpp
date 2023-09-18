@@ -550,7 +550,7 @@ bool type2smv(const typet &type, std::string &code)
   else if(type.id()==ID_array)
   {
     std::string tmp;
-    if(type2smv(to_array_type(type).subtype(), tmp))
+    if(type2smv(to_array_type(type).element_type(), tmp))
       return true;
     code="array ";
     code+="..";

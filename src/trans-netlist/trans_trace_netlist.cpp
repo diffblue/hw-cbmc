@@ -71,8 +71,8 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
     std::size_t op_width=src.size()/size_int;
 
     for(std::size_t i=0; i<size_int; i++)
-      value_expr.operands()[size_int-i-1]=bitstring_to_expr(
-        std::string(src, i*op_width, op_width), array_type.subtype());
+      value_expr.operands()[size_int - i - 1] = bitstring_to_expr(
+        std::string(src, i * op_width, op_width), array_type.element_type());
   }
   
   return value_expr;

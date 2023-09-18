@@ -33,11 +33,10 @@ public:
 
   void modules_provided(
     std::set<std::string> &module_set) override;
-                 
-  bool typecheck(
-    symbol_tablet &symbol_table,
-    const std::string &module) override;
-  
+
+  bool typecheck(symbol_table_baset &symbol_table, const std::string &module)
+    override;
+
   void show_parse(std::ostream &out) override;
   
   ~smv_languaget() override { }
@@ -57,8 +56,8 @@ public:
     const std::string &module,
     exprt &expr,
     const namespacet &ns) override;
-                       
-  bool generate_support_functions(symbol_tablet &) override
+
+  bool generate_support_functions(symbol_table_baset &) override
   {
     return false;
   }

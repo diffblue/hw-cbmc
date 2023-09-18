@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/arith_tools.h>
+#include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>

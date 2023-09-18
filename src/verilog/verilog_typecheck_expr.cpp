@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <algorithm>
 
+#include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/mathematical_types.h>
@@ -285,7 +286,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
      case 0: convert_nullary_expr(expr); break;
      case 1: convert_unary_expr  (to_unary_expr(expr)); break;
      case 2: convert_binary_expr (to_binary_expr(expr)); break;
-     case 3: convert_trinary_expr(static_cast<ternary_exprt &>(expr)); break;
+     case 3: convert_trinary_expr(to_ternary_expr(expr)); break;
      default:
       error().source_location=expr.source_location();
       error() << "no conversion for expression " << expr.id() << eom;
@@ -1620,7 +1621,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
         op1 = typecast_exprt{op1, _index_type};
     }
 
-    expr.type() = to_array_type(op0.type()).subtype();
+    expr.type() = to_array_type(op0.type()).element_type();
     expr.id(ID_index);
   }
   else

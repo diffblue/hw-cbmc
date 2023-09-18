@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ostream>
 
+#include <util/bitvector_types.h>
 #include <util/std_types.h>
 
 #include "verilog_types.h"

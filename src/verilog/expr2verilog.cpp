@@ -98,7 +98,7 @@ Function: expr2verilogt::convert_sva_cycle_delay
 \*******************************************************************/
 
 std::string expr2verilogt::convert_sva_cycle_delay(
-  const exprt &src,
+  const ternary_exprt &src,
   unsigned precedence)
 {
   if(src.operands().size()!=3)
@@ -1003,7 +1003,7 @@ std::string expr2verilogt::convert(
     // not sure about precedence
     
   else if(src.id()==ID_sva_cycle_delay)
-    return convert_sva_cycle_delay(src, precedence=0);
+    return convert_sva_cycle_delay(to_ternary_expr(src), precedence = 0);
     // not sure about precedence
     
   else if(src.id()==ID_sva_sequence_concatenation)
@@ -1120,7 +1120,7 @@ std::string expr2verilogt::convert(const typet &type)
     dest += convert(array_type.size());
 
     dest+="] of ";
-    dest += convert(array_type.subtype());
+    dest += convert(array_type.element_type());
 
     return dest;
   }

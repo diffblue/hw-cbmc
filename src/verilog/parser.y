@@ -162,8 +162,8 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
   if(stack_expr(range).id()==ID_part_select)
   {
     auto &part_select = to_binary_expr(stack_expr(range));
-    stack_expr(expr).add_to_operands(std::move(part_select.op0()),
-                                 std::move(part_select.op1()));
+    stack_expr(expr).add_to_operands(std::move(part_select.op0()));
+    stack_expr(expr).add_to_operands(std::move(part_select.op1()));
   }
   else if(stack_expr(range).id()==ID_indexed_part_select_plus)
   {
@@ -745,7 +745,7 @@ unpacked_dimension_brace:
 packed_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
 		{ init($$, ID_array);
-		  stack_type($$).subtype().make_nil();
+		  stack_type($$).add_subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
 		  range.add_to_operands(stack_expr($2));
 		  range.add_to_operands(stack_expr($4)); }
@@ -755,7 +755,7 @@ packed_dimension:
 unpacked_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
 		{ init($$, ID_array);
-		  stack_type($$).subtype().make_nil();
+		  stack_type($$).add_subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
 		  range.add_to_operands(stack_expr($2));
 		  range.add_to_operands(stack_expr($4)); }

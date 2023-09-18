@@ -43,7 +43,7 @@ bool verilog_languaget::parse(
 
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
-  verilog_parser.set_message_handler(get_message_handler());
+  verilog_parser.log.set_message_handler(get_message_handler());
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
   
   if(has_suffix(path, ".sv"))
@@ -155,7 +155,7 @@ Function: verilog_languaget::typecheck
 \*******************************************************************/
 
 bool verilog_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module)
 {
   if(module=="") return false;
@@ -183,7 +183,7 @@ Function: verilog_languaget::interfaces
 
 \*******************************************************************/
 
-bool verilog_languaget::interfaces(symbol_tablet &symbol_table)
+bool verilog_languaget::interfaces(symbol_table_baset &)
 {
   return false;
 }
@@ -276,7 +276,7 @@ bool verilog_languaget::to_expr(
   verilog_parser.clear();
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;
-  verilog_parser.set_message_handler(get_message_handler());
+  verilog_parser.log.set_message_handler(get_message_handler());
   verilog_parser.grammar=verilog_parsert::EXPRESSION;
   verilog_scanner_init();
 

@@ -36,7 +36,7 @@ bool vhdl_languaget::parse(
 
   vhdl_parser.set_file(path);
   vhdl_parser.in=&instream;
-  vhdl_parser.set_message_handler(get_message_handler());
+  vhdl_parser.log.set_message_handler(get_message_handler());
   //vhdl_parser.grammar=vhdl_parsert::LANGUAGE;
   
   vhdl_scanner_init();
@@ -147,7 +147,7 @@ Function: vhdl_languaget::typecheck
 \*******************************************************************/
 
 bool vhdl_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  symbol_table_baset &symbol_table,
   const std::string &module)
 {
   if(module=="") return false;
@@ -179,8 +179,7 @@ Function: vhdl_languaget::interfaces
 
 \*******************************************************************/
 
-bool vhdl_languaget::interfaces(
-  symbol_tablet &symbol_table)
+bool vhdl_languaget::interfaces(symbol_table_baset &symbol_table)
 {
   return false;
 }
@@ -272,7 +271,7 @@ bool vhdl_languaget::to_expr(
   vhdl_parser.clear();
   vhdl_parser.set_file("");
   vhdl_parser.in=&i_preprocessed;
-  vhdl_parser.set_message_handler(get_message_handler());
+  vhdl_parser.log.set_message_handler(get_message_handler());
   vhdl_parser.grammar=vhdl_parsert::EXPRESSION;
   vhdl_scanner_init();
 

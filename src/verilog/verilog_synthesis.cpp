@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <set>
 
+#include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/identifier.h>

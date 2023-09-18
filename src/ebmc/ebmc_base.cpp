@@ -6,19 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <chrono>
-#include <fstream>
-#include <iostream>
-
-#include <util/cmdline.h>
-#include <util/config.h>
-#include <util/expr_util.h>
-#include <util/find_macros.h>
-#include <util/get_module.h>
-#include <util/string2int.h>
-#include <util/unicode.h>
-#include <util/xml.h>
-#include <util/xml_irep.h>
+#include "ebmc_base.h"
+#include "ebmc_version.h"
 
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/ldg.h>
@@ -31,11 +20,25 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/unwind.h>
 #include <trans-word-level/show_modules.h>
 
+#include <langapi/language.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
 
-#include "ebmc_base.h"
-#include "ebmc_version.h"
+#include <solvers/prop/literal_expr.h>
+
+#include <util/cmdline.h>
+#include <util/config.h>
+#include <util/expr_util.h>
+#include <util/find_macros.h>
+#include <util/get_module.h>
+#include <util/string2int.h>
+#include <util/unicode.h>
+#include <util/xml.h>
+#include <util/xml_irep.h>
+
+#include <chrono>
+#include <fstream>
+#include <iostream>
 
 /*******************************************************************\
 
@@ -123,13 +126,14 @@ int ebmc_baset::finish_bmc(prop_conv_solvert &solver) {
       continue;
     
     status() << "Checking " << property.name << eom;
-    
-    or_exprt or_expr;
-    
-    for(auto l : property.timeframe_literals)
-      or_expr.operands().push_back(literal_exprt(!l));
 
-    auto converted_or = solver.convert(or_expr);
+    or_exprt::operandst disjuncts;
+    disjuncts.reserve(property.timeframe_literals.size());
+
+    for(auto l : property.timeframe_literals)
+      disjuncts.push_back(literal_exprt(!l));
+
+    auto converted_or = solver.convert(disjunction(disjuncts));
     solver.push({literal_exprt{converted_or}});
 
     decision_proceduret::resultt dec_result=
@@ -1053,9 +1057,7 @@ bool ebmc_baset::parse(const std::string &filename) {
 bool ebmc_baset::typecheck() {
   status() << "Converting" << eom;
 
-  language_files.set_message_handler(*message_handler);
-
-  if (language_files.typecheck(symbol_table)) {
+  if (language_files.typecheck(symbol_table, *message_handler)) {
     error() << "CONVERSION ERROR" << eom;
     return true;
   }
