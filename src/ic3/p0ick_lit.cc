@@ -94,6 +94,8 @@ void CompInfo::act_var_init(CLAUSE &B,CUBE &Avail_lits,SCUBE &Tried,
     else if (val == max_act_var) count_eq++;
   }
 
+  // silence a warning that count_eq is not read
+  (void)count_eq;
  
   assert(max_lit != 0);
   B.push_back(max_lit);
@@ -193,6 +195,9 @@ int CompInfo::find_inact_var(CLAUSE &Curr,SCUBE &Tried,FltCube &Act0,
     }
     else if (val == min_var_act) count_eq++;
   }
+
+  // silence a warning that count_eq is not read
+  (void)count_eq;
 
   if (act_upd_mode == MINISAT_ACT_UPD)
     scale_factor_down(min_var_act);
