@@ -14,6 +14,28 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_preprocessort::filet::make_source_location
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+source_locationt verilog_preprocessort::filet::make_source_location() const
+{
+  source_locationt result;
+
+  result.set_file(filename);
+  result.set_line(line);
+
+  return result;
+}
+
+/*******************************************************************\
+
 Function: verilog_preprocessort::getline
 
   Inputs:
@@ -178,7 +200,9 @@ Function: verilog_preprocessort::include
 
 \*******************************************************************/
 
-void verilog_preprocessort::include(const std::string &filename)
+void verilog_preprocessort::include(
+  const std::string &filename,
+  const source_locationt &source_location)
 {
   {
     filet tmp_file;
@@ -209,6 +233,7 @@ void verilog_preprocessort::include(const std::string &filename)
     file.close=false;
   }
 
+  error().source_location = source_location;
   error() << "include file `" << filename << "' not found" << eom;
   throw 0;
 }
@@ -504,6 +529,9 @@ void verilog_preprocessort::directive()
   }
   else if(text=="include")
   {
+    // remember the source location
+    auto source_location = files.back().make_source_location();
+
     files.back().getline(line);
 
     const char *tptr=line.c_str();
@@ -534,7 +562,7 @@ void verilog_preprocessort::directive()
       tptr++;
     }
 
-    include(filename);
+    include(filename, source_location);
   }
   else if(text=="resetall")
   {

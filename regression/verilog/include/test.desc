@@ -1,0 +1,7 @@
+CORE
+not_found1.v
+
+^file not_found1\.v line 1: include file .file_that_does_not_exist\.v. not found$
+^EXIT=1$
+^SIGNAL=0$
+--
