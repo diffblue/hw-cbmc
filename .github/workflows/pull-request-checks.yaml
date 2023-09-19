@@ -1,9 +1,9 @@
 name: Build and Test HW-CBMC
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   # This job takes approximately 15 minutes
