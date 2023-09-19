@@ -32,7 +32,7 @@ protected:
   
   virtual void directive();
   virtual void replace_macros(std::string &s);
-  virtual void include(const std::string &filename);
+  virtual void include(const std::string &filename, const source_locationt &);
 
   static std::string build_path(
     const std::string &path,
@@ -89,6 +89,8 @@ protected:
     void print_line(std::ostream &out, unsigned level)
     { out << "`line " << line << " \"" 
           <<filename << "\" " << level << std::endl; }
+
+    source_locationt make_source_location() const;
   };
 
   std::list<filet> files;  
