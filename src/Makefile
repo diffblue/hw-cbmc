@@ -7,8 +7,7 @@ export EBMC_DIR
 
 all: hw-cbmc.dir ebmc.dir
 
-.PHONY: clean
-
+.PHONY: $(patsubst %, %.dir, $(DIRS))
 $(patsubst %, %.dir, $(DIRS)):
 	## Entering $(basename $@)
 	$(MAKE) $(MAKEARGS) -C $(basename $@)
@@ -29,10 +28,15 @@ cprover.dir:
 	$(MAKE) $(MAKEARGS) -C $(CPROVER_DIR) \
   CP_EXTRA_CXXFLAGS='-D"LOCAL_IREP_IDS=<$(EBMC_DIR)/hw_cbmc_irep_ids.h>"'
 
-clean: $(patsubst %, %_clean, $(SUBDIRS))
+.PHONY: clean
+clean: $(patsubst %, %_clean, $(DIRS)) cprover_clean
 
-$(patsubst %, %_clean, $(SUBDIRS)):
+.PHONY: $(patsubst %, %_clean, $(DIRS))
+$(patsubst %, %_clean, $(DIRS)):
 	if [ -e $(patsubst %_clean, %, $@)/. ] ; then \
 	        $(MAKE) $(MAKEARGS) -C $(patsubst %_clean, %, $@) clean ; \
 	fi
 
+.PHONY: cprover_clean
+cprover_clean:
+	$(MAKE) $(MAKEARGS) -C $(CPROVER_DIR) clean
