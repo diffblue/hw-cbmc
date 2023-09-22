@@ -134,7 +134,8 @@ int ebmc_baset::finish_bmc(prop_conv_solvert &solver) {
       disjuncts.push_back(literal_exprt(!l));
 
     auto converted_or = solver.convert(disjunction(disjuncts));
-    solver.push({literal_exprt{converted_or}});
+    solver.push({literal_exprt(converted_or)});
+    solver.set_frozen(converted_or);
 
     decision_proceduret::resultt dec_result=
       solver.dec_solve();
