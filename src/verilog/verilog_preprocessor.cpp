@@ -6,11 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <fstream>
+#include "verilog_preprocessor.h"
 
 #include <util/config.h>
 
-#include "verilog_preprocessor.h"
+#include "verilog_preprocessor_error.h"
+
+#include <fstream>
 
 /*******************************************************************\
 
@@ -245,44 +247,55 @@ Function: verilog_preprocessort::preprocessor
 
 void verilog_preprocessort::preprocessor()
 {
-  files.emplace_back(false, &in, filename);
-
-  while(!files.empty())
+  try
   {
-    files.back().print_line(out, files.size()==1?0:2);
+    files.emplace_back(false, &in, filename);
 
-    char ch, last_out=0;
-
-    while(files.back().get(ch))
+    while(!files.empty())
     {
-      switch(ch)
+      files.back().print_line(out, files.size() == 1 ? 0 : 2);
+
+      char ch, last_out = 0;
+
+      while(files.back().get(ch))
       {
-       case '`':
-        directive();
-        break;
-
-       default:
-        if(condition)
+        switch(ch)
         {
-          filet &file=files.back();
+        case '`':
+          directive();
+          break;
 
-          if(last_out=='\n' && file.last_line!=file.line &&
-             ch!='\n')
+        default:
+          if(condition)
           {
-            file.print_line(out, 0);
-            file.last_line=file.line;
+            filet &file = files.back();
+
+            if(last_out == '\n' && file.last_line != file.line && ch != '\n')
+            {
+              file.print_line(out, 0);
+              file.last_line = file.line;
+            }
+
+            out << ch;
+            last_out = ch;
+
+            if(ch == '\n')
+              file.last_line++;
           }
-
-          out << ch;
-          last_out=ch;
-
-          if(ch=='\n') file.last_line++;
         }
       }
-    }
 
-    if(last_out!='\n') out << '\n';
-    files.pop_back();
+      if(last_out != '\n')
+        out << '\n';
+      files.pop_back();
+    }
+  }
+  catch(const verilog_preprocessor_errort &e)
+  {
+    if(!files.empty())
+      error().source_location = files.back().make_source_location();
+    error() << e.what() << eom;
+    throw 0;
   }
 }
 
@@ -591,9 +604,8 @@ void verilog_preprocessort::directive()
 
       if(it==defines.end())
       {
-        error().source_location = source_location;
-        error() << "unknown preprocessor directive \"" << text << "\"" << eom;
-        throw 0;
+        throw verilog_preprocessor_errort()
+          << "unknown preprocessor directive \"" << text << "\"";
       }
 
       // found it! replace it!
