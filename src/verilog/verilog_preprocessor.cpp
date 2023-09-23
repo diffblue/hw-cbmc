@@ -182,26 +182,29 @@ void verilog_preprocessort::include(
   const std::string &filename,
   const source_locationt &source_location)
 {
-  files.emplace_back(true, nullptr, filename);
-  filet &file=files.back();
-
-  file.in=new std::ifstream(filename.c_str());
-  if(*file.in) return;
-
-  delete file.in;
-  file.close=false;
+  // first try filename as is
+  {
+    auto in = new std::ifstream(filename);
+    if(*in)
+    {
+      files.emplace_back(true, in, filename);
+      return; // done
+    }
+    else
+      delete in;
+  }
 
   // try include paths in given order
-  for(std::list<std::string>::const_iterator
-      it=config.verilog.include_paths.begin();
-      it!=config.verilog.include_paths.end();
-      it++)
+  for(const auto &path : config.verilog.include_paths)
   {
-    file.close=true;
-    file.in = new std::ifstream(concat_dir_file(*it, filename));
-    if(*file.in) return;
-    delete file.in;
-    file.close=false;
+    auto in = new std::ifstream(concat_dir_file(path, filename));
+    if(*in)
+    {
+      files.emplace_back(true, in, filename);
+      return; // done
+    }
+
+    delete in;
   }
 
   error().source_location = source_location;
