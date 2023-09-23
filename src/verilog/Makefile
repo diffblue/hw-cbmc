@@ -1,11 +1,24 @@
-SRC = verilog_language.cpp verilog_y.tab.cpp verilog_lex.yy.cpp verilog_parser.cpp \
-      expr2verilog.cpp verilog_typecheck.cpp verilog_preprocessor.cpp \
-      verilog_typecheck_expr.cpp verilog_synthesis.cpp \
-      verilog_interfaces.cpp verilog_typecheck_base.cpp \
-      verilog_generate.cpp verilog_parameterize_module.cpp \
-      verilog_symbol_table.cpp verilog_parse_tree.cpp \
-      verilog_module.cpp vtype.cpp verilog_typecheck_type.cpp \
-      verilog_interpreter.cpp
+SRC = expr2verilog.cpp \
+      verilog_generate.cpp \
+      verilog_interfaces.cpp \
+      verilog_interpreter.cpp \
+      verilog_language.cpp \
+      verilog_lex.yy.cpp \
+      verilog_module.cpp \
+      verilog_parameterize_module.cpp \
+      verilog_parse_tree.cpp \
+      verilog_parser.cpp \
+      verilog_preprocessor.cpp \
+      verilog_preprocessor_lex.yy.cpp \
+      verilog_preprocessor_tokenizer.cpp \
+      verilog_symbol_table.cpp \
+      verilog_synthesis.cpp \
+      verilog_typecheck.cpp \
+      verilog_typecheck_base.cpp \
+      verilog_typecheck_expr.cpp \
+      verilog_typecheck_type.cpp \
+      verilog_y.tab.cpp \
+      vtype.cpp
 
 include $(CPROVER_DIR)/config.inc
 include $(CPROVER_DIR)/common
@@ -33,6 +46,9 @@ verilog_y.tab.h: verilog_y.tab.cpp
 
 verilog_lex.yy.cpp: scanner.l
 	$(LEX) -Pyyverilog -o$@ scanner.l
+
+verilog_preprocessor_lex.yy.cpp: verilog_preprocessor_tokenizer.l
+	$(LEX) -Pyyverilog_preprocessor -o$@ verilog_preprocessor_tokenizer.l
 
 # extra dependencies
 verilog_y.tab$(OBJEXT): verilog_y.tab.cpp verilog_y.tab.h

@@ -7,6 +7,8 @@
 #include <util/string_hash.h>
 #include <util/preprocessor.h>
 
+#include "verilog_preprocessor_tokenizer.h"
+
 class verilog_preprocessort:public preprocessort
 {
 public:
