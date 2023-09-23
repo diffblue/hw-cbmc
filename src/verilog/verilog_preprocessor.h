@@ -70,8 +70,17 @@ protected:
     std::istream *in;
     std::string filename;
     unsigned line, last_line;
-    
-    filet() { close=false; line=1; last_line=0; column=1; }
+
+    filet(bool _close, std::istream *_in, std::string _filename)
+      : close(_close),
+        in(_in),
+        filename(std::move(_filename)),
+        line(1),
+        last_line(0),
+        column(1)
+    {
+    }
+
     ~filet() { if(close) delete in; }
     
     bool get(char &ch);

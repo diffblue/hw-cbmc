@@ -204,15 +204,8 @@ void verilog_preprocessort::include(
   const std::string &filename,
   const source_locationt &source_location)
 {
-  {
-    filet tmp_file;
-    files.push_back(tmp_file);
-  }
-
+  files.emplace_back(true, nullptr, filename);
   filet &file=files.back();
-
-  file.filename=filename;
-  file.close=true;
 
   file.in=new std::ifstream(filename.c_str());
   if(*file.in) return;
@@ -252,12 +245,7 @@ Function: verilog_preprocessort::preprocessor
 
 void verilog_preprocessort::preprocessor()
 {
-  {
-    filet file;
-    file.in=&in;
-    file.filename=filename;
-    files.push_back(file);
-  }
+  files.emplace_back(false, &in, filename);
 
   while(!files.empty())
   {
