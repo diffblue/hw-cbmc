@@ -363,6 +363,9 @@ Function: verilog_preprocessort::directive
 
 void verilog_preprocessort::directive()
 {
+  // remember the source location
+  auto source_location = files.back().make_source_location();
+
   std::string text;
 
   char ch;
@@ -404,6 +407,7 @@ void verilog_preprocessort::directive()
     // is there a parameter list?
     if(*tptr=='(')
     {
+      error().source_location = source_location;
       error() << "`define with parameters not yet supported" << eom;
       throw 0;
     }
@@ -495,6 +499,7 @@ void verilog_preprocessort::directive()
 
     if(conditionals.empty())
     {
+      error().source_location = source_location;
       error() << "`else without `ifdef/`ifndef" << eom;
       throw 0;
     }
@@ -503,6 +508,7 @@ void verilog_preprocessort::directive()
 
     if(conditional.else_part)
     {
+      error().source_location = source_location;
       error() << "`else without `ifdef/`ifndef" << eom;
       throw 0;
     }
@@ -516,6 +522,7 @@ void verilog_preprocessort::directive()
 
     if(conditionals.empty())
     {
+      error().source_location = source_location;
       error() << "`endif without `ifdef/`ifndef" << eom;
       throw 0;
     }
@@ -530,7 +537,7 @@ void verilog_preprocessort::directive()
   else if(text=="include")
   {
     // remember the source location
-    auto source_location = files.back().make_source_location();
+    auto include_source_location = files.back().make_source_location();
 
     files.back().getline(line);
 
@@ -541,6 +548,7 @@ void verilog_preprocessort::directive()
 
     if(tptr[0]!='"')
     {
+      error() << include_source_location;
       error() << "expected file name" << eom;
       throw 0;
     }
@@ -554,6 +562,7 @@ void verilog_preprocessort::directive()
     {
       if(*tptr==0)
       {
+        error() << include_source_location;
         error() << "expected `\"'" << eom;
         throw 0;
       }
@@ -562,7 +571,7 @@ void verilog_preprocessort::directive()
       tptr++;
     }
 
-    include(filename, source_location);
+    include(filename, include_source_location);
   }
   else if(text=="resetall")
   {
@@ -594,6 +603,7 @@ void verilog_preprocessort::directive()
 
       if(it==defines.end())
       {
+        error().source_location = source_location;
         error() << "unknown preprocessor directive \"" << text << "\"" << eom;
         throw 0;
       }
