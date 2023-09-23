@@ -639,6 +639,62 @@ int ebmc_baset::do_bmc(cnft &solver, bool convert_only)
 
 /*******************************************************************\
 
+Function: ebmc_baset::preprocess
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int ebmc_baset::preprocess()
+{
+  if(cmdline.args.size() != 1)
+  {
+    error() << "please give exactly one file to preprocess" << eom;
+    return 1;
+  }
+
+  const auto &filename = cmdline.args.front();
+
+#ifdef _MSC_VER
+  std::ifstream infile(widen(filename));
+#else
+  std::ifstream infile(filename);
+#endif
+
+  if(!infile)
+  {
+    error() << "failed to open input file `" << filename << "'" << eom;
+    return 1;
+  }
+
+  auto language = get_language_from_filename(filename);
+
+  if(language == nullptr)
+  {
+    source_locationt location;
+    location.set_file(filename);
+    error().source_location = location;
+    error() << "failed to figure out type of file" << eom;
+    return 1;
+  }
+
+  language->set_message_handler(get_message_handler());
+
+  if(language->preprocess(infile, filename, std::cout))
+  {
+    error() << "PREPROCESSING FAILED" << eom;
+    return 1;
+  }
+
+  return 0;
+}
+
+/*******************************************************************\
+
 Function: ebmc_baset::get_model
 
   Inputs:
@@ -654,6 +710,9 @@ int ebmc_baset::get_model()
   // do -I
   if(cmdline.isset('I'))
     config.verilog.include_paths=cmdline.get_values('I');
+
+  if(cmdline.isset("preprocess"))
+    return preprocess();
 
   //
   // parsing

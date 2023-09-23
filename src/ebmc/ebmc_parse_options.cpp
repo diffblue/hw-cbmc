@@ -291,6 +291,7 @@ void ebmc_parse_optionst::help()
     " {y--z3}                        \t use Z3 as solver\n"
     "\n"
     "Debugging options:\n"
+    " {y--preprocess}                \t output the preprocessed source file\n"
     " {y--show-parse}                \t show parse trees\n"
     " {y--show-varmap}               \t show variable map\n"
     " {y--show-netlist}              \t show netlist\n"

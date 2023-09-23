@@ -41,6 +41,8 @@ protected:
   const symbolt *main_symbol;
   optionalt<transt> trans_expr; // transition system expression
 
+  int preprocess();
+
   bool get_main();
   bool get_bound();
 
