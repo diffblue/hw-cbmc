@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/config.h>
 #include <util/file_util.h>
+#include <util/unicode.h>
 
 #include "verilog_preprocessor_error.h"
 
@@ -184,7 +185,12 @@ void verilog_preprocessort::include(
 {
   // first try filename as is
   {
+#ifdef _MSC_VER
+    auto in = new std::ifstream(widen(filename));
+#else
     auto in = new std::ifstream(filename);
+#endif
+
     if(*in)
     {
       files.emplace_back(true, in, filename);
@@ -197,7 +203,14 @@ void verilog_preprocessort::include(
   // try include paths in given order
   for(const auto &path : config.verilog.include_paths)
   {
-    auto in = new std::ifstream(concat_dir_file(path, filename));
+    auto full_name = concat_dir_file(path, filename);
+
+#ifdef _MSC_VER
+    auto in = new std::ifstream(widen(full_name));
+#else
+    auto in = new std::ifstream(full_name);
+#endif
+
     if(*in)
     {
       files.emplace_back(true, in, filename);
