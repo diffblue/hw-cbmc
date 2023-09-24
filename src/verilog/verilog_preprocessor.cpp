@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 
 #include <util/config.h>
+#include <util/file_util.h>
 
 #include "verilog_preprocessor.h"
 
@@ -165,31 +166,6 @@ bool verilog_preprocessort::filet::get(char &ch)
 
 /*******************************************************************\
 
-Function: verilog_preprocessort::build_path
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string verilog_preprocessort::build_path(
-  const std::string &path,
-  const std::string &filename)
-{
-  if(path=="") return filename;
-
-  if(path[path.size()-1]=='/' ||
-     path[path.size()-1]=='\\')
-   return path+filename;
-
-  return path+"/"+filename;
-}
-
-/*******************************************************************\
-
 Function: verilog_preprocessort::include
 
   Inputs:
@@ -220,7 +196,7 @@ void verilog_preprocessort::include(
       it++)
   {
     file.close=true;
-    file.in=new std::ifstream(build_path(*it, filename).c_str());
+    file.in = new std::ifstream(concat_dir_file(*it, filename));
     if(*file.in) return;
     delete file.in;
     file.close=false;
