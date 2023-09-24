@@ -34,10 +34,6 @@ protected:
   virtual void replace_macros(std::string &s);
   virtual void include(const std::string &filename, const source_locationt &);
 
-  static std::string build_path(
-    const std::string &path,
-    const std::string &filename);
-  
   // for ifdef, else, endif
   
   bool condition;
