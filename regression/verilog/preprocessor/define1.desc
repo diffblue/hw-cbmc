@@ -1,0 +1,19 @@
+CORE
+define1.v
+--preprocess
+// Enable multi-line checking
+activate-multi-line-match
+`line 1 "define1.v" 0
+
+
+
+value
+
+value
+
+x-y-z
+x-y-value
+^EXIT=0$
+^SIGNAL=0$
+--
+^PREPROCESSING FAILED$

@@ -9,6 +9,7 @@
 #include "verilog_preprocessor_tokenizer.h"
 
 #include <list>
+#include <map>
 
 class verilog_preprocessort:public preprocessort
 {
@@ -28,14 +29,26 @@ public:
   virtual ~verilog_preprocessort() { }
 
 protected:
-  typedef std::unordered_map<std::string, std::string, string_hash>
-    definest;
-    
+  using tokent = verilog_preprocessor_token_sourcet::tokent;
+
+  struct definet
+  {
+    using parameterst = std::vector<std::string>;
+    parameterst parameters;
+    std::vector<tokent> tokens;
+  };
+
+  static std::string as_string(const std::vector<tokent> &);
+
+  using definest = std::unordered_map<std::string, definet, string_hash>;
   definest defines;
-  
-  virtual void directive();
-  virtual void replace_macros(std::string &s);
-  virtual void include(const std::string &filename);
+
+  void directive();
+  void include(const std::string &filename);
+  definet::parameterst parse_define_parameters();
+
+  using define_argumentst = std::map<std::string, std::vector<tokent>>;
+  define_argumentst parse_define_arguments(const definet &);
 
   // for ifdef, else, endif
   
@@ -60,45 +73,84 @@ protected:
 
   std::list<conditionalt> conditionals;
 
-  // for include
+  class vector_token_sourcet : public verilog_preprocessor_token_sourcet
+  {
+  public:
+    vector_token_sourcet(const std::vector<tokent> &_tokens)
+      : tokens(_tokens), pos(tokens.begin())
+    {
+    }
 
-  class filet
+  protected:
+    const std::vector<tokent> &tokens;
+    std::vector<tokent>::const_iterator pos;
+    void get_token_from_stream() override;
+  };
+
+  // for include and for `define
+  class contextt
   {
   protected:
-    bool close;
+    bool deallocate_in;
     std::istream *in;
     std::string filename;
 
   public:
-    verilog_preprocessor_tokenizert tokenizer;
+    verilog_preprocessor_token_sourcet *tokenizer;
 
-    filet(bool _close, std::istream *_in, std::string _filename)
-      : close(_close), in(_in), filename(std::move(_filename)), tokenizer(*in)
+    // for `define with parameters
+    define_argumentst define_arguments;
+
+    contextt(bool _deallocate_in, std::istream *_in, std::string _filename)
+      : deallocate_in(_deallocate_in),
+        in(_in),
+        filename(std::move(_filename)),
+        tokenizer(new verilog_preprocessor_tokenizert(*in))
     {
     }
 
-    ~filet()
+    explicit contextt(const std::vector<tokent> &tokens)
+      : deallocate_in(false),
+        in(nullptr),
+        filename(),
+        tokenizer(new vector_token_sourcet(tokens))
     {
-      if(close)
+    }
+
+    ~contextt()
+    {
+      delete tokenizer;
+      if(deallocate_in)
         delete in;
     }
 
     void print_line_directive(std::ostream &out, unsigned level) const
     {
-      out << "`line " << tokenizer.line_no() << " \"" << filename << "\" "
+      out << "`line " << tokenizer->line_no() << " \"" << filename << "\" "
           << level << '\n';
     }
 
     source_locationt make_source_location() const;
+
+    bool is_file() const
+    {
+      return !filename.empty();
+    }
   };
 
-  std::list<filet> files;
+  std::list<contextt> context_stack;
+
+  // the topmost context
+  contextt &context()
+  {
+    PRECONDITION(!context_stack.empty());
+    return context_stack.back();
+  }
 
   // the topmost tokenizer
-  verilog_preprocessor_tokenizert &tokenizer()
+  verilog_preprocessor_token_sourcet &tokenizer()
   {
-    PRECONDITION(!files.empty());
-    return files.back().tokenizer;
+    return *(context().tokenizer);
   }
 };
 
