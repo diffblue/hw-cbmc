@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: verilog_preprocessort::filet::make_source_location
+Function: verilog_preprocessort::contextt::make_source_location
 
   Inputs:
 
@@ -28,14 +28,62 @@ Function: verilog_preprocessort::filet::make_source_location
 
 \*******************************************************************/
 
-source_locationt verilog_preprocessort::filet::make_source_location() const
+source_locationt verilog_preprocessort::contextt::make_source_location() const
 {
   source_locationt result;
 
   result.set_file(filename);
-  result.set_line(tokenizer.line_no());
+  result.set_line(tokenizer->line_no());
 
   return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_preprocessort::as_string
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string verilog_preprocessort::as_string(const std::vector<tokent> &tokens)
+{
+  std::string result;
+
+  for(auto &t : tokens)
+    result.append(t.text);
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_preprocessort::vector_token_sourcet::get_token_from_stream
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_preprocessort::vector_token_sourcet::get_token_from_stream()
+{
+  if(pos == tokens.end())
+  {
+    token.text.clear();
+    token.kind = tokent::END_OF_FILE;
+  }
+  else
+  {
+    token = *pos;
+    pos++;
+  }
 }
 
 /*******************************************************************\
@@ -62,8 +110,8 @@ void verilog_preprocessort::include(const std::string &filename)
 
     if(*in)
     {
-      files.emplace_back(true, in, filename);
-      files.back().print_line_directive(out, 1); // 'enter'
+      context_stack.emplace_back(true, in, filename);
+      context().print_line_directive(out, 1); // 'enter'
       return; // done
     }
     else
@@ -83,8 +131,8 @@ void verilog_preprocessort::include(const std::string &filename)
 
     if(*in)
     {
-      files.emplace_back(true, in, filename);
-      files.back().print_line_directive(out, 1); // 'enter'
+      context_stack.emplace_back(true, in, filename);
+      context().print_line_directive(out, 1); // 'enter'
       return; // done
     }
 
@@ -111,11 +159,12 @@ void verilog_preprocessort::preprocessor()
 {
   try
   {
-    files.emplace_back(false, &in, filename);
+    // the first context is the input file
+    context_stack.emplace_back(false, &in, filename);
 
-    files.back().print_line_directive(out, 0); // 'neither'
+    context().print_line_directive(out, 0); // 'neither'
 
-    while(!files.empty())
+    while(!context_stack.empty())
     {
       while(!tokenizer().eof())
       {
@@ -124,20 +173,30 @@ void verilog_preprocessort::preprocessor()
           directive();
         else if(condition)
         {
-          out << token;
+          auto a_it = context().define_arguments.find(token.text);
+          if(a_it == context().define_arguments.end())
+            out << token;
+          else
+          {
+            // Create a new context for the define argument.
+            // We then continue in that context.
+            context_stack.emplace_back(a_it->second);
+          }
         }
       }
 
-      files.pop_back();
+      const bool is_file = context().is_file();
+      context_stack.pop_back();
 
-      if(!files.empty())
-        files.back().print_line_directive(out, 2); // 'exit'
+      // print the line directive when we exit an include file
+      if(!context_stack.empty() && is_file)
+        context().print_line_directive(out, 2); // 'exit'
     }
   }
   catch(const verilog_preprocessor_errort &e)
   {
-    if(!files.empty())
-      error().source_location = files.back().make_source_location();
+    if(!context_stack.empty())
+      error().source_location = context().make_source_location();
     error() << e.what() << eom;
     throw 0;
   }
@@ -145,7 +204,7 @@ void verilog_preprocessort::preprocessor()
 
 /*******************************************************************\
 
-Function: verilog_preprocessort::replace_macros
+Function: verilog_preprocessort::parse_define_parameters
 
   Inputs:
 
@@ -155,43 +214,96 @@ Function: verilog_preprocessort::replace_macros
 
 \*******************************************************************/
 
-void verilog_preprocessort::replace_macros(std::string &s)
+auto verilog_preprocessort::parse_define_parameters() -> definet::parameterst
 {
-  std::string dest;
+  tokenizer().next_token(); // eat (
 
-  for(unsigned i=0; i<s.size();)
+  definet::parameterst result;
+
+  while(true)
   {
-    if(s[i]=='`')
-    {
-      i++;
-      unsigned start=i;
+    tokenizer().skip_ws();
 
-      while(i<s.size() && 
-            (isalnum(s[i]) || s[i]=='$' || s[i]=='_'))
-        i++;
+    auto parameter = tokenizer().next_token();
+    if(!parameter.is_identifier())
+      throw verilog_preprocessor_errort() << "expecting a define parameter";
 
-      std::string text(s, start, i-start);
+    result.push_back(parameter.text);
 
-      definest::const_iterator it=defines.find(text);
+    tokenizer().skip_ws();
 
-      if(it==defines.end())
-      {
-        error() << "unknown preprocessor macro \"" << text << "\"" << eom;
-        throw 0;
-      }
+    auto token = tokenizer().next_token();
 
-      // found it! replace it!
-
-      dest+=it->second;
-    }
+    if(token == ')')
+      break; // done
+    else if(token == ',')
+      continue;           // keep going
+    else if(token == '=') // SystemVerilog 2009
+      throw verilog_preprocessor_errort()
+        << "default parameters are not supported yet";
     else
-    {
-      dest+=s[i];
-      i++;
-    }
+      throw verilog_preprocessor_errort() << "expecting a define parameter";
   }
 
-  dest.swap(s);
+  return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_preprocessort::parse_define_arguments
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+auto verilog_preprocessort::parse_define_arguments(const definet &define)
+  -> std::map<std::string, std::vector<tokent>>
+{
+  if(define.parameters.empty())
+    return {};
+
+  if(tokenizer().next_token() != '(')
+    throw verilog_preprocessor_errort() << "expecting define arguments";
+
+  // We start with a vector of size 1,
+  // which contains one empty vector of argument tokens.
+  std::vector<std::vector<tokent>> arguments = {{}};
+
+  while(true)
+  {
+    if(tokenizer().eof())
+      throw verilog_preprocessor_errort()
+        << "eof inside a define argument list";
+
+    auto token = tokenizer().next_token();
+    if(token == ',')
+    {
+      arguments.push_back({}); // next argument
+      tokenizer().skip_ws();
+    }
+    else if(token == ')')
+      break; // done
+    else
+      arguments.back().push_back(std::move(token));
+  }
+
+  // does the number of arguments match the number of parameters?
+  if(arguments.size() != define.parameters.size())
+    throw verilog_preprocessor_errort()
+      << "expected " << define.parameters.size() << " arguments, but got "
+      << arguments.size();
+
+  // sort into the map
+  std::map<std::string, std::vector<tokent>> result;
+
+  for(std::size_t i = 0; i < define.parameters.size(); i++)
+    result[define.parameters[i]] = std::move(arguments[i]);
+
+  return result;
 }
 
 /*******************************************************************\
@@ -209,12 +321,13 @@ Function: verilog_preprocessort::directive
 void verilog_preprocessort::directive()
 {
   // we expect an identifier after the backtick
-  auto directive_token = tokenizer().next_token();
+  const auto directive_token = tokenizer().next_token();
+
   if(!directive_token.is_identifier())
     throw verilog_preprocessor_errort()
       << "expecting an identifier after backtick";
 
-  const auto &text = directive_token.text;
+  auto &text = directive_token.text;
 
   if(text=="define")
   {
@@ -229,47 +342,41 @@ void verilog_preprocessort::directive()
     tokenizer().skip_ws();
 
     // we expect an identifier after `define
-    auto identifier_token = tokenizer().next_token();
+    const auto identifier_token = tokenizer().next_token();
+
     if(!identifier_token.is_identifier())
       throw verilog_preprocessor_errort()
         << "expecting an identifier after `define";
 
     auto &identifier = identifier_token.text;
-
-    // Is there a parameter list?
-    // These have been introduced in Verilog 2001.
-    if(tokenizer().peek() == '(')
-    {
-      throw verilog_preprocessor_errort()
-        << "`define with parameters not yet supported";
-    }
+    auto &define = defines[identifier];
 
     // skip whitespace
     tokenizer().skip_ws();
 
-    // read any tokens until end of line
-    std::string value;
-    while(!tokenizer().eof())
+    // Is there a parameter list?
+    // These have been introduced in Verilog 2001.
+    if(tokenizer().peek() == '(')
+      define.parameters = parse_define_parameters();
+
+    // skip whitespace
+    tokenizer().skip_ws();
+
+    // Read any tokens until end of line.
+    // Note that any defines in this sequence
+    // are not expanded at this point.
+    while(!tokenizer().eof() && tokenizer().peek() != '\n')
     {
       auto token = tokenizer().next_token();
-      if(token.is_identifier())
-      {
-        value += token.text;
-      }
-      else if(token == '\n')
-        break;
-      else
-      {
-        value += token.text;
-      }
+      define.tokens.push_back(std::move(token));
     }
 
 #ifdef DEBUG
-    std::cout << "DEFINE: >" << identifier
-              << "< = >" << value << "<" << std::endl;
-    #endif
-
-    defines[identifier]=value;
+    std::cout << "DEFINE: >" << identifier << "< = >";
+    for(auto &t : define.tokens)
+      std::cout << t;
+    std::cout << '<' << std::endl;
+#endif
   }
   else if(text=="undef")
   {
@@ -284,7 +391,8 @@ void verilog_preprocessort::directive()
     tokenizer().skip_ws();
 
     // we expect an identifier after `undef
-    auto identifier_token = tokenizer().next_token();
+    const auto identifier_token = tokenizer().next_token();
+
     if(!identifier_token.is_identifier())
       throw verilog_preprocessor_errort()
         << "expecting an identifier after `undef";
@@ -309,7 +417,8 @@ void verilog_preprocessort::directive()
     tokenizer().skip_ws();
 
     // we expect an identifier
-    auto identifier_token = tokenizer().next_token();
+    const auto identifier_token = tokenizer().next_token();
+
     if(!identifier_token.is_identifier())
       throw verilog_preprocessor_errort()
         << "expecting an identifier after ifdef";
@@ -370,7 +479,7 @@ void verilog_preprocessort::directive()
     tokenizer().skip_ws();
 
     // we expect a string literal
-    auto file_token = tokenizer().next_token();
+    const auto file_token = tokenizer().next_token();
     if(!file_token.is_string_literal())
       throw verilog_preprocessor_errort()
         << "expecting a string literal after `include";
@@ -403,19 +512,23 @@ void verilog_preprocessort::directive()
   else
   {
     // check defines
+    if(!condition)
+      return; // ignore
 
-    if(condition)
+    definest::const_iterator it = defines.find(text);
+
+    if(it == defines.end())
     {
-      definest::const_iterator it=defines.find(text);
-
-      if(it==defines.end())
-      {
-        throw verilog_preprocessor_errort()
-          << "unknown preprocessor directive \"" << text << "\"";
-      }
-
-      // found it! replace it!
-      out << it->second;
+      throw verilog_preprocessor_errort()
+        << "unknown preprocessor directive \"" << text << "\"";
     }
+
+    // Found it!
+    // Parse the arguments, if any.
+    auto arguments = parse_define_arguments(it->second);
+
+    // Create a new context. We then continue in that context.
+    context_stack.emplace_back(it->second.tokens);
+    context().define_arguments = std::move(arguments);
   }
 }
