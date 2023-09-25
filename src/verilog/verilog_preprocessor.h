@@ -1,11 +1,14 @@
 #ifndef VERILOG_PREPROCESSOR_H
 #define VERILOG_PREPROCESSOR_H
 
-#include <list>
-
+#include <util/invariant.h>
 #include <util/irep.h>
-#include <util/string_hash.h>
 #include <util/preprocessor.h>
+#include <util/string_hash.h>
+
+#include "verilog_preprocessor_tokenizer.h"
+
+#include <list>
 
 class verilog_preprocessort:public preprocessort
 {
@@ -32,7 +35,7 @@ protected:
   
   virtual void directive();
   virtual void replace_macros(std::string &s);
-  virtual void include(const std::string &filename, const source_locationt &);
+  virtual void include(const std::string &filename);
 
   // for ifdef, else, endif
   
@@ -61,44 +64,42 @@ protected:
 
   class filet
   {
-  public:
+  protected:
     bool close;
     std::istream *in;
     std::string filename;
-    unsigned line, last_line;
+
+  public:
+    verilog_preprocessor_tokenizert tokenizer;
 
     filet(bool _close, std::istream *_in, std::string _filename)
-      : close(_close),
-        in(_in),
-        filename(std::move(_filename)),
-        line(1),
-        last_line(0),
-        column(1)
+      : close(_close), in(_in), filename(std::move(_filename)), tokenizer(*in)
     {
     }
 
-    ~filet() { if(close) delete in; }
-    
-    bool get(char &ch);
-    void getline(std::string &dest);
+    ~filet()
+    {
+      if(close)
+        delete in;
+    }
 
-    // a minimal scanner
-    
-    typedef enum { INITIAL, C_COMMENT, CPP_COMMENT,
-                   DASH, C_COMMENT2 } statet;
-    
-    statet state;  
-    unsigned column;
-    bool cpp_comment_empty;
-
-    void print_line(std::ostream &out, unsigned level)
-    { out << "`line " << line << " \"" 
-          <<filename << "\" " << level << std::endl; }
+    void print_line_directive(std::ostream &out, unsigned level) const
+    {
+      out << "`line " << tokenizer.line_no() << " \"" << filename << "\" "
+          << level << '\n';
+    }
 
     source_locationt make_source_location() const;
   };
 
-  std::list<filet> files;  
+  std::list<filet> files;
+
+  // the topmost tokenizer
+  verilog_preprocessor_tokenizert &tokenizer()
+  {
+    PRECONDITION(!files.empty());
+    return files.back().tokenizer;
+  }
 };
 
 #endif

@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/config.h>
 #include <util/file_util.h>
+#include <util/unicode.h>
 
 #include "verilog_preprocessor_error.h"
 
@@ -32,138 +33,9 @@ source_locationt verilog_preprocessort::filet::make_source_location() const
   source_locationt result;
 
   result.set_file(filename);
-  result.set_line(line);
+  result.set_line(tokenizer.line_no());
 
   return result;
-}
-
-/*******************************************************************\
-
-Function: verilog_preprocessort::getline
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_preprocessort::filet::getline(std::string &dest)
-{
-  dest="";
-
-  char ch;
-
-  while(get(ch) && ch!='\n')
-    if(ch!='\r')
-      dest+=ch;
-}
-
-/*******************************************************************\
-
-Function: verilog_preprocessort::filet::get
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool verilog_preprocessort::filet::get(char &ch)
-{
-  state=INITIAL;
-
-  while(in->get(ch))
-  {
-    if(ch=='\n')
-    {
-      line++;
-      column=1;
-    }
-    else
-      column++;
-
-    switch(state)
-    {
-     case INITIAL:
-      switch(ch)
-      {
-       case '/':
-        state=DASH;
-        break;
-
-       default:
-        return true;
-      }
-      break;
-
-     case DASH:
-      switch(ch)
-      {
-       case '*':
-        state=C_COMMENT;
-        break;
-
-       case '/':
-        state=CPP_COMMENT;
-        cpp_comment_empty=(column==3);
-        break;
-
-       default:
-        in->unget();
-        ch='/';
-        return true;
-      }
-      break;
-
-     case C_COMMENT:
-      switch(ch)
-      {
-       case '*':
-        state=C_COMMENT2;
-        break;
-
-       default:;
-      }
-      break;
-
-     case C_COMMENT2:
-      switch(ch)
-      {
-       case '/':
-        state=INITIAL;
-        break;
-
-       case '*':
-        break;
-
-       default:
-        state=C_COMMENT;
-      }
-      break;
-
-     case CPP_COMMENT:
-      switch(ch)
-      {
-       case '\n':
-        if(cpp_comment_empty)
-        {
-          state=INITIAL;
-          break;
-        }
-
-        return true;
-
-       default:;
-      }
-      break;
-    }
-  }
-
-  return false;
 }
 
 /*******************************************************************\
@@ -178,35 +50,49 @@ Function: verilog_preprocessort::include
 
 \*******************************************************************/
 
-void verilog_preprocessort::include(
-  const std::string &filename,
-  const source_locationt &source_location)
+void verilog_preprocessort::include(const std::string &filename)
 {
-  files.emplace_back(true, nullptr, filename);
-  filet &file=files.back();
-
-  file.in=new std::ifstream(filename.c_str());
-  if(*file.in) return;
-
-  delete file.in;
-  file.close=false;
-
-  // try include paths in given order
-  for(std::list<std::string>::const_iterator
-      it=config.verilog.include_paths.begin();
-      it!=config.verilog.include_paths.end();
-      it++)
+  // first try filename as is
   {
-    file.close=true;
-    file.in = new std::ifstream(concat_dir_file(*it, filename));
-    if(*file.in) return;
-    delete file.in;
-    file.close=false;
+#ifdef _MSC_VER
+    auto in = new std::ifstream(widen(filename));
+#else
+    auto in = new std::ifstream(filename);
+#endif
+
+    if(*in)
+    {
+      files.emplace_back(true, in, filename);
+      files.back().print_line_directive(out, 1); // 'enter'
+      return; // done
+    }
+    else
+      delete in;
   }
 
-  error().source_location = source_location;
-  error() << "include file `" << filename << "' not found" << eom;
-  throw 0;
+  // try include paths in given order
+  for(const auto &path : config.verilog.include_paths)
+  {
+    auto full_name = concat_dir_file(path, filename);
+
+#ifdef _MSC_VER
+    auto in = new std::ifstream(widen(full_name));
+#else
+    auto in = new std::ifstream(full_name);
+#endif
+
+    if(*in)
+    {
+      files.emplace_back(true, in, filename);
+      files.back().print_line_directive(out, 1); // 'enter'
+      return; // done
+    }
+
+    delete in;
+  }
+
+  throw verilog_preprocessor_errort()
+    << "include file `" << filename << "' not found";
 }
 
 /*******************************************************************\
@@ -227,43 +113,25 @@ void verilog_preprocessort::preprocessor()
   {
     files.emplace_back(false, &in, filename);
 
+    files.back().print_line_directive(out, 0); // 'neither'
+
     while(!files.empty())
     {
-      files.back().print_line(out, files.size() == 1 ? 0 : 2);
-
-      char ch, last_out = 0;
-
-      while(files.back().get(ch))
+      while(!tokenizer().eof())
       {
-        switch(ch)
-        {
-        case '`':
+        auto token = tokenizer().next_token();
+        if(token == '`')
           directive();
-          break;
-
-        default:
-          if(condition)
-          {
-            filet &file = files.back();
-
-            if(last_out == '\n' && file.last_line != file.line && ch != '\n')
-            {
-              file.print_line(out, 0);
-              file.last_line = file.line;
-            }
-
-            out << ch;
-            last_out = ch;
-
-            if(ch == '\n')
-              file.last_line++;
-          }
+        else if(condition)
+        {
+          out << token;
         }
       }
 
-      if(last_out != '\n')
-        out << '\n';
       files.pop_back();
+
+      if(!files.empty())
+        files.back().print_line_directive(out, 2); // 'exit'
     }
   }
   catch(const verilog_preprocessor_errort &e)
@@ -340,69 +208,63 @@ Function: verilog_preprocessort::directive
 
 void verilog_preprocessort::directive()
 {
-  // remember the source location
-  auto source_location = files.back().make_source_location();
+  // we expect an identifier after the backtick
+  auto directive_token = tokenizer().next_token();
+  if(!directive_token.is_identifier())
+    throw verilog_preprocessor_errort()
+      << "expecting an identifier after backtick";
 
-  std::string text;
-
-  char ch;
-
-  while(files.back().in->get(ch))
-  {
-    if(isalnum(ch) || ch=='$' || ch=='_')
-      text+=ch;
-    else
-    {
-      files.back().in->unget();
-      break;
-    }
-  }
-
-  std::string line;
+  const auto &text = directive_token.text;
 
   if(text=="define")
   {
-    files.back().getline(line);
-
     if(!condition)
+    {
+      // ignore
+      tokenizer().skip_until_eol();
       return;
-
-    const char *tptr=line.c_str();
-
-    // skip whitespace
-    while(*tptr==' ' || *tptr=='\t') tptr++;
-
-    std::string identifier, value;
-
-    // copy identifier
-    while(isalnum(*tptr) || *tptr=='$' || *tptr=='_')
-    {
-      identifier+=*tptr;
-      tptr++;
-    }
-
-    // is there a parameter list?
-    if(*tptr=='(')
-    {
-      error().source_location = source_location;
-      error() << "`define with parameters not yet supported" << eom;
-      throw 0;
     }
 
     // skip whitespace
-    while(*tptr==' ' || *tptr=='\t') tptr++;
+    tokenizer().skip_ws();
 
-    value=tptr;
+    // we expect an identifier after `define
+    auto identifier_token = tokenizer().next_token();
+    if(!identifier_token.is_identifier())
+      throw verilog_preprocessor_errort()
+        << "expecting an identifier after `define";
 
-    // remove trailing whitespace
+    auto &identifier = identifier_token.text;
 
-    while(value.size()!=0 &&
-          (value[value.size()-1]==' ' || value[value.size()-1]=='\t'))
-      value.resize(value.size()-1);
+    // Is there a parameter list?
+    // These have been introduced in Verilog 2001.
+    if(tokenizer().peek() == '(')
+    {
+      throw verilog_preprocessor_errort()
+        << "`define with parameters not yet supported";
+    }
 
-    replace_macros(value);
+    // skip whitespace
+    tokenizer().skip_ws();
 
-    #ifdef DEBUG
+    // read any tokens until end of line
+    std::string value;
+    while(!tokenizer().eof())
+    {
+      auto token = tokenizer().next_token();
+      if(token.is_identifier())
+      {
+        value += token.text;
+      }
+      else if(token == '\n')
+        break;
+      else
+      {
+        value += token.text;
+      }
+    }
+
+#ifdef DEBUG
     std::cout << "DEFINE: >" << identifier
               << "< = >" << value << "<" << std::endl;
     #endif
@@ -411,83 +273,76 @@ void verilog_preprocessort::directive()
   }
   else if(text=="undef")
   {
-    files.back().getline(line);
-
     if(!condition)
+    {
+      // ignore
+      tokenizer().skip_until_eol();
       return;
-
-    const char *tptr=line.c_str();
+    }
 
     // skip whitespace
-    while(*tptr==' ' || *tptr=='\t') tptr++;
+    tokenizer().skip_ws();
 
-    std::string identifier, value;
+    // we expect an identifier after `undef
+    auto identifier_token = tokenizer().next_token();
+    if(!identifier_token.is_identifier())
+      throw verilog_preprocessor_errort()
+        << "expecting an identifier after `undef";
 
-    // copy identifier
-    while(isalnum(*tptr) || *tptr=='$' || *tptr=='_')
-    {
-      identifier+=*tptr;
-      tptr++;
-    }
+    auto &identifier = identifier_token.text;
+
+    tokenizer().skip_until_eol();
 
     definest::iterator it=defines.find(identifier);
 
     if(it!=defines.end())
     {
       // found it! remove it!
-
       defines.erase(it);
     }
   }
   else if(text=="ifdef" || text=="ifndef")
   {
-    files.back().getline(line);
-
-    const char *tptr=line.c_str();
+    bool ifdef = text == "ifdef";
 
     // skip whitespace
-    while(*tptr==' ' || *tptr=='\t') tptr++;
+    tokenizer().skip_ws();
 
-    std::string identifier, value;
+    // we expect an identifier
+    auto identifier_token = tokenizer().next_token();
+    if(!identifier_token.is_identifier())
+      throw verilog_preprocessor_errort()
+        << "expecting an identifier after ifdef";
 
-    // copy identifier
-    while(isalnum(*tptr) || *tptr=='$' || *tptr=='_')
-    {
-      identifier+=*tptr;
-      tptr++;
-    }
+    auto &identifier = identifier_token.text;
 
-    definest::iterator it=defines.find(identifier);
+    tokenizer().skip_until_eol();
+
+    bool defined = defines.find(identifier) != defines.end();
 
     conditionalt conditional;
-    
-    if(text=="ifdef")
-      conditional.condition=(it!=defines.end());
+
+    if(ifdef)
+      conditional.condition = defined;
     else
-      conditional.condition=(it==defines.end());
-    
+      conditional.condition = !defined;
+
     conditional.previous_condition=condition;
     conditionals.push_back(conditional);
     condition=conditional.get_cond();
   }
   else if(text=="else")
   {
-    files.back().getline(line);
-
     if(conditionals.empty())
-    {
-      error().source_location = source_location;
-      error() << "`else without `ifdef/`ifndef" << eom;
-      throw 0;
-    }
+      throw verilog_preprocessor_errort() << "`else without `ifdef/`ifndef";
+
+    tokenizer().skip_until_eol();
 
     conditionalt &conditional=conditionals.back();
 
     if(conditional.else_part)
     {
-      error().source_location = source_location;
-      error() << "`else without `ifdef/`ifndef" << eom;
-      throw 0;
+      throw verilog_preprocessor_errort() << "`else without `ifdef/`ifndef";
     }
 
     conditional.else_part=true;
@@ -495,14 +350,12 @@ void verilog_preprocessort::directive()
   }
   else if(text=="endif")
   {
-    files.back().getline(line);
-
     if(conditionals.empty())
     {
-      error().source_location = source_location;
-      error() << "`endif without `ifdef/`ifndef" << eom;
-      throw 0;
+      throw verilog_preprocessor_errort() << "`endif without `ifdef/`ifndef";
     }
+
+    tokenizer().skip_until_eol();
 
     conditionals.pop_back();
 
@@ -513,62 +366,39 @@ void verilog_preprocessort::directive()
   }
   else if(text=="include")
   {
-    // remember the source location
-    auto include_source_location = files.back().make_source_location();
-
-    files.back().getline(line);
-
-    const char *tptr=line.c_str();
-
     // skip whitespace
-    while(*tptr==' ' || *tptr=='\t') tptr++;
+    tokenizer().skip_ws();
 
-    if(tptr[0]!='"')
-    {
-      error() << include_source_location;
-      error() << "expected file name" << eom;
-      throw 0;
-    }
+    // we expect a string literal
+    auto file_token = tokenizer().next_token();
+    if(!file_token.is_string_literal())
+      throw verilog_preprocessor_errort()
+        << "expecting a string literal after `include";
 
-    tptr++;
-
-    std::string filename;
-
-    // copy filename
-    while(*tptr!='"')
-    {
-      if(*tptr==0)
-      {
-        error() << include_source_location;
-        error() << "expected `\"'" << eom;
-        throw 0;
-      }
-
-      filename+=*tptr;
-      tptr++;
-    }
-
-    include(filename, include_source_location);
+    // strip quotes off string literal, escaping, etc.
+    auto filename = file_token.string_literal_value();
+    tokenizer().skip_until_eol();
+    include(filename);
   }
   else if(text=="resetall")
   {
     // ignored
-    files.back().getline(line);
+    tokenizer().skip_until_eol();
   }
   else if(text=="timescale")
   {
     // ignored
-    files.back().getline(line);
+    tokenizer().skip_until_eol();
   }
   else if(text=="celldefine")
   {
     // ignored
-    files.back().getline(line);
+    tokenizer().skip_until_eol();
   }
   else if(text=="endcelldefine")
   {
     // ignored
-    files.back().getline(line);
+    tokenizer().skip_until_eol();
   }
   else
   {
@@ -585,7 +415,6 @@ void verilog_preprocessort::directive()
       }
 
       // found it! replace it!
-
       out << it->second;
     }
   }
