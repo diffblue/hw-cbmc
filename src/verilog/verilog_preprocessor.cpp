@@ -362,13 +362,23 @@ void verilog_preprocessort::directive()
     // skip whitespace
     tokenizer().skip_ws();
 
-    // Read any tokens until end of line.
+    // Read any tokens until end of line,
+    // but note that \n can be escaped with a backslash.
     // Note that any defines in this sequence
     // are not expanded at this point.
     while(!tokenizer().eof() && tokenizer().peek() != '\n')
     {
       auto token = tokenizer().next_token();
-      define.tokens.push_back(std::move(token));
+      if(token == '\\' && tokenizer().peek() == '\n')
+      {
+        // Eat the newline, which is escaped.
+        // Not clear whether the newline is meant to show
+        // in the expansion.
+        auto nl = tokenizer().next_token();
+        define.tokens.push_back(std::move(nl));
+      }
+      else
+        define.tokens.push_back(std::move(token));
     }
 
 #ifdef DEBUG
