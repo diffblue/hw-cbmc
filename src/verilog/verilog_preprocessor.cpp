@@ -98,45 +98,19 @@ Function: verilog_preprocessort::include
 
 \*******************************************************************/
 
-void verilog_preprocessort::include(const std::string &filename)
+std::string
+verilog_preprocessort::find_include_file(const std::string &filename)
 {
   // first try filename as is
-  {
-#ifdef _MSC_VER
-    auto in = new std::ifstream(widen(filename));
-#else
-    auto in = new std::ifstream(filename);
-#endif
-
-    if(*in)
-    {
-      context_stack.emplace_back(true, in, filename);
-      context().print_line_directive(out, 1); // 'enter'
-      return; // done
-    }
-    else
-      delete in;
-  }
+  if(file_exists(filename))
+    return filename; // done
 
   // try include paths in given order
   for(const auto &path : config.verilog.include_paths)
   {
     auto full_name = concat_dir_file(path, filename);
-
-#ifdef _MSC_VER
-    auto in = new std::ifstream(widen(full_name));
-#else
-    auto in = new std::ifstream(full_name);
-#endif
-
-    if(*in)
-    {
-      context_stack.emplace_back(true, in, filename);
-      context().print_line_directive(out, 1); // 'enter'
-      return; // done
-    }
-
-    delete in;
+    if(file_exists(full_name))
+      return full_name; // done
   }
 
   throw verilog_preprocessor_errort()
@@ -486,8 +460,23 @@ void verilog_preprocessort::directive()
 
     // strip quotes off string literal, escaping, etc.
     auto filename = file_token.string_literal_value();
+    auto full_path = find_include_file(filename);
+
+#ifdef _MSC_VER
+    auto in = new std::ifstream(widen(full_path));
+#else
+    auto in = new std::ifstream(full_path);
+#endif
+
+    if(!*in)
+      throw verilog_preprocessor_errort() << "failed to open an include file";
+
     tokenizer().skip_until_eol();
-    include(filename);
+    tokenizer().next_token(); // eat the \n
+
+    context_stack.emplace_back(true, in, filename);
+    context().print_line_directive(out, 1); // 'enter'
+    // we now continue in the new context
   }
   else if(text=="resetall")
   {
