@@ -1,0 +1,7 @@
+CORE
+multi-line-define3.v
+
+^file multi-line-define3\.v line 4: syntax error before 'syntax'$
+^EXIT=1$
+^SIGNAL=0$
+--

@@ -119,6 +119,28 @@ verilog_preprocessort::find_include_file(const std::string &filename)
 
 /*******************************************************************\
 
+Function: verilog_preprocessort::emit_line_directive
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_preprocessort::emit_line_directive(unsigned level)
+{
+  PRECONDITION(context().is_file());
+
+  out << "`line " << tokenizer().line_no() << " \"" << context().filename
+      << "\" " << level << '\n';
+
+  parser_line_no = tokenizer().line_no();
+}
+
+/*******************************************************************\
+
 Function: verilog_preprocessort::preprocessor
 
   Inputs:
@@ -136,12 +158,20 @@ void verilog_preprocessort::preprocessor()
     // the first context is the input file
     context_stack.emplace_back(false, &in, filename);
 
-    context().print_line_directive(out, 0); // 'neither'
-
     while(!context_stack.empty())
     {
       while(!tokenizer().eof())
       {
+        // Emit line directive to get parser line count
+        // back in sync with preprocessor line count.
+        if(
+          condition && context().is_file() &&
+          parser_line_no != tokenizer().line_no())
+        {
+          emit_line_directive(0); // 'neither'
+        }
+
+        // Read a token.
         auto token = tokenizer().next_token();
         if(token == '`')
           directive();
@@ -149,7 +179,14 @@ void verilog_preprocessort::preprocessor()
         {
           auto a_it = context().define_arguments.find(token.text);
           if(a_it == context().define_arguments.end())
+          {
+            // Not an argument, just emit
             out << token;
+
+            // track parser line number
+            if(token == '\n')
+              parser_line_no++;
+          }
           else
           {
             // Create a new context for the define argument.
@@ -164,7 +201,7 @@ void verilog_preprocessort::preprocessor()
 
       // print the line directive when we exit an include file
       if(!context_stack.empty() && is_file)
-        context().print_line_directive(out, 2); // 'exit'
+        emit_line_directive(2); // 'exit'
     }
   }
   catch(const verilog_preprocessor_errort &e)
@@ -346,10 +383,9 @@ void verilog_preprocessort::directive()
       if(token == '\\' && tokenizer().peek() == '\n')
       {
         // Eat the newline, which is escaped.
-        // Not clear whether the newline is meant to show
-        // in the expansion.
-        auto nl = tokenizer().next_token();
-        define.tokens.push_back(std::move(nl));
+        // We rely on the sync_line_no mechanism to
+        // get the parser's line count back in sync.
+        tokenizer().next_token();
       }
       else
         define.tokens.push_back(std::move(token));
@@ -485,7 +521,7 @@ void verilog_preprocessort::directive()
     tokenizer().next_token(); // eat the \n
 
     context_stack.emplace_back(true, in, filename);
-    context().print_line_directive(out, 1); // 'enter'
+    emit_line_directive(1); // 'enter'
     // we now continue in the new context
   }
   else if(text=="resetall")
