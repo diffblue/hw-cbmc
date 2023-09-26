@@ -14,9 +14,28 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr.h>
 
 /// The syntax for these A.B, where A is a module identifier and B
-/// is an identifier within that module.
+/// is an identifier within that module. B is given als symbol_exprt.
 class hierarchical_identifier_exprt : public binary_exprt
 {
+public:
+  const exprt &module() const
+  {
+    return op0();
+  }
+
+  const symbol_exprt &item() const
+  {
+    return static_cast<const symbol_exprt &>(binary_exprt::op1());
+  }
+
+  const symbol_exprt &rhs() const
+  {
+    return item();
+  }
+
+protected:
+  using binary_exprt::op0;
+  using binary_exprt::op1;
 };
 
 extern inline const hierarchical_identifier_exprt
@@ -891,6 +910,38 @@ extern inline verilog_continuous_assignt &to_verilog_continuous_assign(exprt &ex
 {
   assert(expr.id()==ID_continuous_assign);
   return static_cast<verilog_continuous_assignt &>(expr);
+}
+
+class verilog_parameter_overridet : public verilog_module_itemt
+{
+public:
+  verilog_parameter_overridet() : verilog_module_itemt(ID_parameter_override)
+  {
+  }
+
+  exprt::operandst &assignments()
+  {
+    return operands();
+  }
+
+  const exprt::operandst &assignments() const
+  {
+    return operands();
+  }
+};
+
+extern inline const verilog_parameter_overridet &
+to_verilog_parameter_override(const exprt &expr)
+{
+  assert(expr.id() == ID_parameter_override);
+  return static_cast<const verilog_parameter_overridet &>(expr);
+}
+
+extern inline verilog_parameter_overridet &
+to_verilog_parameter_override(exprt &expr)
+{
+  assert(expr.id() == ID_parameter_override);
+  return static_cast<verilog_parameter_overridet &>(expr);
 }
 
 class verilog_assignt:public verilog_statementt

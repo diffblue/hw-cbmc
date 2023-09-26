@@ -526,9 +526,9 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
 {
   const irep_idt &inst_module=inst.get_module();
 
-  // must be user-defined
+  // The instantiated module must be user-defined.
 
-  const irep_idt identifier=
+  const irep_idt module_identifier =
     verilog_module_symbol(id2string(inst_module));
 
   exprt::operandst &parameter_assignments=
@@ -550,32 +550,36 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
     }
   }
 
-  irep_idt new_identifier=
-    parameterize_module(
-      inst.source_location(),
-      identifier,
-      parameter_assignments);
-
-  inst.set_module(new_identifier);
-  
   // get the instance symbols
-  forall_operands(it, inst)
+  Forall_operands(it, inst)
   {
-    irep_idt instance_identifier=
-      id2string(module_symbol.name)+"."+id2string(it->get(ID_instance));
-  
+    const auto instance_name = it->get(ID_instance);
+
+    const irep_idt instance_identifier =
+      id2string(module_symbol.name) + "." + id2string(instance_name);
+
+    // add relevant defparam assignments
+    auto &instance_defparams = defparams[instance_identifier];
+
+    irep_idt new_module_identifier = parameterize_module(
+      inst.source_location(),
+      module_identifier,
+      parameter_assignments,
+      instance_defparams);
+
+    inst.set_module(new_module_identifier);
+
     symbolt &instance_symbol=symbol_table_lookup(instance_identifier);
   
     // fix the module in the instance symbol
-    instance_symbol.value.set(ID_module, new_identifier);
-  }
-  
-  const symbolt &parameterized_module_symbol=
-    symbol_table_lookup(new_identifier);
+    instance_symbol.value.set(ID_module, new_module_identifier);
 
-  // check the arguments
-  Forall_operands(it, inst)
+    const symbolt &parameterized_module_symbol =
+      symbol_table_lookup(new_module_identifier);
+
+    // check the port connections
     typecheck_port_connections(*it, parameterized_module_symbol);
+  }
 }
 
 /*******************************************************************\
@@ -946,6 +950,60 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
     
     statement.function().type()=symbol.type;
     statement.function().set(ID_identifier, symbol.name);
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::convert_paramter_override
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::convert_parameter_override(
+  const verilog_parameter_overridet &module_item)
+{
+  for(auto &assignment : module_item.assignments())
+  {
+    // Copy the lhs/rhs.
+    exprt lhs = to_binary_expr(assignment).lhs();
+    exprt rhs = to_binary_expr(assignment).rhs();
+
+    // The lhs is a sequence of module instance names using
+    // hierarchical_identifier expressions.
+    convert_expr(lhs);
+
+    // turn into identifier
+    if(lhs.id() != ID_hierarchical_identifier)
+    {
+      error().source_location = module_item.source_location();
+      error() << "defparam expected to have a hierachical identifier" << eom;
+      throw 0;
+    }
+
+    const auto &hierarchical_identifier = to_hierarchical_identifier_expr(lhs);
+
+    if(hierarchical_identifier.module().id() != ID_symbol)
+    {
+      error().source_location = module_item.source_location();
+      error() << "defparam expected to have a single level identifier" << eom;
+      throw 0;
+    }
+
+    auto module_instance =
+      to_symbol_expr(hierarchical_identifier.module()).get_identifier();
+    auto parameter_name = hierarchical_identifier.item().get_identifier();
+
+    // The rhs must be a constant at this point.
+    auto rhs_value = from_integer(convert_const_expression(rhs), integer_typet());
+
+    // store the assignment
+    defparams[module_instance][parameter_name] = rhs_value;
   }
 }
 
@@ -1487,6 +1545,10 @@ void verilog_typecheckt::convert_module_item(
           module_item.id()==ID_local_parameter_decl)
   {
   }
+  else if(module_item.id() == ID_parameter_override)
+  {
+    // done already
+  }
   else if(module_item.id()==ID_always)
     convert_always(to_verilog_always(module_item));
   else if(module_item.id()==ID_assert)
@@ -1558,10 +1620,26 @@ void verilog_typecheckt::convert_statements()
   verilog_module_expr.module_items().reserve(module_items.get_sub().size());
 
   // do the generate stuff, copying the module items
-
   for(auto &item : module_items.get_sub())
     elaborate_generate_item(
       static_cast<const exprt &>(item), verilog_module_expr.module_items());
+
+  // Do defparam, also known as 'parameter override'.
+  // These must all be done before any module instantiation,
+  // which use the parameters.
+  for(auto &item : verilog_module_expr.module_items())
+  {
+    if(item.id() == ID_parameter_override)
+      convert_parameter_override(to_verilog_parameter_override(item));
+    else if(item.id() == ID_set_genvars)
+    {
+      for(auto &sub_item : item.operands())
+      {
+        if(sub_item.id() == ID_parameter_override)
+          convert_parameter_override(to_verilog_parameter_override(sub_item));
+      }
+    }
+  }
 
   // typecheck the new module items
   for(auto &item : verilog_module_expr.module_items())

@@ -726,21 +726,23 @@ Function: verilog_typecheck_exprt::convert_hierarchical_identifier
 void verilog_typecheck_exprt::convert_hierarchical_identifier(
   hierarchical_identifier_exprt &expr)
 {
-  convert_expr(expr.op0());
+  convert_expr(expr.lhs());
 
-  if(expr.op0().id()!=ID_symbol)
+  if(expr.lhs().id() != ID_symbol)
   {
     error().source_location=expr.source_location();
     error() << "expected symbol on lhs of `.'" << eom;
     throw 0;
   }
 
-  const irep_idt &lhs_identifier=expr.op0().get(ID_identifier);
-  const irep_idt &rhs_identifier=expr.op1().get(ID_identifier);
-  
+  DATA_INVARIANT(expr.rhs().id() == ID_symbol, "expected symbol on rhs of `.'");
+
+  const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).get_identifier();
+  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
+
   irep_idt full_identifier;
-    
-  if(expr.op0().type().id()==ID_module_instance)
+
+  if(expr.lhs().type().id() == ID_module_instance)
   {
     // figure out which module this is
     const symbolt *module_instance_symbol;
@@ -753,14 +755,6 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
     }
 
     const irep_idt &module=module_instance_symbol->value.get(ID_module);
-
-    if(expr.op1().id()!=ID_symbol)
-    {
-      error().source_location=expr.source_location();
-      error() << "expected symbol on rhs of `.', but got `"
-              << to_string(expr.op1()) << '\'' << eom;
-      throw 0;
-    }
 
     full_identifier=
       id2string(module)+"."+id2string(rhs_identifier);
@@ -788,7 +782,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
       throw 0;
     }
   }
-  else if(expr.op0().type().id()==ID_named_block)
+  else if(expr.lhs().type().id() == ID_named_block)
   {
     full_identifier=
       id2string(lhs_identifier)+"."+

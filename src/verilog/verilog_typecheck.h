@@ -73,12 +73,13 @@ protected:
   irep_idt parameterize_module(
     const source_locationt &location,
     const irep_idt &module_identifier,
-    const exprt::operandst &parameter_assignment);
+    const exprt::operandst &parameter_assignment,
+    const std::map<irep_idt, exprt> &defparams);
 
-  void get_parameter_values(
+  std::list<exprt> get_parameter_values(
     const irept &module_source,
     const exprt::operandst &parameter_assignment,
-    std::list<exprt> &parameter_values);
+    const std::map<irep_idt, exprt> &defparams);
 
   void set_parameter_values(
     irept &module_source,
@@ -137,6 +138,7 @@ protected:
   void check_lhs(const exprt &lhs, vassignt vassign);
   void convert_assignments(exprt &trans);
   void convert_module_item(class verilog_module_itemt &);
+  void convert_parameter_override(const class verilog_parameter_overridet &);
 
   void integer_expr(exprt &expr);
 
@@ -192,7 +194,13 @@ protected:
     else
       value=it->second;
   }
-  
+
+  // defparam assignments. Map from module instance names
+  // to a map from parameter names to values.
+  using defparamst =
+    std::map<irep_idt, std::map<irep_idt, exprt>>;
+  defparamst defparams;
+
   // interpreter state
   typedef std::map<irep_idt, exprt> varst;
   varst vars;

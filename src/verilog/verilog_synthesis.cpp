@@ -203,36 +203,27 @@ void verilog_synthesist::expand_hierarchical_identifier(
   hierarchical_identifier_exprt &expr,
   symbol_statet symbol_state)
 {
-  synth_expr(expr.op0(), symbol_state);
+  synth_expr(expr.lhs(), symbol_state);
 
-  if(expr.op0().id()!=ID_symbol)
+  if(expr.lhs().id() != ID_symbol)
   {
     error().source_location=expr.source_location();
     error() << "synthesis expected symbol on lhs of `.'" << eom;
     throw 0;
   }
 
-  if(expr.op0().type().id()!=ID_module_instance)
+  if(expr.lhs().type().id() != ID_module_instance)
   {
     error().source_location=expr.source_location();
     error() << "synthesis expected module instance on lhs of `.', but got `"
-            << to_string(expr.op0().type()) << '\'' << eom;
+            << to_string(expr.lhs().type()) << '\'' << eom;
     throw 0;
   }
-  
-  const irep_idt &lhs_identifier=expr.op0().get(ID_identifier);
+
+  const irep_idt &lhs_identifier = expr.lhs().get(ID_identifier);
 
   // rhs
-
-  if(expr.op1().id()!=ID_symbol)
-  {
-    error().source_location=expr.source_location();
-    error() << "synthesis expected symbol on rhs of `.', but got `"
-            << to_string(expr.op1()) << '\'' << eom;
-    throw 0;
-  }
-
-  const irep_idt &rhs_identifier=expr.op1().get(ID_identifier);
+  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
 
   // just patch together
   
@@ -2583,8 +2574,10 @@ void verilog_synthesist::synth_module_item(
   }
   else if(module_item.id()==ID_decl)
     synth_decl(to_verilog_decl(module_item));
-  else if(module_item.id()==ID_parameter_decl ||
-          module_item.id()==ID_local_parameter_decl)
+  else if(
+    module_item.id() == ID_parameter_decl ||
+    module_item.id() == ID_local_parameter_decl ||
+    module_item.id() == ID_parameter_override)
   {
   }
   else if(module_item.id()==ID_always)
