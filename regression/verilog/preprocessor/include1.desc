@@ -7,8 +7,7 @@ activate-multi-line-match
 `line 1 "include1b.v" 1
 line b 1
 line b 2
-`line 1 "include1.v" 2
-
+`line 2 "include1.v" 2
 line 2
 line 3
 ^EXIT=0$
