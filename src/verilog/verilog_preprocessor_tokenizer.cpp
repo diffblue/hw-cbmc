@@ -88,13 +88,19 @@ verilog_preprocessor_tokenizert::verilog_preprocessor_tokenizert(
 std::size_t
 verilog_preprocessor_tokenizert::yy_input(char *buffer, std::size_t max_size)
 {
-  std::size_t result;
-  for(result = 0; result < max_size; result++)
+  std::size_t result = 0;
+  while(result < max_size)
   {
     char ch;
     if(!in.get(ch))
-      return result; // eof
-    buffer[result] = ch;
+      break; // eof
+    buffer[result++] = ch;
+    if(ch == '\n')
+    {
+      // We need to abort prematurely to enable
+      // switching input streams on `include.
+      break;
+    }
   }
   return result;
 }
