@@ -1125,17 +1125,22 @@ genvar_case_item:
 	;
 
 generate_loop_statement:
+	  // The following is a generalisation of the Verilog 2001
+	  // grammar, which requires begin ... end, and does not allow
+	  // the generate_item. Found in the SystemVerilog IEEE 1800-2012
+	  // grammar.
 	  TOK_FOR '(' genvar_assignment ';'
 	              constant_expression ';'
                       genvar_assignment ')'
-          generate_block
-          	{ init($$, ID_generate_for);
-          	  stack_expr($$).reserve_operands(4);
-          	  mto($$, $3);
-          	  mto($$, $5);
-          	  mto($$, $7);
-          	  mto($$, $9);
-          	}
+          // generate_block
+          generate_item
+		{ init($$, ID_generate_for);
+		  stack_expr($$).reserve_operands(4);
+		  mto($$, $3);
+		  mto($$, $5);
+		  mto($$, $7);
+		  mto($$, $9);
+		}
         ;
 
 generate_block_identifier: TOK_CHARSTR;
