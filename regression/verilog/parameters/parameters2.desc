@@ -1,5 +1,5 @@
 CORE
-main.v
+parameters2.v
 --bound 1 --top test
 ^EXIT=0$
 ^SIGNAL=0$
