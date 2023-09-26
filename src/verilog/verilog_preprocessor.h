@@ -87,15 +87,19 @@ protected:
     void get_token_from_stream() override;
   };
 
+  // To synchronize the parser's line number
+  std::size_t parser_line_no = 0;
+  void emit_line_directive(unsigned level);
+
   // for include and for `define
   class contextt
   {
   protected:
     bool deallocate_in;
     std::istream *in;
-    std::string filename;
 
   public:
+    std::string filename;
     verilog_preprocessor_token_sourcet *tokenizer;
 
     // for `define with parameters
@@ -122,12 +126,6 @@ protected:
       delete tokenizer;
       if(deallocate_in)
         delete in;
-    }
-
-    void print_line_directive(std::ostream &out, unsigned level) const
-    {
-      out << "`line " << tokenizer->line_no() << " \"" << filename << "\" "
-          << level << '\n';
     }
 
     source_locationt make_source_location() const;
