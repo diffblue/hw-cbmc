@@ -1,0 +1,6 @@
+CORE
+generate-for1.v
+--module main --bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
