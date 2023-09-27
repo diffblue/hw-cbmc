@@ -1,5 +1,5 @@
 CORE
-main.smv
+smv4.smv
 --module main
 ^EXIT=2$
 ^SIGNAL=0$

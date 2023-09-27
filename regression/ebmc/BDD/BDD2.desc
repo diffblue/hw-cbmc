@@ -1,5 +1,5 @@
 CORE
-main.sv
+BDD2.sv
 --module main --bdd
 ^EXIT=10$
 ^SIGNAL=0$

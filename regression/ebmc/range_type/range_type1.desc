@@ -1,5 +1,5 @@
 CORE
-main.smv
+range_type1.smv
 --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
