@@ -1,0 +1,8 @@
+CORE
+bit-extract1.v
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[main.property.property1\] .* SUCCESS$
+--
+^warning: ignoring

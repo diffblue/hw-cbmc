@@ -1,0 +1,9 @@
+CORE
+bit-extract2.v
+--module main --bound 1 --trace
+^EXIT=10$
+^SIGNAL=0$
+^Counterexample:$
+^\[main.property.property1\] .* FAILURE$
+--
+^warning: ignoring

@@ -1,9 +1,0 @@
-KNOWNBUG
-main.v
---module main --bound 1
-^EXIT=0$
-^SIGNAL=0$
-^Counterexample:$
-^Property .* violated in time frame 0$
---
-^warning: ignoring

@@ -1,0 +1,8 @@
+CORE
+functioncall2.v
+--module main --bound 1
+^EXIT=0$
+^SIGNAL=0$
+^UNSAT: No counterexample found within bound$
+--
+^warning: ignoring

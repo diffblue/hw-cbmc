@@ -1,0 +1,7 @@
+CORE
+system_verilog_assertion4.sv
+--module main --bound 10
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

@@ -1,0 +1,8 @@
+CORE
+tasks1.v
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[main.property.p1\] .* SUCCESS$
+--
+^warning: ignoring

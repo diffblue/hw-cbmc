@@ -1,9 +1,0 @@
-CORE
-main.sv
---module main --bound 20 --trace
-^EXIT=10$
-^SIGNAL=0$
-^Counterexample:$
-^\[main.property.my_label\] .* FAILURE$
---
-^warning: ignoring
