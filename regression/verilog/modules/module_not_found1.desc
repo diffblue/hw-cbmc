@@ -1,0 +1,7 @@
+CORE
+module_not_found1.v
+--bound 1 --top main
+^found no file that provides module Verilog::some_module_that_does_not_exist$
+^EXIT=2$
+^SIGNAL=0$
+--
