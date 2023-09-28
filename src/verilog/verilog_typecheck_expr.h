@@ -40,7 +40,7 @@ public:
   { }
 
   virtual void convert_expr(exprt &expr);
-  virtual void convert_const_expression(const exprt &expr, mp_integer &value);
+  virtual mp_integer convert_const_expression(const exprt &);
 
 protected:
   irep_idt module_identifier;
