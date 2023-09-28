@@ -1,0 +1,9 @@
+CORE
+case1.v
+--module main --bound 3 --trace
+^EXIT=10$
+^SIGNAL=0$
+^Counterexample:$
+^\[main.property.p1\] .* FAILURE$
+--
+^warning: ignoring

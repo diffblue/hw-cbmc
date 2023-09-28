@@ -1,0 +1,9 @@
+CORE
+tasks4.v
+--module main --bound 3 --trace
+^EXIT=10$
+^SIGNAL=0$
+^Counterexample:$
+^\[main.property.property1\] .* FAILURE$
+--
+^warning: ignoring
