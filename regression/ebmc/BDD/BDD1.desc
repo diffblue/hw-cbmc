@@ -1,5 +1,5 @@
 CORE
-main.smv
+BDD1.smv
 --bdd
 ^EXIT=0$
 ^SIGNAL=0$

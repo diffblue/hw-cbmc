@@ -1,5 +1,5 @@
 CORE
-main.v
+k-induction1.v
 --module main --bound 1 --k-induction
 ^EXIT=0$
 ^SIGNAL=0$

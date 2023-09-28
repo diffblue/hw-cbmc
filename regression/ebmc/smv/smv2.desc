@@ -1,5 +1,5 @@
 CORE
-main.smv
+smv2.smv
 --module main --bound 2 --k-induction
 ^EXIT=0$
 ^SIGNAL=0$
