@@ -114,9 +114,9 @@ void verilog_typecheckt::elaborate_generate_if(
     error() << "generate_if expects two or three operands" << eom;
     throw 0;
   }
-  
-  mp_integer condition;
-  convert_const_expression(to_multi_ary_expr(statement).op0(), condition);
+
+  mp_integer condition =
+    convert_const_expression(to_multi_ary_expr(statement).op0());
 
   if(condition==0)
   {
@@ -168,10 +168,8 @@ void verilog_typecheckt::elaborate_generate_assign(
     error() << "expected genvar on left hand side of assignment" << eom;
     throw 0;
   }
-  
-  mp_integer rhs;
 
-  convert_const_expression(to_binary_expr(statement).rhs(), rhs);
+  mp_integer rhs = convert_const_expression(to_binary_expr(statement).rhs());
 
   if(rhs<0)
   {
@@ -210,8 +208,8 @@ void verilog_typecheckt::elaborate_generate_for(
 
   while(true)
   {
-    mp_integer condition;
-    convert_const_expression(to_multi_ary_expr(statement).op1(), condition);
+    mp_integer condition =
+      convert_const_expression(to_multi_ary_expr(statement).op1());
 
     if(condition==0) break;
     

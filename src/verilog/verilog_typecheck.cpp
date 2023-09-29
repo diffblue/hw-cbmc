@@ -539,14 +539,13 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
     // these must be constants
     if(it->id()==ID_named_parameter_assignment)
     {
-      mp_integer v_int;
-      convert_const_expression(static_cast<exprt &>(it->add(ID_value)), v_int);
+      mp_integer v_int =
+        convert_const_expression(static_cast<exprt &>(it->add(ID_value)));
       it->add(ID_value)=from_integer(v_int, integer_typet());
     }
     else
     {
-      mp_integer v_int;
-      convert_const_expression(*it, v_int);
+      mp_integer v_int = convert_const_expression(*it);
       *it=from_integer(v_int, integer_typet());
     }
   }
