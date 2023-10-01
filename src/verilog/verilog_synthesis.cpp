@@ -2906,13 +2906,16 @@ Function: verilog_synthesist::convert_module_items
 
  Outputs:
 
- Purpose:
+ Purpose: Turn the verilog_module_exprt into a transition system
+          expression
 
 \*******************************************************************/
 
 void verilog_synthesist::convert_module_items(symbolt &symbol)
 {
-  assert(symbol.value.id()==ID_verilog_module);
+  PRECONDITION(symbol.value.id() == ID_verilog_module);
+
+  const auto &verilog_module = to_verilog_module_expr(symbol.value);
 
   // clean up
   assignments.clear();
@@ -2930,11 +2933,8 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   transt trans{ID_trans, conjunction({}), conjunction({}), conjunction({}),
                symbol.type};
 
-  for(const auto & it : symbol.value.operands())
-  {
-    const auto & module_item=static_cast<const verilog_module_itemt &>(it);
+  for(const auto &module_item : verilog_module.module_items())
     synth_module_item(module_item, trans);
-  }
 
   synth_assignments(trans);
   
@@ -2966,7 +2966,7 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   }
   #endif
 
-  symbol.value=trans;
+  symbol.value = std::move(trans);
 }
 
 /*******************************************************************\

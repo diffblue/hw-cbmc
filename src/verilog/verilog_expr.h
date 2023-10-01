@@ -90,6 +90,37 @@ extern inline verilog_statementt &to_verilog_statement(exprt &expr)
   return static_cast<verilog_statementt &>(expr);
 }
 
+class verilog_module_exprt : public exprt
+{
+public:
+  inline explicit verilog_module_exprt() : exprt(ID_verilog_module)
+  {
+  }
+
+  using module_itemst = std::vector<class verilog_module_itemt>;
+
+  const module_itemst &module_items() const
+  {
+    return (const module_itemst &)(operands());
+  }
+
+  module_itemst &module_items()
+  {
+    return (module_itemst &)(operands());
+  }
+};
+
+extern inline const verilog_module_exprt &
+to_verilog_module_expr(const exprt &expr)
+{
+  return static_cast<const verilog_module_exprt &>(expr);
+}
+
+extern inline verilog_module_exprt &to_verilog_module_expr(exprt &expr)
+{
+  return static_cast<verilog_module_exprt &>(expr);
+}
+
 class verilog_module_itemt:public exprt
 {
 public:

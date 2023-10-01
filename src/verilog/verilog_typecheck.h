@@ -170,13 +170,15 @@ protected:
   bool implicit_wire(const irep_idt &identifier,
                      const symbolt *&symbol) override;
 
+  using module_itemst = std::vector<verilog_module_itemt>;
+
   // generate constructs
-  void elaborate_generate_assign(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_block(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_item(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_if(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_case(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_for(const exprt &statement, exprt::operandst &dest);
+  void elaborate_generate_assign(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_block(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_item(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_if(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_case(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_for(const exprt &statement, module_itemst &dest);
 
   // generate state
   typedef std::map<irep_idt, mp_integer> genvarst;

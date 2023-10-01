@@ -8,6 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_typecheck.h"
 
+#include "verilog_expr.h"
+
 /*******************************************************************\
 
 Function: verilog_typecheckt::elaborate_generate_block
@@ -22,7 +24,7 @@ Function: verilog_typecheckt::elaborate_generate_block
 
 void verilog_typecheckt::elaborate_generate_block(
   const exprt &statement,
-  exprt::operandst &dest)
+  module_itemst &dest)
 {
   forall_operands(it, statement)
     elaborate_generate_item(*it, dest);
@@ -42,7 +44,7 @@ Function: verilog_typecheckt::elaborate_generate_item
 
 void verilog_typecheckt::elaborate_generate_item(
   const exprt &statement,
-  exprt::operandst &dest)
+  module_itemst &dest)
 {
   if(statement.id()==ID_generate_block)
     elaborate_generate_block(statement, dest);
@@ -61,15 +63,14 @@ void verilog_typecheckt::elaborate_generate_item(
   else
   {
     // no need for elaboration
-    exprt tmp("set_genvars");
+    verilog_module_itemt tmp("set_genvars");
     tmp.add_to_operands(statement);
     irept &variables=tmp.add("variables");
     
     for(const auto & it : genvars)
       variables.set(it.first, integer2string(it.second));
 
-    dest.push_back(exprt());
-    dest.back().swap(tmp);
+    dest.push_back(std::move(tmp));
   }
 }
 
@@ -87,7 +88,7 @@ Function: verilog_typecheckt::elaborate_generate_case
 
 void verilog_typecheckt::elaborate_generate_case(
   const exprt &statement,
-  exprt::operandst &dest)
+  module_itemst &dest)
 {
 }
 
@@ -105,7 +106,7 @@ Function: verilog_typecheckt::elaborate_generate_if
 
 void verilog_typecheckt::elaborate_generate_if(
   const exprt &statement,
-  exprt::operandst &dest)
+  module_itemst &dest)
 {
   if(statement.operands().size()!=3 &&
      statement.operands().size()!=2)
@@ -141,7 +142,7 @@ Function: verilog_typecheckt::elaborate_generate_assign
 
 void verilog_typecheckt::elaborate_generate_assign(
   const exprt &statement,
-  exprt::operandst &dest)
+  module_itemst &dest)
 {
   if(statement.operands().size()!=2)
   {
@@ -197,7 +198,7 @@ Function: verilog_typecheckt::elaborate_generate_for
 
 void verilog_typecheckt::elaborate_generate_for(
   const exprt &statement,
-  exprt::operandst &dest)
+  module_itemst &dest)
 {
   if(statement.operands().size()!=4)
   {
