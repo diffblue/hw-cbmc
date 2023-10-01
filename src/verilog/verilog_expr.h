@@ -143,6 +143,37 @@ extern inline verilog_module_itemt &to_verilog_module_item(irept &irep)
   return static_cast<verilog_module_itemt &>(irep);
 }
 
+class verilog_parameter_declt : public verilog_module_itemt
+{
+public:
+  inline verilog_parameter_declt() : verilog_module_itemt(ID_parameter_decl)
+  {
+  }
+
+  const exprt::operandst &declarations() const
+  {
+    return operands();
+  }
+
+  exprt::operandst &declarations()
+  {
+    return operands();
+  }
+};
+
+extern inline const verilog_parameter_declt &
+to_verilog_parameter_decl(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_parameter_decl);
+  return static_cast<const verilog_parameter_declt &>(irep);
+}
+
+extern inline verilog_parameter_declt &to_verilog_parameter_decl(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_parameter_decl);
+  return static_cast<verilog_parameter_declt &>(irep);
+}
+
 class verilog_instt:public verilog_module_itemt
 {
 public:

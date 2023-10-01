@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_typecheck.h"
 
+#include "verilog_expr.h"
+
 /*******************************************************************\
 
 Function: verilog_typecheckt::get_parameter_values
@@ -48,16 +50,16 @@ void verilog_typecheckt::get_parameter_values(
     for(auto &item : module_items.get_sub())
       if(item.id() == ID_parameter_decl)
       {
-        forall_operands(o_it, static_cast<const exprt &>(item))
+        for(auto &decl : to_verilog_parameter_decl(item).declarations())
         {
-          const irep_idt &identifier=o_it->get(ID_identifier);
+          const irep_idt &identifier = decl.get(ID_identifier);
           exprt value;
 
           if(map.find(identifier)!=map.end())
             value=map[identifier];
           else
-          {          
-            value=static_cast<const exprt &>(o_it->find(ID_value));
+          {
+            value = static_cast<const exprt &>(decl.find(ID_value));
             // substitute other parameters
             replace_symbol.replace(value);
             simplify(value, ns);
@@ -84,9 +86,9 @@ void verilog_typecheckt::get_parameter_values(
     for(auto &item : module_items.get_sub())
       if(item.id() == ID_parameter_decl)
       {
-        forall_operands(o_it, static_cast<const exprt &>(item))
+        for(auto &decl : to_verilog_parameter_decl(item).declarations())
         {
-          const irep_idt &identifier=o_it->get(ID_identifier);
+          const irep_idt &identifier = decl.get(ID_identifier);
           exprt value;
           
           if(p_it!=parameter_assignment.end())
@@ -96,7 +98,7 @@ void verilog_typecheckt::get_parameter_values(
           }
           else
           {
-            value=static_cast<const exprt &>(o_it->find(ID_value));
+            value = static_cast<const exprt &>(decl.find(ID_value));
             // substitute other parameters
             replace_symbol.replace(value);
             simplify(value, ns);
@@ -147,11 +149,11 @@ void verilog_typecheckt::set_parameter_values(
   for(auto &module_item : module_items.get_sub())
     if(module_item.id() == ID_parameter_decl)
     {
-      Forall_operands(o_it, static_cast<exprt &>(module_item))
+      for(auto &decl : to_verilog_parameter_decl(module_item).declarations())
       {
         if(p_it!=parameter_values.end())
         {
-          exprt &value=static_cast<exprt &>(o_it->add(ID_value));
+          exprt &value = static_cast<exprt &>(decl.add(ID_value));
           value=*p_it;
           p_it++;
         }
