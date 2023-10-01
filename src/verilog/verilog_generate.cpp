@@ -63,7 +63,7 @@ void verilog_typecheckt::elaborate_generate_item(
   else
   {
     // no need for elaboration
-    verilog_module_itemt tmp("set_genvars");
+    verilog_module_itemt tmp(ID_set_genvars);
     tmp.add_to_operands(statement);
     irept &variables=tmp.add("variables");
     

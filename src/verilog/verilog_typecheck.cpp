@@ -1508,7 +1508,7 @@ void verilog_typecheckt::convert_module_item(
     error() << "unexpected generate_block module item" << eom;
     throw 0;
   }
-  else if(module_item.id()=="set_genvars")
+  else if(module_item.id() == ID_set_genvars)
   {
     genvars.clear();
     const irept &variables=module_item.find("variables");
