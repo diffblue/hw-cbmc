@@ -1548,26 +1548,27 @@ Function: verilog_typecheckt::convert_statements
 
 void verilog_typecheckt::convert_statements()
 {
-  exprt &value=module_symbol.value;
-  
-  value.id(ID_verilog_module);
+  verilog_module_exprt verilog_module_expr;
 
   const irept &module_source=
     module_symbol.type.find(ID_module_source);
 
   const irept &module_items=module_source.find(ID_module_items);
 
-  value.reserve_operands(module_items.get_sub().size());
+  verilog_module_expr.module_items().reserve(module_items.get_sub().size());
 
-  // do the generate stuff
+  // do the generate stuff, copying the module items
 
   for(auto &item : module_items.get_sub())
-    elaborate_generate_item(static_cast<const exprt &>(item), value.operands());
+    elaborate_generate_item(
+      static_cast<const exprt &>(item), verilog_module_expr.module_items());
 
-  // typecheck
-  
-  Forall_operands(it, value)
-    convert_module_item(static_cast<verilog_module_itemt &>(*it));
+  // typecheck the new module items
+  for(auto &item : verilog_module_expr.module_items())
+    convert_module_item(item);
+
+  // store the module expression in module_symbol.value
+  module_symbol.value = std::move(verilog_module_expr);
 }
 
 /*******************************************************************\
