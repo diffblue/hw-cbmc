@@ -1,8 +1,9 @@
 CORE
 example4.sv
---bound 10 
+--bound 10 --trace
 SUCCESS$
 FAILURE$
+^  counter\.state = 254 \(11111110\)$
 ^EXIT=10$
 ^SIGNAL=0$
 

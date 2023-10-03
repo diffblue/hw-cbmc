@@ -37,45 +37,52 @@ Function: bitstring_to_expr
 
 exprt bitstring_to_expr(const std::string &src, const typet &type)
 {
-  exprt value_expr;
-  value_expr.make_nil();
-
-  if(type.id()==ID_range ||
-     type.id()==ID_unsignedbv ||
-     type.id()==ID_signedbv)
+  if(type.id() == ID_unsignedbv)
   {
-    if(type.id()==ID_range)
-    {
-      mp_integer i=binary2integer(src, false);
-      mp_integer from=string2integer(type.get_string(ID_from));
-      value_expr = constant_exprt{integer2string(i + from), type};
-    }
-    else
-      value_expr = constant_exprt{src, type};
+    return from_integer(binary2integer(src, false), type);
+  }
+  else if(type.id() == ID_signedbv)
+  {
+    return from_integer(binary2integer(src, true), type);
+  }
+  else if(type.id() == ID_range)
+  {
+    // from_integer doesn't support range_typet
+    mp_integer i = binary2integer(src, false);
+    mp_integer from = string2integer(type.get_string(ID_from));
+    return constant_exprt(integer2string(i + from), type);
   }
   else if(type.id()==ID_bool)
   {
     if(src=="0")
-      value_expr=false_exprt();
+      return false_exprt();
     else if(src=="1")
-      value_expr=true_exprt();
+      return true_exprt();
+    else
+      PRECONDITION(false);
   }
   else if(type.id()==ID_array)
   {
     const array_typet &array_type=to_array_type(type);
-    value_expr=exprt(ID_array, array_type);
-    mp_integer size;
-    to_integer_non_constant(array_type.size(), size);
-    std::size_t size_int = size.to_ulong();
-    value_expr.operands().resize(size_int);
+    exprt::operandst elements;
+
+    // we can only do constant sizes
+    PRECONDITION(array_type.size().is_constant());
+    auto size_opt =
+      numeric_cast<mp_integer>(to_constant_expr(array_type.size()));
+    PRECONDITION(size_opt.has_value());
+    std::size_t size_int = size_opt.value().to_ulong();
+    elements.resize(size_int);
     std::size_t op_width=src.size()/size_int;
 
     for(std::size_t i=0; i<size_int; i++)
-      value_expr.operands()[size_int - i - 1] = bitstring_to_expr(
+      elements[size_int - i - 1] = bitstring_to_expr(
         std::string(src, i * op_width, op_width), array_type.element_type());
+
+    return array_exprt(std::move(elements), array_type);
   }
-  
-  return value_expr;
+  else
+    PRECONDITION(false);
 }
 
 /*******************************************************************\
