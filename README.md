@@ -2,28 +2,28 @@ About
 =======
 
 EBMC is a bounded model checker for the Verilog language (and other HW
-specification languages). The verification is performed by synthesizing a
-transition system from the Verilog, unwinding the loops (up to a certain bound),
-and then producing a SAT formula. The formula encodes the circuit and the
-negation of the property under verification. Hence if satisfiable, the tool
-produces a counterexample demonstrating violation of the property. EBMC employs
-CBMC for the last two steps of the above described verification chain, i.e. SAT
-encoding and satisfiability checking.
+specification languages).  The verification is performed by synthesizing a
+transition system from the Verilog, unwinding the transition system (up to a
+certain bound), and then producing a decision problem.  The decision problem
+encodes the circuit and the negation of the property under verification. 
+Hence if satisfiable, the tool produces a counterexample demonstrating
+violation of the property.  EBMC can use CBMC's bit-vector solver or Z3
+or CVC4 to solve the decision problem.
 
-For full information see [cprover.org](http://www.cprover.org/ebmc/)
+For full information see [cprover.org](http://www.cprover.org/ebmc/).
 
 Compiling
 =========
 
 - initialize and update the CBMC submodule: `$> git submodule init; git submodule update`
-- download minisat: `$> make -C lib/cbmc minisat2-download`
+- download minisat: `$> make -C lib/cbmc/src minisat2-download`
 - build EBMC: `$> make -C src` (this also builds the CBMC submodule)
 - optional: `$> export PATH=/full/path/hw-cbmc/src/ebmc:${PATH}` to get EBMC on the path
 
 Usage
 =====
 
-Let us assume we have the following Verilog code in `main.v`
+Let us assume we have the following Verilog code in `main.v`.
 
 ```main.v
 
@@ -54,6 +54,6 @@ Then we can run the EBMC verification as
 
 `$> ebmc main.v --module main --bound 3`
 
-setting the unrolling bound to `3` and running the verification of the module `main`.
+setting the unwinding bound to `3` and running the verification of the module `main`.
 
 For more information see [EBMC Manual](http://www.cprover.org/ebmc/manual/)
