@@ -72,16 +72,16 @@ void show_state(
          var.type.id()==ID_unsignedbv ||
          var.type.id()==ID_signedbv)
       {
-        exprt value_expr(ID_constant, var.type);
+        exprt value_expr;
 
         if(var.type.id()==ID_range)
         {
           mp_integer i=binary2integer(value, false);
           mp_integer from=string2integer(var.type.get_string(ID_from));
-          value_expr.set(ID_value, integer2string(i+from));
+          value_expr = constant_exprt(integer2string(i + from), var.type);
         }
         else
-          value_expr.set(ID_value, value);
+          value_expr = constant_exprt(value, var.type);
 
         std::cout << from_expr(ns, it->first, value_expr);
         std::cout << " (" << value << ")";

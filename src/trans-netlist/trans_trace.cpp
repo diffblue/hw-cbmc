@@ -118,7 +118,9 @@ void show_trans_state(
       
       if(width>=2 && width<=32 &&
          rhs.id()==ID_constant)
-        std::cout << " (" << rhs.get(ID_value) << ")";
+      {
+        std::cout << " (" << to_constant_expr(rhs).get_value() << ")";
+      }
     }
     
     std::cout << '\n';
@@ -263,7 +265,9 @@ static mp_integer vcd_width(
           type.id()==ID_fixedbv ||
           type.id()==ID_floatbv ||
           type.id()==ID_pointer)
-    return string2integer(type.get_string(ID_width));
+  {
+    return to_bitvector_type(type).get_width();
+  }
   else if(type.id()==ID_array)
   {
     auto &array_type = to_array_type(type);
@@ -332,7 +336,9 @@ static std::string as_vcd_binary(
        type.id()==ID_fixedbv ||
        type.id()==ID_floatbv ||
        type.id()==ID_pointer)
-      return expr.get_string(ID_value);
+    {
+      return id2string(to_constant_expr(expr).get_value());
+    }
     else if(type.id()==ID_integer)
     {
       mp_integer i;
