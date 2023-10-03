@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "instantiate_word_level.h"
 #include "counterexample_word_level.h"
 
+#include <util/std_expr.h>
 #include <util/symbol_table.h>
 
 /*******************************************************************\
@@ -47,8 +48,8 @@ void show_state(
 
     if(!symbol.is_type)
     {
-      exprt symbol_expr(ID_symbol, symbol.type);
-      symbol_expr.set(ID_identifier, timeframe_identifier(timeframe, symbol.name));
+      symbol_exprt symbol_expr(
+        timeframe_identifier(timeframe, symbol.name), symbol.type);
 
       exprt value_expr=solver.get(symbol_expr);
 
