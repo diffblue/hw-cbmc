@@ -1165,7 +1165,7 @@ port_declaration:
 
 module_or_generate_item:
  	  attribute_instance_brace module_or_generate_item_declaration { $$=$2; }
- 	// | attribute_instance_brace parameter override { $$=$2; }
+ 	| attribute_instance_brace parameter_override { $$=$2; }
  	| attribute_instance_brace parameter_declaration { $$=$2; }
  	| attribute_instance_brace continuous_assign { $$=$2; }
         | attribute_instance_brace gate_instantiation { $$=$2; }
@@ -1216,6 +1216,26 @@ list_of_genvar_identifiers:
 
 genvar_identifier: TOK_CHARSTR
 		{ new_symbol($$, $1); }
+	;
+
+hierarchical_parameter_identifier: hierarchical_identifier
+	;
+
+param_assignment:
+	  hierarchical_parameter_identifier '=' constant_expression
+	  	{ init($$, ID_parameter_assignment); mto($$, $1); mto($$, $3); }
+	;
+
+list_of_param_assignments:
+	  param_assignment
+		{ init($$); mto($$, $1); }
+	| list_of_param_assignments ',' param_assignment
+		{ $$=$1;    mto($$, $3); }
+	;
+
+parameter_override:
+	  TOK_DEFPARAM list_of_param_assignments ';'
+		{ init($$, ID_parameter_override); swapop($$, $2); }
 	;
 
 parameter_declaration:

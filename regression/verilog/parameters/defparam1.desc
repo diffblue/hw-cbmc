@@ -1,0 +1,6 @@
+CORE
+defparam1.v
+--bound 1 --module top
+^EXIT=0$
+^SIGNAL=0$
+--

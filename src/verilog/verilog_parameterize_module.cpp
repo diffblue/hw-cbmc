@@ -26,18 +26,20 @@ Function: verilog_typecheckt::get_parameter_values
 
 \*******************************************************************/
 
-void verilog_typecheckt::get_parameter_values(
+std::list<exprt> verilog_typecheckt::get_parameter_values(
   const irept &module_source,
   const exprt::operandst &parameter_assignment,
-  std::list<exprt> &parameter_values)
+  const std::map<irep_idt, exprt> &instance_defparams)
 {
   const irept &module_items=module_source.find(ID_module_items);
   replace_symbolt replace_symbol;
-  
-  // named or ordered?
-  assert(!parameter_assignment.empty());
-  
-  if(parameter_assignment.front().id()==ID_named_parameter_assignment)
+
+  std::list<exprt> parameter_values;
+
+  // Are the parameter values given with the instantiation
+  // statement named or ordered?
+  if(!parameter_assignment.empty() &&
+     parameter_assignment.front().id()==ID_named_parameter_assignment)
   {
     std::map<irep_idt, exprt> map;
 
@@ -72,6 +74,11 @@ void verilog_typecheckt::get_parameter_values(
               throw 0;
             }
           }
+
+          // Is there a defparam that overrides this parameter?
+          auto def_param_it = instance_defparams.find(identifier);
+          if(def_param_it != instance_defparams.end())
+            value = def_param_it->second;
 
           replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
           parameter_values.push_back(value);
@@ -112,6 +119,11 @@ void verilog_typecheckt::get_parameter_values(
             }
           }
 
+          // Is there a defparam that overrides this parameter?
+          auto def_param_it = instance_defparams.find(identifier);
+          if(def_param_it != instance_defparams.end())
+            value = def_param_it->second;
+
           replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
           parameter_values.push_back(value);
         }
@@ -124,6 +136,8 @@ void verilog_typecheckt::get_parameter_values(
       throw 0;
     }
   }
+  
+  return parameter_values;
 }
 
 /*******************************************************************\
@@ -176,10 +190,11 @@ Function: verilog_typecheckt::parameterize_module
 irep_idt verilog_typecheckt::parameterize_module(
   const source_locationt &location,
   const irep_idt &module_identifier,
-  const exprt::operandst &parameter_assignments)
+  const exprt::operandst &parameter_assignments,
+  const std::map<irep_idt, exprt> &instance_defparams)
 {
   // No parameters assigned? Nothing to do.
-  if(parameter_assignments.empty())
+  if(parameter_assignments.empty() && instance_defparams.empty())
     return module_identifier;
 
   // find base symbol
@@ -195,13 +210,11 @@ irep_idt verilog_typecheckt::parameterize_module(
   }
   
   const symbolt &base_symbol=it->second;
-  
-  std::list<exprt> parameter_values;
-  
-  get_parameter_values(
+
+  auto parameter_values = get_parameter_values(
     base_symbol.type.find(ID_module_source),
     parameter_assignments,
-    parameter_values);
+    instance_defparams);
 
   // create full instance symbol name
   std::string suffix="(";

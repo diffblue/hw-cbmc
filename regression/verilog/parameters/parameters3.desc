@@ -1,5 +1,5 @@
 CORE
-main.v
+parameters3.v
 --bound 1
 ^EXIT=0$
 ^SIGNAL=0$
