@@ -1,0 +1,7 @@
+CORE
+simple_counterexamples_to_Gp.sv
+--bound 10 --property top.property.p2
+^EXIT=10$
+^SIGNAL=0$
+^\[top\.property\.p2\] .* FAILURE$
+--

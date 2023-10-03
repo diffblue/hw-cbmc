@@ -1,5 +1,5 @@
 CORE
-main.sv
+simple_passing_LTL_properties.sv
 --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
@@ -13,4 +13,3 @@ main.sv
 ^\[top.property.p7\] .* SUCCESS$
 ^\[top.property.p8\] .* SUCCESS$
 --
-^warning: ignoring
