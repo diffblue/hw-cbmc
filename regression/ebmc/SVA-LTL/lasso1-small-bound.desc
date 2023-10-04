@@ -1,0 +1,10 @@
+KNOWNBUG
+lasso1.sv
+--bound 5
+^EXIT=0$
+^SIGNAL=0$
+^\[top\.property\.p0\] .* SUCCESS$
+--
+--
+The bound is too small to find the counterexample, and hence, SUCCESS should
+be reported.
