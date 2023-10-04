@@ -118,8 +118,8 @@ int k_inductiont::induction_base()
 
   ::unwind(*trans_expr, *message_handler, solver, bound + 1, ns, true);
 
-  int result=finish_bmc(solver);
-  
+  int result = finish_word_level_bmc(solver);
+
   if(result!=0 && result!=10)
     return result;
   else

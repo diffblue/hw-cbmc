@@ -43,7 +43,7 @@ int ebmc_baset::do_dimacs()
 {
   dimacs_cnft dimacs_cnf{*message_handler};
 
-  int result=do_bmc(dimacs_cnf, true);
+  int result = do_bit_level_bmc(dimacs_cnf, true);
   if(result!=0) return result;
 
   statistics() << dimacs_cnf.no_variables() << " variables and "
@@ -107,7 +107,7 @@ int ebmc_baset::do_smt2()
       smt2_convt::solvert::Z3,
       out);
 
-    return do_bmc(smt2_conv, true);
+    return do_word_level_bmc(smt2_conv, true);
   }
 
   smt2_convt smt2_conv(
@@ -118,7 +118,7 @@ int ebmc_baset::do_smt2()
     smt2_convt::solvert::Z3,
     std::cout);
 
-  return do_bmc(smt2_conv, true);
+  return do_word_level_bmc(smt2_conv, true);
 }
 */
 /*******************************************************************\
@@ -144,7 +144,7 @@ int ebmc_baset::do_mathsat()
     "QF_AUFBV",
     smt2_dect::solvert::MATHSAT);
 
-  return do_bmc(smt2_dec, false);
+  return do_word_level_bmc(smt2_dec, false);
 }
 */
 /*******************************************************************\
@@ -170,7 +170,7 @@ int ebmc_baset::do_z3()
     "QF_AUFBV",
     smt2_dect::solvert::Z3);
 
-  return do_bmc(smt2_dec, false);
+  return do_word_level_bmc(smt2_dec, false);
 }
 */
 /*******************************************************************\
@@ -196,7 +196,7 @@ int ebmc_baset::do_cvc4()
     "QF_AUFBV",
     smt2_dect::solvert::CVC4);
 
-  return do_bmc(smt2_dec, false);
+  return do_word_level_bmc(smt2_dec, false);
 }
 */
 /*******************************************************************\
@@ -222,7 +222,7 @@ int ebmc_baset::do_yices()
     "QF_AUFBV",
     smt2_dect::solvert::YICES);
 
-  return do_bmc(smt2_dec, false);
+  return do_word_level_bmc(smt2_dec, false);
 }
 */
 /*******************************************************************\
@@ -248,7 +248,7 @@ int ebmc_baset::do_boolector()
     "QF_AUFBV",
     smt2_dect::solvert::BOOLECTOR);
 
-  return do_bmc(smt2_dec, false);
+  return do_word_level_bmc(smt2_dec, false);
 }
 */
 /*******************************************************************\
@@ -271,13 +271,13 @@ int ebmc_baset::do_sat()
 
   if(cmdline.isset("aig"))
   {
-    return do_bmc(satcheck, false);
+    return do_bit_level_bmc(satcheck, false);
   }
   else
   {
     const namespacet ns(symbol_table);
     boolbvt boolbv(ns, satcheck, *message_handler);
-    return do_bmc(boolbv, false);
+    return do_word_level_bmc(boolbv, false);
   }
 }
 
@@ -295,14 +295,14 @@ Function: ebmc_baset::do_prover
 
 int ebmc_baset::do_prover()
 {
-  #ifdef HAVE_PROVER
+#ifdef HAVE_PROVER
   const namespacet ns(symbol_table);
   prover_satt prover_sat(ns);
-  return do_bmc(prover_sat, false);
-  #else
+  return do_word_level_bmc(prover_sat, false);
+#else
   error() << "Support for prover not linked in" << eom;
   return 1;
-  #endif
+#endif
 }
 
 /*******************************************************************\
@@ -319,12 +319,12 @@ Function: ebmc_baset::do_lifter
 
 int ebmc_baset::do_lifter()
 {
-  #ifdef HAVE_PROVER
+#ifdef HAVE_PROVER
   const namespacet ns(symbol_table);
   liftert lifter(ns);
-  return do_bmc(lifter.prop_conv(), false);
-  #else
+  return do_word_level_bmc(lifter.prop_conv(), false);
+#else
   error() << "Support for lifter not linked in" << eom;
   return 1;
-  #endif
+#endif
 }
