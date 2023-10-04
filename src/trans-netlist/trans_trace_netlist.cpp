@@ -97,13 +97,14 @@ Function: compute_trans_trace
 
 \*******************************************************************/
 
-void compute_trans_trace(
+trans_tracet compute_trans_trace(
   const bvt &prop_bv,
   const bmc_mapt &bmc_map,
   const propt &solver,
-  const namespacet &ns,
-  trans_tracet &dest)
+  const namespacet &ns)
 {
+  trans_tracet dest;
+
   dest.states.reserve(bmc_map.get_no_timeframes());
   
   for(unsigned t=0; t<bmc_map.get_no_timeframes(); t++)
@@ -159,5 +160,7 @@ void compute_trans_trace(
     tvt result=solver.l_get(prop_bv[t]);
     state.property_failed=result.is_false();
   }
+
+  return dest;
 }         
           

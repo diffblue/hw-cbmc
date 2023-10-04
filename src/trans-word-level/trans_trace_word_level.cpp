@@ -24,13 +24,14 @@ Function: compute_trans_trace
 
 \*******************************************************************/
 
-void compute_trans_trace(
+trans_tracet compute_trans_trace(
   const decision_proceduret &decision_procedure,
   unsigned no_timeframes,
   const namespacet &ns,
-  const irep_idt &module,
-  trans_tracet &dest)
+  const irep_idt &module)
 {
+  trans_tracet dest;
+
   // look up the module symbol
   {
     const symbolt &symbol=ns.lookup(module);
@@ -74,6 +75,8 @@ void compute_trans_trace(
       }
     }
   }
+
+  return dest;
 }
 
 /*******************************************************************\
@@ -88,28 +91,24 @@ Function: compute_trans_trace
 
 \*******************************************************************/
 
-void compute_trans_trace(
+trans_tracet compute_trans_trace(
   const bvt &prop_bv,
   const class prop_convt &solver,
   unsigned no_timeframes,
   const namespacet &ns,
-  const irep_idt &module,
-  trans_tracet &dest)  
+  const irep_idt &module)
 {
-  compute_trans_trace(
-    solver,
-    no_timeframes,
-    ns,
-    module,
-    dest);
-    
+  trans_tracet trace = compute_trans_trace(solver, no_timeframes, ns, module);
+
   // check the properties that got violated
 
   for(unsigned t=0; t<no_timeframes; t++)
   {
     assert(t<prop_bv.size());
     tvt result=solver.l_get(prop_bv[t]);
-    dest.states[t].property_failed=result.is_false();
+    trace.states[t].property_failed = result.is_false();
   }
+
+  return trace;
 }
 
