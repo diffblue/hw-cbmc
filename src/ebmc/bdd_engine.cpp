@@ -377,14 +377,8 @@ void bdd_enginet::compute_counterexample(
     throw "unexpected result from SAT solver";
   }
 
-  trans_tracet trans_trace;
-
-  compute_trans_trace(
-    property.timeframe_literals,
-    bmc_map,
-    solver,
-    ns,
-    property.counterexample);
+  property.counterexample =
+    compute_trans_trace(property.timeframe_literals, bmc_map, solver, ns);
 }
 
 /*******************************************************************\

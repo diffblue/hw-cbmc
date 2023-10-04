@@ -305,10 +305,9 @@ void hw_cbmc_parse_optionst::show_unwind_trace(const optionst &options,
   if (unwind_module == "" || unwind_no_timeframes == 0)
     return;
 
-  trans_tracet trans_trace;
   namespacet ns{goto_model.symbol_table};
-  compute_trans_trace(prop_conv, unwind_no_timeframes, ns, unwind_module,
-                      trans_trace);
+  auto trans_trace =
+    compute_trans_trace(prop_conv, unwind_no_timeframes, ns, unwind_module);
 
   if (options.get_option("vcd") != "") {
     if (options.get_option("vcd") == "-")

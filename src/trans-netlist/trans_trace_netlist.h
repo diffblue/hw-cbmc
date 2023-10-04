@@ -12,11 +12,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "bmc_map.h"
 #include "trans_trace.h"
 
-void compute_trans_trace(
+trans_tracet compute_trans_trace(
   const bvt &prop_bv,
-  const bmc_mapt &bmc_map,
+  const bmc_mapt &,
   const class propt &solver,
-  const namespacet &ns,
-  trans_tracet &dest);
+  const namespacet &);
 
 #endif

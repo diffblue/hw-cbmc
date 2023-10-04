@@ -150,14 +150,13 @@ int ebmc_baset::finish_bmc(prop_conv_solvert &solver) {
         result() << "SAT: counterexample found" << messaget::eom;
 
         namespacet ns(symbol_table);
-    
-        compute_trans_trace(
+
+        property.counterexample = compute_trans_trace(
           property.timeframe_literals,
           solver,
-          bound+1,
+          bound + 1,
           ns,
-          main_symbol->name,
-          property.counterexample);
+          main_symbol->name);
       }
       break;
 
@@ -248,12 +247,8 @@ int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
 
         namespacet ns(symbol_table);
 
-        compute_trans_trace(
-          property.timeframe_literals,
-          bmc_map,
-          solver,
-          ns,
-          property.counterexample);
+        property.counterexample =
+          compute_trans_trace(property.timeframe_literals, bmc_map, solver, ns);
       }
       break;
 

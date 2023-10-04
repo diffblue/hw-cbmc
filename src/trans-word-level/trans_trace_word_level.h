@@ -16,21 +16,19 @@ Author: Daniel Kroening, kroening@kroening.com
 
 // word-level without properties
 
-void compute_trans_trace(
-  const decision_proceduret &decision_procedure,
+trans_tracet compute_trans_trace(
+  const decision_proceduret &,
   unsigned no_timeframes,
-  const namespacet &ns,
-  const irep_idt &module,
-  trans_tracet &dest);
+  const namespacet &,
+  const irep_idt &module);
 
 // word-level with properties
-  
-void compute_trans_trace(
+
+trans_tracet compute_trans_trace(
   const bvt &prop_bv,
   const class prop_convt &solver,
   unsigned no_timeframes,
   const namespacet &ns,
-  const irep_idt &module,
-  trans_tracet &dest);
+  const irep_idt &module);
 
 #endif
