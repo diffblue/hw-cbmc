@@ -47,13 +47,13 @@ protected:
   bool get_bound();
 
   // word-level
-  int do_bmc(prop_conv_solvert &solver, bool convert_only);
-  int finish_bmc(prop_conv_solvert &solver);
+  int do_word_level_bmc(prop_conv_solvert &solver, bool convert_only);
+  int finish_word_level_bmc(prop_conv_solvert &solver);
 
   // bit-level
-  int do_bmc(cnft &solver, bool convert_only);
-  int finish_bmc(const bmc_mapt &bmc_map, propt &solver);
-  
+  int do_bit_level_bmc(cnft &solver, bool convert_only);
+  int finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver);
+
   bool parse_property(const std::string &property);
   bool get_model_properties();
   void show_properties();

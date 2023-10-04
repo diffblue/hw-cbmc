@@ -85,7 +85,7 @@ ebmc_baset::ebmc_baset(const cmdlinet &_cmdline,
 
 /*******************************************************************\
 
-Function: ebmc_baset::finish_bmc
+Function: ebmc_baset::finish_word_level_bmc
 
   Inputs:
 
@@ -95,7 +95,8 @@ Function: ebmc_baset::finish_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::finish_bmc(prop_conv_solvert &solver) {
+int ebmc_baset::finish_word_level_bmc(prop_conv_solvert &solver)
+{
   // convert the properties
   
   for(propertyt &property : properties)
@@ -185,12 +186,12 @@ int ebmc_baset::finish_bmc(prop_conv_solvert &solver) {
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
-  return property_failure()?10:0; 
+  return property_failure() ? 10 : 0;
 }
 
 /*******************************************************************\
 
-Function: ebmc_baset::finish_bmc
+Function: ebmc_baset::finish_bit_level_bmc
 
   Inputs:
 
@@ -200,7 +201,7 @@ Function: ebmc_baset::finish_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::finish_bmc(const bmc_mapt &bmc_map, propt &solver)
+int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 {
   // convert the properties
   for(propertyt &property : properties)
@@ -486,7 +487,7 @@ bool ebmc_baset::get_main()
 
 /*******************************************************************\
 
-Function: ebmc_baset::do_bmc
+Function: ebmc_baset::do_word_level_bmc
 
   Inputs:
 
@@ -496,7 +497,8 @@ Function: ebmc_baset::do_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::do_bmc(prop_conv_solvert &solver, bool convert_only) {
+int ebmc_baset::do_word_level_bmc(prop_conv_solvert &solver, bool convert_only)
+{
   int result=0;
 
   try
@@ -512,13 +514,13 @@ int ebmc_baset::do_bmc(prop_conv_solvert &solver, bool convert_only) {
       for(bound=1; bound<=max_bound; bound++)
       {
         status() << "Doing BMC with bound " << bound << eom;
-        
-        #if 0
+
+#if 0
         const namespacet ns(symbol_table);
         CHECK_RETURN(trans_expr.has_value());
         ::unwind(*trans_expr, *message_handler, solver, bound+1, ns, true);
-        result=finish_bmc(solver);
-        #endif
+        result=finish_word_level_bmc(solver);
+#endif
       }
 
       report_results();
@@ -541,7 +543,7 @@ int ebmc_baset::do_bmc(prop_conv_solvert &solver, bool convert_only) {
         result=0;
       else
       {
-        result=finish_bmc(solver);
+        result = finish_word_level_bmc(solver);
         report_results();
       }
     }
@@ -569,7 +571,7 @@ int ebmc_baset::do_bmc(prop_conv_solvert &solver, bool convert_only) {
 
 /*******************************************************************\
 
-Function: ebmc_baset::do_bmc
+Function: ebmc_baset::do_bit_level_bmc
 
   Inputs:
 
@@ -579,7 +581,7 @@ Function: ebmc_baset::do_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::do_bmc(cnft &solver, bool convert_only)
+int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
 {
   if(get_bound()) return 1;
 
@@ -607,7 +609,7 @@ int ebmc_baset::do_bmc(cnft &solver, bool convert_only)
       result=0;
     else
     {
-      result=finish_bmc(bmc_map, solver);
+      result = finish_bit_level_bmc(bmc_map, solver);
       report_results();
     }
   }
