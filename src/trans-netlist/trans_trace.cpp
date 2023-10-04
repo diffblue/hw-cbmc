@@ -74,6 +74,30 @@ unsigned trans_tracet::get_min_failing_timeframe() const
 
 /*******************************************************************\
 
+Function: bvrep2binary
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string bvrep2binary(const constant_exprt &expr)
+{
+  const auto &value = expr.get_value();
+  std::size_t width = to_bitvector_type(expr.type()).get_width();
+  std::string result;
+  result.reserve(width);
+  for(std::size_t dest_index = 0; dest_index < width; dest_index++)
+    result.push_back(
+      get_bvrep_bit(value, width, width - dest_index - 1) ? '1' : '0');
+  return result;
+}
+
+/*******************************************************************\
+
 Function: show_trans_state
 
   Inputs:
@@ -109,20 +133,30 @@ void show_trans_state(
       std::cout << "?";
     else
       std::cout << from_expr(ns, symbol.name, rhs);
-    
-    if(rhs.type().id()==ID_unsignedbv ||
-       rhs.type().id()==ID_signedbv ||
-       rhs.type().id()==ID_bv)
+
+    if(rhs.type().id() == ID_unsignedbv || rhs.type().id() == ID_signedbv)
     {
       std::size_t width=to_bitvector_type(rhs.type()).get_width();
-      
+
+      if(width >= 2 && width <= 32 && rhs.id() == ID_constant)
+      {
+        std::cout << " ("
+                  << integer2binary(
+                       numeric_cast_v<mp_integer>(to_constant_expr(rhs)), width)
+                  << ')';
+      }
+    }
+    else if(rhs.type().id() == ID_bv)
+    {
+      std::size_t width = to_bv_type(rhs.type()).get_width();
+
       if(width>=2 && width<=32 &&
          rhs.id()==ID_constant)
       {
-        std::cout << " (" << to_constant_expr(rhs).get_value() << ")";
+        std::cout << " (" << bvrep2binary(to_constant_expr(rhs)) << ')';
       }
     }
-    
+
     std::cout << '\n';
   }
 
