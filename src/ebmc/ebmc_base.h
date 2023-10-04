@@ -12,8 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 
 #include <langapi/language_file.h>
-#include <solvers/prop/prop_conv_solver.h>
 #include <solvers/sat/cnf.h>
+#include <solvers/stack_decision_procedure.h>
 #include <trans-netlist/bmc_map.h>
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_trace.h>
@@ -47,8 +47,8 @@ protected:
   bool get_bound();
 
   // word-level
-  int do_word_level_bmc(prop_conv_solvert &solver, bool convert_only);
-  int finish_word_level_bmc(prop_conv_solvert &solver);
+  int do_word_level_bmc(stack_decision_proceduret &, bool convert_only);
+  int finish_word_level_bmc(stack_decision_proceduret &);
 
   // bit-level
   int do_bit_level_bmc(cnft &solver, bool convert_only);
@@ -73,7 +73,8 @@ protected:
     std::string expr_string;
     irep_idt mode;
     exprt expr;
-    bvt timeframe_literals;
+    bvt timeframe_literals;             // bit level
+    exprt::operandst timeframe_handles; // word level
     std::string description;
     enum class statust { DISABLED, SUCCESS, FAILURE, UNKNOWN } status;
     

@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/decision_procedure.h>
 
 #include "../trans-netlist/trans_trace.h"
-#include <solvers/prop/prop.h>
 
 // word-level without properties
 
@@ -25,8 +24,8 @@ trans_tracet compute_trans_trace(
 // word-level with properties
 
 trans_tracet compute_trans_trace(
-  const bvt &prop_bv,
-  const class prop_convt &solver,
+  const exprt::operandst &prop_handles,
+  const decision_proceduret &solver,
   unsigned no_timeframes,
   const namespacet &ns,
   const irep_idt &module);

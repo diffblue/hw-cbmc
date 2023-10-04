@@ -92,8 +92,8 @@ Function: compute_trans_trace
 \*******************************************************************/
 
 trans_tracet compute_trans_trace(
-  const bvt &prop_bv,
-  const class prop_convt &solver,
+  const exprt::operandst &prop_handles,
+  const decision_proceduret &solver,
   unsigned no_timeframes,
   const namespacet &ns,
   const irep_idt &module)
@@ -104,11 +104,12 @@ trans_tracet compute_trans_trace(
 
   for(unsigned t=0; t<no_timeframes; t++)
   {
-    assert(t<prop_bv.size());
-    tvt result=solver.l_get(prop_bv[t]);
+    DATA_INVARIANT(
+      t < prop_handles.size(),
+      "There must be exactly one prop_handles element per time frame");
+    auto result = solver.get(prop_handles[t]);
     trace.states[t].property_failed = result.is_false();
   }
 
   return trace;
 }
-

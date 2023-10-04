@@ -95,7 +95,7 @@ Function: ebmc_baset::finish_word_level_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::finish_word_level_bmc(prop_conv_solvert &solver)
+int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
 {
   // convert the properties
   
@@ -105,13 +105,14 @@ int ebmc_baset::finish_word_level_bmc(prop_conv_solvert &solver)
       continue;
     
     const namespacet ns(symbol_table);
-    
-    ::property(property.expr, property.timeframe_literals,
-               get_message_handler(), solver, bound+1, ns);
-               
-    // freeze for incremental usage
-    for(auto l : property.timeframe_literals)
-      solver.set_frozen(l);
+
+    ::property(
+      property.expr,
+      property.timeframe_handles,
+      get_message_handler(),
+      solver,
+      bound + 1,
+      ns);
   }
   
   status() << "Solving with "
@@ -128,18 +129,16 @@ int ebmc_baset::finish_word_level_bmc(prop_conv_solvert &solver)
     
     status() << "Checking " << property.name << eom;
 
-    or_exprt::operandst disjuncts;
-    disjuncts.reserve(property.timeframe_literals.size());
+    auto constraint = not_exprt(conjunction(property.timeframe_handles));
+    auto handle = solver.handle(constraint);
+    if(handle.is_true())
+      solver.push({literal_exprt(const_literal(true))});
+    else if(handle.is_false())
+      solver.push({literal_exprt(const_literal(false))});
+    else
+      solver.push({solver.handle(constraint)});
 
-    for(auto l : property.timeframe_literals)
-      disjuncts.push_back(literal_exprt(!l));
-
-    auto converted_or = solver.convert(disjunction(disjuncts));
-    solver.push({literal_exprt(converted_or)});
-    solver.set_frozen(converted_or);
-
-    decision_proceduret::resultt dec_result=
-      solver.dec_solve();
+    decision_proceduret::resultt dec_result = solver();
 
     solver.pop();
 
@@ -153,11 +152,7 @@ int ebmc_baset::finish_word_level_bmc(prop_conv_solvert &solver)
         namespacet ns(symbol_table);
 
         property.counterexample = compute_trans_trace(
-          property.timeframe_literals,
-          solver,
-          bound + 1,
-          ns,
-          main_symbol->name);
+          property.timeframe_handles, solver, bound + 1, ns, main_symbol->name);
       }
       break;
 
@@ -497,7 +492,9 @@ Function: ebmc_baset::do_word_level_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::do_word_level_bmc(prop_conv_solvert &solver, bool convert_only)
+int ebmc_baset::do_word_level_bmc(
+  stack_decision_proceduret &solver,
+  bool convert_only)
 {
   int result=0;
 

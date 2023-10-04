@@ -26,14 +26,19 @@ Function: property
 
 \*******************************************************************/
 
-void property(const exprt &property_expr, bvt &prop_bv,
-              message_handlert &message_handler, prop_conv_solvert &solver,
-              unsigned no_timeframes, const namespacet &ns) {
+void property(
+  const exprt &property_expr,
+  exprt::operandst &prop_handles,
+  message_handlert &message_handler,
+  decision_proceduret &solver,
+  unsigned no_timeframes,
+  const namespacet &ns)
+{
   messaget message(message_handler);
 
   if(property_expr.is_true())
   {
-    prop_bv.resize(no_timeframes, const_literal(true));
+    prop_handles.resize(no_timeframes, true_exprt());
     return;
   }
 
@@ -52,7 +57,7 @@ void property(const exprt &property_expr, bvt &prop_bv,
     exprt tmp=
       instantiate(p, c, no_timeframes, ns);
 
-    literalt l=solver.convert(tmp);
-    prop_bv.push_back(l);
+    auto handle = solver.handle(tmp);
+    prop_handles.push_back(std::move(handle));
   }
 }
