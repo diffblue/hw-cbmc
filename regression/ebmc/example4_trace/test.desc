@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 example4.sv
 --bound 10 --trace
 SUCCESS$

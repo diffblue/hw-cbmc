@@ -42,8 +42,10 @@ jobs:
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make -C src -j2 CXX="ccache g++"
-      - name: Run the ebmc tests
+      - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
+      - name: Run the ebmc tests with Z3
+        run: make -C regression/ebmc test-z3
       - name: Run the verilog tests
         run: make -C regression/verilog test
       - name: Print ccache stats
@@ -90,8 +92,10 @@ jobs:
       - name: Build with make
         run: |
           make CXX="ccache clang++" -C src -j2
-      - name: Run the ebmc tests
+      - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
+      - name: Run the ebmc tests with Z3
+        run: make -C regression/ebmc test-z3
       - name: Run the verilog tests
         run: make -C regression/verilog test
       - name: Print ccache stats
