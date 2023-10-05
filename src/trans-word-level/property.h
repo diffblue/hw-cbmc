@@ -13,11 +13,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/message.h>
 #include <util/namespace.h>
 
-#include <solvers/prop/literal.h>
-#include <solvers/prop/prop_conv_solver.h>
+#include <solvers/decision_procedure.h>
 
-void property(const exprt &property_expr, bvt &prop_bv, message_handlert &,
-              prop_conv_solvert &solver, unsigned no_timeframes,
-              const namespacet &);
+void property(
+  const exprt &property_expr,
+  exprt::operandst &prop_handles,
+  message_handlert &,
+  decision_proceduret &solver,
+  unsigned no_timeframes,
+  const namespacet &);
 
 #endif
