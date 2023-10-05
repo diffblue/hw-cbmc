@@ -23,4 +23,17 @@ void property(
   std::size_t no_timeframes,
   const namespacet &);
 
+/// Adds a constraint that can be used to determine whether the
+/// given state has already been seen earlier in the trace.
+void lasso_constraints(
+  decision_proceduret &,
+  std::size_t no_timeframes,
+  const namespacet &,
+  const irep_idt &module_identifier);
+
+symbol_exprt lasso_symbol(std::size_t);
+
+/// Returns true iff the given property requires lasso constraints.
+bool requires_lasso_constraints(const exprt &);
+
 #endif

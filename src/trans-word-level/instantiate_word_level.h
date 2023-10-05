@@ -22,4 +22,6 @@ exprt instantiate(
 std::string
 timeframe_identifier(std::size_t timeframe, const irep_idt &identifier);
 
+symbol_exprt timeframe_symbol(std::size_t timeframe, symbol_exprt);
+
 #endif

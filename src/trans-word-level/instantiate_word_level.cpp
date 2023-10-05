@@ -6,11 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
+#include "instantiate_word_level.h"
 
 #include <util/ebmc_util.h>
 
-#include "instantiate_word_level.h"
+#include "property.h"
+
+#include <cassert>
 
 /*******************************************************************\
 
@@ -28,6 +30,26 @@ std::string
 timeframe_identifier(std::size_t timeframe, const irep_idt &identifier)
 {
   return id2string(identifier)+"@"+std::to_string(timeframe);
+}
+
+/*******************************************************************\
+
+Function: timeframe_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt timeframe_symbol(std::size_t timeframe, symbol_exprt src)
+{
+  auto result = std::move(src);
+  result.set_identifier(
+    timeframe_identifier(timeframe, result.get_identifier()));
+  return result;
 }
 
 /*******************************************************************\
@@ -99,19 +121,14 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
 {
   instantiate_rec(expr.type());
 
-  if(expr.id()==ID_next_symbol || expr.id()==ID_symbol)
+  if(expr.id() == ID_next_symbol)
   {
-    const irep_idt &identifier=expr.get(ID_identifier);
-
-    if(expr.id()==ID_next_symbol)
-    {
-      expr.id(ID_symbol);
-      expr.set(ID_identifier, timeframe_identifier(current+1, identifier));
-    }
-    else
-    {
-      expr.set(ID_identifier, timeframe_identifier(current, identifier));
-    }
+    expr.id(ID_symbol);
+    expr = timeframe_symbol(current + 1, to_symbol_expr(std::move(expr)));
+  }
+  else if(expr.id() == ID_symbol)
+  {
+    expr = timeframe_symbol(current, to_symbol_expr(std::move(expr)));
   }
   else if(expr.id()==ID_sva_overlapped_implication)
   {
@@ -245,30 +262,36 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
   else if(expr.id()==ID_sva_eventually ||
           expr.id()==ID_sva_s_eventually)
   {
-    assert(expr.operands().size()==1);
-    
-    // For Fp to hold, we need one of the following:
-    // (1) at least one state from the current point
-    //     in time satisfies 'p' OR
-    // (2) no state from now on is repeated
-    //     (which means 'p' can still hold later)
+    const auto &p = to_unary_expr(expr).op();
 
-    // save the current time frame, we'll change it
-    
-    exprt::operandst disjuncts;
+    // The following needs to be satisfied for a counterexample
+    // to Fp:
+    // (1) No state up to the current state satisfies 'p'.
+    // (2) The current state is equal to some earlier state.
+    //
+    // We look backwards instead of forwards so that 'current'
+    // is the last state of the counterexample trace.
 
-    if(current==0)
+    if(current == 0)
     {
-      save_currentt save_current(current);
-      for(; current<no_timeframes; current++)
-      {
-        disjuncts.push_back(to_unary_expr(expr).op());
-        instantiate_rec(disjuncts.back());
-      }
-      expr=disjunction(disjuncts);
+      // there is no counterexample to Fp with just one state
+      expr = true_exprt();
     }
     else
-      expr=true_exprt();
+    {
+      exprt::operandst conjuncts = {lasso_symbol(current)};
+
+      // save the current time frame, we'll change it
+      save_currentt save_current(current);
+
+      for(; current<no_timeframes; current++)
+      {
+        conjuncts.push_back(not_exprt(p));
+        instantiate_rec(conjuncts.back());
+      }
+
+      expr = not_exprt(conjunction(conjuncts));
+    }
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
