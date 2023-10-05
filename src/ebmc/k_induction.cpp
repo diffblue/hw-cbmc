@@ -116,7 +116,11 @@ int k_inductiont::induction_base()
   satcheckt satcheck{*message_handler};
   boolbvt solver(ns, satcheck, *message_handler);
 
+  // convert the transition system
   ::unwind(*trans_expr, *message_handler, solver, bound + 1, ns, true);
+
+  // convert the properties
+  word_level_properties(solver);
 
   int result = finish_word_level_bmc(solver);
 

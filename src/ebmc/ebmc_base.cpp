@@ -95,16 +95,14 @@ Function: ebmc_baset::finish_word_level_bmc
 
 \*******************************************************************/
 
-int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
+void ebmc_baset::word_level_properties(decision_proceduret &solver)
 {
-  // convert the properties
-  
+  const namespacet ns(symbol_table);
+
   for(propertyt &property : properties)
   {
     if(property.is_disabled())
       continue;
-    
-    const namespacet ns(symbol_table);
 
     ::property(
       property.expr,
@@ -114,7 +112,22 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
       bound + 1,
       ns);
   }
-  
+}
+
+/*******************************************************************\
+
+Function: ebmc_baset::finish_word_level_bmc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
+{
   status() << "Solving with "
            << solver.decision_procedure_text() << eom;
 
@@ -198,22 +211,6 @@ Function: ebmc_baset::finish_bit_level_bmc
 
 int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 {
-  // convert the properties
-  for(propertyt &property : properties)
-  {
-    if(property.is_disabled())
-      continue;
-    
-    const namespacet ns(symbol_table);
-    
-    ::unwind_property(property.expr, property.timeframe_literals,
-                      get_message_handler(), solver, bmc_map, ns);
-
-    // freeze for incremental usage
-    for(auto l : property.timeframe_literals)
-      solver.set_frozen(l);
-  }
-
   auto sat_start_time = std::chrono::steady_clock::now();  
 
   status() << "Solving with " << solver.solver_text() << eom;
@@ -273,7 +270,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
-  return property_failure()?10:0; 
+  return property_failure()?10:0;
 }
 
 /*******************************************************************\
@@ -533,11 +530,26 @@ int ebmc_baset::do_word_level_bmc(
       status() << "Generating Decision Problem" << eom;
 
       const namespacet ns(symbol_table);
+
+      // convert the transition system
       CHECK_RETURN(trans_expr.has_value());
       ::unwind(*trans_expr, *message_handler, solver, bound + 1, ns, true);
 
+      status() << "Properties" << eom;
+
+      // convert the properties
+      word_level_properties(solver);
+
       if(convert_only)
+      {
+        for(propertyt &property : properties)
+        {
+          if(!property.is_disabled())
+            solver.set_to_false(conjunction(property.timeframe_handles));
+        }
+
         result=0;
+      }
       else
       {
         result = finish_word_level_bmc(solver);
@@ -601,7 +613,28 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
     bmc_map.map_timeframes(netlist, bound+1, solver);
 
     ::unwind(netlist, bmc_map, *this, solver);
-    
+
+    // convert the properties
+    for(propertyt &property : properties)
+    {
+      if(property.is_disabled())
+        continue;
+
+      const namespacet ns(symbol_table);
+
+      ::unwind_property(
+        property.expr,
+        property.timeframe_literals,
+        get_message_handler(),
+        solver,
+        bmc_map,
+        ns);
+
+      // freeze for incremental usage
+      for(auto l : property.timeframe_literals)
+        solver.set_frozen(l);
+    }
+
     if(convert_only)
       result=0;
     else
