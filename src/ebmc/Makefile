@@ -16,6 +16,7 @@ SRC = \
       main.cpp \
       negate_property.cpp \
       random_traces.cpp \
+      show_formula_solver.cpp \
       show_properties.cpp \
       show_trans.cpp \
       #empty line

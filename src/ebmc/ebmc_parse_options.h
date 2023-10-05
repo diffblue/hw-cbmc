@@ -25,7 +25,7 @@ public:
         "(diameter)(ediameter)"
         "(diatest)(statebits):(bound):(max-bound):"
         "(show-parse)(show-varmap)(show-symbol-table)(show-netlist)"
-        "(show-ldg)(show-modules)(show-trans)(show-bdds)"
+        "(show-ldg)(show-modules)(show-trans)(show-bdds)(show-formula)"
         "(show-properties)(property):p:(trace)"
         "(dimacs)(module):(top):"
         "(po)(cegar)(k-induction)(2pi)(bound2):"

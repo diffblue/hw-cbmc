@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ebmc_base.h"
 #include "ebmc_version.h"
+#include "show_formula_solver.h"
 
 /*******************************************************************\
 
@@ -116,6 +117,41 @@ int ebmc_baset::do_smt2()
     std::cout);
 
   return do_word_level_bmc(smt2_conv, true);
+}
+
+/*******************************************************************\
+
+Function: ebmc_baset::do_show_formula
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int ebmc_baset::do_show_formula()
+{
+  const namespacet ns(symbol_table);
+
+  if(cmdline.isset("outfile"))
+  {
+    const std::string filename = cmdline.get_value("outfile");
+    std::ofstream out(filename);
+
+    if(!out)
+    {
+      std::cerr << "Failed to open `" << filename << "'" << '\n';
+      return 1;
+    }
+
+    show_formula_solvert show_formula_solver(out);
+    return do_word_level_bmc(show_formula_solver, true);
+  }
+
+  show_formula_solvert show_formula_solver;
+  return do_word_level_bmc(show_formula_solver, true);
 }
 
 /*******************************************************************\
