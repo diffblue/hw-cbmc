@@ -35,7 +35,7 @@ public:
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"
         "(ic3)(property):(constr)(h)(new-mode)(aiger)"
         "(interpolation-word)(interpolator):(bdd)"
-        "(smt1)(smt2)(boolector)(z3)(cvc4)(yices)(mathsat)(prover)(lifter)"
+        "(smt2)(boolector)(z3)(cvc4)(yices)(mathsat)(prover)(lifter)"
         "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
         "(compute-ct)(dot-netlist)(smv-netlist)(vcd):"
         "I:(preprocess)",
