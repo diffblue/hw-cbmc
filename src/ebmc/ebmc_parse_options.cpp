@@ -282,7 +282,6 @@ void ebmc_parse_optionst::help()
     "Solvers:\n"
     " {y--aig}                       \t bit-level SAT with AIGs\n"
     " {y--dimacs}                    \t output bit-level CNF in DIMACS format\n"
-    " {y--smt1}                      \t output word-level SMT 1 formula\n"
     " {y--smt2}                      \t output word-level SMT 2 formula\n"
     " {y--boolector}                 \t use Boolector as solver\n"
     " {y--cvc4}                      \t use CVC4 as solver\n"
