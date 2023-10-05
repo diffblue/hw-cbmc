@@ -201,7 +201,6 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("dimacs"))
       return ebmc_base.do_dimacs();
-    /*
     else if(cmdline.isset("cvc4"))
       return ebmc_base.do_cvc4();
     else if(cmdline.isset("boolector"))
@@ -214,7 +213,6 @@ int ebmc_parse_optionst::doit()
       return ebmc_base.do_yices();
     else if(cmdline.isset("smt2"))
       return ebmc_base.do_smt2();
-    */
     else if(cmdline.isset("prover"))
       return ebmc_base.do_prover();
     else if(cmdline.isset("lifter"))

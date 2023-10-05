@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 range_type2.smv
 --bound 10
 ^EXIT=0$
