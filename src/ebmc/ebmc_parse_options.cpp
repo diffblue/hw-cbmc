@@ -197,8 +197,8 @@ int ebmc_parse_optionst::doit()
  
   {
     ebmc_baset ebmc_base(cmdline, ui_message_handler);
-  
-    int result=ebmc_base.get_model();
+
+    int result = ebmc_base.get_transition_system();
 
     if(result!=-1) return result;
 

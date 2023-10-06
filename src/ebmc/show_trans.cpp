@@ -235,7 +235,7 @@ Function: show_transt::show_trans
 
 int show_transt::show_trans()
 {
-  int result=get_model();
+  int result = get_transition_system();
   if(result!=-1) return result;
   PRECONDITION(trans_expr.has_value());
 
@@ -268,7 +268,7 @@ Function: show_transt::show_trans_verilog_rtl
 
 int show_transt::show_trans_verilog_rtl()
 {
-  int result=get_model();
+  int result = get_transition_system();
   if(result!=-1) return result;
 
   if(cmdline.isset("outfile"))
@@ -306,7 +306,7 @@ Function: show_transt::show_trans_verilog_netlist
 
 int show_transt::show_trans_verilog_netlist()
 {
-  int result=get_model();
+  int result = get_transition_system();
   if(result!=-1) return result;
 
   if(cmdline.isset("outfile"))

@@ -260,7 +260,7 @@ int random_tracest::operator()()
 
   auto number_of_timeframes = bound + 1;
 
-  int result = get_model();
+  int result = get_transition_system();
   if(result != -1)
     return result;
 

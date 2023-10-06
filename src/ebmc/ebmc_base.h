@@ -31,7 +31,7 @@ public:
              ui_message_handlert &_ui_message_handler);
   virtual ~ebmc_baset() { }
 
-  int get_model();
+  int get_transition_system();
 
 protected:
   symbol_tablet symbol_table;
