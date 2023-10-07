@@ -32,7 +32,7 @@ Function: instantiate_symbol
 
 \*******************************************************************/
 
-void instantiate_symbol(exprt &expr, unsigned timeframe)
+void instantiate_symbol(exprt &expr, std::size_t timeframe)
 {
   if(expr.id()==ID_symbol)
   {
@@ -65,7 +65,7 @@ public:
     symbol_table_baset &_symbol_table,
     std::list<exprt> &_constraints,
     message_handlert &_message,
-    unsigned _no_timeframes)
+    std::size_t _no_timeframes)
     : messaget(_message),
       symbol_table(_symbol_table),
       constraints(_constraints),
@@ -77,7 +77,7 @@ public:
 protected:
   symbol_table_baset &symbol_table;
   std::list<exprt> &constraints;
-  unsigned no_timeframes;
+  std::size_t no_timeframes;
   std::set<irep_idt> top_level_inputs;
 
   symbolt &lookup(const irep_idt &identifier);
@@ -96,7 +96,7 @@ protected:
   void map_var(
     const exprt &program_symbol,
     const symbolt &module_symbol,
-    unsigned transition);
+    std::size_t transition);
 
   void add_constraint_rec(
     const exprt &program_symbol,
@@ -111,8 +111,8 @@ protected:
     std::string &error_msg);
     
   std::string show_member(const exprt &expr);
-  void set_transition(exprt &expr, unsigned transition);
-  
+  void set_transition(exprt &expr, std::size_t transition);
+
   mp_integer get_size(const array_typet &type)
   {
     const exprt &size_expr=type.size();
@@ -166,7 +166,7 @@ Function: map_varst::set_transition
 
 \*******************************************************************/
 
-void map_varst::set_transition(exprt &expr, unsigned transition)
+void map_varst::set_transition(exprt &expr, std::size_t transition)
 {
   if(expr.id()==ID_member)
   {
@@ -390,7 +390,7 @@ Function: map_varst::map_var
 void map_varst::map_var(
   const exprt &program_symbol,
   const symbolt &module_symbol,
-  unsigned transition)
+  std::size_t transition)
 {
   // we have s[0].a.b.c
   // make that s#0[transition].a.b.c
@@ -614,7 +614,7 @@ void map_varst::map_var(
       
   // map values
 
-  for(unsigned t=0; t<no_timeframes; t++)
+  for(std::size_t t = 0; t < no_timeframes; t++)
     map_var(program_symbol, module_symbol, t);
 }
 
@@ -760,7 +760,7 @@ void map_vars(
   const irep_idt &module,
   std::list<exprt> &constraints,
   message_handlert &message,
-  unsigned no_timeframes)
+  std::size_t no_timeframes)
 {
   map_varst map_vars(symbol_table, constraints, message, no_timeframes);
   map_vars.map_vars(module);

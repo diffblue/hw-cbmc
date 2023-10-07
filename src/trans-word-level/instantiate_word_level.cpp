@@ -24,9 +24,8 @@ Function: timeframe_identifier
 
 \*******************************************************************/
 
-std::string timeframe_identifier(
-  unsigned timeframe,
-  const irep_idt &identifier)
+std::string
+timeframe_identifier(std::size_t timeframe, const irep_idt &identifier)
 {
   return id2string(identifier)+"@"+std::to_string(timeframe);
 }
@@ -47,11 +46,10 @@ class wl_instantiatet
 {
 public:
   wl_instantiatet(
-    unsigned _current, unsigned _no_timeframes,
-    const namespacet &_ns):
-    current(_current),
-    no_timeframes(_no_timeframes),
-    ns(_ns)
+    std::size_t _current,
+    std::size_t _no_timeframes,
+    const namespacet &_ns)
+    : current(_current), no_timeframes(_no_timeframes), ns(_ns)
   {
   }
   
@@ -63,7 +61,7 @@ public:
   }
 
 protected:
-  unsigned current, no_timeframes;
+  std::size_t current, no_timeframes;
   const namespacet &ns;
   
   void instantiate_rec(exprt &);
@@ -72,7 +70,7 @@ protected:
   class save_currentt
   {
   public:
-    inline explicit save_currentt(unsigned &_c):c(_c), saved(c)
+    inline explicit save_currentt(std::size_t &_c) : c(_c), saved(c)
     {
     }
     
@@ -80,8 +78,8 @@ protected:
     {
       c=saved; // restore
     }
-    
-    unsigned &c, saved;
+
+    std::size_t &c, saved;
   };
 };
 
@@ -358,7 +356,8 @@ Function: instantiate
 
 exprt instantiate(
   const exprt &expr,
-  unsigned current, unsigned no_timeframes,
+  std::size_t current,
+  std::size_t no_timeframes,
   const namespacet &ns)
 {
   wl_instantiatet wl_instantiate(current, no_timeframes, ns);

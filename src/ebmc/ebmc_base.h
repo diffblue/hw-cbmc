@@ -62,7 +62,7 @@ protected:
   bool parse(const std::string &filename);
   bool typecheck();
 
-  unsigned bound;
+  std::size_t bound;
 
   struct propertyt
   {

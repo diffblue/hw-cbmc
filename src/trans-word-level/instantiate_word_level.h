@@ -15,11 +15,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 exprt instantiate(
   const exprt &expr,
-  unsigned current, unsigned no_timeframes,
+  std::size_t current,
+  std::size_t no_timeframes,
   const namespacet &);
 
-std::string timeframe_identifier(
-  unsigned timeframe,
-  const irep_idt &identifier);
+std::string
+timeframe_identifier(std::size_t timeframe, const irep_idt &identifier);
 
 #endif
