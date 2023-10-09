@@ -8,13 +8,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
-#include "ebmc_version.h"
-#include "show_trans.h"
-#include "k_induction.h"
 #include "bdd_engine.h"
-#include "ic3_engine.h"
 #include "ebmc_base.h"
 #include "ebmc_parse_options.h"
+#include "ebmc_version.h"
+#include "ic3_engine.h"
+#include "k_induction.h"
+#include "random_traces.h"
+#include "show_trans.h"
 
 #include <util/config.h>
 #include <util/exit_codes.h>
@@ -110,7 +111,9 @@ int ebmc_parse_optionst::doit()
     //    }
     #endif
   }
-  
+
+  if(cmdline.isset("random-traces"))
+    return random_traces(cmdline, ui_message_handler);
 
   if(cmdline.isset("ic3"))
     return do_ic3(cmdline, ui_message_handler);
@@ -247,7 +250,7 @@ void ebmc_parse_optionst::help()
     "\n";
 
   std::cout << help_formatter(
-    "Usage:                             Purpose:\n"
+    "Usage:\tPurpose:\n"
     "\n"
     " {bebmc} [{y-?}] [{y-h}] [{y--help}] \t show help\n"
     " {bebmc} {ufile} {u...}         \t source file names\n"
@@ -272,6 +275,8 @@ void ebmc_parse_optionst::help()
     "       {y--constr}              \t use constraints specified in 'file.cnstr'\n"
     "       {y--new-mode}            \t new mode is switched on\n"
     "       {y--aiger}               \t print out the instance in aiger format\n"
+    " {y--random-traces} {unumber}   \t generate the given number of random traces\n"
+    "       {y--random-seed} {unumber}\t use the given random seed\n"
     
     //" --interpolation                \t use bit-level interpolants\n"
     //" --interpolation-word           \t use word-level interpolants\n"

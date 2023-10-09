@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+boolean1.v
+--bound 0 --random-traces 2
+^\*\*\* Trace 1$
+^  main\.some_wire = 0$
+^  main\.input1 = 0$
+^\*\*\* Trace 2$
+^  main\.some_wire = 1$
+^  main\.input1 = 1$
+^EXIT=0$
+^SIGNAL=0$
+--

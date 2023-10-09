@@ -38,9 +38,9 @@ Function: trans_tracet::get_max_failing_timeframe
 
 \*******************************************************************/
 
-std::size_t trans_tracet::get_max_failing_timeframe() const
+optionalt<std::size_t> trans_tracet::get_max_failing_timeframe() const
 {
-  std::size_t max = 0;
+  optionalt<std::size_t> max = {};
 
   for(std::size_t t = 0; t < states.size(); t++)
   {
@@ -63,13 +63,13 @@ Function: trans_tracet::get_min_failing_timeframe
 
 \*******************************************************************/
 
-std::size_t trans_tracet::get_min_failing_timeframe() const
+optionalt<std::size_t> trans_tracet::get_min_failing_timeframe() const
 {
   for(std::size_t t = 0; t < states.size(); t++)
     if(states[t].property_failed)
       return t;
 
-  return 0;
+  return {};
 }
 
 /*******************************************************************\
@@ -180,7 +180,10 @@ void convert(
   const trans_tracet &trace,
   xmlt &dest)
 {
-  std::size_t last_time_frame = trace.get_min_failing_timeframe();
+  auto min_failing_timeframe_opt = trace.get_min_failing_timeframe();
+
+  auto last_time_frame =
+    min_failing_timeframe_opt.value_or(trace.states.size() - 1);
 
   dest=xmlt("trans_trace");
   
@@ -253,7 +256,8 @@ void show_trans_trace(
   {
   case ui_message_handlert::uit::PLAIN:
     {
-      std::size_t l = trace.get_min_failing_timeframe();
+      auto l =
+        trace.get_min_failing_timeframe().value_or(trace.states.size() - 1);
 
       for(std::size_t t = 0; t <= l; t++)
         show_trans_state(t, trace.states[t], ns);
@@ -717,7 +721,7 @@ void show_trans_trace_vcd(
 
   out << "$enddefinitions $end\n";
 
-  std::size_t l = trace.get_min_failing_timeframe();
+  auto l = trace.get_min_failing_timeframe().value_or(trace.states.size() - 1);
 
   // initial state
 

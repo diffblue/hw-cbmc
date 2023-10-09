@@ -15,6 +15,7 @@ SRC = \
       k_induction.cpp \
       main.cpp \
       negate_property.cpp \
+      random_traces.cpp \
       show_properties.cpp \
       show_trans.cpp \
       #empty line
