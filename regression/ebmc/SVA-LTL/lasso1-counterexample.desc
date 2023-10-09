@@ -1,0 +1,9 @@
+KNOWNBUG
+lasso1.sv
+--bound 10 --trace
+^EXIT=10$
+^SIGNAL=0$
+^\[top\.property\.p0\] .* FAILURE$
+--
+--
+The reported counterexample should be longer, to include the loop.
