@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_version.h"
 #include "ic3_engine.h"
 #include "k_induction.h"
+#include "liveness_to_safety.h"
 #include "neural_liveness.h"
 #include "random_traces.h"
 #include "ranking_function.h"
@@ -293,7 +294,12 @@ int ebmc_parse_optionst::doit()
 
       if(cmdline.isset("compute-ct"))
         return ebmc_base.do_compute_ct();
-      else if(cmdline.isset("aig") || cmdline.isset("dimacs"))
+
+      // possibly apply liveness-to-safety
+      if(cmdline.isset("liveness-to-safety"))
+        liveness_to_safety(ebmc_base.transition_system, ebmc_base.properties);
+
+      if(cmdline.isset("aig") || cmdline.isset("dimacs"))
         return ebmc_base.do_bit_level_bmc();
       else
         return ebmc_base.do_word_level_bmc(); // default
@@ -354,6 +360,7 @@ void ebmc_parse_optionst::help()
     " {y--property} {uid}            \t check the property with given ID\n"
     " {y-I} {upath}                  \t set include path\n"
     " {y--reset} {uexpr}             \t set up module reset\n"
+    " {y--liveness-to-safety}        \t translate liveness properties to safety properties\n"
     "\n"
     "Methods:\n"
     " {y--k-induction}               \t do k-induction with k=bound\n"

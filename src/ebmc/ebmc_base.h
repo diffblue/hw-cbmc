@@ -37,6 +37,7 @@ public:
   bool make_netlist(netlistt &);
 
   transition_systemt transition_system;
+  ebmc_propertiest properties;
 
 protected:
   messaget message;
@@ -62,11 +63,7 @@ protected:
   bool typecheck();
 
   std::size_t bound;
-
   using propertyt = ebmc_propertiest::propertyt;
-  ebmc_propertiest properties;
-
-  bool property_requires_lasso_constraints() const;
 
 public:
   int do_compute_ct();

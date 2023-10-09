@@ -35,7 +35,11 @@ void lasso_constraints(
 /// Precondition: k<i
 symbol_exprt lasso_symbol(std::size_t k, std::size_t i);
 
-/// Returns true iff the given property requires lasso constraints.
+/// Returns true iff the given property requires lasso constraints for BMC.
 bool requires_lasso_constraints(const exprt &);
+
+/// Returns true iff the given property is a liveness property when
+/// given an infinite trace.
+bool is_liveness_property(const exprt &);
 
 #endif
