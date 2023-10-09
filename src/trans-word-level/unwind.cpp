@@ -38,9 +38,9 @@ void unwind(
   const exprt &op_init=trans.init();
   const exprt &op_trans=trans.trans();
 
-  // general constraints
+  // in-state constraints
 
-  message.status() << "General constraints" << messaget::eom;
+  message.status() << "In-state constraints" << messaget::eom;
 
   if(!op_invar.is_true())
     for(std::size_t c = 0; c < no_timeframes; c++)
