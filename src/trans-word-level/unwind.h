@@ -15,9 +15,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 // word-level
 
-void unwind(const transt &trans, message_handlert &message_handler,
-            class decision_proceduret &decision_procedure,
-            unsigned no_timeframes, const class namespacet &ns,
-            bool initial_state = true);
+void unwind(
+  const transt &,
+  message_handlert &,
+  class decision_proceduret &,
+  std::size_t no_timeframes,
+  const class namespacet &,
+  bool initial_state = true);
 
 #endif

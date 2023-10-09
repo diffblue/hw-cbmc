@@ -26,7 +26,7 @@ Function: compute_trans_trace
 
 trans_tracet compute_trans_trace(
   const decision_proceduret &decision_procedure,
-  unsigned no_timeframes,
+  std::size_t no_timeframes,
   const namespacet &ns,
   const irep_idt &module)
 {
@@ -40,7 +40,7 @@ trans_tracet compute_trans_trace(
 
   dest.states.resize(no_timeframes);
 
-  for(unsigned t=0; t<no_timeframes; t++)
+  for(std::size_t t = 0; t < no_timeframes; t++)
   {
     const symbol_tablet &symbol_table=ns.get_symbol_table();
 
@@ -94,7 +94,7 @@ Function: compute_trans_trace
 trans_tracet compute_trans_trace(
   const exprt::operandst &prop_handles,
   const decision_proceduret &solver,
-  unsigned no_timeframes,
+  std::size_t no_timeframes,
   const namespacet &ns,
   const irep_idt &module)
 {
@@ -102,7 +102,7 @@ trans_tracet compute_trans_trace(
 
   // check the properties that got violated
 
-  for(unsigned t=0; t<no_timeframes; t++)
+  for(std::size_t t = 0; t < no_timeframes; t++)
   {
     DATA_INVARIANT(
       t < prop_handles.size(),

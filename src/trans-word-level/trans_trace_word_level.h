@@ -17,7 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 trans_tracet compute_trans_trace(
   const decision_proceduret &,
-  unsigned no_timeframes,
+  std::size_t no_timeframes,
   const namespacet &,
   const irep_idt &module);
 
@@ -26,7 +26,7 @@ trans_tracet compute_trans_trace(
 trans_tracet compute_trans_trace(
   const exprt::operandst &prop_handles,
   const decision_proceduret &solver,
-  unsigned no_timeframes,
+  std::size_t no_timeframes,
   const namespacet &ns,
   const irep_idt &module);
 

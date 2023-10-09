@@ -17,6 +17,6 @@ void map_vars(
   const irep_idt &module,
   std::list<exprt> &constraints,
   message_handlert &message,
-  unsigned no_timeframes);
+  std::size_t no_timeframes);
 
 #endif

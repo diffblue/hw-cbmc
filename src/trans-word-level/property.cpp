@@ -31,7 +31,7 @@ void property(
   exprt::operandst &prop_handles,
   message_handlert &message_handler,
   decision_proceduret &solver,
-  unsigned no_timeframes,
+  std::size_t no_timeframes,
   const namespacet &ns)
 {
   messaget message(message_handler);
@@ -52,7 +52,7 @@ void property(
 
   const exprt &p = to_unary_expr(property_expr).op();
 
-  for(unsigned c=0; c<no_timeframes; c++)
+  for(std::size_t c = 0; c < no_timeframes; c++)
   {
     exprt tmp=
       instantiate(p, c, no_timeframes, ns);

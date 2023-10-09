@@ -38,11 +38,11 @@ Function: trans_tracet::get_max_failing_timeframe
 
 \*******************************************************************/
 
-unsigned trans_tracet::get_max_failing_timeframe() const
+std::size_t trans_tracet::get_max_failing_timeframe() const
 {
-  unsigned max=0;
-  
-  for(unsigned t=0; t<states.size(); t++)
+  std::size_t max = 0;
+
+  for(std::size_t t = 0; t < states.size(); t++)
   {
     if(states[t].property_failed)
       max=t;
@@ -63,9 +63,9 @@ Function: trans_tracet::get_min_failing_timeframe
 
 \*******************************************************************/
 
-unsigned trans_tracet::get_min_failing_timeframe() const
+std::size_t trans_tracet::get_min_failing_timeframe() const
 {
-  for(unsigned t=0; t<states.size(); t++)
+  for(std::size_t t = 0; t < states.size(); t++)
     if(states[t].property_failed)
       return t;
 
@@ -109,7 +109,7 @@ Function: show_trans_state
 \*******************************************************************/
 
 void show_trans_state(
-  unsigned timeframe,
+  std::size_t timeframe,
   const trans_tracet::statet &state,
   const namespacet &ns)
 {
@@ -180,13 +180,13 @@ void convert(
   const trans_tracet &trace,
   xmlt &dest)
 {
-  unsigned last_time_frame=trace.get_min_failing_timeframe();
+  std::size_t last_time_frame = trace.get_min_failing_timeframe();
 
   dest=xmlt("trans_trace");
   
   dest.new_element("mode").data=trace.mode;
 
-  for(unsigned t=0; t<=last_time_frame; t++)
+  for(std::size_t t = 0; t <= last_time_frame; t++)
   {
     assert(t<trace.states.size());
   
@@ -253,9 +253,9 @@ void show_trans_trace(
   {
   case ui_message_handlert::uit::PLAIN:
     {
-      unsigned l=trace.get_min_failing_timeframe();
+      std::size_t l = trace.get_min_failing_timeframe();
 
-      for(unsigned t=0; t<=l; t++)
+      for(std::size_t t = 0; t <= l; t++)
         show_trans_state(t, trace.states[t], ns);
     }
     break;
@@ -458,7 +458,7 @@ Function: show_trans_state_vcd
 \*******************************************************************/
 
 void show_trans_state_vcd(
-  unsigned timeframe,
+  std::size_t timeframe,
   const trans_tracet::statet &previous_state,
   const trans_tracet::statet &current_state,
   const namespacet &ns,
@@ -599,7 +599,7 @@ void vcd_hierarchy_rec(
   const std::set<irep_idt> &ids,
   const std::string &prefix,
   std::ostream &out,
-  unsigned depth)
+  std::size_t depth)
 {
   std::set<std::string> sub_modules;
   std::set<irep_idt> signals;
@@ -716,16 +716,16 @@ void show_trans_trace_vcd(
   out << "$upscope $end\n";  
 
   out << "$enddefinitions $end\n";
-  
-  unsigned l=trace.get_min_failing_timeframe();
-  
+
+  std::size_t l = trace.get_min_failing_timeframe();
+
   // initial state
 
   show_trans_state_vcd(0, trace.states[0], trace.states[0], ns, out);
   
   // following ones
 
-  for(unsigned t=1; t<=l; t++)
+  for(std::size_t t = 1; t <= l; t++)
     show_trans_state_vcd(t, trace.states[t-1], trace.states[t], ns, out);
 }
 

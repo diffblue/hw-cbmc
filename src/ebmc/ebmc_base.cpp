@@ -505,8 +505,8 @@ int ebmc_baset::do_word_level_bmc(
       if(convert_only)
         throw "please set a specific bound";
         
-      const unsigned max_bound=
-        unsafe_string2unsigned(cmdline.get_value("max-bound"));
+      const std::size_t max_bound=
+        unsafe_string2size_t(cmdline.get_value("max-bound"));
     
       for(bound=1; bound<=max_bound; bound++)
       {

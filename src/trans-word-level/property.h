@@ -20,7 +20,7 @@ void property(
   exprt::operandst &prop_handles,
   message_handlert &,
   decision_proceduret &solver,
-  unsigned no_timeframes,
+  std::size_t no_timeframes,
   const namespacet &);
 
 #endif

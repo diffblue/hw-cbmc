@@ -12,9 +12,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/message.h>
 
-void show_counterexample(message_handlert &,
-                         const class decision_proceduret &solver,
-                         unsigned no_timeframes, const namespacet &ns,
-                         const std::string &module);
+void show_counterexample(
+  message_handlert &,
+  const class decision_proceduret &solver,
+  std::size_t no_timeframes,
+  const namespacet &ns,
+  const std::string &module);
 
 #endif
