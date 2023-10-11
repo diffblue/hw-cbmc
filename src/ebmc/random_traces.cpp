@@ -41,7 +41,8 @@ public:
   random_tracest(
     const cmdlinet &_cmdline,
     ui_message_handlert &_ui_message_handler)
-    : ebmc_baset(_cmdline, _ui_message_handler), ns{symbol_table}
+    : ebmc_baset(_cmdline, _ui_message_handler),
+      ns{transition_system.symbol_table}
   {
   }
 
@@ -154,7 +155,7 @@ std::vector<symbol_exprt> random_tracest::inputs() const
   std::vector<symbol_exprt> inputs;
   const symbol_tablet &symbol_table = ns.get_symbol_table();
 
-  auto module_identifier = main_symbol->name;
+  auto module_identifier = transition_system.main_symbol->name;
   auto lower = symbol_table.symbol_module_map.lower_bound(module_identifier);
   auto upper = symbol_table.symbol_module_map.upper_bound(module_identifier);
 
@@ -264,7 +265,7 @@ int random_tracest::operator()()
   if(result != -1)
     return result;
 
-  CHECK_RETURN(trans_expr.has_value());
+  CHECK_RETURN(transition_system.trans_expr.has_value());
 
   status() << "Passing transition system to solver" << eom;
 
@@ -272,7 +273,12 @@ int random_tracest::operator()()
   boolbvt solver(ns, satcheck, *message_handler);
 
   ::unwind(
-    *trans_expr, *message_handler, solver, number_of_timeframes, ns, true);
+    *transition_system.trans_expr,
+    *message_handler,
+    solver,
+    number_of_timeframes,
+    ns,
+    true);
 
   auto inputs = this->inputs();
 
@@ -295,7 +301,7 @@ int random_tracest::operator()()
     case decision_proceduret::resultt::D_SATISFIABLE:
     {
       auto trace = compute_trans_trace(
-        solver, number_of_timeframes, ns, main_symbol->name);
+        solver, number_of_timeframes, ns, transition_system.main_symbol->name);
       if(cmdline.isset("vcd"))
       {
         auto filename =

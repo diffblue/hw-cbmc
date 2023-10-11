@@ -82,7 +82,7 @@ Function: ebmc_baset::do_smt2
 
 int ebmc_baset::do_smt2()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   if(cmdline.isset("outfile"))
   {
@@ -133,7 +133,7 @@ Function: ebmc_baset::do_show_formula
 
 int ebmc_baset::do_show_formula()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   if(cmdline.isset("outfile"))
   {
@@ -168,7 +168,7 @@ Function: ebmc_baset::do_mathsat
 
 int ebmc_baset::do_mathsat()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   smt2_dect smt2_dec(
     ns,
@@ -195,7 +195,7 @@ Function: ebmc_baset::do_z3
 
 int ebmc_baset::do_z3()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   smt2_dect smt2_dec(
     ns,
@@ -222,7 +222,7 @@ Function: ebmc_baset::do_cvc4
 
 int ebmc_baset::do_cvc4()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   smt2_dect smt2_dec(
     ns,
@@ -249,7 +249,7 @@ Function: ebmc_baset::do_yices
 
 int ebmc_baset::do_yices()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   smt2_dect smt2_dec(
     ns,
@@ -276,7 +276,7 @@ Function: ebmc_baset::do_boolector
 
 int ebmc_baset::do_boolector()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   smt2_dect smt2_dec(
     ns,
@@ -313,7 +313,7 @@ int ebmc_baset::do_sat()
   }
   else
   {
-    const namespacet ns(symbol_table);
+    const namespacet ns(transition_system.symbol_table);
     boolbvt boolbv(ns, satcheck, *message_handler);
     return do_word_level_bmc(boolbv, false);
   }
@@ -334,7 +334,7 @@ Function: ebmc_baset::do_prover
 int ebmc_baset::do_prover()
 {
 #ifdef HAVE_PROVER
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
   prover_satt prover_sat(ns);
   return do_word_level_bmc(prover_sat, false);
 #else
@@ -358,7 +358,7 @@ Function: ebmc_baset::do_lifter
 int ebmc_baset::do_lifter()
 {
 #ifdef HAVE_PROVER
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
   liftert lifter(ns);
   return do_word_level_bmc(lifter.prop_conv(), false);
 #else

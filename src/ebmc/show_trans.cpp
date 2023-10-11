@@ -100,12 +100,12 @@ Function: show_transt::show_trans_verilog_netlist
 int show_transt::show_trans_verilog_netlist(std::ostream &out)
 {
   output_verilog_netlistt output_verilog(
-    symbol_table, out, get_message_handler());
+    transition_system.symbol_table, out, get_message_handler());
 
   try
   {
     verilog_header(out, "Verilog netlist");
-    output_verilog(*main_symbol);
+    output_verilog(*transition_system.main_symbol);
   }
   
   catch(const std::string &e)
@@ -144,12 +144,12 @@ Function: show_transt::show_trans_verilog_rtl
 int show_transt::show_trans_verilog_rtl(std::ostream &out)
 {
   output_verilog_rtlt output_verilog(
-    symbol_table, out, get_message_handler());
+    transition_system.symbol_table, out, get_message_handler());
 
   try
   {
     verilog_header(out, "Verilog RTL");
-    output_verilog(*main_symbol);
+    output_verilog(*transition_system.main_symbol);
   }
   
   catch(const std::string &e)
@@ -237,19 +237,19 @@ int show_transt::show_trans()
 {
   int result = get_transition_system();
   if(result!=-1) return result;
-  PRECONDITION(trans_expr.has_value());
+  PRECONDITION(transition_system.trans_expr.has_value());
 
   std::cout << "Initial state constraints:\n\n";
 
-  print_verilog_constraints(trans_expr->init(), std::cout);
+  print_verilog_constraints(transition_system.trans_expr->init(), std::cout);
 
   std::cout << "State constraints:\n\n";
 
-  print_verilog_constraints(trans_expr->invar(), std::cout);
+  print_verilog_constraints(transition_system.trans_expr->invar(), std::cout);
 
   std::cout << "Transition constraints:\n\n";
 
-  print_verilog_constraints(trans_expr->trans(), std::cout);
+  print_verilog_constraints(transition_system.trans_expr->trans(), std::cout);
 
   return 0;
 }
