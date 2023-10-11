@@ -214,6 +214,8 @@ int ebmc_parse_optionst::doit()
       return ebmc_base.do_mathsat();
     else if(cmdline.isset("yices"))
       return ebmc_base.do_yices();
+    else if(cmdline.isset("show-formula"))
+      return ebmc_base.do_show_formula();
     else if(cmdline.isset("smt2"))
       return ebmc_base.do_smt2();
     else if(cmdline.isset("prover"))
@@ -298,6 +300,7 @@ void ebmc_parse_optionst::help()
     " {y--show-varmap}               \t show variable map\n"
     " {y--show-netlist}              \t show netlist\n"
     " {y--show-ldg}                  \t show latch dependencies\n"
+    " {y--show-formula}              \t show the formula that is generated\n"
     " {y--smv-netlist}               \t show netlist in SMV format\n"
     " {y--dot-netlist}               \t show netlist in DOT format\n"
     " {y--show-trans}                \t show transition system\n"
