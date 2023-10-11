@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ic3_engine.h"
 #include "k_induction.h"
 #include "random_traces.h"
+#include "ranking_function.h"
 #include "show_trans.h"
 
 #include <util/config.h>
@@ -120,6 +121,9 @@ int ebmc_parse_optionst::doit()
   
   if(cmdline.isset("k-induction"))
     return do_k_induction(cmdline, ui_message_handler);
+
+  if(cmdline.isset("ranking-function"))
+    return do_ranking_function(cmdline, ui_message_handler);
 
   if(cmdline.isset("bdd") ||
      cmdline.isset("show-bdds"))
@@ -274,12 +278,14 @@ void ebmc_parse_optionst::help()
     " {y--k-induction}               \t do k-induction with k=bound\n"
     " {y--bdd}                       \t use (unbounded) BDD engine\n"
     " {y--ic3}                       \t use IC3 engine with options described below\n"
-    "       {y--constr}              \t use constraints specified in 'file.cnstr'\n"
-    "       {y--new-mode}            \t new mode is switched on\n"
-    "       {y--aiger}               \t print out the instance in aiger format\n"
+    "    {y--constr}                 \t use constraints specified in 'file.cnstr'\n"
+    "    {y--new-mode}               \t new mode is switched on\n"
+    "    {y--aiger}                  \t print out the instance in aiger format\n"
     " {y--random-traces} {unumber}   \t generate the given number of random traces\n"
     "       {y--random-seed} {unumber}\t use the given random seed\n"
-    
+    " {y--ranking-function} {uf}     \t prove a liveness property using given ranking funnction (experimental)\n"
+    "    {y--property} {uid}         \t the liveness property to prove\n"
+
     //" --interpolation                \t use bit-level interpolants\n"
     //" --interpolation-word           \t use word-level interpolants\n"
     //" --diameter                     \t perform recurrence diameter test\n"
