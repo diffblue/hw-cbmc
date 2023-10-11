@@ -126,7 +126,9 @@ protected:
 
     return false;
   }
-  
+
+  bool property_requires_lasso_constraints() const;
+
   void report_results();
   
   void show_ldg(std::ostream &out);

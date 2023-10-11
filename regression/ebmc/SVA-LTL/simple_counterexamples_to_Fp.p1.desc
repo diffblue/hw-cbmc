@@ -1,6 +1,7 @@
 CORE
-simple_counterexamples_to_Gp.sv
+simple_counterexamples_to_Fp.sv
 --bound 10 --property top.property.p1
+^Adding lasso constraints$
 ^EXIT=10$
 ^SIGNAL=0$
 ^\[top\.property\.p1\] .* FAILURE$

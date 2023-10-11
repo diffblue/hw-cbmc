@@ -1,6 +1,7 @@
 CORE
 simple_passing_LTL_properties.sv
 --bound 10
+^Adding lasso constraints$
 ^EXIT=0$
 ^SIGNAL=0$
 ^\[top.property.p0\] .* SUCCESS$

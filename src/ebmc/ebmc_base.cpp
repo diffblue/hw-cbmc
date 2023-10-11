@@ -85,6 +85,27 @@ ebmc_baset::ebmc_baset(const cmdlinet &_cmdline,
 
 /*******************************************************************\
 
+Function: ebmc_baset::property_requires_lasso_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool ebmc_baset::property_requires_lasso_constraints() const
+{
+  for(const auto &p : properties)
+    if(!p.is_disabled() && requires_lasso_constraints(p.expr))
+      return true;
+
+  return false;
+}
+
+/*******************************************************************\
+
 Function: ebmc_baset::finish_word_level_bmc
 
   Inputs:
@@ -128,6 +149,15 @@ Function: ebmc_baset::finish_word_level_bmc
 
 int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
 {
+  const namespacet ns(symbol_table);
+
+  // lasso constraints, if needed
+  if(property_requires_lasso_constraints())
+  {
+    status() << "Adding lasso constraints" << eom;
+    lasso_constraints(solver, bound + 1, ns, main_symbol->name);
+  }
+
   status() << "Solving with "
            << solver.decision_procedure_text() << eom;
 
@@ -161,8 +191,6 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
       {
         property.make_failure();
         result() << "SAT: counterexample found" << messaget::eom;
-
-        namespacet ns(symbol_table);
 
         property.counterexample = compute_trans_trace(
           property.timeframe_handles, solver, bound + 1, ns, main_symbol->name);
