@@ -6,22 +6,22 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
-#include <iostream>
-#include <algorithm>
+#include "bdd_engine.h"
+
+#include <util/format_expr.h>
 
 #include <solvers/bdd/miniBDD/miniBDD.h>
 #include <solvers/sat/satcheck.h>
-
 #include <trans-netlist/aig_prop.h>
-#include <trans-netlist/unwind_netlist.h>
-#include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/instantiate_netlist.h>
-
-#include <langapi/language_util.h>
+#include <trans-netlist/trans_trace_netlist.h>
+#include <trans-netlist/unwind_netlist.h>
 
 #include "ebmc_base.h"
-#include "bdd_engine.h"
 #include "negate_property.h"
+
+#include <algorithm>
+#include <iostream>
 
 /*******************************************************************\
 
@@ -163,9 +163,8 @@ int bdd_enginet::operator()()
       std::cout << "Atomic propositions:\n";
       for(const auto & a : atomic_propositions)
       {
-        std::string as_string=
-          from_expr(namespacet(symbol_table), irep_idt(), a.first);
-        std::cout << '`' << as_string << "' -> " << a.second.bdd.node_number();
+        std::cout << '`' << format(a.first) << "' -> "
+                  << a.second.bdd.node_number();
       }
 
       std::cout << '\n';
