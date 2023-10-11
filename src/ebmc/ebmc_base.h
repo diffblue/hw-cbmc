@@ -48,6 +48,7 @@ protected:
 
   // word-level
   int do_word_level_bmc(stack_decision_proceduret &, bool convert_only);
+  void word_level_properties(decision_proceduret &);
   int finish_word_level_bmc(stack_decision_proceduret &);
 
   // bit-level
