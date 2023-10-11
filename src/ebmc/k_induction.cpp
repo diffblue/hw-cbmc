@@ -75,7 +75,7 @@ int k_inductiont::operator()()
 {
   if(get_bound()) return 1;
 
-  int result=get_model();
+  int result = get_transition_system();
   if(result!=-1) return result;
 
   if(properties.empty())

@@ -689,7 +689,7 @@ int ebmc_baset::preprocess()
 
 /*******************************************************************\
 
-Function: ebmc_baset::get_model
+Function: ebmc_baset::get_transition_system
 
   Inputs:
 
@@ -699,7 +699,7 @@ Function: ebmc_baset::get_model
 
 \*******************************************************************/
 
-int ebmc_baset::get_model()
+int ebmc_baset::get_transition_system()
 {
   // do -I
   if(cmdline.isset('I'))

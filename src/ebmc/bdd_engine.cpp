@@ -131,7 +131,7 @@ int bdd_enginet::operator()()
 {
   try
   {
-    int result=get_model();
+    int result = get_transition_system();
     if(result!=-1) return result;
 
     {  

@@ -53,7 +53,7 @@ int ic3_enginet::operator()()
   read_parameters();
 
   try    {
-    int result=get_model();
+    int result = get_transition_system();
     if(result!=-1) return result;
 
     if(make_netlist(netlist))     {
