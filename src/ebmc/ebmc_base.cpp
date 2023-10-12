@@ -855,26 +855,6 @@ int ebmc_baset::get_transition_system()
     *transition_system.trans_expr = new_trans_expr;
   }
 
-  // Property given on command line?
-  if(cmdline.isset('p'))
-  {
-    // NuSMV also uses -p
-    if(parse_property(cmdline.get_value('p')))
-      return 1;
-  }
-  else
-  {
-    // get properties from file
-    if(get_model_properties())
-      return 1;
-  }
-
-  if(cmdline.isset("show-properties"))
-  {
-    show_properties();
-    return 0;
-  }
-
   if(cmdline.isset("show-netlist"))
   {
     netlistt netlist;
@@ -906,6 +886,43 @@ int ebmc_baset::get_transition_system()
   }
   
   return -1; // done with the model
+}
+
+/*******************************************************************\
+
+Function: ebmc_baset::get_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int ebmc_baset::get_properties()
+{
+  // Property given on command line?
+  if(cmdline.isset('p'))
+  {
+    // NuSMV also uses -p
+    if(parse_property(cmdline.get_value('p')))
+      return 1;
+  }
+  else
+  {
+    // get properties from the model files
+    if(get_model_properties())
+      return 1;
+  }
+
+  if(cmdline.isset("show-properties"))
+  {
+    show_properties();
+    return 0;
+  }
+
+  return -1; // done
 }
 
 /*******************************************************************\

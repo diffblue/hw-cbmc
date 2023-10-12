@@ -126,6 +126,11 @@ int ranking_function_checkt::operator()()
   const auto ranking_function = parse_ranking_function();
 
   // find the property
+  exit_code = get_properties();
+
+  if(exit_code != -1)
+    return exit_code;
+
   auto &property = find_property();
 
   satcheckt satcheck{*message_handler};

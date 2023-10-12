@@ -203,6 +203,11 @@ int ebmc_parse_optionst::doit()
       if(result != -1)
         return result;
 
+      result = ebmc_base.get_properties();
+
+      if(result != -1)
+        return result;
+
       if(cmdline.isset("dimacs"))
         return ebmc_base.do_dimacs();
       else if(cmdline.isset("cvc4"))
