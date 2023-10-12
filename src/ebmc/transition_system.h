@@ -13,6 +13,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/symbol_table.h>
 
 class cmdlinet;
+class ui_message_handlert;
 
 class transition_systemt
 {
@@ -22,6 +23,9 @@ public:
   optionalt<transt> trans_expr; // transition system expression
 };
 
-int get_transition_system(cmdlinet &, transition_systemt &);
+int get_transition_system(
+  const cmdlinet &,
+  ui_message_handlert &,
+  transition_systemt &);
 
 #endif // CPROVER_EBMC_TRANSITION_SYSTEM_H

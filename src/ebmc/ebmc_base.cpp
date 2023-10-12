@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/expr_util.h>
 #include <util/find_macros.h>
-#include <util/get_module.h>
 #include <util/json.h>
 #include <util/string2int.h>
 #include <util/unicode.h>
@@ -29,7 +28,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <trans-word-level/property.h>
-#include <trans-word-level/show_modules.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
@@ -39,26 +37,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <chrono>
 #include <fstream>
 #include <iostream>
-
-/*******************************************************************\
-
-Function: make_next_state
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void make_next_state(exprt &expr) {
-  for (auto &sub_expression : expr.operands())
-    make_next_state(sub_expression);
-
-  if(expr.id()==ID_symbol)
-    expr.id(ID_next_symbol);
-}
 
 /*******************************************************************\
 
@@ -483,45 +461,6 @@ bool ebmc_baset::get_bound()
 
 /*******************************************************************\
 
-Function: ebmc_baset::get_main
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool ebmc_baset::get_main()
-{
-  std::string top_module;
-  
-  if(cmdline.isset("module"))
-    top_module=cmdline.get_value("module");
-  else if(cmdline.isset("top"))
-    top_module=cmdline.get_value("top");
-
-  try
-  {
-    transition_system.main_symbol = &get_module(
-      transition_system.symbol_table,
-      top_module,
-      message.get_message_handler());
-    transition_system.trans_expr =
-      to_trans_expr(transition_system.main_symbol->value);
-  }
-
-  catch(int e)
-  {
-    return true;
-  }
-
-  return false;
-}
-
-/*******************************************************************\
-
 Function: ebmc_baset::do_word_level_bmc
 
   Inputs:
@@ -710,191 +649,6 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
   }  
 
   return result;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::preprocess
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::preprocess()
-{
-  if(cmdline.args.size() != 1)
-  {
-    message.error() << "please give exactly one file to preprocess"
-                    << messaget::eom;
-    return 1;
-  }
-
-  const auto &filename = cmdline.args.front();
-
-#ifdef _MSC_VER
-  std::ifstream infile(widen(filename));
-#else
-  std::ifstream infile(filename);
-#endif
-
-  if(!infile)
-  {
-    message.error() << "failed to open input file `" << filename << "'"
-                    << messaget::eom;
-    return 1;
-  }
-
-  auto language = get_language_from_filename(filename);
-
-  if(language == nullptr)
-  {
-    source_locationt location;
-    location.set_file(filename);
-    message.error().source_location = location;
-    message.error() << "failed to figure out type of file" << messaget::eom;
-    return 1;
-  }
-
-  language->set_message_handler(message.get_message_handler());
-
-  if(language->preprocess(infile, filename, std::cout))
-  {
-    message.error() << "PREPROCESSING FAILED" << messaget::eom;
-    return 1;
-  }
-
-  return 0;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::get_transition_system
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::get_transition_system()
-{
-  // do -I
-  if(cmdline.isset('I'))
-    config.verilog.include_paths=cmdline.get_values('I');
-
-  if(cmdline.isset("preprocess"))
-    return preprocess();
-
-  //
-  // parsing
-  //
-
-  if(parse()) return 1;
-
-  if(cmdline.isset("show-parse"))
-  {
-    language_files.show_parse(std::cout);
-    return 0;
-  }
-
-  //
-  // type checking
-  //
-
-  if(typecheck()) 
-    return 2;
-
-  if(cmdline.isset("show-modules"))
-  {
-    show_modules(
-      transition_system.symbol_table,
-      static_cast<ui_message_handlert &>(message.get_message_handler())
-        .get_ui());
-    return 0;
-  }
-
-  if(cmdline.isset("show-symbol-table"))
-  {
-    std::cout << transition_system.symbol_table;
-    return 0;
-  }
-
-  // get module name
-
-  if(get_main()) return 1;
-
-  if(cmdline.isset("show-varmap"))
-  {
-    netlistt netlist;
-    if(make_netlist(netlist)) return 1;
-    netlist.var_map.output(std::cout);
-    return 0;
-  }
-
-  if(cmdline.isset("show-ldg"))
-  {
-    show_ldg(std::cout);
-    return 0;
-  }
-  
-  // --reset given?
-  if(cmdline.isset("reset"))
-  {
-    namespacet ns(transition_system.symbol_table);
-    exprt reset_constraint = to_expr(
-      ns, transition_system.main_symbol->name, cmdline.get_value("reset"));
-
-    // true in initial state
-    CHECK_RETURN(transition_system.trans_expr.has_value());
-    transt new_trans_expr = *transition_system.trans_expr;
-    new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
-
-    // and not anymore afterwards
-    exprt reset_next_state=reset_constraint;
-    make_next_state(reset_next_state);
-
-    new_trans_expr.trans() =
-        and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
-    *transition_system.trans_expr = new_trans_expr;
-  }
-
-  if(cmdline.isset("show-netlist"))
-  {
-    netlistt netlist;
-    if(make_netlist(netlist)) return 1;
-    netlist.print(std::cout);
-    return 0;
-  }
-  
-  if(cmdline.isset("smv-netlist"))
-  {
-    netlistt netlist;
-    if(make_netlist(netlist)) return 1;
-    std::cout << "-- Generated by EBMC " << EBMC_VERSION << '\n';
-    std::cout << "-- Generated from " << transition_system.main_symbol->name
-              << '\n';
-    std::cout << '\n';
-    netlist.output_smv(std::cout);
-    return 0;
-  }
-  
-  if(cmdline.isset("dot-netlist"))
-  {
-    netlistt netlist;
-    if(make_netlist(netlist)) return 1;
-    std::cout << "digraph netlist {\n";
-    netlist.output_dot(std::cout);
-    std::cout << "}\n";
-    return 0;
-  }
-  
-  return -1; // done with the model
 }
 
 /*******************************************************************\
@@ -1205,69 +959,4 @@ void ebmc_baset::report_results()
     }
   }
 
-}
-
-bool ebmc_baset::parse() {
-  for (unsigned i = 0; i < cmdline.args.size(); i++) {
-    if (parse(cmdline.args[i]))
-      return true;
-  }
-  return false;
-}
-
-bool ebmc_baset::parse(const std::string &filename) {
-#ifdef _MSC_VER
-  std::ifstream infile(widen(filename));
-#else
-  std::ifstream infile(filename);
-#endif
-
-  if (!infile) {
-    message.error() << "failed to open input file `" << filename << "'"
-                    << messaget::eom;
-    return true;
-  }
-
-  auto &lf = language_files.add_file(filename);
-  lf.filename = filename;
-  lf.language = get_language_from_filename(filename);
-
-  if (lf.language == nullptr) {
-    source_locationt location;
-    location.set_file(filename);
-    message.error().source_location = location;
-    message.error() << "failed to figure out type of file" << messaget::eom;
-    return true;
-  }
-
-  languaget &language = *lf.language;
-  language.set_message_handler(message.get_message_handler());
-
-  message.status() << "Parsing " << filename << messaget::eom;
-
-  if (language.parse(infile, filename)) {
-    if(
-      static_cast<ui_message_handlert &>(message.get_message_handler())
-        .get_ui() == ui_message_handlert::uit::PLAIN)
-      std::cerr << "PARSING ERROR\n";
-
-    return true;
-  }
-
-  lf.get_modules();
-
-  return false;
-}
-
-bool ebmc_baset::typecheck() {
-  message.status() << "Converting" << messaget::eom;
-
-  if(language_files.typecheck(
-       transition_system.symbol_table, message.get_message_handler()))
-  {
-    message.error() << "CONVERSION ERROR" << messaget::eom;
-    return true;
-  }
-
-  return false;
 }

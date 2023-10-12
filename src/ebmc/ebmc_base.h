@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/ui_message.h>
 
-#include <langapi/language_file.h>
 #include <solvers/sat/cnf.h>
 #include <solvers/stack_decision_procedure.h>
 #include <trans-netlist/bmc_map.h>
@@ -32,19 +31,16 @@ public:
              ui_message_handlert &_ui_message_handler);
   virtual ~ebmc_baset() { }
 
-  int get_transition_system();
   int get_properties();
+  void show_ldg(std::ostream &out);
+  bool make_netlist(netlistt &);
+
+  transition_systemt transition_system;
 
 protected:
   messaget message;
   const cmdlinet &cmdline;
-  language_filest language_files;
 
-  transition_systemt transition_system;
-
-  int preprocess();
-
-  bool get_main();
   bool get_bound();
 
   // word-level
@@ -131,9 +127,6 @@ protected:
   bool property_requires_lasso_constraints() const;
 
   void report_results();
-  
-  void show_ldg(std::ostream &out);
-  bool make_netlist(netlistt &netlist);  
 
 public:  
   // solvers

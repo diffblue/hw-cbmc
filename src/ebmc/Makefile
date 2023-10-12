@@ -20,6 +20,7 @@ SRC = \
       show_formula_solver.cpp \
       show_properties.cpp \
       show_trans.cpp \
+      transition_system.cpp \
       #empty line
 
 OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
