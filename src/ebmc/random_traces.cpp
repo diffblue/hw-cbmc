@@ -251,10 +251,22 @@ void random_tracest::operator()()
   else
     generator.seed(0);
 
-  if(get_bound())
-    throw ebmc_errort();
+  std::size_t trace_steps;
 
-  auto number_of_timeframes = bound + 1;
+  if(cmdline.isset("trace-steps"))
+  {
+    auto trace_steps_opt =
+      string2optional_size_t(cmdline.get_value("trace-steps"));
+
+    if(!trace_steps_opt.has_value())
+      throw ebmc_errort() << "failed to parse number of trace steps";
+
+    trace_steps = trace_steps_opt.value();
+  }
+  else
+    trace_steps = 10; // default
+
+  auto number_of_timeframes = trace_steps + 1;
 
   int result = get_transition_system();
   if(result != -1)

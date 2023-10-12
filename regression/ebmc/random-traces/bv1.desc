@@ -1,6 +1,6 @@
 CORE broken-smt-backend
 bv1.v
---bound 1 --random-traces 1
+--trace-steps 1 --random-traces 1
 ^Transition system state 0$
 ^  main\.some_reg = 0 .*$
 ^  main\.input1 = 'h6FE4167A .*$
