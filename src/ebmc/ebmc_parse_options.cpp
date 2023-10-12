@@ -6,11 +6,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
+#include "ebmc_parse_options.h"
+
+#include <util/config.h>
+#include <util/exit_codes.h>
+#include <util/help_formatter.h>
 
 #include "bdd_engine.h"
 #include "ebmc_base.h"
-#include "ebmc_parse_options.h"
+#include "ebmc_error.h"
 #include "ebmc_version.h"
 #include "ic3_engine.h"
 #include "k_induction.h"
@@ -18,9 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ranking_function.h"
 #include "show_trans.h"
 
-#include <util/config.h>
-#include <util/exit_codes.h>
-#include <util/help_formatter.h>
+#include <iostream>
 
 #ifdef HAVE_INTERPOLATION
 #include "interpolation/interpolation_expr.h"
@@ -45,10 +47,12 @@ Function: ebmc_parse_optionst::doit
 
 int ebmc_parse_optionst::doit()
 {
-  if (config.set(cmdline)) {
+  if(config.set(cmdline))
+  {
     usage_error();
-    exit(CPROVER_EXIT_USAGE_ERROR);
+    return CPROVER_EXIT_USAGE_ERROR;
   }
+
   register_languages();
 
   if(cmdline.isset("version"))
@@ -57,179 +61,183 @@ int ebmc_parse_optionst::doit()
     return 0;
   }
 
-  if(cmdline.isset("diatest"))
+  try
   {
-    std::cout << "This option is currently disabled\n";
-    return 1;
-
-    #if 0
-    if(!cmdline.isset("statebits"))
+    if(cmdline.isset("diatest"))
     {
-      error("error: must provide number of state bits");
-      help();
-      return 1;
+      throw ebmc_errort() << "This option is currently disabled";
+
+#if 0
+      if(!cmdline.isset("statebits"))
+      {
+        error("error: must provide number of state bits");
+        help();
+        return 1;
+      }
+
+      diatest(bound, atoi(cmdline.getval("statebits")));
+
+      return 0;
+#endif
     }
 
-    diatest(bound, atoi(cmdline.getval("statebits")));
+    if(cmdline.isset("cegar"))
+    {
+      throw ebmc_errort() << "This option is currently disabled";
 
-    return 0;
-    #endif
-  }
-  
-  if(cmdline.isset("cegar"))
-  {
-    std::cout << "This option is currently disabled\n";
-    return 1;
+#if 0
+      namespacet ns(symbol_table);
+      var_mapt var_map(symbol_table, main_symbol->name);
 
-    #if 0
-    namespacet ns(symbol_table);
-    var_mapt var_map(symbol_table, main_symbol->name);
+      bmc_cegart bmc_cegar(
+        var_map,
+        *trans_expr,
+        ns,
+        *this,
+        prop_expr_list);
 
-    bmc_cegart bmc_cegar(
-      var_map,
-      *trans_expr,
-      ns,
-      *this,
-      prop_expr_list);
+      bmc_cegar.bmc_cegar();
+      return 0;
+#endif
+    }
 
-    bmc_cegar.bmc_cegar();
-    return 0;
-    #endif
-  }
+    if(cmdline.isset("coverage"))
+    {
+      throw ebmc_errort() << "This option is currently disabled";
 
-  if(cmdline.isset("coverage"))
-  {
-    std::cout << "This option is currently disabled\n";
-    return 1;
+#if 0
+      std::cout << "found coverage\n";
+      //    return do_coverage(cmdline);
+      //    if(do_coverage)
+      //    {
+        coveraget coverage(cmdline);
+        return coverage.measure_coverage();
+      //    }
+#endif
+    }
 
-    #if 0
-    std::cout << "found coverage\n";
-    //    return do_coverage(cmdline);
-    //    if(do_coverage)
-    //    {
-      coveraget coverage(cmdline);
-      return coverage.measure_coverage();
-    //    }
-    #endif
-  }
+    if(cmdline.isset("random-traces"))
+      return random_traces(cmdline, ui_message_handler);
 
-  if(cmdline.isset("random-traces"))
-    return random_traces(cmdline, ui_message_handler);
+    if(cmdline.isset("ic3"))
+      return do_ic3(cmdline, ui_message_handler);
 
-  if(cmdline.isset("ic3"))
-    return do_ic3(cmdline, ui_message_handler);
-  
-  if(cmdline.isset("k-induction"))
-    return do_k_induction(cmdline, ui_message_handler);
+    if(cmdline.isset("k-induction"))
+      return do_k_induction(cmdline, ui_message_handler);
 
-  if(cmdline.isset("ranking-function"))
-    return do_ranking_function(cmdline, ui_message_handler);
+    if(cmdline.isset("ranking-function"))
+      return do_ranking_function(cmdline, ui_message_handler);
 
-  if(cmdline.isset("bdd") ||
-     cmdline.isset("show-bdds"))
-    return do_bdd(cmdline, ui_message_handler);
+    if(cmdline.isset("bdd") || cmdline.isset("show-bdds"))
+      return do_bdd(cmdline, ui_message_handler);
 
-  if(cmdline.isset("interpolation-word"))
-  {
-    std::cout << "This option is currently disabled\n";
-    return 1;
-    //#ifdef HAVE_INTERPOLATION
-    //    return do_interpolation_word(cmdline);
-    //#else
-    //    language_uit language_ui("EBMC " EBMC_VERSION, cmdline);
-    //    language_ui.error("No support for interpolation linked in");
-    //    return 1; 
-    //#endif
-  }
+    if(cmdline.isset("interpolation-word"))
+    {
+      throw ebmc_errort() << "This option is currently disabled";
+      //#ifdef HAVE_INTERPOLATION
+      //    return do_interpolation_word(cmdline);
+      //#else
+      //    language_uit language_ui("EBMC " EBMC_VERSION, cmdline);
+      //    language_ui.error("No support for interpolation linked in");
+      //    return 1;
+      //#endif
+    }
 
-  if(cmdline.isset("interpolation-vmcai"))
-  {
-    std::cout << "This option is currently disabled\n";
-    return 1;
+    if(cmdline.isset("interpolation-vmcai"))
+    {
+      throw ebmc_errort() << "This option is currently disabled";
 
-    /*    #ifdef HAVE_INTERPOLATION
-    return do_interpolation_netlist_vmcai(cmdline);
-    #else
-    language_uit language_ui(cmdline);
-    language_ui.error("No support for interpolation linked in");
-    return 1; 
-    #endif
+      /*    #ifdef HAVE_INTERPOLATION
+      return do_interpolation_netlist_vmcai(cmdline);
+      #else
+      language_uit language_ui(cmdline);
+      language_ui.error("No support for interpolation linked in");
+      return 1; 
+      #endif
+      */
+    }
+
+    if(cmdline.isset("interpolation"))
+    {
+#ifdef HAVE_INTERPOLATION
+      //  if(cmdline.isset("no-netlist"))
+      //      return do_interpolation(cmdline);
+      //    else
+      return do_interpolation_netlist(cmdline);
+#else
+      throw ebmc_errort() << "No support for interpolation linked in";
+#endif
+    }
+
+    /*  if(cmdline.isset("compute-interpolant"))
+    {
+      #ifdef HAVE_INTERPOLATION
+      return compute_interpolant(cmdline);
+      #else
+      language_uit language_ui(cmdline);
+      language_ui.error("No support for interpolation linked in");
+      return 1; 
+      #endif
+    }
     */
+
+    if(cmdline.isset("2pi"))
+    {
+      // return do_two_phase_induction();
+    }
+
+    if(cmdline.isset("show-trans"))
+      return show_trans(cmdline, ui_message_handler);
+
+    if(cmdline.isset("verilog-rtl"))
+      return show_trans_verilog_rtl(cmdline, ui_message_handler);
+
+    if(cmdline.isset("verilog-netlist"))
+      return show_trans_verilog_netlist(cmdline, ui_message_handler);
+
+    {
+      ebmc_baset ebmc_base(cmdline, ui_message_handler);
+
+      int result = ebmc_base.get_transition_system();
+
+      if(result != -1)
+        return result;
+
+      if(cmdline.isset("dimacs"))
+        return ebmc_base.do_dimacs();
+      else if(cmdline.isset("cvc4"))
+        return ebmc_base.do_cvc4();
+      else if(cmdline.isset("boolector"))
+        return ebmc_base.do_boolector();
+      else if(cmdline.isset("z3"))
+        return ebmc_base.do_z3();
+      else if(cmdline.isset("mathsat"))
+        return ebmc_base.do_mathsat();
+      else if(cmdline.isset("yices"))
+        return ebmc_base.do_yices();
+      else if(cmdline.isset("show-formula"))
+        return ebmc_base.do_show_formula();
+      else if(cmdline.isset("smt2"))
+        return ebmc_base.do_smt2();
+      else if(cmdline.isset("prover"))
+        return ebmc_base.do_prover();
+      else if(cmdline.isset("lifter"))
+        return ebmc_base.do_lifter();
+      else if(cmdline.isset("compute-ct"))
+        return ebmc_base.do_compute_ct();
+      else
+        return ebmc_base.do_sat();
+    }
   }
-
-  if(cmdline.isset("interpolation"))
+  catch(const ebmc_errort &ebmc_error)
   {
-    #ifdef HAVE_INTERPOLATION
-    //  if(cmdline.isset("no-netlist"))
-    //      return do_interpolation(cmdline);
-    //    else
-    return do_interpolation_netlist(cmdline);
-    #else
-    messaget message(ui_message_handler);
-    message.error() << "No support for interpolation linked in" << messaget::eom;
-    return 1; 
-    #endif
-  }
-
-  /*  if(cmdline.isset("compute-interpolant"))
-  {
-    #ifdef HAVE_INTERPOLATION
-    return compute_interpolant(cmdline);
-    #else
-    language_uit language_ui(cmdline);
-    language_ui.error("No support for interpolation linked in");
-    return 1; 
-    #endif
-  }
-  */
-
-  if(cmdline.isset("2pi"))
-  {
-    // return do_two_phase_induction();
-  }
-  
-  
-  if(cmdline.isset("show-trans"))
-    return show_trans(cmdline, ui_message_handler);
-
-  if(cmdline.isset("verilog-rtl"))
-    return show_trans_verilog_rtl(cmdline, ui_message_handler);
-
-  if(cmdline.isset("verilog-netlist"))
-    return show_trans_verilog_netlist(cmdline, ui_message_handler);
-
- 
-  {
-    ebmc_baset ebmc_base(cmdline, ui_message_handler);
-
-    int result = ebmc_base.get_transition_system();
-
-    if(result!=-1) return result;
-
-    if(cmdline.isset("dimacs"))
-      return ebmc_base.do_dimacs();
-    else if(cmdline.isset("cvc4"))
-      return ebmc_base.do_cvc4();
-    else if(cmdline.isset("boolector"))
-      return ebmc_base.do_boolector();
-    else if(cmdline.isset("z3"))
-      return ebmc_base.do_z3();
-    else if(cmdline.isset("mathsat"))
-      return ebmc_base.do_mathsat();
-    else if(cmdline.isset("yices"))
-      return ebmc_base.do_yices();
-    else if(cmdline.isset("show-formula"))
-      return ebmc_base.do_show_formula();
-    else if(cmdline.isset("smt2"))
-      return ebmc_base.do_smt2();
-    else if(cmdline.isset("prover"))
-      return ebmc_base.do_prover();
-    else if(cmdline.isset("lifter"))
-      return ebmc_base.do_lifter();
-    else if(cmdline.isset("compute-ct"))
-      return ebmc_base.do_compute_ct();
-    else
-      return ebmc_base.do_sat();
+    if(!ebmc_error.what().empty())
+    {
+      messaget message(ui_message_handler);
+      message.error() << "error: " << messaget::red << ebmc_error.what()
+                      << messaget::reset << messaget::eom;
+    }
+    return CPROVER_EXIT_EXCEPTION;
   }
 }
 
