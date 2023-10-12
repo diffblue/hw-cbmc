@@ -87,16 +87,16 @@ void ic3_enginet::read_constraints(const std::string &source_name)
   ===========================*/
 bool ic3_enginet::find_prop(propertyt &Prop)
 {
+  assert(properties.properties.size() > 0);
 
-  assert(properties.size() > 0);
-
-  if ((properties.size() >= 1) && (Ci.prop_name.size() == 0)) {
-    Prop = properties.front();
+  if((properties.properties.size() >= 1) && (Ci.prop_name.size() == 0))
+  {
+    Prop = properties.properties.front();
     Ci.prop_name = id2string(Prop.name);
     return(true);
   }
-    
-  for(const auto &p : properties) 
+
+  for(const auto &p : properties.properties)
     if (p.status==propertyt::statust::UNKNOWN) {
       assert(p.name == Ci.prop_name);
       Prop = p;

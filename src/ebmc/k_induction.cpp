@@ -89,7 +89,7 @@ int k_inductiont::operator()()
   if(result != -1)
     return result;
 
-  if(properties.empty())
+  if(properties.properties.empty())
   {
     message.error() << "no properties" << messaget::eom;
     return 1;
@@ -166,7 +166,7 @@ int k_inductiont::induction_step()
 
   unsigned no_timeframes=bound+1;
 
-  for(auto &p_it : properties)
+  for(auto &p_it : properties.properties)
   {
     if(p_it.is_disabled() ||
        p_it.is_failure())
@@ -243,5 +243,5 @@ int k_inductiont::induction_step()
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
-  return property_failure()?10:0; 
+  return properties.property_failure() ? 10 : 0;
 }
