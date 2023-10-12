@@ -1,0 +1,7 @@
+CPROVER_DIR = ../../lib/cbmc/src
+
+include $(CPROVER_DIR)/config.inc
+include $(CPROVER_DIR)/common
+
+INCLUDES= -I $(CPROVER_DIR) -I ..
+CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'

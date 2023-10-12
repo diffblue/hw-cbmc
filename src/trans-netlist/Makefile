@@ -4,11 +4,8 @@ SRC = aig.cpp aig_prop.cpp bmc_map.cpp counterexample_netlist.cpp \
       trans_trace.cpp trans_to_netlist.cpp \
       map_aigs.cpp bv_varid.cpp
 
-include $(CPROVER_DIR)/config.inc
-include $(CPROVER_DIR)/common
-
-INCLUDES= -I $(CPROVER_DIR) -I ..
-CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
+include ../config.inc
+include ../common
 
 CLEANFILES = trans-netlist$(LIBEXT)
 

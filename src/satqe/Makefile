@@ -11,7 +11,7 @@ ifneq ($(MINISAT),)
 MINISAT_INCLUDE=-I ../$(MINISAT)
 endif
 
-INCLUDES= $(MINISAT_INCLUDE) -I .. -I ../util
+INCLUDES+= $(MINISAT_INCLUDE)
 
 ###############################################################################
 

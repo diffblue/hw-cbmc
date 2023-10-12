@@ -1,9 +1,7 @@
 DIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger
 
 EBMC_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-CPROVER_DIR = $(EBMC_DIR)/../lib/cbmc/src
-export CPROVER_DIR
-export EBMC_DIR
+CPROVER_DIR:=../lib/cbmc/src
 
 all: hw-cbmc.dir ebmc.dir
 

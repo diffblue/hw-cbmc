@@ -20,11 +20,8 @@ SRC = expr2verilog.cpp \
       verilog_y.tab.cpp \
       vtype.cpp
 
-include $(CPROVER_DIR)/config.inc
-include $(CPROVER_DIR)/common
-
-INCLUDES= -I $(CPROVER_DIR) -I ..
-CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
+include ../config.inc
+include ../common
 
 CLEANFILES = verilog$(LIBEXT) verilog_y.tab.h verilog_y.tab.cpp \
              verilog_lex.yy.cpp verilog_y.output
