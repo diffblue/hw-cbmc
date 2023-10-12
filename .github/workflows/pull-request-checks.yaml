@@ -27,10 +27,10 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .ccache
-          key: ${{ runner.os }}-20.04-make-${{ github.ref }}-${{ github.sha }}-PR
+          key: ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: |
-            ${{ runner.os }}-20.04-make-${{ github.ref }}
-            ${{ runner.os }}-20.04-make
+            ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}
+            ${{ runner.os }}-20.04-make-gcc
       - name: ccache environment
         run: |
           echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
