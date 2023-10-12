@@ -72,10 +72,11 @@ Function: ebmc_baset::ebmc_baset
 
 \*******************************************************************/
 
-ebmc_baset::ebmc_baset(const cmdlinet &_cmdline,
-                       ui_message_handlert &_ui_message_handler)
-    : messaget(_ui_message_handler), symbol_table{}, cmdline(_cmdline),
-      main_symbol(NULL) {
+ebmc_baset::ebmc_baset(
+  const cmdlinet &_cmdline,
+  ui_message_handlert &_ui_message_handler)
+  : messaget(_ui_message_handler), cmdline(_cmdline)
+{
   if(cmdline.isset("verbosity"))
     message_handler->set_verbosity(
         unsafe_string2unsigned(cmdline.get_value("verbosity")));
@@ -118,7 +119,7 @@ Function: ebmc_baset::finish_word_level_bmc
 
 void ebmc_baset::word_level_properties(decision_proceduret &solver)
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   for(propertyt &property : properties)
   {
@@ -149,13 +150,14 @@ Function: ebmc_baset::finish_word_level_bmc
 
 int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   // lasso constraints, if needed
   if(property_requires_lasso_constraints())
   {
     status() << "Adding lasso constraints" << eom;
-    lasso_constraints(solver, bound + 1, ns, main_symbol->name);
+    lasso_constraints(
+      solver, bound + 1, ns, transition_system.main_symbol->name);
   }
 
   status() << "Solving with "
@@ -193,7 +195,11 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
         result() << "SAT: counterexample found" << messaget::eom;
 
         property.counterexample = compute_trans_trace(
-          property.timeframe_handles, solver, bound + 1, ns, main_symbol->name);
+          property.timeframe_handles,
+          solver,
+          bound + 1,
+          ns,
+          transition_system.main_symbol->name);
       }
       break;
 
@@ -266,7 +272,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
         property.make_failure();
         result() << "SAT: counterexample found" << messaget::eom;
 
-        namespacet ns(symbol_table);
+        namespacet ns(transition_system.symbol_table);
 
         property.counterexample =
           compute_trans_trace(property.timeframe_literals, bmc_map, solver, ns);
@@ -316,17 +322,16 @@ Function: ebmc_baset::parse_property
 bool ebmc_baset::parse_property(
   const std::string &property)
 {
-  namespacet ns(symbol_table);
+  namespacet ns(transition_system.symbol_table);
 
-  auto language = get_language_from_mode(main_symbol->mode);
+  auto language = get_language_from_mode(transition_system.main_symbol->mode);
 
   exprt expr;
   if(language->to_expr(
-    property,
-    id2string(main_symbol->module),
-    expr,
-    ns))
+       property, id2string(transition_system.main_symbol->module), expr, ns))
+  {
     return true;
+  }
 
   // We give it an implict always, as in SVA
   
@@ -339,12 +344,12 @@ bool ebmc_baset::parse_property(
   std::string expr_as_string;
   language->from_expr(expr, expr_as_string, ns);
   debug() << "Property: " << expr_as_string << eom;
-  debug() << "Mode: " << main_symbol->mode << eom;
+  debug() << "Mode: " << transition_system.main_symbol->mode << eom;
 
   properties.push_back(propertyt());
   properties.back().expr=expr;
   properties.back().expr_string=expr_as_string;
-  properties.back().mode=main_symbol->mode;
+  properties.back().mode = transition_system.main_symbol->mode;
   properties.back().location.make_nil();
   properties.back().description="command-line assertion";
   properties.back().name="command-line assertion";
@@ -366,11 +371,13 @@ Function: ebmc_baset::get_model_properties
 
 bool ebmc_baset::get_model_properties()
 {
-  for(auto it=symbol_table.symbol_module_map.lower_bound(main_symbol->name);
-      it!=symbol_table.symbol_module_map.upper_bound(main_symbol->name);
+  for(auto it = transition_system.symbol_table.symbol_module_map.lower_bound(
+        transition_system.main_symbol->name);
+      it != transition_system.symbol_table.symbol_module_map.upper_bound(
+              transition_system.main_symbol->name);
       it++)
   {
-    namespacet ns(symbol_table);
+    namespacet ns(transition_system.symbol_table);
     const symbolt &symbol=ns.lookup(it->second);
 
     if(symbol.is_property)
@@ -493,8 +500,10 @@ bool ebmc_baset::get_main()
 
   try
   {
-    main_symbol=&get_module(symbol_table, top_module, get_message_handler());
-    trans_expr=to_trans_expr(main_symbol->value);
+    transition_system.main_symbol = &get_module(
+      transition_system.symbol_table, top_module, get_message_handler());
+    transition_system.trans_expr =
+      to_trans_expr(transition_system.main_symbol->value);
   }
 
   catch(int e)
@@ -538,7 +547,7 @@ int ebmc_baset::do_word_level_bmc(
         status() << "Doing BMC with bound " << bound << eom;
 
 #if 0
-        const namespacet ns(symbol_table);
+        const namespacet ns(transition_system.symbol_table);
         CHECK_RETURN(trans_expr.has_value());
         ::unwind(*trans_expr, *message_handler, solver, bound+1, ns, true);
         result=finish_word_level_bmc(solver);
@@ -557,11 +566,16 @@ int ebmc_baset::do_word_level_bmc(
 
       status() << "Generating Decision Problem" << eom;
 
-      const namespacet ns(symbol_table);
-
       // convert the transition system
-      CHECK_RETURN(trans_expr.has_value());
-      ::unwind(*trans_expr, *message_handler, solver, bound + 1, ns, true);
+      const namespacet ns(transition_system.symbol_table);
+      CHECK_RETURN(transition_system.trans_expr.has_value());
+      ::unwind(
+        *transition_system.trans_expr,
+        *message_handler,
+        solver,
+        bound + 1,
+        ns,
+        true);
 
       status() << "Properties" << eom;
 
@@ -648,7 +662,7 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
       if(property.is_disabled())
         continue;
 
-      const namespacet ns(symbol_table);
+      const namespacet ns(transition_system.symbol_table);
 
       ::unwind_property(
         property.expr,
@@ -790,14 +804,15 @@ int ebmc_baset::get_transition_system()
 
   if(cmdline.isset("show-modules"))
   {
-    show_modules(symbol_table,
-                 static_cast<ui_message_handlert *>(message_handler)->get_ui());
+    show_modules(
+      transition_system.symbol_table,
+      static_cast<ui_message_handlert *>(message_handler)->get_ui());
     return 0;
   }
 
   if(cmdline.isset("show-symbol-table"))
   {
-    std::cout << symbol_table;
+    std::cout << transition_system.symbol_table;
     return 0;
   }
 
@@ -822,12 +837,13 @@ int ebmc_baset::get_transition_system()
   // --reset given?
   if(cmdline.isset("reset"))
   {
-    namespacet ns(symbol_table);
-    exprt reset_constraint=to_expr(ns, main_symbol->name, cmdline.get_value("reset"));
+    namespacet ns(transition_system.symbol_table);
+    exprt reset_constraint = to_expr(
+      ns, transition_system.main_symbol->name, cmdline.get_value("reset"));
 
     // true in initial state
-    CHECK_RETURN(trans_expr.has_value());
-    transt new_trans_expr = *trans_expr;
+    CHECK_RETURN(transition_system.trans_expr.has_value());
+    transt new_trans_expr = *transition_system.trans_expr;
     new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
 
     // and not anymore afterwards
@@ -836,7 +852,7 @@ int ebmc_baset::get_transition_system()
 
     new_trans_expr.trans() =
         and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
-    *trans_expr = new_trans_expr;
+    *transition_system.trans_expr = new_trans_expr;
   }
 
   // Property given on command line?
@@ -872,7 +888,8 @@ int ebmc_baset::get_transition_system()
     netlistt netlist;
     if(make_netlist(netlist)) return 1;
     std::cout << "-- Generated by EBMC " << EBMC_VERSION << '\n';
-    std::cout << "-- Generated from " << main_symbol->name << '\n';
+    std::cout << "-- Generated from " << transition_system.main_symbol->name
+              << '\n';
     std::cout << '\n';
     netlist.output_smv(std::cout);
     return 0;
@@ -970,8 +987,10 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
   try
   {
     convert_trans_to_netlist(
-      symbol_table, main_symbol->name,
-      netlist, get_message_handler());
+      transition_system.symbol_table,
+      transition_system.main_symbol->name,
+      netlist,
+      get_message_handler());
   }
   
   catch(const std::string &error_str)
@@ -1033,7 +1052,7 @@ Function: ebmc_baset::report_results
 
 void ebmc_baset::report_results()
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(transition_system.symbol_table);
 
   if (static_cast<ui_message_handlert *>(message_handler)->get_ui() ==
       ui_message_handlert::uit::XML_UI) {
@@ -1172,7 +1191,8 @@ bool ebmc_baset::parse(const std::string &filename) {
 bool ebmc_baset::typecheck() {
   status() << "Converting" << eom;
 
-  if (language_files.typecheck(symbol_table, *message_handler)) {
+  if(language_files.typecheck(transition_system.symbol_table, *message_handler))
+  {
     error() << "CONVERSION ERROR" << eom;
     return true;
   }

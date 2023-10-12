@@ -350,8 +350,8 @@ void bdd_enginet::compute_counterexample(
 
   satcheckt solver{*message_handler};
   bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
-  
-  const namespacet ns(symbol_table);
+
+  const namespacet ns(transition_system.symbol_table);
 
   ::unwind(netlist, bmc_map, *this, solver);
   ::unwind_property(property.expr, property.timeframe_literals,
@@ -702,8 +702,8 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
 
     aig_prop_constraintt aig_prop(netlist, *message_handler);
 
-    const namespacet ns(symbol_table);
-    
+    const namespacet ns(transition_system.symbol_table);
+
     literalt l=instantiate_convert(
       aig_prop, netlist.var_map, expr, ns, get_message_handler());
     

@@ -34,12 +34,16 @@ public:
   int get_transition_system();
 
 protected:
-  symbol_tablet symbol_table;
   const cmdlinet &cmdline;
   language_filest language_files;
 
-  const symbolt *main_symbol;
-  optionalt<transt> trans_expr; // transition system expression
+  class transition_systemt
+  {
+  public:
+    symbol_tablet symbol_table;
+    const symbolt *main_symbol;
+    optionalt<transt> trans_expr; // transition system expression
+  } transition_system;
 
   int preprocess();
 

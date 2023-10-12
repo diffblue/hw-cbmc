@@ -40,7 +40,8 @@ public:
   ranking_function_checkt(
     const cmdlinet &_cmdline,
     ui_message_handlert &_ui_message_handler)
-    : ebmc_baset(_cmdline, _ui_message_handler), ns{symbol_table}
+    : ebmc_baset(_cmdline, _ui_message_handler),
+      ns{transition_system.symbol_table}
   {
   }
 
@@ -62,14 +63,14 @@ int do_ranking_function(
 
 optionalt<exprt> ranking_function_checkt::parse_ranking_function()
 {
-  auto language = get_language_from_mode(main_symbol->mode);
+  auto language = get_language_from_mode(transition_system.main_symbol->mode);
   exprt expr;
 
   language->set_message_handler(get_message_handler());
 
   if(language->to_expr(
        cmdline.get_value("ranking-function"),
-       id2string(main_symbol->module),
+       id2string(transition_system.main_symbol->module),
        expr,
        ns))
   {
@@ -87,7 +88,7 @@ optionalt<exprt> ranking_function_checkt::parse_ranking_function()
   std::string expr_as_string;
   language->from_expr(expr, expr_as_string, ns);
   debug() << "Ranking function: " << expr_as_string << eom;
-  debug() << "Mode: " << main_symbol->mode << eom;
+  debug() << "Mode: " << transition_system.main_symbol->mode << eom;
 
   return expr;
 }
@@ -130,7 +131,7 @@ int ranking_function_checkt::operator()()
   if(exit_code != -1)
     return exit_code;
 
-  CHECK_RETURN(trans_expr.has_value());
+  CHECK_RETURN(transition_system.trans_expr.has_value());
 
   // parse the ranking function
   const auto ranking_function_opt = parse_ranking_function();
@@ -147,7 +148,7 @@ int ranking_function_checkt::operator()()
   boolbvt solver(ns, satcheck, *message_handler);
 
   // *no* initial state, two time frames
-  unwind(*trans_expr, *message_handler, solver, 2, ns, false);
+  unwind(*transition_system.trans_expr, *message_handler, solver, 2, ns, false);
 
   const auto p = [&property]() -> optionalt<exprt>
   {

@@ -28,9 +28,13 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 class k_inductiont:public ebmc_baset
 {
 public:
-  k_inductiont(const cmdlinet &_cmdline,
-               ui_message_handlert &_ui_message_handler)
-      : ebmc_baset(_cmdline, _ui_message_handler), ns{symbol_table} {}
+  k_inductiont(
+    const cmdlinet &_cmdline,
+    ui_message_handlert &_ui_message_handler)
+    : ebmc_baset(_cmdline, _ui_message_handler),
+      ns{transition_system.symbol_table}
+  {
+  }
 
   int operator()();
 
@@ -110,14 +114,20 @@ Function: k_inductiont::induction_base
 
 int k_inductiont::induction_base()
 {
-  PRECONDITION(trans_expr.has_value());
+  PRECONDITION(transition_system.trans_expr.has_value());
   status() << "Induction Base" << eom;
 
   satcheckt satcheck{*message_handler};
   boolbvt solver(ns, satcheck, *message_handler);
 
   // convert the transition system
-  ::unwind(*trans_expr, *message_handler, solver, bound + 1, ns, true);
+  ::unwind(
+    *transition_system.trans_expr,
+    *message_handler,
+    solver,
+    bound + 1,
+    ns,
+    true);
 
   // convert the properties
   word_level_properties(solver);
@@ -144,7 +154,7 @@ Function: k_inductiont::induction_step
 
 int k_inductiont::induction_step()
 {
-  PRECONDITION(trans_expr.has_value());
+  PRECONDITION(transition_system.trans_expr.has_value());
   status() << "Induction Step" << eom;
 
   unsigned no_timeframes=bound+1;
@@ -159,7 +169,13 @@ int k_inductiont::induction_step()
     boolbvt solver(ns, satcheck, *message_handler);
 
     // *no* initial state
-    unwind(*trans_expr, *message_handler, solver, no_timeframes, ns, false);
+    unwind(
+      *transition_system.trans_expr,
+      *message_handler,
+      solver,
+      no_timeframes,
+      ns,
+      false);
 
     exprt property(p_it.expr);
 
