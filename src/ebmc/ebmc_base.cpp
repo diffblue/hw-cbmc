@@ -356,31 +356,9 @@ bool ebmc_baset::get_model_properties()
        transition_system, properties, message.get_message_handler()))
     return true;
 
-  if(cmdline.isset("property"))
-  {
-    std::string property=cmdline.get_value("property");
+  if(properties.select_property(cmdline, message.get_message_handler()))
+    return true;
 
-    for(auto &p : properties.properties)
-      p.status=propertyt::statust::DISABLED;
-      
-    bool found=false;
-
-    for(auto &p : properties.properties)
-      if(p.name==property)
-      {
-        found=true;
-        p.status=propertyt::statust::UNKNOWN;
-        break;
-      }
-    
-    if(!found)
-    {
-      message.error() << "Property " << property << " not found"
-                      << messaget::eom;
-      return true;
-    }
-  }
-  
   return false;
 }
 

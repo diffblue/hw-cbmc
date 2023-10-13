@@ -71,3 +71,36 @@ bool ebmc_propertiest::from_transition_system(
 
   return false;
 }
+
+bool ebmc_propertiest::select_property(
+  const cmdlinet &cmdline,
+  message_handlert &message_handler)
+{
+  if(cmdline.isset("property"))
+  {
+    std::string property = cmdline.get_value("property");
+
+    for(auto &p : properties)
+      p.status = propertyt::statust::DISABLED;
+
+    bool found = false;
+
+    for(auto &p : properties)
+      if(p.name == property)
+      {
+        found = true;
+        p.status = propertyt::statust::UNKNOWN;
+        break;
+      }
+
+    if(!found)
+    {
+      messaget message(message_handler);
+      message.error() << "Property " << property << " not found"
+                      << messaget::eom;
+      return true;
+    }
+  }
+
+  return false;
+}

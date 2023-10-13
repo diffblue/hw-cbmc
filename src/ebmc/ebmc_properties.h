@@ -9,11 +9,11 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_EBMC_PROPERTIES_H
 #define CPROVER_EBMC_PROPERTIES_H
 
-#include <trans-netlist/trans_trace.h>
+#include <util/cmdline.h>
+#include <util/message.h>
 
 #include <solvers/prop/literal.h>
-
-#include <util/message.h>
+#include <trans-netlist/trans_trace.h>
 
 #include "transition_system.h"
 
@@ -92,6 +92,8 @@ public:
     const transition_systemt &,
     ebmc_propertiest &,
     message_handlert &);
+
+  bool select_property(const cmdlinet &, message_handlert &);
 };
 
 #endif // CPROVER_EBMC_PROPERTIES_H
