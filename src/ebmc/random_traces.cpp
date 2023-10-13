@@ -8,21 +8,21 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "random_traces.h"
 
-#include "ebmc_base.h"
-
-#include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/property.h>
-#include <trans-word-level/trans_trace_word_level.h>
-#include <trans-word-level/unwind.h>
-
-#include <solvers/flattening/boolbv.h>
-#include <solvers/sat/satcheck.h>
-
 #include <util/arith_tools.h>
 #include <util/bitvector_types.h>
 #include <util/console.h>
 #include <util/expr_util.h>
 #include <util/string2int.h>
+
+#include <solvers/flattening/boolbv.h>
+#include <solvers/sat/satcheck.h>
+#include <trans-word-level/instantiate_word_level.h>
+#include <trans-word-level/property.h>
+#include <trans-word-level/trans_trace_word_level.h>
+#include <trans-word-level/unwind.h>
+
+#include "ebmc_base.h"
+#include "ebmc_error.h"
 
 #include <algorithm>
 #include <random>
@@ -46,7 +46,7 @@ public:
   {
   }
 
-  int operator()();
+  void operator()();
 
 protected:
   namespacet ns;
@@ -83,7 +83,8 @@ int random_traces(
   const cmdlinet &cmdline,
   ui_message_handlert &ui_message_handler)
 {
-  return random_tracest(cmdline, ui_message_handler)();
+  random_tracest(cmdline, ui_message_handler)();
+  return 0;
 }
 
 /*******************************************************************\
@@ -229,16 +230,13 @@ Function: random_tracest::operator()()
 
 \*******************************************************************/
 
-int random_tracest::operator()()
+void random_tracest::operator()()
 {
   auto number_of_traces_opt =
     string2optional_size_t(cmdline.get_value("random-traces"));
 
   if(!number_of_traces_opt.has_value())
-  {
-    error() << "failed to parse number of traces" << eom;
-    return 1;
-  }
+    throw ebmc_errort() << "failed to parse number of traces";
 
   if(cmdline.isset("random-seed"))
   {
@@ -246,10 +244,7 @@ int random_tracest::operator()()
       string2optional_size_t(cmdline.get_value("random-seed"));
 
     if(!random_seed_opt.has_value())
-    {
-      error() << "failed to parse random seed" << eom;
-      return 1;
-    }
+      throw ebmc_errort() << "failed to parse random seed";
 
     generator.seed(random_seed_opt.value());
   }
@@ -257,13 +252,13 @@ int random_tracest::operator()()
     generator.seed(0);
 
   if(get_bound())
-    return 1;
+    throw ebmc_errort();
 
   auto number_of_timeframes = bound + 1;
 
   int result = get_transition_system();
   if(result != -1)
-    return result;
+    throw ebmc_errort();
 
   CHECK_RETURN(transition_system.trans_expr.has_value());
 
@@ -306,12 +301,11 @@ int random_tracest::operator()()
       {
         auto filename =
           cmdline.get_value("vcd") + "." + std::to_string(trace_nr + 1);
+
         std::ofstream out(filename);
+
         if(!out)
-        {
-          error() << "failed to write trace to " << filename << eom;
-          return 1;
-        }
+          throw ebmc_errort() << "failed to write trace to " << filename;
 
         consolet::out() << "*** Writing " << filename << '\n';
 
@@ -333,14 +327,10 @@ int random_tracest::operator()()
       break;
 
     case decision_proceduret::resultt::D_ERROR:
-      error() << "Error from decision procedure" << messaget::eom;
-      return 2;
+      throw ebmc_errort() << "Error from decision procedure";
 
     default:
-      error() << "Unexpected result from decision procedure" << messaget::eom;
-      return 1;
+      throw ebmc_errort() << "Unexpected result from decision procedure";
     }
   }
-
-  return 0;
 }

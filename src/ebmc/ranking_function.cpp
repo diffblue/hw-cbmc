@@ -11,20 +11,19 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ranking_function.h"
 
+#include <util/std_expr.h>
+
+#include <langapi/language.h>
+#include <langapi/mode.h>
+#include <solvers/flattening/boolbv.h>
+#include <solvers/sat/satcheck.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
-#include <langapi/language.h>
-#include <langapi/mode.h>
-
-#include <solvers/flattening/boolbv.h>
-#include <solvers/sat/satcheck.h>
-
-#include <util/std_expr.h>
-
 #include "ebmc_base.h"
+#include "ebmc_error.h"
 
 /*******************************************************************\
 
@@ -50,7 +49,7 @@ public:
 protected:
   namespacet ns;
 
-  optionalt<exprt> parse_ranking_function();
+  exprt parse_ranking_function();
   propertyt &find_property();
 };
 
@@ -61,7 +60,7 @@ int do_ranking_function(
   return ranking_function_checkt(cmdline, ui_message_handler)();
 }
 
-optionalt<exprt> ranking_function_checkt::parse_ranking_function()
+exprt ranking_function_checkt::parse_ranking_function()
 {
   auto language = get_language_from_mode(transition_system.main_symbol->mode);
   exprt expr;
@@ -74,16 +73,12 @@ optionalt<exprt> ranking_function_checkt::parse_ranking_function()
        expr,
        ns))
   {
-    error() << "failed to parse ranking function" << eom;
-    return {};
+    throw ebmc_errort() << "failed to parse ranking function";
   }
 
   // needs to have some numerical type
   if(expr.type().id() != ID_signedbv && expr.type().id() != ID_unsignedbv)
-  {
-    error() << "ranking function must have integral bitvector type" << eom;
-    return {};
-  }
+    throw ebmc_errort() << "ranking function must have integral bitvector type";
 
   std::string expr_as_string;
   language->from_expr(expr, expr_as_string, ns);
@@ -103,16 +98,10 @@ ebmc_baset::propertyt &ranking_function_checkt::find_property()
   }
 
   if(count == 0)
-  {
-    error() << "no property given" << eom;
-    throw 0;
-  }
+    throw ebmc_errort() << "no property given";
 
   if(count >= 2)
-  {
-    error() << "multiple properties are given -- please pick one" << eom;
-    throw 0;
-  }
+    throw ebmc_errort() << "multiple properties are given -- please pick one";
 
   for(auto &p : properties)
   {
@@ -129,17 +118,12 @@ int ranking_function_checkt::operator()()
   int exit_code = get_transition_system();
 
   if(exit_code != -1)
-    return exit_code;
+    throw ebmc_errort();
 
   CHECK_RETURN(transition_system.trans_expr.has_value());
 
   // parse the ranking function
-  const auto ranking_function_opt = parse_ranking_function();
-
-  if(!ranking_function_opt.has_value())
-    return 1;
-
-  auto &ranking_function = ranking_function_opt.value();
+  const auto ranking_function = parse_ranking_function();
 
   // find the property
   auto &property = find_property();
@@ -150,7 +134,7 @@ int ranking_function_checkt::operator()()
   // *no* initial state, two time frames
   unwind(*transition_system.trans_expr, *message_handler, solver, 2, ns, false);
 
-  const auto p = [&property]() -> optionalt<exprt>
+  const auto p = [&property]() -> exprt
   {
     if(property.expr.id() == ID_AF)
     {
@@ -163,15 +147,11 @@ int ranking_function_checkt::operator()()
       return to_unary_expr(to_unary_expr(property.expr).op()).op();
     }
     else
-      return {};
+    {
+      throw ebmc_errort()
+        << "unsupported property - only SVA eventually or AF implemented";
+    }
   }();
-
-  if(!p.has_value())
-  {
-    error() << "unsupported property - only SVA eventually or AF implemented"
-            << eom;
-    return 1;
-  }
 
   // AF p holds if
   // a) either the ranking function decreases from timeframe 0 to 1, or
@@ -183,10 +163,10 @@ int ranking_function_checkt::operator()()
     instantiate(ranking_function, 0, 2, ns));
   solver.set_to_false(ranking_function_decreases);
 
-  exprt p_at_0 = instantiate(*p, 0, 2, ns);
+  exprt p_at_0 = instantiate(p, 0, 2, ns);
   solver.set_to_false(p_at_0);
 
-  exprt p_at_1 = instantiate(*p, 1, 2, ns);
+  exprt p_at_1 = instantiate(p, 1, 2, ns);
   solver.set_to_false(p_at_1);
 
   decision_proceduret::resultt dec_result = solver.dec_solve();
@@ -204,12 +184,11 @@ int ranking_function_checkt::operator()()
     break;
 
   case decision_proceduret::resultt::D_ERROR:
-    error() << "Error from decision procedure" << eom;
+    throw ebmc_errort() << "Error from decision procedure";
     return 2;
 
   default:
-    error() << "Unexpected result from decision procedure" << eom;
-    return 1;
+    throw ebmc_errort() << "Unexpected result from decision procedure";
   }
 
   report_results();
