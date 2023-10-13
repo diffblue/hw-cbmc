@@ -61,10 +61,7 @@ ifneq ($(wildcard ../vhdl/Makefile),)
 endif
 
 include ../config.inc
-
-INCLUDES= -I $(CPROVER_DIR) -I ..
-
-CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
+include ../common
 
 LIBS = ../ic3/minisat/build/release/lib/libminisat.a
 

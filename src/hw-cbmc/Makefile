@@ -39,10 +39,7 @@ OBJ+= $(CPROVER_DIR)/goto-checker/goto-checker$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT)
 
 include ../config.inc
-
-INCLUDES= -I $(CPROVER_DIR) -I ..
-
-CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
+include ../common
 
 LIBS =
 

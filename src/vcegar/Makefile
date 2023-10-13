@@ -18,8 +18,7 @@ OBJ = $(SRC:.cpp=$(OBJEXT)) \
       ../trans/trans$(LIBEXT)
 
 include ../config.inc
-
-INCLUDES= -I $(CBMC)/src/ -I ../
+include ../common
 
 LIBS =
 

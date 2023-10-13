@@ -15,9 +15,9 @@ vpath %.cc build_prob
 vpath %.hh build_prob
 
 include ../config.inc
+include ../common
 
 MINISAT_INC = minisat
-CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 INC_DIR = -I . -I build_prob -I seq_circ -I $(MINISAT_INC) -I $(CPROVER_DIR) -I ..
 
