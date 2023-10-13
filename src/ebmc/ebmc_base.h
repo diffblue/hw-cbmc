@@ -9,7 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_EBMC_EBMC_BASE_H
 #define CPROVER_EBMC_EBMC_BASE_H
 
-#include <fstream>
+#include <util/cmdline.h>
+#include <util/message.h>
+#include <util/std_expr.h>
+#include <util/ui_message.h>
 
 #include <langapi/language_file.h>
 #include <solvers/sat/cnf.h>
@@ -18,12 +21,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_trace.h>
 
-#include <util/cmdline.h>
-#include <util/mathematical_expr.h>
-#include <util/message.h>
-#include <util/std_expr.h>
-#include <util/symbol_table.h>
-#include <util/ui_message.h>
+#include "transition_system.h"
+
+#include <fstream>
 
 class ebmc_baset : public messaget {
 public:
@@ -37,13 +37,7 @@ protected:
   const cmdlinet &cmdline;
   language_filest language_files;
 
-  class transition_systemt
-  {
-  public:
-    symbol_tablet symbol_table;
-    const symbolt *main_symbol;
-    optionalt<transt> trans_expr; // transition system expression
-  } transition_system;
+  transition_systemt transition_system;
 
   int preprocess();
 
