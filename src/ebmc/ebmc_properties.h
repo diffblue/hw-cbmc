@@ -87,6 +87,11 @@ public:
 
     return false;
   }
+
+  static bool from_transition_system(
+    const transition_systemt &,
+    ebmc_propertiest &,
+    message_handlert &);
 };
 
 #endif // CPROVER_EBMC_PROPERTIES_H

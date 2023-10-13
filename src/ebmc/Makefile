@@ -11,6 +11,7 @@ SRC = \
       ebmc_base.cpp \
       ebmc_languages.cpp \
       ebmc_parse_options.cpp \
+      ebmc_properties.cpp \
       ebmc_solvers.cpp \
       k_induction.cpp \
       main.cpp \
