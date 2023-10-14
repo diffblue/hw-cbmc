@@ -6,15 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <fstream>
-#include <iostream>
-
 #include <util/cmdline.h>
+#include <util/unicode.h>
 
 #include <solvers/flattening/boolbv.h>
 #include <solvers/sat/dimacs_cnf.h>
 #include <solvers/sat/satcheck.h>
 #include <solvers/smt2/smt2_dec.h>
+
+#include <fstream>
+#include <iostream>
 
 #ifdef HAVE_PROVER
 #include <prover/prover_sat.h>
@@ -50,8 +51,8 @@ int ebmc_baset::do_dimacs()
   if(cmdline.isset("outfile"))
   {
     const std::string filename=cmdline.get_value("outfile");
-    std::ofstream out(filename.c_str());
-  
+    std::ofstream out(widen_if_needed(filename));
+
     if(!out)
     {
       error() << "Failed to open `"
@@ -87,7 +88,7 @@ int ebmc_baset::do_smt2()
   if(cmdline.isset("outfile"))
   {
     const std::string filename=cmdline.get_value("outfile");
-    std::ofstream out(filename.c_str());
+    std::ofstream out(widen_if_needed(filename));
 
     if(!out)
     {
@@ -138,7 +139,7 @@ int ebmc_baset::do_show_formula()
   if(cmdline.isset("outfile"))
   {
     const std::string filename = cmdline.get_value("outfile");
-    std::ofstream out(filename);
+    std::ofstream out(widen_if_needed(filename));
 
     if(!out)
     {

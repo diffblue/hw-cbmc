@@ -6,32 +6,32 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
+#include "hw_cbmc_parse_options.h"
 
 #include <util/config.h>
 #include <util/exit_codes.h>
 #include <util/get_module.h>
 #include <util/string2int.h>
+#include <util/unicode.h>
 #include <util/version.h>
-
-#include <goto-checker/all_properties_verifier_with_trace_storage.h>
-#include <goto-checker/goto_verifier.h>
-#include <goto-checker/multi_path_symex_checker.h>
-#include <goto-checker/solver_factory.h>
 
 #include <goto-programs/goto_convert_functions.h>
 #include <goto-programs/set_properties.h>
 #include <goto-programs/show_properties.h>
 
+#include <goto-checker/all_properties_verifier_with_trace_storage.h>
+#include <goto-checker/goto_verifier.h>
+#include <goto-checker/multi_path_symex_checker.h>
+#include <goto-checker/solver_factory.h>
 #include <langapi/mode.h>
-
 #include <trans-word-level/show_modules.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
-#include "hw_cbmc_parse_options.h"
-#include "map_vars.h"
 #include "gen_interface.h"
+#include "map_vars.h"
+
+#include <iostream>
 
 /*******************************************************************\
 
@@ -211,7 +211,7 @@ int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
 
         if(cmdline.isset("outfile"))
         {
-          std::ofstream out(cmdline.get_value("outfile").c_str());
+          std::ofstream out(widen_if_needed(cmdline.get_value("outfile")));
           if(!out)
           {
             log.error() << "failed to open given outfile" << messaget::eom;
@@ -313,7 +313,7 @@ void hw_cbmc_parse_optionst::show_unwind_trace(const optionst &options,
     if (options.get_option("vcd") == "-")
       show_trans_trace_vcd(trans_trace, log, ns, std::cout);
     else {
-      std::ofstream out(options.get_option("vcd").c_str());
+      std::ofstream out(widen_if_needed(options.get_option("vcd")));
       show_trans_trace_vcd(trans_trace, log, ns, out);
     }
   }

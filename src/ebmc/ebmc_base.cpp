@@ -1136,11 +1136,7 @@ void ebmc_baset::report_results()
       if(property.is_failure())
       {
         std::string vcdfile=cmdline.get_value("vcd");
-        #ifdef _MSC_VER
-        std::ofstream vcd(widen(vcdfile));
-        #else    
-        std::ofstream vcd(vcdfile);
-        #endif
+        std::ofstream vcd(widen_if_needed(vcdfile));
 
         show_trans_trace_vcd(
           property.counterexample,

@@ -403,8 +403,8 @@ Function: vcegart::get_properties_from_file
 
 void vcegart::get_properties_from_file()
 {
-  std::ifstream infile(cmdline.get_value("p"));
-  
+  std::ifstream infile(widen_if_needed(cmdline.get_value("p")));
+
   if(!infile)
     throw std::string("failed to open ")+cmdline.get_value("p");
   
@@ -465,8 +465,8 @@ Function: vcegart::get_user_provided_preds
 
 void vcegart::get_user_provided_preds()
 {
-  std::ifstream infile(cmdline.get_value("pred"));
-  
+  std::ifstream infile(widen_if_needed(cmdline.get_value("pred")));
+
   if(!infile)
     throw std::string("failed to open ")+cmdline.get_value("pred");
   

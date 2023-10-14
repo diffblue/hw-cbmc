@@ -6,15 +6,18 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <fstream>
-#include <iostream>
+#include "show_trans.h"
+
+#include <util/unicode.h>
 
 #include <verilog/expr2verilog.h>
 
-#include "show_trans.h"
 #include "ebmc_base.h"
 #include "ebmc_version.h"
 #include "output_verilog.h"
+
+#include <fstream>
+#include <iostream>
 
 /*******************************************************************\
 
@@ -274,8 +277,8 @@ int show_transt::show_trans_verilog_rtl()
   if(cmdline.isset("outfile"))
   {
     const std::string filename=cmdline.get_value("outfile");
-    std::ofstream out(filename.c_str());
-  
+    std::ofstream out(widen_if_needed(filename));
+
     if(!out)
     {
       std::cerr << "Failed to open `"
@@ -312,8 +315,8 @@ int show_transt::show_trans_verilog_netlist()
   if(cmdline.isset("outfile"))
   {
     const std::string filename=cmdline.get_value("outfile");
-    std::ofstream out(filename.c_str());
-  
+    std::ofstream out(widen_if_needed(filename));
+
     if(!out)
     {
       std::cerr << "Failed to open `"
