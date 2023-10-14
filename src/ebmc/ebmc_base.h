@@ -32,6 +32,7 @@ public:
   virtual ~ebmc_baset() { }
 
   int get_transition_system();
+  int get_properties();
 
 protected:
   const cmdlinet &cmdline;

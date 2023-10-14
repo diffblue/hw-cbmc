@@ -82,6 +82,10 @@ int k_inductiont::operator()()
   int result = get_transition_system();
   if(result!=-1) return result;
 
+  result = get_properties();
+  if(result != -1)
+    return result;
+
   if(properties.empty())
   {
     error() << "no properties" << eom;

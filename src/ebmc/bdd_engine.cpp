@@ -143,6 +143,10 @@ int bdd_enginet::operator()()
       
       status() << "Building netlist for atomic propositions" << eom;
       
+      result = get_properties();
+      if(result != -1)
+        return result;
+
       for(const propertyt &p : properties)
         get_atomic_propositions(p.expr);
         
