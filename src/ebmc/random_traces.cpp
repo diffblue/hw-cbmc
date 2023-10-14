@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/console.h>
 #include <util/expr_util.h>
 #include <util/string2int.h>
+#include <util/unicode.h>
 
 #include <solvers/flattening/boolbv.h>
 #include <solvers/sat/satcheck.h>
@@ -301,8 +302,7 @@ void random_tracest::operator()()
       {
         auto filename =
           cmdline.get_value("vcd") + "." + std::to_string(trace_nr + 1);
-
-        std::ofstream out(filename);
+        std::ofstream out(widen_if_needed(filename));
 
         if(!out)
           throw ebmc_errort() << "failed to write trace to " << filename;

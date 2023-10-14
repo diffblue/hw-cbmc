@@ -1266,12 +1266,13 @@ bool modelchecker_smvt::check
 
 
   {
-    std::ofstream out(temp_smv.c_str());
-    build_smv_file(abstract_trans, 
-		   abstract_transition_constrains, 
-		   weakest_precondition_constrains, 
-		   abstract_initial_constrains,
-		   out);
+      std::ofstream out(widen_if_needed(temp_smv));
+      build_smv_file(
+        abstract_trans,
+        abstract_transition_constrains,
+        weakest_precondition_constrains,
+        abstract_initial_constrains,
+        out);
   }
 
   {
@@ -1313,9 +1314,9 @@ bool modelchecker_smvt::check
   bool result;
   
   {
-    std::ifstream out1(temp_smv_out1.c_str()),
-      out2(temp_smv_out2.c_str()), 
-      out_ce(temp_smv_out_ce.c_str());
+    std::ifstream out1(widen_if_needed(temp_smv_out1)),
+      out2(widen_if_needed(temp_smv_out2)),
+      out_ce(widen_if_needed(temp_smv_out_ce));
 
     result=read_result(out1, out2, out_ce, abstract_trans,
 		       counterexample);

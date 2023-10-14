@@ -6,13 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdio.h>
-#include <fstream>
-#include <iostream>
+#include "verilog_parser.h"
 
 #include <util/cout_message.h>
+#include <util/unicode.h>
 
-#include "verilog_parser.h"
+#include <fstream>
+#include <iostream>
+#include <stdio.h>
 
 verilog_parsert verilog_parser;
 
@@ -30,7 +31,7 @@ Function:
 
 bool parse_verilog_file(const std::string &filename)
 {
-  std::ifstream in(filename.c_str());
+  std::ifstream in(widen_if_needed(filename));
   console_message_handlert console_message_handler;
 
   verilog_parser.set_file(filename);

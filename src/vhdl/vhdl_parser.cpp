@@ -6,13 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <stdio.h>
-#include <fstream>
-#include <iostream>
+#include "vhdl_parser.h"
 
 #include <util/cout_message.h>
+#include <util/unicode.h>
 
-#include "vhdl_parser.h"
+#include <fstream>
+#include <iostream>
+#include <stdio.h>
 
 vhdl_parsert vhdl_parser;
 extern int yyvhdlparse();
@@ -31,7 +32,7 @@ Function: parse_vhdl_file
 
 bool parse_vhdl_file(const std::string &filename)
 {
-  std::ifstream in(filename.c_str());
+  std::ifstream in(widen_if_needed(filename));
   console_message_handlert console_message_handler;
 
   vhdl_parser.set_file(filename);
