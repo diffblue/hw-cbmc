@@ -16,6 +16,7 @@ SRC = \
       k_induction.cpp \
       main.cpp \
       negate_property.cpp \
+      neural_liveness.cpp \
       random_traces.cpp \
       ranking_function.cpp \
       report_results.cpp \

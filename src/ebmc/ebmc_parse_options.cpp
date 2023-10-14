@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_version.h"
 #include "ic3_engine.h"
 #include "k_induction.h"
+#include "neural_liveness.h"
 #include "random_traces.h"
 #include "ranking_function.h"
 #include "show_trans.h"
@@ -138,6 +139,9 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("k-induction"))
       return do_k_induction(cmdline, ui_message_handler);
+
+    if(cmdline.isset("neural-liveness"))
+      return do_neural_liveness(cmdline, ui_message_handler);
 
     if(cmdline.isset("ranking-function"))
       return do_ranking_function(cmdline, ui_message_handler);
@@ -368,6 +372,9 @@ void ebmc_parse_optionst::help()
     "    {y--trace-steps} {unumber}  \t set the number of random transitions (default: 10 steps)\n"
     " {y--ranking-function} {uf}     \t prove a liveness property using given ranking funnction (experimental)\n"
     "    {y--property} {uid}         \t the liveness property to prove\n"
+    " {y--neural-liveness}           \t check liveness properties using neural "
+                                       "inference (experimental)\n"
+    "    {y--neural-engine} {ucmd}   \t the neural engine to use\n"
 
     //" --interpolation                \t use bit-level interpolants\n"
     //" --interpolation-word           \t use word-level interpolants\n"
