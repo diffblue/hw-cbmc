@@ -314,11 +314,7 @@ void random_tracest::operator()()
       else
       {
         consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
-        show_trans_trace(
-          trace,
-          *this,
-          ns,
-          static_cast<ui_message_handlert *>(message_handler)->get_ui());
+        show_trans_trace(trace, *this, ns, consolet::out());
       }
     }
     break;
