@@ -65,7 +65,7 @@ exprt ranking_function_checkt::parse_ranking_function()
   auto language = get_language_from_mode(transition_system.main_symbol->mode);
   exprt expr;
 
-  language->set_message_handler(get_message_handler());
+  language->set_message_handler(message.get_message_handler());
 
   if(language->to_expr(
        cmdline.get_value("ranking-function"),
@@ -82,8 +82,9 @@ exprt ranking_function_checkt::parse_ranking_function()
 
   std::string expr_as_string;
   language->from_expr(expr, expr_as_string, ns);
-  debug() << "Ranking function: " << expr_as_string << eom;
-  debug() << "Mode: " << transition_system.main_symbol->mode << eom;
+  message.debug() << "Ranking function: " << expr_as_string << messaget::eom;
+  message.debug() << "Mode: " << transition_system.main_symbol->mode
+                  << messaget::eom;
 
   return expr;
 }
@@ -133,11 +134,17 @@ int ranking_function_checkt::operator()()
 
   auto &property = find_property();
 
-  satcheckt satcheck{*message_handler};
-  boolbvt solver(ns, satcheck, *message_handler);
+  satcheckt satcheck{message.get_message_handler()};
+  boolbvt solver(ns, satcheck, message.get_message_handler());
 
   // *no* initial state, two time frames
-  unwind(*transition_system.trans_expr, *message_handler, solver, 2, ns, false);
+  unwind(
+    *transition_system.trans_expr,
+    message.get_message_handler(),
+    solver,
+    2,
+    ns,
+    false);
 
   const auto p = [&property]() -> exprt
   {
@@ -179,18 +186,19 @@ int ranking_function_checkt::operator()()
   switch(dec_result)
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
-    result() << "SAT: inductive proof failed, check is inconclusive" << eom;
+    message.result() << "SAT: inductive proof failed, check is inconclusive"
+                     << messaget::eom;
     property.make_unknown();
     break;
 
   case decision_proceduret::resultt::D_UNSATISFIABLE:
-    result() << "UNSAT: inductive proof successful, property holds" << eom;
+    message.result() << "UNSAT: inductive proof successful, property holds"
+                     << messaget::eom;
     property.make_success();
     break;
 
   case decision_proceduret::resultt::D_ERROR:
     throw ebmc_errort() << "Error from decision procedure";
-    return 2;
 
   default:
     throw ebmc_errort() << "Unexpected result from decision procedure";

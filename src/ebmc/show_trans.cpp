@@ -103,7 +103,7 @@ Function: show_transt::show_trans_verilog_netlist
 int show_transt::show_trans_verilog_netlist(std::ostream &out)
 {
   output_verilog_netlistt output_verilog(
-    transition_system.symbol_table, out, get_message_handler());
+    transition_system.symbol_table, out, message.get_message_handler());
 
   try
   {
@@ -113,13 +113,13 @@ int show_transt::show_trans_verilog_netlist(std::ostream &out)
   
   catch(const std::string &e)
   {
-    output_verilog.error() << e << eom;
+    output_verilog.error() << e << messaget::eom;
     return 1;
   }
   
   catch(const char *e)
   {
-    output_verilog.error() << e << eom;
+    output_verilog.error() << e << messaget::eom;
     return 1;
   }
   
@@ -147,7 +147,7 @@ Function: show_transt::show_trans_verilog_rtl
 int show_transt::show_trans_verilog_rtl(std::ostream &out)
 {
   output_verilog_rtlt output_verilog(
-    transition_system.symbol_table, out, get_message_handler());
+    transition_system.symbol_table, out, message.get_message_handler());
 
   try
   {
@@ -157,13 +157,13 @@ int show_transt::show_trans_verilog_rtl(std::ostream &out)
   
   catch(const std::string &e)
   {
-    output_verilog.error() << e << eom;
+    output_verilog.error() << e << messaget::eom;
     return 1;
   }
   
   catch(const char *e)
   {
-    output_verilog.error() << e << eom;
+    output_verilog.error() << e << messaget::eom;
     return 1;
   }
   

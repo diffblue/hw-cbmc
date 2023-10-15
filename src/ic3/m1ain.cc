@@ -57,18 +57,18 @@ int ic3_enginet::operator()()
     if(result!=-1) return result;
 
     if(make_netlist(netlist))     {
-      error() << "Failed to build netlist" << eom;
+      message.error() << "Failed to build netlist" << messaget::eom;
       return 2;
     }
       
     if(properties.empty())   {
-      error() << "no properties" << eom;
+      message.error() << "no properties" << messaget::eom;
       return 1;
     }
   }
 
   catch(const char *error_msg)    {
-    error() << error_msg << eom;
+    message.error() << error_msg << messaget::eom;
     return 1;
   }
   catch(int)    {

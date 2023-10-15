@@ -137,28 +137,29 @@ int bdd_enginet::operator()()
     {  
       if(make_netlist(netlist))
       {
-        error() << "Failed to build netlist" << eom;
+        message.error() << "Failed to build netlist" << messaget::eom;
         return 2;
       }
-      
-      status() << "Building netlist for atomic propositions" << eom;
-      
+
+      message.status() << "Building netlist for atomic propositions"
+                       << messaget::eom;
+
       result = get_properties();
       if(result != -1)
         return result;
 
       for(const propertyt &p : properties)
         get_atomic_propositions(p.expr);
-        
-      status() << "Building BDD for netlist" << eom;
-      
+
+      message.status() << "Building BDD for netlist" << messaget::eom;
+
       allocate_vars(netlist.var_map);
       build_BDDs();
     }
-    
-    statistics() << "BDD nodes: "
-                 << mgr.number_of_nodes() << eom;
-    
+
+    message.statistics() << "BDD nodes: " << mgr.number_of_nodes()
+                         << messaget::eom;
+
     if(cmdline.isset("show-bdds"))
     {
       mgr.DumpTable(std::cout);
@@ -178,7 +179,7 @@ int bdd_enginet::operator()()
 
     if(properties.empty())
     {
-      error() << "no properties" << eom;
+      message.error() << "no properties" << messaget::eom;
       return 1;
     }
 
@@ -193,7 +194,7 @@ int bdd_enginet::operator()()
   }
   catch(const char *error_msg)
   {
-    error() << error_msg << eom;
+    message.error() << error_msg << messaget::eom;
     return 1;
   }
   catch(int)
@@ -347,20 +348,25 @@ void bdd_enginet::compute_counterexample(
   propertyt &property,
   unsigned number_of_timeframes)
 {
-  status() << "Computing counterexample with " << number_of_timeframes 
-           << " timeframe(s)" << eom;
+  message.status() << "Computing counterexample with " << number_of_timeframes
+                   << " timeframe(s)" << messaget::eom;
 
   bmc_mapt bmc_map;
 
-  satcheckt solver{*message_handler};
+  satcheckt solver{message.get_message_handler()};
   bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
 
   const namespacet ns(transition_system.symbol_table);
 
-  ::unwind(netlist, bmc_map, *this, solver);
-  ::unwind_property(property.expr, property.timeframe_literals,
-                    get_message_handler(), solver, bmc_map, ns);
-  
+  ::unwind(netlist, bmc_map, message, solver);
+  ::unwind_property(
+    property.expr,
+    property.timeframe_literals,
+    message.get_message_handler(),
+    solver,
+    bmc_map,
+    ns);
+
   // we need the propertyt to fail in one of the timeframes
   bvt clause=property.timeframe_literals;
   for(auto & l : clause) l=!l;
@@ -401,7 +407,7 @@ void bdd_enginet::check_property(propertyt &property)
   if(property.is_disabled())
     return;
 
-  status() << "Checking " << property.name << eom;
+  message.status() << "Checking " << property.name << messaget::eom;
   property.status=propertyt::statust::UNKNOWN;
 
   // special treatment for always
@@ -427,7 +433,7 @@ void bdd_enginet::check_property(propertyt &property)
     while(true)
     {
       iteration++;
-      statistics() << "Iteration " << iteration << eom;
+      message.statistics() << "Iteration " << iteration << messaget::eom;
 
       // do we have an initial state?
       BDD intersection=states;
@@ -440,7 +446,7 @@ void bdd_enginet::check_property(propertyt &property)
       if(!intersection.is_false())
       {
         property.make_failure();
-        status() << "Property refuted" << eom;
+        message.status() << "Property refuted" << messaget::eom;
         compute_counterexample(property, iteration);
         break;
       }
@@ -467,7 +473,7 @@ void bdd_enginet::check_property(propertyt &property)
       if((set_union==states).is_true())
       {
         property.make_success();
-        status() << "Property holds" << eom;
+        message.status() << "Property holds" << messaget::eom;
         break;
       }
 
@@ -495,12 +501,12 @@ void bdd_enginet::check_property(propertyt &property)
     if(!intersection.is_false())
     {
       property.make_failure();
-      status() << "Property refuted" << eom;
+      message.status() << "Property refuted" << messaget::eom;
     }
     else
     {
       property.make_success();
-      status() << "Property holds" << eom;
+      message.status() << "Property holds" << messaget::eom;
     }
   }
 }
@@ -658,8 +664,8 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
       return it->second.bdd;
   }
 
-  error() << "unsupported property -- `" << expr.id()
-          << "' not implemented" << messaget::eom;
+  message.error() << "unsupported property -- `" << expr.id()
+                  << "' not implemented" << messaget::eom;
   throw 0;
 }
 
@@ -704,13 +710,13 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
   
     assert(expr.type().id()==ID_bool);
 
-    aig_prop_constraintt aig_prop(netlist, *message_handler);
+    aig_prop_constraintt aig_prop(netlist, message.get_message_handler());
 
     const namespacet ns(transition_system.symbol_table);
 
-    literalt l=instantiate_convert(
-      aig_prop, netlist.var_map, expr, ns, get_message_handler());
-    
+    literalt l = instantiate_convert(
+      aig_prop, netlist.var_map, expr, ns, message.get_message_handler());
+
     atomic_propositiont &a=atomic_propositions[expr];
     
     a.l=l;

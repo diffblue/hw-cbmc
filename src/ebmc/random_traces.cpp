@@ -275,14 +275,14 @@ void random_tracest::operator()()
 
   CHECK_RETURN(transition_system.trans_expr.has_value());
 
-  status() << "Passing transition system to solver" << eom;
+  message.status() << "Passing transition system to solver" << messaget::eom;
 
-  satcheckt satcheck{*message_handler};
-  boolbvt solver(ns, satcheck, *message_handler);
+  satcheckt satcheck{message.get_message_handler()};
+  boolbvt solver(ns, satcheck, message.get_message_handler());
 
   ::unwind(
     *transition_system.trans_expr,
-    *message_handler,
+    message.get_message_handler(),
     solver,
     number_of_timeframes,
     ns,
@@ -290,9 +290,11 @@ void random_tracest::operator()()
 
   auto inputs = this->inputs();
 
-  statistics() << "Found " << inputs.size() << " input(s)" << eom;
+  message.statistics() << "Found " << inputs.size() << " input(s)"
+                       << messaget::eom;
 
-  status() << "Solving with " << solver.decision_procedure_text() << eom;
+  message.status() << "Solving with " << solver.decision_procedure_text()
+                   << messaget::eom;
 
   for(std::size_t trace_nr = 0; trace_nr < number_of_traces_opt.value();
       trace_nr++)
@@ -321,12 +323,12 @@ void random_tracest::operator()()
 
         consolet::out() << "*** Writing " << filename << '\n';
 
-        show_trans_trace_vcd(trace, *this, ns, out);
+        show_trans_trace_vcd(trace, message, ns, out);
       }
       else
       {
         consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
-        show_trans_trace(trace, *this, ns, consolet::out());
+        show_trans_trace(trace, message, ns, consolet::out());
       }
     }
     break;
