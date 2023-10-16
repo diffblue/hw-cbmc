@@ -11,8 +11,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/exit_codes.h>
 #include <util/help_formatter.h>
+#include <util/string2int.h>
 
 #include "bdd_engine.h"
+#include "diatest.h"
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_version.h"
@@ -65,20 +67,26 @@ int ebmc_parse_optionst::doit()
   {
     if(cmdline.isset("diatest"))
     {
-      throw ebmc_errort() << "This option is currently disabled";
-
-#if 0
       if(!cmdline.isset("statebits"))
-      {
-        error("error: must provide number of state bits");
-        help();
-        return 1;
-      }
+        throw ebmc_errort() << "must provide number of state bits";
 
-      diatest(bound, atoi(cmdline.getval("statebits")));
+      auto statebits_opt =
+        string2optional_size_t(cmdline.get_value("statebits"));
+
+      if(!statebits_opt.has_value())
+        throw ebmc_errort() << "failed to parse number of state bits";
+
+      if(!cmdline.isset("bound"))
+        throw ebmc_errort() << "must provide bound";
+
+      auto bound_opt = string2optional_size_t(cmdline.get_value("bound"));
+
+      if(!bound_opt.has_value())
+        throw ebmc_errort() << "failed to parse bound";
+
+      diatest(*bound_opt, *statebits_opt, ui_message_handler);
 
       return 0;
-#endif
     }
 
     if(cmdline.isset("cegar"))
