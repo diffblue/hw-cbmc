@@ -29,7 +29,7 @@ public:
         "(show-properties)(property):p:(trace)"
         "(dimacs)(module):(top):"
         "(po)(cegar)(k-induction)(2pi)(bound2):"
-        "(outfile):(xml-ui)(verbosity):(gui)"
+        "(outfile):(xml-ui)(verbosity):(gui)(json-result):"
         "(reset):"
         "(version)(verilog-rtl)(verilog-netlist)"
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"

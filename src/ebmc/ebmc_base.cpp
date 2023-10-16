@@ -7,34 +7,34 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "ebmc_base.h"
-#include "ebmc_version.h"
-
-#include <trans-netlist/trans_trace_netlist.h>
-#include <trans-netlist/ldg.h>
-#include <trans-netlist/trans_to_netlist.h>
-#include <trans-netlist/unwind_netlist.h>
-#include <trans-netlist/compute_ct.h>
-
-#include <trans-word-level/trans_trace_word_level.h>
-#include <trans-word-level/property.h>
-#include <trans-word-level/unwind.h>
-#include <trans-word-level/show_modules.h>
-
-#include <langapi/language.h>
-#include <langapi/language_util.h>
-#include <langapi/mode.h>
-
-#include <solvers/prop/literal_expr.h>
 
 #include <util/cmdline.h>
 #include <util/config.h>
 #include <util/expr_util.h>
 #include <util/find_macros.h>
 #include <util/get_module.h>
+#include <util/json.h>
 #include <util/string2int.h>
 #include <util/unicode.h>
 #include <util/xml.h>
 #include <util/xml_irep.h>
+
+#include <langapi/language.h>
+#include <langapi/language_util.h>
+#include <langapi/mode.h>
+#include <solvers/prop/literal_expr.h>
+#include <trans-netlist/compute_ct.h>
+#include <trans-netlist/ldg.h>
+#include <trans-netlist/trans_to_netlist.h>
+#include <trans-netlist/trans_trace_netlist.h>
+#include <trans-netlist/unwind_netlist.h>
+#include <trans-word-level/property.h>
+#include <trans-word-level/show_modules.h>
+#include <trans-word-level/trans_trace_word_level.h>
+#include <trans-word-level/unwind.h>
+
+#include "ebmc_error.h"
+#include "ebmc_version.h"
 
 #include <chrono>
 #include <fstream>
@@ -1070,6 +1070,50 @@ Function: ebmc_baset::report_results
 void ebmc_baset::report_results()
 {
   const namespacet ns(transition_system.symbol_table);
+
+  if(cmdline.isset("json-result"))
+  {
+    auto filename = cmdline.get_value("json-result");
+    std::ofstream out(widen_if_needed(filename));
+    if(!out)
+      throw ebmc_errort() << "failed to open " << filename;
+
+    json_objectt json_results;
+    auto &json_properties = json_results["properties"].make_array();
+
+    for(const propertyt &property : properties)
+    {
+      if(property.status == propertyt::statust::DISABLED)
+        continue;
+
+      json_objectt json_property;
+      json_property["identifier"] = json_stringt(id2string(property.name));
+
+      json_property["status"] = json_stringt(
+        [&property]()
+        {
+          switch(property.status)
+          {
+          case propertyt::statust::SUCCESS:
+            return "HOLDS";
+          case propertyt::statust::FAILURE:
+            return "REFUTED";
+          case propertyt::statust::UNKNOWN:
+            return "UNKNOWN";
+          case propertyt::statust::DISABLED:
+          default:
+            UNREACHABLE;
+          }
+        }());
+
+      if(property.is_failure())
+        json_property["counterexample"] = json(property.counterexample, ns);
+
+      json_properties.push_back(std::move(json_property));
+    }
+
+    out << json_results;
+  }
 
   if (static_cast<ui_message_handlert *>(message_handler)->get_ui() ==
       ui_message_handlert::uit::XML_UI) {

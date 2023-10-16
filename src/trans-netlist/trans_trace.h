@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/threeval.h>
 #include <util/ui_message.h>
 
+class jsont;
+
 class trans_tracet
 {
 public:
@@ -57,6 +59,8 @@ public:
 };
 
 // outputting traces
+
+jsont json(const trans_tracet &, const namespacet &);
 
 void convert(
   const namespacet &,
