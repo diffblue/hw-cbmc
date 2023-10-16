@@ -131,7 +131,10 @@ int bdd_enginet::operator()()
 {
   try
   {
-    int result = get_transition_system();
+    int result = get_transition_system(
+      cmdline,
+      static_cast<ui_message_handlert &>(message.get_message_handler()),
+      transition_system);
     if(result!=-1) return result;
 
     {  
