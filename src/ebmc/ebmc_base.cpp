@@ -1134,7 +1134,7 @@ void ebmc_baset::report_results()
       }
       
       if(property.is_failure())
-        convert(ns, property.counterexample, xml_result.new_element());
+        xml_result.new_element() = xml(property.counterexample, ns);
 
       std::cout << xml_result << '\n' << std::flush;
     }
