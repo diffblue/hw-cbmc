@@ -76,7 +76,7 @@ Function: ebmc_baset::property_requires_lasso_constraints
 
 bool ebmc_baset::property_requires_lasso_constraints() const
 {
-  for(const auto &p : properties)
+  for(const auto &p : properties.properties)
     if(!p.is_disabled() && requires_lasso_constraints(p.expr))
       return true;
 
@@ -99,7 +99,7 @@ void ebmc_baset::word_level_properties(decision_proceduret &solver)
 {
   const namespacet ns(transition_system.symbol_table);
 
-  for(propertyt &property : properties)
+  for(propertyt &property : properties.properties)
   {
     if(property.is_disabled())
       continue;
@@ -144,8 +144,8 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
   auto sat_start_time = std::chrono::steady_clock::now();
   
   // Use assumptions to check the properties separately
-  
-  for(propertyt &property : properties)
+
+  for(propertyt &property : properties.properties)
   {
     if(property.is_disabled())
       continue;
@@ -207,7 +207,7 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
-  return property_failure() ? 10 : 0;
+  return properties.property_failure() ? 10 : 0;
 }
 
 /*******************************************************************\
@@ -228,7 +228,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 
   message.status() << "Solving with " << solver.solver_text() << messaget::eom;
 
-  for(propertyt &property : properties)
+  for(propertyt &property : properties.properties)
   {
     if(property.is_disabled())
       continue;
@@ -284,7 +284,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
-  return property_failure()?10:0;
+  return properties.property_failure() ? 10 : 0;
 }
 
 /*******************************************************************\
@@ -327,14 +327,14 @@ bool ebmc_baset::parse_property(
   message.debug() << "Mode: " << transition_system.main_symbol->mode
                   << messaget::eom;
 
-  properties.push_back(propertyt());
-  properties.back().expr=expr;
-  properties.back().expr_string=expr_as_string;
-  properties.back().mode = transition_system.main_symbol->mode;
-  properties.back().location.make_nil();
-  properties.back().description="command-line assertion";
-  properties.back().name="command-line assertion";
-  
+  properties.properties.push_back(propertyt());
+  properties.properties.back().expr = expr;
+  properties.properties.back().expr_string = expr_as_string;
+  properties.properties.back().mode = transition_system.main_symbol->mode;
+  properties.properties.back().location.make_nil();
+  properties.properties.back().description = "command-line assertion";
+  properties.properties.back().name = "command-line assertion";
+
   return false;
 }
 
@@ -352,84 +352,13 @@ Function: ebmc_baset::get_model_properties
 
 bool ebmc_baset::get_model_properties()
 {
-  for(auto it = transition_system.symbol_table.symbol_module_map.lower_bound(
-        transition_system.main_symbol->name);
-      it != transition_system.symbol_table.symbol_module_map.upper_bound(
-              transition_system.main_symbol->name);
-      it++)
-  {
-    namespacet ns(transition_system.symbol_table);
-    const symbolt &symbol=ns.lookup(it->second);
+  if(properties.from_transition_system(
+       transition_system, properties, message.get_message_handler()))
+    return true;
 
-    if(symbol.is_property)
-    {
-      try
-      {
-        std::string value_as_string=
-          from_expr(ns, symbol.name, symbol.value);
+  if(properties.select_property(cmdline, message.get_message_handler()))
+    return true;
 
-        message.debug() << "Property: " << value_as_string << messaget::eom;
-
-        properties.push_back(propertyt());
-        properties.back().number=properties.size()-1;
-
-        if(symbol.pretty_name.empty())
-          properties.back().name=symbol.name;
-        else
-          properties.back().name=symbol.pretty_name;
-
-        properties.back().expr=symbol.value;
-        properties.back().location=symbol.location;
-        properties.back().expr_string=value_as_string;
-        properties.back().mode=symbol.mode;
-        properties.back().description=id2string(symbol.location.get_comment());
-      }
-      
-      catch(const char *e)
-      {
-        message.error() << e << messaget::eom;
-        return true;
-      }
-      
-      catch(const std::string &e)
-      {
-        message.error() << e << messaget::eom;
-        return true;
-      }
-      
-      catch(int)
-      {
-        return true;
-      }  
-
-    }
-  }
-  
-  if(cmdline.isset("property"))
-  {
-    std::string property=cmdline.get_value("property");
-
-    for(auto & p : properties)
-      p.status=propertyt::statust::DISABLED;
-      
-    bool found=false;
-
-    for(auto & p : properties)
-      if(p.name==property)
-      {
-        found=true;
-        p.status=propertyt::statust::UNKNOWN;
-        break;
-      }
-    
-    if(!found)
-    {
-      message.error() << "Property " << property << " not found"
-                      << messaget::eom;
-      return true;
-    }
-  }
-  
   return false;
 }
 
@@ -506,7 +435,7 @@ int ebmc_baset::do_word_level_bmc(
       if(get_bound()) return 1;
     
       if(!convert_only)
-        if(properties.empty())
+        if(properties.properties.empty())
           throw "no properties";
 
       message.status() << "Generating Decision Problem" << messaget::eom;
@@ -529,7 +458,7 @@ int ebmc_baset::do_word_level_bmc(
 
       if(convert_only)
       {
-        for(propertyt &property : properties)
+        for(propertyt &property : properties.properties)
         {
           if(!property.is_disabled())
             solver.set_to_false(conjunction(property.timeframe_handles));
@@ -588,7 +517,7 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
     bmc_mapt bmc_map;
   
     if(!convert_only)
-      if(properties.empty())
+      if(properties.properties.empty())
         throw "no properties";
       
     netlistt netlist;
@@ -602,7 +531,7 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
     ::unwind(netlist, bmc_map, message, solver);
 
     // convert the properties
-    for(propertyt &property : properties)
+    for(propertyt &property : properties.properties)
     {
       if(property.is_disabled())
         continue;
@@ -845,7 +774,7 @@ void ebmc_baset::report_results()
     json_objectt json_results;
     auto &json_properties = json_results["properties"].make_array();
 
-    for(const propertyt &property : properties)
+    for(const propertyt &property : properties.properties)
     {
       if(property.status == propertyt::statust::DISABLED)
         continue;
@@ -883,7 +812,7 @@ void ebmc_baset::report_results()
     static_cast<ui_message_handlert &>(message.get_message_handler())
       .get_ui() == ui_message_handlert::uit::XML_UI)
   {
-    for(const propertyt &property : properties)
+    for(const propertyt &property : properties.properties)
     {
       if(property.status==propertyt::statust::DISABLED)
         continue;
@@ -910,7 +839,7 @@ void ebmc_baset::report_results()
     message.status() << messaget::eom;
     message.status() << "** Results:" << messaget::eom;
 
-    for(const propertyt &property : properties)
+    for(const propertyt &property : properties.properties)
     {
       if(property.status==propertyt::statust::DISABLED)
         continue;
@@ -945,7 +874,7 @@ void ebmc_baset::report_results()
 
   if(cmdline.isset("vcd"))
   {
-    for(const propertyt &property : properties)
+    for(const propertyt &property : properties.properties)
     {
       if(property.is_failure())
       {

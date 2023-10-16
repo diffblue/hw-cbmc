@@ -149,7 +149,7 @@ int bdd_enginet::operator()()
       if(result != -1)
         return result;
 
-      for(const propertyt &p : properties)
+      for(const propertyt &p : properties.properties)
         get_atomic_propositions(p.expr);
 
       message.status() << "Building BDD for netlist" << messaget::eom;
@@ -178,20 +178,20 @@ int bdd_enginet::operator()()
       return 0;
     }
 
-    if(properties.empty())
+    if(properties.properties.empty())
     {
       message.error() << "no properties" << messaget::eom;
       return 1;
     }
 
-    for(propertyt &p : properties)
+    for(propertyt &p : properties.properties)
       check_property(p);
     
     report_results();
 
     // We return '0' if the property holds,
     // and '10' if it is violated.
-    return property_failure()?10:0;
+    return properties.property_failure() ? 10 : 0;
   }
   catch(const char *error_msg)
   {

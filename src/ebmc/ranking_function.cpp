@@ -92,7 +92,7 @@ exprt ranking_function_checkt::parse_ranking_function()
 ebmc_baset::propertyt &ranking_function_checkt::find_property()
 {
   std::size_t count = 0;
-  for(auto &p : properties)
+  for(auto &p : properties.properties)
   {
     if(!p.is_disabled())
       count++;
@@ -104,7 +104,7 @@ ebmc_baset::propertyt &ranking_function_checkt::find_property()
   if(count >= 2)
     throw ebmc_errort() << "multiple properties are given -- please pick one";
 
-  for(auto &p : properties)
+  for(auto &p : properties.properties)
   {
     if(!p.is_disabled())
       return p;
@@ -207,5 +207,5 @@ int ranking_function_checkt::operator()()
 
   report_results();
 
-  return property_failure() ? 10 : 0;
+  return properties.property_failure() ? 10 : 0;
 }

@@ -63,8 +63,9 @@ int ic3_enginet::operator()()
       message.error() << "Failed to build netlist" << messaget::eom;
       return 2;
     }
-      
-    if(properties.empty())   {
+
+    if(properties.properties.empty())
+    {
       message.error() << "no properties" << messaget::eom;
       return 1;
     }
