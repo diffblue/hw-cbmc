@@ -31,7 +31,7 @@ void ebmc_baset::show_properties()
 
   for(const auto & p : properties)
   {
-    switch (static_cast<ui_message_handlert *>(message_handler)->get_ui()) {
+    switch (static_cast<ui_message_handlert &>(message.get_message_handler()).get_ui()) {
     case ui_message_handlert::uit::XML_UI:
       {
         xmlt xml("property");

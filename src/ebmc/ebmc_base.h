@@ -25,7 +25,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <fstream>
 
-class ebmc_baset : public messaget {
+class ebmc_baset
+{
 public:
   ebmc_baset(const cmdlinet &_cmdline,
              ui_message_handlert &_ui_message_handler);
@@ -35,6 +36,7 @@ public:
   int get_properties();
 
 protected:
+  messaget message;
   const cmdlinet &cmdline;
   language_filest language_files;
 

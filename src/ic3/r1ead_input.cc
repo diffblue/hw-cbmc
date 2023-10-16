@@ -48,13 +48,13 @@ void ic3_enginet::find_prop_lit()
   }
   assert(Oper.type().id()==ID_bool);
 
-  aig_prop_constraintt aig_prop(netlist, get_message_handler());
+  aig_prop_constraintt aig_prop(netlist, message.get_message_handler());
 
   symbol_tablet symbol_table{};
   const namespacet ns(symbol_table);
 
-  prop_l=instantiate_convert(aig_prop, netlist.var_map, Oper, ns,
-			     get_message_handler());
+  prop_l = instantiate_convert(
+    aig_prop, netlist.var_map, Oper, ns, message.get_message_handler());
 
   // int var_num = prop_l.var_no();
   // printf("var_num = %d\n",var_num);

@@ -88,7 +88,7 @@ int k_inductiont::operator()()
 
   if(properties.empty())
   {
-    error() << "no properties" << eom;
+    message.error() << "no properties" << messaget::eom;
     return 1;
   }
 
@@ -119,15 +119,15 @@ Function: k_inductiont::induction_base
 int k_inductiont::induction_base()
 {
   PRECONDITION(transition_system.trans_expr.has_value());
-  status() << "Induction Base" << eom;
+  message.status() << "Induction Base" << messaget::eom;
 
-  satcheckt satcheck{*message_handler};
-  boolbvt solver(ns, satcheck, *message_handler);
+  satcheckt satcheck{message.get_message_handler()};
+  boolbvt solver(ns, satcheck, message.get_message_handler());
 
   // convert the transition system
   ::unwind(
     *transition_system.trans_expr,
-    *message_handler,
+    message.get_message_handler(),
     solver,
     bound + 1,
     ns,
@@ -159,7 +159,7 @@ Function: k_inductiont::induction_step
 int k_inductiont::induction_step()
 {
   PRECONDITION(transition_system.trans_expr.has_value());
-  status() << "Induction Step" << eom;
+  message.status() << "Induction Step" << messaget::eom;
 
   unsigned no_timeframes=bound+1;
 
@@ -169,13 +169,13 @@ int k_inductiont::induction_step()
        p_it.is_failure())
       continue;
 
-    satcheckt satcheck{*message_handler};
-    boolbvt solver(ns, satcheck, *message_handler);
+    satcheckt satcheck{message.get_message_handler()};
+    boolbvt solver(ns, satcheck, message.get_message_handler());
 
     // *no* initial state
     unwind(
       *transition_system.trans_expr,
-      *message_handler,
+      message.get_message_handler(),
       solver,
       no_timeframes,
       ns,
@@ -186,7 +186,9 @@ int k_inductiont::induction_step()
     if(property.id()!=ID_sva_always &&
        property.id()!=ID_AG)
     {
-      error() << "unsupported property - only SVA always or AG implemented" << eom;
+      message.error()
+        << "unsupported property - only SVA always or AG implemented"
+        << messaget::eom;
       return 1;
     }
 
@@ -213,21 +215,25 @@ int k_inductiont::induction_step()
     switch(dec_result)
     {
     case decision_proceduret::resultt::D_SATISFIABLE:
-      result() << "SAT: inductive proof failed, k-induction is inconclusive" << eom;
+      message.result()
+        << "SAT: inductive proof failed, k-induction is inconclusive"
+        << messaget::eom;
       p_it.make_unknown();
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE:
-      result() << "UNSAT: inductive proof successful, property holds" << eom;
+      message.result() << "UNSAT: inductive proof successful, property holds"
+                       << messaget::eom;
       p_it.make_success();
       break;
 
     case decision_proceduret::resultt::D_ERROR:
-      error() << "Error from decision procedure" << eom;
+      message.error() << "Error from decision procedure" << messaget::eom;
       return 2;
 
     default:
-      error() << "Unexpected result from decision procedure" << eom;
+      message.error() << "Unexpected result from decision procedure"
+                      << messaget::eom;
       return 1;
     }
   }

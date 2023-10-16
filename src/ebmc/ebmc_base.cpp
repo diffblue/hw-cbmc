@@ -75,13 +75,13 @@ Function: ebmc_baset::ebmc_baset
 ebmc_baset::ebmc_baset(
   const cmdlinet &_cmdline,
   ui_message_handlert &_ui_message_handler)
-  : messaget(_ui_message_handler), cmdline(_cmdline)
+  : message(_ui_message_handler), cmdline(_cmdline)
 {
   if(cmdline.isset("verbosity"))
-    message_handler->set_verbosity(
-        unsafe_string2unsigned(cmdline.get_value("verbosity")));
+    _ui_message_handler.set_verbosity(
+      unsafe_string2unsigned(cmdline.get_value("verbosity")));
   else
-    message_handler->set_verbosity(messaget::M_STATUS); // default
+    _ui_message_handler.set_verbosity(messaget::M_STATUS); // default
 }
 
 /*******************************************************************\
@@ -129,7 +129,7 @@ void ebmc_baset::word_level_properties(decision_proceduret &solver)
     ::property(
       property.expr,
       property.timeframe_handles,
-      get_message_handler(),
+      message.get_message_handler(),
       solver,
       bound + 1,
       ns);
@@ -155,13 +155,13 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
   // lasso constraints, if needed
   if(property_requires_lasso_constraints())
   {
-    status() << "Adding lasso constraints" << eom;
+    message.status() << "Adding lasso constraints" << messaget::eom;
     lasso_constraints(
       solver, bound + 1, ns, transition_system.main_symbol->name);
   }
 
-  status() << "Solving with "
-           << solver.decision_procedure_text() << eom;
+  message.status() << "Solving with " << solver.decision_procedure_text()
+                   << messaget::eom;
 
   auto sat_start_time = std::chrono::steady_clock::now();
   
@@ -171,8 +171,8 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
   {
     if(property.is_disabled())
       continue;
-    
-    status() << "Checking " << property.name << eom;
+
+    message.status() << "Checking " << property.name << messaget::eom;
 
     auto constraint = not_exprt(conjunction(property.timeframe_handles));
     auto handle = solver.handle(constraint);
@@ -192,7 +192,7 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
     case decision_proceduret::resultt::D_SATISFIABLE:
       {
         property.make_failure();
-        result() << "SAT: counterexample found" << messaget::eom;
+        message.result() << "SAT: counterexample found" << messaget::eom;
 
         property.counterexample = compute_trans_trace(
           property.timeframe_handles,
@@ -204,27 +204,28 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE:
-      result() << "UNSAT: No counterexample found within bound"
-               << messaget::eom;
-      property.make_success();
-      break;
+        message.result() << "UNSAT: No counterexample found within bound"
+                         << messaget::eom;
+        property.make_success();
+        break;
 
     case decision_proceduret::resultt::D_ERROR:
-      error() << "Error from decision procedure" << messaget::eom;
-      return 2;
+        message.error() << "Error from decision procedure" << messaget::eom;
+        return 2;
 
     default:
-      error() << "Unexpected result from decision procedure" << messaget::eom;
-      return 1;
+        message.error() << "Unexpected result from decision procedure"
+                        << messaget::eom;
+        return 1;
     }
   }
 
   auto sat_stop_time = std::chrono::steady_clock::now();
 
-  statistics()
-     << "Solver time: "
-     << std::chrono::duration<double>(sat_stop_time-sat_start_time).count()
-     << eom;
+  message.statistics()
+    << "Solver time: "
+    << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
+    << messaget::eom;
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
@@ -245,16 +246,16 @@ Function: ebmc_baset::finish_bit_level_bmc
 
 int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 {
-  auto sat_start_time = std::chrono::steady_clock::now();  
+  auto sat_start_time = std::chrono::steady_clock::now();
 
-  status() << "Solving with " << solver.solver_text() << eom;
+  message.status() << "Solving with " << solver.solver_text() << messaget::eom;
 
   for(propertyt &property : properties)
   {
     if(property.is_disabled())
       continue;
 
-    status() << "Checking " << property.name << messaget::eom;
+    message.status() << "Checking " << property.name << messaget::eom;
 
     literalt property_literal=!solver.land(property.timeframe_literals);
   
@@ -270,7 +271,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
     case propt::resultt::P_SATISFIABLE:
       {
         property.make_failure();
-        result() << "SAT: counterexample found" << messaget::eom;
+        message.result() << "SAT: counterexample found" << messaget::eom;
 
         namespacet ns(transition_system.symbol_table);
 
@@ -280,27 +281,28 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
       break;
 
     case propt::resultt::P_UNSATISFIABLE:
-      result() << "UNSAT: No counterexample found within bound"
-               << messaget::eom;
-      property.make_success();
-      break;
+        message.result() << "UNSAT: No counterexample found within bound"
+                         << messaget::eom;
+        property.make_success();
+        break;
 
     case propt::resultt::P_ERROR:
-      error() << "Error from decision procedure" << messaget::eom;
-      return 2;
+        message.error() << "Error from decision procedure" << messaget::eom;
+        return 2;
 
     default:
-      error() << "Unexpected result from decision procedure" << messaget::eom;
-      return 1;
+        message.error() << "Unexpected result from decision procedure"
+                        << messaget::eom;
+        return 1;
     }
   }
 
-  auto sat_stop_time = std::chrono::steady_clock::now();  
-    
-  statistics()
+  auto sat_stop_time = std::chrono::steady_clock::now();
+
+  message.statistics()
     << "Solver time: "
-    << std::chrono::duration<double>(sat_stop_time-sat_start_time).count()
-    << eom;
+    << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
+    << messaget::eom;
 
   // We return '0' if the property holds,
   // and '10' if it is violated.
@@ -343,8 +345,9 @@ bool ebmc_baset::parse_property(
 
   std::string expr_as_string;
   language->from_expr(expr, expr_as_string, ns);
-  debug() << "Property: " << expr_as_string << eom;
-  debug() << "Mode: " << transition_system.main_symbol->mode << eom;
+  message.debug() << "Property: " << expr_as_string << messaget::eom;
+  message.debug() << "Mode: " << transition_system.main_symbol->mode
+                  << messaget::eom;
 
   properties.push_back(propertyt());
   properties.back().expr=expr;
@@ -387,7 +390,7 @@ bool ebmc_baset::get_model_properties()
         std::string value_as_string=
           from_expr(ns, symbol.name, symbol.value);
 
-        debug() << "Property: " << value_as_string << eom;
+        message.debug() << "Property: " << value_as_string << messaget::eom;
 
         properties.push_back(propertyt());
         properties.back().number=properties.size()-1;
@@ -406,13 +409,13 @@ bool ebmc_baset::get_model_properties()
       
       catch(const char *e)
       {
-        error() << e << eom;
+        message.error() << e << messaget::eom;
         return true;
       }
       
       catch(const std::string &e)
       {
-        error() << e << eom;
+        message.error() << e << messaget::eom;
         return true;
       }
       
@@ -443,7 +446,8 @@ bool ebmc_baset::get_model_properties()
     
     if(!found)
     {
-      error() << "Property " << property << " not found" << eom;
+      message.error() << "Property " << property << " not found"
+                      << messaget::eom;
       return true;
     }
   }
@@ -467,7 +471,7 @@ bool ebmc_baset::get_bound()
 {
   if(!cmdline.isset("bound"))
   {
-    warning() << "using default bound 1" << eom;
+    message.warning() << "using default bound 1" << messaget::eom;
     bound=1;
     return false;
   }
@@ -501,7 +505,9 @@ bool ebmc_baset::get_main()
   try
   {
     transition_system.main_symbol = &get_module(
-      transition_system.symbol_table, top_module, get_message_handler());
+      transition_system.symbol_table,
+      top_module,
+      message.get_message_handler());
     transition_system.trans_expr =
       to_trans_expr(transition_system.main_symbol->value);
   }
@@ -544,7 +550,7 @@ int ebmc_baset::do_word_level_bmc(
     
       for(bound=1; bound<=max_bound; bound++)
       {
-        status() << "Doing BMC with bound " << bound << eom;
+        message.status() << "Doing BMC with bound " << bound << messaget::eom;
 
 #if 0
         const namespacet ns(transition_system.symbol_table);
@@ -564,20 +570,20 @@ int ebmc_baset::do_word_level_bmc(
         if(properties.empty())
           throw "no properties";
 
-      status() << "Generating Decision Problem" << eom;
+      message.status() << "Generating Decision Problem" << messaget::eom;
 
       // convert the transition system
       const namespacet ns(transition_system.symbol_table);
       CHECK_RETURN(transition_system.trans_expr.has_value());
       ::unwind(
         *transition_system.trans_expr,
-        *message_handler,
+        message.get_message_handler(),
         solver,
         bound + 1,
         ns,
         true);
 
-      status() << "Properties" << eom;
+      message.status() << "Properties" << messaget::eom;
 
       // convert the properties
       word_level_properties(solver);
@@ -602,13 +608,13 @@ int ebmc_baset::do_word_level_bmc(
     
   catch(const char *e)
   {
-    error() << e << eom;
+    message.error() << e << messaget::eom;
     return 10;
   }
   
   catch(const std::string &e)
   {
-    error() << e << eom;
+    message.error() << e << messaget::eom;
     return 10;
   }
   
@@ -650,11 +656,11 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
     if(make_netlist(netlist))
       throw 0;
 
-    status() << "Unwinding Netlist" << eom;
-    
+    message.status() << "Unwinding Netlist" << messaget::eom;
+
     bmc_map.map_timeframes(netlist, bound+1, solver);
 
-    ::unwind(netlist, bmc_map, *this, solver);
+    ::unwind(netlist, bmc_map, message, solver);
 
     // convert the properties
     for(propertyt &property : properties)
@@ -667,7 +673,7 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
       ::unwind_property(
         property.expr,
         property.timeframe_literals,
-        get_message_handler(),
+        message.get_message_handler(),
         solver,
         bmc_map,
         ns);
@@ -688,13 +694,13 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
 
   catch(const char *e)
   {
-    error() << e << eom;
+    message.error() << e << messaget::eom;
     return 10;
   }
   
   catch(const std::string &e)
   {
-    error() << e << eom;
+    message.error() << e << messaget::eom;
     return 10;
   }
   
@@ -722,7 +728,8 @@ int ebmc_baset::preprocess()
 {
   if(cmdline.args.size() != 1)
   {
-    error() << "please give exactly one file to preprocess" << eom;
+    message.error() << "please give exactly one file to preprocess"
+                    << messaget::eom;
     return 1;
   }
 
@@ -736,7 +743,8 @@ int ebmc_baset::preprocess()
 
   if(!infile)
   {
-    error() << "failed to open input file `" << filename << "'" << eom;
+    message.error() << "failed to open input file `" << filename << "'"
+                    << messaget::eom;
     return 1;
   }
 
@@ -746,16 +754,16 @@ int ebmc_baset::preprocess()
   {
     source_locationt location;
     location.set_file(filename);
-    error().source_location = location;
-    error() << "failed to figure out type of file" << eom;
+    message.error().source_location = location;
+    message.error() << "failed to figure out type of file" << messaget::eom;
     return 1;
   }
 
-  language->set_message_handler(get_message_handler());
+  language->set_message_handler(message.get_message_handler());
 
   if(language->preprocess(infile, filename, std::cout))
   {
-    error() << "PREPROCESSING FAILED" << eom;
+    message.error() << "PREPROCESSING FAILED" << messaget::eom;
     return 1;
   }
 
@@ -806,7 +814,8 @@ int ebmc_baset::get_transition_system()
   {
     show_modules(
       transition_system.symbol_table,
-      static_cast<ui_message_handlert *>(message_handler)->get_ui());
+      static_cast<ui_message_handlert &>(message.get_message_handler())
+        .get_ui());
     return 0;
   }
 
@@ -999,7 +1008,7 @@ Function: ebmc_baset::make_netlist
 bool ebmc_baset::make_netlist(netlistt &netlist)
 {
   // make net-list
-  status() << "Generating Netlist" << eom;
+  message.status() << "Generating Netlist" << messaget::eom;
 
   try
   {
@@ -1007,18 +1016,19 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
       transition_system.symbol_table,
       transition_system.main_symbol->name,
       netlist,
-      get_message_handler());
+      message.get_message_handler());
   }
   
   catch(const std::string &error_str)
   {
-    error() << error_str << eom;
+    message.error() << error_str << messaget::eom;
     return true;
   }
 
-  statistics() << "Latches: " << netlist.var_map.latches.size()
-               << ", nodes: " << netlist.number_of_nodes() << eom;
-           
+  message.statistics() << "Latches: " << netlist.var_map.latches.size()
+                       << ", nodes: " << netlist.number_of_nodes()
+                       << messaget::eom;
+
   return false;
 }
 
@@ -1037,16 +1047,16 @@ Function: ebmc_baset::do_compute_ct
 int ebmc_baset::do_compute_ct()
 {
   // make net-list
-  status() << "Making Netlist" << eom;
+  message.status() << "Making Netlist" << messaget::eom;
 
   netlistt netlist;
   if(make_netlist(netlist)) return 1;
 
-  status() << "Latches: " << netlist.var_map.latches.size()
-           << ", nodes: " << netlist.number_of_nodes() << eom;
+  message.status() << "Latches: " << netlist.var_map.latches.size()
+                   << ", nodes: " << netlist.number_of_nodes() << messaget::eom;
 
-  status() << "Making LDG" << eom;
-  
+  message.status() << "Making LDG" << messaget::eom;
+
   ldgt ldg;
   ldg.compute(netlist);
 
@@ -1115,8 +1125,10 @@ void ebmc_baset::report_results()
     out << json_results;
   }
 
-  if (static_cast<ui_message_handlert *>(message_handler)->get_ui() ==
-      ui_message_handlert::uit::XML_UI) {
+  if(
+    static_cast<ui_message_handlert &>(message.get_message_handler())
+      .get_ui() == ui_message_handlert::uit::XML_UI)
+  {
     for(const propertyt &property : properties)
     {
       if(property.status==propertyt::statust::DISABLED)
@@ -1141,32 +1153,38 @@ void ebmc_baset::report_results()
   }
   else
   {
-    status() << eom;
-    status() << "** Results:" << eom;
+    message.status() << messaget::eom;
+    message.status() << "** Results:" << messaget::eom;
 
     for(const propertyt &property : properties)
     {
       if(property.status==propertyt::statust::DISABLED)
         continue;
-      
-      status() << "[" << property.name << "] "
-               << property.expr_string << ": ";
+
+      message.status() << "[" << property.name << "] " << property.expr_string
+                       << ": ";
 
       switch(property.status)
       {
-      case propertyt::statust::SUCCESS: status() << "SUCCESS"; break;
-      case propertyt::statust::FAILURE: status() << "FAILURE"; break;
-      case propertyt::statust::UNKNOWN: status() << "UNKNOWN"; break;
+      case propertyt::statust::SUCCESS:
+        message.status() << "SUCCESS";
+        break;
+      case propertyt::statust::FAILURE:
+        message.status() << "FAILURE";
+        break;
+      case propertyt::statust::UNKNOWN:
+        message.status() << "UNKNOWN";
+        break;
       case propertyt::statust::DISABLED:;
       }
-               
-      status() << eom;
-      
+
+      message.status() << messaget::eom;
+
       if(property.is_failure() &&
          cmdline.isset("trace"))
       {
-        status() << "Counterexample:\n" << eom;
-        show_trans_trace(property.counterexample, *this, ns, std::cout);
+        message.status() << "Counterexample:\n" << messaget::eom;
+        show_trans_trace(property.counterexample, message, ns, std::cout);
       }
     }
   }
@@ -1180,11 +1198,7 @@ void ebmc_baset::report_results()
         std::string vcdfile=cmdline.get_value("vcd");
         std::ofstream vcd(widen_if_needed(vcdfile));
 
-        show_trans_trace_vcd(
-          property.counterexample,
-          *this, // message
-          ns,
-          vcd);
+        show_trans_trace_vcd(property.counterexample, message, ns, vcd);
 
         break;
       }
@@ -1209,7 +1223,8 @@ bool ebmc_baset::parse(const std::string &filename) {
 #endif
 
   if (!infile) {
-    error() << "failed to open input file `" << filename << "'" << eom;
+    message.error() << "failed to open input file `" << filename << "'"
+                    << messaget::eom;
     return true;
   }
 
@@ -1220,19 +1235,20 @@ bool ebmc_baset::parse(const std::string &filename) {
   if (lf.language == nullptr) {
     source_locationt location;
     location.set_file(filename);
-    error().source_location = location;
-    error() << "failed to figure out type of file" << eom;
+    message.error().source_location = location;
+    message.error() << "failed to figure out type of file" << messaget::eom;
     return true;
   }
 
   languaget &language = *lf.language;
-  language.set_message_handler(get_message_handler());
+  language.set_message_handler(message.get_message_handler());
 
-  status() << "Parsing " << filename << eom;
+  message.status() << "Parsing " << filename << messaget::eom;
 
   if (language.parse(infile, filename)) {
-    if (static_cast<ui_message_handlert *>(message_handler)->get_ui() ==
-        ui_message_handlert::uit::PLAIN)
+    if(
+      static_cast<ui_message_handlert &>(message.get_message_handler())
+        .get_ui() == ui_message_handlert::uit::PLAIN)
       std::cerr << "PARSING ERROR\n";
 
     return true;
@@ -1244,11 +1260,12 @@ bool ebmc_baset::parse(const std::string &filename) {
 }
 
 bool ebmc_baset::typecheck() {
-  status() << "Converting" << eom;
+  message.status() << "Converting" << messaget::eom;
 
-  if(language_files.typecheck(transition_system.symbol_table, *message_handler))
+  if(language_files.typecheck(
+       transition_system.symbol_table, message.get_message_handler()))
   {
-    error() << "CONVERSION ERROR" << eom;
+    message.error() << "CONVERSION ERROR" << messaget::eom;
     return true;
   }
 
