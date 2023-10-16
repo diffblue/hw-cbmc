@@ -318,5 +318,18 @@ void hw_cbmc_parse_optionst::show_unwind_trace(const optionst &options,
     }
   }
 
-  show_trans_trace(trans_trace, log, ns, ui_message_handler.get_ui());
+  switch(ui_message_handler.get_ui())
+  {
+  case ui_message_handlert::uit::PLAIN:
+    show_trans_trace(trans_trace, log, ns, std::cout);
+    break;
+
+  case ui_message_handlert::uit::XML_UI:
+    show_trans_trace_xml(trans_trace, log, ns, std::cout);
+    break;
+
+  case ui_message_handlert::uit::JSON_UI:
+    show_trans_trace_json(trans_trace, log, ns, std::cout);
+    break;
+  }
 }

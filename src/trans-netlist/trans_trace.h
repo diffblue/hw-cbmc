@@ -65,15 +65,27 @@ jsont json(const trans_tracet &, const namespacet &);
 xmlt xml(const trans_tracet &, const namespacet &);
 
 void show_trans_trace(
+  const trans_tracet &,
+  messaget &,
+  const namespacet &,
+  std::ostream &);
+
+void show_trans_trace_xml(
   const trans_tracet &trace,
-  messaget &message,
-  const namespacet &ns,
-  ui_message_handlert::uit ui);  
+  messaget &,
+  const namespacet &,
+  std::ostream &);
+
+void show_trans_trace_json(
+  const trans_tracet &,
+  messaget &,
+  const namespacet &,
+  std::ostream &);
 
 void show_trans_trace_vcd(
-  const trans_tracet &trace,
-  messaget &message,
-  const namespacet &ns,
-  std::ostream &out);
+  const trans_tracet &,
+  messaget &,
+  const namespacet &,
+  std::ostream &);
 
 #endif

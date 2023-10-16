@@ -1166,9 +1166,7 @@ void ebmc_baset::report_results()
          cmdline.isset("trace"))
       {
         status() << "Counterexample:\n" << eom;
-        show_trans_trace(
-            property.counterexample, *this, ns,
-            static_cast<ui_message_handlert *>(message_handler)->get_ui());
+        show_trans_trace(property.counterexample, *this, ns, std::cout);
       }
     }
   }

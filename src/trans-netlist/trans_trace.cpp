@@ -168,6 +168,32 @@ void show_trans_state(
 
 /*******************************************************************\
 
+Function: show_trans_trace
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_trans_trace(
+  const trans_tracet &trace,
+  messaget &message,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  PRECONDITION(!trace.states.empty());
+
+  auto l = trace.get_min_failing_timeframe().value_or(trace.states.size() - 1);
+
+  for(std::size_t t = 0; t <= l; t++)
+    show_trans_state(t, trace.states[t], ns);
+}
+
+/*******************************************************************\
+
 Function: xml
 
   Inputs:
@@ -180,6 +206,8 @@ Function: xml
 
 xmlt xml(const trans_tracet &trace, const namespacet &ns)
 {
+  PRECONDITION(!trace.states.empty());
+
   auto min_failing_timeframe_opt = trace.get_min_failing_timeframe();
 
   auto last_time_frame =
@@ -294,7 +322,7 @@ jsont json(const trans_tracet &trace, const namespacet &ns)
 
 /*******************************************************************\
 
-Function: show_trans_trace
+Function: show_trans_trace_xml
 
   Inputs:
 
@@ -304,32 +332,34 @@ Function: show_trans_trace
 
 \*******************************************************************/
 
-void show_trans_trace(
+void show_trans_trace_xml(
   const trans_tracet &trace,
-  messaget &message,
+  messaget &,
   const namespacet &ns,
-  ui_message_handlert::uit ui)
+  std::ostream &out)
 {
-  switch(ui)
-  {
-  case ui_message_handlert::uit::PLAIN:
-    {
-      auto l =
-        trace.get_min_failing_timeframe().value_or(trace.states.size() - 1);
+  xml(trace, ns).output(out);
+}
 
-      for(std::size_t t = 0; t <= l; t++)
-        show_trans_state(t, trace.states[t], ns);
-    }
-    break;
-    
-  case ui_message_handlert::uit::XML_UI:
-      xml(trace, ns).output(std::cout);
-      break;
+/*******************************************************************\
 
-  case ui_message_handlert::uit::JSON_UI:
-  default:
-      assert(false);
-  }
+Function: show_trans_trace_json
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_trans_trace_json(
+  const trans_tracet &trace,
+  messaget &,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  out << json(trace, ns);
 }
 
 /*******************************************************************\
