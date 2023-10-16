@@ -246,7 +246,7 @@ int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
   }
   else if(cmdline.isset("show-modules"))
   {
-    show_modules(goto_model.symbol_table, ui_message_handler.get_ui());
+    show_modules(goto_model.symbol_table, std::cout);
     return 0; // done
   }
     
