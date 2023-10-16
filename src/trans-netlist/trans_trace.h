@@ -62,11 +62,8 @@ public:
 
 jsont json(const trans_tracet &, const namespacet &);
 
-void convert(
-  const namespacet &,
-  const trans_tracet &,
-  class xmlt &);
-        
+xmlt xml(const trans_tracet &, const namespacet &);
+
 void show_trans_trace(
   const trans_tracet &trace,
   messaget &message,

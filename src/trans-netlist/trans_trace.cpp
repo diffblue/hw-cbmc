@@ -168,28 +168,25 @@ void show_trans_state(
 
 /*******************************************************************\
 
-Function: convert
+Function: xml
 
   Inputs:
 
  Outputs:
 
- Purpose:
+ Purpose: Transform trans_tracet to XML
 
 \*******************************************************************/
 
-void convert(
-  const namespacet &ns,
-  const trans_tracet &trace,
-  xmlt &dest)
+xmlt xml(const trans_tracet &trace, const namespacet &ns)
 {
   auto min_failing_timeframe_opt = trace.get_min_failing_timeframe();
 
   auto last_time_frame =
     min_failing_timeframe_opt.value_or(trace.states.size() - 1);
 
-  dest=xmlt("trans_trace");
-  
+  xmlt dest = xmlt{"trans_trace"};
+
   dest.new_element("mode").data=trace.mode;
 
   for(std::size_t t = 0; t <= last_time_frame; t++)
@@ -235,6 +232,8 @@ void convert(
       #endif
     }
   }
+
+  return dest;
 }
 
 /*******************************************************************\
@@ -324,16 +323,11 @@ void show_trans_trace(
     break;
     
   case ui_message_handlert::uit::XML_UI:
-    {
-      xmlt xml;
-      
-      convert(ns, trace, xml);
-      
-      xml.output(std::cout);
-    }
-    break;
-    case ui_message_handlert::uit::JSON_UI:
-    default:
+      xml(trace, ns).output(std::cout);
+      break;
+
+  case ui_message_handlert::uit::JSON_UI:
+  default:
       assert(false);
   }
 }
