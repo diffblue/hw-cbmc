@@ -23,7 +23,7 @@ public:
   struct propertyt
   {
   public:
-    unsigned number = 0;
+    std::size_t number = 0;
     irep_idt name;
     source_locationt location;
     std::string expr_string;
