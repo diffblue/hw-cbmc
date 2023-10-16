@@ -239,9 +239,7 @@ Function: show_transt::show_trans
 int show_transt::show_trans()
 {
   int result = get_transition_system(
-    cmdline,
-    static_cast<ui_message_handlert &>(message.get_message_handler()),
-    transition_system);
+    cmdline, message.get_message_handler(), transition_system);
   if(result!=-1) return result;
   PRECONDITION(transition_system.trans_expr.has_value());
 
@@ -275,9 +273,7 @@ Function: show_transt::show_trans_verilog_rtl
 int show_transt::show_trans_verilog_rtl()
 {
   int result = get_transition_system(
-    cmdline,
-    static_cast<ui_message_handlert &>(message.get_message_handler()),
-    transition_system);
+    cmdline, message.get_message_handler(), transition_system);
   if(result!=-1) return result;
 
   if(cmdline.isset("outfile"))
@@ -316,9 +312,7 @@ Function: show_transt::show_trans_verilog_netlist
 int show_transt::show_trans_verilog_netlist()
 {
   int result = get_transition_system(
-    cmdline,
-    static_cast<ui_message_handlert &>(message.get_message_handler()),
-    transition_system);
+    cmdline, message.get_message_handler(), transition_system);
   if(result!=-1) return result;
 
   if(cmdline.isset("outfile"))

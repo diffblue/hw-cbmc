@@ -270,9 +270,7 @@ void random_tracest::operator()()
   auto number_of_timeframes = trace_steps + 1;
 
   int result = get_transition_system(
-    cmdline,
-    static_cast<ui_message_handlert &>(message.get_message_handler()),
-    transition_system);
+    cmdline, message.get_message_handler(), transition_system);
   if(result != -1)
     throw ebmc_errort();
 
