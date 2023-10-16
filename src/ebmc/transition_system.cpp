@@ -11,8 +11,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/cmdline.h>
 #include <util/config.h>
 #include <util/get_module.h>
+#include <util/message.h>
 #include <util/namespace.h>
-#include <util/ui_message.h>
 #include <util/unicode.h>
 
 #include <langapi/language.h>
@@ -21,6 +21,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/mode.h>
 #include <trans-word-level/show_modules.h>
 
+#include "ebmc_error.h"
 #include "ebmc_version.h"
 
 #include <fstream>
@@ -166,7 +167,7 @@ void make_next_state(exprt &expr)
 
 int get_transition_system(
   const cmdlinet &cmdline,
-  ui_message_handlert &message_handler,
+  message_handlert &message_handler,
   transition_systemt &transition_system)
 {
   messaget message(message_handler);
@@ -206,7 +207,17 @@ int get_transition_system(
 
   if(cmdline.isset("show-modules"))
   {
-    show_modules(transition_system.symbol_table, message_handler.get_ui());
+    show_modules(transition_system.symbol_table, std::cout);
+    return 0;
+  }
+
+  if(cmdline.isset("modules-xml"))
+  {
+    auto filename = cmdline.get_value("modules-xml");
+    std::ofstream out(widen_if_needed(filename));
+    if(!out)
+      throw ebmc_errort() << "failed to open " << filename;
+    show_modules_xml(transition_system.symbol_table, out);
     return 0;
   }
 
