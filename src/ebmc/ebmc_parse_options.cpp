@@ -280,6 +280,7 @@ void ebmc_parse_optionst::help()
     " {y--top} {umodule}             \t set top module\n"
     " {y-p} {uexpr}                  \t specify a property\n"
     " {y--outfile} {ufile name}      \t set output file name (default: stdout)\n"
+    " {y--json-result} {ufile name}  \t use JSON for property status and traces\n"
     " {y--trace}                     \t generate a trace for failing properties\n"
     " {y--vcd} {ufile name}          \t generate traces in VCD format\n"
     " {y--show-properties}           \t list the properties in the model\n"

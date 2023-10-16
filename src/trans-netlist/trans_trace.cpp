@@ -6,25 +6,28 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <ctime>
-#include <cassert>
-#include <string>
-#include <iostream>
-
-#include <goto-programs/xml_expr.h>
+#include "trans_trace.h"
 
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
+#include <util/json_irep.h>
 #include <util/pointer_offset_size.h>
 #include <util/prefix.h>
 #include <util/std_expr.h>
 #include <util/xml.h>
 
+#include <goto-programs/xml_expr.h>
+
 #include <langapi/language_util.h>
 
 #include "instantiate_netlist.h"
+
+#include <cassert>
+#include <ctime>
+#include <iostream>
+#include <string>
+
 #include "../trans-word-level/instantiate_word_level.h"
-#include "trans_trace.h"
 
 /*******************************************************************\
 
@@ -232,6 +235,62 @@ void convert(
       #endif
     }
   }
+}
+
+/*******************************************************************\
+
+Function: json
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+jsont json(const trans_tracet &trace, const namespacet &ns)
+{
+  json_objectt json_trace;
+
+  json_trace["mode"] = json_stringt(trace.mode);
+  json_arrayt &json_states = json_trace["states"].make_array();
+
+  for(auto &state : trace.states)
+  {
+    json_arrayt json_assignments;
+
+    for(const auto &a : state.assignments)
+    {
+      json_objectt json_assignment;
+
+      DATA_INVARIANT(a.lhs.id() == ID_symbol, "assignment lhs must be symbol");
+      const symbolt &symbol = ns.lookup(to_symbol_expr(a.lhs));
+
+      std::string lhs_string = from_expr(ns, symbol.name, a.lhs);
+
+      std::string value_string =
+        a.rhs.is_nil() ? "" : from_expr(ns, symbol.name, a.rhs);
+
+      std::string type_string = from_type(ns, symbol.name, symbol.type);
+
+      json_assignment["lhs"] = json_stringt(lhs_string);
+      json_assignment["identifier"] = json_stringt(id2string(symbol.name));
+      json_assignment["base_name"] = json_stringt(id2string(symbol.base_name));
+      json_assignment["display_name"] =
+        json_stringt(id2string(symbol.display_name()));
+      json_assignment["value"] = json_stringt(value_string);
+      json_assignment["type"] = json_stringt(type_string);
+      json_assignment["mode"] = json_stringt(id2string(symbol.mode));
+
+      if(a.location.is_not_nil())
+        json_assignment["location"] = json(a.location);
+    }
+
+    json_states.push_back(std::move(json_assignments));
+  }
+
+  return std::move(json_trace);
 }
 
 /*******************************************************************\
