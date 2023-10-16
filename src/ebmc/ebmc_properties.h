@@ -23,7 +23,7 @@ public:
   struct propertyt
   {
   public:
-    unsigned number;
+    unsigned number = 0;
     irep_idt name;
     source_locationt location;
     std::string expr_string;
@@ -32,13 +32,16 @@ public:
     bvt timeframe_literals;             // bit level
     exprt::operandst timeframe_handles; // word level
     std::string description;
+
     enum class statust
     {
       DISABLED,
       SUCCESS,
       FAILURE,
       UNKNOWN
-    } status;
+    } status = statust::UNKNOWN;
+
+    trans_tracet counterexample;
 
     inline bool is_disabled() const
     {
@@ -70,11 +73,7 @@ public:
       status = statust::UNKNOWN;
     }
 
-    inline propertyt() : number(0), status(statust::UNKNOWN)
-    {
-    }
-
-    trans_tracet counterexample;
+    propertyt() = default;
   };
 
   typedef std::list<propertyt> propertiest;
