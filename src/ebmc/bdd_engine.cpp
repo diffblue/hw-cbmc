@@ -19,6 +19,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "ebmc_base.h"
 #include "negate_property.h"
+#include "report_results.h"
 
 #include <algorithm>
 #include <iostream>
@@ -186,8 +187,9 @@ int bdd_enginet::operator()()
 
     for(propertyt &p : properties.properties)
       check_property(p);
-    
-    report_results();
+
+    const namespacet ns(transition_system.symbol_table);
+    report_results(cmdline, properties, ns, message.get_message_handler());
 
     // We return '0' if the property holds,
     // and '10' if it is violated.

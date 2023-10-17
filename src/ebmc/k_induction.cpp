@@ -6,16 +6,17 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
+#include "k_induction.h"
+
+#include <solvers/flattening/boolbv.h>
+#include <solvers/sat/satcheck.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/boolbv.h>
-
 #include "ebmc_base.h"
-#include "k_induction.h"
+#include "report_results.h"
 
 /*******************************************************************\
 
@@ -99,9 +100,10 @@ int k_inductiont::operator()()
 
   // do induction step
   result=induction_step();
-  
-  report_results();
-  
+
+  const namespacet ns(transition_system.symbol_table);
+  report_results(cmdline, properties, ns, message.get_message_handler());
+
   return result;
 }
 

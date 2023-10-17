@@ -24,6 +24,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_base.h"
 #include "ebmc_error.h"
+#include "report_results.h"
 
 /*******************************************************************\
 
@@ -205,7 +206,7 @@ int ranking_function_checkt::operator()()
     throw ebmc_errort() << "Unexpected result from decision procedure";
   }
 
-  report_results();
+  report_results(cmdline, properties, ns, message.get_message_handler());
 
   return properties.property_failure() ? 10 : 0;
 }
