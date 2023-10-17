@@ -233,11 +233,21 @@ Function: random_tracest::operator()()
 
 void random_tracest::operator()()
 {
-  auto number_of_traces_opt =
-    string2optional_size_t(cmdline.get_value("random-traces"));
+  const auto number_of_traces = [this]() -> std::size_t
+  {
+    if(cmdline.isset("number-of-traces"))
+    {
+      auto number_of_traces_opt =
+        string2optional_size_t(cmdline.get_value("number-of-traces"));
 
-  if(!number_of_traces_opt.has_value())
-    throw ebmc_errort() << "failed to parse number of traces";
+      if(!number_of_traces_opt.has_value())
+        throw ebmc_errort() << "failed to parse number of traces";
+
+      return number_of_traces_opt.value();
+    }
+    else
+      return 10; // default
+  }();
 
   if(cmdline.isset("random-seed"))
   {
@@ -297,8 +307,7 @@ void random_tracest::operator()()
   message.status() << "Solving with " << solver.decision_procedure_text()
                    << messaget::eom;
 
-  for(std::size_t trace_nr = 0; trace_nr < number_of_traces_opt.value();
-      trace_nr++)
+  for(std::size_t trace_nr = 0; trace_nr < number_of_traces; trace_nr++)
   {
     auto input_constraints =
       random_input_constraints(solver, inputs, number_of_timeframes);

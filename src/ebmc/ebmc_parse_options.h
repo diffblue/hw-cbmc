@@ -40,7 +40,7 @@ public:
         "(smt2)(boolector)(z3)(cvc4)(yices)(mathsat)(prover)(lifter)"
         "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
         "(compute-ct)(dot-netlist)(smv-netlist)(vcd):"
-        "(random-traces):(trace-steps):(random-seed):"
+        "(random-traces)(trace-steps):(random-seed):(number-of-traces):"
         "I:(preprocess)",
         argc,
         argv,

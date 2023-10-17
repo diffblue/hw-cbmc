@@ -356,9 +356,10 @@ void ebmc_parse_optionst::help()
     "    {y--constr}                 \t use constraints specified in 'file.cnstr'\n"
     "    {y--new-mode}               \t new mode is switched on\n"
     "    {y--aiger}                  \t print out the instance in aiger format\n"
-    " {y--random-traces} {unumber}   \t generate the given number of random traces\n"
-    "       {y--random-seed} {unumber}\t use the given random seed\n"
-    "       {y--trace-steps} {unumber}\t set the number of random transitions (default: 10 steps)\n"
+    " {y--random-traces}             \t generate random traces\n"
+    "    {y--number-of-traces} {unumber}\t generate the given number of traces\n"
+    "    {y--random-seed} {unumber}  \t use the given random seed\n"
+    "    {y--trace-steps} {unumber}  \t set the number of random transitions (default: 10 steps)\n"
     " {y--ranking-function} {uf}     \t prove a liveness property using given ranking funnction (experimental)\n"
     "    {y--property} {uid}         \t the liveness property to prove\n"
 
