@@ -9,9 +9,20 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef EBMC_RANDOM_TRACES_H
 #define EBMC_RANDOM_TRACES_H
 
-class cmdlinet;
-class ui_message_handlert;
+#include <string>
 
-int random_traces(const cmdlinet &, ui_message_handlert &);
+class cmdlinet;
+class message_handlert;
+
+int random_traces(const cmdlinet &, message_handlert &);
+
+class transition_systemt;
+
+void random_traces(
+  const transition_systemt &,
+  const std::string &outfile_prefix,
+  std::size_t number_of_traces,
+  std::size_t number_of_trace_steps,
+  message_handlert &);
 
 #endif

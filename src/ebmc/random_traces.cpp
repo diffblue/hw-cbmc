@@ -36,21 +36,28 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-class random_tracest : public ebmc_baset
+class random_tracest
 {
 public:
-  random_tracest(
-    const cmdlinet &_cmdline,
-    ui_message_handlert &_ui_message_handler)
-    : ebmc_baset(_cmdline, _ui_message_handler),
-      ns{transition_system.symbol_table}
+  explicit random_tracest(
+    const transition_systemt &_transition_system,
+    message_handlert &_message_handler)
+    : transition_system(_transition_system),
+      ns(_transition_system.symbol_table),
+      message(_message_handler)
   {
   }
 
-  void operator()();
+  void operator()(
+    const optionalt<std::string> &outfile_prefix,
+    std::size_t random_seed,
+    std::size_t number_of_traces,
+    std::size_t number_of_trace_steps);
 
 protected:
-  namespacet ns;
+  const transition_systemt &transition_system;
+  const namespacet ns;
+  messaget message;
 
   std::vector<exprt> random_input_constraints(
     decision_proceduret &,
@@ -80,12 +87,100 @@ Function: random_traces
 
 \*******************************************************************/
 
-int random_traces(
-  const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
 {
-  random_tracest(cmdline, ui_message_handler)();
+  const auto number_of_traces = [&cmdline]() -> std::size_t
+  {
+    if(cmdline.isset("number-of-traces"))
+    {
+      auto number_of_traces_opt =
+        string2optional_size_t(cmdline.get_value("number-of-traces"));
+
+      if(!number_of_traces_opt.has_value())
+        throw ebmc_errort() << "failed to parse number of traces";
+
+      return number_of_traces_opt.value();
+    }
+    else
+      return 10; // default
+  }();
+
+  const std::size_t random_seed = [&cmdline]() -> std::size_t
+  {
+    if(cmdline.isset("random-seed"))
+    {
+      auto random_seed_opt =
+        string2optional_size_t(cmdline.get_value("random-seed"));
+
+      if(!random_seed_opt.has_value())
+        throw ebmc_errort() << "failed to parse random seed";
+
+      return random_seed_opt.value();
+    }
+    else
+      return 0;
+  }();
+
+  const std::size_t number_of_trace_steps = [&cmdline]() -> std::size_t
+  {
+    if(cmdline.isset("trace-steps"))
+    {
+      auto trace_steps_opt =
+        string2optional_size_t(cmdline.get_value("trace-steps"));
+
+      if(!trace_steps_opt.has_value())
+        throw ebmc_errort() << "failed to parse number of trace steps";
+
+      return trace_steps_opt.value();
+    }
+    else
+      return 10; // default
+  }();
+
+  const auto outfile_prefix = [&cmdline]() -> optionalt<std::string>
+  {
+    if(cmdline.isset("vcd"))
+      return cmdline.get_value("vcd") + ".";
+    else
+      return {};
+  }();
+
+  transition_systemt transition_system;
+
+  int result =
+    get_transition_system(cmdline, message_handler, transition_system);
+
+  if(result != -1)
+    throw ebmc_errort();
+
+  random_tracest(transition_system, message_handler)(
+    outfile_prefix, random_seed, number_of_traces, number_of_trace_steps);
+
   return 0;
+}
+
+/*******************************************************************\
+
+Function: random_traces
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void random_traces(
+  const transition_systemt &transition_system,
+  const std::string &outfile_prefix,
+  std::size_t number_of_traces,
+  std::size_t number_of_trace_steps,
+  message_handlert &message_handler)
+{
+  std::size_t random_seed = 0;
+  random_tracest(transition_system, message_handler)(
+    outfile_prefix, random_seed, number_of_traces, number_of_trace_steps);
 }
 
 /*******************************************************************\
@@ -231,60 +326,17 @@ Function: random_tracest::operator()()
 
 \*******************************************************************/
 
-void random_tracest::operator()()
+void random_tracest::operator()(
+  const optionalt<std::string> &outfile_prefix,
+  std::size_t random_seed,
+  std::size_t number_of_traces,
+  std::size_t number_of_trace_steps)
 {
-  const auto number_of_traces = [this]() -> std::size_t
-  {
-    if(cmdline.isset("number-of-traces"))
-    {
-      auto number_of_traces_opt =
-        string2optional_size_t(cmdline.get_value("number-of-traces"));
+  generator.seed(random_seed);
 
-      if(!number_of_traces_opt.has_value())
-        throw ebmc_errort() << "failed to parse number of traces";
+  auto number_of_timeframes = number_of_trace_steps + 1;
 
-      return number_of_traces_opt.value();
-    }
-    else
-      return 10; // default
-  }();
-
-  if(cmdline.isset("random-seed"))
-  {
-    auto random_seed_opt =
-      string2optional_size_t(cmdline.get_value("random-seed"));
-
-    if(!random_seed_opt.has_value())
-      throw ebmc_errort() << "failed to parse random seed";
-
-    generator.seed(random_seed_opt.value());
-  }
-  else
-    generator.seed(0);
-
-  std::size_t trace_steps;
-
-  if(cmdline.isset("trace-steps"))
-  {
-    auto trace_steps_opt =
-      string2optional_size_t(cmdline.get_value("trace-steps"));
-
-    if(!trace_steps_opt.has_value())
-      throw ebmc_errort() << "failed to parse number of trace steps";
-
-    trace_steps = trace_steps_opt.value();
-  }
-  else
-    trace_steps = 10; // default
-
-  auto number_of_timeframes = trace_steps + 1;
-
-  int result = get_transition_system(
-    cmdline, message.get_message_handler(), transition_system);
-  if(result != -1)
-    throw ebmc_errort();
-
-  CHECK_RETURN(transition_system.trans_expr.has_value());
+  PRECONDITION(transition_system.trans_expr.has_value());
 
   message.status() << "Passing transition system to solver" << messaget::eom;
 
@@ -322,10 +374,9 @@ void random_tracest::operator()()
     {
       auto trace = compute_trans_trace(
         solver, number_of_timeframes, ns, transition_system.main_symbol->name);
-      if(cmdline.isset("vcd"))
+      if(outfile_prefix.has_value())
       {
-        auto filename =
-          cmdline.get_value("vcd") + "." + std::to_string(trace_nr + 1);
+        auto filename = outfile_prefix.value() + std::to_string(trace_nr + 1);
         std::ofstream out(widen_if_needed(filename));
 
         if(!out)
