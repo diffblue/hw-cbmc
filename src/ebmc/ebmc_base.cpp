@@ -33,6 +33,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ebmc_error.h"
 #include "ebmc_version.h"
+#include "report_results.h"
 
 #include <chrono>
 #include <fstream>
@@ -428,7 +429,8 @@ int ebmc_baset::do_word_level_bmc(
 #endif
       }
 
-      report_results();
+      const namespacet ns(transition_system.symbol_table);
+      report_results(cmdline, properties, ns, message.get_message_handler());
     }
     else
     {
@@ -469,7 +471,7 @@ int ebmc_baset::do_word_level_bmc(
       else
       {
         result = finish_word_level_bmc(solver);
-        report_results();
+        report_results(cmdline, properties, ns, message.get_message_handler());
       }
     }
   }
@@ -530,13 +532,13 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
 
     ::unwind(netlist, bmc_map, message, solver);
 
+    const namespacet ns(transition_system.symbol_table);
+
     // convert the properties
     for(propertyt &property : properties.properties)
     {
       if(property.is_disabled())
         continue;
-
-      const namespacet ns(transition_system.symbol_table);
 
       ::unwind_property(
         property.expr,
@@ -556,7 +558,7 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
     else
     {
       result = finish_bit_level_bmc(bmc_map, solver);
-      report_results();
+      report_results(cmdline, properties, ns, message.get_message_handler());
     }
   }
 
@@ -746,146 +748,4 @@ int ebmc_baset::do_compute_ct()
   std::cout << "CT = " << compute_ct(ldg) << '\n';
   
   return 0;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::report_results
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::report_results()
-{
-  const namespacet ns(transition_system.symbol_table);
-
-  if(cmdline.isset("json-result"))
-  {
-    auto filename = cmdline.get_value("json-result");
-    std::ofstream out(widen_if_needed(filename));
-    if(!out)
-      throw ebmc_errort() << "failed to open " << filename;
-
-    json_objectt json_results;
-    auto &json_properties = json_results["properties"].make_array();
-
-    for(const propertyt &property : properties.properties)
-    {
-      if(property.status == propertyt::statust::DISABLED)
-        continue;
-
-      json_objectt json_property;
-      json_property["identifier"] = json_stringt(id2string(property.name));
-
-      json_property["status"] = json_stringt(
-        [&property]()
-        {
-          switch(property.status)
-          {
-          case propertyt::statust::SUCCESS:
-            return "HOLDS";
-          case propertyt::statust::FAILURE:
-            return "REFUTED";
-          case propertyt::statust::UNKNOWN:
-            return "UNKNOWN";
-          case propertyt::statust::DISABLED:
-          default:
-            UNREACHABLE;
-          }
-        }());
-
-      if(property.is_failure())
-        json_property["counterexample"] = json(property.counterexample, ns);
-
-      json_properties.push_back(std::move(json_property));
-    }
-
-    out << json_results;
-  }
-
-  if(
-    static_cast<ui_message_handlert &>(message.get_message_handler())
-      .get_ui() == ui_message_handlert::uit::XML_UI)
-  {
-    for(const propertyt &property : properties.properties)
-    {
-      if(property.status==propertyt::statust::DISABLED)
-        continue;
-        
-      xmlt xml_result("result");
-      xml_result.set_attribute("property", id2string(property.name));
-      
-      switch(property.status)
-      {
-      case propertyt::statust::SUCCESS: xml_result.set_attribute("status", "SUCCESS"); break;
-      case propertyt::statust::FAILURE: xml_result.set_attribute("status", "FAILURE"); break;
-      case propertyt::statust::UNKNOWN: xml_result.set_attribute("status", "UNKNOWN"); break;
-      case propertyt::statust::DISABLED:;
-      }
-      
-      if(property.is_failure())
-        xml_result.new_element() = xml(property.counterexample, ns);
-
-      std::cout << xml_result << '\n' << std::flush;
-    }
-  }
-  else
-  {
-    message.status() << messaget::eom;
-    message.status() << "** Results:" << messaget::eom;
-
-    for(const propertyt &property : properties.properties)
-    {
-      if(property.status==propertyt::statust::DISABLED)
-        continue;
-
-      message.status() << "[" << property.name << "] " << property.expr_string
-                       << ": ";
-
-      switch(property.status)
-      {
-      case propertyt::statust::SUCCESS:
-        message.status() << "SUCCESS";
-        break;
-      case propertyt::statust::FAILURE:
-        message.status() << "FAILURE";
-        break;
-      case propertyt::statust::UNKNOWN:
-        message.status() << "UNKNOWN";
-        break;
-      case propertyt::statust::DISABLED:;
-      }
-
-      message.status() << messaget::eom;
-
-      if(property.is_failure() &&
-         cmdline.isset("trace"))
-      {
-        message.status() << "Counterexample:\n" << messaget::eom;
-        show_trans_trace(property.counterexample, message, ns, std::cout);
-      }
-    }
-  }
-
-  if(cmdline.isset("vcd"))
-  {
-    for(const propertyt &property : properties.properties)
-    {
-      if(property.is_failure())
-      {
-        std::string vcdfile=cmdline.get_value("vcd");
-        std::ofstream vcd(widen_if_needed(vcdfile));
-
-        show_trans_trace_vcd(property.counterexample, message, ns, vcd);
-
-        break;
-      }
-    }
-  }
-
 }

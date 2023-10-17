@@ -68,8 +68,6 @@ protected:
 
   bool property_requires_lasso_constraints() const;
 
-  void report_results();
-
 public:  
   // solvers
   int do_compute_ct();

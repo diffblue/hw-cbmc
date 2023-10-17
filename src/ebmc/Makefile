@@ -18,6 +18,7 @@ SRC = \
       negate_property.cpp \
       random_traces.cpp \
       ranking_function.cpp \
+      report_results.cpp \
       show_formula_solver.cpp \
       show_properties.cpp \
       show_trans.cpp \
