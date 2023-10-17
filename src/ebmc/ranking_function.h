@@ -12,9 +12,24 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef EBMC_RANKING_FUNCTION_H
 #define EBMC_RANKING_FUNCTION_H
 
-#include <util/cmdline.h>
-#include <util/ui_message.h>
+#include <util/threeval.h>
 
-int do_ranking_function(const cmdlinet &, ui_message_handlert &);
+class cmdlinet;
+class exprt;
+class message_handlert;
+class transition_systemt;
+
+int do_ranking_function(const cmdlinet &, message_handlert &);
+
+exprt parse_ranking_function(
+  const std::string &,
+  const transition_systemt &,
+  message_handlert &);
+
+tvt is_ranking_function(
+  const transition_systemt &,
+  const exprt &property,
+  const exprt &ranking_function,
+  message_handlert &);
 
 #endif // EBMC_RANKING_FUNCTION_H
