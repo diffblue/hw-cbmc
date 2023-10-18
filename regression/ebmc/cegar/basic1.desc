@@ -1,0 +1,6 @@
+KNOWNBUG
+basic1.sv
+--cegar
+SUCCESS$
+^EXIT=0$
+^SIGNAL=0$
