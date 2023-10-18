@@ -45,10 +45,8 @@ void bmc_cegart::abstract()
     latch_orderingt latch_ordering;
     latch_ordering.compute(ldg);
 
-    for(unsigned l=0; l<latch_ordering.node_ordering.size(); l++)
-      std::cout << "Latch " << l << ": "
-                << latch_ordering.node_ordering[l] << std::endl;
-
-    exit(0);
+    for(std::size_t l = 0; l < latch_ordering.node_ordering.size(); l++)
+      std::cout << "Latch " << l << ": " << latch_ordering.node_ordering[l]
+                << std::endl;
   }
 }

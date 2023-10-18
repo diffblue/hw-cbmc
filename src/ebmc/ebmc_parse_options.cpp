@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_version.h"
 #include "ic3_engine.h"
 #include "liveness_to_safety.h"
+#include "netlist.h"
 #include "neural_liveness.h"
 #include "output_file.h"
 #include "property_checker.h"
@@ -27,6 +28,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_trans.h"
 
 #include <iostream>
+
+#include "cegar/bmc_cegar.h"
 
 #ifdef HAVE_INTERPOLATION
 #include "interpolation/interpolation_expr.h"
@@ -113,26 +116,6 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("show-symbol-table"))
       return show_symbol_table(cmdline, ui_message_handler);
-
-    if(cmdline.isset("cegar"))
-    {
-      throw ebmc_errort() << "This option is currently disabled";
-
-#if 0
-      namespacet ns(symbol_table);
-      var_mapt var_map(symbol_table, main_symbol->name);
-
-      bmc_cegart bmc_cegar(
-        var_map,
-        *trans_expr,
-        ns,
-        *this,
-        prop_expr_list);
-
-      bmc_cegar.bmc_cegar();
-      return 0;
-#endif
-    }
 
     if(cmdline.isset("coverage"))
     {
@@ -297,6 +280,17 @@ int ebmc_parse_optionst::doit()
         outfile.stream() << '\n';
         netlist.output_smv(outfile.stream());
         return 0;
+      }
+
+      if(cmdline.isset("cegar"))
+      {
+        auto netlist = make_netlist(
+          ebmc_base.transition_system,
+          ebmc_base.properties,
+          ui_message_handler);
+        const namespacet ns(ebmc_base.transition_system.symbol_table);
+        return do_bmc_cegar(
+          netlist, ebmc_base.properties, ns, ui_message_handler);
       }
 
       if(cmdline.isset("compute-ct"))
