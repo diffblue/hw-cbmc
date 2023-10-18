@@ -6,13 +6,12 @@ Author: Mitra Purandare
 
 \*******************************************************************/
 
-#ifndef CPROVER_COVERAGE_H
-#define CPROVER_COVERAGE_H
+#ifndef EBMC_COVERAGE_H
+#define EBMC_COVERAGE_H
 
-#include <trans/netlist_trans.h>
-#include "../interpolation/interpolation_netlist.h"
-#include "interpolation/bitlevel/normal_resolution_proof.h"
-#include "../ebmc_base.h"
+#include <ebmc/ebmc_base.h>
+#include <trans-netlist/netlist.h>
+
 #include "assumptions.h"
 
 class coveraget: public ebmc_baset
@@ -53,4 +52,4 @@ private:
   int measure_coverage_naive();
 };
 
-#endif
+#endif // EBMC_COVERAGE_H

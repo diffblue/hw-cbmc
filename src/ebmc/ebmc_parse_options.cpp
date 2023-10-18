@@ -27,13 +27,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 
 #ifdef HAVE_INTERPOLATION
-#include "interpolation/interpolation_expr.h"
-#include "interpolation/interpolation_netlist.h"
-#include "interpolation/interpolation_netlist_vmcai.h"
-#include "interpolation/interpolation_word.h"
-#include "interpolation/compute-interpolant.h"
-#include "coverage/coverage.h"
+#  include "interpolation/compute-interpolant.h"
+#  include "interpolation/interpolation_expr.h"
+#  include "interpolation/interpolation_netlist.h"
+#  include "interpolation/interpolation_netlist_vmcai.h"
+#  include "interpolation/interpolation_word.h"
 #endif
+
+#include "coverage/coverage.h"
 
 /*******************************************************************\
 
@@ -111,17 +112,8 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("coverage"))
     {
-      throw ebmc_errort() << "This option is currently disabled";
-
-#if 0
-      std::cout << "found coverage\n";
-      //    return do_coverage(cmdline);
-      //    if(do_coverage)
-      //    {
-        coveraget coverage(cmdline);
-        return coverage.measure_coverage();
-      //    }
-#endif
+      coveraget coverage(cmdline);
+      return coverage.measure_coverage();
     }
 
     if(cmdline.isset("random-traces"))

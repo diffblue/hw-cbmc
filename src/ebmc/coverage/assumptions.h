@@ -1,10 +1,11 @@
 #ifndef SOLVER_COVERAGE_ASSUMPTIONS
 #define SOLVER_COVERAGE_ASSUMPTIONS
+
+#include <solvers/prop/literal.h>
+#include <trans-netlist/bmc_map.h>
+
 #include <map>
 #include <vector>
-#include <time_stopping.h>
-#include "solvers/prop/literal.h"
-#include "trans/bmc_map.h"
 
 enum coverage_resultt {COVERED, NOTCOVERED, UNKNOWN};
 
