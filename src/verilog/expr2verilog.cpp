@@ -10,7 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <sstream>
 
-#include <util/ebmc_util.h>
+#include <util/arith_tools.h>
+#include <util/bitvector_types.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
 #include <util/std_expr.h>
@@ -721,7 +722,6 @@ std::string expr2verilogt::convert_constant(
   precedence=22;
 
   const typet &type=src.type();
-  const irep_idt &value=src.get_value();
   std::string dest;
 
   if(type.id()==ID_bool)
@@ -734,10 +734,8 @@ std::string expr2verilogt::convert_constant(
   else if(type.id()==ID_unsignedbv ||
           type.id()==ID_signedbv)
   {
-    unsigned width=to_bitvector_type(type).get_width();
-  
-    mp_integer i;
-    to_integer_non_constant(binary_to_hex(src), i);
+    auto width = to_bitvector_type(type).get_width();
+    auto i = numeric_cast_v<mp_integer>(src);
 
     if(i>=256)
       dest="'h"+integer2string(i, 16);
@@ -754,17 +752,25 @@ std::string expr2verilogt::convert_constant(
   }
   else if(type.id()==ID_verilog_signedbv)
   {
+    // these have a binary representation
+    const irep_idt &value = src.get_value();
     unsigned width=to_verilog_signedbv_type(src.type()).get_width();
     return std::to_string(width)+"'sb"+id2string(value);
   }
   else if(type.id()==ID_verilog_unsignedbv)
   {
+    // these have a binary representation
+    const irep_idt &value = src.get_value();
     unsigned width=to_verilog_unsignedbv_type(src.type()).get_width();
     return std::to_string(width)+"'b"+id2string(value);
   }
   else if(type.id()==ID_integer || type.id()==ID_natural ||
           type.id()==ID_range)
+  {
+    // these have a decimal representation
+    const irep_idt &value = src.get_value();
     dest=id2string(value);
+  }
   else
     return convert_norep(src, precedence);
 

@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <sstream>
 
 #include <util/arith_tools.h>
-#include <util/ebmc_util.h>
+#include <util/bitvector_types.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
 #include <util/std_expr.h>
@@ -500,8 +500,7 @@ expr2vhdlt::convert_constant(const constant_exprt &src, unsigned &precedence)
   else if(type.id()==ID_unsignedbv ||
           type.id()==ID_signedbv)
   {
-    mp_integer i;
-    to_integer_non_constant(src, i);
+    auto i = numeric_cast_v<mp_integer>(src);
 
     if(i>=256)
       dest="'h"+integer2string(i, 16);
