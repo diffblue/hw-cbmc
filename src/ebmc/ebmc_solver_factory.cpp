@@ -23,8 +23,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <fstream>
 #include <iostream>
 
-std::function<ebmc_solvert(const namespacet &, message_handlert &)>
-ebmc_solver_factory(const cmdlinet &cmdline)
+ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &cmdline)
 {
   if(cmdline.isset("show-formula"))
   {

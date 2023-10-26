@@ -8,14 +8,13 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "k_induction.h"
 
-#include <solvers/flattening/boolbv.h>
-#include <solvers/sat/satcheck.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
 #include "ebmc_base.h"
+#include "ebmc_solver_factory.h"
 #include "report_results.h"
 
 /*******************************************************************\
@@ -33,7 +32,8 @@ public:
     const cmdlinet &_cmdline,
     ui_message_handlert &_ui_message_handler)
     : ebmc_baset(_cmdline, _ui_message_handler),
-      ns{transition_system.symbol_table}
+      ns{transition_system.symbol_table},
+      solver_factory(ebmc_solver_factory(_cmdline))
   {
   }
 
@@ -41,6 +41,8 @@ public:
 
 protected:
   namespacet ns;
+  ebmc_solver_factoryt solver_factory;
+
   int induction_base();
   int induction_step();
 };
@@ -124,8 +126,8 @@ int k_inductiont::induction_base()
   PRECONDITION(transition_system.trans_expr.has_value());
   message.status() << "Induction Base" << messaget::eom;
 
-  satcheckt satcheck{message.get_message_handler()};
-  boolbvt solver(ns, satcheck, message.get_message_handler());
+  auto solver_wrapper = solver_factory(ns, message.get_message_handler());
+  auto &solver = solver_wrapper.stack_decision_procedure();
 
   // convert the transition system
   ::unwind(
@@ -172,8 +174,8 @@ int k_inductiont::induction_step()
        p_it.is_failure())
       continue;
 
-    satcheckt satcheck{message.get_message_handler()};
-    boolbvt solver(ns, satcheck, message.get_message_handler());
+    auto solver_wrapper = solver_factory(ns, message.get_message_handler());
+    auto &solver = solver_wrapper.decision_procedure();
 
     // *no* initial state
     unwind(
@@ -210,11 +212,10 @@ int k_inductiont::induction_step()
       exprt tmp=
         instantiate(p, no_timeframes-1, no_timeframes, ns);
       solver.set_to_false(tmp);
-    }    
+    }
 
-    decision_proceduret::resultt dec_result=
-      solver.dec_solve();
-    
+    decision_proceduret::resultt dec_result = solver();
+
     switch(dec_result)
     {
     case decision_proceduret::resultt::D_SATISFIABLE:

@@ -44,11 +44,13 @@ public:
 
   decision_proceduret &decision_procedure() const
   {
+    PRECONDITION(decision_procedure_ptr);
     return *decision_procedure_ptr;
   }
 
   stack_decision_proceduret &stack_decision_procedure() const
   {
+    PRECONDITION(decision_procedure_ptr);
     return *decision_procedure_ptr;
   }
 
@@ -58,7 +60,9 @@ public:
   std::unique_ptr<stack_decision_proceduret> decision_procedure_ptr;
 };
 
-std::function<ebmc_solvert(const namespacet &, message_handlert &)>
-ebmc_solver_factory(const cmdlinet &);
+using ebmc_solver_factoryt =
+  std::function<ebmc_solvert(const namespacet &, message_handlert &)>;
+
+ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &);
 
 #endif // EBMC_SOLVER_FACTORY_H
