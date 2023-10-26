@@ -8,11 +8,12 @@ SRC = \
       cegar/verify.cpp \
       diameter.cpp \
       diatest.cpp \
+      dimacs_writer.cpp \
       ebmc_base.cpp \
       ebmc_languages.cpp \
       ebmc_parse_options.cpp \
       ebmc_properties.cpp \
-      ebmc_solvers.cpp \
+      ebmc_solver_factory.cpp \
       k_induction.cpp \
       main.cpp \
       negate_property.cpp \

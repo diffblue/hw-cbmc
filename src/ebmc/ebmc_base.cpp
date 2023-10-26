@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/unicode.h>
 
 #include <solvers/prop/literal_expr.h>
+#include <solvers/sat/satcheck.h>
 #include <trans-netlist/compute_ct.h>
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/trans_to_netlist.h>
@@ -24,7 +25,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
+#include "dimacs_writer.h"
 #include "ebmc_error.h"
+#include "ebmc_solver_factory.h"
 #include "ebmc_version.h"
 #include "report_results.h"
 
@@ -497,6 +500,62 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
 
 /*******************************************************************\
 
+Function: ebmc_baset::do_bit_level_bmc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int ebmc_baset::do_bit_level_bmc()
+{
+  if(cmdline.isset("dimacs"))
+  {
+    if(cmdline.isset("outfile"))
+    {
+      const std::string filename = cmdline.get_value("outfile");
+      std::ofstream out(widen_if_needed(filename));
+
+      if(!out)
+      {
+        message.error() << "Failed to open `" << filename << "'"
+                        << messaget::eom;
+        return 1;
+      }
+
+      message.status() << "Writing DIMACS CNF to `" << filename << "'"
+                       << messaget::eom;
+
+      dimacs_cnf_writert dimacs_cnf_writer{out, message.get_message_handler()};
+
+      return do_bit_level_bmc(dimacs_cnf_writer, true);
+    }
+    else
+    {
+      dimacs_cnf_writert dimacs_cnf_writer{
+        std::cout, message.get_message_handler()};
+
+      return do_bit_level_bmc(dimacs_cnf_writer, true);
+    }
+  }
+  else
+  {
+    if(cmdline.isset("outfile"))
+      throw ebmc_errort()
+        << "Cannot write to outfile without file format option";
+
+    satcheckt satcheck{message.get_message_handler()};
+
+    message.status() << "Using " << satcheck.solver_text() << messaget::eom;
+
+    return do_bit_level_bmc(satcheck, false);
+  }
+}
+/*******************************************************************\
+
 Function: ebmc_baset::get_properties
 
   Inputs:
@@ -650,4 +709,29 @@ int ebmc_baset::do_compute_ct()
   std::cout << "CT = " << compute_ct(ldg) << '\n';
   
   return 0;
+}
+
+/*******************************************************************\
+
+Function: ebmc_baset::do_word_level_bmc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int ebmc_baset::do_word_level_bmc()
+{
+  const namespacet ns(transition_system.symbol_table);
+
+  auto solver_factory = ebmc_solver_factory(cmdline);
+  auto solver = solver_factory(ns, message.get_message_handler());
+
+  bool convert_only = cmdline.isset("smt2") || cmdline.isset("outfile") ||
+                      cmdline.isset("show-formula");
+
+  return do_word_level_bmc(solver.stack_decision_procedure(), convert_only);
 }
