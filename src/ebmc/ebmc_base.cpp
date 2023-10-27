@@ -11,16 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/cmdline.h>
 #include <util/config.h>
 #include <util/expr_util.h>
-#include <util/find_macros.h>
-#include <util/json.h>
 #include <util/string2int.h>
 #include <util/unicode.h>
-#include <util/xml.h>
-#include <util/xml_irep.h>
 
-#include <langapi/language.h>
-#include <langapi/language_util.h>
-#include <langapi/mode.h>
 #include <solvers/prop/literal_expr.h>
 #include <trans-netlist/compute_ct.h>
 #include <trans-netlist/ldg.h>
@@ -285,80 +278,6 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 
 /*******************************************************************\
 
-Function: ebmc_baset::parse_property
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool ebmc_baset::parse_property(
-  const std::string &property)
-{
-  namespacet ns(transition_system.symbol_table);
-
-  auto language = get_language_from_mode(transition_system.main_symbol->mode);
-
-  exprt expr;
-  if(language->to_expr(
-       property, id2string(transition_system.main_symbol->module), expr, ns))
-  {
-    return true;
-  }
-
-  // We give it an implict always, as in SVA
-  
-  if(expr.id()!=ID_sva_always)
-  {
-    unary_predicate_exprt tmp(ID_sva_always, expr);
-    expr.swap(tmp);
-  }
-
-  std::string expr_as_string;
-  language->from_expr(expr, expr_as_string, ns);
-  message.debug() << "Property: " << expr_as_string << messaget::eom;
-  message.debug() << "Mode: " << transition_system.main_symbol->mode
-                  << messaget::eom;
-
-  properties.properties.push_back(propertyt());
-  properties.properties.back().expr = expr;
-  properties.properties.back().expr_string = expr_as_string;
-  properties.properties.back().mode = transition_system.main_symbol->mode;
-  properties.properties.back().location.make_nil();
-  properties.properties.back().description = "command-line assertion";
-  properties.properties.back().name = "command-line assertion";
-
-  return false;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::get_model_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool ebmc_baset::get_model_properties()
-{
-  properties = ebmc_propertiest::from_transition_system(
-    transition_system, message.get_message_handler());
-
-  if(properties.select_property(cmdline, message.get_message_handler()))
-    return true;
-
-  return false;
-}
-
-/*******************************************************************\
-
 Function: ebmc_baset::get_bound
 
   Inputs:
@@ -590,19 +509,8 @@ Function: ebmc_baset::get_properties
 
 int ebmc_baset::get_properties()
 {
-  // Property given on command line?
-  if(cmdline.isset('p'))
-  {
-    // NuSMV also uses -p
-    if(parse_property(cmdline.get_value('p')))
-      return 1;
-  }
-  else
-  {
-    // get properties from the model files
-    if(get_model_properties())
-      return 1;
-  }
+  properties = ebmc_propertiest::from_command_line(
+    cmdline, transition_system, message.get_message_handler());
 
   if(cmdline.isset("show-properties"))
   {
