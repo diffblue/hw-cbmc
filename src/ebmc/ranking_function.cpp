@@ -15,8 +15,6 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <langapi/language.h>
 #include <langapi/mode.h>
-#include <solvers/flattening/boolbv.h>
-#include <solvers/sat/satcheck.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
@@ -24,6 +22,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_base.h"
 #include "ebmc_error.h"
+#include "ebmc_solver_factory.h"
 #include "report_results.h"
 
 exprt parse_ranking_function(
@@ -113,8 +112,14 @@ int do_ranking_function(
 
   auto &property = find_property(properties);
 
+  auto solver_factory = ebmc_solver_factory(cmdline);
+
   auto result = is_ranking_function(
-    transition_system, property.expr, ranking_function, message_handler);
+    transition_system,
+    property.expr,
+    ranking_function,
+    solver_factory,
+    message_handler);
 
   if(result.is_true())
   {
@@ -135,11 +140,12 @@ tvt is_ranking_function(
   const transition_systemt &transition_system,
   const exprt &property,
   const exprt &ranking_function,
+  const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
 {
   const namespacet ns{transition_system.symbol_table};
-  satcheckt satcheck{message_handler};
-  boolbvt solver(ns, satcheck, message_handler);
+  auto solver_wrapper = solver_factory(ns, message_handler);
+  auto &solver = solver_wrapper.stack_decision_procedure();
 
   // *no* initial state, two time frames
   unwind(*transition_system.trans_expr, message_handler, solver, 2, ns, false);
@@ -179,7 +185,7 @@ tvt is_ranking_function(
   exprt p_at_1 = instantiate(p, 1, 2, ns);
   solver.set_to_false(p_at_1);
 
-  decision_proceduret::resultt dec_result = solver.dec_solve();
+  decision_proceduret::resultt dec_result = solver();
 
   messaget message(message_handler);
 
