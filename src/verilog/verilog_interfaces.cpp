@@ -522,6 +522,12 @@ void verilog_typecheckt::interface_module_decl(
     else if(port_class==ID_wire)
     {
     }
+    else if(port_class == ID_supply0)
+    {
+    }
+    else if(port_class == ID_supply1)
+    {
+    }
     else
     {
       error() << "unexpected port class: `" << port_class
