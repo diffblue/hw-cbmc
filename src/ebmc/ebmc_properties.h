@@ -88,6 +88,11 @@ public:
     return false;
   }
 
+  static ebmc_propertiest from_command_line(
+    const cmdlinet &,
+    const transition_systemt &,
+    message_handlert &);
+
   static ebmc_propertiest
   from_transition_system(const transition_systemt &, message_handlert &);
 

@@ -8,7 +8,11 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_properties.h"
 
+#include <langapi/language.h>
 #include <langapi/language_util.h>
+#include <langapi/mode.h>
+
+#include "ebmc_error.h"
 
 ebmc_propertiest ebmc_propertiest::from_transition_system(
   const transition_systemt &transition_system,
@@ -83,4 +87,69 @@ bool ebmc_propertiest::select_property(
   }
 
   return false;
+}
+
+ebmc_propertiest ebmc_propertiest::from_command_line(
+  const cmdlinet &cmdline,
+  const transition_systemt &transition_system,
+  message_handlert &message_handler)
+{
+  // Property given as expression on command line?
+  if(cmdline.isset('p'))
+  {
+    // NuSMV also uses -p
+    namespacet ns(transition_system.symbol_table);
+
+    auto language = get_language_from_mode(transition_system.main_symbol->mode);
+
+    auto property_string = cmdline.get_value('p');
+
+    exprt expr;
+    if(language->to_expr(
+         property_string,
+         id2string(transition_system.main_symbol->module),
+         expr,
+         ns))
+    {
+      throw ebmc_errort() << "failed to parse the given property expression";
+    }
+
+    // We give it an implict always, as in SVA
+
+    if(expr.id() != ID_sva_always)
+    {
+      unary_predicate_exprt tmp(ID_sva_always, expr);
+      expr.swap(tmp);
+    }
+
+    std::string expr_as_string;
+    language->from_expr(expr, expr_as_string, ns);
+    messaget message(message_handler);
+    message.debug() << "Property: " << expr_as_string << messaget::eom;
+    message.debug() << "Mode: " << transition_system.main_symbol->mode
+                    << messaget::eom;
+
+    ebmc_propertiest properties;
+    properties.properties.push_back(propertyt());
+    auto &p = properties.properties.back();
+    p.expr = expr;
+    p.expr_string = expr_as_string;
+    p.mode = transition_system.main_symbol->mode;
+    p.location.make_nil();
+    p.description = "command-line assertion";
+    p.name = "command-line assertion";
+
+    return properties;
+  }
+  else
+  {
+    // Pull properties from the transition system.
+    auto properties =
+      from_transition_system(transition_system, message_handler);
+
+    // We optionally may select a subset.
+    properties.select_property(cmdline, message_handler);
+
+    return properties;
+  }
 }
