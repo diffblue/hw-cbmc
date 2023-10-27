@@ -1047,6 +1047,9 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_function_call)
     return convert_function_call(to_function_call_expr(src));
 
+  else if(src.id() == ID_clog2)
+    return convert_function("$clog2", src);
+
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);
 }

@@ -548,15 +548,47 @@ void verilog_typecheck_exprt::convert_system_function(
       error() << "$onehot takes one argument" << eom;
       throw 0;
     }
-    
-    std::string identifier=
-      id2string(module_identifier)+"::nondet::"+std::to_string(nondet_count++);
 
     // the meaning is 'at most one bit is high'
     unary_predicate_exprt onehot0(ID_onehot0, arguments.front());
     onehot0.add_source_location()=expr.source_location();
     
     expr.swap(onehot0);
+  }
+  else if(identifier == "$clog2") // Verilog-2005
+  {
+    if(arguments.size() != 1)
+    {
+      error().source_location = expr.source_location();
+      error() << "$clog2 takes one argument" << eom;
+      throw 0;
+    }
+
+    // the ceiling of the log with base 2 of the argument
+    exprt clog2 = unary_exprt(ID_clog2, arguments.front());
+    clog2.add_source_location() = expr.source_location();
+
+    auto &op = to_unary_expr(clog2).op();
+    if(op.is_constant())
+    {
+      auto value_opt = numeric_cast<mp_integer>(to_constant_expr(op));
+      if(value_opt.has_value())
+      {
+        // SystemVerilog (20.8.1, page 567)
+        if(*value_opt == 0 || *value_opt == 1)
+          clog2 = from_integer(0, integer_typet());
+        else
+        {
+          mp_integer result = 1;
+          for(mp_integer x = 2; x < *value_opt; ++result, x *= 2)
+            ;
+
+          clog2 = from_integer(result, integer_typet());
+        }
+      }
+    }
+
+    expr.swap(clog2);
   }
   else
   {
@@ -1164,8 +1196,9 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
     
     for(auto & e : tmp.operands())
       e=elaborate_const_expression(e);
-    
+
     simplify(tmp, ns);
+
     return tmp;
   }
 }

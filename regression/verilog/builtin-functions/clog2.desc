@@ -1,0 +1,14 @@
+CORE
+clog2.v
+
+^EXIT=0$
+^SIGNAL=0$
+^\[main.property.p0\] .* SUCCESS$
+^\[main.property.p1\] .* SUCCESS$
+^\[main.property.p2\] .* SUCCESS$
+^\[main.property.p3\] .* SUCCESS$
+^\[main.property.p4\] .* SUCCESS$
+^\[main.property.p5\] .* SUCCESS$
+^\[main.property.p6\] .* SUCCESS$
+--
+^warning: ignoring
