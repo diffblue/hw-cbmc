@@ -88,10 +88,8 @@ public:
     return false;
   }
 
-  static bool from_transition_system(
-    const transition_systemt &,
-    ebmc_propertiest &,
-    message_handlert &);
+  static ebmc_propertiest
+  from_transition_system(const transition_systemt &, message_handlert &);
 
   bool select_property(const cmdlinet &, message_handlert &);
 };

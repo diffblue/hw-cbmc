@@ -348,9 +348,8 @@ Function: ebmc_baset::get_model_properties
 
 bool ebmc_baset::get_model_properties()
 {
-  if(properties.from_transition_system(
-       transition_system, properties, message.get_message_handler()))
-    return true;
+  properties = ebmc_propertiest::from_transition_system(
+    transition_system, message.get_message_handler());
 
   if(properties.select_property(cmdline, message.get_message_handler()))
     return true;
