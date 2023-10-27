@@ -1649,7 +1649,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
   {
     exprt &op1 = to_extractbit_expr(expr).index();
     convert_expr(op1);
-    typet _index_type=index_type(op0.type());
+    typet _index_type = index_type(to_array_type(op0.type()));
 
     if(_index_type!=op1.type())
     {
