@@ -266,7 +266,8 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
   }
   else if(expr.id()==ID_function_call)
   {
-    convert_expr_function_call(to_function_call_expr(expr));
+    auto result = convert_expr_function_call(to_function_call_expr(expr));
+    expr = std::move(result);
   }
   else if(expr.id()==ID_constraint_select_one)
   {
@@ -307,12 +308,12 @@ Function: verilog_typecheck_exprt::convert_expr_function_call
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_expr_function_call(
-  function_call_exprt &expr)
+exprt verilog_typecheck_exprt::convert_expr_function_call(
+  function_call_exprt expr)
 {
   // arguments
-  exprt::operandst &arguments=expr.arguments();
-  
+  auto &arguments = expr.arguments();
+
   Forall_expr(it, arguments)
     convert_expr(*it);
   
@@ -374,6 +375,8 @@ void verilog_typecheck_exprt::convert_expr_function_call(
 
   for(unsigned i=0; i<arguments.size(); i++)
     propagate_type(arguments[i], parameter_types[i].type());
+
+  return std::move(expr);
 }
 
 /*******************************************************************\
@@ -410,9 +413,9 @@ Function: verilog_typecheck_exprt::convert_system_function
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_system_function(
+exprt verilog_typecheck_exprt::convert_system_function(
   const irep_idt &identifier,
-  function_call_exprt &expr)
+  function_call_exprt expr)
 {
   exprt::operandst &arguments=expr.arguments();
 
@@ -431,22 +434,21 @@ void verilog_typecheck_exprt::convert_system_function(
     if(argument.type().id()==ID_signedbv)
     {
       // remove
-      exprt tmp=argument;
-      expr.swap(tmp);
+      return argument;
     }
     else if(argument.type().id()==ID_unsignedbv)
     {
-      exprt tmp(ID_typecast, argument.type());
-      tmp.type().id(ID_signedbv);
-      tmp.add_to_operands(std::move(argument));
-      tmp.add_source_location()=expr.source_location();
-      expr.swap(tmp);
+      typet new_type = argument.type();
+      new_type.id(ID_signedbv);
+      typecast_exprt tmp{std::move(argument), std::move(new_type)};
+      tmp.add_source_location() = expr.source_location();
+      return std::move(tmp);
     }
     else if(argument.type().id()==ID_bool)
     {
       typecast_exprt tmp(argument, signedbv_typet(2));
       tmp.add_source_location()=expr.source_location();
-      expr.swap(tmp);
+      return std::move(tmp);
     }
     else
     {
@@ -471,21 +473,20 @@ void verilog_typecheck_exprt::convert_system_function(
     if(argument.type().id()==ID_unsignedbv)
     {
       // remove
-      exprt tmp=argument;
-      expr.swap(tmp);
+      return argument;
     }
     else if(argument.type().id()==ID_signedbv)
     {
       typecast_exprt tmp(argument, argument.type());
       tmp.type().id(ID_unsignedbv);
       tmp.add_source_location()=expr.source_location();
-      expr.swap(tmp);
+      return std::move(tmp);
     }
     else if(argument.type().id()==ID_bool)
     {
       typecast_exprt tmp(argument, unsignedbv_typet(1));
       tmp.add_source_location()=expr.source_location();
-      expr.swap(tmp);
+      return std::move(tmp);
     }
     else
     {
@@ -507,12 +508,7 @@ void verilog_typecheck_exprt::convert_system_function(
     }
     
     if(arguments.size()==1)
-    {
-      // remove
-      exprt tmp=arguments.front();
-      expr.swap(tmp);
-      return;
-    }
+      return arguments.front(); // remove
 
     std::string identifier=
       id2string(module_identifier)+"::nondet::"+std::to_string(nondet_count++);
@@ -522,8 +518,8 @@ void verilog_typecheck_exprt::convert_system_function(
     exprt select_one(ID_constraint_select_one, type);
     select_one.operands()=arguments;
     select_one.set(ID_identifier, identifier);
-    
-    expr.swap(select_one);
+
+    return select_one;
   }
   else if(identifier=="$onehot") // SystemVerilog
   {
@@ -537,8 +533,8 @@ void verilog_typecheck_exprt::convert_system_function(
     // the meaning is 'exactly one bit is high'
     unary_predicate_exprt onehot(ID_onehot, arguments.front());
     onehot.add_source_location()=expr.source_location();
-    
-    expr.swap(onehot);
+
+    return std::move(onehot);
   }
   else if(identifier=="$onehot0") // SystemVerilog
   {
@@ -552,8 +548,8 @@ void verilog_typecheck_exprt::convert_system_function(
     // the meaning is 'at most one bit is high'
     unary_predicate_exprt onehot0(ID_onehot0, arguments.front());
     onehot0.add_source_location()=expr.source_location();
-    
-    expr.swap(onehot0);
+
+    return std::move(onehot0);
   }
   else if(identifier == "$clog2") // Verilog-2005
   {
@@ -576,19 +572,19 @@ void verilog_typecheck_exprt::convert_system_function(
       {
         // SystemVerilog (20.8.1, page 567)
         if(*value_opt == 0 || *value_opt == 1)
-          clog2 = from_integer(0, integer_typet());
+          return from_integer(0, integer_typet());
         else
         {
           mp_integer result = 1;
           for(mp_integer x = 2; x < *value_opt; ++result, x *= 2)
             ;
 
-          clog2 = from_integer(result, integer_typet());
+          return from_integer(result, integer_typet());
         }
       }
     }
 
-    expr.swap(clog2);
+    return clog2;
   }
   else
   {

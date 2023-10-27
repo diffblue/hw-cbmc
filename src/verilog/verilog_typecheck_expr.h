@@ -9,16 +9,16 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHEK_EXPR_H
 #define CPROVER_VERILOG_TYPECHEK_EXPR_H
 
-#include <cassert>
-
-#include <stack>
-
 #include <util/bitvector_expr.h>
 #include <util/mp_arith.h>
 #include <util/namespace.h>
+#include <util/nodiscard.h>
 #include <util/std_expr.h>
 
 #include "verilog_typecheck_base.h"
+
+#include <cassert>
+#include <stack>
 
 class verilog_typecheck_exprt:public verilog_typecheck_baset
 {
@@ -98,9 +98,10 @@ private:
   void convert_unary_expr  (unary_exprt &);
   void convert_binary_expr (binary_exprt &);
   void convert_trinary_expr(ternary_exprt &);
-  void convert_expr_function_call(class function_call_exprt &);
-  void convert_system_function(const irep_idt &identifier,
-                               class function_call_exprt &);
+  NODISCARD exprt convert_expr_function_call(class function_call_exprt);
+  NODISCARD exprt convert_system_function(
+    const irep_idt &identifier,
+    class function_call_exprt);
   void convert_constraint_select_one(exprt &);
   void convert_extractbit_expr(extractbit_exprt &);
   void convert_replication_expr(replication_exprt &);
