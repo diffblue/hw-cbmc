@@ -56,11 +56,6 @@ ebmc_baset::ebmc_baset(
   ui_message_handlert &_ui_message_handler)
   : message(_ui_message_handler), cmdline(_cmdline)
 {
-  if(cmdline.isset("verbosity"))
-    _ui_message_handler.set_verbosity(
-      unsafe_string2unsigned(cmdline.get_value("verbosity")));
-  else
-    _ui_message_handler.set_verbosity(messaget::M_STATUS); // default
 }
 
 /*******************************************************************\

@@ -49,6 +49,12 @@ Function: ebmc_parse_optionst::doit
 
 int ebmc_parse_optionst::doit()
 {
+  if(cmdline.isset("verbosity"))
+    ui_message_handler.set_verbosity(
+      unsafe_string2unsigned(cmdline.get_value("verbosity")));
+  else
+    ui_message_handler.set_verbosity(messaget::M_STATUS); // default
+
   if(config.set(cmdline))
   {
     usage_error();
