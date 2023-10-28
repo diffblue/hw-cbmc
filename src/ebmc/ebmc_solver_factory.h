@@ -13,12 +13,11 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/message.h>
 #include <util/namespace.h>
 
+#include <solvers/prop/prop.h>
 #include <solvers/stack_decision_procedure.h>
 
 #include <iosfwd>
 #include <memory>
-
-class propt;
 
 class ebmc_solvert final
 {
