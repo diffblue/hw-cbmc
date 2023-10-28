@@ -275,30 +275,12 @@ int ebmc_parse_optionst::doit()
       if(result != -1)
         return result;
 
-      if(cmdline.isset("dimacs"))
-        return ebmc_base.do_dimacs();
-      else if(cmdline.isset("cvc4"))
-        return ebmc_base.do_cvc4();
-      else if(cmdline.isset("boolector"))
-        return ebmc_base.do_boolector();
-      else if(cmdline.isset("z3"))
-        return ebmc_base.do_z3();
-      else if(cmdline.isset("mathsat"))
-        return ebmc_base.do_mathsat();
-      else if(cmdline.isset("yices"))
-        return ebmc_base.do_yices();
-      else if(cmdline.isset("show-formula"))
-        return ebmc_base.do_show_formula();
-      else if(cmdline.isset("smt2"))
-        return ebmc_base.do_smt2();
-      else if(cmdline.isset("prover"))
-        return ebmc_base.do_prover();
-      else if(cmdline.isset("lifter"))
-        return ebmc_base.do_lifter();
-      else if(cmdline.isset("compute-ct"))
+      if(cmdline.isset("compute-ct"))
         return ebmc_base.do_compute_ct();
+      else if(cmdline.isset("aig") || cmdline.isset("dimacs"))
+        return ebmc_base.do_bit_level_bmc();
       else
-        return ebmc_base.do_sat();
+        return ebmc_base.do_word_level_bmc(); // default
     }
   }
   catch(const ebmc_errort &ebmc_error)

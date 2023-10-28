@@ -68,21 +68,10 @@ protected:
 
   bool property_requires_lasso_constraints() const;
 
-public:  
-  // solvers
+public:
   int do_compute_ct();
-  int do_dimacs();
-  int do_cvc4();
-  int do_smt1();
-  int do_smt2();
-  int do_boolector();
-  int do_mathsat();
-  int do_yices();
-  int do_z3();
-  int do_sat();
-  int do_prover();
-  int do_lifter();
-  int do_show_formula();
+  int do_bit_level_bmc();
+  int do_word_level_bmc();
 };
 
 #endif
