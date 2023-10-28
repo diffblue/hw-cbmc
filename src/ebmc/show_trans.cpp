@@ -238,9 +238,9 @@ Function: show_transt::show_trans
 
 int show_transt::show_trans()
 {
-  int result = get_transition_system(
-    cmdline, message.get_message_handler(), transition_system);
-  if(result!=-1) return result;
+  transition_system =
+    get_transition_system(cmdline, message.get_message_handler());
+
   PRECONDITION(transition_system.trans_expr.has_value());
 
   std::cout << "Initial state constraints:\n\n";
@@ -272,9 +272,8 @@ Function: show_transt::show_trans_verilog_rtl
 
 int show_transt::show_trans_verilog_rtl()
 {
-  int result = get_transition_system(
-    cmdline, message.get_message_handler(), transition_system);
-  if(result!=-1) return result;
+  transition_system =
+    get_transition_system(cmdline, message.get_message_handler());
 
   if(cmdline.isset("outfile"))
   {
@@ -311,9 +310,8 @@ Function: show_transt::show_trans_verilog_netlist
 
 int show_transt::show_trans_verilog_netlist()
 {
-  int result = get_transition_system(
-    cmdline, message.get_message_handler(), transition_system);
-  if(result!=-1) return result;
+  transition_system =
+    get_transition_system(cmdline, message.get_message_handler());
 
   if(cmdline.isset("outfile"))
   {

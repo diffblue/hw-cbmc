@@ -23,9 +23,11 @@ public:
   optionalt<transt> trans_expr; // transition system expression
 };
 
-int get_transition_system(
-  const cmdlinet &,
-  message_handlert &,
-  transition_systemt &);
+transition_systemt get_transition_system(const cmdlinet &, message_handlert &);
+
+int preprocess(const cmdlinet &, message_handlert &);
+int show_parse(const cmdlinet &, message_handlert &);
+int show_modules(const cmdlinet &, message_handlert &);
+int show_symbol_table(const cmdlinet &, message_handlert &);
 
 #endif // CPROVER_EBMC_TRANSITION_SYSTEM_H

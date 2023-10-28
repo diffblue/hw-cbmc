@@ -53,11 +53,8 @@ int ic3_enginet::operator()()
   read_parameters();
 
   try    {
-    int result = get_transition_system(
-      cmdline,
-      static_cast<ui_message_handlert &>(message.get_message_handler()),
-      transition_system);
-    if(result!=-1) return result;
+    transition_system =
+      get_transition_system(cmdline, message.get_message_handler());
 
     if(make_netlist(netlist))     {
       message.error() << "Failed to build netlist" << messaget::eom;

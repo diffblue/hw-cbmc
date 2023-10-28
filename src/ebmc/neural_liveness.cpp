@@ -60,10 +60,8 @@ int neural_livenesst::operator()()
   if(!cmdline.isset("neural-engine"))
     throw ebmc_errort() << "give a neural engine";
 
-  int result = get_transition_system(
-    cmdline, message.get_message_handler(), transition_system);
-  if(result != -1)
-    return result;
+  transition_system =
+    get_transition_system(cmdline, message.get_message_handler());
 
   // Get the properties
   properties = ebmc_propertiest::from_command_line(
