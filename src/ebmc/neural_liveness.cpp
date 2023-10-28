@@ -15,6 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/tempfile.h>
 
 #include "ebmc_error.h"
+#include "ebmc_solver_factory.h"
 #include "random_traces.h"
 #include "ranking_function.h"
 #include "report_results.h"
@@ -33,7 +34,9 @@ class neural_livenesst
 {
 public:
   neural_livenesst(const cmdlinet &_cmdline, message_handlert &_message_handler)
-    : cmdline(_cmdline), message(_message_handler)
+    : cmdline(_cmdline),
+      message(_message_handler),
+      solver_factory(ebmc_solver_factory(_cmdline))
   {
   }
 
@@ -42,6 +45,7 @@ public:
 protected:
   const cmdlinet &cmdline;
   messaget message;
+  ebmc_solver_factoryt solver_factory;
   transition_systemt transition_system;
   ebmc_propertiest properties;
 
@@ -73,6 +77,8 @@ int neural_livenesst::operator()()
   // trace, and are then read by the neural fitting procedure.
   temp_dirt temp_dir("ebmc-neural.XXXXXXXX");
   sample(temp_dir);
+
+  auto solver_factory = ebmc_solver_factory(cmdline);
 
   // We now do a guess-verify loop, per property.
   for(auto &property : properties.properties)
@@ -218,7 +224,11 @@ tvt neural_livenesst::verify(
                    << messaget::eom;
 
   auto result = is_ranking_function(
-    transition_system, property.expr, candidate, message.get_message_handler());
+    transition_system,
+    property.expr,
+    candidate,
+    solver_factory,
+    message.get_message_handler());
 
   if(result.is_true())
     property.make_success();
