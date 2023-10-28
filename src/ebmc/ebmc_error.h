@@ -25,8 +25,20 @@ public:
     return message;
   }
 
+  optionalt<int> exit_code() const
+  {
+    return __exit_code;
+  }
+
+  ebmc_errort with_exit_code(int exit_code) &&
+  {
+    __exit_code = exit_code;
+    return std::move(*this);
+  }
+
 protected:
   std::ostringstream message;
+  optionalt<int> __exit_code = {};
 };
 
 /// add to the diagnostic information in the given ebmc_error exception

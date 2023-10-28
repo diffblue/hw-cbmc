@@ -82,11 +82,10 @@ int k_inductiont::operator()()
 {
   if(get_bound()) return 1;
 
-  int result = get_transition_system(
-    cmdline, message.get_message_handler(), transition_system);
-  if(result!=-1) return result;
+  transition_system =
+    get_transition_system(cmdline, message.get_message_handler());
 
-  result = get_properties();
+  auto result = get_properties();
   if(result != -1)
     return result;
 

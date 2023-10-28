@@ -255,3 +255,38 @@ int get_transition_system(
 
   return -1; // done with the transition system
 }
+
+transition_systemt get_transition_system(
+  const cmdlinet &cmdline,
+  message_handlert &message_handler)
+{
+  transition_systemt transition_system;
+  auto exit_code =
+    get_transition_system(cmdline, message_handler, transition_system);
+  if(exit_code != -1)
+    throw ebmc_errort().with_exit_code(exit_code);
+  return transition_system;
+}
+
+int show_parse(const cmdlinet &cmdline, message_handlert &message_handler)
+{
+  transition_systemt dummy_transition_system;
+  return get_transition_system(
+    cmdline, message_handler, dummy_transition_system);
+}
+
+int show_modules(const cmdlinet &cmdline, message_handlert &message_handler)
+{
+  transition_systemt dummy_transition_system;
+  return get_transition_system(
+    cmdline, message_handler, dummy_transition_system);
+}
+
+int show_symbol_table(
+  const cmdlinet &cmdline,
+  message_handlert &message_handler)
+{
+  transition_systemt dummy_transition_system;
+  return get_transition_system(
+    cmdline, message_handler, dummy_transition_system);
+}

@@ -89,13 +89,8 @@ int do_ranking_function(
   message_handlert &message_handler)
 {
   // get the transition system
-  transition_systemt transition_system;
-
-  int exit_code =
-    get_transition_system(cmdline, message_handler, transition_system);
-
-  if(exit_code != -1)
-    throw ebmc_errort();
+  transition_systemt transition_system =
+    get_transition_system(cmdline, message_handler);
 
   CHECK_RETURN(transition_system.trans_expr.has_value());
 

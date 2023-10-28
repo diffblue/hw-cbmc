@@ -96,6 +96,18 @@ int ebmc_parse_optionst::doit()
       return 0;
     }
 
+    if(cmdline.isset("preprocess"))
+      return preprocess(cmdline, ui_message_handler);
+
+    if(cmdline.isset("show-parse"))
+      return show_parse(cmdline, ui_message_handler);
+
+    if(cmdline.isset("show-modules") || cmdline.isset("modules-xml"))
+      show_modules(cmdline, ui_message_handler);
+
+    if(cmdline.isset("show-symbol-table"))
+      show_symbol_table(cmdline, ui_message_handler);
+
     if(cmdline.isset("cegar"))
     {
       throw ebmc_errort() << "This option is currently disabled";
@@ -214,13 +226,7 @@ int ebmc_parse_optionst::doit()
       return show_trans_verilog_netlist(cmdline, ui_message_handler);
 
     // get the transition system
-    transition_systemt transition_system;
-
-    int result =
-      get_transition_system(cmdline, ui_message_handler, transition_system);
-
-    if(result != -1)
-      return result;
+    auto transition_system = get_transition_system(cmdline, ui_message_handler);
 
     {
       ebmc_baset ebmc_base(cmdline, ui_message_handler);
@@ -274,7 +280,7 @@ int ebmc_parse_optionst::doit()
         return 0;
       }
 
-      result = ebmc_base.get_properties();
+      auto result = ebmc_base.get_properties();
 
       if(result != -1)
         return result;
@@ -295,7 +301,7 @@ int ebmc_parse_optionst::doit()
       message.error() << "error: " << messaget::red << ebmc_error.what()
                       << messaget::reset << messaget::eom;
     }
-    return CPROVER_EXIT_EXCEPTION;
+    return ebmc_error.exit_code().value_or(CPROVER_EXIT_EXCEPTION);
   }
 }
 

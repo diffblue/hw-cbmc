@@ -132,9 +132,8 @@ int bdd_enginet::operator()()
 {
   try
   {
-    int result = get_transition_system(
-      cmdline, message.get_message_handler(), transition_system);
-    if(result!=-1) return result;
+    transition_system =
+      get_transition_system(cmdline, message.get_message_handler());
 
     {  
       if(make_netlist(netlist))
@@ -146,7 +145,7 @@ int bdd_enginet::operator()()
       message.status() << "Building netlist for atomic propositions"
                        << messaget::eom;
 
-      result = get_properties();
+      auto result = get_properties();
       if(result != -1)
         return result;
 
