@@ -116,23 +116,17 @@ Function: verilog_typecheck_baset::array_size
 
 \*******************************************************************/
 
-mp_integer verilog_typecheck_baset::array_size(const typet &type)
+mp_integer verilog_typecheck_baset::array_size(const array_typet &type)
 {
-  mp_integer size;
+  auto size_opt = numeric_cast<mp_integer>(type.size());
 
-  if(type.id()!=ID_array)
-  {
-    error() << "array_size expected array type" << eom;
-    throw 0;
-  }
-
-  if(to_integer_non_constant(to_array_type(type).size(), size))
+  if(!size_opt.has_value())
   {
     error() << "failed to get array size of array type" << eom;
     throw 0;
   }
 
-  return size;
+  return size_opt.value();
 }
 
 /*******************************************************************\
@@ -147,7 +141,7 @@ Function: verilog_typecheck_baset::array_offset
 
 \*******************************************************************/
 
-mp_integer verilog_typecheck_baset::array_offset(const typet &type)
+mp_integer verilog_typecheck_baset::array_offset(const array_typet &type)
 {
   mp_integer offset;
 
@@ -186,7 +180,7 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
   if(type.id()==ID_array)
   {
     mp_integer element_width = get_width(to_array_type(type).element_type());
-    return (array_size(type) * element_width).to_ulong();
+    return (array_size(to_array_type(type)) * element_width).to_ulong();
   }
   
   if(type.id()==ID_integer)
@@ -212,7 +206,7 @@ Function: verilog_typecheck_baset::index_type
 
 \*******************************************************************/
 
-typet verilog_typecheck_baset::index_type(const typet &array_type)
+typet verilog_typecheck_baset::index_type(const array_typet &array_type)
 {
   return unsignedbv_typet(address_bits(
       (array_size(array_type) + array_offset(array_type)).to_ulong()));
