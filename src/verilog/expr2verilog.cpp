@@ -385,12 +385,28 @@ std::string expr2verilogt::convert_sva(
   const exprt &src)
 {
   if(src.operands().size()==1)
-    return name + " " + convert(to_unary_expr(src).op());
+  {
+    unsigned p;
+    auto s = convert(to_unary_expr(src).op(), p);
+    if(p == 0)
+      s = "(" + s + ")";
+    return name + " " + s;
+  }
   else if(src.operands().size()==2)
   {
     auto &binary_expr = to_binary_expr(src);
-    return convert(binary_expr.op0()) + " " + name + " " +
-           convert(binary_expr.op1());
+
+    unsigned p0;
+    auto s0 = convert(binary_expr.op0(), p0);
+    if(p0 == 0)
+      s0 = "(" + s0 + ")";
+
+    unsigned p1;
+    auto s1 = convert(binary_expr.op1(), p1);
+    if(p1 == 0)
+      s1 = "(" + s1 + ")";
+
+    return s0 + " " + name + " " + s1;
   }
   else
     return "?";
@@ -1001,13 +1017,11 @@ std::string expr2verilogt::convert(
     return convert_function("$onehot0", src);
 
   else if(src.id()==ID_sva_overlapped_implication)
-    return convert_binary(to_multi_ary_expr(src), "|->", precedence = 0);
-    // not sure about precedence
-    
+    return precedence = 0, convert_sva("|->", src);
+
   else if(src.id()==ID_sva_non_overlapped_implication)
-    return convert_binary(to_multi_ary_expr(src), "|=>", precedence = 0);
-    // not sure about precedence
-    
+    return precedence = 0, convert_sva("|=>", src);
+
   else if(src.id()==ID_sva_cycle_delay)
     return convert_sva_cycle_delay(to_ternary_expr(src), precedence = 0);
     // not sure about precedence
@@ -1018,32 +1032,32 @@ std::string expr2verilogt::convert(
     // not sure about precedence
     
   else if(src.id()==ID_sva_always)
-    return convert_sva("always", src);
+    return precedence = 0, convert_sva("always", src);
 
   else if(src.id()==ID_sva_nexttime)
-    return convert_sva("nexttime", src);
+    return precedence = 0, convert_sva("nexttime", src);
 
   else if(src.id()==ID_sva_s_nexttime)
-    return convert_sva("s_nexttime", src);
+    return precedence = 0, convert_sva("s_nexttime", src);
 
   else if(src.id()==ID_sva_eventually)
-    return convert_sva("eventually", src);
+    return precedence = 0, convert_sva("eventually", src);
 
   else if(src.id()==ID_sva_s_eventually)
-    return convert_sva("s_eventually", src);
+    return precedence = 0, convert_sva("s_eventually", src);
 
   else if(src.id()==ID_sva_until)
-    return convert_sva("until", src);
+    return precedence = 0, convert_sva("until", src);
 
   else if(src.id()==ID_sva_s_until)
-    return convert_sva("s_until", src);
+    return precedence = 0, convert_sva("s_until", src);
 
   else if(src.id()==ID_sva_until_with)
-    return convert_sva("until_with", src);
+    return precedence = 0, convert_sva("until_with", src);
 
   else if(src.id()==ID_sva_s_until_with)
-    return convert_sva("s_until_with", src);
-    
+    return precedence = 0, convert_sva("s_until_with", src);
+
   else if(src.id()==ID_function_call)
     return convert_function_call(to_function_call_expr(src));
 
