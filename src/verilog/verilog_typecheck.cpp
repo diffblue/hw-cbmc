@@ -323,13 +323,10 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
   
   decl.set_identifier(symbol.name);
 
-  irept::subt &declarations=decl.declarations();
+  auto &declarations = decl.declarations();
 
-  for(auto &decl : declarations)
-  {
-    assert(decl.id() == ID_decl);
-    convert_decl(static_cast<verilog_declt &>(decl));
-  }
+  for(auto &inner_decl : declarations)
+    convert_decl(inner_decl);
 
   function_or_task_name=symbol.name;
   convert_statement(decl.body());
@@ -371,10 +368,10 @@ exprt verilog_typecheckt::elaborate_const_function_call(
   // typecheck it
   verilog_declt decl=to_verilog_decl(function_symbol.value);
 
-  irept::subt &declarations=decl.declarations();
+  auto &declarations = decl.declarations();
 
-  for(auto &decl : declarations)
-    convert_decl(static_cast<verilog_declt &>(decl));
+  for(auto &inner_decl : declarations)
+    convert_decl(inner_decl);
 
   function_or_task_name=function_symbol.name;
   convert_statement(decl.body());
