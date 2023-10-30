@@ -306,17 +306,21 @@ public:
   {
     set(ID_class, _class);
   }
-  
-  inline irept::subt &declarations()
+
+  // Function and task declarations may contain further declarations.
+  using declarationst = std::vector<verilog_declt>;
+
+  inline declarationst &declarations()
   {
-    return add("declarations").get_sub();
+    return (declarationst &)(add("declarations").get_sub());
   }
 
-  inline const irept::subt &declarations() const
+  inline const declarationst &declarations() const
   {
-    return find("declarations").get_sub();
+    return (const declarationst &)(find("declarations").get_sub());
   }
 
+  // Function and task declarations have a body.
   inline verilog_statementt &body()
   {
     return static_cast<verilog_statementt &>(add(ID_body));

@@ -274,11 +274,10 @@ void verilog_typecheckt::interface_function_or_task(
   }
 
   // do the declarations within the task/function
-
-  const irept::subt &declarations=decl.declarations();
+  auto &declarations = decl.declarations();
 
   for(auto &decl : declarations)
-    interface_module_item(to_verilog_module_item(decl));
+    interface_function_or_task_decl(decl);
 
   interface_statement(decl.body());
     
