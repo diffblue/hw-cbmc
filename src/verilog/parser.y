@@ -575,6 +575,9 @@ grammar:  TOK_PARSE_LANGUAGE { /*yydebug=1;*/ } source_text
            { PARSER.parse_tree.expr.swap(stack_expr($2)); }
         ;
 
+// System Verilog standard 1800-2017
+// A.1.2 SystemVerilog source text
+
 source_text: description_brace;
 
 description_brace:
@@ -605,8 +608,14 @@ package_declaration:
           TOK_PACKAGE TOK_ENDPACKAGE
         ;
 
+// System Verilog standard 1800-2017
+// A.1.11 Package items
+
 package_item:
         ;
+
+// System Verilog standard 1800-2017
+// A.1.5 Configuration source text
 
 config_declaration:
           TOK_CONFIG TOK_ENDCONFIG
@@ -624,6 +633,9 @@ type_declaration:
 	  TOK_TYPEDEF data_type type_identifier ';'
 	  	{ PARSER.parse_tree.create_typedef(stack_expr($2), stack_expr($3)); }
 	;
+
+// System Verilog standard 1800-2017
+// A.2.2.1 Net and variable types
 
 data_type:
 	  integer_vector_type signing_opt packed_dimension_brace
@@ -732,6 +744,9 @@ packed_dimension_brace:
 	  }
 	;
 
+// System Verilog standard 1800-2017
+// A.2.5 Declaration ranges
+
 unpacked_dimension_brace:
 	  /* Optional */
 	  { make_nil($$); }
@@ -778,6 +793,9 @@ type_identifier: TOK_CHARSTR
 		{ new_symbol($$, $1); }
 	;
 
+// System Verilog standard 1800-2017
+// A.5.1 UDP declaration
+
 udp_declaration: attribute_instance_brace TOK_PRIMITIVE udp_identifier 
 	  '(' udp_port_list ')' ';' udp_port_declaration_brace
 	  udp_body TOK_ENDPRIMITIVE
@@ -787,6 +805,9 @@ udp_declaration: attribute_instance_brace TOK_PRIMITIVE udp_identifier
 	;
 
 udp_identifier: TOK_CHARSTR;
+
+// System Verilog standard 1800-2017
+// A.5.2 UDP ports
 
 udp_port_list: port_identifier ',' port_identifier_brace
 	;
@@ -826,6 +847,9 @@ port_identifier_brace:
 	  port_identifier
 	| port_identifier_brace ',' port_identifier
 	;
+
+// System Verilog standard 1800-2017
+// A.5.3 UDP body
 
 udp_body: udp_initial_statement_opt TOK_TABLE table_entry_brace TOK_ENDTABLE
 	;
@@ -921,6 +945,9 @@ list_of_ports_opt:
 	| list_of_ports
 	;
 
+// System Verilog standard 1800-2017
+// A.1.3 Module parameters and ports
+
 module_parameter_port_list_opt:
 	 /* Optional */
 	        { init($$); }
@@ -989,6 +1016,9 @@ module_port_output_declaration:
                   mto($$, $3); }
 	;
 
+// System Verilog standard 1800-2017
+// A.2.1.2 Port declarations
+
 module_port_inout_declaration:
 	  TOK_INOUT port_type port_identifier
 		{ init($$, ID_decl);
@@ -1047,7 +1077,8 @@ port_identifier: TOK_CHARSTR
 		{ new_symbol($$, $1); }
 	;
 
-/* Module items */
+// System Verilog standard 1800-2017
+// A.1.3 Module items
 
 module_item_brace:
 		/* Optional */
@@ -1078,6 +1109,9 @@ non_port_module_item:
 	| attribute_instance_brace specify_block { $$=$2;}
 	;
 */
+
+// System Verilog standard 1800-2017
+// A.4.2 Generated instantiation
 
 generated_instantiation:
 	  TOK_GENERATE generate_item_brace TOK_ENDGENERATE
@@ -1203,6 +1237,9 @@ package_or_generate_item_declaration:
 	| parameter_declaration ';'
         ;
 	
+// System Verilog standard 1800-2017
+// A.2.10 Assertion declarations
+
 concurrent_assertion_item_declaration: property_declaration;
 
 property_declaration:
@@ -1213,6 +1250,9 @@ genvar_declaration:
 	  TOK_GENVAR list_of_genvar_identifiers ';'
 		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
 	;
+
+// System Verilog standard 1800-2017
+// A.2.3 Declaration lists
 
 list_of_genvar_identifiers:
 	  genvar_identifier
@@ -1253,6 +1293,9 @@ local_parameter_declaration:
           TOK_LOCALPARAM list_of_param_assignments
 		{ init($$, ID_local_parameter_decl); swapop($$, $2); }
 	;
+
+// System Verilog standard 1800-2017
+// A.2.1.1 Module parameter declarations
 
 parameter_declaration:
           TOK_PARAMETER list_of_param_assignments
@@ -1428,6 +1471,9 @@ list_of_real_identifiers:
 		{ $$=$1;    mto($$, $3); }
 	;
 
+// System Verilog standard 1800-2017
+// A.2.1.3 Type declarations
+
 net_declaration:
           net_type_or_trireg drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
 		{ init($$, ID_decl);
@@ -1491,9 +1537,15 @@ list_of_net_decl_assignments:
 		{ $$=$1;    mto($$, $3); }
 	;
 
+// System Verilog standard 1800-2017
+// A.2.4 Declaration assignments
+
 net_decl_assignment: net_identifier '=' expression
 		{ init($$, ID_equal); mto($$, $1); mto($$, $3); }
 	;
+
+// System Verilog standard 1800-2017
+// A.2.2.3 Delays
 
 delay3_opt:
 		{ make_nil($$); }
@@ -1509,6 +1561,9 @@ delay3:   '#' delay_value { $$=$2; }
 delay_value:
           unsigned_number
         ;
+
+// System Verilog standard 1800-2017
+// A.2.6 Function declarations
 
 function_declaration:
 	  TOK_FUNCTION automatic_opt signing_opt range_or_type_opt
@@ -1556,6 +1611,9 @@ function_item_declaration:
 	| input_declaration ';'
 	;
 
+// System Verilog standard 1800-2017
+// A.2.6 Task declarations
+
 task_declaration:
 	  TOK_TASK task_identifier list_of_ports_opt ';'
 	  task_item_declaration_brace
@@ -1583,6 +1641,9 @@ task_item_declaration:
 	| attribute_instance_brace inout_declaration  ';' { $$=$2; }
 	;
 
+// System Verilog standard 1800-2017
+// A.2.8 Block item declarations
+
 block_item_declaration:
 	  attribute_instance_brace block_reg_declaration { $$=$2; }
 	| attribute_instance_brace event_declaration     { $$=$2; }
@@ -1593,6 +1654,9 @@ block_item_declaration:
 	| attribute_instance_brace realtime_declaration  { $$=$2; }
 	// | attribute_instance_brace time_declaration
 	;
+
+// System Verilog standard 1800-2017
+// A.9.1 Attributes
 
 attribute_instance_brace:
 	  /* Optional */
@@ -1640,9 +1704,8 @@ list_of_event_identifiers:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-/*
- * Gate instantiation.
- */
+// System Verilog standard 1800-2017
+// A.3.1 Primitive instantiation and instances
 
 gate_instantiation:
 	  cmos_switchtype delay3_opt gate_instance_brace ';'
@@ -1664,6 +1727,9 @@ gate_instantiation:
 	| TOK_PULLUP   pullup_strength_opt   gate_instance_brace ';'
 		{ init($$, ID_inst_builtin); stack_expr($$).set(ID_module, ID_pullup);   swapop($$, $3); }
 	;
+
+// System Verilog standard 1800-2017
+// A.3.4 Primitive gate and switch types
 
 cmos_switchtype:
 	  TOK_CMOS     { init($$, ID_cmos); }
@@ -1733,9 +1799,8 @@ name_of_gate_instance_opt:
 
 name_of_gate_instance: TOK_CHARSTR;
 
-/*
- * Module instantiation
- */
+// System Verilog standard 1800-2017
+// A.4.1.1 Module instantiation
 
 module_instantiation:
 	  module_identifier param_value_assign_opt module_instance_brace ';'
@@ -1836,9 +1901,8 @@ named_port_connection:
                   mto($$, $4); }
 	;
 
-/*
- * Behavioral statements.
- */
+// System Verilog standard 1800-2017
+// A.6.1 Continuous assignment and net alias statements
 
 continuous_assign:
 	  TOK_ASSIGN delay3_opt list_of_net_assignments ';'
@@ -1857,6 +1921,9 @@ net_assignment: net_lvalue '=' expression
 	;
 
 variable_assignment: net_assignment;
+
+// System Verilog standard 1800-2017
+// A.6.2 Procedural blocks and assignments
 
 initial_construct: TOK_INITIAL statement
 		{ init($$, ID_initial); mto($$, $2); }
@@ -1909,6 +1976,9 @@ subroutine_call:
         | system_tf_call
         ;
         
+// System Verilog standard 1800-2017
+// A.8.2 Subroutine calls
+
 tf_call:
           hierarchical_tf_identifier '(' expression_brace ')'
 		{ init($$, ID_function_call);
@@ -1983,6 +2053,9 @@ cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
 		{ init($$, ID_cover); mto($$, $4); mto($$, $6); }
 	;
 
+// System Verilog standard 1800-2017
+// A.6.3 Parallel and sequential blocks
+
 action_block:
           statement_or_null %prec LT_TOK_ELSE
         | statement_or_null TOK_ELSE statement 
@@ -2016,6 +2089,9 @@ concurrent_cover_statement: cover_property_statement
 		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
 		}
 	;
+
+// System Verilog standard 1800-2017
+// A.6.10 Assertion statements
 
 immediate_assert_statement: TOK_ASSERT '(' expression ')' action_block
 		{ init($$, ID_assert); mto($$, $3); mto($$, $5); }
@@ -2087,6 +2163,9 @@ procedural_timing_control:
         | cycle_delay
         ;
 
+// System Verilog standard 1800-2017
+// A.6.11 Clocking block
+
 cycle_delay:
           "##" number
                 { init($$, ID_verilog_cycle_delay); mto($$, $2); }
@@ -2095,6 +2174,9 @@ cycle_delay:
         | "##" '(' expression ')'
                 { init($$, ID_verilog_cycle_delay); mto($$, $3); }
         ;
+
+// System Verilog standard 1800-2017
+// A.6.5 Timing control statements
 
 delay_or_event_control:
 	  delay_control
@@ -2154,12 +2236,18 @@ event_expression:
 		{ init($$, ID_negedge); mto($$, $2); }
 	;
 
+// System Verilog standard 1800-2017
+// A.6.6 Conditional statements
+
 conditional_statement:
 	  TOK_IF '(' expression ')' statement_or_null %prec LT_TOK_ELSE
 		{ init($$, ID_if); mto($$, $3); mto($$, $5); }
 	| TOK_IF '(' expression ')' statement_or_null TOK_ELSE statement_or_null
 		{ init($$, ID_if); mto($$, $3); mto($$, $5); mto($$, $7); }
 	;
+
+// System Verilog standard 1800-2017
+// A.6.7 Case statements
 
 case_statement:
 	  TOK_CASE '(' expression ')' case_item_brace TOK_ENDCASE
@@ -2197,6 +2285,9 @@ case_item:
                   to_unary_expr(stack_expr($$)).op().id(ID_default);
                   mto($$, $2); }
 	;
+
+// System Verilog standard 1800-2017
+// A.6.8 Looping statements
 
 loop_statement:
 	  TOK_FOREVER statement
@@ -2246,6 +2337,9 @@ statement_brace:
 		{ $$=$1; mto($$, $2); }
 	;
 
+// System Verilog standard 1800-2017
+// A.6.4 Statements
+
 statement_or_null_brace:
 		/* Optional */
 		{ init($$); }
@@ -2262,9 +2356,8 @@ system_task_name: TOK_SYSIDENT
                 }
         ;
 
-/*
- * Expressions.
- */
+// System Verilog standard 1800-2017
+// A.8.5 Expression left-side values
 
 net_lvalue: variable_lvalue;
 
@@ -2431,6 +2524,9 @@ cycle_delay_range:
                 { init($$, ID_sva_cycle_delay); mto($$, $3); stack_expr($$).add_to_operands(exprt(ID_infinity)); }
         ;
 
+// System Verilog standard 1800-2017
+// A.8.6 Operators
+
 unary_operator:
 	  TOK_TILDE        { init($$, ID_bitnot); }
 	| TOK_EXCLAM       { init($$, ID_not); }
@@ -2443,6 +2539,9 @@ unary_operator:
 	| TOK_TILDECARET   { init($$, ID_reduction_xnor); }
         ;
 
+// System Verilog standard 1800-2017
+// A.8.3 Expressions
+
 inc_or_dec_expression:
           TOK_PLUSPLUS attribute_instance_brace variable_lvalue
                 { init($$, ID_preincrement); mto($$, $3); }
@@ -2453,6 +2552,9 @@ inc_or_dec_expression:
         | variable_lvalue attribute_instance_brace TOK_MINUSMINUS
                 { init($$, ID_postdecrement); mto($$, $1); }
         ;
+
+// System Verilog standard 1800-2017
+// A.8.4 Primaries
 
 primary:  primary_literal
         | indexed_variable_lvalue
@@ -2472,9 +2574,15 @@ primary_literal:
           number
         ;
 
+// System Verilog standard 1800-2017
+// A.8.7 Numbers
+
 number: unsigned_number
 		{ init($$, ID_constant); addswap($$, ID_value, $1); }
 	;
+
+// System Verilog standard 1800-2017
+// A.8.1 Concatenations
 
 concatenation: '{' expression_brace '}'
 		{ init($$, ID_concatenation); swapop($$, $2); }
@@ -2521,6 +2629,9 @@ identifier: TOK_CHARSTR
 		{ new_symbol($$, $1); }
 	;
 
+// System Verilog standard 1800-2017
+// A.3.2 Primitive strengths
+
 pulldown_strength_opt:
 	  /* Optional */ { make_nil($$); }
 //	| pulldown_strength
@@ -2546,6 +2657,9 @@ pullup_strength:
 	| '(' strength1 ')'
 	;
 */
+
+// System Verilog standard 1800-2017
+// A.2.2.2 Strengths
 
 drive_strength_opt:
 	  /* Optional */ { make_nil($$); }
@@ -2589,6 +2703,9 @@ charge_strength_opt:
 	| charge_strength
 	;
 
+// System Verilog standard 1800-2017
+// A.7.1 Specify block declaration
+
 specify_block: TOK_SPECIFY specify_item_brace TOK_ENDSPECIFY
 		{ init($$, ID_specify); } 
 	;
@@ -2604,6 +2721,9 @@ specify_item: specparam_declaration
         | path_declaration
         | system_timing_check
         ;
+
+// System Verilog standard 1800-2017
+// A.7.2 Specify path declarations
 
 path_declaration:
 	  simple_path_declaration ';'
@@ -2634,6 +2754,9 @@ full_path_description:
 	  '(' port_brace polarity_operator TOK_ASTERIC
 	  TOK_GREATER port_brace ')'
 	;
+
+// System Verilog standard 1800-2017
+// A.7.4 Specify path delays
 
 path_delay_value:
           mintypmax_expression
