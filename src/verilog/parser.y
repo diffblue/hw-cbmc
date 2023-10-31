@@ -1166,7 +1166,6 @@ port_declaration:
 module_or_generate_item:
  	  attribute_instance_brace module_or_generate_item_declaration { $$=$2; }
  	| attribute_instance_brace parameter_override { $$=$2; }
- 	| attribute_instance_brace parameter_declaration { $$=$2; }
  	| attribute_instance_brace continuous_assign { $$=$2; }
         | attribute_instance_brace gate_instantiation { $$=$2; }
  	// | attribute_instance_brace udp_instantiation { $$=$2; }
@@ -1194,6 +1193,8 @@ package_or_generate_item_declaration:
 	  net_declaration
 	| task_declaration
 	| function_declaration
+	| local_parameter_declaration ';'
+	| parameter_declaration ';'
         ;
 	
 concurrent_assertion_item_declaration: property_declaration;
@@ -1221,9 +1222,31 @@ genvar_identifier: TOK_CHARSTR
 hierarchical_parameter_identifier: hierarchical_identifier
 	;
 
-param_assignment:
+defparam_assignment:
 	  hierarchical_parameter_identifier '=' constant_expression
-	  	{ init($$, ID_parameter_assignment); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_parameter_assignment); mto($$, $1); mto($$, $3); }
+	;
+
+list_of_defparam_assignments:
+	  defparam_assignment
+		{ init($$); mto($$, $1); }
+	| list_of_defparam_assignments ',' defparam_assignment
+		{ $$=$1;    mto($$, $3); }
+	;
+
+parameter_override:
+	  TOK_DEFPARAM list_of_defparam_assignments ';'
+		{ init($$, ID_parameter_override); swapop($$, $2); }
+	;
+
+local_parameter_declaration:
+          TOK_LOCALPARAM list_of_param_assignments
+		{ init($$, ID_local_parameter_decl); swapop($$, $2); }
+	;
+
+parameter_declaration:
+          TOK_PARAMETER list_of_param_assignments
+		{ init($$, ID_parameter_decl); swapop($$, $2); }
 	;
 
 list_of_param_assignments:
@@ -1233,26 +1256,7 @@ list_of_param_assignments:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-parameter_override:
-	  TOK_DEFPARAM list_of_param_assignments ';'
-		{ init($$, ID_parameter_override); swapop($$, $2); }
-	;
-
-parameter_declaration:
-          TOK_PARAMETER list_of_param_assign ';'
-		{ init($$, ID_parameter_decl); swapop($$, $2); }
-        | TOK_LOCALPARAM list_of_param_assign ';'
-		{ init($$, ID_local_parameter_decl); swapop($$, $2); }
-	;
-
-list_of_param_assign:
-	  param_assign
-		{ init($$); mto($$, $1); }
-	| list_of_param_assign ',' param_assign
-		{ $$=$1;    mto($$, $3); }
-	;
-
-param_assign: signing_opt packed_dimension_brace param_identifier '=' const_expression
+param_assignment: signing_opt packed_dimension_brace param_identifier '=' const_expression
 		{ // $1 and $2 implement Verilog 2000 sized parameters,
 		  // which can be ignored
 		  init($$, ID_parameter);
@@ -1573,8 +1577,8 @@ block_item_declaration:
 	  attribute_instance_brace block_reg_declaration { $$=$2; }
 	| attribute_instance_brace event_declaration     { $$=$2; }
 	| attribute_instance_brace integer_declaration   { $$=$2; }
-	// | attribute_instance_brace local_parameter_declaration
-	| attribute_instance_brace parameter_declaration { $$=$2; }
+	| attribute_instance_brace local_parameter_declaration ';' { $$=$2; }
+	| attribute_instance_brace parameter_declaration ';' { $$=$2; }
 	// | attribute_instance_brace real_declaration
 	| attribute_instance_brace realtime_declaration  { $$=$2; }
 	// | attribute_instance_brace time_declaration
