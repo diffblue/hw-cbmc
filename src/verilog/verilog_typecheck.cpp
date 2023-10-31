@@ -323,13 +323,13 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
   
   decl.set_identifier(symbol.name);
 
-  auto &declarations = decl.declarations();
+  function_or_task_name = symbol.name;
 
-  for(auto &inner_decl : declarations)
+  for(auto &inner_decl : decl.declarations())
     convert_decl(inner_decl);
 
-  function_or_task_name=symbol.name;
   convert_statement(decl.body());
+
   function_or_task_name="";
   
   symbol.value=decl.body();
@@ -368,12 +368,11 @@ exprt verilog_typecheckt::elaborate_const_function_call(
   // typecheck it
   verilog_declt decl=to_verilog_decl(function_symbol.value);
 
-  auto &declarations = decl.declarations();
+  function_or_task_name = function_symbol.name;
 
-  for(auto &inner_decl : declarations)
+  for(auto &inner_decl : decl.declarations())
     convert_decl(inner_decl);
 
-  function_or_task_name=function_symbol.name;
   convert_statement(decl.body());
   
   const code_typet &code_type=
@@ -460,7 +459,29 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
   {
     if(it->id()==ID_symbol)
     {
-      // nothing to do
+      auto &symbol_expr = to_symbol_expr(*it);
+
+      // in a named block?
+      irep_idt named_block;
+      if(!named_blocks.empty())
+        named_block = named_blocks.back();
+
+      // fix the type and identifier
+      irep_idt full_identifier;
+
+      if(!function_or_task_name.empty())
+        full_identifier = id2string(function_or_task_name) + "." +
+                          id2string(named_block) +
+                          id2string(symbol_expr.get_identifier());
+      else
+        full_identifier = id2string(module_identifier) + "." +
+                          id2string(named_block) +
+                          id2string(symbol_expr.get_identifier());
+
+      symbol_expr.set_identifier(full_identifier);
+
+      symbolt &symbol = symbol_table_lookup(full_identifier);
+      it->type() = symbol.type;
     }
     else if(it->id()==ID_equal)
     {
@@ -480,11 +501,11 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
         throw 0;
       }
 
-      const std::string identifier=
-        id2string(module_identifier)+"."+
-        lhs.get_string(ID_identifier);
+      const std::string identifier =
+        id2string(module_identifier) + "." +
+        id2string(to_symbol_expr(lhs).get_identifier());
 
-      lhs.set(ID_identifier, identifier);
+      to_symbol_expr(lhs).set_identifier(identifier);
 
       symbolt &symbol=symbol_table_lookup(identifier);
       convert_expr(rhs);

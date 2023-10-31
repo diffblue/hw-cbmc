@@ -6,12 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
-
-#include <map>
-#include <set>
+#include "verilog_synthesis.h"
+#include "verilog_synthesis_class.h"
 
 #include <util/bitvector_expr.h>
+#include <util/bitvector_types.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/identifier.h>
@@ -20,9 +19,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
-#include "verilog_synthesis.h"
-#include "verilog_synthesis_class.h"
 #include "verilog_expr.h"
+
+#include <cassert>
+#include <map>
+#include <set>
 
 /*******************************************************************\
 
@@ -1389,6 +1390,57 @@ void verilog_synthesist::synth_initial(
 
 /*******************************************************************\
 
+Function: verilog_synthesist::make_supply_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_synthesist::make_supply_value(
+  const irep_idt &decl_class,
+  const typet &type)
+{
+  if(type.id() == ID_array)
+  {
+    auto &array_type = to_array_type(type);
+    auto element = make_supply_value(decl_class, array_type.element_type());
+    return array_of_exprt(element, array_type);
+  }
+  else if(type.id() == ID_unsignedbv)
+  {
+    if(decl_class == ID_supply0)
+      return from_integer(0, type);
+    else
+      return from_integer(
+        power(2, to_unsignedbv_type(type).get_width()) - 1, type);
+  }
+  else if(type.id() == ID_signedbv)
+  {
+    if(decl_class == ID_supply0)
+      return from_integer(0, type);
+    else
+      return from_integer(-1, type);
+  }
+  else if(type.id() == ID_bool)
+  {
+    if(decl_class == ID_supply0)
+      return false_exprt();
+    else
+      return true_exprt();
+  }
+  else
+  {
+    error() << decl_class << " for unexpected type " << to_string(type) << eom;
+    throw 0;
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::synth_decl
 
   Inputs:
@@ -1400,8 +1452,31 @@ Function: verilog_synthesist::synth_decl
 \*******************************************************************/
 
 void verilog_synthesist::synth_decl(const verilog_declt &statement) {
+  // Look for supply0 and supply1 port class.
+  if(statement.get_class() == ID_supply0 || statement.get_class() == ID_supply1)
+  {
+    for(auto &op : statement.operands())
+    {
+      if(op.id() == ID_symbol)
+      {
+        const symbolt &symbol = ns.lookup(to_symbol_expr(op));
+
+        if(!symbol.is_state_var)
+        {
+          // much like a continuous assignment
+          const auto value =
+            make_supply_value(statement.get_class(), op.type());
+          verilog_continuous_assignt assign(equal_exprt(op, value));
+          assign.add_source_location() = op.source_location();
+          synth_continuous_assign(assign);
+        }
+      }
+    }
+  }
+
   forall_operands(it, statement)
   {
+    // This is reg x = ... or wire x = ...
     if(it->id()==ID_equal)
     {
       // These are only allowed for module-level declarations,
@@ -1439,9 +1514,8 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
       else
       {
         // much like a continuous assignment
-        verilog_continuous_assignt assign;
-        assign.add_source_location()=it->source_location();
-        assign.add_to_operands(*it);
+        verilog_continuous_assignt assign(*it);
+        assign.add_source_location() = it->source_location();
         synth_continuous_assign(assign);
       }
     }

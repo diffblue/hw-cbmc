@@ -899,8 +899,10 @@ extern inline verilog_forcet &to_verilog_force(exprt &expr)
 class verilog_continuous_assignt:public verilog_module_itemt
 {
 public:
-  verilog_continuous_assignt():verilog_module_itemt(ID_continuous_assign)
+  explicit verilog_continuous_assignt(exprt assignment)
+    : verilog_module_itemt(ID_continuous_assign)
   {
+    add_to_operands(std::move(assignment));
   }
 };
 

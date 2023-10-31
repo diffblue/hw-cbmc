@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 #include <map>
+#include <set>
 #include <unordered_set>
 
 #include <util/mathematical_expr.h>
@@ -231,6 +232,8 @@ protected:
   void synth_assume(const class verilog_assumet &);
   void synth_prepostincdec(const class verilog_statementt &);
   void synth_assignments(transt &);
+
+  exprt make_supply_value(const irep_idt &decl_class, const typet &);
 
   void post_process_initial(exprt &constraints);
   void post_process_wire(const irep_idt &identifier, exprt &expr);
