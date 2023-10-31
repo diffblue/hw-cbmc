@@ -34,10 +34,14 @@ void verilog_typecheckt::module_interface()
   
   module_identifier=module_symbol.name;
 
-  const irept &module_source=module_symbol.type.find(ID_module_source);
+  const auto &module_source = module_symbol.type.find(ID_module_source);
   const irept &module_items=module_source.find(ID_module_items);
 
-  // first do module items
+  // first do parameter ports
+  for(auto &parameter : module_source.find("parameter_port_list").get_sub())
+    interface_parameter(static_cast<const exprt &>(parameter));
+
+  // then do do module items
   for(auto &module_item : module_items.get_sub())
     interface_module_item(
       static_cast<const verilog_module_itemt &>(module_item));

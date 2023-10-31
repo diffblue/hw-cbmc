@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 struct verilog_modulet
 {
   irep_idt name;
+  exprt parameter_port_list;
   exprt ports;
   exprt module_items;
   source_locationt location;
@@ -24,6 +25,7 @@ struct verilog_modulet
   {
     irept irep;
     irep.set(ID_name, name);
+    irep.add("parameter_port_list") = parameter_port_list;
     irep.add(ID_ports)=ports;
     irep.add("module_items")=module_items;
     return irep;

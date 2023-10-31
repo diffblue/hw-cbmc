@@ -25,6 +25,7 @@ void verilog_parse_treet::create_module(
   irept &attributes,
   irept &module_keyword,
   exprt &name,
+  exprt &parameter_port_list,
   exprt &ports,
   exprt &module_items)
 {
@@ -40,6 +41,7 @@ void verilog_parse_treet::create_module(
     ports.clear();
 
   new_module.name=name.id();
+  new_module.parameter_port_list.swap(parameter_port_list);
   new_module.ports.swap(ports);
   new_module.location=((const exprt &)module_keyword).source_location();
   new_module.module_items.swap(module_items);
