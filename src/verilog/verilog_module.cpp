@@ -26,12 +26,19 @@ void verilog_modulet::show(std::ostream &out) const
 {
   out << "Module: " << name << '\n';
 
+  out << "  Parameters:\n";
+
+  for(auto &parameter : parameter_port_list.get_sub())
+    out << "    " << parameter.pretty() << '\n';
+
+  out << '\n';
+
   out << "  Ports:\n";
 
   for(auto &port : ports.get_sub())
     out << "    " << port.pretty() << '\n';
 
-  out << std::endl;
+  out << '\n';
 
   out << "  Module items:\n";
 

@@ -71,11 +71,12 @@ public:
   {
     return module_map.count(name)!=0;
   }
-  
+
   void create_module(
     irept &attributes,
     irept &module_keyword,
     exprt &name,
+    exprt &parameter_port_list,
     exprt &ports,
     exprt &statements);
 

@@ -639,6 +639,7 @@ module_declaration:
               stack_expr($1).operands()[0],
               stack_expr($1).operands()[1],
               stack_expr($1).operands()[2],
+              stack_expr($1).operands()[3],
               stack_expr($1).operands()[4],
               stack_expr($2));
           }
@@ -648,6 +649,7 @@ module_declaration:
               stack_expr($1).operands()[0],
               stack_expr($1).operands()[1],
               stack_expr($1).operands()[2],
+              stack_expr($1).operands()[3],
               stack_expr($1).operands()[4],
               stack_expr($2));
           }
