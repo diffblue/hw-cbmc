@@ -923,7 +923,13 @@ list_of_ports_opt:
 
 module_parameter_port_list_opt:
 	 /* Optional */
-	      { init($$); }
+	        { init($$); }
+        | '#' '(' list_of_param_assignments ')'
+	        { $$ = $3; }
+        | '#' '(' parameter_port_declaration ')'
+	        { $$ = $3; }
+        | '#' '(' ')'
+	        { init($$); }
 	;
 
 module_keyword:
@@ -1225,6 +1231,10 @@ hierarchical_parameter_identifier: hierarchical_identifier
 defparam_assignment:
 	  hierarchical_parameter_identifier '=' constant_expression
 		{ init($$, ID_parameter_assignment); mto($$, $1); mto($$, $3); }
+	;
+
+parameter_port_declaration:
+	  parameter_declaration
 	;
 
 list_of_defparam_assignments:
