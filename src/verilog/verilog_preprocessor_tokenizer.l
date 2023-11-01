@@ -38,7 +38,7 @@ String		\"(\\.|[^"\\])*\"
 <INITIAL>.|\n		{ TOKENIZER.text(yytext[0]); return yytext[0]; /* anything else */ }
 <SLCOMMENT>\n		{ BEGIN INITIAL; TOKENIZER.text('\n'); return '\n'; }
 <SLCOMMENT>.		{ /* just eat up */ }
-<SLCOMMENT><<EOF>>      { throw verilog_preprocessor_errort() << "EOF inside a comment"; }
+<SLCOMMENT><<EOF>>      { /* we allow that */ BEGIN INITIAL; }
 <MLCOMMENT>\n		{ TOKENIZER.text('\n'); return '\n'; }
 <MLCOMMENT>"*/"         { BEGIN INITIAL; /* comment done */ }
 <MLCOMMENT>.		{ /* just eat up */ }

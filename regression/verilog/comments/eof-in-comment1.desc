@@ -1,0 +1,7 @@
+CORE
+eof-in-comment1.v
+
+^no module found$
+^EXIT=1$
+^SIGNAL=0$
+--
