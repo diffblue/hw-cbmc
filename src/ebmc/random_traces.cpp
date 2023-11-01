@@ -59,14 +59,21 @@ protected:
   const namespacet ns;
   messaget message;
 
+  using inputst = std::vector<symbol_exprt>;
+
   std::vector<exprt> random_input_constraints(
     decision_proceduret &,
-    const std::vector<symbol_exprt> &inputs,
+    const inputst &,
     size_t number_of_timeframes);
 
   constant_exprt random_value(const typet &);
 
-  std::vector<symbol_exprt> inputs() const;
+  inputst inputs() const;
+
+  void freeze_inputs(
+    const inputst &,
+    std::size_t number_of_timeframes,
+    boolbvt &) const;
 
   // Random number generator. These are fully specified in
   // the C++ standard, and produce the same values on compliant
@@ -242,9 +249,9 @@ Function: random_tracest::inputs
 
 \*******************************************************************/
 
-std::vector<symbol_exprt> random_tracest::inputs() const
+random_tracest::inputst random_tracest::inputs() const
 {
-  std::vector<symbol_exprt> inputs;
+  inputst inputs;
   const symbol_tablet &symbol_table = ns.get_symbol_table();
 
   auto module_identifier = transition_system.main_symbol->name;
@@ -274,6 +281,33 @@ std::vector<symbol_exprt> random_tracest::inputs() const
     inputs.push_back(ns.lookup(identifier).symbol_expr());
 
   return inputs;
+}
+
+/*******************************************************************\
+
+Function: random_tracest::freeze_inputs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void random_tracest::freeze_inputs(
+  const inputst &inputs,
+  std::size_t number_of_timeframes,
+  boolbvt &boolbv) const
+{
+  for(std::size_t i = 0; i < number_of_timeframes; i++)
+  {
+    for(auto &input : inputs)
+    {
+      auto input_in_timeframe = instantiate(input, i, number_of_timeframes, ns);
+      boolbv.set_frozen(boolbv.convert_bv(input_in_timeframe));
+    }
+  }
 }
 
 /*******************************************************************\
@@ -350,6 +384,8 @@ void random_tracest::operator()(
 
   message.statistics() << "Found " << inputs.size() << " input(s)"
                        << messaget::eom;
+
+  freeze_inputs(inputs, number_of_timeframes, solver);
 
   message.status() << "Solving with " << solver.decision_procedure_text()
                    << messaget::eom;
