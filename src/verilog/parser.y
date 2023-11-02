@@ -604,7 +604,7 @@ module_nonansi_header:
 	  attribute_instance_brace
 	  module_keyword
 	  module_identifier
-	  module_parameter_port_list_opt
+	  parameter_port_list_opt
 	  list_of_ports_opt ';'
           {
             init($$); stack_expr($$).operands().resize(5);
@@ -620,7 +620,7 @@ module_ansi_header:
           attribute_instance_brace
 	  module_keyword
 	  module_identifier
-	  module_parameter_port_list_opt
+	  parameter_port_list_opt
 	  list_of_port_declarations ';'
           {
             init($$); stack_expr($$).operands().resize(5);
@@ -686,12 +686,15 @@ package_declaration:
 // System Verilog standard 1800-2017
 // A.1.3 Module parameters and ports
 
-module_parameter_port_list_opt:
+// This deviates from the grammar in the standard to address an
+// ambiguity between the comma in list_of_param_assignments
+// and the comma in parameter_port_list. The productions
+// allowed by list_of_param_assignments are folded into
+// parameter_port_declaration.
+parameter_port_list_opt:
 	 /* Optional */
 	        { init($$); }
-        | '#' '(' list_of_param_assignments ')'
-	        { $$ = $3; }
-        | '#' '(' parameter_port_declaration ')'
+        | '#' '(' parameter_port_declaration_brace ')'
 	        { $$ = $3; }
         | '#' '(' ')'
 	        { init($$); }
@@ -806,13 +809,17 @@ package_item:
 // A.2.1.1 Module parameter declarations
 
 local_parameter_declaration:
-          TOK_LOCALPARAM list_of_param_assignments
-		{ init($$, ID_local_parameter_decl); swapop($$, $2); }
+          TOK_LOCALPARAM data_type_or_implicit list_of_param_assignments
+		{ init($$, ID_local_parameter_decl); swapop($$, $3); }
 	;
 
 parameter_declaration:
-          TOK_PARAMETER list_of_param_assignments
-		{ init($$, ID_parameter_decl); swapop($$, $2); }
+          TOK_PARAMETER data_type_or_implicit list_of_param_assignments
+		{ init($$, ID_parameter_decl); swapop($$, $3); }
+	;
+
+specparam_declaration:
+	  TOK_SPECPARAM data_type_or_implicit list_of_specparam_assignments ';'
 	;
 
 // System Verilog standard 1800-2017
@@ -1137,8 +1144,21 @@ defparam_assignment:
 		{ init($$, ID_parameter_assignment); mto($$, $1); mto($$, $3); }
 	;
 
+parameter_port_declaration_brace:
+	  parameter_port_declaration
+		{ init($$, ID_parameter_decl); mto($$, $1); }
+	| parameter_port_declaration_brace ',' parameter_port_declaration
+		{ $$=$1; mto($$, $3); }
+	;
+
+// This rule is more permissive that the grammar in the standard
+// to cover list_of_param_assignments.
 parameter_port_declaration:
-	  parameter_declaration
+          TOK_PARAMETER param_assignment
+		{ $$ = $2; }
+	| data_type param_assignment
+		{ $$ = $2; }
+	| param_assignment
 	;
 
 list_of_defparam_assignments:
@@ -1160,12 +1180,10 @@ list_of_param_assignments:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-param_assignment: signing_opt packed_dimension_brace param_identifier '=' const_expression
-		{ // $1 and $2 implement Verilog 2000 sized parameters,
-		  // which can be ignored
-		  init($$, ID_parameter);
-		  addswap($$, ID_identifier, $3);
-		  addswap($$, ID_value, $5); }
+param_assignment: param_identifier '=' const_expression
+		{ init($$, ID_parameter);
+		  addswap($$, ID_identifier, $1);
+		  addswap($$, ID_value, $3); }
         ;
 
 param_identifier: TOK_CHARSTR;
@@ -2376,10 +2394,6 @@ polarity_operator:
 list_of_specparam_assignments: 
 	  specparam_assignment 
 	| list_of_specparam_assignments ',' specparam_assignment
-	;
-
-specparam_declaration:
-	  TOK_SPECPARAM range_opt list_of_specparam_assignments ';'
 	;
 
 specparam_assignment:
