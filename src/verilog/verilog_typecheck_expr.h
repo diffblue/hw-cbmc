@@ -113,6 +113,8 @@ private:
   void tc_binary_expr(exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
   void no_bool_ops(exprt &);
+
+  exprt bits(const exprt &);
 };
 
 bool verilog_typecheck(

@@ -403,6 +403,40 @@ void verilog_typecheck_exprt::convert_constraint_select_one(exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::bits
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::bits(const exprt &expr)
+{
+  auto width = [this](const exprt &expr) -> mp_integer {
+    const typet &type = expr.type();
+    if(type.id() == ID_bool)
+      return 1;
+    else if(type.id() == ID_unsignedbv)
+      return to_unsignedbv_type(type).get_width();
+    else if(type.id() == ID_signedbv)
+      return to_signedbv_type(type).get_width();
+    else
+    {
+      error().source_location = expr.source_location();
+      error() << "failed to determine number of bits of " << to_string(expr)
+              << eom;
+      throw 0;
+    }
+  }(expr);
+
+  return from_integer(width, integer_typet());
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_system_function
 
   Inputs:
@@ -520,6 +554,19 @@ exprt verilog_typecheck_exprt::convert_system_function(
     select_one.set(ID_identifier, identifier);
 
     return select_one;
+  }
+  else if(identifier == "$bits")
+  {
+    if(arguments.size() != 1)
+    {
+      error().source_location = expr.source_location();
+      error() << "$bits takes one argument" << eom;
+      throw 0;
+    }
+
+    expr.type() = integer_typet();
+
+    return std::move(expr);
   }
   else if(identifier=="$onehot") // SystemVerilog
   {
@@ -1238,7 +1285,12 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
 
   auto &arguments = expr.arguments();
 
-  if(identifier == "$clog2")
+  if(identifier == "$bits")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$bits has one argument");
+    return bits(arguments[0]);
+  }
+  else if(identifier == "$clog2")
   {
     // the ceiling of the log with base 2 of the argument
     DATA_INVARIANT(arguments.size() == 1, "$clog2 has one argument");
