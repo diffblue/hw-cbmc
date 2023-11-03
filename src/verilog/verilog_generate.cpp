@@ -117,7 +117,7 @@ void verilog_typecheckt::elaborate_generate_if(
   }
 
   mp_integer condition =
-    convert_const_expression(to_multi_ary_expr(statement).op0());
+    convert_constant_expression(to_multi_ary_expr(statement).op0());
 
   if(condition==0)
   {
@@ -170,7 +170,7 @@ void verilog_typecheckt::elaborate_generate_assign(
     throw 0;
   }
 
-  mp_integer rhs = convert_const_expression(to_binary_expr(statement).rhs());
+  mp_integer rhs = convert_constant_expression(to_binary_expr(statement).rhs());
 
   if(rhs<0)
   {
@@ -210,7 +210,7 @@ void verilog_typecheckt::elaborate_generate_for(
   while(true)
   {
     mp_integer condition =
-      convert_const_expression(to_multi_ary_expr(statement).op1());
+      convert_constant_expression(to_multi_ary_expr(statement).op1());
 
     if(condition==0) break;
     

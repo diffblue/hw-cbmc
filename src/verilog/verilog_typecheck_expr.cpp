@@ -1092,7 +1092,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::convert_const_expression
+Function: verilog_typecheck_exprt::convert_constant_expression
 
   Inputs:
 
@@ -1102,7 +1102,8 @@ Function: verilog_typecheck_exprt::convert_const_expression
 
 \*******************************************************************/
 
-mp_integer verilog_typecheck_exprt::convert_const_expression(const exprt &expr)
+mp_integer
+verilog_typecheck_exprt::convert_constant_expression(const exprt &expr)
 {
   exprt tmp(expr);
 
@@ -1111,8 +1112,8 @@ mp_integer verilog_typecheck_exprt::convert_const_expression(const exprt &expr)
 
   // this could be large
   propagate_type(tmp, integer_typet());
-  
-  tmp=elaborate_const_expression(tmp);
+
+  tmp = elaborate_constant_expression(tmp);
 
   if(!tmp.is_constant())
   {
@@ -1145,7 +1146,7 @@ mp_integer verilog_typecheck_exprt::convert_const_expression(const exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::elaborate_const_expression
+Function: verilog_typecheck_exprt::elaborate_constant_expression
 
   Inputs:
 
@@ -1155,7 +1156,7 @@ Function: verilog_typecheck_exprt::elaborate_const_expression
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
+exprt verilog_typecheck_exprt::elaborate_constant_expression(const exprt &expr)
 {
   if(expr.id()==ID_constant)
     return expr;
@@ -1184,14 +1185,14 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
     const function_call_exprt &function_call=
       to_function_call_expr(expr);
 
-    return elaborate_const_function_call(function_call);  
+    return elaborate_constant_function_call(function_call);
   }
   else
   {
     exprt tmp=expr;
     
     for(auto & e : tmp.operands())
-      e=elaborate_const_expression(e);
+      e = elaborate_constant_expression(e);
 
     simplify(tmp, ns);
 
@@ -1201,7 +1202,7 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::is_const_expression
+Function: verilog_typecheck_exprt::is_constant_expression
 
   Inputs:
 
@@ -1211,7 +1212,7 @@ Function: verilog_typecheck_exprt::is_const_expression
 
 \*******************************************************************/
 
-bool verilog_typecheck_exprt::is_const_expression(
+bool verilog_typecheck_exprt::is_constant_expression(
   const exprt &expr,
   mp_integer &value)
 {
@@ -1425,8 +1426,8 @@ void verilog_typecheck_exprt::convert_range(
     throw 0;
   }
 
-  msb = convert_const_expression(to_binary_expr(range).op0());
-  lsb = convert_const_expression(to_binary_expr(range).op1());
+  msb = convert_constant_expression(to_binary_expr(range).op0());
+  lsb = convert_constant_expression(to_binary_expr(range).op1());
 }
 
 /*******************************************************************\
@@ -1668,7 +1669,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
 
     mp_integer op1;
 
-    if(is_const_expression(to_extractbit_expr(expr).op1(), op1))
+    if(is_constant_expression(to_extractbit_expr(expr).op1(), op1))
     {
       if(op1<offset)
       {
@@ -1729,7 +1730,7 @@ void verilog_typecheck_exprt::convert_replication_expr(replication_exprt &expr)
 
   unsigned width=get_width(expr.op1().type());
 
-  mp_integer op0 = convert_const_expression(expr.op0());
+  mp_integer op0 = convert_constant_expression(expr.op0());
 
   if(op0<0)
   {
@@ -1974,8 +1975,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt &expr)
     unsigned width=get_width(op0.type());
     unsigned offset=atoi(op0.type().get(ID_C_offset).c_str());
 
-    mp_integer op1 = convert_const_expression(expr.op1());
-    mp_integer op2 = convert_const_expression(expr.op2());
+    mp_integer op1 = convert_constant_expression(expr.op1());
+    mp_integer op2 = convert_constant_expression(expr.op2());
 
     if(op1<op2)
       std::swap(op1, op2);

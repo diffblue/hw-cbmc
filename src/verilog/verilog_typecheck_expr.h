@@ -40,7 +40,7 @@ public:
   { }
 
   virtual void convert_expr(exprt &expr);
-  virtual mp_integer convert_const_expression(const exprt &);
+  virtual mp_integer convert_constant_expression(const exprt &);
 
 protected:
   irep_idt module_identifier;
@@ -81,11 +81,12 @@ protected:
   void enter_named_block(const irep_idt &);
 
   // elaboration (expansion) of constant expressions and functions
-  bool is_const_expression(const exprt &, mp_integer &value);
-  exprt elaborate_const_expression(const exprt &);
+  bool is_constant_expression(const exprt &, mp_integer &value);
+  exprt elaborate_constant_expression(const exprt &);
 
   // to be overridden
-  virtual exprt elaborate_const_function_call(const class function_call_exprt &)
+  virtual exprt
+  elaborate_constant_function_call(const class function_call_exprt &)
   {
     assert(false);
   }
