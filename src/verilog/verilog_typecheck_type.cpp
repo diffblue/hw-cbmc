@@ -25,10 +25,20 @@ Function: verilog_typecheck_exprt::convert_type
 
 typet verilog_typecheck_exprt::convert_type(const irept &src)
 {
+  auto source_location =
+    static_cast<const typet &>(src).source_location();
+
   if(src.is_nil() || src.id()==ID_reg)
   {
     // it's just a bit
     return bool_typet();
+  }
+
+  if(src.id() == ID_integer)
+  {
+    auto result = integer_typet();
+    result.add_source_location() = source_location;
+    return result;
   }
   
   if(src.id()==ID_array)
@@ -57,8 +67,7 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
 
       bitvector_typet dest(subtype.id()==ID_signed?ID_signedbv:ID_unsignedbv);
 
-      dest.add_source_location()=
-        static_cast<const source_locationt &>(src.find(ID_C_source_location));
+      dest.add_source_location()=source_location;
       dest.set_width(width.to_ulong());
       dest.set(ID_C_little_endian, little_endian);
       dest.set(ID_C_offset, integer2string(offset));
@@ -72,8 +81,7 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
       typet s=convert_type(subtype);
 
       array_typet result(s, size);
-      result.add_source_location()=
-        static_cast<const source_locationt &>(src.find(ID_C_source_location));
+      result.add_source_location()=source_location;
       result.set(ID_offset, from_integer(offset, integer_typet()));
 
       return std::move(result);
@@ -81,7 +89,7 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
   }
   else
   {
-    error().source_location=static_cast<const typet &>(src).source_location();
+    error().source_location=source_location;
     error() << "unexpected type: `" << src.id() << "'" << eom;
     throw 0;
   }

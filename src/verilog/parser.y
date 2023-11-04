@@ -886,6 +886,14 @@ port_identifier: TOK_CHARSTR
 // System Verilog standard 1800-2017
 // A.2.1.3 Type declarations
 
+data_declaration:
+	  data_type list_of_variable_decl_assignments ';'
+		{ init($$, ID_decl);
+		  stack_expr($$).set(ID_class, ID_reg);
+                  addswap($$, ID_type, $1);
+		  swapop($$, $2); }
+	;
+
 net_declaration:
           net_type_or_trireg drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
 		{ init($$, ID_decl);
@@ -1005,8 +1013,19 @@ integer_vector_type:
         | TOK_REG { init($$, ID_reg); }
 	;
 	
-integer_atom_type: TOK_INT
+integer_atom_type:
+	  TOK_BYTE
+                { init($$, ID_byte); }
+//	| TOK_SHORTINT
+//                { init($$, ID_shortint); }
+	| TOK_INT
                 { init($$, ID_int); }
+//	| TOK_LONGINT
+//                { init($$, ID_longint); }
+	| TOK_INTEGER
+                { init($$, ID_integer); }
+	| TOK_TIME
+                { init($$, ID_time); }
 	;
 	
 class_type: TOK_CLASS
@@ -1180,6 +1199,13 @@ list_of_param_assignments:
 		{ $$=$1;    mto($$, $3); }
 	;
 
+list_of_variable_decl_assignments:
+	  variable_decl_assignment
+		{ init($$); mto($$, $1); }
+	| list_of_variable_decl_assignments ',' variable_decl_assignment
+		{ $$=$1;    mto($$, $3); }
+	;
+
 param_assignment: param_identifier '=' const_expression
 		{ init($$, ID_parameter);
 		  addswap($$, ID_identifier, $1);
@@ -1347,6 +1373,10 @@ net_decl_assignment: net_identifier '=' expression
 		{ init($$, ID_equal); mto($$, $1); mto($$, $3); }
 	;
 
+variable_decl_assignment:
+	  variable_identifier variable_dimension_brace
+	;
+
 // System Verilog standard 1800-2017
 // A.2.5 Declaration ranges
 
@@ -1360,16 +1390,6 @@ unpacked_dimension_brace:
 	  }
 	;
 
-packed_dimension:
-	  '[' const_expression TOK_COLON const_expression ']'
-		{ init($$, ID_array);
-		  stack_type($$).add_subtype().make_nil();
-		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
-		  range.add_to_operands(stack_expr($2));
-		  range.add_to_operands(stack_expr($4)); }
-	| unsized_dimension
-	;
-
 unpacked_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
 		{ init($$, ID_array);
@@ -1381,6 +1401,31 @@ unpacked_dimension:
 	{
 	  $$=$2;
 	}
+	;
+
+packed_dimension:
+	  '[' const_expression TOK_COLON const_expression ']'
+		{ init($$, ID_array);
+		  stack_type($$).add_subtype().make_nil();
+		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
+		  range.add_to_operands(stack_expr($2));
+		  range.add_to_operands(stack_expr($4)); }
+	| unsized_dimension
+	;
+
+variable_dimension_brace:
+	  /* Optional */
+	  { make_nil($$); }
+	| variable_dimension_brace variable_dimension
+	  {
+	    $$=$1;
+	    add_as_subtype(stack_type($$), stack_type($2));
+	  }
+	;
+
+variable_dimension:
+	  unsized_dimension
+	| unpacked_dimension
 	;
 
 unsized_dimension: '[' ']'
@@ -1479,14 +1524,9 @@ task_item_declaration:
 // A.2.8 Block item declarations
 
 block_item_declaration:
-	  attribute_instance_brace block_reg_declaration { $$=$2; }
-	| attribute_instance_brace event_declaration     { $$=$2; }
-	| attribute_instance_brace integer_declaration   { $$=$2; }
+	  attribute_instance_brace data_declaration { $$=$2; }
 	| attribute_instance_brace local_parameter_declaration ';' { $$=$2; }
 	| attribute_instance_brace parameter_declaration ';' { $$=$2; }
-	// | attribute_instance_brace real_declaration
-	| attribute_instance_brace realtime_declaration  { $$=$2; }
-	// | attribute_instance_brace time_declaration
 	;
 
 // System Verilog standard 1800-2017
@@ -1839,17 +1879,12 @@ module_or_generate_item:
 
 module_or_generate_item_declaration:
           package_or_generate_item_declaration
-	| reg_declaration
-	| integer_declaration
-	| real_declaration
-          /* time_declaration */
-	| realtime_declaration
-	| event_declaration
 	| genvar_declaration
 	;
 
 package_or_generate_item_declaration:
 	  net_declaration
+	| data_declaration
 	| task_declaration
 	| function_declaration
 	| local_parameter_declaration ';'
@@ -1987,10 +2022,8 @@ statement:
 statement_item:
           assert_property_statement
         | assume_property_statement
-        | block_reg_declaration /* added */
-        | net_declaration       /* added */
-	| event_declaration     /* added */
-	| integer_declaration   /* added */
+        | data_declaration
+          /* added allow anywhere in seq_block, not just at the beginning */
         | blocking_assignment ';' { $$ = $1; }
 	| nonblocking_assignment ';' { $$ = $1; }
 	| case_statement
