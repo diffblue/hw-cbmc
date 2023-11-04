@@ -551,20 +551,22 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
 
   exprt::operandst &parameter_assignments=
     inst.parameter_assignments();
-  
+
   Forall_expr(it, parameter_assignments)
   {
-    // these must be constants
+    // These must be constants. Preserve the location.
     if(it->id()==ID_named_parameter_assignment)
     {
-      mp_integer v_int = convert_integer_constant_expression(
-        static_cast<exprt &>(it->add(ID_value)));
-      it->add(ID_value)=from_integer(v_int, integer_typet());
+      auto &value = static_cast<exprt &>(it->add(ID_value));
+      mp_integer v_int = convert_integer_constant_expression(value);
+      value =
+        from_integer(v_int, integer_typet()).with_source_location<exprt>(*it);
     }
     else
     {
       mp_integer v_int = convert_integer_constant_expression(*it);
-      *it=from_integer(v_int, integer_typet());
+      *it =
+        from_integer(v_int, integer_typet()).with_source_location<exprt>(*it);
     }
   }
 

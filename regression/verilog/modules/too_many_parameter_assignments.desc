@@ -1,0 +1,7 @@
+CORE
+too_many_parameter_assignments.v
+
+^file .* line 8: too many parameter assignments$
+^EXIT=2$
+^SIGNAL=0$
+--
