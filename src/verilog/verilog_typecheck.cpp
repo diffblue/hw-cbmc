@@ -557,13 +557,13 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
     // these must be constants
     if(it->id()==ID_named_parameter_assignment)
     {
-      mp_integer v_int =
-        convert_constant_expression(static_cast<exprt &>(it->add(ID_value)));
+      mp_integer v_int = convert_integer_constant_expression(
+        static_cast<exprt &>(it->add(ID_value)));
       it->add(ID_value)=from_integer(v_int, integer_typet());
     }
     else
     {
-      mp_integer v_int = convert_constant_expression(*it);
+      mp_integer v_int = convert_integer_constant_expression(*it);
       *it=from_integer(v_int, integer_typet());
     }
   }
@@ -1019,7 +1019,7 @@ void verilog_typecheckt::convert_parameter_override(
 
     // The rhs must be a constant at this point.
     auto rhs_value =
-      from_integer(convert_constant_expression(rhs), integer_typet());
+      from_integer(convert_integer_constant_expression(rhs), integer_typet());
 
     // store the assignment
     defparams[module_instance][parameter_name] = rhs_value;

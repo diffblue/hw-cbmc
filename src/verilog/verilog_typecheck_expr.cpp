@@ -1092,7 +1092,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::convert_constant_expression
+Function: verilog_typecheck_exprt::convert_integer_constant_expression
 
   Inputs:
 
@@ -1103,7 +1103,7 @@ Function: verilog_typecheck_exprt::convert_constant_expression
 \*******************************************************************/
 
 mp_integer
-verilog_typecheck_exprt::convert_constant_expression(const exprt &expr)
+verilog_typecheck_exprt::convert_integer_constant_expression(const exprt &expr)
 {
   exprt tmp(expr);
 
@@ -1426,8 +1426,8 @@ void verilog_typecheck_exprt::convert_range(
     throw 0;
   }
 
-  msb = convert_constant_expression(to_binary_expr(range).op0());
-  lsb = convert_constant_expression(to_binary_expr(range).op1());
+  msb = convert_integer_constant_expression(to_binary_expr(range).op0());
+  lsb = convert_integer_constant_expression(to_binary_expr(range).op1());
 }
 
 /*******************************************************************\
@@ -1730,7 +1730,7 @@ void verilog_typecheck_exprt::convert_replication_expr(replication_exprt &expr)
 
   unsigned width=get_width(expr.op1().type());
 
-  mp_integer op0 = convert_constant_expression(expr.op0());
+  mp_integer op0 = convert_integer_constant_expression(expr.op0());
 
   if(op0<0)
   {
@@ -1975,8 +1975,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt &expr)
     unsigned width=get_width(op0.type());
     unsigned offset=atoi(op0.type().get(ID_C_offset).c_str());
 
-    mp_integer op1 = convert_constant_expression(expr.op1());
-    mp_integer op2 = convert_constant_expression(expr.op2());
+    mp_integer op1 = convert_integer_constant_expression(expr.op1());
+    mp_integer op2 = convert_integer_constant_expression(expr.op2());
 
     if(op1<op2)
       std::swap(op1, op2);
