@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "expr2verilog.h"
 #include "verilog_expr.h"
+#include "verilog_typecheck_expr.h"
 
 #include <cassert>
 #include <map>
@@ -122,6 +123,24 @@ Function: verilog_synthesist::expand_function_call
 
 void verilog_synthesist::expand_function_call(function_call_exprt &call)
 {
+  // Is it a 'system function call'?
+  if(call.is_system_function_call())
+  {
+    // Attempt to constant fold.
+    verilog_typecheck_exprt verilog_typecheck_expr(ns, get_message_handler());
+    auto result = verilog_typecheck_expr.elaborate_constant_system_function_call(call);
+    if(!result.is_constant())
+    {
+      error().source_location = call.source_location();
+      error() << "cannot synthesise system function "
+              << to_string(call.function()) << eom;
+      throw 0;
+    }
+
+    call.swap(result);
+    return;
+  }
+
   // check some restrictions
   if(construct!=constructt::INITIAL &&
      construct!=constructt::ALWAYS)

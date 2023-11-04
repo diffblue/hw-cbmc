@@ -20,6 +20,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cassert>
 #include <stack>
 
+class function_call_exprt;
+
 class verilog_typecheck_exprt:public verilog_typecheck_baset
 {
 public:
@@ -40,7 +42,9 @@ public:
   { }
 
   virtual void convert_expr(exprt &expr);
-  mp_integer convert_integer_constant_expression(const exprt &);
+  mp_integer convert_integer_constant_expression(exprt);
+
+  exprt elaborate_constant_system_function_call(function_call_exprt);
 
 protected:
   irep_idt module_identifier;
@@ -80,13 +84,12 @@ protected:
   named_blockst named_blocks;
   void enter_named_block(const irep_idt &);
 
-  // elaboration (expansion) of constant expressions and functions
+  // elaboration (expansion and folding) of constant expressions and functions
   bool is_constant_expression(const exprt &, mp_integer &value);
-  exprt elaborate_constant_expression(const exprt &);
+  exprt elaborate_constant_expression(exprt);
 
-  // to be overridden
-  virtual exprt
-  elaborate_constant_function_call(const class function_call_exprt &)
+  // To be overridden, requires a Verilog interpreter.
+  virtual exprt elaborate_constant_function_call(const function_call_exprt &)
   {
     assert(false);
   }
@@ -99,10 +102,9 @@ private:
   void convert_unary_expr  (unary_exprt &);
   void convert_binary_expr (binary_exprt &);
   void convert_trinary_expr(ternary_exprt &);
-  NODISCARD exprt convert_expr_function_call(class function_call_exprt);
-  NODISCARD exprt convert_system_function(
-    const irep_idt &identifier,
-    class function_call_exprt);
+  NODISCARD exprt convert_expr_function_call(function_call_exprt);
+  NODISCARD exprt
+  convert_system_function(const irep_idt &identifier, function_call_exprt);
   void convert_constraint_select_one(exprt &);
   void convert_extractbit_expr(extractbit_exprt &);
   void convert_replication_expr(replication_exprt &);
