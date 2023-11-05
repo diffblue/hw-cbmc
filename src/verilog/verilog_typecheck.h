@@ -14,9 +14,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table_base.h>
 #include <util/typecheck.h>
 
-#include "verilog_typecheck_expr.h"
+#include "verilog_expr.h"
 #include "verilog_parse_tree.h"
 #include "verilog_symbol_table.h"
+#include "verilog_typecheck_expr.h"
 
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
@@ -75,6 +76,9 @@ protected:
     const irep_idt &module_identifier,
     const exprt::operandst &parameter_assignment,
     const std::map<irep_idt, exprt> &defparams);
+
+  std::vector<verilog_parameter_declt::declaratort>
+  get_parameter_declarators(const irept &module_source);
 
   std::list<exprt> get_parameter_values(
     const irept &module_source,
