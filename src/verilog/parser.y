@@ -1318,19 +1318,20 @@ range_opt:
 
 range:	part_select;
 
-integer_declaration:
-	  TOK_INTEGER list_of_register_identifiers ';'
-		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_integer); swapop($$, $2); }
+integer_real_type:
+	  TOK_INTEGER
+		{ init($$, ID_integer); }
+	| TOK_REAL
+		{ init($$, ID_real); }
+	| TOK_REALTIME
+		{ init($$, ID_realtime); }
 	;
 
-realtime_declaration:
-	  TOK_REALTIME list_of_real_identifiers ';'
-		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_realtime); swapop($$, $2); }
-	;
-
-real_declaration:
-	  TOK_REAL list_of_real_identifiers ';'
-		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_realtime); swapop($$, $2); }
+integer_real_declaration:
+	  integer_real_type list_of_register_identifiers ';'
+		{ init($$, ID_decl);
+		  stack_expr($$).add(ID_type) = std::move(stack_expr($1));
+		  swapop($$, $2); }
 	;
 
 list_of_real_identifiers:
@@ -1481,11 +1482,9 @@ task_item_declaration:
 block_item_declaration:
 	  attribute_instance_brace block_reg_declaration { $$=$2; }
 	| attribute_instance_brace event_declaration     { $$=$2; }
-	| attribute_instance_brace integer_declaration   { $$=$2; }
+	| attribute_instance_brace integer_real_declaration   { $$=$2; }
 	| attribute_instance_brace local_parameter_declaration ';' { $$=$2; }
 	| attribute_instance_brace parameter_declaration ';' { $$=$2; }
-	// | attribute_instance_brace real_declaration
-	| attribute_instance_brace realtime_declaration  { $$=$2; }
 	// | attribute_instance_brace time_declaration
 	;
 
@@ -1840,10 +1839,8 @@ module_or_generate_item:
 module_or_generate_item_declaration:
           package_or_generate_item_declaration
 	| reg_declaration
-	| integer_declaration
-	| real_declaration
+	| integer_real_declaration
           /* time_declaration */
-	| realtime_declaration
 	| event_declaration
 	| genvar_declaration
 	;
@@ -1990,7 +1987,7 @@ statement_item:
         | block_reg_declaration /* added */
         | net_declaration       /* added */
 	| event_declaration     /* added */
-	| integer_declaration   /* added */
+	| integer_real_declaration   /* added */
         | blocking_assignment ';' { $$ = $1; }
 	| nonblocking_assignment ';' { $$ = $1; }
 	| case_statement
