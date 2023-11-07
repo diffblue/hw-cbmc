@@ -51,7 +51,7 @@ jobs:
       - name: Print ccache stats
         run: ccache -s
 
-  # This job takes approximately ? minutes
+  # This job takes approximately 15 minutes
   check-ubuntu-20_04-make-clang:
     runs-on: ubuntu-20.04
     env:
@@ -96,6 +96,47 @@ jobs:
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
         run: make -C regression/ebmc test-z3
+      - name: Run the verilog tests
+        run: make -C regression/verilog test
+      - name: Print ccache stats
+        run: ccache -s
+
+  # This job takes approximately 15 minutes
+  check-centos8-make-gcc:
+    name: CentOS 8
+    runs-on: ubuntu-20.04
+    container:
+      image: centos:8
+    steps:
+      - name: Install Packages
+        run: |
+          sed -i -e "s|mirrorlist=|#mirrorlist=|g" -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-Linux-*
+          yum -y install make gcc-c++ flex bison git rpmdevtools wget zlib-devel
+          wget --no-verbose https://github.com/ccache/ccache/releases/download/v4.8.3/ccache-4.8.3-linux-x86_64.tar.xz
+          tar xJf ccache-4.8.3-linux-x86_64.tar.xz
+          cp ccache-4.8.3-linux-x86_64/ccache /usr/bin/
+          # yum install dnf-plugins-core
+          # yum config-manager --set-enabled powertools
+          # yum install glibc-static libstdc++-static
+      - name: cache for ccache
+        uses: actions/cache@v3
+        with:
+          path: /github/home/.ccache
+          key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: ${{ runner.os }}-centos8-make-gcc-
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get minisat
+        run: make -C lib/cbmc/src minisat2-download
+      - name: Build with make
+        run: make CXX="ccache g++" -C src -j2
+      - name: Run the ebmc tests with SAT
+        run: |
+          rm regression/ebmc/neural-liveness/counter1.desc
+          make -C regression/ebmc test
       - name: Run the verilog tests
         run: make -C regression/verilog test
       - name: Print ccache stats
