@@ -1,0 +1,7 @@
+CORE
+counter2.sv
+--ranking-function 10-counter
+^\[main\.property\.p0\] always \(eventually main.counter == 10\): SUCCESS$
+^EXIT=0$
+^SIGNAL=0$
+--
