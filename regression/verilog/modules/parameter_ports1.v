@@ -10,7 +10,7 @@ module main;
 
   wire [7:0] data = 123;
   wire is_zero;
-  my_zero_tester t(data, is_zero);
+  my_zero_tester #(8) t(data, is_zero);
 
   always assert p1: !is_zero;
 

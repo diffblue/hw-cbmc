@@ -29,13 +29,20 @@ Function: verilog_typecheckt::get_parameter_declarators
 std::vector<verilog_parameter_declt::declaratort>
 verilog_typecheckt::get_parameter_declarators(const irept &module_source)
 {
-  const irept &module_items = module_source.find(ID_module_items);
   std::vector<verilog_parameter_declt::declaratort> declarators;
+
+  const irept &module_items = module_source.find(ID_module_items);
 
   for(auto &item : module_items.get_sub())
     if(item.id() == ID_parameter_decl)
       for(auto &decl : to_verilog_parameter_decl(item).declarations())
         declarators.push_back(decl);
+
+  const irept &parameter_port_list = module_source.find("parameter_port_list");
+
+  for(auto &decl : parameter_port_list.get_sub())
+    declarators.push_back(
+      static_cast<const verilog_parameter_declt::declaratort &>(decl));
 
   return declarators;
 }
@@ -84,7 +91,9 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
         value = map[identifier];
       else
       {
+        // The default value is not yet converted.
         value = decl.value();
+        convert_expr(value);
 
         // substitute other parameters
         replace_symbol.replace(value);
@@ -124,7 +133,10 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
       }
       else
       {
+        // The default value is not yet converted.
         value = decl.value();
+        convert_expr(value);
+
         // substitute other parameters
         replace_symbol.replace(value);
         simplify(value, ns);
