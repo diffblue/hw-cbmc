@@ -2774,8 +2774,9 @@ void verilog_synthesist::synth_assignments(transt &trans)
   for(const auto & it : local_symbols)
   {
     symbolt &symbol=symbol_table_lookup(it);
-    
-    if(symbol.is_state_var && !symbol.is_macro)
+
+    if(
+      symbol.is_state_var && !symbol.is_macro && symbol.type.id() != ID_integer)
     {
       assignmentt &assignment=assignments[symbol.name];
 

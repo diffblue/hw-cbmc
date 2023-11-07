@@ -320,17 +320,6 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     error() << "this kind of declaration is not expected here" << eom;
     throw 0;
   }
-  else if(port_class==ID_integer)
-  {
-    // we treat these as unbounded integers
-    type=integer_typet();
-    symbol.is_lvalue=true;
-  }
-  else if(port_class==ID_realtime)
-  {
-    symbol.is_lvalue=true;
-    type=verilog_realtime_typet();
-  }
   else
   {
     type = convert_type(decl.type());
@@ -365,9 +354,18 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     }
     else
     {
-      error().source_location = decl.source_location();
-      error() << "unexpected port class: `" << port_class << '\'' << eom;
-      throw 0;
+      if(
+        type.id() == ID_integer || type.id() == ID_verilog_realtime ||
+        type.id() == ID_real)
+      {
+        symbol.is_lvalue = true;
+      }
+      else
+      {
+        error().source_location = decl.source_location();
+        error() << "unexpected port class: `" << port_class << '\'' << eom;
+        throw 0;
+      }
     }    
   }
   
@@ -488,20 +486,9 @@ void verilog_typecheckt::interface_module_decl(
     interface_function_or_task(decl);
     return;
   }
-  else if(port_class==ID_integer)
-  {
-    // we treat these as unbounded integers
-    type=integer_typet();
-    symbol.is_lvalue=true;
-  }
   else if(port_class==ID_genvar)
   {
     type=genvar_typet();
-  }
-  else if(port_class==ID_realtime)
-  {
-    symbol.is_lvalue=true;
-    type=verilog_realtime_typet();
   }
   else
   {
@@ -534,9 +521,18 @@ void verilog_typecheckt::interface_module_decl(
     }
     else
     {
-      error() << "unexpected port class: `" << port_class
-              << '\'' << eom;
-      throw 0;
+      if(
+        type.id() == ID_integer || type.id() == ID_verilog_realtime ||
+        type.id() == ID_real)
+      {
+        symbol.is_lvalue = true;
+      }
+      else
+      {
+        error().source_location = decl.source_location();
+        error() << "unexpected port class: `" << port_class << '\'' << eom;
+        throw 0;
+      }
     }
   }
   
@@ -844,7 +840,10 @@ void verilog_typecheckt::interface_statement(
   }
   else if(statement.id()==ID_decl)
   {
-    interface_module_decl(to_verilog_decl(statement));
+    if(function_or_task_name.empty())
+      interface_module_decl(to_verilog_decl(statement));
+    else
+      interface_function_or_task_decl(to_verilog_decl(statement));
   }
   else if(statement.id()==ID_event_guard)
   {
