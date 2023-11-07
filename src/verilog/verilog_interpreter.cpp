@@ -31,7 +31,7 @@ void verilog_typecheckt::verilog_interpreter(
     const verilog_blocking_assignt &assign=
       to_verilog_blocking_assign(statement);
 
-    exprt rhs=elaborate_const_expression(assign.rhs());
+    exprt rhs = elaborate_constant_expression(assign.rhs());
     if(!rhs.is_constant())
     {
       error().source_location=assign.rhs().source_location();
@@ -63,8 +63,8 @@ void verilog_typecheckt::verilog_interpreter(
     
     while(true)
     {
-      exprt cond=elaborate_const_expression(verilog_for.condition());
-      
+      exprt cond = elaborate_constant_expression(verilog_for.condition());
+
       if(cond.is_false())
         break;
       else if(cond.is_true())

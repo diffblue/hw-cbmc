@@ -311,7 +311,7 @@ Function: verilog_typecheck_exprt::convert_expr_function_call
 exprt verilog_typecheck_exprt::convert_expr_function_call(
   function_call_exprt expr)
 {
-  // arguments
+  // convert the arguments
   auto &arguments = expr.arguments();
 
   Forall_expr(it, arguments)
@@ -324,12 +324,12 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
     throw 0;
   }
     
+  // built-in functions
   symbol_exprt &f_op=to_symbol_expr(expr.function());
   
-  // built-in functions
   const irep_idt &identifier=f_op.get_identifier();
   
-  if(has_prefix(id2string(identifier), "$"))
+  if(expr.is_system_function_call())
     return convert_system_function(identifier, expr);
 
   std::string full_identifier=
@@ -560,31 +560,9 @@ exprt verilog_typecheck_exprt::convert_system_function(
       throw 0;
     }
 
-    // the ceiling of the log with base 2 of the argument
-    exprt clog2 = unary_exprt(ID_clog2, arguments.front());
-    clog2.add_source_location() = expr.source_location();
+    expr.type() = integer_typet();
 
-    auto &op = to_unary_expr(clog2).op();
-    if(op.is_constant())
-    {
-      auto value_opt = numeric_cast<mp_integer>(to_constant_expr(op));
-      if(value_opt.has_value())
-      {
-        // SystemVerilog (20.8.1, page 567)
-        if(*value_opt == 0 || *value_opt == 1)
-          return from_integer(0, integer_typet());
-        else
-        {
-          mp_integer result = 1;
-          for(mp_integer x = 2; x < *value_opt; ++result, x *= 2)
-            ;
-
-          return from_integer(result, integer_typet());
-        }
-      }
-    }
-
-    return clog2;
+    return std::move(expr);
   }
   else
   {
@@ -1092,7 +1070,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::convert_const_expression
+Function: verilog_typecheck_exprt::convert_integer_constant_expression
 
   Inputs:
 
@@ -1102,17 +1080,15 @@ Function: verilog_typecheck_exprt::convert_const_expression
 
 \*******************************************************************/
 
-mp_integer verilog_typecheck_exprt::convert_const_expression(const exprt &expr)
+mp_integer
+verilog_typecheck_exprt::convert_integer_constant_expression(exprt expr)
 {
-  exprt tmp(expr);
-
-  convert_expr(tmp);
-  ns.follow_macros(tmp);
+  convert_expr(expr);
 
   // this could be large
-  propagate_type(tmp, integer_typet());
-  
-  tmp=elaborate_const_expression(tmp);
+  propagate_type(expr, integer_typet());
+
+  exprt tmp = elaborate_constant_expression(expr);
 
   if(!tmp.is_constant())
   {
@@ -1145,7 +1121,7 @@ mp_integer verilog_typecheck_exprt::convert_const_expression(const exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::elaborate_const_expression
+Function: verilog_typecheck_exprt::elaborate_constant_expression
 
   Inputs:
 
@@ -1155,14 +1131,31 @@ Function: verilog_typecheck_exprt::elaborate_const_expression
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
+exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 {
+  // This performs constant-folding on a type-checked expression
+  // according to Section 11.2.1 IEEE 1800-2017.
+
   if(expr.id()==ID_constant)
     return expr;
   else if(expr.id()==ID_symbol)
   {
     const irep_idt &identifier=to_symbol_expr(expr).get_identifier();
-    
+
+    if(has_prefix(id2string(identifier), "$"))
+    {
+      // System function identifier. Leave as is.
+      return expr;
+    }
+
+    auto &symbol = ns.lookup(to_symbol_expr(expr));
+
+    if(symbol.is_macro)
+    {
+      // a parameter
+      return symbol.value;
+    }
+
     exprt value=var_value(identifier);
     
     #if 0
@@ -1176,32 +1169,53 @@ exprt verilog_typecheck_exprt::elaborate_const_expression(const exprt &expr)
       tmp.add_source_location()=source_location;
       return tmp;
     }
-
-    return expr;
+    else
+      return expr;
   }
   else if(expr.id()==ID_function_call)
   {
+    // Note that the operands are not elaborated yet.
     const function_call_exprt &function_call=
       to_function_call_expr(expr);
 
-    return elaborate_const_function_call(function_call);  
+    // Is it a system function call?
+    if(function_call.is_system_function_call())
+    {
+      // These are 'built in'.
+      return elaborate_constant_system_function_call(function_call);
+    }
+    else
+    {
+      // Use Verilog interpreter.
+      return elaborate_constant_function_call(function_call);
+    }
   }
   else
   {
-    exprt tmp=expr;
-    
-    for(auto & e : tmp.operands())
-      e=elaborate_const_expression(e);
+    // Do any operands first.
+    bool operands_are_constant = true;
 
-    simplify(tmp, ns);
+    for(auto &op : expr.operands())
+    {
+      // recursive call
+      op = elaborate_constant_expression(op);
+      if(!op.is_constant())
+        operands_are_constant = false;
+    }
 
-    return tmp;
+    // Are all operands constants now?
+    if(!operands_are_constant)
+      return expr; // give up
+
+    // We fall back to the simplifier to approximate
+    // the standard's definition of 'constant expression'.
+    return simplify_expr(expr, ns);
   }
 }
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::is_const_expression
+Function: verilog_typecheck_exprt::elaborate_constant_system_function_call
 
   Inputs:
 
@@ -1211,7 +1225,62 @@ Function: verilog_typecheck_exprt::is_const_expression
 
 \*******************************************************************/
 
-bool verilog_typecheck_exprt::is_const_expression(
+exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
+  function_call_exprt expr)
+{
+  // This performs constant-folding on a type-checked function
+  // call expression according to Section 11.2.1 IEEE 1800-2017.
+  auto &function = expr.function();
+  if(function.id() != ID_symbol)
+    return std::move(expr); // give up
+
+  auto &identifier = to_symbol_expr(function).get_identifier();
+
+  auto &arguments = expr.arguments();
+
+  if(identifier == "$clog2")
+  {
+    // the ceiling of the log with base 2 of the argument
+    DATA_INVARIANT(arguments.size() == 1, "$clog2 has one argument");
+
+    auto op = elaborate_constant_expression(arguments[0]);
+
+    if(!op.is_constant())
+      return std::move(expr); // give up
+
+    auto value_opt = numeric_cast<mp_integer>(to_constant_expr(op));
+    if(!value_opt.has_value())
+      return std::move(expr); // give up
+
+    // SystemVerilog (20.8.1, page 567)
+    if(*value_opt == 0 || *value_opt == 1)
+      return from_integer(0, integer_typet());
+    else
+    {
+      mp_integer result = 1;
+      for(mp_integer x = 2; x < *value_opt; ++result, x *= 2)
+        ;
+
+      return from_integer(result, integer_typet());
+    }
+  }
+  else
+    return std::move(expr); // don't know it, won't elaborate
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::is_constant_expression
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::is_constant_expression(
   const exprt &expr,
   mp_integer &value)
 {
@@ -1425,8 +1494,8 @@ void verilog_typecheck_exprt::convert_range(
     throw 0;
   }
 
-  msb = convert_const_expression(to_binary_expr(range).op0());
-  lsb = convert_const_expression(to_binary_expr(range).op1());
+  msb = convert_integer_constant_expression(to_binary_expr(range).op0());
+  lsb = convert_integer_constant_expression(to_binary_expr(range).op1());
 }
 
 /*******************************************************************\
@@ -1668,7 +1737,7 @@ void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
 
     mp_integer op1;
 
-    if(is_const_expression(to_extractbit_expr(expr).op1(), op1))
+    if(is_constant_expression(to_extractbit_expr(expr).op1(), op1))
     {
       if(op1<offset)
       {
@@ -1729,7 +1798,7 @@ void verilog_typecheck_exprt::convert_replication_expr(replication_exprt &expr)
 
   unsigned width=get_width(expr.op1().type());
 
-  mp_integer op0 = convert_const_expression(expr.op0());
+  mp_integer op0 = convert_integer_constant_expression(expr.op0());
 
   if(op0<0)
   {
@@ -1974,8 +2043,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt &expr)
     unsigned width=get_width(op0.type());
     unsigned offset=atoi(op0.type().get(ID_C_offset).c_str());
 
-    mp_integer op1 = convert_const_expression(expr.op1());
-    mp_integer op2 = convert_const_expression(expr.op2());
+    mp_integer op1 = convert_integer_constant_expression(expr.op1());
+    mp_integer op2 = convert_integer_constant_expression(expr.op2());
 
     if(op1<op2)
       std::swap(op1, op2);

@@ -337,7 +337,7 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_decl
+Function: verilog_typecheckt::elaborate_constant_function_call
 
   Inputs:
 
@@ -347,7 +347,7 @@ Function: verilog_typecheckt::convert_decl
 
 \*******************************************************************/
 
-exprt verilog_typecheckt::elaborate_const_function_call(
+exprt verilog_typecheckt::elaborate_constant_function_call(
   const function_call_exprt &function_call)
 {
   const function_call_exprt::argumentst &arguments=
@@ -394,7 +394,7 @@ exprt verilog_typecheckt::elaborate_const_function_call(
   
   for(std::size_t i=0; i<arguments.size(); i++)
   {
-    exprt value=elaborate_const_expression(arguments[i]);
+    exprt value = elaborate_constant_expression(arguments[i]);
 
     if(!value.is_constant())
     {
@@ -557,13 +557,13 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
     // these must be constants
     if(it->id()==ID_named_parameter_assignment)
     {
-      mp_integer v_int =
-        convert_const_expression(static_cast<exprt &>(it->add(ID_value)));
+      mp_integer v_int = convert_integer_constant_expression(
+        static_cast<exprt &>(it->add(ID_value)));
       it->add(ID_value)=from_integer(v_int, integer_typet());
     }
     else
     {
-      mp_integer v_int = convert_const_expression(*it);
+      mp_integer v_int = convert_integer_constant_expression(*it);
       *it=from_integer(v_int, integer_typet());
     }
   }
@@ -1018,7 +1018,8 @@ void verilog_typecheckt::convert_parameter_override(
     auto parameter_name = hierarchical_identifier.item().get_identifier();
 
     // The rhs must be a constant at this point.
-    auto rhs_value = from_integer(convert_const_expression(rhs), integer_typet());
+    auto rhs_value =
+      from_integer(convert_integer_constant_expression(rhs), integer_typet());
 
     // store the assignment
     defparams[module_instance][parameter_name] = rhs_value;

@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
-#include <util/expr.h>
+#include <util/std_expr.h>
 
 /// The syntax for these A.B, where A is a module identifier and B
 /// is an identifier within that module. B is given als symbol_exprt.
@@ -71,6 +71,8 @@ public:
   {
     return op1().operands();
   }
+
+  bool is_system_function_call() const;
 };
 
 extern inline const function_call_exprt &to_function_call_expr(const exprt &expr)
