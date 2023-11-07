@@ -171,14 +171,30 @@ public:
   {
   }
 
-  const exprt::operandst &declarations() const
+  class declaratort : public irept
   {
-    return operands();
+  public:
+    const irep_idt &identifier() const
+    {
+      return get(ID_identifier);
+    }
+
+    const exprt &value() const
+    {
+      return static_cast<const exprt &>(find(ID_value));
+    }
+  };
+
+  using declarators = std::vector<declaratort>;
+
+  const declarators &declarations() const
+  {
+    return (const declarators &)operands();
   }
 
-  exprt::operandst &declarations()
+  declarators &declarations()
   {
-    return operands();
+    return (declarators &)operands();
   }
 };
 

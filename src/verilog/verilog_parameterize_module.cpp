@@ -16,6 +16,32 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::get_parameter_declarators
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<verilog_parameter_declt::declaratort>
+verilog_typecheckt::get_parameter_declarators(const irept &module_source)
+{
+  const irept &module_items = module_source.find(ID_module_items);
+  std::vector<verilog_parameter_declt::declaratort> declarators;
+
+  for(auto &item : module_items.get_sub())
+    if(item.id() == ID_parameter_decl)
+      for(auto &decl : to_verilog_parameter_decl(item).declarations())
+        declarators.push_back(decl);
+
+  return declarators;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::get_parameter_values
 
   Inputs:
@@ -31,7 +57,7 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
   const exprt::operandst &parameter_assignment,
   const std::map<irep_idt, exprt> &instance_defparams)
 {
-  const irept &module_items=module_source.find(ID_module_items);
+  const auto parameter_declarators = get_parameter_declarators(module_source);
   replace_symbolt replace_symbol;
 
   std::list<exprt> parameter_values;
@@ -49,86 +75,79 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
       map[parameter]=static_cast<const exprt &>(it->find(ID_value));
     }
 
-    for(auto &item : module_items.get_sub())
-      if(item.id() == ID_parameter_decl)
+    for(auto &decl : parameter_declarators)
+    {
+      auto &identifier = decl.identifier();
+      exprt value;
+
+      if(map.find(identifier) != map.end())
+        value = map[identifier];
+      else
       {
-        for(auto &decl : to_verilog_parameter_decl(item).declarations())
+        value = decl.value();
+
+        // substitute other parameters
+        replace_symbol.replace(value);
+        simplify(value, ns);
+
+        if(!value.is_constant())
         {
-          const irep_idt &identifier = decl.get(ID_identifier);
-          exprt value;
-
-          if(map.find(identifier)!=map.end())
-            value=map[identifier];
-          else
-          {
-            value = static_cast<const exprt &>(decl.find(ID_value));
-            // substitute other parameters
-            replace_symbol.replace(value);
-            simplify(value, ns);
-            
-            if(!value.is_constant())
-            {
-              error().source_location = value.source_location();
-              error() << "parameter value expected to simplify to constant, "
-                      << "but got `" << to_string(value) << "'" << eom;
-              throw 0;
-            }
-          }
-
-          // Is there a defparam that overrides this parameter?
-          auto def_param_it = instance_defparams.find(identifier);
-          if(def_param_it != instance_defparams.end())
-            value = def_param_it->second;
-
-          replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
-          parameter_values.push_back(value);
+          error().source_location = value.source_location();
+          error() << "parameter value expected to simplify to constant, "
+                  << "but got `" << to_string(value) << "'" << eom;
+          throw 0;
         }
       }
+
+      // Is there a defparam that overrides this parameter?
+      auto def_param_it = instance_defparams.find(identifier);
+      if(def_param_it != instance_defparams.end())
+        value = def_param_it->second;
+
+      replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
+      parameter_values.push_back(value);
+    }
   }
   else
   {
     // ordered
     exprt::operandst::const_iterator p_it=parameter_assignment.begin();
 
-    for(auto &item : module_items.get_sub())
-      if(item.id() == ID_parameter_decl)
+    for(auto &decl : parameter_declarators)
+    {
+      exprt value;
+
+      if(p_it != parameter_assignment.end())
       {
-        for(auto &decl : to_verilog_parameter_decl(item).declarations())
+        value = *p_it;
+        p_it++;
+      }
+      else
+      {
+        value = decl.value();
+        // substitute other parameters
+        replace_symbol.replace(value);
+        simplify(value, ns);
+
+        if(!value.is_constant())
         {
-          const irep_idt &identifier = decl.get(ID_identifier);
-          exprt value;
-          
-          if(p_it!=parameter_assignment.end())
-          {
-            value=*p_it;
-            p_it++;
-          }
-          else
-          {
-            value = static_cast<const exprt &>(decl.find(ID_value));
-            // substitute other parameters
-            replace_symbol.replace(value);
-            simplify(value, ns);
-            
-            if(!value.is_constant())
-            {
-              error().source_location = value.source_location();
-              error() << "parameter value expected to simplify to constant, "
-                      << "but got `" << to_string(value) << "'" << eom;
-              throw 0;
-            }
-          }
-
-          // Is there a defparam that overrides this parameter?
-          auto def_param_it = instance_defparams.find(identifier);
-          if(def_param_it != instance_defparams.end())
-            value = def_param_it->second;
-
-          replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
-          parameter_values.push_back(value);
+          error().source_location = value.source_location();
+          error() << "parameter value expected to simplify to constant, "
+                  << "but got `" << to_string(value) << "'" << eom;
+          throw 0;
         }
       }
-      
+
+      // Is there a defparam that overrides this parameter?
+      auto &identifier = decl.identifier();
+      auto def_param_it = instance_defparams.find(identifier);
+      if(def_param_it != instance_defparams.end())
+        value = def_param_it->second;
+
+      replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
+      parameter_values.push_back(value);
+    }
+
     if(p_it!=parameter_assignment.end())
     {
       error().source_location = p_it->source_location();
