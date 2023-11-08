@@ -1014,6 +1014,8 @@ void verilog_synthesist::instantiate_ports(
 
     for(const auto &o_it : inst.operands())
     {
+      DATA_INVARIANT(o_it.is_not_nil(), "all ports must be connected");
+
       instantiate_port((exprt &)(*p_it), o_it,
                        replace_map, trans);
       p_it++;

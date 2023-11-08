@@ -228,8 +228,8 @@ void verilog_typecheckt::typecheck_port_connections(
     if(inst.operands().size()!=ports.size())
     {
       error().source_location=inst.source_location();
-      error() << "wrong number of arguments: expected " << ports.size() 
-          << " but got " << inst.operands().size(); 
+      error() << "wrong number of arguments: expected " << ports.size()
+              << " but got " << inst.operands().size() << eom;
       throw 0;
     }
 

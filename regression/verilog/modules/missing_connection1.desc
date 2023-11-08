@@ -1,0 +1,7 @@
+CORE
+missing_connection1.v
+
+^file missing_connection1\.v line 7: wrong number of arguments: expected 2 but got 1$
+^EXIT=2$
+^SIGNAL=0$
+--
