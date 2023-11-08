@@ -121,7 +121,7 @@ jobs:
       - name: cache for ccache
         uses: actions/cache@v3
         with:
-          path: /github/home/.ccache
+          path: /github/home/.cache/ccache
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-centos8-make-gcc-
       - uses: actions/checkout@v3
@@ -129,6 +129,8 @@ jobs:
           submodules: recursive
       - name: Zero ccache stats and limit in size
         run: ccache -z --max-size=500M
+      - name: ccache path
+        run: ccache -p | grep cache_dir
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
