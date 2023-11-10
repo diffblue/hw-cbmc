@@ -264,8 +264,9 @@ irep_idt verilog_typecheckt::parameterize_module(
         error() << "parameter expected to be constant, but got `"
                 << to_string(pv) << "'" << eom;
         throw 0;
-      } else
-        suffix += i.to_ulong();
+      }
+      else
+        suffix += integer2string(i);
     }
     
   suffix+=')';
