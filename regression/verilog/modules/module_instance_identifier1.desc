@@ -1,0 +1,7 @@
+CORE
+module_instance_identifier1.v
+--show-symbol-table
+module: Verilog::my_module\(8\)$
+^EXIT=0$
+^SIGNAL=0$
+--
