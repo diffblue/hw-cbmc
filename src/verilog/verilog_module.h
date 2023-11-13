@@ -25,9 +25,9 @@ struct verilog_modulet
   {
     irept irep;
     irep.set(ID_name, name);
-    irep.add("parameter_port_list") = parameter_port_list;
+    irep.add(ID_parameter_port_list) = parameter_port_list;
     irep.add(ID_ports)=ports;
-    irep.add("module_items")=module_items;
+    irep.add(ID_module_items) = module_items;
     return irep;
   }
   

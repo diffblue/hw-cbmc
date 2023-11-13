@@ -38,7 +38,7 @@ verilog_typecheckt::get_parameter_declarators(const irept &module_source)
       for(auto &decl : to_verilog_parameter_decl(item).declarations())
         declarators.push_back(decl);
 
-  const irept &parameter_port_list = module_source.find("parameter_port_list");
+  const irept &parameter_port_list = module_source.find(ID_parameter_port_list);
 
   for(auto &decl : parameter_port_list.get_sub())
     declarators.push_back(
