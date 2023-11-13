@@ -1810,9 +1810,9 @@ genvar_assignment:
 
 generate_block:
 	  TOK_BEGIN generate_item_brace TOK_END
-	  	{ init($$, ID_generate_block); }
+		{ init($$, ID_generate_block); swapop($$, $2); }
 	| TOK_BEGIN TOK_COLON generate_block_identifier generate_item_brace TOK_END
-		{ init($$, ID_generate_block); stack_expr($$).operands().swap(stack_expr($4).operands()); }
+		{ init($$, ID_generate_block); swapop($$, $4); }
 	;
 
 port_declaration:
