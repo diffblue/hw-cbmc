@@ -31,18 +31,20 @@ verilog_typecheckt::get_parameter_declarators(const irept &module_source)
 {
   std::vector<verilog_parameter_declt::declaratort> declarators;
 
+  // We do the parameter ports first.
+  const irept &parameter_port_list = module_source.find(ID_parameter_port_list);
+
+  for(auto &decl : parameter_port_list.get_sub())
+    declarators.push_back(
+      static_cast<const verilog_parameter_declt::declaratort &>(decl));
+
+  // We do the module item ports second.
   const irept &module_items = module_source.find(ID_module_items);
 
   for(auto &item : module_items.get_sub())
     if(item.id() == ID_parameter_decl)
       for(auto &decl : to_verilog_parameter_decl(item).declarations())
         declarators.push_back(decl);
-
-  const irept &parameter_port_list = module_source.find(ID_parameter_port_list);
-
-  for(auto &decl : parameter_port_list.get_sub())
-    declarators.push_back(
-      static_cast<const verilog_parameter_declt::declaratort &>(decl));
 
   return declarators;
 }
@@ -188,6 +190,15 @@ void verilog_typecheckt::set_parameter_values(
   const std::list<exprt> &parameter_values)
 {
   auto p_it=parameter_values.begin();
+
+  const irept &parameter_port_list = module_source.find("parameter_port_list");
+
+  for(auto &declarator : parameter_port_list.get_sub())
+  {
+    DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
+    ((verilog_parameter_declt::declaratort &)declarator).value() = *p_it;
+    p_it++;
+  }
   
   irept &module_items=module_source.add(ID_module_items);
 
@@ -198,8 +209,8 @@ void verilog_typecheckt::set_parameter_values(
       {
         if(p_it!=parameter_values.end())
         {
-          exprt &value = static_cast<exprt &>(decl.add(ID_value));
-          value=*p_it;
+          DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
+          decl.value() = *p_it;
           p_it++;
         }
       }
@@ -272,7 +283,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   suffix+=')';
 
   irep_idt new_module_identifier=id2string(module_identifier)+suffix;
-  
+
   if(symbol_table.symbols.find(new_module_identifier)!=
      symbol_table.symbols.end())
     return new_module_identifier; // done already
