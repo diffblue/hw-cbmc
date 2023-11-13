@@ -38,7 +38,7 @@ void verilog_typecheckt::module_interface()
   const irept &module_items=module_source.find(ID_module_items);
 
   // first do parameter ports
-  for(auto &parameter : module_source.find("parameter_port_list").get_sub())
+  for(auto &parameter : module_source.find(ID_parameter_port_list).get_sub())
     interface_parameter(static_cast<const exprt &>(parameter));
 
   // then do do module items
