@@ -183,6 +183,11 @@ public:
     {
       return static_cast<const exprt &>(find(ID_value));
     }
+
+    exprt &value()
+    {
+      return static_cast<exprt &>(add(ID_value));
+    }
   };
 
   using declarators = std::vector<declaratort>;
