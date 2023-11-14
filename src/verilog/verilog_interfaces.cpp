@@ -572,7 +572,6 @@ void verilog_typecheckt::interface_module_decl(
     }
 
     symbol.name = hierarchical_identifier(symbol.base_name);
-
     symbol.pretty_name = strip_verilog_prefix(symbol.name);
 
     auto result=symbol_table.get_writeable(symbol.name);
@@ -686,6 +685,37 @@ void verilog_typecheckt::interface_inst(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::interface_generate_block
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::interface_generate_block(
+  const verilog_generate_blockt &generate_block)
+{
+  // These introduce scope, much like a named block statement.
+  bool is_named = generate_block.is_named();
+
+  if(is_named)
+  {
+    irep_idt identifier = generate_block.identifier();
+    enter_named_block(identifier);
+  }
+
+  for(auto &item : generate_block.module_items())
+    interface_module_item(item);
+
+  if(is_named)
+    named_blocks.pop_back();
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::interface_module_item
 
   Inputs:
@@ -719,11 +749,7 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id()==ID_initial)
     interface_statement(to_verilog_initial(module_item).statement());
   else if(module_item.id()==ID_generate_block)
-  {
-    auto &generate_block = to_verilog_generate_block(module_item);
-    for(auto &item : generate_block.module_items())
-      interface_module_item(item);
-  }
+    interface_generate_block(to_verilog_generate_block(module_item));
 }
 
 /*******************************************************************\

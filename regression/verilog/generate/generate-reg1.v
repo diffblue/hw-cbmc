@@ -9,7 +9,7 @@ module main(input [`BITS-1:0] data);
     for (i = 0; i < `BITS; i=i+1) begin : label
       reg my_reg;
 
-      always @(data) begin
+      always @(data) begin : my_generate_block
         my_reg = data[i];
         result[i] = my_reg;
       end
