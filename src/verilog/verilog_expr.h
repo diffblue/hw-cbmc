@@ -164,6 +164,59 @@ extern inline verilog_module_itemt &to_verilog_module_item(irept &irep)
   return static_cast<verilog_module_itemt &>(irep);
 }
 
+class verilog_generate_blockt : public verilog_module_itemt
+{
+public:
+  explicit verilog_generate_blockt(
+    verilog_module_exprt::module_itemst _module_items)
+    : verilog_module_itemt(ID_generate_block)
+  {
+    module_items() = std::move(_module_items);
+  }
+
+  verilog_generate_blockt(
+    irep_idt _identifier,
+    verilog_module_exprt::module_itemst _module_items)
+    : verilog_module_itemt(ID_generate_block)
+  {
+    set(ID_identifier, _identifier);
+    module_items() = std::move(_module_items);
+  }
+
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  bool is_named() const
+  {
+    return !identifier().empty();
+  }
+
+  const verilog_module_exprt::module_itemst &module_items() const
+  {
+    return (const verilog_module_exprt::module_itemst &)operands();
+  }
+
+  verilog_module_exprt::module_itemst &module_items()
+  {
+    return (verilog_module_exprt::module_itemst &)operands();
+  }
+};
+
+extern inline const verilog_generate_blockt &
+to_verilog_generate_block(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_block);
+  return static_cast<const verilog_generate_blockt &>(expr);
+}
+
+extern inline verilog_generate_blockt &to_verilog_generate_block(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_block);
+  return static_cast<verilog_generate_blockt &>(expr);
+}
+
 class verilog_parameter_declt : public verilog_module_itemt
 {
 public:
