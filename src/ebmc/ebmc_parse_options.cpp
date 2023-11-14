@@ -103,10 +103,10 @@ int ebmc_parse_optionst::doit()
       return show_parse(cmdline, ui_message_handler);
 
     if(cmdline.isset("show-modules") || cmdline.isset("modules-xml"))
-      show_modules(cmdline, ui_message_handler);
+      return show_modules(cmdline, ui_message_handler);
 
     if(cmdline.isset("show-symbol-table"))
-      show_symbol_table(cmdline, ui_message_handler);
+      return show_symbol_table(cmdline, ui_message_handler);
 
     if(cmdline.isset("cegar"))
     {
