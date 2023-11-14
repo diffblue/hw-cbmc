@@ -1,0 +1,6 @@
+CORE
+generate-for2.v
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
