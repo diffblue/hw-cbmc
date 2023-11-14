@@ -771,7 +771,7 @@ module_item:
 
 non_port_module_item:
           module_or_generate_item
-	| attribute_instance_brace generated_instantiation { $$=$2; }
+	| attribute_instance_brace generate_region { $$=$2; }
         | attribute_instance_brace specparam_declaration {$$=$2; }
         ;
 
@@ -1497,11 +1497,6 @@ property_declaration:
           TOK_PROPERTY property_identifier TOK_ENDPROPERTY
         ;
 
-genvar_declaration:
-	  TOK_GENVAR list_of_genvar_identifiers ';'
-		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
-	;
-
 // System Verilog standard 1800-2017
 // A.3.1 Primitive instantiation and instances
 
@@ -1731,7 +1726,7 @@ named_port_connection:
 // System Verilog standard 1800-2017
 // A.4.2 Generated instantiation
 
-generated_instantiation:
+generate_region:
 	  TOK_GENERATE generate_item_brace TOK_ENDGENERATE
 		{ init($$, ID_generate_block); swapop($$, $2); }
 	;
@@ -1743,10 +1738,50 @@ generate_item_brace:
 		{ $$=$1; mto($$, $2); }
 	;
 
+loop_generate_construct:
+	  // The following is a generalisation of the Verilog 2001
+	  // grammar, which requires begin ... end, and does not allow
+	  // the generate_item. Found in the SystemVerilog IEEE 1800-2012
+	  // grammar.
+	  TOK_FOR '(' genvar_initialization ';'
+	              constant_expression ';'
+                      genvar_initialization ')'
+          // generate_block
+          generate_item
+		{ init($$, ID_generate_for);
+		  stack_expr($$).reserve_operands(4);
+		  mto($$, $3);
+		  mto($$, $5);
+		  mto($$, $7);
+		  mto($$, $9);
+		}
+        ;
+
+genvar_declaration:
+	  TOK_GENVAR list_of_genvar_identifiers ';'
+		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
+	;
+
+genvar_initialization:
+	  genvar_identifier '=' constant_expression
+	  	{ init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
+	;
+
+conditional_generate_construct:
+	  if_generate_construct
+	| case_generate_construct
+	;
+
+if_generate_construct:
+	  TOK_IF '(' constant_expression ')' generate_item_or_null %prec LT_TOK_ELSE
+	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); }
+	| TOK_IF '(' constant_expression ')' generate_item_or_null TOK_ELSE generate_item_or_null
+	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); mto($$, $7); }
+	;
+
 generate_item:
-	  generate_conditional_statement
-	| generate_case_statement
-	| generate_loop_statement
+	  conditional_generate_construct
+	| loop_generate_construct
 	| generate_block
 	| module_or_generate_item
 	;
@@ -1756,16 +1791,9 @@ generate_item_or_null:
 	| ';' { init($$, ID_generate_skip); }
 	;
 
-generate_conditional_statement:
-	  TOK_IF '(' constant_expression ')' generate_item_or_null %prec LT_TOK_ELSE
-	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); }
-	| TOK_IF '(' constant_expression ')' generate_item_or_null TOK_ELSE generate_item_or_null
-	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); mto($$, $7); }
-	;
-
 constant_expression: expression;
 
-generate_case_statement:
+case_generate_construct:
 	  TOK_CASE '(' constant_expression ')'
 	  genvar_case_item_brace TOK_ENDCASE
 	  	{ init($$, ID_generate_case); mto($$, $3); }
@@ -1782,31 +1810,7 @@ genvar_case_item:
 	| TOK_DEFAULT generate_item_or_null
 	;
 
-generate_loop_statement:
-	  // The following is a generalisation of the Verilog 2001
-	  // grammar, which requires begin ... end, and does not allow
-	  // the generate_item. Found in the SystemVerilog IEEE 1800-2012
-	  // grammar.
-	  TOK_FOR '(' genvar_assignment ';'
-	              constant_expression ';'
-                      genvar_assignment ')'
-          // generate_block
-          generate_item
-		{ init($$, ID_generate_for);
-		  stack_expr($$).reserve_operands(4);
-		  mto($$, $3);
-		  mto($$, $5);
-		  mto($$, $7);
-		  mto($$, $9);
-		}
-        ;
-
 generate_block_identifier: TOK_CHARSTR;
-
-genvar_assignment:
-	  genvar_identifier '=' constant_expression
-	  	{ init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
-	;
 
 generate_block:
 	  TOK_BEGIN generate_item_brace TOK_END
