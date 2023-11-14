@@ -27,6 +27,32 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::hierarchical_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt
+verilog_typecheck_exprt::hierarchical_identifier(irep_idt base_name) const
+{
+  const std::string named_block =
+    named_blocks.empty() ? std::string() : id2string(named_blocks.back());
+
+  if(function_or_task_name.empty())
+    return id2string(module_identifier) + "." + named_block +
+           id2string(base_name);
+  else
+    return id2string(function_or_task_name) + "." + named_block +
+           id2string(base_name);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::enter_named_block
 
   Inputs:
