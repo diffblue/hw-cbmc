@@ -381,6 +381,7 @@ void ebmc_parse_optionst::help()
     "Debugging options:\n"
     " {y--preprocess}                \t output the preprocessed source file\n"
     " {y--show-parse}                \t show parse trees\n"
+    " {y--show-modules}              \t show a list of the modules\n"
     " {y--show-varmap}               \t show variable map\n"
     " {y--show-netlist}              \t show netlist\n"
     " {y--show-ldg}                  \t show latch dependencies\n"
