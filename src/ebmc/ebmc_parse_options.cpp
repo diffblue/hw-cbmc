@@ -105,6 +105,9 @@ int ebmc_parse_optionst::doit()
     if(cmdline.isset("show-modules") || cmdline.isset("modules-xml"))
       return show_modules(cmdline, ui_message_handler);
 
+    if(cmdline.isset("show-module-hierarchy"))
+      return show_module_hierarchy(cmdline, ui_message_handler);
+
     if(cmdline.isset("show-symbol-table"))
       return show_symbol_table(cmdline, ui_message_handler);
 
@@ -382,6 +385,7 @@ void ebmc_parse_optionst::help()
     " {y--preprocess}                \t output the preprocessed source file\n"
     " {y--show-parse}                \t show parse trees\n"
     " {y--show-modules}              \t show a list of the modules\n"
+    " {y--show-module-hierarchy}     \t show the hierarchy of module instantiations\n"
     " {y--show-varmap}               \t show variable map\n"
     " {y--show-netlist}              \t show netlist\n"
     " {y--show-ldg}                  \t show latch dependencies\n"

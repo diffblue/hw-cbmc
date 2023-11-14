@@ -1,0 +1,13 @@
+CORE
+show-module-hierarchy1.v
+--show-module-hierarchy
+^main:$
+^  inner main\.inner_instance1$
+^    leaf1 main\.inner_instance1\.leaf1_instance$
+^    leaf2 main\.inner_instance1\.leaf2_instance$
+^  inner main\.inner_instance2$
+^    leaf1 main\.inner_instance2\.leaf1_instance$
+^    leaf2 main\.inner_instance2\.leaf2_instance$
+^EXIT=0$
+^SIGNAL=0$
+--

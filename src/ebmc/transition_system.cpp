@@ -19,6 +19,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/language_file.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
+#include <trans-word-level/show_module_hierarchy.h>
 #include <trans-word-level/show_modules.h>
 
 #include "ebmc_error.h"
@@ -232,6 +233,17 @@ int get_transition_system(
   if(get_main(cmdline, message_handler, transition_system))
     return 1;
 
+  if(cmdline.isset("show-module-hierarchy"))
+  {
+    DATA_INVARIANT(
+      transition_system.main_symbol != nullptr, "must have main_symbol");
+    show_module_hierarchy(
+      transition_system.symbol_table,
+      *transition_system.main_symbol,
+      std::cout);
+    return 0;
+  }
+
   // --reset given?
   if(cmdline.isset("reset"))
   {
@@ -276,6 +288,15 @@ int show_parse(const cmdlinet &cmdline, message_handlert &message_handler)
 }
 
 int show_modules(const cmdlinet &cmdline, message_handlert &message_handler)
+{
+  transition_systemt dummy_transition_system;
+  return get_transition_system(
+    cmdline, message_handler, dummy_transition_system);
+}
+
+int show_module_hierarchy(
+  const cmdlinet &cmdline,
+  message_handlert &message_handler)
 {
   transition_systemt dummy_transition_system;
   return get_transition_system(
