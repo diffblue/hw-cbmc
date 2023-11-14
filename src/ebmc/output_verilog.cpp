@@ -787,6 +787,7 @@ void output_verilog_baset::wires(const irep_idt &module)
        !symbol.is_property &&
        !symbol.is_macro &&
        symbol.type.id()!=ID_integer &&
+       symbol.type.id()!=ID_genvar &&
        symbol.type.id()!=ID_module &&
        symbol.type.id()!=ID_module_instance &&
        symbol.type.id()!=ID_code &&
