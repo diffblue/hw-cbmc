@@ -31,7 +31,7 @@ Function: verilog_typecheckt::module_interface
 void verilog_typecheckt::module_interface()
 {
   // get port classes and types
-  
+
   module_identifier=module_symbol.name;
 
   const auto &module_source = module_symbol.type.find(ID_module_source);
@@ -239,9 +239,7 @@ void verilog_typecheckt::interface_function_or_task(
     symbol.type = code_typet{{}, return_type};
 
     symbol.base_name=decl.get_identifier();
-    symbol.name=
-      id2string(symbol.module)+"."+
-      id2string(symbol.base_name);
+    symbol.name = hierarchical_identifier(symbol.base_name);
     symbol.pretty_name=strip_verilog_prefix(symbol.name);
 
     if(symbol_table.move(symbol, new_symbol))
@@ -415,9 +413,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       throw 0;
     }
 
-    symbol.name=
-      id2string(function_or_task_name)+"."+
-      id2string(symbol.base_name);
+    symbol.name = hierarchical_identifier(symbol.base_name);
 
     symbol.pretty_name=strip_verilog_prefix(symbol.name);
 
@@ -587,13 +583,9 @@ void verilog_typecheckt::interface_module_decl(
       throw 0;
     }
 
-    symbol.name=
-      id2string(symbol.module)+"."+
-      (named_blocks.empty()?"":named_blocks.back())+
-      id2string(symbol.base_name);
+    symbol.name = hierarchical_identifier(symbol.base_name);
 
-    symbol.pretty_name=
-      strip_verilog_prefix(symbol.name);
+    symbol.pretty_name = strip_verilog_prefix(symbol.name);
 
     auto result=symbol_table.get_writeable(symbol.name);
       
@@ -654,10 +646,7 @@ void verilog_typecheckt::interface_parameter(const exprt &expr)
   symbol.mode=mode;
   symbol.module=module_identifier;
   symbol.base_name=expr.get(ID_identifier);
-
-  symbol.name=id2string(symbol.module)+"."+
-              id2string(symbol.base_name);
-
+  symbol.name = hierarchical_identifier(symbol.base_name);
   symbol.pretty_name=strip_verilog_prefix(symbol.name);
 
   symbol.is_macro=true;
@@ -758,9 +747,7 @@ void verilog_typecheckt::interface_inst(
   symbol.base_name=op.get(ID_instance);
   symbol.type=typet(primitive?ID_primitive_module_instance:ID_module_instance);
   symbol.module=module_identifier;
-  symbol.name=
-    id2string(symbol.module)+"."+
-    id2string(symbol.base_name);
+  symbol.name = hierarchical_identifier(symbol.base_name);
   symbol.pretty_name=strip_verilog_prefix(symbol.name);
   symbol.value.set(ID_module, identifier);
 
@@ -909,10 +896,7 @@ void verilog_typecheckt::interface_block(
     symbol.base_name=identifier;
     symbol.type=typet(ID_named_block);
     symbol.module=module_identifier;
-    symbol.name=
-      id2string(symbol.module)+"."+
-      (named_blocks.empty()?"":named_blocks.back())+
-      id2string(symbol.base_name);
+    symbol.name = hierarchical_identifier(symbol.base_name);
     symbol.pretty_name=strip_verilog_prefix(symbol.name);
     symbol.value=nil_exprt();
 

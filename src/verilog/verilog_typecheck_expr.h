@@ -50,7 +50,11 @@ protected:
   irep_idt module_identifier;
   irep_idt function_or_task_name;
   unsigned nondet_count;
-  
+
+  // module_identifier.function.block.base_name
+  // including the Verilog:: prefix.
+  irep_idt hierarchical_identifier(irep_idt base_name) const;
+
   void make_boolean(exprt &expr);
 
   void propagate_type(exprt &expr, const typet &type);
