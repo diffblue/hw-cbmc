@@ -795,8 +795,9 @@ void verilog_typecheckt::interface_module_item(
     interface_statement(to_verilog_initial(module_item).statement());
   else if(module_item.id()==ID_generate_block)
   {
-    for(auto &item : module_item.get_sub())
-      interface_module_item(static_cast<const verilog_module_itemt &>(item));
+    auto &generate_block = to_verilog_generate_block(module_item);
+    for(auto &item : generate_block.module_items())
+      interface_module_item(item);
   }
 }
 
