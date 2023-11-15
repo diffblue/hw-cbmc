@@ -78,15 +78,15 @@ protected:
     const std::map<irep_idt, exprt> &defparams);
 
   std::vector<verilog_parameter_declt::declaratort>
-  get_parameter_declarators(const irept &module_source);
+  get_parameter_declarators(const verilog_module_sourcet &);
 
   std::list<exprt> get_parameter_values(
-    const irept &module_source,
+    const verilog_module_sourcet &,
     const exprt::operandst &parameter_assignment,
     const std::map<irep_idt, exprt> &defparams);
 
   void set_parameter_values(
-    irept &module_source,
+    verilog_module_sourcet &,
     const std::list<exprt> &parameter_values);
 
   // interfaces

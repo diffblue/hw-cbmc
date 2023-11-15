@@ -190,16 +190,16 @@ public:
     }
   };
 
-  using declarators = std::vector<declaratort>;
+  using declaratorst = std::vector<declaratort>;
 
-  const declarators &declarations() const
+  const declaratorst &declarations() const
   {
-    return (const declarators &)operands();
+    return (const declaratorst &)operands();
   }
 
-  declarators &declarations()
+  declaratorst &declarations()
   {
-    return (declarators &)operands();
+    return (declaratorst &)operands();
   }
 };
 
@@ -1130,6 +1130,61 @@ extern inline verilog_assumet &to_verilog_assume(exprt &expr)
 {
   assert(expr.id()==ID_assume && expr.operands().size()==2);
   return static_cast<verilog_assumet &>(expr);
+}
+
+class verilog_module_sourcet : public irept
+{
+public:
+  irep_idt name() const
+  {
+    return get(ID_name);
+  }
+
+  using parameter_port_listt = verilog_parameter_declt::declaratorst;
+
+  const parameter_port_listt &parameter_port_list() const
+  {
+    return (
+      const parameter_port_listt &)(find(ID_parameter_port_list).get_sub());
+  }
+
+  parameter_port_listt &parameter_port_list()
+  {
+    return (parameter_port_listt &)(add(ID_parameter_port_list).get_sub());
+  }
+
+  const exprt::operandst &ports() const
+  {
+    return (const exprt::operandst &)(find(ID_ports).get_sub());
+  }
+
+  using module_itemst = std::vector<class verilog_module_itemt>;
+
+  const module_itemst &module_items() const
+  {
+    return (const module_itemst &)(find(ID_module_items).get_sub());
+  }
+
+  module_itemst &module_items()
+  {
+    return (module_itemst &)(add(ID_module_items).get_sub());
+  }
+
+  const source_locationt &source_location()
+  {
+    return static_cast<const source_locationt &>(find(ID_C_source_location));
+  }
+};
+
+extern inline const verilog_module_sourcet &
+to_verilog_module_source(const irept &irep)
+{
+  return static_cast<const verilog_module_sourcet &>(irep);
+}
+
+extern inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
+{
+  return static_cast<verilog_module_sourcet &>(irep);
 }
 
 #endif

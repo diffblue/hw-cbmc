@@ -27,21 +27,21 @@ Function: verilog_typecheckt::get_parameter_declarators
 \*******************************************************************/
 
 std::vector<verilog_parameter_declt::declaratort>
-verilog_typecheckt::get_parameter_declarators(const irept &module_source)
+verilog_typecheckt::get_parameter_declarators(
+  const verilog_module_sourcet &module_source)
 {
   std::vector<verilog_parameter_declt::declaratort> declarators;
 
   // We do the parameter ports first.
-  const irept &parameter_port_list = module_source.find(ID_parameter_port_list);
+  const auto &parameter_port_list = module_source.parameter_port_list();
 
-  for(auto &decl : parameter_port_list.get_sub())
-    declarators.push_back(
-      static_cast<const verilog_parameter_declt::declaratort &>(decl));
+  for(auto &decl : parameter_port_list)
+    declarators.push_back(decl);
 
   // We do the module item ports second.
-  const irept &module_items = module_source.find(ID_module_items);
+  const auto &module_items = module_source.module_items();
 
-  for(auto &item : module_items.get_sub())
+  for(auto &item : module_items)
     if(item.id() == ID_parameter_decl)
       for(auto &decl : to_verilog_parameter_decl(item).declarations())
         declarators.push_back(decl);
@@ -62,7 +62,7 @@ Function: verilog_typecheckt::get_parameter_values
 \*******************************************************************/
 
 std::list<exprt> verilog_typecheckt::get_parameter_values(
-  const irept &module_source,
+  const verilog_module_sourcet &module_source,
   const exprt::operandst &parameter_assignment,
   const std::map<irep_idt, exprt> &instance_defparams)
 {
@@ -186,23 +186,23 @@ Function: verilog_typecheckt::set_parameter_values
 \*******************************************************************/
 
 void verilog_typecheckt::set_parameter_values(
-  irept &module_source,
+  verilog_module_sourcet &module_source,
   const std::list<exprt> &parameter_values)
 {
   auto p_it=parameter_values.begin();
 
-  const irept &parameter_port_list = module_source.find("parameter_port_list");
+  auto &parameter_port_list = module_source.parameter_port_list();
 
-  for(auto &declarator : parameter_port_list.get_sub())
+  for(auto &declarator : parameter_port_list)
   {
     DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
-    ((verilog_parameter_declt::declaratort &)declarator).value() = *p_it;
+    declarator.value() = *p_it;
     p_it++;
   }
-  
-  irept &module_items=module_source.add(ID_module_items);
 
-  for(auto &module_item : module_items.get_sub())
+  auto &module_items = module_source.module_items();
+
+  for(auto &module_item : module_items)
     if(module_item.id() == ID_parameter_decl)
     {
       for(auto &decl : to_verilog_parameter_decl(module_item).declarations())
@@ -254,7 +254,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   const symbolt &base_symbol=it->second;
 
   auto parameter_values = get_parameter_values(
-    base_symbol.type.find(ID_module_source),
+    to_verilog_module_source(base_symbol.type.find(ID_module_source)),
     parameter_assignments,
     instance_defparams);
 
@@ -297,9 +297,9 @@ irep_idt verilog_typecheckt::parameterize_module(
   
   // set parameters
   set_parameter_values(
-    symbol.type.add(ID_module_source),
+    to_verilog_module_source(symbol.type.add(ID_module_source)),
     parameter_values);
-  
+
   // throw away old stuff
   symbol.value.clear();
 
