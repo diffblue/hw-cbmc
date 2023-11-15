@@ -1,0 +1,8 @@
+KNOWNBUG
+parameters6.v
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+We currently evaluate parameters in the order in which they appear.
