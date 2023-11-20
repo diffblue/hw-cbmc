@@ -268,6 +268,42 @@ inline verilog_parameter_declt &to_verilog_parameter_decl(irept &irep)
   return static_cast<verilog_parameter_declt &>(irep);
 }
 
+class verilog_local_parameter_declt : public verilog_module_itemt
+{
+public:
+  inline verilog_local_parameter_declt()
+    : verilog_module_itemt(ID_local_parameter_decl)
+  {
+  }
+
+  using declaratort = verilog_parameter_declt::declaratort;
+  using declaratorst = std::vector<declaratort>;
+
+  const declaratorst &declarations() const
+  {
+    return (const declaratorst &)operands();
+  }
+
+  declaratorst &declarations()
+  {
+    return (declaratorst &)operands();
+  }
+};
+
+inline const verilog_local_parameter_declt &
+to_verilog_local_parameter_decl(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_local_parameter_decl);
+  return static_cast<const verilog_local_parameter_declt &>(irep);
+}
+
+inline verilog_local_parameter_declt &
+to_verilog_local_parameter_decl(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_local_parameter_decl);
+  return static_cast<verilog_local_parameter_declt &>(irep);
+}
+
 class verilog_instt:public verilog_module_itemt
 {
 public:
