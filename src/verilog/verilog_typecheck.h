@@ -100,7 +100,7 @@ protected:
 
   // interfaces
   void module_interface(const verilog_module_sourcet &);
-  void interface_ports(irept::subt &ports);
+  void check_module_ports(const verilog_module_sourcet &);
   void interface_module_decl(const class verilog_declt &);
   void interface_function_or_task_decl(const class verilog_declt &);
   void interface_inst(const class verilog_module_itemt &);
