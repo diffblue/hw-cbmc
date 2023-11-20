@@ -38,16 +38,16 @@ protected:
   using binary_exprt::op1;
 };
 
-extern inline const hierarchical_identifier_exprt
-  &to_hierarchical_identifier_expr(const exprt &expr)
+inline const hierarchical_identifier_exprt &
+to_hierarchical_identifier_expr(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_hierarchical_identifier);
   binary_exprt::check(expr);
   return static_cast<const hierarchical_identifier_exprt &>(expr);
 }
 
-extern inline hierarchical_identifier_exprt
-  &to_hierarchical_identifier_expr(exprt &expr)
+inline hierarchical_identifier_exprt &
+to_hierarchical_identifier_expr(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_hierarchical_identifier);
   binary_exprt::check(expr);
@@ -75,14 +75,14 @@ public:
   bool is_system_function_call() const;
 };
 
-extern inline const function_call_exprt &to_function_call_expr(const exprt &expr)
+inline const function_call_exprt &to_function_call_expr(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_function_call);
   binary_exprt::check(expr);
   return static_cast<const function_call_exprt &>(expr);
 }
 
-extern inline function_call_exprt &to_function_call_expr(exprt &expr)
+inline function_call_exprt &to_function_call_expr(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_function_call);
   binary_exprt::check(expr);
@@ -101,12 +101,12 @@ public:
   }
 };
 
-extern inline const verilog_statementt &to_verilog_statement(const exprt &expr)
+inline const verilog_statementt &to_verilog_statement(const exprt &expr)
 {
   return static_cast<const verilog_statementt &>(expr);
 }
 
-extern inline verilog_statementt &to_verilog_statement(exprt &expr)
+inline verilog_statementt &to_verilog_statement(exprt &expr)
 {
   return static_cast<verilog_statementt &>(expr);
 }
@@ -131,13 +131,12 @@ public:
   }
 };
 
-extern inline const verilog_module_exprt &
-to_verilog_module_expr(const exprt &expr)
+inline const verilog_module_exprt &to_verilog_module_expr(const exprt &expr)
 {
   return static_cast<const verilog_module_exprt &>(expr);
 }
 
-extern inline verilog_module_exprt &to_verilog_module_expr(exprt &expr)
+inline verilog_module_exprt &to_verilog_module_expr(exprt &expr)
 {
   return static_cast<verilog_module_exprt &>(expr);
 }
@@ -154,12 +153,12 @@ public:
   }
 };
 
-extern inline const verilog_module_itemt &to_verilog_module_item(const irept &irep)
+inline const verilog_module_itemt &to_verilog_module_item(const irept &irep)
 {
   return static_cast<const verilog_module_itemt &>(irep);
 }
 
-extern inline verilog_module_itemt &to_verilog_module_item(irept &irep)
+inline verilog_module_itemt &to_verilog_module_item(irept &irep)
 {
   return static_cast<verilog_module_itemt &>(irep);
 }
@@ -204,14 +203,14 @@ public:
   }
 };
 
-extern inline const verilog_generate_blockt &
+inline const verilog_generate_blockt &
 to_verilog_generate_block(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_generate_block);
   return static_cast<const verilog_generate_blockt &>(expr);
 }
 
-extern inline verilog_generate_blockt &to_verilog_generate_block(exprt &expr)
+inline verilog_generate_blockt &to_verilog_generate_block(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_generate_block);
   return static_cast<verilog_generate_blockt &>(expr);
@@ -256,14 +255,14 @@ public:
   }
 };
 
-extern inline const verilog_parameter_declt &
+inline const verilog_parameter_declt &
 to_verilog_parameter_decl(const irept &irep)
 {
   PRECONDITION(irep.id() == ID_parameter_decl);
   return static_cast<const verilog_parameter_declt &>(irep);
 }
 
-extern inline verilog_parameter_declt &to_verilog_parameter_decl(irept &irep)
+inline verilog_parameter_declt &to_verilog_parameter_decl(irept &irep)
 {
   PRECONDITION(irep.id() == ID_parameter_decl);
   return static_cast<verilog_parameter_declt &>(irep);
@@ -291,13 +290,13 @@ public:
   }
 };
 
-extern inline const verilog_instt &to_verilog_inst(const exprt &expr)
+inline const verilog_instt &to_verilog_inst(const exprt &expr)
 {
   assert(expr.id()==ID_inst);
   return static_cast<const verilog_instt &>(expr);
 }
 
-extern inline verilog_instt &to_verilog_inst(exprt &expr)
+inline verilog_instt &to_verilog_inst(exprt &expr)
 {
   assert(expr.id()==ID_inst);
   return static_cast<verilog_instt &>(expr);
@@ -313,13 +312,13 @@ public:
   inline irep_idt get_module() const { return get(ID_module); }
 };
 
-extern inline const verilog_inst_builtint &to_verilog_inst_builtin(const exprt &expr)
+inline const verilog_inst_builtint &to_verilog_inst_builtin(const exprt &expr)
 {
   assert(expr.id()==ID_inst_builtin);
   return static_cast<const verilog_inst_builtint &>(expr);
 }
 
-extern inline verilog_inst_builtint &to_verilog_inst_builtin(exprt &expr)
+inline verilog_inst_builtint &to_verilog_inst_builtin(exprt &expr)
 {
   assert(expr.id()==ID_inst_builtin);
   return static_cast<verilog_inst_builtint &>(expr);
@@ -344,13 +343,13 @@ public:
   }
 };
 
-extern inline const verilog_alwayst &to_verilog_always(const exprt &expr)
+inline const verilog_alwayst &to_verilog_always(const exprt &expr)
 {
   assert(expr.id()==ID_always && expr.operands().size()==1);
   return static_cast<const verilog_alwayst &>(expr);
 }
 
-extern inline verilog_alwayst &to_verilog_always(exprt &expr)
+inline verilog_alwayst &to_verilog_always(exprt &expr)
 {
   assert(expr.id()==ID_always && expr.operands().size()==1);
   return static_cast<verilog_alwayst &>(expr);
@@ -408,13 +407,13 @@ public:
   }
 };
 
-extern inline const verilog_declt &to_verilog_decl(const irept &irep)
+inline const verilog_declt &to_verilog_decl(const irept &irep)
 {
   assert(irep.id()==ID_decl);
   return static_cast<const verilog_declt &>(irep);
 }
 
-extern inline verilog_declt &to_verilog_decl(exprt &irep)
+inline verilog_declt &to_verilog_decl(exprt &irep)
 {
   assert(irep.id()==ID_decl);
   return static_cast<verilog_declt &>(irep);
@@ -439,13 +438,13 @@ public:
   }
 };
 
-extern inline const verilog_initialt &to_verilog_initial(const exprt &expr)
+inline const verilog_initialt &to_verilog_initial(const exprt &expr)
 {
   assert(expr.id()==ID_initial && expr.operands().size()==1);
   return static_cast<const verilog_initialt &>(expr);
 }
 
-extern inline verilog_initialt &to_verilog_initial(exprt &expr)
+inline verilog_initialt &to_verilog_initial(exprt &expr)
 {
   assert(expr.id()==ID_initial && expr.operands().size()==1);
   return static_cast<verilog_initialt &>(expr);
@@ -469,13 +468,13 @@ public:
   }
 };
 
-extern inline const verilog_blockt &to_verilog_block(const exprt &expr)
+inline const verilog_blockt &to_verilog_block(const exprt &expr)
 {
   assert(expr.id()==ID_block);
   return static_cast<const verilog_blockt &>(expr);
 }
 
-extern inline verilog_blockt &to_verilog_block(exprt &expr)
+inline verilog_blockt &to_verilog_block(exprt &expr)
 {
   assert(expr.id()==ID_block);
   return static_cast<verilog_blockt &>(expr);
@@ -503,12 +502,12 @@ public:
   }
 };
 
-extern inline const verilog_case_baset &to_verilog_case_base(const exprt &expr)
+inline const verilog_case_baset &to_verilog_case_base(const exprt &expr)
 {
   return static_cast<const verilog_case_baset &>(expr);
 }
 
-extern inline verilog_case_baset &to_verilog_case_base(exprt &expr)
+inline verilog_case_baset &to_verilog_case_base(exprt &expr)
 {
   return static_cast<verilog_case_baset &>(expr);
 }
@@ -542,13 +541,13 @@ public:
   }
 };
 
-extern inline const verilog_case_itemt &to_verilog_case_item(const exprt &expr)
+inline const verilog_case_itemt &to_verilog_case_item(const exprt &expr)
 {
   assert(expr.id()=="case_item" && expr.operands().size()==2);
   return static_cast<const verilog_case_itemt &>(expr);
 }
 
-extern inline verilog_case_itemt &to_verilog_case_item(exprt &expr)
+inline verilog_case_itemt &to_verilog_case_item(exprt &expr)
 {
   assert(expr.id()=="case_item" && expr.operands().size()==2);
   return static_cast<verilog_case_itemt &>(expr);
@@ -562,13 +561,13 @@ public:
   }
 };
 
-extern inline const verilog_caset &to_verilog_case(const exprt &expr)
+inline const verilog_caset &to_verilog_case(const exprt &expr)
 {
   assert(expr.id()==ID_case && expr.operands().size()>=1);
   return static_cast<const verilog_caset &>(expr);
 }
 
-extern inline verilog_caset &to_verilog_case(exprt &expr)
+inline verilog_caset &to_verilog_case(exprt &expr)
 {
   assert(expr.id()==ID_case && expr.operands().size()>=1);
   return static_cast<verilog_caset &>(expr);
@@ -613,13 +612,13 @@ public:
   }
 };
 
-extern inline const verilog_ift &to_verilog_if(const exprt &expr)
+inline const verilog_ift &to_verilog_if(const exprt &expr)
 {
   assert(expr.id()==ID_if && expr.operands().size()>=2);
   return static_cast<const verilog_ift &>(expr);
 }
 
-extern inline verilog_ift &to_verilog_if(exprt &expr)
+inline verilog_ift &to_verilog_if(exprt &expr)
 {
   assert(expr.id()==ID_if && expr.operands().size()>=2);
   return static_cast<verilog_ift &>(expr);
@@ -654,13 +653,13 @@ public:
   }
 };
 
-extern inline const verilog_function_callt &to_verilog_function_call(const exprt &expr)
+inline const verilog_function_callt &to_verilog_function_call(const exprt &expr)
 {
   assert(expr.id()==ID_function_call && expr.operands().size()==2);
   return static_cast<const verilog_function_callt &>(expr);
 }
 
-extern inline verilog_function_callt &to_verilog_function_call(exprt &expr)
+inline verilog_function_callt &to_verilog_function_call(exprt &expr)
 {
   assert(expr.id()==ID_function_call && expr.operands().size()==2);
   return static_cast<verilog_function_callt &>(expr);
@@ -695,13 +694,13 @@ public:
   }
 };
 
-extern inline const verilog_event_guardt &to_verilog_event_guard(const exprt &expr)
+inline const verilog_event_guardt &to_verilog_event_guard(const exprt &expr)
 {
   assert(expr.id()==ID_event_guard && expr.operands().size()==2);
   return static_cast<const verilog_event_guardt &>(expr);
 }
 
-extern inline verilog_event_guardt &to_verilog_event_guard(exprt &expr)
+inline verilog_event_guardt &to_verilog_event_guard(exprt &expr)
 {
   assert(expr.id()==ID_event_guard && expr.operands().size()==2);
   return static_cast<verilog_event_guardt &>(expr);
@@ -726,13 +725,13 @@ public:
   }
 };
 
-extern inline const verilog_delayt &to_verilog_delay(const exprt &expr)
+inline const verilog_delayt &to_verilog_delay(const exprt &expr)
 {
   assert(expr.id()==ID_delay && expr.operands().size()==2);
   return static_cast<const verilog_delayt &>(expr);
 }
 
-extern inline verilog_delayt &to_verilog_delay(exprt &expr)
+inline verilog_delayt &to_verilog_delay(exprt &expr)
 {
   assert(expr.id()==ID_delay && expr.operands().size()==2);
   return static_cast<verilog_delayt &>(expr);
@@ -787,13 +786,13 @@ public:
   }
 };
 
-extern inline const verilog_fort &to_verilog_for(const exprt &expr)
+inline const verilog_fort &to_verilog_for(const exprt &expr)
 {
   assert(expr.id()==ID_for && expr.operands().size()==4);
   return static_cast<const verilog_fort &>(expr);
 }
 
-extern inline verilog_fort &to_verilog_for(exprt &expr)
+inline verilog_fort &to_verilog_for(exprt &expr)
 {
   assert(expr.id()==ID_for && expr.operands().size()==4);
   return static_cast<verilog_fort &>(expr);
@@ -817,13 +816,13 @@ public:
   }
 };
 
-extern inline const verilog_forevert &to_verilog_forever(const exprt &expr)
+inline const verilog_forevert &to_verilog_forever(const exprt &expr)
 {
   assert(expr.id()==ID_forever && expr.operands().size()==1);
   return static_cast<const verilog_forevert &>(expr);
 }
 
-extern inline verilog_forevert &to_verilog_forever(exprt &expr)
+inline verilog_forevert &to_verilog_forever(exprt &expr)
 {
   assert(expr.id()==ID_forever && expr.operands().size()==1);
   return static_cast<verilog_forevert &>(expr);
@@ -858,13 +857,13 @@ public:
   }
 };
 
-extern inline const verilog_whilet &to_verilog_while(const exprt &expr)
+inline const verilog_whilet &to_verilog_while(const exprt &expr)
 {
   assert(expr.id()==ID_while && expr.operands().size()==2);
   return static_cast<const verilog_whilet &>(expr);
 }
 
-extern inline verilog_whilet &to_verilog_while(exprt &expr)
+inline verilog_whilet &to_verilog_while(exprt &expr)
 {
   assert(expr.id()==ID_while && expr.operands().size()==2);
   return static_cast<verilog_whilet &>(expr);
@@ -899,13 +898,13 @@ public:
   }
 };
 
-extern inline const verilog_repeatt &to_verilog_repeat(const exprt &expr)
+inline const verilog_repeatt &to_verilog_repeat(const exprt &expr)
 {
   assert(expr.id()==ID_repeat && expr.operands().size()==2);
   return static_cast<const verilog_repeatt &>(expr);
 }
 
-extern inline verilog_repeatt &to_verilog_repeat(exprt &expr)
+inline verilog_repeatt &to_verilog_repeat(exprt &expr)
 {
   assert(expr.id()==ID_repeat && expr.operands().size()==2);
   return static_cast<verilog_repeatt &>(expr);
@@ -919,13 +918,15 @@ public:
   }
 };
 
-extern inline const verilog_procedural_continuous_assignt &to_verilog_procedural_continuous_assign(const exprt &expr)
+inline const verilog_procedural_continuous_assignt &
+to_verilog_procedural_continuous_assign(const exprt &expr)
 {
   assert(expr.id()==ID_continuous_assign);
   return static_cast<const verilog_procedural_continuous_assignt &>(expr);
 }
 
-extern inline verilog_procedural_continuous_assignt &to_verilog_procedural_continuous_assign(exprt &expr)
+inline verilog_procedural_continuous_assignt &
+to_verilog_procedural_continuous_assign(exprt &expr)
 {
   assert(expr.id()==ID_continuous_assign);
   return static_cast<verilog_procedural_continuous_assignt &>(expr);
@@ -960,13 +961,13 @@ public:
   }
 };
 
-extern inline const verilog_forcet &to_verilog_force(const exprt &expr)
+inline const verilog_forcet &to_verilog_force(const exprt &expr)
 {
   assert(expr.id()==ID_force && expr.operands().size()==2);
   return static_cast<const verilog_forcet &>(expr);
 }
 
-extern inline verilog_forcet &to_verilog_force(exprt &expr)
+inline verilog_forcet &to_verilog_force(exprt &expr)
 {
   assert(expr.id()==ID_force && expr.operands().size()==2);
   return static_cast<verilog_forcet &>(expr);
@@ -982,13 +983,14 @@ public:
   }
 };
 
-extern inline const verilog_continuous_assignt &to_verilog_continuous_assign(const exprt &expr)
+inline const verilog_continuous_assignt &
+to_verilog_continuous_assign(const exprt &expr)
 {
   assert(expr.id()==ID_continuous_assign);
   return static_cast<const verilog_continuous_assignt &>(expr);
 }
 
-extern inline verilog_continuous_assignt &to_verilog_continuous_assign(exprt &expr)
+inline verilog_continuous_assignt &to_verilog_continuous_assign(exprt &expr)
 {
   assert(expr.id()==ID_continuous_assign);
   return static_cast<verilog_continuous_assignt &>(expr);
@@ -1012,15 +1014,14 @@ public:
   }
 };
 
-extern inline const verilog_parameter_overridet &
+inline const verilog_parameter_overridet &
 to_verilog_parameter_override(const exprt &expr)
 {
   assert(expr.id() == ID_parameter_override);
   return static_cast<const verilog_parameter_overridet &>(expr);
 }
 
-extern inline verilog_parameter_overridet &
-to_verilog_parameter_override(exprt &expr)
+inline verilog_parameter_overridet &to_verilog_parameter_override(exprt &expr)
 {
   assert(expr.id() == ID_parameter_override);
   return static_cast<verilog_parameter_overridet &>(expr);
@@ -1067,12 +1068,12 @@ public:
   }
 };
 
-extern inline const verilog_assignt &to_verilog_assign(const exprt &expr)
+inline const verilog_assignt &to_verilog_assign(const exprt &expr)
 {
   return static_cast<const verilog_assignt &>(expr);
 }
 
-extern inline verilog_assignt &to_verilog_assign(exprt &expr)
+inline verilog_assignt &to_verilog_assign(exprt &expr)
 {
   return static_cast<verilog_assignt &>(expr);
 }
@@ -1091,13 +1092,14 @@ public:
   }
 };
 
-extern inline const verilog_blocking_assignt &to_verilog_blocking_assign(const exprt &expr)
+inline const verilog_blocking_assignt &
+to_verilog_blocking_assign(const exprt &expr)
 {
   assert(expr.id()==ID_blocking_assign);
   return static_cast<const verilog_blocking_assignt &>(expr);
 }
 
-extern inline verilog_blocking_assignt &to_verilog_blocking_assign(exprt &expr)
+inline verilog_blocking_assignt &to_verilog_blocking_assign(exprt &expr)
 {
   assert(expr.id()==ID_blocking_assign);
   return static_cast<verilog_blocking_assignt &>(expr);
@@ -1111,13 +1113,14 @@ public:
   }
 };
 
-extern inline const verilog_non_blocking_assignt &to_verilog_non_blocking_assign(const exprt &expr)
+inline const verilog_non_blocking_assignt &
+to_verilog_non_blocking_assign(const exprt &expr)
 {
   assert(expr.id()==ID_non_blocking_assign);
   return static_cast<const verilog_non_blocking_assignt &>(expr);
 }
 
-extern inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
+inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
 {
   assert(expr.id()==ID_non_blocking_assign);
   return static_cast<verilog_non_blocking_assignt &>(expr);
@@ -1142,13 +1145,13 @@ public:
   }
 };
 
-extern inline const verilog_assertt &to_verilog_assert(const exprt &expr)
+inline const verilog_assertt &to_verilog_assert(const exprt &expr)
 {
   assert(expr.id()==ID_assert && expr.operands().size()==2);
   return static_cast<const verilog_assertt &>(expr);
 }
 
-extern inline verilog_assertt &to_verilog_assert(exprt &expr)
+inline verilog_assertt &to_verilog_assert(exprt &expr)
 {
   assert(expr.id()==ID_assert && expr.operands().size()==2);
   return static_cast<verilog_assertt &>(expr);
@@ -1173,13 +1176,13 @@ public:
   }
 };
 
-extern inline const verilog_assumet &to_verilog_assume(const exprt &expr)
+inline const verilog_assumet &to_verilog_assume(const exprt &expr)
 {
   assert(expr.id()==ID_assume && expr.operands().size()==2);
   return static_cast<const verilog_assumet &>(expr);
 }
 
-extern inline verilog_assumet &to_verilog_assume(exprt &expr)
+inline verilog_assumet &to_verilog_assume(exprt &expr)
 {
   assert(expr.id()==ID_assume && expr.operands().size()==2);
   return static_cast<verilog_assumet &>(expr);
@@ -1229,13 +1232,12 @@ public:
   }
 };
 
-extern inline const verilog_module_sourcet &
-to_verilog_module_source(const irept &irep)
+inline const verilog_module_sourcet &to_verilog_module_source(const irept &irep)
 {
   return static_cast<const verilog_module_sourcet &>(irep);
 }
 
-extern inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
+inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
 {
   return static_cast<verilog_module_sourcet &>(irep);
 }
