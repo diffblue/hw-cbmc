@@ -107,6 +107,7 @@ protected:
   void interface_inst(const class verilog_module_itemt &, const exprt &op);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
+  void interface_generate_block(const class verilog_generate_blockt &);
   void interface_statement(const class verilog_statementt &);
   void interface_function_or_task(const class verilog_declt &);
 
@@ -189,12 +190,15 @@ protected:
   verilog_module_exprt
   elaborate_generate_constructs(const verilog_module_sourcet &);
   void elaborate_generate_assign(const exprt &statement, module_itemst &dest);
-  void elaborate_generate_block(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_block(
+    const verilog_generate_blockt &,
+    module_itemst &dest);
   void elaborate_generate_decl(const verilog_declt &, module_itemst &dest);
   void elaborate_generate_item(const exprt &statement, module_itemst &dest);
   void elaborate_generate_if(const exprt &statement, module_itemst &dest);
   void elaborate_generate_case(const exprt &statement, module_itemst &dest);
   void elaborate_generate_for(const exprt &statement, module_itemst &dest);
+  exprt generate_for_loop_index(const exprt &initialization_statement) const;
 
   // generate state
   typedef std::map<irep_idt, mp_integer> genvarst;

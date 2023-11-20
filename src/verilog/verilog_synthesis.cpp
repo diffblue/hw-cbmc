@@ -2687,9 +2687,13 @@ void verilog_synthesist::synth_module_item(
     synth_module_instance_builtin(to_verilog_inst_builtin(module_item), trans);
   else if(module_item.id()==ID_generate_block)
   {
-    error().source_location=module_item.source_location();
-    error() << "unexpected generate module item during synthesis" << eom;
-    throw 0;
+    // These are retained to record the scope.
+    // Synthesis treats them like a block statement.
+    for(auto &block_item :
+        to_verilog_generate_block(module_item).module_items())
+    {
+      synth_module_item(block_item, trans);
+    }
   }
   else if(module_item.id()==ID_assert)
     synth_assert_module_item(module_item);

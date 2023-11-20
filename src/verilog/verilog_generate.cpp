@@ -52,11 +52,30 @@ Function: verilog_typecheckt::elaborate_generate_block
 \*******************************************************************/
 
 void verilog_typecheckt::elaborate_generate_block(
-  const exprt &statement,
+  const verilog_generate_blockt &generate_block,
   module_itemst &dest)
 {
-  forall_operands(it, statement)
-    elaborate_generate_item(*it, dest);
+  // These introduce a scope, and generate-for may append a
+  // loop index to the label. We hence leave a generate_block
+  // module item.
+  bool is_named = generate_block.is_named();
+
+  if(is_named)
+    enter_named_block(generate_block.identifier());
+
+  module_itemst new_module_items;
+
+  for(auto &item : generate_block.module_items())
+    elaborate_generate_item(item, new_module_items);
+
+  auto identifier = generate_block.identifier();
+  auto block = verilog_generate_blockt(identifier, std::move(new_module_items));
+  block.add_source_location() = generate_block.source_location();
+
+  dest.push_back(std::move(block));
+
+  if(is_named)
+    named_blocks.pop_back();
 }
 
 /*******************************************************************\
@@ -122,7 +141,7 @@ void verilog_typecheckt::elaborate_generate_item(
   module_itemst &dest)
 {
   if(statement.id()==ID_generate_block)
-    elaborate_generate_block(statement, dest);
+    elaborate_generate_block(to_verilog_generate_block(statement), dest);
   else if(statement.id()==ID_generate_case)
     elaborate_generate_case(statement, dest);
   else if(statement.id()==ID_generate_if)
@@ -256,6 +275,34 @@ void verilog_typecheckt::elaborate_generate_assign(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::generate_for_loop_index
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheckt::generate_for_loop_index(
+  const exprt &initialization_statement) const
+{
+  if(initialization_statement.id() == ID_generate_assign)
+  {
+    auto &assignment = to_binary_expr(initialization_statement);
+    return assignment.lhs();
+  }
+  else
+  {
+    error().source_location = initialization_statement.source_location();
+    error() << "failed to determine generate loop index" << eom;
+    throw 0;
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_generate_for
 
   Inputs:
@@ -277,17 +324,37 @@ void verilog_typecheckt::elaborate_generate_for(
     throw 0;
   }
 
-  elaborate_generate_assign(to_multi_ary_expr(statement).op0(), dest);
+  auto &for_statement = to_multi_ary_expr(statement);
+
+  elaborate_generate_assign(for_statement.op0(), dest);
+
+  // work out what the loop index is
+  auto loop_index = generate_for_loop_index(for_statement.op0());
 
   while(true)
   {
     mp_integer condition =
-      convert_integer_constant_expression(to_multi_ary_expr(statement).op1());
+      convert_integer_constant_expression(for_statement.op1());
 
     if(condition==0) break;
-    
-    // order is important!
-    elaborate_generate_item(to_multi_ary_expr(statement).op3(), dest);
-    elaborate_generate_assign(to_multi_ary_expr(statement).op2(), dest);
+
+    // Order is important!
+    // First execute the block.
+    // If it's a generate_block, append the loop counter to
+    // the block's identifier, surrounded by square brackets.
+    auto copy_of_body = for_statement.op3();
+    if(copy_of_body.id() == ID_generate_block)
+    {
+      const mp_integer loop_index_int =
+        convert_integer_constant_expression(loop_index);
+      auto new_identifier = id2string(copy_of_body.get(ID_identifier)) + '[' +
+                            integer2string(loop_index_int) + ']';
+      copy_of_body.set(ID_identifier, new_identifier);
+    }
+
+    elaborate_generate_item(copy_of_body, dest);
+
+    // Now increase the loop counter.
+    elaborate_generate_assign(for_statement.op2(), dest);
   }
 }

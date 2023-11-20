@@ -1586,10 +1586,18 @@ void verilog_typecheckt::convert_module_item(
     convert_inst_builtin(to_verilog_inst_builtin(module_item));
   else if(module_item.id()==ID_generate_block)
   {
-    // should be gone already
-    error().source_location=module_item.source_location();
-    error() << "unexpected generate_block module item" << eom;
-    throw 0;
+    // these introduce a scope, much like a named block
+    auto &generate_block = to_verilog_generate_block(module_item);
+    bool is_named = generate_block.is_named();
+
+    if(is_named)
+      enter_named_block(generate_block.identifier());
+
+    for(auto &sub_module_item : generate_block.module_items())
+      convert_module_item(sub_module_item);
+
+    if(is_named)
+      named_blocks.pop_back();
   }
   else if(module_item.id() == ID_set_genvars)
   {
