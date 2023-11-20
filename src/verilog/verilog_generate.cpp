@@ -85,6 +85,14 @@ void verilog_typecheckt::elaborate_generate_decl(
   }
   else
   {
+    if(decl_class == ID_reg || decl_class == ID_wire)
+    {
+      // verilog_typecheckt::module_interfaces does not add
+      // symbols in generate blocks, since the generate blocks
+      // have not yet been elaborated. Do so now.
+      interface_module_decl(decl);
+    }
+
     // Preserve the declaration for any initializers.
     verilog_module_itemt tmp(ID_set_genvars);
     tmp.add_to_operands(decl);
