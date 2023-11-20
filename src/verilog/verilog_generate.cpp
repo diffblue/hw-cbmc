@@ -12,6 +12,35 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::elaborate_generate_constructs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+verilog_module_exprt verilog_typecheckt::elaborate_generate_constructs(
+  const verilog_module_sourcet &module_source)
+{
+  const auto &module_items = module_source.module_items();
+
+  // We copy the module items to a new verilog_module_exprt
+  verilog_module_exprt verilog_module_expr;
+  auto &dest = verilog_module_expr.module_items();
+  dest.reserve(module_items.size());
+
+  // do the generate stuff, copying the module items
+  for(auto &item : module_items)
+    elaborate_generate_item(item, dest);
+
+  return verilog_module_expr;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_generate_block
 
   Inputs:

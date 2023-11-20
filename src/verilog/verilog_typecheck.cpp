@@ -1629,22 +1629,9 @@ Function: verilog_typecheckt::convert_statements
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_statements()
+void verilog_typecheckt::convert_statements(
+  verilog_module_exprt &verilog_module_expr)
 {
-  verilog_module_exprt verilog_module_expr;
-
-  const irept &module_source=
-    module_symbol.type.find(ID_module_source);
-
-  const irept &module_items=module_source.find(ID_module_items);
-
-  verilog_module_expr.module_items().reserve(module_items.get_sub().size());
-
-  // do the generate stuff, copying the module items
-  for(auto &item : module_items.get_sub())
-    elaborate_generate_item(
-      static_cast<const exprt &>(item), verilog_module_expr.module_items());
-
   // Do defparam, also known as 'parameter override'.
   // These must all be done before any module instantiation,
   // which use the parameters.
@@ -1726,11 +1713,16 @@ void verilog_typecheckt::typecheck()
   // of port, generate constructs) may depend on parameters.
   elaborate_parameters();
 
+  const auto &module_source =
+    to_verilog_module_source(module_symbol.type.find(ID_module_source));
+
   // Create symbols for the ports, registers/variables and wires.
-  module_interface();
+  module_interface(module_source);
+
+  auto verilog_module_expr = elaborate_generate_constructs(module_source);
 
   // Now typecheck the statements.
-  convert_statements();
+  convert_statements(verilog_module_expr);
 }
 
 /*******************************************************************\
