@@ -70,6 +70,11 @@ protected:
     assert(false);
   }
 
+  virtual void elaborate_parameter(irep_idt)
+  {
+    PRECONDITION(false);
+  }
+
   virtual exprt var_value(const irep_idt &identifier) { assert(false); }
 
   virtual bool implicit_wire(const irep_idt &identifier,

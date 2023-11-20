@@ -70,6 +70,15 @@ protected:
   const namespacet ns;
   symbolt &module_symbol;
 
+  // Parameters.
+  // defparam assignments. Map from module instance names
+  // to a map from parameter names to values.
+  using defparamst = std::map<irep_idt, std::map<irep_idt, exprt>>;
+  defparamst defparams;
+
+  void elaborate_parameters();
+  void elaborate_parameter(irep_idt) override;
+
   // instances
   irep_idt parameterize_module(
     const source_locationt &location,
@@ -94,8 +103,6 @@ protected:
   void interface_ports(irept::subt &ports);
   void interface_module_decl(const class verilog_declt &);
   void interface_function_or_task_decl(const class verilog_declt &);
-  void interface_parameter(const exprt &expr);
-  void interface_parameter_decl(const exprt &statement);
   void interface_inst(const class verilog_module_itemt &);
   void interface_inst(const class verilog_module_itemt &, const exprt &op);
   void interface_module_item(const class verilog_module_itemt &);
@@ -198,12 +205,6 @@ protected:
     else
       value=it->second;
   }
-
-  // defparam assignments. Map from module instance names
-  // to a map from parameter names to values.
-  using defparamst =
-    std::map<irep_idt, std::map<irep_idt, exprt>>;
-  defparamst defparams;
 
   // interpreter state
   typedef std::map<irep_idt, exprt> varst;

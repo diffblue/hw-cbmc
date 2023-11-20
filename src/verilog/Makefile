@@ -1,4 +1,5 @@
 SRC = expr2verilog.cpp \
+      verilog_elaborate_parameters.cpp \
       verilog_expr.cpp \
       verilog_generate.cpp \
       verilog_interfaces.cpp \
