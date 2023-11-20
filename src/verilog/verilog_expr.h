@@ -402,47 +402,63 @@ public:
   verilog_declt():verilog_statementt(ID_decl)
   {
   }
-  
-  inline irep_idt get_identifier() const
-  {
-    return find(ID_symbol).get(ID_identifier);
-  }
-  
-  inline void set_identifier(const irep_idt &identifier)
-  {
-    add(ID_symbol).set(ID_identifier, identifier);
-  }
-  
-  inline irep_idt get_class() const
+
+  irep_idt get_class() const
   {
     return get(ID_class);
   }
-  
-  inline void set_class(const irep_idt &_class)
+
+  void set_class(const irep_idt &_class)
   {
     set(ID_class, _class);
   }
 
-  // Function and task declarations may contain further declarations.
+  // When it's not a function or task, there are declarators.
+  using declaratort = verilog_parameter_declt::declaratort;
+  using declaratorst = verilog_parameter_declt::declaratorst;
+
+  declaratorst &declarators()
+  {
+    return (declaratorst &)operands();
+  }
+
+  const declaratorst &declarators() const
+  {
+    return (const declaratorst &)operands();
+  }
+
+  // Function and task declarations have:
+  // a) an identifier,
+  // b) further declarations,
+  // c) a body.
+  irep_idt get_identifier() const
+  {
+    return find(ID_symbol).get(ID_identifier);
+  }
+
+  void set_identifier(const irep_idt &identifier)
+  {
+    add(ID_symbol).set(ID_identifier, identifier);
+  }
+
   using declarationst = std::vector<verilog_declt>;
 
-  inline declarationst &declarations()
+  declarationst &declarations()
   {
     return (declarationst &)(add("declarations").get_sub());
   }
 
-  inline const declarationst &declarations() const
+  const declarationst &declarations() const
   {
     return (const declarationst &)(find("declarations").get_sub());
   }
 
-  // Function and task declarations have a body.
-  inline verilog_statementt &body()
+  verilog_statementt &body()
   {
     return static_cast<verilog_statementt &>(add(ID_body));
   }
 
-  inline const verilog_statementt &body() const
+  const verilog_statementt &body() const
   {
     return static_cast<const verilog_statementt &>(find(ID_body));
   }
