@@ -61,6 +61,44 @@ void verilog_typecheckt::elaborate_generate_block(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::elaborate_generate_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::elaborate_generate_decl(
+  const verilog_declt &decl,
+  module_itemst &dest)
+{
+  auto decl_class = decl.get_class();
+
+  if(decl_class == ID_genvar)
+  {
+    // Assign to "-1", which signals "the variable is unset"
+    for(auto &declarator : decl.declarators())
+      genvars[declarator.identifier()] = -1;
+  }
+  else
+  {
+    // Preserve the declaration for any initializers.
+    verilog_module_itemt tmp(ID_set_genvars);
+    tmp.add_to_operands(decl);
+    irept &variables = tmp.add("variables");
+
+    for(const auto &it : genvars)
+      variables.set(it.first, integer2string(it.second));
+
+    dest.push_back(std::move(tmp));
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_generate_item
 
   Inputs:
@@ -83,12 +121,8 @@ void verilog_typecheckt::elaborate_generate_item(
     elaborate_generate_if(statement, dest);
   else if(statement.id()==ID_generate_for)
     elaborate_generate_for(statement, dest);
-  else if(statement.id()==ID_decl &&
-          statement.get(ID_class)==ID_genvar)
-  {
-    forall_operands(it, statement)
-      genvars[it->get(ID_identifier)]=-1;
-  }
+  else if(statement.id() == ID_decl)
+    elaborate_generate_decl(to_verilog_decl(statement), dest);
   else
   {
     // no need for elaboration

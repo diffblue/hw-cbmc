@@ -190,6 +190,7 @@ protected:
   elaborate_generate_constructs(const verilog_module_sourcet &);
   void elaborate_generate_assign(const exprt &statement, module_itemst &dest);
   void elaborate_generate_block(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_decl(const verilog_declt &, module_itemst &dest);
   void elaborate_generate_item(const exprt &statement, module_itemst &dest);
   void elaborate_generate_if(const exprt &statement, module_itemst &dest);
   void elaborate_generate_case(const exprt &statement, module_itemst &dest);
