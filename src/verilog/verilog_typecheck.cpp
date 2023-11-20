@@ -1720,7 +1720,16 @@ Function: verilog_typecheckt::typecheck
 
 void verilog_typecheckt::typecheck()
 {
+  module_identifier = module_symbol.name;
+
+  // We first elaborate the parameters. Everything else (types
+  // of port, generate constructs) may depend on parameters.
+  elaborate_parameters();
+
+  // Create symbols for the ports, registers/variables and wires.
   module_interface();
+
+  // Now typecheck the statements.
   convert_statements();
 }
 

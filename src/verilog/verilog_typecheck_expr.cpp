@@ -746,7 +746,15 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
   if(!ns.lookup(full_identifier, symbol))
   { 
     // found!
-    if(symbol->type.id()==ID_genvar)
+    if(symbol->type.id() == ID_to_be_elaborated)
+    {
+      // A parameter.
+      DATA_INVARIANT(symbol->is_macro, "to_be_elaborated must be macro");
+      elaborate_parameter(symbol->name);
+      expr.type() = symbol->type;
+      expr.set(ID_identifier, full_identifier);
+    }
+    else if(symbol->type.id() == ID_genvar)
     {
       // This must be a constant.
       mp_integer int_value;
@@ -1225,9 +1233,8 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 
     if(symbol.is_macro)
     {
-      // A parameter or local parameter. It may not have been overridden,
-      // and hence may not have been constant folded.
-      return elaborate_constant_expression(symbol.value);
+      // A parameter or local parameter. Replace by its value.
+      return symbol.value;
     }
 
     exprt value=var_value(identifier);

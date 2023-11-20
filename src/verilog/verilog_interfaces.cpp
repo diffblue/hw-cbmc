@@ -31,17 +31,10 @@ Function: verilog_typecheckt::module_interface
 void verilog_typecheckt::module_interface()
 {
   // get port classes and types
-
-  module_identifier=module_symbol.name;
-
   const auto &module_source = module_symbol.type.find(ID_module_source);
   const irept &module_items=module_source.find(ID_module_items);
 
-  // first do parameter ports
-  for(auto &parameter : module_source.find(ID_parameter_port_list).get_sub())
-    interface_parameter(static_cast<const exprt &>(parameter));
-
-  // then do do module items
+  // iterate over the module items
   for(auto &module_item : module_items.get_sub())
     interface_module_item(
       static_cast<const verilog_module_itemt &>(module_item));
@@ -629,71 +622,6 @@ void verilog_typecheckt::interface_module_decl(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::interface_parameter
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::interface_parameter(const exprt &expr)
-{
-  symbolt symbol;
-
-  symbol.mode=mode;
-  symbol.module=module_identifier;
-  symbol.base_name=expr.get(ID_identifier);
-  symbol.name = hierarchical_identifier(symbol.base_name);
-  symbol.pretty_name=strip_verilog_prefix(symbol.name);
-
-  symbol.is_macro=true;
-  symbol.value=static_cast<const exprt &>(expr.find(ID_value));
-
-  if(symbol.base_name.empty())
-  {
-    error().source_location = expr.source_location();
-    error() << "empty symbol name" << eom;
-    throw 0;
-  }
-
-  convert_expr(symbol.value);
-  symbol.type=symbol.value.type();
-
-  symbolt *new_symbol;
-
-  if(symbol_table.move(symbol, new_symbol))
-  {
-    error().source_location = expr.source_location();
-    error() << "conflicting definition of symbol `"
-            << symbol.base_name << '\'' << eom;
-    throw 0;
-  }  
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::interface_parameter_decl
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::interface_parameter_decl(
-  const exprt &statement)
-{
-  forall_operands(it, statement)
-    interface_parameter(*it);
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::convert_inst
 
   Inputs:
@@ -785,7 +713,9 @@ void verilog_typecheckt::interface_module_item(
   }
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
-    interface_parameter_decl(module_item);
+  {
+    // already done by elaborate_parameters
+  }
   else if(module_item.id()==ID_inst ||
           module_item.id()==ID_inst_builtin)
     interface_inst(module_item);
