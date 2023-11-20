@@ -28,16 +28,11 @@ Function: verilog_typecheckt::module_interface
 
 \*******************************************************************/
 
-void verilog_typecheckt::module_interface()
+void verilog_typecheckt::module_interface(
+  const verilog_module_sourcet &module_source)
 {
-  // get port classes and types
-  const auto &module_source = module_symbol.type.find(ID_module_source);
-  const irept &module_items=module_source.find(ID_module_items);
-
-  // iterate over the module items
-  for(auto &module_item : module_items.get_sub())
-    interface_module_item(
-      static_cast<const verilog_module_itemt &>(module_item));
+  for(auto &module_item : module_source.module_items())
+    interface_module_item(module_item);
 
   // now check port names
   interface_ports(module_symbol.type.add(ID_ports).get_sub());

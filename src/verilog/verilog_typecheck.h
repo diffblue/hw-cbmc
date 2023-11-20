@@ -99,7 +99,7 @@ protected:
     const std::list<exprt> &parameter_values);
 
   // interfaces
-  void module_interface();
+  void module_interface(const verilog_module_sourcet &);
   void interface_ports(irept::subt &ports);
   void interface_module_decl(const class verilog_declt &);
   void interface_function_or_task_decl(const class verilog_declt &);
@@ -177,7 +177,7 @@ protected:
   void replace_symbols(const std::string &target, exprt &dest);
 
   // to be overridden
-  virtual void convert_statements();
+  virtual void convert_statements(verilog_module_exprt &);
 
   // to be overridden
   bool implicit_wire(const irep_idt &identifier,
@@ -186,6 +186,8 @@ protected:
   using module_itemst = std::vector<verilog_module_itemt>;
 
   // generate constructs
+  verilog_module_exprt
+  elaborate_generate_constructs(const verilog_module_sourcet &);
   void elaborate_generate_assign(const exprt &statement, module_itemst &dest);
   void elaborate_generate_block(const exprt &statement, module_itemst &dest);
   void elaborate_generate_item(const exprt &statement, module_itemst &dest);
