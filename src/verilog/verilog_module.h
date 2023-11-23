@@ -40,6 +40,14 @@ struct verilog_modulet
   }
   
   void show(std::ostream &out) const;
+
+  // The identifiers of the submodules
+  // (not: the identifiers of the instances)
+  std::vector<irep_idt> submodules() const;
+
+private:
+  static void
+  submodules_rec(const exprt &module_item, std::vector<irep_idt> &dest);
 };
 
 #endif

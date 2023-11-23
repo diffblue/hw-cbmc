@@ -34,7 +34,17 @@ verilog_module_exprt verilog_typecheckt::elaborate_generate_constructs(
 
   // do the generate stuff, copying the module items
   for(auto &item : module_items)
-    elaborate_generate_item(item, dest);
+    if(item.id() == ID_generate_block)
+      elaborate_generate_item(item, dest);
+    else if(
+      item.id() == ID_decl && to_verilog_decl(item).get_class() == ID_genvar)
+    {
+      // Assign to "-1", which signals "the variable is unset"
+      for(auto &declarator : to_verilog_decl(item).declarators())
+        genvars[declarator.identifier()] = -1;
+    }
+    else
+      dest.push_back(item); // copy
 
   return verilog_module_expr;
 }
@@ -126,6 +136,39 @@ void verilog_typecheckt::elaborate_generate_decl(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::elaborate_generate_inst
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::elaborate_generate_inst(
+  const verilog_instt &inst,
+  module_itemst &dest)
+{
+  // verilog_typecheckt::module_interfaces does not add
+  // symbols for module instances in generate blocks,
+  // since the generate blocks have not yet been elaborated.
+  // Do so now.
+  interface_inst(inst);
+
+  // Preserve the instantiation
+  verilog_module_itemt tmp(ID_set_genvars);
+  tmp.add_to_operands(inst);
+  irept &variables = tmp.add("variables");
+
+  for(const auto &it : genvars)
+    variables.set(it.first, integer2string(it.second));
+
+  dest.push_back(std::move(tmp));
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_generate_item
 
   Inputs:
@@ -150,6 +193,8 @@ void verilog_typecheckt::elaborate_generate_item(
     elaborate_generate_for(statement, dest);
   else if(statement.id() == ID_decl)
     elaborate_generate_decl(to_verilog_decl(statement), dest);
+  else if(statement.id() == ID_inst)
+    elaborate_generate_inst(to_verilog_inst(statement), dest);
   else
   {
     // no need for elaboration
