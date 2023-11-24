@@ -338,6 +338,10 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       error() << "wires are not allowed here" << eom;
       throw 0;
     }
+    else if(port_class == ID_typedef)
+    {
+      symbol.is_type = true;
+    }
     else
     {
       if(
@@ -502,6 +506,10 @@ void verilog_typecheckt::interface_module_decl(
     }
     else if(port_class == ID_supply1)
     {
+    }
+    else if(port_class == ID_typedef)
+    {
+      symbol.is_type = true;
     }
     else
     {
