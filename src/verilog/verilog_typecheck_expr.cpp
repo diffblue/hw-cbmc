@@ -746,7 +746,9 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
   if(!ns.lookup(full_identifier, symbol))
   { 
     // found!
-    if(symbol->type.id() == ID_to_be_elaborated)
+    if(
+      symbol->type.id() == ID_to_be_elaborated ||
+      symbol->type.id() == ID_elaborating)
     {
       // A parameter.
       DATA_INVARIANT(symbol->is_macro, "to_be_elaborated must be macro");

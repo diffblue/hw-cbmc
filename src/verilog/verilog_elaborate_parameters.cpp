@@ -102,8 +102,18 @@ void verilog_typecheckt::elaborate_parameter(irep_idt identifier)
   // Does it still need to be elaborated?
   if(symbol.type.id() == ID_to_be_elaborated)
   {
+    // mark as "elaborating" to detect cycles
+    symbol.type = typet(ID_elaborating);
+
     convert_expr(symbol.value);
     symbol.value = elaborate_constant_expression(symbol.value);
     symbol.type = symbol.value.type();
+  }
+  else if(symbol.type.id() == ID_elaborating)
+  {
+    error().source_location = symbol.location;
+    error() << "cyclic dependency when elaborating parameter "
+            << symbol.display_name() << eom;
+    throw 0;
   }
 }

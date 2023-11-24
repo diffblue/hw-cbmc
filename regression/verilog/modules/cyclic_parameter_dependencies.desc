@@ -1,0 +1,7 @@
+CORE
+cyclic_parameter_dependencies.v
+
+^file .* line 2: cyclic dependency when elaborating parameter my_module\.p$
+^EXIT=2$
+^SIGNAL=0$
+--
