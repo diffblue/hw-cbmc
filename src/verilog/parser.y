@@ -1120,6 +1120,7 @@ delay3:   '#' delay_value { $$=$2; }
 
 delay_value:
           unsigned_number
+	| variable_identifier
         ;
 
 // System Verilog standard 1800-2017
@@ -2091,8 +2092,6 @@ delay_or_event_control:
 delay_control:
 	  '#' delay_value
 		{ init($$, ID_delay); mto($$, $2); }
-	// | '#' variable_identifier
-	// 	{ init($$, ID_delay); mto($$, $2); }
 	| '#' '(' mintypmax_expression ')'
 		{ init($$, ID_delay); mto($$, $2); }
 	;
