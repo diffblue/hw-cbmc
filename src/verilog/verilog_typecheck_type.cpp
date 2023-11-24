@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/ebmc_util.h>
+#include <util/ieee_float.h>
 #include <util/mathematical_types.h>
 
 #include "verilog_typecheck_expr.h"
@@ -37,6 +38,12 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
   else if(src.id() == ID_integer)
   {
     typet result = integer_typet();
+    result.add_source_location() = std::move(source_location);
+    return result;
+  }
+  else if(src.id() == ID_shortreal)
+  {
+    typet result = ieee_float_spect::single_precision().to_type();
     result.add_source_location() = std::move(source_location);
     return result;
   }

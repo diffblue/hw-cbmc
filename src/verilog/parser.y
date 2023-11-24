@@ -963,9 +963,7 @@ data_type:
                   $$=$1;
                   add_as_subtype(stack_type($$), stack_type($2));
                 }
-	/*
 	| non_integer_type
-	*/
 	| struct_union packed_opt signing_opt 
 	  '{' struct_union_member_list '}' packed_dimension_brace
 	        { /* todo */ }
@@ -1020,6 +1018,12 @@ enum_base_type_opt:
 	;
 
 non_integer_type:
+	  TOK_SHORTREAL
+		{ init($$, ID_shortreal); }
+	| TOK_REAL
+		{ init($$, ID_real); }
+	| TOK_REALTIME
+		{ init($$, ID_realtime); }
 	;
 
 ps_covergroup_identifier:
