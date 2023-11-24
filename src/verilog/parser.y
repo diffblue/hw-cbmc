@@ -754,15 +754,12 @@ module_port_output_declaration:
 // System Verilog standard 1800-2017
 // A.1.4 Module items
 
-module_item_brace:
-		/* Optional */
-		{ init($$); }
-	| module_item_brace module_item
-		{ $$=$1; mts($$, $2); }
-	;
-
 module_common_item:
           module_or_generate_item_declaration
+        | bind_directive
+	| continuous_assign
+	| initial_construct
+	| always_construct
         ;
 
 module_item:
@@ -770,9 +767,37 @@ module_item:
         | non_port_module_item
         ;
 
+module_item_brace:
+		/* Optional */
+		{ init($$); }
+	| module_item_brace module_item
+		{ $$=$1; mts($$, $2); }
+	;
+
+module_or_generate_item:
+	  attribute_instance_brace parameter_override { $$=$2; }
+	| attribute_instance_brace gate_instantiation { $$=$2; }
+	// | attribute_instance_brace udp_instantiation { $$=$2; }
+	| attribute_instance_brace module_instantiation { $$=$2; }
+	| attribute_instance_brace concurrent_assert_statement { $$=$2; }
+	| attribute_instance_brace concurrent_assume_statement { $$=$2; }
+	| attribute_instance_brace concurrent_cover_statement { $$=$2; }
+	| attribute_instance_brace concurrent_assertion_item_declaration { $$=$2; }
+	| attribute_instance_brace module_common_item { $$=$2; }
+	;
+
+module_or_generate_item_declaration:
+          package_or_generate_item_declaration
+	| genvar_declaration
+	| reg_declaration
+	| integer_real_declaration
+          /* time_declaration */
+	| event_declaration
+	;
+
 non_port_module_item:
-          module_or_generate_item
-	| attribute_instance_brace generate_region { $$=$2; }
+	  attribute_instance_brace generate_region { $$=$2; }
+        | module_or_generate_item
         | attribute_instance_brace specparam_declaration {$$=$2; }
         ;
 
@@ -1818,30 +1843,6 @@ port_declaration:
 	  attribute_instance_brace inout_declaration { $$=$2; }
 	| attribute_instance_brace input_declaration { $$=$2; }
 	| attribute_instance_brace output_declaration { $$=$2; }
-	;
-
-module_or_generate_item:
- 	  attribute_instance_brace module_or_generate_item_declaration { $$=$2; }
- 	| attribute_instance_brace parameter_override { $$=$2; }
- 	| attribute_instance_brace continuous_assign { $$=$2; }
-        | attribute_instance_brace gate_instantiation { $$=$2; }
- 	// | attribute_instance_brace udp_instantiation { $$=$2; }
- 	| attribute_instance_brace module_instantiation { $$=$2; }
- 	| attribute_instance_brace initial_construct { $$=$2; }
- 	| attribute_instance_brace always_construct { $$=$2; }
- 	| attribute_instance_brace concurrent_assert_statement { $$=$2; }
- 	| attribute_instance_brace concurrent_assume_statement { $$=$2; }
- 	| attribute_instance_brace concurrent_cover_statement { $$=$2; }
-	| attribute_instance_brace concurrent_assertion_item_declaration { $$=$2; }
-        ;
-
-module_or_generate_item_declaration:
-          package_or_generate_item_declaration
-	| reg_declaration
-	| integer_real_declaration
-          /* time_declaration */
-	| event_declaration
-	| genvar_declaration
 	;
 
 package_or_generate_item_declaration:
