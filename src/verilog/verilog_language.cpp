@@ -115,12 +115,8 @@ void verilog_languaget::dependencies(
     
     const verilog_modulet &module=(it->second)->verilog_module;
 
-    for(auto &item : module.module_items.get_sub())
-    {
-      if(item.id() == ID_inst)
-        module_set.insert(
-          id2string(verilog_module_symbol(item.get_string(ID_module))));
-    }
+    for(auto &identifier : module.submodules())
+      module_set.insert(id2string(identifier));
   }
 }
 

@@ -216,6 +216,69 @@ inline verilog_generate_blockt &to_verilog_generate_block(exprt &expr)
   return static_cast<verilog_generate_blockt &>(expr);
 }
 
+class verilog_generate_ift : public verilog_module_itemt
+{
+public:
+  verilog_generate_ift() : verilog_module_itemt(ID_generate_if)
+  {
+  }
+
+  const verilog_module_itemt &then_case() const
+  {
+    return static_cast<const verilog_module_itemt &>(get_sub()[1]);
+  }
+
+  bool has_else_case() const
+  {
+    return get_sub().size() == 3;
+  }
+
+  const verilog_module_itemt &else_case() const
+  {
+    PRECONDITION(has_else_case());
+    return static_cast<const verilog_module_itemt &>(get_sub()[2]);
+  }
+};
+
+inline const verilog_generate_ift &to_verilog_generate_if(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_if);
+  return static_cast<const verilog_generate_ift &>(expr);
+}
+
+inline verilog_generate_ift &to_verilog_generate_if(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_if);
+  return static_cast<verilog_generate_ift &>(expr);
+}
+
+class verilog_generate_fort : public verilog_module_itemt
+{
+public:
+  verilog_generate_fort() : verilog_module_itemt(ID_generate_for)
+  {
+  }
+
+  const verilog_module_itemt &body() const
+  {
+    return static_cast<const verilog_module_itemt &>(get_sub()[3]);
+  }
+};
+
+inline const verilog_generate_fort &to_verilog_generate_for(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_for);
+  validate_operands(expr, 4, "generate_for must have 4 operands");
+  return static_cast<const verilog_generate_fort &>(expr);
+}
+
+inline verilog_generate_fort &to_verilog_generate_for(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_for);
+  validate_operands(expr, 4, "generate_for must have 4 operands");
+  return static_cast<verilog_generate_fort &>(expr);
+}
+
 class verilog_parameter_declt : public verilog_module_itemt
 {
 public:
