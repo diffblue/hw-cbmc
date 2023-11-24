@@ -794,11 +794,6 @@ bind_directive:
           TOK_BIND
         ;
 	
-type_declaration:
-	  TOK_TYPEDEF data_type type_identifier ';'
-	  	{ PARSER.parse_tree.create_typedef(stack_expr($2), stack_expr($3)); }
-	;
-
 // System Verilog standard 1800-2017
 // A.1.11 Package items
 
@@ -886,6 +881,11 @@ port_identifier: TOK_CHARSTR
 // System Verilog standard 1800-2017
 // A.2.1.3 Type declarations
 
+genvar_declaration:
+	  TOK_GENVAR list_of_genvar_identifiers ';'
+		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
+	;
+
 net_declaration:
           net_type_or_trireg drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
 		{ init($$, ID_decl);
@@ -905,24 +905,6 @@ vectored_scalared_opt:
 	| TOK_VECTORED     { init($$, "vectored"); }
 	| TOK_SCALARED     { init($$, "scalared"); }
 	;
-
-net_type: TOK_WIRE    { init($$, ID_wire); }
-	| TOK_TRI     { init($$, ID_tri); }
-	| TOK_TRI1    { init($$, ID_tri1); }
-	| TOK_SUPPLY0 { init($$, ID_supply0); }
-	| TOK_WAND    { init($$, ID_wand); }
-	| TOK_TRIAND  { init($$, ID_triand); }
-	| TOK_TRI0    { init($$, ID_tri0); }
-	| TOK_SUPPLY1 { init($$, ID_supply1); }
-	| TOK_WOR     { init($$, ID_wor); }
-	| TOK_TRIOR   { init($$, ID_trior); }
-	;
-
-net_type_opt:
-          /* nothing */
-          { make_nil($$); }
-        | net_type
-        ;
 
 list_of_net_names:
 	  net_name
@@ -947,6 +929,11 @@ list_of_net_decl_assignments:
 		{ init($$); mto($$, $1); }
 	| list_of_net_decl_assignments ',' net_decl_assignment
 		{ $$=$1;    mto($$, $3); }
+	;
+
+type_declaration:
+	  TOK_TYPEDEF data_type type_identifier ';'
+		{ PARSER.parse_tree.create_typedef(stack_expr($2), stack_expr($3)); }
 	;
 
 // System Verilog standard 1800-2017
@@ -1021,6 +1008,24 @@ enum_base_type_opt:
 
 non_integer_type:
 	;
+
+net_type: TOK_WIRE    { init($$, ID_wire); }
+	| TOK_TRI     { init($$, ID_tri); }
+	| TOK_TRI1    { init($$, ID_tri1); }
+	| TOK_SUPPLY0 { init($$, ID_supply0); }
+	| TOK_WAND    { init($$, ID_wand); }
+	| TOK_TRIAND  { init($$, ID_triand); }
+	| TOK_TRI0    { init($$, ID_tri0); }
+	| TOK_SUPPLY1 { init($$, ID_supply1); }
+	| TOK_WOR     { init($$, ID_wor); }
+	| TOK_TRIOR   { init($$, ID_trior); }
+	;
+
+net_type_opt:
+          /* nothing */
+          { make_nil($$); }
+        | net_type
+        ;
 
 ps_covergroup_identifier:
 	;
@@ -1757,11 +1762,6 @@ loop_generate_construct:
 		  mto($$, $9);
 		}
         ;
-
-genvar_declaration:
-	  TOK_GENVAR list_of_genvar_identifiers ';'
-		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
-	;
 
 genvar_initialization:
 	  genvar_identifier '=' constant_expression
