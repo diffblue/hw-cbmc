@@ -80,12 +80,12 @@ public:
     exprt &ports,
     exprt &statements);
 
-  void create_typedef(irept &type, irept &symbol)
+  void create_typedef(irept &declaration)
   {
     items.push_back(itemt());
     items.back().type=itemt::TYPEDEF;
-    items.back().verilog_typedef.symbol.swap(symbol);
-    items.back().verilog_typedef.type.swap(type);
+    items.back().verilog_typedef.symbol.swap(declaration.get_sub()[0]);
+    items.back().verilog_typedef.type.swap(declaration.add(ID_type));
   }
   
   void swap(verilog_parse_treet &parse_tree)

@@ -595,6 +595,7 @@ description:
  	| attribute_instance_brace bind_directive
  	| config_declaration
  	| type_declaration
+          { PARSER.parse_tree.create_typedef(stack_expr($1)); }
         ;
 
 /*
@@ -907,6 +908,10 @@ port_identifier: TOK_CHARSTR
 // System Verilog standard 1800-2017
 // A.2.1.3 Type declarations
 
+data_declaration:
+	  type_declaration
+	;
+
 genvar_declaration:
 	  TOK_GENVAR list_of_genvar_identifiers ';'
 		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
@@ -923,6 +928,15 @@ net_declaration:
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
                   swapop($$, $6); }
+	;
+
+type_declaration:
+	  TOK_TYPEDEF data_type type_identifier ';'
+		{ init($$, ID_decl);
+		  stack_expr($$).set(ID_class, ID_typedef);
+		  addswap($$, ID_type, $2);
+		  mto($$, $3);
+		}
 	;
 
 vectored_scalared_opt:
@@ -955,11 +969,6 @@ list_of_net_decl_assignments:
 		{ init($$); mto($$, $1); }
 	| list_of_net_decl_assignments ',' net_decl_assignment
 		{ $$=$1;    mto($$, $3); }
-	;
-
-type_declaration:
-	  TOK_TYPEDEF data_type type_identifier ';'
-		{ PARSER.parse_tree.create_typedef(stack_expr($2), stack_expr($3)); }
 	;
 
 // System Verilog standard 1800-2017
@@ -1507,7 +1516,8 @@ task_item_declaration:
 // A.2.8 Block item declarations
 
 block_item_declaration:
-	  attribute_instance_brace block_reg_declaration { $$=$2; }
+	  attribute_instance_brace data_declaration { $$=$2; }
+	| attribute_instance_brace block_reg_declaration { $$=$2; }
 	| attribute_instance_brace event_declaration     { $$=$2; }
 	| attribute_instance_brace integer_real_declaration   { $$=$2; }
 	| attribute_instance_brace local_parameter_declaration ';' { $$=$2; }
@@ -1851,6 +1861,7 @@ port_declaration:
 
 package_or_generate_item_declaration:
 	  net_declaration
+	| data_declaration
 	| task_declaration
 	| function_declaration
 	| local_parameter_declaration ';'
