@@ -396,6 +396,7 @@ int yyverilogerror(const char *error)
 %token TOK_REMOVAL          "removal"
 %token TOK_WIDTH            "width"
 %token TOK_SKEW             "skew"
+%token TOK_UWIRE            "uwire"
 
 /* System Verilog Operators */
 %token TOK_VERTBARMINUSGREATER "|->"
@@ -753,15 +754,12 @@ module_port_output_declaration:
 // System Verilog standard 1800-2017
 // A.1.4 Module items
 
-module_item_brace:
-		/* Optional */
-		{ init($$); }
-	| module_item_brace module_item
-		{ $$=$1; mts($$, $2); }
-	;
-
 module_common_item:
           module_or_generate_item_declaration
+        | bind_directive
+	| continuous_assign
+	| initial_construct
+	| always_construct
         ;
 
 module_item:
@@ -769,9 +767,37 @@ module_item:
         | non_port_module_item
         ;
 
+module_item_brace:
+		/* Optional */
+		{ init($$); }
+	| module_item_brace module_item
+		{ $$=$1; mts($$, $2); }
+	;
+
+module_or_generate_item:
+	  attribute_instance_brace parameter_override { $$=$2; }
+	| attribute_instance_brace gate_instantiation { $$=$2; }
+	// | attribute_instance_brace udp_instantiation { $$=$2; }
+	| attribute_instance_brace module_instantiation { $$=$2; }
+	| attribute_instance_brace concurrent_assert_statement { $$=$2; }
+	| attribute_instance_brace concurrent_assume_statement { $$=$2; }
+	| attribute_instance_brace concurrent_cover_statement { $$=$2; }
+	| attribute_instance_brace concurrent_assertion_item_declaration { $$=$2; }
+	| attribute_instance_brace module_common_item { $$=$2; }
+	;
+
+module_or_generate_item_declaration:
+          package_or_generate_item_declaration
+	| genvar_declaration
+	| reg_declaration
+	| integer_real_declaration
+          /* time_declaration */
+	| event_declaration
+	;
+
 non_port_module_item:
-          module_or_generate_item
-	| attribute_instance_brace generate_region { $$=$2; }
+	  attribute_instance_brace generate_region { $$=$2; }
+        | module_or_generate_item
         | attribute_instance_brace specparam_declaration {$$=$2; }
         ;
 
@@ -887,12 +913,12 @@ genvar_declaration:
 	;
 
 net_declaration:
-          net_type_or_trireg drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
+          net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
 		{ init($$, ID_decl);
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
                   swapop($$, $6); }
-        | net_type_or_trireg drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
+        | net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
 		{ init($$, ID_decl);
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
@@ -1013,23 +1039,19 @@ non_integer_type:
 		{ init($$, ID_realtime); }
 	;
 
-net_type: TOK_WIRE    { init($$, ID_wire); }
-	| TOK_TRI     { init($$, ID_tri); }
-	| TOK_TRI1    { init($$, ID_tri1); }
-	| TOK_SUPPLY0 { init($$, ID_supply0); }
-	| TOK_WAND    { init($$, ID_wand); }
-	| TOK_TRIAND  { init($$, ID_triand); }
-	| TOK_TRI0    { init($$, ID_tri0); }
+net_type: TOK_SUPPLY0 { init($$, ID_supply0); }
 	| TOK_SUPPLY1 { init($$, ID_supply1); }
-	| TOK_WOR     { init($$, ID_wor); }
+	| TOK_TRI     { init($$, ID_tri); }
+	| TOK_TRIAND  { init($$, ID_triand); }
 	| TOK_TRIOR   { init($$, ID_trior); }
+	| TOK_TRIREG  { init($$, ID_trireg); }
+	| TOK_TRI0    { init($$, ID_tri0); }
+	| TOK_TRI1    { init($$, ID_tri1); }
+	| TOK_UWIRE   { init($$, ID_uwire); }
+	| TOK_WIRE    { init($$, ID_wire); }
+	| TOK_WAND    { init($$, ID_wand); }
+	| TOK_WOR     { init($$, ID_wor); }
 	;
-
-net_type_opt:
-          /* nothing */
-          { make_nil($$); }
-        | net_type
-        ;
 
 ps_covergroup_identifier:
 	;
@@ -1240,7 +1262,7 @@ inout_declaration:
                   swapop($$, $3); }
 	;
 
-port_type: net_type_or_trireg_opt signing_opt packed_dimension_brace
+port_type: net_type_opt signing_opt packed_dimension_brace
                 {
                   $$=$3;
                   add_as_subtype(stack_type($$), stack_type($2));
@@ -1248,16 +1270,11 @@ port_type: net_type_or_trireg_opt signing_opt packed_dimension_brace
                 }
         ;
         
-net_type_or_trireg_opt:
+net_type_opt:
           /* Optional */
                 { init($$, ID_nil); }
-        | net_type_or_trireg
+        | net_type
         ;
-
-net_type_or_trireg:
-          net_type
-        | TOK_TRIREG
-                { init($$, ID_trireg); }
 
 signing_opt:
 	  /* Optional */
@@ -1830,30 +1847,6 @@ port_declaration:
 	  attribute_instance_brace inout_declaration { $$=$2; }
 	| attribute_instance_brace input_declaration { $$=$2; }
 	| attribute_instance_brace output_declaration { $$=$2; }
-	;
-
-module_or_generate_item:
- 	  attribute_instance_brace module_or_generate_item_declaration { $$=$2; }
- 	| attribute_instance_brace parameter_override { $$=$2; }
- 	| attribute_instance_brace continuous_assign { $$=$2; }
-        | attribute_instance_brace gate_instantiation { $$=$2; }
- 	// | attribute_instance_brace udp_instantiation { $$=$2; }
- 	| attribute_instance_brace module_instantiation { $$=$2; }
- 	| attribute_instance_brace initial_construct { $$=$2; }
- 	| attribute_instance_brace always_construct { $$=$2; }
- 	| attribute_instance_brace concurrent_assert_statement { $$=$2; }
- 	| attribute_instance_brace concurrent_assume_statement { $$=$2; }
- 	| attribute_instance_brace concurrent_cover_statement { $$=$2; }
-	| attribute_instance_brace concurrent_assertion_item_declaration { $$=$2; }
-        ;
-
-module_or_generate_item_declaration:
-          package_or_generate_item_declaration
-	| reg_declaration
-	| integer_real_declaration
-          /* time_declaration */
-	| event_declaration
-	| genvar_declaration
 	;
 
 package_or_generate_item_declaration:
