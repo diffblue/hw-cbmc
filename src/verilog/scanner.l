@@ -407,6 +407,7 @@ void verilog_scanner_init()
 <GRAMMAR>triand         { return TOK_TRIAND; }
 <GRAMMAR>trior          { return TOK_TRIOR; }
 <GRAMMAR>trireg         { return TOK_TRIREG; }
+<GRAMMAR>uwire          { return TOK_UWIRE; } // Verilog 2005
 <GRAMMAR>vectored       { return TOK_VECTORED; }
 <GRAMMAR>wait           { return TOK_WAIT; }
 <GRAMMAR>wand           { return TOK_WAND; }

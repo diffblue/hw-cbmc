@@ -396,6 +396,7 @@ int yyverilogerror(const char *error)
 %token TOK_REMOVAL          "removal"
 %token TOK_WIDTH            "width"
 %token TOK_SKEW             "skew"
+%token TOK_UWIRE            "uwire"
 
 /* System Verilog Operators */
 %token TOK_VERTBARMINUSGREATER "|->"
@@ -887,12 +888,12 @@ genvar_declaration:
 	;
 
 net_declaration:
-          net_type_or_trireg drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
+          net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
 		{ init($$, ID_decl);
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
                   swapop($$, $6); }
-        | net_type_or_trireg drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
+        | net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
 		{ init($$, ID_decl);
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
@@ -1009,23 +1010,19 @@ enum_base_type_opt:
 non_integer_type:
 	;
 
-net_type: TOK_WIRE    { init($$, ID_wire); }
-	| TOK_TRI     { init($$, ID_tri); }
-	| TOK_TRI1    { init($$, ID_tri1); }
-	| TOK_SUPPLY0 { init($$, ID_supply0); }
-	| TOK_WAND    { init($$, ID_wand); }
-	| TOK_TRIAND  { init($$, ID_triand); }
-	| TOK_TRI0    { init($$, ID_tri0); }
+net_type: TOK_SUPPLY0 { init($$, ID_supply0); }
 	| TOK_SUPPLY1 { init($$, ID_supply1); }
-	| TOK_WOR     { init($$, ID_wor); }
+	| TOK_TRI     { init($$, ID_tri); }
+	| TOK_TRIAND  { init($$, ID_triand); }
 	| TOK_TRIOR   { init($$, ID_trior); }
+	| TOK_TRIREG  { init($$, ID_trireg); }
+	| TOK_TRI0    { init($$, ID_tri0); }
+	| TOK_TRI1    { init($$, ID_tri1); }
+	| TOK_UWIRE   { init($$, ID_uwire); }
+	| TOK_WIRE    { init($$, ID_wire); }
+	| TOK_WAND    { init($$, ID_wand); }
+	| TOK_WOR     { init($$, ID_wor); }
 	;
-
-net_type_opt:
-          /* nothing */
-          { make_nil($$); }
-        | net_type
-        ;
 
 ps_covergroup_identifier:
 	;
@@ -1236,7 +1233,7 @@ inout_declaration:
                   swapop($$, $3); }
 	;
 
-port_type: net_type_or_trireg_opt signing_opt packed_dimension_brace
+port_type: net_type_opt signing_opt packed_dimension_brace
                 {
                   $$=$3;
                   add_as_subtype(stack_type($$), stack_type($2));
@@ -1244,16 +1241,11 @@ port_type: net_type_or_trireg_opt signing_opt packed_dimension_brace
                 }
         ;
         
-net_type_or_trireg_opt:
+net_type_opt:
           /* Optional */
                 { init($$, ID_nil); }
-        | net_type_or_trireg
+        | net_type
         ;
-
-net_type_or_trireg:
-          net_type
-        | TOK_TRIREG
-                { init($$, ID_trireg); }
 
 signing_opt:
 	  /* Optional */
