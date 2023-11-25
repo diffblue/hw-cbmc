@@ -1041,11 +1041,11 @@ enum_base_type_opt:
 
 non_integer_type:
 	  TOK_SHORTREAL
-		{ init($$, ID_shortreal); }
+		{ init($$, ID_verilog_shortreal); }
 	| TOK_REAL
-		{ init($$, ID_real); }
+		{ init($$, ID_verilog_real); }
 	| TOK_REALTIME
-		{ init($$, ID_realtime); }
+		{ init($$, ID_verilog_realtime); }
 	;
 
 net_type: TOK_SUPPLY0 { init($$, ID_supply0); }
@@ -1358,9 +1358,9 @@ integer_real_type:
 	  TOK_INTEGER
 		{ init($$, ID_integer); }
 	| TOK_REAL
-		{ init($$, ID_real); }
+		{ init($$, ID_verilog_real); }
 	| TOK_REALTIME
-		{ init($$, ID_realtime); }
+		{ init($$, ID_verilog_realtime); }
 	;
 
 integer_real_declaration:
@@ -1463,9 +1463,9 @@ range_or_type:
 	| TOK_INTEGER
 		{ init($$, ID_integer); }
 	| TOK_REAL
-		{ init($$, ID_real); }
+		{ init($$, ID_verilog_real); }
 	| TOK_REALTIME
-		{ init($$, ID_realtime); }
+		{ init($$, ID_verilog_realtime); }
 	| TOK_TIME
 		{ init($$, ID_time); }
 	;

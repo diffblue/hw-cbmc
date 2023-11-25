@@ -346,7 +346,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
     {
       if(
         type.id() == ID_integer || type.id() == ID_verilog_realtime ||
-        type.id() == ID_real)
+        type.id() == ID_verilog_shortreal || type.id() == ID_verilog_real)
       {
         symbol.is_lvalue = true;
       }
@@ -515,7 +515,7 @@ void verilog_typecheckt::interface_module_decl(
     {
       if(
         type.id() == ID_integer || type.id() == ID_verilog_realtime ||
-        type.id() == ID_real)
+        type.id() == ID_verilog_shortreal || type.id() == ID_verilog_real)
       {
         symbol.is_lvalue = true;
       }

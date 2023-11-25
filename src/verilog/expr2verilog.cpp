@@ -1151,8 +1151,12 @@ std::string expr2verilogt::convert(const typet &type)
     return "genvar";
   else if(type.id()==ID_integer)
     return "integer";
-  else if(type.id()==ID_real || type.id()==ID_verilog_realtime)
+  else if(type.id()==ID_verilog_shortreal)
+    return "shortreal";
+  else if(type.id()==ID_verilog_real)
     return "real";
+  else if(type.id()==ID_verilog_realtime)
+    return "realtime";
 
   return "IREP("+type.pretty()+")";
 }
