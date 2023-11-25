@@ -76,8 +76,17 @@ protected:
   using defparamst = std::map<irep_idt, std::map<irep_idt, exprt>>;
   defparamst defparams;
 
-  void elaborate_constants();
-  void elaborate_parameter(irep_idt) override;
+  // Elaboration
+  void elaborate();
+  void elaborate_rec(irep_idt) override;
+  void add_symbol(symbolt);
+  void collect_symbols(const typet &);
+  void collect_symbols(const verilog_module_sourcet &);
+  void collect_symbols(const verilog_module_itemt &);
+  void collect_symbols(const verilog_declt &);
+  void
+  collect_symbols(const typet &, const verilog_parameter_declt::declaratort &);
+  std::vector<irep_idt> symbols_added;
 
   // instances
   irep_idt parameterize_module(

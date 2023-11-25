@@ -1,0 +1,8 @@
+KNOWNBUG
+enum2.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+enum constants must be strongly typed.

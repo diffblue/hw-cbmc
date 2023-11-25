@@ -56,34 +56,51 @@ public:
     scopet() : parent(nullptr), prefix("Verilog::")
     {
     }
+
     explicit scopet(
-      irep_idt name,
+      irep_idt _base_name,
       const std::string &separator,
       scopet *_parent)
       : parent(_parent),
-        prefix(id2string(_parent->prefix) + id2string(name) + separator)
+        __base_name(_base_name),
+        prefix(id2string(_parent->prefix) + id2string(_base_name) + separator)
     {
     }
+
     scopet *parent = nullptr;
     bool is_type = false;
+    irep_idt __base_name;
+    std::string prefix;
+
+    irep_idt identifier() const
+    {
+      PRECONDITION(parent != nullptr);
+      return parent->prefix + id2string(__base_name);
+    }
+
+    const irep_idt &base_name() const
+    {
+      return __base_name;
+    }
+
+    // sub-scopes
     using scope_mapt = std::map<irep_idt, scopet>;
     scope_mapt scope_map;
-    std::string prefix;
   };
 
   scopet top_scope, *current_scope = &top_scope;
 
-  scopet &add_name(irep_idt name, const std::string &separator)
+  scopet &add_name(irep_idt _base_name, const std::string &separator)
   {
     auto result = current_scope->scope_map.emplace(
-      name, scopet{name, separator, current_scope});
+      _base_name, scopet{_base_name, separator, current_scope});
     return result.first->second;
   }
 
   // Create the given sub-scope of the current scope.
-  void push_scope(irep_idt name, const std::string &separator)
+  void push_scope(irep_idt _base_name, const std::string &separator)
   {
-    current_scope = &add_name(name, separator);
+    current_scope = &add_name(_base_name, separator);
   }
 
   void pop_scope()
@@ -94,11 +111,11 @@ public:
 
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.
-  const scopet *lookup(irep_idt) const;
+  const scopet *lookup(irep_idt base_name) const;
 
-  bool is_type(irep_idt name) const
+  bool is_type(irep_idt base_name) const
   {
-    auto scope_ptr = lookup(name);
+    auto scope_ptr = lookup(base_name);
     return scope_ptr == nullptr ? false : scope_ptr->is_type;
   }
 

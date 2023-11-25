@@ -1,0 +1,9 @@
+KNOWNBUG
+enum4.sv
+--bound 0
+^EXIT=10$
+^SIGNAL=0$
+^\[main\.property\.p1\] always main\.my_light != 0 \+ 1 \+ 1 \+ 1: PROVED up to bound 0$
+--
+--
+Type conversion not working

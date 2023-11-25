@@ -1,0 +1,9 @@
+KNOWNBUG
+enum_initializers1.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Crashes with missing identifier
+

@@ -63,6 +63,7 @@ protected:
   void propagate_type(exprt &expr, const typet &type);
 
   typet convert_type(const typet &);
+  typet convert_enum(const class verilog_enum_typet &);
 
   void convert_range(
     const exprt &range,
@@ -75,7 +76,7 @@ protected:
     PRECONDITION(false);
   }
 
-  virtual void elaborate_parameter(irep_idt)
+  virtual void elaborate_rec(irep_idt)
   {
     PRECONDITION(false);
   }
