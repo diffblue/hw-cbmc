@@ -28,6 +28,8 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
+#define push_scope(x) PARSER.push_scope(x)
+#define pop_scope() PARSER.pop_scope();
 
 int yyveriloglex();
 extern char *yyverilogtext;
@@ -542,6 +544,7 @@ int yyverilogerror(const char *error)
 /* Others */
 %token TOK_ENDOFFILE
 %token TOK_NON_TYPE_IDENTIFIER
+%token TOK_TYPE_IDENTIFIER
 %token TOK_NUMBER           // number, any base
 %token TOK_TIME_LITERAL     // number followed by time unit
 %token TOK_QSTRING          // quoted string
@@ -621,10 +624,20 @@ description:
  	| config_declaration
         ;
 
+// This deviates from the IEEE 1800-2017 grammar
+// to allow the module scope to be opened.
+module_identifier_with_scope:
+	  module_identifier
+	  {
+	    $$ = $1;
+	    push_scope(stack_expr($1).id());
+	  }
+	;
+
 module_nonansi_header:
 	  attribute_instance_brace
 	  module_keyword
-	  module_identifier
+	  module_identifier_with_scope
 	  parameter_port_list_opt
 	  list_of_ports_opt ';'
           {
@@ -640,7 +653,7 @@ module_nonansi_header:
 module_ansi_header:
           attribute_instance_brace
 	  module_keyword
-	  module_identifier
+	  module_identifier_with_scope
 	  parameter_port_list_opt
 	  list_of_port_declarations ';'
           {
@@ -663,6 +676,9 @@ module_declaration:
               stack_expr($1).operands()[3],
               stack_expr($1).operands()[4],
               stack_expr($2));
+
+            // close the module scope
+            pop_scope();
           }
         | module_ansi_header module_item_brace TOK_ENDMODULE module_identifier_opt
           {
@@ -673,6 +689,9 @@ module_declaration:
               stack_expr($1).operands()[3],
               stack_expr($1).operands()[4],
               stack_expr($2));
+
+            // close the module scope
+            pop_scope();
           }
         | TOK_EXTERN module_nonansi_header
           /* ignored for now */
@@ -960,9 +979,15 @@ net_declaration:
                   swapop($$, $6); }
 	;
 
+// Note that the identifier that is defined using the typedef may be
+// an existing type or non-type identifier.
 type_declaration:
-	  TOK_TYPEDEF data_type type_identifier ';'
-		{ init($$, ID_decl);
+	  TOK_TYPEDEF data_type new_identifier ';'
+		{ // add to the scope as a type name
+		  auto &name = PARSER.add_name(stack_expr($3).get(ID_identifier));
+		  name.is_type = true;
+
+		  init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_typedef);
 		  addswap($$, ID_type, $2);
 		  mto($$, $3);
@@ -1033,9 +1058,8 @@ data_type:
 	        { init($$, ID_chandle); }
 	| TOK_VIRTUAL interface_opt interface_identifier
 	        { init($$, "virtual_interface"); }
-	/*
-	| scope_opt type_identifier packed_dimension_brace
-	*/
+	| /*scope_opt*/ type_identifier packed_dimension_brace
+		{ $$ = $1; stack_expr($$).id(ID_typedef_type); }
 	| class_type
 	| TOK_EVENT
 	        { init($$, ID_event); }
@@ -1451,17 +1475,22 @@ struct_union:
 // A.2.6 Function declarations
 
 function_declaration:
-	  TOK_FUNCTION automatic_opt signing_opt range_or_type_opt
-	  function_identifier list_of_ports_opt ';'
-          function_item_declaration_brace statement TOK_ENDFUNCTION
+	  TOK_FUNCTION
+	  automatic_opt signing_opt range_or_type_opt
+	  function_identifier
+		{ push_scope(stack_expr($1).get(ID_identifier)); }
+	  list_of_ports_opt ';'
+          function_item_declaration_brace statement
+          TOK_ENDFUNCTION
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function); 
                   addswap($$, ID_type, $4);
                   add_as_subtype(stack_type($4), stack_type($3));
                   addswap($$, ID_symbol, $5);
-		  addswap($$, ID_ports, $6);
-		  addswap($$, "declarations", $8);
-		  addswap($$, ID_body, $9);
+		  addswap($$, ID_ports, $7);
+		  addswap($$, "declarations", $9);
+		  addswap($$, ID_body, $10);
+		  pop_scope();
 		}
 	;
 
@@ -1500,15 +1529,18 @@ function_item_declaration:
 // A.2.7 Task declarations
 
 task_declaration:
-	  TOK_TASK task_identifier list_of_ports_opt ';'
+	  TOK_TASK task_identifier
+		{ push_scope(stack_expr($2).get(ID_identifier)); }
+	  list_of_ports_opt ';'
 	  task_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task); 
 		  addswap($$, ID_symbol, $2);
-		  addswap($$, ID_ports, $3);
-		  addswap($$, "declarations", $5);
-		  addswap($$, ID_body, $6);
+		  addswap($$, ID_ports, $4);
+		  addswap($$, "declarations", $6);
+		  addswap($$, ID_body, $7);
+		  pop_scope();
                 }
 	;
 
@@ -2351,11 +2383,14 @@ seq_block:
 	  TOK_END
 		{ init($$, ID_block); swapop($$, $2); }
         | TOK_BEGIN TOK_COLON block_identifier
+		{ push_scope(stack_expr($3).id()); }
           statement_or_null_brace
           TOK_END
                 { init($$, ID_block);
-                  swapop($$, $4);
-                  addswap($$, ID_identifier, $3); }
+                  swapop($$, $5);
+                  addswap($$, ID_identifier, $3);
+                  pop_scope();
+                }
 	;
 
 block_item_declaration_brace:
@@ -2837,6 +2872,17 @@ attr_name: identifier
 // System Verilog standard 1800-2017
 // A.9.3 Identifiers
 
+// An extension of the System Verilog grammar to allow defining new types
+// using an existing type or non-type identifier.
+new_identifier:
+	  type_identifier
+	| non_type_identifier
+	;
+
+non_type_identifier: TOK_NON_TYPE_IDENTIFIER
+		{ new_symbol($$, $1); }
+	;
+
 block_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 genvar_identifier: identifier;
@@ -2865,7 +2911,14 @@ ps_covergroup_identifier:
 	
 memory_identifier: identifier;
 
-type_identifier: identifier;
+type_identifier: TOK_TYPE_IDENTIFIER
+		{
+		  init($$, ID_typedef_type);
+		  auto base_name = stack_expr($1).id();
+		  stack_expr($$).set(ID_C_base_name, base_name);
+		  stack_expr($$).set(ID_identifier, PARSER.current_scope->prefix+id2string(base_name));
+		}
+	;
 
 parameter_identifier: TOK_NON_TYPE_IDENTIFIER;
 
@@ -2901,9 +2954,7 @@ hierarchical_identifier:
 	
 hierarchical_variable_identifier: hierarchical_identifier;
 
-identifier: TOK_NON_TYPE_IDENTIFIER
-		{ new_symbol($$, $1); }
-	;
+identifier: non_type_identifier;
 
 property_identifier: TOK_NON_TYPE_IDENTIFIER;
 
