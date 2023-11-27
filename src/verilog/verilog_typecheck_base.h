@@ -44,6 +44,47 @@ protected:
   mp_integer array_size(const array_typet &);
   mp_integer array_offset(const array_typet &);
   typet index_type(const array_typet &);
+
+public:
+  class errort final
+  {
+  public:
+    std::string what() const
+    {
+      return message.str();
+    }
+
+    std::ostringstream &message_ostream()
+    {
+      return message;
+    }
+
+    errort with_location(source_locationt _location) &&
+    {
+      __location = std::move(_location);
+      return std::move(*this);
+    }
+
+    const source_locationt &source_location() const
+    {
+      return __location;
+    }
+
+  protected:
+    std::ostringstream message;
+    source_locationt __location = source_locationt::nil();
+
+    template <typename T>
+    friend errort operator<<(errort &&e, const T &);
+  };
 };
+
+template <typename T>
+verilog_typecheck_baset::errort
+operator<<(verilog_typecheck_baset::errort &&e, const T &message)
+{
+  e.message_ostream() << message;
+  return std::move(e);
+}
 
 #endif
