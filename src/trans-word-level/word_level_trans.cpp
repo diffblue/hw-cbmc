@@ -47,7 +47,7 @@ Function: word_level_transt::read_trans_rec
 
 void word_level_transt::read_trans_rec(const exprt &expr)
 {
-  assert(expr.type().id()==ID_bool);
+  PRECONDITION(expr.type().id() == ID_bool);
 
   if(expr.id()==ID_and)
   {

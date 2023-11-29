@@ -135,8 +135,8 @@ Function: netlistt::label
 
 std::string netlistt::label(unsigned v) const
 {
-  assert(v<number_of_nodes());
-  assert(nodes[v].is_var());
+  PRECONDITION(v < number_of_nodes());
+  PRECONDITION(nodes[v].is_var());
   const bv_varidt &varid=var_map.reverse(v);
   const var_mapt::mapt::const_iterator v_it=var_map.map.find(varid.id);
   if(v_it!=var_map.map.end() && v_it->second.bits.size()!=1)
@@ -188,7 +188,7 @@ void netlistt::output_dot(std::ostream &out) const
 
     if(var.is_latch())
     {
-      assert(var.bits.size()==1);
+      DATA_INVARIANT(var.bits.size() == 1, "");
       unsigned v=var.bits.front().current.var_no();
       literalt next=var.bits.front().next;
 
@@ -397,7 +397,7 @@ void netlistt::print_smv(
   }
 
   unsigned node_nr=a.var_no();
-  assert(node_nr<number_of_nodes());
+  DATA_INVARIANT(node_nr < number_of_nodes(), "node_nr in range");
 
   if(a.sign()) out << "!";
 

@@ -35,7 +35,7 @@ public:
 */
 inline const verilog_signedbv_typet &to_verilog_signedbv_type(const typet &type)
 {
-  assert(type.id()==ID_verilog_signedbv);
+  PRECONDITION(type.id() == ID_verilog_signedbv);
   return static_cast<const verilog_signedbv_typet &>(type);
 }
 
@@ -44,7 +44,7 @@ inline const verilog_signedbv_typet &to_verilog_signedbv_type(const typet &type)
 */
 inline verilog_signedbv_typet &to_verilog_signedbv_type(typet &type)
 {
-  assert(type.id()==ID_verilog_signedbv);
+  PRECONDITION(type.id() == ID_verilog_signedbv);
   return static_cast<verilog_signedbv_typet &>(type);
 }
 
@@ -72,7 +72,7 @@ public:
 */
 inline const verilog_unsignedbv_typet &to_verilog_unsignedbv_type(const typet &type)
 {
-  assert(type.id()==ID_verilog_unsignedbv);
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
   return static_cast<const verilog_unsignedbv_typet &>(type);
 }
 
@@ -81,7 +81,7 @@ inline const verilog_unsignedbv_typet &to_verilog_unsignedbv_type(const typet &t
 */
 inline verilog_unsignedbv_typet &to_verilog_unsignedbv_type(typet &type)
 {
-  assert(type.id()==ID_verilog_unsignedbv);
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
   return static_cast<verilog_unsignedbv_typet &>(type);
 }
 

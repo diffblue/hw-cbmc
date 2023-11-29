@@ -220,6 +220,6 @@ Function: new_aiger_language
   
 std::unique_ptr<languaget> new_aiger_language()
 {
-  return util_make_unique<aiger_languaget>();
+  return std::make_unique<aiger_languaget>();
 }
 

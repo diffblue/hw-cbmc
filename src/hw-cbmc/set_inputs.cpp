@@ -58,8 +58,8 @@ void add_set_inputs(
   {
     const struct_typet::componentt component=
       struct_type.get_component(*i_it);
-    assert(component.is_not_nil());
-  
+    CHECK_RETURN(component.is_not_nil());
+
     const exprt member_expr1=member_exprt(struct_symbol.symbol_expr(), *i_it, component.type());
     const exprt member_expr2=member_exprt(index_expr, *i_it, component.type());
   

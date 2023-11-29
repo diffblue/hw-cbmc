@@ -356,7 +356,7 @@ vardecl    : variable_name ':' type ';'
     break;
   
   default:
-    assert(false);
+    DATA_INVARIANT(false, "unexpected variable class");
   }
 }
            ;
@@ -421,7 +421,7 @@ define     : assignment_var BECOMES_Token formula ';'
     break;
   
   default:
-    assert(false);
+    DATA_INVARIANT(false, "unexpected variable class");
   }
 
   binary($$, $1, ID_equal, $3, bool_typet{});

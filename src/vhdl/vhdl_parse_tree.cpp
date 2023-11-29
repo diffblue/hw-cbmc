@@ -163,7 +163,7 @@ void vhdl_parse_treet::itemt::show(std::ostream &out) const
     out << '\n';
   }
   else
-    assert(false);
+    DATA_INVARIANT(false, "unknown item type");
 }
 
 /*******************************************************************\

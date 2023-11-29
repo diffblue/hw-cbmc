@@ -83,7 +83,6 @@ exprt negate_property(const exprt &expr)
   else if(expr.id()==ID_sva_non_overlapped_implication)
   {
     // rewrite using 'next'
-    assert(expr.operands().size()==2);
     unary_predicate_exprt next(ID_sva_nexttime, to_binary_expr(expr).rhs());
     binary_exprt result=to_binary_expr(expr);
     result.op1()=negate_property(next);

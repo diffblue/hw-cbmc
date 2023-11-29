@@ -79,7 +79,10 @@ public:
 
   void set_assignment(literalt a, bool value) override {}
   bool is_in_conflict(literalt l) const override { return false; }
-  resultt do_prop_solve() override { return resultt{}; }
+  resultt do_prop_solve(const bvt &assumptions) override
+  {
+    return resultt{};
+  }
 };
 
 class aig_prop_solvert : public aig_prop_constraintt {

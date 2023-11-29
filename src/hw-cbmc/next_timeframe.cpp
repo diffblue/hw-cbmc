@@ -41,10 +41,10 @@ void add_next_timeframe(
   
   // we first increase the tick
   symbol_exprt timeframe_expr=timeframe_symbol.symbol_expr();
-  
+
   const plus_exprt plus_expr(
-    timeframe_expr, from_integer(1, index_type()), index_type());
-  
+    timeframe_expr, from_integer(1, c_index_type()), c_index_type());
+
   const code_frontend_assignt assignment_increase(timeframe_expr, plus_expr);
   
   code_blockt block;

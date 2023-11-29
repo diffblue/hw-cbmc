@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VHDL_LANGUAGE_H
 #define CPROVER_VHDL_LANGUAGE_H
 
-#include <util/make_unique.h>
 #include <util/options.h>
 
 #include <langapi/language.h>
@@ -63,8 +62,10 @@ public:
   }
 
   std::unique_ptr<languaget> new_language() override
-  { return util_make_unique<vhdl_languaget>(); }
-   
+  {
+    return std::make_unique<vhdl_languaget>();
+  }
+
   std::string id() const override { return "VHDL"; }
   std::string description() const override { return "VHDL"; }
 
