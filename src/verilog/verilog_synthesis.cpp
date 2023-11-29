@@ -38,9 +38,7 @@ Function: verilog_synthesist::synth_expr
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_expr(
-  exprt &expr,
-  symbol_statet symbol_state)
+exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 {
   if(expr.id()==ID_symbol)
   {
@@ -53,60 +51,72 @@ void verilog_synthesist::synth_expr(
     {
       exprt c=from_integer(v_it->second, integer_typet());
       c.add_source_location()=expr.source_location();
-      expr=c;
+      return c;
     }
     else if(symbol.is_macro)
     {
       // substitute
       assert(symbol.value.is_not_nil());
-      expr=symbol.value;
-      
+
       // recursive call
-      synth_expr(expr, symbol_state);
+      return synth_expr(symbol.value, symbol_state);
     }
     else
     {
       switch(symbol_state)
       {
       case symbol_statet::SYMBOL:
-        break;
+        return expr; // leave as is
 
       case symbol_statet::CURRENT:
-        expr=current_value(symbol);
-        break;
+        return current_value(symbol);
 
       case symbol_statet::FINAL:
-        expr=final_value(symbol);
-        break;
+        return final_value(symbol);
 
       case symbol_statet::NONE:
         error().source_location=expr.source_location();
         error() << "symbols not allowed here" << eom;
         throw 0;
       }
+
+      UNREACHABLE;
     }
   }
   else if(expr.id()==ID_function_call)
   {
     expand_function_call(to_function_call_expr(expr));
+    return expr;
   }
   else if(expr.id()==ID_hierarchical_identifier)
   {
     expand_hierarchical_identifier(
       to_hierarchical_identifier_expr(expr),
       symbol_state);
+    return expr;
   }
   else if(expr.id()==ID_typecast)
   {
-    synth_expr(to_typecast_expr(expr).op(), symbol_state);
+    auto &typecast_expr = to_typecast_expr(expr);
+    typecast_expr.op() = synth_expr(typecast_expr.op(), symbol_state);
 
     // we perform some form of simplification for these
-    if(to_typecast_expr(expr).op().is_constant())
+    if(typecast_expr.op().is_constant())
       simplify(expr, ns);
+
+    return expr;
   }
   else if(expr.has_operands())
-    Forall_operands(it, expr)
-      synth_expr(*it, symbol_state);   
+  {
+    for(auto &op : expr.operands())
+      op = synth_expr(op, symbol_state);
+
+    return expr;
+  }
+  else
+    return expr; // leave as is
+
+  UNREACHABLE;
 }
 
 /*******************************************************************\
@@ -223,7 +233,7 @@ void verilog_synthesist::expand_hierarchical_identifier(
   hierarchical_identifier_exprt &expr,
   symbol_statet symbol_state)
 {
-  synth_expr(expr.lhs(), symbol_state);
+  expr.lhs() = synth_expr(expr.lhs(), symbol_state);
 
   if(expr.lhs().id() != ID_symbol)
   {
@@ -444,10 +454,10 @@ void verilog_synthesist::assignment_rec(
     with_exprt new_rhs(lhs_array, lhs_index, rhs);
 
     // do the array
-    synth_expr(new_rhs.old(), symbol_statet::FINAL);
+    new_rhs.old() = synth_expr(new_rhs.old(), symbol_statet::FINAL);
 
     // do the index
-    synth_expr(new_rhs.where(), symbol_statet::CURRENT);
+    new_rhs.where() = synth_expr(new_rhs.where(), symbol_statet::CURRENT);
 
     // do the value
     assignment_rec(lhs_array, new_rhs, new_value); // recursive call
@@ -501,7 +511,7 @@ void verilog_synthesist::assignment_rec(
     exprt synth_lhs_bv(lhs_bv);
 
     // do the array, but just once
-    synth_expr(synth_lhs_bv, symbol_statet::FINAL);
+    synth_lhs_bv = synth_expr(synth_lhs_bv, symbol_statet::FINAL);
 
     exprt last_value;
     last_value.make_nil();
@@ -1696,8 +1706,7 @@ void verilog_synthesist::synth_force_rec(
     throw 0;
   }
 
-  exprt rhs_synth=rhs;
-  synth_expr(rhs_synth, symbol_statet::CURRENT);  
+  auto rhs_synth = synth_expr(rhs, symbol_statet::CURRENT);  
 
   equal_exprt equality(lhs, rhs_synth);
   invars.push_back(equality);
@@ -1737,7 +1746,7 @@ void verilog_synthesist::synth_assign(
   const exprt &lhs = to_binary_expr(statement).op0();
   exprt rhs = to_binary_expr(statement).op1();
 
-  synth_expr(rhs, symbol_statet::CURRENT);
+  rhs = synth_expr(rhs, symbol_statet::CURRENT);
 
   // elaborate now?
   if(lhs.type().id()==ID_integer)
@@ -1790,7 +1799,7 @@ void verilog_synthesist::synth_assert(
   const irep_idt &identifier=statement.get(ID_identifier);
   symbolt &symbol=symbol_table_lookup(identifier);
   
-  synth_expr(symbol.value, symbol_statet::CURRENT);
+  symbol.value = synth_expr(symbol.value, symbol_statet::CURRENT);
 }
 
 /*******************************************************************\
@@ -1820,7 +1829,7 @@ void verilog_synthesist::synth_assert_module_item(
   
   construct=constructt::OTHER;
 
-  synth_expr(symbol.value, symbol_statet::SYMBOL);
+  symbol.value = synth_expr(symbol.value, symbol_statet::SYMBOL);
 }
 
 /*******************************************************************\
@@ -1845,11 +1854,9 @@ void verilog_synthesist::synth_assume(
     throw 0;
   }
   
-  exprt condition=statement.condition();
-
   construct=constructt::OTHER;
 
-  synth_expr(condition, symbol_statet::CURRENT);
+  auto condition = synth_expr(statement.condition(), symbol_statet::CURRENT);
 
   // add it as an invariant
   invars.push_back(condition);
@@ -1877,8 +1884,7 @@ void verilog_synthesist::synth_assume_module_item(
     throw 0;
   }
 
-  exprt condition = to_binary_expr(module_item).op0();
-  synth_expr(condition, symbol_statet::SYMBOL);
+  auto condition = synth_expr(to_binary_expr(module_item).op0(), symbol_statet::SYMBOL);
 
   // add it as an invariant
   invars.push_back(condition);
@@ -1992,8 +1998,7 @@ exprt verilog_synthesist::synth_case_values(
 
   forall_operands(it, values)
   {
-    exprt pattern=*it;
-    synth_expr(pattern, symbol_statet::CURRENT);
+    auto pattern = synth_expr(*it, symbol_statet::CURRENT);
     op.push_back(case_comparison(case_operand, pattern));
   }
 
@@ -2022,10 +2027,8 @@ void verilog_synthesist::synth_case(
     throw 0;
   }
 
-  exprt case_operand = to_multi_ary_expr(statement).op0();
-
   // do the argument of the case
-  synth_expr(case_operand, symbol_statet::CURRENT);
+  auto case_operand = synth_expr(to_multi_ary_expr(statement).op0(), symbol_statet::CURRENT);
   
   // we convert the rest to if-then-else
   exprt start;
@@ -2088,8 +2091,7 @@ void verilog_synthesist::synth_if(
     throw 0;
   }
 
-  exprt if_operand=statement.condition();
-  synth_expr(if_operand, symbol_statet::CURRENT);
+  auto if_operand = synth_expr(statement.condition(), symbol_statet::CURRENT);
 
   if(if_operand.is_true())
   {
@@ -2326,7 +2328,7 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
   {  
     exprt tmp_guard=statement.condition();
     tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
-    synth_expr(tmp_guard, symbol_statet::CURRENT);
+    tmp_guard = synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
  
     if(!tmp_guard.is_constant())
@@ -2416,7 +2418,7 @@ void verilog_synthesist::synth_while(
   {  
     exprt tmp_guard=statement.condition();
     tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
-    synth_expr(tmp_guard, symbol_statet::CURRENT);
+    tmp_guard = synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
  
     if(!tmp_guard.is_constant())
