@@ -1740,7 +1740,7 @@ void verilog_synthesist::synth_assign(
   synth_expr(rhs, symbol_statet::CURRENT);
 
   // elaborate now?
-  if(lhs.type().id()==ID_integer)
+  if(lhs.type().id() == ID_integer)
   {
     mp_integer i;
     simplify(rhs, ns);

@@ -1038,18 +1038,18 @@ enum_name_declaration_list:
 	;
 	
 integer_vector_type:
-          TOK_BIT { init($$, ID_bit); }
-        | TOK_LOGIC { init($$, ID_logic); }
+          TOK_BIT { init($$, ID_verilog_bit); }
+        | TOK_LOGIC { init($$, ID_verilog_logic); }
         | TOK_REG { init($$, ID_reg); }
 	;
 	
 integer_atom_type:
-	  TOK_BYTE { init($$, ID_byte); }
-//	| TOK_SHORTINT { init($$, ID_shortint); }
-	| TOK_INT { init($$, ID_int); }
-//	| TOK_LONGINT { init($$, ID_longint); }
+	  TOK_BYTE { init($$, ID_verilog_byte); }
+	| TOK_SHORTINT { init($$, ID_verilog_shortint); }
+	| TOK_INT { init($$, ID_verilog_int); }
+	| TOK_LONGINT { init($$, ID_verilog_longint); }
 	| TOK_INTEGER { init($$, ID_integer); }
-	| TOK_TIME { init($$, ID_time); }
+	| TOK_TIME { init($$, ID_verilog_time); }
 	;
 	
 class_type: TOK_CLASS
@@ -1522,7 +1522,7 @@ range_or_type:
 	| TOK_REALTIME
 		{ init($$, ID_verilog_realtime); }
 	| TOK_TIME
-		{ init($$, ID_time); }
+		{ init($$, ID_verilog_time); }
 	;
 
 function_item_declaration_brace:
