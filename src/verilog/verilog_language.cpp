@@ -304,6 +304,6 @@ Function: new_verilog_language
   
 std::unique_ptr<languaget> new_verilog_language()
 {
-  return util_make_unique<verilog_languaget>();
+  return std::make_unique<verilog_languaget>();
 }
 

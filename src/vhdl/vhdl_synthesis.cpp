@@ -36,8 +36,8 @@ void vhdl_synthesist::synth_code(const codet &code)
   }
   else if(statement==ID_assert)
   {
-    assert(code.operands().size()==3);
-    
+    DATA_INVARIANT(code.operands().size() == 3, "assert has three operands");
+
     // There is an implicit 'always'
     exprt property=unary_predicate_exprt(ID_AG, code.op0());
   
@@ -90,8 +90,8 @@ Function: vhdl_synthesist::synth_module
 
 void vhdl_synthesist::synth_module(const irept &module)
 {
-  assert(module.id()==ID_module);
-  
+  PRECONDITION(module.id() == ID_module);
+
   const exprt &body=static_cast<const exprt &>(module.find(ID_body));
 
   for(auto & op : body.operands())

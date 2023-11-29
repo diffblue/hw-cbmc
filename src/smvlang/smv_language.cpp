@@ -259,6 +259,6 @@ Function: new_smv_language
   
 std::unique_ptr<languaget> new_smv_language()
 {
-  return util_make_unique<smv_languaget>();
+  return std::make_unique<smv_languaget>();
 }
 

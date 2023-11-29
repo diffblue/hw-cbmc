@@ -176,8 +176,10 @@ void map_varst::set_transition(exprt &expr, std::size_t transition)
   {
     index_exprt &index_expr=to_index_expr(expr);
 
-    assert(index_expr.array().id()==ID_symbol);
-    
+    DATA_INVARIANT(
+      index_expr.array().id() == ID_symbol,
+      "must have index into array symbol");
+
     symbol_exprt &symbol=to_symbol_expr(index_expr.array());
 
     // rename that symbol!
@@ -436,8 +438,8 @@ const symbolt &map_varst::add_array(symbolt &symbol)
   // add new symbol that is an array
   symbolt new_symbol=symbol;
 
-  exprt array_size=from_integer(no_timeframes, index_type());
-  
+  exprt array_size = from_integer(no_timeframes, c_index_type());
+
   array_typet new_type(full_type, array_size);
   
   new_symbol.type=new_type;
@@ -452,9 +454,9 @@ const symbolt &map_varst::add_array(symbolt &symbol)
   // change initialization
   symbol_exprt symbol_expr(p->type);
   symbol_expr.set_identifier(p->name);
-  
-  symbol.value=
-    index_exprt(symbol_expr, from_integer(0, index_type()), symbol.type);
+
+  symbol.value =
+    index_exprt(symbol_expr, from_integer(0, c_index_type()), symbol.type);
 
   return *p;
 }
@@ -664,10 +666,10 @@ void map_varst::map_vars(const irep_idt &top_module)
 
     timeframe_symbol.base_name="timeframe";
     timeframe_symbol.name="hw-cbmc::timeframe";
-    timeframe_symbol.type=index_type();
+    timeframe_symbol.type = c_index_type();
     timeframe_symbol.is_static_lifetime=true;
     timeframe_symbol.is_lvalue=true;
-    timeframe_symbol.value=from_integer(0, index_type());
+    timeframe_symbol.value = from_integer(0, c_index_type());
 
     symbol_table.add(timeframe_symbol);
   }
@@ -714,7 +716,7 @@ void map_varst::map_vars(const irep_idt &top_module)
     symbol_exprt symbol_expr(array_symbol.type);
     symbol_expr.set_identifier(array_symbol.name);
 
-    exprt timeframe_expr=from_integer(0, index_type());
+    exprt timeframe_expr = from_integer(0, c_index_type());
 
     index_exprt expr(
       symbol_expr,

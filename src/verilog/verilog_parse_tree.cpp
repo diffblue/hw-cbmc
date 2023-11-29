@@ -141,6 +141,6 @@ void verilog_parse_treet::itemt::show(std::ostream &out) const
     break;
     
   default:
-    assert(false);
+    PRECONDITION(false);
   }
 }

@@ -180,7 +180,7 @@ static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
     stack_expr(expr).add_to_operands(plus_exprt(part_select.op0(), offset));
   }
   else
-    assert(false);
+    PRECONDITION(false);
 }
 
 /*******************************************************************\

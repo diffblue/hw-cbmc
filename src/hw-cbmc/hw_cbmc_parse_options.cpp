@@ -80,9 +80,9 @@ int hw_cbmc_parse_optionst::doit()
     options.set_option("vcd", cmdline.get_value("vcd"));
 
   std::unique_ptr<goto_verifiert> verifier = nullptr;
-  verifier = util_make_unique<
-      all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>>(
-      options, ui_message_handler, goto_model);
+  verifier = std::make_unique<
+    all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>>(
+    options, ui_message_handler, goto_model);
 
   // TODO : implement custom goto-checker/verifier that would support
   // do-unwind-module and add-constraints (see below)

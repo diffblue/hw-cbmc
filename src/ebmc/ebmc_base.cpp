@@ -231,11 +231,9 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
   
     bvt assumptions;
     assumptions.push_back(property_literal);
-    solver.set_assumptions(assumptions);
-  
-    propt::resultt prop_result=
-      solver.prop_solve();
-    
+
+    propt::resultt prop_result = solver.prop_solve(assumptions);
+
     switch(prop_result)
     {
     case propt::resultt::P_SATISFIABLE:

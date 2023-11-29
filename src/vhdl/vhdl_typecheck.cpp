@@ -120,7 +120,7 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
      expr.id()==ID_or  || expr.id()==ID_nor ||
      expr.id()==ID_xor || expr.id()==ID_xnor)
   {
-    assert(expr.operands().size()==2);
+    PRECONDITION(expr.operands().size() == 2);
     for(auto & op : expr.operands())
       typecheck_expr(op);
 
@@ -171,8 +171,6 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
           expr.id()==ID_le || expr.id()==ID_ge ||
           expr.id()==ID_lt || expr.id()==ID_gt)
   {
-    assert(expr.operands().size()==2);
-
     typecheck_expr(to_binary_expr(expr).lhs());
     typecheck_expr(to_binary_expr(expr).rhs());
 
@@ -225,8 +223,8 @@ Function: vhdl_typecheckt::typecheck_code_assert
 
 void vhdl_typecheckt::typecheck_code_assert(codet &code)
 {
-  assert(code.operands().size()==3);
-  
+  PRECONDITION(code.operands().size() == 3);
+
   // op0 is the assertion
   typecheck_expr(code.op0());
   convert_to_type(code.op0(), bool_typet());

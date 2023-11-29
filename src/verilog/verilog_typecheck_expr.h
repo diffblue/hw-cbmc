@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/mp_arith.h>
 #include <util/namespace.h>
-#include <util/nodiscard.h>
 #include <util/std_expr.h>
 
 #include "verilog_typecheck_base.h"
@@ -111,8 +110,8 @@ private:
   void convert_unary_expr  (unary_exprt &);
   void convert_binary_expr (binary_exprt &);
   void convert_trinary_expr(ternary_exprt &);
-  NODISCARD exprt convert_expr_function_call(function_call_exprt);
-  NODISCARD exprt
+  [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
+  [[nodiscard]] exprt
   convert_system_function(const irep_idt &identifier, function_call_exprt);
   void convert_constraint_select_one(exprt &);
   void convert_extractbit_expr(extractbit_exprt &);

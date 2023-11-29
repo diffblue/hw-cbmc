@@ -13,8 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language.h>
 
-#include <util/make_unique.h>
-
 #include "smv_parse_tree.h"
 
 /*! \brief TO_BE_DOCUMENTED
@@ -71,8 +69,10 @@ public:
   }
   
   std::unique_ptr<languaget> new_language() override
-  { return util_make_unique<smv_languaget>(); }
-     
+  {
+    return std::make_unique<smv_languaget>();
+  }
+
   smv_parse_treet smv_parse_tree;
 };
 

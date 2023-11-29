@@ -44,7 +44,7 @@ trans_tracet compute_trans_trace(
   {
     const symbol_tablet &symbol_table=ns.get_symbol_table();
 
-    assert(t<dest.states.size());
+    DATA_INVARIANT(t < dest.states.size(), "t is in range");
     trans_tracet::statet &state=dest.states[t];
     
     for(auto it=symbol_table.symbol_module_map.lower_bound(module);

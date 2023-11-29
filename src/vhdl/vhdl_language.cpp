@@ -305,6 +305,6 @@ Function: new_vhdl_language
   
 std::unique_ptr<languaget> new_vhdl_language()
 {
-  return util_make_unique<vhdl_languaget>();
+  return std::make_unique<vhdl_languaget>();
 }
 
