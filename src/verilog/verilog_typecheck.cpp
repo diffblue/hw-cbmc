@@ -1724,7 +1724,7 @@ void verilog_typecheckt::typecheck()
   const auto &module_source =
     to_verilog_module_source(module_symbol.type.find(ID_module_source));
 
-  // Create symbols for the ports, registers/variables and wires.
+  // Create symbols for the functions, tasks, registers/variables and wires.
   module_interface(module_source);
 
   auto verilog_module_expr = elaborate_generate_constructs(module_source);

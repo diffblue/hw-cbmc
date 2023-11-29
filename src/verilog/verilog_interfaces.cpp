@@ -34,13 +34,13 @@ void verilog_typecheckt::module_interface(
   for(auto &module_item : module_source.module_items())
     interface_module_item(module_item);
 
-  // now check port names
-  interface_ports(module_symbol.type.add(ID_ports).get_sub());
+  // Check the typing of the ports
+  check_module_ports(module_source);
 }
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::interface_ports
+Function: verilog_typecheckt::check_module_ports
 
   Inputs:
 
@@ -50,17 +50,18 @@ Function: verilog_typecheckt::interface_ports
 
 \*******************************************************************/
 
-void verilog_typecheckt::interface_ports(irept::subt &ports)
+void verilog_typecheckt::check_module_ports(
+  const verilog_module_sourcet &module_source)
 {
-  const irept &module_source=module_symbol.type.find(ID_module_source);
-  const irept &module_ports=module_source.find(ID_ports);
+  const auto &module_ports = module_source.ports();
 
-  ports.resize(module_ports.get_sub().size());
+  auto &ports = module_symbol.type.add(ID_ports).get_sub();
+  ports.resize(module_ports.size());
   std::map<irep_idt, unsigned> port_names;
 
   unsigned nr=0;
 
-  for(auto &port : module_ports.get_sub())
+  for(auto &port : module_ports)
   {
     assert(port.id() == ID_decl);
 
