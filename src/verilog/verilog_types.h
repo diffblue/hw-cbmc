@@ -101,11 +101,45 @@ public:
   }
 };
 
+/// 64-bit floating point
+class verilog_real_typet:public typet
+{
+public:
+  inline verilog_real_typet():typet(ID_verilog_real)
+  {
+  }
+
+  std::size_t width() const
+  {
+    return 64;
+  }
+};
+
+/// 32-bit floating point
+class verilog_shortreal_typet:public typet
+{
+public:
+  inline verilog_shortreal_typet():typet(ID_verilog_shortreal)
+  {
+  }
+
+  std::size_t width() const
+  {
+    return 32;
+  }
+};
+
+/// 64-bit floating point
 class verilog_realtime_typet:public typet
 {
 public:
   inline verilog_realtime_typet():typet(ID_verilog_realtime)
   {
+  }
+
+  std::size_t width() const
+  {
+    return 64;
   }
 };
 

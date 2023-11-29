@@ -41,19 +41,19 @@ typet verilog_typecheck_exprt::convert_type(const irept &src)
     result.add_source_location() = std::move(source_location);
     return result;
   }
-  else if(src.id() == ID_shortreal)
+  else if(src.id() == ID_verilog_shortreal)
   {
-    typet result = ieee_float_spect::single_precision().to_type();
+    typet result = verilog_shortreal_typet();
     result.add_source_location() = std::move(source_location);
     return result;
   }
-  else if(src.id() == ID_real)
+  else if(src.id() == ID_verilog_real)
   {
-    typet result = real_typet();
+    typet result = verilog_real_typet();
     result.add_source_location() = std::move(source_location);
     return result;
   }
-  else if(src.id() == ID_realtime)
+  else if(src.id() == ID_verilog_realtime)
   {
     typet result = verilog_realtime_typet();
     result.add_source_location() = std::move(source_location);
