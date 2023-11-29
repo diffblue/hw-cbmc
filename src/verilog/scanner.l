@@ -83,27 +83,27 @@ static void preprocessor()
 %s COMMENT
 %s STRING
 
-NL		[\n]
-WS		[ \t\r\b]
-WSNL		[{WS}{NL}]
-Digit		[0-9]
-DigitU		[0-9_]
-Letter		[a-zA-Z]
-LetterU		[a-zA-Z_]
-WordNum		[0-9a-zA-Z]
-WordNumUD	[0-9a-zA-Z_$]
-WSs		{WS}+
-WSst		{WS}*
-Number		{Digit}{DigitU}*
-Word		{LetterU}{WordNumUD}*
+NL              [\n]
+WS              [ \t\r\b]
+WSNL            [{WS}{NL}]
+Digit           [0-9]
+DigitU          [0-9_]
+Letter          [a-zA-Z]
+LetterU         [a-zA-Z_]
+WordNum         [0-9a-zA-Z]
+WordNumUD       [0-9a-zA-Z_$]
+WSs             {WS}+
+WSst            {WS}*
+Number          {Digit}{DigitU}*
+Word            {LetterU}{WordNumUD}*
 EscapedWord     "\\"[^\n \t\r]+
-Binary		({Number})?{WSst}'{WSst}[sS]?[bB]{WSst}[01xXzZ?]([01xXzZ?_])*
+Binary          ({Number})?{WSst}'{WSst}[sS]?[bB]{WSst}[01xXzZ?]([01xXzZ?_])*
 Octal           ({Number})?{WSst}'{WSst}[sS]?[oO]{WSst}[0-7xXzZ?]([0-7xXzZ?_])*
-Decimal		({Number})?{WSst}'{WSst}[sS]?[dD]{WSst}{Number}
-Hexdecimal	({Number})?{WSst}'{WSst}[sS]?[hH]{WSst}[0-9a-fA-FxXzZ?]([0-9a-fA-FxXzZ?_])*
-Real		{Number}\.{Number}
-RealExp		{Number}(\.{Number})?[eE][+-]?{Number}
-Comment		"//"[^\n]*{NL}
+Decimal         ({Number})?{WSst}'{WSst}[sS]?[dD]{WSst}{Number}
+Hexdecimal      ({Number})?{WSst}'{WSst}[sS]?[hH]{WSst}[0-9a-fA-FxXzZ?]([0-9a-fA-FxXzZ?_])*
+Real            {Number}\.{Number}
+RealExp         {Number}(\.{Number})?[eE][+-]?{Number}
+Comment         "//"[^\n]*{NL}
 
 %{
 void verilog_scanner_init()
@@ -115,446 +115,449 @@ void verilog_scanner_init()
 
 %%
 
-<INITIAL>.|\n	{ BEGIN GRAMMAR;
-		  yyless(0);		/* start again with this character */
-		  //yy_current_buffer->yy_at_bol = 1; /* at beginning of line */
-		  switch(PARSER.grammar)
-		   {
+<INITIAL>.|\n   { BEGIN GRAMMAR;
+                  yyless(0);            /* start again with this character */
+                  //yy_current_buffer->yy_at_bol = 1; /* at beginning of line */
+                  switch(PARSER.grammar)
+                   {
                    case verilog_parsert::EXPRESSION: return TOK_PARSE_EXPRESSION;
                    case verilog_parsert::TYPE: return TOK_PARSE_TYPE;
                    case verilog_parsert::LANGUAGE: return TOK_PARSE_LANGUAGE;
-		   default: assert(0);
-		   }
-		}
+                   default: assert(0);
+                   }
+                }
 
-<GRAMMAR>{NL}           { continue; }
-<GRAMMAR>{WSs}		{ continue; }
-<GRAMMAR>{Comment}      { continue; }
-<GRAMMAR>"/*"           { BEGIN COMMENT; continue; }
-<COMMENT>{NL}           { continue; }
-<COMMENT>.              { continue; }
-<COMMENT>"*/"           { BEGIN GRAMMAR; continue; }
-
-<GRAMMAR>"\""	{ BEGIN(STRING);	/* begin string literal state */
-		  newstack(yyveriloglval);
-                  verilog_parser.string_literal.clear();
-		}
+<COMMENT>{
+  {NL}          { continue; }
+  .             { continue; }
+  "*/"          { BEGIN GRAMMAR; continue; }
+} // COMMENT
 
 <STRING>{
-   "\""		{ BEGIN(GRAMMAR);	/* end string state, back GRAMMAR */
+   "\""         { BEGIN(GRAMMAR);
                   stack_expr(yyveriloglval).id(verilog_parser.string_literal);
-		  return TOK_QSTRING;
-		}
+                  return TOK_QSTRING;
+                }
 
-   <<EOF>>	{ yyverilogerror("Unterminated string constant");
-		  return TOK_SCANNER_ERROR;
-		}
+   <<EOF>>      { yyverilogerror("Unterminated string constant");
+                  return TOK_SCANNER_ERROR;
+                }
 
-   "\\n"	{ verilog_parser.string_literal += '\n'; }	/* NL (0x0a) */
-   "\\t"	{ verilog_parser.string_literal += '\t'; }	/* HT (0x09) */
-   "\\".	{ verilog_parser.string_literal += yytext[1]; } /* ignore the backslash */
-   [^\\\"\n]*	{ verilog_parser.string_literal += &yytext[0]; } /* standard stuff */
+   "\\n"        { verilog_parser.string_literal += '\n'; }      // NL (0x0a) */
+   "\\t"        { verilog_parser.string_literal += '\t'; }      // HT (0x09) */
+   "\\".        { verilog_parser.string_literal += yytext[1]; } // ignore the backslash
+   [^\\\"\n]*   { verilog_parser.string_literal += &yytext[0]; } // everything else
 
-   \n		{ yyverilogerror("Unterminated string constant");
-		  return TOK_SCANNER_ERROR;
-		}
-}
+   \n           { yyverilogerror("Unterminated string constant");
+                  return TOK_SCANNER_ERROR;
+                }
+} // STRING
 
-	/*
-	 * Symbols.
-	 */
+<GRAMMAR>{
+{NL}            { continue; }
+{WSs}           { continue; }
+{Comment}       { continue; }
+"/*"            { BEGIN COMMENT; continue; }
+"\""            { BEGIN(STRING);
+                  newstack(yyveriloglval);
+                  verilog_parser.string_literal.clear();
+                }
 
-	/* Generic. */
+                /* Attributes */
 
-<GRAMMAR>"(*"           { return TOK_PARENASTERIC; }
-<GRAMMAR>"*)"           { return TOK_ASTERICPAREN; }
+"(*"            { return TOK_PARENASTERIC; }
+"*)"            { return TOK_ASTERICPAREN; }
 
-	/* Unary. */
+                /* Unary operators */
 
-<GRAMMAR>"+"            { return TOK_PLUS; }
-<GRAMMAR>"-"            { return TOK_MINUS; }
-<GRAMMAR>"!"            { return TOK_EXCLAM; }
-<GRAMMAR>"~"            { return TOK_TILDE; }
-<GRAMMAR>"&"            { return TOK_AMPER; }
-<GRAMMAR>"~&"           { return TOK_TILDEAMPER; }
-<GRAMMAR>"|"            { return TOK_VERTBAR; }
-<GRAMMAR>"~|"           { return TOK_TILDEVERTBAR; }
-<GRAMMAR>"^"            { return TOK_CARET; }
-<GRAMMAR>"~^"           { return TOK_TILDECARET; }
-<GRAMMAR>"^~"           { return TOK_CARETTILDE; }
-<GRAMMAR>"->"           { return TOK_MINUSGREATER; }
+"+"             { return TOK_PLUS; }
+"-"             { return TOK_MINUS; }
+"!"             { return TOK_EXCLAM; }
+"~"             { return TOK_TILDE; }
+"&"             { return TOK_AMPER; }
+"~&"            { return TOK_TILDEAMPER; }
+"|"             { return TOK_VERTBAR; }
+"~|"            { return TOK_TILDEVERTBAR; }
+"^"             { return TOK_CARET; }
+"~^"            { return TOK_TILDECARET; }
+"^~"            { return TOK_CARETTILDE; }
+"->"            { return TOK_MINUSGREATER; }
 
-	/* Binary. */
+                /* Binary operators */
 
-<GRAMMAR>"*"            { return TOK_ASTERIC; }
-<GRAMMAR>"/"            { return TOK_SLASH; }
-<GRAMMAR>"%"            { return TOK_PERCENT; }
-<GRAMMAR>"=="           { return TOK_EQUALEQUAL; }
-<GRAMMAR>"!="           { return TOK_EXCLAMEQUAL; }
-<GRAMMAR>"==="          { return TOK_EQUALEQUALEQUAL; }
-<GRAMMAR>"!=="          { return TOK_EXCLAMEQUALEQUAL; }
-<GRAMMAR>"&&"           { return TOK_AMPERAMPER; }
-<GRAMMAR>"||"           { return TOK_VERTBARVERTBAR; }
-<GRAMMAR>"**"           { return TOK_ASTERICASTERIC; }
-<GRAMMAR>"<"            { return TOK_LESS; }
-<GRAMMAR>"<="           { return TOK_LESSEQUAL; }
-<GRAMMAR>">"            { return TOK_GREATER; }
-<GRAMMAR>">="           { return TOK_GREATEREQUAL; }
-<GRAMMAR>">>"           { return TOK_GREATERGREATER; }
-<GRAMMAR>">>>"          { return TOK_GREATERGREATERGREATER; }
-<GRAMMAR>"<<"           { return TOK_LESSLESS; }
-<GRAMMAR>"<<<"          { return TOK_LESSLESSLESS; }
+"*"             { return TOK_ASTERIC; }
+"/"             { return TOK_SLASH; }
+"%"             { return TOK_PERCENT; }
+"=="            { return TOK_EQUALEQUAL; }
+"!="            { return TOK_EXCLAMEQUAL; }
+"==="           { return TOK_EQUALEQUALEQUAL; }
+"!=="           { return TOK_EXCLAMEQUALEQUAL; }
+"&&"            { return TOK_AMPERAMPER; }
+"||"            { return TOK_VERTBARVERTBAR; }
+"**"            { return TOK_ASTERICASTERIC; }
+"<"             { return TOK_LESS; }
+"<="            { return TOK_LESSEQUAL; }
+">"             { return TOK_GREATER; }
+">="            { return TOK_GREATEREQUAL; }
+">>"            { return TOK_GREATERGREATER; }
+">>>"           { return TOK_GREATERGREATERGREATER; }
+"<<"            { return TOK_LESSLESS; }
+"<<<"           { return TOK_LESSLESSLESS; }
 
-	/* Trinary */
+                /* Trinary operators */
 
-<GRAMMAR>"?"		{ return TOK_QUESTION; }
-<GRAMMAR>":"		{ return TOK_COLON; }
+"?"             { return TOK_QUESTION; }
+":"             { return TOK_COLON; }
 
-        /* System Verilog */
-<GRAMMAR>"|->"          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                /* System Verilog operators */
+
+"|->"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_VERTBARMINUSGREATER;
                           else
                             yyverilogerror("|-> is a System Verilog operator");
-                        }
-<GRAMMAR>"|=>"          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"|=>"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_VERTBAREQUALGREATER;
                           else
                             yyverilogerror("|=> is a System Verilog operator");
-                        }
-<GRAMMAR>"++"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"++"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_PLUSPLUS;
                           else
                             yyverilogerror("++ is a System Verilog operator");
-                        }
-<GRAMMAR>"--"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"--"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_MINUSMINUS;
                           else
                             yyverilogerror("-- is a System Verilog operator");
-                        }
-<GRAMMAR>"+="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"+="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_PLUSEQUAL;
                           else
                             yyverilogerror("+= is a System Verilog operator");
-                        }
-<GRAMMAR>"+:"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"+:"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_PLUSCOLON;
                           else
                             yyverilogerror("+: is a System Verilog operator");
-                        }
-<GRAMMAR>"-:"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"-:"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_MINUSCOLON;
                           else
                             yyverilogerror("-: is a System Verilog operator");
-                        }
-<GRAMMAR>"-="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"-="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_MINUSEQUAL;
                           else
                             yyverilogerror("-= is a System Verilog operator");
-                        }
-<GRAMMAR>"*="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"*="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_ASTERICEQUAL;
                           else
                             yyverilogerror("*= is a System Verilog operator");
-                        }
-<GRAMMAR>"/="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"/="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_SLASHEQUAL;
                           else
                             yyverilogerror("+= is a System Verilog operator");
-                        }
-<GRAMMAR>"%="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"%="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_PERCENTEQUAL;
                           else
                             yyverilogerror("%= is a System Verilog operator");
-                        }
-<GRAMMAR>"&="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"&="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_AMPEREQUAL;
                           else
                             yyverilogerror("&= is a System Verilog operator");
-                        }
-<GRAMMAR>"^="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"^="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_CARETEQUAL;
                           else
                             yyverilogerror("^= is a System Verilog operator");
-                        }
-<GRAMMAR>"|="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"|="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_VERTBAREQUAL;
                           else
                             yyverilogerror("|= is a System Verilog operator");
-                        }
-<GRAMMAR>"<<="          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"<<="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_LESSLESSEQUAL;
                           else
                             yyverilogerror("<<= is a System Verilog operator");
-                        }
-<GRAMMAR>">>="          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+">>="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_GREATERGREATEREQUAL;
                           else
                             yyverilogerror(">>= is a System Verilog operator");
-                        }
-<GRAMMAR>"<<<="         { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"<<<="          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_LESSLESSLESSEQUAL;
                           else
                             yyverilogerror("<<<= is a System Verilog operator");
-                        }
-<GRAMMAR>">>>="         { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+">>>="          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_GREATERGREATERGREATEREQUAL;
                           else
                             yyverilogerror(">>>= is a System Verilog operator");
-                        }
-<GRAMMAR>"##"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
+                }
+"##"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
                             return TOK_HASHHASH;
                           else
                             yyverilogerror("## is a System Verilog operator");
-                        }
+                }
 
-        /* Verilog Keywords */
+                /* Verilog keywords */
 
-<GRAMMAR>always         { return TOK_ALWAYS; }
-<GRAMMAR>and            { return TOK_AND; }
-<GRAMMAR>assign         { return TOK_ASSIGN; }
-<GRAMMAR>automatic      { return TOK_AUTOMATIC; }
-<GRAMMAR>begin          { return TOK_BEGIN; }
-<GRAMMAR>buf            { return TOK_BUF; }
-<GRAMMAR>bufif0         { return TOK_BUFIF0; }
-<GRAMMAR>bufif1         { return TOK_BUFIF1; }
-<GRAMMAR>case           { return TOK_CASE; }
-<GRAMMAR>casex          { return TOK_CASEX; }
-<GRAMMAR>casez          { return TOK_CASEZ; }
-<GRAMMAR>cmos           { return TOK_CMOS; }
-<GRAMMAR>deassign       { return TOK_DEASSIGN; }
-<GRAMMAR>default        { return TOK_DEFAULT; }
-<GRAMMAR>defparam       { return TOK_DEFPARAM; }
-<GRAMMAR>disable        { return TOK_DISABLE; }
-<GRAMMAR>edge           { return TOK_EDGE; }
-<GRAMMAR>else           { return TOK_ELSE; }
-<GRAMMAR>end            { return TOK_END; }
-<GRAMMAR>endcase        { return TOK_ENDCASE; }
-<GRAMMAR>endfunction    { return TOK_ENDFUNCTION; }
-<GRAMMAR>endgenerate    { return TOK_ENDGENERATE; }
-<GRAMMAR>endmodule      { return TOK_ENDMODULE; }
-<GRAMMAR>endprimitive   { return TOK_ENDPRIMITIVE; }
-<GRAMMAR>endspecify     { return TOK_ENDSPECIFY; }
-<GRAMMAR>endtable       { return TOK_ENDTABLE; }
-<GRAMMAR>endtask        { return TOK_ENDTASK; }
-<GRAMMAR>event          { return TOK_EVENT; }
-<GRAMMAR>for            { return TOK_FOR; }
-<GRAMMAR>force          { return TOK_FORCE; }
-<GRAMMAR>forever        { return TOK_FOREVER; }
-<GRAMMAR>fork           { return TOK_FORK; }
-<GRAMMAR>function       { return TOK_FUNCTION; }
-<GRAMMAR>generate       { return TOK_GENERATE; }
-<GRAMMAR>genvar         { return TOK_GENVAR; }
-<GRAMMAR>highz0         { return TOK_HIGHZ0; }
-<GRAMMAR>highz1         { return TOK_HIGHZ1; }
-<GRAMMAR>if             { return TOK_IF; }
-<GRAMMAR>ifnone         { return TOK_IFNONE; }
-<GRAMMAR>initial        { return TOK_INITIAL; }
-<GRAMMAR>inout          { return TOK_INOUT; }
-<GRAMMAR>input          { return TOK_INPUT; }
-<GRAMMAR>integer        { return TOK_INTEGER; }
-<GRAMMAR>join           { return TOK_JOIN; }
-<GRAMMAR>large          { return TOK_LARGE; }
-<GRAMMAR>localparam	{ return TOK_LOCALPARAM; }
-<GRAMMAR>macromodule    { return TOK_MACROMODULE; }
-<GRAMMAR>medium         { return TOK_MEDIUM; }
-<GRAMMAR>module         { return TOK_MODULE; }
-<GRAMMAR>nand           { return TOK_NAND; }
-<GRAMMAR>negedge        { return TOK_NEGEDGE; }
-<GRAMMAR>nmos           { return TOK_NMOS; }
-<GRAMMAR>nor            { return TOK_NOR; }
-<GRAMMAR>not            { return TOK_NOT; }
-<GRAMMAR>notif0         { return TOK_NOTIF0; }
-<GRAMMAR>notif1         { return TOK_NOTIF1; }
-<GRAMMAR>or             { return TOK_OR; }
-<GRAMMAR>output         { return TOK_OUTPUT; }
-<GRAMMAR>parameter      { return TOK_PARAMETER; }
-<GRAMMAR>pmos           { return TOK_PMOS; }
-<GRAMMAR>posedge        { return TOK_POSEDGE; }
-<GRAMMAR>primitive      { return TOK_PRIMITIVE; }
-<GRAMMAR>pull0          { return TOK_PULL0; }
-<GRAMMAR>pull1          { return TOK_PULL1; }
-<GRAMMAR>pulldown       { return TOK_PULLDOWN; }
-<GRAMMAR>pullup         { return TOK_PULLUP; }
-<GRAMMAR>rcmos          { return TOK_RCMOS; }
-<GRAMMAR>real           { return TOK_REAL; }
-<GRAMMAR>realtime       { return TOK_REALTIME; }
-<GRAMMAR>reg            { return TOK_REG; }
-<GRAMMAR>release        { return TOK_RELEASE; }
-<GRAMMAR>repeat         { return TOK_REPEAT; }
-<GRAMMAR>rnmos          { return TOK_RNMOS; }
-<GRAMMAR>rpmos          { return TOK_RPMOS; }
-<GRAMMAR>rtran          { return TOK_RTRAN; }
-<GRAMMAR>rtranif0       { return TOK_RTRANIF0; }
-<GRAMMAR>rtranif1       { return TOK_RTRANIF1; }
-<GRAMMAR>scalared       { return TOK_SCALARED; }
-<GRAMMAR>signed		{ return TOK_SIGNED; }
-<GRAMMAR>small          { return TOK_SMALL; }
-<GRAMMAR>specify        { return TOK_SPECIFY; }
-<GRAMMAR>specparam      { return TOK_SPECPARAM; }
-<GRAMMAR>strong0        { return TOK_STRONG0; }
-<GRAMMAR>strong1        { return TOK_STRONG1; }
-<GRAMMAR>supply0        { return TOK_SUPPLY0; }
-<GRAMMAR>supply1        { return TOK_SUPPLY1; }
-<GRAMMAR>table          { return TOK_TABLE; }
-<GRAMMAR>task           { return TOK_TASK; }
-<GRAMMAR>time           { return TOK_TIME; }
-<GRAMMAR>tran           { return TOK_TRAN; }
-<GRAMMAR>tranif0        { return TOK_TRANIF0; }
-<GRAMMAR>tranif1        { return TOK_TRANIF1; }
-<GRAMMAR>tri            { return TOK_TRI; }
-<GRAMMAR>tri0           { return TOK_TRI0; }
-<GRAMMAR>tri1           { return TOK_TRI1; }
-<GRAMMAR>triand         { return TOK_TRIAND; }
-<GRAMMAR>trior          { return TOK_TRIOR; }
-<GRAMMAR>trireg         { return TOK_TRIREG; }
-<GRAMMAR>uwire          { return TOK_UWIRE; } // Verilog 2005
-<GRAMMAR>vectored       { return TOK_VECTORED; }
-<GRAMMAR>wait           { return TOK_WAIT; }
-<GRAMMAR>wand           { return TOK_WAND; }
-<GRAMMAR>weak0          { return TOK_WEAK0; }
-<GRAMMAR>weak1          { return TOK_WEAK1; }
-<GRAMMAR>wor            { return TOK_WOR; }
-<GRAMMAR>while          { return TOK_WHILE; }
-<GRAMMAR>wire           { return TOK_WIRE; }
-<GRAMMAR>xnor           { return TOK_XNOR; }
-<GRAMMAR>xor            { return TOK_XOR; }
-<GRAMMAR>$setup         { return TOK_SETUP; }
-<GRAMMAR>$hold          { return TOK_HOLD; }
-<GRAMMAR>$recovery      { return TOK_RECOVERY; }
-<GRAMMAR>$removal       { return TOK_REMOVAL; }
-<GRAMMAR>$width         { return TOK_WIDTH; }
-<GRAMMAR>$skew          { return TOK_SKEW; }
+always          { return TOK_ALWAYS; }
+and             { return TOK_AND; }
+assign          { return TOK_ASSIGN; }
+automatic       { return TOK_AUTOMATIC; }
+begin           { return TOK_BEGIN; }
+buf             { return TOK_BUF; }
+bufif0          { return TOK_BUFIF0; }
+bufif1          { return TOK_BUFIF1; }
+case            { return TOK_CASE; }
+casex           { return TOK_CASEX; }
+casez           { return TOK_CASEZ; }
+cmos            { return TOK_CMOS; }
+deassign        { return TOK_DEASSIGN; }
+default         { return TOK_DEFAULT; }
+defparam        { return TOK_DEFPARAM; }
+disable         { return TOK_DISABLE; }
+edge            { return TOK_EDGE; }
+else            { return TOK_ELSE; }
+end             { return TOK_END; }
+endcase         { return TOK_ENDCASE; }
+endfunction     { return TOK_ENDFUNCTION; }
+endgenerate     { return TOK_ENDGENERATE; }
+endmodule       { return TOK_ENDMODULE; }
+endprimitive    { return TOK_ENDPRIMITIVE; }
+endspecify      { return TOK_ENDSPECIFY; }
+endtable        { return TOK_ENDTABLE; }
+endtask         { return TOK_ENDTASK; }
+event           { return TOK_EVENT; }
+for             { return TOK_FOR; }
+force           { return TOK_FORCE; }
+forever         { return TOK_FOREVER; }
+fork            { return TOK_FORK; }
+function        { return TOK_FUNCTION; }
+generate        { return TOK_GENERATE; }
+genvar          { return TOK_GENVAR; }
+highz0          { return TOK_HIGHZ0; }
+highz1          { return TOK_HIGHZ1; }
+if              { return TOK_IF; }
+ifnone          { return TOK_IFNONE; }
+initial         { return TOK_INITIAL; }
+inout           { return TOK_INOUT; }
+input           { return TOK_INPUT; }
+integer         { return TOK_INTEGER; }
+join            { return TOK_JOIN; }
+large           { return TOK_LARGE; }
+localparam      { return TOK_LOCALPARAM; }
+macromodule     { return TOK_MACROMODULE; }
+medium          { return TOK_MEDIUM; }
+module          { return TOK_MODULE; }
+nand            { return TOK_NAND; }
+negedge         { return TOK_NEGEDGE; }
+nmos            { return TOK_NMOS; }
+nor             { return TOK_NOR; }
+not             { return TOK_NOT; }
+notif0          { return TOK_NOTIF0; }
+notif1          { return TOK_NOTIF1; }
+or              { return TOK_OR; }
+output          { return TOK_OUTPUT; }
+parameter       { return TOK_PARAMETER; }
+pmos            { return TOK_PMOS; }
+posedge         { return TOK_POSEDGE; }
+primitive       { return TOK_PRIMITIVE; }
+pull0           { return TOK_PULL0; }
+pull1           { return TOK_PULL1; }
+pulldown        { return TOK_PULLDOWN; }
+pullup          { return TOK_PULLUP; }
+rcmos           { return TOK_RCMOS; }
+real            { return TOK_REAL; }
+realtime        { return TOK_REALTIME; }
+reg             { return TOK_REG; }
+release         { return TOK_RELEASE; }
+repeat          { return TOK_REPEAT; }
+rnmos           { return TOK_RNMOS; }
+rpmos           { return TOK_RPMOS; }
+rtran           { return TOK_RTRAN; }
+rtranif0        { return TOK_RTRANIF0; }
+rtranif1        { return TOK_RTRANIF1; }
+scalared        { return TOK_SCALARED; }
+signed          { return TOK_SIGNED; }
+small           { return TOK_SMALL; }
+specify         { return TOK_SPECIFY; }
+specparam       { return TOK_SPECPARAM; }
+strong0         { return TOK_STRONG0; }
+strong1         { return TOK_STRONG1; }
+supply0         { return TOK_SUPPLY0; }
+supply1         { return TOK_SUPPLY1; }
+table           { return TOK_TABLE; }
+task            { return TOK_TASK; }
+time            { return TOK_TIME; }
+tran            { return TOK_TRAN; }
+tranif0         { return TOK_TRANIF0; }
+tranif1         { return TOK_TRANIF1; }
+tri             { return TOK_TRI; }
+tri0            { return TOK_TRI0; }
+tri1            { return TOK_TRI1; }
+triand          { return TOK_TRIAND; }
+trior           { return TOK_TRIOR; }
+trireg          { return TOK_TRIREG; }
+uwire           { return TOK_UWIRE; } // Verilog 2005
+vectored        { return TOK_VECTORED; }
+wait            { return TOK_WAIT; }
+wand            { return TOK_WAND; }
+weak0           { return TOK_WEAK0; }
+weak1           { return TOK_WEAK1; }
+wor             { return TOK_WOR; }
+while           { return TOK_WHILE; }
+wire            { return TOK_WIRE; }
+xnor            { return TOK_XNOR; }
+xor             { return TOK_XOR; }
+$setup          { return TOK_SETUP; }
+$hold           { return TOK_HOLD; }
+$recovery       { return TOK_RECOVERY; }
+$removal        { return TOK_REMOVAL; }
+$width          { return TOK_WIDTH; }
+$skew           { return TOK_SKEW; }
 
-  /* System Verilog Keywords */
-<GRAMMAR>accept_on	{ SYSTEM_VERILOG_KEYWORD(TOK_ACCEPT_ON); }
-<GRAMMAR>alias		{ SYSTEM_VERILOG_KEYWORD(TOK_ALIAS); }
-<GRAMMAR>always_comb	{ SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_COMB); }
-<GRAMMAR>always_ff	{ SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_FF); }
-<GRAMMAR>always_latch	{ SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_LATCH); }
-<GRAMMAR>assert		{ VIS_VERILOG_KEYWORD(TOK_ASSERT); }
-<GRAMMAR>assume		{ VIS_VERILOG_KEYWORD(TOK_ASSUME); }
-<GRAMMAR>before		{ SYSTEM_VERILOG_KEYWORD(TOK_BEFORE); }
-<GRAMMAR>bind		{ SYSTEM_VERILOG_KEYWORD(TOK_BIND); }
-<GRAMMAR>bins		{ SYSTEM_VERILOG_KEYWORD(TOK_BINS); }
-<GRAMMAR>binsof		{ SYSTEM_VERILOG_KEYWORD(TOK_BINSOF); }
-<GRAMMAR>bit		{ SYSTEM_VERILOG_KEYWORD(TOK_BIT); }
-<GRAMMAR>break		{ SYSTEM_VERILOG_KEYWORD(TOK_BREAK); }
-<GRAMMAR>byte		{ SYSTEM_VERILOG_KEYWORD(TOK_BYTE); }
-<GRAMMAR>chandle	{ SYSTEM_VERILOG_KEYWORD(TOK_CHANDLE); }
-<GRAMMAR>checker	{ SYSTEM_VERILOG_KEYWORD(TOK_CHECKER); }
-<GRAMMAR>class		{ SYSTEM_VERILOG_KEYWORD(TOK_CLASS); }
-<GRAMMAR>clocking	{ SYSTEM_VERILOG_KEYWORD(TOK_CLOCKING); }
-<GRAMMAR>const		{ SYSTEM_VERILOG_KEYWORD(TOK_CONST); }
-<GRAMMAR>constraint	{ SYSTEM_VERILOG_KEYWORD(TOK_CONSTRAINT); }
-<GRAMMAR>context	{ SYSTEM_VERILOG_KEYWORD(TOK_CONTEXT); }
-<GRAMMAR>continue	{ SYSTEM_VERILOG_KEYWORD(TOK_CONTINUE); }
-<GRAMMAR>cover		{ SYSTEM_VERILOG_KEYWORD(TOK_COVER); }
-<GRAMMAR>covergroup	{ SYSTEM_VERILOG_KEYWORD(TOK_COVERGROUP); }
-<GRAMMAR>coverpoint	{ SYSTEM_VERILOG_KEYWORD(TOK_COVERPOINT); }
-<GRAMMAR>cross		{ SYSTEM_VERILOG_KEYWORD(TOK_CROSS); }
-<GRAMMAR>dist		{ SYSTEM_VERILOG_KEYWORD(TOK_DIST); }
-<GRAMMAR>do		{ SYSTEM_VERILOG_KEYWORD(TOK_DO); }
-<GRAMMAR>endclass	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDCLASS); }
-<GRAMMAR>endclocking	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDCLOCKING); }
-<GRAMMAR>endgroup	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDGROUP); }
-<GRAMMAR>endinterface	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDINTERFACE); }
-<GRAMMAR>endpackage	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDPACKAGE); }
-<GRAMMAR>endprogram	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDPROGRAM); }
-<GRAMMAR>endproperty	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDPROPERTY); }
-<GRAMMAR>endsequence	{ SYSTEM_VERILOG_KEYWORD(TOK_ENDSEQUENCE); }
-<GRAMMAR>enum		{ VIS_VERILOG_KEYWORD(TOK_ENUM); }
-<GRAMMAR>eventually     { SYSTEM_VERILOG_KEYWORD(TOK_EVENTUALLY); }
-<GRAMMAR>expect		{ SYSTEM_VERILOG_KEYWORD(TOK_EXPECT); }
-<GRAMMAR>export		{ SYSTEM_VERILOG_KEYWORD(TOK_EXPORT); }
-<GRAMMAR>extends	{ SYSTEM_VERILOG_KEYWORD(TOK_EXTENDS); }
-<GRAMMAR>extern		{ SYSTEM_VERILOG_KEYWORD(TOK_EXTERN); }
-<GRAMMAR>final		{ SYSTEM_VERILOG_KEYWORD(TOK_FINAL); }
-<GRAMMAR>first_match	{ SYSTEM_VERILOG_KEYWORD(TOK_FIRST_MATCH); }
-<GRAMMAR>foreach	{ SYSTEM_VERILOG_KEYWORD(TOK_FOREACH); }
-<GRAMMAR>iff		{ SYSTEM_VERILOG_KEYWORD(TOK_IFF); }
-<GRAMMAR>ignore_bins	{ SYSTEM_VERILOG_KEYWORD(TOK_IGNORE_BINS); }
-<GRAMMAR>illegal_bins	{ SYSTEM_VERILOG_KEYWORD(TOK_ILLEGAL_BINS); }
-<GRAMMAR>import		{ SYSTEM_VERILOG_KEYWORD(TOK_IMPORT); }
-<GRAMMAR>inside		{ SYSTEM_VERILOG_KEYWORD(TOK_INSIDE); }
-<GRAMMAR>int		{ SYSTEM_VERILOG_KEYWORD(TOK_INT); }
-<GRAMMAR>interface	{ SYSTEM_VERILOG_KEYWORD(TOK_INTERFACE); }
-<GRAMMAR>intersect	{ SYSTEM_VERILOG_KEYWORD(TOK_INTERSECT); }
-<GRAMMAR>join_any	{ SYSTEM_VERILOG_KEYWORD(TOK_JOIN_ANY); }
-<GRAMMAR>join_none	{ SYSTEM_VERILOG_KEYWORD(TOK_JOIN_NONE); }
-<GRAMMAR>local		{ SYSTEM_VERILOG_KEYWORD(TOK_LOCAL); }
-<GRAMMAR>logic		{ SYSTEM_VERILOG_KEYWORD(TOK_LOGIC); }
-<GRAMMAR>longint	{ SYSTEM_VERILOG_KEYWORD(TOK_LONGINT); }
-<GRAMMAR>matches	{ SYSTEM_VERILOG_KEYWORD(TOK_MATCHES); }
-<GRAMMAR>modport	{ SYSTEM_VERILOG_KEYWORD(TOK_MODPORT); }
-<GRAMMAR>new		{ SYSTEM_VERILOG_KEYWORD(TOK_NEW); }
-<GRAMMAR>nexttime	{ SYSTEM_VERILOG_KEYWORD(TOK_NEXTTIME); }
-<GRAMMAR>null		{ SYSTEM_VERILOG_KEYWORD(TOK_NULL); }
-<GRAMMAR>package	{ SYSTEM_VERILOG_KEYWORD(TOK_PACKAGE); }
-<GRAMMAR>packed		{ SYSTEM_VERILOG_KEYWORD(TOK_PACKED); }
-<GRAMMAR>priority	{ SYSTEM_VERILOG_KEYWORD(TOK_PRIORITY); }
-<GRAMMAR>program	{ SYSTEM_VERILOG_KEYWORD(TOK_PROGRAM); }
-<GRAMMAR>property	{ SYSTEM_VERILOG_KEYWORD(TOK_PROPERTY); }
-<GRAMMAR>protected	{ SYSTEM_VERILOG_KEYWORD(TOK_PROTECTED); }
-<GRAMMAR>pure		{ SYSTEM_VERILOG_KEYWORD(TOK_PURE); }
-<GRAMMAR>rand		{ SYSTEM_VERILOG_KEYWORD(TOK_RAND); }
-<GRAMMAR>randc		{ SYSTEM_VERILOG_KEYWORD(TOK_RANDC); }
-<GRAMMAR>randcase	{ SYSTEM_VERILOG_KEYWORD(TOK_RANDCASE); }
-<GRAMMAR>randsequence	{ SYSTEM_VERILOG_KEYWORD(TOK_RANDSEQUENCE); }
-<GRAMMAR>ref		{ SYSTEM_VERILOG_KEYWORD(TOK_REF); }
-<GRAMMAR>return		{ SYSTEM_VERILOG_KEYWORD(TOK_RETURN); }
-<GRAMMAR>s_always       { SYSTEM_VERILOG_KEYWORD(TOK_S_ALWAYS); }
-<GRAMMAR>s_eventually   { SYSTEM_VERILOG_KEYWORD(TOK_S_EVENTUALLY); }
-<GRAMMAR>s_nexttime     { SYSTEM_VERILOG_KEYWORD(TOK_S_NEXTTIME); }
-<GRAMMAR>s_until        { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL); }
-<GRAMMAR>s_until_with   { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL_WITH); }
-<GRAMMAR>sequence	{ SYSTEM_VERILOG_KEYWORD(TOK_SEQUENCE); }
-<GRAMMAR>shortint	{ SYSTEM_VERILOG_KEYWORD(TOK_SHORTINT); }
-<GRAMMAR>shortreal	{ SYSTEM_VERILOG_KEYWORD(TOK_SHORTREAL); }
-<GRAMMAR>solve		{ SYSTEM_VERILOG_KEYWORD(TOK_SOLVE); }
-<GRAMMAR>static		{ SYSTEM_VERILOG_KEYWORD(TOK_STATIC); }
-<GRAMMAR>string		{ SYSTEM_VERILOG_KEYWORD(TOK_STRING); }
-<GRAMMAR>struct		{ SYSTEM_VERILOG_KEYWORD(TOK_STRUCT); }
-<GRAMMAR>super		{ SYSTEM_VERILOG_KEYWORD(TOK_SUPER); }
-<GRAMMAR>tagged		{ SYSTEM_VERILOG_KEYWORD(TOK_TAGGED); }
-<GRAMMAR>this		{ SYSTEM_VERILOG_KEYWORD(TOK_THIS); }
-<GRAMMAR>throughout	{ SYSTEM_VERILOG_KEYWORD(TOK_THROUGHOUT); }
-<GRAMMAR>timeprecision	{ SYSTEM_VERILOG_KEYWORD(TOK_TIMEPRECISION); }
-<GRAMMAR>timeunit	{ SYSTEM_VERILOG_KEYWORD(TOK_TIMEUNIT); }
-<GRAMMAR>type		{ SYSTEM_VERILOG_KEYWORD(TOK_TYPE); }
-<GRAMMAR>typedef	{ VIS_VERILOG_KEYWORD(TOK_TYPEDEF); }
-<GRAMMAR>union		{ SYSTEM_VERILOG_KEYWORD(TOK_UNION); }
-<GRAMMAR>unique		{ SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE); }
-<GRAMMAR>until          { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL); }
-<GRAMMAR>until_with     { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL_WITH); }
-<GRAMMAR>var		{ SYSTEM_VERILOG_KEYWORD(TOK_VAR); }
-<GRAMMAR>virtual	{ SYSTEM_VERILOG_KEYWORD(TOK_VIRTUAL); }
-<GRAMMAR>void		{ SYSTEM_VERILOG_KEYWORD(TOK_VOID); }
-<GRAMMAR>wait_order	{ SYSTEM_VERILOG_KEYWORD(TOK_WAIT_ORDER); }
-<GRAMMAR>wildcard	{ SYSTEM_VERILOG_KEYWORD(TOK_WILDCARD); }
-<GRAMMAR>with		{ SYSTEM_VERILOG_KEYWORD(TOK_WITH); }
-<GRAMMAR>within		{ SYSTEM_VERILOG_KEYWORD(TOK_WITHIN); }
+                /* System Verilog Keywords */
 
-	/*
-	 * Others.
-	 */
+accept_on       { SYSTEM_VERILOG_KEYWORD(TOK_ACCEPT_ON); }
+alias           { SYSTEM_VERILOG_KEYWORD(TOK_ALIAS); }
+always_comb     { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_COMB); }
+always_ff       { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_FF); }
+always_latch    { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_LATCH); }
+assert          { VIS_VERILOG_KEYWORD(TOK_ASSERT); }
+assume          { VIS_VERILOG_KEYWORD(TOK_ASSUME); }
+before          { SYSTEM_VERILOG_KEYWORD(TOK_BEFORE); }
+bind            { SYSTEM_VERILOG_KEYWORD(TOK_BIND); }
+bins            { SYSTEM_VERILOG_KEYWORD(TOK_BINS); }
+binsof          { SYSTEM_VERILOG_KEYWORD(TOK_BINSOF); }
+bit             { SYSTEM_VERILOG_KEYWORD(TOK_BIT); }
+break           { SYSTEM_VERILOG_KEYWORD(TOK_BREAK); }
+byte            { SYSTEM_VERILOG_KEYWORD(TOK_BYTE); }
+chandle         { SYSTEM_VERILOG_KEYWORD(TOK_CHANDLE); }
+checker         { SYSTEM_VERILOG_KEYWORD(TOK_CHECKER); }
+class           { SYSTEM_VERILOG_KEYWORD(TOK_CLASS); }
+clocking        { SYSTEM_VERILOG_KEYWORD(TOK_CLOCKING); }
+const           { SYSTEM_VERILOG_KEYWORD(TOK_CONST); }
+constraint      { SYSTEM_VERILOG_KEYWORD(TOK_CONSTRAINT); }
+context         { SYSTEM_VERILOG_KEYWORD(TOK_CONTEXT); }
+continue        { SYSTEM_VERILOG_KEYWORD(TOK_CONTINUE); }
+cover           { SYSTEM_VERILOG_KEYWORD(TOK_COVER); }
+covergroup      { SYSTEM_VERILOG_KEYWORD(TOK_COVERGROUP); }
+coverpoint      { SYSTEM_VERILOG_KEYWORD(TOK_COVERPOINT); }
+cross           { SYSTEM_VERILOG_KEYWORD(TOK_CROSS); }
+dist            { SYSTEM_VERILOG_KEYWORD(TOK_DIST); }
+do              { SYSTEM_VERILOG_KEYWORD(TOK_DO); }
+endclass        { SYSTEM_VERILOG_KEYWORD(TOK_ENDCLASS); }
+endclocking     { SYSTEM_VERILOG_KEYWORD(TOK_ENDCLOCKING); }
+endgroup        { SYSTEM_VERILOG_KEYWORD(TOK_ENDGROUP); }
+endinterface    { SYSTEM_VERILOG_KEYWORD(TOK_ENDINTERFACE); }
+endpackage      { SYSTEM_VERILOG_KEYWORD(TOK_ENDPACKAGE); }
+endprogram      { SYSTEM_VERILOG_KEYWORD(TOK_ENDPROGRAM); }
+endproperty     { SYSTEM_VERILOG_KEYWORD(TOK_ENDPROPERTY); }
+endsequence     { SYSTEM_VERILOG_KEYWORD(TOK_ENDSEQUENCE); }
+enum            { VIS_VERILOG_KEYWORD(TOK_ENUM); }
+eventually      { SYSTEM_VERILOG_KEYWORD(TOK_EVENTUALLY); }
+expect          { SYSTEM_VERILOG_KEYWORD(TOK_EXPECT); }
+export          { SYSTEM_VERILOG_KEYWORD(TOK_EXPORT); }
+extends         { SYSTEM_VERILOG_KEYWORD(TOK_EXTENDS); }
+extern          { SYSTEM_VERILOG_KEYWORD(TOK_EXTERN); }
+final           { SYSTEM_VERILOG_KEYWORD(TOK_FINAL); }
+first_match     { SYSTEM_VERILOG_KEYWORD(TOK_FIRST_MATCH); }
+foreach         { SYSTEM_VERILOG_KEYWORD(TOK_FOREACH); }
+iff             { SYSTEM_VERILOG_KEYWORD(TOK_IFF); }
+ignore_bins     { SYSTEM_VERILOG_KEYWORD(TOK_IGNORE_BINS); }
+illegal_bins    { SYSTEM_VERILOG_KEYWORD(TOK_ILLEGAL_BINS); }
+import          { SYSTEM_VERILOG_KEYWORD(TOK_IMPORT); }
+inside          { SYSTEM_VERILOG_KEYWORD(TOK_INSIDE); }
+int             { SYSTEM_VERILOG_KEYWORD(TOK_INT); }
+interface       { SYSTEM_VERILOG_KEYWORD(TOK_INTERFACE); }
+intersect       { SYSTEM_VERILOG_KEYWORD(TOK_INTERSECT); }
+join_any        { SYSTEM_VERILOG_KEYWORD(TOK_JOIN_ANY); }
+join_none       { SYSTEM_VERILOG_KEYWORD(TOK_JOIN_NONE); }
+local           { SYSTEM_VERILOG_KEYWORD(TOK_LOCAL); }
+logic           { SYSTEM_VERILOG_KEYWORD(TOK_LOGIC); }
+longint         { SYSTEM_VERILOG_KEYWORD(TOK_LONGINT); }
+matches         { SYSTEM_VERILOG_KEYWORD(TOK_MATCHES); }
+modport         { SYSTEM_VERILOG_KEYWORD(TOK_MODPORT); }
+new             { SYSTEM_VERILOG_KEYWORD(TOK_NEW); }
+nexttime        { SYSTEM_VERILOG_KEYWORD(TOK_NEXTTIME); }
+null            { SYSTEM_VERILOG_KEYWORD(TOK_NULL); }
+package         { SYSTEM_VERILOG_KEYWORD(TOK_PACKAGE); }
+packed          { SYSTEM_VERILOG_KEYWORD(TOK_PACKED); }
+priority        { SYSTEM_VERILOG_KEYWORD(TOK_PRIORITY); }
+program         { SYSTEM_VERILOG_KEYWORD(TOK_PROGRAM); }
+property        { SYSTEM_VERILOG_KEYWORD(TOK_PROPERTY); }
+protected       { SYSTEM_VERILOG_KEYWORD(TOK_PROTECTED); }
+pure            { SYSTEM_VERILOG_KEYWORD(TOK_PURE); }
+rand            { SYSTEM_VERILOG_KEYWORD(TOK_RAND); }
+randc           { SYSTEM_VERILOG_KEYWORD(TOK_RANDC); }
+randcase        { SYSTEM_VERILOG_KEYWORD(TOK_RANDCASE); }
+randsequence    { SYSTEM_VERILOG_KEYWORD(TOK_RANDSEQUENCE); }
+ref             { SYSTEM_VERILOG_KEYWORD(TOK_REF); }
+return          { SYSTEM_VERILOG_KEYWORD(TOK_RETURN); }
+s_always        { SYSTEM_VERILOG_KEYWORD(TOK_S_ALWAYS); }
+s_eventually    { SYSTEM_VERILOG_KEYWORD(TOK_S_EVENTUALLY); }
+s_nexttime      { SYSTEM_VERILOG_KEYWORD(TOK_S_NEXTTIME); }
+s_until         { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL); }
+s_until_with    { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL_WITH); }
+sequence        { SYSTEM_VERILOG_KEYWORD(TOK_SEQUENCE); }
+shortint        { SYSTEM_VERILOG_KEYWORD(TOK_SHORTINT); }
+shortreal       { SYSTEM_VERILOG_KEYWORD(TOK_SHORTREAL); }
+solve           { SYSTEM_VERILOG_KEYWORD(TOK_SOLVE); }
+static          { SYSTEM_VERILOG_KEYWORD(TOK_STATIC); }
+string          { SYSTEM_VERILOG_KEYWORD(TOK_STRING); }
+struct          { SYSTEM_VERILOG_KEYWORD(TOK_STRUCT); }
+super           { SYSTEM_VERILOG_KEYWORD(TOK_SUPER); }
+tagged          { SYSTEM_VERILOG_KEYWORD(TOK_TAGGED); }
+this            { SYSTEM_VERILOG_KEYWORD(TOK_THIS); }
+throughout      { SYSTEM_VERILOG_KEYWORD(TOK_THROUGHOUT); }
+timeprecision   { SYSTEM_VERILOG_KEYWORD(TOK_TIMEPRECISION); }
+timeunit        { SYSTEM_VERILOG_KEYWORD(TOK_TIMEUNIT); }
+type            { SYSTEM_VERILOG_KEYWORD(TOK_TYPE); }
+typedef         { VIS_VERILOG_KEYWORD(TOK_TYPEDEF); }
+union           { SYSTEM_VERILOG_KEYWORD(TOK_UNION); }
+unique          { SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE); }
+until           { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL); }
+until_with      { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL_WITH); }
+var             { SYSTEM_VERILOG_KEYWORD(TOK_VAR); }
+virtual         { SYSTEM_VERILOG_KEYWORD(TOK_VIRTUAL); }
+void            { SYSTEM_VERILOG_KEYWORD(TOK_VOID); }
+wait_order      { SYSTEM_VERILOG_KEYWORD(TOK_WAIT_ORDER); }
+wildcard        { SYSTEM_VERILOG_KEYWORD(TOK_WILDCARD); }
+with            { SYSTEM_VERILOG_KEYWORD(TOK_WITH); }
+within          { SYSTEM_VERILOG_KEYWORD(TOK_WITHIN); }
 
-<GRAMMAR>\'line		{ /* get_line_number(); */ continue; }
-<GRAMMAR>\'file		{ /* get_file_name(); */ continue; }
-<GRAMMAR>\`line{WS}[^\n]*{NL} { line_directive(); continue; }
-<GRAMMAR>\`{Word}	{ preprocessor(); continue; }
-<GRAMMAR>\f		{ /* ignore */ }
+                /* Preprocessor outputs */
 
-<GRAMMAR>\${Word}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_SYSIDENT; }
-<GRAMMAR>{Binary}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Octal}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Decimal}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Hexdecimal}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Number}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Real}		{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{RealExp}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-<GRAMMAR>{Word}		{ IDENTIFIER; }
-<GRAMMAR>{EscapedWord}	{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext+1); return TOK_CHARSTR; }
-<GRAMMAR>.		{ return yytext[0]; }
+\'line          { continue; }
+\'file          { continue; }
+\`line{WS}[^\n]*{NL} { line_directive(); continue; }
+\`{Word}        { preprocessor(); continue; }
+
+\f              { /* ignore */ }
+
+                /* Identifiers and numbers */
+
+\${Word}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_SYSIDENT; }
+{Binary}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{Octal}         { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{Decimal}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{Hexdecimal}    { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{Number}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{Real}          { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{RealExp}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{Word}          { IDENTIFIER; }
+{EscapedWord}   { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext+1); return TOK_CHARSTR; }
+.               { return yytext[0]; }
+} // GRAMMAR
 
 %%
 
