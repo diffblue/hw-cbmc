@@ -226,7 +226,7 @@ protected:
   void synth_while(const class verilog_whilet &);
   void synth_repeat(const class verilog_repeatt &);
   void synth_function_call_or_task_enable(const class verilog_function_callt &);
-  void synth_expr(exprt &expr, symbol_statet symbol_state);
+  [[nodiscard]] exprt synth_expr(exprt expr, symbol_statet symbol_state);
   void synth_assign(const exprt &, bool blocking);
   void synth_assert(const class verilog_assertt &);
   void synth_assume(const class verilog_assumet &);
