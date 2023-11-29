@@ -451,20 +451,15 @@ static std::string as_vcd_binary(
   
   if(expr.id()==ID_constant)
   {
-    if(type.id()==ID_unsignedbv ||
-       type.id()==ID_signedbv ||
-       type.id()==ID_bv ||
-       type.id()==ID_fixedbv ||
-       type.id()==ID_floatbv ||
-       type.id()==ID_pointer)
+    if(
+      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+      type.id() == ID_bv || type.id() == ID_fixedbv ||
+      type.id() == ID_floatbv || type.id() == ID_pointer ||
+      type.id() == ID_integer)
     {
-      return id2string(to_constant_expr(expr).get_value());
-    }
-    else if(type.id()==ID_integer)
-    {
-      mp_integer i;
-      if(!to_integer_non_constant(expr, i))
-        return integer2binary(i, 32); // 32 is hardwired
+      mp_integer i = numeric_cast_v<mp_integer>(to_constant_expr(expr));
+      auto width = numeric_cast_v<std::size_t>(vcd_width(type, ns));
+      return integer2binary(i, width);
     }
   }
   else if(expr.id()==ID_array)
