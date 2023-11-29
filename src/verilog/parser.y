@@ -790,10 +790,6 @@ module_or_generate_item:
 module_or_generate_item_declaration:
           package_or_generate_item_declaration
 	| genvar_declaration
-	| reg_declaration
-	| integer_real_declaration
-          /* time_declaration */
-	| event_declaration
 	;
 
 non_port_module_item:
@@ -908,12 +904,19 @@ port_identifier: TOK_CHARSTR
 // System Verilog standard 1800-2017
 // A.2.1.3 Type declarations
 
+// TOK_VAR is optional, but footnote 10 in IEEE 1800-2017 requires it
+// when the data_type is omitted. We split the rule in the standard into two.
 data_declaration:
 	  TOK_VAR lifetime_opt data_type_or_implicit list_of_variable_decl_assignments ';'
 	  	{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_var);
 		  addswap($$, ID_type, $3);
 		  swapop($$, $4); }
+	| lifetime_opt data_type list_of_variable_decl_assignments ';'
+		{ init($$, ID_decl);
+		  stack_expr($$).set(ID_class, ID_reg);
+		  addswap($$, ID_type, $2);
+		  swapop($$, $3); }
 	| type_declaration
 	;
 
@@ -1040,8 +1043,13 @@ integer_vector_type:
         | TOK_REG { init($$, ID_reg); }
 	;
 	
-integer_atom_type: TOK_INT
-                { init($$, ID_int); }
+integer_atom_type:
+	  TOK_BYTE { init($$, ID_byte); }
+//	| TOK_SHORTINT { init($$, ID_shortint); }
+	| TOK_INT { init($$, ID_int); }
+//	| TOK_LONGINT { init($$, ID_longint); }
+	| TOK_INTEGER { init($$, ID_integer); }
+	| TOK_TIME { init($$, ID_time); }
 	;
 	
 class_type: TOK_CLASS
@@ -1564,12 +1572,8 @@ task_item_declaration:
 
 block_item_declaration:
 	  attribute_instance_brace data_declaration { $$=$2; }
-	| attribute_instance_brace block_reg_declaration { $$=$2; }
-	| attribute_instance_brace event_declaration     { $$=$2; }
-	| attribute_instance_brace integer_real_declaration   { $$=$2; }
 	| attribute_instance_brace local_parameter_declaration ';' { $$=$2; }
 	| attribute_instance_brace parameter_declaration ';' { $$=$2; }
-	// | attribute_instance_brace time_declaration
 	;
 
 // System Verilog standard 1800-2017
@@ -2035,21 +2039,20 @@ always_construct: TOK_ALWAYS statement
 		{ init($$, ID_always); mto($$, $2); }
 	;
 
+// The extra rule to allow block_item_declaration is to avoid an ambiguity
+// caused by the attribute_instance_brace.
 statement: 
 /*          block_identifier TOK_COLON attribute_instance_brace statement_item
                 { $$=$4; }
         | */ 
           attribute_instance_brace statement_item
                 { $$=$2; }
+        | block_item_declaration
         ;
 
 statement_item:
           assert_property_statement
         | assume_property_statement
-        | block_reg_declaration /* added */
-        | net_declaration       /* added */
-	| event_declaration     /* added */
-	| integer_real_declaration   /* added */
         | blocking_assignment ';' { $$ = $1; }
 	| nonblocking_assignment ';' { $$ = $1; }
 	| case_statement
@@ -2268,11 +2271,19 @@ for_step_assignment:
         | inc_or_dec_expression
         ;
 
+// The 1800-2017 grammar contains a block_item_declartion_brace before
+// the statement_or_null brace. This yields ambiguity owing to the
+// attribute_inance_brace in block_item_declaration and in
+// statement. Instead, we extend the statement rule to accept
+// block_item_declaration.
 seq_block:
-	  TOK_BEGIN statement_or_null_brace TOK_END
+	  TOK_BEGIN
+	  statement_or_null_brace
+	  TOK_END
 		{ init($$, ID_block); swapop($$, $2); }
         | TOK_BEGIN TOK_COLON block_identifier
-          statement_or_null_brace TOK_END
+          statement_or_null_brace
+          TOK_END
                 { init($$, ID_block);
                   swapop($$, $4);
                   addswap($$, ID_identifier, $3); }
