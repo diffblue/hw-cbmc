@@ -909,7 +909,12 @@ port_identifier: TOK_CHARSTR
 // A.2.1.3 Type declarations
 
 data_declaration:
-	  type_declaration
+	  TOK_VAR lifetime_opt data_type_or_implicit list_of_variable_decl_assignments ';'
+	  	{ init($$, ID_decl);
+		  stack_expr($$).set(ID_class, ID_var);
+		  addswap($$, ID_type, $3);
+		  swapop($$, $4); }
+	| type_declaration
 	;
 
 genvar_declaration:
@@ -969,6 +974,16 @@ list_of_net_decl_assignments:
 		{ init($$); mto($$, $1); }
 	| list_of_net_decl_assignments ',' net_decl_assignment
 		{ $$=$1;    mto($$, $3); }
+	;
+
+lifetime_opt:
+	  /* optional */
+	| lifetime
+	;
+
+lifetime:
+	  TOK_STATIC { init($$, ID_static); }
+	| TOK_AUTOMATIC { init($$, ID_automatic); }
 	;
 
 // System Verilog standard 1800-2017
@@ -1192,6 +1207,13 @@ parameter_port_declaration_brace:
 		{ $$=$1; mto($$, $3); }
 	;
 
+list_of_variable_decl_assignments:
+	  variable_decl_assignment
+		{ init($$); mto($$, $1); }
+	| list_of_variable_decl_assignments ',' variable_decl_assignment
+		{ $$=$1;    mto($$, $3); }
+	;
+
 // This rule is more permissive that the grammar in the standard
 // to cover list_of_param_assignments.
 parameter_port_declaration:
@@ -1384,6 +1406,16 @@ net_decl_assignment: net_identifier '=' expression
 		{ init($$, ID_equal); mto($$, $1); mto($$, $3); }
 	;
 
+variable_decl_assignment:
+	  variable_identifier variable_dimension_brace
+		{ $$ = $1; stack_expr($$).type().swap(stack_expr($2)); }
+	| variable_identifier variable_dimension_brace '=' expression
+		{ init($$, ID_equal);
+		  stack_expr($1).type().swap(stack_expr($2));
+		  mto($$, $1);
+		  mto($$, $4); }
+	;
+
 // System Verilog standard 1800-2017
 // A.2.5 Declaration ranges
 
@@ -1418,6 +1450,21 @@ unpacked_dimension:
 	{
 	  $$=$2;
 	}
+	;
+
+variable_dimension:
+	  unsized_dimension
+	| unpacked_dimension
+	;
+
+variable_dimension_brace:
+	  /* Optional */
+	  { make_nil($$); }
+	| variable_dimension_brace variable_dimension
+	  {
+	    $$=$1;
+	    add_as_subtype(stack_type($$), stack_type($2));
+	  }
 	;
 
 unsized_dimension: '[' ']'

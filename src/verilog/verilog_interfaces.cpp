@@ -329,7 +329,7 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       input=true;
       output=true;
     }
-    else if(port_class==ID_reg)
+    else if(port_class == ID_reg || port_class == ID_var)
     {
     }
     else if(port_class==ID_wire)
@@ -496,7 +496,7 @@ void verilog_typecheckt::interface_module_decl(
       symbol.is_input=true;
       symbol.is_output=true;
     }
-    else if(port_class==ID_reg)
+    else if(port_class == ID_reg || port_class == ID_var)
       symbol.is_state_var=true;
     else if(port_class==ID_wire)
     {
@@ -541,6 +541,7 @@ void verilog_typecheckt::interface_module_decl(
         symbol.type=array_type(it2->type(), type);
       else
       {
+        error().source_location = symbol.location;
         error() << "unexpected type on declarator" << eom;
         throw 0;
       }
