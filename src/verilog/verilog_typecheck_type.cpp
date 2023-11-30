@@ -26,9 +26,9 @@ Function: verilog_typecheck_exprt::convert_type
 
 \*******************************************************************/
 
-typet verilog_typecheck_exprt::convert_type(const irept &src)
+typet verilog_typecheck_exprt::convert_type(const typet &src)
 {
-  auto source_location = static_cast<const typet &>(src).source_location();
+  auto source_location = src.source_location();
 
   if(src.is_nil() || src.id()==ID_reg)
   {

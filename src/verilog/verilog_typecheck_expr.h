@@ -58,7 +58,7 @@ protected:
 
   void propagate_type(exprt &expr, const typet &type);
 
-  typet convert_type(const irept &src);
+  typet convert_type(const typet &);
 
   void convert_range(
     const exprt &range,
