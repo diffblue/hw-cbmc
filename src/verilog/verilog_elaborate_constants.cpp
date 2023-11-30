@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Verilog Parameter Elaboration
+Module: Verilog Elaboration Time Constants
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::elaborate_parameters
+Function: verilog_typecheckt::elaborate_constants
 
   Inputs:
 
@@ -20,11 +20,18 @@ Function: verilog_typecheckt::elaborate_parameters
 
 \*******************************************************************/
 
-void verilog_typecheckt::elaborate_parameters()
+void verilog_typecheckt::elaborate_constants()
 {
-  // Parameters may depend on each other, in any order.
+  // This refers to "elaboration-time constants" as defined
+  // in System Verilog 1800-2017, and includes
+  // * parameters (including parameter ports)
+  // * localparam
+  // * specparam
+  // * enum constants
+  //
+  // These may depend on each other, in any order.
   // We traverse these dependencies recursively.
-  // First collect all parameter declarators into the symbol table,
+  // First collect all constant identifiers into the symbol table,
   // with type "to_be_elaborated".
 
   std::vector<irep_idt> to_be_elaborated;

@@ -76,7 +76,7 @@ protected:
   using defparamst = std::map<irep_idt, std::map<irep_idt, exprt>>;
   defparamst defparams;
 
-  void elaborate_parameters();
+  void elaborate_constants();
   void elaborate_parameter(irep_idt) override;
 
   // instances
