@@ -533,9 +533,10 @@ int yyverilogerror(const char *error)
 /* Others */
 %token TOK_ENDOFFILE
 %token TOK_CHARSTR
-%token TOK_NUMBER           /* number, all bases */
-%token TOK_QSTRING          /* quoted string, i.e. "abc" */
-%token TOK_SYSIDENT         /* system task or function enable */
+%token TOK_NUMBER           // number, any base
+%token TOK_TIME_LITERAL     // number followed by time unit
+%token TOK_QSTRING          // quoted string
+%token TOK_SYSIDENT         // system task or function enable
 %token TOK_SCANNER_ERROR
 
 /* Precedence, following SystemVerilog 3.1a */
@@ -1184,6 +1185,7 @@ delay3:   '#' delay_value { $$=$2; }
 delay_value:
           unsigned_number
 	| variable_identifier
+	| time_literal
         ;
 
 // System Verilog standard 1800-2017
@@ -2644,7 +2646,14 @@ primary:  primary_literal
 
 primary_literal:
           number
+        | time_literal
         ;
+
+time_literal: TOK_TIME_LITERAL
+		{ init($$, ID_constant);
+		  addswap($$, ID_value, $1);
+		  stack_expr($$).type().id(ID_verilog_realtime); }
+	;
 
 // System Verilog standard 1800-2017
 // A.8.5 Expression left-side values

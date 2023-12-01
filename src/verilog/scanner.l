@@ -101,6 +101,7 @@ Binary          ({Number})?{WSst}'{WSst}[sS]?[bB]{WSst}[01xXzZ?]([01xXzZ?_])*
 Octal           ({Number})?{WSst}'{WSst}[sS]?[oO]{WSst}[0-7xXzZ?]([0-7xXzZ?_])*
 Decimal         ({Number})?{WSst}'{WSst}[sS]?[dD]{WSst}{Number}
 Hexdecimal      ({Number})?{WSst}'{WSst}[sS]?[hH]{WSst}[0-9a-fA-FxXzZ?]([0-9a-fA-FxXzZ?_])*
+Time            {Number}(\.{Number})?("fs"|"ps"|"ns"|"us"|"ms"|"s")
 Real            {Number}\.{Number}
 RealExp         {Number}(\.{Number})?[eE][+-]?{Number}
 Comment         "//"[^\n]*{NL}
@@ -552,6 +553,7 @@ within          { SYSTEM_VERILOG_KEYWORD(TOK_WITHIN); }
 {Decimal}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Hexdecimal}    { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Number}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
+{Time}		{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_TIME_LITERAL; }
 {Real}          { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {RealExp}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Word}          { IDENTIFIER; }
