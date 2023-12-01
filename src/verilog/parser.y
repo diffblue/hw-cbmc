@@ -587,7 +587,7 @@ int yyverilogerror(const char *error)
 grammar:  TOK_PARSE_LANGUAGE { /*yydebug=1;*/ } source_text
         | TOK_PARSE_EXPRESSION expression
            { PARSER.parse_tree.expr.swap(stack_expr($2)); }
-        | TOK_PARSE_TYPE reg_declaration
+        | TOK_PARSE_TYPE data_type_or_implicit
            { PARSER.parse_tree.expr.swap(stack_expr($2)); }
         ;
 
@@ -817,13 +817,13 @@ non_port_module_item:
 	  attribute_instance_brace generate_region { $$=$2; }
         | module_or_generate_item
         | attribute_instance_brace specparam_declaration {$$=$2; }
+	| attribute_instance_brace specify_block { $$=$2;}
         ;
 
 /*
 	  module_or_generate_item
 	| attribute_instance_brace parameter_declaration { $$=$2; }
 	// | attribute_instance_brace local_parameter_declaration { $$=$2; }
-	| attribute_instance_brace specify_block { $$=$2;}
 	;
 */
 
@@ -1362,35 +1362,6 @@ list_of_port_identifiers:
 		{ $$=$1;    stack_expr($3).type().swap(stack_expr($4)); mto($$, $3); }
 	;
 
-reg_declaration:
-	  TOK_REG data_type_or_implicit list_of_register_identifiers ';'
-		{ init($$, ID_decl);
-		  stack_expr($$).set(ID_class, ID_reg);
-                  addswap($$, ID_type, $2);
-		  swapop($$, $3); }
-	;
-
-decl_register_identifier:
-	  register_name '=' expression
-		{ init($$, ID_equal); mto($$, $1); mto($$, $3); }
-	| register_name
-	;
-
-list_of_register_identifiers:
-	  decl_register_identifier
-		{ init($$); mto($$, $1); }
-	| list_of_register_identifiers ',' decl_register_identifier
-		{ $$=$1;    mto($$, $3); }
-	;
-
-register_name:
-          register_identifier packed_dimension_brace
-          { 
-            $$=$1;
-            stack_expr($$).add(ID_type)=stack_expr($2);
-          }
-	;
-
 register_identifier: TOK_CHARSTR
 		{ new_symbol($$, $1); }
 	;
@@ -1405,29 +1376,6 @@ range_opt:
 	;
 
 range:	part_select;
-
-integer_real_type:
-	  TOK_INTEGER
-		{ init($$, ID_integer); }
-	| TOK_REAL
-		{ init($$, ID_verilog_real); }
-	| TOK_REALTIME
-		{ init($$, ID_verilog_realtime); }
-	;
-
-integer_real_declaration:
-	  integer_real_type list_of_register_identifiers ';'
-		{ init($$, ID_decl);
-		  stack_expr($$).add(ID_type) = std::move(stack_expr($1));
-		  swapop($$, $2); }
-	;
-
-list_of_real_identifiers:
-	  decl_register_identifier
-		{ init($$); mto($$, $1); }
-	| list_of_real_identifiers ',' decl_register_identifier
-		{ $$=$1;    mto($$, $3); }
-	;
 
 // System Verilog standard 1800-2017
 // A.2.4 Declaration assignments
@@ -2504,8 +2452,8 @@ specify_item_brace:
 specify_item: specparam_declaration
       //              | pulsestyle_declaration
       //              | showcancelled_declaration
-        | path_declaration
-        | system_timing_check
+      //  path_declaration
+	  system_timing_check
         ;
 
 // System Verilog standard 1800-2017
@@ -2569,7 +2517,8 @@ specparam_assignment:
 
 specparam_identifier: TOK_CHARSTR; 
 
-system_timing_check: timing_3 ';' ;
+system_timing_check: timing_3 ';'
+	;
 
 timing_3: 
           timing_type '(' event_expression ',' 
@@ -2610,10 +2559,6 @@ expression_brace_opt:
 	;
 
 function_identifier: hierarchical_identifier
-	;
-
-name_of_system_function: TOK_SYSIDENT
-		{ new_symbol($$, $1); }
 	;
 
 unsigned_number: TOK_NUMBER
@@ -2903,19 +2848,6 @@ attr_spec: attr_name '=' constant_expression
 	;
 
 attr_name: identifier
-	;
-
-block_reg_declaration: reg_declaration;
-
-event_declaration:
-	  TOK_EVENT list_of_event_identifiers ';'
-	;
-
-list_of_event_identifiers:
-	  event_identifier
-		{ init($$); mto($$, $1); }
-	| list_of_event_identifiers ',' event_identifier
-		{ $$=$1;    mto($$, $3); }
 	;
 
 %%
