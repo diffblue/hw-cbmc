@@ -740,6 +740,12 @@ port_declaration_brace:
 		}
 	;
 
+port_declaration:
+	  attribute_instance_brace inout_declaration { $$=$2; }
+	| attribute_instance_brace input_declaration { $$=$2; }
+	| attribute_instance_brace output_declaration { $$=$2; }
+	;
+
 module_port_declaration:
 	  attribute_instance_brace module_port_inout_declaration { $$=$2; }
 	| attribute_instance_brace module_port_input_declaration { $$=$2; }
@@ -1961,32 +1967,18 @@ if_generate_construct:
 	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); mto($$, $7); }
 	;
 
-generate_item:
-	  conditional_generate_construct
-	| loop_generate_construct
-	| generate_block
-	| module_or_generate_item
-	;
-
-generate_item_or_null:
-	  generate_item
-	| ';' { init($$, ID_generate_skip); }
-	;
-
-constant_expression: expression;
-
 case_generate_construct:
 	  TOK_CASE '(' constant_expression ')'
-	  genvar_case_item_brace TOK_ENDCASE
+	  case_generate_item_brace TOK_ENDCASE
 	  	{ init($$, ID_generate_case); mto($$, $3); }
 	;
 
-genvar_case_item_brace:
-	  genvar_case_item
-	| genvar_case_item_brace genvar_case_item
+case_generate_item_brace:
+	  case_generate_item
+	| case_generate_item_brace case_generate_item
 	;
 
-genvar_case_item:
+case_generate_item:
 	  expression_brace TOK_COLON generate_item_or_null
 	| TOK_DEFAULT TOK_COLON generate_item_or_null
 	| TOK_DEFAULT generate_item_or_null
@@ -2003,11 +1995,19 @@ generate_block:
 		  stack_expr($$).set(ID_identifier, stack_expr($3).id()); }
 	;
 
-port_declaration:
-	  attribute_instance_brace inout_declaration { $$=$2; }
-	| attribute_instance_brace input_declaration { $$=$2; }
-	| attribute_instance_brace output_declaration { $$=$2; }
+generate_item:
+	  conditional_generate_construct
+	| loop_generate_construct
+	| generate_block
+	| module_or_generate_item
 	;
+
+generate_item_or_null:
+	  generate_item
+	| ';' { init($$, ID_generate_skip); }
+	;
+
+constant_expression: expression;
 
 package_or_generate_item_declaration:
 	  net_declaration
