@@ -539,32 +539,46 @@ int yyverilogerror(const char *error)
 %token TOK_SYSIDENT         // system task or function enable
 %token TOK_SCANNER_ERROR
 
-/* Precedence, following SystemVerilog 3.1a */
-/* Bison expects these in order of increasing precedence. */
-%right "|->" "|=>"
+// Precedence of System Verilog Assertions Operators,
+// following System Verilog 1800-2017 Table 16-3.
+// Bison expects these in order of increasing precedence,
+// whereas the table gives them in decreasing order.
+// The precendence of the assertion operators is lower than
+// those in Table 11-2.
+%nonassoc "always" "s_always" "eventually" "s_eventually"
+%nonassoc "accept_on" "reject_on"
+%nonassoc "sync_accept_on" "sync_reject_on"
+%right "|->" "|=>" "#-#" "#=#"
+%nonassoc "until" "s_until" "until_with" "s_until_with" "implies"
+%right "iff"
 %left "or"
 %left "and"
-%nonassoc "not"
+%nonassoc "not" "nexttime" "s_nexttime"
 %left "##"
-%right TOK_QUESTION TOK_COLON // ?:
-%left TOK_VERTBARVERTBAR
-%left TOK_AMPERAMPER
-%left TOK_VERTBAR
-%left TOK_CARET TOK_CARETTILDE TOK_TILDECARET
-%left TOK_AMPER TOK_AMPERTILDE TOK_TILDEAMPER
-%left TOK_EQUALEQUAL TOK_EXCLAMEQUAL TOK_EQUALEQUALEQUAL TOK_EXCLAMEQUALEQUAL
-%left TOK_GREATEREQUAL TOK_LESSEQUAL TOK_GREATER TOK_LESS
-%left TOK_LESSLESS TOK_LESSLESSLESS TOK_GREATERGREATER TOK_GREATERGREATERGREATER
-%left TOK_PLUS TOK_MINUS
-%left TOK_ASTERIC TOK_SLASH TOK_PERCENT
-%left TOK_ASTERICASTERIC
-%right TOK_TILDE TOK_EXCLAM TOK_PLUSPLUS TOK_MINUSMINUS
-%nonassoc UNARY_MINUS UNARY_PLUS
+%nonassoc "[*]" "[=]" "[->]"
+
+// Precendence of Verilog operators,
+// following System Verilog 1800-2017 Table 11-2.
+// Bison expects these in order of increasing precedence,
+// whereas the table gives them in decreasing order.
+%right "->" "<->"
+%right "?" ":"
+%left "||"
+%left "&&"
+%left "|"
+%left "^" "^~" "~^"
+%left "&"
+%left "==" "!=" "===" "!==" "==?" "!=?"
+%left "<" "<=" ">" ">=" "inside" "dist"
+%left "<<" ">>" "<<<" ">>>"
+%left "+" "-"
+%left "*" "/" "%"
+%left "**"
+%nonassoc UNARY_PLUS UNARY_MINUS "!" "~" "&~" "++" "--"
+
+// Statements
 %nonassoc LT_TOK_ELSE
 %nonassoc TOK_ELSE
-%right "->"
-%left TOK_ALWAYS TOK_EVENTUALLY TOK_NEXTTIME TOK_UNTIL TOK_UNTIL_WITH
-%left TOK_S_ALWAYS TOK_S_EVENTUALLY TOK_S_NEXTTIME TOK_S_UNTIL TOK_S_UNTIL_WITH
 
 %%
 
