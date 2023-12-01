@@ -1595,11 +1595,94 @@ block_item_declaration:
 // System Verilog standard 1800-2017
 // A.2.10 Assertion declarations
 
-concurrent_assertion_item_declaration: property_declaration;
+concurrent_assertion_item_declaration:
+	  property_declaration
+	;
+
+assert_property_statement:
+          TOK_ASSERT TOK_PROPERTY '(' property_expr ')' action_block
+		{ init($$, ID_assert); mto($$, $4); mto($$, $6); }
+	| /* this one is in because SMV does it */
+	  TOK_ASSERT property_identifier TOK_COLON expression ';'
+		{ init($$, ID_assert); stack_expr($$).operands().resize(2);
+		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
+		  to_binary_expr(stack_expr($$)).op1().make_nil();
+		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
+		}
+	;
+
+assume_property_statement:
+          TOK_ASSUME TOK_PROPERTY '(' property_expr ')' action_block
+		{ init($$, ID_assume); mto($$, $4); mto($$, $6); }
+	| /* this one is in because SMV does it */
+	  TOK_ASSUME property_identifier TOK_COLON expression ';'
+		{ init($$, ID_assume); stack_expr($$).operands().resize(2);
+		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
+		  to_binary_expr(stack_expr($$)).op1().make_nil();
+		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
+		}
+	;
+
+cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
+		{ init($$, ID_cover); mto($$, $4); mto($$, $6); }
+	;
+
+property_identifier: TOK_CHARSTR;
 
 property_declaration:
           TOK_PROPERTY property_identifier TOK_ENDPROPERTY
         ;
+
+property_expr:
+          sequence_expr
+        | "not" property_expr               { init($$, ID_not); mto($$, $2); }
+        | property_expr "or" property_expr  { init($$, ID_or); mto($$, $1); mto($$, $3); }
+        | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
+        | property_expr "|->" property_expr { init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
+        | property_expr "|=>" property_expr { init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
+        | "nexttime" property_expr          { init($$, "sva_nexttime"); mto($$, $2); }
+        | "s_nexttime" property_expr        { init($$, "sva_s_nexttime"); mto($$, $2); }
+        | "always" property_expr            { init($$, "sva_always"); mto($$, $2); }
+        | "s_always" property_expr          { init($$, "sva_s_always"); mto($$, $2); }
+        | "s_eventually" property_expr      { init($$, "sva_s_eventually"); mto($$, $2); }
+        | "eventually" property_expr        { init($$, "sva_eventually"); mto($$, $2); }
+        | property_expr "until" property_expr        { init($$, "sva_until"); mto($$, $1); mto($$, $3); }
+        | property_expr "until_with" property_expr   { init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
+        | property_expr "s_until" property_expr      { init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
+        | property_expr "s_until_with" property_expr { init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
+//        | property_expr "implies" property_expr       { init($$, ID_implies); mto($$, $1); mto($$, $3); }
+//        | property_expr "iff" property_expr           { init($$, ID_iff); mto($$, $1); mto($$, $3); }
+        | "accept_on" '(' expression_or_dist ')'      { init($$, "sva_accept_on"); mto($$, $3); }
+        | "reject_on" '(' expression_or_dist ')'      { init($$, "sva_reject_on"); mto($$, $3); }
+        | "sync_accept_on" '(' expression_or_dist ')' { init($$, "sva_sync_accept_on"); mto($$, $3); }
+        | "sync_reject_on" '(' expression_or_dist ')' { init($$, "sva_sync_reject_on"); mto($$, $3); }
+        | event_control '(' property_expr ')' { $$=$3; }
+        ;
+
+sequence_expr:
+          expression
+        | cycle_delay_range sequence_expr
+                { $$=$1; mto($$, $2); }
+        | expression cycle_delay_range sequence_expr
+                { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
+        | "first_match" '(' sequence_expr ')'
+                { init($$, ID_sva_sequence_first_match); mto($$, $3); }
+        | expression "throughout" sequence_expr
+                { init($$, ID_sva_sequence_throughout); mto($$, $1); mto($$, $3); }
+        ;
+
+cycle_delay_range:
+          "##" number
+                { init($$, ID_sva_cycle_delay); mto($$, $2); stack_expr($$).operands().push_back(nil_exprt()); }
+        | "##" '[' number TOK_COLON number ']'
+                { init($$, ID_sva_cycle_delay); mto($$, $3); mto($$, $5); }
+        | "##" '[' number TOK_COLON '$' ']'
+                { init($$, ID_sva_cycle_delay); mto($$, $3); stack_expr($$).add_to_operands(exprt(ID_infinity)); }
+        ;
+
+expression_or_dist:
+	  expression
+	;
 
 // System Verilog standard 1800-2017
 // A.3.1 Primitive instantiation and instances
@@ -2597,36 +2680,6 @@ disable_statement: TOK_DISABLE hierarchical_task_or_block_identifier ';'
 		{ init($$, ID_disable); mto($$, $2); }
 	;
 
-assert_property_statement:
-          TOK_ASSERT TOK_PROPERTY '(' property_expr ')' action_block
-		{ init($$, ID_assert); mto($$, $4); mto($$, $6); }
-	| /* this one is in because SMV does it */
-	  TOK_ASSERT property_identifier TOK_COLON expression ';'
-		{ init($$, ID_assert); stack_expr($$).operands().resize(2);
-		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
-		  to_binary_expr(stack_expr($$)).op1().make_nil();
-		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
-		} 
-	;
-
-assume_property_statement:
-          TOK_ASSUME TOK_PROPERTY '(' property_expr ')' action_block
-		{ init($$, ID_assume); mto($$, $4); mto($$, $6); }
-	| /* this one is in because SMV does it */
-	  TOK_ASSUME property_identifier TOK_COLON expression ';'
-		{ init($$, ID_assume); stack_expr($$).operands().resize(2);
-		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
-		  to_binary_expr(stack_expr($$)).op1().make_nil();
-		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
-		} 
-	;
-
-property_identifier: TOK_CHARSTR;
-
-cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
-		{ init($$, ID_cover); mto($$, $4); mto($$, $6); }
-	;
-
 // System Verilog standard 1800-2017
 // A.8.3 Expressions
 
@@ -2793,49 +2846,6 @@ expression:
 	| TOK_QSTRING
 		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
 	;
-
-// properties for SystemVerilog assertions
-property_expr:
-          sequence_expr
-        | "not" property_expr { init($$, ID_not); mto($$, $2); }
-        | property_expr "or" property_expr { init($$, ID_or); mto($$, $1); mto($$, $3); }
-        | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
-        | property_expr "|->" property_expr { init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
-        | property_expr "|=>" property_expr { init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
-        | event_control '(' property_expr ')'
-                { $$=$3; }
-        | TOK_ALWAYS property_expr       { init($$, "sva_always"); mto($$, $2); }
-        | TOK_EVENTUALLY property_expr   { init($$, "sva_eventually"); mto($$, $2); }
-        | TOK_NEXTTIME property_expr     { init($$, "sva_nexttime"); mto($$, $2); }
-        | TOK_S_ALWAYS property_expr     { init($$, "sva_s_always"); mto($$, $2); }
-        | TOK_S_EVENTUALLY property_expr { init($$, "sva_s_eventually"); mto($$, $2); }
-        | TOK_S_NEXTTIME property_expr   { init($$, "sva_s_nexttime"); mto($$, $2); }
-        | property_expr TOK_S_UNTIL property_expr      { init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
-        | property_expr TOK_S_UNTIL_WITH property_expr { init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
-        | property_expr TOK_UNTIL property_expr        { init($$, "sva_until"); mto($$, $1); mto($$, $3); }
-        | property_expr TOK_UNTIL_WITH property_expr   { init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
-        ;
-
-sequence_expr:
-          expression
-        | cycle_delay_range sequence_expr
-                { $$=$1; mto($$, $2); }
-        | expression cycle_delay_range sequence_expr
-                { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
-        | "first_match" '(' sequence_expr ')'
-                { init($$, ID_sva_sequence_first_match); mto($$, $3); }
-        | expression "throughout" sequence_expr
-                { init($$, ID_sva_sequence_throughout); mto($$, $1); mto($$, $3); }
-        ;
-
-cycle_delay_range:
-          "##" number
-                { init($$, ID_sva_cycle_delay); mto($$, $2); stack_expr($$).operands().push_back(nil_exprt()); }
-        | "##" '[' number TOK_COLON number ']'
-                { init($$, ID_sva_cycle_delay); mto($$, $3); mto($$, $5); }
-        | "##" '[' number TOK_COLON '$' ']'
-                { init($$, ID_sva_cycle_delay); mto($$, $3); stack_expr($$).add_to_operands(exprt(ID_infinity)); }
-        ;
 
 // System Verilog standard 1800-2017
 // A.8.6 Operators
