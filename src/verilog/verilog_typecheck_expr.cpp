@@ -261,7 +261,7 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
         throw errort().with_location(it->source_location())
           << "array type not allowed in concatenation";
       }
-      else if(type.id()==ID_integer)
+      else if(type.id() == ID_integer)
       {
         throw errort().with_location(it->source_location())
           << "integer type not allowed in concatenation";
@@ -572,6 +572,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
         << "$bits takes one argument";
     }
 
+    // The return type is integer.
     expr.type() = integer_typet();
 
     return std::move(expr);
@@ -1379,7 +1380,7 @@ void verilog_typecheck_exprt::typecast(
   if(expr.type()==dest_type)
     return;
 
-  if(dest_type.id()==ID_integer)
+  if(dest_type.id() == ID_integer)
   {
     if(expr.is_constant())
     {
@@ -1391,22 +1392,21 @@ void verilog_typecheck_exprt::typecast(
         throw errort() << "failed to convert integer constant";
       }
 
-      expr=from_integer(value, dest_type);
+      expr = from_integer(value, dest_type);
       expr.add_source_location()=source_location;
       return;
     }
 
-    if(expr.type().id()==ID_bool ||
-       expr.type().id()==ID_unsignedbv ||
-       expr.type().id()==ID_signedbv ||
-       expr.type().id()==ID_integer)
+    if(
+      expr.type().id() == ID_bool || expr.type().id() == ID_unsignedbv ||
+      expr.type().id() == ID_signedbv || expr.type().id() == ID_integer)
     {
       expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
 
-  if(expr.type().id()==ID_integer)
+  if(expr.type().id() == ID_integer)
   {
     // from integer to s.th. else
     if(dest_type.id()==ID_bool)
@@ -1415,7 +1415,7 @@ void verilog_typecheck_exprt::typecast(
       // we actually only want the lowest bit
       unsignedbv_typet tmp_type(1);
       exprt tmp(ID_extractbit, bool_typet());
-      exprt no_expr=from_integer(0, integer_typet());
+      exprt no_expr = from_integer(0, integer_typet());
       tmp.add_to_operands(typecast_exprt(expr, tmp_type), std::move(no_expr));
       expr.swap(tmp);
       return;
@@ -1451,7 +1451,7 @@ void verilog_typecheck_exprt::typecast(
       }
 
       exprt tmp(ID_extractbit, bool_typet());
-      exprt no_expr=from_integer(0, integer_typet());
+      exprt no_expr = from_integer(0, integer_typet());
       tmp.add_to_operands(std::move(expr), std::move(no_expr));
       expr.swap(tmp);
       return;
@@ -1959,9 +1959,9 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
 
     const typet &op0_type = to_binary_expr(expr).op0().type();
 
-    if(op0_type.id()==ID_signedbv ||
-       op0_type.id()==ID_verilog_signedbv ||
-       op0_type.id()==ID_integer)
+    if(
+      op0_type.id() == ID_signedbv || op0_type.id() == ID_verilog_signedbv ||
+      op0_type.id() == ID_integer)
       expr.id(ID_ashr);
     else
       expr.id(ID_lshr);

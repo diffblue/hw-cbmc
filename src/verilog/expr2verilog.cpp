@@ -1100,7 +1100,25 @@ Function: expr2verilogt::convert
 
 std::string expr2verilogt::convert(const typet &type)
 {
-  if(type.id()==ID_bool)
+  if(type.id() == ID_verilog_shortint)
+    return "shortint";
+  else if(type.id() == ID_verilog_int)
+    return "int";
+  else if(type.id() == ID_verilog_longint)
+    return "longint";
+  else if(type.id() == ID_verilog_byte)
+    return "byte";
+  else if(type.id() == ID_verilog_bit)
+    return "bit";
+  else if(type.id() == ID_verilog_logic)
+    return "logic";
+  else if(type.id() == ID_verilog_integer)
+    return "integer";
+  else if(type.id() == ID_verilog_reg)
+    return "reg";
+  else if(type.id() == ID_verilog_time)
+    return "time";
+  else if(type.id() == ID_bool)
     return "bool";
   else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
   {

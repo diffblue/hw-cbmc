@@ -28,10 +28,15 @@ Function: vtypet::vtypet
 
 vtypet::vtypet(const typet &type)
 {
-  if(type.id()==ID_integer)
+  if(type.id() == ID_integer)
+  {
+    vtype = INTEGER;
+    width = 32;
+  }
+  else if(type.id() == ID_verilog_integer)
   {
     vtype=INTEGER;
-    width=0;
+    width = 32;
   }
   else if(type.id()==ID_unsignedbv)
   {

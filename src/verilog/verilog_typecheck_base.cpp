@@ -182,12 +182,17 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
     mp_integer element_width = get_width(to_array_type(type).element_type());
     return (array_size(to_array_type(type)) * element_width).to_ulong();
   }
-  
-  if(type.id()==ID_integer)
-  {
-    // The standard says these are at least 32 bits wide.
+
+  if(type.id() == ID_verilog_shortint)
+    return 16;
+  else if(type.id() == ID_verilog_int)
     return 32;
-  }
+  else if(type.id() == ID_verilog_longint)
+    return 64;
+  else if(type.id() == ID_verilog_integer)
+    return 32;
+  else if(type.id() == ID_verilog_time)
+    return 64;
 
   error() << "type `" << type.id() << "' has unknown width"
           << eom;
