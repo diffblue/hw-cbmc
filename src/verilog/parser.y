@@ -270,6 +270,7 @@ int yyverilogerror(const char *error)
 %token TOK_GREATERGREATERGREATER ">>>"
 %token TOK_LESSLESS         "<<"
 %token TOK_LESSLESSLESS     "<<<"
+%token TOK_LESSMINUSGREATER "<->"
 
 /* Unary or binary */
 %token TOK_PLUS             "+"
@@ -436,6 +437,7 @@ int yyverilogerror(const char *error)
 %token TOK_BYTE             "byte"
 %token TOK_CHANDLE          "chandle"
 %token TOK_CHECKER          "checker"
+%token TOK_CELL             "cell"
 %token TOK_CLASS            "class"
 %token TOK_CLOCKING         "clocking"
 %token TOK_CONFIG           "config"
@@ -447,8 +449,10 @@ int yyverilogerror(const char *error)
 %token TOK_COVERGROUP       "covergroup"
 %token TOK_COVERPOINT       "coverpoint"
 %token TOK_CROSS            "cross"
+%token TOK_DESIGN           "design"
 %token TOK_DIST             "dist"
 %token TOK_DO               "do"
+%token TOK_ENDCHECKER       "endchecker"
 %token TOK_ENDCLASS         "endclass"
 %token TOK_ENDCLOCKING      "endclocking"
 %token TOK_ENDCONFIG        "endconfig"
@@ -470,6 +474,8 @@ int yyverilogerror(const char *error)
 %token TOK_IFF              "iff"
 %token TOK_IGNORE_BINS      "ignore_bins"
 %token TOK_ILLEGAL_BINS     "illegal_bins"
+%token TOK_IMPLEMENTS       "implements"
+%token TOK_IMPLIES          "implies"
 %token TOK_IMPORT           "import"
 %token TOK_INSIDE           "inside"
 %token TOK_INT              "int"
@@ -506,6 +512,7 @@ int yyverilogerror(const char *error)
 %token TOK_SEQUENCE         "sequence"
 %token TOK_SHORTINT         "shortint"
 %token TOK_SHORTREAL        "shortreal"
+%token TOK_SHOWCANCELLED    "showcancelled"
 %token TOK_SOLVE            "solve"
 %token TOK_STATIC           "static"
 %token TOK_STRING           "string"
@@ -520,8 +527,10 @@ int yyverilogerror(const char *error)
 %token TOK_TYPEDEF          "typedef"
 %token TOK_UNION            "union"
 %token TOK_UNIQUE           "unique"
+%token TOK_UNIQUE0          "unique0"
 %token TOK_UNTIL            "until"
 %token TOK_UNTIL_WITH       "until_with"
+%token TOK_UNTYPED          "untyped"
 %token TOK_VAR              "var"
 %token TOK_VIRTUAL          "virtual"
 %token TOK_VOID             "void"
@@ -1560,8 +1569,8 @@ property_expr:
         | property_expr "until_with" property_expr   { init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
         | property_expr "s_until" property_expr      { init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
         | property_expr "s_until_with" property_expr { init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
-//        | property_expr "implies" property_expr       { init($$, ID_implies); mto($$, $1); mto($$, $3); }
-//        | property_expr "iff" property_expr           { init($$, ID_iff); mto($$, $1); mto($$, $3); }
+        | property_expr "implies" property_expr       { init($$, ID_implies); mto($$, $1); mto($$, $3); }
+        | property_expr "iff" property_expr           { init($$, ID_iff); mto($$, $1); mto($$, $3); }
         | "accept_on" '(' expression_or_dist ')'      { init($$, "sva_accept_on"); mto($$, $3); }
         | "reject_on" '(' expression_or_dist ')'      { init($$, "sva_reject_on"); mto($$, $3); }
         | "sync_accept_on" '(' expression_or_dist ')' { init($$, "sva_sync_accept_on"); mto($$, $3); }
@@ -2640,6 +2649,10 @@ expression:
         | unary_operator attribute_instance_brace primary
                 { $$=$1; mto($$, $3); }
         | inc_or_dec_expression
+	| expression "->" expression
+		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
+	| expression "<->" expression
+		{ init($$, ID_iff); mto($$, $1); mto($$, $3); }
 	| expression TOK_PLUS expression
 		{ init($$, ID_plus); mto($$, $1); mto($$, $3); }
 	| expression TOK_MINUS expression

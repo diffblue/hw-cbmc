@@ -204,6 +204,7 @@ void verilog_scanner_init()
 ">>>"           { return TOK_GREATERGREATERGREATER; }
 "<<"            { return TOK_LESSLESS; }
 "<<<"           { return TOK_LESSLESSLESS; }
+"<->"           { return TOK_LESSMINUSGREATER; }
 
                 /* Trinary operators */
 
@@ -442,10 +443,12 @@ binsof          { SYSTEM_VERILOG_KEYWORD(TOK_BINSOF); }
 bit             { SYSTEM_VERILOG_KEYWORD(TOK_BIT); }
 break           { SYSTEM_VERILOG_KEYWORD(TOK_BREAK); }
 byte            { SYSTEM_VERILOG_KEYWORD(TOK_BYTE); }
+cell            { SYSTEM_VERILOG_KEYWORD(TOK_CELL); }
 chandle         { SYSTEM_VERILOG_KEYWORD(TOK_CHANDLE); }
 checker         { SYSTEM_VERILOG_KEYWORD(TOK_CHECKER); }
 class           { SYSTEM_VERILOG_KEYWORD(TOK_CLASS); }
 clocking        { SYSTEM_VERILOG_KEYWORD(TOK_CLOCKING); }
+config          { SYSTEM_VERILOG_KEYWORD(TOK_CONFIG); }
 const           { SYSTEM_VERILOG_KEYWORD(TOK_CONST); }
 constraint      { SYSTEM_VERILOG_KEYWORD(TOK_CONSTRAINT); }
 context         { SYSTEM_VERILOG_KEYWORD(TOK_CONTEXT); }
@@ -454,8 +457,10 @@ cover           { SYSTEM_VERILOG_KEYWORD(TOK_COVER); }
 covergroup      { SYSTEM_VERILOG_KEYWORD(TOK_COVERGROUP); }
 coverpoint      { SYSTEM_VERILOG_KEYWORD(TOK_COVERPOINT); }
 cross           { SYSTEM_VERILOG_KEYWORD(TOK_CROSS); }
+design          { SYSTEM_VERILOG_KEYWORD(TOK_DESIGN); }
 dist            { SYSTEM_VERILOG_KEYWORD(TOK_DIST); }
 do              { SYSTEM_VERILOG_KEYWORD(TOK_DO); }
+endchecker      { SYSTEM_VERILOG_KEYWORD(TOK_ENDCHECKER); }
 endclass        { SYSTEM_VERILOG_KEYWORD(TOK_ENDCLASS); }
 endclocking     { SYSTEM_VERILOG_KEYWORD(TOK_ENDCLOCKING); }
 endgroup        { SYSTEM_VERILOG_KEYWORD(TOK_ENDGROUP); }
@@ -476,6 +481,8 @@ foreach         { SYSTEM_VERILOG_KEYWORD(TOK_FOREACH); }
 iff             { SYSTEM_VERILOG_KEYWORD(TOK_IFF); }
 ignore_bins     { SYSTEM_VERILOG_KEYWORD(TOK_IGNORE_BINS); }
 illegal_bins    { SYSTEM_VERILOG_KEYWORD(TOK_ILLEGAL_BINS); }
+implements      { SYSTEM_VERILOG_KEYWORD(TOK_IMPLEMENTS); }
+implies         { SYSTEM_VERILOG_KEYWORD(TOK_IMPLIES); }
 import          { SYSTEM_VERILOG_KEYWORD(TOK_IMPORT); }
 inside          { SYSTEM_VERILOG_KEYWORD(TOK_INSIDE); }
 int             { SYSTEM_VERILOG_KEYWORD(TOK_INT); }
@@ -512,6 +519,7 @@ s_until_with    { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL_WITH); }
 sequence        { SYSTEM_VERILOG_KEYWORD(TOK_SEQUENCE); }
 shortint        { SYSTEM_VERILOG_KEYWORD(TOK_SHORTINT); }
 shortreal       { SYSTEM_VERILOG_KEYWORD(TOK_SHORTREAL); }
+showcancelled   { SYSTEM_VERILOG_KEYWORD(TOK_SHOWCANCELLED); }
 solve           { SYSTEM_VERILOG_KEYWORD(TOK_SOLVE); }
 static          { SYSTEM_VERILOG_KEYWORD(TOK_STATIC); }
 string          { SYSTEM_VERILOG_KEYWORD(TOK_STRING); }
@@ -526,8 +534,10 @@ type            { SYSTEM_VERILOG_KEYWORD(TOK_TYPE); }
 typedef         { VIS_VERILOG_KEYWORD(TOK_TYPEDEF); }
 union           { SYSTEM_VERILOG_KEYWORD(TOK_UNION); }
 unique          { SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE); }
+unique0         { SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE0); }
 until           { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL); }
 until_with      { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL_WITH); }
+untyped         { SYSTEM_VERILOG_KEYWORD(TOK_UNTYPED); }
 var             { SYSTEM_VERILOG_KEYWORD(TOK_VAR); }
 virtual         { SYSTEM_VERILOG_KEYWORD(TOK_VIRTUAL); }
 void            { SYSTEM_VERILOG_KEYWORD(TOK_VOID); }

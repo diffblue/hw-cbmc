@@ -1906,7 +1906,9 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
     convert_extractbit_expr(to_extractbit_expr(expr));
   else if(expr.id()==ID_replication)
     convert_replication_expr(to_replication_expr(expr));
-  else if(expr.id()==ID_and || expr.id()==ID_or)
+  else if(
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_iff ||
+    expr.id() == ID_implies)
   {
     Forall_operands(it, expr)
     {
