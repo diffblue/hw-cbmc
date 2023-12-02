@@ -49,9 +49,8 @@ ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &cmdline)
     }
     else
     {
-      return [](const namespacet &, message_handlert &)
-      {
-        auto dec = std::make_unique<show_formula_solvert>(std::cout);
+      return [](const namespacet &, message_handlert &) {
+        auto dec = std::make_unique<show_formula_solvert>();
         return ebmc_solvert{std::move(dec)};
       };
     }
