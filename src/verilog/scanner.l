@@ -188,7 +188,6 @@ void verilog_scanner_init()
 "^"             { return TOK_CARET; }
 "~^"            { return TOK_TILDECARET; }
 "^~"            { return TOK_CARETTILDE; }
-"->"            { return TOK_MINUSGREATER; }
 
                 /* Binary operators */
 
@@ -210,7 +209,6 @@ void verilog_scanner_init()
 ">>>"           { return TOK_GREATERGREATERGREATER; }
 "<<"            { return TOK_LESSLESS; }
 "<<<"           { return TOK_LESSLESSLESS; }
-"<->"           { return TOK_LESSMINUSGREATER; }
 
                 /* Trinary operators */
 
@@ -238,6 +236,8 @@ void verilog_scanner_init()
 "<<<="          { SYSTEM_VERILOG_OPERATOR(TOK_LESSLESSLESSEQUAL, "<<<="); }
 ">>>="          { SYSTEM_VERILOG_OPERATOR(TOK_GREATERGREATERGREATEREQUAL, ">>>="); }
 "##"            { SYSTEM_VERILOG_OPERATOR(TOK_HASHHASH, "##"); }
+"<->"           { SYSTEM_VERILOG_OPERATOR(TOK_LESSMINUSGREATER, "<->"); }
+"->"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSGREATER, "->"); }
 
                 /* Verilog keywords */
 
