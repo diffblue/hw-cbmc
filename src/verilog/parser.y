@@ -685,13 +685,6 @@ interface_declaration:
           TOK_INTERFACE TOK_ENDINTERFACE
         ;
 
-module_identifier: TOK_CHARSTR;
-
-module_identifier_opt:
-	  /* Optional */
-	| module_identifier
-	;
-
 program_declaration:
           TOK_PROGRAM TOK_ENDPROGRAM
         ;
@@ -918,10 +911,6 @@ indexed_part_select:
 		{ init($$, ID_indexed_part_select_minus); mto($$, $2); mto($$, $4); }
 	;
 
-port_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
-
 // System Verilog standard 1800-2017
 // A.2.1.3 Type declarations
 
@@ -987,10 +976,6 @@ net_name: net_identifier packed_dimension_brace
             $$=$1;
             stack_expr($$).add(ID_type)=stack_expr($2);
           }
-	;
-
-net_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
 	;
 
 list_of_net_decl_assignments:
@@ -1106,12 +1091,6 @@ net_type: TOK_SUPPLY0 { init($$, ID_supply0); }
 	| TOK_WOR     { init($$, ID_wor); }
 	;
 
-ps_covergroup_identifier:
-	;
-	
-interface_identifier:
-	;
-	
 interface_opt:
 	  /* Optional */
 	  { make_nil($$); }
@@ -1218,13 +1197,6 @@ list_of_genvar_identifiers:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-genvar_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
-
-hierarchical_parameter_identifier: hierarchical_identifier
-	;
-
 defparam_assignment:
 	  hierarchical_parameter_identifier '=' constant_expression
 		{ init($$, ID_parameter_assignment); mto($$, $1); mto($$, $3); }
@@ -1278,8 +1250,6 @@ param_assignment: param_identifier '=' const_expression
 		  addswap($$, ID_identifier, $1);
 		  addswap($$, ID_value, $3); }
         ;
-
-param_identifier: TOK_CHARSTR;
 
 data_type_or_implicit:
            data_type
@@ -1360,14 +1330,6 @@ list_of_port_identifiers:
 		{ init($$); stack_expr($1).type().swap(stack_expr($2)); mto($$, $1); }
 	| list_of_port_identifiers ',' port_identifier unpacked_dimension_brace
 		{ $$=$1;    stack_expr($3).type().swap(stack_expr($4)); mto($$, $3); }
-	;
-
-register_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
-
-memory_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
 	;
 
 range_opt:
@@ -1454,10 +1416,6 @@ struct_union:
 	| TOK_UNION { init($$, ID_union); }
 	;
 	
-type_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
-
 // System Verilog standard 1800-2017
 // A.2.6 Function declarations
 
@@ -1580,8 +1538,6 @@ assume_property_statement:
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
 		{ init($$, ID_cover); mto($$, $4); mto($$, $6); }
 	;
-
-property_identifier: TOK_CHARSTR;
 
 property_declaration:
           TOK_PROPERTY property_identifier TOK_ENDPROPERTY
@@ -1810,8 +1766,6 @@ named_parameter_assignment:
 	  	}
 	;
 
-parameter_identifier: TOK_CHARSTR;
-
 module_instance_brace:
 	  module_instance
 		{ init($$); mto($$, $1); }
@@ -1932,8 +1886,6 @@ case_generate_item:
 	| TOK_DEFAULT generate_item_or_null
 	;
 
-generate_block_identifier: TOK_CHARSTR;
-
 generate_block:
 	  TOK_BEGIN generate_item_brace TOK_END
 		{ init($$, ID_generate_block); swapop($$, $2); }
@@ -1976,8 +1928,6 @@ udp_declaration: attribute_instance_brace TOK_PRIMITIVE udp_identifier
 	  '(' udp_declaration_port_list ')' ';'
 	  udp_body TOK_ENDPRIMITIVE
 	;
-
-udp_identifier: TOK_CHARSTR;
 
 // System Verilog standard 1800-2017
 // A.5.2 UDP ports
@@ -2175,9 +2125,6 @@ statement_or_null_brace:
 		{ $$=$1; mto($$, $2); }
 	;
 
-task_identifier: hierarchical_identifier
-	;
-
 system_task_name: TOK_SYSIDENT
                 { init($$, ID_symbol);
                   stack_expr($$).set(ID_identifier, stack_expr($1).id());
@@ -2219,11 +2166,6 @@ event_control:
 		  stack_expr($$).operands().resize(1);
 	          to_unary_expr(stack_expr($$)).op().id(ID_verilog_star_event); }
 	;
-
-event_identifier:
-          TOK_CHARSTR
-		{ new_symbol($$, $1); }
-        ;
 
 ored_event_expression:
 	  event_expression
@@ -2336,8 +2278,6 @@ seq_block:
                   addswap($$, ID_identifier, $3); }
 	;
 
-block_identifier: TOK_CHARSTR;
-
 block_item_declaration_brace:
 	  /* Optional */
 		{ init($$); }
@@ -2358,10 +2298,6 @@ statement_brace:
 immediate_assert_statement: TOK_ASSERT '(' expression ')' action_block
 		{ init($$, ID_assert); mto($$, $3); mto($$, $5); }
 	;
-
-hierarchical_task_or_block_identifier: task_identifier;
-
-hierarchical_tf_identifier: hierarchical_identifier;
 
 wait_statement: TOK_WAIT '(' expression ')' statement_or_null
 		{ init($$, ID_wait); mto($$, $3); mto($$, $5); }
@@ -2515,8 +2451,6 @@ specparam_assignment:
 	  specparam_identifier '=' mintypmax_expression
 	;
 
-specparam_identifier: TOK_CHARSTR; 
-
 system_timing_check: timing_3 ';'
 	;
 
@@ -2558,25 +2492,8 @@ expression_brace_opt:
 		{ $$ = $2; }
 	;
 
-function_identifier: hierarchical_identifier
-	;
-
 unsigned_number: TOK_NUMBER
         ;
-
-hierarchical_identifier:
-          identifier
-        | hierarchical_identifier '.' identifier
-		{ init($$, ID_hierarchical_identifier);
-		  stack_expr($$).reserve_operands(2);
-		  mto($$, $1);
-		  mto($$, $3);
-		}
-	;
-	
-identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
 
 // System Verilog standard 1800-2017
 // A.8.2 Subroutine calls
@@ -2607,8 +2524,6 @@ statement_or_null:
 
 event_trigger: TOK_MINUSGREATER hierarchical_event_identifier ';'
 	;
-
-hierarchical_event_identifier: event_identifier;
 
 par_block:
 	  TOK_FORK statement_or_null_brace TOK_JOIN
@@ -2699,12 +2614,6 @@ indexed_variable_lvalue:
 		{ extractbit($$, $1, $2); }
 	;
 	
-hierarchical_variable_identifier: hierarchical_identifier;
-
-variable_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
-
 const_expression: expression;
 
 mintypmax_expression:
@@ -2848,6 +2757,96 @@ attr_spec: attr_name '=' constant_expression
 	;
 
 attr_name: identifier
+	;
+
+// System Verilog standard 1800-2017
+// A.9.3 Identifiers
+
+block_identifier: TOK_CHARSTR;
+
+genvar_identifier: TOK_CHARSTR
+		{ new_symbol($$, $1); }
+	;
+
+hierarchical_parameter_identifier: hierarchical_identifier
+	;
+
+interface_identifier:
+	;
+
+module_identifier: TOK_CHARSTR;
+
+module_identifier_opt:
+	  /* Optional */
+	| module_identifier
+	;
+
+net_identifier: TOK_CHARSTR
+		{ new_symbol($$, $1); }
+	;
+
+param_identifier: TOK_CHARSTR;
+
+port_identifier: TOK_CHARSTR
+		{ new_symbol($$, $1); }
+	;
+
+ps_covergroup_identifier:
+	;
+	
+memory_identifier: TOK_CHARSTR
+		{ new_symbol($$, $1); }
+	;
+
+type_identifier: TOK_CHARSTR
+		{ new_symbol($$, $1); }
+	;
+
+parameter_identifier: TOK_CHARSTR;
+
+generate_block_identifier: TOK_CHARSTR;
+
+udp_identifier: TOK_CHARSTR;
+
+task_identifier: hierarchical_identifier
+	;
+
+event_identifier:
+          TOK_CHARSTR
+		{ new_symbol($$, $1); }
+        ;
+
+hierarchical_task_or_block_identifier: task_identifier;
+
+hierarchical_tf_identifier: hierarchical_identifier;
+
+specparam_identifier: TOK_CHARSTR; 
+
+function_identifier: hierarchical_identifier
+	;
+
+hierarchical_event_identifier: event_identifier;
+
+hierarchical_identifier:
+          identifier
+        | hierarchical_identifier '.' identifier
+		{ init($$, ID_hierarchical_identifier);
+		  stack_expr($$).reserve_operands(2);
+		  mto($$, $1);
+		  mto($$, $3);
+		}
+	;
+	
+hierarchical_variable_identifier: hierarchical_identifier;
+
+identifier: TOK_CHARSTR
+		{ new_symbol($$, $1); }
+	;
+
+property_identifier: TOK_CHARSTR;
+
+variable_identifier: TOK_CHARSTR
+		{ new_symbol($$, $1); }
 	;
 
 %%
