@@ -68,6 +68,12 @@ static void preprocessor()
     else \
       IDENTIFIER; \
   }
+#define SYSTEM_VERILOG_OPERATOR(token, text) \
+  { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \
+      return token; \
+    else \
+      yyverilogerror(text " is a System Verilog operator"); \
+  }
 #define VIS_VERILOG_KEYWORD(x) \
   { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG || \
        PARSER.mode==verilog_parsert::VIS_VERILOG) \
@@ -213,101 +219,25 @@ void verilog_scanner_init()
 
                 /* System Verilog operators */
 
-"|->"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_VERTBARMINUSGREATER;
-                          else
-                            yyverilogerror("|-> is a System Verilog operator");
-                }
-"|=>"           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_VERTBAREQUALGREATER;
-                          else
-                            yyverilogerror("|=> is a System Verilog operator");
-                }
-"++"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_PLUSPLUS;
-                          else
-                            yyverilogerror("++ is a System Verilog operator");
-                }
-"--"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_MINUSMINUS;
-                          else
-                            yyverilogerror("-- is a System Verilog operator");
-                }
-"+="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_PLUSEQUAL;
-                          else
-                            yyverilogerror("+= is a System Verilog operator");
-                }
-"+:"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_PLUSCOLON;
-                          else
-                            yyverilogerror("+: is a System Verilog operator");
-                }
-"-:"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_MINUSCOLON;
-                          else
-                            yyverilogerror("-: is a System Verilog operator");
-                }
-"-="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_MINUSEQUAL;
-                          else
-                            yyverilogerror("-= is a System Verilog operator");
-                }
-"*="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_ASTERICEQUAL;
-                          else
-                            yyverilogerror("*= is a System Verilog operator");
-                }
-"/="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_SLASHEQUAL;
-                          else
-                            yyverilogerror("+= is a System Verilog operator");
-                }
-"%="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_PERCENTEQUAL;
-                          else
-                            yyverilogerror("%= is a System Verilog operator");
-                }
-"&="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_AMPEREQUAL;
-                          else
-                            yyverilogerror("&= is a System Verilog operator");
-                }
-"^="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_CARETEQUAL;
-                          else
-                            yyverilogerror("^= is a System Verilog operator");
-                }
-"|="            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_VERTBAREQUAL;
-                          else
-                            yyverilogerror("|= is a System Verilog operator");
-                }
-"<<="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_LESSLESSEQUAL;
-                          else
-                            yyverilogerror("<<= is a System Verilog operator");
-                }
-">>="           { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_GREATERGREATEREQUAL;
-                          else
-                            yyverilogerror(">>= is a System Verilog operator");
-                }
-"<<<="          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_LESSLESSLESSEQUAL;
-                          else
-                            yyverilogerror("<<<= is a System Verilog operator");
-                }
-">>>="          { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_GREATERGREATERGREATEREQUAL;
-                          else
-                            yyverilogerror(">>>= is a System Verilog operator");
-                }
-"##"            { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG)
-                            return TOK_HASHHASH;
-                          else
-                            yyverilogerror("## is a System Verilog operator");
-                }
+"|->"           { SYSTEM_VERILOG_OPERATOR(TOK_VERTBARMINUSGREATER, "|->"); }
+"|=>"           { SYSTEM_VERILOG_OPERATOR(TOK_VERTBAREQUALGREATER, "|=>"); }
+"++"            { SYSTEM_VERILOG_OPERATOR(TOK_PLUSPLUS, "++"); }
+"--"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSMINUS, "--"); }
+"+="            { SYSTEM_VERILOG_OPERATOR(TOK_PLUSEQUAL, "+="); }
+"+:"            { SYSTEM_VERILOG_OPERATOR(TOK_PLUSCOLON, "+:"); }
+"-:"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSCOLON, "-:"); }
+"-="            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSEQUAL, "-="); }
+"*="            { SYSTEM_VERILOG_OPERATOR(TOK_ASTERICEQUAL, "*="); }
+"/="            { SYSTEM_VERILOG_OPERATOR(TOK_SLASHEQUAL, "+="); }
+"%="            { SYSTEM_VERILOG_OPERATOR(TOK_PERCENTEQUAL, "%="); }
+"&="            { SYSTEM_VERILOG_OPERATOR(TOK_AMPEREQUAL, "&="); }
+"^="            { SYSTEM_VERILOG_OPERATOR(TOK_CARETEQUAL, "^="); }
+"|="            { SYSTEM_VERILOG_OPERATOR(TOK_VERTBAREQUAL, "|="); }
+"<<="           { SYSTEM_VERILOG_OPERATOR(TOK_LESSLESSEQUAL, "<<="); }
+">>="           { SYSTEM_VERILOG_OPERATOR(TOK_GREATERGREATEREQUAL, ">>="); }
+"<<<="          { SYSTEM_VERILOG_OPERATOR(TOK_LESSLESSLESSEQUAL, "<<<="); }
+">>>="          { SYSTEM_VERILOG_OPERATOR(TOK_GREATERGREATERGREATEREQUAL, ">>>="); }
+"##"            { SYSTEM_VERILOG_OPERATOR(TOK_HASHHASH, "##"); }
 
                 /* Verilog keywords */
 
