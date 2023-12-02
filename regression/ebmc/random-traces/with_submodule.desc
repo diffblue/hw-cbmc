@@ -1,0 +1,16 @@
+CORE broken-smt-backend
+with_submodule.v
+--random-traces --trace-steps 0 --number-of-traces 2
+^\*\*\* Trace 1$
+^  main\.some_wire = 0$
+^  main\.input1 = 0$
+^  main\.instance\.some_wire = 0$
+^  main\.instance\.sub_input = 0$
+^\*\*\* Trace 2$
+^  main\.some_wire = 1$
+^  main\.input1 = 1$
+^  main\.instance\.some_wire = 1$
+^  main\.instance\.sub_input = 1$
+^EXIT=0$
+^SIGNAL=0$
+--
