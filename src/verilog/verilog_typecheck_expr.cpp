@@ -763,8 +763,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
   {
     // this should become an error
     warning().source_location=expr.source_location();
-    warning() << "implicit definition of wire "
-              << full_identifier << eom;
+    warning() << "implicit wire " << symbol->display_name() << eom;
     expr.type()=symbol->type;
     expr.set(ID_identifier, symbol->name);
   }

@@ -2790,7 +2790,8 @@ void verilog_synthesist::synth_assignments(transt &trans)
 
       if(assignment.type==event_guardt::COMBINATIONAL)
       {
-        warning() << "Making " << symbol.name << " a wire" << eom;
+        warning().source_location = symbol.location;
+        warning() << "Making " << symbol.display_name() << " a wire" << eom;
         symbol.is_state_var=false;
       }
 
