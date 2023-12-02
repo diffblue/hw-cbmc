@@ -252,33 +252,26 @@ Function: random_tracest::inputs
 random_tracest::inputst random_tracest::inputs() const
 {
   inputst inputs;
-  const symbol_tablet &symbol_table = ns.get_symbol_table();
 
-  auto module_identifier = transition_system.main_symbol->name;
-  auto lower = symbol_table.symbol_module_map.lower_bound(module_identifier);
-  auto upper = symbol_table.symbol_module_map.upper_bound(module_identifier);
+  const auto &module_symbol = *transition_system.main_symbol;
 
-  // We need a deterministic ordering of the inputs that's
-  // portable accross implementations. We use irep_idt::compare.
-  std::vector<irep_idt> input_identifiers;
+  if(module_symbol.type.id() != ID_module)
+    throw ebmc_errort() << "expected a module but got "
+                        << module_symbol.type.id();
 
-  for(auto it = lower; it != upper; it++)
+  const auto &ports = module_symbol.type.find(ID_ports);
+
+  // filter out the inputs
+  for(auto &port : static_cast<const exprt &>(ports).operands())
   {
-    const symbolt &symbol = ns.lookup(it->second);
-
-    if(symbol.is_input)
-      input_identifiers.push_back(symbol.name);
+    DATA_INVARIANT(port.id() == ID_symbol, "port must be a symbol");
+    if(port.get_bool(ID_input) && !port.get_bool(ID_output))
+    {
+      symbol_exprt input_symbol(port.get(ID_identifier), port.type());
+      input_symbol.add_source_location() = port.source_location();
+      inputs.push_back(std::move(input_symbol));
+    }
   }
-
-  // sort by identifier
-  std::sort(
-    input_identifiers.begin(),
-    input_identifiers.end(),
-    [](const irep_idt &a, const irep_idt &b) { return a.compare(b) < 0; });
-
-  // turn into symbol_exprt
-  for(auto identifier : input_identifiers)
-    inputs.push_back(ns.lookup(identifier).symbol_expr());
 
   return inputs;
 }
@@ -336,7 +329,9 @@ std::vector<exprt> random_tracest::random_input_constraints(
       auto input_in_timeframe = instantiate(input, i, number_of_timeframes, ns);
       auto constraint =
         equal_exprt(input_in_timeframe, random_value(input.type()));
-      result.push_back(solver.handle(constraint));
+      auto handle = solver.handle(constraint);
+      CHECK_RETURN(handle.id() == ID_literal);
+      result.push_back(handle);
     }
   }
 
@@ -381,6 +376,9 @@ void random_tracest::operator()(
     true);
 
   auto inputs = this->inputs();
+
+  if(inputs.empty())
+    throw ebmc_errort() << "module does not have inputs";
 
   message.statistics() << "Found " << inputs.size() << " input(s)"
                        << messaget::eom;
