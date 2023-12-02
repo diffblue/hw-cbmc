@@ -25,6 +25,7 @@ SRC = \
       show_properties.cpp \
       show_trans.cpp \
       transition_system.cpp \
+      waveform.cpp \
       #empty line
 
 OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \

@@ -16,6 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/xml.h>
 
 #include "ebmc_error.h"
+#include "waveform.h"
 
 #include <fstream>
 #include <iostream>
@@ -148,10 +149,18 @@ void report_results(
 
       message.status() << messaget::eom;
 
-      if(property.is_failure() && cmdline.isset("trace"))
+      if(property.is_failure())
       {
-        message.status() << "Counterexample:\n" << messaget::eom;
-        show_trans_trace(property.counterexample, message, ns, std::cout);
+        if(cmdline.isset("trace"))
+        {
+          message.status() << "Counterexample:\n" << messaget::eom;
+          show_trans_trace(property.counterexample, message, ns, std::cout);
+        }
+        else if(cmdline.isset("waveform"))
+        {
+          message.status() << "Counterexample:" << messaget::eom;
+          show_waveform(property.counterexample, ns);
+        }
       }
     }
   }

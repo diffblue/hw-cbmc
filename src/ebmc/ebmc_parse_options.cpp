@@ -345,6 +345,7 @@ void ebmc_parse_optionst::help()
     " {y--json-result} {ufile name}  \t use JSON for property status and traces\n"
     " {y--trace}                     \t generate a trace for failing properties\n"
     " {y--vcd} {ufile name}          \t generate traces in VCD format\n"
+    " {y--waveform}                  \t show a waveform for failing properties\n"
     " {y--show-properties}           \t list the properties in the model\n"
     " {y--property} {uid}            \t check the property with given ID\n"
     " {y-I} {upath}                  \t set include path\n"
