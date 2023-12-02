@@ -19,7 +19,6 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 **************************************************************************************************/
 
 #include <errno.h>
-#include <zlib.h>
 
 #include "minisat/utils/System.h"
 #include "minisat/utils/ParseUtils.h"
@@ -88,7 +87,6 @@ int main(int argc, char** argv)
         if (argc == 1)
             printf("Reading from standard input... Use '--help' for help.\n");
 
-        gzFile in = (argc == 1) ? gzdopen(0, "rb") : gzopen(argv[1], "rb");
         if (in == NULL)
             printf("ERROR! Could not open file: %s\n", argc == 1 ? "<stdin>" : argv[1]), exit(1);
         
@@ -97,7 +95,6 @@ int main(int argc, char** argv)
             printf("|                                                                             |\n"); }
         
         parse_DIMACS(in, S, (bool)strictp);
-        gzclose(in);
         FILE* res = (argc >= 3) ? fopen(argv[2], "wb") : NULL;
 
         if (S.verbosity > 0){
