@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 functioncall4.v
 --module main --bound 0
 ^EXIT=0$
@@ -7,4 +7,3 @@ functioncall4.v
 --
 ^warning: ignoring
 --
-We currently don't allow function inputs to have integer type.
