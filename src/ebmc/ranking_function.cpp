@@ -102,8 +102,8 @@ int do_ranking_function(
     cmdline.get_value("ranking-function"), transition_system, message_handler);
 
   // find the property
-  auto properties = ebmc_propertiest::from_transition_system(
-    transition_system, message_handler);
+  auto properties = ebmc_propertiest::from_command_line(
+    cmdline, transition_system, message_handler);
 
   auto &property = find_property(properties);
 
