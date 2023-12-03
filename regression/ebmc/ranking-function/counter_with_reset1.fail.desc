@@ -1,0 +1,7 @@
+CORE
+counter_with_reset1.sv
+--property main.property.p0 --ranking-function 10-counter
+^\[main\.property\.p0\] always \(eventually main.counter == 10\): UNKNOWN$
+^EXIT=0$
+^SIGNAL=0$
+--
