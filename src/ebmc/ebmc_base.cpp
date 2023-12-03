@@ -91,6 +91,8 @@ void ebmc_baset::word_level_properties(decision_proceduret &solver)
 {
   const namespacet ns(transition_system.symbol_table);
 
+  message.status() << "Properties" << messaget::eom;
+
   for(propertyt &property : properties.properties)
   {
     if(property.is_disabled())
@@ -103,6 +105,14 @@ void ebmc_baset::word_level_properties(decision_proceduret &solver)
       solver,
       bound + 1,
       ns);
+  }
+
+  // lasso constraints, if needed
+  if(property_requires_lasso_constraints())
+  {
+    message.status() << "Adding lasso constraints" << messaget::eom;
+    lasso_constraints(
+      solver, bound + 1, ns, transition_system.main_symbol->name);
   }
 }
 
@@ -121,14 +131,6 @@ Function: ebmc_baset::finish_word_level_bmc
 int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
 {
   const namespacet ns(transition_system.symbol_table);
-
-  // lasso constraints, if needed
-  if(property_requires_lasso_constraints())
-  {
-    message.status() << "Adding lasso constraints" << messaget::eom;
-    lasso_constraints(
-      solver, bound + 1, ns, transition_system.main_symbol->name);
-  }
 
   message.status() << "Solving with " << solver.decision_procedure_text()
                    << messaget::eom;
@@ -366,8 +368,6 @@ int ebmc_baset::do_word_level_bmc(
         bound + 1,
         ns,
         true);
-
-      message.status() << "Properties" << messaget::eom;
 
       // convert the properties
       word_level_properties(solver);
