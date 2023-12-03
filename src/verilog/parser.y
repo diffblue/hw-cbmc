@@ -755,7 +755,7 @@ module_port_declaration:
 	;
 
 module_port_input_declaration:
-	  TOK_INPUT port_type port_identifier
+	  TOK_INPUT net_port_type port_identifier
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_input);
                   addswap($$, ID_type, $2);
@@ -763,7 +763,7 @@ module_port_input_declaration:
 	;
 
 module_port_output_declaration:
-	  TOK_OUTPUT port_type port_identifier
+	  TOK_OUTPUT net_port_type port_identifier
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output);
                   addswap($$, ID_type, $2);
@@ -867,7 +867,7 @@ specparam_declaration:
 // A.2.1.2 Port declarations
 
 module_port_inout_declaration:
-	  TOK_INOUT port_type port_identifier
+	  TOK_INOUT net_port_type port_identifier
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_inout);
                   addswap($$, ID_type, $2);
@@ -1100,6 +1100,13 @@ net_type: TOK_SUPPLY0 { init($$, ID_supply0); }
 	| TOK_WOR     { init($$, ID_wor); }
 	;
 
+variable_port_type: var_data_type ;
+
+var_data_type:
+	  data_type
+	| TOK_VAR data_type_or_implicit { $$ = $2; }
+	;
+
 interface_opt:
 	  /* Optional */
 	  { make_nil($$); }
@@ -1225,6 +1232,13 @@ list_of_variable_decl_assignments:
 		{ $$=$1;    mto($$, $3); }
 	;
 
+list_of_variable_identifiers:
+          variable_identifier
+		{ init($$); mto($$, $1); }
+	| list_of_variable_identifiers ',' variable_identifier
+		{ $$=$1;    mto($$, $3); }
+        ;
+
 // This rule is more permissive that the grammar in the standard
 // to cover list_of_param_assignments.
 parameter_port_declaration:
@@ -1274,7 +1288,12 @@ implicit_data_type:
         ;
 
 input_declaration:
-	  TOK_INPUT port_type list_of_port_identifiers
+	  TOK_INPUT net_port_type list_of_port_identifiers
+		{ init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_input);
+                  addswap($$, ID_type, $2);
+                  swapop($$, $3); }
+	| TOK_INPUT variable_port_type list_of_variable_identifiers
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_input);
                   addswap($$, ID_type, $2);
@@ -1282,12 +1301,12 @@ input_declaration:
 	;
 
 output_declaration:
-	  TOK_OUTPUT port_type list_of_port_identifiers
+	  TOK_OUTPUT net_port_type list_of_port_identifiers
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
-	| TOK_OUTPUT data_type list_of_port_identifiers
+	| TOK_OUTPUT variable_port_type list_of_port_identifiers
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output_register);
                   addswap($$, ID_type, $2);
@@ -1295,14 +1314,14 @@ output_declaration:
 	;
 
 inout_declaration:
-	  TOK_INOUT port_type list_of_port_identifiers
+	  TOK_INOUT net_port_type list_of_port_identifiers
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_inout);
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	;
 
-port_type: net_type_opt signing_opt packed_dimension_brace
+net_port_type: net_type_opt signing_opt packed_dimension_brace
                 {
                   $$=$3;
                   add_as_subtype(stack_type($$), stack_type($2));
