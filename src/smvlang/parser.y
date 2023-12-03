@@ -14,7 +14,7 @@
 
 #include "smv_y.tab.h"
 
-#define YYMAXDEPTH 200000
+#define YYMAXDEPTH 2000000
 #define YYSTYPE_IS_TRIVIAL 1
 
 /*------------------------------------------------------------------------*/
