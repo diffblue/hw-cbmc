@@ -1571,8 +1571,18 @@ property_declaration:
           TOK_PROPERTY property_identifier TOK_ENDPROPERTY
         ;
 
+// The 1800-2017 grammar has an ambiguity where
+// '(' expression ')' can either be an expression or a property_expr,
+// which yields a reduce/reduce conflict. Hence, we split the rules
+// for property_expr into property_expr and property_expr_proper.
+
 property_expr:
-          sequence_expr
+	  sequence_expr
+	| property_expr_proper
+	;
+
+property_expr_proper:
+          '(' property_expr_proper ')'      { $$ = $2; }
         | "not" property_expr               { init($$, ID_not); mto($$, $2); }
         | property_expr "or" property_expr  { init($$, ID_or); mto($$, $1); mto($$, $3); }
         | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
