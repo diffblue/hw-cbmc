@@ -80,12 +80,12 @@ Function: states_equal
 exprt states_equal(
   std::size_t i,
   std::size_t k,
-  const std::vector<symbol_exprt> &state_vars)
+  const std::vector<symbol_exprt> &variables_to_compare)
 {
   exprt::operandst conjuncts;
-  conjuncts.reserve(state_vars.size());
+  conjuncts.reserve(variables_to_compare.size());
 
-  for(auto &var : state_vars)
+  for(auto &var : variables_to_compare)
   {
     auto i_var = timeframe_symbol(i, var);
     auto k_var = timeframe_symbol(k, var);
@@ -131,8 +131,12 @@ void lasso_constraints(
   const namespacet &ns,
   const irep_idt &module_identifier)
 {
+  // The definition of a lasso to state s_i is that there
+  // is an identical state s_k = s_i with k<i.
+  // "Identical" is defined as "state variables and top-level inputs match".
+
   // gather the state variables
-  std::vector<symbol_exprt> state_vars;
+  std::vector<symbol_exprt> variables_to_compare;
   const symbol_tablet &symbol_table = ns.get_symbol_table();
 
   auto lower = symbol_table.symbol_module_map.lower_bound(module_identifier);
@@ -143,7 +147,23 @@ void lasso_constraints(
     const symbolt &symbol = ns.lookup(it->second);
 
     if(symbol.is_state_var)
-      state_vars.push_back(symbol.symbol_expr());
+      variables_to_compare.push_back(symbol.symbol_expr());
+  }
+
+  // gather the top-level inputs
+  const auto &module_symbol = ns.lookup(module_identifier);
+  DATA_INVARIANT(module_symbol.type.id() == ID_module, "expected a module");
+  const auto &ports = module_symbol.type.find(ID_ports);
+
+  for(auto &port : static_cast<const exprt &>(ports).operands())
+  {
+    DATA_INVARIANT(port.id() == ID_symbol, "port must be a symbol");
+    if(port.get_bool(ID_input) && !port.get_bool(ID_output))
+    {
+      symbol_exprt input_symbol(port.get(ID_identifier), port.type());
+      input_symbol.add_source_location() = port.source_location();
+      variables_to_compare.push_back(std::move(input_symbol));
+    }
   }
 
   for(std::size_t i = 1; i < no_timeframes; i++)
@@ -153,7 +173,7 @@ void lasso_constraints(
     disjuncts.reserve(i);
 
     for(std::size_t k = 0; k < i; k++)
-      disjuncts.push_back(states_equal(k, i, state_vars));
+      disjuncts.push_back(states_equal(k, i, variables_to_compare));
 
     auto lasso_symbol = ::lasso_symbol(i);
     solver.set_to_true(equal_exprt(lasso_symbol, disjunction(disjuncts)));
