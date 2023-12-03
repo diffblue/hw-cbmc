@@ -266,32 +266,36 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
 
     // The following needs to be satisfied for a counterexample
     // to Fp:
-    // (1) No state up to the current state satisfies 'p'.
-    // (2) The current state is equal to some earlier state.
+    // (1) There is a loop from the current state i back to
+    //     some earlier state k < i.
+    // (1) No state j with k<=k<=i on the lasso satisfies 'p'.
     //
     // We look backwards instead of forwards so that 'current'
     // is the last state of the counterexample trace.
+    //
+    // Note that this is trivially true when current is zero,
+    // as a single state cannot demonstrate the loop.
 
-    if(current == 0)
+    exprt::operandst conjuncts = {};
+    const std::size_t i = current;
+
+    for(std::size_t k = 0; k < i; k++)
     {
-      // there is no counterexample to Fp with just one state
-      expr = true_exprt();
-    }
-    else
-    {
-      exprt::operandst conjuncts = {lasso_symbol(current)};
+      exprt::operandst disjuncts = {not_exprt(lasso_symbol(k, i))};
 
-      // save the current time frame, we'll change it
-      save_currentt save_current(current);
-
-      for(; current<no_timeframes; current++)
+      for(std::size_t j = k; j <= i; j++)
       {
-        conjuncts.push_back(not_exprt(p));
-        instantiate_rec(conjuncts.back());
+        // save the current time frame, we'll change it
+        save_currentt save_current(current);
+        current = j;
+        disjuncts.push_back(p);
+        instantiate_rec(disjuncts.back());
       }
 
-      expr = not_exprt(conjunction(conjuncts));
+      conjuncts.push_back(disjunction(disjuncts));
     }
+
+    expr = conjunction(conjuncts);
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)

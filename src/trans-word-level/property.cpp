@@ -78,10 +78,13 @@ Function: states_equal
 \*******************************************************************/
 
 exprt states_equal(
-  std::size_t i,
   std::size_t k,
+  std::size_t i,
   const std::vector<symbol_exprt> &variables_to_compare)
 {
+  // We require k<i to avoid the symmetric constraints.
+  PRECONDITION(k < i);
+
   exprt::operandst conjuncts;
   conjuncts.reserve(variables_to_compare.size());
 
@@ -107,9 +110,13 @@ Function: lasso_symbol
 
 \*******************************************************************/
 
-symbol_exprt lasso_symbol(std::size_t timeframe)
+symbol_exprt lasso_symbol(std::size_t k, std::size_t i)
 {
-  irep_idt lasso_identifier = "lasso::" + std::to_string(timeframe);
+  // True when states i and k are equal.
+  // We require k<i to avoid the symmetric constraints.
+  PRECONDITION(k < i);
+  irep_idt lasso_identifier =
+    "lasso::" + std::to_string(i) + "-back-to-" + std::to_string(k);
   return symbol_exprt(lasso_identifier, bool_typet());
 }
 
@@ -135,10 +142,10 @@ void lasso_constraints(
   // is an identical state s_k = s_i with k<i.
   // "Identical" is defined as "state variables and top-level inputs match".
 
-  // gather the state variables
   std::vector<symbol_exprt> variables_to_compare;
-  const symbol_tablet &symbol_table = ns.get_symbol_table();
 
+  // Gather the state variables.
+  const symbol_tablet &symbol_table = ns.get_symbol_table();
   auto lower = symbol_table.symbol_module_map.lower_bound(module_identifier);
   auto upper = symbol_table.symbol_module_map.upper_bound(module_identifier);
 
@@ -168,15 +175,13 @@ void lasso_constraints(
 
   for(std::size_t i = 1; i < no_timeframes; i++)
   {
-    // Is there a loop back to any time frame k with k<i?
-    exprt::operandst disjuncts;
-    disjuncts.reserve(i);
-
     for(std::size_t k = 0; k < i; k++)
-      disjuncts.push_back(states_equal(k, i, variables_to_compare));
-
-    auto lasso_symbol = ::lasso_symbol(i);
-    solver.set_to_true(equal_exprt(lasso_symbol, disjunction(disjuncts)));
+    {
+      // Is there a loop back from time frame i back to time frame k?
+      auto lasso_symbol = ::lasso_symbol(k, i);
+      auto equal = states_equal(k, i, variables_to_compare);
+      solver.set_to_true(equal_exprt(lasso_symbol, equal));
+    }
   }
 }
 

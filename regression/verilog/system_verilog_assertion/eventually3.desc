@@ -1,0 +1,8 @@
+CORE
+eventually3.sv
+--module main --bound 11
+^EXIT=10$
+^SIGNAL=0$
+^\[main\.property\.p0\] always \(eventually main\.counter <= 5\): FAILURE$
+--
+^warning: ignoring

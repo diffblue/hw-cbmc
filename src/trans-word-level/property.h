@@ -31,7 +31,9 @@ void lasso_constraints(
   const namespacet &,
   const irep_idt &module_identifier);
 
-symbol_exprt lasso_symbol(std::size_t);
+/// Is there a loop from i back to k?
+/// Precondition: k<i
+symbol_exprt lasso_symbol(std::size_t k, std::size_t i);
 
 /// Returns true iff the given property requires lasso constraints.
 bool requires_lasso_constraints(const exprt &);
