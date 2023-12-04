@@ -803,10 +803,8 @@ module_or_generate_item:
 	| attribute_instance_brace gate_instantiation { $$=$2; }
 	// | attribute_instance_brace udp_instantiation { $$=$2; }
 	| attribute_instance_brace module_instantiation { $$=$2; }
-	| attribute_instance_brace concurrent_assert_statement { $$=$2; }
-	| attribute_instance_brace concurrent_assume_statement { $$=$2; }
-	| attribute_instance_brace concurrent_cover_statement { $$=$2; }
-	| attribute_instance_brace concurrent_assertion_item_declaration { $$=$2; }
+	| attribute_instance_brace concurrent_assertion_item { $$=$2; }
+	| attribute_instance_brace assertion_item_declaration { $$=$2; }
 	| attribute_instance_brace module_common_item { $$=$2; }
 	;
 
@@ -1535,8 +1533,19 @@ block_item_declaration:
 // System Verilog standard 1800-2017
 // A.2.10 Assertion declarations
 
-concurrent_assertion_item_declaration:
-	  property_declaration
+concurrent_assertion_item:
+          concurrent_assertion_statement
+        | block_identifier TOK_COLON concurrent_assertion_statement
+		{
+		  $$=$3;
+		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
+		}
+	;
+
+concurrent_assertion_statement:
+	  assert_property_statement
+	| assume_property_statement
+	| cover_property_statement
 	;
 
 assert_property_statement:
@@ -1565,6 +1574,10 @@ assume_property_statement:
 
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
 		{ init($$, ID_cover); mto($$, $4); mto($$, $6); }
+	;
+
+assertion_item_declaration:
+	  property_declaration
 	;
 
 property_declaration:
@@ -2120,12 +2133,10 @@ statement:
         ;
 
 statement_item:
-          assert_property_statement
-        | assume_property_statement
-        | blocking_assignment ';' { $$ = $1; }
+          blocking_assignment ';' { $$ = $1; }
 	| nonblocking_assignment ';' { $$ = $1; }
 	| case_statement
-	| cover_property_statement
+	| concurrent_assertion_statement
 	| conditional_statement
 	| inc_or_dec_expression ';'
 	| subroutine_call_statement
@@ -2137,7 +2148,7 @@ statement_item:
 	| procedural_continuous_assignments ';'
 	| seq_block
 	| wait_statement
-	| immediate_assert_statement
+	| procedural_assertion_statement
 	;
 
 subroutine_call_statement:
@@ -2367,7 +2378,19 @@ statement_brace:
 // System Verilog standard 1800-2017
 // A.6.10 Assertion statements
 
-immediate_assert_statement: TOK_ASSERT '(' expression ')' action_block
+procedural_assertion_statement:
+	  immediate_assertion_statement
+	;
+
+immediate_assertion_statement:
+	  simple_immediate_assertion_statement
+	;
+
+simple_immediate_assertion_statement:
+	  simple_immediate_assert_statement
+	;
+
+simple_immediate_assert_statement: TOK_ASSERT '(' expression ')' action_block
 		{ init($$, ID_assert); mto($$, $3); mto($$, $5); }
 	;
 
