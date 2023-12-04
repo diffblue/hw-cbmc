@@ -74,21 +74,19 @@ public:
     : current(_current), no_timeframes(_no_timeframes), ns(_ns)
   {
   }
-  
-  inline exprt operator()(const exprt &expr)
+
+  [[nodiscard]] exprt operator()(exprt expr)
   {
-    exprt tmp=expr;
-    instantiate_rec(tmp);
-    return tmp;
+    return instantiate_rec(std::move(expr));
   }
 
 protected:
   std::size_t current, no_timeframes;
   const namespacet &ns;
-  
-  void instantiate_rec(exprt &);
-  void instantiate_rec(typet &);
-  
+
+  [[nodiscard]] exprt instantiate_rec(exprt);
+  [[nodiscard]] typet instantiate_rec(typet);
+
   class save_currentt
   {
   public:
@@ -117,26 +115,28 @@ Function: wl_instantiatet::instantiate_rec
 
 \*******************************************************************/
 
-void wl_instantiatet::instantiate_rec(exprt &expr)
+exprt wl_instantiatet::instantiate_rec(exprt expr)
 {
-  instantiate_rec(expr.type());
+  expr.type() = instantiate_rec(expr.type());
 
   if(expr.id() == ID_next_symbol)
   {
     expr.id(ID_symbol);
-    expr = timeframe_symbol(current + 1, to_symbol_expr(std::move(expr)));
+    return timeframe_symbol(current + 1, to_symbol_expr(std::move(expr)));
   }
   else if(expr.id() == ID_symbol)
   {
-    expr = timeframe_symbol(current, to_symbol_expr(std::move(expr)));
+    return timeframe_symbol(current, to_symbol_expr(std::move(expr)));
   }
   else if(expr.id()==ID_sva_overlapped_implication)
   {
     // same as regular implication
     expr.id(ID_implies);
 
-    Forall_operands(it, expr)
-      instantiate_rec(*it);
+    for(auto &op : expr.operands())
+      op = instantiate_rec(op);
+
+    return expr;
   }
   else if(expr.id()==ID_sva_non_overlapped_implication)
   {
@@ -144,7 +144,8 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     if(expr.operands().size()==2)
     {
       expr.id(ID_implies);
-      instantiate_rec(to_binary_expr(expr).op0());
+      auto &implies_expr = to_implies_expr(expr);
+      implies_expr.op0() = instantiate_rec(implies_expr.op0());
 
       save_currentt save_current(current);
       
@@ -153,46 +154,50 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       // Do we exceed the bound? Make it 'true',
       // works on NNF only
       if(current>=no_timeframes)
-        to_binary_expr(expr).op1() = true_exprt();
+        implies_expr.op1() = true_exprt();
       else
-        instantiate_rec(to_binary_expr(expr).op1());
+        implies_expr.op1() = instantiate_rec(implies_expr.op1());
+
+      return std::move(implies_expr);
     }
+    else
+      return expr;
   }
   else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
     if(expr.operands().size()==3)
     {
+      auto &ternary_expr = to_ternary_expr(expr);
+
       // save the current time frame, we'll change it
       save_currentt save_current(current);
 
-      if(to_ternary_expr(expr).op1().is_nil())
+      if(ternary_expr.op1().is_nil())
       {
         mp_integer offset;
-        if(to_integer_non_constant(to_ternary_expr(expr).op0(), offset))
+        if(to_integer_non_constant(ternary_expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
         current = save_current.saved + offset.to_ulong();
 
         // Do we exceed the bound? Make it 'true'
         if(current>=no_timeframes)
-          to_ternary_expr(expr).op2() = true_exprt();
+          return true_exprt();
         else
-          instantiate_rec(to_ternary_expr(expr).op2());
-
-        expr = to_ternary_expr(expr).op2();
+          return instantiate_rec(ternary_expr.op2());
       }
       else
       {
         mp_integer from, to;
-        if(to_integer_non_constant(to_ternary_expr(expr).op0(), from))
+        if(to_integer_non_constant(ternary_expr.op0(), from))
           throw "failed to convert sva_cycle_delay offsets";
 
-        if(to_ternary_expr(expr).op1().id() == ID_infinity)
+        if(ternary_expr.op1().id() == ID_infinity)
         {
           assert(no_timeframes!=0);
           to=no_timeframes-1;
         }
-        else if(to_integer_non_constant(to_ternary_expr(expr).op1(), to))
+        else if(to_integer_non_constant(ternary_expr.op1(), to))
           throw "failed to convert sva_cycle_delay offsets";
           
         // This is an 'or', and we let it fail if the bound is too small.
@@ -208,26 +213,30 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
           }
           else
           {
-            disjuncts.push_back(to_ternary_expr(expr).op2());
-            instantiate_rec(disjuncts.back());
+            disjuncts.push_back(instantiate_rec(ternary_expr.op2()));
           }
         }
-        
-        expr=disjunction(disjuncts);
+
+        return disjunction(disjuncts);
       }
     }
+    else
+      return expr;
   }
   else if(expr.id()==ID_sva_sequence_concatenation)
   {
     // much like regular 'and'
     expr.id(ID_and);
-    Forall_operands(it, expr)
-      instantiate_rec(*it);
+
+    for(auto &op : expr.operands())
+      op = instantiate_rec(op);
+
+    return expr;
   }
   else if(expr.id()==ID_sva_always)
   {
-    assert(expr.operands().size()==1);
-    
+    auto &op = to_unary_expr(expr).op();
+
     // save the current time frame, we'll change it
     save_currentt save_current(current);
     
@@ -235,11 +244,10 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
 
     for(; current<no_timeframes; current++)
     {
-      conjuncts.push_back(to_unary_expr(expr).op());
-      instantiate_rec(conjuncts.back());
+      conjuncts.push_back(instantiate_rec(op));
     }
-    
-    expr=conjunction(conjuncts);
+
+    return conjunction(conjuncts);
   }
   else if(expr.id()==ID_sva_nexttime ||
           expr.id()==ID_sva_s_nexttime)
@@ -253,11 +261,10 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     
     if(current<no_timeframes)
     {
-      expr = to_unary_expr(expr).op();
-      instantiate_rec(expr);
+      return instantiate_rec(to_unary_expr(expr).op());
     }
     else
-      expr=true_exprt(); // works on NNF only
+      return true_exprt(); // works on NNF only
   }
   else if(expr.id()==ID_sva_eventually ||
           expr.id()==ID_sva_s_eventually)
@@ -288,14 +295,13 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
         // save the current time frame, we'll change it
         save_currentt save_current(current);
         current = j;
-        disjuncts.push_back(p);
-        instantiate_rec(disjuncts.back());
+        disjuncts.push_back(instantiate_rec(p));
       }
 
       conjuncts.push_back(disjunction(disjuncts));
     }
 
-    expr = conjunction(conjuncts);
+    return conjunction(conjuncts);
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
@@ -311,21 +317,19 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
     
     // we expand: p U q <=> q || (p && X(p U q))
     exprt tmp_q = to_binary_expr(expr).op1();
-    instantiate_rec(tmp_q);
+    tmp_q = instantiate_rec(tmp_q);
 
     exprt expansion = to_binary_expr(expr).op0();
-    instantiate_rec(expansion);
-    
+    expansion = instantiate_rec(expansion);
+
     current++;
     
     if(current<no_timeframes)
     {
-      exprt tmp=expr;
-      instantiate_rec(tmp);
-      expansion=and_exprt(expansion, tmp);
+      expansion = and_exprt(expansion, instantiate_rec(expr));
     }
-    
-    expr=or_exprt(tmp_q, expansion);
+
+    return or_exprt(tmp_q, expansion);
   }
   else if(expr.id()==ID_sva_until_with ||
           expr.id()==ID_sva_s_until_with)
@@ -342,14 +346,14 @@ void wl_instantiatet::instantiate_rec(exprt &expr)
       tmp.id(ID_sva_s_until);
 
     tmp.op1()=unary_predicate_exprt(ID_sva_nexttime, tmp.op1());
-    
-    instantiate_rec(tmp);
-    expr=tmp;
+
+    return instantiate_rec(tmp);
   }
   else
   {
-    Forall_operands(it, expr)
-      instantiate_rec(*it);
+    for(auto &op : expr.operands())
+      op = instantiate_rec(op);
+    return expr;
   }
 }
 
@@ -365,8 +369,9 @@ Function: wl_instantiatet::instantiate_rec
 
 \*******************************************************************/
 
-void wl_instantiatet::instantiate_rec(typet &type)
+typet wl_instantiatet::instantiate_rec(typet type)
 {
+  return type;
 }
 
 /*******************************************************************\
