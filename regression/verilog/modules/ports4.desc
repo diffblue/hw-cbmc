@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ports4.v
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ ports4.v
 --
 ^warning: ignoring
 --
-The parameter in the module instance port binding is not expanded.
