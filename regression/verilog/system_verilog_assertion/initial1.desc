@@ -1,0 +1,9 @@
+KNOWNBUG
+initial1.sv
+--module main --bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Syntax is missing for initial label: assert property (...);
