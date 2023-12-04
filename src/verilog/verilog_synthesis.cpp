@@ -1058,8 +1058,8 @@ void verilog_synthesist::synth_module_instance(
   verilog_synthesis(
     symbol_table, identifier, get_message_handler(), options);
 
-  forall_operands(it, statement)
-    expand_module_instance(symbol, *it, trans);
+  for(auto &instance : statement.instances())
+    expand_module_instance(symbol, instance, trans);
 }
 
 /*******************************************************************\
@@ -1249,20 +1249,21 @@ Function: verilog_synthesist::expand_module_instance
 \*******************************************************************/
 
 void verilog_synthesist::expand_module_instance(
-  const symbolt &symbol,
-  const exprt &op,
+  const symbolt &module_symbol,
+  const verilog_instt::instancet &instance,
   transt &trans)
 {
   construct=constructt::OTHER;
 
-  const irep_idt &instance=op.get(ID_instance);
+  const irep_idt &instance_name = instance.name();
 
   replace_mapt replace_map;
 
   std::list<irep_idt> new_symbols;
 
-  for(auto it=symbol_table.symbol_module_map.lower_bound(symbol.module);
-      it!=symbol_table.symbol_module_map.upper_bound(symbol.module);
+  for(auto it =
+        symbol_table.symbol_module_map.lower_bound(module_symbol.module);
+      it != symbol_table.symbol_module_map.upper_bound(module_symbol.module);
       it++)
   {
     const symbolt &symbol=ns.lookup(it->second);
@@ -1285,7 +1286,7 @@ void verilog_synthesist::expand_module_instance(
 
       full_identifier=id2string(mode)+"::";
       full_identifier+=id2string(verilog_module_name(module));
-      full_identifier+="."+id2string(instance);
+      full_identifier += "." + id2string(instance_name);
       full_identifier+=identifier_without_module;
 
       new_symbol.pretty_name=strip_verilog_prefix(full_identifier);
@@ -1320,11 +1321,11 @@ void verilog_synthesist::expand_module_instance(
   // do the trans
 
   {
-    exprt tmp=symbol.value;
+    exprt tmp = module_symbol.value;
 
     if(tmp.id()!=ID_trans || tmp.operands().size()!=3)
     {
-      error().source_location=op.source_location();
+      error().source_location = instance.source_location();
       error() << "Expected transition system, but got `"
               << tmp.id() << '\'' << eom;
       throw 0;
@@ -1336,7 +1337,7 @@ void verilog_synthesist::expand_module_instance(
       trans.operands()[i].add_to_operands(std::move(tmp.operands()[i]));
   }
 
-  instantiate_ports(instance, op, symbol, replace_map, trans);
+  instantiate_ports(instance_name, instance, module_symbol, replace_map, trans);
 }
 
 /*******************************************************************\

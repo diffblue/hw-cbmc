@@ -392,6 +392,38 @@ public:
   {
     return static_cast<const exprt &>(find(ID_parameter_assignments)).operands();
   }
+
+  class instancet : public exprt
+  {
+  public:
+    const irep_idt &name() const
+    {
+      return get(ID_instance);
+    }
+
+    const exprt::operandst &connections() const
+    {
+      return operands();
+    }
+
+  protected:
+    using exprt::operands;
+  };
+
+  using instancest = std::vector<instancet>;
+
+  const instancest &instances() const
+  {
+    return (const instancest &)(operands());
+  }
+
+  instancest &instances()
+  {
+    return (instancest &)(operands());
+  }
+
+protected:
+  using exprt::operands;
 };
 
 inline const verilog_instt &to_verilog_inst(const exprt &expr)
