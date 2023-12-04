@@ -2074,6 +2074,40 @@ always_construct: TOK_ALWAYS statement
 		{ init($$, ID_always); mto($$, $2); }
 	;
 
+blocking_assignment:
+	  variable_lvalue '=' delay_or_event_control expression
+		{ init($$, ID_blocking_assign); mto($$, $1); mto($$, $4); }
+        | operator_assignment
+	;
+
+operator_assignment:
+          variable_lvalue assignment_operator expression
+		{ init($$, ID_blocking_assign); mto($$, $1); mto($$, $3); }
+        ;
+
+assignment_operator:
+          '='
+        | TOK_PLUSEQUAL
+        | TOK_MINUSEQUAL
+        | TOK_ASTERICEQUAL
+        | TOK_SLASHEQUAL
+        | TOK_PERCENTEQUAL
+        | TOK_AMPEREQUAL
+        | TOK_VERTBAREQUAL
+        | TOK_CARETEQUAL
+        | TOK_LESSLESSEQUAL
+        | TOK_GREATERGREATEREQUAL
+        | TOK_LESSLESSLESSEQUAL
+        | TOK_GREATERGREATERGREATEREQUAL
+        ;
+
+nonblocking_assignment:
+	  variable_lvalue TOK_LESSEQUAL expression
+		{ init($$, ID_non_blocking_assign); mto($$, $1); mto($$, $3); }
+	| variable_lvalue TOK_LESSEQUAL delay_or_event_control expression
+		{ init($$, ID_non_blocking_assign); mto($$, $1); mto($$, $4); }
+	;
+
 // The extra rule to allow block_item_declaration is to avoid an ambiguity
 // caused by the attribute_instance_brace.
 statement: 
@@ -2352,40 +2386,6 @@ procedural_continuous_assignments:
 	| TOK_RELEASE variable_lvalue
 		{ init($$, ID_release); mto($$, $2); }
 	/* | TOK_RELEASE net_lvalue */
-	;
-
-blocking_assignment:
-	  variable_lvalue '=' delay_or_event_control expression
-		{ init($$, ID_blocking_assign); mto($$, $1); mto($$, $4); }
-        | operator_assignment
-	;
-	
-operator_assignment:
-          variable_lvalue assignment_operator expression
-		{ init($$, ID_blocking_assign); mto($$, $1); mto($$, $3); }
-        ;
-
-assignment_operator:
-          '='
-        | TOK_PLUSEQUAL
-        | TOK_MINUSEQUAL
-        | TOK_ASTERICEQUAL
-        | TOK_SLASHEQUAL
-        | TOK_PERCENTEQUAL
-        | TOK_AMPEREQUAL
-        | TOK_VERTBAREQUAL
-        | TOK_CARETEQUAL
-        | TOK_LESSLESSEQUAL
-        | TOK_GREATERGREATEREQUAL
-        | TOK_LESSLESSLESSEQUAL
-        | TOK_GREATERGREATERGREATEREQUAL
-        ;
-
-nonblocking_assignment:
-	  variable_lvalue TOK_LESSEQUAL expression
-		{ init($$, ID_non_blocking_assign); mto($$, $1); mto($$, $3); }
-	| variable_lvalue TOK_LESSEQUAL delay_or_event_control expression
-		{ init($$, ID_non_blocking_assign); mto($$, $1); mto($$, $4); }
 	;
 
 procedural_timing_control_statement:
