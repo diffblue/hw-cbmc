@@ -9,19 +9,20 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_SYNTHESIS_CLASS_H
 #define CPROVER_VERILOG_SYNTHESIS_CLASS_H
 
-#include <cassert>
-#include <map>
-#include <set>
-#include <unordered_set>
-
 #include <util/mathematical_expr.h>
 #include <util/mp_arith.h>
 #include <util/options.h>
 #include <util/std_expr.h>
 #include <util/string_hash.h>
 
-#include "verilog_typecheck_base.h"
+#include "verilog_expr.h"
 #include "verilog_symbol_table.h"
+#include "verilog_typecheck_base.h"
+
+#include <cassert>
+#include <map>
+#include <set>
+#include <unordered_set>
 
 /*******************************************************************\
 
@@ -201,36 +202,36 @@ protected:
 
   // module items
   virtual void convert_module_items(symbolt &);
-  void synth_module_item(const class verilog_module_itemt &, transt &);
-  void synth_always(const class verilog_alwayst &);
-  void synth_initial(const class verilog_initialt &);
-  void synth_assert_module_item(const class verilog_module_itemt &);
-  void synth_assume_module_item(const class verilog_module_itemt &);
-  void synth_continuous_assign(const class verilog_continuous_assignt &);
+  void synth_module_item(const verilog_module_itemt &, transt &);
+  void synth_always(const verilog_alwayst &);
+  void synth_initial(const verilog_initialt &);
+  void synth_assert_module_item(const verilog_module_itemt &);
+  void synth_assume_module_item(const verilog_module_itemt &);
+  void synth_continuous_assign(const verilog_continuous_assignt &);
   void synth_force_rec(exprt &lhs, exprt &rhs, transt &);
-  void synth_module_instance(const class verilog_instt &, transt &);
-  void synth_module_instance_builtin(const class verilog_inst_builtint &, transt &);
+  void synth_module_instance(const verilog_instt &, transt &);
+  void synth_module_instance_builtin(const verilog_inst_builtint &, transt &);
 
   // statements
-  void synth_statement(const class verilog_statementt &);
-  void synth_decl(const class verilog_declt &);
-  void synth_block(const class verilog_blockt &);
-  void synth_case(const class verilog_statementt &);
-  void synth_if(const class verilog_ift &);
-  void synth_event_guard(const class verilog_event_guardt &);
-  void synth_delay(const class verilog_delayt &);
-  void synth_for(const class verilog_fort &);
-  void synth_force(const class verilog_forcet &);
+  void synth_statement(const verilog_statementt &);
+  void synth_decl(const verilog_declt &);
+  void synth_block(const verilog_blockt &);
+  void synth_case(const verilog_statementt &);
+  void synth_if(const verilog_ift &);
+  void synth_event_guard(const verilog_event_guardt &);
+  void synth_delay(const verilog_delayt &);
+  void synth_for(const verilog_fort &);
+  void synth_force(const verilog_forcet &);
   void synth_force_rec(const exprt &lhs, const exprt &rhs);
-  void synth_forever(const class verilog_forevert &);
-  void synth_while(const class verilog_whilet &);
-  void synth_repeat(const class verilog_repeatt &);
-  void synth_function_call_or_task_enable(const class verilog_function_callt &);
+  void synth_forever(const verilog_forevert &);
+  void synth_while(const verilog_whilet &);
+  void synth_repeat(const verilog_repeatt &);
+  void synth_function_call_or_task_enable(const verilog_function_callt &);
   [[nodiscard]] exprt synth_expr(exprt expr, symbol_statet symbol_state);
   void synth_assign(const exprt &, bool blocking);
-  void synth_assert(const class verilog_assertt &);
-  void synth_assume(const class verilog_assumet &);
-  void synth_prepostincdec(const class verilog_statementt &);
+  void synth_assert(const verilog_assertt &);
+  void synth_assume(const verilog_assumet &);
+  void synth_prepostincdec(const verilog_statementt &);
   void synth_assignments(transt &);
 
   exprt make_supply_value(const irep_idt &decl_class, const typet &);
@@ -259,8 +260,8 @@ protected:
     const exprt &case_operand);
 
   void expand_module_instance(
-    const symbolt &symbol,
-    const exprt &op,
+    const symbolt &module_symbol,
+    const verilog_instt::instancet &,
     transt &trans);
 
   void expand_hierarchical_identifier(

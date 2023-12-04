@@ -571,9 +571,9 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
   }
 
   // get the instance symbols
-  Forall_operands(it, inst)
+  for(auto &instance : inst.instances())
   {
-    const auto instance_name = it->get(ID_instance);
+    const auto instance_name = instance.name();
 
     const irep_idt instance_identifier =
       id2string(module_symbol.name) + "." + id2string(instance_name);
@@ -598,7 +598,7 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
       symbol_table_lookup(new_module_identifier);
 
     // check the port connections
-    typecheck_port_connections(*it, parameterized_module_symbol);
+    typecheck_port_connections(instance, parameterized_module_symbol);
   }
 }
 
