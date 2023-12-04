@@ -964,8 +964,11 @@ void verilog_synthesist::instantiate_port(
     throw 0;
   }
 
+  auto value_synthesized = synth_expr(value, symbol_statet::SYMBOL);
+
   trans.invar().add_to_operands(equal_exprt(
-    typecast_exprt::conditional_cast(it->second, value.type()), value));
+    typecast_exprt::conditional_cast(it->second, value_synthesized.type()),
+    value_synthesized));
 }
 
 /*******************************************************************\
