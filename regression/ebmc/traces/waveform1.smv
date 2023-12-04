@@ -1,12 +1,15 @@
 MODULE main
 
 VAR x: 0..20;
-VAR y: 0..20;
+VAR y: 0..200;
+VAR z: 0..20;
 
 INIT x=0
 INIT y=0
+INIT z=0
 
 ASSIGN next(x):=x + 1;
-ASSIGN next(y):=y;
+ASSIGN next(y):=y + 10;
+ASSIGN next(z):=z;
 
 SPEC AG x!=20

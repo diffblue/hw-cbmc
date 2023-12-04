@@ -97,8 +97,7 @@ void show_waveform(const trans_tracet &trace, const namespacet &ns)
           value_map[std::make_pair(identifier, timeframe)] = as_string;
           auto &width = column_width[timeframe];
           width = std::max(width, as_string.size());
-          if(width < 2)
-            width = 2;
+          width = std::max(width, std::size_t(2));
         }
       }
     }
@@ -141,7 +140,7 @@ void show_waveform(const trans_tracet &trace, const namespacet &ns)
       consolet::out() << ' ';
       if(consolet::is_terminal() && consolet::use_SGR())
         consolet::out() << ((x % 2) ? "\x1b[47m" : "");
-      consolet::out().width(std::min(std::size_t(2), column_width[x]));
+      consolet::out().width(column_width[x]);
       consolet::out() << value_map[std::make_pair(y, x)];
       consolet::out() << consolet::reset;
     }
