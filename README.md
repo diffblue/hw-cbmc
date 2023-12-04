@@ -15,8 +15,6 @@ For full information see [cprover.org](http://www.cprover.org/ebmc/).
 Compiling
 =========
 
-- Install a package that provides `zlib.h`; e.g., on Debian/Ubuntu, do `sudo apt-get install
-  zlib1g-dev`
 - initialize and update the CBMC submodule: `$> git submodule init; git submodule update`
 - download minisat: `$> make -C lib/cbmc/src minisat2-download`
 - build EBMC: `$> make -C src` (this also builds the CBMC submodule)
