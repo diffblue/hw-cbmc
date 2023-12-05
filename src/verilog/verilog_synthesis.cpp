@@ -49,7 +49,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
     if(v_it!=values.end())
     {
-      exprt c=from_integer(v_it->second, integer_typet());
+      exprt c = v_it->second;
       c.add_source_location()=expr.source_location();
       return c;
     }
@@ -1755,10 +1755,9 @@ void verilog_synthesist::synth_assign(
   // elaborate now?
   if(lhs.type().id() == ID_integer)
   {
-    mp_integer i;
     simplify(rhs, ns);
 
-    if(to_integer_non_constant(rhs, i))
+    if(!rhs.is_constant())
     {
       error().source_location=rhs.source_location();
       error() << "synthesis expects constant on rhs" << eom;
@@ -1771,8 +1770,8 @@ void verilog_synthesist::synth_assign(
       error() << "synthesis expects symbol on lhs" << eom;
       throw 0;
     }
-    
-    values[to_symbol_expr(lhs).get_identifier()]=i;
+
+    values[to_symbol_expr(lhs).get_identifier()] = rhs;
   }
   else
     assignment(lhs, rhs, blocking);
