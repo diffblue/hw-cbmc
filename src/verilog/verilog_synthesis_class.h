@@ -42,13 +42,13 @@ class verilog_synthesist:
 {
 public:
   verilog_synthesist(
+    const namespacet &_ns,
     symbol_table_baset &_symbol_table,
     const irep_idt &_module,
     const optionst &_options,
     message_handlert &_message_handler)
-    : verilog_typecheck_baset(ns, _message_handler),
+    : verilog_typecheck_baset(_ns, _message_handler),
       verilog_symbol_tablet(_symbol_table),
-      ns(_symbol_table),
       options(_options),
       value_map(NULL),
       module(_module),
@@ -59,7 +59,6 @@ public:
   virtual void typecheck();
 
 protected:
-  const namespacet ns;
   const optionst &options;
  
   enum class event_guardt { NONE, CLOCK, COMBINATIONAL };

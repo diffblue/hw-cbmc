@@ -3106,7 +3106,8 @@ bool verilog_synthesis(
   message_handlert &message_handler,
   const optionst &options)
 {
+  const namespacet ns(symbol_table);
   verilog_synthesist verilog_synthesis(
-    symbol_table, module, options, message_handler);
+    ns, symbol_table, module, options, message_handler);
   return verilog_synthesis.typecheck_main();
 }
