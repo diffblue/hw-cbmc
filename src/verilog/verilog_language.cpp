@@ -283,6 +283,13 @@ bool verilog_languaget::to_expr(
 
   // typecheck it
   result=verilog_typecheck(expr, module, get_message_handler(), ns);
+  if(result)
+    return true;
+
+  // synthesize it
+  result = verilog_synthesis(expr, module, get_message_handler(), ns);
+  if(result)
+    return true;
 
   // save some memory
   verilog_parser.clear();
