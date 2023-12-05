@@ -19,4 +19,10 @@ bool verilog_synthesis(
   message_handlert &,
   const optionst &);
 
+bool verilog_synthesis(
+  exprt &,
+  const irep_idt &module_identifier,
+  message_handlert &,
+  const namespacet &);
+
 #endif

@@ -58,6 +58,16 @@ public:
 
   virtual void typecheck();
 
+  enum class symbol_statet
+  {
+    NONE,
+    SYMBOL,
+    CURRENT,
+    FINAL
+  };
+
+  [[nodiscard]] exprt synth_expr(exprt expr, symbol_statet symbol_state);
+
 protected:
   const optionst &options;
  
@@ -114,8 +124,12 @@ protected:
   typedef std::list<exprt> invarst;
   invarst invars;
 
-  enum class constructt { INITIAL, ALWAYS, OTHER };
-  enum class symbol_statet { NONE, SYMBOL, CURRENT, FINAL };
+  enum class constructt
+  {
+    INITIAL,
+    ALWAYS,
+    OTHER
+  };
   constructt construct;
   event_guardt event_guard;
  
@@ -226,7 +240,6 @@ protected:
   void synth_while(const verilog_whilet &);
   void synth_repeat(const verilog_repeatt &);
   void synth_function_call_or_task_enable(const verilog_function_callt &);
-  [[nodiscard]] exprt synth_expr(exprt expr, symbol_statet symbol_state);
   void synth_assign(const exprt &, bool blocking);
   void synth_assert(const verilog_assertt &);
   void synth_assume(const verilog_assumet &);

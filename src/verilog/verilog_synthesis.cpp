@@ -3110,3 +3110,65 @@ bool verilog_synthesis(
     ns, symbol_table, module, options, message_handler);
   return verilog_synthesis.typecheck_main();
 }
+
+/*******************************************************************\
+
+Function: verilog_synthesis
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_synthesis(
+  exprt &expr,
+  const irep_idt &module_identifier,
+  message_handlert &message_handler,
+  const namespacet &ns)
+{
+  optionst options;
+  symbol_tablet symbol_table;
+
+  const auto errors_before =
+    message_handler.get_message_count(messaget::M_ERROR);
+
+  verilog_synthesist verilog_synthesis(
+    ns, symbol_table, module_identifier, options, message_handler);
+
+  try
+  {
+    expr = verilog_synthesis.synth_expr(
+      expr, verilog_synthesist::symbol_statet::SYMBOL);
+  }
+
+  catch(int e)
+  {
+    verilog_synthesis.error();
+  }
+
+  catch(const char *e)
+  {
+    verilog_synthesis.error() << e << messaget::eom;
+  }
+
+  catch(const std::string &e)
+  {
+    verilog_synthesis.error() << e << messaget::eom;
+  }
+
+  catch(const verilog_typecheck_baset::errort &e)
+  {
+    if(e.what().empty())
+      verilog_synthesis.error();
+    else
+    {
+      verilog_synthesis.error().source_location = e.source_location();
+      verilog_synthesis.error() << e.what() << messaget::eom;
+    }
+  }
+
+  return message_handler.get_message_count(messaget::M_ERROR) != errors_before;
+}

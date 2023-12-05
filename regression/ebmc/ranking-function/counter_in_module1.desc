@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 counter_in_module1.sv
 --ranking-function instance.counter
 ^\[main\.property\.p0\] always \(eventually main.instance.counter == 0\): SUCCESS$
@@ -6,4 +6,3 @@ counter_in_module1.sv
 ^SIGNAL=0$
 --
 --
-We currently don't support hierarchical identifiers in the ranking function.
