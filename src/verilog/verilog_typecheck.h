@@ -205,13 +205,13 @@ protected:
   typedef std::map<irep_idt, mp_integer> genvarst;
   genvarst genvars;
 
-  // to be overridden
-  void genvar_value(const irep_idt &identifier, mp_integer &value) override {
+  mp_integer genvar_value(const irep_idt &identifier) override
+  {
     genvarst::const_iterator it=genvars.find(identifier);
     if(it==genvars.end())
-      value=-1;
+      return -1;
     else
-      value=it->second;
+      return it->second;
   }
 
   // interpreter state

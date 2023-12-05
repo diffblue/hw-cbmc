@@ -65,8 +65,10 @@ protected:
     mp_integer &msb,
     mp_integer &lsb);
 
-  virtual void genvar_value(const irep_idt &identifier, mp_integer &value) {
-    assert(false);
+  // to be overridden
+  virtual mp_integer genvar_value(const irep_idt &identifier)
+  {
+    PRECONDITION(false);
   }
 
   virtual void elaborate_parameter(irep_idt)
@@ -74,7 +76,11 @@ protected:
     PRECONDITION(false);
   }
 
-  virtual exprt var_value(const irep_idt &identifier) { assert(false); }
+  // to be overridden
+  virtual exprt var_value(const irep_idt &identifier)
+  {
+    PRECONDITION(false);
+  }
 
   virtual bool implicit_wire(const irep_idt &identifier,
                              const symbolt *&symbol) {
