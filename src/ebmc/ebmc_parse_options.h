@@ -43,6 +43,7 @@ public:
         "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
         "(compute-ct)(dot-netlist)(smv-netlist)(vcd):"
         "(random-traces)(trace-steps):(random-seed):(number-of-traces):"
+        "(random-trace)(random-waveform)"
         "I:(preprocess)",
         argc,
         argv,

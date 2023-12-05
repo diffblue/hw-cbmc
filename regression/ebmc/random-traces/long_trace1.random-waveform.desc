@@ -1,0 +1,10 @@
+CORE broken-smt-backend
+long_trace1.v
+--random-waveform
+^                0  1  2  3  4  5  6  7  8  9 10$
+^      main\.clk                                 $
+^main\.increment  0  1  1  0  1  1  1  1  1  1  1$
+^ main\.some_reg  0  0  1  2  2  3  4  5  6  7  8$
+^EXIT=0$
+^SIGNAL=0$
+--

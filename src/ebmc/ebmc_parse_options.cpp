@@ -149,6 +149,9 @@ int ebmc_parse_optionst::doit()
     if(cmdline.isset("random-traces"))
       return random_traces(cmdline, ui_message_handler);
 
+    if(cmdline.isset("random-trace") || cmdline.isset("random-waveform"))
+      return random_trace(cmdline, ui_message_handler);
+
     if(cmdline.isset("ic3"))
       return do_ic3(cmdline, ui_message_handler);
 

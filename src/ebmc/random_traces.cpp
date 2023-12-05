@@ -24,6 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ebmc_base.h"
 #include "ebmc_error.h"
+#include "waveform.h"
 
 #include <algorithm>
 #include <random>
@@ -48,7 +49,10 @@ public:
   {
   }
 
+  using outputt = enum { TRACE, WAVEFORM, VCD };
+
   void operator()(
+    outputt,
     const optionalt<std::string> &outfile_prefix,
     std::size_t random_seed,
     std::size_t number_of_traces,
@@ -156,7 +160,80 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
     get_transition_system(cmdline, message_handler);
 
   random_tracest(transition_system, message_handler)(
-    outfile_prefix, random_seed, number_of_traces, number_of_trace_steps);
+    outfile_prefix.has_value() ? random_tracest::VCD : random_tracest::TRACE,
+    outfile_prefix,
+    random_seed,
+    number_of_traces,
+    number_of_trace_steps);
+
+  return 0;
+}
+
+/*******************************************************************\
+
+Function: random_trace
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
+{
+  if(cmdline.isset("number-of-traces"))
+    throw ebmc_errort() << "must not give number-of-traces";
+
+  const std::size_t random_seed = [&cmdline]() -> std::size_t {
+    if(cmdline.isset("random-seed"))
+    {
+      auto random_seed_opt =
+        string2optional_size_t(cmdline.get_value("random-seed"));
+
+      if(!random_seed_opt.has_value())
+        throw ebmc_errort() << "failed to parse random seed";
+
+      return random_seed_opt.value();
+    }
+    else
+      return 0;
+  }();
+
+  const std::size_t number_of_trace_steps = [&cmdline]() -> std::size_t {
+    if(cmdline.isset("trace-steps"))
+    {
+      auto trace_steps_opt =
+        string2optional_size_t(cmdline.get_value("trace-steps"));
+
+      if(!trace_steps_opt.has_value())
+        throw ebmc_errort() << "failed to parse number of trace steps";
+
+      return trace_steps_opt.value();
+    }
+    else if(cmdline.isset("bound"))
+    {
+      auto bound_opt = string2optional_size_t(cmdline.get_value("bound"));
+
+      if(!bound_opt.has_value())
+        throw ebmc_errort() << "failed to parse bound";
+
+      return bound_opt.value();
+    }
+    else
+      return 10; // default
+  }();
+
+  transition_systemt transition_system =
+    get_transition_system(cmdline, message_handler);
+
+  if(cmdline.isset("random-trace"))
+    random_tracest(transition_system, message_handler)(
+      random_tracest::TRACE, {}, random_seed, 1, number_of_trace_steps);
+  else if(cmdline.isset("random-waveform"))
+    random_tracest(transition_system, message_handler)(
+      random_tracest::WAVEFORM, {}, random_seed, 1, number_of_trace_steps);
 
   return 0;
 }
@@ -182,7 +259,11 @@ void random_traces(
 {
   std::size_t random_seed = 0;
   random_tracest(transition_system, message_handler)(
-    outfile_prefix, random_seed, number_of_traces, number_of_trace_steps);
+    random_tracest::VCD,
+    outfile_prefix,
+    random_seed,
+    number_of_traces,
+    number_of_trace_steps);
 }
 
 /*******************************************************************\
@@ -351,6 +432,7 @@ Function: random_tracest::operator()()
 \*******************************************************************/
 
 void random_tracest::operator()(
+  outputt output,
   const optionalt<std::string> &outfile_prefix,
   std::size_t random_seed,
   std::size_t number_of_traces,
@@ -403,8 +485,10 @@ void random_tracest::operator()(
     {
       auto trace = compute_trans_trace(
         solver, number_of_timeframes, ns, transition_system.main_symbol->name);
-      if(outfile_prefix.has_value())
+
+      if(output == VCD)
       {
+        PRECONDITION(outfile_prefix.has_value());
         auto filename = outfile_prefix.value() + std::to_string(trace_nr + 1);
         std::ofstream out(widen_if_needed(filename));
 
@@ -415,10 +499,15 @@ void random_tracest::operator()(
 
         show_trans_trace_vcd(trace, message, ns, out);
       }
-      else
+      else if(output == TRACE)
       {
         consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
         show_trans_trace(trace, message, ns, consolet::out());
+      }
+      else if(output == WAVEFORM)
+      {
+        consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
+        show_waveform(trace, ns);
       }
     }
     break;

@@ -14,7 +14,11 @@ Author: Daniel Kroening, kroening@kroening.com
 class cmdlinet;
 class message_handlert;
 
+// many traces
 int random_traces(const cmdlinet &, message_handlert &);
+
+// just one trace
+int random_trace(const cmdlinet &, message_handlert &);
 
 class transition_systemt;
 
