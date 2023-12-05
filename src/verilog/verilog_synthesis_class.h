@@ -292,7 +292,7 @@ protected:
     
   // This map contains the values of all variables
   // fixed to a constant during synthesis.
-  typedef std::map<irep_idt, mp_integer> valuest;
+  typedef std::map<irep_idt, exprt> valuest;
   valuest values;
   
   unsigned temporary_counter;
