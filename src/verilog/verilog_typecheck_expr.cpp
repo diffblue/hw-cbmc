@@ -1250,6 +1250,14 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
     if(!operands_are_constant)
       return expr; // give up
 
+    if(expr.id() == ID_reduction_or)
+    {
+      // The simplifier doesn't know how to simplify reduction_or
+      auto &reduction_or = to_unary_expr(expr);
+      expr = notequal_exprt(
+        reduction_or.op(), from_integer(0, reduction_or.op().type()));
+    }
+
     // We fall back to the simplifier to approximate
     // the standard's definition of 'constant expression'.
     return simplify_expr(expr, ns);
