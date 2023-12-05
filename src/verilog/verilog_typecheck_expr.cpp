@@ -1131,6 +1131,9 @@ verilog_typecheck_exprt::convert_integer_constant_expression(exprt expr)
 {
   convert_expr(expr);
 
+  // copy the source location, we will modify 'expr'
+  auto source_location = expr.source_location();
+
   // this could be large
   propagate_type(expr, integer_typet());
 
@@ -1138,7 +1141,7 @@ verilog_typecheck_exprt::convert_integer_constant_expression(exprt expr)
 
   if(!tmp.is_constant())
   {
-    throw errort().with_location(expr.source_location())
+    throw errort().with_location(source_location)
       << "expected constant expression, but got `" << to_string(tmp) << '\'';
   }
 
@@ -1153,7 +1156,7 @@ verilog_typecheck_exprt::convert_integer_constant_expression(exprt expr)
     auto value_opt = numeric_cast<mp_integer>(tmp_constant);
     if(!value_opt.has_value())
     {
-      throw errort().with_location(expr.source_location())
+      throw errort().with_location(source_location)
         << "failed to convert `" << to_string(tmp_constant)
         << "\' into an integer constant";
     }
