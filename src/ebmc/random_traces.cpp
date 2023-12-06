@@ -159,8 +159,15 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
   transition_systemt transition_system =
     get_transition_system(cmdline, message_handler);
 
+  if(cmdline.isset("waveform") && cmdline.isset("vcd"))
+    throw ebmc_errort() << "cannot do VCD and ASCII waveform simultaneously";
+
+  auto output = cmdline.isset("waveform") ? random_tracest::WAVEFORM
+                : cmdline.isset("vcd")    ? random_tracest::VCD
+                                          : random_tracest::TRACE;
+
   random_tracest(transition_system, message_handler)(
-    outfile_prefix.has_value() ? random_tracest::VCD : random_tracest::TRACE,
+    output,
     outfile_prefix,
     random_seed,
     number_of_traces,

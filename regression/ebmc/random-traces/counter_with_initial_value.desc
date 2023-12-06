@@ -1,0 +1,16 @@
+CORE broken-smt-backend
+counter_with_initial_value.v
+--random-traces --trace-steps 10 --waveform --number-of-traces 2
+^\*\*\* Trace 1$
+^                0   1   2   3   4   5   6   7   8   9  10$
+^     main.clk                                            $
+^  main\.input1 111 228  22 122 182  95  94 154 131  26  95$
+^main\.some_reg 111 110 109 108 107 106 105 104 103 102 101$
+^\*\*\* Trace 2$
+^                0   1   2   3   4   5   6   7   8   9  10$
+^     main\.clk                                            $
+^  main\.input1 178 105  26  10 251 217  12 188  93  44 170$
+^main\.some_reg 178 177 176 175 174 173 172 171 170 169 168$
+^EXIT=0$
+^SIGNAL=0$
+--
