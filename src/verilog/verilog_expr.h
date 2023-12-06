@@ -33,6 +33,16 @@ public:
     return item();
   }
 
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+
 protected:
   using binary_exprt::op0;
   using binary_exprt::op1;
