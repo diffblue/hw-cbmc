@@ -791,22 +791,27 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
 {
   convert_expr(expr.lhs());
 
-  if(expr.lhs().id() != ID_symbol)
-  {
-    throw errort().with_location(expr.source_location())
-      << "expected symbol on lhs of `.'";
-  }
+  const irep_idt &lhs_identifier = [](const exprt &lhs) {
+    if(lhs.id() == ID_symbol)
+      return to_symbol_expr(lhs).get_identifier();
+    else if(lhs.id() == ID_hierarchical_identifier)
+      return to_hierarchical_identifier_expr(lhs).identifier();
+    else
+    {
+      throw errort().with_location(lhs.source_location())
+        << "expected symbol or hierarchical identifier on lhs of `.'";
+    }
+  }(expr.lhs());
 
   DATA_INVARIANT(expr.rhs().id() == ID_symbol, "expected symbol on rhs of `.'");
 
-  const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).get_identifier();
   const irep_idt &rhs_identifier = expr.rhs().get_identifier();
 
   irep_idt full_identifier;
 
   if(expr.lhs().type().id() == ID_module_instance)
   {
-    // figure out which module this is
+    // figure out which module the lhs is
     const symbolt *module_instance_symbol;
     if(ns.lookup(lhs_identifier, module_instance_symbol))
     {
@@ -817,6 +822,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
 
     const irep_idt &module=module_instance_symbol->value.get(ID_module);
 
+    // the identifier in the module
     full_identifier=
       id2string(module)+"."+id2string(rhs_identifier);
 
@@ -839,6 +845,9 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
         << "identifier `" << rhs_identifier << "' not found in module `"
         << module_instance_symbol->pretty_name << "'";
     }
+
+    // We remember the identifier of the symbol.
+    expr.identifier(full_identifier);
   }
   else if(expr.lhs().type().id() == ID_named_block)
   {

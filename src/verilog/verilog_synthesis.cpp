@@ -256,12 +256,12 @@ void verilog_synthesist::expand_hierarchical_identifier(
   const irep_idt &rhs_identifier = expr.rhs().get_identifier();
 
   // just patch together
-  
-  std::string full_identifier=
-    id2string(lhs_identifier)+"."+id2string(rhs_identifier);
 
-  // Note: may not yet be in symbol table, as the inst module
-  // item may be later.
+  irep_idt full_identifier =
+    id2string(lhs_identifier) + '.' + id2string(rhs_identifier);
+
+  // Note: the instance copy may not yet be in symbol table,
+  // as the inst module item may be later.
   // The type checker already checked that it's fine.
 
   symbol_exprt new_symbol{full_identifier, expr.type()};
