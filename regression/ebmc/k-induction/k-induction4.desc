@@ -1,0 +1,8 @@
+CORE
+k-induction4.sv
+--module main --bound 1 --k-induction
+^EXIT=0$
+^SIGNAL=0$
+^\[main.property.p1] .* UNKNOWN$
+--
+^warning: ignoring
