@@ -404,6 +404,7 @@ void ebmc_parse_optionst::help()
     " {y--smv-netlist}               \t show netlist in SMV format\n"
     " {y--dot-netlist}               \t show netlist in DOT format\n"
     " {y--show-trans}                \t show transition system\n"
+    " {y--verbosity} {u#}            \t verbosity level, from 0 (silent) to 10 (everything)\n"
     // clang-format on
     "\n");
 }
