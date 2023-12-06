@@ -37,18 +37,18 @@ void unwind(
   if(add_initial_state && first)
   {
     // do initial state
-    message.status() << "Initial State" << messaget::eom;
-    
+    message.progress() << "Initial State" << messaget::eom;
+
     for(const auto & n : netlist.initial)
       solver.l_set_to(bmc_map.translate(0, n), true);
   }
 
   // do transitions
   if(last)
-    message.status() << "Transition " << t << messaget::eom;
+    message.progress() << "Transition " << t << messaget::eom;
   else
-    message.status() << "Transition " << t << "->" << t+1 << messaget::eom;
-  
+    message.progress() << "Transition " << t << "->" << t + 1 << messaget::eom;
+
   const bmc_mapt::timeframet &timeframe=bmc_map.timeframe_map[t];
   
   for(std::size_t n=0; n<timeframe.size(); n++)
