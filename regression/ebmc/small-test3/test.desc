@@ -3,6 +3,6 @@ main.v
 --bound 2
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main.property.prop1\] always main.x == 3: SUCCESS$
+^\[main.property.prop1\] always main.x == 3: PROVED up to bound 2$
 --
 ^warning: ignoring

@@ -1,7 +1,7 @@
 CORE
 counter_with_reset1.sv
 --property main.property.p1 --ranking-function 10-counter
-^\[main\.property\.p1\] always \(eventually main.reset \|\| main.counter == 10\): SUCCESS$
+^\[main\.property\.p1\] always \(eventually main.reset \|\| main.counter == 10\): PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

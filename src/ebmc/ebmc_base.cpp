@@ -163,7 +163,7 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
     {
     case decision_proceduret::resultt::D_SATISFIABLE:
       {
-        property.make_failure();
+        property.refuted();
         message.result() << "SAT: counterexample found" << messaget::eom;
 
         property.counterexample = compute_trans_trace(
@@ -178,16 +178,18 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
     case decision_proceduret::resultt::D_UNSATISFIABLE:
         message.result() << "UNSAT: No counterexample found within bound"
                          << messaget::eom;
-        property.make_success();
+        property.proved_with_bound(bound);
         break;
 
     case decision_proceduret::resultt::D_ERROR:
         message.error() << "Error from decision procedure" << messaget::eom;
+        property.failure();
         return 2;
 
     default:
         message.error() << "Unexpected result from decision procedure"
                         << messaget::eom;
+        property.failure();
         return 1;
     }
   }
@@ -199,9 +201,9 @@ int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
     << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
     << messaget::eom;
 
-  // We return '0' if the property holds,
-  // and '10' if it is violated.
-  return properties.property_failure() ? 10 : 0;
+  // We return '0' if all properties are proved,
+  // and '10' otherwise.
+  return properties.all_properties_proved() ? 0 : 10;
 }
 
 /*******************************************************************\
@@ -240,7 +242,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
     {
     case propt::resultt::P_SATISFIABLE:
       {
-        property.make_failure();
+        property.refuted();
         message.result() << "SAT: counterexample found" << messaget::eom;
 
         namespacet ns(transition_system.symbol_table);
@@ -253,7 +255,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
     case propt::resultt::P_UNSATISFIABLE:
         message.result() << "UNSAT: No counterexample found within bound"
                          << messaget::eom;
-        property.make_success();
+        property.proved_with_bound(bound);
         break;
 
     case propt::resultt::P_ERROR:
@@ -274,9 +276,9 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
     << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
     << messaget::eom;
 
-  // We return '0' if the property holds,
-  // and '10' if it is violated.
-  return properties.property_failure() ? 10 : 0;
+  // We return '0' if all properties are proved,
+  // and '10' otherwise.
+  return properties.all_properties_proved() ? 0 : 10;
 }
 
 /*******************************************************************\

@@ -1,8 +1,8 @@
 CORE broken-smt-backend
 example4.sv
 --bound 10 --trace
-SUCCESS$
-FAILURE$
+^\[counter\.property\.1\] .* PROVED up to bound 10$
+^\[counter\.property\.2\] .* REFUTED$
 ^  counter\.state = 254 \(11111110\)$
 ^EXIT=10$
 ^SIGNAL=0$

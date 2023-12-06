@@ -3,6 +3,6 @@ case2.v
 --module main --bound 1
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main.property.p1\] .* SUCCESS$
+^\[main.property.p1\] .* PROVED up to bound 1$
 --
 ^warning: ignoring

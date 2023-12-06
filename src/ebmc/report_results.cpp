@@ -56,28 +56,11 @@ void report_results(
 
       json_objectt json_property;
       json_property["identifier"] = json_stringt(id2string(property.name));
+      json_property["status"] = json_stringt(property.status_as_string());
 
-      json_property["status"] = json_stringt(
-        [&property]()
-        {
-          using statust = ebmc_propertiest::propertyt::statust;
-
-          switch(property.status)
-          {
-          case statust::SUCCESS:
-            return "HOLDS";
-          case statust::FAILURE:
-            return "REFUTED";
-          case statust::UNKNOWN:
-            return "UNKNOWN";
-          case statust::DISABLED:
-          default:
-            UNREACHABLE;
-          }
-        }());
-
-      if(property.is_failure())
-        json_property["counterexample"] = json(property.counterexample, ns);
+      if(property.has_counterexample())
+        json_property["counterexample"] =
+          json(property.counterexample.value(), ns);
 
       json_properties.push_back(std::move(json_property));
     }
@@ -96,25 +79,10 @@ void report_results(
 
       xmlt xml_result("result");
       xml_result.set_attribute("property", id2string(property.name));
+      xml_result.set_attribute("status", property.status_as_string());
 
-      using statust = ebmc_propertiest::propertyt::statust;
-
-      switch(property.status)
-      {
-      case statust::SUCCESS:
-        xml_result.set_attribute("status", "SUCCESS");
-        break;
-      case statust::FAILURE:
-        xml_result.set_attribute("status", "FAILURE");
-        break;
-      case statust::UNKNOWN:
-        xml_result.set_attribute("status", "UNKNOWN");
-        break;
-      case statust::DISABLED:;
-      }
-
-      if(property.is_failure())
-        xml_result.new_element() = xml(property.counterexample, ns);
+      if(property.has_counterexample())
+        xml_result.new_element() = xml(property.counterexample.value(), ns);
 
       std::cout << xml_result << '\n' << std::flush;
     }
@@ -133,33 +101,22 @@ void report_results(
       message.status() << "[" << property.name << "] " << property.expr_string
                        << ": ";
 
-      switch(property.status)
-      {
-      case ebmc_propertiest::propertyt::statust::SUCCESS:
-        message.status() << "SUCCESS";
-        break;
-      case ebmc_propertiest::propertyt::statust::FAILURE:
-        message.status() << "FAILURE";
-        break;
-      case ebmc_propertiest::propertyt::statust::UNKNOWN:
-        message.status() << "UNKNOWN";
-        break;
-      case ebmc_propertiest::propertyt::statust::DISABLED:;
-      }
+      message.status() << property.status_as_string();
 
       message.status() << messaget::eom;
 
-      if(property.is_failure())
+      if(property.has_counterexample())
       {
         if(cmdline.isset("trace"))
         {
           message.status() << "Counterexample:\n" << messaget::eom;
-          show_trans_trace(property.counterexample, message, ns, std::cout);
+          show_trans_trace(
+            property.counterexample.value(), message, ns, std::cout);
         }
         else if(cmdline.isset("waveform"))
         {
           message.status() << "Counterexample:" << messaget::eom;
-          show_waveform(property.counterexample, ns);
+          show_waveform(property.counterexample.value(), ns);
         }
       }
     }
@@ -169,13 +126,13 @@ void report_results(
   {
     for(const auto &property : properties.properties)
     {
-      if(property.is_failure())
+      if(property.has_counterexample())
       {
         std::string vcdfile = cmdline.get_value("vcd");
         std::ofstream vcd(widen_if_needed(vcdfile));
 
         messaget message(message_handler);
-        show_trans_trace_vcd(property.counterexample, message, ns, vcd);
+        show_trans_trace_vcd(property.counterexample.value(), message, ns, vcd);
 
         break;
       }

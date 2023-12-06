@@ -4,6 +4,6 @@ main.v
 ^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
-^\[main.property.property1\] always main.x != 10: FAILURE
+^\[main.property.property1\] always main.x != 10: REFUTED$
 --
 ^warning: ignoring

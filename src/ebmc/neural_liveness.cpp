@@ -229,7 +229,9 @@ tvt neural_livenesst::verify(
     message.get_message_handler());
 
   if(result.is_true())
-    property.make_success();
+    property.proved();
+  else
+    property.inconclusive();
 
   return result;
 }

@@ -3,6 +3,6 @@ k-induction3.v
 --module main --bound 9 --k-induction
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main.property.p1] .* FAILURE$
+^\[main.property.p1] .* INCONCLUSIVE$
 --
 ^warning: ignoring

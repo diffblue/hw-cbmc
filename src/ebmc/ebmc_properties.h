@@ -35,43 +35,106 @@ public:
 
     enum class statust
     {
-      DISABLED,
-      SUCCESS,
-      FAILURE,
-      UNKNOWN
+      UNKNOWN,           // no work done yet
+      DISABLED,          // turned off by user
+      PROVED,            // property is true, unbounded
+      PROVED_WITH_BOUND, // property is true, with bound
+      REFUTED,           // property is false, possibly counterexample
+      DROPPED,           // given up
+      FAILURE,           // error during anaysis
+      INCONCLUSIVE       // analysis can't determine truth
     } status = statust::UNKNOWN;
 
-    trans_tracet counterexample;
+    std::size_t bound = 0;
+    std::optional<trans_tracet> counterexample;
 
-    inline bool is_disabled() const
+    bool has_counterexample() const
+    {
+      return counterexample.has_value();
+    }
+
+    bool is_unknown() const
+    {
+      return status == statust::UNKNOWN;
+    }
+
+    bool is_disabled() const
     {
       return status == statust::DISABLED;
     }
 
-    inline bool is_failure() const
+    bool is_proved() const
+    {
+      return status == statust::PROVED;
+    }
+
+    bool is_proved_with_bound() const
+    {
+      return status == statust::PROVED_WITH_BOUND;
+    }
+
+    bool is_refuted() const
+    {
+      return status == statust::REFUTED;
+    }
+
+    bool is_dropped() const
+    {
+      return status == statust::DROPPED;
+    }
+
+    bool is_failure() const
     {
       return status == statust::FAILURE;
     }
 
-    inline void disable()
+    bool is_inconclusive() const
+    {
+      return status == statust::INCONCLUSIVE;
+    }
+
+    void unknown()
+    {
+      status = statust::UNKNOWN;
+    }
+
+    void disable()
     {
       status = statust::DISABLED;
     }
 
-    inline void make_failure()
+    void proved()
+    {
+      status = statust::PROVED;
+    }
+
+    void proved_with_bound(std::size_t _bound)
+    {
+      status = statust::PROVED_WITH_BOUND;
+      bound = _bound;
+    }
+
+    void refuted()
+    {
+      status = statust::REFUTED;
+    }
+
+    void drop()
+    {
+      status = statust::DROPPED;
+    }
+
+    void failure()
     {
       status = statust::FAILURE;
     }
 
-    inline void make_success()
+    void inconclusive()
     {
-      status = statust::SUCCESS;
+      status = statust::INCONCLUSIVE;
     }
 
-    inline void make_unknown()
-    {
-      status = statust::UNKNOWN;
-    }
+    std::string status_as_string() const;
 
     propertyt() = default;
   };
@@ -79,13 +142,13 @@ public:
   typedef std::list<propertyt> propertiest;
   propertiest properties;
 
-  bool property_failure() const
+  bool all_properties_proved() const
   {
     for(const auto &p : properties)
-      if(p.is_failure())
-        return true;
+      if(!p.is_proved() && !p.is_proved_with_bound() && !p.is_disabled())
+        return false;
 
-    return false;
+    return true;
   }
 
   static ebmc_propertiest from_command_line(

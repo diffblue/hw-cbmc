@@ -3,6 +3,6 @@ k-induction2.v
 --module main --bound 3 --k-induction
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main.property.p1] .* SUCCESS$
+^\[main.property.p1] .* PROVED$
 --
 ^warning: ignoring

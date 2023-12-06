@@ -4,6 +4,6 @@ system_verilog_assertion2.sv
 ^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
-^\[main.property.my_label\] .* FAILURE$
+^\[main.property.my_label\] .* REFUTED$
 --
 ^warning: ignoring
