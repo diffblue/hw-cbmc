@@ -334,6 +334,7 @@ void ebmc_parse_optionst::help()
     "\n";
 
   std::cout << help_formatter(
+    // clang-format off
     "Usage:\tPurpose:\n"
     "\n"
     " {bebmc} [{y-?}] [{y-h}] [{y--help}] \t show help\n"
@@ -363,6 +364,12 @@ void ebmc_parse_optionst::help()
     "    {y--aiger}                  \t print out the instance in aiger format\n"
     " {y--random-traces}             \t generate random traces\n"
     "    {y--number-of-traces} {unumber}\t generate the given number of traces\n"
+    "    {y--random-seed} {unumber}  \t use the given random seed\n"
+    "    {y--trace-steps} {unumber}  \t set the number of random transitions (default: 10 steps)\n"
+    " {y--random-trace}              \t generate a random trace\n"
+    "    {y--random-seed} {unumber}  \t use the given random seed\n"
+    "    {y--trace-steps} {unumber}  \t set the number of random transitions (default: 10 steps)\n"
+    " {y--random-waveform}           \t generate a random trace and show it in horizontal form\n"
     "    {y--random-seed} {unumber}  \t use the given random seed\n"
     "    {y--trace-steps} {unumber}  \t set the number of random transitions (default: 10 steps)\n"
     " {y--ranking-function} {uf}     \t prove a liveness property using given ranking funnction (experimental)\n"
@@ -397,5 +404,6 @@ void ebmc_parse_optionst::help()
     " {y--smv-netlist}               \t show netlist in SMV format\n"
     " {y--dot-netlist}               \t show netlist in DOT format\n"
     " {y--show-trans}                \t show transition system\n"
+    // clang-format on
     "\n");
 }
