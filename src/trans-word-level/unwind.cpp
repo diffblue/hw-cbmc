@@ -40,7 +40,7 @@ void unwind(
 
   // in-state constraints
 
-  message.status() << "In-state constraints" << messaget::eom;
+  message.progress() << "In-state constraints" << messaget::eom;
 
   if(!op_invar.is_true())
     for(std::size_t c = 0; c < no_timeframes; c++)
@@ -51,7 +51,7 @@ void unwind(
 
   if(initial_state)
   {
-    message.status() << "Initial state" << messaget::eom;
+    message.progress() << "Initial state" << messaget::eom;
 
     if(!op_init.is_true())
       decision_procedure.set_to_true(
@@ -60,7 +60,7 @@ void unwind(
 
   // transition relation
 
-  message.status() << "Transition relation" << messaget::eom;
+  message.progress() << "Transition relation" << messaget::eom;
 
   if(!op_trans.is_true())
     for(std::size_t t = 0; t < no_timeframes; t++)
@@ -69,10 +69,11 @@ void unwind(
       bool last=(t==no_timeframes-1);
 
       if(last)
-        message.status() << "Transition " << t << messaget::eom;
+        message.progress() << "Transition " << t << messaget::eom;
       else
-        message.status() << "Transition " << t << "->" << t+1 << messaget::eom;
-                  
+        message.progress() << "Transition " << t << "->" << t + 1
+                           << messaget::eom;
+
       decision_procedure.set_to_true(
         instantiate(op_trans, t, no_timeframes, ns));
     }
