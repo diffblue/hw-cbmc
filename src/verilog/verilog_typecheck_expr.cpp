@@ -736,9 +736,7 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     else if(symbol->type.id() == ID_genvar)
     {
       // This must be a constant.
-      mp_integer int_value;
-
-      genvar_value(identifier, int_value);
+      mp_integer int_value = genvar_value(identifier);
 
       if(int_value<0)
       {
