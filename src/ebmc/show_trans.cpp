@@ -241,8 +241,6 @@ int show_transt::show_trans()
   transition_system =
     get_transition_system(cmdline, message.get_message_handler());
 
-  PRECONDITION(transition_system.trans_expr.has_value());
-
   transition_system.output(std::cout);
 
   return 0;

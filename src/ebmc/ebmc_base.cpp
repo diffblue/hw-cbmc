@@ -341,9 +341,8 @@ int ebmc_baset::do_word_level_bmc(
 
       // convert the transition system
       const namespacet ns(transition_system.symbol_table);
-      CHECK_RETURN(transition_system.trans_expr.has_value());
       ::unwind(
-        *transition_system.trans_expr,
+        transition_system.trans_expr,
         message.get_message_handler(),
         solver,
         bound + 1,

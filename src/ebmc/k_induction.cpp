@@ -122,7 +122,6 @@ Function: k_inductiont::induction_base
 
 int k_inductiont::induction_base()
 {
-  PRECONDITION(transition_system.trans_expr.has_value());
   message.status() << "Induction Base" << messaget::eom;
 
   auto solver_wrapper = solver_factory(ns, message.get_message_handler());
@@ -130,7 +129,7 @@ int k_inductiont::induction_base()
 
   // convert the transition system
   ::unwind(
-    *transition_system.trans_expr,
+    transition_system.trans_expr,
     message.get_message_handler(),
     solver,
     bound + 1,
@@ -162,7 +161,6 @@ Function: k_inductiont::induction_step
 
 int k_inductiont::induction_step()
 {
-  PRECONDITION(transition_system.trans_expr.has_value());
   message.status() << "Induction Step" << messaget::eom;
 
   unsigned no_timeframes=bound+1;
@@ -184,7 +182,7 @@ int k_inductiont::induction_step()
 
     // *no* initial state
     unwind(
-      *transition_system.trans_expr,
+      transition_system.trans_expr,
       message.get_message_handler(),
       solver,
       no_timeframes,
