@@ -43,17 +43,8 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   if(expr.id()==ID_symbol)
   {
     const symbolt &symbol=ns.lookup(to_symbol_expr(expr));
-    
-    // does it have a value?
-    valuest::const_iterator v_it=values.find(symbol.name);
 
-    if(v_it!=values.end())
-    {
-      exprt c = v_it->second;
-      c.add_source_location()=expr.source_location();
-      return c;
-    }
-    else if(symbol.is_macro)
+    if(symbol.is_macro)
     {
       // substitute
       assert(symbol.value.is_not_nil());
@@ -271,7 +262,7 @@ void verilog_synthesist::expand_hierarchical_identifier(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::assignment
+Function: verilog_synthesist::assignment_rec
 
   Inputs:
 
@@ -281,7 +272,7 @@ Function: verilog_synthesist::assignment
 
 \*******************************************************************/
 
-void verilog_synthesist::assignment(
+void verilog_synthesist::assignment_rec(
   const exprt &lhs,
   const exprt &rhs,
   bool blocking)
@@ -308,7 +299,7 @@ void verilog_synthesist::assignment(
         bit_extract.add_to_operands(offset_constant);
         offset++;
 
-        assignment(*it, bit_extract, blocking);
+        assignment_rec(*it, bit_extract, blocking);
       }
       else if(it->type().id()==ID_signedbv ||
               it->type().id()==ID_unsignedbv)
@@ -322,8 +313,8 @@ void verilog_synthesist::assignment(
         extractbits_exprt bit_extract(rhs, offset_constant2, offset_constant,
                                       it->type());
 
-        assignment(*it, bit_extract, blocking);
-        
+        assignment_rec(*it, bit_extract, blocking);
+
         offset+=width;
       }
       else
@@ -1752,29 +1743,13 @@ void verilog_synthesist::synth_assign(
 
   rhs = synth_expr(rhs, symbol_statet::CURRENT);
 
-  // elaborate now?
-  if(lhs.type().id() == ID_integer)
-  {
-    simplify(rhs, ns);
+  // Can the rhs be simplified to a constant, for propagation?
+  auto rhs_simplified = simplify_expr(rhs, ns);
 
-    if(!rhs.is_constant())
-    {
-      error().source_location=rhs.source_location();
-      error() << "synthesis expects constant on rhs" << eom;
-      throw 0;
-    }
-    
-    if(lhs.id()!=ID_symbol)
-    {
-      error().source_location=lhs.source_location();
-      error() << "synthesis expects symbol on lhs" << eom;
-      throw 0;
-    }
+  if(rhs_simplified.is_constant())
+    rhs = rhs_simplified;
 
-    values[to_symbol_expr(lhs).get_identifier()] = rhs;
-  }
-  else
-    assignment(lhs, rhs, blocking);
+  assignment_rec(lhs, rhs, blocking);
 }
 
 /*******************************************************************\
