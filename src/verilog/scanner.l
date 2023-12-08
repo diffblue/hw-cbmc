@@ -61,7 +61,7 @@ static void preprocessor()
 
 }
 
-#define IDENTIFIER { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_CHARSTR; }
+#define IDENTIFIER { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NON_TYPE_IDENTIFIER; }
 #define SYSTEM_VERILOG_KEYWORD(x) \
   { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \
       return x; \
@@ -497,7 +497,7 @@ within          { SYSTEM_VERILOG_KEYWORD(TOK_WITHIN); }
 {Real}          { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {RealExp}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Word}          { IDENTIFIER; }
-{EscapedWord}   { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext+1); return TOK_CHARSTR; }
+{EscapedWord}   { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext+1); return TOK_NON_TYPE_IDENTIFIER; }
 .               { return yytext[0]; }
 } // GRAMMAR
 

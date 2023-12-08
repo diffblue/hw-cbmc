@@ -541,7 +541,7 @@ int yyverilogerror(const char *error)
 
 /* Others */
 %token TOK_ENDOFFILE
-%token TOK_CHARSTR
+%token TOK_NON_TYPE_IDENTIFIER
 %token TOK_NUMBER           // number, any base
 %token TOK_TIME_LITERAL     // number followed by time unit
 %token TOK_QSTRING          // quoted string
@@ -1040,7 +1040,7 @@ data_type:
 	;
 	
 enum_name_declaration:
-	  TOK_CHARSTR
+	  TOK_NON_TYPE_IDENTIFIER
 	;
 	
 enum_name_declaration_list:
@@ -1767,7 +1767,7 @@ name_of_gate_instance_opt:
 	| name_of_gate_instance
 	;
 
-name_of_gate_instance: TOK_CHARSTR;
+name_of_gate_instance: TOK_NON_TYPE_IDENTIFIER;
 
 // System Verilog standard 1800-2017
 // A.4.1.1 Module instantiation
@@ -1829,9 +1829,10 @@ module_instance:
 		{ init($$, ID_inst); addswap($$, ID_instance, $1); swapop($$, $3); }
 	;
 
-name_of_instance: { init($$, "$_&#ANON" + PARSER.get_dummy_id());}
-| 
-TOK_CHARSTR;
+name_of_instance:
+	  { init($$, "$_&#ANON" + PARSER.get_dummy_id());}
+	| TOK_NON_TYPE_IDENTIFIER
+	;
 
 list_of_module_connections_opt:
 		/* Optional */
@@ -2827,11 +2828,9 @@ attr_name: identifier
 // System Verilog standard 1800-2017
 // A.9.3 Identifiers
 
-block_identifier: TOK_CHARSTR;
+block_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-genvar_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
+genvar_identifier: identifier;
 
 hierarchical_parameter_identifier: hierarchical_identifier
 	;
@@ -2839,53 +2838,42 @@ hierarchical_parameter_identifier: hierarchical_identifier
 interface_identifier:
 	;
 
-module_identifier: TOK_CHARSTR;
+module_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 module_identifier_opt:
 	  /* Optional */
 	| module_identifier
 	;
 
-net_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
+net_identifier: identifier;
 
-param_identifier: TOK_CHARSTR;
+param_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-port_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
+port_identifier: identifier;
 
 ps_covergroup_identifier:
 	;
 	
-memory_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
+memory_identifier: identifier;
 
-type_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
+type_identifier: identifier;
 
-parameter_identifier: TOK_CHARSTR;
+parameter_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-generate_block_identifier: TOK_CHARSTR;
+generate_block_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-udp_identifier: TOK_CHARSTR;
+udp_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 task_identifier: hierarchical_identifier
 	;
 
-event_identifier:
-          TOK_CHARSTR
-		{ new_symbol($$, $1); }
-        ;
+event_identifier: identifier;
 
 hierarchical_task_or_block_identifier: task_identifier;
 
 hierarchical_tf_identifier: hierarchical_identifier;
 
-specparam_identifier: TOK_CHARSTR; 
+specparam_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 function_identifier: hierarchical_identifier
 	;
@@ -2904,14 +2892,12 @@ hierarchical_identifier:
 	
 hierarchical_variable_identifier: hierarchical_identifier;
 
-identifier: TOK_CHARSTR
+identifier: TOK_NON_TYPE_IDENTIFIER
 		{ new_symbol($$, $1); }
 	;
 
-property_identifier: TOK_CHARSTR;
+property_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-variable_identifier: TOK_CHARSTR
-		{ new_symbol($$, $1); }
-	;
+variable_identifier: identifier;
 
 %%
