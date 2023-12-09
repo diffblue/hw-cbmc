@@ -1,0 +1,11 @@
+KNOWNBUG
+k-induction5.v
+--module main --bound 3 --k-induction
+^EXIT=10$
+^SIGNAL=0$
+^\[main.property.property1\] .* PROVED$
+^\[main.property.property2\] .* PROVED$
+--
+^warning: ignoring
+--
+The result for property2 should be REFUTED.
