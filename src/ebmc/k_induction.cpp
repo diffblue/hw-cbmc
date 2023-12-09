@@ -8,17 +8,20 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "k_induction.h"
 
+#include <util/string2int.h>
+
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
 #include "bmc.h"
-#include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "liveness_to_safety.h"
 #include "report_results.h"
+
+#include <fstream>
 
 /*******************************************************************\
 
@@ -28,27 +31,58 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
-class k_inductiont:public ebmc_baset
+class k_inductiont
 {
 public:
   k_inductiont(
-    const cmdlinet &_cmdline,
-    ui_message_handlert &_ui_message_handler)
-    : ebmc_baset(_cmdline, _ui_message_handler),
-      ns{transition_system.symbol_table},
-      solver_factory(ebmc_solver_factory(_cmdline))
+    std::size_t _k,
+    const transition_systemt &_transition_system,
+    ebmc_propertiest &_properties,
+    const ebmc_solver_factoryt &_solver_factory,
+    message_handlert &_message_handler)
+    : k(_k),
+      transition_system(_transition_system),
+      properties(_properties),
+      solver_factory(_solver_factory),
+      message(_message_handler)
   {
   }
 
-  int operator()();
+  void operator()();
 
 protected:
-  namespacet ns;
-  ebmc_solver_factoryt solver_factory;
+  const std::size_t k;
+  const transition_systemt &transition_system;
+  ebmc_propertiest &properties;
+  const ebmc_solver_factoryt &solver_factory;
+  messaget message;
 
   void induction_base();
-  int induction_step();
+  void induction_step();
 };
+
+/*******************************************************************\
+
+Function: do_k_induction
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void k_induction(
+  std::size_t k,
+  const transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  const ebmc_solver_factoryt &solver_factory,
+  message_handlert &message_handler)
+{
+  k_inductiont(
+    k, transition_system, properties, solver_factory, message_handler)();
+}
 
 /*******************************************************************\
 
@@ -64,43 +98,30 @@ Function: do_k_induction
 
 int do_k_induction(
   const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+  ui_message_handlert &message_handler)
 {
-  return k_inductiont(cmdline, ui_message_handler)();
-}
+  std::size_t k = [&cmdline, &message_handler]() -> std::size_t {
+    if(!cmdline.isset("bound"))
+    {
+      messaget message(message_handler);
+      message.warning() << "using 1-induction" << messaget::eom;
+      return 1;
+    }
+    else
+      return unsafe_string2unsigned(cmdline.get_value("bound"));
+  }();
 
-/*******************************************************************\
+  auto transition_system = get_transition_system(cmdline, message_handler);
 
-Function: k_inductiont::do_k_induction
+  auto properties = ebmc_propertiest::from_command_line(
+    cmdline, transition_system, message_handler);
 
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int k_inductiont::operator()()
-{
-  if(get_bound()) return 1;
-
-  transition_system =
-    get_transition_system(cmdline, message.get_message_handler());
-
-  auto result = get_properties();
-  if(result != -1)
-    return result;
+  if(properties.properties.empty())
+    throw ebmc_errort() << "no properties";
 
   // liveness to safety translation, if requested
   if(cmdline.isset("liveness-to-safety"))
     liveness_to_safety(transition_system, properties);
-
-  if(properties.properties.empty())
-  {
-    message.error() << "no properties" << messaget::eom;
-    return 1;
-  }
 
   // Check whether the properties are suitable for k-induction.
   for(const auto &property : properties.properties)
@@ -110,16 +131,38 @@ int k_inductiont::operator()()
         << "k-induction does not support liveness properties";
     }
 
+  auto solver_factory = ebmc_solver_factory(cmdline);
+
+  k_induction(
+    k, transition_system, properties, solver_factory, message_handler);
+
+  const namespacet ns(transition_system.symbol_table);
+  report_results(cmdline, properties, ns, message_handler);
+
+  // We return '0' if all properties are proved,
+  // and '10' otherwise.
+  return properties.all_properties_proved() ? 0 : 10;
+}
+
+/*******************************************************************\
+
+Function: k_inductiont::operator()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void k_inductiont::operator()()
+{
   // do induction base
   induction_base();
 
   // do induction step
-  result=induction_step();
-
-  const namespacet ns(transition_system.symbol_table);
-  report_results(cmdline, properties, ns, message.get_message_handler());
-
-  return result;
+  induction_step();
 }
 
 /*******************************************************************\
@@ -139,7 +182,7 @@ void k_inductiont::induction_base()
   message.status() << "Induction Base" << messaget::eom;
 
   bmc(
-    bound,
+    k,
     false,
     transition_system,
     properties,
@@ -159,11 +202,12 @@ Function: k_inductiont::induction_step
 
 \*******************************************************************/
 
-int k_inductiont::induction_step()
+void k_inductiont::induction_step()
 {
   message.status() << "Induction Step" << messaget::eom;
 
-  unsigned no_timeframes=bound+1;
+  const std::size_t no_timeframes = k + 1;
+  const namespacet ns(transition_system.symbol_table);
 
   for(auto &p_it : properties.properties)
   {
@@ -194,16 +238,14 @@ int k_inductiont::induction_step()
     if(property.id()!=ID_sva_always &&
        property.id()!=ID_AG)
     {
-      message.error()
-        << "unsupported property - only SVA always or AG implemented"
-        << messaget::eom;
-      return 1;
+      throw ebmc_errort()
+        << "unsupported property - only SVA always or AG implemented";
     }
 
     const exprt &p = to_unary_expr(property).op();
 
     // assumption: time frames 0,...,k-1
-    for(unsigned c=0; c<no_timeframes-1; c++)
+    for(std::size_t c = 0; c < no_timeframes - 1; c++)
     {
       exprt tmp=
         instantiate(p, c, no_timeframes-1, ns);
@@ -235,19 +277,10 @@ int k_inductiont::induction_step()
       break;
 
     case decision_proceduret::resultt::D_ERROR:
-      message.error() << "Error from decision procedure" << messaget::eom;
-      p_it.failure();
-      return 2;
+      throw ebmc_errort() << "Error from decision procedure";
 
     default:
-      message.error() << "Unexpected result from decision procedure"
-                      << messaget::eom;
-      p_it.failure();
-      return 1;
+      throw ebmc_errort() << "Unexpected result from decision procedure";
     }
   }
-
-  // We return '0' if all properties are proved,
-  // and '10' otherwise.
-  return properties.all_properties_proved() ? 0 : 10;
 }
