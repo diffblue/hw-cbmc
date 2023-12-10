@@ -1,6 +1,8 @@
-KNOWNBUG
+CORE
 pdtvispeterson.sv
 --ic3
+^EXIT=2$
+^SIGNAL=0$
 ^property HOLDS
 ^inductive invariant verification is ok
 --

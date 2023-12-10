@@ -1,6 +1,8 @@
-KNOWNBUG
+CORE
 non_inductive1.sv
 --ic3 --property main.property.p0
+^EXIT=2$
+^SIGNAL=0$
 ^property HOLDS$
 ^inductive invariant verification is ok
 --
