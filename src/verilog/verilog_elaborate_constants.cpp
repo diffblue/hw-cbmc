@@ -36,52 +36,55 @@ void verilog_typecheckt::elaborate_constants()
 
   std::vector<irep_idt> to_be_elaborated;
 
-  auto add_parameter = [this, &to_be_elaborated](
-                         const verilog_parameter_declt::declaratort &declarator)
-  {
-    symbolt symbol;
-    symbol.mode = mode;
-    symbol.module = module_identifier;
-    symbol.base_name = declarator.identifier();
-    symbol.name = hierarchical_identifier(symbol.base_name);
-    symbol.pretty_name = strip_verilog_prefix(symbol.name);
-    symbol.is_macro = true;
-    symbol.value = declarator.value();
-    symbol.type = typet(ID_to_be_elaborated);
-    symbol.location = declarator.source_location();
+  auto add_parameter =
+    [this, &to_be_elaborated](
+      const typet &type,
+      const verilog_parameter_declt::declaratort &declarator) {
+      symbolt symbol{
+        hierarchical_identifier(declarator.identifier()),
+        type_with_subtypet(ID_to_be_elaborated, type),
+        mode};
 
-    auto result = symbol_table.insert(std::move(symbol));
+      symbol.module = module_identifier;
+      symbol.base_name = declarator.identifier();
+      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+      symbol.is_macro = true;
+      symbol.value = declarator.value();
+      symbol.location = declarator.source_location();
 
-    if(!result.second)
-    {
-      error().source_location = declarator.source_location();
-      error() << "definition of symbol `" << declarator.identifier()
-              << "\' conflicts with earlier definition at "
-              << result.first.location << eom;
-      throw 0;
-    }
+      auto result = symbol_table.insert(std::move(symbol));
 
-    to_be_elaborated.push_back(result.first.name);
-  };
+      if(!result.second)
+      {
+        throw errort().with_location(declarator.source_location())
+          << "definition of symbol `" << declarator.identifier()
+          << "\' conflicts with earlier definition at "
+          << result.first.location;
+      }
+
+      to_be_elaborated.push_back(result.first.name);
+    };
 
   // Gather the port declarations from the module source.
   auto &module_source =
     to_verilog_module_source(module_symbol.type.find(ID_module_source));
 
   for(auto &decl : module_source.parameter_port_list())
-    add_parameter(decl);
+    add_parameter(typet(ID_nil), decl);
 
   for(auto &item : module_source.module_items())
   {
     if(item.id() == ID_parameter_decl)
     {
-      for(auto &decl : to_verilog_parameter_decl(item).declarations())
-        add_parameter(decl);
+      auto &parameter_decl = to_verilog_parameter_decl(item);
+      for(auto &decl : parameter_decl.declarations())
+        add_parameter(parameter_decl.type(), decl);
     }
     else if(item.id() == ID_local_parameter_decl)
     {
-      for(auto &decl : to_verilog_local_parameter_decl(item).declarations())
-        add_parameter(decl);
+      auto &localparam_decl = to_verilog_local_parameter_decl(item);
+      for(auto &decl : localparam_decl.declarations())
+        add_parameter(localparam_decl.type(), decl);
     }
   }
 
@@ -110,11 +113,26 @@ void verilog_typecheckt::elaborate_parameter(irep_idt identifier)
   if(symbol.type.id() == ID_to_be_elaborated)
   {
     // mark as "elaborating" to detect cycles
-    symbol.type = typet(ID_elaborating);
+    symbol.type.id(ID_elaborating);
 
+    // first elaborate the value
     convert_expr(symbol.value);
     symbol.value = elaborate_constant_expression(symbol.value);
-    symbol.type = symbol.value.type();
+
+    // Now elaborate the type. It may be given or implicit.
+    if(to_type_with_subtype(symbol.type).subtype().is_nil())
+    {
+      // It's implicit. Use type of value.
+      symbol.type = symbol.value.type();
+    }
+    else
+    {
+      // It's given. Elaborate it, then cast value.
+      auto elaborated_type =
+        convert_type(to_type_with_subtype(symbol.type).subtype());
+      symbol.type = elaborated_type;
+      propagate_type(symbol.value, symbol.type);
+    }
   }
   else if(symbol.type.id() == ID_elaborating)
   {
