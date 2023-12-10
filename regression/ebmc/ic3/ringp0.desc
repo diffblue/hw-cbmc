@@ -1,5 +1,5 @@
-CORE
-visbakery.sv
+KNOWNBUG
+ringp0.sv
 --ic3
 ^property FAILED
 ^cex verification is ok

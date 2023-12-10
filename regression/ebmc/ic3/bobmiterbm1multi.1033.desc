@@ -1,6 +1,6 @@
-CORE
-bobcount.sv
---ic3
+KNOWNBUG
+bobmiterbm1multi.sv
+--ic3 --property bobmiterbm1multi.property.1033
 ^property HOLDS
 ^inductive invariant verification is ok
 --

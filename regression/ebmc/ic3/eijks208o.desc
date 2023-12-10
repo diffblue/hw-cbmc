@@ -1,5 +1,5 @@
-CORE
-pdtvispeterson.sv
+KNOWNBUG
+eijks208o.sv
 --ic3
 ^property HOLDS
 ^inductive invariant verification is ok

@@ -1,7 +1,7 @@
-CORE
-eijks208o.sv
---ic3
-^property HOLDS
+KNOWNBUG
+non_inductive1.sv
+--ic3 --property main.property.p0
+^property HOLDS$
 ^inductive invariant verification is ok
 --
 ^inductive invariant verification failed

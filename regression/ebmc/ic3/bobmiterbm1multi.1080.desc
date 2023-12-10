@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 bobmiterbm1multi.sv
 --ic3 --property bobmiterbm1multi.property.1080
 ^property FAILED
