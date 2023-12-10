@@ -911,13 +911,6 @@ part_select:
 		{ init($$, ID_part_select); mto($$, $2); mto($$, $4); }
 	;
 
-indexed_part_select:
-	  '[' const_expression TOK_PLUSCOLON const_expression ']'
-		{ init($$, ID_indexed_part_select_plus); mto($$, $2); mto($$, $4); }
-        | '[' const_expression TOK_MINUSCOLON const_expression ']'
-		{ init($$, ID_indexed_part_select_minus); mto($$, $2); mto($$, $4); }
-	;
-
 // System Verilog standard 1800-2017
 // A.2.1.3 Type declarations
 
@@ -2615,15 +2608,30 @@ inc_or_dec_expression:
                 { init($$, ID_postdecrement); mto($$, $1); }
         ;
 
+constant_range:
+	  const_expression TOK_COLON const_expression
+		{ init($$, ID_part_select); mto($$, $1); mto($$, $3); }
+	;
+
+indexed_range:
+	  expression TOK_PLUSCOLON constant_expression
+		{ init($$, ID_indexed_part_select_plus); mto($$, $1); mto($$, $3); }
+	| expression TOK_MINUSCOLON constant_expression
+		{ init($$, ID_indexed_part_select_minus); mto($$, $1); mto($$, $3); }
+	;
+
+part_select_range:
+	  constant_range
+	| indexed_range
+	;
+
 // System Verilog standard 1800-2017
 // A.8.4 Primaries
 
 primary:  primary_literal
         | indexed_variable_lvalue
-	| indexed_variable_lvalue part_select
-		{ extractbits($$, $1, $2); }
-	| indexed_variable_lvalue indexed_part_select
-		{ extractbits($$, $1, $2); }
+	| indexed_variable_lvalue '[' part_select_range ']'
+		{ extractbits($$, $1, $3); }
 	| concatenation 
         | replication
         | function_subroutine_call
@@ -2650,10 +2658,8 @@ net_lvalue: variable_lvalue;
 
 variable_lvalue:
 	  indexed_variable_lvalue
-	| indexed_variable_lvalue part_select
-		{ extractbits($$, $1, $2); }
-	| indexed_variable_lvalue indexed_part_select
-		{ extractbits($$, $1, $2); }
+	| indexed_variable_lvalue '[' part_select_range ']'
+		{ extractbits($$, $1, $3); }
         | concatenation
           /* more generous than the rule below to avoid conflict */
         /*
