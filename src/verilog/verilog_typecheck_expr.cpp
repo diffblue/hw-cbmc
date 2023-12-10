@@ -218,7 +218,7 @@ void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::convert_expr
+Function: verilog_typecheck_exprt::convert_expr_rec
 
   Inputs:
 
@@ -228,7 +228,7 @@ Function: verilog_typecheck_exprt::convert_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_expr(exprt &expr)
+exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
 {
   // variable number of operands
 
@@ -238,6 +238,8 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
 
     Forall_operands(it, expr)
       convert_expr(*it);
+
+    return expr;
   }
   else if(expr.id()==ID_concatenation)
   {
@@ -286,19 +288,20 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
           *it = typecast_exprt{*it, verilog_unsignedbv_typet{width}};
         }
     }
+
+    return expr;
   }
   else if(expr.id()==ID_function_call)
   {
-    auto result = convert_expr_function_call(to_function_call_expr(expr));
-    expr = std::move(result);
+    return convert_expr_function_call(to_function_call_expr(expr));
   }
   else if(expr.id()==ID_constraint_select_one)
   {
-    convert_constraint_select_one(expr);
+    return convert_constraint_select_one(std::move(expr));
   }
   else
   {
-    unsigned no_op;
+    std::size_t no_op;
 
     if(!expr.has_operands())
       no_op=0;
@@ -307,10 +310,12 @@ void verilog_typecheck_exprt::convert_expr(exprt &expr)
 
     switch(no_op)
     {
-    case 0: convert_nullary_expr(expr); break;
-    case 1: convert_unary_expr  (to_unary_expr(expr)); break;
-    case 2: convert_binary_expr (to_binary_expr(expr)); break;
-    case 3: convert_trinary_expr(to_ternary_expr(expr)); break;
+    // clang-format off
+    case 0: return convert_nullary_expr(static_cast<const nullary_exprt &>(expr));
+    case 1: return convert_unary_expr  (to_unary_expr(expr));
+    case 2: return convert_binary_expr (to_binary_expr(expr));
+    case 3: return convert_trinary_expr(to_ternary_expr(expr));
+    // clang-format on
     default:
       throw errort().with_location(expr.source_location())
         << "no conversion for expression " << expr.id();
@@ -408,13 +413,15 @@ Function: verilog_typecheck_exprt::convert_constraint_select_one
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_constraint_select_one(exprt &expr)
+exprt verilog_typecheck_exprt::convert_constraint_select_one(exprt expr)
 {
   if(expr.operands().size()<2)
   {
     throw errort().with_location(expr.source_location())
       << "constraint_select_one takes at least two operands";
   }
+
+  return expr;
 }
 
 /*******************************************************************\
@@ -636,21 +643,26 @@ Function: verilog_typecheck_exprt::convert_nullary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_nullary_expr(exprt &expr)
+exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
 {
   if(expr.id()==ID_constant)
   {
-    convert_constant(to_constant_expr(expr));
+    return convert_constant(to_constant_expr(std::move(expr)));
   }
   else if(expr.id()==ID_symbol)
   {
-    convert_symbol(to_symbol_expr(expr));
+    return convert_symbol(to_symbol_expr(std::move(expr)));
   }
   else if(expr.id()==ID_verilog_star_event)
   {
+    return std::move(expr);
   }
   else if(expr.id()==ID_infinity)
   {
+    // This is "$" and is used in cycle ranges.
+    // We'll use the type 'natural'.
+    expr.type() = natural_typet();
+    return std::move(expr);
   }
   else
   {
@@ -671,10 +683,10 @@ Function: verilog_typecheck_exprt::convert_symbol
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_symbol(exprt &expr)
+exprt verilog_typecheck_exprt::convert_symbol(symbol_exprt expr)
 {
-  const irep_idt &identifier=to_symbol_expr(expr).get_identifier();
-  
+  const irep_idt &identifier = expr.get_identifier();
+
   std::string full_identifier;
 
   // in a task or function? Try local ones first
@@ -688,8 +700,8 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     if(!ns.lookup(full_identifier, symbol))
     { // found!
       expr.type()=symbol->type;
-      expr.set(ID_identifier, full_identifier);
-      return;
+      expr.set_identifier(full_identifier);
+      return std::move(expr);
     }
   }
   
@@ -731,7 +743,8 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
       DATA_INVARIANT(symbol->is_macro, "to_be_elaborated must be macro");
       elaborate_parameter(symbol->name);
       expr.type() = symbol->type;
-      expr.set(ID_identifier, full_identifier);
+      expr.set_identifier(full_identifier);
+      return std::move(expr);
     }
     else if(symbol->type.id() == ID_genvar)
     {
@@ -749,12 +762,13 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
 
       exprt result=from_integer(int_value, unsignedbv_typet(bits));
       result.add_source_location()=source_location;
-      expr=result;
+      return result;
     }
     else
     {
       expr.type()=symbol->type;
-      expr.set(ID_identifier, full_identifier);
+      expr.set_identifier(full_identifier);
+      return std::move(expr);
     }
   }
   else if(!implicit_wire(identifier, symbol))
@@ -763,7 +777,8 @@ void verilog_typecheck_exprt::convert_symbol(exprt &expr)
     warning().source_location=expr.source_location();
     warning() << "implicit wire " << symbol->display_name() << eom;
     expr.type()=symbol->type;
-    expr.set(ID_identifier, symbol->name);
+    expr.set_identifier(symbol->name);
+    return std::move(expr);
   }
   else
   {
@@ -784,8 +799,8 @@ Function: verilog_typecheck_exprt::convert_hierarchical_identifier
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_hierarchical_identifier(
-  hierarchical_identifier_exprt &expr)
+exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
+  hierarchical_identifier_exprt expr)
 {
   convert_expr(expr.lhs());
 
@@ -846,6 +861,8 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
 
     // We remember the identifier of the symbol.
     expr.identifier(full_identifier);
+
+    return std::move(expr);
   }
   else if(expr.lhs().type().id() == ID_named_block)
   {
@@ -867,7 +884,7 @@ void verilog_typecheck_exprt::convert_hierarchical_identifier(
 
         symbol_exprt symbol_expr=symbol->symbol_expr();
         symbol_expr.add_source_location()=source_location;
-        expr.swap(symbol_expr);
+        return std::move(symbol_expr);
       }
     }
     else
@@ -896,7 +913,7 @@ Function: verilog_typecheck_exprt::convert_constant
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
+exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
 {
   if(expr.type().id()==ID_string)
   {
@@ -913,9 +930,8 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
       new_value += mp_integer(character) << ((value.size() - i - 1) * 8);
     }
 
-    expr =
-      from_integer(new_value, type).with_source_location<constant_exprt>(expr);
-    return;
+    return from_integer(new_value, type)
+      .with_source_location<constant_exprt>(expr);
   }
   else if(expr.type().id()==ID_unsignedbv ||
           expr.type().id()==ID_signedbv ||
@@ -923,7 +939,7 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
           expr.type().id()==ID_verilog_unsignedbv)
   {
     // done already
-    return;
+    return std::move(expr);
   }
 
   // first, get rid of whitespace and underscores
@@ -1117,6 +1133,8 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
     expr.set(ID_value, integer2bvrep(int_value, bits));
     expr.set(ID_C_little_endian, true);
   }
+
+  return std::move(expr);
 }
 
 /*******************************************************************\
@@ -1689,7 +1707,7 @@ Function: verilog_typecheck_exprt::convert_unary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
+exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
 {
   if(expr.id()==ID_not)
   {
@@ -1747,6 +1765,8 @@ void verilog_typecheck_exprt::convert_unary_expr(unary_exprt &expr)
     if(expr.type().id()==ID_bool && expr.id()==ID_bitnot)
       expr.id(ID_not);
   }
+
+  return std::move(expr);
 }
 
 /*******************************************************************\
@@ -1761,7 +1781,7 @@ Function: verilog_typecheck_exprt::convert_extractbit_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
+exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
 {
   exprt &op0 = expr.op0();
 
@@ -1819,6 +1839,8 @@ void verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt &expr)
 
     expr.type()=bool_typet();
   }
+
+  return std::move(expr);
 }
 
 /*******************************************************************\
@@ -1833,7 +1855,7 @@ Function: verilog_typecheck_exprt::convert_replication_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_replication_expr(replication_exprt &expr)
+exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
 {
   exprt &op1=expr.op1();
 
@@ -1876,6 +1898,8 @@ void verilog_typecheck_exprt::convert_replication_expr(replication_exprt &expr)
     else
       expr.type()=unsignedbv_typet(new_width);
   }
+
+  return std::move(expr);
 }
 
 /*******************************************************************\
@@ -1890,7 +1914,7 @@ Function: verilog_typecheck_exprt::convert_shl_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_shl_expr(shl_exprt &expr)
+exprt verilog_typecheck_exprt::convert_shl_expr(shl_exprt expr)
 {
   convert_expr(expr.op0());
   convert_expr(expr.op1());
@@ -1901,6 +1925,8 @@ void verilog_typecheck_exprt::convert_shl_expr(shl_exprt &expr)
   const typet &op0_type=expr.op0().type();
   
   expr.type()=op0_type;
+
+  return std::move(expr);
 }
 
 /*******************************************************************\
@@ -1915,12 +1941,12 @@ Function: verilog_typecheck_exprt::convert_binary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
+exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 {
   if(expr.id()==ID_extractbit)
-    convert_extractbit_expr(to_extractbit_expr(expr));
+    return convert_extractbit_expr(to_extractbit_expr(expr));
   else if(expr.id()==ID_replication)
-    convert_replication_expr(to_replication_expr(expr));
+    return convert_replication_expr(to_replication_expr(expr));
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_iff ||
     expr.id() == ID_implies)
@@ -1932,6 +1958,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
     }
 
     expr.type()=bool_typet();
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal)
   {
@@ -1941,6 +1969,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
       convert_expr(*it);
 
     tc_binary_expr(expr);
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_verilog_case_equality ||
           expr.id()==ID_verilog_case_inequality)
@@ -1951,6 +1981,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
       convert_expr(*it);
 
     tc_binary_expr(expr);
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_lt || expr.id()==ID_gt ||
           expr.id()==ID_le || expr.id()==ID_ge)
@@ -1962,19 +1994,21 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
 
     tc_binary_expr(expr);
     no_bool_ops(expr);
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_shl)
-    convert_shl_expr(to_shl_expr(expr));
+    return convert_shl_expr(to_shl_expr(expr));
   else if(expr.id()==ID_shr)
   {
     // This is the >>> expression, which turns into ID_lshr or ID_ashr
     // depending on type of first operand.
 
-    convert_expr(to_binary_expr(expr).op0());
-    convert_expr(to_binary_expr(expr).op1());
+    convert_expr(expr.op0());
+    convert_expr(expr.op1());
     no_bool_ops(expr);
 
-    const typet &op0_type = to_binary_expr(expr).op0().type();
+    const typet &op0_type = expr.op0().type();
 
     if(
       op0_type.id() == ID_signedbv || op0_type.id() == ID_verilog_signedbv ||
@@ -1984,6 +2018,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
       expr.id(ID_lshr);
 
     expr.type()=op0_type;
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_ashr)
   {
@@ -1993,10 +2029,12 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
   else if(expr.id()==ID_lshr)
   {
     // logical right shift >>
-    convert_expr(to_binary_expr(expr).op0());
-    convert_expr(to_binary_expr(expr).op1());
+    convert_expr(expr.op0());
+    convert_expr(expr.op1());
     no_bool_ops(expr);
     expr.type()=expr.op0().type();
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_div || expr.id()==ID_mod)
   {
@@ -2007,6 +2045,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
     no_bool_ops(expr);
 
     expr.type()=expr.op0().type();
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_sva_overlapped_implication ||
           expr.id()==ID_sva_non_overlapped_implication ||
@@ -2015,17 +2055,18 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
           expr.id()==ID_sva_until_with ||
           expr.id()==ID_sva_s_until_with)
   {
-    assert(expr.operands().size()==2);
-    auto &binary_expr = to_binary_expr(expr);
-    convert_expr(binary_expr.op0());
-    make_boolean(binary_expr.op0());
-    convert_expr(binary_expr.op1());
-    make_boolean(binary_expr.op1());
+    convert_expr(expr.op0());
+    make_boolean(expr.op0());
+    convert_expr(expr.op1());
+    make_boolean(expr.op1());
     expr.type()=bool_typet();
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_hierarchical_identifier)
   {
-    convert_hierarchical_identifier(to_hierarchical_identifier_expr(expr));
+    return convert_hierarchical_identifier(
+      to_hierarchical_identifier_expr(std::move(expr)));
   }
   else
   {
@@ -2062,6 +2103,8 @@ void verilog_typecheck_exprt::convert_binary_expr(binary_exprt &expr)
       else if(expr.id()==ID_bitnor)
         expr.id(ID_nor);
     }
+
+    return std::move(expr);
   }
 }
 
@@ -2077,7 +2120,7 @@ Function: verilog_typecheck_exprt::convert_trinary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt &expr)
+exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
 {
   if(expr.id()==ID_extractbits)
   {
@@ -2133,8 +2176,6 @@ void verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt &expr)
 
     tc_binary_expr(expr, expr.op1(), expr.op2());
     expr.type()=expr.op1().type();
-
-    return;
   }
   else if(expr.id()==ID_sva_cycle_delay) // #[1:2] something
   {
@@ -2150,6 +2191,8 @@ void verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt &expr)
     throw errort().with_location(expr.source_location())
       << "no conversion for trinary expression " << expr.id();
   }
+
+  return std::move(expr);
 }
 
 /*******************************************************************\
