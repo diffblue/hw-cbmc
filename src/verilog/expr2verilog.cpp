@@ -386,9 +386,10 @@ std::string expr2verilogt::convert_sva(
 {
   if(src.operands().size()==1)
   {
+    auto &op = to_unary_expr(src).op();
     unsigned p;
-    auto s = convert(to_unary_expr(src).op(), p);
-    if(p == 0)
+    auto s = convert(op, p);
+    if(p == 0 && op.operands().size() >= 2)
       s = "(" + s + ")";
     return name + " " + s;
   }
