@@ -900,23 +900,21 @@ void verilog_typecheck_exprt::convert_constant(constant_exprt &expr)
 {
   if(expr.type().id()==ID_string)
   {
-    exprt new_expr;
+    // These are unsigned integer vectors with 8 bits per character.
+    // The first character is the most significant one.
     const std::string &value=expr.get_string(ID_value);
+    auto type = unsignedbv_typet(value.size() * 8);
 
-    new_expr.type()=unsignedbv_typet(value.size()*8);
+    // The below is quadratic, and should be made linear.
+    mp_integer new_value = 0;
+    for(std::size_t i = 0; i < value.size(); i++)
+    {
+      unsigned char character = value[i];
+      new_value += mp_integer(character) << ((value.size() - i - 1) * 8);
+    }
 
-    std::string new_value;
-
-    for(unsigned i=0; i<value.size(); i++)
-      for(unsigned bit=0; bit<8; bit++)
-      {
-        bool b=(value[i]&(1<<bit))!=0;
-        new_value=(b?"1":"0")+new_value;
-      }
-
-    new_expr.set(ID_value, new_value);
-    
-    expr.swap(new_expr);
+    expr =
+      from_integer(new_value, type).with_source_location<constant_exprt>(expr);
     return;
   }
   else if(expr.type().id()==ID_unsignedbv ||
