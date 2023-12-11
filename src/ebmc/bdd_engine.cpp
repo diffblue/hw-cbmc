@@ -121,6 +121,10 @@ protected:
   void compute_counterexample(
     propertyt &,
     unsigned number_of_timeframes);
+
+  void AGp(propertyt &);
+  void AGAFp(propertyt &);
+  void just_p(propertyt &);
 };
 
 /*******************************************************************\
@@ -425,100 +429,229 @@ void bdd_enginet::check_property(propertyt &property)
            !has_temporal_operator(to_unary_expr(expr).op());
   };
 
+  // special treatment for AG AFp
+  auto is_AG_AFp = [](const exprt &expr) {
+    return (expr.id() == ID_AG || expr.id() == ID_sva_always) &&
+           (to_unary_expr(expr).op().id() == ID_AF ||
+            to_unary_expr(expr).op().id() == ID_sva_eventually) &&
+           !has_temporal_operator(to_unary_expr(to_unary_expr(expr).op()).op());
+  };
+
   if(is_AGp(property.expr))
   {
-    const exprt &sub_expr = to_unary_expr(property.expr).op();
-    BDD p=property2BDD(sub_expr);
-
-    // Start with !p, and go backwards until saturation or we hit an
-    // initial state.
-    
-    BDD states=!p;
-    unsigned iteration=0;
-    
-    for(const auto &c : constraints_BDDs)
-      states = states & c;
-
-    std::size_t peak_bdd_nodes=0;
-
-    while(true)
-    {
-      iteration++;
-      message.statistics() << "Iteration " << iteration << messaget::eom;
-
-      // do we have an initial state?
-      BDD intersection=states;
-      
-      for(const auto &i : initial_BDDs)
-        intersection=intersection & i;
-
-      peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
-
-      if(!intersection.is_false())
-      {
-        property.refuted();
-        message.status() << "Property refuted" << messaget::eom;
-        compute_counterexample(property, iteration);
-        break;
-      }
-      
-      // make the states be expressed in terms of 'next' variables
-      BDD states_next=current_to_next(states);
-
-      // now conjoin with transition relation
-      BDD conjunction=states_next;
-      
-      for(const auto &t : transition_BDDs)
-        conjunction = conjunction & t;
-      
-      for(const auto &c : constraints_BDDs)
-        conjunction = conjunction & c;
-
-      // now project away 'next' variables
-      BDD pre_image=project_next(conjunction);
-      
-      // compute union
-      BDD set_union=states | pre_image;
-
-      // have we saturated?
-      if((set_union==states).is_true())
-      {
-        property.proved();
-        message.status() << "Property proved" << messaget::eom;
-        break;
-      }
-
-      states=set_union;
-
-      peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
-    }
+    AGp(property);
+  }
+  else if(is_AG_AFp(property.expr))
+  {
+    AGAFp(property);
   }
   else if(!has_temporal_operator(property.expr))
   {
-    // We check whether the BDD for the negation of the property
-    // contains an initial state.
-    exprt negation=negate_property(property.expr);
-    BDD states=property2BDD(negation);
+    just_p(property);
+  }
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::AGp
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void bdd_enginet::AGp(propertyt &property)
+{
+  const exprt &sub_expr = to_unary_expr(property.expr).op();
+  BDD p = property2BDD(sub_expr);
+
+  // Start with !p, and go backwards until saturation or we hit an
+  // initial state.
+
+  BDD states = !p;
+  unsigned iteration = 0;
+
+  for(const auto &c : constraints_BDDs)
+    states = states & c;
+
+  std::size_t peak_bdd_nodes = 0;
+
+  while(true)
+  {
+    iteration++;
+    message.statistics() << "Iteration " << iteration << messaget::eom;
 
     // do we have an initial state?
-    BDD intersection=states;
-      
+    BDD intersection = states;
+
     for(const auto &i : initial_BDDs)
       intersection = intersection & i;
 
-    for(const auto &c : constraints_BDDs)
-      intersection = intersection & c;
+    peak_bdd_nodes = std::max(peak_bdd_nodes, mgr.number_of_nodes());
 
     if(!intersection.is_false())
     {
       property.refuted();
       message.status() << "Property refuted" << messaget::eom;
+      compute_counterexample(property, iteration);
+      break;
     }
-    else
+
+    // make the states be expressed in terms of 'next' variables
+    BDD states_next = current_to_next(states);
+
+    // now conjoin with transition relation
+    BDD conjunction = states_next;
+
+    for(const auto &t : transition_BDDs)
+      conjunction = conjunction & t;
+
+    for(const auto &c : constraints_BDDs)
+      conjunction = conjunction & c;
+
+    // now project away 'next' variables
+    BDD pre_image = project_next(conjunction);
+
+    // compute union
+    BDD set_union = states | pre_image;
+
+    // have we saturated?
+    if((set_union == states).is_true())
     {
       property.proved();
       message.status() << "Property proved" << messaget::eom;
+      break;
     }
+
+    states = set_union;
+
+    peak_bdd_nodes = std::max(peak_bdd_nodes, mgr.number_of_nodes());
+  }
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::AGAFp
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void bdd_enginet::AGAFp(propertyt &property)
+{
+  const exprt &sub_expr = to_unary_expr(to_unary_expr(property.expr).op()).op();
+  BDD p = property2BDD(sub_expr);
+
+  // Start with p, and go backwards until saturation.
+  // AG AFp holds iff this includes all initial states.
+
+  BDD good_states = p;
+  unsigned iteration = 0;
+
+  for(const auto &c : constraints_BDDs)
+    good_states = good_states & c;
+
+  std::size_t peak_bdd_nodes = 0;
+
+  while(true)
+  {
+    iteration++;
+    message.statistics() << "Iteration " << iteration << messaget::eom;
+
+    // make the states be expressed in terms of 'next' variables
+    BDD good_states_next = current_to_next(good_states);
+
+    // now conjoin with transition relation
+    BDD conjunction = good_states_next;
+
+    for(const auto &t : transition_BDDs)
+      conjunction = conjunction & t;
+
+    for(const auto &c : constraints_BDDs)
+      conjunction = conjunction & c;
+
+    // now project away 'next' variables
+    BDD pre_image = project_next(conjunction);
+
+    // compute union
+    BDD set_union = good_states | pre_image;
+
+    // have we saturated?
+    if((set_union == good_states).is_true())
+    {
+      message.progress() << "Fixedpoint reached" << messaget::eom;
+      break;
+    }
+
+    good_states = set_union;
+
+    peak_bdd_nodes = std::max(peak_bdd_nodes, mgr.number_of_nodes());
+  }
+
+  // Does 'good_states' include all initial states?
+  BDD union_with_initial = good_states;
+
+  for(const auto &i : initial_BDDs)
+    union_with_initial = union_with_initial | i;
+
+  if((union_with_initial == good_states).is_true())
+  {
+    // proved
+    property.proved();
+    message.status() << "Property proved" << messaget::eom;
+  }
+  else
+  {
+    // refuted
+    property.refuted();
+    message.status() << "Property refuted" << messaget::eom;
+  }
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::just_p
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void bdd_enginet::just_p(propertyt &property)
+{
+  // We check whether the BDD for the negation of the property
+  // contains an initial state.
+  exprt negation = negate_property(property.expr);
+  BDD states = property2BDD(negation);
+
+  // do we have an initial state?
+  BDD intersection = states;
+
+  for(const auto &i : initial_BDDs)
+    intersection = intersection & i;
+
+  for(const auto &c : constraints_BDDs)
+    intersection = intersection & c;
+
+  if(!intersection.is_false())
+  {
+    property.refuted();
+    message.status() << "Property refuted" << messaget::eom;
+  }
+  else
+  {
+    property.proved();
+    message.status() << "Property proved" << messaget::eom;
   }
 }
 
