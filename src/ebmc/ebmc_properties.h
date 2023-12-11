@@ -14,6 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <solvers/prop/literal.h>
 #include <trans-netlist/trans_trace.h>
+#include <trans-word-level/property.h>
 
 #include "transition_system.h"
 
@@ -137,6 +138,11 @@ public:
     std::string status_as_string() const;
 
     propertyt() = default;
+
+    bool requires_lasso_constraints() const
+    {
+      return ::requires_lasso_constraints(expr);
+    }
   };
 
   typedef std::list<propertyt> propertiest;
@@ -149,6 +155,15 @@ public:
         return false;
 
     return true;
+  }
+
+  bool requires_lasso_constraints() const
+  {
+    for(const auto &p : properties)
+      if(!p.is_disabled() && p.requires_lasso_constraints())
+        return true;
+
+    return false;
   }
 
   static ebmc_propertiest from_command_line(

@@ -44,6 +44,7 @@ public:
         "(compute-ct)(dot-netlist)(smv-netlist)(vcd):"
         "(random-traces)(trace-steps):(random-seed):(number-of-traces):"
         "(random-trace)(random-waveform)"
+        "(liveness-to-safety)"
         "I:(preprocess)",
         argc,
         argv,

@@ -36,9 +36,16 @@ public:
     return std::move(*this);
   }
 
+  ebmc_errort with_location(source_locationt _location) &&
+  {
+    __location = std::move(_location);
+    return std::move(*this);
+  }
+
 protected:
   std::ostringstream message;
   optionalt<int> __exit_code = {};
+  source_locationt __location = source_locationt::nil();
 };
 
 /// add to the diagnostic information in the given ebmc_error exception

@@ -56,27 +56,6 @@ ebmc_baset::ebmc_baset(
 
 /*******************************************************************\
 
-Function: ebmc_baset::property_requires_lasso_constraints
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool ebmc_baset::property_requires_lasso_constraints() const
-{
-  for(const auto &p : properties.properties)
-    if(!p.is_disabled() && requires_lasso_constraints(p.expr))
-      return true;
-
-  return false;
-}
-
-/*******************************************************************\
-
 Function: ebmc_baset::finish_word_level_bmc
 
   Inputs:
@@ -108,7 +87,7 @@ void ebmc_baset::word_level_properties(decision_proceduret &solver)
   }
 
   // lasso constraints, if needed
-  if(property_requires_lasso_constraints())
+  if(properties.requires_lasso_constraints())
   {
     message.status() << "Adding lasso constraints" << messaget::eom;
     lasso_constraints(
