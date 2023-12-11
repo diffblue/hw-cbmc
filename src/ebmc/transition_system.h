@@ -21,6 +21,8 @@ public:
   symbol_tablet symbol_table;
   const symbolt *main_symbol;
   optionalt<transt> trans_expr; // transition system expression
+
+  void output(std::ostream &) const;
 };
 
 transition_systemt get_transition_system(const cmdlinet &, message_handlert &);

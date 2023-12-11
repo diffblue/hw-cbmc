@@ -28,6 +28,49 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <fstream>
 #include <iostream>
 
+static void output(
+  const exprt &expr,
+  std::ostream &out,
+  languaget &language,
+  const namespacet &ns)
+{
+  if(expr.id() == ID_and)
+  {
+    for(auto &conjunct : expr.operands())
+      output(conjunct, out, language, ns);
+  }
+  else
+  {
+    std::string text;
+
+    if(language.from_expr(expr, text, ns))
+    {
+      throw ebmc_errort() << "failed to convert expression";
+    }
+
+    out << "  " << text << '\n' << '\n';
+  }
+}
+
+void transition_systemt::output(std::ostream &out) const
+{
+  auto language = get_language_from_mode(main_symbol->mode);
+
+  const namespacet ns{symbol_table};
+
+  out << "Initial state constraints:\n\n";
+
+  ::output(trans_expr->init(), out, *language, ns);
+
+  out << "State constraints:\n\n";
+
+  ::output(trans_expr->invar(), out, *language, ns);
+
+  out << "Transition constraints:\n\n";
+
+  ::output(trans_expr->trans(), out, *language, ns);
+}
+
 int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
 {
   messaget message(message_handler);
