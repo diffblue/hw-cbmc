@@ -101,9 +101,25 @@ void report_results(
       message.status() << "[" << property.name << "] " << property.expr_string
                        << ": ";
 
+      using statust = ebmc_propertiest::propertyt::statust;
+
+      switch(property.status)
+      {
+      // clang-format off
+      case statust::PROVED: message.status() << messaget::green; break;
+      case statust::PROVED_WITH_BOUND: message.status() << messaget::green; break;
+      case statust::REFUTED: message.status() << messaget::bright_red; break;
+      case statust::DROPPED: message.status() << messaget::red; break;
+      case statust::FAILURE: message.status() << messaget::red; break;
+      case statust::UNKNOWN: message.status() << messaget::yellow; break;
+      case statust::DISABLED: break;
+      case statust::INCONCLUSIVE: message.status() << messaget::yellow; break;
+      }
+      // clang-format on
+
       message.status() << property.status_as_string();
 
-      message.status() << messaget::eom;
+      message.status() << messaget::reset << messaget::eom;
 
       if(property.has_counterexample())
       {
