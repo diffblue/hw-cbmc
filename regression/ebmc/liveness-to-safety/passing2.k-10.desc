@@ -1,0 +1,8 @@
+CORE
+passing2.sv
+--k-induction --bound 10 --liveness-to-safety
+^EXIT=10$
+^SIGNAL=0$
+^\[main\.property\.p0\] always eventually main\.counter == 0: INCONCLUSIVE$
+^\[main\.property\.p1\] always eventually main\.counter == 8: INCONCLUSIVE$
+--
