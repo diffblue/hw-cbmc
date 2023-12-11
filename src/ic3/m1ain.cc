@@ -5,22 +5,32 @@ Module: Main
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
-#include <queue>
-#include <set>
-#include <map>
+
+// clang-format off
+// The order of these matter.
+#include <util/cmdline.h>
+#include <util/ui_message.h>
+
+#include <ebmc/ebmc_properties.h>
+
+#include <trans-netlist/netlist.h>
+#include <trans-netlist/trans_to_netlist.h>
+
 #include <algorithm>
 #include <iostream>
-
-#include <ebmc/ebmc_base.h>
+#include <map>
+#include <queue>
+#include <set>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
+
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
-#include <util/cmdline.h>
 #include "ebmc_ic3_interface.hh"
+// clang-format off
 
 hsh_tbl htable_lits;
 long long gcount = 0;
@@ -53,13 +63,21 @@ int ic3_enginet::operator()()
   read_parameters();
 
   try    {
-    transition_system =
+    auto transition_system =
       get_transition_system(cmdline, message.get_message_handler());
 
-    if(make_netlist(netlist))     {
-      message.error() << "Failed to build netlist" << messaget::eom;
-      return 2;
-    }
+    // make net-list
+    message.status() << "Generating Netlist" << messaget::eom;
+
+    convert_trans_to_netlist(
+      transition_system.symbol_table,
+      transition_system.main_symbol->name,
+      netlist,
+      message.get_message_handler());
+
+    message.statistics() << "Latches: " << netlist.var_map.latches.size()
+                         << ", nodes: " << netlist.number_of_nodes()
+                         << messaget::eom;
 
     properties = ebmc_propertiest::from_command_line(
       cmdline, transition_system, message.get_message_handler());
@@ -70,7 +88,11 @@ int ic3_enginet::operator()()
       return 1;
     }
   }
-
+  catch(const std::string &error_str)
+  {
+    message.error() << error_str << messaget::eom;
+    return 1;
+  }
   catch(const char *error_msg)    {
     message.error() << error_msg << messaget::eom;
     return 1;
