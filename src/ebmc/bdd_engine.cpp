@@ -10,14 +10,16 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include <util/format_expr.h>
 
+#include <ebmc/ebmc_properties.h>
+#include <ebmc/transition_system.h>
 #include <solvers/bdd/miniBDD/miniBDD.h>
 #include <solvers/sat/satcheck.h>
 #include <trans-netlist/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
+#include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 
-#include "ebmc_base.h"
 #include "negate_property.h"
 #include "report_results.h"
 
@@ -32,19 +34,24 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
-class bdd_enginet:public ebmc_baset
+class bdd_enginet
 {
 public:
   bdd_enginet(
-    const cmdlinet &cmdline,
-    ui_message_handlert &ui_message_handler):
-    ebmc_baset(cmdline, ui_message_handler)
+    const cmdlinet &_cmdline,
+    ui_message_handlert &_ui_message_handler)
+    : cmdline(_cmdline), message(_ui_message_handler)
   {
   }
 
   int operator()();
 
 protected:
+  using propertyt = ebmc_propertiest::propertyt;
+  const cmdlinet &cmdline;
+  messaget message;
+  transition_systemt transition_system;
+  ebmc_propertiest properties;
   netlistt netlist;
 
   // the Manager must appear before any BDDs
@@ -135,28 +142,28 @@ int bdd_enginet::operator()()
     transition_system =
       get_transition_system(cmdline, message.get_message_handler());
 
-    {  
-      if(make_netlist(netlist))
-      {
-        message.error() << "Failed to build netlist" << messaget::eom;
-        return 2;
-      }
+    message.status() << "Building netlist" << messaget::eom;
 
-      message.status() << "Building netlist for atomic propositions"
-                       << messaget::eom;
+    convert_trans_to_netlist(
+      transition_system.symbol_table,
+      transition_system.main_symbol->name,
+      netlist,
+      message.get_message_handler());
 
-      auto result = get_properties();
-      if(result != -1)
-        return result;
+    message.statistics() << "Latches: " << netlist.var_map.latches.size()
+                         << ", nodes: " << netlist.number_of_nodes()
+                         << messaget::eom;
 
-      for(const propertyt &p : properties.properties)
-        get_atomic_propositions(p.expr);
+    properties = ebmc_propertiest::from_command_line(
+      cmdline, transition_system, message.get_message_handler());
 
-      message.status() << "Building BDD for netlist" << messaget::eom;
+    for(const propertyt &p : properties.properties)
+      get_atomic_propositions(p.expr);
 
-      allocate_vars(netlist.var_map);
-      build_BDDs();
-    }
+    message.status() << "Building BDD for netlist" << messaget::eom;
+
+    allocate_vars(netlist.var_map);
+    build_BDDs();
 
     message.statistics() << "BDD nodes: " << mgr.number_of_nodes()
                          << messaget::eom;
