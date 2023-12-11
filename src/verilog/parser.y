@@ -849,12 +849,16 @@ package_item:
 
 local_parameter_declaration:
           TOK_LOCALPARAM data_type_or_implicit list_of_param_assignments
-		{ init($$, ID_local_parameter_decl); swapop($$, $3); }
+		{ init($$, ID_local_parameter_decl);
+		  stack_expr($$).type() = std::move(stack_type($2));
+		  swapop($$, $3); }
 	;
 
 parameter_declaration:
           TOK_PARAMETER data_type_or_implicit list_of_param_assignments
-		{ init($$, ID_parameter_decl); swapop($$, $3); }
+		{ init($$, ID_parameter_decl);
+		  stack_expr($$).type() = std::move(stack_type($2));
+		  swapop($$, $3); }
 	;
 
 specparam_declaration:
