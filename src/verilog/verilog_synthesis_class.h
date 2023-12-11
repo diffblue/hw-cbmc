@@ -191,10 +191,7 @@ protected:
   typedef std::unordered_set<irep_idt, irep_id_hash> local_symbolst;
   local_symbolst local_symbols, new_wires;
 
-  void assignment(
-    const exprt &lhs,
-    const exprt &rhs,
-    bool blocking);
+  void assignment_rec(const exprt &lhs, const exprt &rhs, bool blocking);
 
   void assignment_rec(
     const exprt &lhs,
@@ -301,11 +298,6 @@ protected:
     transt &trans);
 
   void replace_by_wire(exprt &expr, const symbolt &base);
-    
-  // This map contains the values of all variables
-  // fixed to a constant during synthesis.
-  typedef std::map<irep_idt, exprt> valuest;
-  valuest values;
   
   unsigned temporary_counter;
 };
