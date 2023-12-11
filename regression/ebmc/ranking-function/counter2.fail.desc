@@ -1,7 +1,7 @@
 CORE
 counter2.sv
 --ranking-function counter
-^\[main\.property\.p0\] always \(eventually main.counter == 10\): INCONCLUSIVE$
+^\[main\.property\.p0\] always eventually main.counter == 10: INCONCLUSIVE$
 ^EXIT=10$
 ^SIGNAL=0$
 --
