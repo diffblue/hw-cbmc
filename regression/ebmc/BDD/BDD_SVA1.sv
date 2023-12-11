@@ -1,7 +1,7 @@
 module top(input clock);
 
   reg my_bit;
-  reg [31:0] counter;
+  reg [7:0] counter;
 
   initial my_bit=1;
   initial counter=0;
