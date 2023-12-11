@@ -12,14 +12,6 @@ or CVC4 to solve the decision problem.
 
 For full information see [cprover.org](http://www.cprover.org/ebmc/).
 
-Compiling
-=========
-
-- initialize and update the CBMC submodule: `$> git submodule init; git submodule update`
-- download minisat: `$> make -C lib/cbmc/src minisat2-download`
-- build EBMC: `$> make -C src` (this also builds the CBMC submodule)
-- optional: `$> export PATH=/full/path/hw-cbmc/src/ebmc:${PATH}` to get EBMC on the path
-
 Usage
 =====
 
