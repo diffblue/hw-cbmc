@@ -3,7 +3,7 @@ lasso1.sv
 --bound 10 --waveform
 ^EXIT=10$
 ^SIGNAL=0$
-^\[top\.property\.p0\] .* FAILURE$
+^\[top\.property\.p0\] .* REFUTED$
 ^             0  1  2  3  4  5  6  7  8  9 10$
 ^top\.counter  0  1  2  3  4  5  6  7  8  9  3$
 --

@@ -1,9 +1,9 @@
 CORE
 k-induction1.v
 --module main --bound 1 --k-induction
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
-^\[main.property.property1\] .* SUCCESS$
-^\[main.property.property2\] .* UNKNOWN$
+^\[main.property.property1\] .* PROVED$
+^\[main.property.property2\] .* INCONCLUSIVE$
 --
 ^warning: ignoring

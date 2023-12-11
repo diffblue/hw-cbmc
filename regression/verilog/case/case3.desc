@@ -4,6 +4,6 @@ case3.v
 ^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
-^\[main.property.p1\] .* FAILURE$
+^\[main.property.p1\] .* REFUTED$
 --
 ^warning: ignoring

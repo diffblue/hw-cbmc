@@ -1,7 +1,7 @@
 CORE
 counter_in_module1.sv
 --ranking-function instance.counter
-^\[main\.property\.p0\] always \(eventually main.instance.counter == 0\): SUCCESS$
+^\[main\.property\.p0\] always \(eventually main.instance.counter == 0\): PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

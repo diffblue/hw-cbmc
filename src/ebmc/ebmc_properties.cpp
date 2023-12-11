@@ -14,6 +14,30 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_error.h"
 
+std::string ebmc_propertiest::propertyt::status_as_string() const
+{
+  switch(status)
+  {
+  case statust::PROVED:
+    return "PROVED";
+  case statust::PROVED_WITH_BOUND:
+    return "PROVED up to bound " + std::to_string(bound);
+  case statust::REFUTED:
+    return "REFUTED";
+  case statust::UNKNOWN:
+    return "UNKNOWN";
+  case statust::INCONCLUSIVE:
+    return "INCONCLUSIVE";
+  case statust::FAILURE:
+    return "FAILURE";
+  case statust::DROPPED:
+    return "DROPPED";
+  case statust::DISABLED:
+  default:
+    UNREACHABLE;
+  }
+}
+
 ebmc_propertiest ebmc_propertiest::from_transition_system(
   const transition_systemt &transition_system,
   message_handlert &message_handler)

@@ -4,6 +4,6 @@ tasks2.v
 ^EXIT=10$
 ^SIGNAL=0$
 ^Counterexample:$
-^\[main.property.property1\] .* FAILURE$
+^\[main.property.property1\] .* REFUTED$
 --
 ^warning: ignoring

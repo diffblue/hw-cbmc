@@ -221,27 +221,29 @@ int k_inductiont::induction_step()
       message.result()
         << "SAT: inductive proof failed, k-induction is inconclusive"
         << messaget::eom;
-      p_it.make_unknown();
+      p_it.inconclusive();
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE:
       message.result() << "UNSAT: inductive proof successful, property holds"
                        << messaget::eom;
-      p_it.make_success();
+      p_it.proved();
       break;
 
     case decision_proceduret::resultt::D_ERROR:
       message.error() << "Error from decision procedure" << messaget::eom;
+      p_it.failure();
       return 2;
 
     default:
       message.error() << "Unexpected result from decision procedure"
                       << messaget::eom;
+      p_it.failure();
       return 1;
     }
   }
 
-  // We return '0' if the property holds,
-  // and '10' if it is violated.
-  return properties.property_failure() ? 10 : 0;
+  // We return '0' if all properties are proved,
+  // and '10' otherwise.
+  return properties.all_properties_proved() ? 0 : 10;
 }

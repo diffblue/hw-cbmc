@@ -1,7 +1,7 @@
 CORE
 ring_buffer.sv
 --bdd
-SUCCESS$
+PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 

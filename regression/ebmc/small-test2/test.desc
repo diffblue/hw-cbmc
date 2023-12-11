@@ -3,6 +3,6 @@ main.smv
 --bound 2
 ^EXIT=10$
 ^SIGNAL=0$
-^\[smv::main::spec1\] AG main::var::z: FAILURE$
+^\[smv::main::spec1\] AG main::var::z: REFUTED$
 --
 ^warning: ignoring

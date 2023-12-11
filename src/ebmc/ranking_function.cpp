@@ -118,17 +118,17 @@ int do_ranking_function(
 
   if(result.is_true())
   {
-    property.make_success();
+    property.proved();
   }
   else
   {
-    property.make_unknown();
+    property.inconclusive();
   }
 
   const namespacet ns(transition_system.symbol_table);
   report_results(cmdline, properties, ns, message_handler);
 
-  return properties.property_failure() ? 10 : 0;
+  return properties.all_properties_proved() ? 0 : 10;
 }
 
 tvt is_ranking_function(

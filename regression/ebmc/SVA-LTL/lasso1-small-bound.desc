@@ -3,6 +3,6 @@ lasso1.sv
 --bound 5
 ^EXIT=0$
 ^SIGNAL=0$
-^\[top\.property\.p0\] .* SUCCESS$
+^\[top\.property\.p0\] .* PROVED up to bound 5$
 --
 --

@@ -190,9 +190,9 @@ int bdd_enginet::operator()()
     const namespacet ns(transition_system.symbol_table);
     report_results(cmdline, properties, ns, message.get_message_handler());
 
-    // We return '0' if the property holds,
-    // and '10' if it is violated.
-    return properties.property_failure() ? 10 : 0;
+    // We return '0' if all properties are proven,
+    // and '10' otherwise.
+    return properties.all_properties_proved() ? 0 : 10;
   }
   catch(const char *error_msg)
   {
@@ -447,7 +447,7 @@ void bdd_enginet::check_property(propertyt &property)
 
       if(!intersection.is_false())
       {
-        property.make_failure();
+        property.refuted();
         message.status() << "Property refuted" << messaget::eom;
         compute_counterexample(property, iteration);
         break;
@@ -474,8 +474,8 @@ void bdd_enginet::check_property(propertyt &property)
       // have we saturated?
       if((set_union==states).is_true())
       {
-        property.make_success();
-        message.status() << "Property holds" << messaget::eom;
+        property.proved();
+        message.status() << "Property proved" << messaget::eom;
         break;
       }
 
@@ -502,13 +502,13 @@ void bdd_enginet::check_property(propertyt &property)
 
     if(!intersection.is_false())
     {
-      property.make_failure();
+      property.refuted();
       message.status() << "Property refuted" << messaget::eom;
     }
     else
     {
-      property.make_success();
-      message.status() << "Property holds" << messaget::eom;
+      property.proved();
+      message.status() << "Property proved" << messaget::eom;
     }
   }
 }

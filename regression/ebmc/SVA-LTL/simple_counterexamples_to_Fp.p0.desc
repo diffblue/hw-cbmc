@@ -4,5 +4,5 @@ simple_counterexamples_to_Fp.sv
 ^Adding lasso constraints$
 ^EXIT=10$
 ^SIGNAL=0$
-^\[top\.property\.p0\] .* FAILURE$
+^\[top\.property\.p0\] .* REFUTED$
 --

@@ -3,7 +3,7 @@ main.v
 --module main --bound 20
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main.s_ok.property.eq\] .* SUCCESS$
-^\[main.s_fail.property.eq\] .* FAILURE$
+^\[main.s_ok.property.eq\] .* PROVED up to bound 20$
+^\[main.s_fail.property.eq\] .* REFUTED$
 --
 ^warning: ignoring

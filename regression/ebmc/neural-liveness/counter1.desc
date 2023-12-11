@@ -1,7 +1,7 @@
 CORE
 counter1.sv
 --number-of-traces 2 --neural-liveness --neural-engine "echo Candidate: counter\\\\n"
-^\[main\.property\.p0\] always \(eventually main.counter == 0\): SUCCESS$
+^\[main\.property\.p0\] always \(eventually main.counter == 0\): PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

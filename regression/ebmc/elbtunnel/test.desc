@@ -3,13 +3,13 @@ elbtunnel.aig.smv
 --bound 12
 ^EXIT=10$
 ^SIGNAL=0$
-\[smv::main::spec1\] .* FAILURE
-\[smv::main::spec2\] .* SUCCESS
-\[smv::main::spec3\] .* FAILURE
-\[smv::main::spec4\] .* FAILURE
-\[smv::main::spec5\] .* SUCCESS
-\[smv::main::spec6\] .* SUCCESS
-\[smv::main::spec7\] .* FAILURE
-\[smv::main::spec8\] .* FAILURE
+^\[smv::main::spec1\] .* REFUTED$
+^\[smv::main::spec2\] .* PROVED up to bound 12$
+^\[smv::main::spec3\] .* REFUTED$
+^\[smv::main::spec4\] .* REFUTED$
+^\[smv::main::spec5\] .* PROVED up to bound 12$
+^\[smv::main::spec6\] .* PROVED up to bound 12$
+^\[smv::main::spec7\] .* REFUTED$
+^\[smv::main::spec8\] .* REFUTED$
 --
 ^warning: ignoring
