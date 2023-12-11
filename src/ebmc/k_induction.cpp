@@ -15,6 +15,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "ebmc_base.h"
 #include "ebmc_solver_factory.h"
+#include "liveness_to_safety.h"
 #include "report_results.h"
 
 /*******************************************************************\
@@ -88,6 +89,10 @@ int k_inductiont::operator()()
   auto result = get_properties();
   if(result != -1)
     return result;
+
+  // liveness to safety translation, if requested
+  if(cmdline.isset("liveness-to-safety"))
+    liveness_to_safety(transition_system, properties);
 
   if(properties.properties.empty())
   {
