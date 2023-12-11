@@ -2,16 +2,25 @@ typedef std::vector<std::string> GateNames;
 typedef std::map<int,int> LatchVal;
 typedef std::map<int,int> NondetVars;
 //
-class ic3_enginet:public ebmc_baset
+class ic3_enginet
 {
 public:
   ic3_enginet(
-	      const cmdlinet &cmdline,
-	      ui_message_handlert &ui_message_handler):
-    ebmc_baset(cmdline, ui_message_handler)
+    const cmdlinet &_cmdline,
+    ui_message_handlert &_ui_message_handler)
+    : cmdline(_cmdline), message(_ui_message_handler)
   {
   }
 
+protected:
+  const cmdlinet &cmdline;
+  messaget message;
+
+  using propertyt = ebmc_propertiest::propertyt;
+  ebmc_propertiest properties;
+  netlistt netlist;
+
+public:
   CompInfo Ci;
   GateNames Gn;
   literalt prop_l;
@@ -61,11 +70,6 @@ public:
   void print_lit(std::ostream& out,literalt a);
   std::string print_string(const irep_idt &id);
   void add_verilog_conv_constrs();
-  
-protected:
-  netlistt netlist;
- 
-
 };
 
 //
