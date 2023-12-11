@@ -173,6 +173,12 @@ int k_inductiont::induction_step()
        p_it.is_failure())
       continue;
 
+    // Do not run the step case for properties that have
+    // failed the base case already. Properties may pass the step
+    // case, but are still false when the base case fails.
+    if(p_it.is_refuted())
+      continue;
+
     auto solver_wrapper = solver_factory(ns, message.get_message_handler());
     auto &solver = solver_wrapper.decision_procedure();
 
