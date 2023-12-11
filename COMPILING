@@ -8,7 +8,7 @@ git submodule update
 
 cd lib/cbmc
 
-and follow the instructions in the file COMPILING.
+and follow the instructions in the file COMPILING in cbmc repository.
 
 3) The do
 
