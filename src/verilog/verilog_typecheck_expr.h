@@ -40,7 +40,11 @@ public:
     nondet_count(0)
   { }
 
-  virtual void convert_expr(exprt &expr);
+  virtual void convert_expr(exprt &expr)
+  {
+    expr = convert_expr_rec(std::move(expr));
+  }
+
   mp_integer convert_integer_constant_expression(exprt);
 
   exprt elaborate_constant_system_function_call(function_call_exprt);
@@ -109,20 +113,22 @@ protected:
   }
 
 private:
-  void convert_constant(constant_exprt &);
-  void convert_symbol(exprt &);
-  void convert_hierarchical_identifier(class hierarchical_identifier_exprt &);
-  void convert_nullary_expr(exprt &);
-  void convert_unary_expr  (unary_exprt &);
-  void convert_binary_expr (binary_exprt &);
-  void convert_trinary_expr(ternary_exprt &);
+  [[nodiscard]] exprt convert_expr_rec(exprt expr);
+  [[nodiscard]] exprt convert_constant(constant_exprt);
+  [[nodiscard]] exprt convert_symbol(symbol_exprt);
+  [[nodiscard]] exprt
+    convert_hierarchical_identifier(class hierarchical_identifier_exprt);
+  [[nodiscard]] exprt convert_nullary_expr(nullary_exprt);
+  [[nodiscard]] exprt convert_unary_expr(unary_exprt);
+  [[nodiscard]] exprt convert_binary_expr(binary_exprt);
+  [[nodiscard]] exprt convert_trinary_expr(ternary_exprt);
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
   [[nodiscard]] exprt
   convert_system_function(const irep_idt &identifier, function_call_exprt);
-  void convert_constraint_select_one(exprt &);
-  void convert_extractbit_expr(extractbit_exprt &);
-  void convert_replication_expr(replication_exprt &);
-  void convert_shl_expr(shl_exprt &);
+  [[nodiscard]] exprt convert_constraint_select_one(exprt);
+  [[nodiscard]] exprt convert_extractbit_expr(extractbit_exprt);
+  [[nodiscard]] exprt convert_replication_expr(replication_exprt);
+  [[nodiscard]] exprt convert_shl_expr(shl_exprt);
   void typecast(exprt &, const typet &type);
   void tc_binary_expr(exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
