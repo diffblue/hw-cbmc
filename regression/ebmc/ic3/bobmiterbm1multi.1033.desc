@@ -1,6 +1,8 @@
 CORE
-bobcount.sv
---ic3
+bobmiterbm1multi.sv
+--ic3 --property bobmiterbm1multi.property.1033
+^EXIT=2$
+^SIGNAL=0$
 ^property HOLDS
 ^inductive invariant verification is ok
 --

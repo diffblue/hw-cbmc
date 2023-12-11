@@ -61,6 +61,9 @@ int ic3_enginet::operator()()
       return 2;
     }
 
+    properties = ebmc_propertiest::from_command_line(
+      cmdline, transition_system, message.get_message_handler());
+
     if(properties.properties.empty())
     {
       message.error() << "no properties" << messaget::eom;

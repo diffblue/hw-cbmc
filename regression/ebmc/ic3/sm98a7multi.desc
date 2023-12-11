@@ -1,6 +1,8 @@
 CORE
 sm98a7multi.sv
 --ic3 --property sm98a7multi.property.2 --constr
+^EXIT=1$
+^SIGNAL=0$
 ^property FAILED
 ^cex verification is ok
 --

@@ -1,6 +1,8 @@
 CORE
-ringp0.sv
+viseisenberg.sv
 --ic3
+^EXIT=1$
+^SIGNAL=0$
 ^property FAILED
 ^cex verification is ok
 --

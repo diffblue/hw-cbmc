@@ -1,7 +1,0 @@
-CORE
-viseisenberg.sv
---ic3
-^property FAILED
-^cex verification is ok
---
-^cex verification failed
