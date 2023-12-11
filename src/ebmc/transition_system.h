@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #define CPROVER_EBMC_TRANSITION_SYSTEM_H
 
 #include <util/mathematical_expr.h>
+#include <util/std_expr.h>
 #include <util/symbol_table.h>
 
 class cmdlinet;
@@ -18,9 +19,14 @@ class message_handlert;
 class transition_systemt
 {
 public:
+  transition_systemt()
+    : trans_expr{ID_trans, true_exprt(), true_exprt(), true_exprt(), typet()}
+  {
+  }
+
   symbol_tablet symbol_table;
   const symbolt *main_symbol;
-  optionalt<transt> trans_expr; // transition system expression
+  transt trans_expr; // transition system expression
 
   void output(std::ostream &) const;
 };

@@ -449,15 +449,13 @@ void random_tracest::operator()(
 
   auto number_of_timeframes = number_of_trace_steps + 1;
 
-  PRECONDITION(transition_system.trans_expr.has_value());
-
   message.status() << "Passing transition system to solver" << messaget::eom;
 
   satcheckt satcheck{message.get_message_handler()};
   boolbvt solver(ns, satcheck, message.get_message_handler());
 
   ::unwind(
-    *transition_system.trans_expr,
+    transition_system.trans_expr,
     message.get_message_handler(),
     solver,
     number_of_timeframes,

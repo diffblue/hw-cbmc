@@ -92,8 +92,6 @@ int do_ranking_function(
   transition_systemt transition_system =
     get_transition_system(cmdline, message_handler);
 
-  CHECK_RETURN(transition_system.trans_expr.has_value());
-
   // parse the ranking function
   if(!cmdline.isset("ranking-function"))
     throw ebmc_errort() << "no candidate ranking function given";
@@ -143,7 +141,7 @@ tvt is_ranking_function(
   auto &solver = solver_wrapper.stack_decision_procedure();
 
   // *no* initial state, two time frames
-  unwind(*transition_system.trans_expr, message_handler, solver, 2, ns, false);
+  unwind(transition_system.trans_expr, message_handler, solver, 2, ns, false);
 
   const auto p = [&property]() -> exprt
   {

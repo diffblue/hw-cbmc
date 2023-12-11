@@ -229,16 +229,16 @@ void liveness_to_safetyt::operator()()
   auto looped_invar = equal_exprt{
     this->looped_symbol(), and_exprt(saved_symbol(), state_is_loop())};
 
-  transition_system.trans_expr->init() =
-    conjunction({transition_system.trans_expr->init(), std::move(saved_init)});
+  transition_system.trans_expr.init() =
+    conjunction({transition_system.trans_expr.init(), std::move(saved_init)});
 
-  transition_system.trans_expr->invar() = conjunction(
-    {transition_system.trans_expr->invar(),
+  transition_system.trans_expr.invar() = conjunction(
+    {transition_system.trans_expr.invar(),
      std::move(save_invar),
      std::move(looped_invar)});
 
-  transition_system.trans_expr->trans() = conjunction(
-    {transition_system.trans_expr->trans(),
+  transition_system.trans_expr.trans() = conjunction(
+    {transition_system.trans_expr.trans(),
      std::move(saved_trans),
      std::move(loop_trans)});
 
@@ -284,8 +284,8 @@ void liveness_to_safetyt::translate_GFp(propertyt &property)
   // Initial-state constraint for 'live' variable.
   auto live_init = equal_exprt{live_symbol(property.name), false_exprt()};
 
-  transition_system.trans_expr->init() =
-    conjunction({transition_system.trans_expr->init(), std::move(live_init)});
+  transition_system.trans_expr.init() =
+    conjunction({transition_system.trans_expr.init(), std::move(live_init)});
 
   // Next-state constraint for 'live' variable.
   // The paper uses live' := live ∨ found, which is for F found,
@@ -295,8 +295,8 @@ void liveness_to_safetyt::translate_GFp(propertyt &property)
     or_exprt{
       and_exprt{live_symbol(property.name), not_exprt{save_symbol()}}, p}};
 
-  transition_system.trans_expr->trans() =
-    conjunction({transition_system.trans_expr->trans(), std::move(live_trans)});
+  transition_system.trans_expr.trans() =
+    conjunction({transition_system.trans_expr.trans(), std::move(live_trans)});
 
   // replace the liveness property
   property.expr = safety_replacement(property.name, property.expr);

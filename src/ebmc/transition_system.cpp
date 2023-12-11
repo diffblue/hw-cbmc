@@ -60,15 +60,15 @@ void transition_systemt::output(std::ostream &out) const
 
   out << "Initial state constraints:\n\n";
 
-  ::output(trans_expr->init(), out, *language, ns);
+  ::output(trans_expr.init(), out, *language, ns);
 
   out << "State constraints:\n\n";
 
-  ::output(trans_expr->invar(), out, *language, ns);
+  ::output(trans_expr.invar(), out, *language, ns);
 
   out << "Transition constraints:\n\n";
 
-  ::output(trans_expr->trans(), out, *language, ns);
+  ::output(trans_expr.trans(), out, *language, ns);
 }
 
 int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
@@ -295,8 +295,7 @@ int get_transition_system(
       ns, transition_system.main_symbol->name, cmdline.get_value("reset"));
 
     // true in initial state
-    CHECK_RETURN(transition_system.trans_expr.has_value());
-    transt new_trans_expr = *transition_system.trans_expr;
+    transt new_trans_expr = transition_system.trans_expr;
     new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
 
     // and not anymore afterwards
@@ -305,7 +304,7 @@ int get_transition_system(
 
     new_trans_expr.trans() =
       and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
-    *transition_system.trans_expr = new_trans_expr;
+    transition_system.trans_expr = new_trans_expr;
   }
 
   return -1; // done with the transition system
