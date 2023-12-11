@@ -1,0 +1,16 @@
+CORE
+BDD_SVA1.sv
+--bdd
+^EXIT=10$
+^SIGNAL=0$
+^\[top\.property\.p0\] always top\.my_bit: PROVED$
+^\[top\.property\.p1\] always top\.my_bit: PROVED$
+^\[top\.property\.p2\] always \(top\.counter == 3 \|-> \(nexttime top\.counter == 4\)\): UNKNOWN$
+^\[top\.property\.p3\] always \(top\.counter == 3 \|=> top\.counter == 4\): PROVED$
+^\[top\.property\.p4\] always \(top\.counter == 3 \|=> \(nexttime top\.counter == 5\)\): UNKNOWN$
+^\[top\.property\.p5\] always eventually top\.counter == 8: UNKNOWN$
+^\[top\.property\.p6\] always \(top\.counter == 0 \|-> \(eventually top\.counter == 8\)\): UNKNOWN$
+^\[top\.property\.p7\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until top\.counter == 6\)\): UNKNOWN$
+^\[top\.property\.p8\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until_with top\.counter == 5\)\): UNKNOWN$
+--
+^warning: ignoring

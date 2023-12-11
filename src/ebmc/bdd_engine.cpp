@@ -419,12 +419,14 @@ void bdd_enginet::check_property(propertyt &property)
   message.status() << "Checking " << property.name << messaget::eom;
   property.status=propertyt::statust::UNKNOWN;
 
-  // special treatment for always
+  // special treatment for AGp
+  auto is_AGp = [](const exprt &expr) {
+    return (expr.id() == ID_AG || expr.id() == ID_sva_always) &&
+           !has_temporal_operator(to_unary_expr(expr).op());
+  };
 
-  if(property.expr.id()==ID_AG ||
-     property.expr.id()==ID_sva_always)
+  if(is_AGp(property.expr))
   {
-    // recursive call
     const exprt &sub_expr = to_unary_expr(property.expr).op();
     BDD p=property2BDD(sub_expr);
 
@@ -491,7 +493,7 @@ void bdd_enginet::check_property(propertyt &property)
       peak_bdd_nodes=std::max(peak_bdd_nodes, mgr.number_of_nodes());
     }
   }
-  else
+  else if(!has_temporal_operator(property.expr))
   {
     // We check whether the BDD for the negation of the property
     // contains an initial state.
