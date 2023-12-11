@@ -616,15 +616,10 @@ description:
 	| interface_declaration
  	| program_declaration
  	| package_declaration
+	| attribute_instance_brace package_item
  	| attribute_instance_brace bind_directive
  	| config_declaration
- 	| type_declaration
-          { PARSER.parse_tree.create_typedef(stack_expr($1)); }
         ;
-
-/*
- 	| attribute_instance_brace package_item
-*/
 
 module_nonansi_header:
 	  attribute_instance_brace
@@ -842,6 +837,19 @@ bind_directive:
 // A.1.11 Package items
 
 package_item:
+	  package_or_generate_item_declaration
+//	| anonymous_program
+//	| package_export_declaration
+//	| timeunits_declaration
+	;
+
+package_or_generate_item_declaration:
+	  net_declaration
+	| data_declaration
+	| task_declaration
+	| function_declaration
+	| local_parameter_declaration ';'
+	| parameter_declaration ';'
         ;
 
 // System Verilog standard 1800-2017
@@ -1958,15 +1966,6 @@ generate_item_or_null:
 
 constant_expression: expression;
 
-package_or_generate_item_declaration:
-	  net_declaration
-	| data_declaration
-	| task_declaration
-	| function_declaration
-	| local_parameter_declaration ';'
-	| parameter_declaration ';'
-        ;
-	
 // System Verilog standard 1800-2017
 // A.5.1 UDP declaration
 
