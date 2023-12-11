@@ -12,6 +12,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <util/ui_message.h>
 
 #include <ebmc/ebmc_properties.h>
+#include <ebmc/liveness_to_safety.h>
 
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_to_netlist.h>
@@ -66,6 +67,19 @@ int ic3_enginet::operator()()
     auto transition_system =
       get_transition_system(cmdline, message.get_message_handler());
 
+    properties = ebmc_propertiest::from_command_line(
+      cmdline, transition_system, message.get_message_handler());
+
+    if(properties.properties.empty())
+    {
+      message.error() << "no properties" << messaget::eom;
+      return 1;
+    }
+
+    // liveness to safety translation, if requested
+    if(cmdline.isset("liveness-to-safety"))
+      liveness_to_safety(transition_system, properties);
+
     // make net-list
     message.status() << "Generating Netlist" << messaget::eom;
 
@@ -78,15 +92,6 @@ int ic3_enginet::operator()()
     message.statistics() << "Latches: " << netlist.var_map.latches.size()
                          << ", nodes: " << netlist.number_of_nodes()
                          << messaget::eom;
-
-    properties = ebmc_propertiest::from_command_line(
-      cmdline, transition_system, message.get_message_handler());
-
-    if(properties.properties.empty())
-    {
-      message.error() << "no properties" << messaget::eom;
-      return 1;
-    }
   }
   catch(const std::string &error_str)
   {

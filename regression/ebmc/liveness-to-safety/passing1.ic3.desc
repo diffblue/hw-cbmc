@@ -1,0 +1,7 @@
+CORE
+passing1.sv
+--ic3 --liveness-to-safety
+^EXIT=0$
+^SIGNAL=0$
+^\[main\.property\.p0\] always eventually main\.my_bit: PROVED$
+--
