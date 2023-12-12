@@ -1,0 +1,8 @@
+CORE
+p-command-line-option1.v
+--bound 1 -p "some_value >= 1"
+^EXIT=0$
+^SIGNAL=0$
+^\[command-line assertion\] always main\.some_value >= 1: SUCCESS$
+--
+^warning: ignoring
