@@ -61,12 +61,16 @@ static void preprocessor()
 
 }
 
-#define IDENTIFIER { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NON_TYPE_IDENTIFIER; }
+#define IDENTIFIER(text) \
+  { newstack(yyveriloglval); \
+    stack_expr(yyveriloglval).id(text); \
+    return TOK_NON_TYPE_IDENTIFIER; \
+  }
 #define SYSTEM_VERILOG_KEYWORD(x) \
   { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \
       return x; \
     else \
-      IDENTIFIER; \
+      IDENTIFIER(yytext); \
   }
 #define SYSTEM_VERILOG_OPERATOR(token, text) \
   { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \
@@ -79,7 +83,7 @@ static void preprocessor()
        PARSER.mode==verilog_parsert::VIS_VERILOG) \
       return x; \
     else \
-      IDENTIFIER; \
+      IDENTIFIER(yytext); \
   }
 %}
 
@@ -496,8 +500,8 @@ within          { SYSTEM_VERILOG_KEYWORD(TOK_WITHIN); }
 {Time}		{ newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_TIME_LITERAL; }
 {Real}          { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {RealExp}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
-{Word}          { IDENTIFIER; }
-{EscapedWord}   { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext+1); return TOK_NON_TYPE_IDENTIFIER; }
+{Word}          { IDENTIFIER(yytext); }
+{EscapedWord}   { IDENTIFIER(yytext+1); /* The backslash is not part of the name */ }
 .               { return yytext[0]; }
 } // GRAMMAR
 
