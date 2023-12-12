@@ -310,6 +310,9 @@ int ebmc_parse_optionst::doit()
     if(!ebmc_error.what().empty())
     {
       messaget message(ui_message_handler);
+      if(ebmc_error.location().is_not_nil())
+        message.error().source_location = ebmc_error.location();
+
       message.error() << "error: " << messaget::red << ebmc_error.what()
                       << messaget::reset << messaget::eom;
     }

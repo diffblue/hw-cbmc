@@ -42,6 +42,11 @@ public:
     return std::move(*this);
   }
 
+  const source_locationt &location() const
+  {
+    return __location;
+  }
+
 protected:
   std::ostringstream message;
   optionalt<int> __exit_code = {};

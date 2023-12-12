@@ -14,6 +14,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-word-level/unwind.h>
 
 #include "ebmc_base.h"
+#include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "liveness_to_safety.h"
 #include "report_results.h"
@@ -99,6 +100,14 @@ int k_inductiont::operator()()
     message.error() << "no properties" << messaget::eom;
     return 1;
   }
+
+  // Check whether the properties are suitable for k-induction.
+  for(const auto &property : properties.properties)
+    if(property.requires_lasso_constraints())
+    {
+      throw ebmc_errort().with_location(property.location)
+        << "k-induction does not support liveness properties";
+    }
 
   // do induction base
   result=induction_base();
