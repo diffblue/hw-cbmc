@@ -3648,6 +3648,7 @@ primary:  primary_literal
 	| cast
 	| assignment_pattern_expression
         | TOK_NULL { init($$, ID_NULL); }
+        | TOK_THIS { init($$, ID_this); }
 	;
 
 primary_literal:

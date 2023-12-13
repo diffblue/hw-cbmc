@@ -912,6 +912,11 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
     expr.type() = elaborate_type(expr.type());
     return std::move(expr);
   }
+  else if(expr.id() == ID_this)
+  {
+    throw errort().with_location(expr.source_location())
+      << "'this' outside of method";
+  }
   else
   {
     throw errort().with_location(expr.source_location())
