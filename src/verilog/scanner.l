@@ -246,6 +246,7 @@ void verilog_scanner_init()
 "##"            { SYSTEM_VERILOG_OPERATOR(TOK_HASHHASH, "##"); }
 "<->"           { SYSTEM_VERILOG_OPERATOR(TOK_LESSMINUSGREATER, "<->"); }
 "->"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSGREATER, "->"); }
+"'"             { SYSTEM_VERILOG_OPERATOR('\'', "'"); }
 
                 /* Verilog keywords */
 

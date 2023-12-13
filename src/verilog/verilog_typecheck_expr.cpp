@@ -1755,6 +1755,12 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     make_boolean(expr.op());
     expr.type()=bool_typet();
   }
+  else if(expr.id() == ID_typecast)
+  {
+    // System Verilog has got type'(expr).
+    expr.type() = convert_type(expr.type());
+    convert_expr(expr.op());
+  }
   else
   {
     convert_expr(expr.op());
