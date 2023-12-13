@@ -2633,9 +2633,7 @@ part_select_range:
 // A.8.4 Primaries
 
 primary:  primary_literal
-        | indexed_variable_lvalue
-	| indexed_variable_lvalue '[' part_select_range ']'
-		{ extractbits($$, $1, $3); }
+	| hierarchical_identifier_select
 	| concatenation 
         | replication
         | function_subroutine_call
@@ -2649,6 +2647,20 @@ primary_literal:
         | time_literal
         ;
 
+// This is equivalent to two System Verilog 1800-2017 productions
+// hierarchical_identifier select.
+hierarchical_identifier_select:
+          hierarchical_identifier_bit_select_brace
+	| hierarchical_identifier_bit_select_brace '[' part_select_range ']'
+		{ extractbits($$, $1, $3); }
+	;
+
+hierarchical_identifier_bit_select_brace:
+	  hierarchical_variable_identifier
+	| hierarchical_identifier_bit_select_brace bit_select
+		{ extractbit($$, $1, $2); }
+	;
+
 time_literal: TOK_TIME_LITERAL
 		{ init($$, ID_constant);
 		  addswap($$, ID_value, $1);
@@ -2661,9 +2673,7 @@ time_literal: TOK_TIME_LITERAL
 net_lvalue: variable_lvalue;
 
 variable_lvalue:
-	  indexed_variable_lvalue
-	| indexed_variable_lvalue '[' part_select_range ']'
-		{ extractbits($$, $1, $3); }
+	  hierarchical_identifier_select
         | concatenation
           /* more generous than the rule below to avoid conflict */
         /*
@@ -2679,12 +2689,6 @@ variable_concatenation_lvalue_brace:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-indexed_variable_lvalue:
-	  hierarchical_variable_identifier
-	| indexed_variable_lvalue bit_select
-		{ extractbit($$, $1, $2); }
-	;
-	
 const_expression: expression;
 
 mintypmax_expression:
