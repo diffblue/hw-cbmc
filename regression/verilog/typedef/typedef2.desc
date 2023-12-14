@@ -1,5 +1,5 @@
 CORE
-typedef1.sv
+typedef2.sv
 
 ^EXIT=10$
 ^SIGNAL=0$

@@ -528,7 +528,7 @@ void verilog_typecheckt::interface_module_decl(
       }
     }
   }
-  
+
   forall_operands(it2, decl)
   {
     if(it2->id()==ID_symbol)

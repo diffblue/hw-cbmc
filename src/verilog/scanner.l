@@ -63,8 +63,12 @@ static void preprocessor()
 
 #define IDENTIFIER(text) \
   { newstack(yyveriloglval); \
-    stack_expr(yyveriloglval).id(text); \
-    return TOK_NON_TYPE_IDENTIFIER; \
+    irep_idt irep_id = text; \
+    stack_expr(yyveriloglval).id(irep_id); \
+    auto name = PARSER.lookup(irep_id); \
+    return name == nullptr ? TOK_NON_TYPE_IDENTIFIER : \
+           name->is_type ?   TOK_TYPE_IDENTIFIER : \
+                             TOK_NON_TYPE_IDENTIFIER; \
   }
 #define SYSTEM_VERILOG_KEYWORD(x) \
   { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \

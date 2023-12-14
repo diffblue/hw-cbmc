@@ -59,6 +59,21 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     result.add_source_location() = std::move(source_location);
     return result;
   }
+  else if(src.id() == ID_typedef_type)
+  {
+    // Look it up!
+    const symbolt *symbol_ptr;
+
+    auto identifier = src.get(ID_identifier);
+
+    if(ns.lookup(identifier, symbol_ptr))
+      throw errort().with_location(source_location)
+        << "type symbol " << identifier << " not found";
+
+    DATA_INVARIANT(symbol_ptr->is_type, "typedef symbols must be types");
+
+    return symbol_ptr->type;
+  }
   else if(src.id() == ID_array)
   {
     const exprt &range=static_cast<const exprt &>(src.find(ID_range));
