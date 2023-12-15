@@ -1035,6 +1035,13 @@ lifetime:
 // System Verilog standard 1800-2017
 // A.2.2.1 Net and variable types
 
+casting_type:
+	  simple_type
+	| signing
+	| TOK_STRING
+	| TOK_CONST
+	;
+
 data_type:
 	  integer_vector_type signing_opt packed_dimension_brace
 	        {
@@ -1077,6 +1084,11 @@ enum_name_declaration_list:
           	{ init($$); mts($$, $1); }
         | enum_name_declaration_list ',' enum_name_declaration
           	{ $$=$1; mts($$, $3); }
+	;
+
+integer_type:
+	  integer_vector_type
+	| integer_atom_type
 	;
 	
 integer_vector_type:
@@ -1163,6 +1175,13 @@ packed_dimension_brace:
 	    $$=$1;
 	    add_as_subtype(stack_type($$), stack_type($2));
 	  }
+	;
+
+simple_type:
+	  integer_type
+	| non_integer_type
+	| ps_type_identifier
+//	| ps_parameter_identifier
 	;
 
 // System Verilog standard 1800-2017
@@ -2674,6 +2693,7 @@ primary:  primary_literal
         | function_subroutine_call
 	| '(' mintypmax_expression ')'
 		{ $$ = $2; }
+	| cast
         | TOK_NULL { init($$, ID_NULL); }
 	;
 
@@ -2700,6 +2720,11 @@ time_literal: TOK_TIME_LITERAL
 		{ init($$, ID_constant);
 		  addswap($$, ID_value, $1);
 		  stack_expr($$).type().id(ID_verilog_realtime); }
+	;
+
+cast:
+	  casting_type '\'' '(' expression ')'
+		{ init($$, ID_typecast); stack_expr($$).type() = stack_type($1); mto($$, $4); }
 	;
 
 // System Verilog standard 1800-2017
@@ -2923,6 +2948,8 @@ type_identifier: TOK_TYPE_IDENTIFIER
 		  stack_expr($$).set(ID_identifier, PARSER.current_scope->prefix+id2string(base_name));
 		}
 	;
+
+ps_type_identifier: type_identifier;
 
 parameter_identifier: TOK_NON_TYPE_IDENTIFIER;
 
