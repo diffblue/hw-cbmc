@@ -2122,17 +2122,22 @@ net_assignment: net_lvalue '=' expression
 		{ init($$, ID_equal); mto($$, $1); mto($$, $3); }
 	;
 
-variable_assignment: net_assignment;
-
 // System Verilog standard 1800-2017
 // A.6.2 Procedural blocks and assignments
 
-initial_construct: TOK_INITIAL statement
+initial_construct: TOK_INITIAL statement_or_null
 		{ init($$, ID_initial); mto($$, $2); }
 	;
 
-always_construct: TOK_ALWAYS statement
-		{ init($$, ID_always); mto($$, $2); }
+always_construct: always_keyword statement
+		{ $$=$1; mto($$, $2); }
+	;
+
+always_keyword:
+	  TOK_ALWAYS       { init($$, ID_always); }
+	| TOK_ALWAYS_COMB  { init($$, ID_always); }
+	| TOK_ALWAYS_LATCH { init($$, ID_always); }
+	| TOK_ALWAYS_FF    { init($$, ID_always); }
 	;
 
 blocking_assignment:
@@ -2169,35 +2174,20 @@ nonblocking_assignment:
 		{ init($$, ID_non_blocking_assign); mto($$, $1); mto($$, $4); }
 	;
 
-// The extra rule to allow block_item_declaration is to avoid an ambiguity
-// caused by the attribute_instance_brace.
-statement: 
-/*          block_identifier TOK_COLON attribute_instance_brace statement_item
-                { $$=$4; }
-        | */ 
-          attribute_instance_brace statement_item
-                { $$=$2; }
-        | block_item_declaration
-        ;
-
-statement_item:
-          blocking_assignment ';' { $$ = $1; }
-	| nonblocking_assignment ';' { $$ = $1; }
-	| case_statement
-	| concurrent_assertion_statement
-	| conditional_statement
-	| inc_or_dec_expression ';'
-	| subroutine_call_statement
-	| disable_statement
-	| event_trigger
-	| loop_statement
-	| par_block
-	| procedural_timing_control_statement
-	| procedural_continuous_assignments ';'
-	| seq_block
-	| wait_statement
-	| procedural_assertion_statement
+procedural_continuous_assignment:
+	  TOK_ASSIGN variable_assignment
+		{ init($$, ID_continuous_assign); mto($$, $2); }
+	| TOK_DEASSIGN variable_lvalue
+		{ init($$, ID_deassign); mto($$, $2); }
+	| TOK_FORCE variable_assignment
+		{ init($$, ID_force); swapop($$, $2); }
+	/* | TOK_FORCE net_assignment */
+	| TOK_RELEASE variable_lvalue
+		{ init($$, ID_release); mto($$, $2); }
+	/* | TOK_RELEASE net_lvalue */
 	;
+
+variable_assignment: net_assignment;
 
 subroutine_call_statement:
           subroutine_call ';'
@@ -2249,11 +2239,46 @@ concurrent_cover_statement: cover_property_statement
 // System Verilog standard 1800-2017
 // A.6.4 Statements
 
+statement_or_null:
+	  statement
+	| attribute_instance_brace ';' { init($$, ID_skip); }
+	;
+
 statement_or_null_brace:
 		/* Optional */
 		{ init($$); }
 	| statement_or_null_brace statement_or_null
 		{ $$=$1; mto($$, $2); }
+	;
+
+// The extra rule to allow block_item_declaration is to avoid an ambiguity
+// caused by the attribute_instance_brace.
+statement: 
+/*          block_identifier TOK_COLON attribute_instance_brace statement_item
+                { $$=$4; }
+        | */ 
+          attribute_instance_brace statement_item
+                { $$=$2; }
+        | block_item_declaration
+        ;
+
+statement_item:
+          blocking_assignment ';' { $$ = $1; }
+	| nonblocking_assignment ';' { $$ = $1; }
+	| case_statement
+	| concurrent_assertion_statement
+	| conditional_statement
+	| inc_or_dec_expression ';'
+	| subroutine_call_statement
+	| disable_statement
+	| event_trigger
+	| loop_statement
+	| par_block
+	| procedural_timing_control_statement
+	| procedural_continuous_assignment ';'
+	| seq_block
+	| wait_statement
+	| procedural_assertion_statement
 	;
 
 system_task_name: TOK_SYSIDENT
@@ -2449,19 +2474,6 @@ wait_statement: TOK_WAIT '(' expression ')' statement_or_null
 		{ init($$, ID_wait); mto($$, $3); mto($$, $5); }
 	;
 
-procedural_continuous_assignments:
-	  TOK_ASSIGN variable_assignment
-		{ init($$, ID_continuous_assign); mto($$, $2); }
-	| TOK_DEASSIGN variable_lvalue
-		{ init($$, ID_deassign); mto($$, $2); }
-	| TOK_FORCE variable_assignment
-		{ init($$, ID_force); swapop($$, $2); }
-	/* | TOK_FORCE net_assignment */
-	| TOK_RELEASE variable_lvalue
-		{ init($$, ID_release); mto($$, $2); }
-	/* | TOK_RELEASE net_lvalue */
-	;
-
 procedural_timing_control_statement:
           procedural_timing_control statement_or_null
 		{ $$=$1; mto($$, $2); }
@@ -2628,11 +2640,6 @@ system_tf_call:
 		  mto($$, $1); mto($$, $3); }
         ;
 
-
-statement_or_null:
-	  statement
-	| attribute_instance_brace ';' { init($$, ID_skip); }
-	;
 
 event_trigger: TOK_MINUSGREATER hierarchical_event_identifier ';'
 	;
