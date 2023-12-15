@@ -13,6 +13,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
+#include "bmc.h"
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
@@ -45,7 +46,7 @@ protected:
   namespacet ns;
   ebmc_solver_factoryt solver_factory;
 
-  int induction_base();
+  void induction_base();
   int induction_step();
 };
 
@@ -110,8 +111,7 @@ int k_inductiont::operator()()
     }
 
   // do induction base
-  result=induction_base();
-  if(result!=-1) return result;
+  induction_base();
 
   // do induction step
   result=induction_step();
@@ -134,31 +134,17 @@ Function: k_inductiont::induction_base
 
 \*******************************************************************/
 
-int k_inductiont::induction_base()
+void k_inductiont::induction_base()
 {
   message.status() << "Induction Base" << messaget::eom;
 
-  auto solver_wrapper = solver_factory(ns, message.get_message_handler());
-  auto &solver = solver_wrapper.stack_decision_procedure();
-
-  // convert the transition system
-  ::unwind(
-    transition_system.trans_expr,
-    message.get_message_handler(),
-    solver,
-    bound + 1,
-    ns,
-    true);
-
-  // convert the properties
-  word_level_properties(solver);
-
-  int result = finish_word_level_bmc(solver);
-
-  if(result!=0 && result!=10)
-    return result;
-  else
-    return -1;
+  bmc(
+    bound,
+    false,
+    transition_system,
+    properties,
+    solver_factory,
+    message.get_message_handler());
 }
 
 /*******************************************************************\

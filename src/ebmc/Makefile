@@ -1,5 +1,6 @@
 SRC = \
       bdd_engine.cpp \
+      bmc.cpp \
       cegar/abstract.cpp \
       cegar/bmc_cegar.cpp \
       cegar/latch_ordering.cpp \
