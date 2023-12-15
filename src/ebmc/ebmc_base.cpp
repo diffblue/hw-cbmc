@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
+#include "bmc.h"
 #include "dimacs_writer.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
@@ -52,137 +53,6 @@ ebmc_baset::ebmc_baset(
   ui_message_handlert &_ui_message_handler)
   : message(_ui_message_handler), cmdline(_cmdline)
 {
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::finish_word_level_bmc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::word_level_properties(decision_proceduret &solver)
-{
-  const namespacet ns(transition_system.symbol_table);
-
-  message.status() << "Properties" << messaget::eom;
-
-  for(propertyt &property : properties.properties)
-  {
-    if(property.is_disabled())
-      continue;
-
-    ::property(
-      property.expr,
-      property.timeframe_handles,
-      message.get_message_handler(),
-      solver,
-      bound + 1,
-      ns);
-  }
-
-  // lasso constraints, if needed
-  if(properties.requires_lasso_constraints())
-  {
-    message.status() << "Adding lasso constraints" << messaget::eom;
-    lasso_constraints(
-      solver, bound + 1, ns, transition_system.main_symbol->name);
-  }
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::finish_word_level_bmc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::finish_word_level_bmc(stack_decision_proceduret &solver)
-{
-  const namespacet ns(transition_system.symbol_table);
-
-  message.status() << "Solving with " << solver.decision_procedure_text()
-                   << messaget::eom;
-
-  auto sat_start_time = std::chrono::steady_clock::now();
-  
-  // Use assumptions to check the properties separately
-
-  for(propertyt &property : properties.properties)
-  {
-    if(property.is_disabled())
-      continue;
-
-    message.status() << "Checking " << property.name << messaget::eom;
-
-    auto constraint = not_exprt(conjunction(property.timeframe_handles));
-    auto handle = solver.handle(constraint);
-    if(handle.is_true())
-      solver.push({literal_exprt(const_literal(true))});
-    else if(handle.is_false())
-      solver.push({literal_exprt(const_literal(false))});
-    else
-      solver.push({solver.handle(constraint)});
-
-    decision_proceduret::resultt dec_result = solver();
-
-    solver.pop();
-
-    switch(dec_result)
-    {
-    case decision_proceduret::resultt::D_SATISFIABLE:
-      {
-        property.refuted();
-        message.result() << "SAT: counterexample found" << messaget::eom;
-
-        property.counterexample = compute_trans_trace(
-          property.timeframe_handles,
-          solver,
-          bound + 1,
-          ns,
-          transition_system.main_symbol->name);
-      }
-      break;
-
-    case decision_proceduret::resultt::D_UNSATISFIABLE:
-        message.result() << "UNSAT: No counterexample found within bound"
-                         << messaget::eom;
-        property.proved_with_bound(bound);
-        break;
-
-    case decision_proceduret::resultt::D_ERROR:
-        message.error() << "Error from decision procedure" << messaget::eom;
-        property.failure();
-        return 2;
-
-    default:
-        message.error() << "Unexpected result from decision procedure"
-                        << messaget::eom;
-        property.failure();
-        return 1;
-    }
-  }
-
-  auto sat_stop_time = std::chrono::steady_clock::now();
-
-  message.statistics()
-    << "Solver time: "
-    << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
-    << messaget::eom;
-
-  // We return '0' if all properties are proved,
-  // and '10' otherwise.
-  return properties.all_properties_proved() ? 0 : 10;
 }
 
 /*******************************************************************\
@@ -284,110 +154,6 @@ bool ebmc_baset::get_bound()
   bound=unsafe_string2unsigned(cmdline.get_value("bound"));
 
   return false;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::do_word_level_bmc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::do_word_level_bmc(
-  stack_decision_proceduret &solver,
-  bool convert_only)
-{
-  int result=0;
-
-  try
-  {
-    if(cmdline.isset("max-bound"))
-    {
-      if(convert_only)
-        throw "please set a specific bound";
-        
-      const std::size_t max_bound=
-        unsafe_string2size_t(cmdline.get_value("max-bound"));
-    
-      for(bound=1; bound<=max_bound; bound++)
-      {
-        message.status() << "Doing BMC with bound " << bound << messaget::eom;
-
-#if 0
-        const namespacet ns(transition_system.symbol_table);
-        CHECK_RETURN(trans_expr.has_value());
-        ::unwind(*trans_expr, *message_handler, solver, bound+1, ns, true);
-        result=finish_word_level_bmc(solver);
-#endif
-      }
-
-      const namespacet ns(transition_system.symbol_table);
-      report_results(cmdline, properties, ns, message.get_message_handler());
-    }
-    else
-    {
-      if(get_bound()) return 1;
-    
-      if(!convert_only)
-        if(properties.properties.empty())
-          throw "no properties";
-
-      message.status() << "Generating Decision Problem" << messaget::eom;
-
-      // convert the transition system
-      const namespacet ns(transition_system.symbol_table);
-      ::unwind(
-        transition_system.trans_expr,
-        message.get_message_handler(),
-        solver,
-        bound + 1,
-        ns,
-        true);
-
-      // convert the properties
-      word_level_properties(solver);
-
-      if(convert_only)
-      {
-        for(propertyt &property : properties.properties)
-        {
-          if(!property.is_disabled())
-            solver.set_to_false(conjunction(property.timeframe_handles));
-        }
-
-        result=0;
-      }
-      else
-      {
-        result = finish_word_level_bmc(solver);
-        report_results(cmdline, properties, ns, message.get_message_handler());
-      }
-    }
-  }
-    
-  catch(const char *e)
-  {
-    message.error() << e << messaget::eom;
-    return 10;
-  }
-  
-  catch(const std::string &e)
-  {
-    message.error() << e << messaget::eom;
-    return 10;
-  }
-  
-  catch(int)
-  {
-    return 10;
-  }  
-
-  return result;
 }
 
 /*******************************************************************\
@@ -703,13 +469,83 @@ Function: ebmc_baset::do_word_level_bmc
 
 int ebmc_baset::do_word_level_bmc()
 {
-  const namespacet ns(transition_system.symbol_table);
-
   auto solver_factory = ebmc_solver_factory(cmdline);
-  auto solver = solver_factory(ns, message.get_message_handler());
 
   bool convert_only = cmdline.isset("smt2") || cmdline.isset("outfile") ||
                       cmdline.isset("show-formula");
 
-  return do_word_level_bmc(solver.stack_decision_procedure(), convert_only);
+  int result = 0;
+
+  try
+  {
+    if(cmdline.isset("max-bound"))
+    {
+      if(convert_only)
+        throw "please set a specific bound";
+
+      const std::size_t max_bound =
+        unsafe_string2size_t(cmdline.get_value("max-bound"));
+
+      for(bound = 1; bound <= max_bound; bound++)
+      {
+        message.status() << "Doing BMC with bound " << bound << messaget::eom;
+
+#if 0
+        const namespacet ns(transition_system.symbol_table);
+        CHECK_RETURN(trans_expr.has_value());
+        ::unwind(*trans_expr, *message_handler, solver, bound+1, ns, true);
+        result=finish_word_level_bmc(solver);
+#endif
+      }
+
+      const namespacet ns(transition_system.symbol_table);
+      report_results(cmdline, properties, ns, message.get_message_handler());
+    }
+    else
+    {
+      if(get_bound())
+        return 1;
+
+      if(!convert_only)
+        if(properties.properties.empty())
+          throw "no properties";
+
+      bmc(
+        bound,
+        convert_only,
+        transition_system,
+        properties,
+        solver_factory,
+        message.get_message_handler());
+
+      if(!convert_only)
+      {
+        const namespacet ns(transition_system.symbol_table);
+        report_results(cmdline, properties, ns, message.get_message_handler());
+
+        // We return '0' if all properties are proved,
+        // and '10' otherwise.
+        result = properties.all_properties_proved() ? 0 : 10;
+      }
+    }
+  }
+
+  catch(const char *e)
+  {
+    message.error() << e << messaget::eom;
+    return 10;
+  }
+
+  catch(const std::string &e)
+  {
+    message.error() << e << messaget::eom;
+    return 10;
+  }
+
+  catch(int)
+  {
+    return 10;
+  }
+
+  return result;
 }
