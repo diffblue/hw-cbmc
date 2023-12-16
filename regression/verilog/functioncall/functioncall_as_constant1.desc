@@ -1,0 +1,9 @@
+KNOWNBUG
+functioncall_as_constant1.v
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Parameter evaluation is unable to evaluate a given function.
