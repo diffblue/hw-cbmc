@@ -592,6 +592,39 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   }
 }
 
+#include <iostream>
+
+void verilog_typecheckt::collect_symbols(const verilog_lett &let)
+{
+  // These have one declarator.
+  auto &declarator = let.declarator();
+
+  // We don't currently do let ports
+  if(declarator.type().is_not_nil())
+  {
+    throw errort().with_location(let.source_location())
+      << "let ports not supported yet";
+  }
+
+  const irep_idt &base_name = declarator.base_name();
+  irep_idt identifier = hierarchical_identifier(base_name);
+
+  // The range type is always derived from the type of the
+  // value expression.
+  auto type = to_be_elaborated_typet(derive_from_value_typet());
+
+  // add the symbol
+  symbolt new_symbol(identifier, type, mode);
+
+  new_symbol.module = module_identifier;
+  new_symbol.is_macro = true;
+  new_symbol.value = declarator.value();
+  new_symbol.base_name = base_name;
+  new_symbol.pretty_name = strip_verilog_prefix(new_symbol.name);
+
+  add_symbol(std::move(new_symbol));
+}
+
 void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
 {
   if(statement.id() == ID_assert || statement.id() == ID_assume)
@@ -728,6 +761,10 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_set_genvars)
   {
     collect_symbols(to_verilog_set_genvars(module_item).module_item());
+  }
+  else if(module_item.id() == ID_verilog_let)
+  {
+    collect_symbols(to_verilog_let(module_item));
   }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());

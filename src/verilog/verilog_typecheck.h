@@ -87,6 +87,7 @@ protected:
   void collect_symbols(const verilog_module_sourcet &);
   void collect_symbols(const verilog_module_itemt &);
   void collect_symbols(const verilog_declt &);
+  void collect_symbols(const verilog_lett &);
   void collect_symbols(const verilog_statementt &);
   void
   collect_symbols(const typet &, const verilog_parameter_declt::declaratort &);
