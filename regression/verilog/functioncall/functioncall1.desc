@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 functioncall1.v
---module main --bound 1
+--module main --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
+^\[main\.property\.test1\] always .*: PROVED up to bound 0$
 --
 ^warning: ignoring
