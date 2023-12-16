@@ -13,9 +13,9 @@ endmodule
 
 module main(input clk);
 
-  my_counter instance(clk);
+  my_counter my_instance(clk);
 
-  // expected to pass with ranking function instance.counter
-  p0: assert property (eventually instance.counter == 0);
+  // expected to pass with ranking function my_instance.counter
+  p0: assert property (eventually my_instance.counter == 0);
 
 endmodule
