@@ -1,0 +1,7 @@
+CORE
+class1.sv
+--bound 0 --module main
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--

@@ -712,6 +712,13 @@ program_declaration:
           TOK_PROGRAM TOK_ENDPROGRAM
         ;
 
+class_declaration:
+	  TOK_CLASS class_identifier
+	  ';'
+	  class_item_brace
+	  TOK_ENDCLASS
+	;
+
 package_declaration:
           TOK_PACKAGE TOK_ENDPACKAGE
         ;
@@ -853,6 +860,120 @@ bind_directive:
         ;
 	
 // System Verilog standard 1800-2017
+// A.1.9 Class items
+
+class_item_brace:
+	  /* Optional */
+	| class_item_brace class_item
+	;
+
+class_item:
+//	  attribute_instance_brace class_property
+//	| attribute_instance_brace class_method
+//	| attribute_instance_brace class_constraint
+	  attribute_instance_brace class_declaration
+//	| attribute_instance_brace covergroup_declaration
+	| local_parameter_declaration ';'
+	| parameter_declaration ';'
+	| ';'
+	;
+
+class_property:
+	  property_qualifier_brace data_declaration
+	| TOK_CONST class_item_qualifier_brace data_type identifier ';'
+	| TOK_CONST class_item_qualifier_brace data_type identifier '=' constant_expression ';'
+	;
+
+class_method:
+	  method_qualifier_brace task_declaration
+	| method_qualifier_brace function_declaration
+	| TOK_PURE TOK_VIRTUAL class_item_qualifier_brace method_prototype ';'
+	| TOK_EXTERN method_qualifier_brace method_prototype ';'
+	| method_qualifier_brace class_constructor_declaration
+	| TOK_EXTERN method_qualifier_brace class_constructor_prototype
+	;
+
+class_constructor_prototype:
+	  TOK_FUNCTION TOK_NEW ';'
+	;
+
+class_constraint:
+	  constraint_prototype
+	| constraint_declaration
+	;
+
+class_item_qualifier_brace:
+	  /* Optional */
+	| class_item_qualifier_brace class_item_qualifier
+	;
+
+class_item_qualifier: TOK_STATIC | TOK_PROTECTED | TOK_LOCAL ;
+
+property_qualifier_brace:
+	  /* Optional */
+	| property_qualifier_brace property_qualifier
+	;
+
+property_qualifier:
+	  random_qualifier
+	| class_item_qualifier
+	;
+
+random_qualifier:
+	  TOK_RAND
+	| TOK_RANDC
+	;
+
+method_qualifier_brace:
+	  /* Optional */
+	| method_qualifier_brace method_qualifier
+	;
+
+method_qualifier:
+	  TOK_PURE TOK_VIRTUAL
+	| TOK_VIRTUAL
+	| class_item_qualifier
+	;
+
+method_prototype:
+	  task_prototype
+	| function_prototype
+	;
+
+class_constructor_declaration:
+	  TOK_FUNCTION TOK_NEW ';'
+	  block_item_declaration_brace
+	  TOK_ENDFUNCTION
+	;
+
+// System Verilog standard 1800-2017
+// A.1.10 Constraints
+
+constraint_declaration:
+	  TOK_CONSTRAINT constraint_identifier constraint_block
+	;
+
+constraint_block: '{' constraint_block_item_brace '}'
+	;
+
+constraint_block_item_brace:
+	  /* Optional */
+	| constraint_block_item_brace constraint_block_item
+	;
+
+constraint_block_item:
+	  TOK_SOLVE ';'
+	| constraint_expression
+	;
+
+constraint_expression:
+	  expression
+	;
+
+constraint_prototype: TOK_CONSTRAINT constraint_identifier ';'
+	;
+
+// System Verilog standard 1800-2017
 // A.1.11 Package items
 
 package_item:
@@ -867,6 +988,7 @@ package_or_generate_item_declaration:
 	| data_declaration
 	| task_declaration
 	| function_declaration
+	| class_declaration
 	| local_parameter_declaration ';'
 	| parameter_declaration ';'
         ;
@@ -1067,7 +1189,7 @@ data_type:
 	        { init($$, "virtual_interface"); }
 	| /*scope_opt*/ type_identifier packed_dimension_brace
 		{ $$ = $1; stack_expr($$).id(ID_typedef_type); }
-	| class_type
+//	| class_type
 	| TOK_EVENT
 	        { init($$, ID_event); }
 	/*
@@ -1106,8 +1228,7 @@ integer_atom_type:
 	| TOK_TIME { init($$, ID_verilog_time); }
 	;
 	
-class_type: TOK_CLASS
-                { init($$, ID_class); }
+class_type: class_identifier
 	;
 	
 struct_union_member_list:
@@ -1182,6 +1303,9 @@ simple_type:
 	| non_integer_type
 	| ps_type_identifier
 //	| ps_parameter_identifier
+	;
+
+data_type_or_void: data_type | TOK_VOID
 	;
 
 // System Verilog standard 1800-2017
@@ -1544,6 +1668,9 @@ function_item_declaration:
 	| input_declaration ';'
 	;
 
+function_prototype: TOK_FUNCTION data_type_or_void function_identifier
+	;
+
 // System Verilog standard 1800-2017
 // A.2.7 Task declarations
 
@@ -1575,6 +1702,9 @@ task_item_declaration:
 	| attribute_instance_brace input_declaration  ';' { $$=$2; }
 	| attribute_instance_brace output_declaration ';' { $$=$2; }
 	| attribute_instance_brace inout_declaration  ';' { $$=$2; }
+	;
+
+task_prototype: TOK_TASK task_identifier
 	;
 
 // System Verilog standard 1800-2017
@@ -2920,6 +3050,10 @@ non_type_identifier: TOK_NON_TYPE_IDENTIFIER
 	;
 
 block_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+class_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 genvar_identifier: identifier;
 
