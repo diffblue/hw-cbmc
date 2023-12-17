@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "verilog_typecheck.h"
+#include "verilog_types.h"
 
 /*******************************************************************\
 
@@ -42,7 +43,7 @@ void verilog_typecheckt::elaborate_constants()
       const verilog_parameter_declt::declaratort &declarator) {
       symbolt symbol{
         hierarchical_identifier(declarator.identifier()),
-        type_with_subtypet(ID_to_be_elaborated, type),
+        to_be_elaborated_typet(type),
         mode};
 
       symbol.module = module_identifier;

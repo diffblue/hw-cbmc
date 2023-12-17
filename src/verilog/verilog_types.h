@@ -11,6 +11,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_types.h>
 
+/// Used during elaboration only,
+/// to signal that a symbol is yet to be elaborated.
+class to_be_elaborated_typet : public type_with_subtypet
+{
+public:
+  explicit to_be_elaborated_typet(typet type)
+    : type_with_subtypet(ID_to_be_elaborated, std::move(type))
+  {
+  }
+};
+
 class verilog_signedbv_typet:public bitvector_typet
 {
 public:
