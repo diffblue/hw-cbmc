@@ -41,6 +41,42 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     result.add_source_location() = std::move(source_location);
     return result;
   }
+  else if(src.id() == ID_verilog_byte)
+  {
+    return signedbv_typet{8};
+  }
+  else if(src.id() == ID_verilog_shortint)
+  {
+    return signedbv_typet{16};
+  }
+  else if(src.id() == ID_verilog_int)
+  {
+    return signedbv_typet{32};
+  }
+  else if(src.id() == ID_verilog_longint)
+  {
+    return signedbv_typet{64};
+  }
+  else if(src.id() == ID_verilog_integer)
+  {
+    return signedbv_typet{32};
+  }
+  else if(src.id() == ID_verilog_time)
+  {
+    return unsignedbv_typet{64};
+  }
+  else if(src.id() == ID_verilog_bit)
+  {
+    return unsignedbv_typet{1};
+  }
+  else if(src.id() == ID_verilog_logic)
+  {
+    return unsignedbv_typet{1};
+  }
+  else if(src.id() == ID_verilog_reg)
+  {
+    return unsignedbv_typet{1};
+  }
   else if(src.id() == ID_verilog_shortreal)
   {
     typet result = verilog_shortreal_typet();
