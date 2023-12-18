@@ -276,6 +276,19 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
     }
 
     // Cocatenations are unsigned regardless of the operands
+    // We cast all the signed operands to unsigned.
+    for(auto &op : expr.operands())
+    {
+      if(op.type().id() == ID_signedbv || op.type().id() == ID_verilog_signedbv)
+      {
+        auto width = get_width(op);
+        if(op.type().id() == ID_verilog_signedbv)
+          op = typecast_exprt(op, verilog_unsignedbv_typet(width));
+        else
+          op = typecast_exprt(op, unsignedbv_typet(width));
+      }
+    }
+
     expr.type()=typet(has_verilogbv?ID_verilog_unsignedbv:ID_unsignedbv);
     expr.type().set(ID_width, width);
     
