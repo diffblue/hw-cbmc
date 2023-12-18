@@ -28,7 +28,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
-#define push_scope(x) PARSER.push_scope(x)
+#define push_scope(x, y) PARSER.push_scope(x, y)
 #define pop_scope() PARSER.pop_scope();
 
 int yyveriloglex();
@@ -630,7 +630,7 @@ module_identifier_with_scope:
 	  module_identifier
 	  {
 	    $$ = $1;
-	    push_scope(stack_expr($1).id());
+	    push_scope(stack_expr($1).id(), ".");
 	  }
 	;
 
@@ -715,13 +715,36 @@ program_declaration:
 class_declaration:
 	  TOK_CLASS class_identifier
 	  ';'
+		{
+		  $$ = $1;
+	          push_scope(stack_expr($2).id(), "::");
+	        }
 	  class_item_brace
 	  TOK_ENDCLASS
+		{
+		  pop_scope();
+	        }
 	;
 
 package_declaration:
-          TOK_PACKAGE TOK_ENDPACKAGE
+          attribute_instance_brace TOK_PACKAGE
+          lifetime_opt
+          package_identifier ';'
+		{
+		  $$ = $1;
+	          push_scope(stack_expr($4).id(), "::");
+	        }
+          timeunits_declaration_opt
+          package_item_brace
+          TOK_ENDPACKAGE
+		{
+		  pop_scope();
+	        }
         ;
+
+timeunits_declaration_opt:
+	  /* Optional */
+	;
 
 // System Verilog standard 1800-2017
 // A.1.3 Module parameters and ports
@@ -976,6 +999,13 @@ constraint_prototype: TOK_CONSTRAINT constraint_identifier ';'
 // System Verilog standard 1800-2017
 // A.1.11 Package items
 
+package_item_brace:
+	  /* Optional */
+		{ init($$); }
+	| package_item_brace package_item
+		{ $$ = $1; mts($$, $2); }
+	;
+
 package_item:
 	  package_or_generate_item_declaration
 //	| anonymous_program
@@ -1106,7 +1136,7 @@ net_declaration:
 type_declaration:
 	  TOK_TYPEDEF data_type new_identifier ';'
 		{ // add to the scope as a type name
-		  auto &name = PARSER.add_name(stack_expr($3).get(ID_identifier));
+		  auto &name = PARSER.add_name(stack_expr($3).get(ID_identifier), "");
 		  name.is_type = true;
 
 		  init($$, ID_decl);
@@ -1621,7 +1651,7 @@ function_declaration:
 	  TOK_FUNCTION
 	  automatic_opt signing_opt range_or_type_opt
 	  function_identifier
-		{ push_scope(stack_expr($1).get(ID_identifier)); }
+		{ push_scope(stack_expr($1).get(ID_identifier), "."); }
 	  list_of_ports_opt ';'
           function_item_declaration_brace statement
           TOK_ENDFUNCTION
@@ -1676,7 +1706,7 @@ function_prototype: TOK_FUNCTION data_type_or_void function_identifier
 
 task_declaration:
 	  TOK_TASK task_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier)); }
+		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
 	  list_of_ports_opt ';'
 	  task_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
@@ -2557,7 +2587,7 @@ seq_block:
 	  TOK_END
 		{ init($$, ID_block); swapop($$, $2); }
         | TOK_BEGIN TOK_COLON block_identifier
-		{ push_scope(stack_expr($3).id()); }
+		{ push_scope(stack_expr($3).id(), "."); }
           statement_or_null_brace
           TOK_END
                 { init($$, ID_block);
@@ -3071,6 +3101,8 @@ module_identifier_opt:
 	;
 
 net_identifier: identifier;
+
+package_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 param_identifier: TOK_NON_TYPE_IDENTIFIER;
 

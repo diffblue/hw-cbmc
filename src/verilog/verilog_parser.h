@@ -56,9 +56,12 @@ public:
     scopet() : parent(nullptr), prefix("Verilog::")
     {
     }
-    explicit scopet(irep_idt name, scopet *_parent)
+    explicit scopet(
+      irep_idt name,
+      const std::string &separator,
+      scopet *_parent)
       : parent(_parent),
-        prefix(id2string(_parent->prefix) + id2string(name) + ".")
+        prefix(id2string(_parent->prefix) + id2string(name) + separator)
     {
     }
     scopet *parent = nullptr;
@@ -70,17 +73,17 @@ public:
 
   scopet top_scope, *current_scope = &top_scope;
 
-  scopet &add_name(irep_idt name)
+  scopet &add_name(irep_idt name, const std::string &separator)
   {
-    auto result =
-      current_scope->scope_map.emplace(name, scopet{name, current_scope});
+    auto result = current_scope->scope_map.emplace(
+      name, scopet{name, separator, current_scope});
     return result.first->second;
   }
 
   // Create the given sub-scope of the current scope.
-  void push_scope(irep_idt name)
+  void push_scope(irep_idt name, const std::string &separator)
   {
-    current_scope = &add_name(name);
+    current_scope = &add_name(name, separator);
   }
 
   void pop_scope()
