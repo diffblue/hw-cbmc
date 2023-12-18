@@ -1816,27 +1816,19 @@ exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
   }
   else
   {
-    unsigned width=get_width(op0.type());
-    unsigned offset=atoi(op0.type().get(ID_C_offset).c_str());
+    auto width = get_width(op0.type());
+    auto offset = atoi(op0.type().get(ID_C_offset).c_str());
 
     mp_integer op1;
 
     if(is_constant_expression(to_extractbit_expr(expr).op1(), op1))
     {
-      if(op1<offset)
-      {
-        throw errort().with_location(expr.source_location())
-          << "bit selection below lower bound: " << op1 << "<" << offset;
-      }
+      // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
+      // x for 4-state and 0 for 2-state values.
+      if(op1 < offset || op1 >= width + offset)
+        return false_exprt().with_source_location<exprt>(expr);
 
-      if(op1>=width+offset)
-      {
-        throw errort().with_location(expr.source_location())
-          << "bit selection out of range: " << op1 << ">=" << (width + offset);
-      }
-
-      op1-=offset;
-
+      op1 -= offset;
       to_extractbit_expr(expr).op1() = from_integer(op1, natural_typet());
     }
     else
@@ -2141,38 +2133,53 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
         << "array type not allowed in extraction";
     }
 
-    unsigned width=get_width(op0.type());
-    unsigned offset=atoi(op0.type().get(ID_C_offset).c_str());
+    mp_integer width = get_width(op0.type());
+    mp_integer offset = atoi(op0.type().get(ID_C_offset).c_str());
 
     mp_integer op1 = convert_integer_constant_expression(expr.op1());
     mp_integer op2 = convert_integer_constant_expression(expr.op2());
 
     if(op1<op2)
-      std::swap(op1, op2);
+      std::swap(op1, op2); // now op1>=op2
 
-    // now op1>=op2
-
-    if(op2<offset)
+    // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
+    // x for 4-state and 0 for 2-state values. We
+    // achieve that by padding the operand from either end,
+    // or both.
+    if(op2 < offset)
     {
-      throw errort().with_location(expr.source_location())
-        << "bit selection below offset";
+      auto padding_width = offset - op2;
+      auto padding =
+        from_integer(0, unsignedbv_typet{(padding_width).to_ulong()});
+      auto new_type =
+        unsignedbv_typet{(get_width(op0.type()) + padding_width).to_ulong()};
+      expr.op0() = concatenation_exprt(expr.op0(), padding, new_type);
+      op2 += padding_width;
+      op1 += padding_width;
     }
 
-    if(op1>=width+offset)
+    if(op1 >= width + offset)
     {
-      throw errort().with_location(expr.source_location())
-        << "bit selection out of range: " << op1 << ">=" << (width + offset);
+      auto padding_width = op1 - (width + offset) + 1;
+      auto padding =
+        from_integer(0, unsignedbv_typet{padding_width.to_ulong()});
+      auto new_type =
+        unsignedbv_typet{(get_width(op0.type()) + padding_width).to_ulong()};
+      expr.op0() = concatenation_exprt(padding, expr.op0(), new_type);
     }
-
-    op2-=offset;
-    op1-=offset;
-
-    expr.op1()=from_integer(op1, natural_typet());
-    expr.op2()=from_integer(op2, natural_typet());
 
     // Part-select expressions are unsigned, even if the
     // entire expression is selected!
-    expr.type() = unsignedbv_typet((op1 - op2).to_ulong() + 1);
+    auto expr_type = unsignedbv_typet((op1 - op2).to_ulong() + 1);
+
+    op2 -= offset;
+    op1 -= offset;
+
+    expr.op1() = from_integer(op1, natural_typet());
+    expr.op2() = from_integer(op2, natural_typet());
+    expr.type() = expr_type;
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_if)
   {
@@ -2183,6 +2190,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
 
     tc_binary_expr(expr, expr.op1(), expr.op2());
     expr.type()=expr.op1().type();
+    return std::move(expr);
   }
   else if(expr.id()==ID_sva_cycle_delay) // #[1:2] something
   {
@@ -2192,14 +2200,13 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     if(expr.op1().is_not_nil()) convert_expr(expr.op1());
     convert_expr(expr.op2());
     make_boolean(expr.op2());
+    return std::move(expr);
   }
   else
   {
     throw errort().with_location(expr.source_location())
       << "no conversion for trinary expression " << expr.id();
   }
-
-  return std::move(expr);
 }
 
 /*******************************************************************\
