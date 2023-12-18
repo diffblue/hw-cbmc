@@ -6,7 +6,7 @@ endmodule
 
 module main#(parameter MY_PARAMETER = 123)();
 
-  submodule instance(MY_PARAMETER);
+  submodule my_instance(MY_PARAMETER);
 
   always assert p1: MY_PARAMETER == 123;
 

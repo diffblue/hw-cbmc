@@ -8,6 +8,6 @@ module main(input input1);
 
   wire some_wire = input1;
 
-  submodule instance(some_wire);
+  submodule my_instance(some_wire);
 
 endmodule
