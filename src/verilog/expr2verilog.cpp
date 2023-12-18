@@ -1176,6 +1176,10 @@ std::string expr2verilogt::convert(const typet &type)
     return "real";
   else if(type.id()==ID_verilog_realtime)
     return "realtime";
+  else if(type.id() == ID_verilog_enum)
+  {
+    return "enum";
+  }
 
   return "IREP("+type.pretty()+")";
 }

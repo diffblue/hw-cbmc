@@ -1,0 +1,8 @@
+KNOWNBUG
+enum_initializers3.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Cycle not detected.

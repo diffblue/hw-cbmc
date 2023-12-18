@@ -739,9 +739,8 @@ exprt verilog_typecheck_exprt::convert_symbol(symbol_exprt expr)
       symbol->type.id() == ID_to_be_elaborated ||
       symbol->type.id() == ID_elaborating)
     {
-      // A parameter.
-      DATA_INVARIANT(symbol->is_macro, "to_be_elaborated must be macro");
-      elaborate_parameter(symbol->name);
+      // A parameter, or enum. The type is elaborated recursively.
+      elaborate_rec(symbol->name);
       expr.type() = symbol->type;
       expr.set_identifier(full_identifier);
       return std::move(expr);

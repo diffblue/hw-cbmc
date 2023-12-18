@@ -1231,7 +1231,12 @@ data_type:
 	  '{' struct_union_member_list '}' packed_dimension_brace
 	        { /* todo */ }
 	| TOK_ENUM enum_base_type_opt '{' enum_name_declaration_list '}'
-	        { init($$, ID_c_enum); }
+	        { // Like in C, these do _not_ create a scope.
+	          // The enum names go into the current scope.
+	          init($$, ID_verilog_enum);
+	          stack_type($$).add_subtype() = std::move(stack_type($2));
+	          stack_type($$).set(ID_enum_names, stack_type($4));
+	        }
 	| TOK_STRING
 	        { init($$, ID_string); }
 	| TOK_CHANDLE
@@ -1248,8 +1253,23 @@ data_type:
 	*/
 	;
 	
+enum_name_value_opt:
+	  /* optional */
+	  {
+	    init($$, ID_nil);
+	  }
+	| '=' constant_expression { $$ = $2; }
+	;
+
 enum_name_declaration:
-	  TOK_NON_TYPE_IDENTIFIER
+	  TOK_NON_TYPE_IDENTIFIER enum_name_value_opt
+	  {
+	    init($$);
+	    auto &scope = PARSER.add_name(stack_expr($1).id(), "");
+	    stack_expr($$).set(ID_base_name, scope.base_name());
+	    stack_expr($$).set(ID_identifier, scope.identifier());
+	    stack_expr($$).add(ID_value).swap(stack_expr($2));
+	  }
 	;
 	
 enum_name_declaration_list:
@@ -1286,6 +1306,11 @@ struct_union_member_list:
 	;
 	
 enum_base_type_opt:
+	  /* Optional */
+		{ init($$, ID_nil); }
+	| integer_atom_type signing_opt
+	| integer_vector_type signing_opt packed_dimension_opt
+	| type_identifier packed_dimension_opt
 	;
 
 non_integer_type:
@@ -1616,6 +1641,12 @@ unpacked_dimension_brace:
 	    $$=$1;
 	    add_as_subtype(stack_type($$), stack_type($2));
 	  }
+	;
+
+packed_dimension_opt:
+	  /* Optional */
+		{ init($$, ID_nil); }
+	| packed_dimension
 	;
 
 packed_dimension:

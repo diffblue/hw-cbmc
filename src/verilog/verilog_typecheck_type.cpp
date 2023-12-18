@@ -74,6 +74,14 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
 
     return symbol_ptr->type;
   }
+  else if(src.id() == ID_verilog_enum)
+  {
+    // Replace by base type.
+    // The default base type is 'int'.
+    auto &enum_type = to_verilog_enum_type(src);
+    return enum_type.has_base_type() ? enum_type.base_type()
+                                     : signedbv_typet(32);
+  }
   else if(src.id() == ID_array)
   {
     const exprt &range=static_cast<const exprt &>(src.find(ID_range));

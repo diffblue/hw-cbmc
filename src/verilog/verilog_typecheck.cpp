@@ -1720,7 +1720,7 @@ void verilog_typecheckt::typecheck()
   // We first elaborate the named constants (parameters, enums).
   // Everything else (types of ports, generate constructs) may
   // depend on these.
-  elaborate_constants();
+  elaborate();
 
   const auto &module_source =
     to_verilog_module_source(module_symbol.type.find(ID_module_source));
