@@ -446,6 +446,8 @@ exprt verilog_typecheck_exprt::bits(const exprt &expr)
       return to_unsignedbv_type(type).get_width();
     else if(type.id() == ID_signedbv)
       return to_signedbv_type(type).get_width();
+    else if(type.id() == ID_integer)
+      return 32;
     else
     {
       throw errort().with_location(expr.source_location())
