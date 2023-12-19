@@ -1669,9 +1669,10 @@ unpacked_dimension:
 		  range.add_to_operands(stack_expr($2));
 		  range.add_to_operands(stack_expr($4)); }
 	| '[' expression ']'
-	{
-	  $$=$2;
-	}
+		{ init($$, ID_array);
+		  stack_type($$).add_subtype().make_nil();
+		  stack_type($$).set(ID_size, std::move(stack_expr($2)));
+		}
 	;
 
 variable_dimension:
