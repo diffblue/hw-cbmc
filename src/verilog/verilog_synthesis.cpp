@@ -1043,17 +1043,17 @@ void verilog_synthesist::synth_module_instance(
   const verilog_instt &statement,
   transt &trans)
 {
-  const irep_idt &identifier=statement.get_module();
+  const irep_idt &module_identifier = statement.get_module();
 
   // must be in symbol_table
-  const symbolt &symbol=ns.lookup(identifier);
-  
-  // make sure it's synthesized already
+  const symbolt &module_symbol = ns.lookup(module_identifier);
+
+  // make sure the module is synthesized already
   verilog_synthesis(
-    symbol_table, identifier, get_message_handler(), options);
+    symbol_table, module_identifier, get_message_handler(), options);
 
   for(auto &instance : statement.instances())
-    expand_module_instance(symbol, instance, trans);
+    expand_module_instance(module_symbol, instance, trans);
 }
 
 /*******************************************************************\
@@ -1249,8 +1249,6 @@ void verilog_synthesist::expand_module_instance(
 {
   construct=constructt::OTHER;
 
-  const irep_idt &instance_name = instance.name();
-
   replace_mapt replace_map;
 
   std::list<irep_idt> new_symbols;
@@ -1269,19 +1267,16 @@ void verilog_synthesist::expand_module_instance(
       symbolt new_symbol(symbol);
 
       new_symbol.module=module;
-      
-      // Identifiers are Verilog::MODULE.id.id.id
+
+      // Identifier Verilog::INSTANTIATED_MODULE.X
+      // is turned into Verilog::MODULE.id.instance::X
 
       // strip old module      
       std::string identifier_without_module=
         std::string(id2string(symbol.name), symbol.module.size());
 
-      std::string full_identifier;
-
-      full_identifier=id2string(mode)+"::";
-      full_identifier+=id2string(verilog_module_name(module));
-      full_identifier += "." + id2string(instance_name);
-      full_identifier+=identifier_without_module;
+      std::string full_identifier =
+        id2string(instance.identifier()) + identifier_without_module;
 
       new_symbol.pretty_name=strip_verilog_prefix(full_identifier);
       new_symbol.name=full_identifier;
@@ -1331,7 +1326,8 @@ void verilog_synthesist::expand_module_instance(
       trans.operands()[i].add_to_operands(std::move(tmp.operands()[i]));
   }
 
-  instantiate_ports(instance_name, instance, module_symbol, replace_map, trans);
+  instantiate_ports(
+    instance.base_name(), instance, module_symbol, replace_map, trans);
 }
 
 /*******************************************************************\

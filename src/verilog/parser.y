@@ -2025,7 +2025,7 @@ gate_instance_brace:
 
 gate_instance:
 	  name_of_gate_instance_opt range_opt '(' list_of_module_connections_opt ')'
-		{ init($$, ID_inst); addswap($$, ID_instance, $1);
+		{ init($$, ID_inst); addswap($$, ID_base_name, $1);
                   swapop($$, $4);
                   addswap($$, ID_range, $2);
                 }
@@ -2096,7 +2096,7 @@ module_instance_brace:
 
 module_instance:
 	  name_of_instance '(' list_of_module_connections_opt ')'
-		{ init($$, ID_inst); addswap($$, ID_instance, $1); swapop($$, $3); }
+		{ init($$, ID_inst); addswap($$, ID_base_name, $1); swapop($$, $3); }
 	;
 
 name_of_instance:
@@ -2215,11 +2215,6 @@ generate_block:
 
 generate_item:
 	  module_or_generate_item
-	;
-
-generate_item_or_null:
-	  generate_item
-	| ';' { init($$, ID_generate_skip); }
 	;
 
 constant_expression: expression;
