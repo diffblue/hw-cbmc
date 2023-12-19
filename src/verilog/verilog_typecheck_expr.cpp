@@ -451,24 +451,53 @@ Function: verilog_typecheck_exprt::bits
 
 exprt verilog_typecheck_exprt::bits(const exprt &expr)
 {
-  auto width = [this](const exprt &expr) -> mp_integer {
-    const typet &type = expr.type();
-    if(type.id() == ID_bool)
-      return 1;
-    else if(type.id() == ID_unsignedbv)
-      return to_unsignedbv_type(type).get_width();
-    else if(type.id() == ID_signedbv)
-      return to_signedbv_type(type).get_width();
-    else if(type.id() == ID_integer)
-      return 32;
-    else
-    {
-      throw errort().with_location(expr.source_location())
-        << "failed to determine number of bits of " << to_string(expr);
-    }
-  }(expr);
+  auto width_opt = bits_rec(expr.type());
 
-  return from_integer(width, integer_typet());
+  if(!width_opt.has_value())
+  {
+    throw errort().with_location(expr.source_location())
+      << "failed to determine number of bits of " << to_string(expr);
+  }
+
+  return from_integer(width_opt.value(), integer_typet());
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::bits_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<mp_integer>
+verilog_typecheck_exprt::bits_rec(const typet &type) const
+{
+  if(type.id() == ID_bool)
+    return 1;
+  else if(type.id() == ID_unsignedbv)
+    return to_unsignedbv_type(type).get_width();
+  else if(type.id() == ID_signedbv)
+    return to_signedbv_type(type).get_width();
+  else if(type.id() == ID_integer)
+    return 32;
+  else if(type.id() == ID_array)
+  {
+    auto &array_type = to_array_type(type);
+    auto size_int =
+      numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+    auto element_bits_opt = bits_rec(array_type.element_type());
+    if(element_bits_opt.has_value())
+      return element_bits_opt.value() * size_int;
+    else
+      return {};
+  }
+  else
+    return {};
 }
 
 /*******************************************************************\

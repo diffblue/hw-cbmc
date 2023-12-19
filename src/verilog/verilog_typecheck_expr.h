@@ -136,6 +136,7 @@ private:
   void no_bool_ops(exprt &);
 
   exprt bits(const exprt &);
+  std::optional<mp_integer> bits_rec(const typet &) const;
 };
 
 bool verilog_typecheck(
