@@ -849,6 +849,8 @@ module_common_item:
 	| continuous_assign
 	| initial_construct
 	| always_construct
+	| loop_generate_construct
+	| conditional_generate_construct
         ;
 
 module_item:
@@ -2154,15 +2156,10 @@ generate_item_brace:
 	;
 
 loop_generate_construct:
-	  // The following is a generalisation of the Verilog 2001
-	  // grammar, which requires begin ... end, and does not allow
-	  // the generate_item. Found in the SystemVerilog IEEE 1800-2012
-	  // grammar.
 	  TOK_FOR '(' genvar_initialization ';'
 	              constant_expression ';'
                       genvar_initialization ')'
-          // generate_block
-          generate_item
+          generate_block
 		{ init($$, ID_generate_for);
 		  stack_expr($$).reserve_operands(4);
 		  mto($$, $3);
@@ -2183,9 +2180,9 @@ conditional_generate_construct:
 	;
 
 if_generate_construct:
-	  TOK_IF '(' constant_expression ')' generate_item_or_null %prec LT_TOK_ELSE
+	  TOK_IF '(' constant_expression ')' generate_block %prec LT_TOK_ELSE
 	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); }
-	| TOK_IF '(' constant_expression ')' generate_item_or_null TOK_ELSE generate_item_or_null
+	| TOK_IF '(' constant_expression ')' generate_block TOK_ELSE generate_block
 	  	{ init($$, ID_generate_if); mto($$, $3); mto($$, $5); mto($$, $7); }
 	;
 
@@ -2201,13 +2198,14 @@ case_generate_item_brace:
 	;
 
 case_generate_item:
-	  expression_brace TOK_COLON generate_item_or_null
-	| TOK_DEFAULT TOK_COLON generate_item_or_null
-	| TOK_DEFAULT generate_item_or_null
+	  expression_brace TOK_COLON generate_block
+	| TOK_DEFAULT TOK_COLON generate_block
+	| TOK_DEFAULT generate_block
 	;
 
 generate_block:
-	  TOK_BEGIN generate_item_brace TOK_END
+	  generate_item
+	| TOK_BEGIN generate_item_brace TOK_END
 		{ init($$, ID_generate_block); swapop($$, $2); }
 	| TOK_BEGIN TOK_COLON generate_block_identifier generate_item_brace TOK_END
 		{ init($$, ID_generate_block);
@@ -2216,10 +2214,7 @@ generate_block:
 	;
 
 generate_item:
-	  conditional_generate_construct
-	| loop_generate_construct
-	| generate_block
-	| module_or_generate_item
+	  module_or_generate_item
 	;
 
 generate_item_or_null:
