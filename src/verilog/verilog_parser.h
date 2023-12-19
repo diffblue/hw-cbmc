@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #define VERILOG_PARSER_H
 
 #include <util/mp_arith.h>
-#include <util/optional.h>
 #include <util/parser.h>
 
 #include "verilog_parse_tree.h"

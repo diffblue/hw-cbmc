@@ -128,14 +128,13 @@ ebmc_propertiest ebmc_propertiest::from_command_line(
 
     auto property_string = cmdline.get_value('p');
 
-    language->set_message_handler(message_handler);
-
     exprt expr;
     if(language->to_expr(
          property_string,
          id2string(transition_system.main_symbol->module),
          expr,
-         ns))
+         ns,
+         message_handler))
     {
       throw ebmc_errort() << "failed to parse the given property expression";
     }

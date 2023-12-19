@@ -52,10 +52,10 @@ public:
   std::string mode;
 
   // returns the latest failing timeframe, if any
-  optionalt<std::size_t> get_max_failing_timeframe() const;
+  std::optional<std::size_t> get_max_failing_timeframe() const;
 
   // returns the earliest failing timeframe, if any
-  optionalt<std::size_t> get_min_failing_timeframe() const;
+  std::optional<std::size_t> get_min_failing_timeframe() const;
 };
 
 // outputting traces

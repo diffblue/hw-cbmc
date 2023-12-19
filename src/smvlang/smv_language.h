@@ -21,9 +21,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class smv_languaget:public languaget
 {
 public:
-  bool parse(
-    std::istream &instream,
-    const std::string &path) override;
+  bool
+  parse(std::istream &, const std::string &path, message_handlert &) override;
 
   void dependencies(
     const std::string &module,
@@ -32,11 +31,13 @@ public:
   void modules_provided(
     std::set<std::string> &module_set) override;
 
-  bool typecheck(symbol_table_baset &symbol_table, const std::string &module)
-    override;
+  bool typecheck(
+    symbol_table_baset &,
+    const std::string &module,
+    message_handlert &) override;
 
-  void show_parse(std::ostream &out) override;
-  
+  void show_parse(std::ostream &, message_handlert &) override;
+
   ~smv_languaget() override { }
   
   bool from_expr(
@@ -52,10 +53,12 @@ public:
   bool to_expr(
     const std::string &code,
     const std::string &module,
-    exprt &expr,
-    const namespacet &ns) override;
+    exprt &,
+    const namespacet &,
+    message_handlert &) override;
 
-  bool generate_support_functions(symbol_table_baset &) override
+  bool
+  generate_support_functions(symbol_table_baset &, message_handlert &) override
   {
     return false;
   }

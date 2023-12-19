@@ -9,8 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef VERILOG_PREPROCESSOR_TOKENIZER_H
 #define VERILOG_PREPROCESSOR_TOKENIZER_H
 
-#include <util/optional.h>
-
 #include "verilog_preprocessor_error.h"
 
 /// Note that the set of tokens recognised by the Verilog preprocessor

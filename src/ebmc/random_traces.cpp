@@ -53,7 +53,7 @@ public:
 
   void operator()(
     outputt,
-    const optionalt<std::string> &outfile_prefix,
+    const std::optional<std::string> &outfile_prefix,
     std::size_t random_seed,
     std::size_t number_of_traces,
     std::size_t number_of_trace_steps);
@@ -148,8 +148,7 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
       return 10; // default
   }();
 
-  const auto outfile_prefix = [&cmdline]() -> optionalt<std::string>
-  {
+  const auto outfile_prefix = [&cmdline]() -> std::optional<std::string> {
     if(cmdline.isset("vcd"))
       return cmdline.get_value("vcd") + ".";
     else
@@ -417,9 +416,7 @@ std::vector<exprt> random_tracest::random_input_constraints(
       auto input_in_timeframe = instantiate(input, i, number_of_timeframes, ns);
       auto constraint =
         equal_exprt(input_in_timeframe, random_value(input.type()));
-      auto handle = solver.handle(constraint);
-      CHECK_RETURN(handle.id() == ID_literal);
-      result.push_back(handle);
+      result.push_back(constraint);
     }
   }
 
@@ -440,7 +437,7 @@ Function: random_tracest::operator()()
 
 void random_tracest::operator()(
   outputt output,
-  const optionalt<std::string> &outfile_prefix,
+  const std::optional<std::string> &outfile_prefix,
   std::size_t random_seed,
   std::size_t number_of_traces,
   std::size_t number_of_trace_steps)

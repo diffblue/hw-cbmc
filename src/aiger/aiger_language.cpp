@@ -8,15 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "aiger_language.h"
 
-/*******************************************************************\
-
-Module:
-
-Author: Daniel Kroening, kroening@kroening.com
-
-\*******************************************************************/
-
-#include "aiger_language.h"
+#include <util/message.h>
 
 /*******************************************************************\
 
@@ -31,8 +23,9 @@ Function: aiger_languaget::parse
 \*******************************************************************/
 
 bool aiger_languaget::parse(
-  std::istream &instream,
-  const std::string &path)
+  std::istream &,
+  const std::string &,
+  message_handlert &)
 {
   return true;
 }
@@ -50,11 +43,13 @@ Function: aiger_languaget::preprocess
 \*******************************************************************/
 
 bool aiger_languaget::preprocess(
-  std::istream &instream,
-  const std::string &path,
-  std::ostream &outstream)
+  std::istream &,
+  const std::string &,
+  std::ostream &,
+  message_handlert &message_handler)
 {
-  error() << "there is no AIGER preprocessing" << eom;
+  messaget message(message_handler);
+  message.error() << "there is no AIGER preprocessing" << messaget::eom;
   return true;
 }
 
@@ -106,8 +101,9 @@ Function: aiger_languaget::typecheck
 \*******************************************************************/
 
 bool aiger_languaget::typecheck(
-  symbol_table_baset &symbol_table,
-  const std::string &module)
+  symbol_table_baset &,
+  const std::string &,
+  message_handlert &)
 {
   return true;
 }
@@ -124,7 +120,7 @@ Function: aiger_languaget::interfaces
 
 \*******************************************************************/
 
-bool aiger_languaget::interfaces(symbol_table_baset &symbol_table)
+bool aiger_languaget::interfaces(symbol_table_baset &, message_handlert &)
 {
   return false;
 }
@@ -140,8 +136,8 @@ Function: aiger_languaget::show_parse
  Purpose:
 
 \*******************************************************************/
-  
-void aiger_languaget::show_parse(std::ostream &out)
+
+void aiger_languaget::show_parse(std::ostream &, message_handlert &)
 {
 }
 
@@ -200,8 +196,9 @@ Function: aiger_languaget::to_expr
 bool aiger_languaget::to_expr(
   const std::string &code,
   const std::string &module,
-  exprt &expr,
-  const namespacet &ns)
+  exprt &,
+  const namespacet &,
+  message_handlert &)
 {
   return true;
 }

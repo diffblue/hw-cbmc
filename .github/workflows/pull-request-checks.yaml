@@ -104,7 +104,7 @@ jobs:
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:
     name: CentOS 8
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: centos:8
     steps:
@@ -134,7 +134,7 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make CXX="ccache g++" -C src -j2
+        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j2
       - name: Run the ebmc tests with SAT
         run: |
           rm regression/ebmc/neural-liveness/counter1.desc

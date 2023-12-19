@@ -57,8 +57,9 @@ inline void cnf_gate_and(cnft &cnf, literalt a, literalt b, literalt o) {
   cnf.lcnf(lits);
 }
 
-inline optionalt<std::pair<std::string, std::size_t>>
-b2h_conversion_specs(const exprt &expr) {
+inline std::optional<std::pair<std::string, std::size_t>>
+b2h_conversion_specs(const exprt &expr)
+{
   if (expr.id() == ID_constant) {
     auto &constant_expr = to_constant_expr(expr);
     const typet &type = constant_expr.type();

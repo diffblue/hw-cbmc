@@ -56,7 +56,7 @@ ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &cmdline)
     }
   }
 
-  optionalt<smt2_convt::solvert> smt2_solver =
+  std::optional<smt2_convt::solvert> smt2_solver =
     cmdline.isset("bitwuzla")    ? smt2_convt::solvert::BITWUZLA
     : cmdline.isset("boolector") ? smt2_convt::solvert::BOOLECTOR
     : cmdline.isset("cvc3")      ? smt2_convt::solvert::CVC3
@@ -66,7 +66,7 @@ ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &cmdline)
     : cmdline.isset("yices")     ? smt2_convt::solvert::YICES
     : cmdline.isset("z3")        ? smt2_convt::solvert::Z3
     : cmdline.isset("smt2")      ? smt2_convt::solvert::GENERIC
-                                 : optionalt<smt2_convt::solvert>{};
+                                 : std::optional<smt2_convt::solvert>{};
 
   if(cmdline.isset("outfile"))
   {

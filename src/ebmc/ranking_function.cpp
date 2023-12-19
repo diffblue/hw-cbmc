@@ -33,15 +33,14 @@ exprt parse_ranking_function(
   auto language = get_language_from_mode(transition_system.main_symbol->mode);
   exprt expr;
 
-  language->set_message_handler(message_handler);
-
   const namespacet ns{transition_system.symbol_table};
 
   if(language->to_expr(
        string_to_be_parsed,
        id2string(transition_system.main_symbol->module),
        expr,
-       ns))
+       ns,
+       message_handler))
   {
     throw ebmc_errort() << "failed to parse ranking function";
   }
@@ -138,7 +137,7 @@ tvt is_ranking_function(
 {
   const namespacet ns{transition_system.symbol_table};
   auto solver_wrapper = solver_factory(ns, message_handler);
-  auto &solver = solver_wrapper.stack_decision_procedure();
+  auto &solver = solver_wrapper.decision_procedure();
 
   // *no* initial state, two time frames
   unwind(transition_system.trans_expr, message_handler, solver, 2, ns, false);
