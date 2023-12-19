@@ -637,10 +637,18 @@ Function: verilog_typecheckt::convert_inst
 \*******************************************************************/
 
 void verilog_typecheckt::interface_inst(
-  const verilog_module_itemt &statement)
+  const verilog_module_itemt &inst_module_item)
 {
-  forall_operands(it, statement)
-    interface_inst(statement, *it);
+  if(inst_module_item.id() == ID_inst)
+  {
+    for(auto &instance : to_verilog_inst(inst_module_item).instances())
+      interface_inst(inst_module_item, instance);
+  }
+  else
+  {
+    for(auto &instance : to_verilog_inst_builtin(inst_module_item).instances())
+      interface_inst(inst_module_item, instance);
+  }
 }
 
 /*******************************************************************\
@@ -657,7 +665,7 @@ Function: verilog_typecheckt::interface_inst
 
 void verilog_typecheckt::interface_inst(
   const verilog_module_itemt &statement,
-  const exprt &op)
+  const verilog_instt::instancet &op)
 {
   bool primitive=statement.id()==ID_inst_builtin;
   const exprt &range=static_cast<const exprt &>(op.find(ID_range));
@@ -669,19 +677,19 @@ void verilog_typecheckt::interface_inst(
   else
     convert_range(range, msb, lsb);
 
-  irep_idt identifier=
+  irep_idt instantiated_module_identifier =
     verilog_module_symbol(id2string(statement.get(ID_module)));
 
-  // add symbol
+  // add symbol for the module instance
   symbolt symbol;
 
   symbol.mode=mode;
-  symbol.base_name=op.get(ID_instance);
+  symbol.base_name = op.base_name();
   symbol.type=typet(primitive?ID_primitive_module_instance:ID_module_instance);
   symbol.module=module_identifier;
   symbol.name = hierarchical_identifier(symbol.base_name);
   symbol.pretty_name=strip_verilog_prefix(symbol.name);
-  symbol.value.set(ID_module, identifier);
+  symbol.value.set(ID_module, instantiated_module_identifier);
 
   if(symbol_table.add(symbol))
   {

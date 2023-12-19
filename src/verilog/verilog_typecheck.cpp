@@ -573,10 +573,12 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
   // get the instance symbols
   for(auto &instance : inst.instances())
   {
-    const auto instance_name = instance.name();
+    const auto instance_base_name = instance.base_name();
 
     const irep_idt instance_identifier =
-      id2string(module_symbol.name) + "." + id2string(instance_name);
+      hierarchical_identifier(instance_base_name);
+
+    instance.identifier(instance_identifier);
 
     // add relevant defparam assignments
     auto &instance_defparams = defparams[instance_identifier];

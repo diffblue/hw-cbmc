@@ -406,9 +406,19 @@ public:
   class instancet : public exprt
   {
   public:
-    const irep_idt &name() const
+    const irep_idt &base_name() const
     {
-      return get(ID_instance);
+      return get(ID_base_name);
+    }
+
+    const irep_idt &identifier() const
+    {
+      return get(ID_identifier);
+    }
+
+    void identifier(irep_idt _identifier)
+    {
+      return set(ID_identifier, _identifier);
     }
 
     const exprt::operandst &connections() const
@@ -456,6 +466,20 @@ public:
   }
   
   inline irep_idt get_module() const { return get(ID_module); }
+
+  using instancet = verilog_instt::instancet;
+
+  using instancest = std::vector<instancet>;
+
+  const instancest &instances() const
+  {
+    return (const instancest &)(operands());
+  }
+
+  instancest &instances()
+  {
+    return (instancest &)(operands());
+  }
 };
 
 inline const verilog_inst_builtint &to_verilog_inst_builtin(const exprt &expr)

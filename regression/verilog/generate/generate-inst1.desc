@@ -1,0 +1,7 @@
+CORE
+generate-inst1.v
+
+^EXIT=10$
+^SIGNAL=0$
+^no properties$
+--
