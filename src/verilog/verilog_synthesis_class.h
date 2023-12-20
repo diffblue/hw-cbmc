@@ -284,18 +284,19 @@ protected:
   void instantiate_ports(
     const irep_idt &instance,
     const exprt &inst,
-    const symbolt &symbol,
-    const replace_mapt &replace_map,
-    transt &trans);
+    const symbolt &,
+    const replace_mapt &,
+    transt &);
 
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const irep_idt &target, exprt &dest);
-  
+
   void instantiate_port(
-    const exprt &symbol_expr,
+    const symbol_exprt &port,
     const exprt &value,
-    const replace_mapt &replace_map,
-    transt &trans);
+    const replace_mapt &,
+    const source_locationt &,
+    transt &);
 
   void replace_by_wire(exprt &expr, const symbolt &base);
   

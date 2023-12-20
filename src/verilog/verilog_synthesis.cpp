@@ -938,28 +938,38 @@ Function: verilog_synthesist::instantiate_port
 \*******************************************************************/
 
 void verilog_synthesist::instantiate_port(
-  const exprt &symbol_expr,
+  const symbol_exprt &port,
   const exprt &value,
   const replace_mapt &replace_map,
+  const source_locationt &source_location,
   transt &trans)
 {
-  irep_idt identifier=symbol_expr.get(ID_identifier);
+  irep_idt port_identifier = port.get_identifier();
 
-  replace_mapt::const_iterator it=
-    replace_map.find(identifier);
+  replace_mapt::const_iterator it = replace_map.find(port_identifier);
 
   if(it==replace_map.end())
   {
-    error() << "failed to find " << identifier << " in replace_map"
-            << eom;
-    throw 0;
+    throw errort().with_location(source_location)
+      << "failed to find port symbol " << port_identifier << " in replace_map";
   }
 
-  auto value_synthesized = synth_expr(value, symbol_statet::SYMBOL);
+  // Much like always @(*) port = value.
+  // Note that the types need not match.
+  verilog_forcet assignment(
+    it->second, typecast_exprt::conditional_cast(value, it->second.type()));
 
-  trans.invar().add_to_operands(equal_exprt(
-    typecast_exprt::conditional_cast(it->second, value_synthesized.type()),
-    value_synthesized));
+  assignment.add_source_location() = source_location;
+
+  verilog_event_guardt event_guard;
+  event_guard.add_source_location() = source_location;
+  event_guard.body() = assignment;
+
+  verilog_alwayst always;
+  always.add_source_location() = source_location;
+  always.statement() = event_guard;
+
+  synth_always(always);
 }
 
 /*******************************************************************\
@@ -995,11 +1005,12 @@ void verilog_synthesist::instantiate_ports(
     {
       if(o_it.operands().size()==2)
       {
-        const exprt &op0 = to_binary_expr(o_it).op0();
+        const auto &op0 = to_symbol_expr(to_binary_expr(o_it).op0());
         const exprt &op1 = to_binary_expr(o_it).op1();
 
         if(op1.is_not_nil())
-          instantiate_port(op0, op1, replace_map, trans);
+          instantiate_port(
+            op0, op1, replace_map, inst.source_location(), trans);
       }
     }
   }
@@ -1020,8 +1031,9 @@ void verilog_synthesist::instantiate_ports(
     {
       DATA_INVARIANT(o_it.is_not_nil(), "all ports must be connected");
 
-      instantiate_port((exprt &)(*p_it), o_it,
-                       replace_map, trans);
+      auto &port = to_symbol_expr((const exprt &)(*p_it));
+
+      instantiate_port(port, o_it, replace_map, inst.source_location(), trans);
       p_it++;
     }
   }

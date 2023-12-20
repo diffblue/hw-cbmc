@@ -105,7 +105,13 @@ public:
   explicit verilog_statementt(const irep_idt &id):exprt(id)
   {
   }
-  
+
+  explicit verilog_statementt(const irep_idt &id, operandst _operands)
+    : exprt(id)
+  {
+    operands() = std::move(_operands);
+  }
+
   verilog_statementt()
   {
   }
@@ -1124,6 +1130,11 @@ public:
   verilog_forcet():verilog_statementt(ID_force)
   {
     operands().resize(2);
+  }
+
+  verilog_forcet(exprt _lhs, exprt _rhs)
+    : verilog_statementt(ID_force, {std::move(_lhs), std::move(_rhs)})
+  {
   }
 
   const exprt &lhs() const
