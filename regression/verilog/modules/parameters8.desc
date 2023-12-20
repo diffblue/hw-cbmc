@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 parameters8.v
 
 ^EXIT=10$
 ^SIGNAL=0$
 --
 --
-module names are mismatched, resulting in a parameter evaluation error

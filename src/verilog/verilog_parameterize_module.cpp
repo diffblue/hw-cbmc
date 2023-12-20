@@ -69,6 +69,7 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
   const auto parameter_declarators = get_parameter_declarators(module_source);
   replace_symbolt replace_symbol;
 
+  // 'nil' denotes 'not assigned'
   std::list<exprt> parameter_values;
 
   // Are the parameter values given with the instantiation
@@ -76,7 +77,8 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
   if(!parameter_assignment.empty() &&
      parameter_assignment.front().id()==ID_named_parameter_assignment)
   {
-    std::map<irep_idt, exprt> map;
+    // named
+    std::map<irep_idt, exprt> map; // base name to values
 
     forall_expr(it, parameter_assignment)
     {
@@ -86,36 +88,18 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
 
     for(auto &decl : parameter_declarators)
     {
-      auto &identifier = decl.identifier();
-      exprt value;
+      auto &base_name = decl.base_name();
 
-      if(map.find(identifier) != map.end())
-        value = map[identifier];
-      else
-      {
-        // The default value is not yet converted.
-        value = decl.value();
-        convert_expr(value);
+      exprt value = nil_exprt(); // "not assigned"
 
-        // substitute other parameters
-        replace_symbol.replace(value);
-        simplify(value, ns);
-
-        if(!value.is_constant())
-        {
-          error().source_location = value.source_location();
-          error() << "parameter value expected to simplify to constant, "
-                  << "but got `" << to_string(value) << "'" << eom;
-          throw 0;
-        }
-      }
+      if(map.find(base_name) != map.end())
+        value = map[base_name];
 
       // Is there a defparam that overrides this parameter?
-      auto def_param_it = instance_defparams.find(identifier);
+      auto def_param_it = instance_defparams.find(base_name);
       if(def_param_it != instance_defparams.end())
         value = def_param_it->second;
 
-      replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
       parameter_values.push_back(value);
     }
   }
@@ -126,30 +110,12 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
 
     for(auto &decl : parameter_declarators)
     {
-      exprt value;
+      exprt value = nil_exprt();
 
       if(p_it != parameter_assignment.end())
       {
         value = *p_it;
         p_it++;
-      }
-      else
-      {
-        // The default value is not yet converted.
-        value = decl.value();
-        convert_expr(value);
-
-        // substitute other parameters
-        replace_symbol.replace(value);
-        simplify(value, ns);
-
-        if(!value.is_constant())
-        {
-          error().source_location = value.source_location();
-          error() << "parameter value expected to simplify to constant, "
-                  << "but got `" << to_string(value) << "'" << eom;
-          throw 0;
-        }
       }
 
       // Is there a defparam that overrides this parameter?
@@ -158,7 +124,6 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
       if(def_param_it != instance_defparams.end())
         value = def_param_it->second;
 
-      replace_symbol.insert(symbol_exprt{identifier, value.type()}, value);
       parameter_values.push_back(value);
     }
 
@@ -196,7 +161,11 @@ void verilog_typecheckt::set_parameter_values(
   for(auto &declarator : parameter_port_list)
   {
     DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
-    declarator.value() = *p_it;
+
+    // only overwrite when actually assigned
+    if(p_it->is_not_nil())
+      declarator.value() = *p_it;
+
     p_it++;
   }
 
@@ -210,7 +179,11 @@ void verilog_typecheckt::set_parameter_values(
         if(p_it!=parameter_values.end())
         {
           DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
-          decl.value() = *p_it;
+
+          // only overwrite when actually assigned
+          if(p_it->is_not_nil())
+            decl.value() = *p_it;
+
           p_it++;
         }
       }
@@ -258,28 +231,34 @@ irep_idt verilog_typecheckt::parameterize_module(
     parameter_assignments,
     instance_defparams);
 
-  // create full instance symbol name
+  // Create full parameterized module name by appending a suffix
+  // to the name of the instantiated module.
   std::string suffix="(";
   
   bool first=true;
 
   for(const auto &pv : parameter_values)
+  {
+    if(first)
+      first = false;
+    else
+      suffix += ",";
+
     if(pv.is_not_nil())
     {
-      if(first) first=false; else suffix+=",";
-      
       mp_integer i;
       if(to_integer_non_constant(pv, i))
       {
         error().source_location = pv.source_location();
-        error() << "parameter expected to be constant, but got `"
+        error() << "parameter value expected to be constant, but got `"
                 << to_string(pv) << "'" << eom;
         throw 0;
       }
       else
         suffix += integer2string(i);
     }
-    
+  }
+
   suffix+=')';
 
   irep_idt new_module_identifier=id2string(module_identifier)+suffix;

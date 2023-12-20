@@ -310,6 +310,11 @@ public:
       return get(ID_identifier);
     }
 
+    const irep_idt &base_name() const
+    {
+      return get(ID_identifier);
+    }
+
     const exprt &value() const
     {
       return static_cast<const exprt &>(find(ID_value));
