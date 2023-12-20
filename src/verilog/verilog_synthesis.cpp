@@ -190,7 +190,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
   {
     const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
     verilog_blocking_assignt assignment;
-    assignment.lhs()=a_symbol.symbol_expr();
+    assignment.lhs() = a_symbol.symbol_expr().with_source_location<exprt>(call);
     assignment.rhs()=actuals[i];
     assignment.add_source_location()=call.source_location();
     synth_statement(assignment);
