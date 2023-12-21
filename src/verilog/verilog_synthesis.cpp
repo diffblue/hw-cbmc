@@ -76,8 +76,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id()==ID_function_call)
   {
-    expand_function_call(to_function_call_expr(expr));
-    return expr;
+    return expand_function_call(to_function_call_expr(expr));
   }
   else if(expr.id()==ID_hierarchical_identifier)
   {
@@ -122,7 +121,7 @@ Function: verilog_synthesist::expand_function_call
 
 \*******************************************************************/
 
-void verilog_synthesist::expand_function_call(function_call_exprt &call)
+exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
 {
   // Is it a 'system function call'?
   if(call.is_system_function_call())
@@ -138,8 +137,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
       throw 0;
     }
 
-    call.swap(result);
-    return;
+    return result;
   }
 
   // check some restrictions
@@ -203,9 +201,7 @@ void verilog_synthesist::expand_function_call(function_call_exprt &call)
     ns.lookup(id2string(symbol.name)+"."+
               id2string(symbol.base_name));
 
-  exprt return_value=return_symbol.symbol_expr();
-
-  call.swap(return_value);
+  return return_symbol.symbol_expr();
 }
 
 /*******************************************************************\

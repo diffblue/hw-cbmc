@@ -277,8 +277,8 @@ protected:
     class hierarchical_identifier_exprt &expr,
     symbol_statet symbol_state);
 
-  void expand_function_call(class function_call_exprt &call);
-  
+  exprt expand_function_call(const class function_call_exprt &call);
+
   typedef std::map<irep_idt, exprt> replace_mapt;
 
   void instantiate_ports(
