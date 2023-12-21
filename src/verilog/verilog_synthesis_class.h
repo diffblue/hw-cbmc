@@ -111,6 +111,7 @@ protected:
 
     // only relevant for 'next'
     event_guardt type;
+    bool is_cycle_local = false;
 
     assignmentt():type(event_guardt::NONE)
     {
@@ -299,7 +300,11 @@ protected:
     transt &);
 
   void replace_by_wire(exprt &expr, const symbolt &base);
-  
+
+  // Mark the local variables of a function or task
+  // as cycle local.
+  void function_locality(const symbolt &);
+
   unsigned temporary_counter;
 };
 

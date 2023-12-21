@@ -111,6 +111,32 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::function_locality
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::function_locality(const symbolt &function_symbol)
+{
+  // Find all local symbols of the function, mark their
+  // assignments as local.
+  auto prefix = id2string(function_symbol.name) + '.';
+  for(auto &symbol : symbol_table.symbols)
+  {
+    if(irep_idt(symbol.first).starts_with(prefix))
+    {
+      assignments[symbol.first].is_cycle_local = true;
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::expand_function_call
 
   Inputs:
@@ -182,7 +208,10 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
     error() << "wrong number of arguments" << eom;
     throw 0;
   }
-  
+
+  // preserve locality of function-local variables
+  function_locality(symbol);
+
   // do assignments to function parameters
   for(unsigned i=0; i<parameters.size(); i++)
   {
@@ -195,13 +224,16 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
   }
 
   synth_statement(to_verilog_statement(symbol.value));
-  
+
   // replace function call by return value symbol
   const symbolt &return_symbol=
     ns.lookup(id2string(symbol.name)+"."+
               id2string(symbol.base_name));
 
-  return return_symbol.symbol_expr();
+  // get the current value
+  auto result = synth_expr(return_symbol.symbol_expr(), symbol_statet::CURRENT);
+
+  return result;
 }
 
 /*******************************************************************\
@@ -358,22 +390,27 @@ void verilog_synthesist::assignment_rec(
       
     assignmentt &assignment=assignments[symbol.name];
 
-    if(assignment.type==event_guardt::NONE)
-      assignment.type=new_type;
-    else if(assignment.type!=new_type)
+    if(assignment.is_cycle_local)
     {
-      error().source_location=lhs.source_location();
-      error() << "conflicting assignment types for `"
-              << symbol.base_name
-              << "' (new: "
-              << as_string(new_type) << ", old: "
-              << as_string(assignment.type) << ")" << eom;
-      throw 0;      
     }
-    
-    membert member;
-    assignment_member_rec(lhs, member,
-      (construct==constructt::INITIAL)?assignment.init:assignment.next);
+    else
+    {
+      if(assignment.type == event_guardt::NONE)
+        assignment.type = new_type;
+      else if(assignment.type != new_type)
+      {
+        throw errort().with_location(lhs.source_location())
+          << "conflicting assignment types for `" << symbol.base_name
+          << "' (new: " << as_string(new_type)
+          << ", old: " << as_string(assignment.type) << ")";
+      }
+
+      membert member;
+      assignment_member_rec(
+        lhs,
+        member,
+        (construct == constructt::INITIAL) ? assignment.init : assignment.next);
+    }
   }
 
   {
@@ -2759,6 +2796,9 @@ void verilog_synthesist::synth_assignments(transt &trans)
       symbol.is_state_var && !symbol.is_macro && symbol.type.id() != ID_integer)
     {
       assignmentt &assignment=assignments[symbol.name];
+
+      if(assignment.is_cycle_local)
+        continue; // ignore
 
       if(assignment.type==event_guardt::COMBINATIONAL)
       {
