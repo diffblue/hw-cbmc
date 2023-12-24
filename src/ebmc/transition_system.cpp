@@ -92,6 +92,10 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
     return 1;
   }
 
+  // do -I
+  if(cmdline.isset('I'))
+    config.verilog.include_paths = cmdline.get_values('I');
+
   auto language = get_language_from_filename(filename);
 
   if(language == nullptr)
