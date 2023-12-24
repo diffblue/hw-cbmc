@@ -1,0 +1,7 @@
+KNOWNBUG
+parameter_ports2.v
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+The type of the parameter needs to be processed.
