@@ -1,0 +1,6 @@
+CORE
+generate-if1.v
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
