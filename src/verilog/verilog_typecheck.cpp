@@ -641,10 +641,8 @@ void verilog_typecheckt::convert_inst_builtin(
 {
   const irep_idt &inst_module=inst.get_module();
 
-  Forall_operands(it, inst)
+  for(auto &instance : inst.instances())
   {
-    exprt &instance=*it;
-
     typecheck_builtin_port_connections(instance);
 
     // check built-in ones
@@ -669,7 +667,7 @@ void verilog_typecheckt::convert_inst_builtin(
             inst_module==ID_xor ||
             inst_module==ID_xnor)
     {
-      if(instance.operands().size()<2)
+      if(instance.connections().size() < 2)
       {
         error().source_location=instance.source_location();
         error() << "Primitive gate " << inst_module
@@ -680,7 +678,7 @@ void verilog_typecheckt::convert_inst_builtin(
     else if(inst_module==ID_buf ||
             inst_module==ID_not)
     {
-      if(instance.operands().size()<2)
+      if(instance.connections().size() < 2)
       {
         error().source_location=instance.source_location();
         error() << "Primitive gate " << inst_module

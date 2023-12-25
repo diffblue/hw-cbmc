@@ -388,25 +388,21 @@ to_verilog_local_parameter_decl(irept &irep)
   return static_cast<verilog_local_parameter_declt &>(irep);
 }
 
-class verilog_instt:public verilog_module_itemt
+class verilog_inst_baset : public verilog_module_itemt
 {
 public:
-  inline verilog_instt():verilog_module_itemt(ID_inst)
+  verilog_inst_baset(irep_idt id) : verilog_module_itemt(id)
   {
   }
 
-  inline irep_idt get_module() const { return get(ID_module); }
-  
-  inline void set_module(const irep_idt &module) { return set(ID_module, module); }
-  
-  inline exprt::operandst &parameter_assignments()
+  irep_idt get_module() const
   {
-    return static_cast<exprt &>(add(ID_parameter_assignments)).operands();
+    return get(ID_module);
   }
 
-  inline const exprt::operandst &parameter_assignments() const
+  void set_module(const irep_idt &module)
   {
-    return static_cast<const exprt &>(find(ID_parameter_assignments)).operands();
+    return set(ID_module, module);
   }
 
   class instancet : public exprt
@@ -452,6 +448,25 @@ protected:
   using exprt::operands;
 };
 
+class verilog_instt : public verilog_inst_baset
+{
+public:
+  inline verilog_instt() : verilog_inst_baset(ID_inst)
+  {
+  }
+
+  exprt::operandst &parameter_assignments()
+  {
+    return static_cast<exprt &>(add(ID_parameter_assignments)).operands();
+  }
+
+  const exprt::operandst &parameter_assignments() const
+  {
+    return static_cast<const exprt &>(find(ID_parameter_assignments))
+      .operands();
+  }
+};
+
 inline const verilog_instt &to_verilog_inst(const exprt &expr)
 {
   assert(expr.id()==ID_inst);
@@ -464,27 +479,11 @@ inline verilog_instt &to_verilog_inst(exprt &expr)
   return static_cast<verilog_instt &>(expr);
 }
 
-class verilog_inst_builtint:public verilog_module_itemt
+class verilog_inst_builtint : public verilog_inst_baset
 {
 public:
-  inline verilog_inst_builtint():verilog_module_itemt(ID_inst_builtin)
+  inline verilog_inst_builtint() : verilog_inst_baset(ID_inst_builtin)
   {
-  }
-  
-  inline irep_idt get_module() const { return get(ID_module); }
-
-  using instancet = verilog_instt::instancet;
-
-  using instancest = std::vector<instancet>;
-
-  const instancest &instances() const
-  {
-    return (const instancest &)(operands());
-  }
-
-  instancest &instances()
-  {
-    return (instancest &)(operands());
   }
 };
 
