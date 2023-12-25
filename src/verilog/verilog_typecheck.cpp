@@ -496,18 +496,6 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       auto &rhs = declarator.value();
       convert_expr(rhs);
       propagate_type(rhs, symbol.type);
-
-      if(symbol.is_state_var)
-      {
-      }
-      else
-      {
-        if(!symbol.value.is_nil())
-        {
-          throw errort().with_location(declarator.source_location())
-            << "Net " << symbol.display_name() << " is assigned twice";
-        }
-      }
     }
   }
 }
@@ -819,7 +807,8 @@ void verilog_typecheckt::check_lhs(
   }
   else
   {
-    throw errort() << "typechecking: failed to get identifier on LHS";
+    throw errort() << "typechecking: failed to get identifier on LHS "
+                   << lhs.pretty();
   }
 }
 
@@ -1661,15 +1650,16 @@ void verilog_typecheckt::typecheck()
   const auto &module_source =
     to_verilog_module_source(module_symbol.type.find(ID_module_source));
 
-  // We first elaborate the named constants (parameters, enums).
-  // Everything else (types of ports, generate constructs) may
-  // depend on these.
-  elaborate(module_source);
+  // Elaborate the named constants (parameters, enums),
+  // generate constructs, and add the symbols to the symbol table.
+  auto verilog_module_expr = elaborate(module_source);
 
   // Create symbols for the functions, tasks, registers/variables and wires.
-  module_interface(module_source);
+  for(auto &module_item : verilog_module_expr.module_items())
+    interface_module_item(module_item);
 
-  auto verilog_module_expr = elaborate_generate_constructs(module_source);
+  // Check the module interface
+  check_module_ports(module_source.ports());
 
   // Now typecheck the generated statements.
   convert_statements(verilog_module_expr);

@@ -76,7 +76,7 @@ protected:
     PRECONDITION(false);
   }
 
-  virtual void elaborate_rec(irep_idt)
+  virtual void elaborate_symbol_rec(irep_idt)
   {
     PRECONDITION(false);
   }

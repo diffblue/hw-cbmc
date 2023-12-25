@@ -12,46 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::elaborate_generate_constructs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-verilog_module_exprt verilog_typecheckt::elaborate_generate_constructs(
-  const verilog_module_sourcet &module_source)
-{
-  const auto &module_items = module_source.module_items();
-
-  // We copy the module items to a new verilog_module_exprt
-  verilog_module_exprt verilog_module_expr;
-  auto &dest = verilog_module_expr.module_items();
-  dest.reserve(module_items.size());
-
-  // do the generate stuff, copying the module items
-  for(auto &item : module_items)
-    if(item.id() == ID_generate_block)
-      elaborate_generate_item(item, dest);
-    else if(
-      item.id() == ID_decl &&
-      to_verilog_decl(item).get_class() == ID_verilog_genvar)
-    {
-      // Assign to "-1", which signals "the variable is unset"
-      for(auto &declarator : to_verilog_decl(item).declarators())
-        genvars[declarator.identifier()] = -1;
-    }
-    else
-      dest.push_back(item); // copy
-
-  return verilog_module_expr;
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::elaborate_generate_block
 
   Inputs:
@@ -124,12 +84,12 @@ void verilog_typecheckt::elaborate_generate_decl(
     }
 
     // Preserve the declaration for any initializers.
-    verilog_module_itemt tmp(ID_set_genvars);
-    tmp.add_to_operands(decl);
-    irept &variables = tmp.add("variables");
+    verilog_set_genvarst tmp(static_cast<const verilog_module_itemt &>(
+      static_cast<const exprt &>(decl)));
+    auto &variables = tmp.variables();
 
     for(const auto &it : genvars)
-      variables.set(it.first, integer2string(it.second));
+      variables[it.first] = irept(integer2string(it.second));
 
     dest.push_back(std::move(tmp));
   }
@@ -179,34 +139,41 @@ Function: verilog_typecheckt::elaborate_generate_item
 
 \*******************************************************************/
 
-void verilog_typecheckt::elaborate_generate_item(
-  const exprt &statement,
-  module_itemst &dest)
+verilog_typecheckt::module_itemst verilog_typecheckt::elaborate_generate_item(
+  const verilog_module_itemt &module_item)
 {
-  if(statement.id()==ID_generate_block)
-    elaborate_generate_block(to_verilog_generate_block(statement), dest);
-  else if(statement.id()==ID_generate_case)
-    elaborate_generate_case(to_verilog_generate_case(statement), dest);
-  else if(statement.id()==ID_generate_if)
-    elaborate_generate_if(to_verilog_generate_if(statement), dest);
-  else if(statement.id()==ID_generate_for)
-    elaborate_generate_for(to_verilog_generate_for(statement), dest);
-  else if(statement.id() == ID_decl)
-    elaborate_generate_decl(to_verilog_decl(statement), dest);
-  else if(statement.id() == ID_inst)
-    elaborate_generate_inst(to_verilog_inst(statement), dest);
+  module_itemst dest;
+
+  if(module_item.id() == ID_generate_block)
+    elaborate_generate_block(to_verilog_generate_block(module_item), dest);
+  else if(module_item.id() == ID_generate_case)
+    elaborate_generate_case(to_verilog_generate_case(module_item), dest);
+  else if(module_item.id() == ID_generate_if)
+    elaborate_generate_if(to_verilog_generate_if(module_item), dest);
+  else if(module_item.id() == ID_generate_for)
+    elaborate_generate_for(to_verilog_generate_for(module_item), dest);
   else
   {
-    // no need for elaboration
-    verilog_module_itemt tmp(ID_set_genvars);
-    tmp.add_to_operands(statement);
-    irept &variables=tmp.add("variables");
-    
-    for(const auto & it : genvars)
+    // E.g., declarations. Remember the values of the
+    // generate variables.
+    verilog_set_genvarst set_genvars(module_item);
+    irept &variables = set_genvars.add("variables");
+
+    for(const auto &it : genvars)
       variables.set(it.first, integer2string(it.second));
 
-    dest.push_back(std::move(tmp));
+    dest = elaborate_level({set_genvars});
   }
+
+  return dest;
+}
+
+void verilog_typecheckt::elaborate_generate_item(
+  const verilog_module_itemt &module_item,
+  module_itemst &dest)
+{
+  auto result = elaborate_generate_item(module_item);
+  dest.insert(dest.end(), result.begin(), result.end());
 }
 
 /*******************************************************************\
@@ -257,10 +224,12 @@ void verilog_typecheckt::elaborate_generate_if(
   if(condition==0)
   {
     if(statement.operands().size()==3)
-      elaborate_generate_item(to_multi_ary_expr(statement).op2(), dest);
+      elaborate_generate_item(
+        to_verilog_module_item(to_multi_ary_expr(statement).op2()), dest);
   }
   else
-    elaborate_generate_item(to_multi_ary_expr(statement).op1(), dest);
+    elaborate_generate_item(
+      to_verilog_module_item(to_multi_ary_expr(statement).op1()), dest);
 }
 
 /*******************************************************************\

@@ -77,8 +77,11 @@ protected:
   defparamst defparams;
 
   // Elaboration
-  void elaborate(const verilog_module_sourcet &);
-  void elaborate_rec(irep_idt) override;
+  using module_itemst = verilog_module_sourcet::module_itemst;
+
+  verilog_module_exprt elaborate(const verilog_module_sourcet &);
+  module_itemst elaborate_level(const module_itemst &);
+  void elaborate_symbol_rec(irep_idt) override;
   void add_symbol(symbolt);
   void collect_symbols(const typet &);
   void collect_symbols(const verilog_module_sourcet &);
@@ -197,11 +200,7 @@ protected:
   bool implicit_wire(const irep_idt &identifier,
                      const symbolt *&symbol) override;
 
-  using module_itemst = std::vector<verilog_module_itemt>;
-
   // generate constructs
-  verilog_module_exprt
-  elaborate_generate_constructs(const verilog_module_sourcet &);
   void elaborate_generate_assign(
     const verilog_generate_assignt &,
     module_itemst &dest);
@@ -210,7 +209,9 @@ protected:
     module_itemst &dest);
   void elaborate_generate_decl(const verilog_declt &, module_itemst &dest);
   void elaborate_generate_inst(const verilog_instt &, module_itemst &dest);
-  void elaborate_generate_item(const exprt &statement, module_itemst &dest);
+  module_itemst elaborate_generate_item(const verilog_module_itemt &);
+  void
+  elaborate_generate_item(const verilog_module_itemt &src, module_itemst &dest);
   void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
   void
   elaborate_generate_case(const verilog_generate_caset &, module_itemst &dest);
