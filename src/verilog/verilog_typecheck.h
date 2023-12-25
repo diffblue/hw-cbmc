@@ -77,7 +77,7 @@ protected:
   defparamst defparams;
 
   // Elaboration
-  void elaborate();
+  void elaborate(const verilog_module_sourcet &);
   void elaborate_rec(irep_idt) override;
   void add_symbol(symbolt);
   void collect_symbols(const typet &);
