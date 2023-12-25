@@ -857,8 +857,8 @@ void verilog_typecheckt::interface_block(
   
   if(is_named)
   {
-    irep_idt identifier=statement.get_identifier();
-  
+    irep_idt identifier = statement.identifier();
+
     // need to add to symbol table
     symbolt symbol;
 
@@ -892,9 +892,8 @@ void verilog_typecheckt::interface_block(
     
   // do block itself
 
-  forall_operands(it, statement)
-    interface_statement(
-      static_cast<const verilog_statementt &>(*it));
+  for(auto &block_statement : statement.statements())
+    interface_statement(block_statement);
 
   if(is_named)
     named_blocks.pop_back();

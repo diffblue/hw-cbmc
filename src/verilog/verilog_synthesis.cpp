@@ -1570,8 +1570,8 @@ Function: verilog_synthesist::synth_block
 
 void verilog_synthesist::synth_block(const verilog_blockt &statement)
 {
-  forall_operands(it, statement)
-    synth_statement(static_cast<const verilog_statementt &>(*it));
+  for(auto &block_statement : statement.statements())
+    synth_statement(block_statement);
 }
 
 /*******************************************************************\
