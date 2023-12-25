@@ -1706,7 +1706,7 @@ function_declaration:
 	  TOK_FUNCTION
 	  automatic_opt signing_opt range_or_type_opt
 	  function_identifier
-		{ push_scope(stack_expr($1).get(ID_identifier), "."); }
+		{ push_scope(stack_expr($5).get(ID_identifier), "."); }
 	  list_of_ports_opt ';'
           function_item_declaration_brace statement
           TOK_ENDFUNCTION
