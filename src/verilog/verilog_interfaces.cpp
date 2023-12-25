@@ -61,26 +61,22 @@ void verilog_typecheckt::check_module_ports(
 
   unsigned nr=0;
 
-  for(auto &port : module_ports)
+  for(auto &decl : module_ports)
   {
-    assert(port.id() == ID_decl);
+    DATA_INVARIANT(decl.id() == ID_decl, "port declaration id");
+    DATA_INVARIANT(
+      decl.declarators().size() == 1,
+      "port declarations must have one declarator");
 
-    const verilog_declt &decl = to_verilog_decl(port);
+    const auto &declarator = decl.declarators().front();
 
-    assert(decl.operands().size()==1);
-    const auto &declarator = to_unary_expr(decl).op();
-    assert(declarator.id() == ID_symbol);
+    const irep_idt &name = declarator.identifier();
+    const irep_idt &port_class = decl.get_class();
 
-    const irep_idt &name = to_symbol_expr(declarator).get_identifier();
-    const irep_idt &port_class=decl.get(ID_class);
-    
     if(name.empty())
     {
-      error().source_location =
-        static_cast<const exprt &>(port).source_location();
-      error() << "empty port name (module "
-              << module_symbol.base_name << ')' << eom;
-      throw 0;
+      throw errort().with_location(decl.source_location())
+        << "empty port name (module " << module_symbol.base_name << ')';
     }
 
     if(port_names.find(name)!=
