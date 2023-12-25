@@ -68,9 +68,8 @@ array_typet verilog_typecheckt::array_type(
     offset = 0;
     if(size < 0)
     {
-      error().source_location = size_expr.find_source_location();
-      error() << "array size must be nonnegative" << eom;
-      throw 0;
+      throw errort().with_location(size_expr.find_source_location())
+        << "array size must be nonnegative";
     }
   }
   else
@@ -120,10 +119,8 @@ void verilog_typecheckt::typecheck_port_connection(
 
   if(!symbol.is_input && !symbol.is_output)
   {
-    error().source_location=op.source_location();
-    error() << "port `" << symbol.name
-        << "' is neither input nor output";
-    throw 0;
+    throw errort().with_location(op.source_location())
+      << "port `" << symbol.name << "' is neither input nor output";
   }
 
   if(op.is_nil())
@@ -177,9 +174,8 @@ void verilog_typecheckt::typecheck_port_connections(
   {
     if(!ports.empty())
     {
-      error().source_location=inst.source_location();
-      error() << "module does not have ports";
-      throw 0;
+      throw errort().with_location(inst.source_location())
+        << "module does not have ports";
     }
 
     return;
@@ -198,9 +194,8 @@ void verilog_typecheckt::typecheck_port_connections(
       if(o_it->id()!=ID_named_port_connection ||
          o_it->operands().size()!=2)
       {
-        error().source_location=inst.source_location();
-        error() << "expected a named port connection" << eom;
-        throw 0;
+        throw errort().with_location(inst.source_location())
+          << "expected a named port connection";
       }
 
       exprt &op = to_binary_expr(*o_it).op1();
@@ -216,9 +211,8 @@ void verilog_typecheckt::typecheck_port_connections(
       if(assigned_ports.find(name)!=
          assigned_ports.end())
       {
-        error().source_location=o_it->source_location();
-        error() << "port name " << name << " assigned twice";
-        throw 0;
+        throw errort().with_location(o_it->source_location())
+          << "port name " << name << " assigned twice";
       }
 
       for(auto &port : ports)
@@ -235,9 +229,8 @@ void verilog_typecheckt::typecheck_port_connections(
 
       if(!found)
       {
-        error().source_location=o_it->source_location();
-        error() << "port name " << identifier << " not found";
-        throw 0;
+        throw errort().with_location(o_it->source_location())
+          << "port name " << identifier << " not found";
       }
 
       assigned_ports.insert(identifier);
@@ -247,10 +240,9 @@ void verilog_typecheckt::typecheck_port_connections(
   {
     if(inst.operands().size()!=ports.size())
     {
-      error().source_location=inst.source_location();
-      error() << "wrong number of arguments: expected " << ports.size()
-              << " but got " << inst.operands().size() << eom;
-      throw 0;
+      throw errort().with_location(inst.source_location())
+        << "wrong number of arguments: expected " << ports.size() << " but got "
+        << inst.operands().size();
     }
 
     irept::subt::const_iterator p_it=
@@ -333,10 +325,9 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
 
   if(result==nullptr)
   {
-    error().source_location=decl.source_location();
-    error() << "expected to find " << decl_class << " symbol `"
-        << identifier << "' in symbol_table";
-    throw 0;
+    throw errort().with_location(decl.source_location())
+      << "expected to find " << decl_class << " symbol `" << identifier
+      << "' in symbol_table";
   }
   
   symbolt &symbol=*result;
@@ -376,10 +367,9 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   // find the function
   if(function_call.function().id()!=ID_symbol)
   {
-    error().source_location=function_call.source_location();
-    error() << "expected function symbol, but got `"
-            << to_string(function_call.function()) << '\'' << eom;
-    throw 0;
+    throw errort().with_location(function_call.source_location())
+      << "expected function symbol, but got `"
+      << to_string(function_call.function()) << '\'';
   }
 
   const symbolt &function_symbol=
@@ -403,9 +393,8 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
     
   if(parameters.size()!=arguments.size())
   {
-    error().source_location=function_call.source_location();
-    error() << "function call has wrong number of arguments" << eom;
-    throw 0;
+    throw errort().with_location(function_call.source_location())
+      << "function call has wrong number of arguments";
   }
   
   // elaborate the arguments of the call and assign to parameter
@@ -418,9 +407,8 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 
     if(!value.is_constant())
     {
-      error().source_location=arguments[i].source_location();
-      error() << "constant function argument is not constant" << eom;
-      throw 0;
+      throw errort().with_location(arguments[i].source_location())
+        << "constant function argument is not constant";
     }
     
     irep_idt p_identifier=parameters[i].get_identifier();
@@ -507,8 +495,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
     {
       if(it->operands().size()!=2)
       {
-        error() << "expected two operands in assignment" << eom;
-        throw 0;
+        throw errort() << "expected two operands in assignment";
       }
 
       exprt &lhs = to_equal_expr(*it).lhs();
@@ -516,9 +503,8 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
 
       if(lhs.id()!=ID_symbol)
       {
-        error() << "expected symbol on left hand side of assignment, "
-                << " but got `" << to_string(lhs) << "'" << eom;
-        throw 0;
+        throw errort() << "expected symbol on left hand side of assignment, "
+                       << " but got `" << to_string(lhs) << "'";
       }
 
       const std::string identifier =
@@ -539,9 +525,8 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       {
         if(!symbol.value.is_nil())
         {
-          error().source_location=it->source_location();
-          error() << "Net " << identifier << " is assigned twice";
-          throw 0;
+          throw errort().with_location(it->source_location())
+            << "Net " << identifier << " is assigned twice";
         }
       }
     }
@@ -671,10 +656,9 @@ void verilog_typecheckt::convert_inst_builtin(
     {
       if(instance.operands().size()<2)
       {
-        error().source_location=instance.source_location();
-        error() << "Primitive gate " << inst_module
-                << " expects at least two operands";
-        throw 0;
+        throw errort().with_location(instance.source_location())
+          << "Primitive gate " << inst_module
+          << " expects at least two operands";
       }
     }
     else if(inst_module==ID_buf ||
@@ -682,10 +666,9 @@ void verilog_typecheckt::convert_inst_builtin(
     {
       if(instance.operands().size()<2)
       {
-        error().source_location=instance.source_location();
-        error() << "Primitive gate " << inst_module
-                << " expects at least two operands";
-        throw 0;
+        throw errort().with_location(instance.source_location())
+          << "Primitive gate " << inst_module
+          << " expects at least two operands";
       }
     }
     else if(inst_module=="tranif0" ||
@@ -702,10 +685,8 @@ void verilog_typecheckt::convert_inst_builtin(
     }
     else
     {
-      error().source_location=inst.source_location();
-      error() << "Unknown primitive Verilog module "
-              << inst_module;
-      throw 0;
+      throw errort().with_location(inst.source_location())
+        << "Unknown primitive Verilog module " << inst_module;
     }
   }
 }
@@ -727,9 +708,8 @@ void verilog_typecheckt::convert_always(
 {
   if(module_item.operands().size()!=1)
   {
-    error().source_location=module_item.source_location();
-    error() << "always statement expected to have one operand" << eom;
-    throw 0;
+    throw errort().with_location(module_item.source_location())
+      << "always statement expected to have one operand";
   }
 
   convert_statement(module_item.statement());
@@ -752,9 +732,8 @@ void verilog_typecheckt::convert_initial(
 {
   if(module_item.operands().size()!=1)
   {
-    error().source_location=module_item.source_location();
-    error() << "initial statement expected to have one operand" << eom;
-    throw 0;
+    throw errort().with_location(module_item.source_location())
+      << "initial statement expected to have one operand";
   }
 
   convert_statement(module_item.statement());
@@ -809,8 +788,7 @@ void verilog_typecheckt::check_lhs(
   {
     if(lhs.operands().size()!=2)
     {
-      error() << "extractbit takes two operands" << eom;
-      throw 0;
+      throw errort() << "extractbit takes two operands";
     }
 
     check_lhs(to_extractbit_expr(lhs).src(), vassign);
@@ -819,8 +797,7 @@ void verilog_typecheckt::check_lhs(
   {
     if(lhs.operands().size()!=3)
     {
-      error() << "extractbits takes three operands" << eom;
-      throw 0;
+      throw errort() << "extractbits takes three operands";
     }
 
     check_lhs(to_extractbits_expr(lhs).src(), vassign);
@@ -841,15 +818,13 @@ void verilog_typecheckt::check_lhs(
     case A_CONTINUOUS:
       if(symbol.is_state_var)
       {
-        error().source_location=lhs.source_location();
-        error() << "continuous assignment to register" << eom;
-        throw 0;
+        throw errort().with_location(lhs.source_location())
+          << "continuous assignment to register";
       }
       else if(symbol.is_input && !symbol.is_output)
       {
-        error().source_location=lhs.source_location();
-        error() << "continuous assignment to input" << eom;
-        throw 0;
+        throw errort().with_location(lhs.source_location())
+          << "continuous assignment to input";
       }
       break;
 
@@ -858,9 +833,8 @@ void verilog_typecheckt::check_lhs(
       if(!symbol.is_state_var &&
          !symbol.is_lvalue)
       {
-        error().source_location=lhs.source_location();
-        error() << "assignment to non-register" << eom;
-        throw 0;
+        throw errort().with_location(lhs.source_location())
+          << "assignment to non-register";
       }
 
       break;
@@ -868,8 +842,7 @@ void verilog_typecheckt::check_lhs(
   }
   else
   {
-    error() << "typechecking: failed to get identifier on LHS" << eom;
-    throw 0;
+    throw errort() << "typechecking: failed to get identifier on LHS";
   }
 }
 
@@ -913,9 +886,8 @@ void verilog_typecheckt::convert_continuous_assign(
   {
     if(it->id()!=ID_equal || it->operands().size()!=2)
     {
-      error().source_location=it->source_location();
-      error() << "malformed continuous assignment" << eom;
-      throw 0;
+      throw errort().with_location(it->source_location())
+        << "malformed continuous assignment";
     }
 
     it->type()=bool_typet();
@@ -966,9 +938,8 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
 
     if(symbol.type.id()!=ID_code)
     {
-      error().source_location=statement.source_location();
-      error() << "expected task or function name" << eom;
-      throw 0;
+      throw errort().with_location(statement.source_location())
+        << "expected task or function name";
     }
     
     const code_typet &code_type=to_code_type(symbol.type);
@@ -979,9 +950,8 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
     
     if(parameter_types.size()!=arguments.size())
     {
-      error().source_location=statement.source_location();
-      error() << "wrong number of arguments" << eom;
-      throw 0;
+      throw errort().with_location(statement.source_location())
+        << "wrong number of arguments";
     }
 
     for(unsigned i=0; i<arguments.size(); i++)
@@ -1023,18 +993,16 @@ void verilog_typecheckt::convert_parameter_override(
     // turn into identifier
     if(lhs.id() != ID_hierarchical_identifier)
     {
-      error().source_location = module_item.source_location();
-      error() << "defparam expected to have a hierachical identifier" << eom;
-      throw 0;
+      throw errort().with_location(module_item.source_location())
+        << "defparam expected to have a hierachical identifier";
     }
 
     const auto &hierarchical_identifier = to_hierarchical_identifier_expr(lhs);
 
     if(hierarchical_identifier.module().id() != ID_symbol)
     {
-      error().source_location = module_item.source_location();
-      error() << "defparam expected to have a single level identifier" << eom;
-      throw 0;
+      throw errort().with_location(module_item.source_location())
+        << "defparam expected to have a single level identifier";
     }
 
     auto module_instance =
@@ -1091,9 +1059,8 @@ void verilog_typecheckt::convert_assign(
 {
   if(statement.operands().size()!=2)
   {
-    error().source_location=statement.source_location();
-    error() << "assign statement expected to have two operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "assign statement expected to have two operands";
   }
 
   exprt &lhs = to_binary_expr(statement).lhs();
@@ -1121,9 +1088,8 @@ void verilog_typecheckt::convert_assert(exprt &statement)
 {
   if(statement.operands().size()!=2)
   {
-    error().source_location=statement.source_location();
-    error() << "assert statement expected to have two operands" << eom;
-    return;
+    throw errort().with_location(statement.source_location())
+      << "assert statement expected to have two operands";
   }
 
   exprt &cond = to_binary_expr(statement).op0();
@@ -1157,10 +1123,8 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   if(symbol_table.symbols.find(full_identifier)!=
      symbol_table.symbols.end())
   {
-    error().source_location=statement.source_location();
-    error() << "property identifier `" << base_name
-            << "' already used" << eom;
-    return; // continue with error
+    throw errort().with_location(statement.source_location())
+      << "property identifier `" << base_name << "' already used";
   }
 
   statement.set(ID_identifier, full_identifier);
@@ -1197,9 +1161,8 @@ void verilog_typecheckt::convert_assume(exprt &statement)
 {
   if(statement.operands().size()!=2)
   {
-    error().source_location=statement.source_location();
-    error() << "assume statement expected to have two operands" << eom;
-    return;
+    throw errort().with_location(statement.source_location())
+      << "assume statement expected to have two operands";
   }
 
   exprt &cond = to_binary_expr(statement).op0();
@@ -1252,9 +1215,8 @@ void verilog_typecheckt::convert_case(
 {
   if(statement.operands().size()<1)
   {
-    error().source_location=statement.source_location();
-    error() << "case statement expected to have at least one operand" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "case statement expected to have at least one operand";
   }
 
   exprt &case_operand=statement.case_operand();
@@ -1288,9 +1250,8 @@ void verilog_typecheckt::convert_if(verilog_ift &statement)
   if(statement.operands().size()!=2 &&
      statement.operands().size()!=3)
   {
-    error().source_location=statement.source_location();
-    error() << "if statement expected to have two or three operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "if statement expected to have two or three operands";
   }
 
   exprt &condition=statement.condition();
@@ -1321,9 +1282,8 @@ void verilog_typecheckt::convert_event_guard(
 {
   if(statement.operands().size()!=2)
   {
-    error().source_location=statement.source_location();
-    error() << "event_guard expected to have two operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "event_guard expected to have two operands";
   }
 
   exprt &guard=statement.guard();
@@ -1350,9 +1310,8 @@ void verilog_typecheckt::convert_delay(verilog_delayt &statement)
 {
   if(statement.operands().size()!=2)
   {
-    error().source_location=statement.source_location();
-    error() << "delay expected to have two operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "delay expected to have two operands";
   }
 
   convert_statement(statement.body());
@@ -1374,9 +1333,8 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
 {
   if(statement.operands().size()!=4)
   {
-    error().source_location=statement.source_location();
-    error() << "for expected to have four operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "for expected to have four operands";
   }
 
   convert_statement(statement.initialization());
@@ -1405,8 +1363,8 @@ void verilog_typecheckt::convert_prepostincdec(verilog_statementt &statement)
 {
   if(statement.operands().size()!=1)
   {
-    error().source_location=statement.source_location();
-    throw statement.id_string()+" expected to have one operand";
+    throw errort().with_location(statement.source_location())
+      << statement.id() << " expected to have one operand";
   }
 
   convert_expr(to_unary_expr(statement).op());
@@ -1429,9 +1387,8 @@ void verilog_typecheckt::convert_while(
 {
   if(statement.operands().size()!=2)
   {
-    error().source_location=statement.source_location();
-    error() << "while expected to have two operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "while expected to have two operands";
   }
 
   exprt &condition=statement.condition();
@@ -1458,9 +1415,8 @@ void verilog_typecheckt::convert_repeat(
 {
   if(statement.operands().size()!=2)
   {
-    error().source_location=statement.source_location();
-    error() << "repeat expected to have two operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "repeat expected to have two operands";
   }
 
   exprt &condition=statement.condition();
@@ -1487,9 +1443,8 @@ void verilog_typecheckt::convert_forever(
 {
   if(statement.operands().size()!=1)
   {
-    error().source_location=statement.source_location();
-    error() << "forever expected to have one operand" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "forever expected to have one operand";
   }
 
   convert_statement(statement.body());
@@ -1558,9 +1513,8 @@ void verilog_typecheckt::convert_statement(
     convert_force(to_verilog_force(statement));
   else
   {
-    error().source_location=statement.source_location();
-    error() << "unexpected statement:" << statement.id() << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "unexpected statement:" << statement.id();
   }
 }
 
@@ -1630,8 +1584,7 @@ void verilog_typecheckt::convert_module_item(
 
     if(module_item.operands().size()!=1)
     {
-      error() << "set_genvars expects one operand" << eom;
-      throw 0;
+      throw errort() << "set_genvars expects one operand";
     }
       
     exprt tmp;
@@ -1641,9 +1594,8 @@ void verilog_typecheckt::convert_module_item(
   }
   else
   {
-    error().source_location=module_item.source_location();
-    error() << "unexpected module item:" << module_item.id() << eom;
-    throw 0;
+    throw errort().with_location(module_item.source_location())
+      << "unexpected module item:" << module_item.id();
   }
 }
 
