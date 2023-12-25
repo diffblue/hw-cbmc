@@ -1,6 +1,6 @@
 SRC = expr2verilog.cpp \
       sva_expr.cpp \
-      verilog_elaborate_constants.cpp \
+      verilog_elaborate.cpp \
       verilog_expr.cpp \
       verilog_generate.cpp \
       verilog_interfaces.cpp \
