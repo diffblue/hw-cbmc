@@ -125,6 +125,87 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   }
 }
 
+void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
+{
+  if(statement.id() == ID_assert || statement.id() == ID_assume)
+  {
+  }
+  else if(statement.id() == ID_block)
+  {
+    // These may be named
+    auto &block_statement = to_verilog_block(statement);
+
+    if(block_statement.is_named())
+      enter_named_block(block_statement.identifier());
+
+    for(auto &block_statement : to_verilog_block(statement).operands())
+      collect_symbols(to_verilog_statement(block_statement));
+
+    if(block_statement.is_named())
+      named_blocks.pop_back();
+  }
+  else if(statement.id() == ID_blocking_assign)
+  {
+  }
+  else if(
+    statement.id() == ID_case || statement.id() == ID_casex ||
+    statement.id() == ID_casez)
+  {
+    auto &case_statement = to_verilog_case_base(statement);
+
+    for(std::size_t i = 1; i < case_statement.operands().size(); i++)
+    {
+      const verilog_case_itemt &c =
+        to_verilog_case_item(statement.operands()[i]);
+
+      collect_symbols(c.case_statement());
+    }
+  }
+  else if(statement.id() == ID_decl)
+  {
+    collect_symbols(to_verilog_decl(statement));
+  }
+  else if(statement.id() == ID_delay)
+  {
+    collect_symbols(to_verilog_delay(statement).body());
+  }
+  else if(statement.id() == ID_event_guard)
+  {
+    collect_symbols(to_verilog_event_guard(statement).body());
+  }
+  else if(statement.id() == ID_for)
+  {
+    collect_symbols(to_verilog_for(statement).body());
+  }
+  else if(statement.id() == ID_forever)
+  {
+    collect_symbols(to_verilog_forever(statement).body());
+  }
+  else if(statement.id() == ID_function_call)
+  {
+  }
+  else if(statement.id() == ID_if)
+  {
+    auto &if_statement = to_verilog_if(statement);
+    collect_symbols(if_statement.then_case());
+    if(if_statement.has_else_case())
+      collect_symbols(if_statement.else_case());
+  }
+  else if(statement.id() == ID_non_blocking_assign)
+  {
+  }
+  else if(
+    statement.id() == ID_postincrement || statement.id() == ID_postdecrement ||
+    statement.id() == ID_preincrement || statement.id() == ID_predecrement)
+  {
+  }
+  else if(statement.id() == ID_skip)
+  {
+  }
+  else
+    DATA_INVARIANT(false, "unexpected statement: " + statement.id_string());
+}
+
 void verilog_typecheckt::collect_symbols(
   const verilog_module_itemt &module_item)
 {
@@ -148,9 +229,11 @@ void verilog_typecheckt::collect_symbols(
   }
   else if(module_item.id() == ID_always)
   {
+    collect_symbols(to_verilog_always(module_item).statement());
   }
   else if(module_item.id() == ID_initial)
   {
+    collect_symbols(to_verilog_initial(module_item).statement());
   }
   else if(module_item.id() == ID_generate_block)
   {
