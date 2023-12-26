@@ -784,37 +784,53 @@ inline verilog_caset &to_verilog_case(exprt &expr)
 class verilog_ift:public verilog_statementt
 {
 public:
-  verilog_ift():verilog_statementt(ID_if)
+  verilog_ift(exprt __cond, verilog_statementt __then_case)
+    : verilog_statementt(ID_if)
   {
-    operands().resize(3);
+    add_to_operands(std::move(__cond), std::move(__then_case));
   }
 
-  exprt &condition()
+  verilog_ift(
+    exprt __cond,
+    verilog_statementt __then_case,
+    verilog_statementt __else_case)
+    : verilog_statementt(ID_if)
+  {
+    add_to_operands(
+      std::move(__cond), std::move(__then_case), std::move(__else_case));
+  }
+
+  exprt &cond()
   {
     return op0();
   }
 
-  const exprt &condition() const
+  const exprt &cond() const
   {
     return op0();
   }
-  
-  verilog_statementt &true_case()
+
+  verilog_statementt &then_case()
   {
     return static_cast<verilog_statementt &>(op1());
   }
 
-  const verilog_statementt &true_case() const
+  const verilog_statementt &then_case() const
   {
     return static_cast<const verilog_statementt &>(op1());
   }
 
-  verilog_statementt &false_case()
+  bool has_else_case() const
+  {
+    return operands().size() == 3;
+  }
+
+  verilog_statementt &else_case()
   {
     return static_cast<verilog_statementt &>(op2());
   }
 
-  const verilog_statementt &false_case() const
+  const verilog_statementt &else_case() const
   {
     return static_cast<const verilog_statementt &>(op2());
   }
@@ -822,13 +838,19 @@ public:
 
 inline const verilog_ift &to_verilog_if(const exprt &expr)
 {
-  assert(expr.id()==ID_if && expr.operands().size()>=2);
+  PRECONDITION(expr.id() == ID_if);
+  DATA_INVARIANT(
+    expr.operands().size() == 2 || expr.operands().size() == 3,
+    "if has two or three operands");
   return static_cast<const verilog_ift &>(expr);
 }
 
 inline verilog_ift &to_verilog_if(exprt &expr)
 {
-  assert(expr.id()==ID_if && expr.operands().size()>=2);
+  PRECONDITION(expr.id() == ID_if);
+  DATA_INVARIANT(
+    expr.operands().size() == 2 || expr.operands().size() == 3,
+    "if has two or three operands");
   return static_cast<verilog_ift &>(expr);
 }
 
