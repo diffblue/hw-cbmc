@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Live Signal
+Module: Liveness Signal
 
 Author: Daniel Kroening, dkr@amazon.com
 
@@ -13,6 +13,6 @@ Author: Daniel Kroening, dkr@amazon.com
 
 class transition_systemt;
 
-void set_live_signal(transition_systemt &, exprt property);
+void set_liveness_signal(transition_systemt &, exprt property);
 
 #endif // EBMC_LIVE_SIGNAL_H
