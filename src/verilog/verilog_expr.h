@@ -1422,9 +1422,11 @@ public:
     return (parameter_port_listt &)(add(ID_parameter_port_list).get_sub());
   }
 
-  const exprt::operandst &ports() const
+  using port_listt = std::vector<verilog_declt>;
+
+  const port_listt &ports() const
   {
-    return (const exprt::operandst &)(find(ID_ports).get_sub());
+    return (const port_listt &)(find(ID_ports).get_sub());
   }
 
   using module_itemst = std::vector<class verilog_module_itemt>;
