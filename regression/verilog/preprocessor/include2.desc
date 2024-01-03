@@ -1,0 +1,12 @@
+CORE
+include2.v
+--preprocess -I subdir
+// Enable multi-line checking
+activate-multi-line-match
+`line 1 "include2\.v" 0
+`line 1 "include_file\.vh" 1
+
+`line 2 "include2\.v" 2
+^EXIT=0$
+^SIGNAL=0$
+--
