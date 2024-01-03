@@ -191,3 +191,52 @@ jobs:
         run: make -C regression/verilog test-z3
       - name: Print ccache stats
         run: ccache -s
+
+  # This job takes approximately 1 minute
+  check-ubuntu-22_04-nuterm:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -yq gcc g++ ccache cmake
+      - name: Prepare ccache
+        uses: actions/cache@v3
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-22.04-nuterm-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-22.04-nuterm-${{ github.ref }}
+            ${{ runner.os }}-22.04-nuterm
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get pytorch
+        run: |
+          cd src/nuterm
+          wget -q https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.1.2%2Bcpu.zip
+          unzip -q *.zip
+      - name: Build with cmake
+        run: |
+          cd src/nuterm
+          LIBTORCH=`pwd`/libtorch
+          mkdir build
+          cd build
+          cmake -DCMAKE_PREFIX_PATH=$LIBTORCH -DCMAKE_CXX_COMPILER_LAUNCHER=ccache ..
+          cmake --build . --config Release
+      - name: Run the unit tests
+        run: src/nuterm/build/pytorch_tests
+      - name: Run the system tests
+        run: make -C regression/nuterm
+      - name: Print ccache stats
+        run: ccache -s
