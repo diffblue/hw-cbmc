@@ -637,18 +637,10 @@ Function: verilog_typecheckt::convert_inst
 \*******************************************************************/
 
 void verilog_typecheckt::interface_inst(
-  const verilog_module_itemt &inst_module_item)
+  const verilog_inst_baset &inst_module_item)
 {
-  if(inst_module_item.id() == ID_inst)
-  {
-    for(auto &instance : to_verilog_inst(inst_module_item).instances())
-      interface_inst(inst_module_item, instance);
-  }
-  else
-  {
-    for(auto &instance : to_verilog_inst_builtin(inst_module_item).instances())
-      interface_inst(inst_module_item, instance);
-  }
+  for(auto &instance : inst_module_item.instances())
+    interface_inst(inst_module_item, instance);
 }
 
 /*******************************************************************\
@@ -664,7 +656,7 @@ Function: verilog_typecheckt::interface_inst
 \*******************************************************************/
 
 void verilog_typecheckt::interface_inst(
-  const verilog_module_itemt &statement,
+  const verilog_inst_baset &statement,
   const verilog_instt::instancet &op)
 {
   bool primitive=statement.id()==ID_inst_builtin;
@@ -759,9 +751,10 @@ void verilog_typecheckt::interface_module_item(
   {
     // already done by elaborate_parameters
   }
-  else if(module_item.id()==ID_inst ||
-          module_item.id()==ID_inst_builtin)
-    interface_inst(module_item);
+  else if(module_item.id() == ID_inst)
+    interface_inst(to_verilog_inst(module_item));
+  else if(module_item.id() == ID_inst_builtin)
+    interface_inst(to_verilog_inst_builtin(module_item));
   else if(module_item.id()==ID_always)
     interface_statement(to_verilog_always(module_item).statement());
   else if(module_item.id()==ID_initial)

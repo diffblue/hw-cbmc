@@ -112,9 +112,9 @@ protected:
   void check_module_ports(const verilog_module_sourcet &);
   void interface_module_decl(const class verilog_declt &);
   void interface_function_or_task_decl(const class verilog_declt &);
-  void interface_inst(const verilog_module_itemt &);
+  void interface_inst(const verilog_inst_baset &);
   void interface_inst(
-    const verilog_module_itemt &,
+    const verilog_inst_baset &,
     const verilog_instt::instancet &op);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);

@@ -1086,10 +1086,8 @@ void verilog_synthesist::synth_module_instance_builtin(
 {
   const irep_idt &module=module_item.get_module();
 
-  forall_operands(it, module_item)
+  for(auto &instance : module_item.instances())
   {
-    const exprt &instance=*it;
-
     // check built-in ones
     if(module==ID_bufif0 ||
        module==ID_bufif1 ||
@@ -1097,8 +1095,8 @@ void verilog_synthesist::synth_module_instance_builtin(
        module==ID_notif1)
     {
       // add to general constraints
-    
-      exprt constraint=*it;
+
+      exprt constraint = instance;
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
@@ -1112,8 +1110,8 @@ void verilog_synthesist::synth_module_instance_builtin(
             module==ID_rpmos)
     {
       // add to general constraints
-    
-      exprt constraint=*it;
+
+      exprt constraint = instance;
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
@@ -1128,29 +1126,29 @@ void verilog_synthesist::synth_module_instance_builtin(
             module==ID_xor ||
             module==ID_xnor)
     {
-      assert(instance.operands().size()>=2);
+      assert(instance.connections().size() >= 2);
 
-      if(instance.operands().size()==2)
+      if(instance.connections().size() == 2)
       {
-        equal_exprt constraint{instance.operands()[0],
-                               instance.operands().back()};
+        equal_exprt constraint{
+          instance.connections()[0], instance.connections().back()};
         trans.invar().add_to_operands(std::move(constraint));
       }
       else
       {
-        for(unsigned i=1; i<=instance.operands().size()-2; i++)
+        for(unsigned i = 1; i <= instance.connections().size() - 2; i++)
         {
           exprt op(module, instance.type());
 
           if(i==1)
           {
-            op.add_to_operands(instance.operands()[i]);
-            op.add_to_operands(instance.operands()[i + 1]);
+            op.add_to_operands(instance.connections()[i]);
+            op.add_to_operands(instance.connections()[i + 1]);
           }
           else
           {
-            op.add_to_operands(instance.operands()[0]);
-            op.add_to_operands(instance.operands()[i + 1]);
+            op.add_to_operands(instance.connections()[0]);
+            op.add_to_operands(instance.connections()[i + 1]);
           }
 
           if(instance.type().id()!=ID_bool)
@@ -1162,7 +1160,7 @@ void verilog_synthesist::synth_module_instance_builtin(
         }
       }
 
-      /*assert(instance.operands().size()!=3);      
+      /*assert(instance.connections().size()!=3);      
       op.add_to_operands(std::move(instance.op1()), std::move(instance.op2()));
       
       if(instance.type().id()!=ID_bool)
@@ -1176,12 +1174,12 @@ void verilog_synthesist::synth_module_instance_builtin(
     }
     else if(module==ID_buf)
     {
-      assert(instance.operands().size()>=2);
+      assert(instance.connections().size() >= 2);
 
-      for(unsigned i=0; i<instance.operands().size()-1; i++)
+      for(unsigned i = 0; i < instance.connections().size() - 1; i++)
       {
-        equal_exprt constraint{instance.operands()[i],
-                               instance.operands().back()};
+        equal_exprt constraint{
+          instance.connections()[i], instance.connections().back()};
 
         assert(trans.operands().size()==3);
         trans.invar().add_to_operands(std::move(constraint));
@@ -1189,17 +1187,17 @@ void verilog_synthesist::synth_module_instance_builtin(
     }
     else if(module==ID_not)
     {
-      assert(instance.operands().size()>=2);
+      assert(instance.connections().size() >= 2);
 
-      for(unsigned i=0; i<instance.operands().size()-1; i++)
+      for(unsigned i = 0; i < instance.connections().size() - 1; i++)
       {
         exprt op(ID_not, instance.type());
-        op.add_to_operands(instance.operands()[i]);
+        op.add_to_operands(instance.connections()[i]);
 
         if(instance.type().id()!=ID_bool)
           op.id("bit"+op.id_string());
 
-        equal_exprt constraint{op, instance.operands().back()};
+        equal_exprt constraint{op, instance.connections().back()};
 
         assert(trans.operands().size()==3);
         trans.invar().add_to_operands(std::move(constraint));
@@ -1211,8 +1209,8 @@ void verilog_synthesist::synth_module_instance_builtin(
             module=="rtranif0")
     {
       // add to general constraints
-    
-      exprt constraint=*it;
+
+      exprt constraint = instance;
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
@@ -1224,8 +1222,8 @@ void verilog_synthesist::synth_module_instance_builtin(
             module=="rtran")
     {
       // add to general constraints
-    
-      exprt constraint=*it;
+
+      exprt constraint = instance;
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
