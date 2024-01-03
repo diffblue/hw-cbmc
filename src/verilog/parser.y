@@ -1708,7 +1708,7 @@ function_declaration:
 	  function_identifier
 		{ push_scope(stack_expr($1).get(ID_identifier), "."); }
 	  list_of_ports_opt ';'
-          function_item_declaration_brace statement
+          tf_item_declaration_brace statement
           TOK_ENDFUNCTION
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function); 
@@ -1741,16 +1741,18 @@ range_or_type:
 		{ init($$, ID_verilog_time); }
 	;
 
-function_item_declaration_brace:
-	  function_item_declaration
-		{ init($$); mts($$, $1); }
-	| function_item_declaration_brace function_item_declaration
+tf_item_declaration_brace:
+	  /* Optional */
+		{ init($$); }
+	| tf_item_declaration_brace tf_item_declaration
 		{ $$=$1; mts($$, $2); }
 	;
 
-function_item_declaration:
+tf_item_declaration:
 	  block_item_declaration
-	| input_declaration ';'
+	| attribute_instance_brace input_declaration ';' { $$ = $2; }
+	| attribute_instance_brace output_declaration ';' { $$ = $2; }
+	| attribute_instance_brace inout_declaration ';' { $$ = $2; }
 	;
 
 function_prototype: TOK_FUNCTION data_type_or_void function_identifier
@@ -1763,7 +1765,7 @@ task_declaration:
 	  TOK_TASK task_identifier
 		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
 	  list_of_ports_opt ';'
-	  task_item_declaration_brace
+	  tf_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task); 
@@ -1773,20 +1775,6 @@ task_declaration:
 		  addswap($$, ID_body, $7);
 		  pop_scope();
                 }
-	;
-
-task_item_declaration_brace:
-	  /* Optional */
-		{ init($$); }
-	| task_item_declaration_brace task_item_declaration
-		{ $$=$1; mts($$, $2); }
-	;
-
-task_item_declaration:
-	  block_item_declaration
-	| attribute_instance_brace input_declaration  ';' { $$=$2; }
-	| attribute_instance_brace output_declaration ';' { $$=$2; }
-	| attribute_instance_brace inout_declaration  ';' { $$=$2; }
 	;
 
 task_prototype: TOK_TASK task_identifier
@@ -2826,11 +2814,20 @@ unsigned_number: TOK_NUMBER
 // A.8.2 Subroutine calls
 
 tf_call:
-          hierarchical_tf_identifier '(' expression_brace ')'
+          hierarchical_tf_identifier '(' list_of_arguments ')'
 		{ init($$, ID_function_call);
 		  stack_expr($$).operands().reserve(2);
 		  mto($$, $1); mto($$, $3); }
         ;
+
+list_of_arguments:
+	  /* Optional */
+		{ init($$); }
+	| expression
+		{ init($$); mto($$, $1); }
+	| list_of_arguments ',' expression
+		{ $$=$1;    mto($$, $3); }
+	;
 
 system_tf_call:
 	  system_task_name
