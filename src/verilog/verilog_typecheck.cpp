@@ -1245,22 +1245,15 @@ Function: verilog_typecheckt::convert_if
 
 void verilog_typecheckt::convert_if(verilog_ift &statement)
 {
-  if(statement.operands().size()!=2 &&
-     statement.operands().size()!=3)
-  {
-    throw errort().with_location(statement.source_location())
-      << "if statement expected to have two or three operands";
-  }
-
-  exprt &condition=statement.condition();
+  exprt &condition = statement.cond();
 
   convert_expr(condition);
   make_boolean(condition);
 
-  convert_statement(statement.true_case());
+  convert_statement(statement.then_case());
 
-  if(statement.operands().size()==3)
-    convert_statement(statement.false_case());
+  if(statement.has_else_case())
+    convert_statement(statement.else_case());
 }
 
 /*******************************************************************\

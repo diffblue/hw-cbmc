@@ -2067,19 +2067,11 @@ Function: verilog_synthesist::synth_if
 void verilog_synthesist::synth_if(
   const verilog_ift &statement)
 {
-  if(statement.operands().size()!=2 &&
-     statement.operands().size()!=3)
-  {
-    error().source_location=statement.source_location();
-    error() << "if statement expected to have two or three operands" << eom;
-    throw 0;
-  }
-
-  auto if_operand = synth_expr(statement.condition(), symbol_statet::CURRENT);
+  auto if_operand = synth_expr(statement.cond(), symbol_statet::CURRENT);
 
   if(if_operand.is_true())
   {
-    synth_statement(statement.true_case());
+    synth_statement(statement.then_case());
     return;
   }
 
@@ -2091,17 +2083,17 @@ void verilog_synthesist::synth_if(
   true_map.clear_changed();
   false_map.clear_changed();
 
-  // true case
+  // 'then' case
   {
     value_map=&true_map;
-    synth_statement(statement.true_case());
+    synth_statement(statement.then_case());
   }
-  
-  // false case
-  if(statement.operands().size()==3)
+
+  // 'else' case
+  if(statement.has_else_case())
   {
     value_map=&false_map;
-    synth_statement(statement.false_case());
+    synth_statement(statement.else_case());
   }
 
   // restore and merge
