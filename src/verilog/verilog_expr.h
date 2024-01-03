@@ -653,13 +653,25 @@ public:
   verilog_blockt():verilog_statementt(ID_block)
   {
   }
-  
-  inline irep_idt get_identifier() const
+
+  using statementst = std::vector<verilog_statementt>;
+
+  statementst &statements()
+  {
+    return (statementst &)operands();
+  }
+
+  const statementst &statements() const
+  {
+    return (const statementst &)operands();
+  }
+
+  irep_idt identifier() const
   {
     return get(ID_identifier);
   }
-  
-  inline bool is_named() const
+
+  bool is_named() const
   {
     return !get(ID_identifier).empty();
   }
