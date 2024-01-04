@@ -1490,8 +1490,8 @@ list_of_variable_identifiers:
 // This rule is more permissive that the grammar in the standard
 // to cover list_of_param_assignments.
 parameter_port_declaration:
-          TOK_PARAMETER param_assignment
-		{ $$ = $2; }
+          TOK_PARAMETER data_type_or_implicit param_assignment
+		{ $$ = $3; }
 	| data_type param_assignment
 		{ $$ = $2; }
 	| param_assignment
