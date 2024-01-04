@@ -111,6 +111,7 @@ protected:
 
     // only relevant for 'next'
     event_guardt type;
+    bool is_cycle_local = false;
 
     assignmentt():type(event_guardt::NONE)
     {
@@ -277,8 +278,8 @@ protected:
     class hierarchical_identifier_exprt &expr,
     symbol_statet symbol_state);
 
-  void expand_function_call(class function_call_exprt &call);
-  
+  exprt expand_function_call(const class function_call_exprt &call);
+
   typedef std::map<irep_idt, exprt> replace_mapt;
 
   void instantiate_ports(
@@ -299,7 +300,11 @@ protected:
     transt &);
 
   void replace_by_wire(exprt &expr, const symbolt &base);
-  
+
+  // Mark the local variables of a function or task
+  // as cycle local.
+  void function_locality(const symbolt &);
+
   unsigned temporary_counter;
 };
 

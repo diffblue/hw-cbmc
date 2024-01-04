@@ -17,7 +17,9 @@ module main(input clk);
 
   reg my_reg;
 
-  always @(posedge clk)
+  always @(posedge clk) begin
     my_reg = isUpper(my_wire1);
+    assert (my_reg == my_wire2);
+  end
 
 endmodule

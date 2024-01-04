@@ -1,5 +1,5 @@
 CORE
-functioncall5.v
+functioncall7.v
 --module main --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
