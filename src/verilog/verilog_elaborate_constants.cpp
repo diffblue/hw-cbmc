@@ -87,8 +87,65 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   // There may be symbols in the type (say an enum).
   collect_symbols(decl.type());
 
+  const auto decl_class = decl.get_class();
+
+  if(decl_class == ID_function || decl_class == ID_task)
+  {
+    symbolt tf_symbol;
+
+    tf_symbol.mode = mode;
+    tf_symbol.module = module_identifier;
+    tf_symbol.value = decl;
+
+    typet return_type;
+
+    if(decl_class == ID_function)
+      return_type = to_be_elaborated_typet(decl.type());
+    else
+      return_type = empty_typet();
+
+    tf_symbol.type = code_typet{{}, return_type};
+
+    tf_symbol.base_name = decl.get_identifier();
+    tf_symbol.name = hierarchical_identifier(tf_symbol.base_name);
+    tf_symbol.pretty_name = strip_verilog_prefix(tf_symbol.name);
+
+    function_or_task_name = tf_symbol.name;
+
+    add_symbol(tf_symbol); // copy
+
+    // add a symbol for the return value of functions
+    if(decl_class == ID_function)
+    {
+      symbolt return_symbol;
+      return_symbol.is_state_var = true;
+      return_symbol.is_lvalue = true;
+      return_symbol.mode = mode;
+      return_symbol.module = module_identifier;
+      return_symbol.base_name = tf_symbol.base_name;
+      return_symbol.value.make_nil();
+      return_symbol.type = to_code_type(tf_symbol.type).return_type();
+
+      return_symbol.name =
+        id2string(tf_symbol.name) + "." + id2string(tf_symbol.base_name);
+
+      return_symbol.pretty_name = strip_verilog_prefix(return_symbol.name);
+
+      add_symbol(std::move(return_symbol));
+    }
+
+    // do the declarations within the task/function
+    for(auto &decl : decl.declarations())
+      collect_symbols(decl);
+
+    collect_symbols(decl.body());
+
+    function_or_task_name = "";
+    return;
+  }
+
   // Typedef?
-  if(decl.get_class() == ID_typedef)
+  if(decl_class == ID_typedef)
   {
     for(auto &declarator : decl.operands())
     {

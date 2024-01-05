@@ -1,6 +1,7 @@
 module main;
 
-  function [31:0] clog2(input [63:0] value);
+  function [31:0] clog2;
+  input [63:0] value;
   reg [63:0] tmp;
   begin
     tmp = value - 1;

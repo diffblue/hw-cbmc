@@ -202,6 +202,7 @@ Function: verilog_typecheckt::interface_function_or_task
 void verilog_typecheckt::interface_function_or_task(
   const verilog_declt &decl)
 {
+#if 0
   irep_idt decl_class=decl.get_class();
 
   // only add symbol for now
@@ -269,6 +270,7 @@ void verilog_typecheckt::interface_function_or_task(
   interface_statement(decl.body());
     
   function_or_task_name="";  
+#endif
 }
 
 /*******************************************************************\
