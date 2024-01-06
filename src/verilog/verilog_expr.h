@@ -689,8 +689,9 @@ public:
 
   // Function and task declarations have:
   // a) an identifier,
-  // b) further declarations,
-  // c) a body.
+  // b) an optional list of ANSI-style ports,
+  // c) further declarations,
+  // d) a body.
   irep_idt get_identifier() const
   {
     return find(ID_symbol).get(ID_identifier);
@@ -699,6 +700,18 @@ public:
   void set_identifier(const irep_idt &identifier)
   {
     add(ID_symbol).set(ID_identifier, identifier);
+  }
+
+  using portst = std::vector<verilog_declt>;
+
+  portst &ports()
+  {
+    return (portst &)(add(ID_ports).get_sub());
+  }
+
+  const portst &ports() const
+  {
+    return (const portst &)(find(ID_ports).get_sub());
   }
 
   using declarationst = std::vector<verilog_declt>;
