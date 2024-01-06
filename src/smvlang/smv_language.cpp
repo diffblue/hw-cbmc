@@ -27,7 +27,8 @@ Function: smv_languaget::parse
 
 bool smv_languaget::parse(
   std::istream &instream,
-  const std::string &path)
+  const std::string &path,
+  message_handlert &message_handler)
 {
   smv_parser.clear();
 
@@ -38,7 +39,7 @@ bool smv_languaget::parse(
 
   smv_parser.set_file(path);
   smv_parser.in=&instream;
-  smv_parser.log.set_message_handler(get_message_handler());
+  smv_parser.log.set_message_handler(message_handler);
 
   bool result=smv_parser.parse();
 
@@ -118,10 +119,10 @@ Function: smv_languaget::typecheck
 
 bool smv_languaget::typecheck(
   symbol_table_baset &symbol_table,
-  const std::string &module)
+  const std::string &module,
+  message_handlert &message_handler)
 {
-  return smv_typecheck(smv_parse_tree, symbol_table, module,
-                       get_message_handler());
+  return smv_typecheck(smv_parse_tree, symbol_table, module, message_handler);
 }
 
 /*******************************************************************\
@@ -135,8 +136,8 @@ Function: smv_languaget::show_parse
  Purpose:
 
 \*******************************************************************/
-  
-void smv_languaget::show_parse(std::ostream &out)
+
+void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 {
   for(smv_parse_treet::modulest::const_iterator
       it=smv_parse_tree.modules.begin();
@@ -238,10 +239,12 @@ Function: smv_languaget::to_expr
 bool smv_languaget::to_expr(
   const std::string &code,
   const std::string &module,
-  exprt &expr,
-  const namespacet &ns)
+  exprt &,
+  const namespacet &,
+  message_handlert &message_handler)
 {
-  error() << "not yet implemented" << eom;
+  messaget message(message_handler);
+  message.error() << "not yet implemented" << messaget::eom;
   return true;
 }
 

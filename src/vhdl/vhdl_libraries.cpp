@@ -47,7 +47,7 @@ void load_vhdl_library(
   std::stringstream in(library_text);  
   
   vhdl_languaget vhdl_language;
-  vhdl_language.set_message_handler(message_handler);
-  vhdl_language.parse(in, "<builtin-library>");
-  vhdl_language.typecheck(symbol_table, "vhdl::"+id2string(name));
+  vhdl_language.parse(in, "<builtin-library>", message_handler);
+  vhdl_language.typecheck(
+    symbol_table, "vhdl::" + id2string(name), message_handler);
 }

@@ -71,8 +71,6 @@ endif
 include ../config.inc
 include ../common
 
-LIBS = ../ic3/minisat/build/release/lib/libminisat.a
-
 CLEANFILES = ebmc$(EXEEXT)
 
 all: ebmc$(EXEEXT)
@@ -87,5 +85,5 @@ endif
 
 ###############################################################################
 
-ebmc$(EXEEXT): $(OBJ)
+ebmc$(EXEEXT): $(OBJ) ../ic3/minisat/build/release/lib/libminisat.a
 	$(LINKBIN)

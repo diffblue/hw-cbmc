@@ -13,8 +13,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/message.h>
 #include <util/namespace.h>
 
+#include <solvers/decision_procedure.h>
 #include <solvers/prop/prop.h>
-#include <solvers/stack_decision_procedure.h>
 
 #include <iosfwd>
 #include <memory>
@@ -22,21 +22,21 @@ Author: Daniel Kroening, dkr@amazon.com
 class ebmc_solvert final
 {
 public:
-  explicit ebmc_solvert(std::unique_ptr<stack_decision_proceduret> p)
+  explicit ebmc_solvert(std::unique_ptr<decision_proceduret> p)
     : decision_procedure_ptr(std::move(p))
   {
   }
 
   ebmc_solvert(
     std::unique_ptr<propt> p1,
-    std::unique_ptr<stack_decision_proceduret> p2)
+    std::unique_ptr<decision_proceduret> p2)
     : prop_ptr(std::move(p1)), decision_procedure_ptr(std::move(p2))
   {
   }
 
   ebmc_solvert(
     std::unique_ptr<std::ofstream> p1,
-    std::unique_ptr<stack_decision_proceduret> p2)
+    std::unique_ptr<decision_proceduret> p2)
     : ofstream_ptr(std::move(p1)), decision_procedure_ptr(std::move(p2))
   {
   }
@@ -47,16 +47,10 @@ public:
     return *decision_procedure_ptr;
   }
 
-  stack_decision_proceduret &stack_decision_procedure() const
-  {
-    PRECONDITION(decision_procedure_ptr);
-    return *decision_procedure_ptr;
-  }
-
   // the objects are deleted in the opposite order they appear below
   std::unique_ptr<std::ofstream> ofstream_ptr;
   std::unique_ptr<propt> prop_ptr;
-  std::unique_ptr<stack_decision_proceduret> decision_procedure_ptr;
+  std::unique_ptr<decision_proceduret> decision_procedure_ptr;
 };
 
 using ebmc_solver_factoryt =

@@ -52,7 +52,7 @@ public:
   }
 
 protected:
-  resultt dec_solve() override
+  resultt dec_solve(const exprt &) override
   {
     return resultt::D_ERROR;
   }

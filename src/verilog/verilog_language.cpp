@@ -32,18 +32,19 @@ Function: verilog_languaget::parse
 
 bool verilog_languaget::parse(
   std::istream &instream,
-  const std::string &path)
+  const std::string &path,
+  message_handlert &message_handler)
 {
   verilog_parser.clear();
 
   std::stringstream str;
 
-  if(preprocess(instream, path, str))
+  if(preprocess(instream, path, str, message_handler))
     return true;
 
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
-  verilog_parser.log.set_message_handler(get_message_handler());
+  verilog_parser.log.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
   
   if(has_suffix(path, ".sv"))
@@ -76,12 +77,13 @@ Function: verilog_languaget::preprocess
 bool verilog_languaget::preprocess(
   std::istream &instream,
   const std::string &path,
-  std::ostream &outstream)
+  std::ostream &outstream,
+  message_handlert &message_handler)
 {
   std::stringstream str;
 
   verilog_preprocessort preprocessor(
-    instream, outstream, get_message_handler(), path);
+    instream, outstream, message_handler, path);
 
   try { preprocessor.preprocessor(); }
   catch(int e) { return true; }
@@ -152,16 +154,18 @@ Function: verilog_languaget::typecheck
 
 bool verilog_languaget::typecheck(
   symbol_table_baset &symbol_table,
-  const std::string &module)
+  const std::string &module,
+  message_handlert &message_handler)
 {
   if(module=="") return false;
 
-  if(verilog_typecheck(parse_tree, symbol_table, module, get_message_handler()))
+  if(verilog_typecheck(parse_tree, symbol_table, module, message_handler))
     return true;
-    
-  debug() << "Synthesis " << module << eom;
 
-  if(verilog_synthesis(symbol_table, module, get_message_handler(), options))
+  messaget message(message_handler);
+  message.debug() << "Synthesis " << module << messaget::eom;
+
+  if(verilog_synthesis(symbol_table, module, message_handler, options))
     return true;
 
   return false;
@@ -179,7 +183,7 @@ Function: verilog_languaget::interfaces
 
 \*******************************************************************/
 
-bool verilog_languaget::interfaces(symbol_table_baset &)
+bool verilog_languaget::interfaces(symbol_table_baset &, message_handlert &)
 {
   return false;
 }
@@ -195,8 +199,8 @@ Function: verilog_languaget::show_parse
  Purpose:
 
 \*******************************************************************/
-  
-void verilog_languaget::show_parse(std::ostream &out)
+
+void verilog_languaget::show_parse(std::ostream &out, message_handlert &)
 {
   parse_tree.show(out);
 }
@@ -216,7 +220,7 @@ Function: verilog_languaget::from_expr
 bool verilog_languaget::from_expr(
   const exprt &expr,
   std::string &code,
-  const namespacet &ns)
+  const namespacet &)
 {
   code=expr2verilog(expr);
   return false;
@@ -259,7 +263,8 @@ bool verilog_languaget::to_expr(
   const std::string &code,
   const std::string &module,
   exprt &expr,
-  const namespacet &ns)
+  const namespacet &ns,
+  message_handlert &message_handler)
 {
   expr.make_nil();
   
@@ -272,7 +277,7 @@ bool verilog_languaget::to_expr(
   verilog_parser.clear();
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;
-  verilog_parser.log.set_message_handler(get_message_handler());
+  verilog_parser.log.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::EXPRESSION;
   verilog_scanner_init();
 
@@ -282,12 +287,12 @@ bool verilog_languaget::to_expr(
   expr.swap(verilog_parser.parse_tree.expr);
 
   // typecheck it
-  result=verilog_typecheck(expr, module, get_message_handler(), ns);
+  result = verilog_typecheck(expr, module, message_handler, ns);
   if(result)
     return true;
 
   // synthesize it
-  result = verilog_synthesis(expr, module, get_message_handler(), ns);
+  result = verilog_synthesis(expr, module, message_handler, ns);
   if(result)
     return true;
 

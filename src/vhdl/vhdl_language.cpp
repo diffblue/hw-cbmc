@@ -30,13 +30,14 @@ Function: vhdl_languaget::parse
 
 bool vhdl_languaget::parse(
   std::istream &instream,
-  const std::string &path)
+  const std::string &path,
+  message_handlert &message_handler)
 {
   vhdl_parser.clear();
 
   vhdl_parser.set_file(path);
   vhdl_parser.in=&instream;
-  vhdl_parser.log.set_message_handler(get_message_handler());
+  vhdl_parser.log.set_message_handler(message_handler);
   //vhdl_parser.grammar=vhdl_parsert::LANGUAGE;
   
   vhdl_scanner_init();
@@ -64,11 +65,13 @@ Function: vhdl_languaget::preprocess
 \*******************************************************************/
 
 bool vhdl_languaget::preprocess(
-  std::istream &instream,
-  const std::string &path,
-  std::ostream &outstream)
+  std::istream &,
+  const std::string &,
+  std::ostream &,
+  message_handlert &message_handler)
 {
-  error() << "there is no VHDL preprocessing" << eom;
+  messaget message(message_handler);
+  message.error() << "there is no VHDL preprocessing" << messaget::eom;
   return true;
 }
 
@@ -148,20 +151,22 @@ Function: vhdl_languaget::typecheck
 
 bool vhdl_languaget::typecheck(
   symbol_table_baset &symbol_table,
-  const std::string &module)
+  const std::string &module,
+  message_handlert &message_handler)
 {
   if(module=="") return false;
-  
-  vhdl_std_packages(symbol_table, get_message_handler());
-  
-  if(vhdl_typecheck(parse_tree, symbol_table, module, get_message_handler()))
+
+  vhdl_std_packages(symbol_table, message_handler);
+
+  if(vhdl_typecheck(parse_tree, symbol_table, module, message_handler))
     return true;
-    
-  debug() << "Synthesis" << eom;
+
+  messaget message(message_handler);
+  message.debug() << "Synthesis" << messaget::eom;
 
   std::string module2="vhdl::"+module;
 
-  if(vhdl_synthesis(symbol_table, module2, get_message_handler()))
+  if(vhdl_synthesis(symbol_table, module2, message_handler))
     return true;
 
   return false;
@@ -179,7 +184,7 @@ Function: vhdl_languaget::interfaces
 
 \*******************************************************************/
 
-bool vhdl_languaget::interfaces(symbol_table_baset &symbol_table)
+bool vhdl_languaget::interfaces(symbol_table_baset &, message_handlert &)
 {
   return false;
 }
@@ -195,8 +200,8 @@ Function: vhdl_languaget::show_parse
  Purpose:
 
 \*******************************************************************/
-  
-void vhdl_languaget::show_parse(std::ostream &out)
+
+void vhdl_languaget::show_parse(std::ostream &out, message_handlert &)
 {
   parse_tree.show(out);
 }
@@ -259,7 +264,8 @@ bool vhdl_languaget::to_expr(
   const std::string &code,
   const std::string &module,
   exprt &expr,
-  const namespacet &ns)
+  const namespacet &ns,
+  message_handlert &message_handler)
 {
   expr.make_nil();
   
@@ -271,7 +277,7 @@ bool vhdl_languaget::to_expr(
   vhdl_parser.clear();
   vhdl_parser.set_file("");
   vhdl_parser.in=&i_preprocessed;
-  vhdl_parser.log.set_message_handler(get_message_handler());
+  vhdl_parser.log.set_message_handler(message_handler);
   vhdl_parser.grammar=vhdl_parsert::EXPRESSION;
   vhdl_scanner_init();
 

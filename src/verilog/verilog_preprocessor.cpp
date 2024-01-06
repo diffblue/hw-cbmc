@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_preprocessor.h"
 
 #include <util/config.h>
-#include <util/file_util.h>
 #include <util/unicode.h>
 
 #include "verilog_preprocessor_error.h"
 
+#include <filesystem>
 #include <fstream>
 
 /*******************************************************************\
@@ -102,14 +102,14 @@ std::string
 verilog_preprocessort::find_include_file(const std::string &filename)
 {
   // first try filename as is
-  if(file_exists(filename))
+  if(std::filesystem::directory_entry(filename).exists())
     return filename; // done
 
   // try include paths in given order
   for(const auto &path : config.verilog.include_paths)
   {
-    auto full_name = concat_dir_file(path, filename);
-    if(file_exists(full_name))
+    auto full_name = std::filesystem::path(path).append(filename);
+    if(std::filesystem::directory_entry(full_name).exists())
       return full_name; // done
   }
 

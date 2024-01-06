@@ -128,7 +128,7 @@ void verilog_synthesist::function_locality(const symbolt &function_symbol)
   auto prefix = id2string(function_symbol.name) + '.';
   for(auto &symbol : symbol_table.symbols)
   {
-    if(irep_idt(symbol.first).starts_with(prefix))
+    if(symbol.first.starts_with(prefix))
     {
       assignments[symbol.first].is_cycle_local = true;
     }

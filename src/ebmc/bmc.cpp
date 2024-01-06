@@ -33,7 +33,7 @@ void bmc(
   const namespacet ns(transition_system.symbol_table);
 
   auto solver_wrapper = solver_factory(ns, message_handler);
-  auto &solver = solver_wrapper.stack_decision_procedure();
+  auto &solver = solver_wrapper.decision_procedure();
 
   ::unwind(
     transition_system.trans_expr, message_handler, solver, bound + 1, ns, true);
@@ -87,18 +87,9 @@ void bmc(
 
       message.status() << "Checking " << property.name << messaget::eom;
 
-      auto constraint = not_exprt(conjunction(property.timeframe_handles));
-      auto handle = solver.handle(constraint);
-      if(handle.is_true())
-        solver.push({literal_exprt(const_literal(true))});
-      else if(handle.is_false())
-        solver.push({literal_exprt(const_literal(false))});
-      else
-        solver.push({solver.handle(constraint)});
+      auto assumption = not_exprt(conjunction(property.timeframe_handles));
 
-      decision_proceduret::resultt dec_result = solver();
-
-      solver.pop();
+      decision_proceduret::resultt dec_result = solver(assumption);
 
       switch(dec_result)
       {

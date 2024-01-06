@@ -25,7 +25,7 @@ public:
     return message;
   }
 
-  optionalt<int> exit_code() const
+  std::optional<int> exit_code() const
   {
     return __exit_code;
   }
@@ -49,7 +49,7 @@ public:
 
 protected:
   std::ostringstream message;
-  optionalt<int> __exit_code = {};
+  std::optional<int> __exit_code = {};
   source_locationt __location = source_locationt::nil();
 };
 

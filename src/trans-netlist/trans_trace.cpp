@@ -41,9 +41,9 @@ Function: trans_tracet::get_max_failing_timeframe
 
 \*******************************************************************/
 
-optionalt<std::size_t> trans_tracet::get_max_failing_timeframe() const
+std::optional<std::size_t> trans_tracet::get_max_failing_timeframe() const
 {
-  optionalt<std::size_t> max = {};
+  std::optional<std::size_t> max = {};
 
   for(std::size_t t = 0; t < states.size(); t++)
   {
@@ -66,7 +66,7 @@ Function: trans_tracet::get_min_failing_timeframe
 
 \*******************************************************************/
 
-optionalt<std::size_t> trans_tracet::get_min_failing_timeframe() const
+std::optional<std::size_t> trans_tracet::get_min_failing_timeframe() const
 {
   for(std::size_t t = 0; t < states.size(); t++)
     if(states[t].property_failed)

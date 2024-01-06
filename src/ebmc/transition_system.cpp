@@ -107,9 +107,7 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
     return 1;
   }
 
-  language->set_message_handler(message_handler);
-
-  if(language->preprocess(infile, filename, std::cout))
+  if(language->preprocess(infile, filename, std::cout, message_handler))
   {
     message.error() << "PREPROCESSING FAILED" << messaget::eom;
     return 1;
@@ -148,11 +146,10 @@ bool parse(
   }
 
   languaget &language = *lf.language;
-  language.set_message_handler(message_handler);
 
   message.status() << "Parsing " << filename << messaget::eom;
 
-  if(language.parse(infile, filename))
+  if(language.parse(infile, filename, message_handler))
   {
     message.error() << "PARSING ERROR\n";
     return true;
@@ -237,7 +234,7 @@ int get_transition_system(
 
   if(cmdline.isset("show-parse"))
   {
-    language_files.show_parse(std::cout);
+    language_files.show_parse(std::cout, message_handler);
     return 0;
   }
 
