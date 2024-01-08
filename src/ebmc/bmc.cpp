@@ -70,6 +70,10 @@ void bmc(
       if(!property.is_disabled())
         solver.set_to_false(conjunction(property.timeframe_handles));
     }
+
+    // Call decision_proceduret::dec_solve to finish the conversion
+    // process.
+    (void)solver();
   }
   else
   {
