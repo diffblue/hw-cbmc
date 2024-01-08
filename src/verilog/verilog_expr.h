@@ -9,8 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_EXPR_H
 #define CPROVER_VERILOG_EXPR_H
 
-#include <cassert>
-
 #include <util/std_expr.h>
 
 /// The syntax for these A.B, where A is a module identifier and B
@@ -474,13 +472,13 @@ public:
 
 inline const verilog_instt &to_verilog_inst(const exprt &expr)
 {
-  assert(expr.id()==ID_inst);
+  PRECONDITION(expr.id() == ID_inst);
   return static_cast<const verilog_instt &>(expr);
 }
 
 inline verilog_instt &to_verilog_inst(exprt &expr)
 {
-  assert(expr.id()==ID_inst);
+  PRECONDITION(expr.id() == ID_inst);
   return static_cast<verilog_instt &>(expr);
 }
 
@@ -494,13 +492,13 @@ public:
 
 inline const verilog_inst_builtint &to_verilog_inst_builtin(const exprt &expr)
 {
-  assert(expr.id()==ID_inst_builtin);
+  PRECONDITION(expr.id() == ID_inst_builtin);
   return static_cast<const verilog_inst_builtint &>(expr);
 }
 
 inline verilog_inst_builtint &to_verilog_inst_builtin(exprt &expr)
 {
-  assert(expr.id()==ID_inst_builtin);
+  PRECONDITION(expr.id() == ID_inst_builtin);
   return static_cast<verilog_inst_builtint &>(expr);
 }
 
@@ -525,13 +523,15 @@ public:
 
 inline const verilog_alwayst &to_verilog_always(const exprt &expr)
 {
-  assert(expr.id()==ID_always && expr.operands().size()==1);
+  PRECONDITION(expr.id() == ID_always);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<const verilog_alwayst &>(expr);
 }
 
 inline verilog_alwayst &to_verilog_always(exprt &expr)
 {
-  assert(expr.id()==ID_always && expr.operands().size()==1);
+  PRECONDITION(expr.id() == ID_always);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<verilog_alwayst &>(expr);
 }
 
@@ -605,13 +605,13 @@ public:
 
 inline const verilog_declt &to_verilog_decl(const irept &irep)
 {
-  assert(irep.id()==ID_decl);
+  PRECONDITION(irep.id() == ID_decl);
   return static_cast<const verilog_declt &>(irep);
 }
 
 inline verilog_declt &to_verilog_decl(exprt &irep)
 {
-  assert(irep.id()==ID_decl);
+  PRECONDITION(irep.id() == ID_decl);
   return static_cast<verilog_declt &>(irep);
 }
 
@@ -636,13 +636,15 @@ public:
 
 inline const verilog_initialt &to_verilog_initial(const exprt &expr)
 {
-  assert(expr.id()==ID_initial && expr.operands().size()==1);
+  PRECONDITION(expr.id() == ID_initial);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<const verilog_initialt &>(expr);
 }
 
 inline verilog_initialt &to_verilog_initial(exprt &expr)
 {
-  assert(expr.id()==ID_initial && expr.operands().size()==1);
+  PRECONDITION(expr.id() == ID_initial);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<verilog_initialt &>(expr);
 }
 
@@ -678,13 +680,13 @@ public:
 
 inline const verilog_blockt &to_verilog_block(const exprt &expr)
 {
-  assert(expr.id()==ID_block);
+  PRECONDITION(expr.id() == ID_block);
   return static_cast<const verilog_blockt &>(expr);
 }
 
 inline verilog_blockt &to_verilog_block(exprt &expr)
 {
-  assert(expr.id()==ID_block);
+  PRECONDITION(expr.id() == ID_block);
   return static_cast<verilog_blockt &>(expr);
 }
 
@@ -751,13 +753,15 @@ public:
 
 inline const verilog_case_itemt &to_verilog_case_item(const exprt &expr)
 {
-  assert(expr.id()=="case_item" && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_case_item);
+  binary_exprt::check(expr);
   return static_cast<const verilog_case_itemt &>(expr);
 }
 
 inline verilog_case_itemt &to_verilog_case_item(exprt &expr)
 {
-  assert(expr.id()=="case_item" && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_case_item);
+  binary_exprt::check(expr);
   return static_cast<verilog_case_itemt &>(expr);
 }
 
@@ -771,13 +775,13 @@ public:
 
 inline const verilog_caset &to_verilog_case(const exprt &expr)
 {
-  assert(expr.id()==ID_case && expr.operands().size()>=1);
+  PRECONDITION(expr.id() == ID_case && expr.operands().size() >= 1);
   return static_cast<const verilog_caset &>(expr);
 }
 
 inline verilog_caset &to_verilog_case(exprt &expr)
 {
-  assert(expr.id()==ID_case && expr.operands().size()>=1);
+  PRECONDITION(expr.id() == ID_case && expr.operands().size() >= 1);
   return static_cast<verilog_caset &>(expr);
 }
 
@@ -885,13 +889,15 @@ public:
 
 inline const verilog_function_callt &to_verilog_function_call(const exprt &expr)
 {
-  assert(expr.id()==ID_function_call && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_function_call);
+  binary_exprt::check(expr);
   return static_cast<const verilog_function_callt &>(expr);
 }
 
 inline verilog_function_callt &to_verilog_function_call(exprt &expr)
 {
-  assert(expr.id()==ID_function_call && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_function_call);
+  binary_exprt::check(expr);
   return static_cast<verilog_function_callt &>(expr);
 }
 
@@ -926,13 +932,15 @@ public:
 
 inline const verilog_event_guardt &to_verilog_event_guard(const exprt &expr)
 {
-  assert(expr.id()==ID_event_guard && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_event_guard);
+  binary_exprt::check(expr);
   return static_cast<const verilog_event_guardt &>(expr);
 }
 
 inline verilog_event_guardt &to_verilog_event_guard(exprt &expr)
 {
-  assert(expr.id()==ID_event_guard && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_event_guard);
+  binary_exprt::check(expr);
   return static_cast<verilog_event_guardt &>(expr);
 }
 
@@ -957,13 +965,15 @@ public:
 
 inline const verilog_delayt &to_verilog_delay(const exprt &expr)
 {
-  assert(expr.id()==ID_delay && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_delay);
+  binary_exprt::check(expr);
   return static_cast<const verilog_delayt &>(expr);
 }
 
 inline verilog_delayt &to_verilog_delay(exprt &expr)
 {
-  assert(expr.id()==ID_delay && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_delay);
+  binary_exprt::check(expr);
   return static_cast<verilog_delayt &>(expr);
 }
 
@@ -1018,13 +1028,13 @@ public:
 
 inline const verilog_fort &to_verilog_for(const exprt &expr)
 {
-  assert(expr.id()==ID_for && expr.operands().size()==4);
+  PRECONDITION(expr.id() == ID_for && expr.operands().size() == 4);
   return static_cast<const verilog_fort &>(expr);
 }
 
 inline verilog_fort &to_verilog_for(exprt &expr)
 {
-  assert(expr.id()==ID_for && expr.operands().size()==4);
+  PRECONDITION(expr.id() == ID_for && expr.operands().size() == 4);
   return static_cast<verilog_fort &>(expr);
 }
 
@@ -1048,13 +1058,15 @@ public:
 
 inline const verilog_forevert &to_verilog_forever(const exprt &expr)
 {
-  assert(expr.id()==ID_forever && expr.operands().size()==1);
+  PRECONDITION(expr.id() == ID_forever);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<const verilog_forevert &>(expr);
 }
 
 inline verilog_forevert &to_verilog_forever(exprt &expr)
 {
-  assert(expr.id()==ID_forever && expr.operands().size()==1);
+  PRECONDITION(expr.id() == ID_forever);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<verilog_forevert &>(expr);
 }
 
@@ -1089,13 +1101,15 @@ public:
 
 inline const verilog_whilet &to_verilog_while(const exprt &expr)
 {
-  assert(expr.id()==ID_while && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_while);
+  binary_exprt::check(expr);
   return static_cast<const verilog_whilet &>(expr);
 }
 
 inline verilog_whilet &to_verilog_while(exprt &expr)
 {
-  assert(expr.id()==ID_while && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_while);
+  binary_exprt::check(expr);
   return static_cast<verilog_whilet &>(expr);
 }
 
@@ -1130,13 +1144,15 @@ public:
 
 inline const verilog_repeatt &to_verilog_repeat(const exprt &expr)
 {
-  assert(expr.id()==ID_repeat && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_repeat);
+  binary_exprt::check(expr);
   return static_cast<const verilog_repeatt &>(expr);
 }
 
 inline verilog_repeatt &to_verilog_repeat(exprt &expr)
 {
-  assert(expr.id()==ID_repeat && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_repeat);
+  binary_exprt::check(expr);
   return static_cast<verilog_repeatt &>(expr);
 }
 
@@ -1151,14 +1167,14 @@ public:
 inline const verilog_procedural_continuous_assignt &
 to_verilog_procedural_continuous_assign(const exprt &expr)
 {
-  assert(expr.id()==ID_continuous_assign);
+  PRECONDITION(expr.id() == ID_continuous_assign);
   return static_cast<const verilog_procedural_continuous_assignt &>(expr);
 }
 
 inline verilog_procedural_continuous_assignt &
 to_verilog_procedural_continuous_assign(exprt &expr)
 {
-  assert(expr.id()==ID_continuous_assign);
+  PRECONDITION(expr.id() == ID_continuous_assign);
   return static_cast<verilog_procedural_continuous_assignt &>(expr);
 }
 
@@ -1198,13 +1214,15 @@ public:
 
 inline const verilog_forcet &to_verilog_force(const exprt &expr)
 {
-  assert(expr.id()==ID_force && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_force);
+  binary_exprt::check(expr);
   return static_cast<const verilog_forcet &>(expr);
 }
 
 inline verilog_forcet &to_verilog_force(exprt &expr)
 {
-  assert(expr.id()==ID_force && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_force);
+  binary_exprt::check(expr);
   return static_cast<verilog_forcet &>(expr);
 }
 
@@ -1221,13 +1239,13 @@ public:
 inline const verilog_continuous_assignt &
 to_verilog_continuous_assign(const exprt &expr)
 {
-  assert(expr.id()==ID_continuous_assign);
+  PRECONDITION(expr.id() == ID_continuous_assign);
   return static_cast<const verilog_continuous_assignt &>(expr);
 }
 
 inline verilog_continuous_assignt &to_verilog_continuous_assign(exprt &expr)
 {
-  assert(expr.id()==ID_continuous_assign);
+  PRECONDITION(expr.id() == ID_continuous_assign);
   return static_cast<verilog_continuous_assignt &>(expr);
 }
 
@@ -1252,13 +1270,13 @@ public:
 inline const verilog_parameter_overridet &
 to_verilog_parameter_override(const exprt &expr)
 {
-  assert(expr.id() == ID_parameter_override);
+  PRECONDITION(expr.id() == ID_parameter_override);
   return static_cast<const verilog_parameter_overridet &>(expr);
 }
 
 inline verilog_parameter_overridet &to_verilog_parameter_override(exprt &expr)
 {
-  assert(expr.id() == ID_parameter_override);
+  PRECONDITION(expr.id() == ID_parameter_override);
   return static_cast<verilog_parameter_overridet &>(expr);
 }
 
@@ -1330,13 +1348,13 @@ public:
 inline const verilog_blocking_assignt &
 to_verilog_blocking_assign(const exprt &expr)
 {
-  assert(expr.id()==ID_blocking_assign);
+  PRECONDITION(expr.id() == ID_blocking_assign);
   return static_cast<const verilog_blocking_assignt &>(expr);
 }
 
 inline verilog_blocking_assignt &to_verilog_blocking_assign(exprt &expr)
 {
-  assert(expr.id()==ID_blocking_assign);
+  PRECONDITION(expr.id() == ID_blocking_assign);
   return static_cast<verilog_blocking_assignt &>(expr);
 }
 
@@ -1351,13 +1369,13 @@ public:
 inline const verilog_non_blocking_assignt &
 to_verilog_non_blocking_assign(const exprt &expr)
 {
-  assert(expr.id()==ID_non_blocking_assign);
+  PRECONDITION(expr.id() == ID_non_blocking_assign);
   return static_cast<const verilog_non_blocking_assignt &>(expr);
 }
 
 inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
 {
-  assert(expr.id()==ID_non_blocking_assign);
+  PRECONDITION(expr.id() == ID_non_blocking_assign);
   return static_cast<verilog_non_blocking_assignt &>(expr);
 }
 
@@ -1382,13 +1400,15 @@ public:
 
 inline const verilog_assertt &to_verilog_assert(const exprt &expr)
 {
-  assert(expr.id()==ID_assert && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_assert);
+  binary_exprt::check(expr);
   return static_cast<const verilog_assertt &>(expr);
 }
 
 inline verilog_assertt &to_verilog_assert(exprt &expr)
 {
-  assert(expr.id()==ID_assert && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_assert);
+  binary_exprt::check(expr);
   return static_cast<verilog_assertt &>(expr);
 }
 
@@ -1413,13 +1433,15 @@ public:
 
 inline const verilog_assumet &to_verilog_assume(const exprt &expr)
 {
-  assert(expr.id()==ID_assume && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_assume);
+  binary_exprt::check(expr);
   return static_cast<const verilog_assumet &>(expr);
 }
 
 inline verilog_assumet &to_verilog_assume(exprt &expr)
 {
-  assert(expr.id()==ID_assume && expr.operands().size()==2);
+  PRECONDITION(expr.id() == ID_assume);
+  binary_exprt::check(expr);
   return static_cast<verilog_assumet &>(expr);
 }
 
