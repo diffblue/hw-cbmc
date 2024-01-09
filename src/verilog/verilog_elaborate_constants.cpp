@@ -26,8 +26,8 @@ void verilog_typecheckt::collect_symbols(
   // If there's no type, parameters take the type of the
   // value. We signal this using the special type "derive_from_value".
 
-  auto symbol_type = type_with_subtypet(
-    ID_to_be_elaborated, type.is_nil() ? derive_from_value_typet() : type);
+  auto symbol_type =
+    to_be_elaborated_typet(type.is_nil() ? derive_from_value_typet() : type);
 
   symbolt symbol{full_identifier, symbol_type, mode};
 
@@ -108,9 +108,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       auto full_identifier = hierarchical_identifier(base_name);
 
       symbolt symbol{
-        full_identifier,
-        type_with_subtypet(ID_to_be_elaborated, decl.type()),
-        mode};
+        full_identifier, to_be_elaborated_typet(decl.type()), mode};
 
       symbol.module = module_identifier;
       symbol.base_name = base_name;
