@@ -1682,13 +1682,13 @@ void verilog_typecheckt::typecheck()
 {
   module_identifier = module_symbol.name;
 
+  const auto &module_source =
+    to_verilog_module_source(module_symbol.type.find(ID_module_source));
+
   // We first elaborate the named constants (parameters, enums).
   // Everything else (types of ports, generate constructs) may
   // depend on these.
-  elaborate();
-
-  const auto &module_source =
-    to_verilog_module_source(module_symbol.type.find(ID_module_source));
+  elaborate(module_source);
 
   // Create symbols for the functions, tasks, registers/variables and wires.
   module_interface(module_source);

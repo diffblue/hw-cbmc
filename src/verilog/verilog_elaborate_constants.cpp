@@ -278,13 +278,9 @@ void verilog_typecheckt::add_symbol(symbolt symbol)
   symbols_added.push_back(result.first.name);
 }
 
-void verilog_typecheckt::elaborate()
+void verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
 {
-  // First find the symbols in the module source.
-  auto &module_source =
-    to_verilog_module_source(module_symbol.type.find(ID_module_source));
-
-  // Then collect all constant identifiers into the symbol table,
+  // First collect all constant identifiers into the symbol table,
   // with type "to_be_elaborated".
   collect_symbols(module_source);
 
