@@ -71,7 +71,6 @@ void verilog_typecheckt::check_module_ports(
     const auto &declarator = decl.declarators().front();
 
     const irep_idt &name = declarator.identifier();
-    const irep_idt &port_class = decl.get_class();
 
     if(name.empty())
     {
@@ -91,60 +90,13 @@ void verilog_typecheckt::check_module_ports(
       id2string(module_identifier)+"."+id2string(name);
       
     const symbolt *port_symbol=0;
-    
-    if(port_class.empty())
+
+    // find the symbol
+
+    if(ns.lookup(identifier, port_symbol))
     {
-      // find the symbol
-      
-      if(ns.lookup(identifier, port_symbol))
-      {
-        error().source_location = declarator.source_location();
-        error() << "port `" << name << "' not declared" << eom;
-        throw 0;
-      }
-    }
-    else
-    {
-      // add the symbol
-      symbolt new_symbol;
-    
-      new_symbol.name=identifier;
-
-      if(port_class==ID_input)
-      {
-        new_symbol.is_input=true;
-      }
-      else if(port_class==ID_output)
-      {
-        new_symbol.is_output=true;
-      }
-      else if(port_class==ID_output_register)
-      {
-        new_symbol.is_output=true;
-        new_symbol.is_state_var=true;
-      }
-      else if(port_class==ID_inout)
-      {
-        new_symbol.is_input=true;
-        new_symbol.is_output=true;
-      }
-
-      new_symbol.mode=mode;
-      new_symbol.module=module_identifier;
-      new_symbol.value.make_nil();
-      new_symbol.type = convert_type(decl.type());
-      new_symbol.base_name=name;
-      new_symbol.pretty_name=strip_verilog_prefix(new_symbol.name);
-      
-      symbolt *s;
-
-      if(symbol_table.move(new_symbol, s))
-      {
-        warning().source_location = declarator.source_location();
-        warning() << "port `" << name << "' is also declared" << eom;
-      }
-      
-      port_symbol=s;
+      throw errort().with_location(declarator.source_location())
+        << "port `" << name << "' not declared";
     }
 
     if(!port_symbol->is_input && !port_symbol->is_output)
@@ -475,25 +427,18 @@ void verilog_typecheckt::interface_module_decl(
   {
     type=genvar_typet();
   }
+  else if(
+    port_class == ID_input || port_class == ID_output ||
+    port_class == ID_output_register || port_class == ID_inout)
+  {
+    // symbol already created during elaboration
+    return;
+  }
   else
   {
     type=convert_type(decl.type());
 
-    if(port_class==ID_input)
-      symbol.is_input=true;
-    else if(port_class==ID_output)
-      symbol.is_output=true;
-    else if(port_class==ID_output_register)
-    {
-      symbol.is_output=true;
-      symbol.is_state_var=true;
-    }
-    else if(port_class==ID_inout)
-    {
-      symbol.is_input=true;
-      symbol.is_output=true;
-    }
-    else if(port_class == ID_reg || port_class == ID_var)
+    if(port_class == ID_reg || port_class == ID_var)
       symbol.is_state_var=true;
     else if(port_class==ID_wire)
     {

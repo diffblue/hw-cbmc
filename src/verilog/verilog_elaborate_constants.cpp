@@ -13,6 +13,57 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
+void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
+{
+  DATA_INVARIANT(decl.id() == ID_decl, "port declaration id");
+  DATA_INVARIANT(
+    decl.declarators().size() == 1,
+    "port declarations must have one declarator");
+
+  const auto &declarator = decl.declarators().front();
+
+  const irep_idt &base_name = declarator.identifier();
+  const irep_idt &port_class = decl.get_class();
+  auto type = convert_type(decl.type());
+  irep_idt identifier = hierarchical_identifier(base_name);
+
+  if(port_class.empty())
+  {
+    // done when we see the proper declaration
+  }
+  else
+  {
+    // add the symbol
+    symbolt new_symbol(identifier, type, mode);
+
+    if(port_class == ID_input)
+    {
+      new_symbol.is_input = true;
+    }
+    else if(port_class == ID_output)
+    {
+      new_symbol.is_output = true;
+    }
+    else if(port_class == ID_output_register)
+    {
+      new_symbol.is_output = true;
+      new_symbol.is_state_var = true;
+    }
+    else if(port_class == ID_inout)
+    {
+      new_symbol.is_input = true;
+      new_symbol.is_output = true;
+    }
+
+    new_symbol.module = module_identifier;
+    new_symbol.value.make_nil();
+    new_symbol.base_name = base_name;
+    new_symbol.pretty_name = strip_verilog_prefix(new_symbol.name);
+
+    add_symbol(std::move(new_symbol));
+  }
+}
+
 void verilog_typecheckt::collect_symbols(
   const typet &type,
   const verilog_parameter_declt::declaratort &declarator)
@@ -87,8 +138,10 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   // There may be symbols in the type (say an enum).
   collect_symbols(decl.type());
 
+  const auto decl_class = decl.get_class();
+
   // Typedef?
-  if(decl.get_class() == ID_typedef)
+  if(decl_class == ID_typedef)
   {
     for(auto &declarator : decl.operands())
     {
@@ -119,6 +172,120 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbol.value = nil_exprt();
 
       add_symbol(std::move(symbol));
+    }
+  }
+  else if(
+    decl_class == ID_input || decl_class == ID_output ||
+    decl_class == ID_output_register || decl_class == ID_inout)
+  {
+    // function ports are done in interface_function_or_task
+    if(!function_or_task_name.empty())
+      return;
+
+    symbolt symbol;
+
+    symbol.mode = mode;
+    symbol.module = module_identifier;
+    symbol.value.make_nil();
+
+    auto type = convert_type(decl.type());
+
+    if(decl_class == ID_input)
+      symbol.is_input = true;
+    else if(decl_class == ID_output)
+      symbol.is_output = true;
+    else if(decl_class == ID_output_register)
+    {
+      symbol.is_output = true;
+      symbol.is_state_var = true;
+    }
+    else if(decl_class == ID_inout)
+    {
+      symbol.is_input = true;
+      symbol.is_output = true;
+    }
+
+    for(auto declarator : decl.operands())
+    {
+      if(declarator.id() == ID_symbol)
+      {
+        symbol.base_name = declarator.get(ID_identifier);
+        symbol.location = declarator.source_location();
+
+        if(declarator.type().is_nil())
+          symbol.type = type;
+        else if(declarator.type().id() == ID_array)
+          symbol.type = array_type(declarator.type(), type);
+        else
+        {
+          throw errort().with_location(declarator.source_location())
+            << "unexpected type on declarator";
+        }
+      }
+      else if(declarator.id() == ID_equal)
+      {
+        if(declarator.operands().size() != 2)
+        {
+          throw errort().with_location(declarator.source_location())
+            << "expected two operands in declarator assignment";
+        }
+
+        if(to_binary_expr(declarator).op0().id() != ID_symbol)
+        {
+          throw errort().with_location(declarator.source_location())
+            << "expected symbol on left hand side of assignment"
+               " but got `"
+            << to_string(to_binary_expr(declarator).op0()) << '\'';
+        }
+
+        symbol.base_name =
+          to_symbol_expr(to_binary_expr(declarator).op0()).get_identifier();
+        symbol.location = to_binary_expr(declarator).op0().source_location();
+        symbol.type = type;
+      }
+      else
+      {
+        throw errort().with_location(declarator.source_location())
+          << "unexpected declaration: " << declarator.id();
+      }
+
+      if(symbol.base_name.empty())
+      {
+        throw errort().with_location(decl.source_location())
+          << "empty symbol name";
+      }
+
+      symbol.name = hierarchical_identifier(symbol.base_name);
+      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+      auto result = symbol_table.get_writeable(symbol.name);
+
+      if(result == nullptr)
+      {
+        symbol_table.add(symbol);
+      }
+      else
+      {
+        symbolt &osymbol = *result;
+
+        if(symbol.type != osymbol.type)
+        {
+          if(get_width(symbol.type) > get_width(osymbol.type))
+            osymbol.type = symbol.type;
+        }
+
+        osymbol.is_input = symbol.is_input || osymbol.is_input;
+        osymbol.is_output = symbol.is_output || osymbol.is_output;
+        osymbol.is_state_var = symbol.is_state_var || osymbol.is_state_var;
+
+        // a register can't be an input as well
+        if(osymbol.is_input && osymbol.is_state_var)
+        {
+          throw errort().with_location(declarator.source_location())
+            << "port `" << symbol.base_name
+            << "' is declared both as input and as register";
+        }
+      }
     }
   }
 }
@@ -258,6 +425,10 @@ void verilog_typecheckt::collect_symbols(
   // Gather the parameter port declarations from the module source.
   for(auto &parameter_port_decl : module_source.parameter_port_list())
     collect_symbols(typet(ID_nil), parameter_port_decl);
+
+  // Gather the non-parameter port symbols from the module signature
+  for(auto &port_decl : module_source.ports())
+    collect_port_symbols(port_decl);
 
   // Gather the symbols in the module body.
   for(auto &module_item : module_source.module_items())
