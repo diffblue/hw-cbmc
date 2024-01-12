@@ -48,6 +48,7 @@ public:
 
     std::size_t bound = 0;
     std::optional<trans_tracet> counterexample;
+    std::optional<std::string> failure_reason;
 
     bool has_counterexample() const
     {
@@ -125,9 +126,10 @@ public:
       status = statust::DROPPED;
     }
 
-    void failure()
+    void failure(const std::optional<std::string> &reason = {})
     {
       status = statust::FAILURE;
+      failure_reason = reason;
     }
 
     void inconclusive()

@@ -449,6 +449,8 @@ void bdd_enginet::check_property(propertyt &property)
   {
     just_p(property);
   }
+  else
+    property.failure("property not supported by BDD engine");
 }
 
 /*******************************************************************\
