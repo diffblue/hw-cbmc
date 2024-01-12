@@ -1,0 +1,7 @@
+CORE
+port_not_declared.v
+
+^file .* line 1: port `some_port' not declared$
+^EXIT=2$
+^SIGNAL=0$
+--
