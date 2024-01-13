@@ -6,11 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include "vhdl_synthesis.h"
+#include "vhdl_synthesis_class.h"
+
 #include <util/mathematical_expr.h>
 #include <util/std_expr.h>
 
-#include "vhdl_synthesis.h"
-#include "vhdl_synthesis_class.h"
+#include <smvlang/temporal_expr.h>
 
 /*******************************************************************\
 
@@ -39,8 +41,8 @@ void vhdl_synthesist::synth_code(const codet &code)
     DATA_INVARIANT(code.operands().size() == 3, "assert has three operands");
 
     // There is an implicit 'always'
-    exprt property=unary_predicate_exprt(ID_AG, code.op0());
-  
+    exprt property = AG_exprt(code.op0());
+
     // we'll add a property symbol
     symbolt new_symbol;
     

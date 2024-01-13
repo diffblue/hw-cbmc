@@ -6,9 +6,11 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 \*******************************************************************/
 
+#include "negate_property.h"
+
 #include <util/std_expr.h>
 
-#include "negate_property.h"
+#include <smvlang/temporal_expr.h>
 
 /*******************************************************************\
 
@@ -54,7 +56,7 @@ exprt negate_property(const exprt &expr)
   }
   else if(expr.id()==ID_AG)
   {
-    unary_exprt result=to_unary_expr(expr);
+    unary_exprt result = to_AG_expr(expr);
     result.id(ID_EF);
     result.op()=negate_property(result.op());
     return std::move(result);
