@@ -6,14 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cstdlib>
-#include <cassert>
+#include "instantiate_netlist.h"
 
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/std_expr.h>
 
-#include "instantiate_netlist.h"
+#include <verilog/sva_expr.h>
+
+#include <cassert>
+#include <cstdlib>
 
 /*******************************************************************\
 
@@ -199,25 +201,24 @@ literalt instantiate_bmc_mapt::convert_bool(const exprt &expr)
   else if(expr.id()==ID_sva_overlapped_implication)
   {
     // same as regular implication
-    if(expr.operands().size()==2)
-      return prop.limplies(
-        convert_bool(to_binary_expr(expr).op0()),
-        convert_bool(to_binary_expr(expr).op1()));
+    auto &sva_overlapped_implication = to_sva_overlapped_implication_expr(expr);
+    return prop.limplies(
+      convert_bool(sva_overlapped_implication.lhs()),
+      convert_bool(sva_overlapped_implication.rhs()));
   }
   else if(expr.id()==ID_sva_non_overlapped_implication)
   {
     // right-hand side is shifted by one tick
-    if(expr.operands().size()==2)
-    {
-      literalt lhs = convert_bool(to_binary_expr(expr).lhs());
-      unsigned old_current=current;
-      unsigned old_next=next;
-      literalt rhs = convert_bool(to_binary_expr(expr).rhs());
-      // restore      
-      current=old_current;
-      next=old_next;
-      return prop.limplies(lhs, rhs);
-    }
+    auto &sva_non_overlapped_implication =
+      to_sva_non_overlapped_implication_expr(expr);
+    literalt lhs = convert_bool(sva_non_overlapped_implication.lhs());
+    unsigned old_current = current;
+    unsigned old_next = next;
+    literalt rhs = convert_bool(sva_non_overlapped_implication.rhs());
+    // restore
+    current = old_current;
+    next = old_next;
+    return prop.limplies(lhs, rhs);
   }
   else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
@@ -538,10 +539,10 @@ literalt instantiate_var_mapt::convert_bool(const exprt &expr)
   else if(expr.id()==ID_sva_overlapped_implication)
   {
     // same as regular implication
-    if(expr.operands().size()==2)
-      return prop.limplies(
-        convert_bool(to_binary_expr(expr).op0()),
-        convert_bool(to_binary_expr(expr).op1()));
+    auto &sva_overlapped_implication = to_sva_overlapped_implication_expr(expr);
+    return prop.limplies(
+      convert_bool(sva_overlapped_implication.lhs()),
+      convert_bool(sva_overlapped_implication.rhs()));
   }
 
   return SUB::convert_bool(expr);

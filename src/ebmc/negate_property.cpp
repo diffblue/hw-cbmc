@@ -11,6 +11,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <util/std_expr.h>
 
 #include <smvlang/temporal_expr.h>
+#include <verilog/sva_expr.h>
 
 /*******************************************************************\
 
@@ -63,7 +64,7 @@ exprt negate_property(const exprt &expr)
   }
   else if(expr.id()==ID_sva_always)
   {
-    unary_exprt result=to_unary_expr(expr);
+    unary_exprt result = to_sva_always_expr(expr);
     result.id(ID_sva_eventually);
     result.op()=negate_property(result.op());
     return std::move(result);
@@ -77,7 +78,7 @@ exprt negate_property(const exprt &expr)
   }
   else if(expr.id()==ID_sva_eventually)
   {
-    unary_exprt result=to_unary_expr(expr);
+    unary_exprt result = to_sva_eventually_expr(expr);
     result.id(ID_sva_always);
     result.op()=negate_property(result.op());
     return std::move(result);
@@ -92,7 +93,7 @@ exprt negate_property(const exprt &expr)
   }
   else if(expr.id()==ID_sva_nexttime)
   {
-    unary_exprt result=to_unary_expr(expr);
+    unary_exprt result = to_sva_nexttime_expr(expr);
     result.op()=negate_property(result.op());
     return std::move(result);
   }

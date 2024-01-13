@@ -14,6 +14,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/tempdir.h>
 #include <util/tempfile.h>
 
+#include <verilog/sva_expr.h>
+
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "random_traces.h"
@@ -117,7 +119,7 @@ void neural_livenesst::validate_properties()
     }
     else if(
       property.expr.id() == ID_sva_always &&
-      to_unary_expr(property.expr).op().id() == ID_sva_eventually)
+      to_sva_always_expr(property.expr).op().id() == ID_sva_eventually)
     {
       // ok
     }

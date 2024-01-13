@@ -6,9 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
-#include <map>
-#include <set>
+#include "verilog_typecheck.h"
 
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
@@ -20,9 +18,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
-#include "verilog_typecheck.h"
+#include "sva_expr.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
+
+#include <cassert>
+#include <map>
+#include <set>
 
 /*******************************************************************\
 
@@ -1101,8 +1103,8 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   if(cond.id()==ID_sva_always)
     property=cond;
   else
-    property=unary_predicate_exprt(ID_sva_always, cond);
-  
+    property = sva_always_exprt(cond);
+
   assertion_counter++;
   
   const irep_idt &identifier=statement.get(ID_identifier);

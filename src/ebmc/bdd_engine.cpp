@@ -19,6 +19,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
+#include <verilog/sva_expr.h>
 
 #include "negate_property.h"
 #include "report_results.h"
@@ -708,7 +709,7 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
   else if(expr.id()==ID_sva_nexttime)
   {
     // recursive call
-    const exprt &sub_expr = to_unary_expr(expr).op();
+    const exprt &sub_expr = to_sva_nexttime_expr(expr).op();
     BDD p=property2BDD(sub_expr);
 
     // make 'p' be expressed in terms of 'next' variables
@@ -731,7 +732,7 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
   else if(expr.id()==ID_sva_eventually)
   {
     // recursive call
-    const exprt &sub_expr = to_unary_expr(expr).op();
+    const exprt &sub_expr = to_sva_eventually_expr(expr).op();
     BDD p=property2BDD(sub_expr);
     BDD states=p;
     

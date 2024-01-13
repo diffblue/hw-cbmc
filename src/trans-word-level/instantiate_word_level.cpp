@@ -10,6 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/ebmc_util.h>
 
+#include <verilog/sva_expr.h>
+
 #include "property.h"
 
 #include <cassert>
@@ -235,7 +237,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr)
   }
   else if(expr.id()==ID_sva_always)
   {
-    auto &op = to_unary_expr(expr).op();
+    auto &op = to_sva_always_expr(expr).op();
 
     // save the current time frame, we'll change it
     save_currentt save_current(current);
@@ -345,7 +347,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr)
     else
       tmp.id(ID_sva_s_until);
 
-    tmp.op1()=unary_predicate_exprt(ID_sva_nexttime, tmp.op1());
+    tmp.op1() = sva_nexttime_exprt(tmp.op1());
 
     return instantiate_rec(tmp);
   }
