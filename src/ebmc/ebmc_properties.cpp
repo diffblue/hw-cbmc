@@ -29,7 +29,8 @@ std::string ebmc_propertiest::propertyt::status_as_string() const
   case statust::INCONCLUSIVE:
     return "INCONCLUSIVE";
   case statust::FAILURE:
-    return "FAILURE";
+    return failure_reason.has_value() ? "FAILURE: " + failure_reason.value()
+                                      : "FAILURE";
   case statust::DROPPED:
     return "DROPPED";
   case statust::DISABLED:

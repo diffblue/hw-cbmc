@@ -3,6 +3,6 @@ k-induction-unsupported1.sv
 --module main --k-induction
 ^EXIT=6$
 ^SIGNAL=0$
-^file k-induction-unsupported1\.sv line 14: error: k-induction does not support liveness properties$
+^error: there is no property suitable for k-induction$
 --
 ^warning: ignoring
