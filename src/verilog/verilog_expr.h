@@ -308,6 +308,11 @@ public:
       return get(ID_identifier);
     }
 
+    void identifier(irep_idt _identifier)
+    {
+      set(ID_identifier, _identifier);
+    }
+
     const irep_idt &base_name() const
     {
       return get(ID_identifier);
@@ -321,6 +326,13 @@ public:
     exprt &value()
     {
       return static_cast<exprt &>(add(ID_value));
+    }
+
+    // helper to generate a symbol expression
+    symbol_exprt symbol_expr() const
+    {
+      return symbol_exprt(identifier(), type())
+        .with_source_location<symbol_exprt>(*this);
     }
   };
 
@@ -1224,7 +1236,7 @@ inline verilog_forcet &to_verilog_force(exprt &expr)
 class verilog_continuous_assignt:public verilog_module_itemt
 {
 public:
-  explicit verilog_continuous_assignt(exprt assignment)
+  explicit verilog_continuous_assignt(equal_exprt assignment)
     : verilog_module_itemt(ID_continuous_assign)
   {
     add_to_operands(std::move(assignment));

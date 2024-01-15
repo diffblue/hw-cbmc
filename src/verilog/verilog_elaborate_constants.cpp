@@ -148,10 +148,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       auto symbol_expr = [](const exprt &declarator) -> const symbol_exprt & {
         if(declarator.id() == ID_symbol)
           return to_symbol_expr(declarator);
-        else if(
-          declarator.id() == ID_equal &&
-          to_equal_expr(declarator).lhs().id() == ID_symbol)
-          return to_symbol_expr(to_equal_expr(declarator).lhs());
         else
           DATA_INVARIANT(false, "failed to find symbol in declarator");
       }(declarator);
@@ -221,27 +217,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
           throw errort().with_location(declarator.source_location())
             << "unexpected type on declarator";
         }
-      }
-      else if(declarator.id() == ID_equal)
-      {
-        if(declarator.operands().size() != 2)
-        {
-          throw errort().with_location(declarator.source_location())
-            << "expected two operands in declarator assignment";
-        }
-
-        if(to_binary_expr(declarator).op0().id() != ID_symbol)
-        {
-          throw errort().with_location(declarator.source_location())
-            << "expected symbol on left hand side of assignment"
-               " but got `"
-            << to_string(to_binary_expr(declarator).op0()) << '\'';
-        }
-
-        symbol.base_name =
-          to_symbol_expr(to_binary_expr(declarator).op0()).get_identifier();
-        symbol.location = to_binary_expr(declarator).op0().source_location();
-        symbol.type = type;
       }
       else
       {
