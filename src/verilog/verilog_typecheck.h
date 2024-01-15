@@ -87,6 +87,7 @@ protected:
   void collect_symbols(const verilog_statementt &);
   void
   collect_symbols(const typet &, const verilog_parameter_declt::declaratort &);
+  void collect_port_symbols(const verilog_declt &);
   std::vector<irep_idt> symbols_added;
 
   // instances
