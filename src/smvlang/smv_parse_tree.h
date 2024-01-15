@@ -40,19 +40,33 @@ public:
     
     struct itemt
     {
-      enum item_typet { SPEC, INIT, TRANS, DEFINE, INVAR, FAIRNESS };
-      
+      enum item_typet
+      {
+        CTLSPEC,
+        LTLSPEC,
+        INIT,
+        TRANS,
+        DEFINE,
+        INVAR,
+        FAIRNESS
+      };
+
       friend std::string to_string(item_typet i);
       
       item_typet item_type;
       exprt expr;
       source_locationt location;
 
-      bool is_spec() const
+      bool is_ctlspec() const
       {
-        return item_type==SPEC;
+        return item_type == CTLSPEC;
       }
-      
+
+      bool is_ltlspec() const
+      {
+        return item_type == LTLSPEC;
+      }
+
       bool is_define() const
       {
         return item_type==DEFINE;
@@ -93,12 +107,17 @@ public:
     {
       add_item(itemt::INVAR, expr, source_locationt::nil());
     }
-    
-    void add_spec(const exprt &expr)
+
+    void add_ctlspec(const exprt &expr)
     {
-      add_item(itemt::SPEC, expr, source_locationt::nil());
+      add_item(itemt::CTLSPEC, expr, source_locationt::nil());
     }
-    
+
+    void add_ltlspec(const exprt &expr)
+    {
+      add_item(itemt::LTLSPEC, expr, source_locationt::nil());
+    }
+
     void add_define(const exprt &expr)
     {
       add_item(itemt::DEFINE, expr, source_locationt::nil());
@@ -123,10 +142,15 @@ public:
     {
       add_item(itemt::INVAR, expr, location);
     }
-    
-    void add_spec(const exprt &expr, const source_locationt &location)
+
+    void add_ctlspec(const exprt &expr, const source_locationt &location)
     {
-      add_item(itemt::SPEC, expr, location);
+      add_item(itemt::CTLSPEC, expr, location);
+    }
+
+    void add_ltlspec(const exprt &expr, const source_locationt &location)
+    {
+      add_item(itemt::LTLSPEC, expr, location);
     }
     
     void add_define(const exprt &expr, const source_locationt &location)

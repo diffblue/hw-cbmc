@@ -153,9 +153,11 @@ static void new_module(YYSTYPE &module)
 
 %}
 
-%token AG_Token AX_Token AF_Token EG_Token EX_Toekn EF_Token
+%token AG_Token AX_Token AF_Token EG_Token EX_Token EF_Token
 
-%token INIT_Token TRANS_Token SPEC_Token VAR_Token DEFINE_Token ASSIGN_Token
+%token G_Token X_Token F_Token R_Token U_Token
+
+%token INIT_Token TRANS_Token SPEC_Token LTLSPEC_Token VAR_Token DEFINE_Token ASSIGN_Token
 %token INVAR_Token FAIRNESS_Token MODULE_Token ARRAY_Token OF_Token
 %token DOTDOT_Token BOOLEAN_Token EXTERN_Token
 
@@ -171,7 +173,7 @@ static void new_module(YYSTYPE &module)
 %left  OR_Token
 %left  AND_Token
 %left  NOT_Token
-%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token F_Token G_Token X_Token
+%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token F_Token G_Token X_Token
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  UNION_Token
 %left  IN_Token NOTIN_Token
@@ -184,7 +186,7 @@ static void new_module(YYSTYPE &module)
 %%
 
 start      : modules
-           | formula { PARSER.module->add_spec(stack_expr($1));
+           | formula { PARSER.module->add_ctlspec(stack_expr($1));
                        PARSER.module->used=true; }
            ;
 
@@ -217,8 +219,10 @@ section    : VAR_Token vardecls
            | INIT_Token
            | TRANS_Token formula semi_opt { PARSER.module->add_trans(stack_expr($2), stack_expr($1).source_location()); }
            | TRANS_Token
-           | SPEC_Token formula semi_opt { PARSER.module->add_spec(stack_expr($2), stack_expr($1).source_location()); }
+           | SPEC_Token formula semi_opt { PARSER.module->add_ctlspec(stack_expr($2), stack_expr($1).source_location()); }
            | SPEC_Token
+           | LTLSPEC_Token formula semi_opt { PARSER.module->add_ltlspec(stack_expr($2), stack_expr($1).source_location()); }
+           | LTLSPEC_Token
            | ASSIGN_Token assignments
            | ASSIGN_Token
            | DEFINE_Token defines
@@ -469,6 +473,7 @@ term       : variable_name
            | G_Token  term            { init($$, ID_G);  mto($$, $2); }
            | X_Token  term            { init($$, ID_X);  mto($$, $2); }
            | term U_Token term        { binary($$, $1, ID_U, $3, stack_expr($1).type()); }
+           | term R_Token term        { binary($$, $1, ID_U, $3, stack_expr($1).type()); }
            | term EQUAL_Token    term { binary($$, $1, ID_equal,  $3, bool_typet{}); }
            | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3, bool_typet{}); }
            | term LT_Token       term { binary($$, $1, ID_lt,  $3, bool_typet{}); }

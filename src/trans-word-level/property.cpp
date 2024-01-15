@@ -45,8 +45,9 @@ void property(
     return;
   }
 
-  if(property_expr.id()!=ID_AG &&
-     property_expr.id()!=ID_sva_always)
+  if(
+    property_expr.id() != ID_AG && property_expr.id() != ID_G &&
+    property_expr.id() != ID_sva_always)
   {
     message.error() << "unsupported property - only SVA always implemented"
                     << messaget::eom;
@@ -206,7 +207,8 @@ bool requires_lasso_constraints(const exprt &expr)
     if(
       subexpr_it->id() == ID_sva_until || subexpr_it->id() == ID_sva_s_until ||
       subexpr_it->id() == ID_sva_eventually ||
-      subexpr_it->id() == ID_sva_s_eventually)
+      subexpr_it->id() == ID_sva_s_eventually || subexpr_it->id() == ID_AF ||
+      subexpr_it->id() == ID_F)
     {
       return true;
     }
