@@ -780,18 +780,13 @@ void output_verilog_baset::wires(const irep_idt &module)
     }
 
     const symbolt &symbol=s_it->second;
-    
-    if(!symbol.is_state_var &&
-       !symbol.is_input &&
-       !symbol.is_output &&
-       !symbol.is_property &&
-       !symbol.is_macro &&
-       symbol.type.id()!=ID_integer &&
-       symbol.type.id()!=ID_genvar &&
-       symbol.type.id()!=ID_module &&
-       symbol.type.id()!=ID_module_instance &&
-       symbol.type.id()!=ID_code &&
-       symbol.type.id()!=ID_named_block)
+
+    if(
+      !symbol.is_state_var && !symbol.is_input && !symbol.is_output &&
+      !symbol.is_property && !symbol.is_macro &&
+      symbol.type.id() != ID_integer && symbol.type.id() != ID_verilog_genvar &&
+      symbol.type.id() != ID_module && symbol.type.id() != ID_module_instance &&
+      symbol.type.id() != ID_code && symbol.type.id() != ID_named_block)
     {
       const std::string type_base=type_string_base(symbol.type);
       out << "  ";

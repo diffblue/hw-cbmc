@@ -294,10 +294,10 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
   symbol.value.make_nil();
   
   const irep_idt &port_class=decl.get_class();
-  
-  if(port_class==ID_function ||
-     port_class==ID_task ||
-     port_class==ID_genvar)
+
+  if(
+    port_class == ID_function || port_class == ID_task ||
+    port_class == ID_verilog_genvar)
   {
     error().source_location = decl.source_location();
     error() << "this kind of declaration is not expected here" << eom;
@@ -471,9 +471,9 @@ void verilog_typecheckt::interface_module_decl(
     interface_function_or_task(decl);
     return;
   }
-  else if(port_class==ID_genvar)
+  else if(port_class == ID_verilog_genvar)
   {
-    type=genvar_typet();
+    type = verilog_genvar_typet();
   }
   else
   {

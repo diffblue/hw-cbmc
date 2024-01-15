@@ -37,7 +37,8 @@ verilog_module_exprt verilog_typecheckt::elaborate_generate_constructs(
     if(item.id() == ID_generate_block)
       elaborate_generate_item(item, dest);
     else if(
-      item.id() == ID_decl && to_verilog_decl(item).get_class() == ID_genvar)
+      item.id() == ID_decl &&
+      to_verilog_decl(item).get_class() == ID_verilog_genvar)
     {
       // Assign to "-1", which signals "the variable is unset"
       for(auto &declarator : to_verilog_decl(item).declarators())
@@ -106,7 +107,7 @@ void verilog_typecheckt::elaborate_generate_decl(
 {
   auto decl_class = decl.get_class();
 
-  if(decl_class == ID_genvar)
+  if(decl_class == ID_verilog_genvar)
   {
     // Assign to "-1", which signals "the variable is unset"
     for(auto &declarator : decl.declarators())

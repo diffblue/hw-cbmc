@@ -1138,7 +1138,7 @@ data_declaration:
 
 genvar_declaration:
 	  TOK_GENVAR list_of_genvar_identifiers ';'
-		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_genvar); swapop($$, $2); }
+		{ init($$, ID_decl); stack_expr($$).set(ID_class, ID_verilog_genvar); swapop($$, $2); }
 	;
 
 net_declaration:

@@ -457,7 +457,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
     convert_function_or_task(decl);
     return;
   }
-  else if(decl_class==ID_genvar)
+  else if(decl_class == ID_verilog_genvar)
   {
     // ignore here
     return;
