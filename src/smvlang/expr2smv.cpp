@@ -460,8 +460,10 @@ bool expr2smvt::convert(
   else if(src.id()==ID_iff)
     return convert_binary(src, dest, "<->", precedence=3);
 
-  else if(src.id()==ID_AG || src.id()==ID_EG ||
-          src.id()==ID_AX || src.id()==ID_EX)
+  else if(
+    src.id() == ID_AG || src.id() == ID_EG || src.id() == ID_AF ||
+    src.id() == ID_EF || src.id() == ID_AX || src.id() == ID_EX ||
+    src.id() == ID_G || src.id() == ID_F || src.id() == ID_X)
     return convert_unary(
       to_unary_expr(src), dest, src.id_string() + " ", precedence = 7);
 

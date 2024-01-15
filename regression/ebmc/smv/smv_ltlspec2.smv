@@ -1,0 +1,14 @@
+MODULE main
+
+VAR x : 0..3;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x=3 : 3;
+      1   : x+1;
+    esac;
+
+LTLSPEC G F x=3

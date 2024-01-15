@@ -12,6 +12,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include <ebmc/ebmc_properties.h>
 #include <ebmc/transition_system.h>
+#include <smvlang/temporal_expr.h>
 #include <solvers/bdd/miniBDD/miniBDD.h>
 #include <solvers/sat/satcheck.h>
 #include <trans-netlist/aig_prop.h>
@@ -425,23 +426,35 @@ void bdd_enginet::check_property(propertyt &property)
 
   // special treatment for AGp
   auto is_AGp = [](const exprt &expr) {
-    return (expr.id() == ID_AG || expr.id() == ID_sva_always) &&
+    return (expr.id() == ID_AG || expr.id() == ID_G ||
+            expr.id() == ID_sva_always) &&
            !has_temporal_operator(to_unary_expr(expr).op());
   };
 
-  // special treatment for AG AFp
-  auto is_AG_AFp = [](const exprt &expr) {
-    return (expr.id() == ID_AG || expr.id() == ID_sva_always) &&
-           (to_unary_expr(expr).op().id() == ID_AF ||
-            to_unary_expr(expr).op().id() == ID_sva_eventually) &&
+  // special treatment for AG AFp and G F p
+  auto is_always_eventually = [](const exprt &expr) {
+    return expr.id() == ID_sva_always &&
+           to_unary_expr(expr).op().id() == ID_sva_eventually &&
            !has_temporal_operator(to_unary_expr(to_unary_expr(expr).op()).op());
+  };
+
+  auto is_AG_AFp = [](const exprt &expr) {
+    return expr.id() == ID_AG && to_AG_expr(expr).op().id() == ID_AF &&
+           !has_temporal_operator(to_AF_expr(to_AG_expr(expr).op()).op());
+  };
+
+  auto is_GFp = [](const exprt &expr) {
+    return expr.id() == ID_G && to_G_expr(expr).op().id() == ID_F &&
+           !has_temporal_operator(to_F_expr(to_G_expr(expr).op()).op());
   };
 
   if(is_AGp(property.expr))
   {
     AGp(property);
   }
-  else if(is_AG_AFp(property.expr))
+  else if(
+    is_AG_AFp(property.expr) || is_always_eventually(property.expr) ||
+    is_GFp(property.expr))
   {
     AGAFp(property);
   }
@@ -728,7 +741,7 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
         
     return pre_image;
   }
-  else if(expr.id()==ID_sva_eventually)
+  else if(expr.id() == ID_F || expr.id() == ID_sva_eventually)
   {
     // recursive call
     const exprt &sub_expr = to_unary_expr(expr).op();
@@ -764,8 +777,7 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
     
     return states;
   }
-  else if(expr.id()==ID_AG ||
-          expr.id()==ID_sva_always)
+  else if(expr.id() == ID_AG || expr.id() == ID_G || expr.id() == ID_sva_always)
   {
     // recursive call
     const exprt &sub_expr = to_unary_expr(expr).op();
@@ -829,20 +841,15 @@ Function: bdd_enginet::get_atomic_propositions
 
 void bdd_enginet::get_atomic_propositions(const exprt &expr)
 {
-  if(expr.id()==ID_and ||
-     expr.id()==ID_or ||
-     expr.id()==ID_not ||
-     expr.id()==ID_implies ||
-     expr.id()==ID_AG ||
-     expr.id()==ID_sva_always ||
-     expr.id()==ID_sva_overlapped_implication ||
-     expr.id()==ID_sva_non_overlapped_implication ||
-     expr.id()==ID_sva_nexttime ||
-     expr.id()==ID_sva_eventually ||
-     expr.id()==ID_sva_until ||
-     expr.id()==ID_sva_s_until ||
-     expr.id()==ID_sva_until_with ||
-     expr.id()==ID_sva_s_until_with)
+  if(
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
+    expr.id() == ID_implies || expr.id() == ID_AG || expr.id() == ID_G ||
+    expr.id() == ID_AF || expr.id() == ID_F || expr.id() == ID_sva_always ||
+    expr.id() == ID_sva_overlapped_implication ||
+    expr.id() == ID_sva_non_overlapped_implication ||
+    expr.id() == ID_sva_nexttime || expr.id() == ID_sva_eventually ||
+    expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
+    expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with)
   {
     for(const auto & op : expr.operands())
       get_atomic_propositions(op);

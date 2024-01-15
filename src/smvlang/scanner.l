@@ -68,6 +68,7 @@ void newlocation(YYSTYPE &x)
 "INIT"		{ newlocation(yysmvlval); return INIT_Token; }
 "TRANS"		{ newlocation(yysmvlval); return TRANS_Token; }
 "SPEC"		{ newlocation(yysmvlval); return SPEC_Token; }
+"LTLSPEC"	{ newlocation(yysmvlval); return LTLSPEC_Token; }
 "INVAR"		{ newlocation(yysmvlval); return INVAR_Token; }
 "VAR"		{ newlocation(yysmvlval); return VAR_Token; }
 "ASSIGN"	{ newlocation(yysmvlval); return ASSIGN_Token; }

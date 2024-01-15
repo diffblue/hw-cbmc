@@ -1166,7 +1166,8 @@ void smv_typecheckt::typecheck(
   case smv_parse_treet::modulet::itemt::DEFINE:
   case smv_parse_treet::modulet::itemt::INVAR:
   case smv_parse_treet::modulet::itemt::FAIRNESS:
-  case smv_parse_treet::modulet::itemt::SPEC:
+  case smv_parse_treet::modulet::itemt::CTLSPEC:
+  case smv_parse_treet::modulet::itemt::LTLSPEC:
   default:
     mode=OTHER;
   }
@@ -1438,22 +1439,24 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
     unsigned nr=1;
 
     forall_item_list(it, smv_module.items)
-      if(it->is_spec())
+    {
+      if(it->is_ctlspec() || it->is_ltlspec())
       {
         symbolt spec_symbol;
 
-        spec_symbol.base_name=smv_module.base_name;
-        spec_symbol.name=id2string(smv_module.name)+
-                         "::spec"+std::to_string(nr++);
-        spec_symbol.module=smv_module.name;
-        spec_symbol.type=bool_typet();
-        spec_symbol.is_property=true;
-        spec_symbol.mode="SMV";
-        spec_symbol.value=it->expr;
-        spec_symbol.location=it->location;
+        spec_symbol.base_name = smv_module.base_name;
+        spec_symbol.name =
+          id2string(smv_module.name) + "::spec" + std::to_string(nr++);
+        spec_symbol.module = smv_module.name;
+        spec_symbol.type = bool_typet();
+        spec_symbol.is_property = true;
+        spec_symbol.mode = "SMV";
+        spec_symbol.value = it->expr;
+        spec_symbol.location = it->location;
 
         symbol_table.add(spec_symbol);
       }
+    }
   }
 }
 

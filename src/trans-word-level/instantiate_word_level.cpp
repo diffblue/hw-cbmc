@@ -266,8 +266,9 @@ exprt wl_instantiatet::instantiate_rec(exprt expr)
     else
       return true_exprt(); // works on NNF only
   }
-  else if(expr.id()==ID_sva_eventually ||
-          expr.id()==ID_sva_s_eventually)
+  else if(
+    expr.id() == ID_sva_eventually || expr.id() == ID_sva_s_eventually ||
+    expr.id() == ID_F || expr.id() == ID_AF)
   {
     const auto &p = to_unary_expr(expr).op();
 
