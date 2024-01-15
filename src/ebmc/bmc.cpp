@@ -43,7 +43,7 @@ void bmc(
 
   for(auto &property : properties.properties)
   {
-    if(property.is_disabled())
+    if(property.is_disabled() || property.is_failure())
       continue;
 
     ::property(
@@ -86,7 +86,7 @@ void bmc(
 
     for(auto &property : properties.properties)
     {
-      if(property.is_disabled())
+      if(property.is_disabled() || property.is_failure())
         continue;
 
       message.status() << "Checking " << property.name << messaget::eom;

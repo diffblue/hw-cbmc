@@ -50,6 +50,15 @@ public:
 
   void operator()();
 
+  static bool
+  have_supported_property(const ebmc_propertiest::propertiest &properties)
+  {
+    for(auto &p : properties)
+      if(supported(p))
+        return true;
+    return false;
+  }
+
 protected:
   const std::size_t k;
   const transition_systemt &transition_system;
@@ -59,6 +68,19 @@ protected:
 
   void induction_base();
   void induction_step();
+
+  static bool supported(const ebmc_propertiest::propertyt &p)
+  {
+    auto &expr = p.expr;
+    if(expr.id() == ID_sva_always || expr.id() == ID_AG || expr.id() == ID_G)
+    {
+      // Must be AG p or equivalent.
+      auto &op = to_unary_expr(expr).op();
+      return !has_temporal_operator(op);
+    }
+    else
+      return false;
+  }
 };
 
 /*******************************************************************\
@@ -123,13 +145,12 @@ int do_k_induction(
   if(cmdline.isset("liveness-to-safety"))
     liveness_to_safety(transition_system, properties);
 
-  // Check whether the properties are suitable for k-induction.
-  for(const auto &property : properties.properties)
-    if(property.requires_lasso_constraints())
-    {
-      throw ebmc_errort().with_location(property.location)
-        << "k-induction does not support liveness properties";
-    }
+  // Are there any properties suitable for k-induction?
+  // Fail early if not.
+  if(!k_inductiont::have_supported_property(properties.properties))
+  {
+    throw ebmc_errort() << "there is no property suitable for k-induction";
+  }
 
   auto solver_factory = ebmc_solver_factory(cmdline);
 
@@ -158,6 +179,13 @@ Function: k_inductiont::operator()
 
 void k_inductiont::operator()()
 {
+  // Fail unsupported properties
+  for(auto &property : properties.properties)
+  {
+    if(!supported(property))
+      property.failure("property unsupported by k-induction");
+  }
+
   // do induction base
   induction_base();
 
@@ -215,6 +243,9 @@ void k_inductiont::induction_step()
        p_it.is_failure())
       continue;
 
+    // If it's not failed, then it's supported.
+    DATA_INVARIANT(supported(p_it), "property must be supported");
+
     // Do not run the step case for properties that have
     // failed the base case already. Properties may pass the step
     // case, but are still false when the base case fails.
@@ -233,15 +264,7 @@ void k_inductiont::induction_step()
       ns,
       false);
 
-    exprt property(p_it.expr);
-
-    if(property.id()!=ID_sva_always &&
-       property.id()!=ID_AG)
-    {
-      throw ebmc_errort()
-        << "unsupported property - only SVA always or AG implemented";
-    }
-
+    const exprt property(p_it.expr);
     const exprt &p = to_unary_expr(property).op();
 
     // assumption: time frames 0,...,k-1
