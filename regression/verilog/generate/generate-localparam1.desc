@@ -1,0 +1,8 @@
+KNOWNBUG
+generate-localparam1.v
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A localparam may depend on a genvar.
