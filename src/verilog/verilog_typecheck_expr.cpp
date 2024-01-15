@@ -789,7 +789,7 @@ exprt verilog_typecheck_exprt::convert_symbol(symbol_exprt expr)
       expr.set_identifier(full_identifier);
       return std::move(expr);
     }
-    else if(symbol->type.id() == ID_genvar)
+    else if(symbol->type.id() == ID_verilog_genvar)
     {
       // This must be a constant.
       mp_integer int_value = genvar_value(identifier);
@@ -885,7 +885,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
     {
-      if(symbol->type.id()==ID_genvar)
+      if(symbol->type.id() == ID_verilog_genvar)
       {
         throw errort().with_location(expr.source_location())
           << "genvars must not be used in hierarchical identifiers";
@@ -916,7 +916,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
     {
-      if(symbol->type.id()==ID_genvar)
+      if(symbol->type.id() == ID_verilog_genvar)
       {
         throw errort().with_location(expr.source_location())
           << "genvars must not be used in hierarchical identifiers";

@@ -773,8 +773,6 @@ std::string expr2vhdlt::convert(const typet &type)
 
     return dest;
   }
-  else if(type.id()==ID_genvar)
-    return "genvar";
   else if(type.id()==ID_integer)
     return "integer";
   else if(type.id()==ID_real)

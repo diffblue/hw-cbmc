@@ -115,10 +115,10 @@ public:
   }
 };
 
-class genvar_typet:public typet
+class verilog_genvar_typet : public typet
 {
 public:
-  inline genvar_typet():typet(ID_genvar)
+  verilog_genvar_typet() : typet(ID_verilog_genvar)
   {
   }
 };

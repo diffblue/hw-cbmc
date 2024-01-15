@@ -267,7 +267,7 @@ void gen_interfacet::gen_module(
     else if(symbol.type.id()==ID_code)
     {
     }
-    else if(symbol.type.id()==ID_genvar)
+    else if(symbol.type.id() == ID_verilog_genvar)
     {
     }
     else if(symbol.type.id()!=ID_integer &&
