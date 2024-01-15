@@ -307,44 +307,43 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       }
     }    
   }
-  
-  forall_operands(it2, decl)
+
+  for(auto &declarator : decl.declarators())
   {
-    if(it2->id()==ID_symbol)
+    if(declarator.id() == ID_symbol)
     {
-      symbol.base_name=it2->get(ID_identifier);
+      symbol.base_name = declarator.identifier();
       symbol.type=type;
     }
-    else if(it2->id()==ID_equal)
+    else if(declarator.id() == ID_equal)
     {
-      if(it2->operands().size()!=2)
+      if(declarator.operands().size() != 2)
       {
         error() << "expected two operands in assignment" << eom;
         throw 0;
       }
 
-      if(to_equal_expr(*it2).lhs().id() != ID_symbol)
+      if(to_equal_expr(declarator).lhs().id() != ID_symbol)
       {
-        error() << "expected symbol on left hand side of assignment"
-                   " but got `"
-                << to_string(to_equal_expr(*it2).lhs()) << '\'' << eom;
-        throw 0;
+        throw errort().with_location(declarator.source_location())
+          << "expected symbol on left hand side of assignment"
+             " but got `"
+          << to_string(to_equal_expr(declarator).lhs()) << '\'';
       }
 
       symbol.base_name =
-        to_symbol_expr(to_equal_expr(*it2).lhs()).get_identifier();
+        to_symbol_expr(to_equal_expr(declarator).lhs()).get_identifier();
       symbol.type=type;
     }
-    else if(it2->id()==ID_array)
+    else if(declarator.id() == ID_array)
     {
-      symbol.base_name=it2->get(ID_identifier);
-      symbol.type=array_type(*it2, type);
+      symbol.base_name = declarator.identifier();
+      symbol.type = array_type(declarator, type);
     }
     else
     {
-      error().source_location = it2->source_location();
-      error() << "unexpected declaration: " << it2->id() << eom;
-      throw 0;
+      throw errort().with_location(declarator.source_location())
+        << "unexpected declaration: " << declarator.id();
     }
 
     if(symbol.base_name=="")
@@ -470,17 +469,17 @@ void verilog_typecheckt::interface_module_decl(
     }
   }
 
-  forall_operands(it2, decl)
+  for(auto &declarator : decl.declarators())
   {
-    if(it2->id()==ID_symbol)
+    if(declarator.id() == ID_symbol)
     {
-      symbol.base_name=it2->get(ID_identifier);
-      symbol.location=it2->source_location();  
-      
-      if(it2->type().is_nil())
+      symbol.base_name = declarator.identifier();
+      symbol.location = declarator.source_location();
+
+      if(declarator.type().is_nil())
         symbol.type=type;
-      else if(it2->type().id()==ID_array)
-        symbol.type=array_type(it2->type(), type);
+      else if(declarator.type().id() == ID_array)
+        symbol.type = array_type(declarator.type(), type);
       else
       {
         error().source_location = symbol.location;
@@ -488,31 +487,30 @@ void verilog_typecheckt::interface_module_decl(
         throw 0;
       }
     }
-    else if(it2->id()==ID_equal)
+    else if(declarator.id() == ID_equal)
     {
-      if(it2->operands().size()!=2)
+      if(declarator.operands().size() != 2)
       {
         error() << "expected two operands in assignment" << eom;
         throw 0;
       }
 
-      if(to_binary_expr(*it2).op0().id() != ID_symbol)
+      if(to_binary_expr(declarator).op0().id() != ID_symbol)
       {
-        error() << "expected symbol on left hand side of assignment"
-                   " but got `"
-                << to_string(to_binary_expr(*it2).op0()) << '\'' << eom;
-        throw 0;
+        throw errort().with_location(declarator.source_location())
+          << "expected symbol on left hand side of assignment"
+             " but got `"
+          << to_string(to_binary_expr(declarator).op0()) << '\'';
       }
 
-      symbol.base_name = to_binary_expr(*it2).op0().get(ID_identifier);
-      symbol.location = to_binary_expr(*it2).op0().source_location();
+      symbol.base_name = to_binary_expr(declarator).op0().get(ID_identifier);
+      symbol.location = to_binary_expr(declarator).op0().source_location();
       symbol.type=type;
     }
     else
     {
-      error().source_location = it2->source_location();
-      error() << "unexpected declaration: " << it2->id() << eom;
-      throw 0;
+      throw errort().with_location(declarator.source_location())
+        << "unexpected declaration: " << declarator.id();
     }
 
     if(symbol.base_name.empty())
