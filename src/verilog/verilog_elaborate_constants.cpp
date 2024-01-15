@@ -205,11 +205,11 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbol.is_output = true;
     }
 
-    for(auto declarator : decl.operands())
+    for(auto &declarator : decl.declarators())
     {
       if(declarator.id() == ID_symbol)
       {
-        symbol.base_name = declarator.get(ID_identifier);
+        symbol.base_name = declarator.identifier();
         symbol.location = declarator.source_location();
 
         if(declarator.type().is_nil())

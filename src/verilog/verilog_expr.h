@@ -300,7 +300,7 @@ public:
   {
   }
 
-  class declaratort : public irept
+  class declaratort : public exprt
   {
   public:
     const irep_idt &identifier() const
@@ -321,11 +321,6 @@ public:
     exprt &value()
     {
       return static_cast<exprt &>(add(ID_value));
-    }
-
-    const source_locationt &source_location() const
-    {
-      return static_cast<const source_locationt &>(find(ID_C_source_location));
     }
   };
 
