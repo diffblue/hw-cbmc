@@ -27,6 +27,7 @@ public:
         "(show-parse)(show-varmap)(show-symbol-table)(show-netlist)"
         "(show-ldg)(show-modules)(show-module-hierarchy)"
         "(show-trans)(show-bdds)(show-formula)"
+        "(show-traces)"
         "(modules-xml):"
         "(show-properties)(property):p:(trace)(waveform)(numbered-trace)"
         "(dimacs)(module):(top):"

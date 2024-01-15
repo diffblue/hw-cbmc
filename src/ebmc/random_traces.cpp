@@ -320,6 +320,31 @@ void random_traces(
 
 /*******************************************************************\
 
+Function: random_traces
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void random_traces(
+  const transition_systemt &transition_system,
+  std::function<void(trans_tracet)> consumer,
+  std::size_t number_of_traces,
+  std::size_t number_of_trace_steps,
+  message_handlert &message_handler)
+{
+  std::size_t random_seed = 0;
+
+  random_tracest(transition_system, message_handler)(
+    consumer, random_seed, number_of_traces, number_of_trace_steps);
+}
+
+/*******************************************************************\
+
 Function: random_tracest::random_bit
 
   Inputs:
