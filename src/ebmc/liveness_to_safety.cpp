@@ -15,6 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/namespace.h>
 
 #include <trans-word-level/next_symbol.h>
+#include <verilog/sva_expr.h>
 
 #include "ebmc_error.h"
 
@@ -108,8 +109,7 @@ protected:
   safety_replacement(irep_idt property_identifier, const exprt &expr)
   {
     // G (looped → live)
-    return unary_predicate_exprt(
-      ID_sva_always,
+    return sva_always_exprt(
       implies_exprt(looped_symbol(), live_symbol(property_identifier)));
   }
 };
@@ -249,8 +249,8 @@ void liveness_to_safetyt::operator()()
       // We want GFp.
       if(
         property.expr.id() == ID_sva_always &&
-        (to_unary_expr(property.expr).op().id() == ID_sva_eventually ||
-         to_unary_expr(property.expr).op().id() == ID_sva_s_eventually))
+        (to_sva_always_expr(property.expr).op().id() == ID_sva_eventually ||
+         to_sva_always_expr(property.expr).op().id() == ID_sva_s_eventually))
       {
         translate_GFp(property);
       }

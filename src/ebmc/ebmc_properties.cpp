@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/language.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
+#include <verilog/sva_expr.h>
 
 #include "ebmc_error.h"
 
@@ -143,10 +144,7 @@ ebmc_propertiest ebmc_propertiest::from_command_line(
     // We give it an implict always, as in SVA
 
     if(expr.id() != ID_sva_always)
-    {
-      unary_predicate_exprt tmp(ID_sva_always, expr);
-      expr.swap(tmp);
-    }
+      expr = sva_always_exprt(expr);
 
     std::string expr_as_string;
     language->from_expr(expr, expr_as_string, ns);
