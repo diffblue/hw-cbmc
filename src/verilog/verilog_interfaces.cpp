@@ -310,28 +310,17 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
 
   for(auto &declarator : decl.declarators())
   {
-    if(declarator.id() == ID_symbol)
+    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
+    symbol.base_name = declarator.base_name();
+
+    if(symbol.base_name.empty())
     {
-      symbol.base_name = declarator.identifier();
-      symbol.type=type;
-    }
-    else if(declarator.id() == ID_array)
-    {
-      symbol.base_name = declarator.identifier();
-      symbol.type = array_type(declarator, type);
-    }
-    else
-    {
-      throw errort().with_location(declarator.source_location())
-        << "unexpected declaration: " << declarator.id();
+      throw errort().with_location(decl.source_location())
+        << "empty symbol name";
     }
 
-    if(symbol.base_name=="")
-    {
-      error().source_location = decl.source_location();
-      error() << "empty symbol name" << eom;
-      throw 0;
-    }
+    symbol.type = type;
 
     symbol.name = hierarchical_identifier(symbol.base_name);
 
@@ -451,32 +440,20 @@ void verilog_typecheckt::interface_module_decl(
 
   for(auto &declarator : decl.declarators())
   {
-    if(declarator.id() == ID_symbol)
-    {
-      symbol.base_name = declarator.identifier();
-      symbol.location = declarator.source_location();
+    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
-      if(declarator.type().is_nil())
-        symbol.type=type;
-      else if(declarator.type().id() == ID_array)
-        symbol.type = array_type(declarator.type(), type);
-      else
-      {
-        error().source_location = symbol.location;
-        error() << "unexpected type on declarator" << eom;
-        throw 0;
-      }
-    }
-    else if(declarator.id() == ID_declarator)
-    {
-      symbol.base_name = declarator.base_name();
-      symbol.location = declarator.source_location();
+    symbol.base_name = declarator.base_name();
+    symbol.location = declarator.source_location();
+
+    if(declarator.type().is_nil())
       symbol.type=type;
-    }
+    else if(declarator.type().id() == ID_array)
+      symbol.type = array_type(declarator.type(), type);
     else
     {
-      throw errort().with_location(declarator.source_location())
-        << "unexpected declaration: " << declarator.id();
+      error().source_location = symbol.location;
+      error() << "unexpected type on declarator" << eom;
+      throw 0;
     }
 
     if(symbol.base_name.empty())

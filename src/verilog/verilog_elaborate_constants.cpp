@@ -143,17 +143,11 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   // Typedef?
   if(decl_class == ID_typedef)
   {
-    for(auto &declarator : decl.operands())
+    for(auto &declarator : decl.declarators())
     {
-      auto symbol_expr = [](const exprt &declarator) -> const symbol_exprt & {
-        if(declarator.id() == ID_symbol)
-          return to_symbol_expr(declarator);
-        else
-          DATA_INVARIANT(false, "failed to find symbol in declarator");
-      }(declarator);
+      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
-      auto base_name = symbol_expr.get_identifier();
-
+      auto base_name = declarator.base_name();
       auto full_identifier = hierarchical_identifier(base_name);
 
       symbolt symbol{
@@ -203,25 +197,19 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
     for(auto &declarator : decl.declarators())
     {
-      if(declarator.id() == ID_symbol)
-      {
-        symbol.base_name = declarator.identifier();
-        symbol.location = declarator.source_location();
+      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
-        if(declarator.type().is_nil())
-          symbol.type = type;
-        else if(declarator.type().id() == ID_array)
-          symbol.type = array_type(declarator.type(), type);
-        else
-        {
-          throw errort().with_location(declarator.source_location())
-            << "unexpected type on declarator";
-        }
-      }
+      symbol.base_name = declarator.identifier();
+      symbol.location = declarator.source_location();
+
+      if(declarator.type().is_nil())
+        symbol.type = type;
+      else if(declarator.type().id() == ID_array)
+        symbol.type = array_type(declarator.type(), type);
       else
       {
         throw errort().with_location(declarator.source_location())
-          << "unexpected declaration: " << declarator.id();
+          << "unexpected type on declarator";
       }
 
       if(symbol.base_name.empty())

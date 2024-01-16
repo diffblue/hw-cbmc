@@ -467,41 +467,32 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
 
   for(auto &declarator : decl.declarators())
   {
-    if(declarator.id() == ID_symbol)
+    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
+    // in a named block?
+    irep_idt named_block;
+    if(!named_blocks.empty())
+      named_block = named_blocks.back();
+
+    // fix the type and identifier
+    irep_idt full_identifier;
+
+    if(!function_or_task_name.empty())
+      full_identifier = id2string(function_or_task_name) + "." +
+                        id2string(named_block) +
+                        id2string(declarator.base_name());
+    else
+      full_identifier = id2string(module_identifier) + "." +
+                        id2string(named_block) +
+                        id2string(declarator.base_name());
+
+    symbolt &symbol = symbol_table_lookup(full_identifier);
+    declarator.type() = symbol.type;
+
+    declarator.identifier(full_identifier);
+
+    if(declarator.has_value())
     {
-      auto &symbol_expr = to_symbol_expr(declarator);
-
-      // in a named block?
-      irep_idt named_block;
-      if(!named_blocks.empty())
-        named_block = named_blocks.back();
-
-      // fix the type and identifier
-      irep_idt full_identifier;
-
-      if(!function_or_task_name.empty())
-        full_identifier = id2string(function_or_task_name) + "." +
-                          id2string(named_block) +
-                          id2string(symbol_expr.get_identifier());
-      else
-        full_identifier = id2string(module_identifier) + "." +
-                          id2string(named_block) +
-                          id2string(symbol_expr.get_identifier());
-
-      symbol_expr.set_identifier(full_identifier);
-
-      symbolt &symbol = symbol_table_lookup(full_identifier);
-      declarator.type() = symbol.type;
-    }
-    else if(declarator.id() == ID_declarator)
-    {
-      const irep_idt identifier =
-        id2string(module_identifier) + "." + id2string(declarator.base_name());
-
-      symbolt &symbol=symbol_table_lookup(identifier);
-      declarator.type() = symbol.type;
-      declarator.identifier(identifier);
-
       auto &rhs = declarator.value();
       convert_expr(rhs);
       propagate_type(rhs, symbol.type);
@@ -514,14 +505,9 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
         if(!symbol.value.is_nil())
         {
           throw errort().with_location(declarator.source_location())
-            << "Net " << identifier << " is assigned twice";
+            << "Net " << symbol.display_name() << " is assigned twice";
         }
       }
-    }
-    else
-    {
-      throw errort().with_location(declarator.source_location())
-        << "unexpected declarator " << declarator.id();
     }
   }
 }

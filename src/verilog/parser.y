@@ -1165,6 +1165,7 @@ type_declaration:
 		  init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_typedef);
 		  addswap($$, ID_type, $2);
+		  stack_expr($3).id(ID_declarator);
 		  mto($$, $3);
 		}
 	;
@@ -1186,7 +1187,8 @@ list_of_net_names:
 net_name: net_identifier packed_dimension_brace
           {
             $$=$1;
-            stack_expr($$).add(ID_type)=stack_expr($2);
+            stack_expr($$).id(ID_declarator);
+            addswap($$, ID_type, $2);
           }
 	;
 
@@ -1456,9 +1458,15 @@ delay_value:
 
 list_of_genvar_identifiers:
 	  genvar_identifier
-		{ init($$); mto($$, $1); } 
+		{ init($$);
+		  stack_expr($1).id(ID_declarator);
+		  mto($$, $1);
+		}
 	| list_of_genvar_identifiers ',' genvar_identifier
-		{ $$=$1;    mto($$, $3); }
+		{ $$=$1;
+		  stack_expr($3).id(ID_declarator);
+		  mto($$, $3);
+		}
 	;
 
 defparam_assignment:
@@ -1482,9 +1490,13 @@ list_of_variable_decl_assignments:
 
 list_of_variable_identifiers:
           variable_identifier
-		{ init($$); mto($$, $1); }
+		{ init($$);
+		  stack_expr($1).id(ID_declarator);
+		  mto($$, $1); }
 	| list_of_variable_identifiers ',' variable_identifier
-		{ $$=$1;    mto($$, $3); }
+		{ $$=$1;
+		  stack_expr($3).id(ID_declarator);
+		  mto($$, $3); }
         ;
 
 // This rule is more permissive that the grammar in the standard
@@ -1603,9 +1615,15 @@ automatic_opt:
 
 list_of_port_identifiers:
 	  port_identifier unpacked_dimension_brace
-		{ init($$); stack_expr($1).type().swap(stack_expr($2)); mto($$, $1); }
+		{ init($$);
+		  stack_expr($1).id(ID_declarator);
+		  addswap($1, ID_type, $2);
+		  mto($$, $1); }
 	| list_of_port_identifiers ',' port_identifier unpacked_dimension_brace
-		{ $$=$1;    stack_expr($3).type().swap(stack_expr($4)); mto($$, $3); }
+		{ $$=$1;
+		  stack_expr($3).id(ID_declarator);
+		  addswap($3, ID_type, $4);
+		  mto($$, $3); }
 	;
 
 range_opt:
@@ -1624,7 +1642,7 @@ net_decl_assignment: net_identifier '=' expression
 
 variable_decl_assignment:
 	  variable_identifier variable_dimension_brace
-		{ $$ = $1; stack_expr($$).type().swap(stack_expr($2)); }
+		{ $$ = $1; stack_expr($$).id(ID_declarator); addswap($$, ID_type, $2); }
 	| variable_identifier variable_dimension_brace '=' expression
 		{ $$ = $1; stack_expr($$).id(ID_declarator);
 		  addswap($$, ID_type, $2);

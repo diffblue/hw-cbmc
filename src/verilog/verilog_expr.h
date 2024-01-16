@@ -328,6 +328,11 @@ public:
       return static_cast<exprt &>(add(ID_value));
     }
 
+    bool has_value() const
+    {
+      return find(ID_value).is_not_nil();
+    }
+
     // helper to generate a symbol expression
     symbol_exprt symbol_expr() const
     {
