@@ -315,26 +315,6 @@ void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &de
       symbol.base_name = declarator.identifier();
       symbol.type=type;
     }
-    else if(declarator.id() == ID_equal)
-    {
-      if(declarator.operands().size() != 2)
-      {
-        error() << "expected two operands in assignment" << eom;
-        throw 0;
-      }
-
-      if(to_equal_expr(declarator).lhs().id() != ID_symbol)
-      {
-        throw errort().with_location(declarator.source_location())
-          << "expected symbol on left hand side of assignment"
-             " but got `"
-          << to_string(to_equal_expr(declarator).lhs()) << '\'';
-      }
-
-      symbol.base_name =
-        to_symbol_expr(to_equal_expr(declarator).lhs()).get_identifier();
-      symbol.type=type;
-    }
     else if(declarator.id() == ID_array)
     {
       symbol.base_name = declarator.identifier();
@@ -487,24 +467,10 @@ void verilog_typecheckt::interface_module_decl(
         throw 0;
       }
     }
-    else if(declarator.id() == ID_equal)
+    else if(declarator.id() == ID_declarator)
     {
-      if(declarator.operands().size() != 2)
-      {
-        error() << "expected two operands in assignment" << eom;
-        throw 0;
-      }
-
-      if(to_binary_expr(declarator).op0().id() != ID_symbol)
-      {
-        throw errort().with_location(declarator.source_location())
-          << "expected symbol on left hand side of assignment"
-             " but got `"
-          << to_string(to_binary_expr(declarator).op0()) << '\'';
-      }
-
-      symbol.base_name = to_binary_expr(declarator).op0().get(ID_identifier);
-      symbol.location = to_binary_expr(declarator).op0().source_location();
+      symbol.base_name = declarator.base_name();
+      symbol.location = declarator.source_location();
       symbol.type=type;
     }
     else

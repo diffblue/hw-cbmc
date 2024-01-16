@@ -1501,46 +1501,36 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
     }
   }
 
-  forall_operands(it, statement)
+  for(auto &declarator : statement.declarators())
   {
     // This is reg x = ... or wire x = ...
-    if(it->id()==ID_equal)
+    if(declarator.id() == ID_declarator)
     {
       // These are only allowed for module-level declarations,
       // not block-level.
       construct=constructt::INITIAL;
       event_guard=event_guardt::NONE;
 
-      if(it->operands().size()!=2)
-      {
-        throw errort() << "expected two operands in assignment";
-      }
+      auto lhs = declarator.symbol_expr();
+      auto rhs = declarator.value();
 
-      exprt lhs = to_equal_expr(*it).op0();
-      exprt rhs = to_equal_expr(*it).op1();
-
-      if(lhs.id()!=ID_symbol)
-      {
-        throw errort() << "expected symbol on left hand side of assignment"
-                       << " but got `" << to_string(lhs) << '\'';
-      }
-
-      const symbolt &symbol=ns.lookup(to_symbol_expr(lhs));
+      const symbolt &symbol = ns.lookup(lhs);
 
       if(symbol.is_state_var)
       {
         // much like: initial LHS=RHS;
         verilog_initialt initial;
         initial.statement()=verilog_blocking_assignt(lhs, rhs);
-        initial.statement().add_source_location()=it->source_location();
-        initial.add_source_location()=it->source_location();
+        initial.statement().add_source_location() =
+          declarator.source_location();
+        initial.add_source_location() = declarator.source_location();
         synth_initial(initial);
       }
       else
       {
         // much like a continuous assignment
-        verilog_continuous_assignt assign(*it);
-        assign.add_source_location() = it->source_location();
+        verilog_continuous_assignt assign(equal_exprt(lhs, rhs));
+        assign.add_source_location() = declarator.source_location();
         synth_continuous_assign(assign);
       }
     }

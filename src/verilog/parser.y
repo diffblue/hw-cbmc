@@ -1619,17 +1619,16 @@ range:	part_select;
 // A.2.4 Declaration assignments
 
 net_decl_assignment: net_identifier '=' expression
-		{ init($$, ID_equal); mto($$, $1); mto($$, $3); }
+		{ $$ = $1; stack_expr($$).id(ID_declarator); addswap($$, ID_value, $3); }
 	;
 
 variable_decl_assignment:
 	  variable_identifier variable_dimension_brace
 		{ $$ = $1; stack_expr($$).type().swap(stack_expr($2)); }
 	| variable_identifier variable_dimension_brace '=' expression
-		{ init($$, ID_equal);
-		  stack_expr($1).type().swap(stack_expr($2));
-		  mto($$, $1);
-		  mto($$, $4); }
+		{ $$ = $1; stack_expr($$).id(ID_declarator);
+		  addswap($$, ID_type, $2);
+		  addswap($$, ID_value, $4); }
 	;
 
 // System Verilog standard 1800-2017

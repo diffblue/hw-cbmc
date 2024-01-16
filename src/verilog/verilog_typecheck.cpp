@@ -465,11 +465,11 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
     return;
   }
 
-  Forall_operands(it, decl)
+  for(auto &declarator : decl.declarators())
   {
-    if(it->id()==ID_symbol)
+    if(declarator.id() == ID_symbol)
     {
-      auto &symbol_expr = to_symbol_expr(*it);
+      auto &symbol_expr = to_symbol_expr(declarator);
 
       // in a named block?
       irep_idt named_block;
@@ -491,34 +491,20 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       symbol_expr.set_identifier(full_identifier);
 
       symbolt &symbol = symbol_table_lookup(full_identifier);
-      it->type() = symbol.type;
+      declarator.type() = symbol.type;
     }
-    else if(it->id()==ID_equal)
+    else if(declarator.id() == ID_declarator)
     {
-      if(it->operands().size()!=2)
-      {
-        throw errort() << "expected two operands in assignment";
-      }
-
-      exprt &lhs = to_equal_expr(*it).lhs();
-      exprt &rhs = to_equal_expr(*it).rhs();
-
-      if(lhs.id()!=ID_symbol)
-      {
-        throw errort() << "expected symbol on left hand side of assignment, "
-                       << " but got `" << to_string(lhs) << "'";
-      }
-
-      const std::string identifier =
-        id2string(module_identifier) + "." +
-        id2string(to_symbol_expr(lhs).get_identifier());
-
-      to_symbol_expr(lhs).set_identifier(identifier);
+      const irep_idt identifier =
+        id2string(module_identifier) + "." + id2string(declarator.base_name());
 
       symbolt &symbol=symbol_table_lookup(identifier);
+      declarator.type() = symbol.type;
+      declarator.identifier(identifier);
+
+      auto &rhs = declarator.value();
       convert_expr(rhs);
       propagate_type(rhs, symbol.type);
-      lhs.type()=symbol.type;
 
       if(symbol.is_state_var)
       {
@@ -527,10 +513,15 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       {
         if(!symbol.value.is_nil())
         {
-          throw errort().with_location(it->source_location())
+          throw errort().with_location(declarator.source_location())
             << "Net " << identifier << " is assigned twice";
         }
       }
+    }
+    else
+    {
+      throw errort().with_location(declarator.source_location())
+        << "unexpected declarator " << declarator.id();
     }
   }
 }
