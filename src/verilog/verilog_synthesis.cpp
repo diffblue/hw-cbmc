@@ -1482,29 +1482,31 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
   // Look for supply0 and supply1 port class.
   if(statement.get_class() == ID_supply0 || statement.get_class() == ID_supply1)
   {
-    for(auto &op : statement.operands())
+    for(auto &declarator : statement.declarators())
     {
-      if(op.id() == ID_symbol)
-      {
-        const symbolt &symbol = ns.lookup(to_symbol_expr(op));
+      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
-        if(!symbol.is_state_var)
-        {
-          // much like a continuous assignment
-          const auto value =
-            make_supply_value(statement.get_class(), op.type());
-          verilog_continuous_assignt assign(equal_exprt(op, value));
-          assign.add_source_location() = op.source_location();
-          synth_continuous_assign(assign);
-        }
+      auto symbol_expr = declarator.symbol_expr();
+      const symbolt &symbol = ns.lookup(symbol_expr);
+
+      if(!symbol.is_state_var)
+      {
+        // much like a continuous assignment
+        const auto value =
+          make_supply_value(statement.get_class(), symbol_expr.type());
+        verilog_continuous_assignt assign(equal_exprt(symbol_expr, value));
+        assign.add_source_location() = declarator.source_location();
+        synth_continuous_assign(assign);
       }
     }
   }
 
   for(auto &declarator : statement.declarators())
   {
+    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
     // This is reg x = ... or wire x = ...
-    if(declarator.id() == ID_declarator)
+    if(declarator.has_value())
     {
       // These are only allowed for module-level declarations,
       // not block-level.
