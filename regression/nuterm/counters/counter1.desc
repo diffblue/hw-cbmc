@@ -1,0 +1,9 @@
+CORE
+counter1
+
+^weight main.clk = 0 .*$
+^weight main.counter = 1 .*$
+^RESULT: main.counter-1$
+^bias: -1 .*$
+^EXIT=0$
+^SIGNAL=0$
