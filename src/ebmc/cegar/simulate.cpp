@@ -41,8 +41,19 @@ bool bmc_cegart::simulate(unsigned bound)
   case propt::resultt::P_SATISFIABLE:
     status() << "SAT: bug found within bound" << eom;
 
-    show_counterexample(properties, prop_bv, get_message_handler(), solver,
-                        bmc_map, ns);
+    {
+      std::list<exprt> property_expr_list;
+      for(auto &p : properties.properties)
+        property_expr_list.push_back(p.expr);
+
+      show_counterexample(
+        property_expr_list,
+        prop_bv,
+        get_message_handler(),
+        solver,
+        bmc_map,
+        ns);
+    }
     return true;
 
   case propt::resultt::P_UNSATISFIABLE:

@@ -31,9 +31,7 @@ Function: bmc_cegart::bmc_cegar
 
 void bmc_cegart::bmc_cegar()
 {
-  make_netlist();
-
-  if(properties.empty())
+  if(properties.properties.empty())
   {
     error() << "No properties given" << eom;
     return;
@@ -213,7 +211,7 @@ void bmc_cegart::cegar_loop()
 
 /*******************************************************************\
 
-Function: bmc_cegart::make_netlist
+Function: do_bmc_cegar
 
   Inputs:
 
@@ -223,25 +221,14 @@ Function: bmc_cegart::make_netlist
 
 \*******************************************************************/
 
-void bmc_cegart::make_netlist()
+int do_bmc_cegar(
+  const netlistt &netlist,
+  ebmc_propertiest &properties,
+  const namespacet &ns,
+  message_handlert &message_handler)
 {
-  // make net-list
-  status() << "Making Netlist" << eom;
+  bmc_cegart bmc_cegar(netlist, properties, ns, message_handler);
 
-  try
-  {
-    convert_trans_to_netlist(
-      symbol_table, main_module,
-      concrete_netlist, get_message_handler());
-  }
-  
-  catch(const std::string &error_msg)
-  {
-    error() << error_msg << eom;
-    return;
-  }
-
-  statistics() 
-    << "Latches: " << concrete_netlist.var_map.latches.size()
-    << ", nodes: " << concrete_netlist.number_of_nodes() << eom;
+  bmc_cegar.bmc_cegar();
+  return 0;
 }
