@@ -2919,6 +2919,7 @@ primary:  primary_literal
 		{ $$ = $2; }
 	| cast
         | TOK_NULL { init($$, ID_NULL); }
+        | TOK_THIS { init($$, ID_this); }
 	;
 
 primary_literal:
