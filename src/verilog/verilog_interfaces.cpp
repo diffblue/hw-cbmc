@@ -608,6 +608,45 @@ void verilog_typecheckt::interface_generate_block(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::interface_generate_for
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::interface_generate_for(
+  const verilog_generate_fort &generate_for)
+{
+  interface_module_item(generate_for.body());
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::interface_generate_if
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::interface_generate_if(
+  const verilog_generate_ift &generate_if)
+{
+  interface_module_item(generate_if.then_case());
+
+  if(generate_if.has_else_case())
+    interface_module_item(generate_if.else_case());
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::interface_module_item
 
   Inputs:
@@ -643,6 +682,10 @@ void verilog_typecheckt::interface_module_item(
     interface_statement(to_verilog_initial(module_item).statement());
   else if(module_item.id()==ID_generate_block)
     interface_generate_block(to_verilog_generate_block(module_item));
+  else if(module_item.id() == ID_generate_if)
+    interface_generate_if(to_verilog_generate_if(module_item));
+  else if(module_item.id() == ID_generate_for)
+    interface_generate_for(to_verilog_generate_for(module_item));
 }
 
 /*******************************************************************\

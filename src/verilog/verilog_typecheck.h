@@ -121,6 +121,8 @@ protected:
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
+  void interface_generate_for(const verilog_generate_fort &);
+  void interface_generate_if(const verilog_generate_ift &);
   void interface_statement(const class verilog_statementt &);
   void interface_function_or_task(const class verilog_declt &);
 
