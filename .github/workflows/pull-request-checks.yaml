@@ -24,9 +24,10 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .ccache
+          save-always: true
           key: ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: |
             ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}
@@ -73,9 +74,10 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .ccache
+          save-always: true
           key: ${{ runner.os }}-20.04-make-clang-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: |
             ${{ runner.os }}-20.04-make-clang-${{ github.ref }}
@@ -119,9 +121,10 @@ jobs:
           # yum config-manager --set-enabled powertools
           # yum install glibc-static libstdc++-static
       - name: cache for ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /github/home/.cache/ccache
+          save-always: true
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-centos8-make-gcc-
       - uses: actions/checkout@v3
