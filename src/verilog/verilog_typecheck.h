@@ -202,16 +202,20 @@ protected:
   // generate constructs
   verilog_module_exprt
   elaborate_generate_constructs(const verilog_module_sourcet &);
-  void elaborate_generate_assign(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_assign(
+    const verilog_generate_assignt &,
+    module_itemst &dest);
   void elaborate_generate_block(
     const verilog_generate_blockt &,
     module_itemst &dest);
   void elaborate_generate_decl(const verilog_declt &, module_itemst &dest);
   void elaborate_generate_inst(const verilog_instt &, module_itemst &dest);
   void elaborate_generate_item(const exprt &statement, module_itemst &dest);
-  void elaborate_generate_if(const exprt &statement, module_itemst &dest);
-  void elaborate_generate_case(const exprt &statement, module_itemst &dest);
-  void elaborate_generate_for(const exprt &statement, module_itemst &dest);
+  void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
+  void
+  elaborate_generate_case(const verilog_generate_caset &, module_itemst &dest);
+  void
+  elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);
   exprt generate_for_loop_index(const exprt &initialization_statement) const;
 
   // generate state

@@ -187,11 +187,11 @@ void verilog_typecheckt::elaborate_generate_item(
   if(statement.id()==ID_generate_block)
     elaborate_generate_block(to_verilog_generate_block(statement), dest);
   else if(statement.id()==ID_generate_case)
-    elaborate_generate_case(statement, dest);
+    elaborate_generate_case(to_verilog_generate_case(statement), dest);
   else if(statement.id()==ID_generate_if)
-    elaborate_generate_if(statement, dest);
+    elaborate_generate_if(to_verilog_generate_if(statement), dest);
   else if(statement.id()==ID_generate_for)
-    elaborate_generate_for(statement, dest);
+    elaborate_generate_for(to_verilog_generate_for(statement), dest);
   else if(statement.id() == ID_decl)
     elaborate_generate_decl(to_verilog_decl(statement), dest);
   else if(statement.id() == ID_inst)
@@ -223,7 +223,7 @@ Function: verilog_typecheckt::elaborate_generate_case
 \*******************************************************************/
 
 void verilog_typecheckt::elaborate_generate_case(
-  const exprt &statement,
+  const verilog_generate_caset &statement,
   module_itemst &dest)
 {
 }
@@ -241,7 +241,7 @@ Function: verilog_typecheckt::elaborate_generate_if
 \*******************************************************************/
 
 void verilog_typecheckt::elaborate_generate_if(
-  const exprt &statement,
+  const verilog_generate_ift &statement,
   module_itemst &dest)
 {
   if(statement.operands().size()!=3 &&
@@ -277,41 +277,32 @@ Function: verilog_typecheckt::elaborate_generate_assign
 \*******************************************************************/
 
 void verilog_typecheckt::elaborate_generate_assign(
-  const exprt &statement,
+  const verilog_generate_assignt &statement,
   module_itemst &dest)
 {
-  if(statement.operands().size()!=2)
+  if(statement.lhs().id() != ID_symbol)
   {
-    error().source_location = statement.source_location();
-    error() << "generate_assign expects two operands" << eom;
-    throw 0;
-  }
-
-  if(to_binary_expr(statement).lhs().id() != ID_symbol)
-  {
-    error().source_location = to_binary_expr(statement).lhs().source_location();
+    error().source_location = statement.lhs().source_location();
     error() << "expected symbol on left hand side of assignment" << eom;
     throw 0;
   }
 
-  const irep_idt &identifier =
-    to_symbol_expr(to_binary_expr(statement).lhs()).get_identifier();
+  const irep_idt &identifier = to_symbol_expr(statement.lhs()).get_identifier();
 
   genvarst::iterator it=genvars.find(identifier);
   
   if(it==genvars.end())
   {
-    error().source_location = to_binary_expr(statement).lhs().source_location();
+    error().source_location = statement.lhs().source_location();
     error() << "expected genvar on left hand side of assignment" << eom;
     throw 0;
   }
 
-  mp_integer rhs =
-    convert_integer_constant_expression(to_binary_expr(statement).rhs());
+  mp_integer rhs = convert_integer_constant_expression(statement.rhs());
 
   if(rhs<0)
   {
-    error().source_location = to_binary_expr(statement).rhs().source_location();
+    error().source_location = statement.rhs().source_location();
     error() << "must not assign negative value to genvar" << eom;
     throw 0;
   }
@@ -360,27 +351,18 @@ Function: verilog_typecheckt::elaborate_generate_for
 \*******************************************************************/
 
 void verilog_typecheckt::elaborate_generate_for(
-  const exprt &statement,
+  const verilog_generate_fort &for_statement,
   module_itemst &dest)
 {
-  if(statement.operands().size()!=4)
-  {
-    error().source_location = statement.source_location();
-    error() << "generate_for expects four operands" << eom;
-    throw 0;
-  }
-
-  auto &for_statement = to_multi_ary_expr(statement);
-
-  elaborate_generate_assign(for_statement.op0(), dest);
+  elaborate_generate_assign(for_statement.init(), dest);
 
   // work out what the loop index is
-  auto loop_index = generate_for_loop_index(for_statement.op0());
+  auto loop_index = generate_for_loop_index(for_statement.init());
 
   while(true)
   {
     mp_integer condition =
-      convert_integer_constant_expression(for_statement.op1());
+      convert_integer_constant_expression(for_statement.cond());
 
     if(condition==0) break;
 
@@ -388,7 +370,7 @@ void verilog_typecheckt::elaborate_generate_for(
     // First execute the block.
     // If it's a generate_block, append the loop counter to
     // the block's identifier, surrounded by square brackets.
-    auto copy_of_body = for_statement.op3();
+    auto copy_of_body = for_statement.body();
     if(copy_of_body.id() == ID_generate_block)
     {
       const mp_integer loop_index_int =
@@ -401,6 +383,6 @@ void verilog_typecheckt::elaborate_generate_for(
     elaborate_generate_item(copy_of_body, dest);
 
     // Now increase the loop counter.
-    elaborate_generate_assign(for_statement.op2(), dest);
+    elaborate_generate_assign(for_statement.increment(), dest);
   }
 }
