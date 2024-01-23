@@ -251,6 +251,30 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       }
     }
   }
+  else if(decl_class == ID_verilog_genvar)
+  {
+    symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
+
+    symbol.module = module_identifier;
+    symbol.value.make_nil();
+
+    for(auto &declarator : decl.declarators())
+    {
+      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
+      symbol.base_name = declarator.base_name();
+      symbol.location = declarator.source_location();
+
+      if(symbol.base_name.empty())
+        throw errort().with_location(decl.source_location())
+          << "empty symbol name";
+
+      symbol.name = hierarchical_identifier(symbol.base_name);
+      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+      add_symbol(symbol);
+    }
+  }
 }
 
 void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
@@ -364,6 +388,15 @@ void verilog_typecheckt::collect_symbols(
     collect_symbols(to_verilog_initial(module_item).statement());
   }
   else if(module_item.id() == ID_generate_block)
+  {
+    auto &generate_block = to_verilog_generate_block(module_item);
+    for(auto &sub_module_item : generate_block.module_items())
+      collect_symbols(sub_module_item);
+  }
+  else if(module_item.id() == ID_generate_for)
+  {
+  }
+  else if(module_item.id() == ID_generate_if)
   {
   }
   else if(module_item.id() == ID_inst || module_item.id() == ID_inst_builtin)
