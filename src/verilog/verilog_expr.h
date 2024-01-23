@@ -177,6 +177,35 @@ inline verilog_module_itemt &to_verilog_module_item(irept &irep)
   return static_cast<verilog_module_itemt &>(irep);
 }
 
+class verilog_generate_assignt : public verilog_module_itemt
+{
+public:
+  const exprt &lhs() const
+  {
+    return op0();
+  }
+
+  const exprt &rhs() const
+  {
+    return op1();
+  }
+};
+
+inline const verilog_generate_assignt &
+to_verilog_generate_assign(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_assign);
+  validate_operands(expr, 2, "generate_assign must have 2 operands");
+  return static_cast<const verilog_generate_assignt &>(expr);
+}
+
+inline verilog_generate_assignt &to_verilog_generate_assign(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_assign);
+  validate_operands(expr, 2, "generate_assign must have 2 operands");
+  return static_cast<verilog_generate_assignt &>(expr);
+}
+
 class verilog_generate_blockt : public verilog_module_itemt
 {
 public:
@@ -230,6 +259,23 @@ inline verilog_generate_blockt &to_verilog_generate_block(exprt &expr)
   return static_cast<verilog_generate_blockt &>(expr);
 }
 
+class verilog_generate_caset : public verilog_module_itemt
+{
+public:
+};
+
+inline const verilog_generate_caset &to_verilog_generate_case(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_case);
+  return static_cast<const verilog_generate_caset &>(expr);
+}
+
+inline verilog_generate_caset &to_verilog_generate_case(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_generate_case);
+  return static_cast<verilog_generate_caset &>(expr);
+}
+
 class verilog_generate_ift : public verilog_module_itemt
 {
 public:
@@ -271,6 +317,21 @@ class verilog_generate_fort : public verilog_module_itemt
 public:
   verilog_generate_fort() : verilog_module_itemt(ID_generate_for)
   {
+  }
+
+  const verilog_generate_assignt &init() const
+  {
+    return static_cast<const verilog_generate_assignt &>(op0());
+  }
+
+  const exprt &cond() const
+  {
+    return op1();
+  }
+
+  const verilog_generate_assignt &increment() const
+  {
+    return static_cast<const verilog_generate_assignt &>(op2());
   }
 
   const verilog_module_itemt &body() const
