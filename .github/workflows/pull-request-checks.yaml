@@ -10,7 +10,7 @@ jobs:
   check-ubuntu-20_04-make-gcc:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -59,7 +59,7 @@ jobs:
       CC: "ccache clang"
       CXX: "ccache clang++"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -127,7 +127,7 @@ jobs:
           save-always: true
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-centos8-make-gcc-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Zero ccache stats and limit in size
