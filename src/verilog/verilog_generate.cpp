@@ -158,12 +158,11 @@ void verilog_typecheckt::elaborate_generate_inst(
   interface_inst(inst);
 
   // Preserve the instantiation
-  verilog_module_itemt tmp(ID_set_genvars);
-  tmp.add_to_operands(inst);
-  irept &variables = tmp.add("variables");
+  verilog_set_genvarst tmp(inst);
+  auto &variables = tmp.variables();
 
   for(const auto &it : genvars)
-    variables.set(it.first, integer2string(it.second));
+    variables[it.first] = irept(integer2string(it.second));
 
   dest.push_back(std::move(tmp));
 }

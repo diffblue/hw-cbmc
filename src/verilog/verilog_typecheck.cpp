@@ -1548,8 +1548,8 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_set_genvars)
   {
     genvars.clear();
-    const irept &variables=module_item.find("variables");
-    for(auto &var : variables.get_named_sub())
+    const auto &variables = to_verilog_set_genvars(module_item).variables();
+    for(auto &var : variables)
       genvars[id2string(var.first)] = string2integer(var.second.id_string());
 
     if(module_item.operands().size()!=1)
