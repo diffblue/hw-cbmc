@@ -1255,6 +1255,7 @@ data_type:
 	/*
 	| ps_covergroup_identifier
 	*/
+	| type_reference
 	;
 	
 enum_name_value_opt:
@@ -1386,6 +1387,13 @@ simple_type:
 	;
 
 data_type_or_void: data_type | TOK_VOID
+	;
+
+type_reference:
+	  TOK_TYPE '(' expression ')'
+		{ init($$, ID_verilog_type_reference); mto($$, $3); }
+	| TOK_TYPE '(' data_type ')'
+		{ init($$, ID_verilog_type_reference); addswap($$, ID_type_arg, $3); }
 	;
 
 // System Verilog standard 1800-2017
