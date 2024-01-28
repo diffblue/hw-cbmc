@@ -22,7 +22,7 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
 
   const auto &declarator = decl.declarators().front();
 
-  const irep_idt &base_name = declarator.identifier();
+  const irep_idt &base_name = declarator.base_name();
   const irep_idt &port_class = decl.get_class();
   auto type = convert_type(decl.type());
   irep_idt identifier = hierarchical_identifier(base_name);
@@ -69,10 +69,9 @@ void verilog_typecheckt::collect_symbols(
   const verilog_parameter_declt::declaratort &declarator)
 {
   // A localparam or parameter declarator.
-  auto base_name = declarator.identifier();
+  auto base_name = declarator.base_name();
 
-  auto full_identifier =
-    id2string(module_identifier) + "." + id2string(base_name);
+  auto full_identifier = hierarchical_identifier(base_name);
 
   // If there's no type, parameters take the type of the
   // value. We signal this using the special type "derive_from_value".
@@ -118,9 +117,11 @@ void verilog_typecheckt::collect_symbols(const typet &type)
 
       exprt value = typecast_exprt(initializer, base_type);
 
-      symbolt enum_name_symbol(enum_name.identifier(), base_type, mode);
+      const auto base_name = enum_name.base_name();
+      const auto identifier = hierarchical_identifier(base_name);
+      symbolt enum_name_symbol(identifier, base_type, mode);
       enum_name_symbol.module = module_identifier;
-      enum_name_symbol.base_name = enum_name.base_name();
+      enum_name_symbol.base_name = base_name;
       enum_name_symbol.value = std::move(value);
       enum_name_symbol.is_macro = true;
       enum_name_symbol.is_file_local = true;
@@ -199,7 +200,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     {
       DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
-      symbol.base_name = declarator.identifier();
+      symbol.base_name = declarator.base_name();
       symbol.location = declarator.source_location();
 
       if(declarator.type().is_nil())
@@ -288,7 +289,7 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
     auto &block_statement = to_verilog_block(statement);
 
     if(block_statement.is_named())
-      enter_named_block(block_statement.identifier());
+      enter_named_block(block_statement.base_name());
 
     for(auto &block_statement : to_verilog_block(statement).operands())
       collect_symbols(to_verilog_statement(block_statement));

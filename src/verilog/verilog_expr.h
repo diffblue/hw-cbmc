@@ -217,22 +217,27 @@ public:
   }
 
   verilog_generate_blockt(
-    irep_idt _identifier,
+    irep_idt _base_name,
     verilog_module_exprt::module_itemst _module_items)
     : verilog_module_itemt(ID_generate_block)
   {
-    set(ID_identifier, _identifier);
+    set(ID_base_name, _base_name);
     module_items() = std::move(_module_items);
   }
 
-  const irep_idt &identifier() const
+  const irep_idt &base_name() const
   {
-    return get(ID_identifier);
+    return get(ID_base_name);
+  }
+
+  void base_name(irep_idt __base_name)
+  {
+    return set(ID_base_name, __base_name);
   }
 
   bool is_named() const
   {
-    return !identifier().empty();
+    return !base_name().empty();
   }
 
   const verilog_module_exprt::module_itemst &module_items() const
@@ -740,14 +745,14 @@ public:
     return (const statementst &)operands();
   }
 
-  irep_idt identifier() const
+  irep_idt base_name() const
   {
-    return get(ID_identifier);
+    return get(ID_base_name);
   }
 
   bool is_named() const
   {
-    return !get(ID_identifier).empty();
+    return !get(ID_base_name).empty();
   }
 };
 

@@ -734,7 +734,7 @@ void verilog_typecheckt::convert_block(verilog_blockt &statement)
   bool is_named=statement.is_named();
   
   if(is_named)
-    enter_named_block(statement.identifier());
+    enter_named_block(statement.base_name());
 
   for(auto &block_statement : statement.statements())
     convert_statement(block_statement);
@@ -1537,7 +1537,7 @@ void verilog_typecheckt::convert_module_item(
     bool is_named = generate_block.is_named();
 
     if(is_named)
-      enter_named_block(generate_block.identifier());
+      enter_named_block(generate_block.base_name());
 
     for(auto &sub_module_item : generate_block.module_items())
       convert_module_item(sub_module_item);

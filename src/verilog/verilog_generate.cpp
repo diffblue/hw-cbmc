@@ -72,14 +72,14 @@ void verilog_typecheckt::elaborate_generate_block(
   bool is_named = generate_block.is_named();
 
   if(is_named)
-    enter_named_block(generate_block.identifier());
+    enter_named_block(generate_block.base_name());
 
   module_itemst new_module_items;
 
   for(auto &item : generate_block.module_items())
     elaborate_generate_item(item, new_module_items);
 
-  auto identifier = generate_block.identifier();
+  auto identifier = generate_block.base_name();
   auto block = verilog_generate_blockt(identifier, std::move(new_module_items));
   block.add_source_location() = generate_block.source_location();
 
@@ -373,11 +373,12 @@ void verilog_typecheckt::elaborate_generate_for(
     auto copy_of_body = for_statement.body();
     if(copy_of_body.id() == ID_generate_block)
     {
+      auto &generate_block = to_verilog_generate_block(copy_of_body);
       const mp_integer loop_index_int =
         convert_integer_constant_expression(loop_index);
-      auto new_identifier = id2string(copy_of_body.get(ID_identifier)) + '[' +
-                            integer2string(loop_index_int) + ']';
-      copy_of_body.set(ID_identifier, new_identifier);
+      auto new_base_name = id2string(generate_block.base_name()) + '[' +
+                           integer2string(loop_index_int) + ']';
+      generate_block.base_name(new_base_name);
     }
 
     elaborate_generate_item(copy_of_body, dest);

@@ -2216,7 +2216,7 @@ generate_block:
 	| TOK_BEGIN TOK_COLON generate_block_identifier generate_item_brace TOK_END
 		{ init($$, ID_generate_block);
 		  swapop($$, $4);
-		  stack_expr($$).set(ID_identifier, stack_expr($3).id()); }
+		  stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
 	;
 
 generate_item:
@@ -2640,7 +2640,7 @@ seq_block:
           TOK_END
                 { init($$, ID_block);
                   swapop($$, $5);
-                  addswap($$, ID_identifier, $3);
+                  addswap($$, ID_base_name, $3);
                   pop_scope();
                 }
 	;
@@ -2868,7 +2868,7 @@ par_block:
           statement_or_null_brace TOK_JOIN
                 { init($$, ID_block);
                   swapop($$, $4);
-                  addswap($$, ID_identifier, $3); }
+                  addswap($$, ID_base_name, $3); }
 
 	;
 

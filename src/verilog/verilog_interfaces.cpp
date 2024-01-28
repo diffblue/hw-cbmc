@@ -592,8 +592,8 @@ void verilog_typecheckt::interface_generate_block(
 
   if(is_named)
   {
-    irep_idt identifier = generate_block.identifier();
-    enter_named_block(identifier);
+    irep_idt base_name = generate_block.base_name();
+    enter_named_block(base_name);
   }
 
   for(auto &item : generate_block.module_items())
@@ -729,13 +729,13 @@ void verilog_typecheckt::interface_block(
   
   if(is_named)
   {
-    irep_idt identifier = statement.identifier();
+    const irep_idt base_name = statement.base_name();
 
     // need to add to symbol table
     symbolt symbol;
 
     symbol.mode=mode;
-    symbol.base_name=identifier;
+    symbol.base_name = base_name;
     symbol.type=typet(ID_named_block);
     symbol.module=module_identifier;
     symbol.name = hierarchical_identifier(symbol.base_name);
@@ -749,9 +749,9 @@ void verilog_typecheckt::interface_block(
               << symbol.base_name << "' in module `"
               << module_symbol.base_name << '\'' << eom;
       throw 0;
-    }    
+    }
 
-    enter_named_block(identifier);
+    enter_named_block(base_name);
   }
 
   // do decl
