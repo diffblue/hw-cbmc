@@ -278,6 +278,24 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       add_symbol(symbol);
     }
   }
+  else if(
+    decl_class == ID_wire || decl_class == ID_supply0 ||
+    decl_class == ID_supply1 || decl_class == ID_triand ||
+    decl_class == ID_trior || decl_class == ID_trireg ||
+    decl_class == ID_tri0 || decl_class == ID_tri1 || decl_class == ID_uwire ||
+    decl_class == ID_wire || decl_class == ID_wand || decl_class == ID_wor)
+  {
+  }
+  else if(decl_class == ID_reg || decl_class == ID_var)
+  {
+  }
+  else if(decl_class == ID_function || decl_class == ID_task)
+  {
+  }
+  else
+  {
+    DATA_INVARIANT(false, "unexpected decl class " + id2string(decl_class));
+  }
 }
 
 void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
