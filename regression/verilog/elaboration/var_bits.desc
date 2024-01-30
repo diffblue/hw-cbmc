@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 var_bits.sv
 --bound 0
 ^EXIT=0$

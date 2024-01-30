@@ -389,7 +389,8 @@ void verilog_typecheckt::interface_module_decl(
   else if(
     port_class == ID_input || port_class == ID_output ||
     port_class == ID_output_register || port_class == ID_inout ||
-    port_class == ID_verilog_genvar)
+    port_class == ID_verilog_genvar || port_class == ID_reg ||
+    port_class == ID_var)
   {
     // symbol already created during elaboration
     return;
