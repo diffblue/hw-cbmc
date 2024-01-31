@@ -250,6 +250,8 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
             << "' is declared both as input and as register";
         }
       }
+
+      symbols_added.push_back(symbol.name);
     }
   }
   else if(decl_class == ID_verilog_genvar)
@@ -277,6 +279,96 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       add_symbol(symbol);
     }
+  }
+  else if(
+    decl_class == ID_wire || decl_class == ID_supply0 ||
+    decl_class == ID_supply1 || decl_class == ID_triand ||
+    decl_class == ID_trior || decl_class == ID_trireg ||
+    decl_class == ID_tri0 || decl_class == ID_tri1 || decl_class == ID_uwire ||
+    decl_class == ID_wire || decl_class == ID_wand || decl_class == ID_wor)
+  {
+  }
+  else if(decl_class == ID_reg || decl_class == ID_var)
+  {
+    symbolt symbol;
+
+    symbol.mode = mode;
+    symbol.module = module_identifier;
+    symbol.value = nil_exprt();
+    symbol.is_state_var = true;
+
+    auto type = convert_type(decl.type());
+
+    for(auto &declarator : decl.declarators())
+    {
+      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
+      symbol.base_name = declarator.base_name();
+      symbol.location = declarator.source_location();
+
+      if(declarator.type().is_nil())
+        symbol.type = type;
+      else if(declarator.type().id() == ID_array)
+        symbol.type = array_type(declarator.type(), type);
+      else
+      {
+        throw errort().with_location(symbol.location)
+          << "unexpected type on declarator";
+      }
+
+      if(symbol.base_name.empty())
+      {
+        throw errort().with_location(decl.source_location())
+          << "empty symbol name";
+      }
+
+      symbol.name = hierarchical_identifier(symbol.base_name);
+      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+      auto result = symbol_table.get_writeable(symbol.name);
+
+      if(result == nullptr)
+      {
+        symbol_table.add(symbol);
+      }
+      else
+      {
+        symbolt &osymbol = *result;
+
+        if(osymbol.type.id() == ID_code)
+        {
+          throw errort().with_location(decl.source_location())
+            << "symbol `" << symbol.base_name << "' is already declared";
+        }
+
+        if(symbol.type != osymbol.type)
+        {
+          if(get_width(symbol.type) > get_width(osymbol.type))
+            osymbol.type = symbol.type;
+        }
+
+        osymbol.is_input = symbol.is_input || osymbol.is_input;
+        osymbol.is_output = symbol.is_output || osymbol.is_output;
+        osymbol.is_state_var = symbol.is_state_var || osymbol.is_state_var;
+
+        // a register can't be an input as well
+        if(osymbol.is_input && osymbol.is_state_var)
+        {
+          throw errort().with_location(decl.source_location())
+            << "symbol `" << symbol.base_name
+            << "' is declared both as input and as register";
+        }
+      }
+
+      symbols_added.push_back(symbol.name);
+    }
+  }
+  else if(decl_class == ID_function || decl_class == ID_task)
+  {
+  }
+  else
+  {
+    DATA_INVARIANT(false, "unexpected decl class " + id2string(decl_class));
   }
 }
 
