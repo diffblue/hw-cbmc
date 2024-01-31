@@ -359,6 +359,43 @@ inline verilog_generate_fort &to_verilog_generate_for(exprt &expr)
   return static_cast<verilog_generate_fort &>(expr);
 }
 
+class verilog_set_genvarst : public verilog_module_itemt
+{
+public:
+  explicit verilog_set_genvarst(verilog_module_itemt _module_item)
+    : verilog_module_itemt(ID_set_genvars)
+  {
+    add_to_operands(std::move(_module_item));
+  }
+
+  named_subt &variables()
+  {
+    return add(ID_variables).get_named_sub();
+  }
+
+  const named_subt &variables() const
+  {
+    return find(ID_variables).get_named_sub();
+  }
+
+  const verilog_module_itemt &module_item() const
+  {
+    return static_cast<const verilog_module_itemt &>(get_sub()[0]);
+  }
+};
+
+inline const verilog_set_genvarst &to_verilog_set_genvars(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_set_genvars);
+  return static_cast<const verilog_set_genvarst &>(expr);
+}
+
+inline verilog_set_genvarst &to_verilog_set_genvars(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_set_genvars);
+  return static_cast<verilog_set_genvarst &>(expr);
+}
+
 class verilog_parameter_declt : public verilog_module_itemt
 {
 public:
