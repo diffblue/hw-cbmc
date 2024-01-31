@@ -407,4 +407,49 @@ inline verilog_enum_typet &to_verilog_enum_type(typet &type)
   return static_cast<verilog_enum_typet &>(type);
 }
 
+class verilog_type_referencet : public typet
+{
+public:
+  // This comes in two flavors: a reference to the type
+  // of a given type, or of a given expression.
+  const exprt &expression_op() const
+  {
+    if(get_sub().size() == 1)
+      return static_cast<const exprt &>(get_sub().front());
+    else
+      return static_cast<const exprt &>(get_nil_irep());
+  }
+
+  const typet &type_op() const
+  {
+    return static_cast<const typet &>(find(ID_type_arg));
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref verilog_type_referencet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * verilog_type_referencet.
+ *
+ * \param type Source type
+ * \return Object of type \ref verilog_type_referencet
+ *
+ * \ingroup gr_std_types
+*/
+inline const verilog_type_referencet &
+to_verilog_type_reference(const typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_type_reference);
+  return static_cast<const verilog_type_referencet &>(type);
+}
+
+/*! \copydoc to_verilog_type_reference(const typet &)
+ * \ingroup gr_std_types
+*/
+inline verilog_type_referencet &to_verilog_type_reference(typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_type_reference);
+  return static_cast<verilog_type_referencet &>(type);
+}
+
 #endif

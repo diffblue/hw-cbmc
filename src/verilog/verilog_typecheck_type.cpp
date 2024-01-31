@@ -164,6 +164,19 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
       return std::move(result);
     }
   }
+  else if(src.id() == ID_verilog_type_reference)
+  {
+    auto &type_reference = to_verilog_type_reference(src);
+    if(type_reference.expression_op().is_not_nil())
+    {
+      // the expression is not evaluated
+      auto expr = type_reference.expression_op();
+      convert_expr(expr);
+      return expr.type();
+    }
+    else
+      return convert_type(type_reference.type_op());
+  }
   else
   {
     error().source_location = source_location;

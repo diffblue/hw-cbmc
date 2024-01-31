@@ -1180,6 +1180,14 @@ std::string expr2verilogt::convert(const typet &type)
   {
     return "enum";
   }
+  else if(type.id() == ID_verilog_type_reference)
+  {
+    auto &type_reference = to_verilog_type_reference(type);
+    if(type_reference.expression_op().is_not_nil())
+      return "type(" + convert(type_reference.expression_op()) + ")";
+    else
+      return "type(" + convert(type_reference.type_op()) + ")";
+  }
 
   return "IREP("+type.pretty()+")";
 }
