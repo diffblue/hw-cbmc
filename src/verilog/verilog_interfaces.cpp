@@ -35,7 +35,7 @@ void verilog_typecheckt::module_interface(
     interface_module_item(module_item);
 
   // Check the typing of the ports
-  check_module_ports(module_source);
+  check_module_ports(module_source.ports());
 }
 
 /*******************************************************************\
@@ -51,10 +51,8 @@ Function: verilog_typecheckt::check_module_ports
 \*******************************************************************/
 
 void verilog_typecheckt::check_module_ports(
-  const verilog_module_sourcet &module_source)
+  const verilog_module_sourcet::port_listt &module_ports)
 {
-  const auto &module_ports = module_source.ports();
-
   auto &ports = module_symbol.type.add(ID_ports).get_sub();
   ports.resize(module_ports.size());
   std::map<irep_idt, unsigned> port_names;

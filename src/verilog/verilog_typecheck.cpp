@@ -1604,9 +1604,6 @@ void verilog_typecheckt::convert_statements(
   // typecheck the new module items
   for(auto &item : verilog_module_expr.module_items())
     convert_module_item(item);
-
-  // store the module expression in module_symbol.value
-  module_symbol.value = std::move(verilog_module_expr);
 }
 
 /*******************************************************************\
@@ -1674,8 +1671,11 @@ void verilog_typecheckt::typecheck()
 
   auto verilog_module_expr = elaborate_generate_constructs(module_source);
 
-  // Now typecheck the statements.
+  // Now typecheck the generated statements.
   convert_statements(verilog_module_expr);
+
+  // store the module expression in module_symbol.value
+  module_symbol.value = std::move(verilog_module_expr);
 }
 
 /*******************************************************************\
