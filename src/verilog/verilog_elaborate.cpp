@@ -169,89 +169,170 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     decl_class == ID_input || decl_class == ID_output ||
     decl_class == ID_output_register || decl_class == ID_inout)
   {
-    // function ports are done in interface_function_or_task
-    if(!function_or_task_name.empty())
-      return;
-
-    symbolt symbol;
-
-    symbol.mode = mode;
-    symbol.module = module_identifier;
-    symbol.value.make_nil();
-
-    auto type = convert_type(decl.type());
-
-    if(decl_class == ID_input)
-      symbol.is_input = true;
-    else if(decl_class == ID_output)
-      symbol.is_output = true;
-    else if(decl_class == ID_output_register)
+    // If these are inputs/outputs of a function/task, then
+    // adjust the function/task signature.
+    if(function_or_task_name.empty())
     {
-      symbol.is_output = true;
-      symbol.is_state_var = true;
-    }
-    else if(decl_class == ID_inout)
-    {
-      symbol.is_input = true;
-      symbol.is_output = true;
-    }
+      symbolt symbol;
 
-    for(auto &declarator : decl.declarators())
-    {
-      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+      symbol.mode = mode;
+      symbol.module = module_identifier;
+      symbol.value.make_nil();
 
-      symbol.base_name = declarator.base_name();
-      symbol.location = declarator.source_location();
+      auto type = convert_type(decl.type());
 
-      if(declarator.type().is_nil())
-        symbol.type = type;
-      else if(declarator.type().id() == ID_array)
-        symbol.type = array_type(declarator.type(), type);
-      else
+      if(decl_class == ID_input)
+        symbol.is_input = true;
+      else if(decl_class == ID_output)
+        symbol.is_output = true;
+      else if(decl_class == ID_output_register)
       {
-        throw errort().with_location(declarator.source_location())
-          << "unexpected type on declarator";
+        symbol.is_output = true;
+        symbol.is_state_var = true;
+      }
+      else if(decl_class == ID_inout)
+      {
+        symbol.is_input = true;
+        symbol.is_output = true;
       }
 
-      if(symbol.base_name.empty())
+      for(auto &declarator : decl.declarators())
       {
-        throw errort().with_location(decl.source_location())
-          << "empty symbol name";
-      }
+        DATA_INVARIANT(
+          declarator.id() == ID_declarator, "must have declarator");
 
-      symbol.name = hierarchical_identifier(symbol.base_name);
-      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+        symbol.base_name = declarator.base_name();
+        symbol.location = declarator.source_location();
 
-      auto result = symbol_table.get_writeable(symbol.name);
-
-      if(result == nullptr)
-      {
-        symbol_table.add(symbol);
-      }
-      else
-      {
-        symbolt &osymbol = *result;
-
-        if(symbol.type != osymbol.type)
-        {
-          if(get_width(symbol.type) > get_width(osymbol.type))
-            osymbol.type = symbol.type;
-        }
-
-        osymbol.is_input = symbol.is_input || osymbol.is_input;
-        osymbol.is_output = symbol.is_output || osymbol.is_output;
-        osymbol.is_state_var = symbol.is_state_var || osymbol.is_state_var;
-
-        // a register can't be an input as well
-        if(osymbol.is_input && osymbol.is_state_var)
+        if(declarator.type().is_nil())
+          symbol.type = type;
+        else if(declarator.type().id() == ID_array)
+          symbol.type = array_type(declarator.type(), type);
+        else
         {
           throw errort().with_location(declarator.source_location())
-            << "port `" << symbol.base_name
-            << "' is declared both as input and as register";
+            << "unexpected type on declarator";
         }
+
+        if(symbol.base_name.empty())
+        {
+          throw errort().with_location(decl.source_location())
+            << "empty symbol name";
+        }
+
+        symbol.name = hierarchical_identifier(symbol.base_name);
+        symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+        auto result = symbol_table.get_writeable(symbol.name);
+
+        if(result == nullptr)
+        {
+          symbol_table.add(symbol);
+        }
+        else
+        {
+          symbolt &osymbol = *result;
+
+          if(symbol.type != osymbol.type)
+          {
+            if(get_width(symbol.type) > get_width(osymbol.type))
+              osymbol.type = symbol.type;
+          }
+
+          osymbol.is_input = symbol.is_input || osymbol.is_input;
+          osymbol.is_output = symbol.is_output || osymbol.is_output;
+          osymbol.is_state_var = symbol.is_state_var || osymbol.is_state_var;
+
+          // a register can't be an input as well
+          if(osymbol.is_input && osymbol.is_state_var)
+          {
+            throw errort().with_location(declarator.source_location())
+              << "port `" << symbol.base_name
+              << "' is declared both as input and as register";
+          }
+        }
+
+        symbols_added.push_back(symbol.name);
+      }
+    }
+    else
+    {
+      symbolt symbol;
+      bool input = false, output = false;
+
+      symbol.mode = mode;
+      symbol.module = module_identifier;
+      symbol.value.make_nil();
+
+      auto type = convert_type(decl.type());
+
+      symbol.is_state_var = true;
+
+      if(decl_class == ID_input)
+      {
+        input = true;
+      }
+      else if(decl_class == ID_output)
+      {
+        output = true;
+      }
+      else if(decl_class == ID_output_register)
+      {
+        output = true;
+      }
+      else if(decl_class == ID_inout)
+      {
+        input = true;
+        output = true;
       }
 
-      symbols_added.push_back(symbol.name);
+      for(auto &declarator : decl.declarators())
+      {
+        DATA_INVARIANT(
+          declarator.id() == ID_declarator, "must have declarator");
+
+        symbol.base_name = declarator.base_name();
+
+        if(symbol.base_name.empty())
+        {
+          throw errort().with_location(decl.source_location())
+            << "empty symbol name";
+        }
+
+        symbol.type = type;
+
+        symbol.name = hierarchical_identifier(symbol.base_name);
+
+        symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+        if(input || output)
+        {
+          // Terminology clash: these aren't called 'parameters'
+          // in Verilog terminology, but inputs and outputs.
+          // We'll use the C terminology, and call them parameters.
+          // Not to be confused with module parameters.
+          symbolt &function_or_task_symbol =
+            symbol_table.get_writeable_ref(function_or_task_name);
+          code_typet::parameterst &parameters =
+            to_code_type(function_or_task_symbol.type).parameters();
+          parameters.push_back(code_typet::parametert(symbol.type));
+          code_typet::parametert &parameter = parameters.back();
+          parameter.set_base_name(symbol.base_name);
+          parameter.set_identifier(symbol.name);
+          parameter.set(ID_output, output);
+          parameter.set(ID_input, input);
+        }
+
+        auto result = symbol_table.symbols.find(symbol.name);
+
+        if(result != symbol_table.symbols.end())
+        {
+          throw errort().with_location(decl.source_location())
+            << "symbol `" << symbol.base_name << "' is already declared";
+        }
+
+        symbol_table.add(symbol);
+      }
     }
   }
   else if(decl_class == ID_verilog_genvar)
@@ -365,6 +446,54 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   }
   else if(decl_class == ID_function || decl_class == ID_task)
   {
+    typet return_type;
+
+    if(decl_class == ID_function)
+      return_type = convert_type(decl.type());
+    else
+      return_type = empty_typet();
+
+    auto base_name = decl.get_identifier();
+    auto identifier = hierarchical_identifier(base_name);
+    symbolt symbol{identifier, code_typet{{}, std::move(return_type)}, mode};
+
+    symbol.base_name = base_name;
+    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+    symbol.module = module_identifier;
+    symbol.value = decl;
+
+    add_symbol(symbol);
+
+    function_or_task_name = symbol.name;
+
+    // add a symbol for the return value of functions, if applicable
+
+    if(decl_class == ID_function)
+    {
+      symbolt return_symbol;
+      return_symbol.is_state_var = true;
+      return_symbol.is_lvalue = true;
+      return_symbol.mode = symbol.mode;
+      return_symbol.module = symbol.module;
+      return_symbol.base_name = symbol.base_name;
+      return_symbol.value = nil_exprt();
+      return_symbol.type = to_code_type(symbol.type).return_type();
+
+      return_symbol.name =
+        id2string(symbol.name) + "." + id2string(symbol.base_name);
+
+      return_symbol.pretty_name = strip_verilog_prefix(return_symbol.name);
+
+      symbol_table.add(return_symbol);
+    }
+
+    // collect symbols in the declarations within the task/function
+    for(auto &decl : decl.declarations())
+      collect_symbols(decl);
+
+    collect_symbols(decl.body());
+
+    function_or_task_name = "";
   }
   else
   {

@@ -116,7 +116,6 @@ protected:
   void module_interface(const verilog_module_sourcet &);
   void check_module_ports(const verilog_module_sourcet::port_listt &);
   void interface_module_decl(const class verilog_declt &);
-  void interface_function_or_task_decl(const class verilog_declt &);
   void interface_inst(const verilog_inst_baset &);
   void interface_inst(
     const verilog_inst_baset &,
@@ -125,7 +124,6 @@ protected:
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
   void interface_statement(const class verilog_statementt &);
-  void interface_function_or_task(const class verilog_declt &);
 
   array_typet array_type(
     const irept &src,
