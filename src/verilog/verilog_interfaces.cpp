@@ -31,9 +31,6 @@ Function: verilog_typecheckt::module_interface
 void verilog_typecheckt::module_interface(
   const verilog_module_sourcet &module_source)
 {
-  for(auto &module_item : module_source.module_items())
-    interface_module_item(module_item);
-
   // Check the typing of the ports
   check_module_ports(module_source.ports());
 }
@@ -638,6 +635,22 @@ void verilog_typecheckt::interface_module_item(
     interface_statement(to_verilog_initial(module_item).statement());
   else if(module_item.id()==ID_generate_block)
     interface_generate_block(to_verilog_generate_block(module_item));
+  else if(module_item.id() == ID_set_genvars)
+    interface_module_item(to_verilog_set_genvars(module_item).module_item());
+  else if(module_item.id() == ID_assert || module_item.id() == ID_assume)
+  {
+    // done later
+  }
+  else if(
+    module_item.id() == ID_continuous_assign ||
+    module_item.id() == ID_parameter_override)
+  {
+    // does not yield symbol
+  }
+  else
+  {
+    DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
+  }
 }
 
 /*******************************************************************\

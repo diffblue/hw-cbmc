@@ -128,11 +128,17 @@ inline verilog_statementt &to_verilog_statement(exprt &expr)
 class verilog_module_exprt : public exprt
 {
 public:
-  inline explicit verilog_module_exprt() : exprt(ID_verilog_module)
+  using module_itemst = std::vector<class verilog_module_itemt>;
+
+  verilog_module_exprt() : exprt(ID_verilog_module)
   {
   }
 
-  using module_itemst = std::vector<class verilog_module_itemt>;
+  explicit verilog_module_exprt(module_itemst _module_items)
+    : verilog_module_exprt()
+  {
+    module_items() = std::move(_module_items);
+  }
 
   const module_itemst &module_items() const
   {

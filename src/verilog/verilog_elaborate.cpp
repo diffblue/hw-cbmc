@@ -273,6 +273,8 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbol.name = hierarchical_identifier(symbol.base_name);
       symbol.pretty_name = strip_verilog_prefix(symbol.name);
 
+      genvars[symbol.base_name] = -1;
+
       add_symbol(symbol);
     }
   }
@@ -388,20 +390,19 @@ void verilog_typecheckt::collect_symbols(
   {
     collect_symbols(to_verilog_initial(module_item).statement());
   }
-  else if(module_item.id() == ID_generate_block)
+  else if(
+    module_item.id() == ID_generate_block ||
+    module_item.id() == ID_generate_for || module_item.id() == ID_generate_if)
   {
-    auto &generate_block = to_verilog_generate_block(module_item);
-    for(auto &sub_module_item : generate_block.module_items())
-      collect_symbols(sub_module_item);
+    // postpone until constants are elaborated
   }
-  else if(module_item.id() == ID_generate_for)
+  else if(module_item.id() == ID_inst)
   {
+    // these symbols are currently created in verilog_interfaces
   }
-  else if(module_item.id() == ID_generate_if)
+  else if(module_item.id() == ID_inst_builtin)
   {
-  }
-  else if(module_item.id() == ID_inst || module_item.id() == ID_inst_builtin)
-  {
+    // these symbols are currently created in verilog_interfaces
   }
   else if(module_item.id() == ID_continuous_assign)
   {
@@ -412,47 +413,22 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_parameter_override)
   {
   }
+  else if(module_item.id() == ID_set_genvars)
+  {
+    collect_symbols(to_verilog_set_genvars(module_item).module_item());
+  }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
 }
 
-void verilog_typecheckt::collect_symbols(
-  const verilog_module_sourcet &module_source)
+verilog_typecheckt::module_itemst
+verilog_typecheckt::elaborate_level(const module_itemst &module_items)
 {
-  // Gather the parameter port declarations from the module source.
-  for(auto &parameter_port_decl : module_source.parameter_port_list())
-    collect_symbols(typet(ID_nil), parameter_port_decl);
-
-  // Gather the non-parameter port symbols from the module signature
-  for(auto &port_decl : module_source.ports())
-    collect_port_symbols(port_decl);
-
-  // Gather the symbols in the module body.
-  for(auto &module_item : module_source.module_items())
+  // Gather the symbols in the given module items.
+  for(auto &module_item : module_items)
     collect_symbols(module_item);
-}
 
-void verilog_typecheckt::add_symbol(symbolt symbol)
-{
-  auto result = symbol_table.insert(std::move(symbol));
-
-  if(!result.second)
-  {
-    throw errort().with_location(symbol.location)
-      << "definition of symbol `" << symbol.base_name
-      << "\' conflicts with earlier definition at " << result.first.location;
-  }
-
-  symbols_added.push_back(result.first.name);
-}
-
-void verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
-{
-  // First collect all constant identifiers into the symbol table,
-  // with type "to_be_elaborated".
-  collect_symbols(module_source);
-
-  // Now elaborate the types of the symbols we found.
+  // Now elaborate the symbols we found.
   // This refers to "elaboration-time constants" as defined
   // in System Verilog 1800-2017, and includes
   // * parameters (including parameter ports)
@@ -462,12 +438,73 @@ void verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
   //
   // These may depend on each other, in any order.
   // We traverse these dependencies recursively.
-
   for(auto identifier : symbols_added)
-    elaborate_rec(identifier);
+    elaborate_symbol_rec(identifier);
+
+  // Now that we know parameters and other constants,
+  // process the generate constructs at this level, if any.
+  // This may yield new module items, which are elaborated
+  // recursively.
+  module_itemst result;
+
+  for(auto &module_item : module_items)
+  {
+    if(module_item.id() == ID_generate_block)
+    {
+      // elaborate_generate_item calls elaborate_level
+      // recursively.
+      auto generated_items = elaborate_generate_item(module_item);
+      result.insert(
+        result.end(), generated_items.begin(), generated_items.end());
+    }
+    else
+      result.push_back(module_item);
+  }
+
+  return result;
 }
 
-void verilog_typecheckt::elaborate_rec(irep_idt identifier)
+void verilog_typecheckt::add_symbol(symbolt symbol)
+{
+  auto location = symbol.location;
+  auto result = symbol_table.insert(std::move(symbol));
+
+  if(!result.second)
+  {
+    throw errort().with_location(location)
+      << "definition of symbol `" << symbol.base_name
+      << "' conflicts with earlier definition at line "
+      << result.first.location.get_line();
+  }
+
+  symbols_added.push_back(result.first.name);
+}
+
+verilog_module_exprt
+verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
+{
+  // IEEE 1800-2017 23.10.4.1 Order of elaboration
+  // This section suggests alternating between parameter evaluation
+  // and the expansion of generate blocks.
+
+  // At the top level of the module, include the parameter ports.
+  for(auto &parameter_port_decl : module_source.parameter_port_list())
+    collect_symbols(typet(ID_nil), parameter_port_decl);
+
+  // At the top level of the module, include the non-parameter module port
+  // module items.
+  for(auto &port_decl : module_source.ports())
+    collect_port_symbols(port_decl);
+
+  // Now elaborate the top level of the module.
+  auto elaborated_module_items = elaborate_level(module_source.module_items());
+
+  // Create verilog_module expression from the elaborated
+  // module items.
+  return verilog_module_exprt(std::move(elaborated_module_items));
+}
+
+void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
 {
   auto &symbol = *symbol_table.get_writeable(identifier);
 
