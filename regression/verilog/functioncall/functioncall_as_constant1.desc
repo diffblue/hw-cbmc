@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 functioncall_as_constant1.v
 --module main --bound 0
 ^EXIT=0$

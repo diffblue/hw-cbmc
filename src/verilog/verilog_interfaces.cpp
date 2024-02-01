@@ -136,227 +136,6 @@ void verilog_typecheckt::check_module_ports(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::interface_function_or_task
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::interface_function_or_task(
-  const verilog_declt &decl)
-{
-  irep_idt decl_class=decl.get_class();
-
-  // only add symbol for now
-  symbolt *new_symbol;
-  
-  {
-    symbolt symbol;
-
-    symbol.mode=mode;
-    symbol.module=module_identifier;
-    symbol.value=decl;
-
-    typet return_type;
-
-    if(decl_class==ID_function)
-      return_type = convert_type(decl.type());
-    else
-      return_type=empty_typet();
-
-    symbol.type = code_typet{{}, return_type};
-
-    symbol.base_name=decl.get_identifier();
-    symbol.name = hierarchical_identifier(symbol.base_name);
-    symbol.pretty_name=strip_verilog_prefix(symbol.name);
-
-    if(symbol_table.move(symbol, new_symbol))
-    {
-      error().source_location = decl.source_location();
-      error() << "symbol `" << symbol.base_name
-              << "' is already declared" << eom;
-      throw 0;
-    }
-  }
-
-  function_or_task_name=new_symbol->name;
-
-  // add a symbol for the return value of functions
-
-  if(decl_class==ID_function)
-  {
-    symbolt return_symbol;
-    return_symbol.is_state_var=true;
-    return_symbol.is_lvalue=true;
-    return_symbol.mode=new_symbol->mode;
-    return_symbol.module=new_symbol->module;
-    return_symbol.base_name=new_symbol->base_name;
-    return_symbol.value.make_nil();
-    return_symbol.type=to_code_type(new_symbol->type).return_type();
-
-    return_symbol.name=
-      id2string(new_symbol->name)+"."+
-      id2string(new_symbol->base_name);
-
-    return_symbol.pretty_name=strip_verilog_prefix(return_symbol.name);
-
-    symbol_table.add(return_symbol);
-  }
-
-  // do the declarations within the task/function
-  auto &declarations = decl.declarations();
-
-  for(auto &decl : declarations)
-    interface_function_or_task_decl(decl);
-
-  interface_statement(decl.body());
-    
-  function_or_task_name="";  
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::interface_function_or_task_decl
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::interface_function_or_task_decl(const verilog_declt &decl)
-{
-  symbolt symbol;
-  typet type;
-  bool input=false, output=false;
-
-  symbol.mode=mode;
-  symbol.module=module_identifier;
-  symbol.value.make_nil();
-  
-  const irep_idt &port_class=decl.get_class();
-
-  if(
-    port_class == ID_function || port_class == ID_task ||
-    port_class == ID_verilog_genvar)
-  {
-    error().source_location = decl.source_location();
-    error() << "this kind of declaration is not expected here" << eom;
-    throw 0;
-  }
-  else
-  {
-    type = convert_type(decl.type());
-
-    symbol.is_state_var=true;
-
-    if(port_class==ID_input)
-    {
-      input=true;
-    }
-    else if(port_class==ID_output)
-    {
-      output=true;
-    }
-    else if(port_class==ID_output_register)
-    {
-      output=true;
-    }
-    else if(port_class==ID_inout)
-    {
-      input=true;
-      output=true;
-    }
-    else if(port_class == ID_reg || port_class == ID_var)
-    {
-    }
-    else if(port_class==ID_wire)
-    {
-      error().source_location = decl.source_location();
-      error() << "wires are not allowed here" << eom;
-      throw 0;
-    }
-    else if(port_class == ID_typedef)
-    {
-      symbol.is_type = true;
-    }
-    else
-    {
-      if(
-        type.id() == ID_integer || type.id() == ID_verilog_realtime ||
-        type.id() == ID_verilog_shortreal || type.id() == ID_verilog_real)
-      {
-        symbol.is_lvalue = true;
-      }
-      else
-      {
-        error().source_location = decl.source_location();
-        error() << "unexpected port class: `" << port_class << '\'' << eom;
-        throw 0;
-      }
-    }    
-  }
-
-  for(auto &declarator : decl.declarators())
-  {
-    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
-
-    symbol.base_name = declarator.base_name();
-
-    if(symbol.base_name.empty())
-    {
-      throw errort().with_location(decl.source_location())
-        << "empty symbol name";
-    }
-
-    symbol.type = type;
-
-    symbol.name = hierarchical_identifier(symbol.base_name);
-
-    symbol.pretty_name=strip_verilog_prefix(symbol.name);
-
-    if(input || output)
-    {
-      // Terminology clash: these aren't called 'parameters'
-      // in Verilog terminology, but inputs and outputs.
-      // We'll use the C terminology, and call them parameters.
-      // Not to be confused with module parameters.
-      auto s_it=symbol_table.get_writeable(function_or_task_name);
-      CHECK_RETURN(s_it!=nullptr);
-      symbolt &function_or_task_symbol=*s_it;
-      code_typet::parameterst &parameters=
-        to_code_type(function_or_task_symbol.type).parameters();
-      parameters.push_back(code_typet::parametert(symbol.type));
-      code_typet::parametert &parameter=parameters.back();
-      parameter.set_base_name(symbol.base_name);
-      parameter.set_identifier(symbol.name);
-      parameter.set(ID_output, output);
-      parameter.set(ID_input, input);
-    }
-
-    symbol_tablet::symbolst::const_iterator result=
-      symbol_table.symbols.find(symbol.name);
-      
-    if(result!=symbol_table.symbols.end())
-    {
-      error().source_location = decl.source_location();
-      error() << "symbol `" << symbol.base_name
-              << "' is already declared" << eom;
-      throw 0;
-    }
-
-    symbol_table.add(symbol);
-  }
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::interface_module_decl
 
   Inputs:
@@ -383,7 +162,7 @@ void verilog_typecheckt::interface_module_decl(
   if(port_class==ID_function ||
      port_class==ID_task)
   {
-    interface_function_or_task(decl);
+    // symbols already created during elaboration
     return;
   }
   else if(
@@ -618,8 +397,6 @@ void verilog_typecheckt::interface_module_item(
   {
     if(function_or_task_name.empty())
       interface_module_decl(to_verilog_decl(module_item));
-    else
-      interface_function_or_task_decl(to_verilog_decl(module_item));
   }
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
@@ -683,8 +460,6 @@ void verilog_typecheckt::interface_statement(
   {
     if(function_or_task_name.empty())
       interface_module_decl(to_verilog_decl(statement));
-    else
-      interface_function_or_task_decl(to_verilog_decl(statement));
   }
   else if(statement.id()==ID_event_guard)
   {
