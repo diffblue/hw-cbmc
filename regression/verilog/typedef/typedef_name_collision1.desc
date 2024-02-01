@@ -1,0 +1,8 @@
+KNOWNBUG
+typedef_name_collision1.sv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+The name collision should be errored.

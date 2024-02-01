@@ -1,0 +1,9 @@
+KNOWNBUG
+task_name_collision.v
+
+^definition of symbol `some_task' conflicts with earlier definition at line$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+The line number is missing.
