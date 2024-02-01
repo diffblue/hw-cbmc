@@ -368,6 +368,71 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     decl_class == ID_tri0 || decl_class == ID_tri1 || decl_class == ID_uwire ||
     decl_class == ID_wire || decl_class == ID_wand || decl_class == ID_wor)
   {
+    symbolt symbol;
+
+    symbol.mode = mode;
+    symbol.module = module_identifier;
+    symbol.value = nil_exprt();
+
+    auto type = convert_type(decl.type());
+
+    for(auto &declarator : decl.declarators())
+    {
+      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
+      symbol.base_name = declarator.base_name();
+      symbol.location = declarator.source_location();
+
+      if(declarator.type().is_nil())
+        symbol.type = type;
+      else if(declarator.type().id() == ID_array)
+        symbol.type = array_type(declarator.type(), type);
+      else
+      {
+        throw errort().with_location(symbol.location)
+          << "unexpected type on declarator";
+      }
+
+      if(symbol.base_name.empty())
+      {
+        throw errort().with_location(decl.source_location());
+        error() << "empty symbol name" << eom;
+      }
+
+      symbol.name = hierarchical_identifier(symbol.base_name);
+      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+      auto result = symbol_table.get_writeable(symbol.name);
+
+      if(result == nullptr)
+      {
+        // new identifier
+        symbol_table.add(symbol);
+      }
+      else
+      {
+        // We have an existing symbol with that name.
+        // This is ok for certain symbols, e.g., input/wire, output/reg.
+        symbolt &osymbol = *result;
+
+        if(osymbol.type.id() == ID_code)
+        {
+          error().source_location = decl.source_location();
+          error() << "symbol `" << symbol.base_name << "' is already declared"
+                  << eom;
+          throw 0;
+        }
+
+        // change of type?
+        if(symbol.type != osymbol.type)
+        {
+          if(get_width(symbol.type) > get_width(osymbol.type))
+            osymbol.type = symbol.type;
+        }
+      }
+
+      symbols_added.push_back(symbol.name);
+    }
   }
   else if(decl_class == ID_reg || decl_class == ID_var)
   {

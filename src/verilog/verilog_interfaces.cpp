@@ -136,150 +136,6 @@ void verilog_typecheckt::check_module_ports(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::interface_module_decl
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::interface_module_decl(
-  const verilog_declt &decl)
-{
-  assert(function_or_task_name=="");
-  
-  symbolt symbol;
-  typet type;
-
-  symbol.mode=mode;
-  symbol.module=module_identifier;
-  symbol.value.make_nil();
-  const irep_idt &port_class=decl.get_class();
-  
-  if(port_class==ID_function ||
-     port_class==ID_task)
-  {
-    // symbols already created during elaboration
-    return;
-  }
-  else if(
-    port_class == ID_input || port_class == ID_output ||
-    port_class == ID_output_register || port_class == ID_inout ||
-    port_class == ID_verilog_genvar || port_class == ID_reg ||
-    port_class == ID_var)
-  {
-    // symbol already created during elaboration
-    return;
-  }
-  else
-  {
-    type=convert_type(decl.type());
-
-    if(port_class == ID_reg || port_class == ID_var)
-      symbol.is_state_var=true;
-    else if(port_class==ID_wire)
-    {
-    }
-    else if(port_class == ID_supply0)
-    {
-    }
-    else if(port_class == ID_supply1)
-    {
-    }
-    else if(port_class == ID_typedef)
-    {
-      symbol.is_type = true;
-    }
-    else
-    {
-      if(
-        type.id() == ID_integer || type.id() == ID_verilog_realtime ||
-        type.id() == ID_verilog_shortreal || type.id() == ID_verilog_real)
-      {
-        symbol.is_lvalue = true;
-      }
-      else
-      {
-        error().source_location = decl.source_location();
-        error() << "unexpected port class: `" << port_class << '\'' << eom;
-        throw 0;
-      }
-    }
-  }
-
-  for(auto &declarator : decl.declarators())
-  {
-    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
-
-    symbol.base_name = declarator.base_name();
-    symbol.location = declarator.source_location();
-
-    if(declarator.type().is_nil())
-      symbol.type=type;
-    else if(declarator.type().id() == ID_array)
-      symbol.type = array_type(declarator.type(), type);
-    else
-    {
-      error().source_location = symbol.location;
-      error() << "unexpected type on declarator" << eom;
-      throw 0;
-    }
-
-    if(symbol.base_name.empty())
-    {
-      error().source_location = decl.source_location();
-      error() << "empty symbol name" << eom;
-      throw 0;
-    }
-
-    symbol.name = hierarchical_identifier(symbol.base_name);
-    symbol.pretty_name = strip_verilog_prefix(symbol.name);
-
-    auto result=symbol_table.get_writeable(symbol.name);
-      
-    if(result==nullptr)
-    {
-      symbol_table.add(symbol);
-    }
-    else
-    {
-      symbolt &osymbol=*result;
-      
-      if(osymbol.type.id()==ID_code)
-      {
-        error().source_location = decl.source_location();
-        error() << "symbol `" << symbol.base_name
-                << "' is already declared" << eom;
-        throw 0;
-      }
-
-      if(symbol.type!=osymbol.type)
-      {
-        if(get_width(symbol.type)>get_width(osymbol.type))
-          osymbol.type=symbol.type;
-      }
-
-      osymbol.is_input    =symbol.is_input     || osymbol.is_input;
-      osymbol.is_output   =symbol.is_output    || osymbol.is_output;
-      osymbol.is_state_var=symbol.is_state_var || osymbol.is_state_var;
-
-      // a register can't be an input as well
-      if(osymbol.is_input && osymbol.is_state_var)
-      {
-        error().source_location = decl.source_location();
-        error() << "symbol `" << symbol.base_name
-                << "' is declared both as input and as register" << eom;
-        throw 0;
-      }
-    }
-  }
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::convert_inst
 
   Inputs:
@@ -395,8 +251,6 @@ void verilog_typecheckt::interface_module_item(
 {
   if(module_item.id()==ID_decl)
   {
-    if(function_or_task_name.empty())
-      interface_module_decl(to_verilog_decl(module_item));
   }
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
@@ -458,8 +312,6 @@ void verilog_typecheckt::interface_statement(
   }
   else if(statement.id()==ID_decl)
   {
-    if(function_or_task_name.empty())
-      interface_module_decl(to_verilog_decl(statement));
   }
   else if(statement.id()==ID_event_guard)
   {
