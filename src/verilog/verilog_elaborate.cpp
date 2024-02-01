@@ -523,6 +523,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     symbolt symbol{identifier, code_typet{{}, std::move(return_type)}, mode};
 
     symbol.base_name = base_name;
+    symbol.location = decl.source_location();
     symbol.pretty_name = strip_verilog_prefix(symbol.name);
     symbol.module = module_identifier;
     symbol.value = decl;
