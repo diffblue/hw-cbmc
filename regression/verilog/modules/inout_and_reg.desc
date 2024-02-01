@@ -1,0 +1,7 @@
+CORE
+inout_and_reg.v
+
+^file .* line 4: symbol `some_var' is declared both as input and as register$
+^EXIT=2$
+^SIGNAL=0$
+--

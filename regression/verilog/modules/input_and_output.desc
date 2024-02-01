@@ -1,0 +1,8 @@
+KNOWNBUG
+input_and_output.v
+
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+This should be errored, as some_var must not be both input and output.
