@@ -49,6 +49,8 @@ jobs:
         run: make -C regression/ebmc test-z3
       - name: Run the verilog tests
         run: make -C regression/verilog test
+      - name: Run the verilog tests with Z3
+        run: make -C regression/verilog test-z3
       - name: Print ccache stats
         run: ccache -s
 
@@ -100,6 +102,8 @@ jobs:
         run: make -C regression/ebmc test-z3
       - name: Run the verilog tests
         run: make -C regression/verilog test
+      - name: Run the verilog tests with Z3
+        run: make -C regression/verilog test-z3
       - name: Print ccache stats
         run: ccache -s
 

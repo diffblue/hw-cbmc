@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 case3.v
 --module main --bound 3 --trace
 ^EXIT=10$

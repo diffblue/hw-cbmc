@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 bit-extract2.v
 --module main --bound 1 --trace
 ^EXIT=10$

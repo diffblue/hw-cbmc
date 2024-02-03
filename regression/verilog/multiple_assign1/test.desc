@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 main.v
 --module main --bound 1
 ^EXIT=0$

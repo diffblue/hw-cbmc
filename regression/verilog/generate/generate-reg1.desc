@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 generate-reg1.v
 --module main --bound 0
 ^EXIT=0$
