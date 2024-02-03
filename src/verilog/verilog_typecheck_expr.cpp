@@ -1911,7 +1911,7 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
   if(op1.type().id()==ID_bool)
     op1 = typecast_exprt{op1, unsignedbv_typet{1}};
 
-  unsigned width=get_width(expr.op1().type());
+  auto width = get_width(expr.op1().type());
 
   mp_integer op0 = convert_integer_constant_expression(expr.op0());
 
@@ -1921,12 +1921,8 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
       << "number of replications must not be negative";
   }
 
-  if(op0==0)
-  {
-    // ruled out by IEEE 1364-2001
-    throw errort().with_location(expr.source_location())
-      << "number of replications must not be zero";
-  }
+  // IEEE 1800-2017 explicitly allows replication with
+  // count zero.
 
   {
     expr.op0()=from_integer(op0, natural_typet());
