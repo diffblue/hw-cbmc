@@ -424,7 +424,7 @@ public:
 
     const irep_idt &base_name() const
     {
-      return get(ID_identifier);
+      return get(ID_base_name);
     }
 
     const exprt &value() const

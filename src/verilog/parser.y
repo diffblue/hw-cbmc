@@ -122,7 +122,9 @@ Function: new_symbol
 inline static void new_symbol(YYSTYPE &dest, YYSTYPE &src)
 {
   init(dest, ID_symbol);
-  addswap(dest, ID_identifier, src);
+  const auto base_name = stack_expr(src).id();
+  stack_expr(dest).set(ID_identifier, base_name);
+  stack_expr(dest).set(ID_base_name, base_name);
 }
 
 /*******************************************************************\
@@ -1538,7 +1540,9 @@ list_of_param_assignments:
 
 param_assignment: param_identifier '=' const_expression
 		{ init($$, ID_parameter);
-		  addswap($$, ID_identifier, $1);
+		  auto base_name = stack_expr($1).id();
+		  stack_expr($$).set(ID_identifier, base_name);
+		  stack_expr($$).set(ID_base_name, base_name);
 		  addswap($$, ID_value, $3); }
         ;
 
@@ -2498,9 +2502,7 @@ statement_item:
 	;
 
 system_task_name: TOK_SYSIDENT
-                { init($$, ID_symbol);
-                  stack_expr($$).set(ID_identifier, stack_expr($1).id());
-                }
+                { new_symbol($$, $1); }
         ;
 
 // System Verilog standard 1800-2017
@@ -3182,7 +3184,7 @@ type_identifier: TOK_TYPE_IDENTIFIER
 		{
 		  init($$, ID_typedef_type);
 		  auto base_name = stack_expr($1).id();
-		  stack_expr($$).set(ID_C_base_name, base_name);
+		  stack_expr($$).set(ID_base_name, base_name);
 		  stack_expr($$).set(ID_identifier, PARSER.current_scope->prefix+id2string(base_name));
 		}
 	;

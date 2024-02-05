@@ -65,25 +65,22 @@ void verilog_typecheckt::check_module_ports(
 
     const auto &declarator = decl.declarators().front();
 
-    const irep_idt &name = declarator.identifier();
+    const irep_idt &base_name = declarator.base_name();
 
-    if(name.empty())
+    if(base_name.empty())
     {
       throw errort().with_location(decl.source_location())
         << "empty port name (module " << module_symbol.base_name << ')';
     }
 
-    if(port_names.find(name)!=
-       port_names.end())
+    if(port_names.find(base_name) != port_names.end())
     {
-      error().source_location = declarator.source_location();
-      error() << "duplicate port name: `" << name << '\'' << eom;
-      throw 0;
+      throw errort().with_location(declarator.source_location())
+        << "duplicate port name: `" << base_name << '\'';
     }
 
-    irep_idt identifier=
-      id2string(module_identifier)+"."+id2string(name);
-      
+    irep_idt identifier = hierarchical_identifier(base_name);
+
     const symbolt *port_symbol=0;
 
     // find the symbol
@@ -91,18 +88,16 @@ void verilog_typecheckt::check_module_ports(
     if(ns.lookup(identifier, port_symbol))
     {
       throw errort().with_location(declarator.source_location())
-        << "port `" << name << "' not declared";
+        << "port `" << base_name << "' not declared";
     }
 
     if(!port_symbol->is_input && !port_symbol->is_output)
     {
-      error().source_location = declarator.source_location();
-      error() << "port `" << name 
-              << "' not declared as input or output" << eom;
-      throw 0;
+      throw errort().with_location(declarator.source_location())
+        << "port `" << base_name << "' not declared as input or output";
     }
 
-    ports[nr].set("#name", name);
+    ports[nr].set("#name", base_name);
     ports[nr].id(ID_symbol);
     ports[nr].set(ID_identifier, identifier);
     ports[nr].set(ID_C_source_location, declarator.source_location());
@@ -110,8 +105,8 @@ void verilog_typecheckt::check_module_ports(
     ports[nr].set(ID_input, port_symbol->is_input);
     ports[nr].set(ID_output, port_symbol->is_output);
 
-    port_names[name]=nr;
-    
+    port_names[base_name] = nr;
+
     nr++;
   }
 
