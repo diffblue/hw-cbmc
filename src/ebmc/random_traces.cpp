@@ -49,11 +49,8 @@ public:
   {
   }
 
-  using outputt = enum { TRACE, WAVEFORM, VCD };
-
   void operator()(
-    outputt,
-    const std::optional<std::string> &outfile_prefix,
+    std::function<void(trans_tracet)> consumer,
     std::size_t random_seed,
     std::size_t number_of_traces,
     std::size_t number_of_trace_steps);
@@ -161,16 +158,39 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
   if(cmdline.isset("waveform") && cmdline.isset("vcd"))
     throw ebmc_errort() << "cannot do VCD and ASCII waveform simultaneously";
 
-  auto output = cmdline.isset("waveform") ? random_tracest::WAVEFORM
-                : cmdline.isset("vcd")    ? random_tracest::VCD
-                                          : random_tracest::TRACE;
+  auto consumer = [&, trace_nr = 0ull](trans_tracet trace) mutable -> void {
+    namespacet ns(transition_system.symbol_table);
+    if(cmdline.isset("vcd"))
+    {
+      PRECONDITION(outfile_prefix.has_value());
+      auto filename = outfile_prefix.value() + std::to_string(trace_nr + 1);
+      std::ofstream out(widen_if_needed(filename));
+
+      if(!out)
+        throw ebmc_errort() << "failed to write trace to " << filename;
+
+      consolet::out() << "*** Writing " << filename << '\n';
+
+      messaget message(message_handler);
+      show_trans_trace_vcd(trace, message, ns, out);
+    }
+    else if(cmdline.isset("waveform"))
+    {
+      consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
+      show_waveform(trace, ns);
+    }
+    else // default
+    {
+      consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
+      messaget message(message_handler);
+      show_trans_trace(trace, message, ns, consolet::out());
+    }
+
+    trace_nr++;
+  };
 
   random_tracest(transition_system, message_handler)(
-    output,
-    outfile_prefix,
-    random_seed,
-    number_of_traces,
-    number_of_trace_steps);
+    consumer, random_seed, number_of_traces, number_of_trace_steps);
 
   return 0;
 }
@@ -234,12 +254,21 @@ int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
   transition_systemt transition_system =
     get_transition_system(cmdline, message_handler);
 
-  if(cmdline.isset("random-trace"))
-    random_tracest(transition_system, message_handler)(
-      random_tracest::TRACE, {}, random_seed, 1, number_of_trace_steps);
-  else if(cmdline.isset("random-waveform"))
-    random_tracest(transition_system, message_handler)(
-      random_tracest::WAVEFORM, {}, random_seed, 1, number_of_trace_steps);
+  auto consumer = [&](trans_tracet trace) -> void {
+    namespacet ns(transition_system.symbol_table);
+    if(cmdline.isset("random-waveform"))
+    {
+      show_waveform(trace, ns);
+    }
+    else // default
+    {
+      messaget message(message_handler);
+      show_trans_trace(trace, message, ns, consolet::out());
+    }
+  };
+
+  random_tracest(transition_system, message_handler)(
+    consumer, random_seed, 1, number_of_trace_steps);
 
   return 0;
 }
@@ -264,12 +293,23 @@ void random_traces(
   message_handlert &message_handler)
 {
   std::size_t random_seed = 0;
+
+  auto consumer = [&, trace_nr = 0ull](trans_tracet trace) mutable -> void {
+    namespacet ns(transition_system.symbol_table);
+    auto filename = outfile_prefix + std::to_string(trace_nr + 1);
+    std::ofstream out(widen_if_needed(filename));
+
+    if(!out)
+      throw ebmc_errort() << "failed to write trace to " << filename;
+
+    messaget message(message_handler);
+    show_trans_trace_vcd(trace, message, ns, out);
+
+    trace_nr++;
+  };
+
   random_tracest(transition_system, message_handler)(
-    random_tracest::VCD,
-    outfile_prefix,
-    random_seed,
-    number_of_traces,
-    number_of_trace_steps);
+    consumer, random_seed, number_of_traces, number_of_trace_steps);
 }
 
 /*******************************************************************\
@@ -436,8 +476,7 @@ Function: random_tracest::operator()()
 \*******************************************************************/
 
 void random_tracest::operator()(
-  outputt output,
-  const std::optional<std::string> &outfile_prefix,
+  std::function<void(trans_tracet)> consumer,
   std::size_t random_seed,
   std::size_t number_of_traces,
   std::size_t number_of_trace_steps)
@@ -487,30 +526,7 @@ void random_tracest::operator()(
     {
       auto trace = compute_trans_trace(
         solver, number_of_timeframes, ns, transition_system.main_symbol->name);
-
-      if(output == VCD)
-      {
-        PRECONDITION(outfile_prefix.has_value());
-        auto filename = outfile_prefix.value() + std::to_string(trace_nr + 1);
-        std::ofstream out(widen_if_needed(filename));
-
-        if(!out)
-          throw ebmc_errort() << "failed to write trace to " << filename;
-
-        consolet::out() << "*** Writing " << filename << '\n';
-
-        show_trans_trace_vcd(trace, message, ns, out);
-      }
-      else if(output == TRACE)
-      {
-        consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
-        show_trans_trace(trace, message, ns, consolet::out());
-      }
-      else if(output == WAVEFORM)
-      {
-        consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
-        show_waveform(trace, ns);
-      }
+      consumer(std::move(trace));
     }
     break;
 
