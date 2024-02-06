@@ -57,44 +57,4 @@ inline void cnf_gate_and(cnft &cnf, literalt a, literalt b, literalt o) {
   cnf.lcnf(lits);
 }
 
-inline std::optional<std::pair<std::string, std::size_t>>
-b2h_conversion_specs(const exprt &expr)
-{
-  if (expr.id() == ID_constant) {
-    auto &constant_expr = to_constant_expr(expr);
-    const typet &type = constant_expr.type();
-    if (type.id() == ID_unsignedbv || type.id() == ID_signedbv) {
-      const std::size_t &width = to_bitvector_type(type).get_width();
-      const std::string value = id2string(constant_expr.get_value());
-      if (value.size() == width &&
-          std::all_of(value.begin(), value.end(),
-                      [](char c) { return (c == '0' || c == '1'); })) {
-        return std::make_pair(value, width);
-      }
-    }
-  }
-
-  return {};
-}
-
-inline void binary_to_hex_reinterpret(exprt &expr) {
-  auto conversion_specs = b2h_conversion_specs(expr);
-  if (conversion_specs.has_value()) {
-    expr.set(ID_value, integer2bvrep(string2integer(conversion_specs->first, 2),
-                                     conversion_specs->second));
-  }
-}
-
-inline exprt binary_to_hex(const exprt &expr) {
-  auto conversion_specs = b2h_conversion_specs(expr);
-  if (conversion_specs.has_value()) {
-    return constant_exprt{
-        integer2bvrep(string2integer(conversion_specs->first, 2),
-                      conversion_specs->second),
-        expr.type()};
-  }
-
-  return expr;
-}
-
 #endif // HW_CBMC_UTIL_EBMC_UTIL_H

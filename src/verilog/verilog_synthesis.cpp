@@ -1902,7 +1902,8 @@ exprt verilog_synthesist::case_comparison(
            new_pattern_value[i]=='x')
           new_pattern_value[i]='0';
 
-      constant_exprt new_pattern{new_pattern_value, new_type};
+      auto new_pattern =
+        from_integer(string2integer(new_pattern_value, 2), new_type);
 
       std::string new_mask_value=
         id2string(to_constant_expr(tmp).get_value());
@@ -1916,12 +1917,11 @@ exprt verilog_synthesist::case_comparison(
         else
           new_mask_value[i]='1';
 
-      constant_exprt new_mask{new_mask_value, new_type};
+      auto new_mask = from_integer(string2integer(new_mask_value, 2), new_type);
 
-      exprt bitand_expr =
-          bitand_exprt{new_case_operand, binary_to_hex(new_mask)};
+      exprt bitand_expr = bitand_exprt{new_case_operand, new_mask};
 
-      return equal_exprt{bitand_expr, binary_to_hex(new_pattern)};
+      return equal_exprt{bitand_expr, new_pattern};
     }
   }
 
