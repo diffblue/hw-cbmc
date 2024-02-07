@@ -842,6 +842,17 @@ module_port_output_declaration:
                   mto($$, $3); }
 	;
 
+port_direction:
+	  TOK_INPUT
+		{ init($$, ID_input); }
+	| TOK_OUTPUT
+		{ init($$, ID_output); }
+	| TOK_INOUT
+		{ init($$, ID_inout); }
+	| TOK_REF
+		{ init($$, ID_verilog_ref); }
+	;
+
 // System Verilog standard 1800-2017
 // A.1.4 Module items
 
@@ -1731,20 +1742,38 @@ struct_union:
 // System Verilog standard 1800-2017
 // A.2.6 Function declarations
 
-function_declaration:
-	  TOK_FUNCTION
-	  automatic_opt signing_opt range_or_type_opt
+function_declaration: TOK_FUNCTION automatic_opt function_body_declaration
+		{ $$ = $3; }
+	;
+
+function_body_declaration:
+	  signing_opt range_or_type_opt
 	  function_identifier
-		{ push_scope(stack_expr($5).get(ID_identifier), "."); }
-	  list_of_ports_opt ';'
+		{ push_scope(stack_expr($3).get(ID_identifier), "."); }
+	  ';'
           tf_item_declaration_brace statement
           TOK_ENDFUNCTION
 		{ init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_function); 
-                  addswap($$, ID_type, $4);
-                  add_as_subtype(stack_type($4), stack_type($3));
-                  addswap($$, ID_symbol, $5);
-		  addswap($$, ID_ports, $7);
+                  stack_expr($$).set(ID_class, ID_function);
+                  addswap($$, ID_type, $2);
+                  add_as_subtype(stack_type($2), stack_type($1));
+                  addswap($$, ID_symbol, $3);
+		  addswap($$, "declarations", $6);
+		  addswap($$, ID_body, $7);
+		  pop_scope();
+		}
+	| signing_opt range_or_type_opt
+	  function_identifier
+		{ push_scope(stack_expr($3).get(ID_identifier), "."); }
+	  '(' tf_port_list_opt ')' ';'
+          tf_item_declaration_brace statement
+          TOK_ENDFUNCTION
+		{ init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
+                  addswap($$, ID_type, $2);
+                  add_as_subtype(stack_type($2), stack_type($1));
+                  addswap($$, ID_symbol, $3);
+		  addswap($$, ID_ports, $6);
 		  addswap($$, "declarations", $9);
 		  addswap($$, ID_body, $10);
 		  pop_scope();
@@ -1793,20 +1822,65 @@ function_prototype: TOK_FUNCTION data_type_or_void function_identifier
 task_declaration:
 	  TOK_TASK task_identifier
 		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
-	  list_of_ports_opt ';'
+	  ';'
 	  tf_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
 		{ init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_task); 
+                  stack_expr($$).set(ID_class, ID_task);
 		  addswap($$, ID_symbol, $2);
-		  addswap($$, ID_ports, $4);
-		  addswap($$, "declarations", $6);
-		  addswap($$, ID_body, $7);
+		  addswap($$, "declarations", $5);
+		  addswap($$, ID_body, $6);
+		  pop_scope();
+                }
+	| TOK_TASK task_identifier
+		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
+	  '(' tf_port_list_opt ')' ';'
+	  tf_item_declaration_brace
+	  statement_or_null TOK_ENDTASK
+		{ init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_task);
+		  addswap($$, ID_symbol, $2);
+		  addswap($$, ID_ports, $5);
+		  addswap($$, "declarations", $8);
+		  addswap($$, ID_body, $9);
 		  pop_scope();
                 }
 	;
 
 task_prototype: TOK_TASK task_identifier
+	;
+
+tf_port_list_opt:
+	/* Optional */
+		{ init($$); }
+	| tf_port_list
+	;
+
+tf_port_list:
+	  tf_port_item
+		{ init($$); mts($$, $1); }
+	| tf_port_list ',' tf_port_item
+		{ $$ = $1; mts($$, $3); }
+	;
+
+tf_port_item:
+	  attribute_instance_brace
+	  tf_port_direction_opt
+	  data_type_or_implicit
+	  port_identifier
+	  variable_dimension_brace
+		{ init($$, ID_decl);
+		  addswap($$, ID_class, $2);
+		  addswap($$, ID_type, $3);
+		  stack_expr($4).id(ID_declarator);
+		  mto($$, $4); }
+	;
+
+tf_port_direction_opt:
+	  /* Optional */
+	| port_direction
+	| TOK_CONST TOK_REF
+		{ $$ = $2; }
 	;
 
 // System Verilog standard 1800-2017

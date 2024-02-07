@@ -532,6 +532,15 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
     function_or_task_name = symbol.name;
 
+    // do the ANSI-style ports, if applicable
+    for(auto &port_decl : decl.ports())
+    {
+      // These must have one declarator exactly.
+      DATA_INVARIANT(
+        port_decl.declarators().size() == 1, "must have one port declarator");
+      collect_symbols(port_decl); // rec. call
+    }
+
     // add a symbol for the return value of functions, if applicable
 
     if(decl_class == ID_function)
