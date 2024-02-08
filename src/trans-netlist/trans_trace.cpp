@@ -811,3 +811,65 @@ void show_trans_trace_vcd(
     show_trans_state_vcd(t, trace.states[t-1], trace.states[t], ns, out);
 }
 
+/*******************************************************************\
+
+Function: show_trans_state_numbered
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_trans_state_numbered(
+  std::size_t timeframe,
+  const trans_tracet::statet &state,
+  const namespacet &ns)
+{
+  for(const auto &a : state.assignments)
+  {
+    DATA_INVARIANT(
+      a.lhs.id() == ID_symbol, "trace assignment lhs must be symbol");
+
+    const symbolt &symbol = ns.lookup(to_symbol_expr(a.lhs));
+
+    std::cout << symbol.display_name() << '@' << timeframe << " = ";
+
+    const exprt &rhs = a.rhs;
+
+    if(rhs.is_nil())
+      std::cout << "?";
+    else
+      std::cout << from_expr(ns, symbol.name, rhs);
+
+    std::cout << '\n';
+  }
+}
+
+/*******************************************************************\
+
+Function: show_trans_trace_numbered
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_trans_trace_numbered(
+  const trans_tracet &trace,
+  messaget &message,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  PRECONDITION(!trace.states.empty());
+
+  auto l = trace.get_min_failing_timeframe().value_or(trace.states.size() - 1);
+
+  for(std::size_t t = 0; t <= l; t++)
+    show_trans_state_numbered(t, trace.states[t], ns);
+}

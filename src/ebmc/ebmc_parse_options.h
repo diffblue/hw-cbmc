@@ -28,7 +28,7 @@ public:
         "(show-ldg)(show-modules)(show-module-hierarchy)"
         "(show-trans)(show-bdds)(show-formula)"
         "(modules-xml):"
-        "(show-properties)(property):p:(trace)(waveform)"
+        "(show-properties)(property):p:(trace)(waveform)(numbered-trace)"
         "(dimacs)(module):(top):"
         "(po)(cegar)(k-induction)(2pi)(bound2):"
         "(outfile):(xml-ui)(verbosity):(gui)(json-result):"

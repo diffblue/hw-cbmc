@@ -88,4 +88,10 @@ void show_trans_trace_vcd(
   const namespacet &,
   std::ostream &);
 
+void show_trans_trace_numbered(
+  const trans_tracet &,
+  messaget &,
+  const namespacet &,
+  std::ostream &);
+
 #endif

@@ -179,6 +179,12 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
       consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
       show_waveform(trace, ns);
     }
+    else if(cmdline.isset("numbered-trace"))
+    {
+      consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
+      messaget message(message_handler);
+      show_trans_trace_numbered(trace, message, ns, consolet::out());
+    }
     else // default
     {
       consolet::out() << "*** Trace " << (trace_nr + 1) << '\n';
