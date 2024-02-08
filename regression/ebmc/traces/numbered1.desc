@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+waveform1.smv
+--bound 20 --numbered-trace
+^EXIT=10$
+^SIGNAL=0$
+^\[smv::main::spec1\] .* REFUTED$
+^Counterexample:$
+^smv::main::var::y@0 = 0$
+^smv::main::var::y@10 = 100$
+^smv::main::var::y@20 = 200$
+--
+^warning: ignoring

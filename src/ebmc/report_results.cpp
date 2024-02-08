@@ -129,6 +129,12 @@ void report_results(
           show_trans_trace(
             property.counterexample.value(), message, ns, std::cout);
         }
+        else if(cmdline.isset("numbered-trace"))
+        {
+          message.status() << "Counterexample:\n" << messaget::eom;
+          show_trans_trace_numbered(
+            property.counterexample.value(), message, ns, std::cout);
+        }
         else if(cmdline.isset("waveform"))
         {
           message.status() << "Counterexample:" << messaget::eom;
