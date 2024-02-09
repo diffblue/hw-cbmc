@@ -28,72 +28,64 @@ Function: verilog_typecheck_exprt::convert_type
 
 typet verilog_typecheck_exprt::convert_type(const typet &src)
 {
-  auto source_location = src.source_location();
+  const auto &source_location = src.source_location();
 
   if(src.is_nil() || src.id()==ID_reg)
   {
     // it's just a bit
-    return bool_typet();
+    return bool_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_integer)
   {
-    typet result = integer_typet();
-    result.add_source_location() = std::move(source_location);
-    return result;
+    return integer_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_byte)
   {
-    return signedbv_typet{8};
+    return signedbv_typet{8}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_shortint)
   {
-    return signedbv_typet{16};
+    return signedbv_typet{16}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_int)
   {
-    return signedbv_typet{32};
+    return signedbv_typet{32}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_longint)
   {
-    return signedbv_typet{64};
+    return signedbv_typet{64}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_integer)
   {
-    return signedbv_typet{32};
+    return signedbv_typet{32}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_time)
   {
-    return unsignedbv_typet{64};
+    return unsignedbv_typet{64}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_bit)
   {
-    return unsignedbv_typet{1};
+    return unsignedbv_typet{1}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_logic)
   {
-    return unsignedbv_typet{1};
+    return unsignedbv_typet{1}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_reg)
   {
-    return unsignedbv_typet{1};
+    return unsignedbv_typet{1}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_shortreal)
   {
-    typet result = verilog_shortreal_typet();
-    result.add_source_location() = std::move(source_location);
-    return result;
+    return verilog_shortreal_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_real)
   {
-    typet result = verilog_real_typet();
-    result.add_source_location() = std::move(source_location);
-    return result;
+    return verilog_real_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_realtime)
   {
-    typet result = verilog_realtime_typet();
-    result.add_source_location() = std::move(source_location);
-    return result;
+    return verilog_realtime_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_typedef_type)
   {
@@ -108,15 +100,17 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
 
     DATA_INVARIANT(symbol_ptr->is_type, "typedef symbols must be types");
 
-    return symbol_ptr->type;
+    auto result = symbol_ptr->type; // copy
+    return result.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_enum)
   {
     // Replace by base type.
     // The default base type is 'int'.
     auto &enum_type = to_verilog_enum_type(src);
-    return enum_type.has_base_type() ? enum_type.base_type()
-                                     : signedbv_typet(32);
+    auto result =
+      enum_type.has_base_type() ? enum_type.base_type() : signedbv_typet(32);
+    return result.with_source_location(source_location);
   }
   else if(src.id() == ID_array)
   {
@@ -149,7 +143,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
       dest.set(ID_C_little_endian, little_endian);
       dest.set(ID_C_offset, integer2string(offset));
 
-      return std::move(dest);
+      return std::move(dest).with_source_location(source_location);
     }
     else
     {
@@ -161,7 +155,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
       result.add_source_location() = source_location;
       result.set(ID_offset, from_integer(offset, integer_typet()));
 
-      return std::move(result);
+      return std::move(result).with_source_location(source_location);
     }
   }
   else if(src.id() == ID_verilog_type_reference)
@@ -172,7 +166,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
       // the expression is not evaluated
       auto expr = type_reference.expression_op();
       convert_expr(expr);
-      return expr.type();
+      return expr.type().with_source_location(source_location);
     }
     else
       return convert_type(type_reference.type_op());
