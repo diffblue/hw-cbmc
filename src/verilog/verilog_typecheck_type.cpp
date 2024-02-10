@@ -105,11 +105,14 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
   }
   else if(src.id() == ID_verilog_enum)
   {
-    // Replace by base type.
+    // Replace by base type, but annotate the original type.
     // The default base type is 'int'.
     auto &enum_type = to_verilog_enum_type(src);
-    auto result =
-      enum_type.has_base_type() ? enum_type.base_type() : signedbv_typet(32);
+    auto result = enum_type.has_base_type()
+                    ? convert_type(enum_type.base_type())
+                    : signedbv_typet(32);
+    result.set(ID_C_verilog_type, ID_verilog_enum);
+    result.set(ID_C_identifier, enum_type.identifier());
     return result.with_source_location(source_location);
   }
   else if(src.id() == ID_array)
@@ -130,9 +133,10 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
         ? static_cast<const type_with_subtypet &>(src).subtype()
         : typet(ID_nil);
 
-    if(subtype.is_nil() ||
-       subtype.id()==ID_signed ||
-       subtype.id()==ID_unsigned)
+    if(
+      subtype.is_nil() || subtype.id() == ID_signed ||
+      subtype.id() == ID_unsigned || subtype.id() == ID_verilog_bit ||
+      subtype.id() == ID_verilog_logic)
     {
       // we have a bit-vector type, not an array
 

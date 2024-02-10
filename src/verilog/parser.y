@@ -1253,6 +1253,11 @@ data_type:
 	          init($$, ID_verilog_enum);
 	          stack_type($$).add_subtype() = std::move(stack_type($2));
 	          stack_type($$).set(ID_enum_names, stack_type($4));
+
+	          // We attach a dummy id to distinguish two syntactically
+	          // identical enum types.
+	          auto id = PARSER.current_scope->prefix + "enum-" + PARSER.get_next_id();
+	          stack_expr($$).set(ID_identifier, id);
 	        }
 	| TOK_STRING
 	        { init($$, ID_string); }
@@ -1328,7 +1333,9 @@ enum_base_type_opt:
 		{ init($$, ID_nil); }
 	| integer_atom_type signing_opt
 	| integer_vector_type signing_opt packed_dimension_opt
+		{ $$ = $3; add_as_subtype(stack_type($$), stack_type($1)); }
 	| type_identifier packed_dimension_opt
+		{ $$ = $2; add_as_subtype(stack_type($$), stack_type($1)); }
 	;
 
 non_integer_type:
@@ -2125,7 +2132,7 @@ gate_instance:
 
 name_of_gate_instance_opt:
 	  /* Optional */ 
-	        { init($$, "$_&#ANON" + PARSER.get_dummy_id()); }
+	        { init($$, "$_&#ANON" + PARSER.get_next_id()); }
 	| name_of_gate_instance
 	;
 
@@ -2192,7 +2199,7 @@ module_instance:
 	;
 
 name_of_instance:
-	  { init($$, "$_&#ANON" + PARSER.get_dummy_id());}
+	  { init($$, "$_&#ANON" + PARSER.get_next_id());}
 	| TOK_NON_TYPE_IDENTIFIER
 	;
 

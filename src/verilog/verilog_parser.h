@@ -46,7 +46,6 @@ public:
   
   verilog_parsert():mode(VIS_VERILOG)
   {
-    dummy_id=0;
   }
 
   // parser scopes and identifiers
@@ -118,12 +117,14 @@ public:
     return scope_ptr == nullptr ? false : scope_ptr->is_type;
   }
 
-  unsigned dummy_id;
+  // These are used for anonymous gate instances
+  // and to create a unique identifier for enum types.
+  std::size_t next_id_counter = 0;
 
-  std::string get_dummy_id()
+  std::string get_next_id()
   {
-    dummy_id++;
-    return integer2string(dummy_id-1);
+    next_id_counter++;
+    return integer2string(next_id_counter - 1);
   }
 };
 
