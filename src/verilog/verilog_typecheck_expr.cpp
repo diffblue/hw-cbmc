@@ -94,6 +94,21 @@ void verilog_typecheck_exprt::propagate_type(
   exprt &expr,
   const typet &type)
 {
+  auto &verilog_dest_type = type.get(ID_C_verilog_type);
+  if(verilog_dest_type == ID_verilog_enum)
+  {
+    // IEEE 1800-2017 6.19.3: "a variable of type enum cannot be directly
+    // assigned a value that lies outside the enumeration set unless an
+    // explicit cast is used"
+    if(
+      expr.type().get(ID_C_verilog_type) != ID_verilog_enum ||
+      expr.type().get(ID_C_identifier) != type.get(ID_C_identifier))
+    {
+      throw errort().with_location(expr.source_location())
+        << "assignment to enum requires enum of the same type";
+    }
+  }
+
   if(expr.type()==type)
     return;
 
@@ -193,7 +208,7 @@ void verilog_typecheck_exprt::propagate_type(
     }
   }
 
-  typecast(expr, type);
+  implicit_typecast(expr, type);
 }
 
 /*******************************************************************\
@@ -1436,7 +1451,7 @@ bool verilog_typecheck_exprt::is_constant_expression(
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::typecast
+Function: verilog_typecheck_exprt::implicit_typecast
 
   Inputs:
 
@@ -1446,12 +1461,27 @@ Function: verilog_typecheck_exprt::typecast
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::typecast(
+void verilog_typecheck_exprt::implicit_typecast(
   exprt &expr,
   const typet &dest_type)
 {
   if(dest_type.id()==irep_idt())
     return;
+
+  auto &verilog_dest_type = dest_type.get(ID_C_verilog_type);
+  if(verilog_dest_type == ID_verilog_enum)
+  {
+    // IEEE 1800-2017 6.19.3: "a variable of type enum cannot be directly
+    // assigned a value that lies outside the enumeration set unless an
+    // explicit cast is used"
+    if(
+      expr.type().get(ID_C_verilog_type) != ID_verilog_enum ||
+      expr.type().get(ID_C_identifier) != dest_type.get(ID_C_identifier))
+    {
+      throw errort().with_location(expr.source_location())
+        << "assignment to enum requires enum of the same type";
+    }
+  }
 
   if(expr.type()==dest_type)
     return;
@@ -1800,7 +1830,8 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   }
   else if(expr.id() == ID_typecast)
   {
-    // System Verilog has got type'(expr).
+    // System Verilog has got type'(expr). This is an explicit
+    // type cast.
     expr.type() = convert_type(expr.type());
     convert_expr(expr.op());
   }

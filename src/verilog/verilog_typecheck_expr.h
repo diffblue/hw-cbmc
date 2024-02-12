@@ -130,7 +130,7 @@ private:
   [[nodiscard]] exprt convert_extractbit_expr(extractbit_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);
-  void typecast(exprt &, const typet &type);
+  void implicit_typecast(exprt &, const typet &type);
   void tc_binary_expr(exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
   void no_bool_ops(exprt &);

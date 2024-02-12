@@ -1,7 +1,8 @@
 CORE
-enum4.sv
+enum_cast1.sv
 --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
 ^\[main\.property\.p1\] always 1 == 1: PROVED up to bound 0$
+^\[main\.property\.p2\] always 2 == 2: PROVED up to bound 0$
 --
