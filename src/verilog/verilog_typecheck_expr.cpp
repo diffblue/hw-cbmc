@@ -1665,8 +1665,23 @@ void verilog_typecheck_exprt::tc_binary_expr(
   const exprt &expr,
   exprt &op0, exprt &op1)
 {
-  const typet new_type=max_type(op0.type(), op1.type());
-  
+  // Verilog enum types decay to their base type when used in relational
+  // or arithmetic expressions.
+  auto enum_decay = [](const typet &type) {
+    if(type.get(ID_C_verilog_type) == ID_verilog_enum)
+    {
+      typet result = type;
+      result.remove(ID_C_verilog_type);
+      result.remove(ID_C_identifier);
+      return result;
+    }
+    else
+      return type;
+  };
+
+  const typet new_type =
+    max_type(enum_decay(op0.type()), enum_decay(op1.type()));
+
   if(new_type.is_nil())
   {
     throw errort().with_location(expr.source_location())
