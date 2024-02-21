@@ -45,7 +45,8 @@ protected:
   int show_trans_verilog_rtl(std::ostream &out);
   int show_trans_verilog_netlist(std::ostream &out);
   void verilog_header(std::ostream &out, const std::string &desc);
-  void print_verilog_constraints(const exprt &, std::ostream &);
+  void
+  print_verilog_constraints(const exprt &, const namespacet &, std::ostream &);
 };
 
 /*******************************************************************\
@@ -210,16 +211,17 @@ Function: show_transt::print_verilog_constraints
 
 void show_transt::print_verilog_constraints(
   const exprt &expr,
+  const namespacet &ns,
   std::ostream &out)
 {
   if(expr.id()==ID_and)
   {
     forall_operands(it, expr)
-      print_verilog_constraints(*it, out);
+      print_verilog_constraints(*it, ns, out);
     return;
   }
 
-  out << "  " << expr2verilog(expr) << '\n';
+  out << "  " << expr2verilog(expr, ns) << '\n';
 
   out << '\n';
 }

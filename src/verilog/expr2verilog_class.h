@@ -15,6 +15,10 @@ Author: Daniel Kroening, kroening@kroening.com
 class expr2verilogt
 {
 public:
+  explicit expr2verilogt(const namespacet &__ns) : ns(__ns)
+  {
+  }
+
   virtual ~expr2verilogt()
   {
   }
@@ -98,6 +102,9 @@ public:
   convert_sva_sequence_concatenation(const binary_exprt &, unsigned precedence);
 
   virtual std::string convert_function_call(const class function_call_exprt &);
+
+protected:
+  const namespacet &ns;
 };
 
 #endif

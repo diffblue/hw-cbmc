@@ -84,7 +84,7 @@ Function: verilog_typecheck_baset::to_string
 
 std::string verilog_typecheck_baset::to_string(const typet &type)
 {
-  return type2verilog(type);
+  return type2verilog(type, ns);
 }
 
 /*******************************************************************\
@@ -101,7 +101,7 @@ Function: verilog_typecheck_baset::to_string
 
 std::string verilog_typecheck_baset::to_string(const exprt &expr)
 {
-  return expr2verilog(expr);
+  return expr2verilog(expr, ns);
 }
 
 /*******************************************************************\
