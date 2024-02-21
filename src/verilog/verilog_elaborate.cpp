@@ -102,8 +102,9 @@ void verilog_typecheckt::collect_symbols(const typet &type)
     if(enum_type.has_base_type())
       collect_symbols(enum_type.base_type());
 
-    // convert the type now
-    auto converted_type = convert_type(enum_type);
+    // The type needs to be converted later, as it may
+    // depend on other elaboration-time constants.
+    auto tbd_type = to_be_elaborated_typet(enum_type);
 
     // Add the enum names to the symbol table for subsequent elaboration.
     // Values are given, or the previous plus one, starting with value '0'.
@@ -111,28 +112,27 @@ void verilog_typecheckt::collect_symbols(const typet &type)
 
     for(auto &enum_name : enum_type.enum_names())
     {
+      // The initializer will also be converted later.
       if(enum_name.value().is_not_nil())
-      {
-        exprt tmp = enum_name.value();
-        convert_expr(tmp);
-        initializer = std::move(tmp);
-      }
+        initializer = enum_name.value();
 
-      exprt value = typecast_exprt(initializer, converted_type);
+      exprt value = typecast_exprt(initializer, tbd_type);
+      value.add_source_location() = enum_name.source_location();
 
       const auto base_name = enum_name.base_name();
       const auto identifier = hierarchical_identifier(base_name);
-      symbolt enum_name_symbol(identifier, converted_type, mode);
+      symbolt enum_name_symbol(identifier, tbd_type, mode);
       enum_name_symbol.module = module_identifier;
       enum_name_symbol.base_name = base_name;
       enum_name_symbol.value = std::move(value);
       enum_name_symbol.is_macro = true;
       enum_name_symbol.is_file_local = true;
+      enum_name_symbol.location = enum_name.source_location();
       add_symbol(std::move(enum_name_symbol));
 
       initializer = plus_exprt(
-        typecast_exprt(initializer, converted_type),
-        typecast_exprt(from_integer(1, integer_typet()), converted_type));
+        typecast_exprt(initializer, tbd_type),
+        typecast_exprt(from_integer(1, integer_typet()), tbd_type));
     }
   }
 }

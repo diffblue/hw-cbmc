@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 enum_initializers3.sv
 
-^EXIT=10$
+^file .* line 4: cyclic dependency when elaborating main\.B$
+^EXIT=2$
 ^SIGNAL=0$
 --
---
-Cycle not detected.

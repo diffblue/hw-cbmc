@@ -2,7 +2,7 @@ CORE
 enum_initializers1.sv
 --bound 0
 ^\[main\.property\.pA\] always 1 == 1: PROVED up to bound 0$
-^\[main\.property\.pB\] always 1 \+ 10 == 11: PROVED up to bound 0$
+^\[main\.property\.pB\] always 11 == 11: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --
