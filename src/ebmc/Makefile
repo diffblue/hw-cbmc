@@ -17,6 +17,7 @@ SRC = \
       ebmc_solver_factory.cpp \
       k_induction.cpp \
       liveness_to_safety.cpp \
+      live_signal.cpp \
       main.cpp \
       negate_property.cpp \
       neural_liveness.cpp \

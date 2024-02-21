@@ -1,0 +1,17 @@
+CORE
+counter1.sv
+--number-of-traces 1 --neural-liveness --show-traces
+^nuterm::live@0 = 0$
+^nuterm::live@1 = 0$
+^nuterm::live@2 = 0$
+^nuterm::live@3 = 0$
+^nuterm::live@4 = 0$
+^nuterm::live@5 = 0$
+^nuterm::live@6 = 0$
+^nuterm::live@7 = 0$
+^nuterm::live@8 = 0$
+^nuterm::live@9 = 0$
+^nuterm::live@10 = 1$
+^EXIT=0$
+^SIGNAL=0$
+--

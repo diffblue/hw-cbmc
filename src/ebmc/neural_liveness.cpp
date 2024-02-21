@@ -13,16 +13,21 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/string2int.h>
 #include <util/tempdir.h>
 #include <util/tempfile.h>
+#include <util/unicode.h>
 
+#include <smvlang/temporal_expr.h>
 #include <verilog/sva_expr.h>
 
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
+#include "live_signal.h"
 #include "random_traces.h"
 #include "ranking_function.h"
 #include "report_results.h"
+#include "waveform.h"
 
 #include <fstream>
+#include <iostream>
 
 /*******************************************************************\
 
@@ -51,14 +56,20 @@ protected:
   transition_systemt transition_system;
   ebmc_propertiest properties;
 
+  int show_traces();
   void validate_properties();
-  void sample(temp_dirt &);
+  void set_live_signal(const ebmc_propertiest::propertyt &, const exprt &);
+  void sample(std::function<void(trans_tracet)>);
+  std::function<void(trans_tracet)> dump_vcd_files(temp_dirt &);
   exprt guess(ebmc_propertiest::propertyt &, const temp_dirt &);
   tvt verify(ebmc_propertiest::propertyt &, const exprt &candidate);
 };
 
 int neural_livenesst::operator()()
 {
+  if(cmdline.isset("show-traces"))
+    return show_traces();
+
   if(!cmdline.isset("neural-engine"))
     throw ebmc_errort() << "give a neural engine";
 
@@ -73,19 +84,29 @@ int neural_livenesst::operator()()
   // neural liveness.
   validate_properties();
 
-  // Now sample some traces.  These get stored in a set of files, one per
-  // trace, and are then read by the neural fitting procedure.
-  temp_dirt temp_dir("ebmc-neural.XXXXXXXX");
-  sample(temp_dir);
-
   auto solver_factory = ebmc_solver_factory(cmdline);
 
-  // We now do a guess-verify loop, per property.
+  // Save the transition system expression,
+  // to add the constraint for the 'live' signal.
+  const auto original_trans_expr = transition_system.main_symbol->value;
+
+  // We do everything per property.
   for(auto &property : properties.properties)
   {
     if(property.is_disabled())
       continue;
 
+    // Set the liveness signal for the property.
+    set_live_signal(property, original_trans_expr);
+
+    // Now sample some traces.
+    // Store the traces in a set of files, one per
+    // trace, which are then read by the neural fitting procedure.
+    temp_dirt temp_dir("ebmc-neural.XXXXXXXX");
+    const auto trace_files_prefix = temp_dir("trace.");
+    sample(dump_vcd_files(temp_dir));
+
+    // Now do a guess-and-verify loop.
     while(true)
     {
       const auto candidate = guess(property, temp_dir);
@@ -98,6 +119,34 @@ int neural_livenesst::operator()()
   // report outcomes
   const namespacet ns(transition_system.symbol_table);
   report_results(cmdline, properties, ns, message.get_message_handler());
+
+  return 0;
+}
+
+int neural_livenesst::show_traces()
+{
+  transition_system =
+    get_transition_system(cmdline, message.get_message_handler());
+
+  properties = ebmc_propertiest::from_command_line(
+    cmdline, transition_system, message.get_message_handler());
+
+  validate_properties();
+
+  const auto original_trans_expr = transition_system.main_symbol->value;
+
+  for(auto &property : properties.properties)
+  {
+    if(property.is_disabled())
+      continue;
+
+    set_live_signal(property, original_trans_expr);
+
+    sample([&](trans_tracet trace) {
+      namespacet ns(transition_system.symbol_table);
+      show_trans_trace_numbered(trace, message, ns, std::cout);
+    });
+  }
 
   return 0;
 }
@@ -131,10 +180,37 @@ void neural_livenesst::validate_properties()
   }
 }
 
-void neural_livenesst::sample(temp_dirt &temp_dir)
+void neural_livenesst::set_live_signal(
+  const ebmc_propertiest::propertyt &property,
+  const exprt &original_trans_expr)
 {
-  const auto trace_files_prefix = temp_dir("trace.");
+  // restore the original transition system
+  auto main_symbol_writeable = transition_system.symbol_table.get_writeable(
+    transition_system.main_symbol->name);
+  main_symbol_writeable->value = original_trans_expr; // copy
+  ::set_live_signal(transition_system, property.expr);
+}
 
+std::function<void(trans_tracet)>
+neural_livenesst::dump_vcd_files(temp_dirt &temp_dir)
+{
+  const auto outfile_prefix = temp_dir("trace.");
+  return
+    [&, trace_nr = 0ull, outfile_prefix](trans_tracet trace) mutable -> void {
+      namespacet ns(transition_system.symbol_table);
+      auto filename = outfile_prefix + std::to_string(trace_nr + 1);
+      std::ofstream out(widen_if_needed(filename));
+
+      if(!out)
+        throw ebmc_errort() << "failed to write trace to " << filename;
+
+      message.progress() << "*** Writing " << filename << messaget::eom;
+      show_trans_trace_vcd(trace, message, ns, out);
+    };
+}
+
+void neural_livenesst::sample(std::function<void(trans_tracet)> trace_consumer)
+{
   const auto number_of_traces = [this]() -> std::size_t
   {
     if(cmdline.isset("number-of-traces"))
@@ -172,7 +248,7 @@ void neural_livenesst::sample(temp_dirt &temp_dir)
 
   random_traces(
     transition_system,
-    trace_files_prefix,
+    trace_consumer,
     number_of_traces,
     number_of_trace_steps,
     message.get_message_handler());
