@@ -324,9 +324,10 @@ void output_verilog_rtlt::assign_symbol(
   if(symbol_expr.id()!=ID_symbol &&
      symbol_expr.id()!=ID_next_symbol)
   {
+    const namespacet ns(symbol_table);
     error().source_location=lhs.find_source_location();
     error() << "assign_symbol expects symbol on lhs, but got `"
-            << expr2verilog(symbol_expr) << "'" << eom;
+            << expr2verilog(symbol_expr, ns) << "'" << eom;
     throw 0;
   }
   
@@ -380,10 +381,10 @@ Function: output_verilog_rtlt::convert_expr
 
 void output_verilog_rtlt::convert_expr(const exprt &expr)
 {
-  expr2verilogt expr2verilog;
+  namespacet ns(symbol_table);
+  expr2verilogt expr2verilog(ns);
 
   // simplify first
-  namespacet ns(symbol_table);
   exprt tmp(expr);
   simplify(tmp,ns);
   

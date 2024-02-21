@@ -2277,8 +2277,8 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
     {
       throw errort().with_location(
         to_multi_ary_expr(statement).op1().source_location())
-        << "synthesis failed to evaluate loop guard: `"
-        << expr2verilog(tmp_guard) << '\'';
+        << "synthesis failed to evaluate loop guard: `" << to_string(tmp_guard)
+        << '\'';
     }
 
     if(tmp_guard.is_false()) break;
@@ -2364,8 +2364,8 @@ void verilog_synthesist::synth_while(
     if(!tmp_guard.is_constant())
     {
       throw errort().with_location(statement.body().source_location())
-        << "synthesis failed to evaluate loop guard: `"
-        << expr2verilog(tmp_guard) << '\'';
+        << "synthesis failed to evaluate loop guard: `" << to_string(tmp_guard)
+        << '\'';
     }
 
     if(tmp_guard.is_false()) break;

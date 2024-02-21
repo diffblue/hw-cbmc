@@ -6,20 +6,23 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <algorithm>
-#include <cstdlib>
-#include <sstream>
+#include "expr2verilog.h"
+#include "expr2verilog_class.h"
 
 #include <util/arith_tools.h>
 #include <util/bitvector_types.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
+#include <util/namespace.h>
 #include <util/std_expr.h>
+#include <util/symbol.h>
 
-#include "expr2verilog.h"
-#include "expr2verilog_class.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
+
+#include <algorithm>
+#include <cstdlib>
+#include <sstream>
 
 // Precedences (higher means binds more strongly):
 // 
@@ -741,7 +744,32 @@ std::string expr2verilogt::convert_constant(
   const typet &type=src.type();
   std::string dest;
 
-  if(type.id()==ID_bool)
+  if(type.get(ID_C_verilog_type) == ID_verilog_enum)
+  {
+    // Get the numerical value.
+    auto int_value = numeric_cast_v<mp_integer>(src);
+
+    // Look up the enum type symbol.
+    auto enum_type_identifier = type.get(ID_C_identifier);
+    auto &symbol = ns.lookup(enum_type_identifier);
+    auto &enum_type = to_verilog_enum_type(symbol.type);
+
+    // Find the enum name with the matching value.
+    for(auto &enum_name : enum_type.enum_names())
+    {
+      auto &enum_symbol = ns.lookup(enum_name.identifier());
+      DATA_INVARIANT(
+        enum_symbol.value.id() == ID_constant,
+        "enum name value must be constant");
+      auto enum_int_value =
+        numeric_cast_v<mp_integer>(to_constant_expr(enum_symbol.value));
+      if(enum_int_value == int_value)
+        return id2string(enum_symbol.display_name());
+    }
+
+    return integer2string(int_value);
+  }
+  else if(type.id() == ID_bool)
   {
     if(src.is_true())
       dest+='1';
@@ -1204,9 +1232,9 @@ Function: expr2verilog
 
 \*******************************************************************/
 
-std::string expr2verilog(const exprt &expr)
+std::string expr2verilog(const exprt &expr, const namespacet &ns)
 {
-  expr2verilogt expr2verilog;
+  expr2verilogt expr2verilog(ns);
   return expr2verilog.convert(expr);
 }
 
@@ -1222,8 +1250,8 @@ Function: type2verilog
 
 \*******************************************************************/
 
-std::string type2verilog(const typet &type)
+std::string type2verilog(const typet &type, const namespacet &ns)
 {
-  expr2verilogt expr2verilog;
+  expr2verilogt expr2verilog(ns);
   return expr2verilog.convert(type);
 }

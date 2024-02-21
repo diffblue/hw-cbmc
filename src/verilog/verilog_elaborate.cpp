@@ -122,6 +122,8 @@ void verilog_typecheckt::collect_symbols(const typet &type)
       const auto base_name = enum_name.base_name();
       const auto identifier = hierarchical_identifier(base_name);
       symbolt enum_name_symbol(identifier, tbd_type, mode);
+      enum_name_symbol.pretty_name =
+        strip_verilog_prefix(enum_name_symbol.name);
       enum_name_symbol.module = module_identifier;
       enum_name_symbol.base_name = base_name;
       enum_name_symbol.value = std::move(value);
@@ -133,6 +135,17 @@ void verilog_typecheckt::collect_symbols(const typet &type)
       initializer = plus_exprt(
         typecast_exprt(initializer, tbd_type),
         typecast_exprt(from_integer(1, integer_typet()), tbd_type));
+    }
+
+    // Add a symbol for the enum to the symbol table.
+    // This allows looking up the enum name identifiers.
+    {
+      auto identifier = enum_type.identifier();
+      type_symbolt enum_type_symbol(identifier, enum_type, mode);
+      enum_type_symbol.module = module_identifier;
+      enum_type_symbol.is_file_local = true;
+      enum_type_symbol.location = enum_type.source_location();
+      add_symbol(std::move(enum_type_symbol));
     }
   }
 }

@@ -220,9 +220,9 @@ Function: verilog_languaget::from_expr
 bool verilog_languaget::from_expr(
   const exprt &expr,
   std::string &code,
-  const namespacet &)
+  const namespacet &ns)
 {
-  code=expr2verilog(expr);
+  code = expr2verilog(expr, ns);
   return false;
 }
 
@@ -243,7 +243,7 @@ bool verilog_languaget::from_type(
   std::string &code,
   const namespacet &ns)
 {
-  code=type2verilog(type);
+  code = type2verilog(type, ns);
   return false;
 }
 
