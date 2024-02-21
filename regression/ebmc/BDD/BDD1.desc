@@ -3,6 +3,6 @@ BDD1.smv
 --bdd
 ^EXIT=0$
 ^SIGNAL=0$
-^\[smv::main::spec1\] AG \(!main::var::some_var = off\): PROVED$
+^\[main::spec1\] AG \(!main::var::some_var = off\): PROVED$
 --
 ^warning: ignoring

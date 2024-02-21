@@ -3,7 +3,7 @@ range_type3.smv
 --bound 10 --trace
 ^EXIT=10$
 ^SIGNAL=0$
-^\[smv::main::spec1\] .* REFUTED$
+^\[main::spec1\] .* REFUTED$
 ^Counterexample:$
 --
 ^warning: ignoring

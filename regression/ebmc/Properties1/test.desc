@@ -1,9 +1,9 @@
 CORE broken-smt-backend
 main.smv
---bound 10 --property smv::main::spec2
+--bound 10 --property main::spec2
 ^EXIT=0$
 ^SIGNAL=0$
-^\[smv::main::spec2\] .* PROVED up to bound 10$
+^\[main::spec2\] .* PROVED up to bound 10$
 --
 ^warning: ignoring
-$\[smv::main::spec1\] .*$
+$\[main::spec1\] .*$
