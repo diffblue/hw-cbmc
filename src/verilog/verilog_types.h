@@ -22,6 +22,31 @@ public:
   }
 };
 
+/*! \brief Cast a generic typet to a \ref to_be_elaborated_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * to_be_elaborated_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref to_be_elaborated_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const to_be_elaborated_typet &to_to_be_elaborated_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_to_be_elaborated);
+  return static_cast<const to_be_elaborated_typet &>(type);
+}
+
+/*! \copydoc to_to_be_elaborated_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline to_be_elaborated_typet &to_to_be_elaborated_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_to_be_elaborated);
+  return static_cast<to_be_elaborated_typet &>(type);
+}
+
 /// Used during elaboration only,
 /// to signal that the type of the symbol is going to be the
 /// type of the value (default for parameters).
@@ -335,6 +360,11 @@ public:
     void base_name(irep_idt _base_name)
     {
       set(ID_base_name, _base_name);
+    }
+
+    const source_locationt &source_location() const
+    {
+      return static_cast<const source_locationt &>(find(ID_C_source_location));
     }
   };
 

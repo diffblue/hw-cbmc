@@ -105,7 +105,8 @@ void verilog_typecheck_exprt::propagate_type(
       expr.type().get(ID_C_identifier) != type.get(ID_C_identifier))
     {
       throw errort().with_location(expr.source_location())
-        << "assignment to enum requires enum of the same type";
+        << "assignment to enum requires enum of the same type, but got "
+        << to_string(expr.type());
     }
   }
 
@@ -1319,6 +1320,13 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
   }
   else
   {
+    // Remember the Verilog type.
+    auto expr_verilog_type = expr.type().get(ID_C_verilog_type);
+    auto expr_identifier = expr.type().get(ID_C_identifier);
+
+    // Remember the source location.
+    auto location = expr.source_location();
+
     // Do any operands first.
     bool operands_are_constant = true;
 
@@ -1344,7 +1352,19 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 
     // We fall back to the simplifier to approximate
     // the standard's definition of 'constant expression'.
-    return simplify_expr(expr, ns);
+    auto simplified_expr = simplify_expr(expr, ns);
+
+    // Restore the Verilog type, if any.
+    if(expr_verilog_type != irep_idt())
+      simplified_expr.type().set(ID_C_verilog_type, expr_verilog_type);
+
+    if(expr_identifier != irep_idt())
+      simplified_expr.type().set(ID_C_identifier, expr_identifier);
+
+    if(location.is_not_nil())
+      simplified_expr.add_source_location() = location;
+
+    return simplified_expr;
   }
 }
 
@@ -1479,7 +1499,8 @@ void verilog_typecheck_exprt::implicit_typecast(
       expr.type().get(ID_C_identifier) != dest_type.get(ID_C_identifier))
     {
       throw errort().with_location(expr.source_location())
-        << "assignment to enum requires enum of the same type";
+        << "assignment to enum requires enum of the same type, but got "
+        << to_string(expr.type());
     }
   }
 

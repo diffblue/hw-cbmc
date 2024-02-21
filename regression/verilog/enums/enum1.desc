@@ -3,5 +3,5 @@ enum1.sv
 --bound 3
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main\.property\.p1\] always main\.my_light != 0 \+ 1 \+ 1 \+ 1: REFUTED$
+^\[main\.property\.p1\] always main\.my_light != 3: REFUTED$
 --

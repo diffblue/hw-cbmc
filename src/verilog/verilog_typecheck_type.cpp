@@ -175,6 +175,11 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     else
       return convert_type(type_reference.type_op());
   }
+  else if(src.id() == ID_to_be_elaborated)
+  {
+    // recursive call
+    return convert_type(to_to_be_elaborated_type(src).subtype());
+  }
   else
   {
     error().source_location = source_location;
