@@ -1,0 +1,9 @@
+KNOWNBUG
+enum_base_type2.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[.*\] always 8 == 8: PROVED up to bound 0$
+--
+--
+The base type of an enum may depend on an elaboration-time constant.
