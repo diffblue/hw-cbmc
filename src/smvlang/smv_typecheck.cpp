@@ -181,6 +181,14 @@ protected:
   
   typedef std::unordered_map<irep_idt, definet, irep_id_hash> define_mapt;
   define_mapt define_map;
+
+  static irep_idt strip_smv_prefix(irep_idt id)
+  {
+    if(id.starts_with("smv::"))
+      return std::string(id2string(id), 5, std::string::npos);
+    else
+      return id;
+  }
 };
 
 /*******************************************************************\
@@ -1224,6 +1232,7 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
     else
       symbol.name=var.identifier;
 
+    symbol.pretty_name = strip_smv_prefix(symbol.name);
     symbol.value.make_nil();
     symbol.is_input=true;
     symbol.is_state_var=false;
@@ -1429,6 +1438,8 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         transt{ID_trans, conjunction(trans_invar), conjunction(trans_init),
                conjunction(trans_trans), module_symbol.type};
 
+    module_symbol.pretty_name = strip_smv_prefix(module_symbol.name);
+
     symbol_table.add(module_symbol);
   }
 
@@ -1447,6 +1458,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.base_name = smv_module.base_name;
         spec_symbol.name =
           id2string(smv_module.name) + "::spec" + std::to_string(nr++);
+        spec_symbol.pretty_name = strip_smv_prefix(spec_symbol.name);
         spec_symbol.module = smv_module.name;
         spec_symbol.type = bool_typet();
         spec_symbol.is_property = true;
