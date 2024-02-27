@@ -1057,6 +1057,11 @@ package_or_generate_item_declaration:
 	| class_declaration
 	| local_parameter_declaration ';'
 	| parameter_declaration ';'
+	  /* The following rule is not in the standard.
+	     However, Section 11.12 explicitly states
+	     that let constructs may be declared in a
+	     module/interface/program/checker etc. */
+	| let_declaration
         ;
 
 // System Verilog standard 1800-2017
@@ -1897,6 +1902,7 @@ block_item_declaration:
 	  attribute_instance_brace data_declaration { $$=$2; }
 	| attribute_instance_brace local_parameter_declaration ';' { $$=$2; }
 	| attribute_instance_brace parameter_declaration ';' { $$=$2; }
+	| attribute_instance_brace let_declaration { $$=$2; }
 	;
 
 // System Verilog standard 1800-2017
@@ -2012,6 +2018,59 @@ cycle_delay_range:
 
 expression_or_dist:
 	  expression
+	;
+
+// System Verilog standard 1800-2017
+// A.2.12 Let declarations
+
+let_declaration:
+	  TOK_LET let_identifier let_port_list_paren_opt '=' expression ';'
+		{
+		  init($$, ID_verilog_let);
+		  // These have one declarator exactly.
+		  stack_expr($2).id(ID_declarator);
+		  addswap($2, ID_type, $3);
+		  addswap($2, ID_value, $5);
+		  mto($$, $2);
+		}
+	;
+
+let_identifier: identifier;
+
+let_port_list_paren_opt:
+	  /* Optional */
+		{ init($$, ID_nil); }
+	| '(' let_port_list_opt ')'
+		{ $$ = $2; }
+	;
+
+let_port_list_opt:
+	  /* Optional */
+		{ init($$, ID_nil); }
+	| let_port_list
+	;
+
+let_port_list:
+	  let_port_item
+		{ init($$); mts($$, $1); }
+	| let_port_list ',' let_port_item
+		{ $$ = $1; mts($$, $3); }
+	;
+
+let_port_item:
+	  attribute_instance_brace let_formal_type formal_port_identifier
+	  variable_dimension_brace let_port_initializer_opt
+	;
+
+let_port_initializer_opt:
+	  /* Optional */
+	| '=' expression
+	;
+
+let_formal_type:
+	  data_type_or_implicit
+	| TOK_UNTYPED
+		{ init($$, ID_verilog_untyped); }
 	;
 
 // System Verilog standard 1800-2017
@@ -3235,6 +3294,8 @@ block_identifier: TOK_NON_TYPE_IDENTIFIER;
 class_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+formal_port_identifier: identifier;
 
 genvar_identifier: identifier;
 

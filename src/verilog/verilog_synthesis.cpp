@@ -2635,6 +2635,10 @@ void verilog_synthesist::synth_module_item(
   {
     // ignore for now
   }
+  else if(module_item.id() == ID_verilog_let)
+  {
+    // done already
+  }
   else
   {
     throw errort().with_location(module_item.source_location())

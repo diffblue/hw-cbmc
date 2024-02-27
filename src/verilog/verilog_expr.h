@@ -512,6 +512,32 @@ to_verilog_local_parameter_decl(irept &irep)
   return static_cast<verilog_local_parameter_declt &>(irep);
 }
 
+class verilog_lett : public verilog_module_itemt
+{
+public:
+  // These have a single declarator.
+  using declaratort = verilog_parameter_declt::declaratort;
+
+  const declaratort &declarator() const
+  {
+    return static_cast<const declaratort &>(op0());
+  }
+};
+
+inline const verilog_lett &to_verilog_let(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_let);
+  validate_operands(expr, 1, "verilog_let must have 1 operand");
+  return static_cast<const verilog_lett &>(expr);
+}
+
+inline verilog_lett &to_verilog_let(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_let);
+  validate_operands(expr, 1, "verilog_let must have 1 operand");
+  return static_cast<verilog_lett &>(expr);
+}
+
 class verilog_inst_baset : public verilog_module_itemt
 {
 public:
