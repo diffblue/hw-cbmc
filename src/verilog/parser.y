@@ -2495,11 +2495,6 @@ subroutine_call_statement:
                 { $$=$1; }
         ;
 
-subroutine_call:
-          tf_call
-        | system_tf_call
-        ;
-        
 // System Verilog standard 1800-2017
 // A.6.3 Parallel and sequential blocks
 
@@ -2509,6 +2504,37 @@ action_block:
                 { init($$, "action-else"); stack_expr($$).operands().resize(2);
                   to_binary_expr(stack_expr($$)).op0().swap(stack_expr($0));
                   to_binary_expr(stack_expr($$)).op1().swap(stack_expr($2)); }
+	;
+
+// The 1800-2017 grammar contains a block_item_declartion_brace before
+// the statement_or_null brace. This yields ambiguity owing to the
+// attribute_inance_brace in block_item_declaration and in
+// statement. Instead, we extend the statement rule to accept
+// block_item_declaration.
+seq_block:
+	  TOK_BEGIN
+	  statement_or_null_brace
+	  TOK_END
+		{ init($$, ID_block); swapop($$, $2); }
+        | TOK_BEGIN TOK_COLON block_identifier
+		{ push_scope(stack_expr($3).id(), "."); }
+          statement_or_null_brace
+          TOK_END
+                { init($$, ID_block);
+                  swapop($$, $5);
+                  addswap($$, ID_base_name, $3);
+                  pop_scope();
+                }
+	;
+
+par_block:
+	  TOK_FORK statement_or_null_brace TOK_JOIN
+		{ init($$, ID_fork); swapop($$, $2); }
+        | TOK_FORK TOK_COLON block_identifier
+          statement_or_null_brace TOK_JOIN
+                { init($$, ID_block);
+                  swapop($$, $4);
+                  addswap($$, ID_base_name, $3); }
 	;
 
 concurrent_assert_statement:
@@ -2640,6 +2666,10 @@ event_expression:
 		{ init($$, ID_negedge); mto($$, $2); }
 	;
 
+disable_statement: TOK_DISABLE hierarchical_task_or_block_identifier ';'
+		{ init($$, ID_disable); mto($$, $2); }
+	;
+
 // System Verilog standard 1800-2017
 // A.6.6 Conditional statements
 
@@ -2714,27 +2744,6 @@ for_step_assignment:
           operator_assignment
         | inc_or_dec_expression
         ;
-
-// The 1800-2017 grammar contains a block_item_declartion_brace before
-// the statement_or_null brace. This yields ambiguity owing to the
-// attribute_inance_brace in block_item_declaration and in
-// statement. Instead, we extend the statement rule to accept
-// block_item_declaration.
-seq_block:
-	  TOK_BEGIN
-	  statement_or_null_brace
-	  TOK_END
-		{ init($$, ID_block); swapop($$, $2); }
-        | TOK_BEGIN TOK_COLON block_identifier
-		{ push_scope(stack_expr($3).id(), "."); }
-          statement_or_null_brace
-          TOK_END
-                { init($$, ID_block);
-                  swapop($$, $5);
-                  addswap($$, ID_base_name, $3);
-                  pop_scope();
-                }
-	;
 
 block_item_declaration_brace:
 	  /* Optional */
@@ -2905,9 +2914,6 @@ replication:
 		{ init($$, ID_replication); mto($$, $2); mto($$, $3); }
 	;
 
-function_subroutine_call: subroutine_call
-        ;
-
 expression_brace_opt:
 	  /* Optional */
           { make_nil($$); }
@@ -2922,11 +2928,16 @@ unsigned_number: TOK_NUMBER
 // A.8.2 Subroutine calls
 
 tf_call:
-          hierarchical_tf_identifier '(' list_of_arguments ')'
+          hierarchical_tf_identifier list_of_arguments_paren
 		{ init($$, ID_function_call);
 		  stack_expr($$).operands().reserve(2);
-		  mto($$, $1); mto($$, $3); }
+		  mto($$, $1); mto($$, $2); }
         ;
+
+list_of_arguments_paren:
+	  '(' list_of_arguments ')'
+		{ $$ = $2; }
+	;
 
 list_of_arguments:
 	  /* Optional */
@@ -2948,23 +2959,15 @@ system_tf_call:
 		  mto($$, $1); mto($$, $3); }
         ;
 
+subroutine_call:
+          tf_call
+        | system_tf_call
+        ;
+
+function_subroutine_call: subroutine_call
+        ;
 
 event_trigger: TOK_MINUSGREATER hierarchical_event_identifier ';'
-	;
-
-par_block:
-	  TOK_FORK statement_or_null_brace TOK_JOIN
-		{ init($$, ID_fork); swapop($$, $2); }
-        | TOK_FORK TOK_COLON block_identifier
-          statement_or_null_brace TOK_JOIN
-                { init($$, ID_block);
-                  swapop($$, $4);
-                  addswap($$, ID_base_name, $3); }
-
-	;
-
-disable_statement: TOK_DISABLE hierarchical_task_or_block_identifier ';'
-		{ init($$, ID_disable); mto($$, $2); }
 	;
 
 // System Verilog standard 1800-2017
