@@ -728,24 +728,30 @@ module_keyword:
 	;
 
 interface_declaration:
-          TOK_INTERFACE TOK_ENDINTERFACE
+          TOK_INTERFACE interface_identifier TOK_ENDINTERFACE
+		{
+		  PARSER.parse_tree.create_interface(stack_expr($2));
+	        }
         ;
 
 program_declaration:
-          TOK_PROGRAM TOK_ENDPROGRAM
+          TOK_PROGRAM program_identifier TOK_ENDPROGRAM
+		{
+		  PARSER.parse_tree.create_program(stack_expr($2));
+	        }
         ;
 
 class_declaration:
 	  TOK_CLASS class_identifier
-	  ';'
 		{
-		  $$ = $1;
 	          push_scope(stack_expr($2).id(), "::");
 	        }
+	  ';'
 	  class_item_brace
 	  TOK_ENDCLASS
 		{
 		  pop_scope();
+		  PARSER.parse_tree.create_class(stack_expr($2));
 	        }
 	;
 
@@ -754,7 +760,6 @@ package_declaration:
           lifetime_opt
           package_identifier ';'
 		{
-		  $$ = $1;
 	          push_scope(stack_expr($4).id(), "::");
 	        }
           timeunits_declaration_opt
@@ -762,6 +767,7 @@ package_declaration:
           TOK_ENDPACKAGE
 		{
 		  pop_scope();
+		  PARSER.parse_tree.create_package(stack_expr($4));
 	        }
         ;
 
@@ -2324,9 +2330,15 @@ constant_expression: expression;
 udp_declaration: attribute_instance_brace TOK_PRIMITIVE udp_identifier 
 	  '(' udp_port_list ')' ';' udp_port_declaration_brace
 	  udp_body TOK_ENDPRIMITIVE
+		{
+		  PARSER.parse_tree.create_primitive(stack_expr($3));
+	        }
 	| attribute_instance_brace TOK_PRIMITIVE udp_identifier 
 	  '(' udp_declaration_port_list ')' ';'
 	  udp_body TOK_ENDPRIMITIVE
+		{
+		  PARSER.parse_tree.create_primitive(stack_expr($3));
+	        }
 	;
 
 // System Verilog standard 1800-2017
@@ -3256,6 +3268,8 @@ net_identifier: identifier;
 package_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 param_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+program_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 port_identifier: identifier;
 
