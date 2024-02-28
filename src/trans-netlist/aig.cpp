@@ -20,43 +20,6 @@ std::string aigt::dot_label(nodest::size_type v) const {
   return "var(" + std::to_string(v) + ")";
 }
 
-void aigt::get_terminals(terminalst &terminals) const {
-  for (nodest::size_type n = 0; n < nodes.size(); n++)
-    get_terminals_rec(n, terminals);
-}
-
-const aigt::terminal_sett &
-aigt::get_terminals_rec(literalt::var_not n, terminalst &terminals) const {
-  terminalst::iterator it = terminals.find(n);
-
-  if (it != terminals.end())
-    return it->second; // already done
-
-  assert(n < nodes.size());
-  const aig_nodet &node = nodes[n];
-
-  terminal_sett &t = terminals[n];
-
-  if (node.is_and()) {
-    if (!node.a.is_constant()) {
-      const std::set<literalt::var_not> &ta =
-          get_terminals_rec(node.a.var_no(), terminals);
-      t.insert(ta.begin(), ta.end());
-    }
-
-    if (!node.b.is_constant()) {
-      const std::set<literalt::var_not> &tb =
-          get_terminals_rec(node.b.var_no(), terminals);
-      t.insert(tb.begin(), tb.end());
-    }
-  } else // this is a terminal
-  {
-    t.insert(n);
-  }
-
-  return t;
-}
-
 void aigt::print(std::ostream &out, literalt a) const {
   if (a == const_literal(false)) {
     out << "FALSE";

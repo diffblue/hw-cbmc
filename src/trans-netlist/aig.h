@@ -48,13 +48,6 @@ public:
 
   void clear() { nodes.clear(); }
 
-  typedef std::set<literalt::var_not> terminal_sett;
-  typedef std::map<literalt::var_not, terminal_sett> terminalst;
-
-  // produces the support set
-  // should get re-written
-  void get_terminals(terminalst &terminals) const;
-
   const aig_nodet &get_node(literalt l) const { return nodes[l.var_no()]; }
 
   aig_nodet &get_node(literalt l) { return nodes[l.var_no()]; }
@@ -93,10 +86,6 @@ public:
 
   std::string label(nodest::size_type v) const;
   std::string dot_label(nodest::size_type v) const;
-
-protected:
-  const std::set<literalt::var_not> &
-  get_terminals_rec(literalt::var_not n, terminalst &terminals) const;
 };
 
 std::ostream &operator<<(std::ostream &, const aigt &);
