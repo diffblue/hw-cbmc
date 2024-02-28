@@ -42,13 +42,10 @@ bool aiger_languaget::parse(
     return true;
   }
 
-  std::istringstream line_stream(line);  
+  std::istringstream line_stream(line);
   std::string format_identifier;
-  auto &M = parse_tree.M,
-       &I = parse_tree.I,
-       &L = parse_tree.L,
-       &O = parse_tree.O,
-       &A = parse_tree.A;
+  auto &M = parse_tree.M, &I = parse_tree.I, &L = parse_tree.L,
+       &O = parse_tree.O, &A = parse_tree.A;
 
   if(!(line_stream >> format_identifier >> M >> I >> L >> O >> A))
   {
@@ -71,14 +68,16 @@ bool aiger_languaget::parse(
   {
     if(!std::getline(in, line))
     {
-      message.error() << "failed to read AIGER next-state literal line" << messaget::eom;
+      message.error() << "failed to read AIGER next-state literal line"
+                      << messaget::eom;
       return true;
     }
 
     std::size_t l = std::strtoull(line);
     if(next_state_literal == 0)
     {
-      message.error() << "failed to parse AIGER next-state literal line" << messaget::eom;
+      message.error() << "failed to parse AIGER next-state literal line"
+                      << messaget::eom;
       return true;
     }
 
@@ -93,14 +92,16 @@ bool aiger_languaget::parse(
   {
     if(!std::getline(in, line))
     {
-      message.error() << "failed to read AIGER output literal line" << messaget::eom;
+      message.error() << "failed to read AIGER output literal line"
+                      << messaget::eom;
       return true;
     }
 
     std::size_t l = std::strtoull(line);
     if(next_state_literal == 0)
     {
-      message.error() << "failed to parse AIGER output literal line" << messaget::eom;
+      message.error() << "failed to parse AIGER output literal line"
+                      << messaget::eom;
       return true;
     }
 
