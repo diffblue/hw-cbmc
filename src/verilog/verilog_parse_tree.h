@@ -35,24 +35,64 @@ public:
   struct itemt
   {
   public:
-    typedef enum { MODULE, TYPEDEF } item_typet;
+    typedef enum
+    {
+      CLASS,
+      INTERFACE,
+      MODULE,
+      PACKAGE,
+      PRIMITIVE,
+      PROGRAM,
+      TYPEDEF
+    } item_typet;
     item_typet type;
-    
+
+    explicit itemt(item_typet __type) : type(__type)
+    {
+    }
+
     verilog_modulet verilog_module;
     
     verilog_typedeft verilog_typedef;
-    
+
+    source_locationt source_location;
+
+    bool is_class() const
+    {
+      return type == CLASS;
+    }
+
+    bool is_interface() const
+    {
+      return type == INTERFACE;
+    }
+
     bool is_module() const
     {
       return type==MODULE;
+    }
+
+    bool is_package() const
+    {
+      return type == PACKAGE;
+    }
+
+    bool is_primitive() const
+    {
+      return type == PRIMITIVE;
+    }
+
+    bool is_program() const
+    {
+      return type == PROGRAM;
     }
 
     bool is_typedef() const
     {
       return type==TYPEDEF;
     }
-    
-    void show(std::ostream &out) const;
+
+    void show(std::ostream &) const;
   };
   
   typedef std::list<itemt> itemst;
@@ -72,6 +112,10 @@ public:
     return module_map.count(name)!=0;
   }
 
+  void create_class(exprt &name);
+
+  void create_interface(exprt &name);
+
   void create_module(
     irept &attributes,
     irept &module_keyword,
@@ -80,10 +124,15 @@ public:
     exprt &ports,
     exprt &statements);
 
+  void create_package(exprt &name);
+
+  void create_primitive(exprt &name);
+
+  void create_program(exprt &name);
+
   void create_typedef(irept &declaration)
   {
-    items.push_back(itemt());
-    items.back().type=itemt::TYPEDEF;
+    items.emplace_back(itemt::TYPEDEF);
     items.back().verilog_typedef.symbol.swap(declaration.get_sub()[0]);
     items.back().verilog_typedef.type.swap(declaration.add(ID_type));
   }

@@ -11,6 +11,44 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_parse_treet::create_class
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_parse_treet::create_class(exprt &name)
+{
+  items.emplace_back(itemt::CLASS);
+  itemt &item = items.back();
+  item.source_location = name.source_location();
+}
+
+/*******************************************************************\
+
+Function: verilog_parse_treet::create_interface
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_parse_treet::create_interface(exprt &name)
+{
+  items.emplace_back(itemt::INTERFACE);
+  itemt &item = items.back();
+  item.source_location = name.source_location();
+}
+
+/*******************************************************************\
+
 Function: verilog_parse_treet::create_module
 
   Inputs:
@@ -29,10 +67,8 @@ void verilog_parse_treet::create_module(
   exprt &ports,
   exprt &module_items)
 {
-  items.push_back(itemt());
+  items.emplace_back(itemt::MODULE);
   itemt &item=items.back();
-  
-  item.type=itemt::MODULE;
 
   verilog_modulet &new_module=item.verilog_module;
 
@@ -48,6 +84,63 @@ void verilog_parse_treet::create_module(
 
   // add to module map  
   module_map[new_module.name]=--items.end();
+}
+
+/*******************************************************************\
+
+Function: verilog_parse_treet::create_package
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_parse_treet::create_package(exprt &name)
+{
+  items.emplace_back(itemt::PACKAGE);
+  itemt &item = items.back();
+  item.source_location = name.source_location();
+}
+
+/*******************************************************************\
+
+Function: verilog_parse_treet::create_primitive
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_parse_treet::create_primitive(exprt &name)
+{
+  items.emplace_back(itemt::PRIMITIVE);
+  itemt &item = items.back();
+  item.source_location = name.source_location();
+}
+
+/*******************************************************************\
+
+Function: verilog_parse_treet::create_program
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_parse_treet::create_program(exprt &name)
+{
+  items.emplace_back(itemt::PROGRAM);
+  itemt &item = items.back();
+  item.source_location = name.source_location();
 }
 
 /*******************************************************************\
@@ -132,10 +225,30 @@ void verilog_parse_treet::itemt::show(std::ostream &out) const
 {
   switch(type)
   {
+  case itemt::CLASS:
+    out << "CLASS " << source_location << "\n";
+    break;
+
+  case itemt::INTERFACE:
+    out << "INTERFACE " << source_location << "\n";
+    break;
+
   case itemt::MODULE:
     verilog_module.show(out);
     break;
-    
+
+  case itemt::PACKAGE:
+    out << "PACKAGE " << source_location << "\n";
+    break;
+
+  case itemt::PRIMITIVE:
+    out << "PRIMITIVE " << source_location << "\n";
+    break;
+
+  case itemt::PROGRAM:
+    out << "PROGRAM " << source_location << "\n";
+    break;
+
   case itemt::TYPEDEF:
     verilog_typedef.show(out);
     break;
