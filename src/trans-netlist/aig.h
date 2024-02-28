@@ -28,12 +28,26 @@ public:
 
   bool is_var() const { return a.var_no() == literalt::unused_var_no(); }
 
+  // Turn this node into an 'and' gate, with the given two intputs.
   void make_and(literalt _a, literalt _b) {
     a = _a;
     b = _b;
   }
 
+  // Turn this node into a variable.
+  // Optionally, an 'auxiliary' literal may be given.
   void make_var() { a.set(literalt::unused_var_no(), false); }
+  void make_var(literalt aux)
+  {
+    make_var();
+    b = aux;
+  }
+
+  literalt aux() const
+  {
+    PRECONDITION(is_var());
+    return b;
+  }
 };
 
 class aigt {
