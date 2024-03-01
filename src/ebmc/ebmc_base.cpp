@@ -21,7 +21,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
-#include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 

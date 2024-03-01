@@ -15,9 +15,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <langapi/language.h>
 #include <langapi/mode.h>
-#include <smvlang/temporal_expr.h>
+#include <temporal-logic/temporal_expr.h>
 #include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 #include <verilog/sva_expr.h>

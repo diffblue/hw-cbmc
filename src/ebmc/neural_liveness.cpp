@@ -15,7 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/tempfile.h>
 #include <util/unicode.h>
 
-#include <smvlang/temporal_expr.h>
+#include <temporal-logic/temporal_expr.h>
 #include <verilog/sva_expr.h>
 
 #include "ebmc_error.h"

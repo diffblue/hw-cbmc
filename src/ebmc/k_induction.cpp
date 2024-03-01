@@ -10,8 +10,8 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include <util/string2int.h>
 
+#include <temporal-logic/temporal_logic.h>
 #include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 

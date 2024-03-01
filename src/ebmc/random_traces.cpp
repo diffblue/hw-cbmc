@@ -18,7 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/flattening/boolbv.h>
 #include <solvers/sat/satcheck.h>
 #include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
