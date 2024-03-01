@@ -206,7 +206,7 @@ module_head: MODULE_Token module_name { new_module($2); }
            ;
 
 sections   : /* epsilon */
-           | section sections
+           | sections section
            ;
            
 semi_opt   :    /* empty */
@@ -251,7 +251,7 @@ extern_var : variable_name EQUAL_Token QUOTE_Token
            ;
 
 vardecls   : vardecl
-           | vardecl vardecls
+           | vardecls vardecl
            ;
 
 module_argument: variable_name
@@ -366,9 +366,9 @@ vardecl    : variable_name ':' type ';'
            ;
 
 assignments: assignment
-           | assignment assignments
+           | assignments assignment
            | define
-           | define assignments
+           | assignments define
            ;
 
 assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
@@ -395,7 +395,7 @@ assignment_head: init_Token { init($$, ID_init); }
                ;
 
 defines:     define
-           | define defines
+           | defines define
            ;
 
 define     : assignment_var BECOMES_Token formula ';'
