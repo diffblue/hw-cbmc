@@ -46,6 +46,13 @@ void bmc(
     if(property.is_disabled() || property.is_failure())
       continue;
 
+    // Is it supported by the BMC engine?
+    if(!bmc_supports_property(property.expr))
+    {
+      property.failure("property not supported by BMC engine");
+      continue;
+    }
+
     ::property(
       property.expr,
       property.timeframe_handles,

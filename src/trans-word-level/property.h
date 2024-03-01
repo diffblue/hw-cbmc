@@ -23,6 +23,9 @@ void property(
   std::size_t no_timeframes,
   const namespacet &);
 
+/// Is the given property supported by word-level unwinding?
+bool bmc_supports_property(const exprt &);
+
 /// Adds a constraint that can be used to determine whether the
 /// given state has already been seen earlier in the trace.
 void lasso_constraints(
