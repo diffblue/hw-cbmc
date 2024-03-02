@@ -13,6 +13,6 @@ module main(input clk, input reset);
       counter = counter + 1;
 
   // expected to fail, owing to reset
-  p0: assert property (eventually counter == 10);
+  p0: assert property (s_eventually counter == 10);
 
 endmodule

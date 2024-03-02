@@ -36,8 +36,8 @@ module main(input clk);
   end
 
   // expected to pass
-  p_minute: assert property (eventually minute_tick);
-  p_hour: assert property (eventually hour_tick);
-  p_day: assert property (eventually day_tick);
+  p_minute: assert property (s_eventually minute_tick);
+  p_hour: assert property (s_eventually hour_tick);
+  p_day: assert property (s_eventually day_tick);
 
 endmodule

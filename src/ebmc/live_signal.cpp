@@ -37,9 +37,9 @@ void set_live_signal(transition_systemt &transition_system, exprt property)
       return to_AF_expr(expr).op();
     else if(
       expr.id() == ID_sva_always &&
-      to_sva_always_expr(expr).op().id() == ID_sva_eventually)
+      to_sva_always_expr(expr).op().id() == ID_sva_s_eventually)
     {
-      return to_sva_eventually_expr(to_sva_always_expr(expr).op()).op();
+      return to_sva_s_eventually_expr(to_sva_always_expr(expr).op()).op();
     }
     else
       PRECONDITION(false);

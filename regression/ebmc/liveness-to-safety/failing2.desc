@@ -3,6 +3,6 @@ failing2.sv
 --bound 6 --liveness-to-safety
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main\.property\.p0\] always eventually main\.counter == 0: REFUTED$
-^\[main\.property\.p1\] always eventually main\.counter == 6: REFUTED$
+^\[main\.property\.p0\] always s_eventually main\.counter == 0: REFUTED$
+^\[main\.property\.p1\] always s_eventually main\.counter == 6: REFUTED$
 --

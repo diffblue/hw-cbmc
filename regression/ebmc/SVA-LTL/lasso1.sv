@@ -13,7 +13,7 @@ module top(input clock);
       counter = counter + 1;
 
   // the counter never gets to 10
-  p0: assert property (eventually counter == 10);
+  p0: assert property (s_eventually counter == 10);
 
 endmodule
 

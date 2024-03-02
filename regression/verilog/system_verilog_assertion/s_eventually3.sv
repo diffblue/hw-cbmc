@@ -11,6 +11,6 @@ module main(input clk);
       counter = 6;
 
   // expected to fail with any bound greater or equal 11
-  p0: assert property (eventually counter<=5);
+  p0: assert property (s_eventually counter<=5);
 
 endmodule

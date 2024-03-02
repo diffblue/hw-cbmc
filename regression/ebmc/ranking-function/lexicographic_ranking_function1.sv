@@ -16,6 +16,6 @@ module main(input clk);
   end
 
   // expected to pass with ranking function {digit1, digit2}
-  p0: assert property (eventually digit1 == 0);
+  p0: assert property (s_eventually digit1 == 0);
 
 endmodule

@@ -11,7 +11,7 @@ module main(input clk);
       counter=counter+1;
 
   // both expected to fail
-  p0: assert property (eventually counter==0);
-  p1: assert property (eventually counter==6);
+  p0: assert property (s_eventually counter==0);
+  p1: assert property (s_eventually counter==6);
 
 endmodule

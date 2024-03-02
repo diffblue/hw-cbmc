@@ -15,10 +15,12 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <langapi/language.h>
 #include <langapi/mode.h>
+#include <smvlang/temporal_expr.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
+#include <verilog/sva_expr.h>
 
 #include "ebmc_base.h"
 #include "ebmc_error.h"
@@ -146,18 +148,18 @@ tvt is_ranking_function(
   {
     if(property.id() == ID_AF)
     {
-      return to_unary_expr(property).op();
+      return to_AF_expr(property).op();
     }
     else if(
       property.id() == ID_sva_always &&
-      to_unary_expr(property).op().id() == ID_sva_eventually)
+      to_unary_expr(property).op().id() == ID_sva_s_eventually)
     {
-      return to_unary_expr(to_unary_expr(property).op()).op();
+      return to_sva_s_eventually_expr(to_sva_always_expr(property).op()).op();
     }
     else
     {
       throw ebmc_errort()
-        << "unsupported property - only SVA eventually or AF implemented";
+        << "unsupported property - only SVA s_eventually or AF implemented";
     }
   }();
 

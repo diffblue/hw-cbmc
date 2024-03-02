@@ -8,6 +8,6 @@ module main(input clk);
     my_bit = !my_bit;
 
   // expected to pass
-  p0: assert property (eventually my_bit);
+  p0: assert property (s_eventually my_bit);
 
 endmodule
