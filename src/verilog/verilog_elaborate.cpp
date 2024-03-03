@@ -702,6 +702,10 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(statement.id() == ID_skip)
   {
   }
+  else if(statement.id() == ID_verilog_label_statement)
+  {
+    collect_symbols(to_verilog_label_statement(statement).statement());
+  }
   else
     DATA_INVARIANT(false, "unexpected statement: " + statement.id_string());
 }

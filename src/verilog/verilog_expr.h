@@ -808,6 +808,46 @@ inline verilog_initialt &to_verilog_initial(exprt &expr)
   return static_cast<verilog_initialt &>(expr);
 }
 
+class verilog_label_statementt : public verilog_statementt
+{
+public:
+  verilog_label_statementt() : verilog_statementt(ID_verilog_label_statement)
+  {
+    operands().resize(1);
+  }
+
+  const irep_idt &label() const
+  {
+    return get(ID_base_name);
+  }
+
+  verilog_statementt &statement()
+  {
+    return static_cast<verilog_statementt &>(op0());
+  }
+
+  const verilog_statementt &statement() const
+  {
+    return static_cast<const verilog_statementt &>(op0());
+  }
+};
+
+inline const verilog_label_statementt &
+to_verilog_label_statement(const verilog_statementt &statement)
+{
+  PRECONDITION(statement.id() == ID_verilog_label_statement);
+  unary_exprt::check(statement);
+  return static_cast<const verilog_label_statementt &>(statement);
+}
+
+inline verilog_label_statementt &
+to_verilog_label_statement(verilog_statementt &statement)
+{
+  PRECONDITION(statement.id() == ID_verilog_label_statement);
+  unary_exprt::check(statement);
+  return static_cast<verilog_label_statementt &>(statement);
+}
+
 class verilog_blockt:public verilog_statementt
 {
 public:

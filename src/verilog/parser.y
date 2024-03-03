@@ -2656,11 +2656,14 @@ statement_or_null_brace:
 		{ $$=$1; mto($$, $2); }
 	;
 
+// The rule in 1800-2017 does not have the attribute_instance_brace before
+// the label. We allow this to avoid a shift/reduce conflict.
 statement: 
-/*          block_identifier TOK_COLON attribute_instance_brace statement_item
-                { $$=$4; }
-        | */ 
-          attribute_instance_brace statement_item
+          attribute_instance_brace block_identifier TOK_COLON attribute_instance_brace statement_item
+                { init($$, ID_verilog_label_statement);
+                  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+                  mto($$, $5); }
+        | attribute_instance_brace statement_item
                 { $$=$2; }
         ;
 
