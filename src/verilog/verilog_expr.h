@@ -1579,10 +1579,11 @@ inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
   return static_cast<verilog_non_blocking_assignt &>(expr);
 }
 
-class verilog_assertt:public verilog_statementt
+/// Verilog concurrent assertions
+class verilog_assert_module_itemt : public verilog_module_itemt
 {
 public:
-  verilog_assertt():verilog_statementt(ID_assert)
+  verilog_assert_module_itemt() : verilog_module_itemt(ID_assert)
   {
     operands().resize(2);
   }
@@ -1596,26 +1597,39 @@ public:
   {
     return op0();
   }
+
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt __identifier)
+  {
+    set(ID_identifier, __identifier);
+  }
 };
 
-inline const verilog_assertt &to_verilog_assert(const exprt &expr)
+inline const verilog_assert_module_itemt &
+to_verilog_assert_module_item(const verilog_module_itemt &module_item)
 {
-  PRECONDITION(expr.id() == ID_assert);
-  binary_exprt::check(expr);
-  return static_cast<const verilog_assertt &>(expr);
+  PRECONDITION(module_item.id() == ID_assert);
+  binary_exprt::check(module_item);
+  return static_cast<const verilog_assert_module_itemt &>(module_item);
 }
 
-inline verilog_assertt &to_verilog_assert(exprt &expr)
+inline verilog_assert_module_itemt &
+to_verilog_assert_module_item(verilog_module_itemt &module_item)
 {
-  PRECONDITION(expr.id() == ID_assert);
-  binary_exprt::check(expr);
-  return static_cast<verilog_assertt &>(expr);
+  PRECONDITION(module_item.id() == ID_assert);
+  binary_exprt::check(module_item);
+  return static_cast<verilog_assert_module_itemt &>(module_item);
 }
 
-class verilog_assumet:public verilog_statementt
+/// Verilog concurrent assumptions
+class verilog_assume_module_itemt : public verilog_module_itemt
 {
 public:
-  verilog_assumet():verilog_statementt(ID_assume)
+  verilog_assume_module_itemt() : verilog_module_itemt(ID_assume)
   {
     operands().resize(2);
   }
@@ -1629,20 +1643,128 @@ public:
   {
     return op0();
   }
+
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt __identifier)
+  {
+    set(ID_identifier, __identifier);
+  }
 };
 
-inline const verilog_assumet &to_verilog_assume(const exprt &expr)
+inline const verilog_assume_module_itemt &
+to_verilog_assume_module_item(const verilog_module_itemt &module_item)
 {
-  PRECONDITION(expr.id() == ID_assume);
-  binary_exprt::check(expr);
-  return static_cast<const verilog_assumet &>(expr);
+  PRECONDITION(module_item.id() == ID_assume);
+  binary_exprt::check(module_item);
+  return static_cast<const verilog_assume_module_itemt &>(module_item);
 }
 
-inline verilog_assumet &to_verilog_assume(exprt &expr)
+inline verilog_assume_module_itemt &
+to_verilog_assume_module_item(verilog_module_itemt &module_item)
 {
-  PRECONDITION(expr.id() == ID_assume);
-  binary_exprt::check(expr);
-  return static_cast<verilog_assumet &>(expr);
+  PRECONDITION(module_item.id() == ID_assume);
+  binary_exprt::check(module_item);
+  return static_cast<verilog_assume_module_itemt &>(module_item);
+}
+
+// Intermediate assertion statements, and SMV-style assertions.
+class verilog_assert_statementt : public verilog_statementt
+{
+public:
+  verilog_assert_statementt() : verilog_statementt(ID_assert)
+  {
+    operands().resize(2);
+  }
+
+  inline exprt &condition()
+  {
+    return op0();
+  }
+
+  inline const exprt &condition() const
+  {
+    return op0();
+  }
+
+  // The Verilog intermediate assertion does not have an identifier,
+  // but the SMV-style ones do.
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+};
+
+inline const verilog_assert_statementt &
+to_verilog_assert_statement(const verilog_statementt &statement)
+{
+  PRECONDITION(statement.id() == ID_assert);
+  binary_exprt::check(statement);
+  return static_cast<const verilog_assert_statementt &>(statement);
+}
+
+inline verilog_assert_statementt &
+to_verilog_assert_statement(verilog_statementt &statement)
+{
+  PRECONDITION(statement.id() == ID_assert);
+  binary_exprt::check(statement);
+  return static_cast<verilog_assert_statementt &>(statement);
+}
+
+// Intermediate assumption statements, and SMV-style assumptions.
+class verilog_assume_statementt : public verilog_statementt
+{
+public:
+  verilog_assume_statementt() : verilog_statementt(ID_assume)
+  {
+    operands().resize(2);
+  }
+
+  inline exprt &condition()
+  {
+    return op0();
+  }
+
+  inline const exprt &condition() const
+  {
+    return op0();
+  }
+
+  // The Verilog intermediate assumption does not have an identifier,
+  // but the SMV-style ones do.
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+};
+
+inline const verilog_assume_statementt &
+to_verilog_assume_statement(const verilog_statementt &statement)
+{
+  PRECONDITION(statement.id() == ID_assume);
+  binary_exprt::check(statement);
+  return static_cast<const verilog_assume_statementt &>(statement);
+}
+
+inline verilog_assume_statementt &
+to_verilog_assume_statement(verilog_statementt &statement)
+{
+  PRECONDITION(statement.id() == ID_assume);
+  binary_exprt::check(statement);
+  return static_cast<verilog_assume_statementt &>(statement);
 }
 
 class verilog_module_sourcet : public irept

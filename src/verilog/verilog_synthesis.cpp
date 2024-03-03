@@ -1751,14 +1751,8 @@ Function: verilog_synthesist::synth_assert
 \*******************************************************************/
 
 void verilog_synthesist::synth_assert(
-  const verilog_assertt &statement)
+  const verilog_assert_statementt &statement)
 {
-  if(statement.operands().size()!=2)
-  {
-    throw errort().with_location(statement.source_location())
-      << "assert statement expected to have two operands";
-  }
-
   const irep_idt &identifier=statement.get(ID_identifier);
   symbolt &symbol=symbol_table_lookup(identifier);
   
@@ -1807,14 +1801,8 @@ Function: verilog_synthesist::synth_assume
 \*******************************************************************/
 
 void verilog_synthesist::synth_assume(
-  const verilog_assumet &statement)
+  const verilog_assume_statementt &statement)
 {
-  if(statement.operands().size()!=2)
-  {
-    throw errort().with_location(statement.source_location())
-      << "assume statement expected to have two operands";
-  }
-  
   construct=constructt::OTHER;
 
   auto condition = synth_expr(statement.condition(), symbol_statet::CURRENT);
@@ -2537,9 +2525,9 @@ void verilog_synthesist::synth_statement(
       << "synthesis of procedural continuous assignment not supported";
   }
   else if(statement.id()==ID_assert)
-    synth_assert(to_verilog_assert(statement));
+    synth_assert(to_verilog_assert_statement(statement));
   else if(statement.id()==ID_assume)
-    synth_assume(to_verilog_assume(statement));
+    synth_assume(to_verilog_assume_statement(statement));
   else if(statement.id()==ID_non_blocking_assign)
     synth_assign(statement, false);
   else if(statement.id()==ID_force)

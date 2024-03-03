@@ -150,7 +150,9 @@ protected:
   void convert_procedural_continuous_assign(
     class verilog_procedural_continuous_assignt &);
   void convert_prepostincdec(class verilog_statementt &);
-  
+  void convert_assert(verilog_assert_statementt &);
+  void convert_assume(verilog_assume_statementt &);
+
   // module items
   void convert_decl(class verilog_declt &);
   void convert_function_or_task(class verilog_declt &);
@@ -159,8 +161,8 @@ protected:
   void convert_always(class verilog_alwayst &);
   void convert_initial(class verilog_initialt &);
   void convert_continuous_assign(class verilog_continuous_assignt &);
-  void convert_assert(exprt &statement);
-  void convert_assume(exprt &statement);
+  void convert_assert(verilog_assert_module_itemt &);
+  void convert_assume(verilog_assume_module_itemt &);
   void check_lhs(const exprt &lhs, vassignt vassign);
   void convert_assignments(exprt &trans);
   void convert_module_item(class verilog_module_itemt &);
