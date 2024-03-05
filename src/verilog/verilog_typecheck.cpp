@@ -1753,3 +1753,60 @@ bool verilog_typecheck(
   verilog_typecheckt verilog_typecheck(*new_symbol, symbol_table, message_handler);
   return verilog_typecheck.typecheck_main();
 }
+
+/*******************************************************************\
+
+Function: verilog_typecheck
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_package_items(
+  const verilog_parse_treet &parse_tree,
+  symbol_table_baset &symbol_table,
+  message_handlert &message_handler)
+{
+  for(auto &item : parse_tree.items)
+    if(item.is_package_item())
+    {
+      // These might be typedefs, with enums
+
+#if 0
+      // create symbol
+      symbolt symbol;
+
+      symbol.mode=ID_Verilog;
+      symbol.base_name=verilog_module.name;
+      symbol.type=module_typet();
+      symbol.name=verilog_module_symbol(verilog_module.name);
+      symbol.base_name=verilog_module.name;
+      symbol.pretty_name=verilog_module.name;
+      symbol.module=symbol.name;
+      symbol.location=verilog_module.location;
+
+      symbol.type.add(ID_module_source)=verilog_module.to_irep();
+      
+      // put symbol into symbol_table
+      symbolt *new_symbol;
+
+      if(symbol_table.move(symbol, new_symbol))
+      {
+        messaget message(message_handler);
+        message.error() << "duplicate definition of " 
+                        << symbol.base_name << messaget::eom;
+        return true;
+      }
+
+      verilog_typecheckt verilog_typecheck(*new_symbol, symbol_table, message_handler);
+
+      return verilog_typecheck.typecheck_main();
+#endif
+    }
+
+  return false;
+}

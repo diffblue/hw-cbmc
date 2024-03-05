@@ -93,6 +93,7 @@ public:
 
 protected:
   verilog_parse_treet parse_tree;
+  bool top_scope_package_items_done = false;
 };
  
 std::unique_ptr<languaget> new_verilog_language();
