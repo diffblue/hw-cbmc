@@ -80,8 +80,6 @@ bool verilog_languaget::preprocess(
   std::ostream &outstream,
   message_handlert &message_handler)
 {
-  std::stringstream str;
-
   verilog_preprocessort preprocessor(
     instream, outstream, message_handler, path);
 
