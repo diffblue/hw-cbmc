@@ -51,6 +51,8 @@ jobs:
         run: make -C regression/verilog test
       - name: Run the verilog tests with Z3
         run: make -C regression/verilog test-z3
+      - name: Run the vlindex tests
+        run: make -C regression/vlindex test
       - name: Print ccache stats
         run: ccache -s
 
@@ -103,6 +105,8 @@ jobs:
         run: make -C regression/verilog test
       - name: Run the verilog tests with Z3
         run: make -C regression/verilog test-z3
+      - name: Run the vlindex tests
+        run: make -C regression/vlindex test
       - name: Print ccache stats
         run: ccache -s
       - name: Upload the ebmc binary
@@ -181,6 +185,8 @@ jobs:
           make -C regression/ebmc test
       - name: Run the verilog tests
         run: make -C regression/verilog test
+      - name: Run the vlindex tests
+        run: make -C regression/vlindex test
       - name: Print ccache stats
         run: ccache -s
 
@@ -222,6 +228,8 @@ jobs:
         run: make -C regression/verilog test
       - name: Run the verilog tests with Z3
         run: make -C regression/verilog test-z3
+      - name: Run the vlindex tests
+        run: make -C regression/vlindex test
       - name: Print ccache stats
         run: ccache -s
 
