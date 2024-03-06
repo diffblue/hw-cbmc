@@ -8,7 +8,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "live_signal.h"
 
-#include <smvlang/temporal_expr.h>
+#include <temporal-logic/temporal_expr.h>
 #include <verilog/sva_expr.h>
 
 #include "transition_system.h"

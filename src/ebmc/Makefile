@@ -19,7 +19,6 @@ SRC = \
       liveness_to_safety.cpp \
       live_signal.cpp \
       main.cpp \
-      negate_property.cpp \
       neural_liveness.cpp \
       random_traces.cpp \
       ranking_function.cpp \
@@ -38,6 +37,7 @@ OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       $(CPROVER_DIR)/big-int/big-int$(LIBEXT) \
       $(CPROVER_DIR)/util/c_types$(OBJEXT) \
       $(CPROVER_DIR)/goto-programs/xml_expr$(OBJEXT) \
+      ../temporal-logic/temporal-logic$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT) \

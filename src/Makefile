@@ -1,4 +1,5 @@
-DIRS = ebmc hw-cbmc trans-word-level trans-netlist verilog vhdl smvlang ic3 aiger
+DIRS = ebmc hw-cbmc temporal-logic trans-word-level trans-netlist \
+       verilog vhdl smvlang ic3 aiger
 
 EBMC_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CPROVER_DIR:=../lib/cbmc/src
@@ -15,7 +16,7 @@ $(patsubst %, %.dir, $(DIRS)):
 vhdl.dir: cprover.dir
 
 ebmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir vhdl.dir \
-      smvlang.dir ic3.dir aiger.dir cprover.dir
+      smvlang.dir ic3.dir aiger.dir temporal-logic.dir cprover.dir
 
 hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
          vhdl.dir smvlang.dir cprover.dir

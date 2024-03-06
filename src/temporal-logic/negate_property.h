@@ -2,12 +2,12 @@
 
 Module: Property Negation
 
-Author: Daniel Kroening, kroening@kroening.com
+Author: Daniel Kroening, dkr@amazon.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_EBMC_NEGATE_PROPERTY_H
-#define CPROVER_EBMC_NEGATE_PROPERTY_H
+#ifndef CPROVER_TEMPORAL_LOGIC_NEGATE_PROPERTY_H
+#define CPROVER_TEMPORAL_LOGIC_NEGATE_PROPERTY_H
 
 #include <util/expr.h>
 
