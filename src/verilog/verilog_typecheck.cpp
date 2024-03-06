@@ -1050,15 +1050,10 @@ Function: verilog_typecheckt::convert_assert
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_assert(exprt &statement)
+void verilog_typecheckt::convert_assert(
+  verilog_assert_module_itemt &module_item)
 {
-  if(statement.operands().size()!=2)
-  {
-    throw errort().with_location(statement.source_location())
-      << "assert statement expected to have two operands";
-  }
-
-  exprt &cond = to_binary_expr(statement).op0();
+  exprt &cond = module_item.condition();
 
   convert_expr(cond);
   make_boolean(cond);
@@ -1072,12 +1067,12 @@ void verilog_typecheckt::convert_assert(exprt &statement)
     property = sva_always_exprt(cond);
 
   assertion_counter++;
-  
-  const irep_idt &identifier=statement.get(ID_identifier);
-  
+
+  const irep_idt &identifier = module_item.identifier();
+
   irep_idt base_name;
-  
-  if(identifier=="")
+
+  if(identifier == irep_idt())
     base_name=std::to_string(assertion_counter);
   else
     base_name=identifier;
@@ -1089,11 +1084,11 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   if(symbol_table.symbols.find(full_identifier)!=
      symbol_table.symbols.end())
   {
-    throw errort().with_location(statement.source_location())
+    throw errort().with_location(module_item.source_location())
       << "property identifier `" << base_name << "' already used";
   }
 
-  statement.set(ID_identifier, full_identifier);
+  module_item.identifier(full_identifier);
 
   symbolt symbol;
 
@@ -1104,7 +1099,7 @@ void verilog_typecheckt::convert_assert(exprt &statement)
   symbol.name=full_identifier;
   symbol.type=bool_typet();
   symbol.is_property=true;
-  symbol.location=statement.find_source_location();
+  symbol.location = module_item.find_source_location();
   symbol.pretty_name=strip_verilog_prefix(full_identifier);
 
   symbolt *new_symbol;
@@ -1123,15 +1118,92 @@ Function: verilog_typecheckt::convert_assume
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_assume(exprt &statement)
+void verilog_typecheckt::convert_assume(
+  verilog_assume_module_itemt &module_item)
 {
-  if(statement.operands().size()!=2)
+  exprt &cond = module_item.condition();
+
+  convert_expr(cond);
+  make_boolean(cond);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::convert_assert
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::convert_assert(verilog_assert_statementt &statement)
+{
+  exprt &cond = statement.condition();
+
+  convert_expr(cond);
+  make_boolean(cond);
+
+  // There is an implicit 'always'
+  exprt property;
+
+  if(cond.id() == ID_sva_always)
+    property = cond;
+  else
+    property = sva_always_exprt(cond);
+
+  assertion_counter++;
+
+  const irep_idt &identifier = statement.identifier();
+
+  irep_idt base_name;
+
+  if(identifier == irep_idt())
+    base_name = std::to_string(assertion_counter);
+  else
+    base_name = identifier;
+
+  std::string full_identifier =
+    id2string(module_identifier) + ".property." + id2string(base_name);
+
+  if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
   {
     throw errort().with_location(statement.source_location())
-      << "assume statement expected to have two operands";
+      << "property identifier `" << base_name << "' already used";
   }
 
-  exprt &cond = to_binary_expr(statement).op0();
+  statement.identifier(full_identifier);
+
+  symbolt symbol{base_name, bool_typet{}, mode};
+
+  symbol.module = module_identifier;
+  symbol.value.swap(property);
+  symbol.name = full_identifier;
+  symbol.is_property = true;
+  symbol.location = statement.find_source_location();
+  symbol.pretty_name = strip_verilog_prefix(full_identifier);
+
+  symbolt *new_symbol;
+  symbol_table.move(symbol, new_symbol);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::convert_assume
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::convert_assume(verilog_assume_statementt &statement)
+{
+  exprt &cond = statement.condition();
 
   convert_expr(cond);
   make_boolean(cond);
@@ -1436,9 +1508,9 @@ void verilog_typecheckt::convert_statement(
     convert_procedural_continuous_assign(
       to_verilog_procedural_continuous_assign(statement));
   else if(statement.id()==ID_assert)
-    convert_assert(statement);
+    convert_assert(to_verilog_assert_statement(statement));
   else if(statement.id()==ID_assume)
-    convert_assume(statement);
+    convert_assume(to_verilog_assume_statement(statement));
   else if(statement.id()==ID_non_blocking_assign)
     convert_assign(to_verilog_assign(statement), false);
   else if(statement.id()==ID_if)
@@ -1510,9 +1582,9 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id()==ID_always)
     convert_always(to_verilog_always(module_item));
   else if(module_item.id()==ID_assert)
-    convert_assert(module_item);
+    convert_assert(to_verilog_assert_module_item(module_item));
   else if(module_item.id()==ID_assume)
-    convert_assume(module_item);
+    convert_assume(to_verilog_assume_module_item(module_item));
   else if(module_item.id()==ID_initial)
     convert_initial(to_verilog_initial(module_item));
   else if(module_item.id()==ID_continuous_assign)
