@@ -13,9 +13,38 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
+#include <temporal-logic/temporal_expr.h>
+#include <verilog/sva_expr.h>
+
 #include "instantiate_word_level.h"
 
 #include <cstdlib>
+
+/*******************************************************************\
+
+Function: bmc_supports_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool bmc_supports_property(const exprt &expr)
+{
+  if(expr.is_constant())
+    return true;
+  else if(expr.id() == ID_AG)
+    return true;
+  else if(expr.id() == ID_G)
+    return true;
+  else if(expr.id() == ID_sva_always)
+    return true;
+  else
+    return false;
+}
 
 /*******************************************************************\
 
@@ -45,16 +74,17 @@ void property(
     return;
   }
 
-  if(
-    property_expr.id() != ID_AG && property_expr.id() != ID_G &&
-    property_expr.id() != ID_sva_always)
-  {
-    message.error() << "unsupported property - only SVA always implemented"
-                    << messaget::eom;
-    exit(1);
-  }
-
-  const exprt &p = to_unary_expr(property_expr).op();
+  // We want AG p.
+  auto &p = [](const exprt &expr) -> const exprt & {
+    if(expr.id() == ID_AG)
+      return to_AG_expr(expr).op();
+    else if(expr.id() == ID_G)
+      return to_G_expr(expr).op();
+    else if(expr.id() == ID_sva_always)
+      return to_sva_always_expr(expr).op();
+    else
+      PRECONDITION(false);
+  }(property_expr);
 
   for(std::size_t c = 0; c < no_timeframes; c++)
   {

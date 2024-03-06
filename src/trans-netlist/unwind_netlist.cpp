@@ -7,9 +7,13 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "unwind_netlist.h"
-#include "instantiate_netlist.h"
 
 #include <util/ebmc_util.h>
+
+#include <temporal-logic/temporal_expr.h>
+#include <verilog/sva_expr.h>
+
+#include "instantiate_netlist.h"
 
 /*******************************************************************\
 
@@ -175,12 +179,18 @@ void unwind_property(
     prop_bv.resize(map.get_no_timeframes(), const_literal(true));
     return;
   }
-  
-  if(property_expr.id()!=ID_AG &&
-     property_expr.id()!=ID_sva_always)
-    throw "unsupported property - only SVA always implemented";
 
-  const exprt &p = to_unary_expr(property_expr).op();
+  // We want AG p.
+  auto &p = [](const exprt &expr) -> const exprt & {
+    if(expr.id() == ID_AG)
+      return to_AG_expr(expr).op();
+    else if(expr.id() == ID_G)
+      return to_G_expr(expr).op();
+    else if(expr.id() == ID_sva_always)
+      return to_sva_always_expr(expr).op();
+    else
+      PRECONDITION(false);
+  }(property_expr);
 
   for(unsigned c=0; c<map.get_no_timeframes(); c++)
   {
