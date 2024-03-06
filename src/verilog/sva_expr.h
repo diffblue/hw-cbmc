@@ -58,13 +58,46 @@ static inline sva_s_nexttime_exprt &to_sva_s_nexttime_expr(exprt &expr)
   return static_cast<sva_s_nexttime_exprt &>(expr);
 }
 
-class sva_eventually_exprt : public unary_predicate_exprt
+class sva_eventually_exprt : public binary_predicate_exprt
 {
 public:
-  explicit sva_eventually_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_eventually, std::move(op))
+  explicit sva_eventually_exprt(exprt __range, exprt __op)
+    : binary_predicate_exprt(
+        std::move(__range),
+        ID_sva_eventually,
+        std::move(__op))
   {
   }
+
+  // These come with a range
+  const exprt &range() const
+  {
+    return op0();
+  }
+
+  exprt &range()
+  {
+    return op0();
+  }
+
+  const exprt &op() const
+  {
+    return op1();
+  }
+
+  exprt &op()
+  {
+    return op1();
+  }
+
+  const exprt &lhs() const = delete;
+  exprt &lhs() = delete;
+  const exprt &rhs() const = delete;
+  exprt &rhs() = delete;
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
 };
 
 static inline const sva_eventually_exprt &

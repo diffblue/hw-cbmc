@@ -168,14 +168,14 @@ void neural_livenesst::validate_properties()
     }
     else if(
       property.expr.id() == ID_sva_always &&
-      to_sva_always_expr(property.expr).op().id() == ID_sva_eventually)
+      to_sva_always_expr(property.expr).op().id() == ID_sva_s_eventually)
     {
       // ok
     }
     else
     {
       throw ebmc_errort()
-        << "unsupported property - only SVA eventually or AF implemented";
+        << "unsupported property - only SVA s_eventually or AF implemented";
     }
   }
 }

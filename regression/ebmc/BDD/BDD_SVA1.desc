@@ -8,8 +8,8 @@ BDD_SVA1.sv
 ^\[top\.property\.p2\] always \(top\.counter == 3 \|-> \(nexttime top\.counter == 4\)\): FAILURE: property not supported by BDD engine$
 ^\[top\.property\.p3\] always \(top\.counter == 3 \|=> top\.counter == 4\): PROVED$
 ^\[top\.property\.p4\] always \(top\.counter == 3 \|=> \(nexttime top\.counter == 5\)\): FAILURE: property not supported by BDD engine$
-^\[top\.property\.p5\] always eventually top\.counter == 8: PROVED$
-^\[top\.property\.p6\] always \(top\.counter == 0 \|-> \(eventually top\.counter == 8\)\): FAILURE: property not supported by BDD engine$
+^\[top\.property\.p5\] always s_eventually top\.counter == 8: PROVED$
+^\[top\.property\.p6\] always \(top\.counter == 0 \|-> \(s_eventually top\.counter == 8\)\): FAILURE: property not supported by BDD engine$
 ^\[top\.property\.p7\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until top\.counter == 6\)\): FAILURE: property not supported by BDD engine$
 ^\[top\.property\.p8\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until_with top\.counter == 5\)\): FAILURE: property not supported by BDD engine$
 --

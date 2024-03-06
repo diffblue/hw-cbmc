@@ -1,5 +1,5 @@
 CORE
-eventually2.sv
+s_eventually2.sv
 --module main --bound 20
 ^EXIT=0$
 ^SIGNAL=0$

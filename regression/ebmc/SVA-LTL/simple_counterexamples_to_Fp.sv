@@ -11,13 +11,13 @@ module top(input clock);
       counter = counter + 1;
 
   // false never becomes true
-  p0: assert property (eventually 0);
+  p0: assert property (s_eventually 0);
 
   // the constant is never 1
-  p1: assert property (eventually constant == 1);
+  p1: assert property (s_eventually constant == 1);
 
   // the counter never gets to 6
-  p2: assert property (eventually counter == 6);
+  p2: assert property (s_eventually counter == 6);
 
 endmodule
 

@@ -11,6 +11,6 @@ module main(input clk);
       counter = counter - 1;
 
   // expected to pass
-  p0: assert property (eventually counter == 0);
+  p0: assert property (s_eventually counter == 0);
 
 endmodule

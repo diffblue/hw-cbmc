@@ -435,7 +435,7 @@ void bdd_enginet::check_property(propertyt &property)
   // special treatment for AG AFp and G F p
   auto is_always_eventually = [](const exprt &expr) {
     return expr.id() == ID_sva_always &&
-           to_unary_expr(expr).op().id() == ID_sva_eventually &&
+           to_unary_expr(expr).op().id() == ID_sva_s_eventually &&
            !has_temporal_operator(to_unary_expr(to_unary_expr(expr).op()).op());
   };
 
@@ -742,10 +742,10 @@ bdd_enginet::BDD bdd_enginet::property2BDD(const exprt &expr)
         
     return pre_image;
   }
-  else if(expr.id() == ID_F || expr.id() == ID_sva_eventually)
+  else if(expr.id() == ID_F || expr.id() == ID_sva_s_eventually)
   {
     // recursive call
-    const exprt &sub_expr = to_sva_eventually_expr(expr).op();
+    const exprt &sub_expr = to_sva_s_eventually_expr(expr).op();
     BDD p=property2BDD(sub_expr);
     BDD states=p;
     
@@ -848,7 +848,7 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
     expr.id() == ID_AF || expr.id() == ID_F || expr.id() == ID_sva_always ||
     expr.id() == ID_sva_overlapped_implication ||
     expr.id() == ID_sva_non_overlapped_implication ||
-    expr.id() == ID_sva_nexttime || expr.id() == ID_sva_eventually ||
+    expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_eventually ||
     expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
     expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with)
   {

@@ -76,9 +76,9 @@ exprt negate_property(const exprt &expr)
     result.op()=negate_property(result.op());
     return std::move(result);
   }
-  else if(expr.id()==ID_sva_eventually)
+  else if(expr.id() == ID_sva_s_eventually)
   {
-    unary_exprt result = to_sva_eventually_expr(expr);
+    unary_exprt result = to_sva_s_eventually_expr(expr);
     result.id(ID_sva_always);
     result.op()=negate_property(result.op());
     return std::move(result);

@@ -13,6 +13,6 @@ module main(input clk, input reset);
       counter = counter + 1;
 
   // expected to pass for any bound
-  p0: assert property (eventually (reset || counter == 10));
+  p0: assert property (s_eventually (reset || counter == 10));
 
 endmodule

@@ -1,5 +1,5 @@
 CORE
-eventually1.sv
+s_eventually1.sv
 --module main --bound 1 --trace
 ^EXIT=10$
 ^SIGNAL=0$

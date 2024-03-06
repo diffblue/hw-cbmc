@@ -16,8 +16,8 @@ module top(input clock);
   p2: assert property (counter==3 |-> nexttime counter==4);
   p3: assert property (counter==3 |=> counter==4);
   p4: assert property (counter==3 |=> nexttime counter==5);
-  p5: assert property (eventually counter==8);
-  p6: assert property (counter==0 |-> eventually counter==8);
+  p5: assert property (s_eventually counter==8);
+  p6: assert property (counter==0 |-> s_eventually counter==8);
   p7: assert property (counter==0 |-> counter<=5 until counter==6);
   p8: assert property (counter==0 |-> counter<=5 until_with counter==5);
 
