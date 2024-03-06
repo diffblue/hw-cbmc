@@ -1,0 +1,8 @@
+KNOWNBUG
+wire_must_be_fourvalued.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Verilog wires must be four-valued.
