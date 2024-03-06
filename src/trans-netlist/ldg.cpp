@@ -6,10 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
-#include <cassert>
-
 #include "ldg.h"
+
+#include "aig_terminals.h"
+
+#include <cassert>
+#include <iostream>
 
 /*******************************************************************\
 
@@ -73,9 +75,8 @@ void ldgt::compute(
       }
     }
   }
-  
-  aigt::terminalst terminals;
-  netlist.get_terminals(terminals);
+
+  auto terminals = ::terminals(netlist);
 
   for(latchest::const_iterator
       l_it=localization.begin();
@@ -84,7 +85,7 @@ void ldgt::compute(
   {
     unsigned v=*l_it;
     literalt next_state=nodes[v].next_state;
-    const aigt::terminal_sett &t=terminals[next_state.var_no()];
+    const auto &t = terminals[next_state.var_no()];
 
     for(std::set<unsigned>::const_iterator
         it=t.begin(); it!=t.end(); it++)
