@@ -2574,19 +2574,21 @@ action_block:
                   to_binary_expr(stack_expr($$)).op1().swap(stack_expr($2)); }
 	;
 
-// The 1800-2017 grammar contains a block_item_declartion_brace before
-// the statement_or_null brace. This yields ambiguity owing to the
-// attribute_inance_brace in block_item_declaration and in
-// statement. Instead, we extend the statement rule to accept
-// block_item_declaration.
+// The 1800-2017 grammar specifies this to be
+// "begin" { block_item_declartion} { statement_or_null } "end".
+// This yields ambiguity owing to the
+// attribute_instance_brace in block_item_declaration and in
+// statement. Instead, we introduce the
+// block_item_declaration_or_statement_or_null_brace
+// rule to accept both block_item_declaration and statement_or_null.
 seq_block:
 	  TOK_BEGIN
-	  statement_or_null_brace
+	  block_item_declaration_or_statement_or_null_brace
 	  TOK_END
 		{ init($$, ID_block); swapop($$, $2); }
         | TOK_BEGIN TOK_COLON block_identifier
 		{ push_scope(stack_expr($3).id(), "."); }
-          statement_or_null_brace
+	  block_item_declaration_or_statement_or_null_brace
           TOK_END
                 { init($$, ID_block);
                   swapop($$, $5);
@@ -2634,6 +2636,23 @@ concurrent_cover_statement: cover_property_statement
 // System Verilog standard 1800-2017
 // A.6.4 Statements
 
+// The next two rules are an addition for the benefit of seq_block,
+// to avoid the reduce/reduce conflict on the attribute_instance_brace
+// when transitioning between { block_item_declaration }
+// and { statement_or_null }. We allow them to interleave arbitrarily.
+block_item_declaration_or_statement_or_null_brace:
+		/* Optional */
+		{ init($$); }
+	| block_item_declaration_or_statement_or_null_brace
+	  block_item_declaration_or_statement_or_null
+		{ $$=$1; mto($$, $2); }
+	;
+
+block_item_declaration_or_statement_or_null:
+	  block_item_declaration
+	| statement_or_null
+	;
+
 statement_or_null:
 	  statement
 	| attribute_instance_brace ';' { init($$, ID_skip); }
@@ -2646,15 +2665,15 @@ statement_or_null_brace:
 		{ $$=$1; mto($$, $2); }
 	;
 
-// The extra rule to allow block_item_declaration is to avoid an ambiguity
-// caused by the attribute_instance_brace.
+// The rule in 1800-2017 does not have the attribute_instance_brace before
+// the label. We allow this to avoid a shift/reduce conflict.
 statement: 
-/*          block_identifier TOK_COLON attribute_instance_brace statement_item
-                { $$=$4; }
-        | */ 
-          attribute_instance_brace statement_item
+          attribute_instance_brace block_identifier TOK_COLON attribute_instance_brace statement_item
+                { init($$, ID_verilog_label_statement);
+                  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+                  mto($$, $5); }
+        | attribute_instance_brace statement_item
                 { $$=$2; }
-        | block_item_declaration
         ;
 
 statement_item:

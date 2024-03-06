@@ -2573,6 +2573,8 @@ void verilog_synthesist::synth_statement(
   {
     // do nothing
   }
+  else if(statement.id() == ID_verilog_label_statement)
+    synth_statement(to_verilog_label_statement(statement).statement());
   else
   {
     throw errort().with_location(statement.source_location())

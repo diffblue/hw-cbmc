@@ -1470,10 +1470,12 @@ void verilog_typecheckt::convert_statement(
     convert_decl(to_verilog_decl(statement));
   else if(statement.id()==ID_force)
     convert_force(to_verilog_force(statement));
+  else if(statement.id() == ID_verilog_label_statement)
+    convert_statement(to_verilog_label_statement(statement).statement());
   else
   {
     throw errort().with_location(statement.source_location())
-      << "unexpected statement:" << statement.id();
+      << "unexpected statement: " << statement.id();
   }
 }
 
