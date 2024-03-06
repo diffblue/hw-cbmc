@@ -2661,7 +2661,6 @@ statement_item:
           blocking_assignment ';' { $$ = $1; }
 	| nonblocking_assignment ';' { $$ = $1; }
 	| case_statement
-	| concurrent_assertion_statement
 	| conditional_statement
 	| inc_or_dec_expression ';'
 	| subroutine_call_statement
@@ -2831,7 +2830,9 @@ statement_brace:
 // A.6.10 Assertion statements
 
 procedural_assertion_statement:
-	  immediate_assertion_statement
+	  concurrent_assertion_statement
+	| immediate_assertion_statement
+        /* | checker_instantiation */
 	;
 
 immediate_assertion_statement:
