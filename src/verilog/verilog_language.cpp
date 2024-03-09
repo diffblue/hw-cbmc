@@ -157,6 +157,15 @@ bool verilog_languaget::typecheck(
 {
   if(module=="") return false;
 
+  if(!top_scope_package_items_done)
+  {
+    // Verilog allows 'package items' at the top-level scope,
+    // outside of a module. These only need to be done once.
+    top_scope_package_items_done = true;
+    if(verilog_typecheck_package_items(parse_tree, symbol_table, message_handler))
+      return true;
+  }
+
   if(verilog_typecheck(parse_tree, symbol_table, module, message_handler))
     return true;
 

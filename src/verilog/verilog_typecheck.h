@@ -19,6 +19,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_symbol_table.h"
 #include "verilog_typecheck_expr.h"
 
+bool verilog_typecheck_package_items(
+  const verilog_parse_treet &,
+  symbol_table_baset &,
+  message_handlert &);
+
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
   symbol_table_baset &,
