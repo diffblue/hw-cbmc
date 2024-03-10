@@ -1372,7 +1372,7 @@ net_type_opt:
         | net_type
         ;
 
-net_port_type: net_type_opt data_type_or_implicit
+net_port_type: net_type_opt signing_opt packed_dimension_brace
                 {
                   $$=$3;
                   add_as_subtype(stack_type($$), stack_type($2));
