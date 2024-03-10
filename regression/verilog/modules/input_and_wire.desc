@@ -1,0 +1,7 @@
+CORE
+input_and_wire.v
+--module M1
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
