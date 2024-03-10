@@ -82,9 +82,18 @@ public:
     const std::string &name,
     const exprt &src);
 
-  virtual std::string convert_sva(
+  std::string convert_sva(
     const std::string &name,
-    const exprt &src);
+    const std::optional<exprt> &range,
+    const exprt &op);
+
+  std::string convert_sva(const std::string &name, const exprt &op)
+  {
+    return convert_sva(name, {}, op);
+  }
+
+  std::string
+  convert_sva(const exprt &lhs, const std::string &name, const exprt &rhs);
 
   virtual std::string
   convert_replication(const replication_exprt &, unsigned precedence);

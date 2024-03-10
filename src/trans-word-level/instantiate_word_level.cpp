@@ -240,9 +240,34 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     else
       return true_exprt(); // works on NNF only
   }
+  else if(expr.id() == ID_sva_eventually)
+  {
+    const auto &eventually_expr = to_sva_eventually_expr(expr);
+    const auto &range = eventually_expr.range();
+    const auto &op = eventually_expr.op();
+
+    mp_integer lower;
+    if(to_integer_non_constant(range.op0(), lower))
+      throw "failed to convert sva_eventually index";
+
+    mp_integer upper;
+    if(to_integer_non_constant(range.op1(), upper))
+      throw "failed to convert sva_eventually index";
+
+    // This is weak, and passes if any of the timeframes
+    // does not exist.
+    if(t + lower >= no_timeframes || t + upper >= no_timeframes)
+      return true_exprt();
+
+    exprt::operandst disjuncts = {};
+
+    for(mp_integer u = t + lower; u <= t + upper; ++u)
+      disjuncts.push_back(instantiate_rec(op, u));
+
+    return disjunction(disjuncts);
+  }
   else if(
-    expr.id() == ID_sva_eventually || expr.id() == ID_sva_s_eventually ||
-    expr.id() == ID_F || expr.id() == ID_AF)
+    expr.id() == ID_sva_s_eventually || expr.id() == ID_F || expr.id() == ID_AF)
   {
     const auto &p = to_unary_expr(expr).op();
 

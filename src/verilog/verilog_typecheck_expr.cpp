@@ -6,9 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cctype>
-#include <cstdlib>
-#include <algorithm>
+#include "verilog_typecheck_expr.h"
 
 #include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
@@ -20,10 +18,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
+#include "sva_expr.h"
 #include "verilog_expr.h"
-#include "verilog_typecheck_expr.h"
-#include "vtype.h"
 #include "verilog_types.h"
+#include "vtype.h"
+
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 
 /*******************************************************************\
 
@@ -1853,11 +1855,9 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     no_bool_ops(expr);
     expr.type() = expr.op().type();
   }
-  else if(expr.id()==ID_sva_always ||
-          expr.id()==ID_sva_nexttime ||
-          expr.id()==ID_sva_s_nexttime ||
-          expr.id()==ID_sva_eventually ||
-          expr.id()==ID_sva_s_eventually)
+  else if(
+    expr.id() == ID_sva_always || expr.id() == ID_sva_nexttime ||
+    expr.id() == ID_sva_s_nexttime || expr.id() == ID_sva_s_eventually)
   {
     assert(expr.operands().size()==1);
     convert_expr(expr.op());
@@ -2164,6 +2164,28 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     convert_expr(expr.op1());
     make_boolean(expr.op1());
     expr.type()=bool_typet();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_eventually)
+  {
+    auto &range = to_binary_expr(expr.op0());
+    auto lower = convert_integer_constant_expression(range.op0());
+    auto upper = convert_integer_constant_expression(range.op1());
+    if(lower > upper)
+    {
+      throw errort().with_location(expr.source_location())
+        << "range must be lower <= upper";
+    }
+
+    range.op0() = from_integer(lower, natural_typet())
+                    .with_source_location<exprt>(range.op0());
+    range.op1() = from_integer(upper, natural_typet())
+                    .with_source_location<exprt>(range.op1());
+
+    convert_expr(expr.op1());
+    make_boolean(expr.op1());
+    expr.type() = bool_typet();
 
     return std::move(expr);
   }
