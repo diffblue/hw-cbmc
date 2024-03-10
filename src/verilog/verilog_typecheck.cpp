@@ -1821,7 +1821,7 @@ bool verilog_typecheck(
     messaget message(message_handler);
     message.error() << "duplicate definition of module " 
                     << symbol.base_name << messaget::eom;
-    throw 0;
+    return true;
   }
 
   verilog_typecheckt verilog_typecheck(*new_symbol, symbol_table, message_handler);

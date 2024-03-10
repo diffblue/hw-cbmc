@@ -121,10 +121,8 @@ void verilog_typecheckt::check_module_ports(
     if(symbol.is_input || symbol.is_output)
       if(port_names.find(symbol.base_name)==port_names.end())
       {
-        error().source_location=symbol.location;
-        error() << "port `" << symbol.base_name
-                << "' not in port list" << eom;
-        throw 0;
+        throw errort().with_location(symbol.location)
+          << "port `" << symbol.base_name << "' not in port list";
       }
   }
 }
@@ -190,11 +188,9 @@ void verilog_typecheckt::interface_inst(
 
   if(symbol_table.add(symbol))
   {
-    error().source_location = op.source_location();
-    error() << "duplicate definition of identifier `" 
-            << symbol.base_name << "' in module `"
-            << module_symbol.base_name << '\'' << eom;
-    throw 0;
+    throw errort().with_location(op.source_location())
+      << "duplicate definition of identifier `" << symbol.base_name
+      << "' in module `" << module_symbol.base_name << '\'';
   }
 }
 
@@ -316,8 +312,8 @@ void verilog_typecheckt::interface_statement(
   {
     if(statement.operands().size()!=2)
     {
-      error() << "event_guard expected to have two operands" << eom;
-      throw 0;
+      throw errort().with_location(statement.source_location())
+        << "event_guard expected to have two operands";
     }
 
     interface_statement(
@@ -327,8 +323,8 @@ void verilog_typecheckt::interface_statement(
   {
     if(statement.operands().size()!=2)
     {
-      error() << "delay expected to have two operands" << eom;
-      throw 0;
+      throw errort().with_location(statement.source_location())
+        << "delay expected to have two operands";
     }
 
     interface_statement(
@@ -382,11 +378,9 @@ void verilog_typecheckt::interface_block(
 
     if(symbol_table.add(symbol))
     {
-      error().source_location = statement.source_location();
-      error() << "duplicate definition of identifier `" 
-              << symbol.base_name << "' in module `"
-              << module_symbol.base_name << '\'' << eom;
-      throw 0;
+      throw errort().with_location(statement.source_location())
+        << "duplicate definition of identifier `" << symbol.base_name
+        << "' in module `" << module_symbol.base_name << '\'';
     }
 
     enter_named_block(base_name);

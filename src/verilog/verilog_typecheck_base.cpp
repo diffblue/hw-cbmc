@@ -122,8 +122,8 @@ mp_integer verilog_typecheck_baset::array_size(const array_typet &type)
 
   if(!size_opt.has_value())
   {
-    error() << "failed to get array size of array type" << eom;
-    throw 0;
+    throw errort().with_location(type.source_location())
+      << "failed to get array size of array type";
   }
 
   return size_opt.value();
@@ -148,9 +148,8 @@ mp_integer verilog_typecheck_baset::array_offset(const array_typet &type)
   if(to_integer_non_constant(
        static_cast<const exprt &>(type.find(ID_offset)), offset))
   {
-    error() << "failed to get array offset of type `"
-            << type.id() << '\'' << eom;
-    throw 0;
+    throw errort().with_location(type.source_location())
+      << "failed to get array offset of type `" << type.id() << '\'';
   }
 
   return offset;
@@ -194,9 +193,8 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
   else if(type.id() == ID_verilog_time)
     return 64;
 
-  error() << "type `" << type.id() << "' has unknown width"
-          << eom;
-  throw 0;
+  throw errort().with_location(type.source_location())
+    << "type `" << type.id() << "' has unknown width";
 }
 
 /*******************************************************************\
