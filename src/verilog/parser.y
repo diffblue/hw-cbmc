@@ -789,15 +789,15 @@ parameter_port_list_opt:
 list_of_ports: '(' port_brace ')' { $$ = $2; }
 	;
 
-port_declaration_brace:
-	  module_port_declaration
+ansi_port_declaration_brace:
+	  ansi_port_declaration
 		{ init($$); mts($$, $1); }
-	| port_declaration_brace ',' module_port_declaration
+	| ansi_port_declaration_brace ',' ansi_port_declaration
 		{ $$=$1; mts($$, $3); }
 
           // append to last one -- required to make 
           // the grammar LR1
-	| port_declaration_brace ',' port_identifier
+	| ansi_port_declaration_brace ',' port_identifier
 		{ $$=$1;
 		  exprt decl(ID_decl);
 		  decl.add_to_operands(std::move(stack_expr($3)));
@@ -815,7 +815,7 @@ port_declaration:
 	| attribute_instance_brace output_declaration { $$=$2; }
 	;
 
-module_port_declaration:
+ansi_port_declaration:
 	  attribute_instance_brace module_port_inout_declaration { $$=$2; }
 	| attribute_instance_brace module_port_input_declaration { $$=$2; }
 	| attribute_instance_brace module_port_output_declaration { $$=$2; }
@@ -2463,7 +2463,7 @@ output_or_level_symbol:;
 
 next_state:;
 
-list_of_port_declarations: '(' port_declaration_brace ')' { $$=$2; }
+list_of_port_declarations: '(' ansi_port_declaration_brace ')' { $$=$2; }
 	;
 
 list_of_ports_opt:
