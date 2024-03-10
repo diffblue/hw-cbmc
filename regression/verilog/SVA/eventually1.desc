@@ -1,0 +1,8 @@
+CORE
+eventually1.sv
+--bound 20
+^\[main\.property\.p0\] always \(main\.counter == 1 |-> eventually \[1:2\] main\.counter == 3\): PROVED up to bound 20$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

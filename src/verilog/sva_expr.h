@@ -69,15 +69,15 @@ public:
   {
   }
 
-  // These come with a range
-  const exprt &range() const
+  // These come with a range, which is binary
+  const binary_exprt &range() const
   {
-    return op0();
+    return static_cast<const binary_exprt &>(op0());
   }
 
-  exprt &range()
+  binary_exprt &range()
   {
-    return op0();
+    return static_cast<binary_exprt &>(op0());
   }
 
   const exprt &op() const
@@ -94,6 +94,14 @@ public:
   exprt &lhs() = delete;
   const exprt &rhs() const = delete;
   exprt &rhs() = delete;
+
+  static void check(
+    const exprt &expr,
+    const validation_modet vm = validation_modet::INVARIANT)
+  {
+    binary_exprt::check(expr, vm);
+    binary_exprt::check(to_binary_expr(expr).op0(), vm);
+  }
 
 protected:
   using binary_predicate_exprt::op0;
