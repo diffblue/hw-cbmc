@@ -1361,6 +1361,20 @@ net_type: TOK_SUPPLY0 { init($$, ID_supply0); }
 	| TOK_WOR     { init($$, ID_wor); }
 	;
 
+net_type_opt:
+          /* Optional */
+                { init($$, ID_nil); }
+        | net_type
+        ;
+
+net_port_type: net_type_opt signing_opt packed_dimension_brace
+                {
+                  $$=$3;
+                  add_as_subtype(stack_type($$), stack_type($2));
+                  // the net type is ignored right now
+	        }
+        ;
+
 variable_port_type: var_data_type ;
 
 var_data_type:
@@ -1612,20 +1626,6 @@ inout_declaration:
                   addswap($$, ID_type, $2);
                   swapop($$, $3); }
 	;
-
-net_port_type: net_type_opt signing_opt packed_dimension_brace
-                {
-                  $$=$3;
-                  add_as_subtype(stack_type($$), stack_type($2));
-                  // the net type is ignored right now
-                }
-        ;
-        
-net_type_opt:
-          /* Optional */
-                { init($$, ID_nil); }
-        | net_type
-        ;
 
 signing_opt:
 	  /* Optional */
