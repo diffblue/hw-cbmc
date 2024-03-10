@@ -9,19 +9,20 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_BMC_INSTANTIATE_WORD_LEVEL_H
 #define CPROVER_BMC_INSTANTIATE_WORD_LEVEL_H
 
-#include <solvers/prop/prop_conv.h>
-
+#include <util/mp_arith.h>
 #include <util/namespace.h>
+
+#include <solvers/prop/prop_conv.h>
 
 exprt instantiate(
   const exprt &expr,
-  std::size_t current,
-  std::size_t no_timeframes,
+  const mp_integer &current,
+  const mp_integer &no_timeframes,
   const namespacet &);
 
 std::string
-timeframe_identifier(std::size_t timeframe, const irep_idt &identifier);
+timeframe_identifier(const mp_integer &timeframe, const irep_idt &identifier);
 
-symbol_exprt timeframe_symbol(std::size_t timeframe, symbol_exprt);
+symbol_exprt timeframe_symbol(const mp_integer &timeframe, symbol_exprt);
 
 #endif

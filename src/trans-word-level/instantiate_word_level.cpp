@@ -29,9 +29,9 @@ Function: timeframe_identifier
 \*******************************************************************/
 
 std::string
-timeframe_identifier(std::size_t timeframe, const irep_idt &identifier)
+timeframe_identifier(const mp_integer &timeframe, const irep_idt &identifier)
 {
-  return id2string(identifier)+"@"+std::to_string(timeframe);
+  return id2string(identifier) + "@" + integer2string(timeframe);
 }
 
 /*******************************************************************\
@@ -46,7 +46,7 @@ Function: timeframe_symbol
 
 \*******************************************************************/
 
-symbol_exprt timeframe_symbol(std::size_t timeframe, symbol_exprt src)
+symbol_exprt timeframe_symbol(const mp_integer &timeframe, symbol_exprt src)
 {
   auto result = std::move(src);
   result.set_identifier(
@@ -69,23 +69,23 @@ symbol_exprt timeframe_symbol(std::size_t timeframe, symbol_exprt src)
 class wl_instantiatet
 {
 public:
-  wl_instantiatet(std::size_t _no_timeframes, const namespacet &_ns)
+  wl_instantiatet(const mp_integer &_no_timeframes, const namespacet &_ns)
     : no_timeframes(_no_timeframes), ns(_ns)
   {
   }
 
   /// Instantiate the given expression for timeframe t
-  [[nodiscard]] exprt operator()(exprt expr, std::size_t t) const
+  [[nodiscard]] exprt operator()(exprt expr, const mp_integer &t) const
   {
     return instantiate_rec(std::move(expr), t);
   }
 
 protected:
-  std::size_t no_timeframes;
+  const mp_integer &no_timeframes;
   const namespacet &ns;
 
-  [[nodiscard]] exprt instantiate_rec(exprt, std::size_t t) const;
-  [[nodiscard]] typet instantiate_rec(typet, std::size_t t) const;
+  [[nodiscard]] exprt instantiate_rec(exprt, const mp_integer &t) const;
+  [[nodiscard]] typet instantiate_rec(typet, const mp_integer &t) const;
 };
 
 /*******************************************************************\
@@ -100,7 +100,7 @@ Function: wl_instantiatet::instantiate_rec
 
 \*******************************************************************/
 
-exprt wl_instantiatet::instantiate_rec(exprt expr, const std::size_t t) const
+exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 {
   expr.type() = instantiate_rec(expr.type(), t);
 
@@ -158,7 +158,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const std::size_t t) const
         if(to_integer_non_constant(ternary_expr.op0(), offset))
           throw "failed to convert sva_cycle_delay offset";
 
-        const auto u = t + offset.to_ulong();
+        const auto u = t + offset;
 
         // Do we exceed the bound? Make it 'true'
         if(u >= no_timeframes)
@@ -186,7 +186,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const std::size_t t) const
         
         for(mp_integer offset=from; offset<to; ++offset)
         {
-          auto u = t + offset.to_ulong();
+          auto u = t + offset;
 
           if(u >= no_timeframes)
           {
@@ -219,7 +219,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const std::size_t t) const
 
     exprt::operandst conjuncts;
 
-    for(auto u = t; u < no_timeframes; u++)
+    for(auto u = t; u < no_timeframes; ++u)
     {
       conjuncts.push_back(instantiate_rec(op, u));
     }
@@ -261,11 +261,11 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const std::size_t t) const
     exprt::operandst conjuncts = {};
     const auto i = t;
 
-    for(std::size_t k = 0; k < i; k++)
+    for(mp_integer k = 0; k < i; ++k)
     {
       exprt::operandst disjuncts = {not_exprt(lasso_symbol(k, i))};
 
-      for(std::size_t j = k; j <= i; j++)
+      for(mp_integer j = k; j <= i; ++j)
       {
         disjuncts.push_back(instantiate_rec(p, j));
       }
@@ -338,7 +338,7 @@ Function: wl_instantiatet::instantiate_rec
 
 \*******************************************************************/
 
-typet wl_instantiatet::instantiate_rec(typet type, std::size_t) const
+typet wl_instantiatet::instantiate_rec(typet type, const mp_integer &) const
 {
   return type;
 }
@@ -357,8 +357,8 @@ Function: instantiate
 
 exprt instantiate(
   const exprt &expr,
-  std::size_t t,
-  std::size_t no_timeframes,
+  const mp_integer &t,
+  const mp_integer &no_timeframes,
   const namespacet &ns)
 {
   wl_instantiatet wl_instantiate(no_timeframes, ns);
