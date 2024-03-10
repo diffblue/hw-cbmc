@@ -109,8 +109,8 @@ Function: states_equal
 \*******************************************************************/
 
 exprt states_equal(
-  std::size_t k,
-  std::size_t i,
+  const mp_integer &k,
+  const mp_integer &i,
   const std::vector<symbol_exprt> &variables_to_compare)
 {
   // We require k<i to avoid the symmetric constraints.
@@ -141,13 +141,13 @@ Function: lasso_symbol
 
 \*******************************************************************/
 
-symbol_exprt lasso_symbol(std::size_t k, std::size_t i)
+symbol_exprt lasso_symbol(const mp_integer &k, const mp_integer &i)
 {
   // True when states i and k are equal.
   // We require k<i to avoid the symmetric constraints.
   PRECONDITION(k < i);
   irep_idt lasso_identifier =
-    "lasso::" + std::to_string(i) + "-back-to-" + std::to_string(k);
+    "lasso::" + integer2string(i) + "-back-to-" + integer2string(k);
   return symbol_exprt(lasso_identifier, bool_typet());
 }
 
@@ -165,7 +165,7 @@ Function: lasso_constraints
 
 void lasso_constraints(
   decision_proceduret &solver,
-  std::size_t no_timeframes,
+  const mp_integer &no_timeframes,
   const namespacet &ns,
   const irep_idt &module_identifier)
 {
@@ -204,9 +204,9 @@ void lasso_constraints(
     }
   }
 
-  for(std::size_t i = 1; i < no_timeframes; i++)
+  for(mp_integer i = 1; i < no_timeframes; ++i)
   {
-    for(std::size_t k = 0; k < i; k++)
+    for(mp_integer k = 0; k < i; ++k)
     {
       // Is there a loop back from time frame i back to time frame k?
       auto lasso_symbol = ::lasso_symbol(k, i);

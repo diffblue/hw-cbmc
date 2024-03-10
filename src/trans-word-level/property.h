@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/expr.h>
 #include <util/message.h>
+#include <util/mp_arith.h>
 #include <util/namespace.h>
 
 #include <solvers/decision_procedure.h>
@@ -30,13 +31,13 @@ bool bmc_supports_property(const exprt &);
 /// given state has already been seen earlier in the trace.
 void lasso_constraints(
   decision_proceduret &,
-  std::size_t no_timeframes,
+  const mp_integer &no_timeframes,
   const namespacet &,
   const irep_idt &module_identifier);
 
 /// Is there a loop from i back to k?
 /// Precondition: k<i
-symbol_exprt lasso_symbol(std::size_t k, std::size_t i);
+symbol_exprt lasso_symbol(const mp_integer &k, const mp_integer &i);
 
 /// Returns true iff the given property requires lasso constraints for BMC.
 bool requires_lasso_constraints(const exprt &);
