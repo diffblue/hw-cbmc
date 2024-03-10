@@ -34,9 +34,8 @@ void verilog_typecheckt::verilog_interpreter(
     exprt rhs = elaborate_constant_expression(assign.rhs());
     if(!rhs.is_constant())
     {
-      error().source_location=assign.rhs().source_location();
-      error() << "right-hand side of assignment is not constant" << eom;
-      throw 0;
+      throw errort().with_location(assign.rhs().source_location())
+        << "right-hand side of assignment is not constant";
     }
 
     if(assign.lhs().id()==ID_symbol)
@@ -76,9 +75,8 @@ void verilog_typecheckt::verilog_interpreter(
 
         if(to_integer_non_constant(cond, cond_i))
         {
-          error().source_location=verilog_for.source_location();
-          error() << "for condition is not constant: " << cond.pretty() << eom;
-          throw 0;
+          throw errort().with_location(verilog_for.source_location())
+            << "for condition is not constant: " << cond.pretty();
         }
 
         if(cond_i==0) break;
@@ -90,9 +88,7 @@ void verilog_typecheckt::verilog_interpreter(
   }
   else
   {
-    error().source_location=statement.source_location();
-    error() << "Don't know how to interpret statement `"
-            << statement.id() << '\'' << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "Don't know how to interpret statement `" << statement.id() << '\'';
   }
 }

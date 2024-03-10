@@ -182,8 +182,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
   }
   else
   {
-    error().source_location = source_location;
-    error() << "unexpected type: `" << src.id() << "'" << eom;
-    throw 0;
+    throw errort().with_location(source_location)
+      << "unexpected type: `" << src.id() << "'";
   }
 }

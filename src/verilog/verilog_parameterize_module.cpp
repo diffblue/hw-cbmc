@@ -129,9 +129,8 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
 
     if(p_it!=parameter_assignment.end())
     {
-      error().source_location = p_it->source_location();
-      error() << "too many parameter assignments" << eom;
-      throw 0;
+      throw errort().with_location(p_it->source_location())
+        << "too many parameter assignments";
     }
   }
   
@@ -218,12 +217,8 @@ irep_idt verilog_typecheckt::parameterize_module(
     symbol_table.symbols.find(module_identifier);
   
   if(it==symbol_table.symbols.end())
-  {
-    error().source_location=location;
-    error() << "module not found" << eom;
-    throw 0;
-  }
-  
+    throw errort().with_location(location) << "module not found";
+
   const symbolt &base_symbol=it->second;
 
   auto parameter_values = get_parameter_values(
@@ -249,10 +244,9 @@ irep_idt verilog_typecheckt::parameterize_module(
       mp_integer i;
       if(to_integer_non_constant(pv, i))
       {
-        error().source_location = pv.source_location();
-        error() << "parameter value expected to be constant, but got `"
-                << to_string(pv) << "'" << eom;
-        throw 0;
+        throw errort().with_location(pv.source_location())
+          << "parameter value expected to be constant, but got `"
+          << to_string(pv) << "'";
       }
       else
         suffix += integer2string(i);
@@ -288,10 +282,8 @@ irep_idt verilog_typecheckt::parameterize_module(
 
   if(symbol_table.move(symbol, new_symbol))
   {
-    error().source_location=location;
-    error() << "duplicate definition of parameterized module "
-            << symbol.base_name << eom;
-    throw 0;
+    throw errort().with_location(location)
+      << "duplicate definition of parameterized module " << symbol.base_name;
   }
 
   // recursive call

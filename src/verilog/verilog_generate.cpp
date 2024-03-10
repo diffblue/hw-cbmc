@@ -135,9 +135,8 @@ void verilog_typecheckt::elaborate_generate_if(
   if(statement.operands().size()!=3 &&
      statement.operands().size()!=2)
   {
-    error().source_location = statement.source_location();
-    error() << "generate_if expects two or three operands" << eom;
-    throw 0;
+    throw errort().with_location(statement.source_location())
+      << "generate_if expects two or three operands";
   }
 
   mp_integer condition =
@@ -172,9 +171,8 @@ void verilog_typecheckt::elaborate_generate_assign(
 {
   if(statement.lhs().id() != ID_symbol)
   {
-    error().source_location = statement.lhs().source_location();
-    error() << "expected symbol on left hand side of assignment" << eom;
-    throw 0;
+    throw errort().with_location(statement.lhs().source_location())
+      << "expected symbol on left hand side of assignment";
   }
 
   const irep_idt &identifier = to_symbol_expr(statement.lhs()).get_identifier();
@@ -183,18 +181,16 @@ void verilog_typecheckt::elaborate_generate_assign(
   
   if(it==genvars.end())
   {
-    error().source_location = statement.lhs().source_location();
-    error() << "expected genvar on left hand side of assignment" << eom;
-    throw 0;
+    throw errort().with_location(statement.lhs().source_location())
+      << "expected genvar on left hand side of assignment";
   }
 
   mp_integer rhs = convert_integer_constant_expression(statement.rhs());
 
   if(rhs<0)
   {
-    error().source_location = statement.rhs().source_location();
-    error() << "must not assign negative value to genvar" << eom;
-    throw 0;
+    throw errort().with_location(statement.rhs().source_location())
+      << "must not assign negative value to genvar";
   }
   
   it->second=rhs;
@@ -222,9 +218,8 @@ exprt verilog_typecheckt::generate_for_loop_index(
   }
   else
   {
-    error().source_location = initialization_statement.source_location();
-    error() << "failed to determine generate loop index" << eom;
-    throw 0;
+    throw errort().with_location(initialization_statement.source_location())
+      << "failed to determine generate loop index";
   }
 }
 

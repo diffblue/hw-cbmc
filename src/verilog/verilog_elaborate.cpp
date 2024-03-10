@@ -433,10 +433,8 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         if(osymbol.type.id() == ID_code)
         {
-          error().source_location = decl.source_location();
-          error() << "symbol `" << symbol.base_name << "' is already declared"
-                  << eom;
-          throw 0;
+          throw errort().with_location(decl.source_location())
+            << "symbol `" << symbol.base_name << "' is already declared";
         }
 
         // change of type?
@@ -895,9 +893,7 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
   }
   else if(symbol.type.id() == ID_elaborating)
   {
-    error().source_location = symbol.location;
-    error() << "cyclic dependency when elaborating " << symbol.display_name()
-            << eom;
-    throw 0;
+    throw errort().with_location(symbol.location)
+      << "cyclic dependency when elaborating " << symbol.display_name();
   }
 }
