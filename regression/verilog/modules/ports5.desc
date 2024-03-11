@@ -1,0 +1,9 @@
+KNOWNBUG
+ports5.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The grammar currently doesn't allow datatypes as port types.
