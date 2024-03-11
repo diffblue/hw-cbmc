@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <cstdlib>
 #include <cstring>
 
+#include <iostream>
+
 #include <util/arith_tools.h>
 #include <util/ebmc_util.h>
 #include <util/mathematical_types.h>
@@ -833,13 +835,10 @@ module_port_output_declaration:
 	  TOK_OUTPUT net_port_type port_identifier
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output);
+                  std::cout << "XX: " << stack_expr($2).pretty() << "\n";
                   addswap($$, ID_type, $2);
-                  mto($$, $3); }
-	| TOK_OUTPUT data_type port_identifier
-		{ init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_output_register);
-                  addswap($$, ID_type, $2);
-                  mto($$, $3); }
+                  mto($$, $3);
+                  }
 	;
 
 port_direction:
@@ -1372,6 +1371,7 @@ net_type_opt:
         | net_type
         ;
 
+/*
 net_port_type: net_type_opt signing_opt packed_dimension_brace
                 {
                   $$=$3;
@@ -1379,12 +1379,23 @@ net_port_type: net_type_opt signing_opt packed_dimension_brace
                   // the net type is ignored right now
 	        }
         ;
+*/
+
+net_port_type: net_type_opt data_type_or_implicit
+                {
+                  std::cout << "TTT: " << stack_expr($1).pretty() << "\n";
+                  $$=$2;
+                  // the net type is ignored right now
+	        }
+        ;
 
 variable_port_type: var_data_type ;
 
+/* In contrast to 1800-2017, we _require_ the "var",
+   or otherwise the var_data_type can't be distinguished from
+   the net_port_type. */
 var_data_type:
-	  data_type
-	| TOK_VAR data_type_or_implicit { $$ = $2; }
+	  TOK_VAR data_type_or_implicit { $$ = $2; }
 	;
 
 interface_opt:
