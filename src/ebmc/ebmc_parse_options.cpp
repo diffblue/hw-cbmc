@@ -363,6 +363,7 @@ void ebmc_parse_optionst::help()
     " {y--show-properties}           \t list the properties in the model\n"
     " {y--property} {uid}            \t check the property with given ID\n"
     " {y-I} {upath}                  \t set include path\n"
+    " {y--systemverilog}             \t force SystemVerilog instead of Verilog\n"
     " {y--reset} {uexpr}             \t set up module reset\n"
     " {y--liveness-to-safety}        \t translate liveness properties to safety properties\n"
     "\n"
