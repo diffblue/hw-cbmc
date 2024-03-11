@@ -805,6 +805,10 @@ void verilog_typecheckt::check_lhs(
       break;
     }
   }
+  else if(lhs.id() == ID_member)
+  {
+    check_lhs(to_member_expr(lhs).struct_op(), vassign);
+  }
   else
   {
     throw errort() << "typechecking: failed to get identifier on LHS "

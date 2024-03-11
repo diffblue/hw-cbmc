@@ -564,6 +564,31 @@ void verilog_synthesist::assignment_rec(
 
     new_value.swap(last_value);
   }
+  else if(lhs.id() == ID_member)
+  {
+    const auto &member_expr = to_member_expr(lhs);
+    const exprt &lhs_compound = member_expr.struct_op();
+    auto component_name = member_expr.get_component_name();
+
+    if(lhs_compound.type().id() == ID_struct)
+    {
+      // turn
+      //   s.m=e
+      // into
+      //   s'==s WITH [m:=e]
+      auto synth_compound = synth_expr(lhs_compound, symbol_statet::FINAL);
+
+      with_exprt new_rhs{
+        synth_compound, member_designatort{component_name}, rhs};
+
+      // recursive call
+      assignment_rec(lhs_compound, new_rhs, new_value); // recursive call
+    }
+    else
+    {
+      throw errort() << "unexpected member lhs: " << lhs_compound.type().id();
+    }
+  }
   else
   {
     throw errort() << "unexpected lhs: " << lhs.id();
@@ -723,6 +748,10 @@ void verilog_synthesist::assignment_member_rec(
     
     member.pop_back();
   }
+  else if(lhs.id() == ID_member)
+  {
+    add_assignment_member(lhs, member, data);
+  }
   else
   {
     throw errort() << "unexpected lhs: " << lhs.id();
@@ -854,9 +883,14 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
       return it->second;
     }
+    else if(e->id() == ID_member)
+    {
+      e = &to_member_expr(*e).struct_op();
+    }
     else
     {
-      throw errort() << "synthesis: failed to get identifier";
+      throw errort().with_location(e->source_location())
+        << "synthesis: failed to get identifier";
     }
   }
 }

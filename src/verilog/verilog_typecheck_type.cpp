@@ -10,8 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ieee_float.h>
 #include <util/mathematical_types.h>
 
+#include "verilog_expr.h"
 #include "verilog_typecheck_expr.h"
-
 #include "verilog_types.h"
 
 /*******************************************************************\
@@ -179,6 +179,53 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
   {
     // recursive call
     return convert_type(to_to_be_elaborated_type(src).subtype());
+  }
+  else if(src.id() == ID_struct || src.id() == ID_union)
+  {
+    // the declarations of the components
+    auto &declaration_list = src.find(ID_declaration_list).get_sub();
+    struct_union_typet::componentst components;
+
+    for(auto &declaration : declaration_list)
+    {
+      auto &declaration_expr = static_cast<const exprt &>(declaration);
+      DATA_INVARIANT(
+        declaration.id() == ID_decl, "struct type must have declarations");
+
+      // Convert the type
+      auto type = convert_type(declaration_expr.type());
+
+      // Convert the declarators
+      for(auto &declarator_expr : declaration_expr.operands())
+      {
+        auto &declarator =
+          static_cast<const verilog_declaratort &>(declarator_expr);
+
+        struct_union_typet::componentt component;
+
+        // compose the type
+        if(declarator.type().is_nil())
+          component.type() = type;
+        else if(declarator.type().id() == ID_array)
+        {
+          throw errort().with_location(declarator.source_location())
+            << "array in struct";
+        }
+        else
+        {
+          throw errort().with_location(declarator.source_location())
+            << "unexpected type on declarator";
+        }
+
+        component.add_source_location() = declarator.source_location();
+        component.set_base_name(declarator.base_name());
+        component.set_name(declarator.base_name());
+        components.push_back(std::move(component));
+      }
+    }
+
+    return struct_union_typet{src.id(), std::move(components)}
+      .with_source_location(src.source_location());
   }
   else
   {

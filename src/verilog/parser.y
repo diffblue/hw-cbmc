@@ -978,6 +978,11 @@ property_qualifier:
 	| class_item_qualifier
 	;
 
+random_qualifier_opt:
+	  /* Optional */
+	| random_qualifier
+	;
+
 random_qualifier:
 	  TOK_RAND
 	| TOK_RANDC
@@ -1250,8 +1255,9 @@ data_type:
                 }
 	| non_integer_type
 	| struct_union packed_opt signing_opt 
-	  '{' struct_union_member_list '}' packed_dimension_brace
-	        { /* todo */ }
+	  '{' struct_union_member_brace '}' packed_dimension_brace
+	        { $$=$1;
+	          addswap($$, ID_declaration_list, $5); }
 	| TOK_ENUM enum_base_type_opt '{' enum_name_declaration_list '}'
 	        { // Like in C, these do _not_ create a scope.
 	          // The enum names go into the current scope.
@@ -1330,7 +1336,20 @@ integer_atom_type:
 class_type: class_identifier
 	;
 	
-struct_union_member_list:
+struct_union_member_brace:
+	  /* Not optional! No empty structs. */
+	  struct_union_member
+		{ init($$); mts($$, $1); }
+	| struct_union_member_brace struct_union_member
+		{ $$=$1; mts($$, $2); }
+	;
+
+struct_union_member:
+	  attribute_instance_brace
+	  random_qualifier_opt
+	  data_type_or_void
+	  list_of_variable_decl_assignments ';'
+		{ $$=$4; stack_expr($$).id(ID_decl); addswap($$, ID_type, $3); }
 	;
 	
 enum_base_type_opt:

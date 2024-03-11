@@ -402,6 +402,50 @@ inline verilog_set_genvarst &to_verilog_set_genvars(exprt &expr)
   return static_cast<verilog_set_genvarst &>(expr);
 }
 
+// This class is used for all declarators in the parse tree
+class verilog_declaratort : public exprt
+{
+public:
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  const exprt &value() const
+  {
+    return static_cast<const exprt &>(find(ID_value));
+  }
+
+  exprt &value()
+  {
+    return static_cast<exprt &>(add(ID_value));
+  }
+
+  bool has_value() const
+  {
+    return find(ID_value).is_not_nil();
+  }
+
+  // helper to generate a symbol expression
+  symbol_exprt symbol_expr() const
+  {
+    return symbol_exprt(identifier(), type())
+      .with_source_location<symbol_exprt>(*this);
+  }
+};
+
+using verilog_declaratorst = std::vector<verilog_declaratort>;
+
 class verilog_parameter_declt : public verilog_module_itemt
 {
 public:
@@ -409,48 +453,8 @@ public:
   {
   }
 
-  class declaratort : public exprt
-  {
-  public:
-    const irep_idt &identifier() const
-    {
-      return get(ID_identifier);
-    }
-
-    void identifier(irep_idt _identifier)
-    {
-      set(ID_identifier, _identifier);
-    }
-
-    const irep_idt &base_name() const
-    {
-      return get(ID_base_name);
-    }
-
-    const exprt &value() const
-    {
-      return static_cast<const exprt &>(find(ID_value));
-    }
-
-    exprt &value()
-    {
-      return static_cast<exprt &>(add(ID_value));
-    }
-
-    bool has_value() const
-    {
-      return find(ID_value).is_not_nil();
-    }
-
-    // helper to generate a symbol expression
-    symbol_exprt symbol_expr() const
-    {
-      return symbol_exprt(identifier(), type())
-        .with_source_location<symbol_exprt>(*this);
-    }
-  };
-
-  using declaratorst = std::vector<declaratort>;
+  using declaratort = verilog_declaratort;
+  using declaratorst = verilog_declaratorst;
 
   const declaratorst &declarations() const
   {
@@ -484,8 +488,8 @@ public:
   {
   }
 
-  using declaratort = verilog_parameter_declt::declaratort;
-  using declaratorst = std::vector<declaratort>;
+  using declaratort = verilog_declaratort;
+  using declaratorst = verilog_declaratorst;
 
   const declaratorst &declarations() const
   {
@@ -516,7 +520,7 @@ class verilog_lett : public verilog_module_itemt
 {
 public:
   // These have a single declarator.
-  using declaratort = verilog_parameter_declt::declaratort;
+  using declaratort = verilog_declaratort;
 
   const declaratort &declarator() const
   {
@@ -700,8 +704,8 @@ public:
   }
 
   // When it's not a function or task, there are declarators.
-  using declaratort = verilog_parameter_declt::declaratort;
-  using declaratorst = verilog_parameter_declt::declaratorst;
+  using declaratort = verilog_declaratort;
+  using declaratorst = verilog_declaratorst;
 
   declaratorst &declarators()
   {
