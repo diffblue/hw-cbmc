@@ -24,7 +24,9 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
 
   const irep_idt &base_name = declarator.base_name();
   const irep_idt &port_class = decl.get_class();
+
   auto type = convert_type(decl.type());
+
   irep_idt identifier = hierarchical_identifier(base_name);
 
   if(port_class.empty())
@@ -34,7 +36,18 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   else
   {
     // add the symbol
-    symbolt new_symbol(identifier, type, mode);
+    typet final_type;
+    if(declarator.type().is_nil())
+      final_type = type;
+    else if(declarator.type().id() == ID_verilog_unpacked_array)
+      final_type = unpacked_array_type(declarator.type(), type);
+    else
+    {
+      throw errort().with_location(declarator.source_location())
+        << "unexpected type on declarator";
+    }
+
+    symbolt new_symbol(identifier, final_type, mode);
 
     if(port_class == ID_input)
     {
@@ -222,7 +235,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         if(declarator.type().is_nil())
           symbol.type = type;
-        else if(declarator.type().id() == ID_array)
+        else if(declarator.type().id() == ID_verilog_unpacked_array)
           symbol.type = array_type(declarator.type(), type);
         else
         {
@@ -315,7 +328,15 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
             << "empty symbol name";
         }
 
-        symbol.type = type;
+        if(declarator.type().is_nil())
+          symbol.type = type;
+        else if(declarator.type().id() == ID_verilog_unpacked_array)
+          symbol.type = unpacked_array_type(declarator.type(), type);
+        else
+        {
+          throw errort().with_location(declarator.source_location())
+            << "unexpected type on declarator";
+        }
 
         symbol.name = hierarchical_identifier(symbol.base_name);
 
@@ -401,7 +422,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       if(declarator.type().is_nil())
         symbol.type = type;
-      else if(declarator.type().id() == ID_array)
+      else if(declarator.type().id() == ID_verilog_unpacked_array)
         symbol.type = array_type(declarator.type(), type);
       else
       {
@@ -468,7 +489,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       if(declarator.type().is_nil())
         symbol.type = type;
-      else if(declarator.type().id() == ID_array)
+      else if(declarator.type().id() == ID_verilog_unpacked_array)
         symbol.type = array_type(declarator.type(), type);
       else
       {

@@ -111,7 +111,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     result.set(ID_C_identifier, enum_type.identifier());
     return result.with_source_location(source_location);
   }
-  else if(src.id() == ID_array)
+  else if(src.id() == ID_verilog_packed_array)
   {
     const exprt &range=static_cast<const exprt &>(src.find(ID_range));
 
@@ -147,7 +147,8 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     }
     else
     {
-      // we have a genuine array, and do a recursive call
+      // We have a multi-dimensional packed array,
+      // and do a recursive call.
       const exprt size=from_integer(width, integer_typet());
       typet s=convert_type(subtype);
 
@@ -157,6 +158,11 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
 
       return std::move(result).with_source_location(source_location);
     }
+  }
+  else if(src.id() == ID_verilog_unpacked_array)
+  {
+    // not expected here -- these stick to the declarators
+    PRECONDITION(false);
   }
   else if(src.id() == ID_verilog_type_reference)
   {

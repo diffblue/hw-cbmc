@@ -44,7 +44,7 @@ array_typet verilog_typecheckt::array_type(
 {
   // int whatnot[x:y];
   // 'src' is yet to be converted, but 'element_type' is already converted.
-  PRECONDITION(src.id() == ID_array);
+  PRECONDITION(src.id() == ID_verilog_unpacked_array);
 
   // Unpacked arrays may have a range [x:y],
   // or a size [s], equivalent to [0:s-1]
