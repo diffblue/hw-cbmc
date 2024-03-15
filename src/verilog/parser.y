@@ -3043,10 +3043,16 @@ system_tf_call:
 		{ init($$, ID_function_call);
 		  stack_expr($$).operands().resize(2);
 		  stack_expr($$).operands()[0].swap(stack_expr($1)); }
-        | system_task_name '(' expression_brace ')'
+        | system_task_name '(' list_of_arguments ')'
 		{ init($$, ID_function_call);
 		  stack_expr($$).operands().reserve(2);
 		  mto($$, $1); mto($$, $3); }
+	| system_task_name '(' data_type ')'
+		{ init($$, ID_function_call);
+		  stack_expr($$).operands().reserve(2);
+		  mto($$, $1);
+		  unary_exprt arguments(ID_arguments, exprt(ID_type, stack_type($3)));
+		  stack_expr($$).add_to_operands(arguments); }
         ;
 
 subroutine_call:
