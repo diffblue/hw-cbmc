@@ -1179,12 +1179,7 @@ genvar_declaration:
 	;
 
 net_declaration:
-          net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
-		{ init($$, ID_decl);
-                  addswap($$, ID_class, $1);
-                  addswap($$, ID_type, $4);
-                  swapop($$, $6); }
-        | net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
+          net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
 		{ init($$, ID_decl);
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
@@ -1212,21 +1207,6 @@ vectored_scalared_opt:
                 { make_nil($$); }
 	| TOK_VECTORED     { init($$, "vectored"); }
 	| TOK_SCALARED     { init($$, "scalared"); }
-	;
-
-list_of_net_names:
-	  net_name
-		{ init($$); mto($$, $1); }
-	| list_of_net_names ',' net_name
-		{ $$=$1;    mto($$, $3); }
-	;
-
-net_name: net_identifier unpacked_dimension_brace
-          {
-            $$=$1;
-            stack_expr($$).id(ID_declarator);
-            addswap($$, ID_type, $2);
-          }
 	;
 
 list_of_net_decl_assignments:
@@ -1708,8 +1688,16 @@ range:	part_select;
 // System Verilog standard 1800-2017
 // A.2.4 Declaration assignments
 
-net_decl_assignment: net_identifier '=' expression
-		{ $$ = $1; stack_expr($$).id(ID_declarator); addswap($$, ID_value, $3); }
+net_decl_assignment:
+	  net_identifier unpacked_dimension_brace
+		{ $$ = $1;
+		  stack_expr($$).id(ID_declarator);
+		  addswap($$, ID_type, $2); }
+	| net_identifier unpacked_dimension_brace '=' expression
+		{ $$ = $1;
+		  stack_expr($$).id(ID_declarator);
+		  addswap($$, ID_type, $2);
+		  addswap($$, ID_value, $4); }
 	;
 
 variable_decl_assignment:
