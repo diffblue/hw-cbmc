@@ -16,6 +16,79 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::array_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+array_typet
+verilog_typecheck_exprt::array_type(const irept &src, const typet &element_type)
+{
+  // int whatnot[x:y];
+  // 'src' is yet to be converted, but 'element_type' is already converted.
+  PRECONDITION(src.id() == ID_verilog_unpacked_array);
+
+  // Unpacked arrays may have a range [x:y],
+  // or a size [s], equivalent to [0:s-1]
+  const exprt &range_expr = static_cast<const exprt &>(src.find(ID_range));
+  const exprt &size_expr = static_cast<const exprt &>(src.find(ID_size));
+
+  mp_integer size, offset;
+  bool little_endian;
+
+  if(range_expr.is_not_nil())
+  {
+    // these may be negative
+    mp_integer msb, lsb;
+    convert_range(range_expr, msb, lsb);
+    little_endian = (lsb <= msb);
+    size = (little_endian ? msb - lsb : lsb - msb) + 1;
+    offset = little_endian ? lsb : msb;
+  }
+  else if(size_expr.is_not_nil())
+  {
+    little_endian = true;
+    size = convert_integer_constant_expression(size_expr);
+    offset = 0;
+    if(size < 0)
+    {
+      throw errort().with_location(size_expr.find_source_location())
+        << "array size must be nonnegative";
+    }
+  }
+  else
+  {
+    throw errort() << "array must have range or size";
+  }
+
+  const typet src_subtype =
+    static_cast<const typet &>(src).has_subtype()
+      ? static_cast<const type_with_subtypet &>(src).subtype()
+      : typet(ID_nil);
+
+  typet array_subtype;
+
+  // may need to go recursive
+  if(src_subtype.is_nil())
+    array_subtype = element_type;
+  else
+    array_subtype = array_type(src_subtype, element_type);
+
+  const exprt final_size_expr = from_integer(size, integer_typet());
+  array_typet result(array_subtype, final_size_expr);
+  result.set(ID_offset, from_integer(offset, integer_typet()));
+  result.set(ID_C_little_endian, little_endian);
+
+  return result;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_type
 
   Inputs:

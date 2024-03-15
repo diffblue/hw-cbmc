@@ -125,10 +125,6 @@ protected:
   void interface_generate_block(const class verilog_generate_blockt &);
   void interface_statement(const class verilog_statementt &);
 
-  array_typet array_type(
-    const irept &src,
-    const typet &element_type);
-
   // type checking
   
   typedef enum { A_CONTINUOUS, A_BLOCKING, A_NON_BLOCKING } vassignt;
