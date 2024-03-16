@@ -293,6 +293,9 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_verilog_smv_assume)
   {
   }
+  else if(module_item.id() == ID_verilog_package_import)
+  {
+  }
   else
   {
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
