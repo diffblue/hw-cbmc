@@ -167,7 +167,7 @@ Function: verilog_typecheck_baset::get_width
 
 \*******************************************************************/
 
-std::size_t verilog_typecheck_baset::get_width(const typet &type)
+mp_integer verilog_typecheck_baset::get_width(const typet &type)
 {
   if(type.id()==ID_bool)
     return 1;
@@ -188,7 +188,7 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
     mp_integer sum = 0;
     for(auto &component : to_struct_type(type).components())
       sum += get_width(component.type());
-    return sum.to_ulong();
+    return sum;
   }
 
   if(type.id() == ID_verilog_shortint)

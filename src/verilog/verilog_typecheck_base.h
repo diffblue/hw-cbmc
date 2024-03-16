@@ -38,9 +38,12 @@ public:
 protected:
   const namespacet &ns;
   const irep_idt mode;
-  
-  std::size_t get_width(const exprt &expr) { return get_width(expr.type()); }
-  std::size_t get_width(const typet &type);
+
+  mp_integer get_width(const exprt &expr)
+  {
+    return get_width(expr.type());
+  }
+  mp_integer get_width(const typet &type);
   mp_integer array_size(const array_typet &);
   mp_integer array_offset(const array_typet &);
   typet index_type(const array_typet &);
