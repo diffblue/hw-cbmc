@@ -1062,6 +1062,8 @@ package_or_generate_item_declaration:
 	     that let constructs may be declared in a
 	     module/interface/program/checker etc. */
 	| let_declaration
+	| ';'
+		{ init($$, ID_verilog_empty_item); }
         ;
 
 // System Verilog standard 1800-2017

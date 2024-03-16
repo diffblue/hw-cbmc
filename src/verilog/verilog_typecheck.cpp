@@ -1629,6 +1629,9 @@ void verilog_typecheckt::convert_module_item(
   {
     // done already
   }
+  else if(module_item.id() == ID_verilog_empty_item)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
