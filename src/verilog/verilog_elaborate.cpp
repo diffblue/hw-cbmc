@@ -778,6 +778,9 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_empty_item)
   {
   }
+  else if(module_item.id() == ID_verilog_package_import)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
 }

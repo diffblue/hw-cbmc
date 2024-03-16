@@ -662,6 +662,7 @@ module_nonansi_header:
 	  attribute_instance_brace
 	  module_keyword
 	  module_identifier_with_scope
+	  package_import_declaration_brace
 	  parameter_port_list_opt
 	  list_of_ports_opt ';'
           {
@@ -669,8 +670,8 @@ module_nonansi_header:
             stack_expr($$).operands()[0].swap(stack_expr($1));
             stack_expr($$).operands()[1].swap(stack_expr($2));
             stack_expr($$).operands()[2].swap(stack_expr($3));
-            stack_expr($$).operands()[3].swap(stack_expr($4));
-            stack_expr($$).operands()[4].swap(stack_expr($5));
+            stack_expr($$).operands()[3].swap(stack_expr($5));
+            stack_expr($$).operands()[4].swap(stack_expr($6));
           }
         ;
 
@@ -678,6 +679,7 @@ module_ansi_header:
           attribute_instance_brace
 	  module_keyword
 	  module_identifier_with_scope
+	  package_import_declaration_brace
 	  parameter_port_list_opt
 	  list_of_port_declarations ';'
           {
@@ -685,8 +687,8 @@ module_ansi_header:
             stack_expr($$).operands()[0].swap(stack_expr($1));
             stack_expr($$).operands()[1].swap(stack_expr($2));
             stack_expr($$).operands()[2].swap(stack_expr($3));
-            stack_expr($$).operands()[3].swap(stack_expr($4));
-            stack_expr($$).operands()[4].swap(stack_expr($5));
+            stack_expr($$).operands()[3].swap(stack_expr($5));
+            stack_expr($$).operands()[4].swap(stack_expr($6));
           }
         ;
 
@@ -1165,6 +1167,33 @@ data_declaration:
 		  addswap($$, ID_type, $2);
 		  swapop($$, $3); }
 	| type_declaration
+	| package_import_declaration
+	;
+
+package_import_declaration_brace:
+	  /* Optional */
+		{ init($$); }
+	| package_import_declaration_brace package_import_declaration
+		{ $$ = $1; mts($$, $2); }
+	;
+
+package_import_declaration:
+	  TOK_IMPORT package_import_item_brace ';'
+		{ init($$, ID_verilog_package_import); swapop($$, $2); }
+	;
+
+package_import_item_brace:
+	  package_import_item
+		{ init($$); mts($$, $1); }
+	| package_import_item_brace ',' package_import_item
+		{ $$ = $1; mts($$, $3); }
+	;
+
+package_import_item:
+	  package_identifier "::" identifier
+		{ init($$, ID_verilog_import_item); mto($$, $1); mto($$, $3); }
+	| package_identifier "::" "*"
+		{ init($$, ID_verilog_import_item); mto($$, $1); }
 	;
 
 genvar_declaration:
