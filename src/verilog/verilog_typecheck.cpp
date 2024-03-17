@@ -658,7 +658,7 @@ void verilog_typecheckt::convert_inst_builtin(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_always
+Function: verilog_typecheckt::convert_always_base
 
   Inputs:
 
@@ -668,15 +668,8 @@ Function: verilog_typecheckt::convert_always
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_always(
-  verilog_alwayst &module_item)
+void verilog_typecheckt::convert_always_base(verilog_always_baset &module_item)
 {
-  if(module_item.operands().size()!=1)
-  {
-    throw errort().with_location(module_item.source_location())
-      << "always statement expected to have one operand";
-  }
-
   convert_statement(module_item.statement());
 }
 
@@ -1585,8 +1578,12 @@ void verilog_typecheckt::convert_module_item(
   {
     // done already
   }
-  else if(module_item.id()==ID_always)
-    convert_always(to_verilog_always(module_item));
+  else if(
+    module_item.id() == ID_verilog_always ||
+    module_item.id() == ID_verilog_always_comb ||
+    module_item.id() == ID_verilog_always_ff ||
+    module_item.id() == ID_verilog_always_latch)
+    convert_always_base(to_verilog_always_base(module_item));
   else if(module_item.id()==ID_assert)
     convert_assert(to_verilog_assert_module_item(module_item));
   else if(module_item.id()==ID_assume)

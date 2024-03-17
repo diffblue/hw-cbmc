@@ -129,8 +129,12 @@ protected:
   {
     INITIAL,
     ALWAYS,
+    ALWAYS_COMB,
+    ALWAYS_FF,
+    ALWAYS_LATCH,
     OTHER
   };
+
   constructt construct;
   event_guardt event_guard;
  
@@ -214,7 +218,7 @@ protected:
   // module items
   virtual void convert_module_items(symbolt &);
   void synth_module_item(const verilog_module_itemt &, transt &);
-  void synth_always(const verilog_alwayst &);
+  void synth_always_base(const verilog_always_baset &);
   void synth_initial(const verilog_initialt &);
   void synth_assert_module_item(const verilog_module_itemt &);
   void synth_assume_module_item(const verilog_module_itemt &);
@@ -238,7 +242,7 @@ protected:
   void synth_while(const verilog_whilet &);
   void synth_repeat(const verilog_repeatt &);
   void synth_function_call_or_task_enable(const verilog_function_callt &);
-  void synth_assign(const exprt &, bool blocking);
+  void synth_assign(const verilog_statementt &, bool blocking);
   void synth_assert(const verilog_assert_statementt &);
   void synth_assume(const verilog_assume_statementt &);
   void synth_prepostincdec(const verilog_statementt &);

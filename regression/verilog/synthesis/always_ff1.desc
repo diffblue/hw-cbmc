@@ -1,0 +1,8 @@
+CORE
+always_ff1.sv
+--module main --k-induction
+^EXIT=0$
+^SIGNAL=0$
+^\[main\.property\.p0\] always main\.x >= 1 && main\.x <= 10: PROVED$
+--
+^warning: ignoring

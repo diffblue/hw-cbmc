@@ -164,8 +164,7 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
   }
 
   // check some restrictions
-  if(construct!=constructt::INITIAL &&
-     construct!=constructt::ALWAYS)
+  if(construct == constructt::OTHER)
   {
     throw errort().with_location(call.source_location())
       << "function call not allowed here";
@@ -366,17 +365,25 @@ void verilog_synthesist::assignment_rec(
      event_guard==event_guardt::NONE)
   {
     throw errort().with_location(lhs.source_location())
-      << "permanent assignment without event guard";
+      << "assignment in 'always' context without event guard";
+  }
+
+  if(construct == constructt::ALWAYS_FF && event_guard == event_guardt::NONE)
+  {
+    throw errort().with_location(lhs.source_location())
+      << "assignment in 'always_ff' context without event guard";
   }
 
   {
     event_guardt new_type;
 
-    if(construct==constructt::ALWAYS)  
-      new_type=event_guard;
-    else
+    if(construct == constructt::INITIAL)
       new_type=event_guardt::CLOCK;
-      
+    else if(construct == constructt::ALWAYS_COMB)
+      new_type = event_guardt::COMBINATIONAL;
+    else
+      new_type = event_guard;
+
     assignmentt &assignment=assignments[symbol.name];
 
     if(assignment.is_cycle_local)
@@ -968,11 +975,8 @@ void verilog_synthesist::instantiate_port(
   event_guard.add_source_location() = source_location;
   event_guard.body() = assignment;
 
-  verilog_alwayst always;
-  always.add_source_location() = source_location;
-  always.statement() = event_guard;
-
-  synth_always(always);
+  verilog_always_baset always(ID_verilog_always, event_guard, source_location);
+  synth_always_base(always);
 }
 
 /*******************************************************************\
@@ -1340,7 +1344,7 @@ void verilog_synthesist::expand_module_instance(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_always
+Function: verilog_synthesist::synth_always_base
 
   Inputs:
 
@@ -1350,16 +1354,24 @@ Function: verilog_synthesist::synth_always
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_always(
-  const verilog_alwayst &module_item)
+void verilog_synthesist::synth_always_base(
+  const verilog_always_baset &module_item)
 {
-  if(module_item.operands().size()!=1)
+  if(module_item.id() == ID_verilog_always)
+    construct = constructt::ALWAYS;
+  else if(module_item.id() == ID_verilog_always_comb)
+    construct = constructt::ALWAYS_COMB;
+  else if(module_item.id() == ID_verilog_always_ff)
+    construct = constructt::ALWAYS_FF;
+  else if(module_item.id() == ID_verilog_always_latch)
   {
     throw errort().with_location(module_item.source_location())
-      << "always module item expected to have one operand";
+      << "no synthesis support for always_latch";
   }
+  else
+    DATA_INVARIANT(
+      false, "unknown always construct: " + module_item.id_string());
 
-  construct=constructt::ALWAYS;
   event_guard=event_guardt::NONE;
 
   value_mapt always_value_map;
@@ -1592,13 +1604,11 @@ void verilog_synthesist::synth_continuous_assign(
     
     verilog_event_guardt event_guard;
     event_guard.add_source_location()=module_item.source_location();
-    event_guard.body()=assignment;
-    
-    verilog_alwayst always;
-    always.add_source_location()=module_item.source_location();
-    always.statement()=event_guard;
+    event_guard.body() = assignment;
 
-    synth_always(always);
+    verilog_always_baset always(
+      ID_verilog_always, event_guard, module_item.source_location());
+    synth_always_base(always);
   }
 }
 
@@ -1708,7 +1718,7 @@ Function: verilog_synthesist::synth_assign
 \*******************************************************************/
 
 void verilog_synthesist::synth_assign(
-  const exprt &statement,
+  const verilog_statementt &statement,
   bool blocking)
 {
   if(statement.operands().size()!=2)
@@ -1717,8 +1727,7 @@ void verilog_synthesist::synth_assign(
       << "assign statement expected to have two operands";
   }
 
-  if(construct!=constructt::ALWAYS &&
-     construct!=constructt::INITIAL)
+  if(construct == constructt::OTHER)
   {
     throw errort().with_location(statement.source_location())
       << "unexpected assignment statement";
@@ -2597,8 +2606,12 @@ void verilog_synthesist::synth_module_item(
     module_item.id() == ID_parameter_override)
   {
   }
-  else if(module_item.id()==ID_always)
-    synth_always(to_verilog_always(module_item));
+  else if(
+    module_item.id() == ID_verilog_always ||
+    module_item.id() == ID_verilog_always_comb ||
+    module_item.id() == ID_verilog_always_ff ||
+    module_item.id() == ID_verilog_always_latch)
+    synth_always_base(to_verilog_always_base(module_item));
   else if(module_item.id()==ID_initial)
     synth_initial(to_verilog_initial(module_item));
   else if(module_item.id()==ID_continuous_assign)
@@ -2819,7 +2832,9 @@ exprt verilog_synthesist::current_value(
         return value; // done
     }
 
-    if(construct==constructt::ALWAYS)
+    if(
+      construct == constructt::ALWAYS || construct == constructt::ALWAYS_FF ||
+      construct == constructt::ALWAYS_LATCH)
       return symbol_expr(symbol, CURRENT);
     else
     {

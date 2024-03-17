@@ -104,10 +104,20 @@ public:
   {
   }
 
-  explicit verilog_statementt(const irep_idt &id, operandst _operands)
+  verilog_statementt(const irep_idt &id, operandst _operands) : exprt(id)
+  {
+    operands() = std::move(_operands);
+  }
+
+  verilog_statementt(
+    const irep_idt &id,
+    operandst _operands,
+    source_locationt __source_location)
     : exprt(id)
   {
     operands() = std::move(_operands);
+    if(__source_location.is_not_nil())
+      add_source_location() = std::move(__source_location);
   }
 
   verilog_statementt()
@@ -649,14 +659,21 @@ inline verilog_inst_builtint &to_verilog_inst_builtin(exprt &expr)
   return static_cast<verilog_inst_builtint &>(expr);
 }
 
-class verilog_alwayst:public verilog_statementt
+/// SystemVerilog has always, always_comb, always_ff and always_latch
+class verilog_always_baset : public verilog_statementt
 {
 public:
-  verilog_alwayst():verilog_statementt(ID_always)
+  verilog_always_baset(
+    irep_idt id,
+    verilog_statementt __statement,
+    source_locationt __source_location)
+    : verilog_statementt(
+        id,
+        {std::move(__statement)},
+        std::move(__source_location))
   {
-    operands().resize(1);
   }
-  
+
   verilog_statementt &statement()
   {
     return static_cast<verilog_statementt &>(op0());
@@ -668,18 +685,16 @@ public:
   }
 };
 
-inline const verilog_alwayst &to_verilog_always(const exprt &expr)
+inline const verilog_always_baset &to_verilog_always_base(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_always);
-  PRECONDITION(expr.operands().size() == 1);
-  return static_cast<const verilog_alwayst &>(expr);
+  unary_exprt::check(expr);
+  return static_cast<const verilog_always_baset &>(expr);
 }
 
-inline verilog_alwayst &to_verilog_always(exprt &expr)
+inline verilog_always_baset &to_verilog_always_base(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_always);
-  PRECONDITION(expr.operands().size() == 1);
-  return static_cast<verilog_alwayst &>(expr);
+  unary_exprt::check(expr);
+  return static_cast<verilog_always_baset &>(expr);
 }
 
 class verilog_declt:public verilog_statementt
