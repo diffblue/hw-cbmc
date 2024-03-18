@@ -1625,6 +1625,9 @@ void verilog_typecheckt::convert_module_item(
     module_item.swap(tmp);
     convert_module_item(module_item);
   }
+  else if(module_item.id() == ID_verilog_final)
+  {
+  }
   else if(module_item.id() == ID_verilog_let)
   {
     // done already

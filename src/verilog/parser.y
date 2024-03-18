@@ -861,6 +861,7 @@ module_common_item:
         | bind_directive
 	| continuous_assign
 	| initial_construct
+	| final_construct
 	| always_construct
 	| loop_generate_construct
 	| conditional_generate_construct
@@ -2511,6 +2512,10 @@ always_keyword:
 	| TOK_ALWAYS_FF    { init($$, ID_always); }
 	;
 
+final_construct: TOK_FINAL function_statement
+		{ init($$, ID_verilog_final); mto($$, $2); }
+	;
+
 blocking_assignment:
 	  variable_lvalue '=' delay_or_event_control expression
 		{ init($$, ID_blocking_assign); mto($$, $1); mto($$, $4); }
@@ -2694,6 +2699,9 @@ statement_item:
 	| seq_block
 	| wait_statement
 	| procedural_assertion_statement
+	;
+
+function_statement: statement
 	;
 
 system_task_name: TOK_SYSIDENT
