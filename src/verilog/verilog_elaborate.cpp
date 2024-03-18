@@ -729,9 +729,13 @@ void verilog_typecheckt::collect_symbols(
   {
     collect_symbols(to_verilog_decl(module_item));
   }
-  else if(module_item.id() == ID_always)
+  else if(
+    module_item.id() == ID_verilog_always ||
+    module_item.id() == ID_verilog_always_comb ||
+    module_item.id() == ID_verilog_always_ff ||
+    module_item.id() == ID_verilog_always_latch)
   {
-    collect_symbols(to_verilog_always(module_item).statement());
+    collect_symbols(to_verilog_always_base(module_item).statement());
   }
   else if(module_item.id() == ID_initial)
   {

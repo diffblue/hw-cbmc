@@ -2518,10 +2518,10 @@ always_construct: always_keyword statement
 	;
 
 always_keyword:
-	  TOK_ALWAYS       { init($$, ID_always); }
-	| TOK_ALWAYS_COMB  { init($$, ID_always); }
-	| TOK_ALWAYS_LATCH { init($$, ID_always); }
-	| TOK_ALWAYS_FF    { init($$, ID_always); }
+	  TOK_ALWAYS       { init($$, ID_verilog_always); }
+	| TOK_ALWAYS_COMB  { init($$, ID_verilog_always_comb); }
+	| TOK_ALWAYS_LATCH { init($$, ID_verilog_always_latch); }
+	| TOK_ALWAYS_FF    { init($$, ID_verilog_always_ff); }
 	;
 
 final_construct: TOK_FINAL function_statement

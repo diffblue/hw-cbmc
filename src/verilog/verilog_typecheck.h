@@ -158,7 +158,7 @@ protected:
   void convert_function_or_task(class verilog_declt &);
   void convert_inst(class verilog_instt &);
   void convert_inst_builtin(class verilog_inst_builtint &);
-  void convert_always(class verilog_alwayst &);
+  void convert_always_base(class verilog_always_baset &);
   void convert_initial(class verilog_initialt &);
   void convert_continuous_assign(class verilog_continuous_assignt &);
   void convert_assert(verilog_assert_module_itemt &);

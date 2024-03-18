@@ -252,8 +252,12 @@ void verilog_typecheckt::interface_module_item(
     interface_inst(to_verilog_inst(module_item));
   else if(module_item.id() == ID_inst_builtin)
     interface_inst(to_verilog_inst_builtin(module_item));
-  else if(module_item.id()==ID_always)
-    interface_statement(to_verilog_always(module_item).statement());
+  else if(
+    module_item.id() == ID_verilog_always ||
+    module_item.id() == ID_verilog_always_comb ||
+    module_item.id() == ID_verilog_always_ff ||
+    module_item.id() == ID_verilog_always_latch)
+    interface_statement(to_verilog_always_base(module_item).statement());
   else if(module_item.id()==ID_initial)
     interface_statement(to_verilog_initial(module_item).statement());
   else if(module_item.id()==ID_generate_block)
