@@ -182,6 +182,15 @@ std::size_t verilog_typecheck_baset::get_width(const typet &type)
     return (array_size(to_array_type(type)) * element_width).to_ulong();
   }
 
+  if(type.id() == ID_struct)
+  {
+    // add them up
+    mp_integer sum = 0;
+    for(auto &component : to_struct_type(type).components())
+      sum += get_width(component.type());
+    return sum.to_ulong();
+  }
+
   if(type.id() == ID_verilog_shortint)
     return 16;
   else if(type.id() == ID_verilog_int)

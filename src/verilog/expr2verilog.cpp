@@ -1251,6 +1251,14 @@ std::string expr2verilogt::convert(const typet &type)
   {
     return "enum";
   }
+  else if(type.id() == ID_struct)
+  {
+    return "struct";
+  }
+  else if(type.id() == ID_union)
+  {
+    return "union";
+  }
   else if(type.id() == ID_verilog_type_reference)
   {
     auto &type_reference = to_verilog_type_reference(type);

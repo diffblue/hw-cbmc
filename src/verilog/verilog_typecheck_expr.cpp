@@ -514,6 +514,19 @@ verilog_typecheck_exprt::bits_rec(const typet &type) const
     else
       return {};
   }
+  else if(type.id() == ID_struct)
+  {
+    auto &struct_type = to_struct_type(type);
+    mp_integer sum = 0;
+    for(auto &component : struct_type.components())
+    {
+      auto component_bits_opt = bits_rec(component.type());
+      if(!component_bits_opt.has_value())
+        return component_bits_opt.value();
+      sum += component_bits_opt.value();
+    }
+    return sum;
+  }
   else
     return {};
 }
@@ -871,6 +884,25 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 {
   convert_expr(expr.lhs());
 
+  DATA_INVARIANT(expr.rhs().id() == ID_symbol, "expected symbol on rhs of `.'");
+
+  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
+
+  if(expr.lhs().type().id() == ID_struct || expr.lhs().type().id() == ID_union)
+  {
+    // look up the component
+    auto &compound_type = to_struct_union_type(expr.lhs().type());
+    auto &component = compound_type.get_component(rhs_identifier);
+    if(component.is_nil())
+      throw errort().with_location(expr.source_location())
+        << compound_type.id() << " does not have a member named "
+        << rhs_identifier;
+
+    // create the member expression
+    return member_exprt{expr.lhs(), component.get_name(), component.type()}
+      .with_source_location<exprt>(expr);
+  }
+
   const irep_idt &lhs_identifier = [](const exprt &lhs) {
     if(lhs.id() == ID_symbol)
       return to_symbol_expr(lhs).get_identifier();
@@ -882,12 +914,6 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
         << "expected symbol or hierarchical identifier on lhs of `.'";
     }
   }(expr.lhs());
-
-  DATA_INVARIANT(expr.rhs().id() == ID_symbol, "expected symbol on rhs of `.'");
-
-  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
-
-  irep_idt full_identifier;
 
   if(expr.lhs().type().id() == ID_module_instance)
   {
@@ -903,8 +929,8 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     const irep_idt &module=module_instance_symbol->value.get(ID_module);
 
     // the identifier in the module
-    full_identifier=
-      id2string(module)+"."+id2string(rhs_identifier);
+    const irep_idt full_identifier =
+      id2string(module) + "." + id2string(rhs_identifier);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
@@ -933,9 +959,8 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
   }
   else if(expr.lhs().type().id() == ID_named_block)
   {
-    full_identifier=
-      id2string(lhs_identifier)+"."+
-      id2string(rhs_identifier);
+    const irep_idt full_identifier =
+      id2string(lhs_identifier) + "." + id2string(rhs_identifier);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
@@ -1496,6 +1521,8 @@ void verilog_typecheck_exprt::implicit_typecast(
   if(dest_type.id()==irep_idt())
     return;
 
+  const typet &src_type = expr.type();
+
   auto &verilog_dest_type = dest_type.get(ID_C_verilog_type);
   if(verilog_dest_type == ID_verilog_enum)
   {
@@ -1503,8 +1530,8 @@ void verilog_typecheck_exprt::implicit_typecast(
     // assigned a value that lies outside the enumeration set unless an
     // explicit cast is used"
     if(
-      expr.type().get(ID_C_verilog_type) != ID_verilog_enum ||
-      expr.type().get(ID_C_identifier) != dest_type.get(ID_C_identifier))
+      src_type.get(ID_C_verilog_type) != ID_verilog_enum ||
+      src_type.get(ID_C_identifier) != dest_type.get(ID_C_identifier))
     {
       throw errort().with_location(expr.source_location())
         << "assignment to enum requires enum of the same type, but got "
@@ -1512,7 +1539,7 @@ void verilog_typecheck_exprt::implicit_typecast(
     }
   }
 
-  if(expr.type()==dest_type)
+  if(src_type == dest_type)
     return;
 
   if(dest_type.id() == ID_integer)
@@ -1533,15 +1560,15 @@ void verilog_typecheck_exprt::implicit_typecast(
     }
 
     if(
-      expr.type().id() == ID_bool || expr.type().id() == ID_unsignedbv ||
-      expr.type().id() == ID_signedbv || expr.type().id() == ID_integer)
+      src_type.id() == ID_bool || src_type.id() == ID_unsignedbv ||
+      src_type.id() == ID_signedbv || src_type.id() == ID_integer)
     {
       expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
 
-  if(expr.type().id() == ID_integer)
+  if(src_type.id() == ID_integer)
   {
     // from integer to s.th. else
     if(dest_type.id()==ID_bool)
@@ -1564,19 +1591,18 @@ void verilog_typecheck_exprt::implicit_typecast(
       return;
     }
   }
-  else if(expr.type().id()==ID_bool ||
-          expr.type().id()==ID_unsignedbv ||
-          expr.type().id()==ID_signedbv ||
-          expr.type().id()==ID_verilog_unsignedbv ||
-          expr.type().id()==ID_verilog_signedbv)
+  else if(
+    src_type.id() == ID_bool || src_type.id() == ID_unsignedbv ||
+    src_type.id() == ID_signedbv || src_type.id() == ID_verilog_unsignedbv ||
+    src_type.id() == ID_verilog_signedbv)
   {
+    // from bits to s.th. else
     if(dest_type.id()==ID_bool)
     {
       // do not use typecast here
       // we actually only want the lowest bit
 
-      if(expr.is_constant() &&
-         expr.type().id()==ID_unsignedbv)
+      if(expr.is_constant() && src_type.id() == ID_unsignedbv)
       {
         const std::string &value=expr.get_string(ID_value);
         // least significant bit is last
@@ -1620,10 +1646,29 @@ void verilog_typecheck_exprt::implicit_typecast(
       expr = typecast_exprt{expr, dest_type};
       return;
     }
+    else if(dest_type.id() == ID_struct)
+    {
+      // bit-vectors can be converted to packed structs
+      expr = typecast_exprt{expr, dest_type};
+      return;
+    }
+  }
+  else if(src_type.id() == ID_struct)
+  {
+    // packed structs can be converted to bits
+    if(
+      dest_type.id() == ID_bool || dest_type.id() == ID_unsignedbv ||
+      dest_type.id() == ID_signedbv ||
+      dest_type.id() == ID_verilog_unsignedbv ||
+      dest_type.id() == ID_verilog_signedbv)
+    {
+      expr = typecast_exprt{expr, dest_type};
+      return;
+    }
   }
 
   throw errort().with_location(expr.source_location())
-    << "failed to convert `" << to_string(expr.type()) << "' to `"
+    << "failed to convert `" << to_string(src_type) << "' to `"
     << to_string(dest_type) << "'";
 }
 
