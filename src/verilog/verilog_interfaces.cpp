@@ -277,6 +277,9 @@ void verilog_typecheckt::interface_module_item(
   {
     // already done during constant elaboration
   }
+  else if(module_item.id() == ID_verilog_empty_item)
+  {
+  }
   else
   {
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
