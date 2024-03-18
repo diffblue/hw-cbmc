@@ -92,7 +92,7 @@ array_typet verilog_typecheckt::array_type(
   else
     array_subtype=array_type(src_subtype, element_type);
 
-  const exprt final_size_expr = from_integer(size, natural_typet());
+  const exprt final_size_expr = from_integer(size, integer_typet());
   array_typet result(array_subtype, final_size_expr);
   result.set(ID_offset, from_integer(offset, integer_typet()));
   result.set(ID_C_little_endian, little_endian);

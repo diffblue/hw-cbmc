@@ -822,23 +822,26 @@ ansi_port_declaration:
 	;
 
 module_port_input_declaration:
-	  TOK_INPUT net_port_type port_identifier
+	  TOK_INPUT net_port_type port_identifier unpacked_dimension_brace
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_input);
-                  addswap($$, ID_type, $2);
+                  add_as_subtype(stack_type($4), stack_type($2));
+                  addswap($$, ID_type, $4);
                   mto($$, $3); }
 	;
 
 module_port_output_declaration:
-	  TOK_OUTPUT net_port_type port_identifier
+	  TOK_OUTPUT net_port_type port_identifier unpacked_dimension_brace
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output);
-                  addswap($$, ID_type, $2);
+                  add_as_subtype(stack_type($4), stack_type($2));
+                  addswap($$, ID_type, $4);
                   mto($$, $3); }
-	| TOK_OUTPUT data_type port_identifier
+	| TOK_OUTPUT data_type port_identifier unpacked_dimension_brace
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output_register);
-                  addswap($$, ID_type, $2);
+                  add_as_subtype(stack_type($4), stack_type($2));
+                  addswap($$, ID_type, $4);
                   mto($$, $3); }
 	;
 
@@ -1092,10 +1095,11 @@ specparam_declaration:
 // A.2.1.2 Port declarations
 
 module_port_inout_declaration:
-	  TOK_INOUT net_port_type port_identifier
+	  TOK_INOUT net_port_type port_identifier unpacked_dimension_brace
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_inout);
-                  addswap($$, ID_type, $2);
+                  add_as_subtype(stack_type($4), stack_type($2));
+                  addswap($$, ID_type, $4);
                   mto($$, $3); }
 	;
 
