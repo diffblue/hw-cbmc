@@ -1336,7 +1336,7 @@ integer_atom_type:
 	| TOK_SHORTINT { init($$, ID_verilog_shortint); }
 	| TOK_INT { init($$, ID_verilog_int); }
 	| TOK_LONGINT { init($$, ID_verilog_longint); }
-	| TOK_INTEGER { init($$, ID_integer); }
+	| TOK_INTEGER { init($$, ID_verilog_integer); }
 	| TOK_TIME { init($$, ID_verilog_time); }
 	;
 	
@@ -1830,7 +1830,7 @@ range_or_type_opt:
 range_or_type:
 	  packed_dimension
 	| TOK_INTEGER
-		{ init($$, ID_integer); }
+		{ init($$, ID_verilog_integer); }
 	| TOK_REAL
 		{ init($$, ID_verilog_real); }
 	| TOK_REALTIME
