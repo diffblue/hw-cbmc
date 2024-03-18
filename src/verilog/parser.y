@@ -432,6 +432,7 @@ int yyverilogerror(const char *error)
 %token TOK_LESSLESSLESSEQUAL "<<<="
 %token TOK_GREATERGREATERGREATEREQUAL ">>>="
 %token TOK_HASHHASH         "##"
+%token TOK_COLONCOLON       "::"
 
 /* System Verilog Keywords */
 %token TOK_ACCEPT_ON        "accept_on"

@@ -247,6 +247,7 @@ void verilog_scanner_init()
 "<->"           { SYSTEM_VERILOG_OPERATOR(TOK_LESSMINUSGREATER, "<->"); }
 "->"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSGREATER, "->"); }
 "'"             { SYSTEM_VERILOG_OPERATOR('\'', "'"); }
+"::"            { SYSTEM_VERILOG_OPERATOR(TOK_COLONCOLON, "::"); }
 
                 /* Verilog 1364-1995 keywords */
 
