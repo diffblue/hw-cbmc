@@ -2215,18 +2215,24 @@ name_of_gate_instance: TOK_NON_TYPE_IDENTIFIER;
 // A.4.1.1 Module instantiation
 
 module_instantiation:
-	  module_identifier param_value_assign_opt module_instance_brace ';'
+	  module_identifier parameter_value_assignment_opt module_instance_brace ';'
 		{ init($$, ID_inst);
                   addswap($$, ID_module, $1);
 		  addswap($$, ID_parameter_assignments, $2);
                   swapop($$, $3); }
 	;
 
-param_value_assign_opt:
+parameter_value_assignment_opt:
 	  /* Optional */
 		{ make_nil($$); }
-	| '#' '(' list_of_parameter_assignments ')'
+	| '#' '(' list_of_parameter_assignments_opt ')'
 		{ $$ = $3; }
+	;
+
+list_of_parameter_assignments_opt:
+	  /* Optional */
+		{ make_nil($$); }
+	| list_of_parameter_assignments
 	;
 
 list_of_parameter_assignments:
