@@ -65,7 +65,8 @@ public:
   {
   }
 
-  explicit inline verilog_signedbv_typet(unsigned width):bitvector_typet(ID_verilog_signedbv, width)
+  explicit inline verilog_signedbv_typet(std::size_t width)
+    : bitvector_typet(ID_verilog_signedbv, width)
   {
   }
 };
@@ -102,7 +103,8 @@ public:
   {
   }
 
-  explicit inline verilog_unsignedbv_typet(unsigned width):bitvector_typet(ID_verilog_unsignedbv, width)
+  explicit inline verilog_unsignedbv_typet(std::size_t width)
+    : bitvector_typet(ID_verilog_unsignedbv, width)
   {
   }
 };

@@ -266,8 +266,8 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
       throw errort().with_location(expr.source_location())
         << "concatenation expected to have at least one operand";
     }
-    
-    unsigned width=0;
+
+    mp_integer width = 0;
     bool has_verilogbv=false;
 
     Forall_operands(it, expr)
@@ -300,23 +300,24 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
       if(op.type().id() == ID_signedbv || op.type().id() == ID_verilog_signedbv)
       {
         auto width = get_width(op);
+        auto width_int = numeric_cast_v<std::size_t>(width);
         if(op.type().id() == ID_verilog_signedbv)
-          op = typecast_exprt(op, verilog_unsignedbv_typet(width));
+          op = typecast_exprt{op, verilog_unsignedbv_typet{width_int}};
         else
-          op = typecast_exprt(op, unsignedbv_typet(width));
+          op = typecast_exprt{op, unsignedbv_typet{width_int}};
       }
     }
 
     expr.type()=typet(has_verilogbv?ID_verilog_unsignedbv:ID_unsignedbv);
-    expr.type().set(ID_width, width);
-    
+    expr.type().set(ID_width, integer2string(width));
+
     if(has_verilogbv)
     {
       Forall_operands(it, expr)
         if(it->type().id()!=ID_verilog_unsignedbv)
         {
-          unsigned width=get_width(*it);
-          *it = typecast_exprt{*it, verilog_unsignedbv_typet{width}};
+          auto width_int = numeric_cast_v<std::size_t>(get_width(*it));
+          *it = typecast_exprt{*it, verilog_unsignedbv_typet{width_int}};
         }
     }
 
@@ -2045,13 +2046,14 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
   {
     expr.op0()=from_integer(op0, natural_typet());
 
-    std::size_t new_width = op0.to_ulong() * width;
+    auto new_width = op0 * width;
+    auto new_width_int = numeric_cast_v<std::size_t>(new_width);
 
     if(op1.type().id()==ID_verilog_unsignedbv ||
        op1.type().id()==ID_verilog_signedbv)
-      expr.type()=verilog_unsignedbv_typet(new_width);
+      expr.type() = verilog_unsignedbv_typet{new_width_int};
     else
-      expr.type()=unsignedbv_typet(new_width);
+      expr.type() = unsignedbv_typet{new_width_int};
   }
 
   return std::move(expr);
@@ -2327,10 +2329,10 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     if(op2 < offset)
     {
       auto padding_width = offset - op2;
-      auto padding =
-        from_integer(0, unsignedbv_typet{(padding_width).to_ulong()});
-      auto new_type =
-        unsignedbv_typet{(get_width(op0.type()) + padding_width).to_ulong()};
+      auto padding = from_integer(
+        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
+      auto new_type = unsignedbv_typet{
+        numeric_cast_v<std::size_t>(get_width(op0.type()) + padding_width)};
       expr.op0() = concatenation_exprt(expr.op0(), padding, new_type);
       op2 += padding_width;
       op1 += padding_width;
@@ -2339,16 +2341,17 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     if(op1 >= width + offset)
     {
       auto padding_width = op1 - (width + offset) + 1;
-      auto padding =
-        from_integer(0, unsignedbv_typet{padding_width.to_ulong()});
-      auto new_type =
-        unsignedbv_typet{(get_width(op0.type()) + padding_width).to_ulong()};
+      auto padding = from_integer(
+        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
+      auto new_type = unsignedbv_typet{
+        numeric_cast_v<std::size_t>(get_width(op0.type()) + padding_width)};
       expr.op0() = concatenation_exprt(padding, expr.op0(), new_type);
     }
 
     // Part-select expressions are unsigned, even if the
     // entire expression is selected!
-    auto expr_type = unsignedbv_typet((op1 - op2).to_ulong() + 1);
+    auto expr_type =
+      unsignedbv_typet{numeric_cast_v<std::size_t>(op1 - op2 + 1)};
 
     op2 -= offset;
     op1 -= offset;

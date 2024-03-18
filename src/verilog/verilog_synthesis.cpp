@@ -299,8 +299,8 @@ void verilog_synthesist::assignment_rec(
   {
     // TODO: split it up more intelligently;
     // bit-wise is wasteful.
-    unsigned offset=0;
-    
+    mp_integer offset = 0;
+
     // do it from right to left
     
     for(exprt::operandst::const_reverse_iterator
@@ -308,24 +308,24 @@ void verilog_synthesist::assignment_rec(
         it!=lhs.operands().rend();
         it++)
     {
-      constant_exprt offset_constant{std::to_string(offset), natural_typet{}};
+      auto offset_constant = from_integer(offset, natural_typet{});
 
       if(it->type().id()==ID_bool)
       {
         exprt bit_extract(ID_extractbit, it->type());
         bit_extract.add_to_operands(rhs);
         bit_extract.add_to_operands(offset_constant);
-        offset++;
+        ++offset;
 
         assignment_rec(*it, bit_extract, blocking);
       }
       else if(it->type().id()==ID_signedbv ||
               it->type().id()==ID_unsignedbv)
       {
-        unsigned width=get_width(it->type());
+        auto width = get_width(it->type());
 
-        constant_exprt offset_constant2{std::to_string(offset + width - 1),
-                                        natural_typet{}};
+        auto offset_constant2 =
+          from_integer(offset + width - 1, natural_typet{});
 
         // extractbits requires that upper >= lower, i.e. op1 >= op2
         extractbits_exprt bit_extract(rhs, offset_constant2, offset_constant,
@@ -1682,8 +1682,8 @@ void verilog_synthesist::synth_force_rec(
   if(lhs.id()==ID_concatenation)
   {
     // split it up
-    unsigned offset=0;
-    
+    mp_integer offset = 0;
+
     // do it from right to left
     
     for(exprt::operandst::const_reverse_iterator
@@ -1691,20 +1691,21 @@ void verilog_synthesist::synth_force_rec(
         it!=lhs.operands().rend();
         it++)
     {
-      constant_exprt offset_constant{std::to_string(offset), natural_typet{}};
+      auto offset_constant = from_integer(offset, natural_typet{});
 
       if(it->type().id()==ID_bool)
       {
-        extractbit_exprt bit_extract(rhs, offset);
-        offset++;
+        extractbit_exprt bit_extract(rhs, offset_constant);
+        ++offset;
         synth_force_rec(*it, bit_extract);
       }
       else if(it->type().id()==ID_signedbv ||
               it->type().id()==ID_unsignedbv)
       {
-        unsigned width=get_width(it->type());
+        auto width = get_width(it->type());
+        auto sum_constant = from_integer(offset + width - 1, natural_typet{});
         extractbits_exprt bit_extract(
-          rhs, offset, offset + width - 1, it->type());
+          rhs, offset_constant, sum_constant, it->type());
         synth_force_rec(*it, bit_extract);
         offset+=width;
       }
