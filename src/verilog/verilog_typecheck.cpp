@@ -784,7 +784,10 @@ void verilog_typecheckt::check_lhs(
       if(symbol.is_state_var)
       {
         throw errort().with_location(lhs.source_location())
-          << "continuous assignment to register";
+          << "continuous assignment to a variable\n"
+          << "Identifier " << symbol.display_name() << " is declared as "
+          << to_string(symbol.type) << " on line " << symbol.location.get_line()
+          << '.';
       }
       else if(symbol.is_input && !symbol.is_output)
       {
@@ -799,7 +802,10 @@ void verilog_typecheckt::check_lhs(
          !symbol.is_lvalue)
       {
         throw errort().with_location(lhs.source_location())
-          << "assignment to non-register";
+          << "procedural assignment to a net\n"
+          << "Identifier " << symbol.display_name() << " is declared as "
+          << to_string(symbol.type) << " on line " << symbol.location.get_line()
+          << '.';
       }
 
       break;
