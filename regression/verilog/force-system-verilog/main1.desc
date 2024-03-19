@@ -1,0 +1,8 @@
+CORE
+main1.v
+--systemverilog
+^EXIT=10$
+^SIGNAL=0$
+^no properties$
+--
+^warning: ignoring

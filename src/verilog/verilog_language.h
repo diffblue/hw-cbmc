@@ -79,6 +79,8 @@ public:
     return { "v", "sv" };
   }
 
+  void set_language_options(const optionst &, message_handlert &) override;
+
   verilog_parse_treet &get_parse_tree()
   {
     return parse_tree;
@@ -92,6 +94,7 @@ public:
   }
 
 protected:
+  bool force_systemverilog = false;
   verilog_parse_treet parse_tree;
 };
  

@@ -13,6 +13,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/get_module.h>
 #include <util/message.h>
 #include <util/namespace.h>
+#include <util/options.h>
 #include <util/unicode.h>
 
 #include <langapi/language.h>
@@ -107,6 +108,11 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
     return 1;
   }
 
+  optionst options;
+  options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
+
+  language->set_language_options(options, message_handler);
+
   if(language->preprocess(infile, filename, std::cout, message_handler))
   {
     message.error() << "PREPROCESSING FAILED" << messaget::eom;
@@ -116,7 +122,8 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   return 0;
 }
 
-bool parse(
+static bool parse(
+  const cmdlinet &cmdline,
   const std::string &filename,
   language_filest &language_files,
   message_handlert &message_handler)
@@ -147,6 +154,11 @@ bool parse(
 
   languaget &language = *lf.language;
 
+  optionst options;
+  options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
+
+  language.set_language_options(options, message_handler);
+
   message.status() << "Parsing " << filename << messaget::eom;
 
   if(language.parse(infile, filename, message_handler))
@@ -167,7 +179,7 @@ bool parse(
 {
   for(unsigned i = 0; i < cmdline.args.size(); i++)
   {
-    if(parse(cmdline.args[i], language_files, message_handler))
+    if(parse(cmdline, cmdline.args[i], language_files, message_handler))
       return true;
   }
   return false;

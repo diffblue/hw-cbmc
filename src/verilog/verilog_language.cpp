@@ -20,6 +20,25 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_languaget::set_language_options
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_languaget::set_language_options(
+  const optionst &options,
+  message_handlert &message_handler)
+{
+  force_systemverilog = options.get_bool_option("force-systemverilog");
+}
+
+/*******************************************************************\
+
 Function: verilog_languaget::parse
 
   Inputs:
@@ -46,8 +65,8 @@ bool verilog_languaget::parse(
   verilog_parser.in=&str;
   verilog_parser.log.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
-  
-  if(has_suffix(path, ".sv"))
+
+  if(has_suffix(path, ".sv") || force_systemverilog)
     verilog_parser.mode=verilog_parsert::SYSTEM_VERILOG;
 
   verilog_scanner_init();
