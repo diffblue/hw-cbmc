@@ -236,7 +236,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
         if(declarator.type().is_nil())
           symbol.type = type;
         else if(declarator.type().id() == ID_verilog_unpacked_array)
-          symbol.type = array_type(declarator.type(), type);
+          symbol.type = unpacked_array_type(declarator.type(), type);
         else
         {
           throw errort().with_location(declarator.source_location())
@@ -423,7 +423,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       if(declarator.type().is_nil())
         symbol.type = type;
       else if(declarator.type().id() == ID_verilog_unpacked_array)
-        symbol.type = array_type(declarator.type(), type);
+        symbol.type = unpacked_array_type(declarator.type(), type);
       else
       {
         throw errort().with_location(symbol.location)
@@ -490,7 +490,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       if(declarator.type().is_nil())
         symbol.type = type;
       else if(declarator.type().id() == ID_verilog_unpacked_array)
-        symbol.type = array_type(declarator.type(), type);
+        symbol.type = unpacked_array_type(declarator.type(), type);
       else
       {
         throw errort().with_location(symbol.location)

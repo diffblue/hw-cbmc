@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::array_type
+Function: verilog_typecheck_exprt::unpacked_array_type
 
   Inputs:
 
@@ -26,8 +26,9 @@ Function: verilog_typecheck_exprt::array_type
 
 \*******************************************************************/
 
-array_typet
-verilog_typecheck_exprt::array_type(const irept &src, const typet &element_type)
+array_typet verilog_typecheck_exprt::unpacked_array_type(
+  const typet &src,
+  const typet &element_type)
 {
   // int whatnot[x:y];
   // 'src' is yet to be converted, but 'element_type' is already converted.
@@ -57,13 +58,14 @@ verilog_typecheck_exprt::array_type(const irept &src, const typet &element_type)
     offset = 0;
     if(size < 0)
     {
+      // The size must be positive. 1800-2017 7.4.2
       throw errort().with_location(size_expr.find_source_location())
         << "array size must be nonnegative";
     }
   }
   else
   {
-    throw errort() << "array must have range or size";
+    throw errort() << "unpacked array must have range or size";
   }
 
   const typet src_subtype =
@@ -77,7 +79,7 @@ verilog_typecheck_exprt::array_type(const irept &src, const typet &element_type)
   if(src_subtype.is_nil())
     array_subtype = element_type;
   else
-    array_subtype = array_type(src_subtype, element_type);
+    array_subtype = unpacked_array_type(src_subtype, element_type);
 
   const exprt final_size_expr = from_integer(size, integer_typet());
   array_typet result(array_subtype, final_size_expr);
