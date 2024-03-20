@@ -9,7 +9,6 @@ module main(in);
     out[16 +: 16]=0;
   end
 
-  always assert property1:
-    { in, { 8 { 1'b0 }} } == out;
+  p1: assert property ({ in, { 8 { 1'b0 }} } == out);
 
 endmodule

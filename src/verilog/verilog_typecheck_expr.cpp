@@ -1952,13 +1952,24 @@ Function: verilog_typecheck_exprt::convert_extractbit_expr
 exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
 {
   exprt &op0 = expr.op0();
-
   convert_expr(op0);
+
+  if(op0.type().id() == ID_verilog_real)
+  {
+    throw errort().with_location(op0.source_location())
+      << "bit-select of real is not allowed";
+  }
 
   if(op0.type().id()==ID_array)
   {
     exprt &op1 = to_extractbit_expr(expr).index();
     convert_expr(op1);
+    if(op1.type().id() == ID_verilog_real)
+    {
+      throw errort().with_location(op1.source_location())
+        << "real number index is not allowed";
+    }
+
     typet _index_type = index_type(to_array_type(op0.type()));
 
     if(_index_type!=op1.type())
@@ -1982,7 +1993,7 @@ exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
 
     mp_integer op1;
 
-    if(is_constant_expression(to_extractbit_expr(expr).op1(), op1))
+    if(is_constant_expression(expr.op1(), op1))
     {
       // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
       // x for 4-state and 0 for 2-state values.
@@ -1994,7 +2005,12 @@ exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
     }
     else
     {
-      convert_expr(to_extractbit_expr(expr).op1());
+      convert_expr(expr.op1());
+      if(expr.op1().type().id() == ID_verilog_real)
+      {
+        throw errort().with_location(expr.op1().source_location())
+          << "real number index is not allowed";
+      }
     }
 
     expr.type()=bool_typet();
@@ -2301,21 +2317,28 @@ Function: verilog_typecheck_exprt::convert_trinary_expr
 
 exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
 {
-  if(expr.id()==ID_extractbits)
+  if(expr.id() == ID_verilog_non_indexed_part_select)
   {
-    exprt &op0=expr.op0();
-
+    exprt &op0 = expr.op0();
     convert_expr(op0);
 
     if(op0.type().id()==ID_array)
     {
       throw errort().with_location(op0.source_location())
-        << "array type not allowed in extraction";
+        << "array type not allowed in part select";
     }
 
-    mp_integer width = get_width(op0.type());
-    mp_integer offset = atoi(op0.type().get(ID_C_offset).c_str());
+    if(op0.type().id() == ID_verilog_real)
+    {
+      throw errort().with_location(op0.source_location())
+        << "real not allowed in part select";
+    }
 
+    mp_integer op0_width = get_width(op0.type());
+    mp_integer op0_offset = string2integer(op0.type().get_string(ID_C_offset));
+
+    // In non-indexed part-select expressions, both
+    // indices must be constants (1800-2017 11.5.1).
     mp_integer op1 = convert_integer_constant_expression(expr.op1());
     mp_integer op2 = convert_integer_constant_expression(expr.op2());
 
@@ -2326,9 +2349,9 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     // x for 4-state and 0 for 2-state values. We
     // achieve that by padding the operand from either end,
     // or both.
-    if(op2 < offset)
+    if(op2 < op0_offset)
     {
-      auto padding_width = offset - op2;
+      auto padding_width = op0_offset - op2;
       auto padding = from_integer(
         0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
       auto new_type = unsignedbv_typet{
@@ -2338,9 +2361,9 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
       op1 += padding_width;
     }
 
-    if(op1 >= width + offset)
+    if(op1 >= op0_width + op0_offset)
     {
-      auto padding_width = op1 - (width + offset) + 1;
+      auto padding_width = op1 - (op0_width + op0_offset) + 1;
       auto padding = from_integer(
         0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
       auto new_type = unsignedbv_typet{
@@ -2353,14 +2376,98 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     auto expr_type =
       unsignedbv_typet{numeric_cast_v<std::size_t>(op1 - op2 + 1)};
 
-    op2 -= offset;
-    op1 -= offset;
+    op2 -= op0_offset;
+    op1 -= op0_offset;
 
-    expr.op1() = from_integer(op1, natural_typet());
-    expr.op2() = from_integer(op2, natural_typet());
+    // Construct the extractbits expression
+    expr.id(ID_extractbits);
+    expr.op1() = from_integer(op1, integer_typet());
+    expr.op2() = from_integer(op2, integer_typet());
     expr.type() = expr_type;
 
     return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_verilog_indexed_part_select_plus ||
+    expr.id() == ID_verilog_indexed_part_select_minus)
+  {
+    exprt &op0 = expr.op0();
+    convert_expr(op0);
+
+    if(op0.type().id() == ID_array)
+    {
+      throw errort().with_location(op0.source_location())
+        << "array type not allowed in part select";
+    }
+
+    if(op0.type().id() == ID_verilog_real)
+    {
+      throw errort().with_location(op0.source_location())
+        << "real not allowed in part select";
+    }
+
+    mp_integer op0_width = get_width(op0.type());
+    mp_integer op0_offset = string2integer(op0.type().get_string(ID_C_offset));
+
+    // The index need not be a constant.
+    exprt &op1 = expr.op1();
+    convert_expr(op1);
+
+    // The width of the indexed part select must be an
+    // elaboration-time constant.
+    mp_integer op2 = convert_integer_constant_expression(expr.op2());
+
+    // The width must be positive. 1800-2017 11.5.1
+    if(op2 < 0)
+    {
+      throw errort().with_location(expr.op2().source_location())
+        << "width of indexed part select must be positive";
+    }
+
+    // Part-select expressions are unsigned, even if the
+    // entire expression is selected!
+    auto expr_type = unsignedbv_typet{numeric_cast_v<std::size_t>(op2)};
+
+    mp_integer op1_int;
+    if(is_constant_expression(op1, op1_int))
+    {
+      // Construct the extractbits expression
+      mp_integer bottom, top;
+
+      if(expr.id() == ID_verilog_indexed_part_select_plus)
+      {
+        bottom = op1_int - op0_offset;
+        top = bottom + op2;
+      }
+      else // ID_verilog_indexed_part_select_minus
+      {
+        top = op1_int - op0_offset;
+        bottom = bottom - op2;
+      }
+
+      return extractbits_exprt{
+        std::move(op0),
+        from_integer(top, integer_typet{}),
+        from_integer(bottom, integer_typet{}),
+        std::move(expr_type)}
+        .with_source_location<exprt>(expr);
+    }
+    else
+    {
+      // Index not constant.
+      // Use logical right-shift followed by (constant) extractbits.
+      auto op1_adjusted =
+        minus_exprt{op1, from_integer(op0_offset, op1.type())};
+
+      auto op0_shifted = lshr_exprt(op0, op1_adjusted);
+
+      return extractbits_exprt{
+        std::move(op0_shifted),
+        from_integer(op2 - 1, integer_typet{}),
+        from_integer(0, integer_typet{}),
+        std::move(expr_type)}
+        .with_source_location<exprt>(expr);
+    }
   }
   else if(expr.id()==ID_if)
   {

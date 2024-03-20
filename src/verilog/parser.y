@@ -148,47 +148,6 @@ static void extractbit(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &part)
 
 /*******************************************************************\
 
-Function: extractbits
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static void extractbits(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &range)
-{
-  init(expr, ID_extractbits);
-  mto(expr, identifier);
-  
-  if(stack_expr(range).id()==ID_part_select)
-  {
-    auto &part_select = to_binary_expr(stack_expr(range));
-    stack_expr(expr).add_to_operands(std::move(part_select.op0()));
-    stack_expr(expr).add_to_operands(std::move(part_select.op1()));
-  }
-  else if(stack_expr(range).id()==ID_indexed_part_select_plus)
-  {
-    auto &part_select = to_binary_expr(stack_expr(range));
-    exprt offset=minus_exprt(part_select.op1(), from_integer(1, integer_typet{}));
-    stack_expr(expr).add_to_operands(part_select.op0());
-    stack_expr(expr).add_to_operands(plus_exprt(part_select.op0(), offset));
-  }
-  else if(stack_expr(range).id()==ID_indexed_part_select_minus)
-  {
-    auto &part_select = to_binary_expr(stack_expr(range));
-    exprt offset=minus_exprt(from_integer(1, integer_typet{}), part_select.op1());
-    stack_expr(expr).add_to_operands(part_select.op0());
-    stack_expr(expr).add_to_operands(plus_exprt(part_select.op0(), offset));
-  }
-  else
-    PRECONDITION(false);
-}
-
-/*******************************************************************\
-
 Function: add_as_subtype
 
   Inputs:
@@ -1145,7 +1104,7 @@ bit_select:
 
 part_select:
 	  '[' const_expression TOK_COLON const_expression ']'
-		{ init($$, ID_part_select); mto($$, $2); mto($$, $4); }
+		{ init($$, ID_verilog_non_indexed_part_select); mto($$, $2); mto($$, $4); }
 	;
 
 // System Verilog standard 1800-2017
@@ -3122,14 +3081,14 @@ inc_or_dec_expression:
 
 constant_range:
 	  const_expression TOK_COLON const_expression
-		{ init($$, ID_part_select); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_non_indexed_part_select); mto($$, $1); mto($$, $3); }
 	;
 
 indexed_range:
 	  expression TOK_PLUSCOLON constant_expression
-		{ init($$, ID_indexed_part_select_plus); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_indexed_part_select_plus); mto($$, $1); mto($$, $3); }
 	| expression TOK_MINUSCOLON constant_expression
-		{ init($$, ID_indexed_part_select_minus); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_indexed_part_select_minus); mto($$, $1); mto($$, $3); }
 	;
 
 part_select_range:
@@ -3161,7 +3120,13 @@ primary_literal:
 hierarchical_identifier_select:
           hierarchical_identifier_bit_select_brace
 	| hierarchical_identifier_bit_select_brace '[' part_select_range ']'
-		{ extractbits($$, $1, $3); }
+		{ // part_select_range has two operands.
+		  // We form a new expression with three operands from it.
+		  auto &part_select = to_binary_expr(stack_expr($3));
+		  stack_expr($3).operands() =
+		    { stack_expr($1), part_select.op0(), part_select.op1() };
+		  $$ = $3;
+		}
 	;
 
 hierarchical_identifier_bit_select_brace:
