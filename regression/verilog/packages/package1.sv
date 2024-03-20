@@ -3,4 +3,5 @@ package my_pkg;
 endpackage
 
 module main;
+  import my_pkg::*;
 endmodule
