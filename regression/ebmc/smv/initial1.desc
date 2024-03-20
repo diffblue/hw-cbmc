@@ -1,0 +1,9 @@
+CORE
+initial1.smv
+--bound 0
+^\[main::spec1\] main::var::tmp1 = TRUE: PROVED up to bound 0$
+^\[main::spec2\] main::var::tmp2 = TRUE: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

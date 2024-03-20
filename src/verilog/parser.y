@@ -1908,32 +1908,34 @@ concurrent_assertion_statement:
 	| cover_property_statement
 	;
 
-assert_property_statement:
-          TOK_ASSERT TOK_PROPERTY '(' property_expr ')' action_block
-		{ init($$, ID_assert); mto($$, $4); mto($$, $6); }
-	| /* this one is in because SMV does it */
+/* This one mimicks functionality in Cadence SMV */
+smv_assertion_statement:
 	  TOK_ASSERT property_identifier TOK_COLON expression ';'
-		{ init($$, ID_assert); stack_expr($$).operands().resize(2);
+		{ init($$, ID_verilog_smv_assert); stack_expr($$).operands().resize(2);
 		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
 		  to_binary_expr(stack_expr($$)).op1().make_nil();
 		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
 		}
+	| TOK_ASSUME property_identifier TOK_COLON expression ';'
+		{ init($$, ID_verilog_smv_assume); stack_expr($$).operands().resize(2);
+		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
+		  to_binary_expr(stack_expr($$)).op1().make_nil();
+		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
+		}
+	;
+
+assert_property_statement:
+          TOK_ASSERT TOK_PROPERTY '(' property_expr ')' action_block
+		{ init($$, ID_verilog_assert_property); mto($$, $4); mto($$, $6); }
 	;
 
 assume_property_statement:
           TOK_ASSUME TOK_PROPERTY '(' property_expr ')' action_block
-		{ init($$, ID_assume); mto($$, $4); mto($$, $6); }
-	| /* this one is in because SMV does it */
-	  TOK_ASSUME property_identifier TOK_COLON expression ';'
-		{ init($$, ID_assume); stack_expr($$).operands().resize(2);
-		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
-		  to_binary_expr(stack_expr($$)).op1().make_nil();
-		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
-		}
+		{ init($$, ID_verilog_assume_property); mto($$, $4); mto($$, $6); }
 	;
 
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
-		{ init($$, ID_cover); mto($$, $4); mto($$, $6); }
+		{ init($$, ID_verilog_cover_property); mto($$, $4); mto($$, $6); }
 	;
 
 assertion_item_declaration:
@@ -2602,32 +2604,6 @@ par_block:
                   addswap($$, ID_base_name, $3); }
 	;
 
-concurrent_assert_statement:
-          assert_property_statement
-        | block_identifier TOK_COLON assert_property_statement
-		{ 
-		  $$=$3;
-		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
-		}
-	;
-
-concurrent_assume_statement:
-          assume_property_statement
-        | block_identifier TOK_COLON assume_property_statement
-		{ 
-		  $$=$3;
-		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
-		}
-	;
-
-concurrent_cover_statement: cover_property_statement
-        | block_identifier TOK_COLON cover_property_statement
-		{ 
-		  $$=$3;
-		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
-		}
-	;
-
 // System Verilog standard 1800-2017
 // A.6.4 Statements
 
@@ -2850,6 +2826,7 @@ procedural_assertion_statement:
 	  concurrent_assertion_statement
 	| immediate_assertion_statement
         /* | checker_instantiation */
+	| smv_assertion_statement
 	;
 
 immediate_assertion_statement:

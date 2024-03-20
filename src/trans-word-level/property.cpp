@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 
 #include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
 #include "instantiate_word_level.h"
@@ -34,8 +35,19 @@ Function: bmc_supports_property
 
 bool bmc_supports_property(const exprt &expr)
 {
-  if(expr.is_constant())
-    return true;
+  if(!is_temporal_operator(expr))
+  {
+    if(!has_temporal_operator(expr))
+      return true; // initial state only
+    else
+      return false;
+  }
+  else if(expr.id() == ID_sva_cycle_delay)
+    return !has_temporal_operator(to_sva_cycle_delay_expr(expr).op());
+  else if(expr.id() == ID_sva_nexttime)
+    return !has_temporal_operator(to_sva_nexttime_expr(expr).op());
+  else if(expr.id() == ID_sva_s_nexttime)
+    return !has_temporal_operator(to_sva_s_nexttime_expr(expr).op());
   else if(expr.id() == ID_AG)
     return true;
   else if(expr.id() == ID_G)
@@ -68,9 +80,20 @@ void property(
 {
   messaget message(message_handler);
 
-  if(property_expr.is_true())
+  // Initial state only property?
+  if(
+    !is_temporal_operator(property_expr) ||
+    property_expr.id() == ID_sva_cycle_delay ||
+    property_expr.id() == ID_sva_nexttime ||
+    property_expr.id() == ID_sva_s_nexttime)
   {
     prop_handles.resize(no_timeframes, true_exprt());
+    if(no_timeframes > 0)
+    {
+      exprt tmp = instantiate(property_expr, 0, no_timeframes, ns);
+      prop_handles.push_back(solver.handle(tmp));
+    }
+
     return;
   }
 

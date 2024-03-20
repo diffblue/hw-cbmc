@@ -1,9 +1,13 @@
-KNOWNBUG
+CORE
 initial1.sv
 --module main --bound 1
-^EXIT=0$
+^\[main\.property\.1\] main\.counter == 0: PROVED up to bound 1$
+^\[main\.property\.2\] main\.counter == 100: REFUTED$
+^\[main\.property\.3\] ##1 main\.counter == 1: PROVED up to bound 1$
+^\[main\.property\.4\] ##1 main\.counter == 100: REFUTED$
+^\[main\.property\.5\] s_nexttime main\.counter == 1: PROVED up to bound 1$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-Syntax is missing for initial label: assert property (...);

@@ -220,8 +220,8 @@ protected:
   void synth_module_item(const verilog_module_itemt &, transt &);
   void synth_always_base(const verilog_always_baset &);
   void synth_initial(const verilog_initialt &);
-  void synth_assert_module_item(const verilog_module_itemt &);
-  void synth_assume_module_item(const verilog_module_itemt &);
+  void synth_assert(const verilog_assert_module_itemt &);
+  void synth_assume(const verilog_assume_module_itemt &);
   void synth_continuous_assign(const verilog_continuous_assignt &);
   void synth_force_rec(exprt &lhs, exprt &rhs, transt &);
   void synth_module_instance(const verilog_instt &, transt &);

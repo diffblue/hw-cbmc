@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
+#include "sva_expr.h"
 #include "verilog_expr.h"
 #include "verilog_typecheck_expr.h"
 
@@ -1797,15 +1798,37 @@ Function: verilog_synthesist::synth_assert
 void verilog_synthesist::synth_assert(
   const verilog_assert_statementt &statement)
 {
-  const irep_idt &identifier=statement.get(ID_identifier);
+  const irep_idt &identifier = statement.identifier();
   symbolt &symbol=symbol_table_lookup(identifier);
-  
-  symbol.value = synth_expr(symbol.value, symbol_statet::CURRENT);
+
+  // Are we in an initial or always block?
+  if(construct == constructt::INITIAL)
+  {
+    if(statement.id() == ID_assert)
+    {
+      // immediate
+      symbol.value = synth_expr(statement.condition(), symbol_statet::CURRENT);
+    }
+    else
+    {
+      // Verilog concurrent or SMV-style assertion
+      symbol.value = synth_expr(statement.condition(), symbol_statet::SYMBOL);
+    }
+  }
+  else // one of the 'always' variants
+  {
+    auto cond = synth_expr(statement.condition(), symbol_statet::CURRENT);
+
+    if(cond.id() != ID_sva_always)
+      cond = sva_always_exprt(cond); // implicit 'always'
+
+    symbol.value = std::move(cond);
+  }
 }
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_assert_module_item
+Function: verilog_synthesist::synth_assert
 
   Inputs:
 
@@ -1815,21 +1838,21 @@ Function: verilog_synthesist::synth_assert_module_item
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_assert_module_item(
-  const verilog_module_itemt &module_item)
+void verilog_synthesist::synth_assert(
+  const verilog_assert_module_itemt &module_item)
 {
-  if(module_item.operands().size()!=2)
-  {
-    throw errort().with_location(module_item.source_location())
-      << "assert module_item expected to have two operands";
-  }
-
-  const irep_idt &identifier=module_item.get(ID_identifier);
+  const irep_idt &identifier = module_item.identifier();
   symbolt &symbol=symbol_table_lookup(identifier);
-  
+
   construct=constructt::OTHER;
 
-  symbol.value = synth_expr(symbol.value, symbol_statet::SYMBOL);
+  auto cond = synth_expr(module_item.condition(), symbol_statet::SYMBOL);
+
+  // concurrent assertions come with an implicit 'always'
+  if(cond.id() != ID_sva_always)
+    cond = sva_always_exprt(cond);
+
+  symbol.value = std::move(cond);
 }
 
 /*******************************************************************\
@@ -1857,7 +1880,7 @@ void verilog_synthesist::synth_assume(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_assume_module_item
+Function: verilog_synthesist::synth_assume
 
   Inputs:
 
@@ -1867,15 +1890,9 @@ Function: verilog_synthesist::synth_assume_module_item
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_assume_module_item(
-  const verilog_module_itemt &module_item)
+void verilog_synthesist::synth_assume(
+  const verilog_assume_module_itemt &module_item)
 {
-  if(module_item.operands().size()!=2)
-  {
-    throw errort().with_location(module_item.source_location())
-      << "assume module item expected to have two operands";
-  }
-
   auto condition = synth_expr(to_binary_expr(module_item).op0(), symbol_statet::SYMBOL);
 
   // add it as an invariant
@@ -2568,9 +2585,15 @@ void verilog_synthesist::synth_statement(
     throw errort().with_location(statement.source_location())
       << "synthesis of procedural continuous assignment not supported";
   }
-  else if(statement.id()==ID_assert)
+  else if(
+    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_smv_assert)
     synth_assert(to_verilog_assert_statement(statement));
-  else if(statement.id()==ID_assume)
+  else if(
+    statement.id() == ID_assume ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_smv_assume)
     synth_assume(to_verilog_assume_statement(statement));
   else if(statement.id()==ID_non_blocking_assign)
     synth_assign(statement, false);
@@ -2665,10 +2688,10 @@ void verilog_synthesist::synth_module_item(
       synth_module_item(block_item, trans);
     }
   }
-  else if(module_item.id()==ID_assert)
-    synth_assert_module_item(module_item);
-  else if(module_item.id()==ID_assume)
-    synth_assume_module_item(module_item);
+  else if(module_item.id() == ID_verilog_assert_property)
+    synth_assert(to_verilog_assert_module_item(module_item));
+  else if(module_item.id() == ID_verilog_assume_property)
+    synth_assume(to_verilog_assume_module_item(module_item));
   else if(module_item.id()==ID_task)
   {
     // ignore for now

@@ -148,60 +148,55 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   }
   else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
-    if(expr.operands().size()==3)
+    auto &sva_cycle_delay_expr = to_sva_cycle_delay_expr(expr);
+
+    if(sva_cycle_delay_expr.to().is_nil())
     {
-      auto &ternary_expr = to_ternary_expr(expr);
+      mp_integer offset;
+      if(to_integer_non_constant(sva_cycle_delay_expr.from(), offset))
+        throw "failed to convert sva_cycle_delay offset";
 
-      if(ternary_expr.op1().is_nil())
-      {
-        mp_integer offset;
-        if(to_integer_non_constant(ternary_expr.op0(), offset))
-          throw "failed to convert sva_cycle_delay offset";
+      const auto u = t + offset;
 
-        const auto u = t + offset;
-
-        // Do we exceed the bound? Make it 'true'
-        if(u >= no_timeframes)
-          return true_exprt();
-        else
-          return instantiate_rec(ternary_expr.op2(), u);
-      }
+      // Do we exceed the bound? Make it 'true'
+      if(u >= no_timeframes)
+        return true_exprt();
       else
-      {
-        mp_integer from, to;
-        if(to_integer_non_constant(ternary_expr.op0(), from))
-          throw "failed to convert sva_cycle_delay offsets";
-
-        if(ternary_expr.op1().id() == ID_infinity)
-        {
-          assert(no_timeframes!=0);
-          to=no_timeframes-1;
-        }
-        else if(to_integer_non_constant(ternary_expr.op1(), to))
-          throw "failed to convert sva_cycle_delay offsets";
-          
-        // This is an 'or', and we let it fail if the bound is too small.
-        
-        exprt::operandst disjuncts;
-        
-        for(mp_integer offset=from; offset<to; ++offset)
-        {
-          auto u = t + offset;
-
-          if(u >= no_timeframes)
-          {
-          }
-          else
-          {
-            disjuncts.push_back(instantiate_rec(ternary_expr.op2(), u));
-          }
-        }
-
-        return disjunction(disjuncts);
-      }
+        return instantiate_rec(sva_cycle_delay_expr.op(), u);
     }
     else
-      return expr;
+    {
+      mp_integer from, to;
+      if(to_integer_non_constant(sva_cycle_delay_expr.from(), from))
+        throw "failed to convert sva_cycle_delay offsets";
+
+      if(sva_cycle_delay_expr.to().id() == ID_infinity)
+      {
+        assert(no_timeframes != 0);
+        to = no_timeframes - 1;
+      }
+      else if(to_integer_non_constant(sva_cycle_delay_expr.to(), to))
+        throw "failed to convert sva_cycle_delay offsets";
+
+      // This is an 'or', and we let it fail if the bound is too small.
+
+      exprt::operandst disjuncts;
+
+      for(mp_integer offset = from; offset < to; ++offset)
+      {
+        auto u = t + offset;
+
+        if(u >= no_timeframes)
+        {
+        }
+        else
+        {
+          disjuncts.push_back(instantiate_rec(sva_cycle_delay_expr.op(), u));
+        }
+      }
+
+      return disjunction(disjuncts);
+    }
   }
   else if(expr.id()==ID_sva_sequence_concatenation)
   {

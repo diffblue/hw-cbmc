@@ -18,7 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "expr2verilog.h"
-#include "sva_expr.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
 
@@ -986,23 +985,18 @@ void verilog_typecheckt::convert_assert(
 
   convert_expr(cond);
   make_boolean(cond);
-  
-  // There is an implicit 'always'
-  exprt property;
-  
-  if(cond.id()==ID_sva_always)
-    property=cond;
-  else
-    property = sva_always_exprt(cond);
 
-  assertion_counter++;
-
+  // We create a symbol for the property.
+  // The 'value' of the symbol is set by synthesis.
   const irep_idt &identifier = module_item.identifier();
 
   irep_idt base_name;
 
   if(identifier == irep_idt())
+  {
+    assertion_counter++;
     base_name=std::to_string(assertion_counter);
+  }
   else
     base_name=identifier;
   
@@ -1019,14 +1013,11 @@ void verilog_typecheckt::convert_assert(
 
   module_item.identifier(full_identifier);
 
-  symbolt symbol;
+  symbolt symbol{base_name, bool_typet{}, mode};
 
-  symbol.mode=mode;
   symbol.module=module_identifier;
-  symbol.value.swap(property);
-  symbol.base_name=base_name;
-  symbol.name=full_identifier;
-  symbol.type=bool_typet();
+  symbol.value = nil_exprt{}; // set by synthesis
+  symbol.name = full_identifier;
   symbol.is_property=true;
   symbol.location = module_item.find_source_location();
   symbol.pretty_name=strip_verilog_prefix(full_identifier);
@@ -1037,7 +1028,7 @@ void verilog_typecheckt::convert_assert(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_assume
+Function: verilog_typecheckt::convert_assume_property
 
   Inputs:
 
@@ -1075,22 +1066,17 @@ void verilog_typecheckt::convert_assert(verilog_assert_statementt &statement)
   convert_expr(cond);
   make_boolean(cond);
 
-  // There is an implicit 'always'
-  exprt property;
-
-  if(cond.id() == ID_sva_always)
-    property = cond;
-  else
-    property = sva_always_exprt(cond);
-
-  assertion_counter++;
-
+  // We create a symbol for the property.
+  // The 'value' is set by synthesis.
   const irep_idt &identifier = statement.identifier();
 
   irep_idt base_name;
 
   if(identifier == irep_idt())
+  {
+    assertion_counter++;
     base_name = std::to_string(assertion_counter);
+  }
   else
     base_name = identifier;
 
@@ -1108,7 +1094,7 @@ void verilog_typecheckt::convert_assert(verilog_assert_statementt &statement)
   symbolt symbol{base_name, bool_typet{}, mode};
 
   symbol.module = module_identifier;
-  symbol.value.swap(property);
+  symbol.value = nil_exprt{}; // set by synthesis
   symbol.name = full_identifier;
   symbol.is_property = true;
   symbol.location = statement.find_source_location();
@@ -1436,10 +1422,19 @@ void verilog_typecheckt::convert_statement(
   else if(statement.id()==ID_continuous_assign)
     convert_procedural_continuous_assign(
       to_verilog_procedural_continuous_assign(statement));
-  else if(statement.id()==ID_assert)
+  else if(
+    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_smv_assert)
     convert_assert(to_verilog_assert_statement(statement));
-  else if(statement.id()==ID_assume)
+  else if(
+    statement.id() == ID_assume ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_smv_assume)
     convert_assume(to_verilog_assume_statement(statement));
+  else if(statement.id() == ID_verilog_cover_property)
+  {
+  }
   else if(statement.id()==ID_non_blocking_assign)
     convert_assign(to_verilog_assign(statement), false);
   else if(statement.id()==ID_if)
@@ -1513,10 +1508,16 @@ void verilog_typecheckt::convert_module_item(
     module_item.id() == ID_verilog_always_comb ||
     module_item.id() == ID_verilog_always_ff ||
     module_item.id() == ID_verilog_always_latch)
+  {
     convert_always_base(to_verilog_always_base(module_item));
-  else if(module_item.id()==ID_assert)
+  }
+  else if(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_smv_assert)
     convert_assert(to_verilog_assert_module_item(module_item));
-  else if(module_item.id()==ID_assume)
+  else if(
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_smv_assume)
     convert_assume(to_verilog_assume_module_item(module_item));
   else if(module_item.id()==ID_initial)
     convert_initial(to_verilog_initial(module_item));
