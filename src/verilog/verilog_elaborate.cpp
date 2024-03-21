@@ -25,8 +25,6 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   const irep_idt &base_name = declarator.base_name();
   const irep_idt &port_class = decl.get_class();
 
-  auto type = convert_type(decl.type());
-
   irep_idt identifier = hierarchical_identifier(base_name);
 
   if(port_class.empty())
@@ -36,18 +34,9 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   else
   {
     // add the symbol
-    typet final_type;
-    if(declarator.type().is_nil())
-      final_type = type;
-    else if(declarator.type().id() == ID_verilog_unpacked_array)
-      final_type = unpacked_array_type(declarator.type(), type);
-    else
-    {
-      throw errort().with_location(declarator.source_location())
-        << "unexpected type on declarator";
-    }
+    typet type = convert_type(declarator.merged_type(decl.type()));
 
-    symbolt new_symbol(identifier, final_type, mode);
+    symbolt new_symbol{identifier, type, mode};
 
     if(port_class == ID_input)
     {
@@ -208,8 +197,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbol.module = module_identifier;
       symbol.value.make_nil();
 
-      auto type = convert_type(decl.type());
-
       if(decl_class == ID_input)
         symbol.is_input = true;
       else if(decl_class == ID_output)
@@ -232,16 +219,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         symbol.base_name = declarator.base_name();
         symbol.location = declarator.source_location();
-
-        if(declarator.type().is_nil())
-          symbol.type = type;
-        else if(declarator.type().id() == ID_verilog_unpacked_array)
-          symbol.type = unpacked_array_type(declarator.type(), type);
-        else
-        {
-          throw errort().with_location(declarator.source_location())
-            << "unexpected type on declarator";
-        }
+        symbol.type = convert_type(declarator.merged_type(decl.type()));
 
         if(symbol.base_name.empty())
         {
@@ -293,8 +271,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbol.module = module_identifier;
       symbol.value.make_nil();
 
-      auto type = convert_type(decl.type());
-
       symbol.is_state_var = true;
 
       if(decl_class == ID_input)
@@ -328,18 +304,8 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
             << "empty symbol name";
         }
 
-        if(declarator.type().is_nil())
-          symbol.type = type;
-        else if(declarator.type().id() == ID_verilog_unpacked_array)
-          symbol.type = unpacked_array_type(declarator.type(), type);
-        else
-        {
-          throw errort().with_location(declarator.source_location())
-            << "unexpected type on declarator";
-        }
-
+        symbol.type = convert_type(declarator.merged_type(decl.type()));
         symbol.name = hierarchical_identifier(symbol.base_name);
-
         symbol.pretty_name = strip_verilog_prefix(symbol.name);
 
         if(input || output)
@@ -411,24 +377,13 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     symbol.module = module_identifier;
     symbol.value = nil_exprt();
 
-    auto type = convert_type(decl.type());
-
     for(auto &declarator : decl.declarators())
     {
       DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
       symbol.base_name = declarator.base_name();
       symbol.location = declarator.source_location();
-
-      if(declarator.type().is_nil())
-        symbol.type = type;
-      else if(declarator.type().id() == ID_verilog_unpacked_array)
-        symbol.type = unpacked_array_type(declarator.type(), type);
-      else
-      {
-        throw errort().with_location(symbol.location)
-          << "unexpected type on declarator";
-      }
+      symbol.type = convert_type(declarator.merged_type(decl.type()));
 
       if(symbol.base_name.empty())
       {
@@ -478,24 +433,13 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     symbol.value = nil_exprt();
     symbol.is_state_var = true;
 
-    auto type = convert_type(decl.type());
-
     for(auto &declarator : decl.declarators())
     {
       DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
       symbol.base_name = declarator.base_name();
       symbol.location = declarator.source_location();
-
-      if(declarator.type().is_nil())
-        symbol.type = type;
-      else if(declarator.type().id() == ID_verilog_unpacked_array)
-        symbol.type = unpacked_array_type(declarator.type(), type);
-      else
-      {
-        throw errort().with_location(symbol.location)
-          << "unexpected type on declarator";
-      }
+      symbol.type = convert_type(declarator.merged_type(decl.type()));
 
       if(symbol.base_name.empty())
       {

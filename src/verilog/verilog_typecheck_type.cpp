@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::unpacked_array_type
+Function: verilog_typecheck_exprt::convert_unpacked_array_type
 
   Inputs:
 
@@ -26,9 +26,8 @@ Function: verilog_typecheck_exprt::unpacked_array_type
 
 \*******************************************************************/
 
-array_typet verilog_typecheck_exprt::unpacked_array_type(
-  const typet &src,
-  const typet &element_type)
+array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
+  const type_with_subtypet &src)
 {
   // int whatnot[x:y];
   // 'src' is yet to be converted, but 'element_type' is already converted.
@@ -68,21 +67,11 @@ array_typet verilog_typecheck_exprt::unpacked_array_type(
     throw errort() << "unpacked array must have range or size";
   }
 
-  const typet src_subtype =
-    static_cast<const typet &>(src).has_subtype()
-      ? static_cast<const type_with_subtypet &>(src).subtype()
-      : typet(ID_nil);
-
-  typet array_subtype;
-
-  // may need to go recursive
-  if(src_subtype.is_nil())
-    array_subtype = element_type;
-  else
-    array_subtype = unpacked_array_type(src_subtype, element_type);
+  // recursively convert element_type
+  typet element_type = convert_type(src.subtype());
 
   const exprt final_size_expr = from_integer(size, integer_typet());
-  array_typet result(array_subtype, final_size_expr);
+  auto result = array_typet{element_type, final_size_expr};
   result.set(ID_offset, from_integer(offset, integer_typet()));
   result.set(ID_C_little_endian, little_endian);
 
@@ -236,8 +225,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
   }
   else if(src.id() == ID_verilog_unpacked_array)
   {
-    // not expected here -- these stick to the declarators
-    PRECONDITION(false);
+    return convert_unpacked_array_type(to_type_with_subtype(src));
   }
   else if(src.id() == ID_verilog_type_reference)
   {
