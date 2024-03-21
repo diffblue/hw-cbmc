@@ -785,8 +785,10 @@ module_port_input_declaration:
 	  TOK_INPUT net_port_type port_identifier unpacked_dimension_brace
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_input);
-                  add_as_subtype(stack_type($4), stack_type($2));
-                  addswap($$, ID_type, $4);
+                  // The net_port_type goes onto the declaration,
+                  // and the unpacked_array_type goes onto the declarator.
+                  addswap($$, ID_type, $2);
+                  addswap($3, ID_type, $4);
                   mto($$, $3); }
 	;
 
@@ -794,14 +796,18 @@ module_port_output_declaration:
 	  TOK_OUTPUT net_port_type port_identifier unpacked_dimension_brace
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output);
-                  add_as_subtype(stack_type($4), stack_type($2));
-                  addswap($$, ID_type, $4);
+                  // The data_type goes onto the declaration,
+                  // and the unpacked_array_type goes onto the declarator.
+                  addswap($$, ID_type, $2);
+                  addswap($3, ID_type, $4);
                   mto($$, $3); }
 	| TOK_OUTPUT data_type port_identifier unpacked_dimension_brace
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_output_register);
-                  add_as_subtype(stack_type($4), stack_type($2));
-                  addswap($$, ID_type, $4);
+                  // The data_type goes onto the declaration,
+                  // and the unpacked_array_type goes onto the declarator.
+                  addswap($$, ID_type, $2);
+                  addswap($3, ID_type, $4);
                   mto($$, $3); }
 	;
 
@@ -1132,12 +1138,7 @@ genvar_declaration:
 	;
 
 net_declaration:
-          net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_names ';'
-		{ init($$, ID_decl);
-                  addswap($$, ID_class, $1);
-                  addswap($$, ID_type, $4);
-                  swapop($$, $6); }
-        | net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
+          net_type drive_strength_opt vectored_scalared_opt data_type_or_implicit delay3_opt list_of_net_decl_assignments ';'
 		{ init($$, ID_decl);
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
@@ -1165,21 +1166,6 @@ vectored_scalared_opt:
                 { make_nil($$); }
 	| TOK_VECTORED     { init($$, "vectored"); }
 	| TOK_SCALARED     { init($$, "scalared"); }
-	;
-
-list_of_net_names:
-	  net_name
-		{ init($$); mto($$, $1); }
-	| list_of_net_names ',' net_name
-		{ $$=$1;    mto($$, $3); }
-	;
-
-net_name: net_identifier packed_dimension_brace
-          {
-            $$=$1;
-            stack_expr($$).id(ID_declarator);
-            addswap($$, ID_type, $2);
-          }
 	;
 
 list_of_net_decl_assignments:
@@ -1244,7 +1230,9 @@ data_type:
 	| TOK_VIRTUAL interface_opt interface_identifier
 	        { init($$, "virtual_interface"); }
 	| /*scope_opt*/ type_identifier packed_dimension_brace
-		{ $$ = $1; stack_expr($$).id(ID_typedef_type); }
+		{ stack_expr($1).id(ID_typedef_type);
+                  add_as_subtype(stack_type($2), stack_type($1));
+                  $$ = $2; }
 //	| class_type
 	| TOK_EVENT
 	        { init($$, ID_event); }
@@ -1659,8 +1647,16 @@ range:	part_select;
 // System Verilog standard 1800-2017
 // A.2.4 Declaration assignments
 
-net_decl_assignment: net_identifier '=' expression
-		{ $$ = $1; stack_expr($$).id(ID_declarator); addswap($$, ID_value, $3); }
+net_decl_assignment:
+	  net_identifier unpacked_dimension_brace
+		{ $$ = $1;
+		  stack_expr($$).id(ID_declarator);
+		  addswap($$, ID_type, $2); }
+	| net_identifier unpacked_dimension_brace '=' expression
+		{ $$ = $1;
+		  stack_expr($$).id(ID_declarator);
+		  addswap($$, ID_type, $2);
+		  addswap($$, ID_value, $4); }
 	;
 
 variable_decl_assignment:
@@ -1693,7 +1689,7 @@ packed_dimension_opt:
 
 packed_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
-		{ init($$, ID_array);
+		{ init($$, ID_verilog_packed_array);
 		  stack_type($$).add_subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
 		  range.add_to_operands(stack_expr($2));
@@ -1703,13 +1699,14 @@ packed_dimension:
 
 unpacked_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
-		{ init($$, ID_array);
+		{ init($$, ID_verilog_unpacked_array);
 		  stack_type($$).add_subtype().make_nil();
 		  exprt &range=static_cast<exprt &>(stack_type($$).add(ID_range));
 		  range.add_to_operands(stack_expr($2));
 		  range.add_to_operands(stack_expr($4)); }
 	| '[' expression ']'
-		{ init($$, ID_array);
+		{ // starts at index 0
+		  init($$, ID_verilog_unpacked_array);
 		  stack_type($$).add_subtype().make_nil();
 		  stack_type($$).set(ID_size, std::move(stack_expr($2)));
 		}

@@ -16,6 +16,81 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::unpacked_array_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+array_typet verilog_typecheck_exprt::unpacked_array_type(
+  const typet &src,
+  const typet &element_type)
+{
+  // int whatnot[x:y];
+  // 'src' is yet to be converted, but 'element_type' is already converted.
+  PRECONDITION(src.id() == ID_verilog_unpacked_array);
+
+  // Unpacked arrays may have a range [x:y],
+  // or a size [s], equivalent to [0:s-1]
+  const exprt &range_expr = static_cast<const exprt &>(src.find(ID_range));
+  const exprt &size_expr = static_cast<const exprt &>(src.find(ID_size));
+
+  mp_integer size, offset;
+  bool little_endian;
+
+  if(range_expr.is_not_nil())
+  {
+    // these may be negative
+    mp_integer msb, lsb;
+    convert_range(range_expr, msb, lsb);
+    little_endian = (lsb <= msb);
+    size = (little_endian ? msb - lsb : lsb - msb) + 1;
+    offset = little_endian ? lsb : msb;
+  }
+  else if(size_expr.is_not_nil())
+  {
+    little_endian = true;
+    size = convert_integer_constant_expression(size_expr);
+    offset = 0;
+    if(size < 0)
+    {
+      // The size must be positive. 1800-2017 7.4.2
+      throw errort().with_location(size_expr.find_source_location())
+        << "array size must be nonnegative";
+    }
+  }
+  else
+  {
+    throw errort() << "unpacked array must have range or size";
+  }
+
+  const typet src_subtype =
+    static_cast<const typet &>(src).has_subtype()
+      ? static_cast<const type_with_subtypet &>(src).subtype()
+      : typet(ID_nil);
+
+  typet array_subtype;
+
+  // may need to go recursive
+  if(src_subtype.is_nil())
+    array_subtype = element_type;
+  else
+    array_subtype = unpacked_array_type(src_subtype, element_type);
+
+  const exprt final_size_expr = from_integer(size, integer_typet());
+  array_typet result(array_subtype, final_size_expr);
+  result.set(ID_offset, from_integer(offset, integer_typet()));
+  result.set(ID_C_little_endian, little_endian);
+
+  return result;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_type
 
   Inputs:
@@ -111,7 +186,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     result.set(ID_C_identifier, enum_type.identifier());
     return result.with_source_location(source_location);
   }
-  else if(src.id() == ID_array)
+  else if(src.id() == ID_verilog_packed_array)
   {
     const exprt &range=static_cast<const exprt &>(src.find(ID_range));
 
@@ -147,7 +222,8 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     }
     else
     {
-      // we have a genuine array, and do a recursive call
+      // We have a multi-dimensional packed array,
+      // and do a recursive call.
       const exprt size=from_integer(width, integer_typet());
       typet s=convert_type(subtype);
 
@@ -157,6 +233,11 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
 
       return std::move(result).with_source_location(source_location);
     }
+  }
+  else if(src.id() == ID_verilog_unpacked_array)
+  {
+    // not expected here -- these stick to the declarators
+    PRECONDITION(false);
   }
   else if(src.id() == ID_verilog_type_reference)
   {
