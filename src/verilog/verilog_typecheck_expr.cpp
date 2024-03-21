@@ -1877,12 +1877,20 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     make_boolean(expr.op());
     expr.type()=bool_typet();
   }
-  else if(expr.id() == ID_typecast)
+  else if(expr.id() == ID_verilog_explicit_cast)
   {
     // System Verilog has got type'(expr). This is an explicit
     // type cast.
     expr.type() = convert_type(expr.type());
     convert_expr(expr.op());
+    expr.id(ID_typecast);
+  }
+  else if(expr.id() == ID_verilog_implicit_typecast)
+  {
+    // We generate implict casts during elaboration.
+    expr.type() = convert_type(expr.type());
+    convert_expr(expr.op());
+    expr.id(ID_typecast);
   }
   else
   {

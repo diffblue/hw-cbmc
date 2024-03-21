@@ -118,7 +118,7 @@ void verilog_typecheckt::collect_symbols(const typet &type)
       if(enum_name.value().is_not_nil())
         initializer = enum_name.value();
 
-      exprt value = typecast_exprt(initializer, tbd_type);
+      exprt value = verilog_implicit_typecast_exprt(initializer, tbd_type);
       value.add_source_location() = enum_name.source_location();
 
       const auto base_name = enum_name.base_name();
@@ -135,8 +135,9 @@ void verilog_typecheckt::collect_symbols(const typet &type)
       add_symbol(std::move(enum_name_symbol));
 
       initializer = plus_exprt(
-        typecast_exprt(initializer, tbd_type),
-        typecast_exprt(from_integer(1, integer_typet()), tbd_type));
+        verilog_implicit_typecast_exprt(initializer, tbd_type),
+        verilog_implicit_typecast_exprt(
+          from_integer(1, integer_typet()), tbd_type));
     }
 
     // Add a symbol for the enum to the symbol table.
