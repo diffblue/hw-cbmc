@@ -12,6 +12,6 @@ module main;
     some_task(x, y);
   end
 
-  assert p1: y==x+1;
+  always assert p1: y==x+1;
 
 endmodule

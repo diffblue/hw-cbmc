@@ -323,4 +323,70 @@ to_sva_non_overlapped_implication_expr(exprt &expr)
   return static_cast<sva_non_overlapped_implication_exprt &>(expr);
 }
 
+class sva_cycle_delay_exprt : public ternary_exprt
+{
+public:
+  explicit sva_cycle_delay_exprt(exprt from, exprt to, exprt op)
+    : ternary_exprt(
+        ID_sva_cycle_delay,
+        std::move(from),
+        std::move(to),
+        std::move(op),
+        bool_typet())
+  {
+  }
+
+  const exprt &from() const
+  {
+    return op0();
+  }
+
+  exprt &from()
+  {
+    return op0();
+  }
+
+  // may be nil (just the singleton 'from') or
+  // infinity (half-open interval starting at 'from')
+  const exprt &to() const
+  {
+    return op1();
+  }
+
+  exprt &to()
+  {
+    return op1();
+  }
+
+  const exprt &op() const
+  {
+    return op2();
+  }
+
+  exprt &op()
+  {
+    return op2();
+  }
+
+protected:
+  using ternary_exprt::op0;
+  using ternary_exprt::op1;
+  using ternary_exprt::op2;
+};
+
+static inline const sva_cycle_delay_exprt &
+to_sva_cycle_delay_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_cycle_delay);
+  sva_cycle_delay_exprt::check(expr);
+  return static_cast<const sva_cycle_delay_exprt &>(expr);
+}
+
+static inline sva_cycle_delay_exprt &to_sva_cycle_delay_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_cycle_delay);
+  sva_cycle_delay_exprt::check(expr);
+  return static_cast<sva_cycle_delay_exprt &>(expr);
+}
+
 #endif

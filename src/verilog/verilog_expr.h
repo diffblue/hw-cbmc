@@ -1598,11 +1598,12 @@ inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
   return static_cast<verilog_non_blocking_assignt &>(expr);
 }
 
-/// Verilog concurrent assertions
+/// Verilog concurrent assertion module item
 class verilog_assert_module_itemt : public verilog_module_itemt
 {
 public:
-  verilog_assert_module_itemt() : verilog_module_itemt(ID_assert)
+  verilog_assert_module_itemt()
+    : verilog_module_itemt(ID_verilog_assert_property)
   {
     operands().resize(2);
   }
@@ -1631,7 +1632,7 @@ public:
 inline const verilog_assert_module_itemt &
 to_verilog_assert_module_item(const verilog_module_itemt &module_item)
 {
-  PRECONDITION(module_item.id() == ID_assert);
+  PRECONDITION(module_item.id() == ID_verilog_assert_property);
   binary_exprt::check(module_item);
   return static_cast<const verilog_assert_module_itemt &>(module_item);
 }
@@ -1639,16 +1640,17 @@ to_verilog_assert_module_item(const verilog_module_itemt &module_item)
 inline verilog_assert_module_itemt &
 to_verilog_assert_module_item(verilog_module_itemt &module_item)
 {
-  PRECONDITION(module_item.id() == ID_assert);
+  PRECONDITION(module_item.id() == ID_verilog_assert_property);
   binary_exprt::check(module_item);
   return static_cast<verilog_assert_module_itemt &>(module_item);
 }
 
-/// Verilog concurrent assumptions
+/// Verilog concurrent assumption module item
 class verilog_assume_module_itemt : public verilog_module_itemt
 {
 public:
-  verilog_assume_module_itemt() : verilog_module_itemt(ID_assume)
+  verilog_assume_module_itemt()
+    : verilog_module_itemt(ID_verilog_assume_property)
   {
     operands().resize(2);
   }
@@ -1677,7 +1679,7 @@ public:
 inline const verilog_assume_module_itemt &
 to_verilog_assume_module_item(const verilog_module_itemt &module_item)
 {
-  PRECONDITION(module_item.id() == ID_assume);
+  PRECONDITION(module_item.id() == ID_verilog_assume_property);
   binary_exprt::check(module_item);
   return static_cast<const verilog_assume_module_itemt &>(module_item);
 }
@@ -1685,12 +1687,15 @@ to_verilog_assume_module_item(const verilog_module_itemt &module_item)
 inline verilog_assume_module_itemt &
 to_verilog_assume_module_item(verilog_module_itemt &module_item)
 {
-  PRECONDITION(module_item.id() == ID_assume);
+  PRECONDITION(module_item.id() == ID_verilog_assume_property);
   binary_exprt::check(module_item);
   return static_cast<verilog_assume_module_itemt &>(module_item);
 }
 
-// Intermediate assertion statements, and SMV-style assertions.
+// Can be one of three:
+// 1) Intermediate assertion statement
+// 2) Concurrent assertion statement
+// 3) SMV-style assertion statement
 class verilog_assert_statementt : public verilog_statementt
 {
 public:
@@ -1725,7 +1730,10 @@ public:
 inline const verilog_assert_statementt &
 to_verilog_assert_statement(const verilog_statementt &statement)
 {
-  PRECONDITION(statement.id() == ID_assert);
+  PRECONDITION(
+    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_smv_assert);
   binary_exprt::check(statement);
   return static_cast<const verilog_assert_statementt &>(statement);
 }
@@ -1733,12 +1741,18 @@ to_verilog_assert_statement(const verilog_statementt &statement)
 inline verilog_assert_statementt &
 to_verilog_assert_statement(verilog_statementt &statement)
 {
-  PRECONDITION(statement.id() == ID_assert);
+  PRECONDITION(
+    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_smv_assert);
   binary_exprt::check(statement);
   return static_cast<verilog_assert_statementt &>(statement);
 }
 
-// Intermediate assumption statements, and SMV-style assumptions.
+// Can be one of three:
+// 1) Intermediate assumption statement
+// 2) Concurrent assumption statement
+// 3) SMV-style assumption statement
 class verilog_assume_statementt : public verilog_statementt
 {
 public:
@@ -1773,7 +1787,10 @@ public:
 inline const verilog_assume_statementt &
 to_verilog_assume_statement(const verilog_statementt &statement)
 {
-  PRECONDITION(statement.id() == ID_assume);
+  PRECONDITION(
+    statement.id() == ID_assume ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_smv_assume);
   binary_exprt::check(statement);
   return static_cast<const verilog_assume_statementt &>(statement);
 }
@@ -1781,7 +1798,10 @@ to_verilog_assume_statement(const verilog_statementt &statement)
 inline verilog_assume_statementt &
 to_verilog_assume_statement(verilog_statementt &statement)
 {
-  PRECONDITION(statement.id() == ID_assume);
+  PRECONDITION(
+    statement.id() == ID_assume ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_smv_assume);
   binary_exprt::check(statement);
   return static_cast<verilog_assume_statementt &>(statement);
 }

@@ -14,7 +14,16 @@ module main(input clk);
   // expected to pass
   initial p0: assert property (counter == 0);
 
+  // expected to fail
+  initial p1: assert property (counter == 100);
+
+  // expected to pass
+  initial p2: assert property (##1 counter == 1);
+
+  // expected to fail
+  initial p2: assert property (##1 counter == 100);
+
   // expected to pass if there are timeframes 0 and 1
-  initial p1: assert property (s_nexttime counter == 1);
+  initial p3: assert property (s_nexttime counter == 1);
 
 endmodule

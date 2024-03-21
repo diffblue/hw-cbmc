@@ -649,6 +649,17 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   if(statement.id() == ID_assert || statement.id() == ID_assume)
   {
   }
+  else if(
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_cover_property)
+  {
+  }
+  else if(
+    statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_smv_assume)
+  {
+  }
   else if(statement.id() == ID_block)
   {
     // These may be named
@@ -779,7 +790,10 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_continuous_assign)
   {
   }
-  else if(module_item.id() == ID_assert || module_item.id() == ID_assume)
+  else if(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_cover_property)
   {
   }
   else if(module_item.id() == ID_parameter_override)

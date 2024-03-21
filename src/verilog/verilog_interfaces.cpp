@@ -264,7 +264,10 @@ void verilog_typecheckt::interface_module_item(
     interface_generate_block(to_verilog_generate_block(module_item));
   else if(module_item.id() == ID_set_genvars)
     interface_module_item(to_verilog_set_genvars(module_item).module_item());
-  else if(module_item.id() == ID_assert || module_item.id() == ID_assume)
+  else if(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_cover_property)
   {
     // done later
   }

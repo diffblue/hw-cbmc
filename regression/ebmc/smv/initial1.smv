@@ -1,0 +1,12 @@
+MODULE main
+
+VAR tmp1: boolean;
+VAR tmp2: boolean;
+
+ASSIGN init(tmp1):=1;
+
+-- should pass
+SPEC tmp1 = 1;
+
+-- should fail
+SPEC tmp2 = 1;

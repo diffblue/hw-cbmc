@@ -35,6 +35,7 @@ OBJ+= $(CPROVER_DIR)/goto-checker/goto-checker$(LIBEXT) \
       $(CPROVER_DIR)/solvers/solvers$(LIBEXT) \
       $(CPROVER_DIR)/util/util$(LIBEXT) \
       $(CPROVER_DIR)/json/json$(LIBEXT) \
+      ../temporal-logic/temporal-logic$(LIBEXT) \
       ../trans-netlist/trans_trace$(OBJEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT)
 

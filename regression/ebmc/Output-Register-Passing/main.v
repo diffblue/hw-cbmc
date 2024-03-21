@@ -13,12 +13,12 @@ module main(in1, in2);
 
  and1 A1 (in1, in2, o1, o2);             
                                 
- assert property1: o1 == (in1 & in2);
+ always assert property1: o1 == (in1 & in2);
 /* A2 is another instance of      
 ports are referenced to the       
 declaration by name. */           
  and1 A2 (.c(o1),.d(o2),.a(o1),.b(in2)); 
- assert property2: o1 == (in1 & in2);
+ always assert property2: o1 == (in1 & in2);
 endmodule                       
                                      
 // MODULE DEFINITION              
