@@ -64,7 +64,7 @@ protected:
 
   typet convert_type(const typet &);
   typet convert_enum(const class verilog_enum_typet &);
-  array_typet unpacked_array_type(const typet &src, const typet &element_type);
+  array_typet convert_unpacked_array_type(const type_with_subtypet &);
 
   void convert_range(
     const exprt &range,

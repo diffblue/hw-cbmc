@@ -452,6 +452,10 @@ public:
     return symbol_exprt(identifier(), type())
       .with_source_location<symbol_exprt>(*this);
   }
+
+  // Helper to merge the declarator's unpacked array type
+  // with the declaration type.
+  typet merged_type(const typet &declaration_type) const;
 };
 
 using verilog_declaratorst = std::vector<verilog_declaratort>;
