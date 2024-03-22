@@ -1,0 +1,7 @@
+CORE
+procedural_continuous_assignment_to_variable.v
+
+^file .* line 7: synthesis of procedural continuous assignment not supported$
+^EXIT=2$
+^SIGNAL=0$
+--

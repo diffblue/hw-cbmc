@@ -725,7 +725,17 @@ void verilog_typecheckt::check_lhs(
           << to_string(symbol.type) << " on line " << symbol.location.get_line()
           << '.';
       }
+      break;
 
+    case A_PROCEDURAL_CONTINUOUS:
+      if(!symbol.is_state_var && !symbol.is_lvalue)
+      {
+        throw errort().with_location(lhs.source_location())
+          << "procedural continuous assignment to a net\n"
+          << "Identifier " << symbol.display_name() << " is declared as "
+          << to_string(symbol.type) << " on line " << symbol.location.get_line()
+          << '.';
+      }
       break;
     }
   }
@@ -755,10 +765,27 @@ Function: verilog_typecheckt::convert_procedural_continuous_assign
 void verilog_typecheckt::convert_procedural_continuous_assign(
   verilog_procedural_continuous_assignt &statement)
 {
-  // down and up again
-  convert_continuous_assign(
-    static_cast<verilog_continuous_assignt &>(
-      static_cast<exprt &>(statement)));
+  // On path to deprecation.
+  for(auto &assignment : statement.operands())
+  {
+    if(assignment.id() != ID_equal || assignment.operands().size() != 2)
+    {
+      throw errort().with_location(assignment.source_location())
+        << "malformed procedural continuous assignment";
+    }
+
+    assignment.type() = bool_typet();
+
+    exprt &lhs = to_binary_expr(assignment).lhs();
+    exprt &rhs = to_binary_expr(assignment).rhs();
+
+    convert_expr(lhs);
+    convert_expr(rhs);
+
+    propagate_type(rhs, lhs.type());
+
+    check_lhs(lhs, A_PROCEDURAL_CONTINUOUS);
+  }
 }
 
 /*******************************************************************\
@@ -1419,7 +1446,7 @@ void verilog_typecheckt::convert_statement(
     convert_case(to_verilog_case_base(statement));
   else if(statement.id()==ID_blocking_assign)
     convert_assign(to_verilog_assign(statement), true);
-  else if(statement.id()==ID_continuous_assign)
+  else if(statement.id() == ID_procedural_continuous_assign)
     convert_procedural_continuous_assign(
       to_verilog_procedural_continuous_assign(statement));
   else if(

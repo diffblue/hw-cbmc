@@ -2542,7 +2542,7 @@ nonblocking_assignment:
 
 procedural_continuous_assignment:
 	  TOK_ASSIGN variable_assignment
-		{ init($$, ID_continuous_assign); mto($$, $2); }
+		{ init($$, ID_procedural_continuous_assign); mto($$, $2); }
 	| TOK_DEASSIGN variable_lvalue
 		{ init($$, ID_deassign); mto($$, $2); }
 	| TOK_FORCE variable_assignment
