@@ -2411,7 +2411,6 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
 
     // The index need not be a constant.
     exprt &op1 = expr.op1();
-    convert_expr(op1);
 
     // The width of the indexed part select must be an
     // elaboration-time constant.
@@ -2455,6 +2454,8 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     else
     {
       // Index not constant.
+      convert_expr(op1);
+
       // Use logical right-shift followed by (constant) extractbits.
       auto op1_adjusted =
         minus_exprt{op1, from_integer(op0_offset, op1.type())};
