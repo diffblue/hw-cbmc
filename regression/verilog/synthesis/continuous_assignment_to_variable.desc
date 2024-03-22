@@ -1,8 +1,7 @@
 CORE
 continuous_assignment_to_variable.v
-
-^EXIT=2$
+--bound 0
+^\[main\.property\.p1\] always main\.some_reg == main\.i: PROVED up to bound 0$
+^EXIT=0$
 ^SIGNAL=0$
-^file continuous_assignment_to_variable\.v line 6: continuous assignment to a variable$
-^Identifier main\.some_reg is declared as bool on line 3\.$
 --

@@ -666,7 +666,9 @@ void verilog_typecheckt::check_lhs(
   vassignt vassign)
 {
   if(lhs.id()==ID_index)
+  {
     check_lhs(to_index_expr(lhs).array(), vassign);
+  }
   else if(lhs.id()==ID_extractbit)
   {
     if(lhs.operands().size()!=2)
@@ -701,11 +703,7 @@ void verilog_typecheckt::check_lhs(
     case A_CONTINUOUS:
       if(symbol.is_state_var)
       {
-        throw errort().with_location(lhs.source_location())
-          << "continuous assignment to a variable\n"
-          << "Identifier " << symbol.display_name() << " is declared as "
-          << to_string(symbol.type) << " on line " << symbol.location.get_line()
-          << '.';
+        // Continuous assignments can drive variables.
       }
       else if(symbol.is_input && !symbol.is_output)
       {
