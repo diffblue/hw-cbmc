@@ -680,6 +680,9 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   {
     collect_symbols(to_verilog_label_statement(statement).statement());
   }
+  else if(statement.id() == ID_procedural_continuous_assign)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected statement: " + statement.id_string());
 }

@@ -1382,7 +1382,8 @@ inline verilog_repeatt &to_verilog_repeat(exprt &expr)
 class verilog_procedural_continuous_assignt:public verilog_statementt
 {
 public:
-  verilog_procedural_continuous_assignt():verilog_statementt(ID_continuous_assign)
+  verilog_procedural_continuous_assignt()
+    : verilog_statementt(ID_procedural_continuous_assign)
   {
   }
 };
@@ -1390,14 +1391,14 @@ public:
 inline const verilog_procedural_continuous_assignt &
 to_verilog_procedural_continuous_assign(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_continuous_assign);
+  PRECONDITION(expr.id() == ID_procedural_continuous_assign);
   return static_cast<const verilog_procedural_continuous_assignt &>(expr);
 }
 
 inline verilog_procedural_continuous_assignt &
 to_verilog_procedural_continuous_assign(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_continuous_assign);
+  PRECONDITION(expr.id() == ID_procedural_continuous_assign);
   return static_cast<verilog_procedural_continuous_assignt &>(expr);
 }
 

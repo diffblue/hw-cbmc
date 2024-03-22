@@ -2580,7 +2580,7 @@ void verilog_synthesist::synth_statement(
     synth_case(statement);
   else if(statement.id()==ID_blocking_assign)
     synth_assign(statement, true);
-  else if(statement.id()==ID_continuous_assign)
+  else if(statement.id() == ID_procedural_continuous_assign)
   {
     throw errort().with_location(statement.source_location())
       << "synthesis of procedural continuous assignment not supported";

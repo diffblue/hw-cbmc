@@ -126,8 +126,14 @@ protected:
   void interface_statement(const class verilog_statementt &);
 
   // type checking
-  
-  typedef enum { A_CONTINUOUS, A_BLOCKING, A_NON_BLOCKING } vassignt;
+
+  typedef enum
+  {
+    A_CONTINUOUS,
+    A_BLOCKING,
+    A_NON_BLOCKING,
+    A_PROCEDURAL_CONTINUOUS
+  } vassignt;
 
   // statements
   void convert_statement(class verilog_statementt &);
