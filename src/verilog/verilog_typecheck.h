@@ -163,8 +163,7 @@ protected:
   void convert_always_base(class verilog_always_baset &);
   void convert_initial(class verilog_initialt &);
   void convert_continuous_assign(class verilog_continuous_assignt &);
-  void convert_assert(verilog_assert_module_itemt &);
-  void convert_assume(verilog_assume_module_itemt &);
+  void convert_assert_assume_cover(verilog_assert_assume_cover_module_itemt &);
   void check_lhs(const exprt &lhs, vassignt vassign);
   void convert_assignments(exprt &trans);
   void convert_module_item(class verilog_module_itemt &);

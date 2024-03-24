@@ -1838,8 +1838,8 @@ Function: verilog_synthesist::synth_assert
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_assert(
-  const verilog_assert_module_itemt &module_item)
+void verilog_synthesist::synth_assert_cover(
+  const verilog_assert_assume_cover_module_itemt &module_item)
 {
   const irep_idt &identifier = module_item.identifier();
   symbolt &symbol=symbol_table_lookup(identifier);
@@ -1848,9 +1848,19 @@ void verilog_synthesist::synth_assert(
 
   auto cond = synth_expr(module_item.condition(), symbol_statet::SYMBOL);
 
-  // concurrent assertions come with an implicit 'always'
-  if(cond.id() != ID_sva_always)
-    cond = sva_always_exprt(cond);
+  if(module_item.id() == ID_verilog_assert_property)
+  {
+    // Concurrent assertions come with an implicit 'always'.
+    if(cond.id() != ID_sva_always)
+      cond = sva_always_exprt(cond);
+  }
+  else if(module_item.id() == ID_verilog_cover_property)
+  {
+    // 'cover' requirements are existential.
+    cond = sva_cover_exprt(cond);
+  }
+  else
+    PRECONDITION(false);
 
   symbol.value = std::move(cond);
 }
@@ -1891,7 +1901,7 @@ Function: verilog_synthesist::synth_assume
 \*******************************************************************/
 
 void verilog_synthesist::synth_assume(
-  const verilog_assume_module_itemt &module_item)
+  const verilog_assert_assume_cover_module_itemt &module_item)
 {
   auto condition = synth_expr(to_binary_expr(module_item).op0(), symbol_statet::SYMBOL);
 
@@ -2688,10 +2698,16 @@ void verilog_synthesist::synth_module_item(
       synth_module_item(block_item, trans);
     }
   }
-  else if(module_item.id() == ID_verilog_assert_property)
-    synth_assert(to_verilog_assert_module_item(module_item));
+  else if(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_cover_property)
+  {
+    synth_assert_cover(to_verilog_assert_assume_cover_module_item(module_item));
+  }
   else if(module_item.id() == ID_verilog_assume_property)
-    synth_assume(to_verilog_assume_module_item(module_item));
+  {
+    synth_assume(to_verilog_assert_assume_cover_module_item(module_item));
+  }
   else if(module_item.id()==ID_task)
   {
     // ignore for now

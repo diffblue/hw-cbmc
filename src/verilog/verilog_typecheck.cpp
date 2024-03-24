@@ -993,7 +993,7 @@ void verilog_typecheckt::convert_assign(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_assert
+Function: verilog_typecheckt::convert_assert_assume_cover
 
   Inputs:
 
@@ -1003,73 +1003,54 @@ Function: verilog_typecheckt::convert_assert
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_assert(
-  verilog_assert_module_itemt &module_item)
+void verilog_typecheckt::convert_assert_assume_cover(
+  verilog_assert_assume_cover_module_itemt &module_item)
 {
   exprt &cond = module_item.condition();
 
   convert_expr(cond);
   make_boolean(cond);
 
-  // We create a symbol for the property.
-  // The 'value' of the symbol is set by synthesis.
-  const irep_idt &identifier = module_item.identifier();
-
-  irep_idt base_name;
-
-  if(identifier == irep_idt())
+  if(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_cover_property)
   {
-    assertion_counter++;
-    base_name=std::to_string(assertion_counter);
+    // We create a symbol for the property.
+    // The 'value' of the symbol is set by synthesis.
+    const irep_idt &identifier = module_item.identifier();
+
+    irep_idt base_name;
+
+    if(identifier == irep_idt())
+    {
+      assertion_counter++;
+      base_name = std::to_string(assertion_counter);
+    }
+    else
+      base_name = identifier;
+
+    std::string full_identifier =
+      id2string(module_identifier) + ".property." + id2string(base_name);
+
+    if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
+    {
+      throw errort().with_location(module_item.source_location())
+        << "property identifier `" << base_name << "' already used";
+    }
+
+    module_item.identifier(full_identifier);
+
+    symbolt symbol{base_name, bool_typet{}, mode};
+
+    symbol.module = module_identifier;
+    symbol.value = nil_exprt{}; // set by synthesis
+    symbol.name = full_identifier;
+    symbol.is_property = true;
+    symbol.location = module_item.find_source_location();
+    symbol.pretty_name = strip_verilog_prefix(full_identifier);
+
+    symbol_table.insert(std::move(symbol));
   }
-  else
-    base_name=identifier;
-  
-  std::string full_identifier=
-    id2string(module_identifier)+
-    ".property."+id2string(base_name);
-
-  if(symbol_table.symbols.find(full_identifier)!=
-     symbol_table.symbols.end())
-  {
-    throw errort().with_location(module_item.source_location())
-      << "property identifier `" << base_name << "' already used";
-  }
-
-  module_item.identifier(full_identifier);
-
-  symbolt symbol{base_name, bool_typet{}, mode};
-
-  symbol.module=module_identifier;
-  symbol.value = nil_exprt{}; // set by synthesis
-  symbol.name = full_identifier;
-  symbol.is_property=true;
-  symbol.location = module_item.find_source_location();
-  symbol.pretty_name=strip_verilog_prefix(full_identifier);
-
-  symbolt *new_symbol;
-  symbol_table.move(symbol, new_symbol);
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::convert_assume_property
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::convert_assume(
-  verilog_assume_module_itemt &module_item)
-{
-  exprt &cond = module_item.condition();
-
-  convert_expr(cond);
-  make_boolean(cond);
 }
 
 /*******************************************************************\
@@ -1538,12 +1519,12 @@ void verilog_typecheckt::convert_module_item(
   }
   else if(
     module_item.id() == ID_verilog_assert_property ||
-    module_item.id() == ID_verilog_smv_assert)
-    convert_assert(to_verilog_assert_module_item(module_item));
-  else if(
     module_item.id() == ID_verilog_assume_property ||
-    module_item.id() == ID_verilog_smv_assume)
-    convert_assume(to_verilog_assume_module_item(module_item));
+    module_item.id() == ID_verilog_cover_property)
+  {
+    convert_assert_assume_cover(
+      to_verilog_assert_assume_cover_module_item(module_item));
+  }
   else if(module_item.id()==ID_initial)
     convert_initial(to_verilog_initial(module_item));
   else if(module_item.id()==ID_continuous_assign)

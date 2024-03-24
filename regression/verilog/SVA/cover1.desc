@@ -1,0 +1,11 @@
+KNOWNBUG
+cover1.sv
+--bound 10
+^\[main\.property\.p0\] cover main\.counter == 1: REFUTED$
+^\[main\.property\.p1\] cover main\.counter == 100: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Back-end support is missing.
