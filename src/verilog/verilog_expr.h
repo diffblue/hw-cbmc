@@ -1603,14 +1603,19 @@ inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
   return static_cast<verilog_non_blocking_assignt &>(expr);
 }
 
-/// Verilog concurrent assertion module item
-class verilog_assert_module_itemt : public verilog_module_itemt
+/// Verilog assert/assume/cover property module item
+class verilog_assert_assume_cover_module_itemt : public verilog_module_itemt
 {
 public:
-  verilog_assert_module_itemt()
-    : verilog_module_itemt(ID_verilog_assert_property)
+  verilog_assert_assume_cover_module_itemt(
+    irep_idt __id,
+    exprt __condition,
+    verilog_statementt __action)
+    : verilog_module_itemt(__id)
   {
     operands().resize(2);
+    condition() = std::move(__condition);
+    action() = std::move(__action);
   }
   
   inline exprt &condition()
@@ -1623,51 +1628,14 @@ public:
     return op0();
   }
 
-  const irep_idt &identifier() const
+  inline exprt &action()
   {
-    return get(ID_identifier);
+    return op1();
   }
 
-  void identifier(irep_idt __identifier)
+  inline const exprt &action() const
   {
-    set(ID_identifier, __identifier);
-  }
-};
-
-inline const verilog_assert_module_itemt &
-to_verilog_assert_module_item(const verilog_module_itemt &module_item)
-{
-  PRECONDITION(module_item.id() == ID_verilog_assert_property);
-  binary_exprt::check(module_item);
-  return static_cast<const verilog_assert_module_itemt &>(module_item);
-}
-
-inline verilog_assert_module_itemt &
-to_verilog_assert_module_item(verilog_module_itemt &module_item)
-{
-  PRECONDITION(module_item.id() == ID_verilog_assert_property);
-  binary_exprt::check(module_item);
-  return static_cast<verilog_assert_module_itemt &>(module_item);
-}
-
-/// Verilog concurrent assumption module item
-class verilog_assume_module_itemt : public verilog_module_itemt
-{
-public:
-  verilog_assume_module_itemt()
-    : verilog_module_itemt(ID_verilog_assume_property)
-  {
-    operands().resize(2);
-  }
-
-  inline exprt &condition()
-  {
-    return op0();
-  }
-
-  inline const exprt &condition() const
-  {
-    return op0();
+    return op1();
   }
 
   const irep_idt &identifier() const
@@ -1681,20 +1649,28 @@ public:
   }
 };
 
-inline const verilog_assume_module_itemt &
-to_verilog_assume_module_item(const verilog_module_itemt &module_item)
+inline const verilog_assert_assume_cover_module_itemt &
+to_verilog_assert_assume_cover_module_item(
+  const verilog_module_itemt &module_item)
 {
-  PRECONDITION(module_item.id() == ID_verilog_assume_property);
+  PRECONDITION(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_cover_property);
   binary_exprt::check(module_item);
-  return static_cast<const verilog_assume_module_itemt &>(module_item);
+  return static_cast<const verilog_assert_assume_cover_module_itemt &>(
+    module_item);
 }
 
-inline verilog_assume_module_itemt &
-to_verilog_assume_module_item(verilog_module_itemt &module_item)
+inline verilog_assert_assume_cover_module_itemt &
+to_verilog_assert_assume_cover_module_item(verilog_module_itemt &module_item)
 {
-  PRECONDITION(module_item.id() == ID_verilog_assume_property);
+  PRECONDITION(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_cover_property);
   binary_exprt::check(module_item);
-  return static_cast<verilog_assume_module_itemt &>(module_item);
+  return static_cast<verilog_assert_assume_cover_module_itemt &>(module_item);
 }
 
 // Can be one of three:
