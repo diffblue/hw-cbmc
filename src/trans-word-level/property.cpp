@@ -70,14 +70,17 @@ Function: property
 
 \*******************************************************************/
 
-void property(
+std::map<std::size_t, exprt::operandst> property_obligations(
   const exprt &property_expr,
-  exprt::operandst &prop_handles,
   message_handlert &message_handler,
   decision_proceduret &solver,
   std::size_t no_timeframes,
   const namespacet &ns)
 {
+  PRECONDITION(no_timeframes > 0);
+
+  std::map<std::size_t, exprt::operandst> obligations;
+
   messaget message(message_handler);
 
   // Initial state only property?
@@ -87,14 +90,9 @@ void property(
     property_expr.id() == ID_sva_nexttime ||
     property_expr.id() == ID_sva_s_nexttime)
   {
-    prop_handles.resize(no_timeframes, true_exprt());
-    if(no_timeframes > 0)
-    {
-      exprt tmp = instantiate(property_expr, 0, no_timeframes, ns);
-      prop_handles.push_back(solver.handle(tmp));
-    }
-
-    return;
+    exprt tmp = instantiate(property_expr, 0, no_timeframes, ns);
+    obligations[0].push_back(solver.handle(tmp));
+    return obligations;
   }
 
   // We want AG p.
@@ -115,7 +113,45 @@ void property(
       instantiate(p, c, no_timeframes, ns);
 
     auto handle = solver.handle(tmp);
-    prop_handles.push_back(std::move(handle));
+    obligations[c].push_back(std::move(handle));
+  }
+
+  return obligations;
+}
+
+/*******************************************************************\
+
+Function: property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void property(
+  const exprt &property_expr,
+  exprt::operandst &prop_handles,
+  message_handlert &message_handler,
+  decision_proceduret &solver,
+  std::size_t no_timeframes,
+  const namespacet &ns)
+{
+  // The first element of the pair is the length of the
+  // counterexample, and the second is the condition that
+  // must be valid for the property to hold.
+  auto obligations = property_obligations(
+    property_expr, message_handler, solver, no_timeframes, ns);
+
+  // Map obligations onto timeframes.
+  prop_handles.resize(no_timeframes, true_exprt());
+  for(auto &obligation_it : obligations)
+  {
+    auto t = obligation_it.first;
+    DATA_INVARIANT(t < no_timeframes, "obligation must have valid timeframe");
+    prop_handles[t] = conjunction(obligation_it.second);
   }
 }
 
