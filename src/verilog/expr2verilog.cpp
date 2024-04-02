@@ -394,8 +394,12 @@ std::string expr2verilogt::convert_sva(
   if(range.has_value())
   {
     auto &range_binary = to_binary_expr(range.value());
-    range_str = "[" + convert(range_binary.lhs()) + ':' +
-                convert(range_binary.rhs()) + "] ";
+    range_str = "[" + convert(range_binary.lhs()) + ':';
+    if(range_binary.rhs().id() == ID_infinity)
+      range_str += "$";
+    else
+      range_str += convert(range_binary.rhs());
+    range_str += "] ";
   }
 
   unsigned p;
@@ -1087,6 +1091,22 @@ std::string expr2verilogt::convert(
     
   else if(src.id()==ID_sva_always)
     return precedence = 0, convert_sva("always", to_sva_always_expr(src).op());
+
+  else if(src.id() == ID_sva_ranged_always)
+  {
+    return precedence = 0, convert_sva(
+                             "always",
+                             to_sva_ranged_always_expr(src).range(),
+                             to_sva_ranged_always_expr(src).op());
+  }
+
+  else if(src.id() == ID_sva_s_always)
+  {
+    return precedence = 0, convert_sva(
+                             "s_always",
+                             to_sva_s_always_expr(src).range(),
+                             to_sva_s_always_expr(src).op());
+  }
 
   else if(src.id() == ID_sva_cover)
     return precedence = 0, convert_sva("cover", to_sva_cover_expr(src).op());

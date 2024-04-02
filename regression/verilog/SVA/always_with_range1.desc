@@ -1,0 +1,11 @@
+CORE
+always_with_range1.sv
+--bound 20
+^\[main\.property\.1\] always \[0:9\] main\.x < 10: PROVED up to bound 20$
+^\[main\.property\.2\] always \[0:\$\] main\.x < 10: REFUTED$
+^\[main\.property\.3\] s_always \[0:9\] main\.x < 10: PROVED up to bound 20$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

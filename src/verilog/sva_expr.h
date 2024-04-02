@@ -170,6 +170,129 @@ static inline sva_always_exprt &to_sva_always_expr(exprt &expr)
   return static_cast<sva_always_exprt &>(expr);
 }
 
+class sva_ranged_always_exprt : public binary_predicate_exprt
+{
+public:
+  sva_ranged_always_exprt(binary_exprt range, exprt op)
+    : binary_predicate_exprt(std::move(range), ID_sva_always, std::move(op))
+  {
+  }
+
+  // These come with a range, which is binary
+  const binary_exprt &range() const
+  {
+    return static_cast<const binary_exprt &>(op0());
+  }
+
+  binary_exprt &range()
+  {
+    return static_cast<binary_exprt &>(op0());
+  }
+
+  const exprt &op() const
+  {
+    return op1();
+  }
+
+  exprt &op()
+  {
+    return op1();
+  }
+
+  const exprt &lhs() const = delete;
+  exprt &lhs() = delete;
+  const exprt &rhs() const = delete;
+  exprt &rhs() = delete;
+
+  static void check(
+    const exprt &expr,
+    const validation_modet vm = validation_modet::INVARIANT)
+  {
+    binary_exprt::check(expr, vm);
+    binary_exprt::check(to_binary_expr(expr).op0(), vm);
+  }
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
+};
+
+static inline const sva_ranged_always_exprt &
+to_sva_ranged_always_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_ranged_always);
+  sva_ranged_always_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_ranged_always_exprt &>(expr);
+}
+
+static inline sva_ranged_always_exprt &to_sva_ranged_always_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_ranged_always);
+  sva_ranged_always_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_ranged_always_exprt &>(expr);
+}
+
+class sva_s_always_exprt : public binary_predicate_exprt
+{
+public:
+  sva_s_always_exprt(binary_exprt range, exprt op)
+    : binary_predicate_exprt(std::move(range), ID_sva_s_always, std::move(op))
+  {
+  }
+
+  // These come with a range, which is binary
+  const binary_exprt &range() const
+  {
+    return static_cast<const binary_exprt &>(op0());
+  }
+
+  binary_exprt &range()
+  {
+    return static_cast<binary_exprt &>(op0());
+  }
+
+  const exprt &op() const
+  {
+    return op1();
+  }
+
+  exprt &op()
+  {
+    return op1();
+  }
+
+  const exprt &lhs() const = delete;
+  exprt &lhs() = delete;
+  const exprt &rhs() const = delete;
+  exprt &rhs() = delete;
+
+  static void check(
+    const exprt &expr,
+    const validation_modet vm = validation_modet::INVARIANT)
+  {
+    binary_exprt::check(expr, vm);
+    binary_exprt::check(to_binary_expr(expr).op0(), vm);
+  }
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
+};
+
+static inline const sva_s_always_exprt &to_sva_s_always_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_s_always);
+  sva_s_always_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_s_always_exprt &>(expr);
+}
+
+static inline sva_s_always_exprt &to_sva_s_always_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_s_always);
+  sva_s_always_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_s_always_exprt &>(expr);
+}
+
 class sva_cover_exprt : public unary_predicate_exprt
 {
 public:

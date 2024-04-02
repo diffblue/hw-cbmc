@@ -1965,8 +1965,11 @@ property_expr_proper:
         | property_expr "|=>" property_expr { init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
         | "nexttime" property_expr          { init($$, "sva_nexttime"); mto($$, $2); }
         | "s_nexttime" property_expr        { init($$, "sva_s_nexttime"); mto($$, $2); }
+        | "always" '[' cycle_delay_const_range_expression ']' property_expr %prec "always"
+		{ init($$, ID_sva_ranged_always); mto($$, $3); mto($$, $5); }
         | "always" property_expr            { init($$, "sva_always"); mto($$, $2); }
-        | "s_always" property_expr          { init($$, "sva_s_always"); mto($$, $2); }
+        | "s_always" '[' constant_range ']' property_expr %prec "s_always"
+		{ init($$, ID_sva_s_always); mto($$, $3); mto($$, $5); }
         | "s_eventually" property_expr
 		{ init($$, "sva_s_eventually"); mto($$, $2); }
         | "eventually" '[' constant_range ']' property_expr %prec "eventually"
@@ -2008,8 +2011,10 @@ cycle_delay_range:
         ;
 
 cycle_delay_const_range_expression:
-	  constant_expression ':' constant_expression
-	| constant_expression ':' '$'
+	  constant_expression TOK_COLON constant_expression
+                { init($$, ID_sva_cycle_delay); mto($$, $1); mto($$, $3); }
+	| constant_expression TOK_COLON '$'
+                { init($$, ID_sva_cycle_delay); mto($$, $1); stack_expr($$).add_to_operands(exprt(ID_infinity)); }
 	;
 
 expression_or_dist:
