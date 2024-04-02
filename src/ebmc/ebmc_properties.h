@@ -29,7 +29,8 @@ public:
     source_locationt location;
     std::string expr_string;
     irep_idt mode;
-    exprt expr;
+    exprt original_expr;
+    exprt normalized_expr;
     bvt timeframe_literals;             // bit level
     exprt::operandst timeframe_handles; // word level
     std::string description;
@@ -143,7 +144,7 @@ public:
 
     bool requires_lasso_constraints() const
     {
-      return ::requires_lasso_constraints(expr);
+      return ::requires_lasso_constraints(normalized_expr);
     }
   };
 

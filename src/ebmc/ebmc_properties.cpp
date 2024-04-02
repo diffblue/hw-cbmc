@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/language.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
+#include <temporal-logic/normalize_property.h>
 #include <verilog/sva_expr.h>
 
 #include "ebmc_error.h"
@@ -70,7 +71,9 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
       else
         properties.properties.back().name = symbol.pretty_name;
 
-      properties.properties.back().expr = symbol.value;
+      properties.properties.back().original_expr = symbol.value;
+      properties.properties.back().normalized_expr =
+        normalize_property(symbol.value);
       properties.properties.back().location = symbol.location;
       properties.properties.back().expr_string = value_as_string;
       properties.properties.back().mode = symbol.mode;
@@ -156,7 +159,8 @@ ebmc_propertiest ebmc_propertiest::from_command_line(
     ebmc_propertiest properties;
     properties.properties.push_back(propertyt());
     auto &p = properties.properties.back();
-    p.expr = expr;
+    p.original_expr = expr;
+    p.normalized_expr = normalize_property(expr);
     p.expr_string = expr_as_string;
     p.mode = transition_system.main_symbol->mode;
     p.location.make_nil();

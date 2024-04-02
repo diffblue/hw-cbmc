@@ -71,7 +71,7 @@ protected:
 
   static bool supported(const ebmc_propertiest::propertyt &p)
   {
-    auto &expr = p.expr;
+    auto &expr = p.normalized_expr;
     if(expr.id() == ID_sva_always || expr.id() == ID_AG || expr.id() == ID_G)
     {
       // Must be AG p or equivalent.
@@ -264,7 +264,7 @@ void k_inductiont::induction_step()
       ns,
       false);
 
-    const exprt property(p_it.expr);
+    const exprt property(p_it.normalized_expr);
     const exprt &p = to_unary_expr(property).op();
 
     // assumption: time frames 0,...,k-1

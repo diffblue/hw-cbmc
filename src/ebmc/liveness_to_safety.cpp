@@ -248,9 +248,11 @@ void liveness_to_safetyt::operator()()
     {
       // We want GFp.
       if(
-        property.expr.id() == ID_sva_always &&
-        (to_sva_always_expr(property.expr).op().id() == ID_sva_eventually ||
-         to_sva_always_expr(property.expr).op().id() == ID_sva_s_eventually))
+        property.normalized_expr.id() == ID_sva_always &&
+        (to_sva_always_expr(property.normalized_expr).op().id() ==
+           ID_sva_eventually ||
+         to_sva_always_expr(property.normalized_expr).op().id() ==
+           ID_sva_s_eventually))
       {
         translate_GFp(property);
       }
@@ -265,7 +267,7 @@ void liveness_to_safetyt::operator()()
 
 void liveness_to_safetyt::translate_GFp(propertyt &property)
 {
-  auto &p = to_unary_expr(to_unary_expr(property.expr).op()).op();
+  auto &p = to_unary_expr(to_unary_expr(property.normalized_expr).op()).op();
 
   // create the 'live' symbol, one for each liveness property
   {
@@ -299,7 +301,8 @@ void liveness_to_safetyt::translate_GFp(propertyt &property)
     conjunction({transition_system.trans_expr.trans(), std::move(live_trans)});
 
   // replace the liveness property
-  property.expr = safety_replacement(property.name, property.expr);
+  property.normalized_expr =
+    safety_replacement(property.name, property.normalized_expr);
 }
 
 void liveness_to_safety(

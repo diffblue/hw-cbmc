@@ -1,4 +1,5 @@
 SRC = negate_property.cpp \
+      normalize_property.cpp \
       temporal_logic.cpp \
       #empty line
 

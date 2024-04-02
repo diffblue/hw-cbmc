@@ -47,14 +47,14 @@ void bmc(
       continue;
 
     // Is it supported by the BMC engine?
-    if(!bmc_supports_property(property.expr))
+    if(!bmc_supports_property(property.normalized_expr))
     {
       property.failure("property not supported by BMC engine");
       continue;
     }
 
     ::property(
-      property.expr,
+      property.normalized_expr,
       property.timeframe_handles,
       message_handler,
       solver,
