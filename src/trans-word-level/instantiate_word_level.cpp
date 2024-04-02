@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/ebmc_util.h>
 
+#include <temporal-logic/temporal_expr.h>
 #include <verilog/sva_expr.h>
 
 #include "property.h"
@@ -231,6 +232,17 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     if(next < no_timeframes)
     {
       return instantiate_rec(to_unary_expr(expr).op(), next);
+    }
+    else
+      return true_exprt(); // works on NNF only
+  }
+  else if(expr.id() == ID_X)
+  {
+    const auto next = t + 1;
+
+    if(next < no_timeframes)
+    {
+      return instantiate_rec(to_X_expr(expr).op(), next);
     }
     else
       return true_exprt(); // works on NNF only

@@ -235,11 +235,10 @@ static inline A_exprt &to_A_expr(exprt &expr)
   return static_cast<A_exprt &>(expr);
 }
 
-class X_exprt : public binary_predicate_exprt
+class X_exprt : public unary_predicate_exprt
 {
 public:
-  explicit X_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_X, std::move(op1))
+  explicit X_exprt(exprt op) : unary_predicate_exprt(ID_X, std::move(op))
   {
   }
 };

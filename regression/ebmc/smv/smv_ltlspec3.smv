@@ -1,0 +1,10 @@
+MODULE main
+
+VAR x : boolean;
+
+ASSIGN
+  init(x) := 0;
+  next(x) := x;
+
+-- we want to see a trace with three states
+LTLSPEC X X x=1
