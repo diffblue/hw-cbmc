@@ -52,6 +52,8 @@ bool bmc_supports_property(const exprt &expr)
     return true;
   else if(expr.id() == ID_G)
     return true;
+  else if(expr.id() == ID_X)
+    return bmc_supports_property(to_X_expr(expr).op());
   else if(expr.id() == ID_sva_always)
     return true;
   else
@@ -60,7 +62,7 @@ bool bmc_supports_property(const exprt &expr)
 
 /*******************************************************************\
 
-Function: property
+Function: property_obligations_rec
 
   Inputs:
 
@@ -70,51 +72,77 @@ Function: property
 
 \*******************************************************************/
 
-std::map<std::size_t, exprt::operandst> property_obligations(
+static void property_obligations_rec(
   const exprt &property_expr,
-  message_handlert &message_handler,
+  decision_proceduret &solver,
+  std::size_t current,
+  std::size_t no_timeframes,
+  const namespacet &ns,
+  std::map<std::size_t, exprt::operandst> &obligations)
+{
+  PRECONDITION(current < no_timeframes);
+
+  if(property_expr.id() == ID_X)
+  {
+    auto next = current + 1;
+    if(next < no_timeframes)
+    {
+      auto &op = to_X_expr(property_expr).op();
+      property_obligations_rec(
+        op, solver, next, no_timeframes, ns, obligations);
+    }
+  }
+  else if(
+    property_expr.id() == ID_AG || property_expr.id() == ID_G ||
+    property_expr.id() == ID_sva_always)
+  {
+    // We want AG phi.
+    auto &phi = [](const exprt &expr) -> const exprt & {
+      if(expr.id() == ID_AG)
+        return to_AG_expr(expr).op();
+      else if(expr.id() == ID_G)
+        return to_G_expr(expr).op();
+      else if(expr.id() == ID_sva_always)
+        return to_sva_always_expr(expr).op();
+      else
+        PRECONDITION(false);
+    }(property_expr);
+
+    for(std::size_t c = current; c < no_timeframes; c++)
+    {
+      property_obligations_rec(phi, solver, c, no_timeframes, ns, obligations);
+    }
+  }
+  else
+  {
+    // current state property
+    exprt tmp = instantiate(property_expr, current, no_timeframes, ns);
+    obligations[current].push_back(solver.handle(tmp));
+  }
+}
+
+/*******************************************************************\
+
+Function: property_obligations
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static std::map<std::size_t, exprt::operandst> property_obligations(
+  const exprt &property_expr,
   decision_proceduret &solver,
   std::size_t no_timeframes,
   const namespacet &ns)
 {
-  PRECONDITION(no_timeframes > 0);
-
   std::map<std::size_t, exprt::operandst> obligations;
 
-  messaget message(message_handler);
-
-  // Initial state only property?
-  if(
-    !is_temporal_operator(property_expr) ||
-    property_expr.id() == ID_sva_cycle_delay ||
-    property_expr.id() == ID_sva_nexttime ||
-    property_expr.id() == ID_sva_s_nexttime)
-  {
-    exprt tmp = instantiate(property_expr, 0, no_timeframes, ns);
-    obligations[0].push_back(solver.handle(tmp));
-    return obligations;
-  }
-
-  // We want AG p.
-  auto &p = [](const exprt &expr) -> const exprt & {
-    if(expr.id() == ID_AG)
-      return to_AG_expr(expr).op();
-    else if(expr.id() == ID_G)
-      return to_G_expr(expr).op();
-    else if(expr.id() == ID_sva_always)
-      return to_sva_always_expr(expr).op();
-    else
-      PRECONDITION(false);
-  }(property_expr);
-
-  for(std::size_t c = 0; c < no_timeframes; c++)
-  {
-    exprt tmp=
-      instantiate(p, c, no_timeframes, ns);
-
-    auto handle = solver.handle(tmp);
-    obligations[c].push_back(std::move(handle));
-  }
+  property_obligations_rec(
+    property_expr, solver, 0, no_timeframes, ns, obligations);
 
   return obligations;
 }
@@ -142,8 +170,8 @@ void property(
   // The first element of the pair is the length of the
   // counterexample, and the second is the condition that
   // must be valid for the property to hold.
-  auto obligations = property_obligations(
-    property_expr, message_handler, solver, no_timeframes, ns);
+  auto obligations =
+    property_obligations(property_expr, solver, no_timeframes, ns);
 
   // Map obligations onto timeframes.
   prop_handles.resize(no_timeframes, true_exprt());

@@ -1,0 +1,11 @@
+CORE
+smv_ltlspec3.smv
+--bound 10 --numbered-trace
+^EXIT=10$
+^SIGNAL=0$
+^\[main::spec1\] X X main::var::x = TRUE: REFUTED$
+^main::var::x@0 = FALSE$
+^main::var::x@1 = FALSE$
+^main::var::x@2 = FALSE$
+--
+^warning: ignoring
