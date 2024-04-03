@@ -1,0 +1,9 @@
+KNOWNBUG
+sequence1.sv
+--bound 20 --numbered-trace
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The trace shown only has one state, but 10 are expected.
