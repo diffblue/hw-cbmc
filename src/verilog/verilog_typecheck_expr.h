@@ -128,7 +128,7 @@ private:
   [[nodiscard]] exprt
   convert_system_function(const irep_idt &identifier, function_call_exprt);
   [[nodiscard]] exprt convert_constraint_select_one(exprt);
-  [[nodiscard]] exprt convert_extractbit_expr(extractbit_exprt);
+  [[nodiscard]] exprt convert_bit_select_expr(binary_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);
   void implicit_typecast(exprt &, const typet &type);

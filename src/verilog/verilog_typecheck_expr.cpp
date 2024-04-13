@@ -1939,7 +1939,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::convert_extractbit_expr
+Function: verilog_typecheck_exprt::convert_bit_select_expr
 
   Inputs:
 
@@ -1949,8 +1949,11 @@ Function: verilog_typecheck_exprt::convert_extractbit_expr
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
+exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
 {
+  // Verilog's bit select expression may map onto an extractbit
+  // or an array index expression, depending on the type of the first
+  // operand.
   exprt &op0 = expr.op0();
   convert_expr(op0);
 
@@ -1962,7 +1965,7 @@ exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
 
   if(op0.type().id()==ID_array)
   {
-    exprt &op1 = to_extractbit_expr(expr).index();
+    exprt &op1 = expr.op1();
     convert_expr(op1);
     if(op1.type().id() == ID_verilog_real)
     {
@@ -2001,7 +2004,7 @@ exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
         return false_exprt().with_source_location<exprt>(expr);
 
       op1 -= offset;
-      to_extractbit_expr(expr).op1() = from_integer(op1, natural_typet());
+      expr.op1() = from_integer(op1, natural_typet());
     }
     else
     {
@@ -2014,6 +2017,7 @@ exprt verilog_typecheck_exprt::convert_extractbit_expr(extractbit_exprt expr)
     }
 
     expr.type()=bool_typet();
+    expr.id(ID_extractbit);
   }
 
   return std::move(expr);
@@ -2116,8 +2120,8 @@ Function: verilog_typecheck_exprt::convert_binary_expr
 
 exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 {
-  if(expr.id()==ID_extractbit)
-    return convert_extractbit_expr(to_extractbit_expr(expr));
+  if(expr.id() == ID_verilog_bit_select)
+    return convert_bit_select_expr(to_binary_expr(expr));
   else if(expr.id()==ID_replication)
     return convert_replication_expr(to_replication_expr(expr));
   else if(
