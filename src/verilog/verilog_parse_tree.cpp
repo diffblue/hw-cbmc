@@ -52,6 +52,25 @@ void verilog_parse_treet::create_module(
 
 /*******************************************************************\
 
+Function: verilog_parse_treet::create_package_item
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_parse_treet::create_package_item(exprt package_item)
+{
+  items.push_back(itemt());
+  items.back().type=itemt::PACKAGE_ITEM;
+  items.back().package_item = std::move(package_item);
+}
+
+/*******************************************************************\
+
 Function: verilog_parse_treet::modules_provided
 
   Inputs:
@@ -136,8 +155,8 @@ void verilog_parse_treet::itemt::show(std::ostream &out) const
     verilog_module.show(out);
     break;
     
-  case itemt::TYPEDEF:
-    verilog_typedef.show(out);
+  case itemt::PACKAGE_ITEM:
+    out << "Package item: " << package_item.pretty() << '\n';
     break;
     
   default:

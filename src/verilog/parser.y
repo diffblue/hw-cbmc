@@ -603,6 +603,7 @@ description:
  	| program_declaration
  	| package_declaration
 	| attribute_instance_brace package_item
+		{ PARSER.parse_tree.create_package_item(std::move(stack_expr($2))); }
  	| attribute_instance_brace bind_directive
  	| config_declaration
         ;

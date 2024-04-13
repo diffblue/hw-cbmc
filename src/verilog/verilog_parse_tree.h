@@ -22,34 +22,36 @@ public:
   class verilog_typedeft
   {
   public:
-    typet symbol;
+    irept declarator;
     typet type;
     
     void show(std::ostream &out) const
     {
       out << "Typedef:\n";
-      out << "\n";
+      out << "  " << declarator.get(ID_base_name) << " = " << type.pretty() << '\n';
     }
   };
 
   struct itemt
   {
   public:
-    typedef enum { MODULE, TYPEDEF } item_typet;
+    // package items are functions, tasks, typedefs, variables,
+    // nets, variables, parameters
+    typedef enum { MODULE, PACKAGE_ITEM } item_typet;
     item_typet type;
     
     verilog_modulet verilog_module;
     
-    verilog_typedeft verilog_typedef;
+    exprt package_item;
     
     bool is_module() const
     {
       return type==MODULE;
     }
 
-    bool is_typedef() const
+    bool is_package_item() const
     {
-      return type==TYPEDEF;
+      return type==PACKAGE_ITEM;
     }
     
     void show(std::ostream &out) const;
@@ -80,14 +82,8 @@ public:
     exprt &ports,
     exprt &statements);
 
-  void create_typedef(irept &declaration)
-  {
-    items.push_back(itemt());
-    items.back().type=itemt::TYPEDEF;
-    items.back().verilog_typedef.symbol.swap(declaration.get_sub()[0]);
-    items.back().verilog_typedef.type.swap(declaration.add(ID_type));
-  }
-  
+  void create_package_item(exprt);
+
   void swap(verilog_parse_treet &parse_tree)
   {
     parse_tree.items.swap(items);
