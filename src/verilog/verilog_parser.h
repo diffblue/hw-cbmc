@@ -29,8 +29,14 @@ public:
   
   typedef enum { LANGUAGE, EXPRESSION, TYPE } grammart;
   grammart grammar;
-  
-  typedef enum { STRICT_VERILOG, VIS_VERILOG, SYSTEM_VERILOG } modet;
+
+  typedef enum
+  {
+    STRICT_VERILOG,
+    VIS_VERILOG,
+    VL2SMV_VERILOG,
+    SYSTEM_VERILOG
+  } modet;
   modet mode;
   
   virtual bool parse()

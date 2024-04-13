@@ -82,8 +82,22 @@ static void preprocessor()
     else \
       yyverilogerror(text " is a System Verilog operator"); \
   }
-#define VIS_VERILOG_KEYWORD(x) \
+#define VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
   { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG || \
+       PARSER.mode==verilog_parsert::VL2SMV_VERILOG) \
+      return x; \
+    else \
+      IDENTIFIER(yytext); \
+  }
+#define VL2SMV_VERILOG_KEYWORD(x) \
+  { if(PARSER.mode==verilog_parsert::VL2SMV_VERILOG) \
+      return x; \
+    else \
+      IDENTIFIER(yytext); \
+  }
+#define VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
+  { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG || \
+       PARSER.mode==verilog_parsert::VL2SMV_VERILOG || \
        PARSER.mode==verilog_parsert::VIS_VERILOG) \
       return x; \
     else \
@@ -395,8 +409,8 @@ alias           { SYSTEM_VERILOG_KEYWORD(TOK_ALIAS); }
 always_comb     { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_COMB); }
 always_ff       { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_FF); }
 always_latch    { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_LATCH); }
-assert          { VIS_VERILOG_KEYWORD(TOK_ASSERT); }
-assume          { VIS_VERILOG_KEYWORD(TOK_ASSUME); }
+assert          { VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_ASSERT); }
+assume          { VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_ASSUME); }
 before          { SYSTEM_VERILOG_KEYWORD(TOK_BEFORE); }
 bind            { SYSTEM_VERILOG_KEYWORD(TOK_BIND); }
 bins            { SYSTEM_VERILOG_KEYWORD(TOK_BINS); }
@@ -425,7 +439,7 @@ endpackage      { SYSTEM_VERILOG_KEYWORD(TOK_ENDPACKAGE); }
 endprogram      { SYSTEM_VERILOG_KEYWORD(TOK_ENDPROGRAM); }
 endproperty     { SYSTEM_VERILOG_KEYWORD(TOK_ENDPROPERTY); }
 endsequence     { SYSTEM_VERILOG_KEYWORD(TOK_ENDSEQUENCE); }
-enum            { VIS_VERILOG_KEYWORD(TOK_ENUM); }
+enum            { VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_ENUM); }
 expect          { SYSTEM_VERILOG_KEYWORD(TOK_EXPECT); }
 export          { SYSTEM_VERILOG_KEYWORD(TOK_EXPORT); }
 extends         { SYSTEM_VERILOG_KEYWORD(TOK_EXTENDS); }
@@ -478,7 +492,7 @@ throughout      { SYSTEM_VERILOG_KEYWORD(TOK_THROUGHOUT); }
 timeprecision   { SYSTEM_VERILOG_KEYWORD(TOK_TIMEPRECISION); }
 timeunit        { SYSTEM_VERILOG_KEYWORD(TOK_TIMEUNIT); }
 type            { SYSTEM_VERILOG_KEYWORD(TOK_TYPE); }
-typedef         { VIS_VERILOG_KEYWORD(TOK_TYPEDEF); }
+typedef         { VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_TYPEDEF); }
 union           { SYSTEM_VERILOG_KEYWORD(TOK_UNION); }
 unique          { SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE); }
 var             { SYSTEM_VERILOG_KEYWORD(TOK_VAR); }
@@ -494,7 +508,7 @@ within          { SYSTEM_VERILOG_KEYWORD(TOK_WITHIN); }
 accept_on       { SYSTEM_VERILOG_KEYWORD(TOK_ACCEPT_ON); }
 checker         { SYSTEM_VERILOG_KEYWORD(TOK_CHECKER); }
 endchecker      { SYSTEM_VERILOG_KEYWORD(TOK_ENDCHECKER); }
-eventually      { SYSTEM_VERILOG_KEYWORD(TOK_EVENTUALLY); }
+eventually      { VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_EVENTUALLY); }
 global          { SYSTEM_VERILOG_KEYWORD(TOK_GLOBAL); }
 implies         { SYSTEM_VERILOG_KEYWORD(TOK_IMPLIES); }
 let             { SYSTEM_VERILOG_KEYWORD(TOK_LET); }
@@ -521,6 +535,11 @@ implements      { SYSTEM_VERILOG_KEYWORD(TOK_IMPLEMENTS); }
 interconnect    { SYSTEM_VERILOG_KEYWORD(TOK_INTERCONNECT); }
 nettype         { SYSTEM_VERILOG_KEYWORD(TOK_NETTYPE); }
 soft            { SYSTEM_VERILOG_KEYWORD(TOK_SOFT); }
+
+                /* VL2SMV Keywords */
+
+using           { VL2SMV_VERILOG_KEYWORD(TOK_USING); }
+prove           { VL2SMV_VERILOG_KEYWORD(TOK_PROVE); }
 
                 /* Preprocessor outputs */
 

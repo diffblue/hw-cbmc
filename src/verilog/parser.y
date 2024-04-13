@@ -515,6 +515,10 @@ int yyverilogerror(const char *error)
 %token TOK_SYSIDENT         // system task or function enable
 %token TOK_SCANNER_ERROR
 
+/* VL2SMV */
+%token TOK_USING            "using"
+%token TOK_PROVE            "prove"
+
 // Precedence of System Verilog Assertions Operators,
 // following System Verilog 1800-2017 Table 16-3.
 // Bison expects these in order of increasing precedence,
@@ -836,6 +840,8 @@ module_or_generate_item:
 	| attribute_instance_brace module_instantiation { $$=$2; }
 	| attribute_instance_brace concurrent_assertion_item { $$=$2; }
 	| attribute_instance_brace assertion_item_declaration { $$=$2; }
+        | attribute_instance_brace smv_using { $$ = $2; }
+        | attribute_instance_brace smv_assume { $$ = $2; }
 	| attribute_instance_brace module_common_item { $$=$2; }
 	;
 
@@ -1891,18 +1897,47 @@ concurrent_assertion_statement:
 
 /* This one mimicks functionality in Cadence SMV */
 smv_assertion_statement:
-	  TOK_ASSERT property_identifier TOK_COLON expression ';'
+	  TOK_ASSERT property_identifier TOK_COLON smv_property ';'
 		{ init($$, ID_verilog_smv_assert); stack_expr($$).operands().resize(2);
 		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
 		  to_binary_expr(stack_expr($$)).op1().make_nil();
 		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
 		}
-	| TOK_ASSUME property_identifier TOK_COLON expression ';'
+	| TOK_ASSUME property_identifier TOK_COLON smv_property ';'
 		{ init($$, ID_verilog_smv_assume); stack_expr($$).operands().resize(2);
 		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
 		  to_binary_expr(stack_expr($$)).op1().make_nil();
 		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
 		}
+	;
+
+smv_property_identifier_list:
+	  TOK_NON_TYPE_IDENTIFIER
+	| smv_property_identifier_list ',' TOK_NON_TYPE_IDENTIFIER
+	;
+
+smv_using:
+	  TOK_USING smv_property_identifier_list TOK_PROVE smv_property_identifier_list ';'
+		{ init($$, ID_verilog_smv_using); }
+	;
+
+smv_assume:
+	  TOK_ASSUME smv_property_identifier_list ';'
+		{ init($$, ID_verilog_smv_assume); }
+	;
+
+// We use smv_property_proper vs smv_property to avoid the reduce/reduce
+// conflict that arises between '(' expression ')' and '(' smv_property ')'.
+smv_property:
+	  smv_property_proper
+	| expression
+	;
+
+smv_property_proper:
+	  TOK_EVENTUALLY smv_property
+		{ init($$, ID_verilog_smv_eventually); mto($$, $2); }
+	| '(' smv_property_proper ')'
+		{ $$ = $2; }
 	;
 
 assert_property_statement:

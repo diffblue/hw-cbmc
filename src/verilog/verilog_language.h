@@ -95,6 +95,7 @@ public:
 
 protected:
   bool force_systemverilog = false;
+  bool vl2smv_extensions = false;
   verilog_parse_treet parse_tree;
 };
  

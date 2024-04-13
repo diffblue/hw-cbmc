@@ -1,5 +1,5 @@
 CORE
 main.v
---module main --bound 3 --aig
+--module main --bound 3 --aig --vl2smv-extensions
 ^EXIT=0$
 ^SIGNAL=0$

@@ -683,6 +683,9 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(statement.id() == ID_procedural_continuous_assign)
   {
   }
+  else if(statement.id() == ID_wait)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected statement: " + statement.id_string());
 }
@@ -758,6 +761,12 @@ void verilog_typecheckt::collect_symbols(
     collect_symbols(to_verilog_let(module_item));
   }
   else if(module_item.id() == ID_verilog_empty_item)
+  {
+  }
+  else if(module_item.id() == ID_verilog_smv_using)
+  {
+  }
+  else if(module_item.id() == ID_verilog_smv_assume)
   {
   }
   else

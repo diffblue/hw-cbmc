@@ -35,6 +35,7 @@ void verilog_languaget::set_language_options(
   message_handlert &message_handler)
 {
   force_systemverilog = options.get_bool_option("force-systemverilog");
+  vl2smv_extensions = options.get_bool_option("vl2smv-extensions");
 }
 
 /*******************************************************************\
@@ -68,6 +69,8 @@ bool verilog_languaget::parse(
 
   if(has_suffix(path, ".sv") || force_systemverilog)
     verilog_parser.mode=verilog_parsert::SYSTEM_VERILOG;
+  else if(vl2smv_extensions)
+    verilog_parser.mode = verilog_parsert::VL2SMV_VERILOG;
 
   verilog_scanner_init();
 
