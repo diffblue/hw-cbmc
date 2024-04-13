@@ -26,18 +26,16 @@ class verilog_typecheck_exprt:public verilog_typecheck_baset
 public:
   verilog_typecheck_exprt(
     const namespacet &_ns,
-    message_handlert &_message_handler):
-    verilog_typecheck_baset(_ns, _message_handler),
-    nondet_count(0)
+    message_handlert &_message_handler)
+    : verilog_typecheck_baset(_ns, _message_handler)
   { }
 
   verilog_typecheck_exprt(
     const namespacet &_ns,
     const std::string &_module_identifier,
-    message_handlert &_message_handler):
-    verilog_typecheck_baset(_ns, _message_handler),
-    module_identifier(_module_identifier),
-    nondet_count(0)
+    message_handlert &_message_handler)
+    : verilog_typecheck_baset(_ns, _message_handler),
+      module_identifier(_module_identifier)
   { }
 
   virtual void convert_expr(exprt &expr)
@@ -52,7 +50,6 @@ public:
 protected:
   irep_idt module_identifier;
   irep_idt function_or_task_name;
-  unsigned nondet_count;
 
   // module_identifier.function.block.base_name
   // including the Verilog:: prefix.
@@ -127,7 +124,6 @@ private:
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
   [[nodiscard]] exprt
   convert_system_function(const irep_idt &identifier, function_call_exprt);
-  [[nodiscard]] exprt convert_constraint_select_one(exprt);
   [[nodiscard]] exprt convert_bit_select_expr(binary_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);

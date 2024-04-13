@@ -70,7 +70,10 @@ public:
 
 protected:
   const optionst &options;
- 
+
+  // For $ND(...)
+  std::size_t nondet_count = 0;
+
   enum class event_guardt { NONE, CLOCK, COMBINATIONAL };
   
   inline std::string as_string(event_guardt g)

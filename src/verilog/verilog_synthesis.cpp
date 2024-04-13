@@ -152,16 +152,32 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
   // Is it a 'system function call'?
   if(call.is_system_function_call())
   {
-    // Attempt to constant fold.
-    verilog_typecheck_exprt verilog_typecheck_expr(ns, get_message_handler());
-    auto result = verilog_typecheck_expr.elaborate_constant_system_function_call(call);
-    if(!result.is_constant())
+    auto identifier = to_symbol_expr(call.function()).get_identifier();
+    if(identifier == "$ND")
     {
-      throw errort().with_location(call.source_location())
-        << "cannot synthesise system function " << to_string(call.function());
-    }
+      std::string identifier =
+        id2string(module) + "::nondet::" + std::to_string(nondet_count++);
 
-    return result;
+      auto arguments = call.arguments();
+      exprt select_one(
+        ID_constraint_select_one, call.type(), std::move(arguments));
+      select_one.set(ID_identifier, identifier);
+      return select_one.with_source_location<exprt>(call);
+    }
+    else
+    {
+      // Attempt to constant fold.
+      verilog_typecheck_exprt verilog_typecheck_expr(ns, get_message_handler());
+      auto result =
+        verilog_typecheck_expr.elaborate_constant_system_function_call(call);
+      if(!result.is_constant())
+      {
+        throw errort().with_location(call.source_location())
+          << "cannot synthesise system function " << to_string(call.function());
+      }
+
+      return result;
+    }
   }
 
   // check some restrictions
