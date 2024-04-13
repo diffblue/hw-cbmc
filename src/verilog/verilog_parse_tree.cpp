@@ -65,7 +65,7 @@ Function: verilog_parse_treet::create_package_item
 void verilog_parse_treet::create_package_item(exprt package_item)
 {
   items.push_back(itemt());
-  items.back().type=itemt::PACKAGE_ITEM;
+  items.back().type = itemt::PACKAGE_ITEM;
   items.back().package_item = std::move(package_item);
 }
 
@@ -154,7 +154,7 @@ void verilog_parse_treet::itemt::show(std::ostream &out) const
   case itemt::MODULE:
     verilog_module.show(out);
     break;
-    
+
   case itemt::PACKAGE_ITEM:
     out << "Package item: " << package_item.pretty() << '\n';
     break;

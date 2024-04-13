@@ -28,7 +28,8 @@ public:
     void show(std::ostream &out) const
     {
       out << "Typedef:\n";
-      out << "  " << declarator.get(ID_base_name) << " = " << type.pretty() << '\n';
+      out << "  " << declarator.get(ID_base_name) << " = " << type.pretty()
+          << '\n';
     }
   };
 
@@ -37,13 +38,17 @@ public:
   public:
     // package items are functions, tasks, typedefs, variables,
     // nets, variables, parameters
-    typedef enum { MODULE, PACKAGE_ITEM } item_typet;
+    typedef enum
+    {
+      MODULE,
+      PACKAGE_ITEM
+    } item_typet;
     item_typet type;
     
     verilog_modulet verilog_module;
-    
+
     exprt package_item;
-    
+
     bool is_module() const
     {
       return type==MODULE;
@@ -51,7 +56,7 @@ public:
 
     bool is_package_item() const
     {
-      return type==PACKAGE_ITEM;
+      return type == PACKAGE_ITEM;
     }
     
     void show(std::ostream &out) const;
