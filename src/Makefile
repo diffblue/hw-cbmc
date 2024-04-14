@@ -19,7 +19,7 @@ ebmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir vhdl.dir \
       smvlang.dir ic3.dir aiger.dir temporal-logic.dir cprover.dir
 
 hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
-         vhdl.dir smvlang.dir cprover.dir
+         vhdl.dir smvlang.dir cprover.dir temporal-logic.dir
 
 # building cbmc proper
 .PHONY: cprover.dir
