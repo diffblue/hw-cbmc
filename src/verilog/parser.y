@@ -129,25 +129,6 @@ inline static void new_symbol(YYSTYPE &dest, YYSTYPE &src)
 
 /*******************************************************************\
 
-Function: extractbit
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static void extractbit(YYSTYPE &expr, YYSTYPE &identifier, YYSTYPE &part)
-{
-  init(expr, ID_extractbit);
-  mto(expr, identifier);
-  stack_expr(expr).add_to_operands(std::move(to_unary_expr(stack_expr(part)).op()));
-}
-
-/*******************************************************************\
-
 Function: add_as_subtype
 
   Inputs:
@@ -1099,13 +1080,13 @@ port_expression_opt:
 
 port_reference:
 	  port_identifier
-	| port_identifier bit_select  { make_nil($$); /* Not supported */ }
+	| port_identifier constant_bit_select  { make_nil($$); /* Not supported */ }
 	| port_identifier part_select { make_nil($$); /* Not supported */ }
 	;
 
-bit_select:
+constant_bit_select:
 	  '[' expression ']'
-		{ init($$, ID_bit_select); mto($$, $2); }
+		{ $$ = $2; }
 	;
 
 part_select:
@@ -3105,8 +3086,10 @@ hierarchical_identifier_select:
 
 hierarchical_identifier_bit_select_brace:
 	  hierarchical_variable_identifier
-	| hierarchical_identifier_bit_select_brace bit_select
-		{ extractbit($$, $1, $2); }
+	| hierarchical_identifier_bit_select_brace constant_bit_select
+		{ init($$, ID_verilog_bit_select);
+		  mto($$, $1);
+		  mto($$, $2); }
 	;
 
 time_literal: TOK_TIME_LITERAL
