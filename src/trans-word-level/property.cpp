@@ -8,11 +8,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "property.h"
 
+#include <util/arith_tools.h>
 #include <util/expr_iterator.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
+#include <ebmc/ebmc_error.h>
 #include <temporal-logic/temporal_expr.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
@@ -56,6 +58,8 @@ bool bmc_supports_property(const exprt &expr)
     return bmc_supports_property(to_X_expr(expr).op());
   else if(expr.id() == ID_sva_always)
     return true;
+  else if(expr.id() == ID_sva_ranged_always)
+    return true;
   else
     return false;
 }
@@ -75,12 +79,12 @@ Function: property_obligations_rec
 static void property_obligations_rec(
   const exprt &property_expr,
   decision_proceduret &solver,
-  std::size_t current,
-  std::size_t no_timeframes,
+  const mp_integer &current,
+  const mp_integer &no_timeframes,
   const namespacet &ns,
-  std::map<std::size_t, exprt::operandst> &obligations)
+  std::map<mp_integer, exprt::operandst> &obligations)
 {
-  PRECONDITION(current < no_timeframes);
+  PRECONDITION(current >= 0 && current < no_timeframes);
 
   if(property_expr.id() == ID_X)
   {
@@ -108,7 +112,43 @@ static void property_obligations_rec(
         PRECONDITION(false);
     }(property_expr);
 
-    for(std::size_t c = current; c < no_timeframes; c++)
+    for(mp_integer c = current; c < no_timeframes; ++c)
+    {
+      property_obligations_rec(phi, solver, c, no_timeframes, ns, obligations);
+    }
+  }
+  else if(
+    property_expr.id() == ID_sva_ranged_always ||
+    property_expr.id() == ID_sva_s_always)
+  {
+    auto &phi = property_expr.id() == ID_sva_ranged_always
+                  ? to_sva_ranged_always_expr(property_expr).op()
+                  : to_sva_s_always_expr(property_expr).op();
+    auto &range = property_expr.id() == ID_sva_ranged_always
+                    ? to_sva_ranged_always_expr(property_expr).range()
+                    : to_sva_s_always_expr(property_expr).range();
+
+    auto from_opt = numeric_cast<mp_integer>(range.op0());
+    if(!from_opt.has_value())
+      throw ebmc_errort() << "failed to convert SVA always from index";
+
+    auto from = std::max(mp_integer{0}, *from_opt);
+
+    mp_integer to;
+
+    if(range.op1().id() == ID_infinity)
+    {
+      to = no_timeframes - 1;
+    }
+    else
+    {
+      auto to_opt = numeric_cast<mp_integer>(range.op1());
+      if(!to_opt.has_value())
+        throw ebmc_errort() << "failed to convert SVA always to index";
+      to = std::min(*to_opt, no_timeframes - 1);
+    }
+
+    for(mp_integer c = from; c <= to; ++c)
     {
       property_obligations_rec(phi, solver, c, no_timeframes, ns, obligations);
     }
@@ -133,13 +173,13 @@ Function: property_obligations
 
 \*******************************************************************/
 
-static std::map<std::size_t, exprt::operandst> property_obligations(
+static std::map<mp_integer, exprt::operandst> property_obligations(
   const exprt &property_expr,
   decision_proceduret &solver,
-  std::size_t no_timeframes,
+  const mp_integer &no_timeframes,
   const namespacet &ns)
 {
-  std::map<std::size_t, exprt::operandst> obligations;
+  std::map<mp_integer, exprt::operandst> obligations;
 
   property_obligations_rec(
     property_expr, solver, 0, no_timeframes, ns, obligations);
@@ -178,8 +218,10 @@ void property(
   for(auto &obligation_it : obligations)
   {
     auto t = obligation_it.first;
-    DATA_INVARIANT(t < no_timeframes, "obligation must have valid timeframe");
-    prop_handles[t] = conjunction(obligation_it.second);
+    DATA_INVARIANT(
+      t >= 0 && t < no_timeframes, "obligation must have valid timeframe");
+    auto t_int = numeric_cast_v<std::size_t>(t);
+    prop_handles[t_int] = conjunction(obligation_it.second);
   }
 }
 

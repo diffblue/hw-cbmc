@@ -1592,6 +1592,16 @@ void verilog_typecheck_exprt::implicit_typecast(
       return;
     }
   }
+#if 0
+  else if(src_type.id() == ID_natural)
+  {
+    if(dest_type.id()==ID_integer)
+    {
+      expr = typecast_exprt{expr, dest_type};
+      return;
+    }
+  }
+#endif
   else if(
     src_type.id() == ID_bool || src_type.id() == ID_unsignedbv ||
     src_type.id() == ID_signedbv || src_type.id() == ID_verilog_unsignedbv ||
@@ -2240,21 +2250,32 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(expr.id() == ID_sva_eventually)
+  else if(
+    expr.id() == ID_sva_eventually || expr.id() == ID_sva_ranged_always ||
+    expr.id() == ID_sva_s_always)
   {
     auto &range = to_binary_expr(expr.op0());
+
     auto lower = convert_integer_constant_expression(range.op0());
-    auto upper = convert_integer_constant_expression(range.op1());
-    if(lower > upper)
-    {
-      throw errort().with_location(expr.source_location())
-        << "range must be lower <= upper";
-    }
 
     range.op0() = from_integer(lower, natural_typet())
                     .with_source_location<exprt>(range.op0());
-    range.op1() = from_integer(upper, natural_typet())
-                    .with_source_location<exprt>(range.op1());
+
+    if(range.op1().id() == ID_infinity)
+    {
+    }
+    else
+    {
+      auto upper = convert_integer_constant_expression(range.op1());
+      if(lower > upper)
+      {
+        throw errort().with_location(expr.source_location())
+          << "range must be lower <= upper";
+      }
+
+      range.op1() = from_integer(upper, natural_typet())
+                      .with_source_location<exprt>(range.op1());
+    }
 
     convert_expr(expr.op1());
     make_boolean(expr.op1());

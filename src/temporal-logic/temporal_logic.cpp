@@ -17,11 +17,12 @@ bool is_temporal_operator(const exprt &expr)
          expr.id() == ID_A || expr.id() == ID_E || expr.id() == ID_U ||
          expr.id() == ID_R || expr.id() == ID_G || expr.id() == ID_F ||
          expr.id() == ID_X || expr.id() == ID_sva_always ||
-         expr.id() == ID_sva_always || expr.id() == ID_sva_nexttime ||
-         expr.id() == ID_sva_s_nexttime || expr.id() == ID_sva_until ||
-         expr.id() == ID_sva_s_until || expr.id() == ID_sva_until_with ||
-         expr.id() == ID_sva_s_until_with || expr.id() == ID_sva_eventually ||
-         expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_cycle_delay;
+         expr.id() == ID_sva_always || expr.id() == ID_sva_ranged_always ||
+         expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_nexttime ||
+         expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
+         expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with ||
+         expr.id() == ID_sva_eventually || expr.id() == ID_sva_s_eventually ||
+         expr.id() == ID_sva_cycle_delay;
 }
 
 bool has_temporal_operator(const exprt &expr)
