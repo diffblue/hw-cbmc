@@ -26,6 +26,8 @@ std::string ebmc_propertiest::propertyt::status_as_string() const
     return "PROVED up to bound " + std::to_string(bound);
   case statust::REFUTED:
     return "REFUTED";
+  case statust::REFUTED_WITH_BOUND:
+    return "REFUTED up to bound " + std::to_string(bound);
   case statust::UNKNOWN:
     return "UNKNOWN";
   case statust::INCONCLUSIVE:

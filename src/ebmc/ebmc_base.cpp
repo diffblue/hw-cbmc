@@ -95,7 +95,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
 
         namespacet ns(transition_system.symbol_table);
 
-        property.counterexample =
+        property.witness_trace =
           compute_trans_trace(property.timeframe_literals, bmc_map, solver, ns);
       }
       break;

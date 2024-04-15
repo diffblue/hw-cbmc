@@ -13,6 +13,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/message.h>
 
 #include <solvers/prop/literal.h>
+#include <temporal-logic/temporal_logic.h>
 #include <trans-netlist/trans_trace.h>
 #include <trans-word-level/property.h>
 
@@ -37,23 +38,24 @@ public:
 
     enum class statust
     {
-      UNKNOWN,           // no work done yet
-      DISABLED,          // turned off by user
-      PROVED,            // property is true, unbounded
-      PROVED_WITH_BOUND, // property is true, with bound
-      REFUTED,           // property is false, possibly counterexample
-      DROPPED,           // given up
-      FAILURE,           // error during anaysis
-      INCONCLUSIVE       // analysis can't determine truth
+      UNKNOWN,            // no work done yet
+      DISABLED,           // turned off by user
+      PROVED,             // property is true, unbounded
+      PROVED_WITH_BOUND,  // property is true, with bound
+      REFUTED,            // property is false, possibly counterexample
+      REFUTED_WITH_BOUND, // property is false, with bound
+      DROPPED,            // given up
+      FAILURE,            // error during anaysis
+      INCONCLUSIVE        // analysis can't determine truth
     } status = statust::UNKNOWN;
 
     std::size_t bound = 0;
-    std::optional<trans_tracet> counterexample;
+    std::optional<trans_tracet> witness_trace;
     std::optional<std::string> failure_reason;
 
-    bool has_counterexample() const
+    bool has_witness_trace() const
     {
-      return counterexample.has_value();
+      return witness_trace.has_value();
     }
 
     bool is_unknown() const
@@ -122,6 +124,12 @@ public:
       status = statust::REFUTED;
     }
 
+    void refuted_with_bound(std::size_t _bound)
+    {
+      status = statust::REFUTED_WITH_BOUND;
+      bound = _bound;
+    }
+
     void drop()
     {
       status = statust::DROPPED;
@@ -145,6 +153,11 @@ public:
     bool requires_lasso_constraints() const
     {
       return ::requires_lasso_constraints(normalized_expr);
+    }
+
+    bool is_exists_path() const
+    {
+      return ::is_exists_path(original_expr);
     }
   };
 

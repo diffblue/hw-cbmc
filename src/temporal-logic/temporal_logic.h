@@ -18,4 +18,8 @@ bool has_temporal_operator(const exprt &);
 /// as its root
 bool is_temporal_operator(const exprt &);
 
+/// Returns true iff the given expression is an existential path
+/// property.
+bool is_exists_path(const exprt &);
+
 #endif

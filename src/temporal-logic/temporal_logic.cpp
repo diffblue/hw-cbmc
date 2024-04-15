@@ -36,3 +36,8 @@ bool has_temporal_operator(const exprt &expr)
 
   return false;
 }
+
+bool is_exists_path(const exprt &expr)
+{
+  return expr.id() == ID_sva_cover;
+}
