@@ -165,7 +165,7 @@ int bdd_enginet::operator()()
       cmdline, transition_system, message.get_message_handler());
 
     for(const propertyt &p : properties.properties)
-      get_atomic_propositions(p.expr);
+      get_atomic_propositions(p.normalized_expr);
 
     message.status() << "Building BDD for netlist" << messaget::eom;
 
@@ -376,7 +376,7 @@ void bdd_enginet::compute_counterexample(
 
   ::unwind(netlist, bmc_map, message, solver);
   ::unwind_property(
-    property.expr,
+    property.normalized_expr,
     property.timeframe_literals,
     message.get_message_handler(),
     solver,
@@ -450,17 +450,18 @@ void bdd_enginet::check_property(propertyt &property)
            !has_temporal_operator(to_F_expr(to_G_expr(expr).op()).op());
   };
 
-  if(is_AGp(property.expr))
+  if(is_AGp(property.normalized_expr))
   {
     AGp(property);
   }
   else if(
-    is_AG_AFp(property.expr) || is_always_eventually(property.expr) ||
-    is_GFp(property.expr))
+    is_AG_AFp(property.normalized_expr) ||
+    is_always_eventually(property.normalized_expr) ||
+    is_GFp(property.normalized_expr))
   {
     AGAFp(property);
   }
-  else if(!has_temporal_operator(property.expr))
+  else if(!has_temporal_operator(property.normalized_expr))
   {
     just_p(property);
   }
@@ -482,7 +483,7 @@ Function: bdd_enginet::AGp
 
 void bdd_enginet::AGp(propertyt &property)
 {
-  const exprt &sub_expr = to_unary_expr(property.expr).op();
+  const exprt &sub_expr = to_unary_expr(property.normalized_expr).op();
   BDD p = property2BDD(sub_expr);
 
   // Start with !p, and go backwards until saturation or we hit an
@@ -563,7 +564,8 @@ Function: bdd_enginet::AGAFp
 
 void bdd_enginet::AGAFp(propertyt &property)
 {
-  const exprt &sub_expr = to_unary_expr(to_unary_expr(property.expr).op()).op();
+  const exprt &sub_expr =
+    to_unary_expr(to_unary_expr(property.normalized_expr).op()).op();
   BDD p = property2BDD(sub_expr);
 
   // Start with p, and go backwards until saturation.
@@ -648,7 +650,7 @@ void bdd_enginet::just_p(propertyt &property)
 {
   // We check whether the BDD for the negation of the property
   // contains an initial state.
-  exprt negation = negate_property(property.expr);
+  exprt negation = negate_property(property.normalized_expr);
   BDD states = property2BDD(negation);
 
   // do we have an initial state?

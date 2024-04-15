@@ -1850,7 +1850,8 @@ void verilog_synthesist::synth_assert_cover(
 
   if(module_item.id() == ID_verilog_assert_property)
   {
-    // Concurrent assertions come with an implicit 'always'.
+    // Concurrent assertions come with an implicit 'always'
+    // (1800-2017 Sec 16.12.11).
     if(cond.id() != ID_sva_always)
       cond = sva_always_exprt(cond);
   }

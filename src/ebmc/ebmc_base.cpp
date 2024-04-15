@@ -200,7 +200,7 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
         continue;
 
       ::unwind_property(
-        property.expr,
+        property.normalized_expr,
         property.timeframe_literals,
         message.get_message_handler(),
         solver,

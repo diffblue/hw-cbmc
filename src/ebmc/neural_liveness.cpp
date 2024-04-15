@@ -162,13 +162,14 @@ void neural_livenesst::validate_properties()
     {
       // ignore
     }
-    else if(property.expr.id() == ID_AF)
+    else if(property.normalized_expr.id() == ID_AF)
     {
       // ok
     }
     else if(
-      property.expr.id() == ID_sva_always &&
-      to_sva_always_expr(property.expr).op().id() == ID_sva_s_eventually)
+      property.normalized_expr.id() == ID_sva_always &&
+      to_sva_always_expr(property.normalized_expr).op().id() ==
+        ID_sva_s_eventually)
     {
       // ok
     }
@@ -188,7 +189,7 @@ void neural_livenesst::set_live_signal(
   auto main_symbol_writeable = transition_system.symbol_table.get_writeable(
     transition_system.main_symbol->name);
   main_symbol_writeable->value = original_trans_expr; // copy
-  ::set_live_signal(transition_system, property.expr);
+  ::set_live_signal(transition_system, property.normalized_expr);
 }
 
 std::function<void(trans_tracet)>
@@ -301,7 +302,7 @@ tvt neural_livenesst::verify(
 
   auto result = is_ranking_function(
     transition_system,
-    property.expr,
+    property.normalized_expr,
     candidate,
     solver_factory,
     message.get_message_handler());

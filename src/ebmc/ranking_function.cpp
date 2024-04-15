@@ -109,7 +109,7 @@ int do_ranking_function(
 
   auto result = is_ranking_function(
     transition_system,
-    property.expr,
+    property.normalized_expr,
     ranking_function,
     solver_factory,
     message_handler);
