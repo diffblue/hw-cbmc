@@ -1592,7 +1592,6 @@ void verilog_typecheck_exprt::implicit_typecast(
       return;
     }
   }
-#if 0
   else if(src_type.id() == ID_natural)
   {
     if(dest_type.id()==ID_integer)
@@ -1601,7 +1600,6 @@ void verilog_typecheck_exprt::implicit_typecast(
       return;
     }
   }
-#endif
   else if(
     src_type.id() == ID_bool || src_type.id() == ID_unsignedbv ||
     src_type.id() == ID_signedbv || src_type.id() == ID_verilog_unsignedbv ||
