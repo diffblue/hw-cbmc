@@ -98,17 +98,25 @@ void bmc(
 
       message.status() << "Checking " << property.name << messaget::eom;
 
-      auto assumption = not_exprt(conjunction(property.timeframe_handles));
+      auto assumption = not_exprt{conjunction(property.timeframe_handles)};
 
       decision_proceduret::resultt dec_result = solver(assumption);
 
       switch(dec_result)
       {
       case decision_proceduret::resultt::D_SATISFIABLE:
-        property.refuted();
-        message.result() << "SAT: counterexample found" << messaget::eom;
+        if(property.is_exists_path())
+        {
+          property.proved();
+          message.result() << "SAT: path found" << messaget::eom;
+        }
+        else // universal path property
+        {
+          property.refuted();
+          message.result() << "SAT: counterexample found" << messaget::eom;
+        }
 
-        property.counterexample = compute_trans_trace(
+        property.witness_trace = compute_trans_trace(
           property.timeframe_handles,
           solver,
           bound + 1,
@@ -117,9 +125,18 @@ void bmc(
         break;
 
       case decision_proceduret::resultt::D_UNSATISFIABLE:
-        message.result() << "UNSAT: No counterexample found within bound"
-                         << messaget::eom;
-        property.proved_with_bound(bound);
+        if(property.is_exists_path())
+        {
+          message.result() << "UNSAT: No path found within bound"
+                           << messaget::eom;
+          property.refuted_with_bound(bound);
+        }
+        else // universal path property
+        {
+          message.result() << "UNSAT: No counterexample found within bound"
+                           << messaget::eom;
+          property.proved_with_bound(bound);
+        }
         break;
 
       case decision_proceduret::resultt::D_ERROR:
