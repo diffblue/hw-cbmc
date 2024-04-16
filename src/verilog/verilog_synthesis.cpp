@@ -2744,6 +2744,9 @@ void verilog_synthesist::synth_module_item(
   {
     // done already
   }
+  else if(module_item.id() == ID_verilog_covergroup)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
