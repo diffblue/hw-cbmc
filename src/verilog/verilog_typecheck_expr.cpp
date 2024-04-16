@@ -200,15 +200,6 @@ void verilog_typecheck_exprt::propagate_type(
         }
       }
     }
-    else if(expr.id()==ID_constraint_select_one)
-    {
-      expr.type()=type;
-
-      Forall_operands(it, expr)
-        propagate_type(*it, type);
-
-      return;
-    }
   }
 
   implicit_typecast(expr, type);
@@ -327,10 +318,6 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
   {
     return convert_expr_function_call(to_function_call_expr(expr));
   }
-  else if(expr.id()==ID_constraint_select_one)
-  {
-    return convert_constraint_select_one(std::move(expr));
-  }
   else
   {
     std::size_t no_op;
@@ -431,29 +418,6 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
     propagate_type(arguments[i], parameter_types[i].type());
 
   return std::move(expr);
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheck_exprt::convert_constraint_select_one
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt verilog_typecheck_exprt::convert_constraint_select_one(exprt expr)
-{
-  if(expr.operands().size()<2)
-  {
-    throw errort().with_location(expr.source_location())
-      << "constraint_select_one takes at least two operands";
-  }
-
-  return expr;
 }
 
 /*******************************************************************\
@@ -632,20 +596,9 @@ exprt verilog_typecheck_exprt::convert_system_function(
       throw errort().with_location(expr.source_location())
         << "$ND takes at least one argument";
     }
-    
-    if(arguments.size()==1)
-      return arguments.front(); // remove
 
-    std::string identifier=
-      id2string(module_identifier)+"::nondet::"+std::to_string(nondet_count++);
-
-    typet type=arguments.front().type();
-
-    exprt select_one(ID_constraint_select_one, type);
-    select_one.operands()=arguments;
-    select_one.set(ID_identifier, identifier);
-
-    return select_one;
+    expr.type() = arguments.front().type();
+    return std::move(expr);
   }
   else if(identifier == "$bits")
   {
