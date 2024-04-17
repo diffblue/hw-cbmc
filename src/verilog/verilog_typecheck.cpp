@@ -1474,6 +1474,9 @@ void verilog_typecheckt::convert_statement(
     convert_force(to_verilog_force(statement));
   else if(statement.id() == ID_verilog_label_statement)
     convert_statement(to_verilog_label_statement(statement).statement());
+  else if(statement.id() == ID_wait)
+  {
+  }
   else
   {
     throw errort().with_location(statement.source_location())
@@ -1573,6 +1576,12 @@ void verilog_typecheckt::convert_module_item(
     // done already
   }
   else if(module_item.id() == ID_verilog_empty_item)
+  {
+  }
+  else if(module_item.id() == ID_verilog_smv_using)
+  {
+  }
+  else if(module_item.id() == ID_verilog_smv_assume)
   {
   }
   else

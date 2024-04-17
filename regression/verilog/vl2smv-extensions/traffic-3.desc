@@ -1,0 +1,7 @@
+CORE
+traffic/3.v
+--vl2smv-extensions
+^file .* line 50: assignment in 'always' context without event guard$
+^EXIT=2$
+^SIGNAL=0$
+--
