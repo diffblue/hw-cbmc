@@ -1,7 +1,7 @@
-KNOWNBUG
+CORE
 subdir/in_subdir.v
 --preprocess
+`line 1 "subdir/include_file\.vh" 1
 ^EXIT=0$
 ^SIGNAL=0$
 --
-include file in subdirectory not found
