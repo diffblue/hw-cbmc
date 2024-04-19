@@ -1,0 +1,7 @@
+KNOWNBUG
+subdir/in_subdir.v
+--preprocess
+^EXIT=0$
+^SIGNAL=0$
+--
+include file in subdirectory not found
