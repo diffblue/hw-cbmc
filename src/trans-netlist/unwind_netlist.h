@@ -42,6 +42,9 @@ void unwind_property(
   const bmc_mapt &,
   const namespacet &);
 
+// Is the property supported?
+bool netlist_bmc_supports_property(const exprt &);
+
 // unwind a property that is given as netlist node
 void unwind_property(
   const bmc_mapt &,

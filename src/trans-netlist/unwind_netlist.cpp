@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 
 #include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
 #include "instantiate_netlist.h"
@@ -199,3 +200,27 @@ void unwind_property(
   }
 }
 
+/*******************************************************************\
+
+Function: netlist_bmc_supports_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool netlist_bmc_supports_property(const exprt &expr)
+{
+  // We do AG p only.
+  if(expr.id() == ID_AG)
+    return !has_temporal_operator(to_AG_expr(expr).op());
+  else if(expr.id() == ID_G)
+    return !has_temporal_operator(to_G_expr(expr).op());
+  else if(expr.id() == ID_sva_always)
+    return !has_temporal_operator(to_sva_always_expr(expr).op());
+  else
+    return false;
+}
