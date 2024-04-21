@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SOLVERS_PROP_AIG_PROP_H
-#define CPROVER_SOLVERS_PROP_AIG_PROP_H
+#ifndef CPROVER_TRANS_NETLIST_AIG_PROP_H
+#define CPROVER_TRANS_NETLIST_AIG_PROP_H
 
 #include <cassert>
 
@@ -112,4 +112,4 @@ protected:
                     std::vector<unsigned> &n_usage_count);
 };
 
-#endif // CPROVER_SOLVERS_PROP_AIG_PROP_H
+#endif // CPROVER_TRANS_NETLIST_AIG_PROP_H

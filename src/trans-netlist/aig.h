@@ -9,8 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 /// \file
 /// AND-Inverter Graph
 
-#ifndef CPROVER_SOLVERS_PROP_AIG_H
-#define CPROVER_SOLVERS_PROP_AIG_H
+#ifndef CPROVER_TRANS_NETLIST_AIG_H
+#define CPROVER_TRANS_NETLIST_AIG_H
 
 #include <map>
 #include <set>
@@ -101,4 +101,4 @@ public:
   }
 };
 
-#endif // CPROVER_SOLVERS_PROP_AIG_H
+#endif // CPROVER_TRANS_NETLIST_AIG_H
