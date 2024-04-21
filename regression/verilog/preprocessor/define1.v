@@ -7,3 +7,6 @@
 `define with_parameter(a, b, c) a-b-c
 `with_parameter(x, y, z)
 `with_parameter(x, y, `with_value)
+`with_parameter (moo, foo, bar)
+`define no_parameter (1+2)
+`no_parameter

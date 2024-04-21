@@ -277,6 +277,9 @@ auto verilog_preprocessort::parse_define_arguments(const definet &define)
   if(define.parameters.empty())
     return {};
 
+  // skip whitespace
+  tokenizer().skip_ws();
+
   if(tokenizer().next_token() != '(')
     throw verilog_preprocessor_errort() << "expecting define arguments";
 
@@ -362,11 +365,10 @@ void verilog_preprocessort::directive()
     auto &identifier = identifier_token.text;
     auto &define = defines[identifier];
 
-    // skip whitespace
-    tokenizer().skip_ws();
-
     // Is there a parameter list?
     // These have been introduced in Verilog 2001.
+    // 1800-2017: "The left parenthesis shall follow the text macro name
+    // immediately, with no space in between."
     if(tokenizer().peek() == '(')
       define.parameters = parse_define_parameters();
 
