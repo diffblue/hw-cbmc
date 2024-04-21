@@ -5,8 +5,8 @@ waveform1.smv
 ^SIGNAL=0$
 ^\[main::spec1\] .* REFUTED$
 ^Counterexample with 21 states:$
-^main::var::y@0 = 0$
-^main::var::y@10 = 100$
-^main::var::y@20 = 200$
+^y@0 = 0$
+^y@10 = 100$
+^y@20 = 200$
 --
 ^warning: ignoring

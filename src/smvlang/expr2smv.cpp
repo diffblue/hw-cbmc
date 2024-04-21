@@ -6,17 +6,21 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cstring>
+#include "expr2smv.h"
 
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
+#include <util/namespace.h>
 #include <util/std_expr.h>
-
-#include "expr2smv.h"
+#include <util/symbol.h>
 
 class expr2smvt
 {
 public:
+  explicit expr2smvt(const namespacet &__ns) : ns(__ns)
+  {
+  }
+
   bool convert_nondet_choice(const exprt &src, std::string &dest, unsigned precedence);
 
   bool convert_binary(const exprt &src, std::string &dest, const std::string &symbol, unsigned precedence);
@@ -34,7 +38,8 @@ public:
 
   bool convert(const exprt &src, std::string &dest);
 
-  bool convert_symbol(const exprt &src, std::string &dest, unsigned &precedence);
+  bool
+  convert_symbol(const symbol_exprt &, std::string &dest, unsigned &precedence);
 
   bool convert_next_symbol(const exprt &src, std::string &dest, unsigned &precedence);
 
@@ -45,6 +50,9 @@ public:
   bool convert_norep(const exprt &src, std::string &dest, unsigned &precedence);
 
   bool convert(const typet &src, std::string &dest);
+
+protected:
+  const namespacet &ns;
 };
 
 /*
@@ -312,15 +320,15 @@ Function: expr2smvt::convert_symbol
 \*******************************************************************/
 
 bool expr2smvt::convert_symbol(
-  const exprt &src,
+  const symbol_exprt &src,
   std::string &dest,
   unsigned &precedence)
 {
   precedence=SMV_MAX_PRECEDENCE;
-  dest=src.get_string(ID_identifier);
- 
-  if(strncmp(dest.c_str(), "smv::", 5)==0)
-    dest.erase(0, 5);
+
+  auto &symbol = ns.lookup(src);
+
+  dest = id2string(symbol.display_name());
 
   return false;
 }
@@ -343,7 +351,8 @@ bool expr2smvt::convert_next_symbol(
   unsigned &precedence)
 {
   std::string tmp;
-  convert_symbol(src, tmp, precedence);
+  convert_symbol(
+    symbol_exprt{src.get(ID_identifier), src.type()}, tmp, precedence);
 
   dest="next("+tmp+")";
 
@@ -468,7 +477,7 @@ bool expr2smvt::convert(
       to_unary_expr(src), dest, src.id_string() + " ", precedence = 7);
 
   else if(src.id()==ID_symbol)
-    return convert_symbol(src, dest, precedence);
+    return convert_symbol(to_symbol_expr(src), dest, precedence);
 
   else if(src.id()==ID_next_symbol)
     return convert_next_symbol(src, dest, precedence);
@@ -527,9 +536,9 @@ Function: expr2smv
 
 \*******************************************************************/
 
-bool expr2smv(const exprt &expr, std::string &code)
+bool expr2smv(const exprt &expr, std::string &code, const namespacet &ns)
 {
-  expr2smvt expr2smv;
+  expr2smvt expr2smv(ns);
   return expr2smv.convert(expr, code);
 }
 
@@ -545,14 +554,14 @@ Function: type2smv
 
 \*******************************************************************/
 
-bool type2smv(const typet &type, std::string &code)
+bool type2smv(const typet &type, std::string &code, const namespacet &ns)
 {
   if(type.id()==ID_bool)
     code="boolean";
   else if(type.id()==ID_array)
   {
     std::string tmp;
-    if(type2smv(to_array_type(type).element_type(), tmp))
+    if(type2smv(to_array_type(type).element_type(), tmp, ns))
       return true;
     code="array ";
     code+="..";
@@ -587,7 +596,7 @@ bool type2smv(const typet &type, std::string &code)
       {
         if(first) first=false; else code+=", ";
         std::string tmp;
-        expr2smv(*it, tmp);
+        expr2smv(*it, tmp, ns);
         code+=tmp;
       }
       code+=')';

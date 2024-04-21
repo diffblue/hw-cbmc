@@ -3,6 +3,6 @@ range_type5.smv
 --bound 3
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main::spec1\] AG \(!main::var::x = 6\): PROVED up to bound 3$
+^\[main::spec1\] AG \(!x = 6\): PROVED up to bound 3$
 --
 ^warning: ignoring
