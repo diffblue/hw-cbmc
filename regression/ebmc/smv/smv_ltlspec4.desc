@@ -1,0 +1,13 @@
+CORE broken-smt-backend
+smv_ltlspec4.smv
+--bound 10 --numbered-trace
+^EXIT=10$
+^SIGNAL=0$
+^\[main::spec1\] F main::var::x = 0: REFUTED$
+^main::var::x@0 = 1$
+^main::var::x@1 = 2$
+^main::var::x@2 = 2$
+^\[main::spec2\] F main::var::x = 2: PROVED up to bound 10$
+--
+^warning: ignoring
+--

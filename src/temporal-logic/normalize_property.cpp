@@ -36,6 +36,16 @@ exprt normalize_pre_not(not_exprt expr)
   {
     return to_not_expr(op).op();
   }
+  else if(op.id() == ID_G)
+  {
+    // ¬Gφ --> F¬φ
+    return F_exprt{not_exprt{to_G_expr(op).op()}};
+  }
+  else if(op.id() == ID_F)
+  {
+    // ¬Fφ --> G¬φ
+    return G_exprt{not_exprt{to_F_expr(op).op()}};
+  }
 
   return std::move(expr);
 }

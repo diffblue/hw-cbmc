@@ -16,6 +16,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬(a ∨ b) --> ¬a ∧ ¬b
 /// ¬(a ∧ b) --> ¬a ∨ ¬b
 /// ¬¬φ --> φ
+/// ¬Gφ --> F¬φ
+/// ¬Fφ --> G¬φ
 exprt normalize_property(exprt);
 
 #endif
