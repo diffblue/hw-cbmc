@@ -13,6 +13,7 @@ value
 
 x-y-z
 x-y-value
+moo-foo-bar
 ^EXIT=0$
 ^SIGNAL=0$
 --
