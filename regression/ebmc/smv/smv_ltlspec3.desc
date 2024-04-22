@@ -4,6 +4,7 @@ smv_ltlspec3.smv
 ^EXIT=10$
 ^SIGNAL=0$
 ^\[main::spec1\] X X main::var::x = TRUE: REFUTED$
+^Counterexample with 3 states:$
 ^main::var::x@0 = FALSE$
 ^main::var::x@1 = FALSE$
 ^main::var::x@2 = FALSE$

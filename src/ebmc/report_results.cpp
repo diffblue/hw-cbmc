@@ -135,7 +135,17 @@ void report_results(
         }
         else if(cmdline.isset("numbered-trace"))
         {
-          message.status() << term() << ":" << messaget::eom;
+          message.status() << term();
+          auto failing_opt =
+            property.witness_trace->get_min_failing_timeframe();
+          if(failing_opt.has_value())
+          {
+            if(*failing_opt == 0)
+              message.status() << " with 1 state";
+            else
+              message.status() << " with " << *failing_opt + 1 << " states";
+          }
+          message.status() << ':' << messaget::eom;
           show_trans_trace_numbered(
             property.witness_trace.value(), message, ns, std::cout);
         }
