@@ -54,6 +54,10 @@ bool bmc_supports_property(const exprt &expr)
     return true;
   else if(expr.id() == ID_G)
     return true;
+  else if(expr.id() == ID_AF)
+    return true;
+  else if(expr.id() == ID_F)
+    return true;
   else if(expr.id() == ID_X)
     return bmc_supports_property(to_X_expr(expr).op());
   else if(expr.id() == ID_sva_always)
@@ -115,6 +119,37 @@ static void property_obligations_rec(
     for(mp_integer c = current; c < no_timeframes; ++c)
     {
       property_obligations_rec(phi, solver, c, no_timeframes, ns, obligations);
+    }
+  }
+  else if(
+    property_expr.id() == ID_AF || property_expr.id() == ID_F ||
+    property_expr.id() == ID_sva_s_eventually)
+  {
+    const auto &phi = to_unary_expr(property_expr).op();
+
+    // Counterexamples to Fφ must have a loop.
+    // We consider l-k loops with l<k.
+    for(mp_integer k = current + 1; k < no_timeframes; ++k)
+    {
+      // The following needs to be satisfied for a counterexample
+      // to Fφ that loops back in timeframe k:
+      //
+      // (1) There is a loop from timeframe k back to
+      //     some earlier state l with current<=l<k.
+      // (2) No state j with current<=j<=k to the end of the
+      //     lasso satisfies 'φ'.
+      for(mp_integer l = current; l < k; ++l)
+      {
+        exprt::operandst disjuncts = {not_exprt(lasso_symbol(l, k))};
+
+        for(mp_integer j = current; j <= k; ++j)
+        {
+          exprt tmp = instantiate(phi, j, no_timeframes, ns);
+          disjuncts.push_back(std::move(tmp));
+        }
+
+        obligations[k].push_back(disjunction(disjuncts));
+      }
     }
   }
   else if(

@@ -1,0 +1,10 @@
+MODULE main
+
+VAR x : 0..2;
+
+ASSIGN
+  init(x) := 1;
+  next(x) := 2;
+
+LTLSPEC F x=0 -- fails
+LTLSPEC F x=2 -- holds
