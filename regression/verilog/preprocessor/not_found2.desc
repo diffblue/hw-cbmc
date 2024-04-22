@@ -1,0 +1,7 @@
+CORE
+not_found2.v
+
+^file not_found2\.v line 2: include file .include_file2\.vh. not found$
+^EXIT=1$
+^SIGNAL=0$
+--

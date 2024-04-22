@@ -98,12 +98,16 @@ Function: verilog_preprocessort::include
 
 \*******************************************************************/
 
-std::string
-verilog_preprocessort::find_include_file(const std::string &filename)
+std::string verilog_preprocessort::find_include_file(
+  const std::string &filename,
+  bool include_paths_only)
 {
-  // first try filename as is
-  if(std::filesystem::directory_entry(filename).exists())
-    return filename; // done
+  if(!include_paths_only)
+  {
+    // first try filename as is
+    if(std::filesystem::directory_entry(filename).exists())
+      return filename; // done
+  }
 
   // try include paths in given order
   for(const auto &path : config.verilog.include_paths)
@@ -498,15 +502,42 @@ void verilog_preprocessort::directive()
     // skip whitespace
     tokenizer().skip_ws();
 
-    // we expect a string literal
-    const auto file_token = tokenizer().next_token();
-    if(!file_token.is_string_literal())
-      throw verilog_preprocessor_errort()
-        << "expecting a string literal after `include";
+    // We expect one of:
+    // <filename> -- include paths only
+    // "filename" -- relative path, then include paths.
+    std::string filename;
+    bool include_paths_only;
 
-    // strip quotes off string literal, escaping, etc.
-    auto filename = file_token.string_literal_value();
-    auto full_path = find_include_file(filename);
+    if(tokenizer().peek().is_string_literal())
+    {
+      include_paths_only = false;
+      const auto file_token = tokenizer().next_token();
+      CHECK_RETURN(file_token.is_string_literal());
+      // strip quotes off string literal, escaping, etc.
+      filename = file_token.string_literal_value();
+    }
+    else if(tokenizer().peek() == '<')
+    {
+      tokenizer().next_token(); // <
+      include_paths_only = true;
+
+      while(tokenizer().peek() != '>')
+      {
+        if(tokenizer().peek().is_eof())
+          throw verilog_preprocessor_errort() << "eof in include directive";
+
+        filename += tokenizer().next_token().text;
+      }
+
+      tokenizer().next_token(); // >
+    }
+    else
+    {
+      throw verilog_preprocessor_errort()
+        << "expecting either \" or < after `include";
+    }
+
+    auto full_path = find_include_file(filename, include_paths_only);
 
 #ifdef _MSC_VER
     auto in = new std::ifstream(widen(full_path));

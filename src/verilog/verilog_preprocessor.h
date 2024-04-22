@@ -44,7 +44,8 @@ protected:
   definest defines;
 
   void directive();
-  std::string find_include_file(const std::string &filename);
+  std::string
+  find_include_file(const std::string &filename, bool include_paths_only);
   definet::parameterst parse_define_parameters();
 
   using define_argumentst = std::map<std::string, std::vector<tokent>>;
