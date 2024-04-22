@@ -1,0 +1,13 @@
+MODULE main
+
+VAR subA : my-module;
+    subB : my-module;
+
+SPEC AG subA.flag & AG subB.flag
+
+MODULE my-module
+
+VAR flag : boolean;
+
+ASSIGN init(flag) := 1;
+ASSIGN next(flag) := 1;

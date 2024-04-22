@@ -1,0 +1,8 @@
+CORE
+module1.smv
+--bound 10
+^EXIT=0$
+^SIGNAL=0$
+^\[main::spec1\] AG subA.flag & AG subB.flag: PROVED up to bound 10$
+--
+^warning: ignoring

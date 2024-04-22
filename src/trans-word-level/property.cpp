@@ -41,6 +41,14 @@ bool bmc_supports_property(const exprt &expr)
   {
     if(!has_temporal_operator(expr))
       return true; // initial state only
+    else if(
+      expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_implies)
+    {
+      for(auto &op : expr.operands())
+        if(!bmc_supports_property(op))
+          return false;
+      return true;
+    }
     else
       return false;
   }
@@ -187,6 +195,12 @@ static void property_obligations_rec(
     {
       property_obligations_rec(phi, solver, c, no_timeframes, ns, obligations);
     }
+  }
+  else if(property_expr.id() == ID_and)
+  {
+    for(auto &op : to_and_expr(property_expr).operands())
+      property_obligations_rec(
+        op, solver, current, no_timeframes, ns, obligations);
   }
   else
   {
