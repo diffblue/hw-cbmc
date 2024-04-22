@@ -77,6 +77,9 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
     if(property.is_disabled())
       continue;
 
+    if(property.is_failure())
+      continue;
+
     message.status() << "Checking " << property.name << messaget::eom;
 
     literalt property_literal=!solver.land(property.timeframe_literals);
@@ -198,6 +201,12 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
     {
       if(property.is_disabled())
         continue;
+
+      if(!netlist_bmc_supports_property(property.normalized_expr))
+      {
+        property.failure("property not supported by netlist BMC engine");
+        continue;
+      }
 
       ::unwind_property(
         property.normalized_expr,
