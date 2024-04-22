@@ -1843,4 +1843,30 @@ inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
   return static_cast<verilog_module_sourcet &>(irep);
 }
 
+class verilog_implicit_typecast_exprt : public unary_exprt
+{
+public:
+  verilog_implicit_typecast_exprt(exprt __op, typet __type)
+    : unary_exprt(
+        ID_verilog_implicit_typecast,
+        std::move(__op),
+        std::move(__type))
+  {
+  }
+};
+
+inline const verilog_implicit_typecast_exprt &
+to_verilog_implicit_typecast_expr(const exprt &expr)
+{
+  verilog_implicit_typecast_exprt::check(expr);
+  return static_cast<const verilog_implicit_typecast_exprt &>(expr);
+}
+
+inline verilog_implicit_typecast_exprt &
+to_verilog_implicit_typecast_expr(exprt &expr)
+{
+  verilog_implicit_typecast_exprt::check(expr);
+  return static_cast<verilog_implicit_typecast_exprt &>(expr);
+}
+
 #endif

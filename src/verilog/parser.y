@@ -3169,7 +3169,9 @@ time_literal: TOK_TIME_LITERAL
 
 cast:
 	  casting_type '\'' '(' expression ')'
-		{ init($$, ID_typecast); stack_expr($$).type() = stack_type($1); mto($$, $4); }
+		{ init($$, ID_verilog_explicit_cast);
+		  stack_expr($$).type() = stack_type($1);
+		  mto($$, $4); }
 	;
 
 // System Verilog standard 1800-2017
