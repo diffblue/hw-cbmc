@@ -2845,27 +2845,38 @@ disable_statement: TOK_DISABLE hierarchical_task_or_block_identifier ';'
 // A.6.6 Conditional statements
 
 conditional_statement:
-	  TOK_IF '(' expression ')' statement_or_null %prec LT_TOK_ELSE
-		{ init($$, ID_if); mto($$, $3); mto($$, $5); }
-	| TOK_IF '(' expression ')' statement_or_null TOK_ELSE statement_or_null
-		{ init($$, ID_if); mto($$, $3); mto($$, $5); mto($$, $7); }
+	  unique_priority_opt TOK_IF '(' expression ')' statement_or_null %prec LT_TOK_ELSE
+		{ init($$, ID_if); mto($$, $4); mto($$, $6); }
+	| unique_priority_opt TOK_IF '(' expression ')' statement_or_null TOK_ELSE statement_or_null
+		{ init($$, ID_if); mto($$, $4); mto($$, $6); mto($$, $8); }
+	;
+
+unique_priority_opt:
+	  /* Optional */
+		{ init($$); }
+	| TOK_UNIQUE
+		{ init($$, ID_verilog_unique); }
+	| TOK_UNIQUE0
+		{ init($$, ID_verilog_unique0); }
+	| TOK_PRIORITY
+		{ init($$, ID_verilog_priority); }
 	;
 
 // System Verilog standard 1800-2017
 // A.6.7 Case statements
 
 case_statement:
-	  TOK_CASE '(' expression ')' case_item_brace TOK_ENDCASE
-		{ init($$, ID_case);  mto($$, $3);
-                  Forall_operands(it, stack_expr($5))
+	  unique_priority_opt TOK_CASE '(' expression ')' case_item_brace TOK_ENDCASE
+		{ init($$, ID_case);  mto($$, $4);
+                  Forall_operands(it, stack_expr($6))
                     stack_expr($$).add_to_operands(std::move(*it)); }
-	| TOK_CASEX '(' expression ')' case_item_brace TOK_ENDCASE
-		{ init($$, ID_casex); mto($$, $3);
-                  Forall_operands(it, stack_expr($5))
+	| unique_priority_opt TOK_CASEX '(' expression ')' case_item_brace TOK_ENDCASE
+		{ init($$, ID_casex); mto($$, $4);
+                  Forall_operands(it, stack_expr($6))
                     stack_expr($$).add_to_operands(std::move(*it)); }
-	| TOK_CASEZ '(' expression ')' case_item_brace TOK_ENDCASE
-		{ init($$, ID_casez); mto($$, $3);
-                  Forall_operands(it, stack_expr($5))
+	| unique_priority_opt TOK_CASEZ '(' expression ')' case_item_brace TOK_ENDCASE
+		{ init($$, ID_casez); mto($$, $4);
+                  Forall_operands(it, stack_expr($6))
                     stack_expr($$).add_to_operands(std::move(*it)); }
 	;
 
