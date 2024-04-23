@@ -891,7 +891,7 @@ class_item:
 //	| attribute_instance_brace class_method
 //	| attribute_instance_brace class_constraint
 	  attribute_instance_brace class_declaration
-//	| attribute_instance_brace covergroup_declaration
+	| attribute_instance_brace covergroup_declaration
 	| local_parameter_declaration ';'
 	| parameter_declaration ';'
 	| ';'
@@ -1027,6 +1027,7 @@ package_or_generate_item_declaration:
 	     that let constructs may be declared in a
 	     module/interface/program/checker etc. */
 	| let_declaration
+	| covergroup_declaration
 	| ';'
 		{ init($$, ID_verilog_empty_item); }
         ;
@@ -1283,6 +1284,9 @@ enum_name_declaration_list:
           	{ init($$); mts($$, $1); }
         | enum_name_declaration_list ',' enum_name_declaration
           	{ $$=$1; mts($$, $3); }
+	;
+
+class_scope: class_type TOK_COLONCOLON
 	;
 
 integer_type:
@@ -1864,6 +1868,13 @@ task_declaration:
 task_prototype: TOK_TASK task_identifier
 	;
 
+tf_port_list_paren_opt:
+	  /* Optional */
+		{ init($$); }
+	| '(' tf_port_list_opt ')'
+		{ $$ = $2; }
+	;
+
 tf_port_list_opt:
 	/* Optional */
 		{ init($$); }
@@ -2065,6 +2076,55 @@ cycle_delay_const_range_expression:
 
 expression_or_dist:
 	  expression
+	;
+
+// System Verilog standard 1800-2017
+// A.2.11 Covergroup declarations
+
+covergroup_declaration:
+	  TOK_COVERGROUP new_identifier tf_port_list_paren_opt coverage_event_opt ';'
+	  coverage_spec_or_option_brace TOK_ENDGROUP
+		{ init($$, ID_verilog_covergroup); }
+	;
+
+coverage_spec_or_option_brace:
+	  /* Optional */
+	| coverage_spec_or_option_brace coverage_spec_or_option
+	;
+
+coverage_spec_or_option:
+	  attribute_instance_brace coverage_spec
+	;
+
+coverage_spec:
+	  cover_point
+	;
+
+coverage_event_opt:
+	  /* Optional */
+	| coverage_event
+	;
+
+coverage_event:
+	  clocking_event
+	;
+
+block_event_expression:
+	  block_event_expression TOK_OR block_event_expression
+	| TOK_BEGIN hierarchical_btf_identifier
+	| TOK_END hierarchical_btf_identifier
+	;
+
+hierarchical_btf_identifier:
+	  hierarchical_tf_identifier
+	| hierarchical_block_identifier
+	| method_identifier
+	| hierarchical_identifier '.' method_identifier
+	| class_scope method_identifier
+	;
+
+cover_point:
+	  TOK_COVERPOINT expression ';'
 	;
 
 // System Verilog standard 1800-2017
@@ -2910,6 +2970,11 @@ procedural_timing_control:
 // System Verilog standard 1800-2017
 // A.6.11 Clocking block
 
+clocking_event:
+	  '@' identifier
+	| '@' '(' event_expression ')'
+	;
+
 cycle_delay:
           "##" number
                 { init($$, ID_verilog_cycle_delay); mto($$, $2); }
@@ -3396,6 +3461,8 @@ ps_covergroup_identifier:
 	
 memory_identifier: identifier;
 
+method_identifier: identifier;
+
 type_identifier: TOK_TYPE_IDENTIFIER
 		{
 		  init($$, ID_typedef_type);
@@ -3428,6 +3495,8 @@ function_identifier: hierarchical_identifier
 	;
 
 hierarchical_event_identifier: event_identifier;
+
+hierarchical_block_identifier: hierarchical_identifier;
 
 hierarchical_identifier:
           identifier
