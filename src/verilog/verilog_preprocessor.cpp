@@ -99,26 +99,30 @@ Function: verilog_preprocessort::include
 \*******************************************************************/
 
 std::string verilog_preprocessort::find_include_file(
-  const std::string &filename,
+  const std::string &including_file,
+  const std::string &given_filename,
   bool include_paths_only)
 {
   if(!include_paths_only)
   {
-    // first try filename as is
-    if(std::filesystem::directory_entry(filename).exists())
-      return filename; // done
+    // First try given filename relative to the path of the
+    // including file.
+    auto path = std::filesystem::path(including_file);
+    path.replace_filename(given_filename);
+    if(std::filesystem::directory_entry(path).exists())
+      return path; // done
   }
 
-  // try include paths in given order
+  // Then try include paths in given order.
   for(const auto &path : config.verilog.include_paths)
   {
-    auto full_name = std::filesystem::path(path).append(filename);
+    auto full_name = std::filesystem::path(path).append(given_filename);
     if(std::filesystem::directory_entry(full_name).exists())
       return full_name; // done
   }
 
   throw verilog_preprocessor_errort()
-    << "include file `" << filename << "' not found";
+    << "include file `" << given_filename << "' not found";
 }
 
 /*******************************************************************\
@@ -507,7 +511,7 @@ void verilog_preprocessort::directive()
     // We expect one of:
     // <filename> -- include paths only
     // "filename" -- relative path, then include paths.
-    std::string filename;
+    std::string given_filename;
     bool include_paths_only;
 
     if(tokenizer().peek().is_string_literal())
@@ -516,7 +520,7 @@ void verilog_preprocessort::directive()
       const auto file_token = tokenizer().next_token();
       CHECK_RETURN(file_token.is_string_literal());
       // strip quotes off string literal, escaping, etc.
-      filename = file_token.string_literal_value();
+      given_filename = file_token.string_literal_value();
     }
     else if(tokenizer().peek() == '<')
     {
@@ -528,7 +532,7 @@ void verilog_preprocessort::directive()
         if(tokenizer().peek().is_eof())
           throw verilog_preprocessor_errort() << "eof in include directive";
 
-        filename += tokenizer().next_token().text;
+        given_filename += tokenizer().next_token().text;
       }
 
       tokenizer().next_token(); // >
@@ -539,7 +543,8 @@ void verilog_preprocessort::directive()
         << "expecting either \" or < after `include";
     }
 
-    auto full_path = find_include_file(filename, include_paths_only);
+    auto full_path =
+      find_include_file(context().filename, given_filename, include_paths_only);
 
 #ifdef _MSC_VER
     auto in = new std::ifstream(widen(full_path));
@@ -553,7 +558,7 @@ void verilog_preprocessort::directive()
     tokenizer().skip_until_eol();
     tokenizer().next_token(); // eat the \n
 
-    context_stack.emplace_back(true, in, filename);
+    context_stack.emplace_back(true, in, full_path);
     emit_line_directive(1); // 'enter'
     // we now continue in the new context
   }
