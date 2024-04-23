@@ -6,18 +6,20 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
-#include <set>
-#include <algorithm>
+#include "smv_typecheck.h"
 
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
+#include <util/namespace.h>
 #include <util/std_expr.h>
 #include <util/typecheck.h>
 
-#include "smv_typecheck.h"
 #include "expr2smv.h"
+
+#include <algorithm>
+#include <cassert>
+#include <set>
 
 class smv_typecheckt:public typecheckt
 {
@@ -350,6 +352,16 @@ void smv_typecheckt::instantiate(
 
       symbol.name=new_prefix+id2string(symbol.base_name);
       symbol.module=smv_module.name;
+
+      if(smv_module.name == "smv::main")
+      {
+        symbol.pretty_name =
+          id2string(instance) + '.' + id2string(symbol.base_name);
+      }
+      else
+      {
+        symbol.pretty_name = strip_smv_prefix(symbol.name);
+      }
 
       rename_map.insert(
           std::pair<irep_idt, exprt>(s_it2->first, symbol.symbol_expr()));
@@ -1121,7 +1133,8 @@ Function: smv_typecheckt::to_string
 std::string smv_typecheckt::to_string(const exprt &expr)
 {
   std::string result;
-  expr2smv(expr, result);
+  namespacet ns(symbol_table);
+  expr2smv(expr, result, ns);
   return result;
 }
 
@@ -1140,7 +1153,8 @@ Function: smv_typecheckt::to_string
 std::string smv_typecheckt::to_string(const typet &type)
 {
   std::string result;
-  type2smv(type, result);
+  namespacet ns(symbol_table);
+  type2smv(type, result, ns);
   return result;
 }
 
@@ -1228,11 +1242,17 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
     symbol.base_name=it->first;
 
     if(var.identifier=="")
+    {
       symbol.name=module+"::var::"+id2string(symbol.base_name);
+
+      if(module == "smv::main")
+        symbol.pretty_name = symbol.base_name;
+      else
+        symbol.pretty_name = strip_smv_prefix(symbol.name);
+    }
     else
       symbol.name=var.identifier;
 
-    symbol.pretty_name = strip_smv_prefix(symbol.name);
     symbol.value.make_nil();
     symbol.is_input=true;
     symbol.is_state_var=false;

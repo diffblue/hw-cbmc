@@ -7,11 +7,13 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "smv_language.h"
-#include "smv_typecheck.h"
-#include "smv_parser.h"
-#include "expr2smv.h"
 
+#include <util/namespace.h>
 #include <util/symbol_table.h>
+
+#include "expr2smv.h"
+#include "smv_parser.h"
+#include "smv_typecheck.h"
 
 /*******************************************************************\
 
@@ -153,7 +155,9 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
       if(it->second.type.id()!="submodule")
       {
         std::string msg;
-        type2smv(it->second.type, msg);
+        symbol_tablet symbol_table;
+        namespacet ns(symbol_table);
+        type2smv(it->second.type, msg, ns);
         out << "    " << it->first << ": " 
             << msg << ";" << std::endl;
       }
@@ -168,7 +172,9 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
       if(it->second.type.id()=="submodule")
       {
         std::string msg;
-        type2smv(it->second.type, msg);
+        symbol_tablet symbol_table;
+        namespacet ns(symbol_table);
+        type2smv(it->second.type, msg, ns);
         out << "    " << it->first << ": " 
             << msg << ";" << std::endl;
       }
@@ -201,7 +207,7 @@ Function: smv_languaget::from_expr
 bool smv_languaget::from_expr(const exprt &expr, std::string &code,
                               const namespacet &ns)
 {
-  return expr2smv(expr, code);
+  return expr2smv(expr, code, ns);
 }
 
 /*******************************************************************\
@@ -221,7 +227,7 @@ bool smv_languaget::from_type(
   std::string &code,
   const namespacet &ns)
 {
-  return type2smv(type, code);
+  return type2smv(type, code, ns);
 }
 
 /*******************************************************************\
