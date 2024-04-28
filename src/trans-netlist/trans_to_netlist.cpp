@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include "trans_to_netlist.h"
+
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
@@ -13,11 +15,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include <solvers/flattening/boolbv_width.h>
+#include <temporal-logic/normalize_property.h>
+#include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/temporal_logic.h>
+#include <verilog/sva_expr.h>
 
 #include "aig_prop.h"
-#include "netlist.h"
-#include "trans_to_netlist.h"
 #include "instantiate_netlist.h"
+#include "netlist.h"
 
 /*******************************************************************\
 
@@ -302,6 +307,62 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
   // initial state
   dest.initial.push_back(instantiate_convert(
     aig_prop, dest.var_map, trans.init(), ns, get_message_handler()));
+
+  // properties
+  for(const auto &[id, symbol] : symbol_table)
+  {
+    if(symbol.module == module && symbol.is_property)
+    {
+      auto expr = normalize_property(symbol.value);
+
+      auto convert = [&aig_prop, this](const exprt &expr) -> literalt {
+        return instantiate_convert(
+          aig_prop, dest.var_map, expr, ns, get_message_handler());
+      };
+
+      if(expr.id() == ID_AG || expr.id() == ID_G || expr.id() == ID_sva_always)
+      {
+        auto get_phi = [](const exprt &expr) {
+          if(expr.id() == ID_AG)
+            return to_AG_expr(expr).op();
+          else if(expr.id() == ID_G)
+            return to_G_expr(expr).op();
+          else if(expr.id() == ID_sva_always)
+            return to_sva_always_expr(expr).op();
+          else
+            PRECONDITION(false);
+        };
+
+        auto phi = get_phi(expr);
+
+        if(!has_temporal_operator(phi))
+        {
+          dest.properties.emplace(id, netlistt::Gpt{convert(phi)});
+        }
+        else if(
+          phi.id() == ID_AF || phi.id() == ID_F ||
+          phi.id() == ID_sva_s_eventually)
+        {
+          auto get_psi = [](const exprt &expr) {
+            if(expr.id() == ID_AF)
+              return to_AF_expr(expr).op();
+            else if(expr.id() == ID_F)
+              return to_F_expr(expr).op();
+            else if(expr.id() == ID_sva_s_eventually)
+              return to_sva_s_eventually_expr(expr).op();
+            else
+              PRECONDITION(false);
+          };
+
+          dest.properties.emplace(id, netlistt::GFpt{convert(get_psi(phi))});
+        }
+        else
+        {
+          // unsupported
+        }
+      }
+    }
+  }
 
   // find the nondet nodes
   for(std::size_t n=0; n<dest.nodes.size(); n++)

@@ -9,10 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_NETLIST_H
 #define CPROVER_TRANS_NETLIST_H
 
-#include <iosfwd>
-
 #include "aig.h"
 #include "var_map.h"
+
+#include <iosfwd>
+#include <variant>
 
 class netlistt:public aig_plus_constraintst
 {
@@ -51,7 +52,23 @@ public:
   // these are implicit conjunctions
   bvt initial;
   bvt transition;
-  
+
+  struct Gpt
+  {
+    literalt p;
+  };
+
+  struct GFpt
+  {
+    literalt p;
+  };
+
+  using propertyt = std::variant<Gpt, GFpt>;
+
+  // map from property ID to property netlist nodes
+  using propertiest = std::map<irep_idt, propertyt>;
+  propertiest properties;
+
 protected:
   static std::string id2smv(const irep_idt &id);
   void print_smv(std::ostream &out, literalt l) const;
