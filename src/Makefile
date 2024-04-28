@@ -25,7 +25,8 @@ hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
 .PHONY: cprover.dir
 cprover.dir:
 	$(MAKE) $(MAKEARGS) -C $(CPROVER_DIR) \
-  CP_EXTRA_CXXFLAGS='-D"LOCAL_IREP_IDS=<$(EBMC_DIR)/hw_cbmc_irep_ids.h>"'
+  CP_EXTRA_CXXFLAGS='-D"LOCAL_IREP_IDS=<$(EBMC_DIR)/hw_cbmc_irep_ids.h>"' \
+  cbmc.dir
 
 .PHONY: clean
 clean: $(patsubst %, %_clean, $(DIRS)) cprover_clean
