@@ -342,8 +342,17 @@ Function: verilog_preprocessort::directive
 
 void verilog_preprocessort::directive()
 {
-  // we expect an identifier after the backtick
+  // After the backtick we expect:
+  // 1) an identifier
+  // 2) another backtick (double backtick)
   const auto directive_token = tokenizer().next_token();
+
+  // Double backtick?
+  if(directive_token == '`')
+  {
+    // these simply separate tokens -- do not emit anything
+    return;
+  }
 
   if(!directive_token.is_identifier())
     throw verilog_preprocessor_errort()
