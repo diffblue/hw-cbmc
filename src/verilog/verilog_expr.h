@@ -596,6 +596,11 @@ public:
       return operands();
     }
 
+    exprt::operandst &connections()
+    {
+      return operands();
+    }
+
   protected:
     using exprt::operands;
   };

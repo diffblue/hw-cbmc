@@ -177,15 +177,15 @@ protected:
 
   void instantiate_port_connections(
     const std::string &instance,
-    const exprt &inst,
+    const verilog_inst_baset::instancet &,
     const symbolt &symbol,
     exprt &trans);
 
   void typecheck_port_connections(
-    exprt &inst,
+    verilog_inst_baset::instancet &,
     const symbolt &symbol);
 
-  void typecheck_builtin_port_connections(exprt &inst);
+  void typecheck_builtin_port_connections(verilog_inst_baset::instancet &);
 
   void typecheck_port_connection(
     exprt &op,

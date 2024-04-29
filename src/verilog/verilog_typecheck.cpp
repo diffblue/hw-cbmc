@@ -78,7 +78,7 @@ Function: verilog_typecheckt::typecheck_port_connections
 \*******************************************************************/
 
 void verilog_typecheckt::typecheck_port_connections(
-  exprt &inst,
+  verilog_inst_baset::instancet &inst,
   const symbolt &symbol)
 {
   const exprt &range=static_cast<const exprt &>(inst.find(ID_range));
@@ -92,12 +92,15 @@ void verilog_typecheckt::typecheck_port_connections(
 
   const irept::subt &ports=symbol.type.find(ID_ports).get_sub();
 
-  // no arguments is one argument that is nil  
-  if(ports.size()==0 && inst.operands().size()==1 &&
-     inst.operands().front().is_nil())
-    inst.operands().clear();
+  // no arguments is one argument that is nil
+  if(
+    ports.size() == 0 && inst.connections().size() == 1 &&
+    inst.connections().front().is_nil())
+  {
+    inst.connections().clear();
+  }
 
-  if(inst.operands().empty())
+  if(inst.connections().empty())
   {
     if(!ports.empty())
     {
@@ -110,35 +113,37 @@ void verilog_typecheckt::typecheck_port_connections(
 
   // named port connection?
 
-  if(to_multi_ary_expr(inst).op0().id() == ID_named_port_connection)
+  if(inst.connections().front().id() == ID_named_port_connection)
   {
     // We don't require that all ports are connected.
   
     std::set<irep_idt> assigned_ports;
 
-    Forall_operands(o_it, inst)
+    for(auto &connection : inst.connections())
     {
-      if(o_it->id()!=ID_named_port_connection ||
-         o_it->operands().size()!=2)
+      if(
+        connection.id() != ID_named_port_connection ||
+        connection.operands().size() != 2)
       {
         throw errort().with_location(inst.source_location())
           << "expected a named port connection";
       }
 
-      exprt &op = to_binary_expr(*o_it).op1();
-      const irep_idt &name = to_binary_expr(*o_it).op0().get(ID_identifier);
+      exprt &op = to_binary_expr(connection).op1();
+      const irep_idt &name =
+        to_binary_expr(connection).op0().get(ID_identifier);
 
       bool found=false;
 
       std::string identifier=
         id2string(symbol.module)+"."+id2string(name);
 
-      to_binary_expr(*o_it).op0().set(ID_identifier, identifier);
+      to_binary_expr(connection).op0().set(ID_identifier, identifier);
 
       if(assigned_ports.find(name)!=
          assigned_ports.end())
       {
-        throw errort().with_location(o_it->source_location())
+        throw errort().with_location(connection.source_location())
           << "port name " << name << " assigned twice";
       }
 
@@ -149,14 +154,14 @@ void verilog_typecheckt::typecheck_port_connections(
           auto &p_expr = static_cast<const exprt &>(port);
           found=true;
           typecheck_port_connection(op, p_expr);
-          to_binary_expr(*o_it).op0().type() = p_expr.type();
+          to_binary_expr(connection).op0().type() = p_expr.type();
           break;
         }
       }
 
       if(!found)
       {
-        throw errort().with_location(o_it->source_location())
+        throw errort().with_location(connection.source_location())
           << "port name " << identifier << " not found";
       }
 
@@ -165,19 +170,19 @@ void verilog_typecheckt::typecheck_port_connections(
   }
   else // just a list without names
   {
-    if(inst.operands().size()!=ports.size())
+    if(inst.connections().size() != ports.size())
     {
       throw errort().with_location(inst.source_location())
         << "wrong number of arguments: expected " << ports.size() << " but got "
-        << inst.operands().size();
+        << inst.connections().size();
     }
 
     irept::subt::const_iterator p_it=
       ports.begin();
 
-    Forall_operands(o_it, inst)
+    for(auto &connection : inst.connections())
     {
-      typecheck_port_connection(*o_it, (exprt &)*p_it);
+      typecheck_port_connection(connection, (exprt &)*p_it);
       p_it++;
     }
   }
@@ -196,7 +201,7 @@ Function: verilog_typecheckt::typecheck_builtin_port_connections
 \*******************************************************************/
 
 void verilog_typecheckt::typecheck_builtin_port_connections(
-  exprt &inst)
+  verilog_inst_baset::instancet &inst)
 {
   exprt &range=static_cast<exprt &>(inst.add(ID_range));
 
@@ -221,10 +226,10 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
     type.set(ID_width, integer2string(width));
   }
 
-  Forall_operands(o_it, inst)
+  for(auto &connection : inst.connections())
   {
-    convert_expr(*o_it);
-    propagate_type(*o_it, type);
+    convert_expr(connection);
+    propagate_type(connection, type);
   }
 }
 
