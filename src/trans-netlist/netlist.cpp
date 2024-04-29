@@ -313,22 +313,50 @@ void netlistt::output_smv(std::ostream &out) const
   out << "-- Initial state" << '\n';
   out << '\n';
 
-  for(unsigned i=0; i<initial.size(); i++)
+  for(auto &initial_l : initial)
   {
-    out << "INIT ";
-    print_smv(out, initial[i]);
-    out << '\n';
+    if(!initial_l.is_true())
+    {
+      out << "INIT ";
+      print_smv(out, initial_l);
+      out << '\n';
+    }
   }
 
   out << '\n';
   out << "-- TRANS" << '\n';
   out << '\n';
 
-  for(unsigned i=0; i<transition.size(); i++)
+  for(auto &trans_l : transition)
   {
-    out << "TRANS ";
-    print_smv(out, transition[i]);
-    out << '\n';
+    if(!trans_l.is_true())
+    {
+      out << "TRANS ";
+      print_smv(out, trans_l);
+      out << '\n';
+    }
+  }
+
+  out << '\n';
+  out << "-- Properties" << '\n';
+  out << '\n';
+
+  for(auto &[id, property] : properties)
+  {
+    if(std::holds_alternative<Gpt>(property))
+    {
+      out << "-- " << id << '\n';
+      out << "LTLSPEC G ";
+      print_smv(out, std::get<Gpt>(property).p);
+      out << '\n';
+    }
+    else if(std::holds_alternative<GFpt>(property))
+    {
+      out << "-- " << id << '\n';
+      out << "LTLSPEC G F ";
+      print_smv(out, std::get<GFpt>(property).p);
+      out << '\n';
+    }
   }
 }
 
