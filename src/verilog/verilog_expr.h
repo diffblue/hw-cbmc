@@ -573,6 +573,39 @@ public:
     return set(ID_module, module);
   }
 
+  class named_port_connectiont : public binary_exprt
+  {
+  public:
+    named_port_connectiont(exprt _port, exprt _value)
+      : binary_exprt(
+          std::move(_port),
+          ID_named_port_connection,
+          std::move(_value),
+          typet{})
+    {
+    }
+
+    const exprt &port() const
+    {
+      return op0();
+    }
+
+    exprt &port()
+    {
+      return op0();
+    }
+
+    const exprt &value() const
+    {
+      return op1();
+    }
+
+    exprt &value()
+    {
+      return op1();
+    }
+  };
+
   class instancet : public exprt
   {
   public:
@@ -620,6 +653,22 @@ public:
 protected:
   using exprt::operands;
 };
+
+inline const verilog_inst_baset::named_port_connectiont &
+to_verilog_named_port_connection(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_named_port_connection);
+  verilog_inst_baset::named_port_connectiont::check(expr);
+  return static_cast<const verilog_inst_baset::named_port_connectiont &>(expr);
+}
+
+inline verilog_inst_baset::named_port_connectiont &
+to_verilog_named_port_connection(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_named_port_connection);
+  verilog_inst_baset::named_port_connectiont::check(expr);
+  return static_cast<verilog_inst_baset::named_port_connectiont &>(expr);
+}
 
 class verilog_instt : public verilog_inst_baset
 {

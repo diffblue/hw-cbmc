@@ -121,24 +121,24 @@ void verilog_typecheckt::typecheck_port_connections(
 
     for(auto &connection : inst.connections())
     {
-      if(
-        connection.id() != ID_named_port_connection ||
-        connection.operands().size() != 2)
+      if(connection.id() != ID_named_port_connection)
       {
         throw errort().with_location(inst.source_location())
           << "expected a named port connection";
       }
 
-      exprt &op = to_binary_expr(connection).op1();
-      const irep_idt &name =
-        to_binary_expr(connection).op0().get(ID_identifier);
+      auto &named_port_connection =
+        to_verilog_named_port_connection(connection);
+
+      exprt &value = named_port_connection.value();
+      const irep_idt &name = named_port_connection.port().get(ID_identifier);
 
       bool found=false;
 
       std::string identifier=
         id2string(symbol.module)+"."+id2string(name);
 
-      to_binary_expr(connection).op0().set(ID_identifier, identifier);
+      named_port_connection.port().set(ID_identifier, identifier);
 
       if(assigned_ports.find(name)!=
          assigned_ports.end())
@@ -153,8 +153,8 @@ void verilog_typecheckt::typecheck_port_connections(
         {
           auto &p_expr = static_cast<const exprt &>(port);
           found=true;
-          typecheck_port_connection(op, p_expr);
-          to_binary_expr(connection).op0().type() = p_expr.type();
+          typecheck_port_connection(value, p_expr);
+          named_port_connection.port().type() = p_expr.type();
           break;
         }
       }
