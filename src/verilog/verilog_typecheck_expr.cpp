@@ -1879,11 +1879,12 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_cast)
   {
-    // System Verilog has got type'(expr). This is an explicit
+    // SystemVerilog has got type'(expr). This is an explicit
     // type cast.
-    expr.type() = convert_type(expr.type());
     convert_expr(expr.op());
-    expr.id(ID_typecast);
+    auto new_type = convert_type(expr.type());
+    return typecast_exprt{expr.op(), new_type}.with_source_location<exprt>(
+      expr);
   }
   else if(expr.id() == ID_verilog_implicit_typecast)
   {
@@ -2246,6 +2247,31 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   {
     return convert_hierarchical_identifier(
       to_hierarchical_identifier_expr(std::move(expr)));
+  }
+  else if(expr.id() == ID_verilog_size_cast)
+  {
+    // SystemVerilog has got expr'(expr). This is an explicit
+    // type cast, to change the size (in bits) of the rhs to the
+    // number given as lhs.
+    convert_expr(expr.rhs());
+    auto new_size = convert_integer_constant_expression(expr.lhs());
+    auto new_size_int = numeric_cast_v<std::size_t>(new_size);
+    auto &op_type = expr.rhs().type();
+    if(op_type.id() == ID_signedbv)
+    {
+      return typecast_exprt{expr.rhs(), signedbv_typet{new_size_int}}
+        .with_source_location<exprt>(expr);
+    }
+    else if(op_type.id() == ID_unsignedbv)
+    {
+      return typecast_exprt{expr.rhs(), unsignedbv_typet{new_size_int}}
+        .with_source_location<exprt>(expr);
+    }
+    else
+    {
+      throw errort().with_location(expr.source_location())
+        << "cannot perform size cast on " << to_string(op_type);
+    }
   }
   else
   {
