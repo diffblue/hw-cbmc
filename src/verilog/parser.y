@@ -1110,18 +1110,23 @@ part_select:
 // TOK_VAR is optional, but footnote 10 in IEEE 1800-2017 requires it
 // when the data_type is omitted. We split the rule in the standard into two.
 data_declaration:
-	  TOK_VAR lifetime_opt data_type_or_implicit list_of_variable_decl_assignments ';'
+	  const_opt TOK_VAR lifetime_opt data_type_or_implicit list_of_variable_decl_assignments ';'
 	  	{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_var);
-		  addswap($$, ID_type, $3);
-		  swapop($$, $4); }
-	| lifetime_opt data_type list_of_variable_decl_assignments ';'
+		  addswap($$, ID_type, $4);
+		  swapop($$, $5); }
+	| const_opt lifetime_opt data_type list_of_variable_decl_assignments ';'
 		{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_reg);
-		  addswap($$, ID_type, $2);
-		  swapop($$, $3); }
+		  addswap($$, ID_type, $3);
+		  swapop($$, $4); }
 	| type_declaration
 	| package_import_declaration
+	;
+
+const_opt:
+	  /* Optional */
+	| TOK_CONST
 	;
 
 package_import_declaration_brace:
