@@ -75,22 +75,42 @@ void verilog_typecheckt::collect_symbols(
 
   auto full_identifier = hierarchical_identifier(base_name);
 
-  // If there's no type, parameters take the type of the
-  // value. We signal this using the special type "derive_from_value".
+  // Is this a type or a value parameter?
+  if(type.id() == ID_type)
+  {
+    // much like a typedef
+    auto symbol_type = to_be_elaborated_typet{declarator.type()};
 
-  auto symbol_type =
-    to_be_elaborated_typet(type.is_nil() ? derive_from_value_typet() : type);
+    type_symbolt symbol{full_identifier, symbol_type, mode};
 
-  symbolt symbol{full_identifier, symbol_type, mode};
+    symbol.module = module_identifier;
+    symbol.base_name = base_name;
+    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+    symbol.is_macro = true;
+    symbol.value = nil_exprt{};
+    symbol.location = declarator.source_location();
 
-  symbol.module = module_identifier;
-  symbol.base_name = base_name;
-  symbol.pretty_name = strip_verilog_prefix(symbol.name);
-  symbol.is_macro = true;
-  symbol.value = declarator.value();
-  symbol.location = declarator.source_location();
+    add_symbol(std::move(symbol));
+  }
+  else // It's a value parameter.
+  {
+    // If there's no type, parameters take the type of the
+    // value. We signal this using the special type "derive_from_value".
 
-  add_symbol(std::move(symbol));
+    auto symbol_type =
+      to_be_elaborated_typet(type.is_nil() ? derive_from_value_typet() : type);
+
+    symbolt symbol{full_identifier, symbol_type, mode};
+
+    symbol.module = module_identifier;
+    symbol.base_name = base_name;
+    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+    symbol.is_macro = true;
+    symbol.value = declarator.value();
+    symbol.location = declarator.source_location();
+
+    add_symbol(std::move(symbol));
+  }
 }
 
 void verilog_typecheckt::collect_symbols(const typet &type)
