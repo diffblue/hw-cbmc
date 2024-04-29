@@ -1,0 +1,12 @@
+CORE
+double_backtick1.sv
+--preprocess
+// Enable multi-line checking
+activate-multi-line-match
+`line 1 "double_backtick1.sv" 0
+
+foobar_else
+^EXIT=0$
+^SIGNAL=0$
+--
+^PREPROCESSING FAILED$
