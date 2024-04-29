@@ -5,7 +5,8 @@ SRC = vhdl_language.cpp expr2vhdl.cpp vhdl_y.tab.cpp vhdl_lex.yy.cpp \
 include ../config.inc
 include ../common
 
-CLEANFILES = vhdl$(LIBEXT) vhdl_y.tab.cpp vhdl_y.tab.h vhdl_lex.yy.cpp vhdl_y.output
+CLEANFILES = vhdl$(LIBEXT) library_standard.inc \
+             vhdl_y.tab.cpp vhdl_y.tab.h vhdl_lex.yy.cpp vhdl_y.output
 
 all: vhdl$(LIBEXT)
 
