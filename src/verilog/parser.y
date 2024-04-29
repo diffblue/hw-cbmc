@@ -1572,7 +1572,7 @@ list_of_param_assignments:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-param_assignment: param_identifier '=' const_expression
+param_assignment: param_identifier '=' constant_param_expression
 		{ init($$, ID_parameter);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_identifier, base_name);
@@ -2061,10 +2061,8 @@ sequence_expr:
 cycle_delay_range:
           "##" number
                 { init($$, ID_sva_cycle_delay); mto($$, $2); stack_expr($$).operands().push_back(nil_exprt()); }
-        | "##" '[' number TOK_COLON number ']'
-                { init($$, ID_sva_cycle_delay); mto($$, $3); mto($$, $5); }
-        | "##" '[' number TOK_COLON '$' ']'
-                { init($$, ID_sva_cycle_delay); mto($$, $3); stack_expr($$).add_to_operands(exprt(ID_infinity)); }
+        | "##" '[' cycle_delay_const_range_expression ']'
+                { $$ = $3; }
         ;
 
 cycle_delay_const_range_expression:
@@ -3179,6 +3177,12 @@ inc_or_dec_expression:
         | variable_lvalue attribute_instance_brace TOK_MINUSMINUS
                 { init($$, ID_postdecrement); mto($$, $1); }
         ;
+
+constant_param_expression:
+	  constant_expression
+	| '$'
+		{ init($$, ID_infinity); }
+	;
 
 constant_range:
 	  const_expression TOK_COLON const_expression
