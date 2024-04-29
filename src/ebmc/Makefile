@@ -20,6 +20,7 @@ SRC = \
       live_signal.cpp \
       main.cpp \
       neural_liveness.cpp \
+      output_verilog.cpp \
       random_traces.cpp \
       ranking_function.cpp \
       report_results.cpp \
@@ -31,20 +32,17 @@ SRC = \
       #empty line
 
 OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
-      $(CPROVER_DIR)/langapi/langapi$(LIBEXT) \
-      $(CPROVER_DIR)/goto-programs/system_library_symbols$(OBJEXT) \
-      $(CPROVER_DIR)/solvers/solvers$(LIBEXT) \
       $(CPROVER_DIR)/big-int/big-int$(LIBEXT) \
-      $(CPROVER_DIR)/util/c_types$(OBJEXT) \
+      $(CPROVER_DIR)/langapi/langapi$(LIBEXT) \
       $(CPROVER_DIR)/goto-programs/xml_expr$(OBJEXT) \
+      $(CPROVER_DIR)/solvers/solvers$(LIBEXT) \
       ../temporal-logic/temporal-logic$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT) \
-      ../smvlang/smvlang$(LIBEXT) \
       ../aiger/aiger$(LIBEXT) \
-      ../ic3/libic3$(LIBEXT) \
-      ../trans-netlist/aig$(OBJEXT) \
-      ../trans-netlist/aig_prop$(OBJEXT)
+      ../smvlang/smvlang$(LIBEXT) \
+      ../verilog/verilog$(LIBEXT) \
+      ../ic3/libic3$(LIBEXT)
 
 ifdef MODULE_INTERPOLATION
   CXXFLAGS += -DHAVE_INTERPOLATION
@@ -56,12 +54,6 @@ ifdef MODULE_INTERPOLATION
          coverage/coverage.cpp coverage/interpolation_coverage.cpp \
          coverage/assumptions.cpp coverage/induction_coverage.cpp \
          coverage/core.cpp
-endif
-
-ifneq ($(wildcard ../verilog/Makefile),)
-  OBJ += ../verilog/verilog$(LIBEXT)
-  SRC += output_verilog.cpp
-  CXXFLAGS += -DHAVE_VERILOG
 endif
 
 ifneq ($(wildcard ../vhdl/Makefile),)
