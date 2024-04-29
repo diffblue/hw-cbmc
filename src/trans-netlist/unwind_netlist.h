@@ -10,12 +10,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_TRANS_UNWIND_NETLIST_GRAPH_H
 
 #include <util/message.h>
-#include <util/namespace.h>
 
 #include <solvers/sat/cnf.h>
 
-#include "netlist.h"
 #include "bmc_map.h"
+#include "netlist.h"
 
 void unwind(
   const netlistt &netlist,
@@ -31,24 +30,15 @@ void unwind(
   messaget &message,
   cnft &solver,
   bool add_initial_state,
-  unsigned timeframe);
-
-// unwind a property that has not yet been converted
-void unwind_property(
-  const exprt &property_expr,
-  bvt &prop_bv,
-  message_handlert &,
-  propt &solver,
-  const bmc_mapt &,
-  const namespacet &);
+  std::size_t timeframe);
 
 // Is the property supported?
-bool netlist_bmc_supports_property(const exprt &);
+bool netlist_bmc_supports_property(const class exprt &);
 
-// unwind a property that is given as netlist node
+// unwind a netlist property
 void unwind_property(
+  const netlistt::propertyt &,
   const bmc_mapt &,
-  literalt property_node,
   bvt &prop_bv);
 
 #endif

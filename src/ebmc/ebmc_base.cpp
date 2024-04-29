@@ -208,13 +208,12 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
         continue;
       }
 
+      // look up the property in the netlist
+      auto netlist_property = netlist.properties.find(property.identifier);
+      CHECK_RETURN(netlist_property != netlist.properties.end());
+
       ::unwind_property(
-        property.normalized_expr,
-        property.timeframe_literals,
-        message.get_message_handler(),
-        solver,
-        bmc_map,
-        ns);
+        netlist_property->second, bmc_map, property.timeframe_literals);
 
       // freeze for incremental usage
       for(auto l : property.timeframe_literals)

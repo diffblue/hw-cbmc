@@ -55,7 +55,8 @@ void report_results(
         continue;
 
       json_objectt json_property;
-      json_property["identifier"] = json_stringt(id2string(property.name));
+      json_property["identifier"] =
+        json_stringt(id2string(property.identifier));
       json_property["status"] = json_stringt(property.status_as_string());
 
       if(property.has_witness_trace())
@@ -77,7 +78,7 @@ void report_results(
         continue;
 
       xmlt xml_result("result");
-      xml_result.set_attribute("property", id2string(property.name));
+      xml_result.set_attribute("property", id2string(property.identifier));
       xml_result.set_attribute("status", property.status_as_string());
 
       if(property.has_witness_trace())
