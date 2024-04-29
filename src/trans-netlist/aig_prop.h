@@ -85,31 +85,4 @@ public:
   }
 };
 
-class aig_prop_solvert : public aig_prop_constraintt {
-public:
-  explicit aig_prop_solvert(propt &_solver, message_handlert &message_handler)
-      : aig_prop_constraintt(aig, message_handler), solver(_solver) {}
-
-  aig_plus_constraintst aig;
-
-  std::string solver_text() const override {
-    return "conversion into and-inverter graph followed by " +
-           solver.solver_text();
-  }
-
-  tvt l_get(literalt a) const override;
-  resultt prop_solve();
-
-protected:
-  propt &solver;
-
-  void convert_aig();
-  void usage_count(std::vector<unsigned> &p_usage_count,
-                   std::vector<unsigned> &n_usage_count);
-  void compute_phase(std::vector<bool> &n_pos, std::vector<bool> &n_neg);
-  void convert_node(unsigned n, const aigt::nodet &node, bool n_pos, bool n_neg,
-                    std::vector<unsigned> &p_usage_count,
-                    std::vector<unsigned> &n_usage_count);
-};
-
 #endif // CPROVER_TRANS_NETLIST_AIG_PROP_H
