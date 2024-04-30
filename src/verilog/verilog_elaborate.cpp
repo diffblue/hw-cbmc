@@ -611,7 +611,10 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
 
 void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
 {
-  if(statement.id() == ID_verilog_immediate_assert)
+  if(
+    statement.id() == ID_verilog_immediate_assert ||
+    statement.id() == ID_verilog_immediate_assume ||
+    statement.id() == ID_verilog_immediate_cover)
   {
   }
   else if(

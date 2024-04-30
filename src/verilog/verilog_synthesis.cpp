@@ -111,6 +111,26 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::value_mapt::guarded_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_synthesist::value_mapt::guarded_expr(exprt expr) const
+{
+  if(guard.empty())
+    return expr;
+  else
+    return implies_exprt{conjunction(guard), std::move(expr)};
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::function_locality
 
   Inputs:
@@ -1838,10 +1858,16 @@ void verilog_synthesist::synth_assert_cover(
       // procedural concurrent -- evaluated just before the clock tick
       cond = synth_expr(statement.condition(), symbol_statet::SYMBOL);
     }
+
+    // add the guard
+    cond = guarded_expr(cond);
   }
   else // one of the 'always' variants
   {
     cond = synth_expr(statement.condition(), symbol_statet::CURRENT);
+
+    // add the guard
+    cond = guarded_expr(cond);
 
     // assertions have an implicit 'always'
     if(
@@ -1922,6 +1948,9 @@ void verilog_synthesist::synth_assume(
   construct=constructt::OTHER;
 
   auto condition = synth_expr(statement.condition(), symbol_statet::CURRENT);
+
+  // add the guard
+  condition = guarded_expr(condition);
 
   // add it as an invariant
   invars.push_back(condition);
@@ -2138,9 +2167,9 @@ Function: verilog_synthesist::synth_if
 void verilog_synthesist::synth_if(
   const verilog_ift &statement)
 {
-  auto if_operand = synth_expr(statement.cond(), symbol_statet::CURRENT);
+  auto if_cond = synth_expr(statement.cond(), symbol_statet::CURRENT);
 
-  if(if_operand.is_true())
+  if(if_cond.is_true())
   {
     synth_statement(statement.then_case());
     return;
@@ -2151,8 +2180,12 @@ void verilog_synthesist::synth_if(
 
   // produce new value maps
   value_mapt true_map(*value_map), false_map(*value_map);
+
   true_map.clear_changed();
+  true_map.guard.push_back(if_cond);
+
   false_map.clear_changed();
+  false_map.guard.push_back(not_exprt{if_cond});
 
   // 'then' case
   {
@@ -2171,10 +2204,11 @@ void verilog_synthesist::synth_if(
   value_map=old_map;
 
   // merge current map
-  merge(if_operand, true_map.current, false_map.current, false, value_map->current);
-  
+  merge(
+    if_cond, true_map.current, false_map.current, false, value_map->current);
+
   // merge final map
-  merge(if_operand, true_map.final, false_map.final, true, value_map->final);
+  merge(if_cond, true_map.final, false_map.final, true, value_map->final);
 }
 
 /*******************************************************************\
@@ -2643,6 +2677,7 @@ void verilog_synthesist::synth_statement(
     synth_assert_cover(to_verilog_assert_assume_cover_statement(statement));
   }
   else if(
+    statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume)
   {

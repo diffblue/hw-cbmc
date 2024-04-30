@@ -1845,6 +1845,7 @@ inline const verilog_assume_statementt &
 to_verilog_assume_statement(const verilog_statementt &statement)
 {
   PRECONDITION(
+    statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume);
   binary_exprt::check(statement);
@@ -1855,6 +1856,7 @@ inline verilog_assume_statementt &
 to_verilog_assume_statement(verilog_statementt &statement)
 {
   PRECONDITION(
+    statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume);
   binary_exprt::check(statement);
