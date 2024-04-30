@@ -292,6 +292,10 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     return struct_union_typet{src.id(), std::move(components)}
       .with_source_location(src.source_location());
   }
+  else if(src.id() == ID_type)
+  {
+    return src;
+  }
   else
   {
     throw errort().with_location(source_location)

@@ -1040,12 +1040,20 @@ local_parameter_declaration:
 		{ init($$, ID_local_parameter_decl);
 		  stack_expr($$).type() = std::move(stack_type($2));
 		  swapop($$, $3); }
+        | TOK_LOCALPARAM TOK_TYPE list_of_type_assignments
+		{ init($$, ID_local_parameter_decl);
+		  stack_expr($$).type() = typet(ID_type);
+		  swapop($$, $3); }
 	;
 
 parameter_declaration:
           TOK_PARAMETER data_type_or_implicit list_of_param_assignments
 		{ init($$, ID_parameter_decl);
 		  stack_expr($$).type() = std::move(stack_type($2));
+		  swapop($$, $3); }
+        | TOK_PARAMETER TOK_TYPE list_of_type_assignments
+		{ init($$, ID_parameter_decl);
+		  stack_expr($$).type() = typet(ID_type);
 		  swapop($$, $3); }
 	;
 
@@ -1583,6 +1591,21 @@ param_assignment: param_identifier '=' constant_param_expression
 		  stack_expr($$).set(ID_identifier, base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
 		  addswap($$, ID_value, $3); }
+        ;
+
+list_of_type_assignments:
+	  type_assignment
+		{ init($$); mto($$, $1); }
+	| list_of_type_assignments ',' type_assignment
+		{ $$=$1;    mto($$, $3); }
+	;
+
+type_assignment: param_identifier '=' data_type
+		{ init($$, ID_parameter);
+		  auto base_name = stack_expr($1).id();
+		  stack_expr($$).set(ID_identifier, base_name);
+		  stack_expr($$).set(ID_base_name, base_name);
+		  addswap($$, ID_type, $3); }
         ;
 
 data_type_or_implicit:
