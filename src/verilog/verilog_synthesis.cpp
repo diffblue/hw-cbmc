@@ -1801,7 +1801,7 @@ void verilog_synthesist::synth_assign(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_assert
+Function: verilog_synthesist::synth_assert_cover
 
   Inputs:
 
@@ -1811,40 +1811,61 @@ Function: verilog_synthesist::synth_assert
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_assert(
-  const verilog_assert_statementt &statement)
+void verilog_synthesist::synth_assert_cover(
+  const verilog_assert_assume_cover_statementt &statement)
 {
   const irep_idt &identifier = statement.identifier();
   symbolt &symbol=symbol_table_lookup(identifier);
 
+  // This covers both immediate assert/cover and procedural concurrent assert/cover.
+  // Cadence SMV assertions are treated as immediate assertions,
+  // but this is to be checked.
+  // Arguments to procedural concurrent assertions are complex
+  // (1800-2017 16.14.6.1)
+  exprt cond;
+
   // Are we in an initial or always block?
   if(construct == constructt::INITIAL)
   {
-    if(statement.id() == ID_assert)
+    if(
+      statement.id() == ID_verilog_immediate_assert ||
+      statement.id() == ID_verilog_immediate_cover)
     {
-      // immediate
-      symbol.value = synth_expr(statement.condition(), symbol_statet::CURRENT);
+      cond = synth_expr(statement.condition(), symbol_statet::CURRENT);
     }
     else
     {
-      // Verilog concurrent or SMV-style assertion
-      symbol.value = synth_expr(statement.condition(), symbol_statet::SYMBOL);
+      // procedural concurrent -- evaluated just before the clock tick
+      cond = synth_expr(statement.condition(), symbol_statet::SYMBOL);
     }
   }
   else // one of the 'always' variants
   {
-    auto cond = synth_expr(statement.condition(), symbol_statet::CURRENT);
+    cond = synth_expr(statement.condition(), symbol_statet::CURRENT);
 
-    if(cond.id() != ID_sva_always)
-      cond = sva_always_exprt(cond); // implicit 'always'
-
-    symbol.value = std::move(cond);
+    // assertions have an implicit 'always'
+    if(
+      statement.id() != ID_verilog_cover_property &&
+      statement.id() != ID_verilog_immediate_cover)
+    {
+      if(cond.id() != ID_sva_always)
+        cond = sva_always_exprt(cond);
+    }
   }
+
+  // mark 'cover' properties as such
+  if(statement.id() == ID_verilog_cover_property)
+  {
+    // 'cover' properties are existential
+    cond = sva_cover_exprt(cond);
+  }
+
+  symbol.value = std::move(cond);
 }
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_assert
+Function: verilog_synthesist::synth_assert_cover
 
   Inputs:
 
@@ -1857,6 +1878,7 @@ Function: verilog_synthesist::synth_assert
 void verilog_synthesist::synth_assert_cover(
   const verilog_assert_assume_cover_module_itemt &module_item)
 {
+  // These are static concurrent assert/cover module items.
   const irep_idt &identifier = module_item.identifier();
   symbolt &symbol=symbol_table_lookup(identifier);
 
@@ -2613,15 +2635,19 @@ void verilog_synthesist::synth_statement(
       << "synthesis of procedural continuous assignment not supported";
   }
   else if(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
-    statement.id() == ID_verilog_smv_assert)
-    synth_assert(to_verilog_assert_statement(statement));
+    statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_cover_property)
+  {
+    synth_assert_cover(to_verilog_assert_assume_cover_statement(statement));
+  }
   else if(
-    statement.id() == ID_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume)
+  {
     synth_assume(to_verilog_assume_statement(statement));
+  }
   else if(statement.id()==ID_non_blocking_assign)
     synth_assign(statement, false);
   else if(statement.id()==ID_force)

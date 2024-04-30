@@ -1060,7 +1060,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_assert
+Function: verilog_typecheckt::convert_assert_cover
 
   Inputs:
 
@@ -1070,7 +1070,8 @@ Function: verilog_typecheckt::convert_assert
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_assert(verilog_assert_statementt &statement)
+void verilog_typecheckt::convert_assert_cover(
+  verilog_assert_assume_cover_statementt &statement)
 {
   exprt &cond = statement.condition();
 
@@ -1434,15 +1435,19 @@ void verilog_typecheckt::convert_statement(
     convert_procedural_continuous_assign(
       to_verilog_procedural_continuous_assign(statement));
   else if(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
-    statement.id() == ID_verilog_smv_assert)
-    convert_assert(to_verilog_assert_statement(statement));
+    statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_cover_property)
+  {
+    convert_assert_cover(to_verilog_assert_assume_cover_statement(statement));
+  }
   else if(
-    statement.id() == ID_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume)
+  {
     convert_assume(to_verilog_assume_statement(statement));
+  }
   else if(statement.id() == ID_verilog_cover_property)
   {
   }

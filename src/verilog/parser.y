@@ -2983,10 +2983,20 @@ immediate_assertion_statement:
 
 simple_immediate_assertion_statement:
 	  simple_immediate_assert_statement
+	| simple_immediate_assume_statement
+	| simple_immediate_cover_statement
 	;
 
 simple_immediate_assert_statement: TOK_ASSERT '(' expression ')' action_block
-		{ init($$, ID_assert); mto($$, $3); mto($$, $5); }
+		{ init($$, ID_verilog_immediate_assert); mto($$, $3); mto($$, $5); }
+	;
+
+simple_immediate_assume_statement: TOK_ASSUME '(' expression ')' action_block
+		{ init($$, ID_verilog_immediate_assume); mto($$, $3); mto($$, $5); }
+	;
+
+simple_immediate_cover_statement: TOK_COVER '(' expression ')' action_block
+		{ init($$, ID_verilog_immediate_cover); mto($$, $3); mto($$, $5); }
 	;
 
 wait_statement: TOK_WAIT '(' expression ')' statement_or_null
