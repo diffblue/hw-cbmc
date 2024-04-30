@@ -19,7 +19,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_symbol_table.h"
 #include "verilog_typecheck_base.h"
 
-#include <cassert>
 #include <map>
 #include <set>
 #include <unordered_set>
@@ -166,22 +165,33 @@ protected:
       current.changed.clear();
       final.changed.clear();
     }
+
+    // current guard
+    exprt::operandst guard;
+
+    exprt guarded_expr(exprt) const;
   };
    
   exprt current_value(
     const value_mapt::mapt &map,
     const symbolt &symbol,
     bool use_previous_assignments);
-  
+
+  exprt guarded_expr(exprt expr) const
+  {
+    PRECONDITION(value_map != NULL);
+    return value_map->guarded_expr(expr);
+  }
+
   inline exprt current_value(const symbolt &symbol)
   {
-    assert(value_map!=NULL);
+    PRECONDITION(value_map != NULL);
     return current_value(value_map->current, symbol, false);
   }
 
   inline exprt final_value(const symbolt &symbol)
   {
-    assert(value_map!=NULL);
+    PRECONDITION(value_map != NULL);
     return current_value(value_map->final, symbol, true);
   }
 
