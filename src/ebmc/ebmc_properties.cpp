@@ -67,12 +67,8 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
 
       properties.properties.push_back(propertyt());
       properties.properties.back().number = properties.properties.size() - 1;
-
-      if(symbol.pretty_name.empty())
-        properties.properties.back().name = symbol.name;
-      else
-        properties.properties.back().name = symbol.pretty_name;
-
+      properties.properties.back().identifier = symbol.name;
+      properties.properties.back().name = symbol.display_name();
       properties.properties.back().original_expr = symbol.value;
       properties.properties.back().normalized_expr =
         normalize_property(symbol.value);

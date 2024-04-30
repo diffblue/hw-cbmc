@@ -34,7 +34,7 @@ void unwind(
   messaget &message,
   cnft &solver,
   bool add_initial_state,
-  unsigned t)
+  std::size_t t)
 {
   bool first=(t==0);
   bool last=(t==bmc_map.timeframe_map.size()-1);
@@ -123,7 +123,7 @@ void unwind(
   cnft &solver,
   bool add_initial_state)
 {
-  for(unsigned t=0; t<bmc_map.timeframe_map.size(); t++)
+  for(std::size_t t = 0; t < bmc_map.timeframe_map.size(); t++)
     unwind(netlist, bmc_map, message, solver, add_initial_state, t);
 }
 
@@ -140,63 +140,19 @@ Function: unwind_property
 \*******************************************************************/
 
 void unwind_property(
+  const netlistt::propertyt &property,
   const bmc_mapt &bmc_map,
-  literalt property_node,
   bvt &prop_bv)
 {
+  PRECONDITION(std::holds_alternative<netlistt::Gpt>(property));
+  auto property_node = std::get<netlistt::Gpt>(property).p;
+
   prop_bv.resize(bmc_map.timeframe_map.size());
 
-  for(unsigned t=0;
-      t<bmc_map.timeframe_map.size();
-      t++)
+  for(std::size_t t = 0; t < bmc_map.timeframe_map.size(); t++)
   {
     literalt l=bmc_map.translate(t, property_node);
     prop_bv[t]=l;
-  }
-}
-
-/*******************************************************************\
-
-Function: unwind_property
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void unwind_property(
-  const exprt &property_expr,
-  bvt &prop_bv,
-  message_handlert &message_handler,
-  propt &solver,
-  const bmc_mapt &map,
-  const namespacet &ns)
-{
-  if(property_expr.is_true())
-  {
-    prop_bv.resize(map.get_no_timeframes(), const_literal(true));
-    return;
-  }
-
-  // We want AG p.
-  auto &p = [](const exprt &expr) -> const exprt & {
-    if(expr.id() == ID_AG)
-      return to_AG_expr(expr).op();
-    else if(expr.id() == ID_G)
-      return to_G_expr(expr).op();
-    else if(expr.id() == ID_sva_always)
-      return to_sva_always_expr(expr).op();
-    else
-      PRECONDITION(false);
-  }(property_expr);
-
-  for(unsigned c=0; c<map.get_no_timeframes(); c++)
-  {
-    literalt l=instantiate_convert(solver, map, p, c, c+1, ns, message_handler);
-    prop_bv.push_back(l);
   }
 }
 

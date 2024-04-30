@@ -6,16 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_BMC_INSTANTIATE_NETLIST_H
-#define CPROVER_BMC_INSTANTIATE_NETLIST_H
+#ifndef CPROVER_TRANS_NETLIST_INSTANTIATE_NETLIST_H
+#define CPROVER_TRANS_NETLIST_INSTANTIATE_NETLIST_H
 
 #include <util/expr.h>
-#include <util/namespace.h>
 #include <util/message.h>
+#include <util/namespace.h>
 
-#include <solvers/flattening/boolbv.h>
-
-#include "bmc_map.h"
+#include "var_map.h"
 
 // bit-level
 
@@ -41,29 +39,4 @@ void instantiate_convert(
   message_handlert &,
   bvt &bv);
 
-void instantiate_constraint(
-  propt &solver,
-  const bmc_mapt &bmc_map,
-  const exprt &expr,
-  unsigned current, unsigned next,
-  const namespacet &,
-  message_handlert &);
-
-literalt instantiate_convert(
-  propt &solver,
-  const bmc_mapt &bmc_map,
-  const exprt &expr,
-  unsigned current, unsigned next,
-  const namespacet &,
-  message_handlert &);
-  
-void instantiate_convert(
-  propt &solver,
-  const bmc_mapt &bmc_map,
-  const exprt &expr,
-  unsigned current, unsigned next,
-  const namespacet &,
-  message_handlert &,
-  bvt &bv);
-
-#endif
+#endif // CPROVER_TRANS_NETLIST_INSTANTIATE_NETLIST_H

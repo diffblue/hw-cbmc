@@ -364,6 +364,10 @@ void bdd_enginet::compute_counterexample(
   propertyt &property,
   unsigned number_of_timeframes)
 {
+  // Supported by BMC engine?
+  if(!netlist_bmc_supports_property(property.normalized_expr))
+    return;
+
   message.status() << "Computing counterexample with " << number_of_timeframes
                    << " timeframe(s)" << messaget::eom;
 
@@ -372,16 +376,14 @@ void bdd_enginet::compute_counterexample(
   satcheckt solver{message.get_message_handler()};
   bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
 
-  const namespacet ns(transition_system.symbol_table);
-
   ::unwind(netlist, bmc_map, message, solver);
+
+  // find the netlist property
+  auto netlist_property = netlist.properties.find(property.identifier);
+  CHECK_RETURN(netlist_property != netlist.properties.end());
+
   ::unwind_property(
-    property.normalized_expr,
-    property.timeframe_literals,
-    message.get_message_handler(),
-    solver,
-    bmc_map,
-    ns);
+    netlist_property->second, bmc_map, property.timeframe_literals);
 
   // we need the propertyt to fail in one of the timeframes
   bvt clause=property.timeframe_literals;
@@ -401,6 +403,8 @@ void bdd_enginet::compute_counterexample(
   default:
     throw "unexpected result from SAT solver";
   }
+
+  const namespacet ns(transition_system.symbol_table);
 
   property.witness_trace =
     compute_trans_trace(property.timeframe_literals, bmc_map, solver, ns);
