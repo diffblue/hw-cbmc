@@ -1657,7 +1657,8 @@ inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
   return static_cast<verilog_non_blocking_assignt &>(expr);
 }
 
-/// Verilog assert/assume/cover property module item
+/// Verilog static concurrent assert/assume/cover property
+/// module item.
 class verilog_assert_assume_cover_module_itemt : public verilog_module_itemt
 {
 public:
@@ -1727,14 +1728,12 @@ to_verilog_assert_assume_cover_module_item(verilog_module_itemt &module_item)
   return static_cast<verilog_assert_assume_cover_module_itemt &>(module_item);
 }
 
-// Can be one of three:
-// 1) Intermediate assertion statement
-// 2) Concurrent assertion statement
-// 3) SMV-style assertion statement
-class verilog_assert_statementt : public verilog_statementt
+/// base-class for assert, assume and cover statements
+class verilog_assert_assume_cover_statementt : public verilog_statementt
 {
 public:
-  verilog_assert_statementt() : verilog_statementt(ID_assert)
+  explicit verilog_assert_assume_cover_statementt(irep_idt id)
+    : verilog_statementt(id)
   {
     operands().resize(2);
   }
@@ -1749,8 +1748,8 @@ public:
     return op0();
   }
 
-  // The Verilog intermediate assertion does not have an identifier,
-  // but the SMV-style ones do.
+  // The Verilog immediate assert/assume/cover statements
+  // do not have an identifier, but the SMV-style ones do.
   const irep_idt &identifier() const
   {
     return get(ID_identifier);
@@ -1762,11 +1761,56 @@ public:
   }
 };
 
+inline const verilog_assert_assume_cover_statementt &
+to_verilog_assert_assume_cover_statement(const verilog_statementt &statement)
+{
+  PRECONDITION(
+    statement.id() == ID_verilog_immediate_assert ||
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_immediate_assume ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_smv_assume ||
+    statement.id() == ID_verilog_immediate_cover ||
+    statement.id() == ID_verilog_cover_property);
+  binary_exprt::check(statement);
+  return static_cast<const verilog_assert_assume_cover_statementt &>(statement);
+}
+
+inline verilog_assert_assume_cover_statementt &
+to_verilog_assert_assume_cover_statement(verilog_statementt &statement)
+{
+  PRECONDITION(
+    statement.id() == ID_verilog_immediate_assert ||
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_immediate_assume ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_smv_assume ||
+    statement.id() == ID_verilog_immediate_cover ||
+    statement.id() == ID_verilog_cover_property);
+  binary_exprt::check(statement);
+  return static_cast<verilog_assert_assume_cover_statementt &>(statement);
+}
+
+// Can be one of three:
+// 1) Immediate assertion statement
+// 2) Procedural concurrent assertion statement
+// 3) SMV-style assertion statement
+class verilog_assert_statementt : public verilog_assert_assume_cover_statementt
+{
+public:
+  explicit verilog_assert_statementt(irep_idt id)
+    : verilog_assert_assume_cover_statementt(id)
+  {
+  }
+};
+
 inline const verilog_assert_statementt &
 to_verilog_assert_statement(const verilog_statementt &statement)
 {
   PRECONDITION(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert);
   binary_exprt::check(statement);
@@ -1777,7 +1821,7 @@ inline verilog_assert_statementt &
 to_verilog_assert_statement(verilog_statementt &statement)
 {
   PRECONDITION(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert);
   binary_exprt::check(statement);
@@ -1785,37 +1829,15 @@ to_verilog_assert_statement(verilog_statementt &statement)
 }
 
 // Can be one of three:
-// 1) Intermediate assumption statement
-// 2) Concurrent assumption statement
+// 1) Immediate assumption statement
+// 2) Procedural concurrent assumption statement
 // 3) SMV-style assumption statement
-class verilog_assume_statementt : public verilog_statementt
+class verilog_assume_statementt : public verilog_assert_assume_cover_statementt
 {
 public:
-  verilog_assume_statementt() : verilog_statementt(ID_assume)
+  verilog_assume_statementt()
+    : verilog_assert_assume_cover_statementt(ID_verilog_assume_property)
   {
-    operands().resize(2);
-  }
-
-  inline exprt &condition()
-  {
-    return op0();
-  }
-
-  inline const exprt &condition() const
-  {
-    return op0();
-  }
-
-  // The Verilog intermediate assumption does not have an identifier,
-  // but the SMV-style ones do.
-  const irep_idt &identifier() const
-  {
-    return get(ID_identifier);
-  }
-
-  void identifier(irep_idt _identifier)
-  {
-    set(ID_identifier, _identifier);
   }
 };
 
@@ -1823,7 +1845,6 @@ inline const verilog_assume_statementt &
 to_verilog_assume_statement(const verilog_statementt &statement)
 {
   PRECONDITION(
-    statement.id() == ID_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume);
   binary_exprt::check(statement);
@@ -1834,7 +1855,6 @@ inline verilog_assume_statementt &
 to_verilog_assume_statement(verilog_statementt &statement)
 {
   PRECONDITION(
-    statement.id() == ID_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume);
   binary_exprt::check(statement);
