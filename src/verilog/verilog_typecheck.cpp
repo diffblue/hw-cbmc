@@ -1434,12 +1434,11 @@ void verilog_typecheckt::convert_statement(
     convert_procedural_continuous_assign(
       to_verilog_procedural_continuous_assign(statement));
   else if(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert)
     convert_assert(to_verilog_assert_statement(statement));
   else if(
-    statement.id() == ID_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume)
     convert_assume(to_verilog_assume_statement(statement));

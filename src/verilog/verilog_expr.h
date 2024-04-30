@@ -1734,7 +1734,7 @@ to_verilog_assert_assume_cover_module_item(verilog_module_itemt &module_item)
 class verilog_assert_statementt : public verilog_statementt
 {
 public:
-  verilog_assert_statementt() : verilog_statementt(ID_assert)
+  verilog_assert_statementt(irep_idt id) : verilog_statementt(id)
   {
     operands().resize(2);
   }
@@ -1766,7 +1766,7 @@ inline const verilog_assert_statementt &
 to_verilog_assert_statement(const verilog_statementt &statement)
 {
   PRECONDITION(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert);
   binary_exprt::check(statement);
@@ -1777,7 +1777,7 @@ inline verilog_assert_statementt &
 to_verilog_assert_statement(verilog_statementt &statement)
 {
   PRECONDITION(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert);
   binary_exprt::check(statement);

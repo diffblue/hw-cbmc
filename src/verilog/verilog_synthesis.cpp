@@ -1820,7 +1820,7 @@ void verilog_synthesist::synth_assert(
   // Are we in an initial or always block?
   if(construct == constructt::INITIAL)
   {
-    if(statement.id() == ID_assert)
+    if(statement.id() == ID_verilog_immediate_assert)
     {
       // immediate
       symbol.value = synth_expr(statement.condition(), symbol_statet::CURRENT);
@@ -2613,12 +2613,11 @@ void verilog_synthesist::synth_statement(
       << "synthesis of procedural continuous assignment not supported";
   }
   else if(
-    statement.id() == ID_assert ||
+    statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert)
     synth_assert(to_verilog_assert_statement(statement));
   else if(
-    statement.id() == ID_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume)
     synth_assume(to_verilog_assume_statement(statement));
