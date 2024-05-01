@@ -1,0 +1,6 @@
+MODULE main
+
+VAR some_var : boolean;
+
+-- should fail
+LTLSPEC G F some_var
