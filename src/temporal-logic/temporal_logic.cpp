@@ -8,15 +8,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "temporal_logic.h"
 
-#include <util/expr_iterator.h>
+#include <util/expr_util.h>
 
 bool is_temporal_operator(const exprt &expr)
 {
-  return expr.id() == ID_AG || expr.id() == ID_EG || expr.id() == ID_AF ||
-         expr.id() == ID_EF || expr.id() == ID_AX || expr.id() == ID_EX ||
-         expr.id() == ID_A || expr.id() == ID_E || expr.id() == ID_U ||
-         expr.id() == ID_R || expr.id() == ID_G || expr.id() == ID_F ||
-         expr.id() == ID_X || expr.id() == ID_sva_always ||
+  return is_CTL_operator(expr) || is_LTL_operator(expr) || expr.id() == ID_A ||
+         expr.id() == ID_E || expr.id() == ID_sva_always ||
          expr.id() == ID_sva_always || expr.id() == ID_sva_ranged_always ||
          expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_nexttime ||
          expr.id() == ID_sva_non_overlapped_implication ||
@@ -28,18 +25,42 @@ bool is_temporal_operator(const exprt &expr)
 
 bool has_temporal_operator(const exprt &expr)
 {
-  for(auto subexpr_it = expr.depth_cbegin(), subexpr_end = expr.depth_cend();
-      subexpr_it != subexpr_end;
-      subexpr_it++)
-  {
-    if(is_temporal_operator(*subexpr_it))
-      return true;
-  }
-
-  return false;
+  return has_subexpr(expr, is_temporal_operator);
 }
 
 bool is_exists_path(const exprt &expr)
 {
   return expr.id() == ID_sva_cover;
+}
+
+bool is_CTL_operator(const exprt &expr)
+{
+  auto id = expr.id();
+  return id == ID_AG || id == ID_EG || id == ID_AF || id == ID_EF ||
+         id == ID_AX || id == ID_EX || id == ID_AU || id == ID_EU ||
+         id == ID_AR || id == ID_ER;
+}
+
+bool is_CTL(const exprt &expr)
+{
+  auto non_CTL_operator = [](const exprt &expr) {
+    return is_temporal_operator(expr) && !is_CTL_operator(expr);
+  };
+
+  return !has_subexpr(expr, non_CTL_operator);
+}
+
+bool is_LTL_operator(const exprt &expr)
+{
+  auto id = expr.id();
+  return id == ID_G || id == ID_F || id == ID_X || id == ID_U || id == ID_R;
+}
+
+bool is_LTL(const exprt &expr)
+{
+  auto non_LTL_operator = [](const exprt &expr) {
+    return is_temporal_operator(expr) && !is_LTL_operator(expr);
+  };
+
+  return !has_subexpr(expr, non_LTL_operator);
 }

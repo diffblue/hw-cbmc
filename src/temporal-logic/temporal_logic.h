@@ -22,4 +22,18 @@ bool is_temporal_operator(const exprt &);
 /// property.
 bool is_exists_path(const exprt &);
 
+/// Returns true iff the given expression is a CTL formula
+bool is_CTL(const exprt &);
+
+/// Returns true iff the given expression has a CTL operator
+/// as its root
+bool is_CTL_operator(const exprt &);
+
+/// Returns true iff the given expression is an LTL formula
+bool is_LTL(const exprt &);
+
+/// Returns true iff the given expression has an LTL operator
+/// as its root
+bool is_LTL_operator(const exprt &);
+
 #endif

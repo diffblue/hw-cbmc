@@ -1,0 +1,10 @@
+CORE
+EG1.smv
+--bdd
+^\[main::spec1\] EG some_var = TRUE: REFUTED$
+^\[main::spec2\] EG some_var = FALSE: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

@@ -1,0 +1,11 @@
+MODULE main
+
+VAR some_var : boolean;
+
+INVAR some_var = 0
+
+-- should fail
+SPEC AF some_var = 1
+
+-- should pass
+SPEC AF some_var = 0

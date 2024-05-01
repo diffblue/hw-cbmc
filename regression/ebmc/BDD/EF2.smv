@@ -1,0 +1,11 @@
+MODULE main
+
+VAR some_var : boolean;
+
+ASSIGN next(some_var) := 0;
+
+-- should fail
+SPEC EF some_var = 1
+
+-- should pass
+SPEC EF some_var = 0

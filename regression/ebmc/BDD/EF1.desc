@@ -1,0 +1,10 @@
+CORE
+EF1.smv
+--bdd
+^\[main::spec1\] EF some_var = TRUE: REFUTED$
+^\[main::spec2\] EF some_var = FALSE: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
