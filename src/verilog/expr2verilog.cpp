@@ -1111,6 +1111,9 @@ std::string expr2verilogt::convert(
   else if(src.id() == ID_sva_cover)
     return precedence = 0, convert_sva("cover", to_sva_cover_expr(src).op());
 
+  else if(src.id() == ID_sva_assume)
+    return precedence = 0, convert_sva("assume", to_sva_assume_expr(src).op());
+
   else if(src.id()==ID_sva_nexttime)
     return precedence = 0,
            convert_sva("nexttime", to_sva_nexttime_expr(src).op());

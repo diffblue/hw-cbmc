@@ -40,6 +40,7 @@ public:
     {
       UNKNOWN,            // no work done yet
       DISABLED,           // turned off by user
+      ASSUMED,            // property is assumed to be true, unbounded
       PROVED,             // property is true, unbounded
       PROVED_WITH_BOUND,  // property is true, with bound
       REFUTED,            // property is false, possibly counterexample
@@ -66,6 +67,11 @@ public:
     bool is_disabled() const
     {
       return status == statust::DISABLED;
+    }
+
+    bool is_assumed() const
+    {
+      return status == statust::ASSUMED;
     }
 
     bool is_proved() const
@@ -167,8 +173,12 @@ public:
   bool all_properties_proved() const
   {
     for(const auto &p : properties)
-      if(!p.is_proved() && !p.is_proved_with_bound() && !p.is_disabled())
+      if(
+        !p.is_proved() && !p.is_proved_with_bound() && !p.is_disabled() &&
+        !p.is_assumed())
+      {
         return false;
+      }
 
     return true;
   }

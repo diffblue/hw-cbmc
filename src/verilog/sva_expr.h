@@ -316,6 +316,29 @@ static inline sva_cover_exprt &to_sva_cover_expr(exprt &expr)
   return static_cast<sva_cover_exprt &>(expr);
 }
 
+class sva_assume_exprt : public unary_predicate_exprt
+{
+public:
+  explicit sva_assume_exprt(exprt op)
+    : unary_predicate_exprt(ID_sva_assume, std::move(op))
+  {
+  }
+};
+
+static inline const sva_assume_exprt &to_sva_assume_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_assume);
+  sva_assume_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_assume_exprt &>(expr);
+}
+
+static inline sva_assume_exprt &to_sva_assume_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_assume);
+  sva_assume_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_assume_exprt &>(expr);
+}
+
 class sva_until_exprt : public binary_predicate_exprt
 {
 public:

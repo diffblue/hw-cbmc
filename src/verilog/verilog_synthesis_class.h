@@ -233,7 +233,8 @@ protected:
   void synth_module_item(const verilog_module_itemt &, transt &);
   void synth_always_base(const verilog_always_baset &);
   void synth_initial(const verilog_initialt &);
-  void synth_assert_cover(const verilog_assert_assume_cover_module_itemt &);
+  void
+  synth_assert_assume_cover(const verilog_assert_assume_cover_module_itemt &);
   void synth_assume(const verilog_assert_assume_cover_module_itemt &);
   void synth_continuous_assign(const verilog_continuous_assignt &);
   void synth_force_rec(exprt &lhs, exprt &rhs, transt &);
@@ -256,7 +257,8 @@ protected:
   void synth_repeat(const verilog_repeatt &);
   void synth_function_call_or_task_enable(const verilog_function_callt &);
   void synth_assign(const verilog_statementt &, bool blocking);
-  void synth_assert_cover(const verilog_assert_assume_cover_statementt &);
+  void
+  synth_assert_assume_cover(const verilog_assert_assume_cover_statementt &);
   void synth_assume(const verilog_assume_statementt &);
   void synth_prepostincdec(const verilog_statementt &);
   void synth_assignments(transt &);

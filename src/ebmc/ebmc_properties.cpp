@@ -20,6 +20,8 @@ std::string ebmc_propertiest::propertyt::status_as_string() const
 {
   switch(status)
   {
+  case statust::ASSUMED:
+    return "ASSUMED";
   case statust::PROVED:
     return "PROVED";
   case statust::PROVED_WITH_BOUND:
@@ -70,13 +72,24 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
       properties.properties.back().identifier = symbol.name;
       properties.properties.back().name = symbol.display_name();
       properties.properties.back().original_expr = symbol.value;
-      properties.properties.back().normalized_expr =
-        normalize_property(symbol.value);
       properties.properties.back().location = symbol.location;
       properties.properties.back().expr_string = value_as_string;
       properties.properties.back().mode = symbol.mode;
       properties.properties.back().description =
         id2string(symbol.location.get_comment());
+
+      // Don't try to prove assumption properties.
+      if(symbol.value.id() == ID_sva_assume)
+      {
+        properties.properties.back().status = propertyt::statust::ASSUMED;
+        properties.properties.back().normalized_expr =
+          normalize_property(to_sva_assume_expr(symbol.value).op());
+      }
+      else
+      {
+        properties.properties.back().normalized_expr =
+          normalize_property(symbol.value);
+      }
     }
   }
 

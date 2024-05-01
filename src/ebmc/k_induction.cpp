@@ -239,8 +239,7 @@ void k_inductiont::induction_step()
 
   for(auto &p_it : properties.properties)
   {
-    if(p_it.is_disabled() ||
-       p_it.is_failure())
+    if(p_it.is_disabled() || p_it.is_failure() || p_it.is_assumed())
       continue;
 
     // If it's not failed, then it's supported.
@@ -263,6 +262,18 @@ void k_inductiont::induction_step()
       no_timeframes,
       ns,
       false);
+
+    // add all assumptions for all time frames
+    for(auto &property : properties.properties)
+      if(property.is_assumed())
+      {
+        const exprt &p = to_unary_expr(property.normalized_expr).op();
+        for(std::size_t c = 0; c < no_timeframes; c++)
+        {
+          exprt tmp = instantiate(p, c, no_timeframes, ns);
+          solver.set_to_true(tmp);
+        }
+      }
 
     const exprt property(p_it.normalized_expr);
     const exprt &p = to_unary_expr(property).op();

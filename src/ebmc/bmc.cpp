@@ -60,6 +60,10 @@ void bmc(
       solver,
       bound + 1,
       ns);
+
+    // If it's an assumption, then add it as constraint.
+    if(property.is_assumed())
+      solver.set_to_true(conjunction(property.timeframe_handles));
   }
 
   // lasso constraints, if needed
@@ -93,8 +97,12 @@ void bmc(
 
     for(auto &property : properties.properties)
     {
-      if(property.is_disabled() || property.is_failure())
+      if(
+        property.is_disabled() || property.is_failure() ||
+        property.is_assumed())
+      {
         continue;
+      }
 
       message.status() << "Checking " << property.name << messaget::eom;
 
