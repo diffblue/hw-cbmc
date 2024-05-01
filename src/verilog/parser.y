@@ -1221,6 +1221,8 @@ lifetime:
 
 casting_type:
 	  simple_type
+	| constant_primary
+		{ init($$, ID_verilog_size_cast); mto($$, $1); }
 	| signing
 	| TOK_STRING
 	| TOK_CONST
@@ -3258,6 +3260,9 @@ primary_literal:
         | time_literal
         ;
 
+constant_primary: primary
+	;
+
 // This is equivalent to two System Verilog 1800-2017 productions
 // hierarchical_identifier select.
 hierarchical_identifier_select:
@@ -3288,9 +3293,18 @@ time_literal: TOK_TIME_LITERAL
 
 cast:
 	  casting_type '\'' '(' expression ')'
-		{ init($$, ID_verilog_explicit_cast);
-		  stack_expr($$).type() = stack_type($1);
-		  mto($$, $4); }
+		{ if(stack_expr($1).id() == ID_verilog_size_cast)
+		  {
+		    $$ = $1; 
+		    mto($$, $4);
+		  }
+		  else
+		  {
+		    init($$, ID_verilog_explicit_cast);
+		    stack_expr($$).type() = stack_type($1);
+		    mto($$, $4);
+		  }
+		}
 	;
 
 // System Verilog standard 1800-2017
