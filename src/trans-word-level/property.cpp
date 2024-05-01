@@ -192,7 +192,7 @@ static void property_obligations_rec(
   {
     // current state property
     exprt tmp = instantiate(property_expr, current, no_timeframes, ns);
-    obligations[current].push_back(solver.handle(tmp));
+    obligations[current].push_back(tmp);
   }
 }
 
@@ -256,7 +256,7 @@ void property(
     DATA_INVARIANT(
       t >= 0 && t < no_timeframes, "obligation must have valid timeframe");
     auto t_int = numeric_cast_v<std::size_t>(t);
-    prop_handles[t_int] = conjunction(obligation_it.second);
+    prop_handles[t_int] = solver.handle(conjunction(obligation_it.second));
   }
 }
 
