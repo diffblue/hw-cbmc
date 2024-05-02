@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
+#include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
@@ -24,6 +25,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "aig_prop.h"
 #include "instantiate_netlist.h"
 #include "netlist.h"
+
+#include <algorithm>
 
 /*******************************************************************\
 
@@ -78,8 +81,9 @@ protected:
   
   typedef std::list<exprt> constraint_listt;
   constraint_listt constraint_list;
-  bvt transition_constraints;
-  
+
+  bvt invar_constraints, transition_constraints;
+
   class rhst
   {
   public:
@@ -299,7 +303,10 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
 
   // do the remaining transition constraints
   convert_constraints(aig_prop);
-  
+
+  dest.constraints.insert(
+    dest.constraints.end(), invar_constraints.begin(), invar_constraints.end());
+
   dest.transition.insert(
     dest.transition.end(),
     transition_constraints.begin(),
@@ -402,6 +409,9 @@ Function: convert_trans_to_netlistt::convert_constraints
 
 void convert_trans_to_netlistt::convert_constraints(propt &prop)
 {
+  invar_constraints.reserve(
+    transition_constraints.size() + constraint_list.size());
+
   transition_constraints.reserve(
     transition_constraints.size()+constraint_list.size());
 
@@ -412,7 +422,11 @@ void convert_trans_to_netlistt::convert_constraints(propt &prop)
   {
     literalt l=
       instantiate_convert(prop, dest.var_map, *it, ns, get_message_handler());
-    transition_constraints.push_back(l);
+
+    if(has_subexpr(*it, ID_next_symbol))
+      transition_constraints.push_back(l);
+    else
+      invar_constraints.push_back(l);
   }
 }
 
