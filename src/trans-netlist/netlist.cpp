@@ -56,21 +56,32 @@ void netlistt::print(std::ostream &out) const
 
   out << "Initial state: " << '\n';
 
-  for(unsigned i=0; i<initial.size(); i++)
+  for(auto &c : initial)
   {
     out << "  ";
-    print(out, initial[i]);
+    print(out, c);
     out << '\n';
   }
 
   out << '\n';
 
-  out << "Transition constraints: " << '\n';
+  out << "State invariant constraints: " << '\n';
 
-  for(unsigned i=0; i<transition.size(); i++)
+  for(auto &c : constraints)
   {
     out << "  ";
-    print(out, transition[i]);
+    print(out, c);
+    out << '\n';
+  }
+
+  out << '\n' << std::flush;
+
+  out << "Transition constraints: " << '\n';
+
+  for(auto &c : transition)
+  {
+    out << "  ";
+    print(out, c);
     out << '\n';
   }
   
