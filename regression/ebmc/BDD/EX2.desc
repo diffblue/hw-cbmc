@@ -1,8 +1,8 @@
 CORE
 EX2.smv
 --bdd
-^\[main::spec1\] EX some_var = TRUE: REFUTED$
-^\[main::spec2\] EX some_var = FALSE: PROVED$
+^\[spec1\] EX some_var = TRUE: REFUTED$
+^\[spec2\] EX some_var = FALSE: PROVED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

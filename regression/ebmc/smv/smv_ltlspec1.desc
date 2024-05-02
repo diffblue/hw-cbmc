@@ -3,6 +3,6 @@ smv_ltlspec1.smv
 --bdd
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main::spec1\] G x != 0: PROVED$
+^\[spec1\] G x != 0: PROVED$
 --
 ^warning: ignoring

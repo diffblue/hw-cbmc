@@ -3,7 +3,7 @@ bdd_unsupported_property.smv
 --bdd
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main::spec1\] !G x = FALSE: FAILURE: property not supported by BDD engine$
-^\[main::spec2\] G x = FALSE: REFUTED$
+^\[spec1\] !G x = FALSE: FAILURE: property not supported by BDD engine$
+^\[spec2\] G x = FALSE: REFUTED$
 --
 ^warning: ignoring

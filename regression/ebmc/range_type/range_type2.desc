@@ -3,7 +3,7 @@ range_type2.smv
 --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main::spec1\] AG TRUE: PROVED up to bound 10$
-^\[main::spec2\] AG NET_tmp9: PROVED up to bound 10$
+^\[spec1\] AG TRUE: PROVED up to bound 10$
+^\[spec2\] AG NET_tmp9: PROVED up to bound 10$
 --
 ^warning: ignoring

@@ -3,7 +3,7 @@ waveform1.smv
 --bound 20 --numbered-trace
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main::spec1\] .* REFUTED$
+^\[spec1\] .* REFUTED$
 ^Counterexample with 21 states:$
 ^y@0 = 0$
 ^y@10 = 100$

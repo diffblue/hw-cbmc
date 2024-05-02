@@ -3,6 +3,6 @@ smv2.smv
 --module main --bound 2 --k-induction
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main::spec1\] .* PROVED$
+^\[spec1\] .* PROVED$
 --
 ^warning: ignoring

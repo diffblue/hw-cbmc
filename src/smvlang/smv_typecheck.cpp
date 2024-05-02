@@ -1482,16 +1482,20 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
       {
         symbolt spec_symbol;
 
-        spec_symbol.base_name = smv_module.base_name;
+        spec_symbol.base_name = "spec" + std::to_string(nr++);
         spec_symbol.name =
-          id2string(smv_module.name) + "::spec" + std::to_string(nr++);
-        spec_symbol.pretty_name = strip_smv_prefix(spec_symbol.name);
+          id2string(smv_module.name) + "::" + id2string(spec_symbol.base_name);
         spec_symbol.module = smv_module.name;
         spec_symbol.type = bool_typet();
         spec_symbol.is_property = true;
         spec_symbol.mode = "SMV";
         spec_symbol.value = it->expr;
         spec_symbol.location = it->location;
+
+        if(smv_module.name == "smv::main")
+          spec_symbol.pretty_name = spec_symbol.base_name;
+        else
+          spec_symbol.pretty_name = strip_smv_prefix(spec_symbol.name);
 
         symbol_table.add(spec_symbol);
       }
