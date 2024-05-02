@@ -1,0 +1,10 @@
+CORE
+AX1.smv
+--bdd
+^\[main::spec1\] AX some_var = TRUE: REFUTED$
+^\[main::spec2\] AX some_var = FALSE: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

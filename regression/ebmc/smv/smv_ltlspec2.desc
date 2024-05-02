@@ -1,10 +1,9 @@
-KNOWNBUG
+CORE
 smv_ltlspec2.smv
 --bdd
 ^EXIT=0$
 ^SIGNAL=0$
-^\[smv::main::spec1\] G F x = 3: PROVED$
+^\[main::spec1\] G F x = 3: PROVED$
 --
 ^warning: ignoring
 --
-The BDD engine returns REFUTED.

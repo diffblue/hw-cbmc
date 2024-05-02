@@ -1,0 +1,16 @@
+MODULE main
+
+VAR x : 0..10;
+
+-- 1, 2, 3, ..., 10
+ASSIGN init(x) := 1;
+ASSIGN next(x) := case
+    x = 10 : 10;
+    1      : x + 1;
+  esac;
+
+-- should fail, since x=0 is not reachable
+SPEC A x>=1 U x=0
+
+-- should pass
+SPEC A x>=1 U x=10

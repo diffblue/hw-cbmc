@@ -1,0 +1,11 @@
+MODULE main
+
+VAR some_var : boolean;
+
+ASSIGN init(some_var) := 0;
+
+-- should fail
+SPEC some_var = 1
+
+-- should pass
+SPEC some_var = 0

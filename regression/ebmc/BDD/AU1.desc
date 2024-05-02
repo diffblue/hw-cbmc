@@ -1,0 +1,8 @@
+KNOWNBUG
+AU1.smv
+--bdd
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

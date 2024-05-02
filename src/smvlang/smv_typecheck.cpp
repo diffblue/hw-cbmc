@@ -951,6 +951,13 @@ void smv_typecheckt::typecheck(
 
     typecheck(to_unary_expr(expr).op(), expr.type(), mode);
   }
+  else if(expr.id() == ID_U || expr.id() == ID_R)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+    expr.type() = bool_typet();
+    typecheck(binary_expr.lhs(), expr.type(), mode);
+    typecheck(binary_expr.rhs(), expr.type(), mode);
+  }
   else if(expr.id()==ID_typecast)
   {
   }

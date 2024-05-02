@@ -345,6 +345,7 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
 
         if(!has_temporal_operator(phi))
         {
+          // G p
           dest.properties.emplace(id, netlistt::Gpt{convert(phi)});
         }
         else if(
@@ -362,7 +363,17 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
               PRECONDITION(false);
           };
 
-          dest.properties.emplace(id, netlistt::GFpt{convert(get_psi(phi))});
+          auto psi = get_psi(phi);
+
+          if(!has_temporal_operator(psi))
+          {
+            // G F p
+            dest.properties.emplace(id, netlistt::GFpt{convert(psi)});
+          }
+          else
+          {
+            // unsupported
+          }
         }
         else
         {
