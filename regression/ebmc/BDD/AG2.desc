@@ -1,8 +1,8 @@
 CORE
 AG2.smv
 --bdd
-^\[main::spec1\] AG some_var = TRUE: REFUTED$
-^\[main::spec2\] AG some_var = FALSE: REFUTED$
+^\[spec1\] AG some_var = TRUE: REFUTED$
+^\[spec2\] AG some_var = FALSE: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

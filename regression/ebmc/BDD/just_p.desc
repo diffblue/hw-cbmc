@@ -1,8 +1,8 @@
 CORE
 just_p.smv
 --bdd
-^\[main::spec1\] some_var = TRUE: REFUTED$
-^\[main::spec2\] some_var = FALSE: PROVED$
+^\[spec1\] some_var = TRUE: REFUTED$
+^\[spec2\] some_var = FALSE: PROVED$
 ^EXIT=10$
 ^SIGNAL=0$
 --
