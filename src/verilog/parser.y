@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
+#include "verilog_expr.h"
 #include "verilog_parser.h"
 
 #define PARSER verilog_parser
@@ -1158,9 +1159,20 @@ package_import_item_brace:
 
 package_import_item:
 	  package_identifier "::" identifier
-		{ init($$, ID_verilog_import_item); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_import_item);
+		  mto($$, $1);
+		  mto($$, $3);
+		  // add item from package to our scope table
+		  auto &item = to_verilog_import_item(stack_expr($$));
+	          PARSER.current_scope->import_item(item);
+		}
 	| package_identifier "::" "*"
-		{ init($$, ID_verilog_import_item); mto($$, $1); }
+		{ init($$, ID_verilog_import_item);
+		  mto($$, $1);
+	          // add items from package to our scope table
+		  auto &item = to_verilog_import_item(stack_expr($$));
+	          PARSER.current_scope->import_item(item);
+		}
 	;
 
 genvar_declaration:

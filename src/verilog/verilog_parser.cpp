@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/cout_message.h>
 #include <util/unicode.h>
 
+#include "verilog_expr.h"
+
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
@@ -80,4 +82,21 @@ const verilog_parsert::scopet *verilog_parsert::lookup(irep_idt name) const
 
   // not found, give up
   return nullptr;
+}
+
+/*******************************************************************\
+
+Function: verilog_parsert::scopet::import_item
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_parsert::scopet::import_item(
+  const verilog_import_itemt &import_item)
+{
 }

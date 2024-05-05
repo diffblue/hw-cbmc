@@ -1945,4 +1945,21 @@ to_verilog_implicit_typecast_expr(exprt &expr)
   return static_cast<verilog_implicit_typecast_exprt &>(expr);
 }
 
+class verilog_import_itemt : public binary_exprt
+{
+public:
+};
+
+inline const verilog_import_itemt &to_verilog_import_item(const exprt &expr)
+{
+  verilog_import_itemt::check(expr);
+  return static_cast<const verilog_import_itemt &>(expr);
+}
+
+inline verilog_import_itemt &to_verilog_import_item(exprt &expr)
+{
+  verilog_import_itemt::check(expr);
+  return static_cast<verilog_import_itemt &>(expr);
+}
+
 #endif
