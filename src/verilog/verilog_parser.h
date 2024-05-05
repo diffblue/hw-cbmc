@@ -19,6 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 int yyverilogparse();
 
+class verilog_import_itemt;
+
 class verilog_parsert:public parsert
 {
 public:
@@ -90,6 +92,8 @@ public:
     // sub-scopes
     using scope_mapt = std::map<irep_idt, scopet>;
     scope_mapt scope_map;
+
+    void import_item(const verilog_import_itemt &);
   };
 
   scopet top_scope, *current_scope = &top_scope;
