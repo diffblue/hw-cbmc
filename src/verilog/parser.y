@@ -804,7 +804,7 @@ net_port_header:
 	;
 
 variable_port_header:
-	port_direction data_type
+	port_direction var_data_type
 		{ init($$);
 		  mto($$, $1);
 		  addswap($$, ID_type, $2);
