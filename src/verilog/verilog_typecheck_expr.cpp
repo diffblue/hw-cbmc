@@ -854,7 +854,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 
     // create the member expression
     return member_exprt{expr.lhs(), component.get_name(), component.type()}
-      .with_source_location<exprt>(expr);
+      .with_source_location(expr);
   }
 
   const irep_idt &lhs_identifier = [](const exprt &lhs) {
@@ -976,8 +976,7 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
       new_value += mp_integer(character) << ((value.size() - i - 1) * 8);
     }
 
-    return from_integer(new_value, type)
-      .with_source_location<constant_exprt>(expr);
+    return from_integer(new_value, type).with_source_location(expr);
   }
   else if(expr.type().id()==ID_unsignedbv ||
           expr.type().id()==ID_signedbv ||
@@ -1883,8 +1882,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // type cast.
     convert_expr(expr.op());
     auto new_type = convert_type(expr.type());
-    return typecast_exprt{expr.op(), new_type}.with_source_location<exprt>(
-      expr);
+    return typecast_exprt{expr.op(), new_type}.with_source_location(expr);
   }
   else if(expr.id() == ID_verilog_implicit_typecast)
   {
@@ -1971,7 +1969,7 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
       // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
       // x for 4-state and 0 for 2-state values.
       if(op1 < offset || op1 >= width + offset)
-        return false_exprt().with_source_location<exprt>(expr);
+        return false_exprt().with_source_location(expr);
 
       op1 -= offset;
       expr.op1() = from_integer(op1, natural_typet());
@@ -2218,8 +2216,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     auto lower = convert_integer_constant_expression(range.op0());
 
-    range.op0() = from_integer(lower, natural_typet())
-                    .with_source_location<exprt>(range.op0());
+    range.op0() =
+      from_integer(lower, natural_typet()).with_source_location(range.op0());
 
     if(range.op1().id() == ID_infinity)
     {
@@ -2233,8 +2231,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
           << "range must be lower <= upper";
       }
 
-      range.op1() = from_integer(upper, natural_typet())
-                      .with_source_location<exprt>(range.op1());
+      range.op1() =
+        from_integer(upper, natural_typet()).with_source_location(range.op1());
     }
 
     convert_expr(expr.op1());
@@ -2260,12 +2258,12 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     if(op_type.id() == ID_signedbv)
     {
       return typecast_exprt{expr.rhs(), signedbv_typet{new_size_int}}
-        .with_source_location<exprt>(expr);
+        .with_source_location(expr);
     }
     else if(op_type.id() == ID_unsignedbv)
     {
       return typecast_exprt{expr.rhs(), unsignedbv_typet{new_size_int}}
-        .with_source_location<exprt>(expr);
+        .with_source_location(expr);
     }
     else
     {
@@ -2460,7 +2458,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
         from_integer(top, integer_typet{}),
         from_integer(bottom, integer_typet{}),
         std::move(expr_type)}
-        .with_source_location<exprt>(expr);
+        .with_source_location(expr);
     }
     else
     {
@@ -2476,7 +2474,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
         from_integer(op2 - 1, integer_typet{}),
         from_integer(0, integer_typet{}),
         std::move(expr_type)}
-        .with_source_location<exprt>(expr);
+        .with_source_location(expr);
     }
   }
   else if(expr.id()==ID_if)

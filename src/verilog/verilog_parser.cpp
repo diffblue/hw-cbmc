@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 #include <stdio.h>
 
-verilog_parsert verilog_parser;
+verilog_parsert *verilog_parser_ptr = nullptr;
 
 /*******************************************************************\
 
@@ -33,6 +33,8 @@ bool parse_verilog_file(const std::string &filename)
 {
   std::ifstream in(widen_if_needed(filename));
   console_message_handlert console_message_handler;
+
+  verilog_parsert verilog_parser;
 
   verilog_parser.set_file(filename);
   verilog_parser.log.set_message_handler(console_message_handler);

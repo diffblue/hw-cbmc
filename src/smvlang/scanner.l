@@ -15,7 +15,7 @@ static int isatty(int) { return 0; }
 
 #include <util/expr.h>
 
-#define PARSER smv_parser
+#define PARSER (*smv_parser_ptr)
 #define YYSTYPE unsigned
 
 #include "smv_parser.h"

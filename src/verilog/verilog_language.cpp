@@ -55,7 +55,7 @@ bool verilog_languaget::parse(
   const std::string &path,
   message_handlert &message_handler)
 {
-  verilog_parser.clear();
+  verilog_parsert verilog_parser;
 
   std::stringstream str;
 
@@ -77,9 +77,6 @@ bool verilog_languaget::parse(
   bool result=verilog_parser.parse();
 
   parse_tree.swap(verilog_parser.parse_tree);
-
-  // save some memory
-  verilog_parser.clear();
 
   return result;
 }
@@ -293,8 +290,8 @@ bool verilog_languaget::to_expr(
   std::istringstream i_preprocessed(code);
 
   // parsing
-  
-  verilog_parser.clear();
+  verilog_parsert verilog_parser;
+
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;
   verilog_parser.log.set_message_handler(message_handler);
@@ -315,9 +312,6 @@ bool verilog_languaget::to_expr(
   result = verilog_synthesis(expr, module, message_handler, ns);
   if(result)
     return true;
-
-  // save some memory
-  verilog_parser.clear();
 
   return result;
 }

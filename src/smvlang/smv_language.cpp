@@ -32,7 +32,7 @@ bool smv_languaget::parse(
   const std::string &path,
   message_handlert &message_handler)
 {
-  smv_parser.clear();
+  smv_parsert smv_parser;
 
   const std::string main_name=smv_module_symbol("main");
   smv_parser.module=&smv_parser.parse_tree.modules[main_name];
@@ -51,9 +51,6 @@ bool smv_languaget::parse(
     smv_parser.parse_tree.modules.erase(main_name);
 
   smv_parse_tree.swap(smv_parser.parse_tree);
-
-  // save some memory
-  smv_parser.clear();
 
   return result;
 }

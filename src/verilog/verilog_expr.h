@@ -449,8 +449,9 @@ public:
   // helper to generate a symbol expression
   symbol_exprt symbol_expr() const
   {
-    return symbol_exprt(identifier(), type())
-      .with_source_location<symbol_exprt>(*this);
+    auto result = symbol_exprt(identifier(), type());
+    result.with_source_location(*this);
+    return result;
   }
 
   // Helper to merge the declarator's unpacked array type

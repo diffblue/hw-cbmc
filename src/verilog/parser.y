@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 #include "verilog_parser.h"
 
-#define PARSER verilog_parser
+#define PARSER (*verilog_parser_ptr)
 #define YYSTYPE unsigned
 #define YYSTYPE_IS_TRIVIAL 1
 
@@ -49,7 +49,7 @@ Function: init
 inline static void init(exprt &expr)
 {
   expr.clear();
-  verilog_parser.set_source_location(expr);
+  PARSER.set_source_location(expr);
 }
 
 /*******************************************************************\
@@ -169,7 +169,7 @@ Function: yyverilogerror
 
 int yyverilogerror(const char *error)
 {
-  verilog_parser.parse_error(error, yyverilogtext);
+  PARSER.parse_error(error, yyverilogtext);
   return strlen(error)+1;
 }
 

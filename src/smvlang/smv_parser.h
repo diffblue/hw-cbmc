@@ -15,9 +15,22 @@ Author: Daniel Kroening, kroening@kroening.com
 
 int yysmvparse();
 
+extern class smv_parsert *smv_parser_ptr;
+
 class smv_parsert:public parsert
 {
- public:
+public:
+  smv_parsert()
+  {
+    PRECONDITION(smv_parser_ptr == nullptr);
+    smv_parser_ptr = this;
+  }
+
+  ~smv_parsert()
+  {
+    smv_parser_ptr = nullptr;
+  }
+
   smv_parse_treet parse_tree;
   smv_parse_treet::modulet *module;
   
@@ -25,15 +38,6 @@ class smv_parsert:public parsert
   {
     return yysmvparse();
   }
-  
-  virtual void clear()
-  {
-    parsert::clear();
-    parse_tree.clear();
-    module=NULL;
-  }
 };
-
-extern smv_parsert smv_parser;
 
 #endif

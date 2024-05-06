@@ -19,6 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 int yyverilogparse();
 
+extern class verilog_parsert *verilog_parser_ptr;
+
 class verilog_parsert:public parsert
 {
 public:
@@ -43,15 +45,16 @@ public:
   {
     return yyverilogparse()!=0;
   }
-  
-  virtual void clear()
+
+  verilog_parsert() : mode(VIS_VERILOG)
   {
-    parsert::clear();
-    parse_tree.clear();
+    PRECONDITION(verilog_parser_ptr == nullptr);
+    verilog_parser_ptr = this;
   }
-  
-  verilog_parsert():mode(VIS_VERILOG)
+
+  ~verilog_parsert()
   {
+    verilog_parser_ptr = nullptr;
   }
 
   // parser scopes and identifiers
@@ -133,8 +136,6 @@ public:
     return integer2string(next_id_counter - 1);
   }
 };
-
-extern verilog_parsert verilog_parser;
 
 bool parse_verilog_file(const std::string &filename);
 void verilog_scanner_init();

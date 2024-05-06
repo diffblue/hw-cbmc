@@ -10,7 +10,7 @@
 
 #include "vhdl_parser.h"
 
-#define PARSER vhdl_parser
+#define PARSER (*vhdl_parser_ptr)
 #define YYSTYPE vhdl_parsert::yystypet
 
 #undef stack
