@@ -7,7 +7,7 @@
 #include <util/std_types.h>
 
 #define YYSTYPE unsigned
-#define PARSER smv_parser
+#define PARSER (*smv_parser_ptr)
 
 #include "smv_y.tab.h"
 

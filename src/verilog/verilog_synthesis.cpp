@@ -182,7 +182,7 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
       exprt select_one(
         ID_constraint_select_one, call.type(), std::move(arguments));
       select_one.set(ID_identifier, identifier);
-      return select_one.with_source_location<exprt>(call);
+      return select_one.with_source_location(call);
     }
     else
     {
@@ -246,7 +246,7 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
   {
     const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
     verilog_blocking_assignt assignment;
-    assignment.lhs() = a_symbol.symbol_expr().with_source_location<exprt>(call);
+    assignment.lhs() = a_symbol.symbol_expr().with_source_location(call);
     assignment.rhs()=actuals[i];
     assignment.add_source_location()=call.source_location();
     synth_statement(assignment);

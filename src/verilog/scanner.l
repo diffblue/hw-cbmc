@@ -17,7 +17,7 @@ static int isatty(int) { return 0; }
 
 #include <util/expr.h>
 
-#define PARSER verilog_parser
+#define PARSER (*verilog_parser_ptr)
 #define YYSTYPE unsigned
 
 #include "verilog_parser.h"
@@ -164,7 +164,7 @@ void verilog_scanner_init()
 
 <STRING>{
    "\""         { BEGIN(GRAMMAR);
-                  stack_expr(yyveriloglval).id(verilog_parser.string_literal);
+                  stack_expr(yyveriloglval).id(PARSER.string_literal);
                   return TOK_QSTRING;
                 }
 
@@ -172,10 +172,10 @@ void verilog_scanner_init()
                   return TOK_SCANNER_ERROR;
                 }
 
-   "\\n"        { verilog_parser.string_literal += '\n'; }      // NL (0x0a) */
-   "\\t"        { verilog_parser.string_literal += '\t'; }      // HT (0x09) */
-   "\\".        { verilog_parser.string_literal += yytext[1]; } // ignore the backslash
-   [^\\\"\n]*   { verilog_parser.string_literal += &yytext[0]; } // everything else
+   "\\n"        { PARSER.string_literal += '\n'; }       // NL (0x0a) */
+   "\\t"        { PARSER.string_literal += '\t'; }       // HT (0x09) */
+   "\\".        { PARSER.string_literal += yytext[1]; }  // ignore the backslash
+   [^\\\"\n]*   { PARSER.string_literal += &yytext[0]; } // everything else
 
    \n           { yyverilogerror("Unterminated string constant");
                   return TOK_SCANNER_ERROR;
@@ -189,7 +189,7 @@ void verilog_scanner_init()
 "/*"            { BEGIN COMMENT; continue; }
 "\""            { BEGIN(STRING);
                   newstack(yyveriloglval);
-                  verilog_parser.string_literal.clear();
+                  PARSER.string_literal.clear();
                 }
 
                 /* Attributes */

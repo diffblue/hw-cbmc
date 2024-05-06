@@ -33,7 +33,7 @@ bool vhdl_languaget::parse(
   const std::string &path,
   message_handlert &message_handler)
 {
-  vhdl_parser.clear();
+  vhdl_parsert vhdl_parser;
 
   vhdl_parser.set_file(path);
   vhdl_parser.in=&instream;
@@ -45,9 +45,6 @@ bool vhdl_languaget::parse(
   bool result=vhdl_parser.parse();
 
   parse_tree.swap(vhdl_parser.parse_tree);
-
-  // save some memory
-  vhdl_parser.clear();
 
   return result;
 }
@@ -273,8 +270,7 @@ bool vhdl_languaget::to_expr(
   std::istringstream i_preprocessed(code);
 
   // parsing
-  
-  vhdl_parser.clear();
+  vhdl_parsert vhdl_parser;
   vhdl_parser.set_file("");
   vhdl_parser.in=&i_preprocessed;
   vhdl_parser.log.set_message_handler(message_handler);
@@ -290,9 +286,6 @@ bool vhdl_languaget::to_expr(
   // typecheck it
   result=vhdl_typecheck(expr, module, message_handler, ns);
   #endif
-
-  // save some memory
-  vhdl_parser.clear();
 
   return result;
 }

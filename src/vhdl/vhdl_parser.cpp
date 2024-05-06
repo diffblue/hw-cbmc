@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 #include <stdio.h>
 
-vhdl_parsert vhdl_parser;
+vhdl_parsert *vhdl_parser_ptr = nullptr;
 extern int yyvhdlparse();
 
 /*******************************************************************\
@@ -35,6 +35,7 @@ bool parse_vhdl_file(const std::string &filename)
   std::ifstream in(widen_if_needed(filename));
   console_message_handlert console_message_handler;
 
+  vhdl_parsert vhdl_parser;
   vhdl_parser.set_file(filename);
   vhdl_parser.log.set_message_handler(console_message_handler);
 

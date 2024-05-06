@@ -13,7 +13,7 @@ static int isatty(int) { return 0; }
 
 #include <util/dstring.h>
 
-#define PARSER vhdl_parser
+#define PARSER (*vhdl_parser_ptr)
 #define YYSTYPE vhdl_parsert::yystypet
 #define set_loc() PARSER.set_location(yyvhdllval, yyleng)
 
@@ -49,7 +49,7 @@ void vhdl_scanner_init()
   while(tmp2[0]!='\n' && tmp2[0]!=0)
     tmp2++;
   
-  vhdl_parser.comments.push_back(std::string(tmp, 0, tmp2-tmp));
+  PARSER.comments.push_back(std::string(tmp, 0, tmp2-tmp));
 }                                                
 
 "=>"            { set_loc(); return TOK_ARROW; }

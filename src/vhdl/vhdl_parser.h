@@ -18,6 +18,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 int yyvhdlparse();
 
+extern class vhdl_parsert *vhdl_parser_ptr;
+
 class vhdl_parsert:public parsert
 {
 public:
@@ -30,15 +32,16 @@ public:
   {
     return yyvhdlparse();
   }
-  
-  virtual void clear()
-  {
-    parsert::clear();
-    parse_tree.clear();
-  }
-  
+
   vhdl_parsert()
   {
+    PRECONDITION(vhdl_parser_ptr == nullptr);
+    vhdl_parser_ptr = this;
+  }
+
+  ~vhdl_parsert()
+  {
+    vhdl_parser_ptr = nullptr;
   }
   
   std::vector<std::string> comments;
@@ -110,8 +113,6 @@ public:
   // for escaped identifiers and string literals
   std::string scanner_buffer;
 };
-
-extern vhdl_parsert vhdl_parser;
 
 bool parse_vhdl_file(const std::string &filename);
 void vhdl_scanner_init();

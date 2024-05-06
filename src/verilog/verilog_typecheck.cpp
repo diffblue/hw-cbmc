@@ -461,14 +461,12 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
     {
       auto &value = static_cast<exprt &>(it->add(ID_value));
       mp_integer v_int = convert_integer_constant_expression(value);
-      value =
-        from_integer(v_int, integer_typet()).with_source_location<exprt>(*it);
+      value = from_integer(v_int, integer_typet()).with_source_location(*it);
     }
     else
     {
       mp_integer v_int = convert_integer_constant_expression(*it);
-      *it =
-        from_integer(v_int, integer_typet()).with_source_location<exprt>(*it);
+      *it = from_integer(v_int, integer_typet()).with_source_location(*it);
     }
   }
 
