@@ -737,11 +737,14 @@ parameter_port_list_opt:
 list_of_ports: '(' port_brace ')' { $$ = $2; }
 	;
 
+list_of_port_declarations: '(' ansi_port_declaration_brace ')' { $$=$2; }
+	;
+
 ansi_port_declaration_brace:
-	  ansi_port_declaration
-		{ init($$); mts($$, $1); }
-	| ansi_port_declaration_brace ',' ansi_port_declaration
-		{ $$=$1; mts($$, $3); }
+	  attribute_instance_brace ansi_port_declaration
+		{ init($$); mts($$, $2); }
+	| ansi_port_declaration_brace ',' attribute_instance_brace ansi_port_declaration
+		{ $$=$1; mts($$, $4); }
 
           // append to last one -- required to make 
           // the grammar LR1
@@ -763,40 +766,49 @@ port_declaration:
 	| attribute_instance_brace output_declaration { $$=$2; }
 	;
 
+ansi_port_initializer_opt:
+	  /* Optional */
+		{ init($$, ID_nil); }
+	| '=' expression
+		{ $$ = $2; }
+	;
+
 ansi_port_declaration:
-	  attribute_instance_brace module_port_inout_declaration { $$=$2; }
-	| attribute_instance_brace module_port_input_declaration { $$=$2; }
-	| attribute_instance_brace module_port_output_declaration { $$=$2; }
-	;
-
-module_port_input_declaration:
-	  TOK_INPUT net_port_type port_identifier unpacked_dimension_brace
+	  net_port_header port_identifier unpacked_dimension_brace ansi_port_initializer_opt
 		{ init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_input);
-                  // The net_port_type goes onto the declaration,
-                  // and the unpacked_array_type goes onto the declarator.
-                  addswap($$, ID_type, $2);
-                  addswap($3, ID_type, $4);
-                  mto($$, $3); }
-	;
-
-module_port_output_declaration:
-	  TOK_OUTPUT net_port_type port_identifier unpacked_dimension_brace
-		{ init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_output);
+                  stack_expr($$).set(ID_class, to_unary_expr(stack_expr($1)).op().id());
                   // The data_type goes onto the declaration,
                   // and the unpacked_array_type goes onto the declarator.
-                  addswap($$, ID_type, $2);
-                  addswap($3, ID_type, $4);
-                  mto($$, $3); }
-	| TOK_OUTPUT data_type port_identifier unpacked_dimension_brace
+                  stack_expr($$).type() = std::move(stack_expr($1).type());
+                  addswap($2, ID_type, $3);
+                  mto($$, $2); /* declarator */ }
+	| variable_port_header port_identifier unpacked_dimension_brace ansi_port_initializer_opt
 		{ init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_output_register);
+		  if(to_unary_expr(stack_expr($1)).op().id() == ID_output)
+                    stack_expr($$).set(ID_class, ID_output_register);
+                  else
+                    stack_expr($$).set(ID_class, to_unary_expr(stack_expr($1)).op().id());
                   // The data_type goes onto the declaration,
                   // and the unpacked_array_type goes onto the declarator.
-                  addswap($$, ID_type, $2);
-                  addswap($3, ID_type, $4);
-                  mto($$, $3); }
+                  stack_expr($$).type() = std::move(stack_expr($1).type());
+                  addswap($2, ID_type, $3);
+                  mto($$, $2); /* declarator */ }
+	;
+
+net_port_header:
+	  port_direction net_port_type
+		{ init($$);
+		  mto($$, $1);
+		  addswap($$, ID_type, $2);
+		}
+	;
+
+variable_port_header:
+	port_direction var_data_type
+		{ init($$);
+		  mto($$, $1);
+		  addswap($$, ID_type, $2);
+		}
 	;
 
 port_direction:
@@ -1063,15 +1075,6 @@ specparam_declaration:
 
 // System Verilog standard 1800-2017
 // A.2.1.2 Port declarations
-
-module_port_inout_declaration:
-	  TOK_INOUT net_port_type port_identifier unpacked_dimension_brace
-		{ init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_inout);
-                  add_as_subtype(stack_type($4), stack_type($2));
-                  addswap($$, ID_type, $4);
-                  mto($$, $3); }
-	;
 
 port_brace:
 	  port
@@ -2594,9 +2597,6 @@ input_list:;
 output_or_level_symbol:;
 
 next_state:;
-
-list_of_port_declarations: '(' ansi_port_declaration_brace ')' { $$=$2; }
-	;
 
 list_of_ports_opt:
 	/* Optional */
