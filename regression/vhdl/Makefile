@@ -1,10 +1,10 @@
 default: tests.log
 
 test:
-	@../test.pl -c ../../../src/ebmc/ebmc
+	@../test.pl -e -p -c ../../../src/ebmc/ebmc
 
-tests.log: ../test.pl ../../../src/ebmc/ebmc
-	@../test.pl
+tests.log:
+	@../test.pl -e -p -c ../../../src/ebmc/ebmc
 
 show:
 	@for dir in *; do \
