@@ -46,6 +46,11 @@ exprt normalize_pre_not(not_exprt expr)
     // ¬Fφ --> G¬φ
     return G_exprt{not_exprt{to_F_expr(op).op()}};
   }
+  else if(op.id() == ID_X)
+  {
+    // ¬Xφ --> X¬φ
+    return X_exprt{not_exprt{to_X_expr(op).op()}};
+  }
 
   return std::move(expr);
 }
@@ -53,6 +58,20 @@ exprt normalize_pre_not(not_exprt expr)
 exprt normalize_pre_implies(implies_exprt expr)
 {
   return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
+}
+
+exprt normalize_pre_sva_overlapped_implication(
+  sva_overlapped_implication_exprt expr)
+{
+  // same as regular implication
+  return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
+}
+
+exprt normalize_pre_sva_non_overlapped_implication(
+  sva_non_overlapped_implication_exprt expr)
+{
+  // same as a->Xb
+  return or_exprt{not_exprt{expr.lhs()}, X_exprt{expr.rhs()}};
 }
 
 exprt normalize_property(exprt expr)
@@ -64,6 +83,16 @@ exprt normalize_property(exprt expr)
     expr = normalize_pre_implies(to_implies_expr(expr));
   else if(expr.id() == ID_sva_cover)
     expr = G_exprt{not_exprt{to_sva_cover_expr(expr).op()}};
+  else if(expr.id() == ID_sva_overlapped_implication)
+    expr = normalize_pre_sva_overlapped_implication(
+      to_sva_overlapped_implication_expr(expr));
+  else if(expr.id() == ID_sva_non_overlapped_implication)
+    expr = normalize_pre_sva_non_overlapped_implication(
+      to_sva_non_overlapped_implication_expr(expr));
+  else if(expr.id() == ID_sva_nexttime)
+    expr = X_exprt{to_sva_nexttime_expr(expr).op()};
+  else if(expr.id() == ID_sva_s_nexttime)
+    expr = X_exprt{to_sva_s_nexttime_expr(expr).op()};
 
   // normalize the operands
   for(auto &op : expr.operands())

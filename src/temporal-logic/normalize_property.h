@@ -15,6 +15,12 @@ Author: Daniel Kroening, dkr@amazon.com
 /// cover(φ) --> G¬φ
 /// ¬(a ∨ b) --> ¬a ∧ ¬b
 /// ¬(a ∧ b) --> ¬a ∨ ¬b
+/// (a -> b) --> ¬a ∨ b
+/// sva_overlapped_implication --> ¬a ∨ b
+/// sva_non_overlapped_implication --> ¬a ∨ Xb
+/// sva_nexttime φ --> Xφ
+/// sva_s_nexttime φ --> Xφ
+/// ¬Xφ --> X¬φ
 /// ¬¬φ --> φ
 /// ¬Gφ --> F¬φ
 /// ¬Fφ --> G¬φ

@@ -885,8 +885,7 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
 {
   if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
-    expr.id() == ID_implies || is_temporal_operator(expr) ||
-    expr.id() == ID_sva_overlapped_implication)
+    expr.id() == ID_implies || is_temporal_operator(expr))
   {
     for(const auto & op : expr.operands())
       get_atomic_propositions(op);

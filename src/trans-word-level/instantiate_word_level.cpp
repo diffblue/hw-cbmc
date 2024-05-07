@@ -114,39 +114,6 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   {
     return timeframe_symbol(t, to_symbol_expr(std::move(expr)));
   }
-  else if(expr.id()==ID_sva_overlapped_implication)
-  {
-    // same as regular implication
-    expr.id(ID_implies);
-
-    for(auto &op : expr.operands())
-      op = instantiate_rec(op, t);
-
-    return expr;
-  }
-  else if(expr.id()==ID_sva_non_overlapped_implication)
-  {
-    // right-hand side is shifted by one tick
-    if(expr.operands().size()==2)
-    {
-      expr.id(ID_implies);
-      auto &implies_expr = to_implies_expr(expr);
-      implies_expr.op0() = instantiate_rec(implies_expr.op0(), t);
-
-      const auto next = t + 1;
-
-      // Do we exceed the bound? Make it 'true',
-      // works on NNF only
-      if(next >= no_timeframes)
-        implies_expr.op1() = true_exprt();
-      else
-        implies_expr.op1() = instantiate_rec(implies_expr.op1(), next);
-
-      return std::move(implies_expr);
-    }
-    else
-      return expr;
-  }
   else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
     auto &sva_cycle_delay_expr = to_sva_cycle_delay_expr(expr);
@@ -221,20 +188,6 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     }
 
     return conjunction(conjuncts);
-  }
-  else if(expr.id()==ID_sva_nexttime ||
-          expr.id()==ID_sva_s_nexttime)
-  {
-    assert(expr.operands().size()==1);
-
-    const auto next = t + 1;
-
-    if(next < no_timeframes)
-    {
-      return instantiate_rec(to_unary_expr(expr).op(), next);
-    }
-    else
-      return true_exprt(); // works on NNF only
   }
   else if(expr.id() == ID_X)
   {
@@ -346,7 +299,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     else
       tmp.id(ID_sva_s_until);
 
-    tmp.op1() = sva_nexttime_exprt(tmp.op1());
+    tmp.op1() = X_exprt(tmp.op1());
 
     return instantiate_rec(tmp, t);
   }
