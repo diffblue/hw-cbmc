@@ -1821,7 +1821,7 @@ void verilog_synthesist::synth_assign(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_assert_cover
+Function: verilog_synthesist::synth_assert_assume_cover
 
   Inputs:
 
@@ -1831,7 +1831,7 @@ Function: verilog_synthesist::synth_assert_cover
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_assert_cover(
+void verilog_synthesist::synth_assert_assume_cover(
   const verilog_assert_assume_cover_statementt &statement)
 {
   const irep_idt &identifier = statement.identifier();
@@ -1849,6 +1849,7 @@ void verilog_synthesist::synth_assert_cover(
   {
     if(
       statement.id() == ID_verilog_immediate_assert ||
+      statement.id() == ID_verilog_immediate_assume ||
       statement.id() == ID_verilog_immediate_cover)
     {
       cond = synth_expr(statement.condition(), symbol_statet::CURRENT);
@@ -1869,7 +1870,7 @@ void verilog_synthesist::synth_assert_cover(
     // add the guard
     cond = guarded_expr(cond);
 
-    // assertions have an implicit 'always'
+    // assertions and assumptions have an implicit 'always'
     if(
       statement.id() != ID_verilog_cover_property &&
       statement.id() != ID_verilog_immediate_cover)
@@ -1879,8 +1880,15 @@ void verilog_synthesist::synth_assert_cover(
     }
   }
 
-  // mark 'cover' properties as such
-  if(statement.id() == ID_verilog_cover_property)
+  // mark 'assume' and 'cover' properties as such
+  if(
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_immediate_assume ||
+    statement.id() == ID_verilog_smv_assume)
+  {
+    cond = sva_assume_exprt(cond);
+  }
+  else if(statement.id() == ID_verilog_cover_property)
   {
     // 'cover' properties are existential
     cond = sva_cover_exprt(cond);
@@ -1891,7 +1899,7 @@ void verilog_synthesist::synth_assert_cover(
 
 /*******************************************************************\
 
-Function: verilog_synthesist::synth_assert_cover
+Function: verilog_synthesist::synth_assert_assume_cover
 
   Inputs:
 
@@ -1901,7 +1909,7 @@ Function: verilog_synthesist::synth_assert_cover
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_assert_cover(
+void verilog_synthesist::synth_assert_assume_cover(
   const verilog_assert_assume_cover_module_itemt &module_item)
 {
   // These are static concurrent assert/cover module items.
@@ -1917,12 +1925,22 @@ void verilog_synthesist::synth_assert_cover(
     // Concurrent assertions come with an implicit 'always'
     // (1800-2017 Sec 16.12.11).
     if(cond.id() != ID_sva_always)
-      cond = sva_always_exprt(cond);
+      cond = sva_always_exprt{cond};
+  }
+  else if(module_item.id() == ID_verilog_assume_property)
+  {
+    // Concurrent assumptions come with an implicit 'always'
+    // (1800-2017 Sec 16.12.11).
+    if(cond.id() != ID_sva_always)
+      cond = sva_always_exprt{cond};
+
+    // mark assumptions
+    cond = sva_assume_exprt{cond};
   }
   else if(module_item.id() == ID_verilog_cover_property)
   {
     // 'cover' requirements are existential.
-    cond = sva_cover_exprt(cond);
+    cond = sva_cover_exprt{cond};
   }
   else
     PRECONDITION(false);
@@ -2674,14 +2692,16 @@ void verilog_synthesist::synth_statement(
     statement.id() == ID_verilog_smv_assert ||
     statement.id() == ID_verilog_cover_property)
   {
-    synth_assert_cover(to_verilog_assert_assume_cover_statement(statement));
+    synth_assert_assume_cover(
+      to_verilog_assert_assume_cover_statement(statement));
   }
   else if(
     statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_smv_assume)
   {
-    synth_assume(to_verilog_assume_statement(statement));
+    synth_assert_assume_cover(
+      to_verilog_assert_assume_cover_statement(statement));
   }
   else if(statement.id()==ID_non_blocking_assign)
     synth_assign(statement, false);
@@ -2780,11 +2800,13 @@ void verilog_synthesist::synth_module_item(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_cover_property)
   {
-    synth_assert_cover(to_verilog_assert_assume_cover_module_item(module_item));
+    synth_assert_assume_cover(
+      to_verilog_assert_assume_cover_module_item(module_item));
   }
   else if(module_item.id() == ID_verilog_assume_property)
   {
-    synth_assume(to_verilog_assert_assume_cover_module_item(module_item));
+    synth_assert_assume_cover(
+      to_verilog_assert_assume_cover_module_item(module_item));
   }
   else if(module_item.id()==ID_task)
   {

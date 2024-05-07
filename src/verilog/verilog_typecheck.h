@@ -152,7 +152,7 @@ protected:
   void convert_procedural_continuous_assign(
     class verilog_procedural_continuous_assignt &);
   void convert_prepostincdec(class verilog_statementt &);
-  void convert_assert_cover(verilog_assert_assume_cover_statementt &);
+  void convert_assert_assume_cover(verilog_assert_assume_cover_statementt &);
   void convert_assume(verilog_assume_statementt &);
 
   // module items

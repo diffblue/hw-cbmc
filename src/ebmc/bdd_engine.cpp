@@ -452,6 +452,9 @@ void bdd_enginet::check_property(propertyt &property)
   if(property.is_disabled())
     return;
 
+  if(property.is_assumed())
+    return;
+
   message.status() << "Checking " << property.name << messaget::eom;
   property.status=propertyt::statust::UNKNOWN;
 
@@ -973,6 +976,24 @@ void bdd_enginet::build_BDDs()
   // atomic propositions
   for(auto & p : atomic_propositions)
     p.second.bdd=aig2bdd(p.second.l, BDDs);
+
+  // assumptions
+  for(auto &property : properties.properties)
+    if(property.is_assumed())
+    {
+      // We currently only do sva_always assumptions.
+      auto &expr = property.normalized_expr;
+      if(
+        expr.id() == ID_sva_always &&
+        !has_temporal_operator(to_unary_expr(expr).op()))
+      {
+        // find the netlist property
+        auto netlist_property = netlist.properties.find(property.identifier);
+        CHECK_RETURN(netlist_property != netlist.properties.end());
+        auto l = std::get<netlistt::Gpt>(netlist_property->second).p;
+        constraints_BDDs.push_back(aig2bdd(l, BDDs));
+      }
+    }
 }
 
 /*******************************************************************\

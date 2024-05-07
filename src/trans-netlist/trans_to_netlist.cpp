@@ -323,6 +323,10 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
     {
       auto expr = normalize_property(symbol.value);
 
+      // we also convert propositions in assumptions
+      if(expr.id() == ID_sva_assume)
+        expr = to_sva_assume_expr(expr).op();
+
       auto convert = [&aig_prop, this](const exprt &expr) -> literalt {
         return instantiate_convert(
           aig_prop, dest.var_map, expr, ns, get_message_handler());

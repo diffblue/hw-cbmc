@@ -106,6 +106,7 @@ void report_results(
       switch(property.status)
       {
       // clang-format off
+      case statust::ASSUMED: message.status() << messaget::blue; break;
       case statust::PROVED: message.status() << messaget::green; break;
       case statust::PROVED_WITH_BOUND: message.status() << messaget::green; break;
       case statust::REFUTED: message.status() << messaget::bright_red; break;

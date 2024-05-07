@@ -80,6 +80,9 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
     if(property.is_failure())
       continue;
 
+    if(property.is_assumed())
+      continue;
+
     message.status() << "Checking " << property.name << messaget::eom;
 
     literalt property_literal=!solver.land(property.timeframe_literals);
@@ -215,9 +218,18 @@ int ebmc_baset::do_bit_level_bmc(cnft &solver, bool convert_only)
       ::unwind_property(
         netlist_property->second, bmc_map, property.timeframe_literals);
 
-      // freeze for incremental usage
-      for(auto l : property.timeframe_literals)
-        solver.set_frozen(l);
+      if(property.is_assumed())
+      {
+        // force these to be true
+        for(auto l : property.timeframe_literals)
+          solver.l_set_to(l, true);
+      }
+      else
+      {
+        // freeze for incremental usage
+        for(auto l : property.timeframe_literals)
+          solver.set_frozen(l);
+      }
     }
 
     if(convert_only)
