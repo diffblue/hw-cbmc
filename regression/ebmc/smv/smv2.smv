@@ -4,7 +4,7 @@ VAR z: boolean;
 VAR y: boolean;
 
 ASSIGN init(z):=_tt;
-ASSIGN init(y):=0;
+ASSIGN init(y):=FALSE;
 ASSIGN next(z):=m;
 ASSIGN next(y):=y;
 

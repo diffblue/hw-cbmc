@@ -2,7 +2,7 @@ MODULE main
 
 VAR x : boolean;
 
-ASSIGN init(x) := 1;
+ASSIGN init(x) := TRUE;
 
-SPEC EG x=0
-LTLSPEC G x=0
+SPEC EG x=FALSE
+LTLSPEC G x=FALSE

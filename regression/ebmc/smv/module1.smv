@@ -9,5 +9,5 @@ MODULE my-module
 
 VAR flag : boolean;
 
-ASSIGN init(flag) := 1;
-ASSIGN next(flag) := 1;
+ASSIGN init(flag) := TRUE;
+ASSIGN next(flag) := TRUE;

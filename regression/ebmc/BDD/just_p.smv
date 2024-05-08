@@ -2,10 +2,10 @@ MODULE main
 
 VAR some_var : boolean;
 
-ASSIGN init(some_var) := 0;
+ASSIGN init(some_var) := FALSE;
 
 -- should fail
-SPEC some_var = 1
+SPEC some_var = TRUE
 
 -- should pass
-SPEC some_var = 0
+SPEC some_var = FALSE

@@ -16,7 +16,7 @@ ASSIGN
       x=3 : 4;
       x=5 : 6;
       x=6 : 2;
-      1: 4;
+      TRUE: 4;
     esac;
 
 SPEC AG x!=4

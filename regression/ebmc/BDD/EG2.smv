@@ -2,10 +2,10 @@ MODULE main
 
 VAR some_var : boolean;
 
-ASSIGN next(some_var) := 0;
+ASSIGN next(some_var) := FALSE;
 
 -- should fail
-SPEC EG some_var = 1
+SPEC EG some_var = TRUE
 
 -- should fail
-SPEC EG some_var = 0
+SPEC EG some_var = FALSE

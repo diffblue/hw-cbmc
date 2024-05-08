@@ -7,9 +7,9 @@ ASSIGN next(some_var) :=
     some_var=red: green;
     some_var=green: yellow;
     some_var=yellow: red;
-    1: off;
+    TRUE: off;
   esac;
 
-INIT !some_var=off
+INIT some_var != off
 
-SPEC AG !some_var=off
+SPEC AG some_var != off

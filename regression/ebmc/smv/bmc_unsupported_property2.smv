@@ -2,8 +2,8 @@ MODULE main
 
 VAR x : boolean;
 
-ASSIGN init(x) := 1;
+ASSIGN init(x) := TRUE;
 ASSIGN next(x) := x;
 
-SPEC EG x=0 -- unsupported
-LTLSPEC G x=1 -- should pass
+SPEC EG x=FALSE -- unsupported
+LTLSPEC G x=TRUE -- should pass

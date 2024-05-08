@@ -6,7 +6,7 @@ VAR x : 0..10;
 ASSIGN init(x) := 1;
 ASSIGN next(x) := case
     x = 10 : 10;
-    1      : x + 1;
+    TRUE   : x + 1;
   esac;
 
 -- should fail, since x=0 is not reachable

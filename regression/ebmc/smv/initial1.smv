@@ -3,10 +3,10 @@ MODULE main
 VAR tmp1: boolean;
 VAR tmp2: boolean;
 
-ASSIGN init(tmp1):=1;
+ASSIGN init(tmp1):=TRUE;
 
 -- should pass
-SPEC tmp1 = 1;
+SPEC tmp1 = TRUE;
 
 -- should fail
-SPEC tmp2 = 1;
+SPEC tmp2 = TRUE;
