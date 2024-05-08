@@ -2,6 +2,6 @@ MODULE main
 
 DEFINE xx:=yy;
 
-DEFINE yy:=1;
+DEFINE yy:=TRUE;
 
 SPEC AG xx

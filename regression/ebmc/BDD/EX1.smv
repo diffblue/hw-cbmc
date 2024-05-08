@@ -2,10 +2,10 @@ MODULE main
 
 VAR some_var : boolean;
 
-INVAR some_var = 0
+INVAR some_var = FALSE
 
 -- should fail
-SPEC EX some_var = 1
+SPEC EX some_var = TRUE
 
 -- should pass
-SPEC EX some_var = 0
+SPEC EX some_var = FALSE

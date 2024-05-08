@@ -8,7 +8,7 @@ ASSIGN
   next(x) :=
     case
       ~(x=5): x+1;
-      1: 0;
+      TRUE: 0;
     esac;
 
 SPEC AG !(x=6)
