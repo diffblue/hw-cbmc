@@ -1946,4 +1946,47 @@ to_verilog_implicit_typecast_expr(exprt &expr)
   return static_cast<verilog_implicit_typecast_exprt &>(expr);
 }
 
+class verilog_past_exprt : public binary_exprt
+{
+public:
+  verilog_past_exprt(exprt __what, exprt __ticks)
+    : binary_exprt(__what, ID_verilog_past, std::move(__ticks), __what.type())
+  {
+  }
+
+  const exprt &what() const
+  {
+    return op0();
+  }
+
+  exprt &what()
+  {
+    return op0();
+  }
+
+  const exprt &ticks() const
+  {
+    return op1();
+  }
+
+  exprt &ticks()
+  {
+    return op1();
+  }
+};
+
+inline const verilog_past_exprt &to_verilog_past_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_past);
+  verilog_past_exprt::check(expr);
+  return static_cast<const verilog_past_exprt &>(expr);
+}
+
+inline verilog_past_exprt &to_verilog_past_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_past);
+  verilog_past_exprt::check(expr);
+  return static_cast<verilog_past_exprt &>(expr);
+}
+
 #endif
