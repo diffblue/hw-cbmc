@@ -2015,16 +2015,16 @@ smv_property_proper:
 	;
 
 assert_property_statement:
-          TOK_ASSERT TOK_PROPERTY '(' property_expr ')' action_block
+          TOK_ASSERT TOK_PROPERTY '(' property_spec ')' action_block
 		{ init($$, ID_verilog_assert_property); mto($$, $4); mto($$, $6); }
 	;
 
 assume_property_statement:
-          TOK_ASSUME TOK_PROPERTY '(' property_expr ')' action_block
+          TOK_ASSUME TOK_PROPERTY '(' property_spec ')' action_block
 		{ init($$, ID_verilog_assume_property); mto($$, $4); mto($$, $6); }
 	;
 
-cover_property_statement: TOK_COVER TOK_PROPERTY '(' expression ')' action_block
+cover_property_statement: TOK_COVER TOK_PROPERTY '(' property_spec ')' action_block
 		{ init($$, ID_verilog_cover_property); mto($$, $4); mto($$, $6); }
 	;
 
@@ -2035,6 +2035,12 @@ assertion_item_declaration:
 property_declaration:
           TOK_PROPERTY property_identifier TOK_ENDPROPERTY
         ;
+
+property_spec:
+	  TOK_DISABLE TOK_IFF '(' expression ')' property_expr
+		{ $$=$6; }
+	| property_expr
+	;
 
 // The 1800-2017 grammar has an ambiguity where
 // '(' expression ')' can either be an expression or a property_expr,
