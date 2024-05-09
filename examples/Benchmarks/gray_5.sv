@@ -13,6 +13,6 @@ module GRAY #(localparam CBITS = 12) (input clk, input rst, output reg [CBITS-1:
         sig = 0;
     end
   end
-  p1: assert property  (@(posedge clk) ((always s_eventually rst == 1) or (always s_eventually sig == 1))) ;
+  p1: assert property  ((always s_eventually rst == 1) or (always s_eventually sig == 1)) ;
   // F G (rst = F) -> G F (sig = T)
 endmodule

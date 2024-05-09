@@ -61,7 +61,7 @@ module VGA #(localparam  size = 3, localparam h_bits = 8, localparam v_bits = 7)
 				disp_ena = 0;
 		end
 	end
-	p1: assert property  (@(posedge clk) ((always s_eventually rst == 1) or (always s_eventually disp_ena == 1)));
+	p1: assert property  ((always s_eventually rst == 1) or (always s_eventually disp_ena == 1));
   	// F G !rst -> G F disp_ena
 endmodule
 

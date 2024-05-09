@@ -13,7 +13,7 @@ module PWM_TOP #(localparam CBITS = 18) (input clk, input [3:0] sw, output reg p
     else
       pulse = 1'b0;
   end
-  p1: assert property  (@(posedge clk) (always s_eventually pulse == 0)) ;
+  p1: assert property  (always s_eventually pulse == 0) ;
   // G F (pulse = F)
   // G F (pulse = F) is instantaneous for EBMC-BDD but G F (pulse = T) isn't
 endmodule

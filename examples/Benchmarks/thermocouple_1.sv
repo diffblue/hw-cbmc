@@ -41,6 +41,6 @@ module Thermocouple #(localparam clk_freq = 10, localparam CBITS = 5) (input clk
 		else
 			state = 1;
 	end
-	p1: assert property  (@(posedge clk) ((always s_eventually rst == 1 ) or (always s_eventually state == 1))) ;
+	p1: assert property  ((always s_eventually rst == 1 ) or (always s_eventually state == 1)) ;
 	//F G (rst = F) -> G F (state[1] = F & state[0] = T)
 endmodule
