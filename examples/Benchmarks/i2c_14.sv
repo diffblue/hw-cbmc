@@ -33,6 +33,6 @@ module i2cStrech #(localparam divider = 6000, localparam CBITS = 15) (input clk,
 			data_clk = 0;
 		end
 	end
-	p1: assert property  ((always s_eventually (rst == 1 or scl_not_ena == 1)) or (always s_eventually stretch == 1)) ;
+	p1: assert property  (@(posedge clk) ((always s_eventually (rst == 1 or scl_not_ena == 1)) or (always s_eventually stretch == 1))) ;
 	//F G (rst = F & scl_not_ena = F) -> G F (stretch = T)
 endmodule
