@@ -307,12 +307,14 @@ tvt neural_livenesst::verify(
     solver_factory,
     message.get_message_handler());
 
-  if(result.is_true())
+  property.witness_trace = std::move(result.second);
+
+  if(result.first.is_true())
     property.proved();
   else
     property.inconclusive();
 
-  return result;
+  return result.first;
 }
 
 int do_neural_liveness(
