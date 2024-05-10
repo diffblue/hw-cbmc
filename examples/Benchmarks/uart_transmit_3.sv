@@ -33,10 +33,6 @@ module UART_T #(localparam d_width = 8, localparam c_width = 4) (input clk, inpu
 		end
 		tx = tx_buffer[0];
 	end
-	p1: assert property  (@(posedge clk) ((always s_eventually rst == 1) or (always s_eventually tx_state == 0)));
+	p1: assert property (@(posedge clk) s_eventually rst == 1 || tx_state == 0);
   	// F G (rst = FALSE) -> G F (tx_state = FALSE)
 endmodule
-
-
-
-
