@@ -114,7 +114,9 @@ int do_ranking_function(
     solver_factory,
     message_handler);
 
-  if(result.is_true())
+  property.witness_trace = std::move(result.second);
+
+  if(result.first.is_true())
   {
     property.proved();
   }
@@ -129,7 +131,7 @@ int do_ranking_function(
   return properties.all_properties_proved() ? 0 : 10;
 }
 
-tvt is_ranking_function(
+std::pair<tvt, std::optional<trans_tracet>> is_ranking_function(
   const transition_systemt &transition_system,
   const exprt &property,
   const exprt &ranking_function,
@@ -188,13 +190,25 @@ tvt is_ranking_function(
     message.result()
       << "SAT: inductive proof failed, ranking function check is inconclusive"
       << messaget::eom;
-    return tvt::unknown();
+
+    {
+      exprt::operandst timeframe_handles{true_exprt(), false_exprt()};
+
+      auto witness_trace = compute_trans_trace(
+        timeframe_handles,
+        solver,
+        2, // number of timeframes
+        ns,
+        transition_system.main_symbol->name);
+
+      return {tvt::unknown(), witness_trace};
+    }
 
   case decision_proceduret::resultt::D_UNSATISFIABLE:
     message.result()
       << "UNSAT: inductive proof successful, function is a ranking function"
       << messaget::eom;
-    return tvt(true);
+    return {tvt(true), std::nullopt};
 
   case decision_proceduret::resultt::D_ERROR:
     throw ebmc_errort() << "Error from decision procedure";

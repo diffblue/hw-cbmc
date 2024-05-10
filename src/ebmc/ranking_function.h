@@ -18,6 +18,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 class exprt;
 class transition_systemt;
+class trans_tracet;
 
 int do_ranking_function(const cmdlinet &, message_handlert &);
 
@@ -26,7 +27,7 @@ exprt parse_ranking_function(
   const transition_systemt &,
   message_handlert &);
 
-tvt is_ranking_function(
+std::pair<tvt, std::optional<trans_tracet>> is_ranking_function(
   const transition_systemt &,
   const exprt &property,
   const exprt &ranking_function,
