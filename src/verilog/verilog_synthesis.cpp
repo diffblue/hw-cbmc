@@ -184,6 +184,14 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
       select_one.set(ID_identifier, identifier);
       return select_one.with_source_location(call);
     }
+    else if(identifier == "$past")
+    {
+      auto what = call.arguments()[0];
+      auto ticks = call.arguments().size() < 2
+                     ? from_integer(1, integer_typet())
+                     : call.arguments()[1];
+      return verilog_past_exprt{what, ticks}.with_source_location(call);
+    }
     else
     {
       // Attempt to constant fold.

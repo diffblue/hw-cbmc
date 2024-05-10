@@ -653,6 +653,29 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
+  else if(identifier == "$past")
+  {
+    if(arguments.size() == 0 || arguments.size() >= 4)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$past takes one to four arguments";
+    }
+
+    if(arguments.size() >= 2)
+    {
+      auto tmp = elaborate_constant_expression(arguments[1]);
+      if(!tmp.is_constant())
+      {
+        throw errort().with_location(arguments[1].source_location())
+          << "expected elaboration-time constant, but got `" << to_string(tmp)
+          << '\'';
+      }
+    }
+
+    expr.type() = arguments.front().type();
+
+    return std::move(expr);
+  }
   else
   {
     throw errort().with_location(expr.function().source_location())

@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <temporal-logic/temporal_expr.h>
 #include <verilog/sva_expr.h>
+#include <verilog/verilog_expr.h>
 
 #include "property.h"
 
@@ -88,6 +89,27 @@ protected:
   [[nodiscard]] exprt instantiate_rec(exprt, const mp_integer &t) const;
   [[nodiscard]] typet instantiate_rec(typet, const mp_integer &t) const;
 };
+
+/*******************************************************************\
+
+Function: default_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static exprt default_value(const typet &type)
+{
+  auto zero = from_integer(0, type);
+  if(zero.is_nil())
+    throw "failed to create $past default value";
+  else
+    return std::move(zero);
+}
 
 /*******************************************************************\
 
@@ -302,6 +324,24 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     tmp.op1() = X_exprt(tmp.op1());
 
     return instantiate_rec(tmp, t);
+  }
+  else if(expr.id() == ID_verilog_past)
+  {
+    auto &verilog_past = to_verilog_past_expr(expr);
+
+    mp_integer ticks;
+    if(to_integer_non_constant(verilog_past.ticks(), ticks))
+      throw "failed to convert $past number of ticks";
+
+    if(ticks > t)
+    {
+      // return the 'default value' for the type
+      return default_value(verilog_past.type());
+    }
+    else
+    {
+      return instantiate_rec(verilog_past.what(), t - ticks);
+    }
   }
   else
   {

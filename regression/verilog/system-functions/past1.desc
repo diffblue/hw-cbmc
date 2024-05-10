@@ -1,0 +1,7 @@
+CORE
+past1.sv
+--bound 10
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

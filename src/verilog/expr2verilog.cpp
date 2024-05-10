@@ -1061,7 +1061,10 @@ std::string expr2verilogt::convert(
     
   else if(src.id()==ID_constraint_select_one)
     return convert_function("$ND", src);
-    
+
+  else if(src.id() == ID_verilog_past)
+    return convert_function("$past", src);
+
   else if(src.id()==ID_onehot)
     return convert_function("$onehot", src);
     
