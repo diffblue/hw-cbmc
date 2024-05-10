@@ -94,10 +94,6 @@ module LCD #(localparam clk_freq = 35, localparam CBITS = 15) (input clk, input 
 			end
 		end
 	end
-	p1: assert property  (@(posedge clk) ((always s_eventually lcd_enable == 0 ) or (always s_eventually state == 2))) ;
+	p1: assert property (@(posedge clk) s_eventually lcd_enable == 0 || state == 2);
 	//F G (lcd_enable = T) -> G F (state[1] = T & state[0] = F)
 endmodule
-
-
-
-

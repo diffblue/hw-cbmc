@@ -22,12 +22,8 @@ module SEVEN #(localparam freq = 12500, localparam CBITS = 14) (input clk, input
 			end
 		end
 	end
-	p1: assert property  (@(posedge clk) ((always s_eventually rst == 1 ) or (always s_eventually digit_select == 1)));
-	p2: assert property  (@(posedge clk) ((always s_eventually rst == 1 ) or (always s_eventually digit_select == 0)));
+	p1: assert property (@(posedge clk) s_eventually rst == 1 || digit_select == 1);
+	p2: assert property (@(posedge clk) s_eventually rst == 1 || digit_select == 0);
 	//F G (rst = FALSE) -> G F (digit_select = TRUE)
 	//F G (rst = FALSE) -> G F (digit_select = FALSE)
 endmodule
-
-
-
-

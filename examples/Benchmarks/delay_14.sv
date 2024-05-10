@@ -7,6 +7,6 @@ module DELAY #(localparam N = 100000, localparam CBITS = 17) (input clk, input r
       cnt = 0; end
     else sig = 0;
   end
-  p1: assert property  (@(posedge clk) ((always s_eventually rst == 1) or (always s_eventually sig == 1))) ;
+  p1: assert property (@(posedge clk) s_eventually rst || sig == 1);
   // F G (rst = F) -> G F (sig = T)
 endmodule
