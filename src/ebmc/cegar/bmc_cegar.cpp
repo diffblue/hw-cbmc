@@ -229,11 +229,15 @@ void bmc_cegart::make_netlist()
 
   try
   {
+    const symbolt &module_symbol = ns.lookup(main_module);
+    const transt &trans = to_trans_expr(module_symbol.value);
+
     std::map<irep_idt, exprt> property_map;
 
     convert_trans_to_netlist(
       symbol_table,
       main_module,
+      trans,
       property_map,
       concrete_netlist,
       get_message_handler());

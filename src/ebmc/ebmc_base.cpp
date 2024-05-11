@@ -152,6 +152,7 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
     convert_trans_to_netlist(
       transition_system.symbol_table,
       transition_system.main_symbol->name,
+      transition_system.trans_expr,
       properties.make_property_map(),
       netlist,
       message.get_message_handler());

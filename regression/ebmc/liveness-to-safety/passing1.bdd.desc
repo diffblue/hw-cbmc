@@ -1,0 +1,7 @@
+CORE
+passing1.sv
+--liveness-to-safety --bdd
+^EXIT=0$
+^SIGNAL=0$
+^\[main\.p0\] always s_eventually main\.my_bit: PROVED$
+--

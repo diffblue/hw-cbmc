@@ -236,6 +236,15 @@ int ebmc_parse_optionst::doit()
       ebmc_baset ebmc_base(cmdline, ui_message_handler);
       ebmc_base.transition_system = std::move(transition_system);
 
+      auto result = ebmc_base.get_properties();
+
+      if(result != -1)
+        return result;
+
+      // possibly apply liveness-to-safety
+      if(cmdline.isset("liveness-to-safety"))
+        liveness_to_safety(ebmc_base.transition_system, ebmc_base.properties);
+
       if(cmdline.isset("show-varmap"))
       {
         netlistt netlist;
@@ -270,15 +279,6 @@ int ebmc_parse_optionst::doit()
         std::cout << "}\n";
         return 0;
       }
-
-      auto result = ebmc_base.get_properties();
-
-      if(result != -1)
-        return result;
-
-      // possibly apply liveness-to-safety
-      if(cmdline.isset("liveness-to-safety"))
-        liveness_to_safety(ebmc_base.transition_system, ebmc_base.properties);
 
       if(cmdline.isset("smv-netlist"))
       {
