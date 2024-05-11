@@ -1,0 +1,7 @@
+CORE
+failing1.sv
+--ic3 --liveness-to-safety
+^EXIT=1$
+^SIGNAL=0$
+^property FAILED$
+--

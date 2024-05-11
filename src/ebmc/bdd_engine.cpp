@@ -11,6 +11,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <util/format_expr.h>
 
 #include <ebmc/ebmc_properties.h>
+#include <ebmc/liveness_to_safety.h>
 #include <ebmc/transition_system.h>
 #include <solvers/bdd/miniBDD/miniBDD.h>
 #include <solvers/sat/satcheck.h>
@@ -177,6 +178,10 @@ int bdd_enginet::operator()()
     properties = ebmc_propertiest::from_command_line(
       cmdline, transition_system, message.get_message_handler());
 
+    // possibly apply liveness-to-safety
+    if(cmdline.isset("liveness-to-safety"))
+      liveness_to_safety(transition_system, properties);
+
     const auto property_map = properties.make_property_map();
 
     message.status() << "Building netlist" << messaget::eom;
@@ -184,6 +189,7 @@ int bdd_enginet::operator()()
     convert_trans_to_netlist(
       transition_system.symbol_table,
       transition_system.main_symbol->name,
+      transition_system.trans_expr,
       property_map,
       netlist,
       message.get_message_handler());
