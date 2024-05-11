@@ -12,9 +12,15 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <util/ui_message.h>
 
 #include <ebmc/ebmc_properties.h>
+#include <ebmc/report_results.h>
 
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_to_netlist.h>
+
+#include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/temporal_logic.h>
+
+#include <verilog/sva_expr.h>
 
 #include <algorithm>
 #include <iostream>
@@ -47,6 +53,26 @@ int do_ic3(const cmdlinet &cmdline,
 {
   return(ic3_enginet(cmdline,ui_message_handler)());
 } /* end of function do_ic3 */
+
+bool ic3_supports_property(const exprt &expr)
+{
+  if(!is_temporal_operator(expr))
+    return false;
+  else if(expr.id() == ID_AG)
+  {
+    return !has_temporal_operator(to_AG_expr(expr).op());
+  }
+  else if(expr.id() == ID_G)
+  {
+    return !has_temporal_operator(to_G_expr(expr).op());
+  }
+  else if(expr.id() == ID_sva_always)
+  {
+    return !has_temporal_operator(to_sva_always_expr(expr).op());
+  }
+  else
+    return false;
+}
 
 /*==================================
 
@@ -86,6 +112,30 @@ int ic3_enginet::operator()()
     {
       message.error() << "no properties" << messaget::eom;
       return 1;
+    }
+
+    std::size_t number_of_properties = 0;
+
+    for(auto &property : properties.properties)
+    {
+      if(property.is_disabled())
+        continue;
+
+      // Is it supported by the IC3 engine?
+      if(!ic3_supports_property(property.normalized_expr))
+      {
+        property.failure("property not supported by IC3 engine");
+        continue;
+      }
+
+      number_of_properties++;
+    }
+
+    if(number_of_properties == 0)
+    {
+      namespacet ns(transition_system.symbol_table);
+      report_results(cmdline, properties, ns, message.get_message_handler());
+      return 10;
     }
   }
   catch(const std::string &error_str)
