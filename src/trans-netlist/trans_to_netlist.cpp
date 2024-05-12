@@ -17,7 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include <solvers/flattening/boolbv_width.h>
-#include <temporal-logic/normalize_property.h>
 #include <temporal-logic/temporal_expr.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
@@ -50,8 +49,10 @@ public:
   {
   }
 
-  void operator()(const irep_idt &module);
-  
+  void operator()(
+    const irep_idt &module,
+    const std::map<irep_idt, exprt> &properties);
+
 protected:
   symbol_table_baset &symbol_table;
   const namespacet ns;
@@ -250,7 +251,9 @@ Function: convert_trans_to_netlistt::operator()
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::operator()(const irep_idt &module)
+void convert_trans_to_netlistt::operator()(
+  const irep_idt &module,
+  const std::map<irep_idt, exprt> &properties)
 {
   // setup
   lhs_map.clear();
@@ -317,72 +320,69 @@ void convert_trans_to_netlistt::operator()(const irep_idt &module)
     aig_prop, dest.var_map, trans.init(), ns, get_message_handler()));
 
   // properties
-  for(const auto &[id, symbol] : symbol_table)
+  for(const auto &[id, property_expr] : properties)
   {
-    if(symbol.module == module && symbol.is_property)
+    auto expr = property_expr; // copy
+
+    // we also convert propositions in assumptions
+    if(expr.id() == ID_sva_assume)
+      expr = to_sva_assume_expr(expr).op();
+
+    auto convert = [&aig_prop, this](const exprt &expr) -> literalt {
+      return instantiate_convert(
+        aig_prop, dest.var_map, expr, ns, get_message_handler());
+    };
+
+    if(expr.id() == ID_AG || expr.id() == ID_G || expr.id() == ID_sva_always)
     {
-      auto expr = normalize_property(symbol.value);
-
-      // we also convert propositions in assumptions
-      if(expr.id() == ID_sva_assume)
-        expr = to_sva_assume_expr(expr).op();
-
-      auto convert = [&aig_prop, this](const exprt &expr) -> literalt {
-        return instantiate_convert(
-          aig_prop, dest.var_map, expr, ns, get_message_handler());
+      auto get_phi = [](const exprt &expr) {
+        if(expr.id() == ID_AG)
+          return to_AG_expr(expr).op();
+        else if(expr.id() == ID_G)
+          return to_G_expr(expr).op();
+        else if(expr.id() == ID_sva_always)
+          return to_sva_always_expr(expr).op();
+        else
+          PRECONDITION(false);
       };
 
-      if(expr.id() == ID_AG || expr.id() == ID_G || expr.id() == ID_sva_always)
+      auto phi = get_phi(expr);
+
+      if(!has_temporal_operator(phi))
       {
-        auto get_phi = [](const exprt &expr) {
-          if(expr.id() == ID_AG)
-            return to_AG_expr(expr).op();
-          else if(expr.id() == ID_G)
-            return to_G_expr(expr).op();
-          else if(expr.id() == ID_sva_always)
-            return to_sva_always_expr(expr).op();
+        // G p
+        dest.properties.emplace(id, netlistt::Gpt{convert(phi)});
+      }
+      else if(
+        phi.id() == ID_AF || phi.id() == ID_F ||
+        phi.id() == ID_sva_s_eventually)
+      {
+        auto get_psi = [](const exprt &expr) {
+          if(expr.id() == ID_AF)
+            return to_AF_expr(expr).op();
+          else if(expr.id() == ID_F)
+            return to_F_expr(expr).op();
+          else if(expr.id() == ID_sva_s_eventually)
+            return to_sva_s_eventually_expr(expr).op();
           else
             PRECONDITION(false);
         };
 
-        auto phi = get_phi(expr);
+        auto psi = get_psi(phi);
 
-        if(!has_temporal_operator(phi))
+        if(!has_temporal_operator(psi))
         {
-          // G p
-          dest.properties.emplace(id, netlistt::Gpt{convert(phi)});
-        }
-        else if(
-          phi.id() == ID_AF || phi.id() == ID_F ||
-          phi.id() == ID_sva_s_eventually)
-        {
-          auto get_psi = [](const exprt &expr) {
-            if(expr.id() == ID_AF)
-              return to_AF_expr(expr).op();
-            else if(expr.id() == ID_F)
-              return to_F_expr(expr).op();
-            else if(expr.id() == ID_sva_s_eventually)
-              return to_sva_s_eventually_expr(expr).op();
-            else
-              PRECONDITION(false);
-          };
-
-          auto psi = get_psi(phi);
-
-          if(!has_temporal_operator(psi))
-          {
-            // G F p
-            dest.properties.emplace(id, netlistt::GFpt{convert(psi)});
-          }
-          else
-          {
-            // unsupported
-          }
+          // G F p
+          dest.properties.emplace(id, netlistt::GFpt{convert(psi)});
         }
         else
         {
           // unsupported
         }
+      }
+      else
+      {
+        // unsupported
       }
     }
   }
@@ -810,10 +810,11 @@ Function: convert_trans_to_netlist
 void convert_trans_to_netlist(
   symbol_table_baset &symbol_table,
   const irep_idt &module,
+  const std::map<irep_idt, exprt> &properties,
   netlistt &dest,
   message_handlert &message_handler)
 {
   convert_trans_to_netlistt c(symbol_table, dest, message_handler);
 
-  c(module);
+  c(module, properties);
 }

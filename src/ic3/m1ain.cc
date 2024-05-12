@@ -92,21 +92,22 @@ int ic3_enginet::operator()()
     auto transition_system =
       get_transition_system(cmdline, message.get_message_handler());
 
+    properties = ebmc_propertiest::from_command_line(
+      cmdline, transition_system, message.get_message_handler());
+
     // make net-list
     message.status() << "Generating Netlist" << messaget::eom;
 
     convert_trans_to_netlist(
       transition_system.symbol_table,
       transition_system.main_symbol->name,
+      properties.make_property_map(),
       netlist,
       message.get_message_handler());
 
     message.statistics() << "Latches: " << netlist.var_map.latches.size()
                          << ", nodes: " << netlist.number_of_nodes()
                          << messaget::eom;
-
-    properties = ebmc_propertiest::from_command_line(
-      cmdline, transition_system, message.get_message_handler());
 
     if(properties.properties.empty())
     {

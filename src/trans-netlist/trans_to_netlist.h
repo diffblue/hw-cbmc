@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 void convert_trans_to_netlist(
   symbol_table_baset &,
   const irep_idt &module,
+  const std::map<irep_idt, exprt> &properties,
   class netlistt &dest,
   message_handlert &);
 

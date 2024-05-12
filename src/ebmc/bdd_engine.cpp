@@ -174,11 +174,17 @@ int bdd_enginet::operator()()
     transition_system =
       get_transition_system(cmdline, message.get_message_handler());
 
+    properties = ebmc_propertiest::from_command_line(
+      cmdline, transition_system, message.get_message_handler());
+
+    const auto property_map = properties.make_property_map();
+
     message.status() << "Building netlist" << messaget::eom;
 
     convert_trans_to_netlist(
       transition_system.symbol_table,
       transition_system.main_symbol->name,
+      property_map,
       netlist,
       message.get_message_handler());
 
@@ -186,11 +192,8 @@ int bdd_enginet::operator()()
                          << ", nodes: " << netlist.number_of_nodes()
                          << messaget::eom;
 
-    properties = ebmc_propertiest::from_command_line(
-      cmdline, transition_system, message.get_message_handler());
-
-    for(const propertyt &p : properties.properties)
-      get_atomic_propositions(p.normalized_expr);
+    for(const auto &[_, expr] : property_map)
+      get_atomic_propositions(expr);
 
     message.status() << "Building BDD for netlist" << messaget::eom;
 
