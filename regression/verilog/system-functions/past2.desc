@@ -1,0 +1,9 @@
+KNOWNBUG
+past2.sv
+--bdd
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The AIG translation is yet to support $past.
