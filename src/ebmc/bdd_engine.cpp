@@ -228,10 +228,7 @@ int bdd_enginet::operator()()
 
     const namespacet ns(transition_system.symbol_table);
     report_results(cmdline, properties, ns, message.get_message_handler());
-
-    // We return '0' if all properties are proven,
-    // and '10' otherwise.
-    return properties.all_properties_proved() ? 0 : 10;
+    return properties.exit_code();
   }
   catch(const char *error_msg)
   {

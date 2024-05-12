@@ -159,10 +159,7 @@ int do_k_induction(
 
   const namespacet ns(transition_system.symbol_table);
   report_results(cmdline, properties, ns, message_handler);
-
-  // We return '0' if all properties are proved,
-  // and '10' otherwise.
-  return properties.all_properties_proved() ? 0 : 10;
+  return properties.exit_code();
 }
 
 /*******************************************************************\

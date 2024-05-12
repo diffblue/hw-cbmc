@@ -135,7 +135,7 @@ int ic3_enginet::operator()()
     {
       namespacet ns(transition_system.symbol_table);
       report_results(cmdline, properties, ns, message.get_message_handler());
-      return 10;
+      return properties.exit_code();
     }
   }
   catch(const std::string &error_str)
