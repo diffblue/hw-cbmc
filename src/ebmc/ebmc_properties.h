@@ -202,6 +202,16 @@ public:
 
   bool select_property(const cmdlinet &, message_handlert &);
 
+  /// a map from property identifier to normalized expression
+  std::map<irep_idt, exprt> make_property_map() const
+  {
+    std::map<irep_idt, exprt> result;
+    for(auto &p : properties)
+      if(!p.is_disabled())
+        result.emplace(p.identifier, p.normalized_expr);
+    return result;
+  }
+
   // command-line tool exit code, depending on property status
   int exit_code() const;
 };

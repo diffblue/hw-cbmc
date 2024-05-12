@@ -230,9 +230,14 @@ void bmc_cegart::make_netlist()
 
   try
   {
+    std::map<irep_idt, exprt> property_map;
+
     convert_trans_to_netlist(
-      symbol_table, main_module,
-      concrete_netlist, get_message_handler());
+      symbol_table,
+      main_module,
+      property_map,
+      concrete_netlist,
+      get_message_handler());
   }
   
   catch(const std::string &error_msg)
