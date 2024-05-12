@@ -389,9 +389,14 @@ std::string netlistt::id2smv(const irep_idt &id)
   
   for(unsigned i=0; i<id.size(); i++)
   {
+    const bool first = i == 0;
     char ch=id[i];
-    if(isalnum(ch) || ch=='_' || ch=='.' || ch=='#')
+    if(
+      isalnum(ch) || ch == '_' || (ch == '.' && !first) ||
+      (ch == '#' && !first) || (ch == '-' && !first))
+    {
       result+=ch;
+    }
     else if(ch==':')
     {
       result+='.';
