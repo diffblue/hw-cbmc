@@ -127,8 +127,7 @@ int do_ranking_function(
 
   const namespacet ns(transition_system.symbol_table);
   report_results(cmdline, properties, ns, message_handler);
-
-  return properties.all_properties_proved() ? 0 : 10;
+  return properties.exit_code();
 }
 
 std::pair<tvt, std::optional<trans_tracet>> is_ranking_function(

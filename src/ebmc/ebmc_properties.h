@@ -201,6 +201,9 @@ public:
   from_transition_system(const transition_systemt &, message_handlert &);
 
   bool select_property(const cmdlinet &, message_handlert &);
+
+  // command-line tool exit code, depending on property status
+  int exit_code() const;
 };
 
 #endif // CPROVER_EBMC_PROPERTIES_H

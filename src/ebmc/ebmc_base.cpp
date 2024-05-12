@@ -130,9 +130,7 @@ int ebmc_baset::finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver)
     << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
     << messaget::eom;
 
-  // We return '0' if all properties are proved,
-  // and '10' otherwise.
-  return properties.all_properties_proved() ? 0 : 10;
+  return properties.exit_code();
 }
 
 /*******************************************************************\
@@ -541,10 +539,7 @@ int ebmc_baset::do_word_level_bmc()
       {
         const namespacet ns(transition_system.symbol_table);
         report_results(cmdline, properties, ns, message.get_message_handler());
-
-        // We return '0' if all properties are proved,
-        // and '10' otherwise.
-        result = properties.all_properties_proved() ? 0 : 10;
+        result = properties.exit_code();
       }
     }
   }
