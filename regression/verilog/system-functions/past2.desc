@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 past2.sv
 --bdd
-^EXIT=0$
+^file .* line \d+: error: no support for \$past when using AIG backends$
+^EXIT=6$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The AIG translation is yet to support $past.
