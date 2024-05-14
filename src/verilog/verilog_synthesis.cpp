@@ -3023,11 +3023,15 @@ exprt verilog_synthesist::current_value(
 
     if(
       construct == constructt::ALWAYS || construct == constructt::ALWAYS_FF ||
-      construct == constructt::ALWAYS_LATCH)
+      construct == constructt::ALWAYS_LATCH ||
+      construct == constructt::ALWAYS_COMB)
+    {
       return symbol_expr(symbol, CURRENT);
+    }
     else
     {
-      // make it some non-deterministic value
+      // Initial state computation, i.e., this is a value _before_ the
+      // initial state  -- make it non-deterministic
       exprt result=exprt(ID_nondet_symbol, symbol.type);
       result.set(ID_identifier, symbol.name);
       result.set("initial_value", true);
