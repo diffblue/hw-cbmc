@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+disjunction1.smv
+--bound 20 --numbered-trace
+^\[spec1\] G \(X FALSE \| X X FALSE\): REFUTED$
+^Counterexample with 3 states:$
+^i@0 = 0$
+^i@1 = 1$
+^i@2 = 2$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

@@ -1,0 +1,12 @@
+MODULE main
+
+VAR i: 0..20;
+
+ASSIGN init(i) := 0;
+       next(i) := case
+         i >= 10 : 10;
+         TRUE   : i + 1;
+       esac;
+
+-- we need to see a trace with three states
+LTLSPEC G ((X FALSE) | (X X FALSE))
