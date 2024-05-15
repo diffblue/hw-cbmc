@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/std_expr.h>
 
+class sva_ranged_predicate_exprt;
+
 class expr2verilogt
 {
 public:
@@ -82,15 +84,11 @@ public:
     const std::string &name,
     const exprt &src);
 
-  std::string convert_sva(
+  std::string convert_sva_ranged_predicate(
     const std::string &name,
-    const std::optional<exprt> &range,
-    const exprt &op);
+    const sva_ranged_predicate_exprt &);
 
-  std::string convert_sva(const std::string &name, const exprt &op)
-  {
-    return convert_sva(name, {}, op);
-  }
+  std::string convert_sva_unary(const std::string &name, const unary_exprt &);
 
   std::string
   convert_sva(const exprt &lhs, const std::string &name, const exprt &rhs);

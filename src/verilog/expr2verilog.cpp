@@ -384,29 +384,48 @@ Function: expr2verilogt::convert_sva
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva(
+std::string expr2verilogt::convert_sva_ranged_predicate(
   const std::string &name,
-  const std::optional<exprt> &range,
-  const exprt &op)
+  const sva_ranged_predicate_exprt &src)
 {
   std::string range_str;
 
-  if(range.has_value())
-  {
-    auto &range_binary = to_binary_expr(range.value());
-    range_str = "[" + convert(range_binary.lhs()) + ':';
-    if(range_binary.rhs().id() == ID_infinity)
-      range_str += "$";
-    else
-      range_str += convert(range_binary.rhs());
-    range_str += "] ";
-  }
+  range_str = "[" + convert(src.lower()) + ':';
+  if(src.upper().id() == ID_infinity)
+    range_str += "$";
+  else
+    range_str += convert(src.upper());
+  range_str += "] ";
 
   unsigned p;
+  auto &op = src.op();
   auto s = convert(op, p);
   if(p == 0 && op.operands().size() >= 2)
     s = "(" + s + ")";
   return name + " " + range_str + s;
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_sva_unary
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_sva_unary(
+  const std::string &name,
+  const unary_exprt &src)
+{
+  unsigned p;
+  auto s = convert(src.op(), p);
+  if(p == 0 && src.op().operands().size() >= 2)
+    s = "(" + s + ")";
+  return name + " " + s;
 }
 
 /*******************************************************************\
@@ -1093,47 +1112,43 @@ std::string expr2verilogt::convert(
     // not sure about precedence
     
   else if(src.id()==ID_sva_always)
-    return precedence = 0, convert_sva("always", to_sva_always_expr(src).op());
+    return precedence = 0, convert_sva_unary("always", to_sva_always_expr(src));
 
   else if(src.id() == ID_sva_ranged_always)
   {
-    return precedence = 0, convert_sva(
-                             "always",
-                             to_sva_ranged_always_expr(src).range(),
-                             to_sva_ranged_always_expr(src).op());
+    return precedence = 0, convert_sva_ranged_predicate(
+                             "always", to_sva_ranged_always_expr(src));
   }
 
   else if(src.id() == ID_sva_s_always)
   {
-    return precedence = 0, convert_sva(
-                             "s_always",
-                             to_sva_s_always_expr(src).range(),
-                             to_sva_s_always_expr(src).op());
+    return precedence = 0,
+           convert_sva_ranged_predicate("s_always", to_sva_s_always_expr(src));
   }
 
   else if(src.id() == ID_sva_cover)
-    return precedence = 0, convert_sva("cover", to_sva_cover_expr(src).op());
+    return precedence = 0, convert_sva_unary("cover", to_sva_cover_expr(src));
 
   else if(src.id() == ID_sva_assume)
-    return precedence = 0, convert_sva("assume", to_sva_assume_expr(src).op());
+    return precedence = 0, convert_sva_unary("assume", to_sva_assume_expr(src));
 
   else if(src.id()==ID_sva_nexttime)
     return precedence = 0,
-           convert_sva("nexttime", to_sva_nexttime_expr(src).op());
+           convert_sva_unary("nexttime", to_sva_nexttime_expr(src));
 
   else if(src.id()==ID_sva_s_nexttime)
     return precedence = 0,
-           convert_sva("s_nexttime", to_sva_s_nexttime_expr(src).op());
+           convert_sva_unary("s_nexttime", to_sva_s_nexttime_expr(src));
 
   else if(src.id()==ID_sva_eventually)
-    return precedence = 0, convert_sva(
-                             "eventually",
-                             to_sva_eventually_expr(src).range(),
-                             to_sva_eventually_expr(src).op());
+  {
+    return precedence = 0, convert_sva_ranged_predicate(
+                             "eventually", to_sva_eventually_expr(src));
+  }
 
   else if(src.id()==ID_sva_s_eventually)
     return precedence = 0,
-           convert_sva("s_eventually", to_sva_s_eventually_expr(src).op());
+           convert_sva_unary("s_eventually", to_sva_s_eventually_expr(src));
 
   else if(src.id()==ID_sva_until)
     return precedence = 0, convert_sva(

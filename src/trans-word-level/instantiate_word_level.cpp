@@ -225,15 +225,14 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   else if(expr.id() == ID_sva_eventually)
   {
     const auto &eventually_expr = to_sva_eventually_expr(expr);
-    const auto &range = eventually_expr.range();
     const auto &op = eventually_expr.op();
 
     mp_integer lower;
-    if(to_integer_non_constant(range.op0(), lower))
+    if(to_integer_non_constant(eventually_expr.lower(), lower))
       throw "failed to convert sva_eventually index";
 
     mp_integer upper;
-    if(to_integer_non_constant(range.op1(), upper))
+    if(to_integer_non_constant(eventually_expr.upper(), upper))
       throw "failed to convert sva_eventually index";
 
     // This is weak, and passes if any of the timeframes
