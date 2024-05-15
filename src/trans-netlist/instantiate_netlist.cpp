@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/std_expr.h>
 
+#include <ebmc/ebmc_error.h>
 #include <solvers/flattening/boolbv.h>
 #include <verilog/sva_expr.h>
 
@@ -201,6 +202,11 @@ literalt instantiate_var_mapt::convert_bool(const exprt &expr)
       convert_bool(sva_overlapped_implication.lhs()),
       convert_bool(sva_overlapped_implication.rhs()));
   }
+  else if(expr.id() == ID_verilog_past)
+  {
+    throw ebmc_errort().with_location(expr.source_location())
+      << "no support for $past when using AIG backends";
+  }
 
   return SUB::convert_bool(expr);
 }
@@ -237,6 +243,11 @@ bvt instantiate_var_mapt::convert_bitvector(const exprt &expr)
 
       return bv;
     }
+  }
+  else if(expr.id() == ID_verilog_past)
+  {
+    throw ebmc_errort().with_location(expr.source_location())
+      << "no support for $past when using AIG backends";
   }
 
   return SUB::convert_bitvector(expr);
