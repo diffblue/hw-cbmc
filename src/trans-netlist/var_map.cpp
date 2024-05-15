@@ -6,12 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
-#include <iostream>
-
-#include <solvers/flattening/boolbv_width.h>
-
 #include "var_map.h"
+
+#include <ebmc/ebmc_error.h>
+#include <solvers/flattening/boolbv_width.h>
 
 /*******************************************************************\
 
@@ -112,20 +110,19 @@ const var_mapt::vart::bitt &var_mapt::get_bit(
 
   if(it==map.end())
   {
-    std::cerr << "failed to find identifier " 
-              << id << "[" << bit_nr << "]" << std::endl;
-    assert(false);
+    throw ebmc_errort() << "failed to find identifier " << id << '[' << bit_nr
+                        << "] in var_map";
   }
 
-  assert(it->second.bits.size()!=0);
+  if(it->second.bits.size() == 0)
+    throw ebmc_errort() << "var_map entry with size zero";
 
   if(bit_nr>=it->second.bits.size())
   {
-    std::cerr << "index out of range for " 
-              << id << "[" << bit_nr << "]" << std::endl;
-    std::cerr << "available range: 0.."
-              << it->second.bits.size()-1 << std::endl;
-    assert(false);
+    throw ebmc_errort() << "index out of range for " << id << "[" << bit_nr
+                        << "]\n"
+                           "available range: 0.."
+                        << it->second.bits.size() - 1;
   }
 
   return it->second.bits[bit_nr];
@@ -150,9 +147,7 @@ var_mapt::vart::vartypet var_mapt::get_type(
 
   if(it==map.end())
   {
-    std::cerr << "failed to find identifier " 
-              << id << std::endl;
-    assert(false);
+    throw ebmc_errort() << "failed to find identifier " << id << " in var_map";
   }
 
   return it->second.vartype;
@@ -176,9 +171,7 @@ const bv_varidt &var_mapt::reverse(unsigned v) const
 
   if(it==reverse_map.end())
   {
-    std::cerr << "failed to find variable " 
-              << v << std::endl;
-    assert(false);
+    throw ebmc_errort() << "failed to find variable " << v << " in var_map";
   }
 
   return it->second;
