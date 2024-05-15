@@ -1989,4 +1989,68 @@ inline verilog_past_exprt &to_verilog_past_expr(exprt &expr)
   return static_cast<verilog_past_exprt &>(expr);
 }
 
+class verilog_non_indexed_part_select_exprt : public ternary_exprt
+{
+public:
+  verilog_non_indexed_part_select_exprt(
+    exprt src,
+    exprt msb,
+    exprt lsb,
+    typet type)
+    : ternary_exprt(
+        ID_verilog_non_indexed_part_select,
+        std::move(src),
+        std::move(msb),
+        std::move(lsb),
+        std::move(type))
+  {
+  }
+
+  const exprt &src() const
+  {
+    return op0();
+  }
+
+  exprt &src()
+  {
+    return op0();
+  }
+
+  const exprt &msb() const
+  {
+    return op1();
+  }
+
+  exprt &msb()
+  {
+    return op1();
+  }
+
+  const exprt &lsb() const
+  {
+    return op2();
+  }
+
+  exprt &lsb()
+  {
+    return op2();
+  }
+};
+
+inline const verilog_non_indexed_part_select_exprt &
+to_verilog_non_indexed_part_select_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_non_indexed_part_select);
+  verilog_non_indexed_part_select_exprt::check(expr);
+  return static_cast<const verilog_non_indexed_part_select_exprt &>(expr);
+}
+
+inline verilog_non_indexed_part_select_exprt &
+to_verilog_non_indexed_part_select_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_non_indexed_part_select);
+  verilog_non_indexed_part_select_exprt::check(expr);
+  return static_cast<verilog_non_indexed_part_select_exprt &>(expr);
+}
+
 #endif

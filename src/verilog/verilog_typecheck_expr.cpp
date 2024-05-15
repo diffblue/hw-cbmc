@@ -2350,70 +2350,71 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
 {
   if(expr.id() == ID_verilog_non_indexed_part_select)
   {
-    exprt &op0 = expr.op0();
-    convert_expr(op0);
+    auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
+    exprt &src = part_select.src();
+    convert_expr(src);
 
-    if(op0.type().id()==ID_array)
+    if(src.type().id() == ID_array)
     {
-      throw errort().with_location(op0.source_location())
+      throw errort().with_location(src.source_location())
         << "array type not allowed in part select";
     }
 
-    if(op0.type().id() == ID_verilog_real)
+    if(src.type().id() == ID_verilog_real)
     {
-      throw errort().with_location(op0.source_location())
+      throw errort().with_location(src.source_location())
         << "real not allowed in part select";
     }
 
-    mp_integer op0_width = get_width(op0.type());
-    mp_integer op0_offset = string2integer(op0.type().get_string(ID_C_offset));
+    mp_integer src_width = get_width(src.type());
+    mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
 
     // In non-indexed part-select expressions, both
     // indices must be constants (1800-2017 11.5.1).
-    mp_integer op1 = convert_integer_constant_expression(expr.op1());
-    mp_integer op2 = convert_integer_constant_expression(expr.op2());
+    mp_integer msb = convert_integer_constant_expression(part_select.msb());
+    mp_integer lsb = convert_integer_constant_expression(part_select.lsb());
 
-    if(op1<op2)
-      std::swap(op1, op2); // now op1>=op2
+    if(msb < lsb)
+      std::swap(msb, lsb); // now msb>=lsb
 
     // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
     // x for 4-state and 0 for 2-state values. We
     // achieve that by padding the operand from either end,
     // or both.
-    if(op2 < op0_offset)
+    if(lsb < src_offset)
     {
-      auto padding_width = op0_offset - op2;
+      auto padding_width = src_offset - lsb;
       auto padding = from_integer(
         0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
       auto new_type = unsignedbv_typet{
-        numeric_cast_v<std::size_t>(get_width(op0.type()) + padding_width)};
-      expr.op0() = concatenation_exprt(expr.op0(), padding, new_type);
-      op2 += padding_width;
-      op1 += padding_width;
+        numeric_cast_v<std::size_t>(get_width(src.type()) + padding_width)};
+      src = concatenation_exprt(src, padding, new_type);
+      lsb += padding_width;
+      msb += padding_width;
     }
 
-    if(op1 >= op0_width + op0_offset)
+    if(msb >= src_width + src_offset)
     {
-      auto padding_width = op1 - (op0_width + op0_offset) + 1;
+      auto padding_width = msb - (src_width + src_offset) + 1;
       auto padding = from_integer(
         0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
       auto new_type = unsignedbv_typet{
-        numeric_cast_v<std::size_t>(get_width(op0.type()) + padding_width)};
-      expr.op0() = concatenation_exprt(padding, expr.op0(), new_type);
+        numeric_cast_v<std::size_t>(get_width(src.type()) + padding_width)};
+      src = concatenation_exprt(padding, src, new_type);
     }
 
     // Part-select expressions are unsigned, even if the
     // entire expression is selected!
     auto expr_type =
-      unsignedbv_typet{numeric_cast_v<std::size_t>(op1 - op2 + 1)};
+      unsignedbv_typet{numeric_cast_v<std::size_t>(msb - lsb + 1)};
 
-    op2 -= op0_offset;
-    op1 -= op0_offset;
+    lsb -= src_offset;
+    msb -= src_offset;
 
     // Construct the extractbits expression
     expr.id(ID_extractbits);
-    expr.op1() = from_integer(op1, integer_typet());
-    expr.op2() = from_integer(op2, integer_typet());
+    expr.op1() = from_integer(msb, integer_typet());
+    expr.op2() = from_integer(lsb, integer_typet());
     expr.type() = expr_type;
 
     return std::move(expr);
