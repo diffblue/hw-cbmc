@@ -58,54 +58,70 @@ static inline sva_s_nexttime_exprt &to_sva_s_nexttime_expr(exprt &expr)
   return static_cast<sva_s_nexttime_exprt &>(expr);
 }
 
-class sva_eventually_exprt : public binary_predicate_exprt
+class sva_ranged_predicate_exprt : public ternary_exprt
 {
 public:
-  explicit sva_eventually_exprt(exprt __range, exprt __op)
-    : binary_predicate_exprt(
-        std::move(__range),
-        ID_sva_eventually,
-        std::move(__op))
+  sva_ranged_predicate_exprt(
+    irep_idt __id,
+    exprt __lower,
+    exprt __upper,
+    exprt __op)
+    : ternary_exprt(
+        __id,
+        std::move(__lower),
+        std::move(__upper),
+        std::move(__op),
+        bool_typet())
   {
   }
 
-  // These come with a range, which is binary
-  const binary_exprt &range() const
+  const exprt &lower() const
   {
-    return static_cast<const binary_exprt &>(op0());
+    return op0();
   }
 
-  binary_exprt &range()
+  exprt &lower()
   {
-    return static_cast<binary_exprt &>(op0());
+    return op0();
+  }
+
+  const exprt &upper() const
+  {
+    return op1();
+  }
+
+  exprt &upper()
+  {
+    return op1();
   }
 
   const exprt &op() const
   {
-    return op1();
+    return op2();
   }
 
   exprt &op()
   {
-    return op1();
-  }
-
-  const exprt &lhs() const = delete;
-  exprt &lhs() = delete;
-  const exprt &rhs() const = delete;
-  exprt &rhs() = delete;
-
-  static void check(
-    const exprt &expr,
-    const validation_modet vm = validation_modet::INVARIANT)
-  {
-    binary_exprt::check(expr, vm);
-    binary_exprt::check(to_binary_expr(expr).op0(), vm);
+    return op2();
   }
 
 protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
+  using ternary_exprt::op0;
+  using ternary_exprt::op1;
+  using ternary_exprt::op2;
+};
+
+class sva_eventually_exprt : public sva_ranged_predicate_exprt
+{
+public:
+  sva_eventually_exprt(exprt __lower, exprt __upper, exprt __op)
+    : sva_ranged_predicate_exprt(
+        ID_sva_eventually,
+        std::move(__lower),
+        std::move(__upper),
+        std::move(__op))
+  {
+  }
 };
 
 static inline const sva_eventually_exprt &
@@ -170,51 +186,17 @@ static inline sva_always_exprt &to_sva_always_expr(exprt &expr)
   return static_cast<sva_always_exprt &>(expr);
 }
 
-class sva_ranged_always_exprt : public binary_predicate_exprt
+class sva_ranged_always_exprt : public sva_ranged_predicate_exprt
 {
 public:
-  sva_ranged_always_exprt(binary_exprt range, exprt op)
-    : binary_predicate_exprt(std::move(range), ID_sva_always, std::move(op))
+  sva_ranged_always_exprt(exprt lower, exprt upper, exprt op)
+    : sva_ranged_predicate_exprt(
+        ID_sva_always,
+        std::move(lower),
+        std::move(upper),
+        std::move(op))
   {
   }
-
-  // These come with a range, which is binary
-  const binary_exprt &range() const
-  {
-    return static_cast<const binary_exprt &>(op0());
-  }
-
-  binary_exprt &range()
-  {
-    return static_cast<binary_exprt &>(op0());
-  }
-
-  const exprt &op() const
-  {
-    return op1();
-  }
-
-  exprt &op()
-  {
-    return op1();
-  }
-
-  const exprt &lhs() const = delete;
-  exprt &lhs() = delete;
-  const exprt &rhs() const = delete;
-  exprt &rhs() = delete;
-
-  static void check(
-    const exprt &expr,
-    const validation_modet vm = validation_modet::INVARIANT)
-  {
-    binary_exprt::check(expr, vm);
-    binary_exprt::check(to_binary_expr(expr).op0(), vm);
-  }
-
-protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
 };
 
 static inline const sva_ranged_always_exprt &
@@ -232,51 +214,17 @@ static inline sva_ranged_always_exprt &to_sva_ranged_always_expr(exprt &expr)
   return static_cast<sva_ranged_always_exprt &>(expr);
 }
 
-class sva_s_always_exprt : public binary_predicate_exprt
+class sva_s_always_exprt : public sva_ranged_predicate_exprt
 {
 public:
-  sva_s_always_exprt(binary_exprt range, exprt op)
-    : binary_predicate_exprt(std::move(range), ID_sva_s_always, std::move(op))
+  sva_s_always_exprt(exprt lower, exprt upper, exprt op)
+    : sva_ranged_predicate_exprt(
+        ID_sva_s_always,
+        std::move(lower),
+        std::move(upper),
+        std::move(op))
   {
   }
-
-  // These come with a range, which is binary
-  const binary_exprt &range() const
-  {
-    return static_cast<const binary_exprt &>(op0());
-  }
-
-  binary_exprt &range()
-  {
-    return static_cast<binary_exprt &>(op0());
-  }
-
-  const exprt &op() const
-  {
-    return op1();
-  }
-
-  exprt &op()
-  {
-    return op1();
-  }
-
-  const exprt &lhs() const = delete;
-  exprt &lhs() = delete;
-  const exprt &rhs() const = delete;
-  exprt &rhs() = delete;
-
-  static void check(
-    const exprt &expr,
-    const validation_modet vm = validation_modet::INVARIANT)
-  {
-    binary_exprt::check(expr, vm);
-    binary_exprt::check(to_binary_expr(expr).op0(), vm);
-  }
-
-protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
 };
 
 static inline const sva_s_always_exprt &to_sva_s_always_expr(const exprt &expr)

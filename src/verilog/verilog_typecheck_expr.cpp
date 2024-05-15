@@ -2231,39 +2231,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(
-    expr.id() == ID_sva_eventually || expr.id() == ID_sva_ranged_always ||
-    expr.id() == ID_sva_s_always)
-  {
-    auto &range = to_binary_expr(expr.op0());
-
-    auto lower = convert_integer_constant_expression(range.op0());
-
-    range.op0() =
-      from_integer(lower, natural_typet()).with_source_location(range.op0());
-
-    if(range.op1().id() == ID_infinity)
-    {
-    }
-    else
-    {
-      auto upper = convert_integer_constant_expression(range.op1());
-      if(lower > upper)
-      {
-        throw errort().with_location(expr.source_location())
-          << "range must be lower <= upper";
-      }
-
-      range.op1() =
-        from_integer(upper, natural_typet()).with_source_location(range.op1());
-    }
-
-    convert_expr(expr.op1());
-    make_boolean(expr.op1());
-    expr.type() = bool_typet();
-
-    return std::move(expr);
-  }
   else if(expr.id()==ID_hierarchical_identifier)
   {
     return convert_hierarchical_identifier(
@@ -2519,6 +2486,37 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     if(expr.op1().is_not_nil()) convert_expr(expr.op1());
     convert_expr(expr.op2());
     make_boolean(expr.op2());
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_sva_eventually || expr.id() == ID_sva_ranged_always ||
+    expr.id() == ID_sva_s_always)
+  {
+    auto lower = convert_integer_constant_expression(expr.op0());
+
+    expr.op0() =
+      from_integer(lower, natural_typet()).with_source_location(expr.op0());
+
+    if(expr.op1().id() == ID_infinity)
+    {
+    }
+    else
+    {
+      auto upper = convert_integer_constant_expression(expr.op1());
+      if(lower > upper)
+      {
+        throw errort().with_location(expr.source_location())
+          << "range must be lower <= upper";
+      }
+
+      expr.op1() =
+        from_integer(upper, natural_typet()).with_source_location(expr.op1());
+    }
+
+    convert_expr(expr.op2());
+    make_boolean(expr.op2());
+    expr.type() = bool_typet();
+
     return std::move(expr);
   }
   else

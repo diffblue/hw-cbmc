@@ -2062,16 +2062,16 @@ property_expr_proper:
         | "nexttime" property_expr          { init($$, "sva_nexttime"); mto($$, $2); }
         | "s_nexttime" property_expr        { init($$, "sva_s_nexttime"); mto($$, $2); }
         | "always" '[' cycle_delay_const_range_expression ']' property_expr %prec "always"
-		{ init($$, ID_sva_ranged_always); mto($$, $3); mto($$, $5); }
+		{ init($$, ID_sva_ranged_always); swapop($$, $3); mto($$, $5); }
         | "always" property_expr            { init($$, "sva_always"); mto($$, $2); }
         | "s_always" '[' constant_range ']' property_expr %prec "s_always"
-		{ init($$, ID_sva_s_always); mto($$, $3); mto($$, $5); }
+		{ init($$, ID_sva_s_always); swapop($$, $3); mto($$, $5); }
         | "s_eventually" property_expr
-		{ init($$, "sva_s_eventually"); mto($$, $2); }
+		{ init($$, ID_sva_s_eventually); mto($$, $2); }
         | "eventually" '[' constant_range ']' property_expr %prec "eventually"
-		{ init($$, "sva_eventually"); mto($$, $3); mto($$, $5); }
+		{ init($$, ID_sva_eventually); swapop($$, $3); mto($$, $5); }
         | "s_eventually" '[' cycle_delay_const_range_expression ']' property_expr %prec "s_eventually"
-		{ init($$, "sva_s_eventually"); mto($$, $5); }
+		{ init($$, ID_sva_s_eventually); swapop($$, $3); mto($$, $5); }
         | property_expr "until" property_expr        { init($$, "sva_until"); mto($$, $1); mto($$, $3); }
         | property_expr "until_with" property_expr   { init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
         | property_expr "s_until" property_expr      { init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
