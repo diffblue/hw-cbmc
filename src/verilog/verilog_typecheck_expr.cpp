@@ -2344,44 +2344,17 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     if(msb < lsb)
       std::swap(msb, lsb); // now msb>=lsb
 
-    // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
-    // x for 4-state and 0 for 2-state values. We
-    // achieve that by padding the operand from either end,
-    // or both.
-    if(lsb < src_offset)
-    {
-      auto padding_width = src_offset - lsb;
-      auto padding = from_integer(
-        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
-      auto new_type = unsignedbv_typet{
-        numeric_cast_v<std::size_t>(get_width(src.type()) + padding_width)};
-      src = concatenation_exprt(src, padding, new_type);
-      lsb += padding_width;
-      msb += padding_width;
-    }
-
-    if(msb >= src_width + src_offset)
-    {
-      auto padding_width = msb - (src_width + src_offset) + 1;
-      auto padding = from_integer(
-        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
-      auto new_type = unsignedbv_typet{
-        numeric_cast_v<std::size_t>(get_width(src.type()) + padding_width)};
-      src = concatenation_exprt(padding, src, new_type);
-    }
+    // store these back onto the expression
+    expr.op1() = from_integer(msb, integer_typet())
+                   .with_source_location(expr.op1().source_location());
+    expr.op2() = from_integer(lsb, integer_typet())
+                   .with_source_location(expr.op2().source_location());
 
     // Part-select expressions are unsigned, even if the
-    // entire expression is selected!
+    // op0 is signed and the entire expression is selected!
     auto expr_type =
       unsignedbv_typet{numeric_cast_v<std::size_t>(msb - lsb + 1)};
 
-    lsb -= src_offset;
-    msb -= src_offset;
-
-    // Construct the extractbits expression
-    expr.id(ID_extractbits);
-    expr.op1() = from_integer(msb, integer_typet());
-    expr.op2() = from_integer(lsb, integer_typet());
     expr.type() = expr_type;
 
     return std::move(expr);
@@ -2424,50 +2397,13 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
         << "width of indexed part select must be positive";
     }
 
+    part_select.width() = from_integer(width, integer_typet());
+
     // Part-select expressions are unsigned, even if the
     // entire expression is selected!
-    auto expr_type = unsignedbv_typet{numeric_cast_v<std::size_t>(width)};
+    expr.type() = unsignedbv_typet{numeric_cast_v<std::size_t>(width)};
 
-    mp_integer index_int;
-    if(is_constant_expression(index, index_int))
-    {
-      // Construct the extractbits expression
-      mp_integer bottom, top;
-
-      if(part_select.id() == ID_verilog_indexed_part_select_plus)
-      {
-        bottom = index_int - src_offset;
-        top = bottom + width;
-      }
-      else // ID_verilog_indexed_part_select_minus
-      {
-        top = index_int - src_offset;
-        bottom = bottom - width;
-      }
-
-      return extractbits_exprt{
-        std::move(src),
-        from_integer(top, integer_typet{}),
-        from_integer(bottom, integer_typet{}),
-        std::move(expr_type)}
-        .with_source_location(expr);
-    }
-    else
-    {
-      // Index not constant.
-      // Use logical right-shift followed by (constant) extractbits.
-      auto index_adjusted =
-        minus_exprt{index, from_integer(src_offset, index.type())};
-
-      auto src_shifted = lshr_exprt(src, index_adjusted);
-
-      return extractbits_exprt{
-        std::move(src_shifted),
-        from_integer(width - 1, integer_typet{}),
-        from_integer(0, integer_typet{}),
-        std::move(expr_type)}
-        .with_source_location(expr);
-    }
+    return std::move(expr);
   }
   else if(expr.id()==ID_if)
   {

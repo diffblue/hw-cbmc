@@ -96,6 +96,120 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
     return expr;
   }
+  else if(expr.id() == ID_verilog_non_indexed_part_select)
+  {
+    auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
+    auto &src = part_select.src();
+
+    src = synth_expr(src, symbol_state);
+
+    auto op1 = numeric_cast_v<mp_integer>(to_constant_expr(part_select.msb()));
+    auto op2 = numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
+
+    mp_integer src_width = get_width(src.type());
+    mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
+
+    // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
+    // x for 4-state and 0 for 2-state values. We
+    // achieve that by padding the operand from either end,
+    // or both.
+    exprt src_padded = src;
+
+    if(op2 < src_offset)
+    {
+      // lsb too small, pad below
+      auto padding_width = src_offset - op2;
+      auto padding = from_integer(
+        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
+      auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
+        get_width(src_padded.type()) + padding_width)};
+      src_padded = concatenation_exprt(src_padded, padding, new_type);
+      op2 += padding_width;
+      op1 += padding_width;
+    }
+
+    if(op1 >= src_width + src_offset)
+    {
+      // msb too large, pad above
+      auto padding_width = op1 - (src_width + src_offset) + 1;
+      auto padding = from_integer(
+        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
+      auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
+        get_width(src_padded.type()) + padding_width)};
+      src_padded = concatenation_exprt(padding, src_padded, new_type);
+    }
+
+    op2 -= src_offset;
+    op1 -= src_offset;
+
+    // Construct the extractbits expression
+    return extractbits_exprt{
+      src_padded,
+      from_integer(op1, integer_typet()),
+      from_integer(op2, integer_typet()),
+      expr.type()}
+      .with_source_location(expr.source_location());
+  }
+  else if(
+    expr.id() == ID_verilog_indexed_part_select_plus ||
+    expr.id() == ID_verilog_indexed_part_select_minus)
+  {
+    auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
+    exprt &src = part_select.src();
+
+    mp_integer src_width = get_width(src.type());
+    mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
+
+    // The width of the indexed part select must be an
+    // elaboration-time constant.
+    auto width =
+      numeric_cast_v<mp_integer>(to_constant_expr(part_select.width()));
+
+    // The index need not be a constant.
+    exprt &index = part_select.index();
+
+    if(index.is_constant())
+    {
+      auto index_int = numeric_cast_v<mp_integer>(to_constant_expr(index));
+
+      // Construct the extractbits expression
+      mp_integer bottom, top;
+
+      if(part_select.id() == ID_verilog_indexed_part_select_plus)
+      {
+        bottom = index_int - src_offset;
+        top = bottom + width;
+      }
+      else // ID_verilog_indexed_part_select_minus
+      {
+        top = index_int - src_offset;
+        bottom = bottom - width;
+      }
+
+      return extractbits_exprt{
+        std::move(src),
+        from_integer(top, integer_typet{}),
+        from_integer(bottom, integer_typet{}),
+        expr.type()}
+        .with_source_location(expr);
+    }
+    else
+    {
+      // Index not constant.
+      // Use logical right-shift followed by (constant) extractbits.
+      auto index_adjusted =
+        minus_exprt{index, from_integer(src_offset, index.type())};
+
+      auto src_shifted = lshr_exprt(src, index_adjusted);
+
+      return extractbits_exprt{
+        std::move(src_shifted),
+        from_integer(width - 1, integer_typet{}),
+        from_integer(0, integer_typet{}),
+        expr.type()}
+        .with_source_location(expr);
+    }
+  }
   else if(expr.has_operands())
   {
     for(auto &op : expr.operands())
@@ -526,41 +640,36 @@ void verilog_synthesist::assignment_rec(
     // do the value
     assignment_rec(lhs_array, new_rhs, new_value); // recursive call
   }
-  else if(lhs.id()==ID_extractbits)
+  else if(lhs.id() == ID_verilog_non_indexed_part_select)
   {
-    // we flatten n-bit extractbits into n times extractbit
+    // we flatten n-bit part select into n times extractbit
+    auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);
 
-    if(lhs.operands().size()!=3)
-    {
-      throw errort() << "extractbits takes three operands";
-    }
-
-    const exprt &lhs_bv = to_extractbits_expr(lhs).src();
-    const exprt &lhs_index_one = to_extractbits_expr(lhs).upper();
-    const exprt &lhs_index_two = to_extractbits_expr(lhs).lower();
+    const exprt &lhs_src = part_select.src();
+    const exprt &lhs_msb = part_select.msb();
+    const exprt &lhs_lsb = part_select.lsb();
 
     mp_integer from, to;
 
-    if(to_integer_non_constant(lhs_index_one, from))
+    if(to_integer_non_constant(lhs_msb, to))
     {
-      throw errort().with_location(lhs_index_one.source_location())
+      throw errort().with_location(lhs_msb.source_location())
         << "failed to convert range";
     }
 
-    if(to_integer_non_constant(lhs_index_two, to))
+    if(to_integer_non_constant(lhs_lsb, from))
     {
-      throw errort().with_location(lhs_index_two.source_location())
+      throw errort().with_location(lhs_lsb.source_location())
         << "failed to convert range";
     }
 
-    if(from>to)
+    if(from > to)
       std::swap(from, to);
 
     // redundant?
-    if(from==0 &&
-       to==get_width(lhs_bv.type())-1)
+    if(from == 0 && to == get_width(lhs_src.type()) - 1)
     {
-      assignment_rec(lhs_bv, rhs, new_value); // recursive call
+      assignment_rec(lhs_src, rhs, new_value); // recursive call
       return;
     }
 
@@ -569,44 +678,133 @@ void verilog_synthesist::assignment_rec(
     // into
     //   a'==a WITH [i:=e]
 
-    exprt synth_lhs_bv(lhs_bv);
+    exprt synth_lhs_src(lhs_src);
 
     // do the array, but just once
-    synth_lhs_bv = synth_expr(synth_lhs_bv, symbol_statet::FINAL);
+    synth_lhs_src = synth_expr(synth_lhs_src, symbol_statet::FINAL);
 
     exprt last_value;
     last_value.make_nil();
 
+    const auto rhs_width = get_width(lhs_src.type());
+
+    // We drop bits that are out of bounds
+    auto from_in_range = std::max(mp_integer{0}, from);
+    auto to_in_range = std::min(rhs_width - 1, to);
+
     // now add the indexes in the range
-    for(mp_integer i=from; i<=to; ++i)
+    for(mp_integer i = from_in_range; i <= to_in_range; ++i)
     {
-      exprt offset=from_integer(i-from, integer_typet());
+      exprt offset = from_integer(i - from, integer_typet());
 
       exprt rhs_extractbit(ID_extractbit, bool_typet());
       rhs_extractbit.reserve_operands(2);
       rhs_extractbit.add_to_operands(rhs);
       rhs_extractbit.add_to_operands(std::move(offset));
 
-      exprt count=from_integer(i, integer_typet());
+      exprt count = from_integer(i, integer_typet());
 
-      exprt new_rhs(ID_with, lhs_bv.type());
+      exprt new_rhs(ID_with, lhs_src.type());
       new_rhs.reserve_operands(3);
-      new_rhs.add_to_operands(synth_lhs_bv);
+      new_rhs.add_to_operands(synth_lhs_src);
       new_rhs.add_to_operands(std::move(count));
       new_rhs.add_to_operands(std::move(rhs_extractbit));
 
       // do the value
-      assignment_rec(lhs_bv, new_rhs, new_value); // recursive call
+      assignment_rec(lhs_src, new_rhs, new_value); // recursive call
 
       if(last_value.is_nil())
         last_value.swap(new_value);
       else
       {
         // merge the withs
-        assert(new_value.id()==ID_with);
-        assert(new_value.operands().size()==3);
-        assert(last_value.id()==ID_with);
-        assert(last_value.operands().size()>=3);
+        assert(new_value.id() == ID_with);
+        assert(new_value.operands().size() == 3);
+        assert(last_value.id() == ID_with);
+        assert(last_value.operands().size() >= 3);
+
+        last_value.add_to_operands(std::move(to_with_expr(new_value).where()));
+        last_value.add_to_operands(
+          std::move(to_with_expr(new_value).new_value()));
+      }
+    }
+
+    new_value.swap(last_value);
+  }
+  else if(
+    lhs.id() == ID_verilog_indexed_part_select_plus ||
+    lhs.id() == ID_verilog_indexed_part_select_minus)
+  {
+    // we flatten n-bit part select into n times extractbit
+    auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
+
+    const exprt &lhs_src = part_select.src();
+    const exprt &lhs_index = part_select.index();
+    const exprt &lhs_width = part_select.width();
+
+    mp_integer index, width;
+
+    if(to_integer_non_constant(lhs_index, index))
+    {
+      throw errort().with_location(lhs_index.source_location())
+        << "failed to convert part select index";
+    }
+
+    if(to_integer_non_constant(lhs_width, width))
+    {
+      throw errort().with_location(lhs_width.source_location())
+        << "failed to convert part select width";
+    }
+
+    // turn
+    //   a[i]=e
+    // into
+    //   a'==a WITH [i:=e]
+
+    exprt synth_lhs_src(lhs_src);
+
+    // do the array, but just once
+    synth_lhs_src = synth_expr(synth_lhs_src, symbol_statet::FINAL);
+
+    exprt last_value;
+    last_value.make_nil();
+
+    const auto rhs_width = get_width(lhs_src.type());
+
+    // We drop bits that are out of bounds
+    auto from_in_range = std::max(mp_integer{0}, index);
+    auto to_in_range = std::min(rhs_width - 1, index + width);
+
+    // now add the indexes in the range
+    for(mp_integer i = from_in_range; i <= to_in_range; ++i)
+    {
+      exprt offset = from_integer(i - index, integer_typet());
+
+      exprt rhs_extractbit(ID_extractbit, bool_typet());
+      rhs_extractbit.reserve_operands(2);
+      rhs_extractbit.add_to_operands(rhs);
+      rhs_extractbit.add_to_operands(std::move(offset));
+
+      exprt count = from_integer(i, integer_typet());
+
+      exprt new_rhs(ID_with, lhs_src.type());
+      new_rhs.reserve_operands(3);
+      new_rhs.add_to_operands(synth_lhs_src);
+      new_rhs.add_to_operands(std::move(count));
+      new_rhs.add_to_operands(std::move(rhs_extractbit));
+
+      // do the value
+      assignment_rec(lhs_src, new_rhs, new_value); // recursive call
+
+      if(last_value.is_nil())
+        last_value.swap(new_value);
+      else
+      {
+        // merge the withs
+        assert(new_value.id() == ID_with);
+        assert(new_value.operands().size() == 3);
+        assert(last_value.id() == ID_with);
+        assert(last_value.operands().size() >= 3);
 
         last_value.add_to_operands(std::move(to_with_expr(new_value).where()));
         last_value.add_to_operands(
@@ -758,18 +956,14 @@ void verilog_synthesist::assignment_member_rec(
       member.pop_back();
     }
   }
-  else if(lhs.id()==ID_extractbits)
+  else if(lhs.id() == ID_verilog_non_indexed_part_select)
   {
-    // we flatten n-bit extractbits into n times extractbit
+    // we flatten n-bit part select into n times extractbit
+    auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);
 
-    if(lhs.operands().size()!=3)
-    {
-      throw errort() << "extractbits takes three operands";
-    }
-
-    const exprt &lhs_bv = to_extractbits_expr(lhs).src();
-    const exprt &lhs_index_one = to_extractbits_expr(lhs).upper();
-    const exprt &lhs_index_two = to_extractbits_expr(lhs).lower();
+    const exprt &lhs_bv = part_select.src();
+    const exprt &lhs_index_one = part_select.msb();
+    const exprt &lhs_index_two = part_select.lsb();
 
     mp_integer from, to;
 
@@ -798,6 +992,43 @@ void verilog_synthesist::assignment_member_rec(
       assignment_member_rec(lhs_bv, member, data);
     }
     
+    member.pop_back();
+  }
+  else if(
+    lhs.id() == ID_verilog_indexed_part_select_plus ||
+    lhs.id() == ID_verilog_indexed_part_select_minus)
+  {
+    // we flatten n-bit part select into n times extractbit
+    auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
+
+    const exprt &lhs_bv = part_select.src();
+    const exprt &lhs_index = part_select.index();
+    const exprt &lhs_width = part_select.width();
+
+    mp_integer index, width;
+
+    if(to_integer_non_constant(lhs_index, index))
+    {
+      throw errort().with_location(lhs_index.source_location())
+        << "failed to convert part select index";
+    }
+
+    if(to_integer_non_constant(lhs_width, width))
+    {
+      throw errort().with_location(lhs_width.source_location())
+        << "failed to convert part select width";
+    }
+
+    member.push_back(mp_integer());
+
+    // now add the indexes in the range
+    for(mp_integer i = index; i <= index + width; ++i)
+    {
+      // do the value
+      member.back() = i;
+      assignment_member_rec(lhs_bv, member, data);
+    }
+
     member.pop_back();
   }
   else if(lhs.id() == ID_member)
@@ -909,14 +1140,15 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
       e = &to_extractbit_expr(*e).src();
     }
-    else if(e->id()==ID_extractbits)
+    else if(e->id() == ID_verilog_non_indexed_part_select)
     {
-      if(e->operands().size()!=3)
-      {
-        throw errort() << "extractbits takes three operands";
-      }
-
-      e = &to_extractbits_expr(*e).src();
+      e = &to_verilog_non_indexed_part_select_expr(*e).src();
+    }
+    else if(
+      e->id() == ID_verilog_indexed_part_select_plus ||
+      e->id() == ID_verilog_indexed_part_select_minus)
+    {
+      e = &to_verilog_indexed_part_select_plus_or_minus_expr(*e).src();
     }
     else if(e->id()==ID_symbol)
     {

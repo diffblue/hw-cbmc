@@ -681,14 +681,17 @@ void verilog_typecheckt::check_lhs(
 
     check_lhs(to_extractbit_expr(lhs).src(), vassign);
   }
-  else if(lhs.id()==ID_extractbits)
+  else if(lhs.id() == ID_verilog_non_indexed_part_select)
   {
-    if(lhs.operands().size()!=3)
-    {
-      throw errort() << "extractbits takes three operands";
-    }
-
-    check_lhs(to_extractbits_expr(lhs).src(), vassign);
+    auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);
+    check_lhs(part_select.src(), vassign);
+  }
+  else if(
+    lhs.id() == ID_verilog_indexed_part_select_plus ||
+    lhs.id() == ID_verilog_indexed_part_select_minus)
+  {
+    auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
+    check_lhs(part_select.src(), vassign);
   }
   else if(lhs.id()==ID_concatenation)
   {
