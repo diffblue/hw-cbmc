@@ -2423,62 +2423,63 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     expr.id() == ID_verilog_indexed_part_select_plus ||
     expr.id() == ID_verilog_indexed_part_select_minus)
   {
-    exprt &op0 = expr.op0();
-    convert_expr(op0);
+    auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
+    exprt &src = part_select.src();
+    convert_expr(src);
 
-    if(op0.type().id() == ID_array)
+    if(src.type().id() == ID_array)
     {
-      throw errort().with_location(op0.source_location())
+      throw errort().with_location(src.source_location())
         << "array type not allowed in part select";
     }
 
-    if(op0.type().id() == ID_verilog_real)
+    if(src.type().id() == ID_verilog_real)
     {
-      throw errort().with_location(op0.source_location())
+      throw errort().with_location(src.source_location())
         << "real not allowed in part select";
     }
 
-    mp_integer op0_width = get_width(op0.type());
-    mp_integer op0_offset = string2integer(op0.type().get_string(ID_C_offset));
+    mp_integer src_width = get_width(src.type());
+    mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
 
     // The index need not be a constant.
-    exprt &op1 = expr.op1();
-    convert_expr(op1);
+    exprt &index = part_select.index();
+    convert_expr(index);
 
     // The width of the indexed part select must be an
     // elaboration-time constant.
-    mp_integer op2 = convert_integer_constant_expression(expr.op2());
+    mp_integer width = convert_integer_constant_expression(part_select.width());
 
     // The width must be positive. 1800-2017 11.5.1
-    if(op2 < 0)
+    if(width < 0)
     {
-      throw errort().with_location(expr.op2().source_location())
+      throw errort().with_location(part_select.width().source_location())
         << "width of indexed part select must be positive";
     }
 
     // Part-select expressions are unsigned, even if the
     // entire expression is selected!
-    auto expr_type = unsignedbv_typet{numeric_cast_v<std::size_t>(op2)};
+    auto expr_type = unsignedbv_typet{numeric_cast_v<std::size_t>(width)};
 
-    mp_integer op1_int;
-    if(is_constant_expression(op1, op1_int))
+    mp_integer index_int;
+    if(is_constant_expression(index, index_int))
     {
       // Construct the extractbits expression
       mp_integer bottom, top;
 
-      if(expr.id() == ID_verilog_indexed_part_select_plus)
+      if(part_select.id() == ID_verilog_indexed_part_select_plus)
       {
-        bottom = op1_int - op0_offset;
-        top = bottom + op2;
+        bottom = index_int - src_offset;
+        top = bottom + width;
       }
       else // ID_verilog_indexed_part_select_minus
       {
-        top = op1_int - op0_offset;
-        bottom = bottom - op2;
+        top = index_int - src_offset;
+        bottom = bottom - width;
       }
 
       return extractbits_exprt{
-        std::move(op0),
+        std::move(src),
         from_integer(top, integer_typet{}),
         from_integer(bottom, integer_typet{}),
         std::move(expr_type)}
@@ -2488,14 +2489,14 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     {
       // Index not constant.
       // Use logical right-shift followed by (constant) extractbits.
-      auto op1_adjusted =
-        minus_exprt{op1, from_integer(op0_offset, op1.type())};
+      auto index_adjusted =
+        minus_exprt{index, from_integer(src_offset, index.type())};
 
-      auto op0_shifted = lshr_exprt(op0, op1_adjusted);
+      auto src_shifted = lshr_exprt(src, index_adjusted);
 
       return extractbits_exprt{
-        std::move(op0_shifted),
-        from_integer(op2 - 1, integer_typet{}),
+        std::move(src_shifted),
+        from_integer(width - 1, integer_typet{}),
         from_integer(0, integer_typet{}),
         std::move(expr_type)}
         .with_source_location(expr);

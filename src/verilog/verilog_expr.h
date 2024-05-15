@@ -2053,4 +2053,74 @@ to_verilog_non_indexed_part_select_expr(exprt &expr)
   return static_cast<verilog_non_indexed_part_select_exprt &>(expr);
 }
 
+class verilog_indexed_part_select_plus_or_minus_exprt : public ternary_exprt
+{
+public:
+  verilog_indexed_part_select_plus_or_minus_exprt(
+    irep_idt id,
+    exprt src,
+    exprt index,
+    exprt width,
+    typet type)
+    : ternary_exprt(
+        id,
+        std::move(src),
+        std::move(index),
+        std::move(width),
+        std::move(type))
+  {
+  }
+
+  const exprt &src() const
+  {
+    return op0();
+  }
+
+  exprt &src()
+  {
+    return op0();
+  }
+
+  const exprt &index() const
+  {
+    return op1();
+  }
+
+  exprt &index()
+  {
+    return op1();
+  }
+
+  const exprt &width() const
+  {
+    return op2();
+  }
+
+  exprt &width()
+  {
+    return op2();
+  }
+};
+
+inline const verilog_indexed_part_select_plus_or_minus_exprt &
+to_verilog_indexed_part_select_plus_or_minus_expr(const exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_indexed_part_select_plus ||
+    expr.id() == ID_verilog_indexed_part_select_minus);
+  verilog_indexed_part_select_plus_or_minus_exprt::check(expr);
+  return static_cast<const verilog_indexed_part_select_plus_or_minus_exprt &>(
+    expr);
+}
+
+inline verilog_indexed_part_select_plus_or_minus_exprt &
+to_verilog_indexed_part_select_plus_or_minus_expr(exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_indexed_part_select_plus ||
+    expr.id() == ID_verilog_indexed_part_select_minus);
+  verilog_indexed_part_select_plus_or_minus_exprt::check(expr);
+  return static_cast<verilog_indexed_part_select_plus_or_minus_exprt &>(expr);
+}
+
 #endif
