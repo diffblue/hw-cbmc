@@ -90,8 +90,7 @@ public:
 
   std::string convert_sva_unary(const std::string &name, const unary_exprt &);
 
-  std::string
-  convert_sva(const exprt &lhs, const std::string &name, const exprt &rhs);
+  std::string convert_sva_binary(const std::string &name, const binary_exprt &);
 
   virtual std::string
   convert_replication(const replication_exprt &, unsigned precedence);
