@@ -192,6 +192,31 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
                      : call.arguments()[1];
       return verilog_past_exprt{what, ticks}.with_source_location(call);
     }
+    else if(
+      identifier == "$stable" || identifier == "$rose" ||
+      identifier == "$fell" || identifier == "$changed")
+    {
+      DATA_INVARIANT(call.arguments().size() >= 1, "must have argument");
+      auto what = call.arguments()[0];
+      auto past = verilog_past_exprt{what, from_integer(1, integer_typet())}
+                    .with_source_location(call);
+
+      auto lsb = [](exprt expr) {
+        return extractbit_exprt{
+          std::move(expr), from_integer(0, integer_typet{})};
+      };
+
+      if(identifier == "$stable")
+        return equal_exprt{what, past};
+      else if(identifier == "$changed")
+        return notequal_exprt{what, past};
+      else if(identifier == "$rose")
+        return and_exprt{not_exprt{lsb(past)}, lsb(what)};
+      else if(identifier == "$fell")
+        return and_exprt{lsb(past), not_exprt{lsb(what)}};
+      else
+        DATA_INVARIANT(false, "all cases covered");
+    }
     else
     {
       // Attempt to constant fold.
