@@ -64,6 +64,19 @@ state_variablest state_variables(const tracest &traces)
   return identifiers;
 }
 
+bool has_suffix(const std::string &s, const std::string &suffix)
+{
+  if(s.length() >= suffix.length())
+    return s.compare(s.length() - suffix.length(), suffix.length(), suffix) == 0;
+  else
+    return false;
+}
+
+bool is_live_signal(const std::string &identifier)
+{
+  return has_suffix(identifier, "nuterm::live");
+}
+
 #include <iostream>
 
 double vcd_to_value(const std::string &src)
@@ -104,8 +117,34 @@ torch::Tensor state_pair_to_tensor(
   return std::move(tensor_pair);
 }
 
+bool is_live_state(
+  const std::string &liveness_signal,
+  const vcdt::statet &state)
+{
+  auto value_it = state.changes.find(liveness_signal);
+  if(value_it == state.changes.end())
+  {
+    for(auto &[id, value] : state.changes)
+      std::cerr << "I: " << id << " = " << value << "\n";
+    std::cerr << "state without liveness signal" << '\n';
+    abort();
+  }
+  return vcd_to_value(value_it->second) != 0;
+}
+
+std::string liveness_signal(const state_variablest &state_variables)
+{
+  for(auto &[name, _] : state_variables)
+    if(is_live_signal(name))
+      return name;
+
+  std::cerr << "failed to find liveness signal" << '\n';
+  abort();
+}
+
 std::vector<torch::Tensor> traces_to_tensors(
   const state_variablest &state_variables,
+  const std::string &liveness_signal,
   const tracest &traces)
 {
   auto t = number_of_transitions(traces);
@@ -120,10 +159,17 @@ std::vector<torch::Tensor> traces_to_tensors(
     {
       auto &current = full_trace[t - 1];
       auto &next = full_trace[t];
-      auto tensor = state_pair_to_tensor(state_variables, current, next);
-      assert(tensor.size(0) == 2);
-      assert(tensor.size(1) == state_variables.size());
-      result.push_back(std::move(tensor));
+
+      // We must discard transitions in/out of 'live' states.
+      // There is no need for the ranking function to decrease
+      // on such transitions.
+      if(!is_live_state(liveness_signal, current) && !is_live_state(liveness_signal, next))
+      {
+        auto tensor = state_pair_to_tensor(state_variables, current, next);
+        assert(tensor.size(0) == 2);
+        assert(tensor.size(1) == state_variables.size());
+        result.push_back(std::move(tensor));
+      }
     }
   }
 
@@ -200,12 +246,16 @@ int main(int argc, const char *argv[])
     return 1;
   }
 
+  auto liveness_signal = ::liveness_signal(state_variables);
+
   for(auto &v : state_variables)
     std::cout << "V" << v.second << "=" << v.first << '\n';
 
+  std::cout << "Liveness signal: " << liveness_signal << '\n';
+
   torch::manual_seed(0);
 
-  const auto tensors = traces_to_tensors(state_variables, traces);
+  const auto tensors = traces_to_tensors(state_variables, liveness_signal, traces);
 
   std::cout << "Got " << tensors.size() << " transitions\n";
 
