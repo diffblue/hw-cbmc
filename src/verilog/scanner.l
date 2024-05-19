@@ -70,35 +70,35 @@ static void preprocessor()
            name->is_type ?   TOK_TYPE_IDENTIFIER : \
                              TOK_NON_TYPE_IDENTIFIER; \
   }
-#define SYSTEM_VERILOG_KEYWORD(x) \
-  { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \
+#define KEYWORD(s, x) \
+  { if(PARSER.mode >= verilog_standardt::s) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define SYSTEM_VERILOG_OPERATOR(token, text) \
-  { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG) \
+  { if(PARSER.mode >= verilog_standardt::SV2005) \
       return token; \
     else \
       yyverilogerror(text " is a System Verilog operator"); \
   }
 #define VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
-  { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG || \
-       PARSER.mode==verilog_parsert::VL2SMV_VERILOG) \
+  { if(PARSER.mode >= verilog_standardt::SV2005 || \
+       PARSER.mode == verilog_standardt::V2005_SMV) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define VL2SMV_VERILOG_KEYWORD(x) \
-  { if(PARSER.mode==verilog_parsert::VL2SMV_VERILOG) \
+  { if(PARSER.mode == verilog_standardt::V2005_SMV) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
-  { if(PARSER.mode==verilog_parsert::SYSTEM_VERILOG || \
-       PARSER.mode==verilog_parsert::VL2SMV_VERILOG || \
-       PARSER.mode==verilog_parsert::VIS_VERILOG) \
+  { if(PARSER.mode >= verilog_standardt::SV2005 || \
+       PARSER.mode == verilog_standardt::V2005_SMV || \
+       PARSER.mode == verilog_standardt::V2005_VIS) \
       return x; \
     else \
       IDENTIFIER(yytext); \
@@ -375,166 +375,169 @@ $removal        { return TOK_REMOVAL; }
 $width          { return TOK_WIDTH; }
 $skew           { return TOK_SKEW; }
 
-                /* Verilog 1364-2001 keywords */
+                /* Verilog 1364-2001-noconfig keywords */
 
-automatic       { return TOK_AUTOMATIC; }
-cell            { return TOK_CELL; }
-config          { return TOK_CONFIG; }
-design          { return TOK_DESIGN; }
-endconfig       { return TOK_ENDCONFIG; }
-endgenerate     { return TOK_ENDGENERATE; }
-generate        { return TOK_GENERATE; }
-genvar          { return TOK_GENVAR; }
-incdir          { return TOK_INCDIR; }
-include         { return TOK_INCLUDE; }
-instance        { return TOK_INSTANCE; }
-liblist         { return TOK_LIBLIST; }
-library         { return TOK_LIBRARY; }
-localparam      { return TOK_LOCALPARAM; }
-noshowcancelled { return TOK_NOSHOWCANCELLED; }
-pulsestyle_ondetect { return TOK_PULSESTYLE_ONDETECT; }
-pulsestyle_onevent { return TOK_PULSESTYLE_ONEVENT; }
-showcancelled   { return TOK_SHOWCANCELLED; }
-signed          { return TOK_SIGNED; }
-unsigned        { return TOK_UNSIGNED; }
-use             { return TOK_USE; }
+automatic       { KEYWORD(V2001_NOCONFIG, TOK_AUTOMATIC); }
+endgenerate     { KEYWORD(V2001_NOCONFIG, TOK_ENDGENERATE); }
+generate        { KEYWORD(V2001_NOCONFIG, TOK_GENERATE); }
+genvar          { KEYWORD(V2001_NOCONFIG, TOK_GENVAR); }
+localparam      { KEYWORD(V2001_NOCONFIG, TOK_LOCALPARAM); }
+noshowcancelled { KEYWORD(V2001_NOCONFIG, TOK_NOSHOWCANCELLED); }
+pulsestyle_ondetect { KEYWORD(V2001_NOCONFIG, TOK_PULSESTYLE_ONDETECT); }
+pulsestyle_onevent { KEYWORD(V2001_NOCONFIG, TOK_PULSESTYLE_ONEVENT); }
+showcancelled   { KEYWORD(V2001_NOCONFIG, TOK_SHOWCANCELLED); }
+signed          { KEYWORD(V2001_NOCONFIG, TOK_SIGNED); }
+unsigned        { KEYWORD(V2001_NOCONFIG, TOK_UNSIGNED); }
+
+                /* Verilog 1364-2001-config keywords */
+
+cell            { KEYWORD(V2001, TOK_CELL); }
+config          { KEYWORD(V2001, TOK_CONFIG); }
+design          { KEYWORD(V2001, TOK_DESIGN); }
+endconfig       { KEYWORD(V2001, TOK_ENDCONFIG); }
+incdir          { KEYWORD(V2001, TOK_INCDIR); }
+include         { KEYWORD(V2001, TOK_INCLUDE); }
+instance        { KEYWORD(V2001, TOK_INSTANCE); }
+liblist         { KEYWORD(V2001, TOK_LIBLIST); }
+library         { KEYWORD(V2001, TOK_LIBRARY); }
+use             { KEYWORD(V2001, TOK_USE); }
 
                 /* Verilog 1364-2005 keywords */
 
-uwire           { return TOK_UWIRE; }
+uwire           { KEYWORD(V2005, TOK_UWIRE); }
 
                 /* System Verilog 1800-2005 Keywords */
 
-alias           { SYSTEM_VERILOG_KEYWORD(TOK_ALIAS); }
-always_comb     { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_COMB); }
-always_ff       { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_FF); }
-always_latch    { SYSTEM_VERILOG_KEYWORD(TOK_ALWAYS_LATCH); }
+alias           { KEYWORD(SV2005, TOK_ALIAS); }
+always_comb     { KEYWORD(SV2005, TOK_ALWAYS_COMB); }
+always_ff       { KEYWORD(SV2005, TOK_ALWAYS_FF); }
+always_latch    { KEYWORD(SV2005, TOK_ALWAYS_LATCH); }
 assert          { VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_ASSERT); }
 assume          { VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_ASSUME); }
-before          { SYSTEM_VERILOG_KEYWORD(TOK_BEFORE); }
-bind            { SYSTEM_VERILOG_KEYWORD(TOK_BIND); }
-bins            { SYSTEM_VERILOG_KEYWORD(TOK_BINS); }
-binsof          { SYSTEM_VERILOG_KEYWORD(TOK_BINSOF); }
-bit             { SYSTEM_VERILOG_KEYWORD(TOK_BIT); }
-break           { SYSTEM_VERILOG_KEYWORD(TOK_BREAK); }
-byte            { SYSTEM_VERILOG_KEYWORD(TOK_BYTE); }
-chandle         { SYSTEM_VERILOG_KEYWORD(TOK_CHANDLE); }
-class           { SYSTEM_VERILOG_KEYWORD(TOK_CLASS); }
-clocking        { SYSTEM_VERILOG_KEYWORD(TOK_CLOCKING); }
-const           { SYSTEM_VERILOG_KEYWORD(TOK_CONST); }
-constraint      { SYSTEM_VERILOG_KEYWORD(TOK_CONSTRAINT); }
-context         { SYSTEM_VERILOG_KEYWORD(TOK_CONTEXT); }
-continue        { SYSTEM_VERILOG_KEYWORD(TOK_CONTINUE); }
-cover           { SYSTEM_VERILOG_KEYWORD(TOK_COVER); }
-covergroup      { SYSTEM_VERILOG_KEYWORD(TOK_COVERGROUP); }
-coverpoint      { SYSTEM_VERILOG_KEYWORD(TOK_COVERPOINT); }
-cross           { SYSTEM_VERILOG_KEYWORD(TOK_CROSS); }
-dist            { SYSTEM_VERILOG_KEYWORD(TOK_DIST); }
-do              { SYSTEM_VERILOG_KEYWORD(TOK_DO); }
-endclass        { SYSTEM_VERILOG_KEYWORD(TOK_ENDCLASS); }
-endclocking     { SYSTEM_VERILOG_KEYWORD(TOK_ENDCLOCKING); }
-endgroup        { SYSTEM_VERILOG_KEYWORD(TOK_ENDGROUP); }
-endinterface    { SYSTEM_VERILOG_KEYWORD(TOK_ENDINTERFACE); }
-endpackage      { SYSTEM_VERILOG_KEYWORD(TOK_ENDPACKAGE); }
-endprogram      { SYSTEM_VERILOG_KEYWORD(TOK_ENDPROGRAM); }
-endproperty     { SYSTEM_VERILOG_KEYWORD(TOK_ENDPROPERTY); }
-endsequence     { SYSTEM_VERILOG_KEYWORD(TOK_ENDSEQUENCE); }
+before          { KEYWORD(SV2005, TOK_BEFORE); }
+bind            { KEYWORD(SV2005, TOK_BIND); }
+bins            { KEYWORD(SV2005, TOK_BINS); }
+binsof          { KEYWORD(SV2005, TOK_BINSOF); }
+bit             { KEYWORD(SV2005, TOK_BIT); }
+break           { KEYWORD(SV2005, TOK_BREAK); }
+byte            { KEYWORD(SV2005, TOK_BYTE); }
+chandle         { KEYWORD(SV2005, TOK_CHANDLE); }
+class           { KEYWORD(SV2005, TOK_CLASS); }
+clocking        { KEYWORD(SV2005, TOK_CLOCKING); }
+const           { KEYWORD(SV2005, TOK_CONST); }
+constraint      { KEYWORD(SV2005, TOK_CONSTRAINT); }
+context         { KEYWORD(SV2005, TOK_CONTEXT); }
+continue        { KEYWORD(SV2005, TOK_CONTINUE); }
+cover           { KEYWORD(SV2005, TOK_COVER); }
+covergroup      { KEYWORD(SV2005, TOK_COVERGROUP); }
+coverpoint      { KEYWORD(SV2005, TOK_COVERPOINT); }
+cross           { KEYWORD(SV2005, TOK_CROSS); }
+dist            { KEYWORD(SV2005, TOK_DIST); }
+do              { KEYWORD(SV2005, TOK_DO); }
+endclass        { KEYWORD(SV2005, TOK_ENDCLASS); }
+endclocking     { KEYWORD(SV2005, TOK_ENDCLOCKING); }
+endgroup        { KEYWORD(SV2005, TOK_ENDGROUP); }
+endinterface    { KEYWORD(SV2005, TOK_ENDINTERFACE); }
+endpackage      { KEYWORD(SV2005, TOK_ENDPACKAGE); }
+endprogram      { KEYWORD(SV2005, TOK_ENDPROGRAM); }
+endproperty     { KEYWORD(SV2005, TOK_ENDPROPERTY); }
+endsequence     { KEYWORD(SV2005, TOK_ENDSEQUENCE); }
 enum            { VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_ENUM); }
-expect          { SYSTEM_VERILOG_KEYWORD(TOK_EXPECT); }
-export          { SYSTEM_VERILOG_KEYWORD(TOK_EXPORT); }
-extends         { SYSTEM_VERILOG_KEYWORD(TOK_EXTENDS); }
-extern          { SYSTEM_VERILOG_KEYWORD(TOK_EXTERN); }
-final           { SYSTEM_VERILOG_KEYWORD(TOK_FINAL); }
-first_match     { SYSTEM_VERILOG_KEYWORD(TOK_FIRST_MATCH); }
-foreach         { SYSTEM_VERILOG_KEYWORD(TOK_FOREACH); }
-forkjoin        { SYSTEM_VERILOG_KEYWORD(TOK_FORKJOIN); }
-iff             { SYSTEM_VERILOG_KEYWORD(TOK_IFF); }
-ignore_bins     { SYSTEM_VERILOG_KEYWORD(TOK_IGNORE_BINS); }
-illegal_bins    { SYSTEM_VERILOG_KEYWORD(TOK_ILLEGAL_BINS); }
-import          { SYSTEM_VERILOG_KEYWORD(TOK_IMPORT); }
-inside          { SYSTEM_VERILOG_KEYWORD(TOK_INSIDE); }
-int             { SYSTEM_VERILOG_KEYWORD(TOK_INT); }
-interface       { SYSTEM_VERILOG_KEYWORD(TOK_INTERFACE); }
-intersect       { SYSTEM_VERILOG_KEYWORD(TOK_INTERSECT); }
-join_any        { SYSTEM_VERILOG_KEYWORD(TOK_JOIN_ANY); }
-join_none       { SYSTEM_VERILOG_KEYWORD(TOK_JOIN_NONE); }
-local           { SYSTEM_VERILOG_KEYWORD(TOK_LOCAL); }
-logic           { SYSTEM_VERILOG_KEYWORD(TOK_LOGIC); }
-longint         { SYSTEM_VERILOG_KEYWORD(TOK_LONGINT); }
-matches         { SYSTEM_VERILOG_KEYWORD(TOK_MATCHES); }
-modport         { SYSTEM_VERILOG_KEYWORD(TOK_MODPORT); }
-new             { SYSTEM_VERILOG_KEYWORD(TOK_NEW); }
-null            { SYSTEM_VERILOG_KEYWORD(TOK_NULL); }
-package         { SYSTEM_VERILOG_KEYWORD(TOK_PACKAGE); }
-packed          { SYSTEM_VERILOG_KEYWORD(TOK_PACKED); }
-priority        { SYSTEM_VERILOG_KEYWORD(TOK_PRIORITY); }
-program         { SYSTEM_VERILOG_KEYWORD(TOK_PROGRAM); }
-property        { SYSTEM_VERILOG_KEYWORD(TOK_PROPERTY); }
-protected       { SYSTEM_VERILOG_KEYWORD(TOK_PROTECTED); }
-pure            { SYSTEM_VERILOG_KEYWORD(TOK_PURE); }
-rand            { SYSTEM_VERILOG_KEYWORD(TOK_RAND); }
-randc           { SYSTEM_VERILOG_KEYWORD(TOK_RANDC); }
-randcase        { SYSTEM_VERILOG_KEYWORD(TOK_RANDCASE); }
-randsequence    { SYSTEM_VERILOG_KEYWORD(TOK_RANDSEQUENCE); }
-ref             { SYSTEM_VERILOG_KEYWORD(TOK_REF); }
-return          { SYSTEM_VERILOG_KEYWORD(TOK_RETURN); }
-sequence        { SYSTEM_VERILOG_KEYWORD(TOK_SEQUENCE); }
-shortint        { SYSTEM_VERILOG_KEYWORD(TOK_SHORTINT); }
-shortreal       { SYSTEM_VERILOG_KEYWORD(TOK_SHORTREAL); }
-solve           { SYSTEM_VERILOG_KEYWORD(TOK_SOLVE); }
-static          { SYSTEM_VERILOG_KEYWORD(TOK_STATIC); }
-string          { SYSTEM_VERILOG_KEYWORD(TOK_STRING); }
-struct          { SYSTEM_VERILOG_KEYWORD(TOK_STRUCT); }
-super           { SYSTEM_VERILOG_KEYWORD(TOK_SUPER); }
-tagged          { SYSTEM_VERILOG_KEYWORD(TOK_TAGGED); }
-this            { SYSTEM_VERILOG_KEYWORD(TOK_THIS); }
-throughout      { SYSTEM_VERILOG_KEYWORD(TOK_THROUGHOUT); }
-timeprecision   { SYSTEM_VERILOG_KEYWORD(TOK_TIMEPRECISION); }
-timeunit        { SYSTEM_VERILOG_KEYWORD(TOK_TIMEUNIT); }
-type            { SYSTEM_VERILOG_KEYWORD(TOK_TYPE); }
+expect          { KEYWORD(SV2005, TOK_EXPECT); }
+export          { KEYWORD(SV2005, TOK_EXPORT); }
+extends         { KEYWORD(SV2005, TOK_EXTENDS); }
+extern          { KEYWORD(SV2005, TOK_EXTERN); }
+final           { KEYWORD(SV2005, TOK_FINAL); }
+first_match     { KEYWORD(SV2005, TOK_FIRST_MATCH); }
+foreach         { KEYWORD(SV2005, TOK_FOREACH); }
+forkjoin        { KEYWORD(SV2005, TOK_FORKJOIN); }
+iff             { KEYWORD(SV2005, TOK_IFF); }
+ignore_bins     { KEYWORD(SV2005, TOK_IGNORE_BINS); }
+illegal_bins    { KEYWORD(SV2005, TOK_ILLEGAL_BINS); }
+import          { KEYWORD(SV2005, TOK_IMPORT); }
+inside          { KEYWORD(SV2005, TOK_INSIDE); }
+int             { KEYWORD(SV2005, TOK_INT); }
+interface       { KEYWORD(SV2005, TOK_INTERFACE); }
+intersect       { KEYWORD(SV2005, TOK_INTERSECT); }
+join_any        { KEYWORD(SV2005, TOK_JOIN_ANY); }
+join_none       { KEYWORD(SV2005, TOK_JOIN_NONE); }
+local           { KEYWORD(SV2005, TOK_LOCAL); }
+logic           { KEYWORD(SV2005, TOK_LOGIC); }
+longint         { KEYWORD(SV2005, TOK_LONGINT); }
+matches         { KEYWORD(SV2005, TOK_MATCHES); }
+modport         { KEYWORD(SV2005, TOK_MODPORT); }
+new             { KEYWORD(SV2005, TOK_NEW); }
+null            { KEYWORD(SV2005, TOK_NULL); }
+package         { KEYWORD(SV2005, TOK_PACKAGE); }
+packed          { KEYWORD(SV2005, TOK_PACKED); }
+priority        { KEYWORD(SV2005, TOK_PRIORITY); }
+program         { KEYWORD(SV2005, TOK_PROGRAM); }
+property        { KEYWORD(SV2005, TOK_PROPERTY); }
+protected       { KEYWORD(SV2005, TOK_PROTECTED); }
+pure            { KEYWORD(SV2005, TOK_PURE); }
+rand            { KEYWORD(SV2005, TOK_RAND); }
+randc           { KEYWORD(SV2005, TOK_RANDC); }
+randcase        { KEYWORD(SV2005, TOK_RANDCASE); }
+randsequence    { KEYWORD(SV2005, TOK_RANDSEQUENCE); }
+ref             { KEYWORD(SV2005, TOK_REF); }
+return          { KEYWORD(SV2005, TOK_RETURN); }
+sequence        { KEYWORD(SV2005, TOK_SEQUENCE); }
+shortint        { KEYWORD(SV2005, TOK_SHORTINT); }
+shortreal       { KEYWORD(SV2005, TOK_SHORTREAL); }
+solve           { KEYWORD(SV2005, TOK_SOLVE); }
+static          { KEYWORD(SV2005, TOK_STATIC); }
+string          { KEYWORD(SV2005, TOK_STRING); }
+struct          { KEYWORD(SV2005, TOK_STRUCT); }
+super           { KEYWORD(SV2005, TOK_SUPER); }
+tagged          { KEYWORD(SV2005, TOK_TAGGED); }
+this            { KEYWORD(SV2005, TOK_THIS); }
+throughout      { KEYWORD(SV2005, TOK_THROUGHOUT); }
+timeprecision   { KEYWORD(SV2005, TOK_TIMEPRECISION); }
+timeunit        { KEYWORD(SV2005, TOK_TIMEUNIT); }
+type            { KEYWORD(SV2005, TOK_TYPE); }
 typedef         { VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_TYPEDEF); }
-union           { SYSTEM_VERILOG_KEYWORD(TOK_UNION); }
-unique          { SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE); }
-var             { SYSTEM_VERILOG_KEYWORD(TOK_VAR); }
-virtual         { SYSTEM_VERILOG_KEYWORD(TOK_VIRTUAL); }
-void            { SYSTEM_VERILOG_KEYWORD(TOK_VOID); }
-wait_order      { SYSTEM_VERILOG_KEYWORD(TOK_WAIT_ORDER); }
-wildcard        { SYSTEM_VERILOG_KEYWORD(TOK_WILDCARD); }
-with            { SYSTEM_VERILOG_KEYWORD(TOK_WITH); }
-within          { SYSTEM_VERILOG_KEYWORD(TOK_WITHIN); }
+union           { KEYWORD(SV2005, TOK_UNION); }
+unique          { KEYWORD(SV2005, TOK_UNIQUE); }
+var             { KEYWORD(SV2005, TOK_VAR); }
+virtual         { KEYWORD(SV2005, TOK_VIRTUAL); }
+void            { KEYWORD(SV2005, TOK_VOID); }
+wait_order      { KEYWORD(SV2005, TOK_WAIT_ORDER); }
+wildcard        { KEYWORD(SV2005, TOK_WILDCARD); }
+with            { KEYWORD(SV2005, TOK_WITH); }
+within          { KEYWORD(SV2005, TOK_WITHIN); }
 
                 /* System Verilog 1800-2009 Keywords */
 
-accept_on       { SYSTEM_VERILOG_KEYWORD(TOK_ACCEPT_ON); }
-checker         { SYSTEM_VERILOG_KEYWORD(TOK_CHECKER); }
-endchecker      { SYSTEM_VERILOG_KEYWORD(TOK_ENDCHECKER); }
+accept_on       { KEYWORD(SV2009, TOK_ACCEPT_ON); }
+checker         { KEYWORD(SV2009, TOK_CHECKER); }
+endchecker      { KEYWORD(SV2009, TOK_ENDCHECKER); }
 eventually      { VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(TOK_EVENTUALLY); }
-global          { SYSTEM_VERILOG_KEYWORD(TOK_GLOBAL); }
-implies         { SYSTEM_VERILOG_KEYWORD(TOK_IMPLIES); }
-let             { SYSTEM_VERILOG_KEYWORD(TOK_LET); }
-nexttime        { SYSTEM_VERILOG_KEYWORD(TOK_NEXTTIME); }
-reject_on       { SYSTEM_VERILOG_KEYWORD(TOK_REJECT_ON); }
-restrict        { SYSTEM_VERILOG_KEYWORD(TOK_RESTRICT); }
-s_always        { SYSTEM_VERILOG_KEYWORD(TOK_S_ALWAYS); }
-s_eventually    { SYSTEM_VERILOG_KEYWORD(TOK_S_EVENTUALLY); }
-s_nexttime      { SYSTEM_VERILOG_KEYWORD(TOK_S_NEXTTIME); }
-s_until         { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL); }
-s_until_with    { SYSTEM_VERILOG_KEYWORD(TOK_S_UNTIL_WITH); }
-strong          { SYSTEM_VERILOG_KEYWORD(TOK_STRONG); }
-sync_accept_on  { SYSTEM_VERILOG_KEYWORD(TOK_SYNC_ACCEPT_ON); }
-sync_reject_on  { SYSTEM_VERILOG_KEYWORD(TOK_SYNC_REJECT_ON); }
-unique0         { SYSTEM_VERILOG_KEYWORD(TOK_UNIQUE0); }
-until           { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL); }
-until_with      { SYSTEM_VERILOG_KEYWORD(TOK_UNTIL_WITH); }
-untyped         { SYSTEM_VERILOG_KEYWORD(TOK_UNTYPED); }
-weak            { SYSTEM_VERILOG_KEYWORD(TOK_WEAK); }
+global          { KEYWORD(SV2009, TOK_GLOBAL); }
+implies         { KEYWORD(SV2009, TOK_IMPLIES); }
+let             { KEYWORD(SV2009, TOK_LET); }
+nexttime        { KEYWORD(SV2009, TOK_NEXTTIME); }
+reject_on       { KEYWORD(SV2009, TOK_REJECT_ON); }
+restrict        { KEYWORD(SV2009, TOK_RESTRICT); }
+s_always        { KEYWORD(SV2009, TOK_S_ALWAYS); }
+s_eventually    { KEYWORD(SV2009, TOK_S_EVENTUALLY); }
+s_nexttime      { KEYWORD(SV2009, TOK_S_NEXTTIME); }
+s_until         { KEYWORD(SV2009, TOK_S_UNTIL); }
+s_until_with    { KEYWORD(SV2009, TOK_S_UNTIL_WITH); }
+strong          { KEYWORD(SV2009, TOK_STRONG); }
+sync_accept_on  { KEYWORD(SV2009, TOK_SYNC_ACCEPT_ON); }
+sync_reject_on  { KEYWORD(SV2009, TOK_SYNC_REJECT_ON); }
+unique0         { KEYWORD(SV2009, TOK_UNIQUE0); }
+until           { KEYWORD(SV2009, TOK_UNTIL); }
+until_with      { KEYWORD(SV2009, TOK_UNTIL_WITH); }
+untyped         { KEYWORD(SV2009, TOK_UNTYPED); }
+weak            { KEYWORD(SV2009, TOK_WEAK); }
 
                 /* System Verilog 1800-2012 Keywords */
 
-implements      { SYSTEM_VERILOG_KEYWORD(TOK_IMPLEMENTS); }
-interconnect    { SYSTEM_VERILOG_KEYWORD(TOK_INTERCONNECT); }
-nettype         { SYSTEM_VERILOG_KEYWORD(TOK_NETTYPE); }
-soft            { SYSTEM_VERILOG_KEYWORD(TOK_SOFT); }
+implements      { KEYWORD(SV2012, TOK_IMPLEMENTS); }
+interconnect    { KEYWORD(SV2012, TOK_INTERCONNECT); }
+nettype         { KEYWORD(SV2012, TOK_NETTYPE); }
+soft            { KEYWORD(SV2012, TOK_SOFT); }
 
                 /* VL2SMV Keywords */
 

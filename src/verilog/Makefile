@@ -14,6 +14,7 @@ SRC = expr2verilog.cpp \
       verilog_preprocessor.cpp \
       verilog_preprocessor_lex.yy.cpp \
       verilog_preprocessor_tokenizer.cpp \
+      verilog_standard.cpp \
       verilog_symbol_table.cpp \
       verilog_synthesis.cpp \
       verilog_typecheck.cpp \

@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/parser.h>
 
 #include "verilog_parse_tree.h"
+#include "verilog_standard.h"
 
 #include <map>
 #include <string>
@@ -32,21 +33,14 @@ public:
   typedef enum { LANGUAGE, EXPRESSION, TYPE } grammart;
   grammart grammar;
 
-  typedef enum
-  {
-    STRICT_VERILOG,
-    VIS_VERILOG,
-    VL2SMV_VERILOG,
-    SYSTEM_VERILOG
-  } modet;
-  modet mode;
-  
+  verilog_standardt mode;
+
   virtual bool parse()
   {
     return yyverilogparse()!=0;
   }
 
-  verilog_parsert() : mode(VIS_VERILOG)
+  verilog_parsert() : mode(verilog_standardt::V2005_VIS)
   {
     PRECONDITION(verilog_parser_ptr == nullptr);
     verilog_parser_ptr = this;

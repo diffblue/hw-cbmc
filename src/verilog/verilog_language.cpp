@@ -68,9 +68,9 @@ bool verilog_languaget::parse(
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
 
   if(has_suffix(path, ".sv") || force_systemverilog)
-    verilog_parser.mode=verilog_parsert::SYSTEM_VERILOG;
+    verilog_parser.mode = verilog_standardt::SV2023;
   else if(vl2smv_extensions)
-    verilog_parser.mode = verilog_parsert::VL2SMV_VERILOG;
+    verilog_parser.mode = verilog_standardt::V2005_SMV;
 
   verilog_scanner_init();
 
