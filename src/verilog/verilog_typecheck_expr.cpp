@@ -1899,6 +1899,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     make_boolean(expr.op());
     expr.type()=bool_typet();
   }
+  else if(expr.id() == ID_sva_sequence_first_match)
+  {
+    throw errort().with_location(expr.source_location())
+      << "no support for 'first_match'";
+  }
   else if(expr.id() == ID_verilog_explicit_cast)
   {
     // SystemVerilog has got type'(expr). This is an explicit
@@ -2230,6 +2235,21 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.type()=bool_typet();
 
     return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_sequence_intersect)
+  {
+    throw errort().with_location(expr.source_location())
+      << "no support for 'intersect'";
+  }
+  else if(expr.id() == ID_sva_sequence_throughout)
+  {
+    throw errort().with_location(expr.source_location())
+      << "no support for 'throughout'";
+  }
+  else if(expr.id() == ID_sva_sequence_within)
+  {
+    throw errort().with_location(expr.source_location())
+      << "no support for 'within'";
   }
   else if(expr.id()==ID_hierarchical_identifier)
   {

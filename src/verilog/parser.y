@@ -2091,10 +2091,14 @@ sequence_expr:
                 { $$=$1; mto($$, $2); }
         | expression cycle_delay_range sequence_expr
                 { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
+	| expression "intersect" sequence_expr
+                { init($$, ID_sva_sequence_intersect); mto($$, $1); mto($$, $3); }
         | "first_match" '(' sequence_expr ')'
                 { init($$, ID_sva_sequence_first_match); mto($$, $3); }
         | expression "throughout" sequence_expr
                 { init($$, ID_sva_sequence_throughout); mto($$, $1); mto($$, $3); }
+        | expression "within" sequence_expr
+                { init($$, ID_sva_sequence_within); mto($$, $1); mto($$, $3); }
         ;
 
 cycle_delay_range:

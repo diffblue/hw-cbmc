@@ -440,18 +440,17 @@ Function: expr2verilogt::convert_sva
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva(
-  const exprt &lhs,
+std::string expr2verilogt::convert_sva_binary(
   const std::string &name,
-  const exprt &rhs)
+  const binary_exprt &expr)
 {
   unsigned p0;
-  auto s0 = convert(lhs, p0);
+  auto s0 = convert(expr.lhs(), p0);
   if(p0 == 0)
     s0 = "(" + s0 + ")";
 
   unsigned p1;
-  auto s1 = convert(rhs, p1);
+  auto s1 = convert(expr.rhs(), p1);
   if(p1 == 0)
     s1 = "(" + s1 + ")";
 
@@ -1091,16 +1090,10 @@ std::string expr2verilogt::convert(
     return convert_function("$onehot0", src);
 
   else if(src.id()==ID_sva_overlapped_implication)
-  {
-    auto &binary = to_binary_expr(src);
-    return precedence = 0, convert_sva(binary.lhs(), "|->", binary.rhs());
-  }
+    return precedence = 0, convert_sva_binary("|->", to_binary_expr(src));
 
   else if(src.id()==ID_sva_non_overlapped_implication)
-  {
-    auto &binary = to_binary_expr(src);
-    return precedence = 0, convert_sva(binary.lhs(), "|=>", binary.rhs());
-  }
+    return precedence = 0, convert_sva_binary("|=>", to_binary_expr(src));
 
   else if(src.id()==ID_sva_cycle_delay)
     return convert_sva_cycle_delay(to_ternary_expr(src), precedence = 0);
@@ -1110,7 +1103,24 @@ std::string expr2verilogt::convert(
     return convert_sva_sequence_concatenation(
       to_binary_expr(src), precedence = 0);
     // not sure about precedence
-    
+
+  else if(src.id() == ID_sva_sequence_first_match)
+    return convert_function("first_match", src);
+
+  else if(src.id() == ID_sva_sequence_intersect)
+    return precedence = 0, convert_sva_binary("intersect", to_binary_expr(src));
+  // not sure about precedence
+
+  else if(src.id() == ID_sva_sequence_within)
+    return convert_sva_sequence_concatenation(
+      to_binary_expr(src), precedence = 0);
+  // not sure about precedence
+
+  else if(src.id() == ID_sva_sequence_throughout)
+    return convert_sva_sequence_concatenation(
+      to_binary_expr(src), precedence = 0);
+  // not sure about precedence
+
   else if(src.id()==ID_sva_always)
     return precedence = 0, convert_sva_unary("always", to_sva_always_expr(src));
 
@@ -1151,28 +1161,19 @@ std::string expr2verilogt::convert(
            convert_sva_unary("s_eventually", to_sva_s_eventually_expr(src));
 
   else if(src.id()==ID_sva_until)
-    return precedence = 0, convert_sva(
-                             to_sva_until_expr(src).lhs(),
-                             "until",
-                             to_sva_until_expr(src).rhs());
+    return precedence = 0, convert_sva_binary("until", to_sva_until_expr(src));
 
   else if(src.id()==ID_sva_s_until)
-    return precedence = 0, convert_sva(
-                             to_sva_s_until_expr(src).lhs(),
-                             "s_until",
-                             to_sva_s_until_expr(src).rhs());
+    return precedence = 0,
+           convert_sva_binary("s_until", to_sva_s_until_expr(src));
 
   else if(src.id()==ID_sva_until_with)
-    return precedence = 0, convert_sva(
-                             to_sva_until_with_expr(src).lhs(),
-                             "until_with",
-                             to_sva_until_with_expr(src).rhs());
+    return precedence = 0,
+           convert_sva_binary("until_with", to_sva_until_with_expr(src));
 
   else if(src.id()==ID_sva_s_until_with)
-    return precedence = 0, convert_sva(
-                             to_sva_s_until_with_expr(src).lhs(),
-                             "s_until_with",
-                             to_sva_s_until_with_expr(src).rhs());
+    return precedence = 0,
+           convert_sva_binary("s_until_with", to_sva_s_until_with_expr(src));
 
   else if(src.id()==ID_function_call)
     return convert_function_call(to_function_call_expr(src));
