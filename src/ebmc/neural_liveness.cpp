@@ -318,7 +318,7 @@ tvt neural_livenesst::verify(
 
 int do_neural_liveness(
   const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+  message_handlert &message_handler)
 {
-  return neural_livenesst(cmdline, ui_message_handler)();
+  return neural_livenesst(cmdline, message_handler)();
 }
