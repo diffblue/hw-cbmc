@@ -32,7 +32,13 @@ void ranking_function_training(
     return torch::relu(next - curr + delta);
   };
 
+  #if 1
   torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
+  #endif
+  #if 0
+  torch::optim::AdamW optimizer(net->parameters(), /*lr=*/0.1);
+  #endif
+
   torch::Tensor last_loss = {};
 
   for(size_t epoch = 1; epoch <= 10; ++epoch)
