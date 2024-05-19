@@ -18,6 +18,11 @@ void ranking_function_training(
   std::shared_ptr<RankingNet> net,
   const std::vector<torch::Tensor> &data)
 {
+  assert(net != nullptr);
+
+  for(auto &batch : data)
+    assert(batch.size(0) == 2);
+
   auto ranking_function_loss =
     [](const torch::Tensor &curr, const torch::Tensor &next) -> torch::Tensor
   {
@@ -41,7 +46,7 @@ void ranking_function_training(
       optimizer.zero_grad();
 
       // Execute the model on the input data.
-      assert(batch.size(1) == 2);
+      assert(batch.size(0) == 2);
       torch::Tensor prediction_curr = net->forward(batch[0]);
       torch::Tensor prediction_next = net->forward(batch[1]);
       //      std::cout << "B: " << std::fixed << batch[0][1].item<double>() << " -> " << batch[1][1].item<double>() << "\n";

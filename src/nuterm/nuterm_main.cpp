@@ -121,6 +121,8 @@ std::vector<torch::Tensor> traces_to_tensors(
       auto &current = full_trace[t - 1];
       auto &next = full_trace[t];
       auto tensor = state_pair_to_tensor(state_variables, current, next);
+      assert(tensor.size(0) == 2);
+      assert(tensor.size(1) == state_variables.size());
       result.push_back(std::move(tensor));
     }
   }
