@@ -125,8 +125,6 @@ bool is_live_state(
   auto value_it = state.changes.find(liveness_signal);
   if(value_it == state.changes.end())
   {
-    for(auto &[id, value] : state.changes)
-      std::cerr << "I: " << id << " = " << value << "\n";
     std::cerr << "state without liveness signal" << '\n';
     abort();
   }
@@ -156,6 +154,7 @@ std::vector<torch::Tensor> traces_to_tensors(
   for(auto &trace : traces)
   {
     const auto full_trace = trace.full_trace();
+
     for(std::size_t t = 1; t < full_trace.size(); t++)
     {
       auto &current = full_trace[t - 1];
@@ -261,7 +260,7 @@ int main(int argc, const char *argv[])
   const auto tensors =
     traces_to_tensors(state_variables, liveness_signal, traces);
 
-  std::cout << "Got " << tensors.size() << " transitions\n";
+  std::cout << "Got " << tensors.size() << " transitions to rank\n";
 
   const auto net = std::make_shared<RankingNet>(state_variables.size());
 

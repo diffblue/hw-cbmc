@@ -102,6 +102,7 @@ std::vector<vcdt::statet> vcdt::full_trace() const
   {
     if(result.empty())
     {
+      // first state
       result.push_back(state);
     }
     else
@@ -115,7 +116,7 @@ std::vector<vcdt::statet> vcdt::full_trace() const
       for(auto &change : state.changes)
         full_state.changes[change.first] = change.second;
 
-      result.push_back(std::move(state));
+      result.push_back(std::move(full_state));
     }
   }
 
