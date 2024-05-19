@@ -1,0 +1,8 @@
+KNOWNBUG
+continuous_assignment_to_variable_verilog.v
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This should error.

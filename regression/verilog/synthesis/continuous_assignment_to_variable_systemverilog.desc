@@ -1,5 +1,5 @@
 CORE
-continuous_assignment_to_variable.v
+continuous_assignment_to_variable_systemverilog.sv
 --bound 0
 ^\[main\.property\.p1\] always main\.some_reg == main\.i: PROVED up to bound 0$
 ^EXIT=0$
