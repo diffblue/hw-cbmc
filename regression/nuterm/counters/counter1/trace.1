@@ -1,28 +1,30 @@
 $date
-  Sun Jan  7 16:33:39 2024
+  Sun May 19 16:34:19 2024
 $end
 $timescale
   1ns
 $end
 $scope module main $end
-  $var reg 32 main.counter main.counter [31:0] $end
   $var wire 1 main.clk main.clk $end
+  $var reg 32 main.counter main.counter [31:0] $end
+  $var wire 1 main.nuterm::live main.nuterm::live $end
 $upscope $end
 $enddefinitions $end
 #0
-b00010000000000000000000000000000 main.counter
 0main.clk
+b00010000000000000000000000000000 main.counter
+0main.nuterm::live
 #1
-b00001111111111111111111111111111 main.counter
 1main.clk
+b00001111111111111111111111111111 main.counter
 #2
 b00001111111111111111111111111110 main.counter
 #3
-b00001111111111111111111111111101 main.counter
 0main.clk
+b00001111111111111111111111111101 main.counter
 #4
-b00001111111111111111111111111100 main.counter
 1main.clk
+b00001111111111111111111111111100 main.counter
 #5
 b00001111111111111111111111111011 main.counter
 #6
