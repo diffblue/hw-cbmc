@@ -67,7 +67,8 @@ state_variablest state_variables(const tracest &traces)
 bool has_suffix(const std::string &s, const std::string &suffix)
 {
   if(s.length() >= suffix.length())
-    return s.compare(s.length() - suffix.length(), suffix.length(), suffix) == 0;
+    return s.compare(s.length() - suffix.length(), suffix.length(), suffix) ==
+           0;
   else
     return false;
 }
@@ -163,7 +164,9 @@ std::vector<torch::Tensor> traces_to_tensors(
       // We must discard transitions in/out of 'live' states.
       // There is no need for the ranking function to decrease
       // on such transitions.
-      if(!is_live_state(liveness_signal, current) && !is_live_state(liveness_signal, next))
+      if(
+        !is_live_state(liveness_signal, current) &&
+        !is_live_state(liveness_signal, next))
       {
         auto tensor = state_pair_to_tensor(state_variables, current, next);
         assert(tensor.size(0) == 2);
@@ -255,7 +258,8 @@ int main(int argc, const char *argv[])
 
   torch::manual_seed(0);
 
-  const auto tensors = traces_to_tensors(state_variables, liveness_signal, traces);
+  const auto tensors =
+    traces_to_tensors(state_variables, liveness_signal, traces);
 
   std::cout << "Got " << tensors.size() << " transitions\n";
 
