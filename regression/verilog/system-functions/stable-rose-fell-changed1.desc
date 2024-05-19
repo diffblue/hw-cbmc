@@ -1,0 +1,7 @@
+CORE
+stable-rose-fell-changed1.sv
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

@@ -676,6 +676,20 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
+  else if(
+    identifier == "$stable" || identifier == "$rose" || identifier == "$fell" ||
+    identifier == "$changed")
+  {
+    if(arguments.size() != 1 && arguments.size() != 2)
+    {
+      throw errort().with_location(expr.source_location())
+        << identifier << " takes one or two arguments";
+    }
+
+    expr.type() = bool_typet();
+
+    return std::move(expr);
+  }
   else
   {
     throw errort().with_location(expr.function().source_location())
