@@ -33,19 +33,17 @@ ebmc delay_15.sv --neural-liveness "200000-cnt"
 ebmc delay_16.sv --neural-liveness "400000-cnt"
 fi
 
-if false ; then
-ebmc gray_1.sv --neural-liveness "2**8-cnt"
-ebmc gray_2.sv --neural-liveness "2**9-cnt"
-ebmc gray_3.sv --neural-liveness "2**10-cnt"
-ebmc gray_4.sv --neural-liveness "2**11-cnt"
-ebmc gray_5.sv --neural-liveness "2**12-cnt"
-ebmc gray_6.sv --neural-liveness "2**13-cnt"
-ebmc gray_7.sv --neural-liveness "2**14-cnt"
-ebmc gray_8.sv --neural-liveness "2**15-cnt"
-ebmc gray_9.sv --neural-liveness "2**16-cnt"
-ebmc gray_10.sv --neural-liveness "2**17-cnt"
-ebmc gray_11.sv --neural-liveness "2**18-cnt"
-fi
+ebmc gray_1.sv --neural-liveness
+ebmc gray_2.sv --neural-liveness
+ebmc gray_3.sv --neural-liveness
+ebmc gray_4.sv --neural-liveness
+ebmc gray_5.sv --neural-liveness
+ebmc gray_6.sv --neural-liveness
+ebmc gray_7.sv --neural-liveness
+ebmc gray_8.sv --neural-liveness
+ebmc gray_9.sv --neural-liveness
+ebmc gray_10.sv --neural-liveness
+ebmc gray_11.sv --neural-liveness
 
 if false ; then
 ebmc i2c_1.sv --neural-liveness "2**9-cnt"
@@ -123,20 +121,18 @@ ebmc thermocouple_16.sv --neural-liveness "{2-state,2**18-cnt}"
 ebmc thermocouple_17.sv --neural-liveness "{2-state,2**19-cnt}"
 fi
 
-if false ; then
-ebmc uart_transmit_1.sv --neural-liveness "2**3-tx_cnt"
-ebmc uart_transmit_2.sv --neural-liveness "2**4-tx_cnt"
-ebmc uart_transmit_3.sv --neural-liveness "2**4-tx_cnt"
-ebmc uart_transmit_4.sv --neural-liveness "2**4-tx_cnt"
-ebmc uart_transmit_5.sv --neural-liveness "2**4-tx_cnt"
-ebmc uart_transmit_6.sv --neural-liveness "2**4-tx_cnt"
-ebmc uart_transmit_7.sv --neural-liveness "2**4-tx_cnt"
-ebmc uart_transmit_8.sv --neural-liveness "2**4-tx_cnt"
-ebmc uart_transmit_9.sv --neural-liveness "2**5-tx_cnt"
-ebmc uart_transmit_10.sv --neural-liveness "2**5-tx_cnt"
-ebmc uart_transmit_11.sv --neural-liveness "2**5-tx_cnt"
-ebmc uart_transmit_12.sv --neural-liveness "2**6-tx_cnt"
-fi
+ebmc uart_transmit_1.sv --neural-liveness
+ebmc uart_transmit_2.sv --neural-liveness
+ebmc uart_transmit_3.sv --neural-liveness
+ebmc uart_transmit_4.sv --neural-liveness
+ebmc uart_transmit_5.sv --neural-liveness
+ebmc uart_transmit_6.sv --neural-liveness
+ebmc uart_transmit_7.sv --neural-liveness
+ebmc uart_transmit_8.sv --neural-liveness
+ebmc uart_transmit_9.sv --neural-liveness
+ebmc uart_transmit_10.sv --neural-liveness
+ebmc uart_transmit_11.sv --neural-liveness
+ebmc uart_transmit_12.sv --neural-liveness
 
 if false ; then
 ebmc vga_1.sv --neural-liveness "{2**5-v_cnt,2**7-h_cnt}"
