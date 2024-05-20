@@ -230,18 +230,21 @@ std::string ranking_net_to_string(
     {
       terms.push_back(var.reference);
     }
-    else if(weight_int == -1)
-    {
-      terms.push_back("-" + var.reference);
-    }
     else
     {
-      terms.push_back(std::to_string(weight_int) + "*" + var.reference);
+      if(weight_int >= 0)
+        terms.push_back(std::to_string(weight_int) + "*" + var.reference);
+      else
+      {
+        // make signed, but first add a bit
+        terms.push_back(std::to_string(weight_int) + "*$signed({1'b0," + var.reference +"})");
+      }
     }
   }
 
   long long bias_int = round(bias.item<double>());
-  terms.push_back(std::to_string(bias_int));
+  if(bias_int != 0)
+    terms.push_back(std::to_string(bias_int));
 
   return sum(terms);
 }
