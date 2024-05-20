@@ -70,9 +70,6 @@ int neural_livenesst::operator()()
   if(cmdline.isset("show-traces"))
     return show_traces();
 
-  if(!cmdline.isset("neural-engine"))
-    throw ebmc_errort() << "give a neural engine";
-
   transition_system =
     get_transition_system(cmdline, message.get_message_handler());
 
@@ -260,7 +257,8 @@ exprt neural_livenesst::guess(
 {
   message.status() << "Fitting a ranking function" << messaget::eom;
 
-  const auto engine = cmdline.get_value("neural-engine");
+  const auto engine = cmdline.isset("neural-engine") ? cmdline.get_value("neural-engine") : "nuterm";
+
   temporary_filet engine_output("ebmc-neural", "txt");
   const auto cmd = engine + " " + temp_dir.path + " | tee " + engine_output();
 
