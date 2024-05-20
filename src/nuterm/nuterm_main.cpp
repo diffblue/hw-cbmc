@@ -50,18 +50,33 @@ std::size_t number_of_transitions(const tracest &traces)
   return result;
 }
 
-using state_variablest = std::map<std::string, std::size_t>;
+struct state_variablet
+{
+  std::size_t index;
+  std::string reference;
+};
+
+using state_variablest = std::map<std::string, state_variablet>;
 
 state_variablest state_variables(const tracest &traces)
 {
   // number all identifiers
-  state_variablest identifiers;
-  for(auto &trace : traces)
-    for(auto &state : trace.states)
-      for(auto &value_change : state.changes)
-        identifiers.emplace(value_change.first, identifiers.size());
+  state_variablest state_variables;
 
-  return identifiers;
+  for(auto &trace : traces)
+  {
+    for(auto &[id, var] : trace.var_map)
+    {
+      if(state_variables.find(id) == state_variables.end())
+      {
+        auto &state_variable = state_variables[id];
+        state_variable.index = state_variables.size()-1;
+        state_variable.reference = var.reference;
+      }
+    }
+  }
+
+  return state_variables;
 }
 
 bool has_suffix(const std::string &s, const std::string &suffix)
@@ -94,13 +109,13 @@ torch::Tensor state_to_tensor(
 {
   std::vector<double> data;
   data.resize(state_variables.size(), 0);
-  for(auto &var : state_variables)
+  for(auto &[id, var] : state_variables)
   {
-    if(has_suffix(var.first, ".clk"))
+    if(var.reference == "clk")
       continue;
-    auto v_it = state.changes.find(var.first);
+    auto v_it = state.changes.find(id);
     if(v_it != state.changes.end())
-      data[var.second] = vcd_to_value(v_it->second);
+      data[var.index] = vcd_to_value(v_it->second);
   }
 
   return torch::tensor(data, torch::kFloat64);
@@ -205,24 +220,24 @@ std::string ranking_net_to_string(
   auto weight = net->named_parameters()["fc1.weight"];
   auto bias = net->named_parameters()["fc1.bias"];
 
-  for(auto &var : state_variables)
+  for(auto &[id, var] : state_variables)
   {
-    assert(var.second < state_variables.size());
-    long long weight_int = round(weight[0][var.second].item<double>());
+    assert(var.index < state_variables.size());
+    long long weight_int = round(weight[0][var.index].item<double>());
     if(weight_int == 0)
     {
     }
     else if(weight_int == 1)
     {
-      terms.push_back(var.first);
+      terms.push_back(var.reference);
     }
     else if(weight_int == -1)
     {
-      terms.push_back("-" + var.first);
+      terms.push_back("-" + var.reference);
     }
     else
     {
-      terms.push_back(std::to_string(weight_int) + "*" + var.first);
+      terms.push_back(std::to_string(weight_int) + "*" + var.reference);
     }
   }
 
@@ -253,8 +268,8 @@ int main(int argc, const char *argv[])
 
   auto liveness_signal = ::liveness_signal(state_variables);
 
-  for(auto &v : state_variables)
-    std::cout << "V" << v.second << "=" << v.first << '\n';
+  for(auto &[_, var] : state_variables)
+    std::cout << "V" << var.index << "=" << var.reference << '\n';
 
   std::cout << "Liveness signal: " << liveness_signal << '\n';
 
@@ -299,12 +314,12 @@ int main(int argc, const char *argv[])
   {
     auto weight = net->named_parameters()["fc1.weight"];
     auto bias = net->named_parameters()["fc1.bias"];
-    for(auto &var : state_variables)
+    for(auto &[_, var] : state_variables)
     {
-      assert(var.second < state_variables.size());
-      std::cout << "weight " << var.first << " = "
-                << (long long)round(weight[0][var.second].item<double>()) << ' '
-                << weight[0][var.second].item<double>() << '\n';
+      assert(var.index < state_variables.size());
+      std::cout << "weight " << var.reference << " = "
+                << (long long)round(weight[0][var.index].item<double>()) << ' '
+                << weight[0][var.index].item<double>() << '\n';
     }
 
     std::cout << "bias: " << (long long)(round(bias.item<double>())) << ' '

@@ -14,6 +14,17 @@ Author: Daniel Kroening, dkr@amazon.com
 class vcdt
 {
 public:
+  struct vart
+  {
+    std::string type;
+    std::size_t size;
+    std::string id;
+    std::string reference;
+  };
+
+  using var_mapt = std::map<std::string, vart>;
+  var_mapt var_map;
+
   using value_mapt = std::map<std::string, std::string>;
 
   struct statet

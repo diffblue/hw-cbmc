@@ -34,12 +34,23 @@ static std::string vcd_token(std::istream &in)
   return token;
 }
 
-void vcd_command(vcdt &, const std::string &token, std::istream &in)
+void vcd_command(vcdt &vcd, const std::string &token, std::istream &in)
 {
+  if(token == "$var")
+  {
+    vcdt::vart var;
+    var.type = vcd_token(in);
+    var.size = std::stoull(vcd_token(in));
+    var.id = vcd_token(in);
+    var.reference = vcd_token(in);
+    vcd.var_map[var.id] = std::move(var);
+  }
+
   // look for $end
   while(true)
   {
     auto t = vcd_token(in);
+
     if(t.empty() || t == "$end")
       return;
   }
