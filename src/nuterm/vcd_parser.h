@@ -45,6 +45,6 @@ public:
   std::vector<statet> full_trace() const;
 };
 
-std::ostream &operator << (std::ostream &, const vcdt::statet &);
+std::ostream &operator<<(std::ostream &, const vcdt::statet &);
 
 vcdt vcd_parser(std::istream &);

@@ -32,12 +32,12 @@ void ranking_function_training(
     return torch::relu(next - curr + delta);
   };
 
-  #if 0
+#if 0
   torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
-  #endif
-  #if 1
+#endif
+#if 1
   torch::optim::Adam optimizer(net->parameters(), /*lr=*/0.01);
-  #endif
+#endif
 
   torch::Tensor last_loss = {};
 
@@ -49,7 +49,7 @@ void ranking_function_training(
     for(auto &batch : data)
     {
       //std::cout << "B: " << batch << "\n";
-    
+
       // Reset gradients.
       optimizer.zero_grad();
 
