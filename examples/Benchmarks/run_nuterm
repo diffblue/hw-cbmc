@@ -2,9 +2,9 @@
 
 set -e
 
-ebmc PWM_1.sv --neural-liveness --trace-steps 1000 --number-of-traces 1
+ebmc PWM_1.sv --neural-liveness --trace-steps 700 --number-of-traces 1
 ebmc PWM_2.sv --neural-liveness --trace-steps 1000 --number-of-traces 1
-ebmc PWM_3.sv --neural-liveness --trace-steps 1000 --number-of-traces 1
+ebmc PWM_3.sv --neural-liveness --trace-steps 3000 --number-of-traces 1
 ebmc PWM_4.sv --neural-liveness --trace-steps 5000 --number-of-traces 1
 ebmc PWM_5.sv --neural-liveness --trace-steps 10000 --number-of-traces 1
 ebmc PWM_6.sv --neural-liveness --trace-steps 20000 --number-of-traces 1
