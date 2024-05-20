@@ -282,6 +282,11 @@ int main(int argc, const char *argv[])
 
   std::cout << "Got " << tensors.size() << " transitions to rank\n";
 
+  if(tensors.empty())
+  {
+    return 0;
+  }
+
   const auto net = std::make_shared<RankingNet>(state_variables.size());
 
 #if 0
