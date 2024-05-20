@@ -70,7 +70,7 @@ state_variablest state_variables(const tracest &traces)
       if(state_variables.find(id) == state_variables.end())
       {
         auto &state_variable = state_variables[id];
-        state_variable.index = state_variables.size()-1;
+        state_variable.index = state_variables.size() - 1;
         state_variable.reference = var.reference;
       }
     }
