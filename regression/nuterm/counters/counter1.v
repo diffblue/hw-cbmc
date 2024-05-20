@@ -6,6 +6,6 @@ module main(input clk);
     if(counter != 0)
       counter = counter - 1;
 
-  wire \nuterm::live = counter == 0;
+  wire \$live = counter == 0;
 
 endmodule

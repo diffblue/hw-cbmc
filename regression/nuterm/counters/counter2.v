@@ -8,6 +8,6 @@ module main(input clk);
     else
       counter = 0;
 
-  wire \nuterm::live = counter == 0;
+  wire \$live = counter == 0;
 
 endmodule

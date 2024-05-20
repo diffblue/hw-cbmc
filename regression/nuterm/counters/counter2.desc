@@ -1,9 +1,9 @@
 CORE
 counter2
 
-^weight main.clk = 0 .*$
-^weight main.counter = 1 .*$
-^RESULT: main.counter-1$
-^bias: -1 .*$
+^weight clk = 0 .*$
+^weight counter = -1 .*$
+^bias: 0 .*$
+^RESULT: -1\*\$signed\(\{1'b0,counter\}\)$
 ^EXIT=0$
 ^SIGNAL=0$

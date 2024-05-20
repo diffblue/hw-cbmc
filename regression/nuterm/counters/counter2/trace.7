@@ -1,5 +1,5 @@
 $date
-  Mon May 20 14:40:09 2024
+  Mon May 20 17:40:02 2024
 $end
 $timescale
   1ns
@@ -7,19 +7,19 @@ $end
 $scope module Verilog::main $end
   $var wire 1 main.clk clk $end
   $var reg 32 main.counter counter [31:0] $end
-  $var wire 1 main.nuterm::live nuterm::live $end
+  $var wire 1 main.$live $live $end
 $upscope $end
 $enddefinitions $end
 #0
 0main.clk
 b10000000000000000000000000001000 main.counter
-0main.nuterm::live
+0main.$live
 #1
 b00000000000000000000000000000000 main.counter
-1main.nuterm::live
+1main.$live
 #2
 b00000000000000000000000000000001 main.counter
-0main.nuterm::live
+0main.$live
 #3
 b00000000000000000000000000000010 main.counter
 #4

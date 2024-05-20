@@ -15,7 +15,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 void set_liveness_signal(transition_systemt &transition_system, exprt property)
 {
-  static const irep_idt identifier = id2string(transition_system.main_symbol->name) + ".$live";
+  static const irep_idt identifier =
+    id2string(transition_system.main_symbol->name) + ".$live";
 
   // add symbol if needed
   if(!transition_system.symbol_table.has_symbol(identifier))

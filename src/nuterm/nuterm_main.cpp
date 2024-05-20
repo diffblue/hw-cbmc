@@ -237,7 +237,9 @@ std::string ranking_net_to_string(
       else
       {
         // make signed, but first add a bit
-        terms.push_back(std::to_string(weight_int) + "*$signed({1'b0," + var.reference +"})");
+        terms.push_back(
+          std::to_string(weight_int) + "*$signed({1'b0," + var.reference +
+          "})");
       }
     }
   }

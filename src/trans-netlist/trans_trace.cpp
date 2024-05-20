@@ -807,13 +807,13 @@ void show_trans_trace_vcd(
 
   // determine module
 
-  const symbolt &symbol1=ns.lookup(
-    state.assignments.front().lhs.get(ID_identifier));
+  const symbolt &symbol1 =
+    ns.lookup(state.assignments.front().lhs.get(ID_identifier));
 
   auto &module_symbol = ns.lookup(symbol1.module);
 
   // print those in the top module
-  
+
   out << "$scope module " << vcd_reference(module_symbol, "") << " $end\n";
 
   // split up into hierarchy
