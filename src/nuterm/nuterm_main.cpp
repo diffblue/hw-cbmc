@@ -88,11 +88,6 @@ bool has_suffix(const std::string &s, const std::string &suffix)
     return false;
 }
 
-bool is_live_signal(const std::string &identifier)
-{
-  return has_suffix(identifier, "nuterm::live");
-}
-
 #include <iostream>
 
 double vcd_to_value(const std::string &src)
@@ -150,11 +145,13 @@ bool is_live_state(
 
 std::string liveness_signal(const state_variablest &state_variables)
 {
-  for(auto &[name, _] : state_variables)
-    if(is_live_signal(name))
-      return name;
+  for(auto &[id, var] : state_variables)
+    if(var.reference == "nuterm::live")
+      return id;
 
+  std::cout.flush();
   std::cerr << "failed to find liveness signal" << '\n';
+
   abort();
 }
 
