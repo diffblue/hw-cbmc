@@ -32,10 +32,12 @@ tracest read_traces(const std::string &path)
 
   for(const auto &entry : file_names)
   {
-    std::cout << "Reading " << entry << '\n';
+    //std::cout << "Reading " << entry << '\n';
     std::ifstream in(entry);
     traces.push_back(vcd_parser(in));
   }
+
+  std::cout << "Read " << traces.size() << " trace files\n";
 
   return traces;
 }
@@ -146,7 +148,7 @@ bool is_live_state(
 std::string liveness_signal(const state_variablest &state_variables)
 {
   for(auto &[id, var] : state_variables)
-    if(var.reference == "nuterm::live")
+    if(var.reference == "$live")
       return id;
 
   std::cout.flush();

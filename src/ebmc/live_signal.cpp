@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Live Signal
+Module: Liveness Signal
 
 Author: Daniel Kroening, dkr@amazon.com
 
@@ -13,9 +13,9 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "transition_system.h"
 
-void set_live_signal(transition_systemt &transition_system, exprt property)
+void set_liveness_signal(transition_systemt &transition_system, exprt property)
 {
-  static const irep_idt identifier = "nuterm::live";
+  static const irep_idt identifier = id2string(transition_system.main_symbol->name) + ".$live";
 
   // add symbol if needed
   if(!transition_system.symbol_table.has_symbol(identifier))
@@ -24,7 +24,7 @@ void set_live_signal(transition_systemt &transition_system, exprt property)
       identifier, bool_typet(), transition_system.main_symbol->mode};
 
     live_symbol.module = transition_system.main_symbol->module;
-    live_symbol.base_name = "live";
+    live_symbol.base_name = "$live";
 
     const auto symbol_expr = live_symbol.symbol_expr();
 

@@ -58,7 +58,7 @@ protected:
 
   int show_traces();
   void validate_properties();
-  void set_live_signal(const ebmc_propertiest::propertyt &, const exprt &);
+  void set_liveness_signal(const ebmc_propertiest::propertyt &, const exprt &);
   void sample(std::function<void(trans_tracet)>);
   std::function<void(trans_tracet)> dump_vcd_files(temp_dirt &);
   exprt guess(ebmc_propertiest::propertyt &, const temp_dirt &);
@@ -94,7 +94,7 @@ int neural_livenesst::operator()()
       continue;
 
     // Set the liveness signal for the property.
-    set_live_signal(property, original_trans_expr);
+    set_liveness_signal(property, original_trans_expr);
 
     // Now sample some traces.
     // Store the traces in a set of files, one per
@@ -110,6 +110,8 @@ int neural_livenesst::operator()()
 
       if(verify(property, candidate).is_true())
         break;
+
+      throw ebmc_errort() << "giving up";
     }
   }
 
@@ -136,7 +138,7 @@ int neural_livenesst::show_traces()
     if(property.is_disabled())
       continue;
 
-    set_live_signal(property, original_trans_expr);
+    set_liveness_signal(property, original_trans_expr);
 
     sample([&](trans_tracet trace) {
       namespacet ns(transition_system.symbol_table);
@@ -177,7 +179,7 @@ void neural_livenesst::validate_properties()
   }
 }
 
-void neural_livenesst::set_live_signal(
+void neural_livenesst::set_liveness_signal(
   const ebmc_propertiest::propertyt &property,
   const exprt &original_trans_expr)
 {
@@ -185,7 +187,7 @@ void neural_livenesst::set_live_signal(
   auto main_symbol_writeable = transition_system.symbol_table.get_writeable(
     transition_system.main_symbol->name);
   main_symbol_writeable->value = original_trans_expr; // copy
-  ::set_live_signal(transition_system, property.normalized_expr);
+  ::set_liveness_signal(transition_system, property.normalized_expr);
 }
 
 std::function<void(trans_tracet)>

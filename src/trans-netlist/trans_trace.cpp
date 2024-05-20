@@ -796,13 +796,6 @@ void show_trans_trace_vcd(
 
   assert(!state.assignments.empty());
 
-  const symbolt &symbol1=ns.lookup(
-    state.assignments.front().lhs.get(ID_identifier));
-
-  auto &module_symbol = ns.lookup(symbol1.module);
-
-  out << "$scope module " << vcd_reference(module_symbol, "") << " $end\n";
-
   // get identifiers
   std::set<irep_idt> ids;
   
@@ -811,7 +804,18 @@ void show_trans_trace_vcd(
     assert(a.lhs.id()==ID_symbol);
     ids.insert(to_symbol_expr(a.lhs).get_identifier());
   }
+
+  // determine module
+
+  const symbolt &symbol1=ns.lookup(
+    state.assignments.front().lhs.get(ID_identifier));
+
+  auto &module_symbol = ns.lookup(symbol1.module);
+
+  // print those in the top module
   
+  out << "$scope module " << vcd_reference(module_symbol, "") << " $end\n";
+
   // split up into hierarchy
   vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name) + ".", out, 1);
 
