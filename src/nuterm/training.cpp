@@ -32,11 +32,11 @@ void ranking_function_training(
     return torch::relu(next - curr + delta);
   };
 
-  #if 1
+  #if 0
   torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
   #endif
-  #if 0
-  torch::optim::AdamW optimizer(net->parameters(), /*lr=*/0.1);
+  #if 1
+  torch::optim::Adam optimizer(net->parameters(), /*lr=*/0.01);
   #endif
 
   torch::Tensor last_loss = {};
@@ -48,6 +48,8 @@ void ranking_function_training(
     // Iterate the data loader to yield batches from the dataset.
     for(auto &batch : data)
     {
+      //std::cout << "B: " << batch << "\n";
+    
       // Reset gradients.
       optimizer.zero_grad();
 
@@ -55,12 +57,14 @@ void ranking_function_training(
       assert(batch.size(0) == 2);
       torch::Tensor prediction_curr = net->forward(batch[0]);
       torch::Tensor prediction_next = net->forward(batch[1]);
-      //      std::cout << "B: " << std::fixed << batch[0][1].item<double>() << " -> " << batch[1][1].item<double>() << "\n";
-      //      std::cout << "R: " << std::fixed << prediction_curr.item<double>() << " -> " << prediction_next.item<double>() << "\n";
+      // std::cout << "B: " << std::fixed << batch[0][1].item<double>() << " -> " << batch[1][1].item<double>() << "\n";
+      // std::cout << "R: " << std::fixed << prediction_curr.item<double>() << " -> " << prediction_next.item<double>() << "\n";
 
       // Compute a loss value to judge the prediction of our model.
       torch::Tensor loss =
         ranking_function_loss(prediction_curr, prediction_next);
+
+      // std::cout << "L: " << loss << "\n";
 
       // Compute gradients of the loss w.r.t. the parameters of our model.
       loss.backward();
@@ -68,7 +72,7 @@ void ranking_function_training(
       // Update the parameters based on the calculated gradients.
       optimizer.step();
 
-#if 0
+#if 1
       if(1)
       {
         std::cout << "Epoch: " << epoch << " | Batch: " << batch_index
@@ -82,6 +86,9 @@ void ranking_function_training(
 
       last_loss = loss;
     }
+
+    if(last_loss.item<double>() == 0)
+      break; // done
   }
 
   std::cout << "Final loss: " << std::fixed << std::setprecision(3)

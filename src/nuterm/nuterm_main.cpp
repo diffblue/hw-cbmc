@@ -96,6 +96,7 @@ torch::Tensor state_to_tensor(
   data.resize(state_variables.size(), 0);
   for(auto &var : state_variables)
   {
+    if(has_suffix(var.first, ".clk")) continue;
     auto v_it = state.changes.find(var.first);
     if(v_it != state.changes.end())
       data[var.second] = vcd_to_value(v_it->second);
@@ -167,6 +168,8 @@ std::vector<torch::Tensor> traces_to_tensors(
         !is_live_state(liveness_signal, current) &&
         !is_live_state(liveness_signal, next))
       {
+        std::cout << "\n" << current << "---->\n" << next;
+      
         auto tensor = state_pair_to_tensor(state_variables, current, next);
         assert(tensor.size(0) == 2);
         assert(tensor.size(1) == state_variables.size());

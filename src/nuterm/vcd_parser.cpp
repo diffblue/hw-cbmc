@@ -93,6 +93,13 @@ vcdt vcd_parser(std::istream &in)
   return vcd;
 }
 
+std::ostream &operator << (std::ostream &out, const vcdt::statet &state)
+{
+  for(auto &[id, value] : state.changes)
+    out << id << " = " << std::stoull(value, nullptr, 2) << '\n';
+  return out;
+}
+
 std::vector<vcdt::statet> vcdt::full_trace() const
 {
   std::vector<statet> result;

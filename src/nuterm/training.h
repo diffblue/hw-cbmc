@@ -8,7 +8,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <torch/torch.h>
 
-//#include <iostream>
+#include <iostream>
 
 struct RankingNet : torch::nn::Module
 {
@@ -29,7 +29,8 @@ struct RankingNet : torch::nn::Module
   torch::Tensor forward(torch::Tensor x)
   {
     // the relu ensures that the function is bounded from below by 0
-    return torch::relu(fc1->forward(x));
+    // return torch::relu(fc1->forward(x));
+    return fc1->forward(x);
   }
 
   torch::nn::Linear fc1{nullptr};
