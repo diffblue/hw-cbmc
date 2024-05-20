@@ -538,14 +538,9 @@ Function: vcd_reference
 
 \*******************************************************************/
 
-std::string vcd_reference(const std::string &id, const std::string &prefix)
+std::string vcd_reference(const symbolt &symbol, const std::string &prefix)
 {
-  std::string result = id;
-
-  if((has_prefix(result, "verilog::")) || (has_prefix(result, "Verilog::")))
-    result.erase(0, 9);
-  else if(has_prefix(result, "smv::"))
-    result.erase(0, 5);
+  std::string result = id2string(symbol.name);
 
   if(!prefix.empty() && has_prefix(result, prefix))
     result.erase(0, prefix.size());
@@ -752,7 +747,7 @@ void vcd_hierarchy_rec(
     if(width>=1)
       out << std::string(depth * 2, ' ') << "$var " << signal_class << " "
           << width << " " << vcd_identifier(display_name) << " "
-          << vcd_reference(display_name, prefix) << (suffix == "" ? "" : " ")
+          << vcd_reference(symbol, prefix) << (suffix == "" ? "" : " ")
           << suffix << " $end" << '\n';
   }
   
@@ -804,8 +799,9 @@ void show_trans_trace_vcd(
   const symbolt &symbol1=ns.lookup(
     state.assignments.front().lhs.get(ID_identifier));
 
-  std::string module_name=id2string(symbol1.module);
-  out << "$scope module " << vcd_reference(module_name, "") << " $end\n";
+  auto &module_symbol = ns.lookup(symbol1.module);
+
+  out << "$scope module " << vcd_reference(module_symbol, "") << " $end\n";
 
   // get identifiers
   std::set<irep_idt> ids;
@@ -817,7 +813,7 @@ void show_trans_trace_vcd(
   }
   
   // split up into hierarchy
-  vcd_hierarchy_rec(ns, ids, module_name+".", out, 1);
+  vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name)+".", out, 1);
   
   out << "$upscope $end\n";  
 

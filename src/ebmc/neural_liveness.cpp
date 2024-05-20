@@ -195,7 +195,7 @@ neural_livenesst::dump_vcd_files(temp_dirt &temp_dir)
   return
     [&, trace_nr = 0ull, outfile_prefix](trans_tracet trace) mutable -> void {
       namespacet ns(transition_system.symbol_table);
-      auto filename = outfile_prefix + std::to_string(trace_nr + 1);
+      auto filename = outfile_prefix + std::to_string(++trace_nr);
       std::ofstream out(widen_if_needed(filename));
 
       if(!out)
@@ -243,12 +243,14 @@ void neural_livenesst::sample(std::function<void(trans_tracet)> trace_consumer)
   message.status() << "Sampling " << number_of_traces << " traces with "
                    << number_of_trace_steps << " steps" << messaget::eom;
 
+  null_message_handlert null_message_handler;
+
   random_traces(
     transition_system,
     trace_consumer,
     number_of_traces,
     number_of_trace_steps,
-    message.get_message_handler());
+    null_message_handler);
 }
 
 exprt neural_livenesst::guess(
@@ -276,7 +278,7 @@ exprt neural_livenesst::guess(
   if(!in)
     throw ebmc_errort() << "failed to open " << engine_output();
 
-  std::string prefix = "Candidate: ";
+  std::string prefix = "RESULT: ";
   std::string line;
   while(std::getline(in, line))
   {

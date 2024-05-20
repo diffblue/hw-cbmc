@@ -169,8 +169,7 @@ std::vector<torch::Tensor> traces_to_tensors(
         !is_live_state(liveness_signal, current) &&
         !is_live_state(liveness_signal, next))
       {
-        std::cout << "\n" << current << "---->\n" << next;
-
+        // std::cout << "\n" << current << "---->\n" << next;
         auto tensor = state_pair_to_tensor(state_variables, current, next);
         assert(tensor.size(0) == 2);
         assert(tensor.size(1) == state_variables.size());
