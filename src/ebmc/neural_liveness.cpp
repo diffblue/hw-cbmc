@@ -257,7 +257,9 @@ exprt neural_livenesst::guess(
 {
   message.status() << "Fitting a ranking function" << messaget::eom;
 
-  const auto engine = cmdline.isset("neural-engine") ? cmdline.get_value("neural-engine") : "nuterm";
+  const auto engine = cmdline.isset("neural-engine")
+                        ? cmdline.get_value("neural-engine")
+                        : "nuterm";
 
   temporary_filet engine_output("ebmc-neural", "txt");
   const auto cmd = engine + " " + temp_dir.path + " | tee " + engine_output();
