@@ -813,8 +813,8 @@ void show_trans_trace_vcd(
   }
   
   // split up into hierarchy
-  vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name)+".", out, 1);
-  
+  vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name) + ".", out, 1);
+
   out << "$upscope $end\n";  
 
   out << "$enddefinitions $end\n";
