@@ -522,6 +522,33 @@ std::string vcd_identifier(const std::string &id)
     result.erase(0, 9);
   else if(has_prefix(result, "smv::"))
     result.erase(0, 5);
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: vcd_reference
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string vcd_reference(const std::string &id, const std::string &prefix)
+{
+  std::string result=id;
+
+  if((has_prefix(result, "verilog::")) || (has_prefix(result, "Verilog::")))
+    result.erase(0, 9);
+  else if(has_prefix(result, "smv::"))
+    result.erase(0, 5);
+
+  if(!prefix.empty() && has_prefix(result, prefix))
+    result.erase(0, prefix.size());
     
   return result;
 }
@@ -727,7 +754,7 @@ void vcd_hierarchy_rec(
           << "$var " << signal_class << " "
           << width << " "
           << vcd_identifier(display_name) << " " 
-          << vcd_identifier(display_name)
+          << vcd_reference(display_name, prefix)
           << (suffix==""?"":" ") << suffix
           << " $end" << '\n';
   }
@@ -781,7 +808,7 @@ void show_trans_trace_vcd(
     state.assignments.front().lhs.get(ID_identifier));
 
   std::string module_name=id2string(symbol1.module);
-  out << "$scope module " << vcd_identifier(module_name) << " $end\n";
+  out << "$scope module " << vcd_reference(module_name, "") << " $end\n";
   
   // get identifiers
   std::set<irep_idt> ids;
