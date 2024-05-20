@@ -24,8 +24,7 @@ void ranking_function_training(
     assert(batch.size(0) == 2);
 
   auto ranking_function_loss =
-    [](const torch::Tensor &curr, const torch::Tensor &next) -> torch::Tensor
-  {
+    [](const torch::Tensor &curr, const torch::Tensor &next) -> torch::Tensor {
     assert(curr.dim() == 1 && next.dim() == 1);
     // The ranking needs to decrease from 'curr' to 'next'
     // by at least 'delta'. Anything less than that is loss.

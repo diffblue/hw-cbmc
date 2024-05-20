@@ -258,7 +258,7 @@ void pytorch_test6()
 
   auto my_loss =
     [](const torch::Tensor &curr, const torch::Tensor &next) -> torch::Tensor {
-      return torch::relu(next - curr + 1.0);
+    return torch::relu(next - curr + 1.0);
   };
 
   torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
@@ -318,7 +318,7 @@ void pytorch_test7()
 
   auto my_loss =
     [](const torch::Tensor &curr, const torch::Tensor &next) -> torch::Tensor {
-      return torch::relu(next - curr + 1.0);
+    return torch::relu(next - curr + 1.0);
   };
 
   torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
