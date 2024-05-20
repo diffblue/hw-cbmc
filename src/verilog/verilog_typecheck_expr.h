@@ -25,16 +25,18 @@ class verilog_typecheck_exprt:public verilog_typecheck_baset
 {
 public:
   verilog_typecheck_exprt(
+    verilog_standardt _standard,
     const namespacet &_ns,
     message_handlert &_message_handler)
-    : verilog_typecheck_baset(_ns, _message_handler)
+    : verilog_typecheck_baset(_standard, _ns, _message_handler)
   { }
 
   verilog_typecheck_exprt(
+    verilog_standardt _standard,
     const namespacet &_ns,
     const std::string &_module_identifier,
     message_handlert &_message_handler)
-    : verilog_typecheck_baset(_ns, _message_handler),
+    : verilog_typecheck_baset(_standard, _ns, _message_handler),
       module_identifier(_module_identifier)
   { }
 
@@ -139,6 +141,7 @@ private:
 bool verilog_typecheck(
   exprt &,
   const std::string &module_identifier,
+  verilog_standardt,
   message_handlert &,
   const namespacet &);
 

@@ -28,11 +28,13 @@ bool verilog_typecheck(
 bool verilog_typecheck(
   symbol_table_baset &,
   const verilog_modulet &verilog_module,
+  verilog_standardt,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
   symbol_table_baset &,
   const std::string &module_identifier,
+  verilog_standardt,
   const exprt::operandst &parameters,
   message_handlert &message_handler);
 
@@ -54,10 +56,11 @@ class verilog_typecheckt:
 {
 public:
   verilog_typecheckt(
+    verilog_standardt _standard,
     symbolt &_module_symbol,
     symbol_table_baset &_symbol_table,
     message_handlert &_message_handler)
-    : verilog_typecheck_exprt(ns, _message_handler),
+    : verilog_typecheck_exprt(_standard, ns, _message_handler),
       verilog_symbol_tablet(_symbol_table),
       ns(_symbol_table),
       module_symbol(_module_symbol),

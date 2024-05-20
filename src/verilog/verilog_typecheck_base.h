@@ -9,9 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPECHEK_BASE_H
 #define CPROVER_VERILOG_TYPECHEK_BASE_H
 
+#include <util/mp_arith.h>
 #include <util/namespace.h>
 #include <util/typecheck.h>
-#include <util/mp_arith.h>
+
+#include "verilog_standard.h"
 
 irep_idt verilog_module_symbol(const irep_idt &base_name);
 irep_idt verilog_module_name(const irep_idt &identifier);
@@ -23,11 +25,13 @@ class verilog_typecheck_baset:public typecheckt
 {
 public:
   verilog_typecheck_baset(
+    verilog_standardt _standard,
     const namespacet &_ns,
-    message_handlert &_message_handler):
-    typecheckt(_message_handler),
-    ns(_ns),
-    mode(ID_Verilog)
+    message_handlert &_message_handler)
+    : typecheckt(_message_handler),
+      standard(_standard),
+      ns(_ns),
+      mode(ID_Verilog)
   { }
 
   // overloaded to use verilog syntax
@@ -36,6 +40,7 @@ public:
   std::string to_string(const exprt &expr);
 
 protected:
+  verilog_standardt standard;
   const namespacet &ns;
   const irep_idt mode;
 

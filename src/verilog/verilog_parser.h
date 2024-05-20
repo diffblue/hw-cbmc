@@ -33,14 +33,12 @@ public:
   typedef enum { LANGUAGE, EXPRESSION, TYPE } grammart;
   grammart grammar;
 
-  verilog_standardt mode;
-
   virtual bool parse()
   {
     return yyverilogparse()!=0;
   }
 
-  verilog_parsert() : mode(verilog_standardt::V2005_VIS)
+  explicit verilog_parsert(verilog_standardt standard) : parse_tree(standard)
   {
     PRECONDITION(verilog_parser_ptr == nullptr);
     verilog_parser_ptr = this;
@@ -131,7 +129,7 @@ public:
   }
 };
 
-bool parse_verilog_file(const std::string &filename);
+bool parse_verilog_file(const std::string &filename, verilog_standardt);
 void verilog_scanner_init();
 
 #endif

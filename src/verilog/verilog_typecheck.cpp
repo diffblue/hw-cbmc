@@ -1746,7 +1746,10 @@ bool verilog_typecheck(
   }
 
   return verilog_typecheck(
-    symbol_table, it->second->verilog_module, message_handler);
+    symbol_table,
+    it->second->verilog_module,
+    parse_tree.standard,
+    message_handler);
 }
 
 /*******************************************************************\
@@ -1764,6 +1767,7 @@ Function: verilog_typecheck
 bool verilog_typecheck(
   symbol_table_baset &symbol_table,
   const verilog_modulet &verilog_module,
+  verilog_standardt standard,
   message_handlert &message_handler)
 {
   // create symbol
@@ -1793,6 +1797,7 @@ bool verilog_typecheck(
     return true;
   }
 
-  verilog_typecheckt verilog_typecheck(*new_symbol, symbol_table, message_handler);
+  verilog_typecheckt verilog_typecheck(
+    standard, *new_symbol, symbol_table, message_handler);
   return verilog_typecheck.typecheck_main();
 }

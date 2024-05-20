@@ -41,12 +41,13 @@ class verilog_synthesist:
 {
 public:
   verilog_synthesist(
+    verilog_standardt _standard,
     const namespacet &_ns,
     symbol_table_baset &_symbol_table,
     const irep_idt &_module,
     const optionst &_options,
     message_handlert &_message_handler)
-    : verilog_typecheck_baset(_ns, _message_handler),
+    : verilog_typecheck_baset(_standard, _ns, _message_handler),
       verilog_symbol_tablet(_symbol_table),
       options(_options),
       value_map(NULL),
