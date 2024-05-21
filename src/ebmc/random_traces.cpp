@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_types.h>
 #include <util/console.h>
 #include <util/expr_util.h>
+#include <util/find_symbols.h>
 #include <util/string2int.h>
 #include <util/unicode.h>
 
@@ -59,21 +60,35 @@ protected:
   const namespacet ns;
   messaget message;
 
-  using inputst = std::vector<symbol_exprt>;
+  using symbolst = std::vector<symbol_exprt>;
 
   std::vector<exprt> random_input_constraints(
     decision_proceduret &,
-    const inputst &,
+    const symbolst &inputs,
     size_t number_of_timeframes);
+
+  std::vector<exprt> random_initial_state_constraints(
+    decision_proceduret &,
+    const symbolst &state_variables);
+
+  static std::vector<exprt>
+  merge_constraints(const std::vector<exprt> &a, const std::vector<exprt> &b)
+  {
+    std::vector<exprt> result;
+    result.reserve(a.size() + b.size());
+    result.insert(result.end(), a.begin(), a.end());
+    result.insert(result.end(), b.begin(), b.end());
+    return result;
+  }
 
   constant_exprt random_value(const typet &);
 
-  inputst inputs() const;
+  symbolst inputs() const;
+  symbolst state_variables() const;
+  symbolst remove_constrained(const symbolst &) const;
 
-  void freeze_inputs(
-    const inputst &,
-    std::size_t number_of_timeframes,
-    boolbvt &) const;
+  void
+  freeze(const symbolst &, std::size_t number_of_timeframes, boolbvt &) const;
 
   // Random number generator. These are fully specified in
   // the C++ standard, and produce the same values on compliant
@@ -261,9 +276,14 @@ int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
 
   auto consumer = [&](trans_tracet trace) -> void {
     namespacet ns(transition_system.symbol_table);
-    if(cmdline.isset("random-waveform"))
+    if(cmdline.isset("random-waveform") || cmdline.isset("waveform"))
     {
       show_waveform(trace, ns);
+    }
+    else if(cmdline.isset("numbered-trace"))
+    {
+      messaget message(message_handler);
+      show_trans_trace_numbered(trace, message, ns, consolet::out());
     }
     else // default
     {
@@ -406,9 +426,9 @@ Function: random_tracest::inputs
 
 \*******************************************************************/
 
-random_tracest::inputst random_tracest::inputs() const
+random_tracest::symbolst random_tracest::inputs() const
 {
-  inputst inputs;
+  symbolst inputs;
 
   const auto &module_symbol = *transition_system.main_symbol;
 
@@ -435,7 +455,7 @@ random_tracest::inputst random_tracest::inputs() const
 
 /*******************************************************************\
 
-Function: random_tracest::freeze_inputs
+Function: random_tracest::state_variables
 
   Inputs:
 
@@ -445,17 +465,81 @@ Function: random_tracest::freeze_inputs
 
 \*******************************************************************/
 
-void random_tracest::freeze_inputs(
-  const inputst &inputs,
+random_tracest::symbolst random_tracest::state_variables() const
+{
+  symbolst state_variables;
+
+  const auto &module_symbol = *transition_system.main_symbol;
+  const namespacet ns(transition_system.symbol_table);
+
+  const auto &symbol_module_map =
+    transition_system.symbol_table.symbol_module_map;
+  auto lower = symbol_module_map.lower_bound(module_symbol.name);
+  auto upper = symbol_module_map.upper_bound(module_symbol.name);
+
+  for(auto it = lower; it != upper; it++)
+  {
+    const symbolt &symbol = ns.lookup(it->second);
+
+    if(symbol.is_state_var)
+      state_variables.push_back(symbol.symbol_expr());
+  }
+
+  return state_variables;
+}
+
+/*******************************************************************\
+
+Function: random_tracest::remove_constrained
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+random_tracest::symbolst
+random_tracest::remove_constrained(const symbolst &symbols) const
+{
+  auto constrained_symbols = find_symbols(transition_system.trans_expr.init());
+
+  symbolst result;
+  result.reserve(symbols.size());
+
+  // this is symbols setminus constrained_symbols
+  for(auto &symbol : symbols)
+    if(constrained_symbols.find(symbol) == constrained_symbols.end())
+      result.push_back(symbol);
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: random_tracest::freeze
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void random_tracest::freeze(
+  const symbolst &symbols,
   std::size_t number_of_timeframes,
   boolbvt &boolbv) const
 {
   for(std::size_t i = 0; i < number_of_timeframes; i++)
   {
-    for(auto &input : inputs)
+    for(auto &symbol : symbols)
     {
-      auto input_in_timeframe = instantiate(input, i, number_of_timeframes, ns);
-      boolbv.set_frozen(boolbv.convert_bv(input_in_timeframe));
+      auto symbol_in_timeframe =
+        instantiate(symbol, i, number_of_timeframes, ns);
+      boolbv.set_frozen(boolbv.convert_bv(symbol_in_timeframe));
     }
   }
 }
@@ -488,6 +572,35 @@ std::vector<exprt> random_tracest::random_input_constraints(
         equal_exprt(input_in_timeframe, random_value(input.type()));
       result.push_back(constraint);
     }
+  }
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: random_tracest::random_initial_state_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<exprt> random_tracest::random_initial_state_constraints(
+  decision_proceduret &solver,
+  const symbolst &state_variables)
+{
+  std::vector<exprt> result;
+
+  for(auto &symbol : state_variables)
+  {
+    auto symbol_in_timeframe = instantiate(symbol, 0, 1, ns);
+    auto constraint =
+      equal_exprt(symbol_in_timeframe, random_value(symbol.type()));
+    result.push_back(std::move(constraint));
   }
 
   return result;
@@ -533,10 +646,16 @@ void random_tracest::operator()(
   if(inputs.empty())
     throw ebmc_errort() << "module does not have inputs";
 
-  message.statistics() << "Found " << inputs.size() << " input(s)"
+  auto state_variables = this->state_variables();
+
+  message.statistics() << "Found " << inputs.size() << " input(s) and "
+                       << state_variables.size() << " state variable(s)"
                        << messaget::eom;
 
-  freeze_inputs(inputs, number_of_timeframes, solver);
+  auto unconstrained_state_variables = remove_constrained(state_variables);
+
+  freeze(inputs, number_of_timeframes, solver);
+  freeze(unconstrained_state_variables, 1, solver);
 
   message.status() << "Solving with " << solver.decision_procedure_text()
                    << messaget::eom;
@@ -546,7 +665,13 @@ void random_tracest::operator()(
     auto input_constraints =
       random_input_constraints(solver, inputs, number_of_timeframes);
 
-    solver.push(input_constraints);
+    auto initial_state_constraints =
+      random_initial_state_constraints(solver, unconstrained_state_variables);
+
+    auto merged =
+      merge_constraints(input_constraints, initial_state_constraints);
+
+    solver.push(merged);
     auto dec_result = solver();
     solver.pop();
 
