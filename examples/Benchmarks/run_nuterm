@@ -2,15 +2,15 @@
 
 set -e
 
-ebmc PWM_1.sv --neural-liveness --trace-steps 700 --number-of-traces 1
-ebmc PWM_2.sv --neural-liveness --trace-steps 1000 --number-of-traces 1
-ebmc PWM_3.sv --neural-liveness --trace-steps 3000 --number-of-traces 1
-ebmc PWM_4.sv --neural-liveness --trace-steps 5000 --number-of-traces 1
-ebmc PWM_5.sv --neural-liveness --trace-steps 10000 --number-of-traces 1
-ebmc PWM_6.sv --neural-liveness --trace-steps 20000 --number-of-traces 1
-ebmc PWM_7.sv --neural-liveness --trace-steps 40000 --number-of-traces 1
-ebmc PWM_8.sv --neural-liveness --trace-steps 80000 --number-of-traces 1
-ebmc PWM_9.sv --neural-liveness --trace-steps 160000 --number-of-traces 1
+ebmc PWM_1.sv --neural-liveness --trace-steps 700 --traces 1
+ebmc PWM_2.sv --neural-liveness --trace-steps 1000 --traces 1
+ebmc PWM_3.sv --neural-liveness --trace-steps 3000 --traces 1
+ebmc PWM_4.sv --neural-liveness --trace-steps 5000 --traces 1
+ebmc PWM_5.sv --neural-liveness --trace-steps 10000 --traces 1
+ebmc PWM_6.sv --neural-liveness --trace-steps 20000 --traces 1
+ebmc PWM_7.sv --neural-liveness --trace-steps 40000 --traces 1
+ebmc PWM_8.sv --neural-liveness --trace-steps 80000 --traces 1
+ebmc PWM_9.sv --neural-liveness --trace-steps 160000 --traces 1
 
 if false ; then
 ebmc delay_1.sv --neural-liveness "750-cnt"
@@ -119,18 +119,18 @@ ebmc thermocouple_16.sv --neural-liveness "{2-state,2**18-cnt}"
 ebmc thermocouple_17.sv --neural-liveness "{2-state,2**19-cnt}"
 fi
 
-ebmc uart_transmit_1.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_2.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_3.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_4.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_5.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_6.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_7.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_8.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_9.sv --neural-liveness --trace-steps 100 --number-of-traces 20
-ebmc uart_transmit_10.sv --neural-liveness --trace-steps 200 --number-of-traces 20
-ebmc uart_transmit_11.sv --neural-liveness --trace-steps 200 --number-of-traces 20
-ebmc uart_transmit_12.sv --neural-liveness --trace-steps 200 --number-of-traces 20
+ebmc uart_transmit_1.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_2.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_3.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_4.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_5.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_6.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_7.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_8.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_9.sv --neural-liveness --trace-steps 100 --traces 20
+ebmc uart_transmit_10.sv --neural-liveness --trace-steps 200 --traces 20
+ebmc uart_transmit_11.sv --neural-liveness --trace-steps 200 --traces 20
+ebmc uart_transmit_12.sv --neural-liveness --trace-steps 200 --traces 20
 
 if false ; then
 ebmc vga_1.sv --neural-liveness "{2**5-v_cnt,2**7-h_cnt}"
