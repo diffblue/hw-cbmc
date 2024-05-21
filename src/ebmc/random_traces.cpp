@@ -113,10 +113,10 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
 {
   const auto number_of_traces = [&cmdline]() -> std::size_t
   {
-    if(cmdline.isset("number-of-traces"))
+    if(cmdline.isset("traces"))
     {
       auto number_of_traces_opt =
-        string2optional_size_t(cmdline.get_value("number-of-traces"));
+        string2optional_size_t(cmdline.get_value("traces"));
 
       if(!number_of_traces_opt.has_value())
         throw ebmc_errort() << "failed to parse number of traces";
@@ -229,8 +229,8 @@ Function: random_trace
 
 int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
 {
-  if(cmdline.isset("number-of-traces"))
-    throw ebmc_errort() << "must not give number-of-traces";
+  if(cmdline.isset("traces"))
+    throw ebmc_errort() << "must not give number of traces";
 
   const std::size_t random_seed = [&cmdline]() -> std::size_t {
     if(cmdline.isset("random-seed"))

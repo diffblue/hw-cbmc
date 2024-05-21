@@ -1,6 +1,6 @@
 CORE
 counter1.sv
---number-of-traces 1 --neural-liveness --show-traces
+--traces 1 --neural-liveness --show-traces
 ^Verilog::main\.\$live@0 = 0$
 ^Verilog::main\.\$live@1 = 0$
 ^Verilog::main\.\$live@2 = 0$

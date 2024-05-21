@@ -1,6 +1,6 @@
 CORE broken-smt-backend
 boolean1.v
---random-traces --trace-steps 0 --number-of-traces 2
+--random-traces --trace-steps 0 --traces 2
 ^\*\*\* Trace 1$
 ^  main\.some_wire = 0$
 ^  main\.input1 = 0$

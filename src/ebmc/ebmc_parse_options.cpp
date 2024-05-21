@@ -375,7 +375,7 @@ void ebmc_parse_optionst::help()
     "    {y--new-mode}               \t new mode is switched on\n"
     "    {y--aiger}                  \t print out the instance in aiger format\n"
     " {y--random-traces}             \t generate random traces\n"
-    "    {y--number-of-traces} {unumber}\t generate the given number of traces\n"
+    "    {y--traces} {unumber}       \t generate the given number of traces\n"
     "    {y--random-seed} {unumber}  \t use the given random seed\n"
     "    {y--trace-steps} {unumber}  \t set the number of random transitions (default: 10 steps)\n"
     " {y--random-trace}              \t generate a random trace\n"
