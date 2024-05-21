@@ -35,12 +35,12 @@ void ranking_function_training(
   torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
 #endif
 #if 1
-  torch::optim::Adam optimizer(net->parameters(), /*lr=*/0.01);
+  torch::optim::Adam optimizer(net->parameters(), /*lr=*/0.1);
 #endif
 
   torch::Tensor last_loss = {};
 
-  for(size_t epoch = 1; epoch <= 10; ++epoch)
+  for(size_t epoch = 1; epoch <= 20; ++epoch)
   {
     size_t batch_index = 0;
 

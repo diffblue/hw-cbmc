@@ -60,7 +60,7 @@ protected:
   void validate_properties();
   void set_liveness_signal(const ebmc_propertiest::propertyt &, const exprt &);
   void sample(std::function<void(trans_tracet)>);
-  std::function<void(trans_tracet)> dump_vcd_files(temp_dirt &);
+  std::function<void(trans_tracet)> dump_vcd_files(temp_dirt &, std::size_t &vcd_index);
   exprt guess(ebmc_propertiest::propertyt &, const temp_dirt &);
   tvt verify(ebmc_propertiest::propertyt &, const exprt &candidate);
 };
@@ -101,17 +101,31 @@ int neural_livenesst::operator()()
     // trace, which are then read by the neural fitting procedure.
     temp_dirt temp_dir("ebmc-neural.XXXXXXXX");
     const auto trace_files_prefix = temp_dir("trace.");
-    sample(dump_vcd_files(temp_dir));
+    std::size_t vcd_index = 0;
+    auto vcd_dumper = dump_vcd_files(temp_dir, vcd_index);
+    sample(vcd_dumper);
+
+    std::size_t iteration_number = 0;
 
     // Now do a guess-and-verify loop.
     while(true)
     {
+      iteration_number++;
+      message.status() << messaget::blue << "Iteration " << iteration_number << messaget::reset << messaget::eom;
+      if(iteration_number == 3)
+        throw ebmc_errort() << "giving up";
+
       const auto candidate = guess(property, temp_dir);
 
       if(verify(property, candidate).is_true())
-        break;
+        break; // done, proven
 
-      throw ebmc_errort() << "giving up";
+      // add counterexample to dataset
+      CHECK_RETURN(property.witness_trace.has_value());
+      vcd_dumper(property.witness_trace.value());
+
+      const namespacet ns(transition_system.symbol_table);
+      show_waveform(property.witness_trace.value(), ns);      
     }
   }
 
@@ -191,13 +205,13 @@ void neural_livenesst::set_liveness_signal(
 }
 
 std::function<void(trans_tracet)>
-neural_livenesst::dump_vcd_files(temp_dirt &temp_dir)
+neural_livenesst::dump_vcd_files(temp_dirt &temp_dir, std::size_t &vcd_index)
 {
   const auto outfile_prefix = temp_dir("trace.");
   return
-    [&, trace_nr = 0ull, outfile_prefix](trans_tracet trace) mutable -> void {
+    [&, outfile_prefix](trans_tracet trace) mutable -> void {
       namespacet ns(transition_system.symbol_table);
-      auto filename = outfile_prefix + std::to_string(++trace_nr);
+      auto filename = outfile_prefix + std::to_string(++vcd_index);
       std::ofstream out(widen_if_needed(filename));
 
       if(!out)
