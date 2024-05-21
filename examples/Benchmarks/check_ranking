@@ -95,6 +95,22 @@ ebmc seven_seg_16.sv --ranking-function "40000-cnt" --property SEVEN.property.p1
 ebmc seven_seg_17.sv --ranking-function "80000-cnt" --property SEVEN.property.p1
 ebmc seven_seg_18.sv --ranking-function "160000-cnt" --property SEVEN.property.p1
 
+ebmc seven_seg_1.sv --ranking-function "250-cnt" --property SEVEN.property.p2
+ebmc seven_seg_2.sv --ranking-function "500-cnt" --property SEVEN.property.p2
+ebmc seven_seg_3.sv --ranking-function "750-cnt" --property SEVEN.property.p2
+ebmc seven_seg_4.sv --ranking-function "1000-cnt" --property SEVEN.property.p2
+ebmc seven_seg_5.sv --ranking-function "2500-cnt" --property SEVEN.property.p2
+ebmc seven_seg_6.sv --ranking-function "5000-cnt" --property SEVEN.property.p2
+ebmc seven_seg_7.sv --ranking-function "7500-cnt" --property SEVEN.property.p2
+ebmc seven_seg_8.sv --ranking-function "10000-cnt" --property SEVEN.property.p2
+ebmc seven_seg_9.sv --ranking-function "12500-cnt" --property SEVEN.property.p2
+ebmc seven_seg_10.sv --ranking-function "15000-cnt" --property SEVEN.property.p2
+ebmc seven_seg_11.sv --ranking-function "17500-cnt" --property SEVEN.property.p2
+ebmc seven_seg_12.sv --ranking-function "20000-cnt" --property SEVEN.property.p2
+ebmc seven_seg_16.sv --ranking-function "40000-cnt" --property SEVEN.property.p2
+ebmc seven_seg_17.sv --ranking-function "80000-cnt" --property SEVEN.property.p2
+ebmc seven_seg_18.sv --ranking-function "160000-cnt" --property SEVEN.property.p2
+
 ebmc thermocouple_1.sv --ranking-function "{2-state,2**5-cnt}"
 ebmc thermocouple_2.sv --ranking-function "{2-state,2**9-cnt}"
 ebmc thermocouple_3.sv --ranking-function "{2-state,2**10-cnt}"
