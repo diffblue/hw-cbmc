@@ -111,8 +111,7 @@ Function: random_traces
 
 int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
 {
-  const auto number_of_traces = [&cmdline]() -> std::size_t
-  {
+  const auto number_of_traces = [&cmdline]() -> std::size_t {
     if(cmdline.isset("traces"))
     {
       auto number_of_traces_opt =

@@ -226,8 +226,7 @@ void neural_livenesst::sample(std::function<void(trans_tracet)> trace_consumer)
       return 100; // default
   }();
 
-  const std::size_t number_of_trace_steps = [this]() -> std::size_t
-  {
+  const std::size_t number_of_trace_steps = [this]() -> std::size_t {
     if(cmdline.isset("trace-steps"))
     {
       auto trace_steps_opt =
