@@ -58,20 +58,33 @@ trans_tracet compute_trans_trace(
          symbol.type.id()!=ID_module &&
          symbol.type.id()!=ID_module_instance)
       {
-        exprt indexed_symbol_expr(ID_symbol, symbol.type);
+        if(symbol.is_macro)
+        {
+          if(symbol.value.is_constant())
+          {
+            trans_tracet::statet::assignmentt assignment;
+            assignment.rhs = symbol.value;
+            assignment.lhs = symbol.symbol_expr();
+            state.assignments.push_back(assignment);
+          }
+        }
+        else
+        {
+          exprt indexed_symbol_expr(ID_symbol, symbol.type);
 
-        indexed_symbol_expr.set(ID_identifier,
-          timeframe_identifier(t, symbol.name));
+          indexed_symbol_expr.set(
+            ID_identifier, timeframe_identifier(t, symbol.name));
 
-        exprt value_expr=decision_procedure.get(indexed_symbol_expr);
-        if(value_expr==indexed_symbol_expr)
-          value_expr=nil_exprt();
+          exprt value_expr = decision_procedure.get(indexed_symbol_expr);
+          if(value_expr == indexed_symbol_expr)
+            value_expr = nil_exprt();
 
-        trans_tracet::statet::assignmentt assignment;
-        assignment.rhs.swap(value_expr);
-        assignment.lhs=symbol.symbol_expr();
-      
-        state.assignments.push_back(assignment);
+          trans_tracet::statet::assignmentt assignment;
+          assignment.rhs.swap(value_expr);
+          assignment.lhs = symbol.symbol_expr();
+
+          state.assignments.push_back(assignment);
+        }
       }
     }
   }
