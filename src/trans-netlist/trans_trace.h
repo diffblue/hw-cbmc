@@ -28,8 +28,14 @@ public:
       exprt lhs;
       exprt rhs;
       source_locationt location;
-      
-      assignmentt():location(source_locationt::nil())
+
+      assignmentt(
+        exprt __lhs,
+        exprt __rhs,
+        source_locationt __location = source_locationt::nil())
+        : lhs(std::move(__lhs)),
+          rhs(std::move(__rhs)),
+          location(std::move(__location))
       {
       }
     };

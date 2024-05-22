@@ -144,15 +144,9 @@ trans_tracet compute_trans_trace(
 
         value=ch+value;
       }
-      
-      state.assignments.push_back(trans_tracet::statet::assignmentt());
 
-      trans_tracet::statet::assignmentt &assignment=
-        state.assignments.back();
-
-      assignment.lhs=symbol.symbol_expr();
-      assignment.rhs=bitstring_to_expr(value, var.type);
-      assignment.location.make_nil();
+      state.assignments.emplace_back(
+        symbol.symbol_expr(), bitstring_to_expr(value, var.type));
     }
 
     // check the property
