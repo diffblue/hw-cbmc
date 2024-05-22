@@ -62,10 +62,7 @@ trans_tracet compute_trans_trace(
         {
           if(symbol.value.is_constant())
           {
-            trans_tracet::statet::assignmentt assignment;
-            assignment.rhs = symbol.value;
-            assignment.lhs = symbol.symbol_expr();
-            state.assignments.push_back(assignment);
+            state.assignments.emplace_back(symbol.symbol_expr(), symbol.value);
           }
         }
         else
@@ -79,11 +76,8 @@ trans_tracet compute_trans_trace(
           if(value_expr == indexed_symbol_expr)
             value_expr = nil_exprt();
 
-          trans_tracet::statet::assignmentt assignment;
-          assignment.rhs.swap(value_expr);
-          assignment.lhs = symbol.symbol_expr();
-
-          state.assignments.push_back(assignment);
+          state.assignments.emplace_back(
+            symbol.symbol_expr(), std::move(value_expr));
         }
       }
     }
