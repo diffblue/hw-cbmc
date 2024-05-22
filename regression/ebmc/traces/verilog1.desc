@@ -1,0 +1,15 @@
+CORE
+verilog1.v
+--bound 9 --numbered-trace
+^\[.*\] .* REFUTED$
+^Counterexample with 10 states:$
+^main\.P@0 = 123$
+^main\.Q@0 = 124$
+^main\.data@0 = 1$
+^main\.P@9 = 123$
+^main\.Q@9 = 124$
+^main\.data@9 = 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
