@@ -1,0 +1,25 @@
+CORE
+vcd1.v
+--random-trace --trace-steps 1 --vcd -
+^\$date$
+^\$timescale$
+^  1ns$
+^\$scope module main \$end$
+^  \$var wire 32 main\.some_input some_input \[31:0\] \$end$
+^  \$var wire 32 main\.x x \[31:0\] \$end$
+^  \$scope module sub \$end$
+^    \$var wire 32 main\.sub\.x x \[31:0\] \$end$
+^  \$upscope \$end$
+^\$upscope \$end$
+^\$enddefinitions \$end$
+^#0$
+^b\d+ main\.some_input$
+^b\d+ main\.x$
+^b00000000000000000000000001111011 main\.sub\.x$
+^#1$
+^b\d+ main\.some_input$
+^b\d+ main\.x$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

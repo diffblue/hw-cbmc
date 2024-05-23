@@ -27,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "waveform.h"
 
 #include <algorithm>
+#include <iostream>
 #include <random>
 
 /*******************************************************************\
@@ -159,6 +160,9 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
       return 10; // default
   }();
 
+  if(cmdline.isset("vcd") && cmdline.get_value("vcd") == "-")
+    throw ebmc_errort() << "no stdout output for multiple VCDs";
+
   const auto outfile_prefix = [&cmdline]() -> std::optional<std::string> {
     if(cmdline.isset("vcd"))
       return cmdline.get_value("vcd") + ".";
@@ -284,6 +288,27 @@ int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
     {
       messaget message(message_handler);
       show_trans_trace_numbered(trace, message, ns, consolet::out());
+    }
+    else if(cmdline.isset("vcd"))
+    {
+      auto filename = cmdline.get_value("vcd");
+      messaget message(message_handler);
+
+      if(filename == "-")
+      {
+        show_trans_trace_vcd(trace, message, ns, std::cout);
+      }
+      else
+      {
+        std::ofstream out(widen_if_needed(filename));
+
+        if(!out)
+          throw ebmc_errort() << "failed to write trace to " << filename;
+
+        consolet::out() << "*** Writing " << filename << '\n';
+
+        show_trans_trace_vcd(trace, message, ns, out);
+      }
     }
     else // default
     {

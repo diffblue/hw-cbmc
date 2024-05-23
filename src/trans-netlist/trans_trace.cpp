@@ -522,7 +522,29 @@ std::string vcd_identifier(const std::string &id)
     result.erase(0, 9);
   else if(has_prefix(result, "smv::"))
     result.erase(0, 5);
-    
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: vcd_reference
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string vcd_reference(const symbolt &symbol, const std::string &prefix)
+{
+  std::string result = id2string(symbol.name);
+
+  if(!prefix.empty() && has_prefix(result, prefix))
+    result.erase(0, prefix.size());
+
   return result;
 }
 
@@ -723,13 +745,10 @@ void vcd_hierarchy_rec(
     std::string suffix=vcd_suffix(symbol.type, ns);
     
     if(width>=1)
-      out << std::string(depth*2, ' ')
-          << "$var " << signal_class << " "
-          << width << " "
-          << vcd_identifier(display_name) << " " 
-          << vcd_identifier(display_name)
-          << (suffix==""?"":" ") << suffix
-          << " $end" << '\n';
+      out << std::string(depth * 2, ' ') << "$var " << signal_class << " "
+          << width << " " << vcd_identifier(display_name) << " "
+          << vcd_reference(symbol, prefix) << (suffix == "" ? "" : " ")
+          << suffix << " $end" << '\n';
   }
   
   // now do sub modules
@@ -777,12 +796,6 @@ void show_trans_trace_vcd(
 
   assert(!state.assignments.empty());
 
-  const symbolt &symbol1=ns.lookup(
-    state.assignments.front().lhs.get(ID_identifier));
-
-  std::string module_name=id2string(symbol1.module);
-  out << "$scope module " << vcd_identifier(module_name) << " $end\n";
-  
   // get identifiers
   std::set<irep_idt> ids;
   
@@ -791,10 +804,21 @@ void show_trans_trace_vcd(
     assert(a.lhs.id()==ID_symbol);
     ids.insert(to_symbol_expr(a.lhs).get_identifier());
   }
-  
+
+  // determine module
+
+  const symbolt &symbol1 =
+    ns.lookup(state.assignments.front().lhs.get(ID_identifier));
+
+  auto &module_symbol = ns.lookup(symbol1.module);
+
+  // print those in the top module
+
+  out << "$scope module " << module_symbol.display_name() << " $end\n";
+
   // split up into hierarchy
-  vcd_hierarchy_rec(ns, ids, module_name+".", out, 1);
-  
+  vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name) + ".", out, 1);
+
   out << "$upscope $end\n";  
 
   out << "$enddefinitions $end\n";
