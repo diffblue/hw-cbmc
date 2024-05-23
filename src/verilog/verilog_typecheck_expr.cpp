@@ -2513,6 +2513,7 @@ Function: verilog_typecheck
 bool verilog_typecheck(
   exprt &expr,
   const std::string &module_identifier,
+  verilog_standardt standard,
   message_handlert &message_handler,
   const namespacet &ns)
 {
@@ -2520,7 +2521,7 @@ bool verilog_typecheck(
     message_handler.get_message_count(messaget::M_ERROR);
 
   verilog_typecheck_exprt verilog_typecheck_expr(
-    ns, module_identifier, message_handler);
+    standard, ns, module_identifier, message_handler);
 
   try
   {

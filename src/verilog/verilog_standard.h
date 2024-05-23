@@ -16,6 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 // Verilog that the Cadence SMV model checker accepts.
 enum class verilog_standardt
 {
+  NOT_SET,
   V1995,
   V2001_NOCONFIG,
   V2001,

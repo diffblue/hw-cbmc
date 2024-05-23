@@ -9,16 +9,24 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_PARSE_TREE_H
 #define CPROVER_VERILOG_PARSE_TREE_H
 
-#include <list>
-#include <set>
-
 #include <util/string_hash.h>
 
 #include "verilog_module.h"
+#include "verilog_standard.h"
+
+#include <list>
+#include <set>
 
 class verilog_parse_treet
 {
 public:
+  explicit verilog_parse_treet(verilog_standardt _standard)
+    : standard(_standard)
+  {
+  }
+
+  verilog_standardt standard;
+
   class verilog_typedeft
   {
   public:
@@ -93,6 +101,7 @@ public:
     parse_tree.items.swap(items);
     parse_tree.expr.swap(expr);
     parse_tree.module_map.swap(module_map);
+    std::swap(parse_tree.standard, standard);
   }
 
   void modules_provided(

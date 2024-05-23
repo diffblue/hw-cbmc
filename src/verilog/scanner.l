@@ -71,34 +71,34 @@ static void preprocessor()
                              TOK_NON_TYPE_IDENTIFIER; \
   }
 #define KEYWORD(s, x) \
-  { if(PARSER.mode >= verilog_standardt::s) \
+  { if(PARSER.parse_tree.standard >= verilog_standardt::s) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define SYSTEM_VERILOG_OPERATOR(token, text) \
-  { if(PARSER.mode >= verilog_standardt::SV2005) \
+  { if(PARSER.parse_tree.standard >= verilog_standardt::SV2005) \
       return token; \
     else \
       yyverilogerror(text " is a System Verilog operator"); \
   }
 #define VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
-  { if(PARSER.mode >= verilog_standardt::SV2005 || \
-       PARSER.mode == verilog_standardt::V2005_SMV) \
+  { if(PARSER.parse_tree.standard >= verilog_standardt::SV2005 || \
+       PARSER.parse_tree.standard == verilog_standardt::V2005_SMV) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define VL2SMV_VERILOG_KEYWORD(x) \
-  { if(PARSER.mode == verilog_standardt::V2005_SMV) \
+  { if(PARSER.parse_tree.standard == verilog_standardt::V2005_SMV) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
-  { if(PARSER.mode >= verilog_standardt::SV2005 || \
-       PARSER.mode == verilog_standardt::V2005_SMV || \
-       PARSER.mode == verilog_standardt::V2005_VIS) \
+  { if(PARSER.parse_tree.standard >= verilog_standardt::SV2005 || \
+       PARSER.parse_tree.standard == verilog_standardt::V2005_SMV || \
+       PARSER.parse_tree.standard == verilog_standardt::V2005_VIS) \
       return x; \
     else \
       IDENTIFIER(yytext); \

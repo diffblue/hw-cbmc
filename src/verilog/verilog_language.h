@@ -87,8 +87,8 @@ public:
   }
   
   optionst options;
-  
-  verilog_languaget()
+
+  verilog_languaget() : parse_tree(verilog_standardt::NOT_SET)
   {
     options.set_option("flatten_hierarchy", true);
   }

@@ -55,22 +55,26 @@ bool verilog_languaget::parse(
   const std::string &path,
   message_handlert &message_handler)
 {
-  verilog_parsert verilog_parser;
-
   std::stringstream str;
 
   if(preprocess(instream, path, str, message_handler))
     return true;
 
+  verilog_standardt standard;
+
+  if(has_suffix(path, ".sv") || force_systemverilog)
+    standard = verilog_standardt::SV2023;
+  else if(vl2smv_extensions)
+    standard = verilog_standardt::V2005_SMV;
+  else
+    standard = verilog_standardt::V2005_SMV;
+
+  verilog_parsert verilog_parser(standard);
+
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
   verilog_parser.log.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
-
-  if(has_suffix(path, ".sv") || force_systemverilog)
-    verilog_parser.mode = verilog_standardt::SV2023;
-  else if(vl2smv_extensions)
-    verilog_parser.mode = verilog_standardt::V2005_SMV;
 
   verilog_scanner_init();
 
@@ -182,7 +186,8 @@ bool verilog_languaget::typecheck(
   messaget message(message_handler);
   message.debug() << "Synthesis " << module << messaget::eom;
 
-  if(verilog_synthesis(symbol_table, module, message_handler, options))
+  if(verilog_synthesis(
+       symbol_table, module, parse_tree.standard, message_handler, options))
     return true;
 
   return false;
@@ -289,8 +294,10 @@ bool verilog_languaget::to_expr(
 
   std::istringstream i_preprocessed(code);
 
+  verilog_standardt standard = verilog_standardt::V2005;
+
   // parsing
-  verilog_parsert verilog_parser;
+  verilog_parsert verilog_parser(standard);
 
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;
@@ -304,12 +311,12 @@ bool verilog_languaget::to_expr(
   expr.swap(verilog_parser.parse_tree.expr);
 
   // typecheck it
-  result = verilog_typecheck(expr, module, message_handler, ns);
+  result = verilog_typecheck(expr, module, standard, message_handler, ns);
   if(result)
     return true;
 
   // synthesize it
-  result = verilog_synthesis(expr, module, message_handler, ns);
+  result = verilog_synthesis(expr, module, standard, message_handler, ns);
   if(result)
     return true;
 

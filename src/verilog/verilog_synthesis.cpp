@@ -334,7 +334,8 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
     else
     {
       // Attempt to constant fold.
-      verilog_typecheck_exprt verilog_typecheck_expr(ns, get_message_handler());
+      verilog_typecheck_exprt verilog_typecheck_expr(
+        standard, ns, get_message_handler());
       auto result =
         verilog_typecheck_expr.elaborate_constant_system_function_call(call);
       if(!result.is_constant())
@@ -1404,7 +1405,7 @@ void verilog_synthesist::synth_module_instance(
 
   // make sure the module is synthesized already
   verilog_synthesis(
-    symbol_table, module_identifier, get_message_handler(), options);
+    symbol_table, module_identifier, standard, get_message_handler(), options);
 
   for(auto &instance : statement.instances())
     expand_module_instance(module_symbol, instance, trans);
@@ -3496,12 +3497,13 @@ Function: verilog_synthesis
 bool verilog_synthesis(
   symbol_table_baset &symbol_table,
   const irep_idt &module,
+  verilog_standardt standard,
   message_handlert &message_handler,
   const optionst &options)
 {
   const namespacet ns(symbol_table);
   verilog_synthesist verilog_synthesis(
-    ns, symbol_table, module, options, message_handler);
+    standard, ns, symbol_table, module, options, message_handler);
   return verilog_synthesis.typecheck_main();
 }
 
@@ -3520,6 +3522,7 @@ Function: verilog_synthesis
 bool verilog_synthesis(
   exprt &expr,
   const irep_idt &module_identifier,
+  verilog_standardt standard,
   message_handlert &message_handler,
   const namespacet &ns)
 {
@@ -3530,7 +3533,7 @@ bool verilog_synthesis(
     message_handler.get_message_count(messaget::M_ERROR);
 
   verilog_synthesist verilog_synthesis(
-    ns, symbol_table, module_identifier, options, message_handler);
+    standard, ns, symbol_table, module_identifier, options, message_handler);
 
   try
   {
