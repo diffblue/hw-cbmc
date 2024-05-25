@@ -1,6 +1,6 @@
 CORE broken-smt-backend
 long_trace1.v
---random-traces --number-of-traces 1 --trace-steps 1000
+--random-traces --traces 1 --trace-steps 1000
 ^Transition system state 0$
 ^  main\.some_reg = 0 .*$
 ^  main\.increment = 0$

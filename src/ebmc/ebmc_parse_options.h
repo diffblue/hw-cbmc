@@ -43,7 +43,7 @@ public:
         "(smt2)(bitwuzla)(boolector)(cvc3)(cvc4)(cvc5)(mathsat)(yices)(z3)"
         "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
         "(compute-ct)(dot-netlist)(smv-netlist)(vcd):"
-        "(random-traces)(trace-steps):(random-seed):(number-of-traces):"
+        "(random-traces)(trace-steps):(random-seed):(traces):"
         "(random-trace)(random-waveform)"
         "(liveness-to-safety)"
         "I:(preprocess)(systemverilog)(vl2smv-extensions)",

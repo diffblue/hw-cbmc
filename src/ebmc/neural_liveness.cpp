@@ -211,12 +211,11 @@ neural_livenesst::dump_vcd_files(temp_dirt &temp_dir)
 
 void neural_livenesst::sample(std::function<void(trans_tracet)> trace_consumer)
 {
-  const auto number_of_traces = [this]() -> std::size_t
-  {
-    if(cmdline.isset("number-of-traces"))
+  const auto number_of_traces = [this]() -> std::size_t {
+    if(cmdline.isset("traces"))
     {
       auto number_of_traces_opt =
-        string2optional_size_t(cmdline.get_value("number-of-traces"));
+        string2optional_size_t(cmdline.get_value("traces"));
 
       if(!number_of_traces_opt.has_value())
         throw ebmc_errort() << "failed to parse number of traces";
