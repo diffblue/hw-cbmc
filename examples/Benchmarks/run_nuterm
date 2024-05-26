@@ -2,15 +2,18 @@
 
 set -e
 
-ebmc PWM_1.sv --neural-liveness --trace-steps 700 --traces 1
-ebmc PWM_2.sv --neural-liveness --trace-steps 1000 --traces 1
-ebmc PWM_3.sv --neural-liveness --trace-steps 3000 --traces 1
-ebmc PWM_4.sv --neural-liveness --trace-steps 5000 --traces 1
-ebmc PWM_5.sv --neural-liveness --trace-steps 10000 --traces 1
-ebmc PWM_6.sv --neural-liveness --trace-steps 20000 --traces 1
-ebmc PWM_7.sv --neural-liveness --trace-steps 40000 --traces 1
-ebmc PWM_8.sv --neural-liveness --trace-steps 80000 --traces 1
-ebmc PWM_9.sv --neural-liveness --trace-steps 160000 --traces 1
+if false ; then
+# ok
+ebmc PWM_1.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_2.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_3.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_4.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_5.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_6.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_7.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_8.sv --neural-liveness --trace-steps 10 --traces 20
+ebmc PWM_9.sv --neural-liveness --trace-steps 10 --traces 20
+fi
 
 if false ; then
 ebmc delay_1.sv --neural-liveness "750-cnt"
@@ -31,17 +34,20 @@ ebmc delay_15.sv --neural-liveness "200000-cnt"
 ebmc delay_16.sv --neural-liveness "400000-cnt"
 fi
 
-ebmc gray_1.sv --neural-liveness
-ebmc gray_2.sv --neural-liveness
-ebmc gray_3.sv --neural-liveness
-ebmc gray_4.sv --neural-liveness
-ebmc gray_5.sv --neural-liveness
-ebmc gray_6.sv --neural-liveness
-ebmc gray_7.sv --neural-liveness
-ebmc gray_8.sv --neural-liveness
-ebmc gray_9.sv --neural-liveness
-ebmc gray_10.sv --neural-liveness
-ebmc gray_11.sv --neural-liveness
+if false ; then
+# ok
+ebmc gray_1.sv --neural-liveness --trace-steps 10
+ebmc gray_2.sv --neural-liveness --trace-steps 10
+ebmc gray_3.sv --neural-liveness --trace-steps 10
+ebmc gray_4.sv --neural-liveness --trace-steps 10
+ebmc gray_5.sv --neural-liveness --trace-steps 10
+ebmc gray_6.sv --neural-liveness --trace-steps 10
+ebmc gray_7.sv --neural-liveness --trace-steps 10
+ebmc gray_8.sv --neural-liveness --trace-steps 10
+ebmc gray_9.sv --neural-liveness --trace-steps 10
+ebmc gray_10.sv --neural-liveness --trace-steps 10
+ebmc gray_11.sv --neural-liveness --trace-steps 10
+fi
 
 if false ; then
 ebmc i2c_1.sv --neural-liveness "2**9-cnt"
@@ -83,21 +89,24 @@ ebmc lcd_13.sv --neural-liveness "{3-state,90000-cnt}"
 ebmc lcd_14.sv --neural-liveness "{3-state,180000-cnt}"
 fi
 
-ebmc seven_seg_1.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_2.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_3.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_4.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_5.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_6.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_7.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_8.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_9.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_10.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_11.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_12.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_16.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_17.sv --neural-liveness --property SEVEN.property.p1
-ebmc seven_seg_18.sv --neural-liveness --property SEVEN.property.p1
+if false ; then
+# ok
+ebmc seven_seg_1.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_2.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_3.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_4.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_5.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_6.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_7.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_8.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_9.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_10.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_11.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_12.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_16.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_17.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+ebmc seven_seg_18.sv --neural-liveness --property SEVEN.property.p1 --traces 10
+fi
 
 if false ; then
 ebmc thermocouple_1.sv --neural-liveness "{2-state,2**5-cnt}"
@@ -119,8 +128,9 @@ ebmc thermocouple_16.sv --neural-liveness "{2-state,2**18-cnt}"
 ebmc thermocouple_17.sv --neural-liveness "{2-state,2**19-cnt}"
 fi
 
-ebmc uart_transmit_1.sv --neural-liveness --trace-steps 100 --traces 20
-ebmc uart_transmit_2.sv --neural-liveness --trace-steps 100 --traces 20
+if false ; then
+ebmc uart_transmit_1.sv --neural-liveness --trace-steps 10 --traces 10
+ebmc uart_transmit_2.sv --neural-liveness --trace-steps 10 --traces 10
 ebmc uart_transmit_3.sv --neural-liveness --trace-steps 100 --traces 20
 ebmc uart_transmit_4.sv --neural-liveness --trace-steps 100 --traces 20
 ebmc uart_transmit_5.sv --neural-liveness --trace-steps 100 --traces 20
@@ -131,6 +141,7 @@ ebmc uart_transmit_9.sv --neural-liveness --trace-steps 100 --traces 20
 ebmc uart_transmit_10.sv --neural-liveness --trace-steps 200 --traces 20
 ebmc uart_transmit_11.sv --neural-liveness --trace-steps 200 --traces 20
 ebmc uart_transmit_12.sv --neural-liveness --trace-steps 200 --traces 20
+fi
 
 if false ; then
 ebmc vga_1.sv --neural-liveness "{2**5-v_cnt,2**7-h_cnt}"
