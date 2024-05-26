@@ -37,4 +37,14 @@ module i2cStrech #(localparam divider = 125, localparam CBITS = 9) (input clk, i
 	p1: assert property (@(posedge clk) s_eventually rst == 1 || scl_not_ena == 1 || stretch == 1);
 	//F G (rst = F & scl_not_ena = F) -> G F (stretch = T)
 
+wire [8:0] rank1 =
+  cnt>=divider*4 ? 3 :  // 500
+  !scl_clk && cnt>=3*divider-1 ? 2 :
+  scl_clk        ? 1 :
+                   0 ;
+
+wire [8:0] rank2 = 500 - cnt;
+
+wire [31:0] rank = {rank1, rank2};
+
 endmodule
