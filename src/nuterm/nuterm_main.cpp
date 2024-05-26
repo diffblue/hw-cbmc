@@ -6,8 +6,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 \*******************************************************************/
 
-#include "training.h"
 #include "traces_to_tensors.h"
+#include "training.h"
 
 #include <algorithm>
 #include <filesystem>

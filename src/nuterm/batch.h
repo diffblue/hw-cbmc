@@ -13,7 +13,12 @@ Author: Daniel Kroening, dkr@amazon.com
 
 struct batcht
 {
-  batcht(const std::vector<torch::Tensor> &__curr, const std::vector<torch::Tensor> &__next) : curr(torch::stack(__curr)), next(torch::stack(__next)) { }
+  batcht(
+    const std::vector<torch::Tensor> &__curr,
+    const std::vector<torch::Tensor> &__next)
+    : curr(torch::stack(__curr)), next(torch::stack(__next))
+  {
+  }
   torch::Tensor curr, next;
 };
 
