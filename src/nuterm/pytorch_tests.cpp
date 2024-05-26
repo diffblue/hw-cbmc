@@ -424,6 +424,89 @@ void pytorch_test8()
   assert(round(net->parameters()[1].item<double>()) == 6);  // bias
 }
 
+struct test_net3 : torch::nn::Module
+{
+  explicit test_net3(std::size_t number_of_inputs)
+  {
+    fc1 = register_module("fc1", torch::nn::Linear(number_of_inputs, 1));
+    fc1->to(torch::kFloat64);
+  }
+
+  torch::Tensor forward(torch::Tensor x)
+  {
+    x = fc1->forward(x);
+    return x;
+  }
+
+  torch::nn::Linear fc1{nullptr};
+};
+
+void pytorch_test9()
+{
+  torch::manual_seed(0);
+
+  auto net = std::make_shared<test_net3>(1);
+
+  // one state variable
+  // batch-size x state-vars
+  torch::Tensor batch_curr = torch::stack({
+    torch::tensor({1}, torch::kFloat64),
+    torch::tensor({2}, torch::kFloat64),
+    torch::tensor({3}, torch::kFloat64),
+    torch::tensor({4}, torch::kFloat64),
+    torch::tensor({1000}, torch::kFloat64)});
+    
+  torch::Tensor batch_next = torch::stack({
+    torch::tensor({2}, torch::kFloat64),
+    torch::tensor({3}, torch::kFloat64),
+    torch::tensor({4}, torch::kFloat64),
+    torch::tensor({5}, torch::kFloat64),
+    torch::tensor({1001}, torch::kFloat64)});
+
+  auto my_loss =
+    [](const torch::Tensor &curr, const torch::Tensor &next) -> torch::Tensor {
+    // both curr and next are a batch of ranks
+    auto point_loss = torch::relu(next - curr + 1.0);
+    auto loss = torch::sum(point_loss);
+    return loss;
+  };
+
+  torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
+  //torch::optim::AdamW optimizer(net->parameters(), /*lr=*/0.01);
+
+  for(size_t epoch = 1; epoch <= 5; ++epoch)
+  {
+    size_t batch_index = 0;
+
+    // Iterate the data loader to yield batches from the dataset.
+    //for(auto &batch : data)
+    {
+      // Reset gradients.
+      optimizer.zero_grad();
+
+      // Execute the model on the input data.
+      torch::Tensor prediction_curr = net->forward(batch_curr);
+      torch::Tensor prediction_next = net->forward(batch_next);
+
+      // Compute a loss value to judge the prediction of our model.
+      torch::Tensor loss = my_loss(prediction_curr, prediction_next);
+
+      // Compute gradients of the loss w.r.t. the parameters of our model.
+      loss.backward();
+
+      // Update the parameters based on the calculated gradients.
+      optimizer.step();
+
+      // std::cout << "L " << loss.item<double>() << "\n";
+    }
+  }
+
+  //std::cout << "C: " << net->parameters()[0].item<double>() << "\n";
+  //std::cout << "B: " << net->parameters()[1].item<double>() << "\n";
+  assert(round(net->parameters()[0].item<double>()) == -1); // coefficient
+  assert(round(net->parameters()[1].item<double>()) == 1);  // bias
+}
+
 int main()
 {
   std::cout << "Running tests\n";
@@ -436,4 +519,5 @@ int main()
   pytorch_test6();
   pytorch_test7();
   pytorch_test8();
+  pytorch_test9();
 }
