@@ -6,7 +6,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 \*******************************************************************/
 
-#include <torch/torch.h>
+#include "batch.h"
 
 #include <iostream>
 
@@ -38,4 +38,4 @@ struct RankingNet : torch::nn::Module
 
 void ranking_function_training(
   const std::shared_ptr<RankingNet> net,
-  const std::vector<torch::Tensor> &);
+  const std::vector<batcht> &);

@@ -8,6 +8,6 @@ add_executable(pytorch_tests pytorch_tests.cpp)
 target_link_libraries(pytorch_tests "${TORCH_LIBRARIES}")
 set_property(TARGET pytorch_tests PROPERTY CXX_STANDARD 17)
 
-add_executable(nuterm nuterm_main.cpp vcd_parser.cpp training.cpp)
+add_executable(nuterm nuterm_main.cpp vcd_parser.cpp training.cpp traces_to_tensors.cpp)
 target_link_libraries(nuterm "${TORCH_LIBRARIES}")
 set_property(TARGET nuterm PROPERTY CXX_STANDARD 17)

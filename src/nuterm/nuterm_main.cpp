@@ -7,7 +7,7 @@ Author: Daniel Kroening, dkr@amazon.com
 \*******************************************************************/
 
 #include "training.h"
-#include "vcd_parser.h"
+#include "traces_to_tensors.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -15,8 +15,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <iostream>
 #include <list>
 #include <string>
-
-using tracest = std::list<vcdt>;
 
 tracest read_traces(const std::string &path)
 {
@@ -41,24 +39,6 @@ tracest read_traces(const std::string &path)
 
   return traces;
 }
-
-std::size_t number_of_transitions(const tracest &traces)
-{
-  std::size_t result = 0;
-
-  for(auto &trace : traces)
-    result += trace.states.empty() ? 0 : trace.states.size() - 1;
-
-  return result;
-}
-
-struct state_variablet
-{
-  std::size_t index;
-  std::string reference;
-};
-
-using state_variablest = std::map<std::string, state_variablet>;
 
 state_variablest state_variables(const tracest &traces)
 {
@@ -90,61 +70,6 @@ bool has_suffix(const std::string &s, const std::string &suffix)
     return false;
 }
 
-#include <iostream>
-
-double vcd_to_value(const std::string &src)
-{
-  // VCD gives binary values
-  auto integer = std::stoull(src, nullptr, 2);
-  //std::cout << "VALUE " << src << " -> " << double(integer) << "\n";
-  return integer;
-}
-
-torch::Tensor state_to_tensor(
-  const state_variablest &state_variables,
-  const vcdt::statet &state)
-{
-  std::vector<double> data;
-  data.resize(state_variables.size(), 0);
-  for(auto &[id, var] : state_variables)
-  {
-    if(var.reference == "clk")
-      continue;
-    auto v_it = state.changes.find(id);
-    if(v_it != state.changes.end())
-      data[var.index] = vcd_to_value(v_it->second);
-  }
-
-  return torch::tensor(data, torch::kFloat64);
-}
-
-torch::Tensor state_pair_to_tensor(
-  const state_variablest &state_variables,
-  const vcdt::statet &current,
-  const vcdt::statet &next)
-{
-  // We make a tensor that has dimensions 2 x |V|.
-  // The '2' allows for current and next state.
-  auto tensor_current = state_to_tensor(state_variables, current);
-  auto tensor_next = state_to_tensor(state_variables, next);
-  auto tensor_pair = torch::stack({tensor_current, tensor_next}, 0);
-  //  std::cout << "P: " << tensor_pair << "\n" << std::flush;
-  return std::move(tensor_pair);
-}
-
-bool is_live_state(
-  const std::string &liveness_signal,
-  const vcdt::statet &state)
-{
-  auto value_it = state.changes.find(liveness_signal);
-  if(value_it == state.changes.end())
-  {
-    std::cerr << "state without liveness signal" << '\n';
-    abort();
-  }
-  return vcd_to_value(value_it->second) != 0;
-}
-
 std::string liveness_signal(const state_variablest &state_variables)
 {
   for(auto &[id, var] : state_variables)
@@ -155,44 +80,6 @@ std::string liveness_signal(const state_variablest &state_variables)
   std::cerr << "failed to find liveness signal" << '\n';
 
   abort();
-}
-
-std::vector<torch::Tensor> traces_to_tensors(
-  const state_variablest &state_variables,
-  const std::string &liveness_signal,
-  const tracest &traces)
-{
-  auto t = number_of_transitions(traces);
-
-  std::vector<torch::Tensor> result;
-  result.reserve(t);
-
-  for(auto &trace : traces)
-  {
-    const auto full_trace = trace.full_trace();
-
-    for(std::size_t t = 1; t < full_trace.size(); t++)
-    {
-      auto &current = full_trace[t - 1];
-      auto &next = full_trace[t];
-
-      // We must discard transitions in/out of 'live' states.
-      // There is no need for the ranking function to decrease
-      // on such transitions.
-      if(
-        !is_live_state(liveness_signal, current) &&
-        !is_live_state(liveness_signal, next))
-      {
-        // std::cout << "\n" << current << "---->\n" << next;
-        auto tensor = state_pair_to_tensor(state_variables, current, next);
-        assert(tensor.size(0) == 2);
-        assert(tensor.size(1) == state_variables.size());
-        result.push_back(std::move(tensor));
-      }
-    }
-  }
-
-  return result;
 }
 
 std::string sum(const std::vector<std::string> &terms)
@@ -279,12 +166,14 @@ int main(int argc, const char *argv[])
 
   torch::manual_seed(0);
 
-  const auto tensors =
-    traces_to_tensors(state_variables, liveness_signal, traces);
+  const std::size_t batch_size = 1000;
 
-  std::cout << "Got " << tensors.size() << " transitions to rank\n";
+  const auto batches =
+    traces_to_tensors(state_variables, liveness_signal, traces, batch_size);
 
-  if(tensors.empty())
+  std::cout << "Got " << batches.size() << " batch(es) to rank\n";
+
+  if(batches.empty())
   {
     return 0;
   }
@@ -318,7 +207,7 @@ int main(int argc, const char *argv[])
   }
 
   std::cout << "TRAINING\n";
-  ranking_function_training(net, tensors);
+  ranking_function_training(net, batches);
 
   {
     auto weight = net->named_parameters()["fc1.weight"];

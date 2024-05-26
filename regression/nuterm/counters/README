@@ -1,3 +1,4 @@
 Sample as follows:
 
-ebmc FILE.v --random-traces --vcd FILE/trace 
+ebmc counter1.v --random-traces --vcd counter1/trace
+ebmc counter2.v --random-traces --vcd counter2/trace
