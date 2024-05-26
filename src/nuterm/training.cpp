@@ -42,11 +42,12 @@ void ranking_function_training(
   torch::optim::Adam optimizer(net->parameters(), /*lr=*/0.1);
 #endif
 
-  torch::Tensor last_loss = {};
+  double epoch_loss;
 
   for(size_t epoch = 1; epoch <= 20; ++epoch)
   {
     size_t batch_index = 0;
+    epoch_loss = 0;
 
     // Iterate the data loader to yield batches from the dataset.
     for(auto &batch : batches)
@@ -80,7 +81,7 @@ void ranking_function_training(
       if(1)
       {
         std::cout << "Epoch: " << epoch << " | Batch: " << batch_index
-                  << " | Loss: " << std::fixed << std::setprecision(3)
+                  << " | Batch Loss: " << std::fixed << std::setprecision(3)
                   << loss.item<double>() << '\n';
         //torch::save(net, "net.pt");
       }
@@ -88,13 +89,13 @@ void ranking_function_training(
 
       batch_index++;
 
-      last_loss = loss;
+      epoch_loss += loss.item<double>();
     }
 
-    if(last_loss.item<double>() == 0)
+    if(epoch_loss == 0)
       break; // done
   }
 
   std::cout << "Final loss: " << std::fixed << std::setprecision(3)
-            << last_loss.item<double>() << '\n';
+            << epoch_loss << '\n';
 }
