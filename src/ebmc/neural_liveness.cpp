@@ -250,6 +250,7 @@ void neural_livenesst::sample(std::function<void(trans_tracet)> trace_consumer)
     trace_consumer,
     number_of_traces,
     number_of_trace_steps,
+    solver_factory,
     message.get_message_handler());
 }
 
