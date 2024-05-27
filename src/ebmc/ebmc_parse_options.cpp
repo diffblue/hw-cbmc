@@ -23,7 +23,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "instrument_buechi.h"
 #include "liveness_to_safety.h"
 #include "netlist.h"
-#include "neural_liveness.h"
 #include "output_file.h"
 #include "output_smv_word_level.h"
 #include "property_checker.h"
@@ -144,9 +143,6 @@ int ebmc_parse_optionst::doit()
     if(cmdline.isset("random-trace") || cmdline.isset("random-waveform"))
       return random_trace(cmdline, ui_message_handler);
 
-    if(cmdline.isset("neural-liveness"))
-      return do_neural_liveness(cmdline, ui_message_handler);
-
     if(cmdline.isset("ranking-function"))
       return do_ranking_function(cmdline, ui_message_handler);
 
@@ -226,7 +222,11 @@ int ebmc_parse_optionst::doit()
 
     // LTL/SVA to Buechi?
     if(cmdline.isset("buechi"))
+    {
+      if(cmdline.isset("neural"))
+        throw ebmc_errort() << "The neural engine does not work with --buechi";
       instrument_buechi(transition_system, properties, ui_message_handler);
+    }
 
     // possibly apply liveness-to-safety
     if(cmdline.isset("liveness-to-safety"))
@@ -414,9 +414,8 @@ void ebmc_parse_optionst::help()
     "    {y--trace-steps} {unumber}  \t set the number of random transitions (default: 10 steps)\n"
     " {y--ranking-function} {uf}     \t prove a liveness property using given ranking funnction (experimental)\n"
     "    {y--property} {uid}         \t the liveness property to prove\n"
-    " {y--neural-liveness}           \t check liveness properties using neural "
+    " {y--neural}                    \t check properties using neural "
                                        "inference (experimental)\n"
-    "    {y--neural-engine} {ucmd}   \t the neural engine to use\n"
 
     //" --interpolation                \t use bit-level interpolants\n"
     //" --interpolation-word           \t use word-level interpolants\n"

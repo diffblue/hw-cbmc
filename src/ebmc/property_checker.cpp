@@ -24,6 +24,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "instrument_past.h"
 #include "k_induction.h"
 #include "netlist.h"
+#include "neural.h"
 #include "output_file.h"
 #include "report_results.h"
 #include "tautology_check.h"
@@ -458,9 +459,10 @@ property_checker_resultt property_checker(
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
-  bool use_heuristic_engine = !cmdline.isset("bdd") && !cmdline.isset("aig") &&
-                              !cmdline.isset("k-induction") &&
-                              !cmdline.isset("ic3") && !cmdline.isset("bound");
+  bool use_heuristic_engine =
+    !cmdline.isset("bdd") && !cmdline.isset("aig") &&
+    !cmdline.isset("k-induction") && !cmdline.isset("ic3") &&
+    !cmdline.isset("bound") && !cmdline.isset("neural");
 
   if(cmdline.isset("k-induction") || use_heuristic_engine)
   {
@@ -494,6 +496,10 @@ property_checker_resultt property_checker(
       return ic3_engine(
         cmdline, transition_system, properties, message_handler);
 #endif
+    }
+    else if(cmdline.isset("neural"))
+    {
+      return neural(cmdline, transition_system, properties, message_handler);
     }
     else if(cmdline.isset("bound"))
     {

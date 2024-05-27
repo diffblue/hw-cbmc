@@ -1,0 +1,9 @@
+CORE
+wrap_around1.sv
+--traces 1 --solver-neural-liveness
+^weight: nn::fc1\.n0\.w0 = -1$
+^bias: nn::fc1\.n0\.b = .*$
+^\[main\.property\.p0\] always s_eventually main\.counter == 10: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
