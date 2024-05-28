@@ -15,10 +15,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/unicode.h>
 #include <util/version.h>
 
-#include <goto-programs/goto_convert_functions.h>
 #include <goto-programs/set_properties.h>
 #include <goto-programs/show_properties.h>
 
+#include <ansi-c/goto-conversion/goto_convert_functions.h>
 #include <goto-checker/all_properties_verifier_with_trace_storage.h>
 #include <goto-checker/goto_verifier.h>
 #include <goto-checker/multi_path_symex_checker.h>

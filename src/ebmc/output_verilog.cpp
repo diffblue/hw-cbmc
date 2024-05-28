@@ -279,13 +279,11 @@ void output_verilog_rtlt::assign_symbol(
     auto &lhs_extractbits = to_extractbits_expr(lhs);
 
     // redundant?
-    mp_integer from, to;
+    mp_integer index;
 
-    if(
-      !to_integer_non_constant(lhs_extractbits.upper(), to) &&
-      !to_integer_non_constant(lhs_extractbits.lower(), from))
+    if(!to_integer_non_constant(lhs_extractbits.index(), index))
     {
-      if(from == 0 && to == width(lhs_extractbits.src().type()) - 1)
+      if(index == 0 && width(lhs_extractbits.src().type()) == width(lhs.type()))
       {
         assign_symbol(lhs_extractbits.src(), rhs);
         return;
@@ -429,25 +427,17 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
   else if(expr.id()==ID_extractbits)
   {
     auto &src = to_extractbits_expr(expr).src();
-    auto &upper = to_extractbits_expr(expr).upper();
-    auto &lower = to_extractbits_expr(expr).lower();
+    auto &index = to_extractbits_expr(expr).index();
 
     mp_integer from;
-    if(to_integer_non_constant(upper, from))
+    if(to_integer_non_constant(index, from))
     {
-      error().source_location = upper.find_source_location();
-      error() << "failed to convert constant " << upper.pretty() << eom;
+      error().source_location = index.find_source_location();
+      error() << "failed to convert constant " << index.pretty() << eom;
       throw 0;
     }
 
-    mp_integer to;
-    if(to_integer_non_constant(lower, to))
-    {
-      error().source_location = lower.find_source_location();
-      error() << "failed to convert constant " << lower.pretty() << eom;
-      throw 0;
-    }
-
+    auto to = from + width(expr.type());
     std::size_t offset = atoi(src.type().get("#offset").c_str());
 
     assert(from>=offset);
