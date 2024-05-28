@@ -1,0 +1,3 @@
+Sample as follows:
+
+ebmc FILE.v --random-traces --vcd FILE/trace 
