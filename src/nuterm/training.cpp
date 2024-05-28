@@ -39,7 +39,7 @@ void ranking_function_training(
   torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.1);
 #endif
 #if 1
-  torch::optim::Adam optimizer(net->parameters(), /*lr=*/0.1);
+  torch::optim::Adam optimizer(net->parameters(), /*lr=*/0.001);
 #endif
 
   double epoch_loss;

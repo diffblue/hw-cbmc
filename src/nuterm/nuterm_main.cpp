@@ -138,6 +138,41 @@ std::string ranking_net_to_string(
   return sum(terms);
 }
 
+void normalize(batchest &batches)
+{
+  if(batches.empty())
+    return;
+
+  auto vars = batches.front().curr.size(1);
+  std::vector<double> max;
+  max.resize(vars, 0.0);
+
+  for(auto &batch : batches)
+  {
+    for(std::size_t j = 0; j<batch.curr.size(0); j++)
+      for(std::size_t i = 0; i<vars; i++)
+        max[i] = std::max(max[i], batch.curr[j][i].item<double>());
+    for(std::size_t j = 0; j<batch.next.size(0); j++)
+      for(std::size_t i = 0; i<vars; i++)
+        max[i] = std::max(max[i], batch.next[j][i].item<double>());
+  }
+
+  for(std::size_t i=0; i<vars; i++)
+    std::cout << "MAX " << i << ": " << max[i] << '\n';
+
+  for(auto &batch : batches)
+  {
+    for(std::size_t j = 0; j<batch.curr.size(0); j++)
+      for(std::size_t i = 0; i<vars; i++)
+        if(max[i] != 0)
+          batch.curr[j][i] /= max[i];
+    for(std::size_t j = 0; j<batch.next.size(0); j++)
+      for(std::size_t i = 0; i<vars; i++)
+        if(max[i] != 0)
+          batch.next[j][i] /= max[i];
+  }
+}
+
 int main(int argc, const char *argv[])
 {
   // The first argument is the directory with the VCD files.
@@ -168,8 +203,10 @@ int main(int argc, const char *argv[])
 
   const std::size_t batch_size = 1000;
 
-  const auto batches =
+  auto batches =
     traces_to_tensors(state_variables, liveness_signal, traces, batch_size);
+
+  normalize(batches);
 
   std::cout << "Got " << batches.size() << " batch(es) to rank\n";
 

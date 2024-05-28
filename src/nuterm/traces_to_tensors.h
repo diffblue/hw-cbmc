@@ -22,7 +22,9 @@ using state_variablest = std::map<std::string, state_variablet>;
 
 using tracest = std::list<vcdt>;
 
-std::vector<batcht> traces_to_tensors(
+using batchest = std::vector<batcht>;
+
+batchest traces_to_tensors(
   const state_variablest &,
   const std::string &liveness_signal,
   const tracest &traces,
