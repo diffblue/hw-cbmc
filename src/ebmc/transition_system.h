@@ -29,6 +29,9 @@ public:
   transt trans_expr; // transition system expression
 
   void output(std::ostream &) const;
+
+  std::vector<symbol_exprt> state_variables() const;
+  std::vector<symbol_exprt> inputs() const;
 };
 
 transition_systemt get_transition_system(const cmdlinet &, message_handlert &);

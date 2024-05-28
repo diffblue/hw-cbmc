@@ -120,23 +120,10 @@ void liveness_to_safetyt::operator()()
   if(!properties.requires_lasso_constraints())
     return; // no
 
-  irep_idt module_identifier = transition_system.main_symbol->name;
-
   // gather the state variables
+  state_vars = transition_system.state_variables();
+
   const namespacet ns(transition_system.symbol_table);
-
-  const auto &symbol_module_map =
-    transition_system.symbol_table.symbol_module_map;
-  auto lower = symbol_module_map.lower_bound(module_identifier);
-  auto upper = symbol_module_map.upper_bound(module_identifier);
-
-  for(auto it = lower; it != upper; it++)
-  {
-    const symbolt &symbol = ns.lookup(it->second);
-
-    if(symbol.is_state_var)
-      state_vars.push_back(symbol.symbol_expr());
-  }
 
   // create 'loop' shadow symbols for the state variables
   for(auto &symbol_expr : state_vars)

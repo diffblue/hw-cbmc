@@ -368,3 +368,53 @@ int show_symbol_table(
   return get_transition_system(
     cmdline, message_handler, dummy_transition_system);
 }
+
+std::vector<symbol_exprt> transition_systemt::state_variables() const
+{
+  std::vector<symbol_exprt> state_variables;
+
+  const auto &module_symbol = *main_symbol;
+  const namespacet ns(symbol_table);
+
+  const auto &symbol_module_map = symbol_table.symbol_module_map;
+  auto lower = symbol_module_map.lower_bound(module_symbol.name);
+  auto upper = symbol_module_map.upper_bound(module_symbol.name);
+
+  for(auto it = lower; it != upper; it++)
+  {
+    const symbolt &symbol = ns.lookup(it->second);
+
+    if(symbol.is_state_var)
+      state_variables.push_back(symbol.symbol_expr());
+  }
+
+  return state_variables;
+}
+
+std::vector<symbol_exprt> transition_systemt::inputs() const
+{
+  std::vector<symbol_exprt> inputs;
+
+  const auto &module_symbol = *main_symbol;
+
+  DATA_INVARIANT(
+    module_symbol.type.id() == ID_module, "main_symbol must be module");
+
+  const auto &ports_irep = module_symbol.type.find(ID_ports);
+
+  // filter out the inputs
+  auto &ports = static_cast<const exprt &>(ports_irep).operands();
+  for(auto &port : ports)
+  {
+    DATA_INVARIANT(port.id() == ID_symbol, "port must be a symbol");
+    if(port.get_bool(ID_input) && !port.get_bool(ID_output))
+    {
+      symbol_exprt input_symbol(
+        to_symbol_expr(port).get_identifier(), port.type());
+      input_symbol.add_source_location() = port.source_location();
+      inputs.push_back(std::move(input_symbol));
+    }
+  }
+
+  return inputs;
+}

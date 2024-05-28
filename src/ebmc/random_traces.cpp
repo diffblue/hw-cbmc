@@ -84,8 +84,6 @@ protected:
 
   constant_exprt random_value(const typet &);
 
-  symbolst inputs() const;
-  symbolst state_variables() const;
   symbolst remove_constrained(const symbolst &) const;
 
   void
@@ -440,80 +438,6 @@ constant_exprt random_tracest::random_value(const typet &type)
 
 /*******************************************************************\
 
-Function: random_tracest::inputs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-random_tracest::symbolst random_tracest::inputs() const
-{
-  symbolst inputs;
-
-  const auto &module_symbol = *transition_system.main_symbol;
-
-  if(module_symbol.type.id() != ID_module)
-    throw ebmc_errort() << "expected a module but got "
-                        << module_symbol.type.id();
-
-  const auto &ports = module_symbol.type.find(ID_ports);
-
-  // filter out the inputs
-  for(auto &port : static_cast<const exprt &>(ports).operands())
-  {
-    DATA_INVARIANT(port.id() == ID_symbol, "port must be a symbol");
-    if(port.get_bool(ID_input) && !port.get_bool(ID_output))
-    {
-      symbol_exprt input_symbol(port.get(ID_identifier), port.type());
-      input_symbol.add_source_location() = port.source_location();
-      inputs.push_back(std::move(input_symbol));
-    }
-  }
-
-  return inputs;
-}
-
-/*******************************************************************\
-
-Function: random_tracest::state_variables
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-random_tracest::symbolst random_tracest::state_variables() const
-{
-  symbolst state_variables;
-
-  const auto &module_symbol = *transition_system.main_symbol;
-  const namespacet ns(transition_system.symbol_table);
-
-  const auto &symbol_module_map =
-    transition_system.symbol_table.symbol_module_map;
-  auto lower = symbol_module_map.lower_bound(module_symbol.name);
-  auto upper = symbol_module_map.upper_bound(module_symbol.name);
-
-  for(auto it = lower; it != upper; it++)
-  {
-    const symbolt &symbol = ns.lookup(it->second);
-
-    if(symbol.is_state_var)
-      state_variables.push_back(symbol.symbol_expr());
-  }
-
-  return state_variables;
-}
-
-/*******************************************************************\
-
 Function: random_tracest::remove_constrained
 
   Inputs:
@@ -665,12 +589,12 @@ void random_tracest::operator()(
     ns,
     true);
 
-  auto inputs = this->inputs();
+  auto inputs = transition_system.inputs();
 
   if(inputs.empty())
     throw ebmc_errort() << "module does not have inputs";
 
-  auto state_variables = this->state_variables();
+  auto state_variables = transition_system.state_variables();
 
   message.statistics() << "Found " << inputs.size() << " input(s) and "
                        << state_variables.size() << " state variable(s)"
