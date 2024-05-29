@@ -570,17 +570,12 @@ void convert_trans_to_netlistt::convert_lhs_rec(
   }
   else if(expr.id()==ID_extractbits)
   {
-    mp_integer new_from, new_to;
+    mp_integer new_from;
 
-    assert(expr.operands().size()==3);
-
-    if(
-      !to_integer_non_constant(to_extractbits_expr(expr).upper(), new_from) &&
-      !to_integer_non_constant(to_extractbits_expr(expr).lower(), new_to))
+    if(!to_integer_non_constant(to_extractbits_expr(expr).index(), new_from))
     {
-      if(new_from>new_to) std::swap(new_from, new_to);
-
-      assert(new_from<=new_to);
+      boolbv_widtht boolbv_width(ns);
+      mp_integer new_to = new_from + boolbv_width(expr.type());
 
       from = new_from.to_ulong();
       to = new_to.to_ulong();
@@ -747,19 +742,16 @@ void convert_trans_to_netlistt::add_equality_rec(
   }
   else if(lhs.id()==ID_extractbits)
   {
-    mp_integer op1, op2;
+    mp_integer index;
 
-    if(to_integer_non_constant(to_extractbits_expr(lhs).upper(), op1))
-      throw std::string("failed to convert extractbits upper");
+    if(to_integer_non_constant(to_extractbits_expr(lhs).index(), index))
+      throw std::string("failed to convert extractbits index");
 
-    if(to_integer_non_constant(to_extractbits_expr(lhs).lower(), op2))
-      throw std::string("failed to convert extractbits lower");
+    boolbv_widtht boolbv_width(ns);
 
-    if(op1<op2)
-      throw std::string("extractbits op1<op2");
-
-    std::size_t new_lhs_to = lhs_from + op1.to_ulong();
-    std::size_t new_lhs_from = lhs_from + op2.to_ulong();
+    std::size_t new_lhs_from = lhs_from + index.to_ulong();
+    std::size_t new_lhs_to =
+      lhs_from + index.to_ulong() + boolbv_width(lhs.type());
 
     add_equality_rec(
       src, to_extractbits_expr(lhs).src(), new_lhs_from, new_lhs_to, rhs_entry);

@@ -144,10 +144,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
     // Construct the extractbits expression
     return extractbits_exprt{
-      src_padded,
-      from_integer(op1, integer_typet()),
-      from_integer(op2, integer_typet()),
-      expr.type()}
+      src_padded, from_integer(op2, integer_typet()), expr.type()}
       .with_source_location(expr.source_location());
   }
   else if(
@@ -187,10 +184,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       }
 
       return extractbits_exprt{
-        std::move(src),
-        from_integer(top, integer_typet{}),
-        from_integer(bottom, integer_typet{}),
-        expr.type()}
+        std::move(src), from_integer(bottom, integer_typet{}), expr.type()}
         .with_source_location(expr);
     }
     else
@@ -203,10 +197,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       auto src_shifted = lshr_exprt(src, index_adjusted);
 
       return extractbits_exprt{
-        std::move(src_shifted),
-        from_integer(width - 1, integer_typet{}),
-        from_integer(0, integer_typet{}),
-        expr.type()}
+        std::move(src_shifted), from_integer(0, integer_typet{}), expr.type()}
         .with_source_location(expr);
     }
   }
@@ -507,17 +498,11 @@ void verilog_synthesist::assignment_rec(
       else if(it->type().id()==ID_signedbv ||
               it->type().id()==ID_unsignedbv)
       {
-        auto width = get_width(it->type());
-
-        auto offset_constant2 =
-          from_integer(offset + width - 1, natural_typet{});
-
-        // extractbits requires that upper >= lower, i.e. op1 >= op2
-        extractbits_exprt bit_extract(rhs, offset_constant2, offset_constant,
-                                      it->type());
+        extractbits_exprt bit_extract(rhs, offset_constant, it->type());
 
         assignment_rec(*it, bit_extract, blocking);
 
+        auto width = get_width(it->type());
         offset+=width;
       }
       else
@@ -2006,9 +1991,7 @@ void verilog_synthesist::synth_force_rec(
               it->type().id()==ID_unsignedbv)
       {
         auto width = get_width(it->type());
-        auto sum_constant = from_integer(offset + width - 1, natural_typet{});
-        extractbits_exprt bit_extract(
-          rhs, offset_constant, sum_constant, it->type());
+        extractbits_exprt bit_extract(rhs, offset_constant, it->type());
         synth_force_rec(*it, bit_extract);
         offset+=width;
       }

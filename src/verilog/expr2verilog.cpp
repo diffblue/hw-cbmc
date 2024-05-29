@@ -629,9 +629,6 @@ std::string expr2verilogt::convert_extractbits(
   const extractbits_exprt &src,
   unsigned precedence)
 {
-  if(src.operands().size()!=3)
-    return convert_norep(src, precedence);
-
   unsigned p;
   std::string op = convert(src.src(), p);
 
@@ -640,10 +637,24 @@ std::string expr2verilogt::convert_extractbits(
   dest+=op;
   if(precedence>p) dest+=')';
 
+  auto width = to_bitvector_type(src.type()).get_width();
+
   dest+='[';
-  dest += convert(src.upper());
+
+  if(src.index().is_constant())
+  {
+    auto index_int = numeric_cast_v<mp_integer>(to_constant_expr(src.index()));
+    dest += integer2string(index_int + width);
+  }
+  else
+  {
+    dest += convert(src.index());
+    dest += " + ";
+    dest += std::to_string(width);
+  }
+
   dest+=':';
-  dest += convert(src.lower());
+  dest += convert(src.index());
   dest+=']';
 
   return dest;
