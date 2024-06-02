@@ -443,11 +443,21 @@ to_sva_non_overlapped_implication_expr(exprt &expr)
 class sva_cycle_delay_exprt : public ternary_exprt
 {
 public:
-  explicit sva_cycle_delay_exprt(exprt from, exprt to, exprt op)
+  sva_cycle_delay_exprt(exprt from, exprt to, exprt op)
     : ternary_exprt(
         ID_sva_cycle_delay,
         std::move(from),
         std::move(to),
+        std::move(op),
+        bool_typet())
+  {
+  }
+
+  sva_cycle_delay_exprt(exprt cycles, exprt op)
+    : ternary_exprt(
+        ID_sva_cycle_delay,
+        std::move(cycles),
+        nil_exprt{},
         std::move(op),
         bool_typet())
   {
@@ -473,6 +483,11 @@ public:
   exprt &to()
   {
     return op1();
+  }
+
+  bool is_unbounded() const
+  {
+    return to().id() == ID_infinity;
   }
 
   const exprt &op() const

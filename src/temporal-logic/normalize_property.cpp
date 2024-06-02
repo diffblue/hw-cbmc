@@ -8,6 +8,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "normalize_property.h"
 
+#include <util/arith_tools.h>
 #include <util/std_expr.h>
 
 #include <verilog/sva_expr.h>
@@ -74,6 +75,27 @@ exprt normalize_pre_sva_non_overlapped_implication(
   return or_exprt{not_exprt{expr.lhs()}, X_exprt{expr.rhs()}};
 }
 
+exprt normalize_pre_sva_cycle_delay(sva_cycle_delay_exprt expr)
+{
+  if(expr.is_unbounded())
+  {
+    if(
+      expr.from().is_constant() &&
+      numeric_cast_v<mp_integer>(to_constant_expr(expr.from())) == 0)
+    {
+      // ##[0:$] φ --> F φ
+      return F_exprt{expr.op()};
+    }
+    else
+    {
+      // ##[i:$] φ --> ##i F φ
+      return sva_cycle_delay_exprt{expr.from(), F_exprt{expr.op()}};
+    }
+  }
+  else
+    return std::move(expr);
+}
+
 exprt normalize_property(exprt expr)
 {
   // pre-traversal
@@ -93,6 +115,8 @@ exprt normalize_property(exprt expr)
     expr = X_exprt{to_sva_nexttime_expr(expr).op()};
   else if(expr.id() == ID_sva_s_nexttime)
     expr = X_exprt{to_sva_s_nexttime_expr(expr).op()};
+  else if(expr.id() == ID_sva_cycle_delay)
+    expr = normalize_pre_sva_cycle_delay(to_sva_cycle_delay_expr(expr));
 
   // normalize the operands
   for(auto &op : expr.operands())
