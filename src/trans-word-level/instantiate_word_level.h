@@ -20,6 +20,12 @@ exprt instantiate(
   const mp_integer &no_timeframes,
   const namespacet &);
 
+std::pair<mp_integer, exprt> instantiate_property(
+  const exprt &,
+  const mp_integer &current,
+  const mp_integer &no_timeframes,
+  const namespacet &);
+
 std::string
 timeframe_identifier(const mp_integer &timeframe, const irep_idt &identifier);
 

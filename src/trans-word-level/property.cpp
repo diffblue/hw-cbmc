@@ -78,54 +78,6 @@ bool bmc_supports_property(const exprt &expr)
 
 /*******************************************************************\
 
-Function: max_property_obligation
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static void property_obligations_rec(
-  const exprt &property_expr,
-  decision_proceduret &,
-  const mp_integer &current,
-  const mp_integer &no_timeframes,
-  const namespacet &,
-  std::map<mp_integer, exprt::operandst> &obligations);
-
-static std::pair<mp_integer, exprt> max_property_obligation(
-  const exprt &property_expr,
-  decision_proceduret &solver,
-  const mp_integer &current,
-  const mp_integer &no_timeframes,
-  const namespacet &ns)
-{
-  // Generate one obligation, equivalent to the conjunction
-  // for the maximum timeframe.
-
-  std::map<mp_integer, exprt::operandst> obligations;
-
-  property_obligations_rec(
-    property_expr, solver, current, no_timeframes, ns, obligations);
-
-  exprt::operandst conjuncts;
-  mp_integer max_timeframe = 0;
-
-  for(auto &[timeframe, exprs] : obligations)
-  {
-    max_timeframe = std::max(max_timeframe, timeframe);
-    for(auto &conjunct : exprs)
-      conjuncts.push_back(conjunct);
-  }
-
-  return std::pair<mp_integer, exprt>{max_timeframe, conjunction(conjuncts)};
-}
-
-/*******************************************************************\
-
 Function: property_obligations_rec
 
   Inputs:
@@ -146,17 +98,7 @@ static void property_obligations_rec(
 {
   PRECONDITION(current >= 0 && current < no_timeframes);
 
-  if(property_expr.id() == ID_X)
-  {
-    auto next = current + 1;
-    if(next < no_timeframes)
-    {
-      auto &op = to_X_expr(property_expr).op();
-      property_obligations_rec(
-        op, solver, next, no_timeframes, ns, obligations);
-    }
-  }
-  else if(
+  if(
     property_expr.id() == ID_AG || property_expr.id() == ID_G ||
     property_expr.id() == ID_sva_always)
   {
@@ -254,28 +196,10 @@ static void property_obligations_rec(
       property_obligations_rec(
         op, solver, current, no_timeframes, ns, obligations);
   }
-  else if(property_expr.id() == ID_or)
-  {
-    // generate one obligation, equivalent to the disjunction,
-    // for the maximum timeframe
-    mp_integer max_timeframe = 0;
-    exprt::operandst disjuncts;
-
-    for(auto &op : to_or_expr(property_expr).operands())
-    {
-      auto obligation =
-        max_property_obligation(op, solver, current, no_timeframes, ns);
-      max_timeframe = std::max(max_timeframe, obligation.first);
-      disjuncts.push_back(obligation.second);
-    }
-
-    obligations[max_timeframe].push_back(disjunction(disjuncts));
-  }
   else
   {
-    // current state property
-    exprt tmp = instantiate(property_expr, current, no_timeframes, ns);
-    obligations[current].push_back(tmp);
+    auto tmp = instantiate_property(property_expr, current, no_timeframes, ns);
+    obligations[tmp.first].push_back(tmp.second);
   }
 }
 

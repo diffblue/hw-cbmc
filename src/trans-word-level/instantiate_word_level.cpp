@@ -77,7 +77,8 @@ public:
   }
 
   /// Instantiate the given expression for timeframe t
-  [[nodiscard]] exprt operator()(exprt expr, const mp_integer &t) const
+  [[nodiscard]] std::pair<mp_integer, exprt>
+  operator()(exprt expr, const mp_integer &t) const
   {
     return instantiate_rec(std::move(expr), t);
   }
@@ -86,7 +87,8 @@ protected:
   const mp_integer &no_timeframes;
   const namespacet &ns;
 
-  [[nodiscard]] exprt instantiate_rec(exprt, const mp_integer &t) const;
+  [[nodiscard]] std::pair<mp_integer, exprt>
+  instantiate_rec(exprt, const mp_integer &t) const;
   [[nodiscard]] typet instantiate_rec(typet, const mp_integer &t) const;
 };
 
@@ -123,18 +125,20 @@ Function: wl_instantiatet::instantiate_rec
 
 \*******************************************************************/
 
-exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
+std::pair<mp_integer, exprt>
+wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 {
   expr.type() = instantiate_rec(expr.type(), t);
 
   if(expr.id() == ID_next_symbol)
   {
     expr.id(ID_symbol);
-    return timeframe_symbol(t + 1, to_symbol_expr(std::move(expr)));
+    auto u = t + 1;
+    return {u, timeframe_symbol(u, to_symbol_expr(std::move(expr)))};
   }
   else if(expr.id() == ID_symbol)
   {
-    return timeframe_symbol(t, to_symbol_expr(std::move(expr)));
+    return {t, timeframe_symbol(t, to_symbol_expr(std::move(expr)))};
   }
   else if(expr.id()==ID_sva_cycle_delay) // ##[1:2] something
   {
@@ -150,7 +154,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
       // Do we exceed the bound? Make it 'true'
       if(u >= no_timeframes)
-        return true_exprt();
+        return {no_timeframes - 1, true_exprt()};
       else
         return instantiate_rec(sva_cycle_delay_expr.op(), u);
     }
@@ -168,35 +172,29 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
       else if(to_integer_non_constant(sva_cycle_delay_expr.to(), to))
         throw "failed to convert sva_cycle_delay offsets";
 
-      // This is an 'or', and we let it fail if the bound is too small.
+      auto lower = t + from;
+      auto upper = t + to;
+
+      // Do we exceed the bound? Make it 'true'
+      if(upper >= no_timeframes)
+        return {no_timeframes - 1, true_exprt()};
 
       exprt::operandst disjuncts;
 
-      for(mp_integer offset = from; offset < to; ++offset)
+      for(mp_integer u = lower; u <= upper; ++u)
       {
-        auto u = t + offset;
-
-        if(u >= no_timeframes)
-        {
-        }
-        else
-        {
-          disjuncts.push_back(instantiate_rec(sva_cycle_delay_expr.op(), u));
-        }
+        disjuncts.push_back(
+          instantiate_rec(sva_cycle_delay_expr.op(), u).second);
       }
 
-      return disjunction(disjuncts);
+      return {upper, disjunction(disjuncts)};
     }
   }
   else if(expr.id()==ID_sva_sequence_concatenation)
   {
     // much like regular 'and'
     expr.id(ID_and);
-
-    for(auto &op : expr.operands())
-      op = instantiate_rec(op, t);
-
-    return expr;
+    return instantiate_rec(expr, t);
   }
   else if(expr.id()==ID_sva_always)
   {
@@ -206,10 +204,10 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
     for(auto u = t; u < no_timeframes; ++u)
     {
-      conjuncts.push_back(instantiate_rec(op, u));
+      conjuncts.push_back(instantiate_rec(op, u).second);
     }
 
-    return conjunction(conjuncts);
+    return {no_timeframes - 1, conjunction(conjuncts)};
   }
   else if(expr.id() == ID_X)
   {
@@ -220,7 +218,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
       return instantiate_rec(to_X_expr(expr).op(), next);
     }
     else
-      return true_exprt(); // works on NNF only
+      return {no_timeframes - 1, true_exprt()}; // works on NNF only
   }
   else if(expr.id() == ID_sva_eventually)
   {
@@ -238,14 +236,14 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     // This is weak, and passes if any of the timeframes
     // does not exist.
     if(t + lower >= no_timeframes || t + upper >= no_timeframes)
-      return true_exprt();
+      return {no_timeframes - 1, true_exprt()};
 
     exprt::operandst disjuncts = {};
 
     for(mp_integer u = t + lower; u <= t + upper; ++u)
-      disjuncts.push_back(instantiate_rec(op, u));
+      disjuncts.push_back(instantiate_rec(op, u).second);
 
-    return disjunction(disjuncts);
+    return {no_timeframes - 1, disjunction(disjuncts)};
   }
   else if(
     expr.id() == ID_sva_s_eventually || expr.id() == ID_F || expr.id() == ID_AF)
@@ -273,13 +271,13 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
       for(mp_integer j = k; j <= i; ++j)
       {
-        disjuncts.push_back(instantiate_rec(p, j));
+        disjuncts.push_back(instantiate_rec(p, j).second);
       }
 
       conjuncts.push_back(disjunction(disjuncts));
     }
 
-    return conjunction(conjuncts);
+    return {no_timeframes - 1, conjunction(conjuncts)};
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
@@ -292,19 +290,19 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
     // we expand: p U q <=> q || (p && X(p U q))
     exprt tmp_q = to_binary_expr(expr).op1();
-    tmp_q = instantiate_rec(tmp_q, t);
+    tmp_q = instantiate_rec(tmp_q, t).second;
 
     exprt expansion = to_binary_expr(expr).op0();
-    expansion = instantiate_rec(expansion, t);
+    expansion = instantiate_rec(expansion, t).second;
 
     const auto next = t + 1;
 
     if(next < no_timeframes)
     {
-      expansion = and_exprt(expansion, instantiate_rec(expr, next));
+      expansion = and_exprt(expansion, instantiate_rec(expr, next).second);
     }
 
-    return or_exprt(tmp_q, expansion);
+    return {no_timeframes - 1, or_exprt(tmp_q, expansion)};
   }
   else if(expr.id()==ID_sva_until_with ||
           expr.id()==ID_sva_s_until_with)
@@ -335,7 +333,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     if(ticks > t)
     {
       // return the 'default value' for the type
-      return default_value(verilog_past.type());
+      return {t, default_value(verilog_past.type())};
     }
     else
     {
@@ -344,9 +342,15 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   }
   else
   {
+    mp_integer max = t;
     for(auto &op : expr.operands())
-      op = instantiate_rec(op, t);
-    return expr;
+    {
+      auto tmp = instantiate_rec(op, t);
+      op = tmp.second;
+      max = std::max(max, tmp.first);
+    }
+
+    return {max, expr};
   }
 }
 
@@ -386,5 +390,27 @@ exprt instantiate(
   const namespacet &ns)
 {
   wl_instantiatet wl_instantiate(no_timeframes, ns);
-  return wl_instantiate(expr, t);
+  return wl_instantiate(expr, t).second;
+}
+
+/*******************************************************************\
+
+Function: instantiate_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::pair<mp_integer, exprt> instantiate_property(
+  const exprt &expr,
+  const mp_integer &current,
+  const mp_integer &no_timeframes,
+  const namespacet &ns)
+{
+  wl_instantiatet wl_instantiate(no_timeframes, ns);
+  return wl_instantiate(expr, current);
 }
