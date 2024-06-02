@@ -24,6 +24,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬¬φ --> φ
 /// ¬Gφ --> F¬φ
 /// ¬Fφ --> G¬φ
+/// [*] φ --> F φ
+/// [+] φ --> X F φ
 exprt normalize_property(exprt);
 
 #endif

@@ -2106,6 +2106,10 @@ cycle_delay_range:
                 { init($$, ID_sva_cycle_delay); mto($$, $2); stack_expr($$).operands().push_back(nil_exprt()); }
         | "##" '[' cycle_delay_const_range_expression ']'
                 { $$ = $3; }
+        | "##" '[' TOK_ASTERIC ']'
+                { init($$, ID_sva_cycle_delay_star); }
+        | "##" '[' TOK_PLUS ']'
+                { init($$, ID_sva_cycle_delay_plus); }
         ;
 
 cycle_delay_const_range_expression:
