@@ -23,10 +23,12 @@ SRC = \
       output_verilog.cpp \
       random_traces.cpp \
       ranking_function.cpp \
+      ranking_net.cpp \
       report_results.cpp \
       show_formula_solver.cpp \
       show_properties.cpp \
       show_trans.cpp \
+      solver_neural_liveness.cpp \
       transition_system.cpp \
       waveform.cpp \
       #empty line

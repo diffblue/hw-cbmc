@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "random_traces.h"
 #include "ranking_function.h"
 #include "show_trans.h"
+#include "solver_neural_liveness.h"
 
 #include <iostream>
 
@@ -161,6 +162,9 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("neural-liveness"))
       return do_neural_liveness(cmdline, ui_message_handler);
+
+    if(cmdline.isset("solver-neural-liveness"))
+      return do_solver_neural_liveness(cmdline, ui_message_handler);
 
     if(cmdline.isset("ranking-function"))
       return do_ranking_function(cmdline, ui_message_handler);

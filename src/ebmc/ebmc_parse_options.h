@@ -34,6 +34,7 @@ public:
         "(po)(cegar)(k-induction)(2pi)(bound2):"
         "(outfile):(xml-ui)(verbosity):(gui)(json-result):"
         "(neural-liveness)(neural-engine):"
+        "(solver-neural-liveness)"
         "(reset):"
         "(version)(verilog-rtl)(verilog-netlist)"
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"
