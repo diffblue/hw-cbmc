@@ -1906,7 +1906,9 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   }
   else if(
     expr.id() == ID_sva_always || expr.id() == ID_sva_nexttime ||
-    expr.id() == ID_sva_s_nexttime || expr.id() == ID_sva_s_eventually)
+    expr.id() == ID_sva_s_nexttime || expr.id() == ID_sva_s_eventually ||
+    expr.id() == ID_sva_cycle_delay_plus ||
+    expr.id() == ID_sva_cycle_delay_star)
   {
     assert(expr.operands().size()==1);
     convert_expr(expr.op());

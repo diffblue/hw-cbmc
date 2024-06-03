@@ -521,4 +521,54 @@ static inline sva_cycle_delay_exprt &to_sva_cycle_delay_expr(exprt &expr)
   return static_cast<sva_cycle_delay_exprt &>(expr);
 }
 
+class sva_cycle_delay_plus_exprt : public unary_exprt
+{
+public:
+  explicit sva_cycle_delay_plus_exprt(exprt op)
+    : unary_exprt(ID_sva_cycle_delay_plus, std::move(op), bool_typet())
+  {
+  }
+};
+
+static inline const sva_cycle_delay_plus_exprt &
+to_sva_cycle_delay_plus_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_cycle_delay_plus);
+  sva_cycle_delay_plus_exprt::check(expr);
+  return static_cast<const sva_cycle_delay_plus_exprt &>(expr);
+}
+
+static inline sva_cycle_delay_plus_exprt &
+to_sva_cycle_delay_plus_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_cycle_delay_plus);
+  sva_cycle_delay_plus_exprt::check(expr);
+  return static_cast<sva_cycle_delay_plus_exprt &>(expr);
+}
+
+class sva_cycle_delay_star_exprt : public unary_exprt
+{
+public:
+  explicit sva_cycle_delay_star_exprt(exprt op)
+    : unary_exprt(ID_sva_cycle_delay_star, std::move(op), bool_typet())
+  {
+  }
+};
+
+static inline const sva_cycle_delay_star_exprt &
+to_sva_cycle_delay_star_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_cycle_delay_star);
+  sva_cycle_delay_star_exprt::check(expr);
+  return static_cast<const sva_cycle_delay_star_exprt &>(expr);
+}
+
+static inline sva_cycle_delay_star_exprt &
+to_sva_cycle_delay_star_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_cycle_delay_star);
+  sva_cycle_delay_star_exprt::check(expr);
+  return static_cast<sva_cycle_delay_star_exprt &>(expr);
+}
+
 #endif
