@@ -16,8 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/string2int.h>
 #include <util/unicode.h>
 
-#include <solvers/flattening/boolbv.h>
-#include <solvers/sat/satcheck.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
@@ -43,8 +41,10 @@ class random_tracest
 public:
   explicit random_tracest(
     const transition_systemt &_transition_system,
+    const ebmc_solver_factoryt &_solver_factory,
     message_handlert &_message_handler)
     : transition_system(_transition_system),
+      solver_factory(_solver_factory),
       ns(_transition_system.symbol_table),
       message(_message_handler)
   {
@@ -58,6 +58,7 @@ public:
 
 protected:
   const transition_systemt &transition_system;
+  const ebmc_solver_factoryt &solver_factory;
   const namespacet ns;
   messaget message;
 
@@ -86,8 +87,10 @@ protected:
 
   symbolst remove_constrained(const symbolst &) const;
 
-  void
-  freeze(const symbolst &, std::size_t number_of_timeframes, boolbvt &) const;
+  void freeze(
+    const symbolst &,
+    std::size_t number_of_timeframes,
+    decision_proceduret &) const;
 
   // Random number generator. These are fully specified in
   // the C++ standard, and produce the same values on compliant
@@ -210,7 +213,9 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
     trace_nr++;
   };
 
-  random_tracest(transition_system, message_handler)(
+  const auto solver_factory = ebmc_solver_factory(cmdline);
+
+  random_tracest(transition_system, solver_factory, message_handler)(
     consumer, random_seed, number_of_traces, number_of_trace_steps);
 
   return 0;
@@ -314,7 +319,9 @@ int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
     }
   };
 
-  random_tracest(transition_system, message_handler)(
+  const auto solver_factory = ebmc_solver_factory(cmdline);
+
+  random_tracest(transition_system, solver_factory, message_handler)(
     consumer, random_seed, 1, number_of_trace_steps);
 
   return 0;
@@ -337,6 +344,7 @@ void random_traces(
   const std::string &outfile_prefix,
   std::size_t number_of_traces,
   std::size_t number_of_trace_steps,
+  const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
 {
   std::size_t random_seed = 0;
@@ -355,7 +363,7 @@ void random_traces(
     trace_nr++;
   };
 
-  random_tracest(transition_system, message_handler)(
+  random_tracest(transition_system, solver_factory, message_handler)(
     consumer, random_seed, number_of_traces, number_of_trace_steps);
 }
 
@@ -376,11 +384,12 @@ void random_traces(
   std::function<void(trans_tracet)> consumer,
   std::size_t number_of_traces,
   std::size_t number_of_trace_steps,
+  const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
 {
   std::size_t random_seed = 0;
 
-  random_tracest(transition_system, message_handler)(
+  random_tracest(transition_system, solver_factory, message_handler)(
     consumer, random_seed, number_of_traces, number_of_trace_steps);
 }
 
@@ -479,7 +488,7 @@ Function: random_tracest::freeze
 void random_tracest::freeze(
   const symbolst &symbols,
   std::size_t number_of_timeframes,
-  boolbvt &boolbv) const
+  decision_proceduret &solver) const
 {
   for(std::size_t i = 0; i < number_of_timeframes; i++)
   {
@@ -487,7 +496,7 @@ void random_tracest::freeze(
     {
       auto symbol_in_timeframe =
         instantiate(symbol, i, number_of_timeframes, ns);
-      boolbv.set_frozen(boolbv.convert_bv(symbol_in_timeframe));
+      (void)solver.handle(symbol_in_timeframe);
     }
   }
 }
@@ -578,8 +587,8 @@ void random_tracest::operator()(
 
   message.status() << "Passing transition system to solver" << messaget::eom;
 
-  satcheckt satcheck{message.get_message_handler()};
-  boolbvt solver(ns, satcheck, message.get_message_handler());
+  auto solver_container = solver_factory(ns, message.get_message_handler());
+  auto &solver = solver_container.decision_procedure();
 
   ::unwind(
     transition_system.trans_expr,
@@ -619,9 +628,7 @@ void random_tracest::operator()(
     auto merged =
       merge_constraints(input_constraints, initial_state_constraints);
 
-    solver.push(merged);
-    auto dec_result = solver();
-    solver.pop();
+    auto dec_result = solver(conjunction(merged));
 
     switch(dec_result)
     {

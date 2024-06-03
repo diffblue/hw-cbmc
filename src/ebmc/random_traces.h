@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef EBMC_RANDOM_TRACES_H
 #define EBMC_RANDOM_TRACES_H
 
+#include "ebmc_solver_factory.h"
+
 #include <functional>
 #include <string>
 
@@ -30,6 +32,7 @@ void random_traces(
   const std::string &outfile_prefix,
   std::size_t number_of_traces,
   std::size_t number_of_trace_steps,
+  const ebmc_solver_factoryt &,
   message_handlert &);
 
 // many traces, given to a callback
@@ -38,6 +41,7 @@ void random_traces(
   std::function<void(trans_tracet)> consumer,
   std::size_t number_of_traces,
   std::size_t number_of_trace_steps,
+  const ebmc_solver_factoryt &,
   message_handlert &);
 
 #endif
