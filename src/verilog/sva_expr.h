@@ -11,13 +11,43 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
-class sva_nexttime_exprt : public unary_predicate_exprt
+class sva_nexttime_exprt : public binary_predicate_exprt
 {
 public:
+  // nonindexed variant
   explicit sva_nexttime_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_nexttime, std::move(op))
+    : binary_predicate_exprt(nil_exprt(), ID_sva_nexttime, std::move(op))
   {
   }
+
+  bool is_indexed() const
+  {
+    return index().is_not_nil();
+  }
+
+  const exprt &index() const
+  {
+    return op0();
+  }
+
+  exprt &index()
+  {
+    return op0();
+  }
+
+  const exprt &op() const
+  {
+    return op1();
+  }
+
+  exprt &op()
+  {
+    return op1();
+  }
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
 };
 
 static inline const sva_nexttime_exprt &to_sva_nexttime_expr(const exprt &expr)
@@ -34,13 +64,43 @@ static inline sva_nexttime_exprt &to_sva_nexttime_expr(exprt &expr)
   return static_cast<sva_nexttime_exprt &>(expr);
 }
 
-class sva_s_nexttime_exprt : public unary_predicate_exprt
+class sva_s_nexttime_exprt : public binary_predicate_exprt
 {
 public:
+  // nonindexed variant
   explicit sva_s_nexttime_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_s_nexttime, std::move(op))
+    : binary_predicate_exprt(nil_exprt(), ID_sva_s_nexttime, std::move(op))
   {
   }
+
+  bool is_indexed() const
+  {
+    return index().is_not_nil();
+  }
+
+  const exprt &index() const
+  {
+    return op0();
+  }
+
+  exprt &index()
+  {
+    return op0();
+  }
+
+  const exprt &op() const
+  {
+    return op1();
+  }
+
+  exprt &op()
+  {
+    return op1();
+  }
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
 };
 
 static inline const sva_s_nexttime_exprt &

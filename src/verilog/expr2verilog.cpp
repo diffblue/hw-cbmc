@@ -430,7 +430,7 @@ std::string expr2verilogt::convert_sva_unary(
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_sva
+Function: expr2verilogt::convert_sva_binary
 
   Inputs:
 
@@ -455,6 +455,35 @@ std::string expr2verilogt::convert_sva_binary(
     s1 = "(" + s1 + ")";
 
   return s0 + " " + name + " " + s1;
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_sva_indexed_binary
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_sva_indexed_binary(
+  const std::string &name,
+  const binary_exprt &expr)
+{
+  std::string s0;
+
+  if(expr.op0().is_not_nil())
+    s0 = '[' + convert(expr.lhs()) + ']';
+
+  unsigned p1;
+  auto s1 = convert(expr.rhs(), p1);
+  if(p1 == 0)
+    s1 = "(" + s1 + ")";
+
+  return name + s0 + ' ' + s1;
 }
 
 /*******************************************************************\
@@ -1161,11 +1190,11 @@ std::string expr2verilogt::convert(
 
   else if(src.id()==ID_sva_nexttime)
     return precedence = 0,
-           convert_sva_unary("nexttime", to_sva_nexttime_expr(src));
+           convert_sva_indexed_binary("nexttime", to_sva_nexttime_expr(src));
 
   else if(src.id()==ID_sva_s_nexttime)
-    return precedence = 0,
-           convert_sva_unary("s_nexttime", to_sva_s_nexttime_expr(src));
+    return precedence = 0, convert_sva_indexed_binary(
+                             "s_nexttime", to_sva_s_nexttime_expr(src));
 
   else if(src.id()==ID_sva_eventually)
   {

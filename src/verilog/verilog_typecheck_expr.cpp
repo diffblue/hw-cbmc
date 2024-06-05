@@ -1905,8 +1905,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     expr.type() = expr.op().type();
   }
   else if(
-    expr.id() == ID_sva_always || expr.id() == ID_sva_nexttime ||
-    expr.id() == ID_sva_s_nexttime || expr.id() == ID_sva_s_eventually ||
+    expr.id() == ID_sva_always || expr.id() == ID_sva_s_eventually ||
     expr.id() == ID_sva_cycle_delay_plus ||
     expr.id() == ID_sva_cycle_delay_star)
   {
@@ -2234,6 +2233,30 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     no_bool_ops(expr);
 
     expr.type()=expr.op0().type();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_nexttime)
+  {
+    if(to_sva_nexttime_expr(expr).is_indexed())
+      convert_expr(to_sva_nexttime_expr(expr).index());
+
+    auto &op = to_sva_nexttime_expr(expr).op();
+    convert_expr(op);
+    make_boolean(op);
+    expr.type() = bool_typet();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_s_nexttime)
+  {
+    if(to_sva_s_nexttime_expr(expr).is_indexed())
+      convert_expr(to_sva_s_nexttime_expr(expr).index());
+
+    auto &op = to_sva_s_nexttime_expr(expr).op();
+    convert_expr(op);
+    make_boolean(op);
+    expr.type() = bool_typet();
 
     return std::move(expr);
   }
