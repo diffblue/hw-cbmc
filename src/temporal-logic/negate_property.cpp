@@ -93,7 +93,7 @@ exprt negate_property(const exprt &expr)
   }
   else if(expr.id() == ID_sva_nexttime)
   {
-    unary_exprt result = to_sva_nexttime_expr(expr);
+    auto result = to_sva_nexttime_expr(expr);
     result.op() = negate_property(result.op());
     return std::move(result);
   }

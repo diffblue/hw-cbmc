@@ -112,9 +112,15 @@ exprt normalize_property(exprt expr)
     expr = normalize_pre_sva_non_overlapped_implication(
       to_sva_non_overlapped_implication_expr(expr));
   else if(expr.id() == ID_sva_nexttime)
-    expr = X_exprt{to_sva_nexttime_expr(expr).op()};
+  {
+    if(!to_sva_nexttime_expr(expr).is_indexed())
+      expr = X_exprt{to_sva_nexttime_expr(expr).op()};
+  }
   else if(expr.id() == ID_sva_s_nexttime)
-    expr = X_exprt{to_sva_s_nexttime_expr(expr).op()};
+  {
+    if(!to_sva_s_nexttime_expr(expr).is_indexed())
+      expr = X_exprt{to_sva_s_nexttime_expr(expr).op()};
+  }
   else if(expr.id() == ID_sva_cycle_delay)
     expr = normalize_pre_sva_cycle_delay(to_sva_cycle_delay_expr(expr));
   else if(expr.id() == ID_sva_cycle_delay_plus)

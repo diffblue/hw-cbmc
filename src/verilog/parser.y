@@ -2059,11 +2059,18 @@ property_expr_proper:
         | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
         | property_expr "|->" property_expr { init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
         | property_expr "|=>" property_expr { init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
-        | "nexttime" property_expr          { init($$, "sva_nexttime"); mto($$, $2); }
-        | "s_nexttime" property_expr        { init($$, "sva_s_nexttime"); mto($$, $2); }
+        | "nexttime" property_expr
+		{ init($$, "sva_nexttime"); stack_expr($$).add_to_operands(nil_exprt()); mto($$, $2); }
+        | "nexttime" '[' constant_expression ']' property_expr %prec "nexttime"
+		{ init($$, "sva_nexttime"); mto($$, $3); mto($$, $5); }
+        | "s_nexttime" property_expr
+		{ init($$, "sva_s_nexttime"); stack_expr($$).add_to_operands(nil_exprt()); mto($$, $2); }
+        | "s_nexttime" '[' constant_expression ']' property_expr %prec "s_nexttime"
+		{ init($$, "sva_s_nexttime"); mto($$, $3); mto($$, $5); }
         | "always" '[' cycle_delay_const_range_expression ']' property_expr %prec "always"
 		{ init($$, ID_sva_ranged_always); swapop($$, $3); mto($$, $5); }
-        | "always" property_expr            { init($$, "sva_always"); mto($$, $2); }
+        | "always" property_expr
+		{ init($$, "sva_always"); mto($$, $2); }
         | "s_always" '[' constant_range ']' property_expr %prec "s_always"
 		{ init($$, ID_sva_s_always); swapop($$, $3); mto($$, $5); }
         | "s_eventually" property_expr

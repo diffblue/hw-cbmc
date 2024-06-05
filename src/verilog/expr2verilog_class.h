@@ -92,6 +92,9 @@ public:
 
   std::string convert_sva_binary(const std::string &name, const binary_exprt &);
 
+  std::string
+  convert_sva_indexed_binary(const std::string &name, const binary_exprt &);
+
   virtual std::string
   convert_replication(const replication_exprt &, unsigned precedence);
 
