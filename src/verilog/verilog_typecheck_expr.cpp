@@ -2516,6 +2516,22 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_if)
+  {
+    convert_expr(expr.op0());
+    make_boolean(expr.op0());
+
+    convert_expr(expr.op1());
+    make_boolean(expr.op1());
+
+    if(expr.op2().is_not_nil())
+    {
+      convert_expr(expr.op2());
+      make_boolean(expr.op2());
+    }
+
+    return std::move(expr);
+  }
   else
   {
     throw errort().with_location(expr.source_location())

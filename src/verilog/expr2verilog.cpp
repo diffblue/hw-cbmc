@@ -488,6 +488,27 @@ std::string expr2verilogt::convert_sva_indexed_binary(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_sva_if
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_sva_if(const sva_if_exprt &src)
+{
+  if(src.false_case().is_nil())
+    return "if(" + convert(src.cond()) + ") " + convert(src.true_case());
+  else
+    return "if(" + convert(src.cond()) + ") " + convert(src.true_case()) +
+           " else " + convert(src.false_case());
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_replication
 
   Inputs:
@@ -1220,6 +1241,9 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_sva_s_until_with)
     return precedence = 0,
            convert_sva_binary("s_until_with", to_sva_s_until_with_expr(src));
+
+  else if(src.id() == ID_sva_if)
+    return precedence = 0, convert_sva_if(to_sva_if_expr(src));
 
   else if(src.id()==ID_function_call)
     return convert_function_call(to_function_call_expr(src));

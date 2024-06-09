@@ -20,6 +20,7 @@ Author: Daniel Kroening, dkr@amazon.com
 /// sva_non_overlapped_implication --> ¬a ∨ Xb
 /// sva_nexttime φ --> Xφ
 /// sva_s_nexttime φ --> Xφ
+/// sva_if --> ? :
 /// ¬Xφ --> X¬φ
 /// ¬¬φ --> φ
 /// ¬Gφ --> F¬φ

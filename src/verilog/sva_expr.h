@@ -631,4 +631,68 @@ to_sva_cycle_delay_star_expr(exprt &expr)
   return static_cast<sva_cycle_delay_star_exprt &>(expr);
 }
 
+class sva_if_exprt : public ternary_exprt
+{
+public:
+  explicit sva_if_exprt(exprt __cond, exprt __true_case, exprt __false_case)
+    : ternary_exprt(
+        ID_sva_if,
+        std::move(__cond),
+        std::move(__true_case),
+        std::move(__false_case),
+        bool_typet())
+  {
+  }
+
+  const exprt &cond() const
+  {
+    return op0();
+  }
+
+  exprt &cond()
+  {
+    return op0();
+  }
+
+  const exprt &true_case() const
+  {
+    return op1();
+  }
+
+  exprt &true_case()
+  {
+    return op1();
+  }
+
+  // may be nil (in which case it defaults to 'true')
+  const exprt &false_case() const
+  {
+    return op2();
+  }
+
+  exprt &false_case()
+  {
+    return op2();
+  }
+
+protected:
+  using ternary_exprt::op0;
+  using ternary_exprt::op1;
+  using ternary_exprt::op2;
+};
+
+static inline const sva_if_exprt &to_sva_if_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_if);
+  sva_if_exprt::check(expr);
+  return static_cast<const sva_if_exprt &>(expr);
+}
+
+static inline sva_if_exprt &to_sva_if_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_if);
+  sva_if_exprt::check(expr);
+  return static_cast<sva_if_exprt &>(expr);
+}
+
 #endif
