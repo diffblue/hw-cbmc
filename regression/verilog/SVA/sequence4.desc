@@ -1,0 +1,9 @@
+KNOWNBUG
+sequence4.sv
+--bound 10
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+sequence concatenation is not supported by the BMC engine
