@@ -20,7 +20,9 @@ bool is_temporal_operator(const exprt &expr)
          expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
          expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with ||
          expr.id() == ID_sva_eventually || expr.id() == ID_sva_s_eventually ||
-         expr.id() == ID_sva_cycle_delay;
+         expr.id() == ID_sva_cycle_delay ||
+         expr.id() == ID_sva_overlapped_followed_by ||
+         expr.id() == ID_sva_nonoverlapped_followed_by;
 }
 
 bool has_temporal_operator(const exprt &expr)

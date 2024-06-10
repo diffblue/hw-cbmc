@@ -2260,12 +2260,13 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(expr.id()==ID_sva_overlapped_implication ||
-          expr.id()==ID_sva_non_overlapped_implication ||
-          expr.id()==ID_sva_until ||
-          expr.id()==ID_sva_s_until ||
-          expr.id()==ID_sva_until_with ||
-          expr.id()==ID_sva_s_until_with)
+  else if(
+    expr.id() == ID_sva_overlapped_implication ||
+    expr.id() == ID_sva_non_overlapped_implication ||
+    expr.id() == ID_sva_overlapped_followed_by ||
+    expr.id() == ID_sva_nonoverlapped_followed_by ||
+    expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
+    expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with)
   {
     convert_expr(expr.op0());
     make_boolean(expr.op0());

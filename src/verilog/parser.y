@@ -372,6 +372,8 @@ int yyverilogerror(const char *error)
 %token TOK_LESSLESSLESSEQUAL "<<<="
 %token TOK_GREATERGREATERGREATEREQUAL ">>>="
 %token TOK_HASHHASH         "##"
+%token TOK_HASHMINUSHASH    "#-#"
+%token TOK_HASHEQUALHASH    "#=#"
 %token TOK_COLONCOLON       "::"
 
 /* System Verilog Keywords */
@@ -2063,6 +2065,8 @@ property_expr_proper:
 		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); stack_expr($$).add_to_operands(nil_exprt()); }
         | "if" '(' expression_or_dist ')' property_expr "else" property_expr
 		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); mto($$, $7); }
+        | sequence_expr "#-#" property_expr { init($$, ID_sva_overlapped_followed_by); mto($$, $1); mto($$, $3); }
+        | sequence_expr "#=#" property_expr { init($$, ID_sva_nonoverlapped_followed_by); mto($$, $1); mto($$, $3); }
         | "nexttime" property_expr
 		{ init($$, "sva_nexttime"); stack_expr($$).add_to_operands(nil_exprt()); mto($$, $2); }
         | "nexttime" '[' constant_expression ']' property_expr %prec "nexttime"

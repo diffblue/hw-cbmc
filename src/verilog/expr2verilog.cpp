@@ -1162,6 +1162,12 @@ std::string expr2verilogt::convert(
   else if(src.id() == ID_sva_cycle_delay_plus)
     return convert_sva_unary("##[+]", to_unary_expr(src));
 
+  else if(src.id() == ID_sva_overlapped_followed_by)
+    return precedence = 0, convert_sva_binary("#-#", to_binary_expr(src));
+
+  else if(src.id() == ID_sva_nonoverlapped_followed_by)
+    return precedence = 0, convert_sva_binary("#=#", to_binary_expr(src));
+
   else if(src.id()==ID_sva_cycle_delay)
     return convert_sva_cycle_delay(to_ternary_expr(src), precedence = 0);
     // not sure about precedence
