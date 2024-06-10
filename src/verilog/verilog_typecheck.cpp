@@ -1481,7 +1481,21 @@ void verilog_typecheckt::convert_statement(
   else if(statement.id()==ID_force)
     convert_force(to_verilog_force(statement));
   else if(statement.id() == ID_verilog_label_statement)
-    convert_statement(to_verilog_label_statement(statement).statement());
+  {
+    // We stick the label on any assert/assume/conver statement
+    auto &label_statement = to_verilog_label_statement(statement);
+    auto &sub_statement = label_statement.statement();
+
+    if(
+      sub_statement.id() == ID_verilog_assert_property ||
+      sub_statement.id() == ID_verilog_assume_property ||
+      sub_statement.id() == ID_verilog_cover_property)
+    {
+      sub_statement.set(ID_identifier, label_statement.label());
+    }
+
+    convert_statement(sub_statement);
+  }
   else if(statement.id() == ID_wait)
   {
   }
