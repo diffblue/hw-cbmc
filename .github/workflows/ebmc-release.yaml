@@ -1,0 +1,51 @@
+on:
+  push:
+    tags:
+      - 'ebmc-*'
+
+name: Create Release
+
+jobs:
+  get-version-information:
+    name: Get Version Information
+    runs-on: ubuntu-20.04
+    outputs:
+      version: ${{ steps.split-version.outputs._1 }}
+    steps:
+      - uses: jungwinter/split@v2
+        id: split
+        with:
+          msg: ${{ github.ref }}
+          seperator: '/'
+      - uses: jungwinter/split@v2
+        id: split-version
+        with:
+          msg: ${{ steps.split.outputs._2 }}
+          seperator: '-'
+  perform-release:
+    name: Perform Release
+    runs-on: ubuntu-20.04
+    needs: get-version-information
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
+        with:
+          tag_name: ebmc-${{ env.EBMC_VERSION }}
+          release_name: ebmc-${{ env.EBMC_VERSION }}
+          draft: false
+          prerelease: false
+          body: |
+            This is EBMC version ${{ env.EBMC_VERSION }}.
+
+            ## Ubuntu
+
+            On Ubuntu, install EBMC by downloading the *.deb package below for your version of Ubuntu and install with
+
+            ```sh
+            # Ubuntu 22:
+            $ dpkg -i ubuntu-22.04-ebmc-${{ env.EBMC_VERSION }}-Linux.deb
+            ```
