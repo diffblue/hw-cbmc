@@ -2059,6 +2059,10 @@ property_expr_proper:
         | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
         | property_expr "|->" property_expr { init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
         | property_expr "|=>" property_expr { init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
+        | "if" '(' expression_or_dist ')' property_expr %prec LT_TOK_ELSE
+		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); stack_expr($$).add_to_operands(nil_exprt()); }
+        | "if" '(' expression_or_dist ')' property_expr "else" property_expr
+		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); mto($$, $7); }
         | "nexttime" property_expr
 		{ init($$, "sva_nexttime"); stack_expr($$).add_to_operands(nil_exprt()); mto($$, $2); }
         | "nexttime" '[' constant_expression ']' property_expr %prec "nexttime"

@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/std_expr.h>
 
+class sva_if_exprt;
 class sva_ranged_predicate_exprt;
 
 class expr2verilogt
@@ -106,6 +107,8 @@ public:
 
   virtual std::string
   convert_sva_cycle_delay(const ternary_exprt &, unsigned precedence);
+
+  std::string convert_sva_if(const sva_if_exprt &);
 
   virtual std::string
   convert_sva_sequence_concatenation(const binary_exprt &, unsigned precedence);
