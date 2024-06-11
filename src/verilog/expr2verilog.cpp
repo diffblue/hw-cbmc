@@ -407,6 +407,42 @@ std::string expr2verilogt::convert_sva_ranged_predicate(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_sva_case
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_sva_case(const sva_case_exprt &src)
+{
+  std::string cases;
+
+  for(auto &case_item : src.case_items())
+  {
+    bool first = true;
+    for(auto &pattern : case_item.patterns())
+    {
+      if(first)
+        first = false;
+      else
+        cases += ", ";
+      cases += convert(pattern);
+    }
+
+    cases += ": ";
+    cases += convert(case_item.result());
+    cases += "; ";
+  }
+
+  return "case(" + convert(src.case_op()) + ") " + cases + "endcase";
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_sva_unary
 
   Inputs:
@@ -1171,7 +1207,13 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_sva_cycle_delay)
     return convert_sva_cycle_delay(to_ternary_expr(src), precedence = 0);
     // not sure about precedence
-    
+
+  else if(src.id() == ID_sva_strong)
+    return convert_function("strong", src);
+
+  else if(src.id() == ID_sva_weak)
+    return convert_function("weak", src);
+
   else if(src.id()==ID_sva_sequence_concatenation)
     return convert_sva_sequence_concatenation(
       to_binary_expr(src), precedence = 0);
@@ -1250,6 +1292,9 @@ std::string expr2verilogt::convert(
 
   else if(src.id() == ID_sva_if)
     return precedence = 0, convert_sva_if(to_sva_if_expr(src));
+
+  else if(src.id() == ID_sva_case)
+    return precedence = 0, convert_sva_case(to_sva_case_expr(src));
 
   else if(src.id()==ID_function_call)
     return convert_function_call(to_function_call_expr(src));

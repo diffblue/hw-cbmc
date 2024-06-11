@@ -2055,50 +2055,95 @@ property_expr:
 	;
 
 property_expr_proper:
-          '(' property_expr_proper ')'      { $$ = $2; }
-        | "not" property_expr               { init($$, ID_not); mto($$, $2); }
-        | property_expr "or" property_expr  { init($$, ID_or); mto($$, $1); mto($$, $3); }
-        | property_expr "and" property_expr { init($$, ID_and); mto($$, $1); mto($$, $3); }
-        | property_expr "|->" property_expr { init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
-        | property_expr "|=>" property_expr { init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
-        | "if" '(' expression_or_dist ')' property_expr %prec LT_TOK_ELSE
+	  "strong" '(' sequence_expr ')'
+		{ init($$, ID_sva_strong); mto ($$, $3); }
+	| "weak" '(' sequence_expr ')'
+		{ init($$, ID_sva_weak); mto ($$, $3); }
+	| '(' property_expr_proper ')'
+		{ $$ = $2; }
+	| "not" property_expr
+		{ init($$, ID_not); mto($$, $2); }
+	| property_expr "or" property_expr
+		{ init($$, ID_or); mto($$, $1); mto($$, $3); }
+	| property_expr "and" property_expr
+		{ init($$, ID_and); mto($$, $1); mto($$, $3); }
+	| property_expr "|->" property_expr
+		{ init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
+	| property_expr "|=>" property_expr
+		{ init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
+	| "if" '(' expression_or_dist ')' property_expr %prec LT_TOK_ELSE
 		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); stack_expr($$).add_to_operands(nil_exprt()); }
-        | "if" '(' expression_or_dist ')' property_expr "else" property_expr
+	| "if" '(' expression_or_dist ')' property_expr "else" property_expr
 		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); mto($$, $7); }
-        | sequence_expr "#-#" property_expr { init($$, ID_sva_overlapped_followed_by); mto($$, $1); mto($$, $3); }
-        | sequence_expr "#=#" property_expr { init($$, ID_sva_nonoverlapped_followed_by); mto($$, $1); mto($$, $3); }
-        | "nexttime" property_expr
+	| "case" '(' expression_or_dist ')' property_case_item_brace "endcase"
+		{ init($$, ID_sva_case); mto($$, $3); mto($$, $5); }
+	| sequence_expr "#-#" property_expr
+		{ init($$, ID_sva_overlapped_followed_by); mto($$, $1); mto($$, $3); }
+	| sequence_expr "#=#" property_expr
+		{ init($$, ID_sva_nonoverlapped_followed_by); mto($$, $1); mto($$, $3); }
+	| "nexttime" property_expr
 		{ init($$, "sva_nexttime"); stack_expr($$).add_to_operands(nil_exprt()); mto($$, $2); }
-        | "nexttime" '[' constant_expression ']' property_expr %prec "nexttime"
+	| "nexttime" '[' constant_expression ']' property_expr %prec "nexttime"
 		{ init($$, "sva_nexttime"); mto($$, $3); mto($$, $5); }
-        | "s_nexttime" property_expr
+	| "s_nexttime" property_expr
 		{ init($$, "sva_s_nexttime"); stack_expr($$).add_to_operands(nil_exprt()); mto($$, $2); }
-        | "s_nexttime" '[' constant_expression ']' property_expr %prec "s_nexttime"
+	| "s_nexttime" '[' constant_expression ']' property_expr %prec "s_nexttime"
 		{ init($$, "sva_s_nexttime"); mto($$, $3); mto($$, $5); }
-        | "always" '[' cycle_delay_const_range_expression ']' property_expr %prec "always"
+	| "always" '[' cycle_delay_const_range_expression ']' property_expr %prec "always"
 		{ init($$, ID_sva_ranged_always); swapop($$, $3); mto($$, $5); }
-        | "always" property_expr
+	| "always" property_expr
 		{ init($$, "sva_always"); mto($$, $2); }
-        | "s_always" '[' constant_range ']' property_expr %prec "s_always"
+	| "s_always" '[' constant_range ']' property_expr %prec "s_always"
 		{ init($$, ID_sva_s_always); swapop($$, $3); mto($$, $5); }
-        | "s_eventually" property_expr
+	| "s_eventually" property_expr
 		{ init($$, ID_sva_s_eventually); mto($$, $2); }
-        | "eventually" '[' constant_range ']' property_expr %prec "eventually"
+	| "eventually" '[' constant_range ']' property_expr %prec "eventually"
 		{ init($$, ID_sva_eventually); swapop($$, $3); mto($$, $5); }
-        | "s_eventually" '[' cycle_delay_const_range_expression ']' property_expr %prec "s_eventually"
+	| "s_eventually" '[' cycle_delay_const_range_expression ']' property_expr %prec "s_eventually"
 		{ init($$, ID_sva_s_eventually); swapop($$, $3); mto($$, $5); }
-        | property_expr "until" property_expr        { init($$, "sva_until"); mto($$, $1); mto($$, $3); }
-        | property_expr "until_with" property_expr   { init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
-        | property_expr "s_until" property_expr      { init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
-        | property_expr "s_until_with" property_expr { init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
-        | property_expr "implies" property_expr       { init($$, ID_implies); mto($$, $1); mto($$, $3); }
-        | property_expr "iff" property_expr           { init($$, ID_iff); mto($$, $1); mto($$, $3); }
-        | "accept_on" '(' expression_or_dist ')'      { init($$, "sva_accept_on"); mto($$, $3); }
-        | "reject_on" '(' expression_or_dist ')'      { init($$, "sva_reject_on"); mto($$, $3); }
-        | "sync_accept_on" '(' expression_or_dist ')' { init($$, "sva_sync_accept_on"); mto($$, $3); }
-        | "sync_reject_on" '(' expression_or_dist ')' { init($$, "sva_sync_reject_on"); mto($$, $3); }
-        | event_control property_expr { $$=$2; } %prec "property_expr_event_control"
-        ;
+	| property_expr "until" property_expr
+		{ init($$, "sva_until"); mto($$, $1); mto($$, $3); }
+	| property_expr "s_until" property_expr
+		{ init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
+	| property_expr "until_with" property_expr
+		{ init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
+	| property_expr "s_until_with" property_expr
+		{ init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
+	| property_expr "implies" property_expr
+		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
+	| property_expr "iff" property_expr
+		{ init($$, ID_iff); mto($$, $1); mto($$, $3); }
+	| "accept_on" '(' expression_or_dist ')'
+		{ init($$, "sva_accept_on"); mto($$, $3); }
+	| "reject_on" '(' expression_or_dist ')'
+		{ init($$, "sva_reject_on"); mto($$, $3); }
+	| "sync_accept_on" '(' expression_or_dist ')'
+		{ init($$, "sva_sync_accept_on"); mto($$, $3); }
+	| "sync_reject_on" '(' expression_or_dist ')'
+		{ init($$, "sva_sync_reject_on"); mto($$, $3); }
+	| event_control property_expr { $$=$2; } %prec "property_expr_event_control"
+	;
+
+property_case_item_brace:
+	  property_case_item
+		{ init($$); mto($$, $1); }
+	| property_case_item_brace property_case_item
+		{ $$ = $1; mto($$, $2); }
+	;
+
+property_case_item:
+	  expression_or_dist_brace TOK_COLON property_expr ';'
+		{ init($$, ID_case_item); mto($$, $1); mto($$, $3); }
+	| "default" TOK_COLON property_expr ';'
+		{ init($$, ID_case_item); mto($$, $3); }
+	;
+
+expression_or_dist_brace:
+	  expression_or_dist
+		{ init($$, "patterns"); mto($$, $1); }
+	| expression_or_dist_brace ',' expression_or_dist
+		{ $$ = $1; mto($1, $3); }
+	;
 
 sequence_expr:
           expression

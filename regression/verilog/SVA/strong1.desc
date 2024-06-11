@@ -1,0 +1,9 @@
+CORE
+strong1.sv
+--bound 20
+^\[main\.property\.p0\] strong\(##\[0:9\] main\.x == 100\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

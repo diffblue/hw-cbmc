@@ -135,6 +135,18 @@ exprt normalize_property(exprt expr)
                         : sva_if_expr.false_case();
     expr = if_exprt{sva_if_expr.cond(), sva_if_expr.true_case(), false_case};
   }
+  else if(expr.id() == ID_sva_strong)
+  {
+    expr = to_sva_strong_expr(expr).op();
+  }
+  else if(expr.id() == ID_sva_weak)
+  {
+    expr = to_sva_weak_expr(expr).op();
+  }
+  else if(expr.id() == ID_sva_case)
+  {
+    expr = to_sva_case_expr(expr).lowering();
+  }
 
   // normalize the operands
   for(auto &op : expr.operands())
