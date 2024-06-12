@@ -27,6 +27,9 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬Fφ --> G¬φ
 /// [*] φ --> F φ
 /// [+] φ --> X F φ
+/// strong(φ) --> φ
+/// weak(φ) --> φ
+/// sva_case --> ? :
 exprt normalize_property(exprt);
 
 #endif

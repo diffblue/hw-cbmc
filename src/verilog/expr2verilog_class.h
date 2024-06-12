@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/std_expr.h>
 
+class sva_case_exprt;
 class sva_if_exprt;
 class sva_ranged_predicate_exprt;
 
@@ -84,6 +85,8 @@ public:
   virtual std::string convert_function(
     const std::string &name,
     const exprt &src);
+
+  std::string convert_sva_case(const sva_case_exprt &);
 
   std::string convert_sva_ranged_predicate(
     const std::string &name,

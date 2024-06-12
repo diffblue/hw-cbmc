@@ -695,4 +695,126 @@ static inline sva_if_exprt &to_sva_if_expr(exprt &expr)
   return static_cast<sva_if_exprt &>(expr);
 }
 
+class sva_strong_exprt : public unary_exprt
+{
+public:
+  sva_strong_exprt(exprt __op, typet __type)
+    : unary_exprt(ID_sva_strong, std::move(__op), std::move(__type))
+  {
+  }
+};
+
+inline const sva_strong_exprt &to_sva_strong_expr(const exprt &expr)
+{
+  sva_strong_exprt::check(expr);
+  return static_cast<const sva_strong_exprt &>(expr);
+}
+
+inline sva_strong_exprt &to_sva_strong_expr(exprt &expr)
+{
+  sva_strong_exprt::check(expr);
+  return static_cast<sva_strong_exprt &>(expr);
+}
+
+class sva_weak_exprt : public unary_exprt
+{
+public:
+  sva_weak_exprt(exprt __op, typet __type)
+    : unary_exprt(ID_sva_weak, std::move(__op), std::move(__type))
+  {
+  }
+};
+
+inline const sva_weak_exprt &to_sva_weak_expr(const exprt &expr)
+{
+  sva_weak_exprt::check(expr);
+  return static_cast<const sva_weak_exprt &>(expr);
+}
+
+inline sva_weak_exprt &to_sva_weak_expr(exprt &expr)
+{
+  sva_weak_exprt::check(expr);
+  return static_cast<sva_weak_exprt &>(expr);
+}
+
+class sva_case_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_case_exprt(exprt __case_op, exprt __cases)
+    : binary_predicate_exprt(
+        std::move(__case_op),
+        ID_sva_case,
+        std::move(__cases))
+  {
+  }
+
+  const exprt &case_op() const
+  {
+    return op0();
+  }
+
+  exprt &case_op()
+  {
+    return op0();
+  }
+
+  class case_itemt : public binary_exprt
+  {
+  public:
+    const exprt::operandst &patterns() const
+    {
+      return op0().operands();
+    }
+
+    exprt::operandst &patterns()
+    {
+      return op0().operands();
+    }
+
+    const exprt &result() const
+    {
+      return op1();
+    }
+
+    exprt &result()
+    {
+      return op1();
+    }
+
+  protected:
+    using binary_exprt::op0;
+    using binary_exprt::op1;
+  };
+
+  using case_itemst = std::vector<case_itemt>;
+
+  const case_itemst &case_items() const
+  {
+    return (const case_itemst &)(op1().operands());
+  }
+
+  case_itemst &case_items()
+  {
+    return (case_itemst &)(op1().operands());
+  }
+
+  exprt lowering() const;
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
+};
+
+inline const sva_case_exprt &to_sva_case_expr(const exprt &expr)
+{
+  sva_case_exprt::check(expr);
+  return static_cast<const sva_case_exprt &>(expr);
+}
+
+inline sva_case_exprt &to_sva_case_expr(exprt &expr)
+{
+  sva_case_exprt::check(expr);
+  return static_cast<sva_case_exprt &>(expr);
+}
+
 #endif

@@ -1907,7 +1907,8 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   else if(
     expr.id() == ID_sva_always || expr.id() == ID_sva_s_eventually ||
     expr.id() == ID_sva_cycle_delay_plus ||
-    expr.id() == ID_sva_cycle_delay_star)
+    expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_weak ||
+    expr.id() == ID_sva_strong)
   {
     assert(expr.operands().size()==1);
     convert_expr(expr.op());
@@ -2320,6 +2321,28 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
       throw errort().with_location(expr.source_location())
         << "cannot perform size cast on " << to_string(op_type);
     }
+  }
+  else if(expr.id() == ID_sva_case)
+  {
+    auto &case_expr = to_sva_case_expr(expr);
+    convert_expr(case_expr.case_op());
+
+    for(auto &case_item : case_expr.case_items())
+    {
+      // same rules as case statement
+      for(auto &pattern : case_item.patterns())
+      {
+        convert_expr(pattern);
+        typet t = max_type(pattern.type(), case_expr.case_op().type());
+        propagate_type(pattern, t);
+      }
+
+      convert_expr(case_item.result());
+      make_boolean(case_item.result());
+    }
+
+    expr.type() = bool_typet();
+    return std::move(expr);
   }
   else
   {
