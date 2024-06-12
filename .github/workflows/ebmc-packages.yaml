@@ -109,7 +109,7 @@ jobs:
       - name: Run the verilog tests
         run: make -C regression/verilog test
       - name: Create .rpm
-        run |
+        run: |
           VERSION=$(echo ${{ github.ref }} | cut -d "/" -f 3 | cut -d "-" -f 2)
           rpmdev-setuptree
 
