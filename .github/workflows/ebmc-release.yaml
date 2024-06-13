@@ -6,6 +6,39 @@ on:
 name: Create Release
 
 jobs:
+  get-version-information:
+    name: Get Version Information
+    runs-on: ubuntu-20.04
+    outputs:
+      version: ${{ steps.split-version.outputs._1 }}
+    steps:
+      - uses: jungwinter/split@v2
+        id: split-ref
+        with:
+          msg: ${{ github.ref }}
+          separator: '/'
+      - uses: jungwinter/split@v2
+        id: split-version
+        with:
+          msg: ${{ steps.split-ref.outputs._2 }}
+          separator: '-'
+
+  perform-draft-release:
+    name: Perform Draft Release
+    runs-on: ubuntu-20.04
+    needs: [get-version-information]
+    steps:
+      - name: Create draft release
+        uses: actions/create-release@v1
+        env:
+          EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ebmc-${{ env.EBMC_VERSION }}
+          release_name: ebmc-${{ env.EBMC_VERSION }}
+          draft: true
+          prerelease: false
+
   ubuntu-22_04-package:
     name: Package for Ubuntu 22.04
     runs-on: ubuntu-22.04
@@ -22,10 +55,10 @@ jobs:
         with:
           save-always: true
           path: .ccache
-          key: ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
+          key: ${{ runner.os }}-22.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: |
-            ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}
-            ${{ runner.os }}-20.04-make-gcc
+            ${{ runner.os }}-22.04-make-gcc-${{ github.ref }}
+            ${{ runner.os }}-22.04-make-gcc
       - name: ccache environment
         run: |
           echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
@@ -33,7 +66,7 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make -C src -j2 CXX="ccache g++"
+        run: make -C src -j4 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the verilog tests
@@ -107,7 +140,7 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j2
+        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4
       - name: Print ccache stats
         run: ccache -s
       - name: Run the ebmc tests with SAT
@@ -144,7 +177,7 @@ jobs:
           mkdir %{buildroot}/usr/lib
           mkdir %{buildroot}/usr/bin
           mkdir %{buildroot}/usr/lib/ebmc
-          cp ${SRC}/src/ebmc/jcover %{buildroot}/usr/bin/
+          cp ${SRC}/src/ebmc/ebmc %{buildroot}/usr/bin/
 
           %files
           /usr/bin/ebmc
@@ -166,23 +199,6 @@ jobs:
           asset_path: ${{ steps.create_packages.outputs.deb_package }}
           asset_name: ${{ steps.create_packages.outputs.deb_package_name }}
           asset_content_type: application/x-deb
-
-  get-version-information:
-    name: Get Version Information
-    runs-on: ubuntu-20.04
-    outputs:
-      version: ${{ steps.split-version.outputs._1 }}
-    steps:
-      - uses: jungwinter/split@v2
-        id: split-ref
-        with:
-          msg: ${{ github.ref }}
-          separator: '/'
-      - uses: jungwinter/split@v2
-        id: split-version
-        with:
-          msg: ${{ steps.split-ref.outputs._2 }}
-          separator: '-'
 
   perform-release:
     name: Perform Release
