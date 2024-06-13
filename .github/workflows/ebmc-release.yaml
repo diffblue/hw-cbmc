@@ -57,7 +57,7 @@ jobs:
           Homepage: http://www.cprover.org/ebmc/
           Description: The EBMC Model Checker
           EOM
-          chown root:root -R ebmc-${VERSION}
+          sudo chown root:root -R ebmc-${VERSION}
           dpkg -b ebmc-${VERSION}
           deb_package_name="$(ls *.deb)"
           echo "deb_package=./build/$deb_package_name" >> $GITHUB_OUTPUT
@@ -65,8 +65,12 @@ jobs:
       - name: Get release info
         id: get_release_info
         uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release_info.outputs.upload_url }}
           asset_path: ${{ steps.create_packages.outputs.deb_package }}
@@ -104,6 +108,8 @@ jobs:
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j2
+      - name: Print ccache stats
+        run: ccache -s
       - name: Run the ebmc tests with SAT
         run: |
           rm regression/ebmc/neural-liveness/counter1.desc
@@ -125,7 +131,6 @@ jobs:
           Release:          1
           Prefix:           /usr
           Group:            Development/Tools
-          Requires:         
 
           %description
           EBMC is a formal verification tool for hardware designs.
@@ -147,8 +152,20 @@ jobs:
 
           echo Building ebmc-${VERSION}-1.x86_64.rpm
           (cd ~/rpmbuild/SPECS ; rpmbuild -v -bb ebmc.spec )
-      - name: Print ccache stats
-        run: ccache -s
+      - name: Get release info
+        id: get_release_info
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload binary packages
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          asset_path: ${{ steps.create_packages.outputs.deb_package }}
+          asset_name: ${{ steps.create_packages.outputs.deb_package_name }}
+          asset_content_type: application/x-deb
 
   get-version-information:
     name: Get Version Information
