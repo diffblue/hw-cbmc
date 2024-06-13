@@ -25,6 +25,7 @@ jobs:
 
   perform-draft-release:
     name: Perform Draft Release
+    id: draft_release
     runs-on: ubuntu-20.04
     needs: [get-version-information]
     steps:
@@ -42,6 +43,7 @@ jobs:
   ubuntu-22_04-package:
     name: Package for Ubuntu 22.04
     runs-on: ubuntu-22.04
+    needs: [perform-draft-release]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,17 +97,12 @@ jobs:
           deb_package_name="$(ls *.deb)"
           echo "deb_package=./build/$deb_package_name" >> $GITHUB_OUTPUT
           echo "deb_package_name=ubuntu-22.04-$deb_package_name" >> $GITHUB_OUTPUT
-      - name: Get release info
-        id: get_release_info
-        uses: bruceadams/get-release@v1.3.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          upload_url: ${{ steps.draft_release.outputs.upload_url }}
           asset_path: ${{ steps.create_packages.outputs.deb_package }}
           asset_name: ${{ steps.create_packages.outputs.deb_package_name }}
           asset_content_type: application/x-deb
@@ -113,6 +110,7 @@ jobs:
   centos8-package:
     name: Package for CentOS 8
     runs-on: ubuntu-22.04
+    needs: [perform-draft-release]
     container:
       image: centos:8
     steps:
@@ -152,6 +150,7 @@ jobs:
       - name: Create .rpm
         run: |
           VERSION=$(echo ${{ github.ref }} | cut -d "/" -f 3 | cut -d "-" -f 2)
+          SRC=`pwd`
           rpmdev-setuptree
 
           cat > ~/rpmbuild/SPECS/ebmc.spec << EOM
@@ -185,20 +184,18 @@ jobs:
 
           echo Building ebmc-${VERSION}-1.x86_64.rpm
           (cd ~/rpmbuild/SPECS ; rpmbuild -v -bb ebmc.spec )
-      - name: Get release info
-        id: get_release_info
-        uses: bruceadams/get-release@v1.3.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          rpm_package_name=ebmc-${VERSION}-1.x86_64.rpm
+          echo "rpm_package=~/rpmbuild/SPECS/$rpm_package_name" >> $GITHUB_OUTPUT
+          echo "rpm_package_name=centos8-$rpm_package_name" >> $GITHUB_OUTPUT
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-          asset_path: ${{ steps.create_packages.outputs.deb_package }}
-          asset_name: ${{ steps.create_packages.outputs.deb_package_name }}
-          asset_content_type: application/x-deb
+          upload_url: ${{ steps.draft_release.outputs.upload_url }}
+          asset_path: ${{ steps.create_packages.outputs.rpm_package }}
+          asset_name: ${{ steps.create_packages.outputs.rpm_package_name }}
+          asset_content_type: application/x-rpm
 
   perform-release:
     name: Perform Release
