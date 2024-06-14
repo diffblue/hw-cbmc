@@ -25,11 +25,13 @@ jobs:
 
   perform-draft-release:
     name: Perform Draft Release
-    id: draft_release
     runs-on: ubuntu-20.04
     needs: [get-version-information]
+    outputs:
+      upload_url: ${{ steps.draft_release.outputs.upload_url }}
     steps:
       - name: Create draft release
+        id: draft_release
         uses: actions/create-release@v1
         env:
           EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
@@ -44,6 +46,8 @@ jobs:
     name: Package for Ubuntu 22.04
     runs-on: ubuntu-22.04
     needs: [perform-draft-release]
+    outputs:
+      rpm_package_name: ${{ steps.create_packages.outputs.deb_package_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -102,7 +106,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.draft_release.outputs.upload_url }}
+          upload_url: ${{ needs.perform-draft-release.outputs.upload_url }}
           asset_path: ${{ steps.create_packages.outputs.deb_package }}
           asset_name: ${{ steps.create_packages.outputs.deb_package_name }}
           asset_content_type: application/x-deb
@@ -111,6 +115,8 @@ jobs:
     name: Package for CentOS 8
     runs-on: ubuntu-22.04
     needs: [perform-draft-release]
+    outputs:
+      rpm_package_name: ${{ steps.create_packages.outputs.rpm_package_name }}
     container:
       image: centos:8
     steps:
@@ -192,7 +198,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.draft_release.outputs.upload_url }}
+          upload_url: ${{ needs.perform-draft-release.outputs.upload_url }}
           asset_path: ${{ steps.create_packages.outputs.rpm_package }}
           asset_name: ${{ steps.create_packages.outputs.rpm_package_name }}
           asset_content_type: application/x-rpm
@@ -229,4 +235,5 @@ jobs:
 
             ```sh
             rpm -i ebmc-${{ env.EBMC_VERSION }}-1.x86_64.rpm
+            ${{ needs.centos8-package.outputs.rpm_package_name }}
             ```
