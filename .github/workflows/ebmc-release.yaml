@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       version: ${{ steps.split-version.outputs._1 }}
+      tag_name: ebmc-${{ steps.split-version.outputs._1 }}
     steps:
       - uses: jungwinter/split@v2
         id: split-ref
@@ -79,7 +80,7 @@ jobs:
         run: make -C regression/verilog test
       - name: Print ccache stats
         run: ccache -s
-      - name: Create packages
+      - name: Create .deb
         id: create_packages
         run: |
           VERSION=$(echo ${{ github.ref }} | cut -d "/" -f 3 | cut -d "-" -f 2)
@@ -99,7 +100,7 @@ jobs:
           sudo chown root:root -R ebmc-${VERSION}
           dpkg -b ebmc-${VERSION}
           deb_package_name="$(ls *.deb)"
-          echo "deb_package=./build/$deb_package_name" >> $GITHUB_OUTPUT
+          echo "deb_package_path=$PWD/$deb_package_name" >> $GITHUB_OUTPUT
           echo "deb_package_name=ubuntu-22.04-$deb_package_name" >> $GITHUB_OUTPUT
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
@@ -107,7 +108,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.perform-draft-release.outputs.upload_url }}
-          asset_path: ${{ steps.create_packages.outputs.deb_package }}
+          asset_path: ${{ steps.create_packages.outputs.deb_package_path }}
           asset_name: ${{ steps.create_packages.outputs.deb_package_name }}
           asset_content_type: application/x-deb
 
@@ -154,6 +155,7 @@ jobs:
       - name: Run the verilog tests
         run: make -C regression/verilog test
       - name: Create .rpm
+        id: create_packages
         run: |
           VERSION=$(echo ${{ github.ref }} | cut -d "/" -f 3 | cut -d "-" -f 2)
           SRC=`pwd`
@@ -187,11 +189,10 @@ jobs:
           %files
           /usr/bin/ebmc
           EOM
-
           echo Building ebmc-${VERSION}-1.x86_64.rpm
           (cd ~/rpmbuild/SPECS ; rpmbuild -v -bb ebmc.spec )
           rpm_package_name=ebmc-${VERSION}-1.x86_64.rpm
-          echo "rpm_package=~/rpmbuild/SPECS/$rpm_package_name" >> $GITHUB_OUTPUT
+          echo "rpm_package_path=~/rpmbuild/SPECS/$rpm_package_name" >> $GITHUB_OUTPUT
           echo "rpm_package_name=centos8-$rpm_package_name" >> $GITHUB_OUTPUT
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
@@ -199,7 +200,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.perform-draft-release.outputs.upload_url }}
-          asset_path: ${{ steps.create_packages.outputs.rpm_package }}
+          asset_path: ${{ steps.create_packages.outputs.rpm_package_path }}
           asset_name: ${{ steps.create_packages.outputs.rpm_package_name }}
           asset_content_type: application/x-rpm
 
@@ -227,6 +228,7 @@ jobs:
 
             ```sh
             dpkg -i ubuntu-22.04-ebmc-${{ env.EBMC_VERSION }}-Linux.deb
+            ${{ needs.ubuntu-22_04-package.outputs.deb_package_name }}
             ```
 
             ## CentOS
