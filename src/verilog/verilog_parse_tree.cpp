@@ -29,10 +29,8 @@ void verilog_parse_treet::create_module(
   exprt &ports,
   exprt &module_items)
 {
-  items.push_back(itemt());
+  items.push_back(itemt(itemt::MODULE));
   itemt &item=items.back();
-  
-  item.type=itemt::MODULE;
 
   verilog_modulet &new_module=item.verilog_module;
 
@@ -135,9 +133,10 @@ void verilog_parse_treet::itemt::show(std::ostream &out) const
   case itemt::MODULE:
     verilog_module.show(out);
     break;
-    
-  case itemt::TYPEDEF:
-    verilog_typedef.show(out);
+
+  case itemt::PACKAGE_ITEM:
+    out << "Package item:\n";
+    out << verilog_package_item.pretty() << '\n';
     break;
     
   default:
