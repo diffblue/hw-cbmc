@@ -87,6 +87,7 @@ jobs:
           mkdir -p ebmc-${VERSION}/DEBIAN
           mkdir -p ebmc-${VERSION}/usr/bin
           cp src/ebmc/ebmc ebmc-${VERSION}/usr/bin
+          strip ebmc-${VERSION}/usr/bin/ebmc
           cat << EOM > ebmc-${VERSION}/DEBIAN/control
           Package: ebmc
           Version: ${VERSION}
@@ -185,6 +186,7 @@ jobs:
           mkdir %{buildroot}/usr/bin
           mkdir %{buildroot}/usr/lib/ebmc
           cp ${SRC}/src/ebmc/ebmc %{buildroot}/usr/bin/
+          strip %{buildroot}/usr/bin/ebmc
 
           %files
           /usr/bin/ebmc
@@ -192,7 +194,7 @@ jobs:
           echo Building ebmc-${VERSION}-1.x86_64.rpm
           (cd ~/rpmbuild/SPECS ; rpmbuild -v -bb ebmc.spec )
           rpm_package_name=ebmc-${VERSION}-1.x86_64.rpm
-          echo "rpm_package_path=~/rpmbuild/SPECS/$rpm_package_name" >> $GITHUB_OUTPUT
+          echo "rpm_package_path=$HOME/rpmbuild/SPECS/$rpm_package_name" >> $GITHUB_OUTPUT
           echo "rpm_package_name=centos8-$rpm_package_name" >> $GITHUB_OUTPUT
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
