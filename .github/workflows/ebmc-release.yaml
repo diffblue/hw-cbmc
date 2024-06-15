@@ -212,15 +212,15 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [ubuntu-22_04-package, centos8-package, get-version-information, perform-draft-release]
     steps:
-      - name: Create release
-        uses: actions/create-release@v1
+      - name: Publish release
+        uses: tubone24/update_release@v1.0
         env:
           EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ebmc-${{ env.EBMC_VERSION }}
           release_name: ebmc-${{ env.EBMC_VERSION }}
-          release_id: ${{ needs.perform-draft-release.outputs.id }}
+          id: ${{ needs.perform-draft-release.outputs.id }}
           draft: false
           prerelease: false
           body: |
