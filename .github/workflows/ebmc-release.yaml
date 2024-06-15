@@ -30,6 +30,7 @@ jobs:
     needs: [get-version-information]
     outputs:
       upload_url: ${{ steps.draft_release.outputs.upload_url }}
+      id: ${{ steps.draft_release.outputs.id }}
     steps:
       - name: Create draft release
         id: draft_release
@@ -48,7 +49,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [perform-draft-release]
     outputs:
-      rpm_package_name: ${{ steps.create_packages.outputs.deb_package_name }}
+      deb_package_name: ${{ steps.create_packages.outputs.deb_package_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -209,7 +210,7 @@ jobs:
   perform-release:
     name: Perform Release
     runs-on: ubuntu-20.04
-    needs: [ubuntu-22_04-package, centos8-package, get-version-information]
+    needs: [ubuntu-22_04-package, centos8-package, get-version-information, perform-draft-release]
     steps:
       - name: Create release
         uses: actions/create-release@v1
@@ -219,6 +220,7 @@ jobs:
         with:
           tag_name: ebmc-${{ env.EBMC_VERSION }}
           release_name: ebmc-${{ env.EBMC_VERSION }}
+          release_id: ${{ needs.perform-draft-release.outputs.id }}
           draft: false
           prerelease: false
           body: |
@@ -229,8 +231,7 @@ jobs:
             On Ubuntu, install EBMC by downloading the *.deb package below for your version of Ubuntu and install with
 
             ```sh
-            dpkg -i ubuntu-22.04-ebmc-${{ env.EBMC_VERSION }}-Linux.deb
-            ${{ needs.ubuntu-22_04-package.outputs.deb_package_name }}
+            dpkg -i ${{ needs.ubuntu-22_04-package.outputs.deb_package_name }}
             ```
 
             ## CentOS
@@ -238,6 +239,5 @@ jobs:
             On CentOS, install EBMC by downloading the *.rpm package below for your version of CentOS and install with
 
             ```sh
-            rpm -i ebmc-${{ env.EBMC_VERSION }}-1.x86_64.rpm
-            ${{ needs.centos8-package.outputs.rpm_package_name }}
+            rpm -i ${{ needs.centos8-package.outputs.rpm_package_name }}
             ```
