@@ -3,7 +3,7 @@ SRC = aiger_language.cpp
 include ../config.inc
 include ../common
 
-CLEANFILES = 
+CLEANFILES = aiger$(LIBEXT)
 
 all: aiger$(LIBEXT)
 
