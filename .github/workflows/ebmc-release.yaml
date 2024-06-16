@@ -213,31 +213,27 @@ jobs:
     needs: [ubuntu-22_04-package, centos8-package, get-version-information, perform-draft-release]
     steps:
       - name: Publish release
-        uses: tubone24/update_release@v1.0
         env:
           EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ebmc-${{ env.EBMC_VERSION }}
-          release_name: ebmc-${{ env.EBMC_VERSION }}
-          id: ${{ needs.perform-draft-release.outputs.id }}
-          draft: false
-          prerelease: false
-          body: |
-            This is EBMC version ${{ env.EBMC_VERSION }}.
+        run: |
+          cat > body << EOM
+          This is EBMC version ${{ env.EBMC_VERSION }}.
 
-            ## Ubuntu
+          ## Ubuntu
 
-            On Ubuntu, install EBMC by downloading the *.deb package below for your version of Ubuntu and install with
+          On Ubuntu, install EBMC by downloading the *.deb package below for your version of Ubuntu and install with
 
-            ```sh
-            dpkg -i ${{ needs.ubuntu-22_04-package.outputs.deb_package_name }}
-            ```
+          ```sh
+          dpkg -i ${{ needs.ubuntu-22_04-package.outputs.deb_package_name }}
+          ```
 
-            ## CentOS
+          ## CentOS
 
-            On CentOS, install EBMC by downloading the *.rpm package below for your version of CentOS and install with
+          On CentOS, install EBMC by downloading the *.rpm package below for your version of CentOS and install with
 
-            ```sh
-            rpm -i ${{ needs.centos8-package.outputs.rpm_package_name }}
-            ```
+          ```sh
+          rpm -i ${{ needs.centos8-package.outputs.rpm_package_name }}
+          ```
+          EOM
+          gh release edit ebmc-${{ env.EBMC_VERSION }} --draft=false --notes-file body
