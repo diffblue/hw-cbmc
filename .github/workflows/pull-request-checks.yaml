@@ -42,7 +42,7 @@ jobs:
         run: |
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make -C src -j2 CXX="ccache g++"
+        run: make -C src -j4 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -94,8 +94,7 @@ jobs:
         run: |
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: |
-          make CXX="ccache clang++" -C src -j2
+        run: make CXX="ccache clang++" -C src -j4
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -141,7 +140,7 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j2
+        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4
       - name: Run the ebmc tests with SAT
         run: |
           rm regression/ebmc/neural-liveness/counter1.desc
@@ -152,14 +151,14 @@ jobs:
         run: ccache -s
 
   # This job takes approximately 20 minutes
-  check-macos-12-make-clang:
-    runs-on: macos-12
+  check-macos-14-make-clang:
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Fetch dependencies
-        run: brew install flex bison ccache z3
+        run: brew install bison ccache z3
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
@@ -180,7 +179,7 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make YACC="/usr/local/opt/bison/bin/bison" CXX="ccache clang++" -C src -j2
+        run: make YACC="/opt/homebrew/opt/bison/bin/bison" CXX="ccache clang++" -C src -j3
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
