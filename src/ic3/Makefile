@@ -67,11 +67,10 @@ LINK_OPTIONS =
 LIB_PATH = 	minisat/build/release/lib
 
 
-all : libic3.a make_minisat
+all : libic3$(LIBEXT) make_minisat
 
-libic3.a: $(OBJ)
-	ar rc $@ $(OBJ)
-	ranlib $@
+libic3$(LIBEXT): $(OBJ)
+	$(LINKLIB)
 
 make_minisat: 
 	cd minisat; make lr
@@ -79,7 +78,7 @@ make_minisat:
 clean : clean_ic3 clean_minisat
 
 clean_ic3:
-	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d ic3 aic3 libic3.a *~
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d ic3 aic3 libic3$(LIBEXT) *~
 
 clean_minisat:
 	cd minisat; make clean
