@@ -1439,6 +1439,9 @@ void verilog_typecheckt::convert_statement(
     convert_assert_assume_cover(
       to_verilog_assert_assume_cover_statement(statement));
   }
+  else if(statement.id() == ID_verilog_expect_property)
+  {
+  }
   else if(
     statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_assume_property ||

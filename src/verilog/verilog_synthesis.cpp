@@ -2952,6 +2952,11 @@ void verilog_synthesist::synth_statement(
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_statement(statement));
   }
+  else if(statement.id() == ID_verilog_expect_property)
+  {
+    throw errort().with_location(statement.source_location())
+      << "synthesis of expect property not supported";
+  }
   else if(statement.id()==ID_non_blocking_assign)
     synth_assign(statement, false);
   else if(statement.id()==ID_force)

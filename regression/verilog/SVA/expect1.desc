@@ -1,0 +1,9 @@
+CORE
+expect1.sv
+
+^file expect1.sv line \d+: synthesis of expect property not supported$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

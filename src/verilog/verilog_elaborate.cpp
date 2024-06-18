@@ -620,7 +620,8 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_assume_property ||
-    statement.id() == ID_verilog_cover_property)
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_expect_property)
   {
   }
   else if(
