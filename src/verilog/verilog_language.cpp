@@ -69,11 +69,10 @@ bool verilog_languaget::parse(
   else
     standard = verilog_standardt::V2005_SMV;
 
-  verilog_parsert verilog_parser(standard);
+  verilog_parsert verilog_parser(standard, message_handler);
 
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
-  verilog_parser.log.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::LANGUAGE;
 
   verilog_scanner_init();
@@ -297,11 +296,10 @@ bool verilog_languaget::to_expr(
   verilog_standardt standard = verilog_standardt::V2005;
 
   // parsing
-  verilog_parsert verilog_parser(standard);
+  verilog_parsert verilog_parser(standard, message_handler);
 
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;
-  verilog_parser.log.set_message_handler(message_handler);
   verilog_parser.grammar=verilog_parsert::EXPRESSION;
   verilog_scanner_init();
 

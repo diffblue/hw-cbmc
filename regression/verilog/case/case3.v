@@ -14,9 +14,9 @@ module main(input clk, x, y);
 
   always @(posedge clk)
     casez (cnt1)
-      {10'b0z, 2'b00}:;
-      {10'b0z, 2'b01}:;
-      {10'b0z, 2'b1z}: out=1;
+      10'b0z00:;
+      10'b0z01:;
+      10'b0z1z: out=1;
     endcase
     
   always assert p1: out==0;

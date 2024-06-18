@@ -4,7 +4,7 @@ module m(input [7:0] i, output reg [31:0] x);
     casex(i)
       8'b1x: x=1;
       8'bxx: x=2;
-      { 'b11, 'bx, 'bx }: x=3;
+      8'b11xx: x=3;
       default: x=4;
     endcase
 

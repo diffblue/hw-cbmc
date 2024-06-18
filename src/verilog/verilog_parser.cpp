@@ -34,10 +34,9 @@ bool parse_verilog_file(const std::string &filename, verilog_standardt standard)
   std::ifstream in(widen_if_needed(filename));
   console_message_handlert console_message_handler;
 
-  verilog_parsert verilog_parser(standard);
+  verilog_parsert verilog_parser(standard, console_message_handler);
 
   verilog_parser.set_file(filename);
-  verilog_parser.log.set_message_handler(console_message_handler);
 
   if(filename=="")
     verilog_parser.in=&std::cin;

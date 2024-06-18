@@ -50,13 +50,7 @@ int yyvhdlerror(const char *error_str)
     tmp+='\'';
   }
     
-  source_locationt source_location;
-  source_location.set_column(yyvhdllval.column);
-  source_location.set_line(yyvhdllval.line);
-  source_location.set_file(yyvhdllval.file);
-
-  PARSER.log.error().source_location=source_location;
-  PARSER.log.error() << tmp << messaget::eom;
+  PARSER.parse_error(error_str, yyvhdltext);
                   
   return strlen(error_str)+1;
 }
