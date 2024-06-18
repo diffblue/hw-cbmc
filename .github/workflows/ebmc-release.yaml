@@ -45,7 +45,7 @@ jobs:
           prerelease: false
 
   ubuntu-22_04-package:
-    name: Package for Ubuntu 22.04
+    name: Package .deb
     runs-on: ubuntu-22.04
     needs: [perform-draft-release]
     outputs:
@@ -64,9 +64,7 @@ jobs:
           save-always: true
           path: .ccache
           key: ${{ runner.os }}-22.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
-          restore-keys: |
-            ${{ runner.os }}-22.04-make-gcc-${{ github.ref }}
-            ${{ runner.os }}-22.04-make-gcc
+          restore-keys: ${{ runner.os }}-22.04-make-gcc
       - name: ccache environment
         run: |
           echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
@@ -74,7 +72,9 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make -C src -j4 CXX="ccache g++"
+        run: |
+          # -static-libstdc++ is insufficient, owing to varying GLIBC versions
+          make -C src -j4 CXX="ccache g++" LINKFLAGS="-static"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the verilog tests
@@ -100,10 +100,11 @@ jobs:
           Description: The EBMC Model Checker
           EOM
           sudo chown root:root -R ebmc-${VERSION}
-          dpkg -b ebmc-${VERSION}
+          # we give -Zxz since older Debian versions do not uncompress zstd
+          dpkg-deb -Zxz -b ebmc-${VERSION}
           deb_package_name="$(ls *.deb)"
           echo "deb_package_path=$PWD/$deb_package_name" >> $GITHUB_OUTPUT
-          echo "deb_package_name=ubuntu-22.04-$deb_package_name" >> $GITHUB_OUTPUT
+          echo "deb_package_name=$deb_package_name" >> $GITHUB_OUTPUT
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
         env:
@@ -115,7 +116,7 @@ jobs:
           asset_content_type: application/x-deb
 
   centos8-package:
-    name: Package for CentOS 8
+    name: Package .rpm
     runs-on: ubuntu-22.04
     needs: [perform-draft-release]
     outputs:
@@ -126,10 +127,12 @@ jobs:
       - name: Install Packages
         run: |
           sed -i -e "s|mirrorlist=|#mirrorlist=|g" -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-Linux-*
-          yum -y install make gcc-c++ flex bison git rpmdevtools wget
-          wget --no-verbose https://github.com/ccache/ccache/releases/download/v4.8.3/ccache-4.8.3-linux-x86_64.tar.xz
-          tar xJf ccache-4.8.3-linux-x86_64.tar.xz
-          cp ccache-4.8.3-linux-x86_64/ccache /usr/bin/
+          yum install -y dnf-plugins-core
+          yum config-manager --set-enabled powertools
+          yum -y install make gcc-c++ flex bison git rpmdevtools wget libstdc++-static
+          wget --no-verbose https://github.com/ccache/ccache/releases/download/v4.9.1/ccache-4.9.1-linux-x86_64.tar.xz
+          tar xJf ccache-4.9.1-linux-x86_64.tar.xz
+          cp ccache-4.9.1-linux-x86_64/ccache /usr/bin/
       - name: cache for ccache
         uses: actions/cache@v4
         with:
@@ -147,7 +150,9 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4
+        run: |
+          # -static-libstdc++ suffices -- tested on CentOS, Fedora, Amazon Linux
+          make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" LINKFLAGS="-static-libstdc++" -C src -j4
       - name: Print ccache stats
         run: ccache -s
       - name: Run the ebmc tests with SAT
@@ -196,7 +201,7 @@ jobs:
           (cd ~/rpmbuild/SPECS ; rpmbuild -v -bb ebmc.spec )
           rpm_package_name=ebmc-${VERSION}-1.x86_64.rpm
           echo "rpm_package_path=$HOME/rpmbuild/RPMS/x86_64/$rpm_package_name" >> $GITHUB_OUTPUT
-          echo "rpm_package_name=centos8-$rpm_package_name" >> $GITHUB_OUTPUT
+          echo "rpm_package_name=$rpm_package_name" >> $GITHUB_OUTPUT
       - name: Upload binary packages
         uses: actions/upload-release-asset@v1
         env:
@@ -217,23 +222,24 @@ jobs:
           EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat > body << EOM
+          cat << EOM > body
           This is EBMC version ${{ env.EBMC_VERSION }}.
 
-          ## Ubuntu
+          ## Debian, Ubuntu and derivates
 
-          On Ubuntu, install EBMC by downloading the *.deb package below for your version of Ubuntu and install with
+          For Debian and Ubuntu, install EBMC by downloading the *.deb package below and then run
 
-          ```sh
+          \`\`\`sh
           dpkg -i ${{ needs.ubuntu-22_04-package.outputs.deb_package_name }}
-          ```
+          \`\`\`
 
-          ## CentOS
+          ## Red Hat Linux and derivates
 
-          On CentOS, install EBMC by downloading the *.rpm package below for your version of CentOS and install with
+          For Red Hat, CentOS, Fedora, Amazon Linux,
+          install EBMC by downloading the *.rpm package below and then run
 
-          ```sh
+          \`\`\`sh
           rpm -i ${{ needs.centos8-package.outputs.rpm_package_name }}
-          ```
+          \`\`\`
           EOM
-          gh release edit ebmc-${{ env.EBMC_VERSION }} --draft=false --notes-file body
+          gh release edit ebmc-${{ env.EBMC_VERSION }} --repo ${{ github.repository }} --draft=false --notes-file body
