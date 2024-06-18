@@ -33,11 +33,10 @@ bool vhdl_languaget::parse(
   const std::string &path,
   message_handlert &message_handler)
 {
-  vhdl_parsert vhdl_parser;
+  vhdl_parsert vhdl_parser(message_handler);
 
   vhdl_parser.set_file(path);
   vhdl_parser.in=&instream;
-  vhdl_parser.log.set_message_handler(message_handler);
   //vhdl_parser.grammar=vhdl_parsert::LANGUAGE;
   
   vhdl_scanner_init();
@@ -270,10 +269,9 @@ bool vhdl_languaget::to_expr(
   std::istringstream i_preprocessed(code);
 
   // parsing
-  vhdl_parsert vhdl_parser;
+  vhdl_parsert vhdl_parser(message_handler);
   vhdl_parser.set_file("");
   vhdl_parser.in=&i_preprocessed;
-  vhdl_parser.log.set_message_handler(message_handler);
   vhdl_parser.grammar=vhdl_parsert::EXPRESSION;
   vhdl_scanner_init();
 

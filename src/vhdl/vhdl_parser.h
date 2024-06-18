@@ -33,7 +33,8 @@ public:
     return yyvhdlparse();
   }
 
-  vhdl_parsert()
+  explicit vhdl_parsert(message_handlert &message_handler)
+    : parsert(message_handler)
   {
     PRECONDITION(vhdl_parser_ptr == nullptr);
     vhdl_parser_ptr = this;

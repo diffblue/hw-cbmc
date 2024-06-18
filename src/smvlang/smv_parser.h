@@ -20,7 +20,8 @@ extern class smv_parsert *smv_parser_ptr;
 class smv_parsert:public parsert
 {
 public:
-  smv_parsert()
+  explicit smv_parsert(message_handlert &message_handler)
+    : parsert(message_handler)
   {
     PRECONDITION(smv_parser_ptr == nullptr);
     smv_parser_ptr = this;

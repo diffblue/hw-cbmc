@@ -32,7 +32,7 @@ bool smv_languaget::parse(
   const std::string &path,
   message_handlert &message_handler)
 {
-  smv_parsert smv_parser;
+  smv_parsert smv_parser(message_handler);
 
   const std::string main_name=smv_module_symbol("main");
   smv_parser.module=&smv_parser.parse_tree.modules[main_name];
@@ -41,7 +41,6 @@ bool smv_languaget::parse(
 
   smv_parser.set_file(path);
   smv_parser.in=&instream;
-  smv_parser.log.set_message_handler(message_handler);
 
   bool result=smv_parser.parse();
 

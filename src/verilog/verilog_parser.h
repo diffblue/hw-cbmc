@@ -38,7 +38,10 @@ public:
     return yyverilogparse()!=0;
   }
 
-  explicit verilog_parsert(verilog_standardt standard) : parse_tree(standard)
+  explicit verilog_parsert(
+    verilog_standardt standard,
+    message_handlert &message_handler)
+    : parsert(message_handler), parse_tree(standard)
   {
     PRECONDITION(verilog_parser_ptr == nullptr);
     verilog_parser_ptr = this;
