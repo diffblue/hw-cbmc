@@ -1,4 +1,5 @@
-SRC = expr2verilog.cpp \
+SRC = aval_bval_encoding.cpp \
+      expr2verilog.cpp \
       sva_expr.cpp \
       verilog_elaborate.cpp \
       verilog_expr.cpp \

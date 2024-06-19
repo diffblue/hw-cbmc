@@ -1,10 +1,10 @@
 module main(input clk, x, y);
 
   reg [1:0] cnt1;
-  reg z;
+  reg result;
   
   initial cnt1=0;
-  initial z=0;
+  initial result=0;
   
   always @(posedge clk) cnt1=cnt1+1;
 
@@ -12,9 +12,9 @@ module main(input clk, x, y);
     casex (cnt1)
       2'b00:;
       2'b01:;
-      2'b1?: z=1;
+      2'b1?: result=1;
     endcase
     
-  always assert p1: z==0;
+  always assert p1: result==0;
 
 endmodule
