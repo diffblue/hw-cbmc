@@ -190,3 +190,43 @@ jobs:
         run: make -C regression/verilog test-z3
       - name: Print ccache stats
         run: ccache -s
+
+  # This job takes approximately 17 minutes
+  check-ubuntu-24_04-make-emcc:
+    name: Emscripten build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -yq emscripten flex bison libxml2-utils cpanminus ccache
+      - name: Prepare ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          save-always: true
+          key: ${{ runner.os }}-24.04-make-emcc-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-emcc-${{ github.ref }}
+            ${{ runner.os }}-24.04-make-emcc
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get minisat
+        run: make -C lib/cbmc/src minisat2-download
+      - name: Build with make
+        run: make -C src -j4 CXX="ccache emcc" HOSTCXX="ccache g++" BUILD_ENV=Unix LINKLIB="emar rc \$@ \$^" AR="emar" EXEEXT=".html"
+      - name: print version number via node.js
+        run: node --no-experimental-fetch src/ebmc/ebmc.js --version
+      - name: Print ccache stats
+        run: ccache -s
