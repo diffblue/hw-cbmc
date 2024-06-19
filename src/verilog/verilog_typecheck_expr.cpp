@@ -1593,16 +1593,17 @@ void verilog_typecheck_exprt::implicit_typecast(
       expr = typecast_exprt{expr, dest_type};
       return;
     }
-    else if(dest_type.id() == ID_struct)
+    else if(dest_type.id() == ID_struct || dest_type.id() == ID_union)
     {
-      // bit-vectors can be converted to packed structs
+      // bit-vectors can be converted to
+      // packed structs and packed unions
       expr = typecast_exprt{expr, dest_type};
       return;
     }
   }
-  else if(src_type.id() == ID_struct)
+  else if(src_type.id() == ID_struct || src_type.id() == ID_union)
   {
-    // packed structs can be converted to bits
+    // packed structs and packed unions can be converted to bits
     if(
       dest_type.id() == ID_bool || dest_type.id() == ID_unsignedbv ||
       dest_type.id() == ID_signedbv ||

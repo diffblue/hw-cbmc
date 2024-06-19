@@ -857,7 +857,9 @@ void verilog_synthesist::assignment_rec(
     const exprt &lhs_compound = member_expr.struct_op();
     auto component_name = member_expr.get_component_name();
 
-    if(lhs_compound.type().id() == ID_struct)
+    if(
+      lhs_compound.type().id() == ID_struct ||
+      lhs_compound.type().id() == ID_union)
     {
       // turn
       //   s.m=e

@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
+#include "verilog_typecheck_base.h"
 
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
@@ -14,7 +14,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_types.h>
 
 #include "expr2verilog.h"
-#include "verilog_typecheck_base.h"
+#include "verilog_types.h"
+
+#include <cassert>
 
 /*******************************************************************\
 
@@ -198,6 +200,15 @@ verilog_typecheck_baset::get_width_opt(const typet &type)
       sum += *component_width;
     }
     return sum;
+  }
+
+  if(type.id() == ID_union)
+  {
+    // find the biggest
+    mp_integer max = 0;
+    for(auto &component : to_verilog_union_type(type).components())
+      max = std::max(max, get_width(component.type()));
+    return max;
   }
 
   if(type.id() == ID_verilog_shortint)

@@ -484,4 +484,59 @@ inline verilog_type_referencet &to_verilog_type_reference(typet &type)
   return static_cast<verilog_type_referencet &>(type);
 }
 
+/// The SystemVerilog struct/union type
+class verilog_struct_union_typet : public struct_union_typet
+{
+public:
+  verilog_struct_union_typet(
+    irep_idt __id,
+    bool __is_packed,
+    componentst _components)
+    : struct_union_typet(__id, std::move(_components))
+  {
+    is_packed(__is_packed);
+  }
+
+  bool is_packed() const
+  {
+    return get_bool(ID_verilog_packed);
+  }
+
+  void is_packed(bool __is_packed)
+  {
+    return set(ID_verilog_packed, __is_packed);
+  }
+};
+
+/// The SystemVerilog union type
+class verilog_union_typet : public verilog_struct_union_typet
+{
+public:
+  verilog_union_typet(bool __is_packed, componentst _components)
+    : verilog_struct_union_typet(ID_union, __is_packed, std::move(_components))
+  {
+  }
+};
+
+/// \brief Cast a typet to a \ref verilog_union_typet
+///
+/// This is an unchecked conversion. \a type must be known to be \ref
+/// verilog_union_typet. Will fail with a precondition violation if type
+/// doesn't match.
+///
+/// \param type: Source type.
+/// \return Object of type \ref verilog_union_typet
+inline const verilog_union_typet &to_verilog_union_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_union);
+  return static_cast<const verilog_union_typet &>(type);
+}
+
+/// \copydoc to_union_type(const typet &)
+inline verilog_union_typet &to_verilog_union_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_union);
+  return static_cast<verilog_union_typet &>(type);
+}
+
 #endif
