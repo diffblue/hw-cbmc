@@ -2030,6 +2030,10 @@ cover_property_statement: TOK_COVER TOK_PROPERTY '(' property_spec ')' action_bl
 		{ init($$, ID_verilog_cover_property); mto($$, $4); mto($$, $6); }
 	;
 
+expect_property_statement: TOK_EXPECT '(' property_spec ')' action_block
+		{ init($$, ID_verilog_expect_property); mto($$, $3); mto($$, $5); }
+	;
+
 assertion_item_declaration:
 	  property_declaration
 	;
@@ -2876,6 +2880,7 @@ statement_item:
 	| seq_block
 	| wait_statement
 	| procedural_assertion_statement
+	| expect_property_statement
 	;
 
 function_statement: statement
