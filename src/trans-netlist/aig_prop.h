@@ -9,10 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_NETLIST_AIG_PROP_H
 #define CPROVER_TRANS_NETLIST_AIG_PROP_H
 
-#include <cassert>
+#include <util/invariant.h>
+#include <util/threeval.h>
 
 #include <solvers/prop/prop.h>
-#include <util/threeval.h>
 
 #include "aig.h"
 
@@ -28,7 +28,10 @@ public:
   literalt lor(literalt a, literalt b) override;
   literalt land(const bvt &bv) override;
   literalt lor(const bvt &bv) override;
-  void lcnf(const bvt &clause) override { assert(false); }
+  void lcnf(const bvt &clause) override
+  {
+    PRECONDITION(false);
+  }
   literalt lxor(literalt a, literalt b) override;
   literalt lxor(const bvt &bv) override;
   literalt lnand(literalt a, literalt b) override;
@@ -38,7 +41,10 @@ public:
   literalt lselect(literalt a, literalt b, literalt c) override; // a?b:c
   void set_equal(literalt a, literalt b) override;
 
-  void l_set_to(literalt a, bool value) override { assert(false); }
+  void l_set_to(literalt a, bool value) override
+  {
+    PRECONDITION(false);
+  }
 
   literalt new_variable() override { return dest.new_node(); }
 
@@ -49,12 +55,12 @@ public:
   }
 
   tvt l_get(literalt a) const override {
-    assert(0);
+    PRECONDITION(false);
     return tvt::unknown();
   }
 
   resultt prop_solve() {
-    assert(0);
+    PRECONDITION(false);
     return resultt::P_ERROR;
   }
 

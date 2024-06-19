@@ -16,7 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_typecheck_base.h"
 
-#include <cassert>
 #include <stack>
 
 class function_call_exprt;
@@ -110,7 +109,7 @@ protected:
   // To be overridden, requires a Verilog interpreter.
   virtual exprt elaborate_constant_function_call(const function_call_exprt &)
   {
-    assert(false);
+    UNREACHABLE;
   }
 
 private:

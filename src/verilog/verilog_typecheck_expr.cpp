@@ -1553,7 +1553,7 @@ void verilog_typecheck_exprt::implicit_typecast(
       {
         const std::string &value=expr.get_string(ID_value);
         // least significant bit is last
-        assert(value.size()!=0);
+        DATA_INVARIANT(value.size() != 0, "no empty bitvector");
         expr = make_boolean_expr(value[value.size() - 1] == '1');
         return;
       }
@@ -1860,7 +1860,6 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_weak ||
     expr.id() == ID_sva_strong)
   {
-    assert(expr.operands().size()==1);
     convert_expr(expr.op());
     make_boolean(expr.op());
     expr.type()=bool_typet();
@@ -2163,7 +2162,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   else if(expr.id()==ID_ashr)
   {
     // would only happen when re-typechecking, otherwise see above
-    assert(0);
+    DATA_INVARIANT(false, "no re-typechecking");
   }
   else if(expr.id()==ID_lshr)
   {
@@ -2452,7 +2451,6 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
   else if(expr.id()==ID_sva_cycle_delay) // #[1:2] something
   {
     expr.type()=bool_typet();
-    assert(expr.operands().size()==3);
     convert_expr(expr.op0());
     if(expr.op1().is_not_nil()) convert_expr(expr.op1());
     convert_expr(expr.op2());
