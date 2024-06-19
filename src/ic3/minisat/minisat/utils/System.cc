@@ -91,7 +91,10 @@ double IctMinisat::memUsedPeak(bool) { return memUsed(); }
 
 #else
 double IctMinisat::memUsed()     { return 0; }
-double IctMinisat::memUsedPeak() { return 0; }
+double IctMinisat::memUsedPeak(bool)
+{
+  return 0;
+}
 #endif
 
 
