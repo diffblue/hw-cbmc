@@ -157,7 +157,7 @@ mp_integer verilog_typecheck_baset::array_offset(const array_typet &type)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_baset::get_width
+Function: verilog_typecheck_baset::get_width_opt
 
   Inputs:
 
@@ -167,7 +167,8 @@ Function: verilog_typecheck_baset::get_width
 
 \*******************************************************************/
 
-mp_integer verilog_typecheck_baset::get_width(const typet &type)
+std::optional<mp_integer>
+verilog_typecheck_baset::get_width_opt(const typet &type)
 {
   if(type.id()==ID_bool)
     return 1;
@@ -178,8 +179,11 @@ mp_integer verilog_typecheck_baset::get_width(const typet &type)
 
   if(type.id()==ID_array)
   {
-    mp_integer element_width = get_width(to_array_type(type).element_type());
-    return (array_size(to_array_type(type)) * element_width).to_ulong();
+    auto element_width = get_width_opt(to_array_type(type).element_type());
+    if(element_width.has_value())
+      return array_size(to_array_type(type)) * element_width.value();
+    else
+      return {};
   }
 
   if(type.id() == ID_struct)
@@ -187,7 +191,12 @@ mp_integer verilog_typecheck_baset::get_width(const typet &type)
     // add them up
     mp_integer sum = 0;
     for(auto &component : to_struct_type(type).components())
-      sum += get_width(component.type());
+    {
+      auto component_width = get_width_opt(component.type());
+      if(!component_width.has_value())
+        return {};
+      sum += *component_width;
+    }
     return sum;
   }
 
@@ -202,8 +211,30 @@ mp_integer verilog_typecheck_baset::get_width(const typet &type)
   else if(type.id() == ID_verilog_time)
     return 64;
 
-  throw errort().with_location(type.source_location())
-    << "type `" << type.id() << "' has unknown width";
+  return {};
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_baset::get_width
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+mp_integer verilog_typecheck_baset::get_width(const typet &type)
+{
+  auto width_opt = get_width_opt(type);
+
+  if(width_opt.has_value())
+    return std::move(width_opt.value());
+  else
+    throw errort().with_location(type.source_location())
+      << "type `" << type.id() << "' has unknown width";
 }
 
 /*******************************************************************\

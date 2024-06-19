@@ -434,7 +434,7 @@ Function: verilog_typecheck_exprt::bits
 
 exprt verilog_typecheck_exprt::bits(const exprt &expr)
 {
-  auto width_opt = bits_rec(expr.type());
+  auto width_opt = get_width_opt(expr.type());
 
   if(!width_opt.has_value())
   {
@@ -443,57 +443,6 @@ exprt verilog_typecheck_exprt::bits(const exprt &expr)
   }
 
   return from_integer(width_opt.value(), integer_typet());
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheck_exprt::bits_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::optional<mp_integer>
-verilog_typecheck_exprt::bits_rec(const typet &type) const
-{
-  if(type.id() == ID_bool)
-    return 1;
-  else if(type.id() == ID_unsignedbv)
-    return to_unsignedbv_type(type).get_width();
-  else if(type.id() == ID_signedbv)
-    return to_signedbv_type(type).get_width();
-  else if(type.id() == ID_integer)
-    return 32;
-  else if(type.id() == ID_array)
-  {
-    auto &array_type = to_array_type(type);
-    auto size_int =
-      numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
-    auto element_bits_opt = bits_rec(array_type.element_type());
-    if(element_bits_opt.has_value())
-      return element_bits_opt.value() * size_int;
-    else
-      return {};
-  }
-  else if(type.id() == ID_struct)
-  {
-    auto &struct_type = to_struct_type(type);
-    mp_integer sum = 0;
-    for(auto &component : struct_type.components())
-    {
-      auto component_bits_opt = bits_rec(component.type());
-      if(!component_bits_opt.has_value())
-        return component_bits_opt.value();
-      sum += component_bits_opt.value();
-    }
-    return sum;
-  }
-  else
-    return {};
 }
 
 /*******************************************************************\
