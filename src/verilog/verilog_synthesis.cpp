@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
+#include "aval_bval_encoding.h"
 #include "expr2verilog.h"
 #include "sva_expr.h"
 #include "verilog_expr.h"
@@ -74,6 +75,18 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       UNREACHABLE;
     }
   }
+  else if(expr.id() == ID_constant)
+  {
+    // encode into aval/bval
+    if(
+      expr.type().id() == ID_verilog_unsignedbv ||
+      expr.type().id() == ID_verilog_signedbv)
+    {
+      return lower_to_aval_bval(to_constant_expr(expr));
+    }
+
+    return expr;
+  }
   else if(expr.id()==ID_function_call)
   {
     return expand_function_call(to_function_call_expr(expr));
@@ -93,6 +106,19 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
     // we perform some form of simplification for these
     if(typecast_expr.op().is_constant())
       simplify(expr, ns);
+
+    if(
+      expr.type().id() == ID_verilog_unsignedbv ||
+      expr.type().id() == ID_verilog_signedbv)
+    {
+      auto aval_bval_type = lower_to_aval_bval(expr.type());
+
+      if(is_aval_bval(typecast_expr.op().type()))
+      {
+        // separately convert aval and bval
+        return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
+      }
+    }
 
     return expr;
   }
@@ -2260,71 +2286,34 @@ exprt verilog_synthesist::case_comparison(
   const exprt &case_operand,
   const exprt &pattern)
 {
-  // we need to take case of ?, x, z in the pattern
+  // the pattern has the max type, not the case operand
   const typet &pattern_type=pattern.type();
-  
-  if(pattern_type.id()==ID_verilog_signedbv ||
-     pattern_type.id()==ID_verilog_unsignedbv)
+
+  // we need to take case of ?, x, z in the pattern
+  if(is_aval_bval(pattern_type))
   {
-    // try to simplify the pattern
-    exprt tmp=pattern;
-    
-    simplify(tmp, ns);
-    
-    if(tmp.id()!=ID_constant)
-    {
-      warning().source_location=pattern.source_location();
-      warning() << "unexpected case pattern: " << to_string(tmp) << eom;
-    }
-    else
-    {
-      exprt new_case_operand=case_operand;
+    // We are using masking based on the pattern.
+    // The aval is the comparison value, and the
+    // negation of bval is the mask.
+    auto pattern_aval = ::aval(pattern);
+    auto pattern_bval = ::bval(pattern);
+    auto mask_expr = bitnot_exprt{pattern_bval};
 
-      // the pattern has the max type
-      unsignedbv_typet new_type(pattern.type().get_int(ID_width));
-      new_case_operand = typecast_exprt{new_case_operand, new_type};
+    auto case_operand_casted = typecast_exprt{
+      typecast_exprt::conditional_cast(
+        case_operand, aval_bval_underlying(pattern_type)),
+      mask_expr.type()};
 
-      // we are using masking!
-    
-      std::string new_pattern_value=
-        id2string(to_constant_expr(tmp).get_value());
-
-      // ?zx -> 0
-      for(unsigned i=0; i<new_pattern_value.size(); i++)
-        if(new_pattern_value[i]=='?' ||
-           new_pattern_value[i]=='z' ||
-           new_pattern_value[i]=='x')
-          new_pattern_value[i]='0';
-
-      auto new_pattern =
-        from_integer(string2integer(new_pattern_value, 2), new_type);
-
-      std::string new_mask_value=
-        id2string(to_constant_expr(tmp).get_value());
-
-      // ?zx -> 0, 0 -> 1
-      for(unsigned i=0; i<new_mask_value.size(); i++)
-        if(new_mask_value[i]=='?' ||
-           new_mask_value[i]=='z' ||
-           new_mask_value[i]=='x')
-          new_mask_value[i]='0';
-        else
-          new_mask_value[i]='1';
-
-      auto new_mask = from_integer(string2integer(new_mask_value, 2), new_type);
-
-      exprt bitand_expr = bitand_exprt{new_case_operand, new_mask};
-
-      return equal_exprt{bitand_expr, new_pattern};
-    }
+    return equal_exprt{
+      bitand_exprt{case_operand_casted, mask_expr},
+      bitand_exprt{pattern_aval, mask_expr}};
   }
 
-  if(pattern.type()==case_operand.type())
-    return equal_exprt(case_operand, pattern);
+  // 2-valued comparison
+  exprt case_operand_casted =
+    typecast_exprt::conditional_cast(case_operand, pattern_type);
 
-  // the pattern has the max type
-  exprt tmp_case_operand=typecast_exprt(case_operand, pattern.type());
-  return equal_exprt(tmp_case_operand, pattern);
+  return equal_exprt(case_operand_casted, pattern);
 }
 
 /*******************************************************************\
