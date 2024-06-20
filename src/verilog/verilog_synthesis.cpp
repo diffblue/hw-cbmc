@@ -217,6 +217,22 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
     return expr;
   }
+  else if(expr.id() == ID_concatenation)
+  {
+    for(auto &op : expr.operands())
+      op = synth_expr(op, symbol_state);
+
+    if(
+      expr.type().id() == ID_verilog_unsignedbv ||
+      expr.type().id() == ID_verilog_signedbv)
+    {
+      return aval_bval_concatenation(
+        to_concatenation_expr(expr).operands(),
+        lower_to_aval_bval(expr.type()));
+    }
+
+    return expr;
+  }
   else if(expr.id()==ID_function_call)
   {
     return expand_function_call(to_function_call_expr(expr));
