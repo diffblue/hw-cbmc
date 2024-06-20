@@ -105,6 +105,40 @@ jobs:
         run: make -C regression/verilog test-z3
       - name: Print ccache stats
         run: ccache -s
+      - name: Upload the ebmc binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ebmc-binary
+          retention-days: 5
+          path: src/ebmc/ebmc
+
+  # This job takes approximately 4 minutes
+  benchmarking:
+    runs-on: ubuntu-20.04
+    needs: check-ubuntu-20_04-make-clang
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends z3
+      - name: Confirm z3 solver is available and log the version installed
+        run: z3 --version
+      - name: Get the ebmc binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ebmc-binary
+          path: ebmc
+      - name: Try the ebmc binary
+        run: chmod a+x ./ebmc/ebmc ; ./ebmc/ebmc --version
+      - name: HWMCC08 benchmarks
+        run: PATH=$PATH:$PWD/ebmc benchmarking/hwmcc08.sh
 
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:
