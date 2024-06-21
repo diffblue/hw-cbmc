@@ -34,4 +34,6 @@ exprt bval(const exprt &);
 
 exprt aval_bval_conversion(const exprt &, const typet &);
 
+exprt aval_bval_concatenation(const exprt::operandst &, const typet &);
+
 #endif
