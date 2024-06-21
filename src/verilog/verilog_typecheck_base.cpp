@@ -16,8 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "verilog_types.h"
 
-#include <cassert>
-
 /*******************************************************************\
 
 Function: verilog_module_symbol
@@ -50,8 +48,10 @@ Function: strip_verilog_prefix
 irep_idt strip_verilog_prefix(const irep_idt &identifier)
 {
   std::string prefix="Verilog::";
-  assert(has_prefix(id2string(identifier), prefix));
-  assert(identifier.size()>=prefix.size());
+  DATA_INVARIANT(
+    has_prefix(id2string(identifier), prefix), "Verilog identifier syntax");
+  DATA_INVARIANT(
+    identifier.size() >= prefix.size(), "Verilog identifier syntax");
   return identifier.c_str()+prefix.size();
 }
 

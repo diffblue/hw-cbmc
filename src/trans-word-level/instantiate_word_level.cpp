@@ -16,8 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "property.h"
 
-#include <cassert>
-
 /*******************************************************************\
 
 Function: timeframe_identifier
@@ -166,7 +164,7 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
       if(sva_cycle_delay_expr.to().id() == ID_infinity)
       {
-        assert(no_timeframes != 0);
+        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
         to = no_timeframes - 1;
       }
       else if(to_integer_non_constant(sva_cycle_delay_expr.to(), to))
@@ -283,9 +281,6 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
           expr.id()==ID_sva_s_until)
   {
     // non-overlapping until
-  
-    assert(expr.operands().size()==2);
-    
     // we need a lasso to refute these
 
     // we expand: p U q <=> q || (p && X(p U q))
@@ -308,8 +303,6 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
           expr.id()==ID_sva_s_until_with)
   {
     // overlapping until
-  
-    assert(expr.operands().size()==2);
     
     // we rewrite using 'next'
     binary_exprt tmp = to_binary_expr(expr);

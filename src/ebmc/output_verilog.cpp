@@ -6,19 +6,21 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cstdlib>
-#include <iostream>
+#include <verilog/expr2verilog_class.h>
 
 #include <util/ebmc_util.h>
+#include <util/mathematical_expr.h>
 #include <util/simplify_expr.h>
 
-#include <verilog/verilog_language.h>
-#include <verilog/verilog_typecheck.h>
-#include <verilog/verilog_synthesis.h>
-#include <verilog/expr2verilog_class.h>
 #include <verilog/expr2verilog.h>
+#include <verilog/verilog_language.h>
+#include <verilog/verilog_synthesis.h>
+#include <verilog/verilog_typecheck.h>
 
 #include "output_verilog.h"
+
+#include <cstdlib>
+#include <iostream>
 
 /*******************************************************************\
 
@@ -41,8 +43,8 @@ std::size_t output_verilog_baset::width(const typet &type)
     return to_bitvector_type(type).get_width();
   
   std::cerr << type.id() << '\n';
-  assert(false);
-  
+  PRECONDITION(false);
+
   return 0; // not reached
 }
 
@@ -165,8 +167,10 @@ void output_verilog_netlistt::assign_symbol(
           rhs.id()==ID_xor ||
           rhs.id()==ID_xnor)
   {
-    assert(rhs.type().id()==ID_bool);
-    assert(lhs.type().id()==ID_bool);
+    DATA_INVARIANT(
+      rhs.type().id() == ID_bool, "boolean equivalence rhs must be boolean");
+    DATA_INVARIANT(
+      lhs.type().id() == ID_bool, "boolean equivalence lhs must be boolean");
 
     std::string tmp;
     
@@ -182,8 +186,10 @@ void output_verilog_netlistt::assign_symbol(
   }
   else if(rhs.id()==ID_not)
   {
-    assert(rhs.type().id()==ID_bool);
-    assert(lhs.type().id()==ID_bool);
+    DATA_INVARIANT(
+      rhs.type().id() == ID_bool, "boolean equivalence rhs must be boolean");
+    DATA_INVARIANT(
+      lhs.type().id() == ID_bool, "boolean equivalence lhs must be boolean");
 
     std::string tmp = make_symbol_expr(to_not_expr(rhs).op(), "");
 
@@ -201,7 +207,8 @@ void output_verilog_netlistt::assign_symbol(
     {
       std::string tmp;
 
-      assert(rhs.operands().size()!=0);
+      DATA_INVARIANT(
+        rhs.operands().size() != 0, "multi-ary operator must have operand");
 
       if(rhs.operands().size()==2)
         tmp = make_symbol_expr(to_multi_ary_expr(rhs).op0(), "") + ", " +
@@ -420,7 +427,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
 
     std::size_t offset = atoi(src.type().get("#offset").c_str());
 
-    assert(i>=offset);
+    DATA_INVARIANT(i >= offset, "extractbit index must be in range");
 
     return symbol_string(src) + '[' + integer2string(i - offset) + ']';
   }
@@ -440,10 +447,10 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     auto to = from + width(expr.type());
     std::size_t offset = atoi(src.type().get("#offset").c_str());
 
-    assert(from>=offset);
-    assert(to>=offset);
-    
-    assert(to>=from);
+    DATA_INVARIANT(from >= offset, "extractbits index must be in range");
+    DATA_INVARIANT(to >= offset, "extractbits index must be in range");
+
+    DATA_INVARIANT(to >= from, "extractbits index must be in range");
 
     return symbol_string(src) + '[' + integer2string(to - offset) + ':' +
            integer2string(from - offset) + ']';
@@ -804,7 +811,7 @@ Function: output_verilog_baset::module_instantiation
 
 void output_verilog_baset::module_instantiation(const exprt &expr)
 {
-  assert(expr.type().id()==ID_bool);
+  PRECONDITION(expr.type().id() == ID_bool);
 
   std::list<std::string> argument_strings;
 
@@ -852,8 +859,8 @@ Function: output_verilog_baset::invariant
 
 void output_verilog_baset::invariant(const exprt &expr)
 {
-  assert(expr.type().id()==ID_bool);
-  
+  PRECONDITION(expr.type().id() == ID_bool);
+
   if(expr.id()==ID_and)
   {
     forall_operands(it, expr)
@@ -894,10 +901,9 @@ Function: output_verilog_baset::invariants
 
 void output_verilog_baset::invariants(const symbolt &symbol)
 {
-  assert(symbol.value.id()==ID_trans &&
-         symbol.value.operands().size()==3);
+  PRECONDITION(symbol.value.id() == ID_trans);
 
-  invariant(to_ternary_expr(symbol.value).op0());
+  invariant(to_trans_expr(symbol.value).invar());
 }
 
 /*******************************************************************\
@@ -914,8 +920,8 @@ Function: output_verilog_baset::next_state
 
 void output_verilog_baset::next_state(const exprt &expr)
 {
-  assert(expr.type().id()==ID_bool);
-  
+  PRECONDITION(expr.type().id() == ID_bool);
+
   if(expr.id()==ID_and)
   {
     forall_operands(it, expr)
@@ -925,7 +931,8 @@ void output_verilog_baset::next_state(const exprt &expr)
   else if(expr.is_true())
     return;
 
-  assert(expr.id()==ID_equal);
+  DATA_INVARIANT(
+    expr.id() == ID_equal, "next-state constraints must be equality");
 
   auto &equal_expr = to_equal_expr(expr);
   assign_symbol(equal_expr.lhs(), equal_expr.rhs());
@@ -945,10 +952,9 @@ Function: output_verilog_baset::next_state
 
 void output_verilog_baset::next_state(const symbolt &symbol)
 {
-  assert(symbol.value.id()==ID_trans &&
-         symbol.value.operands().size()==3);
+  PRECONDITION(symbol.value.id() == ID_trans);
 
-  next_state(symbol.value.operands()[2]);
+  next_state(to_trans_expr(symbol.value).trans());
 }
 
 /*******************************************************************\
