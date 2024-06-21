@@ -1,0 +1,9 @@
+KNOWNBUG
+equality2.v
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Missing Verilog case equality implementation.
