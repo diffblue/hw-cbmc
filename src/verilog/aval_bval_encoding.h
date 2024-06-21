@@ -34,4 +34,6 @@ exprt bval(const exprt &);
 
 exprt aval_bval_conversion(const exprt &, const typet &);
 
+std::string decode_aval_bval(const constant_exprt &);
+
 #endif

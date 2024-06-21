@@ -152,3 +152,25 @@ exprt aval_bval_conversion(const exprt &src, const typet &dest)
     return combine_aval_bval(new_aval, new_bval, dest);
   }
 }
+
+std::string decode_aval_bval(const constant_exprt &expr)
+{
+  PRECONDITION(is_aval_bval(expr.type()));
+  auto width = aval_bval_width(expr.type());
+  auto &src_value = expr.get_value();
+  std::string result;
+  result.reserve(width);
+
+  for(std::size_t i = 0; i < width; i++)
+  {
+    auto bit_index = width - 1 - i;
+    auto aval = get_bvrep_bit(src_value, width * 2, bit_index);
+    auto bval = get_bvrep_bit(src_value, width * 2, bit_index + width);
+    if(bval)
+      result += aval ? 'x' : 'z';
+    else
+      result += aval ? '1' : '0';
+  }
+
+  return result;
+}
