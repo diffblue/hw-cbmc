@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 equality2.v
 --bound 0
 ^EXIT=0$

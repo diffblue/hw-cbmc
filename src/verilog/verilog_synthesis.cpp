@@ -268,12 +268,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
         dest_type.id() == ID_verilog_signedbv)
       {
         auto aval_bval_type = lower_to_aval_bval(dest_type);
-
-        if(is_aval_bval(src_type))
-        {
-          // separately convert aval and bval
-          return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
-        }
+        return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
       }
       else if(dest_type.id() == ID_struct)
       {
