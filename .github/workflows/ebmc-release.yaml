@@ -45,7 +45,7 @@ jobs:
           prerelease: false
 
   ubuntu-22_04-package:
-    name: Package .deb
+    name: Package amd64 .deb
     runs-on: ubuntu-22.04
     needs: [perform-draft-release]
     outputs:
@@ -85,11 +85,12 @@ jobs:
         id: create_packages
         run: |
           VERSION=$(echo ${{ github.ref }} | cut -d "/" -f 3 | cut -d "-" -f 2)
-          mkdir -p ebmc-${VERSION}/DEBIAN
-          mkdir -p ebmc-${VERSION}/usr/bin
-          cp src/ebmc/ebmc ebmc-${VERSION}/usr/bin
-          strip ebmc-${VERSION}/usr/bin/ebmc
-          cat << EOM > ebmc-${VERSION}/DEBIAN/control
+          DIR=ebmc_${VERSION}_amd64
+          mkdir -p ${DIR}/DEBIAN
+          mkdir -p ${DIR}/usr/bin
+          cp src/ebmc/ebmc ${DIR}/usr/bin
+          strip ${DIR}/usr/bin/ebmc
+          cat << EOM > ${DIR}/DEBIAN/control
           Package: ebmc
           Version: ${VERSION}
           Architecture: amd64
@@ -99,9 +100,9 @@ jobs:
           Homepage: http://www.cprover.org/ebmc/
           Description: The EBMC Model Checker
           EOM
-          sudo chown root:root -R ebmc-${VERSION}
+          sudo chown root:root -R ${DIR}
           # we give -Zxz since older Debian versions do not uncompress zstd
-          dpkg-deb -Zxz -b ebmc-${VERSION}
+          dpkg-deb -Zxz -b ${DIR}
           deb_package_name="$(ls *.deb)"
           echo "deb_package_path=$PWD/$deb_package_name" >> $GITHUB_OUTPUT
           echo "deb_package_name=$deb_package_name" >> $GITHUB_OUTPUT
@@ -116,7 +117,7 @@ jobs:
           asset_content_type: application/x-deb
 
   centos8-package:
-    name: Package .rpm
+    name: Package x86_64 .rpm
     runs-on: ubuntu-22.04
     needs: [perform-draft-release]
     outputs:
