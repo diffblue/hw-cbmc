@@ -52,6 +52,7 @@ protected:
   bool parse_property(const std::string &property);
   bool get_model_properties();
   void show_properties();
+  void json_properties(const std::string &file_name);
 
   bool parse();
   bool parse(const std::string &filename);

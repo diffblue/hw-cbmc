@@ -1,0 +1,18 @@
+CORE
+json-properties.v
+--json-properties -
+activate-multi-line-match
+\[
+  \{
+    "description": "",
+    "location": \{
+      "file": "json-properties\.v",
+      "line": "3",
+      "workingDirectory": ".*"
+    \},
+    "name": "main\.property\.p0"
+  \}
+\]
+^EXIT=0$
+^SIGNAL=0$
+--
