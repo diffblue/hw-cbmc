@@ -98,7 +98,7 @@ void report_results(
       if(property.is_disabled())
         continue;
 
-      message.status() << "[" << property.name << "] " << property.expr_string
+      message.status() << "[" << property.name << "] " << property.description
                        << ": ";
 
       using statust = ebmc_propertiest::propertyt::statust;

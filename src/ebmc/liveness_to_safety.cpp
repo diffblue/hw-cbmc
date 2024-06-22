@@ -246,7 +246,7 @@ void liveness_to_safetyt::operator()()
       else
       {
         throw ebmc_errort().with_location(property.location)
-          << "no liveness-to-safety translation for " << property.expr_string;
+          << "no liveness-to-safety translation for " << property.description;
       }
     }
   }
