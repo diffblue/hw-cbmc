@@ -103,7 +103,9 @@ int ebmc_parse_optionst::doit()
     if(cmdline.isset("show-parse"))
       return show_parse(cmdline, ui_message_handler);
 
-    if(cmdline.isset("show-modules") || cmdline.isset("modules-xml"))
+    if(
+      cmdline.isset("show-modules") || cmdline.isset("modules-xml") ||
+      cmdline.isset("json-modules"))
       return show_modules(cmdline, ui_message_handler);
 
     if(cmdline.isset("show-module-hierarchy"))

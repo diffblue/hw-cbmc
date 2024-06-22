@@ -280,6 +280,23 @@ int get_transition_system(
     return 0;
   }
 
+  if(cmdline.isset("json-modules"))
+  {
+    auto file_name = cmdline.get_value("json-modules");
+    if(file_name == "-")
+    {
+      json_modules(transition_system.symbol_table, std::cout);
+    }
+    else
+    {
+      std::ofstream out(widen_if_needed(file_name));
+      if(!out)
+        throw ebmc_errort() << "failed to open " << file_name;
+      json_modules(transition_system.symbol_table, out);
+    }
+    return 0;
+  }
+
   if(cmdline.isset("show-symbol-table"))
   {
     std::cout << transition_system.symbol_table;

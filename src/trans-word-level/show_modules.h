@@ -15,4 +15,6 @@ void show_modules(const symbol_table_baset &, std::ostream &);
 
 void show_modules_xml(const symbol_table_baset &, std::ostream &);
 
+void json_modules(const symbol_table_baset &, std::ostream &);
+
 #endif
