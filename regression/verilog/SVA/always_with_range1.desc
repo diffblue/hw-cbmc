@@ -1,9 +1,9 @@
 CORE
 always_with_range1.sv
 --bound 20
-^\[main\.property\.p0\] always \[0:9\] main\.x < 10: PROVED up to bound 20$
-^\[main\.property\.p1\] always \[0:\$\] main\.x < 10: REFUTED$
-^\[main\.property\.p2\] s_always \[0:9\] main\.x < 10: PROVED up to bound 20$
+^\[main\.p0\] always \[0:9\] main\.x < 10: PROVED up to bound 20$
+^\[main\.p1\] always \[0:\$\] main\.x < 10: REFUTED$
+^\[main\.p2\] s_always \[0:9\] main\.x < 10: PROVED up to bound 20$
 ^EXIT=10$
 ^SIGNAL=0$
 --

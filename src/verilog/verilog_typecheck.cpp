@@ -1082,14 +1082,30 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   if(identifier == irep_idt())
   {
+    std::string kind = statement.id() == ID_verilog_immediate_assert  ? "assert"
+                       : statement.id() == ID_verilog_assert_property ? "assert"
+                       : statement.id() == ID_verilog_smv_assert      ? "assert"
+                       : statement.id() == ID_verilog_cover_property  ? "cover"
+                       : statement.id() == ID_verilog_immediate_assume
+                         ? "assume"
+                       : statement.id() == ID_verilog_assume_property ? "assume"
+                       : statement.id() == ID_verilog_smv_assume      ? "assume"
+                                                                      : "";
+
     assertion_counter++;
-    base_name = std::to_string(assertion_counter);
+    base_name = kind + "." + std::to_string(assertion_counter);
   }
   else
     base_name = identifier;
 
-  std::string full_identifier =
-    id2string(module_identifier) + ".property." + id2string(base_name);
+  // We produce a full hierarchical identifier for the SystemVerilog immediate
+  // and concurrent assertion statements.
+  // We produce a separate name space for the SMV assertions/assumptions.
+  auto full_identifier =
+    statement.id() == ID_verilog_smv_assert ||
+        statement.id() == ID_verilog_smv_assume
+      ? id2string(module_identifier) + ".property." + id2string(base_name)
+      : hierarchical_identifier(base_name);
 
   if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
   {

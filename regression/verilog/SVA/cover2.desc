@@ -1,11 +1,11 @@
 CORE
 cover2.sv
 --bound 10 --numbered-trace
-^\[main\.property\.p0\] cover main\.counter == 1: PROVED$
+^\[main\.p0\] cover main\.counter == 1: PROVED$
 ^Trace with 2 states:$
 ^main\.counter@0 = 0$
 ^main\.counter@1 = 1$
-^\[main\.property\.p1\] cover main\.counter == 100: REFUTED up to bound 10$
+^\[main\.p1\] cover main\.counter == 100: REFUTED up to bound 10$
 ^EXIT=10$
 ^SIGNAL=0$
 --
