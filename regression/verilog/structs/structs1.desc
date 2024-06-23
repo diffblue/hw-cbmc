@@ -1,8 +1,10 @@
-KNOWNBUG
+CORE
 structs1.sv
 --bound 0
+^\[main\.property\.p0\] always 9 == 9: PROVED up to bound 0$
+^\[main\.property\.p1\] always main\.s\.field1 == 1: PROVED up to bound 0$
+^\[main\.property\.p2\] always main\.s\.field2 == 0: PROVED up to bound 0$
+^\[main\.property\.p3\] always main\.s\.field3 == 115: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --
---
-cast bitvector to struct missing

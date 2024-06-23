@@ -30,6 +30,136 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_synthesist::extract
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_synthesist::extract(
+  const exprt &src,
+  const mp_integer &offset,
+  const typet &dest_type)
+{
+  auto src_width = to_bitvector_type(src.type()).get_width();
+  auto dest_width = get_width(dest_type);
+
+  // first add padding, if src is too small
+  exprt padded_src;
+  auto padding_width = dest_width + offset - src_width;
+
+  if(padding_width > 0)
+  {
+    auto padded_width_int =
+      numeric_cast_v<std::size_t>(src_width + padding_width);
+    padded_src = concatenation_exprt{
+      {unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)}.zero_expr(),
+       src},
+      bv_typet{padded_width_int}};
+  }
+  else // large enough
+    padded_src = src;
+
+  // now extract
+  if(dest_type.id() == ID_bool)
+  {
+    return extractbit_exprt{padded_src, from_integer(offset, integer_typet{})};
+  }
+  else
+  {
+    return extractbits_exprt{
+      padded_src, from_integer(offset, integer_typet{}), dest_type};
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::from_bitvector
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_synthesist::from_bitvector(
+  const exprt &src,
+  const mp_integer &offset,
+  const typet &dest)
+{
+  if(dest.id() == ID_struct)
+  {
+    const auto &struct_type = to_struct_type(dest);
+    exprt::operandst field_values;
+    field_values.reserve(struct_type.components().size());
+
+    // start from the top; the first field is the most significant
+    mp_integer component_offset = get_width(dest);
+
+    for(auto &component : struct_type.components())
+    {
+      auto width = get_width(component.type());
+      component_offset -= width;
+      // rec. call
+      field_values.push_back(
+        from_bitvector(src, offset + component_offset, component.type()));
+    }
+
+    return struct_exprt{std::move(field_values), struct_type};
+  }
+  else
+  {
+    return extract(src, offset, dest);
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::to_bitvector
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_synthesist::to_bitvector(const exprt &src)
+{
+  const auto &src_type = src.type();
+
+  if(src_type.id() == ID_struct)
+  {
+    const auto &struct_type = to_struct_type(src_type);
+    exprt::operandst field_values;
+    field_values.reserve(struct_type.components().size());
+
+    // the first struct member is the most significant
+    for(auto &component : struct_type.components())
+    {
+      auto member = member_exprt{src, component};
+      auto field_value = to_bitvector(member); // rec. call
+      field_values.push_back(std::move(field_value));
+    }
+
+    auto width_int = numeric_cast_v<std::size_t>(get_width(src));
+    return concatenation_exprt{std::move(field_values), bv_typet{width_int}};
+  }
+  else
+  {
+    return src;
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::synth_expr
 
   Inputs:
@@ -100,23 +230,45 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id()==ID_typecast)
   {
-    auto &typecast_expr = to_typecast_expr(expr);
-    typecast_expr.op() = synth_expr(typecast_expr.op(), symbol_state);
-
-    // we perform some form of simplification for these
-    if(typecast_expr.op().is_constant())
-      simplify(expr, ns);
-
-    if(
-      expr.type().id() == ID_verilog_unsignedbv ||
-      expr.type().id() == ID_verilog_signedbv)
     {
-      auto aval_bval_type = lower_to_aval_bval(expr.type());
+      auto &op = to_typecast_expr(expr).op();
+      op = synth_expr(op, symbol_state);
 
-      if(is_aval_bval(typecast_expr.op().type()))
+      // we perform some form of simplification for these
+      if(op.is_constant())
+        simplify(expr, ns);
+    }
+
+    if(expr.id() == ID_typecast)
+    {
+      auto &typecast_expr = to_typecast_expr(expr);
+      typecast_expr.op() = synth_expr(typecast_expr.op(), symbol_state);
+
+      const auto &src_type = typecast_expr.op().type();
+      const auto &dest_type = typecast_expr.type();
+
+      if(
+        dest_type.id() == ID_verilog_unsignedbv ||
+        dest_type.id() == ID_verilog_signedbv)
       {
-        // separately convert aval and bval
-        return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
+        auto aval_bval_type = lower_to_aval_bval(dest_type);
+
+        if(is_aval_bval(src_type))
+        {
+          // separately convert aval and bval
+          return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
+        }
+      }
+      else if(dest_type.id() == ID_struct)
+      {
+        return from_bitvector(typecast_expr.op(), 0, dest_type);
+      }
+      else
+      {
+        if(src_type.id() == ID_struct)
+        {
+          return extract(to_bitvector(typecast_expr.op()), 0, dest_type);
+        }
       }
     }
 

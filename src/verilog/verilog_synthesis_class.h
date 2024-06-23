@@ -71,6 +71,11 @@ public:
 protected:
   const optionst &options;
 
+  static exprt extract(const exprt &, const mp_integer &offset, const typet &);
+  static exprt
+  from_bitvector(const exprt &, const mp_integer &offset, const typet &);
+  static exprt to_bitvector(const exprt &);
+
   // For $ND(...)
   std::size_t nondet_count = 0;
 
