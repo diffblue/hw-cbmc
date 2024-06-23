@@ -1,9 +1,9 @@
 CORE
 ring_buffer.sv
 --k-induction
-^\[ring_buffer\.property\.1\] assume always \(ring_buffer\.empty |-> !ring_buffer\.read\): ASSUMED$
-^\[ring_buffer\.property\.2\] assume always \(ring_buffer\.full |-> !ring_buffer\.write\): ASSUMED$
-^\[ring_buffer\.property\.3\] always \(ring_buffer\.writeptr - ring_buffer\.readptr & 15\) == ring_buffer\.count: PROVED$
+^\[ring_buffer\.assert\.1\] assume always \(ring_buffer\.empty |-> !ring_buffer\.read\): ASSUMED$
+^\[ring_buffer\.assert\.2\] assume always \(ring_buffer\.full |-> !ring_buffer\.write\): ASSUMED$
+^\[ring_buffer\.assert\.3\] always \(ring_buffer\.writeptr - ring_buffer\.readptr & 15\) == ring_buffer\.count: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 

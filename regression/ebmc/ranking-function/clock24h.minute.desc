@@ -1,7 +1,7 @@
 CORE
 clock24h.sv
---property main.property.p_minute --ranking-function "59-seconds"
-^\[main\.property\.p_minute\] .*: PROVED$
+--property main.p_minute --ranking-function "59-seconds"
+^\[main\.p_minute\] .*: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

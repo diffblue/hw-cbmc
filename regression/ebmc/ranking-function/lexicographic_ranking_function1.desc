@@ -1,7 +1,7 @@
 CORE
 lexicographic_ranking_function1.sv
 --ranking-function "{digit1, digit2}"
-^\[main\.property\.p0\] always s_eventually main\.digit1 == 0: PROVED$
+^\[main\.p0\] always s_eventually main\.digit1 == 0: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

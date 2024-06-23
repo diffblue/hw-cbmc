@@ -1,6 +1,6 @@
 CORE
 bobmiterbm1multi.sv
---ic3 --property bobmiterbm1multi.property.1080
+--ic3 --property bobmiterbm1multi.assert.1080
 ^EXIT=1$
 ^SIGNAL=0$
 ^property FAILED

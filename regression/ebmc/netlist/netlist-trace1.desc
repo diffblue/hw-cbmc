@@ -1,7 +1,7 @@
 CORE
 netlist-trace1.sv
 --bound 10 --trace --aig
-^\[counter\.property\.1\] always counter\.state != 3: REFUTED$
+^\[counter\.assert\.1\] always counter\.state != 3: REFUTED$
 ^  counter\.state = 3 \(00000011\)$
 ^EXIT=10$
 ^SIGNAL=0$

@@ -1,8 +1,8 @@
 CORE
 simple_counterexamples_to_Fp.sv
---bound 10 --property top.property.p1
+--bound 10 --property top.p1
 ^Adding lasso constraints$
 ^EXIT=10$
 ^SIGNAL=0$
-^\[top\.property\.p1\] .* REFUTED$
+^\[top\.p1\] .* REFUTED$
 --

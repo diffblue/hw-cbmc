@@ -3,6 +3,6 @@ BDD3.sv
 --module main --bdd
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main.property.my_prop1\] always main.counter <= 10: PROVED$
-^\[main.property.my_prop2\] always main.counter < 10: REFUTED$
+^\[main\.my_prop1\] always main\.counter <= 10: PROVED$
+^\[main\.my_prop2\] always main\.counter < 10: REFUTED$
 --
