@@ -1,9 +1,9 @@
 CORE
 sequence3.sv
 --bound 20 --numbered-trace
-^\[main\.property\.p0\] ##\[\*\] main\.x == 6: REFUTED$
+^\[main\.p0\] ##\[\*\] main\.x == 6: REFUTED$
 ^Counterexample with 2 states:$
-^\[main\.property\.p1\] ##\[\+\] main\.x == 0: REFUTED$
+^\[main\.p1\] ##\[\+\] main\.x == 0: REFUTED$
 ^Counterexample with 7 states:$
 ^EXIT=10$
 ^SIGNAL=0$
