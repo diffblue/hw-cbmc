@@ -7,12 +7,12 @@ module main;
   } s;
 
   // bit-vectors can be converted without cast to packed structs
-  initial s = 8'b1011111;
+  initial s = 'b1_0_1110011;
 
   // Expected to pass.
   p0: assert property ($bits(s) == 9);
   p1: assert property (s.field1 == 1);
   p2: assert property (s.field2 == 0);
-  p3: assert property (s.field3 == 'b111111);
+  p3: assert property (s.field3 == 'b1110011);
 
 endmodule
