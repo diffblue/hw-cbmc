@@ -6,12 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
-
+#include <util/json.h>
+#include <util/json_irep.h>
+#include <util/unicode.h>
 #include <util/xml.h>
 #include <util/xml_irep.h>
 
 #include "ebmc_base.h"
+#include "ebmc_error.h"
+
+#include <iostream>
 
 /*******************************************************************\
 
@@ -60,5 +64,48 @@ void ebmc_baset::show_properties()
     }
     
     p_nr++;
+  }
+}
+
+/*******************************************************************\
+
+Function: ebmc_baset::json_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ebmc_baset::json_properties(const std::string &file_name)
+{
+  json_arrayt json;
+
+  for(const auto &p : properties.properties)
+  {
+    json_objectt json_property;
+    json_property["identifier"] = json_stringt{id2string(p.identifier)};
+    json_property["name"] = json_stringt{id2string(p.name)};
+    json_property["description"] = json_stringt{p.description};
+
+    if(p.location.is_not_nil())
+      json_property["location"] = ::json(p.location);
+
+    json.push_back(std::move(json_property));
+  }
+
+  if(file_name == "-")
+  {
+    std::cout << json;
+  }
+  else
+  {
+    std::ofstream out(widen_if_needed(file_name));
+    if(!out)
+      throw ebmc_errort() << "failed to open " << file_name;
+
+    out << json;
   }
 }

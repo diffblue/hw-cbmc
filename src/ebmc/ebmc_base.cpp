@@ -338,6 +338,12 @@ int ebmc_baset::get_properties()
     return 0;
   }
 
+  if(cmdline.isset("json-properties"))
+  {
+    json_properties(cmdline.get_value("json-properties"));
+    return 0;
+  }
+
   return -1; // done
 }
 
