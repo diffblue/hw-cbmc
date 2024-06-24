@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/symbol.h>
 
+#include "aval_bval_encoding.h"
 #include "sva_expr.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
@@ -953,6 +954,12 @@ std::string expr2verilogt::convert_constant(
     // these have a decimal representation
     const irep_idt &value = src.get_value();
     dest=id2string(value);
+  }
+  else if(is_aval_bval(type))
+  {
+    // these have a 'dual rail' encoding into aval/bval
+    auto width = aval_bval_width(type);
+    return std::to_string(width) + "'b" + decode_aval_bval(src);
   }
   else
     return convert_norep(src, precedence);
