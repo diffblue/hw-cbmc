@@ -1,0 +1,8 @@
+CORE
+array_literal2.sv
+
+^file array_literal2\.sv line 3: number of expressions does not match number of array elements$
+^CONVERSION ERROR$
+^EXIT=2$
+^SIGNAL=0$
+--

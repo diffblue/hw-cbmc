@@ -3010,6 +3010,18 @@ case_item:
 	;
 
 // System Verilog standard 1800-2017
+// A.6.7.1 Patterns
+
+assignment_pattern:
+	'\'' '{' expression_brace '}'
+		{ init($$, ID_verilog_assignment_pattern); swapop($$, $3); }
+	;
+
+assignment_pattern_expression:
+	  assignment_pattern
+	;
+
+// System Verilog standard 1800-2017
 // A.6.8 Looping statements
 
 loop_statement:
@@ -3331,6 +3343,7 @@ primary:  primary_literal
 	| '(' mintypmax_expression ')'
 		{ $$ = $2; }
 	| cast
+	| assignment_pattern_expression
         | TOK_NULL { init($$, ID_NULL); }
 	;
 
