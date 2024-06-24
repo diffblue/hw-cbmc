@@ -2123,4 +2123,37 @@ to_verilog_indexed_part_select_plus_or_minus_expr(exprt &expr)
   return static_cast<verilog_indexed_part_select_plus_or_minus_exprt &>(expr);
 }
 
+class verilog_property_declarationt : public verilog_module_itemt
+{
+public:
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  const exprt &cond() const
+  {
+    return op0();
+  }
+
+  exprt &cond()
+  {
+    return op0();
+  }
+};
+
+inline const verilog_property_declarationt &
+to_verilog_property_declaration(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  return static_cast<const verilog_property_declarationt &>(expr);
+}
+
+inline verilog_property_declarationt &
+to_verilog_property_declaration(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  return static_cast<verilog_property_declarationt &>(expr);
+}
+
 #endif

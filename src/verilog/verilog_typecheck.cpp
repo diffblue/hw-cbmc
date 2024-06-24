@@ -1639,11 +1639,50 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }
+  else if(module_item.id() == ID_verilog_property_declaration)
+  {
+    convert_property_declaration(to_verilog_property_declaration(module_item));
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
       << "unexpected module item: " << module_item.id();
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::convert_property_declaration
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::convert_property_declaration(
+  verilog_property_declarationt &declaration)
+{
+  auto base_name = declaration.base_name();
+  auto full_identifier = hierarchical_identifier(base_name);
+
+  convert_expr(declaration.cond());
+  make_boolean(declaration.cond());
+
+  auto type = bool_typet{};
+  type.set(ID_C_verilog_type, ID_verilog_property_declaration);
+  symbolt symbol{full_identifier, type, mode};
+
+  symbol.module = module_identifier;
+  symbol.base_name = base_name;
+  symbol.pretty_name = strip_verilog_prefix(symbol.name);
+  symbol.is_macro = true;
+  symbol.value = declaration.cond();
+  symbol.location = declaration.source_location();
+
+  add_symbol(std::move(symbol));
 }
 
 /*******************************************************************\
