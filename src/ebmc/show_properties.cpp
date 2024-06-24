@@ -33,36 +33,37 @@ void ebmc_baset::show_properties()
 {
   unsigned p_nr=1;
 
+  auto make_xml =
+    [](const ebmc_propertiest::propertyt &p, std::size_t p_nr) -> xmlt {
+    xmlt xml("property");
+    xml.set_attribute("name", id2string(p.name));
+
+    xml.new_element("number").data = std::to_string(p_nr); // will go away
+    xml.new_element("description").data = p.description;
+
+    if(p.location.is_not_nil())
+      xml.new_element("location") = ::xml(p.location);
+
+    return xml;
+  };
+
   for(const auto &p : properties.properties)
   {
-    switch (static_cast<ui_message_handlert &>(message.get_message_handler()).get_ui()) {
+    switch(static_cast<ui_message_handlert &>(message.get_message_handler())
+             .get_ui())
+    {
     case ui_message_handlert::uit::XML_UI:
-      {
-        xmlt xml("property");
-        xml.set_attribute("name", id2string(p.name));
-        
-        xml.new_element("number").data=std::to_string(p_nr); // will go away
-        xml.new_element("expression").data=p.expr_string;
-        xml.new_element("description").data=p.description;
-
-        if(p.location.is_not_nil())
-          xml.new_element("location")=::xml(p.location);
-
-        std::cout << xml << '\n';
-      }
+      std::cout << make_xml(p, p_nr) << '\n';
       break;
   
     case ui_message_handlert::uit::PLAIN:
-      std::cout << p.name << ": ";
-      std::cout << p.expr_string;
-      if(!p.description.empty())
-        std::cout << " (" << p.description << ")";
-      std::cout << '\n';
+      std::cout << p.name << ": " << p.description << '\n';
       break;
+
     case ui_message_handlert::uit::JSON_UI:
     default:;
     }
-    
+
     p_nr++;
   }
 }

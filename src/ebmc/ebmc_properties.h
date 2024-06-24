@@ -28,7 +28,6 @@ public:
     std::size_t number = 0;
     irep_idt identifier, name;
     source_locationt location;
-    std::string expr_string;
     irep_idt mode;
     exprt original_expr;
     exprt normalized_expr;

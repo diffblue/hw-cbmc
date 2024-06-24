@@ -2323,6 +2323,8 @@ void verilog_synthesist::synth_assert_assume_cover(
     cond = sva_cover_exprt(cond);
   }
 
+  symbol.location.set_comment(to_string(cond));
+
   symbol.value = std::move(cond);
 }
 
@@ -2373,6 +2375,8 @@ void verilog_synthesist::synth_assert_assume_cover(
   }
   else
     PRECONDITION(false);
+
+  symbol.location.set_comment(to_string(cond));
 
   symbol.value = std::move(cond);
 }

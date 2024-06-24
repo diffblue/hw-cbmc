@@ -73,7 +73,6 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
       properties.properties.back().name = symbol.display_name();
       properties.properties.back().original_expr = symbol.value;
       properties.properties.back().location = symbol.location;
-      properties.properties.back().expr_string = value_as_string;
       properties.properties.back().mode = symbol.mode;
       properties.properties.back().description =
         id2string(symbol.location.get_comment());
@@ -172,10 +171,9 @@ ebmc_propertiest ebmc_propertiest::from_command_line(
     auto &p = properties.properties.back();
     p.original_expr = expr;
     p.normalized_expr = normalize_property(expr);
-    p.expr_string = expr_as_string;
     p.mode = transition_system.main_symbol->mode;
     p.location.make_nil();
-    p.description = "command-line assertion";
+    p.description = expr_as_string;
     p.name = "command-line assertion";
 
     return properties;

@@ -1491,6 +1491,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.mode = "SMV";
         spec_symbol.value = it->expr;
         spec_symbol.location = it->location;
+        spec_symbol.location.set_comment(to_string(it->expr));
 
         if(smv_module.name == "smv::main")
           spec_symbol.pretty_name = spec_symbol.base_name;
