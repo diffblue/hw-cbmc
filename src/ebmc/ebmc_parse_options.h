@@ -33,7 +33,7 @@ public:
         "(dimacs)(module):(top):"
         "(po)(cegar)(k-induction)(2pi)(bound2):"
         "(outfile):(xml-ui)(verbosity):(gui)"
-        "(json-result):(json-properties):"
+        "(json-modules):(json-properties):(json-result):"
         "(neural-liveness)(neural-engine):"
         "(reset):"
         "(version)(verilog-rtl)(verilog-netlist)"

@@ -6,10 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/xml.h>
-#include <util/xml_irep.h>
-
 #include "show_modules.h"
+
+#include <util/json_irep.h>
+#include <util/xml_irep.h>
 
 /*******************************************************************\
 
@@ -90,4 +90,39 @@ void show_modules(const symbol_table_baset &symbol_table, std::ostream &out)
       out << "  Name:       " << symbol.display_name() << '\n' << '\n';
     }
   }
+}
+
+/*******************************************************************\
+
+Function: json_modules
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void json_modules(const symbol_table_baset &symbol_table, std::ostream &out)
+{
+  json_arrayt json_modules;
+
+  for(const auto &s : symbol_table.symbols)
+  {
+    const symbolt &symbol = s.second;
+
+    if(symbol.type.id() == ID_module)
+    {
+      json_objectt json_module;
+      json_module["location"] = json(symbol.location);
+      json_module["identifier"] = json_stringt{id2string(symbol.name)};
+      json_module["mode"] = json_stringt{id2string(symbol.mode)};
+      json_module["name"] = json_stringt{id2string(symbol.display_name())};
+
+      json_modules.push_back(std::move(json_module));
+    }
+  }
+
+  out << json_modules;
 }
