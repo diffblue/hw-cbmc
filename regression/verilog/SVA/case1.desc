@@ -1,7 +1,7 @@
 CORE
 case1.sv
 --bound 20 --numbered-trace
-^\[main\.property\.p0\] always \(case\(main\.x\) 10: 0; endcase\): REFUTED$
+^\[main\.p0\] always \(case\(main\.x\) 10: 0; endcase\): REFUTED$
 ^Counterexample with 11 states:$
 ^EXIT=10$
 ^SIGNAL=0$

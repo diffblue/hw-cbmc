@@ -1023,21 +1023,29 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   irep_idt base_name;
 
+  // The label is optional.
   if(identifier == irep_idt())
   {
+    std::string kind = module_item.id() == ID_verilog_assert_property ? "assert"
+                       : module_item.id() == ID_verilog_assume_property
+                         ? "assume"
+                       : module_item.id() == ID_verilog_cover_property ? "cover"
+                                                                       : "";
+
     assertion_counter++;
-    base_name = std::to_string(assertion_counter);
+    base_name = kind + "." + std::to_string(assertion_counter);
   }
   else
     base_name = identifier;
 
+  // The assert/assume/cover module items use the module name space
   std::string full_identifier =
-    id2string(module_identifier) + ".property." + id2string(base_name);
+    id2string(module_identifier) + '.' + id2string(base_name);
 
   if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
   {
     throw errort().with_location(module_item.source_location())
-      << "property identifier `" << base_name << "' already used";
+      << "identifier `" << base_name << "' already used";
   }
 
   module_item.identifier(full_identifier);

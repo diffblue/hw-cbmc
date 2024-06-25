@@ -3,6 +3,6 @@ passing2.sv
 --bound 10 --liveness-to-safety
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property\.p0\] always s_eventually main\.counter == 0: PROVED up to bound 10$
-^\[main\.property\.p1\] always s_eventually main\.counter == 8: PROVED up to bound 10$
+^\[main\.p0\] always s_eventually main\.counter == 0: PROVED up to bound 10$
+^\[main\.p1\] always s_eventually main\.counter == 8: PROVED up to bound 10$
 --

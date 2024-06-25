@@ -1,7 +1,7 @@
 CORE
 not_supported1.sv
 --ic3
-^\[main\.property\.p0\] always s_eventually main\.my_bit: FAILURE: property not supported by IC3 engine$
+^\[main\.p0\] always s_eventually main\.my_bit: FAILURE: property not supported by IC3 engine$
 ^EXIT=10$
 ^SIGNAL=0$
 --

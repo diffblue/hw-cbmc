@@ -3,14 +3,14 @@ BDD_SVA1.sv
 --bdd
 ^EXIT=10$
 ^SIGNAL=0$
-^\[top\.property\.p0\] always top\.my_bit: PROVED$
-^\[top\.property\.p1\] always top\.my_bit: PROVED$
-^\[top\.property\.p2\] always \(top\.counter == 3 \|-> \(nexttime top\.counter == 4\)\): FAILURE: property not supported by BDD engine$
-^\[top\.property\.p3\] always \(top\.counter == 3 \|=> top\.counter == 4\): FAILURE: property not supported by BDD engine$
-^\[top\.property\.p4\] always \(top\.counter == 3 \|=> \(nexttime top\.counter == 5\)\): FAILURE: property not supported by BDD engine$
-^\[top\.property\.p5\] always s_eventually top\.counter == 8: PROVED$
-^\[top\.property\.p6\] always \(top\.counter == 0 \|-> \(s_eventually top\.counter == 8\)\): FAILURE: property not supported by BDD engine$
-^\[top\.property\.p7\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until top\.counter == 6\)\): FAILURE: property not supported by BDD engine$
-^\[top\.property\.p8\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until_with top\.counter == 5\)\): FAILURE: property not supported by BDD engine$
+^\[top\.p0\] always top\.my_bit: PROVED$
+^\[top\.p1\] always top\.my_bit: PROVED$
+^\[top\.p2\] always \(top\.counter == 3 \|-> \(nexttime top\.counter == 4\)\): FAILURE: property not supported by BDD engine$
+^\[top\.p3\] always \(top\.counter == 3 \|=> top\.counter == 4\): FAILURE: property not supported by BDD engine$
+^\[top\.p4\] always \(top\.counter == 3 \|=> \(nexttime top\.counter == 5\)\): FAILURE: property not supported by BDD engine$
+^\[top\.p5\] always s_eventually top\.counter == 8: PROVED$
+^\[top\.p6\] always \(top\.counter == 0 \|-> \(s_eventually top\.counter == 8\)\): FAILURE: property not supported by BDD engine$
+^\[top\.p7\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until top\.counter == 6\)\): FAILURE: property not supported by BDD engine$
+^\[top\.p8\] always \(top\.counter == 0 \|-> \(top\.counter <= 5 until_with top\.counter == 5\)\): FAILURE: property not supported by BDD engine$
 --
 ^warning: ignoring

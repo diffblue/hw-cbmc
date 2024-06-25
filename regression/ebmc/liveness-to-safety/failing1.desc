@@ -3,5 +3,5 @@ failing1.sv
 --bound 1 --liveness-to-safety
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main\.property\.p0\] always s_eventually main\.my_bit: REFUTED$
+^\[main\.p0\] always s_eventually main\.my_bit: REFUTED$
 --

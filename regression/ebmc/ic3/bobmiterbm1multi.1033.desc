@@ -1,6 +1,6 @@
 CORE
 bobmiterbm1multi.sv
---ic3 --property bobmiterbm1multi.property.1033
+--ic3 --property bobmiterbm1multi.assert.1033
 ^EXIT=2$
 ^SIGNAL=0$
 ^property HOLDS

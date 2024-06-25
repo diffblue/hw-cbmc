@@ -1,7 +1,7 @@
 CORE
 continuous_assignment_to_variable_systemverilog.sv
 --bound 0
-^\[main\.property\.p1\] always main\.some_reg == main\.i: PROVED up to bound 0$
+^\[main\.p1\] always main\.some_reg == main\.i: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --

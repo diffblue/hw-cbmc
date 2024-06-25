@@ -4,13 +4,13 @@ simple_passing_LTL_properties.sv
 ^Adding lasso constraints$
 ^EXIT=0$
 ^SIGNAL=0$
-^\[top.property.p0\] .* PROVED up to bound 10$
-^\[top.property.p1\] .* PROVED up to bound 10$
-^\[top.property.p2\] .* PROVED up to bound 10$
-^\[top.property.p3\] .* PROVED up to bound 10$
-^\[top.property.p4\] .* PROVED up to bound 10$
-^\[top.property.p5\] .* PROVED up to bound 10$
-^\[top.property.p6\] .* PROVED up to bound 10$
-^\[top.property.p7\] .* PROVED up to bound 10$
-^\[top.property.p8\] .* PROVED up to bound 10$
+^\[top\.p0\] .* PROVED up to bound 10$
+^\[top\.p1\] .* PROVED up to bound 10$
+^\[top\.p2\] .* PROVED up to bound 10$
+^\[top\.p3\] .* PROVED up to bound 10$
+^\[top\.p4\] .* PROVED up to bound 10$
+^\[top\.p5\] .* PROVED up to bound 10$
+^\[top\.p6\] .* PROVED up to bound 10$
+^\[top\.p7\] .* PROVED up to bound 10$
+^\[top\.p8\] .* PROVED up to bound 10$
 --

@@ -1,7 +1,7 @@
 CORE
 counter2.sv
 --ranking-function counter --numbered-trace
-^\[main\.property\.p0\] always s_eventually main.counter == 10: INCONCLUSIVE$
+^\[main\.p0\] always s_eventually main.counter == 10: INCONCLUSIVE$
 ^main\.counter@0 = .*$
 ^main\.counter@1 = .*$
 ^EXIT=10$

@@ -3,6 +3,6 @@ s_eventually3.sv
 --module main --bound 11
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main\.property\.p0\] always s_eventually main\.counter <= 5: REFUTED$
+^\[main\.p0\] always s_eventually main\.counter <= 5: REFUTED$
 --
 ^warning: ignoring
