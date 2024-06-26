@@ -1,0 +1,22 @@
+CORE
+array_functions1.sv
+--module main --bound 0
+^\[main\.pP0\] always 32 == 32 && 1 == 1: PROVED up to bound 0$
+^\[main\.pP1\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
+^\[main\.pP2\] always 1 == 1 && 32 == 32: PROVED up to bound 0$
+^\[main\.pP3\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
+^\[main\.pP4\] always 1 == 1: PROVED up to bound 0$
+^\[main\.pP5\] always -1 == -1: PROVED up to bound 0$
+^\[main\.pU0\] always 32 == 32 && 1 == 1: PROVED up to bound 0$
+^\[main\.pU1\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
+^\[main\.pU2\] always 31 == 31 && 0 == 0: PROVED up to bound 0$
+^\[main\.pU3\] always 1 == 1 && 32 == 32: PROVED up to bound 0$
+^\[main\.pU4\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
+^\[main\.pU5\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
+^\[main\.pU6\] always 1 == 1: PROVED up to bound 0$
+^\[main\.pU7\] always -1 == -1: PROVED up to bound 0$
+^\[main\.pU8\] always 1 == 1: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
