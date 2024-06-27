@@ -6,7 +6,7 @@ on:
 jobs:
   # This job takes approximately 1 minute
   check-clang-format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,8 +19,8 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq clang-format-11
-      - name: Check updated lines of code match clang-format-11 style
+          sudo apt-get install --no-install-recommends -yq clang-format-15
+      - name: Check updated lines of code match clang-format-15 style
         env:
           BASE_BRANCH: ${{ github.base_ref }}
           MERGE_BRANCH: ${{ github.ref }}
@@ -29,7 +29,7 @@ jobs:
           echo "Pull request's base branch is: ${BASE_BRANCH}"
           echo "Pull request's merge branch is: ${MERGE_BRANCH}"
           echo "Pull request's source branch is: ${GITHUB_HEAD_REF}"
-          clang-format-11 --version
+          clang-format-15 --version
 
           # The checkout action leaves us in detatched head state. The following line
           # names the checked out commit, for simpler reference later.
@@ -45,7 +45,7 @@ jobs:
 
           # Do the checking. "eval" is used so that quotes (as inserted into $EXCLUDES
           # above) are not interpreted as parts of file names.
-          git-clang-format-11 --binary clang-format-11 $MERGE_BASE
+          git-clang-format-15 --binary clang-format-15 $MERGE_BASE
           git diff > formatted.diff
           if [[ -s formatted.diff ]] ; then
             echo 'Formatting error! The following diff shows the required changes'
