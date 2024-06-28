@@ -447,6 +447,179 @@ exprt verilog_typecheck_exprt::bits(const exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::left
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
+{
+  // unpacked array: left bound
+  // packed array: index of most significant element
+  // 0 otherwise
+  auto left = [](const typet &type) -> mp_integer {
+    if(
+      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
+      type.id() == ID_bool)
+    {
+      auto offset = type.get_int(ID_C_offset);
+      if(type.get_bool(ID_C_little_endian))
+        return offset + get_width(type) - 1;
+      else
+        return offset;
+    }
+    else if(type.id() == ID_array)
+    {
+      auto offset = numeric_cast_v<mp_integer>(
+        to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
+      if(type.get_bool(ID_C_little_endian))
+        return offset +
+               numeric_cast_v<mp_integer>(
+                 to_constant_expr(to_array_type(type).size())) -
+               1;
+      else
+        return offset;
+    }
+    else
+      return 0;
+  };
+
+  return from_integer(left(expr.type()), integer_typet{});
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::right
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
+{
+  // unpacked array: right bound
+  // packed array: index of least significant element
+  // 0 otherwise
+  auto right = [](const typet &type) -> mp_integer {
+    if(
+      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
+      type.id() == ID_bool)
+    {
+      auto offset = type.get_int(ID_C_offset);
+      if(type.get_bool(ID_C_little_endian))
+        return offset;
+      else
+        return offset + get_width(type) - 1;
+    }
+    else if(type.id() == ID_array)
+    {
+      auto offset = numeric_cast_v<mp_integer>(
+        to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
+      if(type.get_bool(ID_C_little_endian))
+        return offset;
+      else
+        return offset +
+               numeric_cast_v<mp_integer>(
+                 to_constant_expr(to_array_type(type).size())) -
+               1;
+    }
+    else
+      return 0;
+  };
+
+  return from_integer(right(expr.type()), integer_typet{});
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::increment
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::increment(const exprt &expr)
+{
+  // fixed-size dimension: 1 if $left >= $right, -1 otherwise
+  auto increment = [](const typet &type) -> mp_integer {
+    if(
+      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
+      type.id() == ID_array)
+    {
+      if(type.get_bool(ID_C_little_endian))
+        return 1;
+      else
+        return -1;
+    }
+    else
+      return -1;
+  };
+
+  return from_integer(increment(expr.type()), integer_typet{});
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::low
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::low(const exprt &expr)
+{
+  // $left if $increment returns –1
+  // $right otherwise
+  if(numeric_cast_v<mp_integer>(increment(expr)) == -1)
+    return left(expr);
+  else
+    return right(expr);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::high
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::high(const exprt &expr)
+{
+  // $right if $increment returns –1
+  // $left otherwise
+  if(numeric_cast_v<mp_integer>(increment(expr)) == -1)
+    return right(expr);
+  else
+    return left(expr);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_system_function
 
   Inputs:
@@ -549,12 +722,14 @@ exprt verilog_typecheck_exprt::convert_system_function(
     expr.type() = arguments.front().type();
     return std::move(expr);
   }
-  else if(identifier == "$bits")
+  else if(
+    identifier == "$bits" || identifier == "$left" || identifier == "$right" ||
+    identifier == "$increment" || identifier == "$low" || identifier == "$high")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << "$bits takes one argument";
+        << identifier << " takes one argument";
     }
 
     // The return type is integer.
@@ -1369,6 +1544,31 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
   {
     DATA_INVARIANT(arguments.size() == 1, "$bits has one argument");
     return bits(arguments[0]);
+  }
+  else if(identifier == "$low")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$low has one argument");
+    return low(arguments[0]);
+  }
+  else if(identifier == "$high")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$high has one argument");
+    return high(arguments[0]);
+  }
+  else if(identifier == "$left")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$left has one argument");
+    return left(arguments[0]);
+  }
+  else if(identifier == "$right")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$right has one argument");
+    return right(arguments[0]);
+  }
+  else if(identifier == "$increment")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$increment has one argument");
+    return increment(arguments[0]);
   }
   else if(identifier == "$clog2")
   {
