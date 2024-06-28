@@ -483,22 +483,24 @@ constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
       type.id() == ID_bool)
     {
       auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_little_endian))
-        return offset + get_width(type) - 1;
-      else
+      if(type.get_bool(ID_C_big_endian))
         return offset;
+      else
+        return offset + get_width(type) - 1;
     }
     else if(type.id() == ID_array)
     {
       auto offset = numeric_cast_v<mp_integer>(
         to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_little_endian))
+      if(type.get_bool(ID_C_big_endian))
+        return offset;
+      else
+      {
         return offset +
                numeric_cast_v<mp_integer>(
                  to_constant_expr(to_array_type(type).size())) -
                1;
-      else
-        return offset;
+      }
     }
     else
       return 0;
@@ -531,22 +533,24 @@ constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
       type.id() == ID_bool)
     {
       auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_little_endian))
-        return offset;
-      else
+      if(type.get_bool(ID_C_big_endian))
         return offset + get_width(type) - 1;
+      else
+        return offset;
     }
     else if(type.id() == ID_array)
     {
       auto offset = numeric_cast_v<mp_integer>(
         to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_little_endian))
-        return offset;
-      else
+      if(type.get_bool(ID_C_big_endian))
+      {
         return offset +
                numeric_cast_v<mp_integer>(
                  to_constant_expr(to_array_type(type).size())) -
                1;
+      }
+      else
+        return offset;
     }
     else
       return 0;
@@ -576,10 +580,10 @@ constant_exprt verilog_typecheck_exprt::increment(const exprt &expr)
       type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
       type.id() == ID_array)
     {
-      if(type.get_bool(ID_C_little_endian))
-        return 1;
-      else
+      if(type.get_bool(ID_C_big_endian))
         return -1;
+      else
+        return 1;
     }
     else
       return -1;
@@ -1330,9 +1334,8 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
       expr.type()=verilog_signedbv_typet(bits);
     else
       expr.type()=verilog_unsignedbv_typet(bits);
-    
+
     expr.set(ID_value, fvalue);
-    expr.set(ID_C_little_endian, true);
   }
   else
   {
@@ -1351,7 +1354,6 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
       expr.type()=unsignedbv_typet(bits);
 
     expr.set(ID_value, integer2bvrep(int_value, bits));
-    expr.set(ID_C_little_endian, true);
   }
 
   return std::move(expr);
