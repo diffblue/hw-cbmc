@@ -2039,8 +2039,41 @@ assertion_item_declaration:
 	;
 
 property_declaration:
-          TOK_PROPERTY property_identifier TOK_ENDPROPERTY
+          TOK_PROPERTY property_identifier property_port_list_paren_opt ';'
+          property_spec
+          TOK_ENDPROPERTY property_identifier_opt
+		{ init($$, ID_verilog_property_declaration);
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+		  mto($$, $5); }
         ;
+
+property_identifier_opt:
+	  /* optional */
+	| TOK_COLON property_identifier
+	;
+
+property_port_list_paren_opt:
+	  /* optional */
+	| '(' property_port_list_opt ')'
+	;
+
+property_port_list_opt:
+	  /* optional */
+	| property_port_list
+	;
+
+property_port_list:
+	  property_port_item
+	| property_port_list_opt ',' property_port_item
+	;
+
+property_port_item:
+	  attribute_instance_brace property_formal_type formal_port_identifier variable_dimension_brace
+	;
+
+property_formal_type:
+	  TOK_PROPERTY
+	;
 
 property_spec:
 	  TOK_DISABLE TOK_IFF '(' expression ')' property_expr

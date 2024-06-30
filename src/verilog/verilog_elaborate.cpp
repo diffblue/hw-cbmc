@@ -113,6 +113,11 @@ void verilog_typecheckt::collect_symbols(
   }
 }
 
+void verilog_typecheckt::collect_symbols(
+  const verilog_property_declarationt &declaration)
+{
+}
+
 void verilog_typecheckt::collect_symbols(const typet &type)
 {
   // These types are not yet converted.
@@ -799,6 +804,10 @@ void verilog_typecheckt::collect_symbols(
   }
   else if(module_item.id() == ID_verilog_covergroup)
   {
+  }
+  else if(module_item.id() == ID_verilog_property_declaration)
+  {
+    collect_symbols(to_verilog_property_declaration(module_item));
   }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());

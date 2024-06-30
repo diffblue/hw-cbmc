@@ -3231,6 +3231,9 @@ void verilog_synthesist::synth_module_item(
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }
+  else if(module_item.id() == ID_verilog_property_declaration)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
