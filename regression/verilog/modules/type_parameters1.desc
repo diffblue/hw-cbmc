@@ -1,8 +1,8 @@
 CORE
 type_parameters1.sv
 --bound 0
-^\[main\.p1\] always 1 == 1: PROVED up to bound 0$
-^\[main\.p2\] always 32 == 32: PROVED up to bound 0$
+^\[main\.p1\] always \$bits\(main\.T1\) == 1: PROVED up to bound 0$
+^\[main\.p2\] always \$bits\(main\.T2\) == 32: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --

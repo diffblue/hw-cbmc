@@ -73,6 +73,10 @@ public:
     const exprt &src,
     unsigned &precedence);
 
+  std::string convert_hierarchical_identifier(
+    const class hierarchical_identifier_exprt &,
+    unsigned &precedence);
+
   virtual std::string
   convert_constant(const constant_exprt &, unsigned &precedence);
 
@@ -117,6 +121,14 @@ public:
   convert_sva_sequence_concatenation(const binary_exprt &, unsigned precedence);
 
   virtual std::string convert_function_call(const class function_call_exprt &);
+
+  std::string convert_non_indexed_part_select(
+    const class verilog_non_indexed_part_select_exprt &,
+    unsigned precedence);
+
+  std::string convert_indexed_part_select(
+    const class verilog_indexed_part_select_plus_or_minus_exprt &,
+    unsigned precedence);
 
 protected:
   const namespacet &ns;

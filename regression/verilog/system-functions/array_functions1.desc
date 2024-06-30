@@ -1,21 +1,21 @@
 CORE
 array_functions1.sv
 --module main --bound 0
-^\[main\.pP0\] always 32 == 32 && 1 == 1: PROVED up to bound 0$
-^\[main\.pP1\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
-^\[main\.pP2\] always 1 == 1 && 32 == 32: PROVED up to bound 0$
-^\[main\.pP3\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
-^\[main\.pP4\] always 1 == 1: PROVED up to bound 0$
-^\[main\.pP5\] always -1 == -1: PROVED up to bound 0$
-^\[main\.pU0\] always 32 == 32 && 1 == 1: PROVED up to bound 0$
-^\[main\.pU1\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
-^\[main\.pU2\] always 31 == 31 && 0 == 0: PROVED up to bound 0$
-^\[main\.pU3\] always 1 == 1 && 32 == 32: PROVED up to bound 0$
-^\[main\.pU4\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
-^\[main\.pU5\] always 0 == 0 && 31 == 31: PROVED up to bound 0$
-^\[main\.pU6\] always 1 == 1: PROVED up to bound 0$
-^\[main\.pU7\] always -1 == -1: PROVED up to bound 0$
-^\[main\.pU8\] always 1 == 1: PROVED up to bound 0$
+^\[main\.pP0\] always \$left\(main\.packed1\) == 32 && \$right\(main\.packed1\) == 1: PROVED up to bound 0$
+^\[main\.pP1\] always \$left\(main\.packed2\) == 0 && \$right\(main\.packed2\) == 31: PROVED up to bound 0$
+^\[main\.pP2\] always \$low\(main\.packed1\) == 1 && \$high\(main\.packed1\) == 32: PROVED up to bound 0$
+^\[main\.pP3\] always \$low\(main\.packed2\) == 0 && \$high\(main\.packed2\) == 31: PROVED up to bound 0$
+^\[main\.pP4\] always \$increment\(main\.packed1\) == 1: PROVED up to bound 0$
+^\[main\.pP5\] always \$increment\(main\.packed2\) == -1: PROVED up to bound 0$
+^\[main\.pU0\] always \$left\(main\.unpacked1\) == 32 && \$right\(main\.unpacked1\) == 1: PROVED up to bound 0$
+^\[main\.pU1\] always \$left\(main\.unpacked2\) == 0 && \$right\(main\.unpacked2\) == 31: PROVED up to bound 0$
+^\[main\.pU2\] always \$left\(main\.unpacked3\) == 31 && \$right\(main\.unpacked3\) == 0: PROVED up to bound 0$
+^\[main\.pU3\] always \$low\(main\.unpacked1\) == 1 && \$high\(main\.unpacked1\) == 32: PROVED up to bound 0$
+^\[main\.pU4\] always \$low\(main\.unpacked2\) == 0 && \$high\(main\.unpacked2\) == 31: PROVED up to bound 0$
+^\[main\.pU5\] always \$low\(main\.unpacked3\) == 0 && \$high\(main\.unpacked3\) == 31: PROVED up to bound 0$
+^\[main\.pU6\] always \$increment\(main\.unpacked1\) == 1: PROVED up to bound 0$
+^\[main\.pU7\] always \$increment\(main\.unpacked2\) == -1: PROVED up to bound 0$
+^\[main\.pU8\] always \$increment\(main\.unpacked3\) == 1: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --

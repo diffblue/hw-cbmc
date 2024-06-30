@@ -1,7 +1,7 @@
 CORE
 structs1.sv
 --bound 0
-^\[main\.p0\] always 9 == 9: PROVED up to bound 0$
+^\[main\.p0\] always \$bits\(main\.s\) == 9: PROVED up to bound 0$
 ^\[main\.p1\] always main\.s\.field1 == 1: PROVED up to bound 0$
 ^\[main\.p2\] always main\.s\.field2 == 0: PROVED up to bound 0$
 ^\[main\.p3\] always main\.s\.field3 == 115: PROVED up to bound 0$
