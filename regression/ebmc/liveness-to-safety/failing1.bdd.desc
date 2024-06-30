@@ -1,0 +1,7 @@
+CORE
+failing1.sv
+--bdd --liveness-to-safety
+^EXIT=10$
+^SIGNAL=0$
+^\[main\.p0\] always s_eventually main\.my_bit: REFUTED$
+--
