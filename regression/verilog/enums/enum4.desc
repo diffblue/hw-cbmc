@@ -3,5 +3,5 @@ enum4.sv
 --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.p1\] always main.A == main.A: PROVED up to bound 0$
+^\[main\.p1\] always main\.A == 1: PROVED up to bound 0$
 --

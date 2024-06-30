@@ -2271,6 +2271,39 @@ void verilog_synthesist::synth_assert_assume_cover(
   // but this is to be checked.
   // Arguments to procedural concurrent assertions are complex
   // (1800-2017 16.14.6.1)
+  {
+    exprt cond_for_comment = statement.condition();
+
+    // Are we in an initial or always block?
+    if(construct != constructt::INITIAL)
+    {
+      // one of the 'always' variants -- assertions and assumptions have an implicit 'always'
+      if(
+        statement.id() != ID_verilog_cover_property &&
+        statement.id() != ID_verilog_immediate_cover)
+      {
+        if(cond_for_comment.id() != ID_sva_always)
+          cond_for_comment = sva_always_exprt(cond_for_comment);
+      }
+    }
+
+    // mark 'assume' and 'cover' properties as such
+    if(
+      statement.id() == ID_verilog_assume_property ||
+      statement.id() == ID_verilog_immediate_assume ||
+      statement.id() == ID_verilog_smv_assume)
+    {
+      cond_for_comment = sva_assume_exprt(cond_for_comment);
+    }
+    else if(statement.id() == ID_verilog_cover_property)
+    {
+      // 'cover' properties are existential
+      cond_for_comment = sva_cover_exprt(cond_for_comment);
+    }
+
+    symbol.location.set_comment(to_string(cond_for_comment));
+  }
+
   exprt cond;
 
   // Are we in an initial or always block?
@@ -2323,8 +2356,6 @@ void verilog_synthesist::synth_assert_assume_cover(
     cond = sva_cover_exprt(cond);
   }
 
-  symbol.location.set_comment(to_string(cond));
-
   symbol.value = std::move(cond);
 }
 
@@ -2346,6 +2377,27 @@ void verilog_synthesist::synth_assert_assume_cover(
   // These are static concurrent assert/cover module items.
   const irep_idt &identifier = module_item.identifier();
   symbolt &symbol=symbol_table_lookup(identifier);
+
+  {
+    exprt cond_for_comment = module_item.condition();
+
+    if(
+      module_item.id() == ID_verilog_assert_property ||
+      module_item.id() == ID_verilog_assume_property)
+    {
+      // Concurrent assertions and assumptions come with an implicit 'always'
+      // (1800-2017 Sec 16.12.11).
+      if(cond_for_comment.id() != ID_sva_always)
+        cond_for_comment = sva_always_exprt{cond_for_comment};
+    }
+    else if(module_item.id() == ID_verilog_cover_property)
+    {
+      // 'cover' requirements are existential.
+      cond_for_comment = sva_cover_exprt{cond_for_comment};
+    }
+
+    symbol.location.set_comment(to_string(cond_for_comment));
+  }
 
   construct=constructt::OTHER;
 
@@ -2375,8 +2427,6 @@ void verilog_synthesist::synth_assert_assume_cover(
   }
   else
     PRECONDITION(false);
-
-  symbol.location.set_comment(to_string(cond));
 
   symbol.value = std::move(cond);
 }
