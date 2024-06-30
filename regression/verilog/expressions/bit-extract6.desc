@@ -1,0 +1,9 @@
+CORE
+bit-extract6.sv
+--module main --bound 0
+^\[main\.p0\] always \(main\.index == 8 |-> main\.vector\[7 - main\.index - 1\] == 1\): PROVED up to bound 0$
+^\[main\.p1\] always \(main\.index >= 1 \&\& main\.index <= 7 |-> main\.vector\[7 - main\.index - 1\] == 0\): PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
