@@ -1,7 +1,7 @@
 CORE
 initial2.sv
 --module main --bound 1
-^\[main\.assert\.1\] 1 == 1: PROVED up to bound 1
+^\[main\.assert\.1\] main\.counter == 1: PROVED up to bound 1
 ^\[main\.assert\.2\] main\.counter == 2: PROVED up to bound 1
 ^EXIT=0$
 ^SIGNAL=0$

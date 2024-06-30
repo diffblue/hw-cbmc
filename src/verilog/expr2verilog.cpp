@@ -667,6 +667,81 @@ std::string expr2verilogt::convert_index(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_non_indexed_part_select
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_non_indexed_part_select(
+  const verilog_non_indexed_part_select_exprt &src,
+  unsigned precedence)
+{
+  unsigned p;
+  std::string op = convert(src.src(), p);
+
+  std::string dest;
+  if(precedence > p)
+    dest += '(';
+  dest += op;
+  if(precedence > p)
+    dest += ')';
+
+  dest += '[';
+  dest += convert(src.msb());
+  dest += ':';
+  dest += convert(src.lsb());
+  dest += ']';
+
+  return dest;
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_indexed_part_select
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_indexed_part_select(
+  const verilog_indexed_part_select_plus_or_minus_exprt &src,
+  unsigned precedence)
+{
+  unsigned p;
+  std::string op = convert(src.src(), p);
+
+  std::string dest;
+  if(precedence > p)
+    dest += '(';
+  dest += op;
+  if(precedence > p)
+    dest += ')';
+
+  dest += '[';
+  dest += convert(src.index());
+
+  if(src.id() == ID_verilog_indexed_part_select_plus)
+    dest += '+';
+  else
+    dest += '-';
+
+  dest += convert(src.width());
+  dest += ']';
+
+  return dest;
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_extractbit
 
   Inputs:
@@ -859,6 +934,26 @@ std::string expr2verilogt::convert_next_symbol(
   unsigned &precedence)
 {
   return "next("+convert_symbol(src, precedence)+")";
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_hierarchical_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string expr2verilogt::convert_hierarchical_identifier(
+  const hierarchical_identifier_exprt &src,
+  unsigned &precedence)
+{
+  precedence = 22;
+  return convert(src.module()) + '.' + src.item().get_string(ID_base_name);
 }
 
 /*******************************************************************\
@@ -1061,6 +1156,18 @@ std::string expr2verilogt::convert(
   else if(src.id()==ID_index)
     return convert_index(to_index_expr(src), precedence=18);
 
+  else if(
+    src.id() == ID_verilog_indexed_part_select_plus ||
+    src.id() == ID_verilog_indexed_part_select_minus)
+  {
+    return convert_indexed_part_select(
+      to_verilog_indexed_part_select_plus_or_minus_expr(src), precedence = 18);
+  }
+
+  else if(src.id() == ID_verilog_non_indexed_part_select)
+    return convert_non_indexed_part_select(
+      to_verilog_non_indexed_part_select_expr(src), precedence = 18);
+
   else if(src.id()==ID_extractbit)
     return convert_extractbit(to_extractbit_expr(src), precedence=18);
 
@@ -1170,6 +1277,10 @@ std::string expr2verilogt::convert(
 
   else if(src.id()==ID_next_symbol)
     return convert_next_symbol(src, precedence);
+
+  else if(src.id() == ID_hierarchical_identifier)
+    return convert_hierarchical_identifier(
+      to_hierarchical_identifier_expr(src), precedence);
 
   else if(src.id()==ID_constant)
     return convert_constant(to_constant_expr(src), precedence);

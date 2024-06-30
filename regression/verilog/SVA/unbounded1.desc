@@ -1,7 +1,7 @@
 CORE
 unbounded1.sv
 --module main --bound 1
-^\[main\.assert\.1\] always \(main\.a ##\[0:\$\] main.b\): REFUTED$
+^\[main\.assert\.1\] always \(main\.a ##\[0:main\.upper\] main.b\): REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --
