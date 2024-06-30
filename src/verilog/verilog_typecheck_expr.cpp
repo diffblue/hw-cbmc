@@ -318,6 +318,20 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
   {
     return convert_expr_function_call(to_function_call_expr(expr));
   }
+  else if(expr.id() == ID_verilog_assignment_pattern)
+  {
+    // multi-ary -- may become a struct or array, depending
+    // on context.
+    for(auto &op : expr.operands())
+      convert_expr(op);
+
+    // Typechecking can only be completed once we know the type
+    // from the usage context. We record "verilog_assignment_pattern"
+    // to signal that.
+    expr.type() = typet(ID_verilog_assignment_pattern);
+
+    return expr;
+  }
   else
   {
     std::size_t no_op;
@@ -1812,6 +1826,64 @@ void verilog_typecheck_exprt::implicit_typecast(
     {
       expr = typecast_exprt{expr, dest_type};
       return;
+    }
+  }
+  else if(src_type.id() == ID_verilog_assignment_pattern)
+  {
+    DATA_INVARIANT(
+      expr.id() == ID_verilog_assignment_pattern,
+      "verilog_assignment_pattern expression expected");
+    if(dest_type.id() == ID_struct)
+    {
+      auto &struct_type = to_struct_type(dest_type);
+      auto &components = struct_type.components();
+
+      if(expr.operands().size() != components.size())
+      {
+        throw errort().with_location(expr.source_location())
+          << "number of expressions does not match number of struct members";
+      }
+
+      for(std::size_t i = 0; i < components.size(); i++)
+      {
+        // rec. call
+        implicit_typecast(expr.operands()[i], components[i].type());
+      }
+
+      // turn into struct expression
+      expr.id(ID_struct);
+      expr.type() = dest_type;
+      return;
+    }
+    else if(dest_type.id() == ID_array)
+    {
+      auto &array_type = to_array_type(dest_type);
+      auto &element_type = array_type.element_type();
+      auto array_size =
+        numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+
+      if(array_size != expr.operands().size())
+      {
+        throw errort().with_location(expr.source_location())
+          << "number of expressions does not match number of array elements";
+      }
+
+      for(std::size_t i = 0; i < array_size; i++)
+      {
+        // rec. call
+        implicit_typecast(expr.operands()[i], element_type);
+      }
+
+      // turn into array expression
+      expr.id(ID_array);
+      expr.type() = dest_type;
+      return;
+    }
+    else
+    {
+      throw errort().with_location(expr.source_location())
+        << "cannot convert assignment pattern to '" << to_string(dest_type)
+        << '\'';
     }
   }
 
