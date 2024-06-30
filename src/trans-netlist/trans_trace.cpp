@@ -647,7 +647,7 @@ static std::string vcd_suffix(
     left_bound = offset;
     right_bound = left_bound+width-1;
 
-    if(type.get_bool(ID_C_little_endian))
+    if(!type.get_bool(ID_C_big_endian))
       std::swap(left_bound, right_bound);
     
     return "["+integer2string(left_bound)+":"+integer2string(right_bound)+"]";

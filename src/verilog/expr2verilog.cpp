@@ -1361,7 +1361,7 @@ std::string expr2verilogt::convert(const typet &type)
   else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
   {
     unsigned width=to_bitvector_type(type).get_width();
-    bool little_endian=type.get_bool(ID_C_little_endian);
+    bool big_endian = type.get_bool(ID_C_big_endian);
     unsigned offset=atoi(type.get(ID_C_offset).c_str());
 
     if(width!=0)
@@ -1373,18 +1373,18 @@ std::string expr2verilogt::convert(const typet &type)
         dest="signed ";
 
       dest+='[';
-      
-      if(little_endian)
+
+      if(big_endian)
       {
-        dest+=std::to_string(offset+width-1);
-        dest+=":";
         dest+=std::to_string(offset);
+        dest += ":";
+        dest += std::to_string(offset + width - 1);
       }
       else
       {
-        dest+=std::to_string(offset);
-        dest+=":";
         dest+=std::to_string(offset+width-1);
+        dest += ":";
+        dest += std::to_string(offset);
       }
 
       dest+="]";
