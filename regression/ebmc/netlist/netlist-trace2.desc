@@ -1,0 +1,5 @@
+CORE
+netlist-trace2.sv
+--bound 0 --numbered-trace --aig
+^EXIT=10$
+^SIGNAL=0$
