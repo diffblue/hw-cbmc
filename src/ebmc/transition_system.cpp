@@ -25,6 +25,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_error.h"
 #include "ebmc_version.h"
+#include "output_file.h"
 
 #include <fstream>
 #include <iostream>
@@ -273,27 +274,15 @@ int get_transition_system(
   if(cmdline.isset("modules-xml"))
   {
     auto filename = cmdline.get_value("modules-xml");
-    std::ofstream out(widen_if_needed(filename));
-    if(!out)
-      throw ebmc_errort() << "failed to open " << filename;
-    show_modules_xml(transition_system.symbol_table, out);
+    auto outfile = output_filet{filename};
+    show_modules_xml(transition_system.symbol_table, outfile.stream());
     return 0;
   }
 
   if(cmdline.isset("json-modules"))
   {
-    auto file_name = cmdline.get_value("json-modules");
-    if(file_name == "-")
-    {
-      json_modules(transition_system.symbol_table, std::cout);
-    }
-    else
-    {
-      std::ofstream out(widen_if_needed(file_name));
-      if(!out)
-        throw ebmc_errort() << "failed to open " << file_name;
-      json_modules(transition_system.symbol_table, out);
-    }
+    auto out_file = output_filet{cmdline.get_value("json-modules")};
+    json_modules(transition_system.symbol_table, out_file.stream());
     return 0;
   }
 

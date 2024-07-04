@@ -9,8 +9,9 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef EBMC_ERROR_H
 #define EBMC_ERROR_H
 
+#include <util/source_location.h>
+
 #include <sstream>
-#include <string>
 
 class ebmc_errort
 {

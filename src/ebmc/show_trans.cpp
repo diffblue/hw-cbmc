@@ -8,15 +8,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "show_trans.h"
 
-#include <util/unicode.h>
-
 #include <verilog/expr2verilog.h>
 
 #include "ebmc_base.h"
 #include "ebmc_version.h"
+#include "output_file.h"
 #include "output_verilog.h"
 
-#include <fstream>
 #include <iostream>
 
 /*******************************************************************\
@@ -268,17 +266,8 @@ int show_transt::show_trans_verilog_rtl()
   if(cmdline.isset("outfile"))
   {
     const std::string filename=cmdline.get_value("outfile");
-    std::ofstream out(widen_if_needed(filename));
-
-    if(!out)
-    {
-      std::cerr << "Failed to open `"
-                << filename
-                << "'" << '\n';
-      return 1;
-    }
-
-    show_trans_verilog_rtl(out);
+    auto outfile = output_filet{filename};
+    show_trans_verilog_rtl(outfile.stream());
   }
   else
     show_trans_verilog_rtl(std::cout);
@@ -306,17 +295,8 @@ int show_transt::show_trans_verilog_netlist()
   if(cmdline.isset("outfile"))
   {
     const std::string filename=cmdline.get_value("outfile");
-    std::ofstream out(widen_if_needed(filename));
-
-    if(!out)
-    {
-      std::cerr << "Failed to open `"
-                << filename
-                << "'" << '\n';
-      return 1;
-    }
-
-    show_trans_verilog_netlist(out);
+    auto outfile = output_filet{filename};
+    show_trans_verilog_netlist(outfile.stream());
   }
   else
     show_trans_verilog_netlist(std::cout);

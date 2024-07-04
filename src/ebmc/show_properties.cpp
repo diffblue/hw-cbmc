@@ -8,12 +8,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/json.h>
 #include <util/json_irep.h>
-#include <util/unicode.h>
 #include <util/xml.h>
 #include <util/xml_irep.h>
 
 #include "ebmc_base.h"
 #include "ebmc_error.h"
+#include "output_file.h"
 
 #include <iostream>
 
@@ -97,16 +97,6 @@ void ebmc_baset::json_properties(const std::string &file_name)
     json.push_back(std::move(json_property));
   }
 
-  if(file_name == "-")
-  {
-    std::cout << json;
-  }
-  else
-  {
-    std::ofstream out(widen_if_needed(file_name));
-    if(!out)
-      throw ebmc_errort() << "failed to open " << file_name;
-
-    out << json;
-  }
+  auto outfile = output_filet{file_name};
+  outfile.stream() << json;
 }

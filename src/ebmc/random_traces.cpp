@@ -22,6 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ebmc_base.h"
 #include "ebmc_error.h"
+#include "output_file.h"
 #include "waveform.h"
 
 #include <algorithm>
@@ -182,15 +183,12 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
     {
       PRECONDITION(outfile_prefix.has_value());
       auto filename = outfile_prefix.value() + std::to_string(trace_nr + 1);
-      std::ofstream out(widen_if_needed(filename));
+      auto outfile = output_filet{filename};
 
-      if(!out)
-        throw ebmc_errort() << "failed to write trace to " << filename;
-
-      consolet::out() << "*** Writing " << filename << '\n';
+      consolet::out() << "*** Writing " << outfile.name() << '\n';
 
       messaget message(message_handler);
-      show_trans_trace_vcd(trace, message, ns, out);
+      show_trans_trace_vcd(trace, message, ns, outfile.stream());
     }
     else if(cmdline.isset("waveform"))
     {
@@ -294,23 +292,13 @@ int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
     else if(cmdline.isset("vcd"))
     {
       auto filename = cmdline.get_value("vcd");
-      messaget message(message_handler);
+      auto outfile = output_filet{filename};
 
-      if(filename == "-")
-      {
-        show_trans_trace_vcd(trace, message, ns, std::cout);
-      }
-      else
-      {
-        std::ofstream out(widen_if_needed(filename));
-
-        if(!out)
-          throw ebmc_errort() << "failed to write trace to " << filename;
-
+      if(filename != "-")
         consolet::out() << "*** Writing " << filename << '\n';
 
-        show_trans_trace_vcd(trace, message, ns, out);
-      }
+      messaget message(message_handler);
+      show_trans_trace_vcd(trace, message, ns, outfile.stream());
     }
     else // default
     {
@@ -352,13 +340,9 @@ void random_traces(
   auto consumer = [&, trace_nr = 0ull](trans_tracet trace) mutable -> void {
     namespacet ns(transition_system.symbol_table);
     auto filename = outfile_prefix + std::to_string(trace_nr + 1);
-    std::ofstream out(widen_if_needed(filename));
-
-    if(!out)
-      throw ebmc_errort() << "failed to write trace to " << filename;
-
+    auto outfile = output_filet{filename};
     messaget message(message_handler);
-    show_trans_trace_vcd(trace, message, ns, out);
+    show_trans_trace_vcd(trace, message, ns, outfile.stream());
 
     trace_nr++;
   };
