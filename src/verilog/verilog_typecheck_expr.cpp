@@ -1635,26 +1635,46 @@ bool verilog_typecheck_exprt::is_constant_expression(
   exprt tmp(expr);
 
   convert_expr(tmp);
-  ns.follow_macros(tmp);
 
-  simplify(tmp, ns);
+  auto integer_opt = is_constant_integer_post_convert(tmp);
+  if(integer_opt.has_value())
+  {
+    value = integer_opt.value();
+    return true;
+  }
+  else
+    return false;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::is_constant_integer_post_convert
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<mp_integer>
+verilog_typecheck_exprt::is_constant_integer_post_convert(const exprt &expr)
+{
+  exprt tmp = expr;
+
+  ns.follow_macros(tmp);
+  tmp = simplify_expr(tmp, ns);
+
+  if(!tmp.is_constant())
+    return {};
 
   if(tmp.is_true())
-  {
-    value=1;
-    return true;
-  }
+    return 1;
   else if(tmp.is_false())
-  {
-    value=0;
-    return true;
-  }
-  else if(!to_integer_non_constant(tmp, value))
-  {
-    return true;
-  }
-
-  return false;
+    return 0;
+  else
+    return numeric_cast<mp_integer>(to_constant_expr(tmp));
 }
 
 /*******************************************************************\
@@ -2189,8 +2209,9 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
   // Verilog's bit select expression may map onto an extractbit
   // or an array index expression, depending on the type of the first
   // operand.
-  exprt &op0 = expr.op0();
+  exprt &op0 = expr.op0(), &op1 = expr.op1();
   convert_expr(op0);
+  convert_expr(op1);
 
   if(op0.type().id() == ID_verilog_real)
   {
@@ -2198,28 +2219,16 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
       << "bit-select of real is not allowed";
   }
 
-  if(op0.type().id()==ID_array)
+  if(op1.type().id() == ID_verilog_real)
   {
-    exprt &op1 = expr.op1();
-    convert_expr(op1);
-    if(op1.type().id() == ID_verilog_real)
-    {
-      throw errort().with_location(op1.source_location())
-        << "real number index is not allowed";
-    }
+    throw errort().with_location(op1.source_location())
+      << "real number index is not allowed";
+  }
 
+  if(op0.type().id() == ID_array)
+  {
     typet _index_type = index_type(to_array_type(op0.type()));
-
-    if(_index_type!=op1.type())
-    {
-      mp_integer i;
-      if(!to_integer_non_constant(op1, i))
-        op1=from_integer(i, _index_type);
-      else if(op1.is_true() || op1.is_false())
-        op1=from_integer(op1.is_true()?1:0, _index_type);
-      else
-        op1 = typecast_exprt{op1, _index_type};
-    }
+    op1 = typecast_exprt{op1, _index_type};
 
     expr.type() = to_array_type(op0.type()).element_type();
     expr.id(ID_index);
@@ -2227,27 +2236,38 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
   else
   {
     auto width = get_width(op0.type());
-    auto offset = atoi(op0.type().get(ID_C_offset).c_str());
+    auto offset = op0.type().get_int(ID_C_offset);
 
-    mp_integer op1;
+    auto op1_opt = is_constant_integer_post_convert(op1);
 
-    if(is_constant_expression(expr.op1(), op1))
+    if(op1_opt.has_value()) // constant index
     {
       // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
       // x for 4-state and 0 for 2-state values.
-      if(op1 < offset || op1 >= width + offset)
+      auto op1_int = op1_opt.value();
+
+      if(op1_int < offset || op1_int >= width + offset)
         return false_exprt().with_source_location(expr);
 
-      op1 -= offset;
-      expr.op1() = from_integer(op1, natural_typet());
+      op1_int -= offset;
+
+      if(op0.type().get_bool(ID_C_big_endian))
+        op1_int = width - op1_int - 1;
+
+      expr.op1() = from_integer(op1_int, natural_typet());
     }
-    else
+    else // non-constant index
     {
-      convert_expr(expr.op1());
-      if(expr.op1().type().id() == ID_verilog_real)
+      if(offset != 0)
       {
-        throw errort().with_location(expr.op1().source_location())
-          << "real number index is not allowed";
+        expr.op1() =
+          minus_exprt{expr.op1(), from_integer(offset, expr.op1().type())};
+      }
+
+      if(op0.type().get_bool(ID_C_big_endian))
+      {
+        expr.op1() =
+          minus_exprt{from_integer(width - 1, expr.op1().type()), expr.op1()};
       }
     }
 
