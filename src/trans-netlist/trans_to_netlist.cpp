@@ -59,6 +59,8 @@ protected:
   netlistt &dest;
   
   literalt new_input();
+  std::size_t input_counter = 0;
+  irep_idt mode;
 
   class rhs_entryt
   {
@@ -159,13 +161,11 @@ Function: convert_trans_to_netlistt::new_input
 
 literalt convert_trans_to_netlistt::new_input()
 {
-  irep_idt id="convert::input";
+  irep_idt id = "convert::input" + std::to_string(input_counter++);
 
   if(symbol_table.symbols.find(id)==symbol_table.symbols.end())
   {
-    symbolt symbol;
-    symbol.name=id;
-    symbol.type=bool_typet();
+    symbolt symbol{id, bool_typet(), mode};
     symbol.is_input=true;
     symbol.base_name="input";
     symbol_table.add(symbol);
@@ -286,6 +286,7 @@ void convert_trans_to_netlistt::operator()(
 
   const symbolt &module_symbol=ns.lookup(module);
   const transt &trans=to_trans_expr(module_symbol.value);
+  mode = module_symbol.mode;
 
   // build the net-list
   aig_prop_constraintt aig_prop(dest, get_message_handler());
