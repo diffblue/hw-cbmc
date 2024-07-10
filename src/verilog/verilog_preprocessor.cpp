@@ -161,6 +161,8 @@ Function: verilog_preprocessort::preprocessor
 
 void verilog_preprocessort::preprocessor()
 {
+  bool error_found = false;
+
   try
   {
     // the first context is the input file
@@ -182,7 +184,18 @@ void verilog_preprocessort::preprocessor()
         // Read a token.
         auto token = tokenizer().next_token();
         if(token == '`')
-          directive();
+        {
+          try
+          {
+            directive();
+          }
+          catch(const verilog_preprocessor_errort &e)
+          {
+            error().source_location = context().make_source_location();
+            error() << e.what() << eom;
+            error_found = true;
+          }
+        }
         else if(condition)
         {
           auto a_it = context().define_arguments.find(token.text);
@@ -217,8 +230,11 @@ void verilog_preprocessort::preprocessor()
     if(!context_stack.empty())
       error().source_location = context().make_source_location();
     error() << e.what() << eom;
-    throw 0;
+    error_found = true;
   }
+
+  if(error_found)
+    throw 0;
 }
 
 /*******************************************************************\
