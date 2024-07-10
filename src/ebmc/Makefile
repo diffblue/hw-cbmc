@@ -20,6 +20,7 @@ SRC = \
       live_signal.cpp \
       main.cpp \
       neural_liveness.cpp \
+      output_file.cpp \
       output_verilog.cpp \
       random_traces.cpp \
       ranking_function.cpp \

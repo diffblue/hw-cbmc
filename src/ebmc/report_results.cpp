@@ -12,13 +12,12 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "report_results.h"
 
 #include <util/json.h>
-#include <util/unicode.h>
 #include <util/xml.h>
 
 #include "ebmc_error.h"
+#include "output_file.h"
 #include "waveform.h"
 
-#include <fstream>
 #include <iostream>
 
 /*******************************************************************\
@@ -42,9 +41,7 @@ void report_results(
   if(cmdline.isset("json-result"))
   {
     auto filename = cmdline.get_value("json-result");
-    std::ofstream out(widen_if_needed(filename));
-    if(!out)
-      throw ebmc_errort() << "failed to open " << filename;
+    auto outfile = output_filet{filename};
 
     json_objectt json_results;
     auto &json_properties = json_results["properties"].make_array();
@@ -65,7 +62,7 @@ void report_results(
       json_properties.push_back(std::move(json_property));
     }
 
-    out << json_results;
+    outfile.stream() << json_results;
   }
 
   if(
@@ -167,10 +164,11 @@ void report_results(
       if(property.has_witness_trace())
       {
         std::string vcdfile = cmdline.get_value("vcd");
-        std::ofstream vcd(widen_if_needed(vcdfile));
+        auto outfile = output_filet{vcdfile};
 
         messaget message(message_handler);
-        show_trans_trace_vcd(property.witness_trace.value(), message, ns, vcd);
+        show_trans_trace_vcd(
+          property.witness_trace.value(), message, ns, outfile.stream());
 
         break;
       }

@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/expr_util.h>
 #include <util/string2int.h>
-#include <util/unicode.h>
 
 #include <solvers/prop/literal_expr.h>
 #include <solvers/sat/satcheck.h>
@@ -29,10 +28,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "ebmc_version.h"
+#include "output_file.h"
 #include "report_results.h"
 
 #include <chrono>
-#include <fstream>
 #include <iostream>
 
 /*******************************************************************\
@@ -277,20 +276,13 @@ int ebmc_baset::do_bit_level_bmc()
   {
     if(cmdline.isset("outfile"))
     {
-      const std::string filename = cmdline.get_value("outfile");
-      std::ofstream out(widen_if_needed(filename));
+      auto outfile = output_filet{cmdline.get_value("outfile")};
 
-      if(!out)
-      {
-        message.error() << "Failed to open `" << filename << "'"
-                        << messaget::eom;
-        return 1;
-      }
-
-      message.status() << "Writing DIMACS CNF to `" << filename << "'"
+      message.status() << "Writing DIMACS CNF to `" << outfile.name() << "'"
                        << messaget::eom;
 
-      dimacs_cnf_writert dimacs_cnf_writer{out, message.get_message_handler()};
+      dimacs_cnf_writert dimacs_cnf_writer{
+        outfile.stream(), message.get_message_handler()};
 
       return do_bit_level_bmc(dimacs_cnf_writer, true);
     }

@@ -13,7 +13,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/string2int.h>
 #include <util/tempdir.h>
 #include <util/tempfile.h>
-#include <util/unicode.h>
 
 #include <temporal-logic/temporal_expr.h>
 #include <verilog/sva_expr.h>
@@ -21,6 +20,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "live_signal.h"
+#include "output_file.h"
 #include "random_traces.h"
 #include "ranking_function.h"
 #include "report_results.h"
@@ -199,13 +199,10 @@ neural_livenesst::dump_vcd_files(temp_dirt &temp_dir)
     [&, trace_nr = 0ull, outfile_prefix](trans_tracet trace) mutable -> void {
       namespacet ns(transition_system.symbol_table);
       auto filename = outfile_prefix + std::to_string(trace_nr + 1);
-      std::ofstream out(widen_if_needed(filename));
-
-      if(!out)
-        throw ebmc_errort() << "failed to write trace to " << filename;
-
-      message.progress() << "*** Writing " << filename << messaget::eom;
-      show_trans_trace_vcd(trace, message, ns, out);
+      auto outfile = output_filet{filename};
+      message.progress() << "*** Writing to " << outfile.name()
+                         << messaget::eom;
+      show_trans_trace_vcd(trace, message, ns, outfile.stream());
     };
 }
 
