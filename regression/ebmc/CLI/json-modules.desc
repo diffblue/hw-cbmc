@@ -1,0 +1,29 @@
+CORE
+json-modules.v
+--json-modules -
+activate-multi-line-match
+\[
+  \{
+    "identifier": "Verilog::foo",
+    "location": \{
+      "file": "json-modules\.v",
+      "line": "1",
+      "workingDirectory": ".*"
+    \},
+    "mode": "Verilog",
+    "name": "foo"
+  \},
+  \{
+    "identifier": "Verilog::bar",
+    "location": \{
+      "file": "json-modules.v",
+      "line": "4",
+      "workingDirectory": ".*"
+    \},
+    "mode": "Verilog",
+    "name": "bar"
+  \}
+\]
+^EXIT=0$
+^SIGNAL=0$
+--
