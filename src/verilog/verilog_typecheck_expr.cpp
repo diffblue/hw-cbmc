@@ -2404,9 +2404,46 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(
+    expr.id() == ID_verilog_logical_equality ||
+    expr.id() == ID_verilog_logical_inequality)
+  {
+    // == and !=
+    Forall_operands(it, expr)
+      convert_expr(*it);
+
+    tc_binary_expr(expr);
+
+    // This returns 'x' if either of the operands contains x or z.
+    if(
+      expr.lhs().type().id() == ID_verilog_signedbv ||
+      expr.lhs().type().id() == ID_verilog_unsignedbv ||
+      expr.rhs().type().id() == ID_verilog_signedbv ||
+      expr.rhs().type().id() == ID_verilog_unsignedbv)
+    {
+      // Four-valued case. The ID stays
+      // ID_verilog_logical_equality or
+      // ID_verilog_logical_inequality.
+      expr.type() = verilog_unsignedbv_typet(1);
+    }
+    else
+    {
+      // On two-valued logic, it's the same as proper equality.
+      expr.type() = bool_typet();
+      if(expr.id() == ID_verilog_logical_equality)
+        expr.id(ID_equal);
+      else
+        expr.id(ID_notequal);
+    }
+
+    return std::move(expr);
+  }
   else if(expr.id()==ID_verilog_case_equality ||
           expr.id()==ID_verilog_case_inequality)
   {
+    // === and !==
+    // The result is always Boolean, and semantically
+    // a proper equality is performed.
     expr.type()=bool_typet();
 
     Forall_operands(it, expr)
