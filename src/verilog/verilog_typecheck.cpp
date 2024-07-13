@@ -1577,6 +1577,12 @@ void verilog_typecheckt::convert_module_item(
     convert_assert_assume_cover(
       to_verilog_assert_assume_cover_module_item(module_item));
   }
+  else if(module_item.id() == ID_verilog_assertion_item)
+  {
+    // an assertion statement that's at the item level
+    convert_assert_assume_cover(
+      to_verilog_assertion_item(module_item).statement());
+  }
   else if(module_item.id()==ID_initial)
     convert_initial(to_verilog_initial(module_item));
   else if(module_item.id()==ID_continuous_assign)

@@ -3099,6 +3099,21 @@ statement_brace:
 
 assertion_item:
 	  concurrent_assertion_item
+	| deferred_immediate_assertion_item
+	;
+
+deferred_immediate_assertion_item:
+	  deferred_immediate_assertion_statement
+		{ /* wrap the statement into an item */
+		  init($$, ID_verilog_assertion_item);
+		  mto($$, $1);
+		}
+	| block_identifier TOK_COLON deferred_immediate_assertion_statement
+		{ /* wrap the statement into an item */
+		  stack_expr($3).set(ID_identifier, stack_expr($1).id());
+		  init($$, ID_verilog_assertion_item);
+		  mto($$, $3);
+		}
 	;
 
 procedural_assertion_statement:
@@ -3110,6 +3125,7 @@ procedural_assertion_statement:
 
 immediate_assertion_statement:
 	  simple_immediate_assertion_statement
+	| deferred_immediate_assertion_statement
 	;
 
 simple_immediate_assertion_statement:
@@ -3128,6 +3144,27 @@ simple_immediate_assume_statement: TOK_ASSUME '(' expression ')' action_block
 
 simple_immediate_cover_statement: TOK_COVER '(' expression ')' action_block
 		{ init($$, ID_verilog_immediate_cover); mto($$, $3); mto($$, $5); }
+	;
+
+deferred_immediate_assertion_statement:
+	  deferred_immediate_assert_statement
+	| deferred_immediate_assume_statement
+	| deferred_immediate_cover_statement
+	;
+
+deferred_immediate_assert_statement:
+	  TOK_ASSERT TOK_FINAL '(' expression ')' action_block
+		{ init($$, ID_verilog_immediate_assert); mto($$, $4); mto($$, $6); }
+	;
+
+deferred_immediate_assume_statement:
+	  TOK_ASSUME TOK_FINAL '(' expression ')' action_block
+		{ init($$, ID_verilog_immediate_assume); mto($$, $4); mto($$, $6); }
+	;
+
+deferred_immediate_cover_statement:
+	  TOK_COVER TOK_FINAL '(' expression ')' statement_or_null
+		{ init($$, ID_verilog_immediate_cover); mto($$, $4); mto($$, $6); }
 	;
 
 wait_statement: TOK_WAIT '(' expression ')' statement_or_null
