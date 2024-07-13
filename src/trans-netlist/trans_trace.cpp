@@ -294,6 +294,9 @@ jsont json(const trans_tracet &trace, const namespacet &ns)
       DATA_INVARIANT(a.lhs.id() == ID_symbol, "assignment lhs must be symbol");
       const symbolt &symbol = ns.lookup(to_symbol_expr(a.lhs));
 
+      if(symbol.is_auxiliary)
+        continue; // drop
+
       std::string lhs_string = from_expr(ns, symbol.name, a.lhs);
 
       std::string value_string =
@@ -307,14 +310,20 @@ jsont json(const trans_tracet &trace, const namespacet &ns)
       json_assignment["display_name"] =
         json_stringt(id2string(symbol.display_name()));
       json_assignment["value"] = json_stringt(value_string);
-      json_assignment["type"] = json_stringt(type_string);
+      json_assignment["lhs_type"] = json_stringt(type_string);
       json_assignment["mode"] = json_stringt(id2string(symbol.mode));
+      json_assignment["state_var"] = jsont::json_boolean(symbol.is_state_var);
 
       if(a.location.is_not_nil())
         json_assignment["location"] = json(a.location);
+
+      json_assignments.push_back(std::move(json_assignment));
     }
 
     json_states.push_back(std::move(json_assignments));
+
+    if(state.property_failed)
+      break; // done
   }
 
   return std::move(json_trace);
