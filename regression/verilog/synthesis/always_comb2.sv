@@ -9,8 +9,8 @@ module main(input [7:0] data);
       decoded[i] = data == i;
   end
 
-  p0: assert property (data == 0 |-> decoded == 1);
-  p1: assert property (data == 1 |-> decoded == 2);
-  p2: assert property (data == 2 |-> decoded == 4);
+  p0: assert final (data == 0 -> decoded == 1);
+  p1: assert final (data == 1 -> decoded == 2);
+  p2: assert final (data == 2 -> decoded == 4);
 
 endmodule

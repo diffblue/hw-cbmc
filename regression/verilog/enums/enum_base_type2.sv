@@ -6,6 +6,6 @@ module main;
   parameter p = 8;
 
   // expected to pass
-  p1: assert property ($bits(A) == p);
+  p1: assert final ($bits(A) == p);
 
 endmodule

@@ -12,6 +12,6 @@ module main;
 
   wire [7:0] comp = data0 + 1;
 
-  always assert property1: data1 == comp;
+  always assert final1: data1 == comp;
 
 endmodule

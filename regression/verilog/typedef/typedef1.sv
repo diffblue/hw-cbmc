@@ -6,6 +6,6 @@ module main;
    some_word_type some_word;
    some_signed_type some_signed;
 
-   p0: assert property ($bits(some_word) == 32);
+   p0: assert final ($bits(some_word) == 32);
 
 endmodule

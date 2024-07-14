@@ -11,6 +11,6 @@ module main(input a, input b);
 
   my_add adder(a, b, result);
 
-  assert property (a+b==result);
+  assert final (a+b==result);
 
 endmodule

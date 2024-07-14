@@ -6,6 +6,6 @@ module main(input i);
   assign some_reg = i;
 
   // should pass
-  p1: assert property (some_reg == i);
+  p1: assert final (some_reg == i);
 
 endmodule
