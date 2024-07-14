@@ -62,13 +62,11 @@ jobs:
         uses: actions/cache@v4
         with:
           save-always: true
-          path: .ccache
+          path: /home/runner/.cache
           key: ${{ runner.os }}-22.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-22.04-make-gcc
-      - name: ccache environment
-        run: |
-          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
-          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: ccache path
+        run: ccache -p | grep cache_dir
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
@@ -213,10 +211,86 @@ jobs:
           asset_name: ${{ steps.create_packages.outputs.rpm_package_name }}
           asset_content_type: application/x-rpm
 
+  wasm-package:
+    name: Package wasm
+    runs-on: ubuntu-24.04
+    needs: [perform-draft-release]
+    outputs:
+      wasm_package_name: ${{ steps.create_packages.outputs.wasm_package_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -yq flex bison libxml2-utils cpanminus ccache
+      - name: Install emscripten
+        run: |
+          # The emscripten package in Ubuntu is too far behind.
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git checkout 3.1.31
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+          emcc --version
+      - name: Prepare ccache
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.cache
+          save-always: true
+          key: ${{ runner.os }}-24.04-make-emcc-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-emcc-${{ github.ref }}
+            ${{ runner.os }}-24.04-make-emcc
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: ccache path
+        run: ccache -p | grep cache_dir
+      - name: Get minisat
+        run: make -C lib/cbmc/src minisat2-download
+      - name: Build with make
+        run: |
+          source emsdk/emsdk_env.sh
+          make -C src -j4 \
+               BUILD_ENV=Unix \
+               CXX="ccache emcc -fwasm-exceptions" \
+               LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain" \
+               LINKLIB="emar rc \$@ \$^" \
+               AR="emar" \
+               EXEEXT=".html" \
+               HOSTCXX="ccache g++" \
+               HOSTLINKFLAGS=""
+      - name: print version number via node.js
+        run: node --no-experimental-fetch src/ebmc/ebmc.js --version
+      - name: Create WASM package
+        id: create_packages
+        run: |
+          (cd src/ebmc; tar cvfz ~/ebmc.tgz ebmc.js ebmc.wasm ebmc.html)
+          VERSION=$(echo ${{ github.ref }} | cut -d "/" -f 3 | cut -d "-" -f 2)
+          echo "wasm_package_path=${HOME}/ebmc.tgz" >> $GITHUB_OUTPUT
+          echo "wasm_package_name=ebmc-${VERSION}-wasm.tgz" >> $GITHUB_OUTPUT
+      - name: Print ccache stats
+        run: ccache -s
+      - name: Upload WASM
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.perform-draft-release.outputs.upload_url }}
+          asset_path: ${{ steps.create_packages.outputs.wasm_package_path }}
+          asset_name: ${{ steps.create_packages.outputs.wasm_package_name }}
+          asset_content_type: text/javascript
+
   perform-release:
     name: Perform Release
     runs-on: ubuntu-20.04
-    needs: [ubuntu-22_04-package, centos8-package, get-version-information, perform-draft-release]
+    needs: [ubuntu-22_04-package, centos8-package, wasm-package, get-version-information, perform-draft-release]
     steps:
       - name: Publish release
         env:
@@ -236,8 +310,7 @@ jobs:
 
           ## Red Hat Linux and derivates
 
-          For Red Hat, CentOS, Fedora, Amazon Linux,
-          install EBMC by downloading the *.rpm package below and then run
+          For Red Hat, CentOS, Fedora, Amazon Linux, install EBMC by downloading the *.rpm package below and then run
 
           \`\`\`sh
           rpm -i ${{ needs.centos8-package.outputs.rpm_package_name }}
