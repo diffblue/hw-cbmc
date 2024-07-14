@@ -1,5 +1,5 @@
 KNOWNBUG
-main.sv
+assignment-with-function-call1.sv
 --bound 1
 ^EXIT=0$
 ^SIGNAL=0$
