@@ -1,0 +1,15 @@
+CORE
+json1.v
+--bound 10 --json-result -
+^      "identifier": "Verilog::main\.property\.p1",$
+^      "status": "REFUTED",$
+^      "trace": \{$
+^        "states": \[ \[$
+^              "lhs": "main\.data",$
+^              "lhs_type": "\[31:0\]",$
+^              "value": "1"$
+^              "value": "2"$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
