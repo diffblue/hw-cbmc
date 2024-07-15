@@ -146,22 +146,32 @@ combine_aval_bval(const exprt &aval, const exprt &bval, const typet &dest)
 
 exprt aval_bval_conversion(const exprt &src, const typet &dest)
 {
-  PRECONDITION(is_aval_bval(src.type()));
   PRECONDITION(is_aval_bval(dest));
-
-  auto src_width = aval_bval_width(src.type());
   auto dest_width = aval_bval_width(dest);
 
-  if(src_width == dest_width)
+  if(is_aval_bval(src.type()))
   {
-    // same size
-    return typecast_exprt{src, dest};
+    auto src_width = aval_bval_width(src.type());
+
+    if(src_width == dest_width)
+    {
+      // same size
+      return typecast_exprt{src, dest};
+    }
+    else
+    {
+      auto new_aval = adjust_size(aval(src), dest_width);
+      auto new_bval = adjust_size(bval(src), dest_width);
+      return combine_aval_bval(new_aval, new_bval, dest);
+    }
   }
   else
   {
-    auto new_aval = adjust_size(aval(src), dest_width);
-    auto new_bval = adjust_size(bval(src), dest_width);
-    return combine_aval_bval(new_aval, new_bval, dest);
+    const bv_typet bv_type{dest_width};
+    auto aval =
+      typecast_exprt{typecast_exprt{src, aval_bval_underlying(dest)}, bv_type};
+    auto bval = bv_type.all_zeros_expr();
+    return combine_aval_bval(aval, bval, dest);
   }
 }
 
