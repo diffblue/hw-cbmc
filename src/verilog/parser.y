@@ -830,6 +830,7 @@ port_direction:
 
 module_common_item:
           module_or_generate_item_declaration
+        | assertion_item
         | bind_directive
 	| continuous_assign
 	| initial_construct
@@ -856,8 +857,6 @@ module_or_generate_item:
 	| attribute_instance_brace gate_instantiation { $$=$2; }
 	// | attribute_instance_brace udp_instantiation { $$=$2; }
 	| attribute_instance_brace module_instantiation { $$=$2; }
-	| attribute_instance_brace concurrent_assertion_item { $$=$2; }
-	| attribute_instance_brace assertion_item_declaration { $$=$2; }
         | attribute_instance_brace smv_using { $$ = $2; }
         | attribute_instance_brace smv_assume { $$ = $2; }
 	| attribute_instance_brace module_common_item { $$=$2; }
@@ -1045,6 +1044,7 @@ package_or_generate_item_declaration:
 	| covergroup_declaration
 	| ';'
 		{ init($$, ID_verilog_empty_item); }
+	| assertion_item_declaration
         ;
 
 // System Verilog standard 1800-2017
@@ -3096,6 +3096,10 @@ statement_brace:
 
 // System Verilog standard 1800-2017
 // A.6.10 Assertion statements
+
+assertion_item:
+	  concurrent_assertion_item
+	;
 
 procedural_assertion_statement:
 	  concurrent_assertion_statement
