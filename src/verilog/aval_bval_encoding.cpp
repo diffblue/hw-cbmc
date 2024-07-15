@@ -93,18 +93,31 @@ constant_exprt lower_to_aval_bval(const constant_exprt &src)
 
 exprt aval(const exprt &src)
 {
-  PRECONDITION(is_aval_bval(src.type()));
-  auto width = aval_bval_width(src.type());
-  return extractbits_exprt{
-    src, from_integer(0, integer_typet()), bv_typet{width}};
+  if(is_aval_bval(src.type()))
+  {
+    auto width = aval_bval_width(src.type());
+    return extractbits_exprt{src, 0, bv_typet{width}};
+  }
+  else
+  {
+    auto width = to_bitvector_type(src.type()).get_width();
+    return typecast_exprt::conditional_cast(src, bv_typet{width});
+  }
 }
 
 exprt bval(const exprt &src)
 {
-  PRECONDITION(is_aval_bval(src.type()));
-  auto width = aval_bval_width(src.type());
-  return extractbits_exprt{
-    src, from_integer(width, integer_typet()), bv_typet{width}};
+  if(is_aval_bval(src.type()))
+  {
+    auto width = aval_bval_width(src.type());
+    return extractbits_exprt{src, width, bv_typet{width}};
+  }
+  else
+  {
+    // zeros, signaling 0/1
+    auto width = to_bitvector_type(src.type()).get_width();
+    return bv_typet{width}.all_zeros_expr();
+  }
 }
 
 static exprt adjust_size(const exprt &src, std::size_t dest_width)
@@ -112,13 +125,12 @@ static exprt adjust_size(const exprt &src, std::size_t dest_width)
   auto src_width = to_bv_type(src.type()).get_width();
   if(dest_width > src_width)
   {
-    auto zeros = from_integer(0, bv_typet{dest_width - src_width});
+    auto zeros = bv_typet{dest_width - src_width}.all_zeros_expr();
     return concatenation_exprt{{zeros, src}, bv_typet{dest_width}};
   }
   else if(dest_width < src_width)
   {
-    return extractbits_exprt{
-      src, from_integer(0, integer_typet{}), bv_typet{dest_width}};
+    return extractbits_exprt{src, 0, bv_typet{dest_width}};
   }
   else
     return src;
@@ -151,4 +163,28 @@ exprt aval_bval_conversion(const exprt &src, const typet &dest)
     auto new_bval = adjust_size(bval(src), dest_width);
     return combine_aval_bval(new_aval, new_bval, dest);
   }
+}
+
+static exprt concatenate(const exprt::operandst &operands)
+{
+  std::size_t width = 0;
+  for(auto &op : operands)
+    width += to_bv_type(op.type()).get_width();
+
+  return concatenation_exprt{operands, bv_typet{width}};
+}
+
+exprt aval_bval_concatenation(
+  const exprt::operandst &operands,
+  const typet &type)
+{
+  exprt::operandst new_aval, new_bval;
+
+  for(auto &op : operands)
+  {
+    new_aval.push_back(aval(op));
+    new_bval.push_back(bval(op));
+  }
+
+  return combine_aval_bval(concatenate(new_aval), concatenate(new_bval), type);
 }
