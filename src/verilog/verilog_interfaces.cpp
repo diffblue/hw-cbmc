@@ -271,6 +271,9 @@ void verilog_typecheckt::interface_module_item(
   {
     // done later
   }
+  else if(module_item.id() == ID_verilog_assertion_item)
+  {
+  }
   else if(
     module_item.id() == ID_continuous_assign ||
     module_item.id() == ID_parameter_override)

@@ -776,6 +776,9 @@ void verilog_typecheckt::collect_symbols(
     module_item.id() == ID_verilog_cover_property)
   {
   }
+  else if(module_item.id() == ID_verilog_assertion_item)
+  {
+  }
   else if(module_item.id() == ID_parameter_override)
   {
   }

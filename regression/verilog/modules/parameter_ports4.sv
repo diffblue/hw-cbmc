@@ -8,6 +8,6 @@ module main;
 
   sub #(byte) submodule();
 
-  p1: assert property ($bits(submodule.my_var) == 8);
+  p1: assert final ($bits(submodule.my_var) == 8);
 
 endmodule // main

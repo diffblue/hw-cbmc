@@ -1932,6 +1932,43 @@ void verilog_synthesist::synth_initial(
 
 /*******************************************************************\
 
+Function: verilog_synthesist::synth_asertion_item
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::synth_assertion_item(
+  const verilog_assertion_itemt &assertion_item)
+{
+  // 1800-2017
+  // 16.4.3 Deferred assertions outside procedural code
+  //
+  // module m (input a, b);
+  //  a1: assert #0 (a == b);
+  // endmodule
+  //  ---->
+  // module m (input a, b);
+  //   always_comb begin
+  //     a1: assert #0 (a == b);
+  //   end
+  // endmodule
+
+  construct = constructt::ALWAYS_COMB;
+  event_guard = event_guardt::NONE;
+
+  value_mapt always_value_map;
+  value_map = &always_value_map;
+  synth_statement(assertion_item.statement());
+  value_map = NULL;
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::make_supply_value
 
   Inputs:
@@ -3258,6 +3295,10 @@ void verilog_synthesist::synth_module_item(
   {
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_module_item(module_item));
+  }
+  else if(module_item.id() == ID_verilog_assertion_item)
+  {
+    synth_assertion_item(to_verilog_assertion_item(module_item));
   }
   else if(module_item.id()==ID_task)
   {

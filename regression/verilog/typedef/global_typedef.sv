@@ -19,6 +19,6 @@ module main;
 
    sub s(data_in, data_out);
 
-   p0: assert property (data_in == data_out);
+   p0: assert final (data_in == data_out);
 
 endmodule

@@ -4,6 +4,6 @@ module main(input [7:0] in, input [2:0] where);
   // does not need to be constant.
   wire out = in[where +: 1];
 
-  p0: assert property (out == in[where]);
+  p0: assert final (out == in[where]);
 
 endmodule

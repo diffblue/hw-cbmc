@@ -6,7 +6,7 @@ module main;
   typedef bit [31:0] some_type;
   wire some_type next_wire;
 
-  p0: assert property ($bits(other_wire) == 32);
-  p1: assert property ($bits(next_wire) == 32);
+  p0: assert final ($bits(other_wire) == 32);
+  p1: assert final ($bits(next_wire) == 32);
 
 endmodule

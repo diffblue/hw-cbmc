@@ -1794,6 +1794,36 @@ to_verilog_assert_assume_cover_statement(verilog_statementt &statement)
   return static_cast<verilog_assert_assume_cover_statementt &>(statement);
 }
 
+// A wrapper that encapsulates an assertion statement into an item.
+class verilog_assertion_itemt : public verilog_module_itemt
+{
+public:
+  const verilog_assert_assume_cover_statementt &statement() const
+  {
+    return static_cast<const verilog_assert_assume_cover_statementt &>(op0());
+  }
+
+  verilog_assert_assume_cover_statementt &statement()
+  {
+    return static_cast<verilog_assert_assume_cover_statementt &>(op0());
+  }
+};
+
+inline const verilog_assertion_itemt &
+to_verilog_assertion_item(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_assertion_item);
+  validate_operands(expr, 1, "verilog_assertion_item must have 1 operand");
+  return static_cast<const verilog_assertion_itemt &>(expr);
+}
+
+inline verilog_assertion_itemt &to_verilog_assertion_item(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_assertion_item);
+  validate_operands(expr, 1, "generate_assign must have 1 operand");
+  return static_cast<verilog_assertion_itemt &>(expr);
+}
+
 // Can be one of three:
 // 1) Immediate assertion statement
 // 2) Procedural concurrent assertion statement

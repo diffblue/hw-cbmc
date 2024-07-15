@@ -238,6 +238,7 @@ protected:
   virtual void convert_module_items(symbolt &);
   void synth_module_item(const verilog_module_itemt &, transt &);
   void synth_always_base(const verilog_always_baset &);
+  void synth_assertion_item(const verilog_assertion_itemt &);
   void synth_initial(const verilog_initialt &);
   void
   synth_assert_assume_cover(const verilog_assert_assume_cover_module_itemt &);

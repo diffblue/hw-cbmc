@@ -5,6 +5,6 @@ module main;
 
   parameter param0 = $bits(other_wire);
 
-  p0: assert property (param0 == 32);
+  p0: assert final (param0 == 32);
 
 endmodule

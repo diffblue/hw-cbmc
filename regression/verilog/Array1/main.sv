@@ -4,7 +4,7 @@ module top (input clk, input reset);
 
    assign x[4][5][3] = 1;
    
-   p1: assert property (x[4][5][3] == 1);
+   p1: assert final (x[4][5][3] == 1);
 
 endmodule
    
