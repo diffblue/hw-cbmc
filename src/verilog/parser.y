@@ -3541,9 +3541,9 @@ expression:
 	| expression TOK_PERCENT expression
 		{ init($$, ID_mod); mto($$, $1); mto($$, $3); }
 	| expression TOK_EQUALEQUAL expression
-		{ init($$, ID_equal); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_logical_equality); mto($$, $1); mto($$, $3); }
 	| expression TOK_EXCLAMEQUAL expression
-		{ init($$, ID_notequal); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_logical_inequality); mto($$, $1); mto($$, $3); }
 	| expression TOK_EQUALEQUALEQUAL expression
 		{ init($$, ID_verilog_case_equality); mto($$, $1); mto($$, $3); }
 	| expression TOK_EXCLAMEQUALEQUAL expression
