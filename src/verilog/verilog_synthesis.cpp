@@ -573,9 +573,8 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
   for(unsigned i=0; i<parameters.size(); i++)
   {
     const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
-    verilog_blocking_assignt assignment;
-    assignment.lhs() = a_symbol.symbol_expr().with_source_location(call);
-    assignment.rhs()=actuals[i];
+    verilog_blocking_assignt assignment{
+      a_symbol.symbol_expr().with_source_location(call), actuals[i]};
     assignment.add_source_location()=call.source_location();
     synth_statement(assignment);
   }
@@ -2266,32 +2265,59 @@ Function: verilog_synthesist::synth_assign
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_assign(
-  const verilog_statementt &statement,
-  bool blocking)
+void verilog_synthesist::synth_assign(const verilog_assignt &statement)
 {
-  if(statement.operands().size()!=2)
-  {
-    throw errort().with_location(statement.source_location())
-      << "assign statement expected to have two operands";
-  }
-
   if(construct == constructt::OTHER)
   {
     throw errort().with_location(statement.source_location())
       << "unexpected assignment statement";
   }
 
-  const exprt &lhs = to_binary_expr(statement).op0();
-  exprt rhs = to_binary_expr(statement).op1();
+  const exprt &lhs = statement.lhs();
+  exprt rhs = statement.rhs();
 
   rhs = synth_expr(rhs, symbol_statet::CURRENT);
+
+  irep_idt compound_id = irep_idt{};
+
+  if(statement.id() == ID_verilog_blocking_assign_plus)
+    compound_id = ID_plus;
+  else if(statement.id() == ID_verilog_blocking_assign_minus)
+    compound_id = ID_minus;
+  else if(statement.id() == ID_verilog_blocking_assign_mult)
+    compound_id = ID_mult;
+  else if(statement.id() == ID_verilog_blocking_assign_div)
+    compound_id = ID_div;
+  else if(statement.id() == ID_verilog_blocking_assign_mod)
+    compound_id = ID_mod;
+  else if(statement.id() == ID_verilog_blocking_assign_bitand)
+    compound_id = ID_bitand;
+  else if(statement.id() == ID_verilog_blocking_assign_bitor)
+    compound_id = ID_bitor;
+  else if(statement.id() == ID_verilog_blocking_assign_bitxor)
+    compound_id = ID_bitxor;
+  else if(statement.id() == ID_verilog_blocking_assign_lshr)
+    compound_id = ID_lshr;
+  else if(statement.id() == ID_verilog_blocking_assign_lshl)
+    compound_id = ID_shl;
+  else if(statement.id() == ID_verilog_blocking_assign_ashr)
+    compound_id = ID_ashr;
+  else if(statement.id() == ID_verilog_blocking_assign_ashl)
+    compound_id = ID_shl;
+
+  if(compound_id != irep_idt{})
+  {
+    auto lhs_synth = synth_expr(lhs, symbol_statet::CURRENT);
+    rhs = binary_exprt{std::move(lhs_synth), compound_id, rhs, rhs.type()};
+  }
 
   // Can the rhs be simplified to a constant, for propagation?
   auto rhs_simplified = simplify_expr(rhs, ns);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;
+
+  bool blocking = statement.id() != ID_verilog_non_blocking_assign;
 
   assignment_rec(lhs, rhs, blocking);
 }
@@ -2961,19 +2987,19 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
   // stupid implementation
   exprt one = from_integer(1, op.type());
 
-  bool increment=
-    statement.id()==ID_preincrement ||
-    statement.id()==ID_postincrement;
-  
-  verilog_blocking_assignt assignment;
-  assignment.lhs() = op;
+  bool increment =
+    statement.id() == ID_preincrement || statement.id() == ID_postincrement;
+
+  exprt rhs;
 
   if(increment)
-    assignment.rhs() = plus_exprt(op, one);
+    rhs = plus_exprt(op, one);
   else
-    assignment.rhs() = minus_exprt(op, one);
+    rhs = minus_exprt(op, one);
 
+  verilog_blocking_assignt assignment{op, rhs};
   assignment.add_source_location()=statement.source_location();
+
   synth_statement(assignment);  
 }
 
@@ -3126,9 +3152,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
       if(parameters[i].get_bool(ID_input))
       {
-        verilog_blocking_assignt assignment;
-        assignment.lhs()=a_symbol.symbol_expr();
-        assignment.rhs()=actuals[i];
+        verilog_blocking_assignt assignment{a_symbol.symbol_expr(), actuals[i]};
         assignment.add_source_location()=statement.source_location();
         synth_statement(assignment);
       }
@@ -3142,9 +3166,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
       if(parameters[i].get_bool(ID_output))
       {
-        verilog_blocking_assignt assignment;
-        assignment.lhs()=actuals[i];
-        assignment.rhs()=a_symbol.symbol_expr();
+        verilog_blocking_assignt assignment{actuals[i], a_symbol.symbol_expr()};
         assignment.add_source_location()=statement.source_location();
         synth_statement(assignment);
       }
@@ -3173,8 +3195,23 @@ void verilog_synthesist::synth_statement(
           statement.id()==ID_casex ||
           statement.id()==ID_casez)
     synth_case(statement);
-  else if(statement.id()==ID_blocking_assign)
-    synth_assign(statement, true);
+  else if(
+    statement.id() == ID_verilog_blocking_assign ||
+    statement.id() == ID_verilog_blocking_assign_plus ||
+    statement.id() == ID_verilog_blocking_assign_minus ||
+    statement.id() == ID_verilog_blocking_assign_mult ||
+    statement.id() == ID_verilog_blocking_assign_div ||
+    statement.id() == ID_verilog_blocking_assign_mod ||
+    statement.id() == ID_verilog_blocking_assign_bitand ||
+    statement.id() == ID_verilog_blocking_assign_bitor ||
+    statement.id() == ID_verilog_blocking_assign_bitxor ||
+    statement.id() == ID_verilog_blocking_assign_lshr ||
+    statement.id() == ID_verilog_blocking_assign_lshl ||
+    statement.id() == ID_verilog_blocking_assign_ashr ||
+    statement.id() == ID_verilog_blocking_assign_ashl)
+  {
+    synth_assign(to_verilog_assign(statement));
+  }
   else if(statement.id() == ID_procedural_continuous_assign)
   {
     throw errort().with_location(statement.source_location())
@@ -3202,8 +3239,8 @@ void verilog_synthesist::synth_statement(
     throw errort().with_location(statement.source_location())
       << "synthesis of expect property not supported";
   }
-  else if(statement.id()==ID_non_blocking_assign)
-    synth_assign(statement, false);
+  else if(statement.id() == ID_verilog_non_blocking_assign)
+    synth_assign(to_verilog_assign(statement));
   else if(statement.id()==ID_force)
     synth_force(to_verilog_force(statement));
   else if(statement.id()==ID_if)

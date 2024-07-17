@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 procedural_assignments1.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ procedural_assignments1.sv
 --
 ^warning: ignoring
 --
-The += assignment is broken.

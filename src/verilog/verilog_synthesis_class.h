@@ -263,7 +263,7 @@ protected:
   void synth_while(const verilog_whilet &);
   void synth_repeat(const verilog_repeatt &);
   void synth_function_call_or_task_enable(const verilog_function_callt &);
-  void synth_assign(const verilog_statementt &, bool blocking);
+  void synth_assign(const verilog_assignt &);
   void
   synth_assert_assume_cover(const verilog_assert_assume_cover_statementt &);
   void synth_assume(const verilog_assume_statementt &);

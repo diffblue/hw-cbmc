@@ -648,7 +648,20 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
     if(block_statement.is_named())
       named_blocks.pop_back();
   }
-  else if(statement.id() == ID_blocking_assign)
+  else if(
+    statement.id() == ID_verilog_blocking_assign ||
+    statement.id() == ID_verilog_blocking_assign_plus ||
+    statement.id() == ID_verilog_blocking_assign_minus ||
+    statement.id() == ID_verilog_blocking_assign_mult ||
+    statement.id() == ID_verilog_blocking_assign_div ||
+    statement.id() == ID_verilog_blocking_assign_mod ||
+    statement.id() == ID_verilog_blocking_assign_bitand ||
+    statement.id() == ID_verilog_blocking_assign_bitor ||
+    statement.id() == ID_verilog_blocking_assign_bitxor ||
+    statement.id() == ID_verilog_blocking_assign_lshr ||
+    statement.id() == ID_verilog_blocking_assign_lshl ||
+    statement.id() == ID_verilog_blocking_assign_ashr ||
+    statement.id() == ID_verilog_blocking_assign_ashl)
   {
   }
   else if(
@@ -695,7 +708,7 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
     if(if_statement.has_else_case())
       collect_symbols(if_statement.else_case());
   }
-  else if(statement.id() == ID_non_blocking_assign)
+  else if(statement.id() == ID_verilog_non_blocking_assign)
   {
   }
   else if(

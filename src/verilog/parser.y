@@ -2759,36 +2759,49 @@ final_construct: TOK_FINAL function_statement
 
 blocking_assignment:
 	  variable_lvalue '=' delay_or_event_control expression
-		{ init($$, ID_blocking_assign); mto($$, $1); mto($$, $4); }
+		{ init($$, ID_verilog_blocking_assign); mto($$, $1); mto($$, $4); }
         | operator_assignment
 	;
 
 operator_assignment:
           variable_lvalue assignment_operator expression
-		{ init($$, ID_blocking_assign); mto($$, $1); mto($$, $3); }
+		{ $$ = $2; mto($$, $1); mto($$, $3); }
         ;
 
 assignment_operator:
           '='
+		{ init($$, ID_verilog_blocking_assign); }
         | TOK_PLUSEQUAL
+		{ init($$, ID_verilog_blocking_assign_plus); }
         | TOK_MINUSEQUAL
+		{ init($$, ID_verilog_blocking_assign_minus); }
         | TOK_ASTERICEQUAL
+		{ init($$, ID_verilog_blocking_assign_mult); }
         | TOK_SLASHEQUAL
+		{ init($$, ID_verilog_blocking_assign_div); }
         | TOK_PERCENTEQUAL
+		{ init($$, ID_verilog_blocking_assign_mod); }
         | TOK_AMPEREQUAL
+		{ init($$, ID_verilog_blocking_assign_bitand); }
         | TOK_VERTBAREQUAL
+		{ init($$, ID_verilog_blocking_assign_bitor); }
         | TOK_CARETEQUAL
+		{ init($$, ID_verilog_blocking_assign_bitxor); }
         | TOK_LESSLESSEQUAL
+		{ init($$, ID_verilog_blocking_assign_lshl); }
         | TOK_GREATERGREATEREQUAL
+		{ init($$, ID_verilog_blocking_assign_lshr); }
         | TOK_LESSLESSLESSEQUAL
+		{ init($$, ID_verilog_blocking_assign_ashl); }
         | TOK_GREATERGREATERGREATEREQUAL
+		{ init($$, ID_verilog_blocking_assign_ashr); }
         ;
 
 nonblocking_assignment:
 	  variable_lvalue TOK_LESSEQUAL expression
-		{ init($$, ID_non_blocking_assign); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_non_blocking_assign); mto($$, $1); mto($$, $3); }
 	| variable_lvalue TOK_LESSEQUAL delay_or_event_control expression
-		{ init($$, ID_non_blocking_assign); mto($$, $1); mto($$, $4); }
+		{ init($$, ID_verilog_non_blocking_assign); mto($$, $1); mto($$, $4); }
 	;
 
 procedural_continuous_assignment:
