@@ -155,8 +155,10 @@ int ebmc_parse_optionst::doit()
     if(cmdline.isset("random-trace") || cmdline.isset("random-waveform"))
       return random_trace(cmdline, ui_message_handler);
 
+#ifndef _WIN32
     if(cmdline.isset("ic3"))
       return do_ic3(cmdline, ui_message_handler);
+#endif
 
     if(cmdline.isset("k-induction"))
       return do_k_induction(cmdline, ui_message_handler);

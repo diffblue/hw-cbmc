@@ -3,4 +3,3 @@ main.sv
 --module top --bound 1
 ^EXIT=0$
 ^SIGNAL=0$
-

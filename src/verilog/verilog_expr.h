@@ -1699,9 +1699,9 @@ public:
     return get(ID_identifier);
   }
 
-  void identifier(irep_idt __identifier)
+  void identifier(irep_idt identifier)
   {
-    set(ID_identifier, __identifier);
+    set(ID_identifier, identifier);
   }
 };
 

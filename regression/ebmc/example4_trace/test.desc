@@ -6,4 +6,3 @@ example4.sv
 ^  counter\.state = 254 \(11111110\)$
 ^EXIT=10$
 ^SIGNAL=0$
-

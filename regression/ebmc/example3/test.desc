@@ -5,4 +5,3 @@ example3.sv
 ^\[counter\.assert\.2\] .* REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
-
