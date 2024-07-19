@@ -8,6 +8,7 @@
 
 #include "verilog_preprocessor_tokenizer.h"
 
+#include <filesystem>
 #include <list>
 #include <map>
 
@@ -44,7 +45,7 @@ protected:
   definest defines;
 
   void directive();
-  std::string find_include_file(
+  std::filesystem::path find_include_file(
     const std::string &including_file,
     const std::string &given_filename,
     bool include_paths_only);

@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_preprocessor.h"
 
 #include <util/config.h>
-#include <util/unicode.h>
 
 #include "verilog_preprocessor_error.h"
 
@@ -98,7 +97,7 @@ Function: verilog_preprocessort::include
 
 \*******************************************************************/
 
-std::string verilog_preprocessort::find_include_file(
+std::filesystem::path verilog_preprocessort::find_include_file(
   const std::string &including_file,
   const std::string &given_filename,
   bool include_paths_only)
@@ -555,11 +554,7 @@ void verilog_preprocessort::directive()
     auto full_path =
       find_include_file(context().filename, given_filename, include_paths_only);
 
-#ifdef _MSC_VER
-    auto in = new std::ifstream(widen(full_path));
-#else
     auto in = new std::ifstream(full_path);
-#endif
 
     if(!*in)
       throw verilog_preprocessor_errort() << "failed to open an include file";
