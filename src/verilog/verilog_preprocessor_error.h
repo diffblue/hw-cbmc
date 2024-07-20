@@ -15,6 +15,14 @@ Author: Daniel Kroening, kroening@kroening.com
 class verilog_preprocessor_errort
 {
 public:
+  verilog_preprocessor_errort() = default;
+  verilog_preprocessor_errort(verilog_preprocessor_errort &&) = default;
+  verilog_preprocessor_errort(const verilog_preprocessor_errort &other)
+  {
+    // ostringstream does not have a copy constructor
+    message << other.message.str();
+  }
+
   std::string what() const
   {
     return message.str();

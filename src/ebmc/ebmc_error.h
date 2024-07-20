@@ -16,6 +16,16 @@ Author: Daniel Kroening, dkr@amazon.com
 class ebmc_errort
 {
 public:
+  ebmc_errort() = default;
+  ebmc_errort(const ebmc_errort &other)
+  {
+    // ostringstream does not have a copy constructor
+    message << other.message.str();
+    __exit_code = other.__exit_code;
+    __location = other.__location;
+  }
+  ebmc_errort(ebmc_errort &&) = default;
+
   std::string what() const
   {
     return message.str();
