@@ -5,4 +5,3 @@ example4.sv
 ^\[counter\.assert\.2\] .* PROVED up to bound 10$
 ^EXIT=0$
 ^SIGNAL=0$
-

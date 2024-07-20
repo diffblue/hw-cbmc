@@ -46,7 +46,7 @@ protected:
 
   void directive();
   std::filesystem::path find_include_file(
-    const std::string &including_file,
+    const std::filesystem::path &including_file,
     const std::string &given_filename,
     bool include_paths_only);
   definet::parameterst parse_define_parameters();
@@ -103,16 +103,21 @@ protected:
     std::istream *in;
 
   public:
-    std::string filename;
+    std::filesystem::path path;
     verilog_preprocessor_token_sourcet *tokenizer;
+
+    std::string filename_as_string() const;
 
     // for `define with parameters
     define_argumentst define_arguments;
 
-    contextt(bool _deallocate_in, std::istream *_in, std::string _filename)
+    contextt(
+      bool _deallocate_in,
+      std::istream *_in,
+      std::filesystem::path _path)
       : deallocate_in(_deallocate_in),
         in(_in),
-        filename(std::move(_filename)),
+        path(std::move(_path)),
         tokenizer(new verilog_preprocessor_tokenizert(*in))
     {
     }
@@ -120,7 +125,7 @@ protected:
     explicit contextt(const std::vector<tokent> &tokens)
       : deallocate_in(false),
         in(nullptr),
-        filename(),
+        path(),
         tokenizer(new vector_token_sourcet(tokens))
     {
     }
@@ -136,7 +141,7 @@ protected:
 
     bool is_file() const
     {
-      return !filename.empty();
+      return !path.empty();
     }
   };
 

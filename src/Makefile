@@ -16,7 +16,11 @@ $(patsubst %, %.dir, $(DIRS)):
 vhdl.dir: cprover.dir
 
 ebmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir vhdl.dir \
-      smvlang.dir ic3.dir aiger.dir temporal-logic.dir cprover.dir
+      smvlang.dir aiger.dir temporal-logic.dir cprover.dir
+
+ifneq ($(BUILD_ENV),MSVC)
+ebmc.dir: ic3.dir
+endif
 
 hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
          vhdl.dir smvlang.dir cprover.dir temporal-logic.dir

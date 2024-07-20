@@ -9,11 +9,33 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_preprocessor.h"
 
 #include <util/config.h>
+#include <util/unicode.h>
 
 #include "verilog_preprocessor_error.h"
 
 #include <filesystem>
 #include <fstream>
+
+/*******************************************************************\
+
+Function: verilog_preprocessort::contextt::filename_as_string
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string verilog_preprocessort::contextt::filename_as_string() const
+{
+#ifdef _WIN32
+  return narrow(path.native());
+#else
+  return path.string();
+#endif
+}
 
 /*******************************************************************\
 
@@ -31,7 +53,7 @@ source_locationt verilog_preprocessort::contextt::make_source_location() const
 {
   source_locationt result;
 
-  result.set_file(filename);
+  result.set_file(filename_as_string());
   result.set_line(tokenizer->line_no());
 
   return result;
@@ -98,7 +120,7 @@ Function: verilog_preprocessort::include
 \*******************************************************************/
 
 std::filesystem::path verilog_preprocessort::find_include_file(
-  const std::string &including_file,
+  const std::filesystem::path &including_file,
   const std::string &given_filename,
   bool include_paths_only)
 {
@@ -106,16 +128,16 @@ std::filesystem::path verilog_preprocessort::find_include_file(
   {
     // First try given filename relative to the path of the
     // including file.
-    auto path = std::filesystem::path(including_file);
+    auto path = including_file; // copy
     path.replace_filename(given_filename);
     if(std::filesystem::directory_entry(path).exists())
       return path; // done
   }
 
   // Then try include paths in given order.
-  for(const auto &path : config.verilog.include_paths)
+  for(const auto &include_path : config.verilog.include_paths)
   {
-    auto full_name = std::filesystem::path(path).append(given_filename);
+    auto full_name = std::filesystem::path{include_path}.append(given_filename);
     if(std::filesystem::directory_entry(full_name).exists())
       return full_name; // done
   }
@@ -140,8 +162,8 @@ void verilog_preprocessort::emit_line_directive(unsigned level)
 {
   PRECONDITION(context().is_file());
 
-  out << "`line " << tokenizer().line_no() << " \"" << context().filename
-      << "\" " << level << '\n';
+  out << "`line " << tokenizer().line_no() << " \""
+      << context().filename_as_string() << "\" " << level << '\n';
 
   parser_line_no = tokenizer().line_no();
 }
@@ -163,7 +185,7 @@ void verilog_preprocessort::preprocessor()
   try
   {
     // the first context is the input file
-    context_stack.emplace_back(false, &in, filename);
+    context_stack.emplace_back(false, &in, widen_if_needed(filename));
 
     while(!context_stack.empty())
     {
@@ -552,7 +574,7 @@ void verilog_preprocessort::directive()
     }
 
     auto full_path =
-      find_include_file(context().filename, given_filename, include_paths_only);
+      find_include_file(context().path, given_filename, include_paths_only);
 
     auto in = new std::ifstream(full_path);
 

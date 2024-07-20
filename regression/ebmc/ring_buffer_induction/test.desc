@@ -6,4 +6,3 @@ ring_buffer.sv
 ^\[ring_buffer\.assert\.3\] always \(ring_buffer\.writeptr - ring_buffer\.readptr & 15\) == ring_buffer\.count: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
-

@@ -42,8 +42,12 @@ OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT) \
       ../aiger/aiger$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT) \
-      ../verilog/verilog$(LIBEXT) \
-      ../ic3/libic3$(LIBEXT)
+      ../verilog/verilog$(LIBEXT)
+
+ifneq ($(BUILD_ENV),MSVC)
+OBJ += ../ic3/libic3$(LIBEXT)
+OBJ += ../ic3/minisat/build/release/lib/libminisat.a
+endif
 
 ifdef MODULE_INTERPOLATION
   CXXFLAGS += -DHAVE_INTERPOLATION
@@ -57,13 +61,13 @@ ifdef MODULE_INTERPOLATION
          coverage/core.cpp
 endif
 
+include ../config.inc
+include ../common
+
 ifneq ($(wildcard ../vhdl/Makefile),)
   OBJ += ../vhdl/vhdl$(LIBEXT)
   CXXFLAGS += -DHAVE_VHDL
 endif
-
-include ../config.inc
-include ../common
 
 CLEANFILES = ebmc$(EXEEXT)
 
@@ -79,5 +83,5 @@ endif
 
 ###############################################################################
 
-ebmc$(EXEEXT): $(OBJ) ../ic3/minisat/build/release/lib/libminisat.a
+ebmc$(EXEEXT): $(OBJ)
 	$(LINKBIN)

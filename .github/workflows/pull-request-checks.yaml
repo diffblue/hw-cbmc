@@ -264,3 +264,61 @@ jobs:
         run: node --no-experimental-fetch src/ebmc/ebmc.js --version
       - name: Print ccache stats
         run: ccache -s
+
+  check-vs-2022-make-build-and-test:
+    runs-on: windows-2022
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Fetch dependencies
+        run: |
+          choco install -y --no-progress winflexbison3 strawberryperl wget
+          if($LastExitCode -ne 0)
+          {
+            Write-Output "::error ::Dependency installation via Chocolatey failed."
+            exit $LastExitCode
+          }
+          nuget install clcache -OutputDirectory "c:\tools" -ExcludeVersion -Version 4.1.0
+          echo "c:\tools\clcache\clcache-4.1.0" >> $env:GITHUB_PATH
+          echo "c:\Strawberry\" >> $env:GITHUB_PATH
+          Invoke-WebRequest -Uri https://github.com/Z3Prover/z3/releases/download/z3-4.8.10/z3-4.8.10-x64-win.zip -OutFile .\z3.zip
+          Expand-Archive -LiteralPath '.\z3.Zip' -DestinationPath C:\tools
+          echo "c:\tools\z3-4.8.10-x64-win\bin;" >> $env:GITHUB_PATH
+          New-Item -ItemType directory "C:\tools\parallel"
+          wget.exe -O c:\tools\parallel\parallel https://git.savannah.gnu.org/cgit/parallel.git/plain/src/parallel
+          echo "c:\tools\parallel" >> $env:GITHUB_PATH
+      - name: Confirm z3 solver is available and log the version installed
+        run: z3 --version
+      - name: Initialise Developer Command Line
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Prepare ccache
+        uses: actions/cache@v4
+        with:
+          save-always: true
+          path: .ccache
+          key: ${{ runner.os }}-msbuild-make-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-msbuild-make-${{ github.ref }}
+            ${{ runner.os }}-msbuild-make
+      - name: ccache environment
+        run: |
+          echo "CLCACHE_BASEDIR=$((Get-Item -Path '.\').FullName)" >> $env:GITHUB_ENV
+          echo "CLCACHE_DIR=$pwd\.ccache" >> $env:GITHUB_ENV
+      - name: Zero ccache stats and limit in size (2 GB)
+        run: |
+          clcache -z
+          clcache -M 2147483648
+      - name: Download minisat with make
+        run: make -C lib/cbmc/src minisat2-download
+      - name: Build EBMC with make
+        env:
+          # disable MSYS file-name mangling
+          MSYS2_ARG_CONV_EXCL: "*"
+        run: make CXX=clcache BUILD_ENV=MSVC -j4 -C src
+      - name: Print ccache stats
+        run: clcache -s

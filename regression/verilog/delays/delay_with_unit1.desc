@@ -4,4 +4,3 @@ delay_with_unit1.v
 ^EXIT=2$
 ^SIGNAL=0$
 ^file .*: assignment in 'always' context without event guard$
-

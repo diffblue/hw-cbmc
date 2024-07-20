@@ -5,4 +5,3 @@ netlist-trace1.sv
 ^  counter\.state = 3 \(00000011\)$
 ^EXIT=10$
 ^SIGNAL=0$
-
