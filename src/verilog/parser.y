@@ -641,7 +641,7 @@ module_ansi_header:
         ;
 
 module_declaration:
-          module_nonansi_header module_item_brace TOK_ENDMODULE module_identifier_opt
+          module_nonansi_header module_item_brace TOK_ENDMODULE endmodule_identifier_opt
           {
             PARSER.parse_tree.create_module(
               stack_expr($1).operands()[0],
@@ -654,7 +654,7 @@ module_declaration:
             // close the module scope
             pop_scope();
           }
-        | module_ansi_header module_item_brace TOK_ENDMODULE module_identifier_opt
+        | module_ansi_header module_item_brace TOK_ENDMODULE endmodule_identifier_opt
           {
             PARSER.parse_tree.create_module(
               stack_expr($1).operands()[0],
@@ -3677,9 +3677,9 @@ interface_identifier:
 
 module_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-module_identifier_opt:
+endmodule_identifier_opt:
 	  /* Optional */
-	| module_identifier
+	| TOK_COLON module_identifier
 	;
 
 net_identifier: identifier;
