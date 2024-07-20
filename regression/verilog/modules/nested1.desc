@@ -1,0 +1,6 @@
+CORE
+nested1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--

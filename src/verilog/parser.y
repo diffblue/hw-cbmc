@@ -870,8 +870,9 @@ module_or_generate_item_declaration:
 non_port_module_item:
 	  attribute_instance_brace generate_region { $$=$2; }
         | module_or_generate_item
-        | attribute_instance_brace specparam_declaration {$$=$2; }
 	| attribute_instance_brace specify_block { $$=$2;}
+        | attribute_instance_brace specparam_declaration {$$=$2; }
+        | module_declaration
         ;
 
 /*
