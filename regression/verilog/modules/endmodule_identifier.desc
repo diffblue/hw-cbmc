@@ -1,0 +1,7 @@
+CORE
+endmodule_identifier.sv
+--show-modules
+.*Name:.* some_module$
+^EXIT=0$
+^SIGNAL=0$
+--
