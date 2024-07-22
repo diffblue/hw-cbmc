@@ -1613,13 +1613,8 @@ inline verilog_assignt &to_verilog_assign(exprt &expr)
 class verilog_blocking_assignt:public verilog_assignt
 {
 public:
-  verilog_blocking_assignt():verilog_assignt(ID_blocking_assign)
-  {
-  }
-
-  verilog_blocking_assignt(
-    const exprt &_lhs, const exprt &_rhs):
-    verilog_assignt(ID_blocking_assign, _lhs, _rhs)
+  verilog_blocking_assignt(const exprt &_lhs, const exprt &_rhs)
+    : verilog_assignt(ID_verilog_blocking_assign, _lhs, _rhs)
   {
   }
 };
@@ -1627,20 +1622,21 @@ public:
 inline const verilog_blocking_assignt &
 to_verilog_blocking_assign(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_blocking_assign);
+  PRECONDITION(expr.id() == ID_verilog_blocking_assign);
   return static_cast<const verilog_blocking_assignt &>(expr);
 }
 
 inline verilog_blocking_assignt &to_verilog_blocking_assign(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_blocking_assign);
+  PRECONDITION(expr.id() == ID_verilog_blocking_assign);
   return static_cast<verilog_blocking_assignt &>(expr);
 }
 
 class verilog_non_blocking_assignt:public verilog_assignt
 {
 public:
-  verilog_non_blocking_assignt():verilog_assignt(ID_non_blocking_assign)
+  verilog_non_blocking_assignt()
+    : verilog_assignt(ID_verilog_non_blocking_assign)
   {
   }
 };
@@ -1648,13 +1644,13 @@ public:
 inline const verilog_non_blocking_assignt &
 to_verilog_non_blocking_assign(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_non_blocking_assign);
+  PRECONDITION(expr.id() == ID_verilog_non_blocking_assign);
   return static_cast<const verilog_non_blocking_assignt &>(expr);
 }
 
 inline verilog_non_blocking_assignt &to_verilog_non_blocking_assign(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_non_blocking_assign);
+  PRECONDITION(expr.id() == ID_verilog_non_blocking_assign);
   return static_cast<verilog_non_blocking_assignt &>(expr);
 }
 

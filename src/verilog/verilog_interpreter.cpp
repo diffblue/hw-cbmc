@@ -26,7 +26,7 @@ Function: verilog_typecheckt::verilog_interpreter
 void verilog_typecheckt::verilog_interpreter(
   const verilog_statementt &statement)
 {
-  if(statement.id()==ID_blocking_assign)
+  if(statement.id() == ID_verilog_blocking_assign)
   {
     const verilog_blocking_assignt &assign=
       to_verilog_blocking_assign(statement);

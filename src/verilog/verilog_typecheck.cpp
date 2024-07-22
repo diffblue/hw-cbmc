@@ -1449,8 +1449,23 @@ void verilog_typecheckt::convert_statement(
           statement.id()==ID_casex ||
           statement.id()==ID_casez)
     convert_case(to_verilog_case_base(statement));
-  else if(statement.id()==ID_blocking_assign)
+  else if(
+    statement.id() == ID_verilog_blocking_assign ||
+    statement.id() == ID_verilog_blocking_assign_plus ||
+    statement.id() == ID_verilog_blocking_assign_minus ||
+    statement.id() == ID_verilog_blocking_assign_mult ||
+    statement.id() == ID_verilog_blocking_assign_div ||
+    statement.id() == ID_verilog_blocking_assign_mod ||
+    statement.id() == ID_verilog_blocking_assign_bitand ||
+    statement.id() == ID_verilog_blocking_assign_bitor ||
+    statement.id() == ID_verilog_blocking_assign_bitxor ||
+    statement.id() == ID_verilog_blocking_assign_lshr ||
+    statement.id() == ID_verilog_blocking_assign_lshl ||
+    statement.id() == ID_verilog_blocking_assign_ashr ||
+    statement.id() == ID_verilog_blocking_assign_ashl)
+  {
     convert_assign(to_verilog_assign(statement), true);
+  }
   else if(statement.id() == ID_procedural_continuous_assign)
     convert_procedural_continuous_assign(
       to_verilog_procedural_continuous_assign(statement));
@@ -1476,7 +1491,7 @@ void verilog_typecheckt::convert_statement(
   else if(statement.id() == ID_verilog_cover_property)
   {
   }
-  else if(statement.id()==ID_non_blocking_assign)
+  else if(statement.id() == ID_verilog_non_blocking_assign)
     convert_assign(to_verilog_assign(statement), false);
   else if(statement.id()==ID_if)
     convert_if(to_verilog_if(statement));
