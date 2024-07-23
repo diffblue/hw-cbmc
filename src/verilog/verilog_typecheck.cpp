@@ -1837,7 +1837,7 @@ bool verilog_typecheck(
   verilog_parse_treet::module_mapt::const_iterator it=
     parse_tree.module_map.find(
       id2string(verilog_module_name(module)));
-    
+
   if(it==parse_tree.module_map.end())
   {
     messaget message(message_handler);
@@ -1848,7 +1848,7 @@ bool verilog_typecheck(
 
   return verilog_typecheck(
     symbol_table,
-    it->second->verilog_module,
+    it->second->verilog_module.to_irep(),
     parse_tree.standard,
     message_handler);
 }
@@ -1867,25 +1867,23 @@ Function: verilog_typecheck
 
 bool verilog_typecheck(
   symbol_table_baset &symbol_table,
-  const verilog_modulet &verilog_module,
+  const verilog_module_sourcet &verilog_module_source,
   verilog_standardt standard,
   message_handlert &message_handler)
 {
   // create symbol
 
-  symbolt symbol;
+  irep_idt base_name = verilog_module_source.base_name();
 
-  symbol.mode=ID_Verilog;
-  symbol.base_name=verilog_module.name;
-  symbol.type=module_typet();
-  symbol.name=verilog_module_symbol(verilog_module.name);
-  symbol.base_name=verilog_module.name;
-  symbol.pretty_name=verilog_module.name;
+  symbolt symbol{verilog_module_symbol(base_name), module_typet{}, ID_Verilog};
+
+  symbol.base_name = base_name;
+  symbol.pretty_name = base_name;
   symbol.module=symbol.name;
-  symbol.location=verilog_module.location;
+  symbol.location = verilog_module_source.source_location();
 
-  symbol.type.add(ID_module_source)=verilog_module.to_irep();
-  
+  symbol.type.add(ID_module_source) = verilog_module_source;
+
   // put symbol in symbol_table
 
   symbolt *new_symbol;

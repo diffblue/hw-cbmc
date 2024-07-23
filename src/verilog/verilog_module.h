@@ -9,9 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_MODULE_H
 #define CPROVER_VERILOG_MODULE_H
 
-#include <string>
-
-#include <util/expr.h>
+#include "verilog_expr.h"
 
 struct verilog_modulet
 {
@@ -20,14 +18,15 @@ struct verilog_modulet
   exprt ports;
   exprt module_items;
   source_locationt location;
-  
-  irept to_irep() const
+
+  verilog_module_sourcet to_irep() const
   {
-    irept irep;
-    irep.set(ID_name, name);
+    verilog_module_sourcet irep;
+    irep.base_name(name);
     irep.add(ID_parameter_port_list) = parameter_port_list;
     irep.add(ID_ports)=ports;
     irep.add(ID_module_items) = module_items;
+    irep.add_source_location() = location;
     return irep;
   }
   

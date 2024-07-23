@@ -1893,9 +1893,14 @@ to_verilog_assume_statement(verilog_statementt &statement)
 class verilog_module_sourcet : public irept
 {
 public:
-  irep_idt name() const
+  irep_idt base_name() const
   {
-    return get(ID_name);
+    return get(ID_base_name);
+  }
+
+  void base_name(irep_idt base_name)
+  {
+    return set(ID_base_name, base_name);
   }
 
   using parameter_port_listt = verilog_parameter_declt::declaratorst;
@@ -1930,9 +1935,14 @@ public:
     return (module_itemst &)(add(ID_module_items).get_sub());
   }
 
-  const source_locationt &source_location()
+  const source_locationt &source_location() const
   {
     return static_cast<const source_locationt &>(find(ID_C_source_location));
+  }
+
+  source_locationt &add_source_location()
+  {
+    return static_cast<source_locationt &>(add(ID_C_source_location));
   }
 };
 

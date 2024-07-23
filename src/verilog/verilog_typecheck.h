@@ -27,7 +27,7 @@ bool verilog_typecheck(
 
 bool verilog_typecheck(
   symbol_table_baset &,
-  const verilog_modulet &verilog_module,
+  const verilog_module_sourcet &verilog_module_source,
   verilog_standardt,
   message_handlert &message_handler);
 
