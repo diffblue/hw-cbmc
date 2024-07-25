@@ -1,0 +1,8 @@
+KNOWNBUG
+range_type6.smv
+--bound 10
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The result does not match the expected result.
