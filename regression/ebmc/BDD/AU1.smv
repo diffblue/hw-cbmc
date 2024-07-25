@@ -10,7 +10,7 @@ ASSIGN next(x) := case
   esac;
 
 -- should fail, since x=0 is not reachable
-SPEC A x>=1 U x=0
+SPEC A [x>=1 U x=0]
 
 -- should pass
-SPEC A x>=1 U x=10
+SPEC A [x>=1 U x=10]

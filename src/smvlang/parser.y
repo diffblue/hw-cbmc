@@ -467,13 +467,13 @@ term       : variable_name
            | EX_Token  term           { init($$, ID_EX);  mto($$, $2); }
            | EF_Token  term           { init($$, ID_EF);  mto($$, $2); }
            | EG_Token  term           { init($$, ID_EG);  mto($$, $2); }
-           | A_Token  term            { init($$, ID_A);  mto($$, $2); }
-           | E_Token  term            { init($$, ID_E);  mto($$, $2); }
+           | A_Token '[' term U_Token term ']' { binary($$, $3, ID_AU, $5, bool_typet{}); }
+           | A_Token '[' term R_Token term ']' { binary($$, $3, ID_AR, $5, bool_typet{}); }
+           | E_Token '[' term U_Token term ']' { binary($$, $3, ID_EU, $5, bool_typet{}); }
+           | E_Token '[' term R_Token term ']' { binary($$, $3, ID_ER, $5, bool_typet{}); }
            | F_Token  term            { init($$, ID_F);  mto($$, $2); }
            | G_Token  term            { init($$, ID_G);  mto($$, $2); }
            | X_Token  term            { init($$, ID_X);  mto($$, $2); }
-           | term U_Token term        { binary($$, $1, ID_U, $3, stack_expr($1).type()); }
-           | term R_Token term        { binary($$, $1, ID_U, $3, stack_expr($1).type()); }
            | term EQUAL_Token    term { binary($$, $1, ID_equal,  $3, bool_typet{}); }
            | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3, bool_typet{}); }
            | term LT_Token       term { binary($$, $1, ID_lt,  $3, bool_typet{}); }
