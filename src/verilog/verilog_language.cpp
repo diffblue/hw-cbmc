@@ -137,7 +137,7 @@ void verilog_languaget::dependencies(
     
     const verilog_modulet &module=(it->second)->verilog_module;
 
-    for(auto &identifier : module.submodules())
+    for(auto &identifier : submodules(module.to_irep()))
       module_set.insert(id2string(identifier));
   }
 }

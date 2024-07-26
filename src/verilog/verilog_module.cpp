@@ -53,7 +53,7 @@ void verilog_modulet::show(std::ostream &out) const
 
 /*******************************************************************\
 
-Function: verilog_modulet::submodules_rec
+Function: submodules_rec
 
   Inputs:
 
@@ -63,8 +63,8 @@ Function: verilog_modulet::submodules_rec
 
 \*******************************************************************/
 
-void verilog_modulet::submodules_rec(
-  const exprt &module_item,
+void submodules_rec(
+  const verilog_module_itemt &module_item,
   std::vector<irep_idt> &dest)
 {
   if(module_item.id() == ID_inst)
@@ -92,7 +92,7 @@ void verilog_modulet::submodules_rec(
 
 /*******************************************************************\
 
-Function: verilog_modulet::submodules
+Function: submodules
 
   Inputs:
 
@@ -102,12 +102,12 @@ Function: verilog_modulet::submodules
 
 \*******************************************************************/
 
-std::vector<irep_idt> verilog_modulet::submodules() const
+std::vector<irep_idt> submodules(const verilog_module_sourcet &module)
 {
   std::vector<irep_idt> result;
 
-  for(auto &item : module_items.get_sub())
-    submodules_rec(static_cast<const exprt &>(item), result);
+  for(auto &item : module.module_items())
+    submodules_rec(item, result);
 
   return result;
 }
