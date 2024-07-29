@@ -37,16 +37,12 @@ struct verilog_modulet
     m.module_items.swap(module_items);
     m.location.swap(location);
   }
-  
+
   void show(std::ostream &out) const;
-
-  // The identifiers of the submodules
-  // (not: the identifiers of the instances)
-  std::vector<irep_idt> submodules() const;
-
-private:
-  static void
-  submodules_rec(const exprt &module_item, std::vector<irep_idt> &dest);
 };
+
+// The identifiers of the submodules
+// (not: the identifiers of the instances)
+std::vector<irep_idt> submodules(const verilog_module_sourcet &);
 
 #endif

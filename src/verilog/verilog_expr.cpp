@@ -30,3 +30,29 @@ bool function_call_exprt::is_system_function_call() const
          has_prefix(
            id2string(to_symbol_expr(function()).get_identifier()), "$");
 }
+
+void verilog_module_sourcet::show(std::ostream &out) const
+{
+  out << "Module: " << base_name() << '\n';
+
+  out << "  Parameters:\n";
+
+  for(auto &parameter : parameter_port_list())
+    out << "    " << parameter.pretty() << '\n';
+
+  out << '\n';
+
+  out << "  Ports:\n";
+
+  for(auto &port : ports())
+    out << "    " << port.pretty() << '\n';
+
+  out << '\n';
+
+  out << "  Module items:\n";
+
+  for(auto &item : module_items())
+    out << "    " << item.pretty() << '\n';
+
+  out << '\n';
+}

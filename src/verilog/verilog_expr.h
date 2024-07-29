@@ -1944,6 +1944,8 @@ public:
   {
     return static_cast<source_locationt &>(add(ID_C_source_location));
   }
+
+  void show(std::ostream &) const;
 };
 
 inline const verilog_module_sourcet &to_verilog_module_source(const irept &irep)

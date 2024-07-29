@@ -1848,7 +1848,7 @@ bool verilog_typecheck(
 
   return verilog_typecheck(
     symbol_table,
-    it->second->verilog_module.to_irep(),
+    it->second->verilog_module,
     parse_tree.standard,
     message_handler);
 }

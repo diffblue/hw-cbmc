@@ -41,7 +41,7 @@ public:
     {
     }
 
-    verilog_modulet verilog_module;
+    verilog_module_sourcet verilog_module;
 
     exprt verilog_package_item;
 

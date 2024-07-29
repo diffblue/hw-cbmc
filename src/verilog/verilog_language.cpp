@@ -134,10 +134,10 @@ void verilog_languaget::dependencies(
   if(it!=parse_tree.module_map.end())
   {
     // dependencies on other Verilog modules
-    
-    const verilog_modulet &module=(it->second)->verilog_module;
 
-    for(auto &identifier : module.submodules())
+    const auto &module = (it->second)->verilog_module;
+
+    for(auto &identifier : submodules(module))
       module_set.insert(id2string(identifier));
   }
 }

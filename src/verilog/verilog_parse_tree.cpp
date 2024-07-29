@@ -30,19 +30,20 @@ void verilog_parse_treet::create_module(
   exprt &module_items)
 {
   items.push_back(itemt(itemt::MODULE));
-  itemt &item=items.back();
-
-  verilog_modulet &new_module=item.verilog_module;
 
   if(ports.get_sub().size()==1 &&
      ports.get_sub().front().is_nil())
     ports.clear();
+
+  verilog_modulet new_module;
 
   new_module.name=name.id();
   new_module.parameter_port_list.swap(parameter_port_list);
   new_module.ports.swap(ports);
   new_module.location=((const exprt &)module_keyword).source_location();
   new_module.module_items.swap(module_items);
+
+  items.back().verilog_module = new_module.to_irep();
 
   // add to module map  
   module_map[new_module.name]=--items.end();
@@ -68,7 +69,7 @@ void verilog_parse_treet::modules_provided(
       it++)
     if(it->is_module())
       module_set.insert(
-        id2string(verilog_module_symbol(it->verilog_module.name)));
+        id2string(verilog_module_symbol(it->verilog_module.base_name())));
 }
 
 /*******************************************************************\
@@ -91,7 +92,7 @@ void verilog_parse_treet::build_module_map()
       it!=items.end();
       it++)
     if(it->is_module())
-      module_map[it->verilog_module.name]=it;
+      module_map[it->verilog_module.base_name()] = it;
 }
 
 /*******************************************************************\
