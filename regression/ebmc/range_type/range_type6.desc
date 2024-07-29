@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE broken-smt-backend
 range_type6.smv
 --bound 10
-^EXIT=0$
+^\[spec1\] G x != 4: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-The result does not match the expected result.
