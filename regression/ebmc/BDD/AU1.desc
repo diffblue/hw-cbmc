@@ -1,6 +1,8 @@
-KNOWNBUG
+CORE
 AU1.smv
 --bdd
+^\[spec1\] x >= 1 AU x = 0: REFUTED$
+^\[spec2\] x >= 1 AU x = 10: PROVED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

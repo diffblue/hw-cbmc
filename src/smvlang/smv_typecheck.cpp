@@ -933,11 +933,11 @@ void smv_typecheckt::typecheck(
         condition=!condition;
       }
     }
-  } 
-  else if(expr.id()==ID_AG || expr.id()==ID_AX || expr.id()==ID_AF || 
-          expr.id()==ID_EG || expr.id()==ID_EX || expr.id()==ID_EF ||
-          expr.id()==ID_A || expr.id()==ID_E || expr.id()==ID_X ||
-          expr.id()==ID_F || expr.id()==ID_G)
+  }
+  else if(
+    expr.id() == ID_AG || expr.id() == ID_AX || expr.id() == ID_AF ||
+    expr.id() == ID_EG || expr.id() == ID_EX || expr.id() == ID_EF ||
+    expr.id() == ID_X || expr.id() == ID_F || expr.id() == ID_G)
   {
     if(expr.operands().size()!=1)
     {
@@ -951,7 +951,9 @@ void smv_typecheckt::typecheck(
 
     typecheck(to_unary_expr(expr).op(), expr.type(), mode);
   }
-  else if(expr.id() == ID_U || expr.id() == ID_R)
+  else if(
+    expr.id() == ID_EU || expr.id() == ID_ER || expr.id() == ID_AU ||
+    expr.id() == ID_AR || expr.id() == ID_U || expr.id() == ID_R)
   {
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet();

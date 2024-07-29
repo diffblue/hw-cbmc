@@ -476,6 +476,14 @@ bool expr2smvt::convert(
     return convert_unary(
       to_unary_expr(src), dest, src.id_string() + " ", precedence = 7);
 
+  else if(
+    src.id() == ID_AU || src.id() == ID_EU || src.id() == ID_AR ||
+    src.id() == ID_ER || src.id() == ID_U || src.id() == ID_R)
+  {
+    return convert_binary(
+      to_binary_expr(src), dest, src.id_string(), precedence = 7);
+  }
+
   else if(src.id()==ID_symbol)
     return convert_symbol(to_symbol_expr(src), dest, precedence);
 
