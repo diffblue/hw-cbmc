@@ -16,8 +16,6 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬(a ∨ b) --> ¬a ∧ ¬b
 /// ¬(a ∧ b) --> ¬a ∨ ¬b
 /// (a -> b) --> ¬a ∨ b
-/// sva_overlapped_implication --> ¬a ∨ b
-/// sva_non_overlapped_implication --> ¬a ∨ Xb
 /// sva_nexttime φ --> Xφ
 /// sva_s_nexttime φ --> Xφ
 /// sva_if --> ? :

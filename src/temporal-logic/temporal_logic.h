@@ -36,4 +36,7 @@ bool is_LTL(const exprt &);
 /// as its root
 bool is_LTL_operator(const exprt &);
 
+/// Returns true iff the given expression is an SVA sequence expression
+bool is_SVA_sequence(const exprt &);
+
 #endif

@@ -12,4 +12,7 @@ module main(input clk);
   // checks that 1 2 is followed by 0
   assert property (@(posedge clk) counter == 1 ##1 counter == 2 |-> ##1 counter == 0);
 
+  // same with non-overlapping implication
+  assert property (@(posedge clk) counter == 1 ##1 counter == 2 |=> counter == 0);
+
 endmodule : main
