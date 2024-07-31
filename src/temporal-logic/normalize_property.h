@@ -16,6 +16,11 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬(a ∨ b) --> ¬a ∧ ¬b
 /// ¬(a ∧ b) --> ¬a ∨ ¬b
 /// (a -> b) --> ¬a ∨ b
+/// sva_not a --> ¬a
+/// a sva_and b --> a ∧ b                       if a and b are not SVA sequences
+/// a sva_or b --> a ∨ b                        if a and b are not SVA sequences
+/// sva_overlapped_implication --> ¬a ∨ b       if a and b are not SVA sequences
+/// sva_non_overlapped_implication --> ¬a ∨ Xb  if a and b are not SVA sequences
 /// sva_nexttime φ --> Xφ
 /// sva_s_nexttime φ --> Xφ
 /// sva_if --> ? :

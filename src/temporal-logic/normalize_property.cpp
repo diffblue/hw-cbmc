@@ -14,6 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/sva_expr.h>
 
 #include "temporal_expr.h"
+#include "temporal_logic.h"
 
 exprt normalize_pre_not(not_exprt expr)
 {
@@ -61,6 +62,51 @@ exprt normalize_pre_implies(implies_exprt expr)
   return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
 }
 
+exprt normalize_pre_sva_overlapped_implication(
+  sva_overlapped_implication_exprt expr)
+{
+  // Same as regular implication if lhs and rhs are not
+  // sequences.
+  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
+    return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
+  else
+    return std::move(expr);
+}
+
+exprt normalize_pre_sva_non_overlapped_implication(
+  sva_non_overlapped_implication_exprt expr)
+{
+  // Same as a->Xb if lhs and rhs are not sequences.
+  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
+    return or_exprt{not_exprt{expr.lhs()}, X_exprt{expr.rhs()}};
+  else
+    return std::move(expr);
+}
+
+exprt normalize_pre_sva_not(sva_not_exprt expr)
+{
+  // Same as regular 'not'. These do not apply to sequences.
+  return not_exprt{expr.op()};
+}
+
+exprt normalize_pre_sva_and(sva_and_exprt expr)
+{
+  // Same as a ∧ b if lhs and rhs are not sequences.
+  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
+    return and_exprt{expr.lhs(), expr.rhs()};
+  else
+    return std::move(expr);
+}
+
+exprt normalize_pre_sva_or(sva_or_exprt expr)
+{
+  // Same as a ∧ b if lhs or rhs are not sequences.
+  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
+    return or_exprt{expr.lhs(), expr.rhs()};
+  else
+    return std::move(expr);
+}
+
 exprt normalize_pre_sva_cycle_delay(sva_cycle_delay_exprt expr)
 {
   if(expr.is_unbounded())
@@ -91,6 +137,18 @@ exprt normalize_property(exprt expr)
     expr = normalize_pre_implies(to_implies_expr(expr));
   else if(expr.id() == ID_sva_cover)
     expr = G_exprt{not_exprt{to_sva_cover_expr(expr).op()}};
+  else if(expr.id() == ID_sva_overlapped_implication)
+    expr = normalize_pre_sva_overlapped_implication(
+      to_sva_overlapped_implication_expr(expr));
+  else if(expr.id() == ID_sva_non_overlapped_implication)
+    expr = normalize_pre_sva_non_overlapped_implication(
+      to_sva_non_overlapped_implication_expr(expr));
+  else if(expr.id() == ID_sva_and)
+    expr = normalize_pre_sva_and(to_sva_and_expr(expr));
+  else if(expr.id() == ID_sva_not)
+    expr = normalize_pre_sva_not(to_sva_not_expr(expr));
+  else if(expr.id() == ID_sva_or)
+    expr = normalize_pre_sva_or(to_sva_or_expr(expr));
   else if(expr.id() == ID_sva_nexttime)
   {
     if(!to_sva_nexttime_expr(expr).is_indexed())

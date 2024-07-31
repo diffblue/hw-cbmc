@@ -71,7 +71,9 @@ bool is_SVA_sequence(const exprt &expr)
   auto id = expr.id();
   // Note that ID_sva_overlapped_followed_by and ID_sva_nonoverlapped_followed_by
   // are property expressions, not sequence expressions.
-  return id == ID_sva_overlapped_implication ||
+  // Note that ID_sva_not does not yield a sequence expression.
+  return id == ID_sva_and || id == ID_sva_or ||
+         id == ID_sva_overlapped_implication ||
          id == ID_sva_non_overlapped_implication || id == ID_sva_cycle_delay ||
          id == ID_sva_sequence_concatenation ||
          id == ID_sva_sequence_intersect || id == ID_sva_sequence_first_match ||

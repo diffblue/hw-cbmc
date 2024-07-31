@@ -19,8 +19,8 @@ module ring_buffer(input clk, input read, input write);
   wire full=count==15;
   wire empty=count==0;
 
-  assume property (empty -> !read);
-  assume property (full -> !write);
+  assume property (empty |-> !read);
+  assume property (full |-> !write);
 
   assert property (((writeptr-readptr)&'b1111)==count);
 
