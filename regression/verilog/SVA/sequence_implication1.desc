@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 sequence_implication1.sv
 --bound 20
 ^EXIT=0$
@@ -6,5 +6,3 @@ sequence_implication1.sv
 --
 ^warning: ignoring
 --
-The sequence implication operator does not pick up the end of the chain
-sequence on the left hand side.
