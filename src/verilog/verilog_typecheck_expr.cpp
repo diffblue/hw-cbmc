@@ -2163,6 +2163,16 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     throw errort().with_location(expr.source_location())
       << "no support for 'first_match'";
   }
+  else if(expr.id() == ID_sva_sequence_repetition_plus)
+  {
+    throw errort().with_location(expr.source_location())
+      << "currently no support for [+]";
+  }
+  else if(expr.id() == ID_sva_sequence_repetition_star)
+  {
+    throw errort().with_location(expr.source_location())
+      << "currently no support for [*]";
+  }
   else if(expr.id() == ID_verilog_explicit_cast)
   {
     // SystemVerilog has got type'(expr). This is an explicit
@@ -2623,6 +2633,21 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     expr.type() = bool_typet();
     return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_sequence_non_consecutive_repetition)
+  {
+    throw errort().with_location(expr.source_location())
+      << "currently no support for [=]";
+  }
+  else if(expr.id() == ID_sva_sequence_consecutive_repetition)
+  {
+    throw errort().with_location(expr.source_location())
+      << "currently no support for [*]";
+  }
+  else if(expr.id() == ID_sva_sequence_goto_repetition)
+  {
+    throw errort().with_location(expr.source_location())
+      << "currently no support for [->]";
   }
   else
   {
