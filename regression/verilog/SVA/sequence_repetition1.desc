@@ -1,0 +1,9 @@
+KNOWNBUG
+sequence_repetition1.sv
+--bound 10
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+currently not implemented

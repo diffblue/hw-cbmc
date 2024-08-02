@@ -375,6 +375,10 @@ int yyverilogerror(const char *error)
 %token TOK_HASHMINUSHASH    "#-#"
 %token TOK_HASHEQUALHASH    "#=#"
 %token TOK_COLONCOLON       "::"
+%token TOK_LSQASTERIC       "[*"
+%token TOK_LSQPLUS          "[+"
+%token TOK_LSQEQUAL         "[="
+%token TOK_LSQMINUSGREATER  "[->"
 
 /* System Verilog Keywords */
 %token TOK_ACCEPT_ON        "accept_on"
@@ -538,7 +542,7 @@ int yyverilogerror(const char *error)
 %left "and"
 %nonassoc "not" "nexttime" "s_nexttime"
 %left "##"
-%nonassoc "[*]" "[=]" "[->]"
+%nonassoc "[*" "[=" "[->"
 
 // Precendence of Verilog operators,
 // following System Verilog 1800-2017 Table 11-2.
@@ -2184,7 +2188,9 @@ expression_or_dist_brace:
 	;
 
 sequence_expr:
-          expression
+          expression_or_dist
+        | expression_or_dist boolean_abbrev
+		{ $$ = $2; mto($$, $1); }
         | cycle_delay_range sequence_expr
                 { $$=$1; mto($$, $2); }
         | expression cycle_delay_range sequence_expr
@@ -2199,16 +2205,50 @@ sequence_expr:
                 { init($$, ID_sva_sequence_within); mto($$, $1); mto($$, $3); }
         ;
 
+boolean_abbrev:
+	  consecutive_repetition
+	| non_consecutive_repetition
+	| goto_repetition
+	;
+
+sequence_abbrev:
+	  consecutive_repetition
+	;
+
+consecutive_repetition:
+	  "[*" const_or_range_expression ']'
+		{ init($$, ID_sva_sequence_consecutive_repetition); mto($$, $2); }
+	| "[*" ']'
+		{ init($$, ID_sva_sequence_repetition_star); }
+	| "[+" ']'
+		{ init($$, ID_sva_sequence_repetition_plus); }
+	;
+
+non_consecutive_repetition:
+	  "[=" const_or_range_expression ']'
+		{ init($$, ID_sva_sequence_non_consecutive_repetition); mto($$, $2); }
+	;
+
+goto_repetition:
+	  "[->" const_or_range_expression ']'
+		{ init($$, ID_sva_sequence_goto_repetition); mto($$, $2); }
+	;
+
 cycle_delay_range:
           "##" number
                 { init($$, ID_sva_cycle_delay); mto($$, $2); stack_expr($$).operands().push_back(nil_exprt()); }
         | "##" '[' cycle_delay_const_range_expression ']'
                 { $$ = $3; }
-        | "##" '[' TOK_ASTERIC ']'
+        | "##" "[*" ']'
                 { init($$, ID_sva_cycle_delay_star); }
-        | "##" '[' TOK_PLUS ']'
+        | "##" "[+" ']'
                 { init($$, ID_sva_cycle_delay_plus); }
         ;
+
+const_or_range_expression:
+	  constant_expression
+	| cycle_delay_const_range_expression
+	;
 
 cycle_delay_const_range_expression:
 	  constant_expression TOK_COLON constant_expression
