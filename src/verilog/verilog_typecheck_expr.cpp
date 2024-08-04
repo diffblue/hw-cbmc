@@ -2578,12 +2578,15 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(expr.id() == ID_sva_disable_iff)
+  else if(
+    expr.id() == ID_sva_disable_iff || expr.id() == ID_sva_accept_on ||
+    expr.id() == ID_sva_reject_on || expr.id() == ID_sva_sync_accept_on ||
+    expr.id() == ID_sva_sync_reject_on)
   {
-    convert_expr(to_sva_disable_iff_expr(expr).condition());
-    make_boolean(to_sva_disable_iff_expr(expr).condition());
-    convert_expr(to_sva_disable_iff_expr(expr).property());
-    make_boolean(to_sva_disable_iff_expr(expr).property());
+    convert_expr(to_sva_abort_expr(expr).condition());
+    make_boolean(to_sva_abort_expr(expr).condition());
+    convert_expr(to_sva_abort_expr(expr).property());
+    make_boolean(to_sva_abort_expr(expr).property());
     expr.type() = bool_typet();
     return std::move(expr);
   }

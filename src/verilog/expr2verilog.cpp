@@ -475,7 +475,7 @@ std::string expr2verilogt::convert_sva_binary(
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_sva_disable_iff
+Function: expr2verilogt::convert_sva_abort
 
   Inputs:
 
@@ -485,16 +485,17 @@ Function: expr2verilogt::convert_sva_disable_iff
 
 \*******************************************************************/
 
-std::string
-expr2verilogt::convert_sva_disable_iff(const sva_disable_iff_exprt &expr)
+std::string expr2verilogt::convert_sva_abort(
+  const std::string &text,
+  const sva_abort_exprt &expr)
 {
   verilog_precedencet p0;
   auto s0 = convert(expr.condition(), p0);
 
   verilog_precedencet p1;
-  auto s1 = convert(expr.rhs(), p1);
+  auto s1 = convert(expr.property(), p1);
 
-  return "disable iff (" + s0 + ") " + s1;
+  return text + " (" + s0 + ") " + s1;
 }
 
 /*******************************************************************\
@@ -1428,13 +1429,29 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
     return precedence = verilog_precedencet::MIN,
            convert_sva_unary("assume", to_sva_assume_expr(src));
 
+  else if(src.id() == ID_sva_accept_on)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_abort("accept_on", to_sva_abort_expr(src));
+
+  else if(src.id() == ID_sva_reject_on)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_abort("reject_on", to_sva_abort_expr(src));
+
+  else if(src.id() == ID_sva_sync_accept_on)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_abort("sync_accept_on", to_sva_abort_expr(src));
+
+  else if(src.id() == ID_sva_sync_reject_on)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_abort("sync_reject_on", to_sva_abort_expr(src));
+
   else if(src.id()==ID_sva_nexttime)
     return precedence = verilog_precedencet::MIN,
            convert_sva_indexed_binary("nexttime", to_sva_nexttime_expr(src));
 
   else if(src.id() == ID_sva_disable_iff)
     return precedence = verilog_precedencet::MIN,
-           convert_sva_disable_iff(to_sva_disable_iff_expr(src));
+           convert_sva_abort("disable iff", to_sva_abort_expr(src));
 
   else if(src.id()==ID_sva_s_nexttime)
     return precedence = verilog_precedencet::MIN,

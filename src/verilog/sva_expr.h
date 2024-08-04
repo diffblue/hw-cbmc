@@ -11,14 +11,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
-class sva_disable_iff_exprt : public binary_predicate_exprt
+/// accept_on, reject_on, sync_accept_on, sync_reject_on, disable_iff
+class sva_abort_exprt : public binary_predicate_exprt
 {
 public:
-  explicit sva_disable_iff_exprt(exprt condition, exprt property)
-    : binary_predicate_exprt(
-        std::move(condition),
-        ID_sva_disable_iff,
-        std::move(property))
+  sva_abort_exprt(irep_idt id, exprt condition, exprt property)
+    : binary_predicate_exprt(std::move(condition), id, std::move(property))
   {
   }
 
@@ -45,6 +43,30 @@ public:
 protected:
   using binary_predicate_exprt::op0;
   using binary_predicate_exprt::op1;
+};
+
+static inline const sva_abort_exprt &to_sva_abort_expr(const exprt &expr)
+{
+  sva_abort_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_abort_exprt &>(expr);
+}
+
+static inline sva_abort_exprt &to_sva_abort_expr(exprt &expr)
+{
+  sva_abort_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_abort_exprt &>(expr);
+}
+
+class sva_disable_iff_exprt : public sva_abort_exprt
+{
+public:
+  sva_disable_iff_exprt(exprt condition, exprt property)
+    : sva_abort_exprt(
+        ID_sva_disable_iff,
+        std::move(condition),
+        std::move(property))
+  {
+  }
 };
 
 static inline const sva_disable_iff_exprt &
