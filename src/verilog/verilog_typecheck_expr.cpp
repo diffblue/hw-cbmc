@@ -2517,6 +2517,15 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_disable_iff)
+  {
+    convert_expr(to_sva_disable_iff_expr(expr).condition());
+    make_boolean(to_sva_disable_iff_expr(expr).condition());
+    convert_expr(to_sva_disable_iff_expr(expr).property());
+    make_boolean(to_sva_disable_iff_expr(expr).property());
+    expr.type() = bool_typet();
+    return std::move(expr);
+  }
   else if(expr.id() == ID_sva_nexttime)
   {
     if(to_sva_nexttime_expr(expr).is_indexed())

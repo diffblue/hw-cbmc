@@ -14,12 +14,13 @@ bool is_temporal_operator(const exprt &expr)
 {
   return is_CTL_operator(expr) || is_LTL_operator(expr) ||
          is_SVA_sequence(expr) || expr.id() == ID_A || expr.id() == ID_E ||
-         expr.id() == ID_sva_always || expr.id() == ID_sva_always ||
-         expr.id() == ID_sva_ranged_always || expr.id() == ID_sva_nexttime ||
-         expr.id() == ID_sva_s_nexttime || expr.id() == ID_sva_until ||
-         expr.id() == ID_sva_s_until || expr.id() == ID_sva_until_with ||
-         expr.id() == ID_sva_s_until_with || expr.id() == ID_sva_eventually ||
-         expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_cycle_delay ||
+         expr.id() == ID_sva_disable_iff || expr.id() == ID_sva_always ||
+         expr.id() == ID_sva_always || expr.id() == ID_sva_ranged_always ||
+         expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_nexttime ||
+         expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
+         expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with ||
+         expr.id() == ID_sva_eventually || expr.id() == ID_sva_s_eventually ||
+         expr.id() == ID_sva_cycle_delay ||
          expr.id() == ID_sva_overlapped_followed_by ||
          expr.id() == ID_sva_nonoverlapped_followed_by;
 }
