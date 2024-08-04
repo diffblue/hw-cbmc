@@ -11,6 +11,57 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+class sva_disable_iff_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_disable_iff_exprt(exprt condition, exprt property)
+    : binary_predicate_exprt(
+        std::move(condition),
+        ID_sva_disable_iff,
+        std::move(property))
+  {
+  }
+
+  const exprt &condition() const
+  {
+    return op0();
+  }
+
+  exprt &condition()
+  {
+    return op0();
+  }
+
+  const exprt &property() const
+  {
+    return op1();
+  }
+
+  exprt &property()
+  {
+    return op1();
+  }
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
+};
+
+static inline const sva_disable_iff_exprt &
+to_sva_disable_iff_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_disable_iff);
+  sva_disable_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_disable_iff_exprt &>(expr);
+}
+
+static inline sva_disable_iff_exprt &to_sva_disable_iff_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_disable_iff);
+  sva_disable_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_disable_iff_exprt &>(expr);
+}
+
 class sva_nexttime_exprt : public binary_predicate_exprt
 {
 public:

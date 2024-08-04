@@ -115,6 +115,11 @@ exprt normalize_property(exprt expr)
                         : sva_if_expr.false_case();
     expr = if_exprt{sva_if_expr.cond(), sva_if_expr.true_case(), false_case};
   }
+  else if(expr.id() == ID_sva_disable_iff)
+  {
+    auto &disable_iff_expr = to_sva_disable_iff_expr(expr);
+    expr = or_exprt{disable_iff_expr.lhs(), disable_iff_expr.rhs()};
+  }
   else if(expr.id() == ID_sva_strong)
   {
     expr = to_sva_strong_expr(expr).op();

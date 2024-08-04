@@ -475,6 +475,30 @@ std::string expr2verilogt::convert_sva_binary(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_sva_disable_iff
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string
+expr2verilogt::convert_sva_disable_iff(const sva_disable_iff_exprt &expr)
+{
+  verilog_precedencet p0;
+  auto s0 = convert(expr.condition(), p0);
+
+  verilog_precedencet p1;
+  auto s1 = convert(expr.rhs(), p1);
+
+  return "disable iff (" + s0 + ") " + s1;
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_sva_indexed_binary
 
   Inputs:
@@ -1407,6 +1431,10 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
   else if(src.id()==ID_sva_nexttime)
     return precedence = verilog_precedencet::MIN,
            convert_sva_indexed_binary("nexttime", to_sva_nexttime_expr(src));
+
+  else if(src.id() == ID_sva_disable_iff)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_disable_iff(to_sva_disable_iff_expr(src));
 
   else if(src.id()==ID_sva_s_nexttime)
     return precedence = verilog_precedencet::MIN,
