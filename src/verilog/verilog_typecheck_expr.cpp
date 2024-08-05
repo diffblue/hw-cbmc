@@ -561,6 +561,33 @@ constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::countones
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::countones(const constant_exprt &expr)
+{
+  // lower to popcount and try simplifier
+  auto simplified =
+    simplify_expr(popcount_exprt{expr, verilog_int_typet{}.lower()}, ns);
+
+  if(!simplified.is_constant())
+  {
+    throw errort{}.with_location(expr.source_location())
+      << "failed to simplify constant $countones";
+  }
+  else
+    return to_constant_expr(simplified);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::increment
 
   Inputs:
@@ -752,6 +779,19 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     // The return type is integer.
     expr.type() = integer_typet();
+
+    return std::move(expr);
+  }
+  else if(identifier == "$countones") // SystemVerilog
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$countones takes one argument";
+    }
+
+    // The return type is 'int'
+    expr.type() = verilog_int_typet{}.lower();
 
     return std::move(expr);
   }
@@ -1585,6 +1625,17 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
   {
     DATA_INVARIANT(arguments.size() == 1, "$increment has one argument");
     return increment(arguments[0]);
+  }
+  else if(identifier == "$countones")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$countones has one argument");
+
+    auto op = elaborate_constant_expression(arguments[0]);
+
+    if(!op.is_constant())
+      return std::move(expr); // give up
+
+    return countones(to_constant_expr(op));
   }
   else if(identifier == "$clog2")
   {

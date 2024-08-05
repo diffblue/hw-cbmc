@@ -137,6 +137,7 @@ private:
   // system functions
   exprt bits(const exprt &);
   std::optional<mp_integer> bits_rec(const typet &) const;
+  constant_exprt countones(const constant_exprt &);
   constant_exprt left(const exprt &);
   constant_exprt right(const exprt &);
   constant_exprt low(const exprt &);
