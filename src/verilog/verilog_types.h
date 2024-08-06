@@ -218,6 +218,11 @@ public:
   {
     return 32;
   }
+
+  typet lower() const
+  {
+    return signedbv_typet{width()};
+  }
 };
 
 /// 2-state data type, 64-bit signed integer

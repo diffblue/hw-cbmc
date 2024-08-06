@@ -235,7 +235,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id()==ID_function_call)
   {
-    return expand_function_call(to_function_call_expr(expr));
+    return expand_function_call(to_function_call_expr(expr), symbol_state);
   }
   else if(expr.id()==ID_hierarchical_identifier)
   {
@@ -461,7 +461,9 @@ Function: verilog_synthesist::expand_function_call
 
 \*******************************************************************/
 
-exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
+exprt verilog_synthesist::expand_function_call(
+  const function_call_exprt &call,
+  symbol_statet symbol_state)
 {
   // Is it a 'system function call'?
   if(call.is_system_function_call())
@@ -510,6 +512,14 @@ exprt verilog_synthesist::expand_function_call(const function_call_exprt &call)
         return and_exprt{lsb(past), not_exprt{lsb(what)}};
       else
         DATA_INVARIANT(false, "all cases covered");
+    }
+    else if(identifier == "$countones")
+    {
+      // lower to popcount
+      DATA_INVARIANT(
+        call.arguments().size() == 1, "$countones must have one argument");
+      auto what = synth_expr(call.arguments()[0], symbol_state); // rec. call
+      return popcount_exprt{what, call.type()};
     }
     else
     {

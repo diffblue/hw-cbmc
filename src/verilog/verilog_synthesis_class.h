@@ -304,7 +304,8 @@ protected:
     class hierarchical_identifier_exprt &expr,
     symbol_statet symbol_state);
 
-  exprt expand_function_call(const class function_call_exprt &call);
+  exprt
+  expand_function_call(const class function_call_exprt &call, symbol_statet);
 
   typedef std::map<irep_idt, exprt> replace_mapt;
 
