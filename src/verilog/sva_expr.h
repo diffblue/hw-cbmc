@@ -573,6 +573,75 @@ to_sva_non_overlapped_implication_expr(exprt &expr)
   return static_cast<sva_non_overlapped_implication_exprt &>(expr);
 }
 
+class sva_not_exprt : public unary_predicate_exprt
+{
+public:
+  explicit sva_not_exprt(exprt op)
+    : unary_predicate_exprt(ID_sva_not, std::move(op))
+  {
+  }
+};
+
+static inline const sva_not_exprt &to_sva_not_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_not);
+  sva_not_exprt::check(expr);
+  return static_cast<const sva_not_exprt &>(expr);
+}
+
+static inline sva_not_exprt &to_sva_not_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_not);
+  sva_not_exprt::check(expr);
+  return static_cast<sva_not_exprt &>(expr);
+}
+
+class sva_and_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_and_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_sva_and, std::move(op1))
+  {
+  }
+};
+
+static inline const sva_and_exprt &to_sva_and_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_and);
+  sva_and_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_and_exprt &>(expr);
+}
+
+static inline sva_and_exprt &to_sva_and_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_and);
+  sva_and_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_and_exprt &>(expr);
+}
+
+class sva_or_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_or_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_sva_or, std::move(op1))
+  {
+  }
+};
+
+static inline const sva_or_exprt &to_sva_or_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_or);
+  sva_or_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_or_exprt &>(expr);
+}
+
+static inline sva_or_exprt &to_sva_or_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_or);
+  sva_or_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_or_exprt &>(expr);
+}
+
 class sva_cycle_delay_exprt : public ternary_exprt
 {
 public:

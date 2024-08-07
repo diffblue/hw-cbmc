@@ -2107,11 +2107,11 @@ property_expr_proper:
 	| '(' property_expr_proper ')'
 		{ $$ = $2; }
 	| "not" property_expr
-		{ init($$, ID_not); mto($$, $2); }
+		{ init($$, ID_sva_not); mto($$, $2); }
 	| property_expr "or" property_expr
-		{ init($$, ID_or); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_or); mto($$, $1); mto($$, $3); }
 	| property_expr "and" property_expr
-		{ init($$, ID_and); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_and); mto($$, $1); mto($$, $3); }
 	| property_expr "|->" property_expr
 		{ init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
 	| property_expr "|=>" property_expr

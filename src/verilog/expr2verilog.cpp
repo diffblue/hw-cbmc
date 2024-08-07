@@ -1242,6 +1242,9 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
     return convert_unary(
       to_not_expr(src), "!", precedence = verilog_precedencet::NOT);
 
+  else if(src.id() == ID_sva_not)
+    return convert_sva_unary("not", to_sva_not_expr(src));
+
   else if(src.id()==ID_bitnot)
     return convert_unary(
       to_bitnot_expr(src), "~", precedence = verilog_precedencet::NOT);
@@ -1252,6 +1255,9 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
   else if(src.id()==ID_and)
     return convert_binary(
       to_multi_ary_expr(src), "&&", precedence = verilog_precedencet::AND);
+
+  else if(src.id() == ID_sva_and)
+    return convert_sva_binary("and", to_sva_and_expr(src));
 
   else if(src.id()==ID_power)
     return convert_binary(
@@ -1276,6 +1282,9 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
   else if(src.id()==ID_or)
     return convert_binary(
       to_multi_ary_expr(src), "||", precedence = verilog_precedencet::OR);
+
+  else if(src.id() == ID_sva_or)
+    return convert_sva_binary("or", to_sva_or_expr(src));
 
   else if(src.id()==ID_bitor)
     return convert_binary(

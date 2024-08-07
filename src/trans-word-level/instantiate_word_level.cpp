@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "instantiate_word_level.h"
 
 #include <util/ebmc_util.h>
+#include <util/expr_util.h>
 
 #include <temporal-logic/temporal_expr.h>
 #include <temporal-logic/temporal_logic.h>
@@ -240,6 +241,7 @@ wl_instantiatet::instantiate_sequence(exprt expr, const mp_integer &t) const
   }
   else if(expr.id() == ID_sva_sequence_intersect)
   {
+    // IEEE 1800-2017 16.9.6
     PRECONDITION(false);
   }
   else if(expr.id() == ID_sva_sequence_first_match)
@@ -253,6 +255,35 @@ wl_instantiatet::instantiate_sequence(exprt expr, const mp_integer &t) const
   else if(expr.id() == ID_sva_sequence_within)
   {
     PRECONDITION(false);
+  }
+  else if(expr.id() == ID_sva_and)
+  {
+    // IEEE 1800-2017 16.9.5
+    // 1. Both operands must match.
+    // 2. Both sequences start at the same time.
+    // 3. The end time of the composite sequence is
+    //    the end time of the operand sequence that completes last.
+    // Condition (3) is TBD.
+    exprt::operandst conjuncts;
+
+    for(auto &op : expr.operands())
+      conjuncts.push_back(instantiate_rec(op, t).second);
+
+    exprt condition = conjunction(conjuncts);
+    return {{t, condition}};
+  }
+  else if(expr.id() == ID_sva_or)
+  {
+    // IEEE 1800-2017 16.9.7
+    // The set of matches of a or b is the set union of the matches of a
+    // and the matches of b.
+    std::vector<std::pair<mp_integer, exprt>> result;
+
+    for(auto &op : expr.operands())
+      for(auto &match_point : instantiate_sequence(op, t))
+        result.push_back(match_point);
+
+    return result;
   }
   else
   {
