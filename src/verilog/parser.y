@@ -531,6 +531,7 @@ int yyverilogerror(const char *error)
 // whereas the table gives them in decreasing order.
 // The precendence of the assertion operators is lower than
 // those in Table 11-2.
+%nonassoc "property_expr_abort" // accept_on, reject_on, ...
 %nonassoc "property_expr_clocking_event" // @(...) property_expr
 %nonassoc "always" "s_always" "eventually" "s_eventually"
 %nonassoc "accept_on" "reject_on"
@@ -2157,14 +2158,14 @@ property_expr_proper:
 		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
 	| property_expr "iff" property_expr
 		{ init($$, ID_iff); mto($$, $1); mto($$, $3); }
-	| "accept_on" '(' expression_or_dist ')'
-		{ init($$, "sva_accept_on"); mto($$, $3); }
-	| "reject_on" '(' expression_or_dist ')'
-		{ init($$, "sva_reject_on"); mto($$, $3); }
-	| "sync_accept_on" '(' expression_or_dist ')'
-		{ init($$, "sva_sync_accept_on"); mto($$, $3); }
-	| "sync_reject_on" '(' expression_or_dist ')'
-		{ init($$, "sva_sync_reject_on"); mto($$, $3); }
+	| "accept_on" '(' expression_or_dist ')' property_expr %prec "property_expr_abort"
+		{ init($$, ID_sva_accept_on); mto($$, $3); mto($$, $5); }
+	| "reject_on" '(' expression_or_dist ')' property_expr %prec "property_expr_abort"
+		{ init($$, ID_sva_reject_on); mto($$, $3); mto($$, $5); }
+	| "sync_accept_on" '(' expression_or_dist ')' property_expr %prec "property_expr_abort"
+		{ init($$, ID_sva_sync_accept_on); mto($$, $3); mto($$, $5); }
+	| "sync_reject_on" '(' expression_or_dist ')' property_expr %prec "property_expr_abort"
+		{ init($$, ID_sva_sync_reject_on); mto($$, $3); mto($$, $5); }
 	| clocking_event property_expr { $$=$2; } %prec "property_expr_clocking_event"
 	;
 

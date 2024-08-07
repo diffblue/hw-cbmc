@@ -20,6 +20,10 @@ Author: Daniel Kroening, dkr@amazon.com
 /// sva_s_nexttime φ --> Xφ
 /// sva_if --> ? :
 /// a sva_disable_iff b --> a ∨ b
+/// a sva_accept_on b --> a ∨ b
+/// a sva_reject_on b --> ¬a ∧ b
+/// a sva_sync_accept_on b --> a ∨ b
+/// a sva_sync_reject_on b --> ¬a ∧ b
 /// ¬Xφ --> X¬φ
 /// ¬¬φ --> φ
 /// ¬Gφ --> F¬φ

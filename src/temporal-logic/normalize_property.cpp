@@ -120,6 +120,17 @@ exprt normalize_property(exprt expr)
     auto &disable_iff_expr = to_sva_disable_iff_expr(expr);
     expr = or_exprt{disable_iff_expr.lhs(), disable_iff_expr.rhs()};
   }
+  else if(expr.id() == ID_sva_accept_on || expr.id() == ID_sva_sync_accept_on)
+  {
+    auto &sva_abort_expr = to_sva_abort_expr(expr);
+    expr = or_exprt{sva_abort_expr.condition(), sva_abort_expr.property()};
+  }
+  else if(expr.id() == ID_sva_reject_on || expr.id() == ID_sva_sync_reject_on)
+  {
+    auto &sva_abort_expr = to_sva_abort_expr(expr);
+    expr = and_exprt{
+      not_exprt{sva_abort_expr.condition()}, sva_abort_expr.property()};
+  }
   else if(expr.id() == ID_sva_strong)
   {
     expr = to_sva_strong_expr(expr).op();

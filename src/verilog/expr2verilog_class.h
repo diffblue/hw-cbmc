@@ -12,8 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/std_expr.h>
 
+class sva_abort_exprt;
 class sva_case_exprt;
-class sva_disable_iff_exprt;
 class sva_if_exprt;
 class sva_ranged_predicate_exprt;
 
@@ -121,9 +121,10 @@ public:
   std::string convert_sva_binary(const std::string &name, const binary_exprt &);
 
   std::string
-  convert_sva_indexed_binary(const std::string &name, const binary_exprt &);
+  convert_sva_abort(const std::string &name, const sva_abort_exprt &);
 
-  std::string convert_sva_disable_iff(const sva_disable_iff_exprt &);
+  std::string
+  convert_sva_indexed_binary(const std::string &name, const binary_exprt &);
 
   virtual std::string
   convert_replication(const replication_exprt &, verilog_precedencet);
