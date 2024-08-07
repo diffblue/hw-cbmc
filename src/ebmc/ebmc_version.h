@@ -1,1 +1,1 @@
-#define EBMC_VERSION "5.0"
+#define EBMC_VERSION "5.1"

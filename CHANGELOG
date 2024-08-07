@@ -1,0 +1,32 @@
+# EBMC 5.1
+
+* SVA abort properties and disable iff
+* $countones
+* fix for SVA 'and' and 'or', and sequence implication
+* SystemVerilog: compound blocking assignments
+* SystemVerilog: endmodule identifiers
+* SMV: fix for arithmetic on range types that start from non-zero
+* SMV: CTL operators AR, ER, AU, EU
+
+# EBMC 5.0
+
+* Major revision of the SystemVerilog frontend, extending the support for SVA
+* CTL model checking with BDDs
+* Added a Homebrew formula
+* WASM build
+* Fix for AIG-based engine
+* SystemVerilog: $low, $high, $increment, $left, $right
+* SystemVerilog: $stable, $rose, $fell, $changed, $past
+* SystemVerilog named properties
+* SystemVerilog: fix for always_comb
+* SystemVerilog: size casts
+* SystemVerilog: cover properties
+* SystemVerilog: enums
+* SystemVerilog: added all integer types
+* Verilog: parameter ports
+* --json-modules
+* structs, unions
+* SVA followed-by operators, SVA if, indexed nexttime
+* random trace generation
+* SMV identifier syntax fix
+* SMV: LTLSPEC
