@@ -1,0 +1,10 @@
+KNOWNBUG
+error_first_line1.v
+
+
+^file error_first_line1.v: syntax error
+^EXIT=1$
+^SIGNAL=0$
+--
+--
+The line number is missing in the error message.
