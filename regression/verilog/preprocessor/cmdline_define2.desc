@@ -1,0 +1,8 @@
+CORE
+cmdline_define2.v
+--show-modules -D SOME_NAME=foo
+^  Name:       foo$
+^EXIT=0$
+^SIGNAL=0$
+--
+^PREPROCESSING FAILED$

@@ -85,17 +85,15 @@ public:
   {
     return parse_tree;
   }
-  
-  optionst options;
 
   verilog_languaget() : parse_tree(verilog_standardt::NOT_SET)
   {
-    options.set_option("flatten_hierarchy", true);
   }
 
 protected:
   bool force_systemverilog = false;
   bool vl2smv_extensions = false;
+  std::list<std::string> initial_defines;
   verilog_parse_treet parse_tree;
 };
  

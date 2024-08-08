@@ -184,6 +184,24 @@ void verilog_preprocessort::preprocessor()
 {
   try
   {
+    // set up the initial defines
+    for(auto &define : initial_defines)
+    {
+      std::size_t equal_pos = define.find('=');
+      if(equal_pos == std::string::npos)
+      {
+        defines.insert(std::pair<std::string, definet>(define, definet{}));
+      }
+      else
+      {
+        std::string key = define.substr(0, equal_pos);
+        std::string value = define.substr(equal_pos + 1, std::string::npos);
+        auto tokens = verilog_preprocessor_tokenize(value);
+        defines.insert(
+          std::pair<std::string, definet>(key, definet{std::move(tokens)}));
+      }
+    }
+
     // the first context is the input file
     context_stack.emplace_back(false, &in, widen_if_needed(filename));
 
