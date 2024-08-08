@@ -152,6 +152,22 @@ jobs:
       - name: HWMCC08 benchmarks
         run: PATH=$PATH:$PWD/ebmc benchmarking/hwmcc08.sh
 
+  # This job takes approximately 1 minute
+  examples:
+    runs-on: ubuntu-20.04
+    needs: check-ubuntu-20_04-make-clang
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the ebmc binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ebmc-binary
+          path: ebmc
+      - name: Try the ebmc binary
+        run: chmod a+x ./ebmc/ebmc ; ./ebmc/ebmc --version
+      - name: Hazard3
+        run: PATH=$PATH:$PWD/ebmc examples/Hazard3/Hazard3.sh
+
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:
     name: CentOS 8
