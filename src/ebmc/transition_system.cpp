@@ -113,6 +113,10 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
   options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
 
+  // do -D
+  if(cmdline.isset('D'))
+    options.set_option("defines", cmdline.get_values('D'));
+
   language->set_language_options(options, message_handler);
 
   if(language->preprocess(infile, filename, std::cout, message_handler))
@@ -159,6 +163,10 @@ static bool parse(
   optionst options;
   options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
   options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
+
+  // do -D
+  if(cmdline.isset('D'))
+    options.set_option("defines", cmdline.get_values('D'));
 
   language.set_language_options(options, message_handler);
 

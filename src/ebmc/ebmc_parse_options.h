@@ -47,7 +47,7 @@ public:
         "(random-traces)(trace-steps):(random-seed):(traces):"
         "(random-trace)(random-waveform)"
         "(liveness-to-safety)"
-        "I:(preprocess)(systemverilog)(vl2smv-extensions)",
+        "I:D:(preprocess)(systemverilog)(vl2smv-extensions)",
         argc,
         argv,
         std::string("EBMC ") + EBMC_VERSION),
