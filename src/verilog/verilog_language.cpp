@@ -102,8 +102,10 @@ bool verilog_languaget::preprocess(
   std::ostream &outstream,
   message_handlert &message_handler)
 {
+  auto initial_defines = options.get_list_option("defines");
+
   verilog_preprocessort preprocessor(
-    instream, outstream, message_handler, path);
+    instream, outstream, message_handler, path, initial_defines);
 
   try { preprocessor.preprocessor(); }
   catch(int e) { return true; }
