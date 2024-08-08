@@ -556,6 +556,7 @@ prove           { VL2SMV_VERILOG_KEYWORD(TOK_PROVE); }
 \'line          { continue; }
 \'file          { continue; }
 \`line{WS}[^\n]*{NL} { line_directive(); continue; }
+\`default_nettype{WS}[^\n]*{NL} { /* ignore for now */ continue; }
 \`{Word}        { preprocessor(); continue; }
 
 \f              { /* ignore */ }
