@@ -114,3 +114,14 @@ void verilog_preprocessor_tokenizert::get_token_from_stream()
   token.kind = static_cast<verilog_preprocessor_tokenizert::tokent::kindt>(
     yyverilog_preprocessorlex());
 }
+
+std::vector<verilog_preprocessor_token_sourcet::tokent>
+verilog_preprocessor_tokenize(const std::string &text)
+{
+  std::istringstream instream(text);
+  verilog_preprocessor_tokenizert tokenizer(instream);
+  std::vector<verilog_preprocessor_token_sourcet::tokent> result;
+  while(!tokenizer.eof())
+    result.push_back(tokenizer.next_token());
+  return result;
+}

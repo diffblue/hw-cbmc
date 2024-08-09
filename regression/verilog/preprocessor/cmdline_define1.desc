@@ -1,0 +1,10 @@
+CORE
+cmdline_define1.v
+--preprocess -D SOMETHING -D ELSE=foo
+^A$
+^foo$
+^EXIT=0$
+^SIGNAL=0$
+--
+^B$
+^PREPROCESSING FAILED$

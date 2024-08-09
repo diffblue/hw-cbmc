@@ -21,8 +21,10 @@ public:
     std::istream &_in,
     std::ostream &_out,
     message_handlert &_message_handler,
-    const std::string &_filename):
-    preprocessort(_in, _out, _message_handler, _filename)
+    const std::string &_filename,
+    const std::list<std::string> &_initial_defines)
+    : preprocessort(_in, _out, _message_handler, _filename),
+      initial_defines(_initial_defines)
   {
     condition=true;
   }
@@ -30,6 +32,9 @@ public:
   virtual ~verilog_preprocessort() { }
 
 protected:
+  // from the command line
+  const std::list<std::string> &initial_defines;
+
   using tokent = verilog_preprocessor_token_sourcet::tokent;
 
   struct definet
@@ -37,6 +42,10 @@ protected:
     using parameterst = std::vector<std::string>;
     parameterst parameters;
     std::vector<tokent> tokens;
+    definet() = default;
+    explicit definet(std::vector<tokent> _tokens) : tokens(std::move(_tokens))
+    {
+    }
   };
 
   static std::string as_string(const std::vector<tokent> &);

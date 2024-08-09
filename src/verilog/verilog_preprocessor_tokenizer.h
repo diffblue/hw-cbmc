@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_preprocessor_error.h"
 
+#include <vector>
+
 /// Note that the set of tokens recognised by the Verilog preprocessor
 /// differs from the set of tokens used by the main parser.
 
@@ -104,5 +106,9 @@ protected:
   std::istream &in;
   void get_token_from_stream() override;
 };
+
+// tokenize a given string
+std::vector<verilog_preprocessor_token_sourcet::tokent>
+verilog_preprocessor_tokenize(const std::string &);
 
 #endif // VERILOG_PREPROCESSOR_TOKENIZER_H
