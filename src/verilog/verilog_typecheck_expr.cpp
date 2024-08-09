@@ -1552,6 +1552,17 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
       expr = notequal_exprt(
         reduction_or.op(), from_integer(0, reduction_or.op().type()));
     }
+    else if(expr.id() == ID_replication)
+    {
+      auto &replication = to_replication_expr(expr);
+      auto times = numeric_cast_v<std::size_t>(replication.times());
+      // lower to a concatenation
+      exprt::operandst ops;
+      ops.reserve(times);
+      for(std::size_t i = 0; i < times; i++)
+        ops.push_back(replication.op());
+      expr = concatenation_exprt{ops, expr.type()};
+    }
 
     // We fall back to the simplifier to approximate
     // the standard's definition of 'constant expression'.
