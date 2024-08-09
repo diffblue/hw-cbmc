@@ -608,6 +608,21 @@ void verilog_preprocessort::directive()
     // ignored
     tokenizer().skip_until_eol();
   }
+  else if(text == "default_nettype")
+  {
+    // pass through
+    out << '`' << text;
+    while(true)
+    {
+      auto token = tokenizer().peek();
+      if(token.is_eof())
+        break;
+      out << token.text;
+      tokenizer().next_token(); // eat
+      if(token == '\n')
+        break;
+    }
+  }
   else
   {
     // check defines
