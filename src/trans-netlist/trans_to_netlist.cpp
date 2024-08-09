@@ -207,6 +207,8 @@ void convert_trans_to_netlistt::map_vars(
     else if (symbol.type.id() == ID_module ||
              symbol.type.id() == ID_module_instance)
       return; // ignore modules
+    else if(symbol.is_type)
+      return; // ignore types
     else if (symbol.is_input)
       vartype = var_mapt::vart::vartypet::INPUT;
     else if (symbol.is_state_var)

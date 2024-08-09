@@ -1,0 +1,11 @@
+CORE
+enum1.sv
+--bound 3 --numbered-trace --aig
+^EXIT=10$
+^SIGNAL=0$
+^\[main\.p1\] always main\.my_light != main.YELLOW2: REFUTED$
+^main\.my_light@0 = main\.RED$
+^main\.my_light@1 = main\.YELLOW1$
+^main\.my_light@2 = main\.GREEN$
+^main\.my_light@3 = main\.YELLOW2$
+--
