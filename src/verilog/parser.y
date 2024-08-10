@@ -3451,6 +3451,97 @@ constant_range:
 		{ init($$, ID_verilog_non_indexed_part_select); mto($$, $1); mto($$, $3); }
 	;
 
+const_expression: expression;
+
+mintypmax_expression:
+	  expression
+	| expression TOK_COLON expression TOK_COLON expression
+		{ init($$, "mintypmax"); mto($$, $1); mto($$, $3); mto($$, $5); }
+	;
+
+expression_opt:
+	  /* Optional */
+	  { make_nil($$); }
+	| expression
+	;
+
+expression_brace:
+	  expression
+		{ init($$); mto($$, $1); }
+	| expression_brace ',' expression
+		{ $$=$1;    mto($$, $3); }
+	;
+
+expression:
+          primary
+        | unary_operator attribute_instance_brace primary
+                { $$=$1; mto($$, $3); }
+        | inc_or_dec_expression
+	| expression "->" expression
+		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
+	| expression "<->" expression
+		{ init($$, ID_iff); mto($$, $1); mto($$, $3); }
+	| expression TOK_PLUS expression
+		{ init($$, ID_plus); mto($$, $1); mto($$, $3); }
+	| expression TOK_MINUS expression
+		{ init($$, ID_minus); mto($$, $1); mto($$, $3); }
+	| TOK_PLUS expression %prec UNARY_PLUS
+		{ init($$, ID_unary_plus); mto($$, $2); }
+	| TOK_MINUS expression %prec UNARY_MINUS
+		{ init($$, ID_unary_minus); mto($$, $2); }
+	| expression TOK_ASTERIC expression
+		{ init($$, ID_mult); mto($$, $1); mto($$, $3); }
+	| expression TOK_SLASH expression
+		{ init($$, ID_div); mto($$, $1); mto($$, $3); }
+	| expression TOK_PERCENT expression
+		{ init($$, ID_mod); mto($$, $1); mto($$, $3); }
+	| expression TOK_EQUALEQUAL expression
+		{ init($$, ID_verilog_logical_equality); mto($$, $1); mto($$, $3); }
+	| expression TOK_EXCLAMEQUAL expression
+		{ init($$, ID_verilog_logical_inequality); mto($$, $1); mto($$, $3); }
+	| expression TOK_EQUALEQUALEQUAL expression
+		{ init($$, ID_verilog_case_equality); mto($$, $1); mto($$, $3); }
+	| expression TOK_EXCLAMEQUALEQUAL expression
+		{ init($$, ID_verilog_case_inequality); mto($$, $1); mto($$, $3); }
+	| expression TOK_AMPERAMPER expression
+		{ init($$, ID_and); mto($$, $1); mto($$, $3); }
+	| expression TOK_ASTERICASTERIC expression
+		{ init($$, ID_power); mto($$, $1); mto($$, $3); }
+	| expression TOK_VERTBARVERTBAR expression
+		{ init($$, ID_or); mto($$, $1); mto($$, $3); }
+	| expression TOK_LESS expression
+		{ init($$, ID_lt); mto($$, $1); mto($$, $3); }
+	| expression TOK_LESSEQUAL expression
+		{ init($$, ID_le); mto($$, $1); mto($$, $3); }
+	| expression TOK_GREATER expression
+		{ init($$, ID_gt); mto($$, $1); mto($$, $3); }
+	| expression TOK_GREATEREQUAL expression
+		{ init($$, ID_ge); mto($$, $1); mto($$, $3); }
+	| expression TOK_AMPER expression
+		{ init($$, ID_bitand); mto($$, $1); mto($$, $3); }
+	| expression TOK_VERTBAR expression
+		{ init($$, ID_bitor); mto($$, $1); mto($$, $3); }
+	| expression TOK_CARET expression
+		{ init($$, ID_bitxor); mto($$, $1); mto($$, $3); }
+	| expression TOK_TILDECARET expression
+		{ init($$, ID_bitxnor); mto($$, $1); mto($$, $3); }
+	| expression TOK_LESSLESS expression
+		{ init($$, ID_shl); mto($$, $1); mto($$, $3); }
+	| expression TOK_LESSLESSLESS expression
+		{ init($$, ID_shl); mto($$, $1); mto($$, $3); }
+	| expression TOK_GREATERGREATER expression
+		{ init($$, ID_lshr); mto($$, $1); mto($$, $3); }
+	| expression TOK_GREATERGREATERGREATER expression
+	        // This is an arithmetic right shift for signed expressions,
+	        // and a logical right shift otherwise -- the type checker
+	        // will determine.
+		{ init($$, ID_shr); mto($$, $1); mto($$, $3); }
+	| expression TOK_QUESTION expression TOK_COLON expression
+		{ init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
+	| TOK_QSTRING
+		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
+	;
+
 indexed_range:
 	  expression TOK_PLUSCOLON constant_expression
 		{ init($$, ID_verilog_indexed_part_select_plus); mto($$, $1); mto($$, $3); }
@@ -3550,97 +3641,6 @@ variable_concatenation_lvalue_brace:
 		{ init($$); mto($$, $1); }
 	| variable_concatenation_lvalue_brace ',' variable_lvalue
 		{ $$=$1;    mto($$, $3); }
-	;
-
-const_expression: expression;
-
-mintypmax_expression:
-	  expression
-	| expression TOK_COLON expression TOK_COLON expression
-		{ init($$, "mintypmax"); mto($$, $1); mto($$, $3); mto($$, $5); }
-	;
-
-expression_opt:
-	  /* Optional */
-	  { make_nil($$); }
-	| expression
-	;
-
-expression_brace:
-	  expression
-		{ init($$); mto($$, $1); }
-	| expression_brace ',' expression
-		{ $$=$1;    mto($$, $3); }
-	;
-
-expression:
-          primary
-        | unary_operator attribute_instance_brace primary
-                { $$=$1; mto($$, $3); }
-        | inc_or_dec_expression
-	| expression "->" expression
-		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
-	| expression "<->" expression
-		{ init($$, ID_iff); mto($$, $1); mto($$, $3); }
-	| expression TOK_PLUS expression
-		{ init($$, ID_plus); mto($$, $1); mto($$, $3); }
-	| expression TOK_MINUS expression
-		{ init($$, ID_minus); mto($$, $1); mto($$, $3); }
-	| TOK_PLUS expression %prec UNARY_PLUS
-		{ init($$, ID_unary_plus); mto($$, $2); }
-	| TOK_MINUS expression %prec UNARY_MINUS
-		{ init($$, ID_unary_minus); mto($$, $2); }
-	| expression TOK_ASTERIC expression
-		{ init($$, ID_mult); mto($$, $1); mto($$, $3); }
-	| expression TOK_SLASH expression
-		{ init($$, ID_div); mto($$, $1); mto($$, $3); }
-	| expression TOK_PERCENT expression
-		{ init($$, ID_mod); mto($$, $1); mto($$, $3); }
-	| expression TOK_EQUALEQUAL expression
-		{ init($$, ID_verilog_logical_equality); mto($$, $1); mto($$, $3); }
-	| expression TOK_EXCLAMEQUAL expression
-		{ init($$, ID_verilog_logical_inequality); mto($$, $1); mto($$, $3); }
-	| expression TOK_EQUALEQUALEQUAL expression
-		{ init($$, ID_verilog_case_equality); mto($$, $1); mto($$, $3); }
-	| expression TOK_EXCLAMEQUALEQUAL expression
-		{ init($$, ID_verilog_case_inequality); mto($$, $1); mto($$, $3); }
-	| expression TOK_AMPERAMPER expression
-		{ init($$, ID_and); mto($$, $1); mto($$, $3); }
-	| expression TOK_ASTERICASTERIC expression
-		{ init($$, ID_power); mto($$, $1); mto($$, $3); }
-	| expression TOK_VERTBARVERTBAR expression
-		{ init($$, ID_or); mto($$, $1); mto($$, $3); }
-	| expression TOK_LESS expression
-		{ init($$, ID_lt); mto($$, $1); mto($$, $3); }
-	| expression TOK_LESSEQUAL expression
-		{ init($$, ID_le); mto($$, $1); mto($$, $3); }
-	| expression TOK_GREATER expression
-		{ init($$, ID_gt); mto($$, $1); mto($$, $3); }
-	| expression TOK_GREATEREQUAL expression
-		{ init($$, ID_ge); mto($$, $1); mto($$, $3); }
-	| expression TOK_AMPER expression
-		{ init($$, ID_bitand); mto($$, $1); mto($$, $3); }
-	| expression TOK_VERTBAR expression
-		{ init($$, ID_bitor); mto($$, $1); mto($$, $3); }
-	| expression TOK_CARET expression
-		{ init($$, ID_bitxor); mto($$, $1); mto($$, $3); }
-	| expression TOK_TILDECARET expression
-		{ init($$, ID_bitxnor); mto($$, $1); mto($$, $3); }
-	| expression TOK_LESSLESS expression
-		{ init($$, ID_shl); mto($$, $1); mto($$, $3); }
-	| expression TOK_LESSLESSLESS expression
-		{ init($$, ID_shl); mto($$, $1); mto($$, $3); }
-	| expression TOK_GREATERGREATER expression
-		{ init($$, ID_lshr); mto($$, $1); mto($$, $3); }
-	| expression TOK_GREATERGREATERGREATER expression
-	        // This is an arithmetic right shift for signed expressions,
-	        // and a logical right shift otherwise -- the type checker
-	        // will determine.
-		{ init($$, ID_shr); mto($$, $1); mto($$, $3); }
-	| expression TOK_QUESTION expression TOK_COLON expression
-		{ init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
-	| TOK_QSTRING
-		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
 	;
 
 // System Verilog standard 1800-2017
