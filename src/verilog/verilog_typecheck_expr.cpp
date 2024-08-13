@@ -1545,12 +1545,67 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
     if(!operands_are_constant)
       return expr; // give up
 
+    auto make_all_ones = [](const typet &type) -> exprt
+    {
+      if(type.id() == ID_unsignedbv)
+      {
+        return from_integer(
+          power(2, to_unsignedbv_type(type).get_width()) - 1, type);
+      }
+      else if(type.id() == ID_signedbv)
+      {
+        return from_integer(-1, type);
+      }
+      else if(type.id() == ID_bool)
+        return true_exprt{};
+      else
+        PRECONDITION(false);
+    };
+
     if(expr.id() == ID_reduction_or)
     {
       // The simplifier doesn't know how to simplify reduction_or
       auto &reduction_or = to_unary_expr(expr);
       expr = notequal_exprt(
         reduction_or.op(), from_integer(0, reduction_or.op().type()));
+    }
+    else if(expr.id() == ID_reduction_nor)
+    {
+      // The simplifier doesn't know how to simplify reduction_nor
+      auto &reduction_nor = to_unary_expr(expr);
+      expr = equal_exprt(
+        reduction_nor.op(), from_integer(0, reduction_nor.op().type()));
+    }
+    else if(expr.id() == ID_reduction_and)
+    {
+      // The simplifier doesn't know how to simplify reduction_and
+      auto &reduction_and = to_unary_expr(expr);
+      expr = equal_exprt{
+        reduction_and.op(), make_all_ones(reduction_and.op().type())};
+    }
+    else if(expr.id() == ID_reduction_nand)
+    {
+      // The simplifier doesn't know how to simplify reduction_nand
+      auto &reduction_nand = to_unary_expr(expr);
+      expr = notequal_exprt{
+        reduction_nand.op(), make_all_ones(reduction_nand.op().type())};
+    }
+    else if(expr.id() == ID_reduction_xor)
+    {
+      // The simplifier doesn't know how to simplify reduction_xor
+      // Lower to countones.
+      auto &reduction_xor = to_unary_expr(expr);
+      auto ones = countones(to_constant_expr(reduction_xor.op()));
+      expr = extractbit_exprt{ones, from_integer(0, natural_typet{})};
+    }
+    else if(expr.id() == ID_reduction_xnor)
+    {
+      // The simplifier doesn't know how to simplify reduction_xnor
+      // Lower to countones.
+      auto &reduction_xnor = to_unary_expr(expr);
+      auto ones = countones(to_constant_expr(reduction_xnor.op()));
+      expr =
+        not_exprt{extractbit_exprt{ones, from_integer(0, natural_typet{})}};
     }
     else if(expr.id() == ID_replication)
     {
