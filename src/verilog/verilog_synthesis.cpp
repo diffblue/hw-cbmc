@@ -440,6 +440,80 @@ verilog_synthesist::synthesis_constant(const exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::synth_lhs_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_synthesist::synth_lhs_expr(exprt expr)
+{
+  // case-split on possible expressions on the LHS of an assignment
+  if(expr.id() == ID_symbol)
+  {
+    return expr; // leave as is
+  }
+  else if(expr.id() == ID_concatenation)
+  {
+    for(auto &op : expr.operands())
+      op = synth_lhs_expr(op);
+
+    return expr;
+  }
+  else if(expr.id() == ID_verilog_non_indexed_part_select)
+  {
+    auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
+    part_select.src() = synth_lhs_expr(part_select.src());
+    // The indices are expected to be constants.
+    return expr;
+  }
+  else if(
+    expr.id() == ID_verilog_indexed_part_select_plus ||
+    expr.id() == ID_verilog_indexed_part_select_minus)
+  {
+    auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
+    part_select.src() = synth_lhs_expr(part_select.src());
+    // The index need not be a constant, and is _not_ an lhs.
+    part_select.index() =
+      synth_expr(part_select.index(), symbol_statet::CURRENT);
+    return expr;
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+    // The array is an 'lhs' but the index is not.
+    index_expr.array() = synth_lhs_expr(index_expr.array());
+    index_expr.index() = synth_expr(index_expr.index(), symbol_statet::CURRENT);
+    return expr;
+  }
+  else if(expr.id() == ID_extractbit)
+  {
+    auto &extractbit_expr = to_extractbit_expr(expr);
+    // The vector is an 'lhs' but the bit index is not.
+    extractbit_expr.src() = synth_lhs_expr(extractbit_expr.src());
+    extractbit_expr.index() =
+      synth_expr(extractbit_expr.index(), symbol_statet::CURRENT);
+    return expr;
+  }
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    member_expr.struct_op() = synth_lhs_expr(member_expr.struct_op());
+    return expr;
+  }
+  else
+  {
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      false, "unexpected lhs during synthesis", expr.pretty());
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::value_mapt::guarded_expr
 
   Inputs:
@@ -2318,9 +2392,10 @@ void verilog_synthesist::synth_assign(const verilog_assignt &statement)
       << "unexpected assignment statement";
   }
 
-  const exprt &lhs = statement.lhs();
-  exprt rhs = statement.rhs();
+  exprt lhs = statement.lhs();
+  lhs = synth_lhs_expr(lhs);
 
+  exprt rhs = statement.rhs();
   rhs = synth_expr(rhs, symbol_statet::CURRENT);
 
   irep_idt compound_id = irep_idt{};
