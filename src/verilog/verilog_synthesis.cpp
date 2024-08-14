@@ -405,6 +405,41 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::synthesis_constant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<mp_integer>
+verilog_synthesist::synthesis_constant(const exprt &expr)
+{
+  exprt synthesised = synth_expr(expr, symbol_statet::CURRENT);
+
+  exprt simplified = simplify_expr(synthesised, ns);
+
+  if(!simplified.is_constant())
+    return {};
+
+  if(simplified.type().id() == ID_bool)
+    return simplified.is_true() ? 1 : 0;
+
+  auto number = numeric_cast<mp_integer>(to_constant_expr(simplified));
+  if(!number.has_value())
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      false,
+      "synthesis_constant expects a numerical type",
+      simplified.pretty());
+
+  return number.value();
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::value_mapt::guarded_expr
 
   Inputs:
@@ -2947,22 +2982,23 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
   synth_statement(statement.initialization());
 
   while(true)
-  {  
-    exprt tmp_guard=statement.condition();
-    tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
-    tmp_guard = synth_expr(tmp_guard, symbol_statet::CURRENT);
-    simplify(tmp_guard, ns);
- 
-    if(!tmp_guard.is_constant())
+  {
+    DATA_INVARIANT(
+      statement.condition().type().id() == ID_bool,
+      "for condition must be Boolean");
+
+    auto guard_value_opt = synthesis_constant(statement.condition());
+
+    if(!guard_value_opt.has_value())
     {
-      throw errort().with_location(
-        to_multi_ary_expr(statement).op1().source_location())
-        << "synthesis failed to evaluate loop guard: `" << to_string(tmp_guard)
-        << '\'';
+      throw errort().with_location(statement.condition().source_location())
+        << "synthesis failed to evaluate loop guard: `"
+        << to_string(statement.condition()) << '\'';
     }
 
-    if(tmp_guard.is_false()) break;
-    
+    if(guard_value_opt.value() == 0)
+      break;
+
     // copy the body
     verilog_statementt tmp_body=statement.body();
     synth_statement(tmp_body);
