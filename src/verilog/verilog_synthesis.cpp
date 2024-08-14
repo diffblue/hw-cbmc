@@ -364,12 +364,12 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       if(part_select.id() == ID_verilog_indexed_part_select_plus)
       {
         bottom = index_int - src_offset;
-        top = bottom + width;
+        top = bottom + width - 1;
       }
       else // ID_verilog_indexed_part_select_minus
       {
         top = index_int - src_offset;
-        bottom = bottom - width;
+        bottom = bottom - width + 1;
       }
 
       return extractbits_exprt{
@@ -1091,7 +1091,7 @@ void verilog_synthesist::assignment_rec(
 
     // We drop bits that are out of bounds
     auto from_in_range = std::max(mp_integer{0}, index);
-    auto to_in_range = std::min(rhs_width - 1, index + width);
+    auto to_in_range = std::min(rhs_width - 1, index + width - 1);
 
     // now add the indexes in the range
     for(mp_integer i = from_in_range; i <= to_in_range; ++i)
@@ -1342,7 +1342,7 @@ void verilog_synthesist::assignment_member_rec(
     member.push_back(mp_integer());
 
     // now add the indexes in the range
-    for(mp_integer i = index; i <= index + width; ++i)
+    for(mp_integer i = index; i <= index + width - 1; ++i)
     {
       // do the value
       member.back() = i;
