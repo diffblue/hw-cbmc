@@ -179,6 +179,7 @@ protected:
   };
 
   // expressions
+  [[nodiscard]] exprt synth_lhs_expr(exprt expr);
   [[nodiscard]] std::optional<mp_integer> synthesis_constant(const exprt &);
 
   exprt current_value(
