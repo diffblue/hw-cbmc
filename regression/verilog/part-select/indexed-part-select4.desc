@@ -1,0 +1,9 @@
+KNOWNBUG
+indexed-part-select4.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Synthesis-time constant folding for the index does not work.
