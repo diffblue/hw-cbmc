@@ -1,0 +1,9 @@
+KNOWNBUG
+indexed-part-select5.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This yields invalid SMT-LIB ("invalid extract application").
