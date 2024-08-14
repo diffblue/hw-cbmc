@@ -177,7 +177,10 @@ protected:
 
     exprt guarded_expr(exprt) const;
   };
-   
+
+  // expressions
+  [[nodiscard]] std::optional<mp_integer> synthesis_constant(const exprt &);
+
   exprt current_value(
     const value_mapt::mapt &map,
     const symbolt &symbol,
