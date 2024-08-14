@@ -183,8 +183,8 @@ protected:
 
   exprt current_value(
     const value_mapt::mapt &map,
-    const symbolt &symbol,
-    bool use_previous_assignments);
+    const symbolt &,
+    bool use_previous_assignments) const;
 
   exprt guarded_expr(exprt expr) const
   {
@@ -192,13 +192,13 @@ protected:
     return value_map->guarded_expr(expr);
   }
 
-  inline exprt current_value(const symbolt &symbol)
+  inline exprt current_value(const symbolt &symbol) const
   {
     PRECONDITION(value_map != NULL);
     return current_value(value_map->current, symbol, false);
   }
 
-  inline exprt final_value(const symbolt &symbol)
+  inline exprt final_value(const symbolt &symbol) const
   {
     PRECONDITION(value_map != NULL);
     return current_value(value_map->final, symbol, true);
@@ -282,9 +282,7 @@ protected:
   
   typedef enum { CURRENT, NEXT } curr_or_nextt;
 
-  exprt symbol_expr(
-    const symbolt &symbol,
-    curr_or_nextt curr_or_next);
+  exprt symbol_expr(const symbolt &, curr_or_nextt curr_or_next) const;
 
   void extract_expr(exprt &dest, unsigned bit);
 
