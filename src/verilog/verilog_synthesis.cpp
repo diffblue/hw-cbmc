@@ -3440,7 +3440,7 @@ Function: verilog_synthesist::symbol_expr
 
 exprt verilog_synthesist::symbol_expr(
   const symbolt &symbol,
-  curr_or_nextt curr_or_next)
+  curr_or_nextt curr_or_next) const
 {
   exprt result=exprt(curr_or_next==NEXT?ID_next_symbol:ID_symbol, symbol.type);
   result.set(ID_identifier, symbol.name);
@@ -3563,21 +3563,23 @@ Function: verilog_synthesist::current_value
 exprt verilog_synthesist::current_value(
   const value_mapt::mapt &map,
   const symbolt &symbol,
-  bool use_previous_assignments)
+  bool use_previous_assignments) const
 {
   if(!symbol.is_state_var)
   {
     if(use_previous_assignments)
     {
       // see if we have a previous assignment
-      const assignmentt &assignment=assignments[symbol.name];
-      const exprt &value=
-        (construct==constructt::INITIAL)?
-          assignment.init.value:
-          assignment.next.value;
+      auto assignment_it = assignments.find(symbol.name);
+      if(assignment_it != assignments.end())
+      {
+        const exprt &value = (construct == constructt::INITIAL)
+                               ? assignment_it->second.init.value
+                               : assignment_it->second.next.value;
 
-      if(value.is_not_nil())
-        return value; // done
+        if(value.is_not_nil())
+          return value; // done
+      }
     }
 
     return symbol_expr(symbol, CURRENT);
@@ -3593,13 +3595,16 @@ exprt verilog_synthesist::current_value(
     if(use_previous_assignments)
     {
       // see if we have a previous assignment
-      const assignmentt &assignment=assignments[symbol.name];
-      const exprt &value=
-        (construct==constructt::INITIAL)?
-          assignment.init.value:assignment.next.value;
+      auto assignment_it = assignments.find(symbol.name);
+      if(assignment_it != assignments.end())
+      {
+        const exprt &value = (construct == constructt::INITIAL)
+                               ? assignment_it->second.init.value
+                               : assignment_it->second.next.value;
 
-      if(value.is_not_nil())
-        return value; // done
+        if(value.is_not_nil())
+          return value; // done
+      }
     }
 
     if(
