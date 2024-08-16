@@ -1060,19 +1060,23 @@ void verilog_synthesist::assignment_rec(
     const exprt &lhs_index = part_select.index();
     const exprt &lhs_width = part_select.width();
 
-    mp_integer index, width;
+    auto index_opt = synthesis_constant(lhs_index);
 
-    if(to_integer_non_constant(lhs_index, index))
+    if(!index_opt.has_value())
     {
       throw errort().with_location(lhs_index.source_location())
         << "failed to convert part select index";
     }
 
-    if(to_integer_non_constant(lhs_width, width))
+    auto width_opt = synthesis_constant(lhs_width);
+
+    if(!width_opt.has_value())
     {
       throw errort().with_location(lhs_width.source_location())
         << "failed to convert part select width";
     }
+
+    mp_integer index = *index_opt, width = *width_opt;
 
     // turn
     //   a[i]=e
@@ -1325,13 +1329,15 @@ void verilog_synthesist::assignment_member_rec(
     const exprt &lhs_index = part_select.index();
     const exprt &lhs_width = part_select.width();
 
-    mp_integer index, width;
+    auto index_opt = synthesis_constant(lhs_index);
 
-    if(to_integer_non_constant(lhs_index, index))
+    if(!index_opt.has_value())
     {
       throw errort().with_location(lhs_index.source_location())
         << "failed to convert part select index";
     }
+
+    mp_integer index = index_opt.value(), width;
 
     if(to_integer_non_constant(lhs_width, width))
     {

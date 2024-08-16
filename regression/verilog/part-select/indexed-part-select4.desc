@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 indexed-part-select4.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ indexed-part-select4.sv
 --
 ^warning: ignoring
 --
-Synthesis-time constant folding for the index does not work.
