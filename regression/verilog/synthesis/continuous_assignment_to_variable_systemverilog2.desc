@@ -1,0 +1,9 @@
+KNOWNBUG
+continuous_assignment_to_variable_systemverilog2.sv
+--bound 1
+^\[main\.cover1\] cover 1: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This creates inconsistent constraints, which yields UNSAT.
