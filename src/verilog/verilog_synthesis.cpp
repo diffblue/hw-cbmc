@@ -1585,6 +1585,7 @@ Function: verilog_synthesist::instantiate_port
 \*******************************************************************/
 
 void verilog_synthesist::instantiate_port(
+  bool is_output,
   const symbol_exprt &port,
   const exprt &value,
   const replace_mapt &replace_map,
@@ -1601,10 +1602,24 @@ void verilog_synthesist::instantiate_port(
       << "failed to find port symbol " << port_identifier << " in replace_map";
   }
 
-  // Much like always @(*) port = value.
+  // Much like
+  //   always @(*) port = value for an input, and
+  //   always @(*) value = port for an output.
   // Note that the types need not match.
-  verilog_forcet assignment(
-    it->second, typecast_exprt::conditional_cast(value, it->second.type()));
+  exprt lhs, rhs;
+
+  if(is_output)
+  {
+    lhs = value;
+    rhs = typecast_exprt::conditional_cast(it->second, value.type());
+  }
+  else
+  {
+    lhs = it->second;
+    rhs = typecast_exprt::conditional_cast(value, it->second.type());
+  }
+
+  verilog_forcet assignment{lhs, rhs};
 
   assignment.add_source_location() = source_location;
 
@@ -1635,8 +1650,6 @@ void verilog_synthesist::instantiate_ports(
   const replace_mapt &replace_map,
   transt &trans)
 {
-  const irept::subt &ports=symbol.type.find(ID_ports).get_sub();
-
   if(inst.operands().size()==0)
     return;
 
@@ -1644,6 +1657,14 @@ void verilog_synthesist::instantiate_ports(
 
   if(to_multi_ary_expr(inst).op0().id() == ID_named_port_connection)
   {
+    const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
+
+    std::set<irep_idt> output_identifiers;
+    for(auto &port : ports)
+      if(port.get_bool(ID_output))
+        output_identifiers.insert(
+          to_symbol_expr((const exprt &)(port)).get_identifier());
+
     // no requirement that all ports are connected
     for(const auto &o_it : inst.operands())
     {
@@ -1653,13 +1674,19 @@ void verilog_synthesist::instantiate_ports(
         const exprt &op1 = to_binary_expr(o_it).op1();
 
         if(op1.is_not_nil())
+        {
+          bool is_output = output_identifiers.find(op0.get_identifier()) !=
+                           output_identifiers.end();
           instantiate_port(
-            op0, op1, replace_map, inst.source_location(), trans);
+            is_output, op0, op1, replace_map, inst.source_location(), trans);
+        }
       }
     }
   }
   else // just a list without names
   {
+    const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
+
     if(inst.operands().size()!=ports.size())
     {
       throw errort().with_location(inst.source_location())
@@ -1676,7 +1703,10 @@ void verilog_synthesist::instantiate_ports(
 
       auto &port = to_symbol_expr((const exprt &)(*p_it));
 
-      instantiate_port(port, o_it, replace_map, inst.source_location(), trans);
+      bool is_output = port.get_bool(ID_output);
+
+      instantiate_port(
+        is_output, port, o_it, replace_map, inst.source_location(), trans);
       p_it++;
     }
   }
