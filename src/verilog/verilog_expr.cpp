@@ -10,6 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/prefix.h>
 
+#include "verilog_typecheck_base.h"
+
 typet verilog_declaratort::merged_type(const typet &declaration_type) const
 {
   typet result = type();
@@ -55,4 +57,41 @@ void verilog_module_sourcet::show(std::ostream &out) const
     out << "    " << item.pretty() << '\n';
 
   out << '\n';
+}
+
+static void submodules_rec(
+  const verilog_module_itemt &module_item,
+  std::vector<irep_idt> &dest)
+{
+  if(module_item.id() == ID_inst)
+  {
+    dest.push_back(
+      verilog_module_symbol(to_verilog_inst(module_item).get_module()));
+  }
+  else if(module_item.id() == ID_generate_block)
+  {
+    for(auto &sub_item : to_verilog_generate_block(module_item).module_items())
+      submodules_rec(sub_item, dest);
+  }
+  else if(module_item.id() == ID_generate_if)
+  {
+    auto &generate_if = to_verilog_generate_if(module_item);
+    submodules_rec(generate_if.then_case(), dest);
+    if(generate_if.has_else_case())
+      submodules_rec(generate_if.else_case(), dest);
+  }
+  else if(module_item.id() == ID_generate_for)
+  {
+    submodules_rec(to_verilog_generate_for(module_item).body(), dest);
+  }
+}
+
+std::vector<irep_idt> verilog_module_sourcet::submodules() const
+{
+  std::vector<irep_idt> result;
+
+  for(auto &item : module_items())
+    submodules_rec(item, result);
+
+  return result;
 }

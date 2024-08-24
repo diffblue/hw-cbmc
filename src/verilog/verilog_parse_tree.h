@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/string_hash.h>
 
-#include "verilog_module.h"
+#include "verilog_expr.h"
 #include "verilog_standard.h"
 
 #include <list>

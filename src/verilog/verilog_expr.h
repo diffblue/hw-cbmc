@@ -1893,6 +1893,13 @@ to_verilog_assume_statement(verilog_statementt &statement)
 class verilog_module_sourcet : public irept
 {
 public:
+  verilog_module_sourcet() = default;
+
+  explicit verilog_module_sourcet(irep_idt _base_name)
+  {
+    base_name(_base_name);
+  }
+
   irep_idt base_name() const
   {
     return get(ID_base_name);
@@ -1946,6 +1953,10 @@ public:
   }
 
   void show(std::ostream &) const;
+
+  // The identifiers of the submodules
+  // (not: the identifiers of the instances)
+  std::vector<irep_idt> submodules() const;
 };
 
 inline const verilog_module_sourcet &to_verilog_module_source(const irept &irep)

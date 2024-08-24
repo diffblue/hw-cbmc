@@ -35,18 +35,18 @@ void verilog_parse_treet::create_module(
      ports.get_sub().front().is_nil())
     ports.clear();
 
-  verilog_modulet new_module;
+  verilog_module_sourcet new_module{name.id()};
 
-  new_module.name=name.id();
-  new_module.parameter_port_list.swap(parameter_port_list);
-  new_module.ports.swap(ports);
-  new_module.location=((const exprt &)module_keyword).source_location();
-  new_module.module_items.swap(module_items);
+  new_module.add(ID_parameter_port_list) = std::move(parameter_port_list);
+  new_module.add(ID_ports) = std::move(ports);
+  new_module.add_source_location() =
+    ((const exprt &)module_keyword).source_location();
+  new_module.add(ID_module_items) = std::move(module_items);
 
-  items.back().verilog_module = new_module.to_irep();
+  items.back().verilog_module = std::move(new_module);
 
-  // add to module map  
-  module_map[new_module.name]=--items.end();
+  // add to module map
+  module_map[name.id()] = --items.end();
 }
 
 /*******************************************************************\
