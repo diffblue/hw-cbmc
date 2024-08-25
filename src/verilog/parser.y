@@ -157,6 +157,25 @@ static void add_as_subtype(typet &dest, typet &what)
 
 /*******************************************************************\
 
+Function: add_attributes
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static void add_attributes(YYSTYPE &dest, YYSTYPE &attributes)
+{
+  PRECONDITION(stack_expr(attributes).id() == ID_verilog_attributes);
+  if(!stack_expr(attributes).get_sub().empty())
+    addswap(dest, ID_verilog_attributes, attributes);
+}
+
+/*******************************************************************\
+
 Function: yyverilogerror
 
   Inputs:
@@ -596,7 +615,8 @@ description:
  	| program_declaration
  	| package_declaration
 	| attribute_instance_brace package_item
-		{ PARSER.parse_tree.create_package_item(stack_expr($2)); }
+		{ add_attributes($2, $1);
+		  PARSER.parse_tree.create_package_item(stack_expr($2)); }
  	| attribute_instance_brace bind_directive
  	| config_declaration
         ;
@@ -769,9 +789,12 @@ ansi_port_declaration_brace:
 	;
 
 port_declaration:
-	  attribute_instance_brace inout_declaration { $$=$2; }
-	| attribute_instance_brace input_declaration { $$=$2; }
-	| attribute_instance_brace output_declaration { $$=$2; }
+	  attribute_instance_brace inout_declaration
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace input_declaration
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace output_declaration
+		{ add_attributes($2, $1); $$=$2; }
 	;
 
 ansi_port_initializer_opt:
@@ -858,13 +881,22 @@ module_item_brace:
 	;
 
 module_or_generate_item:
-	  attribute_instance_brace parameter_override { $$=$2; }
-	| attribute_instance_brace gate_instantiation { $$=$2; }
-	// | attribute_instance_brace udp_instantiation { $$=$2; }
-	| attribute_instance_brace module_instantiation { $$=$2; }
-        | attribute_instance_brace smv_using { $$ = $2; }
-        | attribute_instance_brace smv_assume { $$ = $2; }
-	| attribute_instance_brace module_common_item { $$=$2; }
+	  attribute_instance_brace parameter_override
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace gate_instantiation
+		{ add_attributes($2, $1); $$=$2; }
+	// UDP instances have the same syntax
+	// as module instances; they only differ in the identifier.
+	// | attribute_instance_brace udp_instantiation
+	//	{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace module_instantiation
+		{ add_attributes($2, $1); $$=$2; }
+        | attribute_instance_brace smv_using
+		{ add_attributes($2, $1); $$=$2; }
+        | attribute_instance_brace smv_assume
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace module_common_item
+		{ add_attributes($2, $1); $$=$2; }
 	;
 
 module_or_generate_item_declaration:
@@ -873,16 +905,21 @@ module_or_generate_item_declaration:
 	;
 
 non_port_module_item:
-	  attribute_instance_brace generate_region { $$=$2; }
+	  attribute_instance_brace generate_region
+		{ add_attributes($2, $1); $$=$2; }
         | module_or_generate_item
-        | attribute_instance_brace specparam_declaration {$$=$2; }
-	| attribute_instance_brace specify_block { $$=$2;}
+        | attribute_instance_brace specparam_declaration
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace specify_block
+		{ add_attributes($2, $1); $$=$2; }
         ;
 
 /*
 	  module_or_generate_item
-	| attribute_instance_brace parameter_declaration { $$=$2; }
-	// | attribute_instance_brace local_parameter_declaration { $$=$2; }
+	| attribute_instance_brace parameter_declaration
+	//	{ add_attributes($2, $1); $$=$2; }
+	// | attribute_instance_brace local_parameter_declaration
+	//	{ add_attributes($2, $1); $$=$2; }
 	;
 */
 
@@ -905,12 +942,18 @@ class_item_brace:
 	| class_item_brace class_item
 	;
 
+// classes are yet to be implemented
 class_item:
 //	  attribute_instance_brace class_property
+//		{ add_attributes($2, $1); $$=$2; }
 //	| attribute_instance_brace class_method
+//		{ add_attributes($2, $1); $$=$2; }
 //	| attribute_instance_brace class_constraint
+//		{ add_attributes($2, $1); $$=$2; }
 	  attribute_instance_brace class_declaration
+		{ add_attributes($2, $1); $$=$2; }
 	| attribute_instance_brace covergroup_declaration
+		{ add_attributes($2, $1); $$=$2; }
 	| local_parameter_declaration ';'
 	| parameter_declaration ';'
 	| ';'
@@ -1351,7 +1394,10 @@ struct_union_member:
 	  random_qualifier_opt
 	  data_type_or_void
 	  list_of_variable_decl_assignments ';'
-		{ $$=$4; stack_expr($$).id(ID_decl); addswap($$, ID_type, $3); }
+		{ $$=$4;
+		  stack_expr($$).id(ID_decl);
+		  addswap($$, ID_type, $3);
+		  add_attributes($$, $1); }
 	;
 	
 enum_base_type_opt:
@@ -1867,9 +1913,12 @@ tf_item_declaration_brace:
 
 tf_item_declaration:
 	  block_item_declaration
-	| attribute_instance_brace input_declaration ';' { $$ = $2; }
-	| attribute_instance_brace output_declaration ';' { $$ = $2; }
-	| attribute_instance_brace inout_declaration ';' { $$ = $2; }
+	| attribute_instance_brace input_declaration ';'
+		{ add_attributes($2, $1); $$ = $2; }
+	| attribute_instance_brace output_declaration ';'
+		{ add_attributes($2, $1); $$ = $2; }
+	| attribute_instance_brace inout_declaration ';'
+		{ add_attributes($2, $1); $$ = $2; }
 	;
 
 function_prototype: TOK_FUNCTION data_type_or_void function_identifier
@@ -1936,6 +1985,7 @@ tf_port_item:
 	  port_identifier
 	  variable_dimension_brace
 		{ init($$, ID_decl);
+		  add_attributes($$, $1);
 		  addswap($$, ID_class, $2);
 		  addswap($$, ID_type, $3);
 		  stack_expr($4).id(ID_declarator);
@@ -1953,10 +2003,14 @@ tf_port_direction_opt:
 // A.2.8 Block item declarations
 
 block_item_declaration:
-	  attribute_instance_brace data_declaration { $$=$2; }
-	| attribute_instance_brace local_parameter_declaration ';' { $$=$2; }
-	| attribute_instance_brace parameter_declaration ';' { $$=$2; }
-	| attribute_instance_brace let_declaration { $$=$2; }
+	  attribute_instance_brace data_declaration
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace local_parameter_declaration ';'
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace parameter_declaration ';'
+		{ add_attributes($2, $1); $$=$2; }
+	| attribute_instance_brace let_declaration
+		{ add_attributes($2, $1); $$=$2; }
 	;
 
 // System Verilog standard 1800-2017
@@ -2933,7 +2987,9 @@ block_item_declaration_or_statement_or_null:
 
 statement_or_null:
 	  statement
-	| attribute_instance_brace ';' { init($$, ID_skip); }
+	| attribute_instance_brace ';'
+		{ init($$, ID_skip);
+		  add_attributes($$, $1); }
 	;
 
 statement_or_null_brace:
@@ -3431,13 +3487,13 @@ event_trigger: TOK_MINUSGREATER hierarchical_event_identifier ';'
 
 inc_or_dec_expression:
           TOK_PLUSPLUS attribute_instance_brace variable_lvalue
-                { init($$, ID_preincrement); mto($$, $3); }
+                { init($$, ID_preincrement); mto($$, $3); add_attributes($$, $2); }
         | TOK_MINUSMINUS attribute_instance_brace variable_lvalue
-                { init($$, ID_predecrement); mto($$, $3); }
+                { init($$, ID_predecrement); mto($$, $3); add_attributes($$, $2); }
         | variable_lvalue attribute_instance_brace TOK_PLUSPLUS
-                { init($$, ID_postincrement); mto($$, $1); }
+                { init($$, ID_postincrement); mto($$, $1); add_attributes($$, $2); }
         | variable_lvalue attribute_instance_brace TOK_MINUSMINUS
-                { init($$, ID_postdecrement); mto($$, $1); }
+                { init($$, ID_postdecrement); mto($$, $1); add_attributes($$, $2); }
         ;
 
 constant_param_expression:
@@ -3475,7 +3531,7 @@ expression_brace:
 expression:
           primary
         | unary_operator attribute_instance_brace primary
-                { $$=$1; mto($$, $3); }
+                { $$=$1; mto($$, $3); add_attributes($$, $2); }
         | inc_or_dec_expression
 	| expression "->" expression
 		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
@@ -3670,7 +3726,7 @@ number: unsigned_number
 
 attribute_instance_brace:
 	  /* Optional */
-		{ init($$, ID_verilog_attribute); }
+		{ init($$, ID_verilog_attributes); }
 	| attribute_instance_brace attribute_instance
 		{ $$=$1;
 		  for(auto &attr : stack_expr($2).get_sub())
@@ -3690,12 +3746,12 @@ attr_spec_list:
         ;
 
 attr_spec: attr_name '=' constant_expression
-		{ init($$, "attribute");
+		{ init($$, ID_verilog_attribute);
 		  stack_expr($$).add(ID_name).swap(stack_expr($1));
 		  stack_expr($$).add(ID_value).swap(stack_expr($3));
 		}
 	| attr_name
-		{ init($$, "attribute"); stack_expr($$).add(ID_name).swap(stack_expr($1)); }
+		{ init($$, ID_verilog_attribute); stack_expr($$).add(ID_name).swap(stack_expr($1)); }
 	;
 
 attr_name: identifier
