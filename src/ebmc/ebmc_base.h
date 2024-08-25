@@ -64,7 +64,6 @@ protected:
 public:
   int do_compute_ct();
   int do_bit_level_bmc();
-  int do_word_level_bmc();
 };
 
 #endif

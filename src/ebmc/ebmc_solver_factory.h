@@ -16,7 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <solvers/decision_procedure.h>
 #include <solvers/prop/prop.h>
 
-#include <iosfwd>
+#include <fstream>
 #include <memory>
 
 class ebmc_solvert final
