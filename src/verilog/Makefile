@@ -8,7 +8,6 @@ SRC = aval_bval_encoding.cpp \
       verilog_interpreter.cpp \
       verilog_language.cpp \
       verilog_lex.yy.cpp \
-      verilog_module.cpp \
       verilog_parameterize_module.cpp \
       verilog_parse_tree.cpp \
       verilog_parser.cpp \
