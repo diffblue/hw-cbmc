@@ -1,0 +1,9 @@
+KNOWNBUG
+continuous_assignment_to_net_part_select1.sv
+--bound 0
+^\[main\.p0\] always main\.some_wire\[1:0\] == 1: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This reproduces https://github.com/diffblue/hw-cbmc/issues/638
