@@ -22,6 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "k_induction.h"
 #include "liveness_to_safety.h"
 #include "neural_liveness.h"
+#include "property_checker.h"
 #include "random_traces.h"
 #include "ranking_function.h"
 #include "show_trans.h"
@@ -306,7 +307,11 @@ int ebmc_parse_optionst::doit()
       if(cmdline.isset("aig") || cmdline.isset("dimacs"))
         return ebmc_base.do_bit_level_bmc();
       else
-        return ebmc_base.do_word_level_bmc(); // default
+        return property_checker(
+          cmdline,
+          ebmc_base.transition_system,
+          ebmc_base.properties,
+          ui_message_handler);
     }
   }
   catch(const ebmc_errort &ebmc_error)

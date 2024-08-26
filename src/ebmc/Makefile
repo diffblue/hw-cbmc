@@ -22,6 +22,7 @@ SRC = \
       neural_liveness.cpp \
       output_file.cpp \
       output_verilog.cpp \
+      property_checker.cpp \
       random_traces.cpp \
       ranking_function.cpp \
       report_results.cpp \

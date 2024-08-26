@@ -23,7 +23,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
-#include "bmc.h"
 #include "dimacs_writer.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
@@ -469,96 +468,4 @@ int ebmc_baset::do_compute_ct()
   std::cout << "CT = " << compute_ct(ldg) << '\n';
   
   return 0;
-}
-
-/*******************************************************************\
-
-Function: ebmc_baset::do_word_level_bmc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::do_word_level_bmc()
-{
-  auto solver_factory = ebmc_solver_factory(cmdline);
-
-  bool convert_only = cmdline.isset("smt2") || cmdline.isset("outfile") ||
-                      cmdline.isset("show-formula");
-
-  int result = 0;
-
-  try
-  {
-    if(cmdline.isset("max-bound"))
-    {
-      if(convert_only)
-        throw "please set a specific bound";
-
-      const std::size_t max_bound =
-        unsafe_string2size_t(cmdline.get_value("max-bound"));
-
-      for(bound = 1; bound <= max_bound; bound++)
-      {
-        message.status() << "Doing BMC with bound " << bound << messaget::eom;
-
-#if 0
-        const namespacet ns(transition_system.symbol_table);
-        CHECK_RETURN(trans_expr.has_value());
-        ::unwind(*trans_expr, *message_handler, solver, bound+1, ns, true);
-        result=finish_word_level_bmc(solver);
-#endif
-      }
-
-      const namespacet ns(transition_system.symbol_table);
-      report_results(cmdline, properties, ns, message.get_message_handler());
-    }
-    else
-    {
-      if(get_bound())
-        return 1;
-
-      if(!convert_only)
-        if(properties.properties.empty())
-          throw "no properties";
-
-      bmc(
-        bound,
-        convert_only,
-        transition_system,
-        properties,
-        solver_factory,
-        message.get_message_handler());
-
-      if(!convert_only)
-      {
-        const namespacet ns(transition_system.symbol_table);
-        report_results(cmdline, properties, ns, message.get_message_handler());
-        result = properties.exit_code();
-      }
-    }
-  }
-
-  catch(const char *e)
-  {
-    message.error() << e << messaget::eom;
-    return 10;
-  }
-
-  catch(const std::string &e)
-  {
-    message.error() << e << messaget::eom;
-    return 10;
-  }
-
-  catch(int)
-  {
-    return 10;
-  }
-
-  return result;
 }
