@@ -29,8 +29,6 @@ void verilog_parse_treet::create_module(
   exprt &ports,
   exprt &module_items)
 {
-  items.push_back(itemt(itemt::MODULE));
-
   if(ports.get_sub().size()==1 &&
      ports.get_sub().front().is_nil())
     ports.clear();
@@ -43,10 +41,10 @@ void verilog_parse_treet::create_module(
     ((const exprt &)module_keyword).source_location();
   new_module.add(ID_module_items) = std::move(module_items);
 
-  items.back().verilog_module = std::move(new_module);
+  auto &new_item = add_item(std::move(new_module));
 
   // add to module map
-  module_map[name.id()] = --items.end();
+  module_map[name.id()] = &to_verilog_module_source(new_item);
 }
 
 /*******************************************************************\
@@ -64,12 +62,12 @@ Function: verilog_parse_treet::modules_provided
 void verilog_parse_treet::modules_provided(
   std::set<std::string> &module_set) const
 {
-  for(itemst::const_iterator it=items.begin();
-      it!=items.end();
-      it++)
-    if(it->is_module())
-      module_set.insert(
-        id2string(verilog_module_symbol(it->verilog_module.base_name())));
+  for(auto &item : items)
+  {
+    if(item.id() == ID_verilog_module)
+      module_set.insert(id2string(
+        verilog_module_symbol(to_verilog_module_source(item).base_name())));
+  }
 }
 
 /*******************************************************************\
@@ -88,11 +86,14 @@ void verilog_parse_treet::build_module_map()
 {
   module_map.clear();
 
-  for(itemst::iterator it=items.begin();
-      it!=items.end();
-      it++)
-    if(it->is_module())
-      module_map[it->verilog_module.base_name()] = it;
+  for(const auto &item : items)
+  {
+    if(item.id() == ID_verilog_module)
+    {
+      auto &verilog_module = to_verilog_module_source(item);
+      module_map[verilog_module.base_name()] = &verilog_module;
+    }
+  }
 }
 
 /*******************************************************************\
@@ -109,15 +110,13 @@ Function: verilog_parse_treet::show
 
 void verilog_parse_treet::show(std::ostream &out) const
 {
-  for(itemst::const_iterator it=items.begin();
-      it!=items.end();
-      it++)
-    it->show(out);
+  for(const auto &item : items)
+    show(item, out);
 }
 
 /*******************************************************************\
 
-Function: verilog_parse_treet::itemt::show
+Function: verilog_parse_treet::show
 
   Inputs:
 
@@ -127,20 +126,10 @@ Function: verilog_parse_treet::itemt::show
 
 \*******************************************************************/
 
-void verilog_parse_treet::itemt::show(std::ostream &out) const
+void verilog_parse_treet::show(const itemt &item, std::ostream &out) const
 {
-  switch(type)
-  {
-  case itemt::MODULE:
-    verilog_module.show(out);
-    break;
-
-  case itemt::PACKAGE_ITEM:
-    out << "Package item:\n";
-    out << verilog_package_item.pretty() << '\n';
-    break;
-    
-  default:
-    PRECONDITION(false);
-  }
+  if(item.id() == ID_verilog_module)
+    to_verilog_module_source(item).show(out);
+  else
+    out << item.pretty() << '\n';
 }

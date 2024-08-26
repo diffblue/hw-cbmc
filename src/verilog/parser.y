@@ -616,7 +616,7 @@ description:
  	| package_declaration
 	| attribute_instance_brace package_item
 		{ add_attributes($2, $1);
-		  PARSER.parse_tree.create_package_item(stack_expr($2)); }
+		  PARSER.parse_tree.add_item(stack_expr($2)); }
  	| attribute_instance_brace bind_directive
  	| config_declaration
         ;

@@ -136,7 +136,7 @@ void verilog_languaget::dependencies(
   {
     // dependencies on other Verilog modules
 
-    const auto &module = (it->second)->verilog_module;
+    const auto &module = *it->second;
 
     for(auto &identifier : module.submodules())
       module_set.insert(id2string(identifier));
