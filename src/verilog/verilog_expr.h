@@ -1893,9 +1893,8 @@ to_verilog_assume_statement(verilog_statementt &statement)
 class verilog_module_sourcet : public irept
 {
 public:
-  verilog_module_sourcet() = default;
-
   explicit verilog_module_sourcet(irep_idt _base_name)
+    : irept(ID_verilog_module)
   {
     base_name(_base_name);
   }

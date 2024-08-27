@@ -27,37 +27,10 @@ public:
 
   verilog_standardt standard;
 
-  struct itemt
-  {
-  public:
-    typedef enum
-    {
-      MODULE,
-      PACKAGE_ITEM
-    } item_typet;
-    item_typet type;
+  using itemt = irept;
 
-    explicit itemt(item_typet __type) : type(__type)
-    {
-    }
+  void show(const itemt &, std::ostream &) const;
 
-    verilog_module_sourcet verilog_module;
-
-    exprt verilog_package_item;
-
-    bool is_module() const
-    {
-      return type==MODULE;
-    }
-
-    bool is_package_item() const
-    {
-      return type == PACKAGE_ITEM;
-    }
-    
-    void show(std::ostream &out) const;
-  };
-  
   typedef std::list<itemt> itemst;
   itemst items;
 
@@ -83,10 +56,10 @@ public:
     exprt &ports,
     exprt &statements);
 
-  void create_package_item(exprt package_item)
+  itemt &add_item(itemt item)
   {
-    items.push_back(itemt(itemt::PACKAGE_ITEM));
-    items.back().verilog_package_item = std::move(package_item);
+    items.push_back(std::move(item));
+    return items.back();
   }
   
   void swap(verilog_parse_treet &parse_tree)
@@ -100,7 +73,9 @@ public:
   void modules_provided(
     std::set<std::string> &module_set) const;
 
-  typedef std::unordered_map<irep_idt, itemst::iterator, irep_id_hash> module_mapt;
+  typedef std::
+    unordered_map<irep_idt, const verilog_module_sourcet *, irep_id_hash>
+      module_mapt;
   module_mapt module_map;
   
   void build_module_map();
