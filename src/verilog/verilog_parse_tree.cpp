@@ -21,7 +21,7 @@ Function: verilog_parse_treet::create_module
 
 \*******************************************************************/
 
-void verilog_parse_treet::create_module(
+exprt verilog_parse_treet::create_module(
   irept &attributes,
   irept &module_keyword,
   exprt &name,
@@ -41,10 +41,7 @@ void verilog_parse_treet::create_module(
     ((const exprt &)module_keyword).source_location();
   new_module.add(ID_module_items) = std::move(module_items);
 
-  auto &new_item = add_item(std::move(new_module));
-
-  // add to module map
-  module_map[name.id()] = &to_verilog_module_source(new_item);
+  return static_cast<exprt &>(static_cast<irept &>(new_module));
 }
 
 /*******************************************************************\
