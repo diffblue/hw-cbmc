@@ -905,23 +905,14 @@ module_or_generate_item_declaration:
 	;
 
 non_port_module_item:
-	  attribute_instance_brace generate_region
-		{ add_attributes($2, $1); $$=$2; }
+	  generate_region
         | module_or_generate_item
         | attribute_instance_brace specparam_declaration
 		{ add_attributes($2, $1); $$=$2; }
-	| attribute_instance_brace specify_block
-		{ add_attributes($2, $1); $$=$2; }
+        | program_declaration
+        | module_declaration
+        | interface_declaration
         ;
-
-/*
-	  module_or_generate_item
-	| attribute_instance_brace parameter_declaration
-	//	{ add_attributes($2, $1); $$=$2; }
-	// | attribute_instance_brace local_parameter_declaration
-	//	{ add_attributes($2, $1); $$=$2; }
-	;
-*/
 
 // System Verilog standard 1800-2017
 // A.1.5 Configuration source text
