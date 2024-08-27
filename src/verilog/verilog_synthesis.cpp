@@ -2389,23 +2389,40 @@ void verilog_synthesist::synth_force_rec(
   }
 
   // get symbol
-
   const symbolt &symbol=assignment_symbol(lhs);
 
+  // turn into combinational assignment
   assignmentt &assignment=assignments[symbol.name];
 
   if(assignment.type==event_guardt::NONE)
+  {
     assignment.type=event_guardt::COMBINATIONAL;
-  else if(assignment.type!=event_guardt::COMBINATIONAL)
+  }
+  else if(assignment.type == event_guardt::CLOCK)
   {
     throw errort().with_location(lhs.source_location())
-      << "variable is clocked";
+      << "variable " << symbol.display_name() << " is clocked";
   }
+  else if(assignment.type == event_guardt::COMBINATIONAL)
+  {
+    // leave as is
+  }
+  else
+    DATA_INVARIANT(false, "unexpected assignment type");
 
-  auto rhs_synth = synth_expr(rhs, symbol_statet::CURRENT);  
+  auto rhs_synth = synth_expr(rhs, symbol_statet::CURRENT);
 
-  equal_exprt equality(lhs, rhs_synth);
-  invars.push_back(equality);
+  // If it's a variable, synth_assignments will
+  // generate the constraint.
+  if(symbol.is_state_var)
+  {
+    assignment.next.value = rhs_synth;
+  }
+  else
+  {
+    equal_exprt equality(lhs, rhs_synth);
+    invars.push_back(equality);
+  }
 }
 
 /*******************************************************************\
@@ -3642,7 +3659,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
       }
     }
   }
-  
+
   for(const auto & it : new_wires)
   {
     symbolt &symbol=symbol_table_lookup(it);
@@ -3725,7 +3742,7 @@ exprt verilog_synthesist::current_value(
     {
       return symbol_expr(symbol, CURRENT);
     }
-    else
+    else if(construct == constructt::INITIAL)
     {
       // Initial state computation, i.e., this is a value _before_ the
       // initial state  -- make it non-deterministic
@@ -3733,6 +3750,10 @@ exprt verilog_synthesist::current_value(
       result.set(ID_identifier, symbol.name);
       result.set("initial_value", true);
       return result;
+    }
+    else
+    {
+      DATA_INVARIANT(false, "unexpected assignment construct");
     }
   }
 }
