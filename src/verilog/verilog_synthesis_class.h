@@ -322,6 +322,7 @@ protected:
   void replace_symbols(const irep_idt &target, exprt &dest);
 
   void instantiate_port(
+    bool is_output,
     const symbol_exprt &port,
     const exprt &value,
     const replace_mapt &,
