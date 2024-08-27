@@ -10,10 +10,20 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/string2int.h>
 
+#include <solvers/sat/satcheck.h>
+#include <trans-netlist/trans_to_netlist.h>
+#include <trans-netlist/trans_trace_netlist.h>
+#include <trans-netlist/unwind_netlist.h>
+
 #include "bmc.h"
+#include "dimacs_writer.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
+#include "output_file.h"
 #include "report_results.h"
+
+#include <chrono>
+#include <iostream>
 
 int word_level_bmc(
   const cmdlinet &cmdline,
@@ -112,13 +122,271 @@ int word_level_bmc(
   return result;
 }
 
-int property_checker(
-  const cmdlinet &cmdline,
+int finish_bit_level_bmc(
+  std::size_t bound,
+  const bmc_mapt &bmc_map,
+  propt &solver,
   const transition_systemt &transition_system,
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
-  // default engine is word-level BMC
-  return word_level_bmc(
-    cmdline, transition_system, properties, message_handler);
+  auto sat_start_time = std::chrono::steady_clock::now();
+
+  messaget message{message_handler};
+  message.status() << "Solving with " << solver.solver_text() << messaget::eom;
+
+  for(auto &property : properties.properties)
+  {
+    if(property.is_disabled())
+      continue;
+
+    if(property.is_failure())
+      continue;
+
+    if(property.is_assumed())
+      continue;
+
+    message.status() << "Checking " << property.name << messaget::eom;
+
+    literalt property_literal = !solver.land(property.timeframe_literals);
+
+    bvt assumptions;
+    assumptions.push_back(property_literal);
+
+    propt::resultt prop_result = solver.prop_solve(assumptions);
+
+    switch(prop_result)
+    {
+    case propt::resultt::P_SATISFIABLE:
+    {
+      property.refuted();
+      message.result() << "SAT: counterexample found" << messaget::eom;
+
+      namespacet ns{transition_system.symbol_table};
+
+      property.witness_trace =
+        compute_trans_trace(property.timeframe_literals, bmc_map, solver, ns);
+    }
+    break;
+
+    case propt::resultt::P_UNSATISFIABLE:
+      message.result() << "UNSAT: No counterexample found within bound"
+                       << messaget::eom;
+      property.proved_with_bound(bound);
+      break;
+
+    case propt::resultt::P_ERROR:
+      message.error() << "Error from decision procedure" << messaget::eom;
+      return 2;
+
+    default:
+      message.error() << "Unexpected result from decision procedure"
+                      << messaget::eom;
+      return 1;
+    }
+  }
+
+  auto sat_stop_time = std::chrono::steady_clock::now();
+
+  message.statistics()
+    << "Solver time: "
+    << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
+    << messaget::eom;
+
+  return properties.exit_code();
+}
+
+int bit_level_bmc(
+  cnft &solver,
+  bool convert_only,
+  const cmdlinet &cmdline,
+  transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  message_handlert &message_handler)
+{
+  messaget message{message_handler};
+
+  std::size_t bound;
+
+  if(cmdline.isset("bound"))
+  {
+    bound = unsafe_string2unsigned(cmdline.get_value("bound"));
+  }
+  else
+  {
+    message.warning() << "using default bound 1" << messaget::eom;
+    bound = 1;
+  }
+
+  int result;
+
+  try
+  {
+    bmc_mapt bmc_map;
+
+    if(!convert_only)
+      if(properties.properties.empty())
+        throw "no properties";
+
+    // make net-list
+    netlistt netlist;
+    message.status() << "Generating Netlist" << messaget::eom;
+
+    convert_trans_to_netlist(
+      transition_system.symbol_table,
+      transition_system.main_symbol->name,
+      properties.make_property_map(),
+      netlist,
+      message.get_message_handler());
+
+    message.statistics() << "Latches: " << netlist.var_map.latches.size()
+                         << ", nodes: " << netlist.number_of_nodes()
+                         << messaget::eom;
+
+    messaget message{message_handler};
+    message.status() << "Unwinding Netlist" << messaget::eom;
+
+    bmc_map.map_timeframes(netlist, bound + 1, solver);
+
+    ::unwind(netlist, bmc_map, message, solver);
+
+    const namespacet ns(transition_system.symbol_table);
+
+    // convert the properties
+    for(auto &property : properties.properties)
+    {
+      if(property.is_disabled())
+        continue;
+
+      if(!netlist_bmc_supports_property(property.normalized_expr))
+      {
+        property.failure("property not supported by netlist BMC engine");
+        continue;
+      }
+
+      // look up the property in the netlist
+      auto netlist_property = netlist.properties.find(property.identifier);
+      CHECK_RETURN(netlist_property != netlist.properties.end());
+
+      ::unwind_property(
+        netlist_property->second, bmc_map, property.timeframe_literals);
+
+      if(property.is_assumed())
+      {
+        // force these to be true
+        for(auto l : property.timeframe_literals)
+          solver.l_set_to(l, true);
+      }
+      else
+      {
+        // freeze for incremental usage
+        for(auto l : property.timeframe_literals)
+          solver.set_frozen(l);
+      }
+    }
+
+    if(convert_only)
+      result = 0;
+    else
+    {
+      result = finish_bit_level_bmc(
+        bound, bmc_map, solver, transition_system, properties, message_handler);
+      report_results(cmdline, properties, ns, message_handler);
+    }
+  }
+
+  catch(const char *e)
+  {
+    messaget message{message_handler};
+    message.error() << e << messaget::eom;
+    return 10;
+  }
+
+  catch(const std::string &e)
+  {
+    messaget message{message_handler};
+    message.error() << e << messaget::eom;
+    return 10;
+  }
+
+  catch(int)
+  {
+    return 10;
+  }
+
+  return result;
+}
+
+int bit_level_bmc(
+  const cmdlinet &cmdline,
+  transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  message_handlert &message_handler)
+{
+  if(cmdline.isset("dimacs"))
+  {
+    if(cmdline.isset("outfile"))
+    {
+      auto outfile = output_filet{cmdline.get_value("outfile")};
+
+      messaget message{message_handler};
+      message.status() << "Writing DIMACS CNF to `" << outfile.name() << "'"
+                       << messaget::eom;
+
+      dimacs_cnf_writert dimacs_cnf_writer{outfile.stream(), message_handler};
+
+      return bit_level_bmc(
+        dimacs_cnf_writer,
+        true,
+        cmdline,
+        transition_system,
+        properties,
+        message_handler);
+    }
+    else
+    {
+      dimacs_cnf_writert dimacs_cnf_writer{std::cout, message_handler};
+
+      return bit_level_bmc(
+        dimacs_cnf_writer,
+        true,
+        cmdline,
+        transition_system,
+        properties,
+        message_handler);
+    }
+  }
+  else
+  {
+    if(cmdline.isset("outfile"))
+      throw ebmc_errort()
+        << "Cannot write to outfile without file format option";
+
+    satcheckt satcheck{message_handler};
+
+    messaget message{message_handler};
+    message.status() << "Using " << satcheck.solver_text() << messaget::eom;
+
+    return bit_level_bmc(
+      satcheck, false, cmdline, transition_system, properties, message_handler);
+  }
+}
+
+int property_checker(
+  const cmdlinet &cmdline,
+  transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  message_handlert &message_handler)
+{
+  if(cmdline.isset("aig") || cmdline.isset("dimacs"))
+  {
+    return bit_level_bmc(
+      cmdline, transition_system, properties, message_handler);
+  }
+  else
+  {
+    // default engine is word-level BMC
+    return word_level_bmc(
+      cmdline, transition_system, properties, message_handler);
+  }
 }

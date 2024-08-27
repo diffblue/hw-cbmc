@@ -43,12 +43,6 @@ protected:
   messaget message;
   const cmdlinet &cmdline;
 
-  bool get_bound();
-
-  // bit-level
-  int do_bit_level_bmc(cnft &solver, bool convert_only);
-  int finish_bit_level_bmc(const bmc_mapt &bmc_map, propt &solver);
-
   bool parse_property(const std::string &property);
   bool get_model_properties();
   void show_properties();
@@ -63,7 +57,6 @@ protected:
 
 public:
   int do_compute_ct();
-  int do_bit_level_bmc();
 };
 
 #endif
