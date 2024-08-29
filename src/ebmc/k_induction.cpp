@@ -85,7 +85,7 @@ protected:
 
 /*******************************************************************\
 
-Function: do_k_induction
+Function: k_induction
 
   Inputs:
 
@@ -108,7 +108,7 @@ void k_induction(
 
 /*******************************************************************\
 
-Function: do_k_induction
+Function: k_induction
 
   Inputs:
 
@@ -118,9 +118,11 @@ Function: do_k_induction
 
 \*******************************************************************/
 
-int do_k_induction(
+int k_induction(
   const cmdlinet &cmdline,
-  ui_message_handlert &message_handler)
+  transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  message_handlert &message_handler)
 {
   std::size_t k = [&cmdline, &message_handler]() -> std::size_t {
     if(!cmdline.isset("bound"))
@@ -132,11 +134,6 @@ int do_k_induction(
     else
       return unsafe_string2unsigned(cmdline.get_value("bound"));
   }();
-
-  auto transition_system = get_transition_system(cmdline, message_handler);
-
-  auto properties = ebmc_propertiest::from_command_line(
-    cmdline, transition_system, message_handler);
 
   if(properties.properties.empty())
     throw ebmc_errort() << "no properties";

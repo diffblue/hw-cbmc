@@ -20,6 +20,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "dimacs_writer.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
+#include "k_induction.h"
 #include "output_file.h"
 #include "report_results.h"
 
@@ -387,6 +388,10 @@ int property_checker(
   {
     return bit_level_bmc(
       cmdline, transition_system, properties, message_handler);
+  }
+  else if(cmdline.isset("k-induction"))
+  {
+    return k_induction(cmdline, transition_system, properties, message_handler);
   }
   else
   {

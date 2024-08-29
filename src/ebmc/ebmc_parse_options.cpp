@@ -18,7 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_error.h"
 #include "ebmc_version.h"
 #include "ic3_engine.h"
-#include "k_induction.h"
 #include "liveness_to_safety.h"
 #include "neural_liveness.h"
 #include "property_checker.h"
@@ -159,9 +158,6 @@ int ebmc_parse_optionst::doit()
     if(cmdline.isset("ic3"))
       return do_ic3(cmdline, ui_message_handler);
 #endif
-
-    if(cmdline.isset("k-induction"))
-      return do_k_induction(cmdline, ui_message_handler);
 
     if(cmdline.isset("neural-liveness"))
       return do_neural_liveness(cmdline, ui_message_handler);
