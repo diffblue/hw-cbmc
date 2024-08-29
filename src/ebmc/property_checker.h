@@ -14,7 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 int property_checker(
   const cmdlinet &,
-  const transition_systemt &,
+  transition_systemt &,
   ebmc_propertiest &,
   message_handlert &);
 

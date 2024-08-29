@@ -304,14 +304,11 @@ int ebmc_parse_optionst::doit()
       if(cmdline.isset("compute-ct"))
         return ebmc_base.do_compute_ct();
 
-      if(cmdline.isset("aig") || cmdline.isset("dimacs"))
-        return ebmc_base.do_bit_level_bmc();
-      else
-        return property_checker(
-          cmdline,
-          ebmc_base.transition_system,
-          ebmc_base.properties,
-          ui_message_handler);
+      return property_checker(
+        cmdline,
+        ebmc_base.transition_system,
+        ebmc_base.properties,
+        ui_message_handler);
     }
   }
   catch(const ebmc_errort &ebmc_error)
