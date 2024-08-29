@@ -15,6 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 
+#include "bdd_engine.h"
 #include "bmc.h"
 #include "dimacs_writer.h"
 #include "ebmc_error.h"
@@ -378,7 +379,11 @@ int property_checker(
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
-  if(cmdline.isset("aig") || cmdline.isset("dimacs"))
+  if(cmdline.isset("bdd") || cmdline.isset("show-bdds"))
+  {
+    return bdd_engine(cmdline, transition_system, properties, message_handler);
+  }
+  else if(cmdline.isset("aig") || cmdline.isset("dimacs"))
   {
     return bit_level_bmc(
       cmdline, transition_system, properties, message_handler);
