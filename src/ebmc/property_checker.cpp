@@ -27,7 +27,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <chrono>
 #include <iostream>
 
-int word_level_bmc(
+property_checker_resultt word_level_bmc(
   const cmdlinet &cmdline,
   const transition_systemt &transition_system,
   ebmc_propertiest &properties,
@@ -37,8 +37,6 @@ int word_level_bmc(
 
   bool convert_only = cmdline.isset("smt2") || cmdline.isset("outfile") ||
                       cmdline.isset("show-formula");
-
-  int result = 0;
 
   try
   {
@@ -93,12 +91,8 @@ int word_level_bmc(
         solver_factory,
         message_handler);
 
-      if(!convert_only)
-      {
-        const namespacet ns(transition_system.symbol_table);
-        report_results(cmdline, properties, ns, message_handler);
-        result = properties.exit_code();
-      }
+      if(convert_only)
+        return property_checker_resultt::SUCCESS;
     }
   }
 
@@ -106,25 +100,25 @@ int word_level_bmc(
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return 10;
+    return property_checker_resultt::ERROR;
   }
 
   catch(const std::string &e)
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return 10;
+    return property_checker_resultt::ERROR;
   }
 
   catch(int)
   {
-    return 10;
+    return property_checker_resultt::ERROR;
   }
 
-  return result;
+  return property_checker_resultt::VERIFICATION_RESULT;
 }
 
-int finish_bit_level_bmc(
+property_checker_resultt finish_bit_level_bmc(
   std::size_t bound,
   const bmc_mapt &bmc_map,
   propt &solver,
@@ -179,12 +173,12 @@ int finish_bit_level_bmc(
 
     case propt::resultt::P_ERROR:
       message.error() << "Error from decision procedure" << messaget::eom;
-      return 2;
+      return property_checker_resultt::ERROR;
 
     default:
       message.error() << "Unexpected result from decision procedure"
                       << messaget::eom;
-      return 1;
+      return property_checker_resultt::ERROR;
     }
   }
 
@@ -195,10 +189,10 @@ int finish_bit_level_bmc(
     << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
     << messaget::eom;
 
-  return properties.exit_code();
+  return property_checker_resultt::VERIFICATION_RESULT;
 }
 
-int bit_level_bmc(
+property_checker_resultt bit_level_bmc(
   cnft &solver,
   bool convert_only,
   const cmdlinet &cmdline,
@@ -219,8 +213,6 @@ int bit_level_bmc(
     message.warning() << "using default bound 1" << messaget::eom;
     bound = 1;
   }
-
-  int result;
 
   try
   {
@@ -288,12 +280,11 @@ int bit_level_bmc(
     }
 
     if(convert_only)
-      result = 0;
+      return property_checker_resultt::SUCCESS;
     else
     {
-      result = finish_bit_level_bmc(
+      return finish_bit_level_bmc(
         bound, bmc_map, solver, transition_system, properties, message_handler);
-      report_results(cmdline, properties, ns, message_handler);
     }
   }
 
@@ -301,25 +292,23 @@ int bit_level_bmc(
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return 10;
+    return property_checker_resultt::ERROR;
   }
 
   catch(const std::string &e)
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return 10;
+    return property_checker_resultt::ERROR;
   }
 
   catch(int)
   {
-    return 10;
+    return property_checker_resultt::ERROR;
   }
-
-  return result;
 }
 
-int bit_level_bmc(
+property_checker_resultt bit_level_bmc(
   const cmdlinet &cmdline,
   transition_systemt &transition_system,
   ebmc_propertiest &properties,
@@ -380,23 +369,43 @@ int property_checker(
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
+  property_checker_resultt result;
+
   if(cmdline.isset("bdd") || cmdline.isset("show-bdds"))
   {
-    return bdd_engine(cmdline, transition_system, properties, message_handler);
+    result =
+      bdd_engine(cmdline, transition_system, properties, message_handler);
   }
   else if(cmdline.isset("aig") || cmdline.isset("dimacs"))
   {
-    return bit_level_bmc(
-      cmdline, transition_system, properties, message_handler);
+    result =
+      bit_level_bmc(cmdline, transition_system, properties, message_handler);
   }
   else if(cmdline.isset("k-induction"))
   {
-    return k_induction(cmdline, transition_system, properties, message_handler);
+    result =
+      k_induction(cmdline, transition_system, properties, message_handler);
   }
   else
   {
     // default engine is word-level BMC
-    return word_level_bmc(
-      cmdline, transition_system, properties, message_handler);
+    result =
+      word_level_bmc(cmdline, transition_system, properties, message_handler);
   }
+
+  switch(result)
+  {
+  case property_checker_resultt::ERROR:
+    return 10;
+
+  case property_checker_resultt::SUCCESS:
+    return 0;
+
+  case property_checker_resultt::VERIFICATION_RESULT:
+    const namespacet ns{transition_system.symbol_table};
+    report_results(cmdline, properties, ns, message_handler);
+    return properties.exit_code();
+  }
+
+  UNREACHABLE;
 }

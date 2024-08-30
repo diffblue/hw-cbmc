@@ -12,6 +12,13 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_properties.h"
 #include "transition_system.h"
 
+enum class property_checker_resultt
+{
+  VERIFICATION_RESULT,
+  SUCCESS,
+  ERROR
+};
+
 int property_checker(
   const cmdlinet &,
   transition_systemt &,

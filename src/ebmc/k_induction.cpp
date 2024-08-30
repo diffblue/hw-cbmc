@@ -19,7 +19,6 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "liveness_to_safety.h"
-#include "report_results.h"
 
 #include <fstream>
 
@@ -118,7 +117,7 @@ Function: k_induction
 
 \*******************************************************************/
 
-int k_induction(
+property_checker_resultt k_induction(
   const cmdlinet &cmdline,
   transition_systemt &transition_system,
   ebmc_propertiest &properties,
@@ -154,9 +153,7 @@ int k_induction(
   k_induction(
     k, transition_system, properties, solver_factory, message_handler);
 
-  const namespacet ns(transition_system.symbol_table);
-  report_results(cmdline, properties, ns, message_handler);
-  return properties.exit_code();
+  return property_checker_resultt::VERIFICATION_RESULT;
 }
 
 /*******************************************************************\
