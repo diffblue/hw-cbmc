@@ -10,7 +10,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #define CPROVER_VERILOG_AVAL_BVAL_H
 
 #include <util/bitvector_types.h>
-#include <util/std_expr.h>
+
+#include "verilog_expr.h"
 
 // bit-concoding for four-valued types
 //
@@ -35,5 +36,8 @@ exprt bval(const exprt &);
 exprt aval_bval_conversion(const exprt &, const typet &);
 
 exprt aval_bval_concatenation(const exprt::operandst &, const typet &);
+
+exprt aval_bval(const verilog_logical_equality_exprt &);
+exprt aval_bval(const verilog_logical_inequality_exprt &);
 
 #endif
