@@ -22,8 +22,6 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-netlist/unwind_netlist.h>
 #include <verilog/sva_expr.h>
 
-#include "report_results.h"
-
 #include <algorithm>
 #include <iostream>
 
@@ -51,7 +49,7 @@ public:
   {
   }
 
-  int operator()();
+  property_checker_resultt operator()();
 
 protected:
   using propertiest = ebmc_propertiest;
@@ -173,7 +171,7 @@ Function: bdd_enginet::operator()
 
 \*******************************************************************/
 
-int bdd_enginet::operator()()
+property_checker_resultt bdd_enginet::operator()()
 {
   try
   {
@@ -216,30 +214,29 @@ int bdd_enginet::operator()()
       }
 
       std::cout << '\n';
-        
-      return 0;
+
+      return property_checker_resultt::SUCCESS;
     }
 
     if(properties.properties.empty())
     {
       message.error() << "no properties" << messaget::eom;
-      return 1;
+      return property_checker_resultt::ERROR;
     }
 
     for(propertyt &p : properties.properties)
       check_property(p);
 
-    report_results(cmdline, properties, ns, message.get_message_handler());
-    return properties.exit_code();
+    return property_checker_resultt::VERIFICATION_RESULT;
   }
   catch(const char *error_msg)
   {
     message.error() << error_msg << messaget::eom;
-    return 1;
+    return property_checker_resultt::ERROR;
   }
   catch(int)
   {
-    return 1;
+    return property_checker_resultt::ERROR;
   }
 }
 
@@ -1002,7 +999,7 @@ Function: bdd_engine
 
 \*******************************************************************/
 
-int bdd_engine(
+property_checker_resultt bdd_engine(
   const cmdlinet &cmdline,
   transition_systemt &transition_system,
   ebmc_propertiest &properties,

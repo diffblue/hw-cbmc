@@ -13,11 +13,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/message.h>
 
 #include "ebmc_solver_factory.h"
+#include "property_checker.h"
 
 class transition_systemt;
 class ebmc_propertiest;
 
-int k_induction(
+property_checker_resultt k_induction(
   const cmdlinet &,
   transition_systemt &,
   ebmc_propertiest &,
