@@ -10,8 +10,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_EBMC_BDD_ENGINE_H
 
 #include <util/cmdline.h>
-#include <util/ui_message.h>
+#include <util/message.h>
 
-int do_bdd(const cmdlinet &, ui_message_handlert &);
+#include "ebmc_properties.h"
+
+int bdd_engine(
+  const cmdlinet &,
+  transition_systemt &,
+  ebmc_propertiest &,
+  message_handlert &);
 
 #endif

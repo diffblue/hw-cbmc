@@ -10,8 +10,6 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include <util/format_expr.h>
 
-#include <ebmc/ebmc_properties.h>
-#include <ebmc/transition_system.h>
 #include <solvers/bdd/miniBDD/miniBDD.h>
 #include <solvers/sat/satcheck.h>
 #include <temporal-logic/negate_property.h>
@@ -42,19 +40,27 @@ class bdd_enginet
 public:
   bdd_enginet(
     const cmdlinet &_cmdline,
-    ui_message_handlert &_ui_message_handler)
-    : cmdline(_cmdline), message(_ui_message_handler)
+    transition_systemt &_transition_system,
+    ebmc_propertiest &_properties,
+    message_handlert &_message_handler)
+    : cmdline(_cmdline),
+      transition_system(_transition_system),
+      properties(_properties),
+      message(_message_handler),
+      ns(transition_system.symbol_table)
   {
   }
 
   int operator()();
 
 protected:
+  using propertiest = ebmc_propertiest;
   using propertyt = ebmc_propertiest::propertyt;
   const cmdlinet &cmdline;
+  transition_systemt &transition_system;
+  propertiest &properties;
   messaget message;
-  transition_systemt transition_system;
-  ebmc_propertiest properties;
+  const namespacet ns;
   netlistt netlist;
 
   // the Manager must appear before any BDDs
@@ -171,12 +177,6 @@ int bdd_enginet::operator()()
 {
   try
   {
-    transition_system =
-      get_transition_system(cmdline, message.get_message_handler());
-
-    properties = ebmc_propertiest::from_command_line(
-      cmdline, transition_system, message.get_message_handler());
-
     const auto property_map = properties.make_property_map();
 
     message.status() << "Building netlist" << messaget::eom;
@@ -229,7 +229,6 @@ int bdd_enginet::operator()()
     for(propertyt &p : properties.properties)
       check_property(p);
 
-    const namespacet ns(transition_system.symbol_table);
     report_results(cmdline, properties, ns, message.get_message_handler());
     return properties.exit_code();
   }
@@ -428,8 +427,6 @@ void bdd_enginet::compute_counterexample(
   default:
     throw "unexpected result from SAT solver";
   }
-
-  const namespacet ns(transition_system.symbol_table);
 
   property.witness_trace =
     compute_trans_trace(property.timeframe_literals, bmc_map, solver, ns);
@@ -901,8 +898,6 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
 
     aig_prop_constraintt aig_prop(netlist, message.get_message_handler());
 
-    const namespacet ns(transition_system.symbol_table);
-
     literalt l = instantiate_convert(
       aig_prop, netlist.var_map, expr, ns, message.get_message_handler());
 
@@ -997,7 +992,7 @@ void bdd_enginet::build_BDDs()
 
 /*******************************************************************\
 
-Function: do_bdd
+Function: bdd_engine
 
   Inputs:
 
@@ -1007,10 +1002,12 @@ Function: do_bdd
 
 \*******************************************************************/
 
-int do_bdd(
+int bdd_engine(
   const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+  transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  message_handlert &message_handler)
 {
-  return bdd_enginet(cmdline, ui_message_handler)();
+  return bdd_enginet{cmdline, transition_system, properties, message_handler}();
 }
 

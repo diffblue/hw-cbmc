@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/help_formatter.h>
 #include <util/string2int.h>
 
-#include "bdd_engine.h"
 #include "diatest.h"
 #include "ebmc_base.h"
 #include "ebmc_error.h"
@@ -169,9 +168,6 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("ranking-function"))
       return do_ranking_function(cmdline, ui_message_handler);
-
-    if(cmdline.isset("bdd") || cmdline.isset("show-bdds"))
-      return do_bdd(cmdline, ui_message_handler);
 
     if(cmdline.isset("interpolation-word"))
     {
