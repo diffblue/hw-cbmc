@@ -1,6 +1,6 @@
 CORE
-main.v
---module main --bound 1
+signed1.sv
+--module main --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
 --
