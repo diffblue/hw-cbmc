@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 k-induction5.v
 --module main --bound 3 --k-induction
 ^EXIT=10$
