@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 signed2.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ signed2.sv
 --
 ^warning: ignoring
 --
-The signed base 2 literal should be sign-extended.

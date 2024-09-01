@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/prefix.h>
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
+#include <util/string2int.h>
 
 #include "expr2verilog.h"
 #include "sva_expr.h"
@@ -1223,14 +1224,14 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
   // check representation
 
   std::string::size_type pos=rest.find('\'');
-  unsigned bits=0;
+  std::size_t bits = 0;
   bool bits_given=false;
 
   if(pos!=std::string::npos) // size given?
   {
     if(rest[0]!='\'')
     {
-      bits=atoi(rest.c_str());
+      bits = safe_string2size_t(rest);
       bits_given=true;
 
       if(bits==0)
@@ -1273,14 +1274,13 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
   bool is_signed=!based || s_flag_given;
 
   // check for z/x
-
-  bool other=false;
+  bool four_valued = false;
 
   for(unsigned i=0; i<rest.size(); i++)
     if(rest[i]=='?' || rest[i]=='z' || rest[i]=='x')
-      other=true;
+      four_valued = true;
 
-  if(other) // z/x/? found
+  if(base != 10)
   {
     // expand bits
 
@@ -1370,17 +1370,51 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
       bits=fvalue.size();
     }
 
-    if(is_signed)
-      expr.type()=verilog_signedbv_typet(bits);
-    else
-      expr.type()=verilog_unsignedbv_typet(bits);
+    if(four_valued)
+    {
+      // we do a 32-bit minimum if the number of bits isn't given
+      if(!bits_given)
+      {
+        if(bits < 32)
+        {
+          // do sign extension
+          char extension = is_signed ? fvalue.front() : '0';
+          fvalue = std::string(32 - bits, extension) + fvalue;
+          bits = 32;
+        }
+      }
 
-    expr.set(ID_value, fvalue);
+      if(is_signed)
+        expr.type() = verilog_signedbv_typet(bits);
+      else
+        expr.type() = verilog_unsignedbv_typet(bits);
+
+      // stored as individual bits
+      expr.set_value(fvalue);
+    }
+    else // two valued
+    {
+      mp_integer int_value = binary2integer(fvalue, is_signed);
+
+      // we do a 32-bit minimum if the number of bits isn't given
+      if(!bits_given)
+        if(bits < 32)
+          bits = 32;
+
+      if(is_signed)
+        expr.type() = signedbv_typet(bits);
+      else
+        expr.type() = unsignedbv_typet(bits);
+
+      // stored as bvrep
+      expr.set_value(integer2bvrep(int_value, bits));
+    }
   }
   else
   {
+    // base 10, never negative
     mp_integer int_value=string2integer(rest, base);
-    
+
     if(!bits_given)
     {
       bits = address_bits(int_value + 1);
@@ -1393,7 +1427,7 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
     else
       expr.type()=unsignedbv_typet(bits);
 
-    expr.set(ID_value, integer2bvrep(int_value, bits));
+    expr.set_value(integer2bvrep(int_value, bits));
   }
 
   return std::move(expr);
