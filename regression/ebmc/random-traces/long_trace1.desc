@@ -5,7 +5,7 @@ long_trace1.v
 ^  main\.some_reg = 0 .*$
 ^  main\.increment = 0$
 ^Transition system state 1000$
-^  main\.some_reg = 'h1F8 .*$
+^  main\.some_reg = 32'h1F8 .*$
 ^  main\.increment = 1$
 ^EXIT=0$
 ^SIGNAL=0$

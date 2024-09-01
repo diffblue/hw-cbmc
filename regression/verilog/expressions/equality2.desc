@@ -11,8 +11,8 @@ equality2.v
 ^\[.*\] always 1'bx === 1 == 0: PROVED up to bound 0$
 ^\[.*\] always 1'bz === 1 == 0: PROVED up to bound 0$
 ^\[.*\] always 1 === 1 == 1: PROVED up to bound 0$
-^\[.*\] always 3'b11 === 3'b111 == 1: REFUTED$
-^\[.*\] always 3'sb-1 === 3'sb-1 == 1: PROVED up to bound 0$
+^\[.*\] always 3'b011 === 3'b111 == 1: REFUTED$
+^\[.*\] always 3'sb111 === 3'sb111 == 1: PROVED up to bound 0$
 ^EXIT=10$
 ^SIGNAL=0$
 --

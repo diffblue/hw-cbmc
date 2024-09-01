@@ -3,6 +3,6 @@ static_cast1.sv
 --module main --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.p0\] always 'hFFFF == 255: PROVED up to bound 0$
+^\[main\.p0\] always 32'hFFFF == 255: PROVED up to bound 0$
 --
 ^warning: ignoring

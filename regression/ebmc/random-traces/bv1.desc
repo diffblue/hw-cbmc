@@ -3,10 +3,10 @@ bv1.v
 --random-traces --trace-steps 1 --traces 1
 ^Transition system state 0$
 ^  main\.some_reg = 0 .*$
-^  main\.input1 = 'h6FE4167A .*$
+^  main\.input1 = 32'h6FE4167A .*$
 ^Transition system state 1$
-^  main\.some_reg = 'h6FE4167A .*$
-^  main\.input1 = 'hB65F5E9A .*$
+^  main\.some_reg = 32'h6FE4167A .*$
+^  main\.input1 = 32'hB65F5E9A .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

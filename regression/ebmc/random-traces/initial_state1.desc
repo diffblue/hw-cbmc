@@ -1,9 +1,9 @@
 CORE
 initial_state1.v
 --random-trace --trace-steps 1 --numbered-trace --random-seed 0
-^m\.x@0 = 'hBF9059EA$
+^m\.x@0 = 32'hBF9059EA$
 ^m\.y@0 = 123$
-^m\.x@1 = 'hBF9059EB$
+^m\.x@1 = 32'hBF9059EB$
 ^m\.y@1 = 124$
 ^EXIT=0$
 ^SIGNAL=0$
