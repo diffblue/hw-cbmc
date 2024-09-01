@@ -264,6 +264,8 @@ void verilog_scanner_init()
 "->"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSGREATER, "->"); }
 "'"             { SYSTEM_VERILOG_OPERATOR('\'', "'"); }
 "::"            { SYSTEM_VERILOG_OPERATOR(TOK_COLONCOLON, "::"); }
+"==?"           { SYSTEM_VERILOG_OPERATOR(TOK_EQUALEQUALQUESTION, "==?"); }
+"!=?"           { SYSTEM_VERILOG_OPERATOR(TOK_EXCLAMEQUALQUESTION, "!=?"); }
                 /* Table 16-1 in 1800-2017 suggests the following tokens for sequence operators */
 "[*"            { SYSTEM_VERILOG_OPERATOR(TOK_LSQASTERIC, "[*"); }
 "[+"            { SYSTEM_VERILOG_OPERATOR(TOK_LSQPLUS, "[+"); }

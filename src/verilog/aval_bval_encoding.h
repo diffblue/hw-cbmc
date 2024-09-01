@@ -40,4 +40,9 @@ exprt aval_bval_concatenation(const exprt::operandst &, const typet &);
 exprt aval_bval(const verilog_logical_equality_exprt &);
 exprt aval_bval(const verilog_logical_inequality_exprt &);
 
+/// lowering for ==?
+exprt aval_bval(const verilog_wildcard_equality_exprt &);
+/// lowering for !=?
+exprt aval_bval(const verilog_wildcard_inequality_exprt &);
+
 #endif

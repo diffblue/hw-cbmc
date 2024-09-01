@@ -2599,6 +2599,20 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(
+    expr.id() == ID_verilog_wildcard_equality ||
+    expr.id() == ID_verilog_wildcard_inequality)
+  {
+    // ==? and !=?
+    Forall_operands(it, expr)
+      convert_expr(*it);
+
+    tc_binary_expr(expr);
+
+    expr.type() = verilog_unsignedbv_typet(1);
+
+    return std::move(expr);
+  }
   else if(expr.id()==ID_verilog_case_equality ||
           expr.id()==ID_verilog_case_inequality)
   {

@@ -108,6 +108,50 @@ to_verilog_logical_inequality_expr(exprt &expr)
   return static_cast<verilog_logical_inequality_exprt &>(expr);
 }
 
+/// ==?
+class verilog_wildcard_equality_exprt : public equal_exprt
+{
+public:
+};
+
+inline const verilog_wildcard_equality_exprt &
+to_verilog_wildcard_equality_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_wildcard_equality);
+  binary_exprt::check(expr);
+  return static_cast<const verilog_wildcard_equality_exprt &>(expr);
+}
+
+inline verilog_wildcard_equality_exprt &
+to_verilog_wildcard_equality_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_wildcard_equality);
+  binary_exprt::check(expr);
+  return static_cast<verilog_wildcard_equality_exprt &>(expr);
+}
+
+/// !=?
+class verilog_wildcard_inequality_exprt : public equal_exprt
+{
+public:
+};
+
+inline const verilog_wildcard_inequality_exprt &
+to_verilog_wildcard_inequality_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_wildcard_inequality);
+  binary_exprt::check(expr);
+  return static_cast<const verilog_wildcard_inequality_exprt &>(expr);
+}
+
+inline verilog_wildcard_inequality_exprt &
+to_verilog_wildcard_inequality_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_wildcard_inequality);
+  binary_exprt::check(expr);
+  return static_cast<verilog_wildcard_inequality_exprt &>(expr);
+}
+
 class function_call_exprt : public binary_exprt
 {
 public:
