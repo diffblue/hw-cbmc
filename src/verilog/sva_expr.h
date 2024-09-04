@@ -324,7 +324,7 @@ class sva_ranged_always_exprt : public sva_ranged_predicate_exprt
 public:
   sva_ranged_always_exprt(exprt lower, exprt upper, exprt op)
     : sva_ranged_predicate_exprt(
-        ID_sva_always,
+        ID_sva_ranged_always,
         std::move(lower),
         std::move(upper),
         std::move(op))

@@ -22,7 +22,9 @@ Author: Daniel Kroening, dkr@amazon.com
 /// sva_overlapped_implication --> ¬a ∨ b       if a and b are not SVA sequences
 /// sva_non_overlapped_implication --> ¬a ∨ Xb  if a and b are not SVA sequences
 /// sva_nexttime φ --> Xφ
+/// sva_nexttime[i] φ --> sva_always[i:i] φ
 /// sva_s_nexttime φ --> Xφ
+/// sva_s_nexttime[i] φ --> sva_s_always[i:i] φ
 /// sva_if --> ? :
 /// a sva_disable_iff b --> a ∨ b
 /// a sva_accept_on b --> a ∨ b
