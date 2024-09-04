@@ -14,6 +14,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
+#include "verilog_types.h"
+
 bv_typet aval_bval_type(std::size_t width, irep_idt source_type)
 {
   PRECONDITION(!source_type.empty());
@@ -34,10 +36,20 @@ bool is_aval_bval(const typet &type)
   return type.id() == ID_bv && !type.get(ID_C_verilog_aval_bval).empty();
 }
 
+bool is_aval_bval(const exprt &expr)
+{
+  return is_aval_bval(expr.type());
+}
+
 std::size_t aval_bval_width(const typet &type)
 {
   PRECONDITION(is_aval_bval(type));
   return to_bv_type(type).get_width() / 2;
+}
+
+std::size_t aval_bval_width(const exprt &expr)
+{
+  return aval_bval_width(expr.type());
 }
 
 typet aval_bval_underlying(const typet &src)
@@ -197,4 +209,41 @@ exprt aval_bval_concatenation(
   }
 
   return combine_aval_bval(concatenate(new_aval), concatenate(new_bval), type);
+}
+
+/// return true iff 'expr' contains either x or z
+exprt has_xz(const exprt &expr)
+{
+  PRECONDITION(is_aval_bval(expr));
+  auto width = aval_bval_width(expr);
+  return notequal_exprt{bval(expr), bv_typet{width}.all_zeros_expr()};
+}
+
+/// return 'x', one bit
+exprt make_x()
+{
+  auto type = verilog_unsignedbv_typet{1};
+  return lower_to_aval_bval(constant_exprt{ID_x, type});
+}
+
+exprt aval_bval(const verilog_logical_equality_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
+  // returns 'x' if either operand contains x or z
+  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+  auto equality = equal_exprt{expr.lhs(), expr.rhs()};
+  return if_exprt{
+    has_xz, make_x(), aval_bval_conversion(equality, lower_to_aval_bval(type))};
+}
+
+exprt aval_bval(const verilog_logical_inequality_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
+  // returns 'x' if either operand contains x or z
+  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+  auto equality = notequal_exprt{expr.lhs(), expr.rhs()};
+  return if_exprt{
+    has_xz, make_x(), aval_bval_conversion(equality, lower_to_aval_bval(type))};
 }

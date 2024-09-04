@@ -10,7 +10,7 @@ module main;
   always assert property08: ('bx==='b1)==0;
   always assert property09: ('bz==='b1)==0;
   always assert property10: ('b1==='b01)==1; // zero extension
-  always assert property11: ('b011==='sb11)==1; // zero extension
-  always assert property12: ('sb011==='sb11)==1; // sign extension
+  always assert property11: (3'b011===2'sb11)==1; // zero extension
+  always assert property12: (3'sb111===2'sb11)==1; // sign extension
 
 endmodule

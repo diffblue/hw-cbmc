@@ -390,6 +390,18 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
         .with_source_location(expr);
     }
   }
+  else if(expr.id() == ID_verilog_logical_equality)
+  {
+    for(auto &op : expr.operands())
+      op = synth_expr(op, symbol_state);
+    return aval_bval(to_verilog_logical_equality_expr(expr));
+  }
+  else if(expr.id() == ID_verilog_logical_inequality)
+  {
+    for(auto &op : expr.operands())
+      op = synth_expr(op, symbol_state);
+    return aval_bval(to_verilog_logical_inequality_expr(expr));
+  }
   else if(expr.has_operands())
   {
     for(auto &op : expr.operands())

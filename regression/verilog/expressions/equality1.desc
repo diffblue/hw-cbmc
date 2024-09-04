@@ -1,9 +1,18 @@
-KNOWNBUG
+CORE broken-smt-backend
 equality1.v
 --bound 0
-^EXIT=0$
+^\[.*\] always 10 == 10 === 1: PROVED up to bound 0$
+^\[.*\] always 10 == 20 === 0: PROVED up to bound 0$
+^\[.*\] always 10 != 20 === 1: PROVED up to bound 0$
+^\[.*\] always 10 == 20 === 0: PROVED up to bound 0$
+^\[.*\] always 1'bx == 10 === 1'bx: PROVED up to bound 0$
+^\[.*\] always 1'bz == 20 === 1'bx: PROVED up to bound 0$
+^\[.*\] always 1'bx != 10 === 1'bx: PROVED up to bound 0$
+^\[.*\] always 1'bz != 20 === 1'bx: PROVED up to bound 0$
+^\[.*\] always 2'b11 == 2'b11 === 0: REFUTED$
+^\[.*\] always 2'sb-1 == 2'sb-1 === 1: PROVED up to bound 0$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-Missing Verilog case equality implementation.

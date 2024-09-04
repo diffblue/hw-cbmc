@@ -1222,7 +1222,15 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
     return convert_binary(
       to_multi_ary_expr(src), "==", precedence = verilog_precedencet::EQUALITY);
 
+  else if(src.id() == ID_verilog_logical_equality)
+    return convert_binary(
+      to_multi_ary_expr(src), "==", precedence = verilog_precedencet::EQUALITY);
+
   else if(src.id()==ID_notequal)
+    return convert_binary(
+      to_multi_ary_expr(src), "!=", precedence = verilog_precedencet::EQUALITY);
+
+  else if(src.id() == ID_verilog_logical_inequality)
     return convert_binary(
       to_multi_ary_expr(src), "!=", precedence = verilog_precedencet::EQUALITY);
 
