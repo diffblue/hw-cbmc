@@ -433,7 +433,12 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
         // This is ok for certain symbols, e.g., input/wire, output/reg.
         symbolt &osymbol = *result;
 
-        if(osymbol.type.id() == ID_code)
+        if(osymbol.is_input || osymbol.is_output)
+        {
+          // wire + input is ok
+          // wire + output is ok
+        }
+        else
         {
           throw errort().with_location(decl.source_location())
             << "symbol `" << symbol.base_name << "' is already declared";
