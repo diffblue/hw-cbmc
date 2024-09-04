@@ -10,7 +10,7 @@ equality1.v
 ^\[.*\] always 1'bx != 10 === 1'bx: PROVED up to bound 0$
 ^\[.*\] always 1'bz != 20 === 1'bx: PROVED up to bound 0$
 ^\[.*\] always 2'b11 == 2'b11 === 0: REFUTED$
-^\[.*\] always 2'sb-1 == 2'sb-1 === 1: PROVED up to bound 0$
+^\[.*\] always 2'sb11 == 2'sb11 === 1: PROVED up to bound 0$
 ^EXIT=10$
 ^SIGNAL=0$
 --

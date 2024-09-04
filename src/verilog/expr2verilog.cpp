@@ -1020,14 +1020,20 @@ std::string expr2verilogt::convert_constant(
     auto i = numeric_cast_v<mp_integer>(src);
 
     if(i>=256)
-      dest="'h"+integer2string(i, 16);
+    {
+      dest = std::to_string(width);
+      dest += "'h";
+      if(type.id() == ID_signedbv)
+        dest += 's';
+      dest += integer2string(i, 16);
+    }
     else if(width<=7)
     {
       dest=std::to_string(width);
       dest+="'";
       if(type.id()==ID_signedbv) dest+='s';
       dest+='b';
-      dest+=integer2string(i, 2);
+      dest += integer2binary(i, width);
     }
     else
       dest=integer2string(i);

@@ -1,6 +1,8 @@
 CORE
 constants1.v
 --bound 1
+^\[.*\] always main\.w == 32'hFFFF: PROVED up to bound 1$
+^\[.*\] always main\.X == 16: PROVED up to bound 1$
 ^EXIT=0$
 ^SIGNAL=0$
 --
