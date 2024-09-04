@@ -151,12 +151,20 @@ exprt normalize_property(exprt expr)
     expr = normalize_pre_sva_or(to_sva_or_expr(expr));
   else if(expr.id() == ID_sva_nexttime)
   {
-    if(!to_sva_nexttime_expr(expr).is_indexed())
-      expr = X_exprt{to_sva_nexttime_expr(expr).op()};
+    auto &nexttime_expr = to_sva_nexttime_expr(expr);
+    if(nexttime_expr.is_indexed())
+      expr = sva_ranged_always_exprt{
+        nexttime_expr.index(), nexttime_expr.index(), nexttime_expr.op()};
+    else
+      expr = X_exprt{nexttime_expr.op()};
   }
   else if(expr.id() == ID_sva_s_nexttime)
   {
-    if(!to_sva_s_nexttime_expr(expr).is_indexed())
+    auto &nexttime_expr = to_sva_s_nexttime_expr(expr);
+    if(nexttime_expr.is_indexed())
+      expr = sva_s_always_exprt{
+        nexttime_expr.index(), nexttime_expr.index(), nexttime_expr.op()};
+    else
       expr = X_exprt{to_sva_s_nexttime_expr(expr).op()};
   }
   else if(expr.id() == ID_sva_cycle_delay)
