@@ -55,7 +55,22 @@ public:
   {
   }
 
-  virtual std::string convert(const typet &type);
+  virtual std::string convert(const typet &);
+  virtual std::string convert(const exprt &);
+
+protected:
+  struct resultt
+  {
+    resultt(verilog_precedencet _p, std::string _s) : p(_p), s(std::move(_s))
+    {
+    }
+
+    verilog_precedencet p;
+    std::string s;
+  };
+
+  virtual resultt convert_rec(const exprt &src);
+  std::string convert_rec(const exprt &, verilog_precedencet &);
 
   virtual std::string convert_array(const exprt &src, verilog_precedencet);
 
@@ -80,10 +95,6 @@ public:
 
   virtual std::string
   convert_extractbits(const extractbits_exprt &, verilog_precedencet);
-
-  virtual std::string convert(const exprt &src, verilog_precedencet &);
-
-  virtual std::string convert(const exprt &src);
 
   virtual std::string convert_symbol(const exprt &src, verilog_precedencet &);
 
