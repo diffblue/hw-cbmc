@@ -614,9 +614,23 @@ exprt verilog_lowering(exprt expr)
     {
       // turn into floatbv
       expr.type() = verilog_lowering(expr.type());
+      return expr;
     }
-
-    return expr;
+    else if(is_four_valued(expr))
+    {
+      return default_aval_bval_lowering(expr);
+    }
+    else
+      return expr;
+  }
+  else if(
+    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+    expr.id() == ID_div || expr.id() == ID_mod)
+  {
+    if(is_four_valued(expr))
+      return default_aval_bval_lowering(expr);
+    else
+      return expr;
   }
   else if(expr.id() == ID_lshr || expr.id() == ID_ashr || expr.id() == ID_shl)
   {

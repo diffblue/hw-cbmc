@@ -36,8 +36,7 @@ bv_typet aval_bval_type(std::size_t width, irep_idt source_type)
 
 bv_typet lower_to_aval_bval(const typet &src)
 {
-  PRECONDITION(
-    src.id() == ID_verilog_unsignedbv || src.id() == ID_verilog_signedbv);
+  PRECONDITION(is_four_valued(src));
   return aval_bval_type(to_bitvector_type(src).get_width(), src.id());
 }
 
@@ -75,9 +74,7 @@ typet aval_bval_underlying(const typet &src)
 
 constant_exprt lower_to_aval_bval(const constant_exprt &src)
 {
-  PRECONDITION(
-    src.type().id() == ID_verilog_signedbv ||
-    src.type().id() == ID_verilog_unsignedbv);
+  PRECONDITION(is_four_valued(src.type()));
 
   auto new_type = lower_to_aval_bval(src.type());
   auto width = aval_bval_width(new_type);
@@ -256,7 +253,7 @@ exprt has_xz(const exprt &expr)
     return false_exprt{}; // it's two-valued
 }
 
-/// return 'x', one bit, in aval_bval encoding
+/// return 'x'
 exprt make_x(const typet &type)
 {
   PRECONDITION(is_four_valued(type));
@@ -469,4 +466,34 @@ exprt aval_bval(const shift_exprt &expr)
 
   auto x = make_x(expr.type());
   return if_exprt{distance_has_xz, x, combined};
+}
+
+exprt default_aval_bval_lowering(const exprt &expr)
+{
+  auto &type = expr.type();
+
+  PRECONDITION(is_four_valued(type));
+
+  exprt::operandst disjuncts;
+  for(auto &op : expr.operands())
+    disjuncts.push_back(has_xz(op));
+
+  auto has_xz = disjunction(disjuncts);
+
+  exprt two_valued_expr = expr; // copy
+
+  for(auto &op : two_valued_expr.operands())
+    op = aval_underlying(op); // replace by aval
+
+  if(type.id() == ID_verilog_unsignedbv)
+    two_valued_expr.type() = unsignedbv_typet{to_bitvector_type(type).width()};
+  else if(type.id() == ID_verilog_signedbv)
+    two_valued_expr.type() = signedbv_typet{to_bitvector_type(type).width()};
+  else
+    PRECONDITION(false);
+
+  return if_exprt{
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
 }

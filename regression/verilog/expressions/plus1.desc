@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 plus1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ plus1.sv
 --
 ^warning: ignoring
 --
-The result is wrong.
