@@ -1136,7 +1136,7 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
 
   else if(src.id()==ID_replication)
     return convert_replication(
-      to_replication_expr(src), precedence = verilog_precedencet::REPLICATION);
+      to_replication_expr(src), precedence = verilog_precedencet::CONCAT);
 
   else if(src.id()==ID_array)
     return convert_array(src, precedence);
