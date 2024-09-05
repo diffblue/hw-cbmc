@@ -2118,6 +2118,33 @@ void verilog_typecheck_exprt::convert_range(
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::enum_decay
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+typet verilog_typecheck_exprt::enum_decay(const typet &type)
+{
+  // Verilog enum types decay to their base type when used in relational
+  // or arithmetic expressions.
+  if(type.get(ID_C_verilog_type) == ID_verilog_enum)
+  {
+    typet result = type;
+    result.remove(ID_C_verilog_type);
+    result.remove(ID_C_identifier);
+    return result;
+  }
+  else
+    return type;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::tc_binary_expr
 
   Inputs:
@@ -2132,20 +2159,7 @@ void verilog_typecheck_exprt::tc_binary_expr(
   const exprt &expr,
   exprt &op0, exprt &op1)
 {
-  // Verilog enum types decay to their base type when used in relational
-  // or arithmetic expressions.
-  auto enum_decay = [](const typet &type) {
-    if(type.get(ID_C_verilog_type) == ID_verilog_enum)
-    {
-      typet result = type;
-      result.remove(ID_C_verilog_type);
-      result.remove(ID_C_identifier);
-      return result;
-    }
-    else
-      return type;
-  };
-
+  // follows 1800-2017 11.8.2
   const typet new_type =
     max_type(enum_decay(op0.type()), enum_decay(op1.type()));
 
@@ -2159,6 +2173,85 @@ void verilog_typecheck_exprt::tc_binary_expr(
 
   propagate_type(op0, new_type);
   propagate_type(op1, new_type);
+}
+
+/*******************************************************************\
+
+Function: zero_extend
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static exprt zero_extend(const exprt &expr, const typet &type)
+{
+  auto old_width = expr.type().id() == ID_bool
+                     ? 1
+                     : to_bitvector_type(expr.type()).get_width();
+
+  // first make unsigned
+  typet tmp_type;
+
+  if(type.id() == ID_unsignedbv)
+    tmp_type = unsignedbv_typet{old_width};
+  else if(type.id() == ID_verilog_unsignedbv)
+    tmp_type = verilog_unsignedbv_typet{old_width};
+  else
+    PRECONDITION(false);
+
+  return typecast_exprt::conditional_cast(
+    typecast_exprt::conditional_cast(expr, tmp_type), type);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::typecheck_relation
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::typecheck_relation(binary_exprt &expr)
+{
+  auto &lhs = expr.lhs();
+  auto &rhs = expr.rhs();
+
+  // Relations are special-cased in 1800-2017 11.8.2.
+  const typet new_type =
+    max_type(enum_decay(lhs.type()), enum_decay(rhs.type()));
+
+  if(new_type.is_nil())
+  {
+    throw errort().with_location(expr.source_location())
+      << "expected operands of compatible type but got:\n"
+      << "  " << to_string(lhs.type()) << '\n'
+      << "  " << to_string(rhs.type());
+  }
+
+  // If both operands are signed, both are sign-extended to the max width.
+  // Otherwise, both are zero-extended to the max width.
+  // In particular, signed operands are then _not_ sign extended,
+  // which a typecast would do.
+  if(new_type.id() == ID_verilog_unsignedbv || new_type.id() == ID_unsignedbv)
+  {
+    // zero extend both operands
+    lhs = zero_extend(lhs, new_type);
+    rhs = zero_extend(rhs, new_type);
+  }
+  else
+  {
+    // convert
+    implicit_typecast(lhs, new_type);
+    implicit_typecast(rhs, new_type);
+  }
 }
 
 /*******************************************************************\
@@ -2561,7 +2654,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     Forall_operands(it, expr)
       convert_expr(*it);
 
-    tc_binary_expr(expr);
+    typecheck_relation(expr);
 
     return std::move(expr);
   }
@@ -2573,7 +2666,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     Forall_operands(it, expr)
       convert_expr(*it);
 
-    tc_binary_expr(expr);
+    typecheck_relation(expr);
 
     // This returns 'x' if either of the operands contains x or z.
     if(
@@ -2610,7 +2703,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     Forall_operands(it, expr)
       convert_expr(*it);
 
-    tc_binary_expr(expr);
+    typecheck_relation(expr);
 
     return std::move(expr);
   }
@@ -2622,7 +2715,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     Forall_operands(it, expr)
       convert_expr(*it);
 
-    tc_binary_expr(expr);
+    typecheck_relation(expr);
     no_bool_ops(expr);
 
     return std::move(expr);

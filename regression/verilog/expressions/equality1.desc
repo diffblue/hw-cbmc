@@ -9,9 +9,9 @@ equality1.v
 ^\[.*\] always 32'b0000000000000000000000000000000z == 20 === 32'b0000000000000000000000000000000x: PROVED up to bound 0$
 ^\[.*\] always 32'b0000000000000000000000000000000x != 10 === 32'b0000000000000000000000000000000x: PROVED up to bound 0$
 ^\[.*\] always 32'b0000000000000000000000000000000z != 20 === 32'b0000000000000000000000000000000x: PROVED up to bound 0$
-^\[.*\] always 2'b11 == 2'b11 === 0: REFUTED$
+^\[.*\] always 1'sb1 == 2'b11 === 0: PROVED up to bound 0$
 ^\[.*\] always 2'sb11 == 2'sb11 === 1: PROVED up to bound 0$
-^EXIT=10$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring

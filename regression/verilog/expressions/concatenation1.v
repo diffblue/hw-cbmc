@@ -7,7 +7,7 @@ module main(in1, in2);
   always @in1
     out = { in2, in1 };
 
-  always assert property1: out == ((in2<<16)|in1);
+  always assert property1: out == (({16'b0, in2}<<16)|in1);
 
   always assert property2: {4'b1001,4'b1011}==8'b10011011;
 

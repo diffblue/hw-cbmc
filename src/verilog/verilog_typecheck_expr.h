@@ -95,6 +95,7 @@ protected:
   {
   }
 
+  static typet enum_decay(const typet &);
   typet max_type(const typet &t1, const typet &t2);
 
   // named blocks
@@ -132,6 +133,7 @@ private:
   void implicit_typecast(exprt &, const typet &type);
   void tc_binary_expr(exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
+  void typecheck_relation(binary_exprt &);
   void no_bool_ops(exprt &);
 
   // system functions
