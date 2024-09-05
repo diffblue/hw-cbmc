@@ -2730,7 +2730,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
       return typecast_exprt{expr.rhs(), signedbv_typet{new_size_int}}
         .with_source_location(expr);
     }
-    else if(op_type.id() == ID_unsignedbv)
+    else if(op_type.id() == ID_unsignedbv || op_type.id() == ID_bool)
     {
       return typecast_exprt{expr.rhs(), unsignedbv_typet{new_size_int}}
         .with_source_location(expr);
