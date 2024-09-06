@@ -24,10 +24,14 @@ bv_typet aval_bval_type(std::size_t width, irep_idt source_type)
   return result;
 }
 
+bool is_four_valued(const typet &src)
+{
+  return src.id() == ID_verilog_unsignedbv || src.id() == ID_verilog_signedbv;
+}
+
 bv_typet lower_to_aval_bval(const typet &src)
 {
-  PRECONDITION(
-    src.id() == ID_verilog_unsignedbv || src.id() == ID_verilog_signedbv);
+  PRECONDITION(is_four_valued(src));
   return aval_bval_type(to_bitvector_type(src).get_width(), src.id());
 }
 
@@ -65,9 +69,7 @@ typet aval_bval_underlying(const typet &src)
 
 constant_exprt lower_to_aval_bval(const constant_exprt &src)
 {
-  PRECONDITION(
-    src.type().id() == ID_verilog_signedbv ||
-    src.type().id() == ID_verilog_unsignedbv);
+  PRECONDITION(is_four_valued(src.type()));
 
   auto new_type = lower_to_aval_bval(src.type());
   auto width = aval_bval_width(new_type);
@@ -219,11 +221,12 @@ exprt has_xz(const exprt &expr)
   return notequal_exprt{bval(expr), bv_typet{width}.all_zeros_expr()};
 }
 
-/// return 'x', one bit
-exprt make_x()
+/// return 'x'
+exprt make_x(const typet &type)
 {
-  auto type = verilog_unsignedbv_typet{1};
-  return lower_to_aval_bval(constant_exprt{ID_x, type});
+  PRECONDITION(is_four_valued(type));
+  auto width = to_bitvector_type(type).get_width();
+  return lower_to_aval_bval(constant_exprt{std::string(width, 'x'), type});
 }
 
 exprt aval_bval(const verilog_logical_equality_exprt &expr)
@@ -234,7 +237,9 @@ exprt aval_bval(const verilog_logical_equality_exprt &expr)
   auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
   auto equality = equal_exprt{expr.lhs(), expr.rhs()};
   return if_exprt{
-    has_xz, make_x(), aval_bval_conversion(equality, lower_to_aval_bval(type))};
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(equality, lower_to_aval_bval(type))};
 }
 
 exprt aval_bval(const verilog_logical_inequality_exprt &expr)
@@ -245,5 +250,41 @@ exprt aval_bval(const verilog_logical_inequality_exprt &expr)
   auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
   auto equality = notequal_exprt{expr.lhs(), expr.rhs()};
   return if_exprt{
-    has_xz, make_x(), aval_bval_conversion(equality, lower_to_aval_bval(type))};
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(equality, lower_to_aval_bval(type))};
+}
+
+exprt default_aval_bval_lowering(const exprt &expr)
+{
+  auto &type = expr.type();
+
+  if(is_four_valued(type))
+  {
+    exprt::operandst disjuncts;
+    for(auto &op : expr.operands())
+      disjuncts.push_back(has_xz(op));
+
+    exprt two_valued = expr; // copy
+
+    // create corresponding two-valued type
+    if(type.id() == ID_verilog_unsignedbv)
+      two_valued.type() = unsignedbv_typet{to_bitvector_type(type).get_width()};
+    else if(type.id() == ID_verilog_signedbv)
+      two_valued.type() = signedbv_typet{to_bitvector_type(type).get_width()};
+    else
+      PRECONDITION(false);
+
+    for(auto &op : two_valued.operands())
+      op = typecast_exprt{aval(op), two_valued.type()}; // replace by aval
+
+    auto has_xz = disjunction(disjuncts);
+
+    return if_exprt{
+      has_xz,
+      make_x(type),
+      aval_bval_conversion(two_valued, lower_to_aval_bval(type))};
+  }
+  else
+    return expr; // leave as is
 }

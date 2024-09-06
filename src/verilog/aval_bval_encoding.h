@@ -40,4 +40,9 @@ exprt aval_bval_concatenation(const exprt::operandst &, const typet &);
 exprt aval_bval(const verilog_logical_equality_exprt &);
 exprt aval_bval(const verilog_logical_inequality_exprt &);
 
+/// If any operand has x/z, then the result is 'x'.
+/// Otherwise, the result is the expression applied to the aval
+/// of the operands.
+exprt default_aval_bval_lowering(const exprt &);
+
 #endif
