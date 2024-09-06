@@ -19,29 +19,29 @@ class sva_ranged_predicate_exprt;
 
 // Precedences (higher means binds more strongly).
 // Follows Table 11-2 in IEEE 1800-2017.
-//
+// We deviate from the table for the precedence of concatenation
+// and replication, which act like parentheses.
 enum class verilog_precedencet
 {
   MAX = 19,
-  MEMBER = 18,     //  [ ]  bit-select  ( )  parenthesis  ::   .
-  NOT = 17,        //  unary !  ~  &  |  ~&  ~|  ^  ~^  ^~  +  -
-  POWER = 16,      //  **  power
-  MULT = 15,       //  *  /  %
-  ADD = 14,        //  + -
-  SHIFT = 13,      //  <<  >>  <<<  >>>
-  RELATION = 12,   //  >  >=  <  <=
-  EQUALITY = 11,   //  ==  !=  ===  !==  ==?  !=?
-  BITAND = 10,     //  &
-  XOR = 9,         //  ^  ~^  ^~ (binary)
-  BITOR = 8,       //  |
-  AND = 7,         //  &&
-  OR = 6,          //  ||
-  IF = 5,          //  ?:
-  IMPLIES = 4,     //  ->
-  ASSIGN = 3,      //  = += -= etc.
-  CONCAT = 2,      //  { } concatenation
-  REPLICATION = 1, //  {{ }} replication
-  MIN = 0          //  anything even weaker, e.g., SVA
+  MEMBER = 18,   //  [ ]  bit-select  ( )  parenthesis  ::   .
+  NOT = 17,      //  unary !  ~  &  |  ~&  ~|  ^  ~^  ^~  +  -
+  POWER = 16,    //  **  power
+  MULT = 15,     //  *  /  %
+  ADD = 14,      //  + -
+  SHIFT = 13,    //  <<  >>  <<<  >>>
+  RELATION = 12, //  >  >=  <  <=
+  EQUALITY = 11, //  ==  !=  ===  !==  ==?  !=?
+  BITAND = 10,   //  &
+  XOR = 9,       //  ^  ~^  ^~ (binary)
+  BITOR = 8,     //  |
+  AND = 7,       //  &&
+  OR = 6,        //  ||
+  IF = 5,        //  ?:
+  IMPLIES = 4,   //  ->
+  ASSIGN = 3,    //  = += -= etc.
+  CONCAT = 18,   //  { } concatenation, {{ }} replication
+  MIN = 0        //  anything even weaker, e.g., SVA
 };
 
 class expr2verilogt
