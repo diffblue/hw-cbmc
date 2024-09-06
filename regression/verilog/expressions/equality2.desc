@@ -5,11 +5,11 @@ equality2.v
 ^\[.*\] always 10 === 20 == 0: PROVED up to bound 0$
 ^\[.*\] always 10 !== 10 == 0: PROVED up to bound 0$
 ^\[.*\] always 10 !== 20 == 1: PROVED up to bound 0$
-^\[.*\] always 1'bx === 1'bx == 1: PROVED up to bound 0$
-^\[.*\] always 1'bz === 1'bz == 1: PROVED up to bound 0$
-^\[.*\] always 1'bx === 1'bz == 0: PROVED up to bound 0$
-^\[.*\] always 1'bx === 1 == 0: PROVED up to bound 0$
-^\[.*\] always 1'bz === 1 == 0: PROVED up to bound 0$
+^\[.*\] always 32'b0000000000000000000000000000000x === 32'b0000000000000000000000000000000x == 1: PROVED up to bound 0$
+^\[.*\] always 32'b0000000000000000000000000000000z === 32'b0000000000000000000000000000000z == 1: PROVED up to bound 0$
+^\[.*\] always 32'b0000000000000000000000000000000x === 32'b0000000000000000000000000000000z == 0: PROVED up to bound 0$
+^\[.*\] always 32'b0000000000000000000000000000000x === 1 == 0: PROVED up to bound 0$
+^\[.*\] always 32'b0000000000000000000000000000000z === 1 == 0: PROVED up to bound 0$
 ^\[.*\] always 1 === 1 == 1: PROVED up to bound 0$
 ^\[.*\] always 3'b011 === 3'b111 == 1: REFUTED$
 ^\[.*\] always 3'sb111 === 3'sb111 == 1: PROVED up to bound 0$
