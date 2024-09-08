@@ -1,0 +1,9 @@
+CORE
+sva_not1.sv
+--k-induction
+^\[main\.p0] always not 0: PROVED$
+^\[main\.p1] always not 1: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
