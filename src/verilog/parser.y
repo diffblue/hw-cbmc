@@ -2022,6 +2022,7 @@ concurrent_assertion_statement:
 	  assert_property_statement
 	| assume_property_statement
 	| cover_property_statement
+	| restrict_property_statement
 	;
 
 /* This one mimicks functionality in Cadence SMV */
@@ -2081,6 +2082,10 @@ assume_property_statement:
 
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' property_spec ')' action_block
 		{ init($$, ID_verilog_cover_property); mto($$, $4); mto($$, $6); }
+	;
+
+restrict_property_statement: TOK_RESTRICT TOK_PROPERTY '(' property_spec ')' ';'
+		{ init($$, ID_verilog_restrict_property); mto($$, $4); mto($$, $6); }
 	;
 
 expect_property_statement: TOK_EXPECT '(' property_spec ')' action_block

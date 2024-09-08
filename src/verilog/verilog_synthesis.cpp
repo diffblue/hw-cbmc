@@ -2561,6 +2561,7 @@ void verilog_synthesist::synth_assert_assume_cover(
     // mark 'assume' and 'cover' properties as such
     if(
       statement.id() == ID_verilog_assume_property ||
+      statement.id() == ID_verilog_restrict_property ||
       statement.id() == ID_verilog_immediate_assume ||
       statement.id() == ID_verilog_smv_assume)
     {
@@ -2616,6 +2617,7 @@ void verilog_synthesist::synth_assert_assume_cover(
   // mark 'assume' and 'cover' properties as such
   if(
     statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_smv_assume)
   {
@@ -2654,7 +2656,8 @@ void verilog_synthesist::synth_assert_assume_cover(
 
     if(
       module_item.id() == ID_verilog_assert_property ||
-      module_item.id() == ID_verilog_assume_property)
+      module_item.id() == ID_verilog_assume_property ||
+      module_item.id() == ID_verilog_restrict_property)
     {
       // Concurrent assertions and assumptions come with an implicit 'always'
       // (1800-2017 Sec 16.12.11).
@@ -2681,7 +2684,9 @@ void verilog_synthesist::synth_assert_assume_cover(
     if(cond.id() != ID_sva_always)
       cond = sva_always_exprt{cond};
   }
-  else if(module_item.id() == ID_verilog_assume_property)
+  else if(
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_restrict_property)
   {
     // Concurrent assumptions come with an implicit 'always'
     // (1800-2017 Sec 16.12.11).
@@ -3427,6 +3432,7 @@ void verilog_synthesist::synth_statement(
   else if(
     statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_smv_assume)
   {
     synth_assert_assume_cover(
@@ -3537,7 +3543,9 @@ void verilog_synthesist::synth_module_item(
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_module_item(module_item));
   }
-  else if(module_item.id() == ID_verilog_assume_property)
+  else if(
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_restrict_property)
   {
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_module_item(module_item));
