@@ -394,6 +394,8 @@ int yyverilogerror(const char *error)
 %token TOK_HASHMINUSHASH        "#-#"
 %token TOK_HASHEQUALHASH        "#=#"
 %token TOK_COLONCOLON           "::"
+%token TOK_COLONEQUAL           ":="
+%token TOK_COLONSLASH           ":/"
 %token TOK_EQUALEQUALQUESTION   "==?"
 %token TOK_EXCLAMEQUALQUESTION  "!=?"
 %token TOK_LSQASTERIC           "[*"
@@ -1047,6 +1049,21 @@ constraint_block_item:
 
 constraint_expression:
 	  expression
+	;
+
+dist_list:
+	  dist_item
+	| dist_list ',' dist_item
+	;
+
+dist_item:
+	  value_range
+	| value_range dist_weight
+	;
+
+dist_weight:
+	  ":=" expression
+	| ":/" expression
 	;
 
 constraint_prototype: TOK_CONSTRAINT constraint_identifier ';'
@@ -2309,6 +2326,7 @@ cycle_delay_const_range_expression:
 
 expression_or_dist:
 	  expression
+	| expression TOK_DIST '{' dist_list '}'
 	;
 
 // System Verilog standard 1800-2017
@@ -3593,6 +3611,11 @@ expression:
 		{ init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
 	| TOK_QSTRING
 		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
+	;
+
+value_range:
+	  expression
+	| '[' expression TOK_COLON expression ']'
 	;
 
 indexed_range:
