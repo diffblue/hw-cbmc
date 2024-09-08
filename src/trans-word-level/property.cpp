@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/arith_tools.h>
 #include <util/expr_iterator.h>
+#include <util/expr_util.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
@@ -25,7 +26,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: bmc_supports_property
+Function: bmc_supports_LTL_property
 
   Inputs:
 
@@ -35,7 +36,115 @@ Function: bmc_supports_property
 
 \*******************************************************************/
 
-bool bmc_supports_property(const exprt &expr)
+bool bmc_supports_LTL_property(const exprt &expr)
+{
+  // We support
+  // * formulas that contain no temporal operator besides X
+  // * Gφ, where φ contains no temporal operator besides X
+  // * Fφ, where φ contains no temporal operator besides X
+  // * GFφ, where φ contains no temporal operator besides X
+  // * conjunctions of supported LTL properties
+  auto non_X_LTL_operator = [](const exprt &expr)
+  { return is_LTL_operator(expr) && expr.id() != ID_X; };
+
+  if(!has_subexpr(expr, non_X_LTL_operator))
+  {
+    return true;
+  }
+  else if(expr.id() == ID_F)
+  {
+    return !has_subexpr(to_F_expr(expr).op(), non_X_LTL_operator);
+  }
+  else if(expr.id() == ID_G)
+  {
+    auto &op = to_G_expr(expr).op();
+    if(op.id() == ID_F)
+    {
+      return !has_subexpr(to_F_expr(op).op(), non_X_LTL_operator);
+    }
+    else
+    {
+      return !has_subexpr(op, non_X_LTL_operator);
+    }
+  }
+  else if(expr.id() == ID_and)
+  {
+    for(auto &op : expr.operands())
+      if(!bmc_supports_LTL_property(op))
+        return false;
+    return true;
+  }
+  else
+    return false;
+}
+
+/*******************************************************************\
+
+Function: bmc_supports_CTL_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool bmc_supports_CTL_property(const exprt &expr)
+{
+  // We support
+  // * formulas that contain no temporal operator besides AX
+  // * GFφ, where φ contains no temporal operator besides AX
+  // * AFφ, where φ contains no temporal operator besides AX
+  // * AGAFφ, where φ contains no temporal operator besides AX
+  // * conjunctions of supported CTL properties
+  auto non_AX_CTL_operator = [](const exprt &expr)
+  { return is_CTL_operator(expr) && expr.id() != ID_AX; };
+
+  if(!has_subexpr(expr, non_AX_CTL_operator))
+  {
+    return true;
+  }
+  else if(expr.id() == ID_AF)
+  {
+    return !has_subexpr(to_AF_expr(expr).op(), non_AX_CTL_operator);
+  }
+  else if(expr.id() == ID_AG)
+  {
+    auto &op = to_AG_expr(expr).op();
+    if(op.id() == ID_AF)
+    {
+      return !has_subexpr(to_AF_expr(op).op(), non_AX_CTL_operator);
+    }
+    else
+    {
+      return !has_subexpr(op, non_AX_CTL_operator);
+    }
+  }
+  else if(expr.id() == ID_and)
+  {
+    for(auto &op : expr.operands())
+      if(!bmc_supports_CTL_property(op))
+        return false;
+    return true;
+  }
+  else
+    return false;
+}
+
+/*******************************************************************\
+
+Function: bmc_supports_SVA_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool bmc_supports_SVA_property(const exprt &expr)
 {
   if(!is_temporal_operator(expr))
   {
@@ -58,22 +167,34 @@ bool bmc_supports_property(const exprt &expr)
     return !has_temporal_operator(to_sva_nexttime_expr(expr).op());
   else if(expr.id() == ID_sva_s_nexttime)
     return !has_temporal_operator(to_sva_s_nexttime_expr(expr).op());
-  else if(expr.id() == ID_AG)
-    return true;
-  else if(expr.id() == ID_G)
-    return true;
-  else if(expr.id() == ID_AF)
-    return true;
-  else if(expr.id() == ID_F)
-    return true;
-  else if(expr.id() == ID_X)
-    return bmc_supports_property(to_X_expr(expr).op());
   else if(expr.id() == ID_sva_always)
     return true;
   else if(expr.id() == ID_sva_ranged_always)
     return true;
   else
     return false;
+}
+
+/*******************************************************************\
+
+Function: bmc_supports_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool bmc_supports_property(const exprt &expr)
+{
+  if(is_LTL(expr))
+    return bmc_supports_LTL_property(expr);
+  else if(is_CTL(expr))
+    return bmc_supports_CTL_property(expr);
+  else
+    return bmc_supports_SVA_property(expr);
 }
 
 /*******************************************************************\
