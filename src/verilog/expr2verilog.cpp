@@ -1273,6 +1273,12 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
   else if(src.id() == ID_sva_and)
     return convert_sva_binary("and", to_sva_and_expr(src));
 
+  else if(src.id() == ID_sva_iff)
+    return convert_sva_binary("iff", to_sva_iff_expr(src));
+
+  else if(src.id() == ID_sva_implies)
+    return convert_sva_binary("implies", to_sva_implies_expr(src));
+
   else if(src.id()==ID_power)
     return convert_binary(
       to_multi_ary_expr(src), "**", precedence = verilog_precedencet::POWER);

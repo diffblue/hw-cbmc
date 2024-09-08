@@ -143,6 +143,16 @@ exprt normalize_property(exprt expr)
   else if(expr.id() == ID_sva_non_overlapped_implication)
     expr = normalize_pre_sva_non_overlapped_implication(
       to_sva_non_overlapped_implication_expr(expr));
+  else if(expr.id() == ID_sva_iff)
+  {
+    expr =
+      equal_exprt{to_sva_iff_expr(expr).lhs(), to_sva_iff_expr(expr).rhs()};
+  }
+  else if(expr.id() == ID_sva_implies)
+  {
+    expr = implies_exprt{
+      to_sva_implies_expr(expr).lhs(), to_sva_implies_expr(expr).rhs()};
+  }
   else if(expr.id() == ID_sva_and)
     expr = normalize_pre_sva_and(to_sva_and_expr(expr));
   else if(expr.id() == ID_sva_not)

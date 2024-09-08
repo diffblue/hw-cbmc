@@ -16,6 +16,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬(a ∨ b) --> ¬a ∧ ¬b
 /// ¬(a ∧ b) --> ¬a ∨ ¬b
 /// (a -> b) --> ¬a ∨ b
+/// a sva_iff b --> a <-> b
+/// a sva_implies b --> a -> b
 /// sva_not a --> ¬a
 /// a sva_and b --> a ∧ b                       if a and b are not SVA sequences
 /// a sva_or b --> a ∨ b                        if a and b are not SVA sequences

@@ -2563,7 +2563,9 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(expr.id() == ID_sva_and || expr.id() == ID_sva_or)
+  else if(
+    expr.id() == ID_sva_and || expr.id() == ID_sva_or ||
+    expr.id() == ID_sva_implies || expr.id() == ID_sva_iff)
   {
     for(auto &op : expr.operands())
     {

@@ -619,6 +619,52 @@ static inline sva_and_exprt &to_sva_and_expr(exprt &expr)
   return static_cast<sva_and_exprt &>(expr);
 }
 
+class sva_iff_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_iff_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_sva_iff, std::move(op1))
+  {
+  }
+};
+
+static inline const sva_iff_exprt &to_sva_iff_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_iff);
+  sva_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_iff_exprt &>(expr);
+}
+
+static inline sva_iff_exprt &to_sva_iff_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_iff);
+  sva_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_iff_exprt &>(expr);
+}
+
+class sva_implies_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_implies_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_sva_implies, std::move(op1))
+  {
+  }
+};
+
+static inline const sva_implies_exprt &to_sva_implies_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_implies);
+  sva_implies_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_implies_exprt &>(expr);
+}
+
+static inline sva_implies_exprt &to_sva_implies_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_implies);
+  sva_implies_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_implies_exprt &>(expr);
+}
+
 class sva_or_exprt : public binary_predicate_exprt
 {
 public:
