@@ -89,6 +89,13 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
         properties.properties.back().normalized_expr =
           normalize_property(symbol.value);
       }
+
+      message.debug() << "Normalized property: "
+                      << from_expr(
+                           ns,
+                           symbol.name,
+                           properties.properties.back().normalized_expr)
+                      << messaget::eom;
     }
   }
 
