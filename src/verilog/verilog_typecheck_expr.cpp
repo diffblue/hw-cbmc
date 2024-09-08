@@ -2554,6 +2554,19 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_and || expr.id() == ID_sva_or)
+  {
+    for(auto &op : expr.operands())
+    {
+      convert_expr(op);
+      make_boolean(op);
+    }
+
+    // always boolean, never x
+    expr.type() = bool_typet();
+
+    return std::move(expr);
+  }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal)
   {
     expr.type()=bool_typet();
