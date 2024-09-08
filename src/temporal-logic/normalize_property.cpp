@@ -172,7 +172,7 @@ exprt normalize_property(exprt expr)
   else if(expr.id() == ID_sva_cycle_delay_plus)
     expr = F_exprt{X_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
   else if(expr.id() == ID_sva_cycle_delay_star)
-    expr = X_exprt{to_sva_cycle_delay_star_expr(expr).op()};
+    expr = F_exprt{to_sva_cycle_delay_star_expr(expr).op()};
   else if(expr.id() == ID_sva_if)
   {
     auto &sva_if_expr = to_sva_if_expr(expr);

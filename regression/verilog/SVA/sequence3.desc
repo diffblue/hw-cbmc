@@ -2,9 +2,11 @@ CORE
 sequence3.sv
 --bound 20 --numbered-trace
 ^\[main\.p0\] ##\[\*\] main\.x == 6: REFUTED$
-^Counterexample with 2 states:$
-^\[main\.p1\] ##\[\+\] main\.x == 0: REFUTED$
 ^Counterexample with 7 states:$
+^\[main\.p1\] ##\[\*\] main\.x == 5: PROVED up to bound 20$
+^\[main\.p2\] ##\[\+\] main\.x == 0: REFUTED$
+^Counterexample with 7 states:$
+^\[main\.p3\] ##\[\+\] main\.x == 5: PROVED up to bound 20$
 ^EXIT=10$
 ^SIGNAL=0$
 --
