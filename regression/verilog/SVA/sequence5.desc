@@ -1,0 +1,14 @@
+KNOWNBUG
+sequence5.sv
+--bound 0
+^\[main\.p0\] 1: PROVED up to bound 0$
+^\[main\.p1\] 0: REFUTED$
+^\[main\.p2\] 1'bx: PROVED up to bound 0$
+^\[main\.p3\] 1'bz: PROVED up to bound 0$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+x and z are recognized as 'true', but 'true' is defined as a "nonzero known
+value" (1800-2017 12.4).
