@@ -37,8 +37,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬¬φ --> φ
 /// ¬Gφ --> F¬φ
 /// ¬Fφ --> G¬φ
-/// [*] φ --> F φ
-/// [+] φ --> X F φ
+/// ##[*] φ --> F φ
+/// ##[+] φ --> X F φ
 /// strong(φ) --> φ
 /// weak(φ) --> φ
 /// sva_case --> ? :
