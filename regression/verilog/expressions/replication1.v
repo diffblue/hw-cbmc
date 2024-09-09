@@ -7,7 +7,7 @@ module main(in);
     out = { 4 { in } };
     
   always assert property1:
-    out==(in | (in<<8) | (in<<16) | (in<<24));
+    out==({24'b0, in} | (in<<8) | (in<<16) | (in<<24));
 
   // 1-replication
   always assert property2:

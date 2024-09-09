@@ -11,6 +11,6 @@ module main(input a, input b);
 
   my_add adder(a, b, result);
 
-  assert final (a+b==result);
+  assert final (2'(a)+b==result);
 
 endmodule
