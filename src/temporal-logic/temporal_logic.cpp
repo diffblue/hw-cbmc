@@ -13,17 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 bool is_temporal_operator(const exprt &expr)
 {
   return is_CTL_operator(expr) || is_LTL_operator(expr) ||
-         is_SVA_sequence(expr) || expr.id() == ID_A || expr.id() == ID_E ||
-         expr.id() == ID_sva_disable_iff || expr.id() == ID_sva_accept_on ||
-         expr.id() == ID_sva_reject_on || expr.id() == ID_sva_sync_accept_on ||
-         expr.id() == ID_sva_sync_reject_on || expr.id() == ID_sva_always ||
-         expr.id() == ID_sva_ranged_always || expr.id() == ID_sva_nexttime ||
-         expr.id() == ID_sva_s_nexttime || expr.id() == ID_sva_until ||
-         expr.id() == ID_sva_s_until || expr.id() == ID_sva_until_with ||
-         expr.id() == ID_sva_s_until_with || expr.id() == ID_sva_eventually ||
-         expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_cycle_delay ||
-         expr.id() == ID_sva_overlapped_followed_by ||
-         expr.id() == ID_sva_nonoverlapped_followed_by;
+         is_SVA_operator(expr) || expr.id() == ID_A || expr.id() == ID_E;
 }
 
 bool has_temporal_operator(const exprt &expr)
@@ -80,4 +70,27 @@ bool is_SVA_sequence(const exprt &expr)
          id == ID_sva_sequence_concatenation ||
          id == ID_sva_sequence_intersect || id == ID_sva_sequence_first_match ||
          id == ID_sva_sequence_throughout || id == ID_sva_sequence_within;
+}
+
+bool is_SVA_operator(const exprt &expr)
+{
+  auto id = expr.id();
+  return is_SVA_sequence(expr) || id == ID_sva_disable_iff ||
+         id == ID_sva_accept_on || id == ID_sva_reject_on ||
+         id == ID_sva_sync_accept_on || id == ID_sva_sync_reject_on ||
+         id == ID_sva_always || id == ID_sva_ranged_always ||
+         id == ID_sva_nexttime || id == ID_sva_s_nexttime ||
+         id == ID_sva_until || id == ID_sva_s_until ||
+         id == ID_sva_until_with || id == ID_sva_s_until_with ||
+         id == ID_sva_eventually || id == ID_sva_s_eventually ||
+         id == ID_sva_cycle_delay || id == ID_sva_overlapped_followed_by ||
+         id == ID_sva_nonoverlapped_followed_by;
+}
+
+bool is_SVA(const exprt &expr)
+{
+  auto non_SVA_operator = [](const exprt &expr)
+  { return is_temporal_operator(expr) && !is_SVA_operator(expr); };
+
+  return !has_subexpr(expr, non_SVA_operator);
 }
