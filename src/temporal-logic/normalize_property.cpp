@@ -53,6 +53,16 @@ exprt normalize_pre_not(not_exprt expr)
     // ¬Xφ --> X¬φ
     return X_exprt{not_exprt{to_X_expr(op).op()}};
   }
+  else if(op.id() == ID_sva_always)
+  {
+    // ¬ sva_always φ --> sva_s_eventually ¬φ
+    return sva_s_eventually_exprt{not_exprt{to_sva_always_expr(op).op()}};
+  }
+  else if(op.id() == ID_sva_s_eventually)
+  {
+    // ¬ sva_s_eventually φ --> sva_always ¬φ
+    return sva_always_exprt{not_exprt{to_sva_eventually_expr(op).op()}};
+  }
 
   return std::move(expr);
 }

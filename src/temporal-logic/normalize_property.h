@@ -33,6 +33,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// a sva_reject_on b --> ¬a ∧ b
 /// a sva_sync_accept_on b --> a ∨ b
 /// a sva_sync_reject_on b --> ¬a ∧ b
+/// ¬ sva_s_eventually φ --> sva_always ¬φ
+/// ¬ sva_always φ --> sva_s_eventually ¬φ
 /// ¬Xφ --> X¬φ
 /// ¬¬φ --> φ
 /// ¬Gφ --> F¬φ
