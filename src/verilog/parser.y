@@ -372,32 +372,34 @@ int yyverilogerror(const char *error)
 %token TOK_UWIRE            "uwire"
 
 /* System Verilog Operators */
-%token TOK_VERTBARMINUSGREATER "|->"
-%token TOK_VERTBAREQUALGREATER "|=>"
-%token TOK_PLUSPLUS         "++"
-%token TOK_MINUSMINUS       "--"
-%token TOK_PLUSEQUAL        "+="
-%token TOK_PLUSCOLON        "+:"
-%token TOK_MINUSEQUAL       "-="
-%token TOK_MINUSCOLON       "-:"
-%token TOK_ASTERICEQUAL     "*="
-%token TOK_SLASHEQUAL       "/="
-%token TOK_PERCENTEQUAL     "%="
-%token TOK_AMPEREQUAL       "&="
-%token TOK_CARETEQUAL       "^="
-%token TOK_VERTBAREQUAL     "|="
-%token TOK_LESSLESSEQUAL    "<<="
-%token TOK_GREATERGREATEREQUAL ">>="
-%token TOK_LESSLESSLESSEQUAL "<<<="
+%token TOK_VERTBARMINUSGREATER  "|->"
+%token TOK_VERTBAREQUALGREATER  "|=>"
+%token TOK_PLUSPLUS             "++"
+%token TOK_MINUSMINUS           "--"
+%token TOK_PLUSEQUAL            "+="
+%token TOK_PLUSCOLON            "+:"
+%token TOK_MINUSEQUAL           "-="
+%token TOK_MINUSCOLON           "-:"
+%token TOK_ASTERICEQUAL         "*="
+%token TOK_SLASHEQUAL           "/="
+%token TOK_PERCENTEQUAL         "%="
+%token TOK_AMPEREQUAL           "&="
+%token TOK_CARETEQUAL           "^="
+%token TOK_VERTBAREQUAL         "|="
+%token TOK_LESSLESSEQUAL        "<<="
+%token TOK_GREATERGREATEREQUAL  ">>="
+%token TOK_LESSLESSLESSEQUAL    "<<<="
 %token TOK_GREATERGREATERGREATEREQUAL ">>>="
-%token TOK_HASHHASH         "##"
-%token TOK_HASHMINUSHASH    "#-#"
-%token TOK_HASHEQUALHASH    "#=#"
-%token TOK_COLONCOLON       "::"
-%token TOK_LSQASTERIC       "[*"
-%token TOK_LSQPLUS          "[+"
-%token TOK_LSQEQUAL         "[="
-%token TOK_LSQMINUSGREATER  "[->"
+%token TOK_HASHHASH             "##"
+%token TOK_HASHMINUSHASH        "#-#"
+%token TOK_HASHEQUALHASH        "#=#"
+%token TOK_COLONCOLON           "::"
+%token TOK_EQUALEQUALQUESTION   "==?"
+%token TOK_EXCLAMEQUALQUESTION  "!=?"
+%token TOK_LSQASTERIC           "[*"
+%token TOK_LSQPLUS              "[+"
+%token TOK_LSQEQUAL             "[="
+%token TOK_LSQMINUSGREATER      "[->"
 
 /* System Verilog Keywords */
 %token TOK_ACCEPT_ON        "accept_on"
@@ -3546,6 +3548,10 @@ expression:
 		{ init($$, ID_verilog_logical_equality); mto($$, $1); mto($$, $3); }
 	| expression TOK_EXCLAMEQUAL expression
 		{ init($$, ID_verilog_logical_inequality); mto($$, $1); mto($$, $3); }
+	| expression TOK_EQUALEQUALQUESTION expression
+		{ init($$, ID_verilog_wildcard_equality); mto($$, $1); mto($$, $3); }
+	| expression TOK_EXCLAMEQUALQUESTION expression
+		{ init($$, ID_verilog_wildcard_inequality); mto($$, $1); mto($$, $3); }
 	| expression TOK_EQUALEQUALEQUAL expression
 		{ init($$, ID_verilog_case_equality); mto($$, $1); mto($$, $3); }
 	| expression TOK_EXCLAMEQUALEQUAL expression

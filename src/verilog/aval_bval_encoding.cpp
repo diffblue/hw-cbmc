@@ -247,3 +247,37 @@ exprt aval_bval(const verilog_logical_inequality_exprt &expr)
   return if_exprt{
     has_xz, make_x(), aval_bval_conversion(equality, lower_to_aval_bval(type))};
 }
+
+exprt aval_bval(const verilog_wildcard_equality_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
+
+  // We are using masking based on the pattern given as rhs.
+  // The aval is the comparison value, and the
+  // negation of bval is the mask.
+  const auto &pattern_aval = ::aval(expr.rhs());
+  const auto &pattern_bval = ::bval(expr.rhs());
+  auto mask_expr = bitnot_exprt{pattern_bval};
+
+  return equal_exprt{
+    bitand_exprt{aval(expr.lhs()), mask_expr},
+    bitand_exprt{pattern_aval, mask_expr}};
+}
+
+exprt aval_bval(const verilog_wildcard_inequality_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
+
+  // We are using masking based on the pattern given as rhs.
+  // The aval is the comparison value, and the
+  // negation of bval is the mask.
+  const auto &pattern_aval = ::aval(expr.rhs());
+  const auto &pattern_bval = ::bval(expr.rhs());
+  auto mask_expr = bitnot_exprt{pattern_bval};
+
+  return notequal_exprt{
+    bitand_exprt{aval(expr.lhs()), mask_expr},
+    bitand_exprt{pattern_aval, mask_expr}};
+}
