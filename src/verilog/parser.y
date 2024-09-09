@@ -2200,9 +2200,9 @@ property_expr_proper:
 	| property_expr "s_until_with" property_expr
 		{ init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
 	| property_expr "implies" property_expr
-		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_implies); mto($$, $1); mto($$, $3); }
 	| property_expr "iff" property_expr
-		{ init($$, ID_iff); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_iff); mto($$, $1); mto($$, $3); }
 	| "accept_on" '(' expression_or_dist ')' property_expr %prec "property_expr_abort"
 		{ init($$, ID_sva_accept_on); mto($$, $3); mto($$, $5); }
 	| "reject_on" '(' expression_or_dist ')' property_expr %prec "property_expr_abort"

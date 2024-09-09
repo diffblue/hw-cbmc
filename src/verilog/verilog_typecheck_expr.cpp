@@ -2269,8 +2269,10 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op());
 
-    if (expr.op().type().id() == ID_verilog_signedbv ||
-        expr.op().type().id() == ID_verilog_unsignedbv) {
+    if(
+      expr.op().type().id() == ID_verilog_signedbv ||
+      expr.op().type().id() == ID_verilog_unsignedbv)
+    {
       expr.type()=verilog_unsignedbv_typet(1);
     }
     else
@@ -2278,6 +2280,13 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
       expr.type()=bool_typet();
       make_boolean(expr.op());
     }
+  }
+  else if(expr.id() == ID_sva_not)
+  {
+    convert_expr(expr.op());
+    make_boolean(expr.op());
+    expr.type() = bool_typet(); // always boolean, never x
+    return std::move(expr);
   }
   else if(expr.id()==ID_reduction_or  || expr.id()==ID_reduction_and ||
           expr.id()==ID_reduction_nor || expr.id()==ID_reduction_nand ||
@@ -2551,6 +2560,21 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     }
 
     expr.type()=bool_typet();
+
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_sva_and || expr.id() == ID_sva_or ||
+    expr.id() == ID_sva_implies || expr.id() == ID_sva_iff)
+  {
+    for(auto &op : expr.operands())
+    {
+      convert_expr(op);
+      make_boolean(op);
+    }
+
+    // always boolean, never x
+    expr.type() = bool_typet();
 
     return std::move(expr);
   }
