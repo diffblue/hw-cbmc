@@ -1,0 +1,12 @@
+KNOWNBUG
+sva_until1.sv
+--bound 1
+^\[main\.p0\] always (main.a until_with main.b): REFUTED$
+^\[main\.p1\] always (main.a until main.b): REFUTED$
+^\[main\.p2\] always (main.a s_until main.b): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+These properties are not supported by the BMC engine.
