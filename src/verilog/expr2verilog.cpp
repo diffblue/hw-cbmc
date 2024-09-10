@@ -1324,11 +1324,11 @@ expr2verilogt::convert(const exprt &src, verilog_precedencet &precedence)
 
   else if(src.id()==ID_implies)
     return convert_binary(
-      to_multi_ary_expr(src), "|->", precedence = verilog_precedencet::MIN);
+      to_multi_ary_expr(src), "->", precedence = verilog_precedencet::IMPLIES);
 
   else if(src.id()==ID_iff)
     return convert_binary(
-      to_multi_ary_expr(src), "<->", precedence = verilog_precedencet::MIN);
+      to_multi_ary_expr(src), "<->", precedence = verilog_precedencet::IMPLIES);
 
   else if(src.id()==ID_reduction_or)
     return convert_unary(
