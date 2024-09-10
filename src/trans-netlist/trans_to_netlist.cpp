@@ -593,6 +593,11 @@ void convert_trans_to_netlistt::convert_lhs_rec(
   // default
   forall_operands(it, expr)
   {
+    // natural/integer-typed expressions do not contain symbols, and hence,
+    // do not need to be recursed into.
+    if(it->type().id() == ID_natural || it->type().id() == ID_integer)
+      continue;
+
     std::size_t width=boolbv_width(it->type());
     
     if(width==0)

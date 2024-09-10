@@ -1,0 +1,5 @@
+CORE
+netlist-conversion1.v
+--bound 1 --aig
+^EXIT=10$
+^SIGNAL=0$
