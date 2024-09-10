@@ -1484,6 +1484,7 @@ void verilog_typecheckt::convert_statement(
   else if(
     statement.id() == ID_verilog_immediate_assume ||
     statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_smv_assume)
   {
     convert_assert_assume_cover(to_verilog_assume_statement(statement));
@@ -1531,6 +1532,7 @@ void verilog_typecheckt::convert_statement(
     if(
       sub_statement.id() == ID_verilog_assert_property ||
       sub_statement.id() == ID_verilog_assume_property ||
+      sub_statement.id() == ID_verilog_restrict_property ||
       sub_statement.id() == ID_verilog_cover_property)
     {
       sub_statement.set(ID_identifier, label_statement.label());
@@ -1587,6 +1589,7 @@ void verilog_typecheckt::convert_module_item(
   else if(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_restrict_property ||
     module_item.id() == ID_verilog_cover_property)
   {
     convert_assert_assume_cover(
