@@ -27,16 +27,16 @@ Author: Daniel Kroening, dkr@amazon.com
 /// a sva_and b --> a ∧ b                                   if a and b are not SVA sequences
 /// a sva_or b --> a ∨ b                                    if a and b are not SVA sequences
 /// sva_overlapped_implication --> ¬a ∨ b                   if a is not an SVA sequence
-/// sva_non_overlapped_implication --> ¬a ∨ sva_nexttime b  if a is not an SVA sequence
-/// sva_nexttime φ --> Xφ
+/// sva_non_overlapped_implication --> ¬a ∨ always[1:1] b   if a is not an SVA sequence
+/// sva_nexttime φ --> sva_always[1:1] φ
 /// sva_nexttime[i] φ --> sva_always[i:i] φ
-/// sva_s_nexttime φ --> Xφ
+/// sva_s_nexttime φ --> sva_always[1:1] φ
 /// sva_s_nexttime[i] φ --> sva_s_always[i:i] φ
 /// sva_if --> ? :
 /// ##[0:$] φ --> s_eventually φ
 /// ##[i:$] φ --> s_nexttime[i] s_eventually φ
-/// ##[*] φ --> F φ
-/// ##[+] φ --> X F φ
+/// ##[*] φ --> s_eventually φ
+/// ##[+] φ --> always[1:1] s_eventually φ
 /// strong(φ) --> φ
 /// weak(φ) --> φ
 /// sva_case --> ? :

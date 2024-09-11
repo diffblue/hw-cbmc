@@ -86,9 +86,13 @@ exprt normalize_pre_sva_overlapped_implication(
 exprt normalize_pre_sva_non_overlapped_implication(
   sva_non_overlapped_implication_exprt expr)
 {
-  // Same as a->nexttime b if lhs is not a sequence.
+  // Same as a->always[1:1] b if lhs is not a sequence.
   if(!is_SVA_sequence(expr.lhs()))
-    return or_exprt{not_exprt{expr.lhs()}, sva_nexttime_exprt{expr.rhs()}};
+  {
+    auto one = natural_typet{}.one_expr();
+    return or_exprt{
+      not_exprt{expr.lhs()}, sva_ranged_always_exprt{one, one, expr.rhs()}};
+  }
   else
     return std::move(expr);
 }
@@ -178,7 +182,7 @@ exprt normalize_property(exprt expr)
   else if(expr.id() == ID_sva_s_nexttime)
   {
     auto one = natural_typet{}.one_expr();
-    expr = sva_ranged_always_exprt{one, one, to_sva_s_nexttime_expr(expr).op()};
+    expr = sva_s_always_exprt{one, one, to_sva_s_nexttime_expr(expr).op()};
   }
   else if(expr.id() == ID_sva_indexed_nexttime)
   {
@@ -193,11 +197,18 @@ exprt normalize_property(exprt expr)
       nexttime_expr.index(), nexttime_expr.index(), nexttime_expr.op()};
   }
   else if(expr.id() == ID_sva_cycle_delay)
+  {
     expr = normalize_pre_sva_cycle_delay(to_sva_cycle_delay_expr(expr));
+  }
   else if(expr.id() == ID_sva_cycle_delay_plus)
-    expr = F_exprt{X_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
+  {
+    expr = sva_s_eventually_exprt{
+      sva_s_nexttime_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
+  }
   else if(expr.id() == ID_sva_cycle_delay_star)
-    expr = F_exprt{to_sva_cycle_delay_star_expr(expr).op()};
+  {
+    expr = sva_s_eventually_exprt{to_sva_cycle_delay_star_expr(expr).op()};
+  }
   else if(expr.id() == ID_sva_sequence_concatenation)
   {
     auto &sequence_concatenation = to_sva_sequence_concatenation_expr(expr);

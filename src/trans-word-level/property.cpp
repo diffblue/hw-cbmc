@@ -145,35 +145,15 @@ Function: bmc_supports_SVA_property
 
 bool bmc_supports_SVA_property(const exprt &expr)
 {
-  if(!is_temporal_operator(expr))
-  {
-    if(!has_temporal_operator(expr))
-      return true; // initial state only
-    else if(
-      expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_implies)
-    {
-      for(auto &op : expr.operands())
-        if(!bmc_supports_property(op))
-          return false;
-      return true;
-    }
-    else
-      return false;
-  }
-  else if(expr.id() == ID_sva_cycle_delay)
-    return !has_temporal_operator(to_sva_cycle_delay_expr(expr).op());
-  else if(expr.id() == ID_sva_nexttime)
-    return !has_temporal_operator(to_sva_nexttime_expr(expr).op());
-  else if(expr.id() == ID_sva_s_nexttime)
-    return !has_temporal_operator(to_sva_s_nexttime_expr(expr).op());
-  else if(expr.id() == ID_sva_always)
-    return true;
-  else if(expr.id() == ID_sva_ranged_always)
-    return true;
-  else if(expr.id() == ID_sva_s_eventually)
-    return true;
-  else
+  // sva_nonoverlapped_followed_by is not supported yet
+  if(has_subexpr(expr, ID_sva_nonoverlapped_followed_by))
     return false;
+
+  // sva_overlapped_followed_by is not supported yet
+  if(has_subexpr(expr, ID_sva_overlapped_followed_by))
+    return false;
+
+  return true;
 }
 
 /*******************************************************************\
@@ -194,8 +174,10 @@ bool bmc_supports_property(const exprt &expr)
     return bmc_supports_LTL_property(expr);
   else if(is_CTL(expr))
     return bmc_supports_CTL_property(expr);
-  else
+  else if(is_SVA(expr))
     return bmc_supports_SVA_property(expr);
+  else
+    return false; // unknown category
 }
 
 /*******************************************************************\
