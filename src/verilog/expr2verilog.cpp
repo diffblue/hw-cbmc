@@ -37,7 +37,7 @@ Function: expr2verilogt::convert_if
 
 \*******************************************************************/
 
-std::string
+expr2verilogt::resultt
 expr2verilogt::convert_if(const if_exprt &src, verilog_precedencet precedence)
 {
   if(src.operands().size()!=3)
@@ -71,7 +71,7 @@ expr2verilogt::convert_if(const if_exprt &src, verilog_precedencet precedence)
   if(precedence > op0.p)
     dest += ')';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -86,7 +86,7 @@ Function: expr2verilogt::convert_sva_cycle_delay
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_cycle_delay(
+expr2verilogt::resultt expr2verilogt::convert_sva_cycle_delay(
   const ternary_exprt &src,
   verilog_precedencet precedence)
 {
@@ -114,7 +114,7 @@ std::string expr2verilogt::convert_sva_cycle_delay(
   if(precedence > op2.p)
     dest += ')';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -129,7 +129,7 @@ Function: expr2verilogt::convert_sva_sequence_concatenation
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_sequence_concatenation(
+expr2verilogt::resultt expr2verilogt::convert_sva_sequence_concatenation(
   const binary_exprt &src,
   verilog_precedencet precedence)
 {
@@ -155,7 +155,7 @@ std::string expr2verilogt::convert_sva_sequence_concatenation(
   if(precedence > op0.p)
     dest += ')';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -170,7 +170,7 @@ Function: expr2verilogt::convert_binary
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_binary(
+expr2verilogt::resultt expr2verilogt::convert_binary(
   const multi_ary_exprt &src,
   const std::string &symbol,
   verilog_precedencet precedence)
@@ -201,7 +201,7 @@ std::string expr2verilogt::convert_binary(
       dest += ')';
   }
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -216,7 +216,7 @@ Function: expr2verilogt::convert_with
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_with(
+expr2verilogt::resultt expr2verilogt::convert_with(
   const with_exprt &src,
   verilog_precedencet precedence)
 {
@@ -235,7 +235,7 @@ std::string expr2verilogt::convert_with(
 
   dest+=")";
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -250,7 +250,7 @@ Function: expr2verilogt::convert_concatenation
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_concatenation(
+expr2verilogt::resultt expr2verilogt::convert_concatenation(
   const concatenation_exprt &src,
   verilog_precedencet precedence)
 {
@@ -278,7 +278,7 @@ std::string expr2verilogt::convert_concatenation(
 
   dest+=" }";
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -293,9 +293,8 @@ Function: expr2verilogt::convert_function
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_function(
-  const std::string &name,
-  const exprt &src)
+expr2verilogt::resultt
+expr2verilogt::convert_function(const std::string &name, const exprt &src)
 {
   bool first=true;
   std::string dest=name;
@@ -313,7 +312,7 @@ std::string expr2verilogt::convert_function(
 
   dest+=")";
 
-  return dest;
+  return {verilog_precedencet::MIN, dest};
 }
 
 /*******************************************************************\
@@ -328,7 +327,8 @@ Function: expr2verilogt::convert_function_call
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_function_call(const function_call_exprt &src)
+expr2verilogt::resultt
+expr2verilogt::convert_function_call(const function_call_exprt &src)
 {
   if(src.operands().size()!=2)
   {
@@ -354,7 +354,7 @@ std::string expr2verilogt::convert_function_call(const function_call_exprt &src)
 
   dest+=")";
 
-  return dest;
+  return {verilog_precedencet::MIN, dest};
 }
 
 /*******************************************************************\
@@ -369,7 +369,7 @@ Function: expr2verilogt::convert_sva
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_ranged_predicate(
+expr2verilogt::resultt expr2verilogt::convert_sva_ranged_predicate(
   const std::string &name,
   const sva_ranged_predicate_exprt &src)
 {
@@ -386,7 +386,8 @@ std::string expr2verilogt::convert_sva_ranged_predicate(
   auto op = convert_rec(src_op);
   if(op.p == verilog_precedencet::MIN && src_op.operands().size() >= 2)
     op.s = "(" + op.s + ")";
-  return name + " " + range_str + op.s;
+
+  return {verilog_precedencet::MIN, name + " " + range_str + op.s};
 }
 
 /*******************************************************************\
@@ -401,7 +402,8 @@ Function: expr2verilogt::convert_sva_case
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_case(const sva_case_exprt &src)
+expr2verilogt::resultt
+expr2verilogt::convert_sva_case(const sva_case_exprt &src)
 {
   std::string cases;
 
@@ -422,7 +424,9 @@ std::string expr2verilogt::convert_sva_case(const sva_case_exprt &src)
     cases += "; ";
   }
 
-  return "case(" + convert(src.case_op()) + ") " + cases + "endcase";
+  return {
+    verilog_precedencet::MIN,
+    "case(" + convert(src.case_op()) + ") " + cases + "endcase"};
 }
 
 /*******************************************************************\
@@ -437,14 +441,14 @@ Function: expr2verilogt::convert_sva_unary
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_unary(
+expr2verilogt::resultt expr2verilogt::convert_sva_unary(
   const std::string &name,
   const unary_exprt &src)
 {
   auto op = convert_rec(src.op());
   if(op.p == verilog_precedencet::MIN && src.op().operands().size() >= 2)
     op.s = "(" + op.s + ")";
-  return name + " " + op.s;
+  return {verilog_precedencet::MIN, name + " " + op.s};
 }
 
 /*******************************************************************\
@@ -459,7 +463,7 @@ Function: expr2verilogt::convert_sva_binary
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_binary(
+expr2verilogt::resultt expr2verilogt::convert_sva_binary(
   const std::string &name,
   const binary_exprt &expr)
 {
@@ -471,7 +475,7 @@ std::string expr2verilogt::convert_sva_binary(
   if(op1.p == verilog_precedencet::MIN)
     op1.s = "(" + op1.s + ")";
 
-  return op0.s + " " + name + " " + op1.s;
+  return {verilog_precedencet::MIN, op0.s + " " + name + " " + op1.s};
 }
 
 /*******************************************************************\
@@ -486,14 +490,14 @@ Function: expr2verilogt::convert_sva_abort
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_abort(
+expr2verilogt::resultt expr2verilogt::convert_sva_abort(
   const std::string &text,
   const sva_abort_exprt &expr)
 {
   auto op0 = convert_rec(expr.condition());
   auto op1 = convert_rec(expr.property());
 
-  return text + " (" + op0.s + ") " + op1.s;
+  return {verilog_precedencet::MIN, text + " (" + op0.s + ") " + op1.s};
 }
 
 /*******************************************************************\
@@ -508,7 +512,7 @@ Function: expr2verilogt::convert_sva_indexed_binary
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_indexed_binary(
+expr2verilogt::resultt expr2verilogt::convert_sva_indexed_binary(
   const std::string &name,
   const binary_exprt &expr)
 {
@@ -521,7 +525,7 @@ std::string expr2verilogt::convert_sva_indexed_binary(
   if(op1.p == verilog_precedencet::MIN)
     op1.s = "(" + op1.s + ")";
 
-  return name + op0 + ' ' + op1.s;
+  return {verilog_precedencet::MIN, name + op0 + ' ' + op1.s};
 }
 
 /*******************************************************************\
@@ -536,15 +540,19 @@ Function: expr2verilogt::convert_sva_if
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_sva_if(const sva_if_exprt &src)
+expr2verilogt::resultt expr2verilogt::convert_sva_if(const sva_if_exprt &src)
 {
   if(src.false_case().is_nil())
-    return "if(" + convert_rec(src.cond()).s + ") " +
-           convert_rec(src.true_case()).s;
+    return {
+      verilog_precedencet::MIN,
+      "if(" + convert_rec(src.cond()).s + ") " +
+        convert_rec(src.true_case()).s};
   else
-    return "if(" + convert_rec(src.cond()).s + ") " +
-           convert_rec(src.true_case()).s + " else " +
-           convert_rec(src.false_case()).s;
+    return {
+      verilog_precedencet::MIN,
+      "if(" + convert_rec(src.cond()).s + ") " +
+        convert_rec(src.true_case()).s + " else " +
+        convert_rec(src.false_case()).s};
 }
 
 /*******************************************************************\
@@ -559,7 +567,7 @@ Function: expr2verilogt::convert_replication
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_replication(
+expr2verilogt::resultt expr2verilogt::convert_replication(
   const replication_exprt &src,
   verilog_precedencet precedence)
 {
@@ -573,7 +581,7 @@ std::string expr2verilogt::convert_replication(
   dest += convert_rec(src.op1()).s;
   dest+=" } }";
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -588,7 +596,7 @@ Function: expr2verilogt::convert_unary
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_unary(
+expr2verilogt::resultt expr2verilogt::convert_unary(
   const unary_exprt &src,
   const std::string &symbol,
   verilog_precedencet precedence)
@@ -605,7 +613,7 @@ std::string expr2verilogt::convert_unary(
   if(precedence > op.p)
     dest += ')';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -620,7 +628,7 @@ Function: expr2verilogt::convert_typecast
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_typecast(
+expr2verilogt::resultt expr2verilogt::convert_typecast(
   const typecast_exprt &src,
   verilog_precedencet &precedence)
 {
@@ -630,7 +638,7 @@ std::string expr2verilogt::convert_typecast(
     //const typet &to=src.type();
 
     // just ignore them for now
-    return convert_rec(src.op()).s;
+    return {precedence, convert_rec(src.op()).s};
   }
 
   return convert_norep(src, precedence);
@@ -648,7 +656,7 @@ Function: expr2verilogt::convert_index
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_index(
+expr2verilogt::resultt expr2verilogt::convert_index(
   const index_exprt &src,
   verilog_precedencet precedence)
 {
@@ -668,7 +676,7 @@ std::string expr2verilogt::convert_index(
   dest += convert_rec(src.op1()).s;
   dest+=']';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -683,7 +691,7 @@ Function: expr2verilogt::convert_non_indexed_part_select
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_non_indexed_part_select(
+expr2verilogt::resultt expr2verilogt::convert_non_indexed_part_select(
   const verilog_non_indexed_part_select_exprt &src,
   verilog_precedencet precedence)
 {
@@ -702,7 +710,7 @@ std::string expr2verilogt::convert_non_indexed_part_select(
   dest += convert_rec(src.lsb()).s;
   dest += ']';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -717,7 +725,7 @@ Function: expr2verilogt::convert_indexed_part_select
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_indexed_part_select(
+expr2verilogt::resultt expr2verilogt::convert_indexed_part_select(
   const verilog_indexed_part_select_plus_or_minus_exprt &src,
   verilog_precedencet precedence)
 {
@@ -741,7 +749,7 @@ std::string expr2verilogt::convert_indexed_part_select(
   dest += convert_rec(src.width()).s;
   dest += ']';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -756,7 +764,7 @@ Function: expr2verilogt::convert_extractbit
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_extractbit(
+expr2verilogt::resultt expr2verilogt::convert_extractbit(
   const extractbit_exprt &src,
   verilog_precedencet precedence)
 {
@@ -776,7 +784,7 @@ std::string expr2verilogt::convert_extractbit(
   dest += convert_rec(src.op1()).s;
   dest+=']';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -791,7 +799,7 @@ Function: expr2verilogt::convert_extractbits
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_extractbits(
+expr2verilogt::resultt expr2verilogt::convert_extractbits(
   const extractbits_exprt &src,
   verilog_precedencet precedence)
 {
@@ -824,7 +832,7 @@ std::string expr2verilogt::convert_extractbits(
   dest += convert_rec(src.index()).s;
   dest+=']';
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -839,7 +847,7 @@ Function: expr2verilogt::convert_member
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_member(
+expr2verilogt::resultt expr2verilogt::convert_member(
   const member_exprt &src,
   verilog_precedencet precedence)
 {
@@ -858,7 +866,7 @@ std::string expr2verilogt::convert_member(
   dest+='.';
   dest += id2string(src.get_component_name());
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -873,11 +881,11 @@ Function: expr2verilogt::convert_norep
 
 \*******************************************************************/
 
-std::string
+expr2verilogt::resultt
 expr2verilogt::convert_norep(const exprt &src, verilog_precedencet &precedence)
 {
   precedence = verilog_precedencet::MAX;
-  return src.pretty();
+  return {precedence, src.pretty()};
 }
 
 /*******************************************************************\
@@ -892,7 +900,7 @@ Function: expr2verilogt::convert_symbol
 
 \*******************************************************************/
 
-std::string
+expr2verilogt::resultt
 expr2verilogt::convert_symbol(const exprt &src, verilog_precedencet &precedence)
 {
   precedence = verilog_precedencet::MAX;
@@ -901,7 +909,7 @@ expr2verilogt::convert_symbol(const exprt &src, verilog_precedencet &precedence)
   if(std::string(dest, 0, 9)=="Verilog::")
     dest.erase(0, 9);
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -916,11 +924,11 @@ Function: expr2verilogt::convert_nondet_symbol
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_nondet_symbol(
+expr2verilogt::resultt expr2verilogt::convert_nondet_symbol(
   const exprt &src,
   verilog_precedencet &precedence)
 {
-  return "nondet("+convert_symbol(src, precedence)+")";
+  return {precedence, "nondet(" + convert_symbol(src, precedence).s + ")"};
 }
 
 /*******************************************************************\
@@ -935,11 +943,11 @@ Function: expr2verilogt::convert_next_symbol
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_next_symbol(
+expr2verilogt::resultt expr2verilogt::convert_next_symbol(
   const exprt &src,
   verilog_precedencet &precedence)
 {
-  return "next("+convert_symbol(src, precedence)+")";
+  return {precedence, "next(" + convert_symbol(src, precedence).s + ")"};
 }
 
 /*******************************************************************\
@@ -954,13 +962,14 @@ Function: expr2verilogt::convert_hierarchical_identifier
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_hierarchical_identifier(
+expr2verilogt::resultt expr2verilogt::convert_hierarchical_identifier(
   const hierarchical_identifier_exprt &src,
   verilog_precedencet &precedence)
 {
   precedence = verilog_precedencet::MAX;
-  return convert_rec(src.module()).s + '.' +
-         src.item().get_string(ID_base_name);
+  return {
+    precedence,
+    convert_rec(src.module()).s + '.' + src.item().get_string(ID_base_name)};
 }
 
 /*******************************************************************\
@@ -975,7 +984,7 @@ Function: expr2verilogt::convert_constant
 
 \*******************************************************************/
 
-std::string expr2verilogt::convert_constant(
+expr2verilogt::resultt expr2verilogt::convert_constant(
   const constant_exprt &src,
   verilog_precedencet &precedence)
 {
@@ -1004,10 +1013,10 @@ std::string expr2verilogt::convert_constant(
       auto enum_int_value =
         numeric_cast_v<mp_integer>(to_constant_expr(enum_symbol.value));
       if(enum_int_value == int_value)
-        return id2string(enum_symbol.display_name());
+        return {precedence, id2string(enum_symbol.display_name())};
     }
 
-    return integer2string(int_value);
+    return {precedence, integer2string(int_value)};
   }
   else if(type.id() == ID_bool)
   {
@@ -1046,14 +1055,14 @@ std::string expr2verilogt::convert_constant(
     // these have a binary representation
     const irep_idt &value = src.get_value();
     unsigned width=to_verilog_signedbv_type(src.type()).get_width();
-    return std::to_string(width)+"'sb"+id2string(value);
+    return {precedence, std::to_string(width) + "'sb" + id2string(value)};
   }
   else if(type.id()==ID_verilog_unsignedbv)
   {
     // these have a binary representation
     const irep_idt &value = src.get_value();
     unsigned width=to_verilog_unsignedbv_type(src.type()).get_width();
-    return std::to_string(width)+"'b"+id2string(value);
+    return {precedence, std::to_string(width) + "'b" + id2string(value)};
   }
   else if(type.id()==ID_integer || type.id()==ID_natural ||
           type.id()==ID_range)
@@ -1065,7 +1074,7 @@ std::string expr2verilogt::convert_constant(
   else
     return convert_norep(src, precedence);
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -1080,7 +1089,7 @@ Function: expr2verilogt::convert_array
 
 \*******************************************************************/
 
-std::string
+expr2verilogt::resultt
 expr2verilogt::convert_array(const exprt &src, verilog_precedencet precedence)
 {
   std::string dest="{ ";
@@ -1103,7 +1112,7 @@ expr2verilogt::convert_array(const exprt &src, verilog_precedencet precedence)
 
   dest+=" }";
 
-  return dest;
+  return {precedence, dest};
 }
 
 /*******************************************************************\
@@ -1120,27 +1129,7 @@ Function: expr2verilogt::convert_rec
 
 expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 {
-  verilog_precedencet precedence;
-  auto result = convert_rec(src, precedence);
-  return {precedence, result};
-}
-
-/*******************************************************************\
-
-Function: expr2verilogt::convert_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string
-expr2verilogt::convert_rec(const exprt &src, verilog_precedencet &precedence)
-{
-  precedence = verilog_precedencet::MAX;
+  verilog_precedencet precedence = verilog_precedencet::MAX;
 
   if(src.id()==ID_plus)
     return convert_binary(

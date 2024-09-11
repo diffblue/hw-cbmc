@@ -70,95 +70,83 @@ protected:
   };
 
   virtual resultt convert_rec(const exprt &src);
-  std::string convert_rec(const exprt &, verilog_precedencet &);
 
-  virtual std::string convert_array(const exprt &src, verilog_precedencet);
+  resultt convert_array(const exprt &src, verilog_precedencet);
 
-  virtual std::string convert_binary(
+  resultt convert_binary(
     const multi_ary_exprt &,
     const std::string &symbol,
     verilog_precedencet);
 
-  virtual std::string convert_unary(
+  resultt convert_unary(
     const unary_exprt &,
     const std::string &symbol,
     verilog_precedencet);
 
-  virtual std::string convert_if(const if_exprt &, verilog_precedencet);
+  resultt convert_if(const if_exprt &, verilog_precedencet);
 
-  virtual std::string convert_index(const index_exprt &, verilog_precedencet);
+  resultt convert_index(const index_exprt &, verilog_precedencet);
 
-  virtual std::string
-  convert_extractbit(const extractbit_exprt &, verilog_precedencet);
+  resultt convert_extractbit(const extractbit_exprt &, verilog_precedencet);
 
-  virtual std::string convert_member(const member_exprt &, verilog_precedencet);
+  resultt convert_member(const member_exprt &, verilog_precedencet);
 
-  virtual std::string
-  convert_extractbits(const extractbits_exprt &, verilog_precedencet);
+  resultt convert_extractbits(const extractbits_exprt &, verilog_precedencet);
 
-  virtual std::string convert_symbol(const exprt &src, verilog_precedencet &);
+  resultt convert_symbol(const exprt &src, verilog_precedencet &);
 
-  std::string convert_hierarchical_identifier(
+  resultt convert_hierarchical_identifier(
     const class hierarchical_identifier_exprt &,
     verilog_precedencet &precedence);
 
-  virtual std::string
-  convert_nondet_symbol(const exprt &src, verilog_precedencet &);
+  resultt convert_nondet_symbol(const exprt &src, verilog_precedencet &);
 
-  virtual std::string
-  convert_next_symbol(const exprt &src, verilog_precedencet &);
+  resultt convert_next_symbol(const exprt &src, verilog_precedencet &);
 
-  virtual std::string
-  convert_constant(const constant_exprt &, verilog_precedencet &);
+  resultt convert_constant(const constant_exprt &, verilog_precedencet &);
 
-  virtual std::string
-  convert_typecast(const typecast_exprt &, verilog_precedencet &);
+  resultt convert_typecast(const typecast_exprt &, verilog_precedencet &);
 
-  virtual std::string
+  resultt
   convert_concatenation(const concatenation_exprt &, verilog_precedencet);
 
-  virtual std::string convert_function(
-    const std::string &name,
-    const exprt &src);
+  resultt convert_function(const std::string &name, const exprt &src);
 
-  std::string convert_sva_case(const sva_case_exprt &);
+  resultt convert_sva_case(const sva_case_exprt &);
 
-  std::string convert_sva_ranged_predicate(
+  resultt convert_sva_ranged_predicate(
     const std::string &name,
     const sva_ranged_predicate_exprt &);
 
-  std::string convert_sva_unary(const std::string &name, const unary_exprt &);
+  resultt convert_sva_unary(const std::string &name, const unary_exprt &);
 
-  std::string convert_sva_binary(const std::string &name, const binary_exprt &);
+  resultt convert_sva_binary(const std::string &name, const binary_exprt &);
 
-  std::string
-  convert_sva_abort(const std::string &name, const sva_abort_exprt &);
+  resultt convert_sva_abort(const std::string &name, const sva_abort_exprt &);
 
-  std::string
+  resultt
   convert_sva_indexed_binary(const std::string &name, const binary_exprt &);
 
-  virtual std::string
-  convert_replication(const replication_exprt &, verilog_precedencet);
+  resultt convert_replication(const replication_exprt &, verilog_precedencet);
 
-  virtual std::string convert_norep(const exprt &src, verilog_precedencet &);
+  resultt convert_norep(const exprt &src, verilog_precedencet &);
 
-  virtual std::string convert_with(const with_exprt &, verilog_precedencet);
+  resultt convert_with(const with_exprt &, verilog_precedencet);
 
-  virtual std::string
-  convert_sva_cycle_delay(const ternary_exprt &, verilog_precedencet);
+  resultt convert_sva_cycle_delay(const ternary_exprt &, verilog_precedencet);
 
-  std::string convert_sva_if(const sva_if_exprt &);
+  resultt convert_sva_if(const sva_if_exprt &);
 
-  virtual std::string
+  resultt
   convert_sva_sequence_concatenation(const binary_exprt &, verilog_precedencet);
 
-  virtual std::string convert_function_call(const class function_call_exprt &);
+  resultt convert_function_call(const class function_call_exprt &);
 
-  std::string convert_non_indexed_part_select(
+  resultt convert_non_indexed_part_select(
     const class verilog_non_indexed_part_select_exprt &,
     verilog_precedencet precedence);
 
-  std::string convert_indexed_part_select(
+  resultt convert_indexed_part_select(
     const class verilog_indexed_part_select_plus_or_minus_exprt &,
     verilog_precedencet precedence);
 
