@@ -182,6 +182,15 @@ public:
     return true;
   }
 
+  bool has_unknown_property() const
+  {
+    for(const auto &p : properties)
+      if(p.is_unknown())
+        return true;
+
+    return false;
+  }
+
   bool requires_lasso_constraints() const
   {
     for(const auto &p : properties)
