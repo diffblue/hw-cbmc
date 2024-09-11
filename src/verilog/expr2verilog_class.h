@@ -38,7 +38,7 @@ enum class verilog_precedencet
   AND = 7,       //  &&
   OR = 6,        //  ||
   IF = 5,        //  ?:
-  IMPLIES = 4,   //  ->
+  IMPLIES = 4,   //  -> <->
   ASSIGN = 3,    //  = += -= etc.
   CONCAT = 18,   //  { } concatenation, {{ }} replication
   MIN = 0        //  anything even weaker, e.g., SVA
