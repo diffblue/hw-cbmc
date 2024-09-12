@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <verilog/sva_expr.h>
 
 #include "instantiate_word_level.h"
+#include "obligations.h"
 
 #include <cstdlib>
 
@@ -209,13 +210,12 @@ Function: property_obligations_rec
 
 \*******************************************************************/
 
-static void property_obligations_rec(
+static obligationst property_obligations_rec(
   const exprt &property_expr,
   decision_proceduret &solver,
   const mp_integer &current,
   const mp_integer &no_timeframes,
-  const namespacet &ns,
-  std::map<mp_integer, exprt::operandst> &obligations)
+  const namespacet &ns)
 {
   PRECONDITION(current >= 0 && current < no_timeframes);
 
@@ -235,16 +235,23 @@ static void property_obligations_rec(
         PRECONDITION(false);
     }(property_expr);
 
+    obligationst obligations;
+
     for(mp_integer c = current; c < no_timeframes; ++c)
     {
-      property_obligations_rec(phi, solver, c, no_timeframes, ns, obligations);
+      obligations.add(
+        property_obligations_rec(phi, solver, c, no_timeframes, ns));
     }
+
+    return obligations;
   }
   else if(
     property_expr.id() == ID_AF || property_expr.id() == ID_F ||
     property_expr.id() == ID_sva_s_eventually)
   {
     const auto &phi = to_unary_expr(property_expr).op();
+
+    obligationst obligations;
 
     // Counterexamples to Fφ must have a loop.
     // We consider l-k loops with l<k.
@@ -267,9 +274,11 @@ static void property_obligations_rec(
           disjuncts.push_back(std::move(tmp));
         }
 
-        obligations[k].push_back(disjunction(disjuncts));
+        obligations.add(k, disjunction(disjuncts));
       }
     }
+
+    return obligations;
   }
   else if(
     property_expr.id() == ID_sva_ranged_always ||
@@ -305,22 +314,33 @@ static void property_obligations_rec(
       to = std::min(*to_opt, no_timeframes - 1);
     }
 
+    obligationst obligations;
+
     for(mp_integer c = from; c <= to; ++c)
     {
-      property_obligations_rec(phi, solver, c, no_timeframes, ns, obligations);
+      obligations.add(
+        property_obligations_rec(phi, solver, c, no_timeframes, ns));
     }
+
+    return obligations;
   }
   else if(property_expr.id() == ID_and)
   {
     // generate seperate obligations for each conjunct
+    obligationst obligations;
+
     for(auto &op : to_and_expr(property_expr).operands())
-      property_obligations_rec(
-        op, solver, current, no_timeframes, ns, obligations);
+    {
+      obligations.add(
+        property_obligations_rec(op, solver, current, no_timeframes, ns));
+    }
+
+    return obligations;
   }
   else
   {
-    auto tmp = instantiate_property(property_expr, current, no_timeframes, ns);
-    obligations[tmp.first].push_back(tmp.second);
+    return obligationst{
+      instantiate_property(property_expr, current, no_timeframes, ns)};
   }
 }
 
@@ -336,18 +356,13 @@ Function: property_obligations
 
 \*******************************************************************/
 
-static std::map<mp_integer, exprt::operandst> property_obligations(
+obligationst property_obligations(
   const exprt &property_expr,
   decision_proceduret &solver,
   const mp_integer &no_timeframes,
   const namespacet &ns)
 {
-  std::map<mp_integer, exprt::operandst> obligations;
-
-  property_obligations_rec(
-    property_expr, solver, 0, no_timeframes, ns, obligations);
-
-  return obligations;
+  return property_obligations_rec(property_expr, solver, 0, no_timeframes, ns);
 }
 
 /*******************************************************************\
@@ -378,7 +393,7 @@ void property(
 
   // Map obligations onto timeframes.
   prop_handles.resize(no_timeframes, true_exprt());
-  for(auto &obligation_it : obligations)
+  for(auto &obligation_it : obligations.map)
   {
     auto t = obligation_it.first;
     DATA_INVARIANT(
