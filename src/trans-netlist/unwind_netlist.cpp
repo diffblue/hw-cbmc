@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "unwind_netlist.h"
 
 #include <util/ebmc_util.h>
+#include <util/expr_util.h>
 
 #include <temporal-logic/temporal_expr.h>
 #include <temporal-logic/temporal_logic.h>
@@ -170,6 +171,10 @@ Function: netlist_bmc_supports_property
 
 bool netlist_bmc_supports_property(const exprt &expr)
 {
+  // No $past.
+  if(has_subexpr(expr, ID_verilog_past))
+    return false;
+
   // We do AG p only.
   if(expr.id() == ID_AG)
     return !has_temporal_operator(to_AG_expr(expr).op());

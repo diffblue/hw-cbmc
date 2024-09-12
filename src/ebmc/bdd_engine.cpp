@@ -8,6 +8,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 
 #include "bdd_engine.h"
 
+#include <util/expr_util.h>
 #include <util/format_expr.h>
 
 #include <solvers/bdd/miniBDD/miniBDD.h>
@@ -175,6 +176,17 @@ property_checker_resultt bdd_enginet::operator()()
 {
   try
   {
+    for(auto &property : properties.properties)
+    {
+      // no support for $past
+      if(has_subexpr(property.normalized_expr, ID_verilog_past))
+        property.failure("property not supported by BDD engine");
+    }
+
+    // any properties left?
+    if(!properties.has_unknown_property())
+      return property_checker_resultt::VERIFICATION_RESULT;
+
     const auto property_map = properties.make_property_map();
 
     message.status() << "Building netlist" << messaget::eom;
@@ -882,7 +894,8 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
     expr.id() == ID_implies || is_temporal_operator(expr))
   {
     for(const auto & op : expr.operands())
-      get_atomic_propositions(op);
+      if(op.type().id() == ID_bool)
+        get_atomic_propositions(op);
   }
   else
   {
