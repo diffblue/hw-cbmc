@@ -19,6 +19,11 @@ class obligationst
 public:
   obligationst() = default;
 
+  explicit obligationst(const mp_integer &t, const exprt &expr)
+  {
+    add(t, expr);
+  }
+
   explicit obligationst(const std::pair<mp_integer, exprt> &pair)
   {
     add(pair.first, pair.second);

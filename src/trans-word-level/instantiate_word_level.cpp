@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 
+#include <ebmc/ebmc_error.h>
 #include <temporal-logic/temporal_expr.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
@@ -427,6 +428,45 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
     DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
     return {no_timeframes - 1, conjunction(conjuncts)};
+  }
+  else if(expr.id() == ID_sva_ranged_s_eventually)
+  {
+    auto &phi = to_sva_ranged_s_eventually_expr(expr).op();
+    auto &lower = to_sva_ranged_s_eventually_expr(expr).lower();
+    auto &upper = to_sva_ranged_s_eventually_expr(expr).upper();
+
+    auto from_opt = numeric_cast<mp_integer>(lower);
+    if(!from_opt.has_value())
+      throw ebmc_errort() << "failed to convert SVA s_eventually from index";
+
+    auto from = t + std::max(mp_integer{0}, *from_opt);
+
+    mp_integer to;
+
+    if(upper.id() == ID_infinity)
+    {
+      throw ebmc_errort()
+        << "failed to convert SVA s_eventually to index (infinity)";
+    }
+    else
+    {
+      auto to_opt = numeric_cast<mp_integer>(upper);
+      if(!to_opt.has_value())
+        throw ebmc_errort() << "failed to convert SVA s_eventually to index";
+      to = std::min(t + *to_opt, no_timeframes - 1);
+    }
+
+    exprt::operandst disjuncts;
+    mp_integer time = 0;
+
+    for(mp_integer c = from; c <= to; ++c)
+    {
+      auto tmp = instantiate_property(phi, c, no_timeframes, ns);
+      time = std::max(time, tmp.first);
+      disjuncts.push_back(tmp.second);
+    }
+
+    return {time, disjunction(disjuncts)};
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
