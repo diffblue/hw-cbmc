@@ -1499,16 +1499,25 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id()==ID_sva_nexttime)
     return precedence = verilog_precedencet::MIN,
-           convert_sva_indexed_binary("nexttime", to_sva_nexttime_expr(src));
+           convert_sva_unary("nexttime", to_sva_nexttime_expr(src));
+
+  else if(src.id() == ID_sva_indexed_nexttime)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_indexed_binary(
+             "nexttime", to_sva_indexed_nexttime_expr(src));
+
+  else if(src.id()==ID_sva_s_nexttime)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_unary("s_nexttime", to_sva_s_nexttime_expr(src));
+
+  else if(src.id() == ID_sva_indexed_s_nexttime)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_indexed_binary(
+             "s_nexttime", to_sva_indexed_s_nexttime_expr(src));
 
   else if(src.id() == ID_sva_disable_iff)
     return precedence = verilog_precedencet::MIN,
            convert_sva_abort("disable iff", to_sva_abort_expr(src));
-
-  else if(src.id()==ID_sva_s_nexttime)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_indexed_binary(
-             "s_nexttime", to_sva_s_nexttime_expr(src));
 
   else if(src.id()==ID_sva_eventually)
   {
