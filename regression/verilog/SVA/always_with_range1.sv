@@ -17,4 +17,7 @@ module main;
   // strong variant
   initial p2: assert property (s_always [0:9] x<10);
 
+  // nested
+  p3: assert property (always (x==1 implies always [1:1] x==2));
+
 endmodule
