@@ -485,34 +485,32 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       if(result == nullptr)
       {
+        // fresh identifier
         symbol_table.add(symbol);
       }
       else
       {
         symbolt &osymbol = *result;
 
-        if(osymbol.type.id() == ID_code)
+        // we allow re-declaration if the original symbol
+        // is an output (not: an input/output).
+        if(osymbol.is_output && !osymbol.is_input)
+        {
+          // The type isn't required to match.
+          // We'll make it bigger, if need be.
+          if(symbol.type != osymbol.type)
+          {
+            if(get_width(symbol.type) > get_width(osymbol.type))
+              osymbol.type = symbol.type;
+          }
+
+          osymbol.is_state_var = true;
+        }
+        else
         {
           throw errort().with_location(decl.source_location())
-            << "symbol `" << symbol.base_name << "' is already declared";
-        }
-
-        if(symbol.type != osymbol.type)
-        {
-          if(get_width(symbol.type) > get_width(osymbol.type))
-            osymbol.type = symbol.type;
-        }
-
-        osymbol.is_input = symbol.is_input || osymbol.is_input;
-        osymbol.is_output = symbol.is_output || osymbol.is_output;
-        osymbol.is_state_var = symbol.is_state_var || osymbol.is_state_var;
-
-        // a register can't be an input as well
-        if(osymbol.is_input && osymbol.is_state_var)
-        {
-          throw errort().with_location(decl.source_location())
-            << "symbol `" << symbol.base_name
-            << "' is declared both as input and as register";
+            << "variable `" << symbol.base_name << "' is already declared, at "
+            << osymbol.location;
         }
       }
 
