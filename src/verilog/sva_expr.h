@@ -84,43 +84,14 @@ static inline sva_disable_iff_exprt &to_sva_disable_iff_expr(exprt &expr)
   return static_cast<sva_disable_iff_exprt &>(expr);
 }
 
-class sva_nexttime_exprt : public binary_predicate_exprt
+/// nonindexed variant
+class sva_nexttime_exprt : public unary_predicate_exprt
 {
 public:
-  // nonindexed variant
   explicit sva_nexttime_exprt(exprt op)
-    : binary_predicate_exprt(nil_exprt(), ID_sva_nexttime, std::move(op))
+    : unary_predicate_exprt(ID_sva_nexttime, std::move(op))
   {
   }
-
-  bool is_indexed() const
-  {
-    return index().is_not_nil();
-  }
-
-  const exprt &index() const
-  {
-    return op0();
-  }
-
-  exprt &index()
-  {
-    return op0();
-  }
-
-  const exprt &op() const
-  {
-    return op1();
-  }
-
-  exprt &op()
-  {
-    return op1();
-  }
-
-protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
 };
 
 static inline const sva_nexttime_exprt &to_sva_nexttime_expr(const exprt &expr)
@@ -137,18 +108,38 @@ static inline sva_nexttime_exprt &to_sva_nexttime_expr(exprt &expr)
   return static_cast<sva_nexttime_exprt &>(expr);
 }
 
-class sva_s_nexttime_exprt : public binary_predicate_exprt
+/// nonindexed variant
+class sva_s_nexttime_exprt : public unary_predicate_exprt
 {
 public:
-  // nonindexed variant
   explicit sva_s_nexttime_exprt(exprt op)
-    : binary_predicate_exprt(nil_exprt(), ID_sva_s_nexttime, std::move(op))
+    : unary_predicate_exprt(ID_sva_s_nexttime, std::move(op))
   {
   }
+};
 
-  bool is_indexed() const
+static inline const sva_s_nexttime_exprt &
+to_sva_s_nexttime_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_s_nexttime);
+  sva_s_nexttime_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_s_nexttime_exprt &>(expr);
+}
+
+static inline sva_s_nexttime_exprt &to_sva_s_nexttime_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_s_nexttime);
+  sva_s_nexttime_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_s_nexttime_exprt &>(expr);
+}
+
+/// indexed variant of sva_nexttime_exprt
+class sva_indexed_nexttime_exprt : public binary_predicate_exprt
+{
+public:
+  sva_indexed_nexttime_exprt(exprt index, exprt op)
+    : binary_predicate_exprt(std::move(index), ID_sva_nexttime, std::move(op))
   {
-    return index().is_not_nil();
   }
 
   const exprt &index() const
@@ -176,19 +167,73 @@ protected:
   using binary_predicate_exprt::op1;
 };
 
-static inline const sva_s_nexttime_exprt &
-to_sva_s_nexttime_expr(const exprt &expr)
+static inline const sva_indexed_nexttime_exprt &
+to_sva_indexed_nexttime_expr(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_s_nexttime);
-  sva_s_nexttime_exprt::check(expr, validation_modet::INVARIANT);
-  return static_cast<const sva_s_nexttime_exprt &>(expr);
+  PRECONDITION(expr.id() == ID_sva_indexed_nexttime);
+  sva_indexed_nexttime_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_indexed_nexttime_exprt &>(expr);
 }
 
-static inline sva_s_nexttime_exprt &to_sva_s_nexttime_expr(exprt &expr)
+static inline sva_indexed_nexttime_exprt &
+to_sva_indexed_nexttime_expr(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_s_nexttime);
-  sva_s_nexttime_exprt::check(expr, validation_modet::INVARIANT);
-  return static_cast<sva_s_nexttime_exprt &>(expr);
+  PRECONDITION(expr.id() == ID_sva_indexed_nexttime);
+  sva_indexed_nexttime_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_indexed_nexttime_exprt &>(expr);
+}
+
+/// indexed variant of sva_s_nexttime_exprt
+class sva_indexed_s_nexttime_exprt : public binary_predicate_exprt
+{
+public:
+  sva_indexed_s_nexttime_exprt(exprt index, exprt op)
+    : binary_predicate_exprt(
+        std::move(index),
+        ID_sva_indexed_s_nexttime,
+        std::move(op))
+  {
+  }
+
+  const exprt &index() const
+  {
+    return op0();
+  }
+
+  exprt &index()
+  {
+    return op0();
+  }
+
+  const exprt &op() const
+  {
+    return op1();
+  }
+
+  exprt &op()
+  {
+    return op1();
+  }
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
+};
+
+static inline const sva_indexed_s_nexttime_exprt &
+to_sva_indexed_s_nexttime_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_indexed_s_nexttime);
+  sva_indexed_s_nexttime_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_indexed_s_nexttime_exprt &>(expr);
+}
+
+static inline sva_indexed_s_nexttime_exprt &
+to_sva_indexed_s_nexttime_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_indexed_s_nexttime);
+  sva_indexed_s_nexttime_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_indexed_s_nexttime_exprt &>(expr);
 }
 
 class sva_ranged_predicate_exprt : public ternary_exprt
