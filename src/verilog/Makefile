@@ -2,6 +2,7 @@ SRC = aval_bval_encoding.cpp \
       expr2verilog.cpp \
       sva_expr.cpp \
       verilog_elaborate.cpp \
+      verilog_elaborate_type.cpp \
       verilog_expr.cpp \
       verilog_generate.cpp \
       verilog_interfaces.cpp \
@@ -20,7 +21,6 @@ SRC = aval_bval_encoding.cpp \
       verilog_typecheck.cpp \
       verilog_typecheck_base.cpp \
       verilog_typecheck_expr.cpp \
-      verilog_typecheck_type.cpp \
       verilog_y.tab.cpp \
       vtype.cpp
 

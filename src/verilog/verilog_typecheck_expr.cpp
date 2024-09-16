@@ -916,7 +916,7 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   else if(expr.id() == ID_type)
   {
     // Used, e.g., for $bits
-    expr.type() = convert_type(expr.type());
+    expr.type() = elaborate_type(expr.type());
     return std::move(expr);
   }
   else
@@ -2432,13 +2432,13 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // SystemVerilog has got type'(expr). This is an explicit
     // type cast.
     convert_expr(expr.op());
-    auto new_type = convert_type(expr.type());
+    auto new_type = elaborate_type(expr.type());
     return typecast_exprt{expr.op(), new_type}.with_source_location(expr);
   }
   else if(expr.id() == ID_verilog_implicit_typecast)
   {
     // We generate implict casts during elaboration.
-    expr.type() = convert_type(expr.type());
+    expr.type() = elaborate_type(expr.type());
     convert_expr(expr.op());
     expr.id(ID_typecast);
   }
