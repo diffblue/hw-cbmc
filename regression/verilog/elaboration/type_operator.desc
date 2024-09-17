@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 type_operator.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ type_operator.sv
 --
 ^warning: ignoring
 --
-We need to add support for the System Verilog type operator.
