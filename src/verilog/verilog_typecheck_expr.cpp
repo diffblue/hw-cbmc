@@ -3107,8 +3107,8 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     return std::move(expr);
   }
   else if(
-    expr.id() == ID_sva_eventually || expr.id() == ID_sva_ranged_always ||
-    expr.id() == ID_sva_s_always)
+    expr.id() == ID_sva_eventually || expr.id() == ID_sva_ranged_s_eventually ||
+    expr.id() == ID_sva_s_always || expr.id() == ID_sva_ranged_always)
   {
     auto lower = convert_integer_constant_expression(expr.op0());
 

@@ -1530,6 +1530,11 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return precedence = verilog_precedencet::MIN,
            convert_sva_unary("s_eventually", to_sva_s_eventually_expr(src));
 
+  else if(src.id() == ID_sva_ranged_s_eventually)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_ranged_predicate(
+             "s_eventually", to_sva_ranged_s_eventually_expr(src));
+
   else if(src.id()==ID_sva_until)
     return precedence = verilog_precedencet::MIN,
            convert_sva_binary("until", to_sva_until_expr(src));

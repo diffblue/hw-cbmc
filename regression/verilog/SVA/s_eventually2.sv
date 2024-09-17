@@ -15,4 +15,7 @@ module main(input clk, input reset);
   // expected to pass for any bound
   p0: assert property (s_eventually (reset || counter == 10));
 
+  // expected to fail, owing to range
+  p1: assert property (s_eventually[0:2] (reset || counter == 10));
+
 endmodule

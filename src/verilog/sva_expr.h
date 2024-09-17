@@ -341,6 +341,35 @@ static inline sva_s_eventually_exprt &to_sva_s_eventually_expr(exprt &expr)
   return static_cast<sva_s_eventually_exprt &>(expr);
 }
 
+class sva_ranged_s_eventually_exprt : public sva_ranged_predicate_exprt
+{
+public:
+  explicit sva_ranged_s_eventually_exprt(exprt lower, exprt upper, exprt op)
+    : sva_ranged_predicate_exprt(
+        ID_sva_s_eventually,
+        std::move(lower),
+        std::move(upper),
+        std::move(op))
+  {
+  }
+};
+
+static inline const sva_ranged_s_eventually_exprt &
+to_sva_ranged_s_eventually_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_ranged_s_eventually);
+  sva_ranged_s_eventually_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_ranged_s_eventually_exprt &>(expr);
+}
+
+static inline sva_ranged_s_eventually_exprt &
+to_sva_ranged_s_eventually_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_ranged_s_eventually);
+  sva_ranged_s_eventually_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_ranged_s_eventually_exprt &>(expr);
+}
+
 class sva_always_exprt : public unary_predicate_exprt
 {
 public:

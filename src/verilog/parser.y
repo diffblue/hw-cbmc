@@ -2197,7 +2197,7 @@ property_expr_proper:
 	| "eventually" '[' constant_range ']' property_expr %prec "eventually"
 		{ init($$, ID_sva_eventually); swapop($$, $3); mto($$, $5); }
 	| "s_eventually" '[' cycle_delay_const_range_expression ']' property_expr %prec "s_eventually"
-		{ init($$, ID_sva_s_eventually); swapop($$, $3); mto($$, $5); }
+		{ init($$, ID_sva_ranged_s_eventually); swapop($$, $3); mto($$, $5); }
 	| property_expr "until" property_expr
 		{ init($$, "sva_until"); mto($$, $1); mto($$, $3); }
 	| property_expr "s_until" property_expr
