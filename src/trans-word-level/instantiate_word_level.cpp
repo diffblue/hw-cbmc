@@ -91,6 +91,14 @@ protected:
   [[nodiscard]] std::pair<mp_integer, exprt>
   instantiate_rec(exprt, const mp_integer &t) const;
   [[nodiscard]] typet instantiate_rec(typet, const mp_integer &t) const;
+  [[nodiscard]] std::pair<mp_integer, exprt>
+  instantiate_F(const unary_exprt &, const mp_integer &t) const;
+  [[nodiscard]] std::pair<mp_integer, exprt> instantiate_ranged_always(
+    const sva_ranged_predicate_exprt &,
+    const mp_integer &t) const;
+  [[nodiscard]] std::pair<mp_integer, exprt> instantiate_ranged_s_eventually(
+    const sva_ranged_s_eventually_exprt &,
+    const mp_integer &t) const;
 
   // Returns a list of match points and matching conditions
   // for the given sequence expression starting at time t
@@ -353,44 +361,7 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   }
   else if(expr.id() == ID_sva_ranged_always || expr.id() == ID_sva_s_always)
   {
-    auto &phi = expr.id() == ID_sva_ranged_always
-                  ? to_sva_ranged_always_expr(expr).op()
-                  : to_sva_s_always_expr(expr).op();
-    auto &lower = expr.id() == ID_sva_ranged_always
-                    ? to_sva_ranged_always_expr(expr).lower()
-                    : to_sva_s_always_expr(expr).lower();
-    auto &upper = expr.id() == ID_sva_ranged_always
-                    ? to_sva_ranged_always_expr(expr).upper()
-                    : to_sva_s_always_expr(expr).upper();
-
-    auto from_opt = numeric_cast<mp_integer>(lower);
-    if(!from_opt.has_value())
-      throw ebmc_errort() << "failed to convert SVA always from index";
-
-    auto from = t + std::max(mp_integer{0}, *from_opt);
-
-    mp_integer to;
-
-    if(upper.id() == ID_infinity)
-    {
-      to = no_timeframes - 1;
-    }
-    else
-    {
-      auto to_opt = numeric_cast<mp_integer>(upper);
-      if(!to_opt.has_value())
-        throw ebmc_errort() << "failed to convert SVA always to index";
-      to = std::min(t + *to_opt, no_timeframes - 1);
-    }
-
-    exprt::operandst conjuncts;
-
-    for(mp_integer c = from; c <= to; ++c)
-    {
-      conjuncts.push_back(instantiate_rec(phi, c).second);
-    }
-
-    return {to, conjunction(conjuncts)};
+    return instantiate_ranged_always(to_sva_ranged_predicate_expr(expr), t);
   }
   else if(expr.id() == ID_X)
   {
@@ -438,76 +409,12 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   else if(
     expr.id() == ID_sva_s_eventually || expr.id() == ID_F || expr.id() == ID_AF)
   {
-    const auto &p = to_unary_expr(expr).op();
-
-    // The following needs to be satisfied for a counterexample
-    // to Fp:
-    // (1) There is a loop from the current state i back to
-    //     some earlier state k < i.
-    // (1) No state j with k<=k<=i on the lasso satisfies 'p'.
-    //
-    // We look backwards instead of forwards so that 't'
-    // is the last state of the counterexample trace.
-    //
-    // Note that this is trivially true when t is zero,
-    // as a single state cannot demonstrate the loop.
-
-    exprt::operandst conjuncts = {};
-    const auto i = t;
-
-    for(mp_integer k = 0; k < i; ++k)
-    {
-      exprt::operandst disjuncts = {not_exprt(lasso_symbol(k, i))};
-
-      for(mp_integer j = k; j <= i; ++j)
-      {
-        disjuncts.push_back(instantiate_rec(p, j).second);
-      }
-
-      conjuncts.push_back(disjunction(disjuncts));
-    }
-
-    DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-    return {no_timeframes - 1, conjunction(conjuncts)};
+    return instantiate_F(to_unary_expr(expr), t);
   }
   else if(expr.id() == ID_sva_ranged_s_eventually)
   {
-    auto &phi = to_sva_ranged_s_eventually_expr(expr).op();
-    auto &lower = to_sva_ranged_s_eventually_expr(expr).lower();
-    auto &upper = to_sva_ranged_s_eventually_expr(expr).upper();
-
-    auto from_opt = numeric_cast<mp_integer>(lower);
-    if(!from_opt.has_value())
-      throw ebmc_errort() << "failed to convert SVA s_eventually from index";
-
-    auto from = t + std::max(mp_integer{0}, *from_opt);
-
-    mp_integer to;
-
-    if(upper.id() == ID_infinity)
-    {
-      throw ebmc_errort()
-        << "failed to convert SVA s_eventually to index (infinity)";
-    }
-    else
-    {
-      auto to_opt = numeric_cast<mp_integer>(upper);
-      if(!to_opt.has_value())
-        throw ebmc_errort() << "failed to convert SVA s_eventually to index";
-      to = std::min(t + *to_opt, no_timeframes - 1);
-    }
-
-    exprt::operandst disjuncts;
-    mp_integer time = 0;
-
-    for(mp_integer c = from; c <= to; ++c)
-    {
-      auto tmp = instantiate_property(phi, c, no_timeframes, ns);
-      time = std::max(time, tmp.first);
-      disjuncts.push_back(tmp.second);
-    }
-
-    return {time, disjunction(disjuncts)};
+    return instantiate_ranged_s_eventually(
+      to_sva_ranged_s_eventually_expr(expr), t);
   }
   else if(expr.id()==ID_sva_until ||
           expr.id()==ID_sva_s_until)
@@ -578,6 +485,172 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
     return {max, expr};
   }
+}
+
+/*******************************************************************\
+
+Function: wl_instantiatet::instantiate_ranged_s_eventually
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::pair<mp_integer, exprt> wl_instantiatet::instantiate_ranged_s_eventually(
+  const sva_ranged_s_eventually_exprt &expr,
+  const mp_integer &t) const
+{
+  auto &phi = expr.op();
+  auto &lower = expr.lower();
+  auto &upper = expr.upper();
+
+  auto from_opt = numeric_cast<mp_integer>(lower);
+  if(!from_opt.has_value())
+    throw ebmc_errort() << "failed to convert SVA s_eventually from index";
+
+  auto from = t + std::max(mp_integer{0}, *from_opt);
+
+  mp_integer to;
+
+  if(upper.id() == ID_infinity)
+  {
+    throw ebmc_errort()
+      << "failed to convert SVA s_eventually to index (infinity)";
+  }
+  else
+  {
+    auto to_opt = numeric_cast<mp_integer>(upper);
+    if(!to_opt.has_value())
+      throw ebmc_errort() << "failed to convert SVA s_eventually to index";
+    to = std::min(t + *to_opt, no_timeframes - 1);
+  }
+
+  exprt::operandst disjuncts;
+  mp_integer time = 0;
+
+  for(mp_integer c = from; c <= to; ++c)
+  {
+    auto tmp = instantiate_property(phi, c, no_timeframes, ns);
+    time = std::max(time, tmp.first);
+    disjuncts.push_back(tmp.second);
+  }
+
+  return {time, disjunction(disjuncts)};
+}
+
+/*******************************************************************\
+
+Function: wl_instantiatet::instantiate_F
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::pair<mp_integer, exprt> wl_instantiatet::instantiate_F(
+  const unary_exprt &expr,
+  const mp_integer &t) const
+{
+  PRECONDITION(
+    expr.id() == ID_sva_s_eventually || expr.id() == ID_F ||
+    expr.id() == ID_AF);
+
+  const auto &p = expr.op();
+
+  // The following needs to be satisfied for a counterexample
+  // to Fp:
+  // (1) There is a loop from the current state i back to
+  //     some earlier state k < i.
+  // (1) No state j with k<=k<=i on the lasso satisfies 'p'.
+  //
+  // We look backwards instead of forwards so that 't'
+  // is the last state of the counterexample trace.
+  //
+  // Note that this is trivially true when t is zero,
+  // as a single state cannot demonstrate the loop.
+
+  exprt::operandst conjuncts = {};
+  const auto i = t;
+
+  for(mp_integer k = 0; k < i; ++k)
+  {
+    exprt::operandst disjuncts = {not_exprt(lasso_symbol(k, i))};
+
+    for(mp_integer j = k; j <= i; ++j)
+    {
+      disjuncts.push_back(instantiate_rec(p, j).second);
+    }
+
+    conjuncts.push_back(disjunction(disjuncts));
+  }
+
+  DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+  return {no_timeframes - 1, conjunction(conjuncts)};
+}
+
+/*******************************************************************\
+
+Function: wl_instantiatet::instantiate_ranged_always
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::pair<mp_integer, exprt> wl_instantiatet::instantiate_ranged_always(
+  const sva_ranged_predicate_exprt &expr,
+  const mp_integer &t) const
+{
+  PRECONDITION(
+    expr.id() == ID_sva_ranged_always || expr.id() == ID_sva_s_always);
+
+  auto &phi = expr.id() == ID_sva_ranged_always
+                ? to_sva_ranged_always_expr(expr).op()
+                : to_sva_s_always_expr(expr).op();
+  auto &lower = expr.id() == ID_sva_ranged_always
+                  ? to_sva_ranged_always_expr(expr).lower()
+                  : to_sva_s_always_expr(expr).lower();
+  auto &upper = expr.id() == ID_sva_ranged_always
+                  ? to_sva_ranged_always_expr(expr).upper()
+                  : to_sva_s_always_expr(expr).upper();
+
+  auto from_opt = numeric_cast<mp_integer>(lower);
+  if(!from_opt.has_value())
+    throw ebmc_errort() << "failed to convert SVA always from index";
+
+  auto from = t + std::max(mp_integer{0}, *from_opt);
+
+  mp_integer to;
+
+  if(upper.id() == ID_infinity)
+  {
+    to = no_timeframes - 1;
+  }
+  else
+  {
+    auto to_opt = numeric_cast<mp_integer>(upper);
+    if(!to_opt.has_value())
+      throw ebmc_errort() << "failed to convert SVA always to index";
+    to = std::min(t + *to_opt, no_timeframes - 1);
+  }
+
+  exprt::operandst conjuncts;
+
+  for(mp_integer c = from; c <= to; ++c)
+  {
+    conjuncts.push_back(instantiate_rec(phi, c).second);
+  }
+
+  return {to, conjunction(conjuncts)};
 }
 
 /*******************************************************************\

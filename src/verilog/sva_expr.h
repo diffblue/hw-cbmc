@@ -289,6 +289,20 @@ protected:
   using ternary_exprt::op2;
 };
 
+static inline const sva_ranged_predicate_exprt &
+to_sva_ranged_predicate_expr(const exprt &expr)
+{
+  sva_ranged_predicate_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_ranged_predicate_exprt &>(expr);
+}
+
+static inline sva_ranged_predicate_exprt &
+to_sva_ranged_predicate_expr(exprt &expr)
+{
+  sva_ranged_predicate_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_ranged_predicate_exprt &>(expr);
+}
+
 class sva_eventually_exprt : public sva_ranged_predicate_exprt
 {
 public:
