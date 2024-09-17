@@ -69,7 +69,7 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   }
 
   // recursively convert element_type
-  typet element_type = convert_type(src.subtype());
+  typet element_type = elaborate_type(src.subtype());
 
   const exprt final_size_expr = from_integer(size, integer_typet());
   auto result = array_typet{element_type, final_size_expr};
@@ -135,7 +135,7 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
     // We have a multi-dimensional packed array,
     // and do a recursive call.
     const exprt size = from_integer(width, integer_typet());
-    typet s = convert_type(subtype);
+    typet s = elaborate_type(subtype);
 
     array_typet result(s, size);
     result.add_source_location() = source_location;
@@ -147,7 +147,7 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::convert_type
+Function: verilog_typecheck_exprt::elaborate_type
 
   Inputs:
 
@@ -157,11 +157,11 @@ Function: verilog_typecheck_exprt::convert_type
 
 \*******************************************************************/
 
-typet verilog_typecheck_exprt::convert_type(const typet &src)
+typet verilog_typecheck_exprt::elaborate_type(const typet &src)
 {
   const auto &source_location = src.source_location();
 
-  if(src.is_nil() || src.id()==ID_reg)
+  if(src.is_nil() || src.id() == ID_reg)
   {
     // it's just a bit
     return bool_typet().with_source_location(source_location);
@@ -236,7 +236,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
     // The default base type is 'int'.
     auto &enum_type = to_verilog_enum_type(src);
     auto result = enum_type.has_base_type()
-                    ? convert_type(enum_type.base_type())
+                    ? elaborate_type(enum_type.base_type())
                     : signedbv_typet(32);
     result.set(ID_C_verilog_type, ID_verilog_enum);
     result.set(ID_C_identifier, enum_type.identifier());
@@ -261,12 +261,12 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
       return expr.type().with_source_location(source_location);
     }
     else
-      return convert_type(type_reference.type_op());
+      return elaborate_type(type_reference.type_op());
   }
   else if(src.id() == ID_to_be_elaborated)
   {
     // recursive call
-    return convert_type(to_to_be_elaborated_type(src).subtype());
+    return elaborate_type(to_to_be_elaborated_type(src).subtype());
   }
   else if(src.id() == ID_struct || src.id() == ID_union)
   {
@@ -281,7 +281,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
         declaration.id() == ID_decl, "struct type must have declarations");
 
       // Convert the type
-      auto type = convert_type(declaration_expr.type());
+      auto type = elaborate_type(declaration_expr.type());
 
       // Convert the declarators
       for(auto &declarator_expr : declaration_expr.operands())

@@ -34,7 +34,7 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   else
   {
     // add the symbol
-    typet type = convert_type(declarator.merged_type(decl.type()));
+    typet type = elaborate_type(declarator.merged_type(decl.type()));
 
     symbolt new_symbol{identifier, type, mode};
 
@@ -245,7 +245,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         symbol.base_name = declarator.base_name();
         symbol.location = declarator.source_location();
-        symbol.type = convert_type(declarator.merged_type(decl.type()));
+        symbol.type = elaborate_type(declarator.merged_type(decl.type()));
 
         if(symbol.base_name.empty())
         {
@@ -330,7 +330,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
             << "empty symbol name";
         }
 
-        symbol.type = convert_type(declarator.merged_type(decl.type()));
+        symbol.type = elaborate_type(declarator.merged_type(decl.type()));
         symbol.name = hierarchical_identifier(symbol.base_name);
         symbol.pretty_name = strip_verilog_prefix(symbol.name);
 
@@ -409,7 +409,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       symbol.base_name = declarator.base_name();
       symbol.location = declarator.source_location();
-      symbol.type = convert_type(declarator.merged_type(decl.type()));
+      symbol.type = elaborate_type(declarator.merged_type(decl.type()));
 
       if(symbol.base_name.empty())
       {
@@ -470,7 +470,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       symbol.base_name = declarator.base_name();
       symbol.location = declarator.source_location();
-      symbol.type = convert_type(declarator.merged_type(decl.type()));
+      symbol.type = elaborate_type(declarator.merged_type(decl.type()));
 
       if(symbol.base_name.empty())
       {
@@ -522,7 +522,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     typet return_type;
 
     if(decl_class == ID_function)
-      return_type = convert_type(decl.type());
+      return_type = elaborate_type(decl.type());
     else
       return_type = empty_typet();
 
@@ -939,7 +939,7 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
     {
       // No, elaborate the type.
       auto elaborated_type =
-        convert_type(to_type_with_subtype(symbol.type).subtype());
+        elaborate_type(to_type_with_subtype(symbol.type).subtype());
       symbol.type = elaborated_type;
 
       // Now elaborate the value, possibly recursively, if any.
