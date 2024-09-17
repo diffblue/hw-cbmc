@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 wire_and_reg.v
 
+^file .* line 4: variable `some_var' is already declared, at file .* line 3$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 --
-This should be errored, as some_var must not be both wire and reg.
