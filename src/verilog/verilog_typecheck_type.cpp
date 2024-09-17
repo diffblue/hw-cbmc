@@ -81,6 +81,72 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::convert_packed_array_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+typet verilog_typecheck_exprt::convert_packed_array_type(
+  const type_with_subtypet &src)
+{
+  PRECONDITION(src.id() == ID_verilog_packed_array);
+
+  const exprt &range = static_cast<const exprt &>(src.find(ID_range));
+  const auto &source_location = src.source_location();
+
+  mp_integer msb, lsb;
+  convert_range(range, msb, lsb);
+
+  bool big_endian = (lsb > msb);
+
+  mp_integer width = (big_endian ? lsb - msb : msb - lsb) + 1;
+  mp_integer offset = big_endian ? msb : lsb;
+
+  // let's look at the subtype
+  const auto subtype =
+    static_cast<const typet &>(src).has_subtype()
+      ? static_cast<const type_with_subtypet &>(src).subtype()
+      : typet(ID_nil);
+
+  if(
+    subtype.is_nil() || subtype.id() == ID_signed ||
+    subtype.id() == ID_unsigned || subtype.id() == ID_verilog_bit ||
+    subtype.id() == ID_verilog_logic)
+  {
+    // we have a bit-vector type, not an array
+
+    bitvector_typet dest(
+      subtype.id() == ID_signed ? ID_signedbv : ID_unsignedbv);
+
+    dest.add_source_location() = source_location;
+    dest.set_width(width.to_ulong());
+    dest.set(ID_C_big_endian, big_endian);
+    dest.set(ID_C_offset, integer2string(offset));
+
+    return std::move(dest).with_source_location(source_location);
+  }
+  else
+  {
+    // We have a multi-dimensional packed array,
+    // and do a recursive call.
+    const exprt size = from_integer(width, integer_typet());
+    typet s = convert_type(subtype);
+
+    array_typet result(s, size);
+    result.add_source_location() = source_location;
+    result.set(ID_offset, from_integer(offset, integer_typet()));
+
+    return std::move(result).with_source_location(source_location);
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_type
 
   Inputs:
@@ -178,51 +244,7 @@ typet verilog_typecheck_exprt::convert_type(const typet &src)
   }
   else if(src.id() == ID_verilog_packed_array)
   {
-    const exprt &range=static_cast<const exprt &>(src.find(ID_range));
-
-    mp_integer msb, lsb;
-    convert_range(range, msb, lsb);
-
-    bool big_endian = (lsb > msb);
-
-    mp_integer width = (big_endian ? lsb - msb : msb - lsb) + 1;
-    mp_integer offset = big_endian ? msb : lsb;
-
-    // let's look at the subtype
-    const auto subtype =
-      static_cast<const typet &>(src).has_subtype()
-        ? static_cast<const type_with_subtypet &>(src).subtype()
-        : typet(ID_nil);
-
-    if(
-      subtype.is_nil() || subtype.id() == ID_signed ||
-      subtype.id() == ID_unsigned || subtype.id() == ID_verilog_bit ||
-      subtype.id() == ID_verilog_logic)
-    {
-      // we have a bit-vector type, not an array
-
-      bitvector_typet dest(subtype.id()==ID_signed?ID_signedbv:ID_unsignedbv);
-
-      dest.add_source_location() = source_location;
-      dest.set_width(width.to_ulong());
-      dest.set(ID_C_big_endian, big_endian);
-      dest.set(ID_C_offset, integer2string(offset));
-
-      return std::move(dest).with_source_location(source_location);
-    }
-    else
-    {
-      // We have a multi-dimensional packed array,
-      // and do a recursive call.
-      const exprt size=from_integer(width, integer_typet());
-      typet s=convert_type(subtype);
-
-      array_typet result(s, size);
-      result.add_source_location() = source_location;
-      result.set(ID_offset, from_integer(offset, integer_typet()));
-
-      return std::move(result).with_source_location(source_location);
-    }
+    return convert_packed_array_type(to_type_with_subtype(src));
   }
   else if(src.id() == ID_verilog_unpacked_array)
   {
