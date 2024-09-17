@@ -4,6 +4,7 @@ always_with_range1.sv
 ^\[main\.p0\] always \[0:9\] main\.x < 10: PROVED up to bound 20$
 ^\[main\.p1\] always \[0:\$\] main\.x < 10: REFUTED$
 ^\[main\.p2\] s_always \[0:9\] main\.x < 10: PROVED up to bound 20$
+^\[main\.p3\] always \(main\.x == 1 implies \(always \[1:1\] main\.x == 2\)\): PROVED up to bound 20$
 ^EXIT=10$
 ^SIGNAL=0$
 --

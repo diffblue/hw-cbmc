@@ -351,6 +351,47 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
     return {no_timeframes - 1, conjunction(conjuncts)};
   }
+  else if(expr.id() == ID_sva_ranged_always || expr.id() == ID_sva_s_always)
+  {
+    auto &phi = expr.id() == ID_sva_ranged_always
+                  ? to_sva_ranged_always_expr(expr).op()
+                  : to_sva_s_always_expr(expr).op();
+    auto &lower = expr.id() == ID_sva_ranged_always
+                    ? to_sva_ranged_always_expr(expr).lower()
+                    : to_sva_s_always_expr(expr).lower();
+    auto &upper = expr.id() == ID_sva_ranged_always
+                    ? to_sva_ranged_always_expr(expr).upper()
+                    : to_sva_s_always_expr(expr).upper();
+
+    auto from_opt = numeric_cast<mp_integer>(lower);
+    if(!from_opt.has_value())
+      throw ebmc_errort() << "failed to convert SVA always from index";
+
+    auto from = t + std::max(mp_integer{0}, *from_opt);
+
+    mp_integer to;
+
+    if(upper.id() == ID_infinity)
+    {
+      to = no_timeframes - 1;
+    }
+    else
+    {
+      auto to_opt = numeric_cast<mp_integer>(upper);
+      if(!to_opt.has_value())
+        throw ebmc_errort() << "failed to convert SVA always to index";
+      to = std::min(t + *to_opt, no_timeframes - 1);
+    }
+
+    exprt::operandst conjuncts;
+
+    for(mp_integer c = from; c <= to; ++c)
+    {
+      conjuncts.push_back(instantiate_rec(phi, c).second);
+    }
+
+    return {to, conjunction(conjuncts)};
+  }
   else if(expr.id() == ID_X)
   {
     const auto next = t + 1;
