@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 parameters7.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-The test fails owing to the missing grammar for typing parameters.
