@@ -1,0 +1,18 @@
+MODULE main
+
+VAR x : 0..10;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x>=3 : 3;
+      TRUE: x+1;
+    esac;
+
+LTLSPEC x = 1 U x = 2 -- should pass
+LTLSPEC x !=0 U FALSE -- should pass
+LTLSPEC x = 1 U x = 3 -- should fail
+LTLSPEC x = 1 U x = 2 & x<=2 U x = 3 -- should pass
+LTLSPEC x = 1 U x = 2 | x = 1 U x = 3 -- should pass

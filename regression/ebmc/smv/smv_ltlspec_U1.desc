@@ -1,0 +1,9 @@
+KNOWNBUG broken-smt-backend
+smv_ltlspec_U1.smv
+--bound 10
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Parsing for LTL U does not work.
