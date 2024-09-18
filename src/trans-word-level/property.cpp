@@ -93,34 +93,19 @@ Function: bmc_supports_CTL_property
 
 bool bmc_supports_CTL_property(const exprt &expr)
 {
-  // We support
-  // * formulas that contain no temporal operator besides AX
-  // * GFφ, where φ contains no temporal operator besides AX
-  // * AFφ, where φ contains no temporal operator besides AX
-  // * AGAFφ, where φ contains no temporal operator besides AX
-  // * conjunctions of supported CTL properties
-  auto non_AX_CTL_operator = [](const exprt &expr)
-  { return is_CTL_operator(expr) && expr.id() != ID_AX; };
-
-  if(!has_subexpr(expr, non_AX_CTL_operator))
+  // We map a subset of ACTL to LTL, following
+  // Monika Maidl. "The common fragment of CTL and LTL"
+  // http://dx.doi.org/10.1109/SFCS.2000.892332
+  //
+  // Specificially, we allow
+  // * state predicates
+  // * conjunctions of allowed formulas
+  // * AX φ, where φ is allowed
+  // * AF φ, where φ is allowed
+  // * AG φ, where φ is allowed
+  if(!has_CTL_operator(expr))
   {
     return true;
-  }
-  else if(expr.id() == ID_AF)
-  {
-    return !has_subexpr(to_AF_expr(expr).op(), non_AX_CTL_operator);
-  }
-  else if(expr.id() == ID_AG)
-  {
-    auto &op = to_AG_expr(expr).op();
-    if(op.id() == ID_AF)
-    {
-      return !has_subexpr(to_AF_expr(op).op(), non_AX_CTL_operator);
-    }
-    else
-    {
-      return !has_subexpr(op, non_AX_CTL_operator);
-    }
   }
   else if(expr.id() == ID_and)
   {
@@ -128,6 +113,18 @@ bool bmc_supports_CTL_property(const exprt &expr)
       if(!bmc_supports_CTL_property(op))
         return false;
     return true;
+  }
+  else if(expr.id() == ID_AX)
+  {
+    return bmc_supports_CTL_property(to_AX_expr(expr).op());
+  }
+  else if(expr.id() == ID_AF)
+  {
+    return bmc_supports_CTL_property(to_AF_expr(expr).op());
+  }
+  else if(expr.id() == ID_AG)
+  {
+    return bmc_supports_CTL_property(to_AG_expr(expr).op());
   }
   else
     return false;

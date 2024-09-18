@@ -34,6 +34,11 @@ bool is_CTL_operator(const exprt &expr)
          id == ID_AR || id == ID_ER;
 }
 
+bool has_CTL_operator(const exprt &expr)
+{
+  return has_subexpr(expr, is_CTL_operator);
+}
+
 bool is_CTL(const exprt &expr)
 {
   auto non_CTL_operator = [](const exprt &expr) {

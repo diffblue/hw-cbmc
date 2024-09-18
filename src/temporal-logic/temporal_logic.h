@@ -29,6 +29,9 @@ bool is_CTL(const exprt &);
 /// as its root
 bool is_CTL_operator(const exprt &);
 
+/// Returns true iff the given expression contains a CTL operator
+bool has_CTL_operator(const exprt &);
+
 /// Returns true iff the given expression is an LTL formula
 bool is_LTL(const exprt &);
 
