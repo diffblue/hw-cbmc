@@ -474,6 +474,8 @@ term       : variable_name
            | F_Token  term            { init($$, ID_F);  mto($$, $2); }
            | G_Token  term            { init($$, ID_G);  mto($$, $2); }
            | X_Token  term            { init($$, ID_X);  mto($$, $2); }
+           | term U_Token term        { binary($$, $1, ID_U, $3, bool_typet{}); }
+           | term R_Token term        { binary($$, $1, ID_R, $3, bool_typet{}); }
            | term EQUAL_Token    term { binary($$, $1, ID_equal,  $3, bool_typet{}); }
            | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3, bool_typet{}); }
            | term LT_Token       term { binary($$, $1, ID_lt,  $3, bool_typet{}); }
