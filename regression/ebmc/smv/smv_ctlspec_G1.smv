@@ -1,0 +1,19 @@
+MODULE main
+
+VAR x : 0..10;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x>=3 : 3;
+      TRUE: x+1;
+    esac;
+
+SPEC AG x != 5 -- should pass
+SPEC AG x != 6 -- should pass
+SPEC AG x != 2 -- should fail
+SPEC AG x != 5 & AG x != 6 -- should pass
+SPEC AG x != 2 & AG x != 5 -- should fail
+SPEC EG x != 2 -- not supported

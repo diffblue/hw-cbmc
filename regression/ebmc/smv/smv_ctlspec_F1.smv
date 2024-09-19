@@ -1,0 +1,19 @@
+MODULE main
+
+VAR x : 0..3;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x=3 : 3;
+      TRUE: x+1;
+    esac;
+
+SPEC AF x = 0 -- should fail
+SPEC AF x = 1 -- should pass
+SPEC AF x = 2 -- should pass
+SPEC AF x = 1 & AF x = 2 -- should pass
+SPEC AF x = 0 & AF x = 1 -- should fail
+SPEC EF x = 0 -- not supported
