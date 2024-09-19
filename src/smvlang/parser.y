@@ -455,7 +455,7 @@ term       : variable_name
            | term DIVIDE_Token term   { binary_arith($$, $1, ID_div, $3); }
            | term PLUS_Token term     { binary_arith($$, $1, ID_plus, $3); }
            | term MINUS_Token term    { binary_arith($$, $1, ID_minus, $3); }
-           | term EQUIV_Token term    { binary($$, $1, ID_equal, $3, bool_typet{}); }
+           | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3, bool_typet{}); }
            | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3, bool_typet{}); }
            | term XOR_Token term      { j_binary($$, $1, ID_xor, $3, bool_typet{}); }
            | term OR_Token term       { j_binary($$, $1, ID_or, $3, bool_typet{}); }

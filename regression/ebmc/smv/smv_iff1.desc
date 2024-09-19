@@ -1,0 +1,7 @@
+CORE
+smv_iff1.smv
+
+^file .* line 9: Expected expression of type `boolean', but got expression `x', which is of type `0..10'$
+^EXIT=2$
+^SIGNAL=0$
+--

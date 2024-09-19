@@ -449,7 +449,12 @@ bool expr2smvt::convert(
     return convert_binary(src, dest, src.id_string(), precedence=11);
 
   else if(src.id()==ID_equal)
-    return convert_binary(src, dest, "=", precedence=11);
+  {
+    if(src.get_bool(ID_C_smv_iff))
+      return convert_binary(src, dest, "<->", precedence = 16);
+    else
+      return convert_binary(src, dest, "=", precedence = 11);
+  }
 
   else if(src.id()==ID_notequal)
     return convert_binary(src, dest, "!=", precedence=11);
@@ -465,9 +470,6 @@ bool expr2smvt::convert(
 
   else if(src.id()==ID_implies)
     return convert_binary(src, dest, "->", precedence=2);
-
-  else if(src.id()==ID_iff)
-    return convert_binary(src, dest, "<->", precedence=3);
 
   else if(
     src.id() == ID_AG || src.id() == ID_EG || src.id() == ID_AF ||
