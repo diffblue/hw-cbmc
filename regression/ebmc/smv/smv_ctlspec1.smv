@@ -1,0 +1,4 @@
+MODULE main
+
+-- error, this is LTL
+SPEC F FALSE

@@ -41,7 +41,14 @@ public:
 
   virtual ~smv_typecheckt() { }
 
-  typedef enum { INIT, TRANS, OTHER } modet;
+  typedef enum
+  {
+    INIT,
+    TRANS,
+    OTHER,
+    LTL,
+    CTL
+  } modet;
 
   void convert(smv_parse_treet::modulet &smv_module);
   void convert(smv_parse_treet::mc_varst &vars);
@@ -936,25 +943,39 @@ void smv_typecheckt::typecheck(
   }
   else if(
     expr.id() == ID_AG || expr.id() == ID_AX || expr.id() == ID_AF ||
-    expr.id() == ID_EG || expr.id() == ID_EX || expr.id() == ID_EF ||
-    expr.id() == ID_X || expr.id() == ID_F || expr.id() == ID_G)
+    expr.id() == ID_EG || expr.id() == ID_EX || expr.id() == ID_EF)
   {
-    if(expr.operands().size()!=1)
-    {
-      error().source_location=expr.find_source_location();
-      error() << "Expected one operand for " << expr.id()
-              << " operator" << eom;
-      throw 0;
-    }
-
-    expr.type()=bool_typet();
-
+    if(mode != CTL)
+      throw errort().with_location(expr.source_location())
+        << "CTL operator not permitted here";
+    expr.type() = bool_typet();
+    typecheck(to_unary_expr(expr).op(), expr.type(), mode);
+  }
+  else if(expr.id() == ID_X || expr.id() == ID_F || expr.id() == ID_G)
+  {
+    if(mode != LTL)
+      throw errort().with_location(expr.source_location())
+        << "LTL operator not permitted here";
+    expr.type() = bool_typet();
     typecheck(to_unary_expr(expr).op(), expr.type(), mode);
   }
   else if(
     expr.id() == ID_EU || expr.id() == ID_ER || expr.id() == ID_AU ||
-    expr.id() == ID_AR || expr.id() == ID_U || expr.id() == ID_R)
+    expr.id() == ID_AR)
   {
+    if(mode != CTL)
+      throw errort().with_location(expr.source_location())
+        << "CTL operator not permitted here";
+    auto &binary_expr = to_binary_expr(expr);
+    expr.type() = bool_typet();
+    typecheck(binary_expr.lhs(), expr.type(), mode);
+    typecheck(binary_expr.rhs(), expr.type(), mode);
+  }
+  else if(expr.id() == ID_U || expr.id() == ID_R)
+  {
+    if(mode != LTL)
+      throw errort().with_location(expr.source_location())
+        << "LTL operator not permitted here";
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet();
     typecheck(binary_expr.lhs(), expr.type(), mode);
@@ -1194,11 +1215,17 @@ void smv_typecheckt::typecheck(
     mode=TRANS;
     break;
 
+  case smv_parse_treet::modulet::itemt::CTLSPEC:
+    mode = CTL;
+    break;
+
+  case smv_parse_treet::modulet::itemt::LTLSPEC:
+    mode = LTL;
+    break;
+
   case smv_parse_treet::modulet::itemt::DEFINE:
   case smv_parse_treet::modulet::itemt::INVAR:
   case smv_parse_treet::modulet::itemt::FAIRNESS:
-  case smv_parse_treet::modulet::itemt::CTLSPEC:
-  case smv_parse_treet::modulet::itemt::LTLSPEC:
   default:
     mode=OTHER;
   }
