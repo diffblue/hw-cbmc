@@ -1,0 +1,7 @@
+CORE
+smv_ctlspec1.smv
+
+^file .* line 4: LTL operator not permitted here$
+^EXIT=2$
+^SIGNAL=0$
+--
