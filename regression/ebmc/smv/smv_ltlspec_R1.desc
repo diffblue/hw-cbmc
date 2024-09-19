@@ -1,9 +1,14 @@
-KNOWNBUG broken-smt-backend
+CORE broken-smt-backend
 smv_ltlspec_R1.smv
 --bound 10
+^\[.*\] x >= 1 R x = 1: FAILURE: property not supported by BMC engine$
+^\[.*\] FALSE R x != 4: FAILURE: property not supported by BMC engine$
+^\[.*\] x = 2 R x = 1: FAILURE: property not supported by BMC engine$
+^\[.*\] x >= 1 R x = 1 & FALSE R x != 4: FAILURE: property not supported by BMC engine$
+^\[.*\] x = 2 R x = 1 & x >= 1 R x = 1: FAILURE: property not supported by BMC engine$
+^\[.*\] x = 2 R x = 1 \| x >= 1 R x = 1: FAILURE: property not supported by BMC engine$
 ^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-Parsing for LTL R does not work.

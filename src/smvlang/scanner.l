@@ -92,6 +92,7 @@ void newlocation(YYSTYPE &x)
 "X"		return X_Token;
 "G"		return G_Token;
 "U"		return U_Token;
+"R"		return R_Token;
 "next"		return NEXT_Token;
 "init"		return init_Token;
 "case"		return CASE_Token;
