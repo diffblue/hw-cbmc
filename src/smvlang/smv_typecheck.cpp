@@ -989,11 +989,11 @@ void smv_typecheckt::typecheck(
   else if(expr.id()==ID_typecast)
   {
   }
-  else if(expr.id()=="smv_setin")
+  else if(expr.id() == ID_smv_setin)
   {
     expr.type()=bool_typet();
   }
-  else if(expr.id()=="smv_setnotin")
+  else if(expr.id() == ID_smv_setnotin)
   {
     expr.type()=bool_typet();
   }
