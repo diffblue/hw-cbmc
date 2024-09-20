@@ -464,6 +464,15 @@ bool expr2smvt::convert(
     return convert_binary(
       src, dest, src.id_string(), precedence = precedencet::MULT);
 
+  else if(src.id() == ID_smv_setin)
+    return convert_binary(src, dest, "in", precedence = precedencet::IN);
+
+  else if(src.id() == ID_smv_setnotin)
+    return convert_binary(src, dest, "notin", precedence = precedencet::IN);
+
+  else if(src.id() == ID_smv_union)
+    return convert_binary(src, dest, "union", precedence = precedencet::UNION);
+
   else if(src.id()==ID_lt || src.id()==ID_gt ||
           src.id()==ID_le || src.id()==ID_ge)
     return convert_binary(
@@ -526,6 +535,9 @@ bool expr2smvt::convert(
     return convert_constant(src, dest, precedence);
 
   else if(src.id()=="smv_nondet_choice")
+    return convert_nondet_choice(src, dest, precedence);
+
+  else if(src.id() == ID_constraint_select_one)
     return convert_nondet_choice(src, dest, precedence);
 
   else if(src.id()==ID_nondet_bool)

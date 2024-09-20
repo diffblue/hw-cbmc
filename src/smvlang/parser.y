@@ -482,9 +482,9 @@ term       : variable_name
            | term LE_Token       term { binary($$, $1, ID_le, $3, bool_typet{}); }
            | term GT_Token       term { binary($$, $1, ID_gt,  $3, bool_typet{}); }
            | term GE_Token       term { binary($$, $1, ID_ge, $3, bool_typet{}); }
-           | term UNION_Token    term { binary($$, $1, "smv_union", $3, bool_typet{}); }
-           | term IN_Token       term { binary($$, $1, "smv_setin", $3, bool_typet{}); }
-           | term NOTIN_Token    term { binary($$, $1, "smv_setnotin", $3, bool_typet{}); }
+           | term UNION_Token    term { binary($$, $1, ID_smv_union, $3, bool_typet{}); }
+           | term IN_Token       term { binary($$, $1, ID_smv_setin, $3, bool_typet{}); }
+           | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3, bool_typet{}); }
            ;
 
 formula_list: formula { init($$); mto($$, $1); }
