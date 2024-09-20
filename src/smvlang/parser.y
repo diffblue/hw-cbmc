@@ -167,8 +167,10 @@ static void new_module(YYSTYPE &module)
 %token STRING_Token QSTRING_Token QUOTE_Token
 %token NUMBER_Token FALSE_Token TRUE_Token
 
+/* operator precedence, low to high */
 %right IMPLIES_Token
 %left  EQUIV_Token
+%left  IF_Token
 %left  XOR_Token
 %left  OR_Token
 %left  AND_Token
@@ -448,8 +450,11 @@ term       : variable_name
            | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
            | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
            | CASE_Token cases ESAC_Token { $$=$2; }
+           | term IF_Token term ':' term %prec IF_Token
+                                      { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
            | SWITCH_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
-           | MINUS_Token term %prec UMINUS { init($$, ID_unary_minus); mto($$, $2); }
+           | MINUS_Token term %prec UMINUS
+                                      { init($$, ID_unary_minus); mto($$, $2); }
            | term MOD_Token term      { binary_arith($$, $1, ID_mod, $3); }
            | term TIMES_Token term    { binary_arith($$, $1, ID_mult, $3); }
            | term DIVIDE_Token term   { binary_arith($$, $1, ID_div, $3); }

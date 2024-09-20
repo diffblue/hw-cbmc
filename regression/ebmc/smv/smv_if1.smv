@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x : 0..10;
+
+-- count 1, 2, 3
+ASSIGN init(x) := 1;
+       next(x) := x < 3 ? x+1 : 3;
+
+LTLSPEC G x != 4

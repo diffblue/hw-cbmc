@@ -649,6 +649,8 @@ void smv_typecheckt::typecheck(
   const typet &type,
   modet mode)
 {
+  const auto static nil_type = static_cast<const typet &>(get_nil_irep());
+
   if(expr.id()==ID_symbol || 
      expr.id()==ID_next_symbol)
   {
@@ -762,6 +764,16 @@ void smv_typecheckt::typecheck(
         throw 0;
       }
     }
+  }
+  else if(expr.id() == ID_if) // ?:
+  {
+    auto &if_expr = to_if_expr(expr);
+    auto &true_case = if_expr.true_case();
+    auto &false_case = if_expr.false_case();
+    typecheck(if_expr.cond(), bool_typet{}, mode);
+    typecheck(true_case, type, mode);
+    typecheck(false_case, type, mode);
+    expr.type() = type;
   }
   else if(expr.id()==ID_plus || expr.id()==ID_minus ||
           expr.id()==ID_mult || expr.id()==ID_div ||

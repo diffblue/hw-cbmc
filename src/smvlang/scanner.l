@@ -130,6 +130,7 @@ void newlocation(YYSTYPE &x)
                   return QUOTE_Token;
                 }
 
+"?"		return IF_Token;
 "~"		return NOT_Token;
 "!"		return NOT_Token;
 "+"		return PLUS_Token;
