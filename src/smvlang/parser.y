@@ -177,7 +177,7 @@ static void new_module(YYSTYPE &module)
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  UNION_Token
 %left  IN_Token NOTIN_Token
-%left  MOD_Token
+%left  MOD_Token /* Precedence from CMU SMV, different from NuSMV */
 %left  PLUS_Token MINUS_Token
 %left  TIMES_Token DIVIDE_Token
 %left  UMINUS           /* supplies precedence for unary minus */

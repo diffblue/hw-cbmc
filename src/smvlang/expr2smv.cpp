@@ -21,80 +21,98 @@ public:
   {
   }
 
-  bool convert_nondet_choice(const exprt &src, std::string &dest, unsigned precedence);
+protected:
+  // In NuSMV 2.6., ! (not)  has a high precedence (above ::), whereas
+  // in the CMU SMV implementation it has the same as other boolean operators.
+  // We use the CMU SMV precedence for !.
+  // Like CMU SMV, we give the same precedence to -> and <->, to avoid ambiguity.
+  // Note that the precedence of mod in the CMU SMV differs from NuSMV's.
+  // We use NuSMV's.
+  enum class precedencet
+  {
+    MAX = 16,
+    INDEX = 15,   // [ ] , [ : ]
+    CONCAT = 14,  // ::
+    UMINUS = 13,  // - (unary minus)
+    MULT = 12,    // * / mod
+    PLUS = 11,    // + -
+    SHIFT = 10,   // << >>
+    UNION = 9,    // union
+    IN = 8,       // in
+    REL = 7,      // = != < > <= >=
+    TEMPORAL = 6, // AX, AF, etc.
+    NOT = 5,      // !
+    AND = 4,      // &
+    OR = 3,       // | xor xnor
+    IF = 2,       // (• ? • : •)
+    IFF = 1,      // <->
+    IMPLIES = 1   // ->
+  };
 
-  bool convert_binary(const exprt &src, std::string &dest, const std::string &symbol, unsigned precedence);
+  /*
+   From http://www.cs.cmu.edu/~modelcheck/smv/smvmanual.ps
+
+  The order of precedence from high to low is
+    * /
+    + -
+    mod
+    = != < > <= >=
+    !
+    &
+    |
+    -> <->
+  */
+
+public:
+  bool convert_nondet_choice(
+    const exprt &src,
+    std::string &dest,
+    precedencet precedence);
+
+  bool convert_binary(
+    const exprt &src,
+    std::string &dest,
+    const std::string &symbol,
+    precedencet precedence);
 
   bool convert_unary(
     const unary_exprt &,
     std::string &dest,
     const std::string &symbol,
-    unsigned precedence);
+    precedencet precedence);
 
   bool
-  convert_index(const index_exprt &, std::string &dest, unsigned precedence);
+  convert_index(const index_exprt &, std::string &dest, precedencet precedence);
 
-  bool convert(const exprt &src, std::string &dest, unsigned &precedence);
+  bool convert(const exprt &src, std::string &dest, precedencet &precedence);
 
   bool convert(const exprt &src, std::string &dest);
 
-  bool
-  convert_symbol(const symbol_exprt &, std::string &dest, unsigned &precedence);
+  bool convert_symbol(
+    const symbol_exprt &,
+    std::string &dest,
+    precedencet &precedence);
 
-  bool convert_next_symbol(const exprt &src, std::string &dest, unsigned &precedence);
+  bool convert_next_symbol(
+    const exprt &src,
+    std::string &dest,
+    precedencet &precedence);
 
-  bool convert_constant(const exprt &src, std::string &dest, unsigned &precedence);
+  bool convert_constant(
+    const exprt &src,
+    std::string &dest,
+    precedencet &precedence);
 
   bool convert_cond(const exprt &src, std::string &dest);
 
-  bool convert_norep(const exprt &src, std::string &dest, unsigned &precedence);
+  bool
+  convert_norep(const exprt &src, std::string &dest, precedencet &precedence);
 
   bool convert(const typet &src, std::string &dest);
 
 protected:
   const namespacet &ns;
 };
-
-/*
- From http://www.cs.cmu.edu/~modelcheck/smv/smvmanual.ps
-
-The order of precedence from high to low is
-  * /
-  + -
-  mod
-  = != < > <= >=
-  !
-  &
-  |
-  -> <->
-
- SMV Operator Precedences:
-
- 1 %left  COMMA
- 2 %right IMPLIES
- 3 %left  IFF
- 4 %left  OR XOR XNOR
- 5 %left  AND
- 6 %left  NOT
- 7 %left  EX AX EF AF EG AG EE AA SINCE UNTIL TRIGGERED RELEASES EBF EBG ABF ABG BUNTIL MMIN MMAX
- 8 %left  OP_NEXT OP_GLOBAL OP_FUTURE
- 9 %left  OP_PREC OP_NOTPRECNOT OP_HISTORICAL OP_ONCE
-10 %left  APATH EPATH
-11 %left  EQUAL NOTEQUAL LT GT LE GE
-12 %left  UNION
-13 %left  SETIN
-14 %left  MOD
-15 %left  PLUS MINUS
-16 %left  TIMES DIVIDE
-17 %left  UMINUS
-18 %left  NEXT SMALLINIT
-19 %left  DOT
-20        [ ]
-21 = max
-
-*/
-
-#define SMV_MAX_PRECEDENCE 21
 
 /*******************************************************************\
 
@@ -111,7 +129,7 @@ Function: expr2smvt::convert_nondet_choice
 bool expr2smvt::convert_nondet_choice(
   const exprt &src,
   std::string &dest,
-  unsigned precedence)
+  precedencet precedence)
 {
   dest="{ ";
 
@@ -187,7 +205,7 @@ bool expr2smvt::convert_binary(
   const exprt &src,
   std::string &dest,
   const std::string &symbol,
-  unsigned precedence)
+  precedencet precedence)
 {
   if(src.operands().size()<2)
     return convert_norep(src, dest, precedence);
@@ -206,7 +224,7 @@ bool expr2smvt::convert_binary(
     }
 
     std::string op;
-    unsigned p;
+    precedencet p;
 
     if(convert(*it, op, p)) return true;
 
@@ -234,10 +252,10 @@ bool expr2smvt::convert_unary(
   const unary_exprt &src,
   std::string &dest,
   const std::string &symbol,
-  unsigned precedence)
+  precedencet precedence)
 {
   std::string op;
-  unsigned p;
+  precedencet p;
 
   if(convert(src.op(), op, p))
     return true;
@@ -265,10 +283,10 @@ Function: expr2smvt::convert_index
 bool expr2smvt::convert_index(
   const index_exprt &src,
   std::string &dest,
-  unsigned precedence)
+  precedencet precedence)
 {
   std::string op;
-  unsigned p;
+  precedencet p;
 
   if(convert(src.op0(), op, p)) return true;
 
@@ -300,9 +318,9 @@ Function: expr2smvt::convert_norep
 bool expr2smvt::convert_norep(
   const exprt &src,
   std::string &dest,
-  unsigned &precedence)
+  precedencet &precedence)
 {
-  precedence=SMV_MAX_PRECEDENCE;
+  precedence = precedencet::MAX;
   dest=src.pretty();
   return false;
 }
@@ -322,9 +340,9 @@ Function: expr2smvt::convert_symbol
 bool expr2smvt::convert_symbol(
   const symbol_exprt &src,
   std::string &dest,
-  unsigned &precedence)
+  precedencet &precedence)
 {
-  precedence=SMV_MAX_PRECEDENCE;
+  precedence = precedencet::MAX;
 
   auto &symbol = ns.lookup(src);
 
@@ -348,7 +366,7 @@ Function: expr2smvt::convert_next_symbol
 bool expr2smvt::convert_next_symbol(
   const exprt &src,
   std::string &dest,
-  unsigned &precedence)
+  precedencet &precedence)
 {
   std::string tmp;
   convert_symbol(
@@ -374,9 +392,9 @@ Function: expr2smvt::convert_constant
 bool expr2smvt::convert_constant(
   const exprt &src,
   std::string &dest,
-  unsigned &precedence)
+  precedencet &precedence)
 {
-  precedence=SMV_MAX_PRECEDENCE;
+  precedence = precedencet::MAX;
 
   const typet &type=src.type();
   const std::string &value=src.get_string(ID_value);
@@ -414,19 +432,19 @@ Function: expr2smvt::convert
 bool expr2smvt::convert(
   const exprt &src,
   std::string &dest,
-  unsigned &precedence)
+  precedencet &precedence)
 {
-  precedence=SMV_MAX_PRECEDENCE;
+  precedence = precedencet::MAX;
 
   if(src.id()==ID_plus)
-    return convert_binary(src, dest, "+", precedence=15);
+    return convert_binary(src, dest, "+", precedence = precedencet::PLUS);
 
   else if(src.id()==ID_minus)
   {
     if(src.operands().size()<2)
       return convert_norep(src, dest, precedence);
-    else     
-      return convert_binary(src, dest, "-", precedence=15);
+    else
+      return convert_binary(src, dest, "-", precedence = precedencet::PLUS);
   }
 
   else if(src.id()==ID_unary_minus)
@@ -435,55 +453,67 @@ bool expr2smvt::convert(
       return convert_norep(src, dest, precedence);
     else
       return convert_unary(
-        to_unary_minus_expr(src), dest, "-", precedence = 17);
+        to_unary_minus_expr(src), dest, "-", precedence = precedencet::UMINUS);
   }
 
   else if(src.id()==ID_index)
-    return convert_index(to_index_expr(src), dest, precedence = 20);
+    return convert_index(
+      to_index_expr(src), dest, precedence = precedencet::INDEX);
 
   else if(src.id()==ID_mult || src.id()==ID_div)
-    return convert_binary(src, dest, src.id_string(), precedence=16);
+    return convert_binary(
+      src, dest, src.id_string(), precedence = precedencet::MULT);
 
   else if(src.id()==ID_lt || src.id()==ID_gt ||
           src.id()==ID_le || src.id()==ID_ge)
-    return convert_binary(src, dest, src.id_string(), precedence=11);
+    return convert_binary(
+      src, dest, src.id_string(), precedence = precedencet::REL);
 
   else if(src.id()==ID_equal)
   {
     if(src.get_bool(ID_C_smv_iff))
-      return convert_binary(src, dest, "<->", precedence = 16);
+      return convert_binary(src, dest, "<->", precedence = precedencet::IFF);
     else
-      return convert_binary(src, dest, "=", precedence = 11);
+      return convert_binary(src, dest, "=", precedence = precedencet::REL);
   }
 
   else if(src.id()==ID_notequal)
-    return convert_binary(src, dest, "!=", precedence=11);
+    return convert_binary(src, dest, "!=", precedence = precedencet::REL);
 
   else if(src.id()==ID_not)
-    return convert_unary(to_not_expr(src), dest, "!", precedence = 6);
+    return convert_unary(
+      to_not_expr(src), dest, "!", precedence = precedencet::NOT);
 
   else if(src.id()==ID_and)
-    return convert_binary(src, dest, "&", precedence=5);
+    return convert_binary(src, dest, "&", precedence = precedencet::AND);
 
   else if(src.id()==ID_or)
-    return convert_binary(src, dest, "|", precedence=4);
+    return convert_binary(src, dest, "|", precedence = precedencet::OR);
 
   else if(src.id()==ID_implies)
-    return convert_binary(src, dest, "->", precedence=2);
+    return convert_binary(src, dest, "->", precedence = precedencet::IMPLIES);
 
   else if(
     src.id() == ID_AG || src.id() == ID_EG || src.id() == ID_AF ||
     src.id() == ID_EF || src.id() == ID_AX || src.id() == ID_EX ||
     src.id() == ID_G || src.id() == ID_F || src.id() == ID_X)
+  {
     return convert_unary(
-      to_unary_expr(src), dest, src.id_string() + " ", precedence = 7);
+      to_unary_expr(src),
+      dest,
+      src.id_string() + " ",
+      precedence = precedencet::TEMPORAL);
+  }
 
   else if(
     src.id() == ID_AU || src.id() == ID_EU || src.id() == ID_AR ||
     src.id() == ID_ER || src.id() == ID_U || src.id() == ID_R)
   {
     return convert_binary(
-      to_binary_expr(src), dest, src.id_string(), precedence = 7);
+      to_binary_expr(src),
+      dest,
+      src.id_string(),
+      precedence = precedencet::TEMPORAL);
   }
 
   else if(src.id()==ID_symbol)
@@ -530,7 +560,7 @@ Function: expr2smvt::convert
 
 bool expr2smvt::convert(const exprt &src, std::string &dest)
 {
-  unsigned precedence;
+  precedencet precedence;
   return convert(src, dest, precedence);
 }
 
