@@ -673,6 +673,12 @@ bdd_enginet::BDD bdd_enginet::CTL(const exprt &expr)
       result = result | CTL(op);
     return result;
   }
+  else if(
+    expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool)
+  {
+    return (
+      !(CTL(to_binary_expr(expr).lhs())) ^ CTL(to_binary_expr(expr).rhs()));
+  }
   else if(expr.id() == ID_EX)
   {
     return EX(CTL(to_EX_expr(expr).op()));
@@ -891,7 +897,10 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
 {
   if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
-    expr.id() == ID_implies || is_temporal_operator(expr))
+    expr.id() == ID_implies ||
+    (expr.id() == ID_equal &&
+     to_equal_expr(expr).lhs().type().id() == ID_bool) ||
+    is_temporal_operator(expr))
   {
     for(const auto & op : expr.operands())
       if(op.type().id() == ID_bool)

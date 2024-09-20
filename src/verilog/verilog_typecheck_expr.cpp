@@ -2644,7 +2644,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   else if(expr.id()==ID_replication)
     return convert_replication_expr(to_replication_expr(expr));
   else if(
-    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_iff ||
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_verilog_iff ||
     expr.id() == ID_implies)
   {
     Forall_operands(it, expr)

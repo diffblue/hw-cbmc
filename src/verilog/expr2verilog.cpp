@@ -1337,7 +1337,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_binary(
       to_multi_ary_expr(src), "->", precedence = verilog_precedencet::IMPLIES);
 
-  else if(src.id()==ID_iff)
+  else if(src.id() == ID_verilog_iff)
     return convert_binary(
       to_multi_ary_expr(src), "<->", precedence = verilog_precedencet::IMPLIES);
 

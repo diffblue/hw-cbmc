@@ -1,0 +1,7 @@
+CORE
+smv_iff2.smv
+--bdd
+^\[.*\] \(AG x != 5\) <-> \(x != 5 & AX AG x != 5\): PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--

@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x : 0..10;
+
+ASSIGN init(x) := 1;
+       next(x) := x;
+
+-- type error: lhs is not Boolean
+SPEC x <-> (x != 0)

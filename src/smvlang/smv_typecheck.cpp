@@ -681,12 +681,17 @@ void smv_typecheckt::typecheck(
       }
     }
   }
-  else if(expr.id()==ID_and ||
-          expr.id()==ID_or ||
-          expr.id()==ID_xor ||
-          expr.id()==ID_not)
+  else if(
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_xor ||
+    expr.id() == ID_not)
   {
     typecheck_op(expr, bool_typet(), mode);
+  }
+  else if(expr.id() == ID_smv_iff)
+  {
+    typecheck_op(expr, bool_typet(), mode);
+    expr.set(ID_C_smv_iff, true);
+    expr.id(ID_equal);
   }
   else if(expr.id()==ID_nondet_symbol)
   {

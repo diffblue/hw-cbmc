@@ -3534,7 +3534,7 @@ expression:
 	| expression "->" expression
 		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
 	| expression "<->" expression
-		{ init($$, ID_iff); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_iff); mto($$, $1); mto($$, $3); }
 	| expression TOK_PLUS expression
 		{ init($$, ID_plus); mto($$, $1); mto($$, $3); }
 	| expression TOK_MINUS expression
