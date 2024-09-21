@@ -62,7 +62,7 @@ exprt normalize_pre_not(not_exprt expr)
   else if(op.id() == ID_sva_s_eventually)
   {
     // ¬ sva_s_eventually φ --> sva_always ¬φ
-    return sva_always_exprt{not_exprt{to_sva_eventually_expr(op).op()}};
+    return sva_always_exprt{not_exprt{to_sva_s_eventually_expr(op).op()}};
   }
 
   return std::move(expr);
@@ -100,7 +100,7 @@ exprt normalize_pre_sva_non_overlapped_implication(
 exprt normalize_pre_sva_not(sva_not_exprt expr)
 {
   // Same as regular 'not'. These do not apply to sequences.
-  return not_exprt{expr.op()};
+  return normalize_pre_not(not_exprt{expr.op()});
 }
 
 exprt normalize_pre_sva_and(sva_and_exprt expr)

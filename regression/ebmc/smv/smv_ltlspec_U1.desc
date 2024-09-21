@@ -1,11 +1,11 @@
 CORE broken-smt-backend
 smv_ltlspec_U1.smv
 --bound 10
-\[.*\] x = 1 U x = 2: FAILURE: property not supported by BMC engine$
-\[.*\] x != 0 U FALSE: FAILURE: property not supported by BMC engine$
-\[.*\] x = 1 U x = 3: FAILURE: property not supported by BMC engine$
-\[.*\] x = 1 U x = 2 & x <= 2 U x = 3: FAILURE: property not supported by BMC engine$
-\[.*\] x = 1 U x = 2 \| x = 1 U x = 3: FAILURE: property not supported by BMC engine$
+\[.*\] x = 1 U x = 2: PROVED up to bound 10$
+\[.*\] x != 0 U FALSE: PROVED up to bound 10$
+\[.*\] x = 1 U x = 3: REFUTED$
+\[.*\] x = 1 U x = 2 & x <= 2 U x = 3: PROVED up to bound 10$
+\[.*\] x = 1 U x = 2 \| x = 1 U x = 3: PROVED up to bound 10$
 ^EXIT=10$
 ^SIGNAL=0$
 --

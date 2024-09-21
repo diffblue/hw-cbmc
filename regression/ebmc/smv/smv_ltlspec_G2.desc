@@ -6,10 +6,10 @@ smv_ltlspec_G2.smv
 ^\[.*\] !G x != 5: REFUTED$
 ^\[.*\] !G x != 6: REFUTED$
 ^\[.*\] !G x != 2: PROVED up to bound 10$
-^\[.*\] !\(G x != 5 & G x != 6\): FAILURE: property not supported by BMC engine$
-^\[.*\] !\(G x != 2 & G x != 5\): FAILURE: property not supported by BMC engine$
+^\[.*\] !\(G x != 5 & G x != 6\): REFUTED$
+^\[.*\] !\(G x != 2 & G x != 5\): PROVED up to bound 10$
 ^\[.*\] !\(G x != 5 \| G x != 2\): REFUTED$
-^\[.*\] !\(G x != 2 -> FALSE\): FAILURE: property not supported by BMC engine$
-^\[.*\] !\(G x != 5 -> G x != 2\): FAILURE: property not supported by BMC engine$
+^\[.*\] !\(G x != 2 -> FALSE\): REFUTED$
+^\[.*\] !\(G x != 5 -> G x != 2\): PROVED up to bound 10$
 --
 ^warning: ignoring

@@ -40,44 +40,7 @@ Function: bmc_supports_LTL_property
 
 bool bmc_supports_LTL_property(const exprt &expr)
 {
-  // We support
-  // * formulas that contain no temporal operator besides X
-  // * Gφ, where φ contains no temporal operator besides X
-  // * Fφ, where φ contains no temporal operator besides X
-  // * GFφ, where φ contains no temporal operator besides X
-  // * conjunctions of supported LTL properties
-  auto non_X_LTL_operator = [](const exprt &expr)
-  { return is_LTL_operator(expr) && expr.id() != ID_X; };
-
-  if(!has_subexpr(expr, non_X_LTL_operator))
-  {
-    return true;
-  }
-  else if(expr.id() == ID_F)
-  {
-    return !has_subexpr(to_F_expr(expr).op(), non_X_LTL_operator);
-  }
-  else if(expr.id() == ID_G)
-  {
-    auto &op = to_G_expr(expr).op();
-    if(op.id() == ID_F)
-    {
-      return !has_subexpr(to_F_expr(op).op(), non_X_LTL_operator);
-    }
-    else
-    {
-      return !has_subexpr(op, non_X_LTL_operator);
-    }
-  }
-  else if(expr.id() == ID_and)
-  {
-    for(auto &op : expr.operands())
-      if(!bmc_supports_LTL_property(op))
-        return false;
-    return true;
-  }
-  else
-    return false;
+  return true;
 }
 
 /*******************************************************************\
@@ -414,12 +377,13 @@ static obligationst property_obligations_rec(
     }
   }
   else if(
-    property_expr.id() == ID_sva_until || property_expr.id() == ID_sva_s_until)
+    property_expr.id() == ID_sva_until ||
+    property_expr.id() == ID_sva_s_until || property_expr.id() == ID_U)
   {
     // non-overlapping until
     // we need a lasso to refute these
 
-    // we expand: p U q <=> q || (p && X(p U q))
+    // we expand: p U q <=> q ∨ (p ∧ X(p U q))
     exprt tmp_q = to_binary_expr(property_expr).op1();
     tmp_q = property_obligations_rec(tmp_q, solver, current, no_timeframes, ns)
               .conjunction()
@@ -437,11 +401,40 @@ static obligationst property_obligations_rec(
     {
       auto obligations_rec = property_obligations_rec(
         property_expr, solver, next, no_timeframes, ns);
-      expansion = and_exprt(expansion, obligations_rec.conjunction().second);
+      expansion = and_exprt{expansion, obligations_rec.conjunction().second};
     }
 
     DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-    return obligationst{no_timeframes - 1, or_exprt(tmp_q, expansion)};
+    return obligationst{no_timeframes - 1, or_exprt{tmp_q, expansion}};
+  }
+  else if(property_expr.id() == ID_R)
+  {
+    // we expand: p R q <=> q ∧ (p ∨ X(p R q))
+    auto &R_expr = to_R_expr(property_expr);
+    auto tmp_q =
+      property_obligations_rec(R_expr.rhs(), solver, current, no_timeframes, ns)
+        .conjunction()
+        .second;
+
+    auto tmp_p =
+      property_obligations_rec(R_expr.lhs(), solver, current, no_timeframes, ns)
+        .conjunction()
+        .second;
+
+    const auto next = current + 1;
+    exprt expansion;
+
+    if(next < no_timeframes)
+    {
+      auto obligations_rec = property_obligations_rec(
+        property_expr, solver, next, no_timeframes, ns);
+      expansion = or_exprt{tmp_p, obligations_rec.conjunction().second};
+    }
+    else
+      expansion = tmp_p;
+
+    DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+    return obligationst{no_timeframes - 1, and_exprt{tmp_q, expansion}};
   }
   else if(
     property_expr.id() == ID_sva_until_with ||
@@ -493,6 +486,17 @@ static obligationst property_obligations_rec(
 
     return obligationst{t, disjunction(disjuncts)};
   }
+  else if(
+    property_expr.id() == ID_equal &&
+    to_equal_expr(property_expr).lhs().type().id() == ID_bool)
+  {
+    // we rely on NNF: a<=>b ---> a=>b && b=>a
+    auto &equal_expr = to_equal_expr(property_expr);
+    auto tmp = and_exprt{
+      implies_exprt{equal_expr.lhs(), equal_expr.rhs()},
+      implies_exprt{equal_expr.rhs(), equal_expr.lhs()}};
+    return property_obligations_rec(tmp, solver, current, no_timeframes, ns);
+  }
   else if(property_expr.id() == ID_implies)
   {
     // we rely on NNF
@@ -528,8 +532,79 @@ static obligationst property_obligations_rec(
   }
   else if(property_expr.id() == ID_not)
   {
-    return obligationst{
-      instantiate_property(property_expr, current, no_timeframes, ns)};
+    // We need NNF, try to eliminate the negation.
+    auto &op = to_not_expr(property_expr).op();
+
+    if(op.id() == ID_U)
+    {
+      // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
+      auto &U = to_U_expr(op);
+      auto R = R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
+      return property_obligations_rec(R, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_R)
+    {
+      // ¬(φ R ψ) ≡ (¬φ U ¬ψ)
+      auto &R = to_R_expr(op);
+      auto U = U_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
+      return property_obligations_rec(U, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_G)
+    {
+      // ¬G φ ≡ F ¬φ
+      auto &G = to_G_expr(op);
+      auto F = F_exprt{not_exprt{G.op()}};
+      return property_obligations_rec(F, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_F)
+    {
+      // ¬F φ ≡ G ¬φ
+      auto &F = to_F_expr(op);
+      auto G = G_exprt{not_exprt{F.op()}};
+      return property_obligations_rec(G, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_X)
+    {
+      // ¬X φ ≡ X ¬φ
+      auto &X = to_X_expr(op);
+      auto negX = X_exprt{not_exprt{X.op()}};
+      return property_obligations_rec(negX, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_implies)
+    {
+      // ¬(a->b) --> a && ¬b
+      auto &implies_expr = to_implies_expr(op);
+      auto and_expr =
+        and_exprt{implies_expr.lhs(), not_exprt{implies_expr.rhs()}};
+      return property_obligations_rec(
+        and_expr, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_and)
+    {
+      auto operands = op.operands();
+      for(auto &op : operands)
+        op = not_exprt{op};
+      auto or_expr = or_exprt{std::move(operands)};
+      return property_obligations_rec(
+        or_expr, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_or)
+    {
+      auto operands = op.operands();
+      for(auto &op : operands)
+        op = not_exprt{op};
+      auto and_expr = and_exprt{std::move(operands)};
+      return property_obligations_rec(
+        and_expr, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_not)
+    {
+      return property_obligations_rec(
+        to_not_expr(op).op(), solver, current, no_timeframes, ns);
+    }
+    else
+      return obligationst{
+        instantiate_property(property_expr, current, no_timeframes, ns)};
   }
   else
   {
