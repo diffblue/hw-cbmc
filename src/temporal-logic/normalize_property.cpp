@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "normalize_property.h"
 
 #include <util/arith_tools.h>
+#include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
 #include <verilog/sva_expr.h>
@@ -75,9 +76,8 @@ exprt normalize_pre_implies(implies_exprt expr)
 exprt normalize_pre_sva_overlapped_implication(
   sva_overlapped_implication_exprt expr)
 {
-  // Same as regular implication if lhs and rhs are not
-  // sequences.
-  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
+  // Same as regular implication if lhs is not a sequence.
+  if(!is_SVA_sequence(expr.lhs()))
     return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
   else
     return std::move(expr);
@@ -86,9 +86,9 @@ exprt normalize_pre_sva_overlapped_implication(
 exprt normalize_pre_sva_non_overlapped_implication(
   sva_non_overlapped_implication_exprt expr)
 {
-  // Same as a->Xb if lhs and rhs are not sequences.
-  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
-    return or_exprt{not_exprt{expr.lhs()}, X_exprt{expr.rhs()}};
+  // Same as a->nexttime b if lhs is not a sequence.
+  if(!is_SVA_sequence(expr.lhs()))
+    return or_exprt{not_exprt{expr.lhs()}, sva_nexttime_exprt{expr.rhs()}};
   else
     return std::move(expr);
 }
@@ -125,13 +125,14 @@ exprt normalize_pre_sva_cycle_delay(sva_cycle_delay_exprt expr)
       expr.from().is_constant() &&
       numeric_cast_v<mp_integer>(to_constant_expr(expr.from())) == 0)
     {
-      // ##[0:$] φ --> F φ
-      return F_exprt{expr.op()};
+      // ##[0:$] φ --> s_eventually φ
+      return sva_s_eventually_exprt{expr.op()};
     }
     else
     {
-      // ##[i:$] φ --> ##i F φ
-      return sva_cycle_delay_exprt{expr.from(), F_exprt{expr.op()}};
+      // ##[i:$] φ --> always[i:i] s_eventually φ
+      return sva_ranged_always_exprt{
+        expr.from(), expr.from(), sva_s_eventually_exprt{expr.op()}};
     }
   }
   else
@@ -171,11 +172,13 @@ exprt normalize_property(exprt expr)
     expr = normalize_pre_sva_or(to_sva_or_expr(expr));
   else if(expr.id() == ID_sva_nexttime)
   {
-    expr = X_exprt{to_sva_nexttime_expr(expr).op()};
+    auto one = natural_typet{}.one_expr();
+    expr = sva_ranged_always_exprt{one, one, to_sva_nexttime_expr(expr).op()};
   }
   else if(expr.id() == ID_sva_s_nexttime)
   {
-    expr = X_exprt{to_sva_s_nexttime_expr(expr).op()};
+    auto one = natural_typet{}.one_expr();
+    expr = sva_ranged_always_exprt{one, one, to_sva_s_nexttime_expr(expr).op()};
   }
   else if(expr.id() == ID_sva_indexed_nexttime)
   {
@@ -195,6 +198,16 @@ exprt normalize_property(exprt expr)
     expr = F_exprt{X_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
   else if(expr.id() == ID_sva_cycle_delay_star)
     expr = F_exprt{to_sva_cycle_delay_star_expr(expr).op()};
+  else if(expr.id() == ID_sva_sequence_concatenation)
+  {
+    auto &sequence_concatenation = to_sva_sequence_concatenation_expr(expr);
+    if(!is_SVA_sequence(sequence_concatenation.lhs()))
+    {
+      // a ##0 b --> a && b if a is not a sequence
+      expr =
+        and_exprt{sequence_concatenation.lhs(), sequence_concatenation.rhs()};
+    }
+  }
   else if(expr.id() == ID_sva_if)
   {
     auto &sva_if_expr = to_sva_if_expr(expr);

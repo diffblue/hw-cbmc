@@ -138,7 +138,10 @@ class sva_indexed_nexttime_exprt : public binary_predicate_exprt
 {
 public:
   sva_indexed_nexttime_exprt(exprt index, exprt op)
-    : binary_predicate_exprt(std::move(index), ID_sva_nexttime, std::move(op))
+    : binary_predicate_exprt(
+        std::move(index),
+        ID_sva_indexed_nexttime,
+        std::move(op))
   {
   }
 
@@ -691,6 +694,34 @@ static inline sva_and_exprt &to_sva_and_expr(exprt &expr)
   PRECONDITION(expr.id() == ID_sva_and);
   sva_and_exprt::check(expr, validation_modet::INVARIANT);
   return static_cast<sva_and_exprt &>(expr);
+}
+
+class sva_sequence_concatenation_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_sequence_concatenation_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(
+        std::move(op0),
+        ID_sva_sequence_concatenation,
+        std::move(op1))
+  {
+  }
+};
+
+static inline const sva_sequence_concatenation_exprt &
+to_sva_sequence_concatenation_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
+  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_sequence_concatenation_exprt &>(expr);
+}
+
+static inline sva_sequence_concatenation_exprt &
+to_sva_sequence_concatenation_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
+  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_sequence_concatenation_exprt &>(expr);
 }
 
 class sva_iff_exprt : public binary_predicate_exprt

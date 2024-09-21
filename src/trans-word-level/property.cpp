@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "property.h"
 
 #include <util/arith_tools.h>
+#include <util/ebmc_util.h>
 #include <util/expr_iterator.h>
 #include <util/expr_util.h>
 #include <util/namespace.h>
@@ -169,6 +170,8 @@ bool bmc_supports_SVA_property(const exprt &expr)
     return true;
   else if(expr.id() == ID_sva_ranged_always)
     return true;
+  else if(expr.id() == ID_sva_s_eventually)
+    return true;
   else
     return false;
 }
@@ -242,6 +245,38 @@ static obligationst property_obligations_rec(
 
     return obligations;
   }
+  else if(property_expr.id() == ID_sva_eventually)
+  {
+    const auto &eventually_expr = to_sva_eventually_expr(property_expr);
+    const auto &op = eventually_expr.op();
+
+    mp_integer lower;
+    if(to_integer_non_constant(eventually_expr.lower(), lower))
+      throw "failed to convert sva_eventually index";
+
+    mp_integer upper;
+    if(to_integer_non_constant(eventually_expr.upper(), upper))
+      throw "failed to convert sva_eventually index";
+
+    // We rely on NNF.
+    if(current + lower >= no_timeframes || current + upper >= no_timeframes)
+    {
+      DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+      return obligationst{no_timeframes - 1, true_exprt()};
+    }
+
+    exprt::operandst disjuncts = {};
+
+    for(mp_integer u = current + lower; u <= current + upper; ++u)
+    {
+      auto obligations_rec =
+        property_obligations_rec(op, solver, u, no_timeframes, ns);
+      disjuncts.push_back(obligations_rec.conjunction().second);
+    }
+
+    DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+    return obligationst{no_timeframes - 1, disjunction(disjuncts)};
+  }
   else if(
     property_expr.id() == ID_AF || property_expr.id() == ID_F ||
     property_expr.id() == ID_sva_s_eventually)
@@ -267,8 +302,9 @@ static obligationst property_obligations_rec(
 
         for(mp_integer j = current; j <= k; ++j)
         {
-          exprt tmp = instantiate(phi, j, no_timeframes, ns);
-          disjuncts.push_back(std::move(tmp));
+          auto tmp =
+            property_obligations_rec(phi, solver, j, no_timeframes, ns);
+          disjuncts.push_back(tmp.conjunction().second);
         }
 
         obligations.add(k, disjunction(disjuncts));
@@ -276,6 +312,49 @@ static obligationst property_obligations_rec(
     }
 
     return obligations;
+  }
+  else if(property_expr.id() == ID_sva_ranged_s_eventually)
+  {
+    auto &phi = to_sva_ranged_s_eventually_expr(property_expr).op();
+    auto &lower = to_sva_ranged_s_eventually_expr(property_expr).lower();
+    auto &upper = to_sva_ranged_s_eventually_expr(property_expr).upper();
+
+    auto from_opt = numeric_cast<mp_integer>(lower);
+    if(!from_opt.has_value())
+      throw ebmc_errort() << "failed to convert SVA s_eventually from index";
+
+    if(*from_opt < 0)
+      throw ebmc_errort() << "SVA s_eventually from index must not be negative";
+
+    auto from = std::min(no_timeframes - 1, current + *from_opt);
+
+    mp_integer to;
+
+    if(upper.id() == ID_infinity)
+    {
+      throw ebmc_errort()
+        << "failed to convert SVA s_eventually to index (infinity)";
+    }
+    else
+    {
+      auto to_opt = numeric_cast<mp_integer>(upper);
+      if(!to_opt.has_value())
+        throw ebmc_errort() << "failed to convert SVA s_eventually to index";
+      to = std::min(current + *to_opt, no_timeframes - 1);
+    }
+
+    exprt::operandst disjuncts;
+    mp_integer time = 0;
+
+    for(mp_integer c = from; c <= to; ++c)
+    {
+      auto tmp = property_obligations_rec(phi, solver, c, no_timeframes, ns)
+                   .conjunction();
+      time = std::max(time, tmp.first);
+      disjuncts.push_back(tmp.second);
+    }
+
+    return obligationst{time, disjunction(disjuncts)};
   }
   else if(
     property_expr.id() == ID_sva_ranged_always ||
@@ -295,7 +374,10 @@ static obligationst property_obligations_rec(
     if(!from_opt.has_value())
       throw ebmc_errort() << "failed to convert SVA always from index";
 
-    auto from = std::max(mp_integer{0}, *from_opt);
+    if(*from_opt < 0)
+      throw ebmc_errort() << "SVA always from index must not be negative";
+
+    auto from = current + *from_opt;
 
     mp_integer to;
 
@@ -308,7 +390,7 @@ static obligationst property_obligations_rec(
       auto to_opt = numeric_cast<mp_integer>(upper);
       if(!to_opt.has_value())
         throw ebmc_errort() << "failed to convert SVA always to index";
-      to = std::min(*to_opt, no_timeframes - 1);
+      to = std::min(current + *to_opt, no_timeframes - 1);
     }
 
     obligationst obligations;
@@ -321,9 +403,85 @@ static obligationst property_obligations_rec(
 
     return obligations;
   }
+  else if(
+    property_expr.id() == ID_X || property_expr.id() == ID_sva_nexttime ||
+    property_expr.id() == ID_sva_s_nexttime)
+  {
+    const auto next = current + 1;
+
+    auto &phi = [](const exprt &expr) -> const exprt &
+    {
+      if(expr.id() == ID_X)
+        return to_X_expr(expr).op();
+      else if(expr.id() == ID_sva_nexttime)
+        return to_sva_nexttime_expr(expr).op();
+      else if(expr.id() == ID_sva_s_nexttime)
+        return to_sva_s_nexttime_expr(expr).op();
+      else
+        PRECONDITION(false);
+    }(property_expr);
+
+    if(next < no_timeframes)
+    {
+      return property_obligations_rec(phi, solver, next, no_timeframes, ns);
+    }
+    else
+    {
+      DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+      return obligationst{no_timeframes - 1, true_exprt()}; // works on NNF only
+    }
+  }
+  else if(
+    property_expr.id() == ID_sva_until || property_expr.id() == ID_sva_s_until)
+  {
+    // non-overlapping until
+    // we need a lasso to refute these
+
+    // we expand: p U q <=> q || (p && X(p U q))
+    exprt tmp_q = to_binary_expr(property_expr).op1();
+    tmp_q = property_obligations_rec(tmp_q, solver, current, no_timeframes, ns)
+              .conjunction()
+              .second;
+
+    exprt expansion = to_binary_expr(property_expr).op0();
+    expansion =
+      property_obligations_rec(expansion, solver, current, no_timeframes, ns)
+        .conjunction()
+        .second;
+
+    const auto next = current + 1;
+
+    if(next < no_timeframes)
+    {
+      auto obligations_rec = property_obligations_rec(
+        property_expr, solver, next, no_timeframes, ns);
+      expansion = and_exprt(expansion, obligations_rec.conjunction().second);
+    }
+
+    DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+    return obligationst{no_timeframes - 1, or_exprt(tmp_q, expansion)};
+  }
+  else if(
+    property_expr.id() == ID_sva_until_with ||
+    property_expr.id() == ID_sva_s_until_with)
+  {
+    // overlapping until
+
+    // we rewrite using 'next'
+    binary_exprt tmp = to_binary_expr(property_expr);
+    if(property_expr.id() == ID_sva_until_with)
+      tmp.id(ID_sva_until);
+    else
+      tmp.id(ID_sva_s_until);
+
+    tmp.op1() = X_exprt{tmp.op1()};
+
+    return property_obligations_rec(tmp, solver, current, no_timeframes, ns);
+  }
   else if(property_expr.id() == ID_and)
   {
-    // generate seperate obligations for each conjunct
+    // Generate seperate sets of obligations for each conjunct,
+    // and then return the union.
     obligationst obligations;
 
     for(auto &op : to_and_expr(property_expr).operands())
@@ -333,6 +491,63 @@ static obligationst property_obligations_rec(
     }
 
     return obligations;
+  }
+  else if(property_expr.id() == ID_or)
+  {
+    // Generate seperate obligations for each disjunct,
+    // and then 'or' these.
+    mp_integer t = 0;
+    exprt::operandst disjuncts;
+    obligationst obligations;
+
+    for(auto &op : to_or_expr(property_expr).operands())
+    {
+      auto obligations =
+        property_obligations_rec(op, solver, current, no_timeframes, ns);
+      auto conjunction = obligations.conjunction();
+      t = std::max(t, conjunction.first);
+      disjuncts.push_back(conjunction.second);
+    }
+
+    return obligationst{t, disjunction(disjuncts)};
+  }
+  else if(property_expr.id() == ID_implies)
+  {
+    // we rely on NNF
+    auto &implies_expr = to_implies_expr(property_expr);
+    auto tmp = or_exprt{not_exprt{implies_expr.lhs()}, implies_expr.rhs()};
+    return property_obligations_rec(tmp, solver, current, no_timeframes, ns);
+  }
+  else if(property_expr.id() == ID_if)
+  {
+    // we rely on NNF
+    auto &if_expr = to_if_expr(property_expr);
+    auto cond =
+      instantiate_property(if_expr.cond(), current, no_timeframes, ns).second;
+    auto obligations_true =
+      property_obligations_rec(
+        if_expr.true_case(), solver, current, no_timeframes, ns)
+        .conjunction();
+    auto obligations_false =
+      property_obligations_rec(
+        if_expr.false_case(), solver, current, no_timeframes, ns)
+        .conjunction();
+    return obligationst{
+      std::max(obligations_true.first, obligations_false.first),
+      if_exprt{cond, obligations_true.second, obligations_false.second}};
+  }
+  else if(
+    property_expr.id() == ID_typecast &&
+    to_typecast_expr(property_expr).op().type().id() == ID_bool)
+  {
+    // drop reduntant type casts
+    return property_obligations_rec(
+      to_typecast_expr(property_expr).op(), solver, current, no_timeframes, ns);
+  }
+  else if(property_expr.id() == ID_not)
+  {
+    return obligationst{
+      instantiate_property(property_expr, current, no_timeframes, ns)};
   }
   else
   {
