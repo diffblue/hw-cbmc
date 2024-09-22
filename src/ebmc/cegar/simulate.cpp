@@ -41,8 +41,17 @@ bool bmc_cegart::simulate(std::size_t bound)
   case propt::resultt::P_SATISFIABLE:
     message.status() << "SAT: bug found within bound" << messaget::eom;
 
-    show_counterexample(
-      properties, prop_bv, message.get_message_handler(), solver, bmc_map, ns);
+    {
+      std::list<exprt> property_exprs;
+      std::list<bvt> prop_bv;
+      show_counterexample(
+        property_exprs,
+        prop_bv,
+        message.get_message_handler(),
+        solver,
+        bmc_map,
+        ns);
+    }
     return true;
 
   case propt::resultt::P_UNSATISFIABLE:

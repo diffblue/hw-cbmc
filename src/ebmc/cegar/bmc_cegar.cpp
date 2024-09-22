@@ -33,7 +33,7 @@ void bmc_cegart::bmc_cegar()
 {
   make_netlist();
 
-  if(properties.empty())
+  if(properties.properties.empty())
   {
     message.error() << "No properties given" << messaget::eom;
     return;
@@ -228,7 +228,7 @@ void bmc_cegart::make_netlist()
 
   try
   {
-    std::map<irep_idt, exprt> property_map;
+    auto property_map = properties.make_property_map();
 
     convert_trans_to_netlist(
       symbol_table,

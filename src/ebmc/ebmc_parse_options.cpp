@@ -27,6 +27,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
+#include "cegar/bmc_cegar.h"
+
 #ifdef HAVE_INTERPOLATION
 #include "interpolation/interpolation_expr.h"
 #include "interpolation/interpolation_netlist.h"
@@ -112,26 +114,6 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("show-symbol-table"))
       return show_symbol_table(cmdline, ui_message_handler);
-
-    if(cmdline.isset("cegar"))
-    {
-      throw ebmc_errort() << "This option is currently disabled";
-
-#if 0
-      namespacet ns(symbol_table);
-      var_mapt var_map(symbol_table, main_symbol->name);
-
-      bmc_cegart bmc_cegar(
-        var_map,
-        *trans_expr,
-        ns,
-        *this,
-        prop_expr_list);
-
-      bmc_cegar.bmc_cegar();
-      return 0;
-#endif
-    }
 
     if(cmdline.isset("coverage"))
     {
@@ -295,6 +277,21 @@ int ebmc_parse_optionst::doit()
 
       if(cmdline.isset("compute-ct"))
         return ebmc_base.do_compute_ct();
+
+      if(cmdline.isset("cegar"))
+      {
+        std::list<exprt> prop_expr_list;
+
+        for(auto &p : ebmc_base.properties.properties)
+          if(!p.is_disabled())
+            prop_expr_list.push_back(p.normalized_expr);
+
+        bmc_cegart bmc_cegar(
+          transition_system, ebmc_base.properties, ui_message_handler);
+
+        bmc_cegar.bmc_cegar();
+        return 0;
+      }
 
       auto checker_result = property_checker(
         cmdline,
