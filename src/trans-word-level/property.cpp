@@ -376,9 +376,7 @@ static obligationst property_obligations_rec(
       return obligationst{no_timeframes - 1, true_exprt()}; // works on NNF only
     }
   }
-  else if(
-    property_expr.id() == ID_sva_until ||
-    property_expr.id() == ID_sva_s_until || property_expr.id() == ID_U)
+  else if(property_expr.id() == ID_sva_s_until || property_expr.id() == ID_U)
   {
     auto &p = to_binary_expr(property_expr).lhs();
     auto &q = to_binary_expr(property_expr).rhs();
@@ -388,11 +386,11 @@ static obligationst property_obligations_rec(
 
     return property_obligations_rec(tmp, solver, current, no_timeframes, ns);
   }
-  else if(property_expr.id() == ID_weak_U)
+  else if(property_expr.id() == ID_sva_until || property_expr.id() == ID_weak_U)
   {
     // we expand: p W q ≡ q ∨ ( p ∧ X(p W q) )
-    auto &p = to_weak_U_expr(property_expr).lhs();
-    auto &q = to_weak_U_expr(property_expr).rhs();
+    auto &p = to_binary_expr(property_expr).lhs();
+    auto &q = to_binary_expr(property_expr).rhs();
 
     // Once we reach the end of the unwinding, replace X(p W q) by 'true'.
     auto tmp = or_exprt{
@@ -417,22 +415,32 @@ static obligationst property_obligations_rec(
     return property_obligations_rec(
       expansion, solver, current, no_timeframes, ns);
   }
-  else if(
-    property_expr.id() == ID_sva_until_with ||
-    property_expr.id() == ID_sva_s_until_with)
+  else if(property_expr.id() == ID_strong_R)
   {
-    // overlapping until
+    auto &p = to_strong_R_expr(property_expr).lhs();
+    auto &q = to_strong_R_expr(property_expr).rhs();
 
-    // we rewrite using 'next'
-    binary_exprt tmp = to_binary_expr(property_expr);
-    if(property_expr.id() == ID_sva_until_with)
-      tmp.id(ID_sva_until);
-    else
-      tmp.id(ID_sva_s_until);
-
-    tmp.op1() = X_exprt{tmp.op1()};
+    // p strongR q ≡ Fp ∧ (p R q)
+    exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
 
     return property_obligations_rec(tmp, solver, current, no_timeframes, ns);
+  }
+  else if(property_expr.id() == ID_sva_until_with)
+  {
+    // Rewrite to LTL (weak) R.
+    // Note that lhs and rhs are flipped.
+    auto &until_with = to_sva_until_with_expr(property_expr);
+    auto R = R_exprt{until_with.rhs(), until_with.lhs()};
+    return property_obligations_rec(R, solver, current, no_timeframes, ns);
+  }
+  else if(property_expr.id() == ID_sva_s_until_with)
+  {
+    // Rewrite to LTL (strong) R.
+    // Note that lhs and rhs are flipped.
+    auto &s_until_with = to_sva_s_until_with_expr(property_expr);
+    auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
+    return property_obligations_rec(
+      strong_R, solver, current, no_timeframes, ns);
   }
   else if(property_expr.id() == ID_and)
   {
@@ -582,6 +590,40 @@ static obligationst property_obligations_rec(
     {
       return property_obligations_rec(
         to_not_expr(op).op(), solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_sva_until)
+    {
+      // ¬(φ W ψ) ≡ (¬φ strongR ¬ψ)
+      auto &W = to_sva_until_expr(op);
+      auto strong_R = strong_R_exprt{not_exprt{W.lhs()}, not_exprt{W.rhs()}};
+      return property_obligations_rec(
+        strong_R, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_sva_s_until)
+    {
+      // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
+      auto &U = to_sva_s_until_expr(op);
+      auto R = R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
+      return property_obligations_rec(R, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_sva_until_with)
+    {
+      // ¬(φ R ψ) ≡ (¬φ U ¬ψ)
+      // Note LHS and RHS are swapped.
+      auto &until_with = to_sva_until_with_expr(op);
+      auto R = R_exprt{until_with.rhs(), until_with.lhs()};
+      auto U = sva_until_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
+      return property_obligations_rec(U, solver, current, no_timeframes, ns);
+    }
+    else if(op.id() == ID_sva_s_until_with)
+    {
+      // ¬(φ strongR ψ) ≡ (¬φ W ¬ψ)
+      // Note LHS and RHS are swapped.
+      auto &s_until_with = to_sva_s_until_with_expr(op);
+      auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
+      auto W =
+        weak_U_exprt{not_exprt{strong_R.lhs()}, not_exprt{strong_R.rhs()}};
+      return property_obligations_rec(W, solver, current, no_timeframes, ns);
     }
     else
       return obligationst{

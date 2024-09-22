@@ -262,6 +262,29 @@ static inline R_exprt &to_R_expr(exprt &expr)
   return static_cast<R_exprt &>(expr);
 }
 
+class strong_R_exprt : public binary_predicate_exprt
+{
+public:
+  explicit strong_R_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_strong_R, std::move(op1))
+  {
+  }
+};
+
+static inline const strong_R_exprt &to_strong_R_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_strong_R);
+  strong_R_exprt::check(expr);
+  return static_cast<const strong_R_exprt &>(expr);
+}
+
+static inline strong_R_exprt &to_strong_R_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_strong_R);
+  strong_R_exprt::check(expr);
+  return static_cast<strong_R_exprt &>(expr);
+}
+
 class ER_exprt : public binary_predicate_exprt
 {
 public:

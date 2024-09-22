@@ -11,15 +11,17 @@ module top(input clock, input i1);
     counter=counter+1;
   end
   
-  p0: assert property (my_bit);
-  p1: assert property (always my_bit);
-  p2: assert property (counter==3 |-> nexttime counter==4);
-  p3: assert property (counter==3 |=> counter==4);
-  p4: assert property (counter==3 |=> nexttime counter==5);
-  p5: assert property (s_eventually counter==8);
-  p6: assert property (counter==0 |-> s_eventually counter==8);
-  p7: assert property (counter==0 |-> counter<=5 until counter==6);
-  p8: assert property (counter==0 |-> counter<=5 until_with counter==5);
+  p00: assert property (my_bit);
+  p01: assert property (always my_bit);
+  p02: assert property (counter==3 |-> nexttime counter==4);
+  p03: assert property (counter==3 |=> counter==4);
+  p04: assert property (counter==3 |=> nexttime counter==5);
+  p05: assert property (s_eventually counter==8);
+  p06: assert property (counter==0 |-> s_eventually counter==8);
+  p07: assert property (counter==0 |-> counter<=5 until counter==6);
+  p08: assert property (counter==0 |-> counter<=5 s_until counter==6);
+  p09: assert property (counter==0 |-> counter<=5 until_with counter==5);
+  p10: assert property (counter==0 |-> counter<=5 s_until_with counter==5);
 
 endmodule
 
