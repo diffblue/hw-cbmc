@@ -35,7 +35,7 @@ void bmc_cegart::bmc_cegar()
 
   if(properties.empty())
   {
-    error() << "No properties given" << eom;
+    message.error() << "No properties given" << messaget::eom;
     return;
   }
 
@@ -49,10 +49,10 @@ void bmc_cegart::bmc_cegar()
 
   auto stop_time = std::chrono::steady_clock::now();
 
-  statistics()
+  message.statistics()
     << "CEGAR time: "
-    << std::chrono::duration<double>(stop_time-start_time).count()
-    << eom;
+    << std::chrono::duration<double>(stop_time - start_time).count()
+    << messaget::eom;
 }
 
 /*******************************************************************\
@@ -86,7 +86,7 @@ void bmc_cegart::unwind(
   // do transitions
   for(unsigned timeframe=0; timeframe<bound; timeframe++)
   {
-    status() << "Round " << timeframe << eom;
+    message.status() << "Round " << timeframe << eom;
     
     aig.clear_convert_cache();
     
@@ -146,19 +146,19 @@ Function: bmc_cegart::compute_ct
 
 unsigned bmc_cegart::compute_ct()
 {
-  status() << "Computing CT" << eom;
+  message.status() << "Computing CT" << messaget::eom;
 
-  status() << "Computing abstract LDG" << eom;
-   
+  message.status() << "Computing abstract LDG" << messaget::eom;
+
   ldgt ldg;
- 
+
   ldg.compute(abstract_netlist);
-    
-  status() << "Computing CT" << eom;
+
+  message.status() << "Computing CT" << messaget::eom;
 
   unsigned ct=::compute_ct(ldg);
 
-  result() << "CT=" << ct << eom;
+  message.result() << "CT=" << ct << messaget::eom;
 
   return ct;
 }
@@ -187,7 +187,7 @@ void bmc_cegart::cegar_loop()
 
     if(ct>=MAX_CT)
     {
-      error() << "CT too big -- giving up" << eom;
+      message.error() << "CT too big -- giving up" << messaget::eom;
       throw 0;
     }
     
@@ -196,13 +196,15 @@ void bmc_cegart::cegar_loop()
     
     if(verify(bound))
     {
-      status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS" << eom;
+      message.status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS"
+                       << messaget::eom;
       return;
     }
 
     if(simulate(bound))
     {
-      status() << "VERIFICATION FAILED -- PROPERTY REFUTED" << eom;
+      message.status() << "VERIFICATION FAILED -- PROPERTY REFUTED"
+                       << messaget::eom;
       return;
     }
 
@@ -225,7 +227,7 @@ Function: bmc_cegart::make_netlist
 void bmc_cegart::make_netlist()
 {
   // make net-list
-  status() << "Making Netlist" << eom;
+  message.status() << "Making Netlist" << messaget::eom;
 
   try
   {
@@ -236,16 +238,16 @@ void bmc_cegart::make_netlist()
       main_module,
       property_map,
       concrete_netlist,
-      get_message_handler());
+      message.get_message_handler());
   }
   
   catch(const std::string &error_msg)
   {
-    error() << error_msg << eom;
+    message.error() << error_msg << messaget::eom;
     return;
   }
 
-  statistics() 
-    << "Latches: " << concrete_netlist.var_map.latches.size()
-    << ", nodes: " << concrete_netlist.number_of_nodes() << eom;
+  message.statistics() << "Latches: " << concrete_netlist.var_map.latches.size()
+                       << ", nodes: " << concrete_netlist.number_of_nodes()
+                       << messaget::eom;
 }

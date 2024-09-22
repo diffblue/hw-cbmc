@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/bmc_map.h>
 #include <trans-netlist/netlist.h>
 
-class bmc_cegart:public messaget
+class bmc_cegart
 {
 public:
   bmc_cegart(
@@ -21,10 +21,10 @@ public:
     const irep_idt &_main_module,
     message_handlert &_message_handler,
     const std::list<exprt> &_properties)
-    : messaget(_message_handler),
-      symbol_table(_symbol_table),
+    : symbol_table(_symbol_table),
       ns(_symbol_table),
       main_module(_main_module),
+      message(_message_handler),
       properties(_properties)
   {
   }
@@ -35,6 +35,7 @@ protected:
   symbol_table_baset &symbol_table;
   const namespacet ns;
   const irep_idt &main_module;
+  messaget message;
   const std::list<exprt> &properties;
   
   bmc_mapt bmc_map;
