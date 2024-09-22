@@ -52,6 +52,10 @@ public:
     for(auto &obligation : obligations.map)
       add(obligation);
   }
+
+  /// return the conjunction of all obligations,
+  /// and the biggest of the timeframes involved
+  std::pair<mp_integer, exprt> conjunction() const;
 };
 
 #endif
