@@ -44,12 +44,10 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   if(range_expr.is_not_nil())
   {
     // these may be negative
-    mp_integer msb, lsb;
-    convert_range(range_expr, msb, lsb);
-    big_endian = (lsb > msb);
-    size = (big_endian ? lsb - msb : msb - lsb) + 1;
-    DATA_INVARIANT(size >= 0, "array size must not be negative");
-    offset = big_endian ? msb : lsb;
+    auto range = convert_range(range_expr);
+    big_endian = (range.lsb > range.msb);
+    size = range.length();
+    offset = range.smallest_index();
   }
   else if(size_expr.is_not_nil())
   {
@@ -96,16 +94,15 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
 {
   PRECONDITION(src.id() == ID_verilog_packed_array);
 
-  const exprt &range = static_cast<const exprt &>(src.find(ID_range));
+  const exprt &range_expr = static_cast<const exprt &>(src.find(ID_range));
   const auto &source_location = src.source_location();
 
-  mp_integer msb, lsb;
-  convert_range(range, msb, lsb);
+  auto range = convert_range(range_expr);
 
-  bool big_endian = (lsb > msb);
+  bool big_endian = (range.lsb > range.msb);
 
-  mp_integer width = (big_endian ? lsb - msb : msb - lsb) + 1;
-  mp_integer offset = big_endian ? msb : lsb;
+  mp_integer width = range.length();
+  mp_integer offset = range.smallest_index();
 
   // let's look at the subtype
   const auto subtype =
