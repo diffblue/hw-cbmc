@@ -31,7 +31,7 @@ Function: unwind
 
 void unwind(
   const netlistt &netlist,
-  bmc_mapt &bmc_map,
+  const bmc_mapt &bmc_map,
   messaget &message,
   cnft &solver,
   bool add_initial_state,
@@ -119,7 +119,7 @@ Function: unwind
 
 void unwind(
   const netlistt &netlist,
-  bmc_mapt &bmc_map,
+  const bmc_mapt &bmc_map,
   messaget &message,
   cnft &solver,
   bool add_initial_state)

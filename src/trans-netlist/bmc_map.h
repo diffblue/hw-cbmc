@@ -16,6 +16,10 @@ Author: Daniel Kroening, kroening@kroening.com
 class bmc_mapt
 {
 public:
+  // number of valid timeframes
+  // this is number of cycles +1!
+  bmc_mapt(const netlistt &, std::size_t no_timeframes, propt &);
+
   inline literalt
   get(std::size_t timeframe, const var_mapt::vart::bitt &bit) const
   {
@@ -54,13 +58,6 @@ public:
     assert(var_no<timeframe_map[timeframe].size());
     timeframe_map[timeframe][var_no].solver_literal=l;
   }
-
-  // number of valid timeframes
-  // this is number of cycles +1!
-  void map_timeframes(
-    const netlistt &netlist,
-    std::size_t no_timeframes,
-    propt &solver);
 
   var_mapt var_map;
 

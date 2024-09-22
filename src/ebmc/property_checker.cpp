@@ -216,8 +216,6 @@ property_checker_resultt bit_level_bmc(
 
   try
   {
-    bmc_mapt bmc_map;
-
     if(!convert_only)
       if(properties.properties.empty())
         throw "no properties";
@@ -240,7 +238,7 @@ property_checker_resultt bit_level_bmc(
     messaget message{message_handler};
     message.status() << "Unwinding Netlist" << messaget::eom;
 
-    bmc_map.map_timeframes(netlist, bound + 1, solver);
+    const auto bmc_map = bmc_mapt{netlist, bound + 1, solver};
 
     ::unwind(netlist, bmc_map, message, solver);
 

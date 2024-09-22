@@ -18,15 +18,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 void unwind(
   const netlistt &netlist,
-  bmc_mapt &bmc_map,
+  const bmc_mapt &bmc_map,
   messaget &message,
   cnft &solver,
-  bool add_initial_state=true);
+  bool add_initial_state = true);
 
 // unwind timeframes individually
 void unwind(
   const netlistt &netlist,
-  bmc_mapt &bmc_map,
+  const bmc_mapt &bmc_map,
   messaget &message,
   cnft &solver,
   bool add_initial_state,

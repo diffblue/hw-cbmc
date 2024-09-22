@@ -73,10 +73,9 @@ void bmc_cegart::unwind(
   propt &prop)
 {
   // allocate timeframes
-  bmc_mapt bmc_map;
-  bmc_map.map_timeframes(netlist, bound+1, prop);
+  const auto bmc_map = bmc_mapt{netlist, bound + 1, prop};
 
-  #if 0
+#if 0
   for(unsigned timeframe=0; timeframe<=bound; timeframe++)
     bmc_map.timeframe_map[timeframe].resize(aig_map.no_vars);
 
@@ -130,7 +129,7 @@ void bmc_cegart::unwind(
   // do the property
   property(properties, prop_bv, get_message_handler(), prop,
            bmc_map, ns);
-  #endif
+#endif
 }
 
 /*******************************************************************\
