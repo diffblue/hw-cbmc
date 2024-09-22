@@ -52,14 +52,11 @@ protected:
   
   void abstract();
   void refine();
-  bool verify(unsigned bound);
-  bool simulate(unsigned bound);
-  unsigned compute_ct();
+  bool verify(std::size_t bound);
+  bool simulate(std::size_t bound);
+  std::size_t compute_ct();
 
-  void unwind(
-    unsigned bound,
-    const netlistt &netlist,
-    propt &prop);
-  
+  void unwind(std::size_t bound, const netlistt &netlist, propt &prop);
+
   std::list<bvt> prop_bv;
 };

@@ -22,7 +22,7 @@ Function: bmc_cegart::verify
 
 \*******************************************************************/
 
-bool bmc_cegart::verify(unsigned bound)
+bool bmc_cegart::verify(std::size_t bound)
 {
   message.status() << "Checking Abstract Model (bound=" << bound << ")"
                    << messaget::eom;
