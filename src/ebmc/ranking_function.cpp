@@ -24,6 +24,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
+#include "property_checker.h"
 #include "report_results.h"
 
 exprt parse_ranking_function(
@@ -126,8 +127,9 @@ int do_ranking_function(
   }
 
   const namespacet ns(transition_system.symbol_table);
-  report_results(cmdline, properties, ns, message_handler);
-  return properties.exit_code();
+  property_checker_resultt checker_result{properties};
+  report_results(cmdline, checker_result, ns, message_handler);
+  return checker_result.exit_code();
 }
 
 std::pair<tvt, std::optional<trans_tracet>> is_ranking_function(

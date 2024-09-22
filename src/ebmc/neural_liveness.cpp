@@ -21,6 +21,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_solver_factory.h"
 #include "live_signal.h"
 #include "output_file.h"
+#include "property_checker.h"
 #include "random_traces.h"
 #include "ranking_function.h"
 #include "report_results.h"
@@ -118,8 +119,9 @@ int neural_livenesst::operator()()
 
   // report outcomes
   const namespacet ns(transition_system.symbol_table);
-  report_results(cmdline, properties, ns, message.get_message_handler());
-  return properties.exit_code();
+  property_checker_resultt result{properties};
+  report_results(cmdline, result, ns, message.get_message_handler());
+  return result.exit_code();
 }
 
 int neural_livenesst::show_traces()

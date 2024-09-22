@@ -11,7 +11,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <util/cmdline.h>
 #include <util/ui_message.h>
 
-#include <ebmc/ebmc_properties.h>
+#include <ebmc/property_checker.h>
 #include <ebmc/report_results.h>
 
 #include <trans-netlist/netlist.h>
@@ -135,8 +135,9 @@ int ic3_enginet::operator()()
     if(number_of_properties == 0)
     {
       namespacet ns(transition_system.symbol_table);
-      report_results(cmdline, properties, ns, message.get_message_handler());
-      return properties.exit_code();
+      property_checker_resultt result{properties};
+      report_results(cmdline, result, ns, message.get_message_handler());
+      return result.exit_code();
     }
   }
   catch(const std::string &error_str)

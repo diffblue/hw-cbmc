@@ -169,19 +169,6 @@ public:
   typedef std::list<propertyt> propertiest;
   propertiest properties;
 
-  bool all_properties_proved() const
-  {
-    for(const auto &p : properties)
-      if(
-        !p.is_proved() && !p.is_proved_with_bound() && !p.is_disabled() &&
-        !p.is_assumed())
-      {
-        return false;
-      }
-
-    return true;
-  }
-
   bool has_unknown_property() const
   {
     for(const auto &p : properties)
@@ -219,9 +206,6 @@ public:
         result.emplace(p.identifier, p.normalized_expr);
     return result;
   }
-
-  // command-line tool exit code, depending on property status
-  int exit_code() const;
 };
 
 #endif // CPROVER_EBMC_PROPERTIES_H
