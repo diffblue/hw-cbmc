@@ -67,31 +67,28 @@ Function: bmc_cegart::unwind
 
 \*******************************************************************/
 
-void bmc_cegart::unwind(
-  unsigned bound,
-  const netlistt &netlist,
-  propt &prop)
+void bmc_cegart::unwind(std::size_t bound, const netlistt &netlist, propt &prop)
 {
   // allocate timeframes
   const auto bmc_map = bmc_mapt{netlist, bound + 1, prop};
 
 #if 0
-  for(unsigned timeframe=0; timeframe<=bound; timeframe++)
+  for(std::size_t timeframe=0; timeframe<=bound; timeframe++)
     bmc_map.timeframe_map[timeframe].resize(aig_map.no_vars);
 
   // do initial state
-  for(unsigned v=0; v<aig_map.no_vars; v++)
+  for(std::size_t v=0; v<aig_map.no_vars; v++)
     bmc_map.timeframe_map[0][v]=prop.new_variable();
 
   // do transitions
-  for(unsigned timeframe=0; timeframe<bound; timeframe++)
+  for(std::size_t timeframe=0; timeframe<bound; timeframe++)
   {
     message.status() << "Round " << timeframe << eom;
     
     aig.clear_convert_cache();
     
     // set current state bits
-    for(unsigned v=0; v<aig_map.no_vars; v++)
+    for(std::size_t v=0; v<aig_map.no_vars; v++)
     {
       //std::cout << "SETTING "
       //          << aig_map.timeframe_map[0][v] << std::endl;
@@ -102,7 +99,7 @@ void bmc_cegart::unwind(
     }
 
     // convert next state bits
-    for(unsigned v=0; v<aig_map.no_vars; v++)
+    for(std::size_t v=0; v<aig_map.no_vars; v++)
     {
       literalt a=aig_map.timeframe_map[1][v];
     
@@ -144,7 +141,7 @@ Function: bmc_cegart::compute_ct
 
 \*******************************************************************/
 
-unsigned bmc_cegart::compute_ct()
+std::size_t bmc_cegart::compute_ct()
 {
   message.status() << "Computing CT" << messaget::eom;
 
@@ -156,7 +153,7 @@ unsigned bmc_cegart::compute_ct()
 
   message.status() << "Computing CT" << messaget::eom;
 
-  unsigned ct=::compute_ct(ldg);
+  std::size_t ct = ::compute_ct(ldg);
 
   message.result() << "CT=" << ct << messaget::eom;
 
@@ -182,8 +179,8 @@ void bmc_cegart::cegar_loop()
   while(true)
   {
     abstract();
-    
-    unsigned ct=compute_ct();
+
+    std::size_t ct = compute_ct();
 
     if(ct>=MAX_CT)
     {
@@ -192,8 +189,8 @@ void bmc_cegart::cegar_loop()
     }
     
     // this is enough
-    unsigned bound=ct;
-    
+    std::size_t bound = ct;
+
     if(verify(bound))
     {
       message.status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS"

@@ -25,7 +25,7 @@ Function: bmc_cegart::simulate
 
 \*******************************************************************/
 
-bool bmc_cegart::simulate(unsigned bound)
+bool bmc_cegart::simulate(std::size_t bound)
 {
   message.status() << "Simulating Counterexample" << messaget::eom;
 
