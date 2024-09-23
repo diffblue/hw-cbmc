@@ -81,14 +81,14 @@ void verilog_typecheckt::typecheck_port_connections(
   verilog_inst_baset::instancet &inst,
   const symbolt &symbol)
 {
-  const exprt &range=static_cast<const exprt &>(inst.find(ID_range));
+  const exprt &range_expr = static_cast<const exprt &>(inst.find(ID_range));
 
-  mp_integer msb, lsb;
-  
-  if(range.is_nil() || range.id()==irep_idt())
-    msb=lsb=0;
+  ranget range;
+
+  if(range_expr.is_nil() || range_expr.id() == irep_idt())
+    range.msb = range.lsb = 0;
   else
-    convert_range(range, msb, lsb);
+    range = convert_range(range_expr);
 
   const irept::subt &ports=symbol.type.find(ID_ports).get_sub();
 
@@ -203,18 +203,19 @@ Function: verilog_typecheckt::typecheck_builtin_port_connections
 void verilog_typecheckt::typecheck_builtin_port_connections(
   verilog_inst_baset::instancet &inst)
 {
-  exprt &range=static_cast<exprt &>(inst.add(ID_range));
+  exprt &range_expr = static_cast<exprt &>(inst.add(ID_range));
 
-  mp_integer msb, lsb;
-  
-  if(range.is_nil() || range.id()=="")
-    msb=lsb=0;
+  ranget range;
+
+  if(range_expr.is_nil() || range_expr.id() == irep_idt{})
+    range = ranget{0, 0};
   else
-    convert_range(range, msb, lsb);
+    range = convert_range(range_expr);
 
-  if(lsb>msb) std::swap(lsb, msb);
-  mp_integer width=msb-lsb+1;
-  
+  if(range.lsb > range.msb)
+    std::swap(range.lsb, range.msb);
+  mp_integer width = range.length();
+
   inst.remove(ID_range);
 
   typet &type=inst.type();

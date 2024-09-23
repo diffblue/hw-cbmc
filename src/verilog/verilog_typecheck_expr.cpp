@@ -2101,10 +2101,8 @@ Function: verilog_typecheck_exprt::convert_range
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::convert_range(
-  const exprt &range,
-  mp_integer &msb,
-  mp_integer &lsb)
+verilog_typecheck_exprt::ranget
+verilog_typecheck_exprt::convert_range(const exprt &range)
 {
   if(range.operands().size()!=2)
   {
@@ -2112,8 +2110,11 @@ void verilog_typecheck_exprt::convert_range(
       << "range expected to have two operands";
   }
 
-  msb = convert_integer_constant_expression(to_binary_expr(range).op0());
-  lsb = convert_integer_constant_expression(to_binary_expr(range).op1());
+  auto &binary_expr = to_binary_expr(range);
+
+  return ranget{
+    convert_integer_constant_expression(binary_expr.op0()),
+    convert_integer_constant_expression(binary_expr.op1())};
 }
 
 /*******************************************************************\

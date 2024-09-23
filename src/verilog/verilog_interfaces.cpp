@@ -163,14 +163,14 @@ void verilog_typecheckt::interface_inst(
   const verilog_instt::instancet &op)
 {
   bool primitive=statement.id()==ID_inst_builtin;
-  const exprt &range=static_cast<const exprt &>(op.find(ID_range));
+  const exprt &range_expr = static_cast<const exprt &>(op.find(ID_range));
 
-  mp_integer msb, lsb;
-  
-  if(range.is_nil() || range.id().empty())
-    msb=lsb=0;
+  ranget range;
+
+  if(range_expr.is_nil() || range_expr.id().empty())
+    range = ranget{0, 0};
   else
-    convert_range(range, msb, lsb);
+    range = convert_range(range_expr);
 
   irep_idt instantiated_module_identifier =
     verilog_module_symbol(id2string(statement.get(ID_module)));

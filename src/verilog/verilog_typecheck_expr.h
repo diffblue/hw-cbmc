@@ -65,10 +65,42 @@ protected:
   array_typet convert_unpacked_array_type(const type_with_subtypet &);
   typet convert_packed_array_type(const type_with_subtypet &);
 
-  void convert_range(
-    const exprt &range,
-    mp_integer &msb,
-    mp_integer &lsb);
+  struct ranget
+  {
+    // This is Verilog's [msb:lsb].
+    ranget(mp_integer _msb, mp_integer _lsb)
+      : msb(std::move(_msb)), lsb(std::move(_lsb))
+    {
+    }
+
+    ranget() : msb(0), lsb(0)
+    {
+    }
+
+    mp_integer msb, lsb;
+
+    /// return true iff the bit with the higest index
+    /// is the most significant bit
+    bool highest_index_is_msb() const
+    {
+      return msb >= lsb;
+    }
+
+    mp_integer length() const
+    {
+      if(msb >= lsb)
+        return msb - lsb + 1;
+      else // lsb > msb
+        return lsb - msb + 1;
+    }
+
+    mp_integer smallest_index() const
+    {
+      return msb >= lsb ? lsb : msb;
+    }
+  };
+
+  ranget convert_range(const exprt &range);
 
   // to be overridden
   virtual mp_integer genvar_value(const irep_idt &identifier)
