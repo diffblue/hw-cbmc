@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 packed_real1.sv
 --module main --bound 0
-^EXIT=10$
+^file .* line 6: packed array must use packed element type$
+^EXIT=2$
 ^SIGNAL=0$
 --
 --
-A packed array of reals must be rejected.

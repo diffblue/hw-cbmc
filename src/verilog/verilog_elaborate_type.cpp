@@ -135,10 +135,16 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
     // We have a multi-dimensional packed array,
     // and do a recursive call.
     const exprt size = from_integer(width, integer_typet());
-    typet s = elaborate_type(subtype);
+    typet element_type = elaborate_type(subtype);
 
-    array_typet result(s, size);
-    result.add_source_location() = source_location;
+    // the element type must be packed; reject otherwise
+    if(element_type.id() == ID_verilog_real)
+    {
+      throw errort().with_location(source_location)
+        << "packed array must use packed element type";
+    }
+
+    array_typet result{element_type, size};
     result.set(ID_offset, from_integer(offset, integer_typet()));
 
     return std::move(result).with_source_location(source_location);
@@ -236,6 +242,9 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
         << "type symbol " << identifier << " not found";
 
     DATA_INVARIANT(symbol_ptr->is_type, "typedef symbols must be types");
+
+    // elaborate that typedef symbol, recursively, if needed
+    elaborate_symbol_rec(identifier);
 
     auto result = symbol_ptr->type; // copy
     return result.with_source_location(source_location);
