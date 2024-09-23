@@ -79,11 +79,17 @@ protected:
 
     mp_integer msb, lsb;
 
-    /// return true iff the bit with the higest index
-    /// is the most significant bit
-    bool highest_index_is_msb() const
+    /// Return true iff the bit with the higest index
+    /// is the most significant bit, i.e., the vector
+    /// is indexed left-to-right with decreasing indices.
+    bool decreasing() const
     {
       return msb >= lsb;
+    }
+
+    bool increasing() const
+    {
+      return !decreasing();
     }
 
     mp_integer length() const

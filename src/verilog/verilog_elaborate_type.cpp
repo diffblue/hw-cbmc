@@ -39,19 +39,19 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   const exprt &size_expr = static_cast<const exprt &>(src.find(ID_size));
 
   mp_integer size, offset;
-  bool big_endian;
+  bool increasing;
 
   if(range_expr.is_not_nil())
   {
     // these may be negative
     auto range = convert_range(range_expr);
-    big_endian = (range.lsb > range.msb);
+    increasing = range.increasing();
     size = range.length();
     offset = range.smallest_index();
   }
   else if(size_expr.is_not_nil())
   {
-    big_endian = false;
+    increasing = false;
     size = convert_integer_constant_expression(size_expr);
     offset = 0;
     if(size < 0)
@@ -72,7 +72,7 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   const exprt final_size_expr = from_integer(size, integer_typet());
   auto result = array_typet{element_type, final_size_expr};
   result.set(ID_offset, from_integer(offset, integer_typet()));
-  result.set(ID_C_big_endian, big_endian);
+  result.set(ID_C_increasing, increasing);
 
   return result;
 }
@@ -99,8 +99,6 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
 
   auto range = convert_range(range_expr);
 
-  bool big_endian = (range.lsb > range.msb);
-
   mp_integer width = range.length();
   mp_integer offset = range.smallest_index();
 
@@ -122,7 +120,7 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
 
     dest.add_source_location() = source_location;
     dest.set_width(width.to_ulong());
-    dest.set(ID_C_big_endian, big_endian);
+    dest.set(ID_C_increasing, range.increasing());
     dest.set(ID_C_offset, integer2string(offset));
 
     return std::move(dest).with_source_location(source_location);
