@@ -166,6 +166,16 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     // it's just a bit
     return bool_typet().with_source_location(source_location);
   }
+  else if(src.id() == ID_signed)
+  {
+    // one bit, signed
+    return signedbv_typet{1}.with_source_location(source_location);
+  }
+  else if(src.id() == ID_unsigned)
+  {
+    // one bit, unsigned
+    return unsignedbv_typet{1}.with_source_location(source_location);
+  }
   else if(src.id() == ID_verilog_byte)
   {
     return signedbv_typet{8}.with_source_location(source_location);
