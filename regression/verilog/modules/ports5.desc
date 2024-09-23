@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ports5.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ ports5.sv
 --
 ^warning: ignoring
 --
-The grammar currently doesn't allow datatypes as port types.
