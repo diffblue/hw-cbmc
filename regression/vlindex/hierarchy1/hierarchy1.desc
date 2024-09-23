@@ -1,0 +1,8 @@
+CORE
+
+--hierarchy
+^sub$
+^subsub$
+^top$
+^EXIT=0$
+^SIGNAL=0$

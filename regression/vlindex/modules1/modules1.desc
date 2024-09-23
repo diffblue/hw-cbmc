@@ -1,0 +1,9 @@
+CORE
+
+--modules
+^nested modules1.v line 5$
+^sub modules1.v line 4$
+^top modules1.v line 1$
+^EXIT=0$
+^SIGNAL=0$
+
