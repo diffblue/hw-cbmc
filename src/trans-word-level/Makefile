@@ -4,6 +4,7 @@ SRC = counterexample_word_level.cpp \
       property.cpp \
       trans_trace_word_level.cpp \
       instantiate_word_level.cpp \
+      sequence.cpp \
       show_modules.cpp \
       show_module_hierarchy.cpp \
       unwind.cpp \
