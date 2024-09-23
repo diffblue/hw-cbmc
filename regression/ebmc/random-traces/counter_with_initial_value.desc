@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 counter_with_initial_value.v
 --random-traces --trace-steps 10 --waveform --traces 2
 ^\*\*\* Trace 1$

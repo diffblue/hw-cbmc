@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 with_submodule.v
 --random-traces --trace-steps 0 --traces 2
 ^\*\*\* Trace 1$

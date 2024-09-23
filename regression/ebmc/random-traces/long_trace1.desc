@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 long_trace1.v
 --random-traces --traces 1 --trace-steps 1000
 ^Transition system state 0$

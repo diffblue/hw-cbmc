@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv3.smv
 --module main --bound 2 --k-induction
 ^EXIT=0$
