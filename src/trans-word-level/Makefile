@@ -1,5 +1,6 @@
 SRC = counterexample_word_level.cpp \
       get_trans.cpp \
+      lasso.cpp \
       obligations.cpp \
       property.cpp \
       trans_trace_word_level.cpp \
