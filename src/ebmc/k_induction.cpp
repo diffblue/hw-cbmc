@@ -153,7 +153,7 @@ property_checker_resultt k_induction(
   k_induction(
     k, transition_system, properties, solver_factory, message_handler);
 
-  return property_checker_resultt::VERIFICATION_RESULT;
+  return property_checker_resultt{properties};
 }
 
 /*******************************************************************\

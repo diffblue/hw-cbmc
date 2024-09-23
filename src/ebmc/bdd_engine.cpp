@@ -185,7 +185,7 @@ property_checker_resultt bdd_enginet::operator()()
 
     // any properties left?
     if(!properties.has_unknown_property())
-      return property_checker_resultt::VERIFICATION_RESULT;
+      return property_checker_resultt{properties};
 
     const auto property_map = properties.make_property_map();
 
@@ -227,28 +227,28 @@ property_checker_resultt bdd_enginet::operator()()
 
       std::cout << '\n';
 
-      return property_checker_resultt::SUCCESS;
+      return property_checker_resultt::success();
     }
 
     if(properties.properties.empty())
     {
       message.error() << "no properties" << messaget::eom;
-      return property_checker_resultt::ERROR;
+      return property_checker_resultt::error();
     }
 
     for(propertyt &p : properties.properties)
       check_property(p);
 
-    return property_checker_resultt::VERIFICATION_RESULT;
+    return property_checker_resultt{properties};
   }
   catch(const char *error_msg)
   {
     message.error() << error_msg << messaget::eom;
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
   catch(int)
   {
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
 }
 

@@ -60,9 +60,6 @@ property_checker_resultt word_level_bmc(
         result=finish_word_level_bmc(solver);
 #endif
       }
-
-      const namespacet ns(transition_system.symbol_table);
-      report_results(cmdline, properties, ns, message_handler);
     }
     else
     {
@@ -92,7 +89,7 @@ property_checker_resultt word_level_bmc(
         message_handler);
 
       if(convert_only)
-        return property_checker_resultt::SUCCESS;
+        return property_checker_resultt::success();
     }
   }
 
@@ -100,22 +97,22 @@ property_checker_resultt word_level_bmc(
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
 
   catch(const std::string &e)
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
 
   catch(int)
   {
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
 
-  return property_checker_resultt::VERIFICATION_RESULT;
+  return property_checker_resultt{properties};
 }
 
 property_checker_resultt finish_bit_level_bmc(
@@ -173,12 +170,12 @@ property_checker_resultt finish_bit_level_bmc(
 
     case propt::resultt::P_ERROR:
       message.error() << "Error from decision procedure" << messaget::eom;
-      return property_checker_resultt::ERROR;
+      return property_checker_resultt::error();
 
     default:
       message.error() << "Unexpected result from decision procedure"
                       << messaget::eom;
-      return property_checker_resultt::ERROR;
+      return property_checker_resultt::error();
     }
   }
 
@@ -189,7 +186,7 @@ property_checker_resultt finish_bit_level_bmc(
     << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
     << messaget::eom;
 
-  return property_checker_resultt::VERIFICATION_RESULT;
+  return property_checker_resultt{properties};
 }
 
 property_checker_resultt bit_level_bmc(
@@ -280,7 +277,7 @@ property_checker_resultt bit_level_bmc(
     }
 
     if(convert_only)
-      return property_checker_resultt::SUCCESS;
+      return property_checker_resultt::success();
     else
     {
       return finish_bit_level_bmc(
@@ -292,19 +289,19 @@ property_checker_resultt bit_level_bmc(
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
 
   catch(const std::string &e)
   {
     messaget message{message_handler};
     message.error() << e << messaget::eom;
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
 
   catch(int)
   {
-    return property_checker_resultt::ERROR;
+    return property_checker_resultt::error();
   }
 }
 
@@ -363,48 +360,60 @@ property_checker_resultt bit_level_bmc(
   }
 }
 
-int property_checker(
+property_checker_resultt property_checker(
   const cmdlinet &cmdline,
   transition_systemt &transition_system,
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
-  property_checker_resultt result;
+  auto result = [&]() -> property_checker_resultt
+  {
+    if(cmdline.isset("bdd") || cmdline.isset("show-bdds"))
+    {
+      return bdd_engine(
+        cmdline, transition_system, properties, message_handler);
+    }
+    else if(cmdline.isset("aig") || cmdline.isset("dimacs"))
+    {
+      return bit_level_bmc(
+        cmdline, transition_system, properties, message_handler);
+    }
+    else if(cmdline.isset("k-induction"))
+    {
+      return k_induction(
+        cmdline, transition_system, properties, message_handler);
+    }
+    else
+    {
+      // default engine is word-level BMC
+      return word_level_bmc(
+        cmdline, transition_system, properties, message_handler);
+    }
+  }();
 
-  if(cmdline.isset("bdd") || cmdline.isset("show-bdds"))
+  if(result.status == property_checker_resultt::statust::VERIFICATION_RESULT)
   {
-    result =
-      bdd_engine(cmdline, transition_system, properties, message_handler);
-  }
-  else if(cmdline.isset("aig") || cmdline.isset("dimacs"))
-  {
-    result =
-      bit_level_bmc(cmdline, transition_system, properties, message_handler);
-  }
-  else if(cmdline.isset("k-induction"))
-  {
-    result =
-      k_induction(cmdline, transition_system, properties, message_handler);
-  }
-  else
-  {
-    // default engine is word-level BMC
-    result =
-      word_level_bmc(cmdline, transition_system, properties, message_handler);
+    const namespacet ns{transition_system.symbol_table};
+    report_results(cmdline, result, ns, message_handler);
   }
 
-  switch(result)
+  return result;
+}
+
+int property_checker_resultt::exit_code() const
+{
+  switch(status)
   {
-  case property_checker_resultt::ERROR:
+  case statust::ERROR:
     return 10;
 
-  case property_checker_resultt::SUCCESS:
+  case statust::SUCCESS:
     return 0;
 
-  case property_checker_resultt::VERIFICATION_RESULT:
-    const namespacet ns{transition_system.symbol_table};
-    report_results(cmdline, properties, ns, message_handler);
-    return properties.exit_code();
+  case statust::VERIFICATION_RESULT:
+    // We return '0' if all properties are proved,
+    // and '10' otherwise.
+    return all_properties_proved() ? 0 : 10;
   }
 
   UNREACHABLE;

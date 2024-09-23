@@ -12,14 +12,14 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef EBMC_REPORT_RESULTS
 #define EBMC_REPORT_RESULTS
 
-#include "ebmc_properties.h"
+#include "property_checker.h"
 
 class message_handlert;
 class namespacet;
 
 void report_results(
   const cmdlinet &,
-  const ebmc_propertiest &,
+  const property_checker_resultt &,
   const namespacet &,
   message_handlert &);
 

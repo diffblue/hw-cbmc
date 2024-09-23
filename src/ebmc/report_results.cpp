@@ -34,7 +34,7 @@ Function: ebmc_baset::report_results
 
 void report_results(
   const cmdlinet &cmdline,
-  const ebmc_propertiest &properties,
+  const property_checker_resultt &result,
   const namespacet &ns,
   message_handlert &message_handler)
 {
@@ -46,7 +46,7 @@ void report_results(
     json_objectt json_results;
     auto &json_properties = json_results["properties"].make_array();
 
-    for(const auto &property : properties.properties)
+    for(const auto &property : result.properties)
     {
       if(property.is_disabled())
         continue;
@@ -69,7 +69,7 @@ void report_results(
     static_cast<ui_message_handlert &>(message_handler).get_ui() ==
     ui_message_handlert::uit::XML_UI)
   {
-    for(const auto &property : properties.properties)
+    for(const auto &property : result.properties)
     {
       if(property.is_disabled())
         continue;
@@ -90,7 +90,7 @@ void report_results(
     message.status() << messaget::eom;
     message.status() << "** Results:" << messaget::eom;
 
-    for(const auto &property : properties.properties)
+    for(const auto &property : result.properties)
     {
       if(property.is_disabled())
         continue;
@@ -159,7 +159,7 @@ void report_results(
 
   if(cmdline.isset("vcd"))
   {
-    for(const auto &property : properties.properties)
+    for(const auto &property : result.properties)
     {
       if(property.has_witness_trace())
       {

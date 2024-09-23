@@ -296,11 +296,13 @@ int ebmc_parse_optionst::doit()
       if(cmdline.isset("compute-ct"))
         return ebmc_base.do_compute_ct();
 
-      return property_checker(
+      auto checker_result = property_checker(
         cmdline,
         ebmc_base.transition_system,
         ebmc_base.properties,
         ui_message_handler);
+
+      return checker_result.exit_code();
     }
   }
   catch(const ebmc_errort &ebmc_error)

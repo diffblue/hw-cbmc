@@ -197,10 +197,3 @@ ebmc_propertiest ebmc_propertiest::from_command_line(
     return properties;
   }
 }
-
-int ebmc_propertiest::exit_code() const
-{
-  // We return '0' if all properties are proved,
-  // and '10' otherwise.
-  return all_properties_proved() ? 0 : 10;
-}
