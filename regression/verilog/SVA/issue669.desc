@@ -1,0 +1,8 @@
+KNOWNBUG
+issue669.sv
+--bound 5 --top top
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+https://github.com/diffblue/hw-cbmc/issues/669
