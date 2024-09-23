@@ -404,10 +404,8 @@ void bdd_enginet::compute_counterexample(
   message.status() << "Computing counterexample with " << number_of_timeframes
                    << " timeframe(s)" << messaget::eom;
 
-  bmc_mapt bmc_map;
-
   satcheckt solver{message.get_message_handler()};
-  bmc_map.map_timeframes(netlist, number_of_timeframes, solver);
+  const auto bmc_map = bmc_mapt{netlist, number_of_timeframes, solver};
 
   ::unwind(netlist, bmc_map, message, solver);
 

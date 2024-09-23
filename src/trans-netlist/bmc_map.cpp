@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: bmc_mapt::map_timeframes
+Function: bmc_mapt::bmc_mapt
 
   Inputs:
 
@@ -24,12 +24,12 @@ Function: bmc_mapt::map_timeframes
 
 \*******************************************************************/
 
-void bmc_mapt::map_timeframes(
+bmc_mapt::bmc_mapt(
   const netlistt &netlist,
   std::size_t no_timeframes,
   propt &solver)
+  : var_map(netlist.var_map)
 {
-  var_map=netlist.var_map;
   timeframe_map.resize(no_timeframes);
 
   for(std::size_t t = 0; t < timeframe_map.size(); t++)
@@ -52,4 +52,3 @@ void bmc_mapt::map_timeframes(
     }
   }
 }
-
