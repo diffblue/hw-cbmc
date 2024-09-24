@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 continuous_assignment_to_variable_systemverilog3.sv
 --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This yields a type inconsistency error in the synthesis phase.
