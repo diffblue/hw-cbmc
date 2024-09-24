@@ -18,6 +18,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/verilog_y.tab.h>
 
 #include <algorithm>
+#include <deque>
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
@@ -161,18 +162,16 @@ protected:
 
   static bool may_be_type(const tokent &);
 
-  const tokent &peek()
-  {
-    return peek1();
-  }
+  // consume a token, returned as rvalue
+  tokent next_token();
 
-  const tokent &next_token();
-  const tokent &peek1();
-  const tokent &peek2();
+  // lookahead, returned as reference
+  const tokent &peek(std::size_t k = 1);
 
-  tokent peeked_token, extra_token;
-  bool have_peeked_token = false, have_extra_token = false;
+  // the token buffer
+  std::deque<tokent> tokens;
 
+  // get a token from the scanner
   static tokent fetch_token();
 
 public:
@@ -228,11 +227,13 @@ std::string verilog_indexert::preprocess(const std::string &file_name)
   return preprocessed.str();
 }
 
-const verilog_indexer_parsert::tokent &verilog_indexer_parsert::next_token()
+verilog_indexer_parsert::tokent verilog_indexer_parsert::next_token()
 {
   peek();
-  have_peeked_token = false;
-  return peeked_token;
+  CHECK_RETURN(!tokens.empty());
+  auto token = std::move(tokens.front());
+  tokens.pop_front();
+  return token;
 }
 
 // scanner interface
@@ -248,39 +249,17 @@ verilog_indexer_parsert::tokent verilog_indexer_parsert::fetch_token()
   return result;
 }
 
-const verilog_indexer_parsert::tokent &verilog_indexer_parsert::peek1()
+const verilog_indexer_parsert::tokent &
+verilog_indexer_parsert::peek(std::size_t k)
 {
-  if(!have_peeked_token)
-  {
-    if(have_extra_token)
-    {
-      peeked_token = std::move(extra_token);
-      have_extra_token = false;
-      have_peeked_token = true;
-    }
-    else
-    {
-      // no token available
-      peeked_token = fetch_token();
-      have_peeked_token = true;
-    }
-  }
+  PRECONDITION(k >= 1);
 
-  return peeked_token;
-}
+  while(tokens.size() < k)
+    tokens.push_back(fetch_token());
 
-const verilog_indexer_parsert::tokent &verilog_indexer_parsert::peek2()
-{
-  peek1();
-
-  if(!have_extra_token)
-  {
-    // Only one token available, but we want two.
-    extra_token = fetch_token();
-    have_extra_token = true;
-  }
-
-  return extra_token;
+  // std::deque guarantees that the references remain stable even when adding
+  // more tokens.
+  return tokens[k - 1];
 }
 
 void verilog_indexer_parsert::rDescription()
@@ -389,9 +368,9 @@ void verilog_indexer_parsert::rItem()
   }
   else if(token == TOK_DEFAULT)
   {
-    if(peek2() == TOK_CLOCKING)
+    if(peek(2) == TOK_CLOCKING)
       rClocking();
-    else if(peek2() == TOK_DISABLE)
+    else if(peek(2) == TOK_DISABLE)
       rDisable();
     else
       next_token();
@@ -422,14 +401,14 @@ void verilog_indexer_parsert::rItem()
   }
   else if(token == TOK_STATIC)
   {
-    if(peek2() == TOK_CONSTRAINT)
+    if(peek(2) == TOK_CONSTRAINT)
       rConstraint();
     else
       rDeclaration();
   }
   else if(token == TOK_EXPORT)
   {
-    if(peek2() == TOK_FUNCTION)
+    if(peek(2) == TOK_FUNCTION)
       rTaskFunction();
     else
     {
@@ -474,16 +453,24 @@ void verilog_indexer_parsert::rItem()
   {
     // Type identifier (for declaration), label, module instance.
     // We look one further token ahead to disambiguate.
-    auto &second_token = peek2();
+    auto &second_token = peek(2);
+    auto &third_token = peek(3);
     if(second_token == '#' || second_token == '(')
+    {
+      // module #(...) instance(...);
+      // module (...);
       rModuleInstance();
+    }
+    else if(second_token.is_identifier() && third_token == '(')
+    {
+      // module instance(...);
+      rModuleInstance();
+    }
     else if(second_token == TOK_COLON)
       rLabeledItem();
     else
     {
-      // Might be one of
-      //   type identifier;
-      //   module instance(...);
+      // type identifier;
       rDeclaration();
     }
   }
@@ -641,7 +628,7 @@ void verilog_indexer_parsert::rStatement()
   else
   {
     // Label?
-    if(first.is_identifier() && peek2() == TOK_COLON)
+    if(first.is_identifier() && peek(2) == TOK_COLON)
     {
       next_token(); // identifier
       next_token(); // :

@@ -1,8 +1,9 @@
 CORE
 
 --hierarchy
-^sub$
-^subsub$
 ^top$
+^  sub instance1$
+^    subsub instance3$
+^  sub instance2$
 ^EXIT=0$
 ^SIGNAL=0$
