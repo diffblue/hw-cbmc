@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 negation1.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ negation1.sv
 --
 ^warning: ignoring
 --
-Lowering for negation on three-valued logic is missing.

@@ -16,6 +16,11 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "verilog_types.h"
 
+bool is_four_valued(const typet &type)
+{
+  return type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv;
+}
+
 bv_typet aval_bval_type(std::size_t width, irep_idt source_type)
 {
   PRECONDITION(!source_type.empty());
@@ -280,4 +285,16 @@ exprt aval_bval(const verilog_wildcard_inequality_exprt &expr)
   return notequal_exprt{
     bitand_exprt{aval(expr.lhs()), mask_expr},
     bitand_exprt{pattern_aval, mask_expr}};
+}
+
+exprt aval_bval(const not_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+  PRECONDITION(is_aval_bval(expr.op()));
+
+  auto has_xz = ::has_xz(expr.op());
+  auto not_expr =
+    not_exprt{extractbit_exprt{expr.op(), natural_typet{}.zero_expr()}};
+  auto x = make_x();
+  return if_exprt{has_xz, x, aval_bval_conversion(not_expr, x.type())};
 }

@@ -439,6 +439,17 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       op = synth_expr(op, symbol_state);
     return aval_bval(to_verilog_wildcard_inequality_expr(expr));
   }
+  else if(expr.id() == ID_not)
+  {
+    auto &not_expr = to_not_expr(expr);
+    not_expr.op() = synth_expr(not_expr.op(), symbol_state);
+
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval(not_expr);
+    else
+      return expr; // leave as is
+  }
   else if(expr.has_operands())
   {
     for(auto &op : expr.operands())

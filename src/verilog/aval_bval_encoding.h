@@ -22,6 +22,7 @@ Author: Daniel Kroening, dkr@amazon.com
 //   1    0  |   X
 //   1    1  |   Z
 
+bool is_four_valued(const typet &);
 bool is_aval_bval(const typet &);
 std::size_t aval_bval_width(const typet &);
 typet aval_bval_underlying(const typet &);
@@ -40,6 +41,8 @@ exprt aval_bval_concatenation(const exprt::operandst &, const typet &);
 exprt aval_bval(const verilog_logical_equality_exprt &);
 exprt aval_bval(const verilog_logical_inequality_exprt &);
 
+/// lowering for !
+exprt aval_bval(const not_exprt &);
 /// lowering for ==?
 exprt aval_bval(const verilog_wildcard_equality_exprt &);
 /// lowering for !=?
