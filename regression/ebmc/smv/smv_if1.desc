@@ -1,0 +1,6 @@
+CORE broken-smt-backend
+smv_if1.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--

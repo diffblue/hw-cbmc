@@ -86,6 +86,8 @@ public:
 
   bool convert(const exprt &src, std::string &dest, precedencet &precedence);
 
+  bool convert_if(const if_exprt &, std::string &dest, precedencet precedence);
+
   bool convert(const exprt &src, std::string &dest);
 
   bool convert_symbol(
@@ -299,6 +301,54 @@ bool expr2smvt::convert_index(
   dest+='[';
   dest+=op;
   dest+=']';
+
+  return false;
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_if
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool expr2smvt::convert_if(
+  const if_exprt &src,
+  std::string &dest,
+  precedencet precedence)
+{
+  std::string op;
+  precedencet p;
+
+  if(convert(src.cond(), op, p))
+    return true;
+
+  if(precedence >= p)
+    dest += '(';
+  dest += op;
+  if(precedence >= p)
+    dest += ')';
+  dest += '?';
+
+  if(convert(src.true_case(), op, p))
+    return true;
+
+  dest += op;
+  dest += ':';
+
+  if(convert(src.false_case(), op, p))
+    return true;
+
+  if(precedence > p)
+    dest += '(';
+  dest += op;
+  if(precedence > p)
+    dest += ')';
 
   return false;
 }
@@ -524,6 +574,9 @@ bool expr2smvt::convert(
       src.id_string(),
       precedence = precedencet::TEMPORAL);
   }
+
+  else if(src.id() == ID_if)
+    return convert_if(to_if_expr(src), dest, precedencet::IF);
 
   else if(src.id()==ID_symbol)
     return convert_symbol(to_symbol_expr(src), dest, precedence);
