@@ -1,0 +1,29 @@
+MODULE main
+
+VAR x : 0..3;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x=3 : 3;
+      TRUE: x+1;
+    esac;
+
+DEFINE p := x != 0;
+DEFINE q := x = 3;
+
+-- various equivalences
+LTLSPEC (G p) <-> (G G p)
+LTLSPEC (G p) <-> (!F !p)
+LTLSPEC (G p) <-> (p & X G p)
+LTLSPEC (FALSE R p) -> (G p)
+LTLSPEC (G (p&q)) <-> ((G p) & (G q))
+
+LTLSPEC (F p) <-> (F F p)
+LTLSPEC (F p) <-> (!G x = 0)
+LTLSPEC (F p) <-> (p | X F p)
+LTLSPEC (F (p|q)) <-> ((F p) | (F q))
+
+LTLSPEC (X p) <-> (!X !p)

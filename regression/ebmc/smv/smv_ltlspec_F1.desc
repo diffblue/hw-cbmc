@@ -8,8 +8,8 @@ smv_ltlspec_F1.smv
 ^\[.*\] F x = 2: PROVED up to bound 10$
 ^\[.*\] F x = 1 & F x = 2: PROVED up to bound 10$
 ^\[.*\] F x = 0 & F x = 1: REFUTED$
-^\[.*\] F x = 0 \| F x = 1: FAILURE: property not supported by BMC engine$
-^\[.*\] F x = 0 -> FALSE: FAILURE: property not supported by BMC engine$
-^\[.*\] F x = 1 -> F x = 0: FAILURE: property not supported by BMC engine$
+^\[.*\] F x = 0 \| F x = 1: PROVED up to bound 10$
+^\[.*\] F x = 0 -> FALSE: PROVED up to bound 10$
+^\[.*\] F x = 1 -> F x = 0: REFUTED$
 --
 ^warning: ignoring
