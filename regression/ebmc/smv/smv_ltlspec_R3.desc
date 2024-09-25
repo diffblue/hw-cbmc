@@ -1,0 +1,10 @@
+KNOWNBUG broken-smt-backend
+smv_ltlspec_R3.smv
+--bound 1
+^\[.*\] FALSE R x != 3: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The counterexample is wrong.

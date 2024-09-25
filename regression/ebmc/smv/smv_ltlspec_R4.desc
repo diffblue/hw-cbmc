@@ -1,0 +1,10 @@
+KNOWNBUG broken-smt-backend
+smv_ltlspec_R4.smv
+--bound 10
+^\[.*\] FALSE R x != 0: PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Property fails.
