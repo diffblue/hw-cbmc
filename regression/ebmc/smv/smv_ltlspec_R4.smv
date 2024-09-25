@@ -1,0 +1,15 @@
+MODULE main
+
+VAR x : 0..3;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x=3 : 3;
+      TRUE: x+1;
+    esac;
+
+-- should pass
+LTLSPEC FALSE R x != 0

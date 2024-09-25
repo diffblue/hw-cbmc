@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+smv_ltlspec_G3.smv
+--bound 10 --numbered-trace
+^\[.*\] G X x != 3: REFUTED$
+^Counterexample with 3 states:$
+^x@0 = 1$
+^x@1 = 2$
+^x@2 = 3$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
