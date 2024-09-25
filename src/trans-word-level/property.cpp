@@ -380,32 +380,26 @@ static obligationst property_obligations_rec(
     property_expr.id() == ID_sva_until ||
     property_expr.id() == ID_sva_s_until || property_expr.id() == ID_U)
   {
-    // non-overlapping until
-    // we need a lasso to refute these
+    auto &p = to_binary_expr(property_expr).lhs();
+    auto &q = to_binary_expr(property_expr).rhs();
 
-    // we expand: p U q <=> q ∨ (p ∧ X(p U q))
-    exprt tmp_q = to_binary_expr(property_expr).op1();
-    tmp_q = property_obligations_rec(tmp_q, solver, current, no_timeframes, ns)
-              .conjunction()
-              .second;
+    // p U q ≡ Fq ∧ (p W q)
+    exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
 
-    exprt expansion = to_binary_expr(property_expr).op0();
-    expansion =
-      property_obligations_rec(expansion, solver, current, no_timeframes, ns)
-        .conjunction()
-        .second;
+    return property_obligations_rec(tmp, solver, current, no_timeframes, ns);
+  }
+  else if(property_expr.id() == ID_weak_U)
+  {
+    // we expand: p W q ≡ q ∨ ( p ∧ X(p W q) )
+    auto &p = to_weak_U_expr(property_expr).lhs();
+    auto &q = to_weak_U_expr(property_expr).rhs();
 
-    const auto next = current + 1;
+    // Once we reach the end of the unwinding, replace X(p W q) by 'true'.
+    auto tmp = or_exprt{
+      q,
+      (current + 1) < no_timeframes ? and_exprt{p, X_exprt{property_expr}} : p};
 
-    if(next < no_timeframes)
-    {
-      auto obligations_rec = property_obligations_rec(
-        property_expr, solver, next, no_timeframes, ns);
-      expansion = and_exprt{expansion, obligations_rec.conjunction().second};
-    }
-
-    DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-    return obligationst{no_timeframes - 1, or_exprt{tmp_q, expansion}};
+    return property_obligations_rec(tmp, solver, current, no_timeframes, ns);
   }
   else if(property_expr.id() == ID_R)
   {

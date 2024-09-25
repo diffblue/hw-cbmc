@@ -143,6 +143,8 @@ static inline G_exprt &to_G_expr(exprt &expr)
   return static_cast<G_exprt &>(expr);
 }
 
+/// standard (strong) LTL until, i.e.,
+/// the rhs must become true eventually
 class U_exprt : public binary_predicate_exprt
 {
 public:
@@ -164,6 +166,31 @@ static inline U_exprt &to_U_expr(exprt &expr)
   PRECONDITION(expr.id() == ID_U);
   U_exprt::check(expr);
   return static_cast<U_exprt &>(expr);
+}
+
+/// weak LTL until, i.e.,
+/// the rhs is not required to become true eventually
+class weak_U_exprt : public binary_predicate_exprt
+{
+public:
+  explicit weak_U_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_weak_U, std::move(op1))
+  {
+  }
+};
+
+static inline const weak_U_exprt &to_weak_U_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_weak_U);
+  weak_U_exprt::check(expr);
+  return static_cast<const weak_U_exprt &>(expr);
+}
+
+static inline weak_U_exprt &to_weak_U_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_weak_U);
+  weak_U_exprt::check(expr);
+  return static_cast<weak_U_exprt &>(expr);
 }
 
 class EU_exprt : public binary_predicate_exprt

@@ -1,6 +1,6 @@
-KNOWNBUG broken-smt-backend
+CORE broken-smt-backend
 smv_ltlspec_U2.smv
---bound 10
+--bound 10 --numbered-trace
 ^\[.*\] TRUE U x = 0: REFUTED$
 ^Counterexample with 4 states:$
 ^x@0 = 1$
@@ -12,4 +12,3 @@ smv_ltlspec_U2.smv
 --
 ^warning: ignoring
 --
-The property is proven, but should be refuted.

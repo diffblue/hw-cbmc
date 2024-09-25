@@ -58,4 +58,6 @@ public:
   std::pair<mp_integer, exprt> conjunction() const;
 };
 
+obligationst obligations_union(obligationst, obligationst);
+
 #endif
