@@ -2,7 +2,7 @@ KNOWNBUG broken-smt-backend
 smv_ltlspec_R2.smv
 --bound 10
 ^\[.*\] FALSE R x != 3: REFUTED$
-^Counterexample with 4 states:$
+^Counterexample with 3 states:$
 ^x@0 = 1$
 ^x@1 = 2$
 ^x@2 = 3$

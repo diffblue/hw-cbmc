@@ -405,30 +405,17 @@ static obligationst property_obligations_rec(
   {
     // we expand: p R q <=> q ∧ (p ∨ X(p R q))
     auto &R_expr = to_R_expr(property_expr);
-    auto tmp_q =
-      property_obligations_rec(R_expr.rhs(), solver, current, no_timeframes, ns)
-        .conjunction()
-        .second;
+    auto &p = R_expr.lhs();
+    auto &q = R_expr.rhs();
 
-    auto tmp_p =
-      property_obligations_rec(R_expr.lhs(), solver, current, no_timeframes, ns)
-        .conjunction()
-        .second;
+    // Once we reach the end of the unwinding, we replace X(p R q) by
+    // true, and hence the expansion becomes "q" only.
+    exprt expansion = (current + 1) < no_timeframes
+                        ? and_exprt{q, or_exprt{p, X_exprt{property_expr}}}
+                        : q;
 
-    const auto next = current + 1;
-    exprt expansion;
-
-    if(next < no_timeframes)
-    {
-      auto obligations_rec = property_obligations_rec(
-        property_expr, solver, next, no_timeframes, ns);
-      expansion = or_exprt{tmp_p, obligations_rec.conjunction().second};
-    }
-    else
-      expansion = tmp_p;
-
-    DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-    return obligationst{no_timeframes - 1, and_exprt{tmp_q, expansion}};
+    return property_obligations_rec(
+      expansion, solver, current, no_timeframes, ns);
   }
   else if(
     property_expr.id() == ID_sva_until_with ||
