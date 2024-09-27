@@ -484,7 +484,7 @@ constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
       type.id() == ID_bool)
     {
       auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_big_endian))
+      if(type.get_bool(ID_C_increasing))
         return offset;
       else
         return offset + get_width(type) - 1;
@@ -493,7 +493,7 @@ constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
     {
       auto offset = numeric_cast_v<mp_integer>(
         to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_big_endian))
+      if(type.get_bool(ID_C_increasing))
         return offset;
       else
       {
@@ -534,7 +534,7 @@ constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
       type.id() == ID_bool)
     {
       auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_big_endian))
+      if(type.get_bool(ID_C_increasing))
         return offset + get_width(type) - 1;
       else
         return offset;
@@ -543,7 +543,7 @@ constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
     {
       auto offset = numeric_cast_v<mp_integer>(
         to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_big_endian))
+      if(type.get_bool(ID_C_increasing))
       {
         return offset +
                numeric_cast_v<mp_integer>(
@@ -608,7 +608,7 @@ constant_exprt verilog_typecheck_exprt::increment(const exprt &expr)
       type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
       type.id() == ID_array)
     {
-      if(type.get_bool(ID_C_big_endian))
+      if(type.get_bool(ID_C_increasing))
         return -1;
       else
         return 1;
@@ -2516,7 +2516,7 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
 
       op1_int -= offset;
 
-      if(op0.type().get_bool(ID_C_big_endian))
+      if(op0.type().get_bool(ID_C_increasing))
         op1_int = width - op1_int - 1;
 
       expr.op1() = from_integer(op1_int, natural_typet());
@@ -2529,7 +2529,7 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
           minus_exprt{expr.op1(), from_integer(offset, expr.op1().type())};
       }
 
-      if(op0.type().get_bool(ID_C_big_endian))
+      if(op0.type().get_bool(ID_C_increasing))
       {
         expr.op1() =
           minus_exprt{from_integer(width - 1, expr.op1().type()), expr.op1()};
