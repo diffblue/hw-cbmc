@@ -265,3 +265,44 @@ typet verilog_typecheck_baset::index_type(const array_typet &array_type)
   return unsignedbv_typet(address_bits(
       (array_size(array_type) + array_offset(array_type)).to_ulong()));
 }
+
+/*******************************************************************\
+
+Function: verilog_typecheck_baset::is_four_valued
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_baset::is_four_valued(const typet &type)
+{
+  return type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_baset::four_valued
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+typet verilog_typecheck_baset::four_valued(const typet &type)
+{
+  if(type.id() == ID_signedbv)
+    return verilog_signedbv_typet{to_signedbv_type(type).get_width()};
+  else if(type.id() == ID_unsignedbv)
+    return verilog_unsignedbv_typet{to_unsignedbv_type(type).get_width()};
+  else if(type.id() == ID_bool)
+    return verilog_unsignedbv_typet{1};
+  else
+    return type;
+}

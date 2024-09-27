@@ -122,6 +122,22 @@ exprt aval(const exprt &src)
   }
 }
 
+exprt aval_underlying(const exprt &src)
+{
+  if(is_aval_bval(src.type()))
+  {
+    auto type = aval_bval_underlying(src.type());
+    if(type.id() == ID_bool)
+      return extractbit_exprt{src, 0};
+    else
+      return extractbits_exprt{src, 0, type};
+  }
+  else
+  {
+    return src;
+  }
+}
+
 exprt bval(const exprt &src)
 {
   if(is_aval_bval(src.type()))
@@ -225,10 +241,11 @@ exprt has_xz(const exprt &expr)
 }
 
 /// return 'x', one bit
-exprt make_x()
+exprt make_x(const typet &type)
 {
-  auto type = verilog_unsignedbv_typet{1};
-  return lower_to_aval_bval(constant_exprt{ID_x, type});
+  PRECONDITION(is_four_valued(type));
+  auto width = to_bitvector_type(type).get_width();
+  return lower_to_aval_bval(constant_exprt{std::string(width, 'x'), type});
 }
 
 exprt aval_bval(const verilog_logical_equality_exprt &expr)
@@ -239,7 +256,9 @@ exprt aval_bval(const verilog_logical_equality_exprt &expr)
   auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
   auto equality = equal_exprt{expr.lhs(), expr.rhs()};
   return if_exprt{
-    has_xz, make_x(), aval_bval_conversion(equality, lower_to_aval_bval(type))};
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(equality, lower_to_aval_bval(type))};
 }
 
 exprt aval_bval(const verilog_logical_inequality_exprt &expr)
@@ -250,7 +269,9 @@ exprt aval_bval(const verilog_logical_inequality_exprt &expr)
   auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
   auto equality = notequal_exprt{expr.lhs(), expr.rhs()};
   return if_exprt{
-    has_xz, make_x(), aval_bval_conversion(equality, lower_to_aval_bval(type))};
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(equality, lower_to_aval_bval(type))};
 }
 
 exprt aval_bval(const verilog_wildcard_equality_exprt &expr)
@@ -289,12 +310,26 @@ exprt aval_bval(const verilog_wildcard_inequality_exprt &expr)
 
 exprt aval_bval(const not_exprt &expr)
 {
-  PRECONDITION(is_four_valued(expr.type()));
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
   PRECONDITION(is_aval_bval(expr.op()));
 
   auto has_xz = ::has_xz(expr.op());
   auto not_expr =
     not_exprt{extractbit_exprt{expr.op(), natural_typet{}.zero_expr()}};
-  auto x = make_x();
+  auto x = make_x(type);
   return if_exprt{has_xz, x, aval_bval_conversion(not_expr, x.type())};
+}
+
+exprt aval_bval(const power_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+  PRECONDITION(is_aval_bval(expr.lhs()));
+  PRECONDITION(is_aval_bval(expr.rhs()));
+
+  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+  auto power_expr =
+    power_exprt{aval_underlying(expr.lhs()), aval_underlying(expr.rhs())};
+  auto x = make_x(expr.type());
+  return if_exprt{has_xz, x, aval_bval_conversion(power_expr, x.type())};
 }

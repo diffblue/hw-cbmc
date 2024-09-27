@@ -246,28 +246,35 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id() == ID_power)
   {
-    auto &power_expr = to_binary_expr(expr);
+    auto &power_expr = to_power_expr(expr);
     DATA_INVARIANT(
       power_expr.lhs().type() == power_expr.type(),
       "power expression type consistency");
     power_expr.lhs() = synth_expr(power_expr.lhs(), symbol_state);
     power_expr.rhs() = synth_expr(power_expr.rhs(), symbol_state);
-    auto rhs_int = numeric_cast<std::size_t>(power_expr.rhs());
-    if(rhs_int.has_value())
-    {
-      if(*rhs_int == 0)
-        return from_integer(1, expr.type());
-      else if(*rhs_int == 1)
-        return power_expr.lhs();
-      else // >= 2
-      {
-        auto factors = exprt::operandst{rhs_int.value(), power_expr.lhs()};
-        // would prefer appropriate mult_exprt constructor
-        return multi_ary_exprt{ID_mult, factors, expr.type()};
-      }
-    }
+
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval(power_expr);
     else
-      return expr;
+    {
+      auto rhs_int = numeric_cast<std::size_t>(power_expr.rhs());
+      if(rhs_int.has_value())
+      {
+        if(*rhs_int == 0)
+          return from_integer(1, expr.type());
+        else if(*rhs_int == 1)
+          return power_expr.lhs();
+        else // >= 2
+        {
+          auto factors = exprt::operandst{rhs_int.value(), power_expr.lhs()};
+          // would prefer appropriate mult_exprt constructor
+          return multi_ary_exprt{ID_mult, factors, expr.type()};
+        }
+      }
+      else
+        return expr;
+    }
   }
   else if(expr.id()==ID_typecast)
   {

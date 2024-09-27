@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
+#include <util/mathematical_expr.h>
 #include <util/mathematical_types.h>
 #include <util/namespace.h>
 #include <util/prefix.h>
@@ -123,14 +124,11 @@ void verilog_typecheck_exprt::propagate_type(
      expr.has_operands())
   {
     // arithmetic
-    
-    if(expr.id()==ID_plus ||
-       expr.id()==ID_minus ||
-       expr.id()==ID_mult || 
-       expr.id()==ID_div || 
-       expr.id()==ID_power ||
-       expr.id()==ID_unary_minus ||
-       expr.id()==ID_unary_plus)
+
+    if(
+      expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+      expr.id() == ID_div || expr.id() == ID_unary_minus ||
+      expr.id() == ID_unary_plus)
     {
       if(type.id()!=ID_bool)
       {
@@ -2611,6 +2609,44 @@ Function: verilog_typecheck_exprt::convert_shl_expr
 
 \*******************************************************************/
 
+exprt verilog_typecheck_exprt::convert_power_expr(power_exprt expr)
+{
+  convert_expr(expr.op0());
+  convert_expr(expr.op1());
+
+  no_bool_ops(expr);
+
+  // Is one of the operands four-valued?
+  if(is_four_valued(expr.op0().type()))
+  {
+    // We make the other operand also four-valued, if needed
+    expr.op1() = typecast_exprt{expr.op1(), four_valued(expr.op1().type())};
+  }
+  else if(is_four_valued(expr.op1().type()))
+  {
+    // We make the other operand also four-valued, if needed
+    expr.op0() = typecast_exprt{expr.op0(), four_valued(expr.op0().type())};
+  }
+
+  // 1800-2017 Table 11-21
+  // The width of a power is the width of the left operand
+  expr.type() = expr.op0().type();
+
+  return std::move(expr);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::convert_shl_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 exprt verilog_typecheck_exprt::convert_shl_expr(shl_exprt expr)
 {
   convert_expr(expr.op0());
@@ -2760,6 +2796,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_power)
+    return convert_power_expr(to_power_expr(expr));
   else if(expr.id()==ID_shl)
     return convert_shl_expr(to_shl_expr(expr));
   else if(expr.id()==ID_shr)
