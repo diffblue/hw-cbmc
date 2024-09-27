@@ -22,3 +22,9 @@ std::pair<mp_integer, exprt> obligationst::conjunction() const
   }
   return {max, ::conjunction(conjuncts)};
 }
+
+obligationst obligations_union(obligationst a, obligationst b)
+{
+  a.add(b);
+  return a;
+}

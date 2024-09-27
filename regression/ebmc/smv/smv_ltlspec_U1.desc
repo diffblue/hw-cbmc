@@ -1,11 +1,13 @@
 CORE broken-smt-backend
 smv_ltlspec_U1.smv
---bound 10
-\[.*\] x = 1 U x = 2: PROVED up to bound 10$
-\[.*\] x != 0 U FALSE: PROVED up to bound 10$
+--bound 3
+\[.*\] TRUE U x = 3: PROVED up to bound 3$
+\[.*\] x = 1 U x = 2: PROVED up to bound 3$
+\[.*\] x <= 2 U x = 3: PROVED up to bound 3$
+\[.*\] x != 0 U FALSE: REFUTED$
 \[.*\] x = 1 U x = 3: REFUTED$
-\[.*\] x = 1 U x = 2 & x <= 2 U x = 3: PROVED up to bound 10$
-\[.*\] x = 1 U x = 2 \| x = 1 U x = 3: PROVED up to bound 10$
+\[.*\] x = 1 U x = 2 & x <= 2 U x = 3: PROVED up to bound 3$
+\[.*\] x = 1 U x = 2 \| x = 1 U x = 3: PROVED up to bound 3$
 ^EXIT=10$
 ^SIGNAL=0$
 --

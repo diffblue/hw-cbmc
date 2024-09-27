@@ -156,7 +156,7 @@ bool requires_lasso_constraints(const exprt &expr)
       subexpr_it->id() == ID_sva_until || subexpr_it->id() == ID_sva_s_until ||
       subexpr_it->id() == ID_sva_eventually ||
       subexpr_it->id() == ID_sva_s_eventually || subexpr_it->id() == ID_AF ||
-      subexpr_it->id() == ID_F)
+      subexpr_it->id() == ID_F || subexpr_it->id() == ID_U)
     {
       return true;
     }
