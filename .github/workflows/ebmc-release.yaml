@@ -77,6 +77,8 @@ jobs:
         run: make -C regression/ebmc test
       - name: Run the verilog tests
         run: make -C regression/verilog test
+      - name: Run the smv tests
+        run: make -C regression/smv test
       - name: Print ccache stats
         run: ccache -s
       - name: Create .deb
@@ -160,6 +162,8 @@ jobs:
           make -C regression/ebmc test
       - name: Run the verilog tests
         run: make -C regression/verilog test
+      - name: Run the smv tests
+        run: make -C regression/smv test
       - name: Create .rpm
         id: create_packages
         run: |
