@@ -72,8 +72,8 @@ symbol_exprt timeframe_symbol(const mp_integer &timeframe, symbol_exprt src)
 class wl_instantiatet
 {
 public:
-  wl_instantiatet(const mp_integer &_no_timeframes, const namespacet &_ns)
-    : no_timeframes(_no_timeframes), ns(_ns)
+  explicit wl_instantiatet(const mp_integer &_no_timeframes)
+    : no_timeframes(_no_timeframes)
   {
   }
 
@@ -86,7 +86,6 @@ public:
 
 protected:
   const mp_integer &no_timeframes;
-  const namespacet &ns;
 
   [[nodiscard]] std::pair<mp_integer, exprt>
   instantiate_rec(exprt, const mp_integer &t) const;
@@ -145,7 +144,7 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   {
     // sequence expressions -- these may have multiple potential
     // match points, and evaluate to true if any of them matches
-    const auto match_points = instantiate_sequence(expr, t, no_timeframes, ns);
+    const auto match_points = instantiate_sequence(expr, t, no_timeframes);
     exprt::operandst disjuncts;
     disjuncts.reserve(match_points.size());
     mp_integer max = t;
@@ -228,10 +227,9 @@ Function: instantiate
 exprt instantiate(
   const exprt &expr,
   const mp_integer &t,
-  const mp_integer &no_timeframes,
-  const namespacet &ns)
+  const mp_integer &no_timeframes)
 {
-  wl_instantiatet wl_instantiate(no_timeframes, ns);
+  wl_instantiatet wl_instantiate(no_timeframes);
   return wl_instantiate(expr, t).second;
 }
 
@@ -250,9 +248,8 @@ Function: instantiate_property
 std::pair<mp_integer, exprt> instantiate_property(
   const exprt &expr,
   const mp_integer &current,
-  const mp_integer &no_timeframes,
-  const namespacet &ns)
+  const mp_integer &no_timeframes)
 {
-  wl_instantiatet wl_instantiate(no_timeframes, ns);
+  wl_instantiatet wl_instantiate(no_timeframes);
   return wl_instantiate(expr, current);
 }

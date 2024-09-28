@@ -171,14 +171,13 @@ std::pair<tvt, std::optional<trans_tracet>> is_ranking_function(
   // c) p holds in timeframe 1
 
   exprt ranking_function_decreases = less_than_exprt(
-    instantiate(ranking_function, 1, 2, ns),
-    instantiate(ranking_function, 0, 2, ns));
+    instantiate(ranking_function, 1, 2), instantiate(ranking_function, 0, 2));
   solver.set_to_false(ranking_function_decreases);
 
-  exprt p_at_0 = instantiate(p, 0, 2, ns);
+  exprt p_at_0 = instantiate(p, 0, 2);
   solver.set_to_false(p_at_0);
 
-  exprt p_at_1 = instantiate(p, 1, 2, ns);
+  exprt p_at_1 = instantiate(p, 1, 2);
   solver.set_to_false(p_at_1);
 
   decision_proceduret::resultt dec_result = solver();

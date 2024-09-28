@@ -17,8 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   exprt expr,
   const mp_integer &t,
-  const mp_integer &no_timeframes,
-  const namespacet &ns)
+  const mp_integer &no_timeframes)
 {
   if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
   {
@@ -40,7 +39,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
       }
       else
         return instantiate_sequence(
-          sva_cycle_delay_expr.op(), u, no_timeframes, ns);
+          sva_cycle_delay_expr.op(), u, no_timeframes);
     }
     else
     {
@@ -71,7 +70,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
       for(mp_integer u = lower; u <= upper; ++u)
       {
         auto sub_result =
-          instantiate_sequence(sva_cycle_delay_expr.op(), u, no_timeframes, ns);
+          instantiate_sequence(sva_cycle_delay_expr.op(), u, no_timeframes);
         for(auto &match_point : sub_result)
           match_points.push_back(match_point);
       }
@@ -89,7 +88,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
 
     // This is the product of the match points on the LHS and RHS
     const auto lhs_match_points =
-      instantiate_sequence(implication.lhs(), t, no_timeframes, ns);
+      instantiate_sequence(implication.lhs(), t, no_timeframes);
     for(auto &lhs_match_point : lhs_match_points)
     {
       // The RHS of the non-overlapped implication starts one timeframe later
@@ -105,7 +104,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
       }
 
       const auto rhs_match_points =
-        instantiate_sequence(implication.rhs(), t_rhs, no_timeframes, ns);
+        instantiate_sequence(implication.rhs(), t_rhs, no_timeframes);
 
       for(auto &rhs_match_point : rhs_match_points)
       {
@@ -157,8 +156,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     exprt::operandst conjuncts;
 
     for(auto &op : expr.operands())
-      conjuncts.push_back(
-        instantiate_property(op, t, no_timeframes, ns).second);
+      conjuncts.push_back(instantiate_property(op, t, no_timeframes).second);
 
     exprt condition = conjunction(conjuncts);
     return {{t, condition}};
@@ -171,7 +169,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     std::vector<std::pair<mp_integer, exprt>> result;
 
     for(auto &op : expr.operands())
-      for(auto &match_point : instantiate_sequence(op, t, no_timeframes, ns))
+      for(auto &match_point : instantiate_sequence(op, t, no_timeframes))
         result.push_back(match_point);
 
     return result;
@@ -179,6 +177,6 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   else
   {
     // not a sequence, evaluate as state predicate
-    return {instantiate_property(expr, t, no_timeframes, ns)};
+    return {instantiate_property(expr, t, no_timeframes)};
   }
 }

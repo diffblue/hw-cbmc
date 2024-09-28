@@ -478,8 +478,7 @@ void random_tracest::freeze(
   {
     for(auto &symbol : symbols)
     {
-      auto symbol_in_timeframe =
-        instantiate(symbol, i, number_of_timeframes, ns);
+      auto symbol_in_timeframe = instantiate(symbol, i, number_of_timeframes);
       (void)solver.handle(symbol_in_timeframe);
     }
   }
@@ -508,7 +507,7 @@ std::vector<exprt> random_tracest::random_input_constraints(
   {
     for(auto &input : inputs)
     {
-      auto input_in_timeframe = instantiate(input, i, number_of_timeframes, ns);
+      auto input_in_timeframe = instantiate(input, i, number_of_timeframes);
       auto constraint =
         equal_exprt(input_in_timeframe, random_value(input.type()));
       result.push_back(constraint);
@@ -538,7 +537,7 @@ std::vector<exprt> random_tracest::random_initial_state_constraints(
 
   for(auto &symbol : state_variables)
   {
-    auto symbol_in_timeframe = instantiate(symbol, 0, 1, ns);
+    auto symbol_in_timeframe = instantiate(symbol, 0, 1);
     auto constraint =
       equal_exprt(symbol_in_timeframe, random_value(symbol.type()));
     result.push_back(std::move(constraint));

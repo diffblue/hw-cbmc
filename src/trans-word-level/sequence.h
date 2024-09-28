@@ -17,7 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 [[nodiscard]] std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   exprt expr,
   const mp_integer &t,
-  const mp_integer &no_timeframes,
-  const namespacet &);
+  const mp_integer &no_timeframes);
 
 #endif // CPROVER_TRANS_WORD_LEVEL_SEQUENCE_H
