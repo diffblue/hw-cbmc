@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/c_types.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/identifier.h>
@@ -113,6 +114,21 @@ exprt verilog_synthesist::from_bitvector(
 
     return struct_exprt{std::move(field_values), struct_type};
   }
+  else if(dest.id() == ID_union)
+  {
+    // We use the first field of the union.
+    // All fields of a SystemVerilog packed union must have the same width.
+    const auto &union_type = to_union_type(dest);
+    DATA_INVARIANT(
+      !union_type.components().empty(),
+      "union type must have at least one field");
+    auto &field = union_type.components().front();
+
+    // rec. call
+    auto field_value = from_bitvector(src, offset, field.type());
+
+    return union_exprt{field.get_name(), std::move(field_value), union_type};
+  }
   else
   {
     return extract(src, offset, dest);
@@ -151,6 +167,16 @@ exprt verilog_synthesist::to_bitvector(const exprt &src)
 
     auto width_int = numeric_cast_v<std::size_t>(get_width(src));
     return concatenation_exprt{std::move(field_values), bv_typet{width_int}};
+  }
+  else if(src_type.id() == ID_union)
+  {
+    const auto &union_type = to_union_type(src_type);
+    DATA_INVARIANT(
+      !union_type.components().empty(),
+      "union type must have at least one field");
+    auto &field = union_type.components().front();
+    auto member = member_exprt{src, field};
+    return to_bitvector(member); // rec. call
   }
   else
   {
@@ -302,13 +328,13 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
         auto aval_bval_type = lower_to_aval_bval(dest_type);
         return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
       }
-      else if(dest_type.id() == ID_struct)
+      else if(dest_type.id() == ID_struct || dest_type.id() == ID_union)
       {
         return from_bitvector(typecast_expr.op(), 0, dest_type);
       }
       else
       {
-        if(src_type.id() == ID_struct)
+        if(src_type.id() == ID_struct || src_type.id() == ID_union)
         {
           return extract(to_bitvector(typecast_expr.op()), 0, dest_type);
         }

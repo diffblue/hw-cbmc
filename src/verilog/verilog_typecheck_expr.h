@@ -136,6 +136,7 @@ protected:
   }
 
   static typet enum_decay(const typet &);
+  void union_decay(exprt &) const;
   typet max_type(const typet &t1, const typet &t2);
 
   // named blocks
