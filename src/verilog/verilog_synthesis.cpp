@@ -2472,17 +2472,18 @@ void verilog_synthesist::synth_force_rec(
 
   auto rhs_synth = synth_expr(rhs, symbol_statet::CURRENT);
 
-  // If it's a variable, synth_assignments will
-  // generate the constraint.
+  // If the symbol is marked as a state variable,
+  // turn it into a wire now.
   if(symbol.is_state_var)
   {
-    assignment.next.value = rhs_synth;
+    warning().source_location = symbol.location;
+    warning() << "Making " << symbol.display_name() << " a wire" << eom;
+    symbolt &writeable_symbol = symbol_table_lookup(symbol.name);
+    writeable_symbol.is_state_var = false;
   }
-  else
-  {
-    equal_exprt equality(lhs, rhs_synth);
-    invars.push_back(equality);
-  }
+
+  equal_exprt equality{lhs, rhs_synth};
+  invars.push_back(equality);
 }
 
 /*******************************************************************\
