@@ -158,8 +158,7 @@ Function: property_obligations_rec
 static obligationst property_obligations_rec(
   const exprt &property_expr,
   const mp_integer &current,
-  const mp_integer &no_timeframes,
-  const namespacet &ns)
+  const mp_integer &no_timeframes)
 {
   PRECONDITION(current >= 0 && current < no_timeframes);
 
@@ -183,7 +182,7 @@ static obligationst property_obligations_rec(
 
     for(mp_integer c = current; c < no_timeframes; ++c)
     {
-      obligations.add(property_obligations_rec(phi, c, no_timeframes, ns));
+      obligations.add(property_obligations_rec(phi, c, no_timeframes));
     }
 
     return obligations;
@@ -212,7 +211,7 @@ static obligationst property_obligations_rec(
 
     for(mp_integer u = current + lower; u <= current + upper; ++u)
     {
-      auto obligations_rec = property_obligations_rec(op, u, no_timeframes, ns);
+      auto obligations_rec = property_obligations_rec(op, u, no_timeframes);
       disjuncts.push_back(obligations_rec.conjunction().second);
     }
 
@@ -244,7 +243,7 @@ static obligationst property_obligations_rec(
 
         for(mp_integer j = current; j <= k; ++j)
         {
-          auto tmp = property_obligations_rec(phi, j, no_timeframes, ns);
+          auto tmp = property_obligations_rec(phi, j, no_timeframes);
           disjuncts.push_back(tmp.conjunction().second);
         }
 
@@ -289,8 +288,7 @@ static obligationst property_obligations_rec(
 
     for(mp_integer c = from; c <= to; ++c)
     {
-      auto tmp =
-        property_obligations_rec(phi, c, no_timeframes, ns).conjunction();
+      auto tmp = property_obligations_rec(phi, c, no_timeframes).conjunction();
       time = std::max(time, tmp.first);
       disjuncts.push_back(tmp.second);
     }
@@ -338,7 +336,7 @@ static obligationst property_obligations_rec(
 
     for(mp_integer c = from; c <= to; ++c)
     {
-      obligations.add(property_obligations_rec(phi, c, no_timeframes, ns));
+      obligations.add(property_obligations_rec(phi, c, no_timeframes));
     }
 
     return obligations;
@@ -363,7 +361,7 @@ static obligationst property_obligations_rec(
 
     if(next < no_timeframes)
     {
-      return property_obligations_rec(phi, next, no_timeframes, ns);
+      return property_obligations_rec(phi, next, no_timeframes);
     }
     else
     {
@@ -379,7 +377,7 @@ static obligationst property_obligations_rec(
     // p U q ≡ Fq ∧ (p W q)
     exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
 
-    return property_obligations_rec(tmp, current, no_timeframes, ns);
+    return property_obligations_rec(tmp, current, no_timeframes);
   }
   else if(property_expr.id() == ID_sva_until || property_expr.id() == ID_weak_U)
   {
@@ -392,7 +390,7 @@ static obligationst property_obligations_rec(
       q,
       (current + 1) < no_timeframes ? and_exprt{p, X_exprt{property_expr}} : p};
 
-    return property_obligations_rec(tmp, current, no_timeframes, ns);
+    return property_obligations_rec(tmp, current, no_timeframes);
   }
   else if(property_expr.id() == ID_R)
   {
@@ -407,7 +405,7 @@ static obligationst property_obligations_rec(
                         ? and_exprt{q, or_exprt{p, X_exprt{property_expr}}}
                         : q;
 
-    return property_obligations_rec(expansion, current, no_timeframes, ns);
+    return property_obligations_rec(expansion, current, no_timeframes);
   }
   else if(property_expr.id() == ID_strong_R)
   {
@@ -417,7 +415,7 @@ static obligationst property_obligations_rec(
     // p strongR q ≡ Fp ∧ (p R q)
     exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
 
-    return property_obligations_rec(tmp, current, no_timeframes, ns);
+    return property_obligations_rec(tmp, current, no_timeframes);
   }
   else if(property_expr.id() == ID_sva_until_with)
   {
@@ -425,7 +423,7 @@ static obligationst property_obligations_rec(
     // Note that lhs and rhs are flipped.
     auto &until_with = to_sva_until_with_expr(property_expr);
     auto R = R_exprt{until_with.rhs(), until_with.lhs()};
-    return property_obligations_rec(R, current, no_timeframes, ns);
+    return property_obligations_rec(R, current, no_timeframes);
   }
   else if(property_expr.id() == ID_sva_s_until_with)
   {
@@ -433,7 +431,7 @@ static obligationst property_obligations_rec(
     // Note that lhs and rhs are flipped.
     auto &s_until_with = to_sva_s_until_with_expr(property_expr);
     auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
-    return property_obligations_rec(strong_R, current, no_timeframes, ns);
+    return property_obligations_rec(strong_R, current, no_timeframes);
   }
   else if(property_expr.id() == ID_and)
   {
@@ -443,7 +441,7 @@ static obligationst property_obligations_rec(
 
     for(auto &op : to_and_expr(property_expr).operands())
     {
-      obligations.add(property_obligations_rec(op, current, no_timeframes, ns));
+      obligations.add(property_obligations_rec(op, current, no_timeframes));
     }
 
     return obligations;
@@ -458,8 +456,7 @@ static obligationst property_obligations_rec(
 
     for(auto &op : to_or_expr(property_expr).operands())
     {
-      auto obligations =
-        property_obligations_rec(op, current, no_timeframes, ns);
+      auto obligations = property_obligations_rec(op, current, no_timeframes);
       auto conjunction = obligations.conjunction();
       t = std::max(t, conjunction.first);
       disjuncts.push_back(conjunction.second);
@@ -476,14 +473,14 @@ static obligationst property_obligations_rec(
     auto tmp = and_exprt{
       implies_exprt{equal_expr.lhs(), equal_expr.rhs()},
       implies_exprt{equal_expr.rhs(), equal_expr.lhs()}};
-    return property_obligations_rec(tmp, current, no_timeframes, ns);
+    return property_obligations_rec(tmp, current, no_timeframes);
   }
   else if(property_expr.id() == ID_implies)
   {
     // we rely on NNF
     auto &implies_expr = to_implies_expr(property_expr);
     auto tmp = or_exprt{not_exprt{implies_expr.lhs()}, implies_expr.rhs()};
-    return property_obligations_rec(tmp, current, no_timeframes, ns);
+    return property_obligations_rec(tmp, current, no_timeframes);
   }
   else if(property_expr.id() == ID_if)
   {
@@ -492,10 +489,10 @@ static obligationst property_obligations_rec(
     auto cond =
       instantiate_property(if_expr.cond(), current, no_timeframes).second;
     auto obligations_true =
-      property_obligations_rec(if_expr.true_case(), current, no_timeframes, ns)
+      property_obligations_rec(if_expr.true_case(), current, no_timeframes)
         .conjunction();
     auto obligations_false =
-      property_obligations_rec(if_expr.false_case(), current, no_timeframes, ns)
+      property_obligations_rec(if_expr.false_case(), current, no_timeframes)
         .conjunction();
     return obligationst{
       std::max(obligations_true.first, obligations_false.first),
@@ -507,7 +504,7 @@ static obligationst property_obligations_rec(
   {
     // drop reduntant type casts
     return property_obligations_rec(
-      to_typecast_expr(property_expr).op(), current, no_timeframes, ns);
+      to_typecast_expr(property_expr).op(), current, no_timeframes);
   }
   else if(property_expr.id() == ID_not)
   {
@@ -519,35 +516,35 @@ static obligationst property_obligations_rec(
       // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
       auto &U = to_U_expr(op);
       auto R = R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
-      return property_obligations_rec(R, current, no_timeframes, ns);
+      return property_obligations_rec(R, current, no_timeframes);
     }
     else if(op.id() == ID_R)
     {
       // ¬(φ R ψ) ≡ (¬φ U ¬ψ)
       auto &R = to_R_expr(op);
       auto U = U_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
-      return property_obligations_rec(U, current, no_timeframes, ns);
+      return property_obligations_rec(U, current, no_timeframes);
     }
     else if(op.id() == ID_G)
     {
       // ¬G φ ≡ F ¬φ
       auto &G = to_G_expr(op);
       auto F = F_exprt{not_exprt{G.op()}};
-      return property_obligations_rec(F, current, no_timeframes, ns);
+      return property_obligations_rec(F, current, no_timeframes);
     }
     else if(op.id() == ID_F)
     {
       // ¬F φ ≡ G ¬φ
       auto &F = to_F_expr(op);
       auto G = G_exprt{not_exprt{F.op()}};
-      return property_obligations_rec(G, current, no_timeframes, ns);
+      return property_obligations_rec(G, current, no_timeframes);
     }
     else if(op.id() == ID_X)
     {
       // ¬X φ ≡ X ¬φ
       auto &X = to_X_expr(op);
       auto negX = X_exprt{not_exprt{X.op()}};
-      return property_obligations_rec(negX, current, no_timeframes, ns);
+      return property_obligations_rec(negX, current, no_timeframes);
     }
     else if(op.id() == ID_implies)
     {
@@ -555,7 +552,7 @@ static obligationst property_obligations_rec(
       auto &implies_expr = to_implies_expr(op);
       auto and_expr =
         and_exprt{implies_expr.lhs(), not_exprt{implies_expr.rhs()}};
-      return property_obligations_rec(and_expr, current, no_timeframes, ns);
+      return property_obligations_rec(and_expr, current, no_timeframes);
     }
     else if(op.id() == ID_and)
     {
@@ -563,7 +560,7 @@ static obligationst property_obligations_rec(
       for(auto &op : operands)
         op = not_exprt{op};
       auto or_expr = or_exprt{std::move(operands)};
-      return property_obligations_rec(or_expr, current, no_timeframes, ns);
+      return property_obligations_rec(or_expr, current, no_timeframes);
     }
     else if(op.id() == ID_or)
     {
@@ -571,26 +568,26 @@ static obligationst property_obligations_rec(
       for(auto &op : operands)
         op = not_exprt{op};
       auto and_expr = and_exprt{std::move(operands)};
-      return property_obligations_rec(and_expr, current, no_timeframes, ns);
+      return property_obligations_rec(and_expr, current, no_timeframes);
     }
     else if(op.id() == ID_not)
     {
       return property_obligations_rec(
-        to_not_expr(op).op(), current, no_timeframes, ns);
+        to_not_expr(op).op(), current, no_timeframes);
     }
     else if(op.id() == ID_sva_until)
     {
       // ¬(φ W ψ) ≡ (¬φ strongR ¬ψ)
       auto &W = to_sva_until_expr(op);
       auto strong_R = strong_R_exprt{not_exprt{W.lhs()}, not_exprt{W.rhs()}};
-      return property_obligations_rec(strong_R, current, no_timeframes, ns);
+      return property_obligations_rec(strong_R, current, no_timeframes);
     }
     else if(op.id() == ID_sva_s_until)
     {
       // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
       auto &U = to_sva_s_until_expr(op);
       auto R = R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
-      return property_obligations_rec(R, current, no_timeframes, ns);
+      return property_obligations_rec(R, current, no_timeframes);
     }
     else if(op.id() == ID_sva_until_with)
     {
@@ -599,7 +596,7 @@ static obligationst property_obligations_rec(
       auto &until_with = to_sva_until_with_expr(op);
       auto R = R_exprt{until_with.rhs(), until_with.lhs()};
       auto U = sva_until_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
-      return property_obligations_rec(U, current, no_timeframes, ns);
+      return property_obligations_rec(U, current, no_timeframes);
     }
     else if(op.id() == ID_sva_s_until_with)
     {
@@ -609,7 +606,7 @@ static obligationst property_obligations_rec(
       auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
       auto W =
         weak_U_exprt{not_exprt{strong_R.lhs()}, not_exprt{strong_R.rhs()}};
-      return property_obligations_rec(W, current, no_timeframes, ns);
+      return property_obligations_rec(W, current, no_timeframes);
     }
     else
       return obligationst{
@@ -636,10 +633,9 @@ Function: property_obligations
 
 obligationst property_obligations(
   const exprt &property_expr,
-  const mp_integer &no_timeframes,
-  const namespacet &ns)
+  const mp_integer &no_timeframes)
 {
-  return property_obligations_rec(property_expr, 0, no_timeframes, ns);
+  return property_obligations_rec(property_expr, 0, no_timeframes);
 }
 
 /*******************************************************************\
@@ -660,12 +656,12 @@ void property(
   message_handlert &message_handler,
   decision_proceduret &solver,
   std::size_t no_timeframes,
-  const namespacet &ns)
+  const namespacet &)
 {
   // The first element of the pair is the length of the
   // counterexample, and the second is the condition that
   // must be valid for the property to hold.
-  auto obligations = property_obligations(property_expr, no_timeframes, ns);
+  auto obligations = property_obligations(property_expr, no_timeframes);
 
   // Map obligations onto timeframes.
   prop_handles.resize(no_timeframes, true_exprt());
