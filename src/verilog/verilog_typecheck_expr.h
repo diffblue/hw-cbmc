@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <stack>
 
 class function_call_exprt;
+class power_exprt;
 
 class verilog_typecheck_exprt:public verilog_typecheck_baset
 {
@@ -168,6 +169,7 @@ private:
   convert_system_function(const irep_idt &identifier, function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(binary_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
+  [[nodiscard]] exprt convert_power_expr(power_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);
   void implicit_typecast(exprt &, const typet &type);
   void tc_binary_expr(exprt &);
