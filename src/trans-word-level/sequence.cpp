@@ -12,7 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <verilog/sva_expr.h>
 
-#include "instantiate_word_level.h"
+#include "obligations.h"
+#include "property.h"
 
 std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   exprt expr,
@@ -153,13 +154,14 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     // 3. The end time of the composite sequence is
     //    the end time of the operand sequence that completes last.
     // Condition (3) is TBD.
-    exprt::operandst conjuncts;
+    obligationst obligations;
 
     for(auto &op : expr.operands())
-      conjuncts.push_back(instantiate_property(op, t, no_timeframes).second);
+    {
+      obligations.add(property_obligations(op, t, no_timeframes));
+    }
 
-    exprt condition = conjunction(conjuncts);
-    return {{t, condition}};
+    return {obligations.conjunction()};
   }
   else if(expr.id() == ID_sva_or)
   {
@@ -177,6 +179,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   else
   {
     // not a sequence, evaluate as state predicate
-    return {instantiate_property(expr, t, no_timeframes)};
+    auto obligations = property_obligations(expr, t, no_timeframes);
+    return {obligations.conjunction()};
   }
 }

@@ -68,6 +68,23 @@ std::optional<exprt> negate_property_node(const exprt &expr)
   {
     return to_not_expr(expr).op();
   }
+  else if(expr.id() == ID_sva_always)
+  {
+    // not always p --> s_eventually not p
+    return sva_s_eventually_exprt{not_exprt{to_sva_always_expr(expr).op()}};
+  }
+  else if(expr.id() == ID_sva_s_eventually)
+  {
+    // not s_eventually p --> always not p
+    return sva_always_exprt{not_exprt{to_sva_s_eventually_expr(expr).op()}};
+  }
+  else if(expr.id() == ID_sva_eventually)
+  {
+    // not eventually[i:j] p --> s_always[i:j] not p
+    auto &eventually = to_sva_eventually_expr(expr);
+    return sva_s_always_exprt{
+      eventually.lower(), eventually.upper(), not_exprt{eventually.op()}};
+  }
   else if(expr.id() == ID_sva_until)
   {
     // ¬(φ W ψ) ≡ (¬φ strongR ¬ψ)

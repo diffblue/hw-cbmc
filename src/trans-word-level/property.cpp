@@ -519,6 +519,11 @@ static obligationst property_obligations_rec(
       return property_obligations_rec(
         op_negated_opt.value(), current, no_timeframes);
     }
+    else if(is_SVA_sequence(op))
+    {
+      return obligationst{
+        instantiate_property(property_expr, current, no_timeframes)};
+    }
     else if(is_temporal_operator(op))
     {
       throw ebmc_errort() << "failed to make NNF for " << op.id();
@@ -530,11 +535,48 @@ static obligationst property_obligations_rec(
         instantiate_property(property_expr, current, no_timeframes)};
     }
   }
+  else if(property_expr.id() == ID_sva_implies)
+  {
+    // We need NNF, hence we go via implies_exprt.
+    // Note that this is not an SVA sequence operator.
+    auto &sva_implies_expr = to_sva_implies_expr(property_expr);
+    auto implies_expr =
+      implies_exprt{sva_implies_expr.lhs(), sva_implies_expr.rhs()};
+    return property_obligations_rec(implies_expr, current, no_timeframes);
+  }
+  else if(property_expr.id() == ID_sva_iff)
+  {
+    // We need NNF, hence we go via equal_exprt.
+    // Note that this is not an SVA sequence operator.
+    auto &sva_iff_expr = to_sva_iff_expr(property_expr);
+    auto equal_expr = equal_exprt{sva_iff_expr.lhs(), sva_iff_expr.rhs()};
+    return property_obligations_rec(equal_expr, current, no_timeframes);
+  }
   else
   {
     return obligationst{
       instantiate_property(property_expr, current, no_timeframes)};
   }
+}
+
+/*******************************************************************\
+
+Function: property_obligations
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+obligationst property_obligations(
+  const exprt &property_expr,
+  const mp_integer &t,
+  const mp_integer &no_timeframes)
+{
+  return property_obligations_rec(property_expr, t, no_timeframes);
 }
 
 /*******************************************************************\
