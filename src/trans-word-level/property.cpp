@@ -425,7 +425,7 @@ static obligationst property_obligations_rec(
     // Note that lhs and rhs are flipped.
     auto &until_with = to_sva_until_with_expr(property_expr);
     auto R = R_exprt{until_with.rhs(), until_with.lhs()};
-    return property_obligations_rec(R, solver, current, no_timeframes, ns);
+    return property_obligations_rec(R, current, no_timeframes, ns);
   }
   else if(property_expr.id() == ID_sva_s_until_with)
   {
@@ -433,8 +433,7 @@ static obligationst property_obligations_rec(
     // Note that lhs and rhs are flipped.
     auto &s_until_with = to_sva_s_until_with_expr(property_expr);
     auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
-    return property_obligations_rec(
-      strong_R, solver, current, no_timeframes, ns);
+    return property_obligations_rec(strong_R, current, no_timeframes, ns);
   }
   else if(property_expr.id() == ID_and)
   {
@@ -584,15 +583,14 @@ static obligationst property_obligations_rec(
       // ¬(φ W ψ) ≡ (¬φ strongR ¬ψ)
       auto &W = to_sva_until_expr(op);
       auto strong_R = strong_R_exprt{not_exprt{W.lhs()}, not_exprt{W.rhs()}};
-      return property_obligations_rec(
-        strong_R, solver, current, no_timeframes, ns);
+      return property_obligations_rec(strong_R, current, no_timeframes, ns);
     }
     else if(op.id() == ID_sva_s_until)
     {
       // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
       auto &U = to_sva_s_until_expr(op);
       auto R = R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
-      return property_obligations_rec(R, solver, current, no_timeframes, ns);
+      return property_obligations_rec(R, current, no_timeframes, ns);
     }
     else if(op.id() == ID_sva_until_with)
     {
@@ -601,7 +599,7 @@ static obligationst property_obligations_rec(
       auto &until_with = to_sva_until_with_expr(op);
       auto R = R_exprt{until_with.rhs(), until_with.lhs()};
       auto U = sva_until_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
-      return property_obligations_rec(U, solver, current, no_timeframes, ns);
+      return property_obligations_rec(U, current, no_timeframes, ns);
     }
     else if(op.id() == ID_sva_s_until_with)
     {
@@ -611,7 +609,7 @@ static obligationst property_obligations_rec(
       auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
       auto W =
         weak_U_exprt{not_exprt{strong_R.lhs()}, not_exprt{strong_R.rhs()}};
-      return property_obligations_rec(W, solver, current, no_timeframes, ns);
+      return property_obligations_rec(W, current, no_timeframes, ns);
     }
     else
       return obligationst{
