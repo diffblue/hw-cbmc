@@ -290,7 +290,6 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
     if(expr.id() == ID_typecast)
     {
       auto &typecast_expr = to_typecast_expr(expr);
-      typecast_expr.op() = synth_expr(typecast_expr.op(), symbol_state);
 
       const auto &src_type = typecast_expr.op().type();
       const auto &dest_type = typecast_expr.type();
