@@ -2144,6 +2144,34 @@ typet verilog_typecheck_exprt::enum_decay(const typet &type)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::union_decay
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::union_decay(exprt &expr) const
+{
+  // 1800-2017 7.3.1
+  // Verilog union types decay to a vector type [$bits(t)-1:0] when
+  // used in relational or arithmetic expressions.
+  auto &type = expr.type();
+  if(type.id() == ID_union)
+  {
+    auto new_type =
+      unsignedbv_typet{numeric_cast_v<std::size_t>(get_width(type))};
+    // The synthesis stage turns these typecasts into a member
+    // expression.
+    expr = typecast_exprt{expr, new_type};
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::tc_binary_expr
 
   Inputs:
@@ -2158,6 +2186,9 @@ void verilog_typecheck_exprt::tc_binary_expr(
   const exprt &expr,
   exprt &op0, exprt &op1)
 {
+  union_decay(op0);
+  union_decay(op1);
+
   // follows 1800-2017 11.8.2
   const typet new_type =
     max_type(enum_decay(op0.type()), enum_decay(op1.type()));
@@ -2222,6 +2253,9 @@ void verilog_typecheck_exprt::typecheck_relation(binary_exprt &expr)
 {
   auto &lhs = expr.lhs();
   auto &rhs = expr.rhs();
+
+  union_decay(lhs);
+  union_decay(rhs);
 
   // Relations are special-cased in 1800-2017 11.8.2.
   const typet new_type =
