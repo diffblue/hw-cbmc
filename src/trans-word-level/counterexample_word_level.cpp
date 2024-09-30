@@ -6,15 +6,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
-
-#include <langapi/language_util.h>
-
-#include "instantiate_word_level.h"
 #include "counterexample_word_level.h"
 
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
+
+#include <langapi/language_util.h>
+#include <solvers/decision_procedure.h>
+
+#include "instantiate_word_level.h"
+
+#include <iostream>
 
 /*******************************************************************\
 

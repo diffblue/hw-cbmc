@@ -6,12 +6,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/namespace.h>
-#include <util/find_symbols.h>
+#include "unwind.h"
+
 #include <util/expr_util.h>
+#include <util/find_symbols.h>
+#include <util/namespace.h>
+
+#include <solvers/decision_procedure.h>
 
 #include "instantiate_word_level.h"
-#include "unwind.h"
 
 /*******************************************************************\
 
@@ -44,8 +47,7 @@ void unwind(
 
   if(!op_invar.is_true())
     for(std::size_t c = 0; c < no_timeframes; c++)
-      decision_procedure.set_to_true(
-        instantiate(op_invar, c, no_timeframes, ns));
+      decision_procedure.set_to_true(instantiate(op_invar, c, no_timeframes));
 
   // initial state
 
@@ -54,8 +56,7 @@ void unwind(
     message.progress() << "Initial state" << messaget::eom;
 
     if(!op_init.is_true())
-      decision_procedure.set_to_true(
-        instantiate(op_init, 0, no_timeframes, ns));
+      decision_procedure.set_to_true(instantiate(op_init, 0, no_timeframes));
   }
 
   // transition relation
@@ -74,7 +75,6 @@ void unwind(
         message.progress() << "Transition " << t << "->" << t + 1
                            << messaget::eom;
 
-      decision_procedure.set_to_true(
-        instantiate(op_trans, t, no_timeframes, ns));
+      decision_procedure.set_to_true(instantiate(op_trans, t, no_timeframes));
     }
 }
