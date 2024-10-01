@@ -1,0 +1,9 @@
+KNOWNBUG
+eventually4.sv
+--bound 2
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Property gives counterexample but should pass.
