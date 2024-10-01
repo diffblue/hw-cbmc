@@ -612,6 +612,7 @@ description_brace:
 
 description:
 	  module_declaration
+		{ PARSER.parse_tree.add_item(stack_expr($1)); }
 	| udp_declaration
 	| interface_declaration
  	| program_declaration
@@ -670,7 +671,8 @@ module_ansi_header:
 module_declaration:
           module_nonansi_header module_item_brace TOK_ENDMODULE endmodule_identifier_opt
           {
-            PARSER.parse_tree.create_module(
+            init($$);
+            stack_expr($$) = PARSER.parse_tree.create_module(
               stack_expr($1).operands()[0],
               stack_expr($1).operands()[1],
               stack_expr($1).operands()[2],
@@ -683,7 +685,8 @@ module_declaration:
           }
         | module_ansi_header module_item_brace TOK_ENDMODULE endmodule_identifier_opt
           {
-            PARSER.parse_tree.create_module(
+            init($$);
+            stack_expr($$) = PARSER.parse_tree.create_module(
               stack_expr($1).operands()[0],
               stack_expr($1).operands()[1],
               stack_expr($1).operands()[2],
@@ -695,9 +698,11 @@ module_declaration:
             pop_scope();
           }
         | TOK_EXTERN module_nonansi_header
-          /* ignored for now */
+		/* ignored for now */
+		{ init($$); }
         | TOK_EXTERN module_ansi_header
-          /* ignored for now */
+		/* ignored for now */
+		{ init($$); }
 	;
 
 module_keyword:
