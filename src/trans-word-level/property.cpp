@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 
 #include <ebmc/ebmc_error.h>
+#include <temporal-logic/nnf.h>
 #include <temporal-logic/temporal_expr.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
@@ -511,106 +512,23 @@ static obligationst property_obligations_rec(
     // We need NNF, try to eliminate the negation.
     auto &op = to_not_expr(property_expr).op();
 
-    if(op.id() == ID_U)
-    {
-      // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
-      auto &U = to_U_expr(op);
-      auto R = R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
-      return property_obligations_rec(R, current, no_timeframes);
-    }
-    else if(op.id() == ID_R)
-    {
-      // ¬(φ R ψ) ≡ (¬φ U ¬ψ)
-      auto &R = to_R_expr(op);
-      auto U = U_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
-      return property_obligations_rec(U, current, no_timeframes);
-    }
-    else if(op.id() == ID_G)
-    {
-      // ¬G φ ≡ F ¬φ
-      auto &G = to_G_expr(op);
-      auto F = F_exprt{not_exprt{G.op()}};
-      return property_obligations_rec(F, current, no_timeframes);
-    }
-    else if(op.id() == ID_F)
-    {
-      // ¬F φ ≡ G ¬φ
-      auto &F = to_F_expr(op);
-      auto G = G_exprt{not_exprt{F.op()}};
-      return property_obligations_rec(G, current, no_timeframes);
-    }
-    else if(op.id() == ID_X)
-    {
-      // ¬X φ ≡ X ¬φ
-      auto &X = to_X_expr(op);
-      auto negX = X_exprt{not_exprt{X.op()}};
-      return property_obligations_rec(negX, current, no_timeframes);
-    }
-    else if(op.id() == ID_implies)
-    {
-      // ¬(a->b) --> a && ¬b
-      auto &implies_expr = to_implies_expr(op);
-      auto and_expr =
-        and_exprt{implies_expr.lhs(), not_exprt{implies_expr.rhs()}};
-      return property_obligations_rec(and_expr, current, no_timeframes);
-    }
-    else if(op.id() == ID_and)
-    {
-      auto operands = op.operands();
-      for(auto &op : operands)
-        op = not_exprt{op};
-      auto or_expr = or_exprt{std::move(operands)};
-      return property_obligations_rec(or_expr, current, no_timeframes);
-    }
-    else if(op.id() == ID_or)
-    {
-      auto operands = op.operands();
-      for(auto &op : operands)
-        op = not_exprt{op};
-      auto and_expr = and_exprt{std::move(operands)};
-      return property_obligations_rec(and_expr, current, no_timeframes);
-    }
-    else if(op.id() == ID_not)
+    auto op_negated_opt = negate_property_node(op);
+
+    if(op_negated_opt.has_value())
     {
       return property_obligations_rec(
-        to_not_expr(op).op(), current, no_timeframes);
+        op_negated_opt.value(), current, no_timeframes);
     }
-    else if(op.id() == ID_sva_until)
+    else if(is_temporal_operator(op))
     {
-      // ¬(φ W ψ) ≡ (¬φ strongR ¬ψ)
-      auto &W = to_sva_until_expr(op);
-      auto strong_R = strong_R_exprt{not_exprt{W.lhs()}, not_exprt{W.rhs()}};
-      return property_obligations_rec(strong_R, current, no_timeframes);
-    }
-    else if(op.id() == ID_sva_s_until)
-    {
-      // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
-      auto &U = to_sva_s_until_expr(op);
-      auto R = R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
-      return property_obligations_rec(R, current, no_timeframes);
-    }
-    else if(op.id() == ID_sva_until_with)
-    {
-      // ¬(φ R ψ) ≡ (¬φ U ¬ψ)
-      // Note LHS and RHS are swapped.
-      auto &until_with = to_sva_until_with_expr(op);
-      auto R = R_exprt{until_with.rhs(), until_with.lhs()};
-      auto U = sva_until_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
-      return property_obligations_rec(U, current, no_timeframes);
-    }
-    else if(op.id() == ID_sva_s_until_with)
-    {
-      // ¬(φ strongR ψ) ≡ (¬φ W ¬ψ)
-      // Note LHS and RHS are swapped.
-      auto &s_until_with = to_sva_s_until_with_expr(op);
-      auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
-      auto W =
-        weak_U_exprt{not_exprt{strong_R.lhs()}, not_exprt{strong_R.rhs()}};
-      return property_obligations_rec(W, current, no_timeframes);
+      throw ebmc_errort() << "failed to make NNF for " << op.id();
     }
     else
+    {
+      // state formula
       return obligationst{
         instantiate_property(property_expr, current, no_timeframes)};
+    }
   }
   else
   {
