@@ -862,7 +862,9 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
 
   for(auto &module_item : module_items)
   {
-    if(module_item.id() == ID_generate_block)
+    if(
+      module_item.id() == ID_generate_block ||
+      module_item.id() == ID_generate_for || module_item.id() == ID_generate_if)
     {
       // elaborate_generate_item calls elaborate_level
       // recursively.

@@ -1,0 +1,9 @@
+CORE
+generate-for3.v
+--module main --bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The generate ... endgenerate keywords became optional with 1364-2005.
+https://github.com/diffblue/hw-cbmc/issues/747
