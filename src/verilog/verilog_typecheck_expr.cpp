@@ -893,7 +893,7 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   }
   else if(expr.id()==ID_symbol)
   {
-    return convert_symbol(to_symbol_expr(std::move(expr)));
+    return convert_symbol(to_symbol_expr(std::move(expr)), {});
   }
   else if(expr.id()==ID_verilog_star_event)
   {
@@ -931,7 +931,9 @@ Function: verilog_typecheck_exprt::convert_symbol
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::convert_symbol(symbol_exprt expr)
+exprt verilog_typecheck_exprt::convert_symbol(
+  symbol_exprt expr,
+  const std::optional<typet> &implicit_net_type)
 {
   const irep_idt &identifier = expr.get_identifier();
 
@@ -1018,19 +1020,25 @@ exprt verilog_typecheck_exprt::convert_symbol(symbol_exprt expr)
       return std::move(expr);
     }
   }
-  else if(!implicit_wire(identifier, symbol))
-  {
-    // this should become an error
-    warning().source_location=expr.source_location();
-    warning() << "implicit wire " << symbol->display_name() << eom;
-    expr.type()=symbol->type;
-    expr.set_identifier(symbol->name);
-    return std::move(expr);
-  }
   else
   {
-    throw errort().with_location(expr.source_location())
-      << "unknown identifier " << identifier;
+    if(implicit_net_type.has_value())
+    {
+      implicit_wire(identifier, symbol, implicit_net_type.value());
+      if(warn_implicit_nets)
+      {
+        warning().source_location = expr.source_location();
+        warning() << "implicit wire " << symbol->display_name() << eom;
+      }
+      expr.type() = symbol->type;
+      expr.set_identifier(symbol->name);
+      return std::move(expr);
+    }
+    else
+    {
+      throw errort().with_location(expr.source_location())
+        << "unknown identifier " << identifier;
+    }
   }
 }
 
@@ -3259,7 +3267,7 @@ bool verilog_typecheck(
     message_handler.get_message_count(messaget::M_ERROR);
 
   verilog_typecheck_exprt verilog_typecheck_expr(
-    standard, ns, module_identifier, message_handler);
+    standard, true, ns, module_identifier, message_handler);
 
   try
   {

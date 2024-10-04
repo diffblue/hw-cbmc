@@ -1,9 +1,8 @@
-KNOWNBUG
+CORE
 implicit2.sv
---bound 0
+--bound 0 --warn-implicit-nets
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The width of the implicit net is set incorrectly.

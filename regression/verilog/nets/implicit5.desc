@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 implicit5.sv
---bound 0
-^EXIT=0$
+--bound 0 --warn-implicit-nets
+^file .* line 4: unknown identifier A$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This case should be errored.

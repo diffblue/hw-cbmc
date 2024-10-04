@@ -1,5 +1,5 @@
 CORE
-implicit4.sv
+implicit6.sv
 --bound 0 --warn-implicit-nets
 ^EXIT=0$
 ^SIGNAL=0$
