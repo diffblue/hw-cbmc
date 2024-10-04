@@ -1,0 +1,9 @@
+KNOWNBUG
+implicit5.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This case should be errored.

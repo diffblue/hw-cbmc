@@ -1,0 +1,10 @@
+CORE
+implicit1.sv
+--bound 0
+^file .* line 4: implicit wire main\.O$
+^file .* line 4: implicit wire main\.A$
+^file .* line 4: implicit wire main\.B$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
