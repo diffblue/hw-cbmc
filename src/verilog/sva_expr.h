@@ -349,7 +349,7 @@ class sva_ranged_s_eventually_exprt : public sva_ranged_predicate_exprt
 public:
   explicit sva_ranged_s_eventually_exprt(exprt lower, exprt upper, exprt op)
     : sva_ranged_predicate_exprt(
-        ID_sva_s_eventually,
+        ID_sva_ranged_s_eventually,
         std::move(lower),
         std::move(upper),
         std::move(op))
@@ -791,6 +791,49 @@ static inline sva_or_exprt &to_sva_or_expr(exprt &expr)
   PRECONDITION(expr.id() == ID_sva_or);
   sva_or_exprt::check(expr, validation_modet::INVARIANT);
   return static_cast<sva_or_exprt &>(expr);
+}
+
+class sva_followed_by_exprt : public binary_predicate_exprt
+{
+public:
+  const exprt &sequence() const
+  {
+    return op0();
+  }
+
+  exprt &sequence()
+  {
+    return op0();
+  }
+
+  const exprt &property() const
+  {
+    return op1();
+  }
+
+  exprt &property()
+  {
+    return op1();
+  }
+};
+
+static inline const sva_followed_by_exprt &
+to_sva_followed_by_expr(const exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_sva_overlapped_followed_by ||
+    expr.id() == ID_sva_nonoverlapped_followed_by);
+  sva_followed_by_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_followed_by_exprt &>(expr);
+}
+
+static inline sva_followed_by_exprt &to_sva_followed_by_expr(exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_sva_overlapped_followed_by ||
+    expr.id() == ID_sva_nonoverlapped_followed_by);
+  sva_followed_by_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_followed_by_exprt &>(expr);
 }
 
 class sva_cycle_delay_exprt : public ternary_exprt
