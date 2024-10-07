@@ -844,13 +844,8 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     if(arguments.size() >= 2)
     {
-      auto tmp = elaborate_constant_expression(arguments[1]);
-      if(!tmp.is_constant())
-      {
-        throw errort().with_location(arguments[1].source_location())
-          << "expected elaboration-time constant, but got `" << to_string(tmp)
-          << '\'';
-      }
+      auto tmp = elaborate_constant_expression_check(arguments[1]);
+      arguments[1] = tmp;
     }
 
     expr.type() = arguments.front().type();
@@ -1454,12 +1449,12 @@ verilog_typecheck_exprt::convert_integer_constant_expression(exprt expr)
   // this could be large
   propagate_type(expr, integer_typet());
 
-  exprt tmp = elaborate_constant_expression(expr);
+  exprt tmp = elaborate_constant_expression_check(expr);
 
-  if(!tmp.is_constant())
+  if(tmp.id() == ID_infinity)
   {
     throw errort().with_location(source_location)
-      << "expected constant expression, but got `" << to_string(tmp) << '\'';
+      << "expected integer constant, but got $";
   }
 
   const auto &tmp_constant = to_constant_expr(tmp);
@@ -1515,6 +1510,9 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 
     if(symbol.is_macro)
     {
+      // Elaborate recursively
+      elaborate_symbol_rec(symbol.name);
+
       // A parameter or local parameter. Replace by its value.
       return symbol.value;
     }
@@ -1524,12 +1522,12 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
     #if 0
     status() << "READ " << identifier << " = " << to_string(value) << eom;
     #endif
-      
+
     if(value.is_not_nil())
     {
-      source_locationt source_location=expr.source_location();
-      exprt tmp=value;
-      tmp.add_source_location()=source_location;
+      source_locationt source_location = expr.source_location();
+      exprt tmp = value;
+      tmp.add_source_location() = source_location;
       return tmp;
     }
     else
@@ -1667,6 +1665,34 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 
     return simplified_expr;
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::elaborate_constant_expression_check
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::elaborate_constant_expression_check(exprt expr)
+{
+  source_locationt source_location = expr.find_source_location();
+
+  exprt tmp = elaborate_constant_expression(std::move(expr));
+
+  // $ counts as a constant
+  if(!tmp.is_constant() && tmp.id() != ID_infinity)
+  {
+    throw errort().with_location(source_location)
+      << "expected constant expression, but got `" << to_string(tmp) << '\'';
+  }
+
+  return tmp;
 }
 
 /*******************************************************************\

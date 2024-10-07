@@ -614,6 +614,8 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
   new_symbol.base_name = base_name;
   new_symbol.pretty_name = strip_verilog_prefix(new_symbol.name);
 
+  let_symbols.insert(new_symbol.name);
+
   add_symbol(std::move(new_symbol));
 }
 
@@ -929,12 +931,17 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
     // mark as "elaborating" to detect cycles
     symbol.type.id(ID_elaborating);
 
+    bool is_let = let_symbols.find(symbol.name) != let_symbols.end();
+
     // Is the type derived from the value (e.g., parameters)?
     if(to_type_with_subtype(symbol.type).subtype().id() == ID_derive_from_value)
     {
       // First elaborate the value, possibly recursively.
       convert_expr(symbol.value);
-      symbol.value = elaborate_constant_expression(symbol.value);
+
+      if(!is_let)
+        symbol.value = elaborate_constant_expression_check(symbol.value);
+
       symbol.type = symbol.value.type();
     }
     else
@@ -948,7 +955,9 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       if(symbol.value.is_not_nil())
       {
         convert_expr(symbol.value);
-        symbol.value = elaborate_constant_expression(symbol.value);
+
+        if(!is_let)
+          symbol.value = elaborate_constant_expression_check(symbol.value);
 
         // Cast to the given type.
         propagate_type(symbol.value, symbol.type);
