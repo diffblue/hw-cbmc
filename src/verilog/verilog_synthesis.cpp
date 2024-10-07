@@ -198,6 +198,21 @@ Function: verilog_synthesist::synth_expr
 
 exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 {
+  if(expr.id() == ID_function_call)
+  {
+    return expand_function_call(to_function_call_expr(expr), symbol_state);
+  }
+  else if(expr.id() == ID_hierarchical_identifier)
+  {
+    expand_hierarchical_identifier(
+      to_hierarchical_identifier_expr(expr), symbol_state);
+    return expr;
+  }
+
+  // Do the operands recursively
+  for(auto &op : expr.operands())
+    op = synth_expr(op, symbol_state);
+
   if(expr.id()==ID_symbol)
   {
     const symbolt &symbol=ns.lookup(to_symbol_expr(expr));
@@ -245,9 +260,6 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id() == ID_concatenation)
   {
-    for(auto &op : expr.operands())
-      op = synth_expr(op, symbol_state);
-
     if(
       expr.type().id() == ID_verilog_unsignedbv ||
       expr.type().id() == ID_verilog_signedbv)
@@ -259,31 +271,19 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
     return expr;
   }
-  else if(expr.id()==ID_function_call)
-  {
-    return expand_function_call(to_function_call_expr(expr), symbol_state);
-  }
-  else if(expr.id()==ID_hierarchical_identifier)
-  {
-    expand_hierarchical_identifier(
-      to_hierarchical_identifier_expr(expr),
-      symbol_state);
-    return expr;
-  }
   else if(expr.id() == ID_power)
   {
     auto &power_expr = to_power_expr(expr);
-    DATA_INVARIANT(
-      power_expr.lhs().type() == power_expr.type(),
-      "power expression type consistency");
-    power_expr.lhs() = synth_expr(power_expr.lhs(), symbol_state);
-    power_expr.rhs() = synth_expr(power_expr.rhs(), symbol_state);
 
     // encode into aval/bval
     if(is_four_valued(expr.type()))
       return aval_bval(power_expr);
     else
     {
+      DATA_INVARIANT(
+        power_expr.lhs().type() == power_expr.type(),
+        "power expression type consistency");
+
       auto rhs_int = numeric_cast<std::size_t>(power_expr.rhs());
       if(rhs_int.has_value())
       {
@@ -306,7 +306,6 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   {
     {
       auto &op = to_typecast_expr(expr).op();
-      op = synth_expr(op, symbol_state);
 
       // we perform some form of simplification for these
       if(op.is_constant())
@@ -346,8 +345,6 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   {
     auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
     auto &src = part_select.src();
-
-    src = synth_expr(src, symbol_state);
 
     auto op1 = numeric_cast_v<mp_integer>(to_constant_expr(part_select.msb()));
     auto op2 = numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
@@ -449,45 +446,29 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id() == ID_verilog_logical_equality)
   {
-    for(auto &op : expr.operands())
-      op = synth_expr(op, symbol_state);
     return aval_bval(to_verilog_logical_equality_expr(expr));
   }
   else if(expr.id() == ID_verilog_logical_inequality)
   {
-    for(auto &op : expr.operands())
-      op = synth_expr(op, symbol_state);
     return aval_bval(to_verilog_logical_inequality_expr(expr));
   }
   else if(expr.id() == ID_verilog_wildcard_equality)
   {
-    for(auto &op : expr.operands())
-      op = synth_expr(op, symbol_state);
     return aval_bval(to_verilog_wildcard_equality_expr(expr));
   }
   else if(expr.id() == ID_verilog_wildcard_inequality)
   {
-    for(auto &op : expr.operands())
-      op = synth_expr(op, symbol_state);
     return aval_bval(to_verilog_wildcard_inequality_expr(expr));
   }
   else if(expr.id() == ID_not)
   {
     auto &not_expr = to_not_expr(expr);
-    not_expr.op() = synth_expr(not_expr.op(), symbol_state);
 
     // encode into aval/bval
     if(is_four_valued(expr.type()))
       return aval_bval(not_expr);
     else
       return expr; // leave as is
-  }
-  else if(expr.has_operands())
-  {
-    for(auto &op : expr.operands())
-      op = synth_expr(op, symbol_state);
-
-    return expr;
   }
   else
     return expr; // leave as is
