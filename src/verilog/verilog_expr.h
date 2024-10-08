@@ -2203,6 +2203,9 @@ public:
   {
     return op2();
   }
+
+  // lowering to extractbits
+  exprt lower() const;
 };
 
 inline const verilog_non_indexed_part_select_exprt &
