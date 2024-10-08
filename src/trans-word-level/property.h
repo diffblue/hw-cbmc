@@ -42,4 +42,11 @@ symbol_exprt lasso_symbol(const mp_integer &k, const mp_integer &i);
 /// Returns true iff the given property requires lasso constraints for BMC.
 bool requires_lasso_constraints(const exprt &);
 
+class obligationst;
+
+obligationst property_obligations(
+  const exprt &,
+  const mp_integer &t,
+  const mp_integer &no_timeframes);
+
 #endif
