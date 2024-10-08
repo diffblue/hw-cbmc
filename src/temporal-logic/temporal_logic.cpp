@@ -74,7 +74,12 @@ bool is_SVA_sequence(const exprt &expr)
          id == ID_sva_non_overlapped_implication || id == ID_sva_cycle_delay ||
          id == ID_sva_sequence_concatenation ||
          id == ID_sva_sequence_intersect || id == ID_sva_sequence_first_match ||
-         id == ID_sva_sequence_throughout || id == ID_sva_sequence_within;
+         id == ID_sva_sequence_throughout || id == ID_sva_sequence_within ||
+         id == ID_sva_sequence_goto_repetition ||
+         id == ID_sva_sequence_consecutive_repetition ||
+         id == ID_sva_sequence_non_consecutive_repetition ||
+         id == ID_sva_sequence_repetition_star ||
+         id == ID_sva_sequence_repetition_plus;
 }
 
 bool is_SVA_operator(const exprt &expr)

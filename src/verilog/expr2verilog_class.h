@@ -120,6 +120,8 @@ protected:
 
   resultt convert_sva_unary(const std::string &name, const unary_exprt &);
 
+  resultt convert_sva_unary(const unary_exprt &, const std::string &name);
+
   resultt convert_sva_binary(const std::string &name, const binary_exprt &);
 
   resultt convert_sva_abort(const std::string &name, const sva_abort_exprt &);

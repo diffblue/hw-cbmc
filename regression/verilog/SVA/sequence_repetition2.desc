@@ -1,0 +1,15 @@
+CORE
+sequence_repetition2.sv
+--bound 10
+^\[main\.p0\] main\.x == 0\[\*\]: FAILURE: property not supported by BMC engine$
+^\[main\.p1\] main\.x == 1\[\*\]: FAILURE: property not supported by BMC engine$
+^\[main\.p2\] \(main\.x == 0\[\+\]\) #-# main\.x == 1: FAILURE: property not supported by BMC engine$
+^\[main\.p3\] main\.x == 0\[\+\]: FAILURE: property not supported by BMC engine$
+^\[main\.p4\] main\.half_x == 0\[\*\]: FAILURE: property not supported by BMC engine$
+^\[main\.p5\] main\.x == 1\[\+\]: FAILURE: property not supported by BMC engine$
+^\[main\.p6\] \(main\.x == 0\[\+\]\) #=# main\.x == 1: FAILURE: property not supported by BMC engine$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

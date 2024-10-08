@@ -110,6 +110,42 @@ Function: bmc_supports_SVA_property
 
 bool bmc_supports_SVA_property(const exprt &expr)
 {
+  // sva_sequence_first_match is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_first_match))
+    return false;
+
+  // sva_sequence_troughout is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_throughout))
+    return false;
+
+  // sva_sequence_intersect is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_intersect))
+    return false;
+
+  // sva_sequence_within is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_within))
+    return false;
+
+  // sva_sequence_repetition_plus is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_repetition_plus))
+    return false;
+
+  // sva_sequence_repetition_star is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_repetition_star))
+    return false;
+
+  // sva_sequence_non_consecutive_repetition is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_non_consecutive_repetition))
+    return false;
+
+  // sva_sequence_consecutive_repetition is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_consecutive_repetition))
+    return false;
+
+  // sva_sequence_goto_repetition is not supported yet
+  if(has_subexpr(expr, ID_sva_sequence_goto_repetition))
+    return false;
+
   return true;
 }
 

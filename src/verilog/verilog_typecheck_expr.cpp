@@ -2465,26 +2465,14 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     expr.id() == ID_sva_cycle_delay_plus ||
     expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_weak ||
     expr.id() == ID_sva_strong || expr.id() == ID_sva_nexttime ||
-    expr.id() == ID_sva_s_nexttime)
+    expr.id() == ID_sva_s_nexttime ||
+    expr.id() == ID_sva_sequence_first_match ||
+    expr.id() == ID_sva_sequence_repetition_plus ||
+    expr.id() == ID_sva_sequence_repetition_star)
   {
     convert_expr(expr.op());
     make_boolean(expr.op());
     expr.type()=bool_typet();
-  }
-  else if(expr.id() == ID_sva_sequence_first_match)
-  {
-    throw errort().with_location(expr.source_location())
-      << "no support for 'first_match'";
-  }
-  else if(expr.id() == ID_sva_sequence_repetition_plus)
-  {
-    throw errort().with_location(expr.source_location())
-      << "currently no support for [+]";
-  }
-  else if(expr.id() == ID_sva_sequence_repetition_star)
-  {
-    throw errort().with_location(expr.source_location())
-      << "currently no support for [*]";
   }
   else if(expr.id() == ID_verilog_explicit_cast)
   {
@@ -2959,20 +2947,24 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(expr.id() == ID_sva_sequence_intersect)
+  else if(
+    expr.id() == ID_sva_sequence_intersect ||
+    expr.id() == ID_sva_sequence_throughout ||
+    expr.id() == ID_sva_sequence_within ||
+    expr.id() == ID_sva_sequence_non_consecutive_repetition ||
+    expr.id() == ID_sva_sequence_consecutive_repetition ||
+    expr.id() == ID_sva_sequence_goto_repetition)
   {
-    throw errort().with_location(expr.source_location())
-      << "no support for 'intersect'";
-  }
-  else if(expr.id() == ID_sva_sequence_throughout)
-  {
-    throw errort().with_location(expr.source_location())
-      << "no support for 'throughout'";
-  }
-  else if(expr.id() == ID_sva_sequence_within)
-  {
-    throw errort().with_location(expr.source_location())
-      << "no support for 'within'";
+    auto &binary_expr = to_binary_expr(expr);
+
+    convert_expr(binary_expr.lhs());
+    make_boolean(binary_expr.lhs());
+    convert_expr(binary_expr.rhs());
+    make_boolean(binary_expr.rhs());
+
+    expr.type() = bool_typet();
+
+    return std::move(expr);
   }
   else if(expr.id()==ID_hierarchical_identifier)
   {
@@ -3025,21 +3017,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     expr.type() = bool_typet();
     return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_sequence_non_consecutive_repetition)
-  {
-    throw errort().with_location(expr.source_location())
-      << "currently no support for [=]";
-  }
-  else if(expr.id() == ID_sva_sequence_consecutive_repetition)
-  {
-    throw errort().with_location(expr.source_location())
-      << "currently no support for [*]";
-  }
-  else if(expr.id() == ID_sva_sequence_goto_repetition)
-  {
-    throw errort().with_location(expr.source_location())
-      << "currently no support for [->]";
   }
   else
   {
