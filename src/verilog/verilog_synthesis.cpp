@@ -344,51 +344,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   else if(expr.id() == ID_verilog_non_indexed_part_select)
   {
     auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
-    auto &src = part_select.src();
-
-    auto op1 = numeric_cast_v<mp_integer>(to_constant_expr(part_select.msb()));
-    auto op2 = numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
-
-    mp_integer src_width = get_width(src.type());
-    mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
-
-    // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
-    // x for 4-state and 0 for 2-state values. We
-    // achieve that by padding the operand from either end,
-    // or both.
-    exprt src_padded = src;
-
-    if(op2 < src_offset)
-    {
-      // lsb too small, pad below
-      auto padding_width = src_offset - op2;
-      auto padding = from_integer(
-        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
-      auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
-        get_width(src_padded.type()) + padding_width)};
-      src_padded = concatenation_exprt(src_padded, padding, new_type);
-      op2 += padding_width;
-      op1 += padding_width;
-    }
-
-    if(op1 >= src_width + src_offset)
-    {
-      // msb too large, pad above
-      auto padding_width = op1 - (src_width + src_offset) + 1;
-      auto padding = from_integer(
-        0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
-      auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
-        get_width(src_padded.type()) + padding_width)};
-      src_padded = concatenation_exprt(padding, src_padded, new_type);
-    }
-
-    op2 -= src_offset;
-    op1 -= src_offset;
-
-    // Construct the extractbits expression
-    return extractbits_exprt{
-      src_padded, from_integer(op2, integer_typet()), expr.type()}
-      .with_source_location(expr.source_location());
+    return part_select.lower();
   }
   else if(
     expr.id() == ID_verilog_indexed_part_select_plus ||
