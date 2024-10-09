@@ -73,6 +73,13 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     // not always p --> s_eventually not p
     return sva_s_eventually_exprt{not_exprt{to_sva_always_expr(expr).op()}};
   }
+  else if(expr.id() == ID_sva_ranged_always)
+  {
+    // not always [x:y] p --> s_eventually [x:y] not p
+    auto &always = to_sva_ranged_always_expr(expr);
+    return sva_ranged_s_eventually_exprt{
+      always.lower(), always.upper(), not_exprt{always.op()}};
+  }
   else if(expr.id() == ID_sva_s_eventually)
   {
     // not s_eventually p --> always not p
@@ -112,6 +119,22 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     auto &s_until_with = to_sva_s_until_with_expr(expr);
     auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
     return weak_U_exprt{not_exprt{strong_R.lhs()}, not_exprt{strong_R.rhs()}};
+  }
+  else if(expr.id() == ID_sva_overlapped_followed_by)
+  {
+    // 1800 2017 16.12.9
+    // !(a #-# b)   --->   a |-> !b
+    auto &followed_by = to_sva_followed_by_expr(expr);
+    auto not_b = not_exprt{followed_by.property()};
+    return sva_overlapped_implication_exprt{followed_by.lhs(), not_b};
+  }
+  else if(expr.id() == ID_sva_nonoverlapped_followed_by)
+  {
+    // 1800 2017 16.12.9
+    // !(a #=# b)   --->   a |=> !b
+    auto &followed_by = to_sva_followed_by_expr(expr);
+    auto not_b = not_exprt{followed_by.property()};
+    return sva_non_overlapped_implication_exprt{followed_by.lhs(), not_b};
   }
   else
     return {};
