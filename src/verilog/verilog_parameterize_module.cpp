@@ -289,7 +289,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   // recursive call
 
   verilog_typecheckt verilog_typecheck(
-    standard, *new_symbol, symbol_table, get_message_handler());
+    standard, false, *new_symbol, symbol_table, get_message_handler());
 
   if(verilog_typecheck.typecheck_main())
     throw 0;

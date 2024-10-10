@@ -56,8 +56,17 @@ void verilog_typecheckt::typecheck_port_connection(
   }
   else
   {
-    convert_expr(op);
-   
+    // IEEE 1800 2017 6.10 allows implicit declarations of nets when
+    // used in a port connection.
+    if(op.id() == ID_symbol)
+    {
+      op = convert_symbol(to_symbol_expr(op), port.type());
+    }
+    else
+    {
+      convert_expr(op);
+    }
+
     if(symbol.is_output)
       check_lhs(op, A_CONTINUOUS);
     else
@@ -229,7 +238,17 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
 
   for(auto &connection : inst.connections())
   {
-    convert_expr(connection);
+    // IEEE 1800 2017 6.10 allows implicit declarations of nets when
+    // used in a port connection.
+    if(connection.id() == ID_symbol)
+    {
+      connection = convert_symbol(to_symbol_expr(connection), type);
+    }
+    else
+    {
+      convert_expr(connection);
+    }
+
     propagate_type(connection, type);
   }
 }
@@ -821,8 +840,16 @@ void verilog_typecheckt::convert_continuous_assign(
     exprt &lhs = to_binary_expr(*it).lhs();
     exprt &rhs = to_binary_expr(*it).rhs();
 
-    convert_expr(lhs);
+    // IEEE 1800 2017 6.10 allows implicit declarations of nets when
+    // used as the LHS of a continuous assignment. The type is derived
+    // from the RHS, and hence, we convert that first.
     convert_expr(rhs);
+
+    if(lhs.id() == ID_symbol)
+      lhs = convert_symbol(to_symbol_expr(lhs), rhs.type());
+    else
+      convert_expr(lhs);
+
     propagate_type(rhs, lhs.type());
 
     check_lhs(lhs, A_CONTINUOUS);
@@ -1761,7 +1788,8 @@ Function: verilog_typecheckt::implicit_wire
 
 bool verilog_typecheckt::implicit_wire(
   const irep_idt &identifier,
-  const symbolt *&symbol_ptr)
+  const symbolt *&symbol_ptr,
+  const typet &net_type)
 {
   std::string full_identifier=
     id2string(module_identifier)+"."+id2string(identifier);
@@ -1773,7 +1801,7 @@ bool verilog_typecheckt::implicit_wire(
   symbol.value.make_nil();
   symbol.base_name=identifier;
   symbol.name=full_identifier;
-  symbol.type=bool_typet(); // TODO: other types?
+  symbol.type = net_type;
   symbol.pretty_name=strip_verilog_prefix(full_identifier);
 
   symbolt *new_symbol;
@@ -1836,6 +1864,7 @@ bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
   symbol_table_baset &symbol_table,
   const std::string &module,
+  bool warn_implicit_nets,
   message_handlert &message_handler)
 {
   verilog_parse_treet::module_mapt::const_iterator it=
@@ -1851,7 +1880,11 @@ bool verilog_typecheck(
   }
 
   return verilog_typecheck(
-    symbol_table, *it->second, parse_tree.standard, message_handler);
+    symbol_table,
+    *it->second,
+    parse_tree.standard,
+    warn_implicit_nets,
+    message_handler);
 }
 
 /*******************************************************************\
@@ -1870,6 +1903,7 @@ bool verilog_typecheck(
   symbol_table_baset &symbol_table,
   const verilog_module_sourcet &verilog_module_source,
   verilog_standardt standard,
+  bool warn_implicit_nets,
   message_handlert &message_handler)
 {
   // create symbol
@@ -1898,6 +1932,7 @@ bool verilog_typecheck(
   }
 
   verilog_typecheckt verilog_typecheck(
-    standard, *new_symbol, symbol_table, message_handler);
+    standard, warn_implicit_nets, *new_symbol, symbol_table, message_handler);
+
   return verilog_typecheck.typecheck_main();
 }

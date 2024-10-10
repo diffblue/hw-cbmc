@@ -112,6 +112,7 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   optionst options;
   options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
   options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
+  options.set_option("warn-implicit-nets", cmdline.isset("warn-implicit-nets"));
 
   // do -D
   if(cmdline.isset('D'))
@@ -163,6 +164,7 @@ static bool parse(
   optionst options;
   options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
   options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
+  options.set_option("warn-implicit-nets", cmdline.isset("warn-implicit-nets"));
 
   // do -D
   if(cmdline.isset('D'))

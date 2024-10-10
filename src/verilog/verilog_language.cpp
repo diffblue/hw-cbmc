@@ -37,6 +37,7 @@ void verilog_languaget::set_language_options(
   force_systemverilog = options.get_bool_option("force-systemverilog");
   vl2smv_extensions = options.get_bool_option("vl2smv-extensions");
   initial_defines = options.get_list_option("defines");
+  warn_implicit_nets = options.get_bool_option("warn-implicit-nets");
 }
 
 /*******************************************************************\
@@ -180,7 +181,8 @@ bool verilog_languaget::typecheck(
 {
   if(module=="") return false;
 
-  if(verilog_typecheck(parse_tree, symbol_table, module, message_handler))
+  if(verilog_typecheck(
+       parse_tree, symbol_table, module, warn_implicit_nets, message_handler))
     return true;
 
   messaget message(message_handler);

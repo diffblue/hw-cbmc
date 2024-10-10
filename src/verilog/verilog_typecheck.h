@@ -23,12 +23,14 @@ bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
   symbol_table_baset &,
   const std::string &module,
+  bool warn_implicit_nets,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
   symbol_table_baset &,
   const verilog_module_sourcet &verilog_module_source,
   verilog_standardt,
+  bool warn_implicit_nets,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
@@ -57,10 +59,15 @@ class verilog_typecheckt:
 public:
   verilog_typecheckt(
     verilog_standardt _standard,
+    bool warn_implicit_nets,
     symbolt &_module_symbol,
     symbol_table_baset &_symbol_table,
     message_handlert &_message_handler)
-    : verilog_typecheck_exprt(_standard, ns, _message_handler),
+    : verilog_typecheck_exprt(
+        _standard,
+        warn_implicit_nets,
+        ns,
+        _message_handler),
       verilog_symbol_tablet(_symbol_table),
       ns(_symbol_table),
       module_symbol(_module_symbol),
@@ -204,8 +211,10 @@ protected:
   virtual void convert_statements(verilog_module_exprt &);
 
   // to be overridden
-  bool implicit_wire(const irep_idt &identifier,
-                     const symbolt *&symbol) override;
+  bool implicit_wire(
+    const irep_idt &identifier,
+    const symbolt *&,
+    const typet &) override;
 
   // generate constructs
   void elaborate_generate_assign(

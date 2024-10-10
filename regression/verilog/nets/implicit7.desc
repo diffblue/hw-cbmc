@@ -1,0 +1,9 @@
+KNOWNBUG
+implicit7.sv
+--bound 0 --warn-implicit-nets
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The implicit net is not known yet when evaluating parameters.

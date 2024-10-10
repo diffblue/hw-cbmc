@@ -663,7 +663,7 @@ exprt verilog_synthesist::expand_function_call(
     {
       // Attempt to constant fold.
       verilog_typecheck_exprt verilog_typecheck_expr(
-        standard, ns, get_message_handler());
+        standard, false, ns, get_message_handler());
       auto result =
         verilog_typecheck_expr.elaborate_constant_system_function_call(call);
       if(!result.is_constant())

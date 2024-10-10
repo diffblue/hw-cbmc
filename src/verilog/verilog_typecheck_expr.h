@@ -26,18 +26,22 @@ class verilog_typecheck_exprt:public verilog_typecheck_baset
 public:
   verilog_typecheck_exprt(
     verilog_standardt _standard,
+    bool _warn_implicit_nets,
     const namespacet &_ns,
     message_handlert &_message_handler)
-    : verilog_typecheck_baset(_standard, _ns, _message_handler)
+    : verilog_typecheck_baset(_standard, _ns, _message_handler),
+      warn_implicit_nets(_warn_implicit_nets)
   { }
 
   verilog_typecheck_exprt(
     verilog_standardt _standard,
+    bool _warn_implicit_nets,
     const namespacet &_ns,
     const std::string &_module_identifier,
     message_handlert &_message_handler)
     : verilog_typecheck_baset(_standard, _ns, _message_handler),
-      module_identifier(_module_identifier)
+      module_identifier(_module_identifier),
+      warn_implicit_nets(_warn_implicit_nets)
   { }
 
   virtual void convert_expr(exprt &expr)
@@ -126,11 +130,14 @@ protected:
     PRECONDITION(false);
   }
 
-  virtual bool implicit_wire(const irep_idt &identifier,
-                             const symbolt *&symbol) {
+  bool warn_implicit_nets = false;
+
+  virtual bool
+  implicit_wire(const irep_idt &identifier, const symbolt *&, const typet &)
+  {
     return true;
   }
-   
+
   void typecheck() override
   {
   }
@@ -156,10 +163,11 @@ protected:
     UNREACHABLE;
   }
 
-private:
+protected:
   [[nodiscard]] exprt convert_expr_rec(exprt expr);
   [[nodiscard]] exprt convert_constant(constant_exprt);
-  [[nodiscard]] exprt convert_symbol(symbol_exprt);
+  [[nodiscard]] exprt
+  convert_symbol(symbol_exprt, const std::optional<typet> &implicit_net_type);
   [[nodiscard]] exprt
     convert_hierarchical_identifier(class hierarchical_identifier_exprt);
   [[nodiscard]] exprt convert_nullary_expr(nullary_exprt);

@@ -1,6 +1,6 @@
 CORE
 implicit3.sv
---bound 0
+--bound 0 --warn-implicit-nets
 ^file .* line 6: implicit wire main\.O$
 ^EXIT=0$
 ^SIGNAL=0$
