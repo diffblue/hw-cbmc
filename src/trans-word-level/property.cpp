@@ -399,6 +399,13 @@ static obligationst property_obligations_rec(
       return obligationst{no_timeframes - 1, true_exprt()}; // works on NNF only
     }
   }
+  else if(property_expr.id() == ID_sva_indexed_s_nexttime)
+  {
+    auto &nexttime = to_sva_indexed_s_nexttime_expr(property_expr);
+    auto s_always = sva_ranged_always_exprt{
+      nexttime.index(), nexttime.index(), nexttime.op()};
+    return property_obligations_rec(s_always, current, no_timeframes);
+  }
   else if(property_expr.id() == ID_sva_s_until || property_expr.id() == ID_U)
   {
     auto &p = to_binary_expr(property_expr).lhs();
@@ -624,6 +631,43 @@ static obligationst property_obligations_rec(
       }
     }
     return obligationst{t, disjunction(disjuncts)};
+  }
+  else if(property_expr.id() == ID_sva_not)
+  {
+    auto &not_expr = to_sva_not_expr(property_expr);
+    return property_obligations_rec(not_expr.lower(), current, no_timeframes);
+  }
+  else if(property_expr.id() == ID_sva_implies)
+  {
+    auto &implies_expr = to_sva_implies_expr(property_expr);
+    return property_obligations_rec(
+      implies_expr.lower(), current, no_timeframes);
+  }
+  else if(property_expr.id() == ID_sva_iff)
+  {
+    auto &iff_expr = to_sva_iff_expr(property_expr);
+    return property_obligations_rec(iff_expr.lower(), current, no_timeframes);
+  }
+  else if(property_expr.id() == ID_sva_case)
+  {
+    auto &case_expr = to_sva_case_expr(property_expr);
+    return property_obligations_rec(
+      case_expr.lowering(), current, no_timeframes);
+  }
+  else if(property_expr.id() == ID_sva_accept_on || property_expr.id() == ID_sva_sync_accept_on)
+  {
+    auto &sva_abort_expr = to_sva_abort_expr(property_expr);
+    auto lowering = or_exprt{sva_abort_expr.condition(), sva_abort_expr.property()};
+    return property_obligations_rec(
+      lowering, current, no_timeframes);
+  }
+  else if(property_expr.id() == ID_sva_reject_on || property_expr.id() == ID_sva_sync_reject_on)
+  {
+    auto &sva_abort_expr = to_sva_abort_expr(property_expr);
+    auto lowering = and_exprt{
+      not_exprt{sva_abort_expr.condition()}, sva_abort_expr.property()};
+    return property_obligations_rec(
+      lowering, current, no_timeframes);
   }
   else
   {
