@@ -399,6 +399,20 @@ static obligationst property_obligations_rec(
       return obligationst{no_timeframes - 1, true_exprt()}; // works on NNF only
     }
   }
+  else if(property_expr.id() == ID_sva_indexed_nexttime)
+  {
+    auto &nexttime = to_sva_indexed_nexttime_expr(property_expr);
+    auto always = sva_ranged_always_exprt{
+      nexttime.index(), nexttime.index(), nexttime.op()};
+    return property_obligations_rec(always, current, no_timeframes);
+  }
+  else if(property_expr.id() == ID_sva_indexed_s_nexttime)
+  {
+    auto &nexttime = to_sva_indexed_s_nexttime_expr(property_expr);
+    auto s_always = sva_ranged_always_exprt{
+      nexttime.index(), nexttime.index(), nexttime.op()};
+    return property_obligations_rec(s_always, current, no_timeframes);
+  }
   else if(property_expr.id() == ID_sva_s_until || property_expr.id() == ID_U)
   {
     auto &p = to_binary_expr(property_expr).lhs();

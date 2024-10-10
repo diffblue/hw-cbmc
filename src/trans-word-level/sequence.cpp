@@ -176,6 +176,26 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
 
     return result;
   }
+  else if(expr.id() == ID_sva_strong || expr.id() == ID_sva_weak)
+  {
+    // not distinguished
+    auto &op = to_unary_expr(expr).op();
+    return instantiate_sequence(op, t, no_timeframes);
+  }
+  else if(expr.id() == ID_sva_cycle_delay_plus)
+  {
+    auto new_expr = sva_s_eventually_exprt{
+      sva_s_nexttime_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
+    auto obligations = property_obligations(new_expr, t, no_timeframes);
+    return {obligations.conjunction()};
+  }
+  else if(expr.id() == ID_sva_cycle_delay_star)
+  {
+    auto new_expr =
+      sva_s_eventually_exprt{to_sva_cycle_delay_star_expr(expr).op()};
+    auto obligations = property_obligations(new_expr, t, no_timeframes);
+    return {obligations.conjunction()};
+  }
   else
   {
     // not a sequence, evaluate as state predicate

@@ -11,7 +11,8 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <util/string2int.h>
 
 #include <temporal-logic/temporal_logic.h>
-#include <trans-word-level/instantiate_word_level.h>
+#include <trans-word-level/obligations.h>
+#include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
@@ -261,7 +262,8 @@ void k_inductiont::induction_step()
         const exprt &p = to_unary_expr(property.normalized_expr).op();
         for(std::size_t c = 0; c < no_timeframes; c++)
         {
-          exprt tmp = instantiate(p, c, no_timeframes);
+          exprt tmp =
+            property_obligations(p, c, no_timeframes).conjunction().second;
           solver.set_to_true(tmp);
         }
       }
@@ -272,13 +274,16 @@ void k_inductiont::induction_step()
     // assumption: time frames 0,...,k-1
     for(std::size_t c = 0; c < no_timeframes - 1; c++)
     {
-      exprt tmp = instantiate(p, c, no_timeframes - 1);
+      exprt tmp =
+        property_obligations(p, c, no_timeframes - 1).conjunction().second;
       solver.set_to_true(tmp);
     }
     
     // property: time frame k
     {
-      exprt tmp = instantiate(p, no_timeframes - 1, no_timeframes);
+      exprt tmp = property_obligations(p, no_timeframes - 1, no_timeframes)
+                    .conjunction()
+                    .second;
       solver.set_to_false(tmp);
     }
 
