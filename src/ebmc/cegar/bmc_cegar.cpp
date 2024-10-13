@@ -33,9 +33,9 @@ void bmc_cegart::bmc_cegar()
 {
   make_netlist();
 
-  if(properties.empty())
+  if(properties.properties.empty())
   {
-    error() << "No properties given" << eom;
+    message.error() << "No properties given" << messaget::eom;
     return;
   }
 
@@ -49,10 +49,10 @@ void bmc_cegart::bmc_cegar()
 
   auto stop_time = std::chrono::steady_clock::now();
 
-  statistics()
+  message.statistics()
     << "CEGAR time: "
-    << std::chrono::duration<double>(stop_time-start_time).count()
-    << eom;
+    << std::chrono::duration<double>(stop_time - start_time).count()
+    << messaget::eom;
 }
 
 /*******************************************************************\
@@ -67,31 +67,28 @@ Function: bmc_cegart::unwind
 
 \*******************************************************************/
 
-void bmc_cegart::unwind(
-  unsigned bound,
-  const netlistt &netlist,
-  propt &prop)
+void bmc_cegart::unwind(std::size_t bound, const netlistt &netlist, propt &prop)
 {
   // allocate timeframes
   const auto bmc_map = bmc_mapt{netlist, bound + 1, prop};
 
 #if 0
-  for(unsigned timeframe=0; timeframe<=bound; timeframe++)
+  for(std::size_t timeframe=0; timeframe<=bound; timeframe++)
     bmc_map.timeframe_map[timeframe].resize(aig_map.no_vars);
 
   // do initial state
-  for(unsigned v=0; v<aig_map.no_vars; v++)
+  for(std::size_t v=0; v<aig_map.no_vars; v++)
     bmc_map.timeframe_map[0][v]=prop.new_variable();
 
   // do transitions
-  for(unsigned timeframe=0; timeframe<bound; timeframe++)
+  for(std::size_t timeframe=0; timeframe<bound; timeframe++)
   {
-    status() << "Round " << timeframe << eom;
+    message.status() << "Round " << timeframe << eom;
     
     aig.clear_convert_cache();
     
     // set current state bits
-    for(unsigned v=0; v<aig_map.no_vars; v++)
+    for(std::size_t v=0; v<aig_map.no_vars; v++)
     {
       //std::cout << "SETTING "
       //          << aig_map.timeframe_map[0][v] << std::endl;
@@ -102,7 +99,7 @@ void bmc_cegart::unwind(
     }
 
     // convert next state bits
-    for(unsigned v=0; v<aig_map.no_vars; v++)
+    for(std::size_t v=0; v<aig_map.no_vars; v++)
     {
       literalt a=aig_map.timeframe_map[1][v];
     
@@ -144,21 +141,21 @@ Function: bmc_cegart::compute_ct
 
 \*******************************************************************/
 
-unsigned bmc_cegart::compute_ct()
+std::size_t bmc_cegart::compute_ct()
 {
-  status() << "Computing CT" << eom;
+  message.status() << "Computing CT" << messaget::eom;
 
-  status() << "Computing abstract LDG" << eom;
-   
+  message.status() << "Computing abstract LDG" << messaget::eom;
+
   ldgt ldg;
- 
+
   ldg.compute(abstract_netlist);
-    
-  status() << "Computing CT" << eom;
 
-  unsigned ct=::compute_ct(ldg);
+  message.status() << "Computing CT" << messaget::eom;
 
-  result() << "CT=" << ct << eom;
+  std::size_t ct = ::compute_ct(ldg);
+
+  message.result() << "CT=" << ct << messaget::eom;
 
   return ct;
 }
@@ -182,27 +179,29 @@ void bmc_cegart::cegar_loop()
   while(true)
   {
     abstract();
-    
-    unsigned ct=compute_ct();
+
+    std::size_t ct = compute_ct();
 
     if(ct>=MAX_CT)
     {
-      error() << "CT too big -- giving up" << eom;
+      message.error() << "CT too big -- giving up" << messaget::eom;
       throw 0;
     }
     
     // this is enough
-    unsigned bound=ct;
-    
+    std::size_t bound = ct;
+
     if(verify(bound))
     {
-      status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS" << eom;
+      message.status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS"
+                       << messaget::eom;
       return;
     }
 
     if(simulate(bound))
     {
-      status() << "VERIFICATION FAILED -- PROPERTY REFUTED" << eom;
+      message.status() << "VERIFICATION FAILED -- PROPERTY REFUTED"
+                       << messaget::eom;
       return;
     }
 
@@ -225,27 +224,27 @@ Function: bmc_cegart::make_netlist
 void bmc_cegart::make_netlist()
 {
   // make net-list
-  status() << "Making Netlist" << eom;
+  message.status() << "Making Netlist" << messaget::eom;
 
   try
   {
-    std::map<irep_idt, exprt> property_map;
+    auto property_map = properties.make_property_map();
 
     convert_trans_to_netlist(
       symbol_table,
       main_module,
       property_map,
       concrete_netlist,
-      get_message_handler());
+      message.get_message_handler());
   }
   
   catch(const std::string &error_msg)
   {
-    error() << error_msg << eom;
+    message.error() << error_msg << messaget::eom;
     return;
   }
 
-  statistics() 
-    << "Latches: " << concrete_netlist.var_map.latches.size()
-    << ", nodes: " << concrete_netlist.number_of_nodes() << eom;
+  message.statistics() << "Latches: " << concrete_netlist.var_map.latches.size()
+                       << ", nodes: " << concrete_netlist.number_of_nodes()
+                       << messaget::eom;
 }

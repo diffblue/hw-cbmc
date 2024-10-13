@@ -6,26 +6,28 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/std_expr.h>
 #include <util/message.h>
 #include <util/namespace.h>
+#include <util/std_expr.h>
 
 #include <trans-netlist/bmc_map.h>
 #include <trans-netlist/netlist.h>
 
-class bmc_cegart:public messaget
+#include "../ebmc_properties.h"
+#include "../transition_system.h"
+
+class bmc_cegart
 {
 public:
   bmc_cegart(
-    symbol_table_baset &_symbol_table,
-    const irep_idt &_main_module,
-    message_handlert &_message_handler,
-    const std::list<exprt> &_properties)
-    : messaget(_message_handler),
-      symbol_table(_symbol_table),
-      ns(_symbol_table),
-      main_module(_main_module),
-      properties(_properties)
+    transition_systemt &_transition_system,
+    ebmc_propertiest &_properties,
+    message_handlert &_message_handler)
+    : symbol_table(_transition_system.symbol_table),
+      ns(_transition_system.symbol_table),
+      main_module(_transition_system.main_symbol->name),
+      properties(_properties),
+      message(_message_handler)
   {
   }
 
@@ -35,8 +37,9 @@ protected:
   symbol_table_baset &symbol_table;
   const namespacet ns;
   const irep_idt &main_module;
-  const std::list<exprt> &properties;
-  
+  ebmc_propertiest &properties;
+  messaget message;
+
   bmc_mapt bmc_map;
   netlistt concrete_netlist, abstract_netlist;
 
@@ -51,14 +54,9 @@ protected:
   
   void abstract();
   void refine();
-  bool verify(unsigned bound);
-  bool simulate(unsigned bound);
-  unsigned compute_ct();
+  bool verify(std::size_t bound);
+  bool simulate(std::size_t bound);
+  std::size_t compute_ct();
 
-  void unwind(
-    unsigned bound,
-    const netlistt &netlist,
-    propt &prop);
-  
-  std::list<bvt> prop_bv;
+  void unwind(std::size_t bound, const netlistt &netlist, propt &prop);
 };
