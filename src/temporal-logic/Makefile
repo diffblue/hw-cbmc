@@ -1,6 +1,7 @@
 SRC = nnf.cpp \
       normalize_property.cpp \
       temporal_logic.cpp \
+      trivial_sva.cpp \
       #empty line
 
 include ../config.inc
