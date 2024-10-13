@@ -2271,11 +2271,24 @@ sequence_expr:
                 { init($$, ID_sva_sequence_intersect); mto($$, $1); mto($$, $3); }
         | "first_match" '(' sequence_expr ')'
                 { init($$, ID_sva_sequence_first_match); mto($$, $3); }
+        | "first_match" '(' sequence_expr ',' sequence_match_item_brace ')'
+                { init($$, ID_sva_sequence_first_match); mto($$, $3); mto($$, $5); }
         | expression "throughout" sequence_expr
                 { init($$, ID_sva_sequence_throughout); mto($$, $1); mto($$, $3); }
         | expression "within" sequence_expr
                 { init($$, ID_sva_sequence_within); mto($$, $1); mto($$, $3); }
         ;
+
+sequence_match_item_brace:
+	  sequence_match_item
+	| sequence_match_item_brace ',' sequence_match_item
+	;
+
+sequence_match_item:
+	  operator_assignment
+	| inc_or_dec_expression
+	| subroutine_call
+	;
 
 boolean_abbrev:
 	  consecutive_repetition
