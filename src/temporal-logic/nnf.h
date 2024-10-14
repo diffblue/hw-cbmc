@@ -15,4 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 /// Returns {} if no negation is known.
 std::optional<exprt> negate_property_node(const exprt &);
 
+/// Turn a full property into NNF
+exprt property_nnf(exprt);
+
 #endif
