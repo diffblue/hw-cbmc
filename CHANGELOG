@@ -1,3 +1,15 @@
+# EBMC 5.2
+
+* SystemVerilog: defines can now be set on the command line
+* SystemVerilog: improvements to elaboration-time constant folding
+* SystemVerilog: continuous assignments to variables
+* SystemVerilog: additional SVA operators
+* SystemVerilog: wildcard equality and inequality operators
+* SystemVerilog: restrict
+* word-level BMC supports full LTL
+* SMV: LTL U and R
+* SMV: ?: operator
+
 # EBMC 5.1
 
 * SVA abort properties and disable iff
