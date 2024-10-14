@@ -83,6 +83,8 @@ bool verilog_languaget::parse(
 
   parse_tree.swap(verilog_parser.parse_tree);
 
+  parse_tree.build_module_map();
+
   return result;
 }
 
