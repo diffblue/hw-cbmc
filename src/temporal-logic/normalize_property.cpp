@@ -16,6 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "temporal_expr.h"
 #include "temporal_logic.h"
+#include "trivial_sva.h"
 
 exprt normalize_pre_not(not_exprt expr)
 {
@@ -73,16 +74,6 @@ exprt normalize_pre_implies(implies_exprt expr)
   return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
 }
 
-exprt normalize_pre_sva_overlapped_implication(
-  sva_overlapped_implication_exprt expr)
-{
-  // Same as regular implication if lhs is not a sequence.
-  if(!is_SVA_sequence(expr.lhs()))
-    return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
-  else
-    return std::move(expr);
-}
-
 exprt normalize_pre_sva_non_overlapped_implication(
   sva_non_overlapped_implication_exprt expr)
 {
@@ -93,30 +84,6 @@ exprt normalize_pre_sva_non_overlapped_implication(
     return or_exprt{
       not_exprt{expr.lhs()}, sva_ranged_always_exprt{one, one, expr.rhs()}};
   }
-  else
-    return std::move(expr);
-}
-
-exprt normalize_pre_sva_not(sva_not_exprt expr)
-{
-  // Same as regular 'not'. These do not apply to sequences.
-  return normalize_pre_not(not_exprt{expr.op()});
-}
-
-exprt normalize_pre_sva_and(sva_and_exprt expr)
-{
-  // Same as a ∧ b if lhs and rhs are not sequences.
-  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
-    return and_exprt{expr.lhs(), expr.rhs()};
-  else
-    return std::move(expr);
-}
-
-exprt normalize_pre_sva_or(sva_or_exprt expr)
-{
-  // Same as a ∧ b if lhs or rhs are not sequences.
-  if(!is_SVA_sequence(expr.lhs()) && !is_SVA_sequence(expr.rhs()))
-    return or_exprt{expr.lhs(), expr.rhs()};
   else
     return std::move(expr);
 }
@@ -143,37 +110,16 @@ exprt normalize_pre_sva_cycle_delay(sva_cycle_delay_exprt expr)
     return std::move(expr);
 }
 
-exprt normalize_property(exprt expr)
+exprt normalize_property_rec(exprt expr)
 {
   // pre-traversal
   if(expr.id() == ID_not)
     expr = normalize_pre_not(to_not_expr(expr));
   else if(expr.id() == ID_implies)
     expr = normalize_pre_implies(to_implies_expr(expr));
-  else if(expr.id() == ID_sva_cover)
-    expr = G_exprt{not_exprt{to_sva_cover_expr(expr).op()}};
-  else if(expr.id() == ID_sva_overlapped_implication)
-    expr = normalize_pre_sva_overlapped_implication(
-      to_sva_overlapped_implication_expr(expr));
   else if(expr.id() == ID_sva_non_overlapped_implication)
     expr = normalize_pre_sva_non_overlapped_implication(
       to_sva_non_overlapped_implication_expr(expr));
-  else if(expr.id() == ID_sva_iff)
-  {
-    expr =
-      equal_exprt{to_sva_iff_expr(expr).lhs(), to_sva_iff_expr(expr).rhs()};
-  }
-  else if(expr.id() == ID_sva_implies)
-  {
-    expr = implies_exprt{
-      to_sva_implies_expr(expr).lhs(), to_sva_implies_expr(expr).rhs()};
-  }
-  else if(expr.id() == ID_sva_and)
-    expr = normalize_pre_sva_and(to_sva_and_expr(expr));
-  else if(expr.id() == ID_sva_not)
-    expr = normalize_pre_sva_not(to_sva_not_expr(expr));
-  else if(expr.id() == ID_sva_or)
-    expr = normalize_pre_sva_or(to_sva_or_expr(expr));
   else if(expr.id() == ID_sva_nexttime)
   {
     auto one = natural_typet{}.one_expr();
@@ -209,40 +155,6 @@ exprt normalize_property(exprt expr)
   {
     expr = sva_s_eventually_exprt{to_sva_cycle_delay_star_expr(expr).op()};
   }
-  else if(expr.id() == ID_sva_sequence_concatenation)
-  {
-    auto &sequence_concatenation = to_sva_sequence_concatenation_expr(expr);
-    if(!is_SVA_sequence(sequence_concatenation.lhs()))
-    {
-      // a ##0 b --> a && b if a is not a sequence
-      expr =
-        and_exprt{sequence_concatenation.lhs(), sequence_concatenation.rhs()};
-    }
-  }
-  else if(expr.id() == ID_sva_if)
-  {
-    auto &sva_if_expr = to_sva_if_expr(expr);
-    auto false_case = sva_if_expr.false_case().is_nil()
-                        ? true_exprt{}
-                        : sva_if_expr.false_case();
-    expr = if_exprt{sva_if_expr.cond(), sva_if_expr.true_case(), false_case};
-  }
-  else if(expr.id() == ID_sva_disable_iff)
-  {
-    auto &disable_iff_expr = to_sva_disable_iff_expr(expr);
-    expr = or_exprt{disable_iff_expr.lhs(), disable_iff_expr.rhs()};
-  }
-  else if(expr.id() == ID_sva_accept_on || expr.id() == ID_sva_sync_accept_on)
-  {
-    auto &sva_abort_expr = to_sva_abort_expr(expr);
-    expr = or_exprt{sva_abort_expr.condition(), sva_abort_expr.property()};
-  }
-  else if(expr.id() == ID_sva_reject_on || expr.id() == ID_sva_sync_reject_on)
-  {
-    auto &sva_abort_expr = to_sva_abort_expr(expr);
-    expr = and_exprt{
-      not_exprt{sva_abort_expr.condition()}, sva_abort_expr.property()};
-  }
   else if(expr.id() == ID_sva_strong)
   {
     expr = to_sva_strong_expr(expr).op();
@@ -251,16 +163,26 @@ exprt normalize_property(exprt expr)
   {
     expr = to_sva_weak_expr(expr).op();
   }
-  else if(expr.id() == ID_sva_case)
-  {
-    expr = to_sva_case_expr(expr).lowering();
-  }
 
   // normalize the operands
   for(auto &op : expr.operands())
-    op = normalize_property(op);
+    op = normalize_property_rec(op); // recursive call
 
   // post-traversal
+
+  return expr;
+}
+
+exprt normalize_property(exprt expr)
+{
+  // top-level only
+  if(expr.id() == ID_sva_cover)
+    expr = G_exprt{not_exprt{to_sva_cover_expr(expr).op()}};
+
+  expr = trivial_sva(expr);
+
+  // now do recursion
+  expr = normalize_property_rec(expr);
 
   return expr;
 }
