@@ -14,65 +14,10 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <verilog/sva_expr.h>
 
+#include "nnf.h"
 #include "temporal_expr.h"
 #include "temporal_logic.h"
 #include "trivial_sva.h"
-
-exprt normalize_pre_not(not_exprt expr)
-{
-  const auto &op = expr.op();
-
-  if(op.id() == ID_and)
-  {
-    auto operands = op.operands();
-    for(auto &op : operands)
-      op = not_exprt{op};
-    return or_exprt{std::move(operands)};
-  }
-  else if(op.id() == ID_or)
-  {
-    auto operands = op.operands();
-    for(auto &op : operands)
-      op = not_exprt{op};
-    return and_exprt{std::move(operands)};
-  }
-  else if(op.id() == ID_not)
-  {
-    return to_not_expr(op).op();
-  }
-  else if(op.id() == ID_G)
-  {
-    // ¬Gφ --> F¬φ
-    return F_exprt{not_exprt{to_G_expr(op).op()}};
-  }
-  else if(op.id() == ID_F)
-  {
-    // ¬Fφ --> G¬φ
-    return G_exprt{not_exprt{to_F_expr(op).op()}};
-  }
-  else if(op.id() == ID_X)
-  {
-    // ¬Xφ --> X¬φ
-    return X_exprt{not_exprt{to_X_expr(op).op()}};
-  }
-  else if(op.id() == ID_sva_always)
-  {
-    // ¬ sva_always φ --> sva_s_eventually ¬φ
-    return sva_s_eventually_exprt{not_exprt{to_sva_always_expr(op).op()}};
-  }
-  else if(op.id() == ID_sva_s_eventually)
-  {
-    // ¬ sva_s_eventually φ --> sva_always ¬φ
-    return sva_always_exprt{not_exprt{to_sva_s_eventually_expr(op).op()}};
-  }
-
-  return std::move(expr);
-}
-
-exprt normalize_pre_implies(implies_exprt expr)
-{
-  return or_exprt{not_exprt{expr.lhs()}, expr.rhs()};
-}
 
 exprt normalize_pre_sva_non_overlapped_implication(
   sva_non_overlapped_implication_exprt expr)
@@ -113,13 +58,11 @@ exprt normalize_pre_sva_cycle_delay(sva_cycle_delay_exprt expr)
 exprt normalize_property_rec(exprt expr)
 {
   // pre-traversal
-  if(expr.id() == ID_not)
-    expr = normalize_pre_not(to_not_expr(expr));
-  else if(expr.id() == ID_implies)
-    expr = normalize_pre_implies(to_implies_expr(expr));
-  else if(expr.id() == ID_sva_non_overlapped_implication)
+  if(expr.id() == ID_sva_non_overlapped_implication)
+  {
     expr = normalize_pre_sva_non_overlapped_implication(
       to_sva_non_overlapped_implication_expr(expr));
+  }
   else if(expr.id() == ID_sva_nexttime)
   {
     auto one = natural_typet{}.one_expr();
@@ -183,6 +126,9 @@ exprt normalize_property(exprt expr)
 
   // now do recursion
   expr = normalize_property_rec(expr);
+
+  // NNF
+  expr = property_nnf(expr);
 
   return expr;
 }

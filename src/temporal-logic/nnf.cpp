@@ -139,3 +139,35 @@ std::optional<exprt> negate_property_node(const exprt &expr)
   else
     return {};
 }
+
+exprt property_nnf(exprt expr)
+{
+  // Do the node
+  if(expr.id() == ID_not)
+  {
+    auto node_opt = negate_property_node(to_not_expr(expr).op());
+    if(!node_opt.has_value())
+      return expr; // give up
+
+    expr = node_opt.value();
+  }
+  else if(expr.id() == ID_implies)
+  {
+    auto &implies = to_implies_expr(expr);
+    expr = or_exprt{not_exprt{implies.lhs()}, implies.rhs()};
+  }
+  else if(
+    expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool)
+  {
+    auto &equal = to_equal_expr(expr);
+    expr = and_exprt{
+      implies_exprt{equal.lhs(), equal.rhs()},
+      implies_exprt{equal.rhs(), equal.lhs()}};
+  }
+
+  // Do the operands, recursively
+  for(auto &op : expr.operands())
+    op = property_nnf(op);
+
+  return expr;
+}
