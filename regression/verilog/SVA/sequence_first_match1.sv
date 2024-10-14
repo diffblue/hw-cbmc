@@ -7,4 +7,7 @@ module main(input clk);
 
   initial p0: assert property (first_match(x == 0));
 
+  // can come with sequence_match_items
+  initial p1: assert property (first_match(x == 0, x++));
+
 endmodule
