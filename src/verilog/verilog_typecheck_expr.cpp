@@ -1605,7 +1605,13 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
         PRECONDITION(false);
     };
 
-    if(expr.id() == ID_reduction_or)
+    if(expr.id() == ID_verilog_non_indexed_part_select)
+    {
+      // Our simplifier does not know these, do lowering.
+      auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
+      expr = part_select.lower();
+    }
+    else if(expr.id() == ID_reduction_or)
     {
       // The simplifier doesn't know how to simplify reduction_or
       auto &reduction_or = to_unary_expr(expr);
