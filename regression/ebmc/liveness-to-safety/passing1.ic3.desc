@@ -1,0 +1,8 @@
+KNOWNBUG
+passing1.sv
+--liveness-to-safety --ic3
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+IC3 gives wrong result.

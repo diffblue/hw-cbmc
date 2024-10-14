@@ -51,6 +51,7 @@ public:
 
   void operator()(
     const irep_idt &module,
+    const transt &,
     const std::map<irep_idt, exprt> &properties);
 
 protected:
@@ -255,6 +256,7 @@ Function: convert_trans_to_netlistt::operator()
 
 void convert_trans_to_netlistt::operator()(
   const irep_idt &module,
+  const transt &trans,
   const std::map<irep_idt, exprt> &properties)
 {
   // setup
@@ -286,9 +288,7 @@ void convert_trans_to_netlistt::operator()(
     }
   }
 
-  const symbolt &module_symbol=ns.lookup(module);
-  const transt &trans=to_trans_expr(module_symbol.value);
-  mode = module_symbol.mode;
+  mode = ns.lookup(module).mode;
 
   // build the net-list
   aig_prop_constraintt aig_prop(dest, get_message_handler());
@@ -810,11 +810,12 @@ Function: convert_trans_to_netlist
 void convert_trans_to_netlist(
   symbol_table_baset &symbol_table,
   const irep_idt &module,
+  const transt &trans_expr,
   const std::map<irep_idt, exprt> &properties,
   netlistt &dest,
   message_handlert &message_handler)
 {
   convert_trans_to_netlistt c(symbol_table, dest, message_handler);
 
-  c(module, properties);
+  c(module, trans_expr, properties);
 }
