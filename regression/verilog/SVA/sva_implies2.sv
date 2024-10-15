@@ -5,8 +5,10 @@ module main(input a, b);
   p2: assert property ((eventually[0:1] a) implies (eventually[0:1] a));
   p3: assert property ((s_eventually a) implies (s_eventually a));
   p4: assert property ((a until b) implies (a until b));
-  // p5: assert property ((a s_until b) implies (a s_until a));
+  p5: assert property ((a s_until b) implies (a s_until b));
   p6: assert property ((a until_with b) implies (a until_with b));
-  p7: assert property ((a s_until_with b) implies (a s_until_with a));
+  p7: assert property ((a s_until_with b) implies (a s_until_with b));
+  p8: assert property ((a |-> b) implies (a |-> b));
+  p9: assert property ((a #-# b) implies (a #-# b));
 
 endmodule

@@ -543,6 +543,7 @@ static inline sva_s_until_exprt &to_sva_s_until_expr(exprt &expr)
   return static_cast<sva_s_until_exprt &>(expr);
 }
 
+/// SVA until_with operator -- like LTL (weak) R, but lhs/rhs swapped
 class sva_until_with_exprt : public binary_predicate_exprt
 {
 public:
@@ -567,6 +568,7 @@ static inline sva_until_with_exprt &to_sva_until_with_expr(exprt &expr)
   return static_cast<sva_until_with_exprt &>(expr);
 }
 
+/// SVA s_until_with operator -- like LTL strong R, but lhs/rhs swapped
 class sva_s_until_with_exprt : public binary_predicate_exprt
 {
 public:
