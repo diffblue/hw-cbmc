@@ -91,8 +91,8 @@ exprt normalize_property_rec(exprt expr)
   }
   else if(expr.id() == ID_sva_cycle_delay_plus)
   {
-    expr = sva_s_eventually_exprt{
-      sva_s_nexttime_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
+    expr = sva_s_nexttime_exprt{
+      sva_s_eventually_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
   }
   else if(expr.id() == ID_sva_cycle_delay_star)
   {
