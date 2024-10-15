@@ -20,6 +20,6 @@ module main(input clk);
   p10: assert property (x==0 |-> ##1 x==1 and ##2 x==2);
   p11: assert property (x==0 |-> ##1 x==1 and not ##2 x==3);
   p12: assert property (x==0 |-> ##1 x==1 && y==2);
-  p13: assert property ((x==0 |-> y==0) |=> y != 0);
+  p13: assert property ((x==0 -> y==0) |=> y != 0);
 
 endmodule
