@@ -91,10 +91,11 @@ bool is_SVA_operator(const exprt &expr)
          id == ID_sva_always || id == ID_sva_ranged_always ||
          id == ID_sva_nexttime || id == ID_sva_s_nexttime ||
          id == ID_sva_indexed_nexttime || id == ID_sva_until ||
-         id == ID_sva_s_until || id == ID_sva_until_with ||
-         id == ID_sva_s_until_with || id == ID_sva_eventually ||
-         id == ID_sva_s_eventually || id == ID_sva_ranged_s_eventually ||
-         id == ID_sva_cycle_delay || id == ID_sva_overlapped_followed_by ||
+         id == ID_sva_s_until || id == ID_sva_weak_R || id == ID_sva_strong_R ||
+         id == ID_sva_until_with || id == ID_sva_s_until_with ||
+         id == ID_sva_eventually || id == ID_sva_s_eventually ||
+         id == ID_sva_ranged_s_eventually || id == ID_sva_cycle_delay ||
+         id == ID_sva_overlapped_followed_by ||
          id == ID_sva_nonoverlapped_followed_by;
 }
 

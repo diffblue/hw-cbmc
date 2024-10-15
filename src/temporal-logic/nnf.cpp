@@ -96,13 +96,13 @@ std::optional<exprt> negate_property_node(const exprt &expr)
   {
     // ¬(φ W ψ) ≡ (¬φ strongR ¬ψ)
     auto &W = to_sva_until_expr(expr);
-    return strong_R_exprt{not_exprt{W.lhs()}, not_exprt{W.rhs()}};
+    return sva_strong_R_exprt{not_exprt{W.lhs()}, not_exprt{W.rhs()}};
   }
   else if(expr.id() == ID_sva_s_until)
   {
     // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
     auto &U = to_sva_s_until_expr(expr);
-    return R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
+    return sva_weak_R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
   }
   else if(expr.id() == ID_sva_until_with)
   {
@@ -119,6 +119,18 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     auto &s_until_with = to_sva_s_until_with_expr(expr);
     auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
     return weak_U_exprt{not_exprt{strong_R.lhs()}, not_exprt{strong_R.rhs()}};
+  }
+  else if(expr.id() == ID_sva_weak_R)
+  {
+    // ¬(φ weakR ψ) ≡ (¬φ strongU ¬ψ)
+    auto &R = to_sva_weak_R_expr(expr);
+    return sva_s_until_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
+  }
+  else if(expr.id() == ID_sva_strong_R)
+  {
+    // ¬(φ strongR ψ) ≡ (¬φ weakU ¬ψ)
+    auto &R = to_sva_strong_R_expr(expr);
+    return sva_until_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
   }
   else if(expr.id() == ID_sva_overlapped_followed_by)
   {

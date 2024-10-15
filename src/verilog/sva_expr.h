@@ -594,6 +594,56 @@ static inline sva_s_until_with_exprt &to_sva_s_until_with_expr(exprt &expr)
   return static_cast<sva_s_until_with_exprt &>(expr);
 }
 
+/// This is an artificial SVA expression to negate sva_until without
+/// leaving the SVA fragment.
+class sva_strong_R_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_strong_R_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_sva_strong_R, std::move(op1))
+  {
+  }
+};
+
+static inline const sva_strong_R_exprt &to_sva_strong_R_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_strong_R);
+  sva_strong_R_exprt::check(expr);
+  return static_cast<const sva_strong_R_exprt &>(expr);
+}
+
+static inline sva_strong_R_exprt &to_sva_strong_R_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_strong_R);
+  sva_strong_R_exprt::check(expr);
+  return static_cast<sva_strong_R_exprt &>(expr);
+}
+
+/// This is an artificial SVA expression to negate sva_s_until without
+/// leaving the SVA fragment.
+class sva_weak_R_exprt : public binary_predicate_exprt
+{
+public:
+  explicit sva_weak_R_exprt(exprt op0, exprt op1)
+    : binary_predicate_exprt(std::move(op0), ID_sva_weak_R, std::move(op1))
+  {
+  }
+};
+
+static inline const sva_weak_R_exprt &to_sva_weak_R_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_weak_R);
+  sva_weak_R_exprt::check(expr);
+  return static_cast<const sva_weak_R_exprt &>(expr);
+}
+
+static inline sva_weak_R_exprt &to_sva_weak_R_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_weak_R);
+  sva_weak_R_exprt::check(expr);
+  return static_cast<sva_weak_R_exprt &>(expr);
+}
+
 class sva_overlapped_implication_exprt : public binary_predicate_exprt
 {
 public:

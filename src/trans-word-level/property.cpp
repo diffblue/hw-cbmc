@@ -422,10 +422,10 @@ static obligationst property_obligations_rec(
 
     return property_obligations_rec(tmp, current, no_timeframes);
   }
-  else if(property_expr.id() == ID_R)
+  else if(property_expr.id() == ID_R || property_expr.id() == ID_sva_weak_R)
   {
     // we expand: p R q <=> q ∧ (p ∨ X(p R q))
-    auto &R_expr = to_R_expr(property_expr);
+    auto &R_expr = to_binary_expr(property_expr);
     auto &p = R_expr.lhs();
     auto &q = R_expr.rhs();
 
@@ -437,10 +437,12 @@ static obligationst property_obligations_rec(
 
     return property_obligations_rec(expansion, current, no_timeframes);
   }
-  else if(property_expr.id() == ID_strong_R)
+  else if(
+    property_expr.id() == ID_strong_R || property_expr.id() == ID_sva_strong_R)
   {
-    auto &p = to_strong_R_expr(property_expr).lhs();
-    auto &q = to_strong_R_expr(property_expr).rhs();
+    auto &R_expr = to_binary_expr(property_expr);
+    auto &p = R_expr.lhs();
+    auto &q = R_expr.rhs();
 
     // p strongR q ≡ Fp ∧ (p R q)
     exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
