@@ -2181,9 +2181,9 @@ property_expr_proper:
 		{ init($$, ID_sva_or); mto($$, $1); mto($$, $3); }
 	| property_expr "and" property_expr
 		{ init($$, ID_sva_and); mto($$, $1); mto($$, $3); }
-	| property_expr "|->" property_expr
+	| sequence_expr "|->" property_expr
 		{ init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
-	| property_expr "|=>" property_expr
+	| sequence_expr "|=>" property_expr
 		{ init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
 	| "if" '(' expression_or_dist ')' property_expr %prec LT_TOK_ELSE
 		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); stack_expr($$).add_to_operands(nil_exprt()); }
