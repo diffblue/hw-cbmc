@@ -256,6 +256,19 @@ static obligationst property_obligations_rec(
 
     obligationst obligations;
 
+    // Traces with any φ state from "current" onwards satisfy Fφ
+    exprt::operandst phi_disjuncts;
+
+    phi_disjuncts.reserve(numeric_cast_v<std::size_t>(no_timeframes - current));
+
+    for(mp_integer j = current; j < no_timeframes; ++j)
+    {
+      auto tmp = property_obligations_rec(phi, j, no_timeframes);
+      phi_disjuncts.push_back(tmp.conjunction().second);
+    }
+
+    auto phi_disjunction = disjunction(phi_disjuncts);
+
     // Counterexamples to Fφ must have a loop.
     // We consider l-k loops with l<k.
     for(mp_integer k = current + 1; k < no_timeframes; ++k)
@@ -265,19 +278,13 @@ static obligationst property_obligations_rec(
       //
       // (1) There is a loop from timeframe k back to
       //     some earlier state l with current<=l<k.
-      // (2) No state j with current<=j<=k to the end of the
-      //     lasso satisfies 'φ'.
+      // (2) No state j with current<=j<no_timeframes satisfies 'φ'.
+      //     The weaker alternative current<=j<=k yields counterexamples
+      //     that exhibit a ¬φ loop, but are then followed by a φ state.
       for(mp_integer l = current; l < k; ++l)
       {
-        exprt::operandst disjuncts = {not_exprt(lasso_symbol(l, k))};
-
-        for(mp_integer j = current; j <= k; ++j)
-        {
-          auto tmp = property_obligations_rec(phi, j, no_timeframes);
-          disjuncts.push_back(tmp.conjunction().second);
-        }
-
-        obligations.add(k, disjunction(disjuncts));
+        auto tmp = or_exprt{not_exprt(lasso_symbol(l, k)), phi_disjunction};
+        obligations.add(k, std::move(tmp));
       }
     }
 

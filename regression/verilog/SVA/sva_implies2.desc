@@ -1,5 +1,5 @@
 CORE
-eventually4.sv
+sva_implies2.sv
 --bound 2
 ^EXIT=0$
 ^SIGNAL=0$
