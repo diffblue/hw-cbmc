@@ -1,5 +1,5 @@
 CORE
-indexed-part-select2.sv
+indexed-part-select2.v
 
 ^file .* line 4: expected constant expression, but got `main\.width'$
 ^EXIT=2$
