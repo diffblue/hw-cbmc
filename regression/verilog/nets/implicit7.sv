@@ -5,10 +5,11 @@ module main;
   // implicit nets are allowed in the port connection list of a module
   sub #(P) my_sub(x);
 
-  // The type of the implict net could be used to define another parameter
+  // The type of the implicit net is _not_ the type of the port,
+  // but an "implicit scalar net of default net type".
   parameter Q = $bits(x);
 
-  assert final (Q == P + 1);
+  assert final (Q == 1);
 
 endmodule
 
