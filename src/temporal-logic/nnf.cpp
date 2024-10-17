@@ -94,31 +94,35 @@ std::optional<exprt> negate_property_node(const exprt &expr)
   }
   else if(expr.id() == ID_sva_until)
   {
-    // ¬(φ W ψ) ≡ (¬φ strongR ¬ψ)
-    auto &W = to_sva_until_expr(expr);
-    return strong_R_exprt{not_exprt{W.lhs()}, not_exprt{W.rhs()}};
+    // ¬(φ weakU ψ) ≡ (¬φ strongR ¬ψ) ≡ (¬ψ strongU (¬ψ ∧ ¬φ)) ≡ (¬ψ s_until_with ¬φ)
+    // Note that LHS and RHS are swapped.
+    auto &until = to_sva_until_expr(expr);
+    return sva_s_until_with_exprt{
+      not_exprt{until.rhs()}, not_exprt{until.lhs()}};
   }
   else if(expr.id() == ID_sva_s_until)
   {
-    // ¬(φ U ψ) ≡ (¬φ R ¬ψ)
-    auto &U = to_sva_s_until_expr(expr);
-    return R_exprt{not_exprt{U.lhs()}, not_exprt{U.rhs()}};
+    // ¬(φ strongU ψ) ≡ (¬φ weakR ¬ψ) ≡ (¬ψ weakU (¬ψ ∧ ¬φ)) ≡ (¬ψ until_with ¬φ)
+    // Note that LHS and RHS are swapped.
+    auto &s_until = to_sva_s_until_expr(expr);
+    return sva_until_with_exprt{
+      not_exprt{s_until.rhs()}, not_exprt{s_until.lhs()}};
   }
   else if(expr.id() == ID_sva_until_with)
   {
-    // ¬(φ R ψ) ≡ (¬φ U ¬ψ)
+    // ¬(φ until_with ψ) ≡ ¬(φ until (φ ∧ ψ)) ≡ ¬(ψ weakR φ) ≡ (¬ψ strongU ¬φ)
     // Note LHS and RHS are swapped.
     auto &until_with = to_sva_until_with_expr(expr);
-    auto R = R_exprt{until_with.rhs(), until_with.lhs()};
-    return sva_until_exprt{not_exprt{R.lhs()}, not_exprt{R.rhs()}};
+    return sva_s_until_exprt{
+      not_exprt{until_with.rhs()}, not_exprt{until_with.lhs()}};
   }
   else if(expr.id() == ID_sva_s_until_with)
   {
-    // ¬(φ strongR ψ) ≡ (¬φ W ¬ψ)
+    // ¬(φ s_until_with ψ) ≡ ¬(φ s_until (φ ∧ ψ)) ≡ ¬(ψ strongR φ) ≡ (¬φ weakU ¬ψ)
     // Note LHS and RHS are swapped.
     auto &s_until_with = to_sva_s_until_with_expr(expr);
-    auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
-    return weak_U_exprt{not_exprt{strong_R.lhs()}, not_exprt{strong_R.rhs()}};
+    return sva_until_exprt{
+      not_exprt{s_until_with.rhs()}, not_exprt{s_until_with.lhs()}};
   }
   else if(expr.id() == ID_sva_overlapped_followed_by)
   {
