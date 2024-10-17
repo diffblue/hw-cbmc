@@ -125,7 +125,7 @@ exprt normalize_property(exprt expr)
   expr = trivial_sva(expr);
 
   // now do recursion
-  expr = normalize_property_rec(expr);
+  //  expr = normalize_property_rec(expr);
 
   // NNF
   expr = property_nnf(expr);

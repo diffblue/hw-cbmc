@@ -659,6 +659,11 @@ public:
     : unary_predicate_exprt(ID_sva_not, std::move(op))
   {
   }
+
+  not_exprt lower() const
+  {
+    return not_exprt{op()};
+  }
 };
 
 static inline const sva_not_exprt &to_sva_not_expr(const exprt &expr)
@@ -733,6 +738,11 @@ public:
     : binary_predicate_exprt(std::move(op0), ID_sva_iff, std::move(op1))
   {
   }
+
+  equal_exprt lower() const
+  {
+    return equal_exprt{lhs(), rhs()};
+  }
 };
 
 static inline const sva_iff_exprt &to_sva_iff_expr(const exprt &expr)
@@ -755,6 +765,11 @@ public:
   explicit sva_implies_exprt(exprt op0, exprt op1)
     : binary_predicate_exprt(std::move(op0), ID_sva_implies, std::move(op1))
   {
+  }
+
+  implies_exprt lower() const
+  {
+    return implies_exprt{lhs(), rhs()};
   }
 };
 

@@ -140,6 +140,10 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     auto not_b = not_exprt{followed_by.property()};
     return sva_non_overlapped_implication_exprt{followed_by.lhs(), not_b};
   }
+  else if(expr.id() == ID_sva_not)
+  {
+    return to_sva_not_expr(expr).op();
+  }
   else
     return {};
 }
