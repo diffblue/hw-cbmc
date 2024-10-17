@@ -156,6 +156,7 @@ protected:
   std::optional<mp_integer> is_constant_integer_post_convert(const exprt &);
   exprt elaborate_constant_expression(exprt);
   exprt elaborate_constant_expression_check(exprt);
+  mp_integer elaborate_constant_integer_expression(exprt);
 
   // To be overridden, requires a Verilog interpreter.
   virtual exprt elaborate_constant_function_call(const function_call_exprt &)

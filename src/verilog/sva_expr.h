@@ -1155,4 +1155,30 @@ inline sva_case_exprt &to_sva_case_expr(exprt &expr)
   return static_cast<sva_case_exprt &>(expr);
 }
 
+class sva_sequence_consecutive_repetition_exprt : public binary_predicate_exprt
+{
+public:
+  exprt lower() const;
+
+protected:
+  using binary_predicate_exprt::op0;
+  using binary_predicate_exprt::op1;
+};
+
+inline const sva_sequence_consecutive_repetition_exprt &
+to_sva_sequence_consecutive_repetition_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_consecutive_repetition);
+  sva_sequence_consecutive_repetition_exprt::check(expr);
+  return static_cast<const sva_sequence_consecutive_repetition_exprt &>(expr);
+}
+
+inline sva_sequence_consecutive_repetition_exprt &
+to_sva_sequence_consecutive_repetition_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_consecutive_repetition);
+  sva_sequence_consecutive_repetition_exprt::check(expr);
+  return static_cast<sva_sequence_consecutive_repetition_exprt &>(expr);
+}
+
 #endif
