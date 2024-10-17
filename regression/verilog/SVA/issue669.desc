@@ -1,6 +1,15 @@
-KNOWNBUG
+CORE
 issue669.sv
 --bound 5 --top top
+\[top\.assert\.1\] always not s_eventually 0: PROVED up to bound 5$
+\[top\.assert\.2\] always \(\(top\.a until_with top\.b\) implies \(not \(\(not top\.b\) s_until \(not top\.a\)\)\)\): PROVED up to bound 5$
+\[top\.assert\.3\] always \(\(not \(\(not top\.b\) s_until \(not top\.a\)\)\) implies \(top\.a until_with top\.b\)\): PROVED up to bound 5$
+\[top\.assert\.4\] always \(\(top\.a until_with top\.b\) implies \(top\.a until \(top\.a and top\.b\)\)\): PROVED up to bound 5$
+\[top\.assert\.5\] always \(\(top\.a until \(top\.a and top\.b\)\) implies \(top\.a until_with top\.b\)\): PROVED up to bound 5$
+\[top\.assert\.6\] always \(\(s_eventually top\.a\) implies \(1 s_until top\.a\)\): PROVED up to bound 5$
+\[top\.assert\.7\] always \(\(1 s_until top\.a\) implies \(s_eventually top\.a\)\): PROVED up to bound 5$
+\[top\.assert\.8\] always \(\(top\.a s_until top\.b\) implies \(\(s_eventually top\.b\) and \(top\.a until top\.b\)\)\): PROVED up to bound 5$
+\[top\.assert\.9\] always \(\(\(s_eventually top\.b\) and \(top\.a until top\.b\)\) implies \(top\.a s_until top\.b\)\): PROVED up to bound 5$
 ^EXIT=0$
 ^SIGNAL=0$
 --
