@@ -60,7 +60,9 @@ void verilog_typecheckt::typecheck_port_connection(
     // used in a port connection.
     if(op.id() == ID_symbol)
     {
-      op = convert_symbol(to_symbol_expr(op), port.type());
+      // The type of the implicit net is _not_ the type of the port,
+      // but an "implicit scalar net of default net type".
+      op = convert_symbol(to_symbol_expr(op), bool_typet{});
     }
     else
     {
@@ -242,7 +244,9 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
     // used in a port connection.
     if(connection.id() == ID_symbol)
     {
-      connection = convert_symbol(to_symbol_expr(connection), type);
+      // The type of the implicit net is _not_ the type of the port,
+      // but an "implicit scalar net of default net type".
+      connection = convert_symbol(to_symbol_expr(connection), bool_typet{});
     }
     else
     {
