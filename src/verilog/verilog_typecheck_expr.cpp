@@ -1716,6 +1716,35 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_check(exprt expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::elaborate_constant_integer_expression
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+mp_integer
+verilog_typecheck_exprt::elaborate_constant_integer_expression(exprt expr)
+{
+  source_locationt source_location = expr.find_source_location();
+
+  exprt tmp = elaborate_constant_expression(std::move(expr));
+
+  if(!tmp.is_constant())
+  {
+    throw errort().with_location(source_location)
+      << "expected constant integer expression, but got `" << to_string(tmp)
+      << '\'';
+  }
+
+  return numeric_cast_v<mp_integer>(to_constant_expr(tmp));
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::elaborate_constant_system_function_call
 
   Inputs:
@@ -2969,10 +2998,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   else if(
     expr.id() == ID_sva_sequence_intersect ||
     expr.id() == ID_sva_sequence_throughout ||
-    expr.id() == ID_sva_sequence_within ||
-    expr.id() == ID_sva_sequence_non_consecutive_repetition ||
-    expr.id() == ID_sva_sequence_consecutive_repetition ||
-    expr.id() == ID_sva_sequence_goto_repetition)
+    expr.id() == ID_sva_sequence_within)
   {
     auto &binary_expr = to_binary_expr(expr);
 
@@ -2980,6 +3006,29 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     make_boolean(binary_expr.lhs());
     convert_expr(binary_expr.rhs());
     make_boolean(binary_expr.rhs());
+
+    expr.type() = bool_typet();
+
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_sva_sequence_consecutive_repetition ||
+    expr.id() == ID_sva_sequence_non_consecutive_repetition ||
+    expr.id() == ID_sva_sequence_goto_repetition)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+
+    convert_expr(binary_expr.lhs());
+    make_boolean(binary_expr.lhs());
+
+    convert_expr(binary_expr.rhs());
+
+    mp_integer n = elaborate_constant_integer_expression(binary_expr.rhs());
+    if(n < 0)
+      throw errort().with_location(binary_expr.rhs().source_location())
+        << "number of repetitions must not be negative";
+
+    binary_expr.rhs() = from_integer(n, integer_typet{});
 
     expr.type() = bool_typet();
 

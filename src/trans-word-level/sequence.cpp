@@ -176,6 +176,12 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
 
     return result;
   }
+  else if(expr.id() == ID_sva_sequence_consecutive_repetition)
+  {
+    // x[*n] is syntactic sugar for x ##1 ... ##1 x, with n repetitions
+    auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
+    return instantiate_sequence(repetition.lower(), t, no_timeframes);
+  }
   else
   {
     // not a sequence, evaluate as state predicate

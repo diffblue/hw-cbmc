@@ -124,6 +124,9 @@ protected:
 
   resultt convert_sva_binary(const std::string &name, const binary_exprt &);
 
+  resultt
+  convert_sva_binary_repetition(const std::string &name, const binary_exprt &);
+
   resultt convert_sva_abort(const std::string &name, const sva_abort_exprt &);
 
   resultt
