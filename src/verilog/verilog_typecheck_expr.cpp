@@ -664,6 +664,45 @@ constant_exprt verilog_typecheck_exprt::high(const exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::typename_string
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
+{
+  auto &type = expr.type();
+
+  auto left = this->left(expr);
+  auto right = this->right(expr);
+
+  std::string s;
+
+  if(type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv)
+  {
+    s = "bit[" + to_string(left) + ":" + to_string(right) + "]";
+  }
+  else if(type.id() == ID_bool)
+  {
+    s = "bit";
+  }
+  else if(type.id() == ID_signedbv || type.id() == ID_verilog_signedbv)
+  {
+    s = "bit signed[" + to_string(left) + ":" + to_string(right) + "]";
+  }
+  else
+    s = "?";
+
+  return convert_constant(constant_exprt{s, string_typet{}});
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_system_function
 
   Inputs:
@@ -865,6 +904,16 @@ exprt verilog_typecheck_exprt::convert_system_function(
     expr.type() = bool_typet();
 
     return std::move(expr);
+  }
+  else if(identifier == "$typename")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$typename takes one argument";
+    }
+
+    return typename_string(arguments[0]);
   }
   else
   {
