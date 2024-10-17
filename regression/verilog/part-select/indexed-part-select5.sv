@@ -1,6 +1,6 @@
 module main(input my_input);
 
-  bit [7:0] some_wire;
+  reg [7:0] some_wire;
 
   always @my_input begin
     some_wire[0 +: 2] = 'b01;

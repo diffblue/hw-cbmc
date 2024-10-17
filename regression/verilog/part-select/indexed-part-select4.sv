@@ -1,8 +1,8 @@
 module main(input my_input);
 
-  bit [7:0] some_wire;
+  reg [7:0] some_wire;
 
-  always @my_input begin
+  always @my_input begin : my_block
     integer i;
     for(i=0; i<4; i++)
       // part select with index known at synthesis time

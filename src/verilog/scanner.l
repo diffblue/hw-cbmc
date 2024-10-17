@@ -231,6 +231,8 @@ void verilog_scanner_init()
 ">>>"           { return TOK_GREATERGREATERGREATER; }
 "<<"            { return TOK_LESSLESS; }
 "<<<"           { return TOK_LESSLESSLESS; }
+"+:"            { return TOK_PLUSCOLON; } // V2005
+"-:"            { return TOK_MINUSCOLON; } // V2005
 
                 /* Trinary operators */
 
@@ -244,8 +246,6 @@ void verilog_scanner_init()
 "++"            { SYSTEM_VERILOG_OPERATOR(TOK_PLUSPLUS, "++"); }
 "--"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSMINUS, "--"); }
 "+="            { SYSTEM_VERILOG_OPERATOR(TOK_PLUSEQUAL, "+="); }
-"+:"            { SYSTEM_VERILOG_OPERATOR(TOK_PLUSCOLON, "+:"); }
-"-:"            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSCOLON, "-:"); }
 "-="            { SYSTEM_VERILOG_OPERATOR(TOK_MINUSEQUAL, "-="); }
 "*="            { SYSTEM_VERILOG_OPERATOR(TOK_ASTERICEQUAL, "*="); }
 "/="            { SYSTEM_VERILOG_OPERATOR(TOK_SLASHEQUAL, "+="); }
