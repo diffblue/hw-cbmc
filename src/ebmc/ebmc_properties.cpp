@@ -110,8 +110,10 @@ bool ebmc_propertiest::select_property(
   {
     std::string property = cmdline.get_value("property");
 
+    // disable all assertions (not: assumptions)
     for(auto &p : properties)
-      p.status = propertyt::statust::DISABLED;
+      if(!p.is_assumed())
+        p.status = propertyt::statust::DISABLED;
 
     bool found = false;
 

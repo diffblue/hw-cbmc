@@ -6,6 +6,7 @@
 * Verilog: allow indexed part select
 * word-level BMC: fix for F/s_eventually and U/s_until
 * IC3: liveness to safety translation
+* Assumptions are not disabled when using --property
 
 # EBMC 5.2
 

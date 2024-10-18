@@ -1,0 +1,7 @@
+CORE
+assume2.sv
+--bound 0 --property main.p1
+^\[main\.a1\] assume always 10 <= main\.a && main\.a <= 100: ASSUMED$
+^\[main\.p1\] always main\.a != 200: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
