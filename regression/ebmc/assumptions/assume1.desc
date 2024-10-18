@@ -1,5 +1,5 @@
 CORE
-main.v
+assume1.v
 --module main --bound 3 --aig --vl2smv-extensions
 ^\[main\.property\.a1\] assume always 10 <= main\.a && main\.a <= 100: ASSUMED$
 ^\[main\.property\.p1\] always main\.a != 200: PROVED up to bound 3$
