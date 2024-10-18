@@ -1,3 +1,12 @@
+# EBMC 5.3
+
+* SystemVerilog: fix for nets implicitly declared for port connections
+* SystemVerilog: $typename
+* SystemVerilog: SVA [*n]
+* Verilog: allow indexed part select
+* word-level BMC: fix for F/s_eventually and U/s_until
+* IC3: liveness to safety translation
+
 # EBMC 5.2
 
 * SystemVerilog: defines can now be set on the command line
