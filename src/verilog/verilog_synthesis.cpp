@@ -2439,8 +2439,6 @@ void verilog_synthesist::synth_force_rec(
   else
     DATA_INVARIANT(false, "unexpected assignment type");
 
-  auto rhs_synth = synth_expr(rhs, symbol_statet::CURRENT);
-
   // If the symbol is marked as a state variable,
   // turn it into a wire now.
   if(symbol.is_state_var)
@@ -2451,8 +2449,11 @@ void verilog_synthesist::synth_force_rec(
     writeable_symbol.is_state_var = false;
   }
 
-  equal_exprt equality{lhs, rhs_synth};
-  invars.push_back(equality);
+  auto lhs_synth = synth_expr(lhs, symbol_statet::CURRENT);
+  auto rhs_synth = synth_expr(rhs, symbol_statet::CURRENT);
+
+  equal_exprt equality{std::move(lhs_synth), std::move(rhs_synth)};
+  invars.push_back(std::move(equality));
 }
 
 /*******************************************************************\
