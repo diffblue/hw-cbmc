@@ -1,0 +1,10 @@
+KNOWNBUG
+mini-alu.sv
+--module alu --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The "default:;" in the assertion block causes an invalid expression to be
+generated.
