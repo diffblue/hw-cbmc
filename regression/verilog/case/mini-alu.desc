@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 mini-alu.sv
 --module alu --bound 0
 ^EXIT=0$
@@ -6,5 +6,3 @@ mini-alu.sv
 --
 ^warning: ignoring
 --
-The "default:;" in the assertion block causes an invalid expression to be
-generated.

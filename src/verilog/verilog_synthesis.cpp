@@ -2866,6 +2866,7 @@ void verilog_synthesist::synth_case(
   // we convert the rest to if-then-else
   exprt start;
   exprt *last_if=&start;
+  std::optional<verilog_statementt> default_case;
 
   for(unsigned i=1; i<statement.operands().size(); i++)
   {
@@ -2876,20 +2877,28 @@ void verilog_synthesist::synth_case(
       throw errort() << "expected case_item";
     }
 
-    if(e.operands().size()!=2)
+    auto &case_item = to_verilog_case_item(e);
+
+    // default?
+    if(case_item.is_default())
+      default_case = case_item.case_statement();
+    else
     {
-      throw errort().with_location(e.source_location())
-        << "case_item expected to have two operands";
+      exprt if_statement(ID_if);
+      if_statement.reserve_operands(3);
+      if_statement.add_to_operands(
+        synth_case_values(case_item.case_value(), case_operand));
+      if_statement.add_to_operands(case_item.case_statement());
+
+      last_if->add_to_operands(std::move(if_statement));
+      last_if = &last_if->operands().back();
     }
+  }
 
-    exprt if_statement(ID_if);
-    if_statement.reserve_operands(3);
-    if_statement.add_to_operands(
-      synth_case_values(to_binary_expr(e).op0(), case_operand));
-    if_statement.add_to_operands(to_binary_expr(e).op1());
-
-    last_if->add_to_operands(std::move(if_statement));
-    last_if=&last_if->operands().back();
+  if(default_case.has_value())
+  {
+    // Attach the 'default' to the final 'if' as 'else'
+    last_if->add_to_operands(std::move(default_case.value()));
   }
 
   // synthesize the new if-then-else
