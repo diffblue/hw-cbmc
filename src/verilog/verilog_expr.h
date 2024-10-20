@@ -1090,14 +1090,19 @@ inline verilog_case_baset &to_verilog_case_base(exprt &expr)
   return static_cast<verilog_case_baset &>(expr);
 }
 
-class verilog_case_itemt:public exprt
+class verilog_case_itemt : public binary_exprt
 {
 public:
-  verilog_case_itemt():exprt("case_item")
+  verilog_case_itemt(exprt value, verilog_statementt statement)
+    : binary_exprt(std::move(value), ID_case_item, std::move(statement))
   {
-    operands().resize(2);
   }
-  
+
+  bool is_default() const
+  {
+    return case_value().id() == ID_default;
+  }
+
   inline exprt &case_value()
   {
     return op0();
@@ -1117,19 +1122,23 @@ public:
   {
     return to_verilog_statement(op1());
   }
+
+protected:
+  using binary_exprt::op0;
+  using binary_exprt::op1;
 };
 
 inline const verilog_case_itemt &to_verilog_case_item(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_case_item);
-  binary_exprt::check(expr);
+  verilog_case_itemt::check(expr);
   return static_cast<const verilog_case_itemt &>(expr);
 }
 
 inline verilog_case_itemt &to_verilog_case_item(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_case_item);
-  binary_exprt::check(expr);
+  verilog_case_itemt::check(expr);
   return static_cast<verilog_case_itemt &>(expr);
 }
 
