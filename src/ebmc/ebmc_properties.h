@@ -195,7 +195,9 @@ public:
   static ebmc_propertiest
   from_transition_system(const transition_systemt &, message_handlert &);
 
-  bool select_property(const cmdlinet &, message_handlert &);
+  /// Implements --property ID.
+  /// Throws when given an unknown identifier.
+  void select_property(const cmdlinet &, message_handlert &);
 
   /// a map from property identifier to normalized expression
   std::map<irep_idt, exprt> make_property_map() const
