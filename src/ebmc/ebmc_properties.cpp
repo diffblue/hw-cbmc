@@ -102,7 +102,7 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
   return properties;
 }
 
-bool ebmc_propertiest::select_property(
+void ebmc_propertiest::select_property(
   const cmdlinet &cmdline,
   message_handlert &message_handler)
 {
@@ -126,15 +126,8 @@ bool ebmc_propertiest::select_property(
       }
 
     if(!found)
-    {
-      messaget message(message_handler);
-      message.error() << "Property " << property << " not found"
-                      << messaget::eom;
-      return true;
-    }
+      throw ebmc_errort() << "Property " << property << " not found";
   }
-
-  return false;
 }
 
 ebmc_propertiest ebmc_propertiest::from_command_line(

@@ -1,0 +1,7 @@
+CORE
+property-not-found1.sv
+--property main.something
+^error: Property main\.something not found$
+^EXIT=6$
+^SIGNAL=0$
+--
