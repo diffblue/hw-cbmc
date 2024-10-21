@@ -1,0 +1,9 @@
+KNOWNBUG
+past3.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+$past doesn't recognize the loop index as elaboration-time constant.
