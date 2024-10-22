@@ -3,7 +3,7 @@ sva_implies1.sv
 --bound 0
 ^\[main\.p0\] always \(1 implies 1\): PROVED up to bound 0$
 ^\[main\.p1\] always \(1 implies 0\): REFUTED$
-^\[main\.p2\] always \(1 implies 32'b0000000000000000000000000000000x\): PROVED up to bound 0$
+^\[main\.p2\] always \(1 implies 32'b0000000000000000000000000000000x\): REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

@@ -24,7 +24,9 @@ Author: Daniel Kroening, dkr@amazon.com
 //   1    1  |   Z
 
 bool is_four_valued(const typet &);
+bool is_four_valued(const exprt &);
 bool is_aval_bval(const typet &);
+bool is_aval_bval(const exprt &);
 std::size_t aval_bval_width(const typet &);
 typet aval_bval_underlying(const typet &);
 
@@ -50,5 +52,7 @@ exprt aval_bval(const verilog_wildcard_equality_exprt &);
 exprt aval_bval(const verilog_wildcard_inequality_exprt &);
 /// lowering for **
 exprt aval_bval(const power_exprt &);
+/// lowering for typecasts
+exprt aval_bval(const typecast_exprt &);
 
 #endif

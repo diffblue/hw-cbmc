@@ -21,6 +21,11 @@ bool is_four_valued(const typet &type)
   return type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv;
 }
 
+bool is_four_valued(const exprt &expr)
+{
+  return is_four_valued(expr.type());
+}
+
 bv_typet aval_bval_type(std::size_t width, irep_idt source_type)
 {
   PRECONDITION(!source_type.empty());
@@ -332,4 +337,16 @@ exprt aval_bval(const power_exprt &expr)
     power_exprt{aval_underlying(expr.lhs()), aval_underlying(expr.rhs())};
   auto x = make_x(expr.type());
   return if_exprt{has_xz, x, aval_bval_conversion(power_expr, x.type())};
+}
+
+exprt aval_bval(const typecast_exprt &expr)
+{
+  // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
+  PRECONDITION(is_aval_bval(expr.op()));
+  PRECONDITION(expr.type().id() == ID_bool);
+
+  auto op_has_xz = ::has_xz(expr.op());
+  auto op_aval = aval(expr.op());
+  auto op_aval_zero = to_bv_type(op_aval.type()).all_zeros_expr();
+  return and_exprt{not_exprt{op_has_xz}, notequal_exprt{op_aval, op_aval_zero}};
 }
