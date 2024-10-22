@@ -304,6 +304,13 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id()==ID_typecast)
   {
+    // When casting a four-valued scalar to bool,
+    // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
+    if(is_aval_bval(to_typecast_expr(expr).op()) && expr.type().id() == ID_bool)
+    {
+      expr = aval_bval(to_typecast_expr(expr));
+    }
+    else
     {
       auto &op = to_typecast_expr(expr).op();
 
