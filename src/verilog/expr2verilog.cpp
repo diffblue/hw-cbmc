@@ -793,6 +793,8 @@ expr2verilogt::resultt expr2verilogt::convert_indexed_part_select(
   else
     dest += '-';
 
+  dest += ':';
+
   dest += convert_rec(src.width()).s;
   dest += ']';
 
