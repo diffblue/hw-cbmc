@@ -2280,6 +2280,8 @@ public:
   {
     return op2();
   }
+
+  exprt lower() const;
 };
 
 inline const verilog_indexed_part_select_plus_or_minus_exprt &
