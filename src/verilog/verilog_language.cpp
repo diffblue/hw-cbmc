@@ -83,7 +83,7 @@ bool verilog_languaget::parse(
 
   parse_tree.swap(verilog_parser.parse_tree);
 
-  parse_tree.build_module_map();
+  parse_tree.build_item_map();
 
   return result;
 }
@@ -129,20 +129,19 @@ Function: verilog_languaget::dependencies
 
 void verilog_languaget::dependencies(
   const std::string &module,
-  std::set<std::string> &module_set)
+  std::set<std::string> &dependency_set)
 {
-  verilog_parse_treet::module_mapt::const_iterator it=
-    parse_tree.module_map.find(
-      id2string(verilog_module_name(module)));
+  verilog_parse_treet::item_mapt::const_iterator it =
+    parse_tree.item_map.find(id2string(verilog_module_name(module)));
 
-  if(it!=parse_tree.module_map.end())
+  if(it != parse_tree.item_map.end())
   {
-    // dependencies on other Verilog modules
+    // dependencies on other Verilog modules or packages
 
-    const auto &module = *it->second;
+    const auto &item_container = *it->second;
 
-    for(auto &identifier : module.submodules())
-      module_set.insert(id2string(identifier));
+    for(auto &identifier : item_container.dependencies())
+      dependency_set.insert(id2string(identifier));
   }
 }
 

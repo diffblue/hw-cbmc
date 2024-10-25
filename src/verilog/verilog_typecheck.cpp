@@ -1871,11 +1871,10 @@ bool verilog_typecheck(
   bool warn_implicit_nets,
   message_handlert &message_handler)
 {
-  verilog_parse_treet::module_mapt::const_iterator it=
-    parse_tree.module_map.find(
-      id2string(verilog_module_name(module)));
+  verilog_parse_treet::item_mapt::const_iterator it =
+    parse_tree.item_map.find(id2string(verilog_module_name(module)));
 
-  if(it==parse_tree.module_map.end())
+  if(it == parse_tree.item_map.end())
   {
     messaget message(message_handler);
     message.error() << "module `" << module 
@@ -1883,9 +1882,11 @@ bool verilog_typecheck(
     return true;
   }
 
+  auto &module_source = to_verilog_module_source(*it->second);
+
   return verilog_typecheck(
     symbol_table,
-    *it->second,
+    module_source,
     parse_tree.standard,
     warn_implicit_nets,
     message_handler);

@@ -45,7 +45,7 @@ public:
   
   bool has_module(const std::string &name) const
   {
-    return module_map.count(name)!=0;
+    return item_map.count(name) != 0;
   }
 
   static exprt create_module(
@@ -66,20 +66,25 @@ public:
   {
     parse_tree.items.swap(items);
     parse_tree.expr.swap(expr);
-    parse_tree.module_map.swap(module_map);
+    parse_tree.item_map.swap(item_map);
     std::swap(parse_tree.standard, standard);
   }
 
   void modules_provided(
     std::set<std::string> &module_set) const;
 
+  // An index into the items list.
+  // The key is
+  //   package::name for pagages
+  //   name          for modules, etc.
+  // as packages have a separate name space (1800-2017 3.13).
   typedef std::
-    unordered_map<irep_idt, const verilog_module_sourcet *, irep_id_hash>
-      module_mapt;
-  module_mapt module_map;
-  
-  void build_module_map();
-  
+    unordered_map<irep_idt, const verilog_item_containert *, irep_id_hash>
+      item_mapt;
+  item_mapt item_map;
+
+  void build_item_map();
+
   void show(std::ostream &out) const;
 };
 

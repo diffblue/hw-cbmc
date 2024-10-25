@@ -40,6 +40,12 @@ bool verilog_typecheck(
   const exprt::operandst &parameters,
   message_handlert &message_handler);
 
+bool verilog_typecheck(
+  symbol_table_baset &,
+  const verilog_packaget &verilog_package,
+  verilog_standardt,
+  message_handlert &);
+
 /*******************************************************************\
 
    Class: verilog_typecheckt
