@@ -1,5 +1,4 @@
-module VGA #(localparam  size = 2, localparam h_bits = 8, localparam v_bits = 6) (input clk, input rst, output reg disp_ena, output reg n_blank, output reg n_sync, output reg [h_bits-1:0] col, output reg [v_bits-1:0] row);
-
+module VGA #(localparam  size = 2, h_bits =8, v_bits = 6)(input clk, input rst, output reg disp_ena, output reg n_blank, output reg n_sync, output reg [h_bits-1:0] col, output reg [v_bits-1:0] row);
 	localparam h_pixels = 50*size;
 	localparam h_pulse = 5*size;
 	localparam h_bp = 8*size;
@@ -61,7 +60,7 @@ module VGA #(localparam  size = 2, localparam h_bits = 8, localparam v_bits = 6)
 				disp_ena = 0;
 		end
 	end
-	p1: assert property (@(posedge clk) s_eventually rst == 1 || disp_ena == 1);
+	p1: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually disp_ena == 1)) ;
   	// F G !rst -> G F disp_ena
 endmodule
 

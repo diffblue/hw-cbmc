@@ -1,4 +1,5 @@
-module UART_T #(localparam d_width = 13, localparam c_width = 5) (input clk, input rst, input tx_ena, input [d_width - 1: 0] tx_data, output reg tx, output reg tx_busy);
+module UART_T #(localparam d_width = 13, c_width = 5) (input clk, input rst, input tx_ena, input [d_width - 1: 0] tx_data, output reg tx, output reg tx_busy);
+	//2^c_width > d_width+3
 	reg [c_width-1:0] tx_cnt;
 	reg tx_state;
 	reg [d_width+1:0] tx_buffer;
@@ -33,6 +34,6 @@ module UART_T #(localparam d_width = 13, localparam c_width = 5) (input clk, inp
 		end
 		tx = tx_buffer[0];
 	end
-	p1: assert property (@(posedge clk) s_eventually rst == 1 || tx_state == 0);
+	p1: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually tx_state == 0)) ;
   	// F G (rst = FALSE) -> G F (tx_state = FALSE)
 endmodule

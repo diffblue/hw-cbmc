@@ -1,4 +1,7 @@
-module SEVEN #(localparam freq = 80000, localparam CBITS = 17) (input clk, input rst, input [13:0] both7seg, output reg[6:0] segment);
+module SEVEN(input clk, input rst, input [13:0] both7seg, output reg[6:0] segment);
+	localparam freq = 160000;
+	localparam CBITS = 18;
+
 	reg [CBITS-1:0] cnt;
 	reg digit_select;
 
@@ -22,8 +25,6 @@ module SEVEN #(localparam freq = 80000, localparam CBITS = 17) (input clk, input
 			end
 		end
 	end
-	p1: assert property (@(posedge clk) s_eventually rst || digit_select == 1);
-	p2: assert property (@(posedge clk) s_eventually rst || digit_select == 0);
-	//F G (rst = FALSE) -> G F (digit_select = TRUE)
-	//F G (rst = FALSE) -> G F (digit_select = FALSE)
+	p2: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually (digit_select == 0 and (always s_eventually digit_select == 1)))) ;
+	//F G (rst = FALSE) -> G F (digit_select = FALSE & G F (digit_select = TRUE))
 endmodule

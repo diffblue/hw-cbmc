@@ -1,4 +1,7 @@
-module LCD #(localparam clk_freq = 3, localparam CBITS = 11) (input clk, input [6:0] in_data, input lcd_enable, input [9:0] lcd_bus, output reg e, output reg[7:0] lcd_data, output reg rw, output reg rs, output reg busy);
+module LCD(input clk, input [6:0] in_data, input lcd_enable, input [9:0] lcd_bus, output reg e, output reg[7:0] lcd_data, output reg rw, output reg rs, output reg busy);
+	//in_data -> {display_lines, character_font, display_on_off, cursor, blink, inc_dec, shift}
+	localparam clk_freq = 3;
+	localparam CBITS = 11;
 	reg [CBITS - 1:0] cnt;			// 0 to 500*clk_freg
 	reg [1:0] state;
 
@@ -94,7 +97,7 @@ module LCD #(localparam clk_freq = 3, localparam CBITS = 11) (input clk, input [
 			end
 		end
 	end
-	p1: assert property (@(posedge clk) s_eventually lcd_enable == 0 || state == 2);
+	p1: assert property (@(posedge clk) (always s_eventually lcd_enable == 0) or (always s_eventually state == 2)) ;
 	//F G (lcd_enable = T) -> G F (state[1] = T & state[0] = F)
 endmodule
 

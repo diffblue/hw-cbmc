@@ -2,7 +2,7 @@
 
 for BM in *.sv
 do
-  TOP=$(grep -w module $BM | awk '{print $2}')
+  TOP=$(grep -w module $BM | awk '{print $2}' | sed 's/(.*//')
   echo "BENCHMARK: $BM ($TOP)"
   cat > $BM.jg.tcl << EOF
 clear -all
@@ -18,7 +18,7 @@ done
 
 for BM in *.sv
 do
-  TOP=$(grep -w module $BM | awk '{print $2}')
+  TOP=$(grep -w module $BM | awk '{print $2}' | sed 's/(.*//')
   echo "BENCHMARK: $BM ($TOP)"
   cat > $BM.vcf.tcl << EOF
 set CPU_per_lic 12

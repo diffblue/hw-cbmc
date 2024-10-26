@@ -1,8 +1,10 @@
-module Thermocouple #(localparam clk_freq = 6000, localparam CBITS = 15) (input clk, input rst, input spi_not_busy, input [31:0] spi_rx_data, output reg [13:0] tc_temp_data, output reg [11:0] junction_temp_data, output reg [3:0] fault_bits);
+module Thermocouple(input clk, input rst, input spi_not_busy, input [31:0] spi_rx_data, output reg [13:0] tc_temp_data, output reg [11:0] junction_temp_data, output reg [3:0] fault_bits);
+	localparam clk_freq = 6000;
+	localparam CBITS = 15;			// 2^CBITS > clk_freq*3
 	reg spi_ena;
 	reg [1:0] state;
 	reg [CBITS-1:0] cnt;
-	always @(posedge clk) begin
+	always @(posedge clk)
 		if(rst == 1) begin
 			spi_ena = 0;
 			tc_temp_data = 0;
@@ -40,7 +42,7 @@ module Thermocouple #(localparam clk_freq = 6000, localparam CBITS = 15) (input 
 		end
 		else
 			state = 1;
-	end
-	p1: assert property (@(posedge clk) s_eventually rst == 1 || state == 1);
+
+	p1: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually state == 1)) ;
 	//F G (rst = F) -> G F (state[1] = F & state[0] = T)
 endmodule

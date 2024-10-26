@@ -1,4 +1,6 @@
-module DELAY #(localparam N = 20000, localparam CBITS = 15) (input clk, input rst, output reg sig);
+module DELAY (input clk, input rst, output reg sig ,output reg err, output reg flg);
+  localparam N = 20000;
+  localparam CBITS = 15;
   reg [CBITS-1 :0] cnt;
   always @(posedge clk) begin
     if (rst) cnt = 0;
@@ -6,7 +8,11 @@ module DELAY #(localparam N = 20000, localparam CBITS = 15) (input clk, input rs
     if (cnt > N) begin sig = 1;
       cnt = 0; end
     else sig = 0;
+    if (cnt > N + 1) err = 1;
+    else err = 0;
+    if (cnt <= N) flg = 1;
+    else flg = 0;
   end
-  p1: assert property (@(posedge clk) s_eventually rst || sig == 1);
+  p1: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually sig == 1)) ;
   // F G (rst = F) -> G F (sig = T)
 endmodule
