@@ -1,21 +1,19 @@
 About
 =======
 
-EBMC is a bounded model checker for the Verilog language (and other HW
-specification languages).  The verification is performed by synthesizing a
-transition system from the Verilog, unwinding the transition system (up to a
-certain bound), and then producing a decision problem.  The decision problem
-encodes the circuit and the negation of the property under verification. 
-Hence if satisfiable, the tool produces a counterexample demonstrating
-violation of the property.  EBMC can use CBMC's bit-vector solver or Z3
-or CVC4 to solve the decision problem.
+EBMC is a free, open-source formal verification tool for hardware designs.
+It can read Verilog 2005, SystemVerilog 2017, NuSMV and netlists (given in
+ISCAS89 format).  Properties can be given in LTL or a fragment of
+SystemVerilog Assertions.  It includes both bounded and (despite its name)
+unbounded Model Checking engines, i.e., it can both discover bugs and prove
+the absence of bugs.
 
 For full information see [cprover.org](http://www.cprover.org/ebmc/).
 
 Usage
 =====
 
-Let us assume we have the following SystemVerilog code in `main.sv`.
+Let us assume we have the following SystemVerilog model in `main.sv`.
 
 ```main.sv
 module main(input clk, x, y);
@@ -40,10 +38,10 @@ module main(input clk, x, y);
 endmodule
 ```
 
-Then we can run the EBMC verification as
+We can then invoke the BMC engine in EBMC as follows:
 
-`$> ebmc main.sv --module main --bound 3`
+`$ ebmc main.sv --top main --bound 3`
 
-setting the unwinding bound to `3` and running the verification of the module `main`.
+This sets the unwinding bound to `3` and the top-level module to `main`.
 
-For more information see [EBMC Manual](http://www.cprover.org/ebmc/manual/)
+For more information see [EBMC Manual](http://www.cprover.org/ebmc/manual/).
