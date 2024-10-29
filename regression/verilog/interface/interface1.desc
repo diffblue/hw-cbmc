@@ -1,7 +1,7 @@
 CORE
-package1.sv
+interface1.sv
 --show-parse
-^Pacakge: my_pkg$
+^Interface: myInterface$
 ^EXIT=0$
 ^SIGNAL=0$
 --

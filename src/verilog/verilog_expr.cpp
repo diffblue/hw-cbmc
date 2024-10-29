@@ -63,7 +63,7 @@ void verilog_module_sourcet::show(std::ostream &out) const
   out << '\n';
 }
 
-static void submodules_rec(
+static void dependencies_rec(
   const verilog_module_itemt &module_item,
   std::vector<irep_idt> &dest)
 {
@@ -75,29 +75,89 @@ static void submodules_rec(
   else if(module_item.id() == ID_generate_block)
   {
     for(auto &sub_item : to_verilog_generate_block(module_item).module_items())
-      submodules_rec(sub_item, dest);
+      dependencies_rec(sub_item, dest);
   }
   else if(module_item.id() == ID_generate_if)
   {
     auto &generate_if = to_verilog_generate_if(module_item);
-    submodules_rec(generate_if.then_case(), dest);
+    dependencies_rec(generate_if.then_case(), dest);
     if(generate_if.has_else_case())
-      submodules_rec(generate_if.else_case(), dest);
+      dependencies_rec(generate_if.else_case(), dest);
   }
   else if(module_item.id() == ID_generate_for)
   {
-    submodules_rec(to_verilog_generate_for(module_item).body(), dest);
+    dependencies_rec(to_verilog_generate_for(module_item).body(), dest);
   }
 }
 
-std::vector<irep_idt> verilog_module_sourcet::submodules() const
+std::vector<irep_idt> verilog_item_containert::dependencies() const
 {
   std::vector<irep_idt> result;
 
-  for(auto &item : module_items())
-    submodules_rec(item, result);
+  for(auto &item : items())
+    dependencies_rec(item, result);
 
   return result;
+}
+
+void verilog_packaget::show(std::ostream &out) const
+{
+  out << "Pacakge: " << base_name() << '\n';
+
+  out << "  Items:\n";
+
+  for(auto &item : items())
+    out << "    " << item.pretty() << '\n';
+
+  out << '\n';
+}
+
+void verilog_programt::show(std::ostream &out) const
+{
+  out << "Program: " << base_name() << '\n';
+
+  out << "  Items:\n";
+
+  for(auto &item : items())
+    out << "    " << item.pretty() << '\n';
+
+  out << '\n';
+}
+
+void verilog_classt::show(std::ostream &out) const
+{
+  out << "Class: " << base_name() << '\n';
+
+  out << "  Items:\n";
+
+  for(auto &item : items())
+    out << "    " << item.pretty() << '\n';
+
+  out << '\n';
+}
+
+void verilog_interfacet::show(std::ostream &out) const
+{
+  out << "Interface: " << base_name() << '\n';
+
+  out << "  Items:\n";
+
+  for(auto &item : items())
+    out << "    " << item.pretty() << '\n';
+
+  out << '\n';
+}
+
+void verilog_udpt::show(std::ostream &out) const
+{
+  out << "UDP: " << base_name() << '\n';
+
+  out << "  Items:\n";
+
+  for(auto &item : items())
+    out << "    " << item.pretty() << '\n';
+
+  out << '\n';
 }
 
 static exprt lower(const verilog_non_indexed_part_select_exprt &part_select)

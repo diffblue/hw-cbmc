@@ -2019,11 +2019,12 @@ to_verilog_restrict_statement(verilog_statementt &statement)
   return static_cast<verilog_restrict_statementt &>(statement);
 }
 
-class verilog_module_sourcet : public irept
+// modules, primitives, programs, interfaces, classes, packages
+class verilog_item_containert : public irept
 {
 public:
-  explicit verilog_module_sourcet(irep_idt _base_name)
-    : irept(ID_verilog_module)
+  verilog_item_containert(irep_idt _id, irep_idt _base_name)
+    : irept(_id)
   {
     base_name(_base_name);
   }
@@ -2036,6 +2037,64 @@ public:
   void base_name(irep_idt base_name)
   {
     return set(ID_base_name, base_name);
+  }
+
+  using itemst = std::vector<class verilog_module_itemt>;
+
+  const itemst &items() const
+  {
+    return (const itemst &)(find(ID_module_items).get_sub());
+  }
+
+  itemst &items()
+  {
+    return (itemst &)(add(ID_module_items).get_sub());
+  }
+
+  const source_locationt &source_location() const
+  {
+    return static_cast<const source_locationt &>(find(ID_C_source_location));
+  }
+
+  source_locationt &add_source_location()
+  {
+    return static_cast<source_locationt &>(add(ID_C_source_location));
+  }
+
+  // The identifiers of the modules and packages used
+  // (not: the identifiers of the module instances)
+  std::vector<irep_idt> dependencies() const;
+};
+
+class verilog_interfacet : public verilog_item_containert
+{
+public:
+  explicit verilog_interfacet(irep_idt _base_name)
+    : verilog_item_containert(ID_verilog_module, _base_name)
+  {
+  }
+
+  void show(std::ostream &) const;
+};
+
+inline const verilog_interfacet &to_verilog_interface(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_interface);
+  return static_cast<const verilog_interfacet &>(irep);
+}
+
+inline verilog_interfacet &to_verilog_interface(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_interface);
+  return static_cast<verilog_interfacet &>(irep);
+}
+
+class verilog_module_sourcet : public verilog_item_containert
+{
+public:
+  explicit verilog_module_sourcet(irep_idt _base_name)
+    : verilog_item_containert(ID_verilog_module, _base_name)
+  {
   }
 
   using parameter_port_listt = verilog_parameter_declt::declaratorst;
@@ -2058,33 +2117,19 @@ public:
     return (const port_listt &)(find(ID_ports).get_sub());
   }
 
-  using module_itemst = std::vector<class verilog_module_itemt>;
+  using module_itemst = itemst;
 
   const module_itemst &module_items() const
   {
-    return (const module_itemst &)(find(ID_module_items).get_sub());
+    return items();
   }
 
   module_itemst &module_items()
   {
-    return (module_itemst &)(add(ID_module_items).get_sub());
-  }
-
-  const source_locationt &source_location() const
-  {
-    return static_cast<const source_locationt &>(find(ID_C_source_location));
-  }
-
-  source_locationt &add_source_location()
-  {
-    return static_cast<source_locationt &>(add(ID_C_source_location));
+    return items();
   }
 
   void show(std::ostream &) const;
-
-  // The identifiers of the submodules
-  // (not: the identifiers of the instances)
-  std::vector<irep_idt> submodules() const;
 };
 
 inline const verilog_module_sourcet &to_verilog_module_source(const irept &irep)
@@ -2095,6 +2140,98 @@ inline const verilog_module_sourcet &to_verilog_module_source(const irept &irep)
 inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
 {
   return static_cast<verilog_module_sourcet &>(irep);
+}
+
+class verilog_packaget : public verilog_item_containert
+{
+public:
+  explicit verilog_packaget(irep_idt _base_name)
+    : verilog_item_containert(ID_verilog_module, _base_name)
+  {
+  }
+
+  void show(std::ostream &) const;
+};
+
+inline const verilog_packaget &to_verilog_package(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_package);
+  return static_cast<const verilog_packaget &>(irep);
+}
+
+inline verilog_packaget &to_verilog_package(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_package);
+  return static_cast<verilog_packaget &>(irep);
+}
+
+class verilog_programt : public verilog_item_containert
+{
+public:
+  explicit verilog_programt(irep_idt _base_name)
+    : verilog_item_containert(ID_verilog_module, _base_name)
+  {
+  }
+
+  void show(std::ostream &) const;
+};
+
+inline const verilog_programt &to_verilog_program(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_program);
+  return static_cast<const verilog_programt &>(irep);
+}
+
+inline verilog_programt &to_verilog_program(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_program);
+  return static_cast<verilog_programt &>(irep);
+}
+
+class verilog_classt : public verilog_item_containert
+{
+public:
+  explicit verilog_classt(irep_idt _base_name)
+    : verilog_item_containert(ID_verilog_module, _base_name)
+  {
+  }
+
+  void show(std::ostream &) const;
+};
+
+inline const verilog_classt &to_verilog_class(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_class);
+  return static_cast<const verilog_classt &>(irep);
+}
+
+inline verilog_classt &to_verilog_class(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_class);
+  return static_cast<verilog_classt &>(irep);
+}
+
+class verilog_udpt : public verilog_item_containert
+{
+public:
+  explicit verilog_udpt(irep_idt _base_name)
+    : verilog_item_containert(ID_verilog_module, _base_name)
+  {
+  }
+
+  void show(std::ostream &) const;
+};
+
+inline const verilog_udpt &to_verilog_udp(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_udp);
+  return static_cast<const verilog_udpt &>(irep);
+}
+
+inline verilog_udpt &to_verilog_udp(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_udp);
+  return static_cast<verilog_udpt &>(irep);
 }
 
 class verilog_implicit_typecast_exprt : public unary_exprt

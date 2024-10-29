@@ -69,7 +69,7 @@ void verilog_parse_treet::modules_provided(
 
 /*******************************************************************\
 
-Function: verilog_parse_treet::build_module_map
+Function: verilog_parse_treet::build_item_map
 
   Inputs:
 
@@ -79,16 +79,22 @@ Function: verilog_parse_treet::build_module_map
 
 \*******************************************************************/
 
-void verilog_parse_treet::build_module_map()
+void verilog_parse_treet::build_item_map()
 {
-  module_map.clear();
+  item_map.clear();
 
   for(const auto &item : items)
   {
     if(item.id() == ID_verilog_module)
     {
       auto &verilog_module = to_verilog_module_source(item);
-      module_map[verilog_module.base_name()] = &verilog_module;
+      item_map[verilog_module.base_name()] = &verilog_module;
+    }
+    else if(item.id() == ID_verilog_package)
+    {
+      auto &verilog_package = to_verilog_package(item);
+      item_map["package::" + id2string(verilog_package.base_name())] =
+        &verilog_package;
     }
   }
 }
@@ -125,8 +131,18 @@ Function: verilog_parse_treet::show
 
 void verilog_parse_treet::show(const itemt &item, std::ostream &out) const
 {
-  if(item.id() == ID_verilog_module)
+  if(item.id() == ID_verilog_class)
+    to_verilog_class(item).show(out);
+  else if(item.id() == ID_verilog_interface)
+    to_verilog_interface(item).show(out);
+  else if(item.id() == ID_verilog_module)
     to_verilog_module_source(item).show(out);
+  else if(item.id() == ID_verilog_package)
+    to_verilog_package(item).show(out);
+  else if(item.id() == ID_verilog_program)
+    to_verilog_program(item).show(out);
+  else if(item.id() == ID_verilog_udp)
+    to_verilog_udp(item).show(out);
   else
     out << item.pretty() << '\n';
 }

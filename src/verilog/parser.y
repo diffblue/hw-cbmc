@@ -616,9 +616,13 @@ description:
 	  module_declaration
 		{ PARSER.parse_tree.add_item(stack_expr($1)); }
 	| udp_declaration
+		{ PARSER.parse_tree.add_item(stack_expr($1)); }
 	| interface_declaration
+		{ PARSER.parse_tree.add_item(stack_expr($1)); }
  	| program_declaration
+		{ PARSER.parse_tree.add_item(stack_expr($1)); }
  	| package_declaration
+		{ PARSER.parse_tree.add_item(stack_expr($1)); }
 	| attribute_instance_brace package_item
 		{ add_attributes($2, $1);
 		  PARSER.parse_tree.add_item(stack_expr($2)); }
@@ -713,8 +717,30 @@ module_keyword:
 	;
 
 interface_declaration:
-          TOK_INTERFACE TOK_ENDINTERFACE
+	  interface_nonansi_header
+	  timeunits_declaration_opt
+	  interface_item_brace
+          TOK_ENDINTERFACE
+        	{ $$ = $1; }
         ;
+
+interface_nonansi_header:
+	  attribute_instance_brace
+	  TOK_INTERFACE
+	  lifetime_opt
+	  interface_identifier
+	  	{
+		  init($$, ID_verilog_interface);
+		  stack_expr($$).set(ID_base_name, stack_expr($4).id());
+	  	}
+	  package_import_declaration_brace
+	  parameter_port_list_opt
+	  list_of_ports_opt
+	  ';'
+	  	{
+	  	  $$ = $5;
+	  	}
+	;
 
 program_declaration:
           TOK_PROGRAM TOK_ENDPROGRAM
@@ -724,31 +750,41 @@ class_declaration:
 	  TOK_CLASS class_identifier
 	  ';'
 		{
-		  $$ = $1;
+		  init($$, ID_verilog_class);
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
 	          push_scope(stack_expr($2).id(), "::");
 	        }
 	  class_item_brace
 	  TOK_ENDCLASS
 		{
+		  $$ = $4;
 		  pop_scope();
 	        }
 	;
 
 package_declaration:
           attribute_instance_brace TOK_PACKAGE
+		{ init($$, ID_verilog_package); }
           lifetime_opt
           package_identifier ';'
 		{
-		  $$ = $1;
-	          push_scope(stack_expr($4).id(), "::");
+	          push_scope(stack_expr($5).id(), "::");
 	        }
           timeunits_declaration_opt
           package_item_brace
-          TOK_ENDPACKAGE
+          TOK_ENDPACKAGE endpackage_identifier_opt
 		{
 		  pop_scope();
+		  $$ = $3;
+		  addswap($$, ID_module_items, $9);
+		  stack_expr($$).set(ID_base_name, stack_expr($5).id());
 	        }
         ;
+
+endpackage_identifier_opt:
+	  /* Optional */
+	| TOK_COLON package_identifier
+	;
 
 timeunits_declaration_opt:
 	  /* Optional */
@@ -939,6 +975,38 @@ config_declaration:
 bind_directive:
           TOK_BIND
         ;
+
+// System Verilog standard 1800-2017
+// A.1.6 Interface items
+
+interface_or_generate_item:
+	  attribute_instance_brace module_common_item
+	| attribute_instance_brace extern_tf_declaration
+	;
+
+extern_tf_declaration:
+	  TOK_EXTERN method_prototype ';'
+	| TOK_EXTERN TOK_FORKJOIN task_prototype ';'
+	;
+
+interface_item_brace:
+	  /* Optional */
+	| interface_item_brace interface_item
+	;
+
+interface_item:
+	  port_declaration ';'
+	| non_port_interface_item
+	;
+
+non_port_interface_item:
+	  generate_region
+	| interface_or_generate_item
+	| program_declaration
+	/* | modport_declaration */
+	| interface_declaration
+	/* | timeunits_declaration */
+	;
 	
 // System Verilog standard 1800-2017
 // A.1.9 Class items
@@ -3920,8 +3988,7 @@ genvar_identifier: identifier;
 hierarchical_parameter_identifier: hierarchical_identifier
 	;
 
-interface_identifier:
-	;
+interface_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 module_identifier: TOK_NON_TYPE_IDENTIFIER;
 
