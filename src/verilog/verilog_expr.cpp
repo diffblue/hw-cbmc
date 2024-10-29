@@ -228,3 +228,80 @@ exprt verilog_non_indexed_part_select_exprt::lower() const
 {
   return ::lower(*this);
 }
+
+static exprt
+lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
+{
+  auto get_width = [](const typet &t) -> mp_integer
+  {
+    if(t.id() == ID_bool)
+      return 1;
+
+    if(
+      t.id() == ID_unsignedbv || t.id() == ID_signedbv ||
+      t.id() == ID_verilog_signedbv || t.id() == ID_verilog_unsignedbv)
+    {
+      return to_bitvector_type(t).get_width();
+    }
+
+    PRECONDITION(false);
+  };
+
+  PRECONDITION(
+    part_select.id() == ID_verilog_indexed_part_select_plus ||
+    part_select.id() == ID_verilog_indexed_part_select_minus);
+
+  const exprt &src = part_select.src();
+
+  mp_integer src_width = get_width(src.type());
+  mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
+
+  // The width of the indexed part select must be an
+  // elaboration-time constant.
+  auto width =
+    numeric_cast_v<mp_integer>(to_constant_expr(part_select.width()));
+
+  // The index need not be a constant.
+  const exprt &index = part_select.index();
+
+  if(index.is_constant())
+  {
+    auto index_int = numeric_cast_v<mp_integer>(to_constant_expr(index));
+
+    // Construct the extractbits expression
+    mp_integer bottom;
+
+    if(part_select.id() == ID_verilog_indexed_part_select_plus)
+    {
+      bottom = index_int - src_offset;
+    }
+    else // ID_verilog_indexed_part_select_minus
+    {
+      bottom = bottom - width + 1;
+    }
+
+    return extractbits_exprt{
+      std::move(src), from_integer(bottom, integer_typet{}), part_select.type()}
+      .with_source_location(part_select);
+  }
+  else
+  {
+    // Index not constant.
+    // Use logical right-shift followed by (constant) extractbits.
+    auto index_adjusted =
+      minus_exprt{index, from_integer(src_offset, index.type())};
+
+    auto src_shifted = lshr_exprt(src, index_adjusted);
+
+    return extractbits_exprt{
+      std::move(src_shifted),
+      from_integer(0, integer_typet{}),
+      part_select.type()}
+      .with_source_location(part_select);
+  }
+}
+
+exprt verilog_indexed_part_select_plus_or_minus_exprt::lower() const
+{
+  return ::lower(*this);
+}
