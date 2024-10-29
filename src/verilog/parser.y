@@ -771,6 +771,12 @@ parameter_port_list_opt:
 	        { init($$); }
 	;
 
+list_of_ports_opt:
+	/* Optional */
+              { make_nil($$); }
+	| list_of_ports
+	;
+
 list_of_ports: '(' port_brace ')' { $$ = $2; }
 	;
 
@@ -2770,13 +2776,33 @@ constant_expression: expression;
 // System Verilog standard 1800-2017
 // A.5.1 UDP declaration
 
-udp_declaration: attribute_instance_brace TOK_PRIMITIVE udp_identifier 
-	  '(' udp_port_list ')' ';' udp_port_declaration_brace
-	  udp_body TOK_ENDPRIMITIVE
-	| attribute_instance_brace TOK_PRIMITIVE udp_identifier 
-	  '(' udp_declaration_port_list ')' ';'
-	  udp_body TOK_ENDPRIMITIVE
+udp_nonansi_declaration:
+	  attribute_instance_brace
+	  TOK_PRIMITIVE udp_identifier '(' udp_port_list ')' ';'
 	;
+
+udp_ansi_declaration:
+	  attribute_instance_brace
+	  TOK_PRIMITIVE udp_identifier '(' udp_declaration_port_list ')' ';'
+	;
+
+udp_declaration:
+	  udp_nonansi_declaration
+	  udp_port_declaration
+	  udp_port_declaration_brace
+          udp_body
+          TOK_ENDPRIMITIVE
+	| udp_ansi_declaration
+	  udp_body
+          TOK_ENDPRIMITIVE
+	| TOK_EXTERN udp_nonansi_declaration
+	| TOK_EXTERN udp_ansi_declaration
+	| attribute_instance_brace
+	  TOK_PRIMITIVE udp_identifier '(' ')' ';'
+	  udp_port_declaration_brace
+          udp_body
+          TOK_ENDPRIMITIVE
+        ;
 
 // System Verilog standard 1800-2017
 // A.5.2 UDP ports
@@ -2823,31 +2849,94 @@ port_identifier_brace:
 // System Verilog standard 1800-2017
 // A.5.3 UDP body
 
-udp_body: udp_initial_statement_opt TOK_TABLE table_entry_brace TOK_ENDTABLE
+udp_body: combinational_body ;
+
+combinational_body:
+	  TOK_TABLE
+	  combinational_entry_brace
+	  TOK_ENDTABLE
+	;
+
+combinational_entry_brace:
+	  combinational_entry
+	| combinational_entry_brace combinational_entry
+	;
+
+combinational_entry:
+	  level_input_list TOK_COLON output_symbol ';'
+	;
+
+sequential_body:
+	  udp_initial_statement_opt
+	  TOK_TABLE sequential_entry_brace TOK_ENDTABLE
 	;
 
 udp_initial_statement_opt:
+	  /* Optional */
+	| udp_initial_statement
 	;
 
-table_entry_brace:
-	  table_entry
-	| table_entry_brace table_entry
+udp_initial_statement:
+	  TOK_INITIAL output_port_identifier '=' init_val ';'
 	;
 
-table_entry: input_list TOK_COLON output_or_level_symbol ';'
-	| input_list TOK_COLON output_or_level_symbol TOK_COLON next_state ';'
+output_port_identifier: new_identifier
 	;
 
-input_list:;
+init_val:
+	// Really 1'b0 | 1'b1 | 1'bx | 1'bX | 1'B0 | 1'B1 | 1'Bx | 1'BX | 1 | 0
+	  TOK_NUMBER
+	| new_identifier
+	;
 
-output_or_level_symbol:;
+sequential_entry_brace:
+	  sequential_entry
+	| sequential_entry_brace sequential_entry
+	;
 
-next_state:;
+sequential_entry:
+	  seq_input_list TOK_COLON current_state TOK_COLON next_state
+	;
 
-list_of_ports_opt:
-	/* Optional */
-              { make_nil($$); }
-	| list_of_ports
+seq_input_list: level_input_list | edge_input_list
+	;
+
+edge_indicator:
+	  '(' level_symbol level_symbol ')' | edge_symbol
+	;
+
+current_state: level_symbol ;
+
+next_state: output_symbol | '-' ;
+
+level_input_list:
+	  level_symbol
+	| level_input_list level_symbol
+	;
+
+edge_input_list: level_symbol_brace edge_indicator level_symbol_brace ;
+
+output_symbol:
+	// Really 0 | 1 | x | X
+	  TOK_NUMBER
+	| new_identifier
+	;
+
+level_symbol_brace:
+	  level_symbol
+	| level_symbol_brace level_symbol
+	;
+
+level_symbol:
+	// Really 0 | 1 | x | X | ? | b | B
+	  TOK_NUMBER
+	| new_identifier
+	;
+
+edge_symbol:
+	// Really r | R | f | F | p | P | n | N | *
+	  TOK_NUMBER
+	| new_identifier
 	;
 
 // System Verilog standard 1800-2017
