@@ -2351,8 +2351,9 @@ Function: zero_extend
 
 static exprt zero_extend(const exprt &expr, const typet &type)
 {
-  auto old_width = expr.type().id() == ID_bool
-                     ? 1
+  auto old_width = expr.type().id() == ID_bool ? 1
+                   : expr.type().id() == ID_integer
+                     ? 32
                      : to_bitvector_type(expr.type()).get_width();
 
   // first make unsigned

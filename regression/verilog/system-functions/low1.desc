@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 low1.sv
 --module main --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ low1.sv
 --
 ^warning: ignoring
 --
-This yields an error in the typechecker.
