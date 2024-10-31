@@ -1447,6 +1447,11 @@ enum_name_declaration_list:
 class_scope: class_type TOK_COLONCOLON
 	;
 
+class_scope_opt:
+	  /* Optional */
+	| class_scope
+	;
+
 integer_type:
 	  integer_vector_type
 	| integer_atom_type
@@ -1863,6 +1868,12 @@ variable_decl_assignment:
 		{ $$ = $1; stack_expr($$).id(ID_declarator);
 		  addswap($$, ID_type, $2);
 		  addswap($$, ID_value, $4); }
+	| variable_identifier variable_dimension_brace '=' class_new
+	;
+
+class_new:
+	  TOK_NEW list_of_arguments_paren_opt
+		{ init($$, ID_verilog_new); mto($$, $2); }
 	;
 
 // System Verilog standard 1800-2017
@@ -3637,6 +3648,11 @@ tf_call:
 list_of_arguments_paren:
 	  '(' list_of_arguments ')'
 		{ $$ = $2; }
+	;
+
+list_of_arguments_paren_opt:
+	  /* Optional */
+	| list_of_arguments_paren
 	;
 
 list_of_arguments:
