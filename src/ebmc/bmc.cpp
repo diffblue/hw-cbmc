@@ -17,6 +17,15 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <chrono>
 #include <fstream>
 
+static exprt::operandst vector_negation(const exprt::operandst &src)
+{
+  exprt::operandst result;
+  result.reserve(src.size());
+  for(auto &expr : src)
+    result.push_back(not_exprt{expr});
+  return result;
+}
+
 void bmc(
   std::size_t bound,
   bool convert_only,
@@ -79,7 +88,11 @@ void bmc(
     for(const auto &property : properties.properties)
     {
       if(!property.is_disabled())
-        solver.set_to_false(conjunction(property.timeframe_handles));
+      {
+        // one of them must be false
+        solver.set_to_true(
+          disjunction(vector_negation((property.timeframe_handles))));
+      }
     }
 
     // Call decision_proceduret::dec_solve to finish the conversion
@@ -106,7 +119,9 @@ void bmc(
 
       message.status() << "Checking " << property.name << messaget::eom;
 
-      auto assumption = not_exprt{conjunction(property.timeframe_handles)};
+      // one of them must be false
+      auto assumption =
+        disjunction(vector_negation(property.timeframe_handles));
 
       decision_proceduret::resultt dec_result = solver(assumption);
 
