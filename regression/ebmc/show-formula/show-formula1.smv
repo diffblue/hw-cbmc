@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x:0..1;
+
+ASSIGN
+init(x) := 1;
+next(x) := 0;
+
+SPEC AG x=1

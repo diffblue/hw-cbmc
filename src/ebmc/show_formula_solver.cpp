@@ -22,16 +22,37 @@ show_formula_solvert::show_formula_solvert()
 
 void show_formula_solvert::set_to(const exprt &expr, bool value)
 {
+  std::string number_str = '(' + std::to_string(++conjunct_counter) + ')';
+
   if(console)
     out << consolet::faint;
 
-  out << '(' << (++conjunct_counter) << ") ";
+  out << number_str << ' ';
 
   if(console)
     out << consolet::reset;
 
   if(value)
-    out << format(expr) << '\n';
+  {
+    // split up disjunctions into multiple lines for better readability
+    if(expr.id() == ID_or)
+    {
+      bool first = true;
+      for(auto &op : expr.operands())
+      {
+        if(first)
+          first = false;
+        else
+          out << std::string(number_str.size() - 1, ' ') << "\u2228 ";
+
+        out << format(op) << '\n';
+      }
+    }
+    else
+    {
+      out << format(expr) << '\n';
+    }
+  }
   else
     out << format(not_exprt(expr)) << '\n';
 }

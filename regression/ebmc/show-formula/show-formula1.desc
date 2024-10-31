@@ -1,0 +1,13 @@
+CORE
+show-formula1.smv
+--bound 2 --show-formula
+^\(1\) smv::main::var::x@0 = 1$
+^\(2\) smv::main::var::x@1 = 0$
+^\(3\) smv::main::var::x@2 = 0$
+^\(4\) smv::main::var::x@3 = 0$
+^\(5\) ¬\(smv::main::var::x@0 = 1\)$
+^  ∨ ¬\(smv::main::var::x@1 = 1\)$
+^  ∨ ¬\(smv::main::var::x@2 = 1\)$
+^EXIT=0$
+^SIGNAL=0$
+--
