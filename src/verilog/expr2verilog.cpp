@@ -694,6 +694,25 @@ expr2verilogt::convert_typecast(const typecast_exprt &src)
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_zero_extend
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_zero_extend(const zero_extend_exprt &src)
+{
+  // added by the type checker; igore
+  return convert_rec(src.op());
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_index
 
   Inputs:
@@ -1452,6 +1471,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id()==ID_typecast)
     return convert_typecast(to_typecast_expr(src));
+
+  else if(src.id() == ID_zero_extend)
+    return convert_zero_extend(to_zero_extend_expr(src));
 
   else if(src.id()==ID_and)
     return convert_binary(
