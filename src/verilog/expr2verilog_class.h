@@ -116,6 +116,8 @@ protected:
 
   resultt convert_typecast(const typecast_exprt &);
 
+  resultt convert_zero_extend(const zero_extend_exprt &);
+
   resultt
   convert_explicit_size_cast(const class verilog_explicit_size_cast_exprt &);
 

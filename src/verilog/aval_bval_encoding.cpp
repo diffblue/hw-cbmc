@@ -392,3 +392,8 @@ exprt aval_bval(const typecast_exprt &expr)
   auto op_aval_zero = to_bv_type(op_aval.type()).all_zeros_expr();
   return and_exprt{not_exprt{op_has_xz}, notequal_exprt{op_aval, op_aval_zero}};
 }
+
+exprt aval_bval(const zero_extend_exprt &expr)
+{
+  abort();
+}

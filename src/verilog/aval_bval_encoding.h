@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_VERILOG_AVAL_BVAL_H
 #define CPROVER_VERILOG_AVAL_BVAL_H
 
+#include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/mathematical_expr.h>
 
@@ -58,5 +59,7 @@ exprt aval_bval(const verilog_iff_exprt &);
 exprt aval_bval(const verilog_implies_exprt &);
 /// lowering for typecasts
 exprt aval_bval(const typecast_exprt &);
+/// lowering for zero extension
+exprt aval_bval(const zero_extend_exprt &);
 
 #endif
