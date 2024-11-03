@@ -49,7 +49,7 @@ public:
         "(random-traces)(trace-steps):(random-seed):(traces):"
         "(random-trace)(random-waveform)"
         "(bmc-with-assumptions)"
-        "(liveness-to-safety)"
+        "(liveness-to-safety)(buechi)"
         "I:D:(preprocess)(systemverilog)(vl2smv-extensions)"
         "(warn-implicit-nets)",
         argc,
