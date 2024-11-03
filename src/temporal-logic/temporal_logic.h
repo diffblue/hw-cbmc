@@ -54,6 +54,9 @@ bool is_GFp(const exprt &);
 /// Returns true iff the given expression is an LTL past formula
 bool is_LTL_past(const exprt &);
 
+/// Returns true iff the given expression is of the form Gp
+bool is_Gp(const exprt &);
+
 /// Returns true iff the given expression has an LTL operator
 /// as its root
 bool is_LTL_operator(const exprt &);
@@ -84,5 +87,9 @@ std::optional<exprt> LTL_to_CTL(exprt);
 /// If possible, this maps an SVA expression to an equivalent LTL
 /// expression, or otherwise returns {}.
 std::optional<exprt> SVA_to_LTL(exprt);
+
+/// Returns true iff the given expression is an SVA expression that
+/// we can convert into a Buechi automaton
+bool is_Buechi_SVA(const exprt &);
 
 #endif

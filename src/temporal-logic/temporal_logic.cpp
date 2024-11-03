@@ -98,6 +98,11 @@ bool is_LTL_past(const exprt &expr)
   return !has_subexpr(expr, non_LTL_past_operator);
 }
 
+bool is_Gp(const exprt &expr)
+{
+  return expr.id() == ID_G && !has_temporal_operator(to_G_expr(expr).op());
+}
+
 bool is_SVA_sequence_operator(const exprt &expr)
 {
   auto id = expr.id();
@@ -559,4 +564,12 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
   }
   else
     return {};
+}
+
+bool is_Buechi_SVA(const exprt &expr)
+{
+  auto unsupported_operator = [](const exprt &expr)
+  { return is_temporal_operator(expr) && !is_SVA_operator(expr); };
+
+  return !has_subexpr(expr, unsupported_operator);
 }
