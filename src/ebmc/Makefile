@@ -18,6 +18,7 @@ SRC = \
       ebmc_solver_factory.cpp \
       ebmc_version.cpp \
       instrument_past.cpp \
+      instrument_buechi.cpp \
       k_induction.cpp \
       liveness_to_safety.cpp \
       live_signal.cpp \

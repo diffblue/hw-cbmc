@@ -1,0 +1,10 @@
+CORE
+../../verilog/SVA/initial2.sv
+--buechi --module main
+^\[main\.assert\.1\] main\.counter == 1: PROVED up to bound \d+$
+^\[main\.assert\.2\] main\.counter == 2: PROVED up to bound \d+$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

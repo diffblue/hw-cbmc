@@ -1,0 +1,9 @@
+CORE
+Xp1.smv
+--buechi --bdd
+^\[.*\] X p: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

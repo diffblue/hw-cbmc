@@ -1,0 +1,19 @@
+MODULE main
+
+VAR x : 0..10;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x>=3 : 3;
+      TRUE: x+1;
+    esac;
+
+LTLSPEC NAME p1 := x >= 1 R x = 1 -- should pass
+LTLSPEC NAME p2 := FALSE R x != 4 -- should pass
+LTLSPEC NAME p3 := x = 2 R x = 1 -- should fail
+LTLSPEC NAME p4 := (x >= 1 R x = 1) & (FALSE R x != 4) -- should pass
+LTLSPEC NAME p5 := (x = 2 R x = 1) & (x >= 1 R x = 1) -- should fail
+LTLSPEC NAME p6 := (x = 2 R x = 1) | (x >= 1 R x = 1) -- should pass

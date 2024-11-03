@@ -214,3 +214,11 @@ std::optional<exprt> LTL_to_CTL(exprt expr)
   else
     return {};
 }
+
+bool is_Buechi_SVA(const exprt &expr)
+{
+  auto unsupported_operator = [](const exprt &expr)
+  { return is_temporal_operator(expr) && !is_SVA_operator(expr); };
+
+  return !has_subexpr(expr, unsupported_operator);
+}

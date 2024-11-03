@@ -87,7 +87,7 @@ sequence_matchest instantiate_sequence(
     auto &sva_cycle_delay_expr = to_sva_cycle_delay_expr(expr);
     const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
 
-    if(sva_cycle_delay_expr.to().is_nil()) // ##1 something
+    if(!sva_cycle_delay_expr.is_range()) // ##1 something
     {
       const auto u = t + from;
 
@@ -110,19 +110,16 @@ sequence_matchest instantiate_sequence(
       auto lower = t + from;
       mp_integer upper;
 
-      if(sva_cycle_delay_expr.to().id() == ID_infinity)
+      if(sva_cycle_delay_expr.is_unbounded())
       {
         DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
         upper = no_timeframes;
       }
-      else if(sva_cycle_delay_expr.to().is_constant())
+      else
       {
-        auto to = numeric_cast_v<mp_integer>(
-          to_constant_expr(sva_cycle_delay_expr.to()));
+        auto to = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.to());
         upper = t + to;
       }
-      else
-        throw ebmc_errort{} << "failed to convert sva_cycle_delay offsets";
 
       sequence_matchest matches;
 

@@ -1,0 +1,14 @@
+MODULE main
+
+VAR p : boolean;
+
+ASSIGN init(p) := FALSE;
+       next(p) := TRUE;
+
+VAR q : boolean;
+
+ASSIGN init(q) := TRUE;
+       next(q) := FALSE;
+
+-- should pass
+LTLSPEC X (p | q)

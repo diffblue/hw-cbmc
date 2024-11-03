@@ -294,6 +294,16 @@ public:
     return static_cast<constant_exprt &>(op0());
   }
 
+  bool is_range() const
+  {
+    return op1().is_not_nil();
+  }
+
+  bool is_unbounded() const
+  {
+    return op1().id() == ID_infinity;
+  }
+
   const exprt &upper() const
   {
     return op1();
@@ -1007,21 +1017,29 @@ public:
     return static_cast<constant_exprt &>(op0());
   }
 
-  // may be nil (just the singleton 'from') or
-  // infinity (half-open interval starting at 'from')
-  const exprt &to() const
+  // May be just the singleton 'from' or
+  // a half-open interval starting at 'from'.
+  // Use is_range() and is_unbounded() to distinguish.
+  const constant_exprt &to() const
   {
-    return op1();
+    PRECONDITION(is_range() && !is_unbounded());
+    return static_cast<const constant_exprt &>(op1());
   }
 
-  exprt &to()
+  constant_exprt &to()
   {
-    return op1();
+    PRECONDITION(is_range() && !is_unbounded());
+    return static_cast<constant_exprt &>(op1());
+  }
+
+  bool is_range() const
+  {
+    return op1().is_not_nil();
   }
 
   bool is_unbounded() const
   {
-    return to().id() == ID_infinity;
+    return op1().id() == ID_infinity;
   }
 
   const exprt &op() const

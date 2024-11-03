@@ -1,0 +1,10 @@
+KNOWNBUG
+GFp1.smv
+--buechi --bdd
+^\[.*\] G F p: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+BDD engine gives wrong answer.

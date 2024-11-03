@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_version.h"
+#include "instrument_buechi.h"
 #include "liveness_to_safety.h"
 #include "netlist.h"
 #include "neural_liveness.h"
@@ -221,6 +222,10 @@ int ebmc_parse_optionst::doit()
       return 0;
     }
 
+    // LTL/SVA to Buechi?
+    if(cmdline.isset("buechi"))
+      instrument_buechi(transition_system, properties, ui_message_handler);
+
     // possibly apply liveness-to-safety
     if(cmdline.isset("liveness-to-safety"))
       liveness_to_safety(transition_system, properties);
@@ -386,6 +391,7 @@ void ebmc_parse_optionst::help()
     " {y--show-properties}           \t list the properties in the model\n"
     " {y--property} {uid}            \t check the property with given ID\n"
     " {y--liveness-to-safety}        \t translate liveness properties to safety properties\n"
+    " {y--buechi}                    \t translate LTL/SVA properties to Buechi acceptance\n"
     "\n"
     "Methods:\n"
     " {y--k-induction}               \t do k-induction with k=bound\n"
