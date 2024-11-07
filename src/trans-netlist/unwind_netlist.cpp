@@ -11,7 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 
-#include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/ctl.h>
+#include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 

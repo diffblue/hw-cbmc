@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_expr.h>
 #include <util/std_expr.h>
 
-#include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/ctl.h>
 
 /*******************************************************************\
 

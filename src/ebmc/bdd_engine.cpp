@@ -15,7 +15,8 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <ebmc/transition_system.h>
 #include <solvers/bdd/miniBDD/miniBDD.h>
 #include <solvers/sat/satcheck.h>
-#include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/ctl.h>
+#include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <trans-netlist/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>

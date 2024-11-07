@@ -18,7 +18,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_to_netlist.h>
 
-#include <temporal-logic/temporal_expr.h>
+#include <temporal-logic/ctl.h>
+#include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
 
 #include <verilog/sva_expr.h>
