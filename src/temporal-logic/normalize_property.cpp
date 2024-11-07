@@ -14,6 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <verilog/sva_expr.h>
 
+#include "ltl.h"
 #include "nnf.h"
 #include "temporal_expr.h"
 #include "temporal_logic.h"

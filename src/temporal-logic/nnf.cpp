@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <verilog/sva_expr.h>
 
+#include "ltl.h"
 #include "temporal_expr.h"
 
 std::optional<exprt> negate_property_node(const exprt &expr)
