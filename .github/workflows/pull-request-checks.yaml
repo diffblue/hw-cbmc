@@ -43,6 +43,8 @@ jobs:
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make -C src -j4 CXX="ccache g++"
+      - name: Run unit tests
+        run: make -C unit -j4 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -101,6 +103,8 @@ jobs:
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make CXX="ccache clang++" -C src -j4
+      - name: Run unit tests
+        run: make -C unit -j4 CXX="ccache clang++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -203,6 +207,8 @@ jobs:
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4
+      - name: Run unit tests
+        run: make -C unit -j4 CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs"
       - name: Run the ebmc tests with SAT
         run: |
           rm regression/ebmc/neural-liveness/counter1.desc
@@ -246,6 +252,8 @@ jobs:
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make YACC="/opt/homebrew/opt/bison/bin/bison" CXX="ccache clang++" -C src -j3
+      - name: Run unit tests
+        run: make -C unit -j3 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -279,6 +287,20 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -yq emscripten flex bison libxml2-utils cpanminus ccache
+      - name: Install node.js 23
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+      - name: Install emscripten
+        run: |
+          # The emscripten package in Ubuntu is too far behind.
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git checkout 3.1.31
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+          emcc --version
       - name: Prepare ccache
         uses: actions/cache@v4
         with:
@@ -297,9 +319,33 @@ jobs:
       - name: Get minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
-        run: make -C src -j4 CXX="ccache emcc" HOSTCXX="ccache g++" BUILD_ENV=Unix LINKLIB="emar rc \$@ \$^" AR="emar" EXEEXT=".html"
+        run: |
+          source emsdk/emsdk_env.sh
+          make -C src -j4 \
+               BUILD_ENV=Unix \
+               CXX="ccache emcc -fwasm-exceptions" \
+               LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain" \
+               LINKLIB="emar rc \$@ \$^" \
+               AR="emar" \
+               EXEEXT=".html" \
+               HOSTCXX="ccache g++" \
+               HOSTLINKFLAGS=""
       - name: print version number via node.js
-        run: node --no-experimental-fetch src/ebmc/ebmc.js --version
+        run:  node --experimental-wasm-exnref src/ebmc/ebmc.js --version
+      - name: Compile unit tests
+        run: |
+          source emsdk/emsdk_env.sh
+          make -C unit unit_tests.html -j4 \
+               BUILD_ENV=Unix \
+               CXX="ccache emcc -fwasm-exceptions" \
+               LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain" \
+               LINKLIB="emar rc \$@ \$^" \
+               AR="emar" \
+               EXEEXT=".html" \
+               HOSTCXX="ccache g++" \
+               HOSTLINKFLAGS=""
+      - name: Run unit tests
+        run:  node --experimental-wasm-exnref unit/unit_tests.js
       - name: Print ccache stats
         run: ccache -s
 
@@ -358,5 +404,10 @@ jobs:
           # disable MSYS file-name mangling
           MSYS2_ARG_CONV_EXCL: "*"
         run: make CXX=clcache BUILD_ENV=MSVC -j4 -C src
+      - name: Run unit tests
+        env:
+          # disable MSYS file-name mangling
+          MSYS2_ARG_CONV_EXCL: "*"
+        run: make CXX=clcache BUILD_ENV=MSVC -j4 -C unit
       - name: Print ccache stats
         run: clcache -s
