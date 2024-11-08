@@ -43,6 +43,8 @@ jobs:
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make -C src -j4 CXX="ccache g++"
+      - name: Run unit tests
+        run: make -C unit -j4 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -101,6 +103,8 @@ jobs:
           make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make CXX="ccache clang++" -C src -j4
+      - name: Run unit tests
+        run: make -C unit -j4 CXX="ccache clang++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -203,6 +207,8 @@ jobs:
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4
+      - name: Run unit tests
+        run: make -C unit -j4 CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs"
       - name: Run the ebmc tests with SAT
         run: |
           rm regression/ebmc/neural-liveness/counter1.desc
@@ -246,6 +252,8 @@ jobs:
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make YACC="/opt/homebrew/opt/bison/bin/bison" CXX="ccache clang++" -C src -j3
+      - name: Run unit tests
+        run: make -C unit -j3 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the ebmc tests with Z3
@@ -279,6 +287,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -yq emscripten flex bison libxml2-utils cpanminus ccache
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Prepare ccache
         uses: actions/cache@v4
         with:
@@ -299,7 +310,13 @@ jobs:
       - name: Build with make
         run: make -C src -j4 CXX="ccache emcc" HOSTCXX="ccache g++" BUILD_ENV=Unix LINKLIB="emar rc \$@ \$^" AR="emar" EXEEXT=".html"
       - name: print version number via node.js
-        run: node --no-experimental-fetch src/ebmc/ebmc.js --version
+        run: |
+          node --version
+          # node --experimental-wasm-exnref --no-experimental-fetch src/ebmc/ebmc.js --version
+      - name: Run unit tests
+        run: |
+          make -C unit -j4 unit_tests.html CXX="ccache emcc" BUILD_ENV=Unix LINKLIB="emar rc \$@ \$^" AR="emar" EXEEXT=".html"
+          # node --experimental-wasm-exnref --no-experimental-fetch unit/unit_tests.js
       - name: Print ccache stats
         run: ccache -s
 
@@ -358,5 +375,10 @@ jobs:
           # disable MSYS file-name mangling
           MSYS2_ARG_CONV_EXCL: "*"
         run: make CXX=clcache BUILD_ENV=MSVC -j4 -C src
+      - name: Run unit tests
+        env:
+          # disable MSYS file-name mangling
+          MSYS2_ARG_CONV_EXCL: "*"
+        run: make CXX=clcache BUILD_ENV=MSVC -j4 -C unit
       - name: Print ccache stats
         run: clcache -s
