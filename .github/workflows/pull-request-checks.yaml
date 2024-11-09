@@ -330,7 +330,7 @@ jobs:
                HOSTCXX="ccache g++" \
                HOSTLINKFLAGS=""
       - name: print version number via node.js
-        run:  node --experimental-wasm-exnref --no-experimental-fetch src/ebmc/ebmc.js --version
+        run:  node --experimental-wasm-exnref src/ebmc/ebmc.js --version
       - name: Run unit tests
         run: |
           source emsdk/emsdk_env.sh
@@ -343,7 +343,7 @@ jobs:
                EXEEXT=".html" \
                HOSTCXX="ccache g++" \
                HOSTLINKFLAGS=""
-          node --experimental-wasm-exnref --no-experimental-fetch unit/unit_tests.js
+          node --experimental-wasm-exnref unit/unit_tests.js
       - name: Print ccache stats
         run: ccache -s
 
