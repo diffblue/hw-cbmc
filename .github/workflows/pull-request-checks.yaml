@@ -287,7 +287,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -yq emscripten flex bison libxml2-utils cpanminus ccache
-      - uses: actions/setup-node@v4
+      - name: Install node.js 23
+        uses: actions/setup-node@v4
         with:
           node-version: 23
       - name: Install emscripten
@@ -331,7 +332,7 @@ jobs:
                HOSTLINKFLAGS=""
       - name: print version number via node.js
         run:  node --experimental-wasm-exnref src/ebmc/ebmc.js --version
-      - name: Run unit tests
+      - name: Compile unit tests
         run: |
           source emsdk/emsdk_env.sh
           make -C unit unit_tests.html -j4 \
@@ -343,7 +344,8 @@ jobs:
                EXEEXT=".html" \
                HOSTCXX="ccache g++" \
                HOSTLINKFLAGS=""
-          node --experimental-wasm-exnref unit/unit_tests.js
+      - name: Run unit tests
+        run:  node --experimental-wasm-exnref unit/unit_tests.js
       - name: Print ccache stats
         run: ccache -s
 
