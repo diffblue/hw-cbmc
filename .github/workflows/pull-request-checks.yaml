@@ -287,6 +287,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -yq emscripten flex bison libxml2-utils cpanminus ccache
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 23
       - name: Install emscripten
         run: |
           # The emscripten package in Ubuntu is too far behind.
@@ -331,7 +334,7 @@ jobs:
       - name: Run unit tests
         run: |
           source emsdk/emsdk_env.sh
-          make -C unit -j4 \
+          make -C unit unit_tests.html -j4 \
                BUILD_ENV=Unix \
                CXX="ccache emcc -fwasm-exceptions" \
                LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain" \
