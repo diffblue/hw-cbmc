@@ -309,6 +309,8 @@ jobs:
         run: make -C lib/cbmc/src minisat2-download
       - name: Build with make
         run: make -C src -j4 CXX="ccache emcc" HOSTCXX="ccache g++" BUILD_ENV=Unix LINKLIB="emar rc \$@ \$^" AR="emar" EXEEXT=".html"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: print version number via node.js
         run: |
           node --version
