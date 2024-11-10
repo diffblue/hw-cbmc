@@ -13,6 +13,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <solvers/flattening/boolbv.h>
 #include <solvers/prop/prop.h>
 #include <solvers/sat/satcheck.h>
+#include <solvers/sat/satcheck_cadical.h>
+#include <solvers/sat/satcheck_minisat2.h>
 #include <solvers/smt2/smt2_dec.h>
 
 #include "ebmc_error.h"
@@ -136,17 +138,33 @@ ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &cmdline)
   else
   {
     // the 'default' solver
-    return [](const namespacet &ns, message_handlert &message_handler)
+    return [&cmdline](const namespacet &ns, message_handlert &message_handler)
     {
-      auto prop = std::unique_ptr<propt>(new satcheckt{message_handler});
+      std::unique_ptr<propt> sat_solver;
+
+      if(cmdline.isset("cadical"))
+      {
+#ifdef SATCHECK_CADICAL
+        sat_solver =
+          std::unique_ptr<propt>(new satcheck_cadicalt{message_handler});
+#else
+        throw ebmc_errort() << "support for Cadical not configured";
+#endif
+      }
+      else
+      {
+        sat_solver = std::unique_ptr<propt>(
+          new satcheck_minisat_simplifiert{message_handler});
+      }
 
       messaget message(message_handler);
-      message.status() << "Using " << prop->solver_text() << messaget::eom;
+      message.status() << "Using " << sat_solver->solver_text()
+                       << messaget::eom;
 
       auto dec = std::unique_ptr<stack_decision_proceduret>(
-        new boolbvt{ns, *prop, message_handler});
+        new boolbvt{ns, *sat_solver, message_handler});
 
-      return ebmc_solvert{std::move(prop), std::move(dec)};
+      return ebmc_solvert{std::move(sat_solver), std::move(dec)};
     };
   }
 }

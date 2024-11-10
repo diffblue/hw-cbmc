@@ -38,11 +38,11 @@ jobs:
           echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
       - name: Zero ccache stats and limit in size
         run: ccache -z --max-size=500M
-      - name: Get minisat
+      - name: Get cadical and minisat
         run: |
-          make -C lib/cbmc/src minisat2-download
+          make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
-        run: make -C src -j4 CXX="ccache g++"
+        run: make -C src -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Run unit tests
         run: make -C unit -j4 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
