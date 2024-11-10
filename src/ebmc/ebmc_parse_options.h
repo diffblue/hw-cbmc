@@ -42,6 +42,7 @@ public:
         "(interpolation-word)(interpolator):(bdd)"
         "(ranking-function):"
         "(smt2)(bitwuzla)(boolector)(cvc3)(cvc4)(cvc5)(mathsat)(yices)(z3)"
+        "(minisat)(cadical)"
         "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
         "(compute-ct)(dot-netlist)(smv-netlist)(vcd):"
         "(random-traces)(trace-steps):(random-seed):(traces):"

@@ -1,3 +1,7 @@
+# EBMC 5.4
+
+* BMC: Cadical support with --cadical
+
 # EBMC 5.3
 
 * SystemVerilog: fix for nets implicitly declared for port connections
