@@ -1,0 +1,8 @@
+CORE
+assume2.sv
+--bound 0 --bmc-with-assumptions
+^\[main\.a1\] assume always 10 <= main\.a && main\.a <= 100: ASSUMED$
+^\[main\.p1\] always main\.a != 200: PROVED up to bound 0$
+^\[main\.p2\] always main.a != 20: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
