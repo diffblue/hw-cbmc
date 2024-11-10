@@ -1,7 +1,6 @@
 DIRS = ebmc hw-cbmc temporal-logic trans-word-level trans-netlist \
        verilog vhdl smvlang ic3 aiger vlindex
 
-EBMC_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CPROVER_DIR:=../lib/cbmc/src
 
 all: hw-cbmc.dir ebmc.dir vlindex.dir
@@ -31,7 +30,7 @@ vlindex.dir: cprover.dir verilog.dir
 .PHONY: cprover.dir
 cprover.dir:
 	$(MAKE) $(MAKEARGS) -C $(CPROVER_DIR) \
-  CP_EXTRA_CXXFLAGS='-D"LOCAL_IREP_IDS=<$(EBMC_DIR)/hw_cbmc_irep_ids.h>"' \
+  CP_EXTRA_CXXFLAGS='-I ../../../../src -DLOCAL_IREP_IDS=\<hw_cbmc_irep_ids.h\>' \
   cbmc.dir
 
 .PHONY: clean
