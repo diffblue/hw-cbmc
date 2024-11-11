@@ -324,7 +324,7 @@ jobs:
           make -C src -j4 \
                BUILD_ENV=Unix \
                CXX="ccache emcc -fwasm-exceptions" \
-               LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain" \
+               LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain -sALLOW_MEMORY_GROWTH=1" \
                LINKLIB="emar rc \$@ \$^" \
                AR="emar" \
                EXEEXT=".html" \
@@ -338,7 +338,7 @@ jobs:
           make -C unit unit_tests.html -j4 \
                BUILD_ENV=Unix \
                CXX="ccache emcc -fwasm-exceptions" \
-               LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain" \
+               LINKFLAGS="-sEXPORTED_RUNTIME_METHODS=callMain -sALLOW_MEMORY_GROWTH=1" \
                LINKLIB="emar rc \$@ \$^" \
                AR="emar" \
                EXEEXT=".html" \
