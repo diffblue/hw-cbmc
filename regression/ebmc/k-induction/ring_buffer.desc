@@ -1,0 +1,10 @@
+CORE
+ring_buffer.sv
+--k-induction
+^\[ring_buffer\.assume\.1\] always \(ring_buffer\.empty \|-> !ring_buffer\.read\): ASSUMED$
+^\[ring_buffer\.assume\.2\] always \(ring_buffer\.full \|-> !ring_buffer\.write\): ASSUMED$
+^\[ring_buffer\.p0\] always \(ring_buffer\.writeptr - ring_buffer\.readptr & 15\) == ring_buffer\.count\[3:0\]: PROVED$
+^\[ring_buffer\.p1\] always ring_buffer\.count <= 16: PROVED$
+^\[ring_buffer\.p2\] always ring_buffer.count != 17: INCONCLUSIVE$
+^EXIT=10$
+^SIGNAL=0$

@@ -16,13 +16,14 @@ module ring_buffer(input clk, input read, input write);
 
   end
 
-  wire full=count==15;
+  wire full=count==16;
   wire empty=count==0;
 
   assume property (empty |-> !read);
   assume property (full |-> !write);
 
-  assert property (((writeptr-readptr)&'b1111)==count);
+  p0: assert property (((writeptr-readptr)&'b1111)==count[3:0]);
+  p1: assert property (count <= 16);
+  p2: assert property (count != 17);
 
 endmodule
-
