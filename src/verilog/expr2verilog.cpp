@@ -1166,6 +1166,50 @@ expr2verilogt::convert_array(const exprt &src, verilog_precedencet precedence)
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_streaming_concatenation
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_streaming_concatenation(
+  const std::string &name,
+  const verilog_streaming_concatenation_exprt &src)
+{
+  std::string dest = "{";
+
+  dest += name;
+
+  // slice_size?
+  if(src.has_slice_size())
+  {
+    auto tmp = convert_rec(src.slice_size());
+    dest += tmp.s;
+  }
+
+  dest += "{";
+  bool first = true;
+  for(auto &op : src.stream_expressions())
+  {
+    if(first)
+      first = false;
+    else
+      dest += ", ";
+    dest += convert_rec(op).s;
+  }
+  dest += "}";
+
+  dest += "}";
+
+  return {verilog_precedencet::CONCAT, dest};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_rec
 
   Inputs:
@@ -1648,6 +1692,14 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_clog2)
     return convert_function("$clog2", src);
+
+  else if(src.id() == ID_verilog_streaming_concatenation_left_to_right)
+    return convert_streaming_concatenation(
+      ">>", to_verilog_streaming_concatenation_expr(src));
+
+  else if(src.id() == ID_verilog_streaming_concatenation_right_to_left)
+    return convert_streaming_concatenation(
+      "<<", to_verilog_streaming_concatenation_expr(src));
 
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);

@@ -3618,11 +3618,55 @@ concatenation: '{' expression_brace '}'
 		{ init($$, ID_concatenation); swapop($$, $2); }
 	;
 
-replication:
+multiple_concatenation:
           '{' expression concatenation '}'
 		{ init($$, ID_replication); mto($$, $2); mto($$, $3); }
-        | '{' expression replication '}'
+        | '{' expression multiple_concatenation '}'
 		{ init($$, ID_replication); mto($$, $2); mto($$, $3); }
+	;
+
+streaming_concatenation:
+	  '{' stream_operator stream_concatenation '}'
+		{ $$ = $2; mto($$, $3); }
+	| '{' stream_operator slice_size stream_concatenation '}'
+		{ $$ = $2; mto($$, $3); mto($$, $4); }
+	;
+
+stream_operator:
+	  TOK_GREATERGREATER
+		{ init($$, ID_verilog_streaming_concatenation_left_to_right); }
+	| TOK_LESSLESS
+		{ init($$, ID_verilog_streaming_concatenation_right_to_left); }
+	;
+
+slice_size:
+	  simple_type
+	| primary_literal /* really constant_expression */
+	;
+
+stream_concatenation:
+	  '{' stream_expression_brace '}'
+		{ $$ = $2; }
+	;
+
+stream_expression_brace:
+	  stream_expression
+		{ init($$); mto($$, $1); }
+	| stream_expression_brace ',' stream_expression
+		{ $$ = $1; mto($$, $3); }
+	;
+
+stream_expression:
+	  expression
+	| expression TOK_WITH '[' array_range_expression ']'
+		{ init($$, ID_verilog_array_range); mto($$, $1); mto($$, $4); }
+	;
+
+array_range_expression:
+	  expression
+	| expression TOK_COLON expression
+	| expression TOK_PLUSCOLON expression
+	| expression TOK_MINUSCOLON expression
 	;
 
 expression_brace_opt:
@@ -3835,12 +3879,13 @@ part_select_range:
 primary:  primary_literal
 	| hierarchical_identifier_select
 	| concatenation 
-        | replication
+        | multiple_concatenation
         | function_subroutine_call
 	| '(' mintypmax_expression ')'
 		{ $$ = $2; }
 	| cast
 	| assignment_pattern_expression
+	| streaming_concatenation
         | TOK_NULL { init($$, ID_NULL); }
         | TOK_THIS { init($$, ID_this); }
 	;

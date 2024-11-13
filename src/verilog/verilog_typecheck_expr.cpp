@@ -2596,6 +2596,16 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     convert_expr(expr.op());
     expr.id(ID_typecast);
   }
+  else if(
+    expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
+    expr.id() == ID_verilog_streaming_concatenation_right_to_left)
+  {
+    // slice_size is defaulted to 1
+    PRECONDITION(expr.op().operands().size() == 1);
+    convert_expr(expr.op().operands()[0]);
+    expr.type() = expr.op().operands()[0].type();
+    return std::move(expr);
+  }
   else
   {
     convert_expr(expr.op());
@@ -3143,6 +3153,30 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     }
 
     expr.type() = bool_typet();
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
+    expr.id() == ID_verilog_streaming_concatenation_right_to_left)
+  {
+    auto slice_size = convert_integer_constant_expression(expr.op0());
+
+    if(slice_size < 1)
+    {
+      // 1800-2017 11.4.14.2 "it shall be an error for the
+      // value of the expression to be zero or negative"
+      throw errort().with_location(expr.source_location())
+        << "size slice must be 1 or greater";
+    }
+
+    expr.op0() = from_integer(slice_size, natural_typet());
+
+    convert_expr(expr.op0());
+    PRECONDITION(expr.op1().operands().size() == 1);
+    for(auto &op : expr.op1().operands())
+      convert_expr(op);
+    expr.type() = expr.op1().operands().front().type();
+
     return std::move(expr);
   }
   else

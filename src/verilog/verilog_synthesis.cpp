@@ -348,6 +348,14 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 
     return expr;
   }
+  else if(
+    expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
+    expr.id() == ID_verilog_streaming_concatenation_right_to_left)
+  {
+    auto &streaming_concatenation =
+      to_verilog_streaming_concatenation_expr(expr);
+    return streaming_concatenation.lower();
+  }
   else if(expr.id() == ID_verilog_non_indexed_part_select)
   {
     auto &part_select = to_verilog_non_indexed_part_select_expr(expr);

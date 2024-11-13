@@ -305,3 +305,38 @@ exprt verilog_indexed_part_select_plus_or_minus_exprt::lower() const
 {
   return ::lower(*this);
 }
+
+exprt verilog_streaming_concatenation_exprt::lower() const
+{
+  if(id() == ID_verilog_streaming_concatenation_left_to_right)
+  {
+    // slice size does not matter
+    if(stream_expressions().size() == 1)
+      return stream_expressions().front();
+    else
+      PRECONDITION(false);
+  }
+  else if(id() == ID_verilog_streaming_concatenation_right_to_left)
+  {
+    if(stream_expressions().size() == 1)
+    {
+      if(stream_expressions().front().type().id() == ID_bool)
+        return stream_expressions().front();
+      else
+      {
+        auto slice_size_int =
+          has_slice_size()
+            ? numeric_cast_v<std::size_t>(to_constant_expr(slice_size()))
+            : std::size_t(1);
+        if(slice_size_int == 1)
+          return bitreverse_exprt{stream_expressions().front()};
+        else
+          return bswap_exprt{stream_expressions().front(), slice_size_int};
+      }
+    }
+    else
+      PRECONDITION(false);
+  }
+  else
+    PRECONDITION(false);
+}
