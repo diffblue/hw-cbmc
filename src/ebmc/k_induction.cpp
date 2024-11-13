@@ -202,7 +202,8 @@ void k_inductiont::induction_base()
 
   bmc(
     k,
-    false,
+    false, // convert_only
+    false, // bmc_with_assumptions
     transition_system,
     properties,
     solver_factory,

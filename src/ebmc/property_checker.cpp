@@ -80,9 +80,12 @@ property_checker_resultt word_level_bmc(
         if(properties.properties.empty())
           throw "no properties";
 
+      bool bmc_with_assumptions = cmdline.isset("bmc-with-assumptions");
+
       bmc(
         bound,
         convert_only,
+        bmc_with_assumptions,
         transition_system,
         properties,
         solver_factory,

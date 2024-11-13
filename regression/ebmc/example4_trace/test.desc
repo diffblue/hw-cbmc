@@ -3,6 +3,6 @@ example4.sv
 --bound 10 --trace
 ^\[counter\.assert\.1\] .* PROVED up to bound 10$
 ^\[counter\.assert\.2\] .* REFUTED$
-^  counter\.state = 254 \(11111110\)$
+^  counter\.state = \d+ \([01]+\)$
 ^EXIT=10$
 ^SIGNAL=0$

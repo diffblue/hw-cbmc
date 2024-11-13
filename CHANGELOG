@@ -1,6 +1,8 @@
 # EBMC 5.4
 
 * BMC: Cadical support with --cadical
+* BMC: iterative constraint strengthening is now default;
+  use --bmc-with-assumptions to re-enable the previous algorithm.
 
 # EBMC 5.3
 

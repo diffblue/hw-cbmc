@@ -22,6 +22,7 @@ class transition_systemt;
 void bmc(
   std::size_t bound,
   bool convert_only,
+  bool bmc_with_assumptions,
   const transition_systemt &,
   ebmc_propertiest &,
   const ebmc_solver_factoryt &,
