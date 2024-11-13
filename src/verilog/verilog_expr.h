@@ -2475,4 +2475,40 @@ to_verilog_property_declaration(exprt &expr)
   return static_cast<verilog_property_declarationt &>(expr);
 }
 
+class verilog_streaming_concatenation_exprt : public exprt
+{
+public:
+  bool has_slice_size() const
+  {
+    return operands().size() == 2;
+  }
+
+  // optional
+  const exprt &slice_size() const
+  {
+    PRECONDITION(has_slice_size());
+    return op0();
+  }
+
+  const exprt::operandst &stream_expressions() const
+  {
+    return has_slice_size() ? op1().operands() : op0().operands();
+  }
+
+  // lower to bitreverse or similar
+  exprt lower() const;
+};
+
+inline const verilog_streaming_concatenation_exprt &
+to_verilog_streaming_concatenation_expr(const exprt &expr)
+{
+  return static_cast<const verilog_streaming_concatenation_exprt &>(expr);
+}
+
+inline verilog_streaming_concatenation_exprt &
+to_verilog_streaming_concatenation_expr(exprt &expr)
+{
+  return static_cast<verilog_streaming_concatenation_exprt &>(expr);
+}
+
 #endif

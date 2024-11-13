@@ -155,6 +155,10 @@ protected:
     const class verilog_indexed_part_select_plus_or_minus_exprt &,
     verilog_precedencet precedence);
 
+  resultt convert_streaming_concatenation(
+    const std::string &name,
+    const class verilog_streaming_concatenation_exprt &);
+
 protected:
   const namespacet &ns;
 };
