@@ -105,7 +105,7 @@ protected:
 
   resultt convert_constant(const constant_exprt &, verilog_precedencet &);
 
-  resultt convert_typecast(const typecast_exprt &, verilog_precedencet &);
+  resultt convert_typecast(const typecast_exprt &);
 
   resultt
   convert_concatenation(const concatenation_exprt &, verilog_precedencet);
