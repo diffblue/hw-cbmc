@@ -30,7 +30,7 @@ enum class verilog_precedencet
   MULT = 15,     //  *  /  %
   ADD = 14,      //  + -
   SHIFT = 13,    //  <<  >>  <<<  >>>
-  RELATION = 12, //  >  >=  <  <=
+  RELATION = 12, //  >  >=  <  <= inside dist
   EQUALITY = 11, //  ==  !=  ===  !==  ==?  !=?
   BITAND = 10,   //  &
   XOR = 9,       //  ^  ~^  ^~ (binary)
@@ -158,6 +158,10 @@ protected:
   resultt convert_streaming_concatenation(
     const std::string &name,
     const class verilog_streaming_concatenation_exprt &);
+
+  resultt convert_inside(const class verilog_inside_exprt &);
+
+  resultt convert_value_range(const class verilog_value_range_exprt &);
 
 protected:
   const namespacet &ns;

@@ -109,9 +109,10 @@ to_verilog_logical_inequality_expr(exprt &expr)
 }
 
 /// ==?
-class verilog_wildcard_equality_exprt : public equal_exprt
+class verilog_wildcard_equality_exprt : public binary_exprt
 {
 public:
+  verilog_wildcard_equality_exprt(exprt, exprt);
 };
 
 inline const verilog_wildcard_equality_exprt &
@@ -2509,6 +2510,72 @@ inline verilog_streaming_concatenation_exprt &
 to_verilog_streaming_concatenation_expr(exprt &expr)
 {
   return static_cast<verilog_streaming_concatenation_exprt &>(expr);
+}
+
+class verilog_inside_exprt : public binary_exprt
+{
+public:
+  verilog_inside_exprt(exprt _op, exprt::operandst _range_list)
+    : binary_exprt(
+        std::move(_op),
+        ID_verilog_inside,
+        exprt{irep_idt{}, typet{}, std::move(_range_list)})
+  {
+  }
+
+  const exprt &op() const
+  {
+    return op0();
+  }
+
+  const exprt::operandst &range_list() const
+  {
+    return op1().operands();
+  }
+
+  // lower to ==, ==?, >=, <=
+  exprt lower() const;
+};
+
+inline const verilog_inside_exprt &to_verilog_inside_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_inside);
+  verilog_inside_exprt::check(expr);
+  return static_cast<const verilog_inside_exprt &>(expr);
+}
+
+inline verilog_inside_exprt &to_verilog_inside_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_inside);
+  verilog_inside_exprt::check(expr);
+  return static_cast<verilog_inside_exprt &>(expr);
+}
+
+class verilog_value_range_exprt : public binary_exprt
+{
+public:
+  verilog_value_range_exprt(exprt from, exprt to)
+    : binary_exprt(std::move(from), ID_verilog_value_range, std::move(to))
+  {
+  }
+
+  // lower to >=, <=
+  exprt lower() const;
+};
+
+inline const verilog_value_range_exprt &
+to_verilog_value_range_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_value_range);
+  verilog_value_range_exprt::check(expr);
+  return static_cast<const verilog_value_range_exprt &>(expr);
+}
+
+inline verilog_value_range_exprt &to_verilog_value_range_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_value_range);
+  verilog_value_range_exprt::check(expr);
+  return static_cast<verilog_value_range_exprt &>(expr);
 }
 
 #endif
