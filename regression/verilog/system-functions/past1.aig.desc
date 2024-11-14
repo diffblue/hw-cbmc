@@ -1,7 +1,7 @@
 CORE
 past1.sv
 --aig
-^\[main\.p0\] ##0 \(\$past\(main\.counter, 0\)\) == 0: FAILURE: property not supported by netlist BMC engine$
+^\[main\.p0\] ##0 \$past\(main\.counter, 0\) == 0: FAILURE: property not supported by netlist BMC engine$
 ^EXIT=10$
 ^SIGNAL=0$
 --
