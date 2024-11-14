@@ -675,9 +675,8 @@ Function: expr2verilogt::convert_typecast
 
 \*******************************************************************/
 
-expr2verilogt::resultt expr2verilogt::convert_typecast(
-  const typecast_exprt &src,
-  verilog_precedencet &precedence)
+expr2verilogt::resultt
+expr2verilogt::convert_typecast(const typecast_exprt &src)
 {
   if(src.operands().size()==1)
   {
@@ -685,9 +684,10 @@ expr2verilogt::resultt expr2verilogt::convert_typecast(
     //const typet &to=src.type();
 
     // just ignore them for now
-    return {precedence, convert_rec(src.op()).s};
+    return convert_rec(src.op());
   }
 
+  verilog_precedencet precedence;
   return convert_norep(src, precedence);
 }
 
@@ -1380,7 +1380,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
       to_bitnot_expr(src), "~", precedence = verilog_precedencet::NOT);
 
   else if(src.id()==ID_typecast)
-    return convert_typecast(to_typecast_expr(src), precedence);
+    return convert_typecast(to_typecast_expr(src));
 
   else if(src.id()==ID_and)
     return convert_binary(
