@@ -3360,6 +3360,15 @@ case_item:
                   mto($$, $2); }
 	;
 
+open_range_list:
+	  open_value_range
+		{ init($$); mto($$, $1); }
+	| open_range_list ',' open_value_range
+		{ $$=$1; mto($$, $3); }
+	;
+
+open_value_range: value_range;
+
 // System Verilog standard 1800-2017
 // A.6.7.1 Patterns
 
@@ -3854,11 +3863,18 @@ expression:
 		{ init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
 	| TOK_QSTRING
 		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
+	| inside_expression
+	;
+
+inside_expression:
+	  expression TOK_INSIDE '{' open_range_list '}'
+		{ init($$, ID_verilog_inside); mto($$, $1); mto($$, $4); }
 	;
 
 value_range:
 	  expression
 	| '[' expression TOK_COLON expression ']'
+		{ init($$, ID_verilog_value_range); mto($$, $2); mto($$, $4); }
 	;
 
 indexed_range:

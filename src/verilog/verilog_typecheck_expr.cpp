@@ -3179,6 +3179,24 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_verilog_inside)
+  {
+    convert_expr(expr.op0());
+    for(auto &op : expr.op1().operands())
+    {
+      convert_expr(op);
+      if(op.id() == ID_verilog_value_range)
+      {
+        auto &value_range = to_verilog_value_range_expr(op);
+        tc_binary_expr(expr, value_range.lhs(), op);
+        tc_binary_expr(expr, value_range.rhs(), op);
+      }
+      else
+        tc_binary_expr(expr, expr.op0(), op);
+    }
+    expr.type() = bool_typet{};
+    return std::move(expr);
+  }
   else
   {
     // type is guessed for now

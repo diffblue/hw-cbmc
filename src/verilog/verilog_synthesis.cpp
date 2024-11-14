@@ -208,6 +208,12 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       to_hierarchical_identifier_expr(expr), symbol_state);
     return expr;
   }
+  else if(expr.id() == ID_verilog_inside)
+  {
+    // The lowering uses wildcard equality, which needs to be further lowered
+    auto &inside = to_verilog_inside_expr(expr);
+    expr = inside.lower();
+  }
 
   // Do the operands recursively
   for(auto &op : expr.operands())

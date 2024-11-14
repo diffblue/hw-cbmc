@@ -15,6 +15,18 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/prefix.h>
 
 #include "verilog_typecheck_base.h"
+#include "verilog_types.h"
+
+verilog_wildcard_equality_exprt::verilog_wildcard_equality_exprt(
+  exprt lhs,
+  exprt rhs)
+  : binary_exprt(
+      std::move(lhs),
+      ID_verilog_wildcard_equality,
+      std::move(rhs),
+      verilog_unsignedbv_typet{1})
+{
+}
 
 typet verilog_declaratort::merged_type(const typet &declaration_type) const
 {
@@ -339,4 +351,43 @@ exprt verilog_streaming_concatenation_exprt::lower() const
   }
   else
     PRECONDITION(false);
+}
+
+exprt verilog_inside_exprt::lower() const
+{
+  exprt::operandst disjuncts;
+
+  for(auto &range : range_list())
+  {
+    if(range.id() == ID_verilog_value_range)
+    {
+      auto &range_expr = to_verilog_value_range_expr(range);
+      DATA_INVARIANT(
+        op().type() == range_expr.lhs().type(),
+        "inside_exprt type consistency");
+      DATA_INVARIANT(
+        op().type() == range_expr.rhs().type(),
+        "inside_exprt type consistency");
+      disjuncts.push_back(and_exprt{
+        binary_relation_exprt{op(), ID_ge, range_expr.lhs()},
+        binary_relation_exprt{op(), ID_le, range_expr.rhs()}});
+    }
+    else
+    {
+      DATA_INVARIANT(
+        op().type() == range.type(), "inside_exprt type consistency");
+      auto &range_type = range.type();
+      if(
+        range_type.id() == ID_verilog_unsignedbv ||
+        range_type.id() == ID_verilog_signedbv)
+      {
+        disjuncts.push_back(typecast_exprt{
+          verilog_wildcard_equality_exprt{op(), range}, bool_typet()});
+      }
+      else
+        disjuncts.push_back(equal_exprt{op(), range});
+    }
+  }
+
+  return disjunction(disjuncts);
 }

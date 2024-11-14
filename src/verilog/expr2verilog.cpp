@@ -1210,6 +1210,68 @@ expr2verilogt::resultt expr2verilogt::convert_streaming_concatenation(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_inside
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_inside(const verilog_inside_exprt &src)
+{
+  std::string dest;
+  auto precedence = verilog_precedencet::RELATION;
+
+  auto op = convert_rec(src.op());
+
+  if(precedence > op.p)
+    dest += '(';
+  dest += op.s;
+  if(precedence > op.p)
+    dest += ')';
+
+  dest += " inside {";
+  bool first = true;
+  for(auto &op : src.range_list())
+  {
+    if(first)
+      first = false;
+    else
+      dest += ", ";
+    dest += convert_rec(op).s;
+  }
+  dest += "}";
+
+  return {precedence, dest};
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_value_range
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_value_range(const verilog_value_range_exprt &src)
+{
+  std::string dest =
+    '[' + convert_rec(src.lhs()).s + ':' + convert_rec(src.rhs()).s + ']';
+
+  return {verilog_precedencet::MEMBER, dest};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_rec
 
   Inputs:
@@ -1700,6 +1762,12 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   else if(src.id() == ID_verilog_streaming_concatenation_right_to_left)
     return convert_streaming_concatenation(
       "<<", to_verilog_streaming_concatenation_expr(src));
+
+  else if(src.id() == ID_verilog_inside)
+    return convert_inside(to_verilog_inside_expr(src));
+
+  else if(src.id() == ID_verilog_value_range)
+    return convert_value_range(to_verilog_value_range_expr(src));
 
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);
