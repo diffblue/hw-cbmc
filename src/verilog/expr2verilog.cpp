@@ -354,7 +354,7 @@ expr2verilogt::convert_function_call(const function_call_exprt &src)
 
   dest+=")";
 
-  return {verilog_precedencet::MIN, dest};
+  return {verilog_precedencet::MEMBER, dest};
 }
 
 /*******************************************************************\
