@@ -20,7 +20,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/string2int.h>
 
 #include "expr2verilog.h"
-#include "sva_expr.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
 #include "vtype.h"
@@ -2540,13 +2539,6 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
       make_boolean(expr.op());
     }
   }
-  else if(expr.id() == ID_sva_not)
-  {
-    convert_expr(expr.op());
-    make_boolean(expr.op());
-    expr.type() = bool_typet(); // always boolean, never x
-    return std::move(expr);
-  }
   else if(expr.id()==ID_reduction_or  || expr.id()==ID_reduction_and ||
           expr.id()==ID_reduction_nor || expr.id()==ID_reduction_nand ||
           expr.id()==ID_reduction_xor || expr.id()==ID_reduction_xnor)
@@ -2566,20 +2558,6 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     convert_expr(expr.op());
     no_bool_ops(expr);
     expr.type() = expr.op().type();
-  }
-  else if(
-    expr.id() == ID_sva_always || expr.id() == ID_sva_s_eventually ||
-    expr.id() == ID_sva_cycle_delay_plus ||
-    expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_weak ||
-    expr.id() == ID_sva_strong || expr.id() == ID_sva_nexttime ||
-    expr.id() == ID_sva_s_nexttime ||
-    expr.id() == ID_sva_sequence_first_match ||
-    expr.id() == ID_sva_sequence_repetition_plus ||
-    expr.id() == ID_sva_sequence_repetition_star)
-  {
-    convert_expr(expr.op());
-    make_boolean(expr.op());
-    expr.type()=bool_typet();
   }
   else if(expr.id() == ID_verilog_explicit_cast)
   {
@@ -2880,21 +2858,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(
-    expr.id() == ID_sva_and || expr.id() == ID_sva_or ||
-    expr.id() == ID_sva_implies || expr.id() == ID_sva_iff)
-  {
-    for(auto &op : expr.operands())
-    {
-      convert_expr(op);
-      make_boolean(op);
-    }
-
-    // always boolean, never x
-    expr.type() = bool_typet();
-
-    return std::move(expr);
-  }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal)
   {
     expr.type()=bool_typet();
@@ -3035,105 +2998,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(
-    expr.id() == ID_sva_disable_iff || expr.id() == ID_sva_accept_on ||
-    expr.id() == ID_sva_reject_on || expr.id() == ID_sva_sync_accept_on ||
-    expr.id() == ID_sva_sync_reject_on)
-  {
-    convert_expr(to_sva_abort_expr(expr).condition());
-    make_boolean(to_sva_abort_expr(expr).condition());
-    convert_expr(to_sva_abort_expr(expr).property());
-    make_boolean(to_sva_abort_expr(expr).property());
-    expr.type() = bool_typet();
-    return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_indexed_nexttime)
-  {
-    convert_expr(to_sva_indexed_nexttime_expr(expr).index());
-
-    auto &op = to_sva_indexed_nexttime_expr(expr).op();
-    convert_expr(op);
-    make_boolean(op);
-    expr.type() = bool_typet();
-
-    return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_indexed_s_nexttime)
-  {
-    convert_expr(to_sva_indexed_s_nexttime_expr(expr).index());
-
-    auto &op = to_sva_indexed_s_nexttime_expr(expr).op();
-    convert_expr(op);
-    make_boolean(op);
-    expr.type() = bool_typet();
-
-    return std::move(expr);
-  }
-  else if(
-    expr.id() == ID_sva_overlapped_implication ||
-    expr.id() == ID_sva_non_overlapped_implication ||
-    expr.id() == ID_sva_overlapped_followed_by ||
-    expr.id() == ID_sva_nonoverlapped_followed_by ||
-    expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
-    expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with)
-  {
-    convert_expr(expr.op0());
-    make_boolean(expr.op0());
-    convert_expr(expr.op1());
-    make_boolean(expr.op1());
-    expr.type()=bool_typet();
-
-    return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_sequence_concatenation) // a ##b c
-  {
-    expr.type() = bool_typet();
-    convert_expr(expr.op0());
-    make_boolean(expr.op0());
-    convert_expr(expr.op1());
-    make_boolean(expr.op1());
-    return std::move(expr);
-  }
-  else if(
-    expr.id() == ID_sva_sequence_intersect ||
-    expr.id() == ID_sva_sequence_throughout ||
-    expr.id() == ID_sva_sequence_within ||
-    expr.id() == ID_sva_sequence_first_match)
-  {
-    auto &binary_expr = to_binary_expr(expr);
-
-    convert_expr(binary_expr.lhs());
-    make_boolean(binary_expr.lhs());
-    convert_expr(binary_expr.rhs());
-    make_boolean(binary_expr.rhs());
-
-    expr.type() = bool_typet();
-
-    return std::move(expr);
-  }
-  else if(
-    expr.id() == ID_sva_sequence_consecutive_repetition ||
-    expr.id() == ID_sva_sequence_non_consecutive_repetition ||
-    expr.id() == ID_sva_sequence_goto_repetition)
-  {
-    auto &binary_expr = to_binary_expr(expr);
-
-    convert_expr(binary_expr.lhs());
-    make_boolean(binary_expr.lhs());
-
-    convert_expr(binary_expr.rhs());
-
-    mp_integer n = elaborate_constant_integer_expression(binary_expr.rhs());
-    if(n < 0)
-      throw errort().with_location(binary_expr.rhs().source_location())
-        << "number of repetitions must not be negative";
-
-    binary_expr.rhs() = from_integer(n, integer_typet{});
-
-    expr.type() = bool_typet();
-
-    return std::move(expr);
-  }
   else if(expr.id()==ID_hierarchical_identifier)
   {
     return convert_hierarchical_identifier(
@@ -3163,28 +3027,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
       throw errort().with_location(expr.source_location())
         << "cannot perform size cast on " << to_string(op_type);
     }
-  }
-  else if(expr.id() == ID_sva_case)
-  {
-    auto &case_expr = to_sva_case_expr(expr);
-    convert_expr(case_expr.case_op());
-
-    for(auto &case_item : case_expr.case_items())
-    {
-      // same rules as case statement
-      for(auto &pattern : case_item.patterns())
-      {
-        convert_expr(pattern);
-        typet t = max_type(pattern.type(), case_expr.case_op().type());
-        propagate_type(pattern, t);
-      }
-
-      convert_expr(case_item.result());
-      make_boolean(case_item.result());
-    }
-
-    expr.type() = bool_typet();
-    return std::move(expr);
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
@@ -3416,62 +3258,6 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
 
     tc_binary_expr(expr, expr.op1(), expr.op2());
     expr.type()=expr.op1().type();
-    return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
-  {
-    expr.type()=bool_typet();
-    convert_expr(expr.op0());
-    if(expr.op1().is_not_nil()) convert_expr(expr.op1());
-    convert_expr(expr.op2());
-    make_boolean(expr.op2());
-    return std::move(expr);
-  }
-  else if(
-    expr.id() == ID_sva_eventually || expr.id() == ID_sva_ranged_s_eventually ||
-    expr.id() == ID_sva_s_always || expr.id() == ID_sva_ranged_always)
-  {
-    auto lower = convert_integer_constant_expression(expr.op0());
-
-    expr.op0() =
-      from_integer(lower, natural_typet()).with_source_location(expr.op0());
-
-    if(expr.op1().id() == ID_infinity)
-    {
-    }
-    else
-    {
-      auto upper = convert_integer_constant_expression(expr.op1());
-      if(lower > upper)
-      {
-        throw errort().with_location(expr.source_location())
-          << "range must be lower <= upper";
-      }
-
-      expr.op1() =
-        from_integer(upper, natural_typet()).with_source_location(expr.op1());
-    }
-
-    convert_expr(expr.op2());
-    make_boolean(expr.op2());
-    expr.type() = bool_typet();
-
-    return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_if)
-  {
-    convert_expr(expr.op0());
-    make_boolean(expr.op0());
-
-    convert_expr(expr.op1());
-    make_boolean(expr.op1());
-
-    if(expr.op2().is_not_nil())
-    {
-      convert_expr(expr.op2());
-      make_boolean(expr.op2());
-    }
-
     return std::move(expr);
   }
   else

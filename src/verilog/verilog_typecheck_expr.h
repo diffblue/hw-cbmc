@@ -188,6 +188,17 @@ protected:
   void typecheck_relation(binary_exprt &);
   void no_bool_ops(exprt &);
 
+  // SVA
+  void convert_sva(exprt &expr)
+  {
+    expr = convert_sva_rec(std::move(expr));
+  }
+
+  [[nodiscard]] exprt convert_sva_rec(exprt);
+  [[nodiscard]] exprt convert_unary_sva(unary_exprt);
+  [[nodiscard]] exprt convert_binary_sva(binary_exprt);
+  [[nodiscard]] exprt convert_ternary_sva(ternary_exprt);
+
   // system functions
   exprt bits(const exprt &);
   std::optional<mp_integer> bits_rec(const typet &) const;
