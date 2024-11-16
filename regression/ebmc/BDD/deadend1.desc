@@ -1,0 +1,12 @@
+CORE
+deadend1.smv
+--bdd
+^\[spec1\] AX FALSE: PROVED$
+^\[spec2\] EX FALSE: PROVED$
+^\[spec3\] AX TRUE: PROVED$
+^\[spec4\] EX TRUE: PROVED
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
