@@ -2606,15 +2606,36 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     expr.type() = expr.op().operands()[0].type();
     return std::move(expr);
   }
-  else
+  else if(expr.id() == ID_bitnot)
   {
     convert_expr(expr.op());
     expr.type() = expr.op().type();
 
-    // check boolean operators
-
-    if(expr.type().id()==ID_bool && expr.id()==ID_bitnot)
+    // Boolean?
+    if(expr.type().id() == ID_bool)
       expr.id(ID_not);
+  }
+  else if(expr.id() == ID_posedge || expr.id() == ID_negedge)
+  {
+    convert_expr(expr.op());
+    expr.type() = bool_typet{};
+  }
+  else if(expr.id() == ID_verilog_smv_eventually)
+  {
+    convert_expr(expr.op());
+    make_boolean(expr.op());
+    expr.type() = bool_typet{};
+  }
+  else if(
+    expr.id() == ID_postincrement || expr.id() == ID_preincrement ||
+    expr.id() == ID_postdecrement || expr.id() == ID_predecrement)
+  {
+    convert_expr(expr.op());
+    expr.type() = expr.op().type();
+  }
+  else
+  {
+    throw errort() << "no conversion for unary expression " << expr.id();
   }
 
   return std::move(expr);
