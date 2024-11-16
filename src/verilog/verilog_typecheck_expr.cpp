@@ -3064,6 +3064,15 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_sequence_concatenation) // a ##b c
+  {
+    expr.type() = bool_typet();
+    convert_expr(expr.op0());
+    make_boolean(expr.op0());
+    convert_expr(expr.op1());
+    make_boolean(expr.op1());
+    return std::move(expr);
+  }
   else if(
     expr.id() == ID_sva_sequence_intersect ||
     expr.id() == ID_sva_sequence_throughout ||
@@ -3352,7 +3361,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     expr.type()=expr.op1().type();
     return std::move(expr);
   }
-  else if(expr.id()==ID_sva_cycle_delay) // #[1:2] something
+  else if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
   {
     expr.type()=bool_typet();
     convert_expr(expr.op0());
