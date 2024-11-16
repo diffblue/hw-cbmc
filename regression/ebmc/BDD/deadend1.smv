@@ -1,0 +1,20 @@
+MODULE main
+
+VAR some_var : boolean;
+
+INIT some_var = FALSE
+
+-- the initial state is a deadend state
+TRANS FALSE
+
+-- should pass
+SPEC AX FALSE
+
+-- should pass
+SPEC EX FALSE
+
+-- should pass
+SPEC AX TRUE
+
+-- should pass
+SPEC EX TRUE
