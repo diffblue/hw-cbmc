@@ -3848,6 +3848,8 @@ expression:
 		{ init($$, ID_bitxor); mto($$, $1); mto($$, $3); }
 	| expression TOK_TILDECARET expression
 		{ init($$, ID_bitxnor); mto($$, $1); mto($$, $3); }
+	| expression TOK_CARETTILDE expression
+		{ init($$, ID_bitxnor); mto($$, $1); mto($$, $3); }
 	| expression TOK_LESSLESS expression
 		{ init($$, ID_shl); mto($$, $1); mto($$, $3); }
 	| expression TOK_LESSLESSLESS expression
