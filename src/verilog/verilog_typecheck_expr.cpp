@@ -3076,7 +3076,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   else if(
     expr.id() == ID_sva_sequence_intersect ||
     expr.id() == ID_sva_sequence_throughout ||
-    expr.id() == ID_sva_sequence_within)
+    expr.id() == ID_sva_sequence_within ||
+    expr.id() == ID_sva_sequence_first_match)
   {
     auto &binary_expr = to_binary_expr(expr);
 
@@ -3206,43 +3207,78 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.type() = bool_typet{};
     return std::move(expr);
   }
-  else
+  else if(
+    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+    expr.id() == ID_power)
   {
-    // type is guessed for now
-    // hopefully propagate_type will fix it
-
-    Forall_operands(it, expr)
-      convert_expr(*it);
+    for(auto &op : expr.operands())
+      convert_expr(op);
 
     tc_binary_expr(expr);
 
-    if(expr.id()==ID_plus ||
-       expr.id()==ID_minus ||
-       expr.id()==ID_mult ||
-       expr.id()==ID_power)
-      no_bool_ops(expr);
+    no_bool_ops(expr);
 
-    expr.type()=expr.op0().type();
+    expr.type() = expr.op0().type();
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_bitand || expr.id() == ID_bitor || expr.id() == ID_bitxor ||
+    expr.id() == ID_bitxnor || expr.id() == ID_bitnand ||
+    expr.id() == ID_bitnor)
+  {
+    for(auto &op : expr.operands())
+      convert_expr(op);
 
-    // check Boolean operators
+    tc_binary_expr(expr);
 
-    if(expr.type().id()==ID_bool)
+    expr.type() = expr.op0().type();
+
+    // Boolean?
+    if(expr.type().id() == ID_bool)
     {
-      if(expr.id()==ID_bitand)
+      if(expr.id() == ID_bitand)
         expr.id(ID_and);
-      else if(expr.id()==ID_bitor)
+      else if(expr.id() == ID_bitor)
         expr.id(ID_or);
-      else if(expr.id()==ID_bitxor)
+      else if(expr.id() == ID_bitxor)
         expr.id(ID_xor);
-      else if(expr.id()==ID_bitxnor)
+      else if(expr.id() == ID_bitxnor)
         expr.id(ID_equal);
-      else if(expr.id()==ID_bitnand)
+      else if(expr.id() == ID_bitnand)
         expr.id(ID_nand);
-      else if(expr.id()==ID_bitnor)
+      else if(expr.id() == ID_bitnor)
         expr.id(ID_nor);
     }
 
     return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_xor ||
+    expr.id() == ID_xnor || expr.id() == ID_nand || expr.id() == ID_nor)
+  {
+    for(auto &op : expr.operands())
+    {
+      convert_expr(op);
+      make_boolean(op);
+    }
+
+    tc_binary_expr(expr);
+
+    expr.type() = expr.op0().type();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_verilog_value_range)
+  {
+    for(auto &op : expr.operands())
+      convert_expr(op);
+    expr.type() = expr.op0().type();
+    return std::move(expr);
+  }
+  else
+  {
+    throw errort().with_location(expr.source_location())
+      << "no conversion for binary expression " << expr.id();
   }
 }
 
