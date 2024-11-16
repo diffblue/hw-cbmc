@@ -1,0 +1,11 @@
+KNOWNBUG
+AX1.smv
+--bound 2
+^\[spec1\] AX some_var = TRUE: REFUTED$
+^\[spec2\] AX some_var = FALSE: PROVED up to bound 2$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The BMC encoding fails on the temporal operator.
