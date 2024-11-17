@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
+#include <util/ieee_float.h>
 #include <util/mathematical_expr.h>
 #include <util/mathematical_types.h>
 #include <util/namespace.h>
@@ -694,6 +695,18 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   {
     s = "bit signed[" + to_string(left) + ":" + to_string(right) + "]";
   }
+  else if(type.id() == ID_verilog_realtime)
+  {
+    s = "realtime";
+  }
+  else if(type.id() == ID_verilog_real)
+  {
+    s = "real";
+  }
+  else if(type.id() == ID_verilog_shortreal)
+  {
+    s = "shortreal";
+  }
   else
     s = "?";
 
@@ -1276,6 +1289,77 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
   }
 
   // check representation
+  if(
+    rest.find('.') != std::string::npos ||
+    (rest.find('h') == std::string::npos &&
+     rest.find('e') != std::string::npos)) // real?
+  {
+    const char *p = rest.c_str();
+
+    std::string str_whole_number, str_fraction_part, str_exponent;
+
+    // get whole number part
+    while(*p != '.' && *p != 0 && *p != 'e')
+    {
+      str_whole_number += *p;
+      p++;
+    }
+
+    // skip dot
+    if(*p == '.')
+      p++;
+
+    // get fraction part
+    while(*p != 0 && *p != 'e')
+    {
+      str_fraction_part += *p;
+      p++;
+    }
+
+    // skip e
+    if(*p == 'e')
+      p++;
+
+    // skip +
+    if(*p == '+')
+      p++;
+
+    // get exponent
+    while(*p != 0)
+    {
+      str_exponent += *p;
+      p++;
+    }
+
+    std::string str_number = str_whole_number + str_fraction_part;
+
+    mp_integer significand;
+
+    if(str_number.empty())
+      significand = 0;
+    else
+      significand = string2integer(str_number, 10);
+
+    mp_integer exponent;
+
+    if(str_exponent.empty())
+      exponent = 0;
+    else
+      exponent = string2integer(str_exponent, 10);
+
+    // adjust exponent
+    exponent -= str_fraction_part.size();
+
+    ieee_floatt ieee_float{ieee_float_spect::double_precision()};
+
+    ieee_float.from_base10(significand, exponent);
+
+    constant_exprt result = ieee_float.to_expr();
+    result.type() = verilog_real_typet{};
+    result.add_source_location() = expr.source_location();
+
+    return std::move(result);
+  }
 
   std::string::size_type pos=rest.find('\'');
   std::size_t bits = 0;
@@ -2104,7 +2188,10 @@ void verilog_typecheck_exprt::implicit_typecast(
       expr = typecast_exprt{expr, dest_type};
       return;
     }
-    else if(dest_type.id()==ID_verilog_realtime)
+    else if(
+      dest_type.id() == ID_verilog_realtime ||
+      dest_type.id() == ID_verilog_real ||
+      dest_type.id() == ID_verilog_shortreal)
     {
       expr = typecast_exprt{expr, dest_type};
       return;
@@ -2186,6 +2273,14 @@ void verilog_typecheck_exprt::implicit_typecast(
       throw errort().with_location(expr.source_location())
         << "cannot convert assignment pattern to '" << to_string(dest_type)
         << '\'';
+    }
+  }
+  else if(src_type.id() == ID_verilog_real)
+  {
+    if(dest_type.id() == ID_verilog_realtime)
+    {
+      expr = typecast_exprt{expr, dest_type};
+      return;
     }
   }
 
@@ -2453,9 +2548,9 @@ typet verilog_typecheck_exprt::max_type(
     return t0;
     
   // If one of the operands is a real, we return the real.
-  if(vt0.is_verilog_realtime())
+  if(vt0.is_verilog_real())
     return t0;
-  else if(vt1.is_verilog_realtime())
+  else if(vt1.is_verilog_real())
     return t1;
 
   bool is_verilogbv=
