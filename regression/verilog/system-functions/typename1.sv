@@ -9,6 +9,9 @@ module main;
   assert final ($typename(vector1)=="bit[31:0]");
   assert final ($typename(vector2)=="bit[0:31]");
   assert final ($typename(vector3)=="bit signed[31:0]");
+  assert final ($typename(real'(1))=="real");
+  assert final ($typename(shortreal'(1))=="shortreal");
+  assert final ($typename(realtime'(1))=="realtime");
 
   // $typename yields an elaboration-time constant
   parameter P = $typename(some_bit);

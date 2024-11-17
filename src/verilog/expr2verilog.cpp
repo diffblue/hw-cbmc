@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/arith_tools.h>
 #include <util/bitvector_types.h>
+#include <util/ieee_float.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
 #include <util/namespace.h>
@@ -1119,6 +1120,14 @@ expr2verilogt::resultt expr2verilogt::convert_constant(
     // these have a decimal representation
     const irep_idt &value = src.get_value();
     dest=id2string(value);
+  }
+  else if(type.id() == ID_verilog_real)
+  {
+    constant_exprt tmp = src;
+    tmp.type() = ieee_float_spect::double_precision().to_type();
+    ieee_floatt ieee_float;
+    ieee_float.from_expr(tmp);
+    return {precedence, ieee_float.to_ansi_c_string()};
   }
   else
     return convert_norep(src, precedence);
