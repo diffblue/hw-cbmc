@@ -1046,7 +1046,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
 {
   exprt &cond = module_item.condition();
 
-  convert_expr(cond);
+  convert_sva(cond);
   make_boolean(cond);
 
   // We create a symbol for the property.
@@ -1111,7 +1111,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
 {
   exprt &cond = statement.condition();
 
-  convert_expr(cond);
+  convert_sva(cond);
   make_boolean(cond);
 
   // We create a symbol for the property.

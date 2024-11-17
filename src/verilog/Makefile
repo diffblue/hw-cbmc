@@ -21,6 +21,7 @@ SRC = aval_bval_encoding.cpp \
       verilog_typecheck.cpp \
       verilog_typecheck_base.cpp \
       verilog_typecheck_expr.cpp \
+      verilog_typecheck_sva.cpp \
       verilog_y.tab.cpp \
       vtype.cpp
 
