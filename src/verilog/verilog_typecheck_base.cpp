@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_types.h>
 
 #include "expr2verilog.h"
+#include "verilog_bits.h"
 #include "verilog_types.h"
 
 /*******************************************************************\
@@ -159,74 +160,6 @@ mp_integer verilog_typecheck_baset::array_offset(const array_typet &type)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_baset::get_width_opt
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::optional<mp_integer>
-verilog_typecheck_baset::get_width_opt(const typet &type)
-{
-  if(type.id()==ID_bool)
-    return 1;
-
-  if(type.id()==ID_unsignedbv || type.id()==ID_signedbv ||
-     type.id()==ID_verilog_signedbv || type.id()==ID_verilog_unsignedbv)
-    return type.get_int(ID_width);
-
-  if(type.id()==ID_array)
-  {
-    auto element_width = get_width_opt(to_array_type(type).element_type());
-    if(element_width.has_value())
-      return array_size(to_array_type(type)) * element_width.value();
-    else
-      return {};
-  }
-
-  if(type.id() == ID_struct)
-  {
-    // add them up
-    mp_integer sum = 0;
-    for(auto &component : to_struct_type(type).components())
-    {
-      auto component_width = get_width_opt(component.type());
-      if(!component_width.has_value())
-        return {};
-      sum += *component_width;
-    }
-    return sum;
-  }
-
-  if(type.id() == ID_union)
-  {
-    // find the biggest
-    mp_integer max = 0;
-    for(auto &component : to_verilog_union_type(type).components())
-      max = std::max(max, get_width(component.type()));
-    return max;
-  }
-
-  if(type.id() == ID_verilog_shortint)
-    return 16;
-  else if(type.id() == ID_verilog_int)
-    return 32;
-  else if(type.id() == ID_verilog_longint)
-    return 64;
-  else if(type.id() == ID_verilog_integer)
-    return 32;
-  else if(type.id() == ID_verilog_time)
-    return 64;
-
-  return {};
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheck_baset::get_width
 
   Inputs:
@@ -239,13 +172,13 @@ Function: verilog_typecheck_baset::get_width
 
 mp_integer verilog_typecheck_baset::get_width(const typet &type)
 {
-  auto width_opt = get_width_opt(type);
+  auto bits_opt = verilog_bits_opt(type);
 
-  if(width_opt.has_value())
-    return std::move(width_opt.value());
+  if(bits_opt.has_value())
+    return std::move(bits_opt.value());
   else
     throw errort().with_location(type.source_location())
-      << "type `" << type.id() << "' has unknown width";
+      << "type `" << type.id() << "' has unknown number of bits";
 }
 
 /*******************************************************************\

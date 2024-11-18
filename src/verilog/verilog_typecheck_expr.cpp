@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/string2int.h>
 
 #include "expr2verilog.h"
+#include "verilog_bits.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
 #include "vtype.h"
@@ -447,15 +448,16 @@ Function: verilog_typecheck_exprt::bits
 
 exprt verilog_typecheck_exprt::bits(const exprt &expr)
 {
-  auto width_opt = get_width_opt(expr.type());
+  auto bits_opt = verilog_bits_opt(expr.type());
 
-  if(!width_opt.has_value())
+  if(!bits_opt.has_value())
   {
     throw errort().with_location(expr.source_location())
       << "failed to determine number of bits of " << to_string(expr);
   }
 
-  return from_integer(width_opt.value(), integer_typet());
+  return from_integer(bits_opt.value(), integer_typet())
+    .with_source_location(expr.source_location());
 }
 
 /*******************************************************************\
