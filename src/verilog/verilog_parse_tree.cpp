@@ -131,7 +131,9 @@ Function: verilog_parse_treet::show
 
 void verilog_parse_treet::show(const itemt &item, std::ostream &out) const
 {
-  if(item.id() == ID_verilog_class)
+  if(item.id() == ID_verilog_checker)
+    to_verilog_checker(item).show(out);
+  else if(item.id() == ID_verilog_class)
     to_verilog_class(item).show(out);
   else if(item.id() == ID_verilog_interface)
     to_verilog_interface(item).show(out);
