@@ -139,6 +139,7 @@ exprt aval_underlying(const exprt &src)
   }
   else
   {
+    // It's two-valued.
     return src;
   }
 }
@@ -240,12 +241,21 @@ exprt aval_bval_concatenation(
 /// return true iff 'expr' contains either x or z
 exprt has_xz(const exprt &expr)
 {
-  PRECONDITION(is_aval_bval(expr));
-  auto width = aval_bval_width(expr);
-  return notequal_exprt{bval(expr), bv_typet{width}.all_zeros_expr()};
+  if(is_aval_bval(expr))
+  {
+    auto width = aval_bval_width(expr);
+    return notequal_exprt{bval(expr), bv_typet{width}.all_zeros_expr()};
+  }
+  else if(is_four_valued(expr))
+  {
+    // You forgot the encoding.
+    PRECONDITION(false);
+  }
+  else
+    return false_exprt{}; // it's two-valued
 }
 
-/// return 'x', one bit
+/// return 'x', one bit, in aval_bval encoding
 exprt make_x(const typet &type)
 {
   PRECONDITION(is_four_valued(type));
@@ -337,6 +347,22 @@ exprt aval_bval(const power_exprt &expr)
     power_exprt{aval_underlying(expr.lhs()), aval_underlying(expr.rhs())};
   auto x = make_x(expr.type());
   return if_exprt{has_xz, x, aval_bval_conversion(power_expr, x.type())};
+}
+
+/// <->, not SVA iff
+exprt aval_bval(const verilog_iff_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+  PRECONDITION(is_aval_bval(expr.lhs()) || is_aval_bval(expr.rhs()));
+
+  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+  auto lhs_boolean =
+    typecast_exprt::conditional_cast(aval_underlying(expr.lhs()), bool_typet{});
+  auto rhs_boolean =
+    typecast_exprt::conditional_cast(aval_underlying(expr.rhs()), bool_typet{});
+  auto equal_expr = equal_exprt{lhs_boolean, rhs_boolean};
+  auto x = make_x(expr.type());
+  return if_exprt{has_xz, x, aval_bval_conversion(equal_expr, x.type())};
 }
 
 exprt aval_bval(const typecast_exprt &expr)
