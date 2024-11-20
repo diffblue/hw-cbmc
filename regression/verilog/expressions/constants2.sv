@@ -41,12 +41,12 @@ module main;
 //  parameter p37 = 1!==1;
   parameter p38 = 1==1;
   parameter p39 = 1!=1;
-//  parameter p40 = 1==?1;
-//  parameter p41 = 1!=?1;
-//  parameter p42 = 1 inside {1};
+  parameter p40 = 1==?1;
+  parameter p41 = 1!=?1;
+  parameter p42 = 1 inside {1};
   parameter p43 = {1'b1, 1'b0};
   parameter p44 = {2{1'b1}};
-//  parameter p45 = {<<{3'b101}};
-//  parameter p46 = {>>{3'b101}};
+  parameter p45 = {<<{3'b101}};
+  parameter p46 = {>>{3'b101}};
 
 endmodule
