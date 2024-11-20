@@ -23,166 +23,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "sva_expr.h"
 #include "verilog_expr.h"
+#include "verilog_lowering.h"
 #include "verilog_typecheck_expr.h"
 
 #include <cassert>
 #include <map>
 #include <set>
-
-/*******************************************************************\
-
-Function: verilog_synthesist::extract
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt verilog_synthesist::extract(
-  const exprt &src,
-  const mp_integer &offset,
-  const typet &dest_type)
-{
-  auto src_width = to_bitvector_type(src.type()).get_width();
-  auto dest_width = get_width(dest_type);
-
-  // first add padding, if src is too small
-  exprt padded_src;
-  auto padding_width = dest_width + offset - src_width;
-
-  if(padding_width > 0)
-  {
-    auto padded_width_int =
-      numeric_cast_v<std::size_t>(src_width + padding_width);
-    padded_src = concatenation_exprt{
-      {unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)}.zero_expr(),
-       src},
-      bv_typet{padded_width_int}};
-  }
-  else // large enough
-    padded_src = src;
-
-  // now extract
-  if(dest_type.id() == ID_bool)
-  {
-    return extractbit_exprt{padded_src, from_integer(offset, integer_typet{})};
-  }
-  else
-  {
-    return extractbits_exprt{
-      padded_src, from_integer(offset, integer_typet{}), dest_type};
-  }
-}
-
-/*******************************************************************\
-
-Function: verilog_synthesist::from_bitvector
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt verilog_synthesist::from_bitvector(
-  const exprt &src,
-  const mp_integer &offset,
-  const typet &dest)
-{
-  if(dest.id() == ID_struct)
-  {
-    const auto &struct_type = to_struct_type(dest);
-    exprt::operandst field_values;
-    field_values.reserve(struct_type.components().size());
-
-    // start from the top; the first field is the most significant
-    mp_integer component_offset = get_width(dest);
-
-    for(auto &component : struct_type.components())
-    {
-      auto width = get_width(component.type());
-      component_offset -= width;
-      // rec. call
-      field_values.push_back(
-        from_bitvector(src, offset + component_offset, component.type()));
-    }
-
-    return struct_exprt{std::move(field_values), struct_type};
-  }
-  else if(dest.id() == ID_union)
-  {
-    // We use the first field of the union.
-    // All fields of a SystemVerilog packed union must have the same width.
-    const auto &union_type = to_union_type(dest);
-    DATA_INVARIANT(
-      !union_type.components().empty(),
-      "union type must have at least one field");
-    auto &field = union_type.components().front();
-
-    // rec. call
-    auto field_value = from_bitvector(src, offset, field.type());
-
-    return union_exprt{field.get_name(), std::move(field_value), union_type};
-  }
-  else
-  {
-    return extract(src, offset, dest);
-  }
-}
-
-/*******************************************************************\
-
-Function: verilog_synthesist::to_bitvector
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt verilog_synthesist::to_bitvector(const exprt &src)
-{
-  const auto &src_type = src.type();
-
-  if(src_type.id() == ID_struct)
-  {
-    const auto &struct_type = to_struct_type(src_type);
-    exprt::operandst field_values;
-    field_values.reserve(struct_type.components().size());
-
-    // the first struct member is the most significant
-    for(auto &component : struct_type.components())
-    {
-      auto member = member_exprt{src, component};
-      auto field_value = to_bitvector(member); // rec. call
-      field_values.push_back(std::move(field_value));
-    }
-
-    auto width_int = numeric_cast_v<std::size_t>(get_width(src));
-    return concatenation_exprt{std::move(field_values), bv_typet{width_int}};
-  }
-  else if(src_type.id() == ID_union)
-  {
-    const auto &union_type = to_union_type(src_type);
-    DATA_INVARIANT(
-      !union_type.components().empty(),
-      "union type must have at least one field");
-    auto &field = union_type.components().front();
-    auto member = member_exprt{src, field};
-    return to_bitvector(member); // rec. call
-  }
-  else
-  {
-    return src;
-  }
-}
 
 /*******************************************************************\
 
@@ -198,6 +44,28 @@ Function: verilog_synthesist::synth_expr
 
 exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
 {
+  // First lower any Verilog-specific expressions
+  auto lowered = verilog_lowering(expr);
+
+  // Now replace symbols by known values, and expand
+  // function definitions.
+  return synth_expr_rec(lowered, symbol_state);
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::synth_expr_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
+{
   if(expr.id() == ID_function_call)
   {
     return expand_function_call(to_function_call_expr(expr), symbol_state);
@@ -207,12 +75,6 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
     expand_hierarchical_identifier(
       to_hierarchical_identifier_expr(expr), symbol_state);
     return expr;
-  }
-  else if(expr.id() == ID_verilog_inside)
-  {
-    // The lowering uses wildcard equality, which needs to be further lowered
-    auto &inside = to_verilog_inside_expr(expr);
-    expr = inside.lower();
   }
 
   // Do the operands recursively
@@ -229,7 +91,7 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       assert(symbol.value.is_not_nil());
 
       // recursive call
-      return synth_expr(symbol.value, symbol_state);
+      return synth_expr_rec(symbol.value, symbol_state);
     }
     else
     {
@@ -252,153 +114,12 @@ exprt verilog_synthesist::synth_expr(exprt expr, symbol_statet symbol_state)
       UNREACHABLE;
     }
   }
-  else if(expr.id() == ID_constant)
+  else if(expr.id() == ID_typecast)
   {
-    // encode into aval/bval
-    if(
-      expr.type().id() == ID_verilog_unsignedbv ||
-      expr.type().id() == ID_verilog_signedbv)
-    {
-      return lower_to_aval_bval(to_constant_expr(expr));
-    }
-
+    // We do some simplification
+    if(to_typecast_expr(expr).op().type().id() == ID_integer)
+      expr = simplify_expr(expr, ns);
     return expr;
-  }
-  else if(expr.id() == ID_concatenation)
-  {
-    if(
-      expr.type().id() == ID_verilog_unsignedbv ||
-      expr.type().id() == ID_verilog_signedbv)
-    {
-      return aval_bval_concatenation(
-        to_concatenation_expr(expr).operands(),
-        lower_to_aval_bval(expr.type()));
-    }
-
-    return expr;
-  }
-  else if(expr.id() == ID_power)
-  {
-    auto &power_expr = to_power_expr(expr);
-
-    // encode into aval/bval
-    if(is_four_valued(expr.type()))
-      return aval_bval(power_expr);
-    else
-    {
-      DATA_INVARIANT(
-        power_expr.lhs().type() == power_expr.type(),
-        "power expression type consistency");
-
-      auto rhs_int = numeric_cast<std::size_t>(power_expr.rhs());
-      if(rhs_int.has_value())
-      {
-        if(*rhs_int == 0)
-          return from_integer(1, expr.type());
-        else if(*rhs_int == 1)
-          return power_expr.lhs();
-        else // >= 2
-        {
-          auto factors = exprt::operandst{rhs_int.value(), power_expr.lhs()};
-          // would prefer appropriate mult_exprt constructor
-          return multi_ary_exprt{ID_mult, factors, expr.type()};
-        }
-      }
-      else
-        return expr;
-    }
-  }
-  else if(expr.id()==ID_typecast)
-  {
-    // When casting a four-valued scalar to bool,
-    // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
-    if(is_aval_bval(to_typecast_expr(expr).op()) && expr.type().id() == ID_bool)
-    {
-      expr = aval_bval(to_typecast_expr(expr));
-    }
-    else
-    {
-      auto &op = to_typecast_expr(expr).op();
-
-      // we perform some form of simplification for these
-      if(op.is_constant())
-        simplify(expr, ns);
-    }
-
-    if(expr.id() == ID_typecast)
-    {
-      auto &typecast_expr = to_typecast_expr(expr);
-
-      const auto &src_type = typecast_expr.op().type();
-      const auto &dest_type = typecast_expr.type();
-
-      if(
-        dest_type.id() == ID_verilog_unsignedbv ||
-        dest_type.id() == ID_verilog_signedbv)
-      {
-        auto aval_bval_type = lower_to_aval_bval(dest_type);
-        return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
-      }
-      else if(dest_type.id() == ID_struct || dest_type.id() == ID_union)
-      {
-        return from_bitvector(typecast_expr.op(), 0, dest_type);
-      }
-      else
-      {
-        if(src_type.id() == ID_struct || src_type.id() == ID_union)
-        {
-          return extract(to_bitvector(typecast_expr.op()), 0, dest_type);
-        }
-      }
-    }
-
-    return expr;
-  }
-  else if(
-    expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
-    expr.id() == ID_verilog_streaming_concatenation_right_to_left)
-  {
-    auto &streaming_concatenation =
-      to_verilog_streaming_concatenation_expr(expr);
-    return streaming_concatenation.lower();
-  }
-  else if(expr.id() == ID_verilog_non_indexed_part_select)
-  {
-    auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
-    return part_select.lower();
-  }
-  else if(
-    expr.id() == ID_verilog_indexed_part_select_plus ||
-    expr.id() == ID_verilog_indexed_part_select_minus)
-  {
-    auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
-    return part_select.lower();
-  }
-  else if(expr.id() == ID_verilog_logical_equality)
-  {
-    return aval_bval(to_verilog_logical_equality_expr(expr));
-  }
-  else if(expr.id() == ID_verilog_logical_inequality)
-  {
-    return aval_bval(to_verilog_logical_inequality_expr(expr));
-  }
-  else if(expr.id() == ID_verilog_wildcard_equality)
-  {
-    return aval_bval(to_verilog_wildcard_equality_expr(expr));
-  }
-  else if(expr.id() == ID_verilog_wildcard_inequality)
-  {
-    return aval_bval(to_verilog_wildcard_inequality_expr(expr));
-  }
-  else if(expr.id() == ID_not)
-  {
-    auto &not_expr = to_not_expr(expr);
-
-    // encode into aval/bval
-    if(is_four_valued(expr.type()))
-      return aval_bval(not_expr);
-    else
-      return expr; // leave as is
   }
   else
     return expr; // leave as is
