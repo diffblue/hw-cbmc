@@ -365,6 +365,22 @@ exprt aval_bval(const verilog_iff_exprt &expr)
   return if_exprt{has_xz, x, aval_bval_conversion(equal_expr, x.type())};
 }
 
+/// ->, not SVA implies
+exprt aval_bval(const verilog_implies_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+  PRECONDITION(is_aval_bval(expr.lhs()) || is_aval_bval(expr.rhs()));
+
+  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+  auto lhs_boolean =
+    typecast_exprt::conditional_cast(aval_underlying(expr.lhs()), bool_typet{});
+  auto rhs_boolean =
+    typecast_exprt::conditional_cast(aval_underlying(expr.rhs()), bool_typet{});
+  auto implies_expr = implies_exprt{lhs_boolean, rhs_boolean};
+  auto x = make_x(expr.type());
+  return if_exprt{has_xz, x, aval_bval_conversion(implies_expr, x.type())};
+}
+
 exprt aval_bval(const typecast_exprt &expr)
 {
   // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
