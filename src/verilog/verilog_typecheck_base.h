@@ -51,7 +51,6 @@ protected:
   }
 
   static mp_integer get_width(const typet &);
-  static std::optional<mp_integer> get_width_opt(const typet &);
   static mp_integer array_size(const array_typet &);
   static mp_integer array_offset(const array_typet &);
   static typet index_type(const array_typet &);

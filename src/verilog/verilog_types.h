@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_TYPES_H
 #define CPROVER_VERILOG_TYPES_H
 
-#include <util/std_types.h>
+#include <util/bitvector_types.h>
 
 /// Used during elaboration only,
 /// to signal that a symbol is yet to be elaborated.
