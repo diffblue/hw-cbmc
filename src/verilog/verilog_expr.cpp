@@ -112,6 +112,18 @@ std::vector<irep_idt> verilog_item_containert::dependencies() const
   return result;
 }
 
+void verilog_checkert::show(std::ostream &out) const
+{
+  out << "Checker: " << base_name() << '\n';
+
+  out << "  Items:\n";
+
+  for(auto &item : items())
+    out << "    " << item.pretty() << '\n';
+
+  out << '\n';
+}
+
 void verilog_packaget::show(std::ostream &out) const
 {
   out << "Pacakge: " << base_name() << '\n';

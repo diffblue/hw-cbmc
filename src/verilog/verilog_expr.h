@@ -2143,6 +2143,29 @@ inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
   return static_cast<verilog_module_sourcet &>(irep);
 }
 
+class verilog_checkert : public verilog_item_containert
+{
+public:
+  explicit verilog_checkert(irep_idt _base_name)
+    : verilog_item_containert(ID_verilog_module, _base_name)
+  {
+  }
+
+  void show(std::ostream &) const;
+};
+
+inline const verilog_checkert &to_verilog_checker(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_checker);
+  return static_cast<const verilog_checkert &>(irep);
+}
+
+inline verilog_checkert &to_verilog_checker(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_checker);
+  return static_cast<verilog_checkert &>(irep);
+}
+
 class verilog_packaget : public verilog_item_containert
 {
 public:

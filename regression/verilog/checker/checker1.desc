@@ -1,0 +1,7 @@
+CORE
+checker1.sv
+--show-parse
+^Checker: myChecker$
+^EXIT=0$
+^SIGNAL=0$
+--

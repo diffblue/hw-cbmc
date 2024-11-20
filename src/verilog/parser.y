@@ -746,6 +746,20 @@ program_declaration:
           TOK_PROGRAM TOK_ENDPROGRAM
         ;
 
+checker_declaration:
+	  TOK_CHECKER checker_identifier
+		{
+		  init($$, ID_verilog_checker);
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+		}
+	  ';'
+	  checker_or_generate_item_brace
+	  TOK_ENDCHECKER
+		{
+		  $$ = $3;
+		}
+	;
+
 class_declaration:
 	  TOK_CLASS class_identifier
 	  ';'
@@ -1007,6 +1021,42 @@ non_port_interface_item:
 	| interface_declaration
 	/* | timeunits_declaration */
 	;
+
+// System Verilog standard 1800-2017
+// A.1.9 Checker items
+
+checker_or_generate_item_brace:
+	  /* Optional */
+	| checker_or_generate_item_brace attribute_instance_brace checker_or_generate_item
+	;
+
+checker_or_generate_item:
+	  checker_or_generate_item_declaration
+	| initial_construct
+	| always_construct
+	| final_construct
+	| assertion_item
+	| continuous_assign
+	| checker_generate_item
+	;
+
+checker_or_generate_item_declaration:
+	  data_declaration
+	| function_declaration
+	| checker_declaration
+	| assertion_item_declaration
+	| covergroup_declaration
+	| genvar_declaration
+	| TOK_DEFAULT TOK_CLOCKING clocking_identifier ';'
+	| TOK_DEFAULT TOK_DISABLE TOK_IFF expression_or_dist ';'
+	| ';'
+	;
+
+checker_generate_item:
+	  loop_generate_construct
+	| conditional_generate_construct
+	| generate_region
+	;
 	
 // System Verilog standard 1800-2017
 // A.1.9 Class items
@@ -1170,6 +1220,7 @@ package_or_generate_item_declaration:
 	| data_declaration
 	| task_declaration
 	| function_declaration
+	| checker_declaration
 	| class_declaration
 	| local_parameter_declaration ';'
 	| parameter_declaration ';'
@@ -4075,6 +4126,10 @@ endmodule_identifier_opt:
 	  /* Optional */
 	| TOK_COLON module_identifier
 	;
+
+clocking_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+checker_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 net_identifier: identifier;
 
