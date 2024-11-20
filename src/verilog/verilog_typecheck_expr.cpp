@@ -227,6 +227,37 @@ void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::must_be_integral
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::must_be_integral(const exprt &expr)
+{
+  // Throw an error if the given expression doesn't have an integral type.
+  const auto &type = expr.type();
+  if(type.id() == ID_bool)
+  {
+    // ok as is
+  }
+  else if(
+    type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+    type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv)
+  {
+    // ok as is
+  }
+  else
+    throw errort().with_location(expr.source_location())
+      << "operand " << to_string(expr) << " must be integral";
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_expr_rec
 
   Inputs:
@@ -264,22 +295,14 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
     Forall_operands(it, expr)
     {
       convert_expr(*it);
-      
+      must_be_integral(*it);
+
       const typet &type=it->type();
 
-      if(type.id()==ID_array)
+      if(type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
       {
-        throw errort().with_location(it->source_location())
-          << "array type not allowed in concatenation";
-      }
-      else if(type.id() == ID_integer)
-      {
-        throw errort().with_location(it->source_location())
-          << "integer type not allowed in concatenation";
-      }
-      else if(type.id()==ID_verilog_signedbv ||
-              type.id()==ID_verilog_unsignedbv)
         has_verilogbv=true;
+      }
 
       width+=get_width(*it);
     }
@@ -2642,10 +2665,13 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     // these may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op());
+    must_be_integral(expr.op());
 
     if (expr.op().type().id() == ID_verilog_signedbv ||
         expr.op().type().id() == ID_verilog_unsignedbv)
+    {
       expr.type()=verilog_unsignedbv_typet(1);
+    }
     else
       expr.type()=bool_typet();
   }
@@ -2678,6 +2704,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // slice_size is defaulted to 1
     PRECONDITION(expr.op().operands().size() == 1);
     convert_expr(expr.op().operands()[0]);
+    must_be_integral(expr.op().operands()[0]);
     expr.type() = expr.op().operands()[0].type();
     return std::move(expr);
   }
@@ -2819,12 +2846,7 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
   exprt &op1=expr.op1();
 
   convert_expr(op1);
-
-  if(op1.type().id()==ID_array)
-  {
-    throw errort().with_location(op1.source_location())
-      << "array type not allowed in replication";
-  }
+  must_be_integral(op1);
 
   if(op1.type().id()==ID_bool)
     op1 = typecast_exprt{op1, unsignedbv_typet{1}};
@@ -3022,10 +3044,13 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // a proper equality is performed.
     expr.type()=bool_typet();
 
-    Forall_operands(it, expr)
-      convert_expr(*it);
-
+    convert_expr(expr.lhs());
+    convert_expr(expr.rhs());
     typecheck_relation(expr);
+
+    // integral operands only
+    must_be_integral(expr.lhs());
+    must_be_integral(expr.rhs());
 
     return std::move(expr);
   }
@@ -3051,8 +3076,10 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // This is the >>> expression, which turns into ID_lshr or ID_ashr
     // depending on type of first operand.
 
-    convert_expr(expr.op0());
-    convert_expr(expr.op1());
+    convert_expr(expr.lhs());
+    convert_expr(expr.rhs());
+    must_be_integral(expr.lhs());
+    must_be_integral(expr.rhs());
     no_bool_ops(expr);
 
     const typet &op0_type = expr.op0().type();
@@ -3076,14 +3103,16 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   else if(expr.id()==ID_lshr)
   {
     // logical right shift >>
-    convert_expr(expr.op0());
-    convert_expr(expr.op1());
+    convert_expr(expr.lhs());
+    convert_expr(expr.rhs());
+    must_be_integral(expr.lhs());
+    must_be_integral(expr.rhs());
     no_bool_ops(expr);
     expr.type()=expr.op0().type();
 
     return std::move(expr);
   }
-  else if(expr.id()==ID_div || expr.id()==ID_mod)
+  else if(expr.id() == ID_div)
   {
     Forall_operands(it, expr)
       convert_expr(*it);
@@ -3092,6 +3121,20 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     no_bool_ops(expr);
 
     expr.type()=expr.op0().type();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_mod)
+  {
+    convert_expr(expr.lhs());
+    convert_expr(expr.rhs());
+    must_be_integral(expr.lhs());
+    must_be_integral(expr.rhs());
+
+    tc_binary_expr(expr);
+    no_bool_ops(expr);
+
+    expr.type() = expr.lhs().type();
 
     return std::move(expr);
   }

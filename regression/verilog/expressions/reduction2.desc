@@ -1,5 +1,5 @@
 CORE
-mod2.v
+reduction2.v
 --bound 0
 ^file .* line 4: operand 1\.1 must be integral$
 ^EXIT=2$
