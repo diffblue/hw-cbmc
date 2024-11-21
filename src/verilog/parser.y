@@ -1763,11 +1763,15 @@ list_of_variable_identifiers:
 parameter_port_declaration:
           TOK_PARAMETER data_type_or_implicit param_assignment
 		{ $$ = $3; }
+	| TOK_PARAMETER TOK_TYPE data_type_or_implicit param_assignment
+		{ $$ = $4; }
 	| TOK_LOCALPARAM data_type_or_implicit param_assignment
 		{ $$ = $3; }
 	| data_type param_assignment
 		{ $$ = $2; }
 	| param_assignment
+	| TOK_TYPE param_assignment
+		{ $$ = $2; }
 	;
 
 list_of_defparam_assignments:
@@ -1789,13 +1793,15 @@ list_of_param_assignments:
 		{ $$=$1;    mto($$, $3); }
 	;
 
-param_assignment: param_identifier '=' constant_param_expression
+param_assignment:
+	  param_identifier '=' constant_param_expression
 		{ init($$, ID_parameter);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_identifier, base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
 		  addswap($$, ID_value, $3); }
-        ;
+	| type_assignment
+	;
 
 list_of_type_assignments:
 	  type_assignment
