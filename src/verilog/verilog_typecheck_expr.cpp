@@ -1004,6 +1004,11 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
     throw errort().with_location(expr.source_location())
       << "'this' outside of method";
   }
+  else if(expr.id() == ID_verilog_null)
+  {
+    return constant_exprt{ID_NULL, typet{ID_verilog_null}}.with_source_location(
+      expr.source_location());
+  }
   else
   {
     throw errort().with_location(expr.source_location())
@@ -2025,6 +2030,17 @@ void verilog_typecheck_exprt::implicit_typecast(
     {
       expr = typecast_exprt{expr, dest_type};
       return;
+    }
+  }
+  else if(src_type.id() == ID_verilog_null)
+  {
+    if(dest_type.id() == ID_verilog_chandle)
+    {
+      if(expr.id() == ID_constant)
+      {
+        expr.type() = dest_type;
+        return;
+      }
     }
   }
 

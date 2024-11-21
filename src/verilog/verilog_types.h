@@ -544,4 +544,41 @@ inline verilog_union_typet &to_verilog_union_type(typet &type)
   return static_cast<verilog_union_typet &>(type);
 }
 
+/// a pointer type
+class verilog_chandle_typet : public typet
+{
+public:
+  inline verilog_chandle_typet() : typet(ID_verilog_chandle)
+  {
+  }
+
+  bv_typet encoding() const
+  {
+    return bv_typet{32};
+  }
+
+  constant_exprt null_expr() const;
+};
+
+/// \brief Cast a typet to a \ref verilog_chandle_typet
+///
+/// This is an unchecked conversion. \a type must be known to be \ref
+/// verilog_chandle_typet. Will fail with a precondition violation if type
+/// doesn't match.
+///
+/// \param type: Source type.
+/// \return Object of type \ref verilog_chandle_typet
+inline const verilog_chandle_typet &to_verilog_chandle_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_chandle);
+  return static_cast<const verilog_chandle_typet &>(type);
+}
+
+/// \copydoc to_chandle_type(const typet &)
+inline verilog_chandle_typet &to_verilog_chandle_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_chandle);
+  return static_cast<verilog_chandle_typet &>(type);
+}
+
 #endif
