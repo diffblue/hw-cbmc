@@ -761,6 +761,10 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   {
     s = "event";
   }
+  else if(type.id() == ID_verilog_string)
+  {
+    s = "string";
+  }
   else
     s = "?";
 
@@ -2330,6 +2334,21 @@ typet verilog_typecheck_exprt::max_type(
 
   if(vt0.is_event() || vt1.is_null())
     return t0;
+
+  if(
+    vt0.is_string() && (vt1.is_signed() || vt1.is_unsigned() ||
+                        vt1.is_verilog_signed() || vt1.is_verilog_unsigned()))
+  {
+    return t0;
+  }
+
+  if(
+    (vt0.is_signed() || vt0.is_unsigned() || vt0.is_verilog_signed() ||
+     vt0.is_verilog_unsigned()) &&
+    vt0.is_string())
+  {
+    return t1;
+  }
 
   if(vt0.is_other() || vt1.is_other())
     return static_cast<const typet &>(get_nil_irep());

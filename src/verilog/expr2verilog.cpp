@@ -1988,6 +1988,8 @@ std::string expr2verilogt::convert(const typet &type)
     return "logic";
   else if(type.id() == ID_verilog_integer)
     return "integer";
+  else if(type.id() == ID_verilog_string)
+    return "string";
   else if(type.id() == ID_verilog_reg)
     return "reg";
   else if(type.id() == ID_verilog_time)
