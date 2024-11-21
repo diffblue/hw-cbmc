@@ -1477,7 +1477,7 @@ data_type:
 	| TOK_STRING
 	        { init($$, ID_string); }
 	| TOK_CHANDLE
-	        { init($$, ID_chandle); }
+	        { init($$, ID_verilog_chandle); }
 	| TOK_VIRTUAL interface_opt interface_identifier
 	        { init($$, "virtual_interface"); }
 	| /*scope_opt*/ type_identifier packed_dimension_brace
@@ -4039,7 +4039,7 @@ primary:  primary_literal
 	| cast
 	| assignment_pattern_expression
 	| streaming_concatenation
-        | TOK_NULL { init($$, ID_NULL); }
+        | TOK_NULL { init($$, ID_verilog_null); }
         | TOK_THIS { init($$, ID_this); }
 	;
 

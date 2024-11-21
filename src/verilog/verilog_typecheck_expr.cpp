@@ -753,6 +753,10 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   {
     s = "shortreal";
   }
+  else if(type.id() == ID_verilog_chandle)
+  {
+    s = "chandle";
+  }
   else
     s = "?";
 
@@ -1106,6 +1110,11 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   {
     throw errort().with_location(expr.source_location())
       << "'this' outside of method";
+  }
+  else if(expr.id() == ID_verilog_null)
+  {
+    return constant_exprt{ID_NULL, typet{ID_verilog_null}}.with_source_location(
+      expr.source_location());
   }
   else
   {
@@ -2041,6 +2050,17 @@ void verilog_typecheck_exprt::implicit_typecast(
       return;
     }
   }
+  else if(src_type.id() == ID_verilog_null)
+  {
+    if(dest_type.id() == ID_verilog_chandle)
+    {
+      if(expr.id() == ID_constant)
+      {
+        expr.type() = dest_type;
+        return;
+      }
+    }
+  }
 
   throw errort().with_location(expr.source_location())
     << "failed to convert `" << to_string(src_type) << "' to `"
@@ -2292,6 +2312,12 @@ typet verilog_typecheck_exprt::max_type(
 
   vtypet vt0=vtypet(t0);
   vtypet vt1=vtypet(t1);
+
+  if(vt0.is_null() || vt1.is_chandle())
+    return t1;
+
+  if(vt0.is_chandle() || vt1.is_null())
+    return t0;
 
   if(vt0.is_other() || vt1.is_other())
     return static_cast<const typet &>(get_nil_irep());
