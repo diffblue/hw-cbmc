@@ -1486,7 +1486,7 @@ data_type:
                   $$ = $2; }
 //	| class_type
 	| TOK_EVENT
-	        { init($$, ID_event); }
+	        { init($$, ID_verilog_event); }
 	/*
 	| ps_covergroup_identifier
 	*/
@@ -3403,7 +3403,7 @@ event_control:
 
 ored_event_expression:
 	  event_expression
-		{ init($$, ID_event); mto($$, $1); }
+		{ init($$, ID_verilog_event); mto($$, $1); }
 	| ored_event_expression TOK_OR event_expression
 		{ $$=$1; mto($$, $3); }
 	| ored_event_expression ',' event_expression
@@ -3878,6 +3878,7 @@ function_subroutine_call: subroutine_call
         ;
 
 event_trigger: TOK_MINUSGREATER hierarchical_event_identifier ';'
+		{ init($$, ID_verilog_event_trigger); mto($$, $2); }
 	;
 
 // System Verilog standard 1800-2017

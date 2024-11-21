@@ -47,6 +47,10 @@ typet verilog_lowering(typet type)
   {
     return to_verilog_chandle_type(type).encoding();
   }
+  else if(type.id() == ID_verilog_event)
+  {
+    return to_verilog_event_type(type).encoding();
+  }
   else
     return type;
 }
@@ -357,6 +361,11 @@ exprt verilog_lowering(exprt expr)
       // this is 'null'
       return to_verilog_chandle_type(expr.type()).null_expr();
     }
+    else if(expr.type().id() == ID_verilog_event)
+    {
+      // this is 'null'
+      return to_verilog_event_type(expr.type()).null_expr();
+    }
 
     return expr;
   }
@@ -368,6 +377,11 @@ exprt verilog_lowering(exprt expr)
       auto &chandle_type = to_verilog_chandle_type(expr.type());
       return symbol_exprt{
         symbol_expr.get_identifier(), chandle_type.encoding()};
+    }
+    else if(expr.type().id() == ID_verilog_event)
+    {
+      auto &event_type = to_verilog_event_type(expr.type());
+      return symbol_exprt{symbol_expr.get_identifier(), event_type.encoding()};
     }
     else
       return expr;
