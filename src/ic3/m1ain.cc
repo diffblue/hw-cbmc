@@ -12,11 +12,11 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <util/ui_message.h>
 
 #include <ebmc/liveness_to_safety.h>
+#include <ebmc/netlist.h>
 #include <ebmc/property_checker.h>
 #include <ebmc/report_results.h>
 
 #include <trans-netlist/netlist.h>
-#include <trans-netlist/trans_to_netlist.h>
 
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
@@ -104,12 +104,7 @@ int ic3_enginet::operator()()
     // make net-list
     message.status() << "Generating Netlist" << messaget::eom;
 
-    convert_trans_to_netlist(
-      transition_system.symbol_table,
-      transition_system.main_symbol->name,
-      transition_system.trans_expr,
-      properties.make_property_map(),
-      netlist,
+    netlist = make_netlist(transition_system, properties,
       message.get_message_handler());
 
     message.statistics() << "Latches: " << netlist.var_map.latches.size()

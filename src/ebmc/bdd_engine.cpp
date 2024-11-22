@@ -179,13 +179,6 @@ property_checker_resultt bdd_enginet::operator()()
 {
   try
   {
-    for(auto &property : properties.properties)
-    {
-      // no support for $past
-      if(has_subexpr(property.normalized_expr, ID_verilog_past))
-        property.failure("property not supported by BDD engine");
-    }
-
     // any properties left?
     if(!properties.has_unknown_property())
       return property_checker_resultt{properties};

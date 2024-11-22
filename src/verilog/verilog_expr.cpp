@@ -403,3 +403,12 @@ exprt verilog_inside_exprt::lower() const
 
   return disjunction(disjuncts);
 }
+
+exprt verilog_past_exprt::default_value() const
+{
+  auto zero = from_integer(0, type());
+  if(zero.is_nil())
+    throw "failed to create $past default value";
+  else
+    return std::move(zero);
+}
