@@ -1,8 +1,8 @@
 CORE
 past2.sv
 --bdd
-^\[main\.p0\] always \(main\.counter == 0 \|-> \$past\(main\.counter, 1\) == 0\): FAILURE: property not supported by BDD engine$
-^EXIT=10$
+^\[main\.p0\] always \(main\.counter == 0 \|-> \$past\(main\.counter, 1\) == 0\): PROVED$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring

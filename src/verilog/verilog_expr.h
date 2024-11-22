@@ -2668,6 +2668,9 @@ public:
   {
     return op1();
   }
+
+  /// value when going beyond the initial time frame
+  exprt default_value() const;
 };
 
 inline const verilog_past_exprt &to_verilog_past_expr(const exprt &expr)
