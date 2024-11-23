@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "aval_bval_encoding.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
+#include "verilog_types.h"
 
 exprt extract(
   const exprt &src,
@@ -157,8 +158,23 @@ exprt verilog_lowering(exprt expr)
     {
       return lower_to_aval_bval(to_constant_expr(expr));
     }
+    else if(expr.type().id() == ID_verilog_chandle)
+    {
+      // this is 'null'
+      return to_verilog_chandle_type(expr.type()).null_expr();
+    }
 
     return expr;
+  }
+  else if(expr.id() == ID_symbol)
+  {
+    auto &symbol_expr = to_symbol_expr(expr);
+    if(expr.type().id() == ID_verilog_chandle)
+    {
+      return symbol_exprt{symbol_expr.get_identifier(), unsignedbv_typet{32}};
+    }
+    else
+      return expr;
   }
   else if(expr.id() == ID_concatenation)
   {
