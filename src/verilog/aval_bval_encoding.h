@@ -54,6 +54,8 @@ exprt aval_bval(const verilog_wildcard_inequality_exprt &);
 exprt aval_bval(const power_exprt &);
 /// lowering for <->
 exprt aval_bval(const verilog_iff_exprt &);
+/// lowering for ->
+exprt aval_bval(const verilog_implies_exprt &);
 /// lowering for typecasts
 exprt aval_bval(const typecast_exprt &);
 

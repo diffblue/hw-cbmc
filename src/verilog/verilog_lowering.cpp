@@ -338,6 +338,24 @@ exprt verilog_lowering(exprt expr)
       return equal_exprt{lhs_boolean, rhs_boolean};
     }
   }
+  else if(expr.id() == ID_verilog_implies)
+  {
+    auto &implies = to_verilog_implies_expr(expr);
+
+    if(is_four_valued(implies.type()))
+    {
+      // encode into aval/bval
+      return aval_bval(implies);
+    }
+    else
+    {
+      auto lhs_boolean =
+        typecast_exprt::conditional_cast(implies.lhs(), bool_typet{});
+      auto rhs_boolean =
+        typecast_exprt::conditional_cast(implies.rhs(), bool_typet{});
+      return implies_exprt{lhs_boolean, rhs_boolean};
+    }
+  }
   else
     return expr; // leave as is
 

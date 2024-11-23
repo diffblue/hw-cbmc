@@ -3848,7 +3848,7 @@ expression:
                 { $$=$1; mto($$, $3); add_attributes($$, $2); }
         | inc_or_dec_expression
 	| expression "->" expression
-		{ init($$, ID_implies); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_implies); mto($$, $1); mto($$, $3); }
 	| expression "<->" expression
 		{ init($$, ID_verilog_iff); mto($$, $1); mto($$, $3); }
 	| expression TOK_PLUS expression
