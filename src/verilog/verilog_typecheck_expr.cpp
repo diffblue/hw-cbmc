@@ -24,6 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
+#include "verilog_lowering.h"
 #include "verilog_types.h"
 #include "vtype.h"
 
@@ -1382,7 +1383,25 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 {
   // This performs constant-folding on a type-checked expression
   // according to Section 11.2.1 IEEE 1800-2017.
+  auto expr_lowered = verilog_lowering(expr);
 
+  return elaborate_constant_expression_rec(expr_lowered);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::elaborate_constant_expression_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
+{
   if(expr.id()==ID_constant)
     return expr;
   else if(expr.id()==ID_symbol)
@@ -1455,7 +1474,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
     for(auto &op : expr.operands())
     {
       // recursive call
-      op = elaborate_constant_expression(op);
+      op = elaborate_constant_expression_rec(op);
       if(!op.is_constant())
         operands_are_constant = false;
     }
@@ -1481,22 +1500,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
         PRECONDITION(false);
     };
 
-    if(expr.id() == ID_verilog_non_indexed_part_select)
-    {
-      // Our simplifier does not know these, do lowering.
-      auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
-      expr = part_select.lower();
-    }
-    else if(
-      expr.id() == ID_verilog_indexed_part_select_plus ||
-      expr.id() == ID_verilog_indexed_part_select_minus)
-    {
-      // Our simplifier does not know these, do lowering.
-      auto &part_select =
-        to_verilog_indexed_part_select_plus_or_minus_expr(expr);
-      expr = part_select.lower();
-    }
-    else if(expr.id() == ID_reduction_or)
+    if(expr.id() == ID_reduction_or)
     {
       // The simplifier doesn't know how to simplify reduction_or
       auto &reduction_or = to_unary_expr(expr);
