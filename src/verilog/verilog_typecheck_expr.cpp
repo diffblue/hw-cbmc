@@ -2686,9 +2686,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     return convert_bit_select_expr(to_binary_expr(expr));
   else if(expr.id()==ID_replication)
     return convert_replication_expr(to_replication_expr(expr));
-  else if(
-    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_verilog_iff ||
-    expr.id() == ID_implies)
+  else if(expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_implies)
   {
     Forall_operands(it, expr)
     {
@@ -2697,6 +2695,27 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     }
 
     expr.type()=bool_typet();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_verilog_iff)
+  {
+    // 1800 2017 11.4.7 Logical operators
+    convert_expr(expr.lhs());
+    convert_expr(expr.rhs());
+
+    // This returns 'x' if either of the operands contains x or z.
+    if(
+      expr.lhs().type().id() == ID_verilog_signedbv ||
+      expr.lhs().type().id() == ID_verilog_unsignedbv ||
+      expr.rhs().type().id() == ID_verilog_signedbv ||
+      expr.rhs().type().id() == ID_verilog_unsignedbv)
+    {
+      // Four-valued case.
+      expr.type() = verilog_unsignedbv_typet{1};
+    }
+    else // Two-valued case.
+      expr.type() = bool_typet{};
 
     return std::move(expr);
   }

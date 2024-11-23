@@ -153,6 +153,30 @@ to_verilog_wildcard_inequality_expr(exprt &expr)
   return static_cast<verilog_wildcard_inequality_exprt &>(expr);
 }
 
+/// <->, not to be confused with SVA iff
+class verilog_iff_exprt : public binary_exprt
+{
+public:
+  verilog_iff_exprt(exprt lhs, exprt rhs)
+    : binary_exprt{std::move(lhs), ID_verilog_iff, std::move(rhs), bool_typet{}}
+  {
+  }
+};
+
+inline const verilog_iff_exprt &to_verilog_iff_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_iff);
+  binary_exprt::check(expr);
+  return static_cast<const verilog_iff_exprt &>(expr);
+}
+
+inline verilog_iff_exprt &to_verilog_iff_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_iff);
+  binary_exprt::check(expr);
+  return static_cast<verilog_iff_exprt &>(expr);
+}
+
 class function_call_exprt : public binary_exprt
 {
 public:

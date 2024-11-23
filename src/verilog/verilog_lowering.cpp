@@ -320,6 +320,24 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
+  else if(expr.id() == ID_verilog_iff)
+  {
+    auto &iff = to_verilog_iff_expr(expr);
+
+    if(is_four_valued(iff.type()))
+    {
+      // encode into aval/bval
+      return aval_bval(iff);
+    }
+    else
+    {
+      auto lhs_boolean =
+        typecast_exprt::conditional_cast(iff.lhs(), bool_typet{});
+      auto rhs_boolean =
+        typecast_exprt::conditional_cast(iff.rhs(), bool_typet{});
+      return equal_exprt{lhs_boolean, rhs_boolean};
+    }
+  }
   else
     return expr; // leave as is
 
