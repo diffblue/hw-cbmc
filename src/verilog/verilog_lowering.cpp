@@ -11,10 +11,26 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/c_types.h>
+#include <util/ieee_float.h>
 
 #include "aval_bval_encoding.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
+
+/// If applicable, lower the three Verilog real types to floatbv.
+typet lower_verilog_real_types(typet type)
+{
+  if(type.id() == ID_verilog_real || type.id() == ID_verilog_realtime)
+  {
+    return ieee_float_spect::double_precision().to_type();
+  }
+  else if(type.id() == ID_verilog_shortreal)
+  {
+    return ieee_float_spect::single_precision().to_type();
+  }
+  else
+    PRECONDITION(false);
+}
 
 exprt extract(
   const exprt &src,
@@ -150,12 +166,21 @@ exprt verilog_lowering(exprt expr)
 
   if(expr.id() == ID_constant)
   {
-    // encode into aval/bval
     if(
       expr.type().id() == ID_verilog_unsignedbv ||
       expr.type().id() == ID_verilog_signedbv)
     {
+      // encode into aval/bval
       return lower_to_aval_bval(to_constant_expr(expr));
+    }
+    else if(
+      expr.type().id() == ID_verilog_real ||
+      expr.type().id() == ID_verilog_realtime ||
+      expr.type().id() == ID_verilog_shortreal)
+    {
+      // turn into floatbv -- same encoding,
+      // no need to change value
+      expr.type() = lower_verilog_real_types(expr.type());
     }
 
     return expr;
@@ -208,10 +233,18 @@ exprt verilog_lowering(exprt expr)
   {
     auto &typecast_expr = to_typecast_expr(expr);
 
-    // When casting a four-valued scalar to bool,
-    // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
+    if(
+      typecast_expr.type().id() == ID_verilog_real ||
+      typecast_expr.type().id() == ID_verilog_shortreal ||
+      typecast_expr.type().id() == ID_verilog_realtime)
+    {
+      typecast_expr.type() = lower_verilog_real_types(typecast_expr.type());
+    }
+
     if(is_aval_bval(typecast_expr.op()) && typecast_expr.type().id() == ID_bool)
     {
+      // When casting a four-valued scalar to bool,
+      // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
       return aval_bval(typecast_expr);
     }
     else

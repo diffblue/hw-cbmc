@@ -10,5 +10,7 @@ module main;
   always assert property08: ('bz!=20)==='bx;
   always assert property09: (1'sb1==2'b11)===0; // zero extension
   always assert property10: (1'sb1==2'sb11)===1; // sign extension
+  always assert property11: ((1.1==1.1)==1);
+  always assert property12: ((1.1==1)==0);
 
 endmodule
