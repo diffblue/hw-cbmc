@@ -1,0 +1,8 @@
+CORE
+disable_iff1.sv
+--k-induction --reset reset
+^EXIT=0$
+^SIGNAL=0$
+^\[main\.p1\] always \(disable iff \(main\.reset\) main\.x <= 10\): PROVED$
+--
+^warning: ignoring
