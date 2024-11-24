@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 implies1.sv
 --bound 0
 ^EXIT=0$

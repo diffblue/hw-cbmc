@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 wildcard_equality1.sv
 --bound 0
 ^\[main\.property01\] always 10 ==\? 10 === 1: PROVED up to bound 0$

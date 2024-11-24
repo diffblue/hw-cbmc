@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 concatenation3.sv
 --bound 0
 ^EXIT=0$

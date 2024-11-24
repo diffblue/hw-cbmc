@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 equality2.v
 --bound 0
 ^\[.*\] always 10 === 10 == 1: PROVED up to bound 0$
