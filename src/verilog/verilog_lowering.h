@@ -10,7 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_VERILOG_LOWERING_H
 
 class exprt;
+class typet;
 
 exprt verilog_lowering(exprt);
+typet verilog_lowering(typet);
 
 #endif
