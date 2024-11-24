@@ -3314,6 +3314,10 @@ exprt verilog_synthesist::symbol_expr(
 {
   exprt result=exprt(curr_or_next==NEXT?ID_next_symbol:ID_symbol, symbol.type);
   result.set(ID_identifier, symbol.name);
+
+  // The type may need to be lowered
+  result.type() = verilog_lowering(result.type());
+
   return result;
 }
 
