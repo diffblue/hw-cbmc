@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 bit-extract1.v
 --bound 1
 ^EXIT=0$

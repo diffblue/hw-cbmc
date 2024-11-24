@@ -294,6 +294,16 @@ exprt verilog_lowering(exprt expr)
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
     return part_select.lower();
   }
+  else if(expr.id() == ID_verilog_case_equality)
+  {
+    // Result is two-valued, comparing x/z as given.
+    return to_verilog_case_equality_expr(expr).lower();
+  }
+  else if(expr.id() == ID_verilog_case_inequality)
+  {
+    // Result is two-valued, comparing x/z as given.
+    return to_verilog_case_inequality_expr(expr).lower();
+  }
   else if(expr.id() == ID_verilog_logical_equality)
   {
     return aval_bval(to_verilog_logical_equality_expr(expr));

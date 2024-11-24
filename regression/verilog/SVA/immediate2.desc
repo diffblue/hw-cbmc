@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 immediate2.sv
 --bound 0
 ^\[main\.assume\.1\] assume always 0: ASSUMED$

@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 sequence5.sv
 --bound 0
 ^\[main\.p0\] 1: PROVED up to bound 0$

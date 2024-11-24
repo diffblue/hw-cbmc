@@ -108,6 +108,75 @@ to_verilog_logical_inequality_expr(exprt &expr)
   return static_cast<verilog_logical_inequality_exprt &>(expr);
 }
 
+/// ===
+/// returns true if operands are identical
+class verilog_case_equality_exprt : public binary_relation_exprt
+{
+public:
+  verilog_case_equality_exprt(exprt lhs, exprt rhs)
+    : binary_relation_exprt{
+        std::move(lhs),
+        ID_verilog_case_equality,
+        std::move(rhs)}
+  {
+  }
+
+  exprt lower() const
+  {
+    return equal_exprt{lhs(), rhs()};
+  }
+};
+
+inline const verilog_case_equality_exprt &
+to_verilog_case_equality_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_case_equality);
+  verilog_case_equality_exprt::check(expr);
+  return static_cast<const verilog_case_equality_exprt &>(expr);
+}
+
+inline verilog_case_equality_exprt &to_verilog_case_equality_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_case_equality);
+  verilog_case_equality_exprt::check(expr);
+  return static_cast<verilog_case_equality_exprt &>(expr);
+}
+
+/// !==
+/// returns true if the operands are different
+class verilog_case_inequality_exprt : public binary_relation_exprt
+{
+public:
+  verilog_case_inequality_exprt(exprt lhs, exprt rhs)
+    : binary_relation_exprt{
+        std::move(lhs),
+        ID_verilog_case_inequality,
+        std::move(rhs)}
+  {
+  }
+
+  exprt lower() const
+  {
+    return notequal_exprt{lhs(), rhs()};
+  }
+};
+
+inline const verilog_case_inequality_exprt &
+to_verilog_case_inequality_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_case_inequality);
+  verilog_case_inequality_exprt::check(expr);
+  return static_cast<const verilog_case_inequality_exprt &>(expr);
+}
+
+inline verilog_case_inequality_exprt &
+to_verilog_case_inequality_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_case_inequality);
+  verilog_case_inequality_exprt::check(expr);
+  return static_cast<verilog_case_inequality_exprt &>(expr);
+}
+
 /// ==?
 class verilog_wildcard_equality_exprt : public binary_exprt
 {
