@@ -1,0 +1,9 @@
+KNOWNBUG
+void_function1.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This fails to parse.
