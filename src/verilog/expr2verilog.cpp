@@ -1908,6 +1908,8 @@ std::string expr2verilogt::convert(const typet &type)
     else
       return "type(" + convert(type_reference.type_op()) + ")";
   }
+  else if(type.id() == ID_verilog_void)
+    return "void";
 
   return "IREP("+type.pretty()+")";
 }

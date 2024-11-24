@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 void_function1.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ void_function1.sv
 --
 ^warning: ignoring
 --
-This fails to parse.

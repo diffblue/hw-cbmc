@@ -6,7 +6,7 @@ module main;
     x = 123;
   endfunction
 
-  initial foo();
+  initial doit();
 
   assert final (x == 123);
 

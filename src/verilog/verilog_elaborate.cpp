@@ -551,7 +551,9 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
     // add a symbol for the return value of functions, if applicable
 
-    if(decl_class == ID_function)
+    if(
+      decl_class == ID_function &&
+      to_code_type(symbol.type).return_type().id() != ID_verilog_void)
     {
       symbolt return_symbol;
       return_symbol.is_state_var = true;
