@@ -30,6 +30,7 @@ public:
       MODULE,
       UDP,
       INTERFACE,
+      CHECKER,
       CLASS,
       CONFIG,
       TYPEDEF,

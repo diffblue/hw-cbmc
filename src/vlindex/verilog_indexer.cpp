@@ -277,7 +277,8 @@ void verilog_indexer_parsert::rDescription()
 }
 
 /// Covers the various 'definition-like' constructs in SystemVerilog, i.e.,
-/// modules, interfaces, classes, primitives, packages, configurations
+/// modules, interfaces, classes, primitives, packages, configurations,
+/// checkers
 void verilog_indexer_parsert::rModule(
   verilog_indexert::idt::kindt kind,
   int end_token)
@@ -342,6 +343,8 @@ void verilog_indexer_parsert::rItem()
     rModule(verilog_indexert::idt::INTERFACE, TOK_ENDINTERFACE);
   else if(token == TOK_PACKAGE)
     rModule(verilog_indexert::idt::PACKAGE, TOK_ENDPACKAGE);
+  else if(token == TOK_CHECKER)
+    rModule(verilog_indexert::idt::CHECKER, TOK_ENDCHECKER);
   else if(token == TOK_CONFIG)
     rModule(verilog_indexert::idt::CONFIG, TOK_CONFIG);
   else if(token == TOK_PROPERTY)
@@ -1469,6 +1472,11 @@ int verilog_index(const cmdlinet &cmdline)
     // Show the interfaces.
     show_kind(verilog_indexert::idt::kindt::INTERFACE, indexer);
   }
+  else if(cmdline.isset("checkers"))
+  {
+    // Show the checker.
+    show_kind(verilog_indexert::idt::kindt::CHECKER, indexer);
+  }
   else if(cmdline.isset("classes"))
   {
     // Show the interfaces.
@@ -1517,6 +1525,8 @@ int verilog_index(const cmdlinet &cmdline)
     std::cout << "Number of modules.........: " << total_number_of[idt::MODULE]
               << '\n';
     std::cout << "Number of UDPs............: " << total_number_of[idt::UDP]
+              << '\n';
+    std::cout << "Number of checkers........: " << total_number_of[idt::CHECKER]
               << '\n';
     std::cout << "Number of classes.........: " << total_number_of[idt::CLASS]
               << '\n';
