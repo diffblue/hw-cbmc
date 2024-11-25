@@ -333,6 +333,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   {
     return src;
   }
+  else if(src.id() == ID_verilog_void)
+  {
+    return src;
+  }
   else
   {
     throw errort().with_location(source_location)

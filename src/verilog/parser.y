@@ -1402,6 +1402,7 @@ list_of_net_decl_assignments:
 
 lifetime_opt:
 	  /* optional */
+		{ init($$); }
 	| lifetime
 	;
 
@@ -1637,7 +1638,10 @@ simple_type:
 //	| ps_parameter_identifier
 	;
 
-data_type_or_void: data_type | TOK_VOID
+data_type_or_void:
+	  data_type
+	| TOK_VOID
+		{ init($$, ID_verilog_void); }
 	;
 
 type_reference:
@@ -1998,61 +2002,47 @@ struct_union:
 // System Verilog standard 1800-2017
 // A.2.6 Function declarations
 
-function_declaration: TOK_FUNCTION automatic_opt function_body_declaration
-		{ $$ = $3; }
+function_data_type_or_implicit:
+	  data_type_or_void
+	| implicit_data_type
+	;
+
+function_declaration: TOK_FUNCTION lifetime_opt function_body_declaration
+		{ $$ = $3; addswap($$, ID_verilog_lifetime, $2); }
 	;
 
 function_body_declaration:
-	  signing_opt range_or_type_opt
+	  function_data_type_or_implicit
 	  function_identifier
-		{ push_scope(stack_expr($3).get(ID_identifier), "."); }
+		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
 	  ';'
           tf_item_declaration_brace statement
           TOK_ENDFUNCTION
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function);
-                  addswap($$, ID_type, $2);
-                  add_as_subtype(stack_type($2), stack_type($1));
-                  addswap($$, ID_symbol, $3);
-		  addswap($$, "declarations", $6);
-		  addswap($$, ID_body, $7);
+                  addswap($$, ID_type, $1);
+                  add_as_subtype(stack_type($1), stack_type($1));
+                  addswap($$, ID_symbol, $2);
+		  addswap($$, ID_verilog_declarations, $5);
+		  addswap($$, ID_body, $6);
 		  pop_scope();
 		}
-	| signing_opt range_or_type_opt
+	| function_data_type_or_implicit
 	  function_identifier
-		{ push_scope(stack_expr($3).get(ID_identifier), "."); }
+		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
 	  '(' tf_port_list_opt ')' ';'
           tf_item_declaration_brace statement
           TOK_ENDFUNCTION
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function);
-                  addswap($$, ID_type, $2);
-                  add_as_subtype(stack_type($2), stack_type($1));
-                  addswap($$, ID_symbol, $3);
-		  addswap($$, ID_ports, $6);
-		  addswap($$, "declarations", $9);
-		  addswap($$, ID_body, $10);
+                  addswap($$, ID_type, $1);
+                  add_as_subtype(stack_type($1), stack_type($1));
+                  addswap($$, ID_symbol, $2);
+		  addswap($$, ID_ports, $5);
+		  addswap($$, ID_verilog_declarations, $8);
+		  addswap($$, ID_body, $9);
 		  pop_scope();
 		}
-	;
-
-range_or_type_opt:
-	  /* Optional */
-		{ make_nil($$); }
-	| range_or_type
-		{ $$ = $1; }
-	;
-
-range_or_type:
-	  packed_dimension
-	| TOK_INTEGER
-		{ init($$, ID_verilog_integer); }
-	| TOK_REAL
-		{ init($$, ID_verilog_real); }
-	| TOK_REALTIME
-		{ init($$, ID_verilog_realtime); }
-	| TOK_TIME
-		{ init($$, ID_verilog_time); }
 	;
 
 tf_item_declaration_brace:
@@ -2087,7 +2077,7 @@ task_declaration:
 		{ init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task);
 		  addswap($$, ID_symbol, $2);
-		  addswap($$, "declarations", $5);
+		  addswap($$, ID_verilog_declarations, $5);
 		  addswap($$, ID_body, $6);
 		  pop_scope();
                 }
@@ -2100,7 +2090,7 @@ task_declaration:
                   stack_expr($$).set(ID_class, ID_task);
 		  addswap($$, ID_symbol, $2);
 		  addswap($$, ID_ports, $5);
-		  addswap($$, "declarations", $8);
+		  addswap($$, ID_verilog_declarations, $8);
 		  addswap($$, ID_body, $9);
 		  pop_scope();
                 }

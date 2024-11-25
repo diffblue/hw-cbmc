@@ -1034,12 +1034,12 @@ public:
 
   declarationst &declarations()
   {
-    return (declarationst &)(add("declarations").get_sub());
+    return (declarationst &)(add(ID_verilog_declarations).get_sub());
   }
 
   const declarationst &declarations() const
   {
-    return (const declarationst &)(find("declarations").get_sub());
+    return (const declarationst &)(find(ID_verilog_declarations).get_sub());
   }
 
   verilog_statementt &body()
