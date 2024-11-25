@@ -1,0 +1,9 @@
+KNOWNBUG
+undeclared_tasks1.v
+
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The type checker fails to find the symbol, and an exception is thrown.
