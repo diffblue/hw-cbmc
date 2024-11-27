@@ -5,6 +5,7 @@
   use --bmc-with-assumptions to re-enable the previous algorithm.
 * SystemVerilog: streaming concatenation {<<{...}} and {>>{...}}
 * SystemVerilog: set membership operator
+* word-level BMC: LTL/SVA to Buechi with --buechi
 
 # EBMC 5.3
 

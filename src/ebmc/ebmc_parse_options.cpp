@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_error.h"
 #include "ebmc_version.h"
 #include "ic3_engine.h"
+#include "instrument_buechi.h"
 #include "liveness_to_safety.h"
 #include "neural_liveness.h"
 #include "property_checker.h"
@@ -241,7 +242,14 @@ int ebmc_parse_optionst::doit()
       if(result != -1)
         return result;
 
-      // possibly apply liveness-to-safety
+      // LTL/SVA to Buechi?
+      if(cmdline.isset("buechi"))
+        instrument_buechi(
+          ebmc_base.transition_system,
+          ebmc_base.properties,
+          ui_message_handler);
+
+      // Liveness to safety?
       if(cmdline.isset("liveness-to-safety"))
         liveness_to_safety(ebmc_base.transition_system, ebmc_base.properties);
 
@@ -366,6 +374,7 @@ void ebmc_parse_optionst::help()
     " {y--systemverilog}             \t force SystemVerilog instead of Verilog\n"
     " {y--reset} {uexpr}             \t set up module reset\n"
     " {y--liveness-to-safety}        \t translate liveness properties to safety properties\n"
+    " {y--buechi}                    \t translate LTL/SVA properties to Buechi acceptance\n"
     "\n"
     "Methods:\n"
     " {y--k-induction}               \t do k-induction with k=bound\n"

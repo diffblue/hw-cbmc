@@ -4,7 +4,8 @@
 SRC = unit_tests.cpp
 
 # Test source files
-SRC += temporal-logic/nnf.cpp \
+SRC += temporal-logic/ltl_sva_to_string.cpp \
+       temporal-logic/nnf.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src
