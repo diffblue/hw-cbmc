@@ -145,8 +145,8 @@ ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &cmdline)
       if(cmdline.isset("cadical"))
       {
 #ifdef SATCHECK_CADICAL
-        sat_solver =
-          std::unique_ptr<propt>(new satcheck_cadicalt{message_handler});
+        sat_solver = std::unique_ptr<propt>(
+          new satcheck_cadical_preprocessingt{message_handler});
 #else
         throw ebmc_errort() << "support for Cadical not configured";
 #endif

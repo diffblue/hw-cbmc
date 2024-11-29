@@ -339,12 +339,12 @@ exprt aval_bval(const not_exprt &expr)
 exprt aval_bval(const power_exprt &expr)
 {
   PRECONDITION(is_four_valued(expr.type()));
-  PRECONDITION(is_aval_bval(expr.lhs()));
-  PRECONDITION(is_aval_bval(expr.rhs()));
+  PRECONDITION(is_aval_bval(expr.base()));
+  PRECONDITION(is_aval_bval(expr.exponent()));
 
-  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+  auto has_xz = or_exprt{::has_xz(expr.base()), ::has_xz(expr.exponent())};
   auto power_expr =
-    power_exprt{aval_underlying(expr.lhs()), aval_underlying(expr.rhs())};
+    power_exprt{aval_underlying(expr.base()), aval_underlying(expr.exponent())};
   auto x = make_x(expr.type());
   return if_exprt{has_xz, x, aval_bval_conversion(power_expr, x.type())};
 }

@@ -208,21 +208,21 @@ exprt verilog_lowering(exprt expr)
     else
     {
       DATA_INVARIANT(
-        power_expr.lhs().type() == power_expr.type(),
+        power_expr.base().type() == power_expr.type(),
         "power expression type consistency");
 
-      auto rhs_int = numeric_cast<std::size_t>(power_expr.rhs());
-      if(rhs_int.has_value())
+      auto exponent_int = numeric_cast<std::size_t>(power_expr.exponent());
+      if(exponent_int.has_value())
       {
-        if(*rhs_int == 0)
+        if(*exponent_int == 0)
           return from_integer(1, expr.type());
-        else if(*rhs_int == 1)
-          return power_expr.lhs();
+        else if(*exponent_int == 1)
+          return power_expr.base();
         else // >= 2
         {
-          auto factors = exprt::operandst{rhs_int.value(), power_expr.lhs()};
-          // would prefer appropriate mult_exprt constructor
-          return multi_ary_exprt{ID_mult, factors, expr.type()};
+          auto factors =
+            exprt::operandst{exponent_int.value(), power_expr.base()};
+          return mult_exprt{factors, expr.type()};
         }
       }
       else
