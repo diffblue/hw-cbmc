@@ -67,12 +67,12 @@ jobs:
           restore-keys: ${{ runner.os }}-22.04-make-gcc
       - name: ccache path
         run: ccache -p | grep cache_dir
-      - name: Get minisat
-        run: make -C lib/cbmc/src minisat2-download
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
         run: |
           # -static-libstdc++ is insufficient, owing to varying GLIBC versions
-          make -C src -j4 CXX="ccache g++" LINKFLAGS="-static"
+          make -C src -j4 CXX="ccache g++" LINKFLAGS="-static" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
       - name: Run the verilog tests
@@ -148,12 +148,12 @@ jobs:
         run: ccache -z --max-size=500M
       - name: ccache path
         run: ccache -p | grep cache_dir
-      - name: Get minisat
-        run: make -C lib/cbmc/src minisat2-download
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
         run: |
           # -static-libstdc++ suffices -- tested on CentOS, Fedora, Amazon Linux
-          make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" LINKFLAGS="-static-libstdc++" -C src -j4
+          make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" LINKFLAGS="-static-libstdc++" -C src -j4 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Print ccache stats
         run: ccache -s
       - name: Run the ebmc tests with SAT

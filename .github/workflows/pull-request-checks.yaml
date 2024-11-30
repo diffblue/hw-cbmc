@@ -39,8 +39,7 @@ jobs:
       - name: Zero ccache stats and limit in size
         run: ccache -z --max-size=500M
       - name: Get cadical and minisat
-        run: |
-          make -C lib/cbmc/src cadical-download minisat2-download
+        run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
         run: make -C src -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Run unit tests
@@ -98,11 +97,10 @@ jobs:
           echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
       - name: Zero ccache stats and limit in size
         run: ccache -z --max-size=500M
-      - name: Get minisat
-        run: |
-          make -C lib/cbmc/src minisat2-download
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
-        run: make CXX="ccache clang++" -C src -j4
+        run: make CXX="ccache clang++" -C src -j4 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Run unit tests
         run: make -C unit -j4 CXX="ccache clang++"
       - name: Run the ebmc tests with SAT
@@ -203,10 +201,10 @@ jobs:
         run: ccache -z --max-size=500M
       - name: ccache path
         run: ccache -p | grep cache_dir
-      - name: Get minisat
-        run: make -C lib/cbmc/src minisat2-download
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
-        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4
+        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Run unit tests
         run: make -C unit -j4 CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs"
       - name: Run the ebmc tests with SAT
@@ -248,10 +246,10 @@ jobs:
           echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
       - name: Zero ccache stats and limit in size
         run: ccache -z --max-size=500M
-      - name: Get minisat
-        run: make -C lib/cbmc/src minisat2-download
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
-        run: make YACC="/opt/homebrew/opt/bison/bin/bison" CXX="ccache clang++" -C src -j3
+        run: make YACC="/opt/homebrew/opt/bison/bin/bison" CXX="ccache clang++" -C src -j3 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Run unit tests
         run: make -C unit -j3 CXX="ccache g++"
       - name: Run the ebmc tests with SAT
@@ -397,7 +395,7 @@ jobs:
         run: |
           clcache -z
           clcache -M 2147483648
-      - name: Download minisat with make
+      - name: Download minisat
         run: make -C lib/cbmc/src minisat2-download
       - name: Build EBMC with make
         env:
