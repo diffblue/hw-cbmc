@@ -1,0 +1,9 @@
+CORE
+cycle_delay_star1.sv
+--bound 10
+^\[main.p0\] ##\[\*\] main\.x == 2 ##1 main\.x == 3: PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
