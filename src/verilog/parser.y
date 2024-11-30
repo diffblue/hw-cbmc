@@ -2391,16 +2391,16 @@ expression_or_dist_brace:
 	;
 
 sequence_expr:
-          expression_or_dist
-        | expression_or_dist boolean_abbrev
+	  cycle_delay_range sequence_expr
+		{ $$=$1; mto($$, $2); }
+        | expression cycle_delay_range sequence_expr
+                { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
+	| expression_or_dist
+	| expression_or_dist boolean_abbrev
 		{ $$ = $2;
 		  // preserve the operand ordering as in the source code
 		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($1));
 		}
-        | cycle_delay_range sequence_expr
-                { $$=$1; mto($$, $2); }
-        | expression cycle_delay_range sequence_expr
-                { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
 	| expression "intersect" sequence_expr
                 { init($$, ID_sva_sequence_intersect); mto($$, $1); mto($$, $3); }
         | "first_match" '(' sequence_expr ')'
