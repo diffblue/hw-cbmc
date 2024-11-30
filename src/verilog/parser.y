@@ -1463,7 +1463,7 @@ data_type:
                   $$ = $2; }
 //	| class_type
 	| TOK_EVENT
-	        { init($$, ID_event); }
+	        { init($$, ID_verilog_event); }
 	/*
 	| ps_covergroup_identifier
 	*/
@@ -3320,7 +3320,7 @@ event_control:
 
 ored_event_expression:
 	  event_expression
-		{ init($$, ID_event); mto($$, $1); }
+		{ init($$, ID_verilog_event); mto($$, $1); }
 	| ored_event_expression TOK_OR event_expression
 		{ $$=$1; mto($$, $3); }
 	| ored_event_expression ',' event_expression

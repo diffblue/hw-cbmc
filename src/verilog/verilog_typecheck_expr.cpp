@@ -275,7 +275,7 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
 {
   // variable number of operands
 
-  if(expr.id()==ID_event)
+  if(expr.id()==ID_verilog_event)
   {
     expr.type()=bool_typet();
 
