@@ -107,6 +107,8 @@ protected:
 
   resultt convert_typecast(const typecast_exprt &);
 
+  resultt convert_zero_extend(const zero_extend_exprt &);
+
   resultt
   convert_concatenation(const concatenation_exprt &, verilog_precedencet);
 
