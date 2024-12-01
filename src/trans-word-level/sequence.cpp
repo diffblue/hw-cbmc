@@ -132,7 +132,33 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   else if(expr.id() == ID_sva_sequence_intersect)
   {
     // IEEE 1800-2017 16.9.6
-    PRECONDITION(false);
+    // For the intersection of the two operand sequences to match, the following
+    // must hold:
+    // — Both the operands shall match.
+    // — The lengths of the two matches of the operand sequences shall be the same.
+    auto &intersect = to_sva_sequence_intersect_expr(expr);
+
+    const auto lhs_match_points =
+      instantiate_sequence(intersect.lhs(), t, no_timeframes);
+    const auto rhs_match_points =
+      instantiate_sequence(intersect.rhs(), t, no_timeframes);
+
+    std::vector<std::pair<mp_integer, exprt>> result;
+
+    for(auto &lhs_match : lhs_match_points)
+    {
+      for(auto &rhs_match : rhs_match_points)
+      {
+        // Same length?
+        if(lhs_match.first == rhs_match.first)
+        {
+          result.emplace_back(
+            lhs_match.first, and_exprt{lhs_match.second, rhs_match.second});
+        }
+      }
+    }
+
+    return result;
   }
   else if(expr.id() == ID_sva_sequence_first_match)
   {
