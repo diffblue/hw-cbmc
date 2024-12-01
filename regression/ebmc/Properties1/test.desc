@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 main.smv
 --bound 10 --property spec2
 ^EXIT=0$
