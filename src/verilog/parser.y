@@ -565,6 +565,9 @@ int yyverilogerror(const char *error)
 %left "or"
 %left "and"
 %nonassoc "not" "nexttime" "s_nexttime"
+%left "intersect"
+%left "within"
+%right "throughout"
 %left "##"
 %nonassoc "[*" "[=" "[->"
 
@@ -2391,25 +2394,25 @@ expression_or_dist_brace:
 	;
 
 sequence_expr:
-          expression_or_dist
-        | expression_or_dist boolean_abbrev
+	  cycle_delay_range sequence_expr %prec "##"
+		{ $$=$1; mto($$, $2); }
+        | sequence_expr cycle_delay_range sequence_expr %prec "##"
+                { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
+	| expression_or_dist
+	| expression_or_dist boolean_abbrev
 		{ $$ = $2;
 		  // preserve the operand ordering as in the source code
 		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($1));
 		}
-        | cycle_delay_range sequence_expr
-                { $$=$1; mto($$, $2); }
-        | expression cycle_delay_range sequence_expr
-                { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
-	| expression "intersect" sequence_expr
+	| sequence_expr "intersect" sequence_expr
                 { init($$, ID_sva_sequence_intersect); mto($$, $1); mto($$, $3); }
         | "first_match" '(' sequence_expr ')'
                 { init($$, ID_sva_sequence_first_match); mto($$, $3); }
         | "first_match" '(' sequence_expr ',' sequence_match_item_brace ')'
                 { init($$, ID_sva_sequence_first_match); mto($$, $3); mto($$, $5); }
-        | expression "throughout" sequence_expr
+        | expression_or_dist "throughout" sequence_expr
                 { init($$, ID_sva_sequence_throughout); mto($$, $1); mto($$, $3); }
-        | expression "within" sequence_expr
+        | sequence_expr "within" sequence_expr
                 { init($$, ID_sva_sequence_within); mto($$, $1); mto($$, $3); }
         ;
 
