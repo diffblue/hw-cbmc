@@ -372,7 +372,8 @@ static obligationst property_obligations_rec(
     return obligations;
   }
   else if(
-    property_expr.id() == ID_X || property_expr.id() == ID_sva_nexttime ||
+    property_expr.id() == ID_X || property_expr.id() == ID_AX ||
+    property_expr.id() == ID_sva_nexttime ||
     property_expr.id() == ID_sva_s_nexttime)
   {
     const auto next = current + 1;
@@ -381,6 +382,8 @@ static obligationst property_obligations_rec(
     {
       if(expr.id() == ID_X)
         return to_X_expr(expr).op();
+      else if(expr.id() == ID_AX)
+        return to_AX_expr(expr).op();
       else if(expr.id() == ID_sva_nexttime)
         return to_sva_nexttime_expr(expr).op();
       else if(expr.id() == ID_sva_s_nexttime)
