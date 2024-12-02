@@ -3269,6 +3269,7 @@ statement_item:
 	| disable_statement
 	| event_trigger
 	| loop_statement
+	| jump_statement
 	| par_block
 	| procedural_timing_control_statement
 	| procedural_continuous_assignment ';'
@@ -3337,6 +3338,17 @@ event_expression:
 		{ init($$, ID_posedge); mto($$, $2); }
 	| TOK_NEGEDGE expression
 		{ init($$, ID_negedge); mto($$, $2); }
+	;
+
+jump_statement:
+	  "return" ';'
+		{ init($$, ID_return); }
+	| "return" expression ';'
+		{ init($$, ID_return); mto($$, $2); }
+	| "break" ';'
+		{ init($$, ID_break); }
+	| "continue" ';'
+		{ init($$, ID_continue); }
 	;
 
 disable_statement: TOK_DISABLE hierarchical_task_or_block_identifier ';'

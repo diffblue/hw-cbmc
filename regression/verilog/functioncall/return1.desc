@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 return1.sv
 --bound 0
-^EXIT=0$
+^file .* line 4: synthesis of return not supported$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This fails to parse.

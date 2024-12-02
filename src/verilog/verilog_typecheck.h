@@ -166,6 +166,7 @@ protected:
   void convert_forever(class verilog_forevert &);
   void convert_while(class verilog_whilet &);
   void convert_repeat(class verilog_repeatt &);
+  void convert_return(class verilog_returnt &);
   void convert_assign(class verilog_assignt &, bool blocking);
   void convert_procedural_continuous_assign(
     class verilog_procedural_continuous_assignt &);

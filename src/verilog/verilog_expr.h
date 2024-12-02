@@ -1537,6 +1537,88 @@ inline verilog_fort &to_verilog_for(exprt &expr)
   return static_cast<verilog_fort &>(expr);
 }
 
+class verilog_breakt : public verilog_statementt
+{
+public:
+  verilog_breakt() : verilog_statementt(ID_break)
+  {
+  }
+};
+
+inline const verilog_breakt &to_verilog_break(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_break);
+  return static_cast<const verilog_breakt &>(expr);
+}
+
+inline verilog_breakt &to_verilog_break(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_break);
+  return static_cast<verilog_breakt &>(expr);
+}
+
+class verilog_continuet : public verilog_statementt
+{
+public:
+  verilog_continuet() : verilog_statementt(ID_continue)
+  {
+  }
+};
+
+inline const verilog_continuet &to_verilog_continue(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_continue);
+  return static_cast<const verilog_continuet &>(expr);
+}
+
+inline verilog_continuet &to_verilog_continue(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_continue);
+  return static_cast<verilog_continuet &>(expr);
+}
+
+class verilog_returnt : public verilog_statementt
+{
+public:
+  verilog_returnt() : verilog_statementt(ID_return)
+  {
+  }
+
+  explicit verilog_returnt(exprt value) : verilog_statementt(ID_return)
+  {
+    add_to_operands(std::move(value));
+  }
+
+  bool has_value() const
+  {
+    return operands().size() == 1;
+  }
+
+  exprt &value()
+  {
+    PRECONDITION(has_value());
+    return op0();
+  }
+
+  const exprt &value() const
+  {
+    PRECONDITION(has_value());
+    return op0();
+  }
+};
+
+inline const verilog_returnt &to_verilog_return(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_return);
+  return static_cast<const verilog_returnt &>(expr);
+}
+
+inline verilog_returnt &to_verilog_return(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_return);
+  return static_cast<verilog_returnt &>(expr);
+}
+
 class verilog_forevert:public verilog_statementt
 {
 public:
