@@ -4,11 +4,11 @@ riscv-alu.sv
 ^\[alu\.pADD\] always alu\.op == \{ 7'b0000000, 3'b000 \} -> alu\.out == alu\.a \+ alu\.b: PROVED up to bound 0$
 ^\[alu\.pSUB\] always alu\.op == \{ 7'b0100000, 3'b000 \} -> alu\.out == alu\.a - alu\.b: PROVED up to bound 0$
 ^\[alu\.pSLL\] always alu\.op == \{ 7'b0000000, 3'b001 \} -> alu\.out == alu\.a << alu\.b\[4:0\]: PROVED up to bound 0$
-^\[alu\.pSLT\] always alu\.op == \{ 7'b0000000, 3'b010 \} -> alu\.out == alu\.a < alu\.b: PROVED up to bound 0$
+^\[alu\.pSLT\] always alu\.op == \{ 7'b0000000, 3'b010 \} -> alu\.out == \$signed\(alu\.a\) < \$signed\(alu\.b\): PROVED up to bound 0$
 ^\[alu\.pSLTU\] always alu\.op == \{ 7'b0000000, 3'b011 \} -> alu\.out == alu\.a < alu\.b: PROVED up to bound 0$
 ^\[alu\.pXOR\] always alu\.op == \{ 7'b0000000, 3'b100 \} -> alu\.out == \(alu\.a \^ alu\.b\): PROVED up to bound 0$
 ^\[alu\.pSRL\] always alu\.op == \{ 7'b0000000, 3'b101 \} -> alu\.out == alu\.a >> alu\.b\[4:0\]: PROVED up to bound 0$
-^\[alu\.pSRA\] always alu\.op == \{ 7'b0100000, 3'b101 \} -> alu\.out == alu\.a >>> alu\.b\[4:0\]: PROVED up to bound 0$
+^\[alu\.pSRA\] always alu\.op == \{ 7'b0100000, 3'b101 \} -> alu\.out == \$signed\(alu\.a\) >>> alu\.b\[4:0\]: PROVED up to bound 0$
 ^\[alu\.pOR\] always alu\.op == \{ 7'b0000000, 3'b110 \} -> alu\.out == \(alu\.a | alu\.b\): PROVED up to bound 0$
 ^\[alu\.pAND\] always alu\.op == \{ 7'b0000000, 3'b111 \} -> alu\.out == \(alu\.a & alu\.b\): PROVED up to bound 0$
 ^EXIT=0$

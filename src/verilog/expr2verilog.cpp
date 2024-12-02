@@ -694,6 +694,46 @@ expr2verilogt::convert_typecast(const typecast_exprt &src)
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_explicit_cast
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_explicit_cast(const verilog_explicit_cast_exprt &src)
+{
+  return {
+    verilog_precedencet::MAX,
+    convert(src.type()) + "'(" + convert_rec(src.op()).s + ')'};
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_size_cast
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_size_cast(const verilog_size_cast_exprt &src)
+{
+  return {
+    verilog_precedencet::MAX,
+    convert_rec(src.size()).s + "'(" + convert_rec(src.op()).s + ')'};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_index
 
   Inputs:
@@ -1449,6 +1489,12 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   else if(src.id()==ID_bitnot)
     return convert_unary(
       to_bitnot_expr(src), "~", precedence = verilog_precedencet::NOT);
+
+  else if(src.id() == ID_verilog_explicit_cast)
+    return convert_explicit_cast(to_verilog_explicit_cast_expr(src));
+
+  else if(src.id() == ID_verilog_size_cast)
+    return convert_size_cast(to_verilog_size_cast_expr(src));
 
   else if(src.id()==ID_typecast)
     return convert_typecast(to_typecast_expr(src));

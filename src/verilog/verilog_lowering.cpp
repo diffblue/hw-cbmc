@@ -274,6 +274,14 @@ exprt verilog_lowering(exprt expr)
 
     return expr;
   }
+  else if(expr.id() == ID_verilog_explicit_cast)
+  {
+    return to_verilog_explicit_cast_expr(expr).lower();
+  }
+  else if(expr.id() == ID_verilog_size_cast)
+  {
+    return to_verilog_size_cast_expr(expr).lower();
+  }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
     expr.id() == ID_verilog_streaming_concatenation_right_to_left)
@@ -365,6 +373,27 @@ exprt verilog_lowering(exprt expr)
         typecast_exprt::conditional_cast(implies.rhs(), bool_typet{});
       return implies_exprt{lhs_boolean, rhs_boolean};
     }
+  }
+  else if(expr.id() == ID_function_call)
+  {
+    // Is it a 'system function call'?
+    auto &call = to_function_call_expr(expr);
+    if(call.is_system_function_call())
+    {
+      auto identifier = to_symbol_expr(call.function()).get_identifier();
+      if(identifier == "$signed" || identifier == "$unsigned")
+      {
+        // lower to typecast
+        DATA_INVARIANT(
+          call.arguments().size() == 1,
+          id2string(identifier) + " must have one argument");
+        return typecast_exprt{call.arguments()[0], call.type()};
+      }
+      else
+        return expr;
+    }
+    else
+      return expr;
   }
   else
     return expr; // leave as is

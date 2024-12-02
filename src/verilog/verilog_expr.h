@@ -2461,6 +2461,86 @@ inline verilog_udpt &to_verilog_udp(irept &irep)
   return static_cast<verilog_udpt &>(irep);
 }
 
+/// size'(expression)
+class verilog_size_cast_exprt : public binary_exprt
+{
+public:
+  verilog_size_cast_exprt(exprt __size, exprt __op, typet __type)
+    : binary_exprt(
+        std::move(__size),
+        ID_verilog_size_cast,
+        std::move(__op),
+        std::move(__type))
+  {
+  }
+
+  const exprt &size() const
+  {
+    return op0();
+  }
+
+  exprt &size()
+  {
+    return op0();
+  }
+
+  const exprt &op() const
+  {
+    return op1();
+  }
+
+  exprt &op()
+  {
+    return op1();
+  }
+
+  // lower to typecast
+  exprt lower() const
+  {
+    return typecast_exprt{op(), type()};
+  }
+};
+
+inline const verilog_size_cast_exprt &
+to_verilog_size_cast_expr(const exprt &expr)
+{
+  verilog_size_cast_exprt::check(expr);
+  return static_cast<const verilog_size_cast_exprt &>(expr);
+}
+
+inline verilog_size_cast_exprt &to_verilog_size_cast_expr(exprt &expr)
+{
+  verilog_size_cast_exprt::check(expr);
+  return static_cast<verilog_size_cast_exprt &>(expr);
+}
+
+class verilog_explicit_cast_exprt : public unary_exprt
+{
+public:
+  verilog_explicit_cast_exprt(exprt __op, typet __type)
+    : unary_exprt(ID_verilog_explicit_cast, std::move(__op), std::move(__type))
+  {
+  }
+
+  exprt lower() const
+  {
+    return typecast_exprt{op(), type()};
+  }
+};
+
+inline const verilog_explicit_cast_exprt &
+to_verilog_explicit_cast_expr(const exprt &expr)
+{
+  verilog_explicit_cast_exprt::check(expr);
+  return static_cast<const verilog_explicit_cast_exprt &>(expr);
+}
+
+inline verilog_explicit_cast_exprt &to_verilog_explicit_cast_expr(exprt &expr)
+{
+  verilog_explicit_cast_exprt::check(expr);
+  return static_cast<verilog_explicit_cast_exprt &>(expr);
+}
+
 class verilog_implicit_typecast_exprt : public unary_exprt
 {
 public:
