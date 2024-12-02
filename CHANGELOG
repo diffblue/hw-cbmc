@@ -6,6 +6,7 @@
 * BMC: support SVA sequence intersect
 * SystemVerilog: streaming concatenation {<<{...}} and {>>{...}}
 * SystemVerilog: set membership operator
+* SystemVerilog: named sequences
 
 # EBMC 5.3
 

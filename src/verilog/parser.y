@@ -2245,11 +2245,12 @@ expect_property_statement: TOK_EXPECT '(' property_spec ')' action_block
 
 assertion_item_declaration:
 	  property_declaration
+	| sequence_declaration
 	;
 
 property_declaration:
           TOK_PROPERTY property_identifier property_port_list_paren_opt ';'
-          property_spec
+          property_spec semicolon_opt
           TOK_ENDPROPERTY property_identifier_opt
 		{ init($$, ID_verilog_property_declaration);
 		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
@@ -2384,6 +2385,47 @@ property_case_item:
 		{ init($$, ID_case_item); mto($$, $1); mto($$, $3); }
 	| "default" TOK_COLON property_expr ';'
 		{ init($$, ID_case_item); mto($$, $3); }
+	;
+
+sequence_declaration:
+	  "sequence" { init($$, ID_verilog_sequence_declaration); }
+	  sequence_identifier sequence_port_list_opt ';'
+	  sequence_expr semicolon_opt
+	  "endsequence" sequence_identifier_opt
+		{ $$=$2;
+		  stack_expr($$).set(ID_base_name, stack_expr($3).id());
+		  mto($$, $6);
+		}
+	;
+
+sequence_port_list_opt:
+	  /* Optional */
+		{ init($$); }
+	| '(' ')'
+		{ init($$); }
+	| '(' sequence_port_list ')'
+		{ $$=$2; }
+	;
+
+sequence_port_list:
+	  sequence_port_item
+		{ init($$); mto($$, $1); }
+	| sequence_port_list sequence_port_item
+		{ $$=$1; mto($$, $2); }
+	;
+
+sequence_port_item:
+	  formal_port_identifier
+	;
+
+sequence_identifier_opt:
+	  /* Optional */
+	| TOK_COLON sequence_identifier
+	;
+
+semicolon_opt:
+	  /* Optional */
+	| ';'
 	;
 
 expression_or_dist_brace:
@@ -4189,6 +4231,8 @@ hierarchical_variable_identifier: hierarchical_identifier;
 identifier: non_type_identifier;
 
 property_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+sequence_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 variable_identifier: identifier;
 
