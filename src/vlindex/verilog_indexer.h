@@ -35,6 +35,8 @@ public:
       TYPEDEF,
       FUNCTION,
       TASK,
+      PROPERTY,
+      SEQUENCE,
       INSTANCE,
       BLOCK,
       NET,

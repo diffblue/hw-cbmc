@@ -1153,12 +1153,54 @@ void verilog_indexer_parsert::rGenerateBegin()
 
 void verilog_indexer_parsert::rProperty()
 {
+  next_token(); // property
+
+  auto name = next_token(); // name
+
+  {
+    idt id;
+    id.kind = idt::PROPERTY;
+    id.name = name.text;
+    id.module = current_module;
+    id.file_name = verilog_parser.get_file();
+    id.line_number = verilog_parser.get_line_no();
+    indexer.add(std::move(id));
+  }
+
   skip_until(TOK_ENDPROPERTY);
+
+  // optional label
+  if(peek() == TOK_COLON)
+  {
+    next_token(); // :
+    next_token(); // identifier
+  }
 }
 
 void verilog_indexer_parsert::rSequence()
 {
-  skip_until(TOK_ENDSEQUENCE);
+  next_token(); // sequence
+
+  auto name = next_token(); // name
+
+  {
+    idt id;
+    id.kind = idt::SEQUENCE;
+    id.name = name.text;
+    id.module = current_module;
+    id.file_name = verilog_parser.get_file();
+    id.line_number = verilog_parser.get_line_no();
+    indexer.add(std::move(id));
+  }
+
+  skip_until(TOK_ENDPROPERTY);
+
+  // optional label
+  if(peek() == TOK_COLON)
+  {
+    next_token(); // :
+    next_token(); // identifier
+  }
 }
 
 void verilog_indexer_parsert::rSpecify()
@@ -1431,6 +1473,16 @@ int verilog_index(const cmdlinet &cmdline)
     // Show the module instances.
     show_kind(verilog_indexert::idt::kindt::TASK, indexer);
   }
+  else if(cmdline.isset("sequences"))
+  {
+    // Show the sequences.
+    show_kind(verilog_indexert::idt::kindt::SEQUENCE, indexer);
+  }
+  else if(cmdline.isset("properties"))
+  {
+    // Show the properties.
+    show_kind(verilog_indexert::idt::kindt::PROPERTY, indexer);
+  }
   else
   {
     auto total_number_of = indexer.total_number_of();
@@ -1455,6 +1507,10 @@ int verilog_index(const cmdlinet &cmdline)
               << total_number_of[idt::FUNCTION] << '\n';
     std::cout << "Number of tasks...........: " << total_number_of[idt::TASK]
               << '\n';
+    std::cout << "Number of properties......: "
+              << total_number_of[idt::PROPERTY] << '\n';
+    std::cout << "Number of sequences.......: "
+              << total_number_of[idt::SEQUENCE] << '\n';
     std::cout << "Number of module instances: "
               << total_number_of[idt::INSTANCE] << '\n';
     std::cout << "Number of configurations..: " << total_number_of[idt::CONFIG]
