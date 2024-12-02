@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 AX1.smv
 --bound 2
 ^\[spec1\] AX some_var = TRUE: REFUTED$
@@ -8,4 +8,3 @@ AX1.smv
 --
 ^warning: ignoring
 --
-The BMC encoding fails on the temporal operator.
