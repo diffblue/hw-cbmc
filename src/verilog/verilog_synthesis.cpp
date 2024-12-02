@@ -3105,6 +3105,11 @@ void verilog_synthesist::synth_statement(
 {
   if(statement.id()==ID_block)
     synth_block(to_verilog_block(statement));
+  else if(statement.id() == ID_break)
+  {
+    throw errort().with_location(statement.source_location())
+      << "synthesis of break not supported";
+  }
   else if(statement.id()==ID_case ||
           statement.id()==ID_casex ||
           statement.id()==ID_casez)
@@ -3125,6 +3130,11 @@ void verilog_synthesist::synth_statement(
     statement.id() == ID_verilog_blocking_assign_ashl)
   {
     synth_assign(to_verilog_assign(statement));
+  }
+  else if(statement.id() == ID_continue)
+  {
+    throw errort().with_location(statement.source_location())
+      << "synthesis of continue not supported";
   }
   else if(statement.id() == ID_procedural_continuous_assign)
   {
@@ -3170,6 +3180,11 @@ void verilog_synthesist::synth_statement(
     synth_while(to_verilog_while(statement));
   else if(statement.id()==ID_repeat)
     synth_repeat(to_verilog_repeat(statement));
+  else if(statement.id() == ID_return)
+  {
+    throw errort().with_location(statement.source_location())
+      << "synthesis of return not supported";
+  }
   else if(statement.id()==ID_forever)
     synth_forever(to_verilog_forever(statement));
   else if(statement.id()==ID_function_call)

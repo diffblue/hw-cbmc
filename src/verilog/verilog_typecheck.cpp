@@ -1359,6 +1359,30 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::convert_return
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::convert_return(verilog_returnt &statement)
+{
+  if(function_or_task_name.empty())
+  {
+    throw errort().with_location(statement.source_location())
+      << "return statement outside of function or task";
+  }
+
+  if(statement.has_value())
+    convert_expr(statement.value());
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::convert_prepostincdec
 
   Inputs:
@@ -1571,6 +1595,16 @@ void verilog_typecheckt::convert_statement(
     }
 
     convert_statement(sub_statement);
+  }
+  else if(statement.id() == ID_break)
+  {
+  }
+  else if(statement.id() == ID_continue)
+  {
+  }
+  else if(statement.id() == ID_return)
+  {
+    convert_return(to_verilog_return(statement));
   }
   else if(statement.id() == ID_wait)
   {

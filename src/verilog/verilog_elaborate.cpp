@@ -734,6 +734,15 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(statement.id() == ID_procedural_continuous_assign)
   {
   }
+  else if(statement.id() == ID_break)
+  {
+  }
+  else if(statement.id() == ID_continue)
+  {
+  }
+  else if(statement.id() == ID_return)
+  {
+  }
   else if(statement.id() == ID_wait)
   {
   }
