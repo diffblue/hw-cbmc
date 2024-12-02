@@ -1350,10 +1350,6 @@ void show_kind(
 
 int verilog_index(const cmdlinet &cmdline)
 {
-  // First find all .v and .sv files
-  auto files = verilog_files();
-
-  // Now index them.
   verilog_indexert indexer;
 
   verilog_standardt standard = [&cmdline]()
@@ -1378,13 +1374,28 @@ int verilog_index(const cmdlinet &cmdline)
       return verilog_standardt::SV2017;
   }();
 
-  for(const auto &file : files)
+  // Are we given file names on the command line?
+  if(cmdline.args.empty())
   {
+    // No, find all .v and .sv files
+    auto files = verilog_files();
+
+    for(const auto &file : files)
+    {
 #ifdef _WIN32
-    indexer(narrow(file), standard);
+      indexer(narrow(file), standard);
 #else
-    indexer(std::string(file), standard);
+      indexer(std::string(file), standard);
 #endif
+    }
+  }
+  else
+  {
+    // Yes, index the given files
+    for(const auto &file : cmdline.args)
+    {
+      indexer(file, standard);
+    }
   }
 
   if(cmdline.isset("hierarchy"))
