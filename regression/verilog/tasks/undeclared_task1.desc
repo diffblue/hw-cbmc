@@ -1,9 +1,9 @@
-KNOWNBUG
-undeclared_tasks1.v
+CORE
+undeclared_task1.v
 
+^file .* line 3: unknown function or task `some_undeclared_task'$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The type checker fails to find the symbol, and an exception is thrown.

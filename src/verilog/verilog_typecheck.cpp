@@ -887,20 +887,24 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
   else
   {
     // look it up
-    const irep_idt identifier=
-      id2string(module_identifier)+"."+
-      id2string(base_name);
-    
-    const symbolt &symbol=ns.lookup(identifier);
+    const irep_idt full_identifier =
+      id2string(module_identifier) + "." + id2string(base_name);
 
-    if(symbol.type.id()!=ID_code)
+    const symbolt *symbol;
+    if(ns.lookup(full_identifier, symbol))
+    {
+      throw errort().with_location(statement.function().source_location())
+        << "unknown function or task `" << base_name << "'";
+    }
+
+    if(symbol->type.id() != ID_code)
     {
       throw errort().with_location(statement.source_location())
         << "expected task or function name";
     }
-    
-    const code_typet &code_type=to_code_type(symbol.type);
-    
+
+    const code_typet &code_type = to_code_type(symbol->type);
+
     // check arguments
     const code_typet::parameterst &parameter_types=code_type.parameters();
     exprt::operandst &arguments=statement.arguments();
@@ -916,9 +920,9 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       convert_expr(arguments[i]);
       propagate_type(arguments[i], parameter_types[i].type());
     }
-    
-    statement.function().type()=symbol.type;
-    statement.function().set(ID_identifier, symbol.name);
+
+    statement.function().type() = symbol->type;
+    statement.function().set(ID_identifier, symbol->name);
   }
 }
 
