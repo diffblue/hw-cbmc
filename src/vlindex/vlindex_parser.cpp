@@ -114,6 +114,9 @@ void verilog_indexer_parsert::rModule(
 
 void verilog_indexer_parsert::rItem()
 {
+  // Attribute before item?
+  rAttribute();
+
   auto &token = peek();
 
   if(token == TOK_MODULE)
@@ -603,6 +606,39 @@ void verilog_indexer_parsert::rModport()
   skip_until(';');
 }
 
+void verilog_indexer_parsert::rAttribute()
+{
+  // (* attr_name = constant, ... *)
+  if(peek() == TOK_PARENASTERIC)
+  {
+    while(true)
+    {
+      rAttrSpec();
+      if(peek() != ',')
+        break;
+      next_token(); // eat ,
+    }
+
+    if(peek() == TOK_ASTERICPAREN)
+      next_token(); // eat *)
+  }
+}
+
+void verilog_indexer_parsert::rAttrSpec()
+{
+  // attr_name = constant
+  auto name = next_token();
+  if(!name.is_identifier())
+    return; // give up
+
+  auto eq = next_token();
+  if(eq != '=')
+    return; // give up
+
+  rExpression([](const tokent &token)
+              { return token == ',' || token == TOK_ASTERICPAREN; });
+}
+
 void verilog_indexer_parsert::rCell()
 {
   next_token(); // cell
@@ -692,6 +728,23 @@ void verilog_indexer_parsert::rParenExpression()
         return;
       count--;
     }
+  }
+}
+
+void verilog_indexer_parsert::rExpression(
+  std::function<bool(const tokent &)> stopping_condition)
+{
+  std::size_t count = 0;
+
+  while(count != 0 || !stopping_condition(peek()))
+  {
+    auto token = next_token();
+    if(token.is_eof())
+      return;
+    else if(token == '(')
+      count++;
+    else if(token == ')')
+      count--;
   }
 }
 
