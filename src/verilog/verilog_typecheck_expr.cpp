@@ -784,7 +784,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
     }
     else if(argument.type().id()==ID_bool)
     {
-      expr.type() = signedbv_typet{2};
+      expr.type() = signedbv_typet{1};
       return std::move(expr);
     }
     else
