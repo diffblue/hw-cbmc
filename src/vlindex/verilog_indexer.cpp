@@ -645,7 +645,14 @@ void verilog_indexer_parsert::rStatement()
 void verilog_indexer_parsert::rAssertAssumeCover()
 {
   next_token(); // assert, assume, ...
+
+  if(peek() == TOK_FINAL)
+    next_token();
+  else if(peek() == TOK_PROPERTY)
+    next_token();
+
   rParenExpression();
+
   if(peek() == TOK_ELSE)
   {
     next_token(); // else
@@ -1234,7 +1241,10 @@ void verilog_indexer_parsert::rLabeledItem()
   next_token();                 // label
   if(next_token() != TOK_COLON) // :
     return;
-  skip_until(';');
+  if(peek() == TOK_ASSERT || peek() == TOK_ASSUME || peek() == TOK_COVER)
+    rAssertAssumeCover();
+  else
+    skip_until(';');
 }
 
 std::vector<std::filesystem::path> verilog_files()
