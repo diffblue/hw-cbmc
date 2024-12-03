@@ -2,6 +2,7 @@ SRC = \
       verilog_indexer.cpp \
       vlindex_main.cpp \
       vlindex_parse_options.cpp \
+      vlindex_parser.cpp \
       #empty line
 
 OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
