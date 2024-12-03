@@ -113,6 +113,8 @@ void vlindex_parse_optionst::help()
     " {y--udps}                      \t show a list of the UPDs\n"
     " {y--tasks}                     \t show a list of the tasks\n"
     " {y--functions}                 \t show a list of the functions\n"
+    " {y--properties}                \t show a list of the properties\n"
+    " {y--sequences}                 \t show a list of the sequences\n"
     " {y--hierarchy}                 \t show the hierarchy of module instantiations\n"
     " {y--verbosity} {u#}            \t verbosity level, from 0 (silent) to 10 (everything)\n"
     // clang-format on
