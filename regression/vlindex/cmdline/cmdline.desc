@@ -1,0 +1,8 @@
+CORE
+file2.v
+--modules
+^top2 file2\.v line 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^top1 .*$
