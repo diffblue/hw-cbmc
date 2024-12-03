@@ -125,6 +125,12 @@ jobs:
           name: ebmc-binary
           retention-days: 5
           path: src/ebmc/ebmc
+      - name: Upload the vlindex binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: vlindex-binary
+          retention-days: 5
+          path: src/vlindex/vlindex
 
   # This job takes approximately 4 minutes
   benchmarking:
@@ -167,8 +173,17 @@ jobs:
           path: ebmc
       - name: Try the ebmc binary
         run: chmod a+x ./ebmc/ebmc ; ./ebmc/ebmc --version
-      - name: Hazard3
-        run: PATH=$PATH:$PWD/ebmc examples/Hazard3/Hazard3.sh
+      - name: ebmc on Hazard3
+        run: PATH=$PATH:$PWD/ebmc examples/Hazard3/Hazard3-ebmc.sh
+      - name: Get the vlindex binary
+        uses: actions/download-artifact@v4
+        with:
+          name: vlindex-binary
+          path: vlindex
+      - name: Try the vlindex binary
+        run: chmod a+x ./vlindex/vlindex ; ./vlindex/vlindex --version
+      - name: vlindex on Hazard3
+        run: PATH=$PATH:$PWD/vlindex examples/Hazard3/Hazard3-vlindex.sh
 
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:
