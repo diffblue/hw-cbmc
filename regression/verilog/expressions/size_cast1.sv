@@ -7,4 +7,7 @@ module main;
   p2: assert final (10'(-1) == -1);
   p3: assert final (2'(1==1) == 1);
 
+  // size-casts yield constants
+  parameter Q = 10'(1);
+
 endmodule

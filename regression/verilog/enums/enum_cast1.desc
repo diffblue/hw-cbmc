@@ -3,6 +3,6 @@ enum_cast1.sv
 --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.p1\] always main.A == 1: PROVED up to bound 0$
-^\[main\.p2\] always main.B == 2: PROVED up to bound 0$
+^\[main\.p1\] always main.A == signed \[31:0\]'\(1\): PROVED up to bound 0$
+^\[main\.p2\] always main.B == signed \[31:0\]'\(2\): PROVED up to bound 0$
 --

@@ -761,7 +761,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
   if(identifier=="$signed")
   {
-    // this is a type cast
+    // this is an explicit type cast
     if(arguments.size()!=1)
     {
       throw errort().with_location(expr.source_location())
@@ -772,22 +772,20 @@ exprt verilog_typecheck_exprt::convert_system_function(
     
     if(argument.type().id()==ID_signedbv)
     {
-      // remove
-      return argument;
+      expr.type() = argument.type();
+      return std::move(expr);
     }
     else if(argument.type().id()==ID_unsignedbv)
     {
       typet new_type = argument.type();
       new_type.id(ID_signedbv);
-      typecast_exprt tmp{std::move(argument), std::move(new_type)};
-      tmp.add_source_location() = expr.source_location();
-      return std::move(tmp);
+      expr.type() = new_type;
+      return std::move(expr);
     }
     else if(argument.type().id()==ID_bool)
     {
-      typecast_exprt tmp(argument, signedbv_typet(2));
-      tmp.add_source_location()=expr.source_location();
-      return std::move(tmp);
+      expr.type() = signedbv_typet{2};
+      return std::move(expr);
     }
     else
     {
@@ -798,7 +796,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
   }
   else if(identifier=="$unsigned")
   {
-    // this is a type cast
+    // this is an explicit type cast
     if(arguments.size()!=1)
     {
       throw errort().with_location(expr.source_location())
@@ -809,21 +807,20 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     if(argument.type().id()==ID_unsignedbv)
     {
-      // remove
-      return argument;
+      expr.type() = argument.type();
+      return std::move(expr);
     }
     else if(argument.type().id()==ID_signedbv)
     {
-      typecast_exprt tmp(argument, argument.type());
-      tmp.type().id(ID_unsignedbv);
-      tmp.add_source_location()=expr.source_location();
-      return std::move(tmp);
+      typet new_type = argument.type();
+      new_type.id(ID_unsignedbv);
+      expr.type() = new_type;
+      return std::move(expr);
     }
     else if(argument.type().id()==ID_bool)
     {
-      typecast_exprt tmp(argument, unsignedbv_typet(1));
-      tmp.add_source_location()=expr.source_location();
-      return std::move(tmp);
+      expr.type() = unsignedbv_typet{1};
+      return std::move(expr);
     }
     else
     {
@@ -2314,8 +2311,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // SystemVerilog has got type'(expr). This is an explicit
     // type cast.
     convert_expr(expr.op());
-    auto new_type = elaborate_type(expr.type());
-    return typecast_exprt{expr.op(), new_type}.with_source_location(expr);
+    expr.type() = elaborate_type(expr.type());
   }
   else if(expr.id() == ID_verilog_implicit_typecast)
   {
@@ -2796,23 +2792,25 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // number given as lhs.
     convert_expr(expr.rhs());
     auto new_size = convert_integer_constant_expression(expr.lhs());
+    expr.lhs() = from_integer(new_size, natural_typet{});
     auto new_size_int = numeric_cast_v<std::size_t>(new_size);
     auto &op_type = expr.rhs().type();
+
     if(op_type.id() == ID_signedbv)
     {
-      return typecast_exprt{expr.rhs(), signedbv_typet{new_size_int}}
-        .with_source_location(expr);
+      expr.type() = signedbv_typet{new_size_int};
     }
     else if(op_type.id() == ID_unsignedbv || op_type.id() == ID_bool)
     {
-      return typecast_exprt{expr.rhs(), unsignedbv_typet{new_size_int}}
-        .with_source_location(expr);
+      expr.type() = unsignedbv_typet{new_size_int};
     }
     else
     {
       throw errort().with_location(expr.source_location())
         << "cannot perform size cast on " << to_string(op_type);
     }
+
+    return std::move(expr);
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
