@@ -2782,6 +2782,44 @@ to_verilog_property_declaration(exprt &expr)
   return static_cast<verilog_property_declarationt &>(expr);
 }
 
+class verilog_sequence_declarationt : public verilog_module_itemt
+{
+public:
+  explicit verilog_sequence_declarationt(exprt sequence)
+  {
+    add_to_operands(std::move(sequence));
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  const exprt &sequence() const
+  {
+    return op0();
+  }
+
+  exprt &sequence()
+  {
+    return op0();
+  }
+};
+
+inline const verilog_sequence_declarationt &
+to_verilog_sequence_declaration(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  return static_cast<const verilog_sequence_declarationt &>(expr);
+}
+
+inline verilog_sequence_declarationt &
+to_verilog_sequence_declaration(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  return static_cast<verilog_sequence_declarationt &>(expr);
+}
+
 class verilog_streaming_concatenation_exprt : public exprt
 {
 public:

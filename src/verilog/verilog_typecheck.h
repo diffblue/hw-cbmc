@@ -106,6 +106,7 @@ protected:
   void collect_symbols(const verilog_lett &);
   void collect_symbols(const verilog_statementt &);
   void collect_symbols(const verilog_property_declarationt &);
+  void collect_symbols(const verilog_sequence_declarationt &);
   void
   collect_symbols(const typet &, const verilog_parameter_declt::declaratort &);
   void collect_port_symbols(const verilog_declt &);
@@ -188,6 +189,7 @@ protected:
   void convert_module_item(class verilog_module_itemt &);
   void convert_parameter_override(const class verilog_parameter_overridet &);
   void convert_property_declaration(class verilog_property_declarationt &);
+  void convert_sequence_declaration(class verilog_sequence_declarationt &);
 
   void integer_expr(exprt &expr);
 
