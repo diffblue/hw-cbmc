@@ -38,60 +38,6 @@ protected:
   verilog_indexert &indexer;
   irep_idt current_module;
 
-  // modules, classes, primitives, packages, interfaces, configurations
-  void rModule(verilog_indexert::idt::kindt, int end_token);
-  void rImport();
-  void rExtends();
-  void rPorts();
-  void rItem();
-  void rBind();
-
-  void rCell();
-  void rDesign();
-  void rInterconnect();
-  void rModport();
-  void rConstruct(); // always, initial, ...
-  void rStatement();
-  void rBegin();
-  void rFor();
-  void rForEach();
-  void rForEver();
-  void rFork();
-  void rRepeat();
-  void rWait();
-  void rWhile();
-  void rDisable();
-  void rForce();
-  void rRelease();
-  void rReturn();
-  void rIf();
-  void rCase();
-  void rCaseLabel();
-  void rUniquePriority();
-  void rParenExpression(); // (expression)
-  void rDeclaration();     // var, reg, wire, input, typedef, defparam ...
-  void rType();
-  void rTypeOpt();
-  void rStructUnion();
-  void rEnum();
-  void rDeclarators();
-  void rTaskFunction();     // task ... endtask
-  void rConstraint();       // constraint ID { ... }
-  void rContinuousAssign(); // assign
-  void rGenerate();         // generate ... endgenerate
-  void rGenerateFor();
-  void rGenerateIf();
-  void rGenerateBegin();
-  void rModuleInstance();
-  void rLabeledItem();
-  void rAssertAssumeCover();
-  void rClocking();
-  void rCoverGroup();
-  void rProperty();
-  void rSequence();
-  void rSpecify();
-  void skip_until(int token);
-
   struct tokent
   {
     int kind;
@@ -117,6 +63,63 @@ protected:
       return kind != other;
     }
   };
+
+  // modules, classes, primitives, packages, interfaces, configurations
+  void rModule(verilog_indexert::idt::kindt, int end_token);
+  void rImport();
+  void rExtends();
+  void rPorts();
+  void rItem();
+  void rBind();
+
+  void rAttribute();
+  void rAttrSpec();
+  void rCell();
+  void rDesign();
+  void rInterconnect();
+  void rModport();
+  void rConstruct(); // always, initial, ...
+  void rStatement();
+  void rBegin();
+  void rFor();
+  void rForEach();
+  void rForEver();
+  void rFork();
+  void rRepeat();
+  void rWait();
+  void rWhile();
+  void rDisable();
+  void rForce();
+  void rRelease();
+  void rReturn();
+  void rIf();
+  void rCase();
+  void rCaseLabel();
+  void rUniquePriority();
+  void rParenExpression(); // (expression)
+  void rExpression(std::function<bool(const tokent &)>); // expression
+  void rDeclaration();     // var, reg, wire, input, typedef, defparam ...
+  void rType();
+  void rTypeOpt();
+  void rStructUnion();
+  void rEnum();
+  void rDeclarators();
+  void rTaskFunction();     // task ... endtask
+  void rConstraint();       // constraint ID { ... }
+  void rContinuousAssign(); // assign
+  void rGenerate();         // generate ... endgenerate
+  void rGenerateFor();
+  void rGenerateIf();
+  void rGenerateBegin();
+  void rModuleInstance();
+  void rLabeledItem();
+  void rAssertAssumeCover();
+  void rClocking();
+  void rCoverGroup();
+  void rProperty();
+  void rSequence();
+  void rSpecify();
+  void skip_until(int token);
 
   static bool may_be_type(const tokent &);
 
