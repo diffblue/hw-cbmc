@@ -22,6 +22,7 @@ public:
 
   vlindex_parse_optionst(int argc, const char **argv)
     : parse_options_baset(
+        "(version)"
         "(top)"
         "(hierarchy)"
         "(modules)"
