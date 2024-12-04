@@ -2306,12 +2306,71 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     no_bool_ops(expr);
     expr.type() = expr.op().type();
   }
-  else if(expr.id() == ID_verilog_explicit_cast)
+  else if(expr.id() == ID_verilog_explicit_const_cast)
+  {
+    // SystemVerilog has got const'(expr).
+    // This is an explicit type cast.
+    convert_expr(expr.op());
+    expr.type() = expr.op().type();
+  }
+  else if(expr.id() == ID_verilog_explicit_type_cast)
   {
     // SystemVerilog has got type'(expr). This is an explicit
     // type cast.
     convert_expr(expr.op());
     expr.type() = elaborate_type(expr.type());
+  }
+  else if(expr.id() == ID_verilog_explicit_signing_cast)
+  {
+    // SystemVerilog has got signed'(expr) and unsigned'(expr).
+    // This is an explicit type cast.
+    convert_expr(expr.op());
+    const auto &old_type = expr.op().type();
+    const auto dest_type = expr.type().id();
+    PRECONDITION(dest_type == ID_signed || dest_type == ID_unsigned);
+
+    if(old_type.id() == ID_signedbv)
+    {
+      if(dest_type == ID_unsigned)
+        expr.type() = unsignedbv_typet{to_signedbv_type(old_type).get_width()};
+      else
+        expr.type() = old_type; // leave as is
+    }
+    else if(old_type.id() == ID_verilog_signedbv)
+    {
+      if(dest_type == ID_unsigned)
+        expr.type() = verilog_unsignedbv_typet{
+          to_verilog_signedbv_type(old_type).get_width()};
+      else
+        expr.type() = old_type; // leave as is
+    }
+    else if(old_type.id() == ID_unsignedbv)
+    {
+      if(dest_type == ID_signed)
+        expr.type() = signedbv_typet{to_unsignedbv_type(old_type).get_width()};
+      else
+        expr.type() = old_type; // leave as is
+    }
+    else if(old_type.id() == ID_verilog_unsignedbv)
+    {
+      if(dest_type == ID_signed)
+        expr.type() = verilog_signedbv_typet{
+          to_verilog_unsignedbv_type(old_type).get_width()};
+      else
+        expr.type() = old_type; // leave as is
+    }
+    else if(old_type.id() == ID_bool)
+    {
+      if(dest_type == ID_signed)
+        expr.type() = signedbv_typet{1};
+      else
+        expr.type() = old_type; // leave as is
+    }
+    else
+    {
+      throw errort().with_location(expr.source_location())
+        << "signing cast expects a scalar operand";
+    }
   }
   else if(expr.id() == ID_verilog_implicit_typecast)
   {
@@ -2785,7 +2844,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     return convert_hierarchical_identifier(
       to_hierarchical_identifier_expr(std::move(expr)));
   }
-  else if(expr.id() == ID_verilog_size_cast)
+  else if(expr.id() == ID_verilog_explicit_size_cast)
   {
     // SystemVerilog has got expr'(expr). This is an explicit
     // type cast, to change the size (in bits) of the rhs to the

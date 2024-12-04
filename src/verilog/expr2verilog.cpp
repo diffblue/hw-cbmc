@@ -694,7 +694,7 @@ expr2verilogt::convert_typecast(const typecast_exprt &src)
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_explicit_cast
+Function: expr2verilogt::convert_explicit_const_cast
 
   Inputs:
 
@@ -704,8 +704,47 @@ Function: expr2verilogt::convert_explicit_cast
 
 \*******************************************************************/
 
-expr2verilogt::resultt
-expr2verilogt::convert_explicit_cast(const verilog_explicit_cast_exprt &src)
+expr2verilogt::resultt expr2verilogt::convert_explicit_const_cast(
+  const verilog_explicit_const_cast_exprt &src)
+{
+  return {verilog_precedencet::MAX, "const'(" + convert_rec(src.op()).s + ')'};
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_explicit_signing_cast
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_explicit_signing_cast(
+  const verilog_explicit_signing_cast_exprt &src)
+{
+  std::string signing = src.is_signed() ? "signed" : "unsigned";
+
+  return {
+    verilog_precedencet::MAX, signing + "'(" + convert_rec(src.op()).s + ')'};
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_explicit_type_cast
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_explicit_type_cast(
+  const verilog_explicit_type_cast_exprt &src)
 {
   return {
     verilog_precedencet::MAX,
@@ -714,7 +753,7 @@ expr2verilogt::convert_explicit_cast(const verilog_explicit_cast_exprt &src)
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_size_cast
+Function: expr2verilogt::convert_explicit_size_cast
 
   Inputs:
 
@@ -724,8 +763,8 @@ Function: expr2verilogt::convert_size_cast
 
 \*******************************************************************/
 
-expr2verilogt::resultt
-expr2verilogt::convert_size_cast(const verilog_size_cast_exprt &src)
+expr2verilogt::resultt expr2verilogt::convert_explicit_size_cast(
+  const verilog_explicit_size_cast_exprt &src)
 {
   return {
     verilog_precedencet::MAX,
@@ -1490,11 +1529,19 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_unary(
       to_bitnot_expr(src), "~", precedence = verilog_precedencet::NOT);
 
-  else if(src.id() == ID_verilog_explicit_cast)
-    return convert_explicit_cast(to_verilog_explicit_cast_expr(src));
+  else if(src.id() == ID_verilog_explicit_const_cast)
+    return convert_explicit_const_cast(
+      to_verilog_explicit_const_cast_expr(src));
 
-  else if(src.id() == ID_verilog_size_cast)
-    return convert_size_cast(to_verilog_size_cast_expr(src));
+  else if(src.id() == ID_verilog_explicit_size_cast)
+    return convert_explicit_size_cast(to_verilog_explicit_size_cast_expr(src));
+
+  else if(src.id() == ID_verilog_explicit_signing_cast)
+    return convert_explicit_signing_cast(
+      to_verilog_explicit_signing_cast_expr(src));
+
+  else if(src.id() == ID_verilog_explicit_type_cast)
+    return convert_explicit_type_cast(to_verilog_explicit_type_cast_expr(src));
 
   else if(src.id()==ID_typecast)
     return convert_typecast(to_typecast_expr(src));
