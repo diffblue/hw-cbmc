@@ -1,0 +1,9 @@
+KNOWNBUG
+recursive_property1.sv
+--bound 10
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The parameter list fails to parse.
