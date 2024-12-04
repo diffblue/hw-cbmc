@@ -274,13 +274,17 @@ exprt verilog_lowering(exprt expr)
 
     return expr;
   }
-  else if(expr.id() == ID_verilog_explicit_cast)
+  else if(expr.id() == ID_verilog_explicit_type_cast)
   {
-    return to_verilog_explicit_cast_expr(expr).lower();
+    return to_verilog_explicit_type_cast_expr(expr).lower();
   }
-  else if(expr.id() == ID_verilog_size_cast)
+  else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
-    return to_verilog_size_cast_expr(expr).lower();
+    return to_verilog_explicit_signing_cast_expr(expr).lower();
+  }
+  else if(expr.id() == ID_verilog_explicit_size_cast)
+  {
+    return to_verilog_explicit_size_cast_expr(expr).lower();
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||

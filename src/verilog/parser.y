@@ -1419,11 +1419,27 @@ lifetime:
 
 casting_type:
 	  simple_type
+		{
+		  init($$, ID_verilog_explicit_type_cast);
+		  stack_expr($$).type() = stack_type($1);
+		}
 	| constant_primary
-		{ init($$, ID_verilog_size_cast); mto($$, $1); }
+		{ init($$, ID_verilog_explicit_size_cast); mto($$, $1); }
 	| signing
+		{
+		  init($$, ID_verilog_explicit_signing_cast);
+		  stack_expr($$).type() = stack_type($1);
+		}
 	| TOK_STRING
+		{
+		  init($$, ID_verilog_explicit_type_cast);
+		  stack_expr($$).type() = stack_type($1);
+		}
 	| TOK_CONST
+		{
+		  init($$, ID_verilog_explicit_const_cast);
+		  stack_expr($$).type() = stack_type($1);
+		}
 	;
 
 data_type:
@@ -4044,18 +4060,7 @@ time_literal: TOK_TIME_LITERAL
 
 cast:
 	  casting_type '\'' '(' expression ')'
-		{ if(stack_expr($1).id() == ID_verilog_size_cast)
-		  {
-		    $$ = $1; 
-		    mto($$, $4);
-		  }
-		  else
-		  {
-		    init($$, ID_verilog_explicit_cast);
-		    stack_expr($$).type() = stack_type($1);
-		    mto($$, $4);
-		  }
-		}
+		{ $$ = $1; mto($$, $4); }
 	;
 
 // System Verilog standard 1800-2017

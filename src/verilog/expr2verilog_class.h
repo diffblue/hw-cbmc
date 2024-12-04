@@ -105,11 +105,19 @@ protected:
 
   resultt convert_constant(const constant_exprt &, verilog_precedencet &);
 
-  resultt convert_explicit_cast(const class verilog_explicit_cast_exprt &);
+  resultt
+  convert_explicit_const_cast(const class verilog_explicit_const_cast_exprt &);
+
+  resultt convert_explicit_signing_cast(
+    const class verilog_explicit_signing_cast_exprt &);
+
+  resultt
+  convert_explicit_type_cast(const class verilog_explicit_type_cast_exprt &);
 
   resultt convert_typecast(const typecast_exprt &);
 
-  resultt convert_size_cast(const class verilog_size_cast_exprt &);
+  resultt
+  convert_explicit_size_cast(const class verilog_explicit_size_cast_exprt &);
 
   resultt
   convert_concatenation(const concatenation_exprt &, verilog_precedencet);
