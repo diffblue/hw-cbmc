@@ -1,7 +1,9 @@
 CORE
 sequence_throughout1.sv
-
-^\[.*\] main\.x == 0 throughout main\.x == 1: FAILURE: property not supported by BMC engine$
+--bound 10
+^\[main\.p0\] main\.x >= 0 throughout \(main\.x == 0 ##1 main\.x == 1 ##1 main\.x == 2\): PROVED up to bound 10$
+^\[main\.p1\] main\.x <= 1 throughout \(main\.x == 0 ##1 main\.x == 1 ##1 main\.x == 2\): REFUTED$
+^\[main\.p2\] 1 throughout \(main\.x == 0 ##1 main\.x == 1 ##1 main\.x == 3\): REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

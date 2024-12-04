@@ -166,7 +166,32 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   }
   else if(expr.id() == ID_sva_sequence_throughout)
   {
-    PRECONDITION(false);
+    // IEEE 1800-2017 16.9.9
+    // exp throughout seq matches along an interval provided
+    // - seq matches along the interval and
+    // - exp evaluates to true at each clock tick of the interval.
+    auto &throughout = to_sva_sequence_throughout_expr(expr);
+
+    const auto rhs_match_points =
+      instantiate_sequence(throughout.rhs(), t, no_timeframes);
+
+    std::vector<std::pair<mp_integer, exprt>> result;
+
+    for(auto &rhs_match : rhs_match_points)
+    {
+      exprt::operandst conjuncts = {rhs_match.second};
+
+      for(mp_integer new_t = t; new_t <= rhs_match.first; ++new_t)
+      {
+        auto obligations =
+          property_obligations(throughout.lhs(), new_t, no_timeframes);
+        conjuncts.push_back(obligations.conjunction().second);
+      }
+
+      result.emplace_back(rhs_match.first, conjunction(conjuncts));
+    }
+
+    return result;
   }
   else if(expr.id() == ID_sva_sequence_within)
   {

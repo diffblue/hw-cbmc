@@ -4,6 +4,7 @@
 * BMC: iterative constraint strengthening is now default;
   use --bmc-with-assumptions to re-enable the previous algorithm.
 * BMC: support SVA sequence intersect
+* BMC: support SVA sequence throughout
 * SystemVerilog: streaming concatenation {<<{...}} and {>>{...}}
 * SystemVerilog: set membership operator
 * SystemVerilog: named sequences
