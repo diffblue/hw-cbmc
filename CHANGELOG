@@ -8,6 +8,7 @@
 * SystemVerilog: streaming concatenation {<<{...}} and {>>{...}}
 * SystemVerilog: set membership operator
 * SystemVerilog: named sequences
+* ebmc: --smt-netlist and --dot-netlist now honor --outfile
 
 # EBMC 5.3
 
