@@ -2,9 +2,9 @@ class Ebmc < Formula
   desc "Model Checker for SystemVerilog"
   homepage "https://www.cprover.org/ebmc/"
   url "https://github.com/diffblue/hw-cbmc.git",
-    tag: "ebmc-5.2"
-    revision: "d308e0934a635a3e16a332284d41c43eda7a4133"
-  version "5.2"
+    tag: "ebmc-5.0",
+    revision: "61e797fa61f8c207b2bc4ad391c6982e6798dd4d"
+  version "5.0"
   license "BSD-3-Clause"
 
   uses_from_macos "flex" => :build
