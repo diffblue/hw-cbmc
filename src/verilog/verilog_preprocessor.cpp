@@ -572,34 +572,49 @@ void verilog_preprocessort::directive()
     // skip whitespace
     tokenizer().skip_ws();
 
-    // We expect one of:
+    std::string argument;
+
+    // Read any tokens until end of line.
+    // 1800-2017 is silent on whether further directives are
+    // processed. We emit an error.
+    // 1800-2017 is silent wether file names in quotes are processed
+    // as string literals. We assume not so.
+    while(!tokenizer().eof() && tokenizer().peek() != '\n')
+    {
+      auto token = tokenizer().next_token();
+
+      if(token == '`')
+      {
+        throw verilog_preprocessor_errort()
+          << "preprocessor directive inside `include directive";
+      }
+
+      argument += token.text;
+    }
+
+    // We expect the argument to be one of:
     // <filename> -- include paths only
     // "filename" -- relative path, then include paths.
     std::string given_filename;
     bool include_paths_only;
 
-    if(tokenizer().peek().is_string_literal())
+    if(!argument.empty() && argument[0] == '"')
     {
       include_paths_only = false;
-      const auto file_token = tokenizer().next_token();
-      CHECK_RETURN(file_token.is_string_literal());
-      // strip quotes off string literal, escaping, etc.
-      given_filename = file_token.string_literal_value();
+      auto quote_pos = argument.find('"', 1);
+      if(quote_pos == std::string::npos)
+        throw verilog_preprocessor_errort()
+          << "expected closing \" in include directive";
+      given_filename = std::string(argument, 1, quote_pos - 1);
     }
-    else if(tokenizer().peek() == '<')
+    else if(!argument.empty() && argument[0] == '<')
     {
-      tokenizer().next_token(); // <
       include_paths_only = true;
-
-      while(tokenizer().peek() != '>')
-      {
-        if(tokenizer().peek().is_eof())
-          throw verilog_preprocessor_errort() << "eof in include directive";
-
-        given_filename += tokenizer().next_token().text;
-      }
-
-      tokenizer().next_token(); // >
+      auto quote_pos = argument.find('>', 1);
+      if(quote_pos == std::string::npos)
+        throw verilog_preprocessor_errort()
+          << "expected closing > in include directive";
+      given_filename = std::string(argument, 1, quote_pos - 1);
     }
     else
     {

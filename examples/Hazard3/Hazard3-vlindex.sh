@@ -29,6 +29,6 @@ Number of functions.......: 7
 Number of tasks...........: 0
 Number of properties......: 0
 Number of sequences.......: 0
-Number of module instances: 71
+Number of module instances: 70
 Number of configurations..: 0
 EOM

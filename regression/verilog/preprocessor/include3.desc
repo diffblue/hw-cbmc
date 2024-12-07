@@ -1,13 +1,7 @@
-KNOWNBUG
-include2.v
+CORE
+include3.v
 --preprocess
-// Enable multi-line checking
-activate-multi-line-match
-`line 1 "include3\.v" 0
-`line 1 "include_file2\.vh" 1
-
-`line 2 "include3\.v" 2
-^EXIT=0$
+^file include3.v line 2: preprocessor directive inside `include directive$
+^EXIT=1$
 ^SIGNAL=0$
 --
-Giving the include file name as a macro doesn't work.
