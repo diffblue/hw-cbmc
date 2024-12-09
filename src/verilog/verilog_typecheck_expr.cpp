@@ -2094,23 +2094,14 @@ Function: zero_extend
 
 static exprt zero_extend(const exprt &expr, const typet &type)
 {
-  auto old_width = expr.type().id() == ID_bool ? 1
-                   : expr.type().id() == ID_integer
-                     ? 32
-                     : to_bitvector_type(expr.type()).get_width();
+  exprt result = expr;
 
-  // first make unsigned
-  typet tmp_type;
+  if(expr.type().id() == ID_bool)
+    result = typecast_exprt{expr, unsignedbv_typet{1}};
+  else if(expr.type().id() == ID_integer)
+    result = typecast_exprt{expr, unsignedbv_typet{32}};
 
-  if(type.id() == ID_unsignedbv)
-    tmp_type = unsignedbv_typet{old_width};
-  else if(type.id() == ID_verilog_unsignedbv)
-    tmp_type = verilog_unsignedbv_typet{old_width};
-  else
-    PRECONDITION(false);
-
-  return typecast_exprt::conditional_cast(
-    typecast_exprt::conditional_cast(expr, tmp_type), type);
+  return zero_extend_exprt{std::move(result), type};
 }
 
 /*******************************************************************\
