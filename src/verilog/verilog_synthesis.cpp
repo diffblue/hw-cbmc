@@ -1586,17 +1586,21 @@ void verilog_synthesist::synth_module_instance_builtin(
     {
       assert(instance.connections().size() >= 2);
 
-      for(unsigned i = 0; i < instance.connections().size() - 1; i++)
+      // May have multiple outputs. The input is the last connection.
+      auto &input = instance.connections().back();
+      exprt rhs;
+
+      if(input.type().id() == ID_bool)
+        rhs = not_exprt{input};
+      else
+        rhs = bitnot_exprt{input};
+
+      rhs.add_source_location() = module_item.source_location();
+
+      for(std::size_t i = 0; i < instance.connections().size() - 1; i++)
       {
-        exprt op(ID_not, instance.type());
-        op.add_to_operands(instance.connections()[i]);
-
-        if(instance.type().id()!=ID_bool)
-          op.id("bit"+op.id_string());
-
-        equal_exprt constraint{op, instance.connections().back()};
-
-        assert(trans.operands().size()==3);
+        auto &lhs = instance.connections()[i];
+        auto constraint = equal_exprt{lhs, rhs};
         trans.invar().add_to_operands(std::move(constraint));
       }
     }
