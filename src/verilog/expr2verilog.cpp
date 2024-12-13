@@ -1871,6 +1871,13 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   else if(src.id() == ID_verilog_value_range)
     return convert_value_range(to_verilog_value_range_expr(src));
 
+  else if(
+    src.id() == ID_nand || src.id() == ID_nor || src.id() == ID_xnor ||
+    src.id() == ID_xor)
+  {
+    return convert_function(src.id_string(), src);
+  }
+
   // no VERILOG language expression for internal representation 
   return convert_norep(src, precedence);
 }
