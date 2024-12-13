@@ -206,9 +206,12 @@ void convert_trans_to_netlistt::map_vars(
 
     if (symbol.is_property)
       return; // ignore properties
-    else if (symbol.type.id() == ID_module ||
-             symbol.type.id() == ID_module_instance)
+    else if(
+      symbol.type.id() == ID_module || symbol.type.id() == ID_module_instance ||
+      symbol.type.id() == ID_primitive_module_instance)
+    {
       return; // ignore modules
+    }
     else if(symbol.is_type)
       return; // ignore types
     else if (symbol.is_input)
