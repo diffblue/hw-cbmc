@@ -1,0 +1,10 @@
+KNOWNBUG
+or1.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This is a small version of a misencoding of the Verilog primitive gates
+reported as https://github.com/diffblue/hw-cbmc/issues/880
