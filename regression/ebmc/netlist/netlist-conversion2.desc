@@ -1,0 +1,6 @@
+CORE
+netlist-conversion2.sv
+--bound 0 --aig
+^\[main\.assert\.1\] always main\.x == \!main\.i: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
