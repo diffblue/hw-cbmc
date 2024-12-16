@@ -1,0 +1,11 @@
+CORE broken-smt-backend
+xnor1.sv
+--bound 0
+^\[main\.xnor_ok\] always !\(xor\(xor\(main\.xnor_in1, main\.xnor_in2\), main\.xnor_in3\)\) == main\.xnor_out: PROVED up to bound 0$
+^\[main\.xnor_fail\] always main\.xnor_in1 == main\.xnor_in2 == main\.xnor_in3 == main\.xnor_out: REFUTED$
+^\[main\.xnor_is_reduction_xnor\] always ~\^\{ main\.xnor_in1, main\.xnor_in2, main\.xnor_in3 \} == main\.xnor_out: PROVED up to bound 0$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
