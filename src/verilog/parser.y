@@ -2347,17 +2347,17 @@ property_expr_proper:
 	| sequence_expr "#=#" property_expr
 		{ init($$, ID_sva_nonoverlapped_followed_by); mto($$, $1); mto($$, $3); }
 	| "nexttime" property_expr
-		{ init($$, "sva_nexttime"); mto($$, $2); }
+		{ init($$, ID_sva_nexttime); mto($$, $2); }
 	| "nexttime" '[' constant_expression ']' property_expr %prec "nexttime"
-		{ init($$, "sva_indexed_nexttime"); mto($$, $3); mto($$, $5); }
+		{ init($$, ID_sva_indexed_nexttime); mto($$, $3); mto($$, $5); }
 	| "s_nexttime" property_expr
-		{ init($$, "sva_s_nexttime"); mto($$, $2); }
+		{ init($$, ID_sva_s_nexttime); mto($$, $2); }
 	| "s_nexttime" '[' constant_expression ']' property_expr %prec "s_nexttime"
-		{ init($$, "sva_indexed_s_nexttime"); mto($$, $3); mto($$, $5); }
+		{ init($$, ID_sva_indexed_s_nexttime); mto($$, $3); mto($$, $5); }
 	| "always" '[' cycle_delay_const_range_expression ']' property_expr %prec "always"
 		{ init($$, ID_sva_ranged_always); swapop($$, $3); mto($$, $5); }
 	| "always" property_expr
-		{ init($$, "sva_always"); mto($$, $2); }
+		{ init($$, ID_sva_always); mto($$, $2); }
 	| "s_always" '[' constant_range ']' property_expr %prec "s_always"
 		{ init($$, ID_sva_s_always); swapop($$, $3); mto($$, $5); }
 	| "s_eventually" property_expr
@@ -2367,13 +2367,13 @@ property_expr_proper:
 	| "s_eventually" '[' cycle_delay_const_range_expression ']' property_expr %prec "s_eventually"
 		{ init($$, ID_sva_ranged_s_eventually); swapop($$, $3); mto($$, $5); }
 	| property_expr "until" property_expr
-		{ init($$, "sva_until"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_until); mto($$, $1); mto($$, $3); }
 	| property_expr "s_until" property_expr
-		{ init($$, "sva_s_until"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_s_until); mto($$, $1); mto($$, $3); }
 	| property_expr "until_with" property_expr
-		{ init($$, "sva_until_with"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_until_with); mto($$, $1); mto($$, $3); }
 	| property_expr "s_until_with" property_expr
-		{ init($$, "sva_s_until_with"); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_sva_s_until_with); mto($$, $1); mto($$, $3); }
 	| property_expr "implies" property_expr
 		{ init($$, ID_sva_implies); mto($$, $1); mto($$, $3); }
 	| property_expr "iff" property_expr
