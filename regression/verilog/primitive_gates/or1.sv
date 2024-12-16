@@ -1,7 +1,8 @@
 module main(input or_in1, or_in2, or_in3);
 
-  wire  or_out;
+  wire or_out;
 
+  // an 'or' with three inputs
   or o1(or_out, or_in1, or_in2, or_in3);
 
   // should pass

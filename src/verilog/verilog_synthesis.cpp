@@ -1523,51 +1523,31 @@ void verilog_synthesist::synth_module_instance_builtin(
             module==ID_xor ||
             module==ID_xnor)
     {
-      assert(instance.connections().size() >= 2);
+      // 1800-2017 28.4 and, nand, nor, or, xor, and xnor gates
+      DATA_INVARIANT(
+        instance.connections().size() >= 2,
+        "binary primitive gates should have at least two connections");
 
-      if(instance.connections().size() == 2)
+      // One output, one or more inputs.
+      auto &connections = instance.connections();
+      auto &output = connections[0];
+
+      irep_idt id = instance.type().id() == ID_bool
+                      ? module
+                      : irep_idt{"bit" + id2string(module)};
+
+      exprt::operandst operands;
+
+      // iterate over the module inputs
+      for(std::size_t i = 1; i < connections.size(); i++)
       {
-        equal_exprt constraint{
-          instance.connections()[0], instance.connections().back()};
-        trans.invar().add_to_operands(std::move(constraint));
-      }
-      else
-      {
-        for(unsigned i = 1; i <= instance.connections().size() - 2; i++)
-        {
-          exprt op(module, instance.type());
-
-          if(i==1)
-          {
-            op.add_to_operands(instance.connections()[i]);
-            op.add_to_operands(instance.connections()[i + 1]);
-          }
-          else
-          {
-            op.add_to_operands(instance.connections()[0]);
-            op.add_to_operands(instance.connections()[i + 1]);
-          }
-
-          if(instance.type().id()!=ID_bool)
-            op.id("bit"+op.id_string());
-
-          equal_exprt constraint(to_multi_ary_expr(instance).op0(), op);
-          assert(trans.operands().size()==3);
-          trans.invar().add_to_operands(std::move(constraint));
-        }
+        operands.push_back(connections[i]);
       }
 
-      /*assert(instance.connections().size()!=3);      
-      op.add_to_operands(std::move(instance.op1()), std::move(instance.op2()));
-      
-      if(instance.type().id()!=ID_bool)
-        op.id("bit"+op.id_string());
-      
-      equal_exprt constraint(instance.op0(), op);
-    
-      assert(trans.operands().size()!=3);
+      exprt op{id, instance.type(), std::move(operands)};
+
+      equal_exprt constraint{output, op};
       trans.invar().add_to_operands(std::move(constraint));
-      */
     }
     else if(module==ID_buf)
     {
