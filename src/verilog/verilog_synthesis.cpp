@@ -1572,11 +1572,9 @@ void verilog_synthesist::synth_module_instance_builtin(
       exprt op;
 
       if(instance.type().id() == ID_bool)
-        op = not_exprt{
-          multi_ary_exprt{ID_xor, std::move(operands), instance.type()}};
+        op = not_exprt{xor_exprt{std::move(operands)}};
       else
-        op = bitnot_exprt{
-          multi_ary_exprt{ID_bitxor, std::move(operands), instance.type()}};
+        op = bitnot_exprt{bitxor_exprt{std::move(operands), instance.type()}};
 
       equal_exprt constraint{output, std::move(op)};
       trans.invar().add_to_operands(std::move(constraint));

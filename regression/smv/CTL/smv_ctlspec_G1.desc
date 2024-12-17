@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv_ctlspec_G1.smv
 --bound 10
 ^\[.*\] AG x != 5: PROVED up to bound 10$

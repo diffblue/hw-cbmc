@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 generate-for2.v
 --bound 0
 ^EXIT=0$

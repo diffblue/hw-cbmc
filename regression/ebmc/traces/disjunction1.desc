@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 disjunction1.smv
 --bound 20 --numbered-trace
 ^\[spec1\] G \(X FALSE \| X X FALSE\): REFUTED$

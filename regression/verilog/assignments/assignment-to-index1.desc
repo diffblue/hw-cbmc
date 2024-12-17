@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 assignment-to-index1.v
 --bound 1
 ^EXIT=0$

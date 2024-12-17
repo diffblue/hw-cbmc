@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv_ltlspec_U1.smv
 --bound 3
 \[.*\] TRUE U x = 3: PROVED up to bound 3$

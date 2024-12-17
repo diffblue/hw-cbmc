@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv_ltlspec6.smv
 
 ^EXIT=0$
