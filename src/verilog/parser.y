@@ -2724,7 +2724,7 @@ n_input_gatetype:
 	| TOK_NAND     { init($$, ID_nand); }
         | TOK_NOR      { init($$, ID_nor); }
         | TOK_OR       { init($$, ID_or); }
-	| TOK_XNOR     { init($$, ID_nor); }
+	| TOK_XNOR     { init($$, ID_xnor); }
         | TOK_XOR      { init($$, ID_xor); }
 	;
 

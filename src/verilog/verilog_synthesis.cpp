@@ -1516,12 +1516,9 @@ void verilog_synthesist::synth_module_instance_builtin(
       assert(trans.operands().size()==3);
       trans.invar().add_to_operands(std::move(constraint));
     }
-    else if(module==ID_and ||
-            module==ID_nand ||
-            module==ID_or ||
-            module==ID_nor ||
-            module==ID_xor ||
-            module==ID_xnor)
+    else if(
+      module == ID_and || module == ID_nand || module == ID_or ||
+      module == ID_nor || module == ID_xor)
     {
       // 1800-2017 28.4 and, nand, nor, or, xor, and xnor gates
       DATA_INVARIANT(
@@ -1547,6 +1544,41 @@ void verilog_synthesist::synth_module_instance_builtin(
       exprt op{id, instance.type(), std::move(operands)};
 
       equal_exprt constraint{output, op};
+      trans.invar().add_to_operands(std::move(constraint));
+    }
+    else if(module == ID_xnor)
+    {
+      // Our solver does not have ID_xnor, hence use the negation of ID_xor
+      // ID_bitxor.
+      // With one operand, or with more than three operands, the result is
+      // ambiguous. The semantics of bitxnor do not match when using one
+      // or more than two operands.
+      DATA_INVARIANT(
+        instance.connections().size() >= 2,
+        "binary primitive gates should have at least two connections");
+
+      // One output, one or more inputs.
+      auto &connections = instance.connections();
+      auto &output = connections[0];
+
+      exprt::operandst operands;
+
+      // iterate over the module inputs
+      for(std::size_t i = 1; i < connections.size(); i++)
+      {
+        operands.push_back(connections[i]);
+      }
+
+      exprt op;
+
+      if(instance.type().id() == ID_bool)
+        op = not_exprt{
+          multi_ary_exprt{ID_xor, std::move(operands), instance.type()}};
+      else
+        op = bitnot_exprt{
+          multi_ary_exprt{ID_bitxor, std::move(operands), instance.type()}};
+
+      equal_exprt constraint{output, std::move(op)};
       trans.invar().add_to_operands(std::move(constraint));
     }
     else if(module==ID_buf)
