@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv_ltlspec_G3.smv
 --bound 10 --numbered-trace
 ^\[.*\] G X x != 3: REFUTED$

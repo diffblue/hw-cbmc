@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv_ltlspec_R1.smv
 --bound 10
 ^\[.*\] x >= 1 R x = 1: PROVED up to bound 10$

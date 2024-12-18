@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv_ltlspec_R3.smv
 --bound 1
 ^\[.*\] FALSE R x != 3: PROVED up to bound 1$
