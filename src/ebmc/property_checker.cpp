@@ -11,7 +11,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/string2int.h>
 
 #include <solvers/sat/satcheck.h>
-#include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 
@@ -21,6 +20,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "k_induction.h"
+#include "netlist.h"
 #include "output_file.h"
 #include "report_results.h"
 
@@ -221,16 +221,9 @@ property_checker_resultt bit_level_bmc(
         throw "no properties";
 
     // make net-list
-    netlistt netlist;
     message.status() << "Generating Netlist" << messaget::eom;
 
-    convert_trans_to_netlist(
-      transition_system.symbol_table,
-      transition_system.main_symbol->name,
-      transition_system.trans_expr,
-      properties.make_property_map(),
-      netlist,
-      message.get_message_handler());
+    auto netlist = make_netlist(transition_system, properties, message_handler);
 
     message.statistics() << "Latches: " << netlist.var_map.latches.size()
                          << ", nodes: " << netlist.number_of_nodes()

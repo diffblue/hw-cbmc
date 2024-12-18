@@ -13,10 +13,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <trans-netlist/compute_ct.h>
 #include <trans-netlist/ldg.h>
-#include <trans-netlist/trans_to_netlist.h>
 
 #include "ebmc_error.h"
 #include "ebmc_version.h"
+#include "netlist.h"
 
 #include <iostream>
 
@@ -149,13 +149,8 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
 
   try
   {
-    convert_trans_to_netlist(
-      transition_system.symbol_table,
-      transition_system.main_symbol->name,
-      transition_system.trans_expr,
-      properties.make_property_map(),
-      netlist,
-      message.get_message_handler());
+    netlist = ::make_netlist(
+      transition_system, properties, message.get_message_handler());
   }
   
   catch(const std::string &error_str)
