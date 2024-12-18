@@ -20,10 +20,11 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <temporal-logic/temporal_logic.h>
 #include <trans-netlist/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>
-#include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 #include <verilog/sva_expr.h>
+
+#include "netlist.h"
 
 #include <algorithm>
 #include <iostream>
@@ -193,21 +194,16 @@ property_checker_resultt bdd_enginet::operator()()
     if(cmdline.isset("liveness-to-safety"))
       liveness_to_safety(transition_system, properties);
 
-    const auto property_map = properties.make_property_map();
-
     message.status() << "Building netlist" << messaget::eom;
 
-    convert_trans_to_netlist(
-      transition_system.symbol_table,
-      transition_system.main_symbol->name,
-      transition_system.trans_expr,
-      property_map,
-      netlist,
-      message.get_message_handler());
+    netlist = make_netlist(
+      transition_system, properties, message.get_message_handler());
 
     message.statistics() << "Latches: " << netlist.var_map.latches.size()
                          << ", nodes: " << netlist.number_of_nodes()
                          << messaget::eom;
+
+    const auto property_map = properties.make_property_map();
 
     for(const auto &[_, expr] : property_map)
       get_atomic_propositions(expr);

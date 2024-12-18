@@ -19,6 +19,7 @@ SRC = \
       liveness_to_safety.cpp \
       live_signal.cpp \
       main.cpp \
+      netlist.cpp \
       neural_liveness.cpp \
       output_file.cpp \
       output_verilog.cpp \
