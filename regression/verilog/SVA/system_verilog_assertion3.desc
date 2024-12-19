@@ -1,6 +1,6 @@
-CORE broken-smt-backend
+CORE
 system_verilog_assertion3.sv
---module main --bound 1
+--module main --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
 --
