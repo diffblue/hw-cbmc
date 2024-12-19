@@ -11,11 +11,15 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_to_netlist.h>
 
+#include "instrument_past.h"
+
 netlistt make_netlist(
   transition_systemt &transition_system,
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
+  instrument_past(transition_system, properties);
+
   netlistt netlist;
 
   convert_trans_to_netlist(
