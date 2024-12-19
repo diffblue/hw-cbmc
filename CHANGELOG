@@ -1,5 +1,6 @@
 # EBMC 5.5
 
+* Verilog: bugfix for $onehot0
 * Verilog: fix for primitive gates with more than two inputs
 
 # EBMC 5.4
