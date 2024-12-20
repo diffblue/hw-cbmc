@@ -6,4 +6,4 @@ range_type8.smv
 ^SIGNAL=0$
 --
 --
-We do not have type checking for unary minus.
+We do not have solver support for unary minus on ranges.

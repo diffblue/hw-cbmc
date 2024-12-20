@@ -752,6 +752,29 @@ void smv_typecheckt::typecheck_expr_rec(
         << "Expected number type for " << to_string(expr);
     }
   }
+  else if(expr.id() == ID_unary_minus)
+  {
+    typecheck_op(expr, dest_type, mode);
+
+    if(expr.operands().size() != 1)
+    {
+      error().source_location = expr.find_source_location();
+      error() << "Expected one operand for " << expr.id() << eom;
+      throw 0;
+    }
+
+    if(dest_type.is_nil())
+    {
+      if(expr.type().id() == ID_range || expr.type().id() == ID_bool)
+      {
+        // find proper type for precise arithmetic
+        smv_ranget smv_range_op =
+          convert_type(to_unary_minus_expr(expr).op().type());
+        smv_ranget new_range = -smv_range_op;
+        new_range.to_type(expr.type());
+      }
+    }
+  }
   else if(expr.id()==ID_constant)
   {
     if(expr.type().id()==ID_integer)
