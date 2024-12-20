@@ -4,6 +4,8 @@
 * Verilog: fix for primitive gates with more than two inputs
 * Verilog: Support $past when using AIG-based engines
 * Verilog: fix for nor/nand/xnor primitive gates
+* SystemVerilog: $bitstoreal/$bitstoshortreal, $realtobits/$shortrealtobits
+* SystemVerilog: $itor, $rtoi
 
 # EBMC 5.4
 

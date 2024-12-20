@@ -79,7 +79,7 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
 
   // Do the operands recursively
   for(auto &op : expr.operands())
-    op = synth_expr(op, symbol_state);
+    op = synth_expr_rec(op, symbol_state);
 
   if(expr.id()==ID_symbol)
   {
