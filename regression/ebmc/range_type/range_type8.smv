@@ -1,0 +1,14 @@
+MODULE main
+VAR x:1..6;
+
+ASSIGN
+  init(x) := 6;
+
+  next(x) :=
+    case
+      x!=1 : x + -1; -- unary minus
+      TRUE: 1;
+    esac;
+
+-- should fail
+LTLSPEC G x!=1
