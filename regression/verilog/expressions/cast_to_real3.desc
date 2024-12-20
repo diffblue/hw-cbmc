@@ -1,0 +1,9 @@
+KNOWNBUG
+cast_to_real3.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The flattening solver fails with a width error.
