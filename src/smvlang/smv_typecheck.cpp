@@ -82,7 +82,12 @@ protected:
     smv_ranget():from(0), to(0)
     {
     }
-  
+
+    smv_ranget(mp_integer _from, mp_integer _to)
+      : from(std::move(_from)), to(std::move(_to))
+    {
+    }
+
     mp_integer from, to;
     
     bool is_contained_in(const smv_ranget &other) const
@@ -140,6 +145,12 @@ protected:
       to=std::max(p1, std::max(p2, std::max(p3, p4)));
       
       return *this;
+    }
+
+    // unary minus
+    smv_ranget operator-() const
+    {
+      return smv_ranget{-to, -from};
     }
   };
   
@@ -820,6 +831,29 @@ void smv_typecheckt::typecheck(
       error().source_location=expr.find_source_location();
       error() << "Expected number type for " << to_string(expr) << eom;
       throw 0;
+    }
+  }
+  else if(expr.id() == ID_unary_minus)
+  {
+    typecheck_op(expr, type, mode);
+
+    if(expr.operands().size() != 1)
+    {
+      error().source_location = expr.find_source_location();
+      error() << "Expected one operand for " << expr.id() << eom;
+      throw 0;
+    }
+
+    if(type.is_nil())
+    {
+      if(expr.type().id() == ID_range || expr.type().id() == ID_bool)
+      {
+        // find proper type for precise arithmetic
+        smv_ranget smv_range_op =
+          convert_type(to_unary_minus_expr(expr).op().type());
+        smv_ranget new_range = -smv_range_op;
+        new_range.to_type(expr.type());
+      }
     }
   }
   else if(expr.id()==ID_constant)
