@@ -1,0 +1,9 @@
+KNOWNBUG broken-smt-backend
+range_type8.smv
+--bound 5
+^\[spec1\] G x != 1: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+We do not have type checking for unary minus.

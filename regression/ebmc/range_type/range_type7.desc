@@ -1,0 +1,8 @@
+CORE broken-smt-backend
+range_type7.smv
+--bound 5
+^\[spec1\] G x != 1: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
