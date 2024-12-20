@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/c_types.h>
+#include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
 
 #include "aval_bval_encoding.h"
@@ -272,7 +273,18 @@ exprt verilog_lowering(exprt expr)
       }
     }
 
-    return expr;
+    // Cast to float? Turn into floatbv_typecast,
+    // with rounding mode.
+    if(typecast_expr.type().id() == ID_floatbv)
+    {
+      auto rm = ieee_floatt::rounding_mode_expr(
+        ieee_floatt::rounding_modet::ROUND_TO_EVEN);
+      auto floatbv_typecast =
+        floatbv_typecast_exprt{typecast_expr.op(), rm, typecast_expr.type()};
+      return std::move(floatbv_typecast);
+    }
+    else
+      return expr;
   }
   else if(expr.id() == ID_verilog_explicit_type_cast)
   {
