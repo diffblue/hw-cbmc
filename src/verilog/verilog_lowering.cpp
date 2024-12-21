@@ -416,3 +416,11 @@ exprt verilog_lowering(exprt expr)
 
   UNREACHABLE;
 }
+
+typet verilog_lowering(typet type)
+{
+  if(type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+    return lower_to_aval_bval(type);
+  else
+    return type;
+}
