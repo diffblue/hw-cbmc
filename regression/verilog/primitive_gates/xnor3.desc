@@ -1,7 +1,7 @@
 CORE
 xnor3.sv
---bound 0
-^\[main\.xnor_ok\] always main\.xnor_in1 ~\^ main\.xnor_in2 == main\.xnor_out: PROVED up to bound 0$
+
+^\[main\.xnor_ok\] always main\.xnor_in1 ~\^ main\.xnor_in2 == main\.xnor_out: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

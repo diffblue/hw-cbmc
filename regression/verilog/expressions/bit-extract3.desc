@@ -1,12 +1,12 @@
 CORE
 bit-extract3.sv
---module main --bound 0
+--module main
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property1\] .*: PROVED up to bound 0$
-^\[main\.property2\] .*: PROVED up to bound 0$
-^\[main\.property3\] .*: PROVED up to bound 0$
-^\[main\.property4\] .*: PROVED up to bound 0$
-^\[main\.property5\] .*: PROVED up to bound 0$
+^\[main\.property1\] .*: PROVED$
+^\[main\.property2\] .*: PROVED$
+^\[main\.property3\] .*: PROVED$
+^\[main\.property4\] .*: PROVED$
+^\[main\.property5\] .*: PROVED$
 --
 ^warning: ignoring

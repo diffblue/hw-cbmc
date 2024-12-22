@@ -1,10 +1,10 @@
 CORE
 streaming_concatenation1.sv
---bound 0
-^\[.*\] always \{<<\{4'b1010\}\} == 4'b0101: PROVED up to bound 0$
-^\[.*\] always \{<<\{1 == 1\}\} == 1: PROVED up to bound 0$
-^\[.*\] always \{<<4\{16'hABCD\}\} == 16'hDCBA: PROVED up to bound 0$
-^\[.*\] always \{<<8\{16'hABCD\}\} == 16'hCDAB: PROVED up to bound 0$
+
+^\[.*\] always \{<<\{4'b1010\}\} == 4'b0101: PROVED$
+^\[.*\] always \{<<\{1 == 1\}\} == 1: PROVED$
+^\[.*\] always \{<<4\{16'hABCD\}\} == 16'hDCBA: PROVED$
+^\[.*\] always \{<<8\{16'hABCD\}\} == 16'hCDAB: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

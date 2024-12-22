@@ -1,6 +1,6 @@
 CORE
 generate-inst2.v
---module main --bound 0
+--module main
 ^EXIT=10$
 ^SIGNAL=0$
 ^no properties$

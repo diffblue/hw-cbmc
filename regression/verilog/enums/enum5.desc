@@ -1,6 +1,6 @@
 CORE
 enum5.sv
---bound 0
+
 ^file .* line 6: expected constant expression, but got `main\.some_wire'$
 ^EXIT=2$
 ^SIGNAL=0$

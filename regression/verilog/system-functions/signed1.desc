@@ -1,6 +1,6 @@
 CORE
 signed1.v
---bound 0
+
 ^EXIT=10$
 ^SIGNAL=0$
 --

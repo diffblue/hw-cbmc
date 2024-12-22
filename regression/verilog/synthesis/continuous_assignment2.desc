@@ -1,6 +1,6 @@
 CORE
 continuous_assignment2.sv
---module main --bound 0
+--module main
 ^EXIT=0$
 ^SIGNAL=0$
 --

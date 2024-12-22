@@ -208,6 +208,13 @@ public:
         result.emplace(p.identifier, p.normalized_expr);
     return result;
   }
+
+  void reset_failure_to_unknown()
+  {
+    for(auto &p : properties)
+      if(p.is_failure())
+        p.unknown();
+  }
 };
 
 #endif // CPROVER_EBMC_PROPERTIES_H

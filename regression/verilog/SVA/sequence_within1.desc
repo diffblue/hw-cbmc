@@ -1,6 +1,6 @@
 CORE
 sequence_within1.sv
-
+--bound 5
 ^\[.*\] main\.x == 0 within main\.x == 1: FAILURE: property not supported by BMC engine$
 ^EXIT=10$
 ^SIGNAL=0$

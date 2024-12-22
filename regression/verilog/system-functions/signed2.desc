@@ -1,10 +1,10 @@
 CORE
 signed2.sv
---bound 0
-^\[main\.p0\] always \$signed\(1\) == 1: PROVED up to bound 0$
-^\[main\.p1\] always \$signed\(1'b1\) == -1: PROVED up to bound 0$
-^\[main\.p2\] always \$signed\(-1\) == -1: PROVED up to bound 0$
-^\[main\.p3\] always \$signed\(!0\) == -1: PROVED up to bound 0$
+
+^\[main\.p0\] always \$signed\(1\) == 1: PROVED$
+^\[main\.p1\] always \$signed\(1'b1\) == -1: PROVED$
+^\[main\.p2\] always \$signed\(-1\) == -1: PROVED$
+^\[main\.p3\] always \$signed\(!0\) == -1: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

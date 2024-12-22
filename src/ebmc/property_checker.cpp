@@ -356,6 +356,59 @@ property_checker_resultt bit_level_bmc(
   }
 }
 
+property_checker_resultt engine_heuristic(
+  const cmdlinet &cmdline,
+  transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  message_handlert &message_handler)
+{
+  messaget message(message_handler);
+
+  if(properties.properties.empty())
+  {
+    message.error() << "no properties" << messaget::eom;
+    return property_checker_resultt::error();
+  }
+
+  auto solver_factory = ebmc_solver_factory(cmdline);
+
+  if(!properties.has_unknown_property())
+    return property_checker_resultt{properties}; // done
+
+  message.status() << "No engine given, attempting heuristic engine selection"
+                   << messaget::eom;
+
+  // First try 1-induction, word-level
+  message.status() << "Attempting 1-induction" << messaget::eom;
+
+  k_induction(
+    1, transition_system, properties, solver_factory, message_handler);
+
+  properties.reset_failure_to_unknown();
+
+  if(!properties.has_unknown_property())
+    return property_checker_resultt{properties}; // done
+
+  // Now try BMC with bound 5, word-level
+
+  bmc(
+    5,     // bound
+    false, // convert_only
+    cmdline.isset("bmc-with-assumptions"),
+    transition_system,
+    properties,
+    solver_factory,
+    message_handler);
+
+  properties.reset_failure_to_unknown();
+
+  if(!properties.has_unknown_property())
+    return property_checker_resultt{properties}; // done
+
+  // Give up
+  return property_checker_resultt{properties}; // done
+}
+
 property_checker_resultt property_checker(
   const cmdlinet &cmdline,
   transition_systemt &transition_system,
@@ -371,6 +424,7 @@ property_checker_resultt property_checker(
     }
     else if(cmdline.isset("aig") || cmdline.isset("dimacs"))
     {
+      // bit-level BMC
       return bit_level_bmc(
         cmdline, transition_system, properties, message_handler);
     }
@@ -388,10 +442,16 @@ property_checker_resultt property_checker(
         cmdline, transition_system, properties, message_handler);
 #endif
     }
+    else if(cmdline.isset("bound"))
+    {
+      // word-level BMC
+      return word_level_bmc(
+        cmdline, transition_system, properties, message_handler);
+    }
     else
     {
-      // default engine is word-level BMC
-      return word_level_bmc(
+      // heuristic engine selection
+      return engine_heuristic(
         cmdline, transition_system, properties, message_handler);
     }
   }();

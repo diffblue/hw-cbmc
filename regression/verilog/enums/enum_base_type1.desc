@@ -1,7 +1,7 @@
 CORE
 enum_base_type1.sv
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
-^\[.*\] always \$bits\(main\.A\) == 8: PROVED up to bound 0$
+^\[.*\] always \$bits\(main\.A\) == 8: PROVED$
 --

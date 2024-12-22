@@ -1,6 +1,6 @@
 CORE
 parameters10.v
---bound 0
+
 ^file .* line 6: expected constant expression, but got `main\.x'$
 ^EXIT=2$
 ^SIGNAL=0$

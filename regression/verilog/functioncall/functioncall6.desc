@@ -1,8 +1,8 @@
 CORE
 functioncall6.v
---module main --bound 0
+--module main
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property\.p1\] always .*: PROVED up to bound 0$
+^\[main\.property\.p1\] always .*: PROVED$
 --
 ^warning: ignoring

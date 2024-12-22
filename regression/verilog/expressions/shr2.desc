@@ -1,6 +1,6 @@
 CORE
 shr2.v
---bound 0
+
 ^file .* line 4: operand 1\.1 must be integral$
 ^EXIT=2$
 ^SIGNAL=0$

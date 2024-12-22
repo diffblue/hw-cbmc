@@ -1,6 +1,6 @@
 CORE
 for_with_reg.v
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
 --
