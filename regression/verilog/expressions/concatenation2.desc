@@ -1,9 +1,9 @@
 CORE
 concatenation2.v
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property\.pA\] always main\.A == -1: PROVED up to bound 0$
-^\[main\.property\.pB\] always main\.B == 15: PROVED up to bound 0$
+^\[main\.property\.pA\] always main\.A == -1: PROVED$
+^\[main\.property\.pB\] always main\.B == 15: PROVED$
 --
 ^warning: ignoring

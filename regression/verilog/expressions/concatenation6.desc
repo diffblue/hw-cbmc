@@ -1,7 +1,7 @@
 CORE
 concatenation6.sv
---bound 0
-^\[.*\] always main\.x == \{ 0, 1 \}: PROVED up to bound 0$
+
+^\[.*\] always main\.x == \{ 0, 1 \}: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

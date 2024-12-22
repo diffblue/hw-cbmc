@@ -1,6 +1,6 @@
 CORE
 sequence_first_match1.sv
-
+--bound 5
 ^\[.*\] first_match\(main\.x == 0\): FAILURE: property not supported by BMC engine$
 ^EXIT=10$
 ^SIGNAL=0$
