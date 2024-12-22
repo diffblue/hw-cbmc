@@ -3,12 +3,12 @@ clog2.v
 
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main.property.p0\] .* PROVED up to bound 1$
-^\[main.property.p1\] .* PROVED up to bound 1$
-^\[main.property.p2\] .* PROVED up to bound 1$
-^\[main.property.p3\] .* PROVED up to bound 1$
-^\[main.property.p4\] .* PROVED up to bound 1$
-^\[main.property.p5\] .* PROVED up to bound 1$
-^\[main.property.p6\] .* PROVED up to bound 1$
+^\[main.property.p0\] .* PROVED$
+^\[main.property.p1\] .* PROVED$
+^\[main.property.p2\] .* PROVED$
+^\[main.property.p3\] .* PROVED$
+^\[main.property.p4\] .* PROVED$
+^\[main.property.p5\] .* PROVED$
+^\[main.property.p6\] .* PROVED$
 --
 ^warning: ignoring

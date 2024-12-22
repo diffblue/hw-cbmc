@@ -1,8 +1,8 @@
 CORE
 concatenation3.sv
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
-^\[.*\] always \{ 5'bxz01\?, 4'b10zx \} === 9'bxz01\?10zx: PROVED up to bound 0$
+^\[.*\] always \{ 5'bxz01\?, 4'b10zx \} === 9'bxz01\?10zx: PROVED$
 --
 ^warning: ignoring

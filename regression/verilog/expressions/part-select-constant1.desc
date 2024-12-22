@@ -1,7 +1,7 @@
 CORE
 part-select-constant1.sv
---bound 0
-^\[.*\] .* PROVED up to bound 0$
+
+^\[.*\] .* PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

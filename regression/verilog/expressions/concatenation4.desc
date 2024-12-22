@@ -1,6 +1,6 @@
 KNOWNBUG
 concatenation4.v
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
 --

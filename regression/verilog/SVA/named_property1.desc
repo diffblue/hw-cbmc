@@ -1,7 +1,7 @@
 CORE
 named_property1.sv
---bound 0
-^\[main\.assert\.1\] always main\.x_is_ten: PROVED up to bound 0$
+
+^\[main\.assert\.1\] always main\.x_is_ten: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

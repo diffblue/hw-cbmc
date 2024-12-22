@@ -1,8 +1,8 @@
 CORE
 immediate2.sv
---bound 0
+
 ^\[main\.assume\.1\] assume always 0: ASSUMED$
-^\[main\.assert\.2\] always main\.index < 10: PROVED up to bound 0$
+^\[main\.assert\.2\] always main\.index < 10: PROVED$
 ^\[main\.assert\.3\] always 0: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$

@@ -1,6 +1,6 @@
 KNOWNBUG
 cast_to_real2.sv
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
 --
