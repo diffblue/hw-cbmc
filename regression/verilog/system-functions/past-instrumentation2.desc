@@ -1,0 +1,12 @@
+CORE
+past-instrumentation2.sv
+--bdd
+\[main\.assert\.1\] always \$past\(main\.counter, 0\) == main\.counter: PROVED$
+\[main\.assert\.2\] always main\.counter >= 1 -> \$past\(main\.counter, 1\) == main\.counter - 1: PROVED$
+\[main\.assert\.3\] always main\.counter >= 2 -> \$past\(main\.counter, 2\) == main\.counter - 2: PROVED$
+\[main\.assert\.4\] always main\.counter == 0 -> \$past\(main\.counter, 1\) == 0: REFUTED$
+\[main\.assert\.5\] always main\.counter == 1 -> \$past\(main\.counter, 2\) == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

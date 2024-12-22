@@ -2,6 +2,7 @@
 
 * Verilog: bugfix for $onehot0
 * Verilog: fix for primitive gates with more than two inputs
+* Verilog: Support $past when using AIG-based engines
 
 # EBMC 5.4
 

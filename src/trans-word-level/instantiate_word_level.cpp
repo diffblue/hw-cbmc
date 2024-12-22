@@ -94,27 +94,6 @@ protected:
 
 /*******************************************************************\
 
-Function: default_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static exprt default_value(const typet &type)
-{
-  auto zero = from_integer(0, type);
-  if(zero.is_nil())
-    throw "failed to create $past default value";
-  else
-    return std::move(zero);
-}
-
-/*******************************************************************\
-
 Function: wl_instantiatet::instantiate_rec
 
   Inputs:
@@ -168,7 +147,7 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     if(ticks > t)
     {
       // return the 'default value' for the type
-      return {t, default_value(verilog_past.type())};
+      return {t, verilog_past.default_value()};
     }
     else
     {
