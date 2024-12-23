@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x : 1..10;
+
+ASSIGN x := case
+  5 : 1;
+  1 : 1;
+esac;
+

@@ -1,0 +1,5 @@
+MODULE main
+
+VAR x : 1..10;
+
+ASSIGN x := 5 ? 1 : 2;
