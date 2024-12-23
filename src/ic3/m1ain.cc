@@ -141,6 +141,46 @@ int ic3_enginet::operator()()
       report_results(cmdline, result, ns, message.get_message_handler());
       return result.exit_code();
     }
+
+    const0 = false;
+    const1 = false;
+    orig_names = false;
+    
+    // print_nodes();
+    // print_var_map(std::cout);
+    read_ebmc_input();
+    // print_blif3("tst.blif",Ci.N);
+    if (cmdline.isset("aiger")) {
+      printf("converting to aiger format\n");
+      Ci.print_aiger_format();
+      exit(0);
+    }
+    
+    //  printf("Constr_gates.size() = %d\n",Ci.Constr_gates.size()); 
+    int result = Ci.run_ic3();
+
+    // find the first unknown property
+    for(auto &property : properties.properties)
+    {
+      if(property.is_unknown())
+      {
+        switch(result)
+        {
+        case 1: property.refuted(); break;
+        case 2: property.proved(); break;
+        default: property.failure(); break;
+        }
+        break;
+      }
+    }
+
+    {
+      property_checker_resultt result{properties};
+      namespacet ns(transition_system.symbol_table);
+      report_results(cmdline, result, ns, message.get_message_handler());
+    }
+
+    return result;
   }
   catch(const std::string &error_str)
   {
@@ -154,24 +194,6 @@ int ic3_enginet::operator()()
   catch(int)    {
     return 1;
   }
-
-  const0 = false;
-  const1 = false;
-  orig_names = false;
-  
-  // print_nodes();
-  // print_var_map(std::cout);
-  read_ebmc_input();
-  // print_blif3("tst.blif",Ci.N);
-  if (cmdline.isset("aiger")) {
-    printf("converting to aiger format\n");
-    Ci.print_aiger_format();
-    exit(0);
-  }
-  
-  //  printf("Constr_gates.size() = %d\n",Ci.Constr_gates.size()); 
-  return(Ci.run_ic3());
-
 } /* end of function operator */
 
 /* ======================

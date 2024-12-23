@@ -1,9 +1,10 @@
 CORE
 bobcount.sv
 --ic3
-^EXIT=2$
-^SIGNAL=0$
+^\[bobcount\.assert\.1\] always !bobcount\.p0: PROVED$
 ^property HOLDS
 ^inductive invariant verification is ok
+^EXIT=2$
+^SIGNAL=0$
 --
 ^inductive invariant verification failed

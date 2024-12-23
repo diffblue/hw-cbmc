@@ -1,9 +1,10 @@
 CORE
 pdtvispeterson.sv
 --ic3
-^EXIT=2$
-^SIGNAL=0$
+^\[pdtvispeterson\.assert\.1\] always !pdtvispeterson\.p0: PROVED$
 ^property HOLDS
 ^inductive invariant verification is ok
+^EXIT=2$
+^SIGNAL=0$
 --
 ^inductive invariant verification failed
