@@ -1,9 +1,10 @@
 CORE
 bobmiterbm1multi.sv
 --ic3 --property bobmiterbm1multi.assert.1033
-^EXIT=2$
-^SIGNAL=0$
+^\[bobmiterbm1multi\.assert\.1033\] always !bobmiterbm1multi\.p1032: PROVED$
 ^property HOLDS
 ^inductive invariant verification is ok
+^EXIT=2$
+^SIGNAL=0$
 --
 ^inductive invariant verification failed

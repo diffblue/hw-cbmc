@@ -1,9 +1,10 @@
 CORE
 eijks208o.sv
 --ic3
-^EXIT=2$
-^SIGNAL=0$
+^\[eijks208o\.assert\.1\] always !eijks208o\.p0: PROVED$
 ^property HOLDS
 ^inductive invariant verification is ok
+^EXIT=2$
+^SIGNAL=0$
 --
 ^inductive invariant verification failed
