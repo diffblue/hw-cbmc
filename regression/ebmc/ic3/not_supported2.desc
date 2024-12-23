@@ -1,0 +1,7 @@
+CORE
+not_supported2.smv
+--ic3
+^\[.*\] AG TRUE: FAILURE: property not supported by IC3 engine$
+^EXIT=10$
+^SIGNAL=0$
+--
