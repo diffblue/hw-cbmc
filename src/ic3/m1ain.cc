@@ -117,6 +117,16 @@ int ic3_enginet::operator()()
       return 1;
     }
 
+    // No support for assumptions
+    for(auto &property : properties.properties)
+    {
+      if(property.is_assumed())
+      {
+        message.error() << "no support for assumptions" << messaget::eom;
+        return 1;
+      }
+    }
+
     std::size_t number_of_properties = 0;
 
     for(auto &property : properties.properties)
