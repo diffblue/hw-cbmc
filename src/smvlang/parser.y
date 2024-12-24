@@ -377,10 +377,10 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            {
              binary($$, $3, ID_equal, $6, bool_typet{});
 
-             if(stack_expr($1).id()=="next")
+             if(stack_expr($1).id()==ID_smv_next)
              {
                exprt &op=to_binary_expr(stack_expr($$)).op0();
-               unary_exprt tmp("smv_next", std::move(op));
+               unary_exprt tmp(ID_smv_next, std::move(op));
                tmp.swap(op);
                PARSER.module->add_trans(stack_expr($$));
              }
@@ -393,7 +393,7 @@ assignment_var: variable_name
            ;
 
 assignment_head: init_Token { init($$, ID_init); }
-               | NEXT_Token { init($$, "next"); }
+               | NEXT_Token { init($$, ID_smv_next); }
                ;
 
 defines:     define
@@ -439,7 +439,7 @@ formula    : term
            ;
 
 term       : variable_name
-           | NEXT_Token '(' term ')'  { init($$, "smv_next"); mto($$, $3); }
+           | NEXT_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
            | '(' formula ')'          { $$=$2; }
            | '{' formula_list '}'     { $$=$2; stack_expr($$).id("smv_nondet_choice"); }
            | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
