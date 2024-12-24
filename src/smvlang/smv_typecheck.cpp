@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/typecheck.h>
 
 #include "expr2smv.h"
+#include "smv_range.h"
 
 #include <algorithm>
 #include <cassert>
@@ -39,7 +40,9 @@ public:
     nondet_count=0;
   }
 
-  virtual ~smv_typecheckt() { }
+  ~smv_typecheckt() override
+  {
+  }
 
   typedef enum
   {
@@ -50,25 +53,24 @@ public:
     CTL
   } modet;
 
-  void convert(smv_parse_treet::modulet &smv_module);
-  void convert(smv_parse_treet::mc_varst &vars);
+  void convert(smv_parse_treet::modulet &);
+  void convert(smv_parse_treet::mc_varst &);
 
-  void collect_define(const exprt &expr);
+  void collect_define(const exprt &);
   void convert_defines(exprt::operandst &invar);
   void convert_define(const irep_idt &identifier);
 
   typedef enum { NORMAL, NEXT } expr_modet;
-  virtual void convert(exprt &exprt, expr_modet expr_mode);
+  void convert(exprt &, expr_modet);
 
-  virtual void typecheck(exprt &exprt, const typet &type, modet mode);
-  virtual void typecheck_op(exprt &exprt, const typet &type, modet mode);
+  void typecheck(exprt &, const typet &, modet);
+  void typecheck_op(exprt &, const typet &, modet);
 
-  virtual void typecheck();
+  void typecheck() override;
 
-  // overload to use SMV syntax
-  
-  virtual std::string to_string(const typet &type);
-  virtual std::string to_string(const exprt &expr);
+  // These output SMV syntax
+  std::string to_string(const typet &);
+  std::string to_string(const exprt &);
 
 protected:
   smv_parse_treet &smv_parse_tree;
@@ -76,82 +78,15 @@ protected:
   const std::string &module;
   bool do_spec;
 
-  class smv_ranget
-  {
-  public:
-    smv_ranget():from(0), to(0)
-    {
-    }
-  
-    mp_integer from, to;
-    
-    bool is_contained_in(const smv_ranget &other) const
-    {
-      if(other.from>from) return false;
-      if(other.to<to) return false;
-      return true;
-    }
-    
-    void make_union(const smv_ranget &other)
-    {
-      mp_min(from, other.from);
-      mp_max(to, other.to);
-    }
-    
-    void to_type(typet &dest) const
-    {
-      dest=typet(ID_range);
-      dest.set(ID_from, integer2string(from));
-      dest.set(ID_to, integer2string(to));
-    }
-    
-    bool is_bool() const
-    {
-      return from==0 && to==1;
-    }
-    
-    bool is_singleton() const
-    {
-      return from==to;
-    }
-    
-    smv_ranget &operator+(const smv_ranget &other)
-    {
-      from+=other.from;
-      to+=other.to;
-      return *this;
-    }
-
-    smv_ranget &operator-(const smv_ranget &other)
-    {
-      from-=other.from;
-      to-=other.to;
-      return *this;
-    }
-
-    smv_ranget &operator*(const smv_ranget &other)
-    {
-      mp_integer p1=from*other.from;
-      mp_integer p2=from*other.to;
-      mp_integer p3=to*other.from;
-      mp_integer p4=to*other.to;
-
-      from=std::min(p1, std::min(p2, std::min(p3, p4)));
-      to=std::max(p1, std::max(p2, std::max(p3, p4)));
-      
-      return *this;
-    }
-  };
-  
-  smv_ranget convert_type(const typet &type);
-  void convert(smv_parse_treet::modulet::itemt &item);
-  void typecheck(smv_parse_treet::modulet::itemt &item);
+  smv_ranget convert_type(const typet &);
+  void convert(smv_parse_treet::modulet::itemt &);
+  void typecheck(smv_parse_treet::modulet::itemt &);
 
   smv_parse_treet::modulet *modulep;
 
   unsigned nondet_count;
 
-  void flatten_hierarchy(smv_parse_treet::modulet &module);
+  void flatten_hierarchy(smv_parse_treet::modulet &);
 
   void instantiate(
     smv_parse_treet::modulet &,
@@ -166,11 +101,9 @@ protected:
 
   typedef std::map<irep_idt, exprt> rename_mapt;
 
-  void instantiate_rename(exprt &expr,
-                          const rename_mapt &rename_map);
+  void instantiate_rename(exprt &, const rename_mapt &rename_map);
 
-  void convert_ports(smv_parse_treet::modulet &smv_module,
-                     typet &dest);
+  void convert_ports(smv_parse_treet::modulet &, typet &dest);
 
   // for defines
   class definet
@@ -220,14 +153,12 @@ void smv_typecheckt::convert_ports(
 
   ports.reserve(smv_module.ports.size());
 
-  for(std::list<irep_idt>::const_iterator
-      it=smv_module.ports.begin();
-      it!=smv_module.ports.end();
-      it++)
+  for(const auto &port_name : smv_module.ports)
   {
     ports.push_back(exprt(ID_symbol));
-    ports.back().set(ID_identifier,
-      id2string(smv_module.name)+"::var::"+id2string(*it));
+    ports.back().set(
+      ID_identifier,
+      id2string(smv_module.name) + "::var::" + id2string(port_name));
   }
 }
 
@@ -245,25 +176,23 @@ Function: smv_typecheckt::flatten_hierarchy
 
 void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
 {
-  for(smv_parse_treet::mc_varst::iterator
-      it=smv_module.vars.begin();
-      it!=smv_module.vars.end();
-      it++)
+  for(auto &var_it : smv_module.vars)
   {
-    smv_parse_treet::mc_vart &var=it->second;
+    smv_parse_treet::mc_vart &var = var_it.second;
 
     if(var.type.id()=="submodule")
     {
       exprt &inst=static_cast<exprt &>(static_cast<irept &>(var.type));
 
-      Forall_operands(o_it, inst)
-        convert(*o_it, NORMAL);
+      for(auto &op : inst.operands())
+        convert(op, NORMAL);
 
-      instantiate(smv_module,
-                  inst.get(ID_identifier),
-                  it->first,
-                  inst.operands(),
-                  inst.find_source_location());
+      instantiate(
+        smv_module,
+        inst.get(ID_identifier),
+        var_it.first,
+        inst.operands(),
+        inst.find_source_location());
     }
   }
 }
@@ -292,20 +221,14 @@ void smv_typecheckt::instantiate(
 
   if(s_it==symbol_table.symbols.end())
   {
-    error().source_location=location;
-    error() << "submodule `"
-            << identifier
-            << "' not found" << eom;
-    throw 0;
+    throw errort().with_location(location)
+      << "submodule `" << identifier << "' not found";
   }
 
   if(s_it->second.type.id()!=ID_module)
   {
-    error().source_location=location;
-    error() << "submodule `"
-            << identifier
-            << "' not a module" << eom;
-    throw 0;
+    throw errort().with_location(location)
+      << "submodule `" << identifier << "' not a module";
   }
 
   const irept::subt &ports=s_it->second.type.find(ID_ports).get_sub();
@@ -314,16 +237,14 @@ void smv_typecheckt::instantiate(
 
   if(ports.size()!=operands.size())
   {
-    error().source_location=location;
-    error() << "submodule `" << identifier
-            << "' has wrong number of arguments" << eom;
-    throw 0;
+    throw errort().with_location(location)
+      << "submodule `" << identifier << "' has wrong number of arguments";
   }
 
   std::set<irep_idt> port_identifiers;
   rename_mapt rename_map;
 
-  for(unsigned i=0; i<ports.size(); i++)
+  for(std::size_t i = 0; i < ports.size(); i++)
   {
     const irep_idt &identifier=ports[i].get(ID_identifier);
     rename_map.insert(std::pair<irep_idt, exprt>(identifier, operands[i]));
@@ -346,12 +267,14 @@ void smv_typecheckt::instantiate(
 
     if(s_it2==symbol_table.symbols.end())
     {
-      error() << "symbol `" << v_it->second << "' not found" << eom;
-      throw 0;
+      throw errort() << "symbol `" << v_it->second << "' not found";
     }
 
-    if (port_identifiers.find(s_it2->first) != port_identifiers.end()) {
-    } else if (s_it2->second.type.id() == ID_module) {
+    if(port_identifiers.find(s_it2->first) != port_identifiers.end())
+    {
+    }
+    else if(s_it2->second.type.id() == ID_module)
+    {
     }
     else
     {
@@ -381,18 +304,13 @@ void smv_typecheckt::instantiate(
 
   // fix values (macros)
 
-  for(std::set<irep_idt>::const_iterator
-      v_it=var_identifiers.begin();
-      v_it!=var_identifiers.end();
-      v_it++)
+  for(const auto &v_id : var_identifiers)
   {
-    auto s_it2=
-      symbol_table.get_writeable(*v_it);
+    auto s_it2 = symbol_table.get_writeable(v_id);
 
     if(s_it2==nullptr)
     {
-      error() << "symbol `" << *v_it << "' not found" << eom;
-      throw 0;
+      throw errort() << "symbol `" << v_id << "' not found";
     }
 
     symbolt &symbol=*s_it2;
@@ -451,8 +369,8 @@ void smv_typecheckt::instantiate_rename(
   exprt &expr,
   const rename_mapt &rename_map)
 {
-  Forall_operands(it, expr)
-    instantiate_rename(*it, rename_map);
+  for(auto &op : expr.operands())
+    instantiate_rename(op, rename_map);
 
   if(expr.id()==ID_symbol || expr.id()==ID_next_symbol)
   {
@@ -475,10 +393,9 @@ void smv_typecheckt::instantiate_rename(
         }
         else
         {
-          error().source_location=expr.find_source_location();
-          error() << "expected symbol expression here, but got "
-                  << to_string(it->second) << eom;
-          throw 0;
+          throw errort().with_location(expr.find_source_location())
+            << "expected symbol expression here, but got "
+            << to_string(it->second);
         }
       }
       else
@@ -506,14 +423,12 @@ void smv_typecheckt::typecheck_op(
 {
   if(expr.operands().size()==0)
   {
-    error().source_location=expr.find_source_location();
-    error() << "Expected operands for " << expr.id()
-            << " operator" << eom;
-    throw 0;
+    throw errort().with_location(expr.find_source_location())
+      << "Expected operands for " << expr.id() << " operator";
   }
 
-  Forall_operands(it, expr)
-    typecheck(*it, type, mode);
+  for(auto &op : expr.operands())
+    typecheck(op, type, mode);
 
   expr.type()=type;
 
@@ -523,10 +438,10 @@ void smv_typecheckt::typecheck_op(
   {
     // figure out types
 
-    forall_operands(it, expr)
-      if(!it->type().is_nil())
+    for(const auto &op : expr.operands())
+      if(!op.type().is_nil())
       {
-        expr.type()=it->type();
+        expr.type() = op.type();
         break;
       }
   }
@@ -544,7 +459,7 @@ Function: smv_typecheckt::convert_type
 
 \*******************************************************************/
 
-smv_typecheckt::smv_ranget smv_typecheckt::convert_type(const typet &src)
+smv_ranget smv_typecheckt::convert_type(const typet &src)
 {
   smv_ranget dest;
   
@@ -572,9 +487,8 @@ smv_typecheckt::smv_ranget smv_typecheckt::convert_type(const typet &src)
   }
   else
   {
-    error().source_location=src.source_location();
-    error() << "Unexpected type: `" << to_string(src) << "'" << eom;
-    throw 0;
+    throw errort().with_location(src.source_location())
+      << "Unexpected type: `" << to_string(src) << "'";
   }
   
   return dest;
@@ -664,9 +578,8 @@ void smv_typecheckt::typecheck(
 
     if(s_it==nullptr)
     {
-      error().source_location=expr.find_source_location();
-      error() << "variable `" << identifier << "' not found" << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "variable `" << identifier << "' not found";
     }
 
     symbolt &symbol=*s_it;
@@ -707,24 +620,23 @@ void smv_typecheckt::typecheck(
     typet op_type;
     op_type.make_nil();
 
-    forall_operands(it, expr)
+    for(const auto &op : expr.operands())
     {
-      typet tmp=type_union(it->type(), op_type);
+      typet tmp = type_union(op.type(), op_type);
       op_type=tmp;
     }
-    
-    Forall_operands(it, expr)
-      typecheck(*it, op_type, mode);
-      
+
+    for(auto &op : expr.operands())
+      typecheck(op, op_type, mode);
+
     expr.type()=op_type;
   }
   else if(expr.id()==ID_implies)
   {
     if(expr.operands().size()!=2)
     {
-      error().source_location=expr.find_source_location();
-      error() << "Expected two operands for -> operator" << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "Expected two operands for -> operator";
     }
 
     typecheck_op(expr, bool_typet(), mode);
@@ -733,14 +645,13 @@ void smv_typecheckt::typecheck(
           expr.id()==ID_lt || expr.id()==ID_le ||
           expr.id()==ID_gt || expr.id()==ID_ge)
   {
-    Forall_operands(it, expr)
-      typecheck(*it, static_cast<const typet &>(get_nil_irep()), mode);
+    for(auto &op : expr.operands())
+      typecheck(op, static_cast<const typet &>(get_nil_irep()), mode);
 
     if(expr.operands().size()!=2)
     {
-      error().source_location=expr.find_source_location();
-      error() << "Expected two operands for " << expr.id() << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "Expected two operands for " << expr.id();
     }
 
     expr.type()=bool_typet();
@@ -759,9 +670,8 @@ void smv_typecheckt::typecheck(
     {
       if(op0.type().id()!=ID_range)
       {
-        error().source_location=expr.find_source_location();
-        error() << "Expected number type for " << to_string(expr) << eom;
-        throw 0;
+        throw errort().with_location(expr.find_source_location())
+          << "Expected number type for " << to_string(expr);
       }
     }
   }
@@ -783,9 +693,8 @@ void smv_typecheckt::typecheck(
     
     if(expr.operands().size()!=2)
     {
-      error().source_location=expr.find_source_location();
-      error() << "Expected two operands for " << expr.id() << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "Expected two operands for " << expr.id();
     }
     
     if(type.is_nil())
@@ -817,9 +726,8 @@ void smv_typecheckt::typecheck(
     }
     else if(type.id()!=ID_range)
     {
-      error().source_location=expr.find_source_location();
-      error() << "Expected number type for " << to_string(expr) << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "Expected number type for " << to_string(expr);
     }
   }
   else if(expr.id()==ID_constant)
@@ -847,9 +755,8 @@ void smv_typecheckt::typecheck(
             expr=true_exprt();
           else
           {
-            error().source_location=expr.find_source_location();
-            error() << "expected 0 or 1 here, but got " << value << eom;
-            throw 0;
+            throw errort().with_location(expr.find_source_location())
+              << "expected 0 or 1 here, but got " << value;
           }
         }
         else if(type.id()==ID_range)
@@ -858,17 +765,15 @@ void smv_typecheckt::typecheck(
 
           if(int_value<smv_range.from || int_value>smv_range.to)
           {
-            error().source_location=expr.find_source_location();
-            error() << "expected " << smv_range.from << ".." << smv_range.to 
-                    << " here, but got " << value << eom;
-            throw 0;
+            throw errort().with_location(expr.find_source_location())
+              << "expected " << smv_range.from << ".." << smv_range.to
+              << " here, but got " << value;
           }
         }
         else
         {
-          error().source_location=expr.find_source_location();
-          error() << "Unexpected constant: " << value << eom;
-          throw 0;
+          throw errort().with_location(expr.find_source_location())
+            << "Unexpected constant: " << value;
         }
       }
     }
@@ -928,14 +833,14 @@ void smv_typecheckt::typecheck(
       
       expr.type().make_nil();
 
-      Forall_operands(it, expr)
+      for(auto &op : expr.operands())
       {
         if(condition)
-          typecheck(*it, bool_typet(), mode);
+          typecheck(op, bool_typet(), mode);
         else
         {
-          typecheck(*it, static_cast<const typet &>(get_nil_irep()), mode);
-          expr.type()=type_union(expr.type(), it->type());
+          typecheck(op, static_cast<const typet &>(get_nil_irep()), mode);
+          expr.type() = type_union(expr.type(), op.type());
         }
 
         condition=!condition;
@@ -947,12 +852,12 @@ void smv_typecheckt::typecheck(
 
       bool condition=true;
 
-      Forall_operands(it, expr)
+      for(auto &op : expr.operands())
       {
         if(condition)
-          typecheck(*it, bool_typet(), mode);
+          typecheck(op, bool_typet(), mode);
         else
-          typecheck(*it, expr.type(), mode);
+          typecheck(op, expr.type(), mode);
 
         condition=!condition;
       }
@@ -1011,9 +916,8 @@ void smv_typecheckt::typecheck(
   }
   else
   {
-    error().source_location=expr.find_source_location();
-    error() << "No type checking for " << expr.id() << eom;
-    throw 0;
+    throw errort().with_location(expr.find_source_location())
+      << "No type checking for " << expr.id();
   }
 
   if(!type.is_nil() && expr.type()!=type)
@@ -1044,12 +948,10 @@ void smv_typecheckt::typecheck(
       return;      
     }
 
-    error().source_location=expr.find_source_location();
-    error() << "Expected expression of type `" << to_string(type)
-            << "', but got expression `" << to_string(expr)
-            << "', which is of type `" << to_string(expr.type())
-            << "'" << eom;
-    throw 0;
+    throw errort().with_location(expr.find_source_location())
+      << "Expected expression of type `" << to_string(type)
+      << "', but got expression `" << to_string(expr) << "', which is of type `"
+      << to_string(expr.type()) << "'";
   }
 }
 
@@ -1067,13 +969,12 @@ Function: smv_typecheckt::convert
 
 void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
 {
-  if(expr.id()=="smv_next")
+  if(expr.id() == ID_smv_next)
   {
     if(expr_mode!=NORMAL)
     {
-      error().source_location=expr.find_source_location();
-      error() << "next(next(...)) encountered" << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "next(next(...)) encountered";
     }
     
     assert(expr.operands().size()==1);
@@ -1086,8 +987,8 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
     return;
   }
 
-  Forall_operands(it, expr)
-    convert(*it, expr_mode);
+  for(auto &op : expr.operands())
+    convert(op, expr_mode);
 
   if(expr.id()==ID_symbol)
   {
@@ -1119,9 +1020,8 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
   {
     if(expr.operands().size()==0)
     {
-      error().source_location=expr.find_source_location();
-      error() << "expected operand here" << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "expected operand here";
     }
 
     std::string identifier=
@@ -1136,26 +1036,24 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
   {
     if(expr.operands().size()<1)
     {
-      error().source_location=expr.find_source_location();
-      error() << "Expected at least one operand for " << expr.id()
-              << " expression" << eom;
-      throw 0;
+      throw errort().with_location(expr.find_source_location())
+        << "Expected at least one operand for " << expr.id() << " expression";
     }
 
     exprt tmp;
     tmp.operands().swap(expr.operands());
     expr.reserve_operands(tmp.operands().size()*2);
 
-    Forall_operands(it, tmp)
+    for(auto &op : tmp.operands())
     {
-      if(it->operands().size()!=2)
+      if(op.operands().size() != 2)
       {
-        error().source_location=it->find_source_location();
-        throw "case expected to have two operands";
+        throw errort().with_location(op.find_source_location())
+          << "case expected to have two operands";
       }
 
-      exprt &condition = to_binary_expr(*it).op0();
-      exprt &value = to_binary_expr(*it).op1();
+      exprt &condition = to_binary_expr(op).op0();
+      exprt &value = to_binary_expr(op).op1();
 
       expr.add_to_operands(std::move(condition));
       expr.add_to_operands(std::move(value));
@@ -1287,12 +1185,11 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
   symbol.mode="SMV";
   symbol.module=modulep->name;
 
-  for(smv_parse_treet::mc_varst::const_iterator it=vars.begin();
-      it!=vars.end(); it++)
+  for(const auto &var_it : vars)
   {
-    const smv_parse_treet::mc_vart &var=it->second;
+    const smv_parse_treet::mc_vart &var = var_it.second;
 
-    symbol.base_name=it->first;
+    symbol.base_name = var_it.first;
 
     if(var.identifier=="")
     {
@@ -1330,23 +1227,22 @@ Function: smv_typecheckt::collect_define
 void smv_typecheckt::collect_define(const exprt &expr)
 {
   if(expr.id()!=ID_equal || expr.operands().size()!=2)
-    throw "collect_define expects equality";
+    throw errort() << "collect_define expects equality";
 
   const exprt &op0 = to_equal_expr(expr).op0();
   const exprt &op1 = to_equal_expr(expr).op1();
 
   if(op0.id()!=ID_symbol)
-    throw "collect_define expects symbol on left hand side";
+    throw errort() << "collect_define expects symbol on left hand side";
 
-  const irep_idt &identifier=op0.get(ID_identifier);
+  const irep_idt &identifier = to_symbol_expr(op0).get_identifier();
 
   auto it=symbol_table.get_writeable(identifier);
 
   if(it==nullptr)
   {
-    error() << "collect_define failed to find symbol `"
-            << identifier << "'" << eom;
-    throw 0;
+    throw errort() << "collect_define failed to find symbol `" << identifier
+                   << "'";
   }
 
   symbolt &symbol=*it;
@@ -1361,9 +1257,8 @@ void smv_typecheckt::collect_define(const exprt &expr)
 
   if(!result.second)
   {
-    error().source_location=expr.find_source_location();
-    error() << "symbol `" << identifier << "' defined twice" << eom;
-    throw 0;
+    throw errort().with_location(expr.find_source_location())
+      << "symbol `" << identifier << "' defined twice";
   }  
 }
 
@@ -1387,17 +1282,15 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
   
   if(d.in_progress)
   {
-    error() << "definition of `" << identifier << "' is cyclic" << eom;
-    throw 0;
+    throw errort() << "definition of `" << identifier << "' is cyclic";
   }
   
   auto it=symbol_table.get_writeable(identifier);
 
   if(it==nullptr)
   {
-    error() << "convert_define failed to find symbol `"
-            << identifier << "'" << eom;
-    throw 0;
+    throw errort() << "convert_define failed to find symbol `" << identifier
+                   << "'";
   }
 
   symbolt &symbol=*it;
@@ -1409,6 +1302,8 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
   d.in_progress=false;
   d.typechecked=true;
 
+  // VAR x : type; ASSIGN x := ... does come with a type.
+  // DEFINE x := ... doesn't come with a type.
   if(symbol.type.is_nil())
     symbol.type=d.value.type();
 }
@@ -1427,15 +1322,14 @@ Function: smv_typecheckt::convert_defines
 
 void smv_typecheckt::convert_defines(exprt::operandst &invar)
 {
-  for(define_mapt::iterator it=define_map.begin();
-      it!=define_map.end();
-      it++)
+  for(auto &define_it : define_map)
   {
-    convert_define(it->first);
+    convert_define(define_it.first);
 
     // generate constraint
-    equal_exprt equality{symbol_exprt{it->first, it->second.value.type()},
-                         it->second.value};
+    equal_exprt equality{
+      symbol_exprt{define_it.first, define_it.second.value.type()},
+      define_it.second.value};
     invar.push_back(equality);
   }
 }
@@ -1568,8 +1462,7 @@ void smv_typecheckt::typecheck()
 
   if(it==smv_parse_tree.modules.end())
   {
-    error() << "failed to find module " << module << eom;
-    throw 0;
+    throw errort() << "failed to find module " << module;
   }
 
   convert(it->second);
