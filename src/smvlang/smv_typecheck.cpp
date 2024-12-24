@@ -969,7 +969,7 @@ Function: smv_typecheckt::convert
 
 void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
 {
-  if(expr.id()=="smv_next")
+  if(expr.id() == ID_smv_next)
   {
     if(expr_mode!=NORMAL)
     {
