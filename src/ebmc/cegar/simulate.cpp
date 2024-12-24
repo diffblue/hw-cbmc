@@ -25,7 +25,7 @@ Function: bmc_cegart::simulate
 
 \*******************************************************************/
 
-bool bmc_cegart::simulate(unsigned bound)
+bool bmc_cegart::simulate(std::size_t bound)
 {
   status() << "Simulating Counterexample" << eom;
 
@@ -40,9 +40,6 @@ bool bmc_cegart::simulate(unsigned bound)
   {
   case propt::resultt::P_SATISFIABLE:
     status() << "SAT: bug found within bound" << eom;
-
-    show_counterexample(properties, prop_bv, get_message_handler(), solver,
-                        bmc_map, ns);
     return true;
 
   case propt::resultt::P_UNSATISFIABLE:

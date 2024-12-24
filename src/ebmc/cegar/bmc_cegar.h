@@ -6,59 +6,69 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <util/std_expr.h>
+#ifndef EBMC_CEGAR_BMC_CEGAR_H
+#define EBMC_CEGAR_BMC_CEGAR_H
+
 #include <util/message.h>
 #include <util/namespace.h>
+#include <util/std_expr.h>
 
+#include <ebmc/ebmc_properties.h>
+#include <ebmc/transition_system.h>
 #include <trans-netlist/bmc_map.h>
 #include <trans-netlist/netlist.h>
+
+class cnft;
 
 class bmc_cegart:public messaget
 {
 public:
   bmc_cegart(
-    symbol_table_baset &_symbol_table,
-    const irep_idt &_main_module,
-    message_handlert &_message_handler,
-    const std::list<exprt> &_properties)
+    const netlistt &_netlist,
+    ebmc_propertiest &_properties,
+    const namespacet &_ns,
+    message_handlert &_message_handler)
     : messaget(_message_handler),
-      symbol_table(_symbol_table),
-      ns(_symbol_table),
-      main_module(_main_module),
-      properties(_properties)
+      properties(_properties),
+      concrete_netlist(_netlist),
+      ns(_ns)
   {
   }
 
   void bmc_cegar();
   
 protected:
-  symbol_table_baset &symbol_table;
-  const namespacet ns;
-  const irep_idt &main_module;
-  const std::list<exprt> &properties;
-  
+  ebmc_propertiest &properties;
   bmc_mapt bmc_map;
   netlistt concrete_netlist, abstract_netlist;
+  const namespacet &ns;
 
   bool initial_abstraction;
   
   typedef std::set<literalt> cut_pointst;
   cut_pointst cut_points;
-  
-  void make_netlist();
-  
+
   void cegar_loop();
   
   void abstract();
   void refine();
-  bool verify(unsigned bound);
-  bool simulate(unsigned bound);
-  unsigned compute_ct();
+  bool verify(std::size_t bound);
+  bool simulate(std::size_t bound);
+  std::size_t compute_ct();
 
-  void unwind(
-    unsigned bound,
-    const netlistt &netlist,
-    propt &prop);
-  
-  std::list<bvt> prop_bv;
+  void unwind(std::size_t bound, const netlistt &netlist, cnft &solver);
+
+  std::map<irep_idt, bvt> prop_bv_map;
 };
+
+class ebmc_propertiest;
+class message_handlert;
+class netlistt;
+
+int do_bmc_cegar(
+  const netlistt &,
+  ebmc_propertiest &,
+  const namespacet &,
+  message_handlert &);
+
+#endif // EBMC_CEGAR_BMC_CEGAR_H

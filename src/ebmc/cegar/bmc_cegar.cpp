@@ -31,9 +31,7 @@ Function: bmc_cegart::bmc_cegar
 
 void bmc_cegart::bmc_cegar()
 {
-  make_netlist();
-
-  if(properties.empty())
+  if(properties.properties.empty())
   {
     error() << "No properties given" << eom;
     return;
@@ -68,68 +66,24 @@ Function: bmc_cegart::unwind
 \*******************************************************************/
 
 void bmc_cegart::unwind(
-  unsigned bound,
+  std::size_t bound,
   const netlistt &netlist,
-  propt &prop)
+  cnft &solver)
 {
-  // allocate timeframes
-  const auto bmc_map = bmc_mapt{netlist, bound + 1, prop};
+  ::unwind(netlist, bmc_map, *this, solver);
 
-#if 0
-  for(unsigned timeframe=0; timeframe<=bound; timeframe++)
-    bmc_map.timeframe_map[timeframe].resize(aig_map.no_vars);
+  // one of the properties needs to fail
+  bvt disjuncts;
 
-  // do initial state
-  for(unsigned v=0; v<aig_map.no_vars; v++)
-    bmc_map.timeframe_map[0][v]=prop.new_variable();
-
-  // do transitions
-  for(unsigned timeframe=0; timeframe<bound; timeframe++)
+  for(auto &property_it : netlist.properties)
   {
-    status() << "Round " << timeframe << eom;
-    
-    aig.clear_convert_cache();
-    
-    // set current state bits
-    for(unsigned v=0; v<aig_map.no_vars; v++)
-    {
-      //std::cout << "SETTING "
-      //          << aig_map.timeframe_map[0][v] << std::endl;
+    auto &prop_bv = prop_bv_map[property_it.first];
+    unwind_property(property_it.second, bmc_map, prop_bv);
 
-      aig.set_l(prop,
-                      aig_map.timeframe_map[0][v],
-                      bmc_map.timeframe_map[timeframe][v]);
-    }
-
-    // convert next state bits
-    for(unsigned v=0; v<aig_map.no_vars; v++)
-    {
-      literalt a=aig_map.timeframe_map[1][v];
-    
-      // std::cout << "CONVERTING " << a << std::endl;
-
-      literalt l;
-
-      if(latches.find(v)!=latches.end())
-      {
-        assert(aig.can_convert(a));
-
-        l=aig.convert_prop(prop, a);
-      }
-      else
-        l=prop.new_variable();
-      
-      bmc_map.timeframe_map[timeframe+1][v]=l;
-    }
+    disjuncts.push_back(!solver.land(prop_bv));
   }
 
-  instantiate(prop, bmc_map, initial_state_predicate, 0, 1,
-              false, ns);
-  
-  // do the property
-  property(properties, prop_bv, get_message_handler(), prop,
-           bmc_map, ns);
-#endif
+  solver.lcnf(disjuncts);
 }
 
 /*******************************************************************\
@@ -144,21 +98,19 @@ Function: bmc_cegart::compute_ct
 
 \*******************************************************************/
 
-unsigned bmc_cegart::compute_ct()
+std::size_t bmc_cegart::compute_ct()
 {
-  status() << "Computing CT" << eom;
-
   status() << "Computing abstract LDG" << eom;
    
   ldgt ldg;
- 
+
   ldg.compute(abstract_netlist);
-    
-  status() << "Computing CT" << eom;
 
-  unsigned ct=::compute_ct(ldg);
+  status() << "Computing abstract CT" << eom;
 
-  result() << "CT=" << ct << eom;
+  auto ct = ::compute_ct(ldg);
+
+  result() << "Abstract CT=" << ct << eom;
 
   return ct;
 }
@@ -182,8 +134,8 @@ void bmc_cegart::cegar_loop()
   while(true)
   {
     abstract();
-    
-    unsigned ct=compute_ct();
+
+    auto ct = compute_ct();
 
     if(ct>=MAX_CT)
     {
@@ -192,8 +144,8 @@ void bmc_cegart::cegar_loop()
     }
     
     // this is enough
-    unsigned bound=ct;
-    
+    auto bound = ct;
+
     if(verify(bound))
     {
       status() << "VERIFICATION SUCCESSFUL -- PROPERTY HOLDS" << eom;
@@ -212,7 +164,7 @@ void bmc_cegart::cegar_loop()
 
 /*******************************************************************\
 
-Function: bmc_cegart::make_netlist
+Function: do_bmc_cegar
 
   Inputs:
 
@@ -222,34 +174,14 @@ Function: bmc_cegart::make_netlist
 
 \*******************************************************************/
 
-void bmc_cegart::make_netlist()
+int do_bmc_cegar(
+  const netlistt &netlist,
+  ebmc_propertiest &properties,
+  const namespacet &ns,
+  message_handlert &message_handler)
 {
-  // make net-list
-  status() << "Making Netlist" << eom;
+  bmc_cegart bmc_cegar(netlist, properties, ns, message_handler);
 
-  try
-  {
-    const symbolt &module_symbol = ns.lookup(main_module);
-    const transt &trans = to_trans_expr(module_symbol.value);
-
-    std::map<irep_idt, exprt> property_map;
-
-    convert_trans_to_netlist(
-      symbol_table,
-      main_module,
-      trans,
-      property_map,
-      concrete_netlist,
-      get_message_handler());
-  }
-  
-  catch(const std::string &error_msg)
-  {
-    error() << error_msg << eom;
-    return;
-  }
-
-  statistics() 
-    << "Latches: " << concrete_netlist.var_map.latches.size()
-    << ", nodes: " << concrete_netlist.number_of_nodes() << eom;
+  bmc_cegar.bmc_cegar();
+  return 0;
 }
