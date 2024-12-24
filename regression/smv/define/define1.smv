@@ -1,0 +1,6 @@
+MODULE main
+
+DEFINE a := 1;
+
+VAR b : 1..4;
+ASSIGN next(b) := a + 1;
