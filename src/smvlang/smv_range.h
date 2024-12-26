@@ -84,6 +84,12 @@ public:
 
     return *this;
   }
+
+  // unary minus
+  smv_ranget operator-() const
+  {
+    return smv_ranget{-to, -from};
+  }
 };
 
 #endif // CPROVER_SMV_RANGE_H
