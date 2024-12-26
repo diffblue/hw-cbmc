@@ -468,8 +468,8 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
 assignment_var: variable_name
            ;
 
-assignment_head: init_Token { init($$, ID_init); }
-               | NEXT_Token { init($$, ID_smv_next); }
+assignment_head: init_Token { init($$, ID_smv_assign_init); }
+               | NEXT_Token { init($$, ID_smv_assign_next); }
                ;
 
 defines:     define

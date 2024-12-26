@@ -106,7 +106,7 @@ public:
       }
 
       // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
-      const equal_exprt &equal_expr()
+      equal_exprt &equal_expr()
       {
         PRECONDITION(
           is_assign_current() || is_assign_init() || is_assign_next() ||
@@ -223,7 +223,7 @@ public:
   typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
   
   modulest modules;
-  
+
   void swap(smv_parse_treet &smv_parse_tree);
   void clear();
 };
