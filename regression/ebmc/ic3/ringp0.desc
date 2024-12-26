@@ -1,10 +1,10 @@
 CORE
 ringp0.sv
 --ic3
-^\[ringp0\.assert\.1\] always !ringp0\.p0: REFUTED$
 ^property FAILED
 ^cex verification is ok
-^EXIT=1$
+^\[ringp0\.assert\.1\] always !ringp0\.p0: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^cex verification failed

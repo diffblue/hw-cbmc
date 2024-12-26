@@ -17,7 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_version.h"
-#include "ic3_engine.h"
 #include "liveness_to_safety.h"
 #include "neural_liveness.h"
 #include "output_file.h"
@@ -154,11 +153,6 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("random-trace") || cmdline.isset("random-waveform"))
       return random_trace(cmdline, ui_message_handler);
-
-#ifndef _WIN32
-    if(cmdline.isset("ic3"))
-      return do_ic3(cmdline, ui_message_handler);
-#endif
 
     if(cmdline.isset("neural-liveness"))
       return do_neural_liveness(cmdline, ui_message_handler);

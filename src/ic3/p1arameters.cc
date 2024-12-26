@@ -5,13 +5,16 @@ Module: Reading and ininitialization of parameters
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+
+// clang-format off
 #include <queue>
 #include <set>
 #include <map>
 #include <algorithm>
 #include <iostream>
 
-#include <ebmc/ebmc_base.h>
+#include <ebmc/property_checker.h>
+#include <trans-netlist/netlist.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -21,6 +24,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 #include <util/cmdline.h>
 #include "ebmc_ic3_interface.hh"
+// clang-format on
 
 /*=====================================
 

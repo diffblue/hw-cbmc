@@ -6,6 +6,8 @@ Module: Converting Verilog description into an internal
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ********************************************************/
+
+// clang-format off
 #include <queue>
 #include <set>
 #include <map>
@@ -19,11 +21,12 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include "m0ic3.hh"
 
 #include <trans-netlist/aig_prop.h>
-#include <trans-netlist/instantiate_netlist.h>
+#include <trans-netlist/netlist.h>
 
-#include <ebmc/ebmc_base.h>
+#include <ebmc/property_checker.h>
 
 #include "ebmc_ic3_interface.hh"
+// clang-format on
 
 /*=====================================
 

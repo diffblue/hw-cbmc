@@ -6,8 +6,10 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 \*******************************************************************/
 
-#include <util/cmdline.h>
-#include <util/ui_message.h>
+#include "property_checker.h"
 
-int do_ic3(const cmdlinet &, ui_message_handlert &);
-
+property_checker_resultt ic3_engine(
+  const cmdlinet &,
+  transition_systemt &,
+  ebmc_propertiest &,
+  message_handlert &);
