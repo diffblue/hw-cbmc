@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 smv_if2.smv
-
+--bound 1
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This yields a type error.
