@@ -472,8 +472,14 @@ smv_ranget smv_typecheckt::convert_type(const typet &src)
   }
   else if(src.id()==ID_range)
   {
-    dest.from=string2integer(src.get_string(ID_from));
-    dest.to=string2integer(src.get_string(ID_to));
+    auto from = string2integer(src.get_string(ID_from));
+    auto to = string2integer(src.get_string(ID_to));
+
+    if(from > to)
+      throw errort().with_location(src.source_location()) << "range is empty";
+
+    dest.from = from;
+    dest.to = to;
   }
   else if(src.id()==ID_enumeration)
   {
@@ -1231,6 +1237,10 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
   for(const auto &var_it : vars)
   {
     const smv_parse_treet::mc_vart &var = var_it.second;
+
+    // check the type, if given
+    if(var.type.is_not_nil() && var.type.id() != "submodule")
+      convert_type(var.type);
 
     symbol.base_name = var_it.first;
 
