@@ -3,4 +3,7 @@ MODULE main
 DEFINE a := 1;
 
 VAR b : 1..4;
+ASSIGN init(b) := 2;
 ASSIGN next(b) := a + 1;
+
+LTLSPEC G b=2
