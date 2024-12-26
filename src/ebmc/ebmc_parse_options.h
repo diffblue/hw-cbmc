@@ -35,6 +35,7 @@ public:
         "(outfile):(xml-ui)(verbosity):(gui)"
         "(json-modules):(json-properties):(json-result):"
         "(neural-liveness)(neural-engine):"
+        "(solver-neural-liveness)"
         "(reset):"
         "(version)(verilog-rtl)(verilog-netlist)"
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"
