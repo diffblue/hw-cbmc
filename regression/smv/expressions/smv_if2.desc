@@ -1,0 +1,8 @@
+KNOWNBUG
+smv_if2.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This yields a type error.

@@ -1,0 +1,10 @@
+KNOWNBUG
+smv_set2.smv
+--bdd
+^\[spec1\] x in my_set: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The smv_setin operator is not implemented.
