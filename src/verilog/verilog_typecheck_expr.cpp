@@ -261,6 +261,76 @@ void verilog_typecheck_exprt::must_be_integral(const exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::convert_expr_concatenation
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::convert_expr_concatenation(
+  concatenation_exprt expr)
+{
+  if(expr.operands().size() == 0)
+  {
+    throw errort().with_location(expr.source_location())
+      << "concatenation expected to have at least one operand";
+  }
+
+  mp_integer width = 0;
+  bool has_verilogbv = false;
+
+  Forall_operands(it, expr)
+  {
+    convert_expr(*it);
+    must_be_integral(*it);
+
+    const typet &type = it->type();
+
+    if(type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+    {
+      has_verilogbv = true;
+    }
+
+    width += get_width(*it);
+  }
+
+  // Cocatenations are unsigned regardless of the operands
+  // We cast all the signed operands to unsigned.
+  for(auto &op : expr.operands())
+  {
+    if(op.type().id() == ID_signedbv || op.type().id() == ID_verilog_signedbv)
+    {
+      auto width = get_width(op);
+      auto width_int = numeric_cast_v<std::size_t>(width);
+      if(op.type().id() == ID_verilog_signedbv)
+        op = typecast_exprt{op, verilog_unsignedbv_typet{width_int}};
+      else
+        op = typecast_exprt{op, unsignedbv_typet{width_int}};
+    }
+  }
+
+  expr.type() = typet(has_verilogbv ? ID_verilog_unsignedbv : ID_unsignedbv);
+  expr.type().set(ID_width, integer2string(width));
+
+  if(has_verilogbv)
+  {
+    Forall_operands(it, expr)
+      if(it->type().id() != ID_verilog_unsignedbv)
+      {
+        auto width_int = numeric_cast_v<std::size_t>(get_width(*it));
+        *it = typecast_exprt{*it, verilog_unsignedbv_typet{width_int}};
+      }
+  }
+
+  return std::move(expr);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_expr_rec
 
   Inputs:
@@ -275,70 +345,18 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
 {
   // variable number of operands
 
-  if(expr.id()==ID_event)
+  if(expr.id() == ID_event)
   {
-    expr.type()=bool_typet();
+    expr.type() = bool_typet();
 
     Forall_operands(it, expr)
       convert_expr(*it);
 
     return expr;
   }
-  else if(expr.id()==ID_concatenation)
+  else if(expr.id() == ID_concatenation)
   {
-    if(expr.operands().size()==0)
-    {
-      throw errort().with_location(expr.source_location())
-        << "concatenation expected to have at least one operand";
-    }
-
-    mp_integer width = 0;
-    bool has_verilogbv=false;
-
-    Forall_operands(it, expr)
-    {
-      convert_expr(*it);
-      must_be_integral(*it);
-
-      const typet &type=it->type();
-
-      if(type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
-      {
-        has_verilogbv=true;
-      }
-
-      width+=get_width(*it);
-    }
-
-    // Cocatenations are unsigned regardless of the operands
-    // We cast all the signed operands to unsigned.
-    for(auto &op : expr.operands())
-    {
-      if(op.type().id() == ID_signedbv || op.type().id() == ID_verilog_signedbv)
-      {
-        auto width = get_width(op);
-        auto width_int = numeric_cast_v<std::size_t>(width);
-        if(op.type().id() == ID_verilog_signedbv)
-          op = typecast_exprt{op, verilog_unsignedbv_typet{width_int}};
-        else
-          op = typecast_exprt{op, unsignedbv_typet{width_int}};
-      }
-    }
-
-    expr.type()=typet(has_verilogbv?ID_verilog_unsignedbv:ID_unsignedbv);
-    expr.type().set(ID_width, integer2string(width));
-
-    if(has_verilogbv)
-    {
-      Forall_operands(it, expr)
-        if(it->type().id()!=ID_verilog_unsignedbv)
-        {
-          auto width_int = numeric_cast_v<std::size_t>(get_width(*it));
-          *it = typecast_exprt{*it, verilog_unsignedbv_typet{width_int}};
-        }
-    }
-
-    return expr;
+    return convert_expr_concatenation(to_concatenation_expr(expr));
   }
   else if(expr.id()==ID_function_call)
   {
