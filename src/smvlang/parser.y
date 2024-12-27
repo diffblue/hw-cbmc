@@ -1,3 +1,5 @@
+%define parse.error verbose
+
 %{
 #include "smv_parser.h"
 #include "smv_typecheck.h"
@@ -153,19 +155,73 @@ static void new_module(YYSTYPE &module)
 
 %}
 
-%token AG_Token AX_Token AF_Token EG_Token EX_Token EF_Token
+%token AG_Token "AG"
+%token AX_Token "AX"
+%token AF_Token "AF"
+%token EG_Token "EG"
+%token EX_Token "EX"
+%token EF_Token "EF"
 
-%token G_Token X_Token F_Token R_Token U_Token
+%token G_Token "G"
+%token X_Token "X"
+%token F_Token "F"
+%token R_Token "R"
+%token U_Token "U"
 
-%token INIT_Token TRANS_Token SPEC_Token LTLSPEC_Token VAR_Token DEFINE_Token ASSIGN_Token
-%token INVAR_Token FAIRNESS_Token MODULE_Token ARRAY_Token OF_Token
-%token DOTDOT_Token BOOLEAN_Token EXTERN_Token
+%token INIT_Token     "INIT"
+%token TRANS_Token    "TRANS"
+%token SPEC_Token     "SPEC"
+%token LTLSPEC_Token  "LTLSPEC"
+%token VAR_Token      "VAR"
+%token DEFINE_Token   "DEFINE"
+%token ASSIGN_Token   "ASSIGN"
+%token INVAR_Token    "INVAR"
+%token FAIRNESS_Token "FAIRNESS"
+%token MODULE_Token   "MODULE"
+%token ARRAY_Token    "array"
+%token OF_Token       "of"
+%token DOTDOT_Token   ".."
+%token BOOLEAN_Token  "boolean"
+%token EXTERN_Token   "EXTERN"
 
-%token NEXT_Token INC_Token DEC_Token CASE_Token ESAC_Token BECOMES_Token
-%token ADD_Token SUB_Token SWITCH_Token init_Token PLUS_Token
+%token IMPLIES_Token  "->"
+%token EQUIV_Token    "<->"
+%token IF_Token       "?"
+%token XOR_Token      "XOR"
+%token OR_Token       "|"
+%token AND_Token      "&"
+%token NOT_Token      "!"
+%token MOD_Token      "mod"
+%token UNION_Token    "union"
+%token IN_Token       "in"
+%token NOTIN_Token    "notin"
+%token DOT_Token      "."
+%token PLUS_Token     "+"
+%token MINUS_Token    "-"
+%token EQUAL_Token    "="
+%token LE_Token       "<="
+%token GE_Token       ">="
+%token LT_Token       "<"
+%token GT_Token       ">"
+%token NOTEQUAL_Token "!="
 
-%token STRING_Token QSTRING_Token QUOTE_Token
-%token NUMBER_Token FALSE_Token TRUE_Token
+%token INC_Token
+%token DEC_Token
+%token NEXT_Token     "next"
+%token CASE_Token     "case"
+%token ESAC_Token     "esac"
+%token BECOMES_Token  ":="
+%token ADD_Token
+%token SUB_Token
+%token SWITCH_Token   "switch"
+%token init_Token     "init"
+
+%token STRING_Token   "string"
+%token QSTRING_Token  "quoted string"
+%token QUOTE_Token    "'"
+%token NUMBER_Token   "number"
+%token FALSE_Token    "false"
+%token TRUE_Token     "true"
 
 /* operator precedence, low to high */
 %right IMPLIES_Token
