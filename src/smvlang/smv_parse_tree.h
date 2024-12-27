@@ -42,6 +42,7 @@ public:
     {
       enum item_typet
       {
+        ASSIGN,
         CTLSPEC,
         LTLSPEC,
         INIT,
@@ -56,6 +57,11 @@ public:
       item_typet item_type;
       exprt expr;
       source_locationt location;
+
+      bool is_assign() const
+      {
+        return item_type == ASSIGN;
+      }
 
       bool is_ctlspec() const
       {
@@ -102,7 +108,12 @@ public:
       items.back().expr=expr;
       items.back().location=location;
     }
-    
+
+    void add_assign(const exprt &expr)
+    {
+      add_item(itemt::ASSIGN, expr, source_locationt::nil());
+    }
+
     void add_invar(const exprt &expr)
     {
       add_item(itemt::INVAR, expr, source_locationt::nil());
@@ -175,17 +186,20 @@ public:
     
     mc_varst vars;
     enum_sett enum_set;
-    bool used;
-    
+
     std::list<irep_idt> ports;
-    
-    modulet():used(false) { }
+
+    modulet()
+    {
+    }
   };
    
   typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
   
   modulest modules;
-  
+
+  std::optional<exprt> formula;
+
   void swap(smv_parse_treet &smv_parse_tree);
   void clear();
 };

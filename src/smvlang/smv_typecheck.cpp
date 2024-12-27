@@ -1161,34 +1161,49 @@ Function: smv_typecheckt::typecheck
 void smv_typecheckt::typecheck(
   smv_parse_treet::modulet::itemt &item)
 {
-  modet mode;
-
   switch(item.item_type)
   {
+  case smv_parse_treet::modulet::itemt::ASSIGN:
+  {
+    DATA_INVARIANT(
+      item.expr.id() == ID_equal, "ASSIGN expression must be equality");
+    auto &equal_expr = to_equal_expr(item.expr);
+
+    DATA_INVARIANT(
+      equal_expr.lhs().id() == ID_smv_assign_current ||
+        equal_expr.lhs().id() == ID_smv_assign_init ||
+        equal_expr.lhs().id() == ID_smv_assign_next,
+      "ASSIGN lhs must be current, init or next");
+
+    auto &symbol_expr = to_unary_expr(equal_expr.lhs()).op();
+    auto &nil_type = static_cast<const typet &>(get_nil_irep());
+    typecheck(symbol_expr, nil_type, OTHER);
+    typecheck(equal_expr.rhs(), symbol_expr.type(), OTHER);
+  }
+  break;
+
   case smv_parse_treet::modulet::itemt::INIT:
-    mode=INIT;
+    typecheck(item.expr, bool_typet(), INIT);
     break;
 
   case smv_parse_treet::modulet::itemt::TRANS:
-    mode=TRANS;
+    typecheck(item.expr, bool_typet(), TRANS);
     break;
 
   case smv_parse_treet::modulet::itemt::CTLSPEC:
-    mode = CTL;
+    typecheck(item.expr, bool_typet(), CTL);
     break;
 
   case smv_parse_treet::modulet::itemt::LTLSPEC:
-    mode = LTL;
+    typecheck(item.expr, bool_typet(), LTL);
     break;
 
   case smv_parse_treet::modulet::itemt::DEFINE:
   case smv_parse_treet::modulet::itemt::INVAR:
   case smv_parse_treet::modulet::itemt::FAIRNESS:
   default:
-    mode=OTHER;
+    typecheck(item.expr, bool_typet(), OTHER);
   }
-
-  typecheck(item.expr, bool_typet(), mode);
 }
 
 /*******************************************************************\
@@ -1442,6 +1457,45 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         trans_init.push_back(item.expr);
       else if (item.is_trans())
         trans_trans.push_back(item.expr);
+      else if(item.is_assign())
+      {
+        DATA_INVARIANT(
+          item.expr.id() == ID_equal, "ASSIGN expression must be equality");
+        auto &equal_expr = to_equal_expr(item.expr);
+        auto &symbol_expr = to_unary_expr(equal_expr.lhs()).op();
+
+        auto &identifier = to_symbol_expr(symbol_expr).get_identifier();
+        auto s_it = symbol_table.get_writeable(identifier);
+
+        if(s_it == nullptr)
+        {
+          throw errort().with_location(symbol_expr.find_source_location())
+            << "variable `" << identifier << "' not found";
+        }
+
+        symbolt &symbol = *s_it;
+        symbol.is_input = false;
+
+        if(equal_expr.lhs().id() == ID_smv_assign_current)
+        {
+          trans_invar.push_back(equal_exprt{symbol_expr, equal_expr.rhs()});
+        }
+        else if(equal_expr.lhs().id() == ID_smv_assign_init)
+        {
+          symbol.is_state_var = true;
+          trans_init.push_back(equal_exprt{symbol_expr, equal_expr.rhs()});
+        }
+        else if(equal_expr.lhs().id() == ID_smv_assign_next)
+        {
+          symbol.is_state_var = true;
+          exprt next_symbol_expr = symbol_expr;
+          next_symbol_expr.id(ID_next_symbol);
+          trans_trans.push_back(
+            equal_exprt{next_symbol_expr, equal_expr.rhs()});
+        }
+        else
+          DATA_INVARIANT(false, "ASSIGN must be current/init/next");
+      }
     }
 
     module_symbol.value =

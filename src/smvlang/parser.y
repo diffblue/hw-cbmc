@@ -146,7 +146,6 @@ static void new_module(YYSTYPE &module)
   PARSER.module=&PARSER.parse_tree.modules[name];
   PARSER.module->name=name;
   PARSER.module->base_name=stack_expr(module).id_string();
-  PARSER.module->used=true;
 }
 
 /*------------------------------------------------------------------------*/
@@ -188,8 +187,7 @@ static void new_module(YYSTYPE &module)
 %%
 
 start      : modules
-           | formula { PARSER.module->add_ctlspec(stack_expr($1));
-                       PARSER.module->used=true; }
+           | SPEC_Token formula { PARSER.parse_tree.formula = stack_expr($1); }
            ;
 
 modules    : module
@@ -369,31 +367,25 @@ vardecl    : variable_name ':' type ';'
 
 assignments: assignment
            | assignments assignment
-           | define
-           | assignments define
            ;
 
 assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            {
-             binary($$, $3, ID_equal, $6, bool_typet{});
-
-             if(stack_expr($1).id()==ID_smv_next)
-             {
-               exprt &op=to_binary_expr(stack_expr($$)).op0();
-               unary_exprt tmp(ID_smv_next, std::move(op));
-               tmp.swap(op);
-               PARSER.module->add_trans(stack_expr($$));
-             }
-             else
-               PARSER.module->add_init(stack_expr($$));
+             exprt lhs = unary_exprt{stack_expr($1).id(), std::move(stack_expr($3))};
+             PARSER.module->add_assign(binary_exprt{lhs, ID_equal, stack_expr($6)});
+           }
+           | assignment_var BECOMES_Token formula ';'
+           {
+             exprt lhs = unary_exprt{ID_smv_assign_current, std::move(stack_expr($1))};
+             PARSER.module->add_assign(binary_exprt{lhs, ID_equal, stack_expr($3)});
            }
            ;
 
 assignment_var: variable_name
            ;
 
-assignment_head: init_Token { init($$, ID_init); }
-               | NEXT_Token { init($$, ID_smv_next); }
+assignment_head: init_Token { init($$, ID_smv_assign_init); }
+               | NEXT_Token { init($$, ID_smv_assign_next); }
                ;
 
 defines:     define
