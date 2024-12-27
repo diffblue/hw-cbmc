@@ -1445,13 +1445,17 @@ casting_type:
 data_type:
 	  integer_vector_type signing_opt packed_dimension_brace
 	        {
-                  $$=$3;
-                  add_as_subtype(stack_type($$), stack_type($2));
+	          // The integer type is a subtype of the signing.
+	          add_as_subtype(stack_type($2), stack_type($1));
+	          // That becomes a subtype of the packed dimension.
+                  add_as_subtype(stack_type($3), stack_type($2));
+                  $$ = $3;
                 }
 	| integer_atom_type signing_opt
 	        {
-                  $$=$1;
-                  add_as_subtype(stack_type($$), stack_type($2));
+	          // The integer type is a subtype of the signing.
+                  add_as_subtype(stack_type($2), stack_type($1));
+                  $$ = $2;
                 }
 	| non_integer_type
 	| struct_union packed_opt signing_opt 
@@ -1569,8 +1573,19 @@ enum_base_type_opt:
 	  /* Optional */
 		{ init($$, ID_nil); }
 	| integer_atom_type signing_opt
+	        {
+	          // The integer type is a subtype of the signing.
+                  add_as_subtype(stack_type($2), stack_type($1));
+                  $$ = $1;
+                }
 	| integer_vector_type signing_opt packed_dimension_opt
-		{ $$ = $3; add_as_subtype(stack_type($$), stack_type($1)); }
+	        {
+	          // The integer type is a subtype of the signing.
+	          add_as_subtype(stack_type($2), stack_type($1));
+	          // That becomes a subtype of the packed dimension.
+                  add_as_subtype(stack_type($3), stack_type($2));
+                  $$ = $3;
+                }
 	| type_identifier packed_dimension_opt
 		{ $$ = $2; add_as_subtype(stack_type($$), stack_type($1)); }
 	;
@@ -1606,9 +1621,11 @@ net_type_opt:
 
 net_port_type: net_type_opt signing_opt packed_dimension_brace
                 {
-                  $$=$3;
-                  add_as_subtype(stack_type($$), stack_type($2));
-                  // the net type is ignored right now
+	          // The net type is a subtype of the signing.
+	          add_as_subtype(stack_type($2), stack_type($1));
+	          // That becomes a subtype of the packed dimension.
+                  add_as_subtype(stack_type($3), stack_type($2));
+                  $$ = $3;
 	        }
         ;
 
@@ -1889,8 +1906,12 @@ signing_opt:
 	;
 
 signing:
-	  TOK_SIGNED { init($$, ID_signed); }
-	| TOK_UNSIGNED { init($$, ID_unsigned); }
+	  TOK_SIGNED
+		{ init($$, ID_signed);
+		  stack_type($$).add_subtype().make_nil(); }
+	| TOK_UNSIGNED
+		{ init($$, ID_unsigned);
+		  stack_type($$).add_subtype().make_nil(); }
 	;
 
 automatic_opt:

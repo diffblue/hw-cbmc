@@ -111,7 +111,8 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
   if(
     subtype.is_nil() || subtype.id() == ID_signed ||
     subtype.id() == ID_unsigned || subtype.id() == ID_verilog_bit ||
-    subtype.id() == ID_verilog_logic)
+    subtype.id() == ID_verilog_logic || subtype.id() == ID_reg ||
+    subtype.id() == ID_wire)
   {
     // we have a bit-vector type, not an array
 
@@ -164,37 +165,74 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
 
   if(src.is_nil() || src.id() == ID_reg)
   {
-    // it's just a bit
+    // it's just a bit, four-valued
     return bool_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_signed)
   {
-    // one bit, signed
-    return signedbv_typet{1}.with_source_location(source_location);
+    // Might have subtype
+    auto &subtype = to_type_with_subtype(src).subtype();
+    if(subtype.is_nil())
+    {
+      // one bit, signed
+      return signedbv_typet{1}.with_source_location(source_location);
+    }
+    else
+    {
+      // recurse, and make that signed
+      auto rec = elaborate_type(subtype);
+
+      if(rec.id() == ID_unsignedbv)
+        return signedbv_typet{to_unsignedbv_type(rec).width()};
+      else if(rec.id() == ID_bool)
+        return signedbv_typet{1};
+      else
+        return rec;
+    }
   }
   else if(src.id() == ID_unsigned)
   {
-    // one bit, unsigned
-    return unsignedbv_typet{1}.with_source_location(source_location);
+    // Might have subtype
+    auto &subtype = to_type_with_subtype(src).subtype();
+    if(subtype.is_nil())
+    {
+      // one bit, unsigned
+      return unsignedbv_typet{1}.with_source_location(source_location);
+    }
+    else
+    {
+      // recurse, and make that unsigned
+      auto rec = elaborate_type(subtype);
+
+      if(rec.id() == ID_signedbv)
+        return unsignedbv_typet{to_signedbv_type(rec).width()};
+      else
+        return rec;
+    }
   }
   else if(src.id() == ID_verilog_byte)
   {
+    // two-valued type, signed
     return signedbv_typet{8}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_shortint)
   {
+    // two-valued type, signed
     return signedbv_typet{16}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_int)
   {
+    // two-valued type, signed
     return signedbv_typet{32}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_longint)
   {
+    // two-valued type, signed
     return signedbv_typet{64}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_integer)
   {
+    // four-valued type, signed
     return signedbv_typet{32}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_time)
@@ -203,14 +241,22 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   }
   else if(src.id() == ID_verilog_bit)
   {
-    return unsignedbv_typet{1}.with_source_location(source_location);
+    // two-valued type
+    return bool_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_logic)
   {
+    // two-valued type
     return unsignedbv_typet{1}.with_source_location(source_location);
+  }
+  else if(src.id() == ID_wire)
+  {
+    // four-valued type
+    return bool_typet().with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_reg)
   {
+    // four-valued type
     return unsignedbv_typet{1}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_shortreal)
