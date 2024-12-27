@@ -160,6 +160,21 @@ exprt verilog_lowering(exprt expr)
     auto &inside = to_verilog_inside_expr(expr);
     expr = inside.lower();
   }
+  else if(expr.id() == ID_function_call)
+  {
+    auto &call = to_function_call_expr(expr);
+    if(call.is_system_function_call())
+    {
+      auto identifier = to_symbol_expr(call.function()).get_identifier();
+      if(identifier == "$typename")
+      {
+        // Don't touch.
+        // Will be expanded by elaborate_constant_system_function_call,
+        // and we want the argument type as is.
+        return expr;
+      }
+    }
+  }
 
   // Do the operands recursively
   for(auto &op : expr.operands())
