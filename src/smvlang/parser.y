@@ -85,49 +85,40 @@ Function: init
 
  /// binary TODO[docu]
  static void binary(YYSTYPE & x_result, YYSTYPE & y_lhs, const irep_idt &id,
-                    YYSTYPE &z_rhs, const typet &t)
+                    YYSTYPE &z_rhs)
  {
    init(x_result, id);
-   stack_expr(x_result).type() = t;
    auto &lhs = stack_expr(y_lhs);
    auto &rhs = stack_expr(z_rhs);
    stack_expr(x_result).add_to_operands(std::move(lhs), std::move(rhs));
  }
 
- /// binary TODO[docu]
- static void binary_arith(YYSTYPE & x_result, YYSTYPE & y_lhs,
-                          const irep_idt &id, YYSTYPE &z_rhs)
- {
-   init(x_result, id);
-   auto &lhs = stack_expr(y_lhs);
-   DATA_INVARIANT(lhs.type().id() != ID_nil, "arith expr without lhs type");
-   stack_expr(x_result).type() = lhs.type();
-   auto &rhs = stack_expr(z_rhs);
-   stack_expr(x_result).add_to_operands(std::move(lhs), std::move(rhs));
- }
+/*******************************************************************\
 
- /*******************************************************************\
+Function: j_binary
 
- Function: j_binary
+  Inputs:
 
-   Inputs:
+ Outputs:
 
-  Outputs:
+ Purpose:
 
-  Purpose:
+\*******************************************************************/
 
- \*******************************************************************/
-
- static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id,
-                      YYSTYPE &op2, const typet &t) {
-   if (stack_expr(op1).id() == id) {
-     dest = op1;
-     mto(dest, op2);
-   } else if (stack_expr(op2).id() == id) {
-     dest = op2;
-     mto(dest, op1);
-   } else
-     binary(dest, op1, id, op2, t);
+static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id, YYSTYPE &op2)
+{
+  if(stack_expr(op1).id() == id)
+  {
+    dest = op1;
+    mto(dest, op2);
+  }
+  else if(stack_expr(op2).id() == id)
+  {
+    dest = op2;
+    mto(dest, op1);
+  }
+  else
+    binary(dest, op1, id, op2);
 }
 
 /*******************************************************************\
@@ -431,7 +422,7 @@ assignments: assignment
 
 assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            {
-             binary($$, $3, ID_equal, $6, bool_typet{});
+             binary($$, $3, ID_equal, $6);
 
              if(stack_expr($1).id()==ID_smv_next)
              {
@@ -486,7 +477,7 @@ define     : assignment_var BECOMES_Token formula ';'
     DATA_INVARIANT(false, "unexpected variable class");
   }
 
-  binary($$, $1, ID_equal, $3, bool_typet{});
+  binary($$, $1, ID_equal, $3);
   PARSER.module->add_define(stack_expr($$));
 }
 ;
@@ -500,7 +491,7 @@ term       : variable_name
            | '{' formula_list '}'     { $$=$2; stack_expr($$).id("smv_nondet_choice"); }
            | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
            | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
-           | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5, stack_expr($5).type()); }
+           | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
            | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
            | NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
            | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
@@ -511,16 +502,16 @@ term       : variable_name
            | SWITCH_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            | MINUS_Token term %prec UMINUS
                                       { init($$, ID_unary_minus); mto($$, $2); }
-           | term MOD_Token term      { binary_arith($$, $1, ID_mod, $3); }
-           | term TIMES_Token term    { binary_arith($$, $1, ID_mult, $3); }
-           | term DIVIDE_Token term   { binary_arith($$, $1, ID_div, $3); }
-           | term PLUS_Token term     { binary_arith($$, $1, ID_plus, $3); }
-           | term MINUS_Token term    { binary_arith($$, $1, ID_minus, $3); }
-           | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3, bool_typet{}); }
-           | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3, bool_typet{}); }
-           | term XOR_Token term      { j_binary($$, $1, ID_xor, $3, bool_typet{}); }
-           | term OR_Token term       { j_binary($$, $1, ID_or, $3, bool_typet{}); }
-           | term AND_Token term      { j_binary($$, $1, ID_and, $3, bool_typet{}); }
+           | term MOD_Token term      { binary($$, $1, ID_mod, $3); }
+           | term TIMES_Token term    { binary($$, $1, ID_mult, $3); }
+           | term DIVIDE_Token term   { binary($$, $1, ID_div, $3); }
+           | term PLUS_Token term     { binary($$, $1, ID_plus, $3); }
+           | term MINUS_Token term    { binary($$, $1, ID_minus, $3); }
+           | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3); }
+           | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3); }
+           | term XOR_Token term      { j_binary($$, $1, ID_xor, $3); }
+           | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
+           | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
            | NOT_Token term           { init($$, ID_not); mto($$, $2); }
            | AX_Token  term           { init($$, ID_AX);  mto($$, $2); }
            | AF_Token  term           { init($$, ID_AF);  mto($$, $2); }
@@ -528,24 +519,24 @@ term       : variable_name
            | EX_Token  term           { init($$, ID_EX);  mto($$, $2); }
            | EF_Token  term           { init($$, ID_EF);  mto($$, $2); }
            | EG_Token  term           { init($$, ID_EG);  mto($$, $2); }
-           | A_Token '[' term U_Token term ']' { binary($$, $3, ID_AU, $5, bool_typet{}); }
-           | A_Token '[' term R_Token term ']' { binary($$, $3, ID_AR, $5, bool_typet{}); }
-           | E_Token '[' term U_Token term ']' { binary($$, $3, ID_EU, $5, bool_typet{}); }
-           | E_Token '[' term R_Token term ']' { binary($$, $3, ID_ER, $5, bool_typet{}); }
+           | A_Token '[' term U_Token term ']' { binary($$, $3, ID_AU, $5); }
+           | A_Token '[' term R_Token term ']' { binary($$, $3, ID_AR, $5); }
+           | E_Token '[' term U_Token term ']' { binary($$, $3, ID_EU, $5); }
+           | E_Token '[' term R_Token term ']' { binary($$, $3, ID_ER, $5); }
            | F_Token  term            { init($$, ID_F);  mto($$, $2); }
            | G_Token  term            { init($$, ID_G);  mto($$, $2); }
            | X_Token  term            { init($$, ID_X);  mto($$, $2); }
-           | term U_Token term        { binary($$, $1, ID_U, $3, bool_typet{}); }
-           | term R_Token term        { binary($$, $1, ID_R, $3, bool_typet{}); }
-           | term EQUAL_Token    term { binary($$, $1, ID_equal,  $3, bool_typet{}); }
-           | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3, bool_typet{}); }
-           | term LT_Token       term { binary($$, $1, ID_lt,  $3, bool_typet{}); }
-           | term LE_Token       term { binary($$, $1, ID_le, $3, bool_typet{}); }
-           | term GT_Token       term { binary($$, $1, ID_gt,  $3, bool_typet{}); }
-           | term GE_Token       term { binary($$, $1, ID_ge, $3, bool_typet{}); }
-           | term UNION_Token    term { binary($$, $1, ID_smv_union, $3, bool_typet{}); }
-           | term IN_Token       term { binary($$, $1, ID_smv_setin, $3, bool_typet{}); }
-           | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3, bool_typet{}); }
+           | term U_Token term        { binary($$, $1, ID_U, $3); }
+           | term R_Token term        { binary($$, $1, ID_R, $3); }
+           | term EQUAL_Token    term { binary($$, $1, ID_equal, $3); }
+           | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3); }
+           | term LT_Token       term { binary($$, $1, ID_lt, $3); }
+           | term LE_Token       term { binary($$, $1, ID_le, $3); }
+           | term GT_Token       term { binary($$, $1, ID_gt, $3); }
+           | term GE_Token       term { binary($$, $1, ID_ge, $3); }
+           | term UNION_Token    term { binary($$, $1, ID_smv_union, $3); }
+           | term IN_Token       term { binary($$, $1, ID_smv_setin, $3); }
+           | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3); }
            ;
 
 formula_list: formula { init($$); mto($$, $1); }
@@ -636,7 +627,7 @@ cases      :
            ;
 
 case       : formula ':' formula ';'
-           { binary($$, $1, ID_case, $3, stack_expr($3).type()); }
+           { binary($$, $1, ID_case, $3); }
            ;
 
 switches   :
