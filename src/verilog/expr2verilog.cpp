@@ -24,6 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <algorithm>
 #include <cstdlib>
+#include <iomanip>
 #include <sstream>
 
 /*******************************************************************\
@@ -350,7 +351,10 @@ expr2verilogt::convert_function_call(const function_call_exprt &src)
     else
       dest+=", ";
 
-    dest += convert_rec(op).s;
+    if(op.id() == ID_type)
+      dest += convert(op.type());
+    else
+      dest += convert_rec(op).s;
   }
 
   dest+=")";
@@ -1207,6 +1211,54 @@ expr2verilogt::resultt expr2verilogt::convert_constant(
     ieee_floatt ieee_float;
     ieee_float.from_expr(tmp);
     return {precedence, ieee_float.to_ansi_c_string()};
+  }
+  else if(type.id() == ID_string)
+  {
+    dest = '"';
+
+    for(auto &ch : id2string(src.get_value()))
+    {
+      // Follows Table Table 5-1 in 1800-2017.
+      switch(ch)
+      {
+      case '\n':
+        dest += "\\n";
+        break;
+      case '\t':
+        dest += "\\t";
+        break;
+      case '\\':
+        dest += "\\\\";
+        break;
+      case '"':
+        dest += "\\\"";
+        break;
+      case '\v':
+        dest += "\\v";
+        break;
+      case '\f':
+        dest += "\\f";
+        break;
+      case '\a':
+        dest += "\\a";
+        break;
+      default:
+        if(
+          (unsigned(ch) >= ' ' && unsigned(ch) <= 126) ||
+          (unsigned(ch) >= 128 && unsigned(ch) <= 254))
+        {
+          dest += ch;
+        }
+        else
+        {
+          std::ostringstream oss;
+          oss << "\\x" << std::setw(2) << std::setfill('0') << std::hex << ch;
+          dest += oss.str();
+        }
+      }
+    }
+
+    dest += '"';
   }
   else
     return convert_norep(src, precedence);

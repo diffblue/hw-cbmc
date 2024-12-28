@@ -756,7 +756,10 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   else
     s = "?";
 
-  return convert_constant(constant_exprt{s, string_typet{}});
+  auto result = convert_string_literal(s);
+  result.add_source_location() = expr.source_location();
+
+  return std::move(result);
 }
 
 /*******************************************************************\
@@ -1301,8 +1304,8 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
   if(expr.type().id()==ID_string)
   {
     auto result = convert_string_literal(expr.get_value());
-    result.add_source_location() = source_location;
-    return std::move(result);
+    // only add a typecast for now
+    return typecast_exprt{std::move(expr), std::move(result.type())};
   }
   else if(expr.type().id()==ID_unsignedbv ||
           expr.type().id()==ID_signedbv ||
