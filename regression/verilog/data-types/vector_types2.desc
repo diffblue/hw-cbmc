@@ -1,0 +1,7 @@
+CORE
+vector_types2.sv
+--bound 0
+^\[.*\] always \$bits\(main\.x\) == \(1 << main\.p\) \+ 1: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
