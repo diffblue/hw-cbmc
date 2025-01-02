@@ -2004,6 +2004,24 @@ packed_dimension:
 	| unsized_dimension
 	;
 
+associative_dimension:
+	  '[' data_type ']'
+		{ init($$, ID_verilog_associative_array);
+		  // for the element type
+		  stack_type($$).add_subtype().make_nil();
+		}
+	| '[' '*' ']'
+		{ init($$, ID_verilog_associative_array);
+		  // for the element type
+		  stack_type($$).add_subtype().make_nil();
+		}
+	| "[*" ']'
+		{ init($$, ID_verilog_associative_array);
+		  // for the element type
+		  stack_type($$).add_subtype().make_nil();
+		}
+	;
+
 unpacked_dimension:
 	  '[' const_expression TOK_COLON const_expression ']'
 		{ init($$, ID_verilog_unpacked_array);
@@ -2022,6 +2040,7 @@ unpacked_dimension:
 variable_dimension:
 	  unsized_dimension
 	| unpacked_dimension
+	| associative_dimension
 	;
 
 variable_dimension_brace:
