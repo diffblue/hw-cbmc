@@ -1,6 +1,13 @@
 CORE
 typename1.sv
 --module main --bound 0
+^\[.*\] always \$typename\(main\.some_bit\) == 24'h626974: PROVED up to bound 0$
+^\[.*\] always \$typename\(main\.vector1\) == 72'h6269745B33313A305D: PROVED up to bound 0$
+^\[.*\] always \$typename\(main\.vector2\) == 72'h6269745B303A33315D: PROVED up to bound 0$
+^\[.*\] always \$typename\(main\.vector3\) == 128'h626974207369676E65645B33313A305D: PROVED up to bound 0$
+^\[.*\] always \$typename\(real'\(1\)\) == 32'h7265616C: PROVED up to bound 0$
+^\[.*\] always \$typename\(shortreal'\(1\)\) == 72'h73686F72747265616C: PROVED up to bound 0$
+^\[.*\] always \$typename\(realtime'\(1\)\) == 64'h7265616C74696D65: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --

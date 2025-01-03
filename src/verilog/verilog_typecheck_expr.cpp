@@ -950,7 +950,12 @@ exprt verilog_typecheck_exprt::convert_system_function(
         << "$typename takes one argument";
     }
 
-    return typename_string(arguments[0]);
+    // just get the function return type for now
+    auto value = typename_string(arguments[0]);
+
+    expr.type() = value.type();
+
+    return std::move(expr);
   }
   else
   {
@@ -1621,6 +1626,11 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
 
       return from_integer(result, integer_typet());
     }
+  }
+  else if(identifier == "$typename")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$typename takes one argument");
+    return typename_string(arguments[0]);
   }
   else
     return std::move(expr); // don't know it, won't elaborate
