@@ -302,6 +302,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     result.set(ID_C_identifier, enum_type.identifier());
     return result.with_source_location(source_location);
   }
+  else if(src.id() == ID_verilog_event)
+  {
+    return src;
+  }
   else if(src.id() == ID_verilog_packed_array)
   {
     return convert_packed_array_type(to_type_with_subtype(src));

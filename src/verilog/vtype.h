@@ -31,13 +31,17 @@ public:
   {
     return vtype == VERILOG_REAL;
   }
+  bool is_null() const
+  {
+    return vtype == NULL_TYPE;
+  }
   bool is_chandle() const
   {
     return vtype == CHANDLE;
   }
-  bool is_null() const
+  inline bool is_event() const
   {
-    return vtype == NULL_TYPE;
+    return vtype == EVENT;
   }
   inline bool is_other() const { return vtype==OTHER; }
 
@@ -52,8 +56,9 @@ protected:
     VERILOG_SIGNED,
     VERILOG_UNSIGNED,
     VERILOG_REAL,
-    CHANDLE,
     NULL_TYPE,
+    CHANDLE,
+    EVENT,
     OTHER
   } _vtypet;
   _vtypet vtype;

@@ -1260,7 +1260,7 @@ expr2verilogt::resultt expr2verilogt::convert_constant(
 
     dest += '"';
   }
-  else if(type.id() == ID_verilog_chandle)
+  else if(type.id() == ID_verilog_chandle || type.id() == ID_verilog_event)
   {
     if(src.get_value() == ID_NULL)
     {
@@ -2041,6 +2041,8 @@ std::string expr2verilogt::convert(const typet &type)
   }
   else if(type.id() == ID_verilog_chandle)
     return "chandle";
+  else if(type.id() == ID_verilog_event)
+    return "event";
   else if(type.id() == ID_verilog_genvar)
     return "genvar";
   else if(type.id()==ID_integer)
