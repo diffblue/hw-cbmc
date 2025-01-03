@@ -2,6 +2,6 @@ CORE
 not_supported3.sv
 --ic3
 ^no support for assumptions$
-^EXIT=1$
+^EXIT=10$
 ^SIGNAL=0$
 --

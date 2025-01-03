@@ -111,7 +111,7 @@ property_checker_resultt ic3_enginet::operator()()
       if(property.is_assumed())
       {
         message.error() << "no support for assumptions" << messaget::eom;
-        return 1;
+        return property_checker_resultt::error();
       }
     }
 
