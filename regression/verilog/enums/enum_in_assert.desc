@@ -1,0 +1,8 @@
+KNOWNBUG
+enum_in_assert.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This throws an exception.
