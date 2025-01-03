@@ -13,13 +13,16 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/c_types.h>
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
+#include <util/std_expr.h>
 
 #include "aval_bval_encoding.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
 
-/// If applicable, lower the three Verilog real types to floatbv.
-typet lower_verilog_real_types(typet type)
+/// Lowers
+/// * the three Verilog real types to floatbv;
+/// * Verilog integer to signedbv[32]
+typet verilog_lowering(typet type)
 {
   if(type.id() == ID_verilog_real || type.id() == ID_verilog_realtime)
   {
@@ -29,8 +32,17 @@ typet lower_verilog_real_types(typet type)
   {
     return ieee_float_spect::single_precision().to_type();
   }
+  else if(type.id() == ID_verilog_integer)
+  {
+    return signedbv_typet{32};
+  }
+  else if(
+    type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+  {
+    return lower_to_aval_bval(type);
+  }
   else
-    PRECONDITION(false);
+    return type;
 }
 
 exprt extract(
@@ -152,8 +164,136 @@ exprt to_bitvector(const exprt &src)
   }
 }
 
+exprt verilog_lowering_system_function(const function_call_exprt &call)
+{
+  auto identifier = to_symbol_expr(call.function()).get_identifier();
+  auto &arguments = call.arguments();
+
+  if(identifier == "$signed" || identifier == "$unsigned")
+  {
+    // lower to typecast
+    DATA_INVARIANT(
+      arguments.size() == 1, id2string(identifier) + " takes one argument");
+    return typecast_exprt{arguments[0], call.type()};
+  }
+  else if(identifier == "$rtoi")
+  {
+    DATA_INVARIANT(
+      arguments.size(), id2string(identifier) + " takes one argument");
+    // These truncate, and do not round.
+    return floatbv_typecast_exprt{
+      arguments[0],
+      ieee_floatt::rounding_mode_expr(
+        ieee_floatt::rounding_modet::ROUND_TO_ZERO),
+      verilog_lowering(call.type())};
+  }
+  else if(identifier == "$itor")
+  {
+    DATA_INVARIANT(
+      arguments.size(), id2string(identifier) + " takes one argument");
+    // No rounding required, any 32-bit integer will fit into double.
+    return floatbv_typecast_exprt{
+      arguments[0],
+      ieee_floatt::rounding_mode_expr(
+        ieee_floatt::rounding_modet::ROUND_TO_ZERO),
+      verilog_lowering(call.type())};
+  }
+  else if(identifier == "$bitstoreal")
+  {
+    DATA_INVARIANT(
+      arguments.size(), id2string(identifier) + " takes one argument");
+    // not a conversion -- this returns the given bit-pattern as a real
+    return typecast_exprt{
+      zero_extend_exprt{arguments[0], bv_typet{64}},
+      verilog_lowering(call.type())};
+  }
+  else if(identifier == "$bitstoshortreal")
+  {
+    DATA_INVARIANT(
+      arguments.size(), id2string(identifier) + " takes one argument");
+    // not a conversion -- this returns the given bit-pattern as a real
+    return typecast_exprt{
+      zero_extend_exprt{arguments[0], bv_typet{32}},
+      verilog_lowering(call.type())};
+  }
+  else if(identifier == "$realtobits")
+  {
+    DATA_INVARIANT(
+      arguments.size(), id2string(identifier) + " takes one argument");
+    // not a conversion -- this returns the given floating-point bit-pattern as [63:0]
+    return zero_extend_exprt{
+      typecast_exprt{arguments[0], bv_typet{64}}, call.type()};
+  }
+  else if(identifier == "$shortrealtobits")
+  {
+    DATA_INVARIANT(
+      arguments.size(), id2string(identifier) + " takes one argument");
+    // not a conversion -- this returns the given floating-point bit-pattern as [31:0]
+    return zero_extend_exprt{
+      typecast_exprt{arguments[0], bv_typet{32}}, call.type()};
+  }
+  else
+    return call;
+}
+
+exprt verilog_lowering_cast(typecast_exprt expr)
+{
+  auto &src_type = expr.op().type();
+  auto &dest_type = expr.type();
+
+  if(
+    dest_type.id() == ID_verilog_real ||
+    dest_type.id() == ID_verilog_shortreal ||
+    dest_type.id() == ID_verilog_realtime || src_type.id() == ID_floatbv)
+  {
+    // This may require rounding, hence add rounding mode.
+    // 1800-2017 6.12.2 requires rounding away from zero,
+    // which we don't have.
+    expr.type() = verilog_lowering(dest_type);
+    auto new_cast = floatbv_typecast_exprt{
+      expr.op(),
+      ieee_floatt::rounding_mode_expr(
+        ieee_floatt::rounding_modet::ROUND_TO_EVEN),
+      verilog_lowering(dest_type)};
+    return std::move(new_cast);
+  }
+
+  if(is_aval_bval(src_type) && dest_type.id() == ID_bool)
+  {
+    // When casting a four-valued scalar to bool,
+    // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
+    return aval_bval(expr);
+  }
+  else
+  {
+    if(
+      dest_type.id() == ID_verilog_unsignedbv ||
+      dest_type.id() == ID_verilog_signedbv)
+    {
+      auto aval_bval_type = lower_to_aval_bval(dest_type);
+      return aval_bval_conversion(expr.op(), aval_bval_type);
+    }
+    else if(dest_type.id() == ID_struct || dest_type.id() == ID_union)
+    {
+      return from_bitvector(expr.op(), 0, dest_type);
+    }
+    else
+    {
+      if(src_type.id() == ID_struct || src_type.id() == ID_union)
+      {
+        return extract(to_bitvector(expr.op()), 0, dest_type);
+      }
+    }
+  }
+
+  return std::move(expr);
+}
+
 exprt verilog_lowering(exprt expr)
 {
+  // lowered already
+  PRECONDITION(expr.id() != ID_floatbv_typecast);
+
   if(expr.id() == ID_verilog_inside)
   {
     // The lowering uses wildcard equality, which needs to be further lowered
@@ -196,7 +336,7 @@ exprt verilog_lowering(exprt expr)
     {
       // turn into floatbv -- same encoding,
       // no need to change value
-      expr.type() = lower_verilog_real_types(expr.type());
+      expr.type() = verilog_lowering(expr.type());
     }
 
     return expr;
@@ -247,63 +387,12 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_typecast)
   {
-    auto &typecast_expr = to_typecast_expr(expr);
-
-    if(
-      typecast_expr.type().id() == ID_verilog_real ||
-      typecast_expr.type().id() == ID_verilog_shortreal ||
-      typecast_expr.type().id() == ID_verilog_realtime)
-    {
-      typecast_expr.type() = lower_verilog_real_types(typecast_expr.type());
-    }
-
-    if(is_aval_bval(typecast_expr.op()) && typecast_expr.type().id() == ID_bool)
-    {
-      // When casting a four-valued scalar to bool,
-      // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
-      return aval_bval(typecast_expr);
-    }
-    else
-    {
-      const auto &src_type = typecast_expr.op().type();
-      const auto &dest_type = typecast_expr.type();
-
-      if(
-        dest_type.id() == ID_verilog_unsignedbv ||
-        dest_type.id() == ID_verilog_signedbv)
-      {
-        auto aval_bval_type = lower_to_aval_bval(dest_type);
-        return aval_bval_conversion(typecast_expr.op(), aval_bval_type);
-      }
-      else if(dest_type.id() == ID_struct || dest_type.id() == ID_union)
-      {
-        return from_bitvector(typecast_expr.op(), 0, dest_type);
-      }
-      else
-      {
-        if(src_type.id() == ID_struct || src_type.id() == ID_union)
-        {
-          return extract(to_bitvector(typecast_expr.op()), 0, dest_type);
-        }
-      }
-    }
-
-    // Cast to float? Turn into floatbv_typecast,
-    // with rounding mode.
-    if(typecast_expr.type().id() == ID_floatbv)
-    {
-      auto rm = ieee_floatt::rounding_mode_expr(
-        ieee_floatt::rounding_modet::ROUND_TO_EVEN);
-      auto floatbv_typecast =
-        floatbv_typecast_exprt{typecast_expr.op(), rm, typecast_expr.type()};
-      return std::move(floatbv_typecast);
-    }
-    else
-      return expr;
+    return verilog_lowering_cast(to_typecast_expr(expr));
   }
   else if(expr.id() == ID_verilog_explicit_type_cast)
   {
-    return to_verilog_explicit_type_cast_expr(expr).lower();
+    return verilog_lowering_cast(
+      to_typecast_expr(to_verilog_explicit_type_cast_expr(expr).lower()));
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
@@ -410,32 +499,25 @@ exprt verilog_lowering(exprt expr)
     // Is it a 'system function call'?
     auto &call = to_function_call_expr(expr);
     if(call.is_system_function_call())
-    {
-      auto identifier = to_symbol_expr(call.function()).get_identifier();
-      if(identifier == "$signed" || identifier == "$unsigned")
-      {
-        // lower to typecast
-        DATA_INVARIANT(
-          call.arguments().size() == 1,
-          id2string(identifier) + " must have one argument");
-        return typecast_exprt{call.arguments()[0], call.type()};
-      }
-      else
-        return expr;
-    }
+      return verilog_lowering_system_function(call);
     else
       return expr;
+  }
+  else if(expr.id() == ID_unary_minus)
+  {
+    if(
+      expr.type().id() == ID_verilog_real ||
+      expr.type().id() == ID_verilog_realtime ||
+      expr.type().id() == ID_verilog_shortreal)
+    {
+      // turn into floatbv
+      expr.type() = verilog_lowering(expr.type());
+    }
+
+    return expr;
   }
   else
     return expr; // leave as is
 
   UNREACHABLE;
-}
-
-typet verilog_lowering(typet type)
-{
-  if(type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
-    return lower_to_aval_bval(type);
-  else
-    return type;
 }

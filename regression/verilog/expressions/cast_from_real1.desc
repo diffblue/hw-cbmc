@@ -1,0 +1,9 @@
+KNOWNBUG
+cast_from_real1.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Verilog casts from real to integer round, and do not truncate.

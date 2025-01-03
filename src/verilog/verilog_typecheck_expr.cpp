@@ -960,6 +960,84 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
+  else if(identifier == "$rtoi")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << identifier << " takes one argument";
+    }
+
+    expr.type() = verilog_integer_typet();
+
+    return std::move(expr);
+  }
+  else if(identifier == "$itor")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << identifier << " takes one argument";
+    }
+
+    expr.type() = verilog_real_typet();
+
+    return std::move(expr);
+  }
+  else if(identifier == "$bitstoreal")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << identifier << " takes one argument";
+    }
+
+    expr.type() = verilog_real_typet();
+
+    return std::move(expr);
+  }
+  else if(identifier == "$bitstoshortreal")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << identifier << " takes one argument";
+    }
+
+    expr.type() = verilog_shortreal_typet();
+
+    return std::move(expr);
+  }
+  else if(identifier == "$realtobits")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << identifier << " takes one argument";
+    }
+
+    arguments[0] =
+      typecast_exprt::conditional_cast(arguments[0], verilog_real_typet{});
+
+    expr.type() = unsignedbv_typet{64};
+
+    return std::move(expr);
+  }
+  else if(identifier == "$shortrealtobits")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << identifier << " takes one argument";
+    }
+
+    arguments[0] =
+      typecast_exprt::conditional_cast(arguments[0], verilog_shortreal_typet{});
+
+    expr.type() = unsignedbv_typet{32};
+
+    return std::move(expr);
+  }
   else if(identifier == "$typename")
   {
     if(arguments.size() != 1)
@@ -1815,7 +1893,7 @@ void verilog_typecheck_exprt::implicit_typecast(
   else if(
     src_type.id() == ID_bool || src_type.id() == ID_unsignedbv ||
     src_type.id() == ID_signedbv || src_type.id() == ID_verilog_unsignedbv ||
-    src_type.id() == ID_verilog_signedbv)
+    src_type.id() == ID_verilog_signedbv || src_type.id() == ID_verilog_integer)
   {
     // from bits to s.th. else
     if(dest_type.id()==ID_bool)
@@ -1951,8 +2029,11 @@ void verilog_typecheck_exprt::implicit_typecast(
   }
   else if(src_type.id() == ID_verilog_real)
   {
-    if(dest_type.id() == ID_verilog_realtime)
+    if(
+      dest_type.id() == ID_verilog_realtime ||
+      dest_type.id() == ID_verilog_shortreal)
     {
+      // The rounding mode, if needed, is added during lowering.
       expr = typecast_exprt{expr, dest_type};
       return;
     }
