@@ -1334,9 +1334,6 @@ verilog_typecheck_exprt::convert_integer_constant_expression(exprt expr)
   // copy the source location, we will modify 'expr'
   auto source_location = expr.source_location();
 
-  // this could be large
-  propagate_type(expr, integer_typet());
-
   exprt tmp = elaborate_constant_expression_check(expr);
 
   if(tmp.id() == ID_infinity)
