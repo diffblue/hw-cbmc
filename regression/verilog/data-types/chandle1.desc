@@ -1,0 +1,8 @@
+CORE
+chandle1.sv
+--bound 0
+^\[main\.p0\] always main\.some_handle == null: PROVED up to bound 0$
+^\[main\.p1\] always \$typename\(main\.some_handle\) == "chandle": PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--

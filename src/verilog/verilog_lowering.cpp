@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "convert_literals.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
+#include "verilog_types.h"
 
 /// Lowers
 /// * the three Verilog real types to floatbv;
@@ -41,6 +42,10 @@ typet verilog_lowering(typet type)
     type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
   {
     return lower_to_aval_bval(type);
+  }
+  else if(type.id() == ID_verilog_chandle)
+  {
+    return to_verilog_chandle_type(type).encoding();
   }
   else
     return type;
@@ -347,8 +352,25 @@ exprt verilog_lowering(exprt expr)
       result.add_source_location() = expr.source_location();
       expr = std::move(result);
     }
+    else if(expr.type().id() == ID_verilog_chandle)
+    {
+      // this is 'null'
+      return to_verilog_chandle_type(expr.type()).null_expr();
+    }
 
     return expr;
+  }
+  else if(expr.id() == ID_symbol)
+  {
+    auto &symbol_expr = to_symbol_expr(expr);
+    if(expr.type().id() == ID_verilog_chandle)
+    {
+      auto &chandle_type = to_verilog_chandle_type(expr.type());
+      return symbol_exprt{
+        symbol_expr.get_identifier(), chandle_type.encoding()};
+    }
+    else
+      return expr;
   }
   else if(expr.id() == ID_concatenation)
   {

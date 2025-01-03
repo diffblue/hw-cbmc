@@ -31,6 +31,14 @@ public:
   {
     return vtype == VERILOG_REAL;
   }
+  bool is_chandle() const
+  {
+    return vtype == CHANDLE;
+  }
+  bool is_null() const
+  {
+    return vtype == NULL_TYPE;
+  }
   inline bool is_other() const { return vtype==OTHER; }
 
 protected:
@@ -44,6 +52,8 @@ protected:
     VERILOG_SIGNED,
     VERILOG_UNSIGNED,
     VERILOG_REAL,
+    CHANDLE,
+    NULL_TYPE,
     OTHER
   } _vtypet;
   _vtypet vtype;

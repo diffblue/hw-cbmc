@@ -1260,6 +1260,15 @@ expr2verilogt::resultt expr2verilogt::convert_constant(
 
     dest += '"';
   }
+  else if(type.id() == ID_verilog_chandle)
+  {
+    if(src.get_value() == ID_NULL)
+    {
+      dest = "null";
+    }
+    else
+      return convert_norep(src, precedence);
+  }
   else
     return convert_norep(src, precedence);
 
@@ -2030,6 +2039,8 @@ std::string expr2verilogt::convert(const typet &type)
 
     return dest;
   }
+  else if(type.id() == ID_verilog_chandle)
+    return "chandle";
   else if(type.id() == ID_verilog_genvar)
     return "genvar";
   else if(type.id()==ID_integer)
@@ -2040,6 +2051,8 @@ std::string expr2verilogt::convert(const typet &type)
     return "real";
   else if(type.id()==ID_verilog_realtime)
     return "realtime";
+  else if(type.id() == ID_verilog_null)
+    return "null";
   else if(type.id() == ID_verilog_enum)
   {
     return "enum";

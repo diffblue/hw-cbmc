@@ -3346,7 +3346,12 @@ void verilog_synthesist::synth_assignments(
   if(!symbol.is_state_var)
     post_process_wire(symbol.name, new_value);
 
-  equal_exprt equality_expr{symbol_expr(symbol, curr_or_next), new_value};
+  auto lhs = symbol_expr(symbol, curr_or_next);
+
+  DATA_INVARIANT(
+    lhs.type() == new_value.type(), "synth_assignments type consistency");
+
+  equal_exprt equality_expr{std::move(lhs), new_value};
 
   constraints.add_to_operands(std::move(equality_expr));
 }
