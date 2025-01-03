@@ -37,6 +37,8 @@ public:
   bool make_netlist(netlistt &);
 
   transition_systemt transition_system;
+
+  using propertyt = ebmc_propertiest::propertyt;
   ebmc_propertiest properties;
 
 protected:
@@ -53,7 +55,6 @@ protected:
   bool typecheck();
 
   std::size_t bound;
-  using propertyt = ebmc_propertiest::propertyt;
 
 public:
   int do_compute_ct();

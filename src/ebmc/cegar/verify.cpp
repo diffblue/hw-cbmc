@@ -22,9 +22,9 @@ Function: bmc_cegart::verify
 
 \*******************************************************************/
 
-bool bmc_cegart::verify(unsigned bound)
+bool bmc_cegart::verify(const std::size_t bound)
 {
-  status() << "Checking Abstract Model (bound=" << bound << ")" << eom;
+  status() << "Checking abstract model (bound=" << bound << ")" << eom;
 
   satcheckt satcheck{*message_handler};
   cnft &solver=satcheck;
