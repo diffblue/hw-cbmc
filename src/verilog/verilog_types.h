@@ -581,4 +581,41 @@ inline verilog_chandle_typet &to_verilog_chandle_type(typet &type)
   return static_cast<verilog_chandle_typet &>(type);
 }
 
+/// The SystemVerilog event type
+class verilog_event_typet : public typet
+{
+public:
+  verilog_event_typet() : typet(ID_verilog_event)
+  {
+  }
+
+  constant_exprt null_expr() const;
+
+  bv_typet encoding() const
+  {
+    return bv_typet{32};
+  }
+};
+
+/// \brief Cast a typet to a \ref verilog_event_typet
+///
+/// This is an unchecked conversion. \a type must be known to be \ref
+/// verilog_event_typet. Will fail with a precondition violation if type
+/// doesn't match.
+///
+/// \param type: Source type.
+/// \return Object of type \ref verilog_event_typet
+inline const verilog_event_typet &to_verilog_event_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_event);
+  return static_cast<const verilog_event_typet &>(type);
+}
+
+/// \copydoc to_event_type(const typet &)
+inline verilog_event_typet &to_verilog_event_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_event);
+  return static_cast<verilog_event_typet &>(type);
+}
+
 #endif

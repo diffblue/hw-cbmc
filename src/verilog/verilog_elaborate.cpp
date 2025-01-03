@@ -751,6 +751,9 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(statement.id() == ID_wait)
   {
   }
+  else if(statement.id() == ID_verilog_event_trigger)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected statement: " + statement.id_string());
 }

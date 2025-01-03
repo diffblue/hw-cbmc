@@ -1260,7 +1260,7 @@ expr2verilogt::resultt expr2verilogt::convert_constant(
 
     dest += '"';
   }
-  else if(type.id() == ID_verilog_chandle)
+  else if(type.id() == ID_verilog_chandle || type.id() == ID_verilog_event)
   {
     if(src.get_value() == ID_NULL)
     {
@@ -1988,6 +1988,8 @@ std::string expr2verilogt::convert(const typet &type)
     return "logic";
   else if(type.id() == ID_verilog_integer)
     return "integer";
+  else if(type.id() == ID_verilog_string)
+    return "string";
   else if(type.id() == ID_verilog_reg)
     return "reg";
   else if(type.id() == ID_verilog_time)
@@ -2041,6 +2043,8 @@ std::string expr2verilogt::convert(const typet &type)
   }
   else if(type.id() == ID_verilog_chandle)
     return "chandle";
+  else if(type.id() == ID_verilog_event)
+    return "event";
   else if(type.id() == ID_verilog_genvar)
     return "genvar";
   else if(type.id()==ID_integer)

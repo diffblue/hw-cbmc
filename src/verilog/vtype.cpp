@@ -78,6 +78,16 @@ vtypet::vtypet(const typet &type)
     vtype = CHANDLE;
     width = 32;
   }
+  else if(type.id() == ID_verilog_event)
+  {
+    vtype = EVENT;
+    width = 32;
+  }
+  else if(type.id() == ID_verilog_string)
+  {
+    vtype = STRING;
+    width = 0;
+  }
   else 
   {
     width=0;
@@ -122,11 +132,17 @@ std::ostream &operator << (std::ostream &out, const vtypet &vtype)
   case vtypet::VERILOG_REAL:
     return out << "real";
 
+  case vtypet::NULL_TYPE:
+    return out << "null";
+
   case vtypet::CHANDLE:
     return out << "chandle";
 
-  case vtypet::NULL_TYPE:
-    return out << "null";
+  case vtypet::EVENT:
+    return out << "event";
+
+  case vtypet::STRING:
+    return out << "string";
 
   case vtypet::UNKNOWN:
   case vtypet::OTHER:
@@ -134,4 +150,3 @@ std::ostream &operator << (std::ostream &out, const vtypet &vtype)
     return out << "?";
   }
 }
-

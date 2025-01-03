@@ -14,3 +14,8 @@ constant_exprt verilog_chandle_typet::null_expr() const
 {
   return encoding().all_zeros_expr();
 }
+
+constant_exprt verilog_event_typet::null_expr() const
+{
+  return encoding().all_zeros_expr();
+}

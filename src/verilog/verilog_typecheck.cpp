@@ -1613,6 +1613,10 @@ void verilog_typecheckt::convert_statement(
   else if(statement.id() == ID_wait)
   {
   }
+  else if(statement.id() == ID_verilog_event_trigger)
+  {
+    convert_expr(to_unary_expr(statement).op());
+  }
   else
   {
     throw errort().with_location(statement.source_location())

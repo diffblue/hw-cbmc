@@ -345,7 +345,7 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
 {
   // variable number of operands
 
-  if(expr.id() == ID_event)
+  if(expr.id() == ID_verilog_event)
   {
     expr.type() = bool_typet();
 
@@ -756,6 +756,14 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   else if(type.id() == ID_verilog_chandle)
   {
     s = "chandle";
+  }
+  else if(type.id() == ID_verilog_event)
+  {
+    s = "event";
+  }
+  else if(type.id() == ID_verilog_string)
+  {
+    s = "string";
   }
   else
     s = "?";
@@ -2052,7 +2060,9 @@ void verilog_typecheck_exprt::implicit_typecast(
   }
   else if(src_type.id() == ID_verilog_null)
   {
-    if(dest_type.id() == ID_verilog_chandle)
+    if(
+      dest_type.id() == ID_verilog_chandle ||
+      dest_type.id() == ID_verilog_event)
     {
       if(expr.id() == ID_constant)
       {
@@ -2318,6 +2328,27 @@ typet verilog_typecheck_exprt::max_type(
 
   if(vt0.is_chandle() || vt1.is_null())
     return t0;
+
+  if(vt0.is_null() || vt1.is_event())
+    return t1;
+
+  if(vt0.is_event() || vt1.is_null())
+    return t0;
+
+  if(
+    vt0.is_string() && (vt1.is_signed() || vt1.is_unsigned() ||
+                        vt1.is_verilog_signed() || vt1.is_verilog_unsigned()))
+  {
+    return t0;
+  }
+
+  if(
+    (vt0.is_signed() || vt0.is_unsigned() || vt0.is_verilog_signed() ||
+     vt0.is_verilog_unsigned()) &&
+    vt0.is_string())
+  {
+    return t1;
+  }
 
   if(vt0.is_other() || vt1.is_other())
     return static_cast<const typet &>(get_nil_irep());
