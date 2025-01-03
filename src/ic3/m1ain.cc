@@ -60,14 +60,6 @@ bool ic3_supports_property(const exprt &expr)
 {
   if(!is_temporal_operator(expr))
     return false;
-  else if(expr.id() == ID_AG)
-  {
-    return !has_temporal_operator(to_AG_expr(expr).op());
-  }
-  else if(expr.id() == ID_G)
-  {
-    return !has_temporal_operator(to_G_expr(expr).op());
-  }
   else if(expr.id() == ID_sva_always)
   {
     return !has_temporal_operator(to_sva_always_expr(expr).op());
