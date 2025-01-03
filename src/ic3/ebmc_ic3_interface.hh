@@ -7,17 +7,23 @@ class ic3_enginet
 public:
   ic3_enginet(
     const cmdlinet &_cmdline,
-    ui_message_handlert &_ui_message_handler)
-    : cmdline(_cmdline), message(_ui_message_handler)
+    transition_systemt &_transition_system,
+    ebmc_propertiest &_properties,
+    message_handlert &_message_handler)
+    : cmdline(_cmdline),
+      transition_system(_transition_system),
+      properties(_properties),
+      message(_message_handler)
   {
   }
 
 protected:
   const cmdlinet &cmdline;
+  transition_systemt &transition_system;
+  using propertyt = ebmc_propertiest::propertyt;
+  ebmc_propertiest &properties;
   messaget message;
 
-  using propertyt = ebmc_propertiest::propertyt;
-  ebmc_propertiest properties;
   netlistt netlist;
 
 public:
@@ -29,7 +35,7 @@ public:
   bool const0,const1;
   bool orig_names;
 
-  int operator()();
+  property_checker_resultt operator()();
   void read_ebmc_input();  
   void find_prop_lit();
   void ebmc_form_latches();

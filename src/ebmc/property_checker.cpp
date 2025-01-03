@@ -19,6 +19,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "dimacs_writer.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
+#include "ic3_engine.h"
 #include "k_induction.h"
 #include "netlist.h"
 #include "output_file.h"
@@ -377,6 +378,15 @@ property_checker_resultt property_checker(
     {
       return k_induction(
         cmdline, transition_system, properties, message_handler);
+    }
+    else if(cmdline.isset("ic3"))
+    {
+#ifdef _WIN32
+      throw ebmc_errort() << "No support for IC3 on Windows";
+#else
+      return ic3_engine(
+        cmdline, transition_system, properties, message_handler);
+#endif
     }
     else
     {

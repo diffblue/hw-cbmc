@@ -6,21 +6,28 @@ Module: Converting Verilog description into an internal
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+
+// clang-format off
 #include <iostream>
 #include <queue>
 #include <set>
 #include <map>
 #include <algorithm>
+
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
 #include "ccircuit.hh"
 #include "m0ic3.hh"
 
+#include <trans-netlist/netlist.h>
 
-#include <ebmc/ebmc_base.h>
+#include <ebmc/property_checker.h>
+
 #include <util/cmdline.h>
+
 #include "ebmc_ic3_interface.hh"
+// clang-format on
 
 /*=================================
 

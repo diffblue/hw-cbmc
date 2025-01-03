@@ -1,10 +1,10 @@
 CORE
 visbakery.sv
 --ic3
-^\[visbakery\.assert\.1\] always !visbakery\.p0: REFUTED$
 ^property FAILED
 ^cex verification is ok
-^EXIT=1$
+^\[visbakery\.assert\.1\] always !visbakery\.p0: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^cex verification failed

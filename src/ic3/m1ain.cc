@@ -49,12 +49,14 @@ long long gcount = 0;
        D O _ I C 3
 
   ====================*/
-int do_ic3(const cmdlinet &cmdline,
-	   ui_message_handlert &ui_message_handler)
-
+property_checker_resultt ic3_engine(
+  const cmdlinet &cmdline,
+  transition_systemt &transition_system,
+  ebmc_propertiest &properties,
+  message_handlert &message_handler)
 {
-  return(ic3_enginet(cmdline,ui_message_handler)());
-} /* end of function do_ic3 */
+  return(ic3_enginet(cmdline, transition_system, properties, message_handler)());
+} /* end of function ic3_engine */
 
 bool ic3_supports_property(const exprt &expr)
 {
@@ -74,7 +76,7 @@ bool ic3_supports_property(const exprt &expr)
 
    (functionall call reloading)
   =================================*/
-int ic3_enginet::operator()()
+property_checker_resultt ic3_enginet::operator()()
 
 {
 
@@ -83,12 +85,6 @@ int ic3_enginet::operator()()
   read_parameters();
 
   try    {
-    auto transition_system =
-      get_transition_system(cmdline, message.get_message_handler());
-
-    properties = ebmc_propertiest::from_command_line(
-      cmdline, transition_system, message.get_message_handler());
-
     // possibly apply liveness-to-safety
     if(cmdline.isset("liveness-to-safety"))
       liveness_to_safety(transition_system, properties);
@@ -106,7 +102,7 @@ int ic3_enginet::operator()()
     if(properties.properties.empty())
     {
       message.error() << "no properties" << messaget::eom;
-      return 1;
+      return property_checker_resultt::error();
     }
 
     // No support for assumptions
@@ -137,12 +133,7 @@ int ic3_enginet::operator()()
     }
 
     if(number_of_properties == 0)
-    {
-      namespacet ns(transition_system.symbol_table);
-      property_checker_resultt result{properties};
-      report_results(cmdline, result, ns, message.get_message_handler());
-      return result.exit_code();
-    }
+      return property_checker_resultt{properties};
 
     const0 = false;
     const1 = false;
@@ -176,25 +167,19 @@ int ic3_enginet::operator()()
       }
     }
 
-    {
-      property_checker_resultt result{properties};
-      namespacet ns(transition_system.symbol_table);
-      report_results(cmdline, result, ns, message.get_message_handler());
-    }
-
-    return result;
+    return property_checker_resultt{properties};
   }
   catch(const std::string &error_str)
   {
     message.error() << error_str << messaget::eom;
-    return 1;
+    return property_checker_resultt::error();
   }
   catch(const char *error_msg)    {
     message.error() << error_msg << messaget::eom;
-    return 1;
+    return property_checker_resultt::error();
   }
   catch(int)    {
-    return 1;
+    return property_checker_resultt::error();
   }
 } /* end of function operator */
 

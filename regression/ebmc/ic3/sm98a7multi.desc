@@ -1,10 +1,10 @@
 CORE
 sm98a7multi.sv
 --ic3 --property sm98a7multi.assert.2 --constr
-^\[sm98a7multi\.assert\.2\] always !sm98a7multi\.p1: REFUTED$
 ^property FAILED
 ^cex verification is ok
-^EXIT=1$
+^\[sm98a7multi\.assert\.2\] always !sm98a7multi\.p1: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^cex verification failed
