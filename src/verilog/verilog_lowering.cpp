@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "aval_bval_encoding.h"
+#include "convert_literals.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
 
@@ -322,12 +323,14 @@ exprt verilog_lowering(exprt expr)
 
   if(expr.id() == ID_constant)
   {
+    auto &constant_expr = to_constant_expr(expr);
+
     if(
       expr.type().id() == ID_verilog_unsignedbv ||
       expr.type().id() == ID_verilog_signedbv)
     {
       // encode into aval/bval
-      return lower_to_aval_bval(to_constant_expr(expr));
+      return lower_to_aval_bval(constant_expr);
     }
     else if(
       expr.type().id() == ID_verilog_real ||
@@ -337,6 +340,12 @@ exprt verilog_lowering(exprt expr)
       // turn into floatbv -- same encoding,
       // no need to change value
       expr.type() = verilog_lowering(expr.type());
+    }
+    else if(expr.type().id() == ID_string)
+    {
+      auto result = convert_string_literal(constant_expr.get_value());
+      result.add_source_location() = expr.source_location();
+      expr = std::move(result);
     }
 
     return expr;
