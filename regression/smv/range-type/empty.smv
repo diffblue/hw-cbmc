@@ -1,0 +1,5 @@
+MODULE main
+
+-- wrong order
+VAR x : 10..1;
+

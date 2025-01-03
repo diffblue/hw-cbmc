@@ -1,0 +1,7 @@
+CORE
+empty.smv
+
+^file empty\.smv line 4: range is empty$
+^EXIT=2$
+^SIGNAL=0$
+--
