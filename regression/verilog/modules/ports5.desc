@@ -1,6 +1,6 @@
 CORE
 ports5.sv
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
 --

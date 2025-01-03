@@ -1,6 +1,6 @@
 CORE
 constants2.sv
---bound 0
+
 ^no properties$
 ^EXIT=10$
 ^SIGNAL=0$

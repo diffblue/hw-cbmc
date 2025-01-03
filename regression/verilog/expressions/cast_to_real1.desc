@@ -1,6 +1,6 @@
 CORE broken-smt-backend
 cast_to_real1.sv
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
 --

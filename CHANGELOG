@@ -1,5 +1,7 @@
 # EBMC 5.5
 
+* If no engine is given, EBMC now selects an engine heuristically, instead
+  of doing BMC with k=1
 * Verilog: bugfix for $onehot0
 * Verilog: fix for primitive gates with more than two inputs
 * Verilog: Support $past when using AIG-based engines

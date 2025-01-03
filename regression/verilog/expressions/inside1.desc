@@ -1,12 +1,12 @@
 CORE broken-smt-backend
 inside1.sv
---bound 0
-^\[.*\] always 2 inside \{1, 2, 3\}: PROVED up to bound 0$
-^\[.*\] always 2 inside \{3'b0\?0\}: PROVED up to bound 0$
-^\[.*\] always !\(2 inside \{3'b0\?1\}\): PROVED up to bound 0$
-^\[.*\] always 2 inside \{\[1:3\], \[6:8\]\}: PROVED up to bound 0$
-^\[.*\] always !\(4 inside \{\[1:3\], \[6:8\]\}\): PROVED up to bound 0$
-^\[.*\] always \(1 && 1\) inside \{1, 2, 3\}: PROVED up to bound 0$
+
+^\[.*\] always 2 inside \{1, 2, 3\}: PROVED$
+^\[.*\] always 2 inside \{3'b0\?0\}: PROVED$
+^\[.*\] always !\(2 inside \{3'b0\?1\}\): PROVED$
+^\[.*\] always 2 inside \{\[1:3\], \[6:8\]\}: PROVED$
+^\[.*\] always !\(4 inside \{\[1:3\], \[6:8\]\}\): PROVED$
+^\[.*\] always \(1 && 1\) inside \{1, 2, 3\}: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

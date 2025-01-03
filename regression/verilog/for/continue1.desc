@@ -1,6 +1,6 @@
 CORE
 continue1.sv
---bound 0
+
 ^file .* line 8: synthesis of continue not supported$
 ^EXIT=2$
 ^SIGNAL=0$

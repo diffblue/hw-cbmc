@@ -1,6 +1,6 @@
 CORE
 generate-localparam1.v
---module main --bound 0
+--module main
 ^EXIT=0$
 ^SIGNAL=0$
 --

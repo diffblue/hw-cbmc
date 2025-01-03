@@ -1,6 +1,6 @@
 CORE
 implicit1.sv
---bound 0 --warn-implicit-nets
+--warn-implicit-nets
 ^file .* line 4: implicit wire main\.O$
 ^file .* line 4: implicit wire main\.A$
 ^file .* line 4: implicit wire main\.B$

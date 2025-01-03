@@ -1,8 +1,8 @@
 CORE broken-smt-backend
 nor2.sv
---bound 0
-^\[main\.nor_ok\] always !main\.nor_in1 == main\.nor_out: PROVED up to bound 0$
-^\[main\.nor_is_reduction_nor\] always ~\|\{ main\.nor_in1 \} == main\.nor_out: PROVED up to bound 0$
+
+^\[main\.nor_ok\] always !main\.nor_in1 == main\.nor_out: PROVED$
+^\[main\.nor_is_reduction_nor\] always ~\|\{ main\.nor_in1 \} == main\.nor_out: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

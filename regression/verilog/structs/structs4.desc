@@ -1,7 +1,7 @@
 CORE
 structs4.sv
---bound 0
-^\[main\.p0\] always main\.w == 32'h173: PROVED up to bound 0$
+
+^\[main\.p0\] always main\.w == 32'h173: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -1,6 +1,6 @@
 CORE broken-smt-backend
 replication1.v
---bound 0
+
 ^EXIT=0$
 ^SIGNAL=0$
 --

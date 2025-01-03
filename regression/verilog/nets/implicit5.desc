@@ -1,6 +1,6 @@
 CORE
 implicit5.sv
---bound 0 --warn-implicit-nets
+--warn-implicit-nets
 ^file .* line 4: unknown identifier A$
 ^EXIT=2$
 ^SIGNAL=0$

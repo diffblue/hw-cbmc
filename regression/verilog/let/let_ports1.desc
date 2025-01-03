@@ -1,6 +1,6 @@
 CORE
 let_ports1.sv
---bound 0
+
 ^file .* line 5: let ports not supported yet$
 ^EXIT=2$
 ^SIGNAL=0$

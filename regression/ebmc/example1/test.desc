@@ -1,6 +1,6 @@
 CORE
 example1.sv
---bound 10
-PROVED up to bound 10$
+
+^\[.*\] always 2'\(main\.a\) \+ main\.b == main\.result: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$

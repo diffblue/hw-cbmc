@@ -1,10 +1,10 @@
 CORE
 size_cast1.sv
---module main --bound 0
-^\[main\.p0\] always \$bits\(10'\(1\)\) == 10: PROVED up to bound 0$
-^\[main\.p1\] always \$bits\(20'\(1\)\) == 20: PROVED up to bound 0$
-^\[main\.p2\] always 10'\(-1\) == -1: PROVED up to bound 0$
-^\[main\.p3\] always 2'\(1 == 1\) == 1: PROVED up to bound 0$
+--module main
+^\[main\.p0\] always \$bits\(10'\(1\)\) == 10: PROVED$
+^\[main\.p1\] always \$bits\(20'\(1\)\) == 20: PROVED$
+^\[main\.p2\] always 10'\(-1\) == -1: PROVED$
+^\[main\.p3\] always 2'\(1 == 1\) == 1: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --
