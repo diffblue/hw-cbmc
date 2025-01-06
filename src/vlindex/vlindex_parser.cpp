@@ -932,14 +932,31 @@ void verilog_indexer_parsert::rConstraint()
     next_token(); // static
   }
 
-  next_token(); // constraint
+  auto constraint_token = next_token(); // constraint
+  PRECONDITION(constraint_token == TOK_CONSTRAINT);
 
   next_token(); // identifier
 
-  if(next_token() != '{') // onstraint_block
-    return;               // error
+  // constraint_block
+  auto first = next_token();
+  if(first != '{')
+    return; // error
+  std::size_t count = 1;
 
-  skip_until('}');
+  while(true)
+  {
+    auto token = next_token();
+    if(token.is_eof())
+      return;
+    else if(token == '{')
+      count++;
+    else if(token == '}')
+    {
+      if(count == 1)
+        return;
+      count--;
+    }
+  }
 }
 
 void verilog_indexer_parsert::rContinuousAssign()
