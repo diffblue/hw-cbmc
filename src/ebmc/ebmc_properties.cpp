@@ -18,6 +18,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 std::string ebmc_propertiest::propertyt::status_as_string() const
 {
+  auto suffix = failure_reason.has_value() ? ": " + failure_reason.value() : "";
+
   switch(status)
   {
   case statust::ASSUMED:
@@ -31,14 +33,15 @@ std::string ebmc_propertiest::propertyt::status_as_string() const
   case statust::REFUTED_WITH_BOUND:
     return "REFUTED up to bound " + std::to_string(bound);
   case statust::UNKNOWN:
-    return "UNKNOWN";
+    return "UNKNOWN" + suffix;
+  case statust::UNSUPPORTED:
+    return "UNSUPPORTED" + suffix;
   case statust::INCONCLUSIVE:
-    return "INCONCLUSIVE";
+    return "INCONCLUSIVE" + suffix;
   case statust::FAILURE:
-    return failure_reason.has_value() ? "FAILURE: " + failure_reason.value()
-                                      : "FAILURE";
+    return "FAILURE" + suffix;
   case statust::DROPPED:
-    return "DROPPED";
+    return "DROPPED" + suffix;
   case statust::DISABLED:
   default:
     UNREACHABLE;
@@ -78,9 +81,9 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
         id2string(symbol.location.get_comment());
 
       // Don't try to prove assumption properties.
-      if(symbol.value.id() == ID_sva_assume)
+      if(properties.properties.back().is_assumption())
       {
-        properties.properties.back().status = propertyt::statust::ASSUMED;
+        properties.properties.back().assumed();
         properties.properties.back().normalized_expr =
           normalize_property(to_sva_assume_expr(symbol.value).op());
       }

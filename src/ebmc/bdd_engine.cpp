@@ -180,7 +180,7 @@ property_checker_resultt bdd_enginet::operator()()
   try
   {
     // any properties left?
-    if(!properties.has_unknown_property())
+    if(!properties.has_unfinished_property())
       return property_checker_resultt{properties};
 
     // possibly apply liveness-to-safety

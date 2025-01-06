@@ -372,7 +372,7 @@ property_checker_resultt engine_heuristic(
 
   auto solver_factory = ebmc_solver_factory(cmdline);
 
-  if(!properties.has_unknown_property())
+  if(!properties.has_unfinished_property())
     return property_checker_resultt{properties}; // done
 
   message.status() << "No engine given, attempting heuristic engine selection"
@@ -384,12 +384,15 @@ property_checker_resultt engine_heuristic(
   k_induction(
     1, transition_system, properties, solver_factory, message_handler);
 
-  properties.reset_failure_to_unknown();
-
-  if(!properties.has_unknown_property())
+  if(!properties.has_unfinished_property())
     return property_checker_resultt{properties}; // done
 
+  properties.reset_failure();
+  properties.reset_inconclusive();
+  properties.reset_unsupported();
+
   // Now try BMC with bound 5, word-level
+  message.status() << "Attempting BMC with bound 5" << messaget::eom;
 
   bmc(
     5,     // bound
@@ -400,10 +403,10 @@ property_checker_resultt engine_heuristic(
     solver_factory,
     message_handler);
 
-  properties.reset_failure_to_unknown();
-
-  if(!properties.has_unknown_property())
+  if(!properties.has_unfinished_property())
     return property_checker_resultt{properties}; // done
+
+  properties.reset_failure();
 
   // Give up
   return property_checker_resultt{properties}; // done

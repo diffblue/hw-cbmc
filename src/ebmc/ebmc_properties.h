@@ -40,6 +40,7 @@ public:
       UNKNOWN,            // no work done yet
       DISABLED,           // turned off by user
       ASSUMED,            // property is assumed to be true, unbounded
+      UNSUPPORTED,        // property is unsupported
       PROVED,             // property is true, unbounded
       PROVED_WITH_BOUND,  // property is true, with bound
       REFUTED,            // property is false, possibly counterexample
@@ -98,24 +99,38 @@ public:
       return status == statust::FAILURE;
     }
 
+    bool is_unsupported() const
+    {
+      return status == statust::UNSUPPORTED;
+    }
+
     bool is_inconclusive() const
     {
       return status == statust::INCONCLUSIVE;
     }
 
+    void assumed()
+    {
+      status = statust::ASSUMED;
+      failure_reason = {};
+    }
+
     void unknown()
     {
       status = statust::UNKNOWN;
+      failure_reason = {};
     }
 
     void disable()
     {
       status = statust::DISABLED;
+      failure_reason = {};
     }
 
     void proved()
     {
       status = statust::PROVED;
+      failure_reason = {};
     }
 
     void proved_with_bound(std::size_t _bound)
@@ -127,17 +142,20 @@ public:
     void refuted()
     {
       status = statust::REFUTED;
+      failure_reason = {};
     }
 
     void refuted_with_bound(std::size_t _bound)
     {
       status = statust::REFUTED_WITH_BOUND;
       bound = _bound;
+      failure_reason = {};
     }
 
     void drop()
     {
       status = statust::DROPPED;
+      failure_reason = {};
     }
 
     void failure(const std::optional<std::string> &reason = {})
@@ -146,9 +164,16 @@ public:
       failure_reason = reason;
     }
 
+    void unsupported(const std::optional<std::string> &reason = {})
+    {
+      status = statust::UNSUPPORTED;
+      failure_reason = reason;
+    }
+
     void inconclusive()
     {
       status = statust::INCONCLUSIVE;
+      failure_reason = {};
     }
 
     std::string status_as_string() const;
@@ -164,16 +189,30 @@ public:
     {
       return ::is_exists_path(original_expr);
     }
+
+    bool is_assumption() const
+    {
+      return original_expr.id() == ID_sva_assume;
+    }
   };
 
   typedef std::list<propertyt> propertiest;
   propertiest properties;
 
-  bool has_unknown_property() const
+  bool has_unfinished_property() const
   {
     for(const auto &p : properties)
-      if(p.is_unknown())
+    {
+      if(p.is_assumption())
+      {
+      }
+      else if(
+        p.is_unknown() || p.is_unsupported() || p.is_failure() ||
+        p.is_inconclusive())
+      {
         return true;
+      }
+    }
 
     return false;
   }
@@ -209,11 +248,39 @@ public:
     return result;
   }
 
-  void reset_failure_to_unknown()
+  /// Resets properties/assumptions in FAILURE state to
+  /// ASSUMED/UNKNOWN respectively.
+  void reset_failure()
   {
     for(auto &p : properties)
       if(p.is_failure())
+      {
+        if(p.is_assumption())
+          p.assumed();
+        else
+          p.unknown();
+      }
+  }
+
+  /// Resets properties in INCONCLUSIVE state to UNKNOWN.
+  void reset_inconclusive()
+  {
+    for(auto &p : properties)
+      if(p.is_inconclusive())
         p.unknown();
+  }
+
+  /// Resets properties in UNSUPPORTED state to UNKNOWN/ASSUMED.
+  void reset_unsupported()
+  {
+    for(auto &p : properties)
+      if(p.is_unsupported())
+      {
+        if(p.is_assumption())
+          p.assumed();
+        else
+          p.unknown();
+      }
   }
 };
 

@@ -111,6 +111,7 @@ void report_results(
       case statust::DROPPED: message.status() << messaget::red; break;
       case statust::FAILURE: message.status() << messaget::red; break;
       case statust::UNKNOWN: message.status() << messaget::yellow; break;
+      case statust::UNSUPPORTED: message.status() << messaget::yellow; break;
       case statust::DISABLED: break;
       case statust::INCONCLUSIVE: message.status() << messaget::yellow; break;
       }
