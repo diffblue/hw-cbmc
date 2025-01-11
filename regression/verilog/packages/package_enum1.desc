@@ -1,0 +1,8 @@
+KNOWNBUG
+package_enum1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Support for enums in packages is missing.

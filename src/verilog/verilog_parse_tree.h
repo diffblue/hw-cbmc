@@ -75,7 +75,7 @@ public:
 
   // An index into the items list.
   // The key is
-  //   package::name for pagages
+  //   package::name for packages
   //   name          for modules, etc.
   // as packages have a separate name space (1800-2017 3.13).
   typedef std::

@@ -1355,9 +1355,13 @@ package_import_item_brace:
 
 package_import_item:
 	  package_identifier "::" identifier
-		{ init($$, ID_verilog_import_item); mto($$, $1); mto($$, $3); }
+		{ init($$, ID_verilog_import_item);
+		  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
+		  stack_expr($$).set(ID_identifier, stack_expr($3).id()); }
 	| package_identifier "::" "*"
-		{ init($$, ID_verilog_import_item); mto($$, $1); }
+		{ init($$, ID_verilog_import_item);
+		  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
+		  stack_expr($$).set(ID_identifier, "*"); }
 	;
 
 genvar_declaration:
@@ -4032,6 +4036,10 @@ part_select_range:
 
 primary:  primary_literal
 	| hierarchical_identifier_select
+	| package_scope hierarchical_identifier_select
+		{ init($$, ID_verilog_package_scope);
+		  mto($$, $1);
+		  mto($$, $2); }
 	| concatenation 
         | multiple_concatenation
         | function_subroutine_call
@@ -4208,6 +4216,9 @@ checker_identifier: TOK_NON_TYPE_IDENTIFIER;
 net_identifier: identifier;
 
 package_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+package_scope: package_identifier "::"
+	;
 
 param_identifier: TOK_NON_TYPE_IDENTIFIER;
 

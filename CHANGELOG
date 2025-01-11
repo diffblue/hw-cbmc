@@ -9,6 +9,7 @@
 * SystemVerilog: $bitstoreal/$bitstoshortreal, $realtobits/$shortrealtobits
 * SystemVerilog: $itor, $rtoi
 * SystemVerilog: chandle, event
+* SystemVerilog: package scope operator
 
 # EBMC 5.4
 
