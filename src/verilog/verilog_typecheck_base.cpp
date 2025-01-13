@@ -36,6 +36,25 @@ irep_idt verilog_module_symbol(const irep_idt &base_name)
 
 /*******************************************************************\
 
+Function: verilog_package_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt verilog_package_identifier(const irep_idt &base_name)
+{
+  // Packages and modules have separate name spaces,
+  // hence the prefix.
+  return "Verilog::package::" + id2string(base_name);
+}
+
+/*******************************************************************\
+
 Function: strip_verilog_prefix
 
   Inputs:
@@ -58,7 +77,7 @@ irep_idt strip_verilog_prefix(const irep_idt &identifier)
 
 /*******************************************************************\
 
-Function: verilog_module_name
+Function: verilog_item_key
 
   Inputs:
 
@@ -68,7 +87,7 @@ Function: verilog_module_name
 
 \*******************************************************************/
 
-irep_idt verilog_module_name(const irep_idt &identifier)
+irep_idt verilog_item_key(const irep_idt &identifier)
 {
   return strip_verilog_prefix(identifier);
 }
