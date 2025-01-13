@@ -1,0 +1,8 @@
+KNOWNBUG
+package_typedef1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Support for typedefs in packages is missing.

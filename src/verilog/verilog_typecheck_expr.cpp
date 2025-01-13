@@ -2809,6 +2809,34 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 {
   if(expr.id() == ID_verilog_bit_select)
     return convert_bit_select_expr(to_binary_expr(expr));
+  else if(expr.id() == ID_verilog_package_scope)
+  {
+    auto location = expr.source_location();
+
+    if(expr.rhs().id() != ID_symbol)
+      throw errort().with_location(location)
+        << expr.id() << " expects symbol on the rhs";
+
+    auto package_base = expr.lhs().id();
+    auto rhs_base = expr.rhs().get(ID_base_name);
+
+    // stitch together
+    irep_idt full_identifier =
+      id2string(verilog_package_identifier(expr.lhs().id())) + '.' +
+      id2string(rhs_base);
+
+    const symbolt *symbol;
+    if(ns.lookup(full_identifier, symbol))
+    {
+      throw errort().with_location(location)
+        << "identifier " << rhs_base << " not found in package "
+        << package_base;
+    }
+
+    // found!
+    return symbol_exprt{full_identifier, symbol->type}.with_source_location(
+      location);
+  }
   else if(expr.id()==ID_replication)
     return convert_replication_expr(to_replication_expr(expr));
   else if(expr.id() == ID_and || expr.id() == ID_or)

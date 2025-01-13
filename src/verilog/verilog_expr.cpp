@@ -100,6 +100,14 @@ static void dependencies_rec(
   {
     dependencies_rec(to_verilog_generate_for(module_item).body(), dest);
   }
+  else if(module_item.id() == ID_verilog_package_import)
+  {
+    for(auto &import_item : module_item.get_sub())
+    {
+      dest.push_back(
+        verilog_package_identifier(import_item.get(ID_verilog_package)));
+    }
+  }
 }
 
 std::vector<irep_idt> verilog_item_containert::dependencies() const

@@ -22,21 +22,13 @@ Author: Daniel Kroening, kroening@kroening.com
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
   symbol_table_baset &,
-  const std::string &module,
+  const irep_idt &module_identifier,
   bool warn_implicit_nets,
   message_handlert &message_handler);
 
 bool verilog_typecheck(
   symbol_table_baset &,
-  const verilog_module_sourcet &verilog_module_source,
-  verilog_standardt,
-  bool warn_implicit_nets,
-  message_handlert &message_handler);
-
-bool verilog_typecheck(
-  symbol_table_baset &,
-  const std::string &module_identifier,
-  verilog_standardt,
+  const irep_idt &module_identifier,
   const exprt::operandst &parameters,
   message_handlert &message_handler);
 

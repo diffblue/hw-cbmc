@@ -1947,55 +1947,27 @@ Function: verilog_typecheck
 bool verilog_typecheck(
   const verilog_parse_treet &parse_tree,
   symbol_table_baset &symbol_table,
-  const std::string &module,
+  const irep_idt &module_identifier,
   bool warn_implicit_nets,
   message_handlert &message_handler)
 {
   verilog_parse_treet::item_mapt::const_iterator it =
-    parse_tree.item_map.find(id2string(verilog_module_name(module)));
+    parse_tree.item_map.find(id2string(verilog_item_key(module_identifier)));
 
   if(it == parse_tree.item_map.end())
   {
     messaget message(message_handler);
-    message.error() << "module `" << module 
-                    << "' not found" << messaget::eom;
+    message.error() << "module `" << module_identifier << "' not found"
+                    << messaget::eom;
     return true;
   }
 
-  auto &module_source = to_verilog_module_source(*it->second);
+  auto &verilog_module_source = to_verilog_module_source(*it->second);
 
-  return verilog_typecheck(
-    symbol_table,
-    module_source,
-    parse_tree.standard,
-    warn_implicit_nets,
-    message_handler);
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheck
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool verilog_typecheck(
-  symbol_table_baset &symbol_table,
-  const verilog_module_sourcet &verilog_module_source,
-  verilog_standardt standard,
-  bool warn_implicit_nets,
-  message_handlert &message_handler)
-{
-  // create symbol
-
+  // create the symbol
   irep_idt base_name = verilog_module_source.base_name();
 
-  symbolt symbol{verilog_module_symbol(base_name), module_typet{}, ID_Verilog};
+  symbolt symbol{module_identifier, module_typet{}, ID_Verilog};
 
   symbol.base_name = base_name;
   symbol.pretty_name = base_name;
@@ -2017,7 +1989,11 @@ bool verilog_typecheck(
   }
 
   verilog_typecheckt verilog_typecheck(
-    standard, warn_implicit_nets, *new_symbol, symbol_table, message_handler);
+    parse_tree.standard,
+    warn_implicit_nets,
+    *new_symbol,
+    symbol_table,
+    message_handler);
 
   return verilog_typecheck.typecheck_main();
 }

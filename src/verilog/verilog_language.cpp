@@ -132,7 +132,7 @@ void verilog_languaget::dependencies(
   std::set<std::string> &dependency_set)
 {
   verilog_parse_treet::item_mapt::const_iterator it =
-    parse_tree.item_map.find(id2string(verilog_module_name(module)));
+    parse_tree.item_map.find(id2string(verilog_item_key(module)));
 
   if(it != parse_tree.item_map.end())
   {
