@@ -1479,7 +1479,7 @@ data_type:
 	          stack_expr($$).set(ID_identifier, id);
 	        }
 	| TOK_STRING
-	        { init($$, ID_string); }
+	        { init($$, ID_verilog_string); }
 	| TOK_CHANDLE
 	        { init($$, ID_verilog_chandle); }
 	| TOK_VIRTUAL interface_opt interface_identifier

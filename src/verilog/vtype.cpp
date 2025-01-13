@@ -83,6 +83,11 @@ vtypet::vtypet(const typet &type)
     vtype = EVENT;
     width = 32;
   }
+  else if(type.id() == ID_verilog_string)
+  {
+    vtype = STRING;
+    width = 0;
+  }
   else 
   {
     width=0;
@@ -135,6 +140,9 @@ std::ostream &operator << (std::ostream &out, const vtypet &vtype)
 
   case vtypet::EVENT:
     return out << "event";
+
+  case vtypet::STRING:
+    return out << "string";
 
   case vtypet::UNKNOWN:
   case vtypet::OTHER:

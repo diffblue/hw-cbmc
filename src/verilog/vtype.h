@@ -43,6 +43,10 @@ public:
   {
     return vtype == EVENT;
   }
+  bool is_string() const
+  {
+    return vtype == STRING;
+  }
   inline bool is_other() const { return vtype==OTHER; }
 
 protected:
@@ -59,6 +63,7 @@ protected:
     NULL_TYPE,
     CHANDLE,
     EVENT,
+    STRING,
     OTHER
   } _vtypet;
   _vtypet vtype;

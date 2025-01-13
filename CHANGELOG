@@ -8,7 +8,7 @@
 * Verilog: fix for nor/nand/xnor primitive gates
 * SystemVerilog: $bitstoreal/$bitstoshortreal, $realtobits/$shortrealtobits
 * SystemVerilog: $itor, $rtoi
-* SystemVerilog: chandle, event
+* SystemVerilog: chandle, event, string
 * SystemVerilog: package scope operator
 
 # EBMC 5.4
