@@ -1,0 +1,7 @@
+CORE
+checker2.sv
+--bound 20
+^\[main\.c\.assert\.1\] always myChecker\.data != 10: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

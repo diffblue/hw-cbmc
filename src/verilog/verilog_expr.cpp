@@ -124,6 +124,13 @@ void verilog_checkert::show(std::ostream &out) const
 {
   out << "Checker: " << base_name() << '\n';
 
+  out << "  Ports:\n";
+
+  for(auto &port : ports())
+    out << "    " << port.pretty() << '\n';
+
+  out << '\n';
+
   out << "  Items:\n";
 
   for(auto &item : items())

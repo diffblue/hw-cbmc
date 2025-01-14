@@ -750,17 +750,66 @@ program_declaration:
         ;
 
 checker_declaration:
-	  TOK_CHECKER checker_identifier
-		{
-		  init($$, ID_verilog_checker);
-		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
-		}
-	  ';'
+	  TOK_CHECKER { init($$); } checker_identifier
+	  checker_port_list_paren_opt ';'
 	  checker_or_generate_item_brace
 	  TOK_ENDCHECKER
 		{
-		  $$ = $3;
+		  init($$);
+		  irept attributes;
+		  exprt parameter_port_list;
+		  stack_expr($$) = verilog_parse_treet::create_module(
+		    attributes, // attributes,
+		    stack_expr($2), // module_keyword
+		    stack_expr($3), // name
+		    parameter_port_list, // parameter_port_list
+		    stack_expr($4), // ports
+		    stack_expr($6)  // module_items
+		  );
+		  stack_expr($$).id(ID_verilog_checker);
 		}
+	;
+
+checker_port_list_paren_opt:
+	  /* Optional */
+		{ init($$); }
+	| '(' checker_port_list_opt ')'
+		{ $$ = $2; }
+	;
+
+checker_port_list_opt:
+	  /* Optional */
+		{ init($$); }
+	| checker_port_list
+	;
+
+checker_port_list:
+	  checker_port_item
+		{ init($$); mts($$, $1); }
+	| checker_port_list checker_port_item
+		{ $$ = $1; mts($$, $2); }
+	;
+
+checker_port_item:
+	  attribute_instance_brace
+	  checker_port_direction_opt
+	  property_formal_type
+	  formal_port_identifier
+	  variable_dimension_brace
+		{ init($$, ID_decl);
+                  stack_expr($$).set(ID_class, stack_expr($2).id());
+                  addswap($$, ID_type, $3);
+		  mto($$, $4); /* declarator */
+		}
+	;
+
+checker_port_direction_opt:
+	  /* Optional */
+		{ init($$); }
+	| TOK_INPUT
+		{ init($$, ID_input); }
+	| TOK_OUTPUT
+		{ init($$, ID_output); }
 	;
 
 class_declaration:
@@ -1030,7 +1079,9 @@ non_port_interface_item:
 
 checker_or_generate_item_brace:
 	  /* Optional */
+		{ init($$); }
 	| checker_or_generate_item_brace attribute_instance_brace checker_or_generate_item
+		{ $$ = $1; mts($$, $3); }
 	;
 
 checker_or_generate_item:
@@ -2323,7 +2374,8 @@ property_port_item:
 	;
 
 property_formal_type:
-	  TOK_PROPERTY
+	  sequence_formal_type
+	| TOK_PROPERTY
 	;
 
 property_spec:
@@ -2332,6 +2384,14 @@ property_spec:
 	| TOK_DISABLE TOK_IFF '(' expression ')' property_expr
 		{ init($$, ID_sva_disable_iff); mto($$, $4); mto($$, $6); }
 	| property_expr
+	;
+
+sequence_formal_type:
+	  data_type
+	| TOK_SEQUENCE
+		{ init($$, ID_verilog_sequence); }
+	| TOK_UNTYPED
+		{ init($$, ID_verilog_untyped); }
 	;
 
 // The 1800-2017 grammar has an ambiguity where

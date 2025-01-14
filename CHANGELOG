@@ -10,6 +10,7 @@
 * SystemVerilog: $itor, $rtoi
 * SystemVerilog: chandle, event, string
 * SystemVerilog: package scope operator
+* SystemVerilog: checkers
 
 # EBMC 5.4
 
