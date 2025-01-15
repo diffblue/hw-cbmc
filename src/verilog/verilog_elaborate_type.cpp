@@ -210,6 +210,13 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
         return rec;
     }
   }
+  else if(src.id() == ID_verilog_associative_array)
+  {
+    // The subtype is the element type.
+    auto tmp = to_type_with_subtype(src);
+    tmp.subtype() = elaborate_type(tmp.subtype());
+    return std::move(tmp);
+  }
   else if(src.id() == ID_verilog_byte)
   {
     // two-valued type, signed
