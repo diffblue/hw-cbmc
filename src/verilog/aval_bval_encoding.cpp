@@ -355,6 +355,39 @@ exprt aval_bval(const bitnot_exprt &expr)
   return combine_aval_bval(aval, op_bval, lower_to_aval_bval(expr.type()));
 }
 
+exprt aval_bval_bitwise(const multi_ary_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!expr.operands().empty());
+
+  for(auto &op : expr.operands())
+    PRECONDITION(is_aval_bval(op));
+
+  // x/z is done bit-wise.
+  // Any bit involving x/z is x.
+
+  // bval
+  exprt::operandst bval_disjuncts;
+
+  for(auto &op : expr.operands())
+    bval_disjuncts.push_back(bval(op));
+
+  auto bval = bitor_exprt{bval_disjuncts, bval_disjuncts.front().type()};
+
+  // aval
+  exprt::operandst aval_conjuncts;
+
+  for(auto &op : expr.operands())
+    aval_conjuncts.push_back(aval(op));
+
+  exprt aval = bitand_exprt{
+    multi_ary_exprt{expr.id(), aval_conjuncts, aval_conjuncts.front().type()},
+    bitnot_exprt{bval}}; // 0/1 case
+
+  return combine_aval_bval(aval, bval, lower_to_aval_bval(expr.type()));
+}
+
 exprt aval_bval(const power_exprt &expr)
 {
   PRECONDITION(is_four_valued(expr.type()));
