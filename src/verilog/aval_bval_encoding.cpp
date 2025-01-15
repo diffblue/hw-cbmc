@@ -180,6 +180,7 @@ combine_aval_bval(const exprt &aval, const exprt &bval, const typet &dest)
 {
   PRECONDITION(aval.type().id() == ID_bv);
   PRECONDITION(bval.type().id() == ID_bv);
+  PRECONDITION(dest.id() == ID_bv);
   return concatenation_exprt{{bval, aval}, dest};
 }
 
@@ -334,6 +335,24 @@ exprt aval_bval(const not_exprt &expr)
     not_exprt{extractbit_exprt{expr.op(), natural_typet{}.zero_expr()}};
   auto x = make_x(type);
   return if_exprt{has_xz, x, aval_bval_conversion(not_expr, x.type())};
+}
+
+exprt aval_bval(const bitnot_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(is_aval_bval(expr.op()));
+
+  // x/z is done bit-wise.
+  // ~z is x.
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  exprt aval = bitor_exprt{
+    bitand_exprt{bitnot_exprt{op_bval}, op_bval},                // x/z case
+    bitand_exprt{bitnot_exprt{op_aval}, bitnot_exprt{op_bval}}}; // 0/1 case
+
+  return combine_aval_bval(aval, op_bval, lower_to_aval_bval(expr.type()));
 }
 
 exprt aval_bval(const power_exprt &expr)
