@@ -2354,6 +2354,18 @@ public:
   {
   }
 
+  using portst = std::vector<verilog_declt>;
+
+  portst &ports()
+  {
+    return (portst &)(add(ID_ports).get_sub());
+  }
+
+  const portst &ports() const
+  {
+    return (const portst &)(find(ID_ports).get_sub());
+  }
+
   void show(std::ostream &) const;
 };
 
