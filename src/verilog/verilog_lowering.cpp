@@ -503,6 +503,16 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
+  else if(expr.id() == ID_bitnot)
+  {
+    auto &bitnot_expr = to_bitnot_expr(expr);
+
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval(bitnot_expr);
+    else
+      return expr; // leave as is
+  }
   else if(expr.id() == ID_verilog_iff)
   {
     auto &iff = to_verilog_iff_expr(expr);

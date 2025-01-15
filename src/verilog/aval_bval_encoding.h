@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_VERILOG_AVAL_BVAL_H
 #define CPROVER_VERILOG_AVAL_BVAL_H
 
+#include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/mathematical_expr.h>
 
@@ -46,6 +47,8 @@ exprt aval_bval(const verilog_logical_inequality_exprt &);
 
 /// lowering for !
 exprt aval_bval(const not_exprt &);
+/// lowering for ~
+exprt aval_bval(const bitnot_exprt &);
 /// lowering for ==?
 exprt aval_bval(const verilog_wildcard_equality_exprt &);
 /// lowering for !=?
