@@ -1770,7 +1770,7 @@ void verilog_typecheckt::convert_property_declaration(
   auto base_name = declaration.base_name();
   auto full_identifier = hierarchical_identifier(base_name);
 
-  convert_expr(declaration.cond());
+  convert_sva(declaration.cond());
   make_boolean(declaration.cond());
 
   auto type = bool_typet{};
