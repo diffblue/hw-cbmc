@@ -50,12 +50,18 @@ public:
   bool all_properties_proved() const
   {
     for(const auto &p : properties)
-      if(
+    {
+      if(p.is_assumption())
+      {
+        // ignore
+      }
+      else if(
         !p.is_proved() && !p.is_proved_with_bound() && !p.is_disabled() &&
         !p.is_assumed())
       {
         return false;
       }
+    }
 
     return true;
   }

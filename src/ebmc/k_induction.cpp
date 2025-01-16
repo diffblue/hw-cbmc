@@ -170,11 +170,25 @@ Function: k_inductiont::operator()
 
 void k_inductiont::operator()()
 {
+  // Unsupported assumption? Mark as such.
+  bool assumption_unsupported = false;
+  for(auto &property : properties.properties)
+  {
+    if(!supported(property) && property.is_assumed())
+    {
+      assumption_unsupported = true;
+      property.unsupported("unsupported by k-induction");
+    }
+  }
+
   // Fail unsupported properties
   for(auto &property : properties.properties)
   {
-    if(!supported(property))
-      property.failure("property unsupported by k-induction");
+    if(
+      !supported(property) && !property.is_assumed() && !property.is_disabled())
+    {
+      property.unsupported("unsupported by k-induction");
+    }
   }
 
   // do induction base
@@ -182,6 +196,18 @@ void k_inductiont::operator()()
 
   // do induction step
   induction_step();
+
+  // Any refuted properties are really inconclusive if there are
+  // unsupported assumptions, as the assumption might have
+  // proven the property.
+  if(assumption_unsupported)
+  {
+    for(auto &property : properties.properties)
+    {
+      if(property.is_refuted())
+        property.inconclusive();
+    }
+  }
 }
 
 /*******************************************************************\
@@ -231,8 +257,12 @@ void k_inductiont::induction_step()
 
   for(auto &p_it : properties.properties)
   {
-    if(p_it.is_disabled() || p_it.is_failure() || p_it.is_assumed())
+    if(
+      p_it.is_disabled() || p_it.is_failure() || p_it.is_assumed() ||
+      p_it.is_unsupported())
+    {
       continue;
+    }
 
     // If it's not failed, then it's supported.
     DATA_INVARIANT(supported(p_it), "property must be supported");

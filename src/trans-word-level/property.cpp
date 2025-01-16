@@ -696,6 +696,7 @@ void property(
   auto obligations = property_obligations(property_expr, no_timeframes);
 
   // Map obligations onto timeframes.
+  prop_handles.clear();
   prop_handles.resize(no_timeframes, true_exprt());
   for(auto &obligation_it : obligations.map)
   {
