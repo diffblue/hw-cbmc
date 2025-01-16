@@ -141,21 +141,22 @@ Function: unwind_property
 
 \*******************************************************************/
 
-void unwind_property(
+bvt unwind_property(
   const netlistt::propertyt &property,
-  const bmc_mapt &bmc_map,
-  bvt &prop_bv)
+  const bmc_mapt &bmc_map)
 {
   PRECONDITION(std::holds_alternative<netlistt::Gpt>(property));
   auto property_node = std::get<netlistt::Gpt>(property).p;
 
-  prop_bv.resize(bmc_map.timeframe_map.size());
+  bvt prop_bv{bmc_map.timeframe_map.size()};
 
   for(std::size_t t = 0; t < bmc_map.timeframe_map.size(); t++)
   {
     literalt l=bmc_map.translate(t, property_node);
     prop_bv[t]=l;
   }
+
+  return prop_bv;
 }
 
 /*******************************************************************\

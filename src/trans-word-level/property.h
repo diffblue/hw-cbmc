@@ -16,9 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <solvers/decision_procedure.h>
 
-void property(
+exprt::operandst property(
   const exprt &property_expr,
-  exprt::operandst &prop_handles,
   message_handlert &,
   decision_proceduret &solver,
   std::size_t no_timeframes,
