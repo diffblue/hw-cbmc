@@ -1,0 +1,11 @@
+KNOWNBUG
+named_property2.sv
+--bound 20
+^\[main\.assert\.1\] always main\.x_is_eventually_ten: PROVED up to bound 20$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The type checker only allows expressions, not properties in property ...
+endproperty.
