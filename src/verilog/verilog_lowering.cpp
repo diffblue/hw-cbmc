@@ -513,6 +513,18 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
+  else if(
+    expr.id() == ID_bitand || expr.id() == ID_bitor || expr.id() == ID_bitxor ||
+    expr.id() == ID_bitxnor)
+  {
+    auto &multi_ary_expr = to_multi_ary_expr(expr);
+
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_bitwise(multi_ary_expr);
+    else
+      return expr; // leave as is
+  }
   else if(expr.id() == ID_verilog_iff)
   {
     auto &iff = to_verilog_iff_expr(expr);
