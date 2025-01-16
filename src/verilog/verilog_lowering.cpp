@@ -560,6 +560,17 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
+  else if(
+    expr.id() == ID_reduction_or || expr.id() == ID_reduction_and ||
+    expr.id() == ID_reduction_nor || expr.id() == ID_reduction_nand ||
+    expr.id() == ID_reduction_xor || expr.id() == ID_reduction_xnor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_reduction(to_unary_expr(expr));
+    else
+      return expr; // leave as is
+  }
   else if(expr.id() == ID_verilog_iff)
   {
     auto &iff = to_verilog_iff_expr(expr);
