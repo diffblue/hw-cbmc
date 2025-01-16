@@ -31,7 +31,7 @@ Author: Daniel Kroening, dkr@amazon.com
 property_checker_resultt word_level_bmc(
   const cmdlinet &cmdline,
   const transition_systemt &transition_system,
-  ebmc_propertiest &properties,
+  const ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
   auto solver_factory = ebmc_solver_factory(cmdline);
@@ -61,6 +61,8 @@ property_checker_resultt word_level_bmc(
         result=finish_word_level_bmc(solver);
 #endif
       }
+
+      return property_checker_resultt{properties};
     }
     else
     {
@@ -83,7 +85,7 @@ property_checker_resultt word_level_bmc(
 
       bool bmc_with_assumptions = cmdline.isset("bmc-with-assumptions");
 
-      bmc(
+      auto result = bmc(
         bound,
         convert_only,
         bmc_with_assumptions,
@@ -94,6 +96,8 @@ property_checker_resultt word_level_bmc(
 
       if(convert_only)
         return property_checker_resultt::success();
+
+      return result;
     }
   }
 
@@ -115,8 +119,6 @@ property_checker_resultt word_level_bmc(
   {
     return property_checker_resultt::error();
   }
-
-  return property_checker_resultt{properties};
 }
 
 property_checker_resultt finish_bit_level_bmc(
@@ -394,7 +396,7 @@ property_checker_resultt engine_heuristic(
   // Now try BMC with bound 5, word-level
   message.status() << "Attempting BMC with bound 5" << messaget::eom;
 
-  bmc(
+  auto bmc_result = bmc(
     5,     // bound
     false, // convert_only
     cmdline.isset("bmc-with-assumptions"),
@@ -402,6 +404,8 @@ property_checker_resultt engine_heuristic(
     properties,
     solver_factory,
     message_handler);
+
+  properties.properties = std::move(bmc_result.properties);
 
   if(!properties.has_unfinished_property())
     return property_checker_resultt{properties}; // done
