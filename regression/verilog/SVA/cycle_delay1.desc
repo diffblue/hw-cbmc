@@ -1,0 +1,9 @@
+CORE
+cycle_delay1.sv
+
+^file cycle_delay1\.sv line \d+: expected constant expression, but got `main.from'$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
