@@ -682,9 +682,8 @@ Function: property
 
 \*******************************************************************/
 
-void property(
+exprt::operandst property(
   const exprt &property_expr,
-  exprt::operandst &prop_handles,
   message_handlert &message_handler,
   decision_proceduret &solver,
   std::size_t no_timeframes,
@@ -696,8 +695,8 @@ void property(
   auto obligations = property_obligations(property_expr, no_timeframes);
 
   // Map obligations onto timeframes.
-  prop_handles.clear();
-  prop_handles.resize(no_timeframes, true_exprt());
+  exprt::operandst prop_handles{no_timeframes, true_exprt()};
+
   for(auto &obligation_it : obligations.map)
   {
     auto t = obligation_it.first;
@@ -706,4 +705,6 @@ void property(
     auto t_int = numeric_cast_v<std::size_t>(t);
     prop_handles[t_int] = solver.handle(conjunction(obligation_it.second));
   }
+
+  return prop_handles;
 }

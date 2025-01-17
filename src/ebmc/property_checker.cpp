@@ -257,8 +257,8 @@ property_checker_resultt bit_level_bmc(
       auto netlist_property = netlist.properties.find(property.identifier);
       CHECK_RETURN(netlist_property != netlist.properties.end());
 
-      ::unwind_property(
-        netlist_property->second, bmc_map, property.timeframe_literals);
+      property.timeframe_literals =
+        ::unwind_property(netlist_property->second, bmc_map);
 
       if(property.is_assumed())
       {

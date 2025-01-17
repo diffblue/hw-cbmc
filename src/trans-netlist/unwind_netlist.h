@@ -36,9 +36,6 @@ void unwind(
 bool netlist_bmc_supports_property(const class exprt &);
 
 // unwind a netlist property
-void unwind_property(
-  const netlistt::propertyt &,
-  const bmc_mapt &,
-  bvt &prop_bv);
+bvt unwind_property(const netlistt::propertyt &, const bmc_mapt &);
 
 #endif

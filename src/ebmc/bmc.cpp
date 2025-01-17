@@ -230,13 +230,8 @@ property_checker_resultt bmc(
       continue;
     }
 
-    ::property(
-      property.normalized_expr,
-      property.timeframe_handles,
-      message_handler,
-      solver,
-      bound + 1,
-      ns);
+    property.timeframe_handles = ::property(
+      property.normalized_expr, message_handler, solver, bound + 1, ns);
 
     // If it's an assumption, then add it as constraint.
     if(property.is_assumed())
