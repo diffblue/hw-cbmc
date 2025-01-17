@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/unicode.h>
 
+#include "expr2verilog.h"
 #include "verilog_preprocessor_error.h"
 
 #include <filesystem>
@@ -671,6 +672,18 @@ void verilog_preprocessort::directive()
       if(token == '\n')
         break;
     }
+  }
+  else if(text == "__FILE__")
+  {
+    // 1800 2017 22.13
+    // String literal
+    out << verilog_string_literal(context().filename_as_string());
+  }
+  else if(text == "__LINE__")
+  {
+    // 1800 2017 22.13
+    // decimal number
+    out << tokenizer().line_no();
   }
   else
   {
