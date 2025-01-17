@@ -27,6 +27,59 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iomanip>
 #include <sstream>
 
+std::string verilog_string_literal(const std::string &src)
+{
+  std::string dest;
+
+  dest = '"';
+
+  for(auto &ch : src)
+  {
+    // Follows Table Table 5-1 in 1800-2017.
+    switch(ch)
+    {
+    case '\n':
+      dest += "\\n";
+      break;
+    case '\t':
+      dest += "\\t";
+      break;
+    case '\\':
+      dest += "\\\\";
+      break;
+    case '"':
+      dest += "\\\"";
+      break;
+    case '\v':
+      dest += "\\v";
+      break;
+    case '\f':
+      dest += "\\f";
+      break;
+    case '\a':
+      dest += "\\a";
+      break;
+    default:
+      if(
+        (unsigned(ch) >= ' ' && unsigned(ch) <= 126) ||
+        (unsigned(ch) >= 128 && unsigned(ch) <= 254))
+      {
+        dest += ch;
+      }
+      else
+      {
+        std::ostringstream oss;
+        oss << "\\x" << std::setw(2) << std::setfill('0') << std::hex << ch;
+        dest += oss.str();
+      }
+    }
+  }
+
+  dest += '"';
+
+  return dest;
+}
+
 /*******************************************************************\
 
 Function: expr2verilogt::convert_if
@@ -1214,51 +1267,7 @@ expr2verilogt::resultt expr2verilogt::convert_constant(
   }
   else if(type.id() == ID_string)
   {
-    dest = '"';
-
-    for(auto &ch : id2string(src.get_value()))
-    {
-      // Follows Table Table 5-1 in 1800-2017.
-      switch(ch)
-      {
-      case '\n':
-        dest += "\\n";
-        break;
-      case '\t':
-        dest += "\\t";
-        break;
-      case '\\':
-        dest += "\\\\";
-        break;
-      case '"':
-        dest += "\\\"";
-        break;
-      case '\v':
-        dest += "\\v";
-        break;
-      case '\f':
-        dest += "\\f";
-        break;
-      case '\a':
-        dest += "\\a";
-        break;
-      default:
-        if(
-          (unsigned(ch) >= ' ' && unsigned(ch) <= 126) ||
-          (unsigned(ch) >= 128 && unsigned(ch) <= 254))
-        {
-          dest += ch;
-        }
-        else
-        {
-          std::ostringstream oss;
-          oss << "\\x" << std::setw(2) << std::setfill('0') << std::hex << ch;
-          dest += oss.str();
-        }
-      }
-    }
-
-    dest += '"';
+    dest = verilog_string_literal(id2string(src.get_value()));
   }
   else if(type.id() == ID_verilog_chandle || type.id() == ID_verilog_event)
   {
