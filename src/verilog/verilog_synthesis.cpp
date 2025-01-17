@@ -2729,22 +2729,6 @@ void verilog_synthesist::synth_event_guard(
           << "pos/negedge expected to have one operand";
       }
 
-      if(to_unary_expr(*it).op().id() != ID_symbol)
-      {
-        throw errort().with_location(it->source_location())
-          << "pos/negedge expected to have symbol as operand, "
-             "but got " +
-               to_unary_expr(*it).op().pretty();
-      }
-
-      if(to_unary_expr(*it).op().type().id() != ID_bool)
-      {
-        throw errort().with_location(it->source_location())
-          << "pos/negedge expected to have Boolean as operand, "
-             "but got " +
-               to_string(to_unary_expr(*it).op().type());
-      }
-
       irep_idt identifier="conf::clock_enable_mode";
 
       // check symbol_table for clock guard
@@ -2753,7 +2737,15 @@ void verilog_synthesist::synth_event_guard(
       {
         // found! we make it a guard
 
-        guards.push_back(to_unary_expr(*it).op());
+        auto &op = to_unary_expr(*it).op();
+
+        if(op.type().id() == ID_bool)
+          guards.push_back(op);
+        else
+        {
+          // get LSB
+          guards.push_back(extractbit_exprt{op, integer_typet{}.zero_expr()});
+        }
 
         throw errort() << "Notice: using clock guard " << identifier;
       }
