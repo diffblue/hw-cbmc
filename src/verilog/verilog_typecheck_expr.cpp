@@ -2568,6 +2568,17 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   else if(expr.id() == ID_posedge || expr.id() == ID_negedge)
   {
     convert_expr(expr.op());
+
+    // 1800-2017 6.12.1
+    // Edge event controls must not be given real operands.
+    if(
+      expr.op().type().id() == ID_verilog_shortreal ||
+      expr.op().type().id() == ID_verilog_real)
+    {
+      throw errort().with_location(expr.source_location())
+        << "edge event controls do not take real operands";
+    }
+
     expr.type() = bool_typet{};
   }
   else if(expr.id() == ID_verilog_smv_eventually)
