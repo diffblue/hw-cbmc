@@ -383,11 +383,13 @@ property_checker_resultt engine_heuristic(
   // First try 1-induction, word-level
   message.status() << "Attempting 1-induction" << messaget::eom;
 
-  k_induction(
+  auto k_induction_result = k_induction(
     1, transition_system, properties, solver_factory, message_handler);
 
+  properties.properties = k_induction_result.properties;
+
   if(!properties.has_unfinished_property())
-    return property_checker_resultt{properties}; // done
+    return k_induction_result; // done
 
   properties.reset_failure();
   properties.reset_inconclusive();
