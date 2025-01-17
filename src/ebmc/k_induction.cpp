@@ -226,7 +226,7 @@ void k_inductiont::induction_base()
 {
   message.status() << "Induction Base" << messaget::eom;
 
-  bmc(
+  auto result = bmc(
     k,
     false, // convert_only
     false, // bmc_with_assumptions
@@ -234,6 +234,8 @@ void k_inductiont::induction_base()
     properties,
     solver_factory,
     message.get_message_handler());
+
+  properties.properties = std::move(result.properties);
 }
 
 /*******************************************************************\

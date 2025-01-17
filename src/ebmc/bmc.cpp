@@ -191,17 +191,19 @@ void bmc_with_iterative_constraint_strengthening(
   }
 }
 
-void bmc(
+property_checker_resultt bmc(
   std::size_t bound,
   bool convert_only,
   bool bmc_with_assumptions,
   const transition_systemt &transition_system,
-  ebmc_propertiest &properties,
+  const ebmc_propertiest &properties_in,
   const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
 {
-  messaget message(message_handler);
+  // copy
+  ebmc_propertiest properties = properties_in;
 
+  messaget message(message_handler);
   message.status() << "Generating Decision Problem" << messaget::eom;
 
   // convert the transition system
@@ -299,4 +301,6 @@ void bmc(
       << std::chrono::duration<double>(sat_stop_time - sat_start_time).count()
       << messaget::eom;
   }
+
+  return property_checker_resultt{std::move(properties)};
 }
