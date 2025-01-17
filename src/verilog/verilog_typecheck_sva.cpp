@@ -193,11 +193,19 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
   if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
   {
     expr.type() = bool_typet();
+
     convert_expr(expr.op0());
+    elaborate_constant_expression_check(expr.op0());
+
     if(expr.op1().is_not_nil())
+    {
       convert_expr(expr.op1());
+      elaborate_constant_expression_check(expr.op1());
+    }
+
     convert_sva(expr.op2());
     make_boolean(expr.op2());
+
     return std::move(expr);
   }
   else if(
