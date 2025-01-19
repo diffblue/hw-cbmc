@@ -1526,8 +1526,8 @@ data_type:
 
 	          // We attach a dummy id to distinguish two syntactically
 	          // identical enum types.
-	          auto id = PARSER.current_scope->prefix + "enum-" + PARSER.get_next_id();
-	          stack_expr($$).set(ID_identifier, id);
+	          auto base_name = "enum-" + PARSER.get_next_id();
+	          stack_expr($$).set(ID_base_name, base_name);
 	        }
 	| TOK_STRING
 	        { init($$, ID_verilog_string); }

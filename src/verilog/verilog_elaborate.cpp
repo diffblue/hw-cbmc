@@ -173,8 +173,12 @@ void verilog_typecheckt::collect_symbols(const typet &type)
     // Add a symbol for the enum to the symbol table.
     // This allows looking up the enum name identifiers.
     {
-      auto identifier = enum_type.identifier();
-      type_symbolt enum_type_symbol(identifier, enum_type, mode);
+      const auto base_name = enum_type.base_name();
+      const auto identifier = hierarchical_identifier(base_name);
+      auto enum_type_with_identifier = enum_type;
+      enum_type_with_identifier.identifier(identifier);
+      type_symbolt enum_type_symbol(
+        identifier, enum_type_with_identifier, mode);
       enum_type_symbol.module = module_identifier;
       enum_type_symbol.is_file_local = true;
       enum_type_symbol.location = enum_type.source_location();
