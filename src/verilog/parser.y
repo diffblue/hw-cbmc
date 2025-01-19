@@ -2555,12 +2555,23 @@ expression_or_dist_brace:
 		{ $$ = $1; mto($1, $3); }
 	;
 
+// The 1800-2017 grammar has an ambiguity where
+// '(' expression ')' can either be an expression or a sequence_expr,
+// which yields a reduce/reduce conflict. Hence, we split the rules
+// for sequence_expr into sequence_expr and sequence_expr_proper.
+
 sequence_expr:
+	  expression_or_dist
+	| sequence_expr_proper
+	;
+
+sequence_expr_proper:
 	  cycle_delay_range sequence_expr %prec "##"
 		{ $$=$1; mto($$, $2); }
         | sequence_expr cycle_delay_range sequence_expr %prec "##"
                 { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
-	| expression_or_dist
+	| '(' sequence_expr_proper ')'
+		{ $$ = $2; }
 	| expression_or_dist boolean_abbrev
 		{ $$ = $2;
 		  // preserve the operand ordering as in the source code
