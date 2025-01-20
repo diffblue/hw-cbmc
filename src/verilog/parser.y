@@ -554,6 +554,10 @@ int yyverilogerror(const char *error)
 // whereas the table gives them in decreasing order.
 // The precendence of the assertion operators is lower than
 // those in Table 11-2.
+//
+// SEQUENCE_TO_PROPERTY is an artificial token to give
+// the right precedence to the conversion of a sequence_expr
+// to a property_expr.
 %nonassoc "property_expr_abort" // accept_on, reject_on, ...
 %nonassoc "property_expr_clocking_event" // @(...) property_expr
 %nonassoc "always" "s_always" "eventually" "s_eventually"
@@ -564,6 +568,7 @@ int yyverilogerror(const char *error)
 %right "iff"
 %left "or"
 %left "and"
+%nonassoc SEQUENCE_TO_PROPERTY
 %nonassoc "not" "nexttime" "s_nexttime"
 %left "intersect"
 %left "within"
@@ -2419,7 +2424,7 @@ sequence_formal_type:
 // for property_expr into property_expr and property_expr_proper.
 
 property_expr:
-	  sequence_expr
+	  sequence_expr %prec SEQUENCE_TO_PROPERTY
 	| property_expr_proper
 	;
 
@@ -2582,8 +2587,12 @@ sequence_expr_proper:
 		  // preserve the operand ordering as in the source code
 		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($1));
 		}
+	| sequence_expr "and" sequence_expr
+		{ init($$, ID_sva_and); mto($$, $1); mto($$, $3); }
 	| sequence_expr "intersect" sequence_expr
                 { init($$, ID_sva_sequence_intersect); mto($$, $1); mto($$, $3); }
+	| sequence_expr "or" sequence_expr
+		{ init($$, ID_sva_or); mto($$, $1); mto($$, $3); }
         | "first_match" '(' sequence_expr ')'
                 { init($$, ID_sva_sequence_first_match); mto($$, $3); }
         | "first_match" '(' sequence_expr ',' sequence_match_item_brace ')'

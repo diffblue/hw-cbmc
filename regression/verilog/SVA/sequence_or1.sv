@@ -9,6 +9,10 @@ module main(input clk);
   initial p0: assert property (x == 0 or x == 1);
 
   // Given two sequences, 'or' yields a sequence, not a property
-  initial p1: assert property ((x == 0 or x == 1)[*1]);
+  initial p1: assert property (strong(x == 0 or x == 1));
+
+  // But given a property on either side, 'or' yields a property
+  initial p2: assert property (x==0 or nexttime x == 1);
+  initial p3: assert property (nexttime x==1 or x == 1);
 
 endmodule
