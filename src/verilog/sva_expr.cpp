@@ -51,7 +51,7 @@ exprt sva_sequence_consecutive_repetition_exprt::lower() const
     auto cycle_delay =
       sva_cycle_delay_exprt{from_integer(1, integer_typet{}), lhs()};
     result = sva_sequence_concatenation_exprt{
-      std::move(cycle_delay), std::move(result)};
+      std::move(result), std::move(cycle_delay)};
   }
 
   return result;
