@@ -94,15 +94,20 @@ Function: k_induction
 
 \*******************************************************************/
 
-void k_induction(
+property_checker_resultt k_induction(
   std::size_t k,
   const transition_systemt &transition_system,
-  ebmc_propertiest &properties,
+  const ebmc_propertiest &properties,
   const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
 {
+  // copy
+  auto properties_copy = properties;
+
   k_inductiont(
-    k, transition_system, properties, solver_factory, message_handler)();
+    k, transition_system, properties_copy, solver_factory, message_handler)();
+
+  return property_checker_resultt{properties_copy};
 }
 
 /*******************************************************************\
@@ -150,10 +155,8 @@ property_checker_resultt k_induction(
 
   auto solver_factory = ebmc_solver_factory(cmdline);
 
-  k_induction(
+  return k_induction(
     k, transition_system, properties, solver_factory, message_handler);
-
-  return property_checker_resultt{properties};
 }
 
 /*******************************************************************\

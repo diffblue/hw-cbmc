@@ -18,17 +18,17 @@ Author: Daniel Kroening, kroening@kroening.com
 class transition_systemt;
 class ebmc_propertiest;
 
-property_checker_resultt k_induction(
+[[nodiscard]] property_checker_resultt k_induction(
   const cmdlinet &,
   transition_systemt &,
   ebmc_propertiest &,
   message_handlert &);
 
-// Basic k-induction. The result is stored in the ebmc_propertiest argument.
-void k_induction(
+// Basic k-induction, for given k and given solver.
+[[nodiscard]] property_checker_resultt k_induction(
   std::size_t k,
   const transition_systemt &,
-  ebmc_propertiest &,
+  const ebmc_propertiest &,
   const ebmc_solver_factoryt &,
   message_handlert &);
 
