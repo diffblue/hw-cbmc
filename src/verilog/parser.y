@@ -2572,6 +2572,11 @@ sequence_expr_proper:
                 { init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
 	| '(' sequence_expr_proper ')'
 		{ $$ = $2; }
+	| '(' sequence_expr_proper ')' sequence_abbrev
+		{ $$ = $4;
+		  // preserve the operand ordering as in the source code
+		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($2));
+		}
 	| expression_or_dist boolean_abbrev
 		{ $$ = $2;
 		  // preserve the operand ordering as in the source code
