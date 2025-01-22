@@ -11,6 +11,7 @@
 * SystemVerilog: chandle, event, string
 * SystemVerilog: package scope operator
 * SystemVerilog: checkers
+* SystemVerilog: clocking block declarations
 
 # EBMC 5.4
 

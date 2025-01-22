@@ -1,0 +1,9 @@
+CORE
+clocking1.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

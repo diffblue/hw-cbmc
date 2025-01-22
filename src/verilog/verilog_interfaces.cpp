@@ -300,6 +300,9 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_verilog_package_import)
   {
   }
+  else if(module_item.id() == ID_verilog_clocking)
+  {
+  }
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }

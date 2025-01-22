@@ -1024,6 +1024,9 @@ module_or_generate_item:
 module_or_generate_item_declaration:
           package_or_generate_item_declaration
 	| genvar_declaration
+	| clocking_declaration
+	| TOK_DEFAULT TOK_CLOCKING clocking_identifier ';'
+	| TOK_DEFAULT TOK_DISABLE TOK_IFF expression_or_dist ';'
 	;
 
 non_port_module_item:
@@ -1106,6 +1109,7 @@ checker_or_generate_item_declaration:
 	| assertion_item_declaration
 	| covergroup_declaration
 	| genvar_declaration
+	| clocking_declaration
 	| TOK_DEFAULT TOK_CLOCKING clocking_identifier ';'
 	| TOK_DEFAULT TOK_DISABLE TOK_IFF expression_or_dist ';'
 	| ';'
@@ -3483,6 +3487,12 @@ delay_or_event_control:
 	        { init($$, ID_repeat); }
 	;
 
+
+delay_control_opt:
+	  /* Optional */
+	| delay_control
+	;
+
 delay_control:
 	  '#' delay_value
 		{ init($$, ID_delay); mto($$, $2); }
@@ -3754,9 +3764,71 @@ procedural_timing_control:
 // System Verilog standard 1800-2017
 // A.6.11 Clocking block
 
+clocking_declaration:
+	  TOK_DEFAULT TOK_CLOCKING clocking_identifier_opt clocking_event ';'
+	  clocking_item_brace
+	  TOK_ENDCLOCKING
+		{ init($$, ID_verilog_clocking); }
+	| TOK_CLOCKING clocking_identifier_opt clocking_event ';'
+	  clocking_item_brace
+	  TOK_ENDCLOCKING
+		{ init($$, ID_verilog_clocking); }
+	| TOK_GLOBAL TOK_CLOCKING clocking_identifier_opt clocking_event ';'
+	  TOK_ENDCLOCKING
+		{ init($$, ID_verilog_clocking); }
+	;
+
+clocking_identifier_opt:
+	  /* Optional */
+	| clocking_identifier
+	;
+
 clocking_event:
 	  '@' identifier
 	| '@' '(' event_expression ')'
+	;
+
+clocking_item_brace:
+	  /* Optional */
+	| clocking_item_brace clocking_item
+	;
+
+clocking_item:
+	  TOK_DEFAULT default_skew ';'
+	| attribute_instance_brace assertion_item_declaration
+	;
+
+default_skew:
+	  TOK_INPUT clocking_skew
+	| TOK_OUTPUT clocking_skew
+	| TOK_INPUT clocking_skew TOK_OUTPUT clocking_skew
+	;
+
+clocking_direction:
+	  TOK_INPUT clocking_skew_opt
+	| TOK_OUTPUT clocking_skew_opt
+	| TOK_INPUT clocking_skew_opt TOK_OUTPUT clocking_skew_opt
+	| TOK_INOUT
+	;
+
+list_of_clocking_decl_assign:
+	  clocking_decl_assign
+	| list_of_clocking_decl_assign ',' clocking_decl_assign
+	;
+
+clocking_decl_assign:
+	  signal_identifier
+	| signal_identifier '=' expression
+	;
+
+clocking_skew_opt:
+	  /* Optional */
+	| clocking_skew
+	;
+
+clocking_skew:
+	  edge_identifier delay_control_opt
+	| delay_control
 	;
 
 cycle_delay:
@@ -4297,6 +4369,8 @@ class_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
 
+edge_identifier: identifier;
+
 formal_port_identifier: identifier;
 
 genvar_identifier: identifier;
@@ -4334,6 +4408,8 @@ ps_covergroup_identifier:
 memory_identifier: identifier;
 
 method_identifier: identifier;
+
+signal_identifier: identifier;
 
 type_identifier: TOK_TYPE_IDENTIFIER
 		{
