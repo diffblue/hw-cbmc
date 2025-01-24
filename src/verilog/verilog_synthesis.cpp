@@ -3276,6 +3276,9 @@ void verilog_synthesist::synth_module_item(
   {
     // done already
   }
+  else if(module_item.id() == ID_verilog_clocking)
+  {
+  }
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }
