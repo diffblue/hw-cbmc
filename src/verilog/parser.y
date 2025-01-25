@@ -4007,7 +4007,7 @@ unsigned_number: TOK_NUMBER
 // A.8.2 Subroutine calls
 
 tf_call:
-          hierarchical_tf_identifier list_of_arguments_paren
+	  hierarchical_identifier list_of_arguments_paren_opt
 		{ init($$, ID_function_call);
 		  stack_expr($$).operands().reserve(2);
 		  mto($$, $1); mto($$, $2); }
@@ -4020,6 +4020,7 @@ list_of_arguments_paren:
 
 list_of_arguments_paren_opt:
 	  /* Optional */
+		{ init($$); }
 	| list_of_arguments_paren
 	;
 
@@ -4054,8 +4055,17 @@ subroutine_call:
         | system_tf_call
         ;
 
-function_subroutine_call: subroutine_call
-        ;
+// We deviate from the 1800-2017 grammar to remove the ambiguity
+// between function calls without parentheses and variables.
+// Note that this does not affect system function identifiers ($...),
+// which cannot be variables.
+function_subroutine_call:
+          hierarchical_tf_identifier list_of_arguments_paren
+		{ init($$, ID_function_call);
+		  stack_expr($$).operands().reserve(2);
+		  mto($$, $1); mto($$, $2); }
+	| system_tf_call
+	;
 
 event_trigger: TOK_MINUSGREATER hierarchical_event_identifier ';'
 		{ init($$, ID_verilog_event_trigger); mto($$, $2); }

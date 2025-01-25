@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 task_invocation1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ task_invocation1.sv
 --
 ^warning: ignoring
 --
-The parser rejects invocations without ().
