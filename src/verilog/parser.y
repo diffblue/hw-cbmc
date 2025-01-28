@@ -537,6 +537,7 @@ int yyverilogerror(const char *error)
 /* Others */
 %token TOK_ENDOFFILE
 %token TOK_NON_TYPE_IDENTIFIER
+%token TOK_PACKAGE_IDENTIFIER
 %token TOK_TYPE_IDENTIFIER
 %token TOK_NUMBER           // number, any base
 %token TOK_TIME_LITERAL     // number followed by time unit
@@ -837,9 +838,9 @@ package_declaration:
           attribute_instance_brace TOK_PACKAGE
 		{ init($$, ID_verilog_package); }
           lifetime_opt
-          package_identifier ';'
+          any_identifier ';'
 		{
-	          push_scope(stack_expr($5).id(), "::", verilog_scopet::PACKAGE);
+	          push_scope(stack_expr($5).get(ID_base_name), "::", verilog_scopet::PACKAGE);
 	        }
           timeunits_declaration_opt
           package_item_brace
@@ -848,7 +849,7 @@ package_declaration:
 		  pop_scope();
 		  $$ = $3;
 		  addswap($$, ID_module_items, $9);
-		  stack_expr($$).set(ID_base_name, stack_expr($5).id());
+		  stack_expr($$).set(ID_base_name, stack_expr($5).get(ID_base_name));
 	        }
         ;
 
@@ -4224,9 +4225,11 @@ part_select_range:
 primary:  primary_literal
 	| hierarchical_identifier_select
 	| package_scope hierarchical_identifier_select
-		{ init($$, ID_verilog_package_scope);
-		  mto($$, $1);
-		  mto($$, $2); }
+		{ $$ = $1;
+		  mto($$, $2);
+		  // exit the package scope
+		  pop_scope();
+		}
 	| concatenation 
         | multiple_concatenation
         | function_subroutine_call
@@ -4405,9 +4408,15 @@ checker_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 net_identifier: identifier;
 
-package_identifier: TOK_NON_TYPE_IDENTIFIER;
+package_identifier: TOK_PACKAGE_IDENTIFIER;
 
 package_scope: package_identifier "::"
+		{
+		  init($$, ID_verilog_package_scope);
+		  // enter that scope
+		  PARSER.scopes.enter_package_scope(stack_expr($1).id());
+		  mto($$, $1);
+		}
 	;
 
 param_identifier: TOK_NON_TYPE_IDENTIFIER;
