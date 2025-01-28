@@ -47,7 +47,6 @@ struct verilog_scopet
   }
 
   verilog_scopet *parent = nullptr;
-  bool is_type = false;
   irep_idt __base_name;
   std::string prefix;
   kindt kind;
@@ -73,42 +72,55 @@ class verilog_scopest
 public:
   using scopet = verilog_scopet;
 
-  scopet top_scope, *current_scope = &top_scope;
+  scopet top_scope;
 
   scopet &add_name(
     irep_idt _base_name,
     const std::string &separator,
     scopet::kindt kind)
   {
-    auto result = current_scope->scope_map.emplace(
-      _base_name, scopet{_base_name, separator, current_scope, kind});
+    auto result = current_scope().scope_map.emplace(
+      _base_name, scopet{_base_name, separator, &current_scope(), kind});
     return result.first->second;
   }
 
-  // Create the given sub-scope of the current scope.
+  // Scope stack
+  std::vector<scopet *> scope_stack = {&top_scope};
+
+  scopet &current_scope() const
+  {
+    // We never pop the top scope
+    PRECONDITION(!scope_stack.empty());
+    return *scope_stack.back();
+  }
+
+  // find the package scope with given base name, and enter it
+  void enter_package_scope(irep_idt base_name);
+
+  void enter_scope(scopet &scope)
+  {
+    scope_stack.push_back(&scope);
+  }
+
+  // Create the given sub-scope of the current scope, and enter it.
   void push_scope(
     irep_idt _base_name,
     const std::string &separator,
     scopet::kindt kind)
   {
-    current_scope = &add_name(_base_name, separator, kind);
+    enter_scope(add_name(_base_name, separator, kind));
   }
 
   void pop_scope()
   {
-    PRECONDITION(current_scope->parent != nullptr);
-    current_scope = current_scope->parent;
+    // We never pop the top scope
+    PRECONDITION(scope_stack.size() >= 2);
+    scope_stack.pop_back();
   }
 
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.
   const scopet *lookup(irep_idt base_name) const;
-
-  bool is_type(irep_idt base_name) const
-  {
-    auto scope_ptr = lookup(base_name);
-    return scope_ptr == nullptr ? false : scope_ptr->is_type;
-  }
 };
 
 #endif

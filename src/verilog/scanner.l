@@ -67,7 +67,7 @@ static void preprocessor()
     stack_expr(yyveriloglval).id(irep_id); \
     auto name = PARSER.scopes.lookup(irep_id); \
     return name == nullptr ? TOK_NON_TYPE_IDENTIFIER : \
-           name->is_type ?   TOK_TYPE_IDENTIFIER : \
+           name->kind == verilog_scopet::TYPEDEF ? TOK_TYPE_IDENTIFIER : \
                              TOK_NON_TYPE_IDENTIFIER; \
   }
 #define KEYWORD(s, x) \
