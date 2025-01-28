@@ -28,8 +28,8 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
-#define push_scope(x, y) PARSER.push_scope(x, y)
-#define pop_scope() PARSER.pop_scope();
+#define push_scope(x, y) PARSER.scopes.push_scope(x, y)
+#define pop_scope() PARSER.scopes.pop_scope();
 
 int yyveriloglex();
 extern char *yyverilogtext;
@@ -1442,7 +1442,7 @@ net_declaration:
 type_declaration:
 	  TOK_TYPEDEF data_type new_identifier ';'
 		{ // add to the scope as a type name
-		  auto &name = PARSER.add_name(stack_expr($3).get(ID_identifier), "");
+		  auto &name = PARSER.scopes.add_name(stack_expr($3).get(ID_identifier), "");
 		  name.is_type = true;
 
 		  init($$, ID_decl);
@@ -1535,7 +1535,7 @@ data_type:
 
 	          // We attach a dummy id to distinguish two syntactically
 	          // identical enum types.
-	          auto id = PARSER.current_scope->prefix + "enum-" + PARSER.get_next_id();
+	          auto id = PARSER.scopes.current_scope->prefix + "enum-" + PARSER.get_next_id();
 	          stack_expr($$).set(ID_identifier, id);
 	        }
 	| TOK_STRING
@@ -1569,7 +1569,7 @@ enum_name_declaration:
 	  TOK_NON_TYPE_IDENTIFIER enum_name_value_opt
 	  {
 	    init($$);
-	    auto &scope = PARSER.add_name(stack_expr($1).id(), "");
+	    auto &scope = PARSER.scopes.add_name(stack_expr($1).id(), "");
 	    stack_expr($$).set(ID_base_name, scope.base_name());
 	    stack_expr($$).set(ID_identifier, scope.identifier());
 	    stack_expr($$).add(ID_value).swap(stack_expr($2));
@@ -4426,7 +4426,7 @@ type_identifier: TOK_TYPE_IDENTIFIER
 		  init($$, ID_typedef_type);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_base_name, base_name);
-		  stack_expr($$).set(ID_identifier, PARSER.current_scope->prefix+id2string(base_name));
+		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope->prefix+id2string(base_name));
 		}
 	;
 

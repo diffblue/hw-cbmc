@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/parser.h>
 
 #include "verilog_parse_tree.h"
+#include "verilog_scope.h"
 #include "verilog_standard.h"
 
 #include <map>
@@ -53,73 +54,9 @@ public:
   }
 
   // parser scopes and identifiers
-  struct scopet
-  {
-    scopet() : parent(nullptr), prefix("Verilog::")
-    {
-    }
+  using scopet = verilog_scopet;
 
-    explicit scopet(
-      irep_idt _base_name,
-      const std::string &separator,
-      scopet *_parent)
-      : parent(_parent),
-        __base_name(_base_name),
-        prefix(id2string(_parent->prefix) + id2string(_base_name) + separator)
-    {
-    }
-
-    scopet *parent = nullptr;
-    bool is_type = false;
-    irep_idt __base_name;
-    std::string prefix;
-
-    irep_idt identifier() const
-    {
-      PRECONDITION(parent != nullptr);
-      return parent->prefix + id2string(__base_name);
-    }
-
-    const irep_idt &base_name() const
-    {
-      return __base_name;
-    }
-
-    // sub-scopes
-    using scope_mapt = std::map<irep_idt, scopet>;
-    scope_mapt scope_map;
-  };
-
-  scopet top_scope, *current_scope = &top_scope;
-
-  scopet &add_name(irep_idt _base_name, const std::string &separator)
-  {
-    auto result = current_scope->scope_map.emplace(
-      _base_name, scopet{_base_name, separator, current_scope});
-    return result.first->second;
-  }
-
-  // Create the given sub-scope of the current scope.
-  void push_scope(irep_idt _base_name, const std::string &separator)
-  {
-    current_scope = &add_name(_base_name, separator);
-  }
-
-  void pop_scope()
-  {
-    PRECONDITION(current_scope->parent != nullptr);
-    current_scope = current_scope->parent;
-  }
-
-  // Look up an identifier, starting from the current scope,
-  // going upwards until found. Returns nullptr when not found.
-  const scopet *lookup(irep_idt base_name) const;
-
-  bool is_type(irep_idt base_name) const
-  {
-    auto scope_ptr = lookup(base_name);
-    return scope_ptr == nullptr ? false : scope_ptr->is_type;
-  }
+  verilog_scopest scopes;
 
   // These are used for anonymous gate instances
   // and to create a unique identifier for enum types.
