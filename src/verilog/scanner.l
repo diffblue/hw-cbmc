@@ -65,7 +65,7 @@ static void preprocessor()
   { newstack(yyveriloglval); \
     irep_idt irep_id = text; \
     stack_expr(yyveriloglval).id(irep_id); \
-    auto name = PARSER.lookup(irep_id); \
+    auto name = PARSER.scopes.lookup(irep_id); \
     return name == nullptr ? TOK_NON_TYPE_IDENTIFIER : \
            name->is_type ?   TOK_TYPE_IDENTIFIER : \
                              TOK_NON_TYPE_IDENTIFIER; \
