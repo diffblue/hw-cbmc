@@ -1447,8 +1447,7 @@ type_declaration:
 	   data_type any_identifier ';'
 		{ $$ = $2;
 		  // add to the scope as a type name
-		  auto &name = PARSER.scopes.add_name(stack_expr($4).get(ID_identifier), "", verilog_scopet::TYPEDEF);
-		  name.is_type = true;
+		  PARSER.scopes.add_name(stack_expr($4).get(ID_identifier), "", verilog_scopet::TYPEDEF);
 		  addswap($$, ID_type, $3);
 		  stack_expr($4).id(ID_declarator);
 		  mto($$, $4);
@@ -1537,7 +1536,7 @@ data_type:
 
 	          // We attach a dummy id to distinguish two syntactically
 	          // identical enum types.
-	          auto id = PARSER.scopes.current_scope->prefix + "enum-" + PARSER.get_next_id();
+	          auto id = PARSER.scopes.current_scope().prefix + "enum-" + PARSER.get_next_id();
 	          stack_expr($$).set(ID_identifier, id);
 	        }
 	| TOK_STRING
@@ -4429,7 +4428,7 @@ type_identifier: TOK_TYPE_IDENTIFIER
 		  init($$, ID_typedef_type);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_base_name, base_name);
-		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope->prefix+id2string(base_name));
+		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
 		}
 	;
 
