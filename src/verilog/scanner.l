@@ -66,7 +66,9 @@ static void preprocessor()
 #define IDENTIFIER(text) \
   { newstack(yyveriloglval); \
     irep_idt irep_id = text; \
-    stack_expr(yyveriloglval).id(irep_id); \
+    stack_expr(yyveriloglval).id(ID_verilog_identifier); \
+    stack_expr(yyveriloglval).set(ID_base_name, irep_id); \
+    PARSER.set_source_location(stack_expr(yyveriloglval)); \
     return PARSER.scopes.identifier_token(irep_id); \
   }
 #define KEYWORD(s, x) \
