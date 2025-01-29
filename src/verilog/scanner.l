@@ -66,7 +66,9 @@ static void preprocessor()
 #define IDENTIFIER(text) \
   { newstack(yyveriloglval); \
     irep_idt irep_id = text; \
-    stack_expr(yyveriloglval).id(irep_id); \
+    stack_expr(yyveriloglval).id(ID_verilog_identifier); \
+    stack_expr(yyveriloglval).set(ID_base_name, irep_id); \
+    PARSER.set_source_location(stack_expr(yyveriloglval)); \
     return PARSER.scopes.identifier_token(irep_id); \
   }
 #define KEYWORD(s, x) \
@@ -569,7 +571,11 @@ prove           { VL2SMV_VERILOG_KEYWORD(TOK_PROVE); }
 
                 /* Identifiers and numbers */
 
-\${Word}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_SYSIDENT; }
+\${Word}        { newstack(yyveriloglval);
+                  stack_expr(yyveriloglval).id(ID_verilog_identifier);
+                  stack_expr(yyveriloglval).set(ID_base_name, yytext);
+                  PARSER.set_source_location(stack_expr(yyveriloglval));
+                  return TOK_SYSIDENT; }
 {Binary}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Octal}         { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Decimal}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }

@@ -2975,7 +2975,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     // stitch together
     irep_idt full_identifier =
-      id2string(verilog_package_identifier(expr.lhs().id())) + '.' +
+      id2string(verilog_package_identifier(package_base)) + '.' +
       id2string(rhs_base);
 
     const symbolt *symbol;
