@@ -1440,16 +1440,18 @@ net_declaration:
 // Note that the identifier that is defined using the typedef may be
 // an existing type or non-type identifier.
 type_declaration:
-	  TOK_TYPEDEF data_type new_identifier ';'
-		{ // add to the scope as a type name
-		  auto &name = PARSER.scopes.add_name(stack_expr($3).get(ID_identifier), "");
-		  name.is_type = true;
-
-		  init($$, ID_decl);
+	  TOK_TYPEDEF
+		{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_typedef);
-		  addswap($$, ID_type, $2);
-		  stack_expr($3).id(ID_declarator);
-		  mto($$, $3);
+		}
+	   data_type any_identifier ';'
+		{ $$ = $2;
+		  // add to the scope as a type name
+		  auto &name = PARSER.scopes.add_name(stack_expr($4).get(ID_identifier), "");
+		  name.is_type = true;
+		  addswap($$, ID_type, $3);
+		  stack_expr($4).id(ID_declarator);
+		  mto($$, $4);
 		}
 	;
 
@@ -2679,7 +2681,7 @@ expression_or_dist:
 // A.2.11 Covergroup declarations
 
 covergroup_declaration:
-	  TOK_COVERGROUP new_identifier tf_port_list_paren_opt coverage_event_opt ';'
+	  TOK_COVERGROUP any_identifier tf_port_list_paren_opt coverage_event_opt ';'
 	  coverage_spec_or_option_brace TOK_ENDGROUP
 		{ init($$, ID_verilog_covergroup); }
 	;
@@ -3194,13 +3196,13 @@ udp_initial_statement:
 	  TOK_INITIAL output_port_identifier '=' init_val ';'
 	;
 
-output_port_identifier: new_identifier
+output_port_identifier: any_identifier
 	;
 
 init_val:
 	// Really 1'b0 | 1'b1 | 1'bx | 1'bX | 1'B0 | 1'B1 | 1'Bx | 1'BX | 1 | 0
 	  TOK_NUMBER
-	| new_identifier
+	| any_identifier
 	;
 
 sequential_entry_brace:
@@ -3233,7 +3235,7 @@ edge_input_list: level_symbol_brace edge_indicator level_symbol_brace ;
 output_symbol:
 	// Really 0 | 1 | x | X
 	  TOK_NUMBER
-	| new_identifier
+	| any_identifier
 	;
 
 level_symbol_brace:
@@ -3244,13 +3246,13 @@ level_symbol_brace:
 level_symbol:
 	// Really 0 | 1 | x | X | ? | b | B
 	  TOK_NUMBER
-	| new_identifier
+	| any_identifier
 	;
 
 edge_symbol:
 	// Really r | R | f | F | p | P | n | N | *
 	  TOK_NUMBER
-	| new_identifier
+	| any_identifier
 	;
 
 // System Verilog standard 1800-2017
@@ -4362,9 +4364,10 @@ attr_name: identifier
 // System Verilog standard 1800-2017
 // A.9.3 Identifiers
 
-// An extension of the System Verilog grammar to allow defining new types
-// using an existing type or non-type identifier.
-new_identifier:
+// An extension of the System Verilog grammar to allow defining new identifiers
+// even if they are already used for a different kind of identifier
+// in a higher scope.
+any_identifier:
 	  type_identifier
 	| non_type_identifier
 	;
