@@ -16,17 +16,33 @@ Author: Daniel Kroening, dkr@amazon.com
 // parser scopes and identifiers
 struct verilog_scopet
 {
-  verilog_scopet() : parent(nullptr), prefix("Verilog::")
+  using kindt = enum {
+    GLOBAL,
+    FILE,
+    PACKAGE,
+    MODULE,
+    CLASS,
+    ENUM_NAME,
+    TASK,
+    FUNCTION,
+    BLOCK,
+    TYPEDEF,
+    OTHER
+  };
+
+  verilog_scopet() : parent(nullptr), prefix("Verilog::"), kind(GLOBAL)
   {
   }
 
   verilog_scopet(
     irep_idt _base_name,
     const std::string &separator,
-    verilog_scopet *_parent)
+    verilog_scopet *_parent,
+    kindt _kind)
     : parent(_parent),
       __base_name(_base_name),
-      prefix(id2string(_parent->prefix) + id2string(_base_name) + separator)
+      prefix(id2string(_parent->prefix) + id2string(_base_name) + separator),
+      kind(_kind)
   {
   }
 
@@ -34,6 +50,7 @@ struct verilog_scopet
   bool is_type = false;
   irep_idt __base_name;
   std::string prefix;
+  kindt kind;
 
   irep_idt identifier() const
   {
@@ -58,17 +75,23 @@ public:
 
   scopet top_scope, *current_scope = &top_scope;
 
-  scopet &add_name(irep_idt _base_name, const std::string &separator)
+  scopet &add_name(
+    irep_idt _base_name,
+    const std::string &separator,
+    scopet::kindt kind)
   {
     auto result = current_scope->scope_map.emplace(
-      _base_name, scopet{_base_name, separator, current_scope});
+      _base_name, scopet{_base_name, separator, current_scope, kind});
     return result.first->second;
   }
 
   // Create the given sub-scope of the current scope.
-  void push_scope(irep_idt _base_name, const std::string &separator)
+  void push_scope(
+    irep_idt _base_name,
+    const std::string &separator,
+    scopet::kindt kind)
   {
-    current_scope = &add_name(_base_name, separator);
+    current_scope = &add_name(_base_name, separator, kind);
   }
 
   void pop_scope()

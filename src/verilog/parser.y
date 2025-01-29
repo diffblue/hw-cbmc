@@ -28,7 +28,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
-#define push_scope(x, y) PARSER.scopes.push_scope(x, y)
+#define push_scope(name, separator, kind) PARSER.scopes.push_scope(name, separator, kind)
 #define pop_scope() PARSER.scopes.pop_scope();
 
 int yyveriloglex();
@@ -644,7 +644,7 @@ module_identifier_with_scope:
 	  module_identifier
 	  {
 	    $$ = $1;
-	    push_scope(stack_expr($1).id(), ".");
+	    push_scope(stack_expr($1).id(), ".", verilog_scopet::MODULE);
 	  }
 	;
 
@@ -823,7 +823,7 @@ class_declaration:
 		{
 		  init($$, ID_verilog_class);
 		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
-	          push_scope(stack_expr($2).id(), "::");
+	          push_scope(stack_expr($2).id(), "::", verilog_scopet::CLASS);
 	        }
 	  class_item_brace
 	  TOK_ENDCLASS
@@ -839,7 +839,7 @@ package_declaration:
           lifetime_opt
           package_identifier ';'
 		{
-	          push_scope(stack_expr($5).id(), "::");
+	          push_scope(stack_expr($5).id(), "::", verilog_scopet::PACKAGE);
 	        }
           timeunits_declaration_opt
           package_item_brace
@@ -1447,7 +1447,7 @@ type_declaration:
 	   data_type any_identifier ';'
 		{ $$ = $2;
 		  // add to the scope as a type name
-		  auto &name = PARSER.scopes.add_name(stack_expr($4).get(ID_identifier), "");
+		  auto &name = PARSER.scopes.add_name(stack_expr($4).get(ID_identifier), "", verilog_scopet::TYPEDEF);
 		  name.is_type = true;
 		  addswap($$, ID_type, $3);
 		  stack_expr($4).id(ID_declarator);
@@ -1571,7 +1571,7 @@ enum_name_declaration:
 	  TOK_NON_TYPE_IDENTIFIER enum_name_value_opt
 	  {
 	    init($$);
-	    auto &scope = PARSER.scopes.add_name(stack_expr($1).id(), "");
+	    auto &scope = PARSER.scopes.add_name(stack_expr($1).id(), "", verilog_scopet::ENUM_NAME);
 	    stack_expr($$).set(ID_base_name, scope.base_name());
 	    stack_expr($$).set(ID_identifier, scope.identifier());
 	    stack_expr($$).add(ID_value).swap(stack_expr($2));
@@ -2139,7 +2139,7 @@ function_declaration: TOK_FUNCTION lifetime_opt function_body_declaration
 function_body_declaration:
 	  function_data_type_or_implicit
 	  function_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
+		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::FUNCTION); }
 	  ';'
           tf_item_declaration_brace statement
           TOK_ENDFUNCTION
@@ -2154,7 +2154,7 @@ function_body_declaration:
 		}
 	| function_data_type_or_implicit
 	  function_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
+		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::FUNCTION); }
 	  '(' tf_port_list_opt ')' ';'
           tf_item_declaration_brace statement
           TOK_ENDFUNCTION
@@ -2195,7 +2195,7 @@ function_prototype: TOK_FUNCTION data_type_or_void function_identifier
 
 task_declaration:
 	  TOK_TASK task_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
+		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::TASK); }
 	  ';'
 	  tf_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
@@ -2207,7 +2207,7 @@ task_declaration:
 		  pop_scope();
                 }
 	| TOK_TASK task_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), "."); }
+		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::TASK); }
 	  '(' tf_port_list_opt ')' ';'
 	  tf_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
@@ -3387,7 +3387,7 @@ seq_block:
 	  TOK_END
 		{ init($$, ID_block); swapop($$, $2); }
         | TOK_BEGIN TOK_COLON block_identifier
-		{ push_scope(stack_expr($3).id(), "."); }
+		{ push_scope(stack_expr($3).id(), ".", verilog_scopet::BLOCK); }
 	  block_item_declaration_or_statement_or_null_brace
           TOK_END
                 { init($$, ID_block);
