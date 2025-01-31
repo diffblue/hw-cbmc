@@ -61,4 +61,4 @@ verilog_preprocessor_lex.yy.cpp: verilog_preprocessor_tokenizer.l
 # extra dependencies
 verilog_y.tab$(OBJEXT): verilog_y.tab.cpp verilog_y.tab.h
 verilog_lex.yy$(OBJEXT): verilog_y.tab.cpp verilog_lex.yy.cpp verilog_y.tab.h
-
+verilog_scope$(OBJEXT): verilog_y.tab.h
