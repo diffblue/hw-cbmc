@@ -65,10 +65,7 @@ static void preprocessor()
   { newstack(yyveriloglval); \
     irep_idt irep_id = text; \
     stack_expr(yyveriloglval).id(irep_id); \
-    auto name = PARSER.scopes.lookup(irep_id); \
-    return name == nullptr ? TOK_NON_TYPE_IDENTIFIER : \
-           name->kind == verilog_scopet::TYPEDEF ? TOK_TYPE_IDENTIFIER : \
-                             TOK_NON_TYPE_IDENTIFIER; \
+    return PARSER.scopes.identifier_token(irep_id); \
   }
 #define KEYWORD(s, x) \
   { if(PARSER.parse_tree.standard >= verilog_standardt::s) \

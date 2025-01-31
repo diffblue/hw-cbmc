@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/irep.h>
 
+#include <iosfwd>
 #include <map>
 
 // parser scopes and identifiers
@@ -61,6 +62,13 @@ struct verilog_scopet
   {
     return __base_name;
   }
+
+  void print(std::ostream &out) const
+  {
+    print_rec(0, out);
+  }
+
+  void print_rec(std::size_t indent, std::ostream &) const;
 
   // sub-scopes
   using scope_mapt = std::map<irep_idt, verilog_scopet>;
@@ -121,6 +129,10 @@ public:
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.
   const scopet *lookup(irep_idt base_name) const;
+
+  // token to be returned by the scanner for the given identifier
+  // in the current scope
+  unsigned identifier_token(irep_idt base_name) const;
 };
 
 #endif
