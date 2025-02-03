@@ -2052,10 +2052,14 @@ std::string expr2verilogt::convert(const typet &type)
   }
   else if(type.id() == ID_verilog_chandle)
     return "chandle";
+  else if(type.id() == ID_verilog_class_type)
+    return "class";
   else if(type.id() == ID_verilog_event)
     return "event";
   else if(type.id() == ID_verilog_genvar)
     return "genvar";
+  else if(type.id() == ID_verilog_new)
+    return "new";
   else if(type.id()==ID_integer)
     return "integer";
   else if(type.id()==ID_verilog_shortreal)

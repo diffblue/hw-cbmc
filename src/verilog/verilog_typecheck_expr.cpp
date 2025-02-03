@@ -2062,6 +2062,7 @@ void verilog_typecheck_exprt::implicit_typecast(
   {
     if(
       dest_type.id() == ID_verilog_chandle ||
+      dest_type.id() == ID_verilog_class_type ||
       dest_type.id() == ID_verilog_event)
     {
       if(expr.id() == ID_constant)
@@ -2593,6 +2594,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     convert_expr(expr.op());
     expr.type() = expr.op().type();
+  }
+  else if(expr.id() == ID_verilog_new)
+  {
+    // The type of these expressions is determined by their context.
+    expr.type() = typet(ID_verilog_new);
   }
   else
   {
