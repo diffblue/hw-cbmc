@@ -3,4 +3,5 @@ class myClass;
 endclass
 
 module main;
+  myClass c = null;
 endmodule

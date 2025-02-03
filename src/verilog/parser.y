@@ -537,6 +537,7 @@ int yyverilogerror(const char *error)
 /* Others */
 %token TOK_ENDOFFILE
 %token TOK_NON_TYPE_IDENTIFIER
+%token TOK_CLASS_IDENTIFIER
 %token TOK_PACKAGE_IDENTIFIER
 %token TOK_TYPE_IDENTIFIER
 %token TOK_NUMBER           // number, any base
@@ -819,12 +820,13 @@ checker_port_direction_opt:
 	;
 
 class_declaration:
-	  TOK_CLASS class_identifier
+	  TOK_CLASS any_identifier
 	  ';'
 		{
 		  init($$, ID_verilog_class);
-		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
-	          push_scope(stack_expr($2).id(), "::", verilog_scopet::CLASS);
+		  auto base_name = stack_expr($2).get(ID_base_name);
+		  stack_expr($$).set(ID_base_name, base_name);
+	          push_scope(base_name, "::", verilog_scopet::CLASS);
 	        }
 	  class_item_brace
 	  TOK_ENDCLASS
@@ -1553,7 +1555,7 @@ data_type:
 		{ mto($1, $2);
 		  add_as_subtype(stack_type($3), stack_type($1));
 		  $$ = $3; }
-//	| class_type
+	| class_type
 	| TOK_EVENT
 	        { init($$, ID_verilog_event); }
 	/*
@@ -2033,6 +2035,9 @@ variable_decl_assignment:
 		  addswap($$, ID_type, $2);
 		  addswap($$, ID_value, $4); }
 	| variable_identifier variable_dimension_brace '=' class_new
+		{ $$ = $1; stack_expr($$).id(ID_declarator);
+		  addswap($$, ID_type, $2);
+		  addswap($$, ID_value, $4); }
 	;
 
 class_new:
@@ -4383,7 +4388,14 @@ non_type_identifier: TOK_NON_TYPE_IDENTIFIER
 
 block_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-class_identifier: TOK_NON_TYPE_IDENTIFIER;
+class_identifier: TOK_CLASS_IDENTIFIER
+		{
+		  init($$, ID_verilog_class_type);
+		  auto base_name = stack_expr($1).id();
+		  stack_expr($$).set(ID_base_name, base_name);
+		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
+		}
+	;
 
 constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
 
