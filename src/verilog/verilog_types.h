@@ -618,4 +618,42 @@ inline verilog_event_typet &to_verilog_event_type(typet &type)
   return static_cast<verilog_event_typet &>(type);
 }
 
+/// A typedef
+class verilog_typedef_typet : public typet
+{
+public:
+  explicit verilog_typedef_typet(const irep_idt &_identifier)
+    : typet(ID_typedef_type)
+  {
+    identifier(_identifier);
+  }
+
+  void identifier(const irep_idt &identifier)
+  {
+    set(ID_identifier, identifier);
+  }
+
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+};
+
+/// Cast a generic typet to a \ref verilog_typedef_typet. This is an unchecked
+/// conversion. \a type must be known to be \ref verilog_typedef_typet.
+/// \param type: Source type
+/// \return Object of type \ref verilog_typedef_typet
+inline const verilog_typedef_typet &to_verilog_typedef_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_typedef_type);
+  return static_cast<const verilog_typedef_typet &>(type);
+}
+
+/// \copydoc to_verilog_typedef_type(const typet &)
+inline verilog_typedef_typet &to_verilog_typedef_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_typedef_type);
+  return static_cast<verilog_typedef_typet &>(type);
+}
+
 #endif
