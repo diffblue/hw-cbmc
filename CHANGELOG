@@ -12,6 +12,7 @@
 * SystemVerilog: package scope operator
 * SystemVerilog: checkers
 * SystemVerilog: clocking block declarations
+* SystemVerilog: typedefs from package scopes
 
 # EBMC 5.4
 

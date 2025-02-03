@@ -149,6 +149,42 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::elaborate_package_scope_typedef
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
+  const type_with_subtypest &src)
+{
+  auto location = src.source_location();
+
+  if(src.subtypes()[1].id() != ID_typedef_type)
+    throw errort().with_location(location)
+      << "verilog_package_scope expects typedef_type on the rhs";
+
+  auto package_base_name = src.subtypes()[0].id();
+  auto typedef_base_name = src.subtypes()[1].get(ID_base_name);
+
+  // stitch together
+  irep_idt full_identifier =
+    id2string(verilog_package_identifier(package_base_name)) + '.' +
+    id2string(typedef_base_name);
+
+  // recursive call
+  verilog_typedef_typet full_typedef_type(full_identifier);
+  full_typedef_type.set(ID_identifier, full_identifier);
+
+  return elaborate_type(full_typedef_type);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::elaborate_type
 
   Inputs:
@@ -283,7 +319,7 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     // Look it up!
     const symbolt *symbol_ptr;
 
-    auto identifier = src.get(ID_identifier);
+    auto identifier = to_verilog_typedef_type(src).identifier();
 
     if(ns.lookup(identifier, symbol_ptr))
       throw errort().with_location(source_location)
@@ -401,6 +437,11 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_verilog_chandle)
   {
     return src;
+  }
+  else if(src.id() == ID_verilog_package_scope)
+  {
+    // package::typedef
+    return elaborate_package_scope_typedef(to_type_with_subtypes(src));
   }
   else
   {

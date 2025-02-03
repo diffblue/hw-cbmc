@@ -1546,10 +1546,13 @@ data_type:
 	        { init($$, ID_verilog_chandle); }
 	| TOK_VIRTUAL interface_opt interface_identifier
 	        { init($$, "virtual_interface"); }
-	| /*scope_opt*/ type_identifier packed_dimension_brace
-		{ stack_expr($1).id(ID_typedef_type);
-                  add_as_subtype(stack_type($2), stack_type($1));
+	| type_identifier packed_dimension_brace
+		{ add_as_subtype(stack_type($2), stack_type($1));
                   $$ = $2; }
+	| package_scope type_identifier packed_dimension_brace
+		{ mto($1, $2);
+		  add_as_subtype(stack_type($3), stack_type($2));
+		  $$ = $3; }
 //	| class_type
 	| TOK_EVENT
 	        { init($$, ID_verilog_event); }
