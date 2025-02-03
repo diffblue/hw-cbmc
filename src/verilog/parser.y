@@ -1551,7 +1551,7 @@ data_type:
                   $$ = $2; }
 	| package_scope type_identifier packed_dimension_brace
 		{ mto($1, $2);
-		  add_as_subtype(stack_type($3), stack_type($2));
+		  add_as_subtype(stack_type($3), stack_type($1));
 		  $$ = $3; }
 //	| class_type
 	| TOK_EVENT
