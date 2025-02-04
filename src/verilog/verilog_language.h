@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/language.h>
 
 #include "verilog_parse_tree.h"
+#include "verilog_scope.h"
 
 class verilog_languaget:public languaget
 {
