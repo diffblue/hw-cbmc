@@ -16,6 +16,24 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <stdio.h>
 
 verilog_parsert *verilog_parser_ptr = nullptr;
+verilog_scopest verilog_scopes;
+
+/*******************************************************************\
+
+Function: verilog_parsert::scopes
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+verilog_scopest &verilog_parsert::scopes()
+{
+  return verilog_scopes;
+}
 
 /*******************************************************************\
 
@@ -29,7 +47,10 @@ Function:
 
 \*******************************************************************/
 
-bool parse_verilog_file(const std::string &filename, verilog_standardt standard)
+bool parse_verilog_file(
+  const std::string &filename,
+  verilog_standardt standard,
+  verilog_scopest &scopes)
 {
   std::ifstream in(widen_if_needed(filename));
   console_message_handlert console_message_handler;
