@@ -1,7 +1,7 @@
 CORE
 ifdef2.v
 
-^file ifdef2\.v line 4: syntax error before 'syntax'$
+^file ifdef2\.v line 4: syntax error, unexpected .* before 'syntax'$
 ^EXIT=1$
 ^SIGNAL=0$
 --

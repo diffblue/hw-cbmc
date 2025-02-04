@@ -1,0 +1,7 @@
+CORE
+syntax1.smv
+
+^file .* line 3: syntax error, unexpected VAR, expecting string or "'" before 'VAR'$
+^EXIT=1$
+^SIGNAL=0$
+--

@@ -1,0 +1,7 @@
+CORE
+syntax3.sv
+
+^file syntax3.sv line 1: syntax error, unexpected ';' before ';'$
+^EXIT=1$
+^SIGNAL=0$
+--

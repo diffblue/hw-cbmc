@@ -1,0 +1,7 @@
+CORE
+syntax2.sv
+
+^file syntax2.sv line 3: syntax error, unexpected byte, expecting ';' before 'byte'$
+^EXIT=1$
+^SIGNAL=0$
+--

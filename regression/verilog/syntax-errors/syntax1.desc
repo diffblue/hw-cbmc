@@ -1,0 +1,7 @@
+CORE
+syntax1.sv
+
+^file .* line 1: syntax error, unexpected ';', expecting TOK_NON_TYPE_IDENTIFIER before ';'$
+^EXIT=1$
+^SIGNAL=0$
+--

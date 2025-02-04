@@ -1,3 +1,4 @@
+/* increase verbosity of error messages, to include expected tokens */
 %define parse.error verbose
 
 %{
