@@ -18,10 +18,12 @@ static int isatty(int) { return 0; }
 #include <util/expr.h>
 
 #define PARSER (*verilog_parser_ptr)
+#define SCANNER (PARSER.scanner)
 #define YYSTYPE unsigned
 
 #include "verilog_parser.h"
 #include "verilog_y.tab.h"
+#include "verilog_scanner.h"
 
 int yyverilogerror(const char *error);
 
@@ -68,34 +70,34 @@ static void preprocessor()
     return PARSER.scopes.identifier_token(irep_id); \
   }
 #define KEYWORD(s, x) \
-  { if(PARSER.parse_tree.standard >= verilog_standardt::s) \
+  { if(SCANNER.standard >= verilog_standardt::s) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define SYSTEM_VERILOG_OPERATOR(token, text) \
-  { if(PARSER.parse_tree.standard >= verilog_standardt::SV2005) \
+  { if(SCANNER.standard >= verilog_standardt::SV2005) \
       return token; \
     else \
       yyverilogerror(text " is a System Verilog operator"); \
   }
 #define VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
-  { if(PARSER.parse_tree.standard >= verilog_standardt::SV2005 || \
-       PARSER.parse_tree.standard == verilog_standardt::V2005_SMV) \
+  { if(SCANNER.standard >= verilog_standardt::SV2005 || \
+       SCANNER.standard == verilog_standardt::V2005_SMV) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define VL2SMV_VERILOG_KEYWORD(x) \
-  { if(PARSER.parse_tree.standard == verilog_standardt::V2005_SMV) \
+  { if(SCANNER.standard == verilog_standardt::V2005_SMV) \
       return x; \
     else \
       IDENTIFIER(yytext); \
   }
 #define VIS_OR_VL2SMV_OR_SYSTEM_VERILOG_KEYWORD(x) \
-  { if(PARSER.parse_tree.standard >= verilog_standardt::SV2005 || \
-       PARSER.parse_tree.standard == verilog_standardt::V2005_SMV || \
-       PARSER.parse_tree.standard == verilog_standardt::V2005_VIS) \
+  { if(SCANNER.standard >= verilog_standardt::SV2005 || \
+       SCANNER.standard == verilog_standardt::V2005_SMV || \
+       SCANNER.standard == verilog_standardt::V2005_VIS) \
       return x; \
     else \
       IDENTIFIER(yytext); \
@@ -161,7 +163,7 @@ void verilog_scanner_init()
 
 <STRING>{
    "\""         { BEGIN(GRAMMAR);
-                  stack_expr(yyveriloglval).id(PARSER.string_literal);
+                  stack_expr(yyveriloglval).id(SCANNER.string_literal);
                   return TOK_QSTRING;
                 }
 
@@ -169,10 +171,10 @@ void verilog_scanner_init()
                   return TOK_SCANNER_ERROR;
                 }
 
-   "\\n"        { PARSER.string_literal += '\n'; }       // NL (0x0a) */
-   "\\t"        { PARSER.string_literal += '\t'; }       // HT (0x09) */
-   "\\".        { PARSER.string_literal += yytext[1]; }  // ignore the backslash
-   [^\\\"\n]*   { PARSER.string_literal += &yytext[0]; } // everything else
+   "\\n"        { SCANNER.string_literal += '\n'; }       // NL (0x0a) */
+   "\\t"        { SCANNER.string_literal += '\t'; }       // HT (0x09) */
+   "\\".        { SCANNER.string_literal += yytext[1]; }  // ignore the backslash
+   [^\\\"\n]*   { SCANNER.string_literal += &yytext[0]; } // everything else
 
    \n           { yyverilogerror("Unterminated string constant");
                   return TOK_SCANNER_ERROR;
@@ -186,7 +188,7 @@ void verilog_scanner_init()
 "/*"            { BEGIN COMMENT; continue; }
 "\""            { BEGIN(STRING);
                   newstack(yyveriloglval);
-                  PARSER.string_literal.clear();
+                  SCANNER.string_literal.clear();
                 }
 
                 /* Attributes */
