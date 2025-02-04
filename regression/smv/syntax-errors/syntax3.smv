@@ -1,0 +1,4 @@
+MODULE main
+
+VAR foobar : 1.. not_a_number;
+
