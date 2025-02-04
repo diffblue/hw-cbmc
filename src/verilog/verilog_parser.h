@@ -42,8 +42,12 @@ public:
 
   explicit verilog_parsert(
     verilog_standardt standard,
+    verilog_scopest &_scopes,
     message_handlert &message_handler)
-    : parsert(message_handler), parse_tree(standard), scanner(standard)
+    : parsert(message_handler),
+      parse_tree(standard),
+      scanner(standard),
+      scopes(_scopes)
   {
     PRECONDITION(verilog_parser_ptr == nullptr);
     verilog_parser_ptr = this;
@@ -57,7 +61,7 @@ public:
   // parser scopes and identifiers
   using scopet = verilog_scopet;
 
-  verilog_scopest scopes;
+  verilog_scopest &scopes;
 
   // These are used for anonymous gate instances
   // and to create a unique identifier for enum types.

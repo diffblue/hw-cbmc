@@ -74,7 +74,8 @@ bool verilog_languaget::parse(
   else
     standard = verilog_standardt::V2005_SMV;
 
-  verilog_parsert verilog_parser(standard, message_handler);
+  verilog_scopest scopes;
+  verilog_parsert verilog_parser(standard, scopes, message_handler);
 
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
@@ -280,7 +281,8 @@ bool verilog_languaget::to_expr(
   verilog_standardt standard = verilog_standardt::V2005;
 
   // parsing
-  verilog_parsert verilog_parser(standard, message_handler);
+  verilog_scopest scopes;
+  verilog_parsert verilog_parser(standard, scopes, message_handler);
 
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;

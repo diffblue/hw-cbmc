@@ -76,8 +76,9 @@ void verilog_ebmc_languaget::preprocess()
   preprocess(file_name, std::cout);
 }
 
-verilog_parse_treet
-verilog_ebmc_languaget::parse(const std::filesystem::path &path)
+verilog_parse_treet verilog_ebmc_languaget::parse(
+  const std::filesystem::path &path,
+  verilog_scopest &scopes)
 {
   verilog_standardt standard;
 
@@ -91,7 +92,7 @@ verilog_ebmc_languaget::parse(const std::filesystem::path &path)
   std::stringstream preprocessed;
   preprocess(path, preprocessed);
 
-  verilog_parsert verilog_parser{standard, message_handler};
+  verilog_parsert verilog_parser{standard, scopes, message_handler};
 
   verilog_parser.set_file(path.u8string());
   verilog_parser.in = &preprocessed;
@@ -113,7 +114,8 @@ void verilog_ebmc_languaget::show_parse(const std::filesystem::path &path)
 
   message.status() << "Parsing " << path << messaget::eom;
 
-  auto parse_tree = parse(path);
+  verilog_scopest scopes;
+  auto parse_tree = parse(path, scopes);
 
   parse_tree.show(std::cout);
 }
@@ -127,9 +129,10 @@ void verilog_ebmc_languaget::show_parse()
 verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
 {
   parse_treest parse_trees;
+  verilog_scopest scopes;
 
   for(auto &arg : cmdline.args)
-    parse_trees.push_back(parse(arg));
+    parse_trees.push_back(parse(arg, scopes));
 
   return parse_trees;
 }
