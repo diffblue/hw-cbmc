@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/parser.h>
 
 #include "verilog_parse_tree.h"
+#include "verilog_scanner.h"
 #include "verilog_scope.h"
 #include "verilog_standard.h"
 
@@ -28,9 +29,9 @@ class verilog_parsert:public parsert
 public:
   verilog_parse_treet parse_tree;
 
-  // for lexing strings
-  std::string string_literal;
-  
+  // scanner state
+  verilog_scannert scanner;
+
   typedef enum { LANGUAGE, EXPRESSION, TYPE } grammart;
   grammart grammar;
 
@@ -42,7 +43,7 @@ public:
   explicit verilog_parsert(
     verilog_standardt standard,
     message_handlert &message_handler)
-    : parsert(message_handler), parse_tree(standard)
+    : parsert(message_handler), parse_tree(standard), scanner(standard)
   {
     PRECONDITION(verilog_parser_ptr == nullptr);
     verilog_parser_ptr = this;
