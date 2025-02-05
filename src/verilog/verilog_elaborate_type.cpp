@@ -160,7 +160,7 @@ Function: verilog_typecheck_exprt::elaborate_package_scope_typedef
 \*******************************************************************/
 
 typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
-  const type_with_subtypest &src)
+  const verilog_package_scope_typet &src)
 {
   auto location = src.source_location();
 
@@ -445,7 +445,7 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_verilog_package_scope)
   {
     // package::typedef
-    return elaborate_package_scope_typedef(to_type_with_subtypes(src));
+    return elaborate_package_scope_typedef(to_verilog_package_scope_type(src));
   }
   else
   {

@@ -6,8 +6,6 @@ endpackage
 
 module main;
 
-  import moo::*;
-
   parameter Q = moo::P;
 
   assert final (Q == 123);

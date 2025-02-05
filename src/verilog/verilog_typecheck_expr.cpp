@@ -2829,13 +2829,14 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   else if(expr.id() == ID_verilog_package_scope)
   {
     auto location = expr.source_location();
+    auto &package_scope = to_verilog_package_scope_expr(expr);
 
-    if(expr.rhs().id() != ID_symbol)
+    if(package_scope.identifier().id() != ID_symbol)
       throw errort().with_location(location)
         << expr.id() << " expects symbol on the rhs";
 
-    auto package_base = expr.lhs().id();
-    auto rhs_base = expr.rhs().get(ID_base_name);
+    auto package_base = package_scope.package_base_name();
+    auto rhs_base = package_scope.identifier().get(ID_base_name);
 
     // stitch together
     irep_idt full_identifier =

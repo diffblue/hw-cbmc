@@ -656,4 +656,42 @@ inline verilog_typedef_typet &to_verilog_typedef_type(typet &type)
   return static_cast<verilog_typedef_typet &>(type);
 }
 
+/// package::type
+class verilog_package_scope_typet : public type_with_subtypest
+{
+public:
+  irep_idt package_base_name() const
+  {
+    return subtypes()[0].id();
+  }
+
+  const typet &typedef_type() const
+  {
+    return subtypes()[1];
+  }
+
+  static void
+  check(const typet &, const validation_modet = validation_modet::INVARIANT);
+};
+
+/// Cast a generic typet to a \ref verilog_package_scope_typet. This is an unchecked
+/// conversion. \a type must be known to be \ref verilog_package_scope_typet.
+/// \param type: Source type
+/// \return Object of type \ref verilog_package_scope_typet
+inline const verilog_package_scope_typet &
+to_verilog_package_scope_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_package_scope);
+  verilog_package_scope_typet::check(type);
+  return static_cast<const verilog_package_scope_typet &>(type);
+}
+
+/// \copydoc to_verilog_typedef_type(const typet &)
+inline verilog_package_scope_typet &to_verilog_package_scope_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_verilog_package_scope);
+  verilog_package_scope_typet::check(type);
+  return static_cast<verilog_package_scope_typet &>(type);
+}
+
 #endif
