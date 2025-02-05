@@ -447,6 +447,13 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     // package::typedef
     return elaborate_package_scope_typedef(to_type_with_subtypes(src));
   }
+  else if(src.id() == ID_verilog_queue)
+  {
+    // The subtype is the element type.
+    auto tmp = to_type_with_subtype(src);
+    tmp.subtype() = elaborate_type(tmp.subtype());
+    return std::move(tmp);
+  }
   else
   {
     throw errort().with_location(source_location)

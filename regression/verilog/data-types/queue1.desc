@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 queue1.sv
 
-^EXIT=0$
+^no properties$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-Parsing fails.
