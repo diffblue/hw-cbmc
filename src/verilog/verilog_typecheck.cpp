@@ -273,9 +273,11 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
 {
   irep_idt decl_class=decl.get_class();
 
-  const std::string identifier=
-    id2string(module_identifier)+"."+
-    id2string(decl.get_identifier());
+  // the base name of the function/task
+  auto base_name = decl.get_identifier();
+
+  const std::string identifier =
+    id2string(module_identifier) + "." + id2string(base_name);
 
   auto result=symbol_table.get_writeable(identifier);
 
@@ -292,10 +294,17 @@ void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
 
   function_or_task_name = symbol.name;
 
+  // function/tasks have an implicit named block with the name
+  // of the function
+
+  named_blocks.push_back(id2string(base_name) + ".");
+
   for(auto &inner_decl : decl.declarations())
     convert_decl(inner_decl);
 
   convert_statement(decl.body());
+
+  named_blocks.pop_back();
 
   function_or_task_name="";
   
@@ -335,6 +344,11 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   verilog_declt decl=to_verilog_decl(function_symbol.value);
 
   function_or_task_name = function_symbol.name;
+
+  // function/tasks have an implicit named block with the name
+  // of the function
+
+  named_blocks.push_back(id2string(function_symbol.base_name) + ".");
 
   for(auto &inner_decl : decl.declarations())
     convert_decl(inner_decl);
@@ -379,6 +393,8 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 
   // interpret it
   verilog_interpreter(decl.body());
+
+  named_blocks.pop_back();
 
   function_or_task_name="";
   
@@ -429,16 +445,9 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       named_block = named_blocks.back();
 
     // fix the type and identifier
-    irep_idt full_identifier;
-
-    if(!function_or_task_name.empty())
-      full_identifier = id2string(function_or_task_name) + "." +
-                        id2string(named_block) +
-                        id2string(declarator.base_name());
-    else
-      full_identifier = id2string(module_identifier) + "." +
-                        id2string(named_block) +
-                        id2string(declarator.base_name());
+    auto full_identifier = id2string(module_identifier) + "." +
+                           id2string(named_block) +
+                           id2string(declarator.base_name());
 
     symbolt &symbol = symbol_table_lookup(full_identifier);
     declarator.type() = symbol.type;
