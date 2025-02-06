@@ -175,11 +175,8 @@ public:
     
     mc_varst vars;
     enum_sett enum_set;
-    bool used;
-    
+
     std::list<irep_idt> ports;
-    
-    modulet():used(false) { }
   };
    
   typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
