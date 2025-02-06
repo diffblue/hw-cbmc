@@ -1,0 +1,8 @@
+KNOWNBUG
+named_block1.sv
+
+^\[.*\] always main\.foo\(\) == 123: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
