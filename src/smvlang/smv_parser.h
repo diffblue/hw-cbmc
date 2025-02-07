@@ -34,7 +34,7 @@ public:
 
   smv_parse_treet parse_tree;
   smv_parse_treet::modulet *module;
-  
+
   virtual bool parse()
   {
     return yysmvparse();

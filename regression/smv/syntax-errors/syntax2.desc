@@ -1,7 +1,7 @@
 CORE
 syntax2.smv
 
-^file .* line 3: syntax error, unexpected VAR before 'VAR'$
+^file .* line 3: syntax error, unexpected VAR, expecting MODULE before 'VAR'$
 ^EXIT=1$
 ^SIGNAL=0$
 --

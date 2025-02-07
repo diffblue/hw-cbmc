@@ -140,7 +140,6 @@ static void new_module(YYSTYPE &module)
   PARSER.module=&PARSER.parse_tree.modules[name];
   PARSER.module->name=name;
   PARSER.module->base_name=stack_expr(module).id_string();
-  PARSER.module->used=true;
 }
 
 /*------------------------------------------------------------------------*/
@@ -236,8 +235,6 @@ static void new_module(YYSTYPE &module)
 %%
 
 start      : modules
-           | formula { PARSER.module->add_ctlspec(stack_expr($1));
-                       PARSER.module->used=true; }
            ;
 
 modules    : module
