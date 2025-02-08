@@ -15,6 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <ebmc/ebmc_error.h>
 
+#include "verilog_expr.h"
 #include "verilog_types.h"
 
 static constant_exprt
@@ -76,28 +77,28 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   if(expr.id() == ID_reduction_or)
   {
     // The simplifier doesn't know how to simplify reduction_or
-    auto &reduction_or = to_unary_expr(expr);
+    auto &reduction_or = to_reduction_or_expr(expr);
     expr = notequal_exprt(
       reduction_or.op(), from_integer(0, reduction_or.op().type()));
   }
   else if(expr.id() == ID_reduction_nor)
   {
     // The simplifier doesn't know how to simplify reduction_nor
-    auto &reduction_nor = to_unary_expr(expr);
+    auto &reduction_nor = to_reduction_nor_expr(expr);
     expr = equal_exprt(
       reduction_nor.op(), from_integer(0, reduction_nor.op().type()));
   }
   else if(expr.id() == ID_reduction_and)
   {
     // The simplifier doesn't know how to simplify reduction_and
-    auto &reduction_and = to_unary_expr(expr);
+    auto &reduction_and = to_reduction_and_expr(expr);
     expr =
       equal_exprt{reduction_and.op(), make_all_ones(reduction_and.op().type())};
   }
   else if(expr.id() == ID_reduction_nand)
   {
     // The simplifier doesn't know how to simplify reduction_nand
-    auto &reduction_nand = to_unary_expr(expr);
+    auto &reduction_nand = to_reduction_nand_expr(expr);
     expr = notequal_exprt{
       reduction_nand.op(), make_all_ones(reduction_nand.op().type())};
   }
@@ -105,7 +106,7 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   {
     // The simplifier doesn't know how to simplify reduction_xor
     // Lower to countones.
-    auto &reduction_xor = to_unary_expr(expr);
+    auto &reduction_xor = to_reduction_xor_expr(expr);
     auto ones = countones(to_constant_expr(reduction_xor.op()), ns);
     expr = extractbit_exprt{ones, from_integer(0, natural_typet{})};
   }
@@ -113,7 +114,7 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   {
     // The simplifier doesn't know how to simplify reduction_xnor
     // Lower to countones.
-    auto &reduction_xnor = to_unary_expr(expr);
+    auto &reduction_xnor = to_reduction_xnor_expr(expr);
     auto ones = countones(to_constant_expr(reduction_xnor.op()), ns);
     expr = not_exprt{extractbit_exprt{ones, from_integer(0, natural_typet{})}};
   }

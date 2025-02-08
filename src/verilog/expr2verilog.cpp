@@ -1670,27 +1670,27 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id()==ID_reduction_or)
     return convert_unary(
-      to_unary_expr(src), "|", precedence = verilog_precedencet::NOT);
+      to_reduction_or_expr(src), "|", precedence = verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_and)
     return convert_unary(
-      to_unary_expr(src), "&", precedence = verilog_precedencet::NOT);
+      to_reduction_and_expr(src), "&", precedence = verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_nor)
     return convert_unary(
-      to_unary_expr(src), "~|", precedence = verilog_precedencet::NOT);
+      to_reduction_nor_expr(src), "~|", precedence = verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_nand)
     return convert_unary(
-      to_unary_expr(src), "~&", precedence = verilog_precedencet::NOT);
+      to_reduction_nand_expr(src), "~&", precedence = verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_xor)
     return convert_unary(
-      to_unary_expr(src), "^", precedence = verilog_precedencet::NOT);
+      to_reduction_xor_expr(src), "^", precedence = verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_xnor)
     return convert_unary(
-      to_unary_expr(src), "~^", precedence = verilog_precedencet::NOT);
+      to_reduction_xnor_expr(src), "~^", precedence = verilog_precedencet::NOT);
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
           src.id()==ID_AX || src.id()==ID_EX)

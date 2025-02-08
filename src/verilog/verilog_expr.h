@@ -3046,4 +3046,184 @@ inline verilog_package_scope_exprt &to_verilog_package_scope_expr(exprt &expr)
   return static_cast<verilog_package_scope_exprt &>(expr);
 }
 
+class reduction_and_exprt : public unary_predicate_exprt
+{
+public:
+  explicit reduction_and_exprt(exprt _op)
+    : unary_predicate_exprt(ID_reduction_and, std::move(_op))
+  {
+  }
+};
+
+template <>
+inline bool can_cast_expr<reduction_and_exprt>(const exprt &expr)
+{
+  reduction_and_exprt::check(expr);
+  return expr.id() == ID_reduction_and;
+}
+
+inline const reduction_and_exprt &to_reduction_and_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_and);
+  reduction_and_exprt::check(expr);
+  return static_cast<const reduction_and_exprt &>(expr);
+}
+
+inline reduction_and_exprt &to_reduction_and_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_and);
+  reduction_and_exprt::check(expr);
+  return static_cast<reduction_and_exprt &>(expr);
+}
+
+class reduction_or_exprt : public unary_predicate_exprt
+{
+public:
+  explicit reduction_or_exprt(exprt _op)
+    : unary_predicate_exprt(ID_reduction_or, std::move(_op))
+  {
+  }
+};
+
+template <>
+inline bool can_cast_expr<reduction_or_exprt>(const exprt &expr)
+{
+  reduction_or_exprt::check(expr);
+  return expr.id() == ID_reduction_or;
+}
+
+inline const reduction_or_exprt &to_reduction_or_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_or);
+  reduction_or_exprt::check(expr);
+  return static_cast<const reduction_or_exprt &>(expr);
+}
+
+inline reduction_or_exprt &to_reduction_or_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_or);
+  reduction_or_exprt::check(expr);
+  return static_cast<reduction_or_exprt &>(expr);
+}
+
+class reduction_nor_exprt : public unary_predicate_exprt
+{
+public:
+  explicit reduction_nor_exprt(exprt _op)
+    : unary_predicate_exprt(ID_reduction_nor, std::move(_op))
+  {
+  }
+};
+
+template <>
+inline bool can_cast_expr<reduction_nor_exprt>(const exprt &expr)
+{
+  reduction_nor_exprt::check(expr);
+  return expr.id() == ID_reduction_nor;
+}
+
+inline const reduction_nor_exprt &to_reduction_nor_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_nor);
+  reduction_nor_exprt::check(expr);
+  return static_cast<const reduction_nor_exprt &>(expr);
+}
+
+inline reduction_nor_exprt &to_reduction_nor_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_nor);
+  reduction_nor_exprt::check(expr);
+  return static_cast<reduction_nor_exprt &>(expr);
+}
+
+class reduction_nand_exprt : public unary_predicate_exprt
+{
+public:
+  explicit reduction_nand_exprt(exprt _op)
+    : unary_predicate_exprt(ID_reduction_nand, std::move(_op))
+  {
+  }
+};
+
+template <>
+inline bool can_cast_expr<reduction_nand_exprt>(const exprt &expr)
+{
+  reduction_nand_exprt::check(expr);
+  return expr.id() == ID_reduction_nand;
+}
+
+inline const reduction_nand_exprt &to_reduction_nand_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_nand);
+  reduction_nand_exprt::check(expr);
+  return static_cast<const reduction_nand_exprt &>(expr);
+}
+
+inline reduction_nand_exprt &to_reduction_nand_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_nand);
+  reduction_nand_exprt::check(expr);
+  return static_cast<reduction_nand_exprt &>(expr);
+}
+
+class reduction_xor_exprt : public unary_predicate_exprt
+{
+public:
+  explicit reduction_xor_exprt(exprt _op)
+    : unary_predicate_exprt(ID_reduction_xor, std::move(_op))
+  {
+  }
+};
+
+template <>
+inline bool can_cast_expr<reduction_xor_exprt>(const exprt &expr)
+{
+  reduction_xor_exprt::check(expr);
+  return expr.id() == ID_reduction_xor;
+}
+
+inline const reduction_xor_exprt &to_reduction_xor_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_xor);
+  reduction_xor_exprt::check(expr);
+  return static_cast<const reduction_xor_exprt &>(expr);
+}
+
+inline reduction_xor_exprt &to_reduction_xor_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_xor);
+  reduction_xor_exprt::check(expr);
+  return static_cast<reduction_xor_exprt &>(expr);
+}
+
+class reduction_xnor_exprt : public unary_predicate_exprt
+{
+public:
+  explicit reduction_xnor_exprt(exprt _op)
+    : unary_predicate_exprt(ID_reduction_xnor, std::move(_op))
+  {
+  }
+};
+
+template <>
+inline bool can_cast_expr<reduction_xnor_exprt>(const exprt &expr)
+{
+  reduction_xnor_exprt::check(expr);
+  return expr.id() == ID_reduction_xnor;
+}
+
+inline const reduction_xnor_exprt &to_reduction_xnor_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_xnor);
+  reduction_xnor_exprt::check(expr);
+  return static_cast<const reduction_xnor_exprt &>(expr);
+}
+
+inline reduction_xnor_exprt &to_reduction_xnor_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_reduction_xnor);
+  reduction_xnor_exprt::check(expr);
+  return static_cast<reduction_xnor_exprt &>(expr);
+}
+
 #endif
