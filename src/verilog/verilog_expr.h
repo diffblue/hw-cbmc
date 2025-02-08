@@ -3011,4 +3011,39 @@ inline verilog_value_range_exprt &to_verilog_value_range_expr(exprt &expr)
   return static_cast<verilog_value_range_exprt &>(expr);
 }
 
+/// package::identifier
+class verilog_package_scope_exprt : public binary_exprt
+{
+public:
+  irep_idt package_base_name() const
+  {
+    return op0().id();
+  }
+
+  const exprt &identifier() const
+  {
+    return op1();
+  }
+};
+
+/// Cast a generic typet to a \ref verilog_package_scope_exprt. This is an unchecked
+/// conversion. \a type must be known to be \ref verilog_package_scope_exprt.
+/// \param type: Source type
+/// \return Object of type \ref verilog_package_scope_exprt
+inline const verilog_package_scope_exprt &
+to_verilog_package_scope_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_package_scope);
+  verilog_package_scope_exprt::check(expr);
+  return static_cast<const verilog_package_scope_exprt &>(expr);
+}
+
+/// \copydoc to_verilog_exprdef_expr(const exprt &)
+inline verilog_package_scope_exprt &to_verilog_package_scope_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_package_scope);
+  verilog_package_scope_exprt::check(expr);
+  return static_cast<verilog_package_scope_exprt &>(expr);
+}
+
 #endif

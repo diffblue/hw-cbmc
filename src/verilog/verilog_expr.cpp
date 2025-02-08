@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/expr_iterator.h>
 #include <util/mathematical_types.h>
 #include <util/prefix.h>
 
@@ -81,6 +82,33 @@ void verilog_module_sourcet::show(std::ostream &out) const
   out << '\n';
 }
 
+static void
+dependencies_rec(const verilog_module_itemt &, std::vector<irep_idt> &);
+
+static void dependencies_rec(const exprt &expr, std::vector<irep_idt> &dest)
+{
+  for(const_depth_iteratort it = expr.depth_cbegin(); it != expr.depth_cend();
+      ++it)
+  {
+    if(it->id() == ID_verilog_package_scope)
+    {
+      auto &package_scope_expr = to_verilog_package_scope_expr(*it);
+      dest.push_back(
+        verilog_package_identifier(package_scope_expr.package_base_name()));
+    }
+  }
+}
+
+static void dependencies_rec(const typet &type, std::vector<irep_idt> &dest)
+{
+  if(type.id() == ID_verilog_package_scope)
+  {
+    auto &package_scope_type = to_verilog_package_scope_type(type);
+    dest.push_back(
+      verilog_package_identifier(package_scope_type.package_base_name()));
+  }
+}
+
 static void dependencies_rec(
   const verilog_module_itemt &module_item,
   std::vector<irep_idt> &dest)
@@ -113,6 +141,86 @@ static void dependencies_rec(
       dest.push_back(
         verilog_package_identifier(import_item.get(ID_verilog_package)));
     }
+  }
+  else if(module_item.id() == ID_parameter_decl)
+  {
+    auto &parameter_decl = to_verilog_parameter_decl(module_item);
+    for(auto &decl : parameter_decl.declarations())
+    {
+      dependencies_rec(decl.type(), dest);
+      dependencies_rec(decl.value(), dest);
+    }
+  }
+  else if(module_item.id() == ID_local_parameter_decl)
+  {
+    auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
+    for(auto &decl : localparam_decl.declarations())
+    {
+      dependencies_rec(decl.type(), dest);
+      dependencies_rec(decl.value(), dest);
+    }
+  }
+  else if(module_item.id() == ID_decl)
+  {
+    auto &decl = to_verilog_decl(module_item);
+    dependencies_rec(decl.type(), dest);
+    for(auto &declarator : decl.declarators())
+    {
+      dependencies_rec(declarator.type(), dest);
+      dependencies_rec(declarator.value(), dest);
+    }
+  }
+  else if(
+    module_item.id() == ID_verilog_always ||
+    module_item.id() == ID_verilog_always_comb ||
+    module_item.id() == ID_verilog_always_ff ||
+    module_item.id() == ID_verilog_always_latch)
+  {
+    dependencies_rec(to_verilog_always_base(module_item).statement(), dest);
+  }
+  else if(module_item.id() == ID_initial)
+  {
+    dependencies_rec(to_verilog_initial(module_item).statement(), dest);
+  }
+  else if(module_item.id() == ID_inst)
+  {
+  }
+  else if(module_item.id() == ID_inst_builtin)
+  {
+  }
+  else if(module_item.id() == ID_continuous_assign)
+  {
+  }
+  else if(
+    module_item.id() == ID_verilog_assert_property ||
+    module_item.id() == ID_verilog_assume_property ||
+    module_item.id() == ID_verilog_restrict_property ||
+    module_item.id() == ID_verilog_cover_property)
+  {
+  }
+  else if(module_item.id() == ID_verilog_assertion_item)
+  {
+  }
+  else if(module_item.id() == ID_parameter_override)
+  {
+  }
+  else if(module_item.id() == ID_verilog_final)
+  {
+  }
+  else if(module_item.id() == ID_verilog_let)
+  {
+    // to_verilog_let(module_item));
+  }
+  else if(module_item.id() == ID_verilog_smv_assume)
+  {
+  }
+  else if(module_item.id() == ID_verilog_property_declaration)
+  {
+    // to_verilog_property_declaration(module_item)
+  }
+  else if(module_item.id() == ID_verilog_sequence_declaration)
+  {
+    // to_verilog_sequence_declaration(module_item)
   }
 }
 

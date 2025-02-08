@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 class function_call_exprt;
 class power_exprt;
+class verilog_package_scope_typet;
 
 class verilog_typecheck_exprt:public verilog_typecheck_baset
 {
@@ -66,7 +67,7 @@ protected:
   void propagate_type(exprt &expr, const typet &type);
 
   typet elaborate_type(const typet &);
-  typet elaborate_package_scope_typedef(const type_with_subtypest &);
+  typet elaborate_package_scope_typedef(const verilog_package_scope_typet &);
   typet convert_enum(const class verilog_enum_typet &);
   array_typet convert_unpacked_array_type(const type_with_subtypet &);
   typet convert_packed_array_type(const type_with_subtypet &);
