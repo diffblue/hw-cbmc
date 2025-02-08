@@ -727,11 +727,22 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   auto left = this->left(expr);
   auto right = this->right(expr);
 
+  const auto verilog_type = type.get(ID_C_verilog_type);
+
   std::string s;
 
   if(type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv)
   {
-    s = "bit[" + to_string(left) + ":" + to_string(right) + "]";
+    if(verilog_type == ID_verilog_byte)
+      s = "byte unsigned";
+    else if(verilog_type == ID_verilog_int)
+      s = "int unsigned";
+    else if(verilog_type == ID_verilog_longint)
+      s = "longint unsigned";
+    else if(verilog_type == ID_verilog_shortint)
+      s = "shortint unsigned";
+    else
+      s = "bit[" + to_string(left) + ":" + to_string(right) + "]";
   }
   else if(type.id() == ID_bool)
   {
@@ -739,7 +750,16 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   }
   else if(type.id() == ID_signedbv || type.id() == ID_verilog_signedbv)
   {
-    s = "bit signed[" + to_string(left) + ":" + to_string(right) + "]";
+    if(verilog_type == ID_verilog_byte)
+      s = "byte";
+    else if(verilog_type == ID_verilog_int)
+      s = "int";
+    else if(verilog_type == ID_verilog_longint)
+      s = "longint";
+    else if(verilog_type == ID_verilog_shortint)
+      s = "shortint";
+    else
+      s = "bit signed[" + to_string(left) + ":" + to_string(right) + "]";
   }
   else if(type.id() == ID_verilog_realtime)
   {
