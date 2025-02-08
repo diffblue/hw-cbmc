@@ -58,6 +58,12 @@ std::string to_string(smv_parse_treet::modulet::itemt::item_typet i)
 {
   switch(i)
   {
+  case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
+    return "ASSIGN CURRENT";
+  case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
+    return "ASSIGN INIT";
+  case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
+    return "ASSIGN NEXT";
   case smv_parse_treet::modulet::itemt::INVAR:    return "INVAR";
   case smv_parse_treet::modulet::itemt::TRANS:    return "TRANS";
   case smv_parse_treet::modulet::itemt::INIT:     return "INIT";
