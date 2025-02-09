@@ -850,6 +850,12 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }
+  else if(module_item.id() == ID_verilog_default_clocking)
+  {
+  }
+  else if(module_item.id() == ID_verilog_default_disable)
+  {
+  }
   else if(module_item.id() == ID_verilog_property_declaration)
   {
     collect_symbols(to_verilog_property_declaration(module_item));

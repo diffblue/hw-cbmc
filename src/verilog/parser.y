@@ -1032,7 +1032,9 @@ module_or_generate_item_declaration:
 	| genvar_declaration
 	| clocking_declaration
 	| TOK_DEFAULT TOK_CLOCKING clocking_identifier ';'
+		{ init($$, ID_verilog_default_clocking); mto($$, $3); }
 	| TOK_DEFAULT TOK_DISABLE TOK_IFF expression_or_dist ';'
+		{ init($$, ID_verilog_default_disable); mto($$, $4); }
 	;
 
 non_port_module_item:

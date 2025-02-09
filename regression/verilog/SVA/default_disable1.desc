@@ -1,7 +1,8 @@
-KNOWNBUG
+CORE
 default_disable1.sv
 
-^EXIT=10$
+^file .* line 5: default disable iff is unsupported$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring

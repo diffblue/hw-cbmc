@@ -3282,6 +3282,14 @@ void verilog_synthesist::synth_module_item(
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }
+  else if(module_item.id() == ID_verilog_default_clocking)
+  {
+  }
+  else if(module_item.id() == ID_verilog_default_disable)
+  {
+    throw errort().with_location(module_item.source_location())
+      << "default disable iff is unsupported";
+  }
   else if(module_item.id() == ID_verilog_property_declaration)
   {
   }
