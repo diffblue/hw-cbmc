@@ -2114,6 +2114,7 @@ variable_dimension:
 	  unsized_dimension
 	| unpacked_dimension
 	| associative_dimension
+	| queue_dimension
 	;
 
 variable_dimension_brace:
@@ -2124,6 +2125,13 @@ variable_dimension_brace:
 	    $$=$1;
 	    add_as_subtype(stack_type($$), stack_type($2));
 	  }
+	;
+
+queue_dimension:
+	  '[' '$' ']'
+		{ init($$, ID_verilog_queue); stack_type($$).add_subtype().make_nil(); }
+	| '[' '$' TOK_COLON constant_expression ']'
+		{ init($$, ID_verilog_queue); stack_type($$).add_subtype().make_nil(); }
 	;
 
 unsized_dimension: '[' ']'

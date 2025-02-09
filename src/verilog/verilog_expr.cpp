@@ -35,7 +35,7 @@ typet verilog_declaratort::merged_type(const typet &declaration_type) const
   typet *p = &result;
 
   while(p->id() == ID_verilog_unpacked_array ||
-        p->id() == ID_verilog_associative_array)
+        p->id() == ID_verilog_associative_array || p->id() == ID_verilog_queue)
   {
     p = &to_type_with_subtype(*p).subtype();
   }

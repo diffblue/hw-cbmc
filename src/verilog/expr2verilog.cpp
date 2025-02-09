@@ -2074,6 +2074,12 @@ std::string expr2verilogt::convert(const typet &type)
   {
     return "enum";
   }
+  else if(type.id() == ID_verilog_queue)
+  {
+    std::string dest = "queue of ";
+    dest += convert(to_type_with_subtype(type).subtype());
+    return dest;
+  }
   else if(type.id() == ID_struct)
   {
     return "struct";
