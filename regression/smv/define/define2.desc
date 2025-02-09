@@ -1,0 +1,8 @@
+CORE
+define2.smv
+
+^file .* line 6: variable `x' already declared.*$
+^EXIT=1$
+^SIGNAL=0$
+--
+--

@@ -489,7 +489,8 @@ define     : assignment_var BECOMES_Token formula ';'
                break;
 
              case smv_parse_treet::mc_vart::DECLARED:
-               var.var_class=smv_parse_treet::mc_vart::DEFINED;
+               yyerror("variable `"+id2string(identifier)+"' already declared");
+               YYERROR;
                break;
 
              case smv_parse_treet::mc_vart::DEFINED:

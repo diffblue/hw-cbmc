@@ -1,0 +1,8 @@
+KNOWNBUG
+define5.smv
+
+^file .* line 6: variable `x' already defined.*$
+^EXIT=1$
+^SIGNAL=0$
+--
+--

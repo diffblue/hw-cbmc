@@ -1,0 +1,6 @@
+MODULE main
+
+DEFINE x := TRUE;
+
+-- not allowed, x is already defined
+ASSIGN init(x) := TRUE;
