@@ -93,17 +93,16 @@ protected:
 
   resultt convert_extractbits(const extractbits_exprt &, verilog_precedencet);
 
-  resultt convert_symbol(const exprt &src, verilog_precedencet &);
+  resultt convert_symbol(const exprt &);
 
-  resultt convert_hierarchical_identifier(
-    const class hierarchical_identifier_exprt &,
-    verilog_precedencet &precedence);
+  resultt
+  convert_hierarchical_identifier(const class hierarchical_identifier_exprt &);
 
-  resultt convert_nondet_symbol(const exprt &src, verilog_precedencet &);
+  resultt convert_nondet_symbol(const exprt &);
 
-  resultt convert_next_symbol(const exprt &src, verilog_precedencet &);
+  resultt convert_next_symbol(const exprt &);
 
-  resultt convert_constant(const constant_exprt &, verilog_precedencet &);
+  resultt convert_constant(const constant_exprt &);
 
   resultt
   convert_explicit_const_cast(const class verilog_explicit_const_cast_exprt &);
@@ -146,7 +145,7 @@ protected:
 
   resultt convert_replication(const replication_exprt &, verilog_precedencet);
 
-  resultt convert_norep(const exprt &src, verilog_precedencet &);
+  resultt convert_norep(const exprt &);
 
   resultt convert_with(const with_exprt &, verilog_precedencet);
 
