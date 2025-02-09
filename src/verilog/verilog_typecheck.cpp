@@ -1740,6 +1740,17 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }
+  else if(module_item.id() == ID_verilog_default_clocking)
+  {
+    exprt &cond = to_unary_expr(module_item).op();
+    convert_expr(cond);
+  }
+  else if(module_item.id() == ID_verilog_default_disable)
+  {
+    exprt &cond = to_unary_expr(module_item).op();
+    convert_expr(cond);
+    make_boolean(cond);
+  }
   else if(module_item.id() == ID_verilog_property_declaration)
   {
     convert_property_declaration(to_verilog_property_declaration(module_item));

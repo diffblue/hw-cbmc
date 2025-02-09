@@ -306,6 +306,12 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_verilog_covergroup)
   {
   }
+  else if(module_item.id() == ID_verilog_default_clocking)
+  {
+  }
+  else if(module_item.id() == ID_verilog_default_disable)
+  {
+  }
   else if(module_item.id() == ID_verilog_property_declaration)
   {
   }
