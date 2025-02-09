@@ -56,7 +56,7 @@ public:
   void convert(smv_parse_treet::modulet &);
   void convert(smv_parse_treet::mc_varst &);
 
-  void collect_define(const exprt &);
+  void collect_define(const equal_exprt &);
   void convert_defines(exprt::operandst &invar);
   void convert_define(const irep_idt &identifier);
 
@@ -1171,6 +1171,18 @@ void smv_typecheckt::typecheck(
 
   switch(item.item_type)
   {
+  case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
+    mode = OTHER;
+    break;
+
+  case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
+    mode = INIT;
+    break;
+
+  case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
+    mode = TRANS;
+    break;
+
   case smv_parse_treet::modulet::itemt::INIT:
     mode=INIT;
     break;
@@ -1277,18 +1289,15 @@ Function: smv_typecheckt::collect_define
 
 \*******************************************************************/
 
-void smv_typecheckt::collect_define(const exprt &expr)
+void smv_typecheckt::collect_define(const equal_exprt &expr)
 {
-  if(expr.id()!=ID_equal || expr.operands().size()!=2)
-    throw errort() << "collect_define expects equality";
+  const exprt &lhs = expr.lhs();
+  const exprt &rhs = expr.rhs();
 
-  const exprt &op0 = to_equal_expr(expr).op0();
-  const exprt &op1 = to_equal_expr(expr).op1();
-
-  if(op0.id()!=ID_symbol)
+  if(lhs.id() != ID_symbol)
     throw errort() << "collect_define expects symbol on left hand side";
 
-  const irep_idt &identifier = to_symbol_expr(op0).get_identifier();
+  const irep_idt &identifier = to_symbol_expr(lhs).get_identifier();
 
   auto it=symbol_table.get_writeable(identifier);
 
@@ -1305,8 +1314,8 @@ void smv_typecheckt::collect_define(const exprt &expr)
   symbol.is_state_var=false;
   symbol.is_macro=false;
 
-  std::pair<define_mapt::iterator, bool> result=
-    define_map.insert(std::pair<irep_idt, definet>(identifier, definet(op1)));
+  std::pair<define_mapt::iterator, bool> result =
+    define_map.insert(std::pair<irep_idt, definet>{identifier, definet{rhs}});
 
   if(!result.second)
   {
@@ -1432,24 +1441,29 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
     // we first need to collect all the defines
 
     for (auto &item : smv_module.items) {
-      if (item.is_define())
-        collect_define(item.expr);
+      if(item.is_define() || item.is_assign_current())
+        collect_define(item.equal_expr());
     }
     // now turn them into INVARs
     convert_defines(trans_invar);
 
     // do the rest now: typecheck
     for (auto &item : smv_module.items) {
-      if (!item.is_define())
+      if(!item.is_define() && !item.is_assign_current())
         typecheck(item);
     }
 
     // copy to transition system
-    for (const auto &item : smv_module.items) {
+    for(const auto &item : smv_module.items)
+    {
       if (item.is_invar())
         trans_invar.push_back(item.expr);
       else if (item.is_init())
         trans_init.push_back(item.expr);
+      else if(item.is_assign_init())
+        trans_init.push_back(item.expr);
+      else if(item.is_assign_next())
+        trans_trans.push_back(item.expr);
       else if (item.is_trans())
         trans_trans.push_back(item.expr);
     }

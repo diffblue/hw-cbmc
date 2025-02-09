@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SMV_PARSE_TREE_H
 #define CPROVER_SMV_PARSE_TREE_H
 
-#include <unordered_set>
-#include <unordered_map>
-
+#include <util/std_expr.h>
 #include <util/string_hash.h>
-#include <util/expr.h>
+
+#include <unordered_map>
+#include <unordered_set>
 
 class smv_parse_treet
 {
@@ -42,6 +42,9 @@ public:
     {
       enum item_typet
       {
+        ASSIGN_CURRENT,
+        ASSIGN_INIT,
+        ASSIGN_NEXT,
         CTLSPEC,
         LTLSPEC,
         INIT,
@@ -56,6 +59,21 @@ public:
       item_typet item_type;
       exprt expr;
       source_locationt location;
+
+      bool is_assign_current() const
+      {
+        return item_type == ASSIGN_CURRENT;
+      }
+
+      bool is_assign_init() const
+      {
+        return item_type == ASSIGN_INIT;
+      }
+
+      bool is_assign_next() const
+      {
+        return item_type == ASSIGN_NEXT;
+      }
 
       bool is_ctlspec() const
       {
@@ -86,12 +104,20 @@ public:
       {
         return item_type==INIT;
       }
-      
+
+      // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
+      const equal_exprt &equal_expr()
+      {
+        PRECONDITION(
+          is_assign_current() || is_assign_init() || is_assign_next() ||
+          is_define());
+        return to_equal_expr(expr);
+      }
     };
     
     typedef std::list<itemt> item_listt;
     item_listt items;
-    
+
     void add_item(
       itemt::item_typet item_type,
       const exprt &expr,
@@ -102,7 +128,22 @@ public:
       items.back().expr=expr;
       items.back().location=location;
     }
-    
+
+    void add_assign_current(const equal_exprt &expr)
+    {
+      add_item(itemt::ASSIGN_CURRENT, expr, source_locationt::nil());
+    }
+
+    void add_assign_init(const equal_exprt &expr)
+    {
+      add_item(itemt::ASSIGN_INIT, expr, source_locationt::nil());
+    }
+
+    void add_assign_next(const equal_exprt &expr)
+    {
+      add_item(itemt::ASSIGN_NEXT, expr, source_locationt::nil());
+    }
+
     void add_invar(const exprt &expr)
     {
       add_item(itemt::INVAR, expr, source_locationt::nil());
@@ -118,7 +159,7 @@ public:
       add_item(itemt::LTLSPEC, expr, source_locationt::nil());
     }
 
-    void add_define(const exprt &expr)
+    void add_define(const equal_exprt &expr)
     {
       add_item(itemt::DEFINE, expr, source_locationt::nil());
     }
