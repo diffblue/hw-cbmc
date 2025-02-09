@@ -8,6 +8,6 @@ module main;
 
   moo::my_type some_var;
 
-  assert final ($typename(some_var) == "bit signed[7:0]");
+  assert final ($typename(some_var) == "byte");
 
 endmodule

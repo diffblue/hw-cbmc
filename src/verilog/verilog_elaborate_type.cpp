@@ -219,7 +219,15 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
       auto rec = elaborate_type(subtype);
 
       if(rec.id() == ID_unsignedbv)
-        return signedbv_typet{to_unsignedbv_type(rec).width()};
+      {
+        typet dest = signedbv_typet{to_unsignedbv_type(rec).width()};
+
+        auto verilog_type = rec.get(ID_C_verilog_type);
+        if(verilog_type != irep_idt{})
+          dest.set(ID_C_verilog_type, verilog_type);
+
+        return dest;
+      }
       else if(rec.id() == ID_bool)
         return signedbv_typet{1};
       else
@@ -241,7 +249,15 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
       auto rec = elaborate_type(subtype);
 
       if(rec.id() == ID_signedbv)
-        return unsignedbv_typet{to_signedbv_type(rec).width()};
+      {
+        typet dest = unsignedbv_typet{to_signedbv_type(rec).width()};
+
+        auto verilog_type = rec.get(ID_C_verilog_type);
+        if(verilog_type != irep_idt{})
+          dest.set(ID_C_verilog_type, verilog_type);
+
+        return dest;
+      }
       else
         return rec;
     }
@@ -255,23 +271,21 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   }
   else if(src.id() == ID_verilog_byte)
   {
-    // two-valued type, signed
-    return signedbv_typet{8}.with_source_location(source_location);
+    return verilog_byte_typet{}.lower().with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_shortint)
   {
-    // two-valued type, signed
-    return signedbv_typet{16}.with_source_location(source_location);
+    return verilog_shortint_typet{}.lower().with_source_location(
+      source_location);
   }
   else if(src.id() == ID_verilog_int)
   {
-    // two-valued type, signed
-    return signedbv_typet{32}.with_source_location(source_location);
+    return verilog_int_typet{}.lower().with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_longint)
   {
-    // two-valued type, signed
-    return signedbv_typet{64}.with_source_location(source_location);
+    return verilog_longint_typet{}.lower().with_source_location(
+      source_location);
   }
   else if(src.id() == ID_verilog_integer)
   {

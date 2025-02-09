@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_VERILOG_TYPES_H
 
 #include <util/bitvector_types.h>
+#include <util/ieee_float.h>
 
 /// Used during elaboration only,
 /// to signal that a symbol is yet to be elaborated.
@@ -162,6 +163,13 @@ public:
   {
     return 64;
   }
+
+  typet lower() const
+  {
+    typet type = ieee_float_spect::double_precision().to_type();
+    type.set(ID_C_verilog_type, ID_verilog_real);
+    return type;
+  }
 };
 
 /// 32-bit floating point
@@ -175,6 +183,13 @@ public:
   std::size_t width() const
   {
     return 32;
+  }
+
+  typet lower() const
+  {
+    typet type = ieee_float_spect::single_precision().to_type();
+    type.set(ID_C_verilog_type, ID_verilog_shortreal);
+    return type;
   }
 };
 
@@ -190,6 +205,13 @@ public:
   {
     return 64;
   }
+
+  typet lower() const
+  {
+    typet type = ieee_float_spect::double_precision().to_type();
+    type.set(ID_C_verilog_type, ID_verilog_realtime);
+    return type;
+  }
 };
 
 /// 2-state data type, 16-bit signed integer
@@ -203,6 +225,13 @@ public:
   std::size_t width() const
   {
     return 16;
+  }
+
+  typet lower() const
+  {
+    typet type = signedbv_typet{width()};
+    type.set(ID_C_verilog_type, ID_verilog_shortint);
+    return type;
   }
 };
 
@@ -221,7 +250,9 @@ public:
 
   typet lower() const
   {
-    return signedbv_typet{width()};
+    typet type = signedbv_typet{width()};
+    type.set(ID_C_verilog_type, ID_verilog_int);
+    return type;
   }
 };
 
@@ -237,6 +268,13 @@ public:
   {
     return 64;
   }
+
+  typet lower() const
+  {
+    typet type = signedbv_typet{width()};
+    type.set(ID_C_verilog_type, ID_verilog_longint);
+    return type;
+  }
 };
 
 /// 2-state data type, 8-bit signed integer
@@ -250,6 +288,13 @@ public:
   std::size_t width() const
   {
     return 8;
+  }
+
+  typet lower() const
+  {
+    typet type = signedbv_typet{width()};
+    type.set(ID_C_verilog_type, ID_verilog_byte);
+    return type;
   }
 };
 
