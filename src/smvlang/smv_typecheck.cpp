@@ -1162,46 +1162,60 @@ Function: smv_typecheckt::typecheck
 void smv_typecheckt::typecheck(
   smv_parse_treet::modulet::itemt &item)
 {
-  modet mode;
-
   switch(item.item_type)
   {
   case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
-    mode = OTHER;
+  {
+    auto &equal_expr = item.equal_expr();
+    auto &symbol_expr = to_symbol_expr(equal_expr.lhs());
+    auto &nil_type = static_cast<const typet &>(get_nil_irep());
+    typecheck(symbol_expr, nil_type, OTHER);
+    typecheck(equal_expr.rhs(), symbol_expr.type(), OTHER);
+  }
     break;
 
   case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
-    mode = INIT;
+  {
+    auto &equal_expr = item.equal_expr();
+    auto &symbol_expr = to_symbol_expr(to_unary_expr(equal_expr.lhs()).op());
+    auto &nil_type = static_cast<const typet &>(get_nil_irep());
+    typecheck(symbol_expr, nil_type, OTHER);
+    typecheck(equal_expr.rhs(), symbol_expr.type(), INIT);
+  }
     break;
 
   case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
-    mode = TRANS;
+  {
+    auto &equal_expr = item.equal_expr();
+    auto &symbol_expr = to_symbol_expr(to_unary_expr(equal_expr.lhs()).op());
+    auto &nil_type = static_cast<const typet &>(get_nil_irep());
+    typecheck(symbol_expr, nil_type, OTHER);
+    typecheck(equal_expr.rhs(), symbol_expr.type(), TRANS);
+  }
     break;
 
   case smv_parse_treet::modulet::itemt::INIT:
-    mode=INIT;
+    typecheck(item.expr, bool_typet(), INIT);
     break;
 
   case smv_parse_treet::modulet::itemt::TRANS:
-    mode=TRANS;
+    typecheck(item.expr, bool_typet(), TRANS);
     break;
 
   case smv_parse_treet::modulet::itemt::CTLSPEC:
-    mode = CTL;
+    typecheck(item.expr, bool_typet(), CTL);
     break;
 
   case smv_parse_treet::modulet::itemt::LTLSPEC:
-    mode = LTL;
+    typecheck(item.expr, bool_typet(), LTL);
     break;
 
   case smv_parse_treet::modulet::itemt::DEFINE:
   case smv_parse_treet::modulet::itemt::INVAR:
   case smv_parse_treet::modulet::itemt::FAIRNESS:
   default:
-    mode=OTHER;
+    typecheck(item.expr, bool_typet(), OTHER);
   }
-
-  typecheck(item.expr, bool_typet(), mode);
 }
 
 /*******************************************************************\
