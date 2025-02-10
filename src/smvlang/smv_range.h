@@ -11,6 +11,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/arith_tools.h>
 
+#include <iosfwd>
+
 class smv_ranget
 {
 public:
@@ -41,11 +43,14 @@ public:
     mp_max(to, other.to);
   }
 
-  void to_type(typet &dest) const
+  typet to_type() const
   {
-    dest = typet(ID_range);
-    dest.set(ID_from, integer2string(from));
-    dest.set(ID_to, integer2string(to));
+    return range_typet{from, to};
+  }
+
+  static smv_ranget from_type(const range_typet &src)
+  {
+    return {src.get_from(), src.get_to()};
   }
 
   bool is_bool() const
@@ -58,32 +63,30 @@ public:
     return from == to;
   }
 
-  smv_ranget &operator+(const smv_ranget &other)
+  smv_ranget operator+(const smv_ranget &other) const
   {
-    from += other.from;
-    to += other.to;
-    return *this;
+    return {from + other.from, to + other.to};
   }
 
-  smv_ranget &operator-(const smv_ranget &other)
+  smv_ranget operator-(const smv_ranget &other) const
   {
-    from -= other.from;
-    to -= other.to;
-    return *this;
+    return {from - other.from, to - other.to};
   }
 
-  smv_ranget &operator*(const smv_ranget &other)
+  smv_ranget operator*(const smv_ranget &other) const
   {
     mp_integer p1 = from * other.from;
     mp_integer p2 = from * other.to;
     mp_integer p3 = to * other.from;
     mp_integer p4 = to * other.to;
 
-    from = std::min(p1, std::min(p2, std::min(p3, p4)));
-    to = std::max(p1, std::max(p2, std::max(p3, p4)));
+    mp_integer from = std::min(p1, std::min(p2, std::min(p3, p4)));
+    mp_integer to = std::max(p1, std::max(p2, std::max(p3, p4)));
 
-    return *this;
+    return {std::move(from), std::move(to)};
   }
+
+  friend std::ostream &operator<<(std::ostream &, const smv_ranget &);
 };
 
 #endif // CPROVER_SMV_RANGE_H

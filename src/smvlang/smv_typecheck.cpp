@@ -472,14 +472,10 @@ smv_ranget smv_typecheckt::convert_type(const typet &src)
   }
   else if(src.id()==ID_range)
   {
-    auto from = string2integer(src.get_string(ID_from));
-    auto to = string2integer(src.get_string(ID_to));
+    dest = smv_ranget::from_type(to_range_type(src));
 
-    if(from > to)
+    if(dest.from > dest.to)
       throw errort().with_location(src.source_location()) << "range is empty";
-
-    dest.from = from;
-    dest.to = to;
   }
   else if(src.id()==ID_enumeration)
   {
@@ -548,9 +544,7 @@ typet smv_typecheckt::type_union(
   }
   else
   {
-    typet tmp;
-    range1.to_type(tmp);
-    return tmp;
+    return range1.to_type();
   }
 }
 
@@ -744,7 +738,7 @@ void smv_typecheckt::typecheck_expr_rec(
         else
           assert(false);
 
-        new_range.to_type(expr.type());
+        expr.type() = new_range.to_type();
       }
     }
     else if(dest_type.id() != ID_range)
@@ -762,9 +756,7 @@ void smv_typecheckt::typecheck_expr_rec(
 
       if(dest_type.is_nil())
       {
-        expr.type()=typet(ID_range);
-        expr.type().set(ID_from, integer2string(int_value));
-        expr.type().set(ID_to, integer2string(int_value));
+        expr.type() = range_typet{int_value, int_value};
       }
       else
       {
