@@ -1,7 +1,7 @@
 CORE
 boolean_expected1.smv
 
-^file boolean_expected1\.smv line 3: expected 0 or 1 here, but got 10$
+^file boolean_expected1\.smv line 3: Expected expression of type `boolean', but got expression `10', which is of type `10..10'$
 ^EXIT=2$
 ^SIGNAL=0$
 --
