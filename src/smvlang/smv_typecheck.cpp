@@ -636,11 +636,6 @@ void smv_typecheckt::typecheck_expr_rec(
     expr.set(ID_C_smv_iff, true);
     expr.id(ID_equal);
   }
-  else if(expr.id()==ID_nondet_symbol)
-  {
-    if(!dest_type.is_nil())
-      expr.type() = dest_type;
-  }
   else if(expr.id()==ID_constraint_select_one)
   {
     typecheck_op(expr, dest_type, mode);
