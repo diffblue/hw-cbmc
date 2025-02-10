@@ -1,0 +1,6 @@
+MODULE main
+
+VAR x : boolean;
+
+-- not allowed, x is already a variable
+DEFINE x := TRUE;

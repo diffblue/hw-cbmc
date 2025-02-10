@@ -477,39 +477,40 @@ defines:     define
            ;
 
 define     : assignment_var BECOMES_Token formula ';'
-{
-  const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-  smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
+           {
+             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
+             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
 
-  switch(var.var_class)
-  {
-  case smv_parse_treet::mc_vart::UNKNOWN:
-    var.type.make_nil();
-    var.var_class=smv_parse_treet::mc_vart::DEFINED;
-    break;
+             switch(var.var_class)
+             {
+             case smv_parse_treet::mc_vart::UNKNOWN:
+               var.type.make_nil();
+               var.var_class=smv_parse_treet::mc_vart::DEFINED;
+               break;
 
-  case smv_parse_treet::mc_vart::DECLARED:
-    var.var_class=smv_parse_treet::mc_vart::DEFINED;
-    break;
+             case smv_parse_treet::mc_vart::DECLARED:
+               yyerror("variable `"+id2string(identifier)+"' already declared");
+               YYERROR;
+               break;
 
-  case smv_parse_treet::mc_vart::DEFINED:
-    yyerror("variable `"+id2string(identifier)+"' already defined");
-    YYERROR;
-    break;
-  
-  case smv_parse_treet::mc_vart::ARGUMENT:
-    yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-    YYERROR;
-    break;
-  
-  default:
-    DATA_INVARIANT(false, "unexpected variable class");
-  }
+             case smv_parse_treet::mc_vart::DEFINED:
+               yyerror("variable `"+id2string(identifier)+"' already defined");
+               YYERROR;
+               break;
 
-  binary($$, $1, ID_equal, $3);
-  PARSER.module->add_define(to_equal_expr(stack_expr($$)));
-}
-;
+             case smv_parse_treet::mc_vart::ARGUMENT:
+               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
+               YYERROR;
+               break;
+
+             default:
+               DATA_INVARIANT(false, "unexpected variable class");
+             }
+
+             binary($$, $1, ID_equal, $3);
+             PARSER.module->add_define(to_equal_expr(stack_expr($$)));
+           }
+           ;
 
 formula    : term
            ;

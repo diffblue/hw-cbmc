@@ -1,0 +1,8 @@
+MODULE main
+
+VAR x : 1..4;
+
+ASSIGN x := 1;
+
+-- not allowed, x is already assigned
+ASSIGN next(x) := 2;
