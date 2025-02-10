@@ -79,6 +79,8 @@ protected:
   bool do_spec;
 
   smv_ranget convert_type(const typet &);
+  static bool is_contained_in(irep_idt, const enumeration_typet &);
+
   void convert(smv_parse_treet::modulet::itemt &);
   void typecheck(smv_parse_treet::modulet::itemt &);
   void typecheck_expr_rec(exprt &, const typet &, modet);
@@ -134,6 +136,26 @@ protected:
       return id;
   }
 };
+
+/*******************************************************************\
+
+Function: smv_typecheckt::is_contained_in
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool smv_typecheckt::is_contained_in(irep_idt id, const enumeration_typet &type)
+{
+  for(auto &element : type.elements())
+    if(element.id() == id)
+      return true;
+  return false;
+}
 
 /*******************************************************************\
 
@@ -755,10 +777,11 @@ void smv_typecheckt::typecheck_expr_rec(
   }
   else if(expr.id()==ID_constant)
   {
+    const auto value = to_constant_expr(expr).get_value();
+
     if(expr.type().id()==ID_integer)
     {
-      const std::string &value=expr.get_string(ID_value);
-      mp_integer int_value=string2integer(value);
+      mp_integer int_value = string2integer(id2string(value));
 
       if(dest_type.is_nil())
       {
@@ -804,6 +827,12 @@ void smv_typecheckt::typecheck_expr_rec(
     {
       if(dest_type.id() == ID_enumeration)
       {
+        if(!is_contained_in(value, to_enumeration_type(dest_type)))
+        {
+          throw errort().with_location(expr.find_source_location())
+            << "enum " << value << " not a member of " << to_string(dest_type);
+        }
+
         if(to_enumeration_type(expr.type()).elements().empty())
           expr.type() = dest_type;
       }
