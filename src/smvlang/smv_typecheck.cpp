@@ -80,7 +80,7 @@ protected:
   const std::string &module;
   bool do_spec;
 
-  smv_ranget convert_type(const typet &);
+  smv_ranget type_to_range(const typet &);
   void convert(smv_parse_treet::modulet::itemt &);
   void typecheck(smv_parse_treet::modulet::itemt &);
   void typecheck_expr_rec(exprt &, modet);
@@ -413,7 +413,7 @@ void smv_typecheckt::instantiate_rename(
 
 /*******************************************************************\
 
-Function: smv_typecheckt::convert_type
+Function: smv_typecheckt::type_to_range
 
   Inputs:
 
@@ -423,14 +423,11 @@ Function: smv_typecheckt::convert_type
 
 \*******************************************************************/
 
-smv_ranget smv_typecheckt::convert_type(const typet &src)
+smv_ranget smv_typecheckt::type_to_range(const typet &src)
 {
-  smv_ranget dest;
-  
   if(src.id()==ID_bool)
   {
-    dest.from=0;
-    dest.to=1;
+    return {0, 1};
   }
   else if(src.id()==ID_range)
   {
@@ -440,28 +437,13 @@ smv_ranget smv_typecheckt::convert_type(const typet &src)
     if(from > to)
       throw errort().with_location(src.source_location()) << "range is empty";
 
-    dest.from = from;
-    dest.to = to;
-  }
-  else if(src.id()==ID_enumeration)
-  {
-    dest.from=0;
-
-    std::size_t number_of_elements=
-      to_enumeration_type(src).elements().size();
-      
-    if(number_of_elements==0)
-      dest.to=0;
-    else
-      dest.to=(long long)number_of_elements-1;
+    return {from, to};
   }
   else
   {
     throw errort().with_location(src.source_location())
       << "Unexpected type: `" << to_string(src) << "'";
   }
-  
-  return dest;
 }
 
 /*******************************************************************\
@@ -498,8 +480,8 @@ typet smv_typecheckt::type_union(
       return type2;
   }
   
-  smv_ranget range1=convert_type(type1);
-  smv_ranget range2=convert_type(type2);
+  smv_ranget range1=type_to_range(type1);
+  smv_ranget range2=type_to_range(type2);
 
   range1.make_union(range2);
   
@@ -671,8 +653,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     // find proper type for precise arithmetic
     smv_ranget new_range;
 
-    smv_ranget smv_range0 = convert_type(op0.type());
-    smv_ranget smv_range1 = convert_type(op1.type());
+    smv_ranget smv_range0 = type_to_range(op0.type());
+    smv_ranget smv_range1 = type_to_range(op1.type());
 
     if(expr.id() == ID_plus)
       new_range = smv_range0 + smv_range1;
@@ -697,15 +679,18 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   }
   else if(expr.id()==ID_constant)
   {
+    const auto value = to_constant_expr(expr).get_value();
+
     if(expr.type().id()==ID_integer)
     {
-      const std::string &value=expr.get_string(ID_value);
-      mp_integer int_value=string2integer(value);
+      mp_integer int_value=string2integer(id2string(value));
 
       expr.type() = range_typet{int_value, int_value};
     }
     else if(expr.type().id()==ID_enumeration)
     {
+      // add elements -- just the one we have
+      expr.type().add(ID_elements).get_sub().push_back(irept{value});
     }
   }
   else if(expr.id()==ID_cond)
@@ -822,8 +807,8 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &type)
 
   if(expr.type() != type)
   {
-    smv_ranget e=convert_type(expr.type());
-    smv_ranget t=convert_type(type);
+    smv_ranget e=type_to_range(expr.type());
+    smv_ranget t=type_to_range(type);
 
     if(e.is_contained_in(t))
     {
@@ -836,10 +821,13 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &type)
           else
             expr=true_exprt();
         }
+        else if(type.id() == ID_range)
+        {
+          expr = constant_exprt{integer2string(e.from), type};
+        }
         else
         {
-          expr=exprt(ID_constant, type);
-          expr.set(ID_value, integer2string(e.from));
+          expr = typecast_exprt{expr, type};
         }
       }
       else
@@ -1104,7 +1092,9 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
 
     // check the type, if given
     if(var.type.is_not_nil() && var.type.id() != "submodule")
-      convert_type(var.type);
+    {
+      // convert_type(var.type);      
+    }
 
     symbol.base_name = var_it.first;
 
