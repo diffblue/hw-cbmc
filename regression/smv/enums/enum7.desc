@@ -1,0 +1,9 @@
+KNOWNBUG
+enum7.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The literal is converted incorrectly.

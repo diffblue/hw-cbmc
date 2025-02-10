@@ -1,0 +1,9 @@
+KNOWNBUG
+enum6.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This crashes when generating the trace.

@@ -1,0 +1,18 @@
+MODULE main
+
+VAR x: { red, green, yellow };
+VAR y: { red, green, yellow };
+
+ASSIGN init(y) := green;
+ASSIGN next(y) := x;
+
+ASSIGN next(x) :=
+  case
+    x=red: green;
+    x=green: yellow;
+    x=yellow: red;
+  esac;
+
+ASSIGN init(x) := red;
+
+SPEC AG x != y;

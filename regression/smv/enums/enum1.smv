@@ -1,0 +1,15 @@
+MODULE main
+
+VAR some_var: { red, green, yellow, off };
+
+ASSIGN next(some_var) :=
+  case
+    some_var=red: green;
+    some_var=green: yellow;
+    some_var=yellow: red;
+    TRUE: off;
+  esac;
+
+INIT some_var != off
+
+SPEC AG some_var != off

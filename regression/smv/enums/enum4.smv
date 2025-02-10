@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x: { a, b, c };
+VAR y: { a, b };
+
+-- ok; it's a subset
+ASSIGN x := y; 
+
+SPEC AG x = y
