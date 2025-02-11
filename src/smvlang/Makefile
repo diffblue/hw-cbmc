@@ -1,5 +1,11 @@
-SRC = smv_language.cpp smv_parser.cpp smv_typecheck.cpp expr2smv.cpp \
-      smv_y.tab.cpp lex.yy.cpp smv_parse_tree.cpp
+SRC = smv_language.cpp \
+      smv_parser.cpp \
+      smv_typecheck.cpp \
+      expr2smv.cpp \
+      smv_y.tab.cpp \
+      lex.yy.cpp \
+      smv_parse_tree.cpp \
+      smv_range.cpp
 
 include ../config.inc
 include ../common
