@@ -1,0 +1,12 @@
+MODULE main
+
+VAR sub : my-module;
+
+-- the enum is visible here as well
+SPEC AG sub.some_enum = a
+
+MODULE my-module
+
+VAR some_enum : { a, b };
+
+ASSIGN some_enum := a;

@@ -1,0 +1,9 @@
+KNOWNBUG
+module_with_enum1.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The enum literal is not found.

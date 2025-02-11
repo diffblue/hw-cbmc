@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x: { a, b, c };
+
+DEFINE x_value := a;
+
+ASSIGN x := x_value;
+
+SPEC AG x = a

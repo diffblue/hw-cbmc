@@ -1,0 +1,13 @@
+MODULE main
+
+VAR x: { a, b, c };
+
+ASSIGN init(x) := a;
+ASSIGN next(x) := case
+                    x=a: b;
+                    x=b: c;
+                    TRUE: c;
+                  esac;
+
+-- fails
+SPEC AG x != c

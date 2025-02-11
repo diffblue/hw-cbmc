@@ -1,0 +1,7 @@
+MODULE main
+
+VAR x: { a, b, c };
+VAR y: { a, b };
+
+ASSIGN init(x) := c; -- ok
+ASSIGN init(y) := c; -- error

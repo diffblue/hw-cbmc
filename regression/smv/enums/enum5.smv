@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x: { a, b };
+VAR y: { b, a };
+
+-- ok; the ordering does not matter
+ASSIGN x := y; 
+
+SPEC AG x = y

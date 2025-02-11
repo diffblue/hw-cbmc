@@ -1,0 +1,9 @@
+KNOWNBUG
+enum3.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This should be a type error.
