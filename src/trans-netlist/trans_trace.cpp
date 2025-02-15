@@ -387,14 +387,10 @@ static mp_integer vcd_width(
   const typet &type,
   const namespacet &ns)
 {
-  if(type.id()==ID_symbol)
-    return vcd_width(ns.follow(type), ns);
-  else if(type.id()==ID_unsignedbv ||
-          type.id()==ID_signedbv ||
-          type.id()==ID_bv ||
-          type.id()==ID_fixedbv ||
-          type.id()==ID_floatbv ||
-          type.id()==ID_pointer)
+  if(
+    type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+    type.id() == ID_bv || type.id() == ID_fixedbv || type.id() == ID_floatbv ||
+    type.id() == ID_pointer)
   {
     return to_bitvector_type(type).get_width();
   }
@@ -456,8 +452,8 @@ static std::string as_vcd_binary(
   const exprt &expr,
   const namespacet &ns)
 {
-  const typet &type=ns.follow(expr.type());
-  
+  const auto &type = expr.type();
+
   if(expr.id()==ID_constant)
   {
     if(

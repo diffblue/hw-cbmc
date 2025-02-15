@@ -243,8 +243,8 @@ bool map_varst::array_types_eq(
   
   namespacet ns(symbol_table);
 
-  const typet &s1 = ns.follow(type1.element_type());
-  const typet &s2 = ns.follow(type2.element_type());
+  const typet &s1 = type1.element_type();
+  const typet &s2 = type2.element_type();
 
   if(s1.id()==ID_array && s2.id()==ID_array)
     return array_types_eq(to_array_type(s1), to_array_type(s2), error_msg);
@@ -278,12 +278,6 @@ bool map_varst::check_types_rec(
   std::string &error_msg)
 {
   namespacet ns(symbol_table);
-
-  if(type1.id()==ID_symbol)
-    return check_types_rec(ns.follow(type1), type2, error_msg);
-
-  if(type2.id()==ID_symbol)
-    return check_types_rec(type1, ns.follow(type2), error_msg);
 
   // type is the same?
   if(type1 == type2)
@@ -357,8 +351,8 @@ void map_varst::add_constraint_rec(
 {
   namespacet ns(symbol_table);
 
-  const typet &t1=ns.follow(program_symbol.type());
-  const typet &t2=ns.follow(module_symbol.type());
+  const typet &t1 = program_symbol.type();
+  const typet &t2 = module_symbol.type();
 
   // check the type
   if(t1==t2)
@@ -426,7 +420,7 @@ const symbolt &map_varst::add_array(symbolt &symbol)
 {
   const namespacet ns(symbol_table);
 
-  const typet &full_type=ns.follow(symbol.type);
+  const typet &full_type = symbol.type;
 
   if(full_type.id()==ID_incomplete_array)
   {
@@ -514,7 +508,7 @@ void map_varst::map_var_rec(
   const irep_idt &prefix)
 {
   const namespacet ns(symbol_table);
-  const typet &expr_type=ns.follow(expr.type());
+  const typet &expr_type = expr.type();
   const struct_typet &struct_type=to_struct_type(expr_type);
   const struct_typet::componentst &components=struct_type.components();
 
@@ -534,9 +528,9 @@ void map_varst::map_var_rec(
       base_name=c_it->get_base_name();
     else
       base_name=name;
-    
-    bool module_instance=ns.follow(c_it->type()).id()==ID_struct;
-    
+
+    bool module_instance = c_it->type().id() == ID_struct;
+
     irep_idt full_name=id2string(prefix)+"."+id2string(base_name);
 
     const symbol_table_baset::symbolst::const_iterator sub_symbol_it =
@@ -603,8 +597,8 @@ void map_varst::map_var(
 
   const namespacet ns(symbol_table);
 
-  const typet &type1=ns.follow(program_symbol.type());
-  const typet &type2=ns.follow(module_symbol.type);
+  const typet &type1 = program_symbol.type();
+  const typet &type2 = module_symbol.type;
 
   std::string error_msg;
   if(check_types_rec(type1, type2, error_msg))
@@ -721,7 +715,7 @@ void map_varst::map_vars(const irep_idt &top_module)
     index_exprt expr(
       symbol_expr,
       timeframe_expr,
-      to_array_type(ns.follow(symbol_expr.type())).element_type());
+      to_array_type(symbol_expr.type()).element_type());
 
     top_level_inputs.clear();
 
@@ -733,7 +727,7 @@ void map_varst::map_vars(const irep_idt &top_module)
       const irep_idt &base_name = entry.second.base_name;
       symbolt &symbol = symbol_table.get_writeable_ref(entry.first);
       if (symbol.type.id() == ID_struct_tag)
-        symbol.type = ns.follow(symbol.type);
+        symbol.type = symbol.type;
       if (base_name == "next_timeframe" && symbol.type.id() == ID_code) {
         namespacet ns(symbol_table);
         add_next_timeframe(symbol, struct_symbol, top_level_inputs, ns);

@@ -50,8 +50,7 @@ void add_next_timeframe(
   code_blockt block;
   block.add(assignment_increase);
 
-  const struct_typet &struct_type =
-      to_struct_type(ns.follow(struct_symbol.type));
+  const struct_typet &struct_type = to_struct_type(struct_symbol.type);
 
   // now assign the non-inputs in the module symbol
   const index_exprt index_expr(array_symbol.symbol_expr(),

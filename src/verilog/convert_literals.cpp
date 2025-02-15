@@ -103,7 +103,12 @@ constant_exprt convert_real_literal(const irep_idt &value)
   // adjust exponent
   exponent -= str_fraction_part.size();
 
-  ieee_floatt ieee_float{ieee_float_spect::double_precision()};
+  // IEEE 1800-2017 5.7.2 says that real literal constants
+  // are IEEE 754 double-precision, but doesn't specify
+  // how to round when converting decimals.
+  ieee_floatt ieee_float{
+    ieee_float_spect::double_precision(),
+    ieee_floatt::rounding_modet::ROUND_TO_EVEN};
 
   ieee_float.from_base10(significand, exponent);
 
