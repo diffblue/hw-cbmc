@@ -251,19 +251,44 @@ exprt verilog_lowering_cast(typecast_exprt expr)
   auto &src_type = expr.op().type();
   auto &dest_type = expr.type();
 
+  // float to int
+  if(
+    (src_type.id() == ID_verilog_real ||
+     src_type.id() == ID_verilog_shortreal ||
+     src_type.id() == ID_verilog_realtime || src_type.id() == ID_floatbv) &&
+    (dest_type.id() == ID_signedbv || dest_type.id() == ID_unsignedbv ||
+     dest_type.id() == ID_bool))
+  {
+    // 1800-2017 6.12.2 requires rounding away from zero when converting
+    // to integers.
+    auto rm = floatbv_rounding_mode(ieee_floatt::rounding_modet::ROUND_TO_AWAY);
+    auto rti =
+      floatbv_round_to_integral_exprt{expr.op(), rm}.with_source_location(
+        expr.source_location());
+    auto new_cast = floatbv_typecast_exprt{
+      rti,
+      ieee_floatt::rounding_mode_expr(
+        ieee_floatt::rounding_modet::ROUND_TO_ZERO),
+      verilog_lowering(dest_type)};
+    return std::move(new_cast);
+  }
+
+  // float to float, int to float
   if(
     dest_type.id() == ID_verilog_real ||
     dest_type.id() == ID_verilog_shortreal ||
-    dest_type.id() == ID_verilog_realtime || src_type.id() == ID_floatbv)
+    dest_type.id() == ID_verilog_realtime)
   {
-    // This may require rounding, hence add rounding mode.
-    // 1800-2017 6.12.2 requires rounding away from zero,
-    // which we don't have.
+    // The standard does not say how to round double precision
+    // to single precision floating-point.  It does not say how
+    // to round integers to float.  We simply use RNA,
+    // given the explicit requirement to use RNA when converting
+    // float to integer.
     expr.type() = verilog_lowering(dest_type);
     auto new_cast = floatbv_typecast_exprt{
       expr.op(),
       ieee_floatt::rounding_mode_expr(
-        ieee_floatt::rounding_modet::ROUND_TO_EVEN),
+        ieee_floatt::rounding_modet::ROUND_TO_AWAY),
       verilog_lowering(dest_type)};
     return std::move(new_cast);
   }

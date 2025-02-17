@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 cast_to_real2.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ cast_to_real2.sv
 --
 ^warning: ignoring
 --
-Typechecking yields inconsistent types.
