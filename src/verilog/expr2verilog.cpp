@@ -1246,8 +1246,7 @@ expr2verilogt::convert_constant(const constant_exprt &src)
   {
     constant_exprt tmp = src;
     tmp.type() = ieee_float_spect::double_precision().to_type();
-    ieee_floatt ieee_float;
-    ieee_float.from_expr(tmp);
+    auto ieee_float = ieee_float_valuet{tmp};
     return {precedence, ieee_float.to_ansi_c_string()};
   }
   else if(type.id() == ID_string)
