@@ -1,0 +1,7 @@
+MODULE main
+
+SPEC uwconst(123, 8) :: uwconst(1, 8) = uwconst(31489, 16)
+
+-- concatenation is unsigned
+SPEC swconst(123, 8) :: swconst(1, 8) = uwconst(31489, 16)
+SPEC swconst(123, 8) :: uwconst(1, 8) = uwconst(31489, 16)

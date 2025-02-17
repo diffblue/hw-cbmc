@@ -1,0 +1,3 @@
+MODULE main
+
+SPEC unsigned(swconst(-1, 1)) = uwconst(1, 1)

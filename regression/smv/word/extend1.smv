@@ -1,0 +1,4 @@
+MODULE main
+
+SPEC extend(uwconst(1, 1), 7) = uwconst(1, 8)
+SPEC extend(swconst(-1, 1), 7) = swconst(-1, 8)

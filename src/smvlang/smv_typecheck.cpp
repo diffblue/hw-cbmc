@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "smv_typecheck.h"
 
 #include <util/arith_tools.h>
+#include <util/bitvector_types.h>
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
@@ -565,7 +566,15 @@ typet smv_typecheckt::type_union(
 
   if(type2.is_nil())
     return type1;
-    
+
+  if(
+    type1.id() == ID_signedbv || type1.id() == ID_unsignedbv ||
+    type2.id() == ID_signedbv || type2.id() == ID_unsignedbv)
+  {
+    throw errort() << "no type union for types" << to_string(type1) << " and "
+                   << to_string(type2);
+  }
+
   // both enums?
   if(type1.id()==ID_enumeration && type2.id()==ID_enumeration)
   {
@@ -698,28 +707,73 @@ void smv_typecheckt::typecheck_expr_rec(
   }
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_xor ||
-    expr.id() == ID_xnor || expr.id() == ID_not || expr.id() == ID_implies)
+    expr.id() == ID_xnor || expr.id() == ID_not || expr.id() == ID_implies ||
+    expr.id() == ID_bitand || expr.id() == ID_bitor || expr.id() == ID_bitxor ||
+    expr.id() == ID_bitxnor || expr.id() == ID_bitnot ||
+    expr.id() == ID_smv_bitimplies)
   {
+    PRECONDITION(!expr.operands().empty());
+
     for(auto &op : expr.operands())
       typecheck_expr_rec(op, mode);
 
-    expr.type() = bool_typet{};
+    auto &op0_type = to_multi_ary_expr(expr).op0().type();
+
+    // boolean or bit-wise?
+    if(op0_type.id() == ID_signedbv || op0_type.id() == ID_unsignedbv)
+    {
+      auto new_id = irep_idt();
+
+      if(expr.id() == ID_and)
+        new_id = ID_bitand;
+      else if(expr.id() == ID_or)
+        new_id = ID_bitor;
+      else if(expr.id() == ID_xor)
+        new_id = ID_bitxor;
+      else if(expr.id() == ID_xnor)
+        new_id = ID_bitxnor;
+      else if(expr.id() == ID_not)
+        new_id = ID_bitnot;
+      else if(expr.id() == ID_implies)
+        new_id = ID_smv_bitimplies;
+      else
+        new_id = expr.id();
+
+      expr.id(new_id);
+
+      expr.type() = op0_type;
+    }
+    else
+    {
+      expr.type() = bool_typet{};
+    }
 
     for(auto &op : expr.operands())
       convert_expr_to(op, expr.type());
   }
   else if(expr.id() == ID_smv_iff)
   {
-    for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
+    auto &binary_expr = to_binary_expr(expr);
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode);
 
-    expr.type() = bool_typet{};
+    auto &op0_type = binary_expr.op0().type();
 
-    for(auto &op : expr.operands())
-      convert_expr_to(op, expr.type());
-
-    expr.set(ID_C_smv_iff, true);
-    expr.id(ID_equal);
+    if(op0_type.id() == ID_signedbv || op0_type.id() == ID_unsignedbv)
+    {
+      expr.set(ID_C_smv_iff, true);
+      expr.id(ID_bitxnor);
+      convert_expr_to(binary_expr.rhs(), op0_type);
+      expr.type() = op0_type;
+    }
+    else
+    {
+      expr.type() = bool_typet{};
+      convert_expr_to(binary_expr.lhs(), expr.type());
+      convert_expr_to(binary_expr.rhs(), expr.type());
+      expr.set(ID_C_smv_iff, true);
+      expr.id(ID_equal);
+    }
   }
   else if(expr.id()==ID_constraint_select_one)
   {
@@ -766,7 +820,9 @@ void smv_typecheckt::typecheck_expr_rec(
     if(expr.id()==ID_lt || expr.id()==ID_le ||
        expr.id()==ID_gt || expr.id()==ID_ge)
     {
-      if(op0.type().id()!=ID_range)
+      if(
+        op0.type().id() != ID_range && op0.type().id() != ID_signedbv &&
+        op0.type().id() != ID_unsignedbv)
       {
         throw errort().with_location(expr.find_source_location())
           << "Expected number type for " << to_string(expr);
@@ -823,7 +879,9 @@ void smv_typecheckt::typecheck_expr_rec(
         expr.type() = new_range.to_type();
       }
     }
-    else if(dest_type.id() != ID_range)
+    else if(
+      dest_type.id() != ID_range && dest_type.id() != ID_signedbv &&
+      dest_type.id() != ID_unsignedbv)
     {
       throw errort().with_location(expr.find_source_location())
         << "Expected number type for " << to_string(expr);
@@ -1063,6 +1121,225 @@ void smv_typecheckt::typecheck_expr_rec(
   {
     expr.type()=bool_typet();
   }
+  else if(expr.id() == ID_unary_minus)
+  {
+    auto &uminus_expr = to_unary_minus_expr(expr);
+    typecheck_expr_rec(uminus_expr.op(), mode);
+    auto &op_type = uminus_expr.op().type();
+
+    if(op_type.id() == ID_range)
+    {
+      uminus_expr.type() =
+        (-smv_ranget::from_type(to_range_type(op_type))).to_type();
+    }
+    else
+      throw errort().with_location(expr.source_location())
+        << "Operand to unary minus must be integer, but got "
+        << to_string(op_type);
+
+    // constant folding
+    if(uminus_expr.op().is_constant())
+      expr = from_integer(
+        -numeric_cast_v<mp_integer>(to_constant_expr(uminus_expr.op())),
+        uminus_expr.type());
+  }
+  else if(expr.id() == ID_smv_swconst)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode);
+    PRECONDITION(binary_expr.lhs().is_constant());
+    PRECONDITION(binary_expr.rhs().is_constant());
+    auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
+    auto type = signedbv_typet{bits};
+    auto value =
+      numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.lhs()));
+    expr =
+      from_integer(value, type).with_source_location(expr.source_location());
+  }
+  else if(expr.id() == ID_smv_uwconst)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode);
+    PRECONDITION(binary_expr.lhs().is_constant());
+    PRECONDITION(binary_expr.rhs().is_constant());
+    auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
+    auto type = unsignedbv_typet{bits};
+    auto value =
+      numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.lhs()));
+    expr =
+      from_integer(value, type).with_source_location(expr.source_location());
+  }
+  else if(
+    expr.id() == ID_shr || expr.id() == ID_shl || expr.id() == ID_lshr ||
+    expr.id() == ID_ashr)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+
+    // The LHS must be a word type.
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+
+    binary_expr.type() = binary_expr.lhs().type();
+
+    if(binary_expr.type().id() == ID_signedbv)
+    {
+      if(expr.id() == ID_shr)
+        expr.id(ID_ashr);
+    }
+    else if(binary_expr.type().id() == ID_unsignedbv)
+    {
+      if(expr.id() == ID_shr)
+        expr.id(ID_lshr);
+    }
+    else
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "Shift operand must be word type";
+    }
+
+    // The RHS must be an integer constant
+    typecheck_expr_rec(binary_expr.rhs(), mode);
+
+    if(
+      binary_expr.rhs().type().id() != ID_range &&
+      binary_expr.rhs().type().id() != ID_natural)
+      throw errort().with_location(expr.find_source_location())
+        << "Shift distance must be integer, but got "
+        << to_string(binary_expr.rhs().type());
+
+    if(binary_expr.rhs().id() != ID_constant)
+      throw errort().with_location(expr.find_source_location())
+        << "Shift distance must be constant";
+
+    // distance must be 0...w, where w is the number of bits of the LHS
+    auto distance =
+      numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
+
+    if(distance < 0)
+      throw errort().with_location(expr.find_source_location())
+        << "Shift distance must not be negative";
+
+    auto bits = to_bitvector_type(binary_expr.type()).get_width();
+
+    if(distance > bits)
+      throw errort().with_location(expr.find_source_location())
+        << "Shift distance is too large";
+
+    binary_expr.rhs() =
+      from_integer(distance, natural_typet{})
+        .with_source_location(binary_expr.rhs().source_location());
+  }
+  else if(expr.id() == ID_concatenation)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode);
+
+    if(
+      binary_expr.lhs().type().id() != ID_signedbv &&
+      binary_expr.lhs().type().id() != ID_unsignedbv)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "Concatenation operand must have word type";
+    }
+
+    if(
+      binary_expr.rhs().type().id() != ID_signedbv &&
+      binary_expr.rhs().type().id() != ID_unsignedbv)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "Concatenation operand must have word type";
+    }
+
+    auto bits = to_bitvector_type(binary_expr.lhs().type()).get_width() +
+                to_bitvector_type(binary_expr.rhs().type()).get_width();
+
+    binary_expr.type() = unsignedbv_typet{bits};
+  }
+  else if(expr.id() == ID_smv_sizeof)
+  {
+    auto &op = to_unary_expr(expr).op();
+    typecheck_expr_rec(op, mode);
+    if(op.type().id() == ID_signedbv || op.type().id() == ID_unsignedbv)
+    {
+      auto bits = to_bitvector_type(op.type()).get_width();
+      expr = from_integer(bits, range_typet{bits, bits});
+    }
+    else
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "sizeof operand must have word type";
+    }
+  }
+  else if(expr.id() == ID_smv_resize)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode);
+    PRECONDITION(binary_expr.rhs().is_constant());
+    auto &lhs_type = binary_expr.lhs().type();
+    auto new_bits =
+      numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
+
+    if(lhs_type.id() == ID_signedbv)
+      expr.type() = signedbv_typet{new_bits};
+    else if(lhs_type.id() == ID_unsignedbv)
+      expr.type() = unsignedbv_typet{new_bits};
+    else
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "resize operand must have word type";
+    }
+  }
+  else if(expr.id() == ID_smv_extend)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode);
+    PRECONDITION(binary_expr.rhs().is_constant());
+    auto &lhs_type = binary_expr.lhs().type();
+    auto old_bits = to_bitvector_type(lhs_type).get_width();
+    auto new_bits = old_bits + numeric_cast_v<mp_integer>(
+                                 to_constant_expr(binary_expr.rhs()));
+
+    if(lhs_type.id() == ID_signedbv)
+      expr.type() = signedbv_typet{new_bits};
+    else if(lhs_type.id() == ID_unsignedbv)
+      expr.type() = unsignedbv_typet{new_bits};
+    else
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "extend operand must have word type";
+    }
+  }
+  else if(expr.id() == ID_smv_unsigned_cast)
+  {
+    // a reinterpret cast
+    auto &op = to_unary_expr(expr).op();
+    typecheck_expr_rec(op, mode);
+    if(op.type().id() == ID_signedbv)
+      expr.type() = unsignedbv_typet{to_signedbv_type(op.type()).get_width()};
+    else
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "unsigned operand must have signed word type";
+    }
+  }
+  else if(expr.id() == ID_smv_signed_cast)
+  {
+    // a reinterpret cast
+    auto &op = to_unary_expr(expr).op();
+    typecheck_expr_rec(op, mode);
+    if(op.type().id() == ID_unsignedbv)
+      expr.type() = signedbv_typet{to_unsignedbv_type(op.type()).get_width()};
+    else
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "signed operand must have unsigned word type";
+    }
+  }
   else
   {
     throw errort().with_location(expr.find_source_location())
@@ -1091,30 +1368,36 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &type)
 
   if(expr.type() != type)
   {
-    smv_ranget e=convert_type(expr.type());
-    smv_ranget t=convert_type(type);
-
-    if(e.is_contained_in(t) && expr.type().id() != ID_enumeration)
+    if(type.id() == ID_signedbv || type.id() == ID_unsignedbv)
     {
-      if(e.is_singleton())
+    }
+    else
+    {
+      smv_ranget e = convert_type(expr.type());
+      smv_ranget t = convert_type(type);
+
+      if(e.is_contained_in(t) && expr.type().id() != ID_enumeration)
       {
-        if(type.id()==ID_bool)
+        if(e.is_singleton())
         {
-          if(e.from==0)
-            expr=false_exprt();
+          if(type.id() == ID_bool)
+          {
+            if(e.from == 0)
+              expr = false_exprt();
+            else
+              expr = true_exprt();
+          }
           else
-            expr=true_exprt();
+          {
+            expr = exprt(ID_constant, type);
+            expr.set(ID_value, integer2string(e.from));
+          }
         }
         else
-        {
-          expr=exprt(ID_constant, type);
-          expr.set(ID_value, integer2string(e.from));
-        }
-      }
-      else
-        expr = typecast_exprt{expr, type};
+          expr = typecast_exprt{expr, type};
 
-      return;      
+        return;
+      }
     }
 
     throw errort().with_location(expr.find_source_location())
