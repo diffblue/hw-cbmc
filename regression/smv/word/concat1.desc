@@ -1,0 +1,10 @@
+CORE
+concat1.smv
+
+^\[.*\] 0ud8_123 :: 0ud8_1 = 0ud16_31489: PROVED$
+^\[.*\] 0sd8_123 :: 0sd8_1 = 0ud16_31489: PROVED$
+^\[.*\] 0sd8_123 :: 0ud8_1 = 0ud16_31489: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

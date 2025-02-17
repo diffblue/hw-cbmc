@@ -203,6 +203,8 @@ void newlocation(YYSTYPE &x)
 "|"		return OR_Token;
 "&"		return AND_Token;
 "->"		return IMPLIES_Token;
+">>"		return GTGT_Token;
+"<<"		return LTLT_Token;
 "<->"		return EQUIV_Token;
 "="		return EQUAL_Token;
 "<="		return LE_Token;
@@ -213,6 +215,7 @@ void newlocation(YYSTYPE &x)
 ":="		return BECOMES_Token;
 "."		return DOT_Token;
 ".."		return DOTDOT_Token;
+"::"		return COLONCOLON_Token;
 
 .		return yytext[0];
 
