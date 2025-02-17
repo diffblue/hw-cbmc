@@ -79,6 +79,7 @@ protected:
   const std::string &module;
   bool do_spec;
 
+  void check_type(const typet &);
   smv_ranget convert_type(const typet &);
   static bool is_contained_in(irep_idt, const enumeration_typet &);
 
@@ -475,6 +476,29 @@ void smv_typecheckt::typecheck_op(
 
 /*******************************************************************\
 
+Function: smv_typecheckt::check_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::check_type(const typet &type)
+{
+  if(type.id() == ID_range)
+  {
+    auto range = smv_ranget::from_type(to_range_type(type));
+
+    if(range.from > range.to)
+      throw errort().with_location(type.source_location()) << "range is empty";
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::convert_type
 
   Inputs:
@@ -487,22 +511,18 @@ Function: smv_typecheckt::convert_type
 
 smv_ranget smv_typecheckt::convert_type(const typet &src)
 {
-  smv_ranget dest;
-  
   if(src.id()==ID_bool)
   {
-    dest.from=0;
-    dest.to=1;
+    return {0, 1};
   }
   else if(src.id()==ID_range)
   {
-    dest = smv_ranget::from_type(to_range_type(src));
-
-    if(dest.from > dest.to)
-      throw errort().with_location(src.source_location()) << "range is empty";
+    return smv_ranget::from_type(to_range_type(src));
   }
   else if(src.id()==ID_enumeration)
   {
+    smv_ranget dest;
+
     dest.from=0;
 
     std::size_t number_of_elements=
@@ -512,14 +532,14 @@ smv_ranget smv_typecheckt::convert_type(const typet &src)
       dest.to=0;
     else
       dest.to=(long long)number_of_elements-1;
+
+    return dest;
   }
   else
   {
     throw errort().with_location(src.source_location())
       << "Unexpected type: `" << to_string(src) << "'";
   }
-  
-  return dest;
 }
 
 /*******************************************************************\
@@ -1321,9 +1341,9 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
   {
     const smv_parse_treet::mc_vart &var = var_it.second;
 
-    // check the type, if given
-    if(var.type.is_not_nil() && var.type.id() != "submodule")
-      convert_type(var.type);
+    // check the type, if any
+    if(var.type.is_not_nil())
+      check_type(var.type);
 
     symbol.base_name = var_it.first;
 
