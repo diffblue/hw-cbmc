@@ -1,0 +1,11 @@
+MODULE main
+
+VAR u1 : word[8];
+
+ASSIGN u1 := uwconst(123, 8);
+
+VAR s1 : signed word[8];
+
+ASSIGN s1 := swconst(123, 8);
+
+SPEC FALSE

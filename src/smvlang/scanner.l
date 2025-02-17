@@ -103,6 +103,15 @@ void newlocation(YYSTYPE &x)
 "in"		return IN_Token;
 "notin"		return NOTIN_Token;
 "boolean"	return BOOLEAN_Token;
+"extend"	return EXTEND_Token;
+"resize"	return RESIZE_Token;
+"signed"	return SIGNED_Token;
+"sizeof"	return SIZEOF_Token;
+"swconst"	return SWCONST_Token;
+"unsigned"	return UNSIGNED_Token;
+"uwconst"	return UWCONST_Token;
+"word"		return WORD_Token;
+"word1"		return WORD1_Token;
 "mod"           return MOD_Token;
 "union"		return UNION_Token;
 ".."		return DOTDOT_Token;

@@ -8,6 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "expr2smv.h"
 
+#include <util/arith_tools.h>
+#include <util/bitvector_types.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
 #include <util/namespace.h>
@@ -101,7 +103,7 @@ public:
     precedencet &precedence);
 
   bool convert_constant(
-    const exprt &src,
+    const constant_exprt &,
     std::string &dest,
     precedencet &precedence);
 
@@ -440,14 +442,13 @@ Function: expr2smvt::convert_constant
 \*******************************************************************/
 
 bool expr2smvt::convert_constant(
-  const exprt &src,
+  const constant_exprt &src,
   std::string &dest,
   precedencet &precedence)
 {
   precedence = precedencet::MAX;
 
-  const typet &type=src.type();
-  const std::string &value=src.get_string(ID_value);
+  const typet &type = src.type();
 
   if(type.id()==ID_bool)
   {
@@ -460,7 +461,14 @@ bool expr2smvt::convert_constant(
           type.id()==ID_natural ||
           type.id()==ID_range ||
           type.id()==ID_enumeration)
-    dest=value;
+  {
+    dest = id2string(src.get_value());
+  }
+  else if(type.id() == ID_signedbv || type.id() == ID_unsignedbv)
+  {
+    auto value_int = numeric_cast_v<mp_integer>(src);
+    dest = integer2string(value_int);
+  }
   else
     return convert_norep(src, dest, precedence);
 
@@ -585,7 +593,7 @@ bool expr2smvt::convert(
     return convert_next_symbol(src, dest, precedence);
 
   else if(src.id()==ID_constant)
-    return convert_constant(src, dest, precedence);
+    return convert_constant(to_constant_expr(src), dest, precedence);
 
   else if(src.id()=="smv_nondet_choice")
     return convert_nondet_choice(src, dest, precedence);
@@ -706,6 +714,16 @@ bool type2smv(const typet &type, std::string &code, const namespacet &ns)
       }
       code+=')';
     }
+  }
+  else if(type.id() == ID_signedbv)
+  {
+    code =
+      "signed word[" + std::to_string(to_signedbv_type(type).width()) + ']';
+  }
+  else if(type.id() == ID_unsignedbv)
+  {
+    code =
+      "unsigned word[" + std::to_string(to_unsignedbv_type(type).width()) + ']';
   }
   else
     return true;

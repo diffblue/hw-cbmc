@@ -173,6 +173,9 @@ static void new_module(YYSTYPE &module)
 %token OF_Token       "of"
 %token DOTDOT_Token   ".."
 %token BOOLEAN_Token  "boolean"
+%token SIGNED_Token   "signed"
+%token UNSIGNED_Token "unsigned"
+%token WORD_Token     "word"
 %token EXTERN_Token   "EXTERN"
 
 %token IMPLIES_Token  "->"
@@ -195,6 +198,12 @@ static void new_module(YYSTYPE &module)
 %token LT_Token       "<"
 %token GT_Token       ">"
 %token NOTEQUAL_Token "!="
+%token EXTEND_Token   "extend"
+%token RESIZE_Token   "resize"
+%token SIZEOF_Token   "sizeof"
+%token SWCONST_Token  "swconst"
+%token UWCONST_Token  "uwconst"
+%token WORD1_Token    "word1"
 
 %token INC_Token
 %token DEC_Token
@@ -335,6 +344,21 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
              stack_type($$).add_subtype()=stack_type($6);
            }
            | BOOLEAN_Token { init($$, ID_bool); }
+           | WORD_Token '[' NUMBER_Token ']'
+           {
+             init($$, ID_unsignedbv);
+             stack_type($$).set(ID_width, stack_expr($3).id());
+           }
+           | SIGNED_Token WORD_Token '[' NUMBER_Token ']'
+           {
+             init($$, ID_signedbv);
+             stack_type($$).set(ID_width, stack_expr($4).id());
+           }
+           | UNSIGNED_Token WORD_Token '[' NUMBER_Token ']'
+           {
+             init($$, ID_unsignedbv);
+             stack_type($$).set(ID_width, stack_expr($4).id());
+           }
            | '{' enum_list '}' { $$=$2; }
            | NUMBER_Token DOTDOT_Token NUMBER_Token
            {
@@ -567,6 +591,13 @@ term       : variable_name
            | term UNION_Token    term { binary($$, $1, ID_smv_union, $3); }
            | term IN_Token       term { binary($$, $1, ID_smv_setin, $3); }
            | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3); }
+           | EXTEND_Token '(' term ',' term ')' { binary($$, $3, ID_smv_extend, $5); }
+           | RESIZE_Token '(' term ',' term ')' { binary($$, $3, ID_smv_resize, $5); }
+           | SIGNED_Token '(' term ')' { init($$, ID_smv_signed_cast); mto($$, $3); }
+           | SIZEOF_Token '(' term ')' { init($$, ID_smv_sizeof); mto($$, $3); }
+           | SWCONST_Token '(' term ',' term ')' { binary($$, $3, ID_smv_swconst, $5); }
+           | UNSIGNED_Token '(' term ')' { init($$, ID_smv_unsigned_cast); mto($$, $3); }
+           | UWCONST_Token '(' term ',' term ')' { binary($$, $3, ID_smv_uwconst, $5); }
            ;
 
 formula_list: formula { init($$); mto($$, $1); }
