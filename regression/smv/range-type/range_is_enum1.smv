@@ -1,0 +1,10 @@
+MODULE main
+
+-- range types are syntactic sugar for enumeration types
+VAR x: 0..6;
+VAR y: {0, 1, 2, 3, 4, 5, 6};
+VAR z: 0..6;
+
+ASSIGN x := y;
+ASSIGN y := z;
+
