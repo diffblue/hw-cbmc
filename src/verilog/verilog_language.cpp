@@ -39,6 +39,7 @@ void verilog_languaget::set_language_options(
   include_paths = options.get_list_option("I");
   initial_defines = options.get_list_option("defines");
   warn_implicit_nets = options.get_bool_option("warn-implicit-nets");
+  ignore_initial = options.get_bool_option("ignore-initial");
 }
 
 /*******************************************************************\
@@ -191,8 +192,14 @@ bool verilog_languaget::typecheck(
   message.debug() << "Synthesis " << module << messaget::eom;
 
   if(verilog_synthesis(
-       symbol_table, module, parse_tree.standard, message_handler, optionst{}))
+       symbol_table,
+       module,
+       parse_tree.standard,
+       ignore_initial,
+       message_handler))
+  {
     return true;
+  }
 
   return false;
 }

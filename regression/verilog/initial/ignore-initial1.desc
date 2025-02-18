@@ -1,0 +1,9 @@
+CORE
+ignore-initial1.sv
+--top main --bound 1 --ignore-initial
+^\[main\.p1\] always main\.x == 20 || main\.x == 5: REFUTED$
+^\[main\.p2\] always main\.y == 30 || main\.y == 6: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

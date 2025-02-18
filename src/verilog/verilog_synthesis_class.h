@@ -42,14 +42,14 @@ class verilog_synthesist:
 public:
   verilog_synthesist(
     verilog_standardt _standard,
+    bool _ignore_initial,
     const namespacet &_ns,
     symbol_table_baset &_symbol_table,
     const irep_idt &_module,
-    const optionst &_options,
     message_handlert &_message_handler)
     : verilog_typecheck_baset(_standard, _ns, _message_handler),
       verilog_symbol_tablet(_symbol_table),
-      options(_options),
+      ignore_initial(_ignore_initial),
       value_map(NULL),
       module(_module),
       temporary_counter(0)
@@ -69,7 +69,7 @@ public:
   [[nodiscard]] exprt synth_expr(exprt expr, symbol_statet symbol_state);
 
 protected:
-  const optionst &options;
+  bool ignore_initial;
 
   [[nodiscard]] exprt synth_expr_rec(exprt expr, symbol_statet symbol_state);
 

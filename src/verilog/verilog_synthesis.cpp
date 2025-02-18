@@ -1459,7 +1459,11 @@ void verilog_synthesist::synth_module_instance(
 
   // make sure the module is synthesized already
   verilog_synthesis(
-    symbol_table, module_identifier, standard, get_message_handler(), options);
+    symbol_table,
+    module_identifier,
+    standard,
+    ignore_initial,
+    get_message_handler());
 
   for(auto &instance : statement.instances())
     expand_module_instance(module_symbol, instance, trans);
@@ -1781,6 +1785,9 @@ void verilog_synthesist::synth_initial(
     throw errort().with_location(module_item.source_location())
       << "initial module item expected to have one operand";
   }
+
+  if(ignore_initial)
+    return;
 
   construct=constructt::INITIAL;
   event_guard=event_guardt::NONE;
@@ -3716,12 +3723,12 @@ bool verilog_synthesis(
   symbol_table_baset &symbol_table,
   const irep_idt &module,
   verilog_standardt standard,
-  message_handlert &message_handler,
-  const optionst &options)
+  bool ignore_initial,
+  message_handlert &message_handler)
 {
   const namespacet ns(symbol_table);
   verilog_synthesist verilog_synthesis(
-    standard, ns, symbol_table, module, options, message_handler);
+    standard, ignore_initial, ns, symbol_table, module, message_handler);
   return verilog_synthesis.typecheck_main();
 }
 
@@ -3744,14 +3751,13 @@ bool verilog_synthesis(
   message_handlert &message_handler,
   const namespacet &ns)
 {
-  optionst options;
   symbol_tablet symbol_table;
 
   const auto errors_before =
     message_handler.get_message_count(messaget::M_ERROR);
 
   verilog_synthesist verilog_synthesis(
-    standard, ns, symbol_table, module_identifier, options, message_handler);
+    standard, false, ns, symbol_table, module_identifier, message_handler);
 
   try
   {

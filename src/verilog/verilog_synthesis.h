@@ -19,8 +19,8 @@ bool verilog_synthesis(
   symbol_table_baset &,
   const irep_idt &module,
   verilog_standardt,
-  message_handlert &,
-  const optionst &);
+  bool ignore_initial,
+  message_handlert &);
 
 bool verilog_synthesis(
   exprt &,

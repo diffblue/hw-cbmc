@@ -1,5 +1,5 @@
 CORE
-main.v
+initial1.v
 --module main --bound 2
 ^EXIT=0$
 ^SIGNAL=0$
