@@ -380,7 +380,13 @@ module_argument_list_opt: /* empty */
            | module_argument_list
            ;
 
-type       : array_Token NUMBER_Token DOTDOT_Token NUMBER_Token of_Token type
+type_specifier:
+             simple_type_specifier
+           | module_type_specifier
+           ;
+
+simple_type_specifier:
+             array_Token NUMBER_Token DOTDOT_Token NUMBER_Token of_Token simple_type_specifier
            {
              init($$, ID_array);
              int start=atoi(stack_expr($2).id().c_str());
@@ -404,10 +410,10 @@ type       : array_Token NUMBER_Token DOTDOT_Token NUMBER_Token of_Token type
              stack_type($$).set(ID_from, stack_expr($1));
              stack_type($$).set(ID_to, stack_expr($3));
            }
-           | usertype
            ;
 
-usertype   : module_name
+module_type_specifier:
+             module_name
            {
              init($$, "submodule");
              stack_expr($$).set(ID_identifier,
@@ -441,7 +447,7 @@ enum_element: STRING_Token
            }
            ;
 
-vardecl    : variable_name ':' type ';'
+vardecl    : variable_name ':' type_specifier ';'
 {
   const irep_idt &identifier=stack_expr($1).get(ID_identifier);
   smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
