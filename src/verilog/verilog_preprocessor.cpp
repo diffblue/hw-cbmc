@@ -8,7 +8,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_preprocessor.h"
 
-#include <util/config.h>
 #include <util/unicode.h>
 
 #include "expr2verilog.h"
@@ -136,7 +135,7 @@ std::filesystem::path verilog_preprocessort::find_include_file(
   }
 
   // Then try include paths in given order.
-  for(const auto &include_path : config.verilog.include_paths)
+  for(const auto &include_path : include_paths)
   {
     auto full_name = std::filesystem::path{include_path}.append(given_filename);
     if(std::filesystem::directory_entry(full_name).exists())

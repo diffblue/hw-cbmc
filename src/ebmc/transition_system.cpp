@@ -94,10 +94,6 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
     return 1;
   }
 
-  // do -I
-  if(cmdline.isset('I'))
-    config.verilog.include_paths = cmdline.get_values('I');
-
   auto language = get_language_from_filename(filename);
 
   if(language == nullptr)
@@ -110,9 +106,12 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   }
 
   optionst options;
+
+  // do -I
+  if(cmdline.isset('I'))
+    options.set_option("I", cmdline.get_values('I'));
+
   options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
-  options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
-  options.set_option("warn-implicit-nets", cmdline.isset("warn-implicit-nets"));
 
   // do -D
   if(cmdline.isset('D'))
@@ -162,6 +161,11 @@ static bool parse(
   languaget &language = *lf.language;
 
   optionst options;
+
+  // do -I
+  if(cmdline.isset('I'))
+    options.set_option("I", cmdline.get_values('I'));
+
   options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
   options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
   options.set_option("warn-implicit-nets", cmdline.isset("warn-implicit-nets"));
@@ -241,10 +245,6 @@ int get_transition_system(
   transition_systemt &transition_system)
 {
   messaget message(message_handler);
-
-  // do -I
-  if(cmdline.isset('I'))
-    config.verilog.include_paths = cmdline.get_values('I');
 
   if(cmdline.isset("preprocess"))
     return preprocess(cmdline, message_handler);

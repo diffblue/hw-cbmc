@@ -94,6 +94,7 @@ protected:
   bool force_systemverilog = false;
   bool vl2smv_extensions = false;
   bool warn_implicit_nets = false;
+  std::list<std::string> include_paths;
   std::list<std::string> initial_defines;
   verilog_parse_treet parse_tree;
 };

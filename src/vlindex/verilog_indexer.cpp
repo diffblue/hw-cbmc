@@ -92,7 +92,7 @@ std::string verilog_indexert::preprocess(const std::string &file_name)
 
   console_message_handlert message_handler;
   verilog_preprocessort preprocessor(
-    in_stream, preprocessed, message_handler, file_name, {});
+    in_stream, preprocessed, message_handler, file_name, {}, {});
 
   try
   {

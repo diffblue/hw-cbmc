@@ -22,8 +22,10 @@ public:
     std::ostream &_out,
     message_handlert &_message_handler,
     const std::string &_filename,
+    const std::list<std::string> &_include_paths,
     const std::list<std::string> &_initial_defines)
     : preprocessort(_in, _out, _message_handler, _filename),
+      include_paths(_include_paths),
       initial_defines(_initial_defines)
   {
     condition=true;
@@ -33,6 +35,7 @@ public:
 
 protected:
   // from the command line
+  const std::list<std::string> &include_paths;
   const std::list<std::string> &initial_defines;
 
   using tokent = verilog_preprocessor_token_sourcet::tokent;
