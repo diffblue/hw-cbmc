@@ -486,17 +486,14 @@ assignments: assignment
 
 assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            {
-             binary($$, $3, ID_equal, $6);
-
              if(stack_expr($1).id()==ID_smv_next)
              {
-               exprt &op=to_binary_expr(stack_expr($$)).op0();
-               unary_exprt tmp(ID_smv_next, std::move(op));
-               tmp.swap(op);
-               PARSER.module->add_assign_next(to_equal_expr(stack_expr($$)));
+               PARSER.module->add_assign_next(
+                 unary_exprt{ID_smv_next, std::move(stack_expr($3))},
+                 std::move(stack_expr($6)));
              }
              else
-               PARSER.module->add_assign_init(to_equal_expr(stack_expr($$)));
+               PARSER.module->add_assign_init(std::move(stack_expr($3)), std::move(stack_expr($6)));
            }
            | assignment_var BECOMES_Token formula ';'
            {
@@ -528,8 +525,7 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
                DATA_INVARIANT(false, "unexpected variable class");
              }
 
-             binary($$, $1, ID_equal, $3);
-             PARSER.module->add_assign_current(to_equal_expr(stack_expr($$)));
+             PARSER.module->add_assign_current(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
 
@@ -575,8 +571,7 @@ define     : assignment_var BECOMES_Token formula ';'
                DATA_INVARIANT(false, "unexpected variable class");
              }
 
-             binary($$, $1, ID_equal, $3);
-             PARSER.module->add_define(to_equal_expr(stack_expr($$)));
+             PARSER.module->add_define(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
 

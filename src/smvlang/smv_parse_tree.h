@@ -54,6 +54,13 @@ public:
         FAIRNESS
       };
 
+      itemt(item_typet __item_type, exprt __expr, source_locationt __location)
+        : item_type(__item_type),
+          expr(std::move(__expr)),
+          location(std::move(__location))
+      {
+      }
+
       friend std::string to_string(item_typet i);
       
       item_typet item_type;
@@ -118,100 +125,106 @@ public:
     typedef std::list<itemt> item_listt;
     item_listt items;
 
-    void add_item(
-      itemt::item_typet item_type,
-      const exprt &expr,
-      const source_locationt &location)
+    void add_assign_current(exprt lhs, exprt rhs)
     {
-      items.push_back(itemt());
-      items.back().item_type=item_type;
-      items.back().expr=expr;
-      items.back().location=location;
+      items.emplace_back(
+        itemt::ASSIGN_CURRENT,
+        binary_exprt{std::move(lhs), ID_equal, std::move(rhs)},
+        source_locationt::nil());
     }
 
-    void add_assign_current(const equal_exprt &expr)
+    void add_assign_init(exprt lhs, exprt rhs)
     {
-      add_item(itemt::ASSIGN_CURRENT, expr, source_locationt::nil());
+      items.emplace_back(
+        itemt::ASSIGN_INIT,
+        binary_exprt{std::move(lhs), ID_equal, std::move(rhs)},
+        source_locationt::nil());
     }
 
-    void add_assign_init(const equal_exprt &expr)
+    void add_assign_next(exprt lhs, exprt rhs)
     {
-      add_item(itemt::ASSIGN_INIT, expr, source_locationt::nil());
+      items.emplace_back(
+        itemt::ASSIGN_NEXT,
+        binary_exprt{std::move(lhs), ID_equal, std::move(rhs)},
+        source_locationt::nil());
     }
 
-    void add_assign_next(const equal_exprt &expr)
+    void add_invar(exprt expr)
     {
-      add_item(itemt::ASSIGN_NEXT, expr, source_locationt::nil());
+      items.emplace_back(
+        itemt::INVAR, std::move(expr), source_locationt::nil());
     }
 
-    void add_invar(const exprt &expr)
+    void add_ctlspec(exprt expr)
     {
-      add_item(itemt::INVAR, expr, source_locationt::nil());
+      items.emplace_back(
+        itemt::CTLSPEC, std::move(expr), source_locationt::nil());
     }
 
-    void add_ctlspec(const exprt &expr)
+    void add_ltlspec(exprt expr)
     {
-      add_item(itemt::CTLSPEC, expr, source_locationt::nil());
+      items.emplace_back(
+        itemt::LTLSPEC, std::move(expr), source_locationt::nil());
     }
 
-    void add_ltlspec(const exprt &expr)
+    void add_define(exprt lhs, exprt rhs)
     {
-      add_item(itemt::LTLSPEC, expr, source_locationt::nil());
+      items.emplace_back(
+        itemt::DEFINE,
+        binary_exprt{std::move(lhs), ID_equal, std::move(rhs)},
+        source_locationt::nil());
     }
 
-    void add_define(const equal_exprt &expr)
+    void add_fairness(exprt expr)
     {
-      add_item(itemt::DEFINE, expr, source_locationt::nil());
-    }
-    
-    void add_fairness(const exprt &expr)
-    {
-      add_item(itemt::FAIRNESS, expr, source_locationt::nil());
-    }
-    
-    void add_init(const exprt &expr)
-    {
-      add_item(itemt::INIT, expr, source_locationt::nil());
-    }
-    
-    void add_trans(const exprt &expr)
-    {
-      add_item(itemt::TRANS, expr, source_locationt::nil());
-    }
-    
-    void add_invar(const exprt &expr, const source_locationt &location)
-    {
-      add_item(itemt::INVAR, expr, location);
+      items.emplace_back(
+        itemt::FAIRNESS, std::move(expr), source_locationt::nil());
     }
 
-    void add_ctlspec(const exprt &expr, const source_locationt &location)
+    void add_init(exprt expr)
     {
-      add_item(itemt::CTLSPEC, expr, location);
+      items.emplace_back(itemt::INIT, std::move(expr), source_locationt::nil());
     }
 
-    void add_ltlspec(const exprt &expr, const source_locationt &location)
+    void add_trans(exprt expr)
     {
-      add_item(itemt::LTLSPEC, expr, location);
+      items.emplace_back(
+        itemt::TRANS, std::move(expr), source_locationt::nil());
     }
-    
-    void add_define(const exprt &expr, const source_locationt &location)
+
+    void add_invar(exprt expr, source_locationt location)
     {
-      add_item(itemt::DEFINE, expr, location);
+      items.emplace_back(itemt::INVAR, std::move(expr), location);
     }
-    
-    void add_fairness(const exprt &expr, const source_locationt &location)
+
+    void add_ctlspec(exprt expr, source_locationt location)
     {
-      add_item(itemt::FAIRNESS, expr, location);
+      items.emplace_back(itemt::CTLSPEC, std::move(expr), std::move(location));
     }
-    
-    void add_init(const exprt &expr, const source_locationt &location)
+
+    void add_ltlspec(exprt expr, source_locationt location)
     {
-      add_item(itemt::INIT, expr, location);
+      items.emplace_back(itemt::LTLSPEC, std::move(expr), location);
     }
-    
-    void add_trans(const exprt &expr, const source_locationt &location)
+
+    void add_define(exprt expr, source_locationt location)
     {
-      add_item(itemt::TRANS, expr, location);
+      items.emplace_back(itemt::DEFINE, std::move(expr), std::move(location));
+    }
+
+    void add_fairness(exprt expr, source_locationt location)
+    {
+      items.emplace_back(itemt::FAIRNESS, std::move(expr), std::move(location));
+    }
+
+    void add_init(exprt expr, source_locationt location)
+    {
+      items.emplace_back(itemt::INIT, std::move(expr), std::move(location));
+    }
+
+    void add_trans(exprt expr, source_locationt location)
+    {
+      items.emplace_back(itemt::TRANS, std::move(expr), std::move(location));
     }
     
     mc_varst vars;
