@@ -174,6 +174,10 @@ static bool parse(
   if(cmdline.isset('D'))
     options.set_option("defines", cmdline.get_values('D'));
 
+  // do --ignore-initial
+  if(cmdline.isset("ignore-initial"))
+    options.set_option("ignore-initial", true);
+
   language.set_language_options(options, message_handler);
 
   message.status() << "Parsing " << filename << messaget::eom;
