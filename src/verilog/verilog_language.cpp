@@ -36,6 +36,7 @@ void verilog_languaget::set_language_options(
 {
   force_systemverilog = options.get_bool_option("force-systemverilog");
   vl2smv_extensions = options.get_bool_option("vl2smv-extensions");
+  include_paths = options.get_list_option("I");
   initial_defines = options.get_list_option("defines");
   warn_implicit_nets = options.get_bool_option("warn-implicit-nets");
 }
@@ -107,7 +108,7 @@ bool verilog_languaget::preprocess(
   message_handlert &message_handler)
 {
   verilog_preprocessort preprocessor(
-    instream, outstream, message_handler, path, initial_defines);
+    instream, outstream, message_handler, path, include_paths, initial_defines);
 
   try { preprocessor.preprocessor(); }
   catch(int e) { return true; }
