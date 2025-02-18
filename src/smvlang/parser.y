@@ -146,46 +146,115 @@ static void new_module(YYSTYPE &module)
 
 %}
 
-%token AG_Token "AG"
-%token AX_Token "AX"
-%token AF_Token "AF"
-%token EG_Token "EG"
-%token EX_Token "EX"
-%token EF_Token "EF"
+/* Keywords from page 7 */
+/* https://nusmv.fbk.eu/userman/v27/nusmv.pdf */
+%token MODULE_Token	"MODULE"
+%token DEFINE_Token	"DEFINE"
+%token MDEFINE_Token	"MDEFINE"
+%token CONSTANTS_Token	"CONSTANTS"
+%token VAR_Token	"VAR"
+%token IVAR_Token	"IVAR"
+%token FROZENVAR_Token	"FROZENVAR"
+%token INIT_Token	"INIT"
+%token TRANS_Token	"TRANS"
+%token INVAR_Token	"INVAR"
+%token SPEC_Token	"SPEC"
+%token CTLSPEC_Token	"CTLSPEC"
+%token LTLSPEC_Token	"LTLSPEC"
+%token PSLSPEC_Token	"PSLSPEC"
+%token COMPUTE_Token	"COMPUTE"
+%token NAME_Token	"NAME"
+%token INVARSPEC_Token	"INVARSPEC"
+%token FAIRNESS_Token	"FAIRNESS"
+%token JUSTICE_Token	"JUSTICE"
+%token COMPASSION_Token	"COMPASSION"
+%token ISA_Token	"ISA"
+%token ASSIGN_Token	"ASSIGN"
+%token CONSTRAINT_Token	"CONSTRAINT"
+%token SIMPWFF_Token	"SIMPWFF"
+%token CTLWFF_Token	"CTLWFF"
+%token LTLWFF_Token	"LTLWFF"
+%token PSLWFF_Token	"PSLWFF"
+%token COMPWFF_Token	"COMPWFF"
+%token IN_Token		"IN"
+%token MIN_Token	"MIN"
+%token MAX_Token	"MAX"
+%token MIRROR_Token	"MIRROR"
+%token PRED_Token	"PRED"
+%token PREDICATES_Token	"PREDICATES"
 
-%token G_Token "G"
-%token X_Token "X"
-%token F_Token "F"
-%token R_Token "R"
-%token U_Token "U"
+%token process_Token	"process"
+%token array_Token	"array"
+%token of_Token		"of"
+%token boolean_Token	"boolean"
+%token integer_Token	"integer"
+%token real_Token	"real"
+%token word_Token	"word"
+%token word1_Token	"word1"
+%token bool_Token	"bool"
+%token signed_Token	"signed"
+%token unsigned_Token	"unsigned"
+%token extend_Token	"extend"
+%token resize_Token	"resize"
+%token sizeof_Token	"sizeof"
+%token uwconst_Token	"uwconst"
+%token swconst_Token	"swconst"
 
-%token INIT_Token     "INIT"
-%token TRANS_Token    "TRANS"
-%token SPEC_Token     "SPEC"
-%token LTLSPEC_Token  "LTLSPEC"
-%token VAR_Token      "VAR"
-%token DEFINE_Token   "DEFINE"
-%token ASSIGN_Token   "ASSIGN"
-%token INVAR_Token    "INVAR"
-%token FAIRNESS_Token "FAIRNESS"
-%token MODULE_Token   "MODULE"
-%token ARRAY_Token    "array"
-%token OF_Token       "of"
+%token EX_Token		"EX"
+%token AX_Token		"AX"
+%token EF_Token		"EF"
+%token AF_Token		"AF"
+%token EG_Token		"EG"
+%token AG_Token		"AG"
+%token E_Token		"E"
+%token F_Token		"F"
+%token O_Token		"O"
+%token G_Token		"G"
+%token H_Token		"H"
+%token X_Token		"X"
+%token Y_Token		"Y"
+%token Z_Token		"Z"
+%token A_Token		"A"
+%token U_Token		"U"
+%token S_Token		"S"
+%token V_Token		"V"
+%token T_Token		"T"
+%token BU_Token		"BU"
+%token EBF_Token	"EBF"
+%token ABF_Token	"ABF"
+%token EBG_Token	"EBG"
+%token ABG_Token	"ABG"
+
+%token case_Token	"case"
+%token esac_Token	"esac"
+%token mod_Token	"mod"
+%token next_Token	"next"
+%token init_Token	"init"
+%token union_Token	"union"
+%token in_Token		"in"
+%token xor_Token	"xor"
+%token xnor_Token	"xnor"
+%token self_Token	"self"
+%token TRUE_Token	"TRUE"
+%token FALSE_Token	"FALSE"
+%token count_Token	"count"
+%token abs_Token	"abs"
+%token max_Token	"max"
+%token min_Token	"min"
+
+/* Not in the NuSMV manual */
+%token EXTERN_Token	"EXTERN"
+%token switch_Token	"switch"
+%token notin_Token	"notin"
+%token R_Token		"R"
+
 %token DOTDOT_Token   ".."
-%token BOOLEAN_Token  "boolean"
-%token EXTERN_Token   "EXTERN"
-
 %token IMPLIES_Token  "->"
 %token EQUIV_Token    "<->"
 %token IF_Token       "?"
-%token XOR_Token      "XOR"
 %token OR_Token       "|"
 %token AND_Token      "&"
 %token NOT_Token      "!"
-%token MOD_Token      "mod"
-%token UNION_Token    "union"
-%token IN_Token       "in"
-%token NOTIN_Token    "notin"
 %token DOT_Token      "."
 %token PLUS_Token     "+"
 %token MINUS_Token    "-"
@@ -198,35 +267,28 @@ static void new_module(YYSTYPE &module)
 
 %token INC_Token
 %token DEC_Token
-%token NEXT_Token     "next"
-%token CASE_Token     "case"
-%token ESAC_Token     "esac"
 %token BECOMES_Token  ":="
 %token ADD_Token
 %token SUB_Token
-%token SWITCH_Token   "switch"
-%token init_Token     "init"
 
 %token STRING_Token   "string"
 %token QSTRING_Token  "quoted string"
 %token QUOTE_Token    "'"
 %token NUMBER_Token   "number"
-%token FALSE_Token    "false"
-%token TRUE_Token     "true"
 
 /* operator precedence, low to high */
 %right IMPLIES_Token
 %left  EQUIV_Token
 %left  IF_Token
-%left  XOR_Token
+%left  xor_Token
 %left  OR_Token
 %left  AND_Token
 %left  NOT_Token
 %left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token F_Token G_Token X_Token
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
-%left  UNION_Token
+%left  union_Token
 %left  IN_Token NOTIN_Token
-%left  MOD_Token /* Precedence from CMU SMV, different from NuSMV */
+%left  mod_Token /* Precedence from CMU SMV, different from NuSMV */
 %left  PLUS_Token MINUS_Token
 %left  TIMES_Token DIVIDE_Token
 %left  UMINUS           /* supplies precedence for unary minus */
@@ -318,7 +380,7 @@ module_argument_list_opt: /* empty */
            | module_argument_list
            ;
 
-type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
+type       : array_Token NUMBER_Token DOTDOT_Token NUMBER_Token of_Token type
            {
              init($$, ID_array);
              int start=atoi(stack_expr($2).id().c_str());
@@ -334,7 +396,7 @@ type       : ARRAY_Token NUMBER_Token DOTDOT_Token NUMBER_Token OF_Token type
              stack_type($$).set(ID_offset, start);
              stack_type($$).add_subtype()=stack_type($6);
            }
-           | BOOLEAN_Token { init($$, ID_bool); }
+           | boolean_Token { init($$, ID_bool); }
            | '{' enum_list '}' { $$=$2; }
            | NUMBER_Token DOTDOT_Token NUMBER_Token
            {
@@ -469,7 +531,7 @@ assignment_var: variable_name
            ;
 
 assignment_head: init_Token { init($$, ID_init); }
-               | NEXT_Token { init($$, ID_smv_next); }
+               | next_Token { init($$, ID_smv_next); }
                ;
 
 defines:     define
@@ -516,7 +578,7 @@ formula    : term
            ;
 
 term       : variable_name
-           | NEXT_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
+           | next_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
            | '(' formula ')'          { $$=$2; }
            | '{' formula_list '}'     { $$=$2; stack_expr($$).id("smv_nondet_choice"); }
            | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
@@ -526,20 +588,20 @@ term       : variable_name
            | NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
            | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
            | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
-           | CASE_Token cases ESAC_Token { $$=$2; }
+           | case_Token cases esac_Token { $$=$2; }
            | term IF_Token term ':' term %prec IF_Token
                                       { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
-           | SWITCH_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
+           | switch_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            | MINUS_Token term %prec UMINUS
                                       { init($$, ID_unary_minus); mto($$, $2); }
-           | term MOD_Token term      { binary($$, $1, ID_mod, $3); }
+           | term mod_Token term      { binary($$, $1, ID_mod, $3); }
            | term TIMES_Token term    { binary($$, $1, ID_mult, $3); }
            | term DIVIDE_Token term   { binary($$, $1, ID_div, $3); }
            | term PLUS_Token term     { binary($$, $1, ID_plus, $3); }
            | term MINUS_Token term    { binary($$, $1, ID_minus, $3); }
            | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3); }
            | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3); }
-           | term XOR_Token term      { j_binary($$, $1, ID_xor, $3); }
+           | term xor_Token term      { j_binary($$, $1, ID_xor, $3); }
            | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
            | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
            | NOT_Token term           { init($$, ID_not); mto($$, $2); }
@@ -564,7 +626,7 @@ term       : variable_name
            | term LE_Token       term { binary($$, $1, ID_le, $3); }
            | term GT_Token       term { binary($$, $1, ID_gt, $3); }
            | term GE_Token       term { binary($$, $1, ID_ge, $3); }
-           | term UNION_Token    term { binary($$, $1, ID_smv_union, $3); }
+           | term union_Token    term { binary($$, $1, ID_smv_union, $3); }
            | term IN_Token       term { binary($$, $1, ID_smv_setin, $3); }
            | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3); }
            ;
