@@ -3649,8 +3649,30 @@ open_value_range: value_range;
 // A.6.7.1 Patterns
 
 assignment_pattern:
-	'\'' '{' expression_brace '}'
+	  '\'' '{' expression_brace '}'
 		{ init($$, ID_verilog_assignment_pattern); swapop($$, $3); }
+	| '\'' '{' structure_pattern_key_brace '}'
+		{ init($$, ID_verilog_assignment_pattern); swapop($$, $3); }
+	;
+
+structure_pattern_key_and_expression:
+	  structure_pattern_key TOK_COLON expression
+		{ $$ = $1; mto($$, $3); }
+	;
+
+structure_pattern_key_brace:
+	  structure_pattern_key_and_expression
+		{ init($$); mto($$, $1); }
+	| structure_pattern_key_brace ',' structure_pattern_key_and_expression
+		{ $$ = $1; mto($$, $3); }
+	;
+
+structure_pattern_key:
+	  member_identifier
+		{
+		  init($$, ID_member_initializer);
+		  stack_expr($$).set(ID_member_name, stack_expr($1).get(ID_base_name));
+		}
 	;
 
 assignment_pattern_expression:
@@ -4455,6 +4477,8 @@ ps_covergroup_identifier:
 	;
 	
 memory_identifier: identifier;
+
+member_identifier: identifier;
 
 method_identifier: identifier;
 

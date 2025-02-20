@@ -1,6 +1,7 @@
 # EBMC 5.6
 
 * SystemVerilog: typedefs from package scopes
+* SystemVerilog: assignment patterns with keys for structs
 
 # EBMC 5.5
 

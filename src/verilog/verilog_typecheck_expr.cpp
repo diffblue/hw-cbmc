@@ -2019,21 +2019,59 @@ void verilog_typecheck_exprt::implicit_typecast(
       auto &struct_type = to_struct_type(dest_type);
       auto &components = struct_type.components();
 
-      if(expr.operands().size() != components.size())
+      if(
+        !expr.operands().empty() &&
+        expr.operands().front().id() == ID_member_initializer)
       {
-        throw errort().with_location(expr.source_location())
-          << "number of expressions does not match number of struct members";
+        exprt::operandst initializers{components.size(), nil_exprt{}};
+
+        for(auto &op : expr.operands())
+        {
+          PRECONDITION(op.id() == ID_member_initializer);
+          auto member_name = op.get(ID_member_name);
+          if(!struct_type.has_component(member_name))
+          {
+            throw errort().with_location(op.source_location())
+              << "struct does not have a member `" << member_name << "'";
+          }
+          auto nr = struct_type.component_number(member_name);
+          auto value = to_unary_expr(op).op();
+          // rec. call
+          implicit_typecast(value, components[nr].type());
+          initializers[nr] = std::move(value);
+        }
+
+        // Is every member covered?
+        for(std::size_t i = 0; i < components.size(); i++)
+          if(initializers[i].is_nil())
+          {
+            throw errort().with_location(expr.source_location())
+              << "assignment pattern does not assign member `"
+              << components[i].get_name() << "'";
+          }
+
+        expr = struct_exprt{std::move(initializers), struct_type}
+                 .with_source_location(expr.source_location());
+      }
+      else
+      {
+        if(expr.operands().size() != components.size())
+        {
+          throw errort().with_location(expr.source_location())
+            << "number of expressions does not match number of struct members";
+        }
+
+        for(std::size_t i = 0; i < components.size(); i++)
+        {
+          // rec. call
+          implicit_typecast(expr.operands()[i], components[i].type());
+        }
+
+        // turn into struct expression
+        expr.id(ID_struct);
+        expr.type() = dest_type;
       }
 
-      for(std::size_t i = 0; i < components.size(); i++)
-      {
-        // rec. call
-        implicit_typecast(expr.operands()[i], components[i].type());
-      }
-
-      // turn into struct expression
-      expr.id(ID_struct);
-      expr.type() = dest_type;
       return;
     }
     else if(dest_type.id() == ID_array)
@@ -2619,6 +2657,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     // The type of these expressions is determined by their context.
     expr.type() = typet(ID_verilog_new);
+  }
+  else if(expr.id() == ID_member_initializer)
+  {
+    // assignment patterns, 1800 2017 10.9
+    convert_expr(expr.op());
   }
   else
   {
