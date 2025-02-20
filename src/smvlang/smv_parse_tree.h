@@ -113,7 +113,15 @@ public:
       }
 
       // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
-      const equal_exprt &equal_expr()
+      const equal_exprt &equal_expr() const
+      {
+        PRECONDITION(
+          is_assign_current() || is_assign_init() || is_assign_next() ||
+          is_define());
+        return to_equal_expr(expr);
+      }
+
+      equal_exprt &equal_expr()
       {
         PRECONDITION(
           is_assign_current() || is_assign_init() || is_assign_next() ||

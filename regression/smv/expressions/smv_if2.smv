@@ -6,3 +6,5 @@ VAR b : 1..4;
 
 ASSIGN init(b) := 1;
 ASSIGN next(b) := (input ? 1 : 3) + 1;
+
+LTLSPEC X (b = 2 | b = 4)

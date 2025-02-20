@@ -1257,47 +1257,57 @@ Function: smv_typecheckt::typecheck
 void smv_typecheckt::typecheck(
   smv_parse_treet::modulet::itemt &item)
 {
-  modet mode;
-
   switch(item.item_type)
   {
-  case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
-    mode = OTHER;
-    break;
-
-  case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
-    mode = INIT;
-    break;
-
-  case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
-    mode = TRANS;
-    break;
-
   case smv_parse_treet::modulet::itemt::INIT:
-    mode=INIT;
-    break;
+    typecheck(item.expr, INIT);
+    convert_expr_to(item.expr, bool_typet{});
+    return;
 
   case smv_parse_treet::modulet::itemt::TRANS:
-    mode=TRANS;
-    break;
+    typecheck(item.expr, TRANS);
+    convert_expr_to(item.expr, bool_typet{});
+    return;
 
   case smv_parse_treet::modulet::itemt::CTLSPEC:
-    mode = CTL;
-    break;
+    typecheck(item.expr, CTL);
+    convert_expr_to(item.expr, bool_typet{});
+    return;
 
   case smv_parse_treet::modulet::itemt::LTLSPEC:
-    mode = LTL;
-    break;
+    typecheck(item.expr, LTL);
+    convert_expr_to(item.expr, bool_typet{});
+    return;
 
-  case smv_parse_treet::modulet::itemt::DEFINE:
   case smv_parse_treet::modulet::itemt::INVAR:
   case smv_parse_treet::modulet::itemt::FAIRNESS:
-  default:
-    mode=OTHER;
-  }
+    typecheck(item.expr, OTHER);
+    convert_expr_to(item.expr, bool_typet{});
+    return;
 
-  typecheck(item.expr, mode);
-  convert_expr_to(item.expr, bool_typet{});
+  case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
+    typecheck(item.equal_expr().lhs(), OTHER);
+    typecheck(item.equal_expr().rhs(), item.equal_expr().lhs().type(), OTHER);
+    item.equal_expr().type() = bool_typet{};
+    return;
+
+  case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
+    typecheck(item.equal_expr().lhs(), INIT);
+    typecheck(item.equal_expr().rhs(), item.equal_expr().lhs().type(), INIT);
+    item.equal_expr().type() = bool_typet{};
+    return;
+
+  case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
+    typecheck(item.equal_expr().lhs(), TRANS);
+    typecheck(item.equal_expr().rhs(), item.equal_expr().lhs().type(), TRANS);
+    item.equal_expr().type() = bool_typet{};
+    return;
+
+  case smv_parse_treet::modulet::itemt::DEFINE:
+    typecheck(item.expr, OTHER);
+    item.equal_expr().type() = bool_typet{};
+    return;
+  }
 }
 
 /*******************************************************************\
