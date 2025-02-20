@@ -178,6 +178,10 @@ static bool parse(
   if(cmdline.isset("ignore-initial"))
     options.set_option("ignore-initial", true);
 
+  // do --initial-zero
+  if(cmdline.isset("initial-zero"))
+    options.set_option("initial-zero", true);
+
   language.set_language_options(options, message_handler);
 
   message.status() << "Parsing " << filename << messaget::eom;

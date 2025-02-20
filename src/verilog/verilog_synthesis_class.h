@@ -43,6 +43,7 @@ public:
   verilog_synthesist(
     verilog_standardt _standard,
     bool _ignore_initial,
+    bool _initial_zero,
     const namespacet &_ns,
     symbol_table_baset &_symbol_table,
     const irep_idt &_module,
@@ -50,6 +51,7 @@ public:
     : verilog_typecheck_baset(_standard, _ns, _message_handler),
       verilog_symbol_tablet(_symbol_table),
       ignore_initial(_ignore_initial),
+      initial_zero(_initial_zero),
       value_map(NULL),
       module(_module),
       temporary_counter(0)
@@ -70,6 +72,7 @@ public:
 
 protected:
   bool ignore_initial;
+  bool initial_zero;
 
   [[nodiscard]] exprt synth_expr_rec(exprt expr, symbol_statet symbol_state);
 

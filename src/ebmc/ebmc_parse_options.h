@@ -35,7 +35,7 @@ public:
         "(outfile):(xml-ui)(verbosity):(gui)"
         "(json-modules):(json-properties):(json-result):"
         "(neural-liveness)(neural-engine):"
-        "(reset):(ignore-initial)"
+        "(reset):(ignore-initial)(initial-zero)"
         "(version)(verilog-rtl)(verilog-netlist)"
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"
         "(ic3)(property):(constr)(h)(new-mode)(aiger)"

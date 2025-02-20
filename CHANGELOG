@@ -1,5 +1,6 @@
 # EBMC 5.7
 
+* Verilog: --initial-zero changes the default value from nondet to zero
 * Verilog: `elsif preprocessor directive
 * Verilog: fix for named generate blocks
 * Verilog: $onehot and $onehot0 are now elaboration-time constant
