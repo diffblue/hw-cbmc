@@ -1,8 +1,8 @@
 CORE broken-smt-backend
 range_type5.smv
 --bound 3
-^EXIT=0$
+^file .* line 14: Expected expression of type `5..10', but got expression `x', which is of type `0..6'$
+^EXIT=2$
 ^SIGNAL=0$
-^\[spec1\] AG \(!x = 6\): PROVED up to bound 3$
 --
 ^warning: ignoring
