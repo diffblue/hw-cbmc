@@ -63,9 +63,10 @@ public:
   typedef enum { NORMAL, NEXT } expr_modet;
   void convert(exprt &, expr_modet);
 
-  void typecheck(exprt &, const typet &, modet);
-  void typecheck(exprt &, modet);
-  void typecheck_op(exprt &, const typet &, modet);
+  void typecheck(exprt &expr, modet mode)
+  {
+    typecheck_expr_rec(expr, mode);
+  }
 
   void typecheck() override;
 
@@ -81,12 +82,13 @@ protected:
 
   void check_type(const typet &);
   smv_ranget convert_type(const typet &);
-  static bool is_contained_in(irep_idt, const enumeration_typet &);
+  static bool
+  is_contained_in(const enumeration_typet &, const enumeration_typet &);
 
   void convert(smv_parse_treet::modulet::itemt &);
   void typecheck(smv_parse_treet::modulet::itemt &);
-  void typecheck_expr_rec(exprt &, const typet &, modet);
   void typecheck_expr_rec(exprt &, modet);
+
   void convert_expr_to(exprt &, const typet &dest);
 
   smv_parse_treet::modulet *modulep;
@@ -101,10 +103,8 @@ protected:
     const irep_idt &instance,
     const exprt::operandst &operands,
     const source_locationt &);
-    
-  typet type_union(
-    const typet &type1,
-    const typet &type2);
+
+  typet type_union(const typet &, const typet &, const source_locationt &);
 
   typedef std::map<irep_idt, exprt> rename_mapt;
 
@@ -152,12 +152,17 @@ Function: smv_typecheckt::is_contained_in
 
 \*******************************************************************/
 
-bool smv_typecheckt::is_contained_in(irep_idt id, const enumeration_typet &type)
+bool smv_typecheckt::is_contained_in(
+  const enumeration_typet &a,
+  const enumeration_typet &b)
 {
-  for(auto &element : type.elements())
-    if(element.id() == id)
-      return true;
-  return false;
+  std::set<irep_idt> b_elements;
+  for(auto &element : b.elements())
+    b_elements.insert(element.id());
+  for(auto &element : a.elements())
+    if(b_elements.find(element.id()) == b_elements.end())
+      return false;
+  return true;
 }
 
 /*******************************************************************\
@@ -345,7 +350,9 @@ void smv_typecheckt::instantiate(
     if(!symbol.value.is_nil())
     {
       instantiate_rename(symbol.value, rename_map);
-      typecheck(symbol.value, symbol.type, OTHER);
+      typecheck(symbol.value, OTHER);
+      if(symbol.type.is_not_nil())
+        convert_expr_to(symbol.value, symbol.type);
     }
   }
 
@@ -433,49 +440,6 @@ void smv_typecheckt::instantiate_rename(
 
 /*******************************************************************\
 
-Function: smv_typecheckt::typecheck_op
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void smv_typecheckt::typecheck_op(
-  exprt &expr,
-  const typet &type,
-  modet mode)
-{
-  if(expr.operands().size()==0)
-  {
-    throw errort().with_location(expr.find_source_location())
-      << "Expected operands for " << expr.id() << " operator";
-  }
-
-  for(auto &op : expr.operands())
-    typecheck_expr_rec(op, type, mode);
-
-  expr.type()=type;
-
-  // type fixed?
-
-  if(type.is_nil())
-  {
-    // figure out types
-
-    for(const auto &op : expr.operands())
-      if(!op.type().is_nil())
-      {
-        expr.type() = op.type();
-        break;
-      }
-  }
-}
-
-/*******************************************************************\
-
 Function: smv_typecheckt::check_type
 
   Inputs:
@@ -499,51 +463,6 @@ void smv_typecheckt::check_type(const typet &type)
 
 /*******************************************************************\
 
-Function: smv_typecheckt::convert_type
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-smv_ranget smv_typecheckt::convert_type(const typet &src)
-{
-  if(src.id()==ID_bool)
-  {
-    return {0, 1};
-  }
-  else if(src.id()==ID_range)
-  {
-    return smv_ranget::from_type(to_range_type(src));
-  }
-  else if(src.id()==ID_enumeration)
-  {
-    smv_ranget dest;
-
-    dest.from=0;
-
-    std::size_t number_of_elements=
-      to_enumeration_type(src).elements().size();
-      
-    if(number_of_elements==0)
-      dest.to=0;
-    else
-      dest.to=(long long)number_of_elements-1;
-
-    return dest;
-  }
-  else
-  {
-    throw errort().with_location(src.source_location())
-      << "Unexpected type: `" << to_string(src) << "'";
-  }
-}
-
-/*******************************************************************\
-
 Function: smv_typecheckt::type_union
 
   Inputs:
@@ -556,7 +475,8 @@ Function: smv_typecheckt::type_union
 
 typet smv_typecheckt::type_union(
   const typet &type1,
-  const typet &type2)
+  const typet &type2,
+  const source_locationt &source_location)
 {
   if(type1==type2) return type1;
 
@@ -569,64 +489,30 @@ typet smv_typecheckt::type_union(
   // both enums?
   if(type1.id()==ID_enumeration && type2.id()==ID_enumeration)
   {
-    if(to_enumeration_type(type2).elements().empty())
-      return type1;
-  
-    if(to_enumeration_type(type1).elements().empty())
-      return type2;
-  }
-  
-  smv_ranget range1=convert_type(type1);
-  smv_ranget range2=convert_type(type2);
+    const auto &e_type1 = to_enumeration_type(type1);
+    const auto &e_type2 = to_enumeration_type(type2);
 
-  range1.make_union(range2);
-  
-  if((type1.id()==ID_bool || type2.id()==ID_bool) &&
-     range1.is_bool())
-  {
-    return bool_typet();
+    if(is_contained_in(e_type1, e_type2))
+      return type2;
+
+    if(is_contained_in(e_type2, e_type1))
+      return type1;
   }
-  else
+
+  // both range?
+  if(type1.id() == ID_range && type1.id() == ID_range)
   {
+    smv_ranget range1 = smv_ranget::from_type(to_range_type(type1));
+    smv_ranget range2 = smv_ranget::from_type(to_range_type(type2));
+
+    range1.make_union(range2);
+
     return range1.to_type();
   }
-}
 
-/*******************************************************************\
-
-Function: smv_typecheckt::typecheck
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void smv_typecheckt::typecheck(
-  exprt &expr,
-  const typet &type,
-  modet mode)
-{
-  typecheck_expr_rec(expr, type, mode);
-}
-
-/*******************************************************************\
-
-Function: smv_typecheckt::typecheck
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void smv_typecheckt::typecheck(exprt &expr, modet mode)
-{
-  typecheck_expr_rec(expr, static_cast<const typet &>(get_nil_irep()), mode);
+  throw errort().with_location(source_location)
+    << "types `" << to_string(type1) << "' and `" << to_string(type2)
+    << "' are not compatible";
 }
 
 /*******************************************************************\
@@ -643,28 +529,6 @@ Function: smv_typecheckt::typecheck_expr_rec
 
 void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
 {
-  typecheck_expr_rec(expr, static_cast<const typet &>(get_nil_irep()), mode);
-}
-
-/*******************************************************************\
-
-Function: smv_typecheckt::typecheck_expr_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void smv_typecheckt::typecheck_expr_rec(
-  exprt &expr,
-  const typet &dest_type,
-  modet mode)
-{
-  const auto static nil_type = static_cast<const typet &>(get_nil_irep());
-
   if(expr.id()==ID_symbol || 
      expr.id()==ID_next_symbol)
   {
@@ -723,19 +587,20 @@ void smv_typecheckt::typecheck_expr_rec(
   }
   else if(expr.id()==ID_constraint_select_one)
   {
-    typecheck_op(expr, dest_type, mode);
+    for(auto &op : expr.operands())
+      typecheck_expr_rec(op, mode);
 
     typet op_type;
     op_type.make_nil();
 
     for(const auto &op : expr.operands())
     {
-      typet tmp = type_union(op.type(), op_type);
+      typet tmp = type_union(op.type(), op_type, expr.source_location());
       op_type=tmp;
     }
 
     for(auto &op : expr.operands())
-      typecheck_expr_rec(op, op_type, mode);
+      convert_expr_to(op, op_type);
 
     expr.type()=op_type;
   }
@@ -756,78 +621,75 @@ void smv_typecheckt::typecheck_expr_rec(
 
     exprt &op0 = to_binary_expr(expr).op0(), &op1 = to_binary_expr(expr).op1();
 
-    typet op_type=type_union(op0.type(), op1.type());
-
-    typecheck_expr_rec(op0, op_type, mode);
-    typecheck_expr_rec(op1, op_type, mode);
-
-    INVARIANT(op0.type() == op1.type(), "type of operands of relational operators");
+    typet op_type = type_union(op0.type(), op1.type(), expr.source_location());
 
     if(expr.id()==ID_lt || expr.id()==ID_le ||
        expr.id()==ID_gt || expr.id()==ID_ge)
     {
-      if(op0.type().id()!=ID_range)
+      if(op_type.id() != ID_range)
       {
         throw errort().with_location(expr.find_source_location())
           << "Expected number type for " << to_string(expr);
       }
     }
+
+    convert_expr_to(op0, op_type);
+    convert_expr_to(op1, op_type);
   }
   else if(expr.id() == ID_if) // ?:
   {
+    for(auto &op : expr.operands())
+      typecheck_expr_rec(op, mode);
+
     auto &if_expr = to_if_expr(expr);
+    auto &cond = if_expr.cond();
     auto &true_case = if_expr.true_case();
     auto &false_case = if_expr.false_case();
-    typecheck_expr_rec(if_expr.cond(), mode);
-    convert_expr_to(if_expr.cond(), bool_typet{});
-    typecheck_expr_rec(true_case, dest_type, mode);
-    typecheck_expr_rec(false_case, dest_type, mode);
-    expr.type() = dest_type;
+
+    typet op_type =
+      type_union(true_case.type(), false_case.type(), expr.source_location());
+
+    convert_expr_to(cond, bool_typet{});
+    convert_expr_to(true_case, op_type);
+    convert_expr_to(false_case, op_type);
+
+    expr.type() = op_type;
   }
   else if(expr.id()==ID_plus || expr.id()==ID_minus ||
           expr.id()==ID_mult || expr.id()==ID_div ||
           expr.id()==ID_mod)
   {
-    typecheck_op(expr, dest_type, mode);
+    exprt &op0 = to_binary_expr(expr).op0(), &op1 = to_binary_expr(expr).op1();
 
-    if(expr.operands().size()!=2)
-    {
-      throw errort().with_location(expr.find_source_location())
-        << "Expected two operands for " << expr.id();
-    }
+    typecheck_expr_rec(op0, mode);
+    typecheck_expr_rec(op1, mode);
 
-    if(dest_type.is_nil())
-    {
-      if(expr.type().id()==ID_range ||
-         expr.type().id()==ID_bool)
-      {
-        // find proper type for precise arithmetic
-        smv_ranget new_range;
+    // find proper type for precise arithmetic
+    smv_ranget new_range;
 
-        smv_ranget smv_range0 = convert_type(to_binary_expr(expr).op0().type());
-        smv_ranget smv_range1 = convert_type(to_binary_expr(expr).op1().type());
+    smv_ranget smv_range0 = smv_ranget::from_type(to_range_type(op0.type()));
+    smv_ranget smv_range1 = smv_ranget::from_type(to_range_type(op1.type()));
 
-        if(expr.id()==ID_plus)
-          new_range=smv_range0+smv_range1;
-        else if(expr.id()==ID_minus)
-          new_range=smv_range0-smv_range1;
-        else if(expr.id()==ID_mult)
-          new_range=smv_range0*smv_range1;
-        else if(expr.id()==ID_div)
-          new_range=smv_range0;
-        else if(expr.id()==ID_mod)
-          new_range=smv_range1;
-        else
-          assert(false);
+    if(expr.id() == ID_plus)
+      new_range = smv_range0 + smv_range1;
+    else if(expr.id() == ID_minus)
+      new_range = smv_range0 - smv_range1;
+    else if(expr.id() == ID_mult)
+      new_range = smv_range0 * smv_range1;
+    else if(expr.id() == ID_div)
+      new_range = smv_range0;
+    else if(expr.id() == ID_mod)
+      new_range = smv_range1;
+    else
+      assert(false);
 
-        expr.type() = new_range.to_type();
-      }
-    }
-    else if(dest_type.id() != ID_range)
-    {
-      throw errort().with_location(expr.find_source_location())
-        << "Expected number type for " << to_string(expr);
-    }
+    new_range.make_union(smv_range0);
+    new_range.make_union(smv_range1);
+
+    expr.type() = new_range.to_type();
+
+    convert_expr_to(op0, expr.type());
+    convert_expr_to(op1, expr.type());
   }
   else if(expr.id()==ID_constant)
   {
@@ -836,142 +698,43 @@ void smv_typecheckt::typecheck_expr_rec(
     if(expr.type().id()==ID_integer)
     {
       mp_integer int_value = string2integer(id2string(value));
-
-      if(dest_type.is_nil())
-      {
-        expr.type() = range_typet{int_value, int_value};
-      }
-      else
-      {
-        expr.type() = dest_type;
-
-        if(dest_type.id() == ID_bool)
-        {
-          if(int_value==0)
-            expr=false_exprt();
-          else if(int_value==1)
-            expr=true_exprt();
-          else
-          {
-            throw errort().with_location(expr.find_source_location())
-              << "expected 0 or 1 here, but got " << value;
-          }
-        }
-        else if(dest_type.id() == ID_range)
-        {
-          smv_ranget smv_range = convert_type(dest_type);
-
-          if(int_value<smv_range.from || int_value>smv_range.to)
-          {
-            throw errort().with_location(expr.find_source_location())
-              << "expected " << smv_range.from << ".." << smv_range.to
-              << " here, but got " << value;
-          }
-        }
-        else
-        {
-          throw errort().with_location(expr.find_source_location())
-            << "Unexpected constant: " << value;
-        }
-      }
+      expr.type() = range_typet{int_value, int_value};
     }
     else if(expr.type().id()==ID_enumeration)
     {
-      if(dest_type.id() == ID_enumeration)
-      {
-        if(!is_contained_in(value, to_enumeration_type(dest_type)))
-        {
-          throw errort().with_location(expr.find_source_location())
-            << "enum " << value << " not a member of " << to_string(dest_type);
-        }
-
-        if(to_enumeration_type(expr.type()).elements().empty())
-          expr.type() = dest_type;
-      }
-    }
-    else if(dest_type.is_not_nil() && dest_type != expr.type())
-    {
-      // already done, but maybe need to change the type
-      mp_integer int_value;
-      bool have_int_value=false;
-      
-      if(expr.type().id()==ID_bool)
-      {
-        int_value=expr.is_true()?1:0;
-        have_int_value=true;
-      }
-      else if(expr.type().id()==ID_range)
-      {
-        int_value=string2integer(expr.get_string(ID_value));
-        have_int_value=true;
-      }
-
-      if(have_int_value)
-      {
-        if(dest_type.id() == ID_bool)
-        {
-          if(int_value==0)
-            expr=false_exprt();
-          else if(int_value==1)
-            expr=true_exprt();
-        }
-        else if(dest_type.id() == ID_range)
-        {
-          mp_integer from = string2integer(dest_type.get_string(ID_from)),
-                     to = string2integer(dest_type.get_string(ID_to));
-
-          if(int_value>=from && int_value<=to)
-          {
-            expr = exprt(ID_constant, dest_type);
-            expr.set(ID_value, integer2string(int_value));
-          }
-        }
-      }
+      // add elements -- just the one we have
+      expr.type().add(ID_elements).get_sub().push_back(irept{value});
     }
   }
   else if(expr.id()==ID_cond)
   {
-    if(dest_type.is_nil())
+    for(auto &op : expr.operands())
+      typecheck_expr_rec(op, mode);
+
+    bool condition = true;
+    typet result_type;
+    result_type.make_nil();
+
+    for(auto &op : expr.operands())
     {
-      bool condition=true;
-      
-      expr.type().make_nil();
+      if(!condition)
+        result_type =
+          type_union(result_type, op.type(), expr.source_location());
 
-      for(auto &op : expr.operands())
-      {
-        if(condition)
-        {
-          typecheck_expr_rec(op, mode);
-          convert_expr_to(op, bool_typet{});
-        }
-        else
-        {
-          typecheck_expr_rec(
-            op, static_cast<const typet &>(get_nil_irep()), mode);
-          expr.type() = type_union(expr.type(), op.type());
-        }
-
-        condition=!condition;
-      }
+      condition = !condition;
     }
-    else
+
+    expr.type() = result_type;
+
+    condition = true;
+    for(auto &op : expr.operands())
     {
-      expr.type() = dest_type;
+      if(condition)
+        convert_expr_to(op, bool_typet{});
+      else
+        convert_expr_to(op, result_type);
 
-      bool condition=true;
-
-      for(auto &op : expr.operands())
-      {
-        if(condition)
-        {
-          typecheck_expr_rec(op, mode);
-          convert_expr_to(op, bool_typet{});
-        }
-        else
-          typecheck_expr_rec(op, expr.type(), mode);
-
-        condition=!condition;
-      }
+      condition = !condition;
     }
   }
   else if(
@@ -1038,9 +801,6 @@ void smv_typecheckt::typecheck_expr_rec(
     throw errort().with_location(expr.find_source_location())
       << "No type checking for " << expr.id();
   }
-
-  if(!dest_type.is_nil())
-    convert_expr_to(expr, dest_type);
 }
 
 /*******************************************************************\
@@ -1059,39 +819,74 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &type)
 {
   PRECONDITION(type.is_not_nil());
 
-  if(expr.type() != type)
-  {
-    smv_ranget e=convert_type(expr.type());
-    smv_ranget t=convert_type(type);
+  if(expr.type() == type)
+    return; // nothing to do
 
-    if(e.is_contained_in(t) && expr.type().id() != ID_enumeration)
+  if(type.id() == ID_bool)
+  {
+    // Since CMU SMV supported it, we allow conversion of 0 to FALSE
+    // and 1 to TRUE.
+    if(expr.type().id() == ID_range)
     {
-      if(e.is_singleton())
+      smv_ranget e = smv_ranget::from_type(to_range_type(expr.type()));
+
+      if(e.from == 0 && e.to == 0)
       {
-        if(type.id()==ID_bool)
-        {
-          if(e.from==0)
-            expr=false_exprt();
-          else
-            expr=true_exprt();
-        }
-        else
-        {
-          expr=exprt(ID_constant, type);
-          expr.set(ID_value, integer2string(e.from));
-        }
+        expr = false_exprt{};
+        return;
+      }
+      else if(e.from == 1 && e.to == 1)
+      {
+        expr = true_exprt{};
+        return;
+      }
+      else if(e.from >= 0 && e.to <= 1)
+      {
+        expr = typecast_exprt{expr, type};
+        return;
+      }
+    }
+  }
+
+  if(type.id() == ID_range && expr.type().id() == ID_range)
+  {
+    smv_ranget e = smv_ranget::from_type(to_range_type(expr.type()));
+    smv_ranget t = smv_ranget::from_type(to_range_type(type));
+
+    if(e.is_contained_in(t))
+    {
+      if(expr.id() == ID_constant)
+      {
+        // re-type the constant
+        expr.type() = type;
       }
       else
         expr = typecast_exprt{expr, type};
 
-      return;      
+      return;
     }
-
-    throw errort().with_location(expr.find_source_location())
-      << "Expected expression of type `" << to_string(type)
-      << "', but got expression `" << to_string(expr) << "', which is of type `"
-      << to_string(expr.type()) << "'";
   }
+
+  if(type.id() == ID_enumeration && expr.type().id() == ID_enumeration)
+  {
+    const auto &e = to_enumeration_type(expr.type());
+    const auto &t = to_enumeration_type(type);
+
+    if(is_contained_in(e, t))
+    {
+      if(expr.id() == ID_constant)
+      {
+        // re-type the constant
+        expr.type() = type;
+        return;
+      }
+    }
+  }
+
+  throw errort().with_location(expr.find_source_location())
+    << "Expected expression of type `" << to_string(type)
+    << "', but got expression `" << to_string(expr) << "', which is of type `"
+    << to_string(expr.type()) << "'";
 }
 
 /*******************************************************************\
@@ -1287,19 +1082,22 @@ void smv_typecheckt::typecheck(
 
   case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
     typecheck(item.equal_expr().lhs(), OTHER);
-    typecheck(item.equal_expr().rhs(), item.equal_expr().lhs().type(), OTHER);
+    typecheck(item.equal_expr().rhs(), OTHER);
+    convert_expr_to(item.equal_expr().rhs(), item.equal_expr().lhs().type());
     item.equal_expr().type() = bool_typet{};
     return;
 
   case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
     typecheck(item.equal_expr().lhs(), INIT);
-    typecheck(item.equal_expr().rhs(), item.equal_expr().lhs().type(), INIT);
+    typecheck(item.equal_expr().rhs(), INIT);
+    convert_expr_to(item.equal_expr().rhs(), item.equal_expr().lhs().type());
     item.equal_expr().type() = bool_typet{};
     return;
 
   case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
     typecheck(item.equal_expr().lhs(), TRANS);
-    typecheck(item.equal_expr().rhs(), item.equal_expr().lhs().type(), TRANS);
+    typecheck(item.equal_expr().rhs(), TRANS);
+    convert_expr_to(item.equal_expr().rhs(), item.equal_expr().lhs().type());
     item.equal_expr().type() = bool_typet{};
     return;
 
@@ -1459,9 +1257,11 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
   symbolt &symbol=*it;
 
   d.in_progress=true;
-  
-  typecheck(d.value, symbol.type, OTHER);
-  
+
+  typecheck(d.value, OTHER);
+  if(symbol.type.is_not_nil())
+    convert_expr_to(d.value, symbol.type);
+
   d.in_progress=false;
   d.typechecked=true;
 
