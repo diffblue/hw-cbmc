@@ -184,11 +184,12 @@ void k_inductiont::operator()()
     }
   }
 
-  // Fail unsupported properties
+  // Fail unsupported properties that are not proved yet
   for(auto &property : properties.properties)
   {
     if(
-      !supported(property) && !property.is_assumed() && !property.is_disabled())
+      !supported(property) && !property.is_assumed() &&
+      !property.is_disabled() && !property.is_proved())
     {
       property.unsupported("unsupported by k-induction");
     }
@@ -264,7 +265,7 @@ void k_inductiont::induction_step()
   {
     if(
       p_it.is_disabled() || p_it.is_failure() || p_it.is_assumed() ||
-      p_it.is_unsupported())
+      p_it.is_unsupported() || p_it.is_proved())
     {
       continue;
     }
