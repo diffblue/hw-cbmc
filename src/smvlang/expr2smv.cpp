@@ -566,13 +566,20 @@ bool expr2smvt::convert(
 
   else if(
     src.id() == ID_AU || src.id() == ID_EU || src.id() == ID_AR ||
-    src.id() == ID_ER || src.id() == ID_U || src.id() == ID_R)
+    src.id() == ID_ER || src.id() == ID_U)
   {
     return convert_binary(
       to_binary_expr(src),
       dest,
       src.id_string(),
       precedence = precedencet::TEMPORAL);
+  }
+
+  else if(src.id() == ID_R)
+  {
+    // LTL release is "V" in NuSMV
+    return convert_binary(
+      to_binary_expr(src), dest, "V", precedence = precedencet::TEMPORAL);
   }
 
   else if(src.id() == ID_if)

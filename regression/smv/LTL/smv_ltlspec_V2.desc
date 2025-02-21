@@ -1,5 +1,5 @@
 KNOWNBUG broken-smt-backend
-smv_ltlspec_R2.smv
+smv_ltlspec_V2.smv
 --bound 10
 ^\[.*\] FALSE V x != 3: REFUTED$
 ^Counterexample with 3 states:$
