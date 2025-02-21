@@ -6,5 +6,5 @@ ASSIGN
   init(x) := 1;
   next(x) := 2;
 
-LTLSPEC F x=0 -- fails
-LTLSPEC F x=2 -- holds
+LTLSPEC NAME p1 := F x=0 -- fails
+LTLSPEC NAME p2 := F x=2 -- holds

@@ -19,4 +19,4 @@ ASSIGN
       TRUE: 4;
     esac;
 
-SPEC AG x!=4
+SPEC NAME p1 := AG x!=4

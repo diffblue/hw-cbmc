@@ -1590,7 +1590,11 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
       {
         symbolt spec_symbol;
 
-        spec_symbol.base_name = "spec" + std::to_string(nr++);
+        if(it->name.has_value())
+          spec_symbol.base_name = it->name.value();
+        else
+          spec_symbol.base_name = "spec" + std::to_string(nr++);
+
         spec_symbol.name =
           id2string(smv_module.name) + "::" + id2string(spec_symbol.base_name);
         spec_symbol.module = smv_module.name;

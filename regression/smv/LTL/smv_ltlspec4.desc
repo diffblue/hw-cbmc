@@ -3,12 +3,12 @@ smv_ltlspec4.smv
 --bound 10 --numbered-trace
 ^EXIT=10$
 ^SIGNAL=0$
-^\[spec1\] F x = 0: REFUTED$
+^\[p1\] F x = 0: REFUTED$
 ^Counterexample with 3 states:$
 ^x@0 = 1$
 ^x@1 = 2$
 ^x@2 = 2$
-^\[spec2\] F x = 2: PROVED up to bound 10$
+^\[p2\] F x = 2: PROVED up to bound 10$
 --
 ^warning: ignoring
 --
