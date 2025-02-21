@@ -61,9 +61,22 @@ public:
       {
       }
 
+      itemt(
+        item_typet __item_type,
+        irep_idt __name,
+        exprt __expr,
+        source_locationt __location)
+        : item_type(__item_type),
+          name(__name),
+          expr(std::move(__expr)),
+          location(std::move(__location))
+      {
+      }
+
       friend std::string to_string(item_typet i);
       
       item_typet item_type;
+      std::optional<irep_idt> name;
       exprt expr;
       source_locationt location;
 
@@ -163,18 +176,6 @@ public:
         itemt::INVAR, std::move(expr), source_locationt::nil());
     }
 
-    void add_ctlspec(exprt expr)
-    {
-      items.emplace_back(
-        itemt::CTLSPEC, std::move(expr), source_locationt::nil());
-    }
-
-    void add_ltlspec(exprt expr)
-    {
-      items.emplace_back(
-        itemt::LTLSPEC, std::move(expr), source_locationt::nil());
-    }
-
     void add_define(exprt lhs, exprt rhs)
     {
       items.emplace_back(
@@ -210,9 +211,20 @@ public:
       items.emplace_back(itemt::CTLSPEC, std::move(expr), std::move(location));
     }
 
+    void add_ctlspec(irep_idt name, exprt expr, source_locationt location)
+    {
+      items.emplace_back(
+        itemt::CTLSPEC, name, std::move(expr), std::move(location));
+    }
+
     void add_ltlspec(exprt expr, source_locationt location)
     {
       items.emplace_back(itemt::LTLSPEC, std::move(expr), location);
+    }
+
+    void add_ltlspec(irep_idt name, exprt expr, source_locationt location)
+    {
+      items.emplace_back(itemt::LTLSPEC, name, std::move(expr), location);
     }
 
     void add_define(exprt expr, source_locationt location)
