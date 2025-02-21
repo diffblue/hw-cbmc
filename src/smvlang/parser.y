@@ -303,7 +303,7 @@ modules    : module
            | modules module
            ;
 
-module     : module_head sections
+module     : module_head module_body
            ;
 
 module_name: STRING_Token
@@ -314,34 +314,71 @@ module_head: MODULE_Token module_name { new_module($2); }
            | MODULE_Token module_name { new_module($2); } '(' module_argument_list_opt ')'
            ;
 
-sections   : /* epsilon */
-           | sections section
+module_body: /* optional */
+           | module_body module_element
            ;
            
 semi_opt   :    /* empty */
            | ';'
            ;
 
-section    : VAR_Token vardecls
-           | VAR_Token
-           | INIT_Token formula semi_opt { PARSER.module->add_init(stack_expr($2), stack_expr($1).source_location()); }
-           | INIT_Token
-           | TRANS_Token formula semi_opt { PARSER.module->add_trans(stack_expr($2), stack_expr($1).source_location()); }
-           | TRANS_Token
-           | SPEC_Token formula semi_opt { PARSER.module->add_ctlspec(stack_expr($2), stack_expr($1).source_location()); }
-           | SPEC_Token
-           | LTLSPEC_Token formula semi_opt { PARSER.module->add_ltlspec(stack_expr($2), stack_expr($1).source_location()); }
-           | LTLSPEC_Token
-           | ASSIGN_Token assignments
-           | ASSIGN_Token
-           | DEFINE_Token defines
-           | DEFINE_Token
-           | INVAR_Token formula semi_opt { PARSER.module->add_invar(stack_expr($2), stack_expr($1).source_location()); }
-           | INVAR_Token
-           | FAIRNESS_Token formula semi_opt { PARSER.module->add_fairness(stack_expr($2), stack_expr($1).source_location()); }
-           | FAIRNESS_Token
+module_element:
+             var_declaration
+           | define_declaration
+           | assign_constraint
+           | trans_constraint
+           | init_constraint
+           | invar_constraint
+           | fairness_constraint
+           | ctl_specification
+           | ltl_specification
            | EXTERN_Token extern_var semi_opt
            | EXTERN_Token
+           ;
+
+var_declaration:
+             VAR_Token vardecls
+           | VAR_Token
+           ;
+
+define_declaration:
+             DEFINE_Token defines
+           | DEFINE_Token
+           ;
+
+assign_constraint:
+             ASSIGN_Token assignments
+           | ASSIGN_Token
+           ;
+
+trans_constraint:
+             TRANS_Token formula semi_opt { PARSER.module->add_trans(stack_expr($2), stack_expr($1).source_location()); }
+           | TRANS_Token
+           ;
+
+init_constraint:
+             INIT_Token formula semi_opt { PARSER.module->add_init(stack_expr($2), stack_expr($1).source_location()); }
+           | INIT_Token
+           ;
+
+invar_constraint:
+             INVAR_Token formula semi_opt { PARSER.module->add_invar(stack_expr($2), stack_expr($1).source_location()); }
+           | INVAR_Token
+           ;
+
+fairness_constraint:
+             FAIRNESS_Token formula semi_opt { PARSER.module->add_fairness(stack_expr($2), stack_expr($1).source_location()); }
+           | FAIRNESS_Token
+           ;
+
+ctl_specification:
+             SPEC_Token formula semi_opt { PARSER.module->add_ctlspec(stack_expr($2), stack_expr($1).source_location()); }
+           | SPEC_Token
+           ;
+
+ltl_specification:
+             LTLSPEC_Token formula semi_opt { PARSER.module->add_ltlspec(stack_expr($2), stack_expr($1).source_location()); }
+           | LTLSPEC_Token
            ;
  
 extern_var : variable_name EQUAL_Token QUOTE_Token
