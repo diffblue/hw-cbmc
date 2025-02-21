@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "smv_typecheck.h"
 
 #include <util/arith_tools.h>
+#include <util/bitvector_types.h>
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
@@ -565,7 +566,15 @@ typet smv_typecheckt::type_union(
 
   if(type2.is_nil())
     return type1;
-    
+
+  if(
+    type1.id() == ID_signedbv || type1.id() == ID_unsignedbv ||
+    type2.id() == ID_signedbv || type2.id() == ID_unsignedbv)
+  {
+    throw errort() << "no type union for types" << to_string(type1) << " and "
+                   << to_string(type2);
+  }
+
   // both enums?
   if(type1.id()==ID_enumeration && type2.id()==ID_enumeration)
   {
@@ -1033,6 +1042,26 @@ void smv_typecheckt::typecheck_expr_rec(
   {
     expr.type()=bool_typet();
   }
+  else if(expr.id() == ID_smv_swconst)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+    auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.op1()));
+    auto type = signedbv_typet{bits};
+    auto value =
+      numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.op0()));
+    expr =
+      from_integer(value, type).with_source_location(expr.source_location());
+  }
+  else if(expr.id() == ID_smv_uwconst)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+    auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.op1()));
+    auto type = unsignedbv_typet{bits};
+    auto value =
+      numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.op0()));
+    expr =
+      from_integer(value, type).with_source_location(expr.source_location());
+  }
   else
   {
     throw errort().with_location(expr.find_source_location())
@@ -1061,30 +1090,36 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &type)
 
   if(expr.type() != type)
   {
-    smv_ranget e=convert_type(expr.type());
-    smv_ranget t=convert_type(type);
-
-    if(e.is_contained_in(t) && expr.type().id() != ID_enumeration)
+    if(type.id() == ID_signedbv || type.id() == ID_unsignedbv)
     {
-      if(e.is_singleton())
+    }
+    else
+    {
+      smv_ranget e = convert_type(expr.type());
+      smv_ranget t = convert_type(type);
+
+      if(e.is_contained_in(t) && expr.type().id() != ID_enumeration)
       {
-        if(type.id()==ID_bool)
+        if(e.is_singleton())
         {
-          if(e.from==0)
-            expr=false_exprt();
+          if(type.id() == ID_bool)
+          {
+            if(e.from == 0)
+              expr = false_exprt();
+            else
+              expr = true_exprt();
+          }
           else
-            expr=true_exprt();
+          {
+            expr = exprt(ID_constant, type);
+            expr.set(ID_value, integer2string(e.from));
+          }
         }
         else
-        {
-          expr=exprt(ID_constant, type);
-          expr.set(ID_value, integer2string(e.from));
-        }
-      }
-      else
-        expr = typecast_exprt{expr, type};
+          expr = typecast_exprt{expr, type};
 
-      return;      
+        return;
+      }
     }
 
     throw errort().with_location(expr.find_source_location())

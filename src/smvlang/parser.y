@@ -403,6 +403,21 @@ simple_type_specifier:
              stack_type($$).add_subtype()=stack_type($6);
            }
            | boolean_Token { init($$, ID_bool); }
+           | word_Token '[' NUMBER_Token ']'
+           {
+             init($$, ID_unsignedbv);
+             stack_type($$).set(ID_width, stack_expr($3).id());
+           }
+           | signed_Token word_Token '[' NUMBER_Token ']'
+           {
+             init($$, ID_signedbv);
+             stack_type($$).set(ID_width, stack_expr($4).id());
+           }
+           | unsigned_Token word_Token '[' NUMBER_Token ']'
+           {
+             init($$, ID_unsignedbv);
+             stack_type($$).set(ID_width, stack_expr($4).id());
+           }
            | '{' enum_list '}' { $$=$2; }
            | NUMBER_Token DOTDOT_Token NUMBER_Token
            {
@@ -630,6 +645,13 @@ term       : variable_name
            | term union_Token    term { binary($$, $1, ID_smv_union, $3); }
            | term IN_Token       term { binary($$, $1, ID_smv_setin, $3); }
            | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3); }
+           | extend_Token '(' term ',' term ')' { binary($$, $3, ID_smv_extend, $5); }
+           | resize_Token '(' term ',' term ')' { binary($$, $3, ID_smv_resize, $5); }
+           | signed_Token '(' term ')' { init($$, ID_smv_signed_cast); mto($$, $3); }
+           | sizeof_Token '(' term ')' { init($$, ID_smv_sizeof); mto($$, $3); }
+           | swconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_swconst, $5); }
+           | unsigned_Token '(' term ')' { init($$, ID_smv_unsigned_cast); mto($$, $3); }
+           | uwconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_uwconst, $5); }
            ;
 
 formula_list: formula { init($$); mto($$, $1); }
