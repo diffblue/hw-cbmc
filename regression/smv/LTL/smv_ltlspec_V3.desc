@@ -1,5 +1,5 @@
 CORE
-smv_ltlspec_R3.smv
+smv_ltlspec_V3.smv
 --bound 1
 ^\[.*\] FALSE V x != 3: PROVED up to bound 1$
 ^EXIT=0$
