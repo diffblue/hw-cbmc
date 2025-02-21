@@ -7,6 +7,7 @@ SRC = \
       cegar/refine.cpp \
       cegar/simulate.cpp \
       cegar/verify.cpp \
+      completeness_threshold.cpp \
       diameter.cpp \
       diatest.cpp \
       dimacs_writer.cpp \
