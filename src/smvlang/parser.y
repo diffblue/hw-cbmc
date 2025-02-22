@@ -284,7 +284,7 @@ static void new_module(YYSTYPE &module)
 %left  OR_Token
 %left  AND_Token
 %left  NOT_Token
-%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token V_Token F_Token G_Token X_Token
+%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token V_Token F_Token G_Token H_Token O_Token S_Token T_Token X_Token Y_Token Z_Token
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  union_Token
 %left  IN_Token NOTIN_Token
@@ -704,6 +704,19 @@ term       : variable_name
            | term union_Token    term { binary($$, $1, ID_smv_union, $3); }
            | term IN_Token       term { binary($$, $1, ID_smv_setin, $3); }
            | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3); }
+           /* LTL PAST */
+           | Y_Token term             { $$ = $1; stack_expr($$).id(ID_smv_Y); mto($$, $2); }
+           | Z_Token term             { $$ = $1; stack_expr($$).id(ID_smv_Z); mto($$, $2); }
+           | H_Token term             { $$ = $1; stack_expr($$).id(ID_smv_H); mto($$, $2); }
+           | H_Token bound term       { $$ = $1; stack_expr($$).id(ID_smv_bounded_H); mto($$, $3); }
+           | O_Token term             { $$ = $1; stack_expr($$).id(ID_smv_O); mto($$, $2); }
+           | O_Token bound term       { $$ = $1; stack_expr($$).id(ID_smv_bounded_O); mto($$, $3); }
+           | term S_Token term        { $$ = $2; stack_expr($$).id(ID_smv_S); mto($$, $1); mto($$, $3); }
+           | term T_Token term        { $$ = $2; stack_expr($$).id(ID_smv_T); mto($$, $1); mto($$, $3); }
+           ;
+
+bound:     '[' NUMBER_Token ',' NUMBER_Token ']'
+           { init($$); mto($$, $2); mto($$, $4); }
            ;
 
 formula_list:

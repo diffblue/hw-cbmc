@@ -986,7 +986,10 @@ void smv_typecheckt::typecheck_expr_rec(
     typecheck_expr_rec(op, mode);
     convert_expr_to(op, expr.type());
   }
-  else if(expr.id() == ID_X || expr.id() == ID_F || expr.id() == ID_G)
+  else if(
+    expr.id() == ID_X || expr.id() == ID_F || expr.id() == ID_G ||
+    expr.id() == ID_smv_H || expr.id() == ID_smv_O || expr.id() == ID_smv_Y ||
+    expr.id() == ID_smv_Z)
   {
     if(mode != LTL)
       throw errort().with_location(expr.source_location())
@@ -1010,7 +1013,9 @@ void smv_typecheckt::typecheck_expr_rec(
     convert_expr_to(binary_expr.lhs(), expr.type());
     convert_expr_to(binary_expr.rhs(), expr.type());
   }
-  else if(expr.id() == ID_U || expr.id() == ID_R)
+  else if(
+    expr.id() == ID_U || expr.id() == ID_R || expr.id() == ID_smv_S ||
+    expr.id() == ID_smv_T)
   {
     if(mode != LTL)
       throw errort().with_location(expr.source_location())

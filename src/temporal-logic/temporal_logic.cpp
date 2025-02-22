@@ -13,7 +13,8 @@ Author: Daniel Kroening, kroening@kroening.com
 bool is_temporal_operator(const exprt &expr)
 {
   return is_CTL_operator(expr) || is_LTL_operator(expr) ||
-         is_SVA_operator(expr) || expr.id() == ID_A || expr.id() == ID_E;
+         is_LTL_past_operator(expr) || is_SVA_operator(expr) ||
+         expr.id() == ID_A || expr.id() == ID_E;
 }
 
 bool has_temporal_operator(const exprt &expr)
@@ -54,6 +55,14 @@ bool is_LTL_operator(const exprt &expr)
   return id == ID_G || id == ID_F || id == ID_X || id == ID_U || id == ID_R;
 }
 
+bool is_LTL_past_operator(const exprt &expr)
+{
+  auto id = expr.id();
+  return id == ID_smv_H || id == ID_smv_bounded_H || id == ID_smv_O ||
+         id == ID_smv_bounded_O || id == ID_smv_S || id == ID_smv_T ||
+         id == ID_smv_Y || id == ID_smv_Z;
+}
+
 bool is_LTL(const exprt &expr)
 {
   auto non_LTL_operator = [](const exprt &expr) {
@@ -61,6 +70,14 @@ bool is_LTL(const exprt &expr)
   };
 
   return !has_subexpr(expr, non_LTL_operator);
+}
+
+bool is_LTL_past(const exprt &expr)
+{
+  auto non_LTL_past_operator = [](const exprt &expr)
+  { return is_temporal_operator(expr) && !is_LTL_past_operator(expr); };
+
+  return !has_subexpr(expr, non_LTL_past_operator);
 }
 
 bool is_SVA_sequence(const exprt &expr)
