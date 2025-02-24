@@ -372,13 +372,49 @@ fairness_constraint:
            ;
 
 ctl_specification:
-             SPEC_Token formula semi_opt { PARSER.module->add_ctlspec(stack_expr($2), stack_expr($1).source_location()); }
+             SPEC_Token formula semi_opt
+           {
+             PARSER.module->add_ctlspec(
+               stack_expr($2),
+               stack_expr($1).source_location());
+           }
            | SPEC_Token
+           | CTLSPEC_Token formula semi_opt
+           {
+             PARSER.module->add_ctlspec(
+               stack_expr($2),
+               stack_expr($1).source_location());
+           }
+           | CTLSPEC_Token
+           | SPEC_Token NAME_Token identifier BECOMES_Token formula semi_opt
+           {
+             PARSER.module->add_ctlspec(
+               stack_expr($3).id(),
+               stack_expr($5),
+               stack_expr($1).source_location());
+           }
+           | CTLSPEC_Token NAME_Token identifier BECOMES_Token formula semi_opt
+           {
+             PARSER.module->add_ctlspec(
+               stack_expr($3).id(),
+               stack_expr($5),
+               stack_expr($1).source_location());
+           }
            ;
 
 ltl_specification:
-             LTLSPEC_Token formula semi_opt { PARSER.module->add_ltlspec(stack_expr($2), stack_expr($1).source_location()); }
-           | LTLSPEC_Token
+             LTLSPEC_Token formula semi_opt
+           { 
+             PARSER.module->add_ltlspec(stack_expr($2), stack_expr($1).source_location());
+           }
+           | LTLSPEC_Token           
+           | LTLSPEC_Token NAME_Token identifier BECOMES_Token formula semi_opt
+           { 
+             PARSER.module->add_ltlspec(
+               stack_expr($3).id(),
+               stack_expr($5),
+               stack_expr($1).source_location());
+           }
            ;
  
 extern_var : variable_name EQUAL_Token QUOTE_Token
@@ -669,9 +705,13 @@ term       : variable_name
            | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3); }
            ;
 
-formula_list: formula { init($$); mto($$, $1); }
-            | formula_list ',' formula { $$=$1; mto($$, $3); }
-            ;
+formula_list:
+             formula { init($$); mto($$, $1); }
+           | formula_list ',' formula { $$=$1; mto($$, $3); }
+           ;
+
+identifier : STRING_Token
+           ;
 
 variable_name: qstring_list
            {
