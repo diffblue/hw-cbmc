@@ -1,5 +1,5 @@
 CORE
-smv_ltlspec_R4.smv
+smv_ltlspec_V4.smv
 --bound 10
 ^\[.*\] FALSE V x != 0: PROVED up to bound 10$
 ^EXIT=0$

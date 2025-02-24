@@ -1,0 +1,16 @@
+MODULE main
+
+VAR x : 0..3;
+
+ASSIGN
+  init(x) := 1;
+
+  next(x) :=
+    case
+      x=3 : 3;
+      TRUE: x+1;
+    esac;
+
+-- trace should be 1, 2, 3
+-- hence no trace with k=1
+LTLSPEC FALSE V x != 3

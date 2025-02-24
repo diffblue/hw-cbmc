@@ -284,7 +284,7 @@ static void new_module(YYSTYPE &module)
 %left  OR_Token
 %left  AND_Token
 %left  NOT_Token
-%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token F_Token G_Token X_Token
+%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token V_Token F_Token G_Token X_Token
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  union_Token
 %left  IN_Token NOTIN_Token
@@ -694,6 +694,7 @@ term       : variable_name
            | X_Token  term            { init($$, ID_X);  mto($$, $2); }
            | term U_Token term        { binary($$, $1, ID_U, $3); }
            | term R_Token term        { binary($$, $1, ID_R, $3); }
+           | term V_Token term        { binary($$, $1, ID_R, $3); }
            | term EQUAL_Token    term { binary($$, $1, ID_equal, $3); }
            | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3); }
            | term LT_Token       term { binary($$, $1, ID_lt, $3); }
