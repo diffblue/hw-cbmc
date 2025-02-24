@@ -35,9 +35,16 @@ bool has_CTL_operator(const exprt &);
 /// Returns true iff the given expression is an LTL formula
 bool is_LTL(const exprt &);
 
+/// Returns true iff the given expression is an LTL past formula
+bool is_LTL_past(const exprt &);
+
 /// Returns true iff the given expression has an LTL operator
 /// as its root
 bool is_LTL_operator(const exprt &);
+
+/// Returns true iff the given expression has an LTL past operator
+/// as its root
+bool is_LTL_past_operator(const exprt &);
 
 /// Returns true iff the given expression is an SVA sequence expression
 bool is_SVA_sequence(const exprt &);

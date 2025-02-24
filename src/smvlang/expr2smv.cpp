@@ -565,6 +565,26 @@ bool expr2smvt::convert(
   }
 
   else if(
+    src.id() == ID_smv_H || src.id() == ID_smv_O || src.id() == ID_smv_Y ||
+    src.id() == ID_smv_Z)
+  {
+    return convert_unary(
+      to_unary_expr(src),
+      dest,
+      std::string(src.id_string(), 4, std::string::npos) + " ",
+      precedence = precedencet::TEMPORAL);
+  }
+
+  else if(src.id() == ID_smv_bounded_H || src.id() == ID_smv_bounded_O)
+  {
+    return convert_unary(
+      to_unary_expr(src),
+      dest,
+      std::string(src.id_string(), 12, std::string::npos) + " ",
+      precedence = precedencet::TEMPORAL);
+  }
+
+  else if(
     src.id() == ID_AU || src.id() == ID_EU || src.id() == ID_AR ||
     src.id() == ID_ER || src.id() == ID_U)
   {
@@ -580,6 +600,15 @@ bool expr2smvt::convert(
     // LTL release is "V" in NuSMV
     return convert_binary(
       to_binary_expr(src), dest, "V", precedence = precedencet::TEMPORAL);
+  }
+
+  else if(src.id() == ID_smv_S || src.id() == ID_smv_T)
+  {
+    return convert_binary(
+      to_binary_expr(src),
+      dest,
+      std::string(src.id_string(), 4, std::string::npos),
+      precedence = precedencet::TEMPORAL);
   }
 
   else if(src.id() == ID_if)
