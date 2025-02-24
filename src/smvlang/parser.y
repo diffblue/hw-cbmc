@@ -280,7 +280,7 @@ static void new_module(YYSTYPE &module)
 %right IMPLIES_Token
 %left  EQUIV_Token
 %left  IF_Token
-%left  xor_Token
+%left  xor_Token xnor_Token
 %left  OR_Token
 %left  AND_Token
 %left  NOT_Token
@@ -676,6 +676,7 @@ term       : variable_name
            | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3); }
            | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3); }
            | term xor_Token term      { j_binary($$, $1, ID_xor, $3); }
+           | term xnor_Token term     { binary($$, $1, ID_xnor, $3); }
            | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
            | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
            | NOT_Token term           { init($$, ID_not); mto($$, $2); }

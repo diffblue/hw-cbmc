@@ -698,7 +698,7 @@ void smv_typecheckt::typecheck_expr_rec(
   }
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_xor ||
-    expr.id() == ID_not || expr.id() == ID_implies)
+    expr.id() == ID_xnor || expr.id() == ID_not || expr.id() == ID_implies)
   {
     for(auto &op : expr.operands())
       typecheck_expr_rec(op, mode);
