@@ -987,6 +987,31 @@ void smv_typecheckt::typecheck_expr_rec(
     convert_expr_to(op, expr.type());
   }
   else if(
+    expr.id() == ID_smv_EBF || expr.id() == ID_smv_ABF ||
+    expr.id() == ID_smv_EBG || expr.id() == ID_smv_ABG)
+  {
+    if(mode != CTL)
+      throw errort().with_location(expr.source_location())
+        << "CTL operator not permitted here";
+    expr.type() = bool_typet();
+    auto &op2 = to_ternary_expr(expr).op2();
+    typecheck_expr_rec(op2, mode);
+    convert_expr_to(op2, expr.type());
+  }
+  else if(expr.id() == ID_smv_ABU || expr.id() == ID_smv_EBU)
+  {
+    if(mode != CTL)
+      throw errort().with_location(expr.source_location())
+        << "CTL operator not permitted here";
+    expr.type() = bool_typet();
+    for(std::size_t i = 0; i < expr.operands().size(); i++)
+    {
+      typecheck_expr_rec(expr.operands()[i], mode);
+      if(i == 0 || i == 3)
+        convert_expr_to(expr.operands()[i], expr.type());
+    }
+  }
+  else if(
     expr.id() == ID_X || expr.id() == ID_F || expr.id() == ID_G ||
     expr.id() == ID_smv_H || expr.id() == ID_smv_O || expr.id() == ID_smv_Y ||
     expr.id() == ID_smv_Z)

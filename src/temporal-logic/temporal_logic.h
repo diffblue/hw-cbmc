@@ -32,6 +32,13 @@ bool is_CTL_operator(const exprt &);
 /// Returns true iff the given expression contains a CTL operator
 bool has_CTL_operator(const exprt &);
 
+/// Returns true iff the given expression has a real-time CTL operator
+/// as its root
+bool is_RTCTL_operator(const exprt &);
+
+/// Returns true iff the given expression contains a real-time CTL operator
+bool has_RTCTL_operator(const exprt &);
+
 /// Returns true iff the given expression is an LTL formula
 bool is_LTL(const exprt &);
 

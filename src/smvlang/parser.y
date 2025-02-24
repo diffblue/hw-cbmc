@@ -284,7 +284,7 @@ static void new_module(YYSTYPE &module)
 %left  OR_Token
 %left  AND_Token
 %left  NOT_Token
-%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token V_Token F_Token G_Token H_Token O_Token S_Token T_Token X_Token Y_Token Z_Token
+%left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token V_Token F_Token G_Token H_Token O_Token S_Token T_Token X_Token Y_Token Z_Token EBF_Token ABF_Token EBG_Token ABG_Token
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  union_Token
 %left  IN_Token NOTIN_Token
@@ -714,10 +714,37 @@ term       : variable_name
            | O_Token bound term       { $$ = $1; stack_expr($$).id(ID_smv_bounded_O); mto($$, $3); }
            | term S_Token term        { $$ = $2; stack_expr($$).id(ID_smv_S); mto($$, $1); mto($$, $3); }
            | term T_Token term        { $$ = $2; stack_expr($$).id(ID_smv_T); mto($$, $1); mto($$, $3); }
+           /* Real-time CTL */
+           | EBF_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_EBF); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | ABF_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_ABF); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | EBG_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_EBG); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | ABG_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_ABG); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | A_Token '[' term BU_Token range term ']'
+           {
+             $$ = $1;
+             stack_expr($$).id(ID_smv_ABU);
+             mto($$, $3);
+             stack_expr($$).add_to_operands(stack_expr($5).operands()[0]);
+             stack_expr($$).add_to_operands(stack_expr($5).operands()[1]);
+             mto($$, $6);
+           }
+           | E_Token '[' term BU_Token range term ']'
+           {
+             $$ = $1;
+             stack_expr($$).id(ID_smv_EBU);
+             mto($$, $3);
+             stack_expr($$).add_to_operands(stack_expr($5).operands()[0]);
+             stack_expr($$).add_to_operands(stack_expr($5).operands()[1]);
+             mto($$, $6);
+           }
            ;
 
-bound:     '[' NUMBER_Token ',' NUMBER_Token ']'
+bound      : '[' NUMBER_Token ',' NUMBER_Token ']'
            { init($$); mto($$, $2); mto($$, $4); }
+           ;
+
+range      : NUMBER_Token DOTDOT_Token NUMBER_Token
+           { init($$); mto($$, $1); mto($$, $3); }
            ;
 
 formula_list:

@@ -1,0 +1,4 @@
+MODULE main
+
+-- error, this is RT-CTL
+SPEC EBF 1..2 FALSE
