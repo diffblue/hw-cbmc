@@ -2,7 +2,7 @@
 
 * SystemVerilog: typedefs from package scopes
 * SystemVerilog: assignment patterns with keys for structs
-* SMV: LTL V operator
+* SMV: LTL V operator, xnor operator
 
 # EBMC 5.5
 

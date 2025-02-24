@@ -1,0 +1,8 @@
+MODULE main
+
+VAR x : boolean;
+
+ASSIGN init(x) := TRUE;
+ASSIGN next(x) := x xnor x;
+
+LTLSPEC G x

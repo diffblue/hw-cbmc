@@ -552,6 +552,12 @@ bool expr2smvt::convert(
   else if(src.id()==ID_implies)
     return convert_binary(src, dest, "->", precedence = precedencet::IMPLIES);
 
+  else if(src.id() == ID_xor)
+    return convert_binary(src, dest, "xor", precedence = precedencet::OR);
+
+  else if(src.id() == ID_xnor)
+    return convert_binary(src, dest, "xnor", precedence = precedencet::OR);
+
   else if(
     src.id() == ID_AG || src.id() == ID_EG || src.id() == ID_AF ||
     src.id() == ID_EF || src.id() == ID_AX || src.id() == ID_EX ||
