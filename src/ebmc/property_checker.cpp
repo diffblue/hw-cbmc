@@ -16,6 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "bdd_engine.h"
 #include "bmc.h"
+#include "completeness_threshold.h"
 #include "dimacs_writer.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
@@ -380,7 +381,22 @@ property_checker_resultt engine_heuristic(
   message.status() << "No engine given, attempting heuristic engine selection"
                    << messaget::eom;
 
-  // First try 1-induction, word-level
+  // First check whether we have a low completenes threshold
+  message.status() << "Attempting completeness threshold" << messaget::eom;
+
+  auto completeness_threshold_result = completeness_threshold(
+    cmdline, transition_system, properties, solver_factory, message_handler);
+
+  properties.properties = completeness_threshold_result.properties;
+
+  if(!properties.has_unfinished_property())
+    return completeness_threshold_result; // done
+
+  properties.reset_failure();
+  properties.reset_inconclusive();
+  properties.reset_unsupported();
+
+  // Now try 1-induction, word-level
   message.status() << "Attempting 1-induction" << messaget::eom;
 
   auto k_induction_result = k_induction(

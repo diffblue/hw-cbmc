@@ -1,7 +1,7 @@
 CORE
 smv_if2.smv
 
-^\[.*\] X \(b = 2 \| b = 4\): PROVED up to bound 5$
+^\[.*\] X \(b = 2 \| b = 4\): PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --
