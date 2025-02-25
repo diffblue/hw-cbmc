@@ -56,18 +56,6 @@ int ebmc_baset::get_properties()
   properties = ebmc_propertiest::from_command_line(
     cmdline, transition_system, message.get_message_handler());
 
-  if(cmdline.isset("show-properties"))
-  {
-    show_properties();
-    return 0;
-  }
-
-  if(cmdline.isset("json-properties"))
-  {
-    json_properties(cmdline.get_value("json-properties"));
-    return 0;
-  }
-
   return -1; // done
 }
 
