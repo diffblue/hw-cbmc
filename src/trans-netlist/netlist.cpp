@@ -368,6 +368,14 @@ void netlistt::output_smv(std::ostream &out) const
       print_smv(out, std::get<GFpt>(property).p);
       out << '\n';
     }
+    else if(std::holds_alternative<not_translatedt>(property))
+    {
+      out << "-- " << id << '\n';
+      out << "-- not translated\n";
+      out << '\n';
+    }
+    else
+      UNREACHABLE;
   }
 }
 

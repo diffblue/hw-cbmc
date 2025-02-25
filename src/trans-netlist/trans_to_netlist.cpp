@@ -385,12 +385,19 @@ void convert_trans_to_netlistt::operator()(
         else
         {
           // unsupported
+          dest.properties.emplace(id, netlistt::not_translatedt{});
         }
       }
       else
       {
         // unsupported
+        dest.properties.emplace(id, netlistt::not_translatedt{});
       }
+    }
+    else
+    {
+      // unsupported
+      dest.properties.emplace(id, netlistt::not_translatedt{});
     }
   }
 
