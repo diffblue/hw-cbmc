@@ -1,0 +1,7 @@
+CORE
+s_eventually1.sv
+--sva-monitor --smv-word-level
+^-- Verilog::main\.p0: not converted$
+^EXIT=0$
+^SIGNAL=0$
+--

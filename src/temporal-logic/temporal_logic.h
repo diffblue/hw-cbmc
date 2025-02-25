@@ -68,6 +68,9 @@ bool is_SVA_sequence_operator(const exprt &);
 /// Returns true iff the given expression is an SVA temporal operator
 bool is_SVA_operator(const exprt &);
 
+/// Returns true iff the given expression has an SVA temporal operator
+bool has_SVA_operator(const exprt &);
+
 /// Returns true iff the given expression is an SVA expression
 bool is_SVA(const exprt &);
 
