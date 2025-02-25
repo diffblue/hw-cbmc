@@ -1,0 +1,6 @@
+CORE
+initial1.sv
+--sva-monitor --smv-word-level
+^EXIT=0$
+^SIGNAL=0$
+--
