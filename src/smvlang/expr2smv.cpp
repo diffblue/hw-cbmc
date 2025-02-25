@@ -75,6 +75,19 @@ public:
     const std::string &symbol,
     precedencet precedence);
 
+  bool convert_rtctl(
+    const ternary_exprt &src,
+    std::string &dest,
+    const std::string &symbol,
+    precedencet precedence);
+
+  bool convert_rtctl(
+    const multi_ary_exprt &src,
+    std::string &dest,
+    const std::string &symbol1,
+    const std::string &symbol2,
+    precedencet precedence);
+
   bool convert_unary(
     const unary_exprt &,
     std::string &dest,
@@ -235,6 +248,61 @@ bool expr2smvt::convert_binary(
     if(precedence>p) dest+=')';
   }
 
+  return false;
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_rtctl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool expr2smvt::convert_rtctl(
+  const ternary_exprt &src,
+  std::string &dest,
+  const std::string &symbol,
+  precedencet precedence)
+{
+  std::string op0, op1, op2;
+  convert(src.op0(), op0);
+  convert(src.op1(), op1);
+  convert(src.op2(), op2);
+  dest = symbol + ' ' + op0 + ".." + op1 + ' ' + op2;
+  return false;
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_rtctl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool expr2smvt::convert_rtctl(
+  const multi_ary_exprt &src,
+  std::string &dest,
+  const std::string &symbol1,
+  const std::string &symbol2,
+  precedencet precedence)
+{
+  std::string op0, op1, op2, op3;
+  convert(src.op0(), op0);
+  convert(src.op1(), op1);
+  convert(src.op2(), op2);
+  convert(src.op3(), op3);
+  dest = symbol1 + '[' + op0 + ' ' + symbol2 + ' ' + op1 + ".." + op2 + ' ' +
+         op3 + ']';
   return false;
 }
 
@@ -598,6 +666,27 @@ bool expr2smvt::convert(
       to_binary_expr(src),
       dest,
       src.id_string(),
+      precedence = precedencet::TEMPORAL);
+  }
+
+  else if(
+    src.id() == ID_smv_EBF || src.id() == ID_smv_ABF ||
+    src.id() == ID_smv_EBG || src.id() == ID_smv_ABG)
+  {
+    return convert_rtctl(
+      to_ternary_expr(src),
+      dest,
+      std::string(src.id_string(), 4, std::string::npos),
+      precedence = precedencet::TEMPORAL);
+  }
+
+  else if(src.id() == ID_smv_EBU || src.id() == ID_smv_ABU)
+  {
+    return convert_rtctl(
+      to_multi_ary_expr(src),
+      dest,
+      std::string(src.id_string(), 4, 1),
+      std::string(src.id_string(), 5, std::string::npos),
       precedence = precedencet::TEMPORAL);
   }
 

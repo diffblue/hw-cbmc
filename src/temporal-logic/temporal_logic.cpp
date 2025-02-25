@@ -14,7 +14,7 @@ bool is_temporal_operator(const exprt &expr)
 {
   return is_CTL_operator(expr) || is_LTL_operator(expr) ||
          is_LTL_past_operator(expr) || is_SVA_operator(expr) ||
-         expr.id() == ID_A || expr.id() == ID_E;
+         is_RTCTL_operator(expr) || expr.id() == ID_A || expr.id() == ID_E;
 }
 
 bool has_temporal_operator(const exprt &expr)
@@ -25,6 +25,18 @@ bool has_temporal_operator(const exprt &expr)
 bool is_exists_path(const exprt &expr)
 {
   return expr.id() == ID_sva_cover;
+}
+
+bool is_RTCTL_operator(const exprt &expr)
+{
+  auto id = expr.id();
+  return id == ID_smv_EBF || id == ID_smv_ABF || id == ID_smv_EBG ||
+         id == ID_smv_ABG || id == ID_smv_ABU || id == ID_smv_EBU;
+}
+
+bool has_RTCTL_operator(const exprt &expr)
+{
+  return has_subexpr(expr, is_RTCTL_operator);
 }
 
 bool is_CTL_operator(const exprt &expr)
