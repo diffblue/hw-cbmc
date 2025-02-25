@@ -1,0 +1,13 @@
+CORE
+s_nexttime1.sv
+--sva-monitor --smv-word-level
+^VAR initial : boolean;$
+^VAR nexttime_activated : boolean;$
+^INIT sva-monitor::initial$
+^INIT !sva-monitor::nexttime_activated$
+^TRANS !next\(sva-monitor::initial\)$
+^TRANS next\(sva-monitor::nexttime_activated\) = sva-monitor::initial$
+^LTLSPEC G \(sva-monitor::nexttime_activated -> FALSE\)$
+^EXIT=0$
+^SIGNAL=0$
+--
