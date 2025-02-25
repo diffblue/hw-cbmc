@@ -1,25 +1,27 @@
 /*******************************************************************\
 
-Module: Base for Verification Modules
+Module: Show Properties
 
 Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
+
+#include "show_properties.h"
 
 #include <util/json.h>
 #include <util/json_irep.h>
 #include <util/xml.h>
 #include <util/xml_irep.h>
 
-#include "ebmc_base.h"
 #include "ebmc_error.h"
+#include "ebmc_properties.h"
 #include "output_file.h"
 
 #include <iostream>
 
 /*******************************************************************\
 
-Function: ebmc_baset::show_properties
+Function: show_properties
 
   Inputs:
 
@@ -29,7 +31,9 @@ Function: ebmc_baset::show_properties
 
 \*******************************************************************/
 
-void ebmc_baset::show_properties()
+void show_properties(
+  const ebmc_propertiest &properties,
+  ui_message_handlert &message_handler)
 {
   unsigned p_nr=1;
 
@@ -49,8 +53,7 @@ void ebmc_baset::show_properties()
 
   for(const auto &p : properties.properties)
   {
-    switch(static_cast<ui_message_handlert &>(message.get_message_handler())
-             .get_ui())
+    switch(message_handler.get_ui())
     {
     case ui_message_handlert::uit::XML_UI:
       std::cout << make_xml(p, p_nr) << '\n';
@@ -70,7 +73,7 @@ void ebmc_baset::show_properties()
 
 /*******************************************************************\
 
-Function: ebmc_baset::json_properties
+Function: json_properties
 
   Inputs:
 
@@ -80,7 +83,9 @@ Function: ebmc_baset::json_properties
 
 \*******************************************************************/
 
-void ebmc_baset::json_properties(const std::string &file_name)
+void json_properties(
+  const ebmc_propertiest &properties,
+  const std::string &file_name)
 {
   json_arrayt json;
 
