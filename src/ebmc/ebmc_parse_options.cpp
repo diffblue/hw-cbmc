@@ -27,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ranking_function.h"
 #include "show_properties.h"
 #include "show_trans.h"
+#include "sva_monitor.h"
 
 #include <iostream>
 
@@ -241,6 +242,9 @@ int ebmc_parse_optionst::doit()
     if(cmdline.isset("liveness-to-safety"))
       liveness_to_safety(transition_system, properties);
 
+    if(cmdline.isset("sva-monitor"))
+      sva_monitor(transition_system, properties);
+
     if(cmdline.isset("show-varmap"))
     {
       auto netlist =
@@ -371,6 +375,7 @@ void ebmc_parse_optionst::help()
     " {y--show-properties}           \t list the properties in the model\n"
     " {y--property} {uid}            \t check the property with given ID\n"
     " {y--liveness-to-safety}        \t translate liveness properties to safety properties\n"
+    " {y--sva-monitor}               \t translate SVA properties into a monitor circuit\n"
     "\n"
     "Methods:\n"
     " {y--k-induction}               \t do k-induction with k=bound\n"

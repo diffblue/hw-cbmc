@@ -33,6 +33,7 @@ SRC = \
       show_formula_solver.cpp \
       show_properties.cpp \
       show_trans.cpp \
+      sva_monitor.cpp \
       transition_system.cpp \
       waveform.cpp \
       #empty line
