@@ -63,7 +63,11 @@ public:
     literalt p;
   };
 
-  using propertyt = std::variant<Gpt, GFpt>;
+  struct not_translatedt
+  {
+  };
+
+  using propertyt = std::variant<Gpt, GFpt, not_translatedt>;
 
   // map from property ID to property netlist nodes
   using propertiest = std::map<irep_idt, propertyt>;
