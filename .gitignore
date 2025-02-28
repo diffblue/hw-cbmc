@@ -1,1 +1,23 @@
 .DS_Store
+*.o
+*.d
+*.a
+*~
+.*.swp
+.*.swo
+
+# Compiled binaries
+src/ebmc/ebmc
+src/hw-cbmc/hw-cbmc
+src/vlindex/vlindex
+
+# Flex/Yacc generated files
+*.yy.cpp
+*.output
+*.tab.cpp
+*.tab.h
+*.inc
+
+# Regression
+*.out
+*tests.log
