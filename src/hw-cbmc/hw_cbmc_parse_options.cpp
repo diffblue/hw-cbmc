@@ -206,8 +206,8 @@ int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
     {
       if(cmdline.isset("gen-interface"))
       {
-        const symbolt &symbol =
-            namespacet(goto_model.symbol_table).lookup(top_module);
+        namespacet ns(goto_model.symbol_table);
+        const symbolt &symbol = ns.lookup(top_module);
 
         if(cmdline.isset("outfile"))
         {

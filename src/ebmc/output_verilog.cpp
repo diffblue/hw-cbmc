@@ -336,8 +336,8 @@ void output_verilog_rtlt::assign_symbol(
     throw 0;
   }
   
-  const symbolt &symbol=
-    namespacet(symbol_table).lookup(symbol_expr.get(ID_identifier));
+  namespacet ns(symbol_table);
+  const symbolt &symbol = ns.lookup(symbol_expr.get(ID_identifier));
   
   if(symbol.is_state_var)
   {
