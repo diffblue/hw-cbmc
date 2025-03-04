@@ -1529,10 +1529,8 @@ Function: smv_typecheckt::to_string
 
 std::string smv_typecheckt::to_string(const exprt &expr)
 {
-  std::string result;
-  namespacet ns(symbol_table);
-  expr2smv(expr, result, ns);
-  return result;
+  namespacet ns{symbol_table};
+  return expr2smv(expr, ns);
 }
 
 /*******************************************************************\
@@ -1549,10 +1547,8 @@ Function: smv_typecheckt::to_string
 
 std::string smv_typecheckt::to_string(const typet &type)
 {
-  std::string result;
-  namespacet ns(symbol_table);
-  type2smv(type, result, ns);
-  return result;
+  namespacet ns{symbol_table};
+  return type2smv(type, ns);
 }
 
 /*******************************************************************\
