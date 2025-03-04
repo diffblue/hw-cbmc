@@ -24,6 +24,7 @@ SRC = \
       netlist.cpp \
       neural_liveness.cpp \
       output_file.cpp \
+      output_smv_word_level.cpp \
       output_verilog.cpp \
       property_checker.cpp \
       random_traces.cpp \
