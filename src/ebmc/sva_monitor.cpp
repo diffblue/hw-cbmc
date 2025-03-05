@@ -103,7 +103,19 @@ std::optional<exprt> create_sva_safety_monitor_rec(
 
 exprt sva_monitor_initial(transition_systemt &transition_system)
 {
-  return nil_exprt{};
+  auxiliary_symbolt initial_symbol{
+    "sva-monitor::initial",
+    bool_typet{},
+    transition_system.main_symbol->mode};
+
+  initial_symbol.is_state_var = true;
+  initial_symbol.module = transition_system.main_symbol->module;
+  initial_symbol.base_name = "initial";
+
+  auto result = transition_system.symbol_table.insert(std::move(initial_symbol));
+  CHECK_RETURN(result.second);
+
+  return result.first.symbol_expr();
 }
 
 /// top-level formula
