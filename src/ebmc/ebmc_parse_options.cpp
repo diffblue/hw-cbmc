@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "netlist.h"
 #include "neural_liveness.h"
 #include "output_file.h"
+#include "output_smv_word_level.h"
 #include "property_checker.h"
 #include "random_traces.h"
 #include "ranking_function.h"
@@ -214,6 +215,15 @@ int ebmc_parse_optionst::doit()
     // get the properties
     auto properties = ebmc_propertiest::from_command_line(
       cmdline, transition_system, ui_message_handler);
+
+    if(cmdline.isset("smv-word-level"))
+    {
+      auto filename = cmdline.value_opt("outfile").value_or("-");
+      output_filet output_file{filename};
+      output_smv_word_level(
+        transition_system, properties, output_file.stream());
+      return 0;
+    }
 
     if(cmdline.isset("show-properties"))
     {
@@ -418,6 +428,7 @@ void ebmc_parse_optionst::help()
     " {y--smv-netlist}               \t show netlist in SMV format\n"
     " {y--dot-netlist}               \t show netlist in DOT format\n"
     " {y--show-trans}                \t show transition system\n"
+    " {y--smv-word-level}            \t output word-level SMV\n"
     " {y--verbosity} {u#}            \t verbosity level, from 0 (silent) to 10 (everything)\n"
     // clang-format on
     "\n");
