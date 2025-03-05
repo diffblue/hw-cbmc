@@ -7,8 +7,8 @@ on:
 
 jobs:
   # This job takes approximately 15 minutes
-  check-ubuntu-20_04-make-gcc:
-    runs-on: ubuntu-20.04
+  check-ubuntu-24_04-make-gcc:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,10 +28,10 @@ jobs:
         with:
           path: .ccache
           save-always: true
-          key: ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
+          key: ${{ runner.os }}-24.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: |
-            ${{ runner.os }}-20.04-make-gcc-${{ github.ref }}
-            ${{ runner.os }}-20.04-make-gcc
+            ${{ runner.os }}-24.04-make-gcc-${{ github.ref }}
+            ${{ runner.os }}-24.04-make-gcc
       - name: ccache environment
         run: |
           echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
@@ -62,8 +62,8 @@ jobs:
         run: ccache -s
 
   # This job takes approximately 15 minutes
-  check-ubuntu-20_04-make-clang:
-    runs-on: ubuntu-20.04
+  check-ubuntu-24_04-make-clang:
+    runs-on: ubuntu-24.04
     env:
       CC: "ccache clang"
       CXX: "ccache clang++"
@@ -78,7 +78,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq clang-10 clang++-10 gdb jq flex bison libxml2-utils cpanminus ccache z3
+          sudo apt-get install --no-install-recommends -yq clang-19 clang++-19 gdb jq flex bison libxml2-utils cpanminus ccache z3
           cpanm Thread::Pool::Simple
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
@@ -87,10 +87,10 @@ jobs:
         with:
           path: .ccache
           save-always: true
-          key: ${{ runner.os }}-20.04-make-clang-${{ github.ref }}-${{ github.sha }}-PR
+          key: ${{ runner.os }}-24.04-make-clang-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: |
-            ${{ runner.os }}-20.04-make-clang-${{ github.ref }}
-            ${{ runner.os }}-20.04-make-clang
+            ${{ runner.os }}-24.04-make-clang-${{ github.ref }}
+            ${{ runner.os }}-24.04-make-clang
       - name: ccache environment
         run: |
           echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
@@ -134,8 +134,8 @@ jobs:
 
   # This job takes approximately 4 minutes
   benchmarking:
-    runs-on: ubuntu-20.04
-    needs: check-ubuntu-20_04-make-clang
+    runs-on: ubuntu-24.04
+    needs: check-ubuntu-24_04-make-clang
     steps:
       - uses: actions/checkout@v4
         with:
@@ -162,8 +162,8 @@ jobs:
 
   # This job takes approximately 1 minute
   examples:
-    runs-on: ubuntu-20.04
-    needs: check-ubuntu-20_04-make-clang
+    runs-on: ubuntu-24.04
+    needs: check-ubuntu-24_04-make-clang
     steps:
       - uses: actions/checkout@v4
       - name: Get the ebmc binary
