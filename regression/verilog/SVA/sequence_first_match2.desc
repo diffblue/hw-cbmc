@@ -1,9 +1,9 @@
 CORE
 sequence_first_match2.sv
 --bound 5
-^\[.*\] \(##1 1\) or \(\(##2 1\) \|-> main.x == 1\): PROVED up to bound 5$
+^\[.*\] \(\(##1 1\) or \(##2 1\)\) \|-> main.x == 1: PROVED up to bound 5$
 ^\[.*\] first_match\(\(##1 1\) or \(##2 1\)\) \|-> main\.x == 1: PROVED up to bound 5$
-^\[.*\] 1 or \(\(##1 1\) \|-> main\.x == 0\): PROVED up to bound 5$
+^\[.*\] \(1 or \(##1 1\)\) \|-> main\.x == 0: PROVED up to bound 5$
 ^\[.*\] first_match\(1 or \(##1 1\)\) \|-> main\.x == 0: PROVED up to bound 5$
 ^EXIT=0$
 ^SIGNAL=0$

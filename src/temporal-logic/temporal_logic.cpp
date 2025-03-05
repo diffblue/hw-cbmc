@@ -92,7 +92,7 @@ bool is_LTL_past(const exprt &expr)
   return !has_subexpr(expr, non_LTL_past_operator);
 }
 
-bool is_SVA_sequence(const exprt &expr)
+bool is_SVA_sequence_operator(const exprt &expr)
 {
   auto id = expr.id();
   // Note that ID_sva_overlapped_followed_by and ID_sva_nonoverlapped_followed_by
@@ -114,7 +114,7 @@ bool is_SVA_sequence(const exprt &expr)
 bool is_SVA_operator(const exprt &expr)
 {
   auto id = expr.id();
-  return is_SVA_sequence(expr) || id == ID_sva_disable_iff ||
+  return is_SVA_sequence_operator(expr) || id == ID_sva_disable_iff ||
          id == ID_sva_accept_on || id == ID_sva_reject_on ||
          id == ID_sva_sync_accept_on || id == ID_sva_sync_reject_on ||
          id == ID_sva_always || id == ID_sva_s_always ||

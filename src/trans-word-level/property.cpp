@@ -543,7 +543,7 @@ static obligationst property_obligations_rec(
       return property_obligations_rec(
         op_negated_opt.value(), current, no_timeframes);
     }
-    else if(is_SVA_sequence(op))
+    else if(is_SVA_sequence_operator(op))
     {
       return obligationst{
         instantiate_property(property_expr, current, no_timeframes)};

@@ -559,10 +559,6 @@ int yyverilogerror(const char *error)
 // whereas the table gives them in decreasing order.
 // The precendence of the assertion operators is lower than
 // those in Table 11-2.
-//
-// SEQUENCE_TO_PROPERTY is an artificial token to give
-// the right precedence to the conversion of a sequence_expr
-// to a property_expr.
 %nonassoc "property_expr_abort" // accept_on, reject_on, ...
 %nonassoc "property_expr_clocking_event" // @(...) property_expr
 %nonassoc "always" "s_always" "eventually" "s_eventually"
@@ -573,7 +569,6 @@ int yyverilogerror(const char *error)
 %right "iff"
 %left "or"
 %left "and"
-%nonassoc SEQUENCE_TO_PROPERTY
 %nonassoc "not" "nexttime" "s_nexttime"
 %left "intersect"
 %left "within"
@@ -2451,10 +2446,13 @@ sequence_formal_type:
 // for property_expr into property_expr and property_expr_proper.
 
 property_expr:
-	  sequence_expr %prec SEQUENCE_TO_PROPERTY
+	  expression_or_dist
 	| property_expr_proper
 	;
 
+// To allow the operators and/or to be used as either sequence or property,
+// we use 'property_expr' where 'sequence_expr' would be required, and
+// copy the sequence_expr rules.
 property_expr_proper:
 	  "strong" '(' sequence_expr ')'
 		{ init($$, ID_sva_strong); mto ($$, $3); }
@@ -2468,9 +2466,11 @@ property_expr_proper:
 		{ init($$, ID_sva_or); mto($$, $1); mto($$, $3); }
 	| property_expr "and" property_expr
 		{ init($$, ID_sva_and); mto($$, $1); mto($$, $3); }
-	| sequence_expr "|->" property_expr
+	// requires sequence_expr on the LHS
+	| property_expr "|->" property_expr
 		{ init($$, ID_sva_overlapped_implication); mto($$, $1); mto($$, $3); }
-	| sequence_expr "|=>" property_expr
+	// requires sequence_expr on the LHS
+	| property_expr "|=>" property_expr
 		{ init($$, ID_sva_non_overlapped_implication); mto($$, $1); mto($$, $3); }
 	| "if" '(' expression_or_dist ')' property_expr %prec LT_TOK_ELSE
 		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); stack_expr($$).add_to_operands(nil_exprt()); }
@@ -2478,9 +2478,11 @@ property_expr_proper:
 		{ init($$, ID_sva_if); mto($$, $3); mto($$, $5); mto($$, $7); }
 	| "case" '(' expression_or_dist ')' property_case_item_brace "endcase"
 		{ init($$, ID_sva_case); mto($$, $3); mto($$, $5); }
-	| sequence_expr "#-#" property_expr
+	// requires sequence_expr on the LHS
+	| property_expr "#-#" property_expr
 		{ init($$, ID_sva_overlapped_followed_by); mto($$, $1); mto($$, $3); }
-	| sequence_expr "#=#" property_expr
+	// requires sequence_expr on the LHS
+	| property_expr "#=#" property_expr
 		{ init($$, ID_sva_nonoverlapped_followed_by); mto($$, $1); mto($$, $3); }
 	| "nexttime" property_expr
 		{ init($$, ID_sva_nexttime); mto($$, $2); }
@@ -2523,6 +2525,37 @@ property_expr_proper:
 	| "sync_reject_on" '(' expression_or_dist ')' property_expr %prec "property_expr_abort"
 		{ init($$, ID_sva_sync_reject_on); mto($$, $3); mto($$, $5); }
 	| clocking_event property_expr { $$=$2; } %prec "property_expr_clocking_event"
+	//
+	// copy of sequence_expr, to allow and/or to be both sequence_expr and property_expr
+	//
+	| cycle_delay_range sequence_expr %prec "##"
+		{ $$=$1; mto($$, $2); }
+	// requires sequence_expr on the LHS
+	| property_expr cycle_delay_range sequence_expr %prec "##"
+		{ init($$, ID_sva_sequence_concatenation); mto($$, $1); mto($2, $3); mto($$, $2); }
+	// requires sequence_expr on the LHS
+	| '(' property_expr_proper ')' sequence_abbrev
+		{ $$ = $4;
+		  // preserve the operand ordering as in the source code
+		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($2));
+		}
+	| expression_or_dist boolean_abbrev
+		{ $$ = $2;
+		  // preserve the operand ordering as in the source code
+		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($1));
+		}
+	// requires sequence_expr on the LHS
+	| property_expr "intersect" sequence_expr
+		{ init($$, ID_sva_sequence_intersect); mto($$, $1); mto($$, $3); }
+	| "first_match" '(' sequence_expr ')'
+		{ init($$, ID_sva_sequence_first_match); mto($$, $3); stack_expr($$).add_to_operands(nil_exprt{}); }
+	| "first_match" '(' sequence_expr ',' sequence_match_item_brace ')'
+		{ init($$, ID_sva_sequence_first_match); mto($$, $3); mto($$, $5); }
+	| expression_or_dist "throughout" sequence_expr
+		{ init($$, ID_sva_sequence_throughout); mto($$, $1); mto($$, $3); }
+	// requires sequence_expr on the LHS
+	| property_expr "within" sequence_expr
+		{ init($$, ID_sva_sequence_within); mto($$, $1); mto($$, $3); }
 	;
 
 property_case_item_brace:

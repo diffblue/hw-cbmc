@@ -199,6 +199,8 @@ protected:
     expr = convert_sva_rec(std::move(expr));
   }
 
+  void require_sva_sequence(const exprt &) const;
+
   [[nodiscard]] exprt convert_sva_rec(exprt);
   [[nodiscard]] exprt convert_unary_sva(unary_exprt);
   [[nodiscard]] exprt convert_binary_sva(binary_exprt);
