@@ -115,7 +115,17 @@ exprt sva_monitor_initial(transition_systemt &transition_system)
   auto result = transition_system.symbol_table.insert(std::move(initial_symbol));
   CHECK_RETURN(result.second);
 
-  return result.first.symbol_expr();
+  const auto symbol_expr = result.first.symbol_expr();
+
+  // true in the initial state
+  transition_system.trans_expr.init() = and_exprt{transition_system.trans_expr.init(), symbol_expr};
+
+  // but false in subsequent states
+  auto next_expr = exprt(ID_next_symbol, symbol_expr.type());
+  next_expr.set(ID_identifier, symbol_expr.get_identifier());
+  transition_system.trans_expr.trans() = and_exprt{transition_system.trans_expr.trans(), not_exprt{next_expr}};
+
+  return symbol_expr;
 }
 
 /// top-level formula
