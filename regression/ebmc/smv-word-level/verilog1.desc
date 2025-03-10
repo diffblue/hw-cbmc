@@ -1,0 +1,8 @@
+CORE
+verilog1.v
+--smv-word-level
+^MODULE main$
+^VAR x : unsigned word\[32\];$
+^EXIT=0$
+^SIGNAL=0$
+--
