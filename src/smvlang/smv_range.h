@@ -73,6 +73,12 @@ public:
     return {from - other.from, to - other.to};
   }
 
+  // unary minus
+  smv_ranget operator-() const
+  {
+    return {-to, -from};
+  }
+
   smv_ranget operator*(const smv_ranget &other) const
   {
     mp_integer p1 = from * other.from;

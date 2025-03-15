@@ -8,6 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "expr2smv.h"
 
+#include <util/arith_tools.h>
+#include <util/bitvector_types.h>
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
 #include <util/namespace.h>
@@ -114,7 +116,7 @@ public:
     precedencet &precedence);
 
   bool convert_constant(
-    const exprt &src,
+    const constant_exprt &,
     std::string &dest,
     precedencet &precedence);
 
@@ -508,14 +510,13 @@ Function: expr2smvt::convert_constant
 \*******************************************************************/
 
 bool expr2smvt::convert_constant(
-  const exprt &src,
+  const constant_exprt &src,
   std::string &dest,
   precedencet &precedence)
 {
   precedence = precedencet::MAX;
 
-  const typet &type=src.type();
-  const std::string &value=src.get_string(ID_value);
+  const typet &type = src.type();
 
   if(type.id()==ID_bool)
   {
@@ -528,7 +529,19 @@ bool expr2smvt::convert_constant(
           type.id()==ID_natural ||
           type.id()==ID_range ||
           type.id()==ID_enumeration)
-    dest=value;
+  {
+    dest = id2string(src.get_value());
+  }
+  else if(type.id() == ID_signedbv || type.id() == ID_unsignedbv)
+  {
+    auto value_int = numeric_cast_v<mp_integer>(src);
+    auto value_abs = value_int < 0 ? -value_int : value_int;
+    auto minus = value_int < 0 ? "-" : "";
+    auto sign_specifier = type.id() == ID_signedbv ? 's' : 'u';
+    auto word_width = to_bitvector_type(type).width();
+    dest = minus + std::string("0") + sign_specifier + 'd' +
+           std::to_string(word_width) + '_' + integer2string(value_abs);
+  }
   else
     return convert_norep(src, dest, precedence);
 
@@ -611,20 +624,25 @@ bool expr2smvt::convert(
     return convert_unary(
       to_not_expr(src), dest, "!", precedence = precedencet::NOT);
 
-  else if(src.id()==ID_and)
+  else if(src.id() == ID_and || src.id() == ID_bitand)
     return convert_binary(src, dest, "&", precedence = precedencet::AND);
 
-  else if(src.id()==ID_or)
+  else if(src.id() == ID_or || src.id() == ID_bitor)
     return convert_binary(src, dest, "|", precedence = precedencet::OR);
 
-  else if(src.id()==ID_implies)
+  else if(src.id() == ID_implies || src.id() == ID_smv_bitimplies)
     return convert_binary(src, dest, "->", precedence = precedencet::IMPLIES);
 
-  else if(src.id() == ID_xor)
+  else if(src.id() == ID_xor || src.id() == ID_bitxor)
     return convert_binary(src, dest, "xor", precedence = precedencet::OR);
 
-  else if(src.id() == ID_xnor)
-    return convert_binary(src, dest, "xnor", precedence = precedencet::OR);
+  else if(src.id() == ID_xnor || src.id() == ID_bitxnor)
+  {
+    if(src.get_bool(ID_C_smv_iff))
+      return convert_binary(src, dest, "<->", precedence = precedencet::IFF);
+    else
+      return convert_binary(src, dest, "xnor", precedence = precedencet::OR);
+  }
 
   else if(
     src.id() == ID_AG || src.id() == ID_EG || src.id() == ID_AF ||
@@ -716,7 +734,7 @@ bool expr2smvt::convert(
     return convert_next_symbol(src, dest, precedence);
 
   else if(src.id()==ID_constant)
-    return convert_constant(src, dest, precedence);
+    return convert_constant(to_constant_expr(src), dest, precedence);
 
   else if(src.id()=="smv_nondet_choice")
     return convert_nondet_choice(src, dest, precedence);
@@ -735,6 +753,24 @@ bool expr2smvt::convert(
 
   else if(src.id()==ID_cond)
     return convert_cond(src, dest);
+
+  else if(src.id() == ID_concatenation)
+  {
+    return convert_binary(
+      to_binary_expr(src), dest, "::", precedence = precedencet::CONCAT);
+  }
+
+  else if(src.id() == ID_shl)
+  {
+    return convert_binary(
+      to_binary_expr(src), dest, "<<", precedence = precedencet::SHIFT);
+  }
+
+  else if(src.id() == ID_lshr || src.id() == ID_ashr)
+  {
+    return convert_binary(
+      to_binary_expr(src), dest, ">>", precedence = precedencet::SHIFT);
+  }
 
   else // no SMV language expression for internal representation 
     return convert_norep(src, dest, precedence);
@@ -837,6 +873,16 @@ bool type2smv(const typet &type, std::string &code, const namespacet &ns)
       }
       code+=')';
     }
+  }
+  else if(type.id() == ID_signedbv)
+  {
+    code =
+      "signed word[" + std::to_string(to_signedbv_type(type).width()) + ']';
+  }
+  else if(type.id() == ID_unsignedbv)
+  {
+    code =
+      "unsigned word[" + std::to_string(to_unsignedbv_type(type).width()) + ']';
   }
   else
     return true;
