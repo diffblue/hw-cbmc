@@ -731,7 +731,7 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
 
   std::string s;
 
-  if(type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv)
+  if(type.id() == ID_unsignedbv)
   {
     if(verilog_type == ID_verilog_byte)
       s = "byte unsigned";
@@ -743,6 +743,10 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
       s = "shortint unsigned";
     else
       s = "bit[" + to_string(left) + ":" + to_string(right) + "]";
+  }
+  else if(type.id() == ID_verilog_unsignedbv)
+  {
+    s = "logic[" + to_string(left) + ":" + to_string(right) + "]";
   }
   else if(type.id() == ID_bool)
   {
@@ -760,6 +764,10 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
       s = "shortint";
     else
       s = "bit signed[" + to_string(left) + ":" + to_string(right) + "]";
+  }
+  else if(type.id() == ID_verilog_signedbv)
+  {
+    s = "logic signed[" + to_string(left) + ":" + to_string(right) + "]";
   }
   else if(type.id() == ID_verilog_realtime)
   {
