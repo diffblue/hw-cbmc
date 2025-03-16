@@ -1,0 +1,15 @@
+MODULE main
+
+SPEC uwconst(123, 8) >> 0 = uwconst(123, 8)
+SPEC uwconst(123, 8) >> 1 = uwconst(61, 8)
+SPEC uwconst(123, 8) >> 8 = uwconst(0, 8)
+SPEC uwconst(123, 8) << 0 = uwconst(123, 8)
+SPEC uwconst(123, 8) << 1 = uwconst(246, 8)
+SPEC uwconst(123, 8) << 2 = uwconst(236, 8)
+
+SPEC swconst(123, 8) >> 0 = swconst(123, 8)
+SPEC swconst(123, 8) >> 1 = swconst(61, 8)
+SPEC swconst(123, 8) >> 8 = swconst(0, 8)
+SPEC swconst(123, 8) << 0 = swconst(123, 8)
+SPEC swconst(123, 8) << 1 = swconst(-10, 8)
+SPEC swconst(123, 8) << 2 = swconst(-20, 8)

@@ -1,0 +1,4 @@
+MODULE main
+
+SPEC sizeof(uwconst(0, 1)) = 1
+SPEC sizeof(swconst(123, 8)) = 8

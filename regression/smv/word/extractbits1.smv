@@ -1,0 +1,8 @@
+MODULE main
+
+SPEC uwconst(123, 8)[0:0] = uwconst(1, 1)
+SPEC uwconst(123, 8)[7:7] = uwconst(0, 1)
+
+-- always unsigned
+SPEC swconst(123, 8)[0:0] = uwconst(1, 1)
+SPEC swconst(123, 8)[7:7] = uwconst(0, 1)

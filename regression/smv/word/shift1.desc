@@ -1,0 +1,19 @@
+CORE
+shift1.smv
+
+^\[.*\] 0ud8_123 >> 0 = 0ud8_123: PROVED$
+^\[.*\] 0ud8_123 >> 1 = 0ud8_61: PROVED$
+^\[.*\] 0ud8_123 >> 8 = 0ud8_0: PROVED$
+^\[.*\] 0ud8_123 << 0 = 0ud8_123: PROVED$
+^\[.*\] 0ud8_123 << 1 = 0ud8_246: PROVED$
+^\[.*\] 0ud8_123 << 2 = 0ud8_236: PROVED$
+^\[.*\] 0sd8_123 >> 0 = 0sd8_123: PROVED$
+^\[.*\] 0sd8_123 >> 1 = 0sd8_61: PROVED$
+^\[.*\] 0sd8_123 >> 8 = 0sd8_0: PROVED$
+^\[.*\] 0sd8_123 << 0 = 0sd8_123: PROVED$
+^\[.*\] 0sd8_123 << 1 = -0sd8_10: PROVED$
+^\[.*\] 0sd8_123 << 2 = -0sd8_20: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

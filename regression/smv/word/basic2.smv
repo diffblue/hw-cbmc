@@ -1,0 +1,8 @@
+MODULE main
+
+VAR counter : word[8];
+
+ASSIGN init(counter) := uwconst(0, 8);
+ASSIGN next(counter) := counter + uwconst(1, 8);
+
+LTLSPEC NAME live := G F counter = uwconst(10, 8)
