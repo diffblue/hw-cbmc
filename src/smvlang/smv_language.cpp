@@ -140,12 +140,10 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
         it!=module.vars.end(); it++)
       if(it->second.type.id()!="submodule")
       {
-        std::string msg;
         symbol_tablet symbol_table;
-        namespacet ns(symbol_table);
-        type2smv(it->second.type, msg, ns);
-        out << "    " << it->first << ": " 
-            << msg << ";" << std::endl;
+        namespacet ns{symbol_table};
+        auto msg = type2smv(it->second.type, ns);
+        out << "    " << it->first << ": " << msg << ";\n";
       }
 
     out << std::endl;
@@ -157,12 +155,10 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
         it!=module.vars.end(); it++)
       if(it->second.type.id()=="submodule")
       {
-        std::string msg;
         symbol_tablet symbol_table;
         namespacet ns(symbol_table);
-        type2smv(it->second.type, msg, ns);
-        out << "    " << it->first << ": " 
-            << msg << ";" << std::endl;
+        auto msg = type2smv(it->second.type, ns);
+        out << "    " << it->first << ": " << msg << ";\n";
       }
 
     out << std::endl;
@@ -193,7 +189,8 @@ Function: smv_languaget::from_expr
 bool smv_languaget::from_expr(const exprt &expr, std::string &code,
                               const namespacet &ns)
 {
-  return expr2smv(expr, code, ns);
+  code = expr2smv(expr, ns);
+  return false;
 }
 
 /*******************************************************************\
@@ -213,7 +210,8 @@ bool smv_languaget::from_type(
   std::string &code,
   const namespacet &ns)
 {
-  return type2smv(type, code, ns);
+  code = type2smv(type, ns);
+  return false;
 }
 
 /*******************************************************************\

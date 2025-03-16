@@ -4,6 +4,7 @@
 * SystemVerilog: assignment patterns with keys for structs
 * SMV: LTL V operator, xnor operator
 * SMV: word types and operators
+* --smv-word-level outputs the model as word-level SMV
 
 # EBMC 5.5
 

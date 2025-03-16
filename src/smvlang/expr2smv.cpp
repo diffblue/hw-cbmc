@@ -103,7 +103,9 @@ public:
 
   bool convert_if(const if_exprt &, std::string &dest, precedencet precedence);
 
-  bool convert(const exprt &src, std::string &dest);
+  std::string convert(const exprt &);
+
+  bool convert(const exprt &, std::string &dest);
 
   bool convert_symbol(
     const symbol_exprt &,
@@ -124,8 +126,6 @@ public:
 
   bool
   convert_norep(const exprt &src, std::string &dest, precedencet &precedence);
-
-  bool convert(const typet &src, std::string &dest);
 
 protected:
   const namespacet &ns;
@@ -790,6 +790,25 @@ Function: expr2smvt::convert
 
 \*******************************************************************/
 
+std::string expr2smvt::convert(const exprt &src)
+{
+  std::string dest;
+  convert(src, dest);
+  return dest;
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 bool expr2smvt::convert(const exprt &src, std::string &dest)
 {
   precedencet precedence;
@@ -808,10 +827,10 @@ Function: expr2smv
 
 \*******************************************************************/
 
-bool expr2smv(const exprt &expr, std::string &code, const namespacet &ns)
+std::string expr2smv(const exprt &expr, const namespacet &ns)
 {
-  expr2smvt expr2smv(ns);
-  return expr2smv.convert(expr, code);
+  expr2smvt expr2smv{ns};
+  return expr2smv.convert(expr);
 }
 
 /*******************************************************************\
@@ -826,24 +845,22 @@ Function: type2smv
 
 \*******************************************************************/
 
-bool type2smv(const typet &type, std::string &code, const namespacet &ns)
+std::string type2smv(const typet &type, const namespacet &ns)
 {
   if(type.id()==ID_bool)
-    code="boolean";
+    return "boolean";
   else if(type.id()==ID_array)
   {
-    std::string tmp;
-    if(type2smv(to_array_type(type).element_type(), tmp, ns))
-      return true;
-    code="array ";
+    std::string code = "array ";
     code+="..";
     code+=" of ";
-    code+=tmp;
+    code += type2smv(to_array_type(type).element_type(), ns);
+    return code;
   }
   else if(type.id()==ID_enumeration)
   {
     const irept::subt &elements=to_enumeration_type(type).elements();
-    code="{ ";
+    std::string code = "{ ";
     bool first=true;
     for(auto &element : elements)
     {
@@ -851,14 +868,15 @@ bool type2smv(const typet &type, std::string &code, const namespacet &ns)
       code += element.id_string();
     }
     code+=" }";
+    return code;
   }
   else if(type.id()==ID_range)
   {
-    code=type.get_string(ID_from)+".."+type.get_string(ID_to);
+    return type.get_string(ID_from) + ".." + type.get_string(ID_to);
   }
   else if(type.id()=="submodule")
   {
-    code=type.get_string(ID_identifier);
+    auto code = type.get_string(ID_identifier);
     const exprt &e=(exprt &)type;
     if(e.has_operands())
     {
@@ -867,25 +885,22 @@ bool type2smv(const typet &type, std::string &code, const namespacet &ns)
       forall_operands(it, e)
       {
         if(first) first=false; else code+=", ";
-        std::string tmp;
-        expr2smv(*it, tmp, ns);
-        code+=tmp;
+        code += expr2smv(*it, ns);
       }
       code+=')';
     }
+    return code;
   }
   else if(type.id() == ID_signedbv)
   {
-    code =
-      "signed word[" + std::to_string(to_signedbv_type(type).width()) + ']';
+    return "signed word[" + std::to_string(to_signedbv_type(type).width()) +
+           ']';
   }
   else if(type.id() == ID_unsignedbv)
   {
-    code =
-      "unsigned word[" + std::to_string(to_unsignedbv_type(type).width()) + ']';
+    return "unsigned word[" + std::to_string(to_unsignedbv_type(type).width()) +
+           ']';
   }
   else
-    return true;
-
-  return false;
+    return "no conversion for " + type.id_string();
 }
