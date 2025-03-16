@@ -836,9 +836,21 @@ void smv_typecheckt::typecheck_expr_rec(
     auto &false_case = if_expr.false_case();
     typecheck_expr_rec(if_expr.cond(), mode);
     convert_expr_to(if_expr.cond(), bool_typet{});
-    typecheck_expr_rec(true_case, dest_type, mode);
-    typecheck_expr_rec(false_case, dest_type, mode);
-    expr.type() = dest_type;
+
+    if(dest_type.is_nil())
+    {
+      typecheck_expr_rec(true_case, mode);
+      typecheck_expr_rec(false_case, mode);
+      expr.type() = type_union(true_case.type(), false_case.type());
+      typecheck_expr_rec(true_case, expr.type(), mode);
+      typecheck_expr_rec(false_case, expr.type(), mode);
+    }
+    else
+    {
+      typecheck_expr_rec(true_case, dest_type, mode);
+      typecheck_expr_rec(false_case, dest_type, mode);
+      expr.type() = dest_type;
+    }
   }
   else if(expr.id()==ID_plus || expr.id()==ID_minus ||
           expr.id()==ID_mult || expr.id()==ID_div ||
