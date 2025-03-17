@@ -132,6 +132,24 @@ constant_exprt convert_integral_literal(const irep_idt &value)
       rest += tolower(ch);
   }
 
+  // special case the "unbased unsized literals"
+  if(rest == "'0")
+  {
+    return from_integer(0, unsignedbv_typet{1});
+  }
+  else if(rest == "'1")
+  {
+    return from_integer(1, unsignedbv_typet{1});
+  }
+  else if(rest == "'x" || rest == "'X")
+  {
+    return constant_exprt{"x", verilog_unsignedbv_typet{1}};
+  }
+  else if(rest == "'z" || rest == "'Z")
+  {
+    return constant_exprt{"z", verilog_unsignedbv_typet{1}};
+  }
+
   std::string::size_type pos = rest.find('\'');
   std::size_t bits = 0;
   bool bits_given = false;
