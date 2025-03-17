@@ -1,8 +1,7 @@
 CORE broken-smt-backend
 range_type5.smv
 --bound 3
-^file .* line 14: Expected expression of type `5..10', but got expression `x', which is of type `0..6'$
-^EXIT=2$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
