@@ -752,7 +752,7 @@ exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
   {
     s = "bit";
   }
-  else if(type.id() == ID_signedbv || type.id() == ID_verilog_signedbv)
+  else if(type.id() == ID_signedbv)
   {
     if(verilog_type == ID_verilog_byte)
       s = "byte";
