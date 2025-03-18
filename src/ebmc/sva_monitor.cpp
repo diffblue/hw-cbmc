@@ -40,10 +40,10 @@ exprt monitor_resultt::as_LTL() const
 }
 
 /// Recursion for creating a safety automaton for a safety property.
-/// * the property is assumed to be in NNF.
+/// * the property is converted into NNF on the fly.
 /// * the monitor starts with the given "start" signal
 /// * the return value is the "safety" signal, or {} if not supported
-std::optional<exprt> create_sva_safety_monitor_rec(
+std::optional<exprt> create_sva_monitor_rec(
   transition_systemt &transition_system,
   const exprt &start,
   const exprt &property_expr)
@@ -70,7 +70,7 @@ std::optional<exprt> create_sva_safety_monitor_rec(
 
     for(auto &op : property_expr.operands())
     {
-      auto rec = create_sva_safety_monitor_rec(transition_system, start, op);
+      auto rec = create_sva_monitor_rec(transition_system, start, op);
       if(!rec.has_value())
         return {};
       conjuncts.push_back(rec.value());
@@ -129,39 +129,17 @@ exprt sva_monitor_initial(transition_systemt &transition_system)
   return symbol_expr;
 }
 
-/// top-level formula
-std::optional<monitor_resultt>
-create_sva_monitor(transition_systemt &transition_system, exprt property_expr)
-{
-  if(property_expr.id() == ID_sva_always)
-  {
-    auto &op = to_sva_always_expr(property_expr);
-
-    // Special-case "always p".
-    if(!has_temporal_operator(op))
-      return monitor_resultt{op};
-
-    // Create the top-level "start" signal -- on in the initial states exactly.
-    auto start = sva_monitor_initial(transition_system);
-
-    // always X
-    auto result_rec =
-      create_sva_safety_monitor_rec(transition_system, start, op);
-    if(result_rec.has_value())
-      return monitor_resultt{result_rec.value()};
-  }
-
-  return {}; // not supported
-}
-
 void create_sva_monitor(
   transition_systemt &transition_system,
   ebmc_propertiest::propertyt &property)
 {
-  auto result = create_sva_monitor(transition_system, property.normalized_expr);
+  // Create the top-level "start" signal -- on in the initial states exactly.
+  auto start = sva_monitor_initial(transition_system);
+
+  auto result = create_sva_monitor_rec(transition_system, start, property.normalized_expr);
 
   if(result.has_value())
-    property.normalized_expr = result.value().as_LTL();
+    property.normalized_expr = G_exprt{result.value()};
 }
 
 void sva_monitor(
@@ -170,7 +148,6 @@ void sva_monitor(
 {
   for(auto &property : properties.properties)
   {
-    if(has_SVA_operator(property.normalized_expr))
-      create_sva_monitor(transition_system, property);
+    create_sva_monitor(transition_system, property);
   }
 }
