@@ -136,7 +136,8 @@ void create_sva_monitor(
   // Create the top-level "start" signal -- on in the initial states exactly.
   auto start = sva_monitor_initial(transition_system);
 
-  auto result = create_sva_monitor_rec(transition_system, start, property.normalized_expr);
+  auto result =
+    create_sva_monitor_rec(transition_system, start, property.normalized_expr);
 
   if(result.has_value())
     property.normalized_expr = G_exprt{result.value()};
