@@ -217,6 +217,13 @@ int ebmc_parse_optionst::doit()
     auto properties = ebmc_propertiest::from_command_line(
       cmdline, transition_system, ui_message_handler);
 
+    // possibly apply liveness-to-safety
+    if(cmdline.isset("liveness-to-safety"))
+      liveness_to_safety(transition_system, properties);
+
+    if(cmdline.isset("sva-monitor"))
+      sva_monitor(transition_system, properties);
+
     if(cmdline.isset("smv-word-level"))
     {
       auto filename = cmdline.value_opt("outfile").value_or("-");
@@ -237,13 +244,6 @@ int ebmc_parse_optionst::doit()
       json_properties(properties, cmdline.get_value("json-properties"));
       return 0;
     }
-
-    // possibly apply liveness-to-safety
-    if(cmdline.isset("liveness-to-safety"))
-      liveness_to_safety(transition_system, properties);
-
-    if(cmdline.isset("sva-monitor"))
-      sva_monitor(transition_system, properties);
 
     if(cmdline.isset("show-varmap"))
     {

@@ -51,7 +51,7 @@ std::optional<exprt> create_sva_monitor_rec(
   if(!has_temporal_operator(property_expr))
   {
     // A state formula only. Needs to hold in "start" states only.
-    return and_exprt{start, property_expr};
+    return implies_exprt{start, property_expr};
   }
   else if(
     property_expr.id() == ID_not || property_expr.id() == ID_implies ||
