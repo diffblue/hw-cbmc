@@ -174,6 +174,26 @@ constant_exprt convert_integral_literal(const irep_idt &value)
     rest = rest.substr(1);
   }
 
+  // special case for 'dx/'dX/'dz/'dZ
+  // "The default length of x and z is the same as the default length of an integer."
+  // Introduced by Verilog 1364-2001.
+  if(rest == "dx" || rest == "dX")
+  {
+    std::size_t final_bits = bits_given ? bits : 32;
+    auto type = s_flag_given
+                  ? static_cast<typet>(verilog_signedbv_typet{final_bits})
+                  : verilog_unsignedbv_typet{final_bits};
+    return constant_exprt{std::string(final_bits, 'x'), type};
+  }
+  else if(rest == "dz" || rest == "dZ")
+  {
+    std::size_t final_bits = bits_given ? bits : 32;
+    auto type = s_flag_given
+                  ? static_cast<typet>(verilog_signedbv_typet{final_bits})
+                  : verilog_unsignedbv_typet{final_bits};
+    return constant_exprt{std::string(final_bits, 'z'), type};
+  }
+
   unsigned base = 10;
 
   // base given?

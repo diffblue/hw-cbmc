@@ -20,4 +20,16 @@ module main;
   p10: assert final ($typename('x)=="logic[0:0]" && 'x===1'bx);
   p11: assert final ($typename('z)=="logic[0:0]" && 'z===1'bz);
 
+  // decimals must not contain x/z "unless there is
+  // exactly one digit in the token"
+  p12: assert final ('dx===32'hxxxx_xxxx);
+  p13: assert final ('dX===32'hxxxx_xxxx);
+  p14: assert final ('dz===32'hzzzz_zzzz);
+  p15: assert final ('dZ===32'hzzzz_zzzz);
+  p16: assert final (4'dx===4'hx);
+  p17: assert final (4'dX===4'hx);
+  p18: assert final (4'dz===4'hz);
+  p19: assert final (4'dZ===4'hz);
+  p20: assert final ($typename(4'sdx)==="logic signed[3:0]");
+
 endmodule

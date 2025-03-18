@@ -126,7 +126,7 @@ Word            {LetterU}{WordNumUD}*
 EscapedWord     "\\"[^\n \t\r]+
 Binary          ({Number})?{WSst}'{WSst}[sS]?[bB]{WSst}[01xXzZ?]([01xXzZ?_])*
 Octal           ({Number})?{WSst}'{WSst}[sS]?[oO]{WSst}[0-7xXzZ?]([0-7xXzZ?_])*
-Decimal         ({Number})?{WSst}'{WSst}[sS]?[dD]{WSst}{Number}
+Decimal         ({Number})?{WSst}'{WSst}[sS]?[dD]{WSst}({Number}|[xXzZ]_*)
 Hexdecimal      ({Number})?{WSst}'{WSst}[sS]?[hH]{WSst}[0-9a-fA-FxXzZ?]([0-9a-fA-FxXzZ?_])*
 unbased_unsized '0|'1|'x|'X|'z|'Z
 Time            {Number}(\.{Number})?("fs"|"ps"|"ns"|"us"|"ms"|"s")
