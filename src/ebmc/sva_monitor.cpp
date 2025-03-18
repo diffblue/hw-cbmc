@@ -104,26 +104,27 @@ std::optional<exprt> create_sva_safety_monitor_rec(
 exprt sva_monitor_initial(transition_systemt &transition_system)
 {
   auxiliary_symbolt initial_symbol{
-    "sva-monitor::initial",
-    bool_typet{},
-    transition_system.main_symbol->mode};
+    "sva-monitor::initial", bool_typet{}, transition_system.main_symbol->mode};
 
   initial_symbol.is_state_var = true;
   initial_symbol.module = transition_system.main_symbol->module;
   initial_symbol.base_name = "initial";
 
-  auto result = transition_system.symbol_table.insert(std::move(initial_symbol));
+  auto result =
+    transition_system.symbol_table.insert(std::move(initial_symbol));
   CHECK_RETURN(result.second);
 
   const auto symbol_expr = result.first.symbol_expr();
 
   // true in the initial state
-  transition_system.trans_expr.init() = and_exprt{transition_system.trans_expr.init(), symbol_expr};
+  transition_system.trans_expr.init() =
+    and_exprt{transition_system.trans_expr.init(), symbol_expr};
 
   // but false in subsequent states
   auto next_expr = exprt(ID_next_symbol, symbol_expr.type());
   next_expr.set(ID_identifier, symbol_expr.get_identifier());
-  transition_system.trans_expr.trans() = and_exprt{transition_system.trans_expr.trans(), not_exprt{next_expr}};
+  transition_system.trans_expr.trans() =
+    and_exprt{transition_system.trans_expr.trans(), not_exprt{next_expr}};
 
   return symbol_expr;
 }
