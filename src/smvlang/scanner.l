@@ -200,6 +200,8 @@ void newlocation(YYSTYPE &x)
 "!"		return NOT_Token;
 "+"		return PLUS_Token;
 "-"		return MINUS_Token;
+"*"		return TIMES_Token;
+"/"		return DIVIDE_Token;
 "|"		return OR_Token;
 "&"		return AND_Token;
 "->"		return IMPLIES_Token;

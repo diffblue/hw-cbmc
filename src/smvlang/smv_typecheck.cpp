@@ -1004,10 +1004,16 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
       uminus_expr.type() =
         (-smv_ranget::from_type(to_range_type(op_type))).to_type();
     }
+    else if(op_type.id() == ID_signedbv || op_type.id() == ID_unsignedbv)
+    {
+      uminus_expr.type() = op_type;
+    }
     else
+    {
       throw errort().with_location(expr.source_location())
-        << "Operand to unary minus must be integer, but got "
+        << "Operand to unary minus must be integer or word type, but got "
         << to_string(op_type);
+    }
 
     // constant folding
     if(uminus_expr.op().is_constant())
