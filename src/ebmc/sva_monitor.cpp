@@ -90,7 +90,9 @@ std::optional<exprt> create_sva_monitor_rec(
   {
     // Nondeterministically guess when to start monitoring.
     auxiliary_symbolt always_activated_symbol{
-      "sva-monitor::always_activated", bool_typet{}, transition_system.main_symbol->mode};
+      "sva-monitor::always_activated",
+      bool_typet{},
+      transition_system.main_symbol->mode};
 
     always_activated_symbol.is_state_var = true;
     always_activated_symbol.module = transition_system.main_symbol->module;
@@ -103,11 +105,13 @@ std::optional<exprt> create_sva_monitor_rec(
     const auto always_activated_expr = result1.first.symbol_expr();
 
     // "always activated" is false in the initial state
-    transition_system.trans_expr.init() =
-      and_exprt{transition_system.trans_expr.init(), not_exprt{always_activated_expr}};
+    transition_system.trans_expr.init() = and_exprt{
+      transition_system.trans_expr.init(), not_exprt{always_activated_expr}};
 
     auxiliary_symbolt always_active_symbol{
-      "sva-monitor::always_active", bool_typet{}, transition_system.main_symbol->mode};
+      "sva-monitor::always_active",
+      bool_typet{},
+      transition_system.main_symbol->mode};
 
     always_active_symbol.is_state_var = false;
     always_active_symbol.module = transition_system.main_symbol->module;
@@ -119,18 +123,18 @@ std::optional<exprt> create_sva_monitor_rec(
 
     const auto always_active_expr = result2.first.symbol_expr();
 
-    auto always_activated_next_expr = exprt(ID_next_symbol, always_activated_expr.type());
-    always_activated_next_expr.set(ID_identifier, always_activated_expr.get_identifier());
-    transition_system.trans_expr.trans() =
-      and_exprt{transition_system.trans_expr.trans(), equal_exprt{always_activated_next_expr, always_active_expr}};
+    auto always_activated_next_expr =
+      exprt(ID_next_symbol, always_activated_expr.type());
+    always_activated_next_expr.set(
+      ID_identifier, always_activated_expr.get_identifier());
+    transition_system.trans_expr.trans() = and_exprt{
+      transition_system.trans_expr.trans(),
+      equal_exprt{always_activated_next_expr, always_active_expr}};
 
     // recursion
     auto &op = to_sva_always_expr(property_expr).op();
 
-    return create_sva_monitor_rec(
-      transition_system,
-      always_active_expr,
-      op);
+    return create_sva_monitor_rec(transition_system, always_active_expr, op);
   }
   else if(property_expr.id() == ID_sva_s_nexttime)
   {
