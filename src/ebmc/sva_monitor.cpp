@@ -41,17 +41,18 @@ exprt monitor_resultt::as_LTL() const
 
 /// Recursion for creating a safety automaton for a safety property.
 /// * the property is converted into NNF on the fly.
-/// * the monitor starts with the given "start" signal
+/// * the monitor starts with the given "active" signal, which
+///   is expected to stay on.
 /// * the return value is the "safety" signal, or {} if not supported
 std::optional<exprt> create_sva_monitor_rec(
   transition_systemt &transition_system,
-  const exprt &start,
+  const exprt &active,
   const exprt &property_expr)
 {
   if(!has_temporal_operator(property_expr))
   {
-    // A state formula only. Needs to hold in "start" states only.
-    return implies_exprt{start, property_expr};
+    // A state formula only. Needs to hold in "active" states only.
+    return implies_exprt{active, property_expr};
   }
   else if(
     property_expr.id() == ID_not || property_expr.id() == ID_implies ||
@@ -70,7 +71,7 @@ std::optional<exprt> create_sva_monitor_rec(
 
     for(auto &op : property_expr.operands())
     {
-      auto rec = create_sva_monitor_rec(transition_system, start, op);
+      auto rec = create_sva_monitor_rec(transition_system, active, op);
       if(!rec.has_value())
         return {};
       conjuncts.push_back(rec.value());
@@ -88,9 +89,48 @@ std::optional<exprt> create_sva_monitor_rec(
   else if(property_expr.id() == ID_sva_always)
   {
     // Nondeterministically guess when to start monitoring.
-    //auto &op = to_sva_always_expr(expr).op();
-    //return create_sva_safety_monitor_rec(transition_system, op);
-    return {};
+    auxiliary_symbolt always_activated_symbol{
+      "sva-monitor::always_activated", bool_typet{}, transition_system.main_symbol->mode};
+
+    always_activated_symbol.is_state_var = true;
+    always_activated_symbol.module = transition_system.main_symbol->module;
+    always_activated_symbol.base_name = "always_activated";
+
+    auto result1 =
+      transition_system.symbol_table.insert(std::move(always_activated_symbol));
+    CHECK_RETURN(result1.second);
+
+    const auto always_activated_expr = result1.first.symbol_expr();
+
+    // "always activated" is false in the initial state
+    transition_system.trans_expr.init() =
+      and_exprt{transition_system.trans_expr.init(), not_exprt{always_activated_expr}};
+
+    auxiliary_symbolt always_active_symbol{
+      "sva-monitor::always_active", bool_typet{}, transition_system.main_symbol->mode};
+
+    always_active_symbol.is_state_var = false;
+    always_active_symbol.module = transition_system.main_symbol->module;
+    always_active_symbol.base_name = "always_active";
+
+    auto result2 =
+      transition_system.symbol_table.insert(std::move(always_active_symbol));
+    CHECK_RETURN(result2.second);
+
+    const auto always_active_expr = result2.first.symbol_expr();
+
+    auto always_activated_next_expr = exprt(ID_next_symbol, always_activated_expr.type());
+    always_activated_next_expr.set(ID_identifier, always_activated_expr.get_identifier());
+    transition_system.trans_expr.trans() =
+      and_exprt{transition_system.trans_expr.trans(), equal_exprt{always_activated_next_expr, always_active_expr}};
+
+    // recursion
+    auto &op = to_sva_always_expr(property_expr).op();
+
+    return create_sva_monitor_rec(
+      transition_system,
+      always_active_expr,
+      op);
   }
   else if(property_expr.id() == ID_sva_s_nexttime)
   {
@@ -136,6 +176,7 @@ void create_sva_monitor(
   // Create the top-level "start" signal -- on in the initial states exactly.
   auto start = sva_monitor_initial(transition_system);
 
+  // start recursion over property expression
   auto result =
     create_sva_monitor_rec(transition_system, start, property.normalized_expr);
 
