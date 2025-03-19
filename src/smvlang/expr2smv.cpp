@@ -595,6 +595,10 @@ bool expr2smvt::convert(
     return convert_binary(
       src, dest, src.id_string(), precedence = precedencet::MULT);
 
+  else if(src.id() == ID_mod)
+    return convert_binary(
+      src, dest, src.id_string(), precedence = precedencet::MULT);
+
   else if(src.id() == ID_smv_setin)
     return convert_binary(src, dest, "in", precedence = precedencet::IN);
 
