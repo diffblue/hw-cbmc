@@ -117,13 +117,14 @@ bool is_SVA_operator(const exprt &expr)
   return is_SVA_sequence(expr) || id == ID_sva_disable_iff ||
          id == ID_sva_accept_on || id == ID_sva_reject_on ||
          id == ID_sva_sync_accept_on || id == ID_sva_sync_reject_on ||
-         id == ID_sva_always || id == ID_sva_ranged_always ||
-         id == ID_sva_nexttime || id == ID_sva_s_nexttime ||
-         id == ID_sva_indexed_nexttime || id == ID_sva_until ||
-         id == ID_sva_s_until || id == ID_sva_until_with ||
-         id == ID_sva_s_until_with || id == ID_sva_eventually ||
-         id == ID_sva_s_eventually || id == ID_sva_ranged_s_eventually ||
-         id == ID_sva_cycle_delay || id == ID_sva_overlapped_followed_by ||
+         id == ID_sva_always || id == ID_sva_s_always ||
+         id == ID_sva_ranged_always || id == ID_sva_nexttime ||
+         id == ID_sva_s_nexttime || id == ID_sva_indexed_nexttime ||
+         id == ID_sva_until || id == ID_sva_s_until ||
+         id == ID_sva_until_with || id == ID_sva_s_until_with ||
+         id == ID_sva_eventually || id == ID_sva_s_eventually ||
+         id == ID_sva_ranged_s_eventually || id == ID_sva_cycle_delay ||
+         id == ID_sva_overlapped_followed_by ||
          id == ID_sva_nonoverlapped_followed_by;
 }
 

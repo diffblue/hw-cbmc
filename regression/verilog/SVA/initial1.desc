@@ -5,7 +5,7 @@ initial1.sv
 ^\[main\.p1\] main\.counter == 100: REFUTED$
 ^\[main\.p2\] ##1 main\.counter == 1: PROVED up to bound 5$
 ^\[main\.p3\] ##1 main\.counter == 100: REFUTED$
-^\[main\.p4\] s_nexttime main\.counter == 1: PROVED$
+^\[main\.p4\] s_nexttime main\.counter == 1: PROVED up to bound 5$
 ^EXIT=10$
 ^SIGNAL=0$
 --
