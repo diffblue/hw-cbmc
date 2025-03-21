@@ -146,7 +146,7 @@ static void smv_transition_relation(
   if(expr.id() == ID_and)
   {
     for(auto &conjunct : expr.operands())
-      smv_initial_states(conjunct, ns, out);
+      smv_transition_relation(conjunct, ns, out);
   }
   else if(expr.is_true())
   {
