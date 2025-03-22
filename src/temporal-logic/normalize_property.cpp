@@ -38,9 +38,7 @@ exprt normalize_pre_sva_cycle_delay(sva_cycle_delay_exprt expr)
 {
   if(expr.is_unbounded())
   {
-    if(
-      expr.from().is_constant() &&
-      numeric_cast_v<mp_integer>(to_constant_expr(expr.from())) == 0)
+    if(numeric_cast_v<mp_integer>(expr.from()) == 0)
     {
       // ##[0:$] φ --> s_eventually φ
       return sva_s_eventually_exprt{expr.op()};
