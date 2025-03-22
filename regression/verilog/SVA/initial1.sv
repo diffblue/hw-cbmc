@@ -26,4 +26,7 @@ module main(input clk);
   // expected to pass if there are timeframes 0 and 1
   initial p4: assert property (s_nexttime counter == 1);
 
+  // expected to pass
+  initial p5: assert property (always [1:1] counter == 1);
+
 endmodule

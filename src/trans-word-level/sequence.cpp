@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "sequence.h"
 
+#include <util/arith_tools.h>
 #include <util/ebmc_util.h>
 
 #include <verilog/sva_expr.h>
@@ -23,14 +24,11 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
   {
     auto &sva_cycle_delay_expr = to_sva_cycle_delay_expr(expr);
+    const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
 
     if(sva_cycle_delay_expr.to().is_nil()) // ##1 something
     {
-      mp_integer offset;
-      if(to_integer_non_constant(sva_cycle_delay_expr.from(), offset))
-        throw "failed to convert sva_cycle_delay offset";
-
-      const auto u = t + offset;
+      const auto u = t + from;
 
       // Do we exceed the bound? Make it 'true'
       if(u >= no_timeframes)
@@ -44,9 +42,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     }
     else
     {
-      mp_integer from, to;
-      if(to_integer_non_constant(sva_cycle_delay_expr.from(), from))
-        throw "failed to convert sva_cycle_delay offsets";
+      mp_integer to;
 
       if(sva_cycle_delay_expr.to().id() == ID_infinity)
       {

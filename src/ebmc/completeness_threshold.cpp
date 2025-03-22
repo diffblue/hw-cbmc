@@ -8,6 +8,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "completeness_threshold.h"
 
+#include <util/arith_tools.h>
+
 #include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
@@ -25,10 +27,41 @@ bool has_low_completeness_threshold(const exprt &expr)
     // X p
     return !has_temporal_operator(to_X_expr(expr).op());
   }
-  else if(expr.id() == ID_sva_nexttime)
+  else if(
+    expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_nexttime ||
+    expr.id() == ID_sva_s_nexttime)
   {
-    // nexttime p
-    return !has_temporal_operator(to_sva_nexttime_expr(expr).op());
+    // these are rewritten to always/s_always by normalize_property
+    PRECONDITION(false);
+  }
+  else if(expr.id() == ID_sva_ranged_always)
+  {
+    auto &always_expr = to_sva_ranged_always_expr(expr);
+    if(has_temporal_operator(always_expr.op()))
+      return false;
+    else if(always_expr.upper().is_constant())
+    {
+      auto lower_int = numeric_cast_v<mp_integer>(always_expr.lower());
+      auto upper_int =
+        numeric_cast_v<mp_integer>(to_constant_expr(always_expr.upper()));
+      return lower_int >= 0 && lower_int <= 1 && upper_int >= 0 &&
+             upper_int <= 1;
+    }
+    else
+      return false;
+  }
+  else if(expr.id() == ID_sva_s_always)
+  {
+    auto &s_always_expr = to_sva_s_always_expr(expr);
+    if(has_temporal_operator(s_always_expr.op()))
+      return false;
+    else
+    {
+      auto lower_int = numeric_cast_v<mp_integer>(s_always_expr.lower());
+      auto upper_int = numeric_cast_v<mp_integer>(s_always_expr.upper());
+      return lower_int >= 0 && lower_int <= 1 && upper_int >= 0 &&
+             upper_int <= 1;
+    }
   }
   else
     return false;
