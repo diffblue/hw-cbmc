@@ -111,10 +111,6 @@ Function: bmc_supports_SVA_property
 
 bool bmc_supports_SVA_property(const exprt &expr)
 {
-  // sva_sequence_first_match is not supported yet
-  if(has_subexpr(expr, ID_sva_sequence_first_match))
-    return false;
-
   // sva_sequence_within is not supported yet
   if(has_subexpr(expr, ID_sva_sequence_within))
     return false;

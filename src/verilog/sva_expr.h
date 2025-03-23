@@ -1332,4 +1332,38 @@ to_sva_sequence_throughout_expr(exprt &expr)
   return static_cast<sva_sequence_throughout_exprt &>(expr);
 }
 
+class sva_sequence_first_match_exprt : public binary_exprt
+{
+public:
+  // the second operand is optional
+  explicit sva_sequence_first_match_exprt(exprt op)
+    : binary_exprt(std::move(op), ID_sva_sequence_first_match, nil_exprt{})
+  {
+  }
+
+  sva_sequence_first_match_exprt(exprt op, exprt action)
+    : binary_exprt(
+        std::move(op),
+        ID_sva_sequence_first_match,
+        std::move(action))
+  {
+  }
+};
+
+static inline const sva_sequence_first_match_exprt &
+to_sva_sequence_first_match_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_first_match);
+  sva_sequence_first_match_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_sequence_first_match_exprt &>(expr);
+}
+
+static inline sva_sequence_first_match_exprt &
+to_sva_sequence_first_match_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_first_match);
+  sva_sequence_first_match_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_sequence_first_match_exprt &>(expr);
+}
+
 #endif
