@@ -577,6 +577,48 @@ static obligationst property_obligations_rec(
     return property_obligations_rec(equal_expr, current, no_timeframes);
   }
   else if(
+    property_expr.id() == ID_sva_overlapped_implication ||
+    property_expr.id() == ID_sva_non_overlapped_implication)
+  {
+    auto &implication = to_binary_expr(property_expr);
+
+    // The LHS is a sequence, the RHS is a property.
+    // The implication must hold for _all_ matches on the LHS,
+    // i.e., each pair of LHS match and RHS obligation yields an obligation.
+    const auto lhs_match_points =
+      instantiate_sequence(implication.lhs(), current, no_timeframes);
+
+    obligationst result;
+
+    for(auto &lhs_match_point : lhs_match_points)
+    {
+      // The RHS of the non-overlapped implication starts one timeframe later
+      auto t_rhs = property_expr.id() == ID_sva_non_overlapped_implication
+                     ? lhs_match_point.first + 1
+                     : lhs_match_point.first;
+
+      // Do we exceed the bound? Make it 'true'
+      if(t_rhs >= no_timeframes)
+      {
+        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+        return obligationst{no_timeframes - 1, true_exprt()};
+      }
+
+      // Get obligations for RHS
+      auto rhs_obligations_rec =
+        property_obligations_rec(implication.rhs(), t_rhs, no_timeframes);
+
+      for(auto &rhs_obligation : rhs_obligations_rec.map)
+      {
+        auto rhs_conjunction = conjunction(rhs_obligation.second);
+        auto cond = implies_exprt{lhs_match_point.second, rhs_conjunction};
+        result.add(rhs_obligation.first, cond);
+      }
+    }
+
+    return result;
+  }
+  else if(
     property_expr.id() == ID_sva_nonoverlapped_followed_by ||
     property_expr.id() == ID_sva_overlapped_followed_by)
   {
