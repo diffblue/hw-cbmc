@@ -1155,14 +1155,75 @@ inline sva_case_exprt &to_sva_case_expr(exprt &expr)
   return static_cast<sva_case_exprt &>(expr);
 }
 
-class sva_sequence_consecutive_repetition_exprt : public binary_predicate_exprt
+class sva_sequence_consecutive_repetition_exprt : public ternary_exprt
 {
 public:
+  sva_sequence_consecutive_repetition_exprt(exprt __op, exprt __repetitions)
+    : ternary_exprt{
+        ID_sva_sequence_consecutive_repetition,
+        std::move(__op),
+        std::move(__repetitions),
+        nil_exprt{},
+        bool_typet{}}
+  {
+  }
+
+  sva_sequence_consecutive_repetition_exprt(
+    exprt __op,
+    exprt __from,
+    exprt __to)
+    : ternary_exprt{
+        ID_sva_sequence_consecutive_repetition,
+        std::move(__op),
+        std::move(__from),
+        std::move(__to),
+        bool_typet{}}
+  {
+  }
+
   exprt lower() const;
 
+  const exprt &op() const
+  {
+    return op0();
+  }
+
+  exprt &op()
+  {
+    return op0();
+  }
+
+  const exprt &from() const
+  {
+    return op1();
+  }
+
+  exprt &from()
+  {
+    return op1();
+  }
+
+  // may be nil (just the singleton 'from') or
+  // infinity (half-open interval starting at 'from')
+  const exprt &to() const
+  {
+    return op2();
+  }
+
+  exprt &to()
+  {
+    return op2();
+  }
+
+  bool is_unbounded() const
+  {
+    return to().id() == ID_infinity;
+  }
+
 protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
+  using ternary_exprt::op0;
+  using ternary_exprt::op1;
+  using ternary_exprt::op2;
 };
 
 inline const sva_sequence_consecutive_repetition_exprt &
