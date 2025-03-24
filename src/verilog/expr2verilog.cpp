@@ -367,7 +367,7 @@ expr2verilogt::convert_function(const std::string &name, const exprt &src)
 
   dest+=")";
 
-  return {verilog_precedencet::MIN, dest};
+  return {verilog_precedencet::MAX, dest};
 }
 
 /*******************************************************************\
