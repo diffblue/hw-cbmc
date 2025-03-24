@@ -582,6 +582,38 @@ expr2verilogt::resultt expr2verilogt::convert_sva_binary_repetition(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_sva_sequence_consecutive_repetition
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_sva_sequence_consecutive_repetition(
+  const sva_sequence_consecutive_repetition_exprt &expr)
+{
+  auto op = convert_rec(expr.op());
+  if(op.p == verilog_precedencet::MIN)
+    op.s = "(" + op.s + ")";
+
+  std::string dest = op.s + " [*" + convert_rec(expr.from()).s;
+
+  if(expr.is_unbounded())
+    dest += ":$";
+  else if(expr.to().is_not_nil())
+    dest += ":" + convert_rec(expr.to()).s;
+
+  dest += ']';
+
+  return {verilog_precedencet::MIN, dest};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_sva_abort
 
   Inputs:
@@ -1797,9 +1829,8 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   // not sure about precedence
 
   else if(src.id() == ID_sva_sequence_consecutive_repetition)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary_repetition("[*", to_binary_expr(src));
-  // not sure about precedence
+    return convert_sva_sequence_consecutive_repetition(
+      to_sva_sequence_consecutive_repetition_expr(src));
 
   else if(src.id() == ID_sva_sequence_goto_repetition)
     return precedence = verilog_precedencet::MIN,

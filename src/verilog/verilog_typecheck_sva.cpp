@@ -137,7 +137,6 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     return std::move(expr);
   }
   else if(
-    expr.id() == ID_sva_sequence_consecutive_repetition ||
     expr.id() == ID_sva_sequence_non_consecutive_repetition ||
     expr.id() == ID_sva_sequence_goto_repetition)
   {
@@ -206,6 +205,21 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
     convert_sva(expr.op2());
     make_boolean(expr.op2());
 
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_sequence_consecutive_repetition) // x[*1:2]
+  {
+    auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
+
+    convert_sva(repetition.op());
+    make_boolean(repetition.op());
+
+    convert_expr(repetition.from());
+
+    if(repetition.to().is_not_nil())
+      convert_expr(repetition.to());
+
+    expr.type() = bool_typet{};
     return std::move(expr);
   }
   else if(
