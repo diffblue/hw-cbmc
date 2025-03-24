@@ -3,6 +3,7 @@
 * SystemVerilog: typedefs from package scopes
 * SystemVerilog: assignment patterns with keys for structs
 * SystemVerilog: unbased unsigned literals '0, '1, 'x, 'z
+* SystemVerilog: first_match
 * Verilog: 'dx, 'dz
 * SMV: LTL V operator, xnor operator
 * SMV: word types and operators

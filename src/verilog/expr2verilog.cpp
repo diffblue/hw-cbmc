@@ -215,6 +215,36 @@ expr2verilogt::resultt expr2verilogt::convert_sva_sequence_concatenation(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_sva_sequence_first_match
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_sva_sequence_first_match(
+  const sva_sequence_first_match_exprt &src)
+{
+  std::string dest = "first_match(";
+
+  dest += convert_rec(src.lhs()).s;
+
+  if(src.rhs().is_not_nil())
+  {
+    dest += ", ";
+    dest += convert_rec(src.rhs()).s;
+  }
+
+  dest += ')';
+
+  return {verilog_precedencet::MAX, dest};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_binary
 
   Inputs:
@@ -1782,7 +1812,8 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     // not sure about precedence
 
   else if(src.id() == ID_sva_sequence_first_match)
-    return convert_function("first_match", src);
+    return convert_sva_sequence_first_match(
+      to_sva_sequence_first_match_expr(src));
 
   else if(src.id() == ID_sva_sequence_intersect)
     return precedence = verilog_precedencet::MIN,
@@ -1955,6 +1986,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_verilog_value_range)
     return convert_value_range(to_verilog_value_range_expr(src));
+
+  else if(src.id() == ID_postincrement)
+    return convert_sva_unary(to_unary_expr(src), "++");
 
   else if(
     src.id() == ID_nand || src.id() == ID_nor || src.id() == ID_xnor ||

@@ -27,7 +27,6 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
     expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_weak ||
     expr.id() == ID_sva_strong || expr.id() == ID_sva_nexttime ||
     expr.id() == ID_sva_s_nexttime ||
-    expr.id() == ID_sva_sequence_first_match ||
     expr.id() == ID_sva_sequence_repetition_plus ||
     expr.id() == ID_sva_sequence_repetition_star)
   {
@@ -122,8 +121,7 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
   else if(
     expr.id() == ID_sva_sequence_intersect ||
     expr.id() == ID_sva_sequence_throughout ||
-    expr.id() == ID_sva_sequence_within ||
-    expr.id() == ID_sva_sequence_first_match)
+    expr.id() == ID_sva_sequence_within)
   {
     auto &binary_expr = to_binary_expr(expr);
 
@@ -131,6 +129,20 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     make_boolean(binary_expr.lhs());
     convert_sva(binary_expr.rhs());
     make_boolean(binary_expr.rhs());
+
+    expr.type() = bool_typet();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_sequence_first_match)
+  {
+    auto &first_match_expr = to_sva_sequence_first_match_expr(expr);
+
+    convert_sva(first_match_expr.lhs());
+    make_boolean(first_match_expr.lhs());
+
+    if(expr.rhs().is_not_nil())
+      convert_expr(expr.rhs());
 
     expr.type() = bool_typet();
 

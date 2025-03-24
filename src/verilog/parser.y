@@ -2621,7 +2621,7 @@ sequence_expr_proper:
 	| sequence_expr "or" sequence_expr
 		{ init($$, ID_sva_or); mto($$, $1); mto($$, $3); }
         | "first_match" '(' sequence_expr ')'
-                { init($$, ID_sva_sequence_first_match); mto($$, $3); }
+                { init($$, ID_sva_sequence_first_match); mto($$, $3); stack_expr($$).add_to_operands(nil_exprt{}); }
         | "first_match" '(' sequence_expr ',' sequence_match_item_brace ')'
                 { init($$, ID_sva_sequence_first_match); mto($$, $3); mto($$, $5); }
         | expression_or_dist "throughout" sequence_expr

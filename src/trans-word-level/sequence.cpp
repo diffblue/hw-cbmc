@@ -158,7 +158,36 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   }
   else if(expr.id() == ID_sva_sequence_first_match)
   {
-    PRECONDITION(false);
+    auto &first_match = to_sva_sequence_first_match_expr(expr);
+
+    const auto lhs_match_points =
+      instantiate_sequence(first_match.lhs(), t, no_timeframes);
+
+    // the match of seq with the earliest ending clock tick is a
+    // match of first_match (seq)
+    std::optional<mp_integer> earliest;
+
+    for(auto &match : lhs_match_points)
+    {
+      if(!earliest.has_value() || earliest.value() > match.first)
+        earliest = match.first;
+    }
+
+    if(!earliest.has_value())
+      return {}; // no match
+
+    std::vector<std::pair<mp_integer, exprt>> result;
+
+    for(auto &match : lhs_match_points)
+    {
+      // Earliest?
+      if(match.first == earliest.value())
+      {
+        result.push_back(match);
+      }
+    }
+
+    return result;
   }
   else if(expr.id() == ID_sva_sequence_throughout)
   {
