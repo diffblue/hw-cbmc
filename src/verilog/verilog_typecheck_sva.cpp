@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/mathematical_types.h>
 
+#include <temporal-logic/temporal_logic.h>
+
 #include "sva_expr.h"
 #include "verilog_typecheck_expr.h"
 
@@ -39,6 +41,14 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
   {
     // not SVA
     return convert_expr_rec(std::move(expr));
+  }
+}
+
+void verilog_typecheck_exprt::require_sva_sequence(const exprt &expr) const
+{
+  if(is_SVA_operator(expr) && !is_SVA_sequence_operator(expr))
+  {
+    throw errort().with_location(expr.source_location()) << "sequence required";
   }
 }
 
@@ -97,7 +107,20 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     expr.id() == ID_sva_overlapped_implication ||
     expr.id() == ID_sva_non_overlapped_implication ||
     expr.id() == ID_sva_overlapped_followed_by ||
-    expr.id() == ID_sva_nonoverlapped_followed_by ||
+    expr.id() == ID_sva_nonoverlapped_followed_by)
+  {
+    // These all take a sequence on the LHS, and a property on the RHS.
+    // The grammar allows properties on the LHS to implement and/or over
+    // sequences. Check here that the LHS is a sequence.
+    convert_sva(expr.lhs());
+    require_sva_sequence(expr.lhs());
+    make_boolean(expr.lhs());
+    convert_sva(expr.rhs());
+    make_boolean(expr.rhs());
+    expr.type() = bool_typet();
+    return std::move(expr);
+  }
+  else if(
     expr.id() == ID_sva_until || expr.id() == ID_sva_s_until ||
     expr.id() == ID_sva_until_with || expr.id() == ID_sva_s_until_with)
   {
@@ -111,24 +134,40 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
   }
   else if(expr.id() == ID_sva_sequence_concatenation) // a ##b c
   {
-    expr.type() = bool_typet();
-    convert_sva(expr.op0());
+    // This requires a sequence on the LHS.
+    // The grammar allows properties on the LHS to implement and/or over
+    // sequences. Check here that the LHS is a sequence.
+    convert_sva(expr.lhs());
+    require_sva_sequence(expr.lhs());
     make_boolean(expr.op0());
     convert_sva(expr.op1());
     make_boolean(expr.op1());
+    expr.type() = bool_typet();
     return std::move(expr);
   }
   else if(
     expr.id() == ID_sva_sequence_intersect ||
-    expr.id() == ID_sva_sequence_throughout ||
     expr.id() == ID_sva_sequence_within)
   {
-    auto &binary_expr = to_binary_expr(expr);
+    // This requires a sequence on the LHS.
+    // The grammar allows properties on the LHS to implement and/or over
+    // sequences. Check here that the LHS is a sequence.
+    convert_sva(expr.lhs());
+    require_sva_sequence(expr.lhs());
+    make_boolean(expr.lhs());
+    convert_sva(expr.rhs());
+    make_boolean(expr.rhs());
 
-    convert_sva(binary_expr.lhs());
-    make_boolean(binary_expr.lhs());
-    convert_sva(binary_expr.rhs());
-    make_boolean(binary_expr.rhs());
+    expr.type() = bool_typet();
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_sequence_throughout)
+  {
+    convert_expr(expr.lhs());
+    make_boolean(expr.lhs());
+    convert_sva(expr.rhs());
+    make_boolean(expr.rhs());
 
     expr.type() = bool_typet();
 
@@ -152,19 +191,17 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     expr.id() == ID_sva_sequence_non_consecutive_repetition ||
     expr.id() == ID_sva_sequence_goto_repetition)
   {
-    auto &binary_expr = to_binary_expr(expr);
+    convert_sva(expr.lhs());
+    make_boolean(expr.lhs());
 
-    convert_sva(binary_expr.lhs());
-    make_boolean(binary_expr.lhs());
+    convert_sva(expr.rhs());
 
-    convert_sva(binary_expr.rhs());
-
-    mp_integer n = elaborate_constant_integer_expression(binary_expr.rhs());
+    mp_integer n = elaborate_constant_integer_expression(expr.rhs());
     if(n < 0)
-      throw errort().with_location(binary_expr.rhs().source_location())
+      throw errort().with_location(expr.rhs().source_location())
         << "number of repetitions must not be negative";
 
-    binary_expr.rhs() = from_integer(n, integer_typet{});
+    expr.rhs() = from_integer(n, integer_typet{});
 
     expr.type() = bool_typet();
 

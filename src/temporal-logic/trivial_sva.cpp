@@ -20,8 +20,8 @@ exprt trivial_sva(exprt expr)
     // Same as regular implication if lhs and rhs are not sequences.
     auto &sva_implication = to_sva_overlapped_implication_expr(expr);
     if(
-      !is_SVA_sequence(sva_implication.lhs()) &&
-      !is_SVA_sequence(sva_implication.rhs()))
+      !is_SVA_sequence_operator(sva_implication.lhs()) &&
+      !is_SVA_sequence_operator(sva_implication.rhs()))
     {
       expr = implies_exprt{sva_implication.lhs(), sva_implication.rhs()};
     }
@@ -40,14 +40,18 @@ exprt trivial_sva(exprt expr)
   {
     // Same as a ∧ b if lhs and rhs are not sequences.
     auto &sva_and = to_sva_and_expr(expr);
-    if(!is_SVA_sequence(sva_and.lhs()) && !is_SVA_sequence(sva_and.rhs()))
+    if(
+      !is_SVA_sequence_operator(sva_and.lhs()) &&
+      !is_SVA_sequence_operator(sva_and.rhs()))
       expr = and_exprt{sva_and.lhs(), sva_and.rhs()};
   }
   else if(expr.id() == ID_sva_or)
   {
     // Same as a ∧ b if lhs or rhs are not sequences.
     auto &sva_or = to_sva_or_expr(expr);
-    if(!is_SVA_sequence(sva_or.lhs()) && !is_SVA_sequence(sva_or.rhs()))
+    if(
+      !is_SVA_sequence_operator(sva_or.lhs()) &&
+      !is_SVA_sequence_operator(sva_or.rhs()))
       expr = or_exprt{sva_or.lhs(), sva_or.rhs()};
   }
   else if(expr.id() == ID_sva_not)

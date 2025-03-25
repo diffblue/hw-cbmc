@@ -24,7 +24,7 @@ exprt normalize_pre_sva_non_overlapped_implication(
   sva_non_overlapped_implication_exprt expr)
 {
   // Same as a->always[1:1] b if lhs is not a sequence.
-  if(!is_SVA_sequence(expr.lhs()))
+  if(!is_SVA_sequence_operator(expr.lhs()))
   {
     auto one = natural_typet{}.one_expr();
     return or_exprt{

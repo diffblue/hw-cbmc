@@ -5,6 +5,7 @@ sequence_or1.sv
 ^\[main\.p1\] strong\(main\.x == 0 or main\.x == 1\): PROVED$
 ^\[main\.p2\] main\.x == 0 or \(nexttime main\.x == 1\): PROVED up to bound \d+$
 ^\[main\.p3\] \(nexttime main\.x == 1\) or main\.x == 1: PROVED up to bound \d+$
+^\[main\.p4\] \(main\.x == 0 or main\.x != 10\) |=> main\.x == 1: PROVED up to bound \d+$
 ^EXIT=0$
 ^SIGNAL=0$
 --

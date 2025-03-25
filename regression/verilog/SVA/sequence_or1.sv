@@ -15,4 +15,7 @@ module main(input clk);
   initial p2: assert property (x==0 or nexttime x == 1);
   initial p3: assert property (nexttime x==1 or x == 1);
 
+  // It also yields a sequence when in parentheses.
+  initial p4: assert property ((x == 0 or x != 10) |=> x == 1);
+
 endmodule
