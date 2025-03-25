@@ -635,14 +635,55 @@ static inline sva_s_until_with_exprt &to_sva_s_until_with_expr(exprt &expr)
   return static_cast<sva_s_until_with_exprt &>(expr);
 }
 
-class sva_overlapped_implication_exprt : public binary_predicate_exprt
+/// base class for |->, |=>, #-#, #=#
+class sva_implication_base_exprt : public binary_predicate_exprt
 {
 public:
-  explicit sva_overlapped_implication_exprt(exprt op0, exprt op1)
+  explicit sva_implication_base_exprt(
+    exprt __antecedent,
+    irep_idt __id,
+    exprt __consequent)
     : binary_predicate_exprt(
-        std::move(op0),
+        std::move(__antecedent),
+        __id,
+        std::move(__consequent))
+  {
+  }
+
+  // a sequence
+  const exprt &antecedent() const
+  {
+    return lhs();
+  }
+
+  exprt &antecedent()
+  {
+    return lhs();
+  }
+
+  // a property
+  const exprt &consequent() const
+  {
+    return rhs();
+  }
+
+  exprt &consequent()
+  {
+    return rhs();
+  }
+};
+
+/// |->
+class sva_overlapped_implication_exprt : public sva_implication_base_exprt
+{
+public:
+  explicit sva_overlapped_implication_exprt(
+    exprt __antecedent,
+    exprt __consequent)
+    : sva_implication_base_exprt(
+        std::move(__antecedent),
         ID_sva_overlapped_implication,
-        std::move(op1))
+        std::move(__consequent))
   {
   }
 };
@@ -663,14 +704,17 @@ to_sva_overlapped_implication_expr(exprt &expr)
   return static_cast<sva_overlapped_implication_exprt &>(expr);
 }
 
-class sva_non_overlapped_implication_exprt : public binary_predicate_exprt
+/// |=>
+class sva_non_overlapped_implication_exprt : public sva_implication_base_exprt
 {
 public:
-  explicit sva_non_overlapped_implication_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(
-        std::move(op0),
+  explicit sva_non_overlapped_implication_exprt(
+    exprt __antecedent,
+    exprt __consequent)
+    : sva_implication_base_exprt(
+        std::move(__antecedent),
         ID_sva_non_overlapped_implication,
-        std::move(op1))
+        std::move(__consequent))
   {
   }
 };
@@ -834,27 +878,19 @@ static inline sva_or_exprt &to_sva_or_expr(exprt &expr)
   return static_cast<sva_or_exprt &>(expr);
 }
 
-class sva_followed_by_exprt : public binary_predicate_exprt
+// #-#, #=#
+class sva_followed_by_exprt : public sva_implication_base_exprt
 {
 public:
-  const exprt &sequence() const
+  explicit sva_followed_by_exprt(
+    exprt __antecedent,
+    irep_idt __id,
+    exprt __consequent)
+    : sva_implication_base_exprt(
+        std::move(__antecedent),
+        __id,
+        std::move(__consequent))
   {
-    return op0();
-  }
-
-  exprt &sequence()
-  {
-    return op0();
-  }
-
-  const exprt &property() const
-  {
-    return op1();
-  }
-
-  exprt &property()
-  {
-    return op1();
   }
 };
 
