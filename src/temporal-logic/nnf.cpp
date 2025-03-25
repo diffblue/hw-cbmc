@@ -130,16 +130,17 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     // 1800 2017 16.12.9
     // !(a #-# b)   --->   a |-> !b
     auto &followed_by = to_sva_followed_by_expr(expr);
-    auto not_b = not_exprt{followed_by.property()};
-    return sva_overlapped_implication_exprt{followed_by.lhs(), not_b};
+    auto not_b = not_exprt{followed_by.consequent()};
+    return sva_overlapped_implication_exprt{followed_by.antecedent(), not_b};
   }
   else if(expr.id() == ID_sva_nonoverlapped_followed_by)
   {
     // 1800 2017 16.12.9
     // !(a #=# b)   --->   a |=> !b
     auto &followed_by = to_sva_followed_by_expr(expr);
-    auto not_b = not_exprt{followed_by.property()};
-    return sva_non_overlapped_implication_exprt{followed_by.lhs(), not_b};
+    auto not_b = not_exprt{followed_by.consequent()};
+    return sva_non_overlapped_implication_exprt{
+      followed_by.antecedent(), not_b};
   }
   else
     return {};

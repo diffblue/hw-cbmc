@@ -586,7 +586,7 @@ static obligationst property_obligations_rec(
 
     // get match points for LHS sequence
     auto match_points =
-      instantiate_sequence(followed_by.sequence(), current, no_timeframes);
+      instantiate_sequence(followed_by.antecedent(), current, no_timeframes);
 
     exprt::operandst disjuncts;
     mp_integer t = current;
@@ -610,7 +610,7 @@ static obligationst property_obligations_rec(
       {
         auto obligations_rec =
           property_obligations_rec(
-            followed_by.property(), property_start, no_timeframes)
+            followed_by.consequent(), property_start, no_timeframes)
             .conjunction();
 
         disjuncts.push_back(
