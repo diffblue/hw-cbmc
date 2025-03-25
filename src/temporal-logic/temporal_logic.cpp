@@ -95,12 +95,11 @@ bool is_LTL_past(const exprt &expr)
 bool is_SVA_sequence_operator(const exprt &expr)
 {
   auto id = expr.id();
-  // Note that ID_sva_overlapped_followed_by and ID_sva_nonoverlapped_followed_by
+  // Note that ID_sva_overlapped_followed_by, ID_sva_nonoverlapped_followed_by,
+  // ID_sva_non_overlapped_implication and ID_sva_overlapped_implication
   // are property expressions, not sequence expressions.
   // Note that ID_sva_not does not yield a sequence expression.
-  return id == ID_sva_and || id == ID_sva_or ||
-         id == ID_sva_overlapped_implication ||
-         id == ID_sva_non_overlapped_implication || id == ID_sva_cycle_delay ||
+  return id == ID_sva_and || id == ID_sva_or || id == ID_sva_cycle_delay ||
          id == ID_sva_sequence_concatenation ||
          id == ID_sva_sequence_intersect || id == ID_sva_sequence_first_match ||
          id == ID_sva_sequence_throughout || id == ID_sva_sequence_within ||
@@ -124,6 +123,8 @@ bool is_SVA_operator(const exprt &expr)
          id == ID_sva_until_with || id == ID_sva_s_until_with ||
          id == ID_sva_eventually || id == ID_sva_s_eventually ||
          id == ID_sva_ranged_s_eventually || id == ID_sva_cycle_delay ||
+         id == ID_sva_overlapped_implication ||
+         id == ID_sva_non_overlapped_implication ||
          id == ID_sva_overlapped_followed_by ||
          id == ID_sva_nonoverlapped_followed_by;
 }

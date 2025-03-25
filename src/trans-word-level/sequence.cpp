@@ -75,10 +75,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
       return match_points;
     }
   }
-  else if(
-    expr.id() == ID_sva_sequence_concatenation ||
-    expr.id() == ID_sva_overlapped_implication ||
-    expr.id() == ID_sva_non_overlapped_implication)
+  else if(expr.id() == ID_sva_sequence_concatenation)
   {
     auto &implication = to_binary_expr(expr);
     std::vector<std::pair<mp_integer, exprt>> result;
@@ -86,12 +83,10 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     // This is the product of the match points on the LHS and RHS
     const auto lhs_match_points =
       instantiate_sequence(implication.lhs(), t, no_timeframes);
+
     for(auto &lhs_match_point : lhs_match_points)
     {
-      // The RHS of the non-overlapped implication starts one timeframe later
-      auto t_rhs = expr.id() == ID_sva_non_overlapped_implication
-                     ? lhs_match_point.first + 1
-                     : lhs_match_point.first;
+      auto t_rhs = lhs_match_point.first;
 
       // Do we exceed the bound? Make it 'true'
       if(t_rhs >= no_timeframes)
@@ -105,20 +100,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
 
       for(auto &rhs_match_point : rhs_match_points)
       {
-        exprt cond;
-        if(expr.id() == ID_sva_sequence_concatenation)
-        {
-          cond = and_exprt{lhs_match_point.second, rhs_match_point.second};
-        }
-        else if(
-          expr.id() == ID_sva_overlapped_implication ||
-          expr.id() == ID_sva_non_overlapped_implication)
-        {
-          cond = implies_exprt{lhs_match_point.second, rhs_match_point.second};
-        }
-        else
-          PRECONDITION(false);
-
+        auto cond = and_exprt{lhs_match_point.second, rhs_match_point.second};
         result.push_back({rhs_match_point.first, cond});
       }
     }
