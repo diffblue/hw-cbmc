@@ -12,12 +12,14 @@ module main(input clk);
   // should pass
   initial p0: assert property (x==0[*]);
   initial p1: assert property (x==1[*]);
-  initial p2: assert property (x==0[+] #-# x==1);
+  initial p2: assert property (x==0[+] #=# x==1);
   initial p3: assert property (x==0[+]);
   initial p4: assert property (half_x==0[*]);
+  initial p5: assert property (0[*]); // empty match
 
   // should fail
-  initial p5: assert property (x==1[+]);
-  initial p6: assert property (x==0[+] #=# x==1);
+  initial p6: assert property (x==1[+]);
+  initial p7: assert property (x==0[+] #-# x==1);
+  initial p8: assert property (0[+]);
 
 endmodule

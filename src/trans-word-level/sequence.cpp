@@ -11,8 +11,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/ebmc_util.h>
 
+#include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
+#include "instantiate_word_level.h"
 #include "obligations.h"
 #include "property.h"
 
@@ -239,6 +241,36 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     // x[*n] is syntactic sugar for x ##1 ... ##1 x, with n repetitions
     auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
     return instantiate_sequence(repetition.lower(), t, no_timeframes);
+  }
+  else if(
+    expr.id() == ID_sva_sequence_repetition_plus ||
+    expr.id() == ID_sva_sequence_repetition_star)
+  {
+    // x[+] and x[*]
+    auto &op = to_unary_expr(expr).op();
+
+    // Is x a sequence or a state predicate?
+    if(is_SVA_sequence_operator(op))
+      PRECONDITION(false); // no support
+
+    std::vector<std::pair<mp_integer, exprt>> result;
+
+    // we incrementally add conjuncts to the condition
+    exprt::operandst conjuncts;
+
+    for(mp_integer u = t; u < no_timeframes; ++u)
+    {
+      // does x hold in state u?
+      auto cond_u = instantiate(op, u, no_timeframes);
+      conjuncts.push_back(cond_u);
+      result.push_back({u, conjunction(conjuncts)});
+    }
+
+    // In addition to the above, x[*] allows an empty match.
+    if(expr.id() == ID_sva_sequence_repetition_star)
+      result.push_back({t, true_exprt{}});
+
+    return result;
   }
   else
   {
