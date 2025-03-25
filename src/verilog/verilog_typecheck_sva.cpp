@@ -28,13 +28,24 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
     expr.id() == ID_sva_cycle_delay_plus ||
     expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_weak ||
     expr.id() == ID_sva_strong || expr.id() == ID_sva_nexttime ||
-    expr.id() == ID_sva_s_nexttime ||
-    expr.id() == ID_sva_sequence_repetition_plus ||
-    expr.id() == ID_sva_sequence_repetition_star)
+    expr.id() == ID_sva_s_nexttime)
   {
     convert_sva(expr.op());
     make_boolean(expr.op());
     expr.type() = bool_typet();
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_sva_sequence_repetition_plus || // x[+]
+    expr.id() == ID_sva_sequence_repetition_star)   // x[*}
+  {
+    // These both take a sequence as argument.
+    // The grammar allows properties to implement and/or over
+    // sequences. Check here that the argument is a sequence.
+    convert_sva(expr.op());
+    require_sva_sequence(expr.op());
+    make_boolean(expr.op());
+    expr.type() = bool_typet{};
     return std::move(expr);
   }
   else
@@ -260,7 +271,11 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
   {
     auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
 
+    // This expression takes a sequence as argument.
+    // The grammar allows properties to implement and/or over
+    // sequences. Check here that the argument is a sequence.
     convert_sva(repetition.op());
+    require_sva_sequence(repetition.op());
     make_boolean(repetition.op());
 
     convert_expr(repetition.from());
