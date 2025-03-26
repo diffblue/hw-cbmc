@@ -242,7 +242,7 @@ int CompInfo::run_ic3()
       print_fclauses();
     break;
   default:
-    assert(false);
+    UNREACHABLE;
   }
   if (statistics) {
     printf("*********\n");

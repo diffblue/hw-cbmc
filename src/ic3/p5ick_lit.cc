@@ -53,6 +53,5 @@ int CompInfo::fxd_ord_lit(CUBE &Curr,SCUBE &Tried)
       return(lit);
   }
 
-  assert(false); // shouldn't reach this line
-
+  UNREACHABLE;
 } /* end of function fxd_ord_lit */
