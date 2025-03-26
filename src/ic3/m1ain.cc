@@ -195,7 +195,7 @@ int CompInfo::run_ic3()
  
   
   bool ok = check_init_states();
-  assert(ok);
+  INVARIANT(ok, "Initial states should be defined via single literal.");
   assign_var_type();
   assign_value();
   get_runtime (usrtime0, systime0);

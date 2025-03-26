@@ -9,6 +9,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <util/invariant.h>
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -141,7 +142,8 @@ void CompInfo::init_lbs_sat_solver()
   for (size_t i=0; i < Fun_coi_lits.size(); i++) {
     int lit = Fun_coi_lits[i];
     int var_ind = abs(lit)-1;
-    assert (Var_info[var_ind].type == INTERN);
+    INVARIANT(Var_info[var_ind].type == INTERN,
+              "Type of literal should be INTERN");
     U.push_back(-lit);
   }
 

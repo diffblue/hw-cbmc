@@ -107,7 +107,7 @@ void ic3_enginet::form_latch_name(CCUBE &Latch_name,literalt &lit)
 {
   if (orig_names) {
     bool ok = form_orig_name(Latch_name,lit);
-    assert(ok);        
+    INVARIANT(ok, "Literal should have original name.");
     return; }
 
   char Buff[MAX_NAME];

@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <util/invariant.h>
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -87,7 +88,7 @@ void CompInfo::find_fixed_pnt(CLAUSE &C,CLAUSE &C0,SatSolver &Slvr,
          
     bool sat_form = check_sat2(Slvr,Assmps);
   
-    assert(sat_form == false);
+    INVARIANT(sat_form == false, "SAT check should fail here.");
     CLAUSE B;
     gen_assump_clause(B,Slvr,Assmps);
     CLAUSE B1;

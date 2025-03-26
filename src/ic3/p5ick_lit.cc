@@ -11,6 +11,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <util/invariant.h>
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"

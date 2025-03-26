@@ -14,6 +14,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <queue>
 #include <map>
 #include <iostream>
+#include <util/invariant.h>
 #include "dnf_io.hh"
 const int factor = 1000;
 
@@ -65,7 +66,7 @@ void my_printf(const char *format,...)
     int c = *format++;
     if (c != '%') {printf("%c",c); continue;}
     int spec = *format++;
-    assert(spec == 'm');
+    INVARIANT(spec == 'm', "Character should be 'm' in format string.");
     int num = va_arg(ap,int);
     print_num_with_commas(num);      
     //    printf("%d",num);    

@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <map>
 #include <algorithm>
 #include <queue>
+#include <util/invariant.h>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
@@ -48,7 +49,7 @@ void CompInfo::gen_constr_coi(CUBE &Gates,bool &tran_flag,bool &fun_flag,
 
   assert(Stack.size() == 1);
   Gate &G = N->get_gate(Stack.back());
-  assert(G.flags.label == 0);
+  INVARIANT(G.flags.label == 0, "Gate label should be zero.");
 
   CUBE Labelled;
 

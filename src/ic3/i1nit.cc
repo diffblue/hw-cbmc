@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <set>
 #include <map>
 #include <algorithm>
+#include <util/invariant.h>
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
 #include "dnf_io.hh"
@@ -214,7 +215,7 @@ void CompInfo::form_cex()
     add_assumps1(Assmps,Cex[i]);     
     add_assumps1(Assmps,Inp_trace[i]);
     bool sat_form = check_sat2(Gen_sat,Assmps);
-    assert(sat_form);
+    INVARIANT(sat_form, "SAT check should fail here.");
     CUBE Nst,St;
     extr_cut_assgns1(Nst,Next_svars,Gen_sat);
     conv_to_pres_state(St,Nst);

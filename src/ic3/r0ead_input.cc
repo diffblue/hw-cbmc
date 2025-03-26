@@ -128,7 +128,8 @@ void ic3_enginet::form_inputs()
       CCUBE Name;
       if (orig_names) {
 	bool ok = form_orig_name(Name,lit);
-	assert(ok);}      
+	INVARIANT(ok, "Literal should have an original name.");
+      }
       else {
 	char Inp_name[MAX_NAME];
 	sprintf(Inp_name,"i%d",lit_val);   
