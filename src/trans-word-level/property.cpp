@@ -115,14 +115,6 @@ bool bmc_supports_SVA_property(const exprt &expr)
   if(has_subexpr(expr, ID_sva_sequence_within))
     return false;
 
-  // sva_sequence_repetition_plus is not supported yet
-  if(has_subexpr(expr, ID_sva_sequence_repetition_plus))
-    return false;
-
-  // sva_sequence_repetition_star is not supported yet
-  if(has_subexpr(expr, ID_sva_sequence_repetition_star))
-    return false;
-
   // sva_sequence_non_consecutive_repetition is not supported yet
   if(has_subexpr(expr, ID_sva_sequence_non_consecutive_repetition))
     return false;
