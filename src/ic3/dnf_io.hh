@@ -7,7 +7,13 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 
+#pragma once
+
+#include <deque>
 #include <iosfwd>
+#include <map>
+#include <set>
+#include <vector>
 
 typedef std::vector<int> CUBE;
 typedef std::vector<CUBE> DNF;
