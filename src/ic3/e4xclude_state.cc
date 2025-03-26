@@ -6,17 +6,20 @@ Module:  Excludes a state from which a bad state is
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
-#include <queue>
-#include <set>
-#include <map>
+#include <util/invariant.h>
+
+#include "ccircuit.hh"
+#include "dnf_io.hh"
+#include "m0ic3.hh"
+
 #include <algorithm>
 #include <iostream>
-#include <util/invariant.h>
+#include <map>
+#include <queue>
+#include <set>
+
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
-#include "dnf_io.hh"
-#include "ccircuit.hh"
-#include "m0ic3.hh"
 
 /*=========================================
 
@@ -92,8 +95,7 @@ void CompInfo::form_res_cnf(CNF &G,int tf_ind,CUBE &St_cube)
   add_assumps1(Assmps,St_cube);
   
   bool sat_form = Slvr.Mst->solve(Assmps);
-  INVARIANT(sat_form == false,
-            "SAT check should fail here.");
+  INVARIANT(sat_form == false, "SAT check should fail here.");
   CLAUSE C;
   gen_assump_clause(C,Slvr,Assmps);
   G.push_back(C);

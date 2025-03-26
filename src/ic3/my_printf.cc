@@ -6,16 +6,18 @@ Module: Structuring the output of large numbers by
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+#include <util/invariant.h>
+
+#include "dnf_io.hh"
+
+#include <algorithm>
 #include <assert.h>
+#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
 #include <stdarg.h>
 #include <stdio.h>
-#include <set>
-#include <algorithm>
-#include <queue>
-#include <map>
-#include <iostream>
-#include <util/invariant.h>
-#include "dnf_io.hh"
 const int factor = 1000;
 
 /*================================================

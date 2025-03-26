@@ -6,18 +6,20 @@ Module:  Picking a literal to remove when generalizing
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
-#include <queue>
-#include <set>
-#include <map>
-#include <algorithm>
-#include <iostream>
 #include <util/invariant.h>
-#include "minisat/core/Solver.h"
-#include "minisat/simp/SimpSolver.h"
-#include "dnf_io.hh"
+
 #include "ccircuit.hh"
+#include "dnf_io.hh"
 #include "m0ic3.hh"
 
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
+
+#include "minisat/core/Solver.h"
+#include "minisat/simp/SimpSolver.h"
 
 /*=============================
 

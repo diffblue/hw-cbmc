@@ -6,19 +6,20 @@ Module: Treating the case when a gate feeds more
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
-#include <iostream>
-#include <vector>
-#include <set>
-#include <map>
-#include <algorithm>
-#include <queue>
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
 #include <util/invariant.h>
-#include "dnf_io.hh"
-#include "ccircuit.hh"
 
+#include "ccircuit.hh"
+#include "dnf_io.hh"
+
+#include <algorithm>
+#include <assert.h>
+#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
 
 /*=========================================
 
@@ -122,8 +123,9 @@ int spec_buff_gate_ind(Circuit *N,int ind)
   int gate_ind = N->Pin_list[fake_name];
 
   Gate &G = N->get_gate(gate_ind);
-  INVARIANT(G.spec_buff_ind == ind,
-            "Special buffer index of gate should be equal to value of `ind`");
+  INVARIANT(
+    G.spec_buff_ind == ind,
+    "Special buffer index of gate should be equal to value of `ind`");
 
   return(gate_ind);
 

@@ -5,17 +5,20 @@ Module: Initialization of IC3
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+#include <util/invariant.h>
+
+#include "ccircuit.hh"
+#include "dnf_io.hh"
+#include "m0ic3.hh"
+
+#include <algorithm>
 #include <iostream>
+#include <map>
 #include <queue>
 #include <set>
-#include <map>
-#include <algorithm>
-#include <util/invariant.h>
+
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
-#include "dnf_io.hh"
-#include "ccircuit.hh"
-#include "m0ic3.hh"
 /*==============================
 
     C I _ I N I T
