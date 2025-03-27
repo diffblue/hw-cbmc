@@ -1318,6 +1318,117 @@ to_sva_sequence_consecutive_repetition_expr(exprt &expr)
   return static_cast<sva_sequence_consecutive_repetition_exprt &>(expr);
 }
 
+class sva_sequence_goto_repetition_exprt : public binary_exprt
+{
+public:
+  sva_sequence_goto_repetition_exprt(exprt __op, constant_exprt __repetitions)
+    : binary_exprt{
+        std::move(__op),
+        ID_sva_sequence_goto_repetition,
+        std::move(__repetitions),
+        bool_typet{}}
+  {
+  }
+
+  const exprt &op() const
+  {
+    return op0();
+  }
+
+  exprt &op()
+  {
+    return op0();
+  }
+
+  // The number of repetitions must be a constant after elaboration.
+  const constant_exprt &repetitions() const
+  {
+    return static_cast<const constant_exprt &>(op1());
+  }
+
+  constant_exprt &repetitions()
+  {
+    return static_cast<constant_exprt &>(op1());
+  }
+
+protected:
+  using binary_exprt::op0;
+  using binary_exprt::op1;
+};
+
+inline const sva_sequence_goto_repetition_exprt &
+to_sva_sequence_goto_repetition_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_goto_repetition);
+  sva_sequence_goto_repetition_exprt::check(expr);
+  return static_cast<const sva_sequence_goto_repetition_exprt &>(expr);
+}
+
+inline sva_sequence_goto_repetition_exprt &
+to_sva_sequence_goto_repetition_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_goto_repetition);
+  sva_sequence_goto_repetition_exprt::check(expr);
+  return static_cast<sva_sequence_goto_repetition_exprt &>(expr);
+}
+
+class sva_sequence_non_consecutive_repetition_exprt : public binary_exprt
+{
+public:
+  sva_sequence_non_consecutive_repetition_exprt(
+    exprt __op,
+    constant_exprt __repetitions)
+    : binary_exprt{
+        std::move(__op),
+        ID_sva_sequence_non_consecutive_repetition,
+        std::move(__repetitions),
+        bool_typet{}}
+  {
+  }
+
+  const exprt &op() const
+  {
+    return op0();
+  }
+
+  exprt &op()
+  {
+    return op0();
+  }
+
+  // The number of repetitions must be a constant after elaboration.
+  const constant_exprt &repetitions() const
+  {
+    return static_cast<const constant_exprt &>(op1());
+  }
+
+  constant_exprt &repetitions()
+  {
+    return static_cast<constant_exprt &>(op1());
+  }
+
+protected:
+  using binary_exprt::op0;
+  using binary_exprt::op1;
+};
+
+inline const sva_sequence_non_consecutive_repetition_exprt &
+to_sva_sequence_non_consecutive_repetition_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_non_consecutive_repetition);
+  sva_sequence_non_consecutive_repetition_exprt::check(expr);
+  return static_cast<const sva_sequence_non_consecutive_repetition_exprt &>(
+    expr);
+}
+
+inline sva_sequence_non_consecutive_repetition_exprt &
+to_sva_sequence_non_consecutive_repetition_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_non_consecutive_repetition);
+  sva_sequence_non_consecutive_repetition_exprt::check(expr);
+  return static_cast<sva_sequence_non_consecutive_repetition_exprt &>(expr);
+}
+
 class sva_sequence_intersect_exprt : public binary_exprt
 {
 public:

@@ -2,11 +2,11 @@ CORE
 sequence_repetition1.sv
 --bound 10
 ^\[.*\] main\.half_x == 0 \[\*2\]: PROVED up to bound 10$
-^\[.*\] main\.half_x == 0 \[->2\]: FAILURE: property not supported by BMC engine$
-^\[.*\] main\.half_x == 0 \[=2\]: FAILURE: property not supported by BMC engine$
+^\[.*\] main\.half_x == 0 \[->2\]: PROVED up to bound 10$
+^\[.*\] main\.half_x == 0 \[=2\]: PROVED up to bound 10$
 ^\[.*\] main\.x == 0 \[\*2\]: REFUTED$
-^\[.*\] main\.x == 0 \[->2\]: FAILURE: property not supported by BMC engine$
-^\[.*\] main\.x == 0 \[=2\]: FAILURE: property not supported by BMC engine$
+^\[.*\] main\.x == 0 \[->2\]: REFUTED$
+^\[.*\] main\.x == 0 \[=2\]: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --
