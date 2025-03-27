@@ -6,8 +6,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 
-#pragma once
-
 #include <queue>
 #include <string>
 

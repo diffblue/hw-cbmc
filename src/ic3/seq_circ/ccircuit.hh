@@ -7,8 +7,6 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 
-#pragma once
-
 #include "dnf_io.hh"
 
 struct ConstrGateInfo {

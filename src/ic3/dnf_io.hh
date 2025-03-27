@@ -7,7 +7,8 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 
-#pragma once
+#ifndef DNF_IO_HH
+#define DNF_IO_HH
 
 #include <deque>
 #include <iosfwd>
@@ -73,4 +74,4 @@ void print_srt_dnf(DNF &D);
 void fprint_srt_dnf(DNF &D,char *fname);
 void fprint_srt_dnf(DNF &D,const char *fname);
 
-
+#endif
