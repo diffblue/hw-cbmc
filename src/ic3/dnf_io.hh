@@ -26,11 +26,6 @@ typedef std::set<int> SCUBE;
 typedef DNF CNF;
 typedef std::vector <float> FltCube;
 
-
-#define BUF_SIZE 1000
-#define MAX_NUM 20
-
-
 /*========================
 
  C L A S S    comp_lits
