@@ -6,17 +6,20 @@ Module:  Picking a literal to remove when generalizing
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
-#include <queue>
-#include <set>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include "minisat/core/Solver.h"
-#include "minisat/simp/SimpSolver.h"
-#include "dnf_io.hh"
+#include <util/invariant.h>
+
 #include "ccircuit.hh"
+#include "dnf_io.hh"
 #include "m0ic3.hh"
 
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
+
+#include "minisat/core/Solver.h"
+#include "minisat/simp/SimpSolver.h"
 
 /*=============================
 
@@ -52,6 +55,5 @@ int CompInfo::fxd_ord_lit(CUBE &Curr,SCUBE &Tried)
       return(lit);
   }
 
-  assert(false); // shouldn't reach this line
-
+  UNREACHABLE;
 } /* end of function fxd_ord_lit */

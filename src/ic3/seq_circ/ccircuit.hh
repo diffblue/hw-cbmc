@@ -6,6 +6,9 @@ Module: Basic types (gate, circuit and so on)
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+
+#include "dnf_io.hh"
+
 struct ConstrGateInfo {
   unsigned neg_lit:1;
   unsigned fun_coi:1;

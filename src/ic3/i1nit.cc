@@ -5,16 +5,20 @@ Module: Initialization of IC3
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
+#include <util/invariant.h>
+
+#include "ccircuit.hh"
+#include "dnf_io.hh"
+#include "m0ic3.hh"
+
+#include <algorithm>
 #include <iostream>
+#include <map>
 #include <queue>
 #include <set>
-#include <map>
-#include <algorithm>
+
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
-#include "dnf_io.hh"
-#include "ccircuit.hh"
-#include "m0ic3.hh"
 /*==============================
 
     C I _ I N I T
@@ -214,7 +218,7 @@ void CompInfo::form_cex()
     add_assumps1(Assmps,Cex[i]);     
     add_assumps1(Assmps,Inp_trace[i]);
     bool sat_form = check_sat2(Gen_sat,Assmps);
-    assert(sat_form);
+    INVARIANT(sat_form, "SAT check should fail here.");
     CUBE Nst,St;
     extr_cut_assgns1(Nst,Next_svars,Gen_sat);
     conv_to_pres_state(St,Nst);

@@ -6,7 +6,11 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 
+#include <queue>
 #include <string>
+
+#include "minisat/core/Solver.h"
+#include "minisat/simp/SimpSolver.h"
 
 #ifndef UNUSED
 #ifdef _MSC_VER

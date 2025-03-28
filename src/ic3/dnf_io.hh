@@ -7,7 +7,14 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
 
+#ifndef DNF_IO_HH
+#define DNF_IO_HH
+
+#include <deque>
 #include <iosfwd>
+#include <map>
+#include <set>
+#include <vector>
 
 typedef std::vector<int> CUBE;
 typedef std::vector<CUBE> DNF;
@@ -19,11 +26,6 @@ typedef CUBE CLAUSE;
 typedef std::set<int> SCUBE;
 typedef DNF CNF;
 typedef std::vector <float> FltCube;
-
-
-#define BUF_SIZE 1000
-#define MAX_NUM 20
-
 
 /*========================
 
@@ -72,4 +74,4 @@ void print_srt_dnf(DNF &D);
 void fprint_srt_dnf(DNF &D,char *fname);
 void fprint_srt_dnf(DNF &D,const char *fname);
 
-
+#endif
