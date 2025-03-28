@@ -1781,7 +1781,11 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
   {
     // in case no topological order exists, fall back on starting with any
     // defined symbol
-    warning() << "definiton graph is not a DAG";
+
+    // warn if non-empty graph is not a DAG
+    if(!definition_graph.empty())
+      warning() << "definiton graph is not a DAG";
+
     for(define_mapt::iterator it = define_map.begin(); it != define_map.end();
         it++)
     {
