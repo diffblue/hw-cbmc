@@ -28,8 +28,8 @@ Compiling
    make -C lib/cbmc/src minisat2-download
    ```
 
-4. Build EBMC:
+4. Build HW-CBMC:
    ```
    make -C src
    ```
-   This also builds the CBMC submodule. The binary will be in src/ebmc/ebmc.
+   This also builds the CBMC submodule. The hw-cbmc binary will be in src/hw-cbmc/hw-cbmc.
