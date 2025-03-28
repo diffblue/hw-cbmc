@@ -97,14 +97,6 @@ exprt normalize_property_rec(exprt expr)
   {
     expr = sva_s_eventually_exprt{to_sva_cycle_delay_star_expr(expr).op()};
   }
-  else if(expr.id() == ID_sva_strong)
-  {
-    expr = to_sva_strong_expr(expr).op();
-  }
-  else if(expr.id() == ID_sva_weak)
-  {
-    expr = to_sva_weak_expr(expr).op();
-  }
 
   // normalize the operands
   for(auto &op : expr.operands())

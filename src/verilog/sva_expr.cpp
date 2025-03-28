@@ -41,7 +41,8 @@ exprt sva_case_exprt::lowering() const
 
 exprt sva_sequence_consecutive_repetition_exprt::lower() const
 {
-  PRECONDITION(op().type().id() == ID_bool);
+  PRECONDITION(
+    op().type().id() == ID_bool || op().type().id() == ID_verilog_sva_sequence);
 
   if(to().is_nil())
   {
