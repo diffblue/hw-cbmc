@@ -331,6 +331,9 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
       make_boolean(expr.op2());
     }
 
+    // these are always properties
+    expr.type() = bool_typet{};
+
     return std::move(expr);
   }
   else
