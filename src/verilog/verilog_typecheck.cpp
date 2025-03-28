@@ -1051,7 +1051,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
   exprt &cond = module_item.condition();
 
   convert_sva(cond);
-  make_boolean(cond);
+  require_sva_property(cond);
 
   // We create a symbol for the property.
   // The 'value' of the symbol is set by synthesis.
@@ -1116,7 +1116,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
   exprt &cond = statement.condition();
 
   convert_sva(cond);
-  make_boolean(cond);
+  require_sva_property(cond);
 
   // We create a symbol for the property.
   // The 'value' is set by synthesis.

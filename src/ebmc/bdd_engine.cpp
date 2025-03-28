@@ -199,7 +199,8 @@ property_checker_resultt bdd_enginet::operator()()
     const auto property_map = properties.make_property_map();
 
     for(const auto &[_, expr] : property_map)
-      get_atomic_propositions(expr);
+      if(is_LTL(expr) || is_CTL(expr))
+        get_atomic_propositions(expr);
 
     message.status() << "Building BDD for netlist" << messaget::eom;
 
@@ -894,7 +895,7 @@ void bdd_enginet::get_atomic_propositions(const exprt &expr)
     expr.id() == ID_implies ||
     (expr.id() == ID_equal &&
      to_equal_expr(expr).lhs().type().id() == ID_bool) ||
-    is_temporal_operator(expr))
+    is_LTL_operator(expr) || is_CTL_operator(expr))
   {
     for(const auto & op : expr.operands())
       if(op.type().id() == ID_bool)

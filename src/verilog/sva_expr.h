@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+#include "verilog_types.h"
+
 /// accept_on, reject_on, sync_accept_on, sync_reject_on, disable_iff
 class sva_abort_exprt : public binary_predicate_exprt
 {
@@ -1240,7 +1242,7 @@ public:
         std::move(__op),
         std::move(__repetitions),
         nil_exprt{},
-        bool_typet{}}
+        verilog_sva_sequence_typet{}}
   {
   }
 
@@ -1253,7 +1255,7 @@ public:
         std::move(__op),
         std::move(__from),
         std::move(__to),
-        bool_typet{}}
+        verilog_sva_sequence_typet{}}
   {
   }
 
