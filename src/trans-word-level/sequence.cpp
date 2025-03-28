@@ -272,6 +272,50 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
 
     return result;
   }
+  else if(expr.id() == ID_sva_sequence_goto_repetition)
+  {
+    auto &op = to_sva_sequence_goto_repetition_expr(expr).op();
+    auto repetitions = numeric_cast_v<mp_integer>(
+      to_sva_sequence_goto_repetition_expr(expr).repetitions());
+
+    std::vector<std::pair<mp_integer, exprt>> result;
+
+    for(mp_integer u = t; u < no_timeframes; ++u)
+    {
+      // match of op in timeframe u?
+      auto rec_u = instantiate_sequence(op, u, no_timeframes);
+
+      // We have a match for op[->n] if
+      // a) we have a match of op in timeframe u and
+      // b) n=1 or we have a match for [=n-1] in timeframe u-1
+    }
+
+    return result;
+  }
+  else if(expr.id() == ID_sva_sequence_non_consecutive_repetition)
+  {
+    auto &op = to_sva_sequence_non_consecutive_repetition_expr(expr).op();
+    auto repetitions = numeric_cast_v<mp_integer>(
+      to_sva_sequence_non_consecutive_repetition_expr(expr).repetitions());
+
+    std::vector<std::pair<mp_integer, exprt>> result;
+
+    for(mp_integer u = t; u < no_timeframes; ++u)
+    {
+      // match of op in timeframe u?
+      auto rec_u = instantiate_sequence(op, u, no_timeframes);
+
+      // We have a match for op[=n]:
+      // 1. If
+      //    a. there is a match of op in timeframe u and
+      //    b. n=1 or we have a match for [=n-1] in timeframe u-1; or
+      // 2. If
+      //    a. there is no match of op in timeframe u and
+      //    b. op[=n] in timeframe u-1
+    }
+
+    return result;
+  }
   else
   {
     // not a sequence, evaluate as state predicate

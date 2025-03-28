@@ -1856,7 +1856,8 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_sva_sequence_non_consecutive_repetition)
     return precedence = verilog_precedencet::MIN,
-           convert_sva_binary_repetition("[=", to_binary_expr(src));
+           convert_sva_binary_repetition(
+             "[=", to_sva_sequence_non_consecutive_repetition_expr(src));
   // not sure about precedence
 
   else if(src.id() == ID_sva_sequence_consecutive_repetition)
@@ -1865,7 +1866,8 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_sva_sequence_goto_repetition)
     return precedence = verilog_precedencet::MIN,
-           convert_sva_binary_repetition("[->", to_binary_expr(src));
+           convert_sva_binary_repetition(
+             "[->", to_sva_sequence_goto_repetition_expr(src));
   // not sure about precedence
 
   else if(src.id() == ID_sva_ranged_always)
