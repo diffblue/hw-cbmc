@@ -586,8 +586,8 @@ static obligationst property_obligations_rec(
     {
       // The RHS of the non-overlapped implication starts one timeframe later
       auto t_rhs = property_expr.id() == ID_sva_non_overlapped_implication
-                     ? lhs_match_point.first + 1
-                     : lhs_match_point.first;
+                     ? lhs_match_point.end_time + 1
+                     : lhs_match_point.end_time;
 
       // Do we exceed the bound? Make it 'true'
       if(t_rhs >= no_timeframes)
@@ -603,7 +603,7 @@ static obligationst property_obligations_rec(
       for(auto &rhs_obligation : rhs_obligations_rec.map)
       {
         auto rhs_conjunction = conjunction(rhs_obligation.second);
-        auto cond = implies_exprt{lhs_match_point.second, rhs_conjunction};
+        auto cond = implies_exprt{lhs_match_point.condition, rhs_conjunction};
         result.add(rhs_obligation.first, cond);
       }
     }
@@ -619,15 +619,15 @@ static obligationst property_obligations_rec(
     auto &followed_by = to_sva_followed_by_expr(property_expr);
 
     // get match points for LHS sequence
-    auto match_points =
+    auto matches =
       instantiate_sequence(followed_by.antecedent(), current, no_timeframes);
 
     exprt::operandst disjuncts;
     mp_integer t = current;
 
-    for(auto &match_point : match_points)
+    for(auto &match : matches)
     {
-      mp_integer property_start = match_point.first;
+      mp_integer property_start = match.end_time;
 
       // #=# advances the clock by one from the sequence match point
       if(property_expr.id() == ID_sva_nonoverlapped_followed_by)
@@ -638,7 +638,7 @@ static obligationst property_obligations_rec(
       {
         // relies on NNF
         t = std::max(t, no_timeframes - 1);
-        disjuncts.push_back(match_point.second);
+        disjuncts.push_back(match.condition);
       }
       else
       {
@@ -647,8 +647,7 @@ static obligationst property_obligations_rec(
             followed_by.consequent(), property_start, no_timeframes)
             .conjunction();
 
-        disjuncts.push_back(
-          and_exprt{match_point.second, obligations_rec.second});
+        disjuncts.push_back(and_exprt{match.condition, obligations_rec.second});
         t = std::max(t, obligations_rec.first);
       }
     }
