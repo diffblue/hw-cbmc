@@ -86,7 +86,7 @@ protected:
 
   void convert(smv_parse_treet::modulet::itemt &);
   void typecheck(smv_parse_treet::modulet::itemt &);
-  void typecheck_expr_rec(exprt &, modet);
+  void typecheck_expr_node(exprt &, modet);
   void convert_expr_to(exprt &, const typet &dest);
 
   smv_parse_treet::modulet *modulep;
@@ -614,7 +614,10 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck(exprt &expr, modet mode)
 {
-  typecheck_expr_rec(expr, mode);
+  // We use visit_post instead of recursion to avoid
+  // stack overflows on very deep nestings of DEFINE definitions.
+  expr.visit_post([this, mode](exprt &expr)
+                  { typecheck_expr_node(expr, mode); });
 }
 
 /*******************************************************************\
@@ -629,12 +632,8 @@ Function: smv_typecheckt::typecheck_expr_rec
 
 \*******************************************************************/
 
-void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
+void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
 {
-  // Do the operands
-  for(auto &op : expr.operands())
-    typecheck_expr_rec(op, mode);
-
   // now post-traversal
 
   if(expr.id()==ID_symbol || 
