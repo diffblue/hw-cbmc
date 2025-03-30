@@ -65,6 +65,8 @@ protected:
   const namespacet ns;
   netlistt netlist;
 
+  static bool property_supported(const exprt &);
+
   // the Manager must appear before any BDDs
   // to do the cleanup in the right order
   mini_bdd_mgrt mgr;
@@ -196,10 +198,9 @@ property_checker_resultt bdd_enginet::operator()()
                          << ", nodes: " << netlist.number_of_nodes()
                          << messaget::eom;
 
-    const auto property_map = properties.make_property_map();
-
-    for(const auto &[_, expr] : property_map)
-      get_atomic_propositions(expr);
+    for(const auto &property : properties.properties)
+      if(property_supported(property.normalized_expr))
+        get_atomic_propositions(property.normalized_expr);
 
     message.status() << "Building BDD for netlist" << messaget::eom;
 
@@ -437,6 +438,54 @@ void bdd_enginet::compute_counterexample(
 
 /*******************************************************************\
 
+Function: bdd_enginet::property_supported
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool bdd_enginet::property_supported(const exprt &expr)
+{
+  // Our engine knows all of CTL.
+  if(is_CTL(expr))
+    return true;
+
+  if(is_LTL(expr))
+  {
+    // We can map selected path properties to CTL.
+    return is_Gp(expr) || is_GFp(expr);
+  }
+
+  if(is_SVA(expr))
+  {
+    if(
+      expr.id() == ID_sva_always &&
+      !has_temporal_operator(to_sva_always_expr(expr).op()))
+    {
+      // always p
+      return true;
+    }
+
+    if(
+      expr.id() == ID_sva_always &&
+      to_sva_always_expr(expr).op().id() == ID_sva_s_eventually &&
+      !has_temporal_operator(
+        to_sva_s_eventually_expr(to_sva_always_expr(expr).op()).op()))
+    {
+      // always s_eventually p
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::check_property
 
   Inputs:
@@ -455,24 +504,26 @@ void bdd_enginet::check_property(propertyt &property)
   if(property.is_assumed())
     return;
 
+  if(!property_supported(property.normalized_expr))
+  {
+    property.failure("property not supported by BDD engine");
+    return;
+  }
+
   message.status() << "Checking " << property.name << messaget::eom;
   property.status=propertyt::statust::UNKNOWN;
-
-  // special treatment for AGp
-  auto is_AGp = [](const exprt &expr) {
-    return (expr.id() == ID_AG || expr.id() == ID_G ||
-            expr.id() == ID_sva_always) &&
-           !has_temporal_operator(to_unary_expr(expr).op());
-  };
 
   // Our engine knows CTL only.
   // We map selected path properties to CTL.
 
-  if(
-    property.normalized_expr.id() == ID_G &&
-    to_G_expr(property.normalized_expr).op().id() == ID_F &&
-    !has_temporal_operator(
-      to_F_expr(to_G_expr(property.normalized_expr).op()).op()))
+  if(is_Gp(property.normalized_expr))
+  {
+    // G p --> AG  p
+    auto p = to_G_expr(property.normalized_expr).op();
+    property.normalized_expr = AG_exprt{p};
+  }
+
+  if(is_GFp(property.normalized_expr))
   {
     // G F p --> AG AF p
     auto p = to_F_expr(to_G_expr(property.normalized_expr).op()).op();
@@ -494,6 +545,15 @@ void bdd_enginet::check_property(propertyt &property)
     property.normalized_expr = AG_exprt{AF_exprt{p}};
   }
 
+  if(
+    property.normalized_expr.id() == ID_sva_always &&
+    !has_temporal_operator(to_sva_always_expr(property.normalized_expr).op()))
+  {
+    // always p --> AG p
+    auto p = to_sva_always_expr(property.normalized_expr).op();
+    property.normalized_expr = AG_exprt{p};
+  }
+
   if(is_AGp(property.normalized_expr))
   {
     check_AGp(property);
@@ -503,7 +563,7 @@ void bdd_enginet::check_property(propertyt &property)
     check_CTL(property);
   }
   else
-    property.failure("property not supported by BDD engine");
+    DATA_INVARIANT(false, "unexpected normalized property");
 }
 
 /*******************************************************************\

@@ -1,4 +1,6 @@
-SRC = nnf.cpp \
+SRC = ctl.cpp \
+      ltl.cpp \
+      nnf.cpp \
       normalize_property.cpp \
       temporal_logic.cpp \
       trivial_sva.cpp \
