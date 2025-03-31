@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "obligations.h"
 #include "property.h"
 
-std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
+sequence_matchest instantiate_sequence(
   exprt expr,
   const mp_integer &t,
   const mp_integer &no_timeframes)
@@ -64,31 +64,31 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
         return {{no_timeframes - 1, true_exprt()}};
       }
 
-      std::vector<std::pair<mp_integer, exprt>> match_points;
+      sequence_matchest matches;
 
       for(mp_integer u = lower; u <= upper; ++u)
       {
         auto sub_result =
           instantiate_sequence(sva_cycle_delay_expr.op(), u, no_timeframes);
-        for(auto &match_point : sub_result)
-          match_points.push_back(match_point);
+        for(auto &match : sub_result)
+          matches.push_back(match);
       }
 
-      return match_points;
+      return matches;
     }
   }
   else if(expr.id() == ID_sva_sequence_concatenation)
   {
     auto &implication = to_binary_expr(expr);
-    std::vector<std::pair<mp_integer, exprt>> result;
+    sequence_matchest result;
 
     // This is the product of the match points on the LHS and RHS
-    const auto lhs_match_points =
+    const auto lhs_matches =
       instantiate_sequence(implication.lhs(), t, no_timeframes);
 
-    for(auto &lhs_match_point : lhs_match_points)
+    for(auto &lhs_match : lhs_matches)
     {
-      auto t_rhs = lhs_match_point.first;
+      auto t_rhs = lhs_match.end_time;
 
       // Do we exceed the bound? Make it 'true'
       if(t_rhs >= no_timeframes)
@@ -97,13 +97,13 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
         return {{no_timeframes - 1, true_exprt()}};
       }
 
-      const auto rhs_match_points =
+      const auto rhs_matches =
         instantiate_sequence(implication.rhs(), t_rhs, no_timeframes);
 
-      for(auto &rhs_match_point : rhs_match_points)
+      for(auto &rhs_match : rhs_matches)
       {
-        auto cond = and_exprt{lhs_match_point.second, rhs_match_point.second};
-        result.push_back({rhs_match_point.first, cond});
+        auto cond = and_exprt{lhs_match.condition, rhs_match.condition};
+        result.push_back({rhs_match.end_time, cond});
       }
     }
 
@@ -118,22 +118,23 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     // — The lengths of the two matches of the operand sequences shall be the same.
     auto &intersect = to_sva_sequence_intersect_expr(expr);
 
-    const auto lhs_match_points =
+    const auto lhs_matches =
       instantiate_sequence(intersect.lhs(), t, no_timeframes);
-    const auto rhs_match_points =
+    const auto rhs_matches =
       instantiate_sequence(intersect.rhs(), t, no_timeframes);
 
-    std::vector<std::pair<mp_integer, exprt>> result;
+    sequence_matchest result;
 
-    for(auto &lhs_match : lhs_match_points)
+    for(auto &lhs_match : lhs_matches)
     {
-      for(auto &rhs_match : rhs_match_points)
+      for(auto &rhs_match : rhs_matches)
       {
         // Same length?
-        if(lhs_match.first == rhs_match.first)
+        if(lhs_match.end_time == rhs_match.end_time)
         {
           result.emplace_back(
-            lhs_match.first, and_exprt{lhs_match.second, rhs_match.second});
+            lhs_match.end_time,
+            and_exprt{lhs_match.condition, rhs_match.condition});
         }
       }
     }
@@ -144,28 +145,28 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   {
     auto &first_match = to_sva_sequence_first_match_expr(expr);
 
-    const auto lhs_match_points =
+    const auto lhs_matches =
       instantiate_sequence(first_match.lhs(), t, no_timeframes);
 
     // the match of seq with the earliest ending clock tick is a
     // match of first_match (seq)
     std::optional<mp_integer> earliest;
 
-    for(auto &match : lhs_match_points)
+    for(auto &match : lhs_matches)
     {
-      if(!earliest.has_value() || earliest.value() > match.first)
-        earliest = match.first;
+      if(!earliest.has_value() || earliest.value() > match.end_time)
+        earliest = match.end_time;
     }
 
     if(!earliest.has_value())
       return {}; // no match
 
-    std::vector<std::pair<mp_integer, exprt>> result;
+    sequence_matchest result;
 
-    for(auto &match : lhs_match_points)
+    for(auto &match : lhs_matches)
     {
       // Earliest?
-      if(match.first == earliest.value())
+      if(match.end_time == earliest.value())
       {
         result.push_back(match);
       }
@@ -181,23 +182,23 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     // - exp evaluates to true at each clock tick of the interval.
     auto &throughout = to_sva_sequence_throughout_expr(expr);
 
-    const auto rhs_match_points =
+    const auto rhs_matches =
       instantiate_sequence(throughout.rhs(), t, no_timeframes);
 
-    std::vector<std::pair<mp_integer, exprt>> result;
+    sequence_matchest result;
 
-    for(auto &rhs_match : rhs_match_points)
+    for(auto &rhs_match : rhs_matches)
     {
-      exprt::operandst conjuncts = {rhs_match.second};
+      exprt::operandst conjuncts = {rhs_match.condition};
 
-      for(mp_integer new_t = t; new_t <= rhs_match.first; ++new_t)
+      for(mp_integer new_t = t; new_t <= rhs_match.end_time; ++new_t)
       {
         auto obligations =
           property_obligations(throughout.lhs(), new_t, no_timeframes);
         conjuncts.push_back(obligations.conjunction().second);
       }
 
-      result.emplace_back(rhs_match.first, conjunction(conjuncts));
+      result.emplace_back(rhs_match.end_time, conjunction(conjuncts));
     }
 
     return result;
@@ -221,18 +222,20 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
       obligations.add(property_obligations(op, t, no_timeframes));
     }
 
-    return {obligations.conjunction()};
+    auto conjunction = obligations.conjunction();
+
+    return {{conjunction.first, conjunction.second}};
   }
   else if(expr.id() == ID_sva_or)
   {
     // IEEE 1800-2017 16.9.7
     // The set of matches of a or b is the set union of the matches of a
     // and the matches of b.
-    std::vector<std::pair<mp_integer, exprt>> result;
+    sequence_matchest result;
 
     for(auto &op : expr.operands())
-      for(auto &match_point : instantiate_sequence(op, t, no_timeframes))
-        result.push_back(match_point);
+      for(auto &match : instantiate_sequence(op, t, no_timeframes))
+        result.push_back(match);
 
     return result;
   }
@@ -253,7 +256,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
     if(is_SVA_sequence_operator(op))
       PRECONDITION(false); // no support
 
-    std::vector<std::pair<mp_integer, exprt>> result;
+    sequence_matchest result;
 
     // we incrementally add conjuncts to the condition
     exprt::operandst conjuncts;
@@ -276,6 +279,7 @@ std::vector<std::pair<mp_integer, exprt>> instantiate_sequence(
   {
     // not a sequence, evaluate as state predicate
     auto obligations = property_obligations(expr, t, no_timeframes);
-    return {obligations.conjunction()};
+    auto conjunction = obligations.conjunction();
+    return {{conjunction.first, conjunction.second}};
   }
 }

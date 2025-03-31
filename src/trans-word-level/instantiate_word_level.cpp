@@ -123,15 +123,15 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   {
     // sequence expressions -- these may have multiple potential
     // match points, and evaluate to true if any of them matches
-    const auto match_points = instantiate_sequence(expr, t, no_timeframes);
+    const auto matches = instantiate_sequence(expr, t, no_timeframes);
     exprt::operandst disjuncts;
-    disjuncts.reserve(match_points.size());
+    disjuncts.reserve(matches.size());
     mp_integer max = t;
 
-    for(auto &match_point : match_points)
+    for(auto &match : matches)
     {
-      disjuncts.push_back(match_point.second);
-      max = std::max(max, match_point.first);
+      disjuncts.push_back(match.condition);
+      max = std::max(max, match.end_time);
     }
 
     return {max, disjunction(disjuncts)};
