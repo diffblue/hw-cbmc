@@ -107,12 +107,12 @@ exprt trivial_sva(exprt expr)
     op = trivial_sva(op);
 
   // post-traversal
-  if(expr.id() == ID_typecast)
+  if(expr.id() == ID_sva_sequence_property)
   {
-    // We typecast sequences to bool, and hence can drop
-    // casts from bool to bool
-    auto &op = to_typecast_expr(expr).op();
-    if(expr.type().id() == ID_bool && op.type().id() == ID_bool)
+    // We simplify sequences to boolean expressions, and hence can drop
+    // the sva_sequence_property converter
+    auto &op = to_sva_sequence_property_expr(expr).op();
+    if(op.type().id() == ID_bool)
       return op;
   }
 

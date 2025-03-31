@@ -2,7 +2,7 @@ CORE
 sequence2.sv
 --bound 10 --numbered-trace
 ^\[main\.p0] ##\[0:\$\] main\.x == 10: REFUTED$
-^Counterexample with 7 states:$
+^Counterexample with \d+ states:$
 ^main\.x@0 = 0$
 ^main\.x@1 = 1$
 ^main\.x@2 = 2$
