@@ -199,7 +199,7 @@ protected:
     expr = convert_sva_rec(std::move(expr));
   }
 
-  void require_sva_sequence(const exprt &) const;
+  void require_sva_sequence(exprt &);
   void require_sva_property(exprt &);
 
   [[nodiscard]] exprt convert_sva_rec(exprt);
