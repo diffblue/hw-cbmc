@@ -60,7 +60,18 @@ void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
 
 void verilog_typecheck_exprt::require_sva_property(exprt &expr)
 {
-  make_boolean(expr);
+  if(is_SVA_sequence_operator(expr))
+  {
+    // 1800 2017 16.12.2 Sequence property
+    // These yield an implicit weak(...) or strong(...), but we
+    // only know which one once the sequence is used in an assert/assume
+    // or cover.
+    expr = sva_sequence_property_exprt{std::move(expr)};
+  }
+  else
+  {
+    make_boolean(expr);
+  }
 }
 
 exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
