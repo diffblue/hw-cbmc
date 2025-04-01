@@ -214,17 +214,21 @@ sequence_matchest instantiate_sequence(
     // 2. Both sequences start at the same time.
     // 3. The end time of the composite sequence is
     //    the end time of the operand sequence that completes last.
-    // Condition (3) is TBD.
-    obligationst obligations;
+    auto &and_expr = to_sva_and_expr(expr);
+    auto matches_lhs = instantiate_sequence(and_expr.lhs(), t, no_timeframes);
+    auto matches_rhs = instantiate_sequence(and_expr.rhs(), t, no_timeframes);
 
-    for(auto &op : expr.operands())
-    {
-      obligations.add(property_obligations(op, t, no_timeframes));
-    }
+    sequence_matchest result;
 
-    auto conjunction = obligations.conjunction();
+    for(auto &match_lhs : matches_lhs)
+      for(auto &match_rhs : matches_rhs)
+      {
+        auto end_time = std::max(match_lhs.end_time, match_rhs.end_time);
+        auto cond = and_exprt{match_lhs.condition, match_rhs.condition};
+        result.emplace_back(std::move(end_time), std::move(cond));
+      }
 
-    return {{conjunction.first, conjunction.second}};
+    return result;
   }
   else if(expr.id() == ID_sva_or)
   {
