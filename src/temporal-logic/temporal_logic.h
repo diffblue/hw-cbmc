@@ -71,4 +71,10 @@ bool is_SVA_operator(const exprt &);
 /// Returns true iff the given expression is an SVA expression
 bool is_SVA(const exprt &);
 
+/// Returns true iff the given expression is always p
+bool is_SVA_always_p(const exprt &);
+
+/// Returns true iff the given expression is always s_eventually p
+bool is_SVA_always_s_eventually_p(const exprt &);
+
 #endif

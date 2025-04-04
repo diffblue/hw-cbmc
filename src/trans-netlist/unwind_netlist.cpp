@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 
+#include <solvers/prop/literal_expr.h>
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
@@ -141,18 +142,23 @@ Function: unwind_property
 
 \*******************************************************************/
 
-bvt unwind_property(
-  const netlistt::propertyt &property,
-  const bmc_mapt &bmc_map)
+bvt unwind_property(const exprt &property_expr, const bmc_mapt &bmc_map)
 {
-  PRECONDITION(std::holds_alternative<netlistt::Gpt>(property));
-  auto property_node = std::get<netlistt::Gpt>(property).p;
-
   bvt prop_bv{bmc_map.timeframe_map.size()};
+
+  // We only do Gp/AGp
+  PRECONDITION(
+    is_Gp(property_expr) || is_AGp(property_expr) ||
+    is_SVA_always_p(property_expr));
+
+  auto &p = to_unary_expr(property_expr).op();
+  PRECONDITION(p.id() == ID_literal);
+
+  auto p_node = to_literal_expr(p).get_literal();
 
   for(std::size_t t = 0; t < bmc_map.timeframe_map.size(); t++)
   {
-    literalt l=bmc_map.translate(t, property_node);
+    literalt l = bmc_map.translate(t, p_node);
     prop_bv[t]=l;
   }
 
