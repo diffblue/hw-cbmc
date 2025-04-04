@@ -71,4 +71,8 @@ bool is_SVA_operator(const exprt &);
 /// Returns true iff the given expression is an SVA expression
 bool is_SVA(const exprt &);
 
+/// If possible, this maps an SVA expression to an equivalent LTL
+/// expression, or otherwise returns {}.
+std::optional<exprt> SVA_to_LTL(const exprt &);
+
 #endif
