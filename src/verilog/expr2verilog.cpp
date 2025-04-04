@@ -531,8 +531,16 @@ expr2verilogt::resultt expr2verilogt::convert_sva_unary(
   const unary_exprt &src)
 {
   auto op = convert_rec(src.op());
-  if(op.p == verilog_precedencet::MIN && src.op().operands().size() >= 2)
+
+  auto op_skip_typecast =
+    src.op().id() == ID_typecast ? to_typecast_expr(src.op()).op() : src.op();
+
+  if(
+    op.p == verilog_precedencet::MIN && op_skip_typecast.operands().size() >= 2)
+  {
     op.s = "(" + op.s + ")";
+  }
+
   return {verilog_precedencet::MIN, name + " " + op.s};
 }
 

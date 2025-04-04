@@ -645,6 +645,26 @@ static obligationst property_obligations_rec(
     }
     return obligationst{t, disjunction(disjuncts)};
   }
+  else if(
+    property_expr.id() == ID_sva_strong || property_expr.id() == ID_sva_weak)
+  {
+    auto &sequence = to_unary_expr(property_expr).op();
+
+    // sequence expressions -- these may have multiple potential
+    // match points, and evaluate to true if any of them matches
+    const auto matches = instantiate_sequence(sequence, current, no_timeframes);
+    exprt::operandst disjuncts;
+    disjuncts.reserve(matches.size());
+    mp_integer max = current;
+
+    for(auto &match : matches)
+    {
+      disjuncts.push_back(match.condition);
+      max = std::max(max, match.end_time);
+    }
+
+    return obligationst{max, disjunction(disjuncts)};
+  }
   else
   {
     return obligationst{
