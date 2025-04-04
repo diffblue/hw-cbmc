@@ -279,6 +279,72 @@ sequence_matchest instantiate_sequence(
 
     return result;
   }
+  else if(expr.id() == ID_sva_sequence_goto_repetition)
+  {
+    // The 'op' is a Boolean condition, not a sequence.
+    auto &op = to_sva_sequence_goto_repetition_expr(expr).op();
+    auto repetitions_int = numeric_cast_v<mp_integer>(
+      to_sva_sequence_goto_repetition_expr(expr).repetitions());
+    PRECONDITION(repetitions_int >= 1);
+
+    sequence_matchest result;
+
+    // We add up the number of matches of 'op' starting from
+    // timeframe u, until the end of our unwinding.
+    const auto bits = address_bits(no_timeframes);
+    const auto zero = from_integer(0, unsignedbv_typet{bits});
+    const auto one = from_integer(1, unsignedbv_typet{bits});
+    const auto repetitions = from_integer(repetitions_int, zero.type());
+    exprt matches = zero;
+
+    for(mp_integer u = t; u < no_timeframes; ++u)
+    {
+      // match of op in timeframe u?
+      auto rec_op = instantiate(op, u, no_timeframes);
+
+      // add up
+      matches = plus_exprt{matches, if_exprt{rec_op, one, zero}};
+
+      // We have a match for op[->n] if there is a match in timeframe
+      // u and matches is n.
+      result.emplace_back(
+        u, and_exprt{rec_op, equal_exprt{matches, repetitions}});
+    }
+
+    return result;
+  }
+  else if(expr.id() == ID_sva_sequence_non_consecutive_repetition)
+  {
+    // The 'op' is a Boolean condition, not a sequence.
+    auto &op = to_sva_sequence_non_consecutive_repetition_expr(expr).op();
+    auto repetitions_int = numeric_cast_v<mp_integer>(
+      to_sva_sequence_non_consecutive_repetition_expr(expr).repetitions());
+    PRECONDITION(repetitions_int >= 1);
+
+    sequence_matchest result;
+
+    // We add up the number of matches of 'op' starting from
+    // timeframe u, until the end of our unwinding.
+    const auto bits = address_bits(no_timeframes);
+    const auto zero = from_integer(0, unsignedbv_typet{bits});
+    const auto one = from_integer(1, zero.type());
+    const auto repetitions = from_integer(repetitions_int, zero.type());
+    exprt matches = zero;
+
+    for(mp_integer u = t; u < no_timeframes; ++u)
+    {
+      // match of op in timeframe u?
+      auto rec_op = instantiate(op, u, no_timeframes);
+
+      // add up
+      matches = plus_exprt{matches, if_exprt{rec_op, one, zero}};
+
+      // We have a match for op[=n] if matches is n.
+      result.emplace_back(u, equal_exprt{matches, repetitions});
+    }
+
+    return result;
+  }
   else
   {
     // not a sequence, evaluate as state predicate
