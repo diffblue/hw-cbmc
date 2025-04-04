@@ -14,6 +14,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <ebmc/liveness_to_safety.h>
 #include <ebmc/transition_system.h>
 #include <solvers/bdd/miniBDD/miniBDD.h>
+#include <solvers/prop/literal_expr.h>
 #include <solvers/sat/satcheck.h>
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
@@ -1057,7 +1058,14 @@ void bdd_enginet::build_BDDs()
         // find the netlist property
         auto netlist_property = netlist.properties.find(property.identifier);
         CHECK_RETURN(netlist_property != netlist.properties.end());
-        auto l = std::get<netlistt::Gpt>(netlist_property->second).p;
+        DATA_INVARIANT(
+          netlist_property->second.id() == ID_sva_always,
+          "assumed property must be sva_always");
+        auto &p = to_sva_always_expr(netlist_property->second).op();
+        DATA_INVARIANT(
+          p.id() == ID_literal,
+          "assumed property must be sva_assume sva_assert literal");
+        auto l = to_literal_expr(p).get_literal();
         constraints_BDDs.push_back(aig2bdd(l, BDDs));
       }
     }
