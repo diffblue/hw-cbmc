@@ -1806,6 +1806,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   else if(src.id() == ID_sva_weak)
     return convert_function("weak", src);
 
+  else if(src.id() == ID_sva_sequence_property)
+    return convert_rec(to_sva_sequence_property_expr(src).op());
+
   else if(src.id()==ID_sva_sequence_concatenation)
     return convert_sva_sequence_concatenation(
       to_binary_expr(src), precedence = verilog_precedencet::MIN);
