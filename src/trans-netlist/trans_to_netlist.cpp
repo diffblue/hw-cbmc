@@ -329,76 +329,11 @@ void convert_trans_to_netlistt::operator()(
   // properties
   for(const auto &[id, property_expr] : properties)
   {
-    auto expr = property_expr; // copy
+    auto netlist_expr_opt = netlist_property(
+      aig_prop, dest.var_map, property_expr, ns, get_message_handler());
 
-    // we also convert propositions in assumptions
-    if(expr.id() == ID_sva_assume)
-      expr = to_sva_assume_expr(expr).op();
-
-    auto convert = [&aig_prop, this](const exprt &expr) -> literalt {
-      return instantiate_convert(
-        aig_prop, dest.var_map, expr, ns, get_message_handler());
-    };
-
-    if(expr.id() == ID_AG || expr.id() == ID_G || expr.id() == ID_sva_always)
-    {
-      auto get_phi = [](const exprt &expr) {
-        if(expr.id() == ID_AG)
-          return to_AG_expr(expr).op();
-        else if(expr.id() == ID_G)
-          return to_G_expr(expr).op();
-        else if(expr.id() == ID_sva_always)
-          return to_sva_always_expr(expr).op();
-        else
-          PRECONDITION(false);
-      };
-
-      auto phi = get_phi(expr);
-
-      if(!has_temporal_operator(phi))
-      {
-        // G p
-        dest.properties.emplace(id, netlistt::Gpt{convert(phi)});
-      }
-      else if(
-        phi.id() == ID_AF || phi.id() == ID_F ||
-        phi.id() == ID_sva_s_eventually)
-      {
-        auto get_psi = [](const exprt &expr) {
-          if(expr.id() == ID_AF)
-            return to_AF_expr(expr).op();
-          else if(expr.id() == ID_F)
-            return to_F_expr(expr).op();
-          else if(expr.id() == ID_sva_s_eventually)
-            return to_sva_s_eventually_expr(expr).op();
-          else
-            PRECONDITION(false);
-        };
-
-        auto psi = get_psi(phi);
-
-        if(!has_temporal_operator(psi))
-        {
-          // G F p
-          dest.properties.emplace(id, netlistt::GFpt{convert(psi)});
-        }
-        else
-        {
-          // unsupported
-          dest.properties.emplace(id, netlistt::not_translatedt{});
-        }
-      }
-      else
-      {
-        // unsupported
-        dest.properties.emplace(id, netlistt::not_translatedt{});
-      }
-    }
-    else
-    {
-      // unsupported
-      dest.properties.emplace(id, netlistt::not_translatedt{});
-    }
+    if(netlist_expr_opt.has_value())
+      dest.properties.emplace(id, netlist_expr_opt.value());
   }
 
   // find the nondet nodes
