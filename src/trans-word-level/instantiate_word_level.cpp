@@ -119,11 +119,15 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   {
     return {t, timeframe_symbol(t, to_symbol_expr(std::move(expr)))};
   }
-  else if(is_SVA_sequence_operator(expr))
+  else if(
+    expr.id() == ID_typecast && expr.type().id() == ID_bool &&
+    to_typecast_expr(expr).op().type().id() == ID_verilog_sva_sequence)
   {
+    auto &sequence = to_typecast_expr(expr).op();
+
     // sequence expressions -- these may have multiple potential
     // match points, and evaluate to true if any of them matches
-    const auto matches = instantiate_sequence(expr, t, no_timeframes);
+    const auto matches = instantiate_sequence(sequence, t, no_timeframes);
     exprt::operandst disjuncts;
     disjuncts.reserve(matches.size());
     mp_integer max = t;

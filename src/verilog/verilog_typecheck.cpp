@@ -1051,7 +1051,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
   exprt &cond = module_item.condition();
 
   convert_sva(cond);
-  make_boolean(cond);
+  require_sva_property(cond);
 
   // We create a symbol for the property.
   // The 'value' of the symbol is set by synthesis.
@@ -1116,7 +1116,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
   exprt &cond = statement.condition();
 
   convert_sva(cond);
-  make_boolean(cond);
+  require_sva_property(cond);
 
   // We create a symbol for the property.
   // The 'value' is set by synthesis.
@@ -1819,11 +1819,11 @@ void verilog_typecheckt::convert_sequence_declaration(
   auto base_name = declaration.base_name();
   auto full_identifier = hierarchical_identifier(base_name);
 
-  convert_sva(declaration.sequence());
+  auto &sequence = declaration.sequence();
+  convert_sva(sequence);
+  require_sva_sequence(sequence);
 
-  auto type = bool_typet{};
-  type.set(ID_C_verilog_type, ID_verilog_sequence_declaration);
-  symbolt symbol{full_identifier, type, mode};
+  symbolt symbol{full_identifier, sequence.type(), mode};
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;

@@ -13,12 +13,69 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "sva_expr.h"
 #include "verilog_typecheck_expr.h"
+#include "verilog_types.h"
+
+void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
+{
+  auto &type = expr.type();
+
+  if(type.id() == ID_verilog_sva_sequence)
+  {
+    // good as is
+  }
+  else if(
+    type.id() == ID_bool || type.id() == ID_unsignedbv ||
+    type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
+    type.id() == ID_verilog_signedbv)
+  {
+    if(has_temporal_operator(expr))
+    {
+      throw errort().with_location(expr.source_location())
+        << "sequence required, but got property";
+    }
+    else
+    {
+      // state formula, can cast to sequence
+      make_boolean(expr);
+    }
+  }
+  else
+  {
+    throw errort().with_location(expr.source_location())
+      << "sequence required, but got " << to_string(type);
+  }
+}
+
+void verilog_typecheck_exprt::require_sva_property(exprt &expr)
+{
+  auto &type = expr.type();
+
+  if(type.id() == ID_verilog_sva_sequence)
+  {
+    // cast to boolean
+    make_boolean(expr);
+  }
+  else if(
+    type.id() == ID_bool || type.id() == ID_unsignedbv ||
+    type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
+    type.id() == ID_verilog_signedbv)
+  {
+    // property or state formula, can cast
+    make_boolean(expr);
+  }
+  else
+  {
+    throw errort().with_location(expr.source_location())
+      << "sequence required, but got " << to_string(type);
+  }
+}
 
 exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
 {
   if(
     expr.id() == ID_sva_not || expr.id() == ID_sva_always ||
-    expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_nexttime ||
+    expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_cycle_delay_plus ||
+    expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_nexttime ||
     expr.id() == ID_sva_s_nexttime)
   {
     convert_sva(expr.op());
@@ -28,14 +85,20 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
   }
   else if(
     expr.id() == ID_sva_cycle_delay_plus ||
-    expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_weak ||
-    expr.id() == ID_sva_strong ||
+    expr.id() == ID_sva_cycle_delay_star ||
     expr.id() == ID_sva_sequence_repetition_plus || // x[+]
     expr.id() == ID_sva_sequence_repetition_star)   // x[*}
   {
     // These take a sequence as argument.
     // For some, the grammar allows properties to implement and/or over
     // sequences. Check here that the argument is a sequence.
+    convert_sva(expr.op());
+    require_sva_sequence(expr.op());
+    expr.type() = verilog_sva_sequence_typet{};
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_weak || expr.id() == ID_sva_strong)
+  {
     convert_sva(expr.op());
     require_sva_sequence(expr.op());
     expr.type() = bool_typet{};
@@ -48,24 +111,36 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
   }
 }
 
-void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
-{
-  if(is_SVA_operator(expr) && !is_SVA_sequence_operator(expr))
-  {
-    throw errort().with_location(expr.source_location()) << "sequence required";
-  }
-
-  make_boolean(expr);
-}
-
-void verilog_typecheck_exprt::require_sva_property(exprt &expr)
-{
-  make_boolean(expr);
-}
-
 exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
 {
-  if(expr.id() == ID_sva_implies || expr.id() == ID_sva_iff)
+  if(expr.id() == ID_sva_and || expr.id() == ID_sva_or)
+  {
+    for(auto &op : expr.operands())
+      convert_sva(op);
+
+    // These yield sequences when both operands are sequences, and
+    // properties otherwise.
+    if(
+      (expr.lhs().type().id() == ID_verilog_sva_sequence ||
+       !has_temporal_operator(expr.lhs())) &&
+      (expr.rhs().type().id() == ID_verilog_sva_sequence ||
+       !has_temporal_operator(expr.rhs())))
+    {
+      expr.type() = verilog_sva_sequence_typet{};
+      require_sva_sequence(expr.lhs());
+      require_sva_sequence(expr.rhs());
+    }
+    else
+    {
+      require_sva_property(expr.lhs());
+      require_sva_property(expr.rhs());
+      // always boolean, never x
+      expr.type() = bool_typet{};
+    }
+
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_implies || expr.id() == ID_sva_iff)
   {
     convert_sva(expr.lhs());
     convert_sva(expr.rhs());
@@ -74,18 +149,6 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     require_sva_property(expr.rhs());
 
     // always boolean, never x
-    expr.type() = bool_typet{};
-
-    return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_and || expr.id() == ID_sva_or)
-  {
-    convert_sva(expr.lhs());
-    make_boolean(expr.lhs());
-
-    convert_sva(expr.rhs());
-    make_boolean(expr.rhs());
-
     expr.type() = bool_typet{};
 
     return std::move(expr);
@@ -175,6 +238,8 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     require_sva_sequence(expr.rhs());
     expr.type() = bool_typet{};
 
+    expr.type() = verilog_sva_sequence_typet{};
+
     return std::move(expr);
   }
   else if(expr.id() == ID_sva_sequence_throughout)
@@ -186,7 +251,7 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     convert_sva(expr.rhs());
     require_sva_sequence(expr.rhs());
 
-    expr.type() = bool_typet{};
+    expr.type() = verilog_sva_sequence_typet{};
 
     return std::move(expr);
   }
@@ -195,12 +260,12 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     auto &first_match_expr = to_sva_sequence_first_match_expr(expr);
 
     convert_sva(first_match_expr.lhs());
-    require_sva_sequence(expr.lhs());
+    require_sva_sequence(first_match_expr.lhs());
 
-    if(expr.rhs().is_not_nil())
-      convert_expr(expr.rhs());
+    if(first_match_expr.rhs().is_not_nil())
+      convert_expr(first_match_expr.rhs());
 
-    expr.type() = bool_typet{};
+    expr.type() = verilog_sva_sequence_typet{};
 
     return std::move(expr);
   }
@@ -220,7 +285,7 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
 
     expr.rhs() = from_integer(n, integer_typet{});
 
-    expr.type() = bool_typet{};
+    expr.type() = verilog_sva_sequence_typet{};
 
     return std::move(expr);
   }
@@ -257,7 +322,7 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
 {
   if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
   {
-    expr.type() = bool_typet{};
+    expr.type() = verilog_sva_sequence_typet{};
 
     convert_expr(expr.op0());
     elaborate_constant_expression_check(expr.op0());
@@ -288,7 +353,7 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
     if(repetition.to().is_not_nil())
       convert_expr(repetition.to());
 
-    expr.type() = bool_typet{};
+    expr.type() = verilog_sva_sequence_typet{};
     return std::move(expr);
   }
   else if(
@@ -336,7 +401,7 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
       require_sva_property(expr.op2());
     }
 
-    // these are always properties
+    // These are always property expressions
     expr.type() = bool_typet{};
 
     return std::move(expr);

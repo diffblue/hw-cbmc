@@ -12,6 +12,16 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "temporal_logic.h"
 
+static std::optional<exprt> is_state_formula(const exprt &expr)
+{
+  if(expr.id() == ID_typecast && expr.type().id() == ID_verilog_sva_sequence)
+    return to_typecast_expr(expr).op();
+  else if(expr.type().id() == ID_bool)
+    return expr;
+  else
+    return {};
+}
+
 exprt trivial_sva(exprt expr)
 {
   // pre-traversal
@@ -19,12 +29,12 @@ exprt trivial_sva(exprt expr)
   {
     // Same as regular implication if lhs and rhs are not sequences.
     auto &sva_implication = to_sva_overlapped_implication_expr(expr);
-    if(
-      !is_SVA_sequence_operator(sva_implication.lhs()) &&
-      !is_SVA_sequence_operator(sva_implication.rhs()))
-    {
-      expr = implies_exprt{sva_implication.lhs(), sva_implication.rhs()};
-    }
+
+    auto lhs = is_state_formula(sva_implication.lhs());
+    auto rhs = is_state_formula(sva_implication.rhs());
+
+    if(lhs.has_value() && rhs.has_value())
+      expr = implies_exprt{*lhs, *rhs};
   }
   else if(expr.id() == ID_sva_iff)
   {
@@ -38,21 +48,25 @@ exprt trivial_sva(exprt expr)
   }
   else if(expr.id() == ID_sva_and)
   {
-    // Same as a ∧ b if lhs and rhs are not sequences.
     auto &sva_and = to_sva_and_expr(expr);
-    if(
-      !is_SVA_sequence_operator(sva_and.lhs()) &&
-      !is_SVA_sequence_operator(sva_and.rhs()))
-      expr = and_exprt{sva_and.lhs(), sva_and.rhs()};
+
+    // Same as a ∧ b if the expression is not a sequence.
+    auto lhs = is_state_formula(sva_and.lhs());
+    auto rhs = is_state_formula(sva_and.rhs());
+
+    if(lhs.has_value() && rhs.has_value())
+      expr = and_exprt{*lhs, *rhs};
   }
   else if(expr.id() == ID_sva_or)
   {
-    // Same as a ∧ b if lhs or rhs are not sequences.
     auto &sva_or = to_sva_or_expr(expr);
-    if(
-      !is_SVA_sequence_operator(sva_or.lhs()) &&
-      !is_SVA_sequence_operator(sva_or.rhs()))
-      expr = or_exprt{sva_or.lhs(), sva_or.rhs()};
+
+    // Same as a ∨ b if the expression is not a sequence.
+    auto lhs = is_state_formula(sva_or.lhs());
+    auto rhs = is_state_formula(sva_or.rhs());
+
+    if(lhs.has_value() && rhs.has_value())
+      expr = or_exprt{*lhs, *rhs};
   }
   else if(expr.id() == ID_sva_not)
   {
@@ -93,6 +107,14 @@ exprt trivial_sva(exprt expr)
     op = trivial_sva(op);
 
   // post-traversal
+  if(expr.id() == ID_typecast)
+  {
+    // We typecast sequences to bool, and hence can drop
+    // casts from bool to bool
+    auto &op = to_typecast_expr(expr).op();
+    if(expr.type().id() == ID_bool && op.type().id() == ID_bool)
+      return op;
+  }
 
   return expr;
 }
