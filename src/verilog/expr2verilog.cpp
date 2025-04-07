@@ -1586,21 +1586,15 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_binary(
       to_multi_ary_expr(src), "/", precedence = verilog_precedencet::MULT);
 
-  else if(src.id()==ID_lt)
+  else if(
+    src.id() == ID_lt || src.id() == ID_gt || src.id() == ID_le ||
+    src.id() == ID_ge)
+  {
     return convert_binary(
-      to_multi_ary_expr(src), "<", precedence = verilog_precedencet::RELATION);
-
-  else if(src.id()==ID_gt)
-    return convert_binary(
-      to_multi_ary_expr(src), ">", precedence = verilog_precedencet::RELATION);
-
-  else if(src.id()==ID_le)
-    return convert_binary(
-      to_multi_ary_expr(src), "<=", precedence = verilog_precedencet::RELATION);
-
-  else if(src.id()==ID_ge)
-    return convert_binary(
-      to_multi_ary_expr(src), ">=", precedence = verilog_precedencet::RELATION);
+      to_multi_ary_expr(src),
+      id2string(src.id()),
+      precedence = verilog_precedencet::RELATION);
+  }
 
   else if(src.id()==ID_equal)
     return convert_binary(
