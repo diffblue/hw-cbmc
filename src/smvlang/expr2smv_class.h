@@ -24,7 +24,14 @@ public:
   {
   }
 
+  std::string convert(const exprt &expr)
+  {
+    return convert_rec(expr).s;
+  }
+
 protected:
+  const namespacet &ns;
+
   // In NuSMV 2.6., ! (not)  has a high precedence (above ::), whereas
   // in the CMU SMV implementation it has the same as other boolean operators.
   // We use the CMU SMV precedence for !.
@@ -66,57 +73,50 @@ protected:
     -> <->
   */
 
-public:
-  bool convert_nondet_choice(const exprt &src, std::string &dest, precedencet);
+  struct resultt
+  {
+    resultt(precedencet _p, std::string _s) : p(_p), s(std::move(_s))
+    {
+    }
 
-  bool convert_binary(
-    const exprt &src,
-    std::string &dest,
-    const std::string &symbol,
-    precedencet);
+    precedencet p;
+    std::string s;
+  };
 
-  bool convert_rtctl(
+  virtual resultt convert_rec(const exprt &);
+
+  resultt convert_nondet_choice(const exprt &);
+
+  resultt
+  convert_binary(const exprt &src, const std::string &symbol, precedencet);
+
+  resultt convert_rtctl(
     const ternary_exprt &src,
-    std::string &dest,
     const std::string &symbol,
     precedencet);
 
-  bool convert_rtctl(
+  resultt convert_rtctl(
     const multi_ary_exprt &src,
-    std::string &dest,
     const std::string &symbol1,
     const std::string &symbol2,
     precedencet);
 
-  bool convert_unary(
-    const unary_exprt &,
-    std::string &dest,
-    const std::string &symbol,
-    precedencet);
+  resultt
+  convert_unary(const unary_exprt &, const std::string &symbol, precedencet);
 
-  bool convert_index(const index_exprt &, std::string &dest, precedencet);
+  resultt convert_index(const index_exprt &, precedencet);
 
-  bool convert(const exprt &src, std::string &dest, precedencet &);
+  resultt convert_if(const if_exprt &, precedencet);
 
-  bool convert_if(const if_exprt &, std::string &dest, precedencet);
+  resultt convert_symbol(const symbol_exprt &);
 
-  std::string convert(const exprt &);
+  resultt convert_next_symbol(const exprt &);
 
-  bool convert(const exprt &, std::string &dest);
+  resultt convert_constant(const constant_exprt &);
 
-  bool convert_symbol(const symbol_exprt &, std::string &dest, precedencet &);
+  resultt convert_cond(const exprt &);
 
-  bool convert_next_symbol(const exprt &src, std::string &dest, precedencet &);
-
-  bool
-  convert_constant(const constant_exprt &, std::string &dest, precedencet &);
-
-  bool convert_cond(const exprt &src, std::string &dest);
-
-  bool convert_norep(const exprt &src, std::string &dest, precedencet &);
-
-protected:
-  const namespacet &ns;
+  resultt convert_norep(const exprt &);
 };
 
 #endif // CPROVER_SMV_EXPR2SMV_CLASS_H
