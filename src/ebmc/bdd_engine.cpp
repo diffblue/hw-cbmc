@@ -1054,12 +1054,10 @@ void bdd_enginet::build_BDDs()
         auto netlist_property = netlist.properties.find(property.identifier);
         CHECK_RETURN(netlist_property != netlist.properties.end());
         DATA_INVARIANT(
-          netlist_property->second.id() == ID_sva_always,
-          "assumed property must be sva_always");
-        auto &p = to_sva_always_expr(netlist_property->second).op();
+          netlist_property->second.id() == ID_G, "assumed property must be G");
+        auto &p = to_G_expr(netlist_property->second).op();
         DATA_INVARIANT(
-          p.id() == ID_literal,
-          "assumed property must be sva_assume sva_assert literal");
+          p.id() == ID_literal, "assumed property must be G literal");
         auto l = to_literal_expr(p).get_literal();
         constraints_BDDs.push_back(aig2bdd(l, BDDs));
       }

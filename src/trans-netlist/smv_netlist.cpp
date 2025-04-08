@@ -88,21 +88,35 @@ void print_smv(const netlistt &netlist, std::ostream &out, const exprt &expr)
   symbol_tablet symbol_table;
   namespacet ns{symbol_table};
 
-  // replace literal expressions by symbols
-
-  exprt replaced = expr;
-  replaced.visit_pre(
-    [&netlist](exprt &node)
+  class expr2smv_netlistt : public expr2smvt
+  {
+  public:
+    expr2smv_netlistt(const namespacet &ns, const netlistt &__netlist)
+      : expr2smvt(ns), netlist(__netlist)
     {
-      if(node.id() == ID_literal)
+    }
+
+  protected:
+    const netlistt &netlist;
+
+    resultt convert_rec(const exprt &expr) override
+    {
+      if(expr.id() == ID_literal)
       {
         std::ostringstream buffer;
-        print_smv(netlist, buffer, to_literal_expr(node).get_literal());
-        node = symbol_exprt{buffer.str(), node.type()};
+        auto l = to_literal_expr(expr).get_literal();
+        print_smv(netlist, buffer, l);
+        if(l.sign())
+          return {precedencet::NOT, buffer.str()};
+        else
+          return {precedencet::MAX, buffer.str()};
       }
-    });
+      else
+        return expr2smvt::convert_rec(expr);
+    }
+  };
 
-  out << expr2smv(replaced, ns);
+  out << expr2smv_netlistt{ns, netlist}.convert(expr);
 }
 
 void smv_netlist(const netlistt &netlist, std::ostream &out)
@@ -243,29 +257,8 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
     }
     else if(is_SVA(netlist_expr))
     {
-      if(is_SVA_always_p(netlist_expr))
-      {
-        out << "-- " << id << '\n';
-        out << "CTLSPEC AG ";
-        print_smv(netlist, out, to_sva_always_expr(netlist_expr).op());
-        out << '\n';
-      }
-      else if(is_SVA_always_s_eventually_p(netlist_expr))
-      {
-        out << "-- " << id << '\n';
-        out << "CTLSPEC AG AF ";
-        print_smv(
-          netlist,
-          out,
-          to_sva_s_eventually_expr(to_sva_always_expr(netlist_expr).op()).op());
-        out << '\n';
-      }
-      else
-      {
-        out << "-- " << id << '\n';
-        out << "-- not translated\n";
-        out << '\n';
-      }
+      // Should have been mapped to LTL
+      DATA_INVARIANT(false, "smv_netlist got SVA");
     }
     else
     {

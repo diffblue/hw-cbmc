@@ -1,0 +1,11 @@
+CORE
+verilog1.sv
+--smv-netlist
+^MODULE main$
+^VAR Verilog\.main\.x: boolean;$
+^ASSIGN next\(Verilog\.main\.x\):=\!Verilog\.main\.x;$
+^INIT !Verilog\.main\.x$
+^LTLSPEC G F Verilog\.main\.x$
+^EXIT=0$
+^SIGNAL=0$
+--
