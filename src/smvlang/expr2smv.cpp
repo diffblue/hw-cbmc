@@ -584,6 +584,11 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
     return convert_binary(to_binary_expr(src), ">>", precedencet::SHIFT);
   }
 
+  else if(src.id() == ID_typecast)
+  {
+    return convert_rec(to_typecast_expr(src).op());
+  }
+
   else // no SMV language expression for internal representation
     return convert_norep(src);
 }
