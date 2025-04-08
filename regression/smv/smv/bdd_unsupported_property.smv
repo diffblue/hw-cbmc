@@ -4,5 +4,5 @@ VAR x : boolean;
 
 ASSIGN init(x) := TRUE;
 
-LTLSPEC !G x=FALSE
+LTLSPEC G x | F x
 LTLSPEC G x=FALSE
