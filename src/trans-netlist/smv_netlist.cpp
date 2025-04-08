@@ -20,7 +20,7 @@ std::string id2smv(const irep_idt &id)
 {
   std::string result;
 
-  for(unsigned i = 0; i < id.size(); i++)
+  for(std::size_t i = 0; i < id.size(); i++)
   {
     const bool first = i == 0;
     char ch = id[i];
@@ -60,7 +60,7 @@ void print_smv(const netlistt &netlist, std::ostream &out, literalt a)
     return;
   }
 
-  unsigned node_nr = a.var_no();
+  std::size_t node_nr = a.var_no();
   DATA_INVARIANT(node_nr < netlist.number_of_nodes(), "node_nr in range");
 
   if(a.sign())
@@ -115,17 +115,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
 
   auto &var_map = netlist.var_map;
 
-  for(var_mapt::mapt::const_iterator it = var_map.map.begin();
-      it != var_map.map.end();
-      it++)
+  for(auto &var_it : var_map.map)
   {
-    const var_mapt::vart &var = it->second;
+    const var_mapt::vart &var = var_it.second;
 
-    for(unsigned i = 0; i < var.bits.size(); i++)
+    for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_latch())
       {
-        out << "VAR " << id2smv(it->first);
+        out << "VAR " << id2smv(var_it.first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << ": boolean;" << '\n';
@@ -137,17 +135,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   out << "-- Inputs" << '\n';
   out << '\n';
 
-  for(var_mapt::mapt::const_iterator it = var_map.map.begin();
-      it != var_map.map.end();
-      it++)
+  for(auto &var_it : var_map.map)
   {
-    const var_mapt::vart &var = it->second;
+    const var_mapt::vart &var = var_it.second;
 
-    for(unsigned i = 0; i < var.bits.size(); i++)
+    for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_input())
       {
-        out << "VAR " << id2smv(it->first);
+        out << "VAR " << id2smv(var_it.first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << ": boolean;" << '\n';
@@ -161,7 +157,7 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
 
   auto &nodes = netlist.nodes;
 
-  for(unsigned node_nr = 0; node_nr < nodes.size(); node_nr++)
+  for(std::size_t node_nr = 0; node_nr < nodes.size(); node_nr++)
   {
     const aig_nodet &node = nodes[node_nr];
 
@@ -179,17 +175,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   out << "-- Next state functions" << '\n';
   out << '\n';
 
-  for(var_mapt::mapt::const_iterator it = var_map.map.begin();
-      it != var_map.map.end();
-      it++)
+  for(auto &var_it : var_map.map)
   {
-    const var_mapt::vart &var = it->second;
+    const var_mapt::vart &var = var_it.second;
 
-    for(unsigned i = 0; i < var.bits.size(); i++)
+    for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_latch())
       {
-        out << "ASSIGN next(" << id2smv(it->first);
+        out << "ASSIGN next(" << id2smv(var_it.first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << "):=";
