@@ -52,8 +52,11 @@ void verilog_typecheck_exprt::require_sva_property(exprt &expr)
 
   if(type.id() == ID_verilog_sva_sequence)
   {
-    // cast to boolean
-    make_boolean(expr);
+    // 1800 2017 16.12.2 Sequence property
+    // These yield an implicit weak(...) or strong(...), but we
+    // only know which one once the sequence is used in an assert/assume
+    // or cover.
+    expr = sva_sequence_property_exprt{std::move(expr)};
   }
   else if(
     type.id() == ID_bool || type.id() == ID_unsignedbv ||

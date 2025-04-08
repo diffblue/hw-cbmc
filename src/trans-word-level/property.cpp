@@ -507,6 +507,25 @@ static obligationst property_obligations_rec(
       std::max(obligations_true.first, obligations_false.first),
       if_exprt{cond, obligations_true.second, obligations_false.second}};
   }
+  else if(property_expr.id() == ID_sva_sequence_property)
+  {
+    // Sequences can be used as property, and evaluate to true
+    // when there is at least one match.
+    auto &sequence = to_sva_sequence_property_expr(property_expr).op();
+    auto matches = instantiate_sequence(sequence, current, no_timeframes);
+
+    exprt::operandst disjuncts;
+    disjuncts.reserve(matches.size());
+    mp_integer max = current;
+
+    for(auto &match : matches)
+    {
+      disjuncts.push_back(match.condition);
+      max = std::max(max, match.end_time);
+    }
+
+    return obligationst{max, disjunction(disjuncts)};
+  }
   else if(
     property_expr.id() == ID_typecast &&
     to_typecast_expr(property_expr).op().type().id() == ID_bool)

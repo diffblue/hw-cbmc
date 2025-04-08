@@ -1785,7 +1785,7 @@ void verilog_typecheckt::convert_property_declaration(
   auto full_identifier = hierarchical_identifier(base_name);
 
   convert_sva(declaration.cond());
-  make_boolean(declaration.cond());
+  require_sva_property(declaration.cond());
 
   auto type = bool_typet{};
   type.set(ID_C_verilog_type, ID_verilog_property_declaration);

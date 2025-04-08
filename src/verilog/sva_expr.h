@@ -1515,4 +1515,31 @@ to_sva_sequence_first_match_expr(exprt &expr)
   return static_cast<sva_sequence_first_match_exprt &>(expr);
 }
 
+/// 1800-2017 16.12.2 Sequence property
+/// Equivalent to weak(...) or strong(...) depending on context.
+class sva_sequence_property_exprt : public unary_predicate_exprt
+{
+public:
+  explicit sva_sequence_property_exprt(exprt op)
+    : unary_predicate_exprt(ID_sva_sequence_property, std::move(op))
+  {
+  }
+};
+
+static inline const sva_sequence_property_exprt &
+to_sva_sequence_property_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property);
+  sva_sequence_property_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_sequence_property_exprt &>(expr);
+}
+
+static inline sva_sequence_property_exprt &
+to_sva_sequence_property_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property);
+  sva_sequence_property_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_sequence_property_exprt &>(expr);
+}
+
 #endif

@@ -140,6 +140,24 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 
     return {max, disjunction(disjuncts)};
   }
+  else if(expr.id() == ID_sva_sequence_property)
+  {
+    // sequence expressions -- these may have multiple potential
+    // match points, and evaluate to true if any of them matches
+    auto &sequence = to_sva_sequence_property_expr(expr);
+    const auto matches = instantiate_sequence(sequence, t, no_timeframes);
+    exprt::operandst disjuncts;
+    disjuncts.reserve(matches.size());
+    mp_integer max = t;
+
+    for(auto &match : matches)
+    {
+      disjuncts.push_back(match.condition);
+      max = std::max(max, match.end_time);
+    }
+
+    return {max, disjunction(disjuncts)};
+  }
   else if(expr.id() == ID_verilog_past)
   {
     auto &verilog_past = to_verilog_past_expr(expr);

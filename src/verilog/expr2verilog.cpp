@@ -530,18 +530,25 @@ expr2verilogt::resultt expr2verilogt::convert_sva_unary(
   const std::string &name,
   const unary_exprt &src)
 {
-  auto op = convert_rec(src.op());
+  auto &op = src.op();
 
-  auto op_skip_typecast =
-    src.op().id() == ID_typecast ? to_typecast_expr(src.op()).op() : src.op();
+  std::size_t op_operands = 0;
 
-  if(
-    op.p == verilog_precedencet::MIN && op_skip_typecast.operands().size() >= 2)
+  if(op.id() == ID_typecast)
+    op_operands = to_typecast_expr(op).op().operands().size();
+  else if(src.op().id() == ID_sva_sequence_property)
+    op_operands = to_sva_sequence_property_expr(op).op().operands().size();
+  else
+    op_operands = op.operands().size();
+
+  auto op_rec = convert_rec(op);
+
+  if(op_rec.p == verilog_precedencet::MIN && op_operands >= 2)
   {
-    op.s = "(" + op.s + ")";
+    op_rec.s = "(" + op_rec.s + ")";
   }
 
-  return {verilog_precedencet::MIN, name + " " + op.s};
+  return {verilog_precedencet::MIN, name + " " + op_rec.s};
 }
 
 /*******************************************************************\
@@ -1807,6 +1814,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_sva_weak)
     return convert_function("weak", src);
+
+  else if(src.id() == ID_sva_sequence_property)
+    return convert_rec(to_sva_sequence_property_expr(src).op());
 
   else if(src.id()==ID_sva_sequence_concatenation)
     return convert_sva_sequence_concatenation(
