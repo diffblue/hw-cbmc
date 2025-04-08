@@ -12,6 +12,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <verilog/sva_expr.h>
 
+#include "ctl.h"
+#include "ltl.h"
+
 bool is_temporal_operator(const exprt &expr)
 {
   return is_CTL_operator(expr) || is_LTL_operator(expr) ||
@@ -151,4 +154,59 @@ bool is_SVA_always_s_eventually_p(const exprt &expr)
          to_sva_always_expr(expr).op().id() == ID_sva_s_eventually &&
          !has_temporal_operator(
            to_sva_s_eventually_expr(to_sva_always_expr(expr).op()).op());
+}
+
+std::optional<exprt> LTL_to_CTL(exprt expr)
+{
+  // We map a subset of LTL to ACTL, following
+  // Monika Maidl. "The common fragment of CTL and LTL"
+  // http://dx.doi.org/10.1109/SFCS.2000.892332
+  //
+  // Specificially, we allow
+  // * state predicates
+  // * conjunctions of allowed formulas
+  // * X φ, where φ is allowed
+  // * F φ, where φ is allowed
+  // * G φ, where φ is allowed
+  if(!has_temporal_operator(expr))
+  {
+    return expr;
+  }
+  else if(expr.id() == ID_and)
+  {
+    for(auto &op : expr.operands())
+    {
+      auto rec = LTL_to_CTL(op);
+      if(!rec.has_value())
+        return {};
+      op = *rec;
+    }
+    return expr;
+  }
+  else if(expr.id() == ID_X)
+  {
+    auto rec = LTL_to_CTL(to_X_expr(expr).op());
+    if(rec.has_value())
+      return AX_exprt{*rec};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_F)
+  {
+    auto rec = LTL_to_CTL(to_F_expr(expr).op());
+    if(rec.has_value())
+      return AF_exprt{*rec};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_G)
+  {
+    auto rec = LTL_to_CTL(to_G_expr(expr).op());
+    if(rec.has_value())
+      return AG_exprt{*rec};
+    else
+      return {};
+  }
+  else
+    return {};
 }

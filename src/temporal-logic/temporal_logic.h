@@ -77,4 +77,8 @@ bool is_SVA_always_p(const exprt &);
 /// Returns true iff the given expression is always s_eventually p
 bool is_SVA_always_s_eventually_p(const exprt &);
 
+/// Turns some fragment of LTL into equivalent CTL, or
+/// returns {} if not possible
+std::optional<exprt> LTL_to_CTL(exprt);
+
 #endif

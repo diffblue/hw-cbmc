@@ -458,7 +458,7 @@ bool bdd_enginet::property_supported(const exprt &expr)
   if(is_LTL(expr))
   {
     // We can map selected path properties to CTL.
-    return is_Gp(expr) || is_GFp(expr);
+    return LTL_to_CTL(expr).has_value();
   }
 
   if(is_SVA(expr))
@@ -514,23 +514,6 @@ void bdd_enginet::check_property(propertyt &property)
   message.status() << "Checking " << property.name << messaget::eom;
   property.status=propertyt::statust::UNKNOWN;
 
-  // Our engine knows CTL only.
-  // We map selected path properties to CTL.
-
-  if(is_Gp(property.normalized_expr))
-  {
-    // G p --> AG  p
-    auto p = to_G_expr(property.normalized_expr).op();
-    property.normalized_expr = AG_exprt{p};
-  }
-
-  if(is_GFp(property.normalized_expr))
-  {
-    // G F p --> AG AF p
-    auto p = to_F_expr(to_G_expr(property.normalized_expr).op()).op();
-    property.normalized_expr = AG_exprt{AF_exprt{p}};
-  }
-
   if(
     property.normalized_expr.id() == ID_sva_always &&
     to_sva_always_expr(property.normalized_expr).op().id() ==
@@ -553,6 +536,18 @@ void bdd_enginet::check_property(propertyt &property)
     // always p --> AG p
     auto p = to_sva_always_expr(property.normalized_expr).op();
     property.normalized_expr = AG_exprt{p};
+  }
+
+  // Our engine knows CTL only.
+  // We map selected path properties to CTL.
+  if(
+    has_temporal_operator(property.normalized_expr) &&
+    is_LTL(property.normalized_expr))
+  {
+    auto CTL_opt = LTL_to_CTL(property.normalized_expr);
+    CHECK_RETURN(CTL_opt.has_value());
+    property.normalized_expr = CTL_opt.value();
+    CHECK_RETURN(is_CTL(property.normalized_expr));
   }
 
   if(is_AGp(property.normalized_expr))
