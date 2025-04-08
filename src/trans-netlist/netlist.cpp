@@ -6,11 +6,19 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <ctype.h>
-
-#include <solvers/flattening/boolbv_width.h>
-
 #include "netlist.h"
+
+#include <util/namespace.h>
+#include <util/symbol_table.h>
+
+#include <smvlang/expr2smv.h>
+#include <solvers/flattening/boolbv_width.h>
+#include <solvers/prop/literal_expr.h>
+#include <temporal-logic/temporal_logic.h>
+#include <verilog/sva_expr.h>
+
+#include <ctype.h>
+#include <sstream>
 
 /*******************************************************************\
 
@@ -352,30 +360,54 @@ void netlistt::output_smv(std::ostream &out) const
   out << "-- Properties" << '\n';
   out << '\n';
 
-  for(auto &[id, property] : properties)
+  for(auto &[id, netlist_expr] : properties)
   {
-    if(std::holds_alternative<Gpt>(property))
+    if(is_CTL(netlist_expr))
     {
       out << "-- " << id << '\n';
-      out << "LTLSPEC G ";
-      print_smv(out, std::get<Gpt>(property).p);
+      out << "CTLSPEC ";
+      print_smv(out, netlist_expr);
       out << '\n';
     }
-    else if(std::holds_alternative<GFpt>(property))
+    else if(is_LTL(netlist_expr))
     {
       out << "-- " << id << '\n';
-      out << "LTLSPEC G F ";
-      print_smv(out, std::get<GFpt>(property).p);
+      out << "LTLSPEC ";
+      print_smv(out, netlist_expr);
       out << '\n';
     }
-    else if(std::holds_alternative<not_translatedt>(property))
+    else if(is_SVA(netlist_expr))
     {
+      if(is_SVA_always_p(netlist_expr))
+      {
+        out << "-- " << id << '\n';
+        out << "CTLSPEC AG ";
+        print_smv(out, to_sva_always_expr(netlist_expr).op());
+        out << '\n';
+      }
+      else if(is_SVA_always_s_eventually_p(netlist_expr))
+      {
+        out << "-- " << id << '\n';
+        out << "CTLSPEC AG AF ";
+        print_smv(
+          out,
+          to_sva_s_eventually_expr(to_sva_always_expr(netlist_expr).op()).op());
+        out << '\n';
+      }
+      else
+      {
+        out << "-- " << id << '\n';
+        out << "-- not translated\n";
+        out << '\n';
+      }
+    }
+    else
+    {
+      // neither LTL nor CTL nor SVA
       out << "-- " << id << '\n';
       out << "-- not translated\n";
       out << '\n';
     }
-    else
-      UNREACHABLE;
   }
 }
 
@@ -467,3 +499,36 @@ void netlistt::print_smv(
     out << "unknown";
 }
 
+/*******************************************************************\
+
+Function: netlistt::print_smv
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void netlistt::print_smv(std::ostream &out, const exprt &expr) const
+{
+  symbol_tablet symbol_table;
+  namespacet ns{symbol_table};
+
+  // replace literal expressions by symbols
+
+  exprt replaced = expr;
+  replaced.visit_pre(
+    [this](exprt &node)
+    {
+      if(node.id() == ID_literal)
+      {
+        std::ostringstream buffer;
+        print_smv(buffer, to_literal_expr(node).get_literal());
+        node = symbol_exprt{buffer.str(), node.type()};
+      }
+    });
+
+  out << expr2smv(replaced, ns);
+}

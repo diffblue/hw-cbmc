@@ -10,6 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/expr_util.h>
 
+#include <verilog/sva_expr.h>
+
 bool is_temporal_operator(const exprt &expr)
 {
   return is_CTL_operator(expr) || is_LTL_operator(expr) ||
@@ -135,4 +137,18 @@ bool is_SVA(const exprt &expr)
   { return is_temporal_operator(expr) && !is_SVA_operator(expr); };
 
   return !has_subexpr(expr, non_SVA_operator);
+}
+
+bool is_SVA_always_p(const exprt &expr)
+{
+  return expr.id() == ID_sva_always &&
+         !has_temporal_operator(to_sva_always_expr(expr).op());
+}
+
+bool is_SVA_always_s_eventually_p(const exprt &expr)
+{
+  return expr.id() == ID_sva_always &&
+         to_sva_always_expr(expr).op().id() == ID_sva_s_eventually &&
+         !has_temporal_operator(
+           to_sva_s_eventually_expr(to_sva_always_expr(expr).op()).op());
 }

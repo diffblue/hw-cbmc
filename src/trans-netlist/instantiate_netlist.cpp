@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ebmc/ebmc_error.h>
 #include <solvers/flattening/boolbv.h>
+#include <solvers/prop/literal_expr.h>
+#include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
 #include <cassert>
@@ -272,3 +274,86 @@ literalt instantiate_var_mapt::get_literal(
   return var_map.get_current(symbol, bit);
 }
 
+/*******************************************************************\
+
+Function: netlist_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<exprt> netlist_property(
+  propt &solver,
+  const var_mapt &var_map,
+  const exprt &expr,
+  const namespacet &ns,
+  message_handlert &message_handler)
+{
+  if(is_temporal_operator(expr))
+  {
+    if(is_LTL_operator(expr) || is_CTL_operator(expr))
+    {
+      exprt copy = expr;
+      for(auto &op : copy.operands())
+      {
+        auto op_opt =
+          netlist_property(solver, var_map, op, ns, message_handler);
+        if(op_opt.has_value())
+          op = op_opt.value();
+        else
+          return {};
+      }
+      return copy;
+    }
+    else if(is_SVA_operator(expr))
+    {
+      if(expr.id() == ID_sva_always || expr.id() == ID_sva_assume)
+      {
+        auto copy = expr;
+        auto &op = to_unary_expr(copy).op();
+        auto op_opt =
+          netlist_property(solver, var_map, op, ns, message_handler);
+        if(op_opt.has_value())
+        {
+          op = op_opt.value();
+          return copy;
+        }
+        else
+          return {};
+      }
+      else
+        return {};
+    }
+    else
+      return {};
+  }
+  else if(!has_temporal_operator(expr))
+  {
+    auto l = instantiate_convert(solver, var_map, expr, ns, message_handler);
+    return literal_exprt{l};
+  }
+  else if(
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
+    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor)
+  {
+    exprt copy = expr;
+    for(auto &op : copy.operands())
+    {
+      auto op_opt = netlist_property(solver, var_map, op, ns, message_handler);
+      if(op_opt.has_value())
+        op = op_opt.value();
+      else
+        return {};
+    }
+    return copy;
+  }
+  else
+  {
+    // contains temporal operator, but not propositional skeleton
+    return {};
+  }
+}

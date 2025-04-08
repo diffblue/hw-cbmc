@@ -30,7 +30,14 @@ literalt instantiate_convert(
   const exprt &expr,
   const namespacet &,
   message_handlert &);
-  
+
+std::optional<exprt> netlist_property(
+  propt &solver,
+  const var_mapt &var_map,
+  const exprt &expr,
+  const namespacet &,
+  message_handlert &);
+
 void instantiate_convert(
   propt &solver,
   const var_mapt &var_map,
