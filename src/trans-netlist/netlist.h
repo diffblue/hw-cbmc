@@ -38,7 +38,6 @@ public:
   using aigt::print;
   virtual void print(std::ostream &out) const;
   virtual void output_dot(std::ostream &out) const;
-  virtual void output_smv(std::ostream &out) const;
   virtual std::string label(unsigned n) const;
   virtual std::string dot_label(unsigned n) const;
   
@@ -59,11 +58,6 @@ public:
   // which uses literal_exprt.
   using propertiest = std::map<irep_idt, exprt>;
   propertiest properties;
-
-protected:
-  static std::string id2smv(const irep_idt &id);
-  void print_smv(std::ostream &, literalt) const;
-  void print_smv(std::ostream &, const exprt &) const;
 };
 
 #endif

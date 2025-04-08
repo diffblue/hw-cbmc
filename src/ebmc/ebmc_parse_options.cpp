@@ -13,6 +13,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/help_formatter.h>
 #include <util/string2int.h>
 
+#include <trans-netlist/smv_netlist.h>
+
 #include "diatest.h"
 #include "ebmc_base.h"
 #include "ebmc_error.h"
@@ -288,7 +290,7 @@ int ebmc_parse_optionst::doit()
       outfile.stream() << "-- Generated from "
                        << transition_system.main_symbol->name << '\n';
       outfile.stream() << '\n';
-      netlist.output_smv(outfile.stream());
+      smv_netlist(netlist, outfile.stream());
       return 0;
     }
 
