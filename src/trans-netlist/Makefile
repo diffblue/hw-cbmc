@@ -1,19 +1,21 @@
 SRC = aig.cpp \
-      aig_terminals.cpp \
       aig_prop.cpp \
+      aig_terminals.cpp \
       bmc_map.cpp \
+      bv_varid.cpp \
+      compute_ct.cpp \
       counterexample_netlist.cpp \
       instantiate_netlist.cpp \
-      netlist.cpp \
-      trans_trace_netlist.cpp \
-      var_map.cpp \
-      unwind_netlist.cpp \
       ldg.cpp \
-      compute_ct.cpp \
-      trans_trace.cpp \
-      trans_to_netlist.cpp \
       map_aigs.cpp \
-      bv_varid.cpp
+      netlist.cpp \
+      smv_netlist.cpp \
+      trans_to_netlist.cpp \
+      trans_trace.cpp \
+      trans_trace_netlist.cpp \
+      unwind_netlist.cpp \
+      var_map.cpp \
+      # last line
 
 include ../config.inc
 include ../common
