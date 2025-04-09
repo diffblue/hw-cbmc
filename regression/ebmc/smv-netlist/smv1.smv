@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x: boolean;
+
+ASSIGN next(x):=!x;
+ASSIGN init(x):=FALSE;
+
+LTLSPEC G F x
+

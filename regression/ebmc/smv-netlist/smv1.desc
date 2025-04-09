@@ -1,0 +1,10 @@
+CORE
+smv1.smv
+--smv-netlist
+^MODULE main$
+^VAR smv\.main\.var\.x: boolean;$
+^ASSIGN next\(smv\.main\.var\.x\):=\!smv\.main\.var\.x;$
+^INIT !smv\.main\.var\.x$
+^EXIT=0$
+^SIGNAL=0$
+--

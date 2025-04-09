@@ -20,7 +20,7 @@ std::string id2smv(const irep_idt &id)
 {
   std::string result;
 
-  for(unsigned i = 0; i < id.size(); i++)
+  for(std::size_t i = 0; i < id.size(); i++)
   {
     const bool first = i == 0;
     char ch = id[i];
@@ -60,7 +60,7 @@ void print_smv(const netlistt &netlist, std::ostream &out, literalt a)
     return;
   }
 
-  unsigned node_nr = a.var_no();
+  std::size_t node_nr = a.var_no();
   DATA_INVARIANT(node_nr < netlist.number_of_nodes(), "node_nr in range");
 
   if(a.sign())
@@ -88,21 +88,35 @@ void print_smv(const netlistt &netlist, std::ostream &out, const exprt &expr)
   symbol_tablet symbol_table;
   namespacet ns{symbol_table};
 
-  // replace literal expressions by symbols
-
-  exprt replaced = expr;
-  replaced.visit_pre(
-    [&netlist](exprt &node)
+  class expr2smv_netlistt : public expr2smvt
+  {
+  public:
+    expr2smv_netlistt(const namespacet &ns, const netlistt &__netlist)
+      : expr2smvt(ns), netlist(__netlist)
     {
-      if(node.id() == ID_literal)
+    }
+
+  protected:
+    const netlistt &netlist;
+
+    resultt convert_rec(const exprt &expr) override
+    {
+      if(expr.id() == ID_literal)
       {
         std::ostringstream buffer;
-        print_smv(netlist, buffer, to_literal_expr(node).get_literal());
-        node = symbol_exprt{buffer.str(), node.type()};
+        auto l = to_literal_expr(expr).get_literal();
+        print_smv(netlist, buffer, l);
+        if(l.sign())
+          return {precedencet::NOT, buffer.str()};
+        else
+          return {precedencet::MAX, buffer.str()};
       }
-    });
+      else
+        return expr2smvt::convert_rec(expr);
+    }
+  };
 
-  out << expr2smv(replaced, ns);
+  out << expr2smv_netlistt{ns, netlist}.convert(expr);
 }
 
 void smv_netlist(const netlistt &netlist, std::ostream &out)
@@ -115,17 +129,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
 
   auto &var_map = netlist.var_map;
 
-  for(var_mapt::mapt::const_iterator it = var_map.map.begin();
-      it != var_map.map.end();
-      it++)
+  for(auto &var_it : var_map.map)
   {
-    const var_mapt::vart &var = it->second;
+    const var_mapt::vart &var = var_it.second;
 
-    for(unsigned i = 0; i < var.bits.size(); i++)
+    for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_latch())
       {
-        out << "VAR " << id2smv(it->first);
+        out << "VAR " << id2smv(var_it.first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << ": boolean;" << '\n';
@@ -137,17 +149,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   out << "-- Inputs" << '\n';
   out << '\n';
 
-  for(var_mapt::mapt::const_iterator it = var_map.map.begin();
-      it != var_map.map.end();
-      it++)
+  for(auto &var_it : var_map.map)
   {
-    const var_mapt::vart &var = it->second;
+    const var_mapt::vart &var = var_it.second;
 
-    for(unsigned i = 0; i < var.bits.size(); i++)
+    for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_input())
       {
-        out << "VAR " << id2smv(it->first);
+        out << "VAR " << id2smv(var_it.first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << ": boolean;" << '\n';
@@ -161,7 +171,7 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
 
   auto &nodes = netlist.nodes;
 
-  for(unsigned node_nr = 0; node_nr < nodes.size(); node_nr++)
+  for(std::size_t node_nr = 0; node_nr < nodes.size(); node_nr++)
   {
     const aig_nodet &node = nodes[node_nr];
 
@@ -179,17 +189,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   out << "-- Next state functions" << '\n';
   out << '\n';
 
-  for(var_mapt::mapt::const_iterator it = var_map.map.begin();
-      it != var_map.map.end();
-      it++)
+  for(auto &var_it : var_map.map)
   {
-    const var_mapt::vart &var = it->second;
+    const var_mapt::vart &var = var_it.second;
 
-    for(unsigned i = 0; i < var.bits.size(); i++)
+    for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_latch())
       {
-        out << "ASSIGN next(" << id2smv(it->first);
+        out << "ASSIGN next(" << id2smv(var_it.first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << "):=";
@@ -249,29 +257,8 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
     }
     else if(is_SVA(netlist_expr))
     {
-      if(is_SVA_always_p(netlist_expr))
-      {
-        out << "-- " << id << '\n';
-        out << "CTLSPEC AG ";
-        print_smv(netlist, out, to_sva_always_expr(netlist_expr).op());
-        out << '\n';
-      }
-      else if(is_SVA_always_s_eventually_p(netlist_expr))
-      {
-        out << "-- " << id << '\n';
-        out << "CTLSPEC AG AF ";
-        print_smv(
-          netlist,
-          out,
-          to_sva_s_eventually_expr(to_sva_always_expr(netlist_expr).op()).op());
-        out << '\n';
-      }
-      else
-      {
-        out << "-- " << id << '\n';
-        out << "-- not translated\n";
-        out << '\n';
-      }
+      // Should have been mapped to LTL
+      DATA_INVARIANT(false, "smv_netlist got SVA");
     }
     else
     {

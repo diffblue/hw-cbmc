@@ -311,20 +311,10 @@ std::optional<exprt> netlist_property(
     }
     else if(is_SVA_operator(expr))
     {
-      if(expr.id() == ID_sva_always || expr.id() == ID_sva_assume)
-      {
-        auto copy = expr;
-        auto &op = to_unary_expr(copy).op();
-        auto op_opt =
-          netlist_property(solver, var_map, op, ns, message_handler);
-        if(op_opt.has_value())
-        {
-          op = op_opt.value();
-          return copy;
-        }
-        else
-          return {};
-      }
+      // Try to turn into LTL
+      auto LTL_opt = SVA_to_LTL(expr);
+      if(LTL_opt.has_value())
+        return netlist_property(solver, var_map, *LTL_opt, ns, message_handler);
       else
         return {};
     }
