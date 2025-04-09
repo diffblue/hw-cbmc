@@ -210,3 +210,79 @@ std::optional<exprt> LTL_to_CTL(exprt expr)
   else
     return {};
 }
+
+std::optional<exprt> SVA_to_LTL(exprt expr)
+{
+  // Some SVA is directly mappable to LTL
+  if(expr.id() == ID_sva_always)
+  {
+    auto rec = SVA_to_LTL(to_sva_always_expr(expr).op());
+    if(rec.has_value())
+      return G_exprt{rec.value()};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_s_eventually)
+  {
+    auto rec = SVA_to_LTL(to_sva_s_eventually_expr(expr).op());
+    if(rec.has_value())
+      return F_exprt{rec.value()};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_s_nexttime)
+  {
+    auto rec = SVA_to_LTL(to_sva_s_nexttime_expr(expr).op());
+    if(rec.has_value())
+      return X_exprt{rec.value()};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_nexttime)
+  {
+    auto rec = SVA_to_LTL(to_sva_nexttime_expr(expr).op());
+    if(rec.has_value())
+      return X_exprt{rec.value()};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_overlapped_implication)
+  {
+    auto &implication = to_sva_overlapped_implication_expr(expr);
+    auto rec_lhs = SVA_to_LTL(implication.lhs());
+    auto rec_rhs = SVA_to_LTL(implication.rhs());
+    if(rec_lhs.has_value() && rec_rhs.has_value())
+      return implies_exprt{rec_lhs.value(), rec_rhs.value()};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_non_overlapped_implication)
+  {
+    auto &implication = to_sva_non_overlapped_implication_expr(expr);
+    auto rec_lhs = SVA_to_LTL(implication.lhs());
+    auto rec_rhs = SVA_to_LTL(implication.rhs());
+    if(rec_lhs.has_value() && rec_rhs.has_value())
+      return implies_exprt{rec_lhs.value(), X_exprt{rec_rhs.value()}};
+    else
+      return {};
+  }
+  else if(!has_temporal_operator(expr))
+  {
+    return expr;
+  }
+  else if(
+    expr.id() == ID_and || expr.id() == ID_implies || expr.id() == ID_or ||
+    expr.id() == ID_not)
+  {
+    for(auto &op : expr.operands())
+    {
+      auto rec = SVA_to_LTL(op);
+      if(!rec.has_value())
+        return {};
+      op = rec.value();
+    }
+    return expr;
+  }
+  else
+    return {};
+}
