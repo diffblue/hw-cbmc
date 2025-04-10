@@ -1,6 +1,6 @@
-KNOWNBUG broken-smt-backend
+CORE
 smv_ltlspec_V2.smv
---bound 10
+--bound 10 --numbered-trace
 ^\[.*\] FALSE V x != 3: REFUTED$
 ^Counterexample with 3 states:$
 ^x@0 = 1$
@@ -11,4 +11,3 @@ smv_ltlspec_V2.smv
 --
 ^warning: ignoring
 --
-The trace has too many states.
