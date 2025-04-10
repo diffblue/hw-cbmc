@@ -103,6 +103,14 @@ exprt normalize_property_rec(exprt expr)
     op = normalize_property_rec(op); // recursive call
 
   // post-traversal
+  if(expr.id() == ID_R)
+  {
+    if(to_R_expr(expr).lhs().is_false())
+    {
+      // false R ψ ≡ G ψ
+      expr = G_exprt{to_R_expr(expr).rhs()};
+    }
+  }
 
   return expr;
 }
