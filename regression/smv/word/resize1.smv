@@ -1,4 +1,4 @@
 MODULE main
 
-SPEC resize(uwconst(1, 1), 8) = uwconst(1, 8)
-SPEC resize(swconst(123, 1), 1) = swconst(-1, 1)
+SPEC NAME p0 := resize(uwconst(1, 1), 8) = uwconst(1, 8)
+SPEC NAME p1 := resize(swconst(123, 1), 1) = swconst(-1, 1)
