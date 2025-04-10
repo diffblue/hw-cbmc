@@ -124,6 +124,43 @@ expr2smvt::resultt expr2smvt::convert_binary(
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_function_application
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_function_application(
+  const std::string &symbol,
+  const exprt &src)
+{
+  bool first = true;
+
+  std::string dest = symbol + '(';
+
+  for(auto &op : src.operands())
+  {
+    if(first)
+      first = false;
+    else
+    {
+      dest += ',';
+      dest += ' ';
+    }
+
+    auto op_rec = convert_rec(op);
+    dest += op_rec.s;
+  }
+
+  return {precedencet::MAX, dest + ')'};
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_rtctl
 
   Inputs:
@@ -583,6 +620,18 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   {
     return convert_binary(to_binary_expr(src), ">>", precedencet::SHIFT);
   }
+
+  else if(src.id() == ID_smv_extend)
+    return convert_function_application("extend", src);
+
+  else if(src.id() == ID_smv_resize)
+    return convert_function_application("resize", src);
+
+  else if(src.id() == ID_smv_signed_cast)
+    return convert_function_application("signed", src);
+
+  else if(src.id() == ID_smv_unsigned_cast)
+    return convert_function_application("unsigned", src);
 
   else if(src.id() == ID_typecast)
   {

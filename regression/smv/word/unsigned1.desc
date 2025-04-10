@@ -1,6 +1,7 @@
-KNOWNBUG
+CORE
 unsigned1.smv
 
+^\[p0\] unsigned\(-0sd1_1\) = 0ud1_1: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -137,6 +137,13 @@ protected:
     else
       return id;
   }
+
+  void lower_node(exprt &) const;
+
+  void lower(exprt &expr) const
+  {
+    expr.visit_post([this](exprt &expr) { lower_node(expr); });
+  }
 };
 
 /*******************************************************************\
@@ -1227,6 +1234,40 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::lower_node
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::lower_node(exprt &expr) const
+{
+  if(expr.id() == ID_smv_extend)
+  {
+    auto &binary = to_binary_expr(expr);
+    expr = typecast_exprt{binary.lhs(), expr.type()};
+  }
+  else if(expr.id() == ID_smv_resize)
+  {
+    auto &binary = to_binary_expr(expr);
+    expr = typecast_exprt{binary.lhs(), expr.type()};
+  }
+  else if(expr.id() == ID_smv_signed_cast)
+  {
+    expr = typecast_exprt{to_unary_expr(expr).op(), expr.type()};
+  }
+  else if(expr.id() == ID_smv_unsigned_cast)
+  {
+    expr = typecast_exprt{to_unary_expr(expr).op(), expr.type()};
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::convert_expr_to
 
   Inputs:
@@ -1814,6 +1855,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         transt{ID_trans, conjunction(trans_invar), conjunction(trans_init),
                conjunction(trans_trans), module_symbol.type};
 
+    // lowering
+    lower(module_symbol.value);
+
     module_symbol.pretty_name = strip_smv_prefix(module_symbol.name);
 
     symbol_table.add(module_symbol);
@@ -1850,6 +1894,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
           spec_symbol.pretty_name = spec_symbol.base_name;
         else
           spec_symbol.pretty_name = strip_smv_prefix(spec_symbol.name);
+
+        // lowering
+        lower(spec_symbol.value);
 
         symbol_table.add(spec_symbol);
       }
