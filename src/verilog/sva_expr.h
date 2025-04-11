@@ -1111,44 +1111,86 @@ static inline sva_if_exprt &to_sva_if_expr(exprt &expr)
   return static_cast<sva_if_exprt &>(expr);
 }
 
-class sva_strong_exprt : public unary_exprt
+/// Base class for sequence property expressions.
+/// 1800-2017 16.12.2 Sequence property
+class sva_sequence_property_expr_baset : public unary_predicate_exprt
 {
 public:
-  sva_strong_exprt(exprt __op, typet __type)
-    : unary_exprt(ID_sva_strong, std::move(__op), std::move(__type))
+  sva_sequence_property_expr_baset(irep_idt __id, exprt __op)
+    : unary_predicate_exprt(__id, std::move(__op))
+  {
+  }
+
+  const exprt &sequence() const
+  {
+    return op();
+  }
+
+  exprt &sequence()
+  {
+    return op();
+  }
+
+protected:
+  using unary_predicate_exprt::op;
+};
+
+inline const sva_sequence_property_expr_baset &
+to_sva_sequence_property_expr_base(const exprt &expr)
+{
+  sva_sequence_property_expr_baset::check(expr);
+  return static_cast<const sva_sequence_property_expr_baset &>(expr);
+}
+
+inline sva_sequence_property_expr_baset &
+to_sva_sequence_property_base_expr(exprt &expr)
+{
+  sva_sequence_property_expr_baset::check(expr);
+  return static_cast<sva_sequence_property_expr_baset &>(expr);
+}
+
+class sva_strong_exprt : public sva_sequence_property_expr_baset
+{
+public:
+  sva_strong_exprt(exprt __op)
+    : sva_sequence_property_expr_baset(ID_sva_strong, std::move(__op))
   {
   }
 };
 
 inline const sva_strong_exprt &to_sva_strong_expr(const exprt &expr)
 {
+  PRECONDITION(expr.id() == ID_sva_strong);
   sva_strong_exprt::check(expr);
   return static_cast<const sva_strong_exprt &>(expr);
 }
 
 inline sva_strong_exprt &to_sva_strong_expr(exprt &expr)
 {
+  PRECONDITION(expr.id() == ID_sva_strong);
   sva_strong_exprt::check(expr);
   return static_cast<sva_strong_exprt &>(expr);
 }
 
-class sva_weak_exprt : public unary_exprt
+class sva_weak_exprt : public sva_sequence_property_expr_baset
 {
 public:
-  sva_weak_exprt(exprt __op, typet __type)
-    : unary_exprt(ID_sva_weak, std::move(__op), std::move(__type))
+  sva_weak_exprt(exprt __op)
+    : sva_sequence_property_expr_baset(ID_sva_weak, std::move(__op))
   {
   }
 };
 
 inline const sva_weak_exprt &to_sva_weak_expr(const exprt &expr)
 {
+  PRECONDITION(expr.id() == ID_sva_weak);
   sva_weak_exprt::check(expr);
   return static_cast<const sva_weak_exprt &>(expr);
 }
 
 inline sva_weak_exprt &to_sva_weak_expr(exprt &expr)
 {
+  PRECONDITION(expr.id() == ID_sva_weak);
   sva_weak_exprt::check(expr);
   return static_cast<sva_weak_exprt &>(expr);
 }
@@ -1517,11 +1559,11 @@ to_sva_sequence_first_match_expr(exprt &expr)
 
 /// 1800-2017 16.12.2 Sequence property
 /// Equivalent to weak(...) or strong(...) depending on context.
-class sva_sequence_property_exprt : public unary_predicate_exprt
+class sva_sequence_property_exprt : public sva_sequence_property_expr_baset
 {
 public:
   explicit sva_sequence_property_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_sequence_property, std::move(op))
+    : sva_sequence_property_expr_baset(ID_sva_sequence_property, std::move(op))
   {
   }
 };

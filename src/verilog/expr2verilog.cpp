@@ -537,7 +537,8 @@ expr2verilogt::resultt expr2verilogt::convert_sva_unary(
   if(op.id() == ID_typecast)
     op_operands = to_typecast_expr(op).op().operands().size();
   else if(src.op().id() == ID_sva_sequence_property)
-    op_operands = to_sva_sequence_property_expr(op).op().operands().size();
+    op_operands =
+      to_sva_sequence_property_expr(op).sequence().operands().size();
   else
     op_operands = op.operands().size();
 
@@ -1816,7 +1817,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_function("weak", src);
 
   else if(src.id() == ID_sva_sequence_property)
-    return convert_rec(to_sva_sequence_property_expr(src).op());
+    return convert_rec(to_sva_sequence_property_expr(src).sequence());
 
   else if(src.id()==ID_sva_sequence_concatenation)
     return convert_sva_sequence_concatenation(
