@@ -111,7 +111,7 @@ exprt trivial_sva(exprt expr)
   {
     // We simplify sequences to boolean expressions, and hence can drop
     // the sva_sequence_property converter
-    auto &op = to_sva_sequence_property_expr(expr).op();
+    auto &op = to_sva_sequence_property_expr(expr).sequence();
     if(op.type().id() == ID_bool)
       return op;
   }
