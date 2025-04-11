@@ -116,6 +116,9 @@ protected:
 
   resultt convert_cond(const exprt &);
 
+  resultt
+  convert_function_application(const std::string &symbol, const exprt &);
+
   resultt convert_norep(const exprt &);
 };
 
