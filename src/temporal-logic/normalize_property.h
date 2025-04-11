@@ -40,6 +40,7 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ¬¬φ --> φ
 /// ¬Gφ --> F¬φ
 /// ¬Fφ --> G¬φ
+/// false R ψ --> G ψ
 exprt normalize_property(exprt);
 
 #endif
