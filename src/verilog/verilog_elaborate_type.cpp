@@ -468,6 +468,13 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     tmp.subtype() = elaborate_type(tmp.subtype());
     return std::move(tmp);
   }
+  else if(src.id() == ID_const)
+  {
+    auto tmp = to_type_with_subtype(src).subtype();
+    tmp = elaborate_type(tmp);
+    tmp.set(ID_C_const, true);
+    return tmp;
+  }
   else
   {
     throw errort().with_location(source_location)

@@ -1381,12 +1381,14 @@ data_declaration:
 	  const_opt TOK_VAR lifetime_opt data_type_or_implicit list_of_variable_decl_assignments ';'
 	  	{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_var);
-		  addswap($$, ID_type, $4);
+		  add_as_subtype(stack_type($1), stack_type($4));
+		  addswap($$, ID_type, $1);
 		  swapop($$, $5); }
 	| const_opt lifetime_opt data_type list_of_variable_decl_assignments ';'
 		{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_reg);
-		  addswap($$, ID_type, $3);
+		  add_as_subtype(stack_type($1), stack_type($3));
+		  addswap($$, ID_type, $1);
 		  swapop($$, $4); }
 	| type_declaration
 	| package_import_declaration
@@ -1394,7 +1396,9 @@ data_declaration:
 
 const_opt:
 	  /* Optional */
+		{ init($$, ID_nil); }
 	| TOK_CONST
+		{ init($$, ID_const); stack_type($$).add_subtype().make_nil(); }
 	;
 
 package_import_declaration_brace:
