@@ -5,7 +5,10 @@ verilog1.sv
 ^VAR Verilog\.main\.x: boolean;$
 ^ASSIGN next\(Verilog\.main\.x\):=\!Verilog\.main\.x;$
 ^INIT !Verilog\.main\.x$
+^-- Verilog::main.assert.1$
 ^LTLSPEC G F Verilog\.main\.x$
+^-- Verilog::main.assert.2$
+^-- not translated$
 ^EXIT=0$
 ^SIGNAL=0$
 --
