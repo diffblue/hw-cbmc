@@ -1,0 +1,9 @@
+CORE
+nexttime1.sv
+--smv-netlist
+^CTLSPEC node65$
+^LTLSPEC X node72$
+^LTLSPEC X X X X X X X X node79$
+^EXIT=0$
+^SIGNAL=0$
+--

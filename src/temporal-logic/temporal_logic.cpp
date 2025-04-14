@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "temporal_logic.h"
 
+#include <util/arith_tools.h>
 #include <util/expr_util.h>
 
 #include <verilog/sva_expr.h>
@@ -211,6 +212,15 @@ std::optional<exprt> LTL_to_CTL(exprt expr)
     return {};
 }
 
+static exprt n_Xes(mp_integer n, exprt op)
+{
+  PRECONDITION(n >= 0);
+  if(n == 0)
+    return op;
+  else
+    return n_Xes(n - 1, X_exprt{std::move(op)});
+}
+
 std::optional<exprt> SVA_to_LTL(exprt expr)
 {
   // Some SVA is directly mappable to LTL
@@ -219,6 +229,64 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     auto rec = SVA_to_LTL(to_sva_always_expr(expr).op());
     if(rec.has_value())
       return G_exprt{rec.value()};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_ranged_always)
+  {
+    auto &ranged_always = to_sva_ranged_always_expr(expr);
+    auto rec = SVA_to_LTL(ranged_always.op());
+    if(rec.has_value())
+    {
+      // always [l:u] op ---> X ... X (op ∧ X op ∧ ... ∧ X ... X op)
+      auto lower_int = numeric_cast_v<mp_integer>(ranged_always.lower());
+
+      // Is there an upper end of the range?
+      if(ranged_always.upper().is_constant())
+      {
+        // upper end set
+        auto upper_int =
+          numeric_cast_v<mp_integer>(to_constant_expr(ranged_always.upper()));
+        PRECONDITION(upper_int >= lower_int);
+        auto diff = upper_int - lower_int;
+
+        exprt::operandst conjuncts;
+
+        for(auto i = 0; i <= diff; i++)
+          conjuncts.push_back(n_Xes(i, rec.value()));
+
+        return n_Xes(lower_int, conjunction(conjuncts));
+      }
+      else if(ranged_always.upper().id() == ID_infinity)
+      {
+        // always [l:$] op ---> X ... X G op
+        return n_Xes(lower_int, G_exprt{rec.value()});
+      }
+      else
+        PRECONDITION(false);
+    }
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_s_always)
+  {
+    auto &ranged_always = to_sva_s_always_expr(expr);
+    auto rec = SVA_to_LTL(ranged_always.op());
+    if(rec.has_value())
+    {
+      // s_always [l:u] op ---> X ... X (op ∧ X op ∧ ... ∧ X ... X op)
+      auto lower_int = numeric_cast_v<mp_integer>(ranged_always.lower());
+      auto upper_int = numeric_cast_v<mp_integer>(ranged_always.upper());
+      PRECONDITION(upper_int >= lower_int);
+      auto diff = upper_int - lower_int;
+
+      exprt::operandst conjuncts;
+
+      for(auto i = 0; i <= diff; i++)
+        conjuncts.push_back(n_Xes(i, rec.value()));
+
+      return n_Xes(lower_int, conjunction(conjuncts));
+    }
     else
       return {};
   }
