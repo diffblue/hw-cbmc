@@ -1,0 +1,7 @@
+CORE
+cycle_delay1.sv
+--smv-netlist
+^LTLSPEC node22 & X node25 & X X node28 & X X X node31$
+^EXIT=0$
+^SIGNAL=0$
+--
