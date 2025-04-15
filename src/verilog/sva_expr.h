@@ -663,6 +663,16 @@ public:
     return lhs();
   }
 
+  const exprt &sequence() const
+  {
+    return op0();
+  }
+
+  exprt &sequence()
+  {
+    return op0();
+  }
+
   // a property
   const exprt &consequent() const
   {
@@ -673,7 +683,31 @@ public:
   {
     return rhs();
   }
+
+  const exprt &property() const
+  {
+    return op1();
+  }
+
+  exprt &property()
+  {
+    return op1();
+  }
 };
+
+static inline const sva_implication_base_exprt &
+to_sva_implication_base_expr(const exprt &expr)
+{
+  sva_implication_base_exprt::check(expr);
+  return static_cast<const sva_implication_base_exprt &>(expr);
+}
+
+static inline sva_implication_base_exprt &
+to_sva_implication_base_expr(exprt &expr)
+{
+  sva_implication_base_exprt::check(expr);
+  return static_cast<sva_implication_base_exprt &>(expr);
+}
 
 /// |->
 class sva_overlapped_implication_exprt : public sva_implication_base_exprt

@@ -223,6 +223,76 @@ static exprt n_Xes(mp_integer n, exprt op)
     return n_Xes(n - 1, X_exprt{std::move(op)});
 }
 
+// Returns a set of match conditions (given as LTL formula)
+struct ltl_sequence_matcht
+{
+  ltl_sequence_matcht(exprt __cond, mp_integer __length)
+    : cond(std::move(__cond)), length(std::move(__length))
+  {
+  }
+
+  exprt cond;        // LTL
+  mp_integer length; // match_end - match_start
+};
+
+std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
+{
+  if(!is_SVA_sequence_operator(sequence))
+  {
+    // atomic proposition
+    return {{sequence, 0}};
+  }
+  else if(sequence.id() == ID_sva_sequence_concatenation)
+  {
+    auto &concatenation = to_sva_sequence_concatenation_expr(sequence);
+    auto matches_lhs = LTL_sequence_matches(concatenation.lhs());
+    auto matches_rhs = LTL_sequence_matches(concatenation.rhs());
+
+    if(matches_lhs.empty() || matches_rhs.empty())
+      return {};
+
+    std::vector<ltl_sequence_matcht> result;
+    // cross product
+    for(auto &match_lhs : matches_lhs)
+      for(auto &match_rhs : matches_rhs)
+      {
+        auto rhs_delayed = n_Xes(match_lhs.length, match_rhs.cond);
+        result.emplace_back(
+          and_exprt{match_lhs.cond, rhs_delayed},
+          match_lhs.length + match_rhs.length);
+      }
+    return result;
+  }
+  else if(sequence.id() == ID_sva_cycle_delay)
+  {
+    auto &delay = to_sva_cycle_delay_expr(sequence);
+    auto matches = LTL_sequence_matches(delay.op());
+    auto from_int = numeric_cast_v<mp_integer>(delay.from());
+
+    if(matches.empty())
+      return {};
+
+    if(delay.to().is_nil())
+    {
+      for(auto &match : matches)
+      {
+        // delay as instructed
+        match.length += from_int;
+        match.cond = n_Xes(from_int, match.cond);
+      }
+      return matches;
+    }
+    else
+      return {};
+  }
+  else
+  {
+    return {}; // unsupported
+  }
+}
+
+/// takes an SVA property as input, and returns an equivalent LTL property,
+/// or otherwise {}.
 std::optional<exprt> SVA_to_LTL(exprt expr)
 {
   // Some SVA is directly mappable to LTL
@@ -316,25 +386,82 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     else
       return {};
   }
-  else if(expr.id() == ID_sva_overlapped_implication)
+  else if(
+    expr.id() == ID_sva_overlapped_implication ||
+    expr.id() == ID_sva_non_overlapped_implication)
   {
-    auto &implication = to_sva_overlapped_implication_expr(expr);
-    auto rec_lhs = SVA_to_LTL(implication.lhs());
-    auto rec_rhs = SVA_to_LTL(implication.rhs());
-    if(rec_lhs.has_value() && rec_rhs.has_value())
-      return implies_exprt{rec_lhs.value(), rec_rhs.value()};
-    else
+    auto &implication = to_sva_implication_base_expr(expr);
+    auto matches = LTL_sequence_matches(implication.sequence());
+
+    if(matches.empty())
       return {};
+
+    // All matches must be followed
+    // by the property being true
+    exprt::operandst conjuncts;
+
+    auto property_rec = SVA_to_LTL(implication.property());
+
+    if(!property_rec.has_value())
+      return {};
+
+    for(auto &match : matches)
+    {
+      auto delay =
+        match.length + (expr.id() == ID_sva_non_overlapped_implication ? 1 : 0);
+      auto delayed_property = n_Xes(delay, property_rec.value());
+      conjuncts.push_back(implies_exprt{match.cond, delayed_property});
+    }
+
+    return conjunction(conjuncts);
   }
-  else if(expr.id() == ID_sva_non_overlapped_implication)
+  else if(
+    expr.id() == ID_sva_nonoverlapped_followed_by ||
+    expr.id() == ID_sva_overlapped_followed_by)
   {
-    auto &implication = to_sva_non_overlapped_implication_expr(expr);
-    auto rec_lhs = SVA_to_LTL(implication.lhs());
-    auto rec_rhs = SVA_to_LTL(implication.rhs());
-    if(rec_lhs.has_value() && rec_rhs.has_value())
-      return implies_exprt{rec_lhs.value(), X_exprt{rec_rhs.value()}};
-    else
+    auto &followed_by = to_sva_followed_by_expr(expr);
+    auto matches = LTL_sequence_matches(followed_by.sequence());
+
+    if(matches.empty())
       return {};
+
+    // There must be at least one match that is followed
+    // by the property being true
+    exprt::operandst disjuncts;
+
+    auto property_rec = SVA_to_LTL(followed_by.property());
+
+    if(!property_rec.has_value())
+      return {};
+
+    for(auto &match : matches)
+    {
+      auto delay =
+        match.length + (expr.id() == ID_sva_nonoverlapped_followed_by ? 1 : 0);
+      auto delayed_property = n_Xes(delay, property_rec.value());
+      disjuncts.push_back(and_exprt{match.cond, delayed_property});
+    }
+
+    return disjunction(disjuncts);
+  }
+  else if(expr.id() == ID_sva_sequence_property)
+  {
+    auto &sequence = to_sva_sequence_property_expr(expr).sequence();
+
+    // evaluates to true if there's at least one match of the sequence
+    auto matches = LTL_sequence_matches(sequence);
+
+    if(matches.empty())
+      return {};
+
+    exprt::operandst disjuncts;
+
+    for(auto &match : matches)
+    {
+      disjuncts.push_back(match.cond);
+    }
+
+    return disjunction(disjuncts);
   }
   else if(!has_temporal_operator(expr))
   {
