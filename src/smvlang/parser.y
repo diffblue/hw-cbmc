@@ -678,7 +678,7 @@ term       : variable_name
            | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
            | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
            | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
-           | NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
+           | number_expr
            | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
            | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
            | case_Token cases esac_Token { $$=$2; }
@@ -770,11 +770,19 @@ term       : variable_name
            }
            ;
 
+number_expr: NUMBER_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, stack_expr($1).id());
+             stack_expr($$).type()=integer_typet();
+           }
+           ;
+
 bound      : '[' NUMBER_Token ',' NUMBER_Token ']'
            { init($$); mto($$, $2); mto($$, $4); }
            ;
 
-range      : NUMBER_Token DOTDOT_Token NUMBER_Token
+range      : number_expr DOTDOT_Token number_expr
            { init($$); mto($$, $1); mto($$, $3); }
            ;
 
