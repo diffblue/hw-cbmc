@@ -332,8 +332,7 @@ void convert_trans_to_netlistt::operator()(
     auto netlist_expr_opt = netlist_property(
       aig_prop, dest.var_map, property_expr, ns, get_message_handler());
 
-    if(netlist_expr_opt.has_value())
-      dest.properties.emplace(id, netlist_expr_opt.value());
+    dest.properties.emplace(id, netlist_expr_opt);
   }
 
   // find the nondet nodes

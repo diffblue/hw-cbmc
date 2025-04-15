@@ -412,7 +412,7 @@ void bdd_enginet::compute_counterexample(
   CHECK_RETURN(netlist_property != netlist.properties.end());
 
   property.timeframe_literals =
-    ::unwind_property(netlist_property->second, bmc_map);
+    ::unwind_property(netlist_property->second.value(), bmc_map);
 
   // we need the propertyt to fail in one of the timeframes
   bvt clause=property.timeframe_literals;
@@ -1053,9 +1053,11 @@ void bdd_enginet::build_BDDs()
         // find the netlist property
         auto netlist_property = netlist.properties.find(property.identifier);
         CHECK_RETURN(netlist_property != netlist.properties.end());
+        CHECK_RETURN(netlist_property->second.has_value());
         DATA_INVARIANT(
-          netlist_property->second.id() == ID_G, "assumed property must be G");
-        auto &p = to_G_expr(netlist_property->second).op();
+          netlist_property->second.value().id() == ID_G,
+          "assumed property must be G");
+        auto &p = to_G_expr(netlist_property->second.value()).op();
         DATA_INVARIANT(
           p.id() == ID_literal, "assumed property must be G literal");
         auto l = to_literal_expr(p).get_literal();

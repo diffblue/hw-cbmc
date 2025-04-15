@@ -56,7 +56,8 @@ public:
 
   // Map from property ID to a netlist property,
   // which uses literal_exprt.
-  using propertiest = std::map<irep_idt, exprt>;
+  // Maps to {} if translation was not possible.
+  using propertiest = std::map<irep_idt, std::optional<exprt>>;
   propertiest properties;
 };
 

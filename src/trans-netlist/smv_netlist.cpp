@@ -241,30 +241,37 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
 
   for(auto &[id, netlist_expr] : netlist.properties)
   {
-    if(is_CTL(netlist_expr))
+    if(!netlist_expr.has_value())
+    {
+      // translation has failed
+      out << "-- " << id << '\n';
+      out << "-- not translated\n";
+      out << '\n';
+    }
+    else if(is_CTL(*netlist_expr))
     {
       out << "-- " << id << '\n';
       out << "CTLSPEC ";
-      print_smv(netlist, out, netlist_expr);
+      print_smv(netlist, out, *netlist_expr);
       out << '\n';
     }
-    else if(is_LTL(netlist_expr))
+    else if(is_LTL(*netlist_expr))
     {
       out << "-- " << id << '\n';
       out << "LTLSPEC ";
-      print_smv(netlist, out, netlist_expr);
+      print_smv(netlist, out, *netlist_expr);
       out << '\n';
     }
-    else if(is_SVA(netlist_expr))
+    else if(is_SVA(*netlist_expr))
     {
       // Should have been mapped to LTL
       DATA_INVARIANT(false, "smv_netlist got SVA");
     }
     else
     {
-      // neither LTL nor CTL nor SVA
+      // translated to something we can't print
       out << "-- " << id << '\n';
-      out << "-- not translated\n";
+      out << "-- cannot output\n";
       out << '\n';
     }
   }

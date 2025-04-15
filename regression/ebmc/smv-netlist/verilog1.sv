@@ -7,6 +7,9 @@ module main(input clk);
   always @(posedge clk)
     x = !x;
 
-  always assert property (always s_eventually x);
+  assert property (always s_eventually x);
+
+  // won't get translated
+  assert property (x[->5]);
 
 endmodule

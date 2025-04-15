@@ -78,7 +78,7 @@ void bmc_cegart::unwind(
   for(auto &property_it : netlist.properties)
   {
     auto &prop_bv = prop_bv_map[property_it.first];
-    prop_bv = unwind_property(property_it.second, bmc_map);
+    prop_bv = unwind_property(property_it.second.value(), bmc_map);
 
     disjuncts.push_back(!solver.land(prop_bv));
   }
