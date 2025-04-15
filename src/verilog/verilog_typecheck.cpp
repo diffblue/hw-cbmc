@@ -728,6 +728,13 @@ void verilog_typecheckt::check_lhs(
   {
     const symbolt &symbol=ns.lookup(to_symbol_expr(lhs));
 
+    // check for 'const'
+    if(symbol.type.get_bool(ID_C_const))
+    {
+      throw errort().with_location(lhs.source_location())
+        << "assignment to const";
+    }
+
     switch(vassign)
     {
     case A_CONTINUOUS:
