@@ -63,6 +63,16 @@ bool has_low_completeness_threshold(const exprt &expr)
              upper_int <= 1;
     }
   }
+  else if(
+    expr.id() == ID_sva_strong || expr.id() == ID_sva_weak ||
+    expr.id() == ID_sva_sequence_property)
+  {
+    auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
+    if(!is_SVA_sequence_operator(sequence))
+      return true;
+    else
+      return false;
+  }
   else
     return false;
 }
