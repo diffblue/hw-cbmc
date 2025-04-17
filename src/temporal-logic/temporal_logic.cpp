@@ -132,7 +132,10 @@ bool is_SVA_operator(const exprt &expr)
          id == ID_sva_overlapped_implication ||
          id == ID_sva_non_overlapped_implication ||
          id == ID_sva_overlapped_followed_by ||
-         id == ID_sva_nonoverlapped_followed_by;
+         id == ID_sva_nonoverlapped_followed_by ||
+         id == ID_sva_sequence_property || id == ID_sva_weak ||
+         id == ID_sva_strong || id == ID_sva_implicit_weak ||
+         id == ID_sva_implicit_strong;
 }
 
 bool is_SVA(const exprt &expr)
