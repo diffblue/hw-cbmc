@@ -8,7 +8,7 @@ module main;
   always @(posedge clk)
     x<=x+1;
 
-  // fails
-  initial p0: assert property (strong(##[0:9] x==100));
+  // fails if bound is too low
+  initial p0: assert property (strong(##[0:9] x==5));
 
 endmodule
