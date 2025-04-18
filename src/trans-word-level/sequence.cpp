@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 sequence_matchest instantiate_sequence(
   exprt expr,
+  sva_sequence_semanticst semantics,
   const mp_integer &t,
   const mp_integer &no_timeframes)
 {
@@ -40,7 +41,7 @@ sequence_matchest instantiate_sequence(
       }
       else
         return instantiate_sequence(
-          sva_cycle_delay_expr.op(), u, no_timeframes);
+          sva_cycle_delay_expr.op(), semantics, u, no_timeframes);
     }
     else
     {
@@ -68,8 +69,8 @@ sequence_matchest instantiate_sequence(
 
       for(mp_integer u = lower; u <= upper; ++u)
       {
-        auto sub_result =
-          instantiate_sequence(sva_cycle_delay_expr.op(), u, no_timeframes);
+        auto sub_result = instantiate_sequence(
+          sva_cycle_delay_expr.op(), semantics, u, no_timeframes);
         for(auto &match : sub_result)
           matches.push_back(match);
       }
@@ -84,7 +85,7 @@ sequence_matchest instantiate_sequence(
 
     // This is the product of the match points on the LHS and RHS
     const auto lhs_matches =
-      instantiate_sequence(implication.lhs(), t, no_timeframes);
+      instantiate_sequence(implication.lhs(), semantics, t, no_timeframes);
 
     for(auto &lhs_match : lhs_matches)
     {
@@ -97,8 +98,8 @@ sequence_matchest instantiate_sequence(
         return {{no_timeframes - 1, true_exprt()}};
       }
 
-      const auto rhs_matches =
-        instantiate_sequence(implication.rhs(), t_rhs, no_timeframes);
+      const auto rhs_matches = instantiate_sequence(
+        implication.rhs(), semantics, t_rhs, no_timeframes);
 
       for(auto &rhs_match : rhs_matches)
       {
@@ -119,9 +120,9 @@ sequence_matchest instantiate_sequence(
     auto &intersect = to_sva_sequence_intersect_expr(expr);
 
     const auto lhs_matches =
-      instantiate_sequence(intersect.lhs(), t, no_timeframes);
+      instantiate_sequence(intersect.lhs(), semantics, t, no_timeframes);
     const auto rhs_matches =
-      instantiate_sequence(intersect.rhs(), t, no_timeframes);
+      instantiate_sequence(intersect.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -146,7 +147,7 @@ sequence_matchest instantiate_sequence(
     auto &first_match = to_sva_sequence_first_match_expr(expr);
 
     const auto lhs_matches =
-      instantiate_sequence(first_match.lhs(), t, no_timeframes);
+      instantiate_sequence(first_match.lhs(), semantics, t, no_timeframes);
 
     // the match of seq with the earliest ending clock tick is a
     // match of first_match (seq)
@@ -183,7 +184,7 @@ sequence_matchest instantiate_sequence(
     auto &throughout = to_sva_sequence_throughout_expr(expr);
 
     const auto rhs_matches =
-      instantiate_sequence(throughout.rhs(), t, no_timeframes);
+      instantiate_sequence(throughout.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -215,8 +216,10 @@ sequence_matchest instantiate_sequence(
     // 3. The end time of the composite sequence is
     //    the end time of the operand sequence that completes last.
     auto &and_expr = to_sva_and_expr(expr);
-    auto matches_lhs = instantiate_sequence(and_expr.lhs(), t, no_timeframes);
-    auto matches_rhs = instantiate_sequence(and_expr.rhs(), t, no_timeframes);
+    auto matches_lhs =
+      instantiate_sequence(and_expr.lhs(), semantics, t, no_timeframes);
+    auto matches_rhs =
+      instantiate_sequence(and_expr.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -238,7 +241,7 @@ sequence_matchest instantiate_sequence(
     sequence_matchest result;
 
     for(auto &op : expr.operands())
-      for(auto &match : instantiate_sequence(op, t, no_timeframes))
+      for(auto &match : instantiate_sequence(op, semantics, t, no_timeframes))
         result.push_back(match);
 
     return result;
@@ -247,7 +250,8 @@ sequence_matchest instantiate_sequence(
   {
     // x[*n] is syntactic sugar for x ##1 ... ##1 x, with n repetitions
     auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
-    return instantiate_sequence(repetition.lower(), t, no_timeframes);
+    return instantiate_sequence(
+      repetition.lower(), semantics, t, no_timeframes);
   }
   else if(
     expr.id() == ID_sva_sequence_repetition_plus ||
