@@ -34,6 +34,7 @@ Author: Daniel Kroening, dkr@amazon.com
 /// weak(φ) --> φ
 /// ¬ sva_s_eventually φ --> sva_always ¬φ
 /// ¬ sva_always φ --> sva_s_eventually ¬φ
+/// cover φ --> sva_always_exprt ¬φ
 ///
 /// ----LTL-----
 /// ¬Xφ --> X¬φ
