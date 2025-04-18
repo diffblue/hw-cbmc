@@ -28,10 +28,17 @@ public:
 /// A set of matches of an SVA sequence.
 using sequence_matchest = std::vector<sequence_matcht>;
 
+enum class sva_sequence_semanticst
+{
+  WEAK,
+  STRONG
+};
+
 /// Returns a list of match points and matching conditions
 /// for the given sequence expression starting at time t
 [[nodiscard]] sequence_matchest instantiate_sequence(
   exprt expr,
+  sva_sequence_semanticst,
   const mp_integer &t,
   const mp_integer &no_timeframes);
 
