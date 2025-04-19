@@ -107,11 +107,13 @@ exprt trivial_sva(exprt expr)
     op = trivial_sva(op);
 
   // post-traversal
-  if(expr.id() == ID_sva_sequence_property)
+  if(
+    expr.id() == ID_sva_weak || expr.id() == ID_sva_strong ||
+    expr.id() == ID_sva_implicit_weak || expr.id() == ID_sva_implicit_strong)
   {
     // We simplify sequences to boolean expressions, and hence can drop
     // the sva_sequence_property converter
-    auto &op = to_sva_sequence_property_expr(expr).sequence();
+    auto &op = to_sva_sequence_property_expr_base(expr).sequence();
     if(op.type().id() == ID_bool)
       return op;
   }

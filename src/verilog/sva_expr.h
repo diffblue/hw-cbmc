@@ -1143,7 +1143,7 @@ to_sva_sequence_property_expr_base(const exprt &expr)
 }
 
 inline sva_sequence_property_expr_baset &
-to_sva_sequence_property_base_expr(exprt &expr)
+to_sva_sequence_property_expr_base(exprt &expr)
 {
   sva_sequence_property_expr_baset::check(expr);
   return static_cast<sva_sequence_property_expr_baset &>(expr);
@@ -1152,22 +1152,24 @@ to_sva_sequence_property_base_expr(exprt &expr)
 class sva_strong_exprt : public sva_sequence_property_expr_baset
 {
 public:
-  sva_strong_exprt(exprt __op)
-    : sva_sequence_property_expr_baset(ID_sva_strong, std::move(__op))
+  sva_strong_exprt(irep_idt __id, exprt __op)
+    : sva_sequence_property_expr_baset(__id, std::move(__op))
   {
   }
 };
 
 inline const sva_strong_exprt &to_sva_strong_expr(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_strong);
+  PRECONDITION(
+    expr.id() == ID_sva_strong || expr.id() == ID_sva_implicit_strong);
   sva_strong_exprt::check(expr);
   return static_cast<const sva_strong_exprt &>(expr);
 }
 
 inline sva_strong_exprt &to_sva_strong_expr(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_strong);
+  PRECONDITION(
+    expr.id() == ID_sva_strong || expr.id() == ID_sva_implicit_strong);
   sva_strong_exprt::check(expr);
   return static_cast<sva_strong_exprt &>(expr);
 }
@@ -1175,22 +1177,22 @@ inline sva_strong_exprt &to_sva_strong_expr(exprt &expr)
 class sva_weak_exprt : public sva_sequence_property_expr_baset
 {
 public:
-  sva_weak_exprt(exprt __op)
-    : sva_sequence_property_expr_baset(ID_sva_weak, std::move(__op))
+  sva_weak_exprt(irep_idt __id, exprt __op)
+    : sva_sequence_property_expr_baset(__id, std::move(__op))
   {
   }
 };
 
 inline const sva_weak_exprt &to_sva_weak_expr(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_weak);
+  PRECONDITION(expr.id() == ID_sva_weak || expr.id() == ID_sva_implicit_weak);
   sva_weak_exprt::check(expr);
   return static_cast<const sva_weak_exprt &>(expr);
 }
 
 inline sva_weak_exprt &to_sva_weak_expr(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_weak);
+  PRECONDITION(expr.id() == ID_sva_weak || expr.id() == ID_sva_implicit_weak);
   sva_weak_exprt::check(expr);
   return static_cast<sva_weak_exprt &>(expr);
 }
@@ -1583,5 +1585,12 @@ to_sva_sequence_property_expr(exprt &expr)
   sva_sequence_property_exprt::check(expr, validation_modet::INVARIANT);
   return static_cast<sva_sequence_property_exprt &>(expr);
 }
+
+/// SVA sequences can be interpreted as weak or strong
+enum class sva_sequence_semanticst
+{
+  WEAK,
+  STRONG
+};
 
 #endif
