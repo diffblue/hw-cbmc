@@ -527,10 +527,24 @@ static obligationst property_obligations_rec(
       return property_obligations_rec(
         op_negated_opt.value(), current, no_timeframes);
     }
-    else if(is_SVA_sequence_operator(op))
+    else if(
+      op.id() == ID_sva_strong || op.id() == ID_sva_weak ||
+      op.id() == ID_sva_implicit_strong || op.id() == ID_sva_implicit_weak)
     {
-      return obligationst{
-        instantiate_property(property_expr, current, no_timeframes)};
+      // The sequence must not match.
+      auto &sequence = to_sva_sequence_property_expr_base(op).sequence();
+
+      const auto matches =
+        instantiate_sequence(sequence, current, no_timeframes);
+
+      obligationst obligations;
+
+      for(auto &match : matches)
+      {
+        obligations.add(match.end_time, not_exprt{match.condition});
+      }
+
+      return obligations;
     }
     else if(is_temporal_operator(op))
     {
@@ -647,7 +661,8 @@ static obligationst property_obligations_rec(
   }
   else if(
     property_expr.id() == ID_sva_strong || property_expr.id() == ID_sva_weak ||
-    property_expr.id() == ID_sva_sequence_property)
+    property_expr.id() == ID_sva_implicit_strong ||
+    property_expr.id() == ID_sva_implicit_weak)
   {
     auto &sequence =
       to_sva_sequence_property_expr_base(property_expr).sequence();
@@ -666,6 +681,11 @@ static obligationst property_obligations_rec(
     }
 
     return obligationst{max, disjunction(disjuncts)};
+  }
+  else if(property_expr.id() == ID_sva_sequence_property)
+  {
+    // Should have been turned into sva_implict_weak or sva_implict_strong in the type checker.
+    PRECONDITION(false);
   }
   else
   {
