@@ -1,0 +1,9 @@
+KNOWNBUG
+empty_sequence1.sv
+--bound 5
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Repetition with zero is not implemented.
