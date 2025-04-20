@@ -205,7 +205,37 @@ sequence_matchest instantiate_sequence(
   }
   else if(expr.id() == ID_sva_sequence_within)
   {
-    PRECONDITION(false);
+    // If the lhs match is contained anywhere within the rhs match,
+    // then return the rhs match.
+
+    auto &within_expr = to_sva_sequence_within_expr(expr);
+    const auto matches_rhs =
+      instantiate_sequence(within_expr.rhs(), t, no_timeframes);
+
+    sequence_matchest result;
+
+    for(auto &match_rhs : matches_rhs)
+    {
+      for(auto start_lhs = t; start_lhs <= match_rhs.end_time; ++start_lhs)
+      {
+        auto matches_lhs =
+          instantiate_sequence(within_expr.lhs(), start_lhs, no_timeframes);
+
+        for(auto &match_lhs : matches_lhs)
+        {
+          // The end_time of the lhs match must be no later than the
+          // end_time of the rhs match.
+          if(match_lhs.end_time <= match_rhs.end_time)
+          {
+            // return the rhs end_time
+            auto cond = and_exprt{match_lhs.condition, match_rhs.condition};
+            result.emplace_back(match_rhs.end_time, std::move(cond));
+          }
+        }
+      }
+    }
+
+    return result;
   }
   else if(expr.id() == ID_sva_and)
   {

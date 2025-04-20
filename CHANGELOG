@@ -6,6 +6,7 @@
 * SystemVerilog: unbased unsigned literals '0, '1, 'x, 'z
 * SystemVerilog: first_match
 * SystemVerilog: [->n] and [=n]
+* SystemVerilog: within
 * SystemVerilog: bugfix for |-> and |=>
 * SystemVerilog: bugfix for SVA sequence and
 * Verilog: 'dx, 'dz

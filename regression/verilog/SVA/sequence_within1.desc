@@ -1,7 +1,11 @@
 CORE
 sequence_within1.sv
---bound 5
-^\[.*\] main\.x == 0 within main\.x == 1: FAILURE: property not supported by BMC engine$
+--bound 20
+^\[main\.p0\] main\.x == 0 within main\.x == 1: REFUTED$
+^\[main\.p1\] main\.x == 0 within \(##10 1\): PROVED up to bound 20$
+^\[main\.p2\] main\.x == 5 within \(##10 1\): PROVED up to bound 20$
+^\[main\.p3\] main\.x == 10 within \(##10 1\): PROVED up to bound 20$
+^\[main\.p4\] main\.x == 11 within \(##10 1\): REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --
