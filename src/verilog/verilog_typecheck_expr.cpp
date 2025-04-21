@@ -2868,15 +2868,22 @@ Function: verilog_typecheck_exprt::convert_shl_expr
 
 exprt verilog_typecheck_exprt::convert_shl_expr(shl_exprt expr)
 {
-  convert_expr(expr.op0());
-  convert_expr(expr.op1());
-  
+  convert_expr(expr.lhs());
+  convert_expr(expr.rhs());
+
   no_bool_ops(expr);
 
-  // the bit width of a shift is always the bit width of the left operand
-  const typet &op0_type=expr.op0().type();
-  
-  expr.type()=op0_type;
+  const typet &lhs_type = expr.lhs().type();
+  const typet &rhs_type = expr.rhs().type();
+
+  // The bit width of a shift is always the bit width of the left operand.
+  // The result is four-valued if either of the operands is four-valued.
+  if(is_four_valued(lhs_type))
+    expr.type() = lhs_type;
+  else if(is_four_valued(rhs_type))
+    expr.type() = four_valued(lhs_type);
+  else
+    expr.type() = lhs_type;
 
   return std::move(expr);
 }
@@ -3066,16 +3073,26 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     must_be_integral(expr.rhs());
     no_bool_ops(expr);
 
-    const typet &op0_type = expr.op0().type();
+    const typet &lhs_type = expr.lhs().type();
+    const typet &rhs_type = expr.rhs().type();
 
     if(
-      op0_type.id() == ID_signedbv || op0_type.id() == ID_verilog_signedbv ||
-      op0_type.id() == ID_integer)
+      lhs_type.id() == ID_signedbv || lhs_type.id() == ID_verilog_signedbv ||
+      lhs_type.id() == ID_integer)
+    {
       expr.id(ID_ashr);
+    }
     else
       expr.id(ID_lshr);
 
-    expr.type()=op0_type;
+    // The bit width of a shift is always the bit width of the left operand.
+    // The result is four-valued if either of the operands is four-valued.
+    if(is_four_valued(lhs_type))
+      expr.type() = lhs_type;
+    else if(is_four_valued(rhs_type))
+      expr.type() = four_valued(lhs_type);
+    else
+      expr.type() = lhs_type;
 
     return std::move(expr);
   }
@@ -3092,7 +3109,18 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     must_be_integral(expr.lhs());
     must_be_integral(expr.rhs());
     no_bool_ops(expr);
-    expr.type()=expr.op0().type();
+
+    const typet &lhs_type = expr.lhs().type();
+    const typet &rhs_type = expr.rhs().type();
+
+    // The bit width of a shift is always the bit width of the left operand.
+    // The result is four-valued if either of the operands is four-valued.
+    if(is_four_valued(lhs_type))
+      expr.type() = lhs_type;
+    else if(is_four_valued(rhs_type))
+      expr.type() = four_valued(lhs_type);
+    else
+      expr.type() = lhs_type;
 
     return std::move(expr);
   }

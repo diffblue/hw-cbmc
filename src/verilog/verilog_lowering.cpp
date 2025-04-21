@@ -608,6 +608,13 @@ exprt verilog_lowering(exprt expr)
 
     return expr;
   }
+  else if(expr.id() == ID_lshr || expr.id() == ID_ashr || expr.id() == ID_shl)
+  {
+    if(is_four_valued(expr.type()))
+      return aval_bval(to_shift_expr(expr));
+    else
+      return expr;
+  }
   else
     return expr; // leave as is
 
