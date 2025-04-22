@@ -63,5 +63,7 @@ exprt aval_bval(const verilog_iff_exprt &);
 exprt aval_bval(const verilog_implies_exprt &);
 /// lowering for typecasts
 exprt aval_bval(const typecast_exprt &);
+/// lowering for shifts
+exprt aval_bval(const shift_exprt &);
 
 #endif

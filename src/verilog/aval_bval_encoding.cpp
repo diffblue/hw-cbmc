@@ -444,3 +444,29 @@ exprt aval_bval(const typecast_exprt &expr)
   auto op_aval_zero = to_bv_type(op_aval.type()).all_zeros_expr();
   return and_exprt{not_exprt{op_has_xz}, notequal_exprt{op_aval, op_aval_zero}};
 }
+
+exprt aval_bval(const shift_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+
+  auto distance_has_xz = has_xz(expr.distance());
+  auto distance_aval = aval(expr.distance());
+
+  // the shift distance must have a numerical interpretation
+  auto distance_aval_casted = typecast_exprt{
+    distance_aval,
+    unsignedbv_typet{to_bitvector_type(distance_aval.type()).get_width()}};
+
+  // shift aval and bval separately
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  auto aval_shifted = shift_exprt{op_aval, expr.id(), distance_aval_casted};
+  auto bval_shifted = shift_exprt{op_bval, expr.id(), distance_aval_casted};
+
+  auto combined = combine_aval_bval(
+    aval_shifted, bval_shifted, lower_to_aval_bval(expr.type()));
+
+  auto x = make_x(expr.type());
+  return if_exprt{distance_has_xz, x, combined};
+}
