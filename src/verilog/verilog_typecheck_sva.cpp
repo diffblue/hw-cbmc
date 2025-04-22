@@ -239,7 +239,6 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
 
     convert_sva(expr.rhs());
     require_sva_sequence(expr.rhs());
-    expr.type() = bool_typet{};
 
     expr.type() = verilog_sva_sequence_typet{};
 

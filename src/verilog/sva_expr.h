@@ -1500,6 +1500,35 @@ to_sva_sequence_intersect_expr(exprt &expr)
   return static_cast<sva_sequence_intersect_exprt &>(expr);
 }
 
+class sva_sequence_within_exprt : public binary_exprt
+{
+public:
+  sva_sequence_within_exprt(exprt op0, exprt op1)
+    : binary_exprt(
+        std::move(op0),
+        ID_sva_sequence_within,
+        std::move(op1),
+        verilog_sva_sequence_typet{})
+  {
+  }
+};
+
+static inline const sva_sequence_within_exprt &
+to_sva_sequence_within_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_within);
+  sva_sequence_within_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_sequence_within_exprt &>(expr);
+}
+
+static inline sva_sequence_within_exprt &
+to_sva_sequence_within_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_within);
+  sva_sequence_within_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_sequence_within_exprt &>(expr);
+}
+
 class sva_sequence_throughout_exprt : public binary_exprt
 {
 public:
