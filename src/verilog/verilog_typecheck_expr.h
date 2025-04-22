@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/std_expr.h>
 
+#include "sva_expr.h"
 #include "verilog_typecheck_base.h"
 
 #include <stack>
@@ -206,6 +207,8 @@ protected:
   [[nodiscard]] exprt convert_unary_sva(unary_exprt);
   [[nodiscard]] exprt convert_binary_sva(binary_exprt);
   [[nodiscard]] exprt convert_ternary_sva(ternary_exprt);
+
+  static void set_default_sequence_semantics(exprt &, sva_sequence_semanticst);
 
   // system functions
   exprt bits(const exprt &);
