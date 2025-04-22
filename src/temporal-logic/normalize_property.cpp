@@ -119,7 +119,7 @@ exprt normalize_property(exprt expr)
 {
   // top-level only
   if(expr.id() == ID_sva_cover)
-    expr = G_exprt{not_exprt{to_sva_cover_expr(expr).op()}};
+    expr = sva_always_exprt{not_exprt{to_sva_cover_expr(expr).op()}};
 
   expr = trivial_sva(expr);
 

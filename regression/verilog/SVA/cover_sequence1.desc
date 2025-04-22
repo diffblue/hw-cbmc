@@ -1,0 +1,11 @@
+CORE
+cover_sequence1.sv
+--bound 10 --numbered-trace
+^\[main\.p0\] cover \(main\.x == 2 ##1 main\.x == 3 ##1 main\.x == 4\): PROVED$
+^Trace with 5 states:$
+^\[main\.p1\] cover \(main\.x == 2 ##1 main\.x == 3 ##1 main\.x == 5\): REFUTED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
