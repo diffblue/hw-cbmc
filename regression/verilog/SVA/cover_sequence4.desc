@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 cover_sequence4.sv
 --bound 3
 ^\[main\.p0\] cover \(1 \[=10\]\): REFUTED up to bound 3$
@@ -9,4 +9,3 @@ cover_sequence4.sv
 --
 ^warning: ignoring
 --
-Implementation of [=x:y] is missing.
