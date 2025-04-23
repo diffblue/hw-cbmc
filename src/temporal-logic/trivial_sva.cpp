@@ -84,7 +84,7 @@ exprt trivial_sva(exprt expr)
   }
   else if(expr.id() == ID_sva_not)
   {
-    // Same as regular 'not'. These do not apply to sequences.
+    // Same as boolean 'not'. These do not apply to sequences.
     expr = not_exprt{to_sva_not_expr(expr).op()};
   }
   else if(expr.id() == ID_sva_if)
