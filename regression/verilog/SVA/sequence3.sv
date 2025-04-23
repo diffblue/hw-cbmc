@@ -10,11 +10,11 @@ module main;
       x<=x+1;
 
   // ##[*] is the same as [0:$]
-  initial p0: assert property (##[*] x==6); // should fail
-  initial p1: assert property (##[*] x==5); // should pass
+  initial p0: assert property (strong(##[*] x==6)); // no match
+  initial p1: assert property (strong(##[*] x==5)); // match
 
   // ##[+] is the same as [1:$]
-  initial p2: assert property (##[+] x==0); // should fail
-  initial p3: assert property (##[+] x==5); // should pass
+  initial p2: assert property (strong(##[+] x==0)); // no match
+  initial p3: assert property (strong(##[+] x==5)); // match
 
 endmodule

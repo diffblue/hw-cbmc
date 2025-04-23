@@ -34,26 +34,6 @@ exprt normalize_pre_sva_non_overlapped_implication(
     return std::move(expr);
 }
 
-exprt normalize_pre_sva_cycle_delay(sva_cycle_delay_exprt expr)
-{
-  if(expr.is_unbounded())
-  {
-    if(numeric_cast_v<mp_integer>(expr.from()) == 0)
-    {
-      // ##[0:$] φ --> s_eventually φ
-      return sva_s_eventually_exprt{expr.op()};
-    }
-    else
-    {
-      // ##[i:$] φ --> always[i:i] s_eventually φ
-      return sva_ranged_always_exprt{
-        expr.from(), expr.from(), sva_s_eventually_exprt{expr.op()}};
-    }
-  }
-  else
-    return std::move(expr);
-}
-
 exprt normalize_property_rec(exprt expr)
 {
   // pre-traversal
@@ -83,19 +63,6 @@ exprt normalize_property_rec(exprt expr)
     auto &nexttime_expr = to_sva_indexed_s_nexttime_expr(expr);
     expr = sva_s_always_exprt{
       nexttime_expr.index(), nexttime_expr.index(), nexttime_expr.op()};
-  }
-  else if(expr.id() == ID_sva_cycle_delay)
-  {
-    expr = normalize_pre_sva_cycle_delay(to_sva_cycle_delay_expr(expr));
-  }
-  else if(expr.id() == ID_sva_cycle_delay_plus)
-  {
-    expr = sva_s_nexttime_exprt{
-      sva_s_eventually_exprt{to_sva_cycle_delay_plus_expr(expr).op()}};
-  }
-  else if(expr.id() == ID_sva_cycle_delay_star)
-  {
-    expr = sva_s_eventually_exprt{to_sva_cycle_delay_star_expr(expr).op()};
   }
 
   // normalize the operands
