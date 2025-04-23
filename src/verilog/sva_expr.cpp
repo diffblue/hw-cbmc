@@ -62,10 +62,10 @@ exprt sva_sequence_consecutive_repetition_exprt::lower() const
   PRECONDITION(
     op().type().id() == ID_bool || op().type().id() == ID_verilog_sva_sequence);
 
-  if(to().is_nil())
+  if(!is_range())
   {
     // expand x[*n] into x ##1 x ##1 ...
-    auto n = numeric_cast_v<mp_integer>(to_constant_expr(from()));
+    auto n = numeric_cast_v<mp_integer>(repetitions());
     DATA_INVARIANT(n >= 1, "number of repetitions must be at least one");
 
     exprt result = op();
@@ -84,11 +84,11 @@ exprt sva_sequence_consecutive_repetition_exprt::lower() const
   {
     PRECONDITION(false);
   }
-  else
+  else // bounded range
   {
     // expand x[*a:b] into x[*a] or x[*a+1] or ... or x[*b]
-    auto from_int = numeric_cast_v<mp_integer>(to_constant_expr(from()));
-    auto to_int = numeric_cast_v<mp_integer>(to_constant_expr(to()));
+    auto from_int = numeric_cast_v<mp_integer>(from());
+    auto to_int = numeric_cast_v<mp_integer>(to());
 
     DATA_INVARIANT(from_int >= 1, "number of repetitions must be at least one");
     DATA_INVARIANT(

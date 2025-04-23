@@ -2707,12 +2707,28 @@ consecutive_repetition:
 
 non_consecutive_repetition:
 	  "[=" const_or_range_expression ']'
-		{ init($$, ID_sva_sequence_non_consecutive_repetition); mto($$, $2); }
+		{ init($$, ID_sva_sequence_non_consecutive_repetition);
+		  if(stack_expr($2).id() == ID_sva_cycle_delay)
+		    swapop($$, $2);
+		  else
+		  {
+		    mto($$, $2);
+		    stack_expr($$).add_to_operands(nil_exprt{});
+		  }
+		}
 	;
 
 goto_repetition:
 	  "[->" const_or_range_expression ']'
-		{ init($$, ID_sva_sequence_goto_repetition); mto($$, $2); }
+		{ init($$, ID_sva_sequence_goto_repetition);
+		  if(stack_expr($2).id() == ID_sva_cycle_delay)
+		    swapop($$, $2);
+		  else
+		  {
+		    mto($$, $2);
+		    stack_expr($$).add_to_operands(nil_exprt{});
+		  }
+		}
 	;
 
 cycle_delay_range:
