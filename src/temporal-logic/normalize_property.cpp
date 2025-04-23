@@ -23,12 +23,26 @@ Author: Daniel Kroening, dkr@amazon.com
 exprt normalize_pre_sva_non_overlapped_implication(
   sva_non_overlapped_implication_exprt expr)
 {
-  // Same as a->always[1:1] b if lhs is not a sequence.
-  if(!is_SVA_sequence_operator(expr.lhs()))
+  // a|=>b is the same as a->always[1:1] b if lhs is not a proper sequence.
+  if(expr.lhs().id() == ID_sva_boolean)
   {
+    const auto &lhs_cond = to_sva_boolean_expr(expr.lhs()).op();
     auto one = natural_typet{}.one_expr();
     return or_exprt{
-      not_exprt{expr.lhs()}, sva_ranged_always_exprt{one, one, expr.rhs()}};
+      not_exprt{lhs_cond}, sva_ranged_always_exprt{one, one, expr.rhs()}};
+  }
+  else
+    return std::move(expr);
+}
+
+exprt normalize_pre_sva_overlapped_implication(
+  sva_overlapped_implication_exprt expr)
+{
+  // a|->b is the same as a->b if lhs is not a proper sequence.
+  if(expr.lhs().id() == ID_sva_boolean)
+  {
+    const auto &lhs_cond = to_sva_boolean_expr(expr.lhs()).op();
+    return implies_exprt{lhs_cond, expr.rhs()};
   }
   else
     return std::move(expr);
@@ -41,6 +55,11 @@ exprt normalize_property_rec(exprt expr)
   {
     expr = normalize_pre_sva_non_overlapped_implication(
       to_sva_non_overlapped_implication_expr(expr));
+  }
+  else if(expr.id() == ID_sva_overlapped_implication)
+  {
+    expr = normalize_pre_sva_overlapped_implication(
+      to_sva_overlapped_implication_expr(expr));
   }
   else if(expr.id() == ID_sva_nexttime)
   {
