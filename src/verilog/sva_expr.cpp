@@ -83,7 +83,8 @@ exprt sva_sequence_consecutive_repetition_exprt::lower() const
       auto n_expr = from_integer(n, integer_typet{});
       result = sva_or_exprt{
         std::move(result),
-        sva_sequence_consecutive_repetition_exprt{op(), n_expr}};
+        sva_sequence_consecutive_repetition_exprt{op(), n_expr},
+        verilog_sva_sequence_typet{}};
     }
 
     return result;

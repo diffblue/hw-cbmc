@@ -39,6 +39,11 @@ void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
       make_boolean(expr);
     }
   }
+  else if(type.id() == ID_verilog_sva_property)
+  {
+    throw errort().with_location(expr.source_location())
+      << "sequence required, but got property";
+  }
   else
   {
     throw errort().with_location(expr.source_location())
@@ -57,6 +62,10 @@ void verilog_typecheck_exprt::require_sva_property(exprt &expr)
     // only know which one once the sequence is used in an assert/assume
     // or cover.
     expr = sva_sequence_property_exprt{std::move(expr)};
+  }
+  else if(type.id() == ID_verilog_sva_property)
+  {
+    // good as is
   }
   else if(
     type.id() == ID_bool || type.id() == ID_unsignedbv ||
