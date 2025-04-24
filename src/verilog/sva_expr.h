@@ -1004,6 +1004,9 @@ public:
     : unary_exprt(ID_sva_cycle_delay_plus, std::move(op), bool_typet())
   {
   }
+
+  // ##[1:$] op
+  exprt lower() const;
 };
 
 static inline const sva_cycle_delay_plus_exprt &
@@ -1029,6 +1032,9 @@ public:
     : unary_exprt(ID_sva_cycle_delay_star, std::move(op), bool_typet())
   {
   }
+
+  // ##[0:$] op
+  exprt lower() const;
 };
 
 static inline const sva_cycle_delay_star_exprt &

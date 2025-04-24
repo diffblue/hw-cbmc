@@ -42,30 +42,35 @@ sequence_matchest instantiate_sequence(
         return instantiate_sequence(
           sva_cycle_delay_expr.op(), u, no_timeframes);
     }
-    else
+    else // a range
     {
-      mp_integer to;
+      auto lower = t + from;
+      mp_integer upper;
 
       if(sva_cycle_delay_expr.to().id() == ID_infinity)
       {
         DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        to = no_timeframes - 1;
+        upper = no_timeframes;
       }
-      else if(to_integer_non_constant(sva_cycle_delay_expr.to(), to))
-        throw "failed to convert sva_cycle_delay offsets";
-
-      auto lower = t + from;
-      auto upper = t + to;
-
-      // Do we exceed the bound? Make it 'true'
-      if(upper >= no_timeframes)
+      else
       {
-        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        return {{no_timeframes - 1, true_exprt()}};
+        mp_integer to;
+        if(to_integer_non_constant(sva_cycle_delay_expr.to(), to))
+          throw "failed to convert sva_cycle_delay offsets";
+        upper = t + to;
       }
 
       sequence_matchest matches;
 
+      // Do we exceed the bound? Add an unconditional match.
+      if(upper >= no_timeframes)
+      {
+        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+        matches.emplace_back(no_timeframes - 1, true_exprt());
+        upper = no_timeframes - 1;
+      }
+
+      // Add a potential match for each timeframe in the range
       for(mp_integer u = lower; u <= upper; ++u)
       {
         auto sub_result =
@@ -76,6 +81,16 @@ sequence_matchest instantiate_sequence(
 
       return matches;
     }
+  }
+  else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
+  {
+    auto &cycle_delay_star = to_sva_cycle_delay_star_expr(expr);
+    return instantiate_sequence(cycle_delay_star.lower(), t, no_timeframes);
+  }
+  else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
+  {
+    auto &cycle_delay_plus = to_sva_cycle_delay_plus_expr(expr);
+    return instantiate_sequence(cycle_delay_plus.lower(), t, no_timeframes);
   }
   else if(expr.id() == ID_sva_sequence_concatenation)
   {
@@ -378,8 +393,7 @@ sequence_matchest instantiate_sequence(
   else
   {
     // not a sequence, evaluate as state predicate
-    auto obligations = property_obligations(expr, t, no_timeframes);
-    auto conjunction = obligations.conjunction();
-    return {{conjunction.first, conjunction.second}};
+    auto instantiated = instantiate_property(expr, t, no_timeframes);
+    return {{instantiated.first, instantiated.second}};
   }
 }

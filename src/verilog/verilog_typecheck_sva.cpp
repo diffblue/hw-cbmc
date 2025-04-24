@@ -77,8 +77,7 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
 {
   if(
     expr.id() == ID_sva_not || expr.id() == ID_sva_always ||
-    expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_cycle_delay_plus ||
-    expr.id() == ID_sva_cycle_delay_star || expr.id() == ID_sva_nexttime ||
+    expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_nexttime ||
     expr.id() == ID_sva_s_nexttime)
   {
     convert_sva(expr.op());
@@ -87,8 +86,8 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
     return std::move(expr);
   }
   else if(
-    expr.id() == ID_sva_cycle_delay_plus ||
-    expr.id() == ID_sva_cycle_delay_star ||
+    expr.id() == ID_sva_cycle_delay_plus ||         // ##[+]
+    expr.id() == ID_sva_cycle_delay_star ||         // ##[*]
     expr.id() == ID_sva_sequence_repetition_plus || // x[+]
     expr.id() == ID_sva_sequence_repetition_star)   // x[*}
   {

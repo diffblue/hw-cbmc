@@ -9,7 +9,10 @@ module main;
     if(x != 5)
       x<=x+1;
 
-  // fails once we see the lasso 0, 1, 2, 3, 4, 5, 5
-  initial p0: assert property (##[0:$] x==10);
+  // does not match -- passes
+  initial p0: assert property (weak(##[0:$] x==10));
+
+  // does not match -- fails
+  initial p1: assert property (strong(##[0:$] x==10));
 
 endmodule

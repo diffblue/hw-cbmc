@@ -11,6 +11,24 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/mathematical_types.h>
 
+exprt sva_cycle_delay_plus_exprt::lower() const
+{
+  // same as ##[1:$]
+  return sva_cycle_delay_exprt{
+    from_integer(1, integer_typet{}),
+    exprt{ID_infinity, integer_typet{}},
+    op()};
+}
+
+exprt sva_cycle_delay_star_exprt::lower() const
+{
+  // same as ##[0:$]
+  return sva_cycle_delay_exprt{
+    from_integer(0, integer_typet{}),
+    exprt{ID_infinity, integer_typet{}},
+    op()};
+}
+
 exprt sva_case_exprt::lowering() const
 {
   auto &case_items = this->case_items();
