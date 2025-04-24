@@ -270,26 +270,6 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
 
     return std::move(expr);
   }
-  else if(
-    expr.id() == ID_sva_sequence_non_consecutive_repetition ||
-    expr.id() == ID_sva_sequence_goto_repetition)
-  {
-    convert_sva(expr.lhs());
-    require_sva_sequence(expr.lhs());
-
-    convert_expr(expr.rhs());
-
-    mp_integer n = elaborate_constant_integer_expression(expr.rhs());
-    if(n < 0)
-      throw errort().with_location(expr.rhs().source_location())
-        << "number of repetitions must not be negative";
-
-    expr.rhs() = from_integer(n, integer_typet{});
-
-    expr.type() = verilog_sva_sequence_typet{};
-
-    return std::move(expr);
-  }
   else if(expr.id() == ID_sva_case)
   {
     auto &case_expr = to_sva_case_expr(expr);
@@ -341,20 +321,39 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
   }
   else if(expr.id() == ID_sva_sequence_consecutive_repetition) // x[*1:2]
   {
-    auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
-
     // This expression takes a sequence as argument.
     // The grammar allows properties to implement and/or over
     // sequences. Check here that the argument is a sequence.
-    convert_sva(repetition.op());
-    require_sva_sequence(repetition.op());
+    convert_sva(expr.op0());
+    require_sva_sequence(expr.op0());
 
-    convert_expr(repetition.from());
+    convert_expr(expr.op1());
 
-    if(repetition.to().is_not_nil())
-      convert_expr(repetition.to());
+    if(expr.op2().is_not_nil())
+      convert_expr(expr.op2());
 
     expr.type() = verilog_sva_sequence_typet{};
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_sva_sequence_non_consecutive_repetition ||
+    expr.id() == ID_sva_sequence_goto_repetition)
+  {
+    // These take a Boolean as argument.
+    convert_expr(expr.op0());
+    make_boolean(expr.op0());
+
+    convert_expr(expr.op1());
+
+    mp_integer n = elaborate_constant_integer_expression(expr.op1());
+    if(n < 0)
+      throw errort().with_location(expr.op1().source_location())
+        << "number of repetitions must not be negative";
+
+    expr.op1() = from_integer(n, integer_typet{});
+
+    expr.type() = verilog_sva_sequence_typet{};
+
     return std::move(expr);
   }
   else if(

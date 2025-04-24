@@ -16,7 +16,7 @@ class sva_abort_exprt;
 class sva_case_exprt;
 class sva_if_exprt;
 class sva_ranged_predicate_exprt;
-class sva_sequence_consecutive_repetition_exprt;
+class sva_sequence_repetition_exprt;
 class sva_sequence_first_match_exprt;
 
 // Precedences (higher means binds more strongly).
@@ -137,11 +137,9 @@ protected:
 
   resultt convert_sva_binary(const std::string &name, const binary_exprt &);
 
-  resultt
-  convert_sva_binary_repetition(const std::string &name, const binary_exprt &);
-
-  resultt convert_sva_sequence_consecutive_repetition(
-    const sva_sequence_consecutive_repetition_exprt &);
+  resultt convert_sva_sequence_repetition(
+    const std::string &name,
+    const sva_sequence_repetition_exprt &);
 
   resultt convert_sva_abort(const std::string &name, const sva_abort_exprt &);
 
