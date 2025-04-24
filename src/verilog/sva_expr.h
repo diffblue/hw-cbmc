@@ -783,14 +783,15 @@ static inline sva_and_exprt &to_sva_and_expr(exprt &expr)
   return static_cast<sva_and_exprt &>(expr);
 }
 
-class sva_sequence_concatenation_exprt : public binary_predicate_exprt
+class sva_sequence_concatenation_exprt : public binary_exprt
 {
 public:
   explicit sva_sequence_concatenation_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(
+    : binary_exprt(
         std::move(op0),
         ID_sva_sequence_concatenation,
-        std::move(op1))
+        std::move(op1),
+        verilog_sva_sequence_typet{})
   {
   }
 };
@@ -925,7 +926,7 @@ public:
         std::move(from),
         std::move(to),
         std::move(op),
-        bool_typet())
+        verilog_sva_sequence_typet{})
   {
   }
 
@@ -935,7 +936,7 @@ public:
         std::move(cycles),
         nil_exprt{},
         std::move(op),
-        bool_typet())
+        verilog_sva_sequence_typet{})
   {
   }
 
@@ -1001,7 +1002,10 @@ class sva_cycle_delay_plus_exprt : public unary_exprt
 {
 public:
   explicit sva_cycle_delay_plus_exprt(exprt op)
-    : unary_exprt(ID_sva_cycle_delay_plus, std::move(op), bool_typet())
+    : unary_exprt(
+        ID_sva_cycle_delay_plus,
+        std::move(op),
+        verilog_sva_sequence_typet{})
   {
   }
 
@@ -1029,7 +1033,10 @@ class sva_cycle_delay_star_exprt : public unary_exprt
 {
 public:
   explicit sva_cycle_delay_star_exprt(exprt op)
-    : unary_exprt(ID_sva_cycle_delay_star, std::move(op), bool_typet())
+    : unary_exprt(
+        ID_sva_cycle_delay_star,
+        std::move(op),
+        verilog_sva_sequence_typet{})
   {
   }
 
@@ -1378,7 +1385,7 @@ public:
         std::move(__op),
         ID_sva_sequence_goto_repetition,
         std::move(__repetitions),
-        bool_typet{}}
+        verilog_sva_sequence_typet{}}
   {
   }
 
@@ -1434,7 +1441,7 @@ public:
         std::move(__op),
         ID_sva_sequence_non_consecutive_repetition,
         std::move(__repetitions),
-        bool_typet{}}
+        verilog_sva_sequence_typet{}}
   {
   }
 
