@@ -338,6 +338,27 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     else
       return {};
   }
+  else if(expr.id() == ID_sva_s_until)
+  {
+    auto &until = to_sva_s_until_expr(expr);
+    auto rec_lhs = SVA_to_LTL(until.lhs());
+    auto rec_rhs = SVA_to_LTL(until.rhs());
+    if(rec_lhs.has_value() && rec_rhs.has_value())
+      return U_exprt{rec_lhs.value(), rec_rhs.value()};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_sva_s_until_with)
+  {
+    // This is release with swapped operands
+    auto &until_with = to_sva_s_until_with_expr(expr);
+    auto rec_lhs = SVA_to_LTL(until_with.lhs());
+    auto rec_rhs = SVA_to_LTL(until_with.rhs());
+    if(rec_lhs.has_value() && rec_rhs.has_value())
+      return R_exprt{rec_rhs.value(), rec_lhs.value()}; // swapped
+    else
+      return {};
+  }
   else if(!has_temporal_operator(expr))
   {
     return expr;

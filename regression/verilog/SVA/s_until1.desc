@@ -1,0 +1,8 @@
+CORE
+s_until1.sv
+--bound 11
+^\[.*\] \$past\(main\.counter\) <= main\.counter s_until main\.counter == 10: PROVED up to bound 11$
+^\[.*\] 1 s_until main\.counter == 11: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
