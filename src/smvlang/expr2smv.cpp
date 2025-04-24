@@ -227,13 +227,28 @@ expr2smvt::resultt expr2smvt::convert_unary(
   const std::string &symbol,
   precedencet precedence)
 {
-  auto op_rec = convert_rec(src.op());
+  auto &op = src.op();
+
+  auto op_rec = convert_rec(op);
+
+  // We special-case negation (!), since the precedence
+  // of this operator changed between CMU SMV and NuSMV.
+
+  // clang-format off
+  bool parentheses =
+      op.operands().size() == 1 ? false
+    : src.id() == ID_not        ? true
+    : precedence >= op_rec.p;
+  // clang-format on
 
   std::string dest = symbol;
-  if(precedence > op_rec.p)
+
+  if(parentheses)
     dest += '(';
+
   dest += op_rec.s;
-  if(precedence > op_rec.p)
+
+  if(parentheses)
     dest += ')';
 
   return {precedence, std::move(dest)};
