@@ -87,8 +87,15 @@ protected:
 
   resultt convert_nondet_choice(const exprt &);
 
-  resultt
-  convert_binary(const exprt &src, const std::string &symbol, precedencet);
+  resultt convert_binary(
+    const binary_exprt &src,
+    const std::string &symbol,
+    precedencet);
+
+  resultt convert_binary_associative(
+    const exprt &src,
+    const std::string &symbol,
+    precedencet);
 
   resultt convert_rtctl(
     const ternary_exprt &src,
