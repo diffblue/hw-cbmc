@@ -386,9 +386,6 @@ jobs:
           Invoke-WebRequest -Uri https://github.com/Z3Prover/z3/releases/download/z3-4.8.10/z3-4.8.10-x64-win.zip -OutFile .\z3.zip
           Expand-Archive -LiteralPath '.\z3.Zip' -DestinationPath C:\tools
           echo "c:\tools\z3-4.8.10-x64-win\bin;" >> $env:GITHUB_PATH
-          New-Item -ItemType directory "C:\tools\parallel"
-          wget.exe -O c:\tools\parallel\parallel https://git.savannah.gnu.org/cgit/parallel.git/plain/src/parallel
-          echo "c:\tools\parallel" >> $env:GITHUB_PATH
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Initialise Developer Command Line
