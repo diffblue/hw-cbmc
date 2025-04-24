@@ -1,11 +1,12 @@
 CORE
-verilog1.v
+verilog1.sv
 --smv-word-level
 ^MODULE main$
 ^VAR x : unsigned word\[32\];$
 ^INIT main\.x = 0ud32_0$
 ^INVAR Verilog::main\.x_aux0 = main\.x \+ 0ud32_1$
 ^TRANS next\(main\.x\) = Verilog::main\.x_aux0$
+^LTLSPEC F main\.x = 0sd32_10$
 ^EXIT=0$
 ^SIGNAL=0$
 --

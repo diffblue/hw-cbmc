@@ -7,4 +7,6 @@ module main(input clk);
   always @(posedge clk)
     x = x + 1;
 
+  initial assert property (s_eventually x == 10);
+
 endmodule
