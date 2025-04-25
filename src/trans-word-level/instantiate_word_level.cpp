@@ -123,40 +123,15 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     expr.id() == ID_typecast && expr.type().id() == ID_bool &&
     to_typecast_expr(expr).op().type().id() == ID_verilog_sva_sequence)
   {
-    auto &sequence = to_typecast_expr(expr).op();
-
-    // sequence expressions -- these may have multiple potential
-    // match points, and evaluate to true if any of them matches
-    const auto matches = instantiate_sequence(sequence, t, no_timeframes);
-    exprt::operandst disjuncts;
-    disjuncts.reserve(matches.size());
-    mp_integer max = t;
-
-    for(auto &match : matches)
-    {
-      disjuncts.push_back(match.condition);
-      max = std::max(max, match.end_time);
-    }
-
-    return {max, disjunction(disjuncts)};
+    // should have been done by property_obligations_rec
+    PRECONDITION(false);
   }
-  else if(expr.id() == ID_sva_sequence_property)
+  else if(
+    expr.id() == ID_sva_sequence_property || expr.id() == ID_sva_weak ||
+    expr.id() == ID_sva_strong)
   {
-    // sequence expressions -- these may have multiple potential
-    // match points, and evaluate to true if any of them matches
-    auto &sequence = to_sva_sequence_property_expr(expr);
-    const auto matches = instantiate_sequence(sequence, t, no_timeframes);
-    exprt::operandst disjuncts;
-    disjuncts.reserve(matches.size());
-    mp_integer max = t;
-
-    for(auto &match : matches)
-    {
-      disjuncts.push_back(match.condition);
-      max = std::max(max, match.end_time);
-    }
-
-    return {max, disjunction(disjuncts)};
+    // should have been done by property_obligations_rec
+    PRECONDITION(false);
   }
   else if(expr.id() == ID_verilog_past)
   {

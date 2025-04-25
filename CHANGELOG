@@ -9,6 +9,7 @@
 * SystemVerilog: within
 * SystemVerilog: bugfix for |-> and |=>
 * SystemVerilog: bugfix for SVA sequence and
+* SystemVerilog: strong/weak sequence semantics
 * Verilog: 'dx, 'dz
 * SMV: LTL V operator, xnor operator
 * SMV: word types and operators

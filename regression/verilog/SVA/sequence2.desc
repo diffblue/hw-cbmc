@@ -1,11 +1,10 @@
-KNOWNBUG
+CORE
 sequence2.sv
---bound 10 --numbered-trace
-^\[main\.p0] ##\[0:\$\] main\.x == 10: PROVED up to bound 10$
-^\[main\.p1] ##\[0:\$\] main\.x == 10: REFUTED$
+--bound 10
+^\[main\.p0] weak\(##\[0:\$\] main\.x == 10\): PROVED up to bound 10$
+^\[main\.p1] strong\(##\[0:\$\] main\.x == 10\): REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-strong(...) is missing.

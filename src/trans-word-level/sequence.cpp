@@ -9,8 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sequence.h"
 
 #include <util/arith_tools.h>
-#include <util/ebmc_util.h>
 
+#include <ebmc/ebmc_error.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 sequence_matchest instantiate_sequence(
   exprt expr,
+  sva_sequence_semanticst semantics,
   const mp_integer &t,
   const mp_integer &no_timeframes)
 {
@@ -32,17 +33,21 @@ sequence_matchest instantiate_sequence(
     {
       const auto u = t + from;
 
-      // Do we exceed the bound? Make it 'true'
+      // Do we exceed the bound? Make it 'false'/'true', depending
+      // on semantics.
       if(u >= no_timeframes)
       {
         DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        return {{no_timeframes - 1, true_exprt()}};
+        if(semantics == sva_sequence_semanticst::WEAK)
+          return {{no_timeframes - 1, true_exprt{}}};
+        else         // STRONG
+          return {}; // no match
       }
       else
         return instantiate_sequence(
-          sva_cycle_delay_expr.op(), u, no_timeframes);
+          sva_cycle_delay_expr.op(), semantics, u, no_timeframes);
     }
-    else // a range
+    else // ##[from:to] something
     {
       auto lower = t + from;
       mp_integer upper;
@@ -52,29 +57,35 @@ sequence_matchest instantiate_sequence(
         DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
         upper = no_timeframes;
       }
-      else
+      else if(sva_cycle_delay_expr.to().is_constant())
       {
-        mp_integer to;
-        if(to_integer_non_constant(sva_cycle_delay_expr.to(), to))
-          throw "failed to convert sva_cycle_delay offsets";
+        auto to = numeric_cast_v<mp_integer>(
+          to_constant_expr(sva_cycle_delay_expr.to()));
         upper = t + to;
       }
+      else
+        throw ebmc_errort{} << "failed to convert sva_cycle_delay offsets";
 
       sequence_matchest matches;
 
-      // Do we exceed the bound? Add an unconditional match.
+      // Do we exceed the bound? Add an unconditional match when using
+      // weak semantics.
       if(upper >= no_timeframes)
       {
-        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        matches.emplace_back(no_timeframes - 1, true_exprt());
         upper = no_timeframes - 1;
+
+        if(semantics == sva_sequence_semanticst::WEAK)
+        {
+          DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+          matches.emplace_back(no_timeframes - 1, true_exprt());
+        }
       }
 
       // Add a potential match for each timeframe in the range
       for(mp_integer u = lower; u <= upper; ++u)
       {
-        auto sub_result =
-          instantiate_sequence(sva_cycle_delay_expr.op(), u, no_timeframes);
+        auto sub_result = instantiate_sequence(
+          sva_cycle_delay_expr.op(), semantics, u, no_timeframes);
         for(auto &match : sub_result)
           matches.push_back(match);
       }
@@ -85,12 +96,14 @@ sequence_matchest instantiate_sequence(
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
     auto &cycle_delay_star = to_sva_cycle_delay_star_expr(expr);
-    return instantiate_sequence(cycle_delay_star.lower(), t, no_timeframes);
+    return instantiate_sequence(
+      cycle_delay_star.lower(), semantics, t, no_timeframes);
   }
   else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
   {
     auto &cycle_delay_plus = to_sva_cycle_delay_plus_expr(expr);
-    return instantiate_sequence(cycle_delay_plus.lower(), t, no_timeframes);
+    return instantiate_sequence(
+      cycle_delay_plus.lower(), semantics, t, no_timeframes);
   }
   else if(expr.id() == ID_sva_sequence_concatenation)
   {
@@ -99,21 +112,25 @@ sequence_matchest instantiate_sequence(
 
     // This is the product of the match points on the LHS and RHS
     const auto lhs_matches =
-      instantiate_sequence(implication.lhs(), t, no_timeframes);
+      instantiate_sequence(implication.lhs(), semantics, t, no_timeframes);
 
     for(auto &lhs_match : lhs_matches)
     {
       auto t_rhs = lhs_match.end_time;
 
-      // Do we exceed the bound? Make it 'true'
+      // Do we exceed the bound? Make it 'false'/'true', depending
+      // on semantics.
       if(t_rhs >= no_timeframes)
       {
         DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        return {{no_timeframes - 1, true_exprt()}};
+        if(semantics == sva_sequence_semanticst::WEAK)
+          return {{no_timeframes - 1, true_exprt{}}};
+        else         // STRONG
+          return {}; // no match
       }
 
-      const auto rhs_matches =
-        instantiate_sequence(implication.rhs(), t_rhs, no_timeframes);
+      const auto rhs_matches = instantiate_sequence(
+        implication.rhs(), semantics, t_rhs, no_timeframes);
 
       for(auto &rhs_match : rhs_matches)
       {
@@ -134,9 +151,9 @@ sequence_matchest instantiate_sequence(
     auto &intersect = to_sva_sequence_intersect_expr(expr);
 
     const auto lhs_matches =
-      instantiate_sequence(intersect.lhs(), t, no_timeframes);
+      instantiate_sequence(intersect.lhs(), semantics, t, no_timeframes);
     const auto rhs_matches =
-      instantiate_sequence(intersect.rhs(), t, no_timeframes);
+      instantiate_sequence(intersect.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -161,7 +178,7 @@ sequence_matchest instantiate_sequence(
     auto &first_match = to_sva_sequence_first_match_expr(expr);
 
     const auto lhs_matches =
-      instantiate_sequence(first_match.lhs(), t, no_timeframes);
+      instantiate_sequence(first_match.lhs(), semantics, t, no_timeframes);
 
     // the match of seq with the earliest ending clock tick is a
     // match of first_match (seq)
@@ -198,7 +215,7 @@ sequence_matchest instantiate_sequence(
     auto &throughout = to_sva_sequence_throughout_expr(expr);
 
     const auto rhs_matches =
-      instantiate_sequence(throughout.rhs(), t, no_timeframes);
+      instantiate_sequence(throughout.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -225,7 +242,7 @@ sequence_matchest instantiate_sequence(
 
     auto &within_expr = to_sva_sequence_within_expr(expr);
     const auto matches_rhs =
-      instantiate_sequence(within_expr.rhs(), t, no_timeframes);
+      instantiate_sequence(within_expr.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -233,8 +250,8 @@ sequence_matchest instantiate_sequence(
     {
       for(auto start_lhs = t; start_lhs <= match_rhs.end_time; ++start_lhs)
       {
-        auto matches_lhs =
-          instantiate_sequence(within_expr.lhs(), start_lhs, no_timeframes);
+        auto matches_lhs = instantiate_sequence(
+          within_expr.lhs(), semantics, start_lhs, no_timeframes);
 
         for(auto &match_lhs : matches_lhs)
         {
@@ -260,8 +277,10 @@ sequence_matchest instantiate_sequence(
     // 3. The end time of the composite sequence is
     //    the end time of the operand sequence that completes last.
     auto &and_expr = to_sva_and_expr(expr);
-    auto matches_lhs = instantiate_sequence(and_expr.lhs(), t, no_timeframes);
-    auto matches_rhs = instantiate_sequence(and_expr.rhs(), t, no_timeframes);
+    auto matches_lhs =
+      instantiate_sequence(and_expr.lhs(), semantics, t, no_timeframes);
+    auto matches_rhs =
+      instantiate_sequence(and_expr.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -283,7 +302,7 @@ sequence_matchest instantiate_sequence(
     sequence_matchest result;
 
     for(auto &op : expr.operands())
-      for(auto &match : instantiate_sequence(op, t, no_timeframes))
+      for(auto &match : instantiate_sequence(op, semantics, t, no_timeframes))
         result.push_back(match);
 
     return result;
@@ -292,7 +311,8 @@ sequence_matchest instantiate_sequence(
   {
     // x[*n] is syntactic sugar for x ##1 ... ##1 x, with n repetitions
     auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
-    return instantiate_sequence(repetition.lower(), t, no_timeframes);
+    return instantiate_sequence(
+      repetition.lower(), semantics, t, no_timeframes);
   }
   else if(
     expr.id() == ID_sva_sequence_repetition_plus ||
@@ -370,7 +390,8 @@ sequence_matchest instantiate_sequence(
 
     // We add up the number of matches of 'op' starting from
     // timeframe u, until the end of our unwinding.
-    const auto bits = address_bits(no_timeframes);
+    const auto bits =
+      address_bits(std::max(no_timeframes, repetitions_int + 1));
     const auto zero = from_integer(0, unsignedbv_typet{bits});
     const auto one = from_integer(1, zero.type());
     const auto repetitions = from_integer(repetitions_int, zero.type());

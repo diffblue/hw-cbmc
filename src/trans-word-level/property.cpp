@@ -140,6 +140,32 @@ bool bmc_supports_property(const exprt &expr)
 
 /*******************************************************************\
 
+Function: sva_sequence_semantics
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static sva_sequence_semanticst sva_sequence_semantics(irep_idt id)
+{
+  if(id == ID_sva_strong)
+    return sva_sequence_semanticst::STRONG;
+  else if(id == ID_sva_weak)
+    return sva_sequence_semanticst::WEAK;
+  else if(id == ID_sva_implicit_strong)
+    return sva_sequence_semanticst::STRONG;
+  else if(id == ID_sva_implicit_weak)
+    return sva_sequence_semanticst::WEAK;
+  else
+    PRECONDITION(false);
+}
+
+/*******************************************************************\
+
 Function: property_obligations_rec
 
   Inputs:
@@ -527,16 +553,17 @@ static obligationst property_obligations_rec(
       op.id() == ID_sva_strong || op.id() == ID_sva_weak ||
       op.id() == ID_sva_implicit_strong || op.id() == ID_sva_implicit_weak)
     {
-      // The sequence must not match.
       auto &sequence = to_sva_sequence_property_expr_base(op).sequence();
+      auto semantics = sva_sequence_semantics(op.id());
 
       const auto matches =
-        instantiate_sequence(sequence, current, no_timeframes);
+        instantiate_sequence(sequence, semantics, current, no_timeframes);
 
       obligationst obligations;
 
       for(auto &match : matches)
       {
+        // The sequence must not match.
         obligations.add(match.end_time, not_exprt{match.condition});
       }
 
@@ -577,10 +604,13 @@ static obligationst property_obligations_rec(
     auto &implication = to_binary_expr(property_expr);
 
     // The LHS is a sequence, the RHS is a property.
-    // The implication must hold for _all_ matches on the LHS,
+    // The implication must hold for _all_ (strong) matches on the LHS,
     // i.e., each pair of LHS match and RHS obligation yields an obligation.
-    const auto lhs_match_points =
-      instantiate_sequence(implication.lhs(), current, no_timeframes);
+    const auto lhs_match_points = instantiate_sequence(
+      implication.lhs(),
+      sva_sequence_semanticst::STRONG,
+      current,
+      no_timeframes);
 
     obligationst result;
 
@@ -620,9 +650,12 @@ static obligationst property_obligations_rec(
     // the result is a property expression.
     auto &followed_by = to_sva_followed_by_expr(property_expr);
 
-    // get match points for LHS sequence
-    auto matches =
-      instantiate_sequence(followed_by.antecedent(), current, no_timeframes);
+    // get (proper) match points for LHS sequence
+    auto matches = instantiate_sequence(
+      followed_by.antecedent(),
+      sva_sequence_semanticst::STRONG,
+      current,
+      no_timeframes);
 
     exprt::operandst disjuncts;
     mp_integer t = current;
@@ -660,12 +693,14 @@ static obligationst property_obligations_rec(
     property_expr.id() == ID_sva_implicit_strong ||
     property_expr.id() == ID_sva_implicit_weak)
   {
-    auto &sequence =
-      to_sva_sequence_property_expr_base(property_expr).sequence();
-
     // sequence expressions -- these may have multiple potential
     // match points, and evaluate to true if any of them matches
-    const auto matches = instantiate_sequence(sequence, current, no_timeframes);
+    auto &sequence =
+      to_sva_sequence_property_expr_base(property_expr).sequence();
+    auto semantics = sva_sequence_semantics(property_expr.id());
+
+    const auto matches =
+      instantiate_sequence(sequence, semantics, current, no_timeframes);
     exprt::operandst disjuncts;
     disjuncts.reserve(matches.size());
     mp_integer max = current;

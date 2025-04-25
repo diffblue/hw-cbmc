@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr.h>
 #include <util/mp_arith.h>
 
+#include <verilog/sva_expr.h>
+
 /// A match for an SVA sequence.
 class sequence_matcht
 {
@@ -32,6 +34,7 @@ using sequence_matchest = std::vector<sequence_matcht>;
 /// for the given sequence expression starting at time t
 [[nodiscard]] sequence_matchest instantiate_sequence(
   exprt expr,
+  sva_sequence_semanticst,
   const mp_integer &t,
   const mp_integer &no_timeframes);
 
