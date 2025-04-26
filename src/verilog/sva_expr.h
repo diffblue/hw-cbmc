@@ -1325,10 +1325,22 @@ inline sva_case_exprt &to_sva_case_expr(exprt &expr)
 }
 
 /// Base class for [->...], [*...], [=...]
-/// The ... constraint may be x, x:y, x:$
+/// The ... constraint may be blank, x, x:y, x:$
 class sva_sequence_repetition_exprt : public ternary_exprt
 {
 public:
+  /// number of repetitions not given, e.g., [*] or [+]
+  sva_sequence_repetition_exprt(exprt __op, irep_idt __id)
+    : ternary_exprt{
+        __id,
+        std::move(__op),
+        nil_exprt{},
+        nil_exprt{},
+        verilog_sva_sequence_typet{}}
+  {
+  }
+
+  /// fixed number of repetitions
   sva_sequence_repetition_exprt(
     exprt __op,
     irep_idt __id,
@@ -1342,11 +1354,27 @@ public:
   {
   }
 
+  /// bounded range for the number of repetitions
   sva_sequence_repetition_exprt(
     exprt __op,
     irep_idt __id,
     constant_exprt __from,
     constant_exprt __to)
+    : ternary_exprt{
+        __id,
+        std::move(__op),
+        std::move(__from),
+        std::move(__to),
+        verilog_sva_sequence_typet{}}
+  {
+  }
+
+  /// unbounded range for the number of repetitions
+  sva_sequence_repetition_exprt(
+    exprt __op,
+    irep_idt __id,
+    constant_exprt __from,
+    infinity_exprt __to)
     : ternary_exprt{
         __id,
         std::move(__op),
@@ -1367,16 +1395,22 @@ public:
     return op0();
   }
 
+  /// true if number of repetitions is given
+  bool repetitions_given() const
+  {
+    return op1().is_not_nil();
+  }
+
   // The number of repetitions must be a constant after elaboration.
   const constant_exprt &repetitions() const
   {
-    PRECONDITION(!is_range());
+    PRECONDITION(repetitions_given() && !is_range());
     return static_cast<const constant_exprt &>(op1());
   }
 
   constant_exprt &repetitions()
   {
-    PRECONDITION(!is_range());
+    PRECONDITION(repetitions_given() && !is_range());
     return static_cast<constant_exprt &>(op1());
   }
 
@@ -1434,49 +1468,105 @@ to_sva_sequence_repetition_expr(exprt &expr)
   return static_cast<sva_sequence_repetition_exprt &>(expr);
 }
 
-class sva_sequence_consecutive_repetition_exprt
-  : public sva_sequence_repetition_exprt
+/// op[+]
+class sva_sequence_repetition_plus_exprt : public sva_sequence_repetition_exprt
 {
 public:
-  sva_sequence_consecutive_repetition_exprt(
-    exprt __op,
-    constant_exprt __repetitions)
+  /// The operand is a sequence
+  explicit sva_sequence_repetition_plus_exprt(exprt op)
+    : sva_sequence_repetition_exprt{
+        std::move(op),
+        ID_sva_sequence_repetition_plus}
+  {
+  }
+
+  // op[*1:$]
+  exprt lower() const;
+};
+
+static inline const sva_sequence_repetition_plus_exprt &
+to_sva_sequence_repetition_plus_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_repetition_plus);
+  sva_sequence_repetition_plus_exprt::check(expr);
+  return static_cast<const sva_sequence_repetition_plus_exprt &>(expr);
+}
+
+static inline sva_sequence_repetition_plus_exprt &
+to_sva_sequence_repetition_plus_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_repetition_plus);
+  sva_sequence_repetition_plus_exprt::check(expr);
+  return static_cast<sva_sequence_repetition_plus_exprt &>(expr);
+}
+
+/// [*] or [*n] or [*x:y] or [*x:$]
+class sva_sequence_repetition_star_exprt : public sva_sequence_repetition_exprt
+{
+public:
+  /// op[*]
+  explicit sva_sequence_repetition_star_exprt(exprt __op)
     : sva_sequence_repetition_exprt{
         std::move(__op),
-        ID_sva_sequence_consecutive_repetition,
+        ID_sva_sequence_repetition_star}
+  {
+  }
+
+  /// op[*n]
+  sva_sequence_repetition_star_exprt(exprt __op, constant_exprt __repetitions)
+    : sva_sequence_repetition_exprt{
+        std::move(__op),
+        ID_sva_sequence_repetition_star,
         std::move(__repetitions)}
   {
   }
 
-  sva_sequence_consecutive_repetition_exprt(
+  /// op[*x:y]
+  sva_sequence_repetition_star_exprt(
     exprt __op,
     constant_exprt __from,
     constant_exprt __to)
     : sva_sequence_repetition_exprt{
         std::move(__op),
-        ID_sva_sequence_consecutive_repetition,
+        ID_sva_sequence_repetition_star,
         std::move(__from),
         std::move(__to)}
   {
   }
 
+  /// op[*x:$]
+  sva_sequence_repetition_star_exprt(
+    exprt __op,
+    constant_exprt __from,
+    infinity_exprt __to)
+    : sva_sequence_repetition_exprt{
+        std::move(__op),
+        ID_sva_sequence_repetition_star,
+        std::move(__from),
+        std::move(__to)}
+  {
+  }
+
+  /// [*] --> [0:$]
+  /// [*n] --> op ##1 op ##1 op ...
+  /// [*x:y] --> op[*x] or op[*x+1] or ... or op[*y]
   exprt lower() const;
 };
 
-inline const sva_sequence_consecutive_repetition_exprt &
-to_sva_sequence_consecutive_repetition_expr(const exprt &expr)
+inline const sva_sequence_repetition_star_exprt &
+to_sva_sequence_repetition_star_expr(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_sequence_consecutive_repetition);
-  sva_sequence_consecutive_repetition_exprt::check(expr);
-  return static_cast<const sva_sequence_consecutive_repetition_exprt &>(expr);
+  PRECONDITION(expr.id() == ID_sva_sequence_repetition_star);
+  sva_sequence_repetition_star_exprt::check(expr);
+  return static_cast<const sva_sequence_repetition_star_exprt &>(expr);
 }
 
-inline sva_sequence_consecutive_repetition_exprt &
-to_sva_sequence_consecutive_repetition_expr(exprt &expr)
+inline sva_sequence_repetition_star_exprt &
+to_sva_sequence_repetition_star_expr(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_sva_sequence_consecutive_repetition);
-  sva_sequence_consecutive_repetition_exprt::check(expr);
-  return static_cast<sva_sequence_consecutive_repetition_exprt &>(expr);
+  PRECONDITION(expr.id() == ID_sva_sequence_repetition_star);
+  sva_sequence_repetition_star_exprt::check(expr);
+  return static_cast<sva_sequence_repetition_star_exprt &>(expr);
 }
 
 class sva_sequence_goto_repetition_exprt : public sva_sequence_repetition_exprt

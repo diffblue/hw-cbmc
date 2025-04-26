@@ -57,12 +57,25 @@ exprt sva_case_exprt::lowering() const
     disjunction(disjuncts), case_items.front().result(), reduced_rec};
 }
 
-exprt sva_sequence_consecutive_repetition_exprt::lower() const
+exprt sva_sequence_repetition_plus_exprt::lower() const
+{
+  // [+] is the same as [*1:$]
+  return sva_sequence_repetition_star_exprt{
+    op(), from_integer(1, integer_typet{}), infinity_exprt{integer_typet{}}};
+}
+
+exprt sva_sequence_repetition_star_exprt::lower() const
 {
   PRECONDITION(
     op().type().id() == ID_bool || op().type().id() == ID_verilog_sva_sequence);
 
-  if(!is_range())
+  if(!repetitions_given())
+  {
+    // op[*] is the same as op[*0:$]
+    return sva_sequence_repetition_star_exprt{
+      op(), from_integer(0, integer_typet{}), infinity_exprt{integer_typet{}}};
+  }
+  else if(!is_range())
   {
     // expand x[*n] into x ##1 x ##1 ...
     auto n = numeric_cast_v<mp_integer>(repetitions());
@@ -94,14 +107,13 @@ exprt sva_sequence_consecutive_repetition_exprt::lower() const
     DATA_INVARIANT(
       to_int >= from_int, "number of repetitions must be interval");
 
-    exprt result = sva_sequence_consecutive_repetition_exprt{op(), from()};
+    exprt result = sva_sequence_repetition_star_exprt{op(), from()};
 
     for(mp_integer n = from_int + 1; n <= to_int; ++n)
     {
       auto n_expr = from_integer(n, integer_typet{});
       result = sva_or_exprt{
-        std::move(result),
-        sva_sequence_consecutive_repetition_exprt{op(), n_expr}};
+        std::move(result), sva_sequence_repetition_star_exprt{op(), n_expr}};
     }
 
     return result;

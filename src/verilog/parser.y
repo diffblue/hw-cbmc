@@ -2690,7 +2690,7 @@ sequence_abbrev:
 
 consecutive_repetition:
 	  "[*" const_or_range_expression ']'
-		{ init($$, ID_sva_sequence_consecutive_repetition);
+		{ init($$, ID_sva_sequence_repetition_star);
 		  if(stack_expr($2).id() == ID_sva_cycle_delay)
 		    swapop($$, $2);
 		  else
@@ -2700,9 +2700,13 @@ consecutive_repetition:
 		  }
 		}
 	| "[*" ']'
-		{ init($$, ID_sva_sequence_repetition_star); }
+		{ init($$, ID_sva_sequence_repetition_star);
+		  stack_expr($$).add_to_operands(nil_exprt{}, nil_exprt{});
+		}
 	| "[+" ']'
-		{ init($$, ID_sva_sequence_repetition_plus); }
+		{ init($$, ID_sva_sequence_repetition_plus);
+		  stack_expr($$).add_to_operands(nil_exprt{}, nil_exprt{});
+		}
 	;
 
 non_consecutive_repetition:
