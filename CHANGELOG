@@ -14,6 +14,7 @@
 * SMV: LTL V operator, xnor operator
 * SMV: word types and operators
 * --smv-word-level outputs the model as word-level SMV
+* word-level BMC: LTL/SVA to Buechi with --buechi
 
 # EBMC 5.5
 
