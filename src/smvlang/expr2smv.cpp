@@ -88,6 +88,58 @@ Function: expr2smvt::convert_binary
 \*******************************************************************/
 
 expr2smvt::resultt expr2smvt::convert_binary(
+  const binary_exprt &src,
+  const std::string &symbol,
+  precedencet precedence)
+{
+  std::string dest;
+
+  {
+    // lhs
+    auto lhs_rec = convert_rec(src.lhs());
+
+    if(precedence >= lhs_rec.p)
+      dest += '(';
+
+    dest += lhs_rec.s;
+
+    if(precedence >= lhs_rec.p)
+      dest += ')';
+  }
+
+  dest += ' ';
+  dest += symbol;
+  dest += ' ';
+
+  {
+    // rhs
+    auto rhs_rec = convert_rec(src.rhs());
+
+    if(precedence >= rhs_rec.p)
+      dest += '(';
+
+    dest += rhs_rec.s;
+
+    if(precedence >= rhs_rec.p)
+      dest += ')';
+  }
+
+  return {precedence, std::move(dest)};
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_binary_associative
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_binary_associative(
   const exprt &src,
   const std::string &symbol,
   precedencet precedence)
@@ -112,10 +164,18 @@ expr2smvt::resultt expr2smvt::convert_binary(
 
     auto op_rec = convert_rec(*it);
 
-    if(precedence > op_rec.p)
+    // clang-format off
+    bool use_parentheses =
+        src.id() == it->id() ? false
+      : precedence >= op_rec.p;
+    // clang-format on
+
+    if(use_parentheses)
       dest += '(';
+
     dest += op_rec.s;
-    if(precedence > op_rec.p)
+
+    if(use_parentheses)
       dest += ')';
   }
 
@@ -449,15 +509,10 @@ Function: expr2smvt::convert_rec
 expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
 {
   if(src.id()==ID_plus)
-    return convert_binary(src, "+", precedencet::PLUS);
+    return convert_binary_associative(src, "+", precedencet::PLUS);
 
   else if(src.id()==ID_minus)
-  {
-    if(src.operands().size()<2)
-      return convert_norep(src);
-    else
-      return convert_binary(src, "-", precedencet::PLUS);
-  }
+    return convert_binary_associative(src, "-", precedencet::PLUS);
 
   else if(src.id()==ID_unary_minus)
   {
@@ -470,57 +525,65 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id()==ID_index)
     return convert_index(to_index_expr(src), precedencet::INDEX);
 
-  else if(src.id()==ID_mult || src.id()==ID_div)
-    return convert_binary(src, src.id_string(), precedencet::MULT);
+  else if(src.id() == ID_mult)
+    return convert_binary_associative(src, src.id_string(), precedencet::MULT);
+
+  else if(src.id() == ID_div)
+    return convert_binary(to_div_expr(src), src.id_string(), precedencet::MULT);
 
   else if(src.id() == ID_mod)
-    return convert_binary(src, src.id_string(), precedencet::MULT);
+    return convert_binary(to_mod_expr(src), src.id_string(), precedencet::MULT);
 
   else if(src.id() == ID_smv_setin)
-    return convert_binary(src, "in", precedencet::IN);
+    return convert_binary(to_binary_expr(src), "in", precedencet::IN);
 
   else if(src.id() == ID_smv_setnotin)
-    return convert_binary(src, "notin", precedencet::IN);
+    return convert_binary(to_binary_expr(src), "notin", precedencet::IN);
 
   else if(src.id() == ID_smv_union)
-    return convert_binary(src, "union", precedencet::UNION);
+    return convert_binary(to_binary_expr(src), "union", precedencet::UNION);
 
   else if(src.id()==ID_lt || src.id()==ID_gt ||
           src.id()==ID_le || src.id()==ID_ge)
-    return convert_binary(src, src.id_string(), precedencet::REL);
+    return convert_binary(
+      to_binary_expr(src), src.id_string(), precedencet::REL);
 
   else if(src.id()==ID_equal)
   {
-    if(src.get_bool(ID_C_smv_iff))
-      return convert_binary(src, "<->", precedencet::IFF);
+    auto &equal_expr = to_equal_expr(src);
+
+    if(equal_expr.get_bool(ID_C_smv_iff))
+      return convert_binary(equal_expr, "<->", precedencet::IFF);
     else
-      return convert_binary(src, "=", precedencet::REL);
+      return convert_binary(equal_expr, "=", precedencet::REL);
   }
 
   else if(src.id()==ID_notequal)
-    return convert_binary(src, "!=", precedencet::REL);
+    return convert_binary(to_notequal_expr(src), "!=", precedencet::REL);
 
   else if(src.id()==ID_not)
     return convert_unary(to_not_expr(src), "!", precedencet::NOT);
 
   else if(src.id() == ID_and || src.id() == ID_bitand)
-    return convert_binary(src, "&", precedencet::AND);
+    return convert_binary_associative(src, "&", precedencet::AND);
 
   else if(src.id() == ID_or || src.id() == ID_bitor)
-    return convert_binary(src, "|", precedencet::OR);
+    return convert_binary_associative(src, "|", precedencet::OR);
 
   else if(src.id() == ID_implies || src.id() == ID_smv_bitimplies)
-    return convert_binary(src, "->", precedencet::IMPLIES);
+    return convert_binary(to_binary_expr(src), "->", precedencet::IMPLIES);
 
   else if(src.id() == ID_xor || src.id() == ID_bitxor)
-    return convert_binary(src, "xor", precedencet::OR);
+    return convert_binary_associative(src, "xor", precedencet::OR);
 
   else if(src.id() == ID_xnor || src.id() == ID_bitxnor)
   {
+    auto &binary_expr = to_binary_expr(src);
+
     if(src.get_bool(ID_C_smv_iff))
-      return convert_binary(src, "<->", precedencet::IFF);
+      return convert_binary(binary_expr, "<->", precedencet::IFF);
     else
-      return convert_binary(src, "xnor", precedencet::OR);
+      return convert_binary(binary_expr, "xnor", precedencet::OR);
   }
 
   else if(
@@ -623,7 +686,8 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_concatenation)
   {
-    return convert_binary(to_binary_expr(src), "::", precedencet::CONCAT);
+    return convert_binary_associative(
+      to_binary_expr(src), "::", precedencet::CONCAT);
   }
 
   else if(src.id() == ID_shl)
