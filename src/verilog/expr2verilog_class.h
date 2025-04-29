@@ -16,8 +16,8 @@ class sva_abort_exprt;
 class sva_case_exprt;
 class sva_if_exprt;
 class sva_ranged_predicate_exprt;
-class sva_sequence_repetition_exprt;
 class sva_sequence_first_match_exprt;
+class sva_sequence_repetition_exprt;
 
 // Precedences (higher means binds more strongly).
 // Follows Table 11-2 in IEEE 1800-2017.

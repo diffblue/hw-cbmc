@@ -608,7 +608,7 @@ expr2verilogt::resultt expr2verilogt::convert_sva_binary(
 
 /*******************************************************************\
 
-Function: expr2verilogt::convert_sva_sequence_consecutive_repetition
+Function: expr2verilogt::convert_sva_sequence_repetition
 
   Inputs:
 
@@ -622,20 +622,22 @@ expr2verilogt::resultt expr2verilogt::convert_sva_sequence_repetition(
   const std::string &name,
   const sva_sequence_repetition_exprt &expr)
 {
-  auto op = convert_rec(expr.op());
-  if(op.p == verilog_precedencet::MIN)
-    op.s = "(" + op.s + ")";
+  auto op_rec = convert_rec(expr.op());
 
-  std::string dest = op.s + " [" + name;
+  if(op_rec.p == verilog_precedencet::MIN)
+    op_rec.s = "(" + op_rec.s + ")";
+
+  std::string dest = op_rec.s + " [" + name;
 
   if(expr.is_range())
   {
     dest += convert_rec(expr.from()).s;
+    dest += ':';
 
     if(expr.is_unbounded())
-      dest += ":$";
+      dest += '$';
     else
-      dest += ":" + convert_rec(expr.to()).s;
+      dest += convert_rec(expr.to()).s;
   }
   else
     dest += convert_rec(expr.repetitions()).s;

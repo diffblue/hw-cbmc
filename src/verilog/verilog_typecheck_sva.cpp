@@ -352,6 +352,9 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
 
     expr.op1() = from_integer(n, integer_typet{});
 
+    if(expr.op2().is_not_nil())
+      convert_expr(expr.op2());
+
     expr.type() = verilog_sva_sequence_typet{};
 
     return std::move(expr);

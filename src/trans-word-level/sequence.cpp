@@ -18,6 +18,63 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "obligations.h"
 #include "property.h"
 
+// condition on counters for ocurrences of non-consecutive repetitions
+exprt sequence_count_condition(
+  const sva_sequence_repetition_exprt &expr,
+  const exprt &counter)
+{
+  if(expr.is_range())
+  {
+    // number of repetitions inside a range
+    auto from = numeric_cast_v<mp_integer>(expr.from());
+
+    if(expr.is_unbounded())
+    {
+      return binary_relation_exprt{
+        counter, ID_ge, from_integer(from, counter.type())};
+    }
+    else
+    {
+      auto to = numeric_cast_v<mp_integer>(expr.to());
+
+      return and_exprt{
+        binary_relation_exprt{
+          counter, ID_ge, from_integer(from, counter.type())},
+        binary_relation_exprt{
+          counter, ID_le, from_integer(to, counter.type())}};
+    }
+  }
+  else
+  {
+    // fixed number of repetitions
+    auto repetitions = numeric_cast_v<mp_integer>(expr.repetitions());
+    return equal_exprt{counter, from_integer(repetitions, counter.type())};
+  }
+}
+
+/// determine type for the repetition counter
+typet sequence_count_type(
+  const sva_sequence_repetition_exprt &expr,
+  const mp_integer &no_timeframes)
+{
+  mp_integer max;
+
+  if(expr.is_range())
+  {
+    if(expr.is_unbounded())
+      max = numeric_cast_v<mp_integer>(expr.from());
+    else
+      max = numeric_cast_v<mp_integer>(expr.to());
+  }
+  else
+    max = numeric_cast_v<mp_integer>(expr.repetitions());
+
+  max = std::max(no_timeframes, max);
+
+  auto bits = address_bits(max + 1);
+  return unsignedbv_typet{bits};
+}
+
 sequence_matchest instantiate_sequence(
   exprt expr,
   sva_sequence_semanticst semantics,
@@ -307,7 +364,7 @@ sequence_matchest instantiate_sequence(
 
     return result;
   }
-  else if(expr.id() == ID_sva_sequence_consecutive_repetition)
+  else if(expr.id() == ID_sva_sequence_consecutive_repetition) // [*...]
   {
     // x[*n] is syntactic sugar for x ##1 ... ##1 x, with n repetitions
     auto &repetition = to_sva_sequence_consecutive_repetition_expr(expr);
@@ -344,69 +401,59 @@ sequence_matchest instantiate_sequence(
 
     return result;
   }
-  else if(expr.id() == ID_sva_sequence_goto_repetition)
+  else if(expr.id() == ID_sva_sequence_goto_repetition) // [->...]
   {
-    // The 'op' is a Boolean condition, not a sequence.
-    auto &op = to_sva_sequence_goto_repetition_expr(expr).op();
-    auto repetitions_int = numeric_cast_v<mp_integer>(
-      to_sva_sequence_goto_repetition_expr(expr).repetitions());
-    PRECONDITION(repetitions_int >= 1);
+    auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
+    auto &condition = repetition.op();
 
     sequence_matchest result;
 
     // We add up the number of matches of 'op' starting from
     // timeframe u, until the end of our unwinding.
-    const auto bits = address_bits(no_timeframes);
-    const auto zero = from_integer(0, unsignedbv_typet{bits});
-    const auto one = from_integer(1, unsignedbv_typet{bits});
-    const auto repetitions = from_integer(repetitions_int, zero.type());
+    const auto type = sequence_count_type(repetition, no_timeframes);
+    const auto zero = from_integer(0, type);
+    const auto one = from_integer(1, type);
     exprt matches = zero;
 
     for(mp_integer u = t; u < no_timeframes; ++u)
     {
       // match of op in timeframe u?
-      auto rec_op = instantiate(op, u, no_timeframes);
+      auto rec_op = instantiate(condition, u, no_timeframes);
 
       // add up
       matches = plus_exprt{matches, if_exprt{rec_op, one, zero}};
 
       // We have a match for op[->n] if there is a match in timeframe
       // u and matches is n.
-      result.emplace_back(
-        u, and_exprt{rec_op, equal_exprt{matches, repetitions}});
+      result.emplace_back(u, sequence_count_condition(repetition, matches));
     }
 
     return result;
   }
-  else if(expr.id() == ID_sva_sequence_non_consecutive_repetition)
+  else if(expr.id() == ID_sva_sequence_non_consecutive_repetition) // [=...]
   {
-    // The 'op' is a Boolean condition, not a sequence.
-    auto &op = to_sva_sequence_non_consecutive_repetition_expr(expr).op();
-    auto repetitions_int = numeric_cast_v<mp_integer>(
-      to_sva_sequence_non_consecutive_repetition_expr(expr).repetitions());
-    PRECONDITION(repetitions_int >= 1);
+    auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
+    auto &condition = repetition.op();
 
     sequence_matchest result;
 
     // We add up the number of matches of 'op' starting from
     // timeframe u, until the end of our unwinding.
-    const auto bits =
-      address_bits(std::max(no_timeframes, repetitions_int + 1));
-    const auto zero = from_integer(0, unsignedbv_typet{bits});
-    const auto one = from_integer(1, zero.type());
-    const auto repetitions = from_integer(repetitions_int, zero.type());
+    const auto type = sequence_count_type(repetition, no_timeframes);
+    const auto zero = from_integer(0, type);
+    const auto one = from_integer(1, type);
     exprt matches = zero;
 
     for(mp_integer u = t; u < no_timeframes; ++u)
     {
       // match of op in timeframe u?
-      auto rec_op = instantiate(op, u, no_timeframes);
+      auto rec_op = instantiate(condition, u, no_timeframes);
 
       // add up
       matches = plus_exprt{matches, if_exprt{rec_op, one, zero}};
 
       // We have a match for op[=n] if matches is n.
-      result.emplace_back(u, equal_exprt{matches, repetitions});
+      result.emplace_back(u, sequence_count_condition(repetition, matches));
     }
 
     return result;
