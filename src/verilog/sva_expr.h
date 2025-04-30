@@ -1401,6 +1401,12 @@ public:
     return op1().is_not_nil();
   }
 
+  /// op[*0] is a special case, denoting the empty match
+  bool is_empty_match() const
+  {
+    return !is_range() && repetitions_given() && op1().is_zero();
+  }
+
   // The number of repetitions must be a constant after elaboration.
   const constant_exprt &repetitions() const
   {
