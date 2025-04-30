@@ -111,7 +111,6 @@ bool is_SVA_sequence_operator(const exprt &expr)
          id == ID_sva_sequence_intersect || id == ID_sva_sequence_first_match ||
          id == ID_sva_sequence_throughout || id == ID_sva_sequence_within ||
          id == ID_sva_sequence_goto_repetition ||
-         id == ID_sva_sequence_consecutive_repetition ||
          id == ID_sva_sequence_non_consecutive_repetition ||
          id == ID_sva_sequence_repetition_star ||
          id == ID_sva_sequence_repetition_plus;

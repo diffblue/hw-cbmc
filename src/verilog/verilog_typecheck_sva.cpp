@@ -86,14 +86,10 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
     return std::move(expr);
   }
   else if(
-    expr.id() == ID_sva_cycle_delay_plus ||         // ##[+]
-    expr.id() == ID_sva_cycle_delay_star ||         // ##[*]
-    expr.id() == ID_sva_sequence_repetition_plus || // x[+]
-    expr.id() == ID_sva_sequence_repetition_star)   // x[*}
+    expr.id() == ID_sva_cycle_delay_plus || // ##[+]
+    expr.id() == ID_sva_cycle_delay_star)   // ##[*]
   {
     // These take a sequence as argument.
-    // For some, the grammar allows properties to implement and/or over
-    // sequences. Check here that the argument is a sequence.
     convert_sva(expr.op());
     require_sva_sequence(expr.op());
     expr.type() = verilog_sva_sequence_typet{};
@@ -319,7 +315,7 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
 
     return std::move(expr);
   }
-  else if(expr.id() == ID_sva_sequence_consecutive_repetition) // x[*1:2]
+  else if(expr.id() == ID_sva_sequence_repetition_star) // x[*1:2]
   {
     // This expression takes a sequence as argument.
     // The grammar allows properties to implement and/or over
@@ -327,11 +323,24 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
     convert_sva(expr.op0());
     require_sva_sequence(expr.op0());
 
-    convert_expr(expr.op1());
+    if(expr.op1().is_not_nil())
+      convert_expr(expr.op1());
 
     if(expr.op2().is_not_nil())
       convert_expr(expr.op2());
 
+    expr.type() = verilog_sva_sequence_typet{};
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_sva_sequence_repetition_plus) // x[+]
+  {
+    // These take a sequence as argument.
+    // The grammar allows properties to implement and/or over
+    // sequences. Check here that the argument is a sequence.
+    // op1() and op2() are nil.
+    // The forms op[+x] and op[+x:y] do not exist.
+    convert_sva(expr.op0());
+    require_sva_sequence(expr.op0());
     expr.type() = verilog_sva_sequence_typet{};
     return std::move(expr);
   }

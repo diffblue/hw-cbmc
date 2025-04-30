@@ -629,18 +629,21 @@ expr2verilogt::resultt expr2verilogt::convert_sva_sequence_repetition(
 
   std::string dest = op_rec.s + " [" + name;
 
-  if(expr.is_range())
+  if(expr.repetitions_given())
   {
-    dest += convert_rec(expr.from()).s;
-    dest += ':';
+    if(expr.is_range())
+    {
+      dest += convert_rec(expr.from()).s;
+      dest += ':';
 
-    if(expr.is_unbounded())
-      dest += '$';
+      if(expr.is_unbounded())
+        dest += "$";
+      else
+        dest += convert_rec(expr.to()).s;
+    }
     else
-      dest += convert_rec(expr.to()).s;
+      dest += convert_rec(expr.repetitions()).s;
   }
-  else
-    dest += convert_rec(expr.repetitions()).s;
 
   dest += ']';
 
@@ -1850,23 +1853,17 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return precedence = verilog_precedencet::MIN,
            convert_sva_unary("always", to_sva_always_expr(src));
 
-  else if(src.id() == ID_sva_sequence_repetition_star)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary(to_unary_expr(src), "[*]");
-  // not sure about precedence
-
   else if(src.id() == ID_sva_sequence_repetition_plus)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary(to_unary_expr(src), "[+]");
-  // not sure about precedence
+    return convert_sva_sequence_repetition(
+      "+", to_sva_sequence_repetition_plus_expr(src));
 
   else if(src.id() == ID_sva_sequence_non_consecutive_repetition)
     return convert_sva_sequence_repetition(
       "=", to_sva_sequence_non_consecutive_repetition_expr(src));
 
-  else if(src.id() == ID_sva_sequence_consecutive_repetition)
+  else if(src.id() == ID_sva_sequence_repetition_star)
     return convert_sva_sequence_repetition(
-      "*", to_sva_sequence_consecutive_repetition_expr(src));
+      "*", to_sva_sequence_repetition_star_expr(src));
 
   else if(src.id() == ID_sva_sequence_goto_repetition)
     return convert_sva_sequence_repetition(
