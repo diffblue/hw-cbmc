@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 named_block1.sv
 
 ^\[.*\] always main\.foo\(\) == 123: PROVED$
