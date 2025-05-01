@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/typecheck.h>
 
 #include "expr2smv.h"
+#include "smv_expr.h"
 #include "smv_range.h"
 
 #include <algorithm>
@@ -1202,7 +1203,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_unsigned_cast)
   {
     // a reinterpret cast
-    auto &op = to_unary_expr(expr).op();
+    auto &op = to_smv_unsigned_cast_expr(expr).op();
     typecheck_expr_rec(op, mode);
     if(op.type().id() == ID_signedbv)
       expr.type() = unsignedbv_typet{to_signedbv_type(op.type()).get_width()};
@@ -1215,7 +1216,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_signed_cast)
   {
     // a reinterpret cast
-    auto &op = to_unary_expr(expr).op();
+    auto &op = to_smv_signed_cast_expr(expr).op();
     typecheck_expr_rec(op, mode);
     if(op.type().id() == ID_unsignedbv)
       expr.type() = signedbv_typet{to_unsignedbv_type(op.type()).get_width()};
@@ -1248,21 +1249,21 @@ void smv_typecheckt::lower_node(exprt &expr) const
 {
   if(expr.id() == ID_smv_extend)
   {
-    auto &binary = to_binary_expr(expr);
-    expr = typecast_exprt{binary.lhs(), expr.type()};
+    auto &smv_extend = to_smv_extend_expr(expr);
+    expr = typecast_exprt{smv_extend.lhs(), smv_extend.type()};
   }
   else if(expr.id() == ID_smv_resize)
   {
-    auto &binary = to_binary_expr(expr);
-    expr = typecast_exprt{binary.lhs(), expr.type()};
+    auto &smv_resize = to_smv_resize_expr(expr);
+    expr = typecast_exprt{smv_resize.lhs(), smv_resize.type()};
   }
   else if(expr.id() == ID_smv_signed_cast)
   {
-    expr = typecast_exprt{to_unary_expr(expr).op(), expr.type()};
+    expr = typecast_exprt{to_smv_signed_cast_expr(expr).op(), expr.type()};
   }
   else if(expr.id() == ID_smv_unsigned_cast)
   {
-    expr = typecast_exprt{to_unary_expr(expr).op(), expr.type()};
+    expr = typecast_exprt{to_smv_unsigned_cast_expr(expr).op(), expr.type()};
   }
 }
 
