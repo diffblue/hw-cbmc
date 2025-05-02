@@ -337,6 +337,75 @@ exprt aval_bval(const not_exprt &expr)
   return if_exprt{has_xz, x, aval_bval_conversion(not_expr, x.type())};
 }
 
+exprt aval_bval_reduction(const unary_exprt &expr)
+{
+  auto &type = expr.type();
+  auto type_aval_bval = lower_to_aval_bval(type);
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(is_aval_bval(expr.op()));
+
+  auto has_xz = ::has_xz(expr.op());
+  auto x = make_x(type);
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  if(expr.id() == ID_reduction_xor || expr.id() == ID_reduction_xnor)
+  {
+    auto reduction_expr = unary_exprt{expr.id(), op_aval, bool_typet{}};
+    return if_exprt{has_xz, x, aval_bval_conversion(reduction_expr, x.type())};
+  }
+  else if(expr.id() == ID_reduction_and || expr.id() == ID_reduction_nand)
+  {
+    auto has_zero = notequal_exprt{
+      bitor_exprt{op_aval, op_bval},
+      to_bv_type(op_aval.type()).all_ones_expr()};
+
+    auto one = combine_aval_bval(
+      bv_typet{1}.all_ones_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+    auto zero = combine_aval_bval(
+      bv_typet{1}.all_zeros_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+
+    if(expr.id() == ID_reduction_and)
+    {
+      return if_exprt{has_zero, zero, if_exprt{has_xz, x, one}};
+    }
+    else // nand
+    {
+      return if_exprt{has_zero, one, if_exprt{has_xz, x, zero}};
+    }
+  }
+  else if(expr.id() == ID_reduction_or || expr.id() == ID_reduction_nor)
+  {
+    auto has_one = notequal_exprt{
+      bitand_exprt{op_aval, bitnot_exprt{op_bval}},
+      to_bv_type(op_aval.type()).all_zeros_expr()};
+
+    auto one = combine_aval_bval(
+      bv_typet{1}.all_ones_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+    auto zero = combine_aval_bval(
+      bv_typet{1}.all_zeros_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+
+    if(expr.id() == ID_reduction_or)
+    {
+      return if_exprt{has_one, one, if_exprt{has_xz, x, zero}};
+    }
+    else // nor
+    {
+      return if_exprt{has_one, zero, if_exprt{has_xz, x, one}};
+    }
+  }
+  else
+    PRECONDITION(false);
+}
+
 exprt aval_bval(const bitnot_exprt &expr)
 {
   auto &type = expr.type();
