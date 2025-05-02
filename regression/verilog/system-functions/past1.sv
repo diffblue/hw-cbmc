@@ -1,6 +1,6 @@
 module main(input clk);
 
-  reg [31:0] counter = 0;
+  reg [7:0] counter = 0;
 
   always @(posedge clk)
     counter++;
