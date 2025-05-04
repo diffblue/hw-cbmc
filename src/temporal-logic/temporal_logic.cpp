@@ -146,6 +146,11 @@ bool is_SVA(const exprt &expr)
   return !has_subexpr(expr, non_SVA_operator);
 }
 
+bool has_SVA_operator(const exprt &expr)
+{
+  return has_subexpr(expr, is_SVA_operator);
+}
+
 bool is_SVA_always_p(const exprt &expr)
 {
   return expr.id() == ID_sva_always &&
