@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: instantiate_var_mapt::convert_bool
+Function: netlist_boolbvt::convert_bool
 
   Inputs:
 
@@ -23,7 +23,7 @@ Function: instantiate_var_mapt::convert_bool
 
 \*******************************************************************/
 
-literalt instantiate_var_mapt::convert_bool(const exprt &expr)
+literalt netlist_boolbvt::convert_bool(const exprt &expr)
 {
   if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
   {
@@ -53,7 +53,7 @@ literalt instantiate_var_mapt::convert_bool(const exprt &expr)
 
 /*******************************************************************\
 
-Function: instantiate_var_mapt::convert_bitvector
+Function: netlist_boolbvt::convert_bitvector
 
   Inputs:
 
@@ -63,7 +63,7 @@ Function: instantiate_var_mapt::convert_bitvector
 
 \*******************************************************************/
 
-bvt instantiate_var_mapt::convert_bitvector(const exprt &expr)
+bvt netlist_boolbvt::convert_bitvector(const exprt &expr)
 {
   if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
   {
@@ -95,7 +95,7 @@ bvt instantiate_var_mapt::convert_bitvector(const exprt &expr)
 
 /*******************************************************************\
 
-Function: instantiate_var_mapt::get_literal
+Function: netlist_boolbvt::get_literal
 
   Inputs:
 
@@ -106,7 +106,7 @@ Function: instantiate_var_mapt::get_literal
 \*******************************************************************/
 
 literalt
-instantiate_var_mapt::get_literal(const std::string &symbol, const unsigned bit)
+netlist_boolbvt::get_literal(const std::string &symbol, const unsigned bit)
 {
   return var_map.get_current(symbol, bit);
 }

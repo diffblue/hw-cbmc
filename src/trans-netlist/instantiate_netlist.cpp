@@ -41,7 +41,7 @@ void instantiate_constraint(
   const namespacet &ns,
   message_handlert &message_handler)
 {
-  instantiate_var_mapt i(ns, solver, message_handler, var_map);
+  netlist_boolbvt i(ns, solver, message_handler, var_map);
 
   try
   {
@@ -80,7 +80,7 @@ literalt instantiate_convert(
   const namespacet &ns,
   message_handlert &message_handler)
 {
-  instantiate_var_mapt i(ns, solver, message_handler, var_map);
+  netlist_boolbvt i(ns, solver, message_handler, var_map);
 
   try
   {
@@ -120,7 +120,7 @@ void instantiate_convert(
   message_handlert &message_handler,
   bvt &bv)
 {
-  instantiate_var_mapt i(ns, solver, message_handler, var_map);
+  netlist_boolbvt i(ns, solver, message_handler, var_map);
 
   try
   {

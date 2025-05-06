@@ -15,16 +15,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-   Class: instantiate_var_mapt
+   Class: netlist_boolbvt
 
  Purpose:
 
 \*******************************************************************/
 
-class instantiate_var_mapt : public boolbvt
+class netlist_boolbvt : public boolbvt
 {
 public:
-  instantiate_var_mapt(
+  netlist_boolbvt(
     const namespacet &_ns,
     propt &solver,
     message_handlert &message_handler,
