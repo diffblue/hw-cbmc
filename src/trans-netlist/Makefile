@@ -9,6 +9,7 @@ SRC = aig.cpp \
       ldg.cpp \
       map_aigs.cpp \
       netlist.cpp \
+      netlist_boolbv.cpp \
       smv_netlist.cpp \
       trans_to_netlist.cpp \
       trans_trace.cpp \
