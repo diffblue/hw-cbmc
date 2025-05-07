@@ -1,0 +1,8 @@
+KNOWNBUG
+elsif1.v
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The elsif directive is not implemented.
