@@ -17,13 +17,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include <solvers/flattening/boolbv_width.h>
+#include <solvers/prop/literal_expr.h>
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
 #include "aig_prop.h"
-#include "instantiate_netlist.h"
 #include "netlist.h"
 #include "netlist_boolbv.h"
 
@@ -144,6 +144,8 @@ protected:
   void convert_lhs_rec(const exprt &expr, std::size_t from, std::size_t to);
 
   void convert_constraints();
+
+  std::optional<exprt> convert_property(const exprt &);
 
   void map_vars(
     const irep_idt &module,
@@ -328,9 +330,7 @@ void convert_trans_to_netlistt::operator()(
   // properties
   for(const auto &[id, property_expr] : properties)
   {
-    auto netlist_expr_opt = netlist_property(
-      aig_prop, dest.var_map, property_expr, ns, get_message_handler());
-
+    auto netlist_expr_opt = convert_property(property_expr);
     dest.properties.emplace(id, netlist_expr_opt);
   }
 
@@ -354,6 +354,75 @@ void convert_trans_to_netlistt::operator()(
         dest.var_map.nondets.insert(n);
       }
     }
+  }
+}
+
+/*******************************************************************\
+
+Function: convert_trans_to_netlistt::convert_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<exprt>
+convert_trans_to_netlistt::convert_property(const exprt &expr)
+{
+  if(is_temporal_operator(expr))
+  {
+    if(is_LTL_operator(expr) || is_CTL_operator(expr))
+    {
+      exprt copy = expr;
+      for(auto &op : copy.operands())
+      {
+        auto op_opt = convert_property(op);
+        if(op_opt.has_value())
+          op = op_opt.value();
+        else
+          return {};
+      }
+      return copy;
+    }
+    else if(is_SVA_operator(expr))
+    {
+      // Try to turn into LTL
+      auto LTL_opt = SVA_to_LTL(expr);
+      if(LTL_opt.has_value())
+        return convert_property(*LTL_opt);
+      else
+        return {};
+    }
+    else
+      return {};
+  }
+  else if(!has_temporal_operator(expr))
+  {
+    auto l = solver.convert(expr);
+    return literal_exprt{l};
+  }
+  else if(
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
+    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor)
+  {
+    exprt copy = expr;
+    for(auto &op : copy.operands())
+    {
+      auto op_opt = convert_property(op);
+      if(op_opt.has_value())
+        op = op_opt.value();
+      else
+        return {};
+    }
+    return copy;
+  }
+  else
+  {
+    // contains temporal operator, but not propositional skeleton
+    return {};
   }
 }
 
