@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sequence.h"
 
 #include <util/arith_tools.h>
+#include <util/mathematical_types.h>
 
 #include <ebmc/ebmc_error.h>
 #include <temporal-logic/temporal_logic.h>
@@ -367,36 +368,21 @@ sequence_matchest instantiate_sequence(
   else if(expr.id() == ID_sva_sequence_repetition_star) // [*...]
   {
     auto &repetition = to_sva_sequence_repetition_star_expr(expr);
-    if(repetition.is_unbounded() && repetition.repetitions_given())
+    if(repetition.is_empty_match())
     {
-      // [*x:$]
-      auto from = numeric_cast_v<mp_integer>(repetition.from());
-      auto &op = repetition.op();
+      // [*0] denotes the empty match
+      return {{t, true_exprt{}}};
+    }
+    else if(repetition.is_unbounded() && repetition.repetitions_given())
+    {
+      // [*from:$] -> op[*from:to]
+      // with to = no_timeframes - t
+      auto to = from_integer(no_timeframes - t, integer_typet{});
+      auto new_repetition = sva_sequence_repetition_star_exprt{
+        repetition.op(), repetition.from(), to};
 
-      // Is op a sequence or a state predicate?
-      if(is_SVA_sequence_operator(op))
-        PRECONDITION(false); // no support
-
-      sequence_matchest result;
-
-      // we incrementally add conjuncts to the condition
-      exprt::operandst conjuncts;
-
-      for(mp_integer u = t; u < no_timeframes; ++u)
-      {
-        // does op hold in timeframe u?
-        auto cond_u = instantiate(op, u, no_timeframes);
-        conjuncts.push_back(cond_u);
-
-        if(conjuncts.size() >= from)
-          result.push_back({u, conjunction(conjuncts)});
-      }
-
-      // Empty match allowed?
-      if(from == 0)
-        result.push_back({t, true_exprt{}});
-
-      return result;
+      return instantiate_sequence(
+        new_repetition.lower(), semantics, t, no_timeframes);
     }
     else
     {

@@ -75,11 +75,16 @@ exprt sva_sequence_repetition_star_exprt::lower() const
     return sva_sequence_repetition_star_exprt{
       op(), from_integer(0, integer_typet{}), infinity_exprt{integer_typet{}}};
   }
+  else if(is_empty_match())
+  {
+    // [*0] is a special case, denoting the empty match
+    PRECONDITION(false);
+  }
   else if(!is_range())
   {
     // expand x[*n] into x ##1 x ##1 ...
     auto n = numeric_cast_v<mp_integer>(repetitions());
-    DATA_INVARIANT(n >= 1, "number of repetitions must be at least one");
+    PRECONDITION(n >= 1);
 
     exprt result = op();
 
@@ -103,7 +108,7 @@ exprt sva_sequence_repetition_star_exprt::lower() const
     auto from_int = numeric_cast_v<mp_integer>(from());
     auto to_int = numeric_cast_v<mp_integer>(to());
 
-    DATA_INVARIANT(from_int >= 1, "number of repetitions must be at least one");
+    DATA_INVARIANT(from_int >= 0, "number of repetitions must not be negative");
     DATA_INVARIANT(
       to_int >= from_int, "number of repetitions must be interval");
 
