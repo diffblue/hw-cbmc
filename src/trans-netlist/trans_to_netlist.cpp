@@ -17,14 +17,15 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include <solvers/flattening/boolbv_width.h>
+#include <solvers/prop/literal_expr.h>
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
 #include "aig_prop.h"
-#include "instantiate_netlist.h"
 #include "netlist.h"
+#include "netlist_boolbv.h"
 
 #include <algorithm>
 
@@ -47,7 +48,8 @@ public:
       symbol_table(_symbol_table),
       ns(_symbol_table),
       dest(_dest),
-      aig_prop(dest, _message_handler)
+      aig_prop(dest, _message_handler),
+      solver(ns, aig_prop, _message_handler, dest.var_map)
   {
   }
 
@@ -61,6 +63,7 @@ protected:
   const namespacet ns;
   netlistt &dest;
   aig_prop_constraintt aig_prop;
+  netlist_boolbvt solver;
 
   literalt new_input();
   std::size_t input_counter = 0;
@@ -141,6 +144,8 @@ protected:
   void convert_lhs_rec(const exprt &expr, std::size_t from, std::size_t to);
 
   void convert_constraints();
+
+  std::optional<exprt> convert_property(const exprt &);
 
   void map_vars(
     const irep_idt &module,
@@ -320,15 +325,12 @@ void convert_trans_to_netlistt::operator()(
     transition_constraints.end());
   
   // initial state
-  dest.initial.push_back(instantiate_convert(
-    aig_prop, dest.var_map, trans.init(), ns, get_message_handler()));
+  dest.initial.push_back(solver.convert(trans.init()));
 
   // properties
   for(const auto &[id, property_expr] : properties)
   {
-    auto netlist_expr_opt = netlist_property(
-      aig_prop, dest.var_map, property_expr, ns, get_message_handler());
-
+    auto netlist_expr_opt = convert_property(property_expr);
     dest.properties.emplace(id, netlist_expr_opt);
   }
 
@@ -357,6 +359,75 @@ void convert_trans_to_netlistt::operator()(
 
 /*******************************************************************\
 
+Function: convert_trans_to_netlistt::convert_property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<exprt>
+convert_trans_to_netlistt::convert_property(const exprt &expr)
+{
+  if(is_temporal_operator(expr))
+  {
+    if(is_LTL_operator(expr) || is_CTL_operator(expr))
+    {
+      exprt copy = expr;
+      for(auto &op : copy.operands())
+      {
+        auto op_opt = convert_property(op);
+        if(op_opt.has_value())
+          op = op_opt.value();
+        else
+          return {};
+      }
+      return copy;
+    }
+    else if(is_SVA_operator(expr))
+    {
+      // Try to turn into LTL
+      auto LTL_opt = SVA_to_LTL(expr);
+      if(LTL_opt.has_value())
+        return convert_property(*LTL_opt);
+      else
+        return {};
+    }
+    else
+      return {};
+  }
+  else if(!has_temporal_operator(expr))
+  {
+    auto l = solver.convert(expr);
+    return literal_exprt{l};
+  }
+  else if(
+    expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
+    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor)
+  {
+    exprt copy = expr;
+    for(auto &op : copy.operands())
+    {
+      auto op_opt = convert_property(op);
+      if(op_opt.has_value())
+        op = op_opt.value();
+      else
+        return {};
+    }
+    return copy;
+  }
+  else
+  {
+    // contains temporal operator, but not propositional skeleton
+    return {};
+  }
+}
+
+/*******************************************************************\
+
 Function: convert_trans_to_netlistt::convert_constraints
 
   Inputs:
@@ -380,8 +451,7 @@ void convert_trans_to_netlistt::convert_constraints()
       it!=constraint_list.end();
       it++)
   {
-    literalt l = instantiate_convert(
-      aig_prop, dest.var_map, *it, ns, get_message_handler());
+    literalt l = solver.convert(*it);
 
     if(has_subexpr(*it, ID_next_symbol))
       transition_constraints.push_back(l);
@@ -571,13 +641,7 @@ literalt convert_trans_to_netlistt::convert_rhs(const rhst &rhs)
     rhs_entry.converted=true;
 
     // now we can convert
-    instantiate_convert(
-      aig_prop,
-      dest.var_map,
-      rhs_entry.expr,
-      ns,
-      get_message_handler(),
-      rhs_entry.bv);
+    rhs_entry.bv = solver.convert_bv(rhs_entry.expr);
 
     DATA_INVARIANT(rhs_entry.bv.size() == rhs_entry.width, "bit-width match");
   }
