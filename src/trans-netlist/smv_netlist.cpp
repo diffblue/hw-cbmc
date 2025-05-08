@@ -51,12 +51,12 @@ void print_smv(const netlistt &netlist, std::ostream &out, literalt a)
 {
   if(a == const_literal(false))
   {
-    out << "0";
+    out << "FALSE";
     return;
   }
   else if(a == const_literal(true))
   {
-    out << "1";
+    out << "TRUE";
     return;
   }
 
