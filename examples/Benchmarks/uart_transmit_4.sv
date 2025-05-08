@@ -23,17 +23,18 @@ module UART_T #(localparam d_width = 9, c_width = 4) (input clk, input rst, inpu
 		end
 		else if(tx_state == 1) begin
 			if(tx_cnt < d_width+3) begin
-				tx_state = 1;
+				tx_busy = 1;
 				tx_cnt = tx_cnt + 1;
 				tx_buffer = {1'b1, tx_buffer[d_width+1:1]};
 			end
 			else begin
 				tx_cnt = 0;
 				tx_state = 0;
+				tx_busy = 0;
 			end
 		end
 		tx = tx_buffer[0];
 	end
-	p1: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually tx_state == 0)) ;
-  	// F G (rst = FALSE) -> G F (tx_state = FALSE)
+    p1: assert property (@(posedge clk) s_eventually !rst -> !tx_state);
+    // FG !rst -> GF tx_state == 0
 endmodule

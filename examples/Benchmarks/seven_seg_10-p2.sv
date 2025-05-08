@@ -1,4 +1,4 @@
-module SEVEN(input clk, input rst, input [13:0] both7seg, output reg[6:0] segment);
+module SEVEN(input clk, input rst, input [13:0] both7seg, output reg[6:0] segment, output reg sig);
 	localparam freq = 15000;
 	localparam CBITS = 14;
 
@@ -11,9 +11,12 @@ module SEVEN(input clk, input rst, input [13:0] both7seg, output reg[6:0] segmen
 			digit_select = 0;
 			segment = 0;
 		end
-		if(cnt < freq)
+		if(cnt < freq) begin
 			cnt = cnt + 1;
+			sig = 0;
+		end
 		else begin
+			sig = 1;
 			cnt = 0;
 			if(digit_select == 0) begin
 				digit_select = 1;
@@ -25,6 +28,7 @@ module SEVEN(input clk, input rst, input [13:0] both7seg, output reg[6:0] segmen
 			end
 		end
 	end
-	p2: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually (digit_select == 0 and (always s_eventually digit_select == 1)))) ;
-	//F G (rst = FALSE) -> G F (digit_select = FALSE & G F (digit_select = TRUE))
+    p2: assert property (@(posedge clk) s_eventually !rst implies ((s_eventually digit_select) and (s_eventually !digit_select)));
+    // FG !rst -> (GF ds & GF !ds)
+FG !rst -> (GF ds & GF !ds)
 endmodule

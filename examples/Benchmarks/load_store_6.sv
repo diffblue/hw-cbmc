@@ -4,16 +4,21 @@ module Load_Store (input clk, input rst, output reg sig);
     reg [CBITS-1:0] vol;
     reg m;
     always @(posedge clk) begin
-        if (rst) begin m = 0; vol = 0;
+        if (rst) begin m = 0; vol = 0; sig = 0;
         end else begin
             if (m) begin
                 if (vol >= N) m = 0; else vol = vol + 1;
             end else begin
                 if (vol <= 0) m = 1; else vol = vol - 1;
-            end 
+            end
+            if (vol >= N) begin
+                sig = 1;
+                vol = N;
+            end
+            else
+                sig = 0; 
         end 
-        sig = (vol == N);
     end
-    p1: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually sig == 1)) ;
-    // F G (rst = F) -> G F (sig = T)
+    p1: assert property (@(posedge clk) s_eventually !rst -> sig);
+    // FG !rst -> GF (vol = N)
 endmodule

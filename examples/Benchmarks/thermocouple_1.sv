@@ -43,6 +43,6 @@ module Thermocouple(input clk, input rst, input spi_not_busy, input [31:0] spi_r
 		else
 			state = 1;
 
-	p1: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually state == 1)) ;
-	//F G (rst = F) -> G F (state[1] = F & state[0] = T)
+    p1: assert property (@(posedge clk) s_eventually !rst -> state);
+    // FG !rst -> (GF state = 1)
 endmodule

@@ -1,6 +1,6 @@
-module i2cStrech(input clk, input rst, input scl_not_ena, output reg data_clk);
-	localparam divider = 125;
-	localparam CBITS = 9;
+module i2cStrech(input clk, input rst, input scl_not_ena, output reg data_clk, output reg switch_range);
+	localparam divider = 3;
+	localparam CBITS = 4;
 	reg [CBITS - 1:0] cnt;	//0 to 4*divider
 	reg scl_clk;
 	reg stretch;
@@ -34,19 +34,11 @@ module i2cStrech(input clk, input rst, input scl_not_ena, output reg data_clk);
 			scl_clk = 1;
 			data_clk = 0;
 		end
+		if(2*divider <= cnt && cnt <= 3*divider - 1)
+        	switch_range = 1;
+      	else
+        	switch_range = 0;
 	end
-
-	p1: assert property (@(posedge clk) (always s_eventually (rst == 1 || scl_not_ena == 1)) or (always s_eventually stretch == 1)) ;
-	//F G (rst = F & scl_not_ena = F) -> G F (stretch = T)
-
-wire [8:0] rank1 =
-  cnt>=divider*4 ? 3 :  // 500
-  !scl_clk && cnt>=3*divider-1 ? 2 :
-  scl_clk        ? 1 :
-                   0 ;
-
-wire [8:0] rank2 = 500 - cnt;
-
-wire [31:0] rank = {rank1, rank2};
-
+    p1: assert property None #(@(posedge clk) s_eventually rst || scl_not_ena || stretch);
+    // FG (!rst & enable) -> GF stretch
 endmodule

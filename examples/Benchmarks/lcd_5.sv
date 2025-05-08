@@ -97,10 +97,10 @@ module LCD(input clk, input [6:0] in_data, input lcd_enable, input [9:0] lcd_bus
 			end
 		end
 	end
-	p1: assert property (@(posedge clk) (always s_eventually lcd_enable == 0) or (always s_eventually state == 2)) ;
-	//F G (lcd_enable = T) -> G F (state[1] = T & state[0] = F)
+
+
+
+
+    p1: assert property (@(posedge clk) s_eventually lcd_enable -> state == 2);
+    // FG enable -> (GF state = 2)
 endmodule
-
-
-
-

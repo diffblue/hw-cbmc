@@ -15,5 +15,5 @@ module BLINK #(localparam CBITS = 18) (input clk, input rst, output reg led, out
         end       
     end
     p1: assert property (@(posedge clk) s_eventually !rst -> led);
-    // F G (rst = F) -> G F (led = T)
+    // FG !rst -> (GF led)
 endmodule
