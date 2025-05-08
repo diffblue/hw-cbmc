@@ -1,13 +1,13 @@
 module main(input clk);
 
-  reg [31:0] x = 0;
+  reg [7:0] x = 0;
 
   // 0 1 2 3 4 ...
   always_ff @(posedge clk)
     x<=x+1;
 
   // 0 0 1 1 2 2 3 3 ...
-  wire [31:0] half_x = x/2;
+  wire [7:0] half_x = x/2;
 
   // should pass
   initial p0: assert property (half_x==0[*2]);

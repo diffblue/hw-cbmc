@@ -1,7 +1,6 @@
 CORE
 past1.sv
 --bdd
-^\[main\.p0\] ##0 \$past\(main\.counter, 0\) == 0: FAILURE: property not supported by BDD engine$
-^EXIT=10$
+^EXIT=0$
 ^SIGNAL=0$
 --
