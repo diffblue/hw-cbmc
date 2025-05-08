@@ -616,20 +616,22 @@ void verilog_synthesist::assignment_rec(
     exprt new_rhs(rhs), new_value;
     assignment_rec(lhs, new_rhs, new_value); // start of recursion
 
-    // These can explode if the symbol is assigned more than once
-    // and also used more than once, e.g., in a multi-dimensional array.
-    // We add a fresh symbol for anything that is not trivial
-    // to prevent that.
-    if(new_value.id()!=ID_symbol &&
-       new_value.id()!=ID_constant)
+    if(new_value.is_not_nil())
     {
-      replace_by_wire(new_value, symbol);
+      // These can explode if the symbol is assigned more than once
+      // and also used more than once, e.g., in a multi-dimensional array.
+      // We add a fresh symbol for anything that is not trivial
+      // to prevent that.
+      if(new_value.id() != ID_symbol && new_value.id() != ID_constant)
+      {
+        replace_by_wire(new_value, symbol);
+      }
+
+      if(blocking)
+        value_map->current.assign(symbol.name, new_value);
+
+      value_map->final.assign(symbol.name, new_value);
     }
-
-    if(blocking)
-      value_map->current.assign(symbol.name, new_value);
-
-    value_map->final.assign(symbol.name, new_value);
   }
 }
 
@@ -926,6 +928,8 @@ void verilog_synthesist::replace_by_wire(
   exprt &what,
   const symbolt &base)
 {
+  PRECONDITION(what.is_not_nil());
+
   symbolt new_symbol;
   
   do
@@ -935,7 +939,7 @@ void verilog_synthesist::replace_by_wire(
     new_symbol.base_name=id2string(base.base_name)+"_aux"+std::to_string(c);
   }
   while(symbol_table.symbols.find(new_symbol.name)!=symbol_table.symbols.end());
-  
+
   new_symbol.type=what.type();
   new_symbol.module=base.module;
   new_symbol.mode=base.mode;
@@ -3358,7 +3362,9 @@ void verilog_synthesist::synth_assignments(
   
   // see if wire is used to define itself
   if(!symbol.is_state_var)
+  {
     post_process_wire(symbol.name, new_value);
+  }
 
   auto lhs = symbol_expr(symbol, curr_or_next);
 
@@ -3429,6 +3435,9 @@ void verilog_synthesist::synth_assignments(transt &trans)
   {
     symbolt &symbol=symbol_table_lookup(it);
     assignmentt &assignment=assignments[symbol.name];
+
+    DATA_INVARIANT(
+      assignment.next.value.is_not_nil(), "must have assignment value");
 
     synth_assignments(symbol, CURRENT,
                       assignment.next.value,
