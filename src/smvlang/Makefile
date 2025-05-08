@@ -1,4 +1,5 @@
-SRC = smv_language.cpp \
+SRC = smv_expr.cpp \
+      smv_language.cpp \
       smv_parser.cpp \
       smv_typecheck.cpp \
       expr2smv.cpp \
