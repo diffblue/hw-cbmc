@@ -1,0 +1,9 @@
+KNOWNBUG
+nettype1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+nettype is not implemented.
