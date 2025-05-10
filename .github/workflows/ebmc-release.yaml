@@ -8,7 +8,7 @@ name: Create Release
 jobs:
   get-version-information:
     name: Get Version Information
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.split-version.outputs._1 }}
       tag_name: ebmc-${{ steps.split-version.outputs._1 }}
@@ -26,7 +26,7 @@ jobs:
 
   perform-draft-release:
     name: Perform Draft Release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: [get-version-information]
     outputs:
       upload_url: ${{ steps.draft_release.outputs.upload_url }}
@@ -217,7 +217,7 @@ jobs:
 
   wasm-package:
     name: Package wasm
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     needs: [perform-draft-release]
     outputs:
       wasm_package_name: ${{ steps.create_packages.outputs.wasm_package_name }}
@@ -293,7 +293,7 @@ jobs:
 
   perform-release:
     name: Perform Release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: [ubuntu-22_04-package, centos8-package, wasm-package, get-version-information, perform-draft-release]
     steps:
       - name: Publish release
