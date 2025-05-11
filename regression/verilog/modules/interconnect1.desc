@@ -1,0 +1,8 @@
+KNOWNBUG
+interconnect1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+interconnect is not implemented.
