@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "aig_prop.h"
 #include "instantiate_netlist.h"
 #include "netlist.h"
+#include "netlist_boolbv.h"
 
 #include <algorithm>
 
@@ -47,7 +48,8 @@ public:
       symbol_table(_symbol_table),
       ns(_symbol_table),
       dest(_dest),
-      aig_prop(dest, _message_handler)
+      aig_prop(dest, _message_handler),
+      solver(ns, aig_prop, _message_handler, dest.var_map)
   {
   }
 
@@ -61,6 +63,7 @@ protected:
   const namespacet ns;
   netlistt &dest;
   aig_prop_constraintt aig_prop;
+  netlist_boolbvt solver;
 
   literalt new_input();
   std::size_t input_counter = 0;
@@ -320,8 +323,7 @@ void convert_trans_to_netlistt::operator()(
     transition_constraints.end());
   
   // initial state
-  dest.initial.push_back(instantiate_convert(
-    aig_prop, dest.var_map, trans.init(), ns, get_message_handler()));
+  dest.initial.push_back(solver.convert(trans.init()));
 
   // properties
   for(const auto &[id, property_expr] : properties)
@@ -380,8 +382,7 @@ void convert_trans_to_netlistt::convert_constraints()
       it!=constraint_list.end();
       it++)
   {
-    literalt l = instantiate_convert(
-      aig_prop, dest.var_map, *it, ns, get_message_handler());
+    literalt l = solver.convert(*it);
 
     if(has_subexpr(*it, ID_next_symbol))
       transition_constraints.push_back(l);
@@ -571,13 +572,7 @@ literalt convert_trans_to_netlistt::convert_rhs(const rhst &rhs)
     rhs_entry.converted=true;
 
     // now we can convert
-    instantiate_convert(
-      aig_prop,
-      dest.var_map,
-      rhs_entry.expr,
-      ns,
-      get_message_handler(),
-      rhs_entry.bv);
+    rhs_entry.bv = solver.convert_bv(rhs_entry.expr);
 
     DATA_INVARIANT(rhs_entry.bv.size() == rhs_entry.width, "bit-width match");
   }
