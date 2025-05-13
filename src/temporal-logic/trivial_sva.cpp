@@ -12,12 +12,10 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "temporal_logic.h"
 
-static std::optional<exprt> is_state_formula(const exprt &expr)
+static std::optional<exprt> is_state_predicate(const exprt &expr)
 {
-  if(expr.id() == ID_typecast && expr.type().id() == ID_verilog_sva_sequence)
-    return to_typecast_expr(expr).op();
-  else if(expr.type().id() == ID_bool)
-    return expr;
+  if(expr.id() == ID_sva_boolean)
+    return to_sva_boolean_expr(expr).op();
   else
     return {};
 }
@@ -30,8 +28,8 @@ exprt trivial_sva(exprt expr)
     // Same as regular implication if lhs and rhs are not sequences.
     auto &sva_implication = to_sva_overlapped_implication_expr(expr);
 
-    auto lhs = is_state_formula(sva_implication.lhs());
-    auto rhs = is_state_formula(sva_implication.rhs());
+    auto lhs = is_state_predicate(sva_implication.lhs());
+    auto rhs = is_state_predicate(sva_implication.rhs());
 
     if(lhs.has_value() && rhs.has_value())
       expr = implies_exprt{*lhs, *rhs};
@@ -50,23 +48,39 @@ exprt trivial_sva(exprt expr)
   {
     auto &sva_and = to_sva_and_expr(expr);
 
-    // Same as a ∧ b if the expression is not a sequence.
-    auto lhs = is_state_formula(sva_and.lhs());
-    auto rhs = is_state_formula(sva_and.rhs());
+    // can be sequence or property
+    if(expr.type().id() == ID_verilog_sva_sequence)
+    {
+      // Same as a ∧ b if the expression is not a sequence.
+      auto lhs = is_state_predicate(sva_and.lhs());
+      auto rhs = is_state_predicate(sva_and.rhs());
 
-    if(lhs.has_value() && rhs.has_value())
-      expr = and_exprt{*lhs, *rhs};
+      if(lhs.has_value() && rhs.has_value())
+        expr = sva_boolean_exprt{and_exprt{*lhs, *rhs}, expr.type()};
+    }
+    else
+    {
+      expr = and_exprt{sva_and.lhs(), sva_and.rhs()};
+    }
   }
   else if(expr.id() == ID_sva_or)
   {
     auto &sva_or = to_sva_or_expr(expr);
 
-    // Same as a ∨ b if the expression is not a sequence.
-    auto lhs = is_state_formula(sva_or.lhs());
-    auto rhs = is_state_formula(sva_or.rhs());
+    // can be sequence or property
+    if(expr.type().id() == ID_verilog_sva_sequence)
+    {
+      // Same as a ∨ b if the expression is not a sequence.
+      auto lhs = is_state_predicate(sva_or.lhs());
+      auto rhs = is_state_predicate(sva_or.rhs());
 
-    if(lhs.has_value() && rhs.has_value())
-      expr = or_exprt{*lhs, *rhs};
+      if(lhs.has_value() && rhs.has_value())
+        expr = sva_boolean_exprt{or_exprt{*lhs, *rhs}, expr.type()};
+    }
+    else
+    {
+      expr = or_exprt{sva_or.lhs(), sva_or.rhs()};
+    }
   }
   else if(expr.id() == ID_sva_not)
   {
@@ -113,9 +127,10 @@ exprt trivial_sva(exprt expr)
   {
     // We simplify sequences to boolean expressions, and hence can drop
     // the sva_sequence_property converter
-    auto &op = to_sva_sequence_property_expr_base(expr).sequence();
-    if(op.type().id() == ID_bool)
-      return op;
+    auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
+    auto pred_opt = is_state_predicate(sequence);
+    if(pred_opt.has_value())
+      return *pred_opt;
   }
 
   return expr;

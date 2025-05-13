@@ -149,6 +149,24 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     return sva_non_overlapped_implication_exprt{
       followed_by.antecedent(), not_b};
   }
+  else if(expr.id() == ID_sva_overlapped_implication)
+  {
+    // 1800 2017 16.12.9
+    // !(a |-> b)   --->   a #-# !b
+    auto &implication = to_sva_implication_base_expr(expr);
+    auto not_b = not_exprt{implication.consequent()};
+    return sva_followed_by_exprt{
+      implication.antecedent(), ID_sva_overlapped_followed_by, not_b};
+  }
+  else if(expr.id() == ID_sva_non_overlapped_implication)
+  {
+    // 1800 2017 16.12.9
+    // !(a |=> b)   --->   a #=# !b
+    auto &implication = to_sva_implication_base_expr(expr);
+    auto not_b = not_exprt{implication.consequent()};
+    return sva_followed_by_exprt{
+      implication.antecedent(), ID_sva_nonoverlapped_followed_by, not_b};
+  }
   else
     return {};
 }

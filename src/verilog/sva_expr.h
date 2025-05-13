@@ -13,6 +13,29 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_types.h"
 
+/// 1800-2017 16.6 Boolean expressions
+/// Conversion of a Boolean expression into a sequence or property
+class sva_boolean_exprt : public unary_exprt
+{
+public:
+  sva_boolean_exprt(exprt condition, typet __type)
+    : unary_exprt(ID_sva_boolean, std::move(condition), std::move(__type))
+  {
+  }
+};
+
+static inline const sva_boolean_exprt &to_sva_boolean_expr(const exprt &expr)
+{
+  sva_boolean_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_boolean_exprt &>(expr);
+}
+
+static inline sva_boolean_exprt &to_sva_boolean_expr(exprt &expr)
+{
+  sva_boolean_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_boolean_exprt &>(expr);
+}
+
 /// accept_on, reject_on, sync_accept_on, sync_reject_on, disable_iff
 class sva_abort_exprt : public binary_predicate_exprt
 {

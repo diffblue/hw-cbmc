@@ -68,10 +68,18 @@ bool has_low_completeness_threshold(const exprt &expr)
     expr.id() == ID_sva_implicit_strong || expr.id() == ID_sva_implicit_weak)
   {
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
-    if(!is_SVA_sequence_operator(sequence))
-      return true;
-    else
-      return false;
+    return has_low_completeness_threshold(sequence);
+  }
+  else if(expr.id() == ID_sva_boolean)
+  {
+    return true;
+  }
+  else if(expr.id() == ID_sva_or || expr.id() == ID_sva_and)
+  {
+    for(auto &op : expr.operands())
+      if(!has_low_completeness_threshold(op))
+        return false;
+    return true;
   }
   else if(expr.id() == ID_sva_sequence_property)
   {

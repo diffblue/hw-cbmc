@@ -35,8 +35,9 @@ void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
     }
     else
     {
-      // state formula, can cast to sequence
+      // state formula, can convert to sequence
       make_boolean(expr);
+      expr = sva_boolean_exprt{std::move(expr), verilog_sva_sequence_typet{}};
     }
   }
   else

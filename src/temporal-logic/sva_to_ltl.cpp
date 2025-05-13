@@ -42,10 +42,10 @@ struct ltl_sequence_matcht
 
 std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
 {
-  if(!is_SVA_sequence_operator(sequence))
+  if(sequence.id() == ID_sva_boolean)
   {
     // atomic proposition
-    return {{sequence, 1}};
+    return {{to_sva_boolean_expr(sequence).op(), 1}};
   }
   else if(sequence.id() == ID_sva_sequence_concatenation)
   {
