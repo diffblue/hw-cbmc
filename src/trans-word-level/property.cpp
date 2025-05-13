@@ -537,10 +537,10 @@ static obligationst property_obligations_rec(
     return property_obligations_rec(
       to_typecast_expr(property_expr).op(), current, no_timeframes);
   }
-  else if(property_expr.id() == ID_not)
+  else if(property_expr.id() == ID_sva_not)
   {
     // We need NNF, try to eliminate the negation.
-    auto &op = to_not_expr(property_expr).op();
+    auto &op = to_sva_not_expr(property_expr).op();
 
     auto op_negated_opt = negate_property_node(op);
 
@@ -576,8 +576,9 @@ static obligationst property_obligations_rec(
     else
     {
       // state formula
-      return obligationst{
-        instantiate_property(property_expr, current, no_timeframes)};
+      auto sampled =
+        instantiate_property(not_exprt{op}, current, no_timeframes);
+      return obligationst{sampled};
     }
   }
   else if(property_expr.id() == ID_sva_implies)

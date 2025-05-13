@@ -13,12 +13,39 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_types.h"
 
+/// 1800-2017 16.6 Boolean expressions
+/// Conversion of a Boolean expression into a sequence or property
+class sva_boolean_exprt : public unary_exprt
+{
+public:
+  sva_boolean_exprt(exprt condition, typet __type)
+    : unary_exprt(ID_sva_boolean, std::move(condition), std::move(__type))
+  {
+  }
+};
+
+static inline const sva_boolean_exprt &to_sva_boolean_expr(const exprt &expr)
+{
+  sva_boolean_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_boolean_exprt &>(expr);
+}
+
+static inline sva_boolean_exprt &to_sva_boolean_expr(exprt &expr)
+{
+  sva_boolean_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_boolean_exprt &>(expr);
+}
+
 /// accept_on, reject_on, sync_accept_on, sync_reject_on, disable_iff
-class sva_abort_exprt : public binary_predicate_exprt
+class sva_abort_exprt : public binary_exprt
 {
 public:
   sva_abort_exprt(irep_idt id, exprt condition, exprt property)
-    : binary_predicate_exprt(std::move(condition), id, std::move(property))
+    : binary_exprt(
+        std::move(condition),
+        id,
+        std::move(property),
+        verilog_sva_property_typet{})
   {
   }
 
@@ -43,8 +70,8 @@ public:
   }
 
 protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
+  using binary_exprt::op0;
+  using binary_exprt::op1;
 };
 
 static inline const sva_abort_exprt &to_sva_abort_expr(const exprt &expr)
@@ -87,11 +114,11 @@ static inline sva_disable_iff_exprt &to_sva_disable_iff_expr(exprt &expr)
 }
 
 /// nonindexed variant
-class sva_nexttime_exprt : public unary_predicate_exprt
+class sva_nexttime_exprt : public unary_exprt
 {
 public:
   explicit sva_nexttime_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_nexttime, std::move(op))
+    : unary_exprt(ID_sva_nexttime, std::move(op), verilog_sva_property_typet{})
   {
   }
 };
@@ -111,11 +138,14 @@ static inline sva_nexttime_exprt &to_sva_nexttime_expr(exprt &expr)
 }
 
 /// nonindexed variant
-class sva_s_nexttime_exprt : public unary_predicate_exprt
+class sva_s_nexttime_exprt : public unary_exprt
 {
 public:
   explicit sva_s_nexttime_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_s_nexttime, std::move(op))
+    : unary_exprt(
+        ID_sva_s_nexttime,
+        std::move(op),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -136,14 +166,15 @@ static inline sva_s_nexttime_exprt &to_sva_s_nexttime_expr(exprt &expr)
 }
 
 /// indexed variant of sva_nexttime_exprt
-class sva_indexed_nexttime_exprt : public binary_predicate_exprt
+class sva_indexed_nexttime_exprt : public binary_exprt
 {
 public:
   sva_indexed_nexttime_exprt(constant_exprt index, exprt op)
-    : binary_predicate_exprt(
+    : binary_exprt(
         std::move(index),
         ID_sva_indexed_nexttime,
-        std::move(op))
+        std::move(op),
+        verilog_sva_property_typet{})
   {
   }
 
@@ -168,8 +199,8 @@ public:
   }
 
 protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
+  using binary_exprt::op0;
+  using binary_exprt::op1;
 };
 
 static inline const sva_indexed_nexttime_exprt &
@@ -189,14 +220,15 @@ to_sva_indexed_nexttime_expr(exprt &expr)
 }
 
 /// indexed variant of sva_s_nexttime_exprt
-class sva_indexed_s_nexttime_exprt : public binary_predicate_exprt
+class sva_indexed_s_nexttime_exprt : public binary_exprt
 {
 public:
   sva_indexed_s_nexttime_exprt(constant_exprt index, exprt op)
-    : binary_predicate_exprt(
+    : binary_exprt(
         std::move(index),
         ID_sva_indexed_s_nexttime,
-        std::move(op))
+        std::move(op),
+        verilog_sva_property_typet{})
   {
   }
 
@@ -221,8 +253,8 @@ public:
   }
 
 protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
+  using binary_exprt::op0;
+  using binary_exprt::op1;
 };
 
 static inline const sva_indexed_s_nexttime_exprt &
@@ -257,7 +289,7 @@ public:
         std::move(__lower),
         std::move(__upper),
         std::move(__op),
-        bool_typet{})
+        verilog_sva_property_typet{})
   {
   }
 
@@ -358,11 +390,14 @@ static inline sva_eventually_exprt &to_sva_eventually_expr(exprt &expr)
   return static_cast<sva_eventually_exprt &>(expr);
 }
 
-class sva_s_eventually_exprt : public unary_predicate_exprt
+class sva_s_eventually_exprt : public unary_exprt
 {
 public:
   explicit sva_s_eventually_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_s_eventually, std::move(op))
+    : unary_exprt(
+        ID_sva_s_eventually,
+        std::move(op),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -414,11 +449,11 @@ to_sva_ranged_s_eventually_expr(exprt &expr)
   return static_cast<sva_ranged_s_eventually_exprt &>(expr);
 }
 
-class sva_always_exprt : public unary_predicate_exprt
+class sva_always_exprt : public unary_exprt
 {
 public:
   explicit sva_always_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_always, std::move(op))
+    : unary_exprt(ID_sva_always, std::move(op), verilog_sva_property_typet{})
   {
   }
 };
@@ -492,11 +527,11 @@ static inline sva_s_always_exprt &to_sva_s_always_expr(exprt &expr)
   return static_cast<sva_s_always_exprt &>(expr);
 }
 
-class sva_cover_exprt : public unary_predicate_exprt
+class sva_cover_exprt : public unary_exprt
 {
 public:
   explicit sva_cover_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_cover, std::move(op))
+    : unary_exprt(ID_sva_cover, std::move(op), verilog_sva_property_typet{})
   {
   }
 };
@@ -515,11 +550,11 @@ static inline sva_cover_exprt &to_sva_cover_expr(exprt &expr)
   return static_cast<sva_cover_exprt &>(expr);
 }
 
-class sva_assume_exprt : public unary_predicate_exprt
+class sva_assume_exprt : public unary_exprt
 {
 public:
   explicit sva_assume_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_assume, std::move(op))
+    : unary_exprt(ID_sva_assume, std::move(op), verilog_sva_property_typet{})
   {
   }
 };
@@ -538,11 +573,15 @@ static inline sva_assume_exprt &to_sva_assume_expr(exprt &expr)
   return static_cast<sva_assume_exprt &>(expr);
 }
 
-class sva_until_exprt : public binary_predicate_exprt
+class sva_until_exprt : public binary_exprt
 {
 public:
   explicit sva_until_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_until, std::move(op1))
+    : binary_exprt(
+        std::move(op0),
+        ID_sva_until,
+        std::move(op1),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -561,11 +600,15 @@ static inline sva_until_exprt &to_sva_until_expr(exprt &expr)
   return static_cast<sva_until_exprt &>(expr);
 }
 
-class sva_s_until_exprt : public binary_predicate_exprt
+class sva_s_until_exprt : public binary_exprt
 {
 public:
   explicit sva_s_until_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_s_until, std::move(op1))
+    : binary_exprt(
+        std::move(op0),
+        ID_sva_s_until,
+        std::move(op1),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -585,11 +628,15 @@ static inline sva_s_until_exprt &to_sva_s_until_expr(exprt &expr)
 }
 
 /// SVA until_with operator -- like LTL (weak) R, but lhs/rhs swapped
-class sva_until_with_exprt : public binary_predicate_exprt
+class sva_until_with_exprt : public binary_exprt
 {
 public:
   explicit sva_until_with_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_until_with, std::move(op1))
+    : binary_exprt(
+        std::move(op0),
+        ID_sva_until_with,
+        std::move(op1),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -610,14 +657,15 @@ static inline sva_until_with_exprt &to_sva_until_with_expr(exprt &expr)
 }
 
 /// SVA s_until_with operator -- like LTL strong R, but lhs/rhs swapped
-class sva_s_until_with_exprt : public binary_predicate_exprt
+class sva_s_until_with_exprt : public binary_exprt
 {
 public:
   explicit sva_s_until_with_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(
+    : binary_exprt(
         std::move(op0),
         ID_sva_s_until_with,
-        std::move(op1))
+        std::move(op1),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -638,17 +686,18 @@ static inline sva_s_until_with_exprt &to_sva_s_until_with_expr(exprt &expr)
 }
 
 /// base class for |->, |=>, #-#, #=#
-class sva_implication_base_exprt : public binary_predicate_exprt
+class sva_implication_base_exprt : public binary_exprt
 {
 public:
   explicit sva_implication_base_exprt(
     exprt __antecedent,
     irep_idt __id,
     exprt __consequent)
-    : binary_predicate_exprt(
+    : binary_exprt(
         std::move(__antecedent),
         __id,
-        std::move(__consequent))
+        std::move(__consequent),
+        verilog_sva_property_typet{})
   {
   }
 
@@ -771,11 +820,11 @@ to_sva_non_overlapped_implication_expr(exprt &expr)
   return static_cast<sva_non_overlapped_implication_exprt &>(expr);
 }
 
-class sva_not_exprt : public unary_predicate_exprt
+class sva_not_exprt : public unary_exprt
 {
 public:
   explicit sva_not_exprt(exprt op)
-    : unary_predicate_exprt(ID_sva_not, std::move(op))
+    : unary_exprt(ID_sva_not, std::move(op), verilog_sva_property_typet{})
   {
   }
 };
@@ -794,11 +843,16 @@ static inline sva_not_exprt &to_sva_not_expr(exprt &expr)
   return static_cast<sva_not_exprt &>(expr);
 }
 
-class sva_and_exprt : public binary_predicate_exprt
+class sva_and_exprt : public binary_exprt
 {
 public:
-  explicit sva_and_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_and, std::move(op1))
+  // can be a sequence or property, depending on operands
+  explicit sva_and_exprt(exprt op0, exprt op1, typet __type)
+    : binary_exprt(
+        std::move(op0),
+        ID_sva_and,
+        std::move(op1),
+        std::move(__type))
   {
   }
 };
@@ -846,11 +900,15 @@ to_sva_sequence_concatenation_expr(exprt &expr)
   return static_cast<sva_sequence_concatenation_exprt &>(expr);
 }
 
-class sva_iff_exprt : public binary_predicate_exprt
+class sva_iff_exprt : public binary_exprt
 {
 public:
   explicit sva_iff_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_iff, std::move(op1))
+    : binary_exprt(
+        std::move(op0),
+        ID_sva_iff,
+        std::move(op1),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -869,11 +927,15 @@ static inline sva_iff_exprt &to_sva_iff_expr(exprt &expr)
   return static_cast<sva_iff_exprt &>(expr);
 }
 
-class sva_implies_exprt : public binary_predicate_exprt
+class sva_implies_exprt : public binary_exprt
 {
 public:
   explicit sva_implies_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_implies, std::move(op1))
+    : binary_exprt(
+        std::move(op0),
+        ID_sva_implies,
+        std::move(op1),
+        verilog_sva_property_typet{})
   {
   }
 };
@@ -892,11 +954,12 @@ static inline sva_implies_exprt &to_sva_implies_expr(exprt &expr)
   return static_cast<sva_implies_exprt &>(expr);
 }
 
-class sva_or_exprt : public binary_predicate_exprt
+class sva_or_exprt : public binary_exprt
 {
 public:
-  explicit sva_or_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_or, std::move(op1))
+  // These can be sequences or properties, depending on the operands
+  explicit sva_or_exprt(exprt op0, exprt op1, typet __type)
+    : binary_exprt(std::move(op0), ID_sva_or, std::move(op1), std::move(__type))
   {
   }
 };
@@ -1103,7 +1166,7 @@ public:
         std::move(__cond),
         std::move(__true_case),
         std::move(__false_case),
-        bool_typet())
+        verilog_sva_property_typet{})
   {
   }
 
@@ -1160,11 +1223,11 @@ static inline sva_if_exprt &to_sva_if_expr(exprt &expr)
 
 /// Base class for sequence property expressions.
 /// 1800-2017 16.12.2 Sequence property
-class sva_sequence_property_expr_baset : public unary_predicate_exprt
+class sva_sequence_property_expr_baset : public unary_exprt
 {
 public:
   sva_sequence_property_expr_baset(irep_idt __id, exprt __op)
-    : unary_predicate_exprt(__id, std::move(__op))
+    : unary_exprt(__id, std::move(__op), verilog_sva_property_typet{})
   {
   }
 
@@ -1179,7 +1242,7 @@ public:
   }
 
 protected:
-  using unary_predicate_exprt::op;
+  using unary_exprt::op;
 };
 
 inline const sva_sequence_property_expr_baset &
@@ -1244,14 +1307,15 @@ inline sva_weak_exprt &to_sva_weak_expr(exprt &expr)
   return static_cast<sva_weak_exprt &>(expr);
 }
 
-class sva_case_exprt : public binary_predicate_exprt
+class sva_case_exprt : public binary_exprt
 {
 public:
   explicit sva_case_exprt(exprt __case_op, exprt __cases)
-    : binary_predicate_exprt(
+    : binary_exprt(
         std::move(__case_op),
         ID_sva_case,
-        std::move(__cases))
+        std::move(__cases),
+        verilog_sva_property_typet{})
   {
   }
 
@@ -1308,8 +1372,8 @@ public:
   exprt lowering() const;
 
 protected:
-  using binary_predicate_exprt::op0;
-  using binary_predicate_exprt::op1;
+  using binary_exprt::op0;
+  using binary_exprt::op1;
 };
 
 inline const sva_case_exprt &to_sva_case_expr(const exprt &expr)

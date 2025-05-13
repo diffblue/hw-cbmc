@@ -454,10 +454,16 @@ sequence_matchest instantiate_sequence(
 
     return result;
   }
+  else if(expr.id() == ID_sva_boolean)
+  {
+    // a state predicate
+    auto &predicate = to_sva_boolean_expr(expr).op();
+    auto instantiated = instantiate_property(predicate, t, no_timeframes);
+    return {{instantiated.first, instantiated.second}};
+  }
   else
   {
-    // not a sequence, evaluate as state predicate
-    auto instantiated = instantiate_property(expr, t, no_timeframes);
-    return {{instantiated.first, instantiated.second}};
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      false, "unexpected sequence expression", expr.pretty());
   }
 }
