@@ -20,6 +20,7 @@ bool verilog_synthesis(
   const irep_idt &module,
   verilog_standardt,
   bool ignore_initial,
+  bool initial_zero,
   message_handlert &);
 
 bool verilog_synthesis(
