@@ -1,10 +1,10 @@
 CORE
 always_with_range1.sv
 --smv-netlist
-^LTLSPEC node275 & X node363 & X X node451 .*
-^LTLSPEC G node1155$
-^LTLSPEC node1243 & X node1331 & X X node1419 .*
-^LTLSPEC G \(\!node2066 \| X node2097\)$
+^LTLSPEC node275 & X node275 & X X node275 .*
+^LTLSPEC G node275$
+^LTLSPEC node275 & X node275 & X X node275 .*
+^LTLSPEC G \(\!node306 \| X node337\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
