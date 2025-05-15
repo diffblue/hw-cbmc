@@ -23,7 +23,6 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-netlist/instantiate_netlist.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
-#include <verilog/sva_expr.h>
 
 #include "netlist.h"
 
@@ -66,7 +65,7 @@ protected:
   const namespacet ns;
   netlistt netlist;
 
-  static bool property_supported(const exprt &);
+  static std::optional<exprt> property_supported(const exprt &);
 
   // the Manager must appear before any BDDs
   // to do the cleanup in the right order
@@ -199,9 +198,20 @@ property_checker_resultt bdd_enginet::operator()()
                          << ", nodes: " << netlist.number_of_nodes()
                          << messaget::eom;
 
-    for(const auto &property : properties.properties)
-      if(property_supported(property.normalized_expr))
-        get_atomic_propositions(property.normalized_expr);
+    for(auto &property : properties.properties)
+    {
+      if(!property.is_disabled() && !property.is_assumed())
+      {
+        auto converted_opt = property_supported(property.normalized_expr);
+        if(converted_opt.has_value())
+        {
+          property.normalized_expr = *converted_opt;
+          get_atomic_propositions(*converted_opt);
+        }
+        else
+          property.failure("property not supported by BDD engine");
+      }
+    }
 
     message.status() << "Building BDD for netlist" << messaget::eom;
 
@@ -449,40 +459,29 @@ Function: bdd_enginet::property_supported
 
 \*******************************************************************/
 
-bool bdd_enginet::property_supported(const exprt &expr)
+std::optional<exprt> bdd_enginet::property_supported(const exprt &expr)
 {
   // Our engine knows all of CTL.
   if(is_CTL(expr))
-    return true;
+    return expr;
 
   if(is_LTL(expr))
   {
     // We can map selected path properties to CTL.
-    return LTL_to_CTL(expr).has_value();
+    return LTL_to_CTL(expr);
   }
 
   if(is_SVA(expr))
   {
-    if(
-      expr.id() == ID_sva_always &&
-      !has_temporal_operator(to_sva_always_expr(expr).op()))
-    {
-      // always p
-      return true;
-    }
-
-    if(
-      expr.id() == ID_sva_always &&
-      to_sva_always_expr(expr).op().id() == ID_sva_s_eventually &&
-      !has_temporal_operator(
-        to_sva_s_eventually_expr(to_sva_always_expr(expr).op()).op()))
-    {
-      // always s_eventually p
-      return true;
-    }
+    // We can map some SVA to LTL. In turn, some of that can be mapped to CTL.
+    auto ltl_opt = SVA_to_LTL(expr);
+    if(ltl_opt.has_value())
+      return property_supported(ltl_opt.value());
+    else
+      return {};
   }
 
-  return false;
+  return {};
 }
 
 /*******************************************************************\
@@ -505,50 +504,11 @@ void bdd_enginet::check_property(propertyt &property)
   if(property.is_assumed())
     return;
 
-  if(!property_supported(property.normalized_expr))
-  {
-    property.failure("property not supported by BDD engine");
+  if(property.is_failure())
     return;
-  }
 
   message.status() << "Checking " << property.name << messaget::eom;
   property.status=propertyt::statust::UNKNOWN;
-
-  if(
-    property.normalized_expr.id() == ID_sva_always &&
-    to_sva_always_expr(property.normalized_expr).op().id() ==
-      ID_sva_s_eventually &&
-    !has_temporal_operator(to_sva_s_eventually_expr(
-                             to_sva_always_expr(property.normalized_expr).op())
-                             .op()))
-  {
-    // always s_eventually p --> AG AF p
-    auto p = to_sva_s_eventually_expr(
-               to_sva_always_expr(property.normalized_expr).op())
-               .op();
-    property.normalized_expr = AG_exprt{AF_exprt{p}};
-  }
-
-  if(
-    property.normalized_expr.id() == ID_sva_always &&
-    !has_temporal_operator(to_sva_always_expr(property.normalized_expr).op()))
-  {
-    // always p --> AG p
-    auto p = to_sva_always_expr(property.normalized_expr).op();
-    property.normalized_expr = AG_exprt{p};
-  }
-
-  // Our engine knows CTL only.
-  // We map selected path properties to CTL.
-  if(
-    has_temporal_operator(property.normalized_expr) &&
-    is_LTL(property.normalized_expr))
-  {
-    auto CTL_opt = LTL_to_CTL(property.normalized_expr);
-    CHECK_RETURN(CTL_opt.has_value());
-    property.normalized_expr = CTL_opt.value();
-    CHECK_RETURN(is_CTL(property.normalized_expr));
-  }
 
   if(is_AGp(property.normalized_expr))
   {

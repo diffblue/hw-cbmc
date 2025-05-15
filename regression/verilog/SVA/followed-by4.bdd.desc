@@ -1,0 +1,11 @@
+CORE
+followed-by4.sv
+--bdd
+^\[main\.p1\] always \(main\.x == 0 #-# 1\): REFUTED$
+^\[main\.p2\] \(1 or \(##2 1\)\) #-# main\.x == 2: FAILURE: property not supported by BDD engine$
+^\[main\.p3\] \(1 or \(##2 1\)\) #-# main\.x == 0: FAILURE: property not supported by BDD engine$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
