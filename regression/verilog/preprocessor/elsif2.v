@@ -1,6 +1,5 @@
-`define X 1
+`define Y 1
 `ifdef X
-IFDEF
 `elsif Y
 ELSIF
 `endif
