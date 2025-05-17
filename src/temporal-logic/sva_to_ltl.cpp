@@ -88,7 +88,7 @@ std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
       for(auto &match_op : matches_op)
       {
         ltl_sequence_matcht match;
-        for(mp_integer i=0; i<n; i++)
+        for(mp_integer i = 0; i < n; i++)
         {
           match.append(match_op);
         }
