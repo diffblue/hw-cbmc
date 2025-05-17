@@ -551,6 +551,37 @@ void verilog_preprocessort::directive()
     conditional.else_part=true;
     condition=conditional.get_cond();
   }
+  else if(text == "elsif")
+  {
+    if(conditionals.empty())
+      throw verilog_preprocessor_errort() << "`elsif without `ifdef/`ifndef";
+
+    // skip whitespace
+    tokenizer().skip_ws();
+
+    // we expect an identifier
+    const auto identifier_token = tokenizer().next_token();
+
+    if(!identifier_token.is_identifier())
+      throw verilog_preprocessor_errort()
+        << "expecting an identifier after `elsif";
+
+    auto &identifier = identifier_token.text;
+
+    tokenizer().skip_until_eol();
+
+    bool defined = defines.find(identifier) != defines.end();
+
+    conditionalt &conditional = conditionals.back();
+
+    if(conditional.else_part)
+    {
+      throw verilog_preprocessor_errort() << "`elsif after `else";
+    }
+
+    conditional.condition = defined;
+    condition = conditional.get_cond();
+  }
   else if(text=="endif")
   {
     if(conditionals.empty())
