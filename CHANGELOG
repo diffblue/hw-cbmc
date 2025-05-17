@@ -1,5 +1,7 @@
 # EBMC 5.7
 
+* Verilog: `elsif preprocessor directive
+
 # EBMC 5.6
 
 * SystemVerilog: [*] and [+] SVA operators

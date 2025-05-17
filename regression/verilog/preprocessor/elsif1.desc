@@ -1,8 +1,10 @@
-KNOWNBUG
+CORE
 elsif1.v
-
+--preprocess
+^IFDEF$
 ^EXIT=0$
 ^SIGNAL=0$
 --
+^ELSIF$
 --
 The elsif directive is not implemented.

@@ -71,6 +71,36 @@ std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
       }
     return result;
   }
+  else if(sequence.id() == ID_sva_sequence_repetition_star) // [*n], [*n:m]
+  {
+    auto &repetition = to_sva_sequence_repetition_star_expr(sequence);
+    auto matches_op = LTL_sequence_matches(repetition.op());
+
+    if(matches_op.empty())
+      return {};
+
+    std::vector<ltl_sequence_matcht> result;
+
+    if(repetition.repetitions_given() && !repetition.is_range())
+    {
+      auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
+
+      for(auto &match_op : matches_op)
+      {
+        ltl_sequence_matcht match;
+        for(mp_integer i = 0; i < n; i++)
+        {
+          match.append(match_op);
+        }
+
+        result.push_back(std::move(match));
+      }
+    }
+    else
+      return {}; // no support
+
+    return result;
+  }
   else if(sequence.id() == ID_sva_cycle_delay)
   {
     auto &delay = to_sva_cycle_delay_expr(sequence);
