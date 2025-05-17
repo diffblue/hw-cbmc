@@ -1,0 +1,9 @@
+CORE
+sequence_repetition7.sv
+--bdd
+^\[.*\] \(main\.a ##1 main\.b\) \[\*5\]: PROVED$
+^\[.*\] \(\!main\.b ##1 \!main\.a\) \[\*5\]: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
