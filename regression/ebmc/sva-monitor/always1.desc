@@ -1,0 +1,13 @@
+CORE
+always1.sv
+--sva-monitor --smv-word-level
+^VAR initial : boolean;$
+^VAR always_activated : boolean;$
+^INIT sva-monitor::initial$
+^INIT !sva-monitor::always_activated$
+^TRANS !next\(sva-monitor::initial\)$
+^TRANS next\(sva-monitor::always_activated\) = sva-monitor::always_active$
+^LTLSPEC G \(sva-monitor::always_active -> FALSE\)$
+^EXIT=0$
+^SIGNAL=0$
+--
