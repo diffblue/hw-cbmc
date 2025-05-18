@@ -25,27 +25,78 @@ static exprt n_Xes(mp_integer n, exprt op)
 // Returns a set of match conditions (given as LTL formula)
 struct ltl_sequence_matcht
 {
-  ltl_sequence_matcht(exprt __cond, mp_integer __length)
-    : cond(std::move(__cond)), length(std::move(__length))
+  // the empty match
+  ltl_sequence_matcht()
   {
-    PRECONDITION(length >= 0);
   }
 
-  exprt cond;        // LTL
-  mp_integer length; // match_end - match_start + 1
-
-  bool empty() const
+  // a match of length 1
+  explicit ltl_sequence_matcht(exprt __cond) : cond_vector{1, std::move(__cond)}
   {
-    return length == 0;
+  }
+
+  std::vector<exprt> cond_vector;
+
+  std::size_t length()
+  {
+    return cond_vector.size();
+  }
+
+  bool empty_match() const
+  {
+    return cond_vector.empty();
+  }
+
+  // c0 ∧ X c1 ∧ XX c2 ....
+  exprt cond_expr() const
+  {
+    exprt::operandst conjuncts;
+    conjuncts.reserve(cond_vector.size());
+    for(std::size_t i = 0; i < cond_vector.size(); i++)
+    {
+      auto &c = cond_vector[i];
+      if(!c.is_true())
+        conjuncts.push_back(n_Xes(i, c));
+    }
+    return conjunction(conjuncts);
+  }
+
+  // generate true ##1 ... ##1 true with length n
+  static ltl_sequence_matcht true_match(const mp_integer &n)
+  {
+    ltl_sequence_matcht result;
+    for(mp_integer i; i < n; ++i)
+      result.cond_vector.push_back(true_exprt{});
+    return result;
   }
 };
+
+// nonoverlapping concatenation
+ltl_sequence_matcht concat(ltl_sequence_matcht a, const ltl_sequence_matcht &b)
+{
+  a.cond_vector.insert(
+    a.cond_vector.end(), b.cond_vector.begin(), b.cond_vector.end());
+  return a;
+}
+
+// overlapping concatenation
+ltl_sequence_matcht
+overlapping_concat(ltl_sequence_matcht a, ltl_sequence_matcht b)
+{
+  PRECONDITION(!a.empty_match());
+  PRECONDITION(!b.empty_match());
+  auto a_last = a.cond_vector.back();
+  a.cond_vector.pop_back();
+  b.cond_vector.front() = conjunction({a_last, b.cond_vector.front()});
+  return concat(std::move(a), b);
+}
 
 std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
 {
   if(sequence.id() == ID_sva_boolean)
   {
     // atomic proposition
-    return {{to_sva_boolean_expr(sequence).op(), 1}};
+    return {ltl_sequence_matcht{to_sva_boolean_expr(sequence).op()}};
   }
   else if(sequence.id() == ID_sva_sequence_concatenation)
   {
@@ -57,17 +108,16 @@ std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
       return {};
 
     std::vector<ltl_sequence_matcht> result;
+
     // cross product
     for(auto &match_lhs : matches_lhs)
       for(auto &match_rhs : matches_rhs)
       {
-        // Concatenation is overlapping, hence deduct one from
-        // the length.
-        auto delay = match_lhs.length - 1;
-        auto rhs_delayed = n_Xes(delay, match_rhs.cond);
-        result.emplace_back(
-          and_exprt{match_lhs.cond, rhs_delayed},
-          match_lhs.length + match_rhs.length - 1);
+        // Sequence concatenation is overlapping
+        auto new_match = overlapping_concat(match_lhs, match_rhs);
+        CHECK_RETURN(
+          new_match.length() == match_lhs.length() + match_rhs.length() - 1);
+        result.push_back(std::move(new_match));
       }
     return result;
   }
@@ -82,12 +132,12 @@ std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
 
     if(delay.to().is_nil())
     {
+      // delay as instructed
+      auto delay_sequence = ltl_sequence_matcht::true_match(from_int);
+
       for(auto &match : matches)
-      {
-        // delay as instructed
-        match.length += from_int;
-        match.cond = n_Xes(from_int, match.cond);
-      }
+        match = concat(delay_sequence, match);
+
       return matches;
     }
     else if(delay.to().id() == ID_infinity)
@@ -101,13 +151,12 @@ std::vector<ltl_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
 
       for(mp_integer i = from_int; i <= to_int; ++i)
       {
+        // delay as instructed
+        auto delay_sequence = ltl_sequence_matcht::true_match(i);
+
         for(const auto &match : matches)
         {
-          // delay as instructed
-          auto new_match = match;
-          new_match.length += from_int;
-          new_match.cond = n_Xes(i, match.cond);
-          new_matches.push_back(std::move(new_match));
+          new_matches.push_back(concat(delay_sequence, match));
         }
       }
 
@@ -239,15 +288,15 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     for(auto &match : matches)
     {
       const auto overlapped = expr.id() == ID_sva_overlapped_implication;
-      if(match.empty() && overlapped)
+      if(match.empty_match() && overlapped)
       {
         // ignore the empty match
       }
       else
       {
-        auto delay = match.length + (overlapped ? 0 : 1) - 1;
+        auto delay = match.length() + (overlapped ? 0 : 1) - 1;
         auto delayed_property = n_Xes(delay, property_rec.value());
-        conjuncts.push_back(implies_exprt{match.cond, delayed_property});
+        conjuncts.push_back(implies_exprt{match.cond_expr(), delayed_property});
       }
     }
 
@@ -275,15 +324,15 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     for(auto &match : matches)
     {
       const auto overlapped = expr.id() == ID_sva_overlapped_followed_by;
-      if(match.empty() && overlapped)
+      if(match.empty_match() && overlapped)
       {
         // ignore the empty match
       }
       else
       {
-        auto delay = match.length + (overlapped ? 0 : 1) - 1;
+        auto delay = match.length() + (overlapped ? 0 : 1) - 1;
         auto delayed_property = n_Xes(delay, property_rec.value());
-        disjuncts.push_back(and_exprt{match.cond, delayed_property});
+        disjuncts.push_back(and_exprt{match.cond_expr(), delayed_property});
       }
     }
 
@@ -310,8 +359,8 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
 
     for(auto &match : matches)
     {
-      if(!match.empty())
-        disjuncts.push_back(match.cond);
+      if(!match.empty_match())
+        disjuncts.push_back(match.cond_expr());
     }
 
     return disjunction(disjuncts);
