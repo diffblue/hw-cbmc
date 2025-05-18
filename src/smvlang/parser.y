@@ -296,6 +296,7 @@ static void new_module(YYSTYPE &module)
 %left  COLONCOLON_Token
 %left  UMINUS           /* supplies precedence for unary minus */
 %left  DOT_Token
+%nonassoc '['
 
 %%
 
@@ -689,6 +690,8 @@ term       : variable_identifier
            | term mod_Token term      { binary($$, $1, ID_mod, $3); }
            | term GTGT_Token term     { binary($$, $1, ID_shr, $3); }
            | term LTLT_Token term     { binary($$, $1, ID_shl, $3); }
+           | term '[' NUMBER_Token ',' NUMBER_Token ']' // bit selection
+                                      { init($$, ID_extractbits); mto($$, $1); mto($$, $3); mto($$, $5); }
            | term COLONCOLON_Token term { binary($$, $1, ID_concatenation, $3); }
            | term TIMES_Token term    { binary($$, $1, ID_mult, $3); }
            | term DIVIDE_Token term   { binary($$, $1, ID_div, $3); }
