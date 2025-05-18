@@ -11,4 +11,6 @@ module main(input clk);
 
   initial p2: assert property ((##2 1 and 1) |-> x == 2);
 
+  initial p3: assert property ((##2 1 and 1) #-# x == 2);
+
 endmodule

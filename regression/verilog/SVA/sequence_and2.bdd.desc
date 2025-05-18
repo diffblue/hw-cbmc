@@ -1,0 +1,11 @@
+CORE
+sequence_and2.sv
+--bdd
+\[.*\] \(1 and \(##2 1\)\) \|-> main\.x == 2: FAILURE: property not supported by BDD engine$
+\[.*\] \(\(##2 1\) and 1\) \|-> main\.x == 2: FAILURE: property not supported by BDD engine$
+\[.*\] \(\(##2 1\) and 1\) #-# main\.x == 2: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
