@@ -119,7 +119,7 @@ smv_invar(const exprt &expr, const namespacet &ns, std::ostream &out)
   if(expr.id() == ID_and)
   {
     for(auto &conjunct : expr.operands())
-      smv_initial_states(conjunct, ns, out);
+      smv_invar(conjunct, ns, out);
   }
   else if(expr.is_true())
   {

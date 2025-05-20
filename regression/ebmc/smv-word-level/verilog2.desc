@@ -2,18 +2,18 @@ CORE
 verilog2.sv
 --smv-word-level
 ^MODULE main$
-^INIT main\.sw1 = extend\(signed\(main\.ui\), 24\)$
-^INIT main\.sw2 = extend\(main\.si, 24\)$
-^INIT main\.uw1 = extend\(main\.ui, 24\)$
-^INIT main\.uw2 = unsigned\(extend\(main\.si, 24\)\)$
-^INIT main\.sn1 = signed\(resize\(main\.ui, 4\)\)$
-^INIT main\.sn2 = signed\(resize\(unsigned\(main.si\), 4\)\)$
-^INIT main\.un1 = resize\(main\.ui, 4\)$
-^INIT main\.un2 = resize\(unsigned\(main\.si\), 4\)$
-^INIT main\.sb1 = signed\(main\.ui\)$
-^INIT main\.sb2 = main\.si$
-^INIT main\.ub1 = main\.ui$
-^INIT main\.ub2 = unsigned\(main\.si\)$
+^INVAR main\.sw1 = extend\(signed\(main\.ui\), 24\)$
+^INVAR main\.sw2 = extend\(main\.si, 24\)$
+^INVAR main\.uw1 = extend\(main\.ui, 24\)$
+^INVAR main\.uw2 = unsigned\(extend\(main\.si, 24\)\)$
+^INVAR main\.sn1 = signed\(resize\(main\.ui, 4\)\)$
+^INVAR main\.sn2 = signed\(resize\(unsigned\(main.si\), 4\)\)$
+^INVAR main\.un1 = resize\(main\.ui, 4\)$
+^INVAR main\.un2 = resize\(unsigned\(main\.si\), 4\)$
+^INVAR main\.sb1 = signed\(main\.ui\)$
+^INVAR main\.sb2 = main\.si$
+^INVAR main\.ub1 = main\.ui$
+^INVAR main\.ub2 = unsigned\(main\.si\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
