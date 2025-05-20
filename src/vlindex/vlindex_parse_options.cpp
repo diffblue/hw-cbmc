@@ -79,9 +79,8 @@ void vlindex_parse_optionst::help()
 {
   std::cout
     << "\n"
-       "* *             VLINDEX - Copyright (C) 2024                * *\n"
-       "* *                     Version " EBMC_VERSION
-       "                         * *\n"
+    << banner_string("VLINDEX", EBMC_VERSION) << '\n'
+    << "* *                  Copyright (C) 2024                     * *\n"
        "* *                    dkr@amazon.com                       * *\n"
        "\n";
 

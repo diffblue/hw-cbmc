@@ -344,13 +344,13 @@ Function: ebmc_parse_optionst::help
 
 void ebmc_parse_optionst::help()
 {
-  std::cout <<
-    "\n"
-    "* *      EBMC - Copyright (C) 2001-2017 Daniel Kroening     * *\n"
-    "* *                     Version " EBMC_VERSION "                         * *\n"
-    "* *     University of Oxford, Computer Science Department   * *\n"
-    "* *                  kroening@kroening.com                  * *\n"
-    "\n";
+  std::cout
+    << '\n'
+    << banner_string("EBMC", EBMC_VERSION) << '\n'
+    << "* *      EBMC - Copyright (C) 2001-2017 Daniel Kroening     * *\n"
+       "* *     University of Oxford, Computer Science Department   * *\n"
+       "* *                  kroening@kroening.com                  * *\n"
+       "\n";
 
   std::cout << help_formatter(
     // clang-format off

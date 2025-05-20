@@ -16,6 +16,7 @@ SRC = \
       ebmc_parse_options.cpp \
       ebmc_properties.cpp \
       ebmc_solver_factory.cpp \
+      ebmc_version.cpp \
       instrument_past.cpp \
       k_induction.cpp \
       liveness_to_safety.cpp \
@@ -69,12 +70,27 @@ endif
 include ../config.inc
 include ../common
 
+# get version from git
+GIT_INFO = $(shell git describe --tags --always --dirty || echo "n/a")
+RELEASE_INFO = const char *EBMC_VERSION="$(EBMC_VERSION) ($(GIT_INFO))";
+GIT_INFO_FILE = ebmc_version.cpp
+
+$(GIT_INFO_FILE):
+	echo '$(RELEASE_INFO)' > $@
+
+# mark the actually generated file as a phony target to enforce a rebuild - but
+# only if the version information has changed!
+KNOWN_RELEASE_INFO = $(shell cat $(GIT_INFO_FILE) 2>/dev/null)
+ifneq ($(RELEASE_INFO), $(KNOWN_RELEASE_INFO))
+.PHONY: $(GIT_INFO_FILE)
+endif
+
 ifneq ($(wildcard ../vhdl/Makefile),)
   OBJ += ../vhdl/vhdl$(LIBEXT)
   CXXFLAGS += -DHAVE_VHDL
 endif
 
-CLEANFILES = ebmc$(EXEEXT)
+CLEANFILES = $(GIT_INFO_FILE) ebmc$(EXEEXT)
 
 all: ebmc$(EXEEXT)
 
