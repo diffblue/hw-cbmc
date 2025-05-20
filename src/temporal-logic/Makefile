@@ -2,6 +2,7 @@ SRC = ctl.cpp \
       ltl.cpp \
       nnf.cpp \
       normalize_property.cpp \
+      sva_sequence_match.cpp \
       sva_to_ltl.cpp \
       temporal_logic.cpp \
       trivial_sva.cpp \
