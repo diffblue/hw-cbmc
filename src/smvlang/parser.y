@@ -421,7 +421,7 @@ ltl_specification:
            }
            ;
  
-extern_var : variable_name EQUAL_Token QUOTE_Token
+extern_var : variable_identifier EQUAL_Token QUOTE_Token
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
@@ -440,7 +440,7 @@ vardecls   : vardecl
            | vardecls vardecl
            ;
 
-module_argument: variable_name
+module_argument: variable_identifier
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
@@ -539,7 +539,7 @@ enum_element: STRING_Token
            }
            ;
 
-vardecl    : variable_name ':' type_specifier ';'
+vardecl    : variable_identifier ':' type_specifier ';'
 {
   const irep_idt &identifier=stack_expr($1).get(ID_identifier);
   smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
@@ -621,7 +621,7 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            }
            ;
 
-assignment_var: variable_name
+assignment_var: variable_identifier
            ;
 
 assignment_head: init_Token { init($$, ID_init); }
@@ -670,7 +670,7 @@ define     : assignment_var BECOMES_Token formula ';'
 formula    : term
            ;
 
-term       : variable_name
+term       : variable_identifier
            | next_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
            | '(' formula ')'          { $$=$2; }
            | '{' formula_list '}'     { $$=$2; stack_expr($$).id("smv_nondet_choice"); }
@@ -684,7 +684,7 @@ term       : variable_name
            | case_Token cases esac_Token { $$=$2; }
            | term IF_Token term ':' term %prec IF_Token
                                       { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
-           | switch_Token '(' variable_name ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
+           | switch_Token '(' variable_identifier ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            | MINUS_Token term %prec UMINUS
                                       { init($$, ID_unary_minus); mto($$, $2); }
            | term mod_Token term      { binary($$, $1, ID_mod, $3); }
@@ -786,7 +786,7 @@ formula_list:
 identifier : STRING_Token
            ;
 
-variable_name: qstring_list
+variable_identifier: complex_identifier
            {
              const irep_idt &id=stack_expr($1).id();
 
@@ -826,26 +826,26 @@ variable_name: qstring_list
            }
            ;
 
-qstring_list: QSTRING_Token
+complex_identifier: QSTRING_Token
            {
              init($$, std::string(stack_expr($1).id_string(), 1)); // remove backslash
            }
            | STRING_Token
-           | qstring_list DOT_Token QSTRING_Token
+           | complex_identifier DOT_Token QSTRING_Token
            {
              std::string id(stack_expr($1).id_string());
              id+=".";
              id+=std::string(stack_expr($3).id_string(), 1); // remove backslash
              init($$, id);
            }
-           | qstring_list DOT_Token STRING_Token
+           | complex_identifier DOT_Token STRING_Token
            {
              std::string id(stack_expr($1).id_string());
              id+=".";
              id+=stack_expr($3).id_string();
              init($$, id);
            }
-           | qstring_list '[' NUMBER_Token ']'
+           | complex_identifier '[' NUMBER_Token ']'
            {
              std::string id(stack_expr($1).id_string());
              id+="[";
@@ -853,7 +853,7 @@ qstring_list: QSTRING_Token
              id+="]";
              init($$, id);
            }
-           | qstring_list '(' NUMBER_Token ')'
+           | complex_identifier '(' NUMBER_Token ')'
            {
              std::string id(stack_expr($1).id_string());
              id+="(";
