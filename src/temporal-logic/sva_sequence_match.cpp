@@ -29,6 +29,16 @@ sva_sequence_matcht concat(sva_sequence_matcht a, const sva_sequence_matcht &b)
   return a;
 }
 
+// nonoverlapping concatenation
+sva_sequence_matcht repeat(sva_sequence_matcht m, const mp_integer &n)
+{
+  sva_sequence_matcht result;
+  for(mp_integer i = 0; i < n; ++i)
+    result.cond_vector.insert(
+      result.cond_vector.end(), m.cond_vector.begin(), m.cond_vector.end());
+  return result;
+}
+
 // overlapping concatenation
 sva_sequence_matcht
 overlapping_concat(sva_sequence_matcht a, sva_sequence_matcht b)
@@ -69,6 +79,47 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
           new_match.length() == match_lhs.length() + match_rhs.length() - 1);
         result.push_back(std::move(new_match));
       }
+    return result;
+  }
+  else if(sequence.id() == ID_sva_sequence_repetition_star) // [*n], [*n:m]
+  {
+    auto &repetition = to_sva_sequence_repetition_star_expr(sequence);
+    auto matches_op = LTL_sequence_matches(repetition.op());
+
+    if(matches_op.empty())
+      return {};
+
+    std::vector<sva_sequence_matcht> result;
+
+    if(repetition.repetitions_given())
+    {
+      if(repetition.is_range())
+      {
+        if(repetition.is_unbounded()) // [*n:$]
+        {
+          return {}; // no support
+        }
+        else // [*n:m]
+        {
+          auto from = numeric_cast_v<mp_integer>(repetition.from());
+          auto to = numeric_cast_v<mp_integer>(repetition.to());
+
+          for(mp_integer n = from; n < to; ++n)
+            for(auto &match_op : matches_op)
+              result.push_back(repeat(match_op, n));
+        }
+      }
+      else // [*n]
+      {
+        auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
+
+        for(auto &match_op : matches_op)
+          result.push_back(repeat(match_op, n));
+      }
+    }
+    else         // [*]
+      return {}; // no support
+
     return result;
   }
   else if(sequence.id() == ID_sva_cycle_delay)
