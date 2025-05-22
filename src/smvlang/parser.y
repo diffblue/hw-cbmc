@@ -273,9 +273,9 @@ static void new_module(YYSTYPE &module)
 %token ADD_Token
 %token SUB_Token
 
-%token STRING_Token   "string"
-%token QSTRING_Token  "quoted string"
-%token QUOTE_Token    "'"
+%token IDENTIFIER_Token   "identifier"
+%token QIDENTIFIER_Token  "quoted identifier"
+%token STRING_Token    "quoted string"
 %token NUMBER_Token   "number"
 
 /* operator precedence, low to high */
@@ -310,8 +310,8 @@ modules    : module
 module     : module_head module_body
            ;
 
-module_name: STRING_Token
-           | QUOTE_Token
+module_name: IDENTIFIER_Token
+           | STRING_Token
            ;
 
 module_head: MODULE_Token module_name { new_module($2); }
@@ -421,7 +421,7 @@ ltl_specification:
            }
            ;
  
-extern_var : variable_identifier EQUAL_Token QUOTE_Token
+extern_var : variable_identifier EQUAL_Token STRING_Token
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
@@ -532,7 +532,7 @@ enum_list  : enum_element
            }
            ;
 
-enum_element: STRING_Token
+enum_element: IDENTIFIER_Token
            {
              $$=$1;
              PARSER.module->enum_set.insert(stack_expr($1).id_string());
@@ -783,7 +783,12 @@ formula_list:
            | formula_list ',' formula { $$=$1; mto($$, $3); }
            ;
 
-identifier : STRING_Token
+identifier : IDENTIFIER_Token
+           | QIDENTIFIER_Token
+           {
+             // not supported by NuSMV
+             init($$, std::string(stack_expr($1).id_string(), 1)); // remove backslash
+           }
            ;
 
 variable_identifier: complex_identifier
@@ -816,7 +821,7 @@ variable_identifier: complex_identifier
                //PARSER.module->vars[stack_expr($1).id()];
              }
            }
-           | QUOTE_Token
+           | STRING_Token
            {
              const irep_idt &id=stack_expr($1).id();
 
@@ -826,19 +831,16 @@ variable_identifier: complex_identifier
            }
            ;
 
-complex_identifier: QSTRING_Token
-           {
-             init($$, std::string(stack_expr($1).id_string(), 1)); // remove backslash
-           }
-           | STRING_Token
-           | complex_identifier DOT_Token QSTRING_Token
+complex_identifier:
+             identifier
+           | complex_identifier DOT_Token QIDENTIFIER_Token
            {
              std::string id(stack_expr($1).id_string());
              id+=".";
              id+=std::string(stack_expr($3).id_string(), 1); // remove backslash
              init($$, id);
            }
-           | complex_identifier DOT_Token STRING_Token
+           | complex_identifier DOT_Token IDENTIFIER_Token
            {
              std::string id(stack_expr($1).id_string());
              id+=".";
