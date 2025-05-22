@@ -1,12 +1,18 @@
 module converter(input signed [7:0] si, input unsigned [7:0] ui);
 
+  // 1800-2017 10.7 Assignment extension and truncation
+
   // enlarge
+  // The RHS is padded or sign extended.
   wire signed [31:0] sw1 = ui;   // unsigned 8 to signed 32
   wire signed [31:0] sw2 = si;   // signed 8 to signed 32
   wire unsigned [31:0] uw1 = ui; // unsigned 8 to unsigned 32
   wire unsigned [31:0] uw2 = si; // signed 8 to unsigned 32
 
   // shrink
+  // The RHS is truncated.
+  // Icarus Verilog yields 'z' for this, but the standard requires
+  // truncation.  VCS, Questa, Xcelium, Riviera implement this.
   wire signed [3:0] sn1 = ui;   // unsigned 8 to signed 4
   wire signed [3:0] sn2 = si;   // signed 8 to signed 4
   wire unsigned [3:0] un1 = ui; // unsigned 8 to unsigned 4
@@ -22,20 +28,20 @@ endmodule
 
 module main;
 
-  converter c(8'sb1000_0000, 8'b1000_0000);
+  converter c(8'sb1000_1000, 8'b1000_1000);
 
-  assert final(c.sw1 == 128);
-  assert final(c.sw2 == -128);
-  assert final(c.uw1 == 128);
-  assert final(c.uw2 == 4294967168);
-  assert final(c.sn1 == 'z);
-  assert final(c.sn2 == 'z);
-  assert final(c.un1 == 'z);
-  assert final(c.un2 == 'z);
-  assert final(c.sb1 == -128);
-  assert final(c.sb2 == -128);
-  assert final(c.ub1 == 128);
-  assert final(c.ub2 == 128);
+  assert final(c.sw1 == 136);
+  assert final(c.sw2 == -120);
+  assert final(c.uw1 == 136);
+  assert final(c.uw2 == 4294967176);
+  assert final(c.sn1 == -8);
+  assert final(c.sn2 == -8);
+  assert final(c.un1 == 8);
+  assert final(c.un2 == 8);
+  assert final(c.sb1 == -120);
+  assert final(c.sb2 == -120);
+  assert final(c.ub1 == 136);
+  assert final(c.ub2 == 136);
 
   initial begin
     $display("c.sw1 == ", c.sw1);
