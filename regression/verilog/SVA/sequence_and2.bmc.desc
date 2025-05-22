@@ -3,6 +3,7 @@ sequence_and2.sv
 
 \[.*\] \(1 and \(##2 1\)\) \|-> main\.x == 2: PROVED up to bound 5$
 \[.*\] \(\(##2 1\) and 1\) \|-> main\.x == 2: PROVED up to bound 5$
+\[.*\] \(\(##2 1\) and 1\) #-# main\.x == 2: PROVED up to bound 5$
 ^EXIT=0$
 ^SIGNAL=0$
 --
