@@ -8,6 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "show_trans.h"
 
+#include <util/cout_message.h>
+
 #include <verilog/expr2verilog.h>
 
 #include "ebmc_base.h"
@@ -25,23 +27,21 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-class show_transt:public ebmc_baset
+class show_transt
 {
 public:
-  show_transt(
-    const cmdlinet &cmdline,
-    ui_message_handlert &ui_message_handler):
-    ebmc_baset(cmdline, ui_message_handler)
+  explicit show_transt(const transition_systemt &_transition_system)
+    : transition_system(_transition_system)
   {
   }
 
-  int show_trans_verilog_rtl();
-  int show_trans_verilog_netlist();
-  int show_trans();
+  int show_trans_verilog_rtl(std::ostream &);
+  int show_trans_verilog_netlist(std::ostream &);
+  int show_trans(std::ostream &);
 
 protected:
-  int show_trans_verilog_rtl(std::ostream &out);
-  int show_trans_verilog_netlist(std::ostream &out);
+  const transition_systemt &transition_system;
+
   void verilog_header(std::ostream &out, const std::string &desc);
   void
   print_verilog_constraints(const exprt &, const namespacet &, std::ostream &);
@@ -60,11 +60,11 @@ Function: show_trans_verilog_netlist
 \*******************************************************************/
 
 int show_trans_verilog_netlist(
-  const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+  const transition_systemt &transition_system,
+  std::ostream &out)
 {
-  show_transt show_trans(cmdline, ui_message_handler);  
-  return show_trans.show_trans_verilog_netlist();
+  show_transt show_trans(transition_system);
+  return show_trans.show_trans_verilog_netlist(out);
 }
 
 /*******************************************************************\
@@ -80,11 +80,11 @@ Function: show_trans_verilog_rtl
 \*******************************************************************/
 
 int show_trans_verilog_rtl(
-  const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+  const transition_systemt &transition_system,
+  std::ostream &out)
 {
-  show_transt show_trans(cmdline, ui_message_handler);  
-  return show_trans.show_trans_verilog_rtl();
+  show_transt show_trans(transition_system);
+  return show_trans.show_trans_verilog_rtl(out);
 }
 
 /*******************************************************************\
@@ -101,8 +101,10 @@ Function: show_transt::show_trans_verilog_netlist
 
 int show_transt::show_trans_verilog_netlist(std::ostream &out)
 {
+  console_message_handlert message_handler;
+
   output_verilog_netlistt output_verilog(
-    transition_system.symbol_table, out, message.get_message_handler());
+    transition_system.symbol_table, out, message_handler);
 
   try
   {
@@ -145,8 +147,10 @@ Function: show_transt::show_trans_verilog_rtl
 
 int show_transt::show_trans_verilog_rtl(std::ostream &out)
 {
+  console_message_handlert message_handler;
+
   output_verilog_rtlt output_verilog(
-    transition_system.symbol_table, out, message.get_message_handler());
+    transition_system.symbol_table, out, message_handler);
 
   try
   {
@@ -172,6 +176,24 @@ int show_transt::show_trans_verilog_rtl(std::ostream &out)
     return 1;
   }
 
+  return 0;
+}
+
+/*******************************************************************\
+
+Function: show_transt::show_trans
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+int show_transt::show_trans(std::ostream &out)
+{
+  transition_system.output(out);
   return 0;
 }
 
@@ -226,86 +248,6 @@ void show_transt::print_verilog_constraints(
 
 /*******************************************************************\
 
-Function: show_transt::show_trans
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int show_transt::show_trans()
-{
-  transition_system =
-    get_transition_system(cmdline, message.get_message_handler());
-
-  transition_system.output(std::cout);
-
-  return 0;
-}
-
-/*******************************************************************\
-
-Function: show_transt::show_trans_verilog_rtl
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int show_transt::show_trans_verilog_rtl()
-{
-  transition_system =
-    get_transition_system(cmdline, message.get_message_handler());
-
-  if(cmdline.isset("outfile"))
-  {
-    const std::string filename=cmdline.get_value("outfile");
-    auto outfile = output_filet{filename};
-    show_trans_verilog_rtl(outfile.stream());
-  }
-  else
-    show_trans_verilog_rtl(std::cout);
-
-  return 0;
-}
-
-/*******************************************************************\
-
-Function: show_transt::show_trans_verilog_netlist
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int show_transt::show_trans_verilog_netlist()
-{
-  transition_system =
-    get_transition_system(cmdline, message.get_message_handler());
-
-  if(cmdline.isset("outfile"))
-  {
-    const std::string filename=cmdline.get_value("outfile");
-    auto outfile = output_filet{filename};
-    show_trans_verilog_netlist(outfile.stream());
-  }
-  else
-    show_trans_verilog_netlist(std::cout);
-
-  return 0;
-}
-
-/*******************************************************************\
-
 Function: show_trans
 
   Inputs:
@@ -316,11 +258,8 @@ Function: show_trans
 
 \*******************************************************************/
 
-int show_trans(
-  const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+int show_trans(const transition_systemt &transition_system, std::ostream &out)
 {
-  show_transt show_trans(cmdline, ui_message_handler);
-  return show_trans.show_trans();
+  show_transt show_trans(transition_system);
+  return show_trans.show_trans(out);
 }
-
