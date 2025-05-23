@@ -39,13 +39,15 @@ operator<<(std::ostream &out, const smv_type_printert &type_printer)
 {
   auto &type = type_printer.type();
 
-  if(type.id() == ID_bool)
-    return out << "boolean";
-  else if(type.id() == ID_signedbv)
-    return out << "signed word[" << to_signedbv_type(type).get_width() << "]";
-  else if(type.id() == ID_unsignedbv)
-    return out << "unsigned word[" << to_unsignedbv_type(type).get_width()
-               << "]";
+  symbol_tablet symbol_table;
+  namespacet ns(symbol_table);
+
+  if(
+    type.id() == ID_bool || type.id() == ID_signedbv ||
+    type.id() == ID_unsignedbv || type.id() == ID_range)
+  {
+    return out << type2smv(type, ns);
+  }
   else
     throw ebmc_errort{} << "cannot convert type " << type.id() << " to SMV";
 
@@ -146,7 +148,7 @@ static void smv_transition_relation(
   if(expr.id() == ID_and)
   {
     for(auto &conjunct : expr.operands())
-      smv_initial_states(conjunct, ns, out);
+      smv_transition_relation(conjunct, ns, out);
   }
   else if(expr.is_true())
   {

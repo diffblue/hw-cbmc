@@ -1,0 +1,21 @@
+MODULE main
+
+VAR bool_type : boolean;
+
+ASSIGN init(bool_type) := FALSE;
+ASSIGN next(bool_type) := !bool_type;
+
+VAR range_type : 1..10;
+
+ASSIGN init(range_type) := 1;
+ASSIGN next(range_type) := 2;
+
+VAR signed_bit_vector : signed word [20];
+
+ASSIGN init(signed_bit_vector) := swconst(1, 20);
+ASSIGN next(signed_bit_vector) := swconst(2, 20);
+
+VAR unsigned_bit_vector : unsigned word [20];
+
+ASSIGN init(unsigned_bit_vector) := uwconst(1, 20);
+ASSIGN next(unsigned_bit_vector) := uwconst(2, 20);
