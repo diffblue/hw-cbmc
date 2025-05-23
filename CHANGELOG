@@ -1,6 +1,7 @@
 # EBMC 5.7
 
 * Verilog: `elsif preprocessor directive
+* word-level BMC: LTL/SVA to Buechi with --buechi
 
 # EBMC 5.6
 
