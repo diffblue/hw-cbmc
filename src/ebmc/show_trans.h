@@ -9,12 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_EBMC_SHOW_TRANS_H
 #define CPROVER_EBMC_SHOW_TRANS_H
 
-#include <util/cmdline.h>
-#include <util/ui_message.h>
+#include "transition_system.h"
 
-int show_trans_verilog_rtl(const cmdlinet &, ui_message_handlert &);
-int show_trans_verilog_netlist(const cmdlinet &, ui_message_handlert &);
-int show_trans_smv_netlist(const cmdlinet &, ui_message_handlert &);
-int show_trans(const cmdlinet &, ui_message_handlert &);
+int show_trans_verilog_rtl(const transition_systemt &, std::ostream &);
+int show_trans_verilog_netlist(const transition_systemt &, std::ostream &);
+int show_trans_smv_netlist(const transition_systemt &, std::ostream &);
+int show_trans(const transition_systemt &, std::ostream &);
 
-#endif
+#endif // CPROVER_EBMC_SHOW_TRANS_H
