@@ -1,7 +1,7 @@
 CORE
 structs4.sv
 
-^\[main\.p0\] always main\.w == 32'h173: PROVED$
+^\[main\.p0\] always main\.w == 32'h173: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

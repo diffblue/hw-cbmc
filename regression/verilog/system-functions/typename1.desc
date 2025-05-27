@@ -1,13 +1,13 @@
 CORE
 typename1.sv
 --module main
-^\[.*\] always \$typename\(main\.some_bit\) == "bit": PROVED$
-^\[.*\] always \$typename\(main\.vector1\) == "bit\[31:0\]": PROVED$
-^\[.*\] always \$typename\(main\.vector2\) == "bit\[0:31\]": PROVED$
-^\[.*\] always \$typename\(main\.vector3\) == "bit signed\[31:0\]": PROVED$
-^\[.*\] always \$typename\(real'\(1\)\) == "real": PROVED$
-^\[.*\] always \$typename\(shortreal'\(1\)\) == "shortreal": PROVED$
-^\[.*\] always \$typename\(realtime'\(1\)\) == "realtime": PROVED$
+^\[.*\] always \$typename\(main\.some_bit\) == "bit": PROVED .*$
+^\[.*\] always \$typename\(main\.vector1\) == "bit\[31:0\]": PROVED .*$
+^\[.*\] always \$typename\(main\.vector2\) == "bit\[0:31\]": PROVED .*$
+^\[.*\] always \$typename\(main\.vector3\) == "bit signed\[31:0\]": PROVED .*$
+^\[.*\] always \$typename\(real'\(1\)\) == "real": PROVED .*$
+^\[.*\] always \$typename\(shortreal'\(1\)\) == "shortreal": PROVED .*$
+^\[.*\] always \$typename\(realtime'\(1\)\) == "realtime": PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

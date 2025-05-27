@@ -1,8 +1,8 @@
 CORE
 enum_initializers1.sv
 
-^\[main\.pA\] always main.A == 1: PROVED$
-^\[main\.pB\] always main.B == 11: PROVED$
+^\[main\.pA\] always main.A == 1: PROVED .*$
+^\[main\.pB\] always main.B == 11: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

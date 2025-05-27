@@ -3,7 +3,7 @@ basic2.sv
 
 ^\[main\.a0\] always not s_eventually !main\.y: UNSUPPORTED: unsupported by k-induction$
 ^\[main\.a1\] always !main\.x: ASSUMED$
-^\[main\.p0\] always !main\.z: PROVED$
+^\[main\.p0\] always !main\.z: PROVED \(1-induction\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --

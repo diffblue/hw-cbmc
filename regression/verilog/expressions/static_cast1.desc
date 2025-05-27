@@ -1,7 +1,7 @@
 CORE
 static_cast1.sv
 --module main
-^\[main\.p0\] always \[7:0\]'\(32'hFFFF\) == 255: PROVED$
+^\[main\.p0\] always \[7:0\]'\(32'hFFFF\) == 255: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

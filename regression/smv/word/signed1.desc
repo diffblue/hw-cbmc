@@ -1,7 +1,7 @@
 CORE
 signed1.smv
 
-^\[p0\] signed\(0ud1_1\) = -0sd1_1: PROVED$
+^\[p0\] signed\(0ud1_1\) = -0sd1_1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

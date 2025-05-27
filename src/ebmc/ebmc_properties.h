@@ -53,6 +53,7 @@ public:
     std::size_t bound = 0;
     std::optional<trans_tracet> witness_trace;
     std::optional<std::string> failure_reason;
+    std::optional<std::string> proof_via;
 
     bool has_witness_trace() const
     {
@@ -113,36 +114,49 @@ public:
     {
       status = statust::ASSUMED;
       failure_reason = {};
+      proof_via = {};
     }
 
     void unknown()
     {
       status = statust::UNKNOWN;
       failure_reason = {};
+      proof_via = {};
     }
 
     void disable()
     {
       status = statust::DISABLED;
       failure_reason = {};
+      proof_via = {};
     }
 
     void proved()
     {
       status = statust::PROVED;
       failure_reason = {};
+      proof_via = {};
+    }
+
+    void proved(std::string _proof_via)
+    {
+      status = statust::PROVED;
+      failure_reason = {};
+      proof_via = std::move(_proof_via);
     }
 
     void proved_with_bound(std::size_t _bound)
     {
       status = statust::PROVED_WITH_BOUND;
       bound = _bound;
+      proof_via = {};
     }
 
     void refuted()
     {
       status = statust::REFUTED;
       failure_reason = {};
+      proof_via = {};
     }
 
     void refuted_with_bound(std::size_t _bound)
@@ -150,30 +164,35 @@ public:
       status = statust::REFUTED_WITH_BOUND;
       bound = _bound;
       failure_reason = {};
+      proof_via = {};
     }
 
     void drop()
     {
       status = statust::DROPPED;
       failure_reason = {};
+      proof_via = {};
     }
 
     void failure(const std::optional<std::string> &reason = {})
     {
       status = statust::FAILURE;
       failure_reason = reason;
+      proof_via = {};
     }
 
     void unsupported(const std::optional<std::string> &reason = {})
     {
       status = statust::UNSUPPORTED;
       failure_reason = reason;
+      proof_via = {};
     }
 
     void inconclusive()
     {
       status = statust::INCONCLUSIVE;
       failure_reason = {};
+      proof_via = {};
     }
 
     std::string status_as_string() const;

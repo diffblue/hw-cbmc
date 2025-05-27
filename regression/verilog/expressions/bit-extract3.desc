@@ -3,10 +3,10 @@ bit-extract3.sv
 --module main
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property1\] .*: PROVED$
-^\[main\.property2\] .*: PROVED$
-^\[main\.property3\] .*: PROVED$
-^\[main\.property4\] .*: PROVED$
-^\[main\.property5\] .*: PROVED$
+^\[main\.property1\] .*: PROVED .*$
+^\[main\.property2\] .*: PROVED .*$
+^\[main\.property3\] .*: PROVED .*$
+^\[main\.property4\] .*: PROVED .*$
+^\[main\.property5\] .*: PROVED .*$
 --
 ^warning: ignoring

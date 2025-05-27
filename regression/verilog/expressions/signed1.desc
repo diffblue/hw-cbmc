@@ -1,14 +1,14 @@
 CORE
 signed1.sv
 --module main
-^\[main\.p1\] always main\.wire1 == main.wire2: PROVED$
-^\[main\.p2\] always main\.wire1 >>> 1 == -1: PROVED$
-^\[main\.p3\] always main\.wire2 >> 1 != -1: PROVED$
-^\[main\.p4\] always main\.wire1\[31:0\] >> 1 != -1: PROVED$
-^\[main\.p5\] always \$unsigned\(main\.wire1\) >> 1 != -1: PROVED$
-^\[main\.p6\] always \$signed\(main\.wire2\) >>> 1 == -1: PROVED$
-^\[main\.p7\] always -1 >> 1 != -1: PROVED$
-^\[main\.p8\] always -1 >>> 1 == -1: PROVED$
+^\[main\.p1\] always main\.wire1 == main.wire2: PROVED .*$
+^\[main\.p2\] always main\.wire1 >>> 1 == -1: PROVED .*$
+^\[main\.p3\] always main\.wire2 >> 1 != -1: PROVED .*$
+^\[main\.p4\] always main\.wire1\[31:0\] >> 1 != -1: PROVED .*$
+^\[main\.p5\] always \$unsigned\(main\.wire1\) >> 1 != -1: PROVED .*$
+^\[main\.p6\] always \$signed\(main\.wire2\) >>> 1 == -1: PROVED .*$
+^\[main\.p7\] always -1 >> 1 != -1: PROVED .*$
+^\[main\.p8\] always -1 >>> 1 == -1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

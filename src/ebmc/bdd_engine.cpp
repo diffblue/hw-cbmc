@@ -592,7 +592,7 @@ void bdd_enginet::check_AGp(propertyt &property)
     // have we saturated?
     if((set_union == states).is_true())
     {
-      property.proved();
+      property.proved("BDD");
       message.status() << "Property proved" << messaget::eom;
       break;
     }
@@ -632,7 +632,7 @@ void bdd_enginet::check_CTL(propertyt &property)
   if(intersection.is_false())
   {
     // intersection empty, proved
-    property.proved();
+    property.proved("BDD");
     message.status() << "Property proved" << messaget::eom;
   }
   else

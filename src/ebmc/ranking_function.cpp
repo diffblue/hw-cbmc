@@ -128,7 +128,7 @@ int do_ranking_function(
 
   const namespacet ns(transition_system.symbol_table);
   property_checker_resultt checker_result{properties};
-  report_results(cmdline, checker_result, ns, message_handler);
+  report_results(cmdline, false, checker_result, ns, message_handler);
   return checker_result.exit_code();
 }
 

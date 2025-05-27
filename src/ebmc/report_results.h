@@ -19,6 +19,7 @@ class namespacet;
 
 void report_results(
   const cmdlinet &,
+  bool show_proof_via,
   const property_checker_resultt &,
   const namespacet &,
   message_handlert &);

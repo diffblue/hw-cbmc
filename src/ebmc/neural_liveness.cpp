@@ -120,7 +120,7 @@ int neural_livenesst::operator()()
   // report outcomes
   const namespacet ns(transition_system.symbol_table);
   property_checker_resultt result{properties};
-  report_results(cmdline, result, ns, message.get_message_handler());
+  report_results(cmdline, false, result, ns, message.get_message_handler());
   return result.exit_code();
 }
 

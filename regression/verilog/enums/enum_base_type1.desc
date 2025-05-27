@@ -3,5 +3,5 @@ enum_base_type1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
-^\[.*\] always \$bits\(main\.A\) == 8: PROVED$
+^\[.*\] always \$bits\(main\.A\) == 8: PROVED .*$
 --

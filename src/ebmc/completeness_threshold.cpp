@@ -129,7 +129,7 @@ property_checker_resultt completeness_threshold(
     {
       // Turn "PROVED up to bound k" into "PROVED" if k>=CT
       if(has_low_completeness_threshold(property) && property.bound >= 1)
-        property.proved();
+        property.proved("CT=1");
       else
         property.unknown();
     }

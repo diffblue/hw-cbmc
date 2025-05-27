@@ -3,6 +3,6 @@ functioncall1.v
 --module main
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property\.test1\] always .*: PROVED$
+^\[main\.property\.test1\] always .*: PROVED .*$
 --
 ^warning: ignoring
