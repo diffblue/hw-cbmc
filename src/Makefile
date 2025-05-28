@@ -24,7 +24,7 @@ endif
 hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
          vhdl.dir smvlang.dir cprover.dir temporal-logic.dir
 
-vlindex.dir: cprover.dir verilog.dir
+vlindex.dir: ebmc.dir cprover.dir verilog.dir
 
 # building cbmc proper
 .PHONY: cprover.dir

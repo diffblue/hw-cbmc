@@ -8,6 +8,7 @@ SRC = \
 OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       $(CPROVER_DIR)/langapi/langapi$(LIBEXT) \
       $(CPROVER_DIR)/big-int/big-int$(LIBEXT) \
+      ../ebmc/ebmc_version$(OBJEXT) \
       ../verilog/verilog$(LIBEXT)
 
 include ../config.inc

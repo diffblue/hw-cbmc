@@ -35,7 +35,7 @@ public:
         argc,
         argv,
         std::string("EBMC ") + EBMC_VERSION),
-      ui_message_handler(cmdline, "EBMC " EBMC_VERSION)
+      ui_message_handler(cmdline, std::string("EBMC ") + EBMC_VERSION)
   {
   }
 
