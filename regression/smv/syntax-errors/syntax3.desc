@@ -1,7 +1,7 @@
 CORE
 syntax3.smv
 
-^file .* line 3: syntax error, unexpected string, expecting number before 'not_a_number'$
+^file .* line 3: syntax error, unexpected identifier, expecting number before 'not_a_number'$
 ^EXIT=1$
 ^SIGNAL=0$
 --
