@@ -1,8 +1,8 @@
 CORE
 extend1.smv
 
-^\[p0\] extend\(0ud1_1, 7\) = 0ud8_1: PROVED$
-^\[p1\] extend\(-0sd1_1, 7\) = -0sd8_1: PROVED$
+^\[p0\] extend\(0ud1_1, 7\) = 0ud8_1: PROVED .*$
+^\[p1\] extend\(-0sd1_1, 7\) = -0sd8_1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

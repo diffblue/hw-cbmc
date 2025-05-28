@@ -333,7 +333,7 @@ void k_inductiont::induction_step()
     case decision_proceduret::resultt::D_UNSATISFIABLE:
       message.result() << "UNSAT: inductive proof successful, property holds"
                        << messaget::eom;
-      p_it.proved();
+      p_it.proved(std::to_string(no_timeframes - 1) + "-induction");
       break;
 
     case decision_proceduret::resultt::D_ERROR:

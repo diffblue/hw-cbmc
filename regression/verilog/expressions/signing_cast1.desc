@@ -1,12 +1,12 @@
 CORE broken-smt-backend
 signing_cast1.sv
 --module main
-^\[main\.p0\] always signed'\(1'b1\) == -1: PROVED$
-^\[main\.p1\] always signed'\(4'b1110\) == -2: PROVED$
-^\[main\.p2\] always signed'\(4'b0111\) == 7: PROVED$
-^\[main\.p3\] always signed'\(!0\) == -1: PROVED$
-^\[main\.p4\] always unsigned'\(!0\) == 1: PROVED$
-^\[main\.p5\] always unsigned'\(-1\) == 32'hFFFFFFFF: PROVED$
+^\[main\.p0\] always signed'\(1'b1\) == -1: PROVED .*$
+^\[main\.p1\] always signed'\(4'b1110\) == -2: PROVED .*$
+^\[main\.p2\] always signed'\(4'b0111\) == 7: PROVED .*$
+^\[main\.p3\] always signed'\(!0\) == -1: PROVED .*$
+^\[main\.p4\] always unsigned'\(!0\) == 1: PROVED .*$
+^\[main\.p5\] always unsigned'\(-1\) == 32'hFFFFFFFF: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

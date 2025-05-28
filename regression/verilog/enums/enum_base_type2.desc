@@ -3,5 +3,5 @@ enum_base_type2.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
-^\[.*\] always \$bits\(main\.A\) == main\.p: PROVED$
+^\[.*\] always \$bits\(main\.A\) == main\.p: PROVED .*$
 --

@@ -1,6 +1,6 @@
 CORE
 example1.sv
 
-^\[.*\] always 2'\(main\.a\) \+ main\.b == main\.result: PROVED$
+^\[.*\] always 2'\(main\.a\) \+ main\.b == main\.result: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$

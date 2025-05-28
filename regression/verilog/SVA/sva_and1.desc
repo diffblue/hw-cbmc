@@ -1,7 +1,7 @@
 CORE
 sva_and1.sv
 
-^\[main\.p0\] always \(1 and 1\): PROVED$
+^\[main\.p0\] always \(1 and 1\): PROVED .*$
 ^\[main\.p1\] always \(1 and 0\): REFUTED$
 ^\[main\.p2\] always \(1 and 32'b0000000000000000000000000000000x\): REFUTED$
 ^EXIT=10$

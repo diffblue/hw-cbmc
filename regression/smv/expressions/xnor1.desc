@@ -1,7 +1,7 @@
 CORE
 xnor1.smv
 
-^\[spec1\] G x: PROVED$
+^\[spec1\] G x: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

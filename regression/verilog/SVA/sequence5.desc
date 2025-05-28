@@ -1,7 +1,7 @@
 CORE
 sequence5.sv
 
-^\[main\.p0\] 1: PROVED$
+^\[main\.p0\] 1: PROVED .*$
 ^\[main\.p1\] 0: REFUTED$
 ^\[main\.p2\] 1'bx: REFUTED$
 ^\[main\.p3\] 1'bz: REFUTED$

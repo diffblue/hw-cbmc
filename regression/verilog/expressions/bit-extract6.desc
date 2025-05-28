@@ -1,8 +1,8 @@
 CORE
 bit-extract6.sv
 --module main
-^\[main\.p0\] always main\.index == 8 -> main\.vector\[7 - main\.index - 1\] == 1: PROVED$
-^\[main\.p1\] always main\.index >= 1 \&\& main\.index <= 7 -> main\.vector\[7 - main\.index - 1\] == 0: PROVED$
+^\[main\.p0\] always main\.index == 8 -> main\.vector\[7 - main\.index - 1\] == 1: PROVED .*$
+^\[main\.p1\] always main\.index >= 1 \&\& main\.index <= 7 -> main\.vector\[7 - main\.index - 1\] == 0: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

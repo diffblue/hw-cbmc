@@ -1,9 +1,9 @@
 CORE
 structs5.sv
 
-^\[main\.p1\] always main\.s\.field1 == 1: PROVED$
-^\[main\.p2\] always main\.s\.field2 == 0: PROVED$
-^\[main\.p3\] always main\.s\.field3 == 115: PROVED$
+^\[main\.p1\] always main\.s\.field1 == 1: PROVED .*$
+^\[main\.p2\] always main\.s\.field2 == 0: PROVED .*$
+^\[main\.p3\] always main\.s\.field3 == 115: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

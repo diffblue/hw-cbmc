@@ -3,7 +3,7 @@ concatenation2.v
 
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property\.pA\] always main\.A == -1: PROVED$
-^\[main\.property\.pB\] always main\.B == 15: PROVED$
+^\[main\.property\.pA\] always main\.A == -1: PROVED .*$
+^\[main\.property\.pB\] always main\.B == 15: PROVED .*$
 --
 ^warning: ignoring

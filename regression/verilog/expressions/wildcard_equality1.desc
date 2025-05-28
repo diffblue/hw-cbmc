@@ -1,16 +1,16 @@
 CORE
 wildcard_equality1.sv
 
-^\[main\.property01\] always 10 ==\? 10 === 1: PROVED$
-^\[main\.property02\] always 10 ==\? 20 === 0: PROVED$
-^\[main\.property03\] always 10 !=\? 20 === 1: PROVED$
-^\[main\.property04\] always 10 ==\? 20 === 0: PROVED$
-^\[main\.property05\] always 2'b00 ==\? 2'b0x === 1: PROVED$
-^\[main\.property06\] always 2'b10 ==\? 2'b0x === 0: PROVED$
-^\[main\.property07\] always 2'b00 !=\? 2'b0x === 0: PROVED$
-^\[main\.property08\] always 2'b10 !=\? 2'b0x === 1: PROVED$
+^\[main\.property01\] always 10 ==\? 10 === 1: PROVED .*$
+^\[main\.property02\] always 10 ==\? 20 === 0: PROVED .*$
+^\[main\.property03\] always 10 !=\? 20 === 1: PROVED .*$
+^\[main\.property04\] always 10 ==\? 20 === 0: PROVED .*$
+^\[main\.property05\] always 2'b00 ==\? 2'b0x === 1: PROVED .*$
+^\[main\.property06\] always 2'b10 ==\? 2'b0x === 0: PROVED .*$
+^\[main\.property07\] always 2'b00 !=\? 2'b0x === 0: PROVED .*$
+^\[main\.property08\] always 2'b10 !=\? 2'b0x === 1: PROVED .*$
 ^\[main\.property09\] always 2'b11 ==\? 2'b11 === 0: REFUTED$
-^\[main\.property10\] always 2'sb11 ==\? 2'sb11 === 1: PROVED$
+^\[main\.property10\] always 2'sb11 ==\? 2'sb11 === 1: PROVED .*$
 ^EXIT=10$
 ^SIGNAL=0$
 --

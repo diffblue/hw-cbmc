@@ -3,6 +3,6 @@ function_ports1.v
 --module main
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.property\.test16\] always .*: PROVED$
+^\[main\.property\.test16\] always .*: PROVED .*$
 --
 ^warning: ignoring

@@ -1,16 +1,16 @@
 CORE
 riscv-alu.sv
 --module alu
-^\[alu\.pADD\] always alu\.op == \{ 7'b0000000, 3'b000 \} -> alu\.out == alu\.a \+ alu\.b: PROVED$
-^\[alu\.pSUB\] always alu\.op == \{ 7'b0100000, 3'b000 \} -> alu\.out == alu\.a - alu\.b: PROVED$
-^\[alu\.pSLL\] always alu\.op == \{ 7'b0000000, 3'b001 \} -> alu\.out == alu\.a << alu\.b\[4:0\]: PROVED$
-^\[alu\.pSLT\] always alu\.op == \{ 7'b0000000, 3'b010 \} -> alu\.out == \$signed\(alu\.a\) < \$signed\(alu\.b\): PROVED$
-^\[alu\.pSLTU\] always alu\.op == \{ 7'b0000000, 3'b011 \} -> alu\.out == alu\.a < alu\.b: PROVED$
-^\[alu\.pXOR\] always alu\.op == \{ 7'b0000000, 3'b100 \} -> alu\.out == \(alu\.a \^ alu\.b\): PROVED$
-^\[alu\.pSRL\] always alu\.op == \{ 7'b0000000, 3'b101 \} -> alu\.out == alu\.a >> alu\.b\[4:0\]: PROVED$
-^\[alu\.pSRA\] always alu\.op == \{ 7'b0100000, 3'b101 \} -> alu\.out == \$signed\(alu\.a\) >>> alu\.b\[4:0\]: PROVED$
-^\[alu\.pOR\] always alu\.op == \{ 7'b0000000, 3'b110 \} -> alu\.out == \(alu\.a | alu\.b\): PROVED$
-^\[alu\.pAND\] always alu\.op == \{ 7'b0000000, 3'b111 \} -> alu\.out == \(alu\.a & alu\.b\): PROVED$
+^\[alu\.pADD\] always alu\.op == \{ 7'b0000000, 3'b000 \} -> alu\.out == alu\.a \+ alu\.b: PROVED .*$
+^\[alu\.pSUB\] always alu\.op == \{ 7'b0100000, 3'b000 \} -> alu\.out == alu\.a - alu\.b: PROVED .*$
+^\[alu\.pSLL\] always alu\.op == \{ 7'b0000000, 3'b001 \} -> alu\.out == alu\.a << alu\.b\[4:0\]: PROVED .*$
+^\[alu\.pSLT\] always alu\.op == \{ 7'b0000000, 3'b010 \} -> alu\.out == \$signed\(alu\.a\) < \$signed\(alu\.b\): PROVED .*$
+^\[alu\.pSLTU\] always alu\.op == \{ 7'b0000000, 3'b011 \} -> alu\.out == alu\.a < alu\.b: PROVED .*$
+^\[alu\.pXOR\] always alu\.op == \{ 7'b0000000, 3'b100 \} -> alu\.out == \(alu\.a \^ alu\.b\): PROVED .*$
+^\[alu\.pSRL\] always alu\.op == \{ 7'b0000000, 3'b101 \} -> alu\.out == alu\.a >> alu\.b\[4:0\]: PROVED .*$
+^\[alu\.pSRA\] always alu\.op == \{ 7'b0100000, 3'b101 \} -> alu\.out == \$signed\(alu\.a\) >>> alu\.b\[4:0\]: PROVED .*$
+^\[alu\.pOR\] always alu\.op == \{ 7'b0000000, 3'b110 \} -> alu\.out == \(alu\.a | alu\.b\): PROVED .*$
+^\[alu\.pAND\] always alu\.op == \{ 7'b0000000, 3'b111 \} -> alu\.out == \(alu\.a & alu\.b\): PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

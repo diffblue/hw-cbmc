@@ -1,8 +1,8 @@
 CORE
 resize1.smv
 
-^\[p0\] resize\(0ud1_1, 8\) = 0ud8_1: PROVED$
-^\[p1\] resize\(-0sd1_1, 1\) = -0sd1_1: PROVED$
+^\[p0\] resize\(0ud1_1, 8\) = 0ud8_1: PROVED .*$
+^\[p1\] resize\(-0sd1_1, 1\) = -0sd1_1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

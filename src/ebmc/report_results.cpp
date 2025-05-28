@@ -34,6 +34,7 @@ Function: ebmc_baset::report_results
 
 void report_results(
   const cmdlinet &cmdline,
+  bool show_proof_via,
   const property_checker_resultt &result,
   const namespacet &ns,
   message_handlert &message_handler)
@@ -59,6 +60,9 @@ void report_results(
       if(property.has_witness_trace())
         json_property["trace"] = json(property.witness_trace.value(), ns);
 
+      if(property.is_proved() && property.proof_via.has_value())
+        json_property["proof_via"] = json_stringt{property.proof_via.value()};
+
       json_properties.push_back(std::move(json_property));
     }
 
@@ -80,6 +84,9 @@ void report_results(
 
       if(property.has_witness_trace())
         xml_result.new_element() = xml(property.witness_trace.value(), ns);
+
+      if(property.is_proved() && property.proof_via.has_value())
+        xml_result.set_attribute("proof_via", property.proof_via.value());
 
       std::cout << xml_result << '\n' << std::flush;
     }
@@ -119,7 +126,16 @@ void report_results(
 
       message.status() << property.status_as_string();
 
-      message.status() << messaget::reset << messaget::eom;
+      message.status() << messaget::reset;
+
+      if(
+        show_proof_via && property.is_proved() &&
+        property.proof_via.has_value())
+      {
+        message.status() << " (" << property.proof_via.value() << ')';
+      }
+
+      message.status() << messaget::eom;
 
       if(property.has_witness_trace())
       {
