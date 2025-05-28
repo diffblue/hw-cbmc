@@ -202,30 +202,12 @@ int ebmc_parse_optionst::doit()
       // return do_two_phase_induction();
     }
 
-    if(cmdline.isset("show-trans"))
-      return show_trans(cmdline, ui_message_handler);
-
-    if(cmdline.isset("verilog-rtl"))
-      return show_trans_verilog_rtl(cmdline, ui_message_handler);
-
-    if(cmdline.isset("verilog-netlist"))
-      return show_trans_verilog_netlist(cmdline, ui_message_handler);
-
     // get the transition system
     auto transition_system = get_transition_system(cmdline, ui_message_handler);
 
     // get the properties
     auto properties = ebmc_propertiest::from_command_line(
       cmdline, transition_system, ui_message_handler);
-
-    if(cmdline.isset("smv-word-level"))
-    {
-      auto filename = cmdline.value_opt("outfile").value_or("-");
-      output_filet output_file{filename};
-      output_smv_word_level(
-        transition_system, properties, output_file.stream());
-      return 0;
-    }
 
     if(cmdline.isset("show-properties"))
     {
@@ -242,6 +224,37 @@ int ebmc_parse_optionst::doit()
     // possibly apply liveness-to-safety
     if(cmdline.isset("liveness-to-safety"))
       liveness_to_safety(transition_system, properties);
+
+    if(cmdline.isset("smv-word-level"))
+    {
+      auto filename = cmdline.value_opt("outfile").value_or("-");
+      output_filet output_file{filename};
+      output_smv_word_level(
+        transition_system, properties, output_file.stream());
+      return 0;
+    }
+
+    if(cmdline.isset("show-trans"))
+    {
+      auto filename = cmdline.value_opt("outfile").value_or("-");
+      output_filet output_file{filename};
+      return show_trans(transition_system, output_file.stream());
+    }
+
+    if(cmdline.isset("verilog-rtl"))
+    {
+      auto filename = cmdline.value_opt("outfile").value_or("-");
+      output_filet output_file{filename};
+      return show_trans_verilog_rtl(transition_system, output_file.stream());
+    }
+
+    if(cmdline.isset("verilog-netlist"))
+    {
+      auto filename = cmdline.value_opt("outfile").value_or("-");
+      output_filet output_file{filename};
+      return show_trans_verilog_netlist(
+        transition_system, output_file.stream());
+    }
 
     if(cmdline.isset("show-varmap"))
     {
