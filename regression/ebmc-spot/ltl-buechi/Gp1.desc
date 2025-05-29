@@ -1,0 +1,9 @@
+CORE
+Gp1.smv
+--buechi --bdd
+^\[.*\] G p: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

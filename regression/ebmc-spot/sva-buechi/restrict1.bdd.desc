@@ -1,0 +1,10 @@
+CORE
+../../verilog/SVA/restrict1.sv
+--buechi --bdd
+^\[main\.p0\] always main\.x != 5: ASSUMED$
+^\[main\.p1\] always main\.x != 6: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

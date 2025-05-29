@@ -161,6 +161,39 @@ jobs:
         run: PATH=$PATH:$PWD/ebmc benchmarking/hwmcc08.sh
 
   # This job takes approximately 1 minute
+  ebmc-spot:
+    runs-on: ubuntu-24.04
+    needs: check-ubuntu-24_04-make-clang
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # spot
+          wget -q -O - https://www.lrde.epita.fr/repo/debian.gpg | sudo apt-key add -
+          sudo sh -c 'echo "deb http://www.lrde.epita.fr/repo/debian/ stable/" >> /etc/apt/sources.list'
+          sudo apt-get update
+          sudo apt-get install spot
+      - name: Confirm ltl2tgba is available and log the version installed
+        run: ltl2tgba --version
+      - name: Get the ebmc binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ebmc-binary
+          path: ebmc
+      - name: Try the ebmc binary
+        run: chmod a+x ./ebmc/ebmc ; ./ebmc/ebmc --version
+      - name: put the ebmc binary in place
+        run: cp ebmc/ebmc src/ebmc/
+      - name: run the ebmc-spot tests
+        run: make -C regression/ebmc-spot
+
+  # This job takes approximately 1 minute
   examples:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang

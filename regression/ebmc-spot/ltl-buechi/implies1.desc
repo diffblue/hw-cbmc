@@ -1,0 +1,9 @@
+CORE
+implies1.smv
+--buechi --bdd
+^\[.*\] X p -> X q: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

@@ -131,7 +131,7 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     if(matches.empty())
       return {};
 
-    if(delay.to().is_nil())
+    if(!delay.is_range())
     {
       // delay as instructed
       auto delay_sequence = sva_sequence_matcht::true_match(from_int);
@@ -141,13 +141,13 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
 
       return matches;
     }
-    else if(delay.to().id() == ID_infinity)
+    else if(delay.is_unbounded())
     {
       return {}; // can't encode
     }
-    else if(delay.to().is_constant())
+    else
     {
-      auto to_int = numeric_cast_v<mp_integer>(to_constant_expr(delay.to()));
+      auto to_int = numeric_cast_v<mp_integer>(delay.to());
       std::vector<sva_sequence_matcht> new_matches;
 
       for(mp_integer i = from_int; i <= to_int; ++i)
@@ -163,8 +163,6 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
 
       return new_matches;
     }
-    else
-      return {};
   }
   else if(sequence.id() == ID_sva_and)
   {

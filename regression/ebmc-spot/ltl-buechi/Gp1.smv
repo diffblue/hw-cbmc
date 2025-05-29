@@ -1,0 +1,9 @@
+MODULE main
+
+VAR p : boolean;
+
+ASSIGN init(p) := TRUE;
+       next(p) := TRUE;
+
+-- should pass
+LTLSPEC G p
