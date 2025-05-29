@@ -161,16 +161,16 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     auto &always = to_sva_ranged_always_expr(expr);
     auto new_expr = unary_exprt{ID_sva_ranged_always, always.op()};
-    auto lower = numeric_cast_v<mp_integer>(always.lower());
+    auto from = numeric_cast_v<mp_integer>(always.from());
     if(!always.is_range())
-      return prefix("F[" + integer2string(lower) + "]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + "]", new_expr, mode);
     else if(always.is_unbounded())
-      return prefix("F[" + integer2string(lower) + ":]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + ":]", new_expr, mode);
     else
     {
-      auto upper = numeric_cast_v<mp_integer>(to_constant_expr(always.upper()));
+      auto to = numeric_cast_v<mp_integer>(to_constant_expr(always.to()));
       return prefix(
-        "F[" + integer2string(lower) + ":" + integer2string(upper) + "]",
+        "F[" + integer2string(from) + ":" + integer2string(to) + "]",
         new_expr,
         mode);
     }
@@ -189,17 +189,16 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     PRECONDITION(mode == PROPERTY);
     auto &s_eventually = to_sva_ranged_s_eventually_expr(expr);
     auto new_expr = unary_exprt{ID_sva_ranged_s_eventually, s_eventually.op()};
-    auto lower = numeric_cast_v<mp_integer>(s_eventually.lower());
+    auto from = numeric_cast_v<mp_integer>(s_eventually.from());
     if(!s_eventually.is_range())
-      return prefix("F[" + integer2string(lower) + "]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + "]", new_expr, mode);
     else if(s_eventually.is_unbounded())
-      return prefix("F[" + integer2string(lower) + ":]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + ":]", new_expr, mode);
     else
     {
-      auto upper =
-        numeric_cast_v<mp_integer>(to_constant_expr(s_eventually.upper()));
+      auto to = numeric_cast_v<mp_integer>(to_constant_expr(s_eventually.to()));
       return prefix(
-        "F[" + integer2string(lower) + ":" + integer2string(upper) + "]",
+        "F[" + integer2string(from) + ":" + integer2string(to) + "]",
         new_expr,
         mode);
     }

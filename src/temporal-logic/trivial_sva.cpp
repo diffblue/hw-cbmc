@@ -113,7 +113,7 @@ exprt trivial_sva(exprt expr)
   }
   else if(expr.id() == ID_sva_case)
   {
-    expr = to_sva_case_expr(expr).lowering();
+    expr = to_sva_case_expr(expr).lower();
   }
 
   // rewrite the operands, recursively

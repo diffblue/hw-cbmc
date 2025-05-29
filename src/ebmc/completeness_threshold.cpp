@@ -39,13 +39,12 @@ bool has_low_completeness_threshold(const exprt &expr)
     auto &always_expr = to_sva_ranged_always_expr(expr);
     if(has_temporal_operator(always_expr.op()))
       return false;
-    else if(always_expr.upper().is_constant())
+    else if(always_expr.to().is_constant())
     {
-      auto lower_int = numeric_cast_v<mp_integer>(always_expr.lower());
-      auto upper_int =
-        numeric_cast_v<mp_integer>(to_constant_expr(always_expr.upper()));
-      return lower_int >= 0 && lower_int <= 1 && upper_int >= 0 &&
-             upper_int <= 1;
+      auto from_int = numeric_cast_v<mp_integer>(always_expr.from());
+      auto to_int =
+        numeric_cast_v<mp_integer>(to_constant_expr(always_expr.to()));
+      return from_int >= 0 && from_int <= 1 && to_int >= 0 && to_int <= 1;
     }
     else
       return false;
@@ -57,10 +56,9 @@ bool has_low_completeness_threshold(const exprt &expr)
       return false;
     else
     {
-      auto lower_int = numeric_cast_v<mp_integer>(s_always_expr.lower());
-      auto upper_int = numeric_cast_v<mp_integer>(s_always_expr.upper());
-      return lower_int >= 0 && lower_int <= 1 && upper_int >= 0 &&
-             upper_int <= 1;
+      auto from_int = numeric_cast_v<mp_integer>(s_always_expr.from());
+      auto to_int = numeric_cast_v<mp_integer>(s_always_expr.to());
+      return from_int >= 0 && from_int <= 1 && to_int >= 0 && to_int <= 1;
     }
   }
   else if(
