@@ -1,0 +1,10 @@
+CORE
+../../verilog/SVA/followed-by1.sv
+--buechi --bound 20 --numbered-trace
+^\[main\.p0\] main\.x == 0 #=# \(main\.x == 1 #=# main\.x == 2\): PROVED up to bound 20$
+^\[main\.p1\] main\.x == 0 #-# \(\(##1 main\.x == 1\) #-# \(##1 main\.x == 2\)\): PROVED up to bound 20$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
