@@ -213,16 +213,14 @@ static obligationst property_obligations_rec(
     const auto &eventually_expr = to_sva_eventually_expr(property_expr);
     const auto &op = eventually_expr.op();
 
-    mp_integer lower;
-    if(to_integer_non_constant(eventually_expr.lower(), lower))
-      throw "failed to convert sva_eventually index";
+    mp_integer from = numeric_cast_v<mp_integer>(eventually_expr.from());
 
-    mp_integer upper;
-    if(to_integer_non_constant(eventually_expr.upper(), upper))
+    mp_integer to;
+    if(to_integer_non_constant(eventually_expr.to(), to))
       throw "failed to convert sva_eventually index";
 
     // We rely on NNF.
-    if(current + lower >= no_timeframes || current + upper >= no_timeframes)
+    if(current + from >= no_timeframes || current + to >= no_timeframes)
     {
       DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
       return obligationst{no_timeframes - 1, true_exprt()};
@@ -230,7 +228,7 @@ static obligationst property_obligations_rec(
 
     exprt::operandst disjuncts = {};
 
-    for(mp_integer u = current + lower; u <= current + upper; ++u)
+    for(mp_integer u = current + from; u <= current + to; ++u)
     {
       auto obligations_rec = property_obligations_rec(op, u, no_timeframes);
       disjuncts.push_back(obligations_rec.conjunction().second);
@@ -283,29 +281,24 @@ static obligationst property_obligations_rec(
   }
   else if(property_expr.id() == ID_sva_ranged_s_eventually)
   {
-    auto &phi = to_sva_ranged_s_eventually_expr(property_expr).op();
-    auto &lower = to_sva_ranged_s_eventually_expr(property_expr).lower();
-    auto &upper = to_sva_ranged_s_eventually_expr(property_expr).upper();
+    const auto &s_eventually = to_sva_ranged_s_eventually_expr(property_expr);
+    auto from = numeric_cast_v<mp_integer>(s_eventually.from());
 
-    auto from_opt = numeric_cast<mp_integer>(lower);
-    if(!from_opt.has_value())
-      throw ebmc_errort() << "failed to convert SVA s_eventually from index";
-
-    if(*from_opt < 0)
+    if(from < 0)
       throw ebmc_errort() << "SVA s_eventually from index must not be negative";
 
-    auto from = std::min(no_timeframes - 1, current + *from_opt);
+    from = std::min(no_timeframes - 1, current + from);
 
     mp_integer to;
 
-    if(upper.id() == ID_infinity)
+    if(s_eventually.is_unbounded())
     {
       throw ebmc_errort()
         << "failed to convert SVA s_eventually to index (infinity)";
     }
     else
     {
-      auto to_opt = numeric_cast<mp_integer>(upper);
+      auto to_opt = numeric_cast<mp_integer>(s_eventually.to());
       if(!to_opt.has_value())
         throw ebmc_errort() << "failed to convert SVA s_eventually to index";
       to = std::min(current + *to_opt, no_timeframes - 1);
@@ -316,7 +309,8 @@ static obligationst property_obligations_rec(
 
     for(mp_integer c = from; c <= to; ++c)
     {
-      auto tmp = property_obligations_rec(phi, c, no_timeframes).conjunction();
+      auto tmp = property_obligations_rec(s_eventually.op(), c, no_timeframes)
+                   .conjunction();
       time = std::max(time, tmp.first);
       disjuncts.push_back(tmp.second);
     }
@@ -330,14 +324,14 @@ static obligationst property_obligations_rec(
     auto &phi = property_expr.id() == ID_sva_ranged_always
                   ? to_sva_ranged_always_expr(property_expr).op()
                   : to_sva_s_always_expr(property_expr).op();
-    auto &lower = property_expr.id() == ID_sva_ranged_always
-                    ? to_sva_ranged_always_expr(property_expr).lower()
-                    : to_sva_s_always_expr(property_expr).lower();
-    auto &upper = property_expr.id() == ID_sva_ranged_always
-                    ? to_sva_ranged_always_expr(property_expr).upper()
-                    : to_sva_s_always_expr(property_expr).upper();
+    auto &from_expr = property_expr.id() == ID_sva_ranged_always
+                        ? to_sva_ranged_always_expr(property_expr).from()
+                        : to_sva_s_always_expr(property_expr).from();
+    auto &to_expr = property_expr.id() == ID_sva_ranged_always
+                      ? to_sva_ranged_always_expr(property_expr).to()
+                      : to_sva_s_always_expr(property_expr).to();
 
-    auto from_opt = numeric_cast<mp_integer>(lower);
+    auto from_opt = numeric_cast<mp_integer>(from_expr);
     if(!from_opt.has_value())
       throw ebmc_errort() << "failed to convert SVA always from index";
 
@@ -348,13 +342,13 @@ static obligationst property_obligations_rec(
 
     mp_integer to;
 
-    if(upper.id() == ID_infinity)
+    if(to_expr.id() == ID_infinity)
     {
       to = no_timeframes - 1;
     }
     else
     {
-      auto to_opt = numeric_cast<mp_integer>(upper);
+      auto to_opt = numeric_cast<mp_integer>(to_expr);
       if(!to_opt.has_value())
         throw ebmc_errort() << "failed to convert SVA always to index";
       to = std::min(current + *to_opt, no_timeframes - 1);

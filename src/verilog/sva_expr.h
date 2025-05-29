@@ -272,24 +272,24 @@ class sva_ranged_predicate_exprt : public ternary_exprt
 public:
   sva_ranged_predicate_exprt(
     irep_idt __id,
-    constant_exprt __lower,
-    exprt __upper,
+    constant_exprt __from,
+    exprt __to,
     exprt __op)
     : ternary_exprt(
         __id,
-        std::move(__lower),
-        std::move(__upper),
+        std::move(__from),
+        std::move(__to),
         std::move(__op),
         bool_typet{})
   {
   }
 
-  const constant_exprt &lower() const
+  const constant_exprt &from() const
   {
     return static_cast<const constant_exprt &>(op0());
   }
 
-  constant_exprt &lower()
+  constant_exprt &from()
   {
     return static_cast<constant_exprt &>(op0());
   }
@@ -304,12 +304,12 @@ public:
     return op1().id() == ID_infinity;
   }
 
-  const exprt &upper() const
+  const exprt &to() const
   {
     return op1();
   }
 
-  exprt &upper()
+  exprt &to()
   {
     return op1();
   }
@@ -351,40 +351,37 @@ class sva_bounded_range_predicate_exprt : public sva_ranged_predicate_exprt
 public:
   sva_bounded_range_predicate_exprt(
     irep_idt __id,
-    constant_exprt __lower,
-    constant_exprt __upper,
+    constant_exprt __from,
+    constant_exprt __to,
     exprt __op)
     : sva_ranged_predicate_exprt(
         __id,
-        std::move(__lower),
-        std::move(__upper),
+        std::move(__from),
+        std::move(__to),
         std::move(__op))
   {
   }
 
-  const constant_exprt &upper() const
+  const constant_exprt &to() const
   {
     return static_cast<const constant_exprt &>(
-      sva_ranged_predicate_exprt::upper());
+      sva_ranged_predicate_exprt::to());
   }
 
-  constant_exprt &upper()
+  constant_exprt &to()
   {
-    return static_cast<constant_exprt &>(sva_ranged_predicate_exprt::upper());
+    return static_cast<constant_exprt &>(sva_ranged_predicate_exprt::to());
   }
 };
 
 class sva_eventually_exprt : public sva_bounded_range_predicate_exprt
 {
 public:
-  sva_eventually_exprt(
-    constant_exprt __lower,
-    constant_exprt __upper,
-    exprt __op)
+  sva_eventually_exprt(constant_exprt __from, constant_exprt __to, exprt __op)
     : sva_bounded_range_predicate_exprt(
         ID_sva_eventually,
-        std::move(__lower),
-        std::move(__upper),
+        std::move(__from),
+        std::move(__to),
         std::move(__op))
   {
   }
@@ -433,13 +430,13 @@ class sva_ranged_s_eventually_exprt : public sva_ranged_predicate_exprt
 {
 public:
   explicit sva_ranged_s_eventually_exprt(
-    constant_exprt lower,
-    exprt upper,
+    constant_exprt from,
+    exprt to,
     exprt op)
     : sva_ranged_predicate_exprt(
         ID_sva_ranged_s_eventually,
-        std::move(lower),
-        std::move(upper),
+        std::move(from),
+        std::move(to),
         std::move(op))
   {
   }
@@ -487,11 +484,11 @@ static inline sva_always_exprt &to_sva_always_expr(exprt &expr)
 class sva_ranged_always_exprt : public sva_ranged_predicate_exprt
 {
 public:
-  sva_ranged_always_exprt(constant_exprt lower, exprt upper, exprt op)
+  sva_ranged_always_exprt(constant_exprt from, exprt to, exprt op)
     : sva_ranged_predicate_exprt(
         ID_sva_ranged_always,
-        std::move(lower),
-        std::move(upper),
+        std::move(from),
+        std::move(to),
         std::move(op))
   {
   }
@@ -515,11 +512,11 @@ static inline sva_ranged_always_exprt &to_sva_ranged_always_expr(exprt &expr)
 class sva_s_always_exprt : public sva_bounded_range_predicate_exprt
 {
 public:
-  sva_s_always_exprt(constant_exprt lower, constant_exprt upper, exprt op)
+  sva_s_always_exprt(constant_exprt from, constant_exprt to, exprt op)
     : sva_bounded_range_predicate_exprt(
         ID_sva_s_always,
-        std::move(lower),
-        std::move(upper),
+        std::move(from),
+        std::move(to),
         std::move(op))
   {
   }
@@ -1360,7 +1357,7 @@ public:
     return (case_itemst &)(op1().operands());
   }
 
-  exprt lowering() const;
+  exprt lower() const;
 
 protected:
   using binary_predicate_exprt::op0;

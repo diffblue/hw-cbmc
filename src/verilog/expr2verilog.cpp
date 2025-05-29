@@ -460,11 +460,11 @@ expr2verilogt::resultt expr2verilogt::convert_sva_ranged_predicate(
 {
   std::string range_str;
 
-  range_str = "[" + convert(src.lower()) + ':';
-  if(src.upper().id() == ID_infinity)
+  range_str = "[" + convert(src.from()) + ':';
+  if(src.is_unbounded())
     range_str += "$";
   else
-    range_str += convert(src.upper());
+    range_str += convert(src.to());
   range_str += "] ";
 
   auto &src_op = src.op();
