@@ -1,0 +1,10 @@
+CORE
+../../verilog/SVA/followed-by2.sv
+--buechi --bound 20
+^\[main\.p0\] always \(\(main\.a #-# main\.b\) iff \(not \(main\.a |-> \(not main\.b\)\)\)\): PROVED up to bound 20$
+^\[main\.p1\] always \(\(main\.a #=# main\.b\) iff \(not \(main\.a |=> \(not main\.b\)\)\)\): PROVED up to bound 20$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
