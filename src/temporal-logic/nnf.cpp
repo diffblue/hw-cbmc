@@ -79,14 +79,14 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     // not always [x:y] p --> s_eventually [x:y] not p
     auto &always = to_sva_ranged_always_expr(expr);
     return sva_ranged_s_eventually_exprt{
-      always.lower(), always.upper(), not_exprt{always.op()}};
+      always.from(), always.to(), not_exprt{always.op()}};
   }
   else if(expr.id() == ID_sva_s_always)
   {
     // not s_always [x:y] p --> eventually [x:y] not p
     auto &s_always = to_sva_s_always_expr(expr);
     return sva_eventually_exprt{
-      s_always.lower(), s_always.upper(), not_exprt{s_always.op()}};
+      s_always.from(), s_always.to(), not_exprt{s_always.op()}};
   }
   else if(expr.id() == ID_sva_s_eventually)
   {
@@ -98,7 +98,7 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     // not eventually[i:j] p --> s_always[i:j] not p
     auto &eventually = to_sva_eventually_expr(expr);
     return sva_s_always_exprt{
-      eventually.lower(), eventually.upper(), not_exprt{eventually.op()}};
+      eventually.from(), eventually.to(), not_exprt{eventually.op()}};
   }
   else if(expr.id() == ID_sva_until)
   {
