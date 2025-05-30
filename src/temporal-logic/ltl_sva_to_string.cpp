@@ -433,6 +433,105 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto a2 = and_exprt{not_exprt{if_expr.cond()}, if_expr.false_case()};
     return rec(or_exprt{a1, a2}, mode);
   }
+  else if(
+    expr.id() ==
+    ID_sva_sequence_repetition_star) // [*] or [*n] or [*x:y] or [*x:$]
+  {
+    PRECONDITION(mode == SVA_SEQUENCE);
+    auto &repetition = to_sva_sequence_repetition_star_expr(expr);
+    unary_exprt new_expr{ID_sva_sequence_repetition_star, repetition.op()};
+    if(!repetition.repetitions_given())
+    {
+      return suffix("[*]", new_expr, mode);
+    }
+    else if(repetition.is_empty_match())
+    {
+      throw ebmc_errort{} << "cannot convert [*0] to Buechi";
+    }
+    else if(repetition.is_singleton())
+    {
+      auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
+      return suffix("[*" + integer2string(n) + "]", new_expr, mode);
+    }
+    else if(repetition.is_bounded_range())
+    {
+      auto from = numeric_cast_v<mp_integer>(repetition.from());
+      auto to = numeric_cast_v<mp_integer>(repetition.to());
+      return suffix(
+        "[*" + integer2string(from) + ".." + integer2string(to) + "]",
+        new_expr,
+        mode);
+    }
+    else if(repetition.is_unbounded())
+    {
+      auto from = numeric_cast_v<mp_integer>(repetition.from());
+      return suffix("[*" + integer2string(from) + "..]", new_expr, mode);
+    }
+    else
+      DATA_INVARIANT(false, "unexpected sva_sequence_repetition_star");
+  }
+  else if(expr.id() == ID_sva_sequence_repetition_plus) // something[+]
+  {
+    PRECONDITION(mode == SVA_SEQUENCE);
+    return suffix("[+]", expr, mode);
+  }
+  else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
+  {
+    PRECONDITION(mode == SVA_SEQUENCE);
+    auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
+    unary_exprt new_expr{ID_sva_sequence_goto_repetition, repetition.op()};
+    if(repetition.is_singleton())
+    {
+      auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
+      return suffix("[->" + integer2string(n) + "]", new_expr, mode);
+    }
+    else if(repetition.is_bounded_range())
+    {
+      auto from = numeric_cast_v<mp_integer>(repetition.from());
+      auto to = numeric_cast_v<mp_integer>(repetition.to());
+      return suffix(
+        "[->" + integer2string(from) + ".." + integer2string(to) + "]",
+        new_expr,
+        mode);
+    }
+    else if(repetition.is_unbounded())
+    {
+      auto from = numeric_cast_v<mp_integer>(repetition.from());
+      return suffix("[->" + integer2string(from) + "..]", new_expr, mode);
+    }
+    else
+      DATA_INVARIANT(false, "unexpected sva_sequence_goto_repetition");
+  }
+  else if(
+    expr.id() == ID_sva_sequence_non_consecutive_repetition) // something[=n]
+  {
+    PRECONDITION(mode == SVA_SEQUENCE);
+    auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
+    unary_exprt new_expr{
+      ID_sva_sequence_non_consecutive_repetition, repetition.op()};
+    if(repetition.is_singleton())
+    {
+      auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
+      return suffix("[=" + integer2string(n) + "]", new_expr, mode);
+    }
+    else if(repetition.is_bounded_range())
+    {
+      auto from = numeric_cast_v<mp_integer>(repetition.from());
+      auto to = numeric_cast_v<mp_integer>(repetition.to());
+      return suffix(
+        "[=" + integer2string(from) + ".." + integer2string(to) + "]",
+        new_expr,
+        mode);
+    }
+    else if(repetition.is_unbounded())
+    {
+      auto from = numeric_cast_v<mp_integer>(repetition.from());
+      return suffix("[=" + integer2string(from) + "..]", new_expr, mode);
+    }
+    else
+      DATA_INVARIANT(
+        false, "unexpected sva_sequence_non_consecutive_repetition");
+  }
   else if(!is_temporal_operator(expr))
   {
     auto number = atoms.number(expr);
