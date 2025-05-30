@@ -1,0 +1,10 @@
+CORE
+../../verilog/SVA/sequence_repetition4.sv
+--buechi --bound 10
+^\[main\.p0\] \(main\.x == 0 ##1 main\.x == 1\) \[\*2\]: PROVED up to bound \d+$
+^\[main\.p1\] \(main\.x == 0 ##1 main\.x == 1 ##1 main\.x == 0\) \[\*2\]: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
