@@ -177,7 +177,19 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_s_always)
   {
-    throw ebmc_errort{} << "cannot convert " << expr.id() << " to Buechi";
+    auto &always = to_sva_s_always_expr(expr);
+    auto new_expr = unary_exprt{ID_sva_s_always, always.op()};
+    auto lower = numeric_cast_v<mp_integer>(always.lower());
+    if(!always.is_range())
+      return prefix("F[" + integer2string(lower) + "]", new_expr, mode);
+    else
+    {
+      auto upper = numeric_cast_v<mp_integer>(to_constant_expr(always.upper()));
+      return prefix(
+        "F[" + integer2string(lower) + ":" + integer2string(upper) + "]",
+        new_expr,
+        mode);
+    }
   }
   else if(expr.id() == ID_sva_s_eventually)
   {
