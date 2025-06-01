@@ -269,8 +269,8 @@ jobs:
         run: ccache -s
 
   # This job takes approximately 20 minutes
-  check-macos-14-make-clang:
-    runs-on: macos-14
+  check-macos-15-make-clang:
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
         with:
