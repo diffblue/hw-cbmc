@@ -184,20 +184,21 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     PRECONDITION(mode == PROPERTY);
     return prefix("F", expr, mode);
   }
-  else if(expr.id() == ID_sva_ranged_s_eventually)
+  else if(
+    expr.id() == ID_sva_ranged_s_eventually || expr.id() == ID_sva_eventually)
   {
     PRECONDITION(mode == PROPERTY);
-    auto &s_eventually = to_sva_ranged_s_eventually_expr(expr);
-    auto new_expr = unary_exprt{ID_sva_ranged_s_eventually, s_eventually.op()};
-    auto lower = numeric_cast_v<mp_integer>(s_eventually.lower());
-    if(!s_eventually.is_range())
+    auto &eventually = to_sva_ranged_predicate_exprt(expr);
+    auto new_expr = unary_exprt{expr.id(), eventually.op()};
+    auto lower = numeric_cast_v<mp_integer>(eventually.lower());
+    if(!eventually.is_range())
       return prefix("F[" + integer2string(lower) + "]", new_expr, mode);
-    else if(s_eventually.is_unbounded())
+    else if(eventually.is_unbounded())
       return prefix("F[" + integer2string(lower) + ":]", new_expr, mode);
     else
     {
       auto upper =
-        numeric_cast_v<mp_integer>(to_constant_expr(s_eventually.upper()));
+        numeric_cast_v<mp_integer>(to_constant_expr(eventually.upper()));
       return prefix(
         "F[" + integer2string(lower) + ":" + integer2string(upper) + "]",
         new_expr,
