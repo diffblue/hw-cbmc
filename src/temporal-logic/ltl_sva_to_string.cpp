@@ -393,6 +393,14 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     PRECONDITION(mode == SVA_SEQUENCE);
     return suffix("[+]", expr, mode);
   }
+  else if(expr.id() == ID_if)
+  {
+    // c ? x : y  --->  (c∧x)∨(¬c∧y)
+    auto &if_expr = to_if_expr(expr);
+    auto a1 = and_exprt{if_expr.cond(), if_expr.true_case()};
+    auto a2 = and_exprt{not_exprt{if_expr.cond()}, if_expr.false_case()};
+    return rec(or_exprt{a1, a2}, mode);
+  }
   else if(!is_temporal_operator(expr))
   {
     auto number = atoms.number(expr);
