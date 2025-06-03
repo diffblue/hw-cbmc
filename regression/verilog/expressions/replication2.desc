@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 replication2.v
 
-^EXIT=0$
+^file .* line 6: unsized literals are not allowed in concatenations$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This should yield an error.
