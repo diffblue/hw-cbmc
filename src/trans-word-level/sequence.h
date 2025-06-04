@@ -19,12 +19,30 @@ class sequence_matcht
 {
 public:
   sequence_matcht(mp_integer __end_time, exprt __condition)
-    : end_time(std::move(__end_time)), condition(std::move(__condition))
+    : _is_empty_match(false),
+      end_time(std::move(__end_time)),
+      condition(std::move(__condition))
   {
   }
 
+  bool empty_match() const
+  {
+    return _is_empty_match;
+  }
+
+protected:
+  bool _is_empty_match;
+
+public:
   mp_integer end_time;
   exprt condition;
+
+  static sequence_matcht empty_match(mp_integer end_time)
+  {
+    auto result = sequence_matcht{end_time, true_exprt{}};
+    result._is_empty_match = true;
+    return result;
+  }
 };
 
 /// A set of matches of an SVA sequence.

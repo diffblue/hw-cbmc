@@ -1,9 +1,10 @@
-KNOWNBUG
+CORE
 empty_sequence1.sv
 --bound 5
+^\[main\.p0\] 1 \[\*0\]: REFUTED$
+^\[main\.p1\] 1 \[\*0\] ##1 main\.x == 0: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-Repetition with zero is not implemented.
