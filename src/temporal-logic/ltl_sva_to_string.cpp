@@ -161,16 +161,16 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     auto &always = to_sva_ranged_always_expr(expr);
     auto new_expr = unary_exprt{ID_sva_ranged_always, always.op()};
-    auto lower = numeric_cast_v<mp_integer>(always.lower());
+    auto from = numeric_cast_v<mp_integer>(always.from());
     if(!always.is_range())
-      return prefix("F[" + integer2string(lower) + "]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + "]", new_expr, mode);
     else if(always.is_unbounded())
-      return prefix("F[" + integer2string(lower) + ":]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + ":]", new_expr, mode);
     else
     {
-      auto upper = numeric_cast_v<mp_integer>(to_constant_expr(always.upper()));
+      auto to = numeric_cast_v<mp_integer>(to_constant_expr(always.to()));
       return prefix(
-        "F[" + integer2string(lower) + ":" + integer2string(upper) + "]",
+        "F[" + integer2string(from) + ":" + integer2string(to) + "]",
         new_expr,
         mode);
     }
@@ -188,19 +188,19 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     expr.id() == ID_sva_ranged_s_eventually || expr.id() == ID_sva_eventually)
   {
     PRECONDITION(mode == PROPERTY);
+
     auto &eventually = to_sva_ranged_predicate_exprt(expr);
     auto new_expr = unary_exprt{expr.id(), eventually.op()};
-    auto lower = numeric_cast_v<mp_integer>(eventually.lower());
+    auto from = numeric_cast_v<mp_integer>(eventually.from());
     if(!eventually.is_range())
-      return prefix("F[" + integer2string(lower) + "]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + "]", new_expr, mode);
     else if(eventually.is_unbounded())
-      return prefix("F[" + integer2string(lower) + ":]", new_expr, mode);
+      return prefix("F[" + integer2string(from) + ":]", new_expr, mode);
     else
     {
-      auto upper =
-        numeric_cast_v<mp_integer>(to_constant_expr(eventually.upper()));
+      auto to = numeric_cast_v<mp_integer>(to_constant_expr(eventually.to()));
       return prefix(
-        "F[" + integer2string(lower) + ":" + integer2string(upper) + "]",
+        "F[" + integer2string(from) + ":" + integer2string(to) + "]",
         new_expr,
         mode);
     }

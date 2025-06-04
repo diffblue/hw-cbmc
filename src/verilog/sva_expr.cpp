@@ -29,7 +29,7 @@ exprt sva_cycle_delay_star_exprt::lower() const
     op()};
 }
 
-exprt sva_case_exprt::lowering() const
+exprt sva_case_exprt::lower() const
 {
   auto &case_items = this->case_items();
 
@@ -51,7 +51,7 @@ exprt sva_case_exprt::lowering() const
   reduced.case_items().erase(reduced.case_items().begin());
 
   // rec. call
-  auto reduced_rec = reduced.lowering();
+  auto reduced_rec = reduced.lower();
 
   return if_exprt{
     disjunction(disjuncts), case_items.front().result(), reduced_rec};
