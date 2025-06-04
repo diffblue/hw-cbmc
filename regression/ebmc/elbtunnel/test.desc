@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 elbtunnel.aig.smv
 --bound 12
 ^EXIT=10$
@@ -13,3 +13,5 @@ elbtunnel.aig.smv
 ^\[spec8\] .* REFUTED$
 --
 ^warning: ignoring
+--
+The test fails in MacOS CI with Z3.
