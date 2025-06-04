@@ -72,23 +72,22 @@ symbol_exprt timeframe_symbol(const mp_integer &timeframe, symbol_exprt src)
 class wl_instantiatet
 {
 public:
-  explicit wl_instantiatet(const mp_integer &_no_timeframes)
-    : no_timeframes(_no_timeframes)
+  wl_instantiatet(const mp_integer &_no_timeframes, bool _next_symbol_allowed)
+    : no_timeframes(_no_timeframes), next_symbol_allowed(_next_symbol_allowed)
   {
   }
 
   /// Instantiate the given expression for timeframe t
-  [[nodiscard]] std::pair<mp_integer, exprt>
-  operator()(exprt expr, const mp_integer &t) const
+  [[nodiscard]] exprt operator()(exprt expr, const mp_integer &t) const
   {
     return instantiate_rec(std::move(expr), t);
   }
 
 protected:
   const mp_integer &no_timeframes;
+  bool next_symbol_allowed;
 
-  [[nodiscard]] std::pair<mp_integer, exprt>
-  instantiate_rec(exprt, const mp_integer &t) const;
+  [[nodiscard]] exprt instantiate_rec(exprt, const mp_integer &t) const;
   [[nodiscard]] typet instantiate_rec(typet, const mp_integer &t) const;
 };
 
@@ -104,20 +103,20 @@ Function: wl_instantiatet::instantiate_rec
 
 \*******************************************************************/
 
-std::pair<mp_integer, exprt>
-wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
+exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
 {
   expr.type() = instantiate_rec(expr.type(), t);
 
   if(expr.id() == ID_next_symbol)
   {
+    PRECONDITION(next_symbol_allowed);
     expr.id(ID_symbol);
     auto u = t + 1;
-    return {u, timeframe_symbol(u, to_symbol_expr(std::move(expr)))};
+    return timeframe_symbol(u, to_symbol_expr(std::move(expr)));
   }
   else if(expr.id() == ID_symbol)
   {
-    return {t, timeframe_symbol(t, to_symbol_expr(std::move(expr)))};
+    return timeframe_symbol(t, to_symbol_expr(std::move(expr)));
   }
   else if(
     expr.id() == ID_typecast && expr.type().id() == ID_bool &&
@@ -144,7 +143,7 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     if(ticks > t)
     {
       // return the 'default value' for the type
-      return {t, verilog_past.default_value()};
+      return verilog_past.default_value();
     }
     else
     {
@@ -159,15 +158,12 @@ wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   }
   else
   {
-    mp_integer max = t;
     for(auto &op : expr.operands())
     {
-      auto tmp = instantiate_rec(op, t);
-      op = tmp.second;
-      max = std::max(max, tmp.first);
+      op = instantiate_rec(op, t);
     }
 
-    return {max, expr};
+    return expr;
   }
 }
 
@@ -205,8 +201,8 @@ exprt instantiate(
   const mp_integer &t,
   const mp_integer &no_timeframes)
 {
-  wl_instantiatet wl_instantiate(no_timeframes);
-  return wl_instantiate(expr, t).second;
+  wl_instantiatet wl_instantiate(no_timeframes, true);
+  return wl_instantiate(expr, t);
 }
 
 /*******************************************************************\
@@ -221,11 +217,11 @@ Function: instantiate_property
 
 \*******************************************************************/
 
-std::pair<mp_integer, exprt> instantiate_property(
+exprt instantiate_property(
   const exprt &expr,
   const mp_integer &current,
   const mp_integer &no_timeframes)
 {
-  wl_instantiatet wl_instantiate(no_timeframes);
+  wl_instantiatet wl_instantiate(no_timeframes, false);
   return wl_instantiate(expr, current);
 }

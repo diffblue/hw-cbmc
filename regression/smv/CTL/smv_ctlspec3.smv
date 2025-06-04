@@ -1,0 +1,8 @@
+MODULE main
+
+VAR x : boolean;
+
+DEFINE y := next(x);
+
+-- error, next(...) is not allowed
+SPEC AG y

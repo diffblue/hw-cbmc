@@ -1,0 +1,7 @@
+CORE
+smv_ctlspec2.smv
+
+^file .* line 6: next\(...\) is not allowed here$
+^EXIT=2$
+^SIGNAL=0$
+--

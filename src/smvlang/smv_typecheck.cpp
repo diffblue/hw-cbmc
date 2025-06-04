@@ -642,6 +642,11 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   if(expr.id()==ID_symbol || 
      expr.id()==ID_next_symbol)
   {
+    // next_symbol is only allowed in TRANS mode
+    if(expr.id() == ID_next_symbol && mode != TRANS && mode != OTHER)
+      throw errort().with_location(expr.find_source_location())
+        << "next(...) is not allowed here";
+
     const irep_idt &identifier=expr.get(ID_identifier);
     bool next=expr.id()==ID_next_symbol;
     
