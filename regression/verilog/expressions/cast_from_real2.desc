@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 cast_from_real2.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ cast_from_real2.sv
 --
 ^warning: ignoring
 --
-The implicit cast is currently not allowed.

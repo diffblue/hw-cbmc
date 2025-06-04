@@ -2123,6 +2123,14 @@ void verilog_typecheck_exprt::implicit_typecast(
       expr = typecast_exprt{expr, dest_type};
       return;
     }
+    else if(
+      dest_type.id() == ID_bool || dest_type.id() == ID_signedbv ||
+      dest_type.id() == ID_unsignedbv)
+    {
+      // Cast from float to int -- the rounding mode is added during lowering.
+      expr = typecast_exprt{expr, dest_type};
+      return;
+    }
   }
   else if(src_type.id() == ID_verilog_null)
   {
