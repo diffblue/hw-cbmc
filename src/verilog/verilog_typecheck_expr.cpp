@@ -286,6 +286,14 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
   Forall_operands(it, expr)
   {
     convert_expr(*it);
+
+    // check if there's an unsized literal (1800-2017 11.4.12)
+    if(it->get_bool(ID_C_verilog_unsized))
+    {
+      throw errort().with_location(it->source_location())
+        << "unsized literals are not allowed in concatenations";
+    }
+
     must_be_integral(*it);
 
     const typet &type = it->type();

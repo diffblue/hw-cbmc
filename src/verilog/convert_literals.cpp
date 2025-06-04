@@ -118,6 +118,20 @@ constant_exprt convert_real_literal(const irep_idt &value)
   return result;
 }
 
+static constant_exprt unsized(constant_exprt expr)
+{
+  expr.set(ID_C_verilog_unsized, true);
+  return expr;
+}
+
+static constant_exprt cond_unsized(constant_exprt expr, bool is_unsized)
+{
+  if(is_unsized)
+    return unsized(std::move(expr));
+  else
+    return expr;
+}
+
 constant_exprt convert_integral_literal(const irep_idt &value)
 {
   // first, get rid of whitespace and underscores
@@ -135,19 +149,19 @@ constant_exprt convert_integral_literal(const irep_idt &value)
   // special case the "unbased unsized literals"
   if(rest == "'0")
   {
-    return from_integer(0, unsignedbv_typet{1});
+    return unsized(from_integer(0, unsignedbv_typet{1}));
   }
   else if(rest == "'1")
   {
-    return from_integer(1, unsignedbv_typet{1});
+    return unsized(from_integer(1, unsignedbv_typet{1}));
   }
   else if(rest == "'x" || rest == "'X")
   {
-    return constant_exprt{"x", verilog_unsignedbv_typet{1}};
+    return unsized(constant_exprt{"x", verilog_unsignedbv_typet{1}});
   }
   else if(rest == "'z" || rest == "'Z")
   {
-    return constant_exprt{"z", verilog_unsignedbv_typet{1}};
+    return unsized(constant_exprt{"z", verilog_unsignedbv_typet{1}});
   }
 
   std::string::size_type pos = rest.find('\'');
@@ -183,7 +197,8 @@ constant_exprt convert_integral_literal(const irep_idt &value)
     auto type = s_flag_given
                   ? static_cast<typet>(verilog_signedbv_typet{final_bits})
                   : verilog_unsignedbv_typet{final_bits};
-    return constant_exprt{std::string(final_bits, 'x'), type};
+    return cond_unsized(
+      constant_exprt{std::string(final_bits, 'x'), type}, !bits_given);
   }
   else if(rest == "dz" || rest == "dZ")
   {
@@ -191,7 +206,8 @@ constant_exprt convert_integral_literal(const irep_idt &value)
     auto type = s_flag_given
                   ? static_cast<typet>(verilog_signedbv_typet{final_bits})
                   : verilog_unsignedbv_typet{final_bits};
-    return constant_exprt{std::string(final_bits, 'z'), type};
+    return cond_unsized(
+      constant_exprt{std::string(final_bits, 'z'), type}, !bits_given);
   }
 
   unsigned base = 10;
@@ -353,7 +369,7 @@ constant_exprt convert_integral_literal(const irep_idt &value)
         type = verilog_unsignedbv_typet(bits);
 
       // stored as individual bits
-      return constant_exprt{fvalue, type};
+      return cond_unsized(constant_exprt{fvalue, type}, !bits_given);
     }
     else // two valued
     {
@@ -372,7 +388,8 @@ constant_exprt convert_integral_literal(const irep_idt &value)
         type = unsignedbv_typet(bits);
 
       // stored as bvrep
-      return constant_exprt{integer2bvrep(int_value, bits), type};
+      return cond_unsized(
+        constant_exprt{integer2bvrep(int_value, bits), type}, !bits_given);
     }
   }
   else
@@ -395,7 +412,8 @@ constant_exprt convert_integral_literal(const irep_idt &value)
     else
       type = unsignedbv_typet(bits);
 
-    return constant_exprt{integer2bvrep(int_value, bits), type};
+    return cond_unsized(
+      constant_exprt{integer2bvrep(int_value, bits), type}, !bits_given);
   }
 
   UNREACHABLE;
