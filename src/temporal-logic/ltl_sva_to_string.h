@@ -34,13 +34,11 @@ protected:
 
   struct resultt
   {
-    resultt(precedencet _p, std::string _s, exprt _e)
-      : p(_p), s(std::move(_s)), e(std::move(_e))
+    resultt(precedencet _p, std::string _s) : p(_p), s(std::move(_s))
     {
     }
     precedencet p;
     std::string s;
-    exprt e;
   };
 
   numberingt<exprt, irep_hash> atoms;

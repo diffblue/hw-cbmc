@@ -35,13 +35,10 @@ ltl_sva_to_stringt::suffix(std::string s, const exprt &expr, modet mode)
 {
   auto op_rec = rec(to_unary_expr(expr).op(), mode);
 
-  auto new_e = to_unary_expr(expr);
-  new_e.op() = op_rec.e;
-
   if(op_rec.p == precedencet::ATOM || op_rec.p == precedencet::SUFFIX)
-    return resultt{precedencet::SUFFIX, op_rec.s + s, new_e};
+    return resultt{precedencet::SUFFIX, op_rec.s + s};
   else
-    return resultt{precedencet::SUFFIX, '(' + op_rec.s + ')' + s, new_e};
+    return resultt{precedencet::SUFFIX, '(' + op_rec.s + ')' + s};
 }
 
 ltl_sva_to_stringt::resultt
@@ -49,13 +46,10 @@ ltl_sva_to_stringt::prefix(std::string s, const exprt &expr, modet mode)
 {
   auto op_rec = rec(to_unary_expr(expr).op(), mode);
 
-  auto new_e = to_unary_expr(expr);
-  new_e.op() = op_rec.e;
-
   if(op_rec.p == precedencet::ATOM || op_rec.p == precedencet::PREFIX)
-    return resultt{precedencet::PREFIX, s + op_rec.s, new_e};
+    return resultt{precedencet::PREFIX, s + op_rec.s};
   else
-    return resultt{precedencet::PREFIX, s + '(' + op_rec.s + ')', new_e};
+    return resultt{precedencet::PREFIX, s + '(' + op_rec.s + ')'};
 }
 
 ltl_sva_to_stringt::resultt
@@ -63,9 +57,8 @@ ltl_sva_to_stringt::infix(std::string s, const exprt &expr, modet mode)
 {
   std::string result;
   bool first = true;
-  exprt new_e = expr; // copy
 
-  for(auto &op : new_e.operands())
+  for(auto &op : expr.operands())
   {
     if(first)
       first = false;
@@ -73,7 +66,6 @@ ltl_sva_to_stringt::infix(std::string s, const exprt &expr, modet mode)
       result += s;
 
     auto op_rec = rec(op, mode);
-    op = op_rec.e;
 
     if(op_rec.p == precedencet::ATOM)
       result += op_rec.s;
@@ -81,7 +73,7 @@ ltl_sva_to_stringt::infix(std::string s, const exprt &expr, modet mode)
       result += '(' + op_rec.s + ')';
   }
 
-  return resultt{precedencet::INFIX, result, new_e};
+  return resultt{precedencet::INFIX, result};
 }
 
 ltl_sva_to_stringt::resultt
@@ -110,12 +102,12 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.is_true())
   {
     // 1 is preferred, but G1 is parsed as an atom
-    return resultt{precedencet::ATOM, "true", expr};
+    return resultt{precedencet::ATOM, "true"};
   }
   else if(expr.is_false())
   {
     // 0 is preferred, but G0 is parsed as an atom
-    return resultt{precedencet::ATOM, "false", expr};
+    return resultt{precedencet::ATOM, "false"};
   }
   else if(expr.id() == ID_F)
   {
@@ -297,7 +289,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     // weak closure
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
     auto op_rec = rec(sequence, SVA_SEQUENCE);
-    return resultt{precedencet::ATOM, '{' + op_rec.s + '}', expr};
+    return resultt{precedencet::ATOM, '{' + op_rec.s + '}'};
   }
   else if(expr.id() == ID_sva_or)
   {
@@ -539,9 +531,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     // a0, a1, a2, a3, a4, ...
     std::string s = "a" + std::to_string(number);
 
-    symbol_exprt new_e{s, expr.type()};
-
-    return resultt{precedencet::ATOM, s, new_e};
+    return resultt{precedencet::ATOM, s};
   }
   else
     throw ebmc_errort{} << "cannot convert " << expr.id() << " to Buechi";
