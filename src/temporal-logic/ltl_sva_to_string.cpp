@@ -233,12 +233,29 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
       ID_sva_implicit_weak, new_expr.sequence()};
     return infix("|=>", new_expr, mode);
   }
-  else if(
-    expr.id() == ID_sva_nonoverlapped_followed_by ||
-    expr.id() == ID_sva_overlapped_followed_by)
+  else if(expr.id() == ID_sva_overlapped_followed_by)
   {
     PRECONDITION(mode == PROPERTY);
-    throw ebmc_errort{} << "cannot convert " << expr.id() << " to Buechi";
+    // 1800 2017 16.12.9
+    // (a #-# b)   --->   !(a |-> !b)
+    auto &followed_by = to_sva_followed_by_expr(expr);
+    auto not_b = not_exprt{followed_by.consequent()};
+    return rec(
+      not_exprt{
+        sva_overlapped_implication_exprt{followed_by.antecedent(), not_b}},
+      mode);
+  }
+  else if(expr.id() == ID_sva_nonoverlapped_followed_by)
+  {
+    PRECONDITION(mode == PROPERTY);
+    // 1800 2017 16.12.9
+    // (a #=# b)   --->   !(a |=> !b)
+    auto &followed_by = to_sva_followed_by_expr(expr);
+    auto not_b = not_exprt{followed_by.consequent()};
+    return rec(
+      not_exprt{
+        sva_non_overlapped_implication_exprt{followed_by.antecedent(), not_b}},
+      mode);
   }
   else if(expr.id() == ID_sva_sequence_property)
   {
