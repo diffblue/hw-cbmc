@@ -1,0 +1,6 @@
+MODULE main
+
+VAR x : boolean;
+
+-- error, next(...) is not allowed
+SPEC AG next(x)

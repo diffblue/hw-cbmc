@@ -517,8 +517,7 @@ static obligationst property_obligations_rec(
   {
     // we rely on NNF
     auto &if_expr = to_if_expr(property_expr);
-    auto cond =
-      instantiate_property(if_expr.cond(), current, no_timeframes).second;
+    auto cond = instantiate_property(if_expr.cond(), current, no_timeframes);
     auto obligations_true =
       property_obligations_rec(if_expr.true_case(), current, no_timeframes)
         .conjunction();
@@ -577,7 +576,7 @@ static obligationst property_obligations_rec(
     {
       // state formula
       return obligationst{
-        instantiate_property(property_expr, current, no_timeframes)};
+        current, instantiate_property(property_expr, current, no_timeframes)};
     }
   }
   else if(property_expr.id() == ID_sva_implies)
@@ -721,7 +720,7 @@ static obligationst property_obligations_rec(
   else
   {
     return obligationst{
-      instantiate_property(property_expr, current, no_timeframes)};
+      current, instantiate_property(property_expr, current, no_timeframes)};
   }
 }
 
