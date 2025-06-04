@@ -267,13 +267,27 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     PRECONDITION(mode == PROPERTY);
     return infix(" U ", expr, mode);
   }
+  else if(expr.id() == ID_sva_until)
+  {
+    PRECONDITION(mode == PROPERTY);
+    return infix(" W ", expr, mode);
+  }
   else if(expr.id() == ID_sva_s_until_with)
   {
-    // This is release with swapped operands
+    // This is strong release with swapped operands
     PRECONDITION(mode == PROPERTY);
     auto &until_with = to_sva_s_until_with_expr(expr);
-    auto R = R_exprt{until_with.rhs(), until_with.lhs()}; // swapped
-    return rec(R, mode);
+    auto new_expr =
+      strong_R_exprt{until_with.rhs(), until_with.lhs()}; // swapped
+    return infix(" M ", new_expr, mode);
+  }
+  else if(expr.id() == ID_sva_until_with)
+  {
+    // This is weak release with swapped operands
+    PRECONDITION(mode == PROPERTY);
+    auto &until_with = to_sva_until_with_expr(expr);
+    auto new_expr = R_exprt{until_with.rhs(), until_with.lhs()}; // swapped
+    return infix(" R ", new_expr, mode);
   }
   else if(
     expr.id() == ID_sva_weak || expr.id() == ID_sva_strong ||

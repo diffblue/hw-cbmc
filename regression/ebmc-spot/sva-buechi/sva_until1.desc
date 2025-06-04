@@ -1,0 +1,11 @@
+CORE
+../../verilog/SVA/sva_until1.sv
+--buechi
+^\[main\.p0\] always \(main.a until_with main.b\): REFUTED$
+^\[main\.p1\] always \(main.a until main.b\): REFUTED$
+^\[main\.p2\] always \(main.a s_until main.b\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
