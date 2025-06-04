@@ -1456,25 +1456,35 @@ public:
   /// op[*0] is a special case, denoting the empty match
   bool is_empty_match() const
   {
-    return !is_range() && repetitions_given() && op1().is_zero();
+    return is_singleton() && op1().is_zero();
   }
 
   // The number of repetitions must be a constant after elaboration.
   const constant_exprt &repetitions() const
   {
-    PRECONDITION(repetitions_given() && !is_range());
+    PRECONDITION(is_singleton());
     return static_cast<const constant_exprt &>(op1());
   }
 
   constant_exprt &repetitions()
   {
-    PRECONDITION(repetitions_given() && !is_range());
+    PRECONDITION(is_singleton());
     return static_cast<constant_exprt &>(op1());
   }
 
   bool is_range() const
   {
     return op2().is_not_nil();
+  }
+
+  bool is_bounded_range() const
+  {
+    return op2().is_not_nil() && op2().id() != ID_infinity;
+  }
+
+  bool is_singleton() const
+  {
+    return op1().is_not_nil() && op2().is_nil();
   }
 
   bool is_unbounded() const
@@ -1496,13 +1506,13 @@ public:
 
   const constant_exprt &to() const
   {
-    PRECONDITION(is_range() && !is_unbounded());
+    PRECONDITION(is_bounded_range());
     return static_cast<const constant_exprt &>(op2());
   }
 
   constant_exprt &to()
   {
-    PRECONDITION(is_range() && !is_unbounded());
+    PRECONDITION(is_bounded_range());
     return static_cast<constant_exprt &>(op2());
   }
 
