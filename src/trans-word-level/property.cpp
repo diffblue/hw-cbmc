@@ -557,7 +557,8 @@ static obligationst property_obligations_rec(
       for(auto &match : matches)
       {
         // The sequence must not match.
-        obligations.add(match.end_time, not_exprt{match.condition});
+        if(!match.empty_match())
+          obligations.add(match.end_time, not_exprt{match.condition});
       }
 
       return obligations;
@@ -700,8 +701,12 @@ static obligationst property_obligations_rec(
 
     for(auto &match : matches)
     {
-      disjuncts.push_back(match.condition);
-      max = std::max(max, match.end_time);
+      // empty matches are not considered
+      if(!match.empty_match())
+      {
+        disjuncts.push_back(match.condition);
+        max = std::max(max, match.end_time);
+      }
     }
 
     return obligationst{max, disjunction(disjuncts)};

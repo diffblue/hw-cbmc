@@ -368,7 +368,7 @@ sequence_matchest instantiate_sequence(
     if(repetition.is_empty_match())
     {
       // [*0] denotes the empty match
-      return {{t, true_exprt{}}};
+      return {sequence_matcht::empty_match(t)};
     }
     else if(repetition.is_unbounded() && repetition.repetitions_given())
     {
