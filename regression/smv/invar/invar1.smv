@@ -1,0 +1,11 @@
+MODULE main
+
+VAR x : 1..10;
+
+ASSIGN init(x) := 1;
+ASSIGN next(x) := x = 10 ? 10 : x + 1;
+
+-- x won't reach 10, since we won't reach 3
+INVAR x != 3
+
+LTLSPEC G x != 10

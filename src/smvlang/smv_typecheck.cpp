@@ -49,6 +49,7 @@ public:
   typedef enum
   {
     INIT,
+    INVAR,
     TRANS,
     OTHER,
     LTL,
@@ -1562,6 +1563,10 @@ void smv_typecheckt::typecheck(
     return;
 
   case smv_parse_treet::modulet::itemt::INVAR:
+    typecheck(item.expr, INVAR);
+    convert_expr_to(item.expr, bool_typet{});
+    return;
+
   case smv_parse_treet::modulet::itemt::FAIRNESS:
     typecheck(item.expr, OTHER);
     convert_expr_to(item.expr, bool_typet{});
