@@ -470,3 +470,8 @@ exprt aval_bval(const shift_exprt &expr)
   auto x = make_x(expr.type());
   return if_exprt{distance_has_xz, x, combined};
 }
+
+exprt aval_bval(const zero_extend_exprt &expr)
+{
+  abort();
+}

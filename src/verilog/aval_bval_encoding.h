@@ -65,5 +65,7 @@ exprt aval_bval(const verilog_implies_exprt &);
 exprt aval_bval(const typecast_exprt &);
 /// lowering for shifts
 exprt aval_bval(const shift_exprt &);
+/// lowering for zero extension
+exprt aval_bval(const zero_extend_exprt &);
 
 #endif

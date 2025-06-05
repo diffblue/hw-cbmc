@@ -343,6 +343,100 @@ expr2smvt::resultt expr2smvt::convert_typecast(const typecast_exprt &expr)
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_zero_extend
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_zero_extend(const zero_extend_exprt &expr)
+{
+  // these may apply to a variety of operand/result types
+  auto &src_type = expr.op().type();
+  auto &dest_type = expr.type();
+
+  if(src_type.id() == ID_unsignedbv && dest_type.id() == ID_signedbv)
+  {
+    // unsigned to signed
+    auto src_width = to_unsignedbv_type(src_type).get_width();
+    auto dest_width = to_signedbv_type(dest_type).get_width();
+
+    if(src_width == dest_width)
+    {
+      // signedness change only
+      return convert_rec(smv_signed_cast_exprt{expr.op(), dest_type});
+    }
+    else
+    {
+      PRECONDITION(dest_width > src_width);
+
+      // Signedness _and_ width change. First extend, then go signed
+      return convert_rec(smv_signed_cast_exprt{
+        smv_extend_exprt{
+          expr.op(), dest_width - src_width, unsignedbv_typet{dest_width}},
+        dest_type});
+    }
+  }
+  else if(src_type.id() == ID_signedbv && dest_type.id() == ID_unsignedbv)
+  {
+    // signed to unsigned
+    auto src_width = to_signedbv_type(src_type).get_width();
+    auto dest_width = to_unsignedbv_type(dest_type).get_width();
+
+    if(src_width == dest_width)
+    {
+      // signedness change only
+      return convert_rec(smv_unsigned_cast_exprt{expr.op(), dest_type});
+    }
+    else
+    {
+      PRECONDITION(dest_width > src_width);
+
+      // Signedness _and_ width change. First go unsigned, then enlarge.
+      return convert_rec(smv_extend_exprt{
+        smv_unsigned_cast_exprt{expr.op(), unsignedbv_typet{src_width}},
+        dest_width - src_width,
+        dest_type});
+    }
+  }
+  else if(src_type.id() == ID_signedbv && dest_type.id() == ID_signedbv)
+  {
+    // Note that SMV's resize(...) preserves the sign bit, unlike our typecast.
+    // We therefore first go unsigned, then resize, then go signed again.
+    auto src_width = to_signedbv_type(src_type).get_width();
+    auto dest_width = to_signedbv_type(dest_type).get_width();
+    PRECONDITION(dest_width >= src_width);
+    return convert_rec(smv_signed_cast_exprt{
+      smv_extend_exprt{
+        smv_unsigned_cast_exprt{expr.op(), unsignedbv_typet{src_width}},
+        dest_width - src_width,
+        unsignedbv_typet{dest_width}},
+      dest_type});
+  }
+  else if(src_type.id() == ID_unsignedbv && dest_type.id() == ID_unsignedbv)
+  {
+    // Unsigned to unsigned, possible width change.
+    auto src_width = to_unsignedbv_type(src_type).get_width();
+    auto dest_width = to_unsignedbv_type(dest_type).get_width();
+    if(dest_width == src_width)
+      return convert_rec(expr.op()); // no change
+    else
+    {
+      PRECONDITION(dest_width > src_width);
+      return convert_rec(
+        smv_extend_exprt{expr.op(), dest_width - src_width, dest_type});
+    }
+  }
+  else
+    return convert_norep(expr);
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_rtctl
 
   Inputs:
@@ -837,6 +931,11 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_typecast)
   {
     return convert_typecast(to_typecast_expr(src));
+  }
+
+  else if(src.id() == ID_zero_extend)
+  {
+    return convert_zero_extend(to_zero_extend_expr(src));
   }
 
   else // no SMV language expression for internal representation
