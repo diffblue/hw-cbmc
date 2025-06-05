@@ -32,17 +32,29 @@ exprt trivial_sva(exprt expr)
     auto rhs = is_state_predicate(sva_implication.rhs());
 
     if(lhs.has_value() && rhs.has_value())
-      expr = implies_exprt{*lhs, *rhs};
+      expr = sva_boolean_exprt{implies_exprt{*lhs, *rhs}, verilog_sva_property_typet{}};
   }
   else if(expr.id() == ID_sva_iff)
   {
+    // same as boolean iff when both lhs/rhs are state predicates
     auto &sva_iff = to_sva_iff_expr(expr);
-    expr = equal_exprt{sva_iff.lhs(), sva_iff.rhs()};
+
+    auto lhs = is_state_predicate(sva_iff.lhs());
+    auto rhs = is_state_predicate(sva_iff.rhs());
+
+    if(lhs.has_value() && rhs.has_value())
+      expr = sva_boolean_exprt{equal_exprt{*lhs, *rhs}, verilog_sva_property_typet{}};
   }
   else if(expr.id() == ID_sva_implies)
   {
+    // same as boolean implication when both lhs/rhs are state predicates
     auto &sva_implies = to_sva_implies_expr(expr);
-    expr = implies_exprt{sva_implies.lhs(), sva_implies.rhs()};
+
+    auto lhs = is_state_predicate(sva_implies.lhs());
+    auto rhs = is_state_predicate(sva_implies.rhs());
+
+    if(lhs.has_value() && rhs.has_value())
+      expr = sva_boolean_exprt{implies_exprt{*lhs, *rhs}, verilog_sva_property_typet{}};
   }
   else if(expr.id() == ID_sva_and)
   {
@@ -84,11 +96,15 @@ exprt trivial_sva(exprt expr)
   }
   else if(expr.id() == ID_sva_not)
   {
-    // Same as boolean 'not'. These do not apply to sequences.
-    expr = not_exprt{to_sva_not_expr(expr).op()};
+    // Same as boolean 'not' when applied to a state predicate.
+    auto &op = to_sva_not_expr(expr).op();
+    auto predicate = is_state_predicate(op);
+    if(predicate.has_value())
+      expr = sva_boolean_exprt{not_exprt{*predicate}, verilog_sva_property_typet{}};
   }
   else if(expr.id() == ID_sva_if)
   {
+    // same as boolean 'if' when both cases are state predicates.
     auto &sva_if_expr = to_sva_if_expr(expr);
     auto false_case = sva_if_expr.false_case().is_nil()
                         ? true_exprt{}
