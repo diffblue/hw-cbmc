@@ -477,7 +477,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_sequence_repetition_plus) // something[+]
   {
     PRECONDITION(mode == SVA_SEQUENCE);
-    return suffix("[+]", expr, mode);
+    unary_exprt new_expr{
+      ID_sva_sequence_repetition_plus,
+      to_sva_sequence_repetition_plus_expr(expr).op(),
+      expr.type()};
+    return suffix("[+]", new_expr, mode);
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
   {
