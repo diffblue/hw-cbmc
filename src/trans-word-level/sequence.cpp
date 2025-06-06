@@ -189,7 +189,7 @@ sequence_matchest instantiate_sequence(
 
       for(auto &rhs_match : rhs_matches)
       {
-        auto cond = and_exprt{lhs_match.condition, rhs_match.condition};
+        auto cond = and_exprt{lhs_match.condition(), rhs_match.condition()};
         result.push_back({rhs_match.end_time, cond});
       }
     }
@@ -221,7 +221,7 @@ sequence_matchest instantiate_sequence(
         {
           result.emplace_back(
             lhs_match.end_time,
-            and_exprt{lhs_match.condition, rhs_match.condition});
+            and_exprt{lhs_match.condition(), rhs_match.condition()});
         }
       }
     }
@@ -276,7 +276,7 @@ sequence_matchest instantiate_sequence(
 
     for(auto &rhs_match : rhs_matches)
     {
-      exprt::operandst conjuncts = {rhs_match.condition};
+      exprt::operandst conjuncts = {rhs_match.condition()};
 
       for(mp_integer new_t = t; new_t <= rhs_match.end_time; ++new_t)
       {
@@ -315,7 +315,7 @@ sequence_matchest instantiate_sequence(
           if(match_lhs.end_time <= match_rhs.end_time)
           {
             // return the rhs end_time
-            auto cond = and_exprt{match_lhs.condition, match_rhs.condition};
+            auto cond = and_exprt{match_lhs.condition(), match_rhs.condition()};
             result.emplace_back(match_rhs.end_time, std::move(cond));
           }
         }
@@ -343,7 +343,7 @@ sequence_matchest instantiate_sequence(
       for(auto &match_rhs : matches_rhs)
       {
         auto end_time = std::max(match_lhs.end_time, match_rhs.end_time);
-        auto cond = and_exprt{match_lhs.condition, match_rhs.condition};
+        auto cond = and_exprt{match_lhs.condition(), match_rhs.condition()};
         result.emplace_back(std::move(end_time), std::move(cond));
       }
 

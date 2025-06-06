@@ -20,9 +20,14 @@ class sequence_matcht
 public:
   sequence_matcht(mp_integer __end_time, exprt __condition)
     : _is_empty_match(false),
-      end_time(std::move(__end_time)),
-      condition(std::move(__condition))
+      _condition(std::move(__condition)),
+      end_time(std::move(__end_time))
   {
+  }
+
+  exprt condition() const
+  {
+    return _condition;
   }
 
   bool empty_match() const
@@ -32,10 +37,10 @@ public:
 
 protected:
   bool _is_empty_match;
+  exprt _condition;
 
 public:
   mp_integer end_time;
-  exprt condition;
 
   static sequence_matcht empty_match(mp_integer end_time)
   {
