@@ -1,0 +1,11 @@
+KNOWNBUG
+followed-by5.sv
+--bound 2
+^\[main\.p0\] \(1 \[\*0\]\) #=# main\.x == 0: PROVED$
+^\[main\.p1\] \(1 \[\*0\]\) #-# 1: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Empty LHS sequences are not implemented.
