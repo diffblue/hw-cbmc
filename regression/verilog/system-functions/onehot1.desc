@@ -1,0 +1,13 @@
+CORE
+onehot1.sv
+--module main
+^\[main\.pA0\] always \$onehot\(8\) == 1: PROVED .*$
+^\[main\.pA1\] always \$onehot\(10\) == 0: PROVED .*$
+^\[main\.pA2\] always \$onehot\(247\) == 0: PROVED .*$
+^\[main\.pB0\] always \$onehot0\(8\) == 0: PROVED .*$
+^\[main\.pB1\] always \$onehot0\(10\) == 0: PROVED .*$
+^\[main\.pB2\] always \$onehot0\(247\) == 1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

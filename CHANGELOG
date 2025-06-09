@@ -1,6 +1,7 @@
 # EBMC 5.7
 
 * Verilog: `elsif preprocessor directive
+* Verilog: $onehot and $onehot0 are now elaboration-time constant
 * LTL/SVA to Buechi with --buechi
 
 # EBMC 5.6
