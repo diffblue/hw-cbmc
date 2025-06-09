@@ -15,6 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <ebmc/ebmc_error.h>
 
+#include "aval_bval_encoding.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
 
@@ -31,6 +32,18 @@ countones(const constant_exprt &expr, const namespacet &ns)
   }
   else
     return to_constant_expr(simplified);
+}
+
+/// constant folding for $isunknown
+static constant_exprt
+isunknown(const constant_exprt &expr, const namespacet &ns)
+{
+  auto bval = ::bval(expr);
+  CHECK_RETURN(bval.is_constant());
+  if(numeric_cast_v<mp_integer>(to_constant_expr(bval)) == 0)
+    return false_exprt{};
+  else
+    return true_exprt{};
 }
 
 static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
@@ -128,6 +141,21 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
     for(std::size_t i = 0; i < times; i++)
       ops.push_back(replication.op());
     expr = concatenation_exprt{ops, expr.type()};
+  }
+  else if(expr.id() == ID_function_call)
+  {
+    auto &call = to_function_call_expr(expr);
+    if(call.function().id() == ID_symbol)
+    {
+      auto identifier = to_symbol_expr(call.function()).get_identifier();
+      if(identifier == "$isunknown")
+      {
+        DATA_INVARIANT(
+          call.arguments().size() == 1, "$isunknown gets one argument");
+        if(call.arguments()[0].is_constant())
+          expr = isunknown(to_constant_expr(call.arguments()[0]), ns);
+      }
+    }
   }
 
   // We fall back to the simplifier to approximate
