@@ -979,6 +979,18 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
+  else if(identifier == "$isunknown")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$isunknown takes one argument";
+    }
+
+    expr.type() = bool_typet();
+
+    return std::move(expr);
+  }
   else if(identifier == "$past")
   {
     if(arguments.size() == 0 || arguments.size() >= 4)
