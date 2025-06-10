@@ -1,6 +1,7 @@
 # EBMC 5.7
 
 * Verilog: `elsif preprocessor directive
+* Verilog: fix for named generate blocks
 * LTL/SVA to Buechi with --buechi
 
 # EBMC 5.6

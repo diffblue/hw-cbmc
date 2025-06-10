@@ -3163,9 +3163,12 @@ generate_block:
 	  generate_item
 	| TOK_BEGIN generate_item_brace TOK_END
 		{ init($$, ID_generate_block); swapop($$, $2); }
-	| TOK_BEGIN TOK_COLON generate_block_identifier generate_item_brace TOK_END
-		{ init($$, ID_generate_block);
-		  swapop($$, $4);
+	| TOK_BEGIN TOK_COLON generate_block_identifier
+		{ push_scope(stack_expr($3).id(), ".", verilog_scopet::BLOCK); }
+	  generate_item_brace TOK_END
+		{ pop_scope();
+		  init($$, ID_generate_block);
+		  swapop($$, $5);
 		  stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
 	;
 

@@ -23,6 +23,13 @@ module main();
     end
   endtask
 
+  // module item inside a named generate block
+  if (1) begin: some_block
+    typedef logic some_type;
+    some_type some_var;
+   end // checks
+
+  // named procedural block
   always @my_type2_var begin : named_block
     typedef bit my_type5;
     my_type5 my_type5_var;
