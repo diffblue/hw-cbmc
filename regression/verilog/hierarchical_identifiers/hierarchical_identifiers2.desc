@@ -1,0 +1,9 @@
+KNOWNBUG
+hierarchical_identifiers2.v
+--module main
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The block identifier is not found.
