@@ -2,6 +2,7 @@ SRC = smv_expr.cpp \
       smv_language.cpp \
       smv_parser.cpp \
       smv_typecheck.cpp \
+      smv_types.cpp \
       expr2smv.cpp \
       smv_y.tab.cpp \
       lex.yy.cpp \
