@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_types.h>
 
 #include "smv_expr.h"
+#include "smv_types.h"
 
 /*******************************************************************\
 
@@ -337,6 +338,12 @@ expr2smvt::resultt expr2smvt::convert_typecast(const typecast_exprt &expr)
       return convert_rec(smv_resize_exprt{expr.op(), dest_width, dest_type});
     }
   }
+  else if(
+    src_type.id() == ID_smv_enumeration && dest_type.id() == ID_smv_enumeration)
+  {
+    // added by SMV typechecker, implicit
+    return convert_rec(expr.op());
+  }
   else
     return convert_norep(expr);
 }
@@ -593,10 +600,9 @@ expr2smvt::resultt expr2smvt::convert_constant(const constant_exprt &src)
     else
       dest+="FALSE";
   }
-  else if(type.id()==ID_integer ||
-          type.id()==ID_natural ||
-          type.id()==ID_range ||
-          type.id()==ID_enumeration)
+  else if(
+    type.id() == ID_integer || type.id() == ID_natural ||
+    type.id() == ID_range || type.id() == ID_smv_enumeration)
   {
     dest = id2string(src.get_value());
   }
@@ -903,15 +909,15 @@ std::string type2smv(const typet &type, const namespacet &ns)
     code += type2smv(to_array_type(type).element_type(), ns);
     return code;
   }
-  else if(type.id()==ID_enumeration)
+  else if(type.id() == ID_smv_enumeration)
   {
-    const irept::subt &elements=to_enumeration_type(type).elements();
+    auto elements = to_smv_enumeration_type(type).elements();
     std::string code = "{ ";
     bool first=true;
     for(auto &element : elements)
     {
       if(first) first=false; else code+=", ";
-      code += element.id_string();
+      code += id2string(element);
     }
     code+=" }";
     return code;

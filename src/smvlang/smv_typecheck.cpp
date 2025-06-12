@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2smv.h"
 #include "smv_expr.h"
 #include "smv_range.h"
+#include "smv_types.h"
 
 #include <algorithm>
 #include <cassert>
@@ -81,10 +82,8 @@ protected:
   const std::string &module;
   bool do_spec;
 
-  void check_type(const typet &);
+  void check_type(typet &);
   smv_ranget convert_type(const typet &);
-  static bool
-  is_contained_in(const enumeration_typet &, const enumeration_typet &);
 
   void convert(smv_parse_treet::modulet::itemt &);
   void typecheck(smv_parse_treet::modulet::itemt &);
@@ -142,45 +141,13 @@ protected:
 
   void lower_node(exprt &) const;
 
+  void lower(typet &) const;
+
   void lower(exprt &expr) const
   {
     expr.visit_post([this](exprt &expr) { lower_node(expr); });
   }
 };
-
-/*******************************************************************\
-
-Function: smv_typecheckt::is_contained_in
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool smv_typecheckt::is_contained_in(
-  const enumeration_typet &type1,
-  const enumeration_typet &type2)
-{
-  // This is quadratic.
-  for(auto &element1 : type1.elements())
-  {
-    bool found = false;
-    for(auto &element2 : type2.elements())
-      if(element1.id() == element2.id())
-      {
-        found = true;
-        break;
-      }
-
-    if(!found)
-      return false;
-  }
-
-  return true;
-}
 
 /*******************************************************************\
 
@@ -466,7 +433,7 @@ Function: smv_typecheckt::check_type
 
 \*******************************************************************/
 
-void smv_typecheckt::check_type(const typet &type)
+void smv_typecheckt::check_type(typet &type)
 {
   if(type.id() == ID_range)
   {
@@ -474,6 +441,11 @@ void smv_typecheckt::check_type(const typet &type)
 
     if(range.from > range.to)
       throw errort().with_location(type.source_location()) << "range is empty";
+  }
+  else if(type.id() == ID_smv_enumeration)
+  {
+    // normalize the ordering of elements
+    to_smv_enumeration_type(type).normalize();
   }
 }
 
@@ -499,15 +471,15 @@ smv_ranget smv_typecheckt::convert_type(const typet &src)
   {
     return smv_ranget::from_type(to_range_type(src));
   }
-  else if(src.id()==ID_enumeration)
+  else if(src.id() == ID_smv_enumeration)
   {
     smv_ranget dest;
 
     dest.from=0;
 
-    std::size_t number_of_elements=
-      to_enumeration_type(src).elements().size();
-      
+    std::size_t number_of_elements =
+      to_smv_enumeration_type(src).elements().size();
+
     if(number_of_elements==0)
       dest.to=0;
     else
@@ -557,36 +529,16 @@ typet smv_typecheckt::type_union(
   }
 
   // both enums?
-  if(type1.id()==ID_enumeration && type2.id()==ID_enumeration)
+  if(type1.id() == ID_smv_enumeration && type2.id() == ID_smv_enumeration)
   {
-    auto &e_type1 = to_enumeration_type(type1);
-    auto &e_type2 = to_enumeration_type(type2);
+    auto &e_type1 = to_smv_enumeration_type(type1);
+    auto &e_type2 = to_smv_enumeration_type(type2);
 
-    if(is_contained_in(e_type2, e_type1))
-      return type1;
-
-    if(is_contained_in(e_type1, e_type2))
-      return type2;
-
-    // make union
-    std::set<irep_idt> enum_set;
-
-    for(auto &e : e_type1.elements())
-      enum_set.insert(e.id());
-
-    for(auto &e : e_type2.elements())
-      enum_set.insert(e.id());
-
-    enumeration_typet union_type;
-    union_type.elements().reserve(enum_set.size());
-    for(auto &e : enum_set)
-      union_type.elements().push_back(irept{e});
-
-    return std::move(union_type);
+    return ::type_union(e_type1, e_type2);
   }
 
   // one of them enum?
-  if(type1.id() == ID_enumeration || type2.id() == ID_enumeration)
+  if(type1.id() == ID_smv_enumeration || type2.id() == ID_smv_enumeration)
   {
     throw errort().with_location(source_location)
       << "no type union for types " << to_string(type1) << " and "
@@ -869,10 +821,9 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
       mp_integer int_value = string2integer(id2string(value));
       expr.type() = range_typet{int_value, int_value};
     }
-    else if(type.id() == ID_enumeration)
+    else if(type.id() == ID_smv_enumeration)
     {
-      auto t = enumeration_typet{};
-      t.elements().push_back(irept{value});
+      auto t = smv_enumeration_typet{{value}};
       expr.type() = std::move(t);
     }
     else if(type.id() == ID_bool)
@@ -1528,6 +1479,30 @@ void smv_typecheckt::lower_node(exprt &expr) const
     auto one = from_integer(1, expr.type());
     expr = if_exprt{op, std::move(one), std::move(zero)};
   }
+
+  // lower the type
+  lower(expr.type());
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::lower
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::lower(typet &type) const
+{
+  // lower the type
+  if(type.id() == ID_smv_enumeration)
+  {
+    type.id(ID_enumeration);
+  }
 }
 
 /*******************************************************************\
@@ -1643,33 +1618,40 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
         }
       }
     }
-    else if(dest_type.id() == ID_enumeration)
+    else if(dest_type.id() == ID_smv_enumeration)
     {
-      auto &e_type = to_enumeration_type(dest_type);
+      auto &dest_e_type = to_smv_enumeration_type(dest_type);
 
-      if(expr.id() == ID_constant && src_type.id() == ID_enumeration)
+      if(expr.type().id() == ID_smv_enumeration)
       {
-        if(is_contained_in(to_enumeration_type(src_type), e_type))
+        // subset?
+        if(to_smv_enumeration_type(expr.type()).is_subset_of(dest_e_type))
         {
-          // re-type the constant
-          expr.type() = dest_type;
-          return;
-        }
-        else
-        {
-          throw errort().with_location(expr.find_source_location())
-            << "enum " << to_string(expr) << " not a member of "
-            << to_string(dest_type);
-        }
-      }
-      else if(expr.id() == ID_typecast)
-      {
-        // created by type unions
-        auto &op = to_typecast_expr(expr).op();
-        if(src_type.id() == ID_enumeration && op.type().id() == ID_enumeration)
-        {
-          convert_expr_to(op, dest_type);
-          expr = std::move(op);
+          // yes, it's a subset
+          if(expr.is_constant())
+          {
+            // re-type the constant
+            expr.type() = dest_type;
+            return;
+          }
+          else if(expr.id() == ID_typecast)
+          {
+            // created by type unions
+            auto &op = to_typecast_expr(expr).op();
+            if(
+              expr.type().id() == ID_smv_enumeration &&
+              op.type().id() == ID_smv_enumeration)
+            {
+              convert_expr_to(op, dest_type);
+              expr = std::move(op);
+              return;
+            }
+          }
+          else // anything else
+          {
+            expr = typecast_exprt{std::move(expr), dest_type};
+            return;
+          }
         }
       }
     }
@@ -1940,9 +1922,11 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
   {
     const smv_parse_treet::mc_vart &var = var_it.second;
 
+    typet type = var.type;
+
     // check the type, if any
-    if(var.type.is_not_nil())
-      check_type(var.type);
+    if(type.is_not_nil())
+      check_type(type);
 
     symbol.base_name = var_it.first;
 
@@ -1961,7 +1945,7 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
     symbol.value.make_nil();
     symbol.is_input=true;
     symbol.is_state_var=false;
-    symbol.type=var.type;
+    symbol.type = std::move(type);
 
     symbol_table.add(symbol);
   }
@@ -2167,9 +2151,6 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         transt{ID_trans, conjunction(trans_invar), conjunction(trans_init),
                conjunction(trans_trans), module_symbol.type};
 
-    // lowering
-    lower(module_symbol.value);
-
     module_symbol.pretty_name = strip_smv_prefix(module_symbol.name);
 
     symbol_table.add(module_symbol);
@@ -2208,11 +2189,20 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
           spec_symbol.pretty_name = strip_smv_prefix(spec_symbol.name);
 
         // lowering
-        lower(spec_symbol.value);
 
         symbol_table.add(spec_symbol);
       }
     }
+  }
+
+  // lowering
+  for(auto v_it = symbol_table.symbol_module_map.lower_bound(smv_module.name);
+      v_it != symbol_table.symbol_module_map.upper_bound(smv_module.name);
+      v_it++)
+  {
+    auto &symbol = symbol_table.get_writeable_ref(v_it->second);
+    lower(symbol.type);
+    lower(symbol.value);
   }
 }
 
