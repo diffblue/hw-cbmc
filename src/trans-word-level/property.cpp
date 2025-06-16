@@ -558,7 +558,7 @@ static obligationst property_obligations_rec(
       {
         // The sequence must not match.
         if(!match.empty_match())
-          obligations.add(match.end_time, not_exprt{match.condition});
+          obligations.add(match.end_time, not_exprt{match.condition()});
       }
 
       return obligations;
@@ -629,7 +629,7 @@ static obligationst property_obligations_rec(
       for(auto &rhs_obligation : rhs_obligations_rec.map)
       {
         auto rhs_conjunction = conjunction(rhs_obligation.second);
-        auto cond = implies_exprt{lhs_match_point.condition, rhs_conjunction};
+        auto cond = implies_exprt{lhs_match_point.condition(), rhs_conjunction};
         result.add(rhs_obligation.first, cond);
       }
     }
@@ -667,7 +667,7 @@ static obligationst property_obligations_rec(
       {
         // relies on NNF
         t = std::max(t, no_timeframes - 1);
-        disjuncts.push_back(match.condition);
+        disjuncts.push_back(match.condition());
       }
       else
       {
@@ -676,7 +676,8 @@ static obligationst property_obligations_rec(
             followed_by.consequent(), property_start, no_timeframes)
             .conjunction();
 
-        disjuncts.push_back(and_exprt{match.condition, obligations_rec.second});
+        disjuncts.push_back(
+          and_exprt{match.condition(), obligations_rec.second});
         t = std::max(t, obligations_rec.first);
       }
     }
@@ -704,7 +705,7 @@ static obligationst property_obligations_rec(
       // empty matches are not considered
       if(!match.empty_match())
       {
-        disjuncts.push_back(match.condition);
+        disjuncts.push_back(match.condition());
         max = std::max(max, match.end_time);
       }
     }
