@@ -1,0 +1,8 @@
+CORE
+invar1.smv
+--bound 20
+^\[.*\] G x != 10: PROVED up to bound 20$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

@@ -1,0 +1,6 @@
+MODULE main
+
+VAR x : 1..10;
+
+-- next(...) is not allowed
+INVAR next(x) != 3
