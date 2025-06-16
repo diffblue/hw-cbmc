@@ -33,6 +33,26 @@ countones(const constant_exprt &expr, const namespacet &ns)
     return to_constant_expr(simplified);
 }
 
+static constant_exprt onehot(const constant_exprt &expr, const namespacet &ns)
+{
+  if(numeric_cast_v<mp_integer>(countones(expr, ns)) == 1)
+    return true_exprt();
+  else
+    return false_exprt();
+}
+
+static constant_exprt onehot0(const constant_exprt &expr, const namespacet &ns)
+{
+  if(
+    numeric_cast_v<mp_integer>(countones(expr, ns)) ==
+    to_bitvector_type(expr.type()).get_width() - 1)
+  {
+    return true_exprt();
+  }
+  else
+    return false_exprt();
+}
+
 static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
 {
   // Remember the Verilog type.
@@ -128,6 +148,18 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
     for(std::size_t i = 0; i < times; i++)
       ops.push_back(replication.op());
     expr = concatenation_exprt{ops, expr.type()};
+  }
+  else if(expr.id() == ID_onehot)
+  {
+    auto &op = to_onehot_expr(expr).op();
+    if(op.is_constant())
+      expr = onehot(to_constant_expr(op), ns);
+  }
+  else if(expr.id() == ID_onehot0)
+  {
+    auto &op = to_onehot0_expr(expr).op();
+    if(op.is_constant())
+      expr = onehot0(to_constant_expr(op), ns);
   }
 
   // We fall back to the simplifier to approximate

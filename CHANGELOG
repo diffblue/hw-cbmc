@@ -2,6 +2,7 @@
 
 * Verilog: `elsif preprocessor directive
 * Verilog: fix for named generate blocks
+* Verilog: $onehot and $onehot0 are now elaboration-time constant
 * LTL/SVA to Buechi with --buechi
 
 # EBMC 5.6
