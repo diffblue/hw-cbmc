@@ -81,10 +81,6 @@ bool is_SVA_always_s_eventually_p(const exprt &);
 /// returns {} if not possible
 std::optional<exprt> LTL_to_CTL(exprt);
 
-/// If possible, this maps an SVA expression to an equivalent LTL
-/// expression, or otherwise returns {}.
-std::optional<exprt> SVA_to_LTL(exprt);
-
 /// Returns true iff the given expression is an SVA expression that
 /// we can convert into a Buechi automaton
 bool is_Buechi_SVA(const exprt &);

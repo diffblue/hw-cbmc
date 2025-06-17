@@ -18,6 +18,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <solvers/sat/satcheck.h>
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
+#include <temporal-logic/sva_to_ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <trans-netlist/aig_prop.h>
 #include <trans-netlist/instantiate_netlist.h>

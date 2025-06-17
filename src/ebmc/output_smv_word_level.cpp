@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/bitvector_types.h>
 
 #include <smvlang/expr2smv.h>
+#include <temporal-logic/sva_to_ltl.h>
 
 #include "ebmc_error.h"
 #include "ebmc_properties.h"
