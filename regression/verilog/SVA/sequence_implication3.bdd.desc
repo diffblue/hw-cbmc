@@ -1,0 +1,10 @@
+CORE
+sequence_implication3.sv
+--module main --bdd
+^\[main\.p0\] \(1 \[\*0\]\) \|=> main\.x == 1: REFUTED$
+^\[main\.p1\] \(1 \[\*0\]\) \|=> main\.x == 0: PROVED$
+^\[main\.p2\] \(1 \[\*0\]\) \|-> 0: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--

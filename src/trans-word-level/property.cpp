@@ -606,12 +606,21 @@ static obligationst property_obligations_rec(
       current,
       no_timeframes);
 
+    const bool overlapped = property_expr.id() == ID_sva_overlapped_implication;
+
     obligationst result;
 
     for(auto &lhs_match_point : lhs_match_points)
     {
-      // The RHS of the non-overlapped implication starts one timeframe later
-      auto t_rhs = property_expr.id() == ID_sva_non_overlapped_implication
+      if(lhs_match_point.empty_match() && overlapped)
+      {
+        // does not yield an obligation
+        continue;
+      }
+
+      // The RHS of the non-overlapped implication starts one timeframe later,
+      // unless the LHS is an empty match.
+      auto t_rhs = !overlapped && !lhs_match_point.empty_match()
                      ? lhs_match_point.end_time + 1
                      : lhs_match_point.end_time;
 

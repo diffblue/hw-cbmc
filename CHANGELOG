@@ -4,6 +4,7 @@
 * Verilog: fix for named generate blocks
 * Verilog: $onehot and $onehot0 are now elaboration-time constant
 * SystemVerilog: fix for #-# and #=# for empty matches
+* SystemVerilog: fix for |-> and |=> for empty matches
 * LTL/SVA to Buechi with --buechi
 
 # EBMC 5.6
