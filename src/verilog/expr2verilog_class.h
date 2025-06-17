@@ -160,8 +160,6 @@ protected:
 
   resultt convert_sva_if(const sva_if_exprt &);
 
-  resultt convert_sva_sequence_concatenation(const binary_exprt &);
-
   resultt
   convert_sva_sequence_first_match(const sva_sequence_first_match_exprt &);
 
