@@ -327,22 +327,49 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     PRECONDITION(mode == PROPERTY || mode == SVA_SEQUENCE);
     return rec(to_sva_boolean_expr(expr).op(), BOOLEAN);
   }
-  else if(expr.id() == ID_sva_sequence_concatenation)
+  else if(expr.id() == ID_sva_cycle_delay)
   {
     PRECONDITION(mode == SVA_SEQUENCE);
-    // SVA sequence concatenation is overlapping, whereas
-    // the ; operator is nonoverlapping. We special-case
-    // the following for better readability:
-    // f ##0 g  --> f : g
-    // f ##1 g  --> f ; g
-    // f ##n g  --> f ; 1[*n-1] ; b
-    auto &concatenation = to_sva_sequence_concatenation_expr(expr);
-    if(concatenation.rhs().id() == ID_sva_cycle_delay)
-    {
-      auto &delay = to_sva_cycle_delay_expr(concatenation.rhs());
+    auto &delay = to_sva_cycle_delay_expr(expr);
 
-      auto new_expr = concatenation;
-      new_expr.rhs() = delay.op();
+    if(delay.lhs().is_nil())
+    {
+      auto new_expr = unary_exprt{expr.id(), delay.rhs()};
+
+      if(delay.is_range()) // ##[from:to] rhs
+      {
+        auto from = numeric_cast_v<mp_integer>(delay.from());
+
+        if(delay.is_unbounded()) // ##[n:$] rhs
+        {
+          return prefix(
+            "1[*" + integer2string(from) + "..] ; ", new_expr, mode);
+        }
+        else
+        {
+          auto to = numeric_cast_v<mp_integer>(delay.to());
+          PRECONDITION(to >= 0);
+          return prefix(
+            "1[*" + integer2string(from) + ".." + integer2string(to) + "] ; ",
+            new_expr,
+            mode);
+        }
+      }
+      else // ##n rhs
+      {
+        auto i = numeric_cast_v<mp_integer>(delay.from());
+        PRECONDITION(i >= 0);
+        return prefix("1[*" + integer2string(i) + "] ; ", new_expr, mode);
+      }
+    }
+    else // lhs is not nil
+    {
+      // We special-case the following for better readability:
+      // f ##0 g  --> f : g
+      // f ##1 g  --> f ; g
+      // f ##n g  --> f ; 1[*n-1] ; b
+      auto new_expr =
+        binary_exprt{delay.lhs(), delay.id(), delay.rhs(), delay.type()};
 
       if(delay.is_range())
       {
@@ -354,12 +381,12 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
           throw ebmc_errort{}
             << "cannot convert 0.. ranged sequence concatenation to Buechi";
         }
-        else if(delay.is_unbounded())
+        else if(delay.is_unbounded()) // f ##[n:$] g
         {
           return infix(
             " ; 1[*" + integer2string(from - 1) + "..] ; ", new_expr, mode);
         }
-        else
+        else // f ##[from:to] g
         {
           auto to = numeric_cast_v<mp_integer>(delay.to());
           PRECONDITION(to >= 0);
@@ -370,7 +397,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
             mode);
         }
       }
-      else
+      else // f ##n g
       {
         auto n = numeric_cast_v<mp_integer>(delay.from());
         PRECONDITION(n >= 0);
@@ -384,39 +411,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
             " ; 1[*" + integer2string(n - 1) + "] ; ", new_expr, mode);
         }
       }
-    }
-    else
-      return infix(":", expr, mode);
-  }
-  else if(expr.id() == ID_sva_cycle_delay)
-  {
-    PRECONDITION(mode == SVA_SEQUENCE);
-    auto &delay = to_sva_cycle_delay_expr(expr);
-    unary_exprt new_expr{expr.id(), delay.op()};
-
-    if(delay.is_range())
-    {
-      auto from = numeric_cast_v<mp_integer>(delay.from());
-
-      if(delay.is_unbounded())
-      {
-        return prefix("1[*" + integer2string(from) + "..] ; ", new_expr, mode);
-      }
-      else
-      {
-        auto to = numeric_cast_v<mp_integer>(delay.to());
-        PRECONDITION(to >= 0);
-        return prefix(
-          "1[*" + integer2string(from) + ".." + integer2string(to) + "] ; ",
-          new_expr,
-          mode);
-      }
-    }
-    else // singleton
-    {
-      auto i = numeric_cast_v<mp_integer>(delay.from());
-      PRECONDITION(i >= 0);
-      return prefix("1[*" + integer2string(i) + "] ; ", new_expr, mode);
     }
   }
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something

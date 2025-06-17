@@ -2538,11 +2538,10 @@ property_expr_proper:
 		  mto($$, $2); }
 	// requires sequence_expr on the LHS
 	| property_expr cycle_delay_range sequence_expr %prec "##"
-		{ init($$, ID_sva_sequence_concatenation);
-		  mto($$, $1);
-		  stack_expr($2).operands().insert(stack_expr($2).operands().begin(), nil_exprt());
-		  mto($2, $3);
-		  mto($$, $2); }
+		{ $$=$2;
+		  // preserve the operand ordering as in the source code
+		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($1));
+		  mto($$, $3); }
 	// requires sequence_expr on the LHS
 	| '(' property_expr_proper ')' sequence_abbrev
 		{ $$ = $4;
@@ -2646,11 +2645,10 @@ sequence_expr_proper:
 		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), nil_exprt());
 		  mto($$, $2); }
         | sequence_expr cycle_delay_range sequence_expr %prec "##"
-                { init($$, ID_sva_sequence_concatenation);
-                  mto($$, $1);
-		  stack_expr($2).operands().insert(stack_expr($2).operands().begin(), nil_exprt());
-                  mto($2, $3);
-                  mto($$, $2); }
+		{ $$=$2;
+		  // preserve the operand ordering as in the source code
+		  stack_expr($$).operands().insert(stack_expr($$).operands().begin(), stack_expr($1));
+		  mto($$, $3); }
 	| '(' sequence_expr_proper ')'
 		{ $$ = $2; }
 	| '(' sequence_expr_proper ')' sequence_abbrev

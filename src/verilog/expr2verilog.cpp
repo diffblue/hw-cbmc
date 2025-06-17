@@ -144,7 +144,25 @@ Function: expr2verilogt::convert_sva_cycle_delay
 expr2verilogt::resultt
 expr2verilogt::convert_sva_cycle_delay(const sva_cycle_delay_exprt &src)
 {
-  std::string dest="##";
+  std::string dest;
+
+  if(src.lhs().is_not_nil())
+  {
+    auto lhs = convert_rec(src.lhs());
+    if(
+      lhs.p == verilog_precedencet::MIN &&
+      src.lhs().id() != ID_sva_cycle_delay &&
+      src.lhs().id() != ID_sva_cycle_delay_plus &&
+      src.lhs().id() != ID_sva_cycle_delay_star)
+    {
+      dest += "(" + lhs.s + ")";
+    }
+    else
+      dest += lhs.s;
+    dest += ' ';
+  }
+
+  dest += "##";
 
   auto from = convert_rec(src.from());
 
@@ -209,55 +227,6 @@ expr2verilogt::resultt expr2verilogt::convert_sva_cycle_delay(
     dest += rhs.s;
 
   return {verilog_precedencet::MIN, std::move(dest)};
-}
-
-/*******************************************************************\
-
-Function: expr2verilogt::convert_sva_sequence_concatenation
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-expr2verilogt::resultt
-expr2verilogt::convert_sva_sequence_concatenation(const binary_exprt &src)
-{
-  std::string dest;
-
-  auto op0 = convert_rec(src.op0());
-  auto op1 = convert_rec(src.op1());
-
-  bool lhs_paren = op0.p == verilog_precedencet::MIN &&
-                   src.op0().id() != ID_sva_sequence_concatenation &&
-                   src.op0().id() != ID_sva_cycle_delay &&
-                   src.op0().id() != ID_sva_cycle_delay_plus &&
-                   src.op0().id() != ID_sva_cycle_delay_star;
-
-  if(lhs_paren)
-    dest += '(';
-  dest += op0.s;
-  if(lhs_paren)
-    dest += ')';
-
-  dest+=' ';
-
-  bool rhs_paren = op1.p == verilog_precedencet::MIN &&
-                   src.op1().id() != ID_sva_sequence_concatenation &&
-                   src.op1().id() != ID_sva_cycle_delay &&
-                   src.op1().id() != ID_sva_cycle_delay_plus &&
-                   src.op1().id() != ID_sva_cycle_delay_star;
-
-  if(rhs_paren)
-    dest += '(';
-  dest += op1.s;
-  if(rhs_paren)
-    dest += ')';
-
-  return {verilog_precedencet::MIN, dest};
 }
 
 /*******************************************************************\
@@ -1865,9 +1834,6 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     // These are invisible
     return convert_rec(to_sva_boolean_expr(src).op());
   }
-
-  else if(src.id()==ID_sva_sequence_concatenation)
-    return convert_sva_sequence_concatenation(to_binary_expr(src));
 
   else if(src.id() == ID_sva_sequence_first_match)
     return convert_sva_sequence_first_match(

@@ -87,68 +87,71 @@ sequence_matchest instantiate_sequence(
   if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
   {
     auto &sva_cycle_delay_expr = to_sva_cycle_delay_expr(expr);
-    const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
 
-    if(!sva_cycle_delay_expr.is_range()) // ##1 something
+    // This is the product of the match points on the LHS and RHS,
+    // with appropriate delay in between.
+    sequence_matchest lhs_matches;
+
+    if(sva_cycle_delay_expr.lhs().is_nil())
     {
-      const auto u = t + from;
-
-      // Do we exceed the bound? Make it 'false'/'true', depending
-      // on semantics.
-      if(u >= no_timeframes)
-      {
-        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        if(semantics == sva_sequence_semanticst::WEAK)
-          return {{no_timeframes - 1, true_exprt{}}};
-        else         // STRONG
-          return {}; // no match
-      }
-      else
-        return instantiate_sequence(
-          sva_cycle_delay_expr.op(), semantics, u, no_timeframes);
+      // defaults to a length-1 match with condition 'true'
+      lhs_matches = {{t, true_exprt{}}};
     }
-    else // ##[from:to] something
+    else
     {
-      auto lower = t + from;
-      mp_integer upper;
+      lhs_matches = instantiate_sequence(
+        sva_cycle_delay_expr.lhs(), semantics, t, no_timeframes);
+    }
 
-      if(sva_cycle_delay_expr.is_unbounded())
+    sequence_matchest result;
+
+    for(auto &lhs_match : lhs_matches)
+    {
+      // now delay
+      const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
+
+      auto t_rhs_from = lhs_match.end_time + from;
+      mp_integer t_rhs_to;
+
+      if(!sva_cycle_delay_expr.is_range()) // ##1 something
       {
-        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        upper = no_timeframes;
+        t_rhs_to = t_rhs_from;
       }
-      else
+      else if(sva_cycle_delay_expr.is_unbounded()) // ##[from:$] something
+      {
+        // one beyond the bound
+        t_rhs_to = no_timeframes;
+      }
+      else // ##[from:to] something
       {
         auto to = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.to());
-        upper = t + to;
-      }
-
-      sequence_matchest matches;
-
-      // Do we exceed the bound? Add an unconditional match when using
-      // weak semantics.
-      if(upper >= no_timeframes)
-      {
-        upper = no_timeframes - 1;
-
-        if(semantics == sva_sequence_semanticst::WEAK)
-        {
-          DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-          matches.emplace_back(no_timeframes - 1, true_exprt());
-        }
+        t_rhs_to = t_rhs_from + to;
       }
 
       // Add a potential match for each timeframe in the range
-      for(mp_integer u = lower; u <= upper; ++u)
+      for(mp_integer t_rhs = t_rhs_from; t_rhs <= t_rhs_to; ++t_rhs)
       {
-        auto sub_result = instantiate_sequence(
-          sva_cycle_delay_expr.op(), semantics, u, no_timeframes);
-        for(auto &match : sub_result)
-          matches.push_back(match);
-      }
+        // Do we exceed the bound?
+        if(t_rhs >= no_timeframes)
+        {
+          if(semantics == sva_sequence_semanticst::WEAK)
+            result.push_back(lhs_match);
+        }
+        else // still inside bound
+        {
+          const auto rhs_matches = instantiate_sequence(
+            sva_cycle_delay_expr.rhs(), semantics, t_rhs, no_timeframes);
 
-      return matches;
+          for(auto &rhs_match : rhs_matches)
+          {
+            auto cond = and_exprt{lhs_match.condition(), rhs_match.condition()};
+            result.emplace_back(rhs_match.end_time, cond);
+          }
+        }
+      }
     }
+
+    return result;
   }
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
@@ -161,42 +164,6 @@ sequence_matchest instantiate_sequence(
     auto &cycle_delay_plus = to_sva_cycle_delay_plus_expr(expr);
     return instantiate_sequence(
       cycle_delay_plus.lower(), semantics, t, no_timeframes);
-  }
-  else if(expr.id() == ID_sva_sequence_concatenation)
-  {
-    auto &implication = to_binary_expr(expr);
-    sequence_matchest result;
-
-    // This is the product of the match points on the LHS and RHS
-    const auto lhs_matches =
-      instantiate_sequence(implication.lhs(), semantics, t, no_timeframes);
-
-    for(auto &lhs_match : lhs_matches)
-    {
-      auto t_rhs = lhs_match.end_time;
-
-      // Do we exceed the bound? Make it 'false'/'true', depending
-      // on semantics.
-      if(t_rhs >= no_timeframes)
-      {
-        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        if(semantics == sva_sequence_semanticst::WEAK)
-          return {{no_timeframes - 1, true_exprt{}}};
-        else         // STRONG
-          return {}; // no match
-      }
-
-      const auto rhs_matches = instantiate_sequence(
-        implication.rhs(), semantics, t_rhs, no_timeframes);
-
-      for(auto &rhs_match : rhs_matches)
-      {
-        auto cond = and_exprt{lhs_match.condition(), rhs_match.condition()};
-        result.push_back({rhs_match.end_time, cond});
-      }
-    }
-
-    return result;
   }
   else if(expr.id() == ID_sva_sequence_intersect)
   {
