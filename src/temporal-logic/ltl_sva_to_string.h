@@ -9,8 +9,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_TEMPORAL_LOGIC_LTL_SVA_TO_STRING_H
 #define CPROVER_TEMPORAL_LOGIC_LTL_SVA_TO_STRING_H
 
-#include <util/expr.h>
 #include <util/numbering.h>
+#include <util/std_expr.h>
 
 /// create formula strings for external LTL to Buechi tools
 class ltl_sva_to_stringt
@@ -45,8 +45,8 @@ protected:
 
   using modet = enum { PROPERTY, SVA_SEQUENCE, BOOLEAN };
 
-  resultt prefix(std::string s, const exprt &, modet);
-  resultt suffix(std::string s, const exprt &, modet);
+  resultt prefix(std::string s, const unary_exprt &, modet);
+  resultt suffix(std::string s, const unary_exprt &, modet);
   resultt infix(std::string s, const exprt &, modet);
   resultt rec(const exprt &, modet);
 };

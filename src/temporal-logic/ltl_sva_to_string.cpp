@@ -31,9 +31,9 @@ exprt ltl_sva_to_stringt::atom(const std::string &string) const
 }
 
 ltl_sva_to_stringt::resultt
-ltl_sva_to_stringt::suffix(std::string s, const exprt &expr, modet mode)
+ltl_sva_to_stringt::suffix(std::string s, const unary_exprt &expr, modet mode)
 {
-  auto op_rec = rec(to_unary_expr(expr).op(), mode);
+  auto op_rec = rec(expr.op(), mode);
 
   if(op_rec.p == precedencet::ATOM || op_rec.p == precedencet::SUFFIX)
     return resultt{precedencet::SUFFIX, op_rec.s + s};
@@ -42,9 +42,9 @@ ltl_sva_to_stringt::suffix(std::string s, const exprt &expr, modet mode)
 }
 
 ltl_sva_to_stringt::resultt
-ltl_sva_to_stringt::prefix(std::string s, const exprt &expr, modet mode)
+ltl_sva_to_stringt::prefix(std::string s, const unary_exprt &expr, modet mode)
 {
-  auto op_rec = rec(to_unary_expr(expr).op(), mode);
+  auto op_rec = rec(expr.op(), mode);
 
   if(op_rec.p == precedencet::ATOM || op_rec.p == precedencet::PREFIX)
     return resultt{precedencet::PREFIX, s + op_rec.s};
@@ -97,7 +97,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_not)
   {
-    return prefix("!", expr, mode);
+    return prefix("!", to_not_expr(expr), mode);
   }
   else if(expr.is_true())
   {
@@ -112,17 +112,17 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_F)
   {
     PRECONDITION(mode == PROPERTY);
-    return prefix("F", expr, mode);
+    return prefix("F", to_F_expr(expr), mode);
   }
   else if(expr.id() == ID_G)
   {
     PRECONDITION(mode == PROPERTY);
-    return prefix("G", expr, mode);
+    return prefix("G", to_G_expr(expr), mode);
   }
   else if(expr.id() == ID_X)
   {
     PRECONDITION(mode == PROPERTY);
-    return prefix("X", expr, mode);
+    return prefix("X", to_X_expr(expr), mode);
   }
   else if(expr.id() == ID_U)
   {
@@ -147,7 +147,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_always)
   {
     PRECONDITION(mode == PROPERTY);
-    return prefix("G", expr, mode);
+    return prefix("G", to_sva_always_expr(expr), mode);
   }
   else if(expr.id() == ID_sva_ranged_always)
   {
@@ -186,7 +186,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_s_eventually)
   {
     PRECONDITION(mode == PROPERTY);
-    return prefix("F", expr, mode);
+    return prefix("F", to_sva_s_eventually_expr(expr), mode);
   }
   else if(
     expr.id() == ID_sva_ranged_s_eventually || expr.id() == ID_sva_eventually)
@@ -212,12 +212,12 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_s_nexttime)
   {
     PRECONDITION(mode == PROPERTY);
-    return prefix("X", expr, mode);
+    return prefix("X", to_sva_s_nexttime_expr(expr), mode);
   }
   else if(expr.id() == ID_sva_nexttime)
   {
     PRECONDITION(mode == PROPERTY);
-    return prefix("X", expr, mode);
+    return prefix("X", to_sva_nexttime_expr(expr), mode);
   }
   else if(expr.id() == ID_sva_overlapped_implication)
   {
@@ -422,12 +422,12 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
     PRECONDITION(mode == SVA_SEQUENCE);
-    return suffix("[*]", expr, mode);
+    return suffix("[*]", to_sva_cycle_delay_star_expr(expr), mode);
   }
   else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
   {
     PRECONDITION(mode == SVA_SEQUENCE);
-    return suffix("[+]", expr, mode);
+    return suffix("[+]", to_sva_cycle_delay_plus_expr(expr), mode);
   }
   else if(expr.id() == ID_if)
   {
@@ -477,7 +477,10 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_sequence_repetition_plus) // something[+]
   {
     PRECONDITION(mode == SVA_SEQUENCE);
-    return suffix("[+]", expr, mode);
+    auto new_expr = unary_exprt{
+      ID_sva_sequence_repetition_plus,
+      to_sva_sequence_repetition_plus_expr(expr).op()};
+    return suffix("[+]", new_expr, mode);
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
   {
