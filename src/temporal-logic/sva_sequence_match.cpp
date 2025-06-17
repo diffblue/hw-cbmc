@@ -64,9 +64,6 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     auto matches_lhs = LTL_sequence_matches(concatenation.lhs());
     auto matches_rhs = LTL_sequence_matches(concatenation.rhs());
 
-    if(matches_lhs.empty() || matches_rhs.empty())
-      return {};
-
     std::vector<sva_sequence_matcht> result;
 
     // cross product
@@ -86,9 +83,6 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     auto &repetition = to_sva_sequence_repetition_star_expr(sequence);
     auto matches_op = LTL_sequence_matches(repetition.op());
 
-    if(matches_op.empty())
-      return {};
-
     std::vector<sva_sequence_matcht> result;
 
     if(repetition.repetitions_given())
@@ -97,7 +91,7 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
       {
         if(repetition.is_unbounded()) // [*n:$]
         {
-          return {}; // no support
+          throw sva_sequence_match_unsupportedt{sequence}; // no support
         }
         else // [*n:m]
         {
@@ -118,7 +112,7 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
       }
     }
     else         // [*]
-      return {}; // no support
+      throw sva_sequence_match_unsupportedt{sequence}; // no support
 
     return result;
   }
@@ -127,9 +121,6 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     auto &delay = to_sva_cycle_delay_expr(sequence);
     auto matches = LTL_sequence_matches(delay.op());
     auto from_int = numeric_cast_v<mp_integer>(delay.from());
-
-    if(matches.empty())
-      return {};
 
     if(!delay.is_range())
     {
@@ -143,7 +134,7 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     }
     else if(delay.is_unbounded())
     {
-      return {}; // can't encode
+      throw sva_sequence_match_unsupportedt{sequence}; // can't encode
     }
     else
     {
@@ -174,9 +165,6 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     auto &and_expr = to_sva_and_expr(sequence);
     auto matches_lhs = LTL_sequence_matches(and_expr.lhs());
     auto matches_rhs = LTL_sequence_matches(and_expr.rhs());
-
-    if(matches_lhs.empty() || matches_rhs.empty())
-      return {};
 
     std::vector<sva_sequence_matcht> result;
 
@@ -214,7 +202,7 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     {
       auto op_matches = LTL_sequence_matches(op);
       if(op_matches.empty())
-        return {}; // not supported
+        throw sva_sequence_match_unsupportedt{sequence}; // not supported
       for(auto &match : op_matches)
         result.push_back(std::move(match));
     }
@@ -223,6 +211,6 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
   }
   else
   {
-    return {}; // unsupported
+    throw sva_sequence_match_unsupportedt{sequence}; // not supported
   }
 }

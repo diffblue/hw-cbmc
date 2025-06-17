@@ -137,72 +137,82 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     expr.id() == ID_sva_non_overlapped_implication)
   {
     auto &implication = to_sva_implication_base_expr(expr);
-    auto matches = LTL_sequence_matches(implication.sequence());
 
-    if(matches.empty())
-      return {};
-
-    // All matches must be followed
-    // by the property being true
-    exprt::operandst conjuncts;
-
-    auto property_rec = SVA_to_LTL(implication.property());
-
-    if(!property_rec.has_value())
-      return {};
-
-    for(auto &match : matches)
+    try
     {
-      const auto overlapped = expr.id() == ID_sva_overlapped_implication;
-      if(match.empty_match() && overlapped)
-      {
-        // ignore the empty match
-      }
-      else
-      {
-        auto delay = match.length() + (overlapped ? 0 : 1) - 1;
-        auto delayed_property = n_Xes(delay, property_rec.value());
-        conjuncts.push_back(implies_exprt{ltl(match), delayed_property});
-      }
-    }
+      auto matches = LTL_sequence_matches(implication.sequence());
 
-    return conjunction(conjuncts);
+      // All matches must be followed
+      // by the property being true
+      exprt::operandst conjuncts;
+
+      auto property_rec = SVA_to_LTL(implication.property());
+
+      if(!property_rec.has_value())
+        return {};
+
+      for(auto &match : matches)
+      {
+        const auto overlapped = expr.id() == ID_sva_overlapped_implication;
+        if(match.empty_match() && overlapped)
+        {
+          // ignore the empty match
+        }
+        else
+        {
+          auto delay = match.length() + (overlapped ? 0 : 1) - 1;
+          auto delayed_property = n_Xes(delay, property_rec.value());
+          conjuncts.push_back(implies_exprt{ltl(match), delayed_property});
+        }
+      }
+
+      return conjunction(conjuncts);
+    }
+    catch(sva_sequence_match_unsupportedt)
+    {
+      return {};
+    }
   }
   else if(
     expr.id() == ID_sva_nonoverlapped_followed_by ||
     expr.id() == ID_sva_overlapped_followed_by)
   {
     auto &followed_by = to_sva_followed_by_expr(expr);
-    auto matches = LTL_sequence_matches(followed_by.sequence());
 
-    if(matches.empty())
-      return {};
-
-    // There must be at least one match that is followed
-    // by the property being true
-    exprt::operandst disjuncts;
-
-    auto property_rec = SVA_to_LTL(followed_by.property());
-
-    if(!property_rec.has_value())
-      return {};
-
-    for(auto &match : matches)
+    try
     {
-      const auto overlapped = expr.id() == ID_sva_overlapped_followed_by;
-      if(match.empty_match() && overlapped)
-      {
-        // ignore the empty match
-      }
-      else
-      {
-        auto delay = match.length() + (overlapped ? 0 : 1) - 1;
-        auto delayed_property = n_Xes(delay, property_rec.value());
-        disjuncts.push_back(and_exprt{ltl(match), delayed_property});
-      }
-    }
+      auto matches = LTL_sequence_matches(followed_by.sequence());
 
-    return disjunction(disjuncts);
+      // There must be at least one match that is followed
+      // by the property being true
+      exprt::operandst disjuncts;
+
+      auto property_rec = SVA_to_LTL(followed_by.property());
+
+      if(!property_rec.has_value())
+        return {};
+
+      for(auto &match : matches)
+      {
+        const auto overlapped = expr.id() == ID_sva_overlapped_followed_by;
+        if(match.empty_match() && overlapped)
+        {
+          // ignore the empty match
+        }
+        else
+        {
+          auto delay = match.length() + (overlapped ? 0 : 1) - 1;
+          auto delayed_property = n_Xes(delay, property_rec.value());
+          disjuncts.push_back(and_exprt{ltl(match), delayed_property});
+        }
+      }
+
+      return disjunction(disjuncts);
+    }
+    catch(sva_sequence_match_unsupportedt)
+    {
+      return {};
+    }
   }
   else if(expr.id() == ID_sva_sequence_property)
   {
@@ -215,21 +225,25 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
   {
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
 
-    // evaluates to true if there's at least one non-empty match of the sequence
-    auto matches = LTL_sequence_matches(sequence);
-
-    if(matches.empty())
-      return {};
-
-    exprt::operandst disjuncts;
-
-    for(auto &match : matches)
+    try
     {
-      if(!match.empty_match())
-        disjuncts.push_back(ltl(match));
-    }
+      // evaluates to true if there's at least one non-empty match of the sequence
+      auto matches = LTL_sequence_matches(sequence);
 
-    return disjunction(disjuncts);
+      exprt::operandst disjuncts;
+
+      for(auto &match : matches)
+      {
+        if(!match.empty_match())
+          disjuncts.push_back(ltl(match));
+      }
+
+      return disjunction(disjuncts);
+    }
+    catch(sva_sequence_match_unsupportedt)
+    {
+      return {};
+    }
   }
   else if(expr.id() == ID_sva_s_until)
   {
