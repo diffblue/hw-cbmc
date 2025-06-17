@@ -6,6 +6,7 @@ SRC = unit_tests.cpp
 # Test source files
 SRC += smvlang/expr2smv.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
+       temporal-logic/sva_sequence_match.cpp \
        temporal-logic/nnf.cpp \
        # Empty last line
 
