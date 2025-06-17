@@ -422,12 +422,16 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
     PRECONDITION(mode == SVA_SEQUENCE);
-    return suffix("[*]", to_sva_cycle_delay_star_expr(expr), mode);
+    auto new_expr = unary_exprt{
+      ID_sva_cycle_delay_star, to_sva_cycle_delay_star_expr(expr).rhs()};
+    return suffix("[*]", new_expr, mode);
   }
   else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
   {
     PRECONDITION(mode == SVA_SEQUENCE);
-    return suffix("[+]", to_sva_cycle_delay_plus_expr(expr), mode);
+    auto new_expr = unary_exprt{
+      ID_sva_cycle_delay_star, to_sva_cycle_delay_plus_expr(expr).rhs()};
+    return suffix("[+]", new_expr, mode);
   }
   else if(expr.id() == ID_if)
   {

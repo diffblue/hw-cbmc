@@ -42,8 +42,8 @@ SCENARIO("Generating the matches for an SVA sequence")
     auto p = symbol_exprt{"p", bool_typet{}};
 
     CHECK_THROWS_AS(
-      LTL_sequence_matches(
-        sva_cycle_delay_star_exprt{sva_boolean_exprt{p, sequence_type}}),
+      LTL_sequence_matches(sva_cycle_delay_star_exprt{
+        nil_exprt{}, sva_boolean_exprt{p, sequence_type}}),
       sva_sequence_match_unsupportedt);
   }
 }

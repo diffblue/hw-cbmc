@@ -142,34 +142,74 @@ Function: expr2verilogt::convert_sva_cycle_delay
 \*******************************************************************/
 
 expr2verilogt::resultt expr2verilogt::convert_sva_cycle_delay(
-  const ternary_exprt &src,
+  const sva_cycle_delay_exprt &src,
   verilog_precedencet precedence)
 {
-  if(src.operands().size()!=3)
-    return convert_norep(src);
-
   std::string dest="##";
 
-  auto op0 = convert_rec(src.op0());
-  auto op1 = convert_rec(src.op1());
-  auto op2 = convert_rec(src.op2());
+  auto from = convert_rec(src.from());
 
-  if(src.op1().is_nil())
-    dest += op0.s;
-  else if(src.op1().id()==ID_infinity)
-    dest += '[' + op0.s + ':' + '$' + ']';
+  if(!src.is_range())
+    dest += from.s;
+  else if(src.is_unbounded())
+    dest += '[' + from.s + ':' + '$' + ']';
   else
-    dest += '[' + op0.s + ':' + op1.s + ']';
+  {
+    auto to = convert_rec(src.to());
+    dest += '[' + from.s + ':' + to.s + ']';
+  }
 
   dest+=' ';
 
-  if(precedence > op2.p)
+  auto rhs = convert_rec(src.rhs());
+
+  if(precedence > rhs.p)
     dest += '(';
-  dest += op2.s;
-  if(precedence > op2.p)
+  dest += rhs.s;
+  if(precedence > rhs.p)
     dest += ')';
 
   return {precedence, dest};
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_sva_cycle_delay
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_sva_cycle_delay(
+  const std::string &name,
+  const binary_exprt &expr)
+{
+  std::string dest;
+
+  if(expr.lhs().is_not_nil())
+  {
+    auto lhs = convert_rec(expr.lhs());
+    if(lhs.p == verilog_precedencet::MIN)
+      dest += "(" + lhs.s + ")";
+    else
+      dest += lhs.s;
+    dest += ' ';
+  }
+
+  dest += name;
+  dest += ' ';
+
+  auto rhs = convert_rec(expr.rhs());
+  if(rhs.p == verilog_precedencet::MIN)
+    dest += "(" + rhs.s + ")";
+  else
+    dest += rhs.s;
+
+  return {verilog_precedencet::MIN, std::move(dest)};
 }
 
 /*******************************************************************\
@@ -1784,10 +1824,10 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
            convert_sva_binary("|=>", to_binary_expr(src));
 
   else if(src.id() == ID_sva_cycle_delay_star)
-    return convert_sva_unary("##[*]", to_unary_expr(src));
+    return convert_sva_cycle_delay("##[*]", to_sva_cycle_delay_star_expr(src));
 
   else if(src.id() == ID_sva_cycle_delay_plus)
-    return convert_sva_unary("##[+]", to_unary_expr(src));
+    return convert_sva_cycle_delay("##[+]", to_sva_cycle_delay_plus_expr(src));
 
   else if(src.id() == ID_sva_overlapped_followed_by)
     return precedence = verilog_precedencet::MIN,
@@ -1799,7 +1839,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id()==ID_sva_cycle_delay)
     return convert_sva_cycle_delay(
-      to_ternary_expr(src), precedence = verilog_precedencet::MIN);
+      to_sva_cycle_delay_expr(src), precedence = verilog_precedencet::MIN);
     // not sure about precedence
 
   else if(src.id() == ID_sva_strong)

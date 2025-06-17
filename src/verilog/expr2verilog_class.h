@@ -16,6 +16,7 @@ class sva_abort_exprt;
 class sva_case_exprt;
 class sva_if_exprt;
 class sva_ranged_predicate_exprt;
+class sva_cycle_delay_exprt;
 class sva_sequence_first_match_exprt;
 class sva_sequence_repetition_exprt;
 
@@ -137,6 +138,9 @@ protected:
 
   resultt convert_sva_binary(const std::string &name, const binary_exprt &);
 
+  resultt
+  convert_sva_cycle_delay(const std::string &symbol, const binary_exprt &);
+
   resultt convert_sva_sequence_repetition(
     const std::string &name,
     const sva_sequence_repetition_exprt &);
@@ -152,7 +156,8 @@ protected:
 
   resultt convert_with(const with_exprt &, verilog_precedencet);
 
-  resultt convert_sva_cycle_delay(const ternary_exprt &, verilog_precedencet);
+  resultt
+  convert_sva_cycle_delay(const sva_cycle_delay_exprt &, verilog_precedencet);
 
   resultt convert_sva_if(const sva_if_exprt &);
 

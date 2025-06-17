@@ -207,6 +207,7 @@ protected:
   [[nodiscard]] exprt convert_unary_sva(unary_exprt);
   [[nodiscard]] exprt convert_binary_sva(binary_exprt);
   [[nodiscard]] exprt convert_ternary_sva(ternary_exprt);
+  [[nodiscard]] exprt convert_other_sva(exprt);
 
   static void set_default_sequence_semantics(exprt &, sva_sequence_semanticst);
 
