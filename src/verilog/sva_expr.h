@@ -994,38 +994,48 @@ static inline sva_followed_by_exprt &to_sva_followed_by_expr(exprt &expr)
   return static_cast<sva_followed_by_exprt &>(expr);
 }
 
-class sva_cycle_delay_exprt : public ternary_exprt
+/// lhs ##n rhs
+/// lhs ##[from:to] rhs
+/// lhs ##[from:$] rhs
+/// The lhs is optional, indicated by 'nil'
+class sva_cycle_delay_exprt : public exprt
 {
 public:
   /// The upper bound may be $
-  sva_cycle_delay_exprt(constant_exprt from, exprt to, exprt op)
-    : ternary_exprt(
+  sva_cycle_delay_exprt(exprt lhs, constant_exprt from, exprt to, exprt rhs)
+    : exprt{
         ID_sva_cycle_delay,
-        std::move(from),
-        std::move(to),
-        std::move(op),
-        verilog_sva_sequence_typet{})
+        verilog_sva_sequence_typet{},
+        {std::move(lhs), std::move(from), std::move(to), std::move(rhs)}}
   {
   }
 
-  sva_cycle_delay_exprt(constant_exprt cycles, exprt op)
-    : ternary_exprt(
+  sva_cycle_delay_exprt(constant_exprt cycles, exprt rhs)
+    : exprt{
         ID_sva_cycle_delay,
-        std::move(cycles),
-        nil_exprt{},
-        std::move(op),
-        verilog_sva_sequence_typet{})
+        verilog_sva_sequence_typet{},
+        {nil_exprt{}, std::move(cycles), nil_exprt{}, std::move(rhs)}}
   {
+  }
+
+  const exprt &lhs() const
+  {
+    return operands()[0];
+  }
+
+  exprt &lhs()
+  {
+    return operands()[0];
   }
 
   const constant_exprt &from() const
   {
-    return static_cast<const constant_exprt &>(op0());
+    return static_cast<const constant_exprt &>(operands()[1]);
   }
 
   constant_exprt &from()
   {
-    return static_cast<constant_exprt &>(op0());
+    return static_cast<constant_exprt &>(operands()[1]);
   }
 
   // May be just the singleton 'from' or
@@ -1034,39 +1044,54 @@ public:
   const constant_exprt &to() const
   {
     PRECONDITION(is_range() && !is_unbounded());
-    return static_cast<const constant_exprt &>(op1());
+    return static_cast<const constant_exprt &>(operands()[2]);
   }
 
   constant_exprt &to()
   {
     PRECONDITION(is_range() && !is_unbounded());
-    return static_cast<constant_exprt &>(op1());
+    return static_cast<constant_exprt &>(operands()[2]);
   }
 
   bool is_range() const
   {
-    return op1().is_not_nil();
+    return operands()[2].is_not_nil();
   }
 
   bool is_unbounded() const
   {
-    return op1().id() == ID_infinity;
+    return operands()[2].id() == ID_infinity;
   }
 
   const exprt &op() const
   {
-    return op2();
+    return operands()[3];
   }
 
   exprt &op()
   {
-    return op2();
+    return operands()[3];
   }
 
-protected:
-  using ternary_exprt::op0;
-  using ternary_exprt::op1;
-  using ternary_exprt::op2;
+  const exprt &rhs() const
+  {
+    return operands()[3];
+  }
+
+  exprt &rhs()
+  {
+    return operands()[3];
+  }
+
+  static void check(
+    const exprt &expr,
+    const validation_modet vm = validation_modet::INVARIANT)
+  {
+    DATA_CHECK(
+      vm,
+      expr.operands().size() == 4,
+      "sva_cycle_delay expression must have four operands");
+  }
 };
 
 static inline const sva_cycle_delay_exprt &
@@ -1084,13 +1109,14 @@ static inline sva_cycle_delay_exprt &to_sva_cycle_delay_expr(exprt &expr)
   return static_cast<sva_cycle_delay_exprt &>(expr);
 }
 
-class sva_cycle_delay_plus_exprt : public unary_exprt
+class sva_cycle_delay_plus_exprt : public binary_exprt
 {
 public:
-  explicit sva_cycle_delay_plus_exprt(exprt op)
-    : unary_exprt(
+  explicit sva_cycle_delay_plus_exprt(exprt __lhs, exprt __rhs)
+    : binary_exprt(
+        std::move(__lhs),
         ID_sva_cycle_delay_plus,
-        std::move(op),
+        std::move(__rhs),
         verilog_sva_sequence_typet{})
   {
   }
@@ -1115,13 +1141,14 @@ to_sva_cycle_delay_plus_expr(exprt &expr)
   return static_cast<sva_cycle_delay_plus_exprt &>(expr);
 }
 
-class sva_cycle_delay_star_exprt : public unary_exprt
+class sva_cycle_delay_star_exprt : public binary_exprt
 {
 public:
-  explicit sva_cycle_delay_star_exprt(exprt op)
-    : unary_exprt(
+  explicit sva_cycle_delay_star_exprt(exprt __lhs, exprt __rhs)
+    : binary_exprt(
+        std::move(__lhs),
         ID_sva_cycle_delay_star,
-        std::move(op),
+        std::move(__rhs),
         verilog_sva_sequence_typet{})
   {
   }

@@ -15,18 +15,20 @@ exprt sva_cycle_delay_plus_exprt::lower() const
 {
   // same as ##[1:$]
   return sva_cycle_delay_exprt{
+    lhs(),
     from_integer(1, integer_typet{}),
     exprt{ID_infinity, integer_typet{}},
-    op()};
+    rhs()};
 }
 
 exprt sva_cycle_delay_star_exprt::lower() const
 {
   // same as ##[0:$]
   return sva_cycle_delay_exprt{
+    lhs(),
     from_integer(0, integer_typet{}),
     exprt{ID_infinity, integer_typet{}},
-    op()};
+    rhs()};
 }
 
 exprt sva_case_exprt::lower() const

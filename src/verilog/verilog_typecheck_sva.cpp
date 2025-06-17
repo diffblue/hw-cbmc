@@ -86,16 +86,6 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
     expr.type() = bool_typet{}; // always boolean, never x
     return std::move(expr);
   }
-  else if(
-    expr.id() == ID_sva_cycle_delay_plus || // ##[+]
-    expr.id() == ID_sva_cycle_delay_star)   // ##[*]
-  {
-    // These take a sequence as argument.
-    convert_sva(expr.op());
-    require_sva_sequence(expr.op());
-    expr.type() = verilog_sva_sequence_typet{};
-    return std::move(expr);
-  }
   else if(expr.id() == ID_sva_weak || expr.id() == ID_sva_strong)
   {
     convert_sva(expr.op());
@@ -165,6 +155,24 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     convert_sva(to_sva_abort_expr(expr).property());
     require_sva_property(to_sva_abort_expr(expr).property());
     expr.type() = bool_typet{};
+
+    return std::move(expr);
+  }
+  else if(
+    expr.id() == ID_sva_cycle_delay_plus || // ##[+]
+    expr.id() == ID_sva_cycle_delay_star)   // ##[*]
+  {
+    // These take sequences as argument. The LHS is optional.
+    if(expr.lhs().is_not_nil())
+    {
+      convert_sva(expr.lhs());
+      require_sva_sequence(expr.lhs());
+    }
+
+    convert_sva(expr.rhs());
+    require_sva_sequence(expr.rhs());
+
+    expr.type() = verilog_sva_sequence_typet{};
 
     return std::move(expr);
   }
@@ -298,25 +306,7 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
 
 exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
 {
-  if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
-  {
-    expr.type() = verilog_sva_sequence_typet{};
-
-    convert_expr(expr.op0());
-    elaborate_constant_expression_check(expr.op0());
-
-    if(expr.op1().is_not_nil())
-    {
-      convert_expr(expr.op1());
-      elaborate_constant_expression_check(expr.op1());
-    }
-
-    convert_sva(expr.op2());
-    require_sva_sequence(expr.op2());
-
-    return std::move(expr);
-  }
-  else if(expr.id() == ID_sva_sequence_repetition_star) // x[*1:2]
+  if(expr.id() == ID_sva_sequence_repetition_star) // x[*1:2]
   {
     // This expression takes a sequence as argument.
     // The grammar allows properties to implement and/or over
@@ -426,6 +416,46 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
   }
 }
 
+exprt verilog_typecheck_exprt::convert_other_sva(exprt expr)
+{
+  if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
+  {
+    expr.type() = verilog_sva_sequence_typet{};
+
+    DATA_INVARIANT(
+      expr.operands().size() == 4, "sva_cycle_delay has four operands");
+
+    // lhs
+    if(expr.operands()[0].is_not_nil())
+    {
+      convert_sva(expr.operands()[0]);
+      require_sva_sequence(expr.operands()[0]);
+    }
+
+    // from
+    convert_expr(expr.operands()[1]);
+    elaborate_constant_expression_check(expr.operands()[1]);
+
+    // to
+    if(expr.operands()[2].is_not_nil())
+    {
+      convert_expr(expr.operands()[2]);
+      elaborate_constant_expression_check(expr.operands()[2]);
+    }
+
+    // rhs
+    convert_sva(expr.operands()[3]);
+    require_sva_sequence(expr.operands()[3]);
+
+    return expr;
+  }
+  else
+  {
+    // not SVA
+    return convert_expr_rec(std::move(expr));
+  }
+}
+
 exprt verilog_typecheck_exprt::convert_sva_rec(exprt expr)
 {
   switch(expr.operands().size())
@@ -437,7 +467,7 @@ exprt verilog_typecheck_exprt::convert_sva_rec(exprt expr)
   case 3:
     return convert_ternary_sva(to_ternary_expr(expr));
   default:
-    return convert_expr_rec(expr);
+    return convert_other_sva(expr);
   }
 }
 
