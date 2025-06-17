@@ -644,7 +644,7 @@ static obligationst property_obligations_rec(
     // the result is a property expression.
     auto &followed_by = to_sva_followed_by_expr(property_expr);
 
-    // get (proper) match points for LHS sequence
+    // get match points for LHS sequence
     auto matches = instantiate_sequence(
       followed_by.antecedent(),
       sva_sequence_semanticst::STRONG,
@@ -656,10 +656,20 @@ static obligationst property_obligations_rec(
 
     for(auto &match : matches)
     {
+      bool overlapped = property_expr.id() == ID_sva_overlapped_followed_by;
+
+      // empty match?
+      if(match.empty_match() && overlapped)
+      {
+        // won't yield a disjunct
+        continue;
+      }
+
       mp_integer property_start = match.end_time;
 
-      // #=# advances the clock by one from the sequence match point
-      if(property_expr.id() == ID_sva_nonoverlapped_followed_by)
+      // #=# advances the clock by one from the sequence match point,
+      // unless the LHS is an empty match.
+      if(!match.empty_match() && !overlapped)
         property_start += 1;
 
       // at the end?
