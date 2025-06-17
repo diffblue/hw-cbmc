@@ -861,35 +861,6 @@ static inline sva_and_exprt &to_sva_and_expr(exprt &expr)
   return static_cast<sva_and_exprt &>(expr);
 }
 
-class sva_sequence_concatenation_exprt : public binary_exprt
-{
-public:
-  explicit sva_sequence_concatenation_exprt(exprt op0, exprt op1)
-    : binary_exprt(
-        std::move(op0),
-        ID_sva_sequence_concatenation,
-        std::move(op1),
-        verilog_sva_sequence_typet{})
-  {
-  }
-};
-
-static inline const sva_sequence_concatenation_exprt &
-to_sva_sequence_concatenation_expr(const exprt &expr)
-{
-  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
-  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
-  return static_cast<const sva_sequence_concatenation_exprt &>(expr);
-}
-
-static inline sva_sequence_concatenation_exprt &
-to_sva_sequence_concatenation_expr(exprt &expr)
-{
-  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
-  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
-  return static_cast<sva_sequence_concatenation_exprt &>(expr);
-}
-
 class sva_iff_exprt : public binary_predicate_exprt
 {
 public:
@@ -1082,6 +1053,48 @@ static inline sva_cycle_delay_exprt &to_sva_cycle_delay_expr(exprt &expr)
   PRECONDITION(expr.id() == ID_sva_cycle_delay);
   sva_cycle_delay_exprt::check(expr);
   return static_cast<sva_cycle_delay_exprt &>(expr);
+}
+
+class sva_sequence_concatenation_exprt : public binary_exprt
+{
+public:
+  // The lhs is a sequence, the rhs is a sva_cycle_delay expression
+  explicit sva_sequence_concatenation_exprt(
+    exprt __lhs,
+    sva_cycle_delay_exprt __rhs)
+    : binary_exprt(
+        std::move(__lhs),
+        ID_sva_sequence_concatenation,
+        std::move(__rhs),
+        verilog_sva_sequence_typet{})
+  {
+  }
+
+  const sva_cycle_delay_exprt &rhs() const
+  {
+    return static_cast<const sva_cycle_delay_exprt &>(binary_exprt::rhs());
+  }
+
+  sva_cycle_delay_exprt &rhs()
+  {
+    return static_cast<sva_cycle_delay_exprt &>(binary_exprt::rhs());
+  }
+};
+
+static inline const sva_sequence_concatenation_exprt &
+to_sva_sequence_concatenation_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
+  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_sequence_concatenation_exprt &>(expr);
+}
+
+static inline sva_sequence_concatenation_exprt &
+to_sva_sequence_concatenation_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
+  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_sequence_concatenation_exprt &>(expr);
 }
 
 class sva_cycle_delay_plus_exprt : public unary_exprt

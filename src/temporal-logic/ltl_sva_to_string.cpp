@@ -337,56 +337,50 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     // f ##1 g  --> f ; g
     // f ##n g  --> f ; 1[*n-1] ; b
     auto &concatenation = to_sva_sequence_concatenation_expr(expr);
-    if(concatenation.rhs().id() == ID_sva_cycle_delay)
+    auto &delay = concatenation.rhs();
+
+    binary_exprt new_expr = concatenation;
+    new_expr.rhs() = delay.op();
+
+    if(delay.is_range())
     {
-      auto &delay = to_sva_cycle_delay_expr(concatenation.rhs());
+      auto from = numeric_cast_v<mp_integer>(delay.from());
 
-      auto new_expr = concatenation;
-      new_expr.rhs() = delay.op();
-
-      if(delay.is_range())
+      if(from == 0)
       {
-        auto from = numeric_cast_v<mp_integer>(delay.from());
-
-        if(from == 0)
-        {
-          // requires treatment of empty sequences on lhs
-          throw ebmc_errort{}
-            << "cannot convert 0.. ranged sequence concatenation to Buechi";
-        }
-        else if(delay.is_unbounded())
-        {
-          return infix(
-            " ; 1[*" + integer2string(from - 1) + "..] ; ", new_expr, mode);
-        }
-        else
-        {
-          auto to = numeric_cast_v<mp_integer>(delay.to());
-          PRECONDITION(to >= 0);
-          return infix(
-            " ; 1[*" + integer2string(from - 1) + ".." +
-              integer2string(to - 1) + "] ; ",
-            new_expr,
-            mode);
-        }
+        // requires treatment of empty sequences on lhs
+        throw ebmc_errort{}
+          << "cannot convert 0.. ranged sequence concatenation to Buechi";
+      }
+      else if(delay.is_unbounded())
+      {
+        return infix(
+          " ; 1[*" + integer2string(from - 1) + "..] ; ", new_expr, mode);
       }
       else
       {
-        auto n = numeric_cast_v<mp_integer>(delay.from());
-        PRECONDITION(n >= 0);
-        if(n == 0)
-          return infix(" : ", new_expr, mode);
-        else if(n == 1)
-          return infix(" ; ", new_expr, mode);
-        else
-        {
-          return infix(
-            " ; 1[*" + integer2string(n - 1) + "] ; ", new_expr, mode);
-        }
+        auto to = numeric_cast_v<mp_integer>(delay.to());
+        PRECONDITION(to >= 0);
+        return infix(
+          " ; 1[*" + integer2string(from - 1) + ".." + integer2string(to - 1) +
+            "] ; ",
+          new_expr,
+          mode);
       }
     }
     else
-      return infix(":", expr, mode);
+    {
+      auto n = numeric_cast_v<mp_integer>(delay.from());
+      PRECONDITION(n >= 0);
+      if(n == 0)
+        return infix(" : ", new_expr, mode);
+      else if(n == 1)
+        return infix(" ; ", new_expr, mode);
+      else
+      {
+        return infix(" ; 1[*" + integer2string(n - 1) + "] ; ", new_expr, mode);
+      }
+    }
   }
   else if(expr.id() == ID_sva_cycle_delay)
   {
