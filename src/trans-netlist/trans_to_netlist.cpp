@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/prop/literal_expr.h>
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
+#include <temporal-logic/sva_to_ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 

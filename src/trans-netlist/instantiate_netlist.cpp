@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ebmc/ebmc_error.h>
 #include <solvers/prop/literal_expr.h>
+#include <temporal-logic/sva_to_ltl.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 

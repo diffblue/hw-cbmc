@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include "sva_to_ltl.h"
+
 #include <util/arith_tools.h>
 
 #include <verilog/sva_expr.h>
