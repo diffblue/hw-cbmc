@@ -10,7 +10,7 @@ smv1.smv
 ^INIT range_type = 1$
 ^INIT signed_bit_vector = 0sd20_1$
 ^INIT unsigned_bit_vector = 0ud20_1$
-^TRANS next\(bool_type\) = \(!\(bool_type\)\)$
+^TRANS next\(bool_type\) = \(!bool_type\)$
 ^TRANS next\(range_type\) = 2$
 ^TRANS next\(signed_bit_vector\) = 0sd20_2$
 ^TRANS next\(unsigned_bit_vector\) = 0ud20_2$
