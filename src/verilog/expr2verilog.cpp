@@ -141,9 +141,8 @@ Function: expr2verilogt::convert_sva_cycle_delay
 
 \*******************************************************************/
 
-expr2verilogt::resultt expr2verilogt::convert_sva_cycle_delay(
-  const sva_cycle_delay_exprt &src,
-  verilog_precedencet precedence)
+expr2verilogt::resultt
+expr2verilogt::convert_sva_cycle_delay(const sva_cycle_delay_exprt &src)
 {
   std::string dest="##";
 
@@ -163,13 +162,13 @@ expr2verilogt::resultt expr2verilogt::convert_sva_cycle_delay(
 
   auto rhs = convert_rec(src.rhs());
 
-  if(precedence > rhs.p)
+  if(rhs.p == verilog_precedencet::MIN)
     dest += '(';
   dest += rhs.s;
-  if(precedence > rhs.p)
+  if(rhs.p == verilog_precedencet::MIN)
     dest += ')';
 
-  return {precedence, dest};
+  return {verilog_precedencet::MIN, dest};
 }
 
 /*******************************************************************\
@@ -224,33 +223,41 @@ Function: expr2verilogt::convert_sva_sequence_concatenation
 
 \*******************************************************************/
 
-expr2verilogt::resultt expr2verilogt::convert_sva_sequence_concatenation(
-  const binary_exprt &src,
-  verilog_precedencet precedence)
+expr2verilogt::resultt
+expr2verilogt::convert_sva_sequence_concatenation(const binary_exprt &src)
 {
-  if(src.operands().size()!=2)
-    return convert_norep(src);
-
   std::string dest;
 
   auto op0 = convert_rec(src.op0());
   auto op1 = convert_rec(src.op1());
 
-  if(precedence > op0.p)
+  bool lhs_paren = op0.p == verilog_precedencet::MIN &&
+                   src.op0().id() != ID_sva_sequence_concatenation &&
+                   src.op0().id() != ID_sva_cycle_delay &&
+                   src.op0().id() != ID_sva_cycle_delay_plus &&
+                   src.op0().id() != ID_sva_cycle_delay_star;
+
+  if(lhs_paren)
     dest += '(';
   dest += op0.s;
-  if(precedence > op0.p)
+  if(lhs_paren)
     dest += ')';
 
   dest+=' ';
 
-  if(precedence > op0.p)
+  bool rhs_paren = op1.p == verilog_precedencet::MIN &&
+                   src.op1().id() != ID_sva_sequence_concatenation &&
+                   src.op1().id() != ID_sva_cycle_delay &&
+                   src.op1().id() != ID_sva_cycle_delay_plus &&
+                   src.op1().id() != ID_sva_cycle_delay_star;
+
+  if(rhs_paren)
     dest += '(';
   dest += op1.s;
-  if(precedence > op0.p)
+  if(rhs_paren)
     dest += ')';
 
-  return {precedence, dest};
+  return {verilog_precedencet::MIN, dest};
 }
 
 /*******************************************************************\
@@ -1838,9 +1845,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
            convert_sva_binary("#=#", to_binary_expr(src));
 
   else if(src.id()==ID_sva_cycle_delay)
-    return convert_sva_cycle_delay(
-      to_sva_cycle_delay_expr(src), precedence = verilog_precedencet::MIN);
-    // not sure about precedence
+    return convert_sva_cycle_delay(to_sva_cycle_delay_expr(src));
 
   else if(src.id() == ID_sva_strong)
     return convert_function("strong", src);
@@ -1862,9 +1867,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   }
 
   else if(src.id()==ID_sva_sequence_concatenation)
-    return convert_sva_sequence_concatenation(
-      to_binary_expr(src), precedence = verilog_precedencet::MIN);
-    // not sure about precedence
+    return convert_sva_sequence_concatenation(to_binary_expr(src));
 
   else if(src.id() == ID_sva_sequence_first_match)
     return convert_sva_sequence_first_match(
@@ -1883,16 +1886,6 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   else if(src.id() == ID_sva_sequence_within)
     return precedence = verilog_precedencet::MIN,
            convert_sva_binary("within", to_binary_expr(src));
-  // not sure about precedence
-
-  else if(src.id() == ID_sva_sequence_within)
-    return convert_sva_sequence_concatenation(
-      to_binary_expr(src), precedence = verilog_precedencet::MIN);
-  // not sure about precedence
-
-  else if(src.id() == ID_sva_sequence_throughout)
-    return convert_sva_sequence_concatenation(
-      to_binary_expr(src), precedence = verilog_precedencet::MIN);
   // not sure about precedence
 
   else if(src.id()==ID_sva_always)
