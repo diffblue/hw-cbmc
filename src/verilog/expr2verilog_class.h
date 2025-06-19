@@ -156,13 +156,11 @@ protected:
 
   resultt convert_with(const with_exprt &, verilog_precedencet);
 
-  resultt
-  convert_sva_cycle_delay(const sva_cycle_delay_exprt &, verilog_precedencet);
+  resultt convert_sva_cycle_delay(const sva_cycle_delay_exprt &);
 
   resultt convert_sva_if(const sva_if_exprt &);
 
-  resultt
-  convert_sva_sequence_concatenation(const binary_exprt &, verilog_precedencet);
+  resultt convert_sva_sequence_concatenation(const binary_exprt &);
 
   resultt
   convert_sva_sequence_first_match(const sva_sequence_first_match_exprt &);
