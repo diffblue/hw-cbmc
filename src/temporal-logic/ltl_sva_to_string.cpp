@@ -15,6 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/sva_expr.h>
 
 #include "ltl.h"
+#include "rewrite_sva_sequence.h"
 #include "temporal_expr.h"
 #include "temporal_logic.h"
 
@@ -298,9 +299,13 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     expr.id() == ID_sva_implicit_weak || expr.id() == ID_sva_implicit_strong)
   {
     PRECONDITION(mode == PROPERTY);
-    // weak closure
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
-    auto op_rec = rec(sequence, SVA_SEQUENCE);
+
+    // re-write to get rid of empty matches
+    auto sequence_rewritten = rewrite_sva_sequence(sequence);
+
+    auto op_rec = rec(sequence_rewritten, SVA_SEQUENCE);
+    // weak closure
     return resultt{precedencet::ATOM, '{' + op_rec.s + '}'};
   }
   else if(expr.id() == ID_sva_or)
@@ -448,7 +453,8 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_empty_match())
     {
-      throw ebmc_errort{} << "cannot convert [*0] to Buechi";
+      // handled by rewite_sva_sequence
+      return resultt{precedencet::ATOM, "0"};
     }
     else if(repetition.is_singleton())
     {
