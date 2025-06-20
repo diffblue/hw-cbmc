@@ -13,6 +13,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <verilog/sva_expr.h>
 
+#include "temporal_logic.h"
+
 sva_sequence_matcht sva_sequence_matcht::true_match(const mp_integer &n)
 {
   sva_sequence_matcht result;
@@ -212,5 +214,59 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
   else
   {
     throw sva_sequence_match_unsupportedt{sequence}; // not supported
+  }
+}
+
+bool admits_empty(const exprt &expr)
+{
+  PRECONDITION(expr.type().id() == ID_verilog_sva_sequence);
+  PRECONDITION(is_SVA_sequence_operator(expr));
+
+  if(expr.id() == ID_sva_boolean)
+    return false; // admits_empty(b) = 0
+  else if(expr.id() == ID_sva_cycle_delay)
+  {
+    auto &cycle_delay = to_sva_cycle_delay_expr(expr);
+    if(cycle_delay.from().is_zero() && !cycle_delay.is_range())
+    {
+      // admits_empty((r1 ##0 r2)) = 0
+      return false;
+    }
+    else
+    {
+      // admits_empty((r1 ##1 r2)) = admits_empty(r1) && admits_empty(r2)
+      return cycle_delay.lhs().is_not_nil() &&
+             admits_empty(cycle_delay.lhs()) && admits_empty(cycle_delay.rhs());
+    }
+  }
+  else if(expr.id() == ID_sva_or)
+  {
+    // admits_empty((r1 or r2)) = admits_empty(r1) || admits_empty(r2)
+    auto &or_expr = to_sva_or_expr(expr);
+    return admits_empty(or_expr.lhs()) || admits_empty(or_expr.rhs());
+  }
+  else if(expr.id() == ID_sva_sequence_intersect)
+  {
+    // admits_empty((r1 intersect r2)) = admits_empty(r1) && admits_empty(r2)
+    auto &intersect_expr = to_sva_sequence_intersect_expr(expr);
+    return admits_empty(intersect_expr.lhs()) &&
+           admits_empty(intersect_expr.rhs());
+  }
+  else if(expr.id() == ID_sva_sequence_first_match)
+  {
+    // admits_empty(first_match(r)) = admits_empty(r)
+    auto &first_match_expr = to_sva_sequence_first_match_expr(expr);
+    return admits_empty(first_match_expr.lhs()) &&
+           admits_empty(first_match_expr.rhs());
+  }
+  else if(expr.id() == ID_sva_sequence_repetition_star)
+  {
+    // admits_empty(r[*0]) = 1
+    // admits_empty(r[*1:$]) = admits_empty(r)
+    auto &repetition_expr = to_sva_sequence_repetition_star_expr(expr);
+  }
+  else
+  {
+    DATA_INVARIANT(false, "unexpected SVA sequence: " + expr.id_string());
   }
 }

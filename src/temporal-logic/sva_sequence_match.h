@@ -68,4 +68,8 @@ public:
 /// Throws sva_sequence_match_unsupportedt when given sequence that cannot be translated.
 std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &);
 
+/// 1800-2017 F.4.3
+/// Returns true iff the given SVA sequence admits an empty match.
+bool admits_empty(const exprt &);
+
 #endif // CPROVER_TEMPORAL_LOGICS_SVA_SEQUENCE_MATCH_H
