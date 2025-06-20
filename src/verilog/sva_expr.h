@@ -861,35 +861,6 @@ static inline sva_and_exprt &to_sva_and_expr(exprt &expr)
   return static_cast<sva_and_exprt &>(expr);
 }
 
-class sva_sequence_concatenation_exprt : public binary_exprt
-{
-public:
-  explicit sva_sequence_concatenation_exprt(exprt op0, exprt op1)
-    : binary_exprt(
-        std::move(op0),
-        ID_sva_sequence_concatenation,
-        std::move(op1),
-        verilog_sva_sequence_typet{})
-  {
-  }
-};
-
-static inline const sva_sequence_concatenation_exprt &
-to_sva_sequence_concatenation_expr(const exprt &expr)
-{
-  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
-  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
-  return static_cast<const sva_sequence_concatenation_exprt &>(expr);
-}
-
-static inline sva_sequence_concatenation_exprt &
-to_sva_sequence_concatenation_expr(exprt &expr)
-{
-  PRECONDITION(expr.id() == ID_sva_sequence_concatenation);
-  sva_sequence_concatenation_exprt::check(expr, validation_modet::INVARIANT);
-  return static_cast<sva_sequence_concatenation_exprt &>(expr);
-}
-
 class sva_iff_exprt : public binary_predicate_exprt
 {
 public:
@@ -1061,16 +1032,6 @@ public:
   bool is_unbounded() const
   {
     return operands()[2].id() == ID_infinity;
-  }
-
-  const exprt &op() const
-  {
-    return operands()[3];
-  }
-
-  exprt &op()
-  {
-    return operands()[3];
   }
 
   const exprt &rhs() const
