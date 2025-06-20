@@ -838,11 +838,11 @@ static inline sva_not_exprt &to_sva_not_expr(exprt &expr)
   return static_cast<sva_not_exprt &>(expr);
 }
 
-class sva_and_exprt : public binary_predicate_exprt
+class sva_and_exprt : public binary_exprt
 {
 public:
-  explicit sva_and_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_and, std::move(op1))
+  explicit sva_and_exprt(exprt op0, exprt op1, typet type)
+    : binary_exprt(std::move(op0), ID_sva_and, std::move(op1), std::move(type))
   {
   }
 };
@@ -907,11 +907,11 @@ static inline sva_implies_exprt &to_sva_implies_expr(exprt &expr)
   return static_cast<sva_implies_exprt &>(expr);
 }
 
-class sva_or_exprt : public binary_predicate_exprt
+class sva_or_exprt : public binary_exprt
 {
 public:
-  explicit sva_or_exprt(exprt op0, exprt op1)
-    : binary_predicate_exprt(std::move(op0), ID_sva_or, std::move(op1))
+  explicit sva_or_exprt(exprt op0, exprt op1, typet type)
+    : binary_exprt(std::move(op0), ID_sva_or, std::move(op1), std::move(type))
   {
   }
 };
