@@ -1746,6 +1746,16 @@ public:
     : binary_exprt(std::move(op0), ID_sva_sequence_throughout, std::move(op1))
   {
   }
+
+  const exprt &sequence() const
+  {
+    return op1();
+  }
+
+  exprt &sequence()
+  {
+    return op1();
+  }
 };
 
 static inline const sva_sequence_throughout_exprt &
@@ -1779,6 +1789,16 @@ public:
         ID_sva_sequence_first_match,
         std::move(action))
   {
+  }
+
+  const exprt &sequence() const
+  {
+    return op0();
+  }
+
+  exprt &sequence()
+  {
+    return op0();
   }
 };
 

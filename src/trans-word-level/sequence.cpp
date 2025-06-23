@@ -220,14 +220,14 @@ sequence_matchest instantiate_sequence(
   {
     auto &first_match = to_sva_sequence_first_match_expr(expr);
 
-    const auto lhs_matches =
-      instantiate_sequence(first_match.lhs(), semantics, t, no_timeframes);
+    const auto matches =
+      instantiate_sequence(first_match.sequence(), semantics, t, no_timeframes);
 
     // the match of seq with the earliest ending clock tick is a
     // match of first_match (seq)
     std::optional<mp_integer> earliest;
 
-    for(auto &match : lhs_matches)
+    for(auto &match : matches)
     {
       if(!earliest.has_value() || earliest.value() > match.end_time)
         earliest = match.end_time;
@@ -238,7 +238,7 @@ sequence_matchest instantiate_sequence(
 
     sequence_matchest result;
 
-    for(auto &match : lhs_matches)
+    for(auto &match : matches)
     {
       // Earliest?
       if(match.end_time == earliest.value())
@@ -257,23 +257,23 @@ sequence_matchest instantiate_sequence(
     // - exp evaluates to true at each clock tick of the interval.
     auto &throughout = to_sva_sequence_throughout_expr(expr);
 
-    const auto rhs_matches =
-      instantiate_sequence(throughout.rhs(), semantics, t, no_timeframes);
+    const auto matches =
+      instantiate_sequence(throughout.sequence(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
-    for(auto &rhs_match : rhs_matches)
+    for(auto &match : matches)
     {
-      exprt::operandst conjuncts = {rhs_match.condition()};
+      exprt::operandst conjuncts = {match.condition()};
 
-      for(mp_integer new_t = t; new_t <= rhs_match.end_time; ++new_t)
+      for(mp_integer new_t = t; new_t <= match.end_time; ++new_t)
       {
         auto obligations =
           property_obligations(throughout.lhs(), new_t, no_timeframes);
         conjuncts.push_back(obligations.conjunction().second);
       }
 
-      result.emplace_back(rhs_match.end_time, conjunction(conjuncts));
+      result.emplace_back(match.end_time, conjunction(conjuncts));
     }
 
     return result;

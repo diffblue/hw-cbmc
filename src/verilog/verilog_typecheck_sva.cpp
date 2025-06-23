@@ -264,8 +264,8 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
   {
     auto &first_match_expr = to_sva_sequence_first_match_expr(expr);
 
-    convert_sva(first_match_expr.lhs());
-    require_sva_sequence(first_match_expr.lhs());
+    convert_sva(first_match_expr.sequence());
+    require_sva_sequence(first_match_expr.sequence());
 
     if(first_match_expr.rhs().is_not_nil())
       convert_expr(first_match_expr.rhs());
