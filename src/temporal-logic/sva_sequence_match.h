@@ -16,11 +16,6 @@ Author: Daniel Kroening, dkr@amazon.com
 // sequence expressions.
 struct sva_sequence_matcht
 {
-  // the empty match
-  sva_sequence_matcht()
-  {
-  }
-
   // a match of length 1
   explicit sva_sequence_matcht(exprt __cond) : cond_vector{1, std::move(__cond)}
   {
