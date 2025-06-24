@@ -40,6 +40,7 @@ void verilog_languaget::set_language_options(
   initial_defines = options.get_list_option("defines");
   warn_implicit_nets = options.get_bool_option("warn-implicit-nets");
   ignore_initial = options.get_bool_option("ignore-initial");
+  initial_zero = options.get_bool_option("initial-zero");
 }
 
 /*******************************************************************\
@@ -196,6 +197,7 @@ bool verilog_languaget::typecheck(
        module,
        parse_tree.standard,
        ignore_initial,
+       initial_zero,
        message_handler))
   {
     return true;
