@@ -22,6 +22,7 @@ struct verilog_scopet
     FILE,
     PACKAGE,
     MODULE,
+    INTERFACE,
     CLASS,
     ENUM_NAME,
     TASK,
