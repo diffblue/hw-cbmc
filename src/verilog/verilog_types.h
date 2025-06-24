@@ -739,6 +739,15 @@ inline verilog_package_scope_typet &to_verilog_package_scope_type(typet &type)
   return static_cast<verilog_package_scope_typet &>(type);
 }
 
+/// SVA properties
+class verilog_sva_property_typet : public typet
+{
+public:
+  verilog_sva_property_typet() : typet(ID_verilog_sva_property)
+  {
+  }
+};
+
 /// SVA sequences
 class verilog_sva_sequence_typet : public typet
 {
