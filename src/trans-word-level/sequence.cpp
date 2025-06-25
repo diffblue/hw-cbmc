@@ -109,6 +109,7 @@ sequence_matchest instantiate_sequence(
     {
       // now delay
       const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
+      DATA_INVARIANT(from >= 0, "##n must not be negative");
 
       auto t_rhs_from = lhs_match.end_time + from;
       mp_integer t_rhs_to;
@@ -126,6 +127,24 @@ sequence_matchest instantiate_sequence(
       {
         auto to = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.to());
         t_rhs_to = t_rhs_from + to;
+      }
+
+      // Implement 1800-2017 16.9.2.1
+      if(lhs_match.empty_match())
+      {
+        if(from == 0)
+        {
+          // (empty ##0 seq) does not result in a match.
+          continue;
+        }
+        else
+        {
+          // (empty ##n seq), where n is greater than 0,
+          // is equivalent to (##(n-1) seq).
+          t_rhs_from = t_rhs_from - 1;
+          if(t_rhs_to != no_timeframes)
+            t_rhs_to = t_rhs_to - 1;
+        }
       }
 
       // Add a potential match for each timeframe in the range
