@@ -419,7 +419,7 @@ expr2smvt::resultt expr2smvt::convert_unary(
   // clang-format off
   bool parentheses =
       op.operands().size() == 1 ? false
-    : src.id() == ID_not        ? true
+    : src.id() == ID_not && !op.operands().empty() ? true
     : precedence >= op_rec.p;
   // clang-format on
 
