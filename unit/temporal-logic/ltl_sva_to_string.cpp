@@ -52,18 +52,16 @@ SCENARIO("Generating a string from a formula")
       "{1[*1] ; a0}");
 
     REQUIRE(
-      sequence(sva_sequence_concatenation_exprt{
-        p, sva_cycle_delay_exprt{from_integer(0, natural_typet{}), q}}) ==
-      "{a0 : a1}");
+      sequence(sva_cycle_delay_exprt{
+        p, from_integer(0, natural_typet{}), nil_exprt{}, q}) == "{a0 : a1}");
 
     REQUIRE(
-      sequence(sva_sequence_concatenation_exprt{
-        p, sva_cycle_delay_exprt{from_integer(1, natural_typet{}), q}}) ==
-      "{a0 ; a1}");
+      sequence(sva_cycle_delay_exprt{
+        p, from_integer(1, natural_typet{}), nil_exprt{}, q}) == "{a0 ; a1}");
 
     REQUIRE(
-      sequence(sva_sequence_concatenation_exprt{
-        p, sva_cycle_delay_exprt{from_integer(10, natural_typet{}), q}}) ==
+      sequence(sva_cycle_delay_exprt{
+        p, from_integer(10, natural_typet{}), nil_exprt{}, q}) ==
       "{a0 ; 1[*9] ; a1}");
   }
 }

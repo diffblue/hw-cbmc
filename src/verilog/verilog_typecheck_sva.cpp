@@ -231,7 +231,6 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     return std::move(expr);
   }
   else if(
-    expr.id() == ID_sva_sequence_concatenation || // a ##b c
     expr.id() == ID_sva_sequence_intersect ||
     expr.id() == ID_sva_sequence_within)
   {

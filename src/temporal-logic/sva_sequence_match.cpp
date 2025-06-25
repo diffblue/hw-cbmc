@@ -46,7 +46,8 @@ overlapping_concat(sva_sequence_matcht a, sva_sequence_matcht b)
   PRECONDITION(!b.empty_match());
   auto a_last = a.cond_vector.back();
   a.cond_vector.pop_back();
-  b.cond_vector.front() = conjunction({a_last, b.cond_vector.front()});
+  if(!a_last.is_true())
+    b.cond_vector.front() = conjunction({a_last, b.cond_vector.front()});
   return concat(std::move(a), b);
 }
 
@@ -56,26 +57,6 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
   {
     // atomic proposition
     return {sva_sequence_matcht{to_sva_boolean_expr(sequence).op()}};
-  }
-  else if(sequence.id() == ID_sva_sequence_concatenation)
-  {
-    auto &concatenation = to_sva_sequence_concatenation_expr(sequence);
-    auto matches_lhs = LTL_sequence_matches(concatenation.lhs());
-    auto matches_rhs = LTL_sequence_matches(concatenation.rhs());
-
-    std::vector<sva_sequence_matcht> result;
-
-    // cross product
-    for(auto &match_lhs : matches_lhs)
-      for(auto &match_rhs : matches_rhs)
-      {
-        // Sequence concatenation is overlapping
-        auto new_match = overlapping_concat(match_lhs, match_rhs);
-        CHECK_RETURN(
-          new_match.length() == match_lhs.length() + match_rhs.length() - 1);
-        result.push_back(std::move(new_match));
-      }
-    return result;
   }
   else if(sequence.id() == ID_sva_sequence_repetition_star) // [*n], [*n:m]
   {
@@ -118,41 +99,61 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
   else if(sequence.id() == ID_sva_cycle_delay)
   {
     auto &delay = to_sva_cycle_delay_expr(sequence);
-    auto matches = LTL_sequence_matches(delay.op());
-    auto from_int = numeric_cast_v<mp_integer>(delay.from());
 
-    if(!delay.is_range())
+    // These have an optional LHS and a RHS.
+    std::vector<sva_sequence_matcht> lhs_matches;
+
+    if(delay.lhs().is_nil())
     {
-      // delay as instructed
-      auto delay_sequence = sva_sequence_matcht::true_match(from_int);
-
-      for(auto &match : matches)
-        match = concat(delay_sequence, match);
-
-      return matches;
-    }
-    else if(delay.is_unbounded())
-    {
-      throw sva_sequence_match_unsupportedt{sequence}; // can't encode
+      // If the LHS is not given, it's equivalent to 'true'.
+      lhs_matches = {sva_sequence_matcht::true_match(1)};
     }
     else
     {
+      lhs_matches = LTL_sequence_matches(delay.lhs());
+    }
+
+    // The delay in between lhs and rhs
+    std::vector<sva_sequence_matcht> delay_matches;
+
+    auto from_int = numeric_cast_v<mp_integer>(delay.from());
+
+    if(!delay.is_range()) // f ##n g
+    {
+      delay_matches = {sva_sequence_matcht::true_match(from_int)};
+    }
+    else if(delay.is_unbounded()) // f ##[from:$] g
+    {
+      throw sva_sequence_match_unsupportedt{sequence}; // can't encode
+    }
+    else // f ##[from:to] g
+    {
       auto to_int = numeric_cast_v<mp_integer>(delay.to());
-      std::vector<sva_sequence_matcht> new_matches;
 
       for(mp_integer i = from_int; i <= to_int; ++i)
-      {
-        // delay as instructed
-        auto delay_sequence = sva_sequence_matcht::true_match(i);
-
-        for(const auto &match : matches)
-        {
-          new_matches.push_back(concat(delay_sequence, match));
-        }
-      }
-
-      return new_matches;
+        delay_matches.push_back(sva_sequence_matcht::true_match(i));
     }
+
+    // now do RHS
+    auto rhs_matches = LTL_sequence_matches(delay.rhs());
+
+    // cross product lhs x delay x rhs
+    std::vector<sva_sequence_matcht> result;
+
+    for(auto &lhs_match : lhs_matches)
+      for(auto &delay_match : delay_matches)
+        for(auto &rhs_match : rhs_matches)
+        {
+          // Sequence concatenation is overlapping
+          auto new_match =
+            overlapping_concat(lhs_match, concat(delay_match, rhs_match));
+          CHECK_RETURN(
+            new_match.length() ==
+            lhs_match.length() + delay_match.length() + rhs_match.length() - 1);
+          result.push_back(std::move(new_match));
+        }
+
+    return result;
   }
   else if(sequence.id() == ID_sva_and)
   {

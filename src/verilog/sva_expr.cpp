@@ -92,10 +92,8 @@ exprt sva_sequence_repetition_star_exprt::lower() const
 
     for(; n >= 2; --n)
     {
-      auto cycle_delay =
-        sva_cycle_delay_exprt{from_integer(1, integer_typet{}), op()};
-      result = sva_sequence_concatenation_exprt{
-        std::move(result), std::move(cycle_delay)};
+      result = sva_cycle_delay_exprt{
+        std::move(result), from_integer(1, integer_typet{}), nil_exprt{}, op()};
     }
 
     return result;
