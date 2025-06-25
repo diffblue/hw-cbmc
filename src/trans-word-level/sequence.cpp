@@ -82,6 +82,8 @@ sequence_matchest instantiate_sequence(
   const mp_integer &t,
   const mp_integer &no_timeframes)
 {
+  PRECONDITION(t < no_timeframes);
+
   if(expr.id() == ID_sva_cycle_delay) // ##[1:2] something
   {
     auto &sva_cycle_delay_expr = to_sva_cycle_delay_expr(expr);
