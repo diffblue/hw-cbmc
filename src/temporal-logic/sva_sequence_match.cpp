@@ -15,10 +15,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 sva_sequence_matcht sva_sequence_matcht::true_match(const mp_integer &n)
 {
-  sva_sequence_matcht result;
-  for(mp_integer i; i < n; ++i)
-    result.cond_vector.push_back(true_exprt{});
-  return result;
+  auto n_size_t = numeric_cast_v<std::size_t>(n);
+  return sva_sequence_matcht{std::vector<exprt>(n_size_t, true_exprt{})};
 }
 
 // nonoverlapping concatenation
@@ -32,11 +30,12 @@ sva_sequence_matcht concat(sva_sequence_matcht a, const sva_sequence_matcht &b)
 // nonoverlapping concatenation
 sva_sequence_matcht repeat(sva_sequence_matcht m, const mp_integer &n)
 {
-  sva_sequence_matcht result;
+  std::vector<exprt> cond_vector;
+  cond_vector.reserve(numeric_cast_v<std::size_t>(n * m.length()));
   for(mp_integer i = 0; i < n; ++i)
-    result.cond_vector.insert(
-      result.cond_vector.end(), m.cond_vector.begin(), m.cond_vector.end());
-  return result;
+    cond_vector.insert(
+      cond_vector.end(), m.cond_vector.begin(), m.cond_vector.end());
+  return sva_sequence_matcht{std::move(cond_vector)};
 }
 
 // overlapping concatenation
@@ -171,9 +170,9 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
     for(auto &match_lhs : matches_lhs)
       for(auto &match_rhs : matches_rhs)
       {
-        sva_sequence_matcht new_match;
+        std::vector<exprt> cond_vector;
         auto new_length = std::max(match_lhs.length(), match_rhs.length());
-        new_match.cond_vector.resize(new_length);
+        cond_vector.resize(new_length);
         for(std::size_t i = 0; i < new_length; i++)
         {
           exprt::operandst conjuncts;
@@ -183,10 +182,10 @@ std::vector<sva_sequence_matcht> LTL_sequence_matches(const exprt &sequence)
           if(i < match_rhs.cond_vector.size())
             conjuncts.push_back(match_rhs.cond_vector[i]);
 
-          new_match.cond_vector[i] = conjunction(conjuncts);
+          cond_vector[i] = conjunction(conjuncts);
         }
 
-        result.push_back(std::move(new_match));
+        result.emplace_back(std::move(cond_vector));
       }
 
     return result;
