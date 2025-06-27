@@ -79,6 +79,17 @@ ltl_sva_to_stringt::infix(std::string s, const exprt &expr, modet mode)
 ltl_sva_to_stringt::resultt
 ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
 {
+  if(mode == SVA_SEQUENCE)
+    return rec_sequence(expr);
+  else
+    return rec_rest(expr, mode);
+}
+
+ltl_sva_to_stringt::resultt
+ltl_sva_to_stringt::rec_rest(const exprt &expr, modet mode)
+{
+  PRECONDITION(mode == BOOLEAN || mode == PROPERTY);
+
   if(expr.id() == ID_and)
   {
     return infix("&", expr, mode);
@@ -111,42 +122,34 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_F)
   {
-    PRECONDITION(mode == PROPERTY);
     return prefix("F", to_F_expr(expr), mode);
   }
   else if(expr.id() == ID_G)
   {
-    PRECONDITION(mode == PROPERTY);
     return prefix("G", to_G_expr(expr), mode);
   }
   else if(expr.id() == ID_X)
   {
-    PRECONDITION(mode == PROPERTY);
     return prefix("X", to_X_expr(expr), mode);
   }
   else if(expr.id() == ID_U)
   {
-    PRECONDITION(mode == PROPERTY);
     return infix(" U ", expr, mode);
   }
   else if(expr.id() == ID_weak_U)
   {
-    PRECONDITION(mode == PROPERTY);
     return infix(" W ", expr, mode);
   }
   else if(expr.id() == ID_R)
   {
-    PRECONDITION(mode == PROPERTY);
     return infix(" R ", expr, mode);
   }
   else if(expr.id() == ID_strong_R)
   {
-    PRECONDITION(mode == PROPERTY);
     return infix(" M ", expr, mode);
   }
   else if(expr.id() == ID_sva_always)
   {
-    PRECONDITION(mode == PROPERTY);
     return prefix("G", to_sva_always_expr(expr), mode);
   }
   else if(expr.id() == ID_sva_ranged_always)
@@ -185,14 +188,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_s_eventually)
   {
-    PRECONDITION(mode == PROPERTY);
     return prefix("F", to_sva_s_eventually_expr(expr), mode);
   }
   else if(
     expr.id() == ID_sva_ranged_s_eventually || expr.id() == ID_sva_eventually)
   {
-    PRECONDITION(mode == PROPERTY);
-
     auto &eventually = to_sva_ranged_predicate_exprt(expr);
     auto new_expr = unary_exprt{expr.id(), eventually.op()};
     auto from = numeric_cast_v<mp_integer>(eventually.from());
@@ -211,18 +211,15 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_s_nexttime)
   {
-    PRECONDITION(mode == PROPERTY);
     return prefix("X", to_sva_s_nexttime_expr(expr), mode);
   }
   else if(expr.id() == ID_sva_nexttime)
   {
-    PRECONDITION(mode == PROPERTY);
     return prefix("X", to_sva_nexttime_expr(expr), mode);
   }
   else if(expr.id() == ID_sva_overlapped_implication)
   {
     // maps to {f}|->g
-    PRECONDITION(mode == PROPERTY);
     auto new_expr = to_sva_overlapped_implication_expr(expr);
     new_expr.sequence() = sva_sequence_property_expr_baset{
       ID_sva_implicit_weak, new_expr.sequence()};
@@ -231,7 +228,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_non_overlapped_implication)
   {
     // maps to {f}|=>g
-    PRECONDITION(mode == PROPERTY);
     auto new_expr = to_sva_non_overlapped_implication_expr(expr);
     new_expr.sequence() = sva_sequence_property_expr_baset{
       ID_sva_implicit_weak, new_expr.sequence()};
@@ -239,7 +235,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_overlapped_followed_by)
   {
-    PRECONDITION(mode == PROPERTY);
     // 1800 2017 16.12.9
     // (a #-# b)   --->   !(a |-> !b)
     auto &followed_by = to_sva_followed_by_expr(expr);
@@ -251,7 +246,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_nonoverlapped_followed_by)
   {
-    PRECONDITION(mode == PROPERTY);
     // 1800 2017 16.12.9
     // (a #=# b)   --->   !(a |=> !b)
     auto &followed_by = to_sva_followed_by_expr(expr);
@@ -268,18 +262,15 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_s_until)
   {
-    PRECONDITION(mode == PROPERTY);
     return infix(" U ", expr, mode);
   }
   else if(expr.id() == ID_sva_until)
   {
-    PRECONDITION(mode == PROPERTY);
     return infix(" W ", expr, mode);
   }
   else if(expr.id() == ID_sva_s_until_with)
   {
     // This is strong release with swapped operands
-    PRECONDITION(mode == PROPERTY);
     auto &until_with = to_sva_s_until_with_expr(expr);
     auto new_expr =
       strong_R_exprt{until_with.rhs(), until_with.lhs()}; // swapped
@@ -288,7 +279,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_until_with)
   {
     // This is weak release with swapped operands
-    PRECONDITION(mode == PROPERTY);
     auto &until_with = to_sva_until_with_expr(expr);
     auto new_expr = R_exprt{until_with.rhs(), until_with.lhs()}; // swapped
     return infix(" R ", new_expr, mode);
@@ -297,7 +287,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     expr.id() == ID_sva_weak || expr.id() == ID_sva_strong ||
     expr.id() == ID_sva_implicit_weak || expr.id() == ID_sva_implicit_strong)
   {
-    PRECONDITION(mode == PROPERTY);
     // weak closure
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
     auto op_rec = rec(sequence, SVA_SEQUENCE);
@@ -305,31 +294,59 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_or)
   {
-    // can be sequence or property
-    PRECONDITION(mode == PROPERTY || mode == SVA_SEQUENCE);
     return infix("|", expr, mode);
   }
   else if(expr.id() == ID_sva_and)
   {
-    // can be sequence or property
-    PRECONDITION(mode == PROPERTY || mode == SVA_SEQUENCE);
-    // NLM intersection
     return infix("&", expr, mode);
-  }
-  else if(expr.id() == ID_sva_sequence_intersect)
-  {
-    PRECONDITION(mode == SVA_SEQUENCE);
-    return infix("&&", expr, mode);
   }
   else if(expr.id() == ID_sva_boolean)
   {
-    // can be sequence or property
-    PRECONDITION(mode == PROPERTY || mode == SVA_SEQUENCE);
+    return rec(to_sva_boolean_expr(expr).op(), BOOLEAN);
+  }
+  else if(expr.id() == ID_if)
+  {
+    // c ? x : y  --->  (c∧x)∨(¬c∧y)
+    auto &if_expr = to_if_expr(expr);
+    auto a1 = and_exprt{if_expr.cond(), if_expr.true_case()};
+    auto a2 = and_exprt{not_exprt{if_expr.cond()}, if_expr.false_case()};
+    return rec(or_exprt{a1, a2}, mode);
+  }
+  else if(!is_temporal_operator(expr))
+  {
+    auto number = atoms.number(expr);
+
+    // a0, a1, a2, a3, a4, ...
+    std::string s = "a" + std::to_string(number);
+
+    return resultt{precedencet::ATOM, s};
+  }
+  else
+    throw ebmc_errort{} << "cannot convert property " << expr.id()
+                        << " to Buechi";
+}
+
+ltl_sva_to_stringt::resultt ltl_sva_to_stringt::rec_sequence(const exprt &expr)
+{
+  if(expr.id() == ID_sva_or)
+  {
+    return infix("|", expr, SVA_SEQUENCE);
+  }
+  else if(expr.id() == ID_sva_and)
+  {
+    // NLM intersection
+    return infix("&", expr, SVA_SEQUENCE);
+  }
+  else if(expr.id() == ID_sva_sequence_intersect)
+  {
+    return infix("&&", expr, SVA_SEQUENCE);
+  }
+  else if(expr.id() == ID_sva_boolean)
+  {
     return rec(to_sva_boolean_expr(expr).op(), BOOLEAN);
   }
   else if(expr.id() == ID_sva_cycle_delay)
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
     auto &delay = to_sva_cycle_delay_expr(expr);
 
     if(delay.lhs().is_nil())
@@ -343,7 +360,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
         if(delay.is_unbounded()) // ##[n:$] rhs
         {
           return prefix(
-            "1[*" + integer2string(from) + "..] ; ", new_expr, mode);
+            "1[*" + integer2string(from) + "..] ; ", new_expr, SVA_SEQUENCE);
         }
         else
         {
@@ -352,14 +369,15 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
           return prefix(
             "1[*" + integer2string(from) + ".." + integer2string(to) + "] ; ",
             new_expr,
-            mode);
+            SVA_SEQUENCE);
         }
       }
       else // ##n rhs
       {
         auto i = numeric_cast_v<mp_integer>(delay.from());
         PRECONDITION(i >= 0);
-        return prefix("1[*" + integer2string(i) + "] ; ", new_expr, mode);
+        return prefix(
+          "1[*" + integer2string(i) + "] ; ", new_expr, SVA_SEQUENCE);
       }
     }
     else // lhs is not nil
@@ -384,7 +402,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
         else if(delay.is_unbounded()) // f ##[n:$] g
         {
           return infix(
-            " ; 1[*" + integer2string(from - 1) + "..] ; ", new_expr, mode);
+            " ; 1[*" + integer2string(from - 1) + "..] ; ",
+            new_expr,
+            SVA_SEQUENCE);
         }
         else // f ##[from:to] g
         {
@@ -394,7 +414,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
             " ; 1[*" + integer2string(from - 1) + ".." +
               integer2string(to - 1) + "] ; ",
             new_expr,
-            mode);
+            SVA_SEQUENCE);
         }
       }
       else // f ##n g
@@ -402,49 +422,38 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
         auto n = numeric_cast_v<mp_integer>(delay.from());
         PRECONDITION(n >= 0);
         if(n == 0)
-          return infix(" : ", new_expr, mode);
+          return infix(" : ", new_expr, SVA_SEQUENCE);
         else if(n == 1)
-          return infix(" ; ", new_expr, mode);
+          return infix(" ; ", new_expr, SVA_SEQUENCE);
         else
         {
           return infix(
-            " ; 1[*" + integer2string(n - 1) + "] ; ", new_expr, mode);
+            " ; 1[*" + integer2string(n - 1) + "] ; ", new_expr, SVA_SEQUENCE);
         }
       }
     }
   }
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
     auto new_expr = unary_exprt{
       ID_sva_cycle_delay_star, to_sva_cycle_delay_star_expr(expr).rhs()};
-    return suffix("[*]", new_expr, mode);
+    return suffix("[*]", new_expr, SVA_SEQUENCE);
   }
   else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
     auto new_expr = unary_exprt{
       ID_sva_cycle_delay_star, to_sva_cycle_delay_plus_expr(expr).rhs()};
-    return suffix("[+]", new_expr, mode);
-  }
-  else if(expr.id() == ID_if)
-  {
-    // c ? x : y  --->  (c∧x)∨(¬c∧y)
-    auto &if_expr = to_if_expr(expr);
-    auto a1 = and_exprt{if_expr.cond(), if_expr.true_case()};
-    auto a2 = and_exprt{not_exprt{if_expr.cond()}, if_expr.false_case()};
-    return rec(or_exprt{a1, a2}, mode);
+    return suffix("[+]", new_expr, SVA_SEQUENCE);
   }
   else if(
     expr.id() ==
     ID_sva_sequence_repetition_star) // [*] or [*n] or [*x:y] or [*x:$]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
     auto &repetition = to_sva_sequence_repetition_star_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_repetition_star, repetition.op()};
     if(!repetition.repetitions_given())
     {
-      return suffix("[*]", new_expr, mode);
+      return suffix("[*]", new_expr, SVA_SEQUENCE);
     }
     else if(repetition.is_empty_match())
     {
@@ -453,7 +462,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     else if(repetition.is_singleton())
     {
       auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
-      return suffix("[*" + integer2string(n) + "]", new_expr, mode);
+      return suffix("[*" + integer2string(n) + "]", new_expr, SVA_SEQUENCE);
     }
     else if(repetition.is_bounded_range())
     {
@@ -462,33 +471,32 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
       return suffix(
         "[*" + integer2string(from) + ".." + integer2string(to) + "]",
         new_expr,
-        mode);
+        SVA_SEQUENCE);
     }
     else if(repetition.is_unbounded())
     {
       auto from = numeric_cast_v<mp_integer>(repetition.from());
-      return suffix("[*" + integer2string(from) + "..]", new_expr, mode);
+      return suffix(
+        "[*" + integer2string(from) + "..]", new_expr, SVA_SEQUENCE);
     }
     else
       DATA_INVARIANT(false, "unexpected sva_sequence_repetition_star");
   }
   else if(expr.id() == ID_sva_sequence_repetition_plus) // something[+]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
     auto new_expr = unary_exprt{
       ID_sva_sequence_repetition_plus,
       to_sva_sequence_repetition_plus_expr(expr).op()};
-    return suffix("[+]", new_expr, mode);
+    return suffix("[+]", new_expr, SVA_SEQUENCE);
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
     auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_goto_repetition, repetition.op()};
     if(repetition.is_singleton())
     {
       auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
-      return suffix("[->" + integer2string(n) + "]", new_expr, mode);
+      return suffix("[->" + integer2string(n) + "]", new_expr, SVA_SEQUENCE);
     }
     else if(repetition.is_bounded_range())
     {
@@ -497,12 +505,13 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
       return suffix(
         "[->" + integer2string(from) + ".." + integer2string(to) + "]",
         new_expr,
-        mode);
+        SVA_SEQUENCE);
     }
     else if(repetition.is_unbounded())
     {
       auto from = numeric_cast_v<mp_integer>(repetition.from());
-      return suffix("[->" + integer2string(from) + "..]", new_expr, mode);
+      return suffix(
+        "[->" + integer2string(from) + "..]", new_expr, SVA_SEQUENCE);
     }
     else
       DATA_INVARIANT(false, "unexpected sva_sequence_goto_repetition");
@@ -510,14 +519,13 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(
     expr.id() == ID_sva_sequence_non_consecutive_repetition) // something[=n]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
     auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
     unary_exprt new_expr{
       ID_sva_sequence_non_consecutive_repetition, repetition.op()};
     if(repetition.is_singleton())
     {
       auto n = numeric_cast_v<mp_integer>(repetition.repetitions());
-      return suffix("[=" + integer2string(n) + "]", new_expr, mode);
+      return suffix("[=" + integer2string(n) + "]", new_expr, SVA_SEQUENCE);
     }
     else if(repetition.is_bounded_range())
     {
@@ -526,26 +534,19 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
       return suffix(
         "[=" + integer2string(from) + ".." + integer2string(to) + "]",
         new_expr,
-        mode);
+        SVA_SEQUENCE);
     }
     else if(repetition.is_unbounded())
     {
       auto from = numeric_cast_v<mp_integer>(repetition.from());
-      return suffix("[=" + integer2string(from) + "..]", new_expr, mode);
+      return suffix(
+        "[=" + integer2string(from) + "..]", new_expr, SVA_SEQUENCE);
     }
     else
       DATA_INVARIANT(
         false, "unexpected sva_sequence_non_consecutive_repetition");
   }
-  else if(!is_temporal_operator(expr))
-  {
-    auto number = atoms.number(expr);
-
-    // a0, a1, a2, a3, a4, ...
-    std::string s = "a" + std::to_string(number);
-
-    return resultt{precedencet::ATOM, s};
-  }
   else
-    throw ebmc_errort{} << "cannot convert " << expr.id() << " to Buechi";
+    throw ebmc_errort{} << "cannot convert sequence " << expr.id()
+                        << " to Buechi";
 }
