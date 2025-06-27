@@ -18,10 +18,11 @@ SCENARIO("Generating a string from a formula")
 {
   GIVEN("A boolean formula")
   {
-    auto p = symbol_exprt{"p", bool_typet{}};
-    auto q = symbol_exprt{"q", bool_typet{}};
+    auto true_expr = sva_boolean_exprt{true_exprt{}, bool_typet{}};
+    auto p = sva_boolean_exprt{symbol_exprt{"p", bool_typet{}}, bool_typet{}};
+    auto q = sva_boolean_exprt{symbol_exprt{"q", bool_typet{}}, bool_typet{}};
 
-    REQUIRE(ltl_sva_to_stringt{}(true_exprt{}) == "true");
+    REQUIRE(ltl_sva_to_stringt{}(true_expr) == "true");
     REQUIRE(ltl_sva_to_stringt{}(p) == "a0");
     REQUIRE(ltl_sva_to_stringt{}(and_exprt{p, q}) == "a0&a1");
   }

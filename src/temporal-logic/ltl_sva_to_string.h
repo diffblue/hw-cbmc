@@ -49,6 +49,8 @@ protected:
   resultt suffix(std::string s, const unary_exprt &, modet);
   resultt infix(std::string s, const exprt &, modet);
   resultt rec(const exprt &, modet);
+  resultt rec_sequence(const exprt &);
+  resultt rec_rest(const exprt &, modet);
 };
 
 #endif
