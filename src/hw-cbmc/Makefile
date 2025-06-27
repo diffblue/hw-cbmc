@@ -19,7 +19,6 @@ OBJ+= $(CPROVER_DIR)/goto-checker/goto-checker$(LIBEXT) \
       $(CPROVER_DIR)/goto-instrument/source_lines$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/reachability_slicer$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/nondet_static$(OBJEXT) \
-      $(CPROVER_DIR)/goto-instrument/unwindset$(OBJEXT) \
       $(CPROVER_DIR)/xmllang/xml_interface$(OBJEXT) \
       $(CPROVER_DIR)/ansi-c/ansi-c$(LIBEXT) \
       $(CPROVER_DIR)/cpp/cpp$(LIBEXT) \
