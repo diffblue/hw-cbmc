@@ -11,7 +11,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/string2int.h>
 
-#include <ebmc/ebmc_error.h>
 #include <verilog/sva_expr.h>
 
 #include "ltl.h"
@@ -378,8 +377,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
         if(from == 0)
         {
           // requires treatment of empty sequences on lhs
-          throw ebmc_errort{}
-            << "cannot convert 0.. ranged sequence concatenation to Buechi";
+          throw ltl_sva_to_string_unsupportedt{expr};
         }
         else if(delay.is_unbounded()) // f ##[n:$] g
         {
@@ -448,7 +446,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_empty_match())
     {
-      throw ebmc_errort{} << "cannot convert [*0] to Buechi";
+      throw ltl_sva_to_string_unsupportedt{expr};
     }
     else if(repetition.is_singleton())
     {
@@ -547,5 +545,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     return resultt{precedencet::ATOM, s};
   }
   else
-    throw ebmc_errort{} << "cannot convert " << expr.id() << " to Buechi";
+  {
+    throw ltl_sva_to_string_unsupportedt{expr};
+  }
 }
