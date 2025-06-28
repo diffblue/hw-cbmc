@@ -475,11 +475,15 @@ std::optional<exprt> bdd_enginet::property_supported(const exprt &expr)
   if(is_SVA(expr))
   {
     // We can map some SVA to LTL. In turn, some of that can be mapped to CTL.
-    auto ltl_opt = SVA_to_LTL(expr);
-    if(ltl_opt.has_value())
-      return property_supported(ltl_opt.value());
-    else
+    try
+    {
+      auto ltl = SVA_to_LTL(expr);
+      return property_supported(ltl);
+    }
+    catch(sva_to_ltl_unsupportedt)
+    {
       return {};
+    }
   }
 
   return {};

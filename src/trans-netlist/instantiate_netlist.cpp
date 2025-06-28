@@ -179,11 +179,15 @@ std::optional<exprt> netlist_property(
     else if(is_SVA_operator(expr))
     {
       // Try to turn into LTL
-      auto LTL_opt = SVA_to_LTL(expr);
-      if(LTL_opt.has_value())
-        return netlist_property(solver, var_map, *LTL_opt, ns, message_handler);
-      else
+      try
+      {
+        auto LTL = SVA_to_LTL(expr);
+        return netlist_property(solver, var_map, LTL, ns, message_handler);
+      }
+      catch(sva_to_ltl_unsupportedt)
+      {
         return {};
+      }
     }
     else
       return {};

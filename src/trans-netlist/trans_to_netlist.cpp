@@ -391,11 +391,15 @@ convert_trans_to_netlistt::convert_property(const exprt &expr)
     else if(is_SVA_operator(expr))
     {
       // Try to turn into LTL
-      auto LTL_opt = SVA_to_LTL(expr);
-      if(LTL_opt.has_value())
-        return convert_property(*LTL_opt);
-      else
+      try
+      {
+        auto LTL = SVA_to_LTL(expr);
+        return convert_property(LTL);
+      }
+      catch(sva_to_ltl_unsupportedt)
+      {
         return {};
+      }
     }
     else
       return {};

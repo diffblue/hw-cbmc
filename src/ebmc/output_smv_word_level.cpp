@@ -192,11 +192,16 @@ static void smv_properties(
     else if(is_SVA(property.normalized_expr))
     {
       // we can turn some SVA properties into LTL
-      auto ltl_opt = SVA_to_LTL(property.normalized_expr);
-      if(ltl_opt.has_value())
-        out << "LTLSPEC " << expr2smv(ltl_opt.value(), ns);
-      else
-        out << "-- " << property.identifier << ": SVA not converted\n";
+      try
+      {
+        auto ltl = SVA_to_LTL(property.normalized_expr);
+        out << "LTLSPEC " << expr2smv(ltl, ns);
+      }
+      catch(sva_to_ltl_unsupportedt error)
+      {
+        out << "-- " << property.identifier << ": SVA " << error.expr.id()
+            << " not converted\n";
+      }
     }
     else
       out << "-- " << property.identifier << ": not converted\n";
