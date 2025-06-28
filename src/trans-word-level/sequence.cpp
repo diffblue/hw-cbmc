@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_types.h>
 
 #include <ebmc/ebmc_error.h>
+#include <temporal-logic/rewrite_sva_sequence.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
 
@@ -76,7 +77,7 @@ typet sequence_count_type(
   return unsignedbv_typet{bits};
 }
 
-sequence_matchest instantiate_sequence(
+sequence_matchest instantiate_sequence_rec(
   exprt expr,
   sva_sequence_semanticst semantics,
   const mp_integer &t,
@@ -99,7 +100,7 @@ sequence_matchest instantiate_sequence(
     }
     else
     {
-      lhs_matches = instantiate_sequence(
+      lhs_matches = instantiate_sequence_rec(
         sva_cycle_delay_expr.lhs(), semantics, t, no_timeframes);
     }
 
@@ -107,6 +108,9 @@ sequence_matchest instantiate_sequence(
 
     for(auto &lhs_match : lhs_matches)
     {
+      if(lhs_match.empty_match())
+        continue; // handled by rewrite_sva_sequence
+
       // now delay
       const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
       DATA_INVARIANT(from >= 0, "##n must not be negative");
@@ -129,24 +133,6 @@ sequence_matchest instantiate_sequence(
         t_rhs_to = t_rhs_from + to;
       }
 
-      // Implement 1800-2017 16.9.2.1
-      if(lhs_match.empty_match())
-      {
-        if(from == 0)
-        {
-          // (empty ##0 seq) does not result in a match.
-          continue;
-        }
-        else
-        {
-          // (empty ##n seq), where n is greater than 0,
-          // is equivalent to (##(n-1) seq).
-          t_rhs_from = t_rhs_from - 1;
-          if(t_rhs_to != no_timeframes)
-            t_rhs_to = t_rhs_to - 1;
-        }
-      }
-
       // Add a potential match for each timeframe in the range
       for(mp_integer t_rhs = t_rhs_from; t_rhs <= t_rhs_to; ++t_rhs)
       {
@@ -158,13 +144,18 @@ sequence_matchest instantiate_sequence(
         }
         else // still inside bound
         {
-          const auto rhs_matches = instantiate_sequence(
+          const auto rhs_matches = instantiate_sequence_rec(
             sva_cycle_delay_expr.rhs(), semantics, t_rhs, no_timeframes);
 
           for(auto &rhs_match : rhs_matches)
           {
-            auto cond = and_exprt{lhs_match.condition(), rhs_match.condition()};
-            result.emplace_back(rhs_match.end_time, cond);
+            // empty matches are handled by rewrite_sva_sequence
+            if(!rhs_match.empty_match())
+            {
+              auto cond =
+                and_exprt{lhs_match.condition(), rhs_match.condition()};
+              result.emplace_back(rhs_match.end_time, cond);
+            }
           }
         }
       }
@@ -175,13 +166,13 @@ sequence_matchest instantiate_sequence(
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
     auto &cycle_delay_star = to_sva_cycle_delay_star_expr(expr);
-    return instantiate_sequence(
+    return instantiate_sequence_rec(
       cycle_delay_star.lower(), semantics, t, no_timeframes);
   }
   else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
   {
     auto &cycle_delay_plus = to_sva_cycle_delay_plus_expr(expr);
-    return instantiate_sequence(
+    return instantiate_sequence_rec(
       cycle_delay_plus.lower(), semantics, t, no_timeframes);
   }
   else if(expr.id() == ID_sva_sequence_intersect)
@@ -194,9 +185,9 @@ sequence_matchest instantiate_sequence(
     auto &intersect = to_sva_sequence_intersect_expr(expr);
 
     const auto lhs_matches =
-      instantiate_sequence(intersect.lhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(intersect.lhs(), semantics, t, no_timeframes);
     const auto rhs_matches =
-      instantiate_sequence(intersect.rhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(intersect.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -220,8 +211,8 @@ sequence_matchest instantiate_sequence(
   {
     auto &first_match = to_sva_sequence_first_match_expr(expr);
 
-    const auto matches =
-      instantiate_sequence(first_match.sequence(), semantics, t, no_timeframes);
+    const auto matches = instantiate_sequence_rec(
+      first_match.sequence(), semantics, t, no_timeframes);
 
     // the match of seq with the earliest ending clock tick is a
     // match of first_match (seq)
@@ -257,8 +248,8 @@ sequence_matchest instantiate_sequence(
     // - exp evaluates to true at each clock tick of the interval.
     auto &throughout = to_sva_sequence_throughout_expr(expr);
 
-    const auto matches =
-      instantiate_sequence(throughout.sequence(), semantics, t, no_timeframes);
+    const auto matches = instantiate_sequence_rec(
+      throughout.sequence(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -285,7 +276,7 @@ sequence_matchest instantiate_sequence(
 
     auto &within_expr = to_sva_sequence_within_expr(expr);
     const auto matches_rhs =
-      instantiate_sequence(within_expr.rhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(within_expr.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -293,7 +284,7 @@ sequence_matchest instantiate_sequence(
     {
       for(auto start_lhs = t; start_lhs <= match_rhs.end_time; ++start_lhs)
       {
-        auto matches_lhs = instantiate_sequence(
+        auto matches_lhs = instantiate_sequence_rec(
           within_expr.lhs(), semantics, start_lhs, no_timeframes);
 
         for(auto &match_lhs : matches_lhs)
@@ -321,9 +312,9 @@ sequence_matchest instantiate_sequence(
     //    the end time of the operand sequence that completes last.
     auto &and_expr = to_sva_and_expr(expr);
     auto matches_lhs =
-      instantiate_sequence(and_expr.lhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(and_expr.lhs(), semantics, t, no_timeframes);
     auto matches_rhs =
-      instantiate_sequence(and_expr.rhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(and_expr.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
 
@@ -345,8 +336,11 @@ sequence_matchest instantiate_sequence(
     sequence_matchest result;
 
     for(auto &op : expr.operands())
-      for(auto &match : instantiate_sequence(op, semantics, t, no_timeframes))
+      for(auto &match :
+          instantiate_sequence_rec(op, semantics, t, no_timeframes))
+      {
         result.push_back(match);
+      }
 
     return result;
   }
@@ -355,31 +349,31 @@ sequence_matchest instantiate_sequence(
     auto &repetition = to_sva_sequence_repetition_star_expr(expr);
     if(repetition.is_empty_match())
     {
-      // [*0] denotes the empty match
+      // [*0] denotes the empty match.
       return {sequence_matcht::empty_match(t)};
     }
     else if(repetition.is_unbounded() && repetition.repetitions_given())
     {
-      // [*from:$] -> op[*from:to]
+      // op[*from:$] -> op[*from:to]
       // with to = no_timeframes - t
       auto to = from_integer(no_timeframes - t, integer_typet{});
       auto new_repetition = sva_sequence_repetition_star_exprt{
         repetition.op(), repetition.from(), to};
 
-      return instantiate_sequence(
+      return instantiate_sequence_rec(
         new_repetition.lower(), semantics, t, no_timeframes);
     }
     else
     {
       // [*], [*n], [*x:y]
-      return instantiate_sequence(
+      return instantiate_sequence_rec(
         repetition.lower(), semantics, t, no_timeframes);
     }
   }
   else if(expr.id() == ID_sva_sequence_repetition_plus) // [+]
   {
     auto &repetition = to_sva_sequence_repetition_plus_expr(expr);
-    return instantiate_sequence(
+    return instantiate_sequence_rec(
       repetition.lower(), semantics, t, no_timeframes);
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // [->...]
@@ -451,4 +445,14 @@ sequence_matchest instantiate_sequence(
     DATA_INVARIANT_WITH_DIAGNOSTICS(
       false, "unexpected sequence expression", expr.pretty());
   }
+}
+
+sequence_matchest instantiate_sequence(
+  exprt expr,
+  sva_sequence_semanticst semantics,
+  const mp_integer &t,
+  const mp_integer &no_timeframes)
+{
+  auto rewritten = rewrite_sva_sequence(expr);
+  return instantiate_sequence_rec(rewritten, semantics, t, no_timeframes);
 }

@@ -112,7 +112,7 @@ bool is_SVA_sequence_operator(const exprt &expr)
          id == ID_sva_sequence_goto_repetition ||
          id == ID_sva_sequence_non_consecutive_repetition ||
          id == ID_sva_sequence_repetition_star ||
-         id == ID_sva_sequence_repetition_plus;
+         id == ID_sva_sequence_repetition_plus || id == ID_sva_boolean;
 }
 
 bool is_SVA_operator(const exprt &expr)
