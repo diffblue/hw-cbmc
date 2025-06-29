@@ -101,7 +101,6 @@ void newlocation(YYSTYPE &x)
 "LTLWFF"	token(LTLWFF_Token);
 "PSLWFF"	token(PSLWFF_Token);
 "COMPWFF"	token(COMPWFF_Token);
-"IN"		token(IN_Token);
 "MIN"		token(MIN_Token);
 "MAX"		token(MAX_Token);
 "MIRROR"	token(MIRROR_Token);

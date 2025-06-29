@@ -176,7 +176,6 @@ static void new_module(YYSTYPE &module)
 %token LTLWFF_Token	"LTLWFF"
 %token PSLWFF_Token	"PSLWFF"
 %token COMPWFF_Token	"COMPWFF"
-%token IN_Token		"IN"
 %token MIN_Token	"MIN"
 %token MAX_Token	"MAX"
 %token MIRROR_Token	"MIRROR"
@@ -289,7 +288,7 @@ static void new_module(YYSTYPE &module)
 %left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token V_Token F_Token G_Token H_Token O_Token S_Token T_Token X_Token Y_Token Z_Token EBF_Token ABF_Token EBG_Token ABG_Token
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  union_Token
-%left  IN_Token NOTIN_Token
+%left  in_Token
 %left  mod_Token /* Precedence from CMU SMV, different from NuSMV */
 %left  LTLT_Token GTGT_Token
 %left  PLUS_Token MINUS_Token
@@ -673,7 +672,7 @@ formula    : term
 term       : variable_identifier
            | next_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
            | '(' formula ')'          { $$=$2; }
-           | '{' formula_list '}'     { $$=$2; stack_expr($$).id("smv_nondet_choice"); }
+           | '{' formula_list '}'     { $$=$2; stack_expr($$).id(ID_smv_set); }
            | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
            | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
            | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
@@ -709,8 +708,7 @@ term       : variable_identifier
            | term GT_Token       term { binary($$, $1, ID_gt, $3); }
            | term GE_Token       term { binary($$, $1, ID_ge, $3); }
            | term union_Token    term { binary($$, $1, ID_smv_union, $3); }
-           | term IN_Token       term { binary($$, $1, ID_smv_setin, $3); }
-           | term NOTIN_Token    term { binary($$, $1, ID_smv_setnotin, $3); }
+           | term in_Token       term { binary($$, $1, ID_smv_setin, $3); }
            | extend_Token '(' term ',' term ')' { binary($$, $3, ID_smv_extend, $5); }
            | resize_Token '(' term ',' term ')' { binary($$, $3, ID_smv_resize, $5); }
            | signed_Token '(' term ')' { init($$, ID_smv_signed_cast); mto($$, $3); }
