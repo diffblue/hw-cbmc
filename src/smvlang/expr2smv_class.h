@@ -85,7 +85,7 @@ protected:
 
   virtual resultt convert_rec(const exprt &);
 
-  resultt convert_nondet_choice(const exprt &);
+  resultt convert_smv_set(const exprt &);
 
   resultt convert_binary(
     const binary_exprt &src,

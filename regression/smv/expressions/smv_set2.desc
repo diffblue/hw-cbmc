@@ -1,10 +1,10 @@
-KNOWNBUG
+CORE broken-smt-backend
 smv_set2.smv
---bdd
-^\[spec1\] x in my_set: PROVED$
-^EXIT=0$
+
+^\[spec1\] x in \{ 1, 2 \}: REFUTED$
+^\[spec2\] x in 1 \| x in 2: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The smv_setin operator is not implemented.

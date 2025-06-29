@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: expr2smvt::convert_nondet_choice
+Function: expr2smvt::convert_smv_set
 
   Inputs:
 
@@ -25,7 +25,7 @@ Function: expr2smvt::convert_nondet_choice
 
 \*******************************************************************/
 
-expr2smvt::resultt expr2smvt::convert_nondet_choice(const exprt &src)
+expr2smvt::resultt expr2smvt::convert_smv_set(const exprt &src)
 {
   std::string dest = "{ ";
 
@@ -656,6 +656,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_mod)
     return convert_binary(to_mod_expr(src), src.id_string(), precedencet::MULT);
 
+  else if(src.id() == ID_smv_set)
+    return convert_smv_set(src);
+
   else if(src.id() == ID_smv_setin)
     return convert_binary(to_binary_expr(src), "in", precedencet::IN);
 
@@ -788,19 +791,13 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id()==ID_constant)
     return convert_constant(to_constant_expr(src));
 
-  else if(src.id()=="smv_nondet_choice")
-    return convert_nondet_choice(src);
-
-  else if(src.id() == ID_constraint_select_one)
-    return convert_nondet_choice(src);
-
   else if(src.id()==ID_nondet_bool)
   {
-    exprt nondet_choice_expr("smv_nondet_choice");
-    nondet_choice_expr.operands().clear();
-    nondet_choice_expr.operands().push_back(false_exprt());
-    nondet_choice_expr.operands().push_back(true_exprt());
-    return convert_nondet_choice(nondet_choice_expr);
+    exprt smv_set_expr(ID_smv_set);
+    smv_set_expr.operands().clear();
+    smv_set_expr.operands().push_back(false_exprt());
+    smv_set_expr.operands().push_back(true_exprt());
+    return convert_smv_set(smv_set_expr);
   }
 
   else if(src.id()==ID_cond)
@@ -901,6 +898,10 @@ std::string type2smv(const typet &type, const namespacet &ns)
   else if(type.id()==ID_range)
   {
     return type.get_string(ID_from) + ".." + type.get_string(ID_to);
+  }
+  else if(type.id() == ID_smv_set)
+  {
+    return "set";
   }
   else if(type.id()=="submodule")
   {
