@@ -902,6 +902,10 @@ std::string type2smv(const typet &type, const namespacet &ns)
   {
     return type.get_string(ID_from) + ".." + type.get_string(ID_to);
   }
+  else if(type.id() == ID_smv_set)
+  {
+    return "set";
+  }
   else if(type.id()=="submodule")
   {
     auto code = type.get_string(ID_identifier);

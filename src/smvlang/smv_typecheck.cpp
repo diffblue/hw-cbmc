@@ -1232,6 +1232,11 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "signed operand must have unsigned word type";
     }
   }
+  else if(expr.id() == ID_smv_set)
+  {
+    // a set literal
+    expr.type() = typet{ID_smv_set};
+  }
   else
   {
     throw errort().with_location(expr.find_source_location())
