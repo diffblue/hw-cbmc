@@ -1,0 +1,5 @@
+MODULE main
+
+-- a cyclic definition
+DEFINE b := a;
+DEFINE a := b;
