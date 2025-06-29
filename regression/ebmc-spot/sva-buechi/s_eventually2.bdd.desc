@@ -1,0 +1,11 @@
+KNOWNBUG
+../../verilog/SVA/s_eventually2.sv
+--buechi --module main --bdd
+^\[main\.p0\] always s_eventually main.reset \|\| main\.counter == 10: PROVED up to bound 20$
+^\[main\.p1\] always \(s_eventually \[0:2\] main.reset \|\| main\.counter == 10\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This gives the wrong answer for main.p0.
