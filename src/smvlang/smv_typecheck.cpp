@@ -1297,31 +1297,40 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &type)
     }
     else if(type.id() == ID_range)
     {
-      if(expr.id() == ID_constant && expr.type().id() == ID_range)
+      if(expr.type().id() == ID_range)
       {
-        // re-type the constant
-        auto value = numeric_cast_v<mp_integer>(to_constant_expr(expr));
-        expr = from_integer(value, type);
-        return;
-      }
-      else if(expr.id() == ID_cond && expr.type().id() == ID_range)
-      {
-        // re-type the cond
-        bool condition = true;
-
-        for(auto &op : expr.operands())
+        // range to range
+        if(expr.id() == ID_constant)
         {
-          if(!condition)
-            convert_expr_to(op, type);
-
-          condition = !condition;
+          // re-type the constant
+          auto value = numeric_cast_v<mp_integer>(to_constant_expr(expr));
+          if(to_range_type(type).includes(value))
+          {
+            expr = from_integer(value, type);
+            return;
+          }
         }
-        expr.type() = type;
-        return;
-      }
+        else if(expr.id() == ID_cond)
+        {
+          // re-type the cond
+          bool condition = true;
 
-      expr = typecast_exprt{expr, type};
-      return;
+          for(auto &op : expr.operands())
+          {
+            if(!condition)
+              convert_expr_to(op, type);
+
+            condition = !condition;
+          }
+          expr.type() = type;
+          return;
+        }
+        else
+        {
+          expr = typecast_exprt{expr, type};
+          return;
+        }
+      }
     }
     else if(type.id() == ID_bool)
     {
