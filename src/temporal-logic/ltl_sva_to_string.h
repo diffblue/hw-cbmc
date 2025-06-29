@@ -12,10 +12,22 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/numbering.h>
 #include <util/std_expr.h>
 
+class ltl_sva_to_string_unsupportedt
+{
+public:
+  explicit ltl_sva_to_string_unsupportedt(exprt __expr)
+    : expr(std::move(__expr))
+  {
+  }
+
+  exprt expr;
+};
+
 /// create formula strings for external LTL to Buechi tools
 class ltl_sva_to_stringt
 {
 public:
+  // throws ltl_sva_to_string_unsupportedt when the conversion fails
   std::string operator()(const exprt &expr)
   {
     return rec(expr, PROPERTY).s;

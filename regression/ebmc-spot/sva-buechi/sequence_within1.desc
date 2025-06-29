@@ -1,0 +1,14 @@
+CORE
+../../verilog/SVA/sequence_within1.sv
+--buechi --bound 20
+^error: failed to convert sva_sequence_within$
+^EXIT=6$
+^SIGNAL=0$
+--
+^\[main\.p0\] main\.x == 0 within main\.x == 1: REFUTED$
+^\[main\.p1\] main\.x == 0 within \(##10 1\): PROVED up to bound 20$
+^\[main\.p2\] main\.x == 5 within \(##10 1\): PROVED up to bound 20$
+^\[main\.p3\] main\.x == 10 within \(##10 1\): PROVED up to bound 20$
+^\[main\.p4\] main\.x == 11 within \(##10 1\): REFUTED$
+^warning: ignoring
+--
