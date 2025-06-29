@@ -1,0 +1,5 @@
+MODULE main
+VAR x: 1..6;
+
+-- out of range
+ASSIGN x := 7;
