@@ -1,0 +1,10 @@
+KNOWNBUG
+../../verilog/SVA/cycle_delay_star1.sv
+--buechi --bdd
+^\[main.p0\] ##\[\*\] main\.x == 2 ##1 main\.x == 3: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This gives the wrong answer.
