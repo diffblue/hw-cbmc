@@ -16,16 +16,22 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "bmc.h"
 
-bool has_low_completeness_threshold(const exprt &expr)
+// counting number of transitions
+std::optional<mp_integer> completeness_threshold(const exprt &expr)
 {
   if(!has_temporal_operator(expr))
   {
-    return true; // state predicate only
+    return 0; // state predicate only
   }
   else if(expr.id() == ID_X)
   {
     // X p
-    return !has_temporal_operator(to_X_expr(expr).op());
+    // Increases the CT by one.
+    auto ct_p = completeness_threshold(to_X_expr(expr).op());
+    if(ct_p.has_value())
+      return *ct_p + 1;
+    else
+      return {};
   }
   else if(
     expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_nexttime ||
@@ -38,66 +44,103 @@ bool has_low_completeness_threshold(const exprt &expr)
   {
     auto &always_expr = to_sva_ranged_always_expr(expr);
     if(has_temporal_operator(always_expr.op()))
-      return false;
-    else if(always_expr.to().is_constant())
+      return {};
+
+    if(always_expr.is_range() && !always_expr.is_unbounded())
     {
-      auto from_int = numeric_cast_v<mp_integer>(always_expr.from());
       auto to_int =
         numeric_cast_v<mp_integer>(to_constant_expr(always_expr.to()));
-      return from_int >= 0 && from_int <= 1 && to_int >= 0 && to_int <= 1;
+
+      // increases the CT by to_int
+      auto ct_op = completeness_threshold(always_expr.op());
+      if(ct_op.has_value())
+        return *ct_op + to_int;
+      else
+        return {};
     }
     else
-      return false;
+      return {};
   }
   else if(expr.id() == ID_sva_s_always)
   {
     auto &s_always_expr = to_sva_s_always_expr(expr);
-    if(has_temporal_operator(s_always_expr.op()))
-      return false;
+
+    auto to_int = numeric_cast_v<mp_integer>(s_always_expr.to());
+
+    if(to_int < 0)
+      return {};
+
+    // increases the CT by to_int
+    auto ct_op = completeness_threshold(s_always_expr.op());
+    if(ct_op.has_value())
+      return *ct_op + to_int;
     else
-    {
-      auto from_int = numeric_cast_v<mp_integer>(s_always_expr.from());
-      auto to_int = numeric_cast_v<mp_integer>(s_always_expr.to());
-      return from_int >= 0 && from_int <= 1 && to_int >= 0 && to_int <= 1;
-    }
+      return {};
   }
   else if(
     expr.id() == ID_sva_strong || expr.id() == ID_sva_weak ||
     expr.id() == ID_sva_implicit_strong || expr.id() == ID_sva_implicit_weak)
   {
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
-    return has_low_completeness_threshold(sequence);
+    return completeness_threshold(sequence);
   }
   else if(expr.id() == ID_sva_boolean)
   {
-    return true;
+    return 0; // state predicate only
   }
-  else if(expr.id() == ID_sva_or || expr.id() == ID_sva_and)
+  else if(expr.id() == ID_sva_cycle_delay)
   {
-    for(auto &op : expr.operands())
-      if(!has_low_completeness_threshold(op))
-        return false;
-    return true;
+    auto &cycle_delay = to_sva_cycle_delay_expr(expr);
+    mp_integer ct_lhs = 0;
+
+    if(cycle_delay.lhs().is_not_nil())
+    {
+      auto ct_lhs_opt = completeness_threshold(cycle_delay.lhs());
+      if(ct_lhs_opt.has_value())
+        ct_lhs = ct_lhs_opt.value();
+      else
+        return {};
+    }
+
+    if(cycle_delay.is_range())
+      return {};
+    else // singleton
+    {
+      auto ct_rhs = completeness_threshold(cycle_delay.rhs());
+      if(ct_rhs.has_value())
+        return ct_lhs + numeric_cast_v<mp_integer>(cycle_delay.from()) +
+               *ct_rhs;
+      else
+        return {};
+    }
   }
   else if(expr.id() == ID_sva_sequence_property)
   {
     PRECONDITION(false); // should have been turned into implicit weak/strong
   }
   else
-    return false;
+    return {};
 }
 
-bool has_low_completeness_threshold(const ebmc_propertiest::propertyt &property)
+std::optional<mp_integer>
+completeness_threshold(const ebmc_propertiest::propertyt &property)
 {
-  return has_low_completeness_threshold(property.normalized_expr);
+  return completeness_threshold(property.normalized_expr);
 }
 
-bool have_low_completeness_threshold(const ebmc_propertiest &properties)
+std::optional<mp_integer>
+completeness_threshold(const ebmc_propertiest &properties)
 {
+  std::optional<mp_integer> max_ct;
+
   for(auto &property : properties.properties)
-    if(has_low_completeness_threshold(property))
-      return true;
-  return false;
+  {
+    auto ct_opt = completeness_threshold(property);
+    if(ct_opt.has_value())
+      max_ct = std::max(max_ct.value_or(0), *ct_opt);
+  }
+
+  return max_ct;
 }
 
 property_checker_resultt completeness_threshold(
@@ -107,14 +150,16 @@ property_checker_resultt completeness_threshold(
   const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
 {
-  // Do we have an eligibile property?
-  if(!have_low_completeness_threshold(properties))
+  // Do we have an eligible property?
+  auto ct_opt = completeness_threshold(properties);
+
+  if(!ct_opt.has_value())
     return property_checker_resultt{properties}; // give up
 
-  // Do BMC with two timeframes
+  // Do BMC, using the CT as the bound
   auto result = bmc(
-    1,     // bound
-    false, // convert_only
+    numeric_cast_v<std::size_t>(*ct_opt), // bound
+    false,                                // convert_only
     cmdline.isset("bmc-with-assumptions"),
     transition_system,
     properties,
@@ -126,8 +171,9 @@ property_checker_resultt completeness_threshold(
     if(property.is_proved_with_bound())
     {
       // Turn "PROVED up to bound k" into "PROVED" if k>=CT
-      if(has_low_completeness_threshold(property) && property.bound >= 1)
-        property.proved("CT=1");
+      auto property_ct_opt = completeness_threshold(property);
+      if(property_ct_opt.has_value())
+        property.proved("CT=" + integer2string(*property_ct_opt));
       else
         property.unknown();
     }
