@@ -39,100 +39,78 @@ static exprt ltl(const sva_sequence_matcht &match)
   return conjunction(conjuncts);
 }
 
-/// takes an SVA property as input, and returns an equivalent LTL property,
-/// or otherwise {}.
-std::optional<exprt> SVA_to_LTL(exprt expr)
+/// takes an SVA property as input, and returns an equivalent LTL property
+exprt SVA_to_LTL(exprt expr)
 {
   // Some SVA is directly mappable to LTL
   if(expr.id() == ID_sva_always)
   {
     auto rec = SVA_to_LTL(to_sva_always_expr(expr).op());
-    if(rec.has_value())
-      return G_exprt{rec.value()};
-    else
-      return {};
+    return G_exprt{rec};
   }
   else if(expr.id() == ID_sva_ranged_always)
   {
     auto &ranged_always = to_sva_ranged_always_expr(expr);
     auto rec = SVA_to_LTL(ranged_always.op());
-    if(rec.has_value())
+    // always [l:u] op ---> X ... X (op ∧ X op ∧ ... ∧ X ... X op)
+    auto from_int = numeric_cast_v<mp_integer>(ranged_always.from());
+
+    // Is there an upper end of the range?
+    if(ranged_always.to().is_constant())
     {
-      // always [l:u] op ---> X ... X (op ∧ X op ∧ ... ∧ X ... X op)
-      auto from_int = numeric_cast_v<mp_integer>(ranged_always.from());
-
-      // Is there an upper end of the range?
-      if(ranged_always.to().is_constant())
-      {
-        // upper end set
-        auto to_int =
-          numeric_cast_v<mp_integer>(to_constant_expr(ranged_always.to()));
-        PRECONDITION(to_int >= from_int);
-        auto diff = to_int - from_int;
-
-        exprt::operandst conjuncts;
-
-        for(auto i = 0; i <= diff; i++)
-          conjuncts.push_back(n_Xes(i, rec.value()));
-
-        return n_Xes(from_int, conjunction(conjuncts));
-      }
-      else if(ranged_always.to().id() == ID_infinity)
-      {
-        // always [l:$] op ---> X ... X G op
-        return n_Xes(from_int, G_exprt{rec.value()});
-      }
-      else
-        PRECONDITION(false);
-    }
-    else
-      return {};
-  }
-  else if(expr.id() == ID_sva_s_always)
-  {
-    auto &ranged_always = to_sva_s_always_expr(expr);
-    auto rec = SVA_to_LTL(ranged_always.op());
-    if(rec.has_value())
-    {
-      // s_always [l:u] op ---> X ... X (op ∧ X op ∧ ... ∧ X ... X op)
-      auto from_int = numeric_cast_v<mp_integer>(ranged_always.from());
-      auto to_int = numeric_cast_v<mp_integer>(ranged_always.to());
+      // upper end set
+      auto to_int =
+        numeric_cast_v<mp_integer>(to_constant_expr(ranged_always.to()));
       PRECONDITION(to_int >= from_int);
       auto diff = to_int - from_int;
 
       exprt::operandst conjuncts;
 
       for(auto i = 0; i <= diff; i++)
-        conjuncts.push_back(n_Xes(i, rec.value()));
+        conjuncts.push_back(n_Xes(i, rec));
 
       return n_Xes(from_int, conjunction(conjuncts));
     }
+    else if(ranged_always.to().id() == ID_infinity)
+    {
+      // always [l:$] op ---> X ... X G op
+      return n_Xes(from_int, G_exprt{rec});
+    }
     else
-      return {};
+      PRECONDITION(false);
+  }
+  else if(expr.id() == ID_sva_s_always)
+  {
+    auto &ranged_always = to_sva_s_always_expr(expr);
+    auto rec = SVA_to_LTL(ranged_always.op());
+
+    // s_always [l:u] op ---> X ... X (op ∧ X op ∧ ... ∧ X ... X op)
+    auto from_int = numeric_cast_v<mp_integer>(ranged_always.from());
+    auto to_int = numeric_cast_v<mp_integer>(ranged_always.to());
+    PRECONDITION(to_int >= from_int);
+    auto diff = to_int - from_int;
+
+    exprt::operandst conjuncts;
+
+    for(auto i = 0; i <= diff; i++)
+      conjuncts.push_back(n_Xes(i, rec));
+
+    return n_Xes(from_int, conjunction(conjuncts));
   }
   else if(expr.id() == ID_sva_s_eventually)
   {
     auto rec = SVA_to_LTL(to_sva_s_eventually_expr(expr).op());
-    if(rec.has_value())
-      return F_exprt{rec.value()};
-    else
-      return {};
+    return F_exprt{std::move(rec)};
   }
   else if(expr.id() == ID_sva_s_nexttime)
   {
     auto rec = SVA_to_LTL(to_sva_s_nexttime_expr(expr).op());
-    if(rec.has_value())
-      return X_exprt{rec.value()};
-    else
-      return {};
+    return X_exprt{std::move(rec)};
   }
   else if(expr.id() == ID_sva_nexttime)
   {
     auto rec = SVA_to_LTL(to_sva_nexttime_expr(expr).op());
-    if(rec.has_value())
-      return X_exprt{rec.value()};
-    else
-      return {};
+    return X_exprt{std::move(rec)};
   }
   else if(
     expr.id() == ID_sva_overlapped_implication ||
@@ -150,9 +128,6 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
 
       auto property_rec = SVA_to_LTL(implication.property());
 
-      if(!property_rec.has_value())
-        return {};
-
       for(auto &match : matches)
       {
         const auto overlapped = expr.id() == ID_sva_overlapped_implication;
@@ -163,16 +138,16 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
         else
         {
           auto delay = match.length() + (overlapped ? 0 : 1) - 1;
-          auto delayed_property = n_Xes(delay, property_rec.value());
+          auto delayed_property = n_Xes(delay, property_rec);
           conjuncts.push_back(implies_exprt{ltl(match), delayed_property});
         }
       }
 
       return conjunction(conjuncts);
     }
-    catch(sva_sequence_match_unsupportedt)
+    catch(sva_sequence_match_unsupportedt error)
     {
-      return {};
+      throw sva_to_ltl_unsupportedt{std::move(error.expr)};
     }
   }
   else if(
@@ -191,9 +166,6 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
 
       auto property_rec = SVA_to_LTL(followed_by.property());
 
-      if(!property_rec.has_value())
-        return {};
-
       for(auto &match : matches)
       {
         const auto overlapped = expr.id() == ID_sva_overlapped_followed_by;
@@ -204,16 +176,16 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
         else
         {
           auto delay = match.length() + (overlapped ? 0 : 1) - 1;
-          auto delayed_property = n_Xes(delay, property_rec.value());
+          auto delayed_property = n_Xes(delay, property_rec);
           disjuncts.push_back(and_exprt{ltl(match), delayed_property});
         }
       }
 
       return disjunction(disjuncts);
     }
-    catch(sva_sequence_match_unsupportedt)
+    catch(sva_sequence_match_unsupportedt error)
     {
-      return {};
+      throw sva_to_ltl_unsupportedt{std::move(error.expr)};
     }
   }
   else if(expr.id() == ID_sva_sequence_property)
@@ -242,9 +214,9 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
 
       return disjunction(disjuncts);
     }
-    catch(sva_sequence_match_unsupportedt)
+    catch(sva_sequence_match_unsupportedt error)
     {
-      return {};
+      throw sva_to_ltl_unsupportedt{std::move(error.expr)};
     }
   }
   else if(expr.id() == ID_sva_s_until)
@@ -252,10 +224,7 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     auto &until = to_sva_s_until_expr(expr);
     auto rec_lhs = SVA_to_LTL(until.lhs());
     auto rec_rhs = SVA_to_LTL(until.rhs());
-    if(rec_lhs.has_value() && rec_rhs.has_value())
-      return U_exprt{rec_lhs.value(), rec_rhs.value()};
-    else
-      return {};
+    return U_exprt{rec_lhs, rec_rhs};
   }
   else if(expr.id() == ID_sva_s_until_with)
   {
@@ -263,10 +232,7 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     auto &until_with = to_sva_s_until_with_expr(expr);
     auto rec_lhs = SVA_to_LTL(until_with.lhs());
     auto rec_rhs = SVA_to_LTL(until_with.rhs());
-    if(rec_lhs.has_value() && rec_rhs.has_value())
-      return R_exprt{rec_rhs.value(), rec_lhs.value()}; // swapped
-    else
-      return {};
+    return R_exprt{rec_rhs, rec_lhs}; // swapped
   }
   else if(!has_temporal_operator(expr))
   {
@@ -279,12 +245,12 @@ std::optional<exprt> SVA_to_LTL(exprt expr)
     for(auto &op : expr.operands())
     {
       auto rec = SVA_to_LTL(op);
-      if(!rec.has_value())
-        return {};
-      op = rec.value();
+      op = rec;
     }
     return expr;
   }
   else
-    return {};
+  {
+    throw sva_to_ltl_unsupportedt{std::move(expr)};
+  }
 }
