@@ -1,0 +1,12 @@
+MODULE main
+
+VAR flag : boolean;
+VAR buechi_state : boolean;
+
+TRANS next(flag) = !flag
+
+TRANS !buechi_state & !next(buechi_state)
+    | !buechi_state & !flag & next(buechi_state)
+    | buechi_state  & flag  & next(buechi_state)
+
+CTLSPEC AF AG !buechi_state
