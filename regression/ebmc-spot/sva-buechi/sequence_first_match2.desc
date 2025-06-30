@@ -1,0 +1,13 @@
+CORE
+../../verilog/SVA/sequence_first_match2.sv
+--buechi --bound 5
+^error: failed to convert sva_sequence_first_match$
+^EXIT=6$
+^SIGNAL=0$
+--
+^\[.*\] \(\(##1 1\) or \(##2 1\)\) \|-> main.x == 1: REFUTED$
+^\[.*\] first_match\(\(##1 1\) or \(##2 1\)\) \|-> main\.x == 1: PROVED up to bound 5$
+^\[.*\] \(1 or \(##1 1\)\) \|-> main\.x == 0: REFUTED$
+^\[.*\] first_match\(1 or \(##1 1\)\) \|-> main\.x == 0: PROVED up to bound 5$
+^warning: ignoring
+--
