@@ -1,0 +1,10 @@
+KNOWNBUG
+smv_ltlspec_AFAG1.smv
+--bound 3
+^\[spec1\] AF AG !buechi_state: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The BMC engine returns the wrong answer.

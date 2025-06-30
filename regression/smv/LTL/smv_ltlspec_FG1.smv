@@ -1,0 +1,13 @@
+MODULE main
+
+VAR x : 0..2;
+
+ASSIGN init(x) := 0;
+
+TRANS x=0 -> (next(x)=0 | next(x)=1)
+
+TRANS x=1 -> next(x)=2
+
+TRANS x=2 -> next(x)=2
+
+LTLSPEC F G x!=1
