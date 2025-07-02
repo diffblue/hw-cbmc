@@ -1,9 +1,10 @@
 MODULE main
 
-DEFINE my_set := {1, 2};
-
 VAR x : 1..3;
 ASSIGN init(x) := {1, 2, 3};
        next(x) := x;
 
-SPEC x in my_set;
+SPEC x in {1, 2};
+
+-- the rhs set can be a singleton
+SPEC (x in 1) | (x in 2);

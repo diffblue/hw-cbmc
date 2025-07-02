@@ -1,0 +1,10 @@
+KNOWNBUG
+smv_set3.smv
+--bdd
+^\[spec1\] x in my_set: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The smv_setin operator does not work with symbols on the RHS.
