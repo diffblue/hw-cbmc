@@ -510,13 +510,18 @@ module_type_specifier:
              stack_expr($$).set(ID_identifier,
                            smv_module_symbol(stack_expr($1).id_string()));
            }
-           | module_name '(' formula_list ')'
+           | module_name '(' parameter_list ')'
            {
              init($$, "submodule");
              stack_expr($$).set(ID_identifier,
                            smv_module_symbol(stack_expr($1).id_string()));
              stack_expr($$).operands().swap(stack_expr($3).operands());
            }
+           ;
+
+parameter_list:
+             formula { init($$); mto($$, $1); }
+           | parameter_list ',' formula { $$=$1; mto($$, $3); }
            ;
 
 enum_list  : enum_element
@@ -672,7 +677,7 @@ formula    : term
 term       : variable_identifier
            | next_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
            | '(' formula ')'          { $$=$2; }
-           | '{' formula_list '}'     { $$=$2; stack_expr($$).id(ID_smv_set); }
+           | '{' set_body_expr '}'    { $$=$2; stack_expr($$).id(ID_smv_set); }
            | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
            | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
            | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
@@ -776,9 +781,9 @@ range      : NUMBER_Token DOTDOT_Token NUMBER_Token
            { init($$); mto($$, $1); mto($$, $3); }
            ;
 
-formula_list:
+set_body_expr:
              formula { init($$); mto($$, $1); }
-           | formula_list ',' formula { $$=$1; mto($$, $3); }
+           | set_body_expr ',' formula { $$=$1; mto($$, $3); }
            ;
 
 identifier : IDENTIFIER_Token
