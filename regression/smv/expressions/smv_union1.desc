@@ -1,0 +1,9 @@
+CORE broken-smt-backend
+smv_union1.smv
+
+^\[spec1\] x != 3: PROVED \(CT=1\)$
+^\[spec2\] x != 2: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
