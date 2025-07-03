@@ -539,36 +539,36 @@ enum_element: IDENTIFIER_Token
            ;
 
 vardecl    : variable_identifier ':' type_specifier ';'
-{
-  const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-  smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
+           {
+             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
+             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
 
-  switch(var.var_class)
-  {
-  case smv_parse_treet::mc_vart::UNKNOWN:
-    var.type=(typet &)stack_expr($3);
-    var.var_class=smv_parse_treet::mc_vart::DECLARED;
-    break;
+             switch(var.var_class)
+             {
+             case smv_parse_treet::mc_vart::UNKNOWN:
+               var.type=(typet &)stack_expr($3);
+               var.var_class=smv_parse_treet::mc_vart::DECLARED;
+               break;
 
-  case smv_parse_treet::mc_vart::DEFINED:
-    yyerror("variable `"+id2string(identifier)+"' already defined");
-    YYERROR;
-    break;
+             case smv_parse_treet::mc_vart::DEFINED:
+               yyerror("variable `"+id2string(identifier)+"' already defined");
+               YYERROR;
+               break;
 
-  case smv_parse_treet::mc_vart::DECLARED:
-    yyerror("variable `"+id2string(identifier)+"' already declared as variable");
-    YYERROR;
-    break;
-  
-  case smv_parse_treet::mc_vart::ARGUMENT:
-    yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-    YYERROR;
-    break;
-  
-  default:
-    DATA_INVARIANT(false, "unexpected variable class");
-  }
-}
+             case smv_parse_treet::mc_vart::DECLARED:
+               yyerror("variable `"+id2string(identifier)+"' already declared as variable");
+               YYERROR;
+               break;
+
+             case smv_parse_treet::mc_vart::ARGUMENT:
+               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
+               YYERROR;
+               break;
+
+             default:
+               DATA_INVARIANT(false, "unexpected variable class");
+             }
+           }
            ;
 
 assignments: assignment
@@ -623,9 +623,10 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
 assignment_var: variable_identifier
            ;
 
-assignment_head: init_Token { init($$, ID_init); }
-               | next_Token { init($$, ID_smv_next); }
-               ;
+assignment_head:
+             init_Token { init($$, ID_init); }
+           | next_Token { init($$, ID_smv_next); }
+           ;
 
 defines:     define
            | defines define
