@@ -675,53 +675,57 @@ define     : assignment_var BECOMES_Token formula ';'
 formula    : term
            ;
 
-term       : variable_identifier
-           | next_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
-           | '(' formula ')'          { $$=$2; }
-           | '{' set_body_expr '}'    { $$=$2; stack_expr($$).id(ID_smv_set); }
-           | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
-           | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
-           | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
-           | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
-           | NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
+constant   : NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
            | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
            | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
-           | case_Token cases esac_Token { $$=$2; }
-           | term IF_Token term ':' term %prec IF_Token
-                                      { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
-           | switch_Token '(' variable_identifier ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
-           | MINUS_Token term %prec UMINUS
-                                      { init($$, ID_unary_minus); mto($$, $2); }
-           | term mod_Token term      { binary($$, $1, ID_mod, $3); }
-           | term GTGT_Token term     { binary($$, $1, ID_shr, $3); }
-           | term LTLT_Token term     { binary($$, $1, ID_shl, $3); }
-           | term COLONCOLON_Token term { binary($$, $1, ID_concatenation, $3); }
-           | term TIMES_Token term    { binary($$, $1, ID_mult, $3); }
-           | term DIVIDE_Token term   { binary($$, $1, ID_div, $3); }
-           | term PLUS_Token term     { binary($$, $1, ID_plus, $3); }
-           | term MINUS_Token term    { binary($$, $1, ID_minus, $3); }
-           | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3); }
-           | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3); }
+           ;
+
+term       : constant
+           | variable_identifier
+           | '(' formula ')'          { $$=$2; }
+           | NOT_Token term           { init($$, ID_not); mto($$, $2); }
+           | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
+           | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
            | term xor_Token term      { j_binary($$, $1, ID_xor, $3); }
            | term xnor_Token term     { binary($$, $1, ID_xnor, $3); }
-           | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
-           | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
-           | NOT_Token term           { init($$, ID_not); mto($$, $2); }
+           | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3); }
+           | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3); }
            | term EQUAL_Token    term { binary($$, $1, ID_equal, $3); }
            | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3); }
            | term LT_Token       term { binary($$, $1, ID_lt, $3); }
            | term LE_Token       term { binary($$, $1, ID_le, $3); }
            | term GT_Token       term { binary($$, $1, ID_gt, $3); }
            | term GE_Token       term { binary($$, $1, ID_ge, $3); }
-           | term union_Token    term { binary($$, $1, ID_smv_union, $3); }
-           | term in_Token       term { binary($$, $1, ID_smv_setin, $3); }
+           | MINUS_Token term %prec UMINUS
+                                      { init($$, ID_unary_minus); mto($$, $2); }
+           | term PLUS_Token term     { binary($$, $1, ID_plus, $3); }
+           | term MINUS_Token term    { binary($$, $1, ID_minus, $3); }
+           | term TIMES_Token term    { binary($$, $1, ID_mult, $3); }
+           | term DIVIDE_Token term   { binary($$, $1, ID_div, $3); }
+           | term mod_Token term      { binary($$, $1, ID_mod, $3); }
+           | term GTGT_Token term     { binary($$, $1, ID_shr, $3); }
+           | term LTLT_Token term     { binary($$, $1, ID_shl, $3); }
+           | term COLONCOLON_Token term { binary($$, $1, ID_concatenation, $3); }
+           | swconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_swconst, $5); }
+           | uwconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_uwconst, $5); }
+           | signed_Token '(' term ')' { init($$, ID_smv_signed_cast); mto($$, $3); }
+           | unsigned_Token '(' term ')' { init($$, ID_smv_unsigned_cast); mto($$, $3); }
+           | sizeof_Token '(' term ')' { init($$, ID_smv_sizeof); mto($$, $3); }
            | extend_Token '(' term ',' term ')' { binary($$, $3, ID_smv_extend, $5); }
            | resize_Token '(' term ',' term ')' { binary($$, $3, ID_smv_resize, $5); }
-           | signed_Token '(' term ')' { init($$, ID_smv_signed_cast); mto($$, $3); }
-           | sizeof_Token '(' term ')' { init($$, ID_smv_sizeof); mto($$, $3); }
-           | swconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_swconst, $5); }
-           | unsigned_Token '(' term ')' { init($$, ID_smv_unsigned_cast); mto($$, $3); }
-           | uwconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_uwconst, $5); }
+           | term union_Token term    { binary($$, $1, ID_smv_union, $3); }
+           | '{' set_body_expr '}'    { $$=$2; stack_expr($$).id(ID_smv_set); }
+           | term in_Token term       { binary($$, $1, ID_smv_setin, $3); }
+           | term IF_Token term ':' term %prec IF_Token
+                                      { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
+           | case_Token cases esac_Token { $$=$2; }
+           | next_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
+           /* Not in NuSMV manual */
+           | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
+           | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
+           | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
+           | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
+           | switch_Token '(' variable_identifier ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            /* CTL */
            | AX_Token  term           { init($$, ID_AX);  mto($$, $2); }
            | AF_Token  term           { init($$, ID_AF);  mto($$, $2); }
