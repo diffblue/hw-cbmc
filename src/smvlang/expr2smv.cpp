@@ -188,6 +188,32 @@ expr2smvt::resultt expr2smvt::convert_binary_associative(
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_extractbits
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_extractbits(const extractbits_exprt &expr)
+{
+  // we can do constant indices only
+  if(!expr.index().is_constant())
+    return convert_norep(expr);
+
+  auto op_rec = convert_rec(expr.src());
+  auto high_s = integer2string(
+    numeric_cast_v<mp_integer>(to_constant_expr(expr.index())) +
+    to_bitvector_type(expr.type()).width() - 1);
+  auto low_s = convert_rec(expr.index()).s;
+  return {precedencet::INDEX, op_rec.s + '[' + high_s + ':' + low_s + ']'};
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_function_application
 
   Inputs:
@@ -830,6 +856,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_smv_unsigned_cast)
     return convert_function_application("unsigned", src);
+
+  else if(src.id() == ID_extractbits)
+    return convert_extractbits(to_extractbits_expr(src));
 
   else if(src.id() == ID_typecast)
   {
