@@ -1,0 +1,8 @@
+KNOWNBUG
+range_type10.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This fails to parse.

@@ -1,0 +1,22 @@
+MODULE main
+
+VAR x : 1..6;
+VAR y : -6..-1;
+
+ASSIGN init(x) := 1;
+ASSIGN init(y) := -1;
+
+ASSIGN next(x) :=
+  case
+    x=6 : 1;
+    TRUE: x+1;
+  esac;
+
+ASSIGN next(y) :=
+  case
+    y=-6 : -1;
+    TRUE: y + -1;
+  esac;
+
+-- should pass
+LTLSPEC G x + y = 0
