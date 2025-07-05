@@ -6,6 +6,7 @@
 * SystemVerilog: fix for #-# and #=# for empty matches
 * SystemVerilog: fix for |-> and |=> for empty matches
 * LTL/SVA to Buechi with --buechi
+* SMV: abs, bool, count, max, min, toint, word1
 
 # EBMC 5.6
 

@@ -1,0 +1,6 @@
+MODULE main
+
+CTLSPEC max(0, 1) = 1
+CTLSPEC max(-1, -2) = -1
+CTLSPEC max(-1, 1) = 1
+CTLSPEC max(1, 2) = 2

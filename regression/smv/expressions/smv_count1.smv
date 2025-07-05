@@ -1,0 +1,7 @@
+MODULE main
+
+CTLSPEC count(FALSE) = 0
+CTLSPEC count(TRUE) = 1
+CTLSPEC count(FALSE, TRUE) = 1
+CTLSPEC count(TRUE, FALSE) = 1
+CTLSPEC count(TRUE, TRUE, TRUE) = 3

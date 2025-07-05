@@ -831,6 +831,27 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_smv_unsigned_cast)
     return convert_function_application("unsigned", src);
 
+  else if(src.id() == ID_smv_abs)
+    return convert_function_application("abs", src);
+
+  else if(src.id() == ID_smv_bool)
+    return convert_function_application("bool", src);
+
+  else if(src.id() == ID_smv_count)
+    return convert_function_application("count", src);
+
+  else if(src.id() == ID_smv_max)
+    return convert_function_application("max", src);
+
+  else if(src.id() == ID_smv_min)
+    return convert_function_application("min", src);
+
+  else if(src.id() == ID_smv_toint)
+    return convert_function_application("toint", src);
+
+  else if(src.id() == ID_smv_word1)
+    return convert_function_application("word1", src);
+
   else if(src.id() == ID_typecast)
   {
     return convert_typecast(to_typecast_expr(src));

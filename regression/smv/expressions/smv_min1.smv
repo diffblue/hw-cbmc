@@ -1,0 +1,6 @@
+MODULE main
+
+CTLSPEC min(0, 1) = 0
+CTLSPEC min(-1, -2) = -2
+CTLSPEC min(-1, 1) = -1
+CTLSPEC min(1, 2) = 1

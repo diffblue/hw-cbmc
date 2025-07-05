@@ -1,0 +1,11 @@
+CORE
+smv_max1.smv
+
+^\[.*\] max\(0, 1\) = 1: PROVED .*$
+^\[.*\] max\(-1, -2\) = -1: PROVED .*$
+^\[.*\] max\(-1, 1\) = 1: PROVED .*$
+^\[.*\] max\(1, 2\) = 2: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
