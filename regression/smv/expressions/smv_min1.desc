@@ -1,0 +1,11 @@
+CORE
+smv_min1.smv
+
+^\[.*\] min\(0, 1\) = 0: PROVED .*$
+^\[.*\] min\(-1, -2\) = -2: PROVED .*$
+^\[.*\] min\(-1, 1\) = -1: PROVED .*$
+^\[.*\] min\(1, 2\) = 1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

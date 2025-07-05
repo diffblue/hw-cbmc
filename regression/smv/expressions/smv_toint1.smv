@@ -1,0 +1,8 @@
+MODULE main
+
+CTLSPEC toint(0) = 0
+CTLSPEC toint(1) = 1
+CTLSPEC toint(FALSE) = 0
+CTLSPEC toint(TRUE) = 1
+CTLSPEC toint(uwconst(1, 8)) = 1
+CTLSPEC toint(swconst(-1, 8)) = -1

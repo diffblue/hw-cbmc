@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+smv_count1.smv
+
+^\[.*\] count\(FALSE\) = 0: PROVED .*$
+^\[.*\] count\(TRUE\) = 1: PROVED .*$
+^\[.*\] count\(FALSE, TRUE\) = 1: PROVED .*$
+^\[.*\] count\(TRUE, FALSE\) = 1: PROVED .*$
+^\[.*\] count\(TRUE, TRUE, TRUE\) = 3: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

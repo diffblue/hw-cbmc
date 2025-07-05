@@ -1,0 +1,14 @@
+KNOWNBUG
+smv_toint1.smv
+
+^\[.*\] toint\(0\) = 0: PROVED .*$
+^\[.*\] toint\(1\) = 1: PROVED .*$
+^\[.*\] toint\(FALSE\) = 0: PROVED .*$
+^\[.*\] toint\(TRUE\) = 1: PROVED .*$
+^\[.*\] toint\(0ud8_1\) = 1: PROVED .*$
+^\[.*\] toint\(-0sd8_1\) = -1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Missing typecasts.

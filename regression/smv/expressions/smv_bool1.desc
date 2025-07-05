@@ -1,0 +1,11 @@
+CORE
+smv_bool1.smv
+
+^\[.*\] !bool\(0\): PROVED .*$
+^\[.*\] bool\(1\): PROVED .*$
+^\[.*\] bool\(2\): PROVED .*$
+^\[.*\] !bool\(0ud1_0\): PROVED .*$
+^\[.*\] bool\(0ud1_1\): PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--

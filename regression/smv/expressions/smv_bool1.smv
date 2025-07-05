@@ -1,0 +1,7 @@
+MODULE main
+
+CTLSPEC !bool(0)
+CTLSPEC bool(1)
+CTLSPEC bool(2)
+CTLSPEC !bool(uwconst(0, 1))
+CTLSPEC bool(uwconst(1, 1))

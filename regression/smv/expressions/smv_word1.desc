@@ -1,0 +1,9 @@
+CORE
+smv_word1.smv
+
+^\[.*\] word1\(FALSE\) = 0ud1_0: PROVED .*$
+^\[.*\] word1\(TRUE\) = 0ud1_1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

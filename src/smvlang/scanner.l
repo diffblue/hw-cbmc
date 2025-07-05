@@ -121,6 +121,7 @@ void newlocation(YYSTYPE &x)
 "extend"	token(extend_Token);
 "resize"	token(resize_Token);
 "sizeof"	token(sizeof_Token);
+"toint"		token(toint_Token);
 "uwconst"	token(uwconst_Token);
 "swconst"	token(swconst_Token);
 

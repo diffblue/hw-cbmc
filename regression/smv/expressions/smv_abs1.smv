@@ -1,0 +1,7 @@
+MODULE main
+
+CTLSPEC abs(0) = 0
+CTLSPEC abs(1) = 1
+CTLSPEC abs(2) = 2
+CTLSPEC abs(-1) = 1
+CTLSPEC abs(-2) = 2

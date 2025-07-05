@@ -94,6 +94,12 @@ Function: init
    stack_expr(x_result).add_to_operands(std::move(lhs), std::move(rhs));
  }
 
+static void unary(YYSTYPE &result, const irep_idt &id, YYSTYPE &op)
+{
+  init(result, id);
+  mto(result, op);
+}
+
 /*******************************************************************\
 
 Function: j_binary
@@ -234,6 +240,7 @@ static void new_module(YYSTYPE &module)
 %token xor_Token	"xor"
 %token xnor_Token	"xnor"
 %token self_Token	"self"
+%token toint_Token	"toint"
 %token TRUE_Token	"TRUE"
 %token FALSE_Token	"FALSE"
 %token count_Token	"count"
@@ -684,6 +691,9 @@ term       : constant
            | variable_identifier
            | '(' formula ')'          { $$=$2; }
            | NOT_Token term           { init($$, ID_not); mto($$, $2); }
+           | "abs" '(' term ')'       { unary($$, ID_smv_abs, $3); }
+           | "max" '(' term ',' term ')' { binary($$, $3, ID_smv_max, $5); }
+           | "min" '(' term ',' term ')' { binary($$, $3, ID_smv_min, $5); }
            | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
            | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
            | term xor_Token term      { j_binary($$, $1, ID_xor, $3); }
@@ -706,11 +716,15 @@ term       : constant
            | term GTGT_Token term     { binary($$, $1, ID_shr, $3); }
            | term LTLT_Token term     { binary($$, $1, ID_shl, $3); }
            | term COLONCOLON_Token term { binary($$, $1, ID_concatenation, $3); }
+           | "word1" '(' term ')'     { unary($$, ID_smv_word1, $3); }
+           | "bool" '(' term ')'      { unary($$, ID_smv_bool, $3); }
+           | "toint" '(' term ')'     { unary($$, ID_smv_toint, $3); }
+           | "count" '(' term_list ')' { $$=$3; stack_expr($$).id(ID_smv_count); }
            | swconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_swconst, $5); }
            | uwconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_uwconst, $5); }
-           | signed_Token '(' term ')' { init($$, ID_smv_signed_cast); mto($$, $3); }
-           | unsigned_Token '(' term ')' { init($$, ID_smv_unsigned_cast); mto($$, $3); }
-           | sizeof_Token '(' term ')' { init($$, ID_smv_sizeof); mto($$, $3); }
+           | signed_Token '(' term ')' { unary($$, ID_smv_signed_cast, $3); }
+           | unsigned_Token '(' term ')' { unary($$, ID_smv_unsigned_cast, $3); }
+           | sizeof_Token '(' term ')' { unary($$, ID_smv_sizeof, $3); }
            | extend_Token '(' term ',' term ')' { binary($$, $3, ID_smv_extend, $5); }
            | resize_Token '(' term ',' term ')' { binary($$, $3, ID_smv_resize, $5); }
            | term union_Token term    { binary($$, $1, ID_smv_union, $3); }
@@ -789,6 +803,11 @@ range      : NUMBER_Token DOTDOT_Token NUMBER_Token
 set_body_expr:
              formula { init($$); mto($$, $1); }
            | set_body_expr ',' formula { $$=$1; mto($$, $3); }
+           ;
+
+term_list:
+             term { init($$); mto($$, $1); }
+           | term_list ',' term { $$=$1; mto($$, $3); }
            ;
 
 identifier : IDENTIFIER_Token

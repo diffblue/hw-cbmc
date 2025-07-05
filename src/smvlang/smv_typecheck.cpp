@@ -1091,6 +1091,111 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     expr =
       from_integer(value, type).with_source_location(expr.source_location());
   }
+  else if(expr.id() == ID_smv_abs)
+  {
+    auto &op = to_unary_expr(expr).op();
+    typecheck_expr_rec(op, mode);
+    if(op.type().id() == ID_range)
+    {
+      // ok
+      auto &range_type = to_range_type(op.type());
+      auto abs = [](mp_integer i)
+      {
+        if(i < 0)
+          i.negate();
+        return i;
+      };
+      expr.type() =
+        range_typet{abs(range_type.get_from()), abs(range_type.get_to())};
+    }
+    else
+    {
+      throw errort().with_location(expr.source_location())
+        << "abs expects integer";
+    }
+  }
+  else if(expr.id() == ID_smv_bool)
+  {
+    auto &op = to_unary_expr(expr).op();
+    typecheck_expr_rec(op, mode);
+    if(
+      op.type().id() == ID_bool || op.type().id() == ID_unsignedbv ||
+      op.type().id() == ID_signedbv || op.type().id() == ID_range)
+    {
+      // ok
+    }
+    else
+      throw errort().with_location(expr.source_location())
+        << "bool expects boolean, integer or word";
+
+    expr.type() = bool_typet{};
+  }
+  else if(expr.id() == ID_smv_count)
+  {
+    auto &multi_ary_expr = to_multi_ary_expr(expr);
+    for(auto &op : multi_ary_expr.operands())
+    {
+      typecheck_expr_rec(op, mode);
+      if(op.type().id() != ID_bool)
+        throw errort().with_location(op.source_location())
+          << "count expects boolean arguments";
+    }
+    expr.type() = range_typet{0, multi_ary_expr.operands().size()};
+  }
+  else if(expr.id() == ID_smv_max || expr.id() == ID_smv_min)
+  {
+    auto &binary_expr = to_binary_expr(expr);
+
+    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode);
+
+    binary_expr.type() = type_union(
+      binary_expr.lhs().type(),
+      binary_expr.rhs().type(),
+      expr.source_location());
+
+    if(binary_expr.type().id() == ID_range)
+    {
+      // ok
+    }
+    else
+      throw errort().with_location(expr.source_location())
+        << "min/max expect integers";
+
+    convert_expr_to(binary_expr.lhs(), binary_expr.type());
+    convert_expr_to(binary_expr.rhs(), binary_expr.type());
+  }
+  else if(expr.id() == ID_smv_toint)
+  {
+    auto &op = to_unary_expr(expr).op();
+    typecheck_expr_rec(op, mode);
+    if(op.type().id() == ID_bool)
+    {
+      expr.type() = range_typet{0, 1};
+    }
+    else if(op.type().id() == ID_unsignedbv || op.type().id() == ID_signedbv)
+    {
+      auto &op_type = to_integer_bitvector_type(op.type());
+      expr.type() = range_typet{op_type.smallest(), op_type.largest()};
+    }
+    else if(op.type().id() == ID_range)
+    {
+      // leave as is
+      expr.type() = op.type();
+    }
+    else
+      throw errort().with_location(expr.source_location())
+        << "toint expects boolean, integer or word";
+  }
+  else if(expr.id() == ID_smv_word1)
+  {
+    auto &op = to_unary_expr(expr).op();
+    typecheck_expr_rec(op, mode);
+    if(op.type().id() != ID_bool)
+      throw errort().with_location(op.source_location())
+        << "word1 expects boolean argument";
+    expr.type() = unsignedbv_typet{1};
+  }
   else if(
     expr.id() == ID_shr || expr.id() == ID_shl || expr.id() == ID_lshr ||
     expr.id() == ID_ashr)
@@ -1289,10 +1394,87 @@ Function: smv_typecheckt::lower_node
 
 void smv_typecheckt::lower_node(exprt &expr) const
 {
-  if(expr.id() == ID_smv_extend)
+  if(expr.id() == ID_smv_abs)
+  {
+    // turn into if
+    auto &op = to_smv_abs_expr(expr).op();
+    PRECONDITION(op.type().id() == ID_range);
+    auto &range_type = to_range_type(op.type());
+    if(range_type.get_from() >= 0)
+      expr = op; // no change
+    else if(range_type.get_to() < 0)
+    {
+      // always negative
+      expr = unary_minus_exprt{op, expr.type()};
+    }
+    else
+    {
+      expr = if_exprt{
+        binary_relation_exprt{op, ID_ge, from_integer(0, op.type())},
+        typecast_exprt{op, expr.type()},
+        unary_minus_exprt{op, expr.type()},
+        expr.type()};
+    }
+  }
+  else if(expr.id() == ID_smv_bool)
+  {
+    // turn into equality
+    auto &op = to_smv_bool_expr(expr).op();
+    if(op.type().id() == ID_bool)
+      expr = op;
+    else if(op.type().id() == ID_range)
+    {
+      auto &range = to_range_type(op.type());
+      if(range.includes(0))
+        expr = notequal_exprt{op, to_range_type(op.type()).zero_expr()};
+      else
+        expr = true_exprt{};
+    }
+    else if(op.type().id() == ID_unsignedbv)
+    {
+      expr = notequal_exprt{op, to_unsignedbv_type(op.type()).zero_expr()};
+    }
+    else
+      PRECONDITION(false);
+  }
+  else if(expr.id() == ID_smv_count)
+  {
+    // turn into sum
+    exprt::operandst addends;
+
+    addends.reserve(expr.operands().size());
+    auto zero = from_integer(0, expr.type());
+    auto one = from_integer(1, expr.type());
+
+    for(auto &op : expr.operands())
+      addends.push_back(if_exprt{op, one, zero});
+
+    expr = plus_exprt{std::move(addends), expr.type()};
+  }
+  else if(expr.id() == ID_smv_extend)
   {
     auto &smv_extend = to_smv_extend_expr(expr);
     expr = typecast_exprt{smv_extend.lhs(), smv_extend.type()};
+  }
+  else if(expr.id() == ID_smv_max)
+  {
+    // turn into if
+    auto &max_expr = to_smv_max_expr(expr);
+    expr = if_exprt{
+      binary_relation_exprt{max_expr.lhs(), ID_ge, max_expr.rhs()},
+      max_expr.lhs(),
+      max_expr.rhs(),
+      max_expr.type()};
+  }
+  else if(expr.id() == ID_smv_min)
+  {
+    // turn into if
+    auto &min_expr = to_smv_min_expr(expr);
+    expr = if_exprt{
+      binary_relation_exprt{min_expr.lhs(), ID_le, min_expr.rhs()},
+      min_expr.lhs(),
+      min_expr.rhs(),
+      min_expr.type()};
   }
   else if(expr.id() == ID_smv_resize)
   {
@@ -1333,6 +1515,18 @@ void smv_typecheckt::lower_node(exprt &expr) const
       DATA_INVARIANT(
         lhs.type() == rhs.type(), "lhs/rhs of in must have same type");
     }
+  }
+  else if(expr.id() == ID_smv_toint)
+  {
+    auto &op = to_smv_toint_expr(expr).op();
+    expr = typecast_exprt{op, expr.type()};
+  }
+  else if(expr.id() == ID_smv_word1)
+  {
+    auto &op = to_smv_word1_expr(expr).op();
+    auto zero = from_integer(0, expr.type());
+    auto one = from_integer(1, expr.type());
+    expr = if_exprt{op, std::move(one), std::move(zero)};
   }
 }
 

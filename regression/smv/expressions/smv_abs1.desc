@@ -1,0 +1,13 @@
+KNOWNBUG
+smv_abs1.smv
+
+^\[.*\] abs\(0\) = 0: PROVED .*$
+^\[.*\] abs\(1\) = 1: PROVED .*$
+^\[.*\] abs\(2\) = 2: PROVED .*$
+^\[.*\] abs\(-1\) = 1: PROVED .*$
+^\[.*\] abs\(-2\) = 2: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Unary minus on ranges does not work.

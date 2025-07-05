@@ -1,0 +1,4 @@
+MODULE main
+
+CTLSPEC word1(FALSE) = uwconst(0, 1)
+CTLSPEC word1(TRUE) = uwconst(1, 1)
