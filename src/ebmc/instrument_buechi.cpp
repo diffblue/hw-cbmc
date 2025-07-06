@@ -27,6 +27,7 @@ void instrument_buechi(
       !is_LTL(property.normalized_expr) &&
       !is_Buechi_SVA(property.normalized_expr))
     {
+      property.unsupported("not convertible to Buechi");
       continue;
     }
 
