@@ -1,11 +1,10 @@
-KNOWNBUG broken-smt-backend
+CORE broken-smt-backend
 smv_union2.smv
 
-^\[spec1\] x != 3: PROVED \(CT=1\)$
+^\[spec1\] x != 3: PROVED \(CT=0\)$
 ^\[spec2\] x != 2: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The type checker rejects this.

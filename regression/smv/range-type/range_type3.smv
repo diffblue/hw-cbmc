@@ -6,6 +6,7 @@ INIT x=0
 
 DEFINE n:=0 union 1;
 
+-- assignment RHS is a set
 ASSIGN next(x):=n;
 
 SPEC AG x=0
