@@ -104,6 +104,22 @@ property_checker_resultt k_induction(
   // copy
   auto properties_copy = properties;
 
+  // Are there any properties suitable for k-induction?
+  // Fail early if not.
+  if(!k_inductiont::have_supported_property(properties.properties))
+  {
+    for(auto &property : properties_copy.properties)
+    {
+      if(
+        !property.is_assumed() && !property.is_disabled() &&
+        !property.is_proved())
+      {
+        property.unsupported("unsupported by k-induction");
+      }
+    }
+    return property_checker_resultt{properties_copy};
+  }
+
   k_inductiont(
     k, transition_system, properties_copy, solver_factory, message_handler)();
 
