@@ -83,6 +83,9 @@ public:
   }
 };
 
+/// compute the union of the given set types
+smv_set_typet type_union(const smv_set_typet &, const smv_set_typet &);
+
 /*! \brief Cast a generic typet to a \ref smv_set_typet
  *
  * This is an unchecked conversion. \a type must be known to be \ref
