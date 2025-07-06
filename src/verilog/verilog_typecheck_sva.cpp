@@ -28,7 +28,9 @@ void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
     type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
     type.id() == ID_verilog_signedbv)
   {
-    if(has_temporal_operator(expr))
+    if(
+      has_temporal_operator(expr) || expr.id() == ID_sva_not ||
+      expr.id() == ID_sva_implies || expr.id() == ID_sva_iff)
     {
       throw errort().with_location(expr.source_location())
         << "sequence required, but got property";
