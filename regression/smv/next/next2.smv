@@ -1,0 +1,7 @@
+MODULE main
+
+VAR x : boolean;
+
+TRANS next(x)=!x
+
+CTLSPEC (AX x) <-> !x

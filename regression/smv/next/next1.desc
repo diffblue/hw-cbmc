@@ -1,0 +1,8 @@
+CORE
+next1.smv
+--bdd
+^\[.*\] !x: PROVED$
+^\[.*\] AX x: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
