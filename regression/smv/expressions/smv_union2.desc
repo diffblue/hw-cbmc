@@ -1,4 +1,4 @@
-KNOWNBUG broken-smt-backend
+CORE broken-smt-backend
 smv_union2.smv
 
 ^\[spec1\] x != 3: PROVED \(CT=1\)$
@@ -8,4 +8,3 @@ smv_union2.smv
 --
 ^warning: ignoring
 --
-The type checker rejects this.
