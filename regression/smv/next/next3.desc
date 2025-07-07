@@ -1,0 +1,9 @@
+KNOWNBUG
+next3.smv
+--bdd
+^\[.*\] AX x <-> !x: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The BDD engine gives the wrong answer.

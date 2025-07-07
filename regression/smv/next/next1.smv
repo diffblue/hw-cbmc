@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x : boolean;
+
+INIT !x
+TRANS next(x)
+
+CTLSPEC !x
+CTLSPEC AX x
