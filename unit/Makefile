@@ -8,6 +8,7 @@ SRC += smvlang/expr2smv.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
        temporal-logic/sva_sequence_match.cpp \
        temporal-logic/nnf.cpp \
+       temporal-logic/trivial_sva.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src
@@ -20,7 +21,8 @@ include $(CPROVER_DIR)/src/common
 CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 OBJ += ../src/smvlang/smvlang$(LIBEXT) \
-       ../src/temporal-logic/temporal-logic$(LIBEXT)
+       ../src/temporal-logic/temporal-logic$(LIBEXT) \
+       ../src/verilog/verilog$(LIBEXT)
 
 cprover.dir:
 	$(MAKE) $(MAKEARGS) -C ../src
