@@ -54,7 +54,10 @@ SCENARIO("Simplifying a trivial SVA formula")
       trivial_sva(weak(sva_and_exprt{
         sva_and_exprt{seq(p), seq(q), sequence_type}})) == and_exprt{p, q});
 
-    // The below fails
-    // REQUIRE(trivial_sva(weak(sva_and_exprt{sva_and_exprt{p_seq, sva_or_exprt{q_seq, r_seq, sequence_type}, sequence_type}})) == and_exprt{p, or_exprt{q, r}});
+    REQUIRE(
+      trivial_sva(weak(sva_and_exprt{sva_and_exprt{
+        seq(p),
+        sva_or_exprt{seq(q), seq(r), sequence_type},
+        sequence_type}})) == and_exprt{p, or_exprt{q, r}});
   }
 }
