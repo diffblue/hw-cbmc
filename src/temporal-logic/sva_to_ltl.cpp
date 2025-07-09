@@ -238,6 +238,38 @@ exprt SVA_to_LTL(exprt expr)
   {
     return expr;
   }
+  else if(expr.id() == ID_sva_implies)
+  {
+    // maps cleanly to 'implies'
+    auto &sva_implies = to_sva_implies_expr(expr);
+    auto rec_lhs = SVA_to_LTL(sva_implies.lhs());
+    auto rec_rhs = SVA_to_LTL(sva_implies.rhs());
+    return implies_exprt{rec_rhs, rec_lhs};
+  }
+  else if(expr.id() == ID_sva_iff)
+  {
+    // maps cleanly to =
+    auto &sva_iff = to_sva_iff_expr(expr);
+    auto rec_lhs = SVA_to_LTL(sva_iff.lhs());
+    auto rec_rhs = SVA_to_LTL(sva_iff.rhs());
+    return equal_exprt{rec_rhs, rec_lhs};
+  }
+  else if(expr.id() == ID_sva_and)
+  {
+    // maps cleanly to Boolean and
+    auto &sva_iff = to_sva_iff_expr(expr);
+    auto rec_lhs = SVA_to_LTL(sva_iff.lhs());
+    auto rec_rhs = SVA_to_LTL(sva_iff.rhs());
+    return and_exprt{rec_rhs, rec_lhs};
+  }
+  else if(expr.id() == ID_sva_or)
+  {
+    // maps cleanly to Boolean or
+    auto &sva_iff = to_sva_iff_expr(expr);
+    auto rec_lhs = SVA_to_LTL(sva_iff.lhs());
+    auto rec_rhs = SVA_to_LTL(sva_iff.rhs());
+    return or_exprt{rec_rhs, rec_lhs};
+  }
   else if(
     expr.id() == ID_and || expr.id() == ID_implies || expr.id() == ID_or ||
     expr.id() == ID_not)

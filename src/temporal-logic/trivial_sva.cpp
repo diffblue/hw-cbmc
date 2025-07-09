@@ -23,6 +23,10 @@ static std::optional<exprt> is_state_predicate(const exprt &expr)
 exprt trivial_sva(exprt expr)
 {
   // pre-traversal
+  if(expr.type().id() == ID_verilog_sva_property)
+  {
+    expr.type() = bool_typet{};
+  }
 
   // rewrite the operands, recursively
   for(auto &op : expr.operands())

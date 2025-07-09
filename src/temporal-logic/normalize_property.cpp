@@ -27,8 +27,9 @@ exprt normalize_pre_sva_non_overlapped_implication(
   {
     const auto &lhs_cond = to_sva_boolean_expr(expr.lhs()).op();
     auto one = natural_typet{}.one_expr();
-    return or_exprt{
-      not_exprt{lhs_cond}, sva_ranged_always_exprt{one, one, expr.rhs()}};
+    auto ranged_always = sva_ranged_always_exprt{one, one, expr.rhs()};
+    ranged_always.type() = bool_typet{};
+    return or_exprt{not_exprt{lhs_cond}, ranged_always};
   }
   else
     return std::move(expr);
@@ -63,24 +64,32 @@ exprt normalize_property_rec(exprt expr)
   else if(expr.id() == ID_sva_nexttime)
   {
     auto one = natural_typet{}.one_expr();
-    expr = sva_ranged_always_exprt{one, one, to_sva_nexttime_expr(expr).op()};
+    expr = sva_ranged_always_exprt{
+      one, one, to_sva_nexttime_expr(expr).op(), bool_typet{}};
   }
   else if(expr.id() == ID_sva_s_nexttime)
   {
     auto one = natural_typet{}.one_expr();
-    expr = sva_s_always_exprt{one, one, to_sva_s_nexttime_expr(expr).op()};
+    expr = sva_s_always_exprt{
+      one, one, to_sva_s_nexttime_expr(expr).op(), bool_typet{}};
   }
   else if(expr.id() == ID_sva_indexed_nexttime)
   {
     auto &nexttime_expr = to_sva_indexed_nexttime_expr(expr);
     expr = sva_ranged_always_exprt{
-      nexttime_expr.index(), nexttime_expr.index(), nexttime_expr.op()};
+      nexttime_expr.index(),
+      nexttime_expr.index(),
+      nexttime_expr.op(),
+      bool_typet{}};
   }
   else if(expr.id() == ID_sva_indexed_s_nexttime)
   {
     auto &nexttime_expr = to_sva_indexed_s_nexttime_expr(expr);
     expr = sva_s_always_exprt{
-      nexttime_expr.index(), nexttime_expr.index(), nexttime_expr.op()};
+      nexttime_expr.index(),
+      nexttime_expr.index(),
+      nexttime_expr.op(),
+      bool_typet{}};
   }
 
   // normalize the operands
@@ -104,7 +113,7 @@ exprt normalize_property(exprt expr)
 {
   // top-level only
   if(expr.id() == ID_sva_cover)
-    expr = sva_always_exprt{not_exprt{to_sva_cover_expr(expr).op()}};
+    expr = sva_always_exprt{sva_not_exprt{to_sva_cover_expr(expr).op()}};
 
   expr = trivial_sva(expr);
 
