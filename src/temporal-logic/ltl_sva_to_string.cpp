@@ -91,6 +91,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     return infix(" xor ", expr, mode);
   }
+  else if(
+    expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool)
+  {
+    return infix("<->", expr, mode);
+  }
   else if(expr.id() == ID_implies)
   {
     return infix("->", expr, mode);

@@ -15,7 +15,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/sva_expr.h>
 
 #include "ltl.h"
-#include "nnf.h"
 #include "temporal_expr.h"
 #include "temporal_logic.h"
 #include "trivial_sva.h"
@@ -111,9 +110,6 @@ exprt normalize_property(exprt expr)
 
   // now do recursion
   expr = normalize_property_rec(expr);
-
-  // NNF
-  expr = property_nnf(expr);
 
   return expr;
 }
