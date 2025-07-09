@@ -23,6 +23,12 @@ static std::optional<exprt> is_state_predicate(const exprt &expr)
 exprt trivial_sva(exprt expr)
 {
   // pre-traversal
+
+  // rewrite the operands, recursively
+  for(auto &op : expr.operands())
+    op = trivial_sva(op);
+
+  // post-traversal
   if(expr.id() == ID_sva_overlapped_implication)
   {
     // Same as regular implication if lhs and rhs are not sequences.
@@ -115,13 +121,7 @@ exprt trivial_sva(exprt expr)
   {
     expr = to_sva_case_expr(expr).lower();
   }
-
-  // rewrite the operands, recursively
-  for(auto &op : expr.operands())
-    op = trivial_sva(op);
-
-  // post-traversal
-  if(
+  else if(
     expr.id() == ID_sva_weak || expr.id() == ID_sva_strong ||
     expr.id() == ID_sva_implicit_weak || expr.id() == ID_sva_implicit_strong)
   {
