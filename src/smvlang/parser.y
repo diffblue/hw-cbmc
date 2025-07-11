@@ -130,6 +130,41 @@ static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id, YYSTYPE 
 
 /*******************************************************************\
 
+Function: merge_complex_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt merge_complex_identifier(const exprt &expr)
+{
+  if(expr.id() == ID_symbol)
+    return to_symbol_expr(expr).get_identifier();
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    return id2string(merge_complex_identifier(member_expr.compound())) + '.' + id2string(member_expr.get_component_name());
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+    auto &index = index_expr.index();
+    PRECONDITION(index.is_constant());
+    auto index_string = id2string(to_constant_expr(index).get_value());
+    return id2string(merge_complex_identifier(index_expr.array())) + '.' + index_string;
+  }
+  else
+  {
+    DATA_INVARIANT_WITH_DIAGNOSTICS(false, "unexpected complex_identifier", expr.pretty());
+  }
+}
+
+/*******************************************************************\
+
 Function: new_module
 
   Inputs:
@@ -820,7 +855,7 @@ identifier : IDENTIFIER_Token
 
 variable_identifier: complex_identifier
            {
-             const irep_idt &id=stack_expr($1).id();
+             auto id = merge_complex_identifier(stack_expr($1));
 
              bool is_enum=(PARSER.module->enum_set.find(id)!=
                            PARSER.module->enum_set.end());
@@ -850,6 +885,7 @@ variable_identifier: complex_identifier
            }
            | STRING_Token
            {
+             // Not in the NuSMV grammar.
              const irep_idt &id=stack_expr($1).id();
 
              init($$, ID_symbol);
@@ -860,35 +896,31 @@ variable_identifier: complex_identifier
 
 complex_identifier:
              identifier
+           {
+             $$ = $1;
+             irep_idt identifier = stack_expr($$).id();
+             stack_expr($$).id(ID_symbol);
+             stack_expr($$).set(ID_identifier, identifier);
+           }
            | complex_identifier DOT_Token QIDENTIFIER_Token
            {
-             std::string id(stack_expr($1).id_string());
-             id+=".";
-             id+=std::string(stack_expr($3).id_string(), 1); // remove backslash
-             init($$, id);
+             unary($$, ID_member, $1);
+             auto component = std::string(stack_expr($3).id_string(), 1); // remove backslash
+             stack_expr($$).set(ID_component_name, component);
            }
            | complex_identifier DOT_Token IDENTIFIER_Token
            {
-             std::string id(stack_expr($1).id_string());
-             id+=".";
-             id+=stack_expr($3).id_string();
-             init($$, id);
+             unary($$, ID_member, $1);
+             stack_expr($$).set(ID_component_name, stack_expr($3).id());
            }
-           | complex_identifier '[' NUMBER_Token ']'
+           | complex_identifier '[' term ']'
            {
-             std::string id(stack_expr($1).id_string());
-             id+="[";
-             id+=stack_expr($3).id_string();
-             id+="]";
-             init($$, id);
+             binary($$, $1, ID_index, $3);
            }
-           | complex_identifier '(' NUMBER_Token ')'
+           | complex_identifier '(' term ')'
            {
-             std::string id(stack_expr($1).id_string());
-             id+="(";
-             id+=stack_expr($3).id_string();
-             id+=")";
-             init($$, id);
+             // Not in the NuSMV grammar.
+             binary($$, $1, ID_index, $3);
            }
            ;
 
