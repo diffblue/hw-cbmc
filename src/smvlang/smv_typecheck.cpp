@@ -1720,11 +1720,7 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
   {
     const std::string &identifier=expr.get_string(ID_identifier);
 
-    if(identifier=="TRUE")
-      expr=true_exprt();
-    else if(identifier=="FALSE")
-      expr=false_exprt();
-    else if(identifier.find("::")==std::string::npos)
+    if(identifier.find("::") == std::string::npos)
     {
       std::string id=module+"::var::"+identifier;
 
