@@ -356,7 +356,7 @@ module_name: IDENTIFIER_Token
            ;
 
 module_head: MODULE_Token module_name { new_module($2); }
-           | MODULE_Token module_name { new_module($2); } '(' module_argument_list_opt ')'
+           | MODULE_Token module_name { new_module($2); } '(' module_parameters_opt ')'
            ;
 
 module_body: /* optional */
@@ -481,7 +481,7 @@ vardecls   : vardecl
            | vardecls vardecl
            ;
 
-module_argument: variable_identifier
+module_parameter: identifier
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
@@ -490,12 +490,13 @@ module_argument: variable_identifier
            }
            ;
 
-module_argument_list: module_argument
-           | module_argument_list ',' module_argument
+module_parameters:
+             module_parameter
+           | module_parameters ',' module_parameter
            ;
 
-module_argument_list_opt: /* empty */
-           | module_argument_list
+module_parameters_opt: /* empty */
+           | module_parameters
            ;
 
 type_specifier:
