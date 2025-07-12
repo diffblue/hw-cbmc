@@ -46,12 +46,13 @@ public:
         ASSIGN_INIT,
         ASSIGN_NEXT,
         CTLSPEC,
-        LTLSPEC,
-        INIT,
-        TRANS,
         DEFINE,
+        FAIRNESS,
+        INIT,
         INVAR,
-        FAIRNESS
+        LTLSPEC,
+        TRANS,
+        VAR
       };
 
       itemt(item_typet __item_type, exprt __expr, source_locationt __location)
@@ -123,6 +124,11 @@ public:
       bool is_init() const
       {
         return item_type==INIT;
+      }
+
+      bool is_var() const
+      {
+        return item_type == VAR;
       }
 
       // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
@@ -246,7 +252,14 @@ public:
     {
       items.emplace_back(itemt::TRANS, std::move(expr), std::move(location));
     }
-    
+
+    void add_var(exprt expr, typet type)
+    {
+      expr.type() = std::move(type);
+      auto location = expr.source_location();
+      items.emplace_back(itemt::VAR, std::move(expr), std::move(location));
+    }
+
     mc_varst vars;
     enum_sett enum_set;
 

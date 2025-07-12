@@ -72,8 +72,11 @@ std::string to_string(smv_parse_treet::modulet::itemt::item_typet i)
   case smv_parse_treet::modulet::itemt::LTLSPEC:
     return "LTLSPEC";
   case smv_parse_treet::modulet::itemt::FAIRNESS: return "FAIRNESS";
-  case smv_parse_treet::modulet::itemt::DEFINE:    return "DEFINE";  
-  
+  case smv_parse_treet::modulet::itemt::DEFINE:
+    return "DEFINE";
+  case smv_parse_treet::modulet::itemt::VAR:
+    return "VAR";
+
   default:;
   }
   

@@ -594,7 +594,7 @@ vardecl    : variable_identifier ':' type_specifier ';'
              switch(var.var_class)
              {
              case smv_parse_treet::mc_vart::UNKNOWN:
-               var.type=(typet &)stack_expr($3);
+               var.type=stack_type($3);
                var.var_class=smv_parse_treet::mc_vart::DECLARED;
                break;
 
@@ -616,6 +616,8 @@ vardecl    : variable_identifier ':' type_specifier ';'
              default:
                DATA_INVARIANT(false, "unexpected variable class");
              }
+
+             PARSER.module->add_var(stack_expr($1), stack_type($3));
            }
            ;
 
