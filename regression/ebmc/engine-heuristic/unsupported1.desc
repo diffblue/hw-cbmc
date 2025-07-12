@@ -1,0 +1,10 @@
+CORE
+unsupported1.smv
+
+^\[.*\] EX TRUE: UNKNOWN$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+^Generating Decision Problem
+--

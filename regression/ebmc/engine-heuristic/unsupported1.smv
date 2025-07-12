@@ -1,0 +1,4 @@
+MODULE main
+
+-- not supported by k-induction or BMC
+CTLSPEC EX 1

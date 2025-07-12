@@ -203,6 +203,25 @@ handles(const exprt::operandst &exprs, decision_proceduret &solver)
   return result;
 }
 
+static bool have_supported_property(ebmc_propertiest &properties)
+{
+  bool have_supported = false;
+
+  for(auto &property : properties.properties)
+  {
+    if(property.is_disabled() || property.is_failure())
+      continue;
+
+    // Is it supported by the BMC engine?
+    if(bmc_supports_property(property.normalized_expr))
+      have_supported = true;
+    else
+      property.failure("property not supported by BMC engine");
+  }
+
+  return have_supported;
+}
+
 property_checker_resultt bmc(
   std::size_t bound,
   bool convert_only,
@@ -216,6 +235,14 @@ property_checker_resultt bmc(
   ebmc_propertiest properties = properties_in;
 
   messaget message(message_handler);
+
+  // exit early if there is no supported property
+  if(!have_supported_property(properties))
+  {
+    message.status() << "No supported property" << messaget::eom;
+    return property_checker_resultt{std::move(properties)};
+  }
+
   message.status() << "Generating Decision Problem" << messaget::eom;
 
   // convert the transition system
