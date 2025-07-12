@@ -1893,6 +1893,9 @@ void smv_typecheckt::typecheck(
     typecheck(item.expr, OTHER);
     item.equal_expr().type() = bool_typet{};
     return;
+
+  case smv_parse_treet::modulet::itemt::VAR:
+    return;
   }
 }
 
@@ -2104,6 +2107,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   define_map.clear();
 
+  // variables first, need to be visible before declaration
   convert(smv_module.vars);
 
   // transition relation
@@ -2122,9 +2126,10 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
     convert_ports(smv_module, module_symbol.type);
 
-    for (auto &item : smv_module.items) {
-      convert(item);
-    }
+    // non-variable items
+    for(auto &item : smv_module.items)
+      if(!item.is_var())
+        convert(item);
 
     flatten_hierarchy(smv_module);
 
