@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_TRANS_WORD_LEVEL_LASSO_H
 #define CPROVER_TRANS_WORD_LEVEL_LASSO_H
 
+#include <util/expr.h>
 #include <util/mp_arith.h>
 #include <util/namespace.h>
 
@@ -26,7 +27,7 @@ void lasso_constraints(
 /// Precondition: k<i
 symbol_exprt lasso_symbol(const mp_integer &k, const mp_integer &i);
 
-/// Returns true iff the given property requires lasso constraints for BMC.
-bool requires_lasso_constraints(const exprt &);
+/// Returns true iff the given formula uses a lasso symbol
+bool uses_lasso_symbol(const exprt::operandst &);
 
 #endif

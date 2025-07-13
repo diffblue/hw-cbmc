@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 #include <util/expr_iterator.h>
 #include <util/expr_util.h>
-#include <util/namespace.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
@@ -24,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <verilog/sva_expr.h>
 
 #include "instantiate_word_level.h"
+#include "lasso.h"
 #include "obligations.h"
 #include "sequence.h"
 
@@ -797,9 +797,7 @@ Function: property
 exprt::operandst property(
   const exprt &property_expr,
   message_handlert &message_handler,
-  decision_proceduret &solver,
-  std::size_t no_timeframes,
-  const namespacet &)
+  std::size_t no_timeframes)
 {
   // The first element of the pair is the length of the
   // counterexample, and the second is the condition that
@@ -815,7 +813,7 @@ exprt::operandst property(
     DATA_INVARIANT(
       t >= 0 && t < no_timeframes, "obligation must have valid timeframe");
     auto t_int = numeric_cast_v<std::size_t>(t);
-    prop_handles[t_int] = solver.handle(conjunction(obligation_it.second));
+    prop_handles[t_int] = conjunction(obligation_it.second);
   }
 
   return prop_handles;
