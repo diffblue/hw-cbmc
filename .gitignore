@@ -1,1 +1,29 @@
 .DS_Store
+
+# generated files
+src/smvlang/lex.yy.cpp
+src/smvlang/smv_y.output
+src/smvlang/smv_y.tab.cpp
+src/smvlang/smv_y.tab.h
+src/verilog/verilog_main_parser_lex.yy.cpp
+src/verilog/verilog_preprocessor_lex.yy.cpp
+src/verilog/verilog_y.output
+src/verilog/verilog_y.tab.cpp
+src/verilog/verilog_y.tab.h
+src/vhdl/vhdl_y.tab.cpp
+src/vhdl/vhdl_y.tab.h
+
+# compiler outputs
+src/**/*.a
+src/**/*.d
+src/**/*.o
+src/ebmc/ebmc
+src/hw-cbmc/hw-cbmc
+src/vlindex/vlindex
+unit/**/*.d
+unit/**/*.o
+unit/unit_tests
+
+# test outputs
+regression/**/*.log
+regression/**/*.out
