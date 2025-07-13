@@ -114,10 +114,29 @@ protected:
   }
 };
 
+/// returns true iff the given property is supported
+/// by the liveness-to-safety translation
+static bool property_supported(const exprt &expr)
+{
+  return expr.id() == ID_sva_always &&
+         (to_sva_always_expr(expr).op().id() == ID_sva_eventually ||
+          to_sva_always_expr(expr).op().id() == ID_sva_s_eventually);
+}
+
+static bool have_supported_property(const ebmc_propertiest &properties)
+{
+  for(auto &property : properties.properties)
+    if(!property.is_disabled())
+      if(property_supported(property.normalized_expr))
+        return true;
+
+  return false;
+}
+
 void liveness_to_safetyt::operator()()
 {
-  // Do we have a liveness property?
-  if(!properties.requires_lasso_constraints())
+  // Do we have a supported property?
+  if(!have_supported_property(properties))
     return; // no
 
   // gather the state variables
@@ -231,15 +250,10 @@ void liveness_to_safetyt::operator()()
 
   for(auto &property : properties.properties)
   {
-    if(!property.is_disabled() && property.requires_lasso_constraints())
+    if(!property.is_disabled())
     {
       // We want GFp.
-      if(
-        property.normalized_expr.id() == ID_sva_always &&
-        (to_sva_always_expr(property.normalized_expr).op().id() ==
-           ID_sva_eventually ||
-         to_sva_always_expr(property.normalized_expr).op().id() ==
-           ID_sva_s_eventually))
+      if(property_supported(property.normalized_expr))
       {
         translate_GFp(property);
       }
