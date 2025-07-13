@@ -1,0 +1,7 @@
+MODULE main
+
+VAR p : boolean;
+
+-- This should fail for any bound >= 1.
+-- The shortest lasso is FALSE, FALSE, ...
+LTLSPEC F X X p
