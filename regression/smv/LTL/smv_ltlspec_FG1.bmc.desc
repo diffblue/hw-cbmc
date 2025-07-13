@@ -1,7 +1,7 @@
 KNOWNBUG
 smv_ltlspec_FG1.smv
---bound 2
-^\[spec1\] F G x!=1: PROVED$
+--bound 3
+^\[spec1\] F G x != 1: PROVED up to bound 3$
 ^EXIT=0$
 ^SIGNAL=0$
 --
