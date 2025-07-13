@@ -1,10 +1,11 @@
-KNOWNBUG
+CORE
 smv_ltlspec_F6.smv
---bound 3 --numbered-trace
+--bound 1 --numbered-trace
 ^\[spec1\] F X some_input: REFUTED$
+^some_input@0 = FALSE$
+^some_input@1 = FALSE$
 ^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The BMC engine gives the wrong answer.
