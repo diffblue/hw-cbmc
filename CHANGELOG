@@ -7,6 +7,7 @@
 * SystemVerilog: fix for |-> and |=> for empty matches
 * LTL/SVA to Buechi with --buechi
 * SMV: abs, bool, count, max, min, toint, word1
+* BMC: new encoding for F, avoiding spurious traces
 
 # EBMC 5.6
 

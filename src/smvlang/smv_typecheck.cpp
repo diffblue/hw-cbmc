@@ -1940,9 +1940,13 @@ void smv_typecheckt::create_var_symbols(
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
 
-      symbol.value = nil_exprt{};
-      symbol.is_input = true;
+      if(symbol.type.id() == "submodule")
+        symbol.is_input = false;
+      else
+        symbol.is_input = true;
+
       symbol.is_state_var = false;
+      symbol.value = nil_exprt{};
       symbol.location = item.expr.source_location();
 
       symbol_table.insert(std::move(symbol));

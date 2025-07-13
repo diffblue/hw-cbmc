@@ -1,0 +1,11 @@
+MODULE main
+
+VAR x : boolean;
+
+VAR z : boolean;
+
+ASSIGN init(z) := FALSE;
+       next(z) := FALSE;
+
+-- should fail
+LTLSPEC (F z) | (z V x)

@@ -1,0 +1,9 @@
+CORE
+smv_ltlspec_U3.smv
+--bound 5
+^\[.*\] TRUE U x -> F x: PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

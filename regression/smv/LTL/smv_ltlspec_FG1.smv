@@ -10,4 +10,8 @@ TRANS x=1 -> next(x)=2
 
 TRANS x=2 -> next(x)=2
 
+-- This should pass.
+-- There are traces of two kinds:
+-- 0, 0, 0, ...
+-- 0, ..., 0, 1, 2, 2, ...
 LTLSPEC F G x!=1
