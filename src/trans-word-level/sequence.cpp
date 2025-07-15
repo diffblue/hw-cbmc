@@ -18,7 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "instantiate_word_level.h"
 #include "obligations.h"
-#include "property.h"
 
 // condition on counters for ocurrences of non-consecutive repetitions
 exprt sequence_count_condition(
@@ -259,9 +258,9 @@ sequence_matchest instantiate_sequence_rec(
 
       for(mp_integer new_t = t; new_t <= match.end_time; ++new_t)
       {
-        auto obligations =
-          property_obligations(throughout.lhs(), new_t, no_timeframes);
-        conjuncts.push_back(obligations.conjunction().second);
+        auto lhs_inst =
+          instantiate_state_predicate(throughout.lhs(), new_t, no_timeframes);
+        conjuncts.push_back(lhs_inst);
       }
 
       result.emplace_back(match.end_time, conjunction(conjuncts));
@@ -437,7 +436,8 @@ sequence_matchest instantiate_sequence_rec(
   {
     // a state predicate
     auto &predicate = to_sva_boolean_expr(expr).op();
-    auto instantiated = instantiate_property(predicate, t, no_timeframes);
+    auto instantiated =
+      instantiate_state_predicate(predicate, t, no_timeframes);
     return {{t, instantiated}};
   }
   else
