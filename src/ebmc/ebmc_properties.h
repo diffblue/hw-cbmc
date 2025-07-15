@@ -199,11 +199,6 @@ public:
 
     propertyt() = default;
 
-    bool requires_lasso_constraints() const
-    {
-      return ::requires_lasso_constraints(normalized_expr);
-    }
-
     bool is_exists_path() const
     {
       return ::is_exists_path(original_expr);
@@ -232,15 +227,6 @@ public:
         return true;
       }
     }
-
-    return false;
-  }
-
-  bool requires_lasso_constraints() const
-  {
-    for(const auto &p : properties)
-      if(!p.is_disabled() && p.requires_lasso_constraints())
-        return true;
 
     return false;
   }

@@ -59,13 +59,15 @@ Function: lasso_symbol
 
 \*******************************************************************/
 
+#define LASSO_PREFIX "lasso::"
+
 symbol_exprt lasso_symbol(const mp_integer &k, const mp_integer &i)
 {
   // True when states i and k are equal.
   // We require k<i to avoid the symmetric constraints.
   PRECONDITION(k < i);
   irep_idt lasso_identifier =
-    "lasso::" + integer2string(i) + "-back-to-" + integer2string(k);
+    LASSO_PREFIX + integer2string(i) + "-back-to-" + integer2string(k);
   return symbol_exprt(lasso_identifier, bool_typet());
 }
 
@@ -136,7 +138,7 @@ void lasso_constraints(
 
 /*******************************************************************\
 
-Function: requires_lasso_constraints
+Function: uses_lasso_symbol
 
   Inputs:
 
@@ -146,21 +148,38 @@ Function: requires_lasso_constraints
 
 \*******************************************************************/
 
-bool requires_lasso_constraints(const exprt &expr)
+bool uses_lasso_symbol(const exprt &expr)
 {
   for(auto subexpr_it = expr.depth_cbegin(), subexpr_end = expr.depth_cend();
       subexpr_it != subexpr_end;
       subexpr_it++)
   {
-    if(
-      subexpr_it->id() == ID_sva_until || subexpr_it->id() == ID_sva_s_until ||
-      subexpr_it->id() == ID_sva_eventually ||
-      subexpr_it->id() == ID_sva_s_eventually || subexpr_it->id() == ID_AF ||
-      subexpr_it->id() == ID_F || subexpr_it->id() == ID_U)
-    {
-      return true;
-    }
+    if(subexpr_it->id() == ID_symbol)
+      if(to_symbol_expr(*subexpr_it).get_identifier().starts_with(LASSO_PREFIX))
+      {
+        return true;
+      }
   }
 
+  return false;
+}
+
+/*******************************************************************\
+
+Function: uses_lasso_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool uses_lasso_symbol(const exprt::operandst &exprs)
+{
+  for(auto &expr : exprs)
+    if(::uses_lasso_symbol(expr))
+      return true;
   return false;
 }

@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "bmc.h"
 
 #include <solvers/prop/literal_expr.h>
+#include <trans-word-level/lasso.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
@@ -191,6 +192,17 @@ void bmc_with_iterative_constraint_strengthening(
   }
 }
 
+/// Extension of solver.handle(...) from expressions to vectors of expressions
+static exprt::operandst
+handles(const exprt::operandst &exprs, decision_proceduret &solver)
+{
+  exprt::operandst result;
+  result.reserve(exprs.size());
+  for(auto &expr : exprs)
+    result.push_back(solver.handle(expr));
+  return result;
+}
+
 property_checker_resultt bmc(
   std::size_t bound,
   bool convert_only,
@@ -211,12 +223,20 @@ property_checker_resultt bmc(
 
   auto solver_wrapper = solver_factory(ns, message_handler);
   auto &solver = solver_wrapper.decision_procedure();
+  auto no_timeframes = bound + 1;
 
   ::unwind(
-    transition_system.trans_expr, message_handler, solver, bound + 1, ns, true);
+    transition_system.trans_expr,
+    message_handler,
+    solver,
+    no_timeframes,
+    ns,
+    true);
 
   // convert the properties
   message.status() << "Properties" << messaget::eom;
+
+  bool requires_lasso_constraints = false;
 
   for(auto &property : properties.properties)
   {
@@ -230,8 +250,13 @@ property_checker_resultt bmc(
       continue;
     }
 
-    property.timeframe_handles = ::property(
-      property.normalized_expr, message_handler, solver, bound + 1, ns);
+    auto obligations =
+      ::property(property.normalized_expr, message_handler, no_timeframes);
+
+    if(uses_lasso_symbol(obligations))
+      requires_lasso_constraints = true;
+
+    property.timeframe_handles = handles(obligations, solver);
 
     // If it's an assumption, then add it as constraint.
     if(property.is_assumed())
@@ -239,11 +264,11 @@ property_checker_resultt bmc(
   }
 
   // lasso constraints, if needed
-  if(properties.requires_lasso_constraints())
+  if(requires_lasso_constraints)
   {
     message.status() << "Adding lasso constraints" << messaget::eom;
     lasso_constraints(
-      solver, bound + 1, ns, transition_system.main_symbol->name);
+      solver, no_timeframes, ns, transition_system.main_symbol->name);
   }
 
   if(convert_only)
