@@ -1,0 +1,5 @@
+MODULE main
+
+VAR x : boolean;
+
+LTLSPEC (F !x) | G x
