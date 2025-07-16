@@ -1,0 +1,7 @@
+MODULE main
+
+VAR some_input : boolean;
+
+-- Expected to fail
+-- The shortest loop is FALSE, FALSE
+LTLSPEC F (!some_input & X !some_input)

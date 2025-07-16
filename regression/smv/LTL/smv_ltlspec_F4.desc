@@ -1,0 +1,10 @@
+KNOWNBUG
+smv_ltlspec_F4.smv
+--bound 3
+^\[spec1\] F \(some_input <-> X some_input\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The BMC engine gives the wrong answer.

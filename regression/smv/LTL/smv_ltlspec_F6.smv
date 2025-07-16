@@ -1,0 +1,6 @@
+MODULE main
+
+VAR some_input : boolean;
+
+-- Expected to fail
+LTLSPEC F X some_input
