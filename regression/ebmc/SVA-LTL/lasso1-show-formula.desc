@@ -3,6 +3,6 @@ lasso1.sv
 --bound 1 --show-formula
 ^EXIT=0$
 ^SIGNAL=0$
-^\(\d+\) lasso::1-back-to-0 ⇔ \(.*counter@1 = .*counter@0 ∧ .*clock@1 ⇔ .*clock@0\)$
+^\(\d+\) lasso::1-back-to-0 ⇔ \(.*clock@1 ⇔ .*clock@0 ∧ .*counter@1 = .*counter@0\)$
 --
 --
