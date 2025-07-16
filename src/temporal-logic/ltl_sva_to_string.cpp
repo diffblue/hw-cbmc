@@ -250,8 +250,8 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto &followed_by = to_sva_followed_by_expr(expr);
     auto not_b = not_exprt{followed_by.consequent()};
     return rec(
-      not_exprt{
-        sva_overlapped_implication_exprt{followed_by.antecedent(), not_b}},
+      not_exprt{sva_overlapped_implication_exprt{
+        followed_by.antecedent(), not_b, bool_typet{}}},
       mode);
   }
   else if(expr.id() == ID_sva_nonoverlapped_followed_by)
@@ -262,8 +262,8 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto &followed_by = to_sva_followed_by_expr(expr);
     auto not_b = not_exprt{followed_by.consequent()};
     return rec(
-      not_exprt{
-        sva_non_overlapped_implication_exprt{followed_by.antecedent(), not_b}},
+      not_exprt{sva_non_overlapped_implication_exprt{
+        followed_by.antecedent(), not_b, bool_typet{}}},
       mode);
   }
   else if(expr.id() == ID_sva_sequence_property)

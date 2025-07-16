@@ -1806,8 +1806,7 @@ void verilog_typecheckt::convert_property_declaration(
   convert_sva(declaration.cond());
   require_sva_property(declaration.cond());
 
-  auto type = bool_typet{};
-  type.set(ID_C_verilog_type, ID_verilog_property_declaration);
+  auto type = verilog_sva_property_typet{};
   symbolt symbol{full_identifier, type, mode};
 
   symbol.module = module_identifier;

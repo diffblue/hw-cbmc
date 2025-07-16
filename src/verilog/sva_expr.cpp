@@ -11,6 +11,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/mathematical_types.h>
 
+exprt sva_iff_exprt::implications() const
+{
+  return sva_and_exprt{
+    sva_implies_exprt{lhs(), rhs()}, sva_implies_exprt{rhs(), lhs()}, type()};
+}
+
 exprt sva_cycle_delay_plus_exprt::lower() const
 {
   // same as ##[1:$]
