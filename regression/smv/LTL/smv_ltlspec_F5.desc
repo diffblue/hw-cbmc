@@ -1,10 +1,10 @@
-KNOWNBUG
+CORE
 smv_ltlspec_F5.smv
---bound 3 --numbered-trace
+--bound 1 --numbered-trace
 ^\[spec1\] F \(!some_input \& X !some_input\): REFUTED$
+^Counterexample with 2 states:$
 ^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The BMC engine gives the wrong answer.
