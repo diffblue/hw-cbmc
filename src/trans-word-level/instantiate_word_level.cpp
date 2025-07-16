@@ -207,7 +207,7 @@ exprt instantiate(
 
 /*******************************************************************\
 
-Function: instantiate_property
+Function: instantiate_state_predicate
 
   Inputs:
 
@@ -217,11 +217,12 @@ Function: instantiate_property
 
 \*******************************************************************/
 
-exprt instantiate_property(
+exprt instantiate_state_predicate(
   const exprt &expr,
   const mp_integer &current,
   const mp_integer &no_timeframes)
 {
+  PRECONDITION(expr.type().id() == ID_bool);
   wl_instantiatet wl_instantiate(no_timeframes, false);
   return wl_instantiate(expr, current);
 }

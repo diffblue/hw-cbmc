@@ -22,11 +22,4 @@ exprt::operandst property(
 /// Is the given property supported by word-level unwinding?
 bool bmc_supports_property(const exprt &);
 
-class obligationst;
-
-obligationst property_obligations(
-  const exprt &,
-  const mp_integer &t,
-  const mp_integer &no_timeframes);
-
 #endif

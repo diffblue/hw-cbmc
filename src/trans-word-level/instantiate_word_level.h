@@ -21,7 +21,7 @@ exprt instantiate(
 
 // Instantiate an atomic state predicate in the given time frame.
 // Must not contain next_symbol or any temporal operators.
-exprt instantiate_property(
+exprt instantiate_state_predicate(
   const exprt &,
   const mp_integer &current,
   const mp_integer &no_timeframes);

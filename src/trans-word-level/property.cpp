@@ -511,7 +511,8 @@ static obligationst property_obligations_rec(
   {
     // we rely on NNF
     auto &if_expr = to_if_expr(property_expr);
-    auto cond = instantiate_property(if_expr.cond(), current, no_timeframes);
+    auto cond =
+      instantiate_state_predicate(if_expr.cond(), current, no_timeframes);
     auto obligations_true =
       property_obligations_rec(if_expr.true_case(), current, no_timeframes)
         .conjunction();
@@ -571,7 +572,8 @@ static obligationst property_obligations_rec(
     {
       // state formula
       return obligationst{
-        current, instantiate_property(property_expr, current, no_timeframes)};
+        current,
+        instantiate_state_predicate(property_expr, current, no_timeframes)};
     }
   }
   else if(property_expr.id() == ID_sva_implies)
@@ -739,28 +741,9 @@ static obligationst property_obligations_rec(
   else
   {
     return obligationst{
-      current, instantiate_property(property_expr, current, no_timeframes)};
+      current,
+      instantiate_state_predicate(property_expr, current, no_timeframes)};
   }
-}
-
-/*******************************************************************\
-
-Function: property_obligations
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-obligationst property_obligations(
-  const exprt &property_expr,
-  const mp_integer &t,
-  const mp_integer &no_timeframes)
-{
-  return property_obligations_rec(property_expr, t, no_timeframes);
 }
 
 /*******************************************************************\
