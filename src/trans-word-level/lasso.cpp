@@ -95,7 +95,7 @@ void lasso_constraints(
 
   std::vector<symbol_exprt> variables_to_compare;
 
-  // Gather the state variables.
+  // Gather the state variables, and the inputs.
   const symbol_tablet &symbol_table = ns.get_symbol_table();
   auto lower = symbol_table.symbol_module_map.lower_bound(module_identifier);
   auto upper = symbol_table.symbol_module_map.upper_bound(module_identifier);
@@ -104,26 +104,18 @@ void lasso_constraints(
   {
     const symbolt &symbol = ns.lookup(it->second);
 
-    if(symbol.is_state_var)
+    if(symbol.is_state_var || symbol.is_input)
       variables_to_compare.push_back(symbol.symbol_expr());
   }
 
-  // gather the top-level inputs
-  const auto &module_symbol = ns.lookup(module_identifier);
-  DATA_INVARIANT(module_symbol.type.id() == ID_module, "expected a module");
-  const auto &ports = module_symbol.type.find(ID_ports);
+  // We sort the set of variables to compare,
+  // to get a deterministic formula
+  auto ordering = [](const symbol_exprt &a, const symbol_exprt &b)
+  { return id2string(a.get_identifier()) < id2string(b.get_identifier()); };
 
-  for(auto &port : static_cast<const exprt &>(ports).operands())
-  {
-    DATA_INVARIANT(port.id() == ID_symbol, "port must be a symbol");
-    if(port.get_bool(ID_input) && !port.get_bool(ID_output))
-    {
-      symbol_exprt input_symbol(port.get(ID_identifier), port.type());
-      input_symbol.add_source_location() = port.source_location();
-      variables_to_compare.push_back(std::move(input_symbol));
-    }
-  }
+  std::sort(variables_to_compare.begin(), variables_to_compare.end(), ordering);
 
+  // Create the constraint
   for(mp_integer i = 1; i < no_timeframes; ++i)
   {
     for(mp_integer k = 0; k < i; ++k)
