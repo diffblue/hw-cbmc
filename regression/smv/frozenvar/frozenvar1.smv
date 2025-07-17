@@ -1,0 +1,3 @@
+MODULE main
+
+FROZENVAR some_var : boolean;

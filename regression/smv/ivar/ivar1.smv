@@ -1,0 +1,3 @@
+MODULE main
+
+IVAR some_input : boolean;

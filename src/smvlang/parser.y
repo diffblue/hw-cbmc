@@ -369,7 +369,10 @@ semi_opt   :    /* empty */
 
 module_element:
              var_declaration
+           | ivar_declaration
+           | frozenvar_declaration
            | define_declaration
+           | constants_declaration
            | assign_constraint
            | trans_constraint
            | init_constraint
@@ -377,6 +380,9 @@ module_element:
            | fairness_constraint
            | ctl_specification
            | ltl_specification
+           | compute_specification
+           | isa_declaration
+           /* not in the NuSMV manual */
            | EXTERN_Token extern_var semi_opt
            | EXTERN_Token
            ;
@@ -386,9 +392,76 @@ var_declaration:
            | VAR_Token
            ;
 
+ivar_declaration:
+             IVAR_Token simple_var_list
+           {
+             yyerror("No support for IVAR declarations");
+             YYERROR;
+           }
+           ;
+
+frozenvar_declaration:
+             FROZENVAR_Token simple_var_list
+           {
+             yyerror("No support for FROZENVAR declarations");
+             YYERROR;
+           }
+           ;
+
+simple_var_list:
+             identifier ':' simple_type_specifier ';'
+           | simple_var_list identifier ':' simple_type_specifier ';'
+
 define_declaration:
              DEFINE_Token defines
            | DEFINE_Token
+           ;
+
+constants_declaration:
+             CONSTANTS_Token constants_body ';'
+           {
+             yyerror("No support for CONSTANTS declarations");
+             YYERROR;
+           }
+           ;
+
+constants_body:
+             complex_identifier
+           | constants_body ',' complex_identifier
+           ;
+
+compute_specification:
+             COMPUTE_Token compute_expr
+           {
+             yyerror("No support for COMPUTE specifications");
+             YYERROR;
+           }
+           | COMPUTE_Token compute_expr ';'
+           {
+             yyerror("No support for COMPUTE specifications");
+             YYERROR;
+           }
+           | COMPUTE_Token NAME_Token identifier ":=" compute_expr
+           {
+             yyerror("No support for COMPUTE specifications");
+             YYERROR;
+           }
+           | COMPUTE_Token NAME_Token identifier ":=" compute_expr ';'
+           {
+             yyerror("No support for COMPUTE specifications");
+             YYERROR;
+           }
+           ;
+
+compute_expr:
+           ;
+
+isa_declaration:
+             ISA_Token identifier
+           {
+             yyerror("No support for ISA declarations");
+             YYERROR;
+           }
            ;
 
 assign_constraint:

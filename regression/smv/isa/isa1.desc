@@ -1,0 +1,8 @@
+CORE
+isa1.smv
+
+^file .* line 3: No support for ISA declarations .*$
+^EXIT=1$
+^SIGNAL=0$
+--
+--
