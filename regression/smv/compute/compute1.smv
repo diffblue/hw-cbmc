@@ -1,0 +1,3 @@
+MODULE main
+
+COMPUTE MIN [TRUE, TRUE];

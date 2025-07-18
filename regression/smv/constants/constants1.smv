@@ -1,0 +1,3 @@
+MODULE main
+
+CONSTANTS some_constant;
