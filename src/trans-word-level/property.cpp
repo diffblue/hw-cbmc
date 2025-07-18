@@ -176,12 +176,26 @@ Function: property_obligations_rec
 
 \*******************************************************************/
 
+/// Timeframe index of the start and end of the loop of the lasso.
+struct bmc_loopt
+{
+  // State 'start' is required to be equal to state 'end'.
+  mp_integer start, end;
+};
+
 static obligationst property_obligations_rec(
   const exprt &property_expr,
   const mp_integer &current,
-  const mp_integer &no_timeframes)
+  const mp_integer &no_timeframes,
+  const std::optional<bmc_loopt> &loop)
 {
   PRECONDITION(current >= 0 && current < no_timeframes);
+
+  if(loop.has_value())
+  {
+    PRECONDITION(loop.value().start < loop.value().end);
+    PRECONDITION(loop.value().end < no_timeframes);
+  }
 
   if(
     property_expr.id() == ID_AG || property_expr.id() == ID_G ||
@@ -203,7 +217,7 @@ static obligationst property_obligations_rec(
 
     for(mp_integer c = current; c < no_timeframes; ++c)
     {
-      obligations.add(property_obligations_rec(phi, c, no_timeframes));
+      obligations.add(property_obligations_rec(phi, c, no_timeframes, loop));
     }
 
     return obligations;
@@ -230,7 +244,8 @@ static obligationst property_obligations_rec(
 
     for(mp_integer u = current + from; u <= current + to; ++u)
     {
-      auto obligations_rec = property_obligations_rec(op, u, no_timeframes);
+      auto obligations_rec =
+        property_obligations_rec(op, u, no_timeframes, loop);
       disjuncts.push_back(obligations_rec.conjunction().second);
     }
 
@@ -243,41 +258,42 @@ static obligationst property_obligations_rec(
   {
     const auto &phi = to_unary_expr(property_expr).op();
 
-    obligationst obligations;
+    // Counterexamples to Fφ are infinite paths, and we look
+    // for a loop.
 
-    // Traces with any φ state from "current" onwards satisfy Fφ
+    if(!loop.has_value())
+      return {};
+
+    const auto l = loop.value();
+
+    // we want counterexamples starting no later than 'current'
+    if(l.start < current)
+      return {};
+
+    // The following needs to be satisfied for a counterexample
+    // to Fφ that is a lassp with loop from l.start to l.end:
+    //
+    // (stem) No state j with current<j<l.start satisfies 'φ'.
+    // (loop) No state j with l.start<=j<l.end satisfies 'φ'.
+    //
+    // There is no need to check state l.end, since that state
+    // is equal to state l.start.
     exprt::operandst phi_disjuncts;
 
-    phi_disjuncts.reserve(numeric_cast_v<std::size_t>(no_timeframes - current));
+    phi_disjuncts.reserve(numeric_cast_v<std::size_t>(l.end - current));
 
-    for(mp_integer j = current; j < no_timeframes; ++j)
+    for(mp_integer j = current; j < l.end; ++j)
     {
-      auto tmp = property_obligations_rec(phi, j, no_timeframes);
+      auto tmp = property_obligations_rec(phi, j, no_timeframes, loop);
       phi_disjuncts.push_back(tmp.conjunction().second);
     }
 
     auto phi_disjunction = disjunction(phi_disjuncts);
 
-    // Counterexamples to Fφ must have a loop.
-    // We consider l-k loops with l<k.
-    for(mp_integer k = current + 1; k < no_timeframes; ++k)
-    {
-      // The following needs to be satisfied for a counterexample
-      // to Fφ that loops back in timeframe k:
-      //
-      // (1) There is a loop from timeframe k back to
-      //     some earlier state l with current<=l<k.
-      // (2) No state j with current<=j<no_timeframes satisfies 'φ'.
-      //     The weaker alternative current<=j<=k yields counterexamples
-      //     that exhibit a ¬φ loop, but are then followed by a φ state.
-      for(mp_integer l = current; l < k; ++l)
-      {
-        auto tmp = or_exprt{not_exprt(lasso_symbol(l, k)), phi_disjunction};
-        obligations.add(k, std::move(tmp));
-      }
-    }
+    auto tmp = or_exprt{not_exprt{lasso_symbol(l.start, l.end)}, phi_disjunction};
 
-    return obligations;
+    // We want the counterexample to end with state l.end.
+    return obligationst{l.end, std::move(tmp)};
   }
   else if(property_expr.id() == ID_sva_ranged_s_eventually)
   {
@@ -309,8 +325,9 @@ static obligationst property_obligations_rec(
 
     for(mp_integer c = from; c <= to; ++c)
     {
-      auto tmp = property_obligations_rec(s_eventually.op(), c, no_timeframes)
-                   .conjunction();
+      auto tmp =
+        property_obligations_rec(s_eventually.op(), c, no_timeframes, loop)
+          .conjunction();
       time = std::max(time, tmp.first);
       disjuncts.push_back(tmp.second);
     }
@@ -358,7 +375,7 @@ static obligationst property_obligations_rec(
 
     for(mp_integer c = from; c <= to; ++c)
     {
-      obligations.add(property_obligations_rec(phi, c, no_timeframes));
+      obligations.add(property_obligations_rec(phi, c, no_timeframes, loop));
     }
 
     return obligations;
@@ -386,7 +403,7 @@ static obligationst property_obligations_rec(
 
     if(next < no_timeframes)
     {
-      return property_obligations_rec(phi, next, no_timeframes);
+      return property_obligations_rec(phi, next, no_timeframes, loop);
     }
     else
     {
@@ -402,7 +419,7 @@ static obligationst property_obligations_rec(
     // p U q ≡ Fq ∧ (p W q)
     exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
 
-    return property_obligations_rec(tmp, current, no_timeframes);
+    return property_obligations_rec(tmp, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_sva_until || property_expr.id() == ID_weak_U)
   {
@@ -415,7 +432,7 @@ static obligationst property_obligations_rec(
       q,
       (current + 1) < no_timeframes ? and_exprt{p, X_exprt{property_expr}} : p};
 
-    return property_obligations_rec(tmp, current, no_timeframes);
+    return property_obligations_rec(tmp, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_R)
   {
@@ -430,7 +447,7 @@ static obligationst property_obligations_rec(
                         ? and_exprt{q, or_exprt{p, X_exprt{property_expr}}}
                         : q;
 
-    return property_obligations_rec(expansion, current, no_timeframes);
+    return property_obligations_rec(expansion, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_strong_R)
   {
@@ -440,7 +457,7 @@ static obligationst property_obligations_rec(
     // p strongR q ≡ Fp ∧ (p R q)
     exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
 
-    return property_obligations_rec(tmp, current, no_timeframes);
+    return property_obligations_rec(tmp, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_sva_until_with)
   {
@@ -448,7 +465,7 @@ static obligationst property_obligations_rec(
     // Note that lhs and rhs are flipped.
     auto &until_with = to_sva_until_with_expr(property_expr);
     auto R = R_exprt{until_with.rhs(), until_with.lhs()};
-    return property_obligations_rec(R, current, no_timeframes);
+    return property_obligations_rec(R, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_sva_s_until_with)
   {
@@ -456,7 +473,7 @@ static obligationst property_obligations_rec(
     // Note that lhs and rhs are flipped.
     auto &s_until_with = to_sva_s_until_with_expr(property_expr);
     auto strong_R = strong_R_exprt{s_until_with.rhs(), s_until_with.lhs()};
-    return property_obligations_rec(strong_R, current, no_timeframes);
+    return property_obligations_rec(strong_R, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_and)
   {
@@ -466,7 +483,8 @@ static obligationst property_obligations_rec(
 
     for(auto &op : to_and_expr(property_expr).operands())
     {
-      obligations.add(property_obligations_rec(op, current, no_timeframes));
+      obligations.add(
+        property_obligations_rec(op, current, no_timeframes, loop));
     }
 
     return obligations;
@@ -481,7 +499,8 @@ static obligationst property_obligations_rec(
 
     for(auto &op : to_or_expr(property_expr).operands())
     {
-      auto obligations = property_obligations_rec(op, current, no_timeframes);
+      auto obligations =
+        property_obligations_rec(op, current, no_timeframes, loop);
       auto conjunction = obligations.conjunction();
       t = std::max(t, conjunction.first);
       disjuncts.push_back(conjunction.second);
@@ -498,14 +517,14 @@ static obligationst property_obligations_rec(
     auto tmp = and_exprt{
       implies_exprt{equal_expr.lhs(), equal_expr.rhs()},
       implies_exprt{equal_expr.rhs(), equal_expr.lhs()}};
-    return property_obligations_rec(tmp, current, no_timeframes);
+    return property_obligations_rec(tmp, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_implies)
   {
     // we rely on NNF
     auto &implies_expr = to_implies_expr(property_expr);
     auto tmp = or_exprt{not_exprt{implies_expr.lhs()}, implies_expr.rhs()};
-    return property_obligations_rec(tmp, current, no_timeframes);
+    return property_obligations_rec(tmp, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_if)
   {
@@ -513,11 +532,12 @@ static obligationst property_obligations_rec(
     auto &if_expr = to_if_expr(property_expr);
     auto cond =
       instantiate_state_predicate(if_expr.cond(), current, no_timeframes);
-    auto obligations_true =
-      property_obligations_rec(if_expr.true_case(), current, no_timeframes)
-        .conjunction();
+    auto obligations_true = property_obligations_rec(
+                              if_expr.true_case(), current, no_timeframes, loop)
+                              .conjunction();
     auto obligations_false =
-      property_obligations_rec(if_expr.false_case(), current, no_timeframes)
+      property_obligations_rec(
+        if_expr.false_case(), current, no_timeframes, loop)
         .conjunction();
     return obligationst{
       std::max(obligations_true.first, obligations_false.first),
@@ -529,7 +549,7 @@ static obligationst property_obligations_rec(
   {
     // drop reduntant type casts
     return property_obligations_rec(
-      to_typecast_expr(property_expr).op(), current, no_timeframes);
+      to_typecast_expr(property_expr).op(), current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_not)
   {
@@ -541,7 +561,7 @@ static obligationst property_obligations_rec(
     if(op_negated_opt.has_value())
     {
       return property_obligations_rec(
-        op_negated_opt.value(), current, no_timeframes);
+        op_negated_opt.value(), current, no_timeframes, loop);
     }
     else if(
       op.id() == ID_sva_strong || op.id() == ID_sva_weak ||
@@ -583,7 +603,7 @@ static obligationst property_obligations_rec(
     auto &sva_implies_expr = to_sva_implies_expr(property_expr);
     auto implies_expr =
       implies_exprt{sva_implies_expr.lhs(), sva_implies_expr.rhs()};
-    return property_obligations_rec(implies_expr, current, no_timeframes);
+    return property_obligations_rec(implies_expr, current, no_timeframes, loop);
   }
   else if(property_expr.id() == ID_sva_iff)
   {
@@ -591,7 +611,7 @@ static obligationst property_obligations_rec(
     // Note that this is not an SVA sequence operator.
     auto &sva_iff_expr = to_sva_iff_expr(property_expr);
     auto equal_expr = equal_exprt{sva_iff_expr.lhs(), sva_iff_expr.rhs()};
-    return property_obligations_rec(equal_expr, current, no_timeframes);
+    return property_obligations_rec(equal_expr, current, no_timeframes, loop);
   }
   else if(
     property_expr.id() == ID_sva_overlapped_implication ||
@@ -635,7 +655,7 @@ static obligationst property_obligations_rec(
 
       // Get obligations for RHS
       auto rhs_obligations_rec =
-        property_obligations_rec(implication.rhs(), t_rhs, no_timeframes);
+        property_obligations_rec(implication.rhs(), t_rhs, no_timeframes, loop);
 
       for(auto &rhs_obligation : rhs_obligations_rec.map)
       {
@@ -694,7 +714,7 @@ static obligationst property_obligations_rec(
       {
         auto obligations_rec =
           property_obligations_rec(
-            followed_by.consequent(), property_start, no_timeframes)
+            followed_by.consequent(), property_start, no_timeframes, loop)
             .conjunction();
 
         disjuncts.push_back(
@@ -748,6 +768,42 @@ static obligationst property_obligations_rec(
 
 /*******************************************************************\
 
+Function: property_obligations_lasso
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+obligationst property_obligations_lasso(
+  const exprt &property_expr,
+  const mp_integer &no_timeframes)
+{
+  PRECONDITION(no_timeframes >= 1);
+
+  obligationst obligations;
+
+  // This iterates over the possible shapes of a lasso.
+  // This is quadratic in the bound.
+  // State loop.start is required to be equal to state loop.end.
+  bmc_loopt loop;
+
+  for(loop.end = 1; loop.end < no_timeframes; ++loop.end)
+    for(loop.start = 0; loop.start < loop.end; ++loop.start)
+    {
+      auto obligations_loop =
+        property_obligations_rec(property_expr, 0, no_timeframes, loop);
+      obligations.add(obligations_loop);
+    }
+
+  return obligations;
+}
+
+/*******************************************************************\
+
 Function: property_obligations
 
   Inputs:
@@ -762,7 +818,23 @@ obligationst property_obligations(
   const exprt &property_expr,
   const mp_integer &no_timeframes)
 {
-  return property_obligations_rec(property_expr, 0, no_timeframes);
+  // The word-level BMC encoding works on NNF.
+  auto nnf = property_nnf(property_expr);
+
+  // A counterexample to an LTL property can have one of two forms.
+  // 1. A linear, finite path
+  // 2. An infinite path, given in the form of a lasso, i.e.,
+  //    a stem followed by a loop.
+
+  obligationst obligations;
+
+  // Form 1 -- linear path
+  auto form_1 = property_obligations_rec(property_expr, 0, no_timeframes, {});
+
+  // Form 2 -- lasso
+  auto form_2 = property_obligations_lasso(property_expr, no_timeframes);
+
+  return obligations_union(form_1, form_2);
 }
 
 /*******************************************************************\
