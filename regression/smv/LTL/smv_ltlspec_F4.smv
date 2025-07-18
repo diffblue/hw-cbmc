@@ -1,0 +1,6 @@
+MODULE main
+
+VAR some_input : boolean;
+
+-- Expected to fail. The input can alternate infinitely often.
+LTLSPEC F (some_input <-> X some_input)
