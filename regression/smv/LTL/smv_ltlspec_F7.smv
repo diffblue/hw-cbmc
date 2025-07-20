@@ -1,0 +1,6 @@
+MODULE main
+
+VAR some_input : 1..3;
+
+-- Expected to fail
+LTLSPEC F (some_input >= 2)
