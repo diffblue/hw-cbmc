@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_version.h"
+#include "format_hooks.h"
 #include "instrument_buechi.h"
 #include "liveness_to_safety.h"
 #include "netlist.h"
@@ -71,6 +72,7 @@ int ebmc_parse_optionst::doit()
   }
 
   register_languages();
+  format_hooks();
 
   if(cmdline.isset("version"))
   {

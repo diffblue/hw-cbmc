@@ -17,6 +17,7 @@ SRC = \
       ebmc_properties.cpp \
       ebmc_solver_factory.cpp \
       ebmc_version.cpp \
+      format_hooks.cpp \
       instrument_past.cpp \
       instrument_buechi.cpp \
       k_induction.cpp \
