@@ -406,31 +406,50 @@ static obligationst property_obligations_rec(
   }
   else if(property_expr.id() == ID_sva_until || property_expr.id() == ID_weak_U)
   {
-    // we expand: p W q ≡ q ∨ ( p ∧ X(p W q) )
-    auto &p = to_binary_expr(property_expr).lhs();
-    auto &q = to_binary_expr(property_expr).rhs();
+    auto &binary_expr = to_binary_expr(property_expr);
+    auto &p = binary_expr.lhs();
+    auto &q = binary_expr.rhs();
 
-    // Once we reach the end of the unwinding, replace X(p W q) by 'true'.
-    auto tmp = or_exprt{
-      q,
-      (current + 1) < no_timeframes ? and_exprt{p, X_exprt{property_expr}} : p};
+    // p has to to be true until (not including) q is true
+    exprt::operandst q_disjuncts;
+    obligationst obligations;
 
-    return property_obligations_rec(tmp, current, no_timeframes);
+    for(mp_integer j = current; j < no_timeframes; ++j)
+    {
+      auto q_rec = property_obligations_rec(q, j, no_timeframes);
+      q_disjuncts.push_back(q_rec.conjunction().second);
+
+      auto p_rec = property_obligations_rec(p, j, no_timeframes);
+      auto cond =
+        or_exprt{p_rec.conjunction().second, disjunction(q_disjuncts)};
+
+      obligations.add(current, cond);
+    }
+
+    return obligations;
   }
   else if(property_expr.id() == ID_R)
   {
-    // we expand: p R q <=> q ∧ (p ∨ X(p R q))
     auto &R_expr = to_R_expr(property_expr);
     auto &p = R_expr.lhs();
     auto &q = R_expr.rhs();
 
-    // Once we reach the end of the unwinding, we replace X(p R q) by
-    // true, and hence the expansion becomes "q" only.
-    exprt expansion = (current + 1) < no_timeframes
-                        ? and_exprt{q, or_exprt{p, X_exprt{property_expr}}}
-                        : q;
+    // q has to be true until (including) p is true
+    exprt::operandst p_disjuncts;
+    obligationst obligations;
 
-    return property_obligations_rec(expansion, current, no_timeframes);
+    for(mp_integer j = current; j < no_timeframes; ++j)
+    {
+      auto q_rec = property_obligations_rec(q, j, no_timeframes);
+      auto cond =
+        or_exprt{q_rec.conjunction().second, disjunction(p_disjuncts)};
+      obligations.add(current, cond);
+
+      auto p_rec = property_obligations_rec(p, j, no_timeframes);
+      p_disjuncts.push_back(p_rec.conjunction().second);
+    }
+
+    return obligations;
   }
   else if(property_expr.id() == ID_strong_R)
   {
