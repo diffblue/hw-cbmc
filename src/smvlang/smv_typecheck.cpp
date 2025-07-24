@@ -1959,9 +1959,18 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
       symbol.name=var.identifier;
 
     symbol.value.make_nil();
-    symbol.is_input=true;
-    symbol.is_state_var=false;
     symbol.type=var.type;
+
+    if(var.type.id() == "submodule")
+    {
+      symbol.is_input = false;
+      symbol.is_state_var = false;
+    }
+    else
+    {
+      symbol.is_input = true;
+      symbol.is_state_var = false;
+    }
 
     symbol_table.add(symbol);
   }
