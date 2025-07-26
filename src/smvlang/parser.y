@@ -388,7 +388,7 @@ module_element:
            ;
 
 var_declaration:
-             VAR_Token vardecls
+             VAR_Token var_list
            | VAR_Token
            ;
 
@@ -411,6 +411,7 @@ frozenvar_declaration:
 simple_var_list:
              identifier ':' simple_type_specifier ';'
            | simple_var_list identifier ':' simple_type_specifier ';'
+           ;
 
 define_declaration:
              DEFINE_Token defines
@@ -550,8 +551,8 @@ extern_var : variable_identifier EQUAL_Token STRING_Token
            }
            ;
 
-vardecls   : vardecl
-           | vardecls vardecl
+var_list   : var_decl
+           | var_list var_decl
            ;
 
 module_parameter: identifier
@@ -659,7 +660,7 @@ enum_element: IDENTIFIER_Token
            }
            ;
 
-vardecl    : variable_identifier ':' type_specifier ';'
+var_decl   : variable_identifier ':' type_specifier ';'
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
