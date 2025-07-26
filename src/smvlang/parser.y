@@ -642,7 +642,7 @@ parameter_list:
 
 enum_list  : enum_element
            {
-             init($$, ID_enumeration);
+             init($$, ID_smv_enumeration);
              stack_expr($$).add(ID_elements).get_sub().push_back(irept(stack_expr($1).id()));
            }
            | enum_list ',' enum_element
@@ -946,7 +946,7 @@ variable_identifier: complex_identifier
              else if(is_enum)
              {
                init($$, ID_constant);
-               stack_expr($$).type()=typet(ID_enumeration);
+               stack_expr($$).type()=typet(ID_smv_enumeration);
                stack_expr($$).set(ID_value, id);
              }
              else // not an enum, probably a variable
