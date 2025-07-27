@@ -58,7 +58,7 @@ public:
   } modet;
 
   void convert(smv_parse_treet::modulet &);
-  void convert(smv_parse_treet::mc_varst &);
+  void create_var_symbols(const smv_parse_treet::modulet::item_listt &);
 
   void collect_define(const equal_exprt &);
   void convert_defines(exprt::operandst &invar);
@@ -1702,22 +1702,15 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
   {
     const std::string &identifier=expr.get_string(ID_identifier);
 
-    if(identifier.find("::") == std::string::npos)
-    {
-      std::string id=module+"::var::"+identifier;
+    DATA_INVARIANT(
+      identifier.find("::") == std::string::npos, "conversion is done once");
 
-      smv_parse_treet::mc_varst::const_iterator it=
-        modulep->vars.find(identifier);
+    std::string id = module + "::var::" + identifier;
 
-      if(it!=modulep->vars.end())
-        if(it->second.identifier!="")
-          id=id2string(it->second.identifier);
+    expr.set(ID_identifier, id);
 
-      expr.set(ID_identifier, id);
-      
-      if(expr_mode==NEXT)
-        expr.id(ID_next_symbol);
-    }
+    if(expr_mode == NEXT)
+      expr.id(ID_next_symbol);
   }
   else if(expr.id()=="smv_nondet_choice" ||
           expr.id()=="smv_union")
@@ -1901,7 +1894,7 @@ void smv_typecheckt::convert(
 
 /*******************************************************************\
 
-Function: smv_typecheckt::convert_vars
+Function: smv_typecheckt::create_var_symbols
 
   Inputs:
 
@@ -1911,43 +1904,64 @@ Function: smv_typecheckt::convert_vars
 
 \*******************************************************************/
 
-void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
+void smv_typecheckt::create_var_symbols(
+  const smv_parse_treet::modulet::item_listt &items)
 {
-  symbolt symbol;
+  const irep_idt mode = "SMV";
 
-  symbol.mode="SMV";
-  symbol.module=modulep->name;
-
-  for(const auto &var_it : vars)
+  for(const auto &item : items)
   {
-    const smv_parse_treet::mc_vart &var = var_it.second;
+    if(item.is_var())
+    {
+      irep_idt base_name = to_symbol_expr(item.expr).get_identifier();
+      irep_idt identifier = module + "::var::" + id2string(base_name);
 
-    typet type = var.type;
+      typet type = item.expr.type();
 
-    // check the type, if any
-    if(type.is_not_nil())
+      // check the type
       check_type(type);
 
-    symbol.base_name = var_it.first;
+      symbolt symbol{identifier, std::move(type), mode};
 
-    if(var.identifier=="")
-    {
-      symbol.name=module+"::var::"+id2string(symbol.base_name);
+      symbol.module = modulep->name;
+      symbol.base_name = base_name;
 
       if(module == "smv::main")
         symbol.pretty_name = symbol.base_name;
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
+
+      symbol.value = nil_exprt{};
+      symbol.is_input = true;
+      symbol.is_state_var = false;
+
+      symbol_table.insert(std::move(symbol));
     }
-    else
-      symbol.name=var.identifier;
+    else if(item.is_define())
+    {
+      irep_idt base_name =
+        to_symbol_expr(to_equal_expr(item.expr).lhs()).get_identifier();
+      irep_idt identifier = module + "::var::" + id2string(base_name);
+      typet type;
+      type.make_nil();
 
-    symbol.value.make_nil();
-    symbol.is_input=true;
-    symbol.is_state_var=false;
-    symbol.type = std::move(type);
+      symbolt symbol{identifier, std::move(type), mode};
 
-    symbol_table.add(symbol);
+      symbol.mode = mode;
+      symbol.module = modulep->name;
+      symbol.base_name = base_name;
+
+      if(module == "smv::main")
+        symbol.pretty_name = symbol.base_name;
+      else
+        symbol.pretty_name = strip_smv_prefix(symbol.name);
+
+      symbol.value = nil_exprt{};
+      symbol.is_input = true;
+      symbol.is_state_var = false;
+
+      symbol_table.insert(std::move(symbol));
+    }
   }
 }
 
@@ -2091,8 +2105,8 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   define_map.clear();
 
-  // variables first, need to be visible before declaration
-  convert(smv_module.vars);
+  // variables/defines first, can be used before their declaration
+  create_var_symbols(smv_module.items);
 
   // transition relation
 
