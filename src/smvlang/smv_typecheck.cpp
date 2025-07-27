@@ -1947,6 +1947,17 @@ void smv_typecheckt::convert(smv_parse_treet::mc_varst &vars)
     symbol.is_state_var=false;
     symbol.type = std::move(type);
 
+    if(var.type.id() == "submodule")
+    {
+      symbol.is_input = false;
+      symbol.is_state_var = false;
+    }
+    else
+    {
+      symbol.is_input = true;
+      symbol.is_state_var = false;
+    }
+
     symbol_table.add(symbol);
   }
 }
