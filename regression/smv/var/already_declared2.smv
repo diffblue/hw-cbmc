@@ -1,0 +1,6 @@
+MODULE main
+
+DEFINE x := 1;
+
+-- x again
+VAR x : 1..10;

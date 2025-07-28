@@ -1,0 +1,8 @@
+CORE
+already_declared3.smv
+
+^file .* line 8: variable x already declared, at file .* line 5$
+^EXIT=2$
+^SIGNAL=0$
+--
+--

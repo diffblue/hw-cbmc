@@ -1916,6 +1916,14 @@ void smv_typecheckt::create_var_symbols(
       irep_idt base_name = to_symbol_expr(item.expr).get_identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
+      auto symbol_ptr = symbol_table.lookup(identifier);
+      if(symbol_ptr != nullptr)
+      {
+        throw errort{}.with_location(item.expr.source_location())
+          << "variable " << base_name << " already declared, at "
+          << symbol_ptr->location;
+      }
+
       typet type = item.expr.type();
 
       // check the type
@@ -1934,13 +1942,14 @@ void smv_typecheckt::create_var_symbols(
       symbol.value = nil_exprt{};
       symbol.is_input = true;
       symbol.is_state_var = false;
+      symbol.location = item.expr.source_location();
 
       symbol_table.insert(std::move(symbol));
     }
     else if(item.is_define())
     {
-      irep_idt base_name =
-        to_symbol_expr(to_equal_expr(item.expr).lhs()).get_identifier();
+      const auto &symbol_expr = to_symbol_expr(to_equal_expr(item.expr).lhs());
+      irep_idt base_name = symbol_expr.get_identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
       typet type;
       type.make_nil();
@@ -1959,6 +1968,7 @@ void smv_typecheckt::create_var_symbols(
       symbol.value = nil_exprt{};
       symbol.is_input = true;
       symbol.is_state_var = false;
+      symbol.location = symbol_expr.source_location();
 
       symbol_table.insert(std::move(symbol));
     }

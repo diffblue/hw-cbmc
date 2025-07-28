@@ -1,0 +1,8 @@
+MODULE some_module(x)
+
+-- already used as module parameter
+VAR x : 1..10;
+
+MODULE main
+
+VAR m : some_module(1);

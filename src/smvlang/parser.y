@@ -673,13 +673,7 @@ var_decl   : variable_identifier ':' type_specifier ';'
                break;
 
              case smv_parse_treet::mc_vart::DEFINED:
-               yyerror("variable `"+id2string(identifier)+"' already defined");
-               YYERROR;
-               break;
-
              case smv_parse_treet::mc_vart::DECLARED:
-               yyerror("variable `"+id2string(identifier)+"' already declared as variable");
-               YYERROR;
                break;
 
              case smv_parse_treet::mc_vart::ARGUMENT:
