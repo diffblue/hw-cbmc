@@ -1,0 +1,8 @@
+KNOWNBUG
+already_declared4.smv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+This should be errored.

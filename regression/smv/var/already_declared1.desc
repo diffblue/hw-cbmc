@@ -1,5 +1,5 @@
 CORE
-define3.smv
+already_declared1.smv
 
 ^file .* line 6: variable x already declared, at file .* line 3$
 ^EXIT=2$
