@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 named_property3.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ named_property3.sv
 --
 ^warning: ignoring
 --
-The expression in the named property is not lowered.
