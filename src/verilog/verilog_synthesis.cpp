@@ -90,8 +90,11 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
       // substitute
       assert(symbol.value.is_not_nil());
 
+      // These aren't lowered yet
+      auto lowered = verilog_lowering(symbol.value);
+
       // recursive call
-      return synth_expr_rec(symbol.value, symbol_state);
+      return synth_expr_rec(lowered, symbol_state);
     }
     else
     {
