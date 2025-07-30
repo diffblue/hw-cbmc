@@ -1,0 +1,9 @@
+KNOWNBUG
+named_property3.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The expression in the named property is not lowered.
