@@ -1,6 +1,6 @@
 module main(input clk);
 
-  reg [31:0] x = 0;
+  reg [7:0] x = 0;
 
   always @(posedge clk)
     x<=x+1;
