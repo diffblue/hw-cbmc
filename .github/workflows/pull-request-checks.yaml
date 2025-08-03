@@ -175,10 +175,12 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           # spot
-          wget -q -O - https://www.lrde.epita.fr/repo/debian.gpg | sudo apt-key add -
-          sudo sh -c 'echo "deb http://www.lrde.epita.fr/repo/debian/ stable/" >> /etc/apt/sources.list'
-          sudo apt-get update
-          sudo apt-get install spot
+          SPOT_VERSION=2.14.1
+          wget https://www.lre.epita.fr/repo/debian/stable/libbddx0_${SPOT_VERSION}.0-1_amd64.deb
+          wget https://www.lre.epita.fr/repo/debian/stable/libspotgen0_${SPOT_VERSION}.0-1_amd64.deb
+          wget https://www.lre.epita.fr/repo/debian/stable/libspot0_${SPOT_VERSION}.0-1_amd64.deb
+          wget https://www.lre.epita.fr/repo/debian/stable/spot_${SPOT_VERSION}.0-1_amd64.deb
+          sudo dpkg -i libbddx0_${SPOT_VERSION}.0-1_amd64.deb libspotgen0_${SPOT_VERSION}.0-1_amd64.deb libspot0_${SPOT_VERSION}.0-1_amd64.deb spot_${SPOT_VERSION}.0-1_amd64.deb
       - name: Confirm ltl2tgba is available and log the version installed
         run: ltl2tgba --version
       - name: Get the ebmc binary
