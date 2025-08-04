@@ -1,0 +1,6 @@
+MODULE main
+
+VAR some_enum : {x, y, z};
+
+-- x is already declared
+VAR x : boolean;

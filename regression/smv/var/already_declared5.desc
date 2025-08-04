@@ -1,0 +1,8 @@
+KNOWNBUG
+already_declared5.smv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+This crashes.
