@@ -1,0 +1,10 @@
+KNOWNBUG
+../../verilog/SVA/cycle_delay_star3.sv
+--buechi --bdd
+^\[main.p0\] ##\[\*\] main\.x == 4: PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+We get the wrong answer.

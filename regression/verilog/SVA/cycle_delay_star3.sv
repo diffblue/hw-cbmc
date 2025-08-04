@@ -4,11 +4,11 @@ module main(input clk);
 
   initial x=0;
 
-  // 0, 1, 2, 3, 3, ...
+  // 0, 1, 2, 3, 4, 4, ...
   always @(posedge clk)
-    if(x<3) x++;
+    if(x<=3) x++;
 
-  // fails -- 4 is never reached
+  // passes -- 4 is reached
   initial p0: assert property (##[*] x==4);
 
 endmodule
