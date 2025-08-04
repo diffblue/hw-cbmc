@@ -125,6 +125,12 @@ jobs:
           name: ebmc-binary
           retention-days: 5
           path: src/ebmc/ebmc
+      - name: Upload the hw-cbmc binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hw-cbmc-binary
+          retention-days: 5
+          path: src/hw-cbmc/hw-cbmc
       - name: Upload the vlindex binary
         uses: actions/upload-artifact@v4
         with:
@@ -457,3 +463,57 @@ jobs:
         run: make CXX=clcache BUILD_ENV=MSVC -j4 -C unit
       - name: Print ccache stats
         run: clcache -s
+
+  # This job takes approximately 2 minutes
+  check-ubuntu-24_04-make-clang-KNOWNBUG:
+    runs-on: ubuntu-24.04
+    needs: check-ubuntu-24_04-make-clang
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          # This is needed in addition to -yq to prevent apt-get from asking for
+          # user input
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -yq z3
+      - name: Confirm z3 solver is available and log the version installed
+        run: z3 --version
+      - name: Get the ebmc binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ebmc-binary
+          path: bin
+      - name: Get the hw-cbmc binary
+        uses: actions/download-artifact@v4
+        with:
+          name: hw-cbmc-binary
+          path: bin
+      - name: Get the vlindex binary
+        uses: actions/download-artifact@v4
+        with:
+          name: vlindex-binary
+          path: bin
+      - name: Try the binaries
+        run: |
+          chmod a+x ./bin/ebmc ; ./bin/ebmc --version
+          chmod a+x ./bin/hw-cbmc ; ./bin/hw-cbmc --version
+          chmod a+x ./bin/vlindex ; ./bin/vlindex --version
+          echo "PATH=$PATH:$PWD/bin" >> $GITHUB_ENV
+      - name: Run the ebmc tests with SAT
+        run: make -C regression/ebmc test TEST_PL="../../lib/cbmc/regression/test.pl -K"
+      - name: Run the ebmc tests with Z3
+        run: make -C regression/ebmc test-z3 TEST_PL="../../lib/cbmc/regression/test.pl -K"
+      - name: Run the verilog tests
+        run: make -C regression/verilog test TEST_PL="../../lib/cbmc/regression/test.pl -K"
+      - name: Run the verilog tests with Z3
+        run: make -C regression/verilog test-z3 TEST_PL="../../lib/cbmc/regression/test.pl -K"
+      - name: Run the smv tests
+        run: make -C regression/smv test TEST_PL="../../lib/cbmc/regression/test.pl -K"
+      - name: Run the smv tests with Z3
+        run: make -C regression/smv test-z3 TEST_PL="../../lib/cbmc/regression/test.pl -K"
+      - name: Run the vlindex tests
+        run: make -C regression/vlindex test TEST_PL="../../lib/cbmc/regression/test.pl -K"
