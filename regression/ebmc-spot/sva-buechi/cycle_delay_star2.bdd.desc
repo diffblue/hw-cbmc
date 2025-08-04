@@ -1,0 +1,9 @@
+CORE
+../../verilog/SVA/cycle_delay_star2.sv
+--buechi --bdd
+^\[main.p0\] ##\[\*\] main\.x == 4: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
