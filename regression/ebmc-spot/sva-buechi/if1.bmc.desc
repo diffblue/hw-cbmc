@@ -1,6 +1,6 @@
 CORE
-if1.sv
---bound 2
+../../verilog/SVA/if1.sv
+--buechi --bound 2
 ^\[main\.p0\] always \(if\(main\.counter == 0\) nexttime main\.counter == 1\): PROVED up to bound 2$
 ^\[main\.p1\] always \(if\(main\.counter == 0\) nexttime main\.counter == 1 else nexttime main\.counter == 3\): REFUTED$
 ^EXIT=10$

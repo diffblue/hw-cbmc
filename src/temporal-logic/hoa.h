@@ -32,6 +32,10 @@ public:
     mp_integer number;
     labelt label; // in-state condition
     acc_sigt acc_sig;
+    bool is_accepting() const
+    {
+      return !acc_sig.empty();
+    }
   };
   struct edget
   {
