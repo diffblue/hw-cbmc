@@ -192,21 +192,22 @@ Function: smv_typecheckt::flatten_hierarchy
 
 void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
 {
-  for(auto &var_it : smv_module.vars)
+  for(auto &item : smv_module.items)
   {
-    smv_parse_treet::mc_vart &var = var_it.second;
-
-    if(var.type.id()=="submodule")
+    if(item.is_var() && item.expr.type().id() == "submodule")
     {
-      exprt &inst=static_cast<exprt &>(static_cast<irept &>(var.type));
+      exprt &inst =
+        static_cast<exprt &>(static_cast<irept &>(item.expr.type()));
 
       for(auto &op : inst.operands())
         convert(op, NORMAL);
 
+      auto instance_base_name = to_symbol_expr(item.expr).get_identifier();
+
       instantiate(
         smv_module,
         inst.get(ID_identifier),
-        var_it.first,
+        instance_base_name,
         inst.operands(),
         inst.find_source_location());
     }
