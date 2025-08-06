@@ -64,15 +64,24 @@ void instrument_buechi(
     transition_system.trans_expr.trans() =
       and_exprt{transition_system.trans_expr.trans(), buechi.trans};
 
-    // Replace the normalized property expression.
-    // Note that we have negated the property,
-    // so this is the negation of the Buechi acceptance condition.
-    property.normalized_expr =
-      F_exprt{G_exprt{not_exprt{buechi.liveness_signal}}};
+    // Replace the normalized property expression
+    // by the Buechi acceptance condition.
+    exprt::operandst property_conjuncts;
+
+    if(!buechi.liveness_signal.is_false())
+    {
+      // Note that we have negated the property,
+      // so this is the negation of the Buechi acceptance condition.
+      property_conjuncts.push_back(
+        F_exprt{G_exprt{not_exprt{buechi.liveness_signal}}});
+    }
 
     if(!buechi.error_signal.is_true())
-      property.normalized_expr = and_exprt{
-        property.normalized_expr, G_exprt{not_exprt{buechi.error_signal}}};
+    {
+      property_conjuncts.push_back(G_exprt{not_exprt{buechi.error_signal}});
+    }
+
+    property.normalized_expr = conjunction(property_conjuncts);
 
     message.debug() << "New property: " << format(property.normalized_expr)
                     << messaget::eom;

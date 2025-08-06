@@ -25,6 +25,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "netlist.h"
 #include "output_file.h"
 #include "report_results.h"
+#include "tautology_check.h"
 
 #include <chrono>
 #include <iostream>
@@ -382,7 +383,22 @@ property_checker_resultt engine_heuristic(
   message.status() << "No engine given, attempting heuristic engine selection"
                    << messaget::eom;
 
-  // First check whether we have a low completenes threshold
+  // First check if we can tell that the property is a tautology
+  message.status() << "Tautology check" << messaget::eom;
+
+  auto tautology_check_result =
+    tautology_check(cmdline, properties, solver_factory, message_handler);
+
+  properties.properties = tautology_check_result.properties;
+
+  if(!properties.has_unfinished_property())
+    return tautology_check_result; // done
+
+  properties.reset_failure();
+  properties.reset_inconclusive();
+  properties.reset_unsupported();
+
+  // Check whether we have a low completenes threshold
   message.status() << "Attempting completeness threshold" << messaget::eom;
 
   auto completeness_threshold_result = completeness_threshold(

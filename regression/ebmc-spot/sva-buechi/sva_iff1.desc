@@ -1,7 +1,7 @@
 CORE
 ../../verilog/SVA/sva_iff1.sv
 --buechi
-^\[main\.p0\] always \(1 iff 1\): PROVED up to bound \d+$
+^\[main\.p0\] always \(1 iff 1\): PROVED \(tautology\)$
 ^\[main\.p1\] always \(1 iff 0\): REFUTED$
 ^\[main\.p2\] always \(1 iff 32'b0000000000000000000000000000000x\): REFUTED$
 ^EXIT=10$

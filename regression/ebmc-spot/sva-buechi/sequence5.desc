@@ -1,7 +1,7 @@
 CORE
 ../../verilog/SVA/sequence5.sv
 --buechi
-^\[main\.p0\] 1: PROVED up to bound \d+$
+^\[main\.p0\] 1: PROVED \(tautology\)$
 ^\[main\.p1\] 0: REFUTED$
 ^\[main\.p2\] 1'bx: REFUTED$
 ^\[main\.p3\] 1'bz: REFUTED$
