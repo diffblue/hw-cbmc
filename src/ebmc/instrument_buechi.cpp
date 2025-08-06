@@ -68,18 +68,30 @@ void instrument_buechi(
     // by the Buechi acceptance condition.
     exprt::operandst property_conjuncts;
 
+    bool have_liveness = false, have_safety = false;
+
     if(!buechi.liveness_signal.is_false())
     {
       // Note that we have negated the property,
       // so this is the negation of the Buechi acceptance condition.
       property_conjuncts.push_back(
         F_exprt{G_exprt{not_exprt{buechi.liveness_signal}}});
+      have_liveness = true;
     }
 
     if(!buechi.error_signal.is_true())
     {
       property_conjuncts.push_back(G_exprt{not_exprt{buechi.error_signal}});
+      have_safety = true;
     }
+
+    if(have_liveness && have_safety)
+      message.debug() << "Buechi automaton has liveness and safety components"
+                      << messaget::eom;
+    else if(have_liveness)
+      message.debug() << "Buechi automaton is liveness only" << messaget::eom;
+    else if(have_safety)
+      message.debug() << "Buechi automaton is safety only" << messaget::eom;
 
     property.normalized_expr = conjunction(property_conjuncts);
 
