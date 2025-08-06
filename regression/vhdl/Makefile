@@ -1,10 +1,12 @@
 default: tests.log
 
+TEST_PL = ../../lib/cbmc/regression/test.pl
+
 test:
-	@../test.pl -e -p -c ../../../src/ebmc/ebmc
+	@$(TEST_PL) -e -p -c ../../../src/ebmc/ebmc
 
 tests.log:
-	@../test.pl -e -p -c ../../../src/ebmc/ebmc
+	@$(TEST_PL) -e -p -c ../../../src/ebmc/ebmc
 
 show:
 	@for dir in *; do \
