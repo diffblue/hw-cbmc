@@ -8,6 +8,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "instrument_buechi.h"
 
+#include <util/format_expr.h>
+
 #include <temporal-logic/ltl.h>
 #include <temporal-logic/ltl_to_buechi.h>
 #include <temporal-logic/temporal_logic.h>
@@ -67,5 +69,12 @@ void instrument_buechi(
     // so this is the negation of the Buechi acceptance condition.
     property.normalized_expr =
       F_exprt{G_exprt{not_exprt{buechi.liveness_signal}}};
+
+    if(!buechi.error_signal.is_true())
+      property.normalized_expr = and_exprt{
+        property.normalized_expr, G_exprt{not_exprt{buechi.error_signal}}};
+
+    message.debug() << "New property: " << format(property.normalized_expr)
+                    << messaget::eom;
   }
 }

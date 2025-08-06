@@ -1,0 +1,12 @@
+CORE
+../../verilog/SVA/sequence1.sv
+--buechi --bound 20 --numbered-trace
+^\[main\.p0\] ##\[0:9\] main\.x == 100: REFUTED$
+^Counterexample with 10 states:$
+^main\.x@0 = 0$
+^main\.x@9 = 9$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

@@ -17,16 +17,19 @@ struct buechi_transt
 
   exprt init;
   exprt trans;
+  exprt error_signal;
   exprt liveness_signal;
 
   buechi_transt(
     symbol_exprt __state_symbol,
     exprt __init,
     exprt __trans,
+    exprt __error_signal,
     exprt __liveness_signal)
     : state_symbol(std::move(__state_symbol)),
       init(std::move(__init)),
       trans(std::move(__trans)),
+      error_signal(std::move(__error_signal)),
       liveness_signal(std::move(__liveness_signal))
   {
   }

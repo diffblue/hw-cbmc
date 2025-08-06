@@ -1,0 +1,11 @@
+CORE
+../../verilog/SVA/sequence_repetition3.sv
+--buechi --bound 10
+^\[main\.p0\] \(main\.x == 0 \[\*1\]\) #=# \(main\.x == 1 \[\*1\]\): PROVED up to bound 10$
+^\[main\.p1\] \(main\.half_x == 0 \[\*2\]\) #=# \(main\.half_x == 1 \[\*2\]\): PROVED up to bound 10$
+^\[main\.p2\] main\.half_x == 0 \[\*3\]: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

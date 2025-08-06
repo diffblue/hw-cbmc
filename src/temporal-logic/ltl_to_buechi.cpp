@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ltl_to_buechi.h"
 
 #include <util/arith_tools.h>
+#include <util/expr_util.h>
 #include <util/format_expr.h>
 #include <util/message.h>
 #include <util/replace_expr.h>
@@ -37,6 +38,7 @@ void buechi_transt::rename_state_symbol(const symbol_exprt &new_state_symbol)
 
   replace_expr(replace_map, init);
   replace_expr(replace_map, trans);
+  replace_expr(replace_map, error_signal);
   replace_expr(replace_map, liveness_signal);
 
   state_symbol = new_state_symbol;
@@ -79,6 +81,23 @@ exprt hoa_label_to_expr(
     // atomic proposition, given as number
     return ltl_sva_to_string.atom(label.id_string());
   }
+}
+
+// a nonaccepting state with an unconditional self-loop
+bool is_error_state(const std::pair<hoat::state_namet, hoat::edgest> &state)
+{
+  if(!state.first.is_accepting())
+    return false;
+
+  for(auto &edge : state.second)
+  {
+    if(edge.label.id() == "t")
+      for(auto &dest : edge.dest_states)
+        if(dest == state.first.number)
+          return true;
+  }
+
+  return false;
 }
 
 buechi_transt
@@ -144,7 +163,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
     std::vector<exprt> liveness_disjuncts;
 
     for(auto &state : hoa.body)
-      if(!state.first.acc_sig.empty())
+      if(state.first.is_accepting())
       {
         liveness_disjuncts.push_back(equal_exprt{
           buechi_state, from_integer(state.first.number, state_type)});
@@ -153,6 +172,37 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
     auto liveness_signal = disjunction(liveness_disjuncts);
 
     message.debug() << "Buechi liveness signal: " << format(liveness_signal)
+                    << messaget::eom;
+
+    // construct the error signal -- true when the next automaton state
+    // is nonaccepting with an unconditional self-loop.
+    std::vector<exprt> error_disjuncts;
+
+    std::map<mp_integer, std::pair<hoat::state_namet, hoat::edgest>> state_map;
+    for(auto &state : hoa.body)
+      state_map[state.first.number] = state;
+
+    for(auto &state : hoa.body)
+    {
+      for(auto &edge : state.second)
+      {
+        if(edge.dest_states.size() != 1)
+          throw ebmc_errort() << "edge must have one destination state";
+        auto dest_state_it = state_map.find(edge.dest_states.front());
+        CHECK_RETURN(dest_state_it != state_map.end());
+        if(is_error_state(dest_state_it->second))
+        {
+          auto pre = equal_exprt{
+            buechi_state, from_integer(state.first.number, state_type)};
+          auto cond = hoa_label_to_expr(edge.label, ltl_sva_to_string);
+          error_disjuncts.push_back(and_exprt{pre, cond});
+        }
+      }
+    }
+
+    auto error_signal = disjunction(error_disjuncts);
+
+    message.debug() << "Buechi error signal: " << format(error_signal)
                     << messaget::eom;
 
     // construct the transition relation
@@ -183,6 +233,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
       buechi_state,
       std::move(init),
       std::move(trans),
+      std::move(error_signal),
       std::move(liveness_signal)};
   }
   catch(ltl_sva_to_string_unsupportedt error)

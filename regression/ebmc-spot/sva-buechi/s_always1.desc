@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ../../verilog/SVA/s_always1.sv
 --buechi --bound 20
 ^\[main\.p0\] s_always \[0:9\] main\.x < 10: PROVED up to bound 20$
@@ -8,4 +8,3 @@ KNOWNBUG
 --
 ^warning: ignoring
 --
-main.p1 is not refuted.

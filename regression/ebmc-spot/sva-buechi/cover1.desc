@@ -1,6 +1,6 @@
 CORE
-cover1.sv
---bound 10 --numbered-trace
+../../verilog/SVA/cover1.sv
+--buechi --bound 10 --numbered-trace
 ^\[main\.p0\] cover main\.counter == 1: PROVED$
 ^Trace with 2 states:$
 ^main\.counter@0 = 0$

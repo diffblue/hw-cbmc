@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ../../verilog/SVA/followed-by4.sv
 --buechi --bound 3
 ^\[main\.p1\] always \(main\.x == 0 #-# 1\): REFUTED$
@@ -9,4 +9,3 @@ KNOWNBUG
 --
 ^warning: ignoring
 --
-p1 is not refuted.
