@@ -100,6 +100,17 @@ bool is_error_state(const std::pair<hoat::state_namet, hoat::edgest> &state)
   return false;
 }
 
+/// Returns true iff all accepting states of the automaton have
+/// unconditional self loops
+bool is_safety_only(const hoat &hoa)
+{
+  for(auto &state : hoa.body)
+    if(state.first.is_accepting() && !is_error_state(state))
+      return false;
+
+  return true;
+}
+
 buechi_transt
 ltl_to_buechi(const exprt &property, message_handlert &message_handler)
 {
@@ -162,20 +173,32 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
     message.debug() << "Buechi initial state: " << format(init)
                     << messaget::eom;
 
-    // construct the liveness signal
-    std::vector<exprt> liveness_disjuncts;
+    exprt liveness_signal;
 
-    for(auto &state : hoa.body)
-      if(state.first.is_accepting())
-      {
-        liveness_disjuncts.push_back(equal_exprt{
-          buechi_state, from_integer(state.first.number, state_type)});
-      }
+    // Is safety sufficient?
+    if(is_safety_only(hoa))
+    {
+      liveness_signal = false_exprt{};
 
-    auto liveness_signal = disjunction(liveness_disjuncts);
+      message.debug() << "Buechi liveness signal not required" << messaget::eom;
+    }
+    else
+    {
+      // construct the liveness signal
+      std::vector<exprt> liveness_disjuncts;
 
-    message.debug() << "Buechi liveness signal: " << format(liveness_signal)
-                    << messaget::eom;
+      for(auto &state : hoa.body)
+        if(state.first.is_accepting())
+        {
+          liveness_disjuncts.push_back(equal_exprt{
+            buechi_state, from_integer(state.first.number, state_type)});
+        }
+
+      liveness_signal = disjunction(liveness_disjuncts);
+
+      message.debug() << "Buechi liveness signal: " << format(liveness_signal)
+                      << messaget::eom;
+    }
 
     // construct the error signal -- true when the next automaton state
     // is nonaccepting with an unconditional self-loop.
