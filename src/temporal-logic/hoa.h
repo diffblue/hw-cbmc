@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_TEMPORAL_LOGIC_HOA_H
 #define CPROVER_TEMPORAL_LOGIC_HOA_H
 
+#include <util/graph.h>
 #include <util/irep.h>
 
 #include <cstdint>
@@ -47,7 +48,7 @@ public:
     acc_sigt acc_sig; // acceptance sets
   };
   using edgest = std::list<edget>;
-  using bodyt = std::list<std::pair<state_namet, edgest>>;
+  using bodyt = std::vector<std::pair<state_namet, edgest>>;
   bodyt body;
 
   hoat(headert _header, bodyt _body)
@@ -68,6 +69,19 @@ public:
 
   // atomic propositions
   std::map<intt, std::string> ap_map;
+
+  // convert into a graph
+  struct graph_edget
+  {
+    labelt label;
+  };
+
+  grapht<graph_nodet<graph_edget>> graph() const;
+
+  // Remove accepting states that are not part of a cycle.
+  // These are irrelevant when using the standard Buechi
+  // acceptance criterion.
+  void buechi_acceptance_cleanup();
 };
 
 #endif // CPROVER_TEMPORAL_LOGIC_HOA_H

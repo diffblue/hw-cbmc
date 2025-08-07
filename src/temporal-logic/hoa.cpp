@@ -543,3 +543,40 @@ void hoat::output(std::ostream &out) const
 
   out << "--END--\n";
 }
+
+grapht<graph_nodet<hoat::graph_edget>> hoat::graph() const
+{
+  grapht<graph_nodet<hoat::graph_edget>> graph;
+
+  graph.resize(numeric_cast_v<std::size_t>(max_state_number() + 1));
+
+  for(auto &state : body)
+  {
+    for(auto &edge : state.second)
+      for(auto &dest : edge.dest_states)
+      {
+        graph.add_edge(state.first.number, dest);
+        graph.edge(state.first.number, dest).label = edge.label;
+      }
+  }
+
+  return graph;
+}
+
+void hoat::buechi_acceptance_cleanup()
+{
+  using hoa_grapht = grapht<graph_nodet<hoat::graph_edget>>;
+  auto as_graph = graph();
+  for(auto &state : body)
+  {
+    if(state.first.is_accepting())
+    {
+      hoa_grapht::patht loop_path;
+      as_graph.shortest_loop(state.first.number, loop_path);
+      // when this state is not part of any cycle,
+      // then we cannot have Buechi acceptance via this state
+      if(loop_path.empty())
+        state.first.acc_sig.clear();
+    }
+  }
+}
