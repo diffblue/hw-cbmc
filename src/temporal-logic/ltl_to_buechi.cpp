@@ -135,6 +135,9 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
 
     message.debug() << hoa << messaget::eom;
 
+    // clean up accepting states
+    hoa.buechi_acceptance_cleanup();
+
     auto max_state_number = hoa.max_state_number();
     auto state_type = range_typet{0, max_state_number};
     const auto buechi_state = symbol_exprt{"buechi::state", state_type};
