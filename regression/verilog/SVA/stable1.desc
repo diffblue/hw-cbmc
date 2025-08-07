@@ -1,0 +1,9 @@
+CORE
+stable1.sv
+--bound 20
+^\[main\.p0\] always \(\$stable\(main\.data\) \|=> main\.counter >= 1\): PROVED up to bound 20$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
