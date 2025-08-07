@@ -1,7 +1,7 @@
 CORE
 ../../verilog/SVA/sva_not1.sv
 --buechi
-^\[main\.p0] always not 0: PROVED up to bound \d+$
+^\[main\.p0] always not 0: PROVED \(tautology\)$
 ^\[main\.p1] always not 1: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$

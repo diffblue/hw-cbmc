@@ -1,0 +1,16 @@
+CORE
+tautology1.smv
+
+^\[.*\] 2 > 1: PROVED \(tautology\)$
+^\[.*\] G 2 > 1: PROVED \(tautology\)$
+^\[.*\] X 2 > 1: PROVED \(tautology\)$
+^\[.*\] F 2 > 1: PROVED \(tautology\)$
+^\[.*\] 2 > 1: PROVED \(tautology\)$
+^\[.*\] AG 2 > 1: PROVED \(tautology\)$
+^\[.*\] AX 2 > 1: PROVED \(tautology\)$
+^\[.*\] AF 2 > 1: PROVED \(tautology\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
