@@ -178,7 +178,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
     // is nonaccepting with an unconditional self-loop.
     std::vector<exprt> error_disjuncts;
 
-    std::map<mp_integer, std::pair<hoat::state_namet, hoat::edgest>> state_map;
+    std::map<hoat::intt, std::pair<hoat::state_namet, hoat::edgest>> state_map;
     for(auto &state : hoa.body)
       state_map[state.first.number] = state;
 

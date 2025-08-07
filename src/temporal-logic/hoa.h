@@ -10,8 +10,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #define CPROVER_TEMPORAL_LOGIC_HOA_H
 
 #include <util/irep.h>
-#include <util/mp_arith.h>
 
+#include <cstdint>
 #include <list>
 #include <map>
 #include <string>
@@ -24,12 +24,15 @@ public:
   using headert = std::list<std::pair<std::string, std::list<std::string>>>;
   headert header;
 
+  // A HOA INT is non-negative and less than 2^31
+  using intt = uint32_t;
+
   // body
   using labelt = irept;
   using acc_sigt = std::vector<std::string>;
   struct state_namet
   {
-    mp_integer number;
+    intt number;
     labelt label; // in-state condition
     acc_sigt acc_sig;
     bool is_accepting() const
@@ -40,7 +43,7 @@ public:
   struct edget
   {
     labelt label; // transition condition
-    std::vector<mp_integer> dest_states;
+    std::vector<intt> dest_states;
     acc_sigt acc_sig; // acceptance sets
   };
   using edgest = std::list<edget>;
@@ -61,10 +64,10 @@ public:
     return out;
   }
 
-  mp_integer max_state_number() const;
+  intt max_state_number() const;
 
   // atomic propositions
-  std::map<mp_integer, std::string> ap_map;
+  std::map<intt, std::string> ap_map;
 };
 
 #endif // CPROVER_TEMPORAL_LOGIC_HOA_H

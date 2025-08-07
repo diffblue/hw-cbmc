@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "hoa.h"
 
 #include <util/arith_tools.h>
+#include <util/string2int.h>
 
 #include <ebmc/ebmc_error.h>
 
@@ -167,9 +168,9 @@ hoa_tokenizert::tokent hoa_tokenizert::get_token(std::istream &in)
   }
 }
 
-mp_integer hoat::max_state_number() const
+hoat::intt hoat::max_state_number() const
 {
-  mp_integer max = 0;
+  intt max = 0;
 
   for(auto &state : body)
     max = std::max(max, state.first.number);
@@ -208,6 +209,7 @@ public:
   labelt parse_label_expr_and();
   labelt parse_label_expr_primary();
   acc_sigt parse_acc_sig();
+  hoat::intt parse_int();
 };
 
 hoat hoat::from_string(const std::string &src)
@@ -220,6 +222,15 @@ hoat hoat::from_string(const std::string &src)
   auto body = parser.parse_body();
 
   return hoat{header, body};
+}
+
+hoat::intt hoa_parsert::parse_int()
+{
+  auto text = tokenizer.consume().text;
+  auto int_opt = string2optional<hoat::intt>(text);
+  if(!int_opt.has_value())
+    throw ebmc_errort() << "HOA-parser failed to parse INT";
+  return int_opt.value();
 }
 
 hoat::headert hoa_parsert::parse_header()
@@ -284,8 +295,7 @@ hoat::state_namet hoa_parsert::parse_state_name()
     state_name.label = parse_label();
 
   // INT
-  auto number = tokenizer.consume().text;
-  state_name.number = string2integer(number);
+  state_name.number = parse_int();
 
   // STRING?
   if(tokenizer.peek().is_string())
@@ -324,11 +334,11 @@ hoat::edget hoa_parsert::parse_edge()
     edge.label = parse_label();
 
   // state-conj: INT | state-conj "&" INT
-  edge.dest_states.push_back(string2integer(tokenizer.consume().text));
+  edge.dest_states.push_back(parse_int());
   while(tokenizer.peek().text == "&")
   {
     tokenizer.consume();
-    edge.dest_states.push_back(string2integer(tokenizer.consume().text));
+    edge.dest_states.push_back(parse_int());
   }
 
   // acc-sig?
