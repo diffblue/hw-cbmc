@@ -51,7 +51,7 @@ jobs:
     outputs:
       deb_package_name: ${{ steps.create_packages.outputs.deb_package_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -141,7 +141,7 @@ jobs:
           save-always: true
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-centos8-make-gcc-
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Zero ccache stats and limit in size
@@ -222,7 +222,7 @@ jobs:
     outputs:
       wasm_package_name: ${{ steps.create_packages.outputs.wasm_package_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Fetch dependencies
