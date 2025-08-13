@@ -1,0 +1,14 @@
+CORE
+../../verilog/SVA/sequence_repetition1.sv
+--buechi --k-induction --bound 2
+^\[.*\] main\.half_x == 0 \[\*2\]: PROVED$
+^\[.*\] main\.half_x == 0 \[->2\]: UNSUPPORTED: unsupported by k-induction$
+^\[.*\] main\.half_x == 0 \[=2\]: UNSUPPORTED: unsupported by k-induction$
+^\[.*\] main\.x == 0 \[\*2\]: REFUTED$
+^\[.*\] main\.x == 0 \[->2\]: UNSUPPORTED: unsupported by k-induction$
+^\[.*\] main\.x == 0 \[=2\]: UNSUPPORTED: unsupported by k-induction$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
