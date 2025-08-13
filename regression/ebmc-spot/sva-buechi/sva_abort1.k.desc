@@ -1,0 +1,13 @@
+CORE
+../../verilog/SVA/sva_abort1.sv
+--buechi --k-induction --bound 2
+^\[main\.p0\] always \(accept_on \(main\.counter == 0\) main\.counter != 0\): PROVED$
+^\[main\.p1\] always \(accept_on \(1\) 0\): PROVED$
+^\[main\.p2\] always \(accept_on \(main\.counter == 1\) main\.counter == 0\): REFUTED$
+^\[main\.p3\] always \(reject_on \(main\.counter != 0\) 1\): REFUTED$
+^\[main\.p4\] always \(reject_on \(1\) 1\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

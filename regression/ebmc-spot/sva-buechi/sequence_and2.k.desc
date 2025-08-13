@@ -1,0 +1,11 @@
+CORE
+../../verilog/SVA/sequence_and2.sv
+--buechi --k-induction --bound 3
+\[.*\] \(1 and \(##2 1\)\) \|-> main\.x == 2: PROVED$
+\[.*\] \(\(##2 1\) and 1\) \|-> main\.x == 2: PROVED$
+\[.*\] \(\(##2 1\) and 1\) #-# main\.x == 2: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
