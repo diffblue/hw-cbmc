@@ -1,0 +1,6 @@
+CORE
+result1.sv
+--verbosity 4
+^\[main\.assert\.1\] always 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$

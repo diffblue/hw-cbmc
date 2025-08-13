@@ -102,7 +102,7 @@ void report_results(
       if(property.is_disabled())
         continue;
 
-      message.status() << "[" << property.name << "] " << property.description
+      message.result() << "[" << property.name << "] " << property.description
                        << ": ";
 
       using statust = ebmc_propertiest::propertyt::statust;
@@ -110,32 +110,32 @@ void report_results(
       switch(property.status)
       {
       // clang-format off
-      case statust::ASSUMED: message.status() << messaget::blue; break;
-      case statust::PROVED: message.status() << messaget::green; break;
-      case statust::PROVED_WITH_BOUND: message.status() << messaget::green; break;
-      case statust::REFUTED: message.status() << messaget::bright_red; break;
-      case statust::REFUTED_WITH_BOUND: message.status() << messaget::bright_red; break;
-      case statust::DROPPED: message.status() << messaget::red; break;
-      case statust::FAILURE: message.status() << messaget::red; break;
-      case statust::UNKNOWN: message.status() << messaget::yellow; break;
-      case statust::UNSUPPORTED: message.status() << messaget::yellow; break;
+      case statust::ASSUMED: message.result() << messaget::blue; break;
+      case statust::PROVED: message.result() << messaget::green; break;
+      case statust::PROVED_WITH_BOUND: message.result() << messaget::green; break;
+      case statust::REFUTED: message.result() << messaget::bright_red; break;
+      case statust::REFUTED_WITH_BOUND: message.result() << messaget::bright_red; break;
+      case statust::DROPPED: message.result() << messaget::red; break;
+      case statust::FAILURE: message.result() << messaget::red; break;
+      case statust::UNKNOWN: message.result() << messaget::yellow; break;
+      case statust::UNSUPPORTED: message.result() << messaget::yellow; break;
       case statust::DISABLED: break;
-      case statust::INCONCLUSIVE: message.status() << messaget::yellow; break;
+      case statust::INCONCLUSIVE: message.result() << messaget::yellow; break;
       }
       // clang-format on
 
-      message.status() << property.status_as_string();
+      message.result() << property.status_as_string();
 
-      message.status() << messaget::reset;
+      message.result() << messaget::reset;
 
       if(
         show_proof_via && property.is_proved() &&
         property.proof_via.has_value())
       {
-        message.status() << " (" << property.proof_via.value() << ')';
+        message.result() << " (" << property.proof_via.value() << ')';
       }
 
-      message.status() << messaget::eom;
+      message.result() << messaget::eom;
 
       if(property.has_witness_trace())
       {
@@ -145,29 +145,29 @@ void report_results(
 
         if(cmdline.isset("trace"))
         {
-          message.status() << term() << ":\n" << messaget::eom;
+          message.result() << term() << ":\n" << messaget::eom;
           show_trans_trace(
             property.witness_trace.value(), message, ns, std::cout);
         }
         else if(cmdline.isset("numbered-trace"))
         {
-          message.status() << term();
+          message.result() << term();
           auto failing_opt =
             property.witness_trace->get_min_failing_timeframe();
           if(failing_opt.has_value())
           {
             if(*failing_opt == 0)
-              message.status() << " with 1 state";
+              message.result() << " with 1 state";
             else
-              message.status() << " with " << *failing_opt + 1 << " states";
+              message.result() << " with " << *failing_opt + 1 << " states";
           }
-          message.status() << ':' << messaget::eom;
+          message.result() << ':' << messaget::eom;
           show_trans_trace_numbered(
             property.witness_trace.value(), message, ns, std::cout);
         }
         else if(cmdline.isset("waveform"))
         {
-          message.status() << term() << ":" << messaget::eom;
+          message.result() << term() << ":" << messaget::eom;
           show_waveform(property.witness_trace.value(), ns);
         }
       }
