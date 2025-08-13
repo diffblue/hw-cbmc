@@ -8,6 +8,7 @@
 * LTL/SVA to Buechi with --buechi
 * SMV: abs, bool, count, max, min, toint, word1
 * BMC: new encoding for F, avoiding spurious traces
+* EBMC: verification results now have "result" verbosity level
 
 # EBMC 5.6
 
