@@ -546,6 +546,13 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
       DATA_INVARIANT(
         false, "unexpected sva_sequence_non_consecutive_repetition");
   }
+  else if(expr.id() == ID_sva_sequence_first_match) // first_match(...)
+  {
+    PRECONDITION(mode == SVA_SEQUENCE);
+    auto &sequence = to_sva_sequence_first_match_expr(expr).sequence();
+    auto op_rec = rec(sequence, SVA_SEQUENCE);
+    return resultt{precedencet::ATOM, "first_match(" + op_rec.s + ')'};
+  }
   else if(!is_temporal_operator(expr))
   {
     auto number = atoms.number(expr);
