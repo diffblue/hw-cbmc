@@ -1203,6 +1203,7 @@ static inline sva_cycle_delay_exprt &to_sva_cycle_delay_expr(exprt &expr)
 class sva_cycle_delay_plus_exprt : public binary_exprt
 {
 public:
+  /// The operands are sequences, the LHS is optional, indicated by nil.
   explicit sva_cycle_delay_plus_exprt(exprt __lhs, exprt __rhs)
     : binary_exprt(
         std::move(__lhs),
@@ -1210,6 +1211,11 @@ public:
         std::move(__rhs),
         verilog_sva_sequence_typet{})
   {
+  }
+
+  bool has_lhs() const
+  {
+    return lhs().is_not_nil();
   }
 
   // ##[1:$] op
@@ -1235,6 +1241,7 @@ to_sva_cycle_delay_plus_expr(exprt &expr)
 class sva_cycle_delay_star_exprt : public binary_exprt
 {
 public:
+  /// The operands are a sequences, the LHS is optional, indicated by nil.
   explicit sva_cycle_delay_star_exprt(exprt __lhs, exprt __rhs)
     : binary_exprt(
         std::move(__lhs),
@@ -1242,6 +1249,11 @@ public:
         std::move(__rhs),
         verilog_sva_sequence_typet{})
   {
+  }
+
+  bool has_lhs() const
+  {
+    return lhs().is_not_nil();
   }
 
   // ##[0:$] op
