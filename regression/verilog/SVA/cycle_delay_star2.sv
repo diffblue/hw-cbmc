@@ -8,7 +8,8 @@ module main(input clk);
   always @(posedge clk)
     if(x<3) x++;
 
-  // fails -- 4 is never reached
+  // 4 is never reached, but this doesn't fail the property
+  // owing to weak sequence semantics.
   initial p0: assert property (##[*] x==4);
 
 endmodule
