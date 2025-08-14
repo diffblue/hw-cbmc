@@ -1,0 +1,13 @@
+CORE
+cycle_delay_star4.sv
+--bound 10
+^\[main\.p0\] main\.x == 0 ##\[\*\] main\.x == 0: PROVED up to bound 10$
+^\[main\.p1\] main\.x == 0 ##\[\*\] main\.x == 1: PROVED up to bound 10$
+^\[main\.p2\] main\.x == 0 ##\[\*\] main\.x == 2: PROVED up to bound 10$
+^\[main\.p3\] main\.x == 1 ##\[\*\] main\.x == 1: REFUTED$
+^\[main\.p4\] main\.x == 0 ##\[\*\] main\.x == 6: PROVED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
