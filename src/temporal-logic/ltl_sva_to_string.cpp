@@ -423,17 +423,19 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
+    // ##[*] x ---> 1[*] ; x
     PRECONDITION(mode == SVA_SEQUENCE);
     auto new_expr = unary_exprt{
       ID_sva_cycle_delay_star, to_sva_cycle_delay_star_expr(expr).rhs()};
-    return suffix("[*]", new_expr, mode);
+    return prefix("1[*] ; ", new_expr, mode);
   }
   else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
   {
+    // ##[+] x ---> 1[+] ; x
     PRECONDITION(mode == SVA_SEQUENCE);
     auto new_expr = unary_exprt{
-      ID_sva_cycle_delay_star, to_sva_cycle_delay_plus_expr(expr).rhs()};
-    return suffix("[+]", new_expr, mode);
+      ID_sva_cycle_delay_plus, to_sva_cycle_delay_plus_expr(expr).rhs()};
+    return prefix("1[+] ; ", new_expr, mode);
   }
   else if(expr.id() == ID_if)
   {
