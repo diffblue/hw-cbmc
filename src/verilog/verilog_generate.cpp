@@ -6,9 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include "verilog_typecheck.h"
+#include <util/arith_tools.h>
 
 #include "verilog_expr.h"
+#include "verilog_typecheck.h"
 
 /*******************************************************************\
 
@@ -268,7 +269,34 @@ void verilog_typecheckt::elaborate_generate_for(
 
     elaborate_generate_item(copy_of_body, dest);
 
-    // Now increase the loop counter.
-    elaborate_generate_assign(for_statement.increment(), dest);
+    // Now increase/decrease the loop counter.
+    {
+      auto statement = for_statement.iteration().id();
+      if(statement == ID_generate_assign)
+      {
+        elaborate_generate_assign(
+          to_verilog_generate_assign(for_statement.iteration()), dest);
+      }
+      else if(statement == ID_preincrement || statement == ID_predecrement)
+      {
+        // turn ++x and x++ into x = x + 1
+        // turn --x and x-- into x = x - 1
+        // The expressions are parse trees, prior to typechecking
+        auto &op = to_unary_expr(for_statement.iteration()).op();
+        auto one = constant_exprt{ID_1, typet{}};
+        auto new_value = binary_exprt{
+          op, statement == ID_preincrement ? ID_plus : ID_minus, one, typet{}};
+        auto assignment = verilog_generate_assignt{op, new_value};
+
+        elaborate_generate_assign(assignment, dest);
+      }
+      else
+      {
+        DATA_INVARIANT_WITH_DIAGNOSTICS(
+          false,
+          "unexpected genvar_iteration item",
+          for_statement.iteration().pretty());
+      }
+    }
   }
 }

@@ -3123,8 +3123,8 @@ generate_item_brace:
 
 loop_generate_construct:
 	  TOK_FOR '(' genvar_initialization ';'
-	              constant_expression ';'
-                      genvar_initialization ')'
+	              genvar_expression ';'
+                      genvar_iteration ')'
           generate_block
 		{ init($$, ID_generate_for);
 		  stack_expr($$).reserve_operands(4);
@@ -3135,9 +3135,20 @@ loop_generate_construct:
 		}
         ;
 
+genvar_expression: constant_expression;
+
 genvar_initialization:
 	  genvar_identifier '=' constant_expression
 	  	{ init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
+	;
+
+genvar_iteration:
+	  genvar_identifier assignment_operator genvar_expression
+		{ init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
+	| inc_or_dec_operator genvar_identifier
+		{ $$ = $1; mto($$, $2); }
+	| genvar_identifier inc_or_dec_operator
+		{ $$ = $2; mto($$, $1); }
 	;
 
 conditional_generate_construct:
@@ -4440,6 +4451,11 @@ unary_operator:
 	| TOK_CARETTILDE   { init($$, ID_reduction_xnor); }
 	| TOK_TILDECARET   { init($$, ID_reduction_xnor); }
         ;
+
+inc_or_dec_operator:
+	  TOK_PLUSPLUS     { init($$, ID_preincrement); }
+	| TOK_MINUSMINUS   { init($$, ID_predecrement); }
+	;
 
 // System Verilog standard 1800-2017
 // A.8.7 Numbers
