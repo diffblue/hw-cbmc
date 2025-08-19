@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ../../verilog/SVA/followed-by5.sv
 --buechi --bdd
 ^\[main\.p0\] \(1 \[\*0\]\) #=# main\.x == 0: PROVED$
@@ -8,4 +8,3 @@ KNOWNBUG
 --
 ^warning: ignoring
 --
-Empty LHS sequences are not implemented.
