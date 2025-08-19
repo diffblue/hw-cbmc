@@ -1,0 +1,14 @@
+CORE
+../../verilog/SVA/sequence_intersect1.sv
+--buechi --k-induction --bound 4
+^\[main\.p0\] main\.x == 0 intersect main\.x == 1: REFUTED$
+^\[main\.p1\] always main\.x >= 0: PROVED$
+^\[main\.p2\] always main\.x <= 5: PROVED$
+^\[main\.p3\] always main\.x <= 3: REFUTED$
+^\[main\.p4\] always \(main\.x >= 0 intersect main\.x <= 5\): PROVED$
+^\[main\.p5\] always \(main\.x >= 0 intersect main\.x <= 3\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
