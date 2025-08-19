@@ -1,0 +1,12 @@
+CORE
+../../verilog/SVA/sequence_first_match2.sv
+--buechi --k-induction --bound 2
+^\[.*\] \(\(##1 1\) or \(##2 1\)\) \|-> main.x == 1: REFUTED$
+^\[.*\] first_match\(\(##1 1\) or \(##2 1\)\) \|-> main\.x == 1: PROVED$
+^\[.*\] \(1 or \(##1 1\)\) \|-> main\.x == 0: REFUTED$
+^\[.*\] first_match\(1 or \(##1 1\)\) \|-> main\.x == 0: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
