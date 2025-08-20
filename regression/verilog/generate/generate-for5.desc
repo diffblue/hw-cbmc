@@ -1,0 +1,6 @@
+CORE
+generate-for5.sv
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+--

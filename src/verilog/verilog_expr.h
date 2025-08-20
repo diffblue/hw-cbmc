@@ -408,6 +408,12 @@ inline verilog_module_itemt &to_verilog_module_item(irept &irep)
 class verilog_generate_assignt : public verilog_module_itemt
 {
 public:
+  verilog_generate_assignt(exprt __lhs, exprt __rhs)
+    : verilog_module_itemt{ID_generate_assign}
+  {
+    add_to_operands(std::move(__lhs), std::move(__rhs));
+  }
+
   const exprt &lhs() const
   {
     return op0();
@@ -562,9 +568,10 @@ public:
     return op1();
   }
 
-  const verilog_generate_assignt &increment() const
+  // assignment, ++, --
+  const verilog_module_itemt &iteration() const
   {
-    return static_cast<const verilog_generate_assignt &>(op2());
+    return static_cast<const verilog_module_itemt &>(op2());
   }
 
   const verilog_module_itemt &body() const
