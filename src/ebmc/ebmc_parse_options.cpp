@@ -438,6 +438,7 @@ void ebmc_parse_optionst::help()
     " {y--systemverilog}             \t force SystemVerilog instead of Verilog\n"
     " {y--reset} {uexpr}             \t set up module reset\n"
     " {y--ignore-initial}            \t disregard initial blocks\n"
+    " {y--initial-zero}              \t initialize variables with zero\n"
     "\n"
     "Debugging options:\n"
     " {y--preprocess}                \t output the preprocessed source file\n"

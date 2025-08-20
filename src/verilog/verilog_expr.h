@@ -1080,6 +1080,12 @@ public:
     operands().resize(1);
   }
 
+  explicit verilog_initialt(verilog_statementt _statement)
+    : verilog_statementt(ID_initial)
+  {
+    add_to_operands(std::move(_statement));
+  }
+
   verilog_statementt &statement()
   {
     return static_cast<verilog_statementt &>(op0());
