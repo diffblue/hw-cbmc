@@ -1185,24 +1185,10 @@ exprt verilog_typecheck_exprt::convert_symbol(
 {
   const irep_idt &identifier = expr.get_identifier();
 
-  std::string full_identifier;
-
-  // in a task or function? Try local ones first
   if(function_or_task_name!="")
-  {
-    full_identifier=
-      id2string(function_or_task_name)+
-      "."+id2string(identifier);
-    
-    const symbolt *symbol;
-    if(!ns.lookup(full_identifier, symbol))
-    { // found!
-      expr.type()=symbol->type;
-      expr.set_identifier(full_identifier);
-      return std::move(expr);
-    }
-  }
-  
+    DATA_INVARIANT(!named_blocks.empty(), "must have named block");
+
+  std::string full_identifier;
   std::string named_block;
   
   // try named blocks, beginning with inner one
