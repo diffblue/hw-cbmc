@@ -1,0 +1,13 @@
+CORE
+../../verilog/SVA/cycle_delay_star4.sv
+--buechi
+^\[main\.p0\] main\.x == 0 ##\[\*\] main\.x == 0: PROVED \(1-induction\)$
+^\[main\.p1\] main\.x == 0 ##\[\*\] main\.x == 1: PROVED \(1-induction\)$
+^\[main\.p2\] main\.x == 0 ##\[\*\] main\.x == 2: PROVED \(1-induction\)$
+^\[main\.p3\] main\.x == 1 ##\[\*\] main\.x == 1: REFUTED$
+^\[main\.p4\] main\.x == 0 ##\[\*\] main\.x == 6: PROVED \(1-induction\)$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
