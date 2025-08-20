@@ -62,6 +62,7 @@ unsigned verilog_scopest::identifier_token(irep_idt base_name) const
     case verilog_scopet::FILE:      return TOK_NON_TYPE_IDENTIFIER;
     case verilog_scopet::PACKAGE:   return TOK_PACKAGE_IDENTIFIER;
     case verilog_scopet::MODULE:    return TOK_NON_TYPE_IDENTIFIER;
+    case verilog_scopet::INTERFACE: return TOK_INTERFACE_IDENTIFIER;
     case verilog_scopet::CLASS:     return TOK_CLASS_IDENTIFIER;
     case verilog_scopet::BLOCK:     return TOK_NON_TYPE_IDENTIFIER;
     case verilog_scopet::ENUM_NAME: return TOK_NON_TYPE_IDENTIFIER;

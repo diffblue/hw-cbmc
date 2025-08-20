@@ -541,6 +541,7 @@ int yyverilogerror(const char *error)
 %token TOK_ENDOFFILE
 %token TOK_NON_TYPE_IDENTIFIER
 %token TOK_CLASS_IDENTIFIER
+%token TOK_INTERFACE_IDENTIFIER
 %token TOK_PACKAGE_IDENTIFIER
 %token TOK_TYPE_IDENTIFIER
 %token TOK_NUMBER           // number, any base
@@ -736,10 +737,12 @@ interface_nonansi_header:
 	  attribute_instance_brace
 	  TOK_INTERFACE
 	  lifetime_opt
-	  interface_identifier
+	  any_identifier
 	  	{
 		  init($$, ID_verilog_interface);
-		  stack_expr($$).set(ID_base_name, stack_expr($4).id());
+		  auto base_name = stack_expr($4).id();
+		  stack_expr($$).set(ID_base_name, base_name);
+	          push_scope(base_name, ".", verilog_scopet::INTERFACE);
 	  	}
 	  package_import_declaration_brace
 	  parameter_port_list_opt
@@ -747,6 +750,7 @@ interface_nonansi_header:
 	  ';'
 	  	{
 	  	  $$ = $5;
+		  pop_scope();
 	  	}
 	;
 
@@ -981,6 +985,7 @@ port_direction:
 
 module_common_item:
           module_or_generate_item_declaration
+        | interface_instantiation
         | assertion_item
         | bind_directive
 	| continuous_assign
@@ -2979,7 +2984,7 @@ pass_switchtype:
 gate_instance_brace:
 	  gate_instance
 		{ init($$); mto($$, $1); }
-	| gate_instance_brace ',' module_instance
+	| gate_instance_brace ',' hierarchical_instance
 		{ $$=$1;    mto($$, $3); }
 	;
 
@@ -3003,7 +3008,7 @@ name_of_gate_instance: TOK_NON_TYPE_IDENTIFIER;
 // A.4.1.1 Module instantiation
 
 module_instantiation:
-	  module_identifier parameter_value_assignment_opt module_instance_brace ';'
+	  module_identifier parameter_value_assignment_opt hierarchical_instance_brace ';'
 		{ init($$, ID_inst);
                   addswap($$, ID_module, $1);
 		  addswap($$, ID_parameter_assignments, $2);
@@ -3053,14 +3058,14 @@ named_parameter_assignment:
 	  	}
 	;
 
-module_instance_brace:
-	  module_instance
+hierarchical_instance_brace:
+	  hierarchical_instance
 		{ init($$); mto($$, $1); }
-	| module_instance_brace ',' module_instance
+	| hierarchical_instance_brace ',' hierarchical_instance
 		{ $$=$1;    mto($$, $3); }
 	;
 
-module_instance:
+hierarchical_instance:
 	  name_of_instance '(' list_of_module_connections_opt ')'
 		{ init($$, ID_inst); addswap($$, ID_base_name, $1); swapop($$, $3); }
 	;
@@ -3104,6 +3109,16 @@ named_port_connection:
 		{ init($$, ID_named_port_connection);
                   mto($$, $2);
                   mto($$, $4); }
+	;
+
+hierarchical_instance: name_of_instance
+	;
+
+// System Verilog standard 1800-2017
+// A.4.1.2 Interface instantiation
+
+interface_instantiation:
+	  interface_identifier hierarchical_instance ';'
 	;
 
 // System Verilog standard 1800-2017
@@ -4537,7 +4552,7 @@ genvar_identifier: identifier;
 hierarchical_parameter_identifier: hierarchical_identifier
 	;
 
-interface_identifier: TOK_NON_TYPE_IDENTIFIER;
+interface_identifier: TOK_INTERFACE_IDENTIFIER;
 
 module_identifier: TOK_NON_TYPE_IDENTIFIER;
 
