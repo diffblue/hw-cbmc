@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 parameter_ports4.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-The type parameter port needs to be parsed as a type.
