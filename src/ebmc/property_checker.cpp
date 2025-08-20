@@ -22,6 +22,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_solver_factory.h"
 #include "ic3_engine.h"
 #include "k_induction.h"
+#include "liveness_engine.h"
 #include "netlist.h"
 #include "output_file.h"
 #include "report_results.h"
@@ -487,6 +488,11 @@ property_checker_resultt property_checker(
       return ic3_engine(
         cmdline, transition_system, properties, message_handler);
 #endif
+    }
+    else if(cmdline.isset("liveness"))
+    {
+      return liveness_engine(
+        cmdline, transition_system, properties, message_handler);
     }
     else if(cmdline.isset("bound"))
     {
