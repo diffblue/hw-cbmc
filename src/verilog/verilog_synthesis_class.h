@@ -310,7 +310,7 @@ protected:
 
   void instantiate_ports(
     const irep_idt &instance,
-    const exprt &inst,
+    const verilog_instt::instancet &inst,
     const symbolt &,
     const replace_mapt &,
     transt &);

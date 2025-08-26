@@ -5,6 +5,7 @@
 * Verilog: $onehot and $onehot0 are now elaboration-time constant
 * SystemVerilog: fix for #-# and #=# for empty matches
 * SystemVerilog: fix for |-> and |=> for empty matches
+* SystemVerilog: support 1800-2005 .*
 * LTL/SVA to Buechi with --buechi
 * SMV: abs, bool, count, max, min, toint, word1
 * BMC: new encoding for F, avoiding spurious traces

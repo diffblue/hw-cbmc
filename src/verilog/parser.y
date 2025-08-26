@@ -405,6 +405,7 @@ int yyverilogerror(const char *error)
 %token TOK_LSQPLUS              "[+"
 %token TOK_LSQEQUAL             "[="
 %token TOK_LSQMINUSGREATER      "[->"
+%token TOK_DOTASTERIC           ".*"
 
 /* System Verilog Keywords */
 %token TOK_ACCEPT_ON        "accept_on"
@@ -3101,9 +3102,10 @@ named_port_connection_brace:
 
 named_port_connection:
 	  '.' port_identifier '(' expression_opt ')'
-		{ init($$, ID_named_port_connection);
+		{ init($$, ID_verilog_named_port_connection);
                   mto($$, $2);
                   mto($$, $4); }
+	| ".*" { init($$, ID_verilog_wildcard_port_connection); }
 	;
 
 // System Verilog standard 1800-2017
@@ -3736,6 +3738,26 @@ open_value_range: value_range;
 
 // System Verilog standard 1800-2017
 // A.6.7.1 Patterns
+
+pattern:
+	  "." variable_identifier
+	| ".*"
+	| constant_expression
+	| "tagged" member_identifier
+	| "tagged" member_identifier pattern
+	| "'{" pattern_list "}"
+	| "'{" member_pattern_list "}"
+	;
+
+pattern_list:
+	  pattern
+	| pattern_list "," pattern
+	;
+
+member_pattern_list:
+          member_identifier ":" pattern
+        | member_pattern_list "," member_identifier ":" pattern
+        ;
 
 assignment_pattern:
 	  '\'' '{' expression_brace '}'

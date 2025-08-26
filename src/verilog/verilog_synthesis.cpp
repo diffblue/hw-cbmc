@@ -1376,17 +1376,17 @@ Function: verilog_synthesist::instantiate_ports
 
 void verilog_synthesist::instantiate_ports(
   const irep_idt &instance,
-  const exprt &inst,
+  const verilog_instt::instancet &inst,
   const symbolt &symbol,
   const replace_mapt &replace_map,
   transt &trans)
 {
-  if(inst.operands().size()==0)
+  if(inst.connections().size() == 0)
     return;
 
   // named port connection?
 
-  if(to_multi_ary_expr(inst).op0().id() == ID_named_port_connection)
+  if(inst.named_connections())
   {
     const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
 
@@ -1397,7 +1397,7 @@ void verilog_synthesist::instantiate_ports(
           to_symbol_expr((const exprt &)(port)).get_identifier());
 
     // no requirement that all ports are connected
-    for(const auto &o_it : inst.operands())
+    for(const auto &o_it : inst.connections())
     {
       if(o_it.operands().size()==2)
       {
@@ -1418,17 +1418,17 @@ void verilog_synthesist::instantiate_ports(
   {
     const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
 
-    if(inst.operands().size()!=ports.size())
+    if(inst.connections().size() != ports.size())
     {
       throw errort().with_location(inst.source_location())
         << "wrong number of ports: expected " << ports.size() << " but got "
-        << inst.operands().size();
+        << inst.connections().size();
     }
 
     irept::subt::const_iterator p_it=
       ports.begin();
 
-    for(const auto &o_it : inst.operands())
+    for(const auto &o_it : inst.connections())
     {
       DATA_INVARIANT(o_it.is_not_nil(), "all ports must be connected");
 

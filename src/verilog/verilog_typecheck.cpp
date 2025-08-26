@@ -123,16 +123,32 @@ void verilog_typecheckt::typecheck_port_connections(
   }
 
   // named port connection?
-
-  if(inst.connections().front().id() == ID_named_port_connection)
+  if(inst.named_connections())
   {
     // We don't require that all ports are connected.
   
     std::set<irep_idt> assigned_ports;
+    bool wildcard = false;
 
     for(auto &connection : inst.connections())
     {
-      if(connection.id() != ID_named_port_connection)
+      if(connection.id() == ID_verilog_wildcard_port_connection)
+      {
+        // .*
+        if(wildcard)
+        {
+          // .* can only be given once
+          throw errort{}.with_location(connection.source_location())
+            << "wildcard connection given more than once";
+        }
+        else
+        {
+          wildcard = true;
+          continue;
+        }
+      }
+
+      if(connection.id() != ID_verilog_named_port_connection)
       {
         throw errort().with_location(inst.source_location())
           << "expected a named port connection";
@@ -179,7 +195,7 @@ void verilog_typecheckt::typecheck_port_connections(
       assigned_ports.insert(identifier);
     }
   }
-  else // just a list without names
+  else // Positional connections, i.e., just a list without port names
   {
     if(inst.connections().size() != ports.size())
     {
