@@ -273,6 +273,8 @@ void verilog_scanner_init()
 "[+"            { SYSTEM_VERILOG_OPERATOR(TOK_LSQPLUS, "[+"); }
 "[="            { SYSTEM_VERILOG_OPERATOR(TOK_LSQEQUAL, "[="); }
 "[->"           { SYSTEM_VERILOG_OPERATOR(TOK_LSQMINUSGREATER, "[->"); }
+                /* port connections, patterns */
+".*"            { SYSTEM_VERILOG_OPERATOR(TOK_DOTASTERIC, ".*"); }
 
                 /* Verilog 1364-1995 keywords */
 

@@ -1381,6 +1381,10 @@ void verilog_synthesist::instantiate_ports(
     // no requirement that all ports are connected
     for(const auto &connection : inst.connections())
     {
+      if(connection.id() == ID_verilog_wildcard_port_connection)
+        throw errort{}.with_location(connection.source_location())
+          << "no support for wildcard port connection";
+
       auto &named_connection = to_verilog_named_port_connection(connection);
       auto port_it =
         port_map.find(to_symbol_expr(named_connection.port()).get_identifier());
