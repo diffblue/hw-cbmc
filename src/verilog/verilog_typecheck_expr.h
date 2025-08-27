@@ -209,8 +209,6 @@ protected:
   [[nodiscard]] exprt convert_ternary_sva(ternary_exprt);
   [[nodiscard]] exprt convert_other_sva(exprt);
 
-  static void set_default_sequence_semantics(exprt &, sva_sequence_semanticst);
-
   // system functions
   exprt bits(const exprt &);
   std::optional<mp_integer> bits_rec(const typet &) const;

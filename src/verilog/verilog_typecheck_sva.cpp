@@ -480,35 +480,3 @@ exprt verilog_typecheck_exprt::convert_sva_rec(exprt expr)
     return convert_other_sva(expr);
   }
 }
-
-// 1800-2017 16.12.2 Sequence property
-// Sequences are by default _weak_ when used in assert property
-// or assume property, and are _strong_ when used in cover property.
-// This flips when below the SVA not operator.
-void verilog_typecheck_exprt::set_default_sequence_semantics(
-  exprt &expr,
-  sva_sequence_semanticst semantics)
-{
-  if(expr.id() == ID_sva_sequence_property)
-  {
-    // apply
-    if(semantics == sva_sequence_semanticst::WEAK)
-      expr.id(ID_sva_implicit_weak);
-    else
-      expr.id(ID_sva_implicit_strong);
-  }
-  else if(expr.id() == ID_sva_not)
-  {
-    // flip
-    semantics = semantics == sva_sequence_semanticst::WEAK
-                  ? sva_sequence_semanticst::STRONG
-                  : sva_sequence_semanticst::WEAK;
-
-    set_default_sequence_semantics(to_sva_not_expr(expr).op(), semantics);
-  }
-  else
-  {
-    for(auto &op : expr.operands())
-      set_default_sequence_semantics(op, semantics);
-  }
-}
