@@ -1,0 +1,9 @@
+KNOWNBUG
+property_and1.sv
+--bdd
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This is rejected with a typechecking error.
