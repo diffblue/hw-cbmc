@@ -121,10 +121,8 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
     // These yield sequences when both operands are sequences, and
     // properties otherwise.
     if(
-      (expr.lhs().type().id() == ID_verilog_sva_sequence ||
-       !has_temporal_operator(expr.lhs())) &&
-      (expr.rhs().type().id() == ID_verilog_sva_sequence ||
-       !has_temporal_operator(expr.rhs())))
+      expr.lhs().type().id() != ID_verilog_sva_property &&
+      expr.rhs().type().id() != ID_verilog_sva_property)
     {
       expr.type() = verilog_sva_sequence_typet{};
       require_sva_sequence(expr.lhs());

@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 property_and1.sv
---bdd
+
+^\[.*\] always \(main\.P1 and main\.P1\): PROVED \(1-induction\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This is rejected with a typechecking error.
