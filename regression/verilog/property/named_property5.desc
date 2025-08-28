@@ -1,0 +1,9 @@
+KNOWNBUG
+named_property5.sv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This should be rejected.
