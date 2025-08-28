@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/string_hash.h>
 
+#include "sva_expr.h"
 #include "verilog_expr.h"
 #include "verilog_symbol_table.h"
 #include "verilog_typecheck_base.h"
@@ -234,6 +235,8 @@ protected:
     const exprt &lhs,
     const membert &member,
     assignmentt::datat &data);
+
+  static void set_default_sequence_semantics(exprt &, sva_sequence_semanticst);
 
   // module items
   virtual void convert_module_items(symbolt &);

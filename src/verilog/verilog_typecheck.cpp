@@ -1060,12 +1060,6 @@ void verilog_typecheckt::convert_assert_assume_cover(
   convert_sva(cond);
   require_sva_property(cond);
 
-  // 1800-2017 16.12.2 Sequence property
-  if(module_item.id() == ID_verilog_cover_property)
-    set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
-  else
-    set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
-
   // We create a symbol for the property.
   // The 'value' of the symbol is set by synthesis.
   const irep_idt &identifier = module_item.identifier();
@@ -1130,12 +1124,6 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   convert_sva(cond);
   require_sva_property(cond);
-
-  // 1800-2017 16.12.2 Sequence property
-  if(statement.id() == ID_verilog_cover_property)
-    set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
-  else
-    set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
 
   // We create a symbol for the property.
   // The 'value' is set by synthesis.

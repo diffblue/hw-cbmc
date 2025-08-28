@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 named_property4.sv
 
 ^EXIT=10$
@@ -6,4 +6,3 @@ named_property4.sv
 --
 ^warning: ignoring
 --
-This triggers an internal error.

@@ -130,6 +130,38 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
   UNREACHABLE;
 }
 
+// 1800-2017 16.12.2 Sequence property
+// Sequences are by default _weak_ when used in assert property
+// or assume property, and are _strong_ when used in cover property.
+// This flips when below the SVA not operator.
+void verilog_synthesist::set_default_sequence_semantics(
+  exprt &expr,
+  sva_sequence_semanticst semantics)
+{
+  if(expr.id() == ID_sva_sequence_property)
+  {
+    // apply
+    if(semantics == sva_sequence_semanticst::WEAK)
+      expr.id(ID_sva_implicit_weak);
+    else
+      expr.id(ID_sva_implicit_strong);
+  }
+  else if(expr.id() == ID_sva_not)
+  {
+    // flip
+    semantics = semantics == sva_sequence_semanticst::WEAK
+                  ? sva_sequence_semanticst::STRONG
+                  : sva_sequence_semanticst::WEAK;
+
+    set_default_sequence_semantics(to_sva_not_expr(expr).op(), semantics);
+  }
+  else
+  {
+    for(auto &op : expr.operands())
+      set_default_sequence_semantics(op, semantics);
+  }
+}
+
 /*******************************************************************\
 
 Function: verilog_synthesist::synthesis_constant
@@ -2326,6 +2358,12 @@ void verilog_synthesist::synth_assert_assume_cover(
     cond = sva_cover_exprt(cond);
   }
 
+  // 1800-2017 16.12.2 Sequence property
+  if(statement.id() == ID_verilog_cover_property)
+    set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
+  else
+    set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
+
   symbol.value = std::move(cond);
 }
 
@@ -2400,6 +2438,12 @@ void verilog_synthesist::synth_assert_assume_cover(
   }
   else
     PRECONDITION(false);
+
+  // 1800-2017 16.12.2 Sequence property
+  if(module_item.id() == ID_verilog_cover_property)
+    set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
+  else
+    set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
 
   symbol.value = std::move(cond);
 }
