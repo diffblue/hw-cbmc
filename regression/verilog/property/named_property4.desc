@@ -1,0 +1,9 @@
+KNOWNBUG
+named_property4.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This triggers an internal error.
