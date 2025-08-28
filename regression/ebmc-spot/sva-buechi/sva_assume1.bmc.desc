@@ -1,0 +1,10 @@
+CORE
+../../verilog/SVA/sva_assume1.sv
+--buechi --bound 10
+^\[main\.assume\.1\] always main\.a: ASSUMED$
+^\[main\.assert\.2\] s_eventually main\.a: PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
