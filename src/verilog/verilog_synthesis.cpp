@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "sva_expr.h"
 #include "verilog_expr.h"
+#include "verilog_initializer.h"
 #include "verilog_lowering.h"
 #include "verilog_typecheck_expr.h"
 
@@ -1502,6 +1503,7 @@ void verilog_synthesist::synth_module_instance(
     module_identifier,
     standard,
     ignore_initial,
+    initial_zero,
     get_message_handler());
 
   for(auto &instance : statement.instances())
@@ -1972,6 +1974,8 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
   {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
+    auto lhs = declarator.symbol_expr();
+
     // This is reg x = ... or wire x = ...
     if(declarator.has_value())
     {
@@ -1980,9 +1984,7 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
       construct=constructt::INITIAL;
       event_guard=event_guardt::NONE;
 
-      auto lhs = declarator.symbol_expr();
       auto rhs = declarator.value();
-
       const symbolt &symbol = ns.lookup(lhs);
 
       if(symbol.is_state_var)
@@ -2001,6 +2003,26 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
         verilog_continuous_assignt assign(equal_exprt(lhs, rhs));
         assign.add_source_location() = declarator.source_location();
         synth_continuous_assign(assign);
+      }
+    }
+    else if(initial_zero)
+    {
+      const symbolt &symbol = ns.lookup(lhs);
+
+      if(symbol.is_state_var)
+      {
+        // much like: initial LHS=0;
+        auto rhs_opt = verilog_default_initializer(lhs.type());
+        if(!rhs_opt.has_value())
+        {
+          throw errort().with_location(declarator.source_location())
+            << "cannot default-initialize `" << to_string(lhs) << "'";
+        }
+        verilog_initialt initial{verilog_blocking_assignt{lhs, *rhs_opt}};
+        initial.statement().add_source_location() =
+          declarator.source_location();
+        initial.add_source_location() = declarator.source_location();
+        synth_initial(initial);
       }
     }
   }
@@ -3780,11 +3802,18 @@ bool verilog_synthesis(
   const irep_idt &module,
   verilog_standardt standard,
   bool ignore_initial,
+  bool initial_zero,
   message_handlert &message_handler)
 {
   const namespacet ns(symbol_table);
   verilog_synthesist verilog_synthesis(
-    standard, ignore_initial, ns, symbol_table, module, message_handler);
+    standard,
+    ignore_initial,
+    initial_zero,
+    ns,
+    symbol_table,
+    module,
+    message_handler);
   return verilog_synthesis.typecheck_main();
 }
 
@@ -3813,7 +3842,13 @@ bool verilog_synthesis(
     message_handler.get_message_count(messaget::M_ERROR);
 
   verilog_synthesist verilog_synthesis(
-    standard, false, ns, symbol_table, module_identifier, message_handler);
+    standard,
+    false,
+    false,
+    ns,
+    symbol_table,
+    module_identifier,
+    message_handler);
 
   try
   {
