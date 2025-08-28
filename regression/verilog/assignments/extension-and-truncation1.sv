@@ -24,6 +24,12 @@ module converter(input signed [7:0] si, input unsigned [7:0] ui);
   wire unsigned [7:0] ub1 = ui; // unsigned 8 to unsigned 8
   wire unsigned [7:0] ub2 = si; // signed 8 to unsigned 8
 
+  // just one bit
+  wire signed sbit1 = ui;       // unsigned 8 to signed 1
+  wire signed sbit2 = si;       // signed 8 to signed 1
+  wire unsigned ubit1 = ui;     // unsigned 8 to unsigned 1
+  wire unsigned ubit2 = si;     // signed 8 to unsigned 1
+
 endmodule
 
 module main;
@@ -42,6 +48,10 @@ module main;
   assert final(c.sb2 == -120);
   assert final(c.ub1 == 136);
   assert final(c.ub2 == 136);
+  assert final(c.sbit1 == 0);
+  assert final(c.sbit2 == 0);
+  assert final(c.ubit1 == 0);
+  assert final(c.ubit2 == 0);
 
   initial begin
     $display("c.sw1 == ", c.sw1);
@@ -58,6 +68,11 @@ module main;
     $display("c.sb2 == ", c.sb2);
     $display("c.ub1 == ", c.ub1);
     $display("c.ub2 == ", c.ub2);
+
+    $display("c.sbit1 == ", c.sbit1);
+    $display("c.sbit2 == ", c.sbit2);
+    $display("c.ubit1 == ", c.ubit1);
+    $display("c.ubit2 == ", c.ubit2);
   end
 
 endmodule
