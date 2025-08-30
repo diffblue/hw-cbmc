@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_types.h>
 #include <util/prefix.h>
 
+#include "verilog_initializer.h"
 #include "verilog_typecheck_base.h"
 #include "verilog_types.h"
 
@@ -535,9 +536,7 @@ exprt verilog_inside_exprt::lower() const
 
 exprt verilog_past_exprt::default_value() const
 {
-  auto zero = from_integer(0, type());
-  if(zero.is_nil())
-    throw "failed to create $past default value";
-  else
-    return std::move(zero);
+  auto value_opt = verilog_default_initializer(type());
+  CHECK_RETURN(value_opt.has_value());
+  return *value_opt;
 }
