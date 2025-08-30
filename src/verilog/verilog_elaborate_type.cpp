@@ -402,7 +402,7 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
         declaration.id() == ID_decl, "struct type must have declarations");
 
       // Convert the type
-      auto type = elaborate_type(declaration_expr.type());
+      auto &type = declaration_expr.type();
 
       // Convert the declarators
       for(auto &declarator_expr : declaration_expr.operands())
@@ -410,22 +410,11 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
         auto &declarator =
           static_cast<const verilog_declaratort &>(declarator_expr);
 
+        // merge the types, and elaborate
+        auto merged_type = elaborate_type(declarator.merged_type(type));
+
         struct_union_typet::componentt component;
-
-        // compose the type
-        if(declarator.type().is_nil())
-          component.type() = type;
-        else if(declarator.type().id() == ID_array)
-        {
-          throw errort().with_location(declarator.source_location())
-            << "array in struct";
-        }
-        else
-        {
-          throw errort().with_location(declarator.source_location())
-            << "unexpected type on declarator";
-        }
-
+        component.type() = std::move(merged_type);
         component.add_source_location() = declarator.source_location();
         component.set_base_name(declarator.base_name());
         component.set_name(declarator.base_name());
