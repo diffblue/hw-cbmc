@@ -1,0 +1,9 @@
+KNOWNBUG
+compilation_unit_scope_function.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The function identifier is not found at the call site.
