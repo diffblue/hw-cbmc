@@ -2096,7 +2096,15 @@ std::string expr2verilogt::convert(const typet &type)
   else if(type.id()==ID_array)
   {
     auto &array_type = to_array_type(type);
-    std::string dest="array [";
+
+    std::string dest;
+
+    if(type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+      dest += "unpacked ";
+    else if(type.get(ID_C_verilog_type) == ID_verilog_packed_array)
+      dest += "packed ";
+
+    dest += "array [";
 
     dest += convert(array_type.size());
 
