@@ -1444,6 +1444,35 @@ void verilog_synthesist::instantiate_ports(
           is_output, port, value, replace_map, inst.source_location(), trans);
       }
     }
+
+    std::set<irep_idt> connected_ports;
+
+    for(const auto &connection : inst.connections())
+    {
+      auto &named_connection = to_verilog_named_port_connection(connection);
+      connected_ports.insert(
+        to_symbol_expr(named_connection.port()).get_identifier());
+    }
+
+    // unconnected inputs may be given a default value
+    for(auto &port : ports)
+      if(port.get_bool(ID_input))
+      {
+        auto &port_symbol_expr = to_symbol_expr((const exprt &)(port));
+        auto identifier = port_symbol_expr.get_identifier();
+        if(connected_ports.find(identifier) == connected_ports.end())
+        {
+          auto &port_symbol = ns.lookup(port_symbol_expr);
+          if(port_symbol.value.is_not_nil())
+            instantiate_port(
+              false,
+              port_symbol_expr,
+              port_symbol.value,
+              replace_map,
+              inst.source_location(),
+              trans);
+        }
+      }
   }
   else // just a list without names
   {

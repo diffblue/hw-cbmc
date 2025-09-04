@@ -1,7 +1,9 @@
-KNOWNBUG
+CORE
 port_with_value1.sv
 
-^EXIT=0$
+^\[main\.m1\.eq] always M1\.in1 == M1\.in2: REFUTED$
+^\[main\.m2\.eq] always M1\.in1 == M1\.in2: PROVED .*$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
