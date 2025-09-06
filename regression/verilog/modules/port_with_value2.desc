@@ -1,0 +1,9 @@
+CORE
+port_with_value2.sv
+
+^file .* line 2: output ports must not have a default value$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

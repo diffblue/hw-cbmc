@@ -1409,17 +1409,17 @@ Function: verilog_synthesist::instantiate_ports
 
 void verilog_synthesist::instantiate_ports(
   const irep_idt &instance,
-  const exprt &inst,
+  const verilog_instt::instancet &inst,
   const symbolt &symbol,
   const replace_mapt &replace_map,
   transt &trans)
 {
-  if(inst.operands().size()==0)
+  if(inst.connections().empty())
     return;
 
   // named port connection?
 
-  if(to_multi_ary_expr(inst).op0().id() == ID_named_port_connection)
+  if(inst.connections().front().id() == ID_named_port_connection)
   {
     const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
 
@@ -1430,47 +1430,79 @@ void verilog_synthesist::instantiate_ports(
           to_symbol_expr((const exprt &)(port)).get_identifier());
 
     // no requirement that all ports are connected
-    for(const auto &o_it : inst.operands())
+    for(const auto &connection : inst.connections())
     {
-      if(o_it.operands().size()==2)
-      {
-        const auto &op0 = to_symbol_expr(to_binary_expr(o_it).op0());
-        const exprt &op1 = to_binary_expr(o_it).op1();
+      auto &named_connection = to_verilog_named_port_connection(connection);
+      const auto &port = to_symbol_expr(named_connection.port());
+      const exprt &value = named_connection.value();
 
-        if(op1.is_not_nil())
-        {
-          bool is_output = output_identifiers.find(op0.get_identifier()) !=
-                           output_identifiers.end();
-          instantiate_port(
-            is_output, op0, op1, replace_map, inst.source_location(), trans);
-        }
+      if(value.is_not_nil())
+      {
+        bool is_output = output_identifiers.find(port.get_identifier()) !=
+                         output_identifiers.end();
+        instantiate_port(
+          is_output, port, value, replace_map, inst.source_location(), trans);
       }
     }
+
+    std::set<irep_idt> connected_ports;
+
+    for(const auto &connection : inst.connections())
+    {
+      auto &named_connection = to_verilog_named_port_connection(connection);
+      connected_ports.insert(
+        to_symbol_expr(named_connection.port()).get_identifier());
+    }
+
+    // unconnected inputs may be given a default value
+    for(auto &port : ports)
+      if(port.get_bool(ID_input))
+      {
+        auto &port_symbol_expr = to_symbol_expr((const exprt &)(port));
+        auto identifier = port_symbol_expr.get_identifier();
+        if(connected_ports.find(identifier) == connected_ports.end())
+        {
+          auto &port_symbol = ns.lookup(port_symbol_expr);
+          if(port_symbol.value.is_not_nil())
+            instantiate_port(
+              false,
+              port_symbol_expr,
+              port_symbol.value,
+              replace_map,
+              inst.source_location(),
+              trans);
+        }
+      }
   }
   else // just a list without names
   {
     const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
 
-    if(inst.operands().size()!=ports.size())
+    if(inst.connections().size() != ports.size())
     {
       throw errort().with_location(inst.source_location())
         << "wrong number of ports: expected " << ports.size() << " but got "
-        << inst.operands().size();
+        << inst.connections().size();
     }
 
     irept::subt::const_iterator p_it=
       ports.begin();
 
-    for(const auto &o_it : inst.operands())
+    for(const auto &connection : inst.connections())
     {
-      DATA_INVARIANT(o_it.is_not_nil(), "all ports must be connected");
+      DATA_INVARIANT(connection.is_not_nil(), "all ports must be connected");
 
       auto &port = to_symbol_expr((const exprt &)(*p_it));
 
       bool is_output = port.get_bool(ID_output);
 
       instantiate_port(
-        is_output, port, o_it, replace_map, inst.source_location(), trans);
+        is_output,
+        port,
+        connection,
+        replace_map,
+        inst.source_location(),
+        trans);
       p_it++;
     }
   }
