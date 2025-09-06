@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/string2int.h>
 
+#include "aval_bval_encoding.h"
 #include "convert_literals.h"
 #include "expr2verilog.h"
 #include "verilog_bits.h"
@@ -484,6 +485,31 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
     propagate_type(arguments[i], parameter_types[i].type());
 
   return std::move(expr);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::isunknown
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::isunknown(const constant_exprt &expr)
+{
+  // constant folding for $isunknown
+  auto bval = ::bval(expr);
+  auto bval_simplified = verilog_simplifier(bval, ns);
+  CHECK_RETURN(bval_simplified.is_constant());
+  auto all_zeros = to_bv_type(bval_simplified.type()).all_zeros_expr();
+  if(bval_simplified == all_zeros)
+    return false_exprt{};
+  else
+    return true_exprt{};
 }
 
 /*******************************************************************\
@@ -976,6 +1002,18 @@ exprt verilog_typecheck_exprt::convert_system_function(
     }
 
     expr.type() = integer_typet();
+
+    return std::move(expr);
+  }
+  else if(identifier == "$isunknown")
+  {
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$isunknown takes one argument";
+    }
+
+    expr.type() = bool_typet();
 
     return std::move(expr);
   }
@@ -1783,6 +1821,17 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
   {
     DATA_INVARIANT(arguments.size() == 1, "$typename takes one argument");
     return typename_string(arguments[0]);
+  }
+  else if(identifier == "$isunknown")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$isunknown takes one argument");
+
+    auto op = elaborate_constant_expression(arguments[0]);
+
+    if(!op.is_constant())
+      return std::move(expr); // give up
+    else
+      return isunknown(to_constant_expr(op));
   }
   else
     return std::move(expr); // don't know it, won't elaborate
