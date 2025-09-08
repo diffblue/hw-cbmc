@@ -1,0 +1,8 @@
+KNOWNBUG
+array_conversion1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This yields a type checking error.
