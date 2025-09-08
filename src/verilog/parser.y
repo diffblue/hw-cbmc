@@ -899,7 +899,7 @@ ansi_port_declaration_brace:
 
           // append to last one -- required to make 
           // the grammar LR1
-	| ansi_port_declaration_brace ',' port_identifier
+	| ansi_port_declaration_brace ',' port_identifier ansi_port_initializer_opt
 		{ $$=$1;
 		  exprt decl(ID_decl);
 		  decl.add_to_operands(std::move(stack_expr($3)));
@@ -907,6 +907,7 @@ ansi_port_declaration_brace:
 		  const irept &prev=stack_expr($$).get_sub().back();
                   decl.set(ID_type, prev.find(ID_type));
                   decl.set(ID_class, prev.find(ID_class));
+                  decl.set(ID_value, stack_expr($4));
 		  stack_expr($$).move_to_sub(decl);
 		}
 	;
@@ -935,6 +936,7 @@ ansi_port_declaration:
                   // and the unpacked_array_type goes onto the declarator.
                   stack_expr($$).type() = std::move(stack_expr($1).type());
                   addswap($2, ID_type, $3);
+                  stack_expr($2).set(ID_value, stack_expr($4));
                   mto($$, $2); /* declarator */ }
 	| variable_port_header port_identifier unpacked_dimension_brace ansi_port_initializer_opt
 		{ init($$, ID_decl);
@@ -946,6 +948,7 @@ ansi_port_declaration:
                   // and the unpacked_array_type goes onto the declarator.
                   stack_expr($$).type() = std::move(stack_expr($1).type());
                   addswap($2, ID_type, $3);
+                  stack_expr($2).set(ID_value, stack_expr($4));
                   mto($$, $2); /* declarator */ }
 	;
 

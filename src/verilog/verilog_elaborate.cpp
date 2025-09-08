@@ -62,6 +62,21 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
     new_symbol.base_name = base_name;
     new_symbol.pretty_name = strip_verilog_prefix(new_symbol.name);
 
+    // When using ANSI style, input ports may have an
+    // elaboration-time constant default value
+    auto &default_value = declarator.value();
+    if(default_value.is_not_nil())
+    {
+      if(new_symbol.is_output)
+        throw errort{}.with_location(default_value.source_location())
+          << "output ports must not have a default value";
+
+      auto value = default_value;
+      convert_expr(value);
+      auto elaborated_value = elaborate_constant_expression_check(value);
+      new_symbol.value = elaborated_value;
+    }
+
     add_symbol(std::move(new_symbol));
   }
 }
