@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 named_property5.sv
 
+^file .* line 8: cannot use SVA property as an expression$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This should be rejected.

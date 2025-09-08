@@ -122,6 +122,17 @@ void verilog_typecheck_exprt::propagate_type(
   if(expr.type()==type)
     return;
 
+  if(expr.type().id() == ID_verilog_sva_sequence)
+  {
+    throw errort{}.with_location(expr.source_location())
+      << "cannot use SVA sequence as an expression";
+  }
+  else if(expr.type().id() == ID_verilog_sva_property)
+  {
+    throw errort{}.with_location(expr.source_location())
+      << "cannot use SVA property as an expression";
+  }
+
   vtypet vt_from=vtypet(expr.type());
   vtypet vt_to  =vtypet(type);
 
@@ -2223,8 +2234,19 @@ Function: verilog_typecheck_exprt::make_boolean
 
 void verilog_typecheck_exprt::make_boolean(exprt &expr)
 {
-  if(expr.type().id()!=ID_bool)
+  if(expr.type().id() == ID_verilog_sva_sequence)
   {
+    throw errort{}.with_location(expr.source_location())
+      << "cannot use SVA sequence as an expression";
+  }
+  else if(expr.type().id() == ID_verilog_sva_property)
+  {
+    throw errort{}.with_location(expr.source_location())
+      << "cannot use SVA property as an expression";
+  }
+  else if(expr.type().id() != ID_bool)
+  {
+    // everything else can be converted to Boolean
     mp_integer value;
     if(!to_integer_non_constant(expr, value))
       expr = make_boolean_expr(value != 0);
