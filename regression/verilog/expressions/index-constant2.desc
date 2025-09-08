@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 index-constant2.sv
 
 ^\[.*\] .* PROVED .*$

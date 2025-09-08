@@ -2787,6 +2787,9 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
   }
   else
   {
+    // extractbit works on bit vectors only
+    no_bool_ops(expr);
+
     auto width = get_width(op0.type());
     auto offset = op0.type().get_int(ID_C_offset);
 
