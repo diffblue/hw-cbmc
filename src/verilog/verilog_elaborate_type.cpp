@@ -73,6 +73,7 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   auto result = array_typet{element_type, final_size_expr};
   result.set(ID_offset, from_integer(offset, integer_typet()));
   result.set(ID_C_increasing, increasing);
+  result.set(ID_C_verilog_type, ID_verilog_unpacked_array);
 
   return result;
 }
@@ -123,6 +124,7 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
     dest.set_width(width.to_ulong());
     dest.set(ID_C_increasing, range.increasing());
     dest.set(ID_C_offset, integer2string(offset));
+    dest.set(ID_C_verilog_type, ID_verilog_packed_array);
 
     return std::move(dest).with_source_location(source_location);
   }
@@ -142,6 +144,7 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
 
     array_typet result{element_type, size};
     result.set(ID_offset, from_integer(offset, integer_typet()));
+    result.set(ID_C_verilog_type, ID_verilog_packed_array);
 
     return std::move(result).with_source_location(source_location);
   }
