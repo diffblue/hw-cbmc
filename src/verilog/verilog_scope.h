@@ -73,6 +73,9 @@ struct verilog_scopet
   // sub-scopes
   using scope_mapt = std::map<irep_idt, verilog_scopet>;
   scope_mapt scope_map;
+
+  //.the scanner token number
+  unsigned identifier_token() const;
 };
 
 class verilog_scopest
