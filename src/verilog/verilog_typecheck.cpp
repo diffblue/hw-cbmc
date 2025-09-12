@@ -257,20 +257,18 @@ Function: verilog_typecheckt::convert_function_or_task
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_function_or_task(verilog_declt &decl)
+void verilog_typecheckt::convert_function_or_task(
+  verilog_function_or_task_declt &decl)
 {
-  irep_idt decl_class=decl.get_class();
-
-  const std::string identifier=
-    id2string(module_identifier)+"."+
-    id2string(decl.get_identifier());
+  const std::string identifier =
+    id2string(module_identifier) + "." + id2string(decl.base_name());
 
   auto result=symbol_table.get_writeable(identifier);
 
   if(result==nullptr)
   {
     throw errort().with_location(decl.source_location())
-      << "expected to find " << decl_class << " symbol `" << identifier
+      << "expected to find " << decl.id() << " symbol `" << identifier
       << "' in symbol_table";
   }
   
@@ -320,7 +318,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
     ns.lookup(to_symbol_expr(function_call.function()));
 
   // typecheck it
-  verilog_declt decl=to_verilog_decl(function_symbol.value);
+  auto decl = to_verilog_function_or_task_decl(function_symbol.value);
 
   function_or_task_name = function_symbol.name;
 
@@ -395,13 +393,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
 {
   irep_idt decl_class=decl.get_class();
 
-  if(decl_class==ID_function ||
-     decl_class==ID_task)
-  {
-    convert_function_or_task(decl);
-    return;
-  }
-  else if(decl_class == ID_verilog_genvar)
+  if(decl_class == ID_verilog_genvar)
   {
     // ignore here
     return;
@@ -1638,7 +1630,15 @@ void verilog_typecheckt::convert_module_item(
   {
   }
   else if(module_item.id()==ID_decl)
+  {
     convert_decl(to_verilog_decl(module_item));
+  }
+  else if(
+    module_item.id() == ID_verilog_function_decl ||
+    module_item.id() == ID_verilog_task_decl)
+  {
+    convert_function_or_task(to_verilog_function_or_task_decl(module_item));
+  }
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
   {

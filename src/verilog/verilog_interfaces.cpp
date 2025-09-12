@@ -243,6 +243,12 @@ void verilog_typecheckt::interface_module_item(
   if(module_item.id()==ID_decl)
   {
   }
+  else if(module_item.id() == ID_verilog_function_decl)
+  {
+  }
+  else if(module_item.id() == ID_verilog_task_decl)
+  {
+  }
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
   {
