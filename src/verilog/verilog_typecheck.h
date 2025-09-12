@@ -95,6 +95,7 @@ protected:
   void collect_symbols(const verilog_module_sourcet &);
   void collect_symbols(const verilog_module_itemt &);
   void collect_symbols(const verilog_declt &);
+  void collect_symbols(const verilog_function_or_task_declt &);
   void collect_symbols(const verilog_lett &);
   void collect_symbols(const verilog_statementt &);
   void collect_symbols(const verilog_property_declarationt &);
@@ -169,7 +170,7 @@ protected:
 
   // module items
   void convert_decl(class verilog_declt &);
-  void convert_function_or_task(class verilog_declt &);
+  void convert_function_or_task(class verilog_function_or_task_declt &);
   void convert_inst(class verilog_instt &);
   void convert_inst_builtin(class verilog_inst_builtint &);
   void convert_always_base(class verilog_always_baset &);

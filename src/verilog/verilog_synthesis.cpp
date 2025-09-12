@@ -416,7 +416,7 @@ exprt verilog_synthesist::expand_function_call(
 
   // this is essentially inlined
   const symbol_exprt &function=to_symbol_expr(call.function());
-  
+
   const symbolt &symbol=ns.lookup(function);
   
   if(symbol.type.id()!=ID_code)
@@ -2062,6 +2062,23 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
 
 /*******************************************************************\
 
+Function: verilog_synthesist::synth_function_or_task_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::synth_function_or_task_decl(
+  const verilog_function_or_task_declt &statement)
+{
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::synth_block
 
   Inputs:
@@ -3125,7 +3142,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
   else
   {
     const symbolt &symbol=ns.lookup(identifier);
-    
+
     if(symbol.type.id()!=ID_code)
     {
       throw errort().with_location(statement.source_location())
@@ -3283,6 +3300,11 @@ void verilog_synthesist::synth_statement(
   {
     synth_decl(to_verilog_decl(statement));
   }
+  else if(
+    statement.id() == ID_verilog_function_decl ||
+    statement.id() == ID_verilog_task_decl)
+  {
+  }
   else if(statement.id()==ID_skip)
   {
     // do nothing
@@ -3320,7 +3342,15 @@ void verilog_synthesist::synth_module_item(
   {
   }
   else if(module_item.id()==ID_decl)
+  {
     synth_decl(to_verilog_decl(module_item));
+  }
+  else if(
+    module_item.id() == ID_verilog_function_decl ||
+    module_item.id() == ID_verilog_task_decl)
+  {
+    synth_function_or_task_decl(to_verilog_function_or_task_decl(module_item));
+  }
   else if(
     module_item.id() == ID_parameter_decl ||
     module_item.id() == ID_local_parameter_decl ||

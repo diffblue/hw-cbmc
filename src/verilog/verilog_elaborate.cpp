@@ -537,76 +537,76 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbols_added.push_back(symbol.name);
     }
   }
-  else if(decl_class == ID_function || decl_class == ID_task)
-  {
-    typet return_type;
-
-    if(decl_class == ID_function)
-      return_type = elaborate_type(decl.type());
-    else
-      return_type = empty_typet();
-
-    auto base_name = decl.get_identifier();
-    auto identifier = hierarchical_identifier(base_name);
-    symbolt symbol{identifier, code_typet{{}, std::move(return_type)}, mode};
-
-    symbol.base_name = base_name;
-    symbol.location = decl.source_location();
-    symbol.pretty_name = strip_verilog_prefix(symbol.name);
-    symbol.module = module_identifier;
-    symbol.value = decl;
-
-    add_symbol(symbol);
-
-    function_or_task_name = symbol.name;
-
-    // do the ANSI-style ports, if applicable
-    for(auto &port_decl : decl.ports())
-    {
-      // These must have one declarator exactly.
-      DATA_INVARIANT(
-        port_decl.declarators().size() == 1, "must have one port declarator");
-      collect_symbols(port_decl); // rec. call
-    }
-
-    // add a symbol for the return value of functions, if applicable
-
-    if(
-      decl_class == ID_function &&
-      to_code_type(symbol.type).return_type().id() != ID_verilog_void)
-    {
-      symbolt return_symbol;
-      return_symbol.is_state_var = true;
-      return_symbol.is_lvalue = true;
-      return_symbol.mode = symbol.mode;
-      return_symbol.module = symbol.module;
-      return_symbol.base_name = symbol.base_name;
-      return_symbol.value = nil_exprt();
-      return_symbol.type = to_code_type(symbol.type).return_type();
-
-      return_symbol.name =
-        id2string(symbol.name) + "." + id2string(symbol.base_name);
-
-      return_symbol.pretty_name = strip_verilog_prefix(return_symbol.name);
-
-      symbol_table.add(return_symbol);
-    }
-
-    // collect symbols in the declarations within the task/function
-    for(auto &decl : decl.declarations())
-      collect_symbols(decl);
-
-    collect_symbols(decl.body());
-
-    function_or_task_name = "";
-  }
   else
   {
     DATA_INVARIANT(false, "unexpected decl class " + id2string(decl_class));
   }
 }
 
-#include <iostream>
+void verilog_typecheckt::collect_symbols(
+  const verilog_function_or_task_declt &decl)
+{
+  typet return_type;
+
+  if(decl.id() == ID_verilog_function_decl)
+    return_type = elaborate_type(decl.type());
+  else
+    return_type = empty_typet();
+
+  auto base_name = decl.base_name();
+  auto identifier = hierarchical_identifier(base_name);
+  symbolt symbol{identifier, code_typet{{}, std::move(return_type)}, mode};
+
+  symbol.base_name = base_name;
+  symbol.location = decl.source_location();
+  symbol.pretty_name = strip_verilog_prefix(symbol.name);
+  symbol.module = module_identifier;
+  symbol.value = decl;
+
+  add_symbol(symbol);
+
+  function_or_task_name = symbol.name;
+
+  // do the ANSI-style ports, if applicable
+  for(auto &port_decl : decl.ports())
+  {
+    // These must have one declarator exactly.
+    DATA_INVARIANT(
+      port_decl.declarators().size() == 1, "must have one port declarator");
+    collect_symbols(port_decl); // rec. call
+  }
+
+  // add a symbol for the return value of functions, if applicable
+
+  if(
+    decl.id() == ID_verilog_function_decl &&
+    to_code_type(symbol.type).return_type().id() != ID_verilog_void)
+  {
+    symbolt return_symbol;
+    return_symbol.is_state_var = true;
+    return_symbol.is_lvalue = true;
+    return_symbol.mode = symbol.mode;
+    return_symbol.module = symbol.module;
+    return_symbol.base_name = symbol.base_name;
+    return_symbol.value = nil_exprt();
+    return_symbol.type = to_code_type(symbol.type).return_type();
+
+    return_symbol.name =
+      id2string(symbol.name) + "." + id2string(symbol.base_name);
+
+    return_symbol.pretty_name = strip_verilog_prefix(return_symbol.name);
+
+    symbol_table.add(return_symbol);
+  }
+
+  // collect symbols in the declarations within the task/function
+  for(auto &sub_decl : decl.declarations())
+    collect_symbols(sub_decl);
+
+  collect_symbols(decl.body());
+
+  function_or_task_name = "";
+}
 
 void verilog_typecheckt::collect_symbols(const verilog_lett &let)
 {
@@ -793,6 +793,12 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_decl)
   {
     collect_symbols(to_verilog_decl(module_item));
+  }
+  else if(
+    module_item.id() == ID_verilog_function_decl ||
+    module_item.id() == ID_verilog_task_decl)
+  {
+    collect_symbols(to_verilog_function_or_task_decl(module_item));
   }
   else if(
     module_item.id() == ID_verilog_always ||
