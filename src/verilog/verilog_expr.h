@@ -996,7 +996,6 @@ public:
     set(ID_class, _class);
   }
 
-  // When it's not a function or task, there are declarators.
   using declaratort = verilog_declaratort;
   using declaratorst = verilog_declaratorst;
 
@@ -1009,15 +1008,36 @@ public:
   {
     return (const declaratorst &)operands();
   }
+};
+
+inline const verilog_declt &to_verilog_decl(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_decl);
+  return static_cast<const verilog_declt &>(irep);
+}
+
+inline verilog_declt &to_verilog_decl(exprt &irep)
+{
+  PRECONDITION(irep.id() == ID_decl);
+  return static_cast<verilog_declt &>(irep);
+}
+
+/// function and task declarations
+class verilog_function_or_task_declt : public verilog_module_itemt
+{
+public:
+  verilog_function_or_task_declt(irep_idt __id) : verilog_module_itemt(__id)
+  {
+  }
 
   // Function and task declarations have:
-  // a) an identifier,
+  // a) an base name and identifier,
   // b) an optional list of ANSI-style ports,
   // c) further declarations,
   // d) a body.
-  irep_idt get_identifier() const
+  irep_idt base_name() const
   {
-    return find(ID_symbol).get(ID_identifier);
+    return find(ID_symbol).get(ID_base_name);
   }
 
   void set_identifier(const irep_idt &identifier)
@@ -1060,16 +1080,20 @@ public:
   }
 };
 
-inline const verilog_declt &to_verilog_decl(const irept &irep)
+inline const verilog_function_or_task_declt &
+to_verilog_function_or_task_decl(const irept &irep)
 {
-  PRECONDITION(irep.id() == ID_decl);
-  return static_cast<const verilog_declt &>(irep);
+  PRECONDITION(
+    irep.id() == ID_verilog_function_decl || irep.id() == ID_verilog_task_decl);
+  return static_cast<const verilog_function_or_task_declt &>(irep);
 }
 
-inline verilog_declt &to_verilog_decl(exprt &irep)
+inline verilog_function_or_task_declt &
+to_verilog_function_or_task_decl(exprt &irep)
 {
-  PRECONDITION(irep.id() == ID_decl);
-  return static_cast<verilog_declt &>(irep);
+  PRECONDITION(
+    irep.id() == ID_verilog_function_decl || irep.id() == ID_verilog_task_decl);
+  return static_cast<verilog_function_or_task_declt &>(irep);
 }
 
 class verilog_initialt:public verilog_statementt

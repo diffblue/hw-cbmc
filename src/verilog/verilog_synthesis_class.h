@@ -258,6 +258,7 @@ protected:
   // statements
   void synth_statement(const verilog_statementt &);
   void synth_decl(const verilog_declt &);
+  void synth_function_or_task_decl(const verilog_function_or_task_declt &);
   void synth_block(const verilog_blockt &);
   void synth_case(const verilog_statementt &);
   void synth_if(const verilog_ift &);
