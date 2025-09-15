@@ -20,7 +20,7 @@ class ebmc_propertiest;
 
 [[nodiscard]] property_checker_resultt k_induction(
   const cmdlinet &,
-  transition_systemt &,
+  const transition_systemt &,
   ebmc_propertiest &,
   message_handlert &);
 

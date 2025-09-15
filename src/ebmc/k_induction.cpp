@@ -140,7 +140,7 @@ Function: k_induction
 
 property_checker_resultt k_induction(
   const cmdlinet &cmdline,
-  transition_systemt &transition_system,
+  const transition_systemt &transition_system,
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
@@ -157,10 +157,6 @@ property_checker_resultt k_induction(
 
   if(properties.properties.empty())
     throw ebmc_errort() << "no properties";
-
-  // liveness to safety translation, if requested
-  if(cmdline.isset("liveness-to-safety"))
-    liveness_to_safety(transition_system, properties);
 
   // Are there any properties suitable for k-induction?
   // Fail early if not.
