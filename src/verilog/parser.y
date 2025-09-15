@@ -31,7 +31,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
-#define push_scope(name, separator, kind) PARSER.scopes.push_scope(name, separator, kind)
+#define push_scope(base_name, separator, kind) PARSER.scopes.push_scope(base_name, separator, kind)
 #define pop_scope() PARSER.scopes.pop_scope();
 
 int yyveriloglex();
@@ -1457,7 +1457,7 @@ type_declaration:
 	   data_type any_identifier ';'
 		{ $$ = $2;
 		  // add to the scope as a type name
-		  PARSER.scopes.add_name(stack_expr($4).get(ID_identifier), "", verilog_scopet::TYPEDEF);
+		  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
 		  addswap($$, ID_type, $3);
 		  stack_expr($4).id(ID_declarator);
 		  mto($$, $4);
@@ -2162,7 +2162,7 @@ function_declaration: TOK_FUNCTION lifetime_opt function_body_declaration
 function_body_declaration:
 	  function_data_type_or_implicit
 	  function_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::FUNCTION); }
+		{ push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
 	  ';'
           tf_item_declaration_brace statement
           TOK_ENDFUNCTION
@@ -2176,7 +2176,7 @@ function_body_declaration:
 		}
 	| function_data_type_or_implicit
 	  function_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::FUNCTION); }
+		{ push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
 	  '(' tf_port_list_opt ')' ';'
           tf_item_declaration_brace statement
           TOK_ENDFUNCTION
@@ -2216,7 +2216,7 @@ function_prototype: TOK_FUNCTION data_type_or_void function_identifier
 
 task_declaration:
 	  TOK_TASK task_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::TASK); }
+		{ push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
 	  ';'
 	  tf_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
@@ -2227,7 +2227,7 @@ task_declaration:
 		  pop_scope();
                 }
 	| TOK_TASK task_identifier
-		{ push_scope(stack_expr($2).get(ID_identifier), ".", verilog_scopet::TASK); }
+		{ push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
 	  '(' tf_port_list_opt ')' ';'
 	  tf_item_declaration_brace
 	  statement_or_null TOK_ENDTASK
