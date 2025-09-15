@@ -30,12 +30,14 @@ void collect_past(const exprt &expr, past_sett &past_set)
   }
 }
 
-void collect_past(transition_systemt &transition_system, past_sett &past_set)
+void collect_past(
+  const transition_systemt &transition_system,
+  past_sett &past_set)
 {
   collect_past(transition_system.trans_expr, past_set);
 }
 
-void collect_past(ebmc_propertiest &properties, past_sett &past_set)
+void collect_past(const ebmc_propertiest &properties, past_sett &past_set)
 {
   for(auto &property : properties.properties)
   {
@@ -198,4 +200,15 @@ void instrument_past(
 
   instrument_past_model(past_map, transition_system);
   instrument_past_model(past_map, properties);
+}
+
+bool has_past(
+  const transition_systemt &transition_system,
+  const ebmc_propertiest &properties)
+{
+  past_sett past_set;
+  collect_past(transition_system, past_set);
+  collect_past(properties, past_set);
+
+  return !past_set.empty();
 }

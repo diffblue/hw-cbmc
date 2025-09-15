@@ -11,6 +11,7 @@
 * SMV: abs, bool, count, max, min, toint, word1
 * BMC: new encoding for F, avoiding spurious traces
 * EBMC: verification results now have "result" verbosity level
+* Soundness fix for combination of $past and k-induction
 
 # EBMC 5.6
 

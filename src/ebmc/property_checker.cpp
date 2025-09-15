@@ -21,6 +21,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "ic3_engine.h"
+#include "instrument_past.h"
 #include "k_induction.h"
 #include "netlist.h"
 #include "output_file.h"
@@ -460,6 +461,12 @@ property_checker_resultt property_checker(
   bool use_heuristic_engine = !cmdline.isset("bdd") && !cmdline.isset("aig") &&
                               !cmdline.isset("k-induction") &&
                               !cmdline.isset("ic3") && !cmdline.isset("bound");
+
+  if(cmdline.isset("k-induction") || use_heuristic_engine)
+  {
+    // The step case of k-induction can't do $past
+    instrument_past(transition_system, properties);
+  }
 
   auto result = [&]() -> property_checker_resultt
   {

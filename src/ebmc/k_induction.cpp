@@ -18,6 +18,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include "bmc.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
+#include "instrument_past.h"
 #include "liveness_to_safety.h"
 
 #include <fstream>
@@ -185,6 +186,9 @@ Function: k_inductiont::operator()
 
 void k_inductiont::operator()()
 {
+  // check that $past is not present
+  PRECONDITION(!has_past(transition_system, properties));
+
   // Unsupported assumption? Mark as such.
   bool assumption_unsupported = false;
   for(auto &property : properties.properties)
