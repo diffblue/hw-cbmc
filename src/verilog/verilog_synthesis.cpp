@@ -1419,7 +1419,7 @@ void verilog_synthesist::instantiate_ports(
 
   // named port connection?
 
-  if(inst.connections().front().id() == ID_named_port_connection)
+  if(inst.named_port_connections())
   {
     const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
 

@@ -110,9 +110,7 @@ void verilog_typecheckt::typecheck_port_connections(
   }
 
   // named port connection?
-  if(
-    inst.connections().empty() ||
-    inst.connections().front().id() == ID_named_port_connection)
+  if(inst.named_port_connections())
   {
     // We don't require that all ports are connected.
   
