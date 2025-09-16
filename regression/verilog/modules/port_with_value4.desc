@@ -1,0 +1,15 @@
+KNOWNBUG
+port_with_value1.sv
+
+^\[main\.m1\.eq_a] always M\.a == 4: PROVED .*$
+^\[main\.m1\.eq_b] always M\.b == 5: PROVED .*$
+^\[main\.m1\.eq_c] always M\.c == 6: PROVED .*$
+^\[main\.m2\.eq_a] always M\.a == 4: PROVED .*$
+^\[main\.m2\.eq_b] always M\.b == 5: REFUTED$
+^\[main\.m2\.eq_c] always M\.c == 6: PROVED .*$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This fails an assertion.
