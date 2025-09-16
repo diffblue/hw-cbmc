@@ -45,3 +45,42 @@ We can then invoke the BMC engine in EBMC as follows:
 This sets the unwinding bound to `3` and the top-level module to `main`.
 
 For more information see [EBMC Manual](http://www.cprover.org/ebmc/manual/).
+
+Steps for building from source (Ubuntu):
+=====
+ ```
+sudo apt update
+sudo apt install -y build-essential git cmake bison flex zlib1g-dev libgmp-dev python3
+```
+Can create folder of your choice where the **hw-cbmc** repo is to be cloned.
+```
+mkdir -p ~/src && cd ~/src
+git clone https://github.com/diffblue/hw-cbmc.git
+cd hw-cbmc
+git fetch origin
+git switch -C main origin/main
+
+# initialize submodules (CBMC is a submodule here)
+git submodule update --init –recursive
+```
+Build using make:
+```
+# fetch SAT solver used by CBMC (minisat2)
+make -C lib/cbmc/src minisat2-download
+
+# build EBMC
+make -C src -j"$(nproc)"
+
+# re-run build (single job to surface first error)
+make -C src -j1 V=1
+
+# sanity check
+./src/ebmc/ebmc --version
+```
+optional - create symlink
+```
+cd ~/src/hw-cbmc # adjust to your clone path
+sudo ln -sf "$PWD/src/ebmc/ebmc" /usr/local/bin/ebmc
+hash -r
+command -v ebmc && ebmc --version
+```
