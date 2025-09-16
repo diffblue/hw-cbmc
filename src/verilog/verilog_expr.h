@@ -854,6 +854,18 @@ public:
       return operands();
     }
 
+    bool positional_port_connections() const
+    {
+      return !named_port_connections();
+    }
+
+    bool named_port_connections() const
+    {
+      auto &connections = this->connections();
+      return connections.empty() ||
+             connections.front().id() == ID_named_port_connection;
+    }
+
   protected:
     using exprt::operands;
   };
