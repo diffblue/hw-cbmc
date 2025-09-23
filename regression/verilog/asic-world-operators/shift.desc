@@ -1,0 +1,9 @@
+KNOWNBUG
+shift.sv
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The test shift_p7 fails.

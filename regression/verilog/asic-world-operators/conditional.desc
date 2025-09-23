@@ -1,0 +1,9 @@
+KNOWNBUG
+conditional.sv
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Fails an assertion
