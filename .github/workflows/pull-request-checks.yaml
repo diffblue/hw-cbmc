@@ -181,7 +181,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           # spot
-          SPOT_VERSION=2.14.1
+          SPOT_VERSION=2.14.2
           URL=https://download.opensuse.org/repositories/home:/adl/Debian_12/amd64
           wget ${URL}/libbddx0_${SPOT_VERSION}.0-1_amd64.deb
           wget ${URL}/libspotgen0_${SPOT_VERSION}.0-1_amd64.deb
