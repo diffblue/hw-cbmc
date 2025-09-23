@@ -1,0 +1,9 @@
+KNOWNBUG
+relational.sv
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+x-related tests fail

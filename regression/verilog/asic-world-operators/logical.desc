@@ -1,0 +1,9 @@
+KNOWNBUG
+logical.sv
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The test logic_p3 fails.
