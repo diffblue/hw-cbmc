@@ -1395,6 +1395,7 @@ data_declaration:
 		  swapop($$, $4); }
 	| type_declaration
 	| package_import_declaration
+	| net_type_declaration
 	;
 
 const_opt:
@@ -1455,6 +1456,21 @@ type_declaration:
 		  stack_expr($$).set(ID_class, ID_typedef);
 		}
 	   data_type any_identifier ';'
+		{ $$ = $2;
+		  // add to the scope as a type name
+		  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
+		  addswap($$, ID_type, $3);
+		  stack_expr($4).id(ID_declarator);
+		  mto($$, $4);
+		}
+	;
+
+net_type_declaration:
+	  TOK_NETTYPE
+		{ init($$, ID_decl);
+		  stack_expr($$).set(ID_class, ID_typedef);
+		}
+	  data_type any_identifier ';'
 		{ $$ = $2;
 		  // add to the scope as a type name
 		  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
@@ -4623,6 +4639,8 @@ hierarchical_identifier:
 	;
 	
 hierarchical_variable_identifier: hierarchical_identifier;
+
+net_type_identifier: TOK_TYPE_IDENTIFIER;
 
 identifier: non_type_identifier;
 
