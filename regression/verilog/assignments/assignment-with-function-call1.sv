@@ -11,7 +11,7 @@ module top(input [7:0] a, input [7:0] b);
              sum_1_2 = fn(1, 2),
              sum_2_3 = fn(2, 3);
   
-  assert property (sum_a_b==a+b);
+  assert property (sum_a_b==a[2:0]+b[2:0]);
 
   assert property (sum_1_2==3);
 
