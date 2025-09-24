@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 nettype1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ nettype1.sv
 --
 ^warning: ignoring
 --
-nettype is not implemented.
