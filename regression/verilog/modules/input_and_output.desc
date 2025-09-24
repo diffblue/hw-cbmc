@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 input_and_output.v
 
+^file .* line 4: port `x' is alrady declared$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 --
-This should be errored, as some_var must not be both input and output.
