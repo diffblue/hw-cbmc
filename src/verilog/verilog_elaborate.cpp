@@ -286,14 +286,23 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
         {
           symbolt &osymbol = *result;
 
+          // 1800-2017 23.2.2.1
+          // "Once a name is used in a port declaration, it shall not be declared
+          // again in another port declaration"
+          if(osymbol.is_input || osymbol.is_output)
+          {
+            throw errort().with_location(declarator.source_location())
+              << "port `" << symbol.base_name << "' is alrady declared";
+          }
+
           if(symbol.type != osymbol.type)
           {
             if(get_width(symbol.type) > get_width(osymbol.type))
               osymbol.type = symbol.type;
           }
 
-          osymbol.is_input = symbol.is_input || osymbol.is_input;
-          osymbol.is_output = symbol.is_output || osymbol.is_output;
+          osymbol.is_input = symbol.is_input;
+          osymbol.is_output = symbol.is_output;
           osymbol.is_state_var = symbol.is_state_var || osymbol.is_state_var;
 
           // a register can't be an input as well
