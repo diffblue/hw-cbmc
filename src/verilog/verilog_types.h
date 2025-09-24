@@ -193,6 +193,11 @@ public:
       return direction() == ID_input || direction() == ID_inout;
     }
 
+    bool ref() const
+    {
+      return direction() == ID_verilog_ref;
+    }
+
     const source_locationt &source_location() const
     {
       return (const source_locationt &)find(ID_C_source_location);

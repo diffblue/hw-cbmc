@@ -56,6 +56,14 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
       new_symbol.is_input = true;
       new_symbol.is_output = true;
     }
+    else if(port_class == ID_verilog_ref)
+    {
+      new_symbol.is_input = false;
+      new_symbol.is_output = false;
+      new_symbol.is_state_var = true;
+    }
+    else
+      DATA_INVARIANT(false, "unexpected port class");
 
     new_symbol.module = module_identifier;
     new_symbol.value.make_nil();

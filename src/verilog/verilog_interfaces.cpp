@@ -92,13 +92,24 @@ void verilog_typecheckt::check_module_ports(
         << "port `" << base_name << "' not declared";
     }
 
-    if(!port_symbol->is_input && !port_symbol->is_output)
+    irep_idt direction = decl.get_class();
+
+    if(direction.empty())
     {
-      throw errort().with_location(declarator.source_location())
-        << "port `" << base_name << "' not declared as input or output";
+      if(!port_symbol->is_input && !port_symbol->is_output)
+      {
+        throw errort().with_location(declarator.source_location())
+          << "port `" << base_name << "' not declared as input or output";
+      }
+      else if(port_symbol->is_input && !port_symbol->is_output)
+        direction = ID_input;
+      else if(!port_symbol->is_input && port_symbol->is_output)
+        direction = ID_output;
+      else
+        direction = ID_inout;
     }
 
-    ports.emplace_back(identifier, port_symbol->type, decl.get_class());
+    ports.emplace_back(identifier, port_symbol->type, direction);
 
     ports.back().set("#name", base_name);
     ports.back().set(ID_C_source_location, declarator.source_location());
