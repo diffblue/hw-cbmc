@@ -202,9 +202,7 @@ protected:
 
   void typecheck_builtin_port_connections(verilog_inst_baset::instancet &);
 
-  void typecheck_port_connection(
-    exprt &op,
-    const exprt &port);
+  void typecheck_port_connection(exprt &op, const module_typet::portt &);
 
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const std::string &target, exprt &dest);

@@ -50,8 +50,9 @@ Function: verilog_typecheckt::check_module_ports
 void verilog_typecheckt::check_module_ports(
   const verilog_module_sourcet::port_listt &module_ports)
 {
-  auto &ports = module_symbol.type.add(ID_ports).get_sub();
-  ports.resize(module_ports.size());
+  auto &ports = to_module_type(module_symbol.type).ports();
+  ports.clear();
+  ports.reserve(module_ports.size());
   std::map<irep_idt, unsigned> port_names;
 
   unsigned nr=0;
@@ -97,18 +98,21 @@ void verilog_typecheckt::check_module_ports(
         << "port `" << base_name << "' not declared as input or output";
     }
 
-    ports[nr].set("#name", base_name);
-    ports[nr].id(ID_symbol);
-    ports[nr].set(ID_identifier, identifier);
-    ports[nr].set(ID_C_source_location, declarator.source_location());
-    ports[nr].set(ID_type, port_symbol->type);
-    ports[nr].set(ID_input, port_symbol->is_input);
-    ports[nr].set(ID_output, port_symbol->is_output);
+    ports.emplace_back(
+      identifier,
+      port_symbol->type,
+      port_symbol->is_input,
+      port_symbol->is_output);
+
+    ports.back().set("#name", base_name);
+    ports.back().set(ID_C_source_location, declarator.source_location());
 
     port_names[base_name] = nr;
 
     nr++;
   }
+
+  DATA_INVARIANT(ports.size() == module_ports.size(), "number of ports");
 
   // check that all declared ports are also in the port list
   

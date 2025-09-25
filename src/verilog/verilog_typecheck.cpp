@@ -39,10 +39,9 @@ Function: verilog_typecheckt::typecheck_port_connection
 
 void verilog_typecheckt::typecheck_port_connection(
   exprt &op,
-  const exprt &port)
+  const module_typet::portt &port)
 {
-  const symbolt &symbol=
-    ns.lookup(port.get(ID_identifier));
+  const symbolt &symbol = ns.lookup(port.identifier());
 
   if(!symbol.is_input && !symbol.is_output)
   {
@@ -101,7 +100,7 @@ void verilog_typecheckt::typecheck_port_connections(
   else
     range = convert_range(range_expr);
 
-  const irept::subt &ports=symbol.type.find(ID_ports).get_sub();
+  const auto &ports = to_module_type(symbol.type).ports();
 
   // no connection is one connection that is nil
   if(inst.connections().size() == 1 && inst.connections().front().is_nil())
@@ -148,10 +147,9 @@ void verilog_typecheckt::typecheck_port_connections(
       {
         if(port.get(ID_identifier) == identifier)
         {
-          auto &p_expr = static_cast<const exprt &>(port);
           found=true;
-          typecheck_port_connection(value, p_expr);
-          named_port_connection.port().type() = p_expr.type();
+          typecheck_port_connection(value, port);
+          named_port_connection.port().type() = port.type();
           break;
         }
       }
@@ -174,12 +172,11 @@ void verilog_typecheckt::typecheck_port_connections(
         << " but got " << inst.connections().size();
     }
 
-    irept::subt::const_iterator p_it=
-      ports.begin();
+    auto p_it = ports.begin();
 
     for(auto &connection : inst.connections())
     {
-      typecheck_port_connection(connection, (exprt &)*p_it);
+      typecheck_port_connection(connection, *p_it);
       p_it++;
     }
   }
