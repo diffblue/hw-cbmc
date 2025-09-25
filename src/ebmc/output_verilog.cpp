@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <verilog/verilog_language.h>
 #include <verilog/verilog_synthesis.h>
 #include <verilog/verilog_typecheck.h>
+#include <verilog/verilog_types.h>
 
 #include "output_verilog.h"
 
@@ -585,17 +586,17 @@ void output_verilog_baset::module_header(const symbolt &symbol)
 {
   out << "module " << symbol.base_name;
 
-  const irept &ports=symbol.type.find(ID_ports);
-  
+  const auto &ports = to_module_type(symbol.type).ports();
+
   //
   // print port in module statement
   //
-  if(!ports.get_sub().empty())
+  if(!ports.empty())
   {
     out << '(';
 
     bool first = true;
-    for(auto &port : ports.get_sub())
+    for(auto &port : ports)
     {
       if(first)
         first = false;
@@ -615,10 +616,10 @@ void output_verilog_baset::module_header(const symbolt &symbol)
   //
   // port declarations
   //
-  for(auto &port : ports.get_sub())
+  for(auto &port : ports)
   {
-    bool is_input = port.get_bool(ID_input);
-    bool is_output = port.get_bool(ID_output);
+    bool is_input = port.input();
+    bool is_output = port.output();
 
     out << "  ";
     
@@ -629,7 +630,7 @@ void output_verilog_baset::module_header(const symbolt &symbol)
     else
       out << "output";
 
-    const typet &type = static_cast<const typet &>(port.find(ID_type));
+    const typet &type = port.type();
 
     if(type.id()==ID_named_block)
       continue;

@@ -98,11 +98,7 @@ void verilog_typecheckt::check_module_ports(
         << "port `" << base_name << "' not declared as input or output";
     }
 
-    ports.emplace_back(
-      identifier,
-      port_symbol->type,
-      port_symbol->is_input,
-      port_symbol->is_output);
+    ports.emplace_back(identifier, port_symbol->type, decl.get_class());
 
     ports.back().set("#name", base_name);
     ports.back().set(ID_C_source_location, declarator.source_location());

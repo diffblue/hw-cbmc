@@ -22,6 +22,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/mode.h>
 #include <trans-word-level/show_module_hierarchy.h>
 #include <trans-word-level/show_modules.h>
+#include <verilog/verilog_types.h>
 
 #include "ebmc_error.h"
 #include "ebmc_version.h"
@@ -424,17 +425,14 @@ std::vector<symbol_exprt> transition_systemt::inputs() const
   DATA_INVARIANT(
     module_symbol.type.id() == ID_module, "main_symbol must be module");
 
-  const auto &ports_irep = module_symbol.type.find(ID_ports);
-
   // filter out the inputs
-  auto &ports = static_cast<const exprt &>(ports_irep).operands();
+  auto &ports = to_module_type(module_symbol.type).ports();
   for(auto &port : ports)
   {
     DATA_INVARIANT(port.id() == ID_symbol, "port must be a symbol");
-    if(port.get_bool(ID_input) && !port.get_bool(ID_output))
+    if(port.input() && !port.output())
     {
-      symbol_exprt input_symbol(
-        to_symbol_expr(port).get_identifier(), port.type());
+      symbol_exprt input_symbol(port.identifier(), port.type());
       input_symbol.add_source_location() = port.source_location();
       inputs.push_back(std::move(input_symbol));
     }
