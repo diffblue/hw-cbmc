@@ -141,7 +141,108 @@ public:
   inline module_typet():typet(ID_module)
   {
   }
+
+  class portt : public irept
+  {
+  public:
+    portt(irep_idt _identifier, typet _type, bool _input, bool _output)
+      : irept(ID_symbol)
+    {
+      type() = std::move(_type);
+      identifier(_identifier);
+      input(_input);
+      output(_output);
+    }
+
+    typet &type()
+    {
+      return static_cast<typet &>(add(ID_type));
+    }
+
+    const typet &type() const
+    {
+      return static_cast<const typet &>(find(ID_type));
+    }
+
+    irep_idt identifier() const
+    {
+      return get(ID_identifier);
+    }
+
+    void identifier(irep_idt _identifier)
+    {
+      set(ID_identifier, _identifier);
+    }
+
+    bool output() const
+    {
+      return get_bool(ID_output);
+    }
+
+    void output(bool _output)
+    {
+      set(ID_output, _output);
+    }
+
+    bool input() const
+    {
+      return get_bool(ID_input);
+    }
+
+    void input(bool _input)
+    {
+      set(ID_input, _input);
+    }
+  };
+
+  using portst = std::vector<portt>;
+
+  portst &ports()
+  {
+    return (portst &)(add(ID_ports).get_sub());
+  }
+
+  const portst &ports() const
+  {
+    return (const portst &)(find(ID_ports).get_sub());
+  }
+
+  using port_mapt = std::unordered_map<irep_idt, portt, irep_id_hash>;
+
+  port_mapt port_map() const
+  {
+    port_mapt result;
+    auto &ports = this->ports();
+    for(auto &port : ports)
+      result.emplace(port.identifier(), port);
+    return result;
+  }
 };
+
+/*! \brief Cast a generic typet to a \ref module_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * module_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref module_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const module_typet &to_module_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_module);
+  return static_cast<const module_typet &>(type);
+}
+
+/*! \copydoc to_module_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline module_typet &to_module_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_module);
+  return static_cast<module_typet &>(type);
+}
 
 class verilog_genvar_typet : public typet
 {

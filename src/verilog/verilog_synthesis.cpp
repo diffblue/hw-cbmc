@@ -1349,14 +1349,13 @@ Function: verilog_synthesist::instantiate_port
 \*******************************************************************/
 
 void verilog_synthesist::instantiate_port(
-  bool is_output,
-  const symbol_exprt &port,
+  const module_typet::portt &port,
   const exprt &value,
   const replace_mapt &replace_map,
   const source_locationt &source_location,
   transt &trans)
 {
-  irep_idt port_identifier = port.get_identifier();
+  irep_idt port_identifier = port.identifier();
 
   replace_mapt::const_iterator it = replace_map.find(port_identifier);
 
@@ -1372,7 +1371,7 @@ void verilog_synthesist::instantiate_port(
   // Note that the types need not match.
   exprt lhs, rhs;
 
-  if(is_output)
+  if(port.output())
   {
     lhs = value;
     rhs = typecast_exprt::conditional_cast(it->second, value.type());
@@ -1417,31 +1416,29 @@ void verilog_synthesist::instantiate_ports(
   if(inst.connections().empty())
     return;
 
+  auto &module_type = to_module_type(symbol.type);
+
   // named port connection?
 
   if(inst.named_port_connections())
   {
-    const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
-
-    std::set<irep_idt> output_identifiers;
-    for(auto &port : ports)
-      if(port.get_bool(ID_output))
-        output_identifiers.insert(
-          to_symbol_expr((const exprt &)(port)).get_identifier());
+    const auto &ports = module_type.ports();
+    auto port_map = module_type.port_map();
 
     // no requirement that all ports are connected
     for(const auto &connection : inst.connections())
     {
       auto &named_connection = to_verilog_named_port_connection(connection);
-      const auto &port = to_symbol_expr(named_connection.port());
+      auto port_it =
+        port_map.find(to_symbol_expr(named_connection.port()).get_identifier());
+      CHECK_RETURN(port_it != port_map.end());
+      auto &port = port_it->second;
       const exprt &value = named_connection.value();
 
       if(value.is_not_nil())
       {
-        bool is_output = output_identifiers.find(port.get_identifier()) !=
-                         output_identifiers.end();
         instantiate_port(
-          is_output, port, value, replace_map, inst.source_location(), trans);
+          port, value, replace_map, inst.source_location(), trans);
       }
     }
 
@@ -1456,17 +1453,15 @@ void verilog_synthesist::instantiate_ports(
 
     // unconnected inputs may be given a default value
     for(auto &port : ports)
-      if(port.get_bool(ID_input))
+      if(port.input())
       {
-        auto &port_symbol_expr = to_symbol_expr((const exprt &)(port));
-        auto identifier = port_symbol_expr.get_identifier();
+        auto identifier = port.identifier();
         if(connected_ports.find(identifier) == connected_ports.end())
         {
-          auto &port_symbol = ns.lookup(port_symbol_expr);
+          auto &port_symbol = ns.lookup(identifier);
           if(port_symbol.value.is_not_nil())
             instantiate_port(
-              false,
-              port_symbol_expr,
+              port,
               port_symbol.value,
               replace_map,
               inst.source_location(),
@@ -1476,7 +1471,7 @@ void verilog_synthesist::instantiate_ports(
   }
   else // just a list without names
   {
-    const irept::subt &ports = symbol.type.find(ID_ports).get_sub();
+    const auto &ports = module_type.ports();
 
     if(inst.connections().size() != ports.size())
     {
@@ -1485,24 +1480,15 @@ void verilog_synthesist::instantiate_ports(
         << inst.connections().size();
     }
 
-    irept::subt::const_iterator p_it=
-      ports.begin();
+    auto p_it = ports.begin();
 
     for(const auto &connection : inst.connections())
     {
       DATA_INVARIANT(connection.is_not_nil(), "all ports must be connected");
 
-      auto &port = to_symbol_expr((const exprt &)(*p_it));
-
-      bool is_output = port.get_bool(ID_output);
-
       instantiate_port(
-        is_output,
-        port,
-        connection,
-        replace_map,
-        inst.source_location(),
-        trans);
+        *p_it, connection, replace_map, inst.source_location(), trans);
+
       p_it++;
     }
   }
