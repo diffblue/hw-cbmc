@@ -2408,7 +2408,7 @@ static exprt zero_extend(const exprt &expr, const typet &type)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::typecheck_relation
+Function: verilog_typecheck_exprt::convert_relation
 
   Inputs:
 
@@ -2418,10 +2418,13 @@ Function: verilog_typecheck_exprt::typecheck_relation
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::typecheck_relation(binary_exprt &expr)
+void verilog_typecheck_exprt::convert_relation(binary_exprt &expr)
 {
   auto &lhs = expr.lhs();
   auto &rhs = expr.rhs();
+
+  convert_expr(lhs);
+  convert_expr(rhs);
 
   union_decay(lhs);
   union_decay(rhs);
@@ -3062,10 +3065,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   {
     expr.type()=bool_typet();
 
-    Forall_operands(it, expr)
-      convert_expr(*it);
-
-    typecheck_relation(expr);
+    convert_relation(expr);
 
     return std::move(expr);
   }
@@ -3074,10 +3074,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.id() == ID_verilog_logical_inequality)
   {
     // == and !=
-    Forall_operands(it, expr)
-      convert_expr(*it);
-
-    typecheck_relation(expr);
+    convert_relation(expr);
 
     // This returns 'x' if either of the operands contains x or z.
     if(
@@ -3125,9 +3122,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // a proper equality is performed.
     expr.type()=bool_typet();
 
-    convert_expr(expr.lhs());
-    convert_expr(expr.rhs());
-    typecheck_relation(expr);
+    convert_relation(expr);
 
     // integral operands only
     must_be_integral(expr.lhs());
@@ -3140,10 +3135,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   {
     expr.type()=bool_typet();
 
-    Forall_operands(it, expr)
-      convert_expr(*it);
-
-    typecheck_relation(expr);
+    convert_relation(expr);
     no_bool_ops(expr);
 
     return std::move(expr);
