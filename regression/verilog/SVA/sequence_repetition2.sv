@@ -4,10 +4,10 @@ module main(input clk);
 
   // 0 1 2 3 4 ...
   always_ff @(posedge clk)
-    x<=x+1;
+    x<=x+8'd1;
 
   // 0 0 1 1 2 2 3 3 ...
-  wire [7:0] half_x = x/2;
+  wire [7:0] half_x = x/8'd2;
 
   // should pass
   initial p0: assert property (x==0[*]);

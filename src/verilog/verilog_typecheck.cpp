@@ -27,6 +27,34 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::assignment_conversion
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::assignment_conversion(
+  exprt &rhs,
+  const typet &lhs_type)
+{
+  // Implements 1800-2017 10.7
+  // If the RHS is smaller than the LHS:
+  // * if the RHS is unsigned, it is zero-padded
+  // * if the RHS is signed, it is sign-extended
+  // If the RHS is larger than the LHS, it is truncated.
+
+  // This matches our typecast, but differs from the steps taken
+  // when evaluating binary expressions (11.8.2), where sign
+  // extension only happens when the propagated type is signed.
+  implicit_typecast(rhs, lhs_type);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::typecheck_port_connection
 
   Inputs:
@@ -74,7 +102,10 @@ void verilog_typecheckt::typecheck_port_connection(
     if(symbol.is_output)
       check_lhs(op, A_CONTINUOUS);
     else
-      propagate_type(op, port.type());
+    {
+      // This is an assignment to the input
+      assignment_conversion(op, port.type());
+    }
   }
 }
 
@@ -239,7 +270,8 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
       convert_expr(connection);
     }
 
-    propagate_type(connection, type);
+    // like an assignment
+    assignment_conversion(connection, type);
   }
 }
 
@@ -427,7 +459,7 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
     {
       auto &rhs = declarator.value();
       convert_expr(rhs);
-      propagate_type(rhs, symbol.type);
+      assignment_conversion(rhs, symbol.type);
     }
   }
 }
@@ -795,7 +827,7 @@ void verilog_typecheckt::convert_procedural_continuous_assign(
     convert_expr(lhs);
     convert_expr(rhs);
 
-    propagate_type(rhs, lhs.type());
+    assignment_conversion(rhs, lhs.type());
 
     check_lhs(lhs, A_PROCEDURAL_CONTINUOUS);
   }
@@ -839,7 +871,7 @@ void verilog_typecheckt::convert_continuous_assign(
     else
       convert_expr(lhs);
 
-    propagate_type(rhs, lhs.type());
+    assignment_conversion(rhs, lhs.type());
 
     check_lhs(lhs, A_CONTINUOUS);
   }
@@ -903,7 +935,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
     for(unsigned i=0; i<arguments.size(); i++)
     {
       convert_expr(arguments[i]);
-      propagate_type(arguments[i], parameter_types[i].type());
+      assignment_conversion(arguments[i], parameter_types[i].type());
     }
 
     statement.function().type() = symbol->type;
@@ -983,7 +1015,8 @@ void verilog_typecheckt::convert_force(verilog_forcet &statement)
 
   convert_expr(lhs);
   convert_expr(rhs);
-  propagate_type(rhs, lhs.type());
+
+  assignment_conversion(rhs, lhs.type());
   //check_lhs(lhs, blocking?A_BLOCKING:A_NON_BLOCKING);
 }
 
@@ -1014,7 +1047,7 @@ void verilog_typecheckt::convert_assign(
 
   convert_expr(lhs);
   convert_expr(rhs);
-  propagate_type(rhs, lhs.type());
+  assignment_conversion(rhs, lhs.type());
   check_lhs(lhs, blocking?A_BLOCKING:A_NON_BLOCKING);
 }
 
@@ -1199,6 +1232,8 @@ void verilog_typecheckt::convert_case_values(
   Forall_operands(it, values)
   {
     convert_expr(*it);
+
+    // This works like a relational operator, not like an assignment
     typet t=max_type(it->type(), case_operand.type());
     propagate_type(*it, t);
   }
