@@ -502,7 +502,13 @@ jobs:
           chmod a+x ./bin/ebmc ; ./bin/ebmc --version
           chmod a+x ./bin/hw-cbmc ; ./bin/hw-cbmc --version
           chmod a+x ./bin/vlindex ; ./bin/vlindex --version
-          echo "PATH=$PATH:$PWD/bin" >> $GITHUB_ENV
+      - name: Put binaries back in place
+        run: |
+          cp bin/ebmc src/ebmc/
+          cp bin/hw-cbmc src/hw-cbmc/
+          cp bin/vlindex src/vlindex/
+      - name: Run the verilog tests (CORE)
+        run: make -C regression/verilog test TEST_PL="../../lib/cbmc/regression/test.pl -C"
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test TEST_PL="../../lib/cbmc/regression/test.pl -K"
       - name: Run the ebmc tests with Z3
