@@ -1,7 +1,6 @@
-KNOWNBUG
+CORE
 array_in_struct1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
-This fails in the typechecker.
