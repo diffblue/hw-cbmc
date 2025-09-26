@@ -43,10 +43,13 @@ void verilog_typecheckt::typecheck_port_connection(
 {
   const symbolt &symbol = ns.lookup(port.identifier());
 
-  if(!symbol.is_input && !symbol.is_output)
+  if(port.direction() != ID_verilog_ref)
   {
-    throw errort().with_location(op.source_location())
-      << "port `" << symbol.name << "' is neither input nor output";
+    if(!symbol.is_input && !symbol.is_output)
+    {
+      throw errort().with_location(op.source_location())
+        << "port `" << symbol.name << "' is neither input nor output";
+    }
   }
 
   if(op.is_nil())

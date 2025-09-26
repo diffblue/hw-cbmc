@@ -145,13 +145,12 @@ public:
   class portt : public irept
   {
   public:
-    portt(irep_idt _identifier, typet _type, bool _input, bool _output)
+    portt(irep_idt _identifier, typet _type, irep_idt _direction)
       : irept(ID_symbol)
     {
-      type() = std::move(_type);
       identifier(_identifier);
-      input(_input);
-      output(_output);
+      type() = std::move(_type);
+      direction(_direction);
     }
 
     typet &type()
@@ -174,24 +173,34 @@ public:
       set(ID_identifier, _identifier);
     }
 
-    bool output() const
+    irep_idt direction() const
     {
-      return get_bool(ID_output);
+      return get(ID_direction);
     }
 
-    void output(bool _output)
+    void direction(irep_idt _direction)
     {
-      set(ID_output, _output);
+      set(ID_direction, _direction);
+    }
+
+    bool output() const
+    {
+      return direction() == ID_output || direction() == ID_inout;
     }
 
     bool input() const
     {
-      return get_bool(ID_input);
+      return direction() == ID_input || direction() == ID_inout;
     }
 
-    void input(bool _input)
+    bool ref() const
     {
-      set(ID_input, _input);
+      return direction() == ID_verilog_ref;
+    }
+
+    const source_locationt &source_location() const
+    {
+      return (const source_locationt &)find(ID_C_source_location);
     }
   };
 
