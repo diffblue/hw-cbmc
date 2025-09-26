@@ -25,13 +25,14 @@ SRC = \
       live_signal.cpp \
       main.cpp \
       netlist.cpp \
-      neural_liveness.cpp \
+      neural.cpp \
       output_file.cpp \
       output_smv_word_level.cpp \
       output_verilog.cpp \
       property_checker.cpp \
       random_traces.cpp \
       ranking_function.cpp \
+      ranking_net.cpp \
       report_results.cpp \
       show_formula_solver.cpp \
       show_properties.cpp \
