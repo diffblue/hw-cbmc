@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 shift.sv
 --module main --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ shift.sv
 --
 ^warning: ignoring
 --
-The test shift_p7 fails.
