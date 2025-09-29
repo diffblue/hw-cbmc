@@ -66,6 +66,7 @@ protected:
   void make_boolean(exprt &expr);
 
   void propagate_type(exprt &expr, const typet &type);
+  void downwards_type_propagation(exprt &, const typet &);
 
   [[nodiscard]] typet elaborate_type(const typet &);
   typet elaborate_package_scope_typedef(const verilog_package_scope_typet &);

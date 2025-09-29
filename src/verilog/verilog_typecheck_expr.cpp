@@ -222,6 +222,118 @@ void verilog_typecheck_exprt::propagate_type(
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::downwards_type_progatation
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::downwards_type_propagation(
+  exprt &expr,
+  const typet &type)
+{
+  // This implements the step "propagate the type and size down to
+  // the context-determined operands" in 1800-2017 11.8.2
+
+  // Any context-determined operand of an operator shall be the
+  // same type and size as the result of the operator.
+  // Exceptions:
+  // * result type real -- just cast
+  // * relational operators are always 1 bit unsigned
+
+  if(expr.type() == type)
+    return;
+
+  vtypet vt_from = vtypet(expr.type());
+  vtypet vt_to = vtypet(type);
+
+  if(!vt_from.is_other() && !vt_to.is_other() && expr.has_operands())
+  {
+    // arithmetic
+
+    if(
+      expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+      expr.id() == ID_div || expr.id() == ID_unary_minus ||
+      expr.id() == ID_unary_plus)
+    {
+      if(type.id() != ID_bool)
+      {
+        Forall_operands(it, expr)
+          propagate_type(*it, type);
+
+        expr.type() = type;
+
+        return;
+      }
+    }
+    else if(
+      expr.id() == ID_bitand || expr.id() == ID_bitor ||
+      expr.id() == ID_bitnand || expr.id() == ID_bitnor ||
+      expr.id() == ID_bitxor || expr.id() == ID_bitxnor ||
+      expr.id() == ID_bitnot)
+    {
+      Forall_operands(it, expr)
+        propagate_type(*it, type);
+
+      expr.type() = type;
+
+      if(type.id() == ID_bool)
+      {
+        if(expr.id() == ID_bitand)
+          expr.id(ID_and);
+        else if(expr.id() == ID_bitor)
+          expr.id(ID_or);
+        else if(expr.id() == ID_bitnand)
+          expr.id(ID_nand);
+        else if(expr.id() == ID_bitnor)
+          expr.id(ID_nor);
+        else if(expr.id() == ID_bitxor)
+          expr.id(ID_xor);
+        else if(expr.id() == ID_bitxnor)
+          expr.id(ID_xnor);
+        else if(expr.id() == ID_bitnot)
+          expr.id(ID_not);
+      }
+
+      return;
+    }
+    else if(expr.id() == ID_if)
+    {
+      if(expr.operands().size() == 3)
+      {
+        propagate_type(to_if_expr(expr).true_case(), type);
+        propagate_type(to_if_expr(expr).false_case(), type);
+
+        expr.type() = type;
+        return;
+      }
+    }
+    else if(expr.id() == ID_shl) // does not work with shr
+    {
+      // does not work with boolean
+      if(type.id() != ID_bool)
+      {
+        if(expr.operands().size() == 2)
+        {
+          propagate_type(to_binary_expr(expr).op0(), type);
+          // not applicable to second operand
+
+          expr.type() = type;
+          return;
+        }
+      }
+    }
+  }
+
+  implicit_typecast(expr, type);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::no_bool_ops
 
   Inputs:
@@ -2396,12 +2508,20 @@ void verilog_typecheck_exprt::tc_binary_expr(
   const exprt &expr,
   exprt &op0, exprt &op1)
 {
+  // Follows 1800-2017 11.8.2.
+
+  // First get the self-determined type and size of both operands
   union_decay(op0);
   union_decay(op1);
 
-  // follows 1800-2017 11.8.2
-  const typet new_type =
-    max_type(enum_decay(op0.type()), enum_decay(op1.type()));
+  enum_decay(op0);
+  enum_decay(op1);
+
+  struct_decay(op0);
+  struct_decay(op1);
+
+  // Now get the max
+  const typet new_type = max_type(op0.type(), op1.type());
 
   if(new_type.is_nil())
   {
@@ -2411,8 +2531,9 @@ void verilog_typecheck_exprt::tc_binary_expr(
       << "  " << to_string(op1.type());
   }
 
-  propagate_type(op0, new_type);
-  propagate_type(op1, new_type);
+  // Now do downwards propagation
+  downwards_type_propagation(op0, new_type);
+  downwards_type_propagation(op1, new_type);
 }
 
 /*******************************************************************\
