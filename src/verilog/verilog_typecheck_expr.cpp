@@ -1928,14 +1928,14 @@ void verilog_typecheck_exprt::implicit_typecast(
   if(dest_type.id()==irep_idt())
     return;
 
-  const typet &src_type = expr.type();
-
   auto &verilog_dest_type = dest_type.get(ID_C_verilog_type);
   if(verilog_dest_type == ID_verilog_enum)
   {
     // IEEE 1800-2017 6.19.3: "a variable of type enum cannot be directly
     // assigned a value that lies outside the enumeration set unless an
     // explicit cast is used"
+    const typet &src_type = expr.type();
+
     if(
       src_type.get(ID_C_verilog_type) != ID_verilog_enum ||
       src_type.get(ID_C_identifier) != dest_type.get(ID_C_identifier))
@@ -1946,8 +1946,15 @@ void verilog_typecheck_exprt::implicit_typecast(
     }
   }
 
-  if(src_type == dest_type)
+  if(expr.type() == dest_type)
     return;
+
+  // do enum, union and struct decay
+  enum_decay(expr);
+  struct_decay(expr);
+  union_decay(expr);
+
+  const typet &src_type = expr.type();
 
   if(dest_type.id() == ID_integer)
   {
@@ -2068,19 +2075,6 @@ void verilog_typecheck_exprt::implicit_typecast(
     {
       // bit-vectors can be converted to
       // packed structs and packed unions
-      expr = typecast_exprt{expr, dest_type};
-      return;
-    }
-  }
-  else if(src_type.id() == ID_struct || src_type.id() == ID_union)
-  {
-    // packed structs and packed unions can be converted to bits
-    if(
-      dest_type.id() == ID_bool || dest_type.id() == ID_unsignedbv ||
-      dest_type.id() == ID_signedbv ||
-      dest_type.id() == ID_verilog_unsignedbv ||
-      dest_type.id() == ID_verilog_signedbv)
-    {
       expr = typecast_exprt{expr, dest_type};
       return;
     }
@@ -2312,6 +2306,28 @@ typet verilog_typecheck_exprt::enum_decay(const typet &type)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::enum_decay
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::enum_decay(exprt &expr) const
+{
+  // Verilog enum types decay to their base type when used in relational
+  // or arithmetic expressions.
+  if(expr.type().get(ID_C_verilog_type) == ID_verilog_enum)
+  {
+    expr = typecast_exprt{expr, enum_decay(expr.type())};
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::union_decay
 
   Inputs:
@@ -2334,6 +2350,32 @@ void verilog_typecheck_exprt::union_decay(exprt &expr) const
       unsignedbv_typet{numeric_cast_v<std::size_t>(get_width(type))};
     // The synthesis stage turns these typecasts into a member
     // expression.
+    expr = typecast_exprt{expr, new_type};
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::struct_decay
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::struct_decay(exprt &expr) const
+{
+  // 1800-2017 7.2.1
+  // Verilog packed struct types decay to a vector type [$bits(t)-1:0]
+  // when used in relational or arithmetic expressions.
+  auto &type = expr.type();
+  if(type.id() == ID_struct)
+  {
+    auto new_type =
+      unsignedbv_typet{numeric_cast_v<std::size_t>(get_width(type))};
     expr = typecast_exprt{expr, new_type};
   }
 }
