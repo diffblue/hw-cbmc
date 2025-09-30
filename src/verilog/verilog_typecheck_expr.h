@@ -191,7 +191,7 @@ protected:
   [[nodiscard]] exprt convert_power_expr(power_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);
   void implicit_typecast(exprt &, const typet &type);
-  void tc_binary_expr(exprt &);
+  void tc_binary_expr(binary_exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
   void convert_relation(binary_exprt &);
   void no_bool_ops(exprt &);

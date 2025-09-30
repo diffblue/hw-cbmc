@@ -2727,15 +2727,9 @@ Function: verilog_typecheck_exprt::tc_binary_expr
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::tc_binary_expr(exprt &expr)
+void verilog_typecheck_exprt::tc_binary_expr(binary_exprt &expr)
 {
-  if(expr.operands().size()!=2)
-  {
-    throw errort().with_location(expr.source_location())
-      << "operator " << expr.id_string() << " takes two operands";
-  }
-
-  tc_binary_expr(expr, to_binary_expr(expr).op0(), to_binary_expr(expr).op1());
+  tc_binary_expr(expr, expr.op0(), expr.op1());
 }
 
 /*******************************************************************\
