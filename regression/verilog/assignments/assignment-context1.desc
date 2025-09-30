@@ -1,0 +1,9 @@
+KNOWNBUG
+assignment-context1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The variants that enlarge give a wrong answer.
