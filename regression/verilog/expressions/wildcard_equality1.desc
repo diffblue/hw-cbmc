@@ -9,9 +9,9 @@ wildcard_equality1.sv
 ^\[main\.property06\] always 2'b10 ==\? 2'b0x === 0: PROVED .*$
 ^\[main\.property07\] always 2'b00 !=\? 2'b0x === 0: PROVED .*$
 ^\[main\.property08\] always 2'b10 !=\? 2'b0x === 1: PROVED .*$
-^\[main\.property09\] always 2'b11 ==\? 2'b11 === 0: REFUTED$
+^\[main\.property09\] always 1'sb1 ==\? 2'b11 === 0: PROVED .*$
 ^\[main\.property10\] always 2'sb11 ==\? 2'sb11 === 1: PROVED .*$
-^EXIT=10$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring

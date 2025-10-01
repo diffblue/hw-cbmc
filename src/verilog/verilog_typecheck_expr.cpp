@@ -3262,10 +3262,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.id() == ID_verilog_wildcard_inequality)
   {
     // ==? and !=?
-    Forall_operands(it, expr)
-      convert_expr(*it);
-
-    tc_binary_expr(expr);
+    convert_relation(expr);
 
     expr.type() = verilog_unsignedbv_typet(1);
 
