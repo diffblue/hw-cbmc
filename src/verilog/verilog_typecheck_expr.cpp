@@ -2313,11 +2313,8 @@ void verilog_typecheck_exprt::implicit_typecast(
       dest_type.id() == ID_verilog_class_type ||
       dest_type.id() == ID_verilog_event)
     {
-      if(expr.id() == ID_constant)
-      {
-        expr.type() = dest_type;
-        return;
-      }
+      expr = typecast_exprt{expr, dest_type};
+      return;
     }
   }
 
