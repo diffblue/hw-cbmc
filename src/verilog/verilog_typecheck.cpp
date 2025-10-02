@@ -47,6 +47,7 @@ void verilog_typecheckt::assignment_conversion(
     DATA_INVARIANT(
       rhs.id() == ID_verilog_assignment_pattern,
       "verilog_assignment_pattern expression expected");
+
     if(lhs_type.id() == ID_struct)
     {
       auto &struct_type = to_struct_type(lhs_type);
@@ -139,16 +140,102 @@ void verilog_typecheckt::assignment_conversion(
     }
   }
 
-  // Implements 1800-2017 10.7
-  // If the RHS is smaller than the LHS:
-  // * if the RHS is unsigned, it is zero-padded
-  // * if the RHS is signed, it is sign-extended
-  // If the RHS is larger than the LHS, it is truncated.
+  auto original_rhs_type = rhs.type(); // copy
 
-  // This matches our typecast, but differs from the steps taken
-  // when evaluating binary expressions (11.8.2), where sign
-  // extension only happens when the propagated type is signed.
-  implicit_typecast(rhs, lhs_type);
+  auto &verilog_dest_type = lhs_type.get(ID_C_verilog_type);
+  if(verilog_dest_type == ID_verilog_enum)
+  {
+    // IEEE 1800-2017 6.19.3: "a variable of type enum cannot be directly
+    // assigned a value that lies outside the enumeration set unless an
+    // explicit cast is used"
+    if(
+      rhs.type().get(ID_C_verilog_type) != ID_verilog_enum ||
+      rhs.type().get(ID_C_identifier) != lhs_type.get(ID_C_identifier))
+    {
+      throw errort().with_location(rhs.source_location())
+        << "assignment to enum requires enum of the same type, but got "
+        << to_string(rhs.type());
+    }
+  }
+
+  if(lhs_type == rhs.type())
+    return;
+
+  // do enum, union and struct decay
+  enum_decay(rhs);
+  struct_decay(rhs);
+  union_decay(rhs);
+
+  if(rhs.type().id() == ID_struct || rhs.type().id() == ID_union)
+  {
+    // not decayed, not equal
+    throw errort().with_location(rhs.source_location())
+      << "failed to convert `" << to_string(original_rhs_type) << "' to `"
+      << to_string(lhs_type) << "'";
+  }
+
+  // Implements 1800-2017 10.7 and 1800-2017 11.8.3.
+
+  if(
+    lhs_type.id() == ID_verilog_real || lhs_type.id() == ID_verilog_shortreal ||
+    lhs_type.id() == ID_verilog_realtime ||
+    rhs.type().id() == ID_verilog_real ||
+    rhs.type().id() == ID_verilog_shortreal)
+  {
+    // from/to real is just a cast
+    rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+    return;
+  }
+
+  if(rhs.type().id() == ID_verilog_null)
+  {
+    if(
+      lhs_type.id() == ID_verilog_chandle ||
+      lhs_type.id() == ID_verilog_class_type ||
+      lhs_type.id() == ID_verilog_event)
+    {
+      rhs = typecast_exprt{rhs, lhs_type};
+      return;
+    }
+  }
+
+  // "The size of the left-hand side of an assignment forms
+  // the context for the right-hand expression."
+
+  // Get the width of LHS and RHS
+  auto lhs_width = get_width(lhs_type);
+  auto rhs_width = get_width(rhs.type());
+
+  if(lhs_width > rhs_width)
+  {
+    // Need to enlarge the RHS.
+    //
+    // "If needed, extend the size of the right-hand side,
+    // performing sign extension if, and only if, the type
+    // of the right-hand side is signed.
+    if(
+      (rhs.type().id() == ID_signedbv ||
+       rhs.type().id() == ID_verilog_signedbv) &&
+      (lhs_type.id() == ID_unsignedbv ||
+       lhs_type.id() == ID_verilog_unsignedbv))
+    {
+      // LHS is unsigned, RHS is signed. Must sign-extend.
+      auto new_rhs_type = to_bitvector_type(rhs.type());
+      new_rhs_type.set_width(numeric_cast_v<std::size_t>(lhs_width));
+
+      downwards_type_propagation(rhs, new_rhs_type);
+
+      // then cast
+      rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+    }
+    else
+      downwards_type_propagation(rhs, lhs_type);
+  }
+  else
+  {
+    // no need to enlarge
+    rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+  }
 }
 
 /*******************************************************************\

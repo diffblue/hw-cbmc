@@ -5,6 +5,7 @@
 * Verilog: fix for named generate blocks
 * Verilog: $onehot and $onehot0 are now elaboration-time constant
 * Verilog: $isunknown
+* Verilog: fix for semantics of assignment contexts
 * SystemVerilog: fix for #-# and #=# for empty matches
 * SystemVerilog: fix for |-> and |=> for empty matches
 * SystemVerilog: ref module port direction
