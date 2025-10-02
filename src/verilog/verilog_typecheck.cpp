@@ -41,16 +41,143 @@ void verilog_typecheckt::assignment_conversion(
   exprt &rhs,
   const typet &lhs_type)
 {
-  // Implements 1800-2017 10.7
-  // If the RHS is smaller than the LHS:
-  // * if the RHS is unsigned, it is zero-padded
-  // * if the RHS is signed, it is sign-extended
-  // If the RHS is larger than the LHS, it is truncated.
+  if(rhs.type().id() == ID_verilog_assignment_pattern)
+  {
+    DATA_INVARIANT(
+      rhs.id() == ID_verilog_assignment_pattern,
+      "verilog_assignment_pattern expression expected");
 
-  // This matches our typecast, but differs from the steps taken
-  // when evaluating binary expressions (11.8.2), where sign
-  // extension only happens when the propagated type is signed.
-  implicit_typecast(rhs, lhs_type);
+    if(lhs_type.id() == ID_struct)
+    {
+      auto &struct_type = to_struct_type(lhs_type);
+      auto &components = struct_type.components();
+
+      if(
+        !rhs.operands().empty() &&
+        rhs.operands().front().id() == ID_member_initializer)
+      {
+        exprt::operandst initializers{components.size(), nil_exprt{}};
+
+        for(auto &op : rhs.operands())
+        {
+          PRECONDITION(op.id() == ID_member_initializer);
+          auto member_name = op.get(ID_member_name);
+          if(!struct_type.has_component(member_name))
+          {
+            throw errort().with_location(op.source_location())
+              << "struct does not have a member `" << member_name << "'";
+          }
+          auto nr = struct_type.component_number(member_name);
+          auto value = to_unary_expr(op).op();
+          // rec. call
+          assignment_conversion(value, components[nr].type());
+          initializers[nr] = std::move(value);
+        }
+
+        // Is every member covered?
+        for(std::size_t i = 0; i < components.size(); i++)
+          if(initializers[i].is_nil())
+          {
+            throw errort().with_location(rhs.source_location())
+              << "assignment pattern does not assign member `"
+              << components[i].get_name() << "'";
+          }
+
+        rhs = struct_exprt{std::move(initializers), struct_type}
+                .with_source_location(rhs.source_location());
+      }
+      else
+      {
+        if(rhs.operands().size() != components.size())
+        {
+          throw errort().with_location(rhs.source_location())
+            << "number of expressions does not match number of struct members";
+        }
+
+        for(std::size_t i = 0; i < components.size(); i++)
+        {
+          // rec. call
+          assignment_conversion(rhs.operands()[i], components[i].type());
+        }
+
+        // turn into struct expression
+        rhs.id(ID_struct);
+        rhs.type() = lhs_type;
+      }
+
+      return;
+    }
+    else if(lhs_type.id() == ID_array)
+    {
+      auto &array_type = to_array_type(lhs_type);
+      auto &element_type = array_type.element_type();
+      auto array_size =
+        numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+
+      if(array_size != rhs.operands().size())
+      {
+        throw errort().with_location(rhs.source_location())
+          << "number of expressions does not match number of array elements";
+      }
+
+      for(std::size_t i = 0; i < array_size; i++)
+      {
+        // rec. call
+        assignment_conversion(rhs.operands()[i], element_type);
+      }
+
+      // turn into array expression
+      rhs.id(ID_array);
+      rhs.type() = lhs_type;
+      return;
+    }
+    else
+    {
+      throw errort().with_location(rhs.source_location())
+        << "cannot convert assignment pattern to '" << to_string(lhs_type)
+        << '\'';
+    }
+  }
+
+  // Implements 1800-2017 10.7 and 1800-2017 11.8.3.
+  //
+  // "The size of the left-hand side of an assignment forms
+  // the context for the right-hand expression."
+
+  // Get the width of LHS and RHS
+  auto lhs_width = get_width(lhs_type);
+  auto rhs_width = get_width(rhs.type());
+
+  if(lhs_width > rhs_width)
+  {
+    // Need to enlarge the RHS.
+    //
+    // "If needed, extend the size of the right-hand side,
+    // performing sign extension if, and only if, the type
+    // of the right-hand side is signed.
+    if(
+      (rhs.type().id() == ID_signedbv ||
+       rhs.type().id() == ID_verilog_signedbv) &&
+      (lhs_type.id() == ID_unsignedbv ||
+       lhs_type.id() == ID_verilog_unsignedbv))
+    {
+      // LHS is unsigned, RHS is signed. Must sign-extend.
+      auto new_rhs_type = to_bitvector_type(rhs.type());
+      new_rhs_type.set_width(numeric_cast_v<std::size_t>(lhs_width));
+
+      downwards_type_propagation(rhs, new_rhs_type);
+
+      // then cast
+      rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+    }
+    else
+      downwards_type_propagation(rhs, lhs_type);
+  }
+  else
+  {
+    // no need to enlarge
+    rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+  }
 }
 
 /*******************************************************************\
