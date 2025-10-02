@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 past6.sv
 
 ^EXIT=10$
