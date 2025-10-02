@@ -2554,43 +2554,11 @@ Function: verilog_typecheck_exprt::convert_relation
 
 void verilog_typecheck_exprt::convert_relation(binary_exprt &expr)
 {
-  auto &lhs = expr.lhs();
-  auto &rhs = expr.rhs();
+  convert_expr(expr.lhs());
+  convert_expr(expr.rhs());
 
-  convert_expr(lhs);
-  convert_expr(rhs);
-
-  union_decay(lhs);
-  union_decay(rhs);
-
-  // Relations are special-cased in 1800-2017 11.8.2.
-  const typet new_type =
-    max_type(enum_decay(lhs.type()), enum_decay(rhs.type()));
-
-  if(new_type.is_nil())
-  {
-    throw errort().with_location(expr.source_location())
-      << "expected operands of compatible type but got:\n"
-      << "  " << to_string(lhs.type()) << '\n'
-      << "  " << to_string(rhs.type());
-  }
-
-  // If both operands are signed, both are sign-extended to the max width.
-  // Otherwise, both are zero-extended to the max width.
-  // In particular, signed operands are then _not_ sign extended,
-  // which a typecast would do.
-  if(new_type.id() == ID_verilog_unsignedbv || new_type.id() == ID_unsignedbv)
-  {
-    // zero extend both operands
-    lhs = zero_extend(lhs, new_type);
-    rhs = zero_extend(rhs, new_type);
-  }
-  else
-  {
-    // convert
-    implicit_typecast(lhs, new_type);
-    implicit_typecast(rhs, new_type);
-  }
+  // determine the max of the operand types and propagate it downwards
+  tc_binary_expr(expr);
 }
 
 /*******************************************************************\
