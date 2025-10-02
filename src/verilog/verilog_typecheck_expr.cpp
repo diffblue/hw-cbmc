@@ -3457,9 +3457,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.type() = bool_typet{};
     return std::move(expr);
   }
-  else if(
-    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
-    expr.id() == ID_power)
+  else if(expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult)
   {
     for(auto &op : expr.operands())
       convert_expr(op);
