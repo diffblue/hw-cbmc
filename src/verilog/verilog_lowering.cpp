@@ -251,6 +251,16 @@ exprt verilog_lowering_cast(typecast_exprt expr)
   auto &src_type = expr.op().type();
   auto &dest_type = expr.type();
 
+  if(src_type.id() == ID_verilog_null && dest_type.id() == ID_verilog_chandle)
+  {
+    return to_verilog_chandle_type(dest_type).null_expr();
+  }
+
+  if(src_type.id() == ID_verilog_null && dest_type.id() == ID_verilog_event)
+  {
+    return to_verilog_event_type(dest_type).null_expr();
+  }
+
   // float to int
   if(
     (src_type.id() == ID_verilog_real ||
