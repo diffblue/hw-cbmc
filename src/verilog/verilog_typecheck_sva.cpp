@@ -167,6 +167,21 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_sequence_disable_iff)
+  {
+    auto &disable_iff = to_sva_sequence_disable_iff_expr(expr);
+
+    // The condition of these is special: They are not sampled,
+    // but evaluated directly (1800-2017 16.6).
+    convert_expr(disable_iff.condition());
+    make_boolean(disable_iff.condition());
+
+    convert_sva(disable_iff.sequence());
+    require_sva_sequence(disable_iff.sequence());
+    expr.type() = verilog_sva_sequence_typet{};
+
+    return std::move(expr);
+  }
   else if(
     expr.id() == ID_sva_cycle_delay_plus || // ##[+]
     expr.id() == ID_sva_cycle_delay_star)   // ##[*]
@@ -295,7 +310,7 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
       {
         convert_expr(pattern);
         typet t = max_type(pattern.type(), case_expr.case_op().type());
-        propagate_type(pattern, t);
+        downwards_type_propagation(pattern, t);
       }
 
       convert_sva(case_item.result());
@@ -477,4 +492,27 @@ exprt verilog_typecheck_exprt::convert_sva_rec(exprt expr)
   default:
     return convert_other_sva(expr);
   }
+}
+
+/// 1800-2017 F.4.1
+exprt verilog_typecheck_exprt::flatten_named_sequence_property(
+  sva_sequence_property_instance_exprt instance)
+{
+  auto &cond = instance.declaration().cond();
+  convert_sva(cond);
+
+  if(instance.symbol().type().id() == ID_verilog_sva_named_sequence)
+  {
+    require_sva_sequence(cond);
+    instance.type() = verilog_sva_sequence_typet{};
+  }
+  else if(instance.symbol().type().id() == ID_verilog_sva_named_property)
+  {
+    require_sva_property(cond);
+    instance.type() = verilog_sva_property_typet{};
+  }
+  else
+    PRECONDITION(false);
+
+  return instance;
 }

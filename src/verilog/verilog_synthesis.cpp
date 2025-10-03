@@ -71,6 +71,11 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
   {
     return expand_function_call(to_function_call_expr(expr), symbol_state);
   }
+  else if(expr.id() == ID_sva_sequence_property_instance)
+  {
+    auto &instance = to_sva_sequence_property_instance_expr(expr);
+    return synth_expr(instance.declaration().cond(), symbol_state);
+  }
   else if(expr.id() == ID_hierarchical_identifier)
   {
     expand_hierarchical_identifier(
@@ -337,8 +342,8 @@ exprt verilog_synthesist::expand_function_call(
   // Is it a 'system function call'?
   if(call.is_system_function_call())
   {
-    auto identifier = to_symbol_expr(call.function()).get_identifier();
-    if(identifier == "$ND")
+    auto base_name = to_verilog_identifier_expr(call.function()).base_name();
+    if(base_name == "$ND")
     {
       std::string identifier =
         id2string(module) + "::nondet::" + std::to_string(nondet_count++);
@@ -349,7 +354,7 @@ exprt verilog_synthesist::expand_function_call(
       select_one.set(ID_identifier, identifier);
       return select_one.with_source_location(call);
     }
-    else if(identifier == "$past")
+    else if(base_name == "$past")
     {
       auto what = call.arguments()[0];
       auto ticks = call.arguments().size() < 2
@@ -358,8 +363,8 @@ exprt verilog_synthesist::expand_function_call(
       return verilog_past_exprt{what, ticks}.with_source_location(call);
     }
     else if(
-      identifier == "$stable" || identifier == "$rose" ||
-      identifier == "$fell" || identifier == "$changed")
+      base_name == "$stable" || base_name == "$rose" || base_name == "$fell" ||
+      base_name == "$changed")
     {
       DATA_INVARIANT(call.arguments().size() >= 1, "must have argument");
       auto what = call.arguments()[0];
@@ -371,18 +376,18 @@ exprt verilog_synthesist::expand_function_call(
           std::move(expr), from_integer(0, integer_typet{})};
       };
 
-      if(identifier == "$stable")
+      if(base_name == "$stable")
         return equal_exprt{what, past};
-      else if(identifier == "$changed")
+      else if(base_name == "$changed")
         return notequal_exprt{what, past};
-      else if(identifier == "$rose")
+      else if(base_name == "$rose")
         return and_exprt{not_exprt{lsb(past)}, lsb(what)};
-      else if(identifier == "$fell")
+      else if(base_name == "$fell")
         return and_exprt{lsb(past), not_exprt{lsb(what)}};
       else
         DATA_INVARIANT(false, "all cases covered");
     }
-    else if(identifier == "$countones")
+    else if(base_name == "$countones")
     {
       // lower to popcount
       DATA_INVARIANT(
@@ -505,12 +510,12 @@ void verilog_synthesist::expand_hierarchical_identifier(
   const irep_idt &lhs_identifier = expr.lhs().get(ID_identifier);
 
   // rhs
-  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
+  const irep_idt &rhs_base_name = expr.rhs().base_name();
 
   // just patch together
 
   irep_idt full_identifier =
-    id2string(lhs_identifier) + '.' + id2string(rhs_identifier);
+    id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
 
   // Note: the instance copy may not yet be in symbol table,
   // as the inst module item may be later.
@@ -555,9 +560,7 @@ void verilog_synthesist::assignment_rec(
 
       if(it->type().id()==ID_bool)
       {
-        exprt bit_extract(ID_extractbit, it->type());
-        bit_extract.add_to_operands(rhs);
-        bit_extract.add_to_operands(offset_constant);
+        exprt bit_extract = extractbit_exprt{rhs, offset_constant};
         ++offset;
 
         assignment_rec(*it, bit_extract, blocking);
@@ -649,8 +652,7 @@ void verilog_synthesist::assignment_rec(
   {
     assert(value_map!=NULL);
 
-    exprt new_rhs(rhs), new_value;
-    assignment_rec(lhs, new_rhs, new_value); // start of recursion
+    auto new_value = assignment_rec(lhs, rhs); // start of recursion
 
     if(new_value.is_not_nil())
     {
@@ -683,15 +685,11 @@ Function: verilog_synthesist::assignment_rec
 
 \*******************************************************************/
 
-void verilog_synthesist::assignment_rec(
-  const exprt &lhs,
-  exprt &rhs,
-  exprt &new_value)
+exprt verilog_synthesist::assignment_rec(const exprt &lhs, const exprt &rhs)
 {
   if(lhs.id()==ID_symbol)
   {
-    new_value.swap(rhs);
-    rhs.clear();
+    return rhs;
   }
   else if(lhs.id()==ID_index ||
           lhs.id()==ID_extractbit)
@@ -718,7 +716,7 @@ void verilog_synthesist::assignment_rec(
     new_rhs.where() = synth_expr(new_rhs.where(), symbol_statet::CURRENT);
 
     // do the value
-    assignment_rec(lhs_array, new_rhs, new_value); // recursive call
+    return assignment_rec(lhs_array, new_rhs); // recursive call
   }
   else if(lhs.id() == ID_verilog_non_indexed_part_select)
   {
@@ -749,8 +747,7 @@ void verilog_synthesist::assignment_rec(
     // redundant?
     if(from == 0 && to == get_width(lhs_src.type()) - 1)
     {
-      assignment_rec(lhs_src, rhs, new_value); // recursive call
-      return;
+      return assignment_rec(lhs_src, rhs); // recursive call
     }
 
     // turn
@@ -777,39 +774,26 @@ void verilog_synthesist::assignment_rec(
     {
       exprt offset = from_integer(i - from, integer_typet());
 
-      exprt rhs_extractbit(ID_extractbit, bool_typet());
-      rhs_extractbit.reserve_operands(2);
-      rhs_extractbit.add_to_operands(rhs);
-      rhs_extractbit.add_to_operands(std::move(offset));
+      exprt rhs_extractbit = extractbit_exprt{rhs, std::move(offset)};
 
       exprt count = from_integer(i, integer_typet());
 
-      exprt new_rhs(ID_with, lhs_src.type());
-      new_rhs.reserve_operands(3);
-      new_rhs.add_to_operands(synth_lhs_src);
-      new_rhs.add_to_operands(std::move(count));
-      new_rhs.add_to_operands(std::move(rhs_extractbit));
+      exprt new_rhs =
+        with_exprt{synth_lhs_src, std::move(count), std::move(rhs_extractbit)};
 
       // do the value
-      assignment_rec(lhs_src, new_rhs, new_value); // recursive call
+      exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
 
-      if(last_value.is_nil())
-        last_value.swap(new_value);
-      else
+      if(last_value.is_not_nil())
       {
-        // merge the withs
-        assert(new_value.id() == ID_with);
-        assert(new_value.operands().size() == 3);
-        assert(last_value.id() == ID_with);
-        assert(last_value.operands().size() >= 3);
-
-        last_value.add_to_operands(std::move(to_with_expr(new_value).where()));
-        last_value.add_to_operands(
-          std::move(to_with_expr(new_value).new_value()));
+        // chain the withs
+        to_with_expr(new_value).old() = std::move(last_value);
       }
+
+      last_value = std::move(new_value);
     }
 
-    new_value.swap(last_value);
+    return last_value;
   }
   else if(
     lhs.id() == ID_verilog_indexed_part_select_plus ||
@@ -864,39 +848,26 @@ void verilog_synthesist::assignment_rec(
     {
       exprt offset = from_integer(i - index, integer_typet());
 
-      exprt rhs_extractbit(ID_extractbit, bool_typet());
-      rhs_extractbit.reserve_operands(2);
-      rhs_extractbit.add_to_operands(rhs);
-      rhs_extractbit.add_to_operands(std::move(offset));
+      exprt rhs_extractbit = extractbit_exprt{rhs, std::move(offset)};
 
       exprt count = from_integer(i, integer_typet());
 
-      exprt new_rhs(ID_with, lhs_src.type());
-      new_rhs.reserve_operands(3);
-      new_rhs.add_to_operands(synth_lhs_src);
-      new_rhs.add_to_operands(std::move(count));
-      new_rhs.add_to_operands(std::move(rhs_extractbit));
+      exprt new_rhs =
+        with_exprt{synth_lhs_src, std::move(count), std::move(rhs_extractbit)};
 
       // do the value
-      assignment_rec(lhs_src, new_rhs, new_value); // recursive call
+      exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
 
-      if(last_value.is_nil())
-        last_value.swap(new_value);
-      else
+      if(last_value.is_not_nil())
       {
-        // merge the withs
-        assert(new_value.id() == ID_with);
-        assert(new_value.operands().size() == 3);
-        assert(last_value.id() == ID_with);
-        assert(last_value.operands().size() >= 3);
-
-        last_value.add_to_operands(std::move(to_with_expr(new_value).where()));
-        last_value.add_to_operands(
-          std::move(to_with_expr(new_value).new_value()));
+        // chain the withs
+        to_with_expr(new_value).old() = std::move(last_value);
       }
+
+      last_value = std::move(new_value);
     }
 
-    new_value.swap(last_value);
+    return last_value;
   }
   else if(lhs.id() == ID_member)
   {
@@ -918,7 +889,7 @@ void verilog_synthesist::assignment_rec(
         synth_compound, member_designatort{component_name}, rhs};
 
       // recursive call
-      assignment_rec(lhs_compound, new_rhs, new_value); // recursive call
+      return assignment_rec(lhs_compound, new_rhs); // recursive call
     }
     else
     {
@@ -929,24 +900,6 @@ void verilog_synthesist::assignment_rec(
   {
     throw errort() << "unexpected lhs: " << lhs.id();
   }
-
-  #if 0
-  // do "with" merging
-
-  if(new_value.id()==ID_with &&
-     new_value.op0().id()==ID_with)
-  {
-    exprt tmp;
-
-    tmp.swap(new_value.op0());
-
-    tmp.reserve_operands(tmp.operands().size()+2);
-    tmp.add_to_operands(std::move(new_value.op1()));
-    tmp.add_to_operands(std::move(new_value.op2()));
-
-    new_value.swap(tmp);
-  }
-  #endif
 }
 
 /*******************************************************************\
@@ -2337,6 +2290,7 @@ void verilog_synthesist::synth_assert_assume_cover(
       // one of the 'always' variants -- assertions and assumptions have an implicit 'always'
       if(
         statement.id() != ID_verilog_cover_property &&
+        statement.id() != ID_verilog_cover_sequence &&
         statement.id() != ID_verilog_immediate_cover)
       {
         if(cond_for_comment.id() != ID_sva_always)
@@ -2353,7 +2307,9 @@ void verilog_synthesist::synth_assert_assume_cover(
     {
       cond_for_comment = sva_assume_exprt(cond_for_comment);
     }
-    else if(statement.id() == ID_verilog_cover_property)
+    else if(
+      statement.id() == ID_verilog_cover_property ||
+      statement.id() == ID_verilog_cover_sequence)
     {
       // 'cover' properties are existential
       cond_for_comment = sva_cover_exprt(cond_for_comment);
@@ -2393,6 +2349,7 @@ void verilog_synthesist::synth_assert_assume_cover(
     // assertions and assumptions have an implicit 'always'
     if(
       statement.id() != ID_verilog_cover_property &&
+      statement.id() != ID_verilog_cover_sequence &&
       statement.id() != ID_verilog_immediate_cover)
     {
       if(cond.id() != ID_sva_always)
@@ -2412,14 +2369,25 @@ void verilog_synthesist::synth_assert_assume_cover(
   else if(statement.id() == ID_verilog_cover_property)
   {
     // 'cover' properties are existential
-    cond = sva_cover_exprt(cond);
+    cond = sva_cover_exprt{cond};
+  }
+  else if(statement.id() == ID_verilog_cover_sequence)
+  {
+    // 'cover' properties are existential
+    cond = sva_cover_exprt{sva_sequence_property_exprt{cond}};
   }
 
   // 1800-2017 16.12.2 Sequence property
-  if(statement.id() == ID_verilog_cover_property)
+  if(
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence)
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
+  }
   else
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
+  }
 
   symbol.value = std::move(cond);
 }
@@ -2456,7 +2424,9 @@ void verilog_synthesist::synth_assert_assume_cover(
       if(cond_for_comment.id() != ID_sva_always)
         cond_for_comment = sva_always_exprt{cond_for_comment};
     }
-    else if(module_item.id() == ID_verilog_cover_property)
+    else if(
+      module_item.id() == ID_verilog_cover_property ||
+      module_item.id() == ID_verilog_cover_sequence)
     {
       // 'cover' requirements are existential.
       cond_for_comment = sva_cover_exprt{cond_for_comment};
@@ -2493,14 +2463,25 @@ void verilog_synthesist::synth_assert_assume_cover(
     // 'cover' requirements are existential.
     cond = sva_cover_exprt{cond};
   }
+  else if(module_item.id() == ID_verilog_cover_sequence)
+  {
+    // 'cover' requirements are existential.
+    cond = sva_cover_exprt{sva_sequence_property_exprt{cond}};
+  }
   else
     PRECONDITION(false);
 
   // 1800-2017 16.12.2 Sequence property
-  if(module_item.id() == ID_verilog_cover_property)
+  if(
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
+  }
   else
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
+  }
 
   symbol.value = std::move(cond);
 }
@@ -3113,21 +3094,15 @@ Function: verilog_synthesist::synth_function_call_or_task_enable
 void verilog_synthesist::synth_function_call_or_task_enable(
   const verilog_function_callt &statement)
 {
-  // this is essentially inlined
-  const symbol_exprt &function=to_symbol_expr(statement.function());
-  
-  irep_idt identifier=function.get_identifier();
-  
-  // We ignore everyting that starts with a '$',
-  // e.g., $display etc
-    
-  if(!identifier.empty() && identifier[0]=='$')       
+  if(statement.is_system_function_call())
   {
-    // ignore
+    // ignore system functions
   }
   else
   {
-    const symbolt &symbol=ns.lookup(identifier);
+    // this is essentially inlined
+    const symbol_exprt &function = to_symbol_expr(statement.function());
+    const symbolt &symbol = ns.lookup(function);
 
     if(symbol.type.id()!=ID_code)
     {
@@ -3233,7 +3208,8 @@ void verilog_synthesist::synth_statement(
     statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert ||
-    statement.id() == ID_verilog_cover_property)
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence)
   {
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_statement(statement));
@@ -3369,7 +3345,8 @@ void verilog_synthesist::synth_module_item(
   }
   else if(
     module_item.id() == ID_verilog_assert_property ||
-    module_item.id() == ID_verilog_cover_property)
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
   {
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_module_item(module_item));
@@ -3422,6 +3399,9 @@ void verilog_synthesist::synth_module_item(
   {
   }
   else if(module_item.id() == ID_verilog_sequence_declaration)
+  {
+  }
+  else if(module_item.id() == ID_function_call)
   {
   }
   else

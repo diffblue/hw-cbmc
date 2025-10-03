@@ -8,7 +8,7 @@ jobs:
   check-clang-format:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -18,8 +18,13 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq clang-format-15
+          sudo apt-get remove --purge man-db
+          packages_to_install="clang-format-15"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Check updated lines of code match clang-format-15 style
         env:
           BASE_BRANCH: ${{ github.base_ref }}

@@ -28,6 +28,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 //#define YYDEBUG 1
 
 #define mto(x, y) stack_expr(x).add_to_operands(std::move(stack_expr(y)))
+#define mto2(x, y, z) stack_expr(x).add_to_operands(std::move(stack_expr(y)), std::move(stack_expr(z)))
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
@@ -111,7 +112,7 @@ inline static void init(YYSTYPE &expr, const irep_idt &id)
 
 /*******************************************************************\
 
-Function: new_symbol
+Function: new_identifier
 
   Inputs:
 
@@ -122,9 +123,9 @@ Function: new_symbol
 
 \*******************************************************************/
 
-inline static void new_symbol(YYSTYPE &dest, YYSTYPE &src)
+inline static void new_identifier(YYSTYPE &dest, YYSTYPE &src)
 {
-  init(dest, ID_symbol);
+  init(dest, ID_verilog_identifier);
   const auto base_name = stack_expr(src).id();
   stack_expr(dest).set(ID_identifier, base_name);
   stack_expr(dest).set(ID_base_name, base_name);
@@ -580,6 +581,8 @@ int yyverilogerror(const char *error)
 // following System Verilog 1800-2017 Table 11-2.
 // Bison expects these in order of increasing precedence,
 // whereas the table gives them in decreasing order.
+%nonassoc '{'
+%nonassoc '=' "+=" "-=" "*=" "/=" "%=" "&=" "^=" "|=" "<<=" ">>=" "<<<=" ">>>=" ":=" ":/"
 %right "->" "<->"
 %right "?" ":"
 %left "||"
@@ -1023,6 +1026,9 @@ module_or_generate_item:
 		{ add_attributes($2, $1); $$=$2; }
 	| attribute_instance_brace module_common_item
 		{ add_attributes($2, $1); $$=$2; }
+	// The next rule is not in 1800-2017, but is a vendor extension.
+	| attribute_instance_brace system_tf_call ';'
+		{ add_attributes($2, $1); $$ = $2; }
 	;
 
 module_or_generate_item_declaration:
@@ -1049,8 +1055,79 @@ non_port_module_item:
 // A.1.5 Configuration source text
 
 config_declaration:
-          TOK_CONFIG TOK_ENDCONFIG
-        ;
+	   TOK_CONFIG config_identifier ';'
+	   local_parameter_declaration_opt
+	   design_statement
+	   config_rule_statement_opt
+	   TOK_ENDCONFIG config_identifier_opt
+	 ;
+
+local_parameter_declaration_opt:
+	  /* Optional */
+	| local_parameter_declaration ';'
+	;
+
+design_statement:
+	  TOK_DESIGN design_identifier ';'
+	;
+
+design_identifier:
+	  cell_identifier
+	| library_identifier '.' cell_identifier
+	;
+
+config_rule_statement_opt:
+	  /* Optional */
+	| config_rule_statement
+	;
+
+config_rule_statement:
+	  default_clause liblist_clause ';'
+	| inst_clause liblist_clause ';'
+	| inst_clause use_clause ';'
+	| cell_clause liblist_clause ';'
+	| cell_clause use_clause ';'
+	;
+
+default_clause: TOK_DEFAULT;
+
+inst_clause: TOK_INSTANCE inst_name;
+
+inst_name: topmodule_identifier dot_instance_identifier_brace;
+
+dot_instance_identifier_brace:
+	  /* Optional */
+	| dot_instance_identifier_brace '.' instance_identifier
+	;
+
+cell_clause:
+	  TOK_CELL cell_identifier
+	| TOK_CELL library_identifier cell_identifier
+	;
+
+liblist_clause: TOK_LIBLIST library_identifier_brace;
+
+library_identifier_brace:
+	  /* Optional */
+	| library_identifier_brace library_identifier
+	;
+
+use_clause:
+	  TOK_USE cell_identifier colon_config_opt
+	| TOK_USE library_identifier '.' cell_identifier colon_config_opt
+	| TOK_USE '#' '(' named_parameter_assignment_brace ')' colon_config_opt
+	| TOK_USE library_identifier '.' cell_identifier '#' '(' named_parameter_assignment_brace ')' colon_config_opt
+	;
+
+colon_config_opt:
+	  /* Optional */
+	| TOK_COLON TOK_CONFIG
+	;
+
+config_identifier_opt:
+	  /* Optional */
+	| TOK_COLON config_identifier
+	;
 
 bind_directive:
           TOK_BIND
@@ -1428,11 +1505,11 @@ package_import_item:
 	  package_identifier "::" identifier
 		{ init($$, ID_verilog_import_item);
 		  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
-		  stack_expr($$).set(ID_identifier, stack_expr($3).id()); }
+		  stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
 	| package_identifier "::" "*"
 		{ init($$, ID_verilog_import_item);
 		  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
-		  stack_expr($$).set(ID_identifier, "*"); }
+		  stack_expr($$).set(ID_base_name, "*"); }
 	;
 
 genvar_declaration:
@@ -1446,6 +1523,10 @@ net_declaration:
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
                   swapop($$, $6); }
+        | TOK_INTERCONNECT delay3_opt list_of_net_decl_assignments ';'
+		{ init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_verilog_interconnect);
+                  swapop($$, $3); }
 	;
 
 // Note that the identifier that is defined using the typedef may be
@@ -1552,6 +1633,8 @@ data_type:
 	| struct_union packed_opt signing_opt 
 	  '{' struct_union_member_brace '}' packed_dimension_brace
 	        { $$=$1;
+	          if(stack_expr($2).id() == ID_packed)
+	            stack_type($1).set(ID_packed, true);
 	          addswap($$, ID_declaration_list, $5); }
 	| TOK_ENUM enum_base_type_opt '{' enum_name_declaration_list '}'
 	        { // Like in C, these do _not_ create a scope.
@@ -1713,14 +1796,19 @@ net_type_opt:
         | net_type
         ;
 
-net_port_type: net_type_opt signing_opt packed_dimension_brace
-                {
-	          // The net type is a subtype of the signing.
-	          add_as_subtype(stack_type($2), stack_type($1));
-	          // That becomes a subtype of the packed dimension.
-                  add_as_subtype(stack_type($3), stack_type($2));
-                  $$ = $3;
-	        }
+net_port_type:
+	  net_type_opt signing_opt packed_dimension_brace
+	{
+	  // The net type is a subtype of the signing.
+	  add_as_subtype(stack_type($2), stack_type($1));
+	  // That becomes a subtype of the packed dimension.
+	  add_as_subtype(stack_type($3), stack_type($2));
+	  $$ = $3;
+	}
+	| TOK_INTERCONNECT
+	{
+	  init($$, ID_verilog_interconnect);
+	}
         ;
 
 variable_port_type: var_data_type ;
@@ -1896,12 +1984,19 @@ list_of_variable_identifiers:
 // to cover list_of_param_assignments.
 parameter_port_declaration:
           TOK_PARAMETER data_type_or_implicit param_assignment
-		{ $$ = $3; }
+		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
+        | TOK_PARAMETER TOK_TYPE type_assignment
+		{ init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $3); }
 	| TOK_LOCALPARAM data_type_or_implicit param_assignment
-		{ $$ = $3; }
+		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
+        | TOK_LOCALPARAM TOK_TYPE type_assignment
+		{ init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $3); }
 	| data_type param_assignment
-		{ $$ = $2; }
+		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($1)); mto($$, $2); }
 	| param_assignment
+		{ init($$, ID_decl); mto($$, $1); }
+        | TOK_TYPE type_assignment
+		{ init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $2); }
 	;
 
 list_of_defparam_assignments:
@@ -1926,7 +2021,6 @@ list_of_param_assignments:
 param_assignment: param_identifier '=' constant_param_expression
 		{ init($$, ID_parameter);
 		  auto base_name = stack_expr($1).id();
-		  stack_expr($$).set(ID_identifier, base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
 		  addswap($$, ID_value, $3); }
         ;
@@ -1939,11 +2033,15 @@ list_of_type_assignments:
 	;
 
 type_assignment: param_identifier '=' data_type
-		{ init($$, ID_parameter);
+		{ init($$, ID_declarator);
 		  auto base_name = stack_expr($1).id();
-		  stack_expr($$).set(ID_identifier, base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
-		  addswap($$, ID_type, $3); }
+		  stack_expr($$).set(ID_value, type_exprt{stack_type($3)});
+		  stack_expr($$).type() = typet{ID_type};
+
+		  // add to the scope as a type name
+		  PARSER.scopes.add_name(base_name, "", verilog_scopet::TYPEDEF);
+		}
         ;
 
 data_type_or_implicit:
@@ -2161,6 +2259,7 @@ unsized_dimension: '[' ']'
 struct_union:
 	  TOK_STRUCT { init($$, ID_struct); }
 	| TOK_UNION { init($$, ID_union); }
+	| TOK_UNION TOK_TAGGED { init($$, ID_union); }
 	;
 	
 // System Verilog standard 1800-2017
@@ -2322,7 +2421,7 @@ concurrent_assertion_item:
         | block_identifier TOK_COLON concurrent_assertion_statement
 		{
 		  $$=$3;
-		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
+		  stack_expr($$).set(ID_base_name, stack_expr($1).id());
 		}
 	;
 
@@ -2330,6 +2429,7 @@ concurrent_assertion_statement:
 	  assert_property_statement
 	| assume_property_statement
 	| cover_property_statement
+	| cover_sequence_statement
 	| restrict_property_statement
 	;
 
@@ -2339,13 +2439,13 @@ smv_assertion_statement:
 		{ init($$, ID_verilog_smv_assert); stack_expr($$).operands().resize(2);
 		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
 		  to_binary_expr(stack_expr($$)).op1().make_nil();
-		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
 		}
 	| TOK_ASSUME property_identifier TOK_COLON smv_property ';'
 		{ init($$, ID_verilog_smv_assume); stack_expr($$).operands().resize(2);
 		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
 		  to_binary_expr(stack_expr($$)).op1().make_nil();
-		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
 		}
 	;
 
@@ -2390,6 +2490,15 @@ assume_property_statement:
 
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' property_spec ')' action_block
 		{ init($$, ID_verilog_cover_property); mto($$, $4); mto($$, $6); }
+	;
+
+cover_sequence_statement:
+	  TOK_COVER TOK_SEQUENCE '(' sequence_expr ')' action_block
+		{ init($$, ID_verilog_cover_sequence); mto2($$, $4, $6); }
+	| TOK_COVER TOK_SEQUENCE '(' clocking_event TOK_DISABLE TOK_IFF '(' expression ')' sequence_expr ')' action_block
+		{ init($5, ID_sva_sequence_disable_iff); mto2($5, $8, $10); init($$, ID_verilog_cover_sequence); mto2($$, $5, $12); }
+	| TOK_COVER TOK_SEQUENCE '(' TOK_DISABLE TOK_IFF '(' expression ')' sequence_expr ')' action_block
+		{ init($4, ID_sva_sequence_disable_iff); mto2($4, $7, $9); init($$, ID_verilog_cover_sequence); mto2($$, $4, $11); }
 	;
 
 restrict_property_statement: TOK_RESTRICT TOK_PROPERTY '(' property_spec ')' ';'
@@ -3057,11 +3166,23 @@ named_parameter_assignment_brace:
 	  	{ $$=$1; mto($$, $3); }
 	;
 
-ordered_parameter_assignment:
-          expression;
+ordered_parameter_assignment: param_expression
+	;
+
+param_expression:
+          expression
+        | data_type
+		{ init($$, ID_type); stack_expr($$).type() = stack_type($1); }
+        ;
+
+param_expression_opt:
+          /* empty */
+		{ init($$, ID_nil); }
+        | param_expression
+        ;
 
 named_parameter_assignment:
-	  '.' parameter_identifier '(' expression_opt ')'
+	  '.' parameter_identifier '(' param_expression_opt ')'
 	  	{ init($$, ID_named_parameter_assignment);
 	  	  stack_expr($$).add(ID_parameter).swap(stack_expr($2));
 	  	  stack_expr($$).add(ID_value).swap(stack_expr($4));
@@ -3115,10 +3236,13 @@ named_port_connection_brace:
 	;
 
 named_port_connection:
-	  '.' port_identifier '(' expression_opt ')'
+	  // This needs to be 'any_identifier' to allow identifiers that
+	  // are typedefs in the local scope.
+	  '.' any_identifier '(' expression_opt ')'
 		{ init($$, ID_named_port_connection);
-                  mto($$, $2);
-                  mto($$, $4); }
+		  stack_expr($2).id(ID_verilog_identifier);
+		  mto($$, $2);
+		  mto($$, $4); }
 	;
 
 // System Verilog standard 1800-2017
@@ -3493,10 +3617,11 @@ subroutine_call_statement:
 
 action_block:
           statement_or_null %prec LT_TOK_ELSE
+                { init($$, ID_verilog_action_then); mto($$, $1); }
+        | TOK_ELSE statement
+                { init($$, ID_verilog_action_else); mto($$, $2); }
         | statement_or_null TOK_ELSE statement 
-                { init($$, "action-else"); stack_expr($$).operands().resize(2);
-                  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($0));
-                  to_binary_expr(stack_expr($$)).op1().swap(stack_expr($2)); }
+                { init($$, ID_verilog_action_then_else); mto2($$, $1, $3); }
 	;
 
 // The 1800-2017 grammar specifies this to be
@@ -3572,7 +3697,18 @@ statement:
           attribute_instance_brace block_identifier TOK_COLON attribute_instance_brace statement_item
                 { init($$, ID_verilog_label_statement);
                   stack_expr($$).set(ID_base_name, stack_expr($2).id());
-                  mto($$, $5); }
+
+                  // We'll stick the label onto any assertion
+                  auto statement = stack_expr($5).id();
+                  if(statement == ID_verilog_immediate_assert ||
+                     statement == ID_verilog_immediate_assume ||
+                     statement == ID_verilog_immediate_cover)
+                  {
+		    stack_expr($5).set(ID_base_name, stack_expr($2).id());
+		  }
+
+                  mto($$, $5);
+                }
         | attribute_instance_brace statement_item
                 { $$=$2; }
         ;
@@ -3601,7 +3737,7 @@ function_statement: statement
 	;
 
 system_task_name: TOK_SYSIDENT
-                { new_symbol($$, $1); }
+                { new_identifier($$, $1); }
         ;
 
 // System Verilog standard 1800-2017
@@ -3838,7 +3974,7 @@ deferred_immediate_assertion_item:
 		}
 	| block_identifier TOK_COLON deferred_immediate_assertion_statement
 		{ /* wrap the statement into an item */
-		  stack_expr($3).set(ID_identifier, stack_expr($1).id());
+		  stack_expr($3).set(ID_base_name, stack_expr($1).id());
 		  init($$, ID_verilog_assertion_item);
 		  mto($$, $3);
 		}
@@ -4341,6 +4477,12 @@ expression:
 	| TOK_QSTRING
 		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
 	| inside_expression
+	| tagged_union_expression
+	;
+
+tagged_union_expression:
+	  TOK_TAGGED member_identifier
+		{ init($$, ID_verilog_tagged_union); mto($$, $2); }
 	;
 
 inside_expression:
@@ -4443,6 +4585,7 @@ variable_lvalue:
         | '{' variable_concatenation_lvalue_brace '}'
 		{ init($$, ID_concatenation); swapop($$, $2); }
         */
+	| assignment_pattern
 	;
 	
 variable_concatenation_lvalue_brace:
@@ -4522,15 +4665,18 @@ attr_name: identifier
 // even if they are already used for a different kind of identifier
 // in a higher scope.
 any_identifier:
-	  type_identifier
+	  TOK_TYPE_IDENTIFIER
+		{ new_identifier($$, $1); }
 	| non_type_identifier
 	;
 
 non_type_identifier: TOK_NON_TYPE_IDENTIFIER
-		{ new_symbol($$, $1); }
+		{ new_identifier($$, $1); }
 	;
 
 block_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+cell_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 class_identifier: TOK_CLASS_IDENTIFIER
 		{
@@ -4540,6 +4686,8 @@ class_identifier: TOK_CLASS_IDENTIFIER
 		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
 		}
 	;
+
+config_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
 
@@ -4552,9 +4700,13 @@ genvar_identifier: identifier;
 hierarchical_parameter_identifier: hierarchical_identifier
 	;
 
+instance_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 interface_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 module_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+topmodule_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 endmodule_identifier_opt:
 	  /* Optional */
@@ -4585,6 +4737,8 @@ port_identifier: identifier;
 ps_covergroup_identifier:
 	;
 	
+library_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 memory_identifier: identifier;
 
 member_identifier: identifier;
@@ -4598,7 +4752,6 @@ type_identifier: TOK_TYPE_IDENTIFIER
 		  init($$, ID_typedef_type);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_base_name, base_name);
-		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
 		}
 	;
 

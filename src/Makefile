@@ -21,7 +21,7 @@ ifneq ($(BUILD_ENV),MSVC)
 ebmc.dir: ic3.dir
 endif
 
-hw-cbmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir \
+hw-cbmc.dir: ebmc.dir trans-word-level.dir trans-netlist.dir verilog.dir \
          vhdl.dir smvlang.dir cprover.dir temporal-logic.dir
 
 vlindex.dir: ebmc.dir cprover.dir verilog.dir

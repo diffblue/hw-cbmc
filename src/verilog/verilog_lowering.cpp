@@ -176,20 +176,20 @@ exprt to_bitvector(const exprt &src)
 
 exprt verilog_lowering_system_function(const function_call_exprt &call)
 {
-  auto identifier = to_symbol_expr(call.function()).get_identifier();
+  auto base_name = to_verilog_identifier_expr(call.function()).base_name();
   auto &arguments = call.arguments();
 
-  if(identifier == "$signed" || identifier == "$unsigned")
+  if(base_name == "$signed" || base_name == "$unsigned")
   {
     // lower to typecast
     DATA_INVARIANT(
-      arguments.size() == 1, id2string(identifier) + " takes one argument");
+      arguments.size() == 1, id2string(base_name) + " takes one argument");
     return typecast_exprt{arguments[0], call.type()};
   }
-  else if(identifier == "$rtoi")
+  else if(base_name == "$rtoi")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // These truncate, and do not round.
     return floatbv_typecast_exprt{
       arguments[0],
@@ -197,10 +197,10 @@ exprt verilog_lowering_system_function(const function_call_exprt &call)
         ieee_floatt::rounding_modet::ROUND_TO_ZERO),
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$itor")
+  else if(base_name == "$itor")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // No rounding required, any 32-bit integer will fit into double.
     return floatbv_typecast_exprt{
       arguments[0],
@@ -208,36 +208,36 @@ exprt verilog_lowering_system_function(const function_call_exprt &call)
         ieee_floatt::rounding_modet::ROUND_TO_ZERO),
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$bitstoreal")
+  else if(base_name == "$bitstoreal")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given bit-pattern as a real
     return typecast_exprt{
       zero_extend_exprt{arguments[0], bv_typet{64}},
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$bitstoshortreal")
+  else if(base_name == "$bitstoshortreal")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given bit-pattern as a real
     return typecast_exprt{
       zero_extend_exprt{arguments[0], bv_typet{32}},
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$realtobits")
+  else if(base_name == "$realtobits")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given floating-point bit-pattern as [63:0]
     return zero_extend_exprt{
       typecast_exprt{arguments[0], bv_typet{64}}, call.type()};
   }
-  else if(identifier == "$shortrealtobits")
+  else if(base_name == "$shortrealtobits")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given floating-point bit-pattern as [31:0]
     return zero_extend_exprt{
       typecast_exprt{arguments[0], bv_typet{32}}, call.type()};
@@ -250,6 +250,16 @@ exprt verilog_lowering_cast(typecast_exprt expr)
 {
   auto &src_type = expr.op().type();
   auto &dest_type = expr.type();
+
+  if(src_type.id() == ID_verilog_null && dest_type.id() == ID_verilog_chandle)
+  {
+    return to_verilog_chandle_type(dest_type).null_expr();
+  }
+
+  if(src_type.id() == ID_verilog_null && dest_type.id() == ID_verilog_event)
+  {
+    return to_verilog_event_type(dest_type).null_expr();
+  }
 
   // float to int
   if(
@@ -293,7 +303,7 @@ exprt verilog_lowering_cast(typecast_exprt expr)
     return std::move(new_cast);
   }
 
-  if(is_aval_bval(src_type) && dest_type.id() == ID_bool)
+  if(is_aval_bval(src_type))
   {
     // When casting a four-valued scalar to bool,
     // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
@@ -340,8 +350,8 @@ exprt verilog_lowering(exprt expr)
     auto &call = to_function_call_expr(expr);
     if(call.is_system_function_call())
     {
-      auto identifier = to_symbol_expr(call.function()).get_identifier();
-      if(identifier == "$typename")
+      auto base_name = to_verilog_identifier_expr(call.function()).base_name();
+      if(base_name == "$typename")
       {
         // Don't touch.
         // Will be expanded by elaborate_constant_system_function_call,
@@ -411,6 +421,17 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(
+    expr.id() == ID_le || expr.id() == ID_ge || expr.id() == ID_lt ||
+    expr.id() == ID_ge)
+  {
+    if(is_four_valued(expr))
+    {
+      return aval_bval(to_binary_relation_expr(expr));
+    }
+    else
+      return expr;
+  }
   else if(expr.id() == ID_concatenation)
   {
     if(
@@ -461,8 +482,13 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_type_cast)
   {
-    return verilog_lowering_cast(
-      to_typecast_expr(to_verilog_explicit_type_cast_expr(expr).lower()));
+    // These act like an assignment, and hence, the type checker
+    // has already converted the argument to the target type.
+    auto &type_cast = to_verilog_explicit_type_cast_expr(expr);
+    expr.type() = verilog_lowering(expr.type());
+    DATA_INVARIANT(
+      type_cast.op().type() == type_cast.type(), "type cast type consistency");
+    return type_cast.op();
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
@@ -470,7 +496,13 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_size_cast)
   {
-    return to_verilog_explicit_size_cast_expr(expr).lower();
+    // These act like an assignment, and hence, the type checker
+    // has already converted the argument to the target type.
+    auto &size_cast = to_verilog_explicit_size_cast_expr(expr);
+    expr.type() = verilog_lowering(expr.type());
+    DATA_INVARIANT(
+      size_cast.op().type() == size_cast.type(), "size cast type consistency");
+    return size_cast.op();
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
@@ -538,15 +570,48 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
-  else if(
-    expr.id() == ID_bitand || expr.id() == ID_bitor || expr.id() == ID_bitxor ||
-    expr.id() == ID_bitxnor)
+  else if(expr.id() == ID_bitand)
   {
-    auto &multi_ary_expr = to_multi_ary_expr(expr);
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_bitand(to_bitand_expr(expr));
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_bitor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_bitor(to_bitor_expr(expr));
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_bitxor || expr.id() == ID_bitxnor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_xor_xnor(to_multi_ary_expr(expr));
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_replication)
+  {
+    auto &replication_expr = to_replication_expr(expr);
 
     // encode into aval/bval
     if(is_four_valued(expr.type()))
-      return aval_bval_bitwise(multi_ary_expr);
+      return aval_bval_replication(replication_expr);
+    else
+      return expr; // leave as is
+  }
+  else if(
+    expr.id() == ID_reduction_or || expr.id() == ID_reduction_and ||
+    expr.id() == ID_reduction_nor || expr.id() == ID_reduction_nand ||
+    expr.id() == ID_reduction_xor || expr.id() == ID_reduction_xnor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_reduction(to_unary_expr(expr));
     else
       return expr; // leave as is
   }
@@ -604,14 +669,35 @@ exprt verilog_lowering(exprt expr)
     {
       // turn into floatbv
       expr.type() = verilog_lowering(expr.type());
+      return expr;
     }
-
-    return expr;
+    else if(is_four_valued(expr))
+    {
+      return default_aval_bval_lowering(expr);
+    }
+    else
+      return expr;
+  }
+  else if(
+    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+    expr.id() == ID_div || expr.id() == ID_mod)
+  {
+    if(is_four_valued(expr))
+      return default_aval_bval_lowering(expr);
+    else
+      return expr;
   }
   else if(expr.id() == ID_lshr || expr.id() == ID_ashr || expr.id() == ID_shl)
   {
     if(is_four_valued(expr.type()))
       return aval_bval(to_shift_expr(expr));
+    else
+      return expr;
+  }
+  else if(expr.id() == ID_zero_extend)
+  {
+    if(is_four_valued(expr.type()))
+      return aval_bval(to_zero_extend_expr(expr));
     else
       return expr;
   }

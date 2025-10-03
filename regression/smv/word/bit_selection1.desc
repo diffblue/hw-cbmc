@@ -1,0 +1,10 @@
+CORE
+bit_selection1.smv
+--bound 0
+^\[.*\] -0sd7_39\[4:1\] = 0ud4_12: PROVED .*$
+^\[.*\] 0ud3_5\[0:0\] = 0ud1_1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

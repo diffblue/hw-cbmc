@@ -1,8 +1,8 @@
 CORE
 s_until1.sv
 --smv-netlist
-^LTLSPEC \(\!node144\) U node151$
-^LTLSPEC \(TRUE\) U node158$
+^LTLSPEC \(\!node144\) U node51$
+^LTLSPEC TRUE U node151$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -36,8 +36,7 @@ bv_typet aval_bval_type(std::size_t width, irep_idt source_type)
 
 bv_typet lower_to_aval_bval(const typet &src)
 {
-  PRECONDITION(
-    src.id() == ID_verilog_unsignedbv || src.id() == ID_verilog_signedbv);
+  PRECONDITION(is_four_valued(src));
   return aval_bval_type(to_bitvector_type(src).get_width(), src.id());
 }
 
@@ -75,9 +74,7 @@ typet aval_bval_underlying(const typet &src)
 
 constant_exprt lower_to_aval_bval(const constant_exprt &src)
 {
-  PRECONDITION(
-    src.type().id() == ID_verilog_signedbv ||
-    src.type().id() == ID_verilog_unsignedbv);
+  PRECONDITION(is_four_valued(src.type()));
 
   auto new_type = lower_to_aval_bval(src.type());
   auto width = aval_bval_width(new_type);
@@ -191,6 +188,7 @@ exprt aval_bval_conversion(const exprt &src, const typet &dest)
 
   if(is_aval_bval(src.type()))
   {
+    // four-valued to four-valued
     auto src_width = aval_bval_width(src.type());
 
     if(src_width == dest_width)
@@ -198,15 +196,43 @@ exprt aval_bval_conversion(const exprt &src, const typet &dest)
       // same size
       return typecast_exprt{src, dest};
     }
-    else
+    else if(src_width > dest_width)
     {
+      // shrink
       auto new_aval = adjust_size(aval(src), dest_width);
       auto new_bval = adjust_size(bval(src), dest_width);
       return combine_aval_bval(new_aval, new_bval, dest);
     }
+    else
+    {
+      // extend
+      auto underlying_src = aval_bval_underlying(src.type());
+      auto underlying_dest = aval_bval_underlying(dest);
+
+      if(underlying_src.id() == ID_signedbv)
+      {
+        // sign extend both aval and bval
+        auto new_aval = typecast_exprt{
+          typecast_exprt{
+            typecast_exprt{aval(src), underlying_src}, underlying_dest},
+          bv_typet{dest_width}};
+        auto new_bval = typecast_exprt{
+          typecast_exprt{
+            typecast_exprt{bval(src), underlying_src}, underlying_dest},
+          bv_typet{dest_width}};
+        return combine_aval_bval(new_aval, new_bval, dest);
+      }
+      else
+      {
+        auto new_aval = adjust_size(aval(src), dest_width);
+        auto new_bval = adjust_size(bval(src), dest_width);
+        return combine_aval_bval(new_aval, new_bval, dest);
+      }
+    }
   }
   else
   {
+    // two-valued to four-valued
     const bv_typet bv_type{dest_width};
     auto aval =
       typecast_exprt{typecast_exprt{src, aval_bval_underlying(dest)}, bv_type};
@@ -256,7 +282,7 @@ exprt has_xz(const exprt &expr)
     return false_exprt{}; // it's two-valued
 }
 
-/// return 'x', one bit, in aval_bval encoding
+/// return 'x'
 exprt make_x(const typet &type)
 {
   PRECONDITION(is_four_valued(type));
@@ -337,6 +363,75 @@ exprt aval_bval(const not_exprt &expr)
   return if_exprt{has_xz, x, aval_bval_conversion(not_expr, x.type())};
 }
 
+exprt aval_bval_reduction(const unary_exprt &expr)
+{
+  auto &type = expr.type();
+  auto type_aval_bval = lower_to_aval_bval(type);
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(is_aval_bval(expr.op()));
+
+  auto has_xz = ::has_xz(expr.op());
+  auto x = make_x(type);
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  if(expr.id() == ID_reduction_xor || expr.id() == ID_reduction_xnor)
+  {
+    auto reduction_expr = unary_exprt{expr.id(), op_aval, bool_typet{}};
+    return if_exprt{has_xz, x, aval_bval_conversion(reduction_expr, x.type())};
+  }
+  else if(expr.id() == ID_reduction_and || expr.id() == ID_reduction_nand)
+  {
+    auto has_zero = notequal_exprt{
+      bitor_exprt{op_aval, op_bval},
+      to_bv_type(op_aval.type()).all_ones_expr()};
+
+    auto one = combine_aval_bval(
+      bv_typet{1}.all_ones_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+    auto zero = combine_aval_bval(
+      bv_typet{1}.all_zeros_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+
+    if(expr.id() == ID_reduction_and)
+    {
+      return if_exprt{has_zero, zero, if_exprt{has_xz, x, one}};
+    }
+    else // nand
+    {
+      return if_exprt{has_zero, one, if_exprt{has_xz, x, zero}};
+    }
+  }
+  else if(expr.id() == ID_reduction_or || expr.id() == ID_reduction_nor)
+  {
+    auto has_one = notequal_exprt{
+      bitand_exprt{op_aval, bitnot_exprt{op_bval}},
+      to_bv_type(op_aval.type()).all_zeros_expr()};
+
+    auto one = combine_aval_bval(
+      bv_typet{1}.all_ones_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+    auto zero = combine_aval_bval(
+      bv_typet{1}.all_zeros_expr(),
+      bv_typet{1}.all_zeros_expr(),
+      type_aval_bval);
+
+    if(expr.id() == ID_reduction_or)
+    {
+      return if_exprt{has_one, one, if_exprt{has_xz, x, zero}};
+    }
+    else // nor
+    {
+      return if_exprt{has_one, zero, if_exprt{has_xz, x, one}};
+    }
+  }
+  else
+    PRECONDITION(false);
+}
+
 exprt aval_bval(const bitnot_exprt &expr)
 {
   auto &type = expr.type();
@@ -355,7 +450,85 @@ exprt aval_bval(const bitnot_exprt &expr)
   return combine_aval_bval(aval, op_bval, lower_to_aval_bval(expr.type()));
 }
 
-exprt aval_bval_bitwise(const multi_ary_exprt &expr)
+exprt aval_bval_bitand(const bitand_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!expr.operands().empty());
+
+  for(auto &op : expr.operands())
+    PRECONDITION(is_aval_bval(op));
+
+  // All result bits are computed bit-wise.
+  // 0 is the dominating value.
+  // Otherwise, any bit involving x/z is x.
+
+  // A bit is zero of both aval and bval bits are zero.
+  exprt::operandst bit_is_zero_disjuncts;
+
+  for(auto &op : expr.operands())
+    bit_is_zero_disjuncts.push_back(
+      bitand_exprt{bitnot_exprt{aval(op)}, bitnot_exprt{bval(op)}});
+
+  auto bit_is_zero =
+    bitor_exprt{bit_is_zero_disjuncts, bit_is_zero_disjuncts.front().type()};
+
+  // bval: one if not bit_is_zero, and any bval bit is one
+  exprt::operandst bval_disjuncts;
+
+  for(auto &op : expr.operands())
+    bval_disjuncts.push_back(bval(op));
+
+  auto bval = bitand_exprt{
+    bitor_exprt{bval_disjuncts, bval_disjuncts.front().type()},
+    bitnot_exprt{bit_is_zero}};
+
+  // aval: one if not bit_is_zero and bval is zero
+  auto aval = bitand_exprt{bitnot_exprt{bit_is_zero}, bitnot_exprt{bval}};
+
+  return combine_aval_bval(aval, bval, lower_to_aval_bval(expr.type()));
+}
+
+exprt aval_bval_bitor(const bitor_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!expr.operands().empty());
+
+  for(auto &op : expr.operands())
+    PRECONDITION(is_aval_bval(op));
+
+  // All result bits are computed bit-wise.
+  // 1 is the dominating value.
+  // Otherwise, any bit involving x/z is x.
+
+  // A bit is one if the aval bit is one and the bval bit is zero.
+  exprt::operandst bit_is_one_disjuncts;
+
+  for(auto &op : expr.operands())
+    bit_is_one_disjuncts.push_back(
+      bitand_exprt{aval(op), bitnot_exprt{bval(op)}});
+
+  auto bit_is_one =
+    bitor_exprt{bit_is_one_disjuncts, bit_is_one_disjuncts.front().type()};
+
+  // bval: one if not bit_is_one, and any bval bit is one
+  exprt::operandst bval_disjuncts;
+
+  for(auto &op : expr.operands())
+    bval_disjuncts.push_back(bval(op));
+
+  auto bval = bitand_exprt{
+    bitor_exprt{bval_disjuncts, bval_disjuncts.front().type()},
+    bitnot_exprt{bit_is_one}};
+
+  // aval: one if bit_is_one
+  auto aval = bit_is_one;
+
+  return combine_aval_bval(aval, bval, lower_to_aval_bval(expr.type()));
+}
+
+exprt aval_bval_xor_xnor(const multi_ary_exprt &expr)
 {
   auto &type = expr.type();
   PRECONDITION(is_four_valued(type));
@@ -386,6 +559,30 @@ exprt aval_bval_bitwise(const multi_ary_exprt &expr)
     bitnot_exprt{bval}}; // 0/1 case
 
   return combine_aval_bval(aval, bval, lower_to_aval_bval(expr.type()));
+}
+
+exprt aval_bval_replication(const replication_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!is_four_valued(expr.times()));
+
+  auto times_int = numeric_cast_v<mp_integer>(expr.times());
+
+  // separately replicate aval and bval
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  auto replication_type = bv_typet{numeric_cast_v<std::size_t>(
+    to_bitvector_type(op_aval.type()).width() * times_int)};
+
+  auto aval_replicated =
+    replication_exprt{expr.times(), op_aval, replication_type};
+  auto bval_replicated =
+    replication_exprt{expr.times(), op_bval, replication_type};
+
+  return combine_aval_bval(
+    aval_replicated, bval_replicated, lower_to_aval_bval(type));
 }
 
 exprt aval_bval(const power_exprt &expr)
@@ -435,14 +632,34 @@ exprt aval_bval(const verilog_implies_exprt &expr)
 
 exprt aval_bval(const typecast_exprt &expr)
 {
-  // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
-  PRECONDITION(is_aval_bval(expr.op()));
-  PRECONDITION(expr.type().id() == ID_bool);
+  auto &dest_type = expr.type();
 
-  auto op_has_xz = ::has_xz(expr.op());
-  auto op_aval = aval(expr.op());
-  auto op_aval_zero = to_bv_type(op_aval.type()).all_zeros_expr();
-  return and_exprt{not_exprt{op_has_xz}, notequal_exprt{op_aval, op_aval_zero}};
+  PRECONDITION(is_aval_bval(expr.op()));
+
+  if(dest_type.id() == ID_bool)
+  {
+    // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
+    auto op_has_xz = ::has_xz(expr.op());
+    auto op_aval = aval(expr.op());
+    auto op_aval_zero = to_bv_type(op_aval.type()).all_zeros_expr();
+    return and_exprt{
+      not_exprt{op_has_xz}, notequal_exprt{op_aval, op_aval_zero}};
+  }
+  else if(
+    dest_type.id() == ID_verilog_unsignedbv ||
+    dest_type.id() == ID_verilog_signedbv)
+  {
+    // four-valued to four-valued
+    auto aval_bval_type = lower_to_aval_bval(dest_type);
+    return aval_bval_conversion(expr.op(), aval_bval_type);
+  }
+  else if(dest_type.id() == ID_unsignedbv || dest_type.id() == ID_signedbv)
+  {
+    // four-valued to two-valued
+    return typecast_exprt{aval(expr.op()), dest_type};
+  }
+  else
+    PRECONDITION(false);
 }
 
 exprt aval_bval(const shift_exprt &expr)
@@ -469,4 +686,68 @@ exprt aval_bval(const shift_exprt &expr)
 
   auto x = make_x(expr.type());
   return if_exprt{distance_has_xz, x, combined};
+}
+
+exprt aval_bval(const binary_relation_exprt &expr)
+{
+  auto &type = expr.type();
+
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
+
+  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+
+  exprt two_valued_expr = binary_predicate_exprt{
+    aval_underlying(expr.lhs()), expr.id(), aval_underlying(expr.rhs())};
+
+  return if_exprt{
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
+}
+
+exprt aval_bval(const zero_extend_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+
+  // extend aval and bval separately
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  auto result_type = lower_to_aval_bval(expr.type());
+  auto extended_type = bv_typet{aval_bval_width(result_type)};
+
+  auto aval_extended = zero_extend_exprt{op_aval, extended_type};
+  auto bval_extended = zero_extend_exprt{op_bval, extended_type};
+
+  return combine_aval_bval(aval_extended, bval_extended, result_type);
+}
+
+exprt default_aval_bval_lowering(const exprt &expr)
+{
+  auto &type = expr.type();
+
+  PRECONDITION(is_four_valued(type));
+
+  exprt::operandst disjuncts;
+  for(auto &op : expr.operands())
+    disjuncts.push_back(has_xz(op));
+
+  auto has_xz = disjunction(disjuncts);
+
+  exprt two_valued_expr = expr; // copy
+
+  for(auto &op : two_valued_expr.operands())
+    op = aval_underlying(op); // replace by aval
+
+  if(type.id() == ID_verilog_unsignedbv)
+    two_valued_expr.type() = unsignedbv_typet{to_bitvector_type(type).width()};
+  else if(type.id() == ID_verilog_signedbv)
+    two_valued_expr.type() = signedbv_typet{to_bitvector_type(type).width()};
+  else
+    PRECONDITION(false);
+
+  return if_exprt{
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
 }

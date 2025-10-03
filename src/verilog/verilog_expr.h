@@ -11,6 +11,36 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+/// A simple Verilog identifier, unqualified
+class verilog_identifier_exprt : public nullary_exprt
+{
+public:
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  void identifier(irep_idt _base_name)
+  {
+    set(ID_base_name, _base_name);
+  }
+};
+
+inline const verilog_identifier_exprt &
+to_verilog_identifier_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_identifier);
+  verilog_identifier_exprt::check(expr);
+  return static_cast<const verilog_identifier_exprt &>(expr);
+}
+
+inline verilog_identifier_exprt &to_verilog_identifier_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_identifier);
+  verilog_identifier_exprt::check(expr);
+  return static_cast<verilog_identifier_exprt &>(expr);
+}
+
 /// The syntax for these A.B, where A is a module identifier and B
 /// is an identifier within that module. B is given als symbol_exprt.
 class hierarchical_identifier_exprt : public binary_exprt
@@ -21,12 +51,12 @@ public:
     return op0();
   }
 
-  const symbol_exprt &item() const
+  const verilog_identifier_exprt &item() const
   {
-    return static_cast<const symbol_exprt &>(binary_exprt::op1());
+    return static_cast<const verilog_identifier_exprt &>(binary_exprt::op1());
   }
 
-  const symbol_exprt &rhs() const
+  const verilog_identifier_exprt &rhs() const
   {
     return item();
   }
@@ -393,6 +423,12 @@ public:
   inline verilog_module_itemt()
   {
   }
+
+  static void
+  check(const exprt &expr, validation_modet vm = validation_modet::INVARIANT)
+  {
+    exprt::check(expr, vm);
+  }
 };
 
 inline const verilog_module_itemt &to_verilog_module_item(const irept &irep)
@@ -680,6 +716,7 @@ public:
 
 using verilog_declaratorst = std::vector<verilog_declaratort>;
 
+/// a SystemVerilog parameter declaration
 class verilog_parameter_declt : public verilog_module_itemt
 {
 public:
@@ -690,12 +727,12 @@ public:
   using declaratort = verilog_declaratort;
   using declaratorst = verilog_declaratorst;
 
-  const declaratorst &declarations() const
+  const declaratorst &declarators() const
   {
     return (const declaratorst &)operands();
   }
 
-  declaratorst &declarations()
+  declaratorst &declarators()
   {
     return (declaratorst &)operands();
   }
@@ -725,12 +762,12 @@ public:
   using declaratort = verilog_declaratort;
   using declaratorst = verilog_declaratorst;
 
-  const declaratorst &declarations() const
+  const declaratorst &declarators() const
   {
     return (const declaratorst &)operands();
   }
 
-  declaratorst &declarations()
+  declaratorst &declarators()
   {
     return (declaratorst &)operands();
   }
@@ -1406,6 +1443,7 @@ inline verilog_ift &to_verilog_if(exprt &expr)
   return static_cast<verilog_ift &>(expr);
 }
 
+/// task or function enable
 class verilog_function_callt:public verilog_statementt
 {
 public:
@@ -1423,7 +1461,9 @@ public:
   {
     return op0();
   }
-  
+
+  bool is_system_function_call() const;
+
   exprt::operandst &arguments()
   {
     return op1().operands();
@@ -2042,6 +2082,7 @@ public:
     return op1();
   }
 
+  // The full identifier created by the type checker
   const irep_idt &identifier() const
   {
     return get(ID_identifier);
@@ -2050,6 +2091,11 @@ public:
   void identifier(irep_idt identifier)
   {
     set(ID_identifier, identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
   }
 };
 
@@ -2061,7 +2107,8 @@ to_verilog_assert_assume_cover_module_item(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property);
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence);
   binary_exprt::check(module_item);
   return static_cast<const verilog_assert_assume_cover_module_itemt &>(
     module_item);
@@ -2074,7 +2121,8 @@ to_verilog_assert_assume_cover_module_item(verilog_module_itemt &module_item)
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property);
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence);
   binary_exprt::check(module_item);
   return static_cast<verilog_assert_assume_cover_module_itemt &>(module_item);
 }
@@ -2110,6 +2158,16 @@ public:
   {
     set(ID_identifier, _identifier);
   }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  void base_name(irep_idt _base_name)
+  {
+    set(ID_base_name, _base_name);
+  }
 };
 
 inline const verilog_assert_assume_cover_statementt &
@@ -2124,7 +2182,8 @@ to_verilog_assert_assume_cover_statement(const verilog_statementt &statement)
     statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_smv_assume ||
     statement.id() == ID_verilog_immediate_cover ||
-    statement.id() == ID_verilog_cover_property);
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence);
   binary_exprt::check(statement);
   return static_cast<const verilog_assert_assume_cover_statementt &>(statement);
 }
@@ -2141,7 +2200,8 @@ to_verilog_assert_assume_cover_statement(verilog_statementt &statement)
     statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_smv_assume ||
     statement.id() == ID_verilog_immediate_cover ||
-    statement.id() == ID_verilog_cover_property);
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence);
   binary_exprt::check(statement);
   return static_cast<verilog_assert_assume_cover_statementt &>(statement);
 }
@@ -2350,17 +2410,18 @@ public:
   {
   }
 
-  using parameter_port_listt = verilog_parameter_declt::declaratorst;
+  using parameter_port_declst = std::vector<verilog_parameter_declt>;
 
-  const parameter_port_listt &parameter_port_list() const
+  const parameter_port_declst &parameter_port_decls() const
   {
-    return (
-      const parameter_port_listt &)(find(ID_parameter_port_list).get_sub());
+    return (const parameter_port_declst &)(find(ID_verilog_parameter_port_decls)
+                                             .get_sub());
   }
 
-  parameter_port_listt &parameter_port_list()
+  parameter_port_declst &parameter_port_decls()
   {
-    return (parameter_port_listt &)(add(ID_parameter_port_list).get_sub());
+    return (
+      parameter_port_declst &)(add(ID_verilog_parameter_port_decls).get_sub());
   }
 
   using port_listt = std::vector<verilog_declt>;
@@ -2554,12 +2615,6 @@ public:
   {
     return op1();
   }
-
-  // lower to typecast
-  exprt lower() const
-  {
-    return typecast_exprt{op(), type()};
-  }
 };
 
 inline const verilog_explicit_size_cast_exprt &
@@ -2654,11 +2709,6 @@ public:
         std::move(__op),
         std::move(__type))
   {
-  }
-
-  exprt lower() const
-  {
-    return typecast_exprt{op(), type()};
   }
 };
 
@@ -2887,9 +2937,16 @@ to_verilog_indexed_part_select_plus_or_minus_expr(exprt &expr)
   return static_cast<verilog_indexed_part_select_plus_or_minus_exprt &>(expr);
 }
 
-class verilog_property_declarationt : public verilog_module_itemt
+/// a base class for both sequence and property declarations
+class verilog_sequence_property_declaration_baset : public verilog_module_itemt
 {
 public:
+  verilog_sequence_property_declaration_baset(irep_idt _id, exprt _cond)
+    : verilog_module_itemt{_id}
+  {
+    add_to_operands(std::move(_cond));
+  }
+
   const irep_idt &base_name() const
   {
     return get(ID_base_name);
@@ -2906,10 +2963,53 @@ public:
   }
 };
 
+inline const verilog_sequence_property_declaration_baset &
+to_verilog_sequence_property_declaration_base(const exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_sequence_declaration ||
+    expr.id() == ID_verilog_property_declaration);
+  verilog_sequence_property_declaration_baset::check(expr);
+  return static_cast<const verilog_sequence_property_declaration_baset &>(expr);
+}
+
+inline verilog_sequence_property_declaration_baset &
+to_verilog_sequence_property_declaration_base(exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_sequence_declaration ||
+    expr.id() == ID_verilog_property_declaration);
+  verilog_sequence_property_declaration_baset::check(expr);
+  return static_cast<verilog_sequence_property_declaration_baset &>(expr);
+}
+
+class verilog_property_declarationt
+  : public verilog_sequence_property_declaration_baset
+{
+public:
+  explicit verilog_property_declarationt(exprt property)
+    : verilog_sequence_property_declaration_baset{
+        ID_verilog_property_declaration,
+        std::move(property)}
+  {
+  }
+
+  const exprt &property() const
+  {
+    return cond();
+  }
+
+  exprt &property()
+  {
+    return cond();
+  }
+};
+
 inline const verilog_property_declarationt &
 to_verilog_property_declaration(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  verilog_property_declarationt::check(expr);
   return static_cast<const verilog_property_declarationt &>(expr);
 }
 
@@ -2917,30 +3017,29 @@ inline verilog_property_declarationt &
 to_verilog_property_declaration(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  verilog_property_declarationt::check(expr);
   return static_cast<verilog_property_declarationt &>(expr);
 }
 
-class verilog_sequence_declarationt : public verilog_module_itemt
+class verilog_sequence_declarationt
+  : public verilog_sequence_property_declaration_baset
 {
 public:
-  explicit verilog_sequence_declarationt(exprt sequence)
+  explicit verilog_sequence_declarationt(exprt _sequence)
+    : verilog_sequence_property_declaration_baset{
+        ID_verilog_sequence_declaration,
+        std::move(_sequence)}
   {
-    add_to_operands(std::move(sequence));
-  }
-
-  const irep_idt &base_name() const
-  {
-    return get(ID_base_name);
   }
 
   const exprt &sequence() const
   {
-    return op0();
+    return cond();
   }
 
   exprt &sequence()
   {
-    return op0();
+    return cond();
   }
 };
 
@@ -2948,6 +3047,7 @@ inline const verilog_sequence_declarationt &
 to_verilog_sequence_declaration(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  verilog_sequence_declarationt::check(expr);
   return static_cast<const verilog_sequence_declarationt &>(expr);
 }
 
@@ -2955,6 +3055,7 @@ inline verilog_sequence_declarationt &
 to_verilog_sequence_declaration(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  verilog_sequence_declarationt::check(expr);
   return static_cast<verilog_sequence_declarationt &>(expr);
 }
 

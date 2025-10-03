@@ -2,11 +2,11 @@ CORE
 ../../verilog/SVA/sequence_repetition1.sv
 --buechi --bound 10
 ^\[.*\] main\.half_x == 0 \[\*2\]: PROVED up to bound 10$
-^\[.*\] main\.half_x == 0 \[->2\]: UNSUPPORTED: not convertible to Buechi$
-^\[.*\] main\.half_x == 0 \[=2\]: UNSUPPORTED: not convertible to Buechi$
+^\[.*\] main\.half_x == 0 \[->2\]: UNSUPPORTED: sva_sequence_goto_repetition not convertible to Buechi$
+^\[.*\] main\.half_x == 0 \[=2\]: UNSUPPORTED: sva_sequence_non_consecutive_repetition not convertible to Buechi$
 ^\[.*\] main\.x == 0 \[\*2\]: REFUTED$
-^\[.*\] main\.x == 0 \[->2\]: UNSUPPORTED: not convertible to Buechi$
-^\[.*\] main\.x == 0 \[=2\]: UNSUPPORTED: not convertible to Buechi$
+^\[.*\] main\.x == 0 \[->2\]: UNSUPPORTED: sva_sequence_goto_repetition not convertible to Buechi$
+^\[.*\] main\.x == 0 \[=2\]: UNSUPPORTED: sva_sequence_non_consecutive_repetition not convertible to Buechi$
 ^EXIT=10$
 ^SIGNAL=0$
 --

@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/std_expr.h>
 
+#include <ebmc/ebmc_error.h>
 #include <solvers/flattening/boolbv_width.h>
 #include <solvers/prop/literal_expr.h>
 #include <temporal-logic/ctl.h>
@@ -148,9 +149,9 @@ protected:
 
   std::optional<exprt> convert_property(const exprt &);
 
-  void map_vars(
-    const irep_idt &module,
-    netlistt &dest);
+  var_mapt build_var_map(const irep_idt &module);
+
+  void allocate_state_variables(netlistt &);
 };
 
 /*******************************************************************\
@@ -189,7 +190,7 @@ literalt convert_trans_to_netlistt::new_input()
 
 /*******************************************************************\
 
-Function: convert_trans_to_netlistt::map_vars
+Function: convert_trans_to_netlistt::build_var_map
 
   Inputs:
 
@@ -199,22 +200,39 @@ Function: convert_trans_to_netlistt::map_vars
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::map_vars(
-  const irep_idt &module,
-  netlistt &dest)
+var_mapt convert_trans_to_netlistt::build_var_map(const irep_idt &module)
 {
   boolbv_widtht boolbv_width(ns);
+  var_mapt var_map;
 
-  auto update_dest_var_map = [&dest, &boolbv_width](const symbolt &symbol) {
+  auto update_dest_var_map = [&var_map, &boolbv_width](const symbolt &symbol)
+  {
     var_mapt::vart::vartypet vartype;
 
     if (symbol.is_property)
       return; // ignore properties
     else if(
+      symbol.type.id() == ID_verilog_sva_named_sequence ||
+      symbol.type.id() == ID_verilog_sva_named_property)
+    {
+      return; // ignore sequence/property declarations
+    }
+    else if(
+      symbol.type.id() == ID_natural || symbol.type.id() == ID_integer ||
+      symbol.type.id() == ID_verilog_genvar)
+    {
+      return; // ignore
+    }
+    else if(
       symbol.type.id() == ID_module || symbol.type.id() == ID_module_instance ||
-      symbol.type.id() == ID_primitive_module_instance)
+      symbol.type.id() == ID_primitive_module_instance ||
+      symbol.type.id() == ID_smv_module_instance)
     {
       return; // ignore modules
+    }
+    else if(symbol.type.id() == ID_named_block)
+    {
+      return; // ignore Verilog named blocks
     }
     else if(symbol.is_type)
       return; // ignore types
@@ -230,24 +248,51 @@ void convert_trans_to_netlistt::map_vars(
     if (size == 0)
       return;
 
-    var_mapt::vart &var = dest.var_map.map[symbol.name];
+    var_mapt::vart &var = var_map.map[symbol.name];
     var.vartype = vartype;
     var.type = symbol.type;
     var.mode = symbol.mode;
     var.bits.resize(size);
-
-    for (std::size_t bit = 0; bit < size; bit++) {
-      // just initialize with something
-      var.bits[bit].current = const_literal(false);
-      var.bits[bit].next = const_literal(false);
-
-      // we already know the numbers of inputs and latches
-      if (var.is_input() || var.is_latch())
-        var.bits[bit].current = dest.new_var_node();
-    }
   };
 
-  for_all_module_symbols(symbol_table, module, update_dest_var_map);
+  for(const auto &symbol_it : symbol_table.symbols)
+    if(symbol_it.second.module == module)
+      update_dest_var_map(symbol_it.second);
+
+  return var_map;
+}
+
+/*******************************************************************\
+
+Function: convert_trans_to_netlistt::allocate_state_variables
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void convert_trans_to_netlistt::allocate_state_variables(netlistt &dest)
+{
+  // we work with the sorted var_map to get a deterministic
+  // allocation for the latches and inputs
+
+  for(auto var_map_it : dest.var_map.sorted())
+  {
+    auto &var = var_map_it->second;
+
+    for(auto &bit : var.bits)
+    {
+      // just initialize with something
+      bit.current = const_literal(false);
+      bit.next = const_literal(false);
+
+      if(var.is_input() || var.is_latch())
+        bit.current = dest.new_var_node();
+    }
+  }
 }
 
 /*******************************************************************\
@@ -271,9 +316,10 @@ void convert_trans_to_netlistt::operator()(
   lhs_map.clear();
   rhs_list.clear();
   constraint_list.clear();
-  
-  map_vars(module, dest);
-  
+
+  dest.var_map = build_var_map(module);
+  allocate_state_variables(dest);
+
   // setup lhs_map
 
   for(var_mapt::mapt::iterator
@@ -411,7 +457,8 @@ convert_trans_to_netlistt::convert_property(const exprt &expr)
   }
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
-    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor)
+    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor ||
+    (expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool))
   {
     exprt copy = expr;
     for(auto &op : copy.operands())
@@ -564,8 +611,9 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       lhs_mapt::iterator it=lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "lhs_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
-      
+        throw ebmc_errort{} << "lhs_rec: failed to find `"
+                            << bv_varid.as_string() << "' in lhs_map";
+
       // we only need to do wires
       if(!it->second.var->is_wire()) return;
 
@@ -592,7 +640,10 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     if(!to_integer_non_constant(to_extractbits_expr(expr).index(), new_from))
     {
       boolbv_widtht boolbv_width(ns);
-      mp_integer new_to = new_from + boolbv_width(expr.type());
+      const auto width = boolbv_width(expr.type());
+      DATA_INVARIANT(
+        width != 0, "trans_to_netlist got extractbits with zero-width operand");
+      mp_integer new_to = new_from + width - 1;
 
       from = new_from.to_ulong();
       to = new_to.to_ulong();
@@ -720,7 +771,7 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     bv_varidt bv_varid;
     bv_varid.id=lhs.get(ID_identifier);
-    
+
     for(bv_varid.bit_nr=lhs_from;
         bv_varid.bit_nr!=(lhs_to+1);
         bv_varid.bit_nr++)
@@ -729,7 +780,8 @@ void convert_trans_to_netlistt::add_equality_rec(
         lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "add_equality_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
+        throw ebmc_errort{} << "add_equality_rec: failed to find `"
+                            << bv_varid.as_string() << "' in lhs_map";
 
       lhs_entryt &lhs_entry=it->second;
       const var_mapt::vart &var=*lhs_entry.var;
@@ -767,9 +819,12 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     boolbv_widtht boolbv_width(ns);
 
+    const auto width = boolbv_width(lhs.type());
+
+    DATA_INVARIANT(width != 0, "add_equality_rec got zero-width bit-vector");
+
     std::size_t new_lhs_from = lhs_from + index.to_ulong();
-    std::size_t new_lhs_to =
-      lhs_from + index.to_ulong() + boolbv_width(lhs.type());
+    std::size_t new_lhs_to = lhs_from + index.to_ulong() + width - 1;
 
     add_equality_rec(
       src, to_extractbits_expr(lhs).src(), new_lhs_from, new_lhs_to, rhs_entry);

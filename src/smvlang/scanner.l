@@ -188,6 +188,11 @@ void newlocation(YYSTYPE &x)
                   stack_expr(yysmvlval).id(yytext);
 		  return NUMBER_Token;
 		}
+0[us]?[bBoOdDhH][0-9]*_[0-9a-fA-F][_0-9a-fA-F]* {
+                  newstack(yysmvlval);
+                  stack_expr(yysmvlval).id(yytext);
+		  return WORD_CONSTANT_Token;
+		}
 \"[^\"]*\"      {
                   newstack(yysmvlval);
                   std::string tmp(yytext);

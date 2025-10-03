@@ -10,9 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/replace_symbol.h>
 #include <util/simplify_expr.h>
 
-#include "verilog_typecheck.h"
-
+#include "typename.h"
 #include "verilog_expr.h"
+#include "verilog_typecheck.h"
 
 /*******************************************************************\
 
@@ -33,18 +33,19 @@ verilog_typecheckt::get_parameter_declarators(
   std::vector<verilog_parameter_declt::declaratort> declarators;
 
   // We do the parameter ports first.
-  const auto &parameter_port_list = module_source.parameter_port_list();
+  const auto &parameter_port_decls = module_source.parameter_port_decls();
 
-  for(auto &decl : parameter_port_list)
-    declarators.push_back(decl);
+  for(auto &declaration : parameter_port_decls)
+    for(auto &declarator : declaration.declarators())
+      declarators.push_back(declarator);
 
   // We do the module item ports second.
   const auto &module_items = module_source.module_items();
 
   for(auto &item : module_items)
     if(item.id() == ID_parameter_decl)
-      for(auto &decl : to_verilog_parameter_decl(item).declarations())
-        declarators.push_back(decl);
+      for(auto &declarator : to_verilog_parameter_decl(item).declarators())
+        declarators.push_back(declarator);
 
   return declarators;
 }
@@ -119,8 +120,8 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
       }
 
       // Is there a defparam that overrides this parameter?
-      auto &identifier = decl.identifier();
-      auto def_param_it = instance_defparams.find(identifier);
+      auto &base_name = decl.base_name();
+      auto def_param_it = instance_defparams.find(base_name);
       if(def_param_it != instance_defparams.end())
         value = def_param_it->second;
 
@@ -155,25 +156,28 @@ void verilog_typecheckt::set_parameter_values(
 {
   auto p_it=parameter_values.begin();
 
-  auto &parameter_port_list = module_source.parameter_port_list();
+  auto &parameter_port_decls = module_source.parameter_port_decls();
 
-  for(auto &declarator : parameter_port_list)
-  {
-    DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
+  for(auto &declaration : parameter_port_decls)
+    for(auto &declarator : declaration.declarators())
+    {
+      DATA_INVARIANT(
+        p_it != parameter_values.end(), "have enough parameter values");
 
-    // only overwrite when actually assigned
-    if(p_it->is_not_nil())
-      declarator.value() = *p_it;
+      // only overwrite when actually assigned
+      if(p_it->is_not_nil())
+        declarator.value() = *p_it;
 
-    p_it++;
-  }
+      p_it++;
+    }
 
   auto &module_items = module_source.module_items();
 
   for(auto &module_item : module_items)
     if(module_item.id() == ID_parameter_decl)
     {
-      for(auto &decl : to_verilog_parameter_decl(module_item).declarations())
+      for(auto &declarator :
+          to_verilog_parameter_decl(module_item).declarators())
       {
         if(p_it!=parameter_values.end())
         {
@@ -181,7 +185,7 @@ void verilog_typecheckt::set_parameter_values(
 
           // only overwrite when actually assigned
           if(p_it->is_not_nil())
-            decl.value() = *p_it;
+            declarator.value() = *p_it;
 
           p_it++;
         }
@@ -241,15 +245,18 @@ irep_idt verilog_typecheckt::parameterize_module(
 
     if(pv.is_not_nil())
     {
-      mp_integer i;
-      if(to_integer_non_constant(pv, i))
+      if(pv.id() == ID_type)
       {
-        throw errort().with_location(pv.source_location())
-          << "parameter value expected to be constant, but got `"
-          << to_string(pv) << "'";
+        suffix += verilog_typename(to_type_expr(pv).type());
+      }
+      else if(pv.id() == ID_constant)
+      {
+        mp_integer i = numeric_cast_v<mp_integer>(to_constant_expr(pv));
+        suffix += integer2string(i);
       }
       else
-        suffix += integer2string(i);
+        DATA_INVARIANT(
+          false, "parameter value expected to be type or constant");
     }
   }
 

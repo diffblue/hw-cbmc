@@ -1,7 +1,7 @@
 CORE
 shr2.v
 
-^file .* line 4: operand 1\.1 must be integral$
+^file .* line 4: operand 1\.1 must have a bit vector type$
 ^EXIT=2$
 ^SIGNAL=0$
 --

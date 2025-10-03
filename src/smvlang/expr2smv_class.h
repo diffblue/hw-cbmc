@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #define CPROVER_SMV_EXPR2SMV_CLASS_H
 
 #include <util/arith_tools.h>
+#include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
@@ -111,6 +112,10 @@ protected:
   resultt
   convert_unary(const unary_exprt &, const std::string &symbol, precedencet);
 
+  resultt convert_extractbits(const extractbits_exprt &);
+
+  resultt convert_smv_bit_selection(const ternary_exprt &);
+
   resultt convert_index(const index_exprt &, precedencet);
 
   resultt convert_if(const if_exprt &, precedencet);
@@ -127,6 +132,8 @@ protected:
   convert_function_application(const std::string &symbol, const exprt &);
 
   resultt convert_typecast(const typecast_exprt &);
+
+  resultt convert_zero_extend(const zero_extend_exprt &);
 
   resultt convert_norep(const exprt &);
 };

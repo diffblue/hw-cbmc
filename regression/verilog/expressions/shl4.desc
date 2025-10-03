@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 shl4.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ shl4.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.

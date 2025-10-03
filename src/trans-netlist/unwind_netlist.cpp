@@ -83,10 +83,7 @@ void unwind(
   if(!last)
   {     
     // joining the latches between timeframe and timeframe+1
-    for(var_mapt::mapt::const_iterator
-        v_it=netlist.var_map.map.begin();
-        v_it!=netlist.var_map.map.end();
-        v_it++)
+    for(auto v_it : netlist.var_map.sorted())
     {
       const var_mapt::vart &var=v_it->second;
       if(var.is_latch())

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 replication.sv
 --module main --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ replication.sv
 --
 ^warning: ignoring
 --
-z-related tests fail

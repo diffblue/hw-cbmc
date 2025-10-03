@@ -10,7 +10,7 @@ jobs:
   check-ubuntu-24_04-make-gcc:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -19,12 +19,19 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq gcc gdb g++ jq flex bison libxml2-utils ccache cmake z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="ccache z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
+      - name: Log the version of gcc
+        run: gcc --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -68,7 +75,7 @@ jobs:
       CC: "ccache clang"
       CXX: "ccache clang++"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -77,13 +84,18 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq clang-19 clang++-19 gdb jq flex bison libxml2-utils cpanminus ccache z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="clang-19 clang++-19 gdb jq flex bison libxml2-utils cpanminus ccache z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
           cpanm Thread::Pool::Simple
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -120,19 +132,19 @@ jobs:
       - name: Print ccache stats
         run: ccache -s
       - name: Upload the ebmc binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ebmc-binary
           retention-days: 5
           path: src/ebmc/ebmc
       - name: Upload the hw-cbmc binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: hw-cbmc-binary
           retention-days: 5
           path: src/hw-cbmc/hw-cbmc
       - name: Upload the vlindex binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: vlindex-binary
           retention-days: 5
@@ -143,7 +155,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -152,12 +164,17 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: ebmc
@@ -171,7 +188,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -181,17 +198,17 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           # spot
-          SPOT_VERSION=2.14.2
-          URL=https://download.opensuse.org/repositories/home:/adl/Debian_12/amd64
-          wget ${URL}/libbddx0_${SPOT_VERSION}.0-1_amd64.deb
-          wget ${URL}/libspotgen0_${SPOT_VERSION}.0-1_amd64.deb
-          wget ${URL}/libspot0_${SPOT_VERSION}.0-1_amd64.deb
-          wget ${URL}/spot_${SPOT_VERSION}.0-1_amd64.deb
-          sudo dpkg -i libbddx0_${SPOT_VERSION}.0-1_amd64.deb libspotgen0_${SPOT_VERSION}.0-1_amd64.deb libspot0_${SPOT_VERSION}.0-1_amd64.deb spot_${SPOT_VERSION}.0-1_amd64.deb
+          SPOT_VERSION=2.14.3.16
+          URL=https://www.lre.epita.fr/repo/debian/stable/
+          wget ${URL}/libbddx0_${SPOT_VERSION}-1_amd64.deb
+          wget ${URL}/libspotgen0_${SPOT_VERSION}-1_amd64.deb
+          wget ${URL}/libspot0_${SPOT_VERSION}-1_amd64.deb
+          wget ${URL}/spot_${SPOT_VERSION}-1_amd64.deb
+          sudo dpkg -i libbddx0_${SPOT_VERSION}-1_amd64.deb libspotgen0_${SPOT_VERSION}-1_amd64.deb libspot0_${SPOT_VERSION}-1_amd64.deb spot_${SPOT_VERSION}-1_amd64.deb
       - name: Confirm ltl2tgba is available and log the version installed
         run: ltl2tgba --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: ebmc
@@ -207,9 +224,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: ebmc
@@ -218,7 +235,7 @@ jobs:
       - name: ebmc on Hazard3
         run: PATH=$PATH:$PWD/ebmc examples/Hazard3/Hazard3-ebmc.sh
       - name: Get the vlindex binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: vlindex-binary
           path: vlindex
@@ -245,13 +262,13 @@ jobs:
           # yum config-manager --set-enabled powertools
           # yum install glibc-static libstdc++-static
       - name: cache for ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /github/home/.cache/ccache
           save-always: true
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-centos8-make-gcc-
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Zero ccache stats and limit in size
@@ -281,7 +298,7 @@ jobs:
   check-macos-15-make-clang:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -289,7 +306,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           save-always: true
           path: .ccache
@@ -331,7 +348,7 @@ jobs:
     name: Emscripten build
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -340,10 +357,15 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq emscripten flex bison libxml2-utils cpanminus ccache
+          sudo apt-get remove --purge man-db
+          packages_to_install="emscripten flex bison libxml2-utils cpanminus ccache"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Install node.js 23
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 23
       - name: Install emscripten
@@ -357,7 +379,7 @@ jobs:
           source ./emsdk_env.sh
           emcc --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -409,7 +431,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Setup MSBuild
@@ -433,7 +455,7 @@ jobs:
       - name: Initialise Developer Command Line
         uses: ilammy/msvc-dev-cmd@v1
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           save-always: true
           path: .ccache
@@ -469,7 +491,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -478,22 +500,27 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: bin
       - name: Get the hw-cbmc binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: hw-cbmc-binary
           path: bin
       - name: Get the vlindex binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: vlindex-binary
           path: bin

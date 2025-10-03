@@ -680,10 +680,10 @@ Function: expr2verilogt::convert_sva_abort
 
 expr2verilogt::resultt expr2verilogt::convert_sva_abort(
   const std::string &text,
-  const sva_abort_exprt &expr)
+  const binary_exprt &expr)
 {
-  auto op0 = convert_rec(expr.condition());
-  auto op1 = convert_rec(expr.property());
+  auto op0 = convert_rec(expr.op0());
+  auto op1 = convert_rec(expr.op1());
 
   return {verilog_precedencet::MIN, text + " (" + op0.s + ") " + op1.s};
 }
@@ -1178,6 +1178,24 @@ expr2verilogt::resultt expr2verilogt::convert_symbol(const exprt &src)
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_verilog_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_verilog_identifier(const verilog_identifier_exprt &src)
+{
+  return {verilog_precedencet::MAX, id2string(src.base_name())};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_nondet_symbol
 
   Inputs:
@@ -1348,6 +1366,10 @@ expr2verilogt::convert_constant(const constant_exprt &src)
     else
       return convert_norep(src);
   }
+  else if(type.id() == ID_verilog_null)
+  {
+    dest = "null";
+  }
   else
     return convert_norep(src);
 
@@ -1475,6 +1497,45 @@ expr2verilogt::convert_inside(const verilog_inside_exprt &src)
   dest += "}";
 
   return {precedence, dest};
+}
+
+/*******************************************************************\
+
+Function: expr2verilogt::convert_sequence_property_instance
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_sequence_property_instance(
+  const sva_sequence_property_instance_exprt &src)
+{
+  if(src.arguments().empty())
+    return convert_rec(src.symbol());
+
+  auto fkt = convert_rec(src.symbol());
+
+  std::string dest = fkt.s;
+  bool first = true;
+  dest += "(";
+
+  for(const auto &op : src.arguments())
+  {
+    if(first)
+      first = false;
+    else
+      dest += ", ";
+
+    dest += convert_rec(op).s;
+  }
+
+  dest += ")";
+
+  return {verilog_precedencet::MEMBER, dest};
 }
 
 /*******************************************************************\
@@ -1766,6 +1827,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   else if(src.id()==ID_symbol)
     return convert_symbol(src);
 
+  else if(src.id() == ID_verilog_identifier)
+    return convert_symbol(to_verilog_identifier_expr(src));
+
   else if(src.id()==ID_nondet_symbol)
     return convert_nondet_symbol(src);
 
@@ -1933,6 +1997,11 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return precedence = verilog_precedencet::MIN,
            convert_sva_abort("disable iff", to_sva_abort_expr(src));
 
+  else if(src.id() == ID_sva_sequence_disable_iff)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_abort(
+             "disable iff", to_sva_sequence_disable_iff_expr(src));
+
   else if(src.id()==ID_sva_eventually)
   {
     return precedence = verilog_precedencet::MIN,
@@ -2001,6 +2070,15 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     src.id() == ID_xor)
   {
     return convert_function(src.id_string(), src);
+  }
+
+  else if(src.id() == ID_zero_extend)
+    return convert_rec(to_zero_extend_expr(src).op());
+
+  else if(src.id() == ID_sva_sequence_property_instance)
+  {
+    return convert_sequence_property_instance(
+      to_sva_sequence_property_instance_expr(src));
   }
 
   // no VERILOG language expression for internal representation
@@ -2145,7 +2223,10 @@ std::string expr2verilogt::convert(const typet &type)
   }
   else if(type.id() == ID_struct)
   {
-    return "struct";
+    if(type.get_bool(ID_packed))
+      return "struct packed";
+    else
+      return "struct";
   }
   else if(type.id() == ID_union)
   {

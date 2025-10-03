@@ -1,0 +1,8 @@
+CORE
+div1.smv
+
+^file .* line 4: no support for / on integer operands$
+^EXIT=2$
+^SIGNAL=0$
+--
+--

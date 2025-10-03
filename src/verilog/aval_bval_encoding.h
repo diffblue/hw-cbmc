@@ -49,8 +49,16 @@ exprt aval_bval(const verilog_logical_inequality_exprt &);
 exprt aval_bval(const not_exprt &);
 /// lowering for ~
 exprt aval_bval(const bitnot_exprt &);
-/// lowering for &, |, ^, ^~
-exprt aval_bval_bitwise(const multi_ary_exprt &);
+/// lowering for &
+exprt aval_bval_bitand(const bitand_exprt &);
+/// lowering for |
+exprt aval_bval_bitor(const bitor_exprt &);
+/// lowering for ^, ^~
+exprt aval_bval_xor_xnor(const multi_ary_exprt &);
+/// lowering for reduction operators
+exprt aval_bval_reduction(const unary_exprt &);
+/// lowering for replication
+exprt aval_bval_replication(const replication_exprt &);
 /// lowering for ==?
 exprt aval_bval(const verilog_wildcard_equality_exprt &);
 /// lowering for !=?
@@ -65,5 +73,14 @@ exprt aval_bval(const verilog_implies_exprt &);
 exprt aval_bval(const typecast_exprt &);
 /// lowering for shifts
 exprt aval_bval(const shift_exprt &);
+/// lowering for <=, <, etc.
+exprt aval_bval(const binary_relation_exprt &);
+/// lowering for zero extension
+exprt aval_bval(const zero_extend_exprt &);
+
+/// If any operand has x/z, then the result is 'x'.
+/// Otherwise, the result is the expression applied to the aval
+/// of the operands.
+exprt default_aval_bval_lowering(const exprt &);
 
 #endif

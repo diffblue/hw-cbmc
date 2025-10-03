@@ -1,0 +1,9 @@
+MODULE main
+
+MODULE my-module(x)
+
+-- this is tolerated when the module is not instantiated
+CTLSPEC x + 1
+
+-- this, too
+CTLSPEC something_not_known_at_all

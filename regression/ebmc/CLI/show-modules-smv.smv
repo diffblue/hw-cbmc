@@ -1,0 +1,15 @@
+-- from the NuSMV 2.7 manual
+
+MODULE main
+ VAR
+  a : bar;
+  m : foo(a);
+
+MODULE bar
+ VAR
+  q : boolean;
+  p : boolean;
+
+MODULE foo(c)
+ DEFINE
+  flag := c.q | c.p;

@@ -8,8 +8,10 @@ SRC += smvlang/expr2smv.cpp \
        temporal-logic/hoa.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
        temporal-logic/sva_sequence_match.cpp \
+       temporal-logic/sva_to_ltl.cpp \
        temporal-logic/nnf.cpp \
        temporal-logic/trivial_sva.cpp \
+       verilog/typename.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src

@@ -1,0 +1,8 @@
+MODULE main
+
+VAR red : boolean;
+
+-- The identifier "red" is already used.
+-- NuSMV doesn't error this, but yields an error when attempting
+-- to use the identifier.
+VAR some_var: { red, green, yellow, off };

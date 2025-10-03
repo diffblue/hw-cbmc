@@ -1,0 +1,10 @@
+CORE
+smv_ltlspec_X1.smv
+
+^\[.*\] X x & x: REFUTED$
+^\[.*\] X x & x: REFUTED$
+^\[.*\] X \(x & x\): PROVED \(CT=1\)$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

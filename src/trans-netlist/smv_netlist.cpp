@@ -106,7 +106,7 @@ void print_smv(const netlistt &netlist, std::ostream &out, const exprt &expr)
         std::ostringstream buffer;
         auto l = to_literal_expr(expr).get_literal();
         print_smv(netlist, buffer, l);
-        if(l.sign())
+        if(l.sign() && !l.is_constant())
           return {precedencet::NOT, buffer.str()};
         else
           return {precedencet::MAX, buffer.str()};
@@ -127,17 +127,19 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   out << "-- Variables" << '\n';
   out << '\n';
 
+  // We use the sorted var map to get deterministic output
   auto &var_map = netlist.var_map;
+  const auto sorted_var_map = var_map.sorted();
 
-  for(auto &var_it : var_map.map)
+  for(auto var_it : sorted_var_map)
   {
-    const var_mapt::vart &var = var_it.second;
+    const var_mapt::vart &var = var_it->second;
 
     for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_latch())
       {
-        out << "VAR " << id2smv(var_it.first);
+        out << "VAR " << id2smv(var_it->first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << ": boolean;" << '\n';
@@ -149,15 +151,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   out << "-- Inputs" << '\n';
   out << '\n';
 
-  for(auto &var_it : var_map.map)
+  for(auto var_it : sorted_var_map)
   {
-    const var_mapt::vart &var = var_it.second;
+    const var_mapt::vart &var = var_it->second;
 
     for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_input())
       {
-        out << "VAR " << id2smv(var_it.first);
+        out << "VAR " << id2smv(var_it->first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << ": boolean;" << '\n';
@@ -189,15 +191,15 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   out << "-- Next state functions" << '\n';
   out << '\n';
 
-  for(auto &var_it : var_map.map)
+  for(auto var_it : sorted_var_map)
   {
-    const var_mapt::vart &var = var_it.second;
+    const var_mapt::vart &var = var_it->second;
 
     for(std::size_t i = 0; i < var.bits.size(); i++)
     {
       if(var.is_latch())
       {
-        out << "ASSIGN next(" << id2smv(var_it.first);
+        out << "ASSIGN next(" << id2smv(var_it->first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << "):=";

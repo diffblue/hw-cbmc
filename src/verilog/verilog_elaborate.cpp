@@ -102,7 +102,8 @@ void verilog_typecheckt::collect_symbols(
   if(type.id() == ID_type)
   {
     // much like a typedef
-    auto symbol_type = to_be_elaborated_typet{declarator.type()};
+    auto symbol_type =
+      to_be_elaborated_typet{to_type_expr(declarator.value()).type()};
 
     type_symbolt symbol{full_identifier, symbol_type, mode};
 
@@ -492,8 +493,14 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbols_added.push_back(symbol.name);
     }
   }
-  else if(decl_class == ID_reg || decl_class == ID_var)
+  else if(
+    decl_class == ID_reg || decl_class == ID_var ||
+    decl_class == ID_verilog_interconnect)
   {
+    if(decl_class == ID_verilog_interconnect)
+      throw errort().with_location(decl.source_location())
+        << "no support for interconnect nets";
+
     symbolt symbol;
 
     symbol.mode = mode;
@@ -671,6 +678,7 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence ||
     statement.id() == ID_verilog_expect_property)
   {
   }
@@ -797,15 +805,15 @@ void verilog_typecheckt::collect_symbols(
   {
     auto &parameter_decl = to_verilog_parameter_decl(module_item);
     collect_symbols(parameter_decl.type());
-    for(auto &decl : parameter_decl.declarations())
-      collect_symbols(parameter_decl.type(), decl);
+    for(auto &declarator : parameter_decl.declarators())
+      collect_symbols(parameter_decl.type(), declarator);
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
     auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
     collect_symbols(localparam_decl.type());
-    for(auto &decl : localparam_decl.declarations())
-      collect_symbols(localparam_decl.type(), decl);
+    for(auto &declarator : localparam_decl.declarators())
+      collect_symbols(localparam_decl.type(), declarator);
   }
   else if(module_item.id() == ID_decl)
   {
@@ -850,7 +858,8 @@ void verilog_typecheckt::collect_symbols(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property)
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
   {
   }
   else if(module_item.id() == ID_verilog_assertion_item)
@@ -901,6 +910,10 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_sequence_declaration)
   {
     collect_symbols(to_verilog_sequence_declaration(module_item));
+  }
+  else if(module_item.id() == ID_function_call)
+  {
+    // e.g., $error
   }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
@@ -975,8 +988,9 @@ verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
   // and the expansion of generate blocks.
 
   // At the top level of the module, include the parameter ports.
-  for(auto &parameter_port_decl : module_source.parameter_port_list())
-    collect_symbols(typet(ID_nil), parameter_port_decl);
+  for(auto &declaration : module_source.parameter_port_decls())
+    for(auto &declarator : declaration.declarators())
+      collect_symbols(declaration.type(), declarator);
 
   // At the top level of the module, include the non-parameter module port
   // module items.
@@ -1026,11 +1040,11 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       {
         convert_expr(symbol.value);
 
+        // Convert to the given type. These are assignment contexts.
+        assignment_conversion(symbol.value, symbol.type);
+
         if(!is_let)
           symbol.value = elaborate_constant_expression_check(symbol.value);
-
-        // Cast to the given type.
-        propagate_type(symbol.value, symbol.type);
       }
     }
   }

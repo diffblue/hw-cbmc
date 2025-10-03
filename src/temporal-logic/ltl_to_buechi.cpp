@@ -16,6 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/run.h>
 #include <util/std_expr.h>
 #include <util/std_types.h>
+#include <util/string2int.h>
 
 #include <ebmc/ebmc_error.h>
 #include <trans-word-level/next_symbol.h>
@@ -46,12 +47,13 @@ void buechi_transt::rename_state_symbol(const symbol_exprt &new_state_symbol)
 
 exprt hoa_label_to_expr(
   const hoat::labelt &label,
-  const ltl_sva_to_stringt &ltl_sva_to_string)
+  const ltl_sva_to_stringt &ltl_sva_to_string,
+  const hoat::ap_mapt &ap_map)
 {
   std::vector<exprt> operands;
   operands.reserve(label.get_sub().size());
   for(auto &sub : label.get_sub())
-    operands.push_back(hoa_label_to_expr(sub, ltl_sva_to_string));
+    operands.push_back(hoa_label_to_expr(sub, ltl_sva_to_string, ap_map));
 
   if(label.id() == "t")
   {
@@ -78,8 +80,17 @@ exprt hoa_label_to_expr(
   }
   else
   {
-    // atomic proposition, given as number
-    return ltl_sva_to_string.atom(label.id_string());
+    // Atomic proposition, given as number. This is the numbering
+    // from the "AP" header, which then maps to a string "aX", which
+    // is our atom number.  These may or may not match.
+    auto spot_ap_number = safe_string2size_t(label.id_string());
+
+    auto ap_map_it = ap_map.find(spot_ap_number);
+    if(ap_map_it == ap_map.end())
+      throw ebmc_errort{} << "failed to find atom " << label.id()
+                          << " in AP header";
+
+    return ltl_sva_to_string.atom(ap_map_it->second);
   }
 }
 
@@ -150,6 +161,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
     hoa.buechi_acceptance_cleanup();
 
     auto max_state_number = hoa.max_state_number();
+    auto ap_map = hoa.parse_AP();
     auto state_type = range_typet{0, max_state_number};
     const auto buechi_state = symbol_exprt{"buechi::state", state_type};
     const auto buechi_next_state =
@@ -220,7 +232,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
         {
           auto pre = equal_exprt{
             buechi_state, from_integer(state.first.number, state_type)};
-          auto cond = hoa_label_to_expr(edge.label, ltl_sva_to_string);
+          auto cond = hoa_label_to_expr(edge.label, ltl_sva_to_string, ap_map);
           error_disjuncts.push_back(and_exprt{pre, cond});
         }
       }
@@ -242,7 +254,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
       {
         if(edge.dest_states.size() != 1)
           throw ebmc_errort() << "edge must have one destination state";
-        auto cond = hoa_label_to_expr(edge.label, ltl_sva_to_string);
+        auto cond = hoa_label_to_expr(edge.label, ltl_sva_to_string, ap_map);
         auto post = equal_exprt{
           buechi_next_state,
           from_integer(edge.dest_states.front(), state_type)};
@@ -264,6 +276,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
   }
   catch(ltl_sva_to_string_unsupportedt error)
   {
-    throw ebmc_errort{} << "failed to convert " << error.expr.id();
+    // re-throw
+    throw ltl_to_buechi_unsupportedt{error.expr};
   }
 }

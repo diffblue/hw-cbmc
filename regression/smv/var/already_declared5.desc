@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 already_declared5.smv
 
+^file .* line 6: identifier x already used as enum$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 --
-This crashes.

@@ -179,6 +179,64 @@ const bv_varidt &var_mapt::reverse(unsigned v) const
 
 /*******************************************************************\
 
+Function: var_mapt::sorted
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<var_mapt::mapt::const_iterator> var_mapt::sorted() const
+{
+  using iteratort = mapt::const_iterator;
+  std::vector<iteratort> iterators;
+  iterators.reserve(map.size());
+
+  for(auto it = map.begin(); it != map.end(); it++)
+    iterators.push_back(it);
+
+  std::sort(
+    iterators.begin(),
+    iterators.end(),
+    [](iteratort a, iteratort b) { return a->first.compare(b->first) < 0; });
+
+  return iterators;
+}
+
+/*******************************************************************\
+
+Function: var_mapt::sorted
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<var_mapt::mapt::iterator> var_mapt::sorted()
+{
+  using iteratort = mapt::iterator;
+  std::vector<iteratort> iterators;
+  iterators.reserve(map.size());
+
+  for(auto it = map.begin(); it != map.end(); it++)
+    iterators.push_back(it);
+
+  std::sort(
+    iterators.begin(),
+    iterators.end(),
+    [](iteratort a, iteratort b) { return a->first.compare(b->first) < 0; });
+
+  return iterators;
+}
+
+/*******************************************************************\
+
 Function: var_mapt::output
 
   Inputs:
@@ -193,14 +251,14 @@ void var_mapt::output(std::ostream &out) const
 {
   out << "Variable map:" << '\n';
 
-  for(mapt::const_iterator it=map.begin();
-      it!=map.end(); it++)
+  // sort by identifier to get stable output
+  for(auto map_it : sorted())
   {
-    const vart &var=it->second;
+    const vart &var = map_it->second;
 
     for(std::size_t i=0; i<var.bits.size(); i++)
     {
-      out << "  " << it->first;
+      out << "  " << map_it->first;
       if(var.bits.size()!=1) out << "[" << i << "]";
       out << "=";
 

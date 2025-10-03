@@ -65,7 +65,7 @@ protected:
 
   void make_boolean(exprt &expr);
 
-  void propagate_type(exprt &expr, const typet &type);
+  void assignment_conversion(exprt &expr, const typet &type);
   void downwards_type_propagation(exprt &, const typet &);
 
   [[nodiscard]] typet elaborate_type(const typet &);
@@ -174,8 +174,10 @@ protected:
 protected:
   [[nodiscard]] exprt convert_expr_rec(exprt expr);
   [[nodiscard]] exprt convert_constant(constant_exprt);
-  [[nodiscard]] exprt
-  convert_symbol(symbol_exprt, const std::optional<typet> &implicit_net_type);
+  [[nodiscard]] const symbolt *resolve(irep_idt base_name);
+  [[nodiscard]] exprt convert_verilog_identifier(
+    verilog_identifier_exprt,
+    const std::optional<typet> &implicit_net_type);
   [[nodiscard]] exprt
     convert_hierarchical_identifier(class hierarchical_identifier_exprt);
   [[nodiscard]] exprt convert_nullary_expr(nullary_exprt);
@@ -184,18 +186,17 @@ protected:
   [[nodiscard]] exprt convert_trinary_expr(ternary_exprt);
   [[nodiscard]] exprt convert_expr_concatenation(concatenation_exprt);
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
-  [[nodiscard]] exprt
-  convert_system_function(const irep_idt &identifier, function_call_exprt);
+  [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(binary_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
   [[nodiscard]] exprt convert_power_expr(power_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);
   void implicit_typecast(exprt &, const typet &type);
-  void tc_binary_expr(exprt &);
+  void tc_binary_expr(binary_exprt &);
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
   void convert_relation(binary_exprt &);
   void no_bool_ops(exprt &);
-  void must_be_integral(const exprt &);
+  void must_be_bit_vector(exprt &);
 
   // SVA
   void convert_sva(exprt &expr)
@@ -211,6 +212,8 @@ protected:
   [[nodiscard]] exprt convert_binary_sva(binary_exprt);
   [[nodiscard]] exprt convert_ternary_sva(ternary_exprt);
   [[nodiscard]] exprt convert_other_sva(exprt);
+  [[nodiscard]] exprt
+    flatten_named_sequence_property(sva_sequence_property_instance_exprt);
 
   // system functions
   exprt bits(const exprt &);

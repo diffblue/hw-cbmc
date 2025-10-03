@@ -222,10 +222,7 @@ protected:
 
   void assignment_rec(const exprt &lhs, const exprt &rhs, bool blocking);
 
-  void assignment_rec(
-    const exprt &lhs,
-    exprt &rhs,
-    exprt &new_value);
+  exprt assignment_rec(const exprt &lhs, const exprt &rhs);
 
   const symbolt &assignment_symbol(const exprt &lhs);
 

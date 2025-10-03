@@ -7,3 +7,4 @@ ASSIGN init(x):=FALSE;
 
 LTLSPEC G F x
 
+CTLSPEC x <-> ! AX x

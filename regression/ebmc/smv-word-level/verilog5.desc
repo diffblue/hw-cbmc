@@ -1,0 +1,9 @@
+CORE
+verilog5.sv
+--smv-word-level
+^INIT ebmc::\$past1@1 = FALSE$
+^TRANS next\(ebmc::\$past1@1\) = main\.in$
+^LTLSPEC G main\.in = \(X ebmc::\$past1@1\)$
+^EXIT=0$
+^SIGNAL=0$
+--

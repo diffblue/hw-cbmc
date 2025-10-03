@@ -39,9 +39,7 @@ void show_state(
   std::cout << "Transition system state " << timeframe << "\n";
   std::cout << "----------------------------------------------------\n";
 
-  for(var_mapt::mapt::const_iterator
-      it=map.var_map.map.begin();
-      it!=map.var_map.map.end(); it++)
+  for(auto it : map.var_map.sorted())
   {
     const var_mapt::vart &var=it->second;
     

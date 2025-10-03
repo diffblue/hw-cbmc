@@ -1,8 +1,8 @@
 CORE
 ../../verilog/SVA/initial2.sv
 --buechi --module main
-^\[main\.assert\.1\] main\.counter == 1: PROVED \(1-induction\)$
-^\[main\.assert\.2\] main\.counter == 2: PROVED \(1-induction\)$
+^\[main\.p0\] main\.counter == 1: PROVED \(1-induction\)$
+^\[main\.p1\] main\.counter == 2: PROVED \(1-induction\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --

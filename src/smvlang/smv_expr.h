@@ -209,6 +209,30 @@ inline smv_min_exprt &to_smv_min_expr(exprt &expr)
   return static_cast<smv_min_exprt &>(expr);
 }
 
+// ->
+class smv_bitimplies_exprt : public binary_exprt
+{
+public:
+  smv_bitimplies_exprt(exprt __lhs, exprt __rhs)
+    : binary_exprt{std::move(__lhs), ID_smv_bitimplies, std::move(__rhs)}
+  {
+  }
+};
+
+inline const smv_bitimplies_exprt &to_smv_bitimplies_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_bitimplies);
+  smv_bitimplies_exprt::check(expr);
+  return static_cast<const smv_bitimplies_exprt &>(expr);
+}
+
+inline smv_bitimplies_exprt &to_smv_bitimplies_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_bitimplies);
+  smv_bitimplies_exprt::check(expr);
+  return static_cast<smv_bitimplies_exprt &>(expr);
+}
+
 class smv_unsigned_cast_exprt : public unary_exprt
 {
 public:
@@ -300,6 +324,49 @@ inline smv_word1_exprt &to_smv_word1_expr(exprt &expr)
   PRECONDITION(expr.id() == ID_smv_word1);
   smv_word1_exprt::check(expr);
   return static_cast<smv_word1_exprt &>(expr);
+}
+
+// parse tree only -- used for identifiers, which may turn into
+// symbols or enums
+class smv_identifier_exprt : public nullary_exprt
+{
+public:
+  explicit smv_identifier_exprt(irep_idt _identifier)
+    : nullary_exprt{ID_smv_identifier, typet{}}
+  {
+    identifier(_identifier);
+  }
+
+  smv_identifier_exprt(irep_idt _identifier, source_locationt _location)
+    : smv_identifier_exprt{_identifier}
+  {
+    if(_location.is_not_nil())
+      add_source_location() = _location;
+  }
+
+  irep_idt identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+};
+
+inline const smv_identifier_exprt &to_smv_identifier_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_identifier);
+  smv_identifier_exprt::check(expr);
+  return static_cast<const smv_identifier_exprt &>(expr);
+}
+
+inline smv_identifier_exprt &to_smv_identifier_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_identifier);
+  smv_identifier_exprt::check(expr);
+  return static_cast<smv_identifier_exprt &>(expr);
 }
 
 #endif // CPROVER_SMV_EXPR_H

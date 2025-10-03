@@ -172,18 +172,26 @@ typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
       << "verilog_package_scope expects typedef_type on the rhs";
 
   auto package_base_name = src.subtypes()[0].id();
-  auto typedef_base_name = src.subtypes()[1].get(ID_base_name);
+  auto typedef_base_name =
+    to_verilog_typedef_type(src.subtypes()[1]).base_name();
 
   // stitch together
   irep_idt full_identifier =
     id2string(verilog_package_identifier(package_base_name)) + '.' +
     id2string(typedef_base_name);
 
-  // recursive call
-  verilog_typedef_typet full_typedef_type(full_identifier);
-  full_typedef_type.set(ID_identifier, full_identifier);
+  // look it up
+  const symbolt *symbol_ptr;
 
-  return elaborate_type(full_typedef_type);
+  if(ns.lookup(full_identifier, symbol_ptr))
+    throw errort().with_location(location)
+      << "symbol " << typedef_base_name << " not found in package";
+
+  // must be type
+  if(!symbol_ptr->is_type)
+    throw errort().with_location(location) << "expected a type identifier";
+
+  return symbol_ptr->type;
 }
 
 /*******************************************************************\
@@ -334,18 +342,17 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_typedef_type)
   {
     // Look it up!
-    const symbolt *symbol_ptr;
+    auto base_name = to_verilog_typedef_type(src).base_name();
+    const auto *symbol_ptr = resolve(base_name);
 
-    auto identifier = to_verilog_typedef_type(src).identifier();
-
-    if(ns.lookup(identifier, symbol_ptr))
+    if(symbol_ptr == nullptr)
       throw errort().with_location(source_location)
-        << "type symbol " << identifier << " not found";
+        << "type symbol " << base_name << " not found";
 
     DATA_INVARIANT(symbol_ptr->is_type, "typedef symbols must be types");
 
     // elaborate that typedef symbol, recursively, if needed
-    elaborate_symbol_rec(identifier);
+    elaborate_symbol_rec(symbol_ptr->name);
 
     auto result = symbol_ptr->type; // copy
     return result.with_source_location(source_location);
@@ -425,8 +432,14 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
       }
     }
 
-    return struct_union_typet{src.id(), std::move(components)}
-      .with_source_location(src.source_location());
+    auto result =
+      struct_union_typet{src.id(), std::move(components)}.with_source_location(
+        src.source_location());
+
+    if(src.get_bool(ID_packed))
+      result.set(ID_packed, true);
+
+    return result;
   }
   else if(src.id() == ID_verilog_string)
   {

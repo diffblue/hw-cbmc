@@ -8,4 +8,7 @@ module main;
   property06: assert final (!2'bxx===1'bx);
   property07: assert final (!1'bz===1'bx);
 
+  // expression type contexts do not pass through !
+  initial assert(!(1'b1 + 1'b1) == 1);
+
 endmodule

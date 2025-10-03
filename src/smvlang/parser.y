@@ -2,8 +2,10 @@
 %define parse.error verbose
 
 %{
+#include "smv_expr.h"
 #include "smv_parser.h"
 #include "smv_typecheck.h"
+#include "smv_types.h"
 
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
@@ -130,41 +132,6 @@ static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id, YYSTYPE 
 
 /*******************************************************************\
 
-Function: merge_complex_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-irep_idt merge_complex_identifier(const exprt &expr)
-{
-  if(expr.id() == ID_symbol)
-    return to_symbol_expr(expr).get_identifier();
-  else if(expr.id() == ID_member)
-  {
-    auto &member_expr = to_member_expr(expr);
-    return id2string(merge_complex_identifier(member_expr.compound())) + '.' + id2string(member_expr.get_component_name());
-  }
-  else if(expr.id() == ID_index)
-  {
-    auto &index_expr = to_index_expr(expr);
-    auto &index = index_expr.index();
-    PRECONDITION(index.is_constant());
-    auto index_string = id2string(to_constant_expr(index).get_value());
-    return id2string(merge_complex_identifier(index_expr.array())) + '.' + index_string;
-  }
-  else
-  {
-    DATA_INVARIANT_WITH_DIAGNOSTICS(false, "unexpected complex_identifier", expr.pretty());
-  }
-}
-
-/*******************************************************************\
-
 Function: new_module
 
   Inputs:
@@ -175,12 +142,18 @@ Function: new_module
 
 \*******************************************************************/
 
-static void new_module(YYSTYPE &module)
+static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_name)
 {
-  const std::string name=smv_module_symbol(stack_expr(module).id_string());
-  PARSER.module=&PARSER.parse_tree.modules[name];
-  PARSER.module->name=name;
-  PARSER.module->base_name=stack_expr(module).id_string();
+  auto base_name = stack_expr(module_name).id_string();
+  const std::string identifier=smv_module_symbol(base_name);
+  PARSER.parse_tree.module_list.push_back(smv_parse_treet::modulet{});
+  auto &module=PARSER.parse_tree.module_list.back();
+  PARSER.parse_tree.module_map[identifier] = --PARSER.parse_tree.module_list.end();
+  module.name = identifier;
+  module.base_name = base_name;
+  module.source_location = stack_expr(location).source_location();
+  PARSER.module = &module;
+  return module;
 }
 
 /*------------------------------------------------------------------------*/
@@ -316,8 +289,9 @@ static void new_module(YYSTYPE &module)
 
 %token IDENTIFIER_Token   "identifier"
 %token QIDENTIFIER_Token  "quoted identifier"
-%token STRING_Token    "quoted string"
+%token STRING_Token   "quoted string"
 %token NUMBER_Token   "number"
+%token WORD_CONSTANT_Token "word constant"
 
 /* operator precedence, low to high */
 %right IMPLIES_Token
@@ -337,7 +311,7 @@ static void new_module(YYSTYPE &module)
 %left  TIMES_Token DIVIDE_Token
 %left  COLONCOLON_Token
 %left  UMINUS           /* supplies precedence for unary minus */
-%left  DOT_Token
+%left  DOT_Token '[' '('
 
 %%
 
@@ -355,8 +329,12 @@ module_name: IDENTIFIER_Token
            | STRING_Token
            ;
 
-module_head: MODULE_Token module_name { new_module($2); }
-           | MODULE_Token module_name { new_module($2); } '(' module_parameters_opt ')'
+module_keyword: MODULE_Token { init($$); /* for the location */ }
+           ;
+
+module_head: module_keyword module_name { new_module($1, $2); }
+           | module_keyword module_name { new_module($1, $2); }
+             '(' module_parameters_opt ')'
            ;
 
 module_body: /* optional */
@@ -393,10 +371,19 @@ var_declaration:
            ;
 
 ivar_declaration:
-             IVAR_Token simple_var_list
+             IVAR_Token ivar_simple_var_list
+           ;
+
+ivar_simple_var_list:
+             identifier ':' simple_type_specifier ';'
            {
-             yyerror("No support for IVAR declarations");
-             YYERROR;
+             smv_identifier_exprt identifier{stack_expr($1).id(), PARSER.source_location()};
+             PARSER.module->add_ivar(std::move(identifier), stack_type($3));
+           }
+           | ivar_simple_var_list identifier ':' simple_type_specifier ';'
+           {
+             smv_identifier_exprt identifier{stack_expr($2).id(), PARSER.source_location()};
+             PARSER.module->add_ivar(std::move(identifier), stack_type($4));
            }
            ;
 
@@ -537,18 +524,6 @@ ltl_specification:
            ;
  
 extern_var : variable_identifier EQUAL_Token STRING_Token
-           {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             if(var.identifier!=irep_idt())
-             {
-               yyerror("variable `"+id2string(identifier)+"' already declared extern");
-               YYERROR;
-             }
-             else
-               var.identifier=stack_expr($3).id_string();
-           }
            ;
 
 var_list   : var_decl
@@ -557,10 +532,8 @@ var_list   : var_decl
 
 module_parameter: identifier
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-             var.var_class=smv_parse_treet::mc_vart::ARGUMENT;
-             PARSER.module->ports.push_back(identifier);
+             const irep_idt &identifier=stack_expr($1).id();
+             PARSER.module->parameters.push_back(identifier);
            }
            ;
 
@@ -569,7 +542,11 @@ module_parameters:
            | module_parameters ',' module_parameter
            ;
 
-module_parameters_opt: /* empty */
+module_parameters_opt:
+             /* empty */
+           {
+             init($$);
+           }
            | module_parameters
            ;
 
@@ -623,14 +600,14 @@ simple_type_specifier:
 module_type_specifier:
              module_name
            {
-             init($$, "submodule");
-             stack_expr($$).set(ID_identifier,
+             init($$, ID_smv_module_instance);
+             to_smv_module_instance_type(stack_type($$)).identifier(
                            smv_module_symbol(stack_expr($1).id_string()));
            }
            | module_name '(' parameter_list ')'
            {
-             init($$, "submodule");
-             stack_expr($$).set(ID_identifier,
+             init($$, ID_smv_module_instance);
+             to_smv_module_instance_type(stack_type($$)).identifier(
                            smv_module_symbol(stack_expr($1).id_string()));
              stack_expr($$).operands().swap(stack_expr($3).operands());
            }
@@ -656,35 +633,14 @@ enum_list  : enum_element
 enum_element: IDENTIFIER_Token
            {
              $$=$1;
-             PARSER.module->enum_set.insert(stack_expr($1).id_string());
+             PARSER.parse_tree.enum_set.insert(stack_expr($1).id_string());
+             PARSER.module->add_enum(
+               smv_identifier_exprt{stack_expr($1).id(), PARSER.source_location()});
            }
            ;
 
 var_decl   : variable_identifier ':' type_specifier ';'
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             switch(var.var_class)
-             {
-             case smv_parse_treet::mc_vart::UNKNOWN:
-               var.type=stack_type($3);
-               var.var_class=smv_parse_treet::mc_vart::DECLARED;
-               break;
-
-             case smv_parse_treet::mc_vart::DEFINED:
-             case smv_parse_treet::mc_vart::DECLARED:
-               break;
-
-             case smv_parse_treet::mc_vart::ARGUMENT:
-               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-               YYERROR;
-               break;
-
-             default:
-               DATA_INVARIANT(false, "unexpected variable class");
-             }
-
              PARSER.module->add_var(stack_expr($1), stack_type($3));
            }
            ;
@@ -706,34 +662,6 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            }
            | assignment_var BECOMES_Token formula ';'
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             switch(var.var_class)
-             {
-             case smv_parse_treet::mc_vart::UNKNOWN:
-               var.type.make_nil();
-               var.var_class=smv_parse_treet::mc_vart::DEFINED;
-               break;
-
-             case smv_parse_treet::mc_vart::DECLARED:
-               var.var_class=smv_parse_treet::mc_vart::DEFINED;
-               break;
-
-             case smv_parse_treet::mc_vart::DEFINED:
-               yyerror("variable `"+id2string(identifier)+"' already defined");
-               YYERROR;
-               break;
-             
-             case smv_parse_treet::mc_vart::ARGUMENT:
-               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-               YYERROR;
-               break;
-             
-             default:
-               DATA_INVARIANT(false, "unexpected variable class");
-             }
-
              PARSER.module->add_assign_current(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
@@ -752,133 +680,155 @@ defines:     define
 
 define     : assignment_var BECOMES_Token formula ';'
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             switch(var.var_class)
-             {
-             case smv_parse_treet::mc_vart::UNKNOWN:
-               var.type.make_nil();
-               var.var_class=smv_parse_treet::mc_vart::DEFINED;
-               break;
-
-             case smv_parse_treet::mc_vart::DECLARED:
-               yyerror("variable `"+id2string(identifier)+"' already declared");
-               YYERROR;
-               break;
-
-             case smv_parse_treet::mc_vart::DEFINED:
-               yyerror("variable `"+id2string(identifier)+"' already defined");
-               YYERROR;
-               break;
-
-             case smv_parse_treet::mc_vart::ARGUMENT:
-               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-               YYERROR;
-               break;
-
-             default:
-               DATA_INVARIANT(false, "unexpected variable class");
-             }
-
              PARSER.module->add_define(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
 
-formula    : term
+formula    : basic_expr
            ;
 
-constant   : NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
-           | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
-           | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
+constant   : boolean_constant
+           | integer_constant
+           | word_constant
            ;
 
-term       : constant
-           | variable_identifier
-           | '(' formula ')'          { $$=$2; }
-           | NOT_Token term           { init($$, ID_not); mto($$, $2); }
-           | "abs" '(' term ')'       { unary($$, ID_smv_abs, $3); }
-           | "max" '(' term ',' term ')' { binary($$, $3, ID_smv_max, $5); }
-           | "min" '(' term ',' term ')' { binary($$, $3, ID_smv_min, $5); }
-           | term AND_Token term      { j_binary($$, $1, ID_and, $3); }
-           | term OR_Token term       { j_binary($$, $1, ID_or, $3); }
-           | term xor_Token term      { j_binary($$, $1, ID_xor, $3); }
-           | term xnor_Token term     { binary($$, $1, ID_xnor, $3); }
-           | term IMPLIES_Token term  { binary($$, $1, ID_implies, $3); }
-           | term EQUIV_Token term    { binary($$, $1, ID_smv_iff, $3); }
-           | term EQUAL_Token    term { binary($$, $1, ID_equal, $3); }
-           | term NOTEQUAL_Token term { binary($$, $1, ID_notequal, $3); }
-           | term LT_Token       term { binary($$, $1, ID_lt, $3); }
-           | term LE_Token       term { binary($$, $1, ID_le, $3); }
-           | term GT_Token       term { binary($$, $1, ID_gt, $3); }
-           | term GE_Token       term { binary($$, $1, ID_ge, $3); }
-           | MINUS_Token term %prec UMINUS
-                                      { init($$, ID_unary_minus); mto($$, $2); }
-           | term PLUS_Token term     { binary($$, $1, ID_plus, $3); }
-           | term MINUS_Token term    { binary($$, $1, ID_minus, $3); }
-           | term TIMES_Token term    { binary($$, $1, ID_mult, $3); }
-           | term DIVIDE_Token term   { binary($$, $1, ID_div, $3); }
-           | term mod_Token term      { binary($$, $1, ID_mod, $3); }
-           | term GTGT_Token term     { binary($$, $1, ID_shr, $3); }
-           | term LTLT_Token term     { binary($$, $1, ID_shl, $3); }
-           | term COLONCOLON_Token term { binary($$, $1, ID_concatenation, $3); }
-           | "word1" '(' term ')'     { unary($$, ID_smv_word1, $3); }
-           | "bool" '(' term ')'      { unary($$, ID_smv_bool, $3); }
-           | "toint" '(' term ')'     { unary($$, ID_smv_toint, $3); }
-           | "count" '(' term_list ')' { $$=$3; stack_expr($$).id(ID_smv_count); }
-           | swconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_swconst, $5); }
-           | uwconst_Token '(' term ',' term ')' { binary($$, $3, ID_smv_uwconst, $5); }
-           | signed_Token '(' term ')' { unary($$, ID_smv_signed_cast, $3); }
-           | unsigned_Token '(' term ')' { unary($$, ID_smv_unsigned_cast, $3); }
-           | sizeof_Token '(' term ')' { unary($$, ID_smv_sizeof, $3); }
-           | extend_Token '(' term ',' term ')' { binary($$, $3, ID_smv_extend, $5); }
-           | resize_Token '(' term ',' term ')' { binary($$, $3, ID_smv_resize, $5); }
-           | term union_Token term    { binary($$, $1, ID_smv_union, $3); }
-           | '{' set_body_expr '}'    { $$=$2; stack_expr($$).id(ID_smv_set); }
-           | term in_Token term       { binary($$, $1, ID_smv_setin, $3); }
-           | term IF_Token term ':' term %prec IF_Token
-                                      { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
-           | case_Token cases esac_Token { $$=$2; }
-           | next_Token '(' term ')'  { init($$, ID_smv_next); mto($$, $3); }
+boolean_constant:
+             TRUE_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, ID_true);
+             stack_expr($$).type()=typet{ID_bool};
+           }
+           | FALSE_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, ID_false);
+             stack_expr($$).type()=typet{ID_bool};
+           }
+           ;
+
+integer_constant:
+             NUMBER_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, stack_expr($1).id());
+             stack_expr($$).type()=integer_typet{};
+           }
+           ;
+
+word_constant:
+             WORD_CONSTANT_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, stack_expr($1).id());
+             stack_expr($$).type() = typet{ID_smv_word_constant};
+           }
+           ;
+
+basic_expr : constant
+           | identifier
+           {
+             // This rule is part of "complex_identifier" in the NuSMV manual.
+             $$ = $1;
+             irep_idt identifier = stack_expr($$).id();
+             stack_expr($$) = smv_identifier_exprt{identifier, PARSER.source_location()};
+           }
+           | basic_expr DOT_Token IDENTIFIER_Token
+           {
+             // This rule is part of "complex_identifier" in the NuSMV manual.
+             unary($$, ID_member, $1);
+             stack_expr($$).set(ID_component_name, stack_expr($3).id());
+           }
+           | basic_expr '(' basic_expr ')'
+           {
+             // Not in the NuSMV grammar.
+             binary($$, $1, ID_index, $3);
+           }
+           | '(' formula ')'                      { $$=$2; }
+           | NOT_Token basic_expr                 { init($$, ID_not); mto($$, $2); }
+           | "abs" '(' basic_expr ')'             { unary($$, ID_smv_abs, $3); }
+           | "max" '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_max, $5); }
+           | "min" '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_min, $5); }
+           | basic_expr AND_Token basic_expr      { j_binary($$, $1, ID_and, $3); }
+           | basic_expr OR_Token basic_expr       { j_binary($$, $1, ID_or, $3); }
+           | basic_expr xor_Token basic_expr      { j_binary($$, $1, ID_xor, $3); }
+           | basic_expr xnor_Token basic_expr     { binary($$, $1, ID_xnor, $3); }
+           | basic_expr IMPLIES_Token basic_expr  { binary($$, $1, ID_implies, $3); }
+           | basic_expr EQUIV_Token basic_expr    { binary($$, $1, ID_smv_iff, $3); }
+           | basic_expr EQUAL_Token    basic_expr { binary($$, $1, ID_equal, $3); }
+           | basic_expr NOTEQUAL_Token basic_expr { binary($$, $1, ID_notequal, $3); }
+           | basic_expr LT_Token       basic_expr { binary($$, $1, ID_lt, $3); }
+           | basic_expr LE_Token       basic_expr { binary($$, $1, ID_le, $3); }
+           | basic_expr GT_Token       basic_expr { binary($$, $1, ID_gt, $3); }
+           | basic_expr GE_Token       basic_expr { binary($$, $1, ID_ge, $3); }
+           | MINUS_Token basic_expr %prec UMINUS  { init($$, ID_unary_minus); mto($$, $2); }
+           | basic_expr PLUS_Token basic_expr     { binary($$, $1, ID_plus, $3); }
+           | basic_expr MINUS_Token basic_expr    { binary($$, $1, ID_minus, $3); }
+           | basic_expr TIMES_Token basic_expr    { binary($$, $1, ID_mult, $3); }
+           | basic_expr DIVIDE_Token basic_expr   { binary($$, $1, ID_div, $3); }
+           | basic_expr mod_Token basic_expr      { binary($$, $1, ID_mod, $3); }
+           | basic_expr GTGT_Token basic_expr     { binary($$, $1, ID_shr, $3); }
+           | basic_expr LTLT_Token basic_expr     { binary($$, $1, ID_shl, $3); }
+           | basic_expr '[' basic_expr ']'        { binary($$, $1, ID_index, $3); }
+           | basic_expr '[' basic_expr ':' basic_expr ']' { init($$, ID_smv_bit_selection); mto($$, $1); mto($$, $3); mto($$, $5); }
+           | basic_expr COLONCOLON_Token basic_expr { binary($$, $1, ID_concatenation, $3); }
+           | "word1" '(' basic_expr ')'           { unary($$, ID_smv_word1, $3); }
+           | "bool" '(' basic_expr ')'            { unary($$, ID_smv_bool, $3); }
+           | "toint" '(' basic_expr ')'           { unary($$, ID_smv_toint, $3); }
+           | "count" '(' basic_expr_list ')'      { $$=$3; stack_expr($$).id(ID_smv_count); }
+           | swconst_Token '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_swconst, $5); }
+           | uwconst_Token '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_uwconst, $5); }
+           | signed_Token '(' basic_expr ')'      { unary($$, ID_smv_signed_cast, $3); }
+           | unsigned_Token '(' basic_expr ')'    { unary($$, ID_smv_unsigned_cast, $3); }
+           | sizeof_Token '(' basic_expr ')'      { unary($$, ID_smv_sizeof, $3); }
+           | extend_Token '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_extend, $5); }
+           | resize_Token '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_resize, $5); }
+           | basic_expr union_Token basic_expr    { binary($$, $1, ID_smv_union, $3); }
+           | '{' set_body_expr '}'                { $$=$2; stack_expr($$).id(ID_smv_set); }
+           | basic_expr in_Token basic_expr       { binary($$, $1, ID_smv_setin, $3); }
+           | basic_expr IF_Token basic_expr ':' basic_expr %prec IF_Token
+                                                  { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
+           | case_Token cases esac_Token          { $$=$2; }
+           | next_Token '(' basic_expr ')'        { init($$, ID_smv_next); mto($$, $3); }
            /* Not in NuSMV manual */
-           | INC_Token '(' term ')'   { init($$, "inc"); mto($$, $3); }
-           | DEC_Token '(' term ')'   { init($$, "dec"); mto($$, $3); }
-           | ADD_Token '(' term ',' term ')' { j_binary($$, $3, ID_plus, $5); }
-           | SUB_Token '(' term ',' term ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
+           | INC_Token '(' basic_expr ')'         { init($$, "inc"); mto($$, $3); }
+           | DEC_Token '(' basic_expr ')'         { init($$, "dec"); mto($$, $3); }
+           | ADD_Token '(' basic_expr ',' basic_expr ')' { j_binary($$, $3, ID_plus, $5); }
+           | SUB_Token '(' basic_expr ',' basic_expr ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
            | switch_Token '(' variable_identifier ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            /* CTL */
-           | AX_Token  term           { init($$, ID_AX);  mto($$, $2); }
-           | AF_Token  term           { init($$, ID_AF);  mto($$, $2); }
-           | AG_Token  term           { init($$, ID_AG);  mto($$, $2); }
-           | EX_Token  term           { init($$, ID_EX);  mto($$, $2); }
-           | EF_Token  term           { init($$, ID_EF);  mto($$, $2); }
-           | EG_Token  term           { init($$, ID_EG);  mto($$, $2); }
-           | A_Token '[' term U_Token term ']' { binary($$, $3, ID_AU, $5); }
-           | A_Token '[' term R_Token term ']' { binary($$, $3, ID_AR, $5); }
-           | E_Token '[' term U_Token term ']' { binary($$, $3, ID_EU, $5); }
-           | E_Token '[' term R_Token term ']' { binary($$, $3, ID_ER, $5); }
+           | AX_Token  basic_expr                 { init($$, ID_AX);  mto($$, $2); }
+           | AF_Token  basic_expr                 { init($$, ID_AF);  mto($$, $2); }
+           | AG_Token  basic_expr                 { init($$, ID_AG);  mto($$, $2); }
+           | EX_Token  basic_expr                 { init($$, ID_EX);  mto($$, $2); }
+           | EF_Token  basic_expr                 { init($$, ID_EF);  mto($$, $2); }
+           | EG_Token  basic_expr                 { init($$, ID_EG);  mto($$, $2); }
+           | A_Token '[' basic_expr U_Token basic_expr ']' { binary($$, $3, ID_AU, $5); }
+           | A_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_AR, $5); }
+           | E_Token '[' basic_expr U_Token basic_expr ']' { binary($$, $3, ID_EU, $5); }
+           | E_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_ER, $5); }
            /* LTL */
-           | F_Token  term            { init($$, ID_F);  mto($$, $2); }
-           | G_Token  term            { init($$, ID_G);  mto($$, $2); }
-           | X_Token  term            { init($$, ID_X);  mto($$, $2); }
-           | term U_Token term        { binary($$, $1, ID_U, $3); }
-           | term R_Token term        { binary($$, $1, ID_R, $3); }
-           | term V_Token term        { binary($$, $1, ID_R, $3); }
+           | F_Token  basic_expr                  { init($$, ID_F);  mto($$, $2); }
+           | G_Token  basic_expr                  { init($$, ID_G);  mto($$, $2); }
+           | X_Token  basic_expr                  { init($$, ID_X);  mto($$, $2); }
+           | basic_expr U_Token basic_expr        { binary($$, $1, ID_U, $3); }
+           | basic_expr R_Token basic_expr        { binary($$, $1, ID_R, $3); }
+           | basic_expr V_Token basic_expr        { binary($$, $1, ID_R, $3); }
            /* LTL PAST */
-           | Y_Token term             { $$ = $1; stack_expr($$).id(ID_smv_Y); mto($$, $2); }
-           | Z_Token term             { $$ = $1; stack_expr($$).id(ID_smv_Z); mto($$, $2); }
-           | H_Token term             { $$ = $1; stack_expr($$).id(ID_smv_H); mto($$, $2); }
-           | H_Token bound term       { $$ = $1; stack_expr($$).id(ID_smv_bounded_H); mto($$, $3); }
-           | O_Token term             { $$ = $1; stack_expr($$).id(ID_smv_O); mto($$, $2); }
-           | O_Token bound term       { $$ = $1; stack_expr($$).id(ID_smv_bounded_O); mto($$, $3); }
-           | term S_Token term        { $$ = $2; stack_expr($$).id(ID_smv_S); mto($$, $1); mto($$, $3); }
-           | term T_Token term        { $$ = $2; stack_expr($$).id(ID_smv_T); mto($$, $1); mto($$, $3); }
+           | Y_Token basic_expr                   { $$ = $1; stack_expr($$).id(ID_smv_Y); mto($$, $2); }
+           | Z_Token basic_expr                   { $$ = $1; stack_expr($$).id(ID_smv_Z); mto($$, $2); }
+           | H_Token basic_expr                   { $$ = $1; stack_expr($$).id(ID_smv_H); mto($$, $2); }
+           | H_Token bound basic_expr             { $$ = $1; stack_expr($$).id(ID_smv_bounded_H); mto($$, $3); }
+           | O_Token basic_expr                   { $$ = $1; stack_expr($$).id(ID_smv_O); mto($$, $2); }
+           | O_Token bound basic_expr             { $$ = $1; stack_expr($$).id(ID_smv_bounded_O); mto($$, $3); }
+           | basic_expr S_Token basic_expr        { $$ = $2; stack_expr($$).id(ID_smv_S); mto($$, $1); mto($$, $3); }
+           | basic_expr T_Token basic_expr        { $$ = $2; stack_expr($$).id(ID_smv_T); mto($$, $1); mto($$, $3); }
            /* Real-time CTL */
-           | EBF_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_EBF); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
-           | ABF_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_ABF); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
-           | EBG_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_EBG); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
-           | ABG_Token range term     { $$ = $1; stack_expr($$).id(ID_smv_ABG); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
-           | A_Token '[' term BU_Token range term ']'
+           | EBF_Token range basic_expr           { $$ = $1; stack_expr($$).id(ID_smv_EBF); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | ABF_Token range basic_expr           { $$ = $1; stack_expr($$).id(ID_smv_ABF); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | EBG_Token range basic_expr           { $$ = $1; stack_expr($$).id(ID_smv_EBG); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | ABG_Token range basic_expr           { $$ = $1; stack_expr($$).id(ID_smv_ABG); stack_expr($$).operands().swap(stack_expr($2).operands()); mto($$, $3); }
+           | A_Token '[' basic_expr BU_Token range basic_expr ']'
            {
              $$ = $1;
              stack_expr($$).id(ID_smv_ABU);
@@ -887,7 +837,7 @@ term       : constant
              stack_expr($$).add_to_operands(stack_expr($5).operands()[1]);
              mto($$, $6);
            }
-           | E_Token '[' term BU_Token range term ']'
+           | E_Token '[' basic_expr BU_Token range basic_expr ']'
            {
              $$ = $1;
              stack_expr($$).id(ID_smv_EBU);
@@ -911,9 +861,9 @@ set_body_expr:
            | set_body_expr ',' formula { $$=$1; mto($$, $3); }
            ;
 
-term_list:
-             term { init($$); mto($$, $1); }
-           | term_list ',' term { $$=$1; mto($$, $3); }
+basic_expr_list:
+             basic_expr { init($$); mto($$, $1); }
+           | basic_expr_list ',' basic_expr { $$=$1; mto($$, $3); }
            ;
 
 identifier : IDENTIFIER_Token
@@ -925,43 +875,13 @@ identifier : IDENTIFIER_Token
            ;
 
 variable_identifier: complex_identifier
-           {
-             auto id = merge_complex_identifier(stack_expr($1));
-
-             bool is_enum=(PARSER.module->enum_set.find(id)!=
-                           PARSER.module->enum_set.end());
-             bool is_var=(PARSER.module->vars.find(id)!=
-                          PARSER.module->vars.end());
-
-             if(is_var && is_enum)
-             {
-               yyerror("identifier `"+id2string(id)+"' is ambiguous");
-               YYERROR;
-             }
-             else if(is_enum)
-             {
-               init($$, ID_constant);
-               stack_expr($$).type()=typet(ID_smv_enumeration);
-               stack_expr($$).set(ID_value, id);
-             }
-             else // not an enum, probably a variable
-             {
-               init($$, ID_symbol);
-               stack_expr($$).set(ID_identifier, id);
-               auto var_it = PARSER.module->vars.find(id);
-               if(var_it!= PARSER.module->vars.end())
-                 stack_expr($$).type()=var_it->second.type;
-               //PARSER.module->vars[stack_expr($1).id()];
-             }
-           }
            | STRING_Token
            {
              // Not in the NuSMV grammar.
              const irep_idt &id=stack_expr($1).id();
 
-             init($$, ID_symbol);
+             init($$, ID_smv_identifier);
              stack_expr($$).set(ID_identifier, id);
-             PARSER.module->vars[id];
            }
            ;
 
@@ -969,9 +889,8 @@ complex_identifier:
              identifier
            {
              $$ = $1;
-             irep_idt identifier = stack_expr($$).id();
-             stack_expr($$).id(ID_symbol);
-             stack_expr($$).set(ID_identifier, identifier);
+             auto identifier = stack_expr($$).id();
+             stack_expr($$) = smv_identifier_exprt{identifier, PARSER.source_location()};
            }
            | complex_identifier DOT_Token QIDENTIFIER_Token
            {
@@ -984,11 +903,11 @@ complex_identifier:
              unary($$, ID_member, $1);
              stack_expr($$).set(ID_component_name, stack_expr($3).id());
            }
-           | complex_identifier '[' term ']'
+           | complex_identifier '[' basic_expr ']'
            {
              binary($$, $1, ID_index, $3);
            }
-           | complex_identifier '(' term ')'
+           | complex_identifier '(' basic_expr ')'
            {
              // Not in the NuSMV grammar.
              binary($$, $1, ID_index, $3);
@@ -996,7 +915,7 @@ complex_identifier:
            ;
 
 cases      :
-           { init($$, "smv_cases"); }
+           { init($$, ID_smv_cases); }
            | cases case
            { $$=$1; mto($$, $2); }
            ;
@@ -1011,7 +930,7 @@ switches   :
            { $$=$1; mto($$, $2); }
            ;
 
-switch     : NUMBER_Token ':' term ';'
+switch     : NUMBER_Token ':' basic_expr ';'
            { init($$, ID_switch); mto($$, $1); mto($$, $3); }
            ;
 

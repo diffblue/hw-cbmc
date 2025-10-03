@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+#include "verilog_expr.h"
 #include "verilog_types.h"
 
 /// 1800-2017 16.6 Boolean expressions
@@ -34,6 +35,58 @@ static inline sva_boolean_exprt &to_sva_boolean_expr(exprt &expr)
 {
   sva_boolean_exprt::check(expr, validation_modet::INVARIANT);
   return static_cast<sva_boolean_exprt &>(expr);
+}
+
+/// disable_iff for cover sequence
+class sva_sequence_disable_iff_exprt : public binary_exprt
+{
+public:
+  sva_sequence_disable_iff_exprt(exprt condition, exprt sequence)
+    : binary_exprt(
+        std::move(condition),
+        ID_sva_sequence_disable_iff,
+        std::move(sequence),
+        verilog_sva_sequence_typet{})
+  {
+  }
+
+  const exprt &condition() const
+  {
+    return op0();
+  }
+
+  exprt &condition()
+  {
+    return op0();
+  }
+
+  const exprt &sequence() const
+  {
+    return op1();
+  }
+
+  exprt &sequence()
+  {
+    return op1();
+  }
+
+protected:
+  using binary_exprt::op0;
+  using binary_exprt::op1;
+};
+
+static inline const sva_sequence_disable_iff_exprt &
+to_sva_sequence_disable_iff_expr(const exprt &expr)
+{
+  sva_sequence_disable_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_sequence_disable_iff_exprt &>(expr);
+}
+
+static inline sva_sequence_disable_iff_exprt &
+to_sva_sequence_disable_iff_expr(exprt &expr)
+{
+  sva_sequence_disable_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_sequence_disable_iff_exprt &>(expr);
 }
 
 /// accept_on, reject_on, sync_accept_on, sync_reject_on, disable_iff
@@ -1994,5 +2047,79 @@ enum class sva_sequence_semanticst
   WEAK,
   STRONG
 };
+
+/// a base class for both sequence and property instance expressions
+class sva_sequence_property_instance_exprt : public ternary_exprt
+{
+public:
+  sva_sequence_property_instance_exprt(
+    symbol_exprt _symbol,
+    exprt::operandst _arguments,
+    verilog_sequence_property_declaration_baset _declaration)
+    : ternary_exprt{
+        ID_sva_sequence_property_instance,
+        std::move(_symbol),
+        multi_ary_exprt{ID_arguments, std::move(_arguments), typet{}},
+        std::move(_declaration),
+        typet{}}
+  {
+  }
+
+  const symbol_exprt &symbol() const
+  {
+    return static_cast<const symbol_exprt &>(op0());
+  }
+
+  symbol_exprt &symbol()
+  {
+    return static_cast<symbol_exprt &>(op0());
+  }
+
+  exprt::operandst &arguments()
+  {
+    return op1().operands();
+  }
+
+  const exprt::operandst &arguments() const
+  {
+    return op1().operands();
+  }
+
+  verilog_sequence_property_declaration_baset &declaration()
+  {
+    return static_cast<verilog_sequence_property_declaration_baset &>(op2());
+  }
+
+  const verilog_sequence_property_declaration_baset &declaration() const
+  {
+    return static_cast<const verilog_sequence_property_declaration_baset &>(
+      op2());
+  }
+
+  /// Add the source location from \p other, if it has any.
+  sva_sequence_property_instance_exprt &&
+  with_source_location(const exprt &other) &&
+  {
+    if(other.source_location().is_not_nil())
+      add_source_location() = other.source_location();
+    return std::move(*this);
+  }
+};
+
+inline const sva_sequence_property_instance_exprt &
+to_sva_sequence_property_instance_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property_instance);
+  sva_sequence_property_instance_exprt::check(expr);
+  return static_cast<const sva_sequence_property_instance_exprt &>(expr);
+}
+
+inline sva_sequence_property_instance_exprt &
+to_sva_sequence_property_instance_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property_instance);
+  sva_sequence_property_instance_exprt::check(expr);
+  return static_cast<sva_sequence_property_instance_exprt &>(expr);
+}
 
 #endif

@@ -41,10 +41,14 @@ Author: Daniel Kroening, dkr@amazon.com
 class neural_livenesst
 {
 public:
-  neural_livenesst(const cmdlinet &_cmdline, message_handlert &_message_handler)
+  neural_livenesst(
+    transition_systemt &_transition_system,
+    const cmdlinet &_cmdline,
+    message_handlert &_message_handler)
     : cmdline(_cmdline),
       message(_message_handler),
-      solver_factory(ebmc_solver_factory(_cmdline))
+      solver_factory(ebmc_solver_factory(_cmdline)),
+      transition_system(_transition_system)
   {
   }
 
@@ -54,7 +58,7 @@ protected:
   const cmdlinet &cmdline;
   messaget message;
   ebmc_solver_factoryt solver_factory;
-  transition_systemt transition_system;
+  transition_systemt &transition_system;
   ebmc_propertiest properties;
 
   int show_traces();
@@ -73,9 +77,6 @@ int neural_livenesst::operator()()
 
   if(!cmdline.isset("neural-engine"))
     throw ebmc_errort() << "give a neural engine";
-
-  transition_system =
-    get_transition_system(cmdline, message.get_message_handler());
 
   // Get the properties
   properties = ebmc_propertiest::from_command_line(
@@ -126,9 +127,6 @@ int neural_livenesst::operator()()
 
 int neural_livenesst::show_traces()
 {
-  transition_system =
-    get_transition_system(cmdline, message.get_message_handler());
-
   properties = ebmc_propertiest::from_command_line(
     cmdline, transition_system, message.get_message_handler());
 
@@ -316,8 +314,9 @@ tvt neural_livenesst::verify(
 }
 
 int do_neural_liveness(
+  transition_systemt &transition_system,
   const cmdlinet &cmdline,
-  ui_message_handlert &ui_message_handler)
+  message_handlert &message_handler)
 {
-  return neural_livenesst(cmdline, ui_message_handler)();
+  return neural_livenesst{transition_system, cmdline, message_handler}();
 }
