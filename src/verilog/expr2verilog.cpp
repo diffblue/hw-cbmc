@@ -1348,6 +1348,10 @@ expr2verilogt::convert_constant(const constant_exprt &src)
     else
       return convert_norep(src);
   }
+  else if(type.id() == ID_verilog_null)
+  {
+    dest = "null";
+  }
   else
     return convert_norep(src);
 
