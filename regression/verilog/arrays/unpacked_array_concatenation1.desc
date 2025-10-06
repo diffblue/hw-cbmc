@@ -1,0 +1,8 @@
+KNOWNBUG
+unpacked_array_concatenation1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This yields a type checking error.
