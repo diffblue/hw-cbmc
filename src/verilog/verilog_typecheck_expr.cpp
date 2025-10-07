@@ -2385,7 +2385,7 @@ void verilog_typecheck_exprt::struct_decay(exprt &expr) const
   // Verilog packed struct types decay to a vector type [$bits(t)-1:0]
   // when used in relational or arithmetic expressions.
   auto &type = expr.type();
-  if(type.id() == ID_struct)
+  if(type.id() == ID_struct && type.get_bool(ID_packed))
   {
     auto new_type =
       unsignedbv_typet{numeric_cast_v<std::size_t>(get_width(type))};

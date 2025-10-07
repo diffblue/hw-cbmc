@@ -2149,7 +2149,10 @@ std::string expr2verilogt::convert(const typet &type)
   }
   else if(type.id() == ID_struct)
   {
-    return "struct";
+    if(type.get_bool(ID_packed))
+      return "struct packed";
+    else
+      return "struct";
   }
   else if(type.id() == ID_union)
   {

@@ -12,7 +12,7 @@ module main;
     s.field3 = 'b1110011;
   end
 
-  // structs can be converted without cast to bit-vectors
+  // packed structs can be converted without cast to bit-vectors
   wire [8:0] w = s;
 
   // Expected to pass.
