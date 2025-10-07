@@ -2161,6 +2161,7 @@ unsized_dimension: '[' ']'
 struct_union:
 	  TOK_STRUCT { init($$, ID_struct); }
 	| TOK_UNION { init($$, ID_union); }
+	| TOK_UNION TOK_TAGGED { init($$, ID_union); }
 	;
 	
 // System Verilog standard 1800-2017
@@ -4341,6 +4342,12 @@ expression:
 	| TOK_QSTRING
 		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
 	| inside_expression
+	| tagged_union_expression
+	;
+
+tagged_union_expression:
+	  TOK_TAGGED member_identifier
+		{ init($$, ID_verilog_tagged_union); mto($$, $2); }
 	;
 
 inside_expression:

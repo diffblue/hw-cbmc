@@ -2819,6 +2819,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // assignment patterns, 1800 2017 10.9
     convert_expr(expr.op());
   }
+  else if(expr.id() == ID_verilog_tagged_union)
+  {
+    throw errort{}.with_location(expr.source_location())
+      << "no support for tagged unions";
+  }
   else
   {
     throw errort() << "no conversion for unary expression " << expr.id();
