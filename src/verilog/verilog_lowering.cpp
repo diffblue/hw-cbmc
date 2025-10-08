@@ -625,6 +625,36 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(expr.id() == ID_zero_extend)
+  {
+    auto tmp_op = to_zero_extend_expr(expr).op();
+
+    if(tmp_op.type().id() == ID_bool)
+    {
+      tmp_op = typecast_exprt{expr, unsignedbv_typet{1}};
+    }
+    else if(expr.type().id() == ID_integer)
+    {
+      tmp_op = typecast_exprt{expr, unsignedbv_typet{32}};
+    }
+
+    auto old_width = to_bitvector_type(tmp_op.type()).get_width();
+
+    // first make unsigned
+    typet tmp_type;
+
+    if(expr.type().id() == ID_unsignedbv)
+      tmp_type = unsignedbv_typet{old_width};
+    else if(expr.type().id() == ID_verilog_unsignedbv)
+      tmp_type = verilog_unsignedbv_typet{old_width};
+    else
+      PRECONDITION(false);
+
+    auto unsigned_op = verilog_lowering_cast(typecast_exprt{tmp_op, tmp_type});
+
+    // then cast to target type
+    return verilog_lowering_cast(typecast_exprt{unsigned_op, expr.type()});
+  }
   else
     return expr; // leave as is
 
