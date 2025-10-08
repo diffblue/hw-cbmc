@@ -322,9 +322,6 @@ void verilog_typecheck_exprt::downwards_type_propagation(
   }
 
   // Just cast the expression, leave any operands as they are.
-
-  bool is_constant = expr.is_constant();
-
   if(
     (expr.type().id() == ID_signedbv ||
      expr.type().id() == ID_verilog_signedbv) &&
@@ -340,10 +337,6 @@ void verilog_typecheck_exprt::downwards_type_propagation(
   {
     expr = typecast_exprt{expr, type};
   }
-
-  // fold constants
-  if(is_constant)
-    expr = verilog_simplifier(expr, ns);
 }
 
 /*******************************************************************\
