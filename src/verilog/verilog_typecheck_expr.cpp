@@ -222,6 +222,39 @@ void verilog_typecheck_exprt::propagate_type(
 
 /*******************************************************************\
 
+Function: zero_extend
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static exprt zero_extend(const exprt &expr, const typet &type)
+{
+  auto old_width = expr.type().id() == ID_bool ? 1
+                   : expr.type().id() == ID_integer
+                     ? 32
+                     : to_bitvector_type(expr.type()).get_width();
+
+  // first make unsigned
+  typet tmp_type;
+
+  if(type.id() == ID_unsignedbv)
+    tmp_type = unsignedbv_typet{old_width};
+  else if(type.id() == ID_verilog_unsignedbv)
+    tmp_type = verilog_unsignedbv_typet{old_width};
+  else
+    PRECONDITION(false);
+
+  return typecast_exprt::conditional_cast(
+    typecast_exprt::conditional_cast(expr, tmp_type), type);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::downwards_type_progatation
 
   Inputs:
@@ -241,95 +274,76 @@ void verilog_typecheck_exprt::downwards_type_propagation(
 
   // Any context-determined operand of an operator shall be the
   // same type and size as the result of the operator.
-  // Exceptions:
-  // * result type real -- just cast
-  // * relational operators are always 1 bit unsigned
+  // As an exception, if the result type is real, the operands
+  // are just casted.
 
   if(expr.type() == type)
     return;
 
-  vtypet vt_from = vtypet(expr.type());
-  vtypet vt_to = vtypet(type);
-
-  if(!vt_from.is_other() && !vt_to.is_other() && expr.has_operands())
+  if(type.id() == ID_verilog_real || type.id() == ID_verilog_shortreal)
   {
-    // arithmetic
-
-    if(
-      expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
-      expr.id() == ID_div || expr.id() == ID_unary_minus ||
-      expr.id() == ID_unary_plus)
-    {
-      if(type.id() != ID_bool)
-      {
-        Forall_operands(it, expr)
-          propagate_type(*it, type);
-
-        expr.type() = type;
-
-        return;
-      }
-    }
-    else if(
-      expr.id() == ID_bitand || expr.id() == ID_bitor ||
-      expr.id() == ID_bitnand || expr.id() == ID_bitnor ||
-      expr.id() == ID_bitxor || expr.id() == ID_bitxnor ||
-      expr.id() == ID_bitnot)
-    {
-      Forall_operands(it, expr)
-        propagate_type(*it, type);
-
-      expr.type() = type;
-
-      if(type.id() == ID_bool)
-      {
-        if(expr.id() == ID_bitand)
-          expr.id(ID_and);
-        else if(expr.id() == ID_bitor)
-          expr.id(ID_or);
-        else if(expr.id() == ID_bitnand)
-          expr.id(ID_nand);
-        else if(expr.id() == ID_bitnor)
-          expr.id(ID_nor);
-        else if(expr.id() == ID_bitxor)
-          expr.id(ID_xor);
-        else if(expr.id() == ID_bitxnor)
-          expr.id(ID_xnor);
-        else if(expr.id() == ID_bitnot)
-          expr.id(ID_not);
-      }
-
-      return;
-    }
-    else if(expr.id() == ID_if)
-    {
-      if(expr.operands().size() == 3)
-      {
-        propagate_type(to_if_expr(expr).true_case(), type);
-        propagate_type(to_if_expr(expr).false_case(), type);
-
-        expr.type() = type;
-        return;
-      }
-    }
-    else if(expr.id() == ID_shl) // does not work with shr
-    {
-      // does not work with boolean
-      if(type.id() != ID_bool)
-      {
-        if(expr.operands().size() == 2)
-        {
-          propagate_type(to_binary_expr(expr).op0(), type);
-          // not applicable to second operand
-
-          expr.type() = type;
-          return;
-        }
-      }
-    }
+    expr = typecast_exprt{expr, type};
+    return;
   }
 
-  implicit_typecast(expr, type);
+  // expressions with context-determined width, following
+  // 1800-2017 Table 11-21
+  if(
+    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+    expr.id() == ID_div || expr.id() == ID_mod || expr.id() == ID_bitand ||
+    expr.id() == ID_bitor || expr.id() == ID_bitxor ||
+    expr.id() == ID_bitxnor || expr.id() == ID_unary_plus ||
+    expr.id() == ID_unary_minus || expr.id() == ID_bitnot)
+  {
+    // All operands are context-determined.
+    for(auto &op : expr.operands())
+      downwards_type_propagation(op, type);
+    expr.type() = type;
+    return;
+  }
+  else if(
+    expr.id() == ID_shl || expr.id() == ID_ashr || expr.id() == ID_lshr ||
+    expr.id() == ID_power)
+  {
+    // The LHS is context-determined, the RHS is self-determined
+    auto &binary_expr = to_binary_expr(expr);
+    downwards_type_propagation(binary_expr.lhs(), type);
+    expr.type() = type;
+    return;
+  }
+  else if(expr.id() == ID_if)
+  {
+    // The first operand is self-determined, the others are context-determined
+    auto &if_expr = to_if_expr(expr);
+    downwards_type_propagation(if_expr.op1(), type);
+    downwards_type_propagation(if_expr.op2(), type);
+    expr.type() = type;
+    return;
+  }
+
+  // Just cast the expression, leave any operands as they are.
+
+  bool is_constant = expr.is_constant();
+
+  if(
+    (expr.type().id() == ID_signedbv ||
+     expr.type().id() == ID_verilog_signedbv) &&
+    (type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv) &&
+    get_width(expr.type()) < get_width(type))
+  {
+    // "If the operand shall be extended, then it shall be sign-extended only
+    // if the propagated type is signed."
+    // A typecast from signed to a larger unsigned would sign extend.
+    expr = zero_extend(expr, type);
+  }
+  else
+  {
+    expr = typecast_exprt{expr, type};
+  }
+
+  // fold constants
+  if(is_constant)
+    expr = verilog_simplifier(expr, ns);
 }
 
 /*******************************************************************\
@@ -2435,39 +2449,6 @@ void verilog_typecheck_exprt::tc_binary_expr(
   // Now do downwards propagation
   downwards_type_propagation(op0, new_type);
   downwards_type_propagation(op1, new_type);
-}
-
-/*******************************************************************\
-
-Function: zero_extend
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static exprt zero_extend(const exprt &expr, const typet &type)
-{
-  auto old_width = expr.type().id() == ID_bool ? 1
-                   : expr.type().id() == ID_integer
-                     ? 32
-                     : to_bitvector_type(expr.type()).get_width();
-
-  // first make unsigned
-  typet tmp_type;
-
-  if(type.id() == ID_unsignedbv)
-    tmp_type = unsignedbv_typet{old_width};
-  else if(type.id() == ID_verilog_unsignedbv)
-    tmp_type = verilog_unsignedbv_typet{old_width};
-  else
-    PRECONDITION(false);
-
-  return typecast_exprt::conditional_cast(
-    typecast_exprt::conditional_cast(expr, tmp_type), type);
 }
 
 /*******************************************************************\
