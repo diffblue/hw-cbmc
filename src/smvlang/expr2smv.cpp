@@ -350,6 +350,25 @@ expr2smvt::resultt expr2smvt::convert_typecast(const typecast_exprt &expr)
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_zero_extend
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_zero_extend(const zero_extend_exprt &expr)
+{
+  // Both "extend" and "resize" do sign extension.
+  // Hence, use lowering.
+  return convert_rec(expr.lower());
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_rtctl
 
   Inputs:
@@ -662,6 +681,20 @@ expr2smvt::resultt expr2smvt::convert_constant(const constant_exprt &src)
     dest = minus + std::string("0") + sign_specifier + 'd' +
            std::to_string(word_width) + '_' + integer2string(value_abs);
   }
+  else if(type.id() == ID_bv)
+  {
+    auto &bv_type = to_bv_type(type);
+    auto width = bv_type.width();
+    auto &src_value = src.get_value();
+    dest = std::string("0ub");
+    dest += std::to_string(width);
+    dest += '_';
+    for(std::size_t i = 0; i < width; i++)
+    {
+      bool bit = get_bvrep_bit(src_value, width, width - i - 1);
+      dest += bit ? '1' : '0';
+    }
+  }
   else
     return convert_norep(src);
 
@@ -911,6 +944,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   {
     return convert_typecast(to_typecast_expr(src));
   }
+
+  else if(src.id() == ID_zero_extend)
+    return convert_zero_extend(to_zero_extend_expr(src));
 
   else // no SMV language expression for internal representation
     return convert_norep(src);

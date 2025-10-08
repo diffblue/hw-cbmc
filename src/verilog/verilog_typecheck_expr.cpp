@@ -302,39 +302,6 @@ void verilog_typecheck_exprt::assignment_conversion(
 
 /*******************************************************************\
 
-Function: zero_extend
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static exprt zero_extend(const exprt &expr, const typet &type)
-{
-  auto old_width = expr.type().id() == ID_bool ? 1
-                   : expr.type().id() == ID_integer
-                     ? 32
-                     : to_bitvector_type(expr.type()).get_width();
-
-  // first make unsigned
-  typet tmp_type;
-
-  if(type.id() == ID_unsignedbv)
-    tmp_type = unsignedbv_typet{old_width};
-  else if(type.id() == ID_verilog_unsignedbv)
-    tmp_type = verilog_unsignedbv_typet{old_width};
-  else
-    PRECONDITION(false);
-
-  return typecast_exprt::conditional_cast(
-    typecast_exprt::conditional_cast(expr, tmp_type), type);
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheck_exprt::downwards_type_progatation
 
   Inputs:
@@ -411,7 +378,7 @@ void verilog_typecheck_exprt::downwards_type_propagation(
     // "If the operand shall be extended, then it shall be sign-extended only
     // if the propagated type is signed."
     // A typecast from signed to a larger unsigned would sign extend.
-    expr = zero_extend(expr, type);
+    expr = zero_extend_exprt{expr, type};
   }
   else
   {
