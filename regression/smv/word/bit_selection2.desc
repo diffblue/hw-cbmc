@@ -1,5 +1,5 @@
 CORE
-shift1.smv
+bit_selection2.smv
 
 ^EXIT=0$
 ^SIGNAL=0$

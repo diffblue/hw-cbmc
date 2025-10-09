@@ -544,6 +544,41 @@ expr2smvt::resultt expr2smvt::convert_extractbits(const extractbits_exprt &expr)
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_smv_bit_select
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt
+expr2smvt::convert_smv_bit_selection(const ternary_exprt &expr)
+{
+  const precedencet precedence = precedencet::INDEX;
+  auto op_rec = convert_rec(expr.op0());
+
+  std::string dest;
+
+  if(precedence >= op_rec.p)
+    dest += '(';
+  dest += op_rec.s;
+  if(precedence >= op_rec.p)
+    dest += ')';
+
+  dest += '[';
+  dest += convert_rec(expr.op1()).s;
+  dest += ':';
+  dest += convert_rec(expr.op2()).s;
+  dest += ']';
+
+  return {precedence, std::move(dest)};
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_if
 
   Inputs:
@@ -906,6 +941,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_extractbits)
     return convert_extractbits(to_extractbits_expr(src));
+
+  else if(src.id() == ID_smv_bit_selection)
+    return convert_smv_bit_selection(to_ternary_expr(src));
 
   else if(src.id() == ID_smv_extend)
     return convert_function_application("extend", src);
