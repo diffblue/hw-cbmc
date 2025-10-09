@@ -479,6 +479,52 @@ expr2smvt::convert_index(const index_exprt &src, precedencet precedence)
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_extractbits
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_extractbits(const extractbits_exprt &expr)
+{
+  const precedencet precedence = precedencet::INDEX;
+  auto op_rec = convert_rec(expr.src());
+
+  std::string dest;
+
+  if(precedence >= op_rec.p)
+    dest += '(';
+  dest += op_rec.s;
+  if(precedence >= op_rec.p)
+    dest += ')';
+
+  dest += '[';
+
+  // We can only do constant indices.
+  if(expr.index().is_constant())
+  {
+    auto index_int = numeric_cast_v<mp_integer>(to_constant_expr(expr.index()));
+    auto width = to_unsignedbv_type(expr.type()).get_width();
+    dest += integer2string(index_int + width - 1);
+    dest += ':';
+    dest += integer2string(index_int);
+  }
+  else
+  {
+    dest += "?:?";
+  }
+
+  dest += ']';
+
+  return {precedence, std::move(dest)};
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_if
 
   Inputs:
@@ -824,6 +870,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   {
     return convert_binary(to_binary_expr(src), ">>", precedencet::SHIFT);
   }
+
+  else if(src.id() == ID_extractbits)
+    return convert_extractbits(to_extractbits_expr(src));
 
   else if(src.id() == ID_smv_extend)
     return convert_function_application("extend", src);
