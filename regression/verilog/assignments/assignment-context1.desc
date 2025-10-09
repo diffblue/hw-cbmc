@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 assignment-context1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ assignment-context1.sv
 --
 ^warning: ignoring
 --
-The variants that enlarge give a wrong answer.
