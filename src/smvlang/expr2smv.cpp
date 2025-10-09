@@ -903,10 +903,15 @@ std::string type2smv(const typet &type, const namespacet &ns)
     return "boolean";
   else if(type.id()==ID_array)
   {
+    auto &array_type = to_array_type(type);
+    auto size_const = to_constant_expr(array_type.size());
+    auto size_int = numeric_cast_v<mp_integer>(size_const);
     std::string code = "array ";
-    code+="..";
+    // The index type cannot be any type, but must be a range low..high
+    code += "0..";
+    code += integer2string(size_int - 1);
     code+=" of ";
-    code += type2smv(to_array_type(type).element_type(), ns);
+    code += type2smv(array_type.element_type(), ns);
     return code;
   }
   else if(type.id() == ID_smv_enumeration)
