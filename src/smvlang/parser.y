@@ -821,6 +821,7 @@ term       : constant
            | term mod_Token term      { binary($$, $1, ID_mod, $3); }
            | term GTGT_Token term     { binary($$, $1, ID_shr, $3); }
            | term LTLT_Token term     { binary($$, $1, ID_shl, $3); }
+           | term '[' term ':' term ']' { init($$, ID_smv_bit_selection); mto($$, $1); mto($$, $3); mto($$, $5); }
            | term COLONCOLON_Token term { binary($$, $1, ID_concatenation, $3); }
            | "word1" '(' term ')'     { unary($$, ID_smv_word1, $3); }
            | "bool" '(' term ')'      { unary($$, ID_smv_bool, $3); }
