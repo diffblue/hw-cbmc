@@ -1,0 +1,5 @@
+MODULE main
+
+-- From the NuSMV manual
+SPEC 0sb7_1011001[4:1] = 0ub4_1100
+SPEC 0ub3_101[0:0] = 0ub1_1
