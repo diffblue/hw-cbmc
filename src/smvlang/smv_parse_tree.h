@@ -37,7 +37,8 @@ public:
   struct modulet
   {
     irep_idt name, base_name;
-    
+    irept parameters;
+
     struct itemt
     {
       enum item_typet

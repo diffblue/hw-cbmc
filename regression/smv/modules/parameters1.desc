@@ -1,0 +1,12 @@
+CORE
+parameters1.smv
+--show-parse
+^  PARAMETERS:$
+^    pa$
+^    pb$
+^    pc$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
