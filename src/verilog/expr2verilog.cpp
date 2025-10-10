@@ -2007,6 +2007,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_function(src.id_string(), src);
   }
 
+  else if(src.id() == ID_zero_extend)
+    return convert_rec(to_zero_extend_expr(src).op());
+
   // no VERILOG language expression for internal representation
   return convert_norep(src);
 }
