@@ -272,7 +272,8 @@ exprt SVA_to_LTL(exprt expr)
   }
   else if(
     expr.id() == ID_and || expr.id() == ID_implies || expr.id() == ID_or ||
-    expr.id() == ID_not)
+    expr.id() == ID_not ||
+    (expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool))
   {
     for(auto &op : expr.operands())
     {
