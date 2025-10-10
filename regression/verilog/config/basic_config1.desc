@@ -1,0 +1,9 @@
+KNOWNBUG
+basic_config1.sv
+--module top
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This does not parse.
