@@ -28,6 +28,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 //#define YYDEBUG 1
 
 #define mto(x, y) stack_expr(x).add_to_operands(std::move(stack_expr(y)))
+#define mto2(x, y, z) stack_expr(x).add_to_operands(std::move(stack_expr(y)), std::move(stack_expr(z)))
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
@@ -3496,10 +3497,11 @@ subroutine_call_statement:
 
 action_block:
           statement_or_null %prec LT_TOK_ELSE
+                { init($$, ID_verilog_action_then); mto($$, $1); }
+        | TOK_ELSE statement
+                { init($$, ID_verilog_action_else); mto($$, $2); }
         | statement_or_null TOK_ELSE statement 
-                { init($$, "action-else"); stack_expr($$).operands().resize(2);
-                  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($0));
-                  to_binary_expr(stack_expr($$)).op1().swap(stack_expr($2)); }
+                { init($$, ID_verilog_action_then_else); mto2($$, $1, $3); }
 	;
 
 // The 1800-2017 grammar specifies this to be
