@@ -1050,8 +1050,79 @@ non_port_module_item:
 // A.1.5 Configuration source text
 
 config_declaration:
-          TOK_CONFIG TOK_ENDCONFIG
-        ;
+	   TOK_CONFIG config_identifier ';'
+	   local_parameter_declaration_opt
+	   design_statement
+	   config_rule_statement_opt
+	   TOK_ENDCONFIG config_identifier_opt
+	 ;
+
+local_parameter_declaration_opt:
+	  /* Optional */
+	| local_parameter_declaration ';'
+	;
+
+design_statement:
+	  TOK_DESIGN design_identifier ';'
+	;
+
+design_identifier:
+	  cell_identifier
+	| library_identifier '.' cell_identifier
+	;
+
+config_rule_statement_opt:
+	  /* Optional */
+	| config_rule_statement
+	;
+
+config_rule_statement:
+	  default_clause liblist_clause ';'
+	| inst_clause liblist_clause ';'
+	| inst_clause use_clause ';'
+	| cell_clause liblist_clause ';'
+	| cell_clause use_clause ';'
+	;
+
+default_clause: TOK_DEFAULT;
+
+inst_clause: TOK_INSTANCE inst_name;
+
+inst_name: topmodule_identifier dot_instance_identifier_brace;
+
+dot_instance_identifier_brace:
+	  /* Optional */
+	| dot_instance_identifier_brace '.' instance_identifier
+	;
+
+cell_clause:
+	  TOK_CELL cell_identifier
+	| TOK_CELL library_identifier cell_identifier
+	;
+
+liblist_clause: TOK_LIBLIST library_identifier_brace;
+
+library_identifier_brace:
+	  /* Optional */
+	| library_identifier_brace library_identifier
+	;
+
+use_clause:
+	  TOK_USE cell_identifier colon_config_opt
+	| TOK_USE library_identifier '.' cell_identifier colon_config_opt
+	| TOK_USE '#' '(' named_parameter_assignment_brace ')' colon_config_opt
+	| TOK_USE library_identifier '.' cell_identifier '#' '(' named_parameter_assignment_brace ')' colon_config_opt
+	;
+
+colon_config_opt:
+	  /* Optional */
+	| TOK_COLON TOK_CONFIG
+	;
+
+config_identifier_opt:
+	  /* Optional */
+	| TOK_COLON config_identifier
+	;
 
 bind_directive:
           TOK_BIND
@@ -4543,6 +4614,8 @@ non_type_identifier: TOK_NON_TYPE_IDENTIFIER
 
 block_identifier: TOK_NON_TYPE_IDENTIFIER;
 
+cell_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 class_identifier: TOK_CLASS_IDENTIFIER
 		{
 		  init($$, ID_verilog_class_type);
@@ -4551,6 +4624,8 @@ class_identifier: TOK_CLASS_IDENTIFIER
 		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
 		}
 	;
+
+config_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
 
@@ -4563,9 +4638,13 @@ genvar_identifier: identifier;
 hierarchical_parameter_identifier: hierarchical_identifier
 	;
 
+instance_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 interface_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 module_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+topmodule_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 endmodule_identifier_opt:
 	  /* Optional */
@@ -4596,6 +4675,8 @@ port_identifier: identifier;
 ps_covergroup_identifier:
 	;
 	
+library_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 memory_identifier: identifier;
 
 member_identifier: identifier;
