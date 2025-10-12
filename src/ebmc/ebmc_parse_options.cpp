@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ebmc_version.h"
 #include "format_hooks.h"
 #include "instrument_buechi.h"
+#include "instrument_past.h"
 #include "liveness_to_safety.h"
 #include "netlist.h"
 #include "neural_liveness.h"
@@ -234,6 +235,8 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("smv-word-level"))
     {
+      // There is no $past in SMV.
+      instrument_past(transition_system, properties);
       auto filename = cmdline.value_opt("outfile").value_or("-");
       output_filet output_file{filename};
       output_smv_word_level(
