@@ -1,0 +1,10 @@
+KNOWNBUG
+case5.sv
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This gives the wrong result.
+
