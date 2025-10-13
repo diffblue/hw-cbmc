@@ -1420,7 +1420,7 @@ void verilog_typecheckt::convert_case_values(
 
     // This works like a relational operator, not like an assignment
     typet t=max_type(it->type(), case_operand.type());
-    propagate_type(*it, t);
+    downwards_type_propagation(*it, t);
   }
 }
 
