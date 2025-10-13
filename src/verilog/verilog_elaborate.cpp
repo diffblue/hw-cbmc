@@ -1026,11 +1026,11 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       {
         convert_expr(symbol.value);
 
+        // Convert to the given type. These are assignment contexts.
+        assignment_conversion(symbol.value, symbol.type);
+
         if(!is_let)
           symbol.value = elaborate_constant_expression_check(symbol.value);
-
-        // Cast to the given type.
-        propagate_type(symbol.value, symbol.type);
       }
     }
   }
