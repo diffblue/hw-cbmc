@@ -295,7 +295,7 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
       {
         convert_expr(pattern);
         typet t = max_type(pattern.type(), case_expr.case_op().type());
-        propagate_type(pattern, t);
+        downwards_type_propagation(pattern, t);
       }
 
       convert_sva(case_item.result());
