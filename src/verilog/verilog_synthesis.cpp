@@ -3424,6 +3424,9 @@ void verilog_synthesist::synth_module_item(
   else if(module_item.id() == ID_verilog_sequence_declaration)
   {
   }
+  else if(module_item.id() == ID_function_call)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())

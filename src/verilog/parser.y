@@ -1024,6 +1024,9 @@ module_or_generate_item:
 		{ add_attributes($2, $1); $$=$2; }
 	| attribute_instance_brace module_common_item
 		{ add_attributes($2, $1); $$=$2; }
+	// The next rule is not in 1800-2017, but is a vendor extension.
+	| attribute_instance_brace system_tf_call ';'
+		{ add_attributes($2, $1); $$ = $2; }
 	;
 
 module_or_generate_item_declaration:

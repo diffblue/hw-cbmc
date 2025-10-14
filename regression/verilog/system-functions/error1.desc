@@ -1,9 +1,8 @@
-KNOWNBUG
+CORE
 error1.v
 --module main
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This doesn't parse.
