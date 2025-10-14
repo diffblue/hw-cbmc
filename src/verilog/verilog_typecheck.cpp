@@ -1972,6 +1972,9 @@ void verilog_typecheckt::convert_module_item(
   {
     convert_sequence_declaration(to_verilog_sequence_declaration(module_item));
   }
+  else if(module_item.id() == ID_function_call)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
