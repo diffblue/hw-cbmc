@@ -787,20 +787,13 @@ exprt verilog_synthesist::assignment_rec(const exprt &lhs, const exprt &rhs)
       // do the value
       exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
 
-      if(last_value.is_nil())
-        last_value.swap(new_value);
-      else
+      if(last_value.is_not_nil())
       {
-        // merge the withs
-        assert(new_value.id() == ID_with);
-        assert(new_value.operands().size() == 3);
-        assert(last_value.id() == ID_with);
-        assert(last_value.operands().size() >= 3);
-
-        last_value.add_to_operands(std::move(to_with_expr(new_value).where()));
-        last_value.add_to_operands(
-          std::move(to_with_expr(new_value).new_value()));
+        // chain the withs
+        to_with_expr(new_value).old() = std::move(last_value);
       }
+
+      last_value = std::move(new_value);
     }
 
     return last_value;
@@ -874,20 +867,13 @@ exprt verilog_synthesist::assignment_rec(const exprt &lhs, const exprt &rhs)
       // do the value
       exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
 
-      if(last_value.is_nil())
-        last_value.swap(new_value);
-      else
+      if(last_value.is_not_nil())
       {
-        // merge the withs
-        assert(new_value.id() == ID_with);
-        assert(new_value.operands().size() == 3);
-        assert(last_value.id() == ID_with);
-        assert(last_value.operands().size() >= 3);
-
-        last_value.add_to_operands(std::move(to_with_expr(new_value).where()));
-        last_value.add_to_operands(
-          std::move(to_with_expr(new_value).new_value()));
+        // chain the withs
+        to_with_expr(new_value).old() = std::move(last_value);
       }
+
+      last_value = std::move(new_value);
     }
 
     return last_value;
