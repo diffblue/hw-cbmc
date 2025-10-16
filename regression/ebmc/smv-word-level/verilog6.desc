@@ -1,0 +1,7 @@
+CORE
+verilog6.sv
+--smv-word-level
+^CTLSPEC 0ud8_1 \+ 0ub6_000000 :: -0sd2_1 = 0ud8_4$
+^EXIT=0$
+^SIGNAL=0$
+--
