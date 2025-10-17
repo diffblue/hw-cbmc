@@ -1,0 +1,7 @@
+MODULE main
+
+-- NuSMV 2.7 manual page 16
+CTLSPEC 7/5 = 1
+CTLSPEC -7/5 = -1
+CTLSPEC 7/-5 = -1
+CTLSPEC -7/-5 = 1
