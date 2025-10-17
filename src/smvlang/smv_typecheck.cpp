@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "smv_typecheck.h"
 
 #include <util/arith_tools.h>
+#include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
@@ -1479,6 +1480,12 @@ void smv_typecheckt::lower_node(exprt &expr) const
     auto zero = from_integer(0, expr.type());
     auto one = from_integer(1, expr.type());
     expr = if_exprt{op, std::move(one), std::move(zero)};
+  }
+  else if(expr.id() == ID_smv_bitimplies)
+  {
+    // we'll lower a->b to !a|b
+    auto &implies = to_smv_bitimplies_expr(expr);
+    expr = bitor_exprt{bitnot_exprt{implies.op0()}, implies.op1()};
   }
 
   // lower the type

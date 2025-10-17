@@ -7,6 +7,7 @@ bitwise1.smv
 ^\[.*\] \(0ud8_123 \| 0ud8_7\) = 0ud8_127: PROVED .*$
 ^\[.*\] \(0ud8_123 xor 0ud8_7\) = 0ud8_124: PROVED .*$
 ^\[.*\] \(0ud8_123 xnor 0ud8_7\) = 0ud8_131: PROVED .*$
+^\[.*\] \(0ud8_123 -> 0ud8_7\) = 0ud8_135: PROVED .*$
 ^\[.*\] \(0ud8_123 <-> 0ud8_7\) = 0ud8_131: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
