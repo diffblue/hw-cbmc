@@ -48,6 +48,7 @@ public:
         ASSIGN_NEXT,
         CTLSPEC,
         DEFINE,
+        ENUM,
         FAIRNESS,
         INIT,
         INVAR,
@@ -125,6 +126,11 @@ public:
       bool is_init() const
       {
         return item_type==INIT;
+      }
+
+      bool is_enum() const
+      {
+        return item_type == ENUM;
       }
 
       bool is_var() const
@@ -259,6 +265,12 @@ public:
       expr.type() = std::move(type);
       auto location = expr.source_location();
       items.emplace_back(itemt::VAR, std::move(expr), std::move(location));
+    }
+
+    void add_enum(exprt expr)
+    {
+      auto location = expr.source_location();
+      items.emplace_back(itemt::ENUM, std::move(expr), std::move(location));
     }
 
     mc_varst vars;

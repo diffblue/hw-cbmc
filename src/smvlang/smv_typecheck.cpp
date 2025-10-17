@@ -1877,6 +1877,7 @@ void smv_typecheckt::typecheck(
     item.equal_expr().type() = bool_typet{};
     return;
 
+  case smv_parse_treet::modulet::itemt::ENUM:
   case smv_parse_treet::modulet::itemt::VAR:
     return;
   }
@@ -1983,6 +1984,19 @@ void smv_typecheckt::create_var_symbols(
       symbol.location = symbol_expr.source_location();
 
       symbol_table.insert(std::move(symbol));
+    }
+    else if(item.is_enum())
+    {
+      irep_idt base_name = to_symbol_expr(item.expr).get_identifier();
+      irep_idt identifier = module + "::var::" + id2string(base_name);
+
+      auto symbol_ptr = symbol_table.lookup(identifier);
+      if(symbol_ptr != nullptr)
+      {
+        throw errort{}.with_location(item.expr.source_location())
+          << "enum " << base_name << " already declared, at "
+          << symbol_ptr->location;
+      }
     }
   }
 }
