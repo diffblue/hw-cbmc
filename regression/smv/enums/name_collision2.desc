@@ -1,0 +1,9 @@
+CORE
+name_collision2.smv
+
+^file .* line 8: enum red already declared, at file .* line 3$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

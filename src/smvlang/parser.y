@@ -676,6 +676,11 @@ enum_element: IDENTIFIER_Token
            {
              $$=$1;
              PARSER.module->enum_set.insert(stack_expr($1).id_string());
+
+             exprt expr(ID_symbol);
+             expr.set(ID_identifier, stack_expr($1).id());
+             PARSER.set_source_location(expr);
+             PARSER.module->add_enum(std::move(expr));
            }
            ;
 

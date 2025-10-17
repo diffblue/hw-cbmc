@@ -1,0 +1,6 @@
+MODULE main
+
+VAR some_var: { red, green, yellow, off };
+
+-- identifier already used
+VAR red : boolean;
