@@ -9,4 +9,7 @@ module main;
   assert final (1'b1 << 6 === 64);
   assert final (1'b1 << 6 === 1'b0);
 
+  // The shift will have 16 bits!
+  initial assert(8'b0 + (1'sb1 << 15) === 16'b1000_0000_0000_0000);
+
 endmodule
