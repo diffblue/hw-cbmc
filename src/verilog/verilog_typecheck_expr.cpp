@@ -223,6 +223,14 @@ void verilog_typecheck_exprt::assignment_conversion(
   if(lhs_type == rhs.type())
     return;
 
+  if(lhs_type.id() == ID_struct && !lhs_type.get_bool(ID_packed))
+  {
+    // assignment of a non-matching type to unpacked struct
+    throw errort().with_location(rhs.source_location())
+      << "failed to convert `" << to_string(original_rhs_type) << "' to `"
+      << to_string(lhs_type) << "'";
+  }
+
   // do enum, union and struct decay
   enum_decay(rhs);
   struct_decay(rhs);
