@@ -209,6 +209,30 @@ inline smv_min_exprt &to_smv_min_expr(exprt &expr)
   return static_cast<smv_min_exprt &>(expr);
 }
 
+// ->
+class smv_bitimplies_exprt : public binary_exprt
+{
+public:
+  smv_bitimplies_exprt(exprt __lhs, exprt __rhs)
+    : binary_exprt{std::move(__lhs), ID_smv_bitimplies, std::move(__rhs)}
+  {
+  }
+};
+
+inline const smv_bitimplies_exprt &to_smv_bitimplies_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_bitimplies);
+  smv_bitimplies_exprt::check(expr);
+  return static_cast<const smv_bitimplies_exprt &>(expr);
+}
+
+inline smv_bitimplies_exprt &to_smv_bitimplies_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_bitimplies);
+  smv_bitimplies_exprt::check(expr);
+  return static_cast<smv_bitimplies_exprt &>(expr);
+}
+
 class smv_unsigned_cast_exprt : public unary_exprt
 {
 public:
