@@ -1,0 +1,7 @@
+MODULE main
+
+-- bit-vector version of NuSMV 2.7 manual page 16
+CTLSPEC swconst(7, 8) mod swconst(5, 8) = swconst(2, 8)
+CTLSPEC swconst(-7, 8) mod swconst(5, 8) = swconst(-2, 8)
+CTLSPEC swconst(7, 8) mod swconst(-5, 8) = swconst(2, 8)
+CTLSPEC swconst(-7, 8) mod swconst(-5, 8) = swconst(-2, 8)

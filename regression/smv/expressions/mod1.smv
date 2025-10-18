@@ -1,0 +1,7 @@
+MODULE main
+
+-- NuSMV 2.7 manual page 16
+CTLSPEC 7 mod 5 = 2
+CTLSPEC -7 mod 5 = -2
+CTLSPEC 7 mod -5 = 2
+CTLSPEC -7 mod -5 = -2
