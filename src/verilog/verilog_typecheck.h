@@ -168,8 +168,6 @@ protected:
   void convert_assert_assume_cover(verilog_assert_assume_cover_statementt &);
   void convert_assume(verilog_assume_statementt &);
 
-  void assignment_conversion(exprt &rhs, const typet &lhs_type);
-
   // module items
   void convert_decl(class verilog_declt &);
   void convert_function_or_task(class verilog_function_or_task_declt &);
