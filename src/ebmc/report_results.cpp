@@ -180,14 +180,15 @@ void report_results(
     {
       if(property.has_witness_trace())
       {
-        std::string vcdfile = cmdline.get_value("vcd");
-        auto outfile = output_filet{vcdfile};
+        std::stringstream vcdfile;
 
+       	vcdfile << property.name << "_witness.vcd";
+        auto outfile = output_filet{vcdfile.str()};
+        std::cout << "Writing witness trace VCD file to " << vcdfile.str() << "\n";
         messaget message(message_handler);
         show_trans_trace_vcd(
           property.witness_trace.value(), message, ns, outfile.stream());
 
-        break;
       }
     }
   }
