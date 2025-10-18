@@ -1,0 +1,9 @@
+KNOWNBUG
+name_collision3.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This crashes.
