@@ -108,6 +108,10 @@ void verilog_typecheckt::check_module_ports(
       else
         direction = ID_inout;
     }
+    else if(direction == ID_output_register)
+    {
+      direction = ID_output;
+    }
 
     ports.emplace_back(identifier, port_symbol->type, direction);
 

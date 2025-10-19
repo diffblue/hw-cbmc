@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ports9.sv
 --bound 1
 ^EXIT=0$
@@ -6,4 +6,3 @@ ports9.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.
