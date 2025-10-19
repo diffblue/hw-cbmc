@@ -1552,6 +1552,8 @@ data_type:
 	| struct_union packed_opt signing_opt 
 	  '{' struct_union_member_brace '}' packed_dimension_brace
 	        { $$=$1;
+	          if(stack_expr($2).id() == ID_packed)
+	            stack_type($1).set(ID_packed, true);
 	          addswap($$, ID_declaration_list, $5); }
 	| TOK_ENUM enum_base_type_opt '{' enum_name_declaration_list '}'
 	        { // Like in C, these do _not_ create a scope.
