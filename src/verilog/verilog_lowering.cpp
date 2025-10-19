@@ -650,6 +650,20 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(expr.id() == ID_zero_extend)
+  {
+    auto &zero_extend = to_zero_extend_expr(expr);
+
+    if(
+      is_four_valued(zero_extend.type()) ||
+      is_four_valued(zero_extend.op().type()))
+    {
+      // encode into aval/bval
+      return aval_bval(zero_extend);
+    }
+    else
+      return expr; // leave as is
+  }
   else
     return expr; // leave as is
 

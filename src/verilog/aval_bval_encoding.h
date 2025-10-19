@@ -67,6 +67,8 @@ exprt aval_bval(const verilog_implies_exprt &);
 exprt aval_bval(const typecast_exprt &);
 /// lowering for shifts
 exprt aval_bval(const shift_exprt &);
+/// lowering for zero extension
+exprt aval_bval(const zero_extend_exprt &);
 
 /// If any operand has x/z, then the result is 'x'.
 /// Otherwise, the result is the expression applied to the aval

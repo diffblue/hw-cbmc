@@ -537,6 +537,25 @@ exprt aval_bval(const shift_exprt &expr)
   return if_exprt{distance_has_xz, x, combined};
 }
 
+exprt aval_bval(const zero_extend_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr));
+
+  auto expr_aval_bval_type = lower_to_aval_bval(expr.type());
+
+  // zero-extend aval and bval separately!
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  auto aval_ext_width = aval_bval_width(expr_aval_bval_type);
+  auto ext_type = bv_typet{aval_ext_width};
+
+  auto aval_extended = zero_extend_exprt{op_aval, ext_type};
+  auto bval_extended = zero_extend_exprt{op_bval, ext_type};
+
+  return combine_aval_bval(aval_extended, bval_extended, expr_aval_bval_type);
+}
+
 exprt default_aval_bval_lowering(const exprt &expr)
 {
   auto &type = expr.type();
