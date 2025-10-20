@@ -1,0 +1,9 @@
+KNOWNBUG
+size_cast2.sv
+--module main
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This is not yet implemented.
