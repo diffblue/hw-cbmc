@@ -109,11 +109,54 @@ exprt normalize_property_rec(exprt expr)
   return expr;
 }
 
+// Turn "disable iff" into an OR for assertions,
+// and into an AND for cover statements.
+void rewrite_disable_iff(exprt &expr, bool cover)
+{
+  expr.visit_post(
+    [cover](exprt &node)
+    {
+      if(node.id() == ID_sva_disable_iff)
+      {
+        auto &disable_iff = to_sva_disable_iff_expr(node);
+        if(cover)
+        {
+          // a sva_disable_iff b --> ¬a ∧ b
+          node = and_exprt{not_exprt{disable_iff.lhs()}, disable_iff.rhs()};
+        }
+        else // assertion
+        {
+          // a sva_disable_iff b --> a ∨ b
+          node = or_exprt{disable_iff.lhs(), disable_iff.rhs()};
+        }
+      }
+      else if(node.id() == ID_sva_sequence_disable_iff)
+      {
+        // only used in cover sequence (disable iff ...)
+        PRECONDITION(cover);
+        auto &disable_iff = to_sva_sequence_disable_iff_expr(node);
+        // a sva_disable_iff b --> ¬a and b
+        node = sva_and_exprt{
+          sva_boolean_exprt{
+            not_exprt{disable_iff.lhs()}, verilog_sva_sequence_typet{}},
+          disable_iff.rhs(),
+          verilog_sva_sequence_typet{}};
+      }
+    });
+}
+
 exprt normalize_property(exprt expr)
 {
   // top-level only
   if(expr.id() == ID_sva_cover)
+  {
+    rewrite_disable_iff(to_sva_cover_expr(expr).op(), true);
     expr = sva_always_exprt{sva_not_exprt{to_sva_cover_expr(expr).op()}};
+  }
+  else
+  {
+    rewrite_disable_iff(expr, false);
+  }
 
   expr = trivial_sva(expr);
 

@@ -1,5 +1,7 @@
 # EBMC 6.0
 
+* SystemVerilog: semantics fix for cover disable iff
+
 # EBMC 5.11
 
 * SystemVerilog: $unit::
