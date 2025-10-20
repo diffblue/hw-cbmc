@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 cover_sequence5.sv
 --bound 10
 ^EXIT=10$
@@ -6,4 +6,3 @@ cover_sequence5.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.
