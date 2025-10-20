@@ -3,6 +3,7 @@
 * Verilog: semantic fix for output register ports
 * SystemVerilog: cover sequence
 * SystemVerilog: semantics fix for explicit casts
+* SystemVerilog: semantics fix for cover disable iff
 
 # EBMC 5.7
 
