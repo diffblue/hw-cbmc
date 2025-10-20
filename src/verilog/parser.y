@@ -2408,6 +2408,7 @@ concurrent_assertion_statement:
 	  assert_property_statement
 	| assume_property_statement
 	| cover_property_statement
+	| cover_sequence_statement
 	| restrict_property_statement
 	;
 
@@ -2468,6 +2469,15 @@ assume_property_statement:
 
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' property_spec ')' action_block
 		{ init($$, ID_verilog_cover_property); mto($$, $4); mto($$, $6); }
+	;
+
+cover_sequence_statement:
+	  TOK_COVER TOK_SEQUENCE '(' sequence_expr ')' action_block
+		{ init($$, ID_verilog_cover_sequence); mto2($$, $4, $6); }
+	| TOK_COVER TOK_SEQUENCE '(' clocking_event TOK_DISABLE TOK_IFF '(' expression ')' sequence_expr ')' action_block
+		{ init($5, ID_sva_sequence_disable_iff); mto2($5, $8, $10); init($$, ID_verilog_cover_sequence); mto2($$, $5, $12); }
+	| TOK_COVER TOK_SEQUENCE '(' TOK_DISABLE TOK_IFF '(' expression ')' sequence_expr ')' action_block
+		{ init($4, ID_sva_sequence_disable_iff); mto2($4, $7, $9); init($$, ID_verilog_cover_sequence); mto2($$, $4, $11); }
 	;
 
 restrict_property_statement: TOK_RESTRICT TOK_PROPERTY '(' property_spec ')' ';'

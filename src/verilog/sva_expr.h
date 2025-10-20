@@ -36,6 +36,58 @@ static inline sva_boolean_exprt &to_sva_boolean_expr(exprt &expr)
   return static_cast<sva_boolean_exprt &>(expr);
 }
 
+/// disable_iff for cover sequence
+class sva_sequence_disable_iff_exprt : public binary_exprt
+{
+public:
+  sva_sequence_disable_iff_exprt(exprt condition, exprt sequence)
+    : binary_exprt(
+        std::move(condition),
+        ID_sva_sequence_disable_iff,
+        std::move(sequence),
+        verilog_sva_sequence_typet{})
+  {
+  }
+
+  const exprt &condition() const
+  {
+    return op0();
+  }
+
+  exprt &condition()
+  {
+    return op0();
+  }
+
+  const exprt &sequence() const
+  {
+    return op1();
+  }
+
+  exprt &sequence()
+  {
+    return op1();
+  }
+
+protected:
+  using binary_exprt::op0;
+  using binary_exprt::op1;
+};
+
+static inline const sva_sequence_disable_iff_exprt &
+to_sva_sequence_disable_iff_expr(const exprt &expr)
+{
+  sva_sequence_disable_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const sva_sequence_disable_iff_exprt &>(expr);
+}
+
+static inline sva_sequence_disable_iff_exprt &
+to_sva_sequence_disable_iff_expr(exprt &expr)
+{
+  sva_sequence_disable_iff_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<sva_sequence_disable_iff_exprt &>(expr);
+}
+
 /// accept_on, reject_on, sync_accept_on, sync_reject_on, disable_iff
 class sva_abort_exprt : public binary_exprt
 {

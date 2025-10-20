@@ -1,5 +1,7 @@
 # EBMC 5.8
 
+* SystemVerilog: cover sequence
+
 # EBMC 5.7
 
 * Verilog: --initial-zero changes the default value from nondet to zero

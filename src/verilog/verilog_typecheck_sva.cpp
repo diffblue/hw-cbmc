@@ -167,6 +167,21 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_sequence_disable_iff)
+  {
+    auto &disable_iff = to_sva_sequence_disable_iff_expr(expr);
+
+    // The condition of these is special: They are not sampled,
+    // but evaluated directly (1800-2017 16.6).
+    convert_expr(disable_iff.condition());
+    make_boolean(disable_iff.condition());
+
+    convert_sva(disable_iff.sequence());
+    require_sva_sequence(disable_iff.sequence());
+    expr.type() = verilog_sva_sequence_typet{};
+
+    return std::move(expr);
+  }
   else if(
     expr.id() == ID_sva_cycle_delay_plus || // ##[+]
     expr.id() == ID_sva_cycle_delay_star)   // ##[*]

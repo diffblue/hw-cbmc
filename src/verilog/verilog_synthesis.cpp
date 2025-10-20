@@ -2299,6 +2299,7 @@ void verilog_synthesist::synth_assert_assume_cover(
       // one of the 'always' variants -- assertions and assumptions have an implicit 'always'
       if(
         statement.id() != ID_verilog_cover_property &&
+        statement.id() != ID_verilog_cover_sequence &&
         statement.id() != ID_verilog_immediate_cover)
       {
         if(cond_for_comment.id() != ID_sva_always)
@@ -2315,7 +2316,9 @@ void verilog_synthesist::synth_assert_assume_cover(
     {
       cond_for_comment = sva_assume_exprt(cond_for_comment);
     }
-    else if(statement.id() == ID_verilog_cover_property)
+    else if(
+      statement.id() == ID_verilog_cover_property ||
+      statement.id() == ID_verilog_cover_sequence)
     {
       // 'cover' properties are existential
       cond_for_comment = sva_cover_exprt(cond_for_comment);
@@ -2355,6 +2358,7 @@ void verilog_synthesist::synth_assert_assume_cover(
     // assertions and assumptions have an implicit 'always'
     if(
       statement.id() != ID_verilog_cover_property &&
+      statement.id() != ID_verilog_cover_sequence &&
       statement.id() != ID_verilog_immediate_cover)
     {
       if(cond.id() != ID_sva_always)
@@ -2374,14 +2378,25 @@ void verilog_synthesist::synth_assert_assume_cover(
   else if(statement.id() == ID_verilog_cover_property)
   {
     // 'cover' properties are existential
-    cond = sva_cover_exprt(cond);
+    cond = sva_cover_exprt{cond};
+  }
+  else if(statement.id() == ID_verilog_cover_sequence)
+  {
+    // 'cover' properties are existential
+    cond = sva_cover_exprt{sva_sequence_property_exprt{cond}};
   }
 
   // 1800-2017 16.12.2 Sequence property
-  if(statement.id() == ID_verilog_cover_property)
+  if(
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence)
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
+  }
   else
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
+  }
 
   symbol.value = std::move(cond);
 }
@@ -2418,7 +2433,9 @@ void verilog_synthesist::synth_assert_assume_cover(
       if(cond_for_comment.id() != ID_sva_always)
         cond_for_comment = sva_always_exprt{cond_for_comment};
     }
-    else if(module_item.id() == ID_verilog_cover_property)
+    else if(
+      module_item.id() == ID_verilog_cover_property ||
+      module_item.id() == ID_verilog_cover_sequence)
     {
       // 'cover' requirements are existential.
       cond_for_comment = sva_cover_exprt{cond_for_comment};
@@ -2455,14 +2472,25 @@ void verilog_synthesist::synth_assert_assume_cover(
     // 'cover' requirements are existential.
     cond = sva_cover_exprt{cond};
   }
+  else if(module_item.id() == ID_verilog_cover_sequence)
+  {
+    // 'cover' requirements are existential.
+    cond = sva_cover_exprt{sva_sequence_property_exprt{cond}};
+  }
   else
     PRECONDITION(false);
 
   // 1800-2017 16.12.2 Sequence property
-  if(module_item.id() == ID_verilog_cover_property)
+  if(
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::STRONG);
+  }
   else
+  {
     set_default_sequence_semantics(cond, sva_sequence_semanticst::WEAK);
+  }
 
   symbol.value = std::move(cond);
 }
@@ -3195,7 +3223,8 @@ void verilog_synthesist::synth_statement(
     statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert ||
-    statement.id() == ID_verilog_cover_property)
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence)
   {
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_statement(statement));
@@ -3331,7 +3360,8 @@ void verilog_synthesist::synth_module_item(
   }
   else if(
     module_item.id() == ID_verilog_assert_property ||
-    module_item.id() == ID_verilog_cover_property)
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
   {
     synth_assert_assume_cover(
       to_verilog_assert_assume_cover_module_item(module_item));

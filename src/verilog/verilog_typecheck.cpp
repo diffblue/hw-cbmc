@@ -1041,7 +1041,11 @@ void verilog_typecheckt::convert_assert_assume_cover(
   exprt &cond = module_item.condition();
 
   convert_sva(cond);
-  require_sva_property(cond);
+
+  if(module_item.id() == ID_verilog_cover_sequence)
+    require_sva_sequence(cond);
+  else
+    require_sva_property(cond);
 
   // We create a symbol for the property.
   // The 'value' of the symbol is set by synthesis.
@@ -1056,6 +1060,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
                        : module_item.id() == ID_verilog_assume_property
                          ? "assume"
                        : module_item.id() == ID_verilog_cover_property ? "cover"
+                       : module_item.id() == ID_verilog_cover_sequence ? "cover"
                                                                        : "";
 
     assertion_counter++;
@@ -1106,7 +1111,11 @@ void verilog_typecheckt::convert_assert_assume_cover(
   exprt &cond = statement.condition();
 
   convert_sva(cond);
-  require_sva_property(cond);
+
+  if(statement.id() == ID_verilog_cover_sequence)
+    require_sva_sequence(cond);
+  else
+    require_sva_property(cond);
 
   // We create a symbol for the property.
   // The 'value' is set by synthesis.
@@ -1120,6 +1129,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
                        : statement.id() == ID_verilog_assert_property ? "assert"
                        : statement.id() == ID_verilog_smv_assert      ? "assert"
                        : statement.id() == ID_verilog_cover_property  ? "cover"
+                       : statement.id() == ID_verilog_cover_sequence  ? "cover"
                        : statement.id() == ID_verilog_immediate_assume
                          ? "assume"
                        : statement.id() == ID_verilog_assume_property ? "assume"
@@ -1525,7 +1535,8 @@ void verilog_typecheckt::convert_statement(
     statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert ||
-    statement.id() == ID_verilog_cover_property)
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence)
   {
     convert_assert_assume_cover(
       to_verilog_assert_assume_cover_statement(statement));
@@ -1540,9 +1551,6 @@ void verilog_typecheckt::convert_statement(
     statement.id() == ID_verilog_smv_assume)
   {
     convert_assert_assume_cover(to_verilog_assume_statement(statement));
-  }
-  else if(statement.id() == ID_verilog_cover_property)
-  {
   }
   else if(statement.id() == ID_verilog_non_blocking_assign)
     convert_assign(to_verilog_assign(statement), false);
@@ -1585,6 +1593,7 @@ void verilog_typecheckt::convert_statement(
       sub_statement.id() == ID_verilog_assert_property ||
       sub_statement.id() == ID_verilog_assume_property ||
       sub_statement.id() == ID_verilog_restrict_property ||
+      sub_statement.id() == ID_verilog_cover_sequence ||
       sub_statement.id() == ID_verilog_cover_property)
     {
       sub_statement.set(ID_identifier, label_statement.label());
@@ -1664,7 +1673,8 @@ void verilog_typecheckt::convert_module_item(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property)
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
   {
     convert_assert_assume_cover(
       to_verilog_assert_assume_cover_module_item(module_item));

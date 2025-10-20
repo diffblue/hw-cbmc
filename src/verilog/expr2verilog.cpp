@@ -680,10 +680,10 @@ Function: expr2verilogt::convert_sva_abort
 
 expr2verilogt::resultt expr2verilogt::convert_sva_abort(
   const std::string &text,
-  const sva_abort_exprt &expr)
+  const binary_exprt &expr)
 {
-  auto op0 = convert_rec(expr.condition());
-  auto op1 = convert_rec(expr.property());
+  auto op0 = convert_rec(expr.op0());
+  auto op1 = convert_rec(expr.op1());
 
   return {verilog_precedencet::MIN, text + " (" + op0.s + ") " + op1.s};
 }
@@ -1936,6 +1936,11 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   else if(src.id() == ID_sva_disable_iff)
     return precedence = verilog_precedencet::MIN,
            convert_sva_abort("disable iff", to_sva_abort_expr(src));
+
+  else if(src.id() == ID_sva_sequence_disable_iff)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_abort(
+             "disable iff", to_sva_sequence_disable_iff_expr(src));
 
   else if(src.id()==ID_sva_eventually)
   {
