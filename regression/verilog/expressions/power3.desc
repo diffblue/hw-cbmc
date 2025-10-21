@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 power3.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ power3.sv
 --
 ^warning: ignoring
 --
-The result is wrong.
