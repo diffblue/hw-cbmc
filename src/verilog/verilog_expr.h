@@ -2061,7 +2061,8 @@ to_verilog_assert_assume_cover_module_item(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property);
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence);
   binary_exprt::check(module_item);
   return static_cast<const verilog_assert_assume_cover_module_itemt &>(
     module_item);
@@ -2074,7 +2075,8 @@ to_verilog_assert_assume_cover_module_item(verilog_module_itemt &module_item)
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property);
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence);
   binary_exprt::check(module_item);
   return static_cast<verilog_assert_assume_cover_module_itemt &>(module_item);
 }
@@ -2124,7 +2126,8 @@ to_verilog_assert_assume_cover_statement(const verilog_statementt &statement)
     statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_smv_assume ||
     statement.id() == ID_verilog_immediate_cover ||
-    statement.id() == ID_verilog_cover_property);
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence);
   binary_exprt::check(statement);
   return static_cast<const verilog_assert_assume_cover_statementt &>(statement);
 }
@@ -2141,7 +2144,8 @@ to_verilog_assert_assume_cover_statement(verilog_statementt &statement)
     statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_smv_assume ||
     statement.id() == ID_verilog_immediate_cover ||
-    statement.id() == ID_verilog_cover_property);
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence);
   binary_exprt::check(statement);
   return static_cast<verilog_assert_assume_cover_statementt &>(statement);
 }

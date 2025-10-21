@@ -110,6 +110,14 @@ exprt trivial_sva(exprt expr)
     auto &disable_iff_expr = to_sva_disable_iff_expr(expr);
     expr = or_exprt{disable_iff_expr.lhs(), disable_iff_expr.rhs()};
   }
+  else if(expr.id() == ID_sva_sequence_disable_iff)
+  {
+    auto &disable_iff_expr = to_sva_sequence_disable_iff_expr(expr);
+    expr = sva_or_exprt{
+      sva_boolean_exprt{disable_iff_expr.lhs(), verilog_sva_sequence_typet{}},
+      disable_iff_expr.rhs(),
+      verilog_sva_sequence_typet{}};
+  }
   else if(expr.id() == ID_sva_accept_on || expr.id() == ID_sva_sync_accept_on)
   {
     auto &sva_abort_expr = to_sva_abort_expr(expr);

@@ -671,6 +671,7 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence ||
     statement.id() == ID_verilog_expect_property)
   {
   }
@@ -850,7 +851,8 @@ void verilog_typecheckt::collect_symbols(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property)
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
   {
   }
   else if(module_item.id() == ID_verilog_assertion_item)

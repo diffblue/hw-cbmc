@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/std_expr.h>
 
-class sva_abort_exprt;
 class sva_case_exprt;
 class sva_if_exprt;
 class sva_ranged_predicate_exprt;
@@ -145,7 +144,7 @@ protected:
     const std::string &name,
     const sva_sequence_repetition_exprt &);
 
-  resultt convert_sva_abort(const std::string &name, const sva_abort_exprt &);
+  resultt convert_sva_abort(const std::string &name, const binary_exprt &);
 
   resultt
   convert_sva_indexed_binary(const std::string &name, const binary_exprt &);

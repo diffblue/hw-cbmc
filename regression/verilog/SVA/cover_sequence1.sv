@@ -7,9 +7,9 @@ module main(input clk);
     x++;
 
   // expected to pass
-  p0: cover property (x==2 ##1 x==3 ##1 x==4);
+  p0: cover sequence (x==2 ##1 x==3 ##1 x==4);
 
   // expected to fail
-  p1: cover property (x==2 ##1 x==3 ##1 x==5);
+  p1: cover sequence (x==2 ##1 x==3 ##1 x==5);
 
 endmodule
