@@ -12,7 +12,7 @@ module main;
   // base 8
   pB0: assert final ('so7 == -1);
   pB1: assert final ('so1 == 1);
-  pB2: assert final ('so7x === 'so3777777777x);
+  pB2: assert final ('so7x === 32'so3777777777x);
   pB3: assert final ($bits('so1) == 32);
   pB4: assert final ('so77 == -1);
   pB5: assert final (4'so7 == 7);

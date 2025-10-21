@@ -303,7 +303,7 @@ exprt verilog_lowering_cast(typecast_exprt expr)
     return std::move(new_cast);
   }
 
-  if(is_aval_bval(src_type) && dest_type.id() == ID_bool)
+  if(is_aval_bval(src_type))
   {
     // When casting a four-valued scalar to bool,
     // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
@@ -480,7 +480,7 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_size_cast)
   {
-    return to_verilog_explicit_size_cast_expr(expr).lower();
+    return verilog_lowering(to_verilog_explicit_size_cast_expr(expr).lower());
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
