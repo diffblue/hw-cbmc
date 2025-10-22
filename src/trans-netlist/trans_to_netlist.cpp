@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/std_expr.h>
 
+#include <ebmc/ebmc_error.h>
 #include <solvers/flattening/boolbv_width.h>
 #include <solvers/prop/literal_expr.h>
 #include <temporal-logic/ctl.h>
@@ -564,8 +565,9 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       lhs_mapt::iterator it=lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "lhs_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
-      
+        throw ebmc_errort{} << "lhs_rec: failed to find `"
+                            << bv_varid.as_string() << "' in lhs_map";
+
       // we only need to do wires
       if(!it->second.var->is_wire()) return;
 
@@ -729,7 +731,8 @@ void convert_trans_to_netlistt::add_equality_rec(
         lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "add_equality_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
+        throw ebmc_errort{} << "add_equality_rec: failed to find `"
+                            << bv_varid.as_string() << "' in lhs_map";
 
       lhs_entryt &lhs_entry=it->second;
       const var_mapt::vart &var=*lhs_entry.var;
