@@ -22,7 +22,6 @@ Author: Daniel Kroening, dkr@amazon.com
 /// sva_overlapped_implication --> a -> b     if a and b are not sequences
 /// sva_if --> ? :
 /// sva_case --> ? :
-/// a sva_disable_iff b --> a ∨ b
 /// a sva_accept_on b --> a ∨ b
 /// a sva_reject_on b --> ¬a ∧ b
 /// a sva_sync_accept_on b --> a ∨ b
