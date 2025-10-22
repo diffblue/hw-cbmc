@@ -3309,9 +3309,17 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     {
       expr.type() = signedbv_typet{new_size_int};
     }
+    else if(op_type.id() == ID_verilog_signedbv)
+    {
+      expr.type() = verilog_signedbv_typet{new_size_int};
+    }
     else if(op_type.id() == ID_unsignedbv || op_type.id() == ID_bool)
     {
       expr.type() = unsignedbv_typet{new_size_int};
+    }
+    else if(op_type.id() == ID_verilog_unsignedbv)
+    {
+      expr.type() = verilog_unsignedbv_typet{new_size_int};
     }
     else
     {

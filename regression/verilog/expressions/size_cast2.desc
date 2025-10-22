@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 size_cast2.sv
 --module main
 ^EXIT=0$
@@ -6,4 +6,3 @@ size_cast2.sv
 --
 ^warning: ignoring
 --
-This is not yet implemented.

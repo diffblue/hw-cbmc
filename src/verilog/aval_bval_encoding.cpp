@@ -188,6 +188,7 @@ exprt aval_bval_conversion(const exprt &src, const typet &dest)
 
   if(is_aval_bval(src.type()))
   {
+    // four-valued to four-valued
     auto src_width = aval_bval_width(src.type());
 
     if(src_width == dest_width)
@@ -195,15 +196,43 @@ exprt aval_bval_conversion(const exprt &src, const typet &dest)
       // same size
       return typecast_exprt{src, dest};
     }
-    else
+    else if(src_width > dest_width)
     {
+      // shrink
       auto new_aval = adjust_size(aval(src), dest_width);
       auto new_bval = adjust_size(bval(src), dest_width);
       return combine_aval_bval(new_aval, new_bval, dest);
     }
+    else
+    {
+      // extend
+      auto underlying_src = aval_bval_underlying(src.type());
+      auto underlying_dest = aval_bval_underlying(dest);
+
+      if(underlying_src.id() == ID_signedbv)
+      {
+        // sign extend both aval and bval
+        auto new_aval = typecast_exprt{
+          typecast_exprt{
+            typecast_exprt{aval(src), underlying_src}, underlying_dest},
+          bv_typet{dest_width}};
+        auto new_bval = typecast_exprt{
+          typecast_exprt{
+            typecast_exprt{bval(src), underlying_src}, underlying_dest},
+          bv_typet{dest_width}};
+        return combine_aval_bval(new_aval, new_bval, dest);
+      }
+      else
+      {
+        auto new_aval = adjust_size(aval(src), dest_width);
+        auto new_bval = adjust_size(bval(src), dest_width);
+        return combine_aval_bval(new_aval, new_bval, dest);
+      }
+    }
   }
   else
   {
+    // two-valued to four-valued
     const bv_typet bv_type{dest_width};
     auto aval =
       typecast_exprt{typecast_exprt{src, aval_bval_underlying(dest)}, bv_type};
@@ -501,14 +530,34 @@ exprt aval_bval(const verilog_implies_exprt &expr)
 
 exprt aval_bval(const typecast_exprt &expr)
 {
-  // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
-  PRECONDITION(is_aval_bval(expr.op()));
-  PRECONDITION(expr.type().id() == ID_bool);
+  auto &dest_type = expr.type();
 
-  auto op_has_xz = ::has_xz(expr.op());
-  auto op_aval = aval(expr.op());
-  auto op_aval_zero = to_bv_type(op_aval.type()).all_zeros_expr();
-  return and_exprt{not_exprt{op_has_xz}, notequal_exprt{op_aval, op_aval_zero}};
+  PRECONDITION(is_aval_bval(expr.op()));
+
+  if(dest_type.id() == ID_bool)
+  {
+    // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
+    auto op_has_xz = ::has_xz(expr.op());
+    auto op_aval = aval(expr.op());
+    auto op_aval_zero = to_bv_type(op_aval.type()).all_zeros_expr();
+    return and_exprt{
+      not_exprt{op_has_xz}, notequal_exprt{op_aval, op_aval_zero}};
+  }
+  else if(
+    dest_type.id() == ID_verilog_unsignedbv ||
+    dest_type.id() == ID_verilog_signedbv)
+  {
+    // four-valued to four-valued
+    auto aval_bval_type = lower_to_aval_bval(dest_type);
+    return aval_bval_conversion(expr.op(), aval_bval_type);
+  }
+  else if(dest_type.id() == ID_unsignedbv || dest_type.id() == ID_signedbv)
+  {
+    // four-valued to two-valued
+    return typecast_exprt{aval(expr.op()), dest_type};
+  }
+  else
+    PRECONDITION(false);
 }
 
 exprt aval_bval(const shift_exprt &expr)
