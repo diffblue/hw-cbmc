@@ -1,6 +1,7 @@
 # EBMC 5.8
 
 * SystemVerilog: cover sequence
+* Verilog: semantic fix for output register ports
 
 # EBMC 5.7
 
