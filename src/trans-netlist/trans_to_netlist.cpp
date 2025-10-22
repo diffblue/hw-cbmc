@@ -720,7 +720,7 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     bv_varidt bv_varid;
     bv_varid.id=lhs.get(ID_identifier);
-    
+
     for(bv_varid.bit_nr=lhs_from;
         bv_varid.bit_nr!=(lhs_to+1);
         bv_varid.bit_nr++)
@@ -767,9 +767,12 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     boolbv_widtht boolbv_width(ns);
 
+    const auto width = boolbv_width(lhs.type());
+
+    DATA_INVARIANT(width != 0, "add_equality_rec got zero-width bit-vector");
+
     std::size_t new_lhs_from = lhs_from + index.to_ulong();
-    std::size_t new_lhs_to =
-      lhs_from + index.to_ulong() + boolbv_width(lhs.type());
+    std::size_t new_lhs_to = lhs_from + index.to_ulong() + width - 1;
 
     add_equality_rec(
       src, to_extractbits_expr(lhs).src(), new_lhs_from, new_lhs_to, rhs_entry);
