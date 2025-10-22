@@ -3661,7 +3661,18 @@ statement:
           attribute_instance_brace block_identifier TOK_COLON attribute_instance_brace statement_item
                 { init($$, ID_verilog_label_statement);
                   stack_expr($$).set(ID_base_name, stack_expr($2).id());
-                  mto($$, $5); }
+
+                  // We'll stick the label onto any assertion
+                  auto statement = stack_expr($5).id();
+                  if(statement == ID_verilog_immediate_assert ||
+                     statement == ID_verilog_immediate_assume ||
+                     statement == ID_verilog_immediate_cover)
+                  {
+		    stack_expr($5).set(ID_identifier, stack_expr($2).id());
+		  }
+
+                  mto($$, $5);
+                }
         | attribute_instance_brace statement_item
                 { $$=$2; }
         ;

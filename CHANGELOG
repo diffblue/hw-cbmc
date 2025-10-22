@@ -2,6 +2,7 @@
 
 * Verilog: semantic fix for output register ports
 * SystemVerilog: cover sequence
+* SystemVerilog: labeled immediate assert/assume/cover statements
 * SystemVerilog: semantics fix for explicit casts
 
 # EBMC 5.7
