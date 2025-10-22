@@ -2694,9 +2694,22 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   else if(expr.id() == ID_verilog_explicit_type_cast)
   {
     // SystemVerilog has got type'(expr). This is an explicit
-    // type cast.
+    // type cast. These are assignment contexts.
     convert_expr(expr.op());
     expr.type() = elaborate_type(expr.type());
+
+    // In contrast to assignments, these can turn integers into enums
+    // (1800-2017 6.19.3).
+    if(expr.type().get(ID_C_verilog_type) == ID_verilog_enum)
+    {
+      expr.op() = typecast_exprt::conditional_cast(expr.op(), expr.type());
+    }
+    else
+    {
+      assignment_conversion(expr.op(), expr.type());
+    }
+
+    CHECK_RETURN(expr.op().type() == expr.type());
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
@@ -3326,6 +3339,11 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
       throw errort().with_location(expr.source_location())
         << "cannot perform size cast on " << to_string(op_type);
     }
+
+    // These act like an assignment (1800-2017 6.24.1)
+    assignment_conversion(expr.rhs(), expr.type());
+
+    CHECK_RETURN(expr.rhs().type() == expr.type());
 
     return std::move(expr);
   }

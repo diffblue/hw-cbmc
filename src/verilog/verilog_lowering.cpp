@@ -471,8 +471,13 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_type_cast)
   {
-    return verilog_lowering_cast(
-      to_typecast_expr(to_verilog_explicit_type_cast_expr(expr).lower()));
+    // These act like an assignment, and hence, the type checker
+    // has already converted the argument to the target type.
+    auto &type_cast = to_verilog_explicit_type_cast_expr(expr);
+    expr.type() = verilog_lowering(expr.type());
+    DATA_INVARIANT(
+      type_cast.op().type() == type_cast.type(), "type cast type consistency");
+    return type_cast.op();
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
@@ -480,7 +485,13 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_size_cast)
   {
-    return verilog_lowering(to_verilog_explicit_size_cast_expr(expr).lower());
+    // These act like an assignment, and hence, the type checker
+    // has already converted the argument to the target type.
+    auto &size_cast = to_verilog_explicit_size_cast_expr(expr);
+    expr.type() = verilog_lowering(expr.type());
+    DATA_INVARIANT(
+      size_cast.op().type() == size_cast.type(), "size cast type consistency");
+    return size_cast.op();
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||

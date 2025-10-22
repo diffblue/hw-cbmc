@@ -2558,12 +2558,6 @@ public:
   {
     return op1();
   }
-
-  // lower to typecast
-  exprt lower() const
-  {
-    return typecast_exprt{op(), type()};
-  }
 };
 
 inline const verilog_explicit_size_cast_exprt &
@@ -2658,11 +2652,6 @@ public:
         std::move(__op),
         std::move(__type))
   {
-  }
-
-  exprt lower() const
-  {
-    return typecast_exprt{op(), type()};
   }
 };
 

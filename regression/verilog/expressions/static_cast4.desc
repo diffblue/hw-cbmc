@@ -1,5 +1,5 @@
 CORE
-size_cast3.sv
+static_cast4.sv
 --module main
 ^EXIT=0$
 ^SIGNAL=0$

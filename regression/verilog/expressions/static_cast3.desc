@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 static_cast3.sv
 --module main
 ^EXIT=0$
@@ -6,4 +6,3 @@ static_cast3.sv
 --
 ^warning: ignoring
 --
-This is not yet implemented.
