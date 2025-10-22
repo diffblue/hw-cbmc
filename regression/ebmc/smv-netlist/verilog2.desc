@@ -1,0 +1,8 @@
+KNOWNBUG
+verilog2.sv
+--smv-netlist
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This throws an error.
