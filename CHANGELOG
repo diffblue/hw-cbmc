@@ -1,5 +1,6 @@
 # EBMC 5.8
 
+* AIG/netlist engine: fix for conversion of extract bits operator
 * Verilog: semantic fix for output register ports
 * SystemVerilog: cover sequence
 * SystemVerilog: labeled immediate assert/assume/cover statements

@@ -594,7 +594,10 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     if(!to_integer_non_constant(to_extractbits_expr(expr).index(), new_from))
     {
       boolbv_widtht boolbv_width(ns);
-      mp_integer new_to = new_from + boolbv_width(expr.type());
+      const auto width = boolbv_width(expr.type());
+      DATA_INVARIANT(
+        width != 0, "trans_to_netlist got extractbits with zero-width operand");
+      mp_integer new_to = new_from + width - 1;
 
       from = new_from.to_ulong();
       to = new_to.to_ulong();

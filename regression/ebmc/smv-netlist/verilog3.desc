@@ -1,0 +1,5 @@
+CORE
+verilog3.sv
+--smv-netlist
+^EXIT=0$
+^SIGNAL=0$
