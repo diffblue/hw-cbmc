@@ -675,7 +675,7 @@ enum_list  : enum_element
 enum_element: IDENTIFIER_Token
            {
              $$=$1;
-             PARSER.module->enum_set.insert(stack_expr($1).id_string());
+             PARSER.parse_tree.enum_set.insert(stack_expr($1).id_string());
 
              exprt expr(ID_symbol);
              expr.set(ID_identifier, stack_expr($1).id());
@@ -950,33 +950,10 @@ identifier : IDENTIFIER_Token
 
 variable_identifier: complex_identifier
            {
+             // Could be a variable, or an enum
              auto id = merge_complex_identifier(stack_expr($1));
-
-             bool is_enum=(PARSER.module->enum_set.find(id)!=
-                           PARSER.module->enum_set.end());
-             bool is_var=(PARSER.module->vars.find(id)!=
-                          PARSER.module->vars.end());
-
-             if(is_var && is_enum)
-             {
-               yyerror("identifier `"+id2string(id)+"' is ambiguous");
-               YYERROR;
-             }
-             else if(is_enum)
-             {
-               init($$, ID_constant);
-               stack_expr($$).type()=typet(ID_smv_enumeration);
-               stack_expr($$).set(ID_value, id);
-             }
-             else // not an enum, probably a variable
-             {
-               init($$, ID_symbol);
-               stack_expr($$).set(ID_identifier, id);
-               auto var_it = PARSER.module->vars.find(id);
-               if(var_it!= PARSER.module->vars.end())
-                 stack_expr($$).type()=var_it->second.type;
-               //PARSER.module->vars[stack_expr($1).id()];
-             }
+             init($$, ID_smv_identifier);
+             stack_expr($$).set(ID_identifier, id);
            }
            | STRING_Token
            {
