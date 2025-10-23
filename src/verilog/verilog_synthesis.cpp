@@ -555,9 +555,7 @@ void verilog_synthesist::assignment_rec(
 
       if(it->type().id()==ID_bool)
       {
-        exprt bit_extract(ID_extractbit, it->type());
-        bit_extract.add_to_operands(rhs);
-        bit_extract.add_to_operands(offset_constant);
+        exprt bit_extract = extractbit_exprt{rhs, offset_constant};
         ++offset;
 
         assignment_rec(*it, bit_extract, blocking);
@@ -771,18 +769,12 @@ exprt verilog_synthesist::assignment_rec(const exprt &lhs, const exprt &rhs)
     {
       exprt offset = from_integer(i - from, integer_typet());
 
-      exprt rhs_extractbit(ID_extractbit, bool_typet());
-      rhs_extractbit.reserve_operands(2);
-      rhs_extractbit.add_to_operands(rhs);
-      rhs_extractbit.add_to_operands(std::move(offset));
+      exprt rhs_extractbit = extractbit_exprt{rhs, std::move(offset)};
 
       exprt count = from_integer(i, integer_typet());
 
-      exprt new_rhs(ID_with, lhs_src.type());
-      new_rhs.reserve_operands(3);
-      new_rhs.add_to_operands(synth_lhs_src);
-      new_rhs.add_to_operands(std::move(count));
-      new_rhs.add_to_operands(std::move(rhs_extractbit));
+      exprt new_rhs =
+        with_exprt{synth_lhs_src, std::move(count), std::move(rhs_extractbit)};
 
       // do the value
       exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
@@ -851,18 +843,12 @@ exprt verilog_synthesist::assignment_rec(const exprt &lhs, const exprt &rhs)
     {
       exprt offset = from_integer(i - index, integer_typet());
 
-      exprt rhs_extractbit(ID_extractbit, bool_typet());
-      rhs_extractbit.reserve_operands(2);
-      rhs_extractbit.add_to_operands(rhs);
-      rhs_extractbit.add_to_operands(std::move(offset));
+      exprt rhs_extractbit = extractbit_exprt{rhs, std::move(offset)};
 
       exprt count = from_integer(i, integer_typet());
 
-      exprt new_rhs(ID_with, lhs_src.type());
-      new_rhs.reserve_operands(3);
-      new_rhs.add_to_operands(synth_lhs_src);
-      new_rhs.add_to_operands(std::move(count));
-      new_rhs.add_to_operands(std::move(rhs_extractbit));
+      exprt new_rhs =
+        with_exprt{synth_lhs_src, std::move(count), std::move(rhs_extractbit)};
 
       // do the value
       exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
