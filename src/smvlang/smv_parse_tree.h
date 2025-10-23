@@ -271,10 +271,11 @@ public:
       auto location = expr.source_location();
       items.emplace_back(itemt::ENUM, std::move(expr), std::move(location));
     }
-
-    enum_sett enum_set;
   };
-   
+
+  // enums are global
+  enum_sett enum_set;
+
   typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
   
   modulest modules;
