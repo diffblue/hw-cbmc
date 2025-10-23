@@ -274,10 +274,12 @@ public:
     }
 
     mc_varst vars;
-    enum_sett enum_set;
 
     std::list<irep_idt> ports;
   };
+
+  // enums are global
+  enum_sett enum_set;
    
   typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
   
