@@ -53,6 +53,7 @@ public:
     INIT,
     INVAR,
     TRANS,
+    TRANS_NEXT,
     OTHER,
     LTL,
     CTL
@@ -65,8 +66,7 @@ public:
   void convert_defines(exprt::operandst &invar);
   void convert_define(const irep_idt &identifier);
 
-  typedef enum { NORMAL, NEXT } expr_modet;
-  void convert(exprt &, expr_modet);
+  void convert(exprt &);
 
   void typecheck(exprt &, modet);
   void typecheck_op(exprt &, const typet &, modet);
@@ -201,7 +201,7 @@ void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
         static_cast<exprt &>(static_cast<irept &>(item.expr.type()));
 
       for(auto &op : inst.operands())
-        convert(op, NORMAL);
+        convert(op);
 
       auto instance_base_name = to_symbol_expr(item.expr).get_identifier();
 
@@ -594,17 +594,27 @@ Function: smv_typecheckt::typecheck_expr_rec
 
 void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
 {
-  if(expr.id()==ID_symbol || 
-     expr.id()==ID_next_symbol)
+  if(expr.id() == ID_smv_next)
   {
+    if(mode == TRANS_NEXT)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "next(next(...)) encountered";
+    }
+
     // next_symbol is only allowed in TRANS mode
-    if(expr.id() == ID_next_symbol && mode != TRANS && mode != OTHER)
+    if(mode != TRANS && mode != OTHER)
       throw errort().with_location(expr.find_source_location())
         << "next(...) is not allowed here";
 
-    const irep_idt &identifier=expr.get(ID_identifier);
-    bool next=expr.id()==ID_next_symbol;
-    
+    expr = to_unary_expr(expr).op();
+
+    typecheck_expr_rec(expr, TRANS_NEXT);
+  }
+  else if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
+  {
+    const irep_idt &identifier = expr.get(ID_identifier);
+
     if(define_map.find(identifier)!=define_map.end())
       convert_define(identifier);
 
@@ -616,12 +626,15 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "variable `" << identifier << "' not found";
     }
 
+    if(mode == TRANS_NEXT)
+      expr.id(ID_next_symbol);
+
     symbolt &symbol=*s_it;
     
     assert(symbol.type.is_not_nil());
     expr.type()=symbol.type;
 
-    if(mode==INIT || (mode==TRANS && next))
+    if(mode == INIT || mode == TRANS_NEXT)
     {
       if(symbol.module==module)
       {
@@ -1683,28 +1696,10 @@ Function: smv_typecheckt::convert
 
 \*******************************************************************/
 
-void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
+void smv_typecheckt::convert(exprt &expr)
 {
-  if(expr.id() == ID_smv_next)
-  {
-    if(expr_mode!=NORMAL)
-    {
-      throw errort().with_location(expr.find_source_location())
-        << "next(next(...)) encountered";
-    }
-    
-    assert(expr.operands().size()==1);
-
-    exprt tmp;
-    tmp.swap(to_unary_expr(expr).op());
-    expr.swap(tmp);
-
-    convert(expr, NEXT);
-    return;
-  }
-
   for(auto &op : expr.operands())
-    convert(op, expr_mode);
+    convert(op);
 
   if(expr.id()==ID_symbol)
   {
@@ -1716,9 +1711,6 @@ void smv_typecheckt::convert(exprt &expr, expr_modet expr_mode)
     std::string id = module + "::var::" + identifier;
 
     expr.set(ID_identifier, id);
-
-    if(expr_mode == NEXT)
-      expr.id(ID_next_symbol);
   }
   else if(expr.id()=="smv_nondet_choice" ||
           expr.id()=="smv_union")
@@ -1898,7 +1890,7 @@ Function: smv_typecheckt::convert
 void smv_typecheckt::convert(
   smv_parse_treet::modulet::itemt &item)
 {
-  convert(item.expr, NORMAL);
+  convert(item.expr);
 }
 
 /*******************************************************************\
