@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 signing_cast1.sv
 --module main
 ^\[main\.p0\] always signed'\(1'b1\) == -1: PROVED .*$
@@ -12,4 +12,3 @@ signing_cast1.sv
 --
 ^warning: ignoring
 --
-The width of the operand is not preserved.
