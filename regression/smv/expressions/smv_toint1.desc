@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 smv_toint1.smv
 
 ^\[.*\] toint\(0\) = 0: PROVED .*$

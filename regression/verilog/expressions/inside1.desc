@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 inside1.sv
 
 ^\[.*\] always 2 inside \{1, 2, 3\}: PROVED .*$
