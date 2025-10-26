@@ -203,7 +203,7 @@ void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
       for(auto &op : inst.operands())
         convert(op);
 
-      auto instance_base_name = to_symbol_expr(item.expr).get_identifier();
+      auto instance_base_name = to_smv_identifier_expr(item.expr).identifier();
 
       instantiate(
         smv_module,
@@ -1701,7 +1701,7 @@ void smv_typecheckt::convert(exprt &expr)
   for(auto &op : expr.operands())
     convert(op);
 
-  if(expr.id()==ID_symbol)
+  if(expr.id() == ID_smv_identifier)
   {
     const std::string &identifier=expr.get_string(ID_identifier);
 
@@ -1711,6 +1711,7 @@ void smv_typecheckt::convert(exprt &expr)
     std::string id = module + "::var::" + identifier;
 
     expr.set(ID_identifier, id);
+    expr.id(ID_symbol);
   }
   else if(expr.id()=="smv_nondet_choice" ||
           expr.id()=="smv_union")
@@ -1914,7 +1915,7 @@ void smv_typecheckt::create_var_symbols(
   {
     if(item.is_var())
     {
-      irep_idt base_name = to_symbol_expr(item.expr).get_identifier();
+      irep_idt base_name = to_smv_identifier_expr(item.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
@@ -1953,8 +1954,9 @@ void smv_typecheckt::create_var_symbols(
     }
     else if(item.is_define())
     {
-      const auto &symbol_expr = to_symbol_expr(to_equal_expr(item.expr).lhs());
-      irep_idt base_name = symbol_expr.get_identifier();
+      const auto &identifier_expr =
+        to_smv_identifier_expr(to_equal_expr(item.expr).lhs());
+      irep_idt base_name = identifier_expr.identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
       typet type;
       type.make_nil();
@@ -1973,13 +1975,13 @@ void smv_typecheckt::create_var_symbols(
       symbol.value = nil_exprt{};
       symbol.is_input = true;
       symbol.is_state_var = false;
-      symbol.location = symbol_expr.source_location();
+      symbol.location = identifier_expr.source_location();
 
       symbol_table.insert(std::move(symbol));
     }
     else if(item.is_enum())
     {
-      irep_idt base_name = to_symbol_expr(item.expr).get_identifier();
+      irep_idt base_name = to_smv_identifier_expr(item.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);

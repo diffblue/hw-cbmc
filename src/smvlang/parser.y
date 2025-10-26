@@ -2,6 +2,7 @@
 %define parse.error verbose
 
 %{
+#include "smv_expr.h"
 #include "smv_parser.h"
 #include "smv_typecheck.h"
 
@@ -142,8 +143,8 @@ Function: merge_complex_identifier
 
 irep_idt merge_complex_identifier(const exprt &expr)
 {
-  if(expr.id() == ID_symbol)
-    return to_symbol_expr(expr).get_identifier();
+  if(expr.id() == ID_smv_identifier)
+    return to_smv_identifier_expr(expr).identifier();
   else if(expr.id() == ID_member)
   {
     auto &member_expr = to_member_expr(expr);
@@ -677,7 +678,7 @@ enum_element: IDENTIFIER_Token
              $$=$1;
              PARSER.module->enum_set.insert(stack_expr($1).id_string());
 
-             exprt expr(ID_symbol);
+             exprt expr(ID_smv_identifier);
              expr.set(ID_identifier, stack_expr($1).id());
              PARSER.set_source_location(expr);
              PARSER.module->add_enum(std::move(expr));
@@ -970,7 +971,7 @@ variable_identifier: complex_identifier
              }
              else // not an enum, probably a variable
              {
-               init($$, ID_symbol);
+               init($$, ID_smv_identifier);
                stack_expr($$).set(ID_identifier, id);
                auto var_it = PARSER.module->vars.find(id);
                if(var_it!= PARSER.module->vars.end())
@@ -983,7 +984,7 @@ variable_identifier: complex_identifier
              // Not in the NuSMV grammar.
              const irep_idt &id=stack_expr($1).id();
 
-             init($$, ID_symbol);
+             init($$, ID_smv_identifier);
              stack_expr($$).set(ID_identifier, id);
              PARSER.module->vars[id];
            }
@@ -994,7 +995,7 @@ complex_identifier:
            {
              $$ = $1;
              irep_idt identifier = stack_expr($$).id();
-             stack_expr($$).id(ID_symbol);
+             stack_expr($$).id(ID_smv_identifier);
              stack_expr($$).set(ID_identifier, identifier);
            }
            | complex_identifier DOT_Token QIDENTIFIER_Token
