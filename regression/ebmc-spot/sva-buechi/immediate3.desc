@@ -1,0 +1,9 @@
+CORE
+../../verilog/SVA/immediate3.sv
+--buechi
+^\[full_adder\.assert\.1\] always \{ full_adder\.carry, full_adder\.sum \} == \{ 1'b0, full_adder\.a \} \+ full_adder\.b \+ full_adder\.c: PROVED \(.*\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
