@@ -9,11 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_trans.h"
 
 #include <util/cout_message.h>
+#include <util/output_file.h>
 
 #include <verilog/expr2verilog.h>
 
 #include "ebmc_version.h"
-#include "output_file.h"
 #include "output_verilog.h"
 
 #include <iostream>

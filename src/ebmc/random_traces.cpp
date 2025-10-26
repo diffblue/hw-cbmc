@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/console.h>
 #include <util/expr_util.h>
 #include <util/find_symbols.h>
+#include <util/output_file.h>
 #include <util/string2int.h>
 #include <util/unicode.h>
 
@@ -21,7 +22,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/unwind.h>
 
 #include "ebmc_error.h"
-#include "output_file.h"
 #include "transition_system.h"
 #include "waveform.h"
 

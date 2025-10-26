@@ -8,6 +8,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "property_checker.h"
 
+#include <util/output_file.h>
 #include <util/string2int.h>
 
 #include <solvers/sat/satcheck.h>
@@ -24,7 +25,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "instrument_past.h"
 #include "k_induction.h"
 #include "netlist.h"
-#include "output_file.h"
 #include "report_results.h"
 
 #include <chrono>

@@ -10,12 +10,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/json.h>
 #include <util/json_irep.h>
+#include <util/output_file.h>
 #include <util/xml.h>
 #include <util/xml_irep.h>
 
 #include "ebmc_error.h"
 #include "ebmc_properties.h"
-#include "output_file.h"
 
 #include <iostream>
 

@@ -13,10 +13,10 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/cmdline.h>
 #include <util/get_module.h>
+#include <util/output_file.h>
 #include <util/unicode.h>
 
 #include <ebmc/ebmc_error.h>
-#include <ebmc/output_file.h>
 #include <ebmc/show_modules.h>
 #include <ebmc/transition_system.h>
 #include <langapi/language_util.h>

@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/config.h>
 #include <util/exit_codes.h>
 #include <util/help_formatter.h>
+#include <util/output_file.h>
 #include <util/string2int.h>
 
 #include <trans-netlist/compute_ct.h>
@@ -28,7 +29,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "liveness_to_safety.h"
 #include "netlist.h"
 #include "neural_liveness.h"
-#include "output_file.h"
 #include "output_smv_word_level.h"
 #include "property_checker.h"
 #include "random_traces.h"

@@ -14,6 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/message.h>
 #include <util/namespace.h>
 #include <util/options.h>
+#include <util/output_file.h>
 #include <util/unicode.h>
 
 #include <langapi/language.h>
@@ -24,7 +25,6 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_error.h"
 #include "ebmc_version.h"
-#include "output_file.h"
 
 #include <fstream>
 #include <iostream>
