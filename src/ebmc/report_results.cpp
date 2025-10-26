@@ -13,10 +13,10 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/console.h>
 #include <util/json.h>
+#include <util/output_file.h>
 #include <util/xml.h>
 
 #include "ebmc_error.h"
-#include "output_file.h"
 #include "waveform.h"
 
 #include <iostream>

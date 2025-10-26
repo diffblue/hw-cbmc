@@ -12,11 +12,10 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/cmdline.h>
 #include <util/message.h>
 #include <util/namespace.h>
+#include <util/output_file.h>
 
 #include <solvers/decision_procedure.h>
 #include <solvers/prop/prop.h>
-
-#include "output_file.h"
 
 #include <fstream>
 #include <memory>

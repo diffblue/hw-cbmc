@@ -8,6 +8,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "neural_liveness.h"
 
+#include <util/output_file.h>
 #include <util/prefix.h>
 #include <util/run.h>
 #include <util/string2int.h>
@@ -20,7 +21,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "live_signal.h"
-#include "output_file.h"
 #include "property_checker.h"
 #include "random_traces.h"
 #include "ranking_function.h"

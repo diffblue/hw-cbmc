@@ -29,7 +29,6 @@ include $(CPROVER_DIR)/src/common
 CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 OBJ += ../src/ebmc/bdd_model_checker$(OBJEXT) \
-       ../src/ebmc/output_file$(OBJEXT) \
        ../src/ebmc/transition_property$(OBJEXT) \
        ../src/smvlang/smvlang$(LIBEXT) \
        ../src/temporal-logic/temporal-logic$(LIBEXT) \
