@@ -212,6 +212,18 @@ void convert_trans_to_netlistt::map_vars(
     if (symbol.is_property)
       return; // ignore properties
     else if(
+      symbol.type.id() == ID_verilog_sva_sequence ||
+      symbol.type.id() == ID_verilog_sva_property)
+    {
+      return; // ignore properties
+    }
+    else if(
+      symbol.type.id() == ID_natural || symbol.type.id() == ID_integer ||
+      symbol.type.id() == ID_verilog_genvar)
+    {
+      return; // ignore
+    }
+    else if(
       symbol.type.id() == ID_module || symbol.type.id() == ID_module_instance ||
       symbol.type.id() == ID_primitive_module_instance)
     {

@@ -1,0 +1,9 @@
+CORE
+property_and1.sv
+--aig --bound 5
+^\[.*\] always \(main\.P1 and main\.P1\): PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
