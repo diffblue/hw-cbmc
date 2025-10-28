@@ -1,7 +1,7 @@
 CORE
 ../../verilog/SVA/unbounded1.sv
 --buechi --module main --bound 1
-^error: failed to convert sva_cycle_delay$
-^EXIT=6$
+^\[.*\] always \(main\.a ##\[0:main\.upper\] main\.b\): UNSUPPORTED: sva_cycle_delay not convertible to Buechi$
+^EXIT=10$
 ^SIGNAL=0$
 --

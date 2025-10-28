@@ -214,22 +214,3 @@ std::optional<exprt> LTL_to_CTL(exprt expr)
   else
     return {};
 }
-
-bool is_Buechi_SVA(const exprt &expr)
-{
-  auto unsupported_operator = [](const exprt &expr)
-  {
-    // ltl2tgba produces the wrong anser for [->n] and [=n]
-    if(
-      expr.id() == ID_sva_implicit_strong || expr.id() == ID_sva_strong ||
-      expr.id() == ID_sva_sequence_goto_repetition ||
-      expr.id() == ID_sva_sequence_non_consecutive_repetition)
-    {
-      return true;
-    }
-    else
-      return is_temporal_operator(expr) && !is_SVA_operator(expr);
-  };
-
-  return !has_subexpr(expr, unsupported_operator);
-}
