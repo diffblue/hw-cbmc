@@ -201,7 +201,8 @@ static void dependencies_rec(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property)
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
   {
   }
   else if(module_item.id() == ID_verilog_assertion_item)

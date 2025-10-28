@@ -1,0 +1,7 @@
+CORE
+verilog4.sv
+--smv-word-level
+^LTLSPEC X X extend\(main\.x\[31:1\], 1\) = unsigned\(0sd32_1\)$
+^EXIT=0$
+^SIGNAL=0$
+--

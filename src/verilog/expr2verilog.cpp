@@ -680,10 +680,10 @@ Function: expr2verilogt::convert_sva_abort
 
 expr2verilogt::resultt expr2verilogt::convert_sva_abort(
   const std::string &text,
-  const sva_abort_exprt &expr)
+  const binary_exprt &expr)
 {
-  auto op0 = convert_rec(expr.condition());
-  auto op1 = convert_rec(expr.property());
+  auto op0 = convert_rec(expr.op0());
+  auto op1 = convert_rec(expr.op1());
 
   return {verilog_precedencet::MIN, text + " (" + op0.s + ") " + op1.s};
 }
@@ -1937,6 +1937,11 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return precedence = verilog_precedencet::MIN,
            convert_sva_abort("disable iff", to_sva_abort_expr(src));
 
+  else if(src.id() == ID_sva_sequence_disable_iff)
+    return precedence = verilog_precedencet::MIN,
+           convert_sva_abort(
+             "disable iff", to_sva_sequence_disable_iff_expr(src));
+
   else if(src.id()==ID_sva_eventually)
   {
     return precedence = verilog_precedencet::MIN,
@@ -2006,6 +2011,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   {
     return convert_function(src.id_string(), src);
   }
+
+  else if(src.id() == ID_zero_extend)
+    return convert_rec(to_zero_extend_expr(src).op());
 
   // no VERILOG language expression for internal representation
   return convert_norep(src);

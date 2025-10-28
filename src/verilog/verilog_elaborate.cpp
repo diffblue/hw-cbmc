@@ -671,6 +671,7 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
     statement.id() == ID_verilog_assume_property ||
     statement.id() == ID_verilog_restrict_property ||
     statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence ||
     statement.id() == ID_verilog_expect_property)
   {
   }
@@ -850,7 +851,8 @@ void verilog_typecheckt::collect_symbols(
     module_item.id() == ID_verilog_assert_property ||
     module_item.id() == ID_verilog_assume_property ||
     module_item.id() == ID_verilog_restrict_property ||
-    module_item.id() == ID_verilog_cover_property)
+    module_item.id() == ID_verilog_cover_property ||
+    module_item.id() == ID_verilog_cover_sequence)
   {
   }
   else if(module_item.id() == ID_verilog_assertion_item)
@@ -901,6 +903,10 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_sequence_declaration)
   {
     collect_symbols(to_verilog_sequence_declaration(module_item));
+  }
+  else if(module_item.id() == ID_function_call)
+  {
+    // e.g., $error
   }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
@@ -1026,11 +1032,11 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       {
         convert_expr(symbol.value);
 
+        // Convert to the given type. These are assignment contexts.
+        assignment_conversion(symbol.value, symbol.type);
+
         if(!is_let)
           symbol.value = elaborate_constant_expression_check(symbol.value);
-
-        // Cast to the given type.
-        propagate_type(symbol.value, symbol.type);
       }
     }
   }

@@ -1,0 +1,9 @@
+KNOWNBUG
+equality4.v
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+zero_extend doesn't work for four-valued operands.

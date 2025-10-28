@@ -134,6 +134,13 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
     const smv_parse_treet::modulet &module=it->second;
     out << "Module: " << module.name << std::endl << std::endl;
 
+    out << "  PARAMETERS:\n";
+
+    for(auto &parameter : module.parameters.get_sub())
+      out << "    " << parameter.id() << '\n';
+
+    out << '\n';
+
     out << "  VARIABLES:" << std::endl;
 
     for(smv_parse_treet::mc_varst::const_iterator it=module.vars.begin();

@@ -303,7 +303,7 @@ exprt verilog_lowering_cast(typecast_exprt expr)
     return std::move(new_cast);
   }
 
-  if(is_aval_bval(src_type) && dest_type.id() == ID_bool)
+  if(is_aval_bval(src_type))
   {
     // When casting a four-valued scalar to bool,
     // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
@@ -471,8 +471,13 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_type_cast)
   {
-    return verilog_lowering_cast(
-      to_typecast_expr(to_verilog_explicit_type_cast_expr(expr).lower()));
+    // These act like an assignment, and hence, the type checker
+    // has already converted the argument to the target type.
+    auto &type_cast = to_verilog_explicit_type_cast_expr(expr);
+    expr.type() = verilog_lowering(expr.type());
+    DATA_INVARIANT(
+      type_cast.op().type() == type_cast.type(), "type cast type consistency");
+    return type_cast.op();
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
@@ -480,7 +485,13 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_size_cast)
   {
-    return to_verilog_explicit_size_cast_expr(expr).lower();
+    // These act like an assignment, and hence, the type checker
+    // has already converted the argument to the target type.
+    auto &size_cast = to_verilog_explicit_size_cast_expr(expr);
+    expr.type() = verilog_lowering(expr.type());
+    DATA_INVARIANT(
+      size_cast.op().type() == size_cast.type(), "size cast type consistency");
+    return size_cast.op();
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
@@ -560,6 +571,17 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
+  else if(
+    expr.id() == ID_reduction_or || expr.id() == ID_reduction_and ||
+    expr.id() == ID_reduction_nor || expr.id() == ID_reduction_nand ||
+    expr.id() == ID_reduction_xor || expr.id() == ID_reduction_xnor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_reduction(to_unary_expr(expr));
+    else
+      return expr; // leave as is
+  }
   else if(expr.id() == ID_verilog_iff)
   {
     auto &iff = to_verilog_iff_expr(expr);
@@ -614,9 +636,23 @@ exprt verilog_lowering(exprt expr)
     {
       // turn into floatbv
       expr.type() = verilog_lowering(expr.type());
+      return expr;
     }
-
-    return expr;
+    else if(is_four_valued(expr))
+    {
+      return default_aval_bval_lowering(expr);
+    }
+    else
+      return expr;
+  }
+  else if(
+    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+    expr.id() == ID_div || expr.id() == ID_mod)
+  {
+    if(is_four_valued(expr))
+      return default_aval_bval_lowering(expr);
+    else
+      return expr;
   }
   else if(expr.id() == ID_lshr || expr.id() == ID_ashr || expr.id() == ID_shl)
   {

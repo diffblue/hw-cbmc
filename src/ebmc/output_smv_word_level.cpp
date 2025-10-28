@@ -45,7 +45,8 @@ operator<<(std::ostream &out, const smv_type_printert &type_printer)
 
   if(
     type.id() == ID_bool || type.id() == ID_signedbv ||
-    type.id() == ID_unsignedbv || type.id() == ID_range)
+    type.id() == ID_unsignedbv || type.id() == ID_range ||
+    type.id() == ID_array)
   {
     return out << type2smv(type, ns);
   }

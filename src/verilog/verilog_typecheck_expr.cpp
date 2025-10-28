@@ -89,7 +89,7 @@ void verilog_typecheck_exprt::enter_named_block(const irep_idt &name)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::propagate_type
+Function: verilog_typecheck_exprt::assignment_conversion
 
   Inputs:
 
@@ -99,125 +99,213 @@ Function: verilog_typecheck_exprt::propagate_type
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::propagate_type(
-  exprt &expr,
-  const typet &type)
+void verilog_typecheck_exprt::assignment_conversion(
+  exprt &rhs,
+  const typet &lhs_type)
 {
-  auto &verilog_dest_type = type.get(ID_C_verilog_type);
+  // 1800-2017 10.9
+  if(rhs.type().id() == ID_verilog_assignment_pattern)
+  {
+    DATA_INVARIANT(
+      rhs.id() == ID_verilog_assignment_pattern,
+      "verilog_assignment_pattern expression expected");
+
+    if(lhs_type.id() == ID_struct)
+    {
+      auto &struct_type = to_struct_type(lhs_type);
+      auto &components = struct_type.components();
+
+      if(
+        !rhs.operands().empty() &&
+        rhs.operands().front().id() == ID_member_initializer)
+      {
+        exprt::operandst initializers{components.size(), nil_exprt{}};
+
+        for(auto &op : rhs.operands())
+        {
+          PRECONDITION(op.id() == ID_member_initializer);
+          auto member_name = op.get(ID_member_name);
+          if(!struct_type.has_component(member_name))
+          {
+            throw errort().with_location(op.source_location())
+              << "struct does not have a member `" << member_name << "'";
+          }
+          auto nr = struct_type.component_number(member_name);
+          auto value = to_unary_expr(op).op();
+          // rec. call
+          assignment_conversion(value, components[nr].type());
+          initializers[nr] = std::move(value);
+        }
+
+        // Is every member covered?
+        for(std::size_t i = 0; i < components.size(); i++)
+          if(initializers[i].is_nil())
+          {
+            throw errort().with_location(rhs.source_location())
+              << "assignment pattern does not assign member `"
+              << components[i].get_name() << "'";
+          }
+
+        rhs = struct_exprt{std::move(initializers), struct_type}
+                .with_source_location(rhs.source_location());
+      }
+      else
+      {
+        if(rhs.operands().size() != components.size())
+        {
+          throw errort().with_location(rhs.source_location())
+            << "number of expressions does not match number of struct members";
+        }
+
+        for(std::size_t i = 0; i < components.size(); i++)
+        {
+          // rec. call
+          assignment_conversion(rhs.operands()[i], components[i].type());
+        }
+
+        // turn into struct expression
+        rhs.id(ID_struct);
+        rhs.type() = lhs_type;
+      }
+
+      return;
+    }
+    else if(lhs_type.id() == ID_array)
+    {
+      auto &array_type = to_array_type(lhs_type);
+      auto &element_type = array_type.element_type();
+      auto array_size =
+        numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+
+      if(array_size != rhs.operands().size())
+      {
+        throw errort().with_location(rhs.source_location())
+          << "number of expressions does not match number of array elements";
+      }
+
+      for(std::size_t i = 0; i < array_size; i++)
+      {
+        // rec. call
+        assignment_conversion(rhs.operands()[i], element_type);
+      }
+
+      // turn into array expression
+      rhs.id(ID_array);
+      rhs.type() = lhs_type;
+      return;
+    }
+    else
+    {
+      throw errort().with_location(rhs.source_location())
+        << "cannot convert assignment pattern to '" << to_string(lhs_type)
+        << '\'';
+    }
+  }
+
+  auto original_rhs_type = rhs.type(); // copy
+
+  auto &verilog_dest_type = lhs_type.get(ID_C_verilog_type);
   if(verilog_dest_type == ID_verilog_enum)
   {
     // IEEE 1800-2017 6.19.3: "a variable of type enum cannot be directly
     // assigned a value that lies outside the enumeration set unless an
     // explicit cast is used"
     if(
-      expr.type().get(ID_C_verilog_type) != ID_verilog_enum ||
-      expr.type().get(ID_C_identifier) != type.get(ID_C_identifier))
+      rhs.type().get(ID_C_verilog_type) != ID_verilog_enum ||
+      rhs.type().get(ID_C_identifier) != lhs_type.get(ID_C_identifier))
     {
-      throw errort().with_location(expr.source_location())
+      throw errort().with_location(rhs.source_location())
         << "assignment to enum requires enum of the same type, but got "
-        << to_string(expr.type());
+        << to_string(rhs.type());
     }
   }
 
-  if(expr.type()==type)
+  if(lhs_type == rhs.type())
     return;
 
-  if(expr.type().id() == ID_verilog_sva_sequence)
+  if(lhs_type.id() == ID_struct && !lhs_type.get_bool(ID_packed))
   {
-    throw errort{}.with_location(expr.source_location())
-      << "cannot use SVA sequence as an expression";
-  }
-  else if(expr.type().id() == ID_verilog_sva_property)
-  {
-    throw errort{}.with_location(expr.source_location())
-      << "cannot use SVA property as an expression";
+    // assignment of a non-matching type to unpacked struct
+    throw errort().with_location(rhs.source_location())
+      << "failed to convert `" << to_string(original_rhs_type) << "' to `"
+      << to_string(lhs_type) << "'";
   }
 
-  vtypet vt_from=vtypet(expr.type());
-  vtypet vt_to  =vtypet(type);
+  // do enum, union and struct decay
+  enum_decay(rhs);
+  struct_decay(rhs);
+  union_decay(rhs);
 
-  if(!vt_from.is_other() && !vt_to.is_other() &&
-     expr.has_operands())
+  if(rhs.type().id() == ID_struct || rhs.type().id() == ID_union)
   {
-    // arithmetic
+    // not decayed, not equal
+    throw errort().with_location(rhs.source_location())
+      << "failed to convert `" << to_string(original_rhs_type) << "' to `"
+      << to_string(lhs_type) << "'";
+  }
 
+  // Implements 1800-2017 10.7 and 1800-2017 11.8.3.
+
+  if(
+    lhs_type.id() == ID_verilog_real || lhs_type.id() == ID_verilog_shortreal ||
+    lhs_type.id() == ID_verilog_realtime ||
+    rhs.type().id() == ID_verilog_real ||
+    rhs.type().id() == ID_verilog_shortreal)
+  {
+    // from/to real is just a cast
+    rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+    return;
+  }
+
+  if(rhs.type().id() == ID_verilog_null)
+  {
     if(
-      expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
-      expr.id() == ID_div || expr.id() == ID_unary_minus ||
-      expr.id() == ID_unary_plus)
+      lhs_type.id() == ID_verilog_chandle ||
+      lhs_type.id() == ID_verilog_class_type ||
+      lhs_type.id() == ID_verilog_event)
     {
-      if(type.id()!=ID_bool)
-      {
-        Forall_operands(it, expr)
-          propagate_type(*it, type);
-
-        expr.type()=type;
-
-        return;
-      }
-    }
-    else if(expr.id()==ID_bitand  ||
-            expr.id()==ID_bitor   ||
-            expr.id()==ID_bitnand ||
-            expr.id()==ID_bitnor  ||
-            expr.id()==ID_bitxor  ||
-            expr.id()==ID_bitxnor ||
-            expr.id()==ID_bitnot)
-    {
-      Forall_operands(it, expr)
-        propagate_type(*it, type);
-
-      expr.type()=type;
-
-      if(type.id()==ID_bool)
-      {
-        if(expr.id()==ID_bitand)
-          expr.id(ID_and);
-        else if(expr.id()==ID_bitor)
-          expr.id(ID_or);
-        else if(expr.id()==ID_bitnand)
-          expr.id(ID_nand);
-        else if(expr.id()==ID_bitnor)
-          expr.id(ID_nor);
-        else if(expr.id()==ID_bitxor)
-          expr.id(ID_xor);
-        else if(expr.id()==ID_bitxnor)
-          expr.id(ID_xnor);
-        else if(expr.id()==ID_bitnot)
-          expr.id(ID_not);
-      }
-
+      rhs = typecast_exprt{rhs, lhs_type};
       return;
     }
-    else if(expr.id()==ID_if)
-    {
-      if(expr.operands().size()==3)
-      {
-        propagate_type(to_if_expr(expr).true_case(), type);
-        propagate_type(to_if_expr(expr).false_case(), type);
-
-        expr.type()=type;
-        return;
-      }
-    }
-    else if(expr.id()==ID_shl) // does not work with shr
-    {
-      // does not work with boolean
-      if(type.id()!=ID_bool)
-      {
-        if(expr.operands().size()==2)
-        {
-          propagate_type(to_binary_expr(expr).op0(), type);
-          // not applicable to second operand
-
-          expr.type()=type;
-          return;
-        }
-      }
-    }
   }
 
-  implicit_typecast(expr, type);
+  // "The size of the left-hand side of an assignment forms
+  // the context for the right-hand expression."
+
+  // Get the width of LHS and RHS
+  auto lhs_width = get_width(lhs_type);
+  auto rhs_width = get_width(rhs.type());
+
+  if(lhs_width > rhs_width)
+  {
+    // Need to enlarge the RHS.
+    //
+    // "If needed, extend the size of the right-hand side,
+    // performing sign extension if, and only if, the type
+    // of the right-hand side is signed.
+    if(
+      (rhs.type().id() == ID_signedbv ||
+       rhs.type().id() == ID_verilog_signedbv) &&
+      (lhs_type.id() == ID_unsignedbv ||
+       lhs_type.id() == ID_verilog_unsignedbv))
+    {
+      // LHS is unsigned, RHS is signed. Must sign-extend.
+      auto new_rhs_type = to_bitvector_type(rhs.type());
+      new_rhs_type.set_width(numeric_cast_v<std::size_t>(lhs_width));
+
+      downwards_type_propagation(rhs, new_rhs_type);
+
+      // then cast
+      rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+    }
+    else
+      downwards_type_propagation(rhs, lhs_type);
+  }
+  else
+  {
+    // no need to enlarge
+    rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+  }
 }
 
 /*******************************************************************\
@@ -241,95 +329,69 @@ void verilog_typecheck_exprt::downwards_type_propagation(
 
   // Any context-determined operand of an operator shall be the
   // same type and size as the result of the operator.
-  // Exceptions:
-  // * result type real -- just cast
-  // * relational operators are always 1 bit unsigned
+  // As an exception, if the result type is real, the operands
+  // are just casted.
 
   if(expr.type() == type)
     return;
 
-  vtypet vt_from = vtypet(expr.type());
-  vtypet vt_to = vtypet(type);
-
-  if(!vt_from.is_other() && !vt_to.is_other() && expr.has_operands())
+  if(type.id() == ID_verilog_real || type.id() == ID_verilog_shortreal)
   {
-    // arithmetic
-
-    if(
-      expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
-      expr.id() == ID_div || expr.id() == ID_unary_minus ||
-      expr.id() == ID_unary_plus)
-    {
-      if(type.id() != ID_bool)
-      {
-        Forall_operands(it, expr)
-          propagate_type(*it, type);
-
-        expr.type() = type;
-
-        return;
-      }
-    }
-    else if(
-      expr.id() == ID_bitand || expr.id() == ID_bitor ||
-      expr.id() == ID_bitnand || expr.id() == ID_bitnor ||
-      expr.id() == ID_bitxor || expr.id() == ID_bitxnor ||
-      expr.id() == ID_bitnot)
-    {
-      Forall_operands(it, expr)
-        propagate_type(*it, type);
-
-      expr.type() = type;
-
-      if(type.id() == ID_bool)
-      {
-        if(expr.id() == ID_bitand)
-          expr.id(ID_and);
-        else if(expr.id() == ID_bitor)
-          expr.id(ID_or);
-        else if(expr.id() == ID_bitnand)
-          expr.id(ID_nand);
-        else if(expr.id() == ID_bitnor)
-          expr.id(ID_nor);
-        else if(expr.id() == ID_bitxor)
-          expr.id(ID_xor);
-        else if(expr.id() == ID_bitxnor)
-          expr.id(ID_xnor);
-        else if(expr.id() == ID_bitnot)
-          expr.id(ID_not);
-      }
-
-      return;
-    }
-    else if(expr.id() == ID_if)
-    {
-      if(expr.operands().size() == 3)
-      {
-        propagate_type(to_if_expr(expr).true_case(), type);
-        propagate_type(to_if_expr(expr).false_case(), type);
-
-        expr.type() = type;
-        return;
-      }
-    }
-    else if(expr.id() == ID_shl) // does not work with shr
-    {
-      // does not work with boolean
-      if(type.id() != ID_bool)
-      {
-        if(expr.operands().size() == 2)
-        {
-          propagate_type(to_binary_expr(expr).op0(), type);
-          // not applicable to second operand
-
-          expr.type() = type;
-          return;
-        }
-      }
-    }
+    expr = typecast_exprt{expr, type};
+    return;
   }
 
-  implicit_typecast(expr, type);
+  // expressions with context-determined width, following
+  // 1800-2017 Table 11-21
+  if(
+    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
+    expr.id() == ID_div || expr.id() == ID_mod || expr.id() == ID_bitand ||
+    expr.id() == ID_bitor || expr.id() == ID_bitxor ||
+    expr.id() == ID_bitxnor || expr.id() == ID_unary_plus ||
+    expr.id() == ID_unary_minus || expr.id() == ID_bitnot)
+  {
+    // All operands are context-determined.
+    for(auto &op : expr.operands())
+      downwards_type_propagation(op, type);
+    expr.type() = type;
+    return;
+  }
+  else if(
+    expr.id() == ID_shl || expr.id() == ID_ashr || expr.id() == ID_lshr ||
+    expr.id() == ID_power)
+  {
+    // The LHS is context-determined, the RHS is self-determined
+    auto &binary_expr = to_binary_expr(expr);
+    downwards_type_propagation(binary_expr.lhs(), type);
+    expr.type() = type;
+    return;
+  }
+  else if(expr.id() == ID_if)
+  {
+    // The first operand is self-determined, the others are context-determined
+    auto &if_expr = to_if_expr(expr);
+    downwards_type_propagation(if_expr.op1(), type);
+    downwards_type_propagation(if_expr.op2(), type);
+    expr.type() = type;
+    return;
+  }
+
+  // Just cast the expression, leave any operands as they are.
+  if(
+    (expr.type().id() == ID_signedbv ||
+     expr.type().id() == ID_verilog_signedbv) &&
+    (type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv) &&
+    get_width(expr.type()) < get_width(type))
+  {
+    // "If the operand shall be extended, then it shall be sign-extended only
+    // if the propagated type is signed."
+    // A typecast from signed to a larger unsigned would sign extend.
+    expr = zero_extend_exprt{expr, type};
+  }
+  else
+  {
+    expr = typecast_exprt{expr, type};
+  }
 }
 
 /*******************************************************************\
@@ -605,7 +667,7 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   }
 
   for(unsigned i=0; i<arguments.size(); i++)
-    propagate_type(arguments[i], parameter_types[i].type());
+    assignment_conversion(arguments[i], parameter_types[i].type());
 
   return std::move(expr);
 }
@@ -2439,39 +2501,6 @@ void verilog_typecheck_exprt::tc_binary_expr(
 
 /*******************************************************************\
 
-Function: zero_extend
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static exprt zero_extend(const exprt &expr, const typet &type)
-{
-  auto old_width = expr.type().id() == ID_bool ? 1
-                   : expr.type().id() == ID_integer
-                     ? 32
-                     : to_bitvector_type(expr.type()).get_width();
-
-  // first make unsigned
-  typet tmp_type;
-
-  if(type.id() == ID_unsignedbv)
-    tmp_type = unsignedbv_typet{old_width};
-  else if(type.id() == ID_verilog_unsignedbv)
-    tmp_type = verilog_unsignedbv_typet{old_width};
-  else
-    PRECONDITION(false);
-
-  return typecast_exprt::conditional_cast(
-    typecast_exprt::conditional_cast(expr, tmp_type), type);
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheck_exprt::convert_relation
 
   Inputs:
@@ -2484,43 +2513,11 @@ Function: verilog_typecheck_exprt::convert_relation
 
 void verilog_typecheck_exprt::convert_relation(binary_exprt &expr)
 {
-  auto &lhs = expr.lhs();
-  auto &rhs = expr.rhs();
+  convert_expr(expr.lhs());
+  convert_expr(expr.rhs());
 
-  convert_expr(lhs);
-  convert_expr(rhs);
-
-  union_decay(lhs);
-  union_decay(rhs);
-
-  // Relations are special-cased in 1800-2017 11.8.2.
-  const typet new_type =
-    max_type(enum_decay(lhs.type()), enum_decay(rhs.type()));
-
-  if(new_type.is_nil())
-  {
-    throw errort().with_location(expr.source_location())
-      << "expected operands of compatible type but got:\n"
-      << "  " << to_string(lhs.type()) << '\n'
-      << "  " << to_string(rhs.type());
-  }
-
-  // If both operands are signed, both are sign-extended to the max width.
-  // Otherwise, both are zero-extended to the max width.
-  // In particular, signed operands are then _not_ sign extended,
-  // which a typecast would do.
-  if(new_type.id() == ID_verilog_unsignedbv || new_type.id() == ID_unsignedbv)
-  {
-    // zero extend both operands
-    lhs = zero_extend(lhs, new_type);
-    rhs = zero_extend(rhs, new_type);
-  }
-  else
-  {
-    // convert
-    implicit_typecast(lhs, new_type);
-    implicit_typecast(rhs, new_type);
-  }
+  // determine the max of the operand types and propagate it downwards
+  tc_binary_expr(expr);
 }
 
 /*******************************************************************\
@@ -2697,9 +2694,22 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   else if(expr.id() == ID_verilog_explicit_type_cast)
   {
     // SystemVerilog has got type'(expr). This is an explicit
-    // type cast.
+    // type cast. These are assignment contexts.
     convert_expr(expr.op());
     expr.type() = elaborate_type(expr.type());
+
+    // In contrast to assignments, these can turn integers into enums
+    // (1800-2017 6.19.3).
+    if(expr.type().get(ID_C_verilog_type) == ID_verilog_enum)
+    {
+      expr.op() = typecast_exprt::conditional_cast(expr.op(), expr.type());
+    }
+    else
+    {
+      assignment_conversion(expr.op(), expr.type());
+    }
+
+    CHECK_RETURN(expr.op().type() == expr.type());
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
@@ -2818,6 +2828,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     // assignment patterns, 1800 2017 10.9
     convert_expr(expr.op());
+  }
+  else if(expr.id() == ID_verilog_tagged_union)
+  {
+    throw errort{}.with_location(expr.source_location())
+      << "no support for tagged unions";
   }
   else
   {
@@ -3307,15 +3322,28 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     {
       expr.type() = signedbv_typet{new_size_int};
     }
+    else if(op_type.id() == ID_verilog_signedbv)
+    {
+      expr.type() = verilog_signedbv_typet{new_size_int};
+    }
     else if(op_type.id() == ID_unsignedbv || op_type.id() == ID_bool)
     {
       expr.type() = unsignedbv_typet{new_size_int};
+    }
+    else if(op_type.id() == ID_verilog_unsignedbv)
+    {
+      expr.type() = verilog_unsignedbv_typet{new_size_int};
     }
     else
     {
       throw errort().with_location(expr.source_location())
         << "cannot perform size cast on " << to_string(op_type);
     }
+
+    // These act like an assignment (1800-2017 6.24.1)
+    assignment_conversion(expr.rhs(), expr.type());
+
+    CHECK_RETURN(expr.rhs().type() == expr.type());
 
     return std::move(expr);
   }

@@ -28,6 +28,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 //#define YYDEBUG 1
 
 #define mto(x, y) stack_expr(x).add_to_operands(std::move(stack_expr(y)))
+#define mto2(x, y, z) stack_expr(x).add_to_operands(std::move(stack_expr(y)), std::move(stack_expr(z)))
 #define mts(x, y) stack_expr(x).move_to_sub((irept &)stack_expr(y))
 #define swapop(x, y) stack_expr(x).operands().swap(stack_expr(y).operands())
 #define addswap(x, y, z) stack_expr(x).add(y).swap(stack_expr(z))
@@ -1023,6 +1024,9 @@ module_or_generate_item:
 		{ add_attributes($2, $1); $$=$2; }
 	| attribute_instance_brace module_common_item
 		{ add_attributes($2, $1); $$=$2; }
+	// The next rule is not in 1800-2017, but is a vendor extension.
+	| attribute_instance_brace system_tf_call ';'
+		{ add_attributes($2, $1); $$ = $2; }
 	;
 
 module_or_generate_item_declaration:
@@ -1049,8 +1053,79 @@ non_port_module_item:
 // A.1.5 Configuration source text
 
 config_declaration:
-          TOK_CONFIG TOK_ENDCONFIG
-        ;
+	   TOK_CONFIG config_identifier ';'
+	   local_parameter_declaration_opt
+	   design_statement
+	   config_rule_statement_opt
+	   TOK_ENDCONFIG config_identifier_opt
+	 ;
+
+local_parameter_declaration_opt:
+	  /* Optional */
+	| local_parameter_declaration ';'
+	;
+
+design_statement:
+	  TOK_DESIGN design_identifier ';'
+	;
+
+design_identifier:
+	  cell_identifier
+	| library_identifier '.' cell_identifier
+	;
+
+config_rule_statement_opt:
+	  /* Optional */
+	| config_rule_statement
+	;
+
+config_rule_statement:
+	  default_clause liblist_clause ';'
+	| inst_clause liblist_clause ';'
+	| inst_clause use_clause ';'
+	| cell_clause liblist_clause ';'
+	| cell_clause use_clause ';'
+	;
+
+default_clause: TOK_DEFAULT;
+
+inst_clause: TOK_INSTANCE inst_name;
+
+inst_name: topmodule_identifier dot_instance_identifier_brace;
+
+dot_instance_identifier_brace:
+	  /* Optional */
+	| dot_instance_identifier_brace '.' instance_identifier
+	;
+
+cell_clause:
+	  TOK_CELL cell_identifier
+	| TOK_CELL library_identifier cell_identifier
+	;
+
+liblist_clause: TOK_LIBLIST library_identifier_brace;
+
+library_identifier_brace:
+	  /* Optional */
+	| library_identifier_brace library_identifier
+	;
+
+use_clause:
+	  TOK_USE cell_identifier colon_config_opt
+	| TOK_USE library_identifier '.' cell_identifier colon_config_opt
+	| TOK_USE '#' '(' named_parameter_assignment_brace ')' colon_config_opt
+	| TOK_USE library_identifier '.' cell_identifier '#' '(' named_parameter_assignment_brace ')' colon_config_opt
+	;
+
+colon_config_opt:
+	  /* Optional */
+	| TOK_COLON TOK_CONFIG
+	;
+
+config_identifier_opt:
+	  /* Optional */
+	| TOK_COLON config_identifier
+	;
 
 bind_directive:
           TOK_BIND
@@ -2163,6 +2238,7 @@ unsized_dimension: '[' ']'
 struct_union:
 	  TOK_STRUCT { init($$, ID_struct); }
 	| TOK_UNION { init($$, ID_union); }
+	| TOK_UNION TOK_TAGGED { init($$, ID_union); }
 	;
 	
 // System Verilog standard 1800-2017
@@ -2332,6 +2408,7 @@ concurrent_assertion_statement:
 	  assert_property_statement
 	| assume_property_statement
 	| cover_property_statement
+	| cover_sequence_statement
 	| restrict_property_statement
 	;
 
@@ -2392,6 +2469,15 @@ assume_property_statement:
 
 cover_property_statement: TOK_COVER TOK_PROPERTY '(' property_spec ')' action_block
 		{ init($$, ID_verilog_cover_property); mto($$, $4); mto($$, $6); }
+	;
+
+cover_sequence_statement:
+	  TOK_COVER TOK_SEQUENCE '(' sequence_expr ')' action_block
+		{ init($$, ID_verilog_cover_sequence); mto2($$, $4, $6); }
+	| TOK_COVER TOK_SEQUENCE '(' clocking_event TOK_DISABLE TOK_IFF '(' expression ')' sequence_expr ')' action_block
+		{ init($5, ID_sva_sequence_disable_iff); mto2($5, $8, $10); init($$, ID_verilog_cover_sequence); mto2($$, $5, $12); }
+	| TOK_COVER TOK_SEQUENCE '(' TOK_DISABLE TOK_IFF '(' expression ')' sequence_expr ')' action_block
+		{ init($4, ID_sva_sequence_disable_iff); mto2($4, $7, $9); init($$, ID_verilog_cover_sequence); mto2($$, $4, $11); }
 	;
 
 restrict_property_statement: TOK_RESTRICT TOK_PROPERTY '(' property_spec ')' ';'
@@ -3495,10 +3581,11 @@ subroutine_call_statement:
 
 action_block:
           statement_or_null %prec LT_TOK_ELSE
+                { init($$, ID_verilog_action_then); mto($$, $1); }
+        | TOK_ELSE statement
+                { init($$, ID_verilog_action_else); mto($$, $2); }
         | statement_or_null TOK_ELSE statement 
-                { init($$, "action-else"); stack_expr($$).operands().resize(2);
-                  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($0));
-                  to_binary_expr(stack_expr($$)).op1().swap(stack_expr($2)); }
+                { init($$, ID_verilog_action_then_else); mto2($$, $1, $3); }
 	;
 
 // The 1800-2017 grammar specifies this to be
@@ -3574,7 +3661,18 @@ statement:
           attribute_instance_brace block_identifier TOK_COLON attribute_instance_brace statement_item
                 { init($$, ID_verilog_label_statement);
                   stack_expr($$).set(ID_base_name, stack_expr($2).id());
-                  mto($$, $5); }
+
+                  // We'll stick the label onto any assertion
+                  auto statement = stack_expr($5).id();
+                  if(statement == ID_verilog_immediate_assert ||
+                     statement == ID_verilog_immediate_assume ||
+                     statement == ID_verilog_immediate_cover)
+                  {
+		    stack_expr($5).set(ID_identifier, stack_expr($2).id());
+		  }
+
+                  mto($$, $5);
+                }
         | attribute_instance_brace statement_item
                 { $$=$2; }
         ;
@@ -4343,6 +4441,12 @@ expression:
 	| TOK_QSTRING
 		{ init($$, ID_constant); stack_expr($$).type()=typet(ID_string); addswap($$, ID_value, $1); }
 	| inside_expression
+	| tagged_union_expression
+	;
+
+tagged_union_expression:
+	  TOK_TAGGED member_identifier
+		{ init($$, ID_verilog_tagged_union); mto($$, $2); }
 	;
 
 inside_expression:
@@ -4534,6 +4638,8 @@ non_type_identifier: TOK_NON_TYPE_IDENTIFIER
 
 block_identifier: TOK_NON_TYPE_IDENTIFIER;
 
+cell_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 class_identifier: TOK_CLASS_IDENTIFIER
 		{
 		  init($$, ID_verilog_class_type);
@@ -4542,6 +4648,8 @@ class_identifier: TOK_CLASS_IDENTIFIER
 		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
 		}
 	;
+
+config_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
 
@@ -4554,9 +4662,13 @@ genvar_identifier: identifier;
 hierarchical_parameter_identifier: hierarchical_identifier
 	;
 
+instance_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 interface_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 module_identifier: TOK_NON_TYPE_IDENTIFIER;
+
+topmodule_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 endmodule_identifier_opt:
 	  /* Optional */
@@ -4587,6 +4699,8 @@ port_identifier: identifier;
 ps_covergroup_identifier:
 	;
 	
+library_identifier: TOK_NON_TYPE_IDENTIFIER;
+
 memory_identifier: identifier;
 
 member_identifier: identifier;

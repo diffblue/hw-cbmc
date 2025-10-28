@@ -1,0 +1,8 @@
+CORE
+basic_config1.sv
+--module top
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

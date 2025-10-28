@@ -12,7 +12,7 @@ equality2.v
 ^\[.*\] always 32'b0000000000000000000000000000000z === 1 == 0: PROVED .*$
 ^\[.*\] always 1 === 1 == 1: PROVED .*$
 ^\[.*\] always 3'b011 === 2'sb11 == 1: PROVED .*$
-^\[.*\] always 3'sb111 === 3'sb111 == 1: PROVED .*$
+^\[.*\] always 3'sb111 === 2'sb11 == 1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

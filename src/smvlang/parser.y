@@ -175,12 +175,15 @@ Function: new_module
 
 \*******************************************************************/
 
-static void new_module(YYSTYPE &module)
+static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
 {
-  const std::string name=smv_module_symbol(stack_expr(module).id_string());
-  PARSER.module=&PARSER.parse_tree.modules[name];
-  PARSER.module->name=name;
-  PARSER.module->base_name=stack_expr(module).id_string();
+  auto base_name = stack_expr(module_name).id_string();
+  const std::string identifier=smv_module_symbol(base_name);
+  auto &module=PARSER.parse_tree.modules[identifier];
+  module.name = identifier;
+  module.base_name = base_name;
+  PARSER.module = &module;
+  return module;
 }
 
 /*------------------------------------------------------------------------*/
@@ -356,7 +359,11 @@ module_name: IDENTIFIER_Token
            ;
 
 module_head: MODULE_Token module_name { new_module($2); }
-           | MODULE_Token module_name { new_module($2); } '(' module_parameters_opt ')'
+           | MODULE_Token module_name '(' module_parameters_opt ')'
+           {
+             auto &module = new_module($2);
+             module.parameters = stack_expr($4);
+           }
            ;
 
 module_body: /* optional */
@@ -566,10 +573,22 @@ module_parameter: identifier
 
 module_parameters:
              module_parameter
+           {
+             init($$);
+             mto($$, $1);
+           }
            | module_parameters ',' module_parameter
+           {
+             $$ = $1;
+             mto($$, $3);
+           }
            ;
 
-module_parameters_opt: /* empty */
+module_parameters_opt:
+             /* empty */
+           {
+             init($$);
+           }
            | module_parameters
            ;
 
@@ -657,6 +676,11 @@ enum_element: IDENTIFIER_Token
            {
              $$=$1;
              PARSER.module->enum_set.insert(stack_expr($1).id_string());
+
+             exprt expr(ID_symbol);
+             expr.set(ID_identifier, stack_expr($1).id());
+             PARSER.set_source_location(expr);
+             PARSER.module->add_enum(std::move(expr));
            }
            ;
 

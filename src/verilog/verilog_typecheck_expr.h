@@ -65,7 +65,7 @@ protected:
 
   void make_boolean(exprt &expr);
 
-  void propagate_type(exprt &expr, const typet &type);
+  void assignment_conversion(exprt &expr, const typet &type);
   void downwards_type_propagation(exprt &, const typet &);
 
   [[nodiscard]] typet elaborate_type(const typet &);

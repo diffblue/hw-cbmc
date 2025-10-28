@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/std_expr.h>
 
+#include <ebmc/ebmc_error.h>
 #include <solvers/flattening/boolbv_width.h>
 #include <solvers/prop/literal_expr.h>
 #include <temporal-logic/ctl.h>
@@ -564,8 +565,9 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       lhs_mapt::iterator it=lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "lhs_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
-      
+        throw ebmc_errort{} << "lhs_rec: failed to find `"
+                            << bv_varid.as_string() << "' in lhs_map";
+
       // we only need to do wires
       if(!it->second.var->is_wire()) return;
 
@@ -592,7 +594,10 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     if(!to_integer_non_constant(to_extractbits_expr(expr).index(), new_from))
     {
       boolbv_widtht boolbv_width(ns);
-      mp_integer new_to = new_from + boolbv_width(expr.type());
+      const auto width = boolbv_width(expr.type());
+      DATA_INVARIANT(
+        width != 0, "trans_to_netlist got extractbits with zero-width operand");
+      mp_integer new_to = new_from + width - 1;
 
       from = new_from.to_ulong();
       to = new_to.to_ulong();
@@ -720,7 +725,7 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     bv_varidt bv_varid;
     bv_varid.id=lhs.get(ID_identifier);
-    
+
     for(bv_varid.bit_nr=lhs_from;
         bv_varid.bit_nr!=(lhs_to+1);
         bv_varid.bit_nr++)
@@ -729,7 +734,8 @@ void convert_trans_to_netlistt::add_equality_rec(
         lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
-        throw "add_equality_rec: failed to find `"+bv_varid.as_string()+"' in lhs_map";
+        throw ebmc_errort{} << "add_equality_rec: failed to find `"
+                            << bv_varid.as_string() << "' in lhs_map";
 
       lhs_entryt &lhs_entry=it->second;
       const var_mapt::vart &var=*lhs_entry.var;
@@ -767,9 +773,12 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     boolbv_widtht boolbv_width(ns);
 
+    const auto width = boolbv_width(lhs.type());
+
+    DATA_INVARIANT(width != 0, "add_equality_rec got zero-width bit-vector");
+
     std::size_t new_lhs_from = lhs_from + index.to_ulong();
-    std::size_t new_lhs_to =
-      lhs_from + index.to_ulong() + boolbv_width(lhs.type());
+    std::size_t new_lhs_to = lhs_from + index.to_ulong() + width - 1;
 
     add_equality_rec(
       src, to_extractbits_expr(lhs).src(), new_lhs_from, new_lhs_to, rhs_entry);

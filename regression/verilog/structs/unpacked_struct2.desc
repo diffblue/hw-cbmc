@@ -1,0 +1,7 @@
+CORE
+unpacked_struct2.sv
+
+^file .* line 9: failed to convert `signed \[31:0\]' to `struct'$
+^EXIT=2$
+^SIGNAL=0$
+--

@@ -11,4 +11,9 @@ module main;
   // signing casts yield constants
   parameter Q = signed'(1);
 
+  // signing casts block downwards size/type propagation
+  initial assert (unsigned'(1'b1 + 1'b1) == 0);
+  initial assert (signed'(1'b1 + 1'b1) == 0);
+  initial assert ($bits(unsigned'(1'b1 + 1'b1)) == 1);
+
 endmodule

@@ -350,6 +350,25 @@ expr2smvt::resultt expr2smvt::convert_typecast(const typecast_exprt &expr)
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_zero_extend
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_zero_extend(const zero_extend_exprt &expr)
+{
+  // Both "extend" and "resize" do sign extension.
+  // Hence, use lowering.
+  return convert_rec(expr.lower());
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_rtctl
 
   Inputs:
@@ -473,6 +492,52 @@ expr2smvt::convert_index(const index_exprt &src, precedencet precedence)
   dest+='[';
   dest += op1_rec.s;
   dest+=']';
+
+  return {precedence, std::move(dest)};
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_extractbits
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_extractbits(const extractbits_exprt &expr)
+{
+  const precedencet precedence = precedencet::INDEX;
+  auto op_rec = convert_rec(expr.src());
+
+  std::string dest;
+
+  if(precedence >= op_rec.p)
+    dest += '(';
+  dest += op_rec.s;
+  if(precedence >= op_rec.p)
+    dest += ')';
+
+  dest += '[';
+
+  // We can only do constant indices.
+  if(expr.index().is_constant())
+  {
+    auto index_int = numeric_cast_v<mp_integer>(to_constant_expr(expr.index()));
+    auto width = to_unsignedbv_type(expr.type()).get_width();
+    dest += integer2string(index_int + width - 1);
+    dest += ':';
+    dest += integer2string(index_int);
+  }
+  else
+  {
+    dest += "?:?";
+  }
+
+  dest += ']';
 
   return {precedence, std::move(dest)};
 }
@@ -615,6 +680,20 @@ expr2smvt::resultt expr2smvt::convert_constant(const constant_exprt &src)
     auto word_width = to_bitvector_type(type).width();
     dest = minus + std::string("0") + sign_specifier + 'd' +
            std::to_string(word_width) + '_' + integer2string(value_abs);
+  }
+  else if(type.id() == ID_bv)
+  {
+    auto &bv_type = to_bv_type(type);
+    auto width = bv_type.width();
+    auto &src_value = src.get_value();
+    dest = std::string("0ub");
+    dest += std::to_string(width);
+    dest += '_';
+    for(std::size_t i = 0; i < width; i++)
+    {
+      bool bit = get_bvrep_bit(src_value, width, width - i - 1);
+      dest += bit ? '1' : '0';
+    }
   }
   else
     return convert_norep(src);
@@ -825,6 +904,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
     return convert_binary(to_binary_expr(src), ">>", precedencet::SHIFT);
   }
 
+  else if(src.id() == ID_extractbits)
+    return convert_extractbits(to_extractbits_expr(src));
+
   else if(src.id() == ID_smv_extend)
     return convert_function_application("extend", src);
 
@@ -862,6 +944,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   {
     return convert_typecast(to_typecast_expr(src));
   }
+
+  else if(src.id() == ID_zero_extend)
+    return convert_zero_extend(to_zero_extend_expr(src));
 
   else // no SMV language expression for internal representation
     return convert_norep(src);
@@ -903,10 +988,15 @@ std::string type2smv(const typet &type, const namespacet &ns)
     return "boolean";
   else if(type.id()==ID_array)
   {
+    auto &array_type = to_array_type(type);
+    auto size_const = to_constant_expr(array_type.size());
+    auto size_int = numeric_cast_v<mp_integer>(size_const);
     std::string code = "array ";
-    code+="..";
+    // The index type cannot be any type, but must be a range low..high
+    code += "0..";
+    code += integer2string(size_int - 1);
     code+=" of ";
-    code += type2smv(to_array_type(type).element_type(), ns);
+    code += type2smv(array_type.element_type(), ns);
     return code;
   }
   else if(type.id() == ID_smv_enumeration)

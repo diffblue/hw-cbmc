@@ -1,3 +1,11 @@
+# EBMC 5.8
+
+* AIG/netlist engine: fix for conversion of extract bits operator
+* Verilog: semantic fix for output register ports
+* SystemVerilog: cover sequence
+* SystemVerilog: labeled immediate assert/assume/cover statements
+* SystemVerilog: semantics fix for explicit casts
+
 # EBMC 5.7
 
 * Verilog: --initial-zero changes the default value from nondet to zero
@@ -5,6 +13,7 @@
 * Verilog: fix for named generate blocks
 * Verilog: $onehot and $onehot0 are now elaboration-time constant
 * Verilog: $isunknown
+* Verilog: fix for semantics of assignment contexts
 * SystemVerilog: fix for #-# and #=# for empty matches
 * SystemVerilog: fix for |-> and |=> for empty matches
 * SystemVerilog: ref module port direction

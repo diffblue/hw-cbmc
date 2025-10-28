@@ -51,6 +51,8 @@ exprt aval_bval(const not_exprt &);
 exprt aval_bval(const bitnot_exprt &);
 /// lowering for &, |, ^, ^~
 exprt aval_bval_bitwise(const multi_ary_exprt &);
+/// lowering for reduction operators
+exprt aval_bval_reduction(const unary_exprt &);
 /// lowering for ==?
 exprt aval_bval(const verilog_wildcard_equality_exprt &);
 /// lowering for !=?
@@ -65,5 +67,10 @@ exprt aval_bval(const verilog_implies_exprt &);
 exprt aval_bval(const typecast_exprt &);
 /// lowering for shifts
 exprt aval_bval(const shift_exprt &);
+
+/// If any operand has x/z, then the result is 'x'.
+/// Otherwise, the result is the expression applied to the aval
+/// of the operands.
+exprt default_aval_bval_lowering(const exprt &);
 
 #endif
