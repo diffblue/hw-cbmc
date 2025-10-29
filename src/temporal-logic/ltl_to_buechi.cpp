@@ -264,6 +264,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
   }
   catch(ltl_sva_to_string_unsupportedt error)
   {
-    throw ebmc_errort{} << "failed to convert " << error.expr.id();
+    // re-throw
+    throw ltl_to_buechi_unsupportedt{error.expr};
   }
 }

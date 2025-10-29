@@ -297,9 +297,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto new_expr = R_exprt{until_with.rhs(), until_with.lhs()}; // swapped
     return infix(" R ", new_expr, mode);
   }
-  else if(
-    expr.id() == ID_sva_weak || expr.id() == ID_sva_strong ||
-    expr.id() == ID_sva_implicit_weak || expr.id() == ID_sva_implicit_strong)
+  else if(expr.id() == ID_sva_weak || expr.id() == ID_sva_implicit_weak)
   {
     PRECONDITION(mode == PROPERTY);
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
@@ -307,6 +305,10 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
 
     // weak closure
     return resultt{precedencet::ATOM, '{' + op_rec.s + '}'};
+  }
+  else if(expr.id() == ID_sva_strong || expr.id() == ID_sva_implicit_strong)
+  {
+    throw ltl_sva_to_string_unsupportedt{expr};
   }
   else if(expr.id() == ID_sva_or)
   {
@@ -514,6 +516,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
   {
+    // ltl2tgba produces the wrong anser for [->n] and [=n]
+    throw ltl_sva_to_string_unsupportedt{expr};
+
     PRECONDITION(mode == SVA_SEQUENCE);
     auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_goto_repetition, repetition.op()};
@@ -542,6 +547,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(
     expr.id() == ID_sva_sequence_non_consecutive_repetition) // something[=n]
   {
+    // ltl2tgba produces the wrong anser for [->n] and [=n]
+    throw ltl_sva_to_string_unsupportedt{expr};
+
     PRECONDITION(mode == SVA_SEQUENCE);
     auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
     unary_exprt new_expr{
