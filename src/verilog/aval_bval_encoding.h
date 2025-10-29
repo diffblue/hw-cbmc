@@ -53,6 +53,8 @@ exprt aval_bval(const bitnot_exprt &);
 exprt aval_bval_bitwise(const multi_ary_exprt &);
 /// lowering for reduction operators
 exprt aval_bval_reduction(const unary_exprt &);
+/// lowering for replication
+exprt aval_bval_replication(const replication_exprt &);
 /// lowering for ==?
 exprt aval_bval(const verilog_wildcard_equality_exprt &);
 /// lowering for !=?

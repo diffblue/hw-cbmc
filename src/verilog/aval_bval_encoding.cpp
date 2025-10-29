@@ -483,6 +483,30 @@ exprt aval_bval_bitwise(const multi_ary_exprt &expr)
   return combine_aval_bval(aval, bval, lower_to_aval_bval(expr.type()));
 }
 
+exprt aval_bval_replication(const replication_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!is_four_valued(expr.times()));
+
+  auto times_int = numeric_cast_v<mp_integer>(expr.times());
+
+  // separately replicate aval and bval
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  auto replication_type = bv_typet{numeric_cast_v<std::size_t>(
+    to_bitvector_type(op_aval.type()).width() * times_int)};
+
+  auto aval_replicated =
+    replication_exprt{expr.times(), op_aval, replication_type};
+  auto bval_replicated =
+    replication_exprt{expr.times(), op_bval, replication_type};
+
+  return combine_aval_bval(
+    aval_replicated, bval_replicated, lower_to_aval_bval(type));
+}
+
 exprt aval_bval(const power_exprt &expr)
 {
   PRECONDITION(is_four_valued(expr.type()));

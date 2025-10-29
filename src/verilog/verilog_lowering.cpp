@@ -571,6 +571,16 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
+  else if(expr.id() == ID_replication)
+  {
+    auto &replication_expr = to_replication_expr(expr);
+
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_replication(replication_expr);
+    else
+      return expr; // leave as is
+  }
   else if(
     expr.id() == ID_reduction_or || expr.id() == ID_reduction_and ||
     expr.id() == ID_reduction_nor || expr.id() == ID_reduction_nand ||
