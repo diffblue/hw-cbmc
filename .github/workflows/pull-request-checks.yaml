@@ -19,10 +19,17 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq gcc gdb g++ jq flex bison libxml2-utils ccache cmake z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="ccache z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
+      - name: Log the version of gcc
+        run: gcc --version
       - name: Prepare ccache
         uses: actions/cache@v4
         with:
@@ -77,8 +84,13 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq clang-19 clang++-19 gdb jq flex bison libxml2-utils cpanminus ccache z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="clang-19 clang++-19 gdb jq flex bison libxml2-utils cpanminus ccache z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
           cpanm Thread::Pool::Simple
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
@@ -152,8 +164,13 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
@@ -340,8 +357,13 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq emscripten flex bison libxml2-utils cpanminus ccache
+          sudo apt-get remove --purge man-db
+          packages_to_install="emscripten flex bison libxml2-utils cpanminus ccache"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Install node.js 23
         uses: actions/setup-node@v6
         with:
@@ -478,8 +500,13 @@ jobs:
           # user input
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -yq z3
+          sudo apt-get remove --purge man-db
+          packages_to_install="z3"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            # retry after updating package indices
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
