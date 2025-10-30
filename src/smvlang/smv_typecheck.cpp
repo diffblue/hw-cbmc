@@ -1708,10 +1708,21 @@ void smv_typecheckt::convert(exprt &expr)
     DATA_INVARIANT(
       identifier.find("::") == std::string::npos, "conversion is done once");
 
-    std::string id = module + "::var::" + identifier;
+    // enum or variable?
+    if(modulep->enum_set.find(identifier) == modulep->enum_set.end())
+    {
+      std::string id = module + "::var::" + identifier;
 
-    expr.set(ID_identifier, id);
-    expr.id(ID_symbol);
+      expr.set(ID_identifier, id);
+      expr.id(ID_symbol);
+    }
+    else
+    {
+      expr.id(ID_constant);
+      expr.type() = typet(ID_smv_enumeration);
+      expr.set(ID_value, identifier);
+      expr.remove(ID_identifier);
+    }
   }
   else if(expr.id()=="smv_nondet_choice" ||
           expr.id()=="smv_union")
