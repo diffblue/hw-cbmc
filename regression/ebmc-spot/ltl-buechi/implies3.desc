@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 implies3.smv
 --buechi --bound 5
 ^EXIT=0$
@@ -6,4 +6,3 @@ implies3.smv
 --
 ^warning: ignoring
 --
-This fails since Spot uses a different atom numbering than we do.
