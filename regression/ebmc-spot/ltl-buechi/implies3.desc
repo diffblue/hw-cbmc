@@ -1,0 +1,9 @@
+KNOWNBUG
+implies3.smv
+--buechi --bound 5
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This fails since Spot uses a different atom numbering than we do.
