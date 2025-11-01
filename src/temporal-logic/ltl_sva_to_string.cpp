@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/string2int.h>
 
+#include <ebmc/ebmc_error.h>
 #include <verilog/sva_expr.h>
 
 #include "ltl.h"
@@ -21,8 +22,11 @@ Author: Daniel Kroening, dkr@amazon.com
 
 exprt ltl_sva_to_stringt::atom(const std::string &string) const
 {
+  if(string.empty() || string[0] != 'a')
+    throw ebmc_errort{} << "got unexpected atom '" << string << "'";
+
   // map back to number
-  auto number = safe_string2size_t(string);
+  auto number = safe_string2size_t(string.substr(1, std::string::npos));
 
   PRECONDITION(number < atoms.size());
 

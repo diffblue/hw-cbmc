@@ -1,6 +1,6 @@
 CORE
 ../../verilog/SVA/if1.sv
---buechi --k-induction --bound 1
+--buechi --k-induction --bound 2
 ^\[main\.p0\] always \(if\(main\.counter == 0\) nexttime main\.counter == 1\): PROVED$
 ^\[main\.p1\] always \(if\(main\.counter == 0\) nexttime main\.counter == 1 else nexttime main\.counter == 3\): REFUTED$
 ^EXIT=10$

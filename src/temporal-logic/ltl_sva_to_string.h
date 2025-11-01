@@ -53,6 +53,8 @@ protected:
     std::string s;
   };
 
+  // This maps our expressions to a number.
+  // Spot may or may not use the same numbering in the AP header.
   numberingt<exprt, irep_hash> atoms;
 
   using modet = enum { PROPERTY, SVA_SEQUENCE, BOOLEAN };

@@ -68,7 +68,10 @@ public:
   intt max_state_number() const;
 
   // atomic propositions
-  std::map<intt, std::string> ap_map;
+  using ap_mapt = std::map<intt, std::string>;
+
+  // parses the AP header
+  ap_mapt parse_AP() const;
 
   // convert into a graph
   struct graph_edget
