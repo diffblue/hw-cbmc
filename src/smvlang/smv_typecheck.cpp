@@ -1724,6 +1724,34 @@ void smv_typecheckt::convert(exprt &expr)
       expr.remove(ID_identifier);
     }
   }
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      member_expr.compound().id() == ID_symbol,
+      "unexpected complex_identifier",
+      expr.pretty());
+
+    auto tmp = to_symbol_expr(member_expr.compound());
+    tmp.set_identifier(
+      id2string(tmp.get_identifier()) + '.' +
+      id2string(member_expr.get_component_name()));
+    expr = tmp;
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      index_expr.array().id() == ID_symbol,
+      "unexpected complex_identifier",
+      expr.pretty());
+    auto &index = index_expr.index();
+    PRECONDITION(index.is_constant());
+    auto index_string = id2string(to_constant_expr(index).get_value());
+    auto tmp = to_symbol_expr(index_expr.array());
+    tmp.set_identifier(id2string(tmp.get_identifier()) + '.' + index_string);
+    expr = tmp;
+  }
   else if(expr.id()=="smv_nondet_choice" ||
           expr.id()=="smv_union")
   {
