@@ -421,6 +421,17 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(
+    expr.id() == ID_le || expr.id() == ID_ge || expr.id() == ID_lt ||
+    expr.id() == ID_ge)
+  {
+    if(is_four_valued(expr))
+    {
+      return aval_bval(to_binary_relation_expr(expr));
+    }
+    else
+      return expr;
+  }
   else if(expr.id() == ID_concatenation)
   {
     if(
