@@ -1,3 +1,7 @@
+# EBMC 6.0
+
+* SMV: use NuSMV's operator precedence, as opposed to CMU SMV's
+
 # EBMC 5.9
 
 * Verilog: use top-level module for verification, instead of "main"
