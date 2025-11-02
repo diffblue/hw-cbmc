@@ -610,6 +610,23 @@ exprt aval_bval(const shift_exprt &expr)
   return if_exprt{distance_has_xz, x, combined};
 }
 
+exprt aval_bval(const binary_relation_exprt &expr)
+{
+  auto &type = expr.type();
+
+  PRECONDITION(type.id() == ID_verilog_unsignedbv);
+
+  auto has_xz = or_exprt{::has_xz(expr.lhs()), ::has_xz(expr.rhs())};
+
+  exprt two_valued_expr = binary_predicate_exprt{
+    aval_underlying(expr.lhs()), expr.id(), aval_underlying(expr.rhs())};
+
+  return if_exprt{
+    has_xz,
+    make_x(type),
+    aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
+}
+
 exprt default_aval_bval_lowering(const exprt &expr)
 {
   auto &type = expr.type();

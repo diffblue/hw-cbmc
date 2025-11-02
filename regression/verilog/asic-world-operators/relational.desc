@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 relational.sv
 --module main --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ relational.sv
 --
 ^warning: ignoring
 --
-x-related tests fail
