@@ -1,10 +1,10 @@
 CORE
 ../../verilog/SVA/cover_sequence2.sv
 --buechi --bound 5
-^\[main\.p0\] cover \(main\.x == 2 ##1 main\.x == 3 ##1 main\.x == 100\): UNSUPPORTED: sva_implicit_strong not convertible to Buechi$
-^\[main\.p1\] cover \(main\.x == 98 ##1 main\.x == 99 ##1 main\.x == 100\): UNSUPPORTED: sva_implicit_strong not convertible to Buechi$
-^\[main\.p2\] cover \(main\.x == 3 ##1 main\.x == 4 ##1 main\.x == 5\): UNSUPPORTED: sva_implicit_strong not convertible to Buechi$
-^\[main\.p3\] cover \(main\.x == 4 ##1 main\.x == 5 ##1 main\.x == 6\): UNSUPPORTED: sva_implicit_strong not convertible to Buechi$
+^\[main\.p0\] cover \(main\.x == 2 ##1 main\.x == 3 ##1 main\.x == 100\): REFUTED up to bound 5$
+^\[main\.p1\] cover \(main\.x == 98 ##1 main\.x == 99 ##1 main\.x == 100\): REFUTED up to bound 5$
+^\[main\.p2\] cover \(main\.x == 3 ##1 main\.x == 4 ##1 main\.x == 5\): PROVED$
+^\[main\.p3\] cover \(main\.x == 4 ##1 main\.x == 5 ##1 main\.x == 6\): REFUTED up to bound 5$
 ^EXIT=10$
 ^SIGNAL=0$
 --
