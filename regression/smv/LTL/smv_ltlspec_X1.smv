@@ -1,0 +1,11 @@
+MODULE main
+
+VAR x : boolean;
+
+ASSIGN next(x) := TRUE;
+       init(x) := FALSE;
+
+-- X binds stronger than &
+LTLSPEC X x & x -- should parse as (X x) & x
+LTLSPEC (X x) & x -- should fail
+LTLSPEC X (x & x) -- should pass
