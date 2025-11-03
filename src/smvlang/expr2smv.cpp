@@ -771,8 +771,8 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id()==ID_notequal)
     return convert_binary(to_notequal_expr(src), "!=", precedencet::REL);
 
-  else if(src.id()==ID_not)
-    return convert_unary(to_not_expr(src), "!", precedencet::NOT);
+  else if(src.id() == ID_not || src.id() == ID_bitnot)
+    return convert_unary(to_unary_expr(src), "!", precedencet::NOT);
 
   else if(src.id() == ID_and || src.id() == ID_bitand)
     return convert_binary_associative(src, "&", precedencet::AND);
