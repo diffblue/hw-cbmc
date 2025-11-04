@@ -57,7 +57,12 @@ protected:
   // Spot may or may not use the same numbering in the AP header.
   numberingt<exprt, irep_hash> atoms;
 
-  using modet = enum { PROPERTY, SVA_SEQUENCE, BOOLEAN };
+  using modet = enum {
+    PROPERTY,
+    SVA_SEQUENCE_STRONG,
+    SVA_SEQUENCE_WEAK,
+    BOOLEAN
+  };
 
   resultt prefix(std::string s, const unary_exprt &, modet);
   resultt suffix(std::string s, const unary_exprt &, modet);

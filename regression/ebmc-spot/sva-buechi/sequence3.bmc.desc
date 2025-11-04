@@ -1,10 +1,10 @@
 CORE
 ../../verilog/SVA/sequence3.sv
 --buechi --bound 20 --numbered-trace
-^\[main\.p0\] strong\(##\[\*\] main\.x == 6\): UNSUPPORTED: sva_strong not convertible to Buechi$
-^\[main\.p1\] strong\(##\[\*\] main\.x == 5\): UNSUPPORTED: sva_strong not convertible to Buechi$
-^\[main\.p2\] strong\(##\[\+\] main\.x == 0\): UNSUPPORTED: sva_strong not convertible to Buechi$
-^\[main\.p3\] strong\(##\[\+\] main\.x == 5\): UNSUPPORTED: sva_strong not convertible to Buechi$
+^\[main\.p0\] strong\(##\[\*\] main\.x == 6\): UNSUPPORTED: sva_cycle_delay_star not convertible to Buechi$
+^\[main\.p1\] strong\(##\[\*\] main\.x == 5\): UNSUPPORTED: sva_cycle_delay_star not convertible to Buechi$
+^\[main\.p2\] strong\(##\[\+\] main\.x == 0\): UNSUPPORTED: sva_cycle_delay_plus not convertible to Buechi$
+^\[main\.p3\] strong\(##\[\+\] main\.x == 5\): UNSUPPORTED: sva_cycle_delay_plus not convertible to Buechi$
 ^EXIT=10$
 ^SIGNAL=0$
 --
