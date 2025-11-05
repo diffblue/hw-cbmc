@@ -341,7 +341,7 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
 %left  TIMES_Token DIVIDE_Token
 %left  COLONCOLON_Token
 %left  UMINUS           /* supplies precedence for unary minus */
-%left  DOT_Token
+%left  DOT_Token '[' '('
 
 %%
 
@@ -842,7 +842,26 @@ integer_constant:
            ;
 
 basic_expr : constant
-           | variable_identifier
+           | identifier
+           {
+             // This rule is part of "complex_identifier" in the NuSMV manual.
+             $$ = $1;
+             irep_idt identifier = stack_expr($$).id();
+             stack_expr($$).id(ID_smv_identifier);
+             stack_expr($$).set(ID_identifier, identifier);
+             PARSER.set_source_location(stack_expr($$));
+           }
+           | basic_expr DOT_Token IDENTIFIER_Token
+           {
+             // This rule is part of "complex_identifier" in the NuSMV manual.
+             unary($$, ID_member, $1);
+             stack_expr($$).set(ID_component_name, stack_expr($3).id());
+           }
+           | basic_expr '(' basic_expr ')'
+           {
+             // Not in the NuSMV grammar.
+             binary($$, $1, ID_index, $3);
+           }
            | '(' formula ')'                      { $$=$2; }
            | NOT_Token basic_expr                 { init($$, ID_not); mto($$, $2); }
            | "abs" '(' basic_expr ')'             { unary($$, ID_smv_abs, $3); }
@@ -868,6 +887,7 @@ basic_expr : constant
            | basic_expr mod_Token basic_expr      { binary($$, $1, ID_mod, $3); }
            | basic_expr GTGT_Token basic_expr     { binary($$, $1, ID_shr, $3); }
            | basic_expr LTLT_Token basic_expr     { binary($$, $1, ID_shl, $3); }
+           | basic_expr '[' basic_expr ']'        { binary($$, $1, ID_index, $3); }
            | basic_expr COLONCOLON_Token basic_expr { binary($$, $1, ID_concatenation, $3); }
            | "word1" '(' basic_expr ')'           { unary($$, ID_smv_word1, $3); }
            | "bool" '(' basic_expr ')'            { unary($$, ID_smv_bool, $3); }
