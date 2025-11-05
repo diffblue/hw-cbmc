@@ -813,9 +813,32 @@ define     : assignment_var BECOMES_Token formula ';'
 formula    : basic_expr
            ;
 
-constant   : NUMBER_Token             { init($$, ID_constant); stack_expr($$).set(ID_value, stack_expr($1).id()); stack_expr($$).type()=integer_typet(); }
-           | TRUE_Token               { init($$, ID_constant); stack_expr($$).set(ID_value, ID_true); stack_expr($$).type()=typet(ID_bool); }
-           | FALSE_Token              { init($$, ID_constant); stack_expr($$).set(ID_value, ID_false); stack_expr($$).type()=typet(ID_bool); }
+constant   : boolean_constant
+           | integer_constant
+           ;
+
+boolean_constant:
+             TRUE_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, ID_true);
+             stack_expr($$).type()=typet{ID_bool};
+           }
+           | FALSE_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, ID_false);
+             stack_expr($$).type()=typet{ID_bool};
+           }
+           ;
+
+integer_constant:
+             NUMBER_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, stack_expr($1).id());
+             stack_expr($$).type()=integer_typet{};
+           }
            ;
 
 basic_expr : constant
