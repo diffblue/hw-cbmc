@@ -4,6 +4,7 @@
 
 # EBMC 5.8
 
+* SMV: use NuSMV's operator precedence, as opposed to CMU SMV's
 * AIG/netlist engine: fix for conversion of extract bits operator
 * Verilog: semantic fix for output register ports
 * SystemVerilog: cover sequence
