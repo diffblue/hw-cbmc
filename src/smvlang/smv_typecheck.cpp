@@ -90,6 +90,7 @@ protected:
   void typecheck(smv_parse_treet::modulet::itemt &);
   void typecheck_expr_rec(exprt &, modet);
   void convert_expr_to(exprt &, const typet &dest);
+  exprt convert_word_constant(const constant_exprt &);
 
   smv_parse_treet::modulet *modulep;
 
@@ -582,6 +583,123 @@ void smv_typecheckt::typecheck(exprt &expr, modet mode)
 
 /*******************************************************************\
 
+Function: convert_word_constant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt smv_typecheckt::convert_word_constant(const constant_exprt &src_expr)
+{
+  auto &src = id2string(src_expr.get_value());
+
+  DATA_INVARIANT(src[0] == '0', "word constant grammar");
+
+  std::size_t index = 1;
+  bool is_signed = false;
+
+  DATA_INVARIANT(index < src.size(), "word constant length");
+
+  switch(src[index])
+  {
+  case 's':
+  case 'S':
+    is_signed = true;
+    index++;
+    break;
+
+  case 'u':
+  case 'U':
+    // this is the default
+    index++;
+    break;
+
+  default:;
+  }
+
+  DATA_INVARIANT(index < src.size(), "word constant length");
+
+  unsigned base;
+  switch(src[index])
+  {
+  case 'd':
+  case 'D':
+    base = 10;
+    break;
+
+  case 'h':
+  case 'H':
+    base = 16;
+    break;
+
+  case 'b':
+  case 'B':
+    base = 2;
+    break;
+
+  case 'o':
+  case 'O':
+    base = 8;
+    break;
+
+  default:
+    DATA_INVARIANT(false, "word constant base");
+  }
+
+  index++;
+
+  DATA_INVARIANT(index < src.size(), "word constant length");
+
+  std::optional<mp_integer> bits = {};
+
+  // optional number of bits
+  if(isdigit(src[index]))
+  {
+    std::string bits_str;
+    for(; index < src.size() && isdigit(src[index]); index++)
+    {
+      bits_str += src[index];
+    }
+
+    bits = string2integer(bits_str);
+  }
+
+  std::string digits;
+  digits.reserve(src.size());
+
+  for(; index < src.size(); index++)
+  {
+    if(src[index] != '_')
+      digits.push_back(src[index]);
+  }
+
+  if(!bits.has_value())
+  {
+    if(base == 10)
+      throw errort{}.with_location(src_expr.source_location())
+        << "decimal word constant without width";
+    else if(base == 2)
+      bits = digits.size();
+    else if(base == 8)
+      bits = digits.size() * 3;
+    else if(base == 16)
+      bits = digits.size() * 4;
+  }
+
+  auto digits_int = string2integer(digits, base);
+
+  auto type =
+    bitvector_typet{is_signed ? ID_signedbv : ID_unsignedbv, bits.value()};
+
+  return from_integer(digits_int, type).with_source_location(src_expr);
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::typecheck_expr_rec
 
   Inputs:
@@ -844,6 +962,11 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     else if(type.id() == ID_bool)
     {
       // good as is
+    }
+    else if(type.id() == ID_smv_word_constant)
+    {
+      // turn into signedbv/unsignedbv
+      expr = convert_word_constant(to_constant_expr(expr));
     }
     else
     {

@@ -320,8 +320,9 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
 
 %token IDENTIFIER_Token   "identifier"
 %token QIDENTIFIER_Token  "quoted identifier"
-%token STRING_Token    "quoted string"
+%token STRING_Token   "quoted string"
 %token NUMBER_Token   "number"
+%token WORD_CONSTANT_Token "word constant"
 
 /* operator precedence, low to high */
 %right IMPLIES_Token
@@ -815,6 +816,7 @@ formula    : basic_expr
 
 constant   : boolean_constant
            | integer_constant
+           | word_constant
            ;
 
 boolean_constant:
@@ -838,6 +840,15 @@ integer_constant:
              init($$, ID_constant);
              stack_expr($$).set(ID_value, stack_expr($1).id());
              stack_expr($$).type()=integer_typet{};
+           }
+           ;
+
+word_constant:
+             WORD_CONSTANT_Token
+           {
+             init($$, ID_constant);
+             stack_expr($$).set(ID_value, stack_expr($1).id());
+             stack_expr($$).type() = typet{ID_smv_word_constant};
            }
            ;
 
