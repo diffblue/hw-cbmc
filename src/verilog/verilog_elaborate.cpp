@@ -492,8 +492,14 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbols_added.push_back(symbol.name);
     }
   }
-  else if(decl_class == ID_reg || decl_class == ID_var)
+  else if(
+    decl_class == ID_reg || decl_class == ID_var ||
+    decl_class == ID_verilog_interconnect)
   {
+    if(decl_class == ID_verilog_interconnect)
+      throw errort().with_location(decl.source_location())
+        << "no support for interconnect nets";
+
     symbolt symbol;
 
     symbol.mode = mode;

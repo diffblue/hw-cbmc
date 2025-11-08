@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 interconnect1.sv
 
-^EXIT=0$
+^file .* line 2: no support for interconnect nets$
+^EXIT=2$
 ^SIGNAL=0$
 --
 --
-interconnect is not implemented.
