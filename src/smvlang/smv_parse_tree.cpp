@@ -76,6 +76,8 @@ std::string to_string(smv_parse_treet::modulet::itemt::item_typet i)
     return "DEFINE";
   case smv_parse_treet::modulet::itemt::ENUM:
     return "ENUM";
+  case smv_parse_treet::modulet::itemt::IVAR:
+    return "IVAR";
   case smv_parse_treet::modulet::itemt::VAR:
     return "VAR";
 

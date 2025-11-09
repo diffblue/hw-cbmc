@@ -2033,6 +2033,7 @@ void smv_typecheckt::typecheck(
     return;
 
   case smv_parse_treet::modulet::itemt::ENUM:
+  case smv_parse_treet::modulet::itemt::IVAR:
   case smv_parse_treet::modulet::itemt::VAR:
     return;
   }
@@ -2075,7 +2076,7 @@ void smv_typecheckt::create_var_symbols(
 
   for(const auto &item : items)
   {
-    if(item.is_var())
+    if(item.is_var() || item.is_ivar())
     {
       irep_idt base_name = to_smv_identifier_expr(item.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
@@ -2318,7 +2319,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
     // non-variable items
     for(auto &item : smv_module.items)
-      if(!item.is_var())
+      if(!item.is_var() && !item.is_ivar())
         convert(item);
 
     flatten_hierarchy(smv_module);

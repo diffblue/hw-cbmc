@@ -402,10 +402,23 @@ var_declaration:
            ;
 
 ivar_declaration:
-             IVAR_Token simple_var_list
+             IVAR_Token ivar_simple_var_list
+           ;
+
+ivar_simple_var_list:
+             identifier ':' simple_type_specifier ';'
            {
-             yyerror("No support for IVAR declarations");
-             YYERROR;
+             irep_idt identifier = stack_expr($1).id();
+             stack_expr($1).id(ID_smv_identifier);
+             stack_expr($1).set(ID_identifier, identifier);
+             PARSER.module->add_ivar(stack_expr($1), stack_type($3));
+           }
+           | ivar_simple_var_list identifier ':' simple_type_specifier ';'
+           {
+             irep_idt identifier = stack_expr($2).id();
+             stack_expr($2).id(ID_smv_identifier);
+             stack_expr($2).set(ID_identifier, identifier);
+             PARSER.module->add_ivar(stack_expr($2), stack_type($4));
            }
            ;
 
