@@ -81,8 +81,13 @@ static void smv_state_variables(
 
     if(symbol.is_state_var)
     {
-      out << "VAR " << symbol.base_name << " : "
-          << smv_type_printert{symbol.type} << ";\n";
+      if(symbol.is_input)
+        out << "IVAR";
+      else
+        out << "VAR";
+
+      out << ' ' << symbol.base_name << " : " << smv_type_printert{symbol.type}
+          << ";\n";
       found = true;
     }
   }
