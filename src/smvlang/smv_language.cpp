@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 
 #include "expr2smv.h"
+#include "smv_expr.h"
 #include "smv_parser.h"
 #include "smv_typecheck.h"
 #include "smv_types.h"
@@ -68,11 +69,10 @@ void smv_languaget::dependencies(
 
   const smv_parse_treet::modulet &smv_module=m_it->second;
 
-  for(smv_parse_treet::mc_varst::const_iterator it=smv_module.vars.begin();
-      it!=smv_module.vars.end(); it++)
-    if(it->second.type.id() == ID_smv_submodule)
+  for(auto &item : smv_module.items)
+    if(item.is_var() && item.expr.type().id() == ID_smv_submodule)
       module_set.insert(
-        id2string(to_smv_submodule_type(it->second.type).identifier()));
+        id2string(to_smv_submodule_type(item.expr.type()).identifier()));
 }
 
 /*******************************************************************\
@@ -145,29 +145,28 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 
     out << "  VARIABLES:" << std::endl;
 
-    for(smv_parse_treet::mc_varst::const_iterator it=module.vars.begin();
-        it!=module.vars.end(); it++)
-      if(it->second.type.id() != ID_smv_submodule)
+    for(auto &item : module.items)
+      if(item.is_var() && item.expr.type().id() != ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns{symbol_table};
-        auto msg = type2smv(it->second.type, ns);
-        out << "    " << it->first << ": " << msg << ";\n";
+        auto identifier = to_smv_identifier_expr(item.expr).identifier();
+        auto msg = type2smv(item.expr.type(), ns);
+        out << "    " << identifier << ": " << msg << ";\n";
       }
 
     out << std::endl;
 
     out << "  SUBMODULES:" << std::endl;
 
-    for(smv_parse_treet::mc_varst::const_iterator
-        it=module.vars.begin();
-        it!=module.vars.end(); it++)
-      if(it->second.type.id() == ID_smv_submodule)
+    for(auto &item : module.items)
+      if(item.is_var() && item.expr.type().id() == ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns(symbol_table);
-        auto msg = type2smv(it->second.type, ns);
-        out << "    " << it->first << ": " << msg << ";\n";
+        auto identifier = to_smv_identifier_expr(item.expr).identifier();
+        auto msg = type2smv(item.expr.type(), ns);
+        out << "    " << identifier << ": " << msg << ";\n";
       }
 
     out << std::endl;
