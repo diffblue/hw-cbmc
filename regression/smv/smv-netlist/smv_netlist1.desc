@@ -2,7 +2,7 @@ CORE
 smv_netlist1.v
 --smv-netlist
 ^VAR Verilog\.main\.my-bit: boolean;$
-^VAR Verilog\.main\.clk: boolean;$
+^IVAR Verilog\.main\.clk: boolean;$
 ^ASSIGN next\(Verilog\.main\.my-bit\):=!Verilog\.main\.my-bit;$
 ^INIT !Verilog\.main\.my-bit$
 ^EXIT=0$
