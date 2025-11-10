@@ -361,11 +361,13 @@ module_name: IDENTIFIER_Token
            | STRING_Token
            ;
 
-module_head: MODULE_Token module_name { new_module($2); }
+module_head: MODULE_Token module_name
+           {
+             new_module($2);
+           }
            | MODULE_Token module_name '(' module_parameters_opt ')'
            {
-             auto &module = new_module($2);
-             module.parameters = stack_expr($4);
+             new_module($2);
            }
            ;
 
@@ -580,24 +582,16 @@ var_list   : var_decl
 
 module_parameter: identifier
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
+             const irep_idt &identifier=stack_expr($1).id();
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
              var.var_class=smv_parse_treet::mc_vart::ARGUMENT;
-             PARSER.module->ports.push_back(identifier);
+             PARSER.module->parameters.push_back(identifier);
            }
            ;
 
 module_parameters:
              module_parameter
-           {
-             init($$);
-             mto($$, $1);
-           }
            | module_parameters ',' module_parameter
-           {
-             $$ = $1;
-             mto($$, $3);
-           }
            ;
 
 module_parameters_opt:

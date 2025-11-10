@@ -37,7 +37,7 @@ public:
   struct modulet
   {
     irep_idt name, base_name;
-    irept parameters;
+    std::list<irep_idt> parameters;
 
     struct itemt
     {
@@ -288,8 +288,6 @@ public:
 
     mc_varst vars;
     enum_sett enum_set;
-
-    std::list<irep_idt> ports;
   };
    
   typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
