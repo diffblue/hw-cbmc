@@ -2137,12 +2137,22 @@ void smv_typecheckt::create_var_symbols(
 {
   const irep_idt mode = "SMV";
 
+  // to catch variables that have the same name as enums
+  std::unordered_set<irep_idt, irep_id_hash> enums;
+
   for(const auto &item : items)
   {
     if(item.is_var() || item.is_ivar())
     {
       irep_idt base_name = to_smv_identifier_expr(item.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
+
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(item.expr.source_location())
+          << "identifier " << base_name << " already used as enum";
+      }
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
@@ -2185,6 +2195,13 @@ void smv_typecheckt::create_var_symbols(
       irep_idt base_name = identifier_expr.identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as enum";
+      }
+
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
@@ -2226,6 +2243,8 @@ void smv_typecheckt::create_var_symbols(
           << "enum " << base_name << " already declared, at "
           << symbol_ptr->location;
       }
+
+      enums.insert(base_name);
     }
   }
 }
