@@ -5,6 +5,7 @@
 #include "smv_expr.h"
 #include "smv_parser.h"
 #include "smv_typecheck.h"
+#include "smv_types.h"
 
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
@@ -657,14 +658,14 @@ simple_type_specifier:
 module_type_specifier:
              module_name
            {
-             init($$, "submodule");
-             stack_expr($$).set(ID_identifier,
+             init($$, ID_smv_submodule);
+             to_smv_submodule_type(stack_type($$)).identifier(
                            smv_module_symbol(stack_expr($1).id_string()));
            }
            | module_name '(' parameter_list ')'
            {
-             init($$, "submodule");
-             stack_expr($$).set(ID_identifier,
+             init($$, ID_smv_submodule);
+             to_smv_submodule_type(stack_type($$)).identifier(
                            smv_module_symbol(stack_expr($1).id_string()));
              stack_expr($$).operands().swap(stack_expr($3).operands());
            }

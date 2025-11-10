@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2smv.h"
 #include "smv_parser.h"
 #include "smv_typecheck.h"
+#include "smv_types.h"
 
 /*******************************************************************\
 
@@ -69,8 +70,9 @@ void smv_languaget::dependencies(
 
   for(smv_parse_treet::mc_varst::const_iterator it=smv_module.vars.begin();
       it!=smv_module.vars.end(); it++)
-    if(it->second.type.id()=="submodule")
-      module_set.insert(it->second.type.get_string("identifier"));
+    if(it->second.type.id() == ID_smv_submodule)
+      module_set.insert(
+        id2string(to_smv_submodule_type(it->second.type).identifier()));
 }
 
 /*******************************************************************\
@@ -145,7 +147,7 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 
     for(smv_parse_treet::mc_varst::const_iterator it=module.vars.begin();
         it!=module.vars.end(); it++)
-      if(it->second.type.id()!="submodule")
+      if(it->second.type.id() != ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns{symbol_table};
@@ -160,7 +162,7 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
     for(smv_parse_treet::mc_varst::const_iterator
         it=module.vars.begin();
         it!=module.vars.end(); it++)
-      if(it->second.type.id()=="submodule")
+      if(it->second.type.id() == ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns(symbol_table);
