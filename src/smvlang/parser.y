@@ -553,18 +553,6 @@ ltl_specification:
            ;
  
 extern_var : variable_identifier EQUAL_Token STRING_Token
-           {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             if(var.identifier!=irep_idt())
-             {
-               yyerror("variable `"+id2string(identifier)+"' already declared extern");
-               YYERROR;
-             }
-             else
-               var.identifier=stack_expr($3).id_string();
-           }
            ;
 
 var_list   : var_decl
@@ -574,8 +562,6 @@ var_list   : var_decl
 module_parameter: identifier
            {
              const irep_idt &identifier=stack_expr($1).id();
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-             var.var_class=smv_parse_treet::mc_vart::ARGUMENT;
              PARSER.module->parameters.push_back(identifier);
            }
            ;
@@ -684,9 +670,6 @@ enum_element: IDENTIFIER_Token
 
 var_decl   : variable_identifier ':' type_specifier ';'
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-             (void)var;
              PARSER.module->add_var(stack_expr($1), stack_type($3));
            }
            ;
@@ -708,9 +691,6 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            }
            | assignment_var BECOMES_Token formula ';'
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-             (void)var;
              PARSER.module->add_assign_current(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
@@ -729,9 +709,6 @@ defines:     define
 
 define     : assignment_var BECOMES_Token formula ';'
            {
-             const irep_idt &identifier=stack_expr($1).get(ID_identifier);
-             smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-             (void)var;
              PARSER.module->add_define(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
@@ -939,7 +916,6 @@ variable_identifier: complex_identifier
 
              init($$, ID_smv_identifier);
              stack_expr($$).set(ID_identifier, id);
-             PARSER.module->vars[id];
            }
            ;
 
