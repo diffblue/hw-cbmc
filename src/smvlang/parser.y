@@ -698,27 +698,7 @@ var_decl   : variable_identifier ':' type_specifier ';'
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             switch(var.var_class)
-             {
-             case smv_parse_treet::mc_vart::UNKNOWN:
-               var.type=stack_type($3);
-               var.var_class=smv_parse_treet::mc_vart::DECLARED;
-               break;
-
-             case smv_parse_treet::mc_vart::DEFINED:
-             case smv_parse_treet::mc_vart::DECLARED:
-               break;
-
-             case smv_parse_treet::mc_vart::ARGUMENT:
-               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-               YYERROR;
-               break;
-
-             default:
-               DATA_INVARIANT(false, "unexpected variable class");
-             }
-
+             (void)var;
              PARSER.module->add_var(stack_expr($1), stack_type($3));
            }
            ;
@@ -742,32 +722,7 @@ assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             switch(var.var_class)
-             {
-             case smv_parse_treet::mc_vart::UNKNOWN:
-               var.type.make_nil();
-               var.var_class=smv_parse_treet::mc_vart::DEFINED;
-               break;
-
-             case smv_parse_treet::mc_vart::DECLARED:
-               var.var_class=smv_parse_treet::mc_vart::DEFINED;
-               break;
-
-             case smv_parse_treet::mc_vart::DEFINED:
-               yyerror("variable `"+id2string(identifier)+"' already defined");
-               YYERROR;
-               break;
-             
-             case smv_parse_treet::mc_vart::ARGUMENT:
-               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-               YYERROR;
-               break;
-             
-             default:
-               DATA_INVARIANT(false, "unexpected variable class");
-             }
-
+             (void)var;
              PARSER.module->add_assign_current(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
@@ -788,33 +743,7 @@ define     : assignment_var BECOMES_Token formula ';'
            {
              const irep_idt &identifier=stack_expr($1).get(ID_identifier);
              smv_parse_treet::mc_vart &var=PARSER.module->vars[identifier];
-
-             switch(var.var_class)
-             {
-             case smv_parse_treet::mc_vart::UNKNOWN:
-               var.type.make_nil();
-               var.var_class=smv_parse_treet::mc_vart::DEFINED;
-               break;
-
-             case smv_parse_treet::mc_vart::DECLARED:
-               yyerror("variable `"+id2string(identifier)+"' already declared");
-               YYERROR;
-               break;
-
-             case smv_parse_treet::mc_vart::DEFINED:
-               yyerror("variable `"+id2string(identifier)+"' already defined");
-               YYERROR;
-               break;
-
-             case smv_parse_treet::mc_vart::ARGUMENT:
-               yyerror("variable `"+id2string(identifier)+"' already declared as argument");
-               YYERROR;
-               break;
-
-             default:
-               DATA_INVARIANT(false, "unexpected variable class");
-             }
-
+             (void)var;
              PARSER.module->add_define(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;

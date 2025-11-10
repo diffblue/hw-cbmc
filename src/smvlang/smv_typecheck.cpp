@@ -2184,6 +2184,15 @@ void smv_typecheckt::create_var_symbols(
         to_smv_identifier_expr(to_equal_expr(item.expr).lhs());
       irep_idt base_name = identifier_expr.identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
+
+      auto symbol_ptr = symbol_table.lookup(identifier);
+      if(symbol_ptr != nullptr)
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "variable `" << base_name << "' already declared, at "
+          << symbol_ptr->location;
+      }
+
       typet type;
       type.make_nil();
 
@@ -2264,7 +2273,7 @@ void smv_typecheckt::collect_define(const equal_exprt &expr)
   if(!result.second)
   {
     throw errort().with_location(expr.find_source_location())
-      << "symbol `" << identifier << "' defined twice";
+      << "variable `" << symbol.display_name() << "' already defined";
   }  
 }
 
