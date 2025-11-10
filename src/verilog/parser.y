@@ -1521,6 +1521,10 @@ net_declaration:
                   addswap($$, ID_class, $1);
                   addswap($$, ID_type, $4);
                   swapop($$, $6); }
+        | TOK_INTERCONNECT delay3_opt list_of_net_decl_assignments ';'
+		{ init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_verilog_interconnect);
+                  swapop($$, $3); }
 	;
 
 // Note that the identifier that is defined using the typedef may be
@@ -1790,14 +1794,19 @@ net_type_opt:
         | net_type
         ;
 
-net_port_type: net_type_opt signing_opt packed_dimension_brace
-                {
-	          // The net type is a subtype of the signing.
-	          add_as_subtype(stack_type($2), stack_type($1));
-	          // That becomes a subtype of the packed dimension.
-                  add_as_subtype(stack_type($3), stack_type($2));
-                  $$ = $3;
-	        }
+net_port_type:
+	  net_type_opt signing_opt packed_dimension_brace
+	{
+	  // The net type is a subtype of the signing.
+	  add_as_subtype(stack_type($2), stack_type($1));
+	  // That becomes a subtype of the packed dimension.
+	  add_as_subtype(stack_type($3), stack_type($2));
+	  $$ = $3;
+	}
+	| TOK_INTERCONNECT
+	{
+	  init($$, ID_verilog_interconnect);
+	}
         ;
 
 variable_port_type: var_data_type ;
