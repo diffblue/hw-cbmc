@@ -1,0 +1,10 @@
+MODULE some-module(x)
+
+-- x is already declared as a parameter
+DEFINE x := 123;
+
+INIT x = 123
+
+MODULE main
+
+VAR instance : some-module(124);
