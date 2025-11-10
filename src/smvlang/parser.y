@@ -361,14 +361,9 @@ module_name: IDENTIFIER_Token
            | STRING_Token
            ;
 
-module_head: MODULE_Token module_name
-           {
-             new_module($2);
-           }
-           | MODULE_Token module_name '(' module_parameters_opt ')'
-           {
-             new_module($2);
-           }
+module_head: MODULE_Token module_name { new_module($2); }
+           | MODULE_Token module_name { new_module($2); }
+             '(' module_parameters_opt ')'
            ;
 
 module_body: /* optional */
