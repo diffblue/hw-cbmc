@@ -337,6 +337,13 @@ public:
     identifier(_identifier);
   }
 
+  smv_identifier_exprt(irep_idt _identifier, source_locationt _location)
+    : smv_identifier_exprt{_identifier}
+  {
+    if(_location.is_not_nil())
+      add_source_location() = _location;
+  }
+
   irep_idt identifier() const
   {
     return get(ID_identifier);
