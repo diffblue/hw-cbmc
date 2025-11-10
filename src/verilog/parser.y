@@ -4558,6 +4558,7 @@ variable_lvalue:
         | '{' variable_concatenation_lvalue_brace '}'
 		{ init($$, ID_concatenation); swapop($$, $2); }
         */
+	| assignment_pattern
 	;
 	
 variable_concatenation_lvalue_brace:

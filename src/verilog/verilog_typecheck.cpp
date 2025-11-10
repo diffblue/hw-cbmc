@@ -760,6 +760,11 @@ void verilog_typecheckt::check_lhs(
   {
     check_lhs(to_member_expr(lhs).struct_op(), vassign);
   }
+  else if(lhs.id() == ID_verilog_assignment_pattern)
+  {
+    throw errort().with_location(lhs.source_location())
+      << "no support for assignment patterns on LHS of an assignment";
+  }
   else
   {
     throw errort() << "typechecking: failed to get identifier on LHS "
@@ -1019,8 +1024,8 @@ void verilog_typecheckt::convert_assign(
 
   convert_expr(lhs);
   convert_expr(rhs);
-  assignment_conversion(rhs, lhs.type());
   check_lhs(lhs, blocking?A_BLOCKING:A_NON_BLOCKING);
+  assignment_conversion(rhs, lhs.type());
 }
 
 /*******************************************************************\
