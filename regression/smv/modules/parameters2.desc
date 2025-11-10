@@ -1,0 +1,9 @@
+KNOWNBUG
+parameters2.smv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This yields a type-checking error.
