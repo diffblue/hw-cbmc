@@ -106,7 +106,7 @@ void print_smv(const netlistt &netlist, std::ostream &out, const exprt &expr)
         std::ostringstream buffer;
         auto l = to_literal_expr(expr).get_literal();
         print_smv(netlist, buffer, l);
-        if(l.sign())
+        if(l.sign() && !l.is_constant())
           return {precedencet::NOT, buffer.str()};
         else
           return {precedencet::MAX, buffer.str()};
