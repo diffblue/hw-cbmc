@@ -18,20 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 class smv_parse_treet
 {
 public:
-
-  struct mc_vart
-  {
-    typedef enum { UNKNOWN, DECLARED, DEFINED, ARGUMENT } var_classt;
-    var_classt var_class;
-    typet type;
-    irep_idt identifier;
-    
-    mc_vart():var_class(UNKNOWN), type(typet(ID_bool))
-    {
-    }
-  };
-   
-  typedef std::unordered_map<irep_idt, mc_vart, irep_id_hash> mc_varst;
   typedef std::unordered_set<irep_idt, irep_id_hash> enum_sett;
 
   struct modulet
@@ -286,7 +272,6 @@ public:
       items.emplace_back(itemt::ENUM, std::move(expr), std::move(location));
     }
 
-    mc_varst vars;
     enum_sett enum_set;
   };
    
