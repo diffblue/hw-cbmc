@@ -169,9 +169,9 @@ void smv_typecheckt::convert_ports(
 {
   irept::subt &ports=dest.add(ID_ports).get_sub();
 
-  ports.reserve(smv_module.ports.size());
+  ports.reserve(smv_module.parameters.size());
 
-  for(const auto &port_name : smv_module.ports)
+  for(const auto &port_name : smv_module.parameters)
   {
     ports.push_back(exprt(ID_symbol));
     ports.back().set(

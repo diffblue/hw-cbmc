@@ -136,8 +136,8 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 
     out << "  PARAMETERS:\n";
 
-    for(auto &parameter : module.parameters.get_sub())
-      out << "    " << parameter.id() << '\n';
+    for(auto &parameter : module.parameters)
+      out << "    " << parameter << '\n';
 
     out << '\n';
 
