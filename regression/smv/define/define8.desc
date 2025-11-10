@@ -1,5 +1,5 @@
 CORE
-already_declared5.smv
+define8.smv
 
 ^file .* line 6: identifier x already used as enum$
 ^EXIT=2$
