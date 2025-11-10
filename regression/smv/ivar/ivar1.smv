@@ -1,3 +1,9 @@
 MODULE main
 
 IVAR some_input : boolean;
+
+-- these should all fail
+LTLSPEC some_input
+LTLSPEC !some_input
+LTLSPEC X some_input
+LTLSPEC X !some_input

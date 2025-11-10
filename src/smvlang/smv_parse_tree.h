@@ -52,6 +52,7 @@ public:
         FAIRNESS,
         INIT,
         INVAR,
+        IVAR,
         LTLSPEC,
         TRANS,
         VAR
@@ -131,6 +132,11 @@ public:
       bool is_enum() const
       {
         return item_type == ENUM;
+      }
+
+      bool is_ivar() const
+      {
+        return item_type == IVAR;
       }
 
       bool is_var() const
@@ -258,6 +264,13 @@ public:
     void add_trans(exprt expr, source_locationt location)
     {
       items.emplace_back(itemt::TRANS, std::move(expr), std::move(location));
+    }
+
+    void add_ivar(exprt expr, typet type)
+    {
+      expr.type() = std::move(type);
+      auto location = expr.source_location();
+      items.emplace_back(itemt::IVAR, std::move(expr), std::move(location));
     }
 
     void add_var(exprt expr, typet type)
