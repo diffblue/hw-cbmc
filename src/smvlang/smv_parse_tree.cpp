@@ -54,31 +54,35 @@ Function: operator <<
 
 \*******************************************************************/
 
-std::string to_string(smv_parse_treet::modulet::itemt::item_typet i)
+std::string to_string(smv_parse_treet::modulet::elementt::element_typet i)
 {
   switch(i)
   {
-  case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
+  case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
     return "ASSIGN CURRENT";
-  case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
+  case smv_parse_treet::modulet::elementt::ASSIGN_INIT:
     return "ASSIGN INIT";
-  case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
+  case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
     return "ASSIGN NEXT";
-  case smv_parse_treet::modulet::itemt::INVAR:    return "INVAR";
-  case smv_parse_treet::modulet::itemt::TRANS:    return "TRANS";
-  case smv_parse_treet::modulet::itemt::INIT:     return "INIT";
-  case smv_parse_treet::modulet::itemt::CTLSPEC:
+  case smv_parse_treet::modulet::elementt::INVAR:
+    return "INVAR";
+  case smv_parse_treet::modulet::elementt::TRANS:
+    return "TRANS";
+  case smv_parse_treet::modulet::elementt::INIT:
+    return "INIT";
+  case smv_parse_treet::modulet::elementt::CTLSPEC:
     return "SPEC";
-  case smv_parse_treet::modulet::itemt::LTLSPEC:
+  case smv_parse_treet::modulet::elementt::LTLSPEC:
     return "LTLSPEC";
-  case smv_parse_treet::modulet::itemt::FAIRNESS: return "FAIRNESS";
-  case smv_parse_treet::modulet::itemt::DEFINE:
+  case smv_parse_treet::modulet::elementt::FAIRNESS:
+    return "FAIRNESS";
+  case smv_parse_treet::modulet::elementt::DEFINE:
     return "DEFINE";
-  case smv_parse_treet::modulet::itemt::ENUM:
+  case smv_parse_treet::modulet::elementt::ENUM:
     return "ENUM";
-  case smv_parse_treet::modulet::itemt::IVAR:
+  case smv_parse_treet::modulet::elementt::IVAR:
     return "IVAR";
-  case smv_parse_treet::modulet::itemt::VAR:
+  case smv_parse_treet::modulet::elementt::VAR:
     return "VAR";
 
   default:;
