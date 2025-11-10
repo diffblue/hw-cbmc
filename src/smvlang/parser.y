@@ -949,7 +949,7 @@ complex_identifier:
            ;
 
 cases      :
-           { init($$, "smv_cases"); }
+           { init($$, ID_smv_cases); }
            | cases case
            { $$=$1; mto($$, $2); }
            ;

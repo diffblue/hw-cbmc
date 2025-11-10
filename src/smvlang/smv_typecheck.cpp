@@ -1955,7 +1955,7 @@ void smv_typecheckt::convert(exprt &expr)
 
     expr.id(ID_constraint_select_one);
   }
-  else if(expr.id()=="smv_cases") // cases
+  else if(expr.id() == ID_smv_cases) // cases
   {
     if(expr.operands().size()<1)
     {
