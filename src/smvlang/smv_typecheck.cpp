@@ -1203,6 +1203,62 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "abs expects integer";
     }
   }
+  else if(expr.id() == ID_smv_bit_selection) // word[high:low]
+  {
+    auto &op = to_ternary_expr(expr).op0();
+
+    typecheck_expr_rec(op, mode);
+
+    if(op.type().id() != ID_unsignedbv && op.type().id() != ID_signedbv)
+    {
+      throw errort().with_location(op.source_location())
+        << "bit selection expects word";
+    }
+
+    auto &high = to_ternary_expr(expr).op1();
+
+    typecheck_expr_rec(high, OTHER);
+
+    // high must be an integer constant
+    if(high.type().id() != ID_range && high.type().id() != ID_natural)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select high must be integer, but got "
+        << to_string(high.type());
+    }
+
+    if(high.id() != ID_constant)
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select high must be constant";
+
+    auto high_int = numeric_cast_v<mp_integer>(to_constant_expr(high));
+
+    auto &low = to_ternary_expr(expr).op2();
+
+    typecheck_expr_rec(low, OTHER);
+
+    // low must be an integer constant
+    if(low.type().id() != ID_range && low.type().id() != ID_natural)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select low must be integer, but got " << to_string(low.type());
+    }
+
+    if(low.id() != ID_constant)
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select low must be constant";
+
+    auto low_int = numeric_cast_v<mp_integer>(to_constant_expr(low));
+
+    if(low_int > high_int)
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select high must not be smaller than low";
+
+    auto width = numeric_cast_v<std::size_t>(high_int - low_int + 1);
+
+    // always unsigned, even if op is signed
+    expr.type() = unsignedbv_typet{width};
+  }
   else if(expr.id() == ID_smv_bool)
   {
     auto &op = to_unary_expr(expr).op();
@@ -1622,6 +1678,13 @@ void smv_typecheckt::lower_node(exprt &expr) const
     // we'll lower a->b to !a|b
     auto &implies = to_smv_bitimplies_expr(expr);
     expr = bitor_exprt{bitnot_exprt{implies.op0()}, implies.op1()};
+  }
+  else if(expr.id() == ID_smv_bit_selection)
+  {
+    // we'll lower to extractbits
+    auto &bit_selection = to_ternary_expr(expr);
+    expr = extractbits_exprt{
+      bit_selection.op0(), bit_selection.op2(), bit_selection.type()};
   }
 
   // lower the type

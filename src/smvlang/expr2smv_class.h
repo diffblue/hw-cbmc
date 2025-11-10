@@ -114,6 +114,8 @@ protected:
 
   resultt convert_extractbits(const extractbits_exprt &);
 
+  resultt convert_smv_bit_selection(const ternary_exprt &);
+
   resultt convert_index(const index_exprt &, precedencet);
 
   resultt convert_if(const if_exprt &, precedencet);

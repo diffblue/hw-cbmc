@@ -2,6 +2,7 @@
 
 * SMV: word constants
 * SMV: IVAR declarations
+* SMV: bit selection operator
 
 # EBMC 5.8
 

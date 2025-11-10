@@ -912,6 +912,7 @@ basic_expr : constant
            | basic_expr GTGT_Token basic_expr     { binary($$, $1, ID_shr, $3); }
            | basic_expr LTLT_Token basic_expr     { binary($$, $1, ID_shl, $3); }
            | basic_expr '[' basic_expr ']'        { binary($$, $1, ID_index, $3); }
+           | basic_expr '[' basic_expr ':' basic_expr ']' { init($$, ID_smv_bit_selection); mto($$, $1); mto($$, $3); mto($$, $5); }
            | basic_expr COLONCOLON_Token basic_expr { binary($$, $1, ID_concatenation, $3); }
            | "word1" '(' basic_expr ')'           { unary($$, ID_smv_word1, $3); }
            | "bool" '(' basic_expr ')'            { unary($$, ID_smv_bool, $3); }
