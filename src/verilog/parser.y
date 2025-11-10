@@ -581,6 +581,8 @@ int yyverilogerror(const char *error)
 // following System Verilog 1800-2017 Table 11-2.
 // Bison expects these in order of increasing precedence,
 // whereas the table gives them in decreasing order.
+%nonassoc '{'
+%nonassoc '=' "+=" "-=" "*=" "/=" "%=" "&=" "^=" "|=" "<<=" ">>=" "<<<=" ">>>=" ":=" ":/"
 %right "->" "<->"
 %right "?" ":"
 %left "||"
