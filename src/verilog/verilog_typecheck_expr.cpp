@@ -269,6 +269,15 @@ void verilog_typecheck_exprt::assignment_conversion(
     }
   }
 
+  if(rhs.type().id() == ID_verilog_new)
+  {
+    if(lhs_type.id() == ID_verilog_class_type)
+    {
+      rhs = typecast_exprt{rhs, lhs_type};
+      return;
+    }
+  }
+
   // "The size of the left-hand side of an assignment forms
   // the context for the right-hand expression."
 
