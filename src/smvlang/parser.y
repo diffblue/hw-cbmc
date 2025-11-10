@@ -406,17 +406,13 @@ ivar_declaration:
 ivar_simple_var_list:
              identifier ':' simple_type_specifier ';'
            {
-             irep_idt identifier = stack_expr($1).id();
-             stack_expr($1).id(ID_smv_identifier);
-             stack_expr($1).set(ID_identifier, identifier);
-             PARSER.module->add_ivar(stack_expr($1), stack_type($3));
+             smv_identifier_exprt identifier{stack_expr($1).id(), PARSER.source_location()};
+             PARSER.module->add_ivar(std::move(identifier), stack_type($3));
            }
            | ivar_simple_var_list identifier ':' simple_type_specifier ';'
            {
-             irep_idt identifier = stack_expr($2).id();
-             stack_expr($2).id(ID_smv_identifier);
-             stack_expr($2).set(ID_identifier, identifier);
-             PARSER.module->add_ivar(stack_expr($2), stack_type($4));
+             smv_identifier_exprt identifier{stack_expr($2).id(), PARSER.source_location()};
+             PARSER.module->add_ivar(std::move(identifier), stack_type($4));
            }
            ;
 
@@ -681,11 +677,8 @@ enum_element: IDENTIFIER_Token
            {
              $$=$1;
              PARSER.module->enum_set.insert(stack_expr($1).id_string());
-
-             exprt expr(ID_smv_identifier);
-             expr.set(ID_identifier, stack_expr($1).id());
-             PARSER.set_source_location(expr);
-             PARSER.module->add_enum(std::move(expr));
+             PARSER.module->add_enum(
+               smv_identifier_exprt{stack_expr($1).id(), PARSER.source_location()});
            }
            ;
 
@@ -790,9 +783,7 @@ basic_expr : constant
              // This rule is part of "complex_identifier" in the NuSMV manual.
              $$ = $1;
              irep_idt identifier = stack_expr($$).id();
-             stack_expr($$).id(ID_smv_identifier);
-             stack_expr($$).set(ID_identifier, identifier);
-             PARSER.set_source_location(stack_expr($$));
+             stack_expr($$) = smv_identifier_exprt{identifier, PARSER.source_location()};
            }
            | basic_expr DOT_Token IDENTIFIER_Token
            {
@@ -956,9 +947,8 @@ complex_identifier:
              identifier
            {
              $$ = $1;
-             irep_idt identifier = stack_expr($$).id();
-             stack_expr($$).id(ID_smv_identifier);
-             stack_expr($$).set(ID_identifier, identifier);
+             auto identifier = stack_expr($$).id();
+             stack_expr($$) = smv_identifier_exprt{identifier, PARSER.source_location()};
            }
            | complex_identifier DOT_Token QIDENTIFIER_Token
            {
