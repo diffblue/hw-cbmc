@@ -69,10 +69,10 @@ void smv_languaget::dependencies(
 
   const smv_parse_treet::modulet &smv_module=m_it->second;
 
-  for(auto &item : smv_module.items)
-    if(item.is_var() && item.expr.type().id() == ID_smv_submodule)
+  for(auto &element : smv_module.elements)
+    if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
       module_set.insert(
-        id2string(to_smv_submodule_type(item.expr.type()).identifier()));
+        id2string(to_smv_submodule_type(element.expr.type()).identifier()));
 }
 
 /*******************************************************************\
@@ -145,13 +145,13 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 
     out << "  VARIABLES:" << std::endl;
 
-    for(auto &item : module.items)
-      if(item.is_var() && item.expr.type().id() != ID_smv_submodule)
+    for(auto &element : module.elements)
+      if(element.is_var() && element.expr.type().id() != ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns{symbol_table};
-        auto identifier = to_smv_identifier_expr(item.expr).identifier();
-        auto msg = type2smv(item.expr.type(), ns);
+        auto identifier = to_smv_identifier_expr(element.expr).identifier();
+        auto msg = type2smv(element.expr.type(), ns);
         out << "    " << identifier << ": " << msg << ";\n";
       }
 
@@ -159,13 +159,13 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 
     out << "  SUBMODULES:" << std::endl;
 
-    for(auto &item : module.items)
-      if(item.is_var() && item.expr.type().id() == ID_smv_submodule)
+    for(auto &element : module.elements)
+      if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns(symbol_table);
-        auto identifier = to_smv_identifier_expr(item.expr).identifier();
-        auto msg = type2smv(item.expr.type(), ns);
+        auto identifier = to_smv_identifier_expr(element.expr).identifier();
+        auto msg = type2smv(element.expr.type(), ns);
         out << "    " << identifier << ": " << msg << ";\n";
       }
 
@@ -173,10 +173,10 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 
     out << "  ITEMS:" << std::endl;
 
-    forall_item_list(it, module.items)
+    for(auto &element : module.elements)
     {
-      out << "    TYPE: " << to_string(it->item_type) << std::endl;
-      out << "    EXPR: " << it->expr.pretty() << std::endl;
+      out << "    TYPE: " << to_string(element.element_type) << '\n';
+      out << "    EXPR: " << element.expr.pretty() << '\n';
       out << std::endl;
     }
   }
