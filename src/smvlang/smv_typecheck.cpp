@@ -1885,64 +1885,80 @@ Function: smv_typecheckt::convert
 
 \*******************************************************************/
 
+std::optional<std::string> merge_complex_identifier_opt(const exprt &expr)
+{
+  if(expr.id() == ID_smv_identifier)
+    return id2string(to_smv_identifier_expr(expr).identifier());
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    auto rec = merge_complex_identifier_opt(member_expr.compound());
+    if(rec.has_value())
+      return rec.value() + '.' + id2string(member_expr.get_component_name());
+    else
+      return {};
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+    auto &index = index_expr.index();
+    PRECONDITION(index.is_constant());
+    auto index_string = id2string(to_constant_expr(index).get_value());
+    auto rec = merge_complex_identifier_opt(index_expr.array());
+    if(rec.has_value())
+      return rec.value() + '.' + index_string;
+    else
+      return {};
+  }
+  else
+  {
+    // not a complex identifier
+    return {};
+  }
+}
+
 void smv_typecheckt::convert(exprt &expr)
 {
-  for(auto &op : expr.operands())
-    convert(op);
+  // We want to find the maximally deep combination of
+  // smv_identifier, index, member that is a variable.
+  // Hence, look for these pre-traversal.
 
-  if(expr.id() == ID_smv_identifier)
+  auto complex_identifier_opt = merge_complex_identifier_opt(expr);
+
+  if(complex_identifier_opt.has_value())
   {
-    const std::string &identifier=expr.get_string(ID_identifier);
+    auto identifier = complex_identifier_opt.value();
 
     DATA_INVARIANT(
       identifier.find("::") == std::string::npos, "conversion is done once");
 
-    // enum or variable?
-    if(modulep->enum_set.find(identifier) == modulep->enum_set.end())
-    {
-      std::string id = module + "::var::" + identifier;
+    std::string id = module + "::var::" + identifier;
 
-      expr.set(ID_identifier, id);
-      expr.id(ID_symbol);
-    }
-    else
+    // enum?
+    if(modulep->enum_set.find(identifier) != modulep->enum_set.end())
     {
       expr.id(ID_constant);
       expr.type() = typet(ID_smv_enumeration);
       expr.set(ID_value, identifier);
       expr.remove(ID_identifier);
+      expr.operands().clear();
+      return;
     }
-  }
-  else if(expr.id() == ID_member)
-  {
-    auto &member_expr = to_member_expr(expr);
-    DATA_INVARIANT_WITH_DIAGNOSTICS(
-      member_expr.compound().id() == ID_symbol,
-      "unexpected complex_identifier",
-      expr.pretty());
+    else if(symbol_table.lookup(identifier) != nullptr) // variable?
+    {
+      expr.set(ID_identifier, id);
+      expr.id(ID_symbol);
+      expr.operands().clear();
+      return;
+    }
 
-    auto tmp = to_symbol_expr(member_expr.compound());
-    tmp.set_identifier(
-      id2string(tmp.get_identifier()) + '.' +
-      id2string(member_expr.get_component_name()));
-    expr = tmp;
+    // not a variable, not an enum: leave as is
   }
-  else if(expr.id() == ID_index)
-  {
-    auto &index_expr = to_index_expr(expr);
-    DATA_INVARIANT_WITH_DIAGNOSTICS(
-      index_expr.array().id() == ID_symbol,
-      "unexpected complex_identifier",
-      expr.pretty());
-    auto &index = index_expr.index();
-    PRECONDITION(index.is_constant());
-    auto index_string = id2string(to_constant_expr(index).get_value());
-    auto tmp = to_symbol_expr(index_expr.array());
-    tmp.set_identifier(id2string(tmp.get_identifier()) + '.' + index_string);
-    expr = tmp;
-  }
-  else if(expr.id()=="smv_nondet_choice" ||
-          expr.id()=="smv_union")
+
+  for(auto &op : expr.operands())
+    convert(op);
+
+  if(expr.id() == "smv_nondet_choice" || expr.id() == "smv_union")
   {
     if(expr.operands().size()==0)
     {
