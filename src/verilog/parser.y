@@ -1985,6 +1985,8 @@ list_of_variable_identifiers:
 parameter_port_declaration:
           TOK_PARAMETER data_type_or_implicit param_assignment
 		{ $$ = $3; }
+        | TOK_PARAMETER TOK_TYPE type_assignment
+		{ $$ = $3; }
 	| TOK_LOCALPARAM data_type_or_implicit param_assignment
 		{ $$ = $3; }
 	| data_type param_assignment
