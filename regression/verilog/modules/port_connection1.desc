@@ -1,0 +1,9 @@
+KNOWNBUG
+port_connection1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This does not parse.
