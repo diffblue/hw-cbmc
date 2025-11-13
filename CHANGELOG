@@ -1,5 +1,6 @@
 # EBMC 5.9
 
+* SystemVerilog: fix for type parameters
 * SMV: word constants
 * SMV: IVAR declarations
 * SMV: bit selection operator
