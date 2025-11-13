@@ -1898,7 +1898,8 @@ void smv_typecheckt::convert(exprt &expr)
       identifier.find("::") == std::string::npos, "conversion is done once");
 
     // enum or variable?
-    if(modulep->enum_set.find(identifier) == modulep->enum_set.end())
+    if(
+      smv_parse_tree.enum_set.find(identifier) == smv_parse_tree.enum_set.end())
     {
       std::string id = module + "::var::" + identifier;
 
