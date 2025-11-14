@@ -2031,7 +2031,11 @@ type_assignment: param_identifier '=' data_type
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_identifier, base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
-		  addswap($$, ID_type, $3); }
+		  addswap($$, ID_type, $3);
+
+		  // add to the scope as a type name
+		  PARSER.scopes.add_name(base_name, "", verilog_scopet::TYPEDEF);
+		}
         ;
 
 data_type_or_implicit:
