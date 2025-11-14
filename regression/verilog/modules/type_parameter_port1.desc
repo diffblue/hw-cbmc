@@ -1,5 +1,5 @@
 KNOWNBUG
-parameter_ports4.sv
+type_parameter_port1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
