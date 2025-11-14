@@ -198,13 +198,13 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           # spot
-          SPOT_VERSION=2.14.2
+          SPOT_VERSION=2.14.3.16
           URL=https://download.opensuse.org/repositories/home:/adl/Debian_12/amd64
-          wget ${URL}/libbddx0_${SPOT_VERSION}.0-1_amd64.deb
-          wget ${URL}/libspotgen0_${SPOT_VERSION}.0-1_amd64.deb
-          wget ${URL}/libspot0_${SPOT_VERSION}.0-1_amd64.deb
-          wget ${URL}/spot_${SPOT_VERSION}.0-1_amd64.deb
-          sudo dpkg -i libbddx0_${SPOT_VERSION}.0-1_amd64.deb libspotgen0_${SPOT_VERSION}.0-1_amd64.deb libspot0_${SPOT_VERSION}.0-1_amd64.deb spot_${SPOT_VERSION}.0-1_amd64.deb
+          wget ${URL}/libbddx0_${SPOT_VERSION}-1_amd64.deb
+          wget ${URL}/libspotgen0_${SPOT_VERSION}-1_amd64.deb
+          wget ${URL}/libspot0_${SPOT_VERSION}-1_amd64.deb
+          wget ${URL}/spot_${SPOT_VERSION}-1_amd64.deb
+          sudo dpkg -i libbddx0_${SPOT_VERSION}-1_amd64.deb libspotgen0_${SPOT_VERSION}-1_amd64.deb libspot0_${SPOT_VERSION}-1_amd64.deb spot_${SPOT_VERSION}-1_amd64.deb
       - name: Confirm ltl2tgba is available and log the version installed
         run: ltl2tgba --version
       - name: Get the ebmc binary
