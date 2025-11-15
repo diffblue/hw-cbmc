@@ -1,16 +1,18 @@
-// count down from 10 to 0
+// count up from 0 to 10
 
-module main(input clk);
+module main(
+  input logic clk, 
+  input logic reset
+  output logic [3:0] counter,
+  );
 
-  reg [3:0] counter;
-
-  initial counter = 0;
-
-  always @(posedge clk)
-    if(counter != 10)
-      counter = counter + 1;
+  always_ff @(posedge clk or posedge reset)
+    if (reset)
+      counter <= 'b0;   
+    else if (counter != 10)
+      counter <= counter + 1;
 
   // expected to pass
-  p0: assert property (s_eventually counter == 10);
+  ASSERT_COUNTER_EVENTUALLY_10: assert property (@(posedge clk) disable iff (reset) s_eventually (counter == 10));
 
 endmodule
