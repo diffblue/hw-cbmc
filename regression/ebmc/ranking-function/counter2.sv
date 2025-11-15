@@ -2,9 +2,8 @@
 
 module main(
   input logic clk, 
-  input logic reset
-  output logic [3:0] counter,
-  );
+  input logic reset,
+  output logic [3:0] counter);
 
   always_ff @(posedge clk or posedge reset)
     if (reset)
