@@ -1,0 +1,17 @@
+CORE
+../../verilog/SVA/sequence_repetition2.sv
+--buechi --bound 10
+^\[main\.p0\] main\.x == 0 \[\*\]: PROVED up to bound 10$
+^\[main\.p1\] \(main\.x == 0 \[\+\]\) #=# main\.x == 1: PROVED up to bound 10$
+^\[main\.p2\] main\.x == 0 \[\+\]: PROVED up to bound 10$
+^\[main\.p3\] main\.half_x == 0 \[\*\]: PROVED up to bound 10$
+^\[main\.p4\] main\.x == 1 \[\*\]: REFUTED$
+^\[main\.p5\] 0 \[\*\]: REFUTED$
+^\[main\.p6\] main\.x == 1 \[\+\]: REFUTED$
+^\[main\.p7\] \(main\.x == 0 \[\+\]\) #-# main\.x == 1: REFUTED$
+^\[main\.p8\] 0 \[\+\]: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

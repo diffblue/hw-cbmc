@@ -1,0 +1,12 @@
+MODULE main
+
+-- complex identifiers can use '[...]' and '.'
+VAR some_var : boolean;
+VAR some_var[3] : boolean;
+VAR some_var[4].whatnot : boolean;
+VAR some_var[5][2].whatnot : boolean;
+
+INIT some_var[5][2].whatnot
+
+-- spaces are ok
+INIT some_var [4] . whatnot

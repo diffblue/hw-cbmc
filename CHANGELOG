@@ -1,3 +1,10 @@
+# EBMC 5.9
+
+* SystemVerilog: fix for type parameters
+* SMV: word constants
+* SMV: IVAR declarations
+* SMV: bit selection operator
+
 # EBMC 5.8
 
 * AIG/netlist engine: fix for conversion of extract bits operator

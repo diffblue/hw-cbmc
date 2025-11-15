@@ -544,6 +544,41 @@ expr2smvt::resultt expr2smvt::convert_extractbits(const extractbits_exprt &expr)
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_smv_bit_select
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt
+expr2smvt::convert_smv_bit_selection(const ternary_exprt &expr)
+{
+  const precedencet precedence = precedencet::INDEX;
+  auto op_rec = convert_rec(expr.op0());
+
+  std::string dest;
+
+  if(precedence >= op_rec.p)
+    dest += '(';
+  dest += op_rec.s;
+  if(precedence >= op_rec.p)
+    dest += ')';
+
+  dest += '[';
+  dest += convert_rec(expr.op1()).s;
+  dest += ':';
+  dest += convert_rec(expr.op2()).s;
+  dest += ']';
+
+  return {precedence, std::move(dest)};
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_if
 
   Inputs:
@@ -771,8 +806,8 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id()==ID_notequal)
     return convert_binary(to_notequal_expr(src), "!=", precedencet::REL);
 
-  else if(src.id()==ID_not)
-    return convert_unary(to_not_expr(src), "!", precedencet::NOT);
+  else if(src.id() == ID_not || src.id() == ID_bitnot)
+    return convert_unary(to_unary_expr(src), "!", precedencet::NOT);
 
   else if(src.id() == ID_and || src.id() == ID_bitand)
     return convert_binary_associative(src, "&", precedencet::AND);
@@ -907,6 +942,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_extractbits)
     return convert_extractbits(to_extractbits_expr(src));
 
+  else if(src.id() == ID_smv_bit_selection)
+    return convert_smv_bit_selection(to_ternary_expr(src));
+
   else if(src.id() == ID_smv_extend)
     return convert_function_application("extend", src);
 
@@ -1020,9 +1058,9 @@ std::string type2smv(const typet &type, const namespacet &ns)
   {
     return "set";
   }
-  else if(type.id()=="submodule")
+  else if(type.id() == ID_smv_submodule)
   {
-    auto code = type.get_string(ID_identifier);
+    auto code = id2string(to_smv_submodule_type(type).identifier());
     const exprt &e=(exprt &)type;
     if(e.has_operands())
     {

@@ -1,0 +1,8 @@
+CORE
+../../verilog/SVA/system_verilog_assertion4.sv
+--buechi --module main --bound 10
+^\[main\.p11\] always \(main\.x == 0 \|-> \(\(##1 main\.x == 1\) and \(not \(##2 main\.x == 3\)\)\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

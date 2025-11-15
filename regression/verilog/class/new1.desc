@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 new1.sv
 
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-The class is not yet recognized as a type.

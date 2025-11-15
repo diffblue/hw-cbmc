@@ -60,7 +60,9 @@ public:
   } modet;
 
   void convert(smv_parse_treet::modulet &);
-  void create_var_symbols(const smv_parse_treet::modulet::item_listt &);
+  void create_var_symbols(
+    const smv_parse_treet::modulet::element_listt &,
+    const std::list<irep_idt> &module_parameters);
 
   void collect_define(const equal_exprt &);
   void convert_defines(exprt::operandst &invar);
@@ -86,10 +88,11 @@ protected:
   void check_type(typet &);
   smv_ranget convert_type(const typet &);
 
-  void convert(smv_parse_treet::modulet::itemt &);
-  void typecheck(smv_parse_treet::modulet::itemt &);
+  void convert(smv_parse_treet::modulet::elementt &);
+  void typecheck(smv_parse_treet::modulet::elementt &);
   void typecheck_expr_rec(exprt &, modet);
   void convert_expr_to(exprt &, const typet &dest);
+  exprt convert_word_constant(const constant_exprt &);
 
   smv_parse_treet::modulet *modulep;
 
@@ -168,9 +171,9 @@ void smv_typecheckt::convert_ports(
 {
   irept::subt &ports=dest.add(ID_ports).get_sub();
 
-  ports.reserve(smv_module.ports.size());
+  ports.reserve(smv_module.parameters.size());
 
-  for(const auto &port_name : smv_module.ports)
+  for(const auto &port_name : smv_module.parameters)
   {
     ports.push_back(exprt(ID_symbol));
     ports.back().set(
@@ -193,17 +196,18 @@ Function: smv_typecheckt::flatten_hierarchy
 
 void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
 {
-  for(auto &item : smv_module.items)
+  for(auto &element : smv_module.elements)
   {
-    if(item.is_var() && item.expr.type().id() == "submodule")
+    if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
     {
       exprt &inst =
-        static_cast<exprt &>(static_cast<irept &>(item.expr.type()));
+        static_cast<exprt &>(static_cast<irept &>(element.expr.type()));
 
       for(auto &op : inst.operands())
         convert(op);
 
-      auto instance_base_name = to_symbol_expr(item.expr).get_identifier();
+      auto instance_base_name =
+        to_smv_identifier_expr(element.expr).identifier();
 
       instantiate(
         smv_module,
@@ -582,6 +586,123 @@ void smv_typecheckt::typecheck(exprt &expr, modet mode)
 
 /*******************************************************************\
 
+Function: convert_word_constant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt smv_typecheckt::convert_word_constant(const constant_exprt &src_expr)
+{
+  auto &src = id2string(src_expr.get_value());
+
+  DATA_INVARIANT(src[0] == '0', "word constant grammar");
+
+  std::size_t index = 1;
+  bool is_signed = false;
+
+  DATA_INVARIANT(index < src.size(), "word constant length");
+
+  switch(src[index])
+  {
+  case 's':
+  case 'S':
+    is_signed = true;
+    index++;
+    break;
+
+  case 'u':
+  case 'U':
+    // this is the default
+    index++;
+    break;
+
+  default:;
+  }
+
+  DATA_INVARIANT(index < src.size(), "word constant length");
+
+  unsigned base;
+  switch(src[index])
+  {
+  case 'd':
+  case 'D':
+    base = 10;
+    break;
+
+  case 'h':
+  case 'H':
+    base = 16;
+    break;
+
+  case 'b':
+  case 'B':
+    base = 2;
+    break;
+
+  case 'o':
+  case 'O':
+    base = 8;
+    break;
+
+  default:
+    DATA_INVARIANT(false, "word constant base");
+  }
+
+  index++;
+
+  DATA_INVARIANT(index < src.size(), "word constant length");
+
+  std::optional<mp_integer> bits = {};
+
+  // optional number of bits
+  if(isdigit(src[index]))
+  {
+    std::string bits_str;
+    for(; index < src.size() && isdigit(src[index]); index++)
+    {
+      bits_str += src[index];
+    }
+
+    bits = string2integer(bits_str);
+  }
+
+  std::string digits;
+  digits.reserve(src.size());
+
+  for(; index < src.size(); index++)
+  {
+    if(src[index] != '_')
+      digits.push_back(src[index]);
+  }
+
+  if(!bits.has_value())
+  {
+    if(base == 10)
+      throw errort{}.with_location(src_expr.source_location())
+        << "decimal word constant without width";
+    else if(base == 2)
+      bits = digits.size();
+    else if(base == 8)
+      bits = digits.size() * 3;
+    else if(base == 16)
+      bits = digits.size() * 4;
+  }
+
+  auto digits_int = string2integer(digits, base);
+
+  auto type =
+    bitvector_typet{is_signed ? ID_signedbv : ID_unsignedbv, bits.value()};
+
+  return from_integer(digits_int, type).with_source_location(src_expr);
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::typecheck_expr_rec
 
   Inputs:
@@ -845,6 +966,11 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     {
       // good as is
     }
+    else if(type.id() == ID_smv_word_constant)
+    {
+      // turn into signedbv/unsignedbv
+      expr = convert_word_constant(to_constant_expr(expr));
+    }
     else
     {
       PRECONDITION(false);
@@ -1079,6 +1205,62 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
       throw errort().with_location(expr.source_location())
         << "abs expects integer";
     }
+  }
+  else if(expr.id() == ID_smv_bit_selection) // word[high:low]
+  {
+    auto &op = to_ternary_expr(expr).op0();
+
+    typecheck_expr_rec(op, mode);
+
+    if(op.type().id() != ID_unsignedbv && op.type().id() != ID_signedbv)
+    {
+      throw errort().with_location(op.source_location())
+        << "bit selection expects word";
+    }
+
+    auto &high = to_ternary_expr(expr).op1();
+
+    typecheck_expr_rec(high, OTHER);
+
+    // high must be an integer constant
+    if(high.type().id() != ID_range && high.type().id() != ID_natural)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select high must be integer, but got "
+        << to_string(high.type());
+    }
+
+    if(high.id() != ID_constant)
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select high must be constant";
+
+    auto high_int = numeric_cast_v<mp_integer>(to_constant_expr(high));
+
+    auto &low = to_ternary_expr(expr).op2();
+
+    typecheck_expr_rec(low, OTHER);
+
+    // low must be an integer constant
+    if(low.type().id() != ID_range && low.type().id() != ID_natural)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select low must be integer, but got " << to_string(low.type());
+    }
+
+    if(low.id() != ID_constant)
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select low must be constant";
+
+    auto low_int = numeric_cast_v<mp_integer>(to_constant_expr(low));
+
+    if(low_int > high_int)
+      throw errort().with_location(expr.find_source_location())
+        << "bit-select high must not be smaller than low";
+
+    auto width = numeric_cast_v<std::size_t>(high_int - low_int + 1);
+
+    // always unsigned, even if op is signed
+    expr.type() = unsignedbv_typet{width};
   }
   else if(expr.id() == ID_smv_bool)
   {
@@ -1500,6 +1682,13 @@ void smv_typecheckt::lower_node(exprt &expr) const
     auto &implies = to_smv_bitimplies_expr(expr);
     expr = bitor_exprt{bitnot_exprt{implies.op0()}, implies.op1()};
   }
+  else if(expr.id() == ID_smv_bit_selection)
+  {
+    // we'll lower to extractbits
+    auto &bit_selection = to_ternary_expr(expr);
+    expr = extractbits_exprt{
+      bit_selection.op0(), bit_selection.op2(), bit_selection.type()};
+  }
 
   // lower the type
   lower(expr.type());
@@ -1701,16 +1890,56 @@ void smv_typecheckt::convert(exprt &expr)
   for(auto &op : expr.operands())
     convert(op);
 
-  if(expr.id()==ID_symbol)
+  if(expr.id() == ID_smv_identifier)
   {
     const std::string &identifier=expr.get_string(ID_identifier);
 
     DATA_INVARIANT(
       identifier.find("::") == std::string::npos, "conversion is done once");
 
-    std::string id = module + "::var::" + identifier;
+    // enum or variable?
+    if(modulep->enum_set.find(identifier) == modulep->enum_set.end())
+    {
+      std::string id = module + "::var::" + identifier;
 
-    expr.set(ID_identifier, id);
+      expr.set(ID_identifier, id);
+      expr.id(ID_symbol);
+    }
+    else
+    {
+      expr.id(ID_constant);
+      expr.type() = typet(ID_smv_enumeration);
+      expr.set(ID_value, identifier);
+      expr.remove(ID_identifier);
+    }
+  }
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      member_expr.compound().id() == ID_symbol,
+      "unexpected complex_identifier",
+      expr.pretty());
+
+    auto tmp = to_symbol_expr(member_expr.compound());
+    tmp.set_identifier(
+      id2string(tmp.get_identifier()) + '.' +
+      id2string(member_expr.get_component_name()));
+    expr = tmp;
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      index_expr.array().id() == ID_symbol,
+      "unexpected complex_identifier",
+      expr.pretty());
+    auto &index = index_expr.index();
+    PRECONDITION(index.is_constant());
+    auto index_string = id2string(to_constant_expr(index).get_value());
+    auto tmp = to_symbol_expr(index_expr.array());
+    tmp.set_identifier(id2string(tmp.get_identifier()) + '.' + index_string);
+    expr = tmp;
   }
   else if(expr.id()=="smv_nondet_choice" ||
           expr.id()=="smv_union")
@@ -1729,7 +1958,7 @@ void smv_typecheckt::convert(exprt &expr)
 
     expr.id(ID_constraint_select_one);
   }
-  else if(expr.id()=="smv_cases") // cases
+  else if(expr.id() == ID_smv_cases) // cases
   {
     if(expr.operands().size()<1)
     {
@@ -1808,69 +2037,72 @@ Function: smv_typecheckt::typecheck
 
 \*******************************************************************/
 
-void smv_typecheckt::typecheck(
-  smv_parse_treet::modulet::itemt &item)
+void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
 {
-  switch(item.item_type)
+  switch(element.element_type)
   {
-  case smv_parse_treet::modulet::itemt::INIT:
-    typecheck(item.expr, INIT);
-    convert_expr_to(item.expr, bool_typet{});
+  case smv_parse_treet::modulet::elementt::INIT:
+    typecheck(element.expr, INIT);
+    convert_expr_to(element.expr, bool_typet{});
     return;
 
-  case smv_parse_treet::modulet::itemt::TRANS:
-    typecheck(item.expr, TRANS);
-    convert_expr_to(item.expr, bool_typet{});
+  case smv_parse_treet::modulet::elementt::TRANS:
+    typecheck(element.expr, TRANS);
+    convert_expr_to(element.expr, bool_typet{});
     return;
 
-  case smv_parse_treet::modulet::itemt::CTLSPEC:
-    typecheck(item.expr, CTL);
-    convert_expr_to(item.expr, bool_typet{});
+  case smv_parse_treet::modulet::elementt::CTLSPEC:
+    typecheck(element.expr, CTL);
+    convert_expr_to(element.expr, bool_typet{});
     return;
 
-  case smv_parse_treet::modulet::itemt::LTLSPEC:
-    typecheck(item.expr, LTL);
-    convert_expr_to(item.expr, bool_typet{});
+  case smv_parse_treet::modulet::elementt::LTLSPEC:
+    typecheck(element.expr, LTL);
+    convert_expr_to(element.expr, bool_typet{});
     return;
 
-  case smv_parse_treet::modulet::itemt::INVAR:
-    typecheck(item.expr, INVAR);
-    convert_expr_to(item.expr, bool_typet{});
+  case smv_parse_treet::modulet::elementt::INVAR:
+    typecheck(element.expr, INVAR);
+    convert_expr_to(element.expr, bool_typet{});
     return;
 
-  case smv_parse_treet::modulet::itemt::FAIRNESS:
-    typecheck(item.expr, OTHER);
-    convert_expr_to(item.expr, bool_typet{});
+  case smv_parse_treet::modulet::elementt::FAIRNESS:
+    typecheck(element.expr, OTHER);
+    convert_expr_to(element.expr, bool_typet{});
     return;
 
-  case smv_parse_treet::modulet::itemt::ASSIGN_CURRENT:
-    typecheck(item.equal_expr().lhs(), OTHER);
-    typecheck(item.equal_expr().rhs(), OTHER);
-    convert_expr_to(item.equal_expr().rhs(), item.equal_expr().lhs().type());
-    item.equal_expr().type() = bool_typet{};
+  case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
+    typecheck(element.equal_expr().lhs(), OTHER);
+    typecheck(element.equal_expr().rhs(), OTHER);
+    convert_expr_to(
+      element.equal_expr().rhs(), element.equal_expr().lhs().type());
+    element.equal_expr().type() = bool_typet{};
     return;
 
-  case smv_parse_treet::modulet::itemt::ASSIGN_INIT:
-    typecheck(item.equal_expr().lhs(), INIT);
-    typecheck(item.equal_expr().rhs(), INIT);
-    convert_expr_to(item.equal_expr().rhs(), item.equal_expr().lhs().type());
-    item.equal_expr().type() = bool_typet{};
+  case smv_parse_treet::modulet::elementt::ASSIGN_INIT:
+    typecheck(element.equal_expr().lhs(), INIT);
+    typecheck(element.equal_expr().rhs(), INIT);
+    convert_expr_to(
+      element.equal_expr().rhs(), element.equal_expr().lhs().type());
+    element.equal_expr().type() = bool_typet{};
     return;
 
-  case smv_parse_treet::modulet::itemt::ASSIGN_NEXT:
-    typecheck(item.equal_expr().lhs(), TRANS);
-    typecheck(item.equal_expr().rhs(), TRANS);
-    convert_expr_to(item.equal_expr().rhs(), item.equal_expr().lhs().type());
-    item.equal_expr().type() = bool_typet{};
+  case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
+    typecheck(element.equal_expr().lhs(), TRANS);
+    typecheck(element.equal_expr().rhs(), TRANS);
+    convert_expr_to(
+      element.equal_expr().rhs(), element.equal_expr().lhs().type());
+    element.equal_expr().type() = bool_typet{};
     return;
 
-  case smv_parse_treet::modulet::itemt::DEFINE:
-    typecheck(item.expr, OTHER);
-    item.equal_expr().type() = bool_typet{};
+  case smv_parse_treet::modulet::elementt::DEFINE:
+    typecheck(element.expr, OTHER);
+    element.equal_expr().type() = bool_typet{};
     return;
 
-  case smv_parse_treet::modulet::itemt::ENUM:
-  case smv_parse_treet::modulet::itemt::VAR:
+  case smv_parse_treet::modulet::elementt::ENUM:
+  case smv_parse_treet::modulet::elementt::IVAR:
+  case smv_parse_treet::modulet::elementt::VAR:
     return;
   }
 }
@@ -1887,10 +2119,9 @@ Function: smv_typecheckt::convert
 
 \*******************************************************************/
 
-void smv_typecheckt::convert(
-  smv_parse_treet::modulet::itemt &item)
+void smv_typecheckt::convert(smv_parse_treet::modulet::elementt &element)
 {
-  convert(item.expr);
+  convert(element.expr);
 }
 
 /*******************************************************************\
@@ -1906,26 +2137,50 @@ Function: smv_typecheckt::create_var_symbols
 \*******************************************************************/
 
 void smv_typecheckt::create_var_symbols(
-  const smv_parse_treet::modulet::item_listt &items)
+  const smv_parse_treet::modulet::element_listt &elements,
+  const std::list<irep_idt> &module_parameters)
 {
   const irep_idt mode = "SMV";
 
-  for(const auto &item : items)
+  // to catch variables that have the same name as enums
+  std::unordered_set<irep_idt, irep_id_hash> enums;
+
+  // to catch re-use of parameter identifiers
+  std::unordered_set<irep_idt, irep_id_hash> parameters;
+
+  for(const auto &parameter : module_parameters)
+    parameters.insert(parameter);
+
+  for(const auto &element : elements)
   {
-    if(item.is_var())
+    if(element.is_var() || element.is_ivar())
     {
-      irep_idt base_name = to_symbol_expr(item.expr).get_identifier();
+      irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
+
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(element.expr.source_location())
+          << "identifier " << base_name << " already used as enum";
+      }
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(element.expr.source_location())
+          << "identifier " << base_name << " already used as a parameter";
+      }
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
-        throw errort{}.with_location(item.expr.source_location())
+        throw errort{}.with_location(element.expr.source_location())
           << "variable " << base_name << " already declared, at "
           << symbol_ptr->location;
       }
 
-      typet type = item.expr.type();
+      typet type = element.expr.type();
 
       // check the type
       check_type(type);
@@ -1940,22 +2195,46 @@ void smv_typecheckt::create_var_symbols(
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
 
-      if(symbol.type.id() == "submodule")
+      if(symbol.type.id() == ID_smv_submodule)
         symbol.is_input = false;
       else
         symbol.is_input = true;
 
       symbol.is_state_var = false;
       symbol.value = nil_exprt{};
-      symbol.location = item.expr.source_location();
+      symbol.location = element.expr.source_location();
 
       symbol_table.insert(std::move(symbol));
     }
-    else if(item.is_define())
+    else if(element.is_define())
     {
-      const auto &symbol_expr = to_symbol_expr(to_equal_expr(item.expr).lhs());
-      irep_idt base_name = symbol_expr.get_identifier();
+      const auto &identifier_expr =
+        to_smv_identifier_expr(to_equal_expr(element.expr).lhs());
+      irep_idt base_name = identifier_expr.identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
+
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as enum";
+      }
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as a parameter";
+      }
+
+      auto symbol_ptr = symbol_table.lookup(identifier);
+      if(symbol_ptr != nullptr)
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "variable `" << base_name << "' already declared, at "
+          << symbol_ptr->location;
+      }
+
       typet type;
       type.make_nil();
 
@@ -1973,22 +2252,31 @@ void smv_typecheckt::create_var_symbols(
       symbol.value = nil_exprt{};
       symbol.is_input = true;
       symbol.is_state_var = false;
-      symbol.location = symbol_expr.source_location();
+      symbol.location = identifier_expr.source_location();
 
       symbol_table.insert(std::move(symbol));
     }
-    else if(item.is_enum())
+    else if(element.is_enum())
     {
-      irep_idt base_name = to_symbol_expr(item.expr).get_identifier();
+      irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(element.expr.source_location())
+          << "identifier " << base_name << " already used as a parameter";
+      }
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
-        throw errort{}.with_location(item.expr.source_location())
+        throw errort{}.with_location(element.expr.source_location())
           << "enum " << base_name << " already declared, at "
           << symbol_ptr->location;
       }
+
+      enums.insert(base_name);
     }
   }
 }
@@ -2036,7 +2324,7 @@ void smv_typecheckt::collect_define(const equal_exprt &expr)
   if(!result.second)
   {
     throw errort().with_location(expr.find_source_location())
-      << "symbol `" << identifier << "' defined twice";
+      << "variable `" << symbol.display_name() << "' already defined";
   }  
 }
 
@@ -2134,7 +2422,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
   define_map.clear();
 
   // variables/defines first, can be used before their declaration
-  create_var_symbols(smv_module.items);
+  create_var_symbols(smv_module.elements, smv_module.parameters);
 
   // transition relation
 
@@ -2152,41 +2440,43 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
     convert_ports(smv_module, module_symbol.type);
 
-    // non-variable items
-    for(auto &item : smv_module.items)
-      if(!item.is_var())
-        convert(item);
+    // non-variable elements
+    for(auto &element : smv_module.elements)
+      if(!element.is_var() && !element.is_ivar())
+        convert(element);
 
     flatten_hierarchy(smv_module);
 
     // we first need to collect all the defines
 
-    for (auto &item : smv_module.items) {
-      if(item.is_define() || item.is_assign_current())
-        collect_define(item.equal_expr());
+    for(auto &element : smv_module.elements)
+    {
+      if(element.is_define() || element.is_assign_current())
+        collect_define(element.equal_expr());
     }
     // now turn them into INVARs
     convert_defines(trans_invar);
 
     // do the rest now: typecheck
-    for (auto &item : smv_module.items) {
-      if(!item.is_define() && !item.is_assign_current())
-        typecheck(item);
+    for(auto &element : smv_module.elements)
+    {
+      if(!element.is_define() && !element.is_assign_current())
+        typecheck(element);
     }
 
     // copy to transition system
-    for(const auto &item : smv_module.items)
+    for(const auto &element : smv_module.elements)
     {
-      if (item.is_invar())
-        trans_invar.push_back(item.expr);
-      else if (item.is_init())
-        trans_init.push_back(item.expr);
-      else if(item.is_assign_init())
-        trans_init.push_back(item.expr);
-      else if(item.is_assign_next())
-        trans_trans.push_back(item.expr);
-      else if (item.is_trans())
-        trans_trans.push_back(item.expr);
+      if(element.is_invar())
+        trans_invar.push_back(element.expr);
+      else if(element.is_init())
+        trans_init.push_back(element.expr);
+      else if(element.is_assign_init())
+        trans_init.push_back(element.expr);
+      else if(element.is_assign_next())
+        trans_trans.push_back(element.expr);
+      else if(element.is_trans())
+        trans_trans.push_back(element.expr);
     }
 
     module_symbol.value =
@@ -2204,14 +2494,14 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
   {
     unsigned nr=1;
 
-    forall_item_list(it, smv_module.items)
+    for(auto &element : smv_module.elements)
     {
-      if(it->is_ctlspec() || it->is_ltlspec())
+      if(element.is_ctlspec() || element.is_ltlspec())
       {
         symbolt spec_symbol;
 
-        if(it->name.has_value())
-          spec_symbol.base_name = it->name.value();
+        if(element.name.has_value())
+          spec_symbol.base_name = element.name.value();
         else
           spec_symbol.base_name = "spec" + std::to_string(nr++);
 
@@ -2221,9 +2511,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.type = bool_typet();
         spec_symbol.is_property = true;
         spec_symbol.mode = "SMV";
-        spec_symbol.value = it->expr;
-        spec_symbol.location = it->location;
-        spec_symbol.location.set_comment(to_string(it->expr));
+        spec_symbol.value = element.expr;
+        spec_symbol.location = element.location;
+        spec_symbol.location.set_comment(to_string(element.expr));
 
         if(smv_module.name == "smv::main")
           spec_symbol.pretty_name = spec_symbol.base_name;

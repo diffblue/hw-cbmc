@@ -12,8 +12,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 
 #include "expr2smv.h"
+#include "smv_expr.h"
 #include "smv_parser.h"
 #include "smv_typecheck.h"
+#include "smv_types.h"
 
 /*******************************************************************\
 
@@ -67,10 +69,10 @@ void smv_languaget::dependencies(
 
   const smv_parse_treet::modulet &smv_module=m_it->second;
 
-  for(smv_parse_treet::mc_varst::const_iterator it=smv_module.vars.begin();
-      it!=smv_module.vars.end(); it++)
-    if(it->second.type.id()=="submodule")
-      module_set.insert(it->second.type.get_string("identifier"));
+  for(auto &element : smv_module.elements)
+    if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
+      module_set.insert(
+        id2string(to_smv_submodule_type(element.expr.type()).identifier()));
 }
 
 /*******************************************************************\
@@ -136,46 +138,45 @@ void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 
     out << "  PARAMETERS:\n";
 
-    for(auto &parameter : module.parameters.get_sub())
-      out << "    " << parameter.id() << '\n';
+    for(auto &parameter : module.parameters)
+      out << "    " << parameter << '\n';
 
     out << '\n';
 
     out << "  VARIABLES:" << std::endl;
 
-    for(smv_parse_treet::mc_varst::const_iterator it=module.vars.begin();
-        it!=module.vars.end(); it++)
-      if(it->second.type.id()!="submodule")
+    for(auto &element : module.elements)
+      if(element.is_var() && element.expr.type().id() != ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns{symbol_table};
-        auto msg = type2smv(it->second.type, ns);
-        out << "    " << it->first << ": " << msg << ";\n";
+        auto identifier = to_smv_identifier_expr(element.expr).identifier();
+        auto msg = type2smv(element.expr.type(), ns);
+        out << "    " << identifier << ": " << msg << ";\n";
       }
 
     out << std::endl;
 
     out << "  SUBMODULES:" << std::endl;
 
-    for(smv_parse_treet::mc_varst::const_iterator
-        it=module.vars.begin();
-        it!=module.vars.end(); it++)
-      if(it->second.type.id()=="submodule")
+    for(auto &element : module.elements)
+      if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
       {
         symbol_tablet symbol_table;
         namespacet ns(symbol_table);
-        auto msg = type2smv(it->second.type, ns);
-        out << "    " << it->first << ": " << msg << ";\n";
+        auto identifier = to_smv_identifier_expr(element.expr).identifier();
+        auto msg = type2smv(element.expr.type(), ns);
+        out << "    " << identifier << ": " << msg << ";\n";
       }
 
     out << std::endl;
 
     out << "  ITEMS:" << std::endl;
 
-    forall_item_list(it, module.items)
+    for(auto &element : module.elements)
     {
-      out << "    TYPE: " << to_string(it->item_type) << std::endl;
-      out << "    EXPR: " << it->expr.pretty() << std::endl;
+      out << "    TYPE: " << to_string(element.element_type) << '\n';
+      out << "    EXPR: " << element.expr.pretty() << '\n';
       out << std::endl;
     }
   }

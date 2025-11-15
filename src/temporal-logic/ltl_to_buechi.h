@@ -37,6 +37,16 @@ struct buechi_transt
   void rename_state_symbol(const symbol_exprt &new_state_symbol);
 };
 
+class ltl_to_buechi_unsupportedt
+{
+public:
+  explicit ltl_to_buechi_unsupportedt(exprt __expr) : expr(std::move(__expr))
+  {
+  }
+
+  exprt expr;
+};
+
 class message_handlert;
 
 buechi_transt ltl_to_buechi(const exprt &formula, message_handlert &);

@@ -2,7 +2,7 @@ CORE
 define4.smv
 
 ^file .* line 6: variable `x' already defined.*$
-^EXIT=1$
+^EXIT=2$
 ^SIGNAL=0$
 --
 --

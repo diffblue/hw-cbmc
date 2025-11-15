@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/string2int.h>
 
+#include <ebmc/ebmc_error.h>
 #include <verilog/sva_expr.h>
 
 #include "ltl.h"
@@ -21,8 +22,11 @@ Author: Daniel Kroening, dkr@amazon.com
 
 exprt ltl_sva_to_stringt::atom(const std::string &string) const
 {
+  if(string.empty() || string[0] != 'a')
+    throw ebmc_errort{} << "got unexpected atom '" << string << "'";
+
   // map back to number
-  auto number = safe_string2size_t(string);
+  auto number = safe_string2size_t(string.substr(1, std::string::npos));
 
   PRECONDITION(number < atoms.size());
 
@@ -297,44 +301,58 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto new_expr = R_exprt{until_with.rhs(), until_with.lhs()}; // swapped
     return infix(" R ", new_expr, mode);
   }
-  else if(
-    expr.id() == ID_sva_weak || expr.id() == ID_sva_strong ||
-    expr.id() == ID_sva_implicit_weak || expr.id() == ID_sva_implicit_strong)
+  else if(expr.id() == ID_sva_weak || expr.id() == ID_sva_implicit_weak)
   {
     PRECONDITION(mode == PROPERTY);
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
-    auto op_rec = rec(sequence, SVA_SEQUENCE);
+    auto op_rec = rec(sequence, SVA_SEQUENCE_WEAK);
 
     // weak closure
+    return resultt{precedencet::ATOM, '{' + op_rec.s + '}'};
+  }
+  else if(expr.id() == ID_sva_strong || expr.id() == ID_sva_implicit_strong)
+  {
+    PRECONDITION(mode == PROPERTY);
+    auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
+    auto op_rec = rec(sequence, SVA_SEQUENCE_STRONG);
+
+    // we use the weak closure, and reject cases where this does not work
     return resultt{precedencet::ATOM, '{' + op_rec.s + '}'};
   }
   else if(expr.id() == ID_sva_or)
   {
     // can be sequence or property
-    PRECONDITION(mode == PROPERTY || mode == SVA_SEQUENCE);
+    PRECONDITION(
+      mode == PROPERTY || mode == SVA_SEQUENCE_STRONG ||
+      mode == SVA_SEQUENCE_WEAK);
     return infix("|", expr, mode);
   }
   else if(expr.id() == ID_sva_and)
   {
     // can be sequence or property
-    PRECONDITION(mode == PROPERTY || mode == SVA_SEQUENCE);
+    PRECONDITION(
+      mode == PROPERTY || mode == SVA_SEQUENCE_STRONG ||
+      mode == SVA_SEQUENCE_WEAK);
     // NLM intersection
     return infix("&", expr, mode);
   }
   else if(expr.id() == ID_sva_sequence_intersect)
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
     return infix("&&", expr, mode);
   }
   else if(expr.id() == ID_sva_boolean)
   {
     // can be sequence or property
-    PRECONDITION(mode == PROPERTY || mode == SVA_SEQUENCE);
+    PRECONDITION(
+      mode == PROPERTY || mode == SVA_SEQUENCE_STRONG ||
+      mode == SVA_SEQUENCE_WEAK);
     return rec(to_sva_boolean_expr(expr).op(), BOOLEAN);
   }
   else if(expr.id() == ID_sva_cycle_delay)
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+
     auto &delay = to_sva_cycle_delay_expr(expr);
 
     if(delay.lhs().is_nil())
@@ -343,6 +361,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
 
       if(delay.is_range()) // ##[from:to] rhs
       {
+        if(mode == SVA_SEQUENCE_STRONG)
+          throw ltl_sva_to_string_unsupportedt{expr};
+
         auto from = numeric_cast_v<mp_integer>(delay.from());
 
         if(delay.is_unbounded()) // ##[n:$] rhs
@@ -378,6 +399,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
 
       if(delay.is_range())
       {
+        if(mode == SVA_SEQUENCE_STRONG)
+          throw ltl_sva_to_string_unsupportedt{expr};
+
         auto from = numeric_cast_v<mp_integer>(delay.from());
 
         if(from == 0)
@@ -387,6 +411,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
         }
         else if(delay.is_unbounded()) // f ##[n:$] g
         {
+          if(mode == SVA_SEQUENCE_STRONG)
+            throw ltl_sva_to_string_unsupportedt{expr};
+
           return infix(
             " ; 1[*" + integer2string(from - 1) + "..] ; ", new_expr, mode);
         }
@@ -421,7 +448,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     // ##[*] x ---> 1[*] ; x
     // w ##[*] x ---> w : 1[*] ; x
-    PRECONDITION(mode == SVA_SEQUENCE);
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+
+    if(mode == SVA_SEQUENCE_STRONG)
+      throw ltl_sva_to_string_unsupportedt{expr};
+
     auto &cycle_delay_expr = to_sva_cycle_delay_star_expr(expr);
     if(cycle_delay_expr.has_lhs())
     {
@@ -442,7 +473,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     // ##[+] x ---> 1[+] ; x
     // w ##[+] x ---> w : 1[+] ; x
-    PRECONDITION(mode == SVA_SEQUENCE);
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+
+    if(mode == SVA_SEQUENCE_STRONG)
+      throw ltl_sva_to_string_unsupportedt{expr};
+
     auto &cycle_delay_expr = to_sva_cycle_delay_plus_expr(expr);
     if(cycle_delay_expr.has_lhs())
     {
@@ -471,11 +506,14 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     expr.id() ==
     ID_sva_sequence_repetition_star) // [*] or [*n] or [*x:y] or [*x:$]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
     auto &repetition = to_sva_sequence_repetition_star_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_repetition_star, repetition.op()};
     if(!repetition.repetitions_given())
     {
+      if(mode == SVA_SEQUENCE_STRONG)
+        throw ltl_sva_to_string_unsupportedt{expr};
+
       return suffix("[*]", new_expr, mode);
     }
     else if(repetition.is_empty_match())
@@ -498,6 +536,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_unbounded())
     {
+      if(mode == SVA_SEQUENCE_STRONG)
+        throw ltl_sva_to_string_unsupportedt{expr};
+
       auto from = numeric_cast_v<mp_integer>(repetition.from());
       return suffix("[*" + integer2string(from) + "..]", new_expr, mode);
     }
@@ -506,7 +547,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_repetition_plus) // something[+]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+
+    if(mode == SVA_SEQUENCE_STRONG)
+      throw ltl_sva_to_string_unsupportedt{expr};
+
     auto new_expr = unary_exprt{
       ID_sva_sequence_repetition_plus,
       to_sva_sequence_repetition_plus_expr(expr).op()};
@@ -514,7 +559,10 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
+    // ltl2tgba produces the wrong anser for [->n] and [=n]
+    throw ltl_sva_to_string_unsupportedt{expr};
+
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
     auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_goto_repetition, repetition.op()};
     if(repetition.is_singleton())
@@ -533,6 +581,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_unbounded())
     {
+      if(mode == SVA_SEQUENCE_STRONG)
+        throw ltl_sva_to_string_unsupportedt{expr};
+
       auto from = numeric_cast_v<mp_integer>(repetition.from());
       return suffix("[->" + integer2string(from) + "..]", new_expr, mode);
     }
@@ -542,7 +593,10 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(
     expr.id() == ID_sva_sequence_non_consecutive_repetition) // something[=n]
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
+    // ltl2tgba produces the wrong anser for [->n] and [=n]
+    throw ltl_sva_to_string_unsupportedt{expr};
+
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
     auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
     unary_exprt new_expr{
       ID_sva_sequence_non_consecutive_repetition, repetition.op()};
@@ -562,6 +616,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_unbounded())
     {
+      if(mode == SVA_SEQUENCE_STRONG)
+        throw ltl_sva_to_string_unsupportedt{expr};
+
       auto from = numeric_cast_v<mp_integer>(repetition.from());
       return suffix("[=" + integer2string(from) + "..]", new_expr, mode);
     }
@@ -571,9 +628,9 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_first_match) // first_match(...)
   {
-    PRECONDITION(mode == SVA_SEQUENCE);
+    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
     auto &sequence = to_sva_sequence_first_match_expr(expr).sequence();
-    auto op_rec = rec(sequence, SVA_SEQUENCE);
+    auto op_rec = rec(sequence, mode);
     return resultt{precedencet::ATOM, "first_match(" + op_rec.s + ')'};
   }
   else if(!is_temporal_operator(expr))

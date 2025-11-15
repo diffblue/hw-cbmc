@@ -421,6 +421,17 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(
+    expr.id() == ID_le || expr.id() == ID_ge || expr.id() == ID_lt ||
+    expr.id() == ID_ge)
+  {
+    if(is_four_valued(expr))
+    {
+      return aval_bval(to_binary_relation_expr(expr));
+    }
+    else
+      return expr;
+  }
   else if(expr.id() == ID_concatenation)
   {
     if(
@@ -568,6 +579,16 @@ exprt verilog_lowering(exprt expr)
     // encode into aval/bval
     if(is_four_valued(expr.type()))
       return aval_bval_bitwise(multi_ary_expr);
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_replication)
+  {
+    auto &replication_expr = to_replication_expr(expr);
+
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_replication(replication_expr);
     else
       return expr; // leave as is
   }

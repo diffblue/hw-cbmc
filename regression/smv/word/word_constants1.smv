@@ -1,0 +1,18 @@
+MODULE main
+
+SPEC uwconst(123, 8) = 0d8_123;
+SPEC uwconst(123, 8) = 0ud8_123;
+SPEC uwconst(123, 8) = 0h_7b;
+SPEC uwconst(123, 8) = 0uh_7b;
+SPEC uwconst(123, 8) = 0o8_173;
+SPEC uwconst(123, 8) = 0uo8_173;
+SPEC uwconst(123, 8) = 0b_01111011;
+SPEC uwconst(123, 8) = 0ub_01111011;
+SPEC uwconst(123, 8) = 0b8_1111011;
+SPEC uwconst(123, 8) = 0ub8_1111011;
+
+SPEC swconst(123, 8) = 0sd8_123;
+SPEC swconst(123, 8) = 0sh_7b;
+SPEC swconst(123, 8) = 0so8_173;
+SPEC swconst(123, 8) = 0sb_01111011;
+SPEC swconst(123, 8) = 0sb8_1111011;

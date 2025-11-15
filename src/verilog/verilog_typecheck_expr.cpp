@@ -269,6 +269,15 @@ void verilog_typecheck_exprt::assignment_conversion(
     }
   }
 
+  if(rhs.type().id() == ID_verilog_new)
+  {
+    if(lhs_type.id() == ID_verilog_class_type)
+    {
+      rhs = typecast_exprt{rhs, lhs_type};
+      return;
+    }
+  }
+
   // "The size of the left-hand side of an assignment forms
   // the context for the right-hand expression."
 
@@ -3203,10 +3212,18 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   else if(expr.id()==ID_lt || expr.id()==ID_gt ||
           expr.id()==ID_le || expr.id()==ID_ge)
   {
-    expr.type()=bool_typet();
-
     convert_relation(expr);
     no_bool_ops(expr);
+
+    // This returns 'x' if either of the operands contains x or z.
+    if(is_four_valued(expr.lhs().type()) || is_four_valued(expr.rhs().type()))
+    {
+      expr.type() = verilog_unsignedbv_typet(1);
+    }
+    else
+    {
+      expr.type() = bool_typet{};
+    }
 
     return std::move(expr);
   }

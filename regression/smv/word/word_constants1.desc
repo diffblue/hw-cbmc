@@ -1,6 +1,6 @@
 CORE
-shift1.smv
-
+word_constants1.smv
+--bound 0
 ^EXIT=0$
 ^SIGNAL=0$
 --

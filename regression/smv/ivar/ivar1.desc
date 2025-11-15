@@ -1,8 +1,11 @@
 CORE
 ivar1.smv
-
-^file .* line 3: No support for IVAR declarations$
-^EXIT=1$
+--bound 1
+^\[.*\] some_input: REFUTED$
+^\[.*\] !some_input: REFUTED$
+^\[.*\] X some_input: REFUTED$
+^\[.*\] X !some_input: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --

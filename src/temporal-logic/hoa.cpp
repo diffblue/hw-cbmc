@@ -266,6 +266,28 @@ hoat::headert hoa_parsert::parse_header()
   return header;
 }
 
+hoat::ap_mapt hoat::parse_AP() const
+{
+  for(auto &item : header)
+  {
+    if(item.first == "AP:")
+    {
+      hoat::ap_mapt result;
+      std::size_t index = 0;
+      for(auto &name : item.second)
+      {
+        if(index != 0)
+          result[index - 1] = name;
+        index++;
+      }
+      return result;
+    }
+  }
+
+  // header not found
+  return {};
+}
+
 hoat::bodyt hoa_parsert::parse_body()
 {
   if(!tokenizer.consume().is_body())
@@ -322,8 +344,6 @@ hoat::edgest hoa_parsert::parse_edges()
 
   return edges;
 }
-
-#include <iostream>
 
 hoat::edget hoa_parsert::parse_edge()
 {
