@@ -12,6 +12,7 @@ SRC = \
       diatest.cpp \
       dimacs_writer.cpp \
       ebmc_base.cpp \
+      ebmc_language_file.cpp \
       ebmc_languages.cpp \
       ebmc_parse_options.cpp \
       ebmc_properties.cpp \
