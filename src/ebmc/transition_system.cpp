@@ -17,7 +17,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/unicode.h>
 
 #include <langapi/language.h>
-#include <langapi/language_file.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
 #include <trans-word-level/show_module_hierarchy.h>
@@ -25,6 +24,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/verilog_types.h>
 
 #include "ebmc_error.h"
+#include "ebmc_language_file.h"
 #include "ebmc_version.h"
 #include "output_file.h"
 
@@ -132,7 +132,7 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
 static bool parse(
   const cmdlinet &cmdline,
   const std::string &filename,
-  language_filest &language_files,
+  ebmc_language_filest &language_files,
   message_handlert &message_handler)
 {
   messaget message(message_handler);
@@ -200,7 +200,7 @@ static bool parse(
 
 bool parse(
   const cmdlinet &cmdline,
-  language_filest &language_files,
+  ebmc_language_filest &language_files,
   message_handlert &message_handler)
 {
   for(unsigned i = 0; i < cmdline.args.size(); i++)
@@ -261,7 +261,7 @@ int get_transition_system(
   //
   // parsing
   //
-  language_filest language_files;
+  ebmc_language_filest language_files;
 
   if(parse(cmdline, language_files, message_handler))
     return 1;
