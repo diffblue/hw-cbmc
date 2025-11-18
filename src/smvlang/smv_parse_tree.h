@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/string_hash.h>
 
+#include <iosfwd>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -293,6 +294,8 @@ public:
   
   void swap(smv_parse_treet &smv_parse_tree);
   void clear();
+
+  void show(std::ostream &) const;
 };
 
 #endif
