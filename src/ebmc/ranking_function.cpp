@@ -21,6 +21,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <trans-word-level/unwind.h>
 #include <verilog/sva_expr.h>
 
+#include "build_transition_system.h"
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
