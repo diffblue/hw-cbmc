@@ -20,6 +20,7 @@ class smv_parse_treet
 {
 public:
   smv_parse_treet() = default;
+  smv_parse_treet(smv_parse_treet &&) = default;
 
   // don't copy, contains pointers
   smv_parse_treet(const smv_parse_treet &) = delete;
