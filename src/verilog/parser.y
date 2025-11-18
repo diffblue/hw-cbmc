@@ -3218,10 +3218,12 @@ named_port_connection_brace:
 	;
 
 named_port_connection:
-	  '.' port_identifier '(' expression_opt ')'
+	  // This needs to be 'any_identifier' to allow identifiers that
+	  // are typedefs in the local scope.
+	  '.' any_identifier '(' expression_opt ')'
 		{ init($$, ID_named_port_connection);
-                  mto($$, $2);
-                  mto($$, $4); }
+		  mto($$, $2);
+		  mto($$, $4); }
 	;
 
 // System Verilog standard 1800-2017
@@ -4644,7 +4646,8 @@ attr_name: identifier
 // even if they are already used for a different kind of identifier
 // in a higher scope.
 any_identifier:
-	  type_identifier
+	  TOK_TYPE_IDENTIFIER
+		{ new_symbol($$, $1); }
 	| non_type_identifier
 	;
 
