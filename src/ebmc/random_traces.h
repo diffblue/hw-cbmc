@@ -16,14 +16,20 @@ Author: Daniel Kroening, kroening@kroening.com
 
 class cmdlinet;
 class message_handlert;
+class transition_systemt;
 
 // many traces
-int random_traces(const cmdlinet &, message_handlert &);
+int random_traces(
+  const transition_systemt &,
+  const cmdlinet &,
+  message_handlert &);
 
 // just one trace
-int random_trace(const cmdlinet &, message_handlert &);
+int random_trace(
+  const transition_systemt &,
+  const cmdlinet &,
+  message_handlert &);
 
-class transition_systemt;
 class trans_tracet;
 
 // many traces, VCD

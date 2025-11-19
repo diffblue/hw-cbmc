@@ -13,6 +13,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #define EBMC_LANGUAGE_H
 
 #include <iosfwd>
+#include <optional>
 
 class cmdlinet;
 class message_handlert;
@@ -29,11 +30,9 @@ public:
 
   virtual ~ebmc_languaget();
 
-  /// produce diagnostic output as specified on the command line
-  virtual void diagnostics() = 0;
-
-  /// produce the transition system, and return it
-  virtual transition_systemt transition_system() = 0;
+  /// Produce the transition system, and return it;
+  /// returns {} when diagnostic output was produced instead.
+  virtual std::optional<transition_systemt> transition_system() = 0;
 
 protected:
   cmdlinet &cmdline;
