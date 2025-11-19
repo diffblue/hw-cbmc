@@ -60,6 +60,7 @@ public:
   } modet;
 
   void convert(smv_parse_treet::modulet &);
+
   void create_var_symbols(const smv_parse_treet::modulet::element_listt &);
 
   void collect_define(const equal_exprt &);
@@ -104,15 +105,13 @@ protected:
     smv_parse_treet::modulet &,
     const irep_idt &identifier,
     const irep_idt &instance,
-    const exprt::operandst &operands,
+    const exprt::operandst &arguments,
     const source_locationt &);
 
   typet
   type_union(const typet &type1, const typet &type2, const source_locationt &);
 
   typedef std::map<irep_idt, exprt> rename_mapt;
-
-  void instantiate_rename(exprt &, const rename_mapt &rename_map);
 
   void convert_ports(smv_parse_treet::modulet &, typet &dest);
 
@@ -196,8 +195,14 @@ Function: smv_typecheckt::flatten_hierarchy
 
 void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
 {
-  for(auto &element : smv_module.elements)
+  // Not using ranged for since we will append to the list we are
+  // iterating over! This avoids recursion.
+  for(auto element_it = smv_module.elements.begin();
+      element_it != smv_module.elements.end();
+      ++element_it)
   {
+    auto &element = *element_it;
+
     if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
     {
       exprt &inst =
@@ -235,195 +240,66 @@ void smv_typecheckt::instantiate(
   smv_parse_treet::modulet &smv_module,
   const irep_idt &identifier,
   const irep_idt &instance,
-  const exprt::operandst &operands,
+  const exprt::operandst &arguments,
   const source_locationt &location)
 {
-  symbol_table_baset::symbolst::const_iterator s_it =
-    symbol_table.symbols.find(identifier);
+  // Find the module
+  auto module_it = smv_parse_tree.module_map.find(identifier);
 
-  if(s_it==symbol_table.symbols.end())
+  if(module_it == smv_parse_tree.module_map.end())
   {
     throw errort().with_location(location)
       << "submodule `" << identifier << "' not found";
   }
 
-  if(s_it->second.type.id()!=ID_module)
-  {
-    throw errort().with_location(location)
-      << "submodule `" << identifier << "' not a module";
-  }
+  const auto &instantiated_module = *module_it->second;
+  const auto &parameters = instantiated_module.parameters;
 
-  const irept::subt &ports=s_it->second.type.find(ID_ports).get_sub();
-
-  // do the arguments/ports
-
-  if(ports.size()!=operands.size())
+  // map the arguments to parameters
+  if(parameters.size() != arguments.size())
   {
     throw errort().with_location(location)
       << "submodule `" << identifier << "' has wrong number of arguments";
   }
 
-  std::set<irep_idt> port_identifiers;
-  rename_mapt rename_map;
+  rename_mapt parameter_map;
 
-  for(std::size_t i = 0; i < ports.size(); i++)
+  for(std::size_t i = 0; i < parameters.size(); i++)
   {
-    const irep_idt &identifier=ports[i].get(ID_identifier);
-    rename_map.insert(std::pair<irep_idt, exprt>(identifier, operands[i]));
-    port_identifiers.insert(identifier);
+    parameter_map.emplace(parameters[i], arguments[i]);
   }
 
-  // do the variables
+  const std::string prefix = id2string(instance) + '.';
 
-  std::string new_prefix=
-    id2string(smv_module.name)+"::var::"+id2string(instance)+".";
-
-  std::set<irep_idt> var_identifiers;
-
-  for(auto v_it=symbol_table.symbol_module_map.lower_bound(identifier);
-      v_it!=symbol_table.symbol_module_map.upper_bound(identifier);
-      v_it++)
+  // copy the parse tree elements
+  for(auto &src_element : instantiated_module.elements)
   {
-    symbol_table_baset::symbolst::const_iterator s_it2 =
-      symbol_table.symbols.find(v_it->second);
+    auto copy = src_element;
 
-    if(s_it2==symbol_table.symbols.end())
-    {
-      throw errort() << "symbol `" << v_it->second << "' not found";
-    }
-
-    if(port_identifiers.find(s_it2->first) != port_identifiers.end())
-    {
-    }
-    else if(s_it2->second.type.id() == ID_module)
-    {
-    }
-    else
-    {
-      symbolt symbol(s_it2->second);
-
-      symbol.name=new_prefix+id2string(symbol.base_name);
-      symbol.module=smv_module.name;
-
-      if(smv_module.name == "smv::main")
+    // replace the parameter identifiers,
+    // and add the prefix to non-parameter identifiers
+    copy.expr.visit_post(
+      [&parameter_map, &prefix](exprt &expr)
       {
-        symbol.pretty_name =
-          id2string(instance) + '.' + id2string(symbol.base_name);
-      }
-      else
-      {
-        symbol.pretty_name = strip_smv_prefix(symbol.name);
-      }
-
-      rename_map.insert(
-          std::pair<irep_idt, exprt>(s_it2->first, symbol.symbol_expr()));
-
-      var_identifiers.insert(symbol.name);
-
-      symbol_table.add(symbol);
-    }
-  }
-
-  // fix values (macros)
-
-  for(const auto &v_id : var_identifiers)
-  {
-    auto s_it2 = symbol_table.get_writeable(v_id);
-
-    if(s_it2==nullptr)
-    {
-      throw errort() << "symbol `" << v_id << "' not found";
-    }
-
-    symbolt &symbol=*s_it2;
-
-    if(!symbol.value.is_nil())
-    {
-      instantiate_rename(symbol.value, rename_map);
-      typecheck(symbol.value, OTHER);
-      convert_expr_to(symbol.value, symbol.type);
-    }
-  }
-
-  // get the transition system
-
-  const transt &trans=to_trans_expr(s_it->second.value);
-
-  std::string old_prefix=id2string(s_it->first)+"::var::";
-
-  // do the transition system
-
-  if(!trans.invar().is_true())
-  {
-    exprt tmp(trans.invar());
-    instantiate_rename(tmp, rename_map);
-    smv_module.add_invar(tmp);
-  }
-    
-  if(!trans.init().is_true())
-  {
-    exprt tmp(trans.init());
-    instantiate_rename(tmp, rename_map);
-    smv_module.add_init(tmp);
-  }
-    
-  if(!trans.trans().is_true())
-  {
-    exprt tmp(trans.trans());
-    instantiate_rename(tmp, rename_map);
-    smv_module.add_trans(tmp);
-  }
-
-}
-
-/*******************************************************************\
-
-Function: smv_typecheckt::instantiate_rename
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void smv_typecheckt::instantiate_rename(
-  exprt &expr,
-  const rename_mapt &rename_map)
-{
-  for(auto &op : expr.operands())
-    instantiate_rename(op, rename_map);
-
-  if(expr.id()==ID_symbol || expr.id()==ID_next_symbol)
-  {
-    const irep_idt &old_identifier=expr.get(ID_identifier);
-    bool next=expr.id()==ID_next_symbol;
-
-    rename_mapt::const_iterator it=
-      rename_map.find(old_identifier);
-
-    if(it!=rename_map.end())
-    {
-      expr=it->second;
-
-      if(next)
-      {
-        if(expr.id()==ID_symbol)
+        if(expr.id() == ID_smv_identifier)
         {
-          expr=it->second;
-          expr.id(ID_next_symbol);
+          auto identifier = to_smv_identifier_expr(expr).identifier();
+          auto parameter_it = parameter_map.find(identifier);
+          if(parameter_it != parameter_map.end())
+          {
+            expr = parameter_it->second;
+          }
+          else
+          {
+            // add the prefix
+            to_smv_identifier_expr(expr).identifier(
+              prefix + id2string(identifier));
+          }
         }
-        else
-        {
-          throw errort().with_location(expr.find_source_location())
-            << "expected symbol expression here, but got "
-            << to_string(it->second);
-        }
-      }
-      else
-        expr=it->second;
-    }
+      });
+
+    // add to main parse tree
+    smv_module.elements.push_back(copy);
   }
 }
 
@@ -2497,10 +2373,10 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   define_map.clear();
 
-  // check for re-use of variables/defines/parameter identifiers
-  variable_checks(smv_module);
+  // expand the module hierarchy
+  flatten_hierarchy(smv_module);
 
-  // variables/defines first, can be used before their declaration
+  // Now do variables/defines, which can be used before their declaration
   create_var_symbols(smv_module.elements);
 
   // transition relation
@@ -2523,8 +2399,6 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
     for(auto &element : smv_module.elements)
       if(!element.is_var() && !element.is_ivar())
         convert(element);
-
-    flatten_hierarchy(smv_module);
 
     // we first need to collect all the defines
 
@@ -2631,6 +2505,13 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck()
 {
+  if(module != "smv::main")
+    return;
+
+  // check all modules for duplicate identifiers
+  for(auto &module : smv_parse_tree.module_list)
+    variable_checks(module);
+
   auto it = smv_parse_tree.module_map.find(module);
 
   if(it == smv_parse_tree.module_map.end())
