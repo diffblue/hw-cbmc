@@ -20,7 +20,10 @@ class exprt;
 class transition_systemt;
 class trans_tracet;
 
-int do_ranking_function(const cmdlinet &, message_handlert &);
+int do_ranking_function(
+  const transition_systemt &,
+  const cmdlinet &,
+  message_handlert &);
 
 exprt parse_ranking_function(
   const std::string &,

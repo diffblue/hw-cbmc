@@ -30,26 +30,20 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <fstream>
 #include <iostream>
 
-int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
+void preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
 {
   messaget message(message_handler);
 
   if(cmdline.args.size() != 1)
-  {
-    message.error() << "please give exactly one file to preprocess"
-                    << messaget::eom;
-    return 1;
-  }
+    throw ebmc_errort{}.with_exit_code(1)
+      << "please give exactly one file to preprocess";
 
   const auto &filename = cmdline.args.front();
   std::ifstream infile(widen_if_needed(filename));
 
   if(!infile)
-  {
-    message.error() << "failed to open input file `" << filename << "'"
-                    << messaget::eom;
-    return 1;
-  }
+    throw ebmc_errort{}.with_exit_code(1)
+      << "failed to open input file `" << filename << "'";
 
   auto language = get_language_from_filename(filename);
 
@@ -57,9 +51,8 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   {
     source_locationt location;
     location.set_file(filename);
-    message.error().source_location = location;
-    message.error() << "failed to figure out type of file" << messaget::eom;
-    return 1;
+    throw ebmc_errort{}.with_location(location).with_exit_code(1)
+      << "failed to figure out type of file";
   }
 
   optionst options;
@@ -77,12 +70,7 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   language->set_language_options(options, message_handler);
 
   if(language->preprocess(infile, filename, std::cout, message_handler))
-  {
-    message.error() << "PREPROCESSING FAILED" << messaget::eom;
-    return 1;
-  }
-
-  return 0;
+    throw ebmc_errort{}.with_exit_code(1);
 }
 
 static bool parse(
@@ -210,9 +198,6 @@ int get_transition_system(
   transition_systemt &transition_system)
 {
   messaget message(message_handler);
-
-  if(cmdline.isset("preprocess"))
-    return preprocess(cmdline, message_handler);
 
   //
   // parsing
@@ -348,4 +333,41 @@ int show_symbol_table(
   transition_systemt dummy_transition_system;
   return get_transition_system(
     cmdline, message_handler, dummy_transition_system);
+}
+
+std::optional<transition_systemt> ebmc_languagest::transition_system()
+{
+  if(cmdline.isset("preprocess"))
+  {
+    preprocess(cmdline, message_handler);
+    return {};
+  }
+
+  if(cmdline.isset("show-parse"))
+  {
+    show_parse(cmdline, message_handler);
+    return {};
+  }
+
+  if(
+    cmdline.isset("show-modules") || cmdline.isset("modules-xml") ||
+    cmdline.isset("json-modules"))
+  {
+    show_modules(cmdline, message_handler);
+    return {};
+  }
+
+  if(cmdline.isset("show-module-hierarchy"))
+  {
+    show_module_hierarchy(cmdline, message_handler);
+    return {};
+  }
+
+  if(cmdline.isset("show-symbol-table"))
+  {
+    show_symbol_table(cmdline, message_handler);
+    return {};
+  }
+
+  return get_transition_system(cmdline, message_handler);
 }
