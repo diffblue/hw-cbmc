@@ -196,8 +196,14 @@ Function: smv_typecheckt::flatten_hierarchy
 
 void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
 {
-  for(auto &element : smv_module.elements)
+  // Not using ranged for since we will append to the list we are
+  // iterating over! This avoids recursion.
+  for(auto element_it = smv_module.elements.begin();
+      element_it != smv_module.elements.end();
+      ++element_it)
   {
+    auto &element = *element_it;
+  
     if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
     {
       exprt &inst =
@@ -238,6 +244,7 @@ void smv_typecheckt::instantiate(
   const exprt::operandst &operands,
   const source_locationt &location)
 {
+#if 0
   symbol_table_baset::symbolst::const_iterator s_it =
     symbol_table.symbols.find(identifier);
 
@@ -373,7 +380,7 @@ void smv_typecheckt::instantiate(
     instantiate_rename(tmp, rename_map);
     smv_module.add_trans(tmp);
   }
-
+#endif
 }
 
 /*******************************************************************\
