@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <trans-netlist/smv_netlist.h>
 
+#include "build_transition_system.h"
 #include "diatest.h"
 #include "ebmc_base.h"
 #include "ebmc_error.h"

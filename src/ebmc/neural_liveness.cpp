@@ -17,6 +17,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <temporal-logic/temporal_expr.h>
 #include <verilog/sva_expr.h>
 
+#include "build_transition_system.h"
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "live_signal.h"

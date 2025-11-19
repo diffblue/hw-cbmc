@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
+#include "build_transition_system.h"
 #include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "output_file.h"
