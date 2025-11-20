@@ -804,15 +804,15 @@ void verilog_typecheckt::collect_symbols(
   {
     auto &parameter_decl = to_verilog_parameter_decl(module_item);
     collect_symbols(parameter_decl.type());
-    for(auto &decl : parameter_decl.declarations())
-      collect_symbols(parameter_decl.type(), decl);
+    for(auto &declarator : parameter_decl.declarators())
+      collect_symbols(parameter_decl.type(), declarator);
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
     auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
     collect_symbols(localparam_decl.type());
-    for(auto &decl : localparam_decl.declarations())
-      collect_symbols(localparam_decl.type(), decl);
+    for(auto &declarator : localparam_decl.declarators())
+      collect_symbols(localparam_decl.type(), declarator);
   }
   else if(module_item.id() == ID_decl)
   {

@@ -146,19 +146,19 @@ static void dependencies_rec(
   else if(module_item.id() == ID_parameter_decl)
   {
     auto &parameter_decl = to_verilog_parameter_decl(module_item);
-    for(auto &decl : parameter_decl.declarations())
+    for(auto &declarator : parameter_decl.declarators())
     {
-      dependencies_rec(decl.type(), dest);
-      dependencies_rec(decl.value(), dest);
+      dependencies_rec(declarator.type(), dest);
+      dependencies_rec(declarator.value(), dest);
     }
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
     auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
-    for(auto &decl : localparam_decl.declarations())
+    for(auto &declarator : localparam_decl.declarators())
     {
-      dependencies_rec(decl.type(), dest);
-      dependencies_rec(decl.value(), dest);
+      dependencies_rec(declarator.type(), dest);
+      dependencies_rec(declarator.value(), dest);
     }
   }
   else if(module_item.id() == ID_decl)
