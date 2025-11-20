@@ -2355,17 +2355,18 @@ public:
   {
   }
 
-  using parameter_port_listt = verilog_parameter_declt::declaratorst;
+  using parameter_port_declst = std::vector<verilog_parameter_declt>;
 
-  const parameter_port_listt &parameter_port_list() const
+  const parameter_port_declst &parameter_port_decls() const
   {
-    return (
-      const parameter_port_listt &)(find(ID_parameter_port_list).get_sub());
+    return (const parameter_port_declst &)(find(ID_verilog_parameter_port_decls)
+                                             .get_sub());
   }
 
-  parameter_port_listt &parameter_port_list()
+  parameter_port_declst &parameter_port_decls()
   {
-    return (parameter_port_listt &)(add(ID_parameter_port_list).get_sub());
+    return (
+      parameter_port_declst &)(add(ID_verilog_parameter_port_decls).get_sub());
   }
 
   using port_listt = std::vector<verilog_declt>;

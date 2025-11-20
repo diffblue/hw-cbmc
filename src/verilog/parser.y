@@ -1984,12 +1984,13 @@ list_of_variable_identifiers:
 // to cover list_of_param_assignments.
 parameter_port_declaration:
           TOK_PARAMETER data_type_or_implicit param_assignment
-		{ $$ = $3; }
+		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
 	| TOK_LOCALPARAM data_type_or_implicit param_assignment
-		{ $$ = $3; }
+		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
 	| data_type param_assignment
-		{ $$ = $2; }
+		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($1)); mto($$, $2); }
 	| param_assignment
+		{ init($$, ID_decl); mto($$, $1); }
 	;
 
 list_of_defparam_assignments:
