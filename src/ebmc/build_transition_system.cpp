@@ -18,6 +18,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/language.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
+#include <smvlang/smv_ebmc_language.h>
 #include <trans-word-level/show_module_hierarchy.h>
 #include <trans-word-level/show_modules.h>
 
@@ -30,26 +31,20 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <fstream>
 #include <iostream>
 
-int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
+void preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
 {
   messaget message(message_handler);
 
   if(cmdline.args.size() != 1)
-  {
-    message.error() << "please give exactly one file to preprocess"
-                    << messaget::eom;
-    return 1;
-  }
+    throw ebmc_errort{}.with_exit_code(1)
+      << "please give exactly one file to preprocess";
 
   const auto &filename = cmdline.args.front();
   std::ifstream infile(widen_if_needed(filename));
 
   if(!infile)
-  {
-    message.error() << "failed to open input file `" << filename << "'"
-                    << messaget::eom;
-    return 1;
-  }
+    throw ebmc_errort{}.with_exit_code(1)
+      << "failed to open input file `" << filename << "'";
 
   auto language = get_language_from_filename(filename);
 
@@ -57,9 +52,8 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   {
     source_locationt location;
     location.set_file(filename);
-    message.error().source_location = location;
-    message.error() << "failed to figure out type of file" << messaget::eom;
-    return 1;
+    throw ebmc_errort{}.with_location(location).with_exit_code(1)
+      << "failed to figure out type of file";
   }
 
   optionst options;
@@ -77,12 +71,7 @@ int preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
   language->set_language_options(options, message_handler);
 
   if(language->preprocess(infile, filename, std::cout, message_handler))
-  {
-    message.error() << "PREPROCESSING FAILED" << messaget::eom;
-    return 1;
-  }
-
-  return 0;
+    throw ebmc_errort{}.with_exit_code(1);
 }
 
 static bool parse(
@@ -210,9 +199,6 @@ int get_transition_system(
   transition_systemt &transition_system)
 {
   messaget message(message_handler);
-
-  if(cmdline.isset("preprocess"))
-    return preprocess(cmdline, message_handler);
 
   //
   // parsing
@@ -348,4 +334,78 @@ int show_symbol_table(
   transition_systemt dummy_transition_system;
   return get_transition_system(
     cmdline, message_handler, dummy_transition_system);
+}
+
+static std::set<std::string> file_extensions(const cmdlinet::argst &args)
+{
+  std::set<std::string> result;
+
+  for(auto &arg : args)
+  {
+    std::size_t ext_pos = arg.rfind('.');
+
+    if(ext_pos != std::string::npos)
+    {
+      auto ext = std::string(arg, ext_pos + 1, std::string::npos);
+      result.insert(ext);
+    }
+  }
+
+  return result;
+}
+
+std::optional<transition_systemt> ebmc_languagest::transition_system()
+{
+  auto extensions = file_extensions(cmdline.args);
+  auto ext_used = [&extensions](const char *ext)
+  { return extensions.find(ext) != extensions.end(); };
+
+  bool have_smv = ext_used("smv");
+  bool have_verilog = ext_used("v") || ext_used("sv");
+
+  if(have_smv && have_verilog)
+  {
+    throw ebmc_errort{} << "no support for mixed-language models";
+  }
+
+  if(have_smv)
+  {
+    return smv_ebmc_languaget{cmdline, message_handler}.transition_system();
+  }
+  else
+  {
+    if(cmdline.isset("preprocess"))
+    {
+      preprocess(cmdline, message_handler);
+      return {};
+    }
+
+    if(cmdline.isset("show-parse"))
+    {
+      show_parse(cmdline, message_handler);
+      return {};
+    }
+
+    if(
+      cmdline.isset("show-modules") || cmdline.isset("modules-xml") ||
+      cmdline.isset("json-modules"))
+    {
+      show_modules(cmdline, message_handler);
+      return {};
+    }
+
+    if(cmdline.isset("show-module-hierarchy"))
+    {
+      show_module_hierarchy(cmdline, message_handler);
+      return {};
+    }
+
+    if(cmdline.isset("show-symbol-table"))
+    {
+      show_symbol_table(cmdline, message_handler);
+      return {};
+    }
+
+    return get_transition_system(cmdline, message_handler);
+  }
 }
