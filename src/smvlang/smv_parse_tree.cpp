@@ -29,6 +29,7 @@ Function: smv_parse_treet::swap
 void smv_parse_treet::swap(smv_parse_treet &smv_parse_tree)
 {
   smv_parse_tree.modules.swap(modules);
+  smv_parse_tree.enum_set.swap(enum_set);
 }
 
 /*******************************************************************\
