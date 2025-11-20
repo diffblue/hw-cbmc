@@ -1,0 +1,7 @@
+KNOWNBUG
+parameter_ports5.v
+
+^EXIT=0$
+^SIGNAL=0$
+--
+The type of the parameter is ignored.
