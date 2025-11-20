@@ -1,0 +1,8 @@
+KNOWNBUG
+use_before_declaration1.smv
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This fails to type check.
