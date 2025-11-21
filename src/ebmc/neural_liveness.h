@@ -9,9 +9,13 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef EBMC_NEURAL_LIVENESS_H
 #define EBMC_NEURAL_LIVENESS_H
 
-#include <util/cmdline.h>
-#include <util/ui_message.h>
+class cmdlinet;
+class message_handlert;
+class transition_systemt;
 
-int do_neural_liveness(const cmdlinet &, ui_message_handlert &);
+int do_neural_liveness(
+  transition_systemt &,
+  const cmdlinet &,
+  message_handlert &);
 
 #endif // EBMC_NEURAL_LIVENESS_H
