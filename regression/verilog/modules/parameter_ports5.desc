@@ -1,7 +1,6 @@
-KNOWNBUG
-parameter_ports5.v
+CORE
+parameter_ports5.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
-The type of the parameter is ignored.
