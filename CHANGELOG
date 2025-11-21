@@ -1,5 +1,6 @@
 # EBMC 5.9
 
+* Verilog: fix for typed parameter ports
 * SystemVerilog: fix for type parameters
 * SMV: word constants
 * SMV: IVAR declarations
