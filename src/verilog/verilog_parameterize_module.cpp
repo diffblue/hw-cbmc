@@ -43,8 +43,8 @@ verilog_typecheckt::get_parameter_declarators(
 
   for(auto &item : module_items)
     if(item.id() == ID_parameter_decl)
-      for(auto &decl : to_verilog_parameter_decl(item).declarations())
-        declarators.push_back(decl);
+      for(auto &declarator : to_verilog_parameter_decl(item).declarators())
+        declarators.push_back(declarator);
 
   return declarators;
 }
@@ -173,7 +173,8 @@ void verilog_typecheckt::set_parameter_values(
   for(auto &module_item : module_items)
     if(module_item.id() == ID_parameter_decl)
     {
-      for(auto &decl : to_verilog_parameter_decl(module_item).declarations())
+      for(auto &declarator :
+          to_verilog_parameter_decl(module_item).declarators())
       {
         if(p_it!=parameter_values.end())
         {
@@ -181,7 +182,7 @@ void verilog_typecheckt::set_parameter_values(
 
           // only overwrite when actually assigned
           if(p_it->is_not_nil())
-            decl.value() = *p_it;
+            declarator.value() = *p_it;
 
           p_it++;
         }

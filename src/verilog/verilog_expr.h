@@ -680,6 +680,7 @@ public:
 
 using verilog_declaratorst = std::vector<verilog_declaratort>;
 
+/// a SystemVerilog parameter declaration
 class verilog_parameter_declt : public verilog_module_itemt
 {
 public:
@@ -690,12 +691,12 @@ public:
   using declaratort = verilog_declaratort;
   using declaratorst = verilog_declaratorst;
 
-  const declaratorst &declarations() const
+  const declaratorst &declarators() const
   {
     return (const declaratorst &)operands();
   }
 
-  declaratorst &declarations()
+  declaratorst &declarators()
   {
     return (declaratorst &)operands();
   }
@@ -725,12 +726,12 @@ public:
   using declaratort = verilog_declaratort;
   using declaratorst = verilog_declaratorst;
 
-  const declaratorst &declarations() const
+  const declaratorst &declarators() const
   {
     return (const declaratorst &)operands();
   }
 
-  declaratorst &declarations()
+  declaratorst &declarators()
   {
     return (declaratorst &)operands();
   }
