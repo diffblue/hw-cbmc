@@ -987,8 +987,9 @@ verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
   // and the expansion of generate blocks.
 
   // At the top level of the module, include the parameter ports.
-  for(auto &parameter_port_decl : module_source.parameter_port_list())
-    collect_symbols(typet(ID_nil), parameter_port_decl);
+  for(auto &declaration : module_source.parameter_port_decls())
+    for(auto &declarator : declaration.declarators())
+      collect_symbols(typet(ID_nil), declarator);
 
   // At the top level of the module, include the non-parameter module port
   // module items.

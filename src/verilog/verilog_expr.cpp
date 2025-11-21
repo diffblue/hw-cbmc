@@ -61,9 +61,9 @@ void verilog_module_sourcet::show(std::ostream &out) const
 {
   out << "Module: " << base_name() << '\n';
 
-  out << "  Parameters:\n";
+  out << "  Parameter ports:\n";
 
-  for(auto &parameter : parameter_port_list())
+  for(auto &parameter : parameter_port_decls())
     out << "    " << parameter.pretty() << '\n';
 
   out << '\n';

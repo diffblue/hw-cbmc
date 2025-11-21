@@ -33,10 +33,11 @@ verilog_typecheckt::get_parameter_declarators(
   std::vector<verilog_parameter_declt::declaratort> declarators;
 
   // We do the parameter ports first.
-  const auto &parameter_port_list = module_source.parameter_port_list();
+  const auto &parameter_port_decls = module_source.parameter_port_decls();
 
-  for(auto &decl : parameter_port_list)
-    declarators.push_back(decl);
+  for(auto &declaration : parameter_port_decls)
+    for(auto &declarator : declaration.declarators())
+      declarators.push_back(declarator);
 
   // We do the module item ports second.
   const auto &module_items = module_source.module_items();
@@ -155,18 +156,20 @@ void verilog_typecheckt::set_parameter_values(
 {
   auto p_it=parameter_values.begin();
 
-  auto &parameter_port_list = module_source.parameter_port_list();
+  auto &parameter_port_decls = module_source.parameter_port_decls();
 
-  for(auto &declarator : parameter_port_list)
-  {
-    DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
+  for(auto &declaration : parameter_port_decls)
+    for(auto &declarator : declaration.declarators())
+    {
+      DATA_INVARIANT(
+        p_it != parameter_values.end(), "have enough parameter values");
 
-    // only overwrite when actually assigned
-    if(p_it->is_not_nil())
-      declarator.value() = *p_it;
+      // only overwrite when actually assigned
+      if(p_it->is_not_nil())
+        declarator.value() = *p_it;
 
-    p_it++;
-  }
+      p_it++;
+    }
 
   auto &module_items = module_source.module_items();
 
