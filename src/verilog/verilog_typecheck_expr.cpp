@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "aval_bval_encoding.h"
 #include "convert_literals.h"
 #include "expr2verilog.h"
+#include "typename.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
 #include "verilog_lowering.h"
@@ -746,40 +747,7 @@ Function: verilog_typecheck_exprt::left
 
 constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
 {
-  // unpacked array: left bound
-  // packed array: index of most significant element
-  // 0 otherwise
-  auto left = [](const typet &type) -> mp_integer {
-    if(
-      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
-      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
-      type.id() == ID_bool)
-    {
-      auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_increasing))
-        return offset;
-      else
-        return offset + get_width(type) - 1;
-    }
-    else if(type.id() == ID_array)
-    {
-      auto offset = numeric_cast_v<mp_integer>(
-        to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_increasing))
-        return offset;
-      else
-      {
-        return offset +
-               numeric_cast_v<mp_integer>(
-                 to_constant_expr(to_array_type(type).size())) -
-               1;
-      }
-    }
-    else
-      return 0;
-  };
-
-  return from_integer(left(expr.type()), integer_typet{});
+  return from_integer(verilog_left(expr.type()), integer_typet{});
 }
 
 /*******************************************************************\
@@ -796,40 +764,7 @@ Function: verilog_typecheck_exprt::right
 
 constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
 {
-  // unpacked array: right bound
-  // packed array: index of least significant element
-  // 0 otherwise
-  auto right = [](const typet &type) -> mp_integer {
-    if(
-      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
-      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
-      type.id() == ID_bool)
-    {
-      auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_increasing))
-        return offset + get_width(type) - 1;
-      else
-        return offset;
-    }
-    else if(type.id() == ID_array)
-    {
-      auto offset = numeric_cast_v<mp_integer>(
-        to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_increasing))
-      {
-        return offset +
-               numeric_cast_v<mp_integer>(
-                 to_constant_expr(to_array_type(type).size())) -
-               1;
-      }
-      else
-        return offset;
-    }
-    else
-      return 0;
-  };
-
-  return from_integer(right(expr.type()), integer_typet{});
+  return from_integer(verilog_right(expr.type()), integer_typet{});
 }
 
 /*******************************************************************\
@@ -950,84 +885,8 @@ Function: verilog_typecheck_exprt::typename_string
 
 exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
 {
-  auto &type = expr.type();
-
-  auto left = this->left(expr);
-  auto right = this->right(expr);
-
-  const auto verilog_type = type.get(ID_C_verilog_type);
-
-  std::string s;
-
-  if(type.id() == ID_unsignedbv)
-  {
-    if(verilog_type == ID_verilog_byte)
-      s = "byte unsigned";
-    else if(verilog_type == ID_verilog_int)
-      s = "int unsigned";
-    else if(verilog_type == ID_verilog_longint)
-      s = "longint unsigned";
-    else if(verilog_type == ID_verilog_shortint)
-      s = "shortint unsigned";
-    else
-      s = "bit[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_verilog_unsignedbv)
-  {
-    s = "logic[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_bool)
-  {
-    s = "bit";
-  }
-  else if(type.id() == ID_signedbv)
-  {
-    if(verilog_type == ID_verilog_byte)
-      s = "byte";
-    else if(verilog_type == ID_verilog_int)
-      s = "int";
-    else if(verilog_type == ID_verilog_longint)
-      s = "longint";
-    else if(verilog_type == ID_verilog_shortint)
-      s = "shortint";
-    else
-      s = "bit signed[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_verilog_signedbv)
-  {
-    s = "logic signed[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_verilog_realtime)
-  {
-    s = "realtime";
-  }
-  else if(type.id() == ID_verilog_real)
-  {
-    s = "real";
-  }
-  else if(type.id() == ID_verilog_shortreal)
-  {
-    s = "shortreal";
-  }
-  else if(type.id() == ID_verilog_chandle)
-  {
-    s = "chandle";
-  }
-  else if(type.id() == ID_verilog_event)
-  {
-    s = "event";
-  }
-  else if(type.id() == ID_verilog_string)
-  {
-    s = "string";
-  }
-  else
-    s = "?";
-
-  auto result = convert_string_literal(s);
-  result.add_source_location() = expr.source_location();
-
-  return std::move(result);
+  auto s = verilog_typename(expr.type());
+  return convert_string_literal(s).with_source_location(expr);
 }
 
 /*******************************************************************\
