@@ -181,7 +181,9 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
 {
   auto base_name = stack_expr(module_name).id_string();
   const std::string identifier=smv_module_symbol(base_name);
-  auto &module=PARSER.parse_tree.modules[identifier];
+  PARSER.parse_tree.module_list.push_back(smv_parse_treet::modulet{});
+  auto &module=PARSER.parse_tree.module_list.back();
+  PARSER.parse_tree.module_map[identifier] = --PARSER.parse_tree.module_list.end();
   module.name = identifier;
   module.base_name = base_name;
   PARSER.module = &module;
