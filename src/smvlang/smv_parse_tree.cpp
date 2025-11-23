@@ -103,7 +103,7 @@ void smv_parse_treet::show(std::ostream &out) const
   {
     auto &module = module_it.second;
 
-    out << "Module: " << module.name << std::endl << std::endl;
+    out << "Module: " << module.base_name << '\n' << '\n';
 
     out << "  PARAMETERS:\n";
 
