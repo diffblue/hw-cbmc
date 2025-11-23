@@ -150,6 +150,8 @@ public:
           is_define());
         return to_equal_expr(expr);
       }
+
+      void show(std::ostream &) const;
     };
 
     typedef std::list<elementt> element_listt;

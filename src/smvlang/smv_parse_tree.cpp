@@ -97,6 +97,12 @@ std::string to_string(smv_parse_treet::modulet::elementt::element_typet i)
   return "";
 }
 
+void smv_parse_treet::modulet::elementt::show(std::ostream &out) const
+{
+  out << "    TYPE: " << to_string(element_type) << '\n';
+  out << "    EXPR: " << expr.pretty() << '\n';
+}
+
 void smv_parse_treet::show(std::ostream &out) const
 {
   for(auto &module_it : modules)
@@ -144,9 +150,8 @@ void smv_parse_treet::show(std::ostream &out) const
 
     for(auto &element : module.elements)
     {
-      out << "    TYPE: " << to_string(element.element_type) << '\n';
-      out << "    EXPR: " << element.expr.pretty() << '\n';
-      out << std::endl;
+      element.show(out);
+      out << '\n';
     }
   }
 }
