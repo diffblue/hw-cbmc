@@ -60,9 +60,7 @@ public:
   } modet;
 
   void convert(smv_parse_treet::modulet &);
-  void create_var_symbols(
-    const smv_parse_treet::modulet::element_listt &,
-    const std::list<irep_idt> &module_parameters);
+  void create_var_symbols(const smv_parse_treet::modulet::element_listt &);
 
   void collect_define(const equal_exprt &);
   void convert_defines(exprt::operandst &invar);
@@ -87,6 +85,8 @@ protected:
 
   void check_type(typet &);
   smv_ranget convert_type(const typet &);
+
+  void variable_checks(const smv_parse_treet::modulet &);
 
   void convert(smv_parse_treet::modulet::elementt &);
   void typecheck(smv_parse_treet::modulet::elementt &);
@@ -2126,6 +2126,129 @@ void smv_typecheckt::convert(smv_parse_treet::modulet::elementt &element)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::variable_checks
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::variable_checks(const smv_parse_treet::modulet &module)
+{
+  std::unordered_set<irep_idt, irep_id_hash> enums, defines, vars, parameters;
+
+  for(const auto &parameter : module.parameters)
+    parameters.insert(parameter);
+
+  for(const auto &element : module.elements)
+  {
+    if(element.is_var() || element.is_ivar())
+    {
+      const auto &identifier_expr = to_smv_identifier_expr(element.expr);
+      irep_idt base_name = identifier_expr.identifier();
+
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as enum";
+      }
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as a parameter";
+      }
+
+      // already used as variable?
+      if(vars.find(base_name) != vars.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as variable";
+      }
+
+      // already used as define?
+      if(defines.find(base_name) != defines.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as define";
+      }
+
+      vars.insert(base_name);
+    }
+    else if(element.is_define())
+    {
+      const auto &identifier_expr =
+        to_smv_identifier_expr(to_equal_expr(element.expr).lhs());
+      irep_idt base_name = identifier_expr.identifier();
+
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as enum";
+      }
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as a parameter";
+      }
+
+      // already used as variable?
+      if(vars.find(base_name) != vars.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as variable";
+      }
+
+      // already used as define?
+      if(defines.find(base_name) != defines.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as define";
+      }
+
+      defines.insert(base_name);
+    }
+    else if(element.is_enum())
+    {
+      const auto &identifier_expr = to_smv_identifier_expr(element.expr);
+      irep_idt base_name = identifier_expr.identifier();
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as a parameter";
+      }
+
+      // already used as variable?
+      if(vars.find(base_name) != vars.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as variable";
+      }
+
+      // already used as define?
+      if(defines.find(base_name) != defines.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as define";
+      }
+
+      enums.insert(base_name);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::create_var_symbols
 
   Inputs:
@@ -2137,19 +2260,9 @@ Function: smv_typecheckt::create_var_symbols
 \*******************************************************************/
 
 void smv_typecheckt::create_var_symbols(
-  const smv_parse_treet::modulet::element_listt &elements,
-  const std::list<irep_idt> &module_parameters)
+  const smv_parse_treet::modulet::element_listt &elements)
 {
   const irep_idt mode = "SMV";
-
-  // to catch variables that have the same name as enums
-  std::unordered_set<irep_idt, irep_id_hash> enums;
-
-  // to catch re-use of parameter identifiers
-  std::unordered_set<irep_idt, irep_id_hash> parameters;
-
-  for(const auto &parameter : module_parameters)
-    parameters.insert(parameter);
 
   for(const auto &element : elements)
   {
@@ -2157,20 +2270,6 @@ void smv_typecheckt::create_var_symbols(
     {
       irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
-
-      // already used as enum?
-      if(enums.find(base_name) != enums.end())
-      {
-        throw errort{}.with_location(element.expr.source_location())
-          << "identifier " << base_name << " already used as enum";
-      }
-
-      // already used as a parameter?
-      if(parameters.find(base_name) != parameters.end())
-      {
-        throw errort{}.with_location(element.expr.source_location())
-          << "identifier " << base_name << " already used as a parameter";
-      }
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
@@ -2213,20 +2312,6 @@ void smv_typecheckt::create_var_symbols(
       irep_idt base_name = identifier_expr.identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
-      // already used as enum?
-      if(enums.find(base_name) != enums.end())
-      {
-        throw errort{}.with_location(identifier_expr.source_location())
-          << "identifier " << base_name << " already used as enum";
-      }
-
-      // already used as a parameter?
-      if(parameters.find(base_name) != parameters.end())
-      {
-        throw errort{}.with_location(identifier_expr.source_location())
-          << "identifier " << base_name << " already used as a parameter";
-      }
-
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
@@ -2261,13 +2346,6 @@ void smv_typecheckt::create_var_symbols(
       irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
-      // already used as a parameter?
-      if(parameters.find(base_name) != parameters.end())
-      {
-        throw errort{}.with_location(element.expr.source_location())
-          << "identifier " << base_name << " already used as a parameter";
-      }
-
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
@@ -2275,8 +2353,6 @@ void smv_typecheckt::create_var_symbols(
           << "enum " << base_name << " already declared, at "
           << symbol_ptr->location;
       }
-
-      enums.insert(base_name);
     }
   }
 }
@@ -2421,8 +2497,11 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   define_map.clear();
 
+  // check for re-use of variables/defines/parameter identifiers
+  variable_checks(smv_module);
+
   // variables/defines first, can be used before their declaration
-  create_var_symbols(smv_module.elements, smv_module.parameters);
+  create_var_symbols(smv_module.elements);
 
   // transition relation
 
