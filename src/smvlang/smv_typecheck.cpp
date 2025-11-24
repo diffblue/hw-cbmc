@@ -2631,14 +2631,14 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck()
 {
-  smv_parse_treet::modulest::iterator it=smv_parse_tree.modules.find(module);
+  auto it = smv_parse_tree.module_map.find(module);
 
-  if(it==smv_parse_tree.modules.end())
+  if(it == smv_parse_tree.module_map.end())
   {
     throw errort() << "failed to find module " << module;
   }
 
-  convert(it->second);
+  convert(*it->second);
 }
 
 /*******************************************************************\

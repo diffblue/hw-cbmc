@@ -28,7 +28,8 @@ Function: smv_parse_treet::swap
 
 void smv_parse_treet::swap(smv_parse_treet &smv_parse_tree)
 {
-  smv_parse_tree.modules.swap(modules);
+  smv_parse_tree.module_list.swap(module_list);
+  smv_parse_tree.module_map.swap(module_map);
 }
 
 /*******************************************************************\
@@ -45,7 +46,8 @@ Function: smv_parse_treet::clear
 
 void smv_parse_treet::clear()
 {
-  modules.clear();
+  module_map.clear();
+  module_list.clear();
 }
 
 /*******************************************************************\
@@ -105,10 +107,8 @@ void smv_parse_treet::modulet::elementt::show(std::ostream &out) const
 
 void smv_parse_treet::show(std::ostream &out) const
 {
-  for(auto &module_it : modules)
+  for(auto &module : module_list)
   {
-    auto &module = module_it.second;
-
     out << "Module: " << module.base_name << '\n' << '\n';
 
     out << "  PARAMETERS:\n";
