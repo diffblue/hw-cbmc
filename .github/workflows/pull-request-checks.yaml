@@ -10,7 +10,7 @@ jobs:
   check-ubuntu-24_04-make-gcc:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -75,7 +75,7 @@ jobs:
       CC: "ccache clang"
       CXX: "ccache clang++"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -155,7 +155,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -188,7 +188,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -224,7 +224,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Get the ebmc binary
         uses: actions/download-artifact@v6
         with:
@@ -268,7 +268,7 @@ jobs:
           save-always: true
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-centos8-make-gcc-
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Zero ccache stats and limit in size
@@ -298,7 +298,7 @@ jobs:
   check-macos-15-make-clang:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -348,7 +348,7 @@ jobs:
     name: Emscripten build
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -431,7 +431,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Setup MSBuild
@@ -491,7 +491,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
