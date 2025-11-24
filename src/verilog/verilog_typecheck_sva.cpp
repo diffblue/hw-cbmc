@@ -499,6 +499,17 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
   sva_sequence_property_instance_exprt instance)
 {
   auto &cond = instance.declaration().cond();
+
+  // Check the arguments vs. the ports
+  auto &ports = instance.declaration().ports();
+  auto &arguments = instance.arguments();
+
+  if(ports.size() != arguments.size())
+  {
+    throw errort().with_location(instance.source_location())
+      << "wrong number of arguments";
+  }
+
   convert_sva(cond);
 
   if(instance.symbol().type().id() == ID_verilog_sva_named_sequence)

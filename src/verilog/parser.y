@@ -794,7 +794,7 @@ checker_port_list_opt:
 checker_port_list:
 	  checker_port_item
 		{ init($$); mts($$, $1); }
-	| checker_port_list checker_port_item
+	| checker_port_list ',' checker_port_item
 		{ $$ = $1; mts($$, $2); }
 	;
 
@@ -2510,12 +2510,19 @@ assertion_item_declaration:
 	;
 
 property_declaration:
-          TOK_PROPERTY property_identifier property_port_list_paren_opt ';'
+          TOK_PROPERTY property_identifier
+		{ // create a scope
+		  push_scope(stack_expr($2).id(), ".", verilog_scopet::PROPERTY);
+		}
+          property_port_list_paren_opt ';'
           property_spec semicolon_opt
           TOK_ENDPROPERTY property_identifier_opt
 		{ init($$, ID_verilog_property_declaration);
 		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
-		  mto($$, $5); }
+		  stack_expr($$).set(ID_ports, stack_expr($4));
+		  mto($$, $6);
+		  pop_scope();
+		}
         ;
 
 property_identifier_opt:
@@ -2526,25 +2533,54 @@ property_identifier_opt:
 property_port_list_paren_opt:
 	  /* optional */
 	| '(' property_port_list_opt ')'
+		{ $$ = $2; }
 	;
 
 property_port_list_opt:
 	  /* optional */
+		{ init($$); }
 	| property_port_list
 	;
 
 property_port_list:
 	  property_port_item
+		{ init($$); mts($$, $1); }
 	| property_port_list_opt ',' property_port_item
+		{ $$ = $1; mts($$, $3); }
 	;
 
 property_port_item:
-	  attribute_instance_brace property_formal_type formal_port_identifier variable_dimension_brace
+	  attribute_instance_brace
+	  property_formal_type
+	  formal_port_identifier
+	  variable_dimension_brace
+	  property_actual_arg_opt
+		{ // add to scope
+		  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::OTHER);
+		  init($$, ID_decl);
+		  stack_expr($$).set(ID_class, ID_var);
+		  addswap($$, ID_type, $2);
+		  addswap($3, ID_type, $4);
+		  stack_expr($3).id(ID_declarator);
+		  mto($$, $3); /* declarator */
+		  addswap($$, ID_value, $5);
+		}
 	;
 
 property_formal_type:
 	  sequence_formal_type
 	| TOK_PROPERTY
+	;
+
+property_actual_arg_opt:
+	  /* Optional */
+		{ init($$, ID_nil); }
+	| '=' property_actual_arg
+		{ $$ = $2; }
+	;
+
+property_actual_arg:
+	  property_expr
 	;
 
 property_spec:
@@ -2556,7 +2592,7 @@ property_spec:
 	;
 
 sequence_formal_type:
-	  data_type
+	  data_type_or_implicit
 	| TOK_SEQUENCE
 		{ init($$, ID_verilog_sequence); }
 	| TOK_UNTYPED
@@ -2701,13 +2737,19 @@ property_case_item:
 	;
 
 sequence_declaration:
-	  "sequence" { init($$, ID_verilog_sequence_declaration); }
-	  sequence_identifier sequence_port_list_opt ';'
+	  "sequence"
+	  sequence_identifier
+		{ // create a scope
+		  push_scope(stack_expr($2).id(), ".", verilog_scopet::SEQUENCE);
+		}
+	  sequence_port_list_opt ';'
 	  sequence_expr semicolon_opt
 	  "endsequence" sequence_identifier_opt
-		{ $$=$2;
-		  stack_expr($$).set(ID_base_name, stack_expr($3).id());
+		{ init($$, ID_verilog_sequence_declaration);
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+		  stack_expr($$).set(ID_ports, stack_expr($4));
 		  mto($$, $6);
+		  pop_scope();
 		}
 	;
 
@@ -2723,12 +2765,36 @@ sequence_port_list_opt:
 sequence_port_list:
 	  sequence_port_item
 		{ init($$); mto($$, $1); }
-	| sequence_port_list sequence_port_item
+	| sequence_port_list ',' sequence_port_item
 		{ $$=$1; mto($$, $2); }
 	;
 
 sequence_port_item:
+	  attribute_instance_brace
+	  sequence_formal_type
 	  formal_port_identifier
+	  variable_dimension_brace
+	  sequence_actual_arg_opt
+		{ // add to scope
+		  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::OTHER);
+		  init($$, ID_decl);
+		  stack_expr($$).set(ID_class, ID_var);
+		  addswap($$, ID_type, $2);
+		  addswap($3, ID_type, $4);
+		  stack_expr($3).id(ID_declarator);
+		  mto($$, $3); /* declarator */
+		  addswap($$, ID_value, $5);
+		}
+	;
+
+sequence_actual_arg_opt:
+	  /* Optional */
+		{ init($$, ID_nil); }
+	| sequence_actual_arg
+	;
+
+sequence_actual_arg:
+	  sequence_expr
 	;
 
 sequence_identifier_opt:

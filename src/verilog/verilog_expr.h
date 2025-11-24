@@ -2912,6 +2912,18 @@ public:
   {
     return op0();
   }
+
+  using portst = std::vector<verilog_declt>;
+
+  portst &ports()
+  {
+    return (portst &)(add(ID_ports).get_sub());
+  }
+
+  const portst &ports() const
+  {
+    return (const portst &)(find(ID_ports).get_sub());
+  }
 };
 
 inline const verilog_sequence_property_declaration_baset &
