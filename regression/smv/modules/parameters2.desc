@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 parameters2.smv
 
 ^EXIT=10$
@@ -6,4 +6,3 @@ parameters2.smv
 --
 ^warning: ignoring
 --
-This yields a type-checking error.
