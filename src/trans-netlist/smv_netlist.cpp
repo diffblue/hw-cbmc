@@ -157,7 +157,7 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
     {
       if(var.is_input())
       {
-        out << "VAR " << id2smv(var_it.first);
+        out << "IVAR " << id2smv(var_it.first);
         if(var.bits.size() != 1)
           out << "[" << i << "]";
         out << ": boolean;" << '\n';
