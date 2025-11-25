@@ -17,6 +17,7 @@ class sva_if_exprt;
 class sva_ranged_predicate_exprt;
 class sva_cycle_delay_exprt;
 class sva_sequence_first_match_exprt;
+class sva_sequence_property_instance_exprt;
 class sva_sequence_repetition_exprt;
 
 // Precedences (higher means binds more strongly).
@@ -179,6 +180,9 @@ protected:
   resultt convert_inside(const class verilog_inside_exprt &);
 
   resultt convert_value_range(const class verilog_value_range_exprt &);
+
+  resultt convert_sequence_property_instance(
+    const class sva_sequence_property_instance_exprt &);
 
 protected:
   const namespacet &ns;

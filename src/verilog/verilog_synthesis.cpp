@@ -71,6 +71,12 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
   {
     return expand_function_call(to_function_call_expr(expr), symbol_state);
   }
+  else if(expr.id() == ID_sva_sequence_property_instance)
+  {
+    auto &instance = to_sva_sequence_property_instance_expr(expr);
+    const symbolt &symbol = ns.lookup(instance.symbol());
+    return synth_expr(symbol.value, symbol_state);
+  }
   else if(expr.id() == ID_hierarchical_identifier)
   {
     expand_hierarchical_identifier(
