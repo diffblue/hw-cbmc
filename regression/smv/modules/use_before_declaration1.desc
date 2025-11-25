@@ -1,7 +1,6 @@
 CORE
-parameters2.smv
-
-^EXIT=10$
+use_before_declaration1.smv
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring

@@ -29,7 +29,7 @@ public:
   struct modulet
   {
     irep_idt name, base_name;
-    std::list<irep_idt> parameters;
+    std::vector<irep_idt> parameters;
 
     struct elementt
     {
