@@ -1260,6 +1260,58 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::resolve
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+const symbolt *verilog_typecheck_exprt::resolve(const symbol_exprt &expr)
+{
+  const irep_idt &base_name = expr.get_identifier();
+
+  // in a task or function? Try local ones first
+  if(function_or_task_name!="")
+  {
+    auto full_identifier =
+      id2string(function_or_task_name) + "." + id2string(base_name);
+
+    const symbolt *symbol;
+    if(!ns.lookup(full_identifier, symbol))
+      return symbol; // found!
+  }
+
+  // try named blocks, beginning with inner one
+  for(named_blockst::const_reverse_iterator
+      it=named_blocks.rbegin();
+      it!=named_blocks.rend();
+      it++)
+  {
+    auto full_identifier = id2string(module_identifier) + "." + id2string(*it) +
+                           id2string(base_name);
+
+    const symbolt *symbol;
+    if(!ns.lookup(full_identifier, symbol))
+      return symbol; // found!
+  }
+
+  auto full_identifier =
+    id2string(module_identifier) + "." + id2string(base_name);
+
+  const symbolt *symbol;
+  if(!ns.lookup(full_identifier, symbol))
+    return symbol; // found!
+
+  // give up
+  return nullptr;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_symbol
 
   Inputs:
@@ -1274,54 +1326,10 @@ exprt verilog_typecheck_exprt::convert_symbol(
   symbol_exprt expr,
   const std::optional<typet> &implicit_net_type)
 {
-  const irep_idt &identifier = expr.get_identifier();
+  auto symbol = resolve(expr);
+  auto base_name = expr.get_identifier();
 
-  std::string full_identifier;
-
-  // in a task or function? Try local ones first
-  if(function_or_task_name!="")
-  {
-    full_identifier=
-      id2string(function_or_task_name)+
-      "."+id2string(identifier);
-    
-    const symbolt *symbol;
-    if(!ns.lookup(full_identifier, symbol))
-    { // found!
-      expr.type()=symbol->type;
-      expr.set_identifier(full_identifier);
-      return std::move(expr);
-    }
-  }
-  
-  std::string named_block;
-  
-  // try named blocks, beginning with inner one
-  for(named_blockst::const_reverse_iterator
-      it=named_blocks.rbegin();
-      it!=named_blocks.rend();
-      it++)
-  {
-    full_identifier=
-      id2string(module_identifier)+"."+
-      id2string(*it)+
-      id2string(identifier);
-    
-    const symbolt *symbol;
-    if(!ns.lookup(full_identifier, symbol))
-    { // found!
-      named_block=*it;
-      break;
-    }
-  }
-  
-  full_identifier=
-    id2string(module_identifier)+"."+
-    named_block+
-    id2string(identifier);
-
-  const symbolt *symbol;
-  if(!ns.lookup(full_identifier, symbol))
+  if(symbol != nullptr)
   { 
     // found!
     if(
@@ -1331,13 +1339,13 @@ exprt verilog_typecheck_exprt::convert_symbol(
       // A parameter, or enum. The type is elaborated recursively.
       elaborate_symbol_rec(symbol->name);
       expr.type() = symbol->type;
-      expr.set_identifier(full_identifier);
+      expr.set_identifier(symbol->name);
       return std::move(expr);
     }
     else if(symbol->type.id() == ID_verilog_genvar)
     {
       // This must be a constant.
-      mp_integer int_value = genvar_value(identifier);
+      mp_integer int_value = genvar_value(base_name);
 
       if(int_value<0)
       {
@@ -1355,7 +1363,7 @@ exprt verilog_typecheck_exprt::convert_symbol(
     else
     {
       expr.type()=symbol->type;
-      expr.set_identifier(full_identifier);
+      expr.set_identifier(symbol->name);
       return std::move(expr);
     }
   }
@@ -1363,7 +1371,7 @@ exprt verilog_typecheck_exprt::convert_symbol(
   {
     if(implicit_net_type.has_value())
     {
-      implicit_wire(identifier, symbol, implicit_net_type.value());
+      implicit_wire(base_name, symbol, implicit_net_type.value());
       if(warn_implicit_nets)
       {
         warning().source_location = expr.source_location();
@@ -1376,7 +1384,7 @@ exprt verilog_typecheck_exprt::convert_symbol(
     else
     {
       throw errort().with_location(expr.source_location())
-        << "unknown identifier " << identifier;
+        << "unknown identifier " << base_name;
     }
   }
 }

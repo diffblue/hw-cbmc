@@ -174,6 +174,7 @@ protected:
 protected:
   [[nodiscard]] exprt convert_expr_rec(exprt expr);
   [[nodiscard]] exprt convert_constant(constant_exprt);
+  [[nodiscard]] const symbolt *resolve(const symbol_exprt &);
   [[nodiscard]] exprt
   convert_symbol(symbol_exprt, const std::optional<typet> &implicit_net_type);
   [[nodiscard]] exprt
