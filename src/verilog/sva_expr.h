@@ -2047,4 +2047,56 @@ enum class sva_sequence_semanticst
   STRONG
 };
 
+/// a base class for both sequence and property instance expressions
+class sva_sequence_property_instance_exprt : public binary_exprt
+{
+public:
+  sva_sequence_property_instance_exprt(
+    symbol_exprt _symbol,
+    exprt::operandst _arguments)
+    : binary_exprt{
+        _symbol,
+        ID_sva_sequence_property_instance,
+        multi_ary_exprt{ID_arguments, std::move(_arguments), typet{}},
+        _symbol.type()}
+  {
+  }
+
+  const symbol_exprt &symbol() const
+  {
+    return static_cast<const symbol_exprt &>(op0());
+  }
+
+  symbol_exprt &symbol()
+  {
+    return static_cast<symbol_exprt &>(op0());
+  }
+
+  exprt::operandst &arguments()
+  {
+    return op1().operands();
+  }
+
+  const exprt::operandst &arguments() const
+  {
+    return op1().operands();
+  }
+};
+
+inline const sva_sequence_property_instance_exprt &
+to_sva_sequence_property_instance_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property_instance);
+  sva_sequence_property_instance_exprt::check(expr);
+  return static_cast<const sva_sequence_property_instance_exprt &>(expr);
+}
+
+inline sva_sequence_property_instance_exprt &
+to_sva_sequence_property_instance_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property_instance);
+  sva_sequence_property_instance_exprt::check(expr);
+  return static_cast<sva_sequence_property_instance_exprt &>(expr);
+}
+
 #endif

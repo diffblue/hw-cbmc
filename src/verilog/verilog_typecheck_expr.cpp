@@ -1360,6 +1360,16 @@ exprt verilog_typecheck_exprt::convert_symbol(
       result.add_source_location()=source_location;
       return result;
     }
+    else if(
+      symbol->type.id() == ID_verilog_sva_sequence ||
+      symbol->type.id() == ID_verilog_sva_property)
+    {
+      // A named sequence or property. Use an instance expression.
+      expr.type() = symbol->type;
+      expr.set_identifier(symbol->name);
+      return sva_sequence_property_instance_exprt{expr, {}}
+        .with_source_location(expr);
+    }
     else
     {
       expr.type()=symbol->type;
