@@ -13,6 +13,7 @@
 * SystemVerilog: cover sequence
 * SystemVerilog: labeled immediate assert/assume/cover statements
 * SystemVerilog: semantics fix for explicit casts
+* SystemVerilog: semantics fix for cover disable iff
 
 # EBMC 5.7
 
