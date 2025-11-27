@@ -245,15 +245,17 @@ irep_idt verilog_typecheckt::parameterize_module(
 
     if(pv.is_not_nil())
     {
-      mp_integer i;
-      if(to_integer_non_constant(pv, i))
+      if(pv.id() == ID_type)
       {
-        throw errort().with_location(pv.source_location())
-          << "parameter value expected to be constant, but got `"
-          << to_string(pv) << "'";
+        suffix += "some_type";
+      }
+      else if(pv.id() == ID_constant)
+      {
+        mp_integer i = numeric_cast_v<mp_integer>(to_constant_expr(pv));
+        suffix += integer2string(i);
       }
       else
-        suffix += integer2string(i);
+        DATA_INVARIANT(false, "parameter value expected to be type or constant");
     }
   }
 
