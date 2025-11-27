@@ -123,6 +123,26 @@ std::string verilog_typename(const typet &type)
     else
       return "bit signed[" + left(type) + ":" + right(type) + "]";
   }
+  else if(type.id() == ID_verilog_byte)
+  {
+    return "byte";
+  }
+  else if(type.id() == ID_verilog_int)
+  {
+    return "int";
+  }
+  else if(type.id() == ID_verilog_integer)
+  {
+    return "integer";
+  }
+  else if(type.id() == ID_verilog_longint)
+  {
+    return "longint";
+  }
+  else if(type.id() == ID_verilog_shortint)
+  {
+    return "shortint";
+  }
   else if(type.id() == ID_verilog_signedbv)
   {
     return "logic signed[" + left(type) + ":" + right(type) + "]";
