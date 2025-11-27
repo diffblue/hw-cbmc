@@ -1802,8 +1802,8 @@ void verilog_typecheckt::convert_property_declaration(
   auto base_name = declaration.base_name();
   auto full_identifier = hierarchical_identifier(base_name);
 
-  convert_sva(declaration.cond());
-  require_sva_property(declaration.cond());
+  convert_sva(declaration.property());
+  require_sva_property(declaration.property());
 
   auto type = verilog_sva_property_typet{};
   symbolt symbol{full_identifier, type, mode};
