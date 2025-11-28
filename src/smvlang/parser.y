@@ -664,7 +664,7 @@ enum_list  : enum_element
 enum_element: IDENTIFIER_Token
            {
              $$=$1;
-             PARSER.module->enum_set.insert(stack_expr($1).id_string());
+             PARSER.parse_tree.enum_set.insert(stack_expr($1).id_string());
              PARSER.module->add_enum(
                smv_identifier_exprt{stack_expr($1).id(), PARSER.source_location()});
            }
@@ -907,6 +907,7 @@ identifier : IDENTIFIER_Token
 
 variable_identifier: complex_identifier
            {
+             // Could be a variable, or an enum
              auto id = merge_complex_identifier(stack_expr($1));
              init($$, ID_smv_identifier);
              stack_expr($$).set(ID_identifier, id);

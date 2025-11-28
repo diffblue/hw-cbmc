@@ -277,9 +277,9 @@ void smv_typecheckt::instantiate(
     auto copy = src_element;
 
     // replace the parameter identifiers,
-    // and add the prefix to non-parameter identifiers
+    // and add the prefix to non-parameter, non-enum identifiers
     copy.expr.visit_post(
-      [&parameter_map, &prefix](exprt &expr)
+      [&parameter_map, &prefix, this](exprt &expr)
       {
         if(expr.id() == ID_smv_identifier)
         {
@@ -287,7 +287,14 @@ void smv_typecheckt::instantiate(
           auto parameter_it = parameter_map.find(identifier);
           if(parameter_it != parameter_map.end())
           {
+            // It's a parameter
             expr = parameter_it->second;
+          }
+          else if(
+            smv_parse_tree.enum_set.find(identifier) !=
+            smv_parse_tree.enum_set.end())
+          {
+            // It's an enum, leave as is
           }
           else
           {
@@ -1774,7 +1781,8 @@ void smv_typecheckt::convert(exprt &expr)
       identifier.find("::") == std::string::npos, "conversion is done once");
 
     // enum or variable?
-    if(modulep->enum_set.find(identifier) == modulep->enum_set.end())
+    if(
+      smv_parse_tree.enum_set.find(identifier) == smv_parse_tree.enum_set.end())
     {
       std::string id = module + "::var::" + identifier;
 
