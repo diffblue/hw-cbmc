@@ -867,4 +867,24 @@ public:
   }
 };
 
+/// SVA named properties
+class verilog_sva_named_property_typet : public typet
+{
+public:
+  explicit verilog_sva_named_property_typet()
+    : typet{ID_verilog_sva_named_property}
+  {
+  }
+};
+
+/// SVA named sequences
+class verilog_sva_named_sequence_typet : public typet
+{
+public:
+  explicit verilog_sva_named_sequence_typet()
+    : typet{ID_verilog_sva_named_sequence}
+  {
+  }
+};
+
 #endif
