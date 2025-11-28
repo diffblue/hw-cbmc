@@ -1805,14 +1805,14 @@ void verilog_typecheckt::convert_property_declaration(
   convert_sva(declaration.property());
   require_sva_property(declaration.property());
 
+  // The symbol uses the full declaration as value
   auto type = verilog_sva_property_typet{};
   symbolt symbol{full_identifier, type, mode};
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;
   symbol.pretty_name = strip_verilog_prefix(symbol.name);
-  symbol.is_macro = true;
-  symbol.value = declaration.cond();
+  symbol.value = declaration;
   symbol.location = declaration.source_location();
 
   add_symbol(std::move(symbol));
@@ -1840,13 +1840,13 @@ void verilog_typecheckt::convert_sequence_declaration(
   convert_sva(sequence);
   require_sva_sequence(sequence);
 
+  // The symbol uses the full declaration as value
   symbolt symbol{full_identifier, sequence.type(), mode};
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;
   symbol.pretty_name = strip_verilog_prefix(symbol.name);
-  symbol.is_macro = true;
-  symbol.value = declaration.sequence();
+  symbol.value = declaration;
   symbol.location = declaration.source_location();
 
   add_symbol(std::move(symbol));
