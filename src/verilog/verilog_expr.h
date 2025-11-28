@@ -393,6 +393,12 @@ public:
   inline verilog_module_itemt()
   {
   }
+
+  static void
+  check(const exprt &expr, validation_modet vm = validation_modet::INVARIANT)
+  {
+    exprt::check(expr, vm);
+  }
 };
 
 inline const verilog_module_itemt &to_verilog_module_item(const irept &irep)
@@ -2882,9 +2888,16 @@ to_verilog_indexed_part_select_plus_or_minus_expr(exprt &expr)
   return static_cast<verilog_indexed_part_select_plus_or_minus_exprt &>(expr);
 }
 
-class verilog_property_declarationt : public verilog_module_itemt
+/// a base class for both sequence and property declarations
+class verilog_sequence_property_declaration_baset : public verilog_module_itemt
 {
 public:
+  verilog_sequence_property_declaration_baset(irep_idt _id, exprt _cond)
+    : verilog_module_itemt{_id}
+  {
+    add_to_operands(std::move(_cond));
+  }
+
   const irep_idt &base_name() const
   {
     return get(ID_base_name);
@@ -2901,10 +2914,53 @@ public:
   }
 };
 
+inline const verilog_sequence_property_declaration_baset &
+to_verilog_sequence_property_declaration_base(const exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_sequence_declaration ||
+    expr.id() == ID_verilog_property_declaration);
+  verilog_sequence_property_declaration_baset::check(expr);
+  return static_cast<const verilog_sequence_property_declaration_baset &>(expr);
+}
+
+inline verilog_sequence_property_declaration_baset &
+to_verilog_sequence_property_declaration_base(exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_sequence_declaration ||
+    expr.id() == ID_verilog_property_declaration);
+  verilog_sequence_property_declaration_baset::check(expr);
+  return static_cast<verilog_sequence_property_declaration_baset &>(expr);
+}
+
+class verilog_property_declarationt
+  : public verilog_sequence_property_declaration_baset
+{
+public:
+  explicit verilog_property_declarationt(exprt property)
+    : verilog_sequence_property_declaration_baset{
+        ID_verilog_property_declaration,
+        std::move(property)}
+  {
+  }
+
+  const exprt &property() const
+  {
+    return cond();
+  }
+
+  exprt &property()
+  {
+    return cond();
+  }
+};
+
 inline const verilog_property_declarationt &
 to_verilog_property_declaration(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  verilog_property_declarationt::check(expr);
   return static_cast<const verilog_property_declarationt &>(expr);
 }
 
@@ -2912,30 +2968,29 @@ inline verilog_property_declarationt &
 to_verilog_property_declaration(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  verilog_property_declarationt::check(expr);
   return static_cast<verilog_property_declarationt &>(expr);
 }
 
-class verilog_sequence_declarationt : public verilog_module_itemt
+class verilog_sequence_declarationt
+  : public verilog_sequence_property_declaration_baset
 {
 public:
-  explicit verilog_sequence_declarationt(exprt sequence)
+  explicit verilog_sequence_declarationt(exprt _sequence)
+    : verilog_sequence_property_declaration_baset{
+        ID_verilog_sequence_declaration,
+        std::move(_sequence)}
   {
-    add_to_operands(std::move(sequence));
-  }
-
-  const irep_idt &base_name() const
-  {
-    return get(ID_base_name);
   }
 
   const exprt &sequence() const
   {
-    return op0();
+    return cond();
   }
 
   exprt &sequence()
   {
-    return op0();
+    return cond();
   }
 };
 
@@ -2943,6 +2998,7 @@ inline const verilog_sequence_declarationt &
 to_verilog_sequence_declaration(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  verilog_sequence_declarationt::check(expr);
   return static_cast<const verilog_sequence_declarationt &>(expr);
 }
 
@@ -2950,6 +3006,7 @@ inline verilog_sequence_declarationt &
 to_verilog_sequence_declaration(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  verilog_sequence_declarationt::check(expr);
   return static_cast<verilog_sequence_declarationt &>(expr);
 }
 
