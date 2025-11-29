@@ -212,6 +212,8 @@ protected:
   [[nodiscard]] exprt convert_binary_sva(binary_exprt);
   [[nodiscard]] exprt convert_ternary_sva(ternary_exprt);
   [[nodiscard]] exprt convert_other_sva(exprt);
+  [[nodiscard]] exprt
+    flatten_named_sequence_property(sva_sequence_property_instance_exprt);
 
   // system functions
   exprt bits(const exprt &);

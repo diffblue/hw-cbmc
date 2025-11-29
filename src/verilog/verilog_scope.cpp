@@ -52,6 +52,8 @@ unsigned verilog_scopet::identifier_token() const
   case verilog_scopet::FUNCTION:  return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::TYPEDEF:   return TOK_TYPE_IDENTIFIER;
   case verilog_scopet::OTHER:     return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::PROPERTY:  return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::SEQUENCE:  return TOK_NON_TYPE_IDENTIFIER;
     // clang-format on
   }
 

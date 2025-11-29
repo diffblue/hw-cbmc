@@ -2,6 +2,7 @@
 
 * Verilog: fix for typed parameter ports
 * SystemVerilog: fix for type parameters
+* SystemVerilog: ports for sequence and property declarations
 * SMV: word constants
 * SMV: IVAR declarations
 * SMV: bit selection operator

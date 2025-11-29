@@ -28,6 +28,8 @@ struct verilog_scopet
     FUNCTION,
     BLOCK,
     TYPEDEF,
+    PROPERTY,
+    SEQUENCE,
     OTHER
   };
 

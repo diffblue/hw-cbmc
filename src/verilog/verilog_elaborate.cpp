@@ -139,11 +139,15 @@ void verilog_typecheckt::collect_symbols(
 void verilog_typecheckt::collect_symbols(
   const verilog_property_declarationt &declaration)
 {
+  for(auto &port : declaration.ports())
+    collect_symbols(port);
 }
 
 void verilog_typecheckt::collect_symbols(
   const verilog_sequence_declarationt &declaration)
 {
+  for(auto &port : declaration.ports())
+    collect_symbols(port);
 }
 
 void verilog_typecheckt::collect_symbols(const typet &type)

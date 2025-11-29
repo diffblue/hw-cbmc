@@ -1802,13 +1802,13 @@ void verilog_typecheckt::convert_property_declaration(
   auto base_name = declaration.base_name();
   auto full_identifier = hierarchical_identifier(base_name);
 
-  convert_sva(declaration.property());
-  require_sva_property(declaration.property());
-
+  // 1800-2017 F.4.1
+  // Typechecking of the property expression has to be delayed
+  // until the instance is known, owing to untyped ports.
   declaration.type() = verilog_sva_named_property_typet{};
 
   // The symbol uses the full declaration as value
-  auto type = verilog_sva_property_typet{};
+  auto type = verilog_sva_named_property_typet{};
   symbolt symbol{full_identifier, type, mode};
 
   symbol.module = module_identifier;
@@ -1838,14 +1838,14 @@ void verilog_typecheckt::convert_sequence_declaration(
   auto base_name = declaration.base_name();
   auto full_identifier = hierarchical_identifier(base_name);
 
-  auto &sequence = declaration.sequence();
-  convert_sva(sequence);
-  require_sva_sequence(sequence);
-
+  // 1800-2017 F.4.1
+  // Typechecking of the sequence expression has to be delayed
+  // until the instance is known, owing to untyped ports.
   declaration.type() = verilog_sva_named_sequence_typet{};
 
   // The symbol uses the full declaration as value
-  symbolt symbol{full_identifier, sequence.type(), mode};
+  auto type = verilog_sva_named_sequence_typet{};
+  symbolt symbol{full_identifier, type, mode};
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;

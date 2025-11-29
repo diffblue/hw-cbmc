@@ -212,10 +212,10 @@ void convert_trans_to_netlistt::map_vars(
     if (symbol.is_property)
       return; // ignore properties
     else if(
-      symbol.type.id() == ID_verilog_sva_sequence ||
-      symbol.type.id() == ID_verilog_sva_property)
+      symbol.type.id() == ID_verilog_sva_named_sequence ||
+      symbol.type.id() == ID_verilog_sva_named_property)
     {
-      return; // ignore properties
+      return; // ignore sequence/property declarations
     }
     else if(
       symbol.type.id() == ID_natural || symbol.type.id() == ID_integer ||
