@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+#include "verilog_expr.h"
 #include "verilog_types.h"
 
 /// 1800-2017 16.6 Boolean expressions
@@ -2048,17 +2049,19 @@ enum class sva_sequence_semanticst
 };
 
 /// a base class for both sequence and property instance expressions
-class sva_sequence_property_instance_exprt : public binary_exprt
+class sva_sequence_property_instance_exprt : public ternary_exprt
 {
 public:
   sva_sequence_property_instance_exprt(
     symbol_exprt _symbol,
-    exprt::operandst _arguments)
-    : binary_exprt{
-        _symbol,
+    exprt::operandst _arguments,
+    verilog_sequence_property_declaration_baset _declaration)
+    : ternary_exprt{
         ID_sva_sequence_property_instance,
+        std::move(_symbol),
         multi_ary_exprt{ID_arguments, std::move(_arguments), typet{}},
-        _symbol.type()}
+        std::move(_declaration),
+        typet{}}
   {
   }
 
@@ -2080,6 +2083,26 @@ public:
   const exprt::operandst &arguments() const
   {
     return op1().operands();
+  }
+
+  verilog_sequence_property_declaration_baset &declaration()
+  {
+    return static_cast<verilog_sequence_property_declaration_baset &>(op2());
+  }
+
+  const verilog_sequence_property_declaration_baset &declaration() const
+  {
+    return static_cast<const verilog_sequence_property_declaration_baset &>(
+      op2());
+  }
+
+  /// Add the source location from \p other, if it has any.
+  sva_sequence_property_instance_exprt &&
+  with_source_location(const exprt &other) &&
+  {
+    if(other.source_location().is_not_nil())
+      add_source_location() = other.source_location();
+    return std::move(*this);
   }
 };
 
