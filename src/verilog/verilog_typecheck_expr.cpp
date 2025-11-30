@@ -1361,14 +1361,19 @@ exprt verilog_typecheck_exprt::convert_symbol(
       return result;
     }
     else if(
-      symbol->type.id() == ID_verilog_sva_sequence ||
-      symbol->type.id() == ID_verilog_sva_property)
+      symbol->type.id() == ID_verilog_sva_named_sequence ||
+      symbol->type.id() == ID_verilog_sva_named_property)
     {
-      // A named sequence or property. Use an instance expression.
+      // A named sequence or property. Create an instance expression,
+      // and then flatten it.
       expr.type() = symbol->type;
       expr.set_identifier(symbol->name);
-      return sva_sequence_property_instance_exprt{expr, {}}
-        .with_source_location(expr);
+      auto &declaration =
+        to_verilog_sequence_property_declaration_base(symbol->value);
+      auto instance =
+        sva_sequence_property_instance_exprt{expr, {}, declaration}
+          .with_source_location(expr);
+      return flatten_named_sequence_property(instance);
     }
     else
     {
