@@ -473,6 +473,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     tmp.set(ID_C_const, true);
     return tmp;
   }
+  else if(src.id() == ID_verilog_untyped)
+  {
+    return src; // stays as is
+  }
   else
   {
     throw errort().with_location(source_location)

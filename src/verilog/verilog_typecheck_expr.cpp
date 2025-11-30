@@ -619,12 +619,6 @@ Function: verilog_typecheck_exprt::convert_expr_function_call
 exprt verilog_typecheck_exprt::convert_expr_function_call(
   function_call_exprt expr)
 {
-  // convert the arguments
-  auto &arguments = expr.arguments();
-
-  Forall_expr(it, arguments)
-    convert_expr(*it);
-  
   if(expr.function().id()!=ID_symbol)
   {
     throw errort().with_location(expr.source_location())
@@ -637,7 +631,13 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   const irep_idt &identifier=f_op.get_identifier();
   
   if(expr.is_system_function_call())
+  {
+    // convert the arguments
+    for(auto &argument : expr.arguments())
+      convert_expr(argument);
+
     return convert_system_function(identifier, expr);
+  }
 
   std::string full_identifier=
     id2string(module_identifier)+"."+id2string(identifier);
@@ -649,37 +649,63 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
       << "unknown function `" << identifier << "'";
   }
 
-  if(symbol->type.id()!=ID_code)
+  if(symbol->type.id() == ID_code)
+  {
+    // convert the arguments
+    auto &arguments = expr.arguments();
+
+    for(auto &argument : arguments)
+      convert_expr(argument);
+
+    const code_typet &code_type = to_code_type(symbol->type);
+
+    f_op.type() = code_type;
+    f_op.set(ID_identifier, full_identifier);
+    expr.type() = code_type.return_type();
+
+    if(code_type.return_type().id() == ID_empty)
+    {
+      throw errort().with_location(f_op.source_location())
+        << "expected function, but got task";
+    }
+
+    // check arguments
+    const code_typet::parameterst &parameter_types = code_type.parameters();
+
+    if(parameter_types.size() != arguments.size())
+    {
+      throw errort().with_location(expr.source_location())
+        << "wrong number of arguments";
+    }
+
+    for(unsigned i = 0; i < arguments.size(); i++)
+      assignment_conversion(arguments[i], parameter_types[i].type());
+
+    return std::move(expr);
+  }
+  else if(
+    symbol->type.id() == ID_verilog_sva_named_sequence ||
+    symbol->type.id() == ID_verilog_sva_named_property)
+  {
+    // A named sequence or property with arguments. Get the declaration.
+    auto &declaration =
+      to_verilog_sequence_property_declaration_base(symbol->value);
+
+    // Create an instance. The arguments are not yet type-checked.
+    auto symbol_expr =
+      symbol->symbol_expr().with_source_location(f_op.source_location());
+
+    auto instance = sva_sequence_property_instance_exprt{
+      symbol_expr, expr.arguments(), declaration};
+
+    // Flatten
+    return flatten_named_sequence_property(instance);
+  }
+  else
   {
     throw errort().with_location(f_op.source_location())
-      << "expected function name";
+      << "expected function, sequence or property name";
   }
-
-  const code_typet &code_type=to_code_type(symbol->type);
-  
-  f_op.type()=code_type;
-  f_op.set(ID_identifier, full_identifier);
-  expr.type()=code_type.return_type();
-  
-  if(code_type.return_type().id()==ID_empty)
-  {
-    throw errort().with_location(f_op.source_location())
-      << "expected function, but got task";
-  }
-
-  // check arguments
-  const code_typet::parameterst &parameter_types=code_type.parameters();
-
-  if(parameter_types.size()!=arguments.size())
-  {
-    throw errort().with_location(expr.source_location())
-      << "wrong number of arguments";
-  }
-
-  for(unsigned i=0; i<arguments.size(); i++)
-    assignment_conversion(arguments[i], parameter_types[i].type());
-
-  return std::move(expr);
 }
 
 /*******************************************************************\
