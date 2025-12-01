@@ -102,7 +102,8 @@ void verilog_typecheckt::collect_symbols(
   if(type.id() == ID_type)
   {
     // much like a typedef
-    auto symbol_type = to_be_elaborated_typet{declarator.type()};
+    auto symbol_type =
+      to_be_elaborated_typet{to_type_expr(declarator.value()).type()};
 
     type_symbolt symbol{full_identifier, symbol_type, mode};
 
