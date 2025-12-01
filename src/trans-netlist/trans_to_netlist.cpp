@@ -229,6 +229,10 @@ void convert_trans_to_netlistt::map_vars(
     {
       return; // ignore modules
     }
+    else if(symbol.type.id() == ID_named_block)
+    {
+      return; // ignore Verilog named blocks
+    }
     else if(symbol.is_type)
       return; // ignore types
     else if (symbol.is_input)
