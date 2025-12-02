@@ -962,14 +962,14 @@ void verilog_typecheckt::convert_parameter_override(
 
     auto module_instance =
       to_symbol_expr(hierarchical_identifier.module()).get_identifier();
-    auto parameter_name = hierarchical_identifier.item().get_identifier();
+    auto parameter_base_name = hierarchical_identifier.item().get_identifier();
 
     // The rhs must be a constant at this point.
     auto rhs_value =
       from_integer(convert_integer_constant_expression(rhs), integer_typet());
 
-    // store the assignment
-    defparams[module_instance][parameter_name] = rhs_value;
+    // store the assignment.
+    defparams[module_instance][parameter_base_name] = rhs_value;
   }
 }
 
