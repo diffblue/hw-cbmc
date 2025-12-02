@@ -510,12 +510,12 @@ void verilog_synthesist::expand_hierarchical_identifier(
   const irep_idt &lhs_identifier = expr.lhs().get(ID_identifier);
 
   // rhs
-  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
+  const irep_idt &rhs_base_name = expr.rhs().base_name();
 
   // just patch together
 
   irep_idt full_identifier =
-    id2string(lhs_identifier) + '.' + id2string(rhs_identifier);
+    id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
 
   // Note: the instance copy may not yet be in symbol table,
   // as the inst module item may be later.

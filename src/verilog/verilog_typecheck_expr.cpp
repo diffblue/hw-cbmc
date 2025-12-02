@@ -1421,19 +1421,21 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 {
   convert_expr(expr.lhs());
 
-  DATA_INVARIANT(expr.rhs().id() == ID_symbol, "expected symbol on rhs of `.'");
+  DATA_INVARIANT(
+    expr.rhs().id() == ID_verilog_identifier,
+    "expected verilog_identifier as rhs of `.'");
 
-  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
+  const irep_idt &rhs_base_name = expr.rhs().base_name();
 
   if(expr.lhs().type().id() == ID_struct || expr.lhs().type().id() == ID_union)
   {
     // look up the component
     auto &compound_type = to_struct_union_type(expr.lhs().type());
-    auto &component = compound_type.get_component(rhs_identifier);
+    auto &component = compound_type.get_component(rhs_base_name);
     if(component.is_nil())
       throw errort().with_location(expr.source_location())
         << compound_type.id() << " does not have a member named "
-        << rhs_identifier;
+        << rhs_base_name;
 
     // create the member expression
     return member_exprt{expr.lhs(), component.get_name(), component.type()}
@@ -1467,7 +1469,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 
     // the identifier in the module
     const irep_idt full_identifier =
-      id2string(module) + "." + id2string(rhs_identifier);
+      id2string(module) + "." + id2string(rhs_base_name);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
@@ -1485,7 +1487,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     else
     {
       throw errort().with_location(expr.source_location())
-        << "identifier `" << rhs_identifier << "' not found in module `"
+        << "identifier `" << rhs_base_name << "' not found in module `"
         << module_instance_symbol->pretty_name << "'";
     }
 
@@ -1497,7 +1499,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
   else if(expr.lhs().type().id() == ID_named_block)
   {
     const irep_idt full_identifier =
-      id2string(lhs_identifier) + "." + id2string(rhs_identifier);
+      id2string(lhs_identifier) + "." + id2string(rhs_base_name);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
@@ -1519,7 +1521,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     else
     {
       throw errort().with_location(expr.source_location())
-        << "identifier `" << rhs_identifier << "' not found in named block";
+        << "identifier `" << rhs_base_name << "' not found in named block";
     }
   }
   else  
