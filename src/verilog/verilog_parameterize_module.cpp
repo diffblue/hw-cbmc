@@ -120,8 +120,8 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
       }
 
       // Is there a defparam that overrides this parameter?
-      auto &identifier = decl.identifier();
-      auto def_param_it = instance_defparams.find(identifier);
+      auto &base_name = decl.base_name();
+      auto def_param_it = instance_defparams.find(base_name);
       if(def_param_it != instance_defparams.end())
         value = def_param_it->second;
 

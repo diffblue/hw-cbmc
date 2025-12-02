@@ -2015,7 +2015,6 @@ list_of_param_assignments:
 param_assignment: param_identifier '=' constant_param_expression
 		{ init($$, ID_parameter);
 		  auto base_name = stack_expr($1).id();
-		  stack_expr($$).set(ID_identifier, base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
 		  addswap($$, ID_value, $3); }
         ;
@@ -2030,7 +2029,6 @@ list_of_type_assignments:
 type_assignment: param_identifier '=' data_type
 		{ init($$, ID_parameter);
 		  auto base_name = stack_expr($1).id();
-		  stack_expr($$).set(ID_identifier, base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
 		  stack_expr($$).set(ID_value, type_exprt{stack_type($3)});
 		  stack_expr($$).type() = typet{ID_type};
