@@ -1054,12 +1054,10 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   // We create a symbol for the property.
   // The 'value' of the symbol is set by synthesis.
-  const irep_idt &identifier = module_item.identifier();
-
-  irep_idt base_name;
+  irep_idt base_name = module_item.base_name();
 
   // The label is optional.
-  if(identifier == irep_idt())
+  if(base_name == irep_idt{})
   {
     std::string kind = module_item.id() == ID_verilog_assert_property ? "assert"
                        : module_item.id() == ID_verilog_assume_property
@@ -1069,10 +1067,8 @@ void verilog_typecheckt::convert_assert_assume_cover(
                                                                        : "";
 
     assertion_counter++;
-    base_name = kind + "." + std::to_string(assertion_counter);
+    base_name = kind + '.' + std::to_string(assertion_counter);
   }
-  else
-    base_name = identifier;
 
   // The assert/assume/cover module items use the module name space
   std::string full_identifier =
@@ -1124,11 +1120,9 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   // We create a symbol for the property.
   // The 'value' is set by synthesis.
-  const irep_idt &identifier = statement.identifier();
+  irep_idt base_name = statement.base_name();
 
-  irep_idt base_name;
-
-  if(identifier == irep_idt())
+  if(base_name == irep_idt{})
   {
     std::string kind = statement.id() == ID_verilog_immediate_assert  ? "assert"
                        : statement.id() == ID_verilog_assert_property ? "assert"
@@ -1142,10 +1136,8 @@ void verilog_typecheckt::convert_assert_assume_cover(
                                                                       : "";
 
     assertion_counter++;
-    base_name = kind + "." + std::to_string(assertion_counter);
+    base_name = kind + '.' + std::to_string(assertion_counter);
   }
-  else
-    base_name = identifier;
 
   // We produce a full hierarchical identifier for the SystemVerilog immediate
   // and concurrent assertion statements.
@@ -1601,7 +1593,7 @@ void verilog_typecheckt::convert_statement(
       sub_statement.id() == ID_verilog_cover_sequence ||
       sub_statement.id() == ID_verilog_cover_property)
     {
-      sub_statement.set(ID_identifier, label_statement.label());
+      sub_statement.set(ID_base_name, label_statement.label());
     }
 
     convert_statement(sub_statement);

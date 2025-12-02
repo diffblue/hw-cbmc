@@ -1505,11 +1505,11 @@ package_import_item:
 	  package_identifier "::" identifier
 		{ init($$, ID_verilog_import_item);
 		  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
-		  stack_expr($$).set(ID_identifier, stack_expr($3).id()); }
+		  stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
 	| package_identifier "::" "*"
 		{ init($$, ID_verilog_import_item);
 		  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
-		  stack_expr($$).set(ID_identifier, "*"); }
+		  stack_expr($$).set(ID_base_name, "*"); }
 	;
 
 genvar_declaration:
@@ -2417,7 +2417,7 @@ concurrent_assertion_item:
         | block_identifier TOK_COLON concurrent_assertion_statement
 		{
 		  $$=$3;
-		  stack_expr($$).set(ID_identifier, stack_expr($1).id());
+		  stack_expr($$).set(ID_base_name, stack_expr($1).id());
 		}
 	;
 
@@ -2435,13 +2435,13 @@ smv_assertion_statement:
 		{ init($$, ID_verilog_smv_assert); stack_expr($$).operands().resize(2);
 		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
 		  to_binary_expr(stack_expr($$)).op1().make_nil();
-		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
 		}
 	| TOK_ASSUME property_identifier TOK_COLON smv_property ';'
 		{ init($$, ID_verilog_smv_assume); stack_expr($$).operands().resize(2);
 		  to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
 		  to_binary_expr(stack_expr($$)).op1().make_nil();
-		  stack_expr($$).set(ID_identifier, stack_expr($2).id());
+		  stack_expr($$).set(ID_base_name, stack_expr($2).id());
 		}
 	;
 
@@ -3687,7 +3687,7 @@ statement:
                      statement == ID_verilog_immediate_assume ||
                      statement == ID_verilog_immediate_cover)
                   {
-		    stack_expr($5).set(ID_identifier, stack_expr($2).id());
+		    stack_expr($5).set(ID_base_name, stack_expr($2).id());
 		  }
 
                   mto($$, $5);
@@ -3957,7 +3957,7 @@ deferred_immediate_assertion_item:
 		}
 	| block_identifier TOK_COLON deferred_immediate_assertion_statement
 		{ /* wrap the statement into an item */
-		  stack_expr($3).set(ID_identifier, stack_expr($1).id());
+		  stack_expr($3).set(ID_base_name, stack_expr($1).id());
 		  init($$, ID_verilog_assertion_item);
 		  mto($$, $3);
 		}

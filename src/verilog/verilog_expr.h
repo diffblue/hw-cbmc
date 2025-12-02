@@ -2049,6 +2049,7 @@ public:
     return op1();
   }
 
+  // The full identifier created by the type checker
   const irep_idt &identifier() const
   {
     return get(ID_identifier);
@@ -2057,6 +2058,11 @@ public:
   void identifier(irep_idt identifier)
   {
     set(ID_identifier, identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
   }
 };
 
@@ -2118,6 +2124,16 @@ public:
   void identifier(irep_idt _identifier)
   {
     set(ID_identifier, _identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  void base_name(irep_idt _base_name)
+  {
+    set(ID_base_name, _base_name);
   }
 };
 
