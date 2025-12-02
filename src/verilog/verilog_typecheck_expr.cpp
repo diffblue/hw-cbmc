@@ -426,7 +426,7 @@ void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::must_be_integral
+Function: verilog_typecheck_exprt::must_be_bit_vector
 
   Inputs:
 
@@ -436,9 +436,9 @@ Function: verilog_typecheck_exprt::must_be_integral
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::must_be_integral(const exprt &expr)
+void verilog_typecheck_exprt::must_be_bit_vector(exprt &expr)
 {
-  // Throw an error if the given expression doesn't have an integral type.
+  // Throw an error if the given expression doesn't have a bitvector type.
   const auto &type = expr.type();
   if(type.id() == ID_bool)
   {
@@ -452,7 +452,7 @@ void verilog_typecheck_exprt::must_be_integral(const exprt &expr)
   }
   else
     throw errort().with_location(expr.source_location())
-      << "operand " << to_string(expr) << " must be integral";
+      << "operand " << to_string(expr) << " must have a bit vector type";
 }
 
 /*******************************************************************\
@@ -490,7 +490,7 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
         << "unsized literals are not allowed in concatenations";
     }
 
-    must_be_integral(*it);
+    must_be_bit_vector(*it);
 
     const typet &type = it->type();
 
@@ -1563,7 +1563,7 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
 
   const std::string &value = id2string(expr.get_value());
 
-  // real or integral?
+  // real or integer?
   if(
     value.find('.') != std::string::npos ||
     (value.find('h') == std::string::npos &&
@@ -2558,10 +2558,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     // these may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op());
-    must_be_integral(expr.op());
+    must_be_bit_vector(expr.op());
 
-    if (expr.op().type().id() == ID_verilog_signedbv ||
-        expr.op().type().id() == ID_verilog_unsignedbv)
+    if(
+      expr.op().type().id() == ID_verilog_signedbv ||
+      expr.op().type().id() == ID_verilog_unsignedbv)
     {
       expr.type()=verilog_unsignedbv_typet(1);
     }
@@ -2668,7 +2669,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // slice_size is defaulted to 1
     PRECONDITION(expr.op().operands().size() == 1);
     convert_expr(expr.op().operands()[0]);
-    must_be_integral(expr.op().operands()[0]);
+    must_be_bit_vector(expr.op().operands()[0]);
     expr.type() = expr.op().operands()[0].type();
     return std::move(expr);
   }
@@ -2839,7 +2840,7 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
   exprt &op1=expr.op1();
 
   convert_expr(op1);
-  must_be_integral(op1);
+  must_be_bit_vector(op1);
 
   if(op1.type().id()==ID_bool)
     op1 = typecast_exprt{op1, unsignedbv_typet{1}};
@@ -3069,9 +3070,15 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.id() == ID_verilog_wildcard_inequality)
   {
     // ==? and !=?
+    // 1800-2017 Table 11-1 says that any integral operands are allowed;
+    // however, it is unclear how these would apply to types that do not have
+    // a bit-encoding.
     convert_relation(expr);
 
-    expr.type() = verilog_unsignedbv_typet(1);
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
+
+    expr.type() = verilog_unsignedbv_typet{1};
 
     return std::move(expr);
   }
@@ -3079,15 +3086,20 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
           expr.id()==ID_verilog_case_inequality)
   {
     // === and !==
+    // Take any operand types except real and shortreal (1800-2017 Table 11-1).
     // The result is always Boolean, and semantically
     // a proper equality is performed.
-    expr.type()=bool_typet();
+    expr.type() = bool_typet{};
 
     convert_relation(expr);
 
-    // integral operands only
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
+    if(
+      expr.lhs().type().id() == ID_verilog_real ||
+      expr.lhs().type().id() == ID_verilog_shortreal)
+    {
+      throw errort().with_location(expr.source_location())
+        << "the case equality operator does not allow real or shortreal";
+    }
 
     return std::move(expr);
   }
@@ -3120,8 +3132,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
     no_bool_ops(expr);
 
     const typet &lhs_type = expr.lhs().type();
@@ -3157,9 +3169,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // logical right shift >>
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
-    no_bool_ops(expr);
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
 
     const typet &lhs_type = expr.lhs().type();
     const typet &rhs_type = expr.rhs().type();
@@ -3191,11 +3202,12 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   {
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
 
     tc_binary_expr(expr);
     no_bool_ops(expr);
+
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
 
     expr.type() = expr.lhs().type();
 

@@ -196,7 +196,7 @@ protected:
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
   void convert_relation(binary_exprt &);
   void no_bool_ops(exprt &);
-  void must_be_integral(const exprt &);
+  void must_be_bit_vector(exprt &);
 
   // SVA
   void convert_sva(exprt &expr)
