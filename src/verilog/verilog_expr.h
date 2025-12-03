@@ -1413,6 +1413,7 @@ inline verilog_ift &to_verilog_if(exprt &expr)
   return static_cast<verilog_ift &>(expr);
 }
 
+/// task or function enable
 class verilog_function_callt:public verilog_statementt
 {
 public:
@@ -1430,7 +1431,9 @@ public:
   {
     return op0();
   }
-  
+
+  bool is_system_function_call() const;
+
   exprt::operandst &arguments()
   {
     return op1().operands();

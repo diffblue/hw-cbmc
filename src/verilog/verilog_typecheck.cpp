@@ -869,17 +869,14 @@ Function: verilog_typecheckt::convert_function_call_or_task_enable
 void verilog_typecheckt::convert_function_call_or_task_enable(
   verilog_function_callt &statement)
 {
-  irep_idt base_name=
-    to_symbol_expr(statement.function()).get_identifier();
-
-  // We ignore everyting that starts with a '$',
-  // e.g., $display etc
-
-  if(!base_name.empty() && base_name[0]=='$')
+  if(statement.is_system_function_call())
   {
+    // we ignore all of these
   }
   else
   {
+    irep_idt base_name = to_symbol_expr(statement.function()).get_identifier();
+
     // look it up
     const irep_idt full_identifier =
       id2string(module_identifier) + "." + id2string(base_name);
