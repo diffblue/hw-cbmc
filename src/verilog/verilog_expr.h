@@ -11,6 +11,36 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+/// A simple Verilog identifier, unqualified
+class verilog_identifier_exprt : public nullary_exprt
+{
+public:
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  void identifier(irep_idt _base_name)
+  {
+    set(ID_base_name, _base_name);
+  }
+};
+
+inline const verilog_identifier_exprt &
+to_verilog_identifier_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_identifier);
+  verilog_identifier_exprt::check(expr);
+  return static_cast<const verilog_identifier_exprt &>(expr);
+}
+
+inline verilog_identifier_exprt &to_verilog_identifier_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_identifier);
+  verilog_identifier_exprt::check(expr);
+  return static_cast<verilog_identifier_exprt &>(expr);
+}
+
 /// The syntax for these A.B, where A is a module identifier and B
 /// is an identifier within that module. B is given als symbol_exprt.
 class hierarchical_identifier_exprt : public binary_exprt
@@ -21,12 +51,12 @@ public:
     return op0();
   }
 
-  const symbol_exprt &item() const
+  const verilog_identifier_exprt &item() const
   {
-    return static_cast<const symbol_exprt &>(binary_exprt::op1());
+    return static_cast<const verilog_identifier_exprt &>(binary_exprt::op1());
   }
 
-  const symbol_exprt &rhs() const
+  const verilog_identifier_exprt &rhs() const
   {
     return item();
   }

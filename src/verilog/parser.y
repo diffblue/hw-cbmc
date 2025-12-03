@@ -4768,6 +4768,7 @@ hierarchical_identifier:
         | hierarchical_identifier '.' identifier
 		{ init($$, ID_hierarchical_identifier);
 		  stack_expr($$).reserve_operands(2);
+		  stack_expr($3).id(ID_verilog_identifier);
 		  mto($$, $1);
 		  mto($$, $3);
 		}
