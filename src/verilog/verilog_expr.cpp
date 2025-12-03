@@ -52,8 +52,9 @@ typet verilog_declaratort::merged_type(const typet &declaration_type) const
 
 static bool is_system_function_identifier(const exprt &function)
 {
-  return function.id() == ID_symbol &&
-         has_prefix(id2string(to_symbol_expr(function).get_identifier()), "$");
+  return function.id() == ID_verilog_identifier &&
+         has_prefix(
+           id2string(to_verilog_identifier_expr(function).base_name()), "$");
 }
 
 bool function_call_exprt::is_system_function_call() const

@@ -19,6 +19,7 @@ class sva_cycle_delay_exprt;
 class sva_sequence_first_match_exprt;
 class sva_sequence_property_instance_exprt;
 class sva_sequence_repetition_exprt;
+class verilog_identifier_exprt;
 
 // Precedences (higher means binds more strongly).
 // Follows Table 11-2 in IEEE 1800-2017.
@@ -97,6 +98,8 @@ protected:
   resultt convert_extractbits(const extractbits_exprt &, verilog_precedencet);
 
   resultt convert_symbol(const exprt &);
+
+  resultt convert_verilog_identifier(const verilog_identifier_exprt &);
 
   resultt
   convert_hierarchical_identifier(const class hierarchical_identifier_exprt &);

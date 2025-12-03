@@ -1178,6 +1178,24 @@ expr2verilogt::resultt expr2verilogt::convert_symbol(const exprt &src)
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_verilog_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt
+expr2verilogt::convert_verilog_identifier(const verilog_identifier_exprt &src)
+{
+  return {verilog_precedencet::MAX, id2string(src.base_name())};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_nondet_symbol
 
   Inputs:
@@ -1808,6 +1826,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id()==ID_symbol)
     return convert_symbol(src);
+
+  else if(src.id() == ID_verilog_identifier)
+    return convert_symbol(to_verilog_identifier_expr(src));
 
   else if(src.id()==ID_nondet_symbol)
     return convert_nondet_symbol(src);

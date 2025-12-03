@@ -185,8 +185,7 @@ protected:
   [[nodiscard]] exprt convert_trinary_expr(ternary_exprt);
   [[nodiscard]] exprt convert_expr_concatenation(concatenation_exprt);
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
-  [[nodiscard]] exprt
-  convert_system_function(const irep_idt &identifier, function_call_exprt);
+  [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(binary_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
   [[nodiscard]] exprt convert_power_expr(power_exprt);
