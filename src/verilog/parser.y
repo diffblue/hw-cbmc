@@ -3718,7 +3718,7 @@ function_statement: statement
 	;
 
 system_task_name: TOK_SYSIDENT
-                { new_symbol($$, $1); }
+                { new_symbol($$, $1); stack_expr($$).id(ID_verilog_identifier); }
         ;
 
 // System Verilog standard 1800-2017

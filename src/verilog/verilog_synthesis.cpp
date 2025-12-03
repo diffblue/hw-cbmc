@@ -342,8 +342,8 @@ exprt verilog_synthesist::expand_function_call(
   // Is it a 'system function call'?
   if(call.is_system_function_call())
   {
-    auto identifier = to_symbol_expr(call.function()).get_identifier();
-    if(identifier == "$ND")
+    auto base_name = to_verilog_identifier_expr(call.function()).base_name();
+    if(base_name == "$ND")
     {
       std::string identifier =
         id2string(module) + "::nondet::" + std::to_string(nondet_count++);
@@ -354,7 +354,7 @@ exprt verilog_synthesist::expand_function_call(
       select_one.set(ID_identifier, identifier);
       return select_one.with_source_location(call);
     }
-    else if(identifier == "$past")
+    else if(base_name == "$past")
     {
       auto what = call.arguments()[0];
       auto ticks = call.arguments().size() < 2
@@ -363,8 +363,8 @@ exprt verilog_synthesist::expand_function_call(
       return verilog_past_exprt{what, ticks}.with_source_location(call);
     }
     else if(
-      identifier == "$stable" || identifier == "$rose" ||
-      identifier == "$fell" || identifier == "$changed")
+      base_name == "$stable" || base_name == "$rose" || base_name == "$fell" ||
+      base_name == "$changed")
     {
       DATA_INVARIANT(call.arguments().size() >= 1, "must have argument");
       auto what = call.arguments()[0];
@@ -376,18 +376,18 @@ exprt verilog_synthesist::expand_function_call(
           std::move(expr), from_integer(0, integer_typet{})};
       };
 
-      if(identifier == "$stable")
+      if(base_name == "$stable")
         return equal_exprt{what, past};
-      else if(identifier == "$changed")
+      else if(base_name == "$changed")
         return notequal_exprt{what, past};
-      else if(identifier == "$rose")
+      else if(base_name == "$rose")
         return and_exprt{not_exprt{lsb(past)}, lsb(what)};
-      else if(identifier == "$fell")
+      else if(base_name == "$fell")
         return and_exprt{lsb(past), not_exprt{lsb(what)}};
       else
         DATA_INVARIANT(false, "all cases covered");
     }
-    else if(identifier == "$countones")
+    else if(base_name == "$countones")
     {
       // lower to popcount
       DATA_INVARIANT(
@@ -3094,21 +3094,15 @@ Function: verilog_synthesist::synth_function_call_or_task_enable
 void verilog_synthesist::synth_function_call_or_task_enable(
   const verilog_function_callt &statement)
 {
-  // this is essentially inlined
-  const symbol_exprt &function=to_symbol_expr(statement.function());
-  
-  irep_idt identifier=function.get_identifier();
-  
-  // We ignore everyting that starts with a '$',
-  // e.g., $display etc
-    
-  if(!identifier.empty() && identifier[0]=='$')       
+  if(statement.is_system_function_call())
   {
-    // ignore
+    // ignore system functions
   }
   else
   {
-    const symbolt &symbol=ns.lookup(identifier);
+    // this is essentially inlined
+    const symbol_exprt &function = to_symbol_expr(statement.function());
+    const symbolt &symbol = ns.lookup(function);
 
     if(symbol.type.id()!=ID_code)
     {
