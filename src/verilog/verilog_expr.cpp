@@ -50,11 +50,20 @@ typet verilog_declaratort::merged_type(const typet &declaration_type) const
   return result;
 }
 
+static bool is_system_function_identifier(const exprt &function)
+{
+  return function.id() == ID_symbol &&
+         has_prefix(id2string(to_symbol_expr(function).get_identifier()), "$");
+}
+
 bool function_call_exprt::is_system_function_call() const
 {
-  return function().id() == ID_symbol &&
-         has_prefix(
-           id2string(to_symbol_expr(function()).get_identifier()), "$");
+  return is_system_function_identifier(function());
+}
+
+bool verilog_function_callt::is_system_function_call() const
+{
+  return is_system_function_identifier(function());
 }
 
 void verilog_module_sourcet::show(std::ostream &out) const
