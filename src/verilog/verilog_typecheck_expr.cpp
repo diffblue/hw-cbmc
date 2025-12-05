@@ -629,24 +629,24 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   if(expr.is_system_function_call())
     return convert_system_function(expr);
 
-  if(expr.function().id()!=ID_symbol)
+  if(expr.function().id() != ID_verilog_identifier)
   {
     throw errort().with_location(expr.source_location())
-      << "expected symbol as function argument";
+      << "expected identifier as function";
   }
 
-  symbol_exprt &f_op=to_symbol_expr(expr.function());
+  exprt &f_op = expr.function();
 
-  const irep_idt &identifier = f_op.get_identifier();
+  const irep_idt &base_name = to_verilog_identifier_expr(f_op).base_name();
 
-  std::string full_identifier=
-    id2string(module_identifier)+"."+id2string(identifier);
+  std::string full_identifier =
+    id2string(module_identifier) + "." + id2string(base_name);
 
   const symbolt *symbol;
   if(ns.lookup(full_identifier, symbol))
   {
     throw errort().with_location(f_op.source_location())
-      << "unknown function `" << identifier << "'";
+      << "unknown function `" << base_name << "'";
   }
 
   if(symbol->type.id()!=ID_code)
@@ -656,9 +656,8 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   }
 
   const code_typet &code_type=to_code_type(symbol->type);
-  
-  f_op.type()=code_type;
-  f_op.set(ID_identifier, full_identifier);
+
+  f_op = symbol->symbol_expr().with_source_location(f_op);
   expr.type()=code_type.return_type();
   
   if(code_type.return_type().id()==ID_empty)
@@ -1220,9 +1219,10 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   {
     return convert_constant(to_constant_expr(std::move(expr)));
   }
-  else if(expr.id()==ID_symbol)
+  else if(expr.id() == ID_verilog_identifier)
   {
-    return convert_symbol(to_symbol_expr(std::move(expr)), {});
+    return convert_verilog_identifier(
+      to_verilog_identifier_expr(std::move(expr)), {});
   }
   else if(expr.id()==ID_verilog_star_event)
   {
@@ -1270,9 +1270,10 @@ Function: verilog_typecheck_exprt::resolve
 
 \*******************************************************************/
 
-const symbolt *verilog_typecheck_exprt::resolve(const symbol_exprt &expr)
+const symbolt *
+verilog_typecheck_exprt::resolve(const verilog_identifier_exprt &expr)
 {
-  const irep_idt &base_name = expr.get_identifier();
+  const irep_idt &base_name = expr.base_name();
 
   // in a task or function? Try local ones first
   if(function_or_task_name!="")
@@ -1322,12 +1323,12 @@ Function: verilog_typecheck_exprt::convert_symbol
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::convert_symbol(
-  symbol_exprt expr,
+exprt verilog_typecheck_exprt::convert_verilog_identifier(
+  verilog_identifier_exprt expr,
   const std::optional<typet> &implicit_net_type)
 {
   auto symbol = resolve(expr);
-  auto base_name = expr.get_identifier();
+  auto base_name = expr.base_name();
 
   if(symbol != nullptr)
   { 
@@ -1338,9 +1339,7 @@ exprt verilog_typecheck_exprt::convert_symbol(
     {
       // A parameter, or enum. The type is elaborated recursively.
       elaborate_symbol_rec(symbol->name);
-      expr.type() = symbol->type;
-      expr.set_identifier(symbol->name);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
     else if(symbol->type.id() == ID_verilog_genvar)
     {
@@ -1366,20 +1365,17 @@ exprt verilog_typecheck_exprt::convert_symbol(
     {
       // A named sequence or property. Create an instance expression,
       // and then flatten it.
-      expr.type() = symbol->type;
-      expr.set_identifier(symbol->name);
+      auto symbol_expr = symbol->symbol_expr().with_source_location(expr);
       auto &declaration =
         to_verilog_sequence_property_declaration_base(symbol->value);
       auto instance =
-        sva_sequence_property_instance_exprt{expr, {}, declaration}
+        sva_sequence_property_instance_exprt{symbol_expr, {}, declaration}
           .with_source_location(expr);
       return flatten_named_sequence_property(instance);
     }
     else
     {
-      expr.type()=symbol->type;
-      expr.set_identifier(symbol->name);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
   }
   else
@@ -1392,9 +1388,7 @@ exprt verilog_typecheck_exprt::convert_symbol(
         warning().source_location = expr.source_location();
         warning() << "implicit wire " << symbol->display_name() << eom;
       }
-      expr.type() = symbol->type;
-      expr.set_identifier(symbol->name);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
     else
     {
@@ -2966,12 +2960,13 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     auto location = expr.source_location();
     auto &package_scope = to_verilog_package_scope_expr(expr);
 
-    if(package_scope.identifier().id() != ID_symbol)
+    if(package_scope.identifier().id() != ID_verilog_identifier)
       throw errort().with_location(location)
-        << expr.id() << " expects symbol on the rhs";
+        << expr.id() << " expects verilog_identifier on the rhs";
 
     auto package_base = package_scope.package_base_name();
-    auto rhs_base = package_scope.identifier().get(ID_base_name);
+    auto rhs_base =
+      to_verilog_identifier_expr(package_scope.identifier()).base_name();
 
     // stitch together
     irep_idt full_identifier =
