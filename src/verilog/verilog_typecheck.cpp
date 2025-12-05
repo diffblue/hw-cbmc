@@ -60,11 +60,12 @@ void verilog_typecheckt::typecheck_port_connection(
   {
     // IEEE 1800 2017 6.10 allows implicit declarations of nets when
     // used in a port connection.
-    if(op.id() == ID_symbol)
+    if(op.id() == ID_verilog_identifier)
     {
       // The type of the implicit net is _not_ the type of the port,
       // but an "implicit scalar net of default net type".
-      op = convert_symbol(to_symbol_expr(op), bool_typet{});
+      op = convert_verilog_identifier(
+        to_verilog_identifier_expr(op), bool_typet{});
     }
     else
     {
@@ -233,11 +234,12 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
   {
     // IEEE 1800 2017 6.10 allows implicit declarations of nets when
     // used in a port connection.
-    if(connection.id() == ID_symbol)
+    if(connection.id() == ID_verilog_identifier)
     {
       // The type of the implicit net is _not_ the type of the port,
       // but an "implicit scalar net of default net type".
-      connection = convert_symbol(to_symbol_expr(connection), bool_typet{});
+      connection = convert_verilog_identifier(
+        to_verilog_identifier_expr(connection), bool_typet{});
     }
     else
     {
@@ -845,8 +847,9 @@ void verilog_typecheckt::convert_continuous_assign(
     // from the RHS, and hence, we convert that first.
     convert_expr(rhs);
 
-    if(lhs.id() == ID_symbol)
-      lhs = convert_symbol(to_symbol_expr(lhs), rhs.type());
+    if(lhs.id() == ID_verilog_identifier)
+      lhs =
+        convert_verilog_identifier(to_verilog_identifier_expr(lhs), rhs.type());
     else
       convert_expr(lhs);
 
@@ -877,7 +880,8 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
   }
   else
   {
-    irep_idt base_name = to_symbol_expr(statement.function()).get_identifier();
+    irep_idt base_name =
+      to_verilog_identifier_expr(statement.function()).base_name();
 
     // look it up
     const irep_idt full_identifier =
@@ -914,8 +918,8 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       assignment_conversion(arguments[i], parameter_types[i].type());
     }
 
-    statement.function().type() = symbol->type;
-    statement.function().set(ID_identifier, symbol->name);
+    statement.function() =
+      symbol->symbol_expr().with_source_location(statement.function());
   }
 }
 
