@@ -264,7 +264,22 @@ void convert_trans_to_netlistt::map_vars(
     }
   };
 
-  for_all_module_symbols(symbol_table, module, update_dest_var_map);
+  // get the symbols in the given module
+  std::vector<const symbolt *> module_symbols;
+
+  for(const auto &symbol_it : symbol_table.symbols)
+    if(symbol_it.second.module == module)
+      module_symbols.push_back(&symbol_it.second);
+
+  // we sort them to get a stable netlist
+  std::sort(
+    module_symbols.begin(),
+    module_symbols.end(),
+    [](const symbolt *a, const symbolt *b)
+    { return a->name.compare(b->name) < 0; });
+
+  for(auto symbol_ptr : module_symbols)
+    update_dest_var_map(*symbol_ptr);
 }
 
 /*******************************************************************\
