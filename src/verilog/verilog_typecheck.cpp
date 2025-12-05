@@ -133,25 +133,26 @@ void verilog_typecheckt::typecheck_port_connections(
         to_verilog_named_port_connection(connection);
 
       exprt &value = named_port_connection.value();
-      const irep_idt &name = named_port_connection.port().get(ID_identifier);
+      const irep_idt &base_name =
+        to_symbol_expr(named_port_connection.port()).get_identifier();
 
       bool found=false;
 
-      std::string identifier=
-        id2string(symbol.module)+"."+id2string(name);
+      std::string full_identifier =
+        id2string(symbol.module) + "." + id2string(base_name);
 
-      named_port_connection.port().set(ID_identifier, identifier);
+      to_symbol_expr(named_port_connection.port())
+        .set_identifier(full_identifier);
 
-      if(assigned_ports.find(name)!=
-         assigned_ports.end())
+      if(assigned_ports.find(base_name) != assigned_ports.end())
       {
         throw errort().with_location(connection.source_location())
-          << "port name " << name << " assigned twice";
+          << "port name " << base_name << " assigned twice";
       }
 
       for(auto &port : ports)
       {
-        if(port.get(ID_identifier) == identifier)
+        if(port.identifier() == full_identifier)
         {
           found=true;
           typecheck_port_connection(value, port);
@@ -163,10 +164,10 @@ void verilog_typecheckt::typecheck_port_connections(
       if(!found)
       {
         throw errort().with_location(connection.source_location())
-          << "port name " << identifier << " not found";
+          << "port name " << base_name << " not found";
       }
 
-      assigned_ports.insert(identifier);
+      assigned_ports.insert(base_name);
     }
   }
   else // just a list without names
