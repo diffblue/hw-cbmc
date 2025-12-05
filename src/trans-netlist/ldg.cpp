@@ -59,11 +59,8 @@ void ldgt::compute(
     nodes[*l_it].is_source_latch=true;
 
   // get the next state nodes
-    
-  for(var_mapt::mapt::const_iterator
-      m_it=netlist.var_map.map.begin();
-      m_it!=netlist.var_map.map.end();
-      m_it++)
+
+  for(auto m_it : netlist.var_map.sorted())
   {
     const var_mapt::vart &var=m_it->second;
     if(var.is_latch())
