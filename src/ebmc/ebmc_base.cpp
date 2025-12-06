@@ -94,36 +94,3 @@ bool ebmc_baset::make_netlist(netlistt &netlist)
 
   return false;
 }
-
-/*******************************************************************\
-
-Function: ebmc_baset::do_compute_ct
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int ebmc_baset::do_compute_ct()
-{
-  // make net-list
-  message.status() << "Making Netlist" << messaget::eom;
-
-  netlistt netlist;
-  if(make_netlist(netlist)) return 1;
-
-  message.status() << "Latches: " << netlist.var_map.latches.size()
-                   << ", nodes: " << netlist.number_of_nodes() << messaget::eom;
-
-  message.status() << "Making LDG" << messaget::eom;
-
-  ldgt ldg;
-  ldg.compute(netlist);
-
-  std::cout << "CT = " << compute_ct(ldg) << '\n';
-  
-  return 0;
-}

@@ -13,12 +13,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/help_formatter.h>
 #include <util/string2int.h>
 
+#include <trans-netlist/compute_ct.h>
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/smv_netlist.h>
 
 #include "build_transition_system.h"
 #include "diatest.h"
-#include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "ebmc_language.h"
 #include "ebmc_version.h"
@@ -331,10 +331,21 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("compute-ct"))
     {
-      ebmc_baset ebmc_base(cmdline, ui_message_handler);
-      ebmc_base.transition_system = std::move(transition_system);
-      ebmc_base.properties = std::move(properties);
-      return ebmc_base.do_compute_ct();
+      auto netlist =
+        make_netlist(transition_system, properties, ui_message_handler);
+
+      messaget message{ui_message_handler};
+
+      message.status() << "Latches: " << netlist.var_map.latches.size()
+                       << ", nodes: " << netlist.number_of_nodes()
+                       << messaget::eom;
+
+      message.status() << "Making LDG" << messaget::eom;
+
+      ldgt ldg;
+      ldg.compute(netlist);
+      std::cout << "CT = " << compute_ct(ldg) << '\n';
+      return 0;
     }
 
     auto checker_result = property_checker(

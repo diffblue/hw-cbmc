@@ -52,9 +52,6 @@ protected:
   bool typecheck();
 
   std::size_t bound;
-
-public:
-  int do_compute_ct();
 };
 
 #endif
