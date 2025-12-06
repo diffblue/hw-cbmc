@@ -3222,6 +3222,7 @@ named_port_connection:
 	  // are typedefs in the local scope.
 	  '.' any_identifier '(' expression_opt ')'
 		{ init($$, ID_named_port_connection);
+		  stack_expr($2).id(ID_verilog_identifier);
 		  mto($$, $2);
 		  mto($$, $4); }
 	;

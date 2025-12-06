@@ -134,15 +134,16 @@ void verilog_typecheckt::typecheck_port_connections(
 
       exprt &value = named_port_connection.value();
       const irep_idt &base_name =
-        to_symbol_expr(named_port_connection.port()).get_identifier();
+        to_verilog_identifier_expr(named_port_connection.port()).base_name();
 
       bool found=false;
 
       std::string full_identifier =
         id2string(symbol.module) + "." + id2string(base_name);
 
-      to_symbol_expr(named_port_connection.port())
-        .set_identifier(full_identifier);
+      named_port_connection.port() =
+        symbol_exprt{full_identifier, typet{}}.with_source_location(
+          named_port_connection.port());
 
       if(assigned_ports.find(base_name) != assigned_ports.end())
       {
