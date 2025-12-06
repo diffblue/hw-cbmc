@@ -1338,9 +1338,7 @@ exprt verilog_typecheck_exprt::convert_symbol(
     {
       // A parameter, or enum. The type is elaborated recursively.
       elaborate_symbol_rec(symbol->name);
-      expr.type() = symbol->type;
-      expr.set_identifier(symbol->name);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
     else if(symbol->type.id() == ID_verilog_genvar)
     {
@@ -1366,20 +1364,17 @@ exprt verilog_typecheck_exprt::convert_symbol(
     {
       // A named sequence or property. Create an instance expression,
       // and then flatten it.
-      expr.type() = symbol->type;
-      expr.set_identifier(symbol->name);
+      auto symbol_expr = symbol->symbol_expr().with_source_location(expr);
       auto &declaration =
         to_verilog_sequence_property_declaration_base(symbol->value);
       auto instance =
-        sva_sequence_property_instance_exprt{expr, {}, declaration}
+        sva_sequence_property_instance_exprt{symbol_expr, {}, declaration}
           .with_source_location(expr);
       return flatten_named_sequence_property(instance);
     }
     else
     {
-      expr.type()=symbol->type;
-      expr.set_identifier(symbol->name);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
   }
   else
@@ -1392,9 +1387,7 @@ exprt verilog_typecheck_exprt::convert_symbol(
         warning().source_location = expr.source_location();
         warning() << "implicit wire " << symbol->display_name() << eom;
       }
-      expr.type() = symbol->type;
-      expr.set_identifier(symbol->name);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
     else
     {
