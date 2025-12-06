@@ -88,12 +88,9 @@ void ebmc_baset::show_ldg(std::ostream &out)
     
   out << "Latch dependencies:" << '\n';
 
-  for(var_mapt::mapt::const_iterator
-      it=netlist.var_map.map.begin();
-      it!=netlist.var_map.map.end();
-      it++)
+  for(auto var_it : netlist.var_map.sorted())
   {
-    const var_mapt::vart &var=it->second;
+    auto &var = var_it->second;
 
     for(std::size_t i=0; i<var.bits.size(); i++)
     {
@@ -101,8 +98,7 @@ void ebmc_baset::show_ldg(std::ostream &out)
       {
         literalt::var_not v=var.bits[i].current.var_no();
 
-        out << "  " << it->first
-            << "[" << i << "] = " << v << ":";
+        out << "  " << var_it->first << "[" << i << "] = " << v << ":";
 
         const ldg_nodet &node=ldg[v];
 
