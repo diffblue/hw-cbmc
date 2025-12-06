@@ -61,38 +61,6 @@ int ebmc_baset::get_properties()
 
 /*******************************************************************\
 
-Function: ebmc_baset::show_ldg
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ebmc_baset::show_ldg(std::ostream &out)
-{
-  netlistt netlist;
-
-  if(make_netlist(netlist))
-    return;
-  
-  if(!netlist.transition.empty())
-    out << "WARNING: transition constraint found!" << '\n'
-        << '\n';
-  
-  ldgt ldg;
- 
-  ldg.compute(netlist);
-    
-  out << "Latch dependencies:" << '\n';
-
-  ldg.output(netlist, out);
-}
-
-/*******************************************************************\
-
 Function: ebmc_baset::make_netlist
 
   Inputs:

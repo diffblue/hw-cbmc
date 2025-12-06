@@ -33,7 +33,6 @@ public:
   virtual ~ebmc_baset() { }
 
   int get_properties();
-  void show_ldg(std::ostream &out);
   bool make_netlist(netlistt &);
 
   transition_systemt transition_system;

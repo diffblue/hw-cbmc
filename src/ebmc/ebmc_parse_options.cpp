@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/help_formatter.h>
 #include <util/string2int.h>
 
+#include <trans-netlist/ldg.h>
 #include <trans-netlist/smv_netlist.h>
 
 #include "build_transition_system.h"
@@ -270,10 +271,19 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("show-ldg"))
     {
-      ebmc_baset ebmc_base(cmdline, ui_message_handler);
-      ebmc_base.transition_system = std::move(transition_system);
-      ebmc_base.properties = std::move(properties);
-      ebmc_base.show_ldg(std::cout);
+      auto netlist =
+        make_netlist(transition_system, properties, ui_message_handler);
+
+      if(!netlist.transition.empty())
+      {
+        messaget message(ui_message_handler);
+        message.warning() << "transition constraint found!" << messaget::eom;
+      }
+
+      ldgt ldg;
+      ldg.compute(netlist);
+      std::cout << "Latch dependencies:" << '\n';
+      ldg.output(netlist, std::cout);
       return 0;
     }
 
