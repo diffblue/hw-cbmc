@@ -33,7 +33,6 @@ public:
   virtual ~ebmc_baset() { }
 
   int get_properties();
-  void show_ldg(std::ostream &out);
   bool make_netlist(netlistt &);
 
   transition_systemt transition_system;
@@ -53,9 +52,6 @@ protected:
   bool typecheck();
 
   std::size_t bound;
-
-public:
-  int do_compute_ct();
 };
 
 #endif
