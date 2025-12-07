@@ -174,7 +174,7 @@ protected:
 protected:
   [[nodiscard]] exprt convert_expr_rec(exprt expr);
   [[nodiscard]] exprt convert_constant(constant_exprt);
-  [[nodiscard]] const symbolt *resolve(const verilog_identifier_exprt &);
+  [[nodiscard]] const symbolt *resolve(irep_idt base_name);
   [[nodiscard]] exprt convert_verilog_identifier(
     verilog_identifier_exprt,
     const std::optional<typet> &implicit_net_type);

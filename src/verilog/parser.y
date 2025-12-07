@@ -4734,7 +4734,6 @@ type_identifier: TOK_TYPE_IDENTIFIER
 		  init($$, ID_typedef_type);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_base_name, base_name);
-		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
 		}
 	;
 

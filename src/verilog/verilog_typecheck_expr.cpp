@@ -1270,11 +1270,8 @@ Function: verilog_typecheck_exprt::resolve
 
 \*******************************************************************/
 
-const symbolt *
-verilog_typecheck_exprt::resolve(const verilog_identifier_exprt &expr)
+const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
 {
-  const irep_idt &base_name = expr.base_name();
-
   // in a task or function? Try local ones first
   if(function_or_task_name!="")
   {
@@ -1327,8 +1324,8 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
   verilog_identifier_exprt expr,
   const std::optional<typet> &implicit_net_type)
 {
-  auto symbol = resolve(expr);
   auto base_name = expr.base_name();
+  auto symbol = resolve(base_name);
 
   if(symbol != nullptr)
   { 
