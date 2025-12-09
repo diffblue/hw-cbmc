@@ -1985,12 +1985,18 @@ list_of_variable_identifiers:
 parameter_port_declaration:
           TOK_PARAMETER data_type_or_implicit param_assignment
 		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
+        | TOK_PARAMETER TOK_TYPE type_assignment
+		{ init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $3); }
 	| TOK_LOCALPARAM data_type_or_implicit param_assignment
 		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
+        | TOK_LOCALPARAM TOK_TYPE type_assignment
+		{ init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $3); }
 	| data_type param_assignment
 		{ init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($1)); mto($$, $2); }
 	| param_assignment
 		{ init($$, ID_decl); mto($$, $1); }
+        | TOK_TYPE type_assignment
+		{ init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $2); }
 	;
 
 list_of_defparam_assignments:
@@ -2027,7 +2033,7 @@ list_of_type_assignments:
 	;
 
 type_assignment: param_identifier '=' data_type
-		{ init($$, ID_parameter);
+		{ init($$, ID_declarator);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_base_name, base_name);
 		  stack_expr($$).set(ID_value, type_exprt{stack_type($3)});
@@ -3160,11 +3166,23 @@ named_parameter_assignment_brace:
 	  	{ $$=$1; mto($$, $3); }
 	;
 
-ordered_parameter_assignment:
-          expression;
+ordered_parameter_assignment: param_expression
+	;
+
+param_expression:
+          expression
+        | data_type
+		{ init($$, ID_type); stack_expr($$).type() = stack_type($1); }
+        ;
+
+param_expression_opt:
+          /* empty */
+		{ init($$, ID_nil); }
+        | param_expression
+        ;
 
 named_parameter_assignment:
-	  '.' parameter_identifier '(' expression_opt ')'
+	  '.' parameter_identifier '(' param_expression_opt ')'
 	  	{ init($$, ID_named_parameter_assignment);
 	  	  stack_expr($$).add(ID_parameter).swap(stack_expr($2));
 	  	  stack_expr($$).add(ID_value).swap(stack_expr($4));

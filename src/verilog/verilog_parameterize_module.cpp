@@ -10,9 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/replace_symbol.h>
 #include <util/simplify_expr.h>
 
-#include "verilog_typecheck.h"
-
+#include "typename.h"
 #include "verilog_expr.h"
+#include "verilog_typecheck.h"
 
 /*******************************************************************\
 
@@ -245,15 +245,18 @@ irep_idt verilog_typecheckt::parameterize_module(
 
     if(pv.is_not_nil())
     {
-      mp_integer i;
-      if(to_integer_non_constant(pv, i))
+      if(pv.id() == ID_type)
       {
-        throw errort().with_location(pv.source_location())
-          << "parameter value expected to be constant, but got `"
-          << to_string(pv) << "'";
+        suffix += verilog_typename(to_type_expr(pv).type());
+      }
+      else if(pv.id() == ID_constant)
+      {
+        mp_integer i = numeric_cast_v<mp_integer>(to_constant_expr(pv));
+        suffix += integer2string(i);
       }
       else
-        suffix += integer2string(i);
+        DATA_INVARIANT(
+          false, "parameter value expected to be type or constant");
     }
   }
 

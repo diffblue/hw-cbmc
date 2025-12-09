@@ -470,13 +470,27 @@ void verilog_typecheckt::convert_inst(verilog_instt &inst)
     if(it->id()==ID_named_parameter_assignment)
     {
       auto &value = static_cast<exprt &>(it->add(ID_value));
-      mp_integer v_int = convert_integer_constant_expression(value);
-      value = from_integer(v_int, integer_typet()).with_source_location(*it);
+      if(value.id() == ID_type)
+      {
+        // leave as is
+      }
+      else
+      {
+        mp_integer v_int = convert_integer_constant_expression(value);
+        value = from_integer(v_int, integer_typet()).with_source_location(*it);
+      }
     }
     else
     {
-      mp_integer v_int = convert_integer_constant_expression(*it);
-      *it = from_integer(v_int, integer_typet()).with_source_location(*it);
+      if(it->id() == ID_type)
+      {
+        // leave as is
+      }
+      else
+      {
+        mp_integer v_int = convert_integer_constant_expression(*it);
+        *it = from_integer(v_int, integer_typet()).with_source_location(*it);
+      }
     }
   }
 
