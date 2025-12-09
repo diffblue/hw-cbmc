@@ -21,6 +21,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <smvlang/smv_ebmc_language.h>
 #include <trans-word-level/show_module_hierarchy.h>
 #include <trans-word-level/show_modules.h>
+#include <verilog/verilog_ebmc_language.h>
 
 #include "ebmc_error.h"
 #include "ebmc_language_file.h"
@@ -372,7 +373,7 @@ std::optional<transition_systemt> ebmc_languagest::transition_system()
   {
     return smv_ebmc_languaget{cmdline, message_handler}.transition_system();
   }
-  else
+  else if(have_verilog)
   {
     if(cmdline.isset("preprocess"))
     {
@@ -406,6 +407,10 @@ std::optional<transition_systemt> ebmc_languagest::transition_system()
       return {};
     }
 
-    return get_transition_system(cmdline, message_handler);
+    return verilog_ebmc_languaget{cmdline, message_handler}.transition_system();
+  }
+  else
+  {
+    throw ebmc_errort{} << "no support for given input file extensions";
   }
 }
