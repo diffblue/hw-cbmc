@@ -170,13 +170,14 @@ void verilog_typecheckt::elaborate_generate_assign(
   const verilog_generate_assignt &statement,
   module_itemst &dest)
 {
-  if(statement.lhs().id() != ID_symbol)
+  if(statement.lhs().id() != ID_verilog_identifier)
   {
     throw errort().with_location(statement.lhs().source_location())
       << "expected symbol on left hand side of assignment";
   }
 
-  const irep_idt &identifier = to_symbol_expr(statement.lhs()).get_identifier();
+  const irep_idt &identifier =
+    to_verilog_identifier_expr(statement.lhs()).base_name();
 
   genvarst::iterator it=genvars.find(identifier);
   

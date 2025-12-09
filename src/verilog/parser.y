@@ -112,7 +112,7 @@ inline static void init(YYSTYPE &expr, const irep_idt &id)
 
 /*******************************************************************\
 
-Function: new_symbol
+Function: new_identifier
 
   Inputs:
 
@@ -123,9 +123,9 @@ Function: new_symbol
 
 \*******************************************************************/
 
-inline static void new_symbol(YYSTYPE &dest, YYSTYPE &src)
+inline static void new_identifier(YYSTYPE &dest, YYSTYPE &src)
 {
-  init(dest, ID_symbol);
+  init(dest, ID_verilog_identifier);
   const auto base_name = stack_expr(src).id();
   stack_expr(dest).set(ID_identifier, base_name);
   stack_expr(dest).set(ID_base_name, base_name);
@@ -3719,7 +3719,7 @@ function_statement: statement
 	;
 
 system_task_name: TOK_SYSIDENT
-                { new_symbol($$, $1); stack_expr($$).id(ID_verilog_identifier); }
+                { new_identifier($$, $1); }
         ;
 
 // System Verilog standard 1800-2017
@@ -4648,12 +4648,12 @@ attr_name: identifier
 // in a higher scope.
 any_identifier:
 	  TOK_TYPE_IDENTIFIER
-		{ new_symbol($$, $1); }
+		{ new_identifier($$, $1); }
 	| non_type_identifier
 	;
 
 non_type_identifier: TOK_NON_TYPE_IDENTIFIER
-		{ new_symbol($$, $1); }
+		{ new_identifier($$, $1); }
 	;
 
 block_identifier: TOK_NON_TYPE_IDENTIFIER;
@@ -4769,7 +4769,6 @@ hierarchical_identifier:
         | hierarchical_identifier '.' identifier
 		{ init($$, ID_hierarchical_identifier);
 		  stack_expr($$).reserve_operands(2);
-		  stack_expr($3).id(ID_verilog_identifier);
 		  mto($$, $1);
 		  mto($$, $3);
 		}
