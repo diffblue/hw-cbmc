@@ -1,0 +1,13 @@
+MODULE main
+
+VAR sub : my-module;
+
+-- There is an enum in another module with the same identifier,
+-- which is an error!
+VAR a : boolean;
+
+MODULE my-module
+
+VAR some_enum : { a, b };
+
+ASSIGN some_enum := a;

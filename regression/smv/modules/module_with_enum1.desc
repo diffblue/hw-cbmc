@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 module_with_enum1.smv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ module_with_enum1.smv
 --
 ^warning: ignoring
 --
-The enum literal is not found.

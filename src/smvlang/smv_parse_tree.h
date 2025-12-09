@@ -292,8 +292,6 @@ public:
       elements.emplace_back(
         elementt::ENUM, std::move(expr), std::move(location));
     }
-
-    enum_sett enum_set;
   };
 
   using module_listt = std::list<modulet>;
@@ -303,7 +301,10 @@ public:
     std::unordered_map<irep_idt, module_listt::iterator, irep_id_hash>;
   module_mapt module_map;
 
-  void swap(smv_parse_treet &smv_parse_tree);
+  // enums are global
+  enum_sett enum_set;
+
+  void swap(smv_parse_treet &);
   void clear();
 
   void show(std::ostream &) const;
