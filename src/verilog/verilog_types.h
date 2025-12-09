@@ -777,20 +777,20 @@ inline verilog_event_typet &to_verilog_event_type(typet &type)
 class verilog_typedef_typet : public typet
 {
 public:
-  explicit verilog_typedef_typet(const irep_idt &_identifier)
+  explicit verilog_typedef_typet(const irep_idt &_base_name)
     : typet(ID_typedef_type)
   {
-    identifier(_identifier);
+    base_name(_base_name);
   }
 
-  void identifier(const irep_idt &identifier)
+  void base_name(const irep_idt &base_name)
   {
-    set(ID_identifier, identifier);
+    set(ID_base_name, base_name);
   }
 
-  const irep_idt &identifier() const
+  const irep_idt &base_name() const
   {
-    return get(ID_identifier);
+    return get(ID_base_name);
   }
 };
 
