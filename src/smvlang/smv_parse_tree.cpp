@@ -122,7 +122,7 @@ void smv_parse_treet::show(std::ostream &out) const
     out << "  VARIABLES:" << std::endl;
 
     for(auto &element : module.elements)
-      if(element.is_var() && element.expr.type().id() != ID_smv_submodule)
+      if(element.is_var() && element.expr.type().id() != ID_smv_module_instance)
       {
         symbol_tablet symbol_table;
         namespacet ns{symbol_table};
@@ -136,7 +136,7 @@ void smv_parse_treet::show(std::ostream &out) const
     out << "  SUBMODULES:" << std::endl;
 
     for(auto &element : module.elements)
-      if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
+      if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
       {
         symbol_tablet symbol_table;
         namespacet ns(symbol_table);

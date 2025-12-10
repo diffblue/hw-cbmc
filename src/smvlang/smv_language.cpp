@@ -70,9 +70,9 @@ void smv_languaget::dependencies(
   const smv_parse_treet::modulet &smv_module = *m_it->second;
 
   for(auto &element : smv_module.elements)
-    if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
-      module_set.insert(
-        id2string(to_smv_submodule_type(element.expr.type()).identifier()));
+    if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
+      module_set.insert(id2string(
+        to_smv_module_instance_type(element.expr.type()).identifier()));
 }
 
 /*******************************************************************\

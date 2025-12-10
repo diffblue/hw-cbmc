@@ -203,7 +203,7 @@ void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
   {
     auto &element = *element_it;
 
-    if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
+    if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
     {
       exprt &inst =
         static_cast<exprt &>(static_cast<irept &>(element.expr.type()));
@@ -2178,7 +2178,7 @@ void smv_typecheckt::create_var_symbols(
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
 
-      if(symbol.type.id() == ID_smv_submodule)
+      if(symbol.type.id() == ID_smv_module_instance)
         symbol.is_input = false;
       else
         symbol.is_input = true;
