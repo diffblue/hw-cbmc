@@ -269,7 +269,10 @@ void smv_typecheckt::instantiate(
     parameter_map.emplace(parameters[i], arguments[i]);
   }
 
-  const std::string prefix = id2string(instance) + '.';
+  // We add a prefix to all identifiers in the instantiated
+  // module -- this prefix is called "context" in Sec. 2.3.16 in
+  // the NuSMV 2.7 manual.
+  const std::string context = id2string(instance) + '.';
 
   // copy the parse tree elements
   for(auto &src_element : instantiated_module.elements)
@@ -277,9 +280,9 @@ void smv_typecheckt::instantiate(
     auto copy = src_element;
 
     // replace the parameter identifiers,
-    // and add the prefix to non-parameter, non-enum identifiers
+    // and add the context prefix to non-parameter, non-enum identifiers
     copy.expr.visit_post(
-      [&parameter_map, &prefix, this](exprt &expr)
+      [&parameter_map, &context, this](exprt &expr)
       {
         if(expr.id() == ID_smv_identifier)
         {
@@ -298,9 +301,9 @@ void smv_typecheckt::instantiate(
           }
           else
           {
-            // add the prefix
+            // add the context prefix
             to_smv_identifier_expr(expr).identifier(
-              prefix + id2string(identifier));
+              context + id2string(identifier));
           }
         }
       });
