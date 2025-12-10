@@ -225,7 +225,8 @@ void convert_trans_to_netlistt::map_vars(
     }
     else if(
       symbol.type.id() == ID_module || symbol.type.id() == ID_module_instance ||
-      symbol.type.id() == ID_primitive_module_instance)
+      symbol.type.id() == ID_primitive_module_instance ||
+      symbol.type.id() == ID_smv_module_instance)
     {
       return; // ignore modules
     }
