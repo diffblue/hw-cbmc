@@ -1058,9 +1058,9 @@ std::string type2smv(const typet &type, const namespacet &ns)
   {
     return "set";
   }
-  else if(type.id() == ID_smv_submodule)
+  else if(type.id() == ID_smv_module_instance)
   {
-    auto code = id2string(to_smv_submodule_type(type).identifier());
+    auto code = id2string(to_smv_module_instance_type(type).identifier());
     const exprt &e=(exprt &)type;
     if(e.has_operands())
     {
