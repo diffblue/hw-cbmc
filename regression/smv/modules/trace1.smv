@@ -1,0 +1,12 @@
+MODULE main
+  VAR a : foo;
+  VAR b : moo;
+
+SPEC AG !a.c.d
+
+MODULE foo
+  VAR c : moo;
+
+MODULE moo
+  VAR d : boolean;
+  INIT d = FALSE

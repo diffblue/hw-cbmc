@@ -1,0 +1,21 @@
+KNOWNBUG
+trace1.smv
+--numbered-trace
+^\[.*\] AG \!a\.c\.d: REFUTED$
+^Counterexample with 2 states:$
+^b\.d@0 = FALSE$
+^a\.c\.d@0 = FALSE$
+^a\.c\.d@1 = TRUE$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+^a@0 = .*$
+^b@0 = .*$
+^a.c@0 = .*$
+^a@1 = .*$
+^b@1 = .*$
+^a.c@1 = .*$
+^b.d@1 = .*$
+--
+The trace contains entries for the module instances.
