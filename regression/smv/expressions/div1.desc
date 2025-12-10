@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 div1.smv
 
-^EXIT=0$
+^file .* line 4: no support for / on integer operands$
+^EXIT=2$
 ^SIGNAL=0$
 --
 --
-div is not implemented.

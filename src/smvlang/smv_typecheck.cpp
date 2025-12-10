@@ -806,9 +806,15 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
       else if(expr.id() == ID_mult)
         new_range = smv_range0 * smv_range1;
       else if(expr.id() == ID_div)
-        new_range = smv_range0;
+      {
+        throw errort().with_location(expr.source_location())
+          << "no support for / on integer operands";
+      }
       else if(expr.id() == ID_mod)
-        new_range = smv_range1;
+      {
+        throw errort().with_location(expr.source_location())
+          << "no support for % on integer operands";
+      }
       else
         assert(false);
 
