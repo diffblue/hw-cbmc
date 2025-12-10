@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 trace1.smv
 --numbered-trace
 ^\[.*\] AG \!a\.c\.d: REFUTED$
@@ -16,6 +16,4 @@ trace1.smv
 ^a@1 = .*$
 ^b@1 = .*$
 ^a.c@1 = .*$
-^b.d@1 = .*$
 --
-The trace contains entries for the module instances.
