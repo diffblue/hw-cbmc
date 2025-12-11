@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 mod1.smv
 
-^EXIT=0$
+^file .* line 4: no support for % on integer operands$
+^EXIT=2$
 ^SIGNAL=0$
 --
 --
-mod is not implemented.
