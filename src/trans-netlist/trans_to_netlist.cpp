@@ -444,7 +444,8 @@ convert_trans_to_netlistt::convert_property(const exprt &expr)
   }
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
-    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor)
+    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor ||
+    (expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool))
   {
     exprt copy = expr;
     for(auto &op : copy.operands())
