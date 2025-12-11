@@ -177,7 +177,7 @@ Function: new_module
 
 \*******************************************************************/
 
-static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
+static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_name)
 {
   auto base_name = stack_expr(module_name).id_string();
   const std::string identifier=smv_module_symbol(base_name);
@@ -186,6 +186,7 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
   PARSER.parse_tree.module_map[identifier] = --PARSER.parse_tree.module_list.end();
   module.name = identifier;
   module.base_name = base_name;
+  module.source_location = stack_expr(location).source_location();
   PARSER.module = &module;
   return module;
 }
@@ -363,8 +364,11 @@ module_name: IDENTIFIER_Token
            | STRING_Token
            ;
 
-module_head: MODULE_Token module_name { new_module($2); }
-           | MODULE_Token module_name { new_module($2); }
+module_keyword: MODULE_Token { init($$); /* for the location */ }
+           ;
+
+module_head: module_keyword module_name { new_module($1, $2); }
+           | module_keyword module_name { new_module($1, $2); }
              '(' module_parameters_opt ')'
            ;
 

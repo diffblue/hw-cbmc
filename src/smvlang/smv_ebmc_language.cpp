@@ -70,9 +70,26 @@ std::optional<transition_systemt> smv_ebmc_languaget::transition_system()
     return {};
   }
 
-  if(
-    cmdline.isset("show-modules") || cmdline.isset("modules-xml") ||
-    cmdline.isset("json-modules"))
+  if(cmdline.isset("show-modules"))
+  {
+    std::size_t count = 0;
+    auto &out = std::cout;
+
+    for(const auto &module : parse_tree.module_list)
+    {
+      count++;
+
+      out << "Module " << count << ":" << '\n';
+
+      out << "  Location:   " << module.source_location << '\n';
+      out << "  Identifier: " << module.name << '\n';
+      out << "  Name:       " << module.base_name << '\n' << '\n';
+    }
+
+    return {};
+  }
+
+  if(cmdline.isset("modules-xml") || cmdline.isset("json-modules"))
   {
     //show_modules(cmdline, message_handler);
     return {};
