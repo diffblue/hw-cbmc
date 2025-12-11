@@ -627,6 +627,23 @@ exprt aval_bval(const binary_relation_exprt &expr)
     aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
 }
 
+exprt aval_bval(const zero_extend_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+
+  // extend aval and bval separately
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  auto result_type = lower_to_aval_bval(expr.type());
+  auto extended_type = bv_typet{aval_bval_width(result_type)};
+
+  auto aval_extended = zero_extend_exprt{op_aval, extended_type};
+  auto bval_extended = zero_extend_exprt{op_bval, extended_type};
+
+  return combine_aval_bval(aval_extended, bval_extended, result_type);
+}
+
 exprt default_aval_bval_lowering(const exprt &expr)
 {
   auto &type = expr.type();

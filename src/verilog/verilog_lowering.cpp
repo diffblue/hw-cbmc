@@ -682,6 +682,13 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(expr.id() == ID_zero_extend)
+  {
+    if(is_four_valued(expr.type()))
+      return aval_bval(to_zero_extend_expr(expr));
+    else
+      return expr;
+  }
   else
     return expr; // leave as is
 
