@@ -53,7 +53,6 @@ public:
     INIT,
     INVAR,
     TRANS,
-    TRANS_NEXT,
     OTHER,
     LTL,
     CTL
@@ -88,10 +87,12 @@ protected:
   smv_ranget convert_type(const typet &);
 
   void variable_checks(const smv_parse_treet::modulet &);
+  bool uses_next(const exprt &expr) const;
+  void no_next_allowed(const exprt &expr) const;
 
   void convert(smv_parse_treet::modulet::elementt &);
   void typecheck(smv_parse_treet::modulet::elementt &);
-  void typecheck_expr_rec(exprt &, modet);
+  void typecheck_expr_rec(exprt &, modet, bool next);
   void convert_expr_to(exprt &, const typet &dest);
   exprt convert_word_constant(const constant_exprt &);
 
@@ -120,13 +121,13 @@ protected:
   {
   public:
     exprt value;
-    bool typechecked, in_progress;
-    
-    explicit definet(const exprt &_v):value(_v), typechecked(false), in_progress(false)
+    bool typechecked = false, in_progress = false, uses_next = false;
+
+    explicit definet(const exprt &_v) : value(_v)
     {
     }
 
-    definet():typechecked(false), in_progress(false)
+    definet()
     {
     }
   };
@@ -467,7 +468,7 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck(exprt &expr, modet mode)
 {
-  typecheck_expr_rec(expr, mode);
+  typecheck_expr_rec(expr, mode, false);
 }
 
 /*******************************************************************\
@@ -599,24 +600,19 @@ Function: smv_typecheckt::typecheck_expr_rec
 
 \*******************************************************************/
 
-void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
+void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
 {
   if(expr.id() == ID_smv_next)
   {
-    if(mode == TRANS_NEXT)
+    if(next)
     {
       throw errort().with_location(expr.find_source_location())
         << "next(next(...)) encountered";
     }
 
-    // next_symbol is only allowed in TRANS mode
-    if(mode != TRANS && mode != OTHER)
-      throw errort().with_location(expr.find_source_location())
-        << "next(...) is not allowed here";
-
     expr = to_unary_expr(expr).op();
 
-    typecheck_expr_rec(expr, TRANS_NEXT);
+    typecheck_expr_rec(expr, mode, true);
   }
   else if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
   {
@@ -633,7 +629,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "variable `" << identifier << "' not found";
     }
 
-    if(mode == TRANS_NEXT)
+    if(next)
       expr.id(ID_next_symbol);
 
     symbolt &symbol=*s_it;
@@ -641,7 +637,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     assert(symbol.type.is_not_nil());
     expr.type()=symbol.type;
 
-    if(mode == INIT || mode == TRANS_NEXT)
+    if(mode == INIT || next)
     {
       if(symbol.module==module)
       {
@@ -657,7 +653,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     PRECONDITION(!expr.operands().empty());
 
     for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
+      typecheck_expr_rec(op, mode, next);
 
     auto &op0_type = to_multi_ary_expr(expr).op0().type();
 
@@ -696,8 +692,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_iff)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
 
     auto &op0_type = binary_expr.op0().type();
 
@@ -720,7 +716,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id()==ID_constraint_select_one)
   {
     for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
+      typecheck_expr_rec(op, mode, next);
 
     typet op_type;
     op_type.make_nil();
@@ -745,8 +741,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     exprt &op0 = to_binary_expr(expr).op0();
     exprt &op1 = to_binary_expr(expr).op1();
 
-    typecheck_expr_rec(op0, mode);
-    typecheck_expr_rec(op1, mode);
+    typecheck_expr_rec(op0, mode, next);
+    typecheck_expr_rec(op1, mode, next);
 
     typet op_type = type_union(op0.type(), op1.type(), expr.source_location());
 
@@ -772,10 +768,10 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &if_expr = to_if_expr(expr);
     auto &true_case = if_expr.true_case();
     auto &false_case = if_expr.false_case();
-    typecheck_expr_rec(if_expr.cond(), mode);
+    typecheck_expr_rec(if_expr.cond(), mode, next);
     convert_expr_to(if_expr.cond(), bool_typet{});
-    typecheck_expr_rec(true_case, mode);
-    typecheck_expr_rec(false_case, mode);
+    typecheck_expr_rec(true_case, mode, next);
+    typecheck_expr_rec(false_case, mode, next);
     expr.type() =
       type_union(true_case.type(), false_case.type(), expr.source_location());
     convert_expr_to(true_case, expr.type());
@@ -788,8 +784,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &op0 = to_binary_expr(expr).op0();
     auto &op1 = to_binary_expr(expr).op1();
 
-    typecheck_expr_rec(op0, mode);
-    typecheck_expr_rec(op1, mode);
+    typecheck_expr_rec(op0, mode, next);
+    typecheck_expr_rec(op1, mode, next);
 
     if(op0.type().id() == ID_range || op0.type().id() == ID_bool)
     {
@@ -872,7 +868,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     // case ... esac
     for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
+      typecheck_expr_rec(op, mode, next);
 
     bool condition = true;
 
@@ -909,7 +905,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "CTL operator not permitted here";
     expr.type() = bool_typet();
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     convert_expr_to(op, expr.type());
   }
   else if(
@@ -921,7 +917,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "CTL operator not permitted here";
     expr.type() = bool_typet();
     auto &op2 = to_ternary_expr(expr).op2();
-    typecheck_expr_rec(op2, mode);
+    typecheck_expr_rec(op2, mode, next);
     convert_expr_to(op2, expr.type());
   }
   else if(expr.id() == ID_smv_ABU || expr.id() == ID_smv_EBU)
@@ -932,7 +928,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     expr.type() = bool_typet();
     for(std::size_t i = 0; i < expr.operands().size(); i++)
     {
-      typecheck_expr_rec(expr.operands()[i], mode);
+      typecheck_expr_rec(expr.operands()[i], mode, next);
       if(i == 0 || i == 3)
         convert_expr_to(expr.operands()[i], expr.type());
     }
@@ -947,7 +943,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "LTL operator not permitted here";
     expr.type() = bool_typet{};
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     convert_expr_to(op, expr.type());
   }
   else if(
@@ -959,8 +955,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "CTL operator not permitted here";
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet{};
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
     convert_expr_to(binary_expr.lhs(), expr.type());
     convert_expr_to(binary_expr.rhs(), expr.type());
   }
@@ -973,8 +969,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "LTL operator not permitted here";
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet{};
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
     convert_expr_to(binary_expr.lhs(), expr.type());
     convert_expr_to(binary_expr.rhs(), expr.type());
   }
@@ -988,8 +984,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &lhs = to_binary_expr(expr).lhs();
     auto &rhs = to_binary_expr(expr).rhs();
 
-    typecheck_expr_rec(lhs, mode);
-    typecheck_expr_rec(rhs, mode);
+    typecheck_expr_rec(lhs, mode, next);
+    typecheck_expr_rec(rhs, mode, next);
 
     // The RHS can be a set or a singleton
     if(rhs.type().id() == ID_smv_set)
@@ -1022,7 +1018,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_unary_minus)
   {
     auto &uminus_expr = to_unary_minus_expr(expr);
-    typecheck_expr_rec(uminus_expr.op(), mode);
+    typecheck_expr_rec(uminus_expr.op(), mode, next);
     auto &op_type = uminus_expr.op().type();
 
     if(op_type.id() == ID_range)
@@ -1050,8 +1046,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_swconst)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
     PRECONDITION(binary_expr.lhs().is_constant());
     PRECONDITION(binary_expr.rhs().is_constant());
     auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
@@ -1064,8 +1060,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_uwconst)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
     PRECONDITION(binary_expr.lhs().is_constant());
     PRECONDITION(binary_expr.rhs().is_constant());
     auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
@@ -1078,7 +1074,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_abs)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     if(op.type().id() == ID_range)
     {
       // ok
@@ -1102,7 +1098,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     auto &op = to_ternary_expr(expr).op0();
 
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
 
     if(op.type().id() != ID_unsignedbv && op.type().id() != ID_signedbv)
     {
@@ -1112,7 +1108,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
 
     auto &high = to_ternary_expr(expr).op1();
 
-    typecheck_expr_rec(high, OTHER);
+    typecheck_expr_rec(high, OTHER, next);
 
     // high must be an integer constant
     if(high.type().id() != ID_range && high.type().id() != ID_natural)
@@ -1130,7 +1126,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
 
     auto &low = to_ternary_expr(expr).op2();
 
-    typecheck_expr_rec(low, OTHER);
+    typecheck_expr_rec(low, OTHER, next);
 
     // low must be an integer constant
     if(low.type().id() != ID_range && low.type().id() != ID_natural)
@@ -1157,7 +1153,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_bool)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     if(
       op.type().id() == ID_bool || op.type().id() == ID_unsignedbv ||
       op.type().id() == ID_signedbv || op.type().id() == ID_range)
@@ -1175,7 +1171,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &multi_ary_expr = to_multi_ary_expr(expr);
     for(auto &op : multi_ary_expr.operands())
     {
-      typecheck_expr_rec(op, mode);
+      typecheck_expr_rec(op, mode, next);
       if(op.type().id() != ID_bool)
         throw errort().with_location(op.source_location())
           << "count expects boolean arguments";
@@ -1186,8 +1182,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     auto &binary_expr = to_binary_expr(expr);
 
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
 
     binary_expr.type() = type_union(
       binary_expr.lhs().type(),
@@ -1208,7 +1204,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_toint)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     if(op.type().id() == ID_bool)
     {
       expr.type() = range_typet{0, 1};
@@ -1230,7 +1226,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_word1)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     if(op.type().id() != ID_bool)
       throw errort().with_location(op.source_location())
         << "word1 expects boolean argument";
@@ -1243,7 +1239,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &binary_expr = to_binary_expr(expr);
 
     // The LHS must be a word type.
-    typecheck_expr_rec(binary_expr.lhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
 
     binary_expr.type() = binary_expr.lhs().type();
 
@@ -1264,7 +1260,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     }
 
     // The RHS must be an integer constant
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
 
     if(
       binary_expr.rhs().type().id() != ID_range &&
@@ -1299,8 +1295,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     auto &binary_expr = to_binary_expr(expr);
 
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
 
     if(
       binary_expr.lhs().type().id() != ID_signedbv &&
@@ -1326,7 +1322,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_sizeof)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     if(op.type().id() == ID_signedbv || op.type().id() == ID_unsignedbv)
     {
       auto bits = to_bitvector_type(op.type()).get_width();
@@ -1341,8 +1337,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_resize)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
     PRECONDITION(binary_expr.rhs().is_constant());
     auto &lhs_type = binary_expr.lhs().type();
     auto new_bits =
@@ -1361,8 +1357,8 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_extend)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
+    typecheck_expr_rec(binary_expr.lhs(), mode, next);
+    typecheck_expr_rec(binary_expr.rhs(), mode, next);
     PRECONDITION(binary_expr.rhs().is_constant());
     auto &lhs_type = binary_expr.lhs().type();
     auto old_bits = to_bitvector_type(lhs_type).get_width();
@@ -1383,7 +1379,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     // a reinterpret cast
     auto &op = to_smv_unsigned_cast_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     if(op.type().id() == ID_signedbv)
       expr.type() = unsignedbv_typet{to_signedbv_type(op.type()).get_width()};
     else
@@ -1396,7 +1392,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     // a reinterpret cast
     auto &op = to_smv_signed_cast_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+    typecheck_expr_rec(op, mode, next);
     if(op.type().id() == ID_unsignedbv)
       expr.type() = signedbv_typet{to_unsignedbv_type(op.type()).get_width()};
     else
@@ -1411,7 +1407,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     expr.type() = typet{ID_smv_set};
 
     for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
+      typecheck_expr_rec(op, mode, next);
   }
   else
   {
@@ -1937,6 +1933,7 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
   case smv_parse_treet::modulet::elementt::INIT:
     typecheck(element.expr, INIT);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::TRANS:
@@ -1947,21 +1944,25 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
   case smv_parse_treet::modulet::elementt::CTLSPEC:
     typecheck(element.expr, CTL);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::LTLSPEC:
     typecheck(element.expr, LTL);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::INVAR:
     typecheck(element.expr, INVAR);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::FAIRNESS:
     typecheck(element.expr, OTHER);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
@@ -1978,6 +1979,7 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
     convert_expr_to(
       element.equal_expr().rhs(), element.equal_expr().lhs().type());
     element.equal_expr().type() = bool_typet{};
+    no_next_allowed(element.equal_expr().rhs());
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
@@ -2299,6 +2301,56 @@ void smv_typecheckt::collect_define(const equal_exprt &expr)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::uses_next
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool smv_typecheckt::uses_next(const exprt &expr) const
+{
+  if(expr.id() == ID_next_symbol)
+    return true;
+
+  if(expr.id() == ID_symbol)
+  {
+    auto d_it = define_map.find(to_symbol_expr(expr).get_identifier());
+    if(d_it != define_map.end())
+      return d_it->second.uses_next;
+  }
+
+  for(auto &op : expr.operands())
+    if(uses_next(op))
+      return true;
+
+  return false;
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::no_next_allowed
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::no_next_allowed(const exprt &expr) const
+{
+  if(uses_next(expr))
+    throw errort().with_location(expr.find_source_location())
+      << "next(...) is not allowed here";
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::convert_define
 
   Inputs:
@@ -2339,6 +2391,7 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
 
   d.in_progress=false;
   d.typechecked=true;
+  d.uses_next = uses_next(d.value);
 
   // VAR x : type; ASSIGN x := ... does come with a type.
   // DEFINE x := ... doesn't come with a type.
