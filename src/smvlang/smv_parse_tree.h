@@ -29,6 +29,7 @@ public:
 
   struct modulet
   {
+    source_locationt source_location;
     irep_idt name, base_name;
     std::vector<irep_idt> parameters;
 
