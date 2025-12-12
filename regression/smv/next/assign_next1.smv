@@ -1,0 +1,11 @@
+MODULE main
+
+VAR x : boolean;
+    y : boolean;
+
+-- The use of next in a 'next' assignment is allowed.
+ASSIGN next(x) := next(y);
+
+ASSIGN init(x) := y;
+
+CTLSPEC AG x = y
