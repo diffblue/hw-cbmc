@@ -142,20 +142,37 @@ public:
       }
 
       // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
-      const equal_exprt &equal_expr() const
+      const exprt &lhs() const
       {
         PRECONDITION(
           is_assign_current() || is_assign_init() || is_assign_next() ||
           is_define());
-        return to_equal_expr(expr);
+        return to_equal_expr(expr).lhs();
       }
 
-      equal_exprt &equal_expr()
+      exprt &lhs()
       {
         PRECONDITION(
           is_assign_current() || is_assign_init() || is_assign_next() ||
           is_define());
-        return to_equal_expr(expr);
+        return to_equal_expr(expr).lhs();
+      }
+
+      // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
+      const exprt &rhs() const
+      {
+        PRECONDITION(
+          is_assign_current() || is_assign_init() || is_assign_next() ||
+          is_define());
+        return to_equal_expr(expr).rhs();
+      }
+
+      exprt &rhs()
+      {
+        PRECONDITION(
+          is_assign_current() || is_assign_init() || is_assign_next() ||
+          is_define());
+        return to_equal_expr(expr).rhs();
       }
 
       void show(std::ostream &) const;
