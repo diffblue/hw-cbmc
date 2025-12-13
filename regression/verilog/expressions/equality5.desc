@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 equality5.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ equality5.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.

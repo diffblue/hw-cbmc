@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 bitwise_and1.sv
 --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ bitwise_and1.sv
 --
 ^warning: ignoring
 --
-This gives wrong answers.

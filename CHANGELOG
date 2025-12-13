@@ -1,5 +1,6 @@
 # EBMC 5.9
 
+* Verilog: fix for four-valued | and &
 * Verilog: fix for typed parameter ports
 * SystemVerilog: fix for type parameters
 * SystemVerilog: type parameter ports

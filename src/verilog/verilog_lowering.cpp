@@ -570,15 +570,27 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
-  else if(
-    expr.id() == ID_bitand || expr.id() == ID_bitor || expr.id() == ID_bitxor ||
-    expr.id() == ID_bitxnor)
+  else if(expr.id() == ID_bitand)
   {
-    auto &multi_ary_expr = to_multi_ary_expr(expr);
-
     // encode into aval/bval
     if(is_four_valued(expr.type()))
-      return aval_bval_bitwise(multi_ary_expr);
+      return aval_bval_bitand(to_bitand_expr(expr));
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_bitor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_bitor(to_bitor_expr(expr));
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_bitxor || expr.id() == ID_bitxnor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_xor_xnor(to_multi_ary_expr(expr));
     else
       return expr; // leave as is
   }
