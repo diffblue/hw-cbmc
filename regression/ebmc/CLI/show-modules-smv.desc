@@ -4,16 +4,19 @@ show-modules-smv.smv
 activate-multi-line-match
 Module 1:
   Location:   file show-modules-smv\.smv line 3
+  Mode:       SMV
   Identifier: smv::main
   Name:       main
 
 Module 2:
   Location:   file show-modules-smv\.smv line 8
+  Mode:       SMV
   Identifier: smv::bar
   Name:       bar
 
 Module 3:
   Location:   file show-modules-smv\.smv line 13
+  Mode:       SMV
   Identifier: smv::foo
   Name:       foo
 ^EXIT=0$

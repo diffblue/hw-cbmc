@@ -36,6 +36,7 @@ SRC = \
       ranking_function.cpp \
       report_results.cpp \
       show_formula_solver.cpp \
+      show_modules.cpp \
       show_properties.cpp \
       show_trans.cpp \
       tautology_check.cpp \

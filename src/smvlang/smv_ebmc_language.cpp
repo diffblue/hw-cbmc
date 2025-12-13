@@ -16,6 +16,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/unicode.h>
 
 #include <ebmc/ebmc_error.h>
+#include <ebmc/output_file.h>
+#include <ebmc/show_modules.h>
 #include <ebmc/transition_system.h>
 
 #include "smv_parser.h"
@@ -70,28 +72,27 @@ std::optional<transition_systemt> smv_ebmc_languaget::transition_system()
     return {};
   }
 
-  if(cmdline.isset("show-modules"))
+  if(
+    cmdline.isset("show-modules") || cmdline.isset("modules-xml") ||
+    cmdline.isset("json-modules"))
   {
-    std::size_t count = 0;
-    auto &out = std::cout;
+    show_modulest show_modules;
 
     for(const auto &module : parse_tree.module_list)
-    {
-      count++;
+      show_modules.modules.emplace_back(
+        module.name, module.base_name, "SMV", module.source_location);
 
-      out << "Module " << count << ":" << '\n';
+    auto filename = cmdline.value_opt("outfile").value_or("-");
+    output_filet output_file{filename};
+    auto &out = output_file.stream();
 
-      out << "  Location:   " << module.source_location << '\n';
-      out << "  Identifier: " << module.name << '\n';
-      out << "  Name:       " << module.base_name << '\n' << '\n';
-    }
+    if(cmdline.isset("show-modules"))
+      show_modules.plain_text(out);
+    else if(cmdline.isset("modules-xml"))
+      show_modules.xml(out);
+    else if(cmdline.isset("json-modules"))
+      show_modules.json(out);
 
-    return {};
-  }
-
-  if(cmdline.isset("modules-xml") || cmdline.isset("json-modules"))
-  {
-    //show_modules(cmdline, message_handler);
     return {};
   }
 

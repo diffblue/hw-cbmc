@@ -20,7 +20,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
 #include <trans-word-level/show_module_hierarchy.h>
-#include <trans-word-level/show_modules.h>
 #include <verilog/verilog_types.h>
 
 #include "ebmc_error.h"
