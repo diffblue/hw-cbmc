@@ -132,41 +132,6 @@ static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id, YYSTYPE 
 
 /*******************************************************************\
 
-Function: merge_complex_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-irep_idt merge_complex_identifier(const exprt &expr)
-{
-  if(expr.id() == ID_smv_identifier)
-    return to_smv_identifier_expr(expr).identifier();
-  else if(expr.id() == ID_member)
-  {
-    auto &member_expr = to_member_expr(expr);
-    return id2string(merge_complex_identifier(member_expr.compound())) + '.' + id2string(member_expr.get_component_name());
-  }
-  else if(expr.id() == ID_index)
-  {
-    auto &index_expr = to_index_expr(expr);
-    auto &index = index_expr.index();
-    PRECONDITION(index.is_constant());
-    auto index_string = id2string(to_constant_expr(index).get_value());
-    return id2string(merge_complex_identifier(index_expr.array())) + '.' + index_string;
-  }
-  else
-  {
-    DATA_INVARIANT_WITH_DIAGNOSTICS(false, "unexpected complex_identifier", expr.pretty());
-  }
-}
-
-/*******************************************************************\
-
 Function: new_module
 
   Inputs:
@@ -910,12 +875,6 @@ identifier : IDENTIFIER_Token
            ;
 
 variable_identifier: complex_identifier
-           {
-             // Could be a variable, or an enum
-             auto id = merge_complex_identifier(stack_expr($1));
-             init($$, ID_smv_identifier);
-             stack_expr($$).set(ID_identifier, id);
-           }
            | STRING_Token
            {
              // Not in the NuSMV grammar.
