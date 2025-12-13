@@ -20,12 +20,12 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/mode.h>
 #include <smvlang/smv_ebmc_language.h>
 #include <trans-word-level/show_module_hierarchy.h>
-#include <trans-word-level/show_modules.h>
 
 #include "ebmc_error.h"
 #include "ebmc_language_file.h"
 #include "ebmc_version.h"
 #include "output_file.h"
+#include "show_modules.h"
 #include "transition_system.h"
 
 #include <fstream>
@@ -228,22 +228,25 @@ int get_transition_system(
 
   if(cmdline.isset("show-modules"))
   {
-    show_modules(transition_system.symbol_table, std::cout);
+    show_modulest::from_symbol_table(transition_system.symbol_table)
+      .plain_text(std::cout);
     return 0;
   }
 
   if(cmdline.isset("modules-xml"))
   {
     auto filename = cmdline.get_value("modules-xml");
-    auto outfile = output_filet{filename};
-    show_modules_xml(transition_system.symbol_table, outfile.stream());
+    auto out_file = output_filet{filename};
+    show_modulest::from_symbol_table(transition_system.symbol_table)
+      .xml(out_file.stream());
     return 0;
   }
 
   if(cmdline.isset("json-modules"))
   {
     auto out_file = output_filet{cmdline.get_value("json-modules")};
-    json_modules(transition_system.symbol_table, out_file.stream());
+    show_modulest::from_symbol_table(transition_system.symbol_table)
+      .json(out_file.stream());
     return 0;
   }
 
