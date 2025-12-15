@@ -149,9 +149,9 @@ protected:
 
   std::optional<exprt> convert_property(const exprt &);
 
-  void map_vars(
-    const irep_idt &module,
-    netlistt &dest);
+  var_mapt build_var_map(const irep_idt &module);
+
+  void allocate_state_variables(netlistt &);
 };
 
 /*******************************************************************\
@@ -190,7 +190,7 @@ literalt convert_trans_to_netlistt::new_input()
 
 /*******************************************************************\
 
-Function: convert_trans_to_netlistt::map_vars
+Function: convert_trans_to_netlistt::build_var_map
 
   Inputs:
 
@@ -200,13 +200,13 @@ Function: convert_trans_to_netlistt::map_vars
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::map_vars(
-  const irep_idt &module,
-  netlistt &dest)
+var_mapt convert_trans_to_netlistt::build_var_map(const irep_idt &module)
 {
   boolbv_widtht boolbv_width(ns);
+  var_mapt var_map;
 
-  auto update_dest_var_map = [&dest, &boolbv_width](const symbolt &symbol) {
+  auto update_dest_var_map = [&var_map, &boolbv_width](const symbolt &symbol)
+  {
     var_mapt::vart::vartypet vartype;
 
     if (symbol.is_property)
@@ -248,39 +248,51 @@ void convert_trans_to_netlistt::map_vars(
     if (size == 0)
       return;
 
-    var_mapt::vart &var = dest.var_map.map[symbol.name];
+    var_mapt::vart &var = var_map.map[symbol.name];
     var.vartype = vartype;
     var.type = symbol.type;
     var.mode = symbol.mode;
     var.bits.resize(size);
-
-    for (std::size_t bit = 0; bit < size; bit++) {
-      // just initialize with something
-      var.bits[bit].current = const_literal(false);
-      var.bits[bit].next = const_literal(false);
-
-      // we already know the numbers of inputs and latches
-      if (var.is_input() || var.is_latch())
-        var.bits[bit].current = dest.new_var_node();
-    }
   };
-
-  // get the symbols in the given module
-  std::vector<const symbolt *> module_symbols;
 
   for(const auto &symbol_it : symbol_table.symbols)
     if(symbol_it.second.module == module)
-      module_symbols.push_back(&symbol_it.second);
+      update_dest_var_map(symbol_it.second);
 
-  // we sort them to get a stable netlist
-  std::sort(
-    module_symbols.begin(),
-    module_symbols.end(),
-    [](const symbolt *a, const symbolt *b)
-    { return a->name.compare(b->name) < 0; });
+  return var_map;
+}
 
-  for(auto symbol_ptr : module_symbols)
-    update_dest_var_map(*symbol_ptr);
+/*******************************************************************\
+
+Function: convert_trans_to_netlistt::allocate_state_variables
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void convert_trans_to_netlistt::allocate_state_variables(netlistt &dest)
+{
+  // we work with the sorted var_map to get a deterministic
+  // allocation for the latches and inputs
+
+  for(auto var_map_it : dest.var_map.sorted())
+  {
+    auto &var = var_map_it->second;
+
+    for(auto &bit : var.bits)
+    {
+      // just initialize with something
+      bit.current = const_literal(false);
+      bit.next = const_literal(false);
+
+      if(var.is_input() || var.is_latch())
+        bit.current = dest.new_var_node();
+    }
+  }
 }
 
 /*******************************************************************\
@@ -304,9 +316,10 @@ void convert_trans_to_netlistt::operator()(
   lhs_map.clear();
   rhs_list.clear();
   constraint_list.clear();
-  
-  map_vars(module, dest);
-  
+
+  dest.var_map = build_var_map(module);
+  allocate_state_variables(dest);
+
   // setup lhs_map
 
   for(var_mapt::mapt::iterator

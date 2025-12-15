@@ -208,6 +208,35 @@ std::vector<var_mapt::mapt::const_iterator> var_mapt::sorted() const
 
 /*******************************************************************\
 
+Function: var_mapt::sorted
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<var_mapt::mapt::iterator> var_mapt::sorted()
+{
+  using iteratort = mapt::iterator;
+  std::vector<iteratort> iterators;
+  iterators.reserve(map.size());
+
+  for(auto it = map.begin(); it != map.end(); it++)
+    iterators.push_back(it);
+
+  std::sort(
+    iterators.begin(),
+    iterators.end(),
+    [](iteratort a, iteratort b) { return a->first.compare(b->first) < 0; });
+
+  return iterators;
+}
+
+/*******************************************************************\
+
 Function: var_mapt::output
 
   Inputs:
