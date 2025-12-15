@@ -206,21 +206,20 @@ void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
 
     if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
     {
-      exprt &inst =
-        static_cast<exprt &>(static_cast<irept &>(element.expr.type()));
+      auto &instance = to_smv_module_instance_type(element.expr.type());
 
-      for(auto &op : inst.operands())
-        convert(op);
+      for(auto &argument : instance.arguments())
+        convert(argument);
 
       auto instance_base_name =
         to_smv_identifier_expr(element.expr).identifier();
 
       instantiate(
         smv_module,
-        inst.get(ID_identifier),
+        instance.identifier(),
         instance_base_name,
-        inst.operands(),
-        inst.find_source_location());
+        instance.arguments(),
+        instance.source_location());
     }
   }
 }

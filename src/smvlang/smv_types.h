@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_SMV_TYPES_H
 #define CPROVER_SMV_TYPES_H
 
+#include <util/expr.h>
 #include <util/type.h>
 
 #include <set>
@@ -89,6 +90,16 @@ public:
   void identifier(irep_idt _identifier)
   {
     set(ID_identifier, _identifier);
+  }
+
+  const exprt::operandst &arguments() const
+  {
+    return (const exprt::operandst &)get_sub();
+  }
+
+  exprt::operandst &arguments()
+  {
+    return (exprt::operandst &)get_sub();
   }
 };
 
