@@ -31,7 +31,7 @@ jobs:
       - name: Log the version of gcc
         run: gcc --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -95,7 +95,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -262,7 +262,7 @@ jobs:
           # yum config-manager --set-enabled powertools
           # yum install glibc-static libstdc++-static
       - name: cache for ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /github/home/.cache/ccache
           save-always: true
@@ -306,7 +306,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           save-always: true
           path: .ccache
@@ -379,7 +379,7 @@ jobs:
           source ./emsdk_env.sh
           emcc --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -455,7 +455,7 @@ jobs:
       - name: Initialise Developer Command Line
         uses: ilammy/msvc-dev-cmd@v1
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           save-always: true
           path: .ccache
