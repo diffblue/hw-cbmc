@@ -276,6 +276,10 @@ int get_transition_system(
     exprt reset_constraint = to_expr(
       ns, transition_system.main_symbol->name, cmdline.get_value("reset"));
 
+    // we want the constraint to be boolean
+    reset_constraint =
+      typecast_exprt::conditional_cast(reset_constraint, bool_typet{});
+
     // true in initial state
     transt new_trans_expr = transition_system.trans_expr;
     new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
