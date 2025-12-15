@@ -174,7 +174,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: ebmc
@@ -208,7 +208,7 @@ jobs:
       - name: Confirm ltl2tgba is available and log the version installed
         run: ltl2tgba --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: ebmc
@@ -226,7 +226,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: ebmc
@@ -235,7 +235,7 @@ jobs:
       - name: ebmc on Hazard3
         run: PATH=$PATH:$PWD/ebmc examples/Hazard3/Hazard3-ebmc.sh
       - name: Get the vlindex binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: vlindex-binary
           path: vlindex
@@ -510,17 +510,17 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ebmc-binary
           path: bin
       - name: Get the hw-cbmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: hw-cbmc-binary
           path: bin
       - name: Get the vlindex binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: vlindex-binary
           path: bin
