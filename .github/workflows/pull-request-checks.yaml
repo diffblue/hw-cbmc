@@ -132,19 +132,19 @@ jobs:
       - name: Print ccache stats
         run: ccache -s
       - name: Upload the ebmc binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ebmc-binary
           retention-days: 5
           path: src/ebmc/ebmc
       - name: Upload the hw-cbmc binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: hw-cbmc-binary
           retention-days: 5
           path: src/hw-cbmc/hw-cbmc
       - name: Upload the vlindex binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: vlindex-binary
           retention-days: 5
