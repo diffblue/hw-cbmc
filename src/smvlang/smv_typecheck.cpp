@@ -155,6 +155,44 @@ protected:
 
 /*******************************************************************\
 
+Function: merge_complex_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt merge_complex_identifier(const exprt &expr)
+{
+  if(expr.id() == ID_smv_identifier)
+    return to_smv_identifier_expr(expr).identifier();
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    return id2string(merge_complex_identifier(member_expr.compound())) + '.' +
+           id2string(member_expr.get_component_name());
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+    auto &index = index_expr.index();
+    PRECONDITION(index.is_constant());
+    auto index_string = id2string(to_constant_expr(index).get_value());
+    return id2string(merge_complex_identifier(index_expr.array())) + '.' +
+           index_string;
+  }
+  else
+  {
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      false, "unexpected complex_identifier", expr.pretty());
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::convert_ports
 
   Inputs:
@@ -2038,34 +2076,34 @@ void smv_typecheckt::variable_checks(const smv_parse_treet::modulet &module)
   {
     if(element.is_var() || element.is_ivar())
     {
-      const auto &identifier_expr = to_smv_identifier_expr(element.expr);
-      irep_idt base_name = identifier_expr.identifier();
+      irep_idt base_name = merge_complex_identifier(element.expr);
+      auto location = element.expr.source_location();
 
       // already used as enum?
       if(enums.find(base_name) != enums.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as enum";
       }
 
       // already used as a parameter?
       if(parameters.find(base_name) != parameters.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as a parameter";
       }
 
       // already used as variable?
       if(vars.find(base_name) != vars.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as variable";
       }
 
       // already used as define?
       if(defines.find(base_name) != defines.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as define";
       }
 
@@ -2073,34 +2111,34 @@ void smv_typecheckt::variable_checks(const smv_parse_treet::modulet &module)
     }
     else if(element.is_define())
     {
-      const auto &identifier_expr = to_smv_identifier_expr(element.lhs());
-      irep_idt base_name = identifier_expr.identifier();
+      irep_idt base_name = merge_complex_identifier(element.lhs());
+      auto location = to_equal_expr(element.expr).lhs().source_location();
 
       // already used as enum?
       if(enums.find(base_name) != enums.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as enum";
       }
 
       // already used as a parameter?
       if(parameters.find(base_name) != parameters.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as a parameter";
       }
 
       // already used as variable?
       if(vars.find(base_name) != vars.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as variable";
       }
 
       // already used as define?
       if(defines.find(base_name) != defines.end())
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "identifier " << base_name << " already used as define";
       }
 
@@ -2158,13 +2196,14 @@ void smv_typecheckt::create_var_symbols(
   {
     if(element.is_var() || element.is_ivar())
     {
-      irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
+      irep_idt base_name = merge_complex_identifier(element.expr);
+      auto location = element.expr.source_location();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
-        throw errort{}.with_location(element.expr.source_location())
+        throw errort{}.with_location(location)
           << "variable " << base_name << " already declared, at "
           << symbol_ptr->location;
       }
@@ -2191,20 +2230,20 @@ void smv_typecheckt::create_var_symbols(
 
       symbol.is_state_var = false;
       symbol.value = nil_exprt{};
-      symbol.location = element.expr.source_location();
+      symbol.location = location;
 
       symbol_table.insert(std::move(symbol));
     }
     else if(element.is_define())
     {
-      const auto &identifier_expr = to_smv_identifier_expr(element.lhs());
-      irep_idt base_name = identifier_expr.identifier();
+      irep_idt base_name = merge_complex_identifier(element.lhs());
+      auto location = to_equal_expr(element.expr).lhs().source_location();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "variable `" << base_name << "' already declared, at "
           << symbol_ptr->location;
       }
@@ -2226,7 +2265,7 @@ void smv_typecheckt::create_var_symbols(
       symbol.value = nil_exprt{};
       symbol.is_input = true;
       symbol.is_state_var = false;
-      symbol.location = identifier_expr.source_location();
+      symbol.location = location;
 
       symbol_table.insert(std::move(symbol));
     }
