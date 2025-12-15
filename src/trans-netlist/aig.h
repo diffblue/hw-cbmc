@@ -22,18 +22,30 @@ class aig_nodet {
 public:
   literalt a, b;
 
-  aig_nodet() {}
-
-  bool is_and() const { return a.var_no() != literalt::unused_var_no(); }
-
-  bool is_var() const { return a.var_no() == literalt::unused_var_no(); }
-
-  void make_and(literalt _a, literalt _b) {
-    a = _a;
-    b = _b;
+  explicit aig_nodet(literalt::var_not var_no)
+    : a{literalt::unused_var_no(), false}, b{var_no, false}
+  {
   }
 
-  void make_var() { a.set(literalt::unused_var_no(), false); }
+  aig_nodet(literalt _a, literalt _b) : a(_a), b(_b)
+  {
+  }
+
+  bool is_and() const
+  {
+    return a.var_no() != literalt::unused_var_no();
+  }
+
+  bool is_var() const
+  {
+    return a.var_no() == literalt::unused_var_no();
+  }
+
+  literalt::var_not var_no() const
+  {
+    PRECONDITION(is_var());
+    return b.var_no();
+  }
 };
 
 class aigt {
@@ -56,23 +68,15 @@ public:
 
   void swap(aigt &g) { nodes.swap(g.nodes); }
 
-  literalt new_node() {
-    nodes.push_back(aig_nodet());
-    literalt l;
-    l.set(nodes.size() - 1, false);
-    return l;
-  }
-
-  literalt new_var_node() {
-    literalt l = new_node();
-    nodes.back().make_var();
-    return l;
+  literalt new_var_node(literalt::var_not var_no = literalt::unused_var_no())
+  {
+    nodes.emplace_back(var_no);
+    return {narrow_cast<literalt::var_not>(nodes.size() - 1), false};
   }
 
   literalt new_and_node(literalt a, literalt b) {
-    literalt l = new_node();
-    nodes.back().make_and(a, b);
-    return l;
+    nodes.emplace_back(a, b);
+    return {narrow_cast<literalt::var_not>(nodes.size() - 1), false};
   }
 
   bool empty() const { return nodes.empty(); }
