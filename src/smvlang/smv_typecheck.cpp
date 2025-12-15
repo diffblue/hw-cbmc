@@ -62,7 +62,7 @@ public:
 
   void create_var_symbols(const smv_parse_treet::modulet::element_listt &);
 
-  void collect_define(const equal_exprt &);
+  void collect_define(const exprt &lhs, const exprt &rhs);
   void convert_defines(exprt::operandst &invar);
   void convert_define(const irep_idt &identifier);
 
@@ -1966,33 +1966,30 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
-    typecheck(element.equal_expr().lhs(), OTHER);
-    typecheck(element.equal_expr().rhs(), OTHER);
-    convert_expr_to(
-      element.equal_expr().rhs(), element.equal_expr().lhs().type());
-    element.equal_expr().type() = bool_typet{};
+    typecheck(element.lhs(), OTHER);
+    typecheck(element.rhs(), OTHER);
+    convert_expr_to(element.rhs(), element.lhs().type());
+    element.expr.type() = bool_typet{};
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_INIT:
-    typecheck(element.equal_expr().lhs(), INIT);
-    typecheck(element.equal_expr().rhs(), INIT);
-    convert_expr_to(
-      element.equal_expr().rhs(), element.equal_expr().lhs().type());
-    element.equal_expr().type() = bool_typet{};
-    no_next_allowed(element.equal_expr().rhs());
+    typecheck(element.lhs(), INIT);
+    typecheck(element.rhs(), INIT);
+    convert_expr_to(element.rhs(), element.lhs().type());
+    no_next_allowed(element.rhs());
+    element.expr.type() = bool_typet{};
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
-    typecheck(element.equal_expr().lhs(), TRANS);
-    typecheck(element.equal_expr().rhs(), TRANS);
-    convert_expr_to(
-      element.equal_expr().rhs(), element.equal_expr().lhs().type());
-    element.equal_expr().type() = bool_typet{};
+    typecheck(element.lhs(), TRANS);
+    typecheck(element.rhs(), TRANS);
+    convert_expr_to(element.rhs(), element.lhs().type());
+    element.expr.type() = bool_typet{};
     return;
 
   case smv_parse_treet::modulet::elementt::DEFINE:
     typecheck(element.expr, OTHER);
-    element.equal_expr().type() = bool_typet{};
+    element.expr.type() = bool_typet{};
     return;
 
   case smv_parse_treet::modulet::elementt::ENUM:
@@ -2077,8 +2074,7 @@ void smv_typecheckt::variable_checks(const smv_parse_treet::modulet &module)
     }
     else if(element.is_define())
     {
-      const auto &identifier_expr =
-        to_smv_identifier_expr(to_equal_expr(element.expr).lhs());
+      const auto &identifier_expr = to_smv_identifier_expr(element.lhs());
       irep_idt base_name = identifier_expr.identifier();
 
       // already used as enum?
@@ -2202,8 +2198,7 @@ void smv_typecheckt::create_var_symbols(
     }
     else if(element.is_define())
     {
-      const auto &identifier_expr =
-        to_smv_identifier_expr(to_equal_expr(element.expr).lhs());
+      const auto &identifier_expr = to_smv_identifier_expr(element.lhs());
       irep_idt base_name = identifier_expr.identifier();
       irep_idt identifier = module + "::var::" + id2string(base_name);
 
@@ -2264,11 +2259,8 @@ Function: smv_typecheckt::collect_define
 
 \*******************************************************************/
 
-void smv_typecheckt::collect_define(const equal_exprt &expr)
+void smv_typecheckt::collect_define(const exprt &lhs, const exprt &rhs)
 {
-  const exprt &lhs = expr.lhs();
-  const exprt &rhs = expr.rhs();
-
   if(lhs.id() != ID_symbol)
     throw errort() << "collect_define expects symbol on left hand side";
 
@@ -2294,9 +2286,9 @@ void smv_typecheckt::collect_define(const equal_exprt &expr)
 
   if(!result.second)
   {
-    throw errort().with_location(expr.find_source_location())
+    throw errort().with_location(lhs.source_location())
       << "variable `" << symbol.display_name() << "' already defined";
-  }  
+  }
 }
 
 /*******************************************************************\
@@ -2475,7 +2467,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
     for(auto &element : smv_module.elements)
     {
       if(element.is_define() || element.is_assign_current())
-        collect_define(element.equal_expr());
+        collect_define(element.lhs(), element.rhs());
     }
     // now turn them into INVARs
     convert_defines(trans_invar);
