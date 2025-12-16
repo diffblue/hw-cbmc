@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_SMV_TYPES_H
 #define CPROVER_SMV_TYPES_H
 
+#include <util/expr.h>
 #include <util/type.h>
 
 #include <set>
@@ -72,10 +73,11 @@ inline smv_enumeration_typet &to_smv_enumeration_type(typet &type)
 }
 
 /// The type used for VAR declarations that are in fact module instantiations
-class smv_submodule_typet : public typet
+class smv_module_instance_typet : public typet
 {
 public:
-  explicit smv_submodule_typet(irep_idt _identifier) : typet{ID_smv_submodule}
+  explicit smv_module_instance_typet(irep_idt _identifier)
+    : typet{ID_smv_module_instance}
   {
     identifier(_identifier);
   }
@@ -89,28 +91,39 @@ public:
   {
     set(ID_identifier, _identifier);
   }
+
+  const exprt::operandst &arguments() const
+  {
+    return (const exprt::operandst &)get_sub();
+  }
+
+  exprt::operandst &arguments()
+  {
+    return (exprt::operandst &)get_sub();
+  }
 };
 
-/*! \brief Cast a generic typet to a \ref smv_submodule_typet
+/*! \brief Cast a generic typet to a \ref smv_module_instance_typet
  *
  * This is an unchecked conversion. \a type must be known to be \ref
- * smv_submodule_typet.
+ * smv_module_instance_typet.
  *
  * \param type Source type
- * \return Object of type \ref smv_submodule_typet
+ * \return Object of type \ref smv_module_instance_typet
  *
  * \ingroup gr_std_types
 */
-inline const smv_submodule_typet &to_smv_submodule_type(const typet &type)
+inline const smv_module_instance_typet &
+to_smv_module_instance_type(const typet &type)
 {
-  PRECONDITION(type.id() == ID_smv_submodule);
-  return static_cast<const smv_submodule_typet &>(type);
+  PRECONDITION(type.id() == ID_smv_module_instance);
+  return static_cast<const smv_module_instance_typet &>(type);
 }
 
-inline smv_submodule_typet &to_smv_submodule_type(typet &type)
+inline smv_module_instance_typet &to_smv_module_instance_type(typet &type)
 {
-  PRECONDITION(type.id() == ID_smv_submodule);
-  return static_cast<smv_submodule_typet &>(type);
+  PRECONDITION(type.id() == ID_smv_module_instance);
+  return static_cast<smv_module_instance_typet &>(type);
 }
 
 #endif // CPROVER_SMV_TYPES_H

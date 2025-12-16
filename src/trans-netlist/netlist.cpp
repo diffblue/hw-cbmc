@@ -32,9 +32,8 @@ void netlistt::print(std::ostream &out) const
   out << '\n';
   out << "Next state functions:" << '\n';
 
-  for(var_mapt::mapt::const_iterator
-      it=var_map.map.begin();
-      it!=var_map.map.end(); it++)
+  // use a sorted var_map to get determistic output
+  for(auto it : var_map.sorted())
   {
     const var_mapt::vart &var=it->second;
 
@@ -190,11 +189,9 @@ void netlistt::output_dot(std::ostream &out) const
 {
   aigt::output_dot(out);
 
-  // add the sinks
-  for(var_mapt::mapt::const_iterator
-      it=var_map.map.begin();
-      it!=var_map.map.end();
-      it++)
+  // Add the sinks.
+  // Use a sorted var_map to get deterministic results.
+  for(auto it : var_map.sorted())
   {
     const var_mapt::vart &var=it->second;
 

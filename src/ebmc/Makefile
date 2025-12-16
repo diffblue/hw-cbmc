@@ -1,6 +1,7 @@
 SRC = \
       bdd_engine.cpp \
       bmc.cpp \
+      build_transition_system.cpp \
       cegar/abstract.cpp \
       cegar/bmc_cegar.cpp \
       cegar/latch_ordering.cpp \
@@ -11,7 +12,8 @@ SRC = \
       diameter.cpp \
       diatest.cpp \
       dimacs_writer.cpp \
-      ebmc_base.cpp \
+      ebmc_language.cpp \
+      ebmc_language_file.cpp \
       ebmc_languages.cpp \
       ebmc_parse_options.cpp \
       ebmc_properties.cpp \
@@ -34,6 +36,7 @@ SRC = \
       ranking_function.cpp \
       report_results.cpp \
       show_formula_solver.cpp \
+      show_modules.cpp \
       show_properties.cpp \
       show_trans.cpp \
       tautology_check.cpp \

@@ -132,41 +132,6 @@ static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id, YYSTYPE 
 
 /*******************************************************************\
 
-Function: merge_complex_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-irep_idt merge_complex_identifier(const exprt &expr)
-{
-  if(expr.id() == ID_smv_identifier)
-    return to_smv_identifier_expr(expr).identifier();
-  else if(expr.id() == ID_member)
-  {
-    auto &member_expr = to_member_expr(expr);
-    return id2string(merge_complex_identifier(member_expr.compound())) + '.' + id2string(member_expr.get_component_name());
-  }
-  else if(expr.id() == ID_index)
-  {
-    auto &index_expr = to_index_expr(expr);
-    auto &index = index_expr.index();
-    PRECONDITION(index.is_constant());
-    auto index_string = id2string(to_constant_expr(index).get_value());
-    return id2string(merge_complex_identifier(index_expr.array())) + '.' + index_string;
-  }
-  else
-  {
-    DATA_INVARIANT_WITH_DIAGNOSTICS(false, "unexpected complex_identifier", expr.pretty());
-  }
-}
-
-/*******************************************************************\
-
 Function: new_module
 
   Inputs:
@@ -177,13 +142,16 @@ Function: new_module
 
 \*******************************************************************/
 
-static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
+static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_name)
 {
   auto base_name = stack_expr(module_name).id_string();
   const std::string identifier=smv_module_symbol(base_name);
-  auto &module=PARSER.parse_tree.modules[identifier];
+  PARSER.parse_tree.module_list.push_back(smv_parse_treet::modulet{});
+  auto &module=PARSER.parse_tree.module_list.back();
+  PARSER.parse_tree.module_map[identifier] = --PARSER.parse_tree.module_list.end();
   module.name = identifier;
   module.base_name = base_name;
+  module.source_location = stack_expr(location).source_location();
   PARSER.module = &module;
   return module;
 }
@@ -361,8 +329,11 @@ module_name: IDENTIFIER_Token
            | STRING_Token
            ;
 
-module_head: MODULE_Token module_name { new_module($2); }
-           | MODULE_Token module_name { new_module($2); }
+module_keyword: MODULE_Token { init($$); /* for the location */ }
+           ;
+
+module_head: module_keyword module_name { new_module($1, $2); }
+           | module_keyword module_name { new_module($1, $2); }
              '(' module_parameters_opt ')'
            ;
 
@@ -629,14 +600,14 @@ simple_type_specifier:
 module_type_specifier:
              module_name
            {
-             init($$, ID_smv_submodule);
-             to_smv_submodule_type(stack_type($$)).identifier(
+             init($$, ID_smv_module_instance);
+             to_smv_module_instance_type(stack_type($$)).identifier(
                            smv_module_symbol(stack_expr($1).id_string()));
            }
            | module_name '(' parameter_list ')'
            {
-             init($$, ID_smv_submodule);
-             to_smv_submodule_type(stack_type($$)).identifier(
+             init($$, ID_smv_module_instance);
+             to_smv_module_instance_type(stack_type($$)).identifier(
                            smv_module_symbol(stack_expr($1).id_string()));
              stack_expr($$).operands().swap(stack_expr($3).operands());
            }
@@ -662,7 +633,7 @@ enum_list  : enum_element
 enum_element: IDENTIFIER_Token
            {
              $$=$1;
-             PARSER.module->enum_set.insert(stack_expr($1).id_string());
+             PARSER.parse_tree.enum_set.insert(stack_expr($1).id_string());
              PARSER.module->add_enum(
                smv_identifier_exprt{stack_expr($1).id(), PARSER.source_location()});
            }
@@ -904,11 +875,6 @@ identifier : IDENTIFIER_Token
            ;
 
 variable_identifier: complex_identifier
-           {
-             auto id = merge_complex_identifier(stack_expr($1));
-             init($$, ID_smv_identifier);
-             stack_expr($$).set(ID_identifier, id);
-           }
            | STRING_Token
            {
              // Not in the NuSMV grammar.

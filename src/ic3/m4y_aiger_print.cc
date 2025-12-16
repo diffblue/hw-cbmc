@@ -6,20 +6,18 @@ Module: Printing circuit in text version of aiger format
 Author: Eugene Goldberg, eu.goldberg@gmail.com
 
 ******************************************************/
-#include <queue>
-#include <set>
-#include <map>
+#include "ccircuit.hh"
+#include "dnf_io.hh"
+#include "m0ic3.hh"
+
 #include <algorithm>
 #include <iostream>
-
-#include <ebmc/ebmc_base.h>
+#include <map>
+#include <queue>
+#include <set>
 
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
-
-#include "dnf_io.hh"
-#include "ccircuit.hh"
-#include "m0ic3.hh"
 
 /*====================================
 

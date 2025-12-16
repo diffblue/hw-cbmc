@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "aval_bval_encoding.h"
 #include "convert_literals.h"
 #include "expr2verilog.h"
+#include "typename.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
 #include "verilog_lowering.h"
@@ -425,7 +426,7 @@ void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::must_be_integral
+Function: verilog_typecheck_exprt::must_be_bit_vector
 
   Inputs:
 
@@ -435,9 +436,9 @@ Function: verilog_typecheck_exprt::must_be_integral
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::must_be_integral(const exprt &expr)
+void verilog_typecheck_exprt::must_be_bit_vector(exprt &expr)
 {
-  // Throw an error if the given expression doesn't have an integral type.
+  // Throw an error if the given expression doesn't have a bitvector type.
   const auto &type = expr.type();
   if(type.id() == ID_bool)
   {
@@ -451,7 +452,7 @@ void verilog_typecheck_exprt::must_be_integral(const exprt &expr)
   }
   else
     throw errort().with_location(expr.source_location())
-      << "operand " << to_string(expr) << " must be integral";
+      << "operand " << to_string(expr) << " must have a bit vector type";
 }
 
 /*******************************************************************\
@@ -489,7 +490,7 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
         << "unsized literals are not allowed in concatenations";
     }
 
-    must_be_integral(*it);
+    must_be_bit_vector(*it);
 
     const typet &type = it->type();
 
@@ -623,29 +624,29 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
   Forall_expr(it, arguments)
     convert_expr(*it);
-  
-  if(expr.function().id()!=ID_symbol)
+
+  // built-in functions
+  if(expr.is_system_function_call())
+    return convert_system_function(expr);
+
+  if(expr.function().id() != ID_verilog_identifier)
   {
     throw errort().with_location(expr.source_location())
-      << "expected symbol as function argument";
+      << "expected identifier as function";
   }
-    
-  // built-in functions
-  symbol_exprt &f_op=to_symbol_expr(expr.function());
-  
-  const irep_idt &identifier=f_op.get_identifier();
-  
-  if(expr.is_system_function_call())
-    return convert_system_function(identifier, expr);
 
-  std::string full_identifier=
-    id2string(module_identifier)+"."+id2string(identifier);
+  exprt &f_op = expr.function();
+
+  const irep_idt &base_name = to_verilog_identifier_expr(f_op).base_name();
+
+  std::string full_identifier =
+    id2string(module_identifier) + "." + id2string(base_name);
 
   const symbolt *symbol;
   if(ns.lookup(full_identifier, symbol))
   {
     throw errort().with_location(f_op.source_location())
-      << "unknown function `" << identifier << "'";
+      << "unknown function `" << base_name << "'";
   }
 
   if(symbol->type.id()!=ID_code)
@@ -655,9 +656,8 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   }
 
   const code_typet &code_type=to_code_type(symbol->type);
-  
-  f_op.type()=code_type;
-  f_op.set(ID_identifier, full_identifier);
+
+  f_op = symbol->symbol_expr().with_source_location(f_op);
   expr.type()=code_type.return_type();
   
   if(code_type.return_type().id()==ID_empty)
@@ -746,40 +746,7 @@ Function: verilog_typecheck_exprt::left
 
 constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
 {
-  // unpacked array: left bound
-  // packed array: index of most significant element
-  // 0 otherwise
-  auto left = [](const typet &type) -> mp_integer {
-    if(
-      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
-      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
-      type.id() == ID_bool)
-    {
-      auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_increasing))
-        return offset;
-      else
-        return offset + get_width(type) - 1;
-    }
-    else if(type.id() == ID_array)
-    {
-      auto offset = numeric_cast_v<mp_integer>(
-        to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_increasing))
-        return offset;
-      else
-      {
-        return offset +
-               numeric_cast_v<mp_integer>(
-                 to_constant_expr(to_array_type(type).size())) -
-               1;
-      }
-    }
-    else
-      return 0;
-  };
-
-  return from_integer(left(expr.type()), integer_typet{});
+  return from_integer(verilog_left(expr.type()), integer_typet{});
 }
 
 /*******************************************************************\
@@ -796,40 +763,7 @@ Function: verilog_typecheck_exprt::right
 
 constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
 {
-  // unpacked array: right bound
-  // packed array: index of least significant element
-  // 0 otherwise
-  auto right = [](const typet &type) -> mp_integer {
-    if(
-      type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
-      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
-      type.id() == ID_bool)
-    {
-      auto offset = type.get_int(ID_C_offset);
-      if(type.get_bool(ID_C_increasing))
-        return offset + get_width(type) - 1;
-      else
-        return offset;
-    }
-    else if(type.id() == ID_array)
-    {
-      auto offset = numeric_cast_v<mp_integer>(
-        to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-      if(type.get_bool(ID_C_increasing))
-      {
-        return offset +
-               numeric_cast_v<mp_integer>(
-                 to_constant_expr(to_array_type(type).size())) -
-               1;
-      }
-      else
-        return offset;
-    }
-    else
-      return 0;
-  };
-
-  return from_integer(right(expr.type()), integer_typet{});
+  return from_integer(verilog_right(expr.type()), integer_typet{});
 }
 
 /*******************************************************************\
@@ -950,84 +884,8 @@ Function: verilog_typecheck_exprt::typename_string
 
 exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
 {
-  auto &type = expr.type();
-
-  auto left = this->left(expr);
-  auto right = this->right(expr);
-
-  const auto verilog_type = type.get(ID_C_verilog_type);
-
-  std::string s;
-
-  if(type.id() == ID_unsignedbv)
-  {
-    if(verilog_type == ID_verilog_byte)
-      s = "byte unsigned";
-    else if(verilog_type == ID_verilog_int)
-      s = "int unsigned";
-    else if(verilog_type == ID_verilog_longint)
-      s = "longint unsigned";
-    else if(verilog_type == ID_verilog_shortint)
-      s = "shortint unsigned";
-    else
-      s = "bit[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_verilog_unsignedbv)
-  {
-    s = "logic[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_bool)
-  {
-    s = "bit";
-  }
-  else if(type.id() == ID_signedbv)
-  {
-    if(verilog_type == ID_verilog_byte)
-      s = "byte";
-    else if(verilog_type == ID_verilog_int)
-      s = "int";
-    else if(verilog_type == ID_verilog_longint)
-      s = "longint";
-    else if(verilog_type == ID_verilog_shortint)
-      s = "shortint";
-    else
-      s = "bit signed[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_verilog_signedbv)
-  {
-    s = "logic signed[" + to_string(left) + ":" + to_string(right) + "]";
-  }
-  else if(type.id() == ID_verilog_realtime)
-  {
-    s = "realtime";
-  }
-  else if(type.id() == ID_verilog_real)
-  {
-    s = "real";
-  }
-  else if(type.id() == ID_verilog_shortreal)
-  {
-    s = "shortreal";
-  }
-  else if(type.id() == ID_verilog_chandle)
-  {
-    s = "chandle";
-  }
-  else if(type.id() == ID_verilog_event)
-  {
-    s = "event";
-  }
-  else if(type.id() == ID_verilog_string)
-  {
-    s = "string";
-  }
-  else
-    s = "?";
-
-  auto result = convert_string_literal(s);
-  result.add_source_location() = expr.source_location();
-
-  return std::move(result);
+  auto s = verilog_typename(expr.type());
+  return convert_string_literal(s).with_source_location(expr);
 }
 
 /*******************************************************************\
@@ -1042,13 +900,13 @@ Function: verilog_typecheck_exprt::convert_system_function
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::convert_system_function(
-  const irep_idt &identifier,
-  function_call_exprt expr)
+exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
 {
+  auto base_name = to_verilog_identifier_expr(expr.function()).base_name();
+
   exprt::operandst &arguments=expr.arguments();
 
-  if(identifier=="$signed")
+  if(base_name == "$signed")
   {
     // this is an explicit type cast
     if(arguments.size()!=1)
@@ -1083,7 +941,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
         << to_string(argument.type()) << '\'';
     }
   }
-  else if(identifier=="$unsigned")
+  else if(base_name == "$unsigned")
   {
     // this is an explicit type cast
     if(arguments.size()!=1)
@@ -1118,7 +976,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
         << to_string(argument.type()) << '\'';
     }
   }
-  else if(identifier=="$ND")
+  else if(base_name == "$ND")
   {
     // this is something from VIS
     
@@ -1132,13 +990,13 @@ exprt verilog_typecheck_exprt::convert_system_function(
     return std::move(expr);
   }
   else if(
-    identifier == "$bits" || identifier == "$left" || identifier == "$right" ||
-    identifier == "$increment" || identifier == "$low" || identifier == "$high")
+    base_name == "$bits" || base_name == "$left" || base_name == "$right" ||
+    base_name == "$increment" || base_name == "$low" || base_name == "$high")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one argument";
+        << base_name << " takes one argument";
     }
 
     // The return type is integer.
@@ -1146,7 +1004,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
-  else if(identifier == "$countones") // SystemVerilog
+  else if(base_name == "$countones") // SystemVerilog
   {
     if(arguments.size() != 1)
     {
@@ -1159,7 +1017,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
-  else if(identifier=="$onehot") // SystemVerilog
+  else if(base_name == "$onehot") // SystemVerilog
   {
     if(arguments.size()!=1)
     {
@@ -1173,7 +1031,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(onehot);
   }
-  else if(identifier=="$onehot0") // SystemVerilog
+  else if(base_name == "$onehot0") // SystemVerilog
   {
     if(arguments.size()!=1)
     {
@@ -1187,7 +1045,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(onehot0);
   }
-  else if(identifier == "$clog2") // Verilog-2005
+  else if(base_name == "$clog2") // Verilog-2005
   {
     if(arguments.size() != 1)
     {
@@ -1199,7 +1057,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
-  else if(identifier == "$isunknown")
+  else if(base_name == "$isunknown")
   {
     if(arguments.size() != 1)
     {
@@ -1211,7 +1069,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
-  else if(identifier == "$past")
+  else if(base_name == "$past")
   {
     if(arguments.size() == 0 || arguments.size() >= 4)
     {
@@ -1230,73 +1088,73 @@ exprt verilog_typecheck_exprt::convert_system_function(
     return std::move(expr);
   }
   else if(
-    identifier == "$stable" || identifier == "$rose" || identifier == "$fell" ||
-    identifier == "$changed")
+    base_name == "$stable" || base_name == "$rose" || base_name == "$fell" ||
+    base_name == "$changed")
   {
     if(arguments.size() != 1 && arguments.size() != 2)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one or two arguments";
+        << base_name << " takes one or two arguments";
     }
 
     expr.type() = bool_typet();
 
     return std::move(expr);
   }
-  else if(identifier == "$rtoi")
+  else if(base_name == "$rtoi")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one argument";
+        << base_name << " takes one argument";
     }
 
     expr.type() = verilog_integer_typet();
 
     return std::move(expr);
   }
-  else if(identifier == "$itor")
+  else if(base_name == "$itor")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one argument";
+        << base_name << " takes one argument";
     }
 
     expr.type() = verilog_real_typet();
 
     return std::move(expr);
   }
-  else if(identifier == "$bitstoreal")
+  else if(base_name == "$bitstoreal")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one argument";
+        << base_name << " takes one argument";
     }
 
     expr.type() = verilog_real_typet();
 
     return std::move(expr);
   }
-  else if(identifier == "$bitstoshortreal")
+  else if(base_name == "$bitstoshortreal")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one argument";
+        << base_name << " takes one argument";
     }
 
     expr.type() = verilog_shortreal_typet();
 
     return std::move(expr);
   }
-  else if(identifier == "$realtobits")
+  else if(base_name == "$realtobits")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one argument";
+        << base_name << " takes one argument";
     }
 
     arguments[0] =
@@ -1306,12 +1164,12 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
-  else if(identifier == "$shortrealtobits")
+  else if(base_name == "$shortrealtobits")
   {
     if(arguments.size() != 1)
     {
       throw errort().with_location(expr.source_location())
-        << identifier << " takes one argument";
+        << base_name << " takes one argument";
     }
 
     arguments[0] =
@@ -1321,7 +1179,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
 
     return std::move(expr);
   }
-  else if(identifier == "$typename")
+  else if(base_name == "$typename")
   {
     if(arguments.size() != 1)
     {
@@ -1339,7 +1197,7 @@ exprt verilog_typecheck_exprt::convert_system_function(
   else
   {
     throw errort().with_location(expr.function().source_location())
-      << "unknown system function `" << identifier << "'";
+      << "unknown system function `" << base_name << "'";
   }
 }
 
@@ -1361,9 +1219,10 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   {
     return convert_constant(to_constant_expr(std::move(expr)));
   }
-  else if(expr.id()==ID_symbol)
+  else if(expr.id() == ID_verilog_identifier)
   {
-    return convert_symbol(to_symbol_expr(std::move(expr)), {});
+    return convert_verilog_identifier(
+      to_verilog_identifier_expr(std::move(expr)), {});
   }
   else if(expr.id()==ID_verilog_star_event)
   {
@@ -1401,6 +1260,56 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::resolve
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
+{
+  // in a task or function? Try local ones first
+  if(function_or_task_name!="")
+  {
+    auto full_identifier =
+      id2string(function_or_task_name) + "." + id2string(base_name);
+
+    const symbolt *symbol;
+    if(!ns.lookup(full_identifier, symbol))
+      return symbol; // found!
+  }
+
+  // try named blocks, beginning with inner one
+  for(named_blockst::const_reverse_iterator
+      it=named_blocks.rbegin();
+      it!=named_blocks.rend();
+      it++)
+  {
+    auto full_identifier = id2string(module_identifier) + "." + id2string(*it) +
+                           id2string(base_name);
+
+    const symbolt *symbol;
+    if(!ns.lookup(full_identifier, symbol))
+      return symbol; // found!
+  }
+
+  auto full_identifier =
+    id2string(module_identifier) + "." + id2string(base_name);
+
+  const symbolt *symbol;
+  if(!ns.lookup(full_identifier, symbol))
+    return symbol; // found!
+
+  // give up
+  return nullptr;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_symbol
 
   Inputs:
@@ -1411,58 +1320,14 @@ Function: verilog_typecheck_exprt::convert_symbol
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::convert_symbol(
-  symbol_exprt expr,
+exprt verilog_typecheck_exprt::convert_verilog_identifier(
+  verilog_identifier_exprt expr,
   const std::optional<typet> &implicit_net_type)
 {
-  const irep_idt &identifier = expr.get_identifier();
+  auto base_name = expr.base_name();
+  auto symbol = resolve(base_name);
 
-  std::string full_identifier;
-
-  // in a task or function? Try local ones first
-  if(function_or_task_name!="")
-  {
-    full_identifier=
-      id2string(function_or_task_name)+
-      "."+id2string(identifier);
-    
-    const symbolt *symbol;
-    if(!ns.lookup(full_identifier, symbol))
-    { // found!
-      expr.type()=symbol->type;
-      expr.set_identifier(full_identifier);
-      return std::move(expr);
-    }
-  }
-  
-  std::string named_block;
-  
-  // try named blocks, beginning with inner one
-  for(named_blockst::const_reverse_iterator
-      it=named_blocks.rbegin();
-      it!=named_blocks.rend();
-      it++)
-  {
-    full_identifier=
-      id2string(module_identifier)+"."+
-      id2string(*it)+
-      id2string(identifier);
-    
-    const symbolt *symbol;
-    if(!ns.lookup(full_identifier, symbol))
-    { // found!
-      named_block=*it;
-      break;
-    }
-  }
-  
-  full_identifier=
-    id2string(module_identifier)+"."+
-    named_block+
-    id2string(identifier);
-
-  const symbolt *symbol;
-  if(!ns.lookup(full_identifier, symbol))
+  if(symbol != nullptr)
   { 
     // found!
     if(
@@ -1471,14 +1336,12 @@ exprt verilog_typecheck_exprt::convert_symbol(
     {
       // A parameter, or enum. The type is elaborated recursively.
       elaborate_symbol_rec(symbol->name);
-      expr.type() = symbol->type;
-      expr.set_identifier(full_identifier);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
     else if(symbol->type.id() == ID_verilog_genvar)
     {
       // This must be a constant.
-      mp_integer int_value = genvar_value(identifier);
+      mp_integer int_value = genvar_value(base_name);
 
       if(int_value<0)
       {
@@ -1493,31 +1356,41 @@ exprt verilog_typecheck_exprt::convert_symbol(
       result.add_source_location()=source_location;
       return result;
     }
+    else if(
+      symbol->type.id() == ID_verilog_sva_named_sequence ||
+      symbol->type.id() == ID_verilog_sva_named_property)
+    {
+      // A named sequence or property. Create an instance expression,
+      // and then flatten it.
+      auto symbol_expr = symbol->symbol_expr().with_source_location(expr);
+      auto &declaration =
+        to_verilog_sequence_property_declaration_base(symbol->value);
+      auto instance =
+        sva_sequence_property_instance_exprt{symbol_expr, {}, declaration}
+          .with_source_location(expr);
+      return flatten_named_sequence_property(instance);
+    }
     else
     {
-      expr.type()=symbol->type;
-      expr.set_identifier(full_identifier);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
   }
   else
   {
     if(implicit_net_type.has_value())
     {
-      implicit_wire(identifier, symbol, implicit_net_type.value());
+      implicit_wire(base_name, symbol, implicit_net_type.value());
       if(warn_implicit_nets)
       {
         warning().source_location = expr.source_location();
         warning() << "implicit wire " << symbol->display_name() << eom;
       }
-      expr.type() = symbol->type;
-      expr.set_identifier(symbol->name);
-      return std::move(expr);
+      return symbol->symbol_expr().with_source_location(expr);
     }
     else
     {
       throw errort().with_location(expr.source_location())
-        << "unknown identifier " << identifier;
+        << "unknown identifier " << base_name;
     }
   }
 }
@@ -1539,19 +1412,21 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 {
   convert_expr(expr.lhs());
 
-  DATA_INVARIANT(expr.rhs().id() == ID_symbol, "expected symbol on rhs of `.'");
+  DATA_INVARIANT(
+    expr.rhs().id() == ID_verilog_identifier,
+    "expected verilog_identifier as rhs of `.'");
 
-  const irep_idt &rhs_identifier = expr.rhs().get_identifier();
+  const irep_idt &rhs_base_name = expr.rhs().base_name();
 
   if(expr.lhs().type().id() == ID_struct || expr.lhs().type().id() == ID_union)
   {
     // look up the component
     auto &compound_type = to_struct_union_type(expr.lhs().type());
-    auto &component = compound_type.get_component(rhs_identifier);
+    auto &component = compound_type.get_component(rhs_base_name);
     if(component.is_nil())
       throw errort().with_location(expr.source_location())
         << compound_type.id() << " does not have a member named "
-        << rhs_identifier;
+        << rhs_base_name;
 
     // create the member expression
     return member_exprt{expr.lhs(), component.get_name(), component.type()}
@@ -1585,7 +1460,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 
     // the identifier in the module
     const irep_idt full_identifier =
-      id2string(module) + "." + id2string(rhs_identifier);
+      id2string(module) + "." + id2string(rhs_base_name);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
@@ -1603,7 +1478,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     else
     {
       throw errort().with_location(expr.source_location())
-        << "identifier `" << rhs_identifier << "' not found in module `"
+        << "identifier `" << rhs_base_name << "' not found in module `"
         << module_instance_symbol->pretty_name << "'";
     }
 
@@ -1615,7 +1490,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
   else if(expr.lhs().type().id() == ID_named_block)
   {
     const irep_idt full_identifier =
-      id2string(lhs_identifier) + "." + id2string(rhs_identifier);
+      id2string(lhs_identifier) + "." + id2string(rhs_base_name);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
@@ -1637,7 +1512,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     else
     {
       throw errort().with_location(expr.source_location())
-        << "identifier `" << rhs_identifier << "' not found in named block";
+        << "identifier `" << rhs_base_name << "' not found in named block";
     }
   }
   else  
@@ -1681,7 +1556,7 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
 
   const std::string &value = id2string(expr.get_value());
 
-  // real or integral?
+  // real or integer?
   if(
     value.find('.') != std::string::npos ||
     (value.find('h') == std::string::npos &&
@@ -1937,44 +1812,41 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
   // This performs constant-folding on a type-checked function
   // call expression according to Section 11.2.1 IEEE 1800-2017.
   auto &function = expr.function();
-  if(function.id() != ID_symbol)
-    return std::move(expr); // give up
-
-  auto &identifier = to_symbol_expr(function).get_identifier();
-
+  PRECONDITION(function.id() == ID_verilog_identifier);
+  auto &base_name = to_verilog_identifier_expr(function).base_name();
   auto &arguments = expr.arguments();
 
-  if(identifier == "$bits")
+  if(base_name == "$bits")
   {
     DATA_INVARIANT(arguments.size() == 1, "$bits has one argument");
     return bits(arguments[0]);
   }
-  else if(identifier == "$low")
+  else if(base_name == "$low")
   {
     DATA_INVARIANT(arguments.size() == 1, "$low has one argument");
     return low(arguments[0]);
   }
-  else if(identifier == "$high")
+  else if(base_name == "$high")
   {
     DATA_INVARIANT(arguments.size() == 1, "$high has one argument");
     return high(arguments[0]);
   }
-  else if(identifier == "$left")
+  else if(base_name == "$left")
   {
     DATA_INVARIANT(arguments.size() == 1, "$left has one argument");
     return left(arguments[0]);
   }
-  else if(identifier == "$right")
+  else if(base_name == "$right")
   {
     DATA_INVARIANT(arguments.size() == 1, "$right has one argument");
     return right(arguments[0]);
   }
-  else if(identifier == "$increment")
+  else if(base_name == "$increment")
   {
     DATA_INVARIANT(arguments.size() == 1, "$increment has one argument");
     return increment(arguments[0]);
   }
-  else if(identifier == "$countones")
+  else if(base_name == "$countones")
   {
     DATA_INVARIANT(arguments.size() == 1, "$countones has one argument");
 
@@ -1985,7 +1857,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
 
     return countones(to_constant_expr(op));
   }
-  else if(identifier == "$clog2")
+  else if(base_name == "$clog2")
   {
     // the ceiling of the log with base 2 of the argument
     DATA_INVARIANT(arguments.size() == 1, "$clog2 has one argument");
@@ -2011,12 +1883,12 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
       return from_integer(result, integer_typet());
     }
   }
-  else if(identifier == "$typename")
+  else if(base_name == "$typename")
   {
     DATA_INVARIANT(arguments.size() == 1, "$typename takes one argument");
     return typename_string(arguments[0]);
   }
-  else if(identifier == "$isunknown")
+  else if(base_name == "$isunknown")
   {
     DATA_INVARIANT(arguments.size() == 1, "$isunknown takes one argument");
 
@@ -2676,10 +2548,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     // these may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op());
-    must_be_integral(expr.op());
+    must_be_bit_vector(expr.op());
 
-    if (expr.op().type().id() == ID_verilog_signedbv ||
-        expr.op().type().id() == ID_verilog_unsignedbv)
+    if(
+      expr.op().type().id() == ID_verilog_signedbv ||
+      expr.op().type().id() == ID_verilog_unsignedbv)
     {
       expr.type()=verilog_unsignedbv_typet(1);
     }
@@ -2786,7 +2659,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // slice_size is defaulted to 1
     PRECONDITION(expr.op().operands().size() == 1);
     convert_expr(expr.op().operands()[0]);
-    must_be_integral(expr.op().operands()[0]);
+    must_be_bit_vector(expr.op().operands()[0]);
     expr.type() = expr.op().operands()[0].type();
     return std::move(expr);
   }
@@ -2957,7 +2830,7 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
   exprt &op1=expr.op1();
 
   convert_expr(op1);
-  must_be_integral(op1);
+  must_be_bit_vector(op1);
 
   if(op1.type().id()==ID_bool)
     op1 = typecast_exprt{op1, unsignedbv_typet{1}};
@@ -3084,12 +2957,13 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     auto location = expr.source_location();
     auto &package_scope = to_verilog_package_scope_expr(expr);
 
-    if(package_scope.identifier().id() != ID_symbol)
+    if(package_scope.identifier().id() != ID_verilog_identifier)
       throw errort().with_location(location)
-        << expr.id() << " expects symbol on the rhs";
+        << expr.id() << " expects verilog_identifier on the rhs";
 
     auto package_base = package_scope.package_base_name();
-    auto rhs_base = package_scope.identifier().get(ID_base_name);
+    auto rhs_base =
+      to_verilog_identifier_expr(package_scope.identifier()).base_name();
 
     // stitch together
     irep_idt full_identifier =
@@ -3187,9 +3061,15 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.id() == ID_verilog_wildcard_inequality)
   {
     // ==? and !=?
+    // 1800-2017 Table 11-1 says that any integral operands are allowed;
+    // however, it is unclear how these would apply to types that do not have
+    // a bit-encoding.
     convert_relation(expr);
 
-    expr.type() = verilog_unsignedbv_typet(1);
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
+
+    expr.type() = verilog_unsignedbv_typet{1};
 
     return std::move(expr);
   }
@@ -3197,15 +3077,20 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
           expr.id()==ID_verilog_case_inequality)
   {
     // === and !==
+    // Take any operand types except real and shortreal (1800-2017 Table 11-1).
     // The result is always Boolean, and semantically
     // a proper equality is performed.
-    expr.type()=bool_typet();
+    expr.type() = bool_typet{};
 
     convert_relation(expr);
 
-    // integral operands only
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
+    if(
+      expr.lhs().type().id() == ID_verilog_real ||
+      expr.lhs().type().id() == ID_verilog_shortreal)
+    {
+      throw errort().with_location(expr.source_location())
+        << "the case equality operator does not allow real or shortreal";
+    }
 
     return std::move(expr);
   }
@@ -3238,8 +3123,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
     no_bool_ops(expr);
 
     const typet &lhs_type = expr.lhs().type();
@@ -3275,9 +3160,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // logical right shift >>
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
-    no_bool_ops(expr);
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
 
     const typet &lhs_type = expr.lhs().type();
     const typet &rhs_type = expr.rhs().type();
@@ -3309,11 +3193,12 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   {
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_integral(expr.lhs());
-    must_be_integral(expr.rhs());
 
     tc_binary_expr(expr);
     no_bool_ops(expr);
+
+    must_be_bit_vector(expr.lhs());
+    must_be_bit_vector(expr.rhs());
 
     expr.type() = expr.lhs().type();
 

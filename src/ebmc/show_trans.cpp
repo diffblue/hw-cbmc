@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <verilog/expr2verilog.h>
 
-#include "ebmc_base.h"
 #include "ebmc_version.h"
 #include "output_file.h"
 #include "output_verilog.h"

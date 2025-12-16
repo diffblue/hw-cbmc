@@ -109,7 +109,7 @@ void report_results(
 
       switch(property.status)
       {
-        // clang-format off
+      // clang-format off
       case statust::ASSUMED: message.result() << messaget::blue; break;
       case statust::PROVED: message.result() << messaget::green; break;
       case statust::PROVED_WITH_BOUND: message.result() << messaget::green; break;
@@ -139,8 +139,9 @@ void report_results(
 
       if(property.has_witness_trace())
       {
-        auto term = [&property]()
-        { return property.is_exists_path() ? "Trace" : "Counterexample"; };
+        auto term = [&property]() {
+          return property.is_exists_path() ? "Trace" : "Counterexample";
+        };
 
         if(cmdline.isset("trace"))
         {
@@ -175,30 +176,17 @@ void report_results(
 
   if(cmdline.isset("vcd"))
   {
-    const auto outfile_prefix = [&cmdline]() -> std::optional<std::string> {
-    if(cmdline.isset("vcd"))
-      return cmdline.get_value("vcd") + ".";
-    else
-      return {};
-    }();
-
+    const auto outfile_prefix = cmdline.get_value("vcd") + '.';
     for(const auto &property : result.properties)
     {
       if(property.has_witness_trace())
       {
-        std::stringstream vcdfile; 
-        vcdfile << property.name << "_witness.vcd";
-        std::string filename;
-        if (outfile_prefix.has_value()) {
-          filename = outfile_prefix.value() + vcdfile.str();
-        } else {
-          filename = vcdfile.str();
-        }
-        
+        const auto filename =
+          outfile_prefix + id2string(property.name) + "_witness.vcd";
         auto outfile = output_filet{filename};
-        std::cout << "Writing witness trace VCD file to " << filename
-                  << "\n";
         messaget message(message_handler);
+        message.status() << "Writing witness trace VCD file to " << filename
+                         << messaget::eom;
         show_trans_trace_vcd(
           property.witness_trace.value(), message, ns, outfile.stream());
       }

@@ -13,11 +13,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/help_formatter.h>
 #include <util/string2int.h>
 
+#include <trans-netlist/compute_ct.h>
+#include <trans-netlist/ldg.h>
 #include <trans-netlist/smv_netlist.h>
 
+#include "build_transition_system.h"
 #include "diatest.h"
-#include "ebmc_base.h"
 #include "ebmc_error.h"
+#include "ebmc_language.h"
 #include "ebmc_version.h"
 #include "format_hooks.h"
 #include "instrument_buechi.h"
@@ -107,23 +110,6 @@ int ebmc_parse_optionst::doit()
       return 0;
     }
 
-    if(cmdline.isset("preprocess"))
-      return preprocess(cmdline, ui_message_handler);
-
-    if(cmdline.isset("show-parse"))
-      return show_parse(cmdline, ui_message_handler);
-
-    if(
-      cmdline.isset("show-modules") || cmdline.isset("modules-xml") ||
-      cmdline.isset("json-modules"))
-      return show_modules(cmdline, ui_message_handler);
-
-    if(cmdline.isset("show-module-hierarchy"))
-      return show_module_hierarchy(cmdline, ui_message_handler);
-
-    if(cmdline.isset("show-symbol-table"))
-      return show_symbol_table(cmdline, ui_message_handler);
-
     if(cmdline.isset("coverage"))
     {
       throw ebmc_errort() << "This option is currently disabled";
@@ -138,18 +124,6 @@ int ebmc_parse_optionst::doit()
       //    }
 #endif
     }
-
-    if(cmdline.isset("random-traces"))
-      return random_traces(cmdline, ui_message_handler);
-
-    if(cmdline.isset("random-trace") || cmdline.isset("random-waveform"))
-      return random_trace(cmdline, ui_message_handler);
-
-    if(cmdline.isset("neural-liveness"))
-      return do_neural_liveness(cmdline, ui_message_handler);
-
-    if(cmdline.isset("ranking-function"))
-      return do_ranking_function(cmdline, ui_message_handler);
 
     if(cmdline.isset("interpolation-word"))
     {
@@ -207,7 +181,28 @@ int ebmc_parse_optionst::doit()
     }
 
     // get the transition system
-    auto transition_system = get_transition_system(cmdline, ui_message_handler);
+    ebmc_languagest ebmc_languages{cmdline, ui_message_handler};
+
+    auto transition_system_opt = ebmc_languages.transition_system();
+
+    // Did we produce diagnostics instead?
+    if(!transition_system_opt.has_value())
+      return 0;
+
+    auto &transition_system = transition_system_opt.value();
+
+    if(cmdline.isset("random-traces"))
+      return random_traces(transition_system, cmdline, ui_message_handler);
+
+    if(cmdline.isset("random-trace") || cmdline.isset("random-waveform"))
+      return random_trace(transition_system, cmdline, ui_message_handler);
+
+    if(cmdline.isset("neural-liveness"))
+      return do_neural_liveness(transition_system, cmdline, ui_message_handler);
+
+    if(cmdline.isset("ranking-function"))
+      return do_ranking_function(
+        transition_system, cmdline, ui_message_handler);
 
     // get the properties
     auto properties = ebmc_propertiest::from_command_line(
@@ -276,10 +271,19 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("show-ldg"))
     {
-      ebmc_baset ebmc_base(cmdline, ui_message_handler);
-      ebmc_base.transition_system = std::move(transition_system);
-      ebmc_base.properties = std::move(properties);
-      ebmc_base.show_ldg(std::cout);
+      auto netlist =
+        make_netlist(transition_system, properties, ui_message_handler);
+
+      if(!netlist.transition.empty())
+      {
+        messaget message(ui_message_handler);
+        message.warning() << "transition constraint found!" << messaget::eom;
+      }
+
+      ldgt ldg;
+      ldg.compute(netlist);
+      std::cout << "Latch dependencies:" << '\n';
+      ldg.output(netlist, std::cout);
       return 0;
     }
 
@@ -327,10 +331,21 @@ int ebmc_parse_optionst::doit()
 
     if(cmdline.isset("compute-ct"))
     {
-      ebmc_baset ebmc_base(cmdline, ui_message_handler);
-      ebmc_base.transition_system = std::move(transition_system);
-      ebmc_base.properties = std::move(properties);
-      return ebmc_base.do_compute_ct();
+      auto netlist =
+        make_netlist(transition_system, properties, ui_message_handler);
+
+      messaget message{ui_message_handler};
+
+      message.status() << "Latches: " << netlist.var_map.latches.size()
+                       << ", nodes: " << netlist.number_of_nodes()
+                       << messaget::eom;
+
+      message.status() << "Making LDG" << messaget::eom;
+
+      ldgt ldg;
+      ldg.compute(netlist);
+      std::cout << "CT = " << compute_ct(ldg) << '\n';
+      return 0;
     }
 
     auto checker_result = property_checker(

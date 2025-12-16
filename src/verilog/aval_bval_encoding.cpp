@@ -450,7 +450,85 @@ exprt aval_bval(const bitnot_exprt &expr)
   return combine_aval_bval(aval, op_bval, lower_to_aval_bval(expr.type()));
 }
 
-exprt aval_bval_bitwise(const multi_ary_exprt &expr)
+exprt aval_bval_bitand(const bitand_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!expr.operands().empty());
+
+  for(auto &op : expr.operands())
+    PRECONDITION(is_aval_bval(op));
+
+  // All result bits are computed bit-wise.
+  // 0 is the dominating value.
+  // Otherwise, any bit involving x/z is x.
+
+  // A bit is zero of both aval and bval bits are zero.
+  exprt::operandst bit_is_zero_disjuncts;
+
+  for(auto &op : expr.operands())
+    bit_is_zero_disjuncts.push_back(
+      bitand_exprt{bitnot_exprt{aval(op)}, bitnot_exprt{bval(op)}});
+
+  auto bit_is_zero =
+    bitor_exprt{bit_is_zero_disjuncts, bit_is_zero_disjuncts.front().type()};
+
+  // bval: one if not bit_is_zero, and any bval bit is one
+  exprt::operandst bval_disjuncts;
+
+  for(auto &op : expr.operands())
+    bval_disjuncts.push_back(bval(op));
+
+  auto bval = bitand_exprt{
+    bitor_exprt{bval_disjuncts, bval_disjuncts.front().type()},
+    bitnot_exprt{bit_is_zero}};
+
+  // aval: one if not bit_is_zero and bval is zero
+  auto aval = bitand_exprt{bitnot_exprt{bit_is_zero}, bitnot_exprt{bval}};
+
+  return combine_aval_bval(aval, bval, lower_to_aval_bval(expr.type()));
+}
+
+exprt aval_bval_bitor(const bitor_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!expr.operands().empty());
+
+  for(auto &op : expr.operands())
+    PRECONDITION(is_aval_bval(op));
+
+  // All result bits are computed bit-wise.
+  // 1 is the dominating value.
+  // Otherwise, any bit involving x/z is x.
+
+  // A bit is one if the aval bit is one and the bval bit is zero.
+  exprt::operandst bit_is_one_disjuncts;
+
+  for(auto &op : expr.operands())
+    bit_is_one_disjuncts.push_back(
+      bitand_exprt{aval(op), bitnot_exprt{bval(op)}});
+
+  auto bit_is_one =
+    bitor_exprt{bit_is_one_disjuncts, bit_is_one_disjuncts.front().type()};
+
+  // bval: one if not bit_is_one, and any bval bit is one
+  exprt::operandst bval_disjuncts;
+
+  for(auto &op : expr.operands())
+    bval_disjuncts.push_back(bval(op));
+
+  auto bval = bitand_exprt{
+    bitor_exprt{bval_disjuncts, bval_disjuncts.front().type()},
+    bitnot_exprt{bit_is_one}};
+
+  // aval: one if bit_is_one
+  auto aval = bit_is_one;
+
+  return combine_aval_bval(aval, bval, lower_to_aval_bval(expr.type()));
+}
+
+exprt aval_bval_xor_xnor(const multi_ary_exprt &expr)
 {
   auto &type = expr.type();
   PRECONDITION(is_four_valued(type));
@@ -625,6 +703,23 @@ exprt aval_bval(const binary_relation_exprt &expr)
     has_xz,
     make_x(type),
     aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
+}
+
+exprt aval_bval(const zero_extend_exprt &expr)
+{
+  PRECONDITION(is_four_valued(expr.type()));
+
+  // extend aval and bval separately
+  auto op_aval = aval(expr.op());
+  auto op_bval = bval(expr.op());
+
+  auto result_type = lower_to_aval_bval(expr.type());
+  auto extended_type = bv_typet{aval_bval_width(result_type)};
+
+  auto aval_extended = zero_extend_exprt{op_aval, extended_type};
+  auto bval_extended = zero_extend_exprt{op_bval, extended_type};
+
+  return combine_aval_bval(aval_extended, bval_extended, result_type);
 }
 
 exprt default_aval_bval_lowering(const exprt &expr)

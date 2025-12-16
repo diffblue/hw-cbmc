@@ -12,18 +12,26 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/string_hash.h>
 
+#include <iosfwd>
 #include <unordered_map>
 #include <unordered_set>
 
 class smv_parse_treet
 {
 public:
+  smv_parse_treet() = default;
+  smv_parse_treet(smv_parse_treet &&) = default;
+
+  // don't copy, contains pointers
+  smv_parse_treet(const smv_parse_treet &) = delete;
+
   typedef std::unordered_set<irep_idt, irep_id_hash> enum_sett;
 
   struct modulet
   {
+    source_locationt source_location;
     irep_idt name, base_name;
-    std::list<irep_idt> parameters;
+    std::vector<irep_idt> parameters;
 
     struct elementt
     {
@@ -134,21 +142,40 @@ public:
       }
 
       // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
-      const equal_exprt &equal_expr() const
+      const exprt &lhs() const
       {
         PRECONDITION(
           is_assign_current() || is_assign_init() || is_assign_next() ||
           is_define());
-        return to_equal_expr(expr);
+        return to_equal_expr(expr).lhs();
       }
 
-      equal_exprt &equal_expr()
+      exprt &lhs()
       {
         PRECONDITION(
           is_assign_current() || is_assign_init() || is_assign_next() ||
           is_define());
-        return to_equal_expr(expr);
+        return to_equal_expr(expr).lhs();
       }
+
+      // for ASSIGN_CURRENT, ASSIGN_INIT, ASSIGN_NEXT, DEFINE
+      const exprt &rhs() const
+      {
+        PRECONDITION(
+          is_assign_current() || is_assign_init() || is_assign_next() ||
+          is_define());
+        return to_equal_expr(expr).rhs();
+      }
+
+      exprt &rhs()
+      {
+        PRECONDITION(
+          is_assign_current() || is_assign_init() || is_assign_next() ||
+          is_define());
+        return to_equal_expr(expr).rhs();
+      }
+
+      void show(std::ostream &) const;
     };
 
     typedef std::list<elementt> element_listt;
@@ -283,16 +310,22 @@ public:
       elements.emplace_back(
         elementt::ENUM, std::move(expr), std::move(location));
     }
-
-    enum_sett enum_set;
   };
-   
-  typedef std::unordered_map<irep_idt, modulet, irep_id_hash> modulest;
-  
-  modulest modules;
-  
-  void swap(smv_parse_treet &smv_parse_tree);
+
+  using module_listt = std::list<modulet>;
+  module_listt module_list;
+
+  using module_mapt =
+    std::unordered_map<irep_idt, module_listt::iterator, irep_id_hash>;
+  module_mapt module_map;
+
+  // enums are global
+  enum_sett enum_set;
+
+  void swap(smv_parse_treet &);
   void clear();
+
+  void show(std::ostream &) const;
 };
 
 #endif

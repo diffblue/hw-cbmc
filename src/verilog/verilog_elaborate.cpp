@@ -102,7 +102,8 @@ void verilog_typecheckt::collect_symbols(
   if(type.id() == ID_type)
   {
     // much like a typedef
-    auto symbol_type = to_be_elaborated_typet{declarator.type()};
+    auto symbol_type =
+      to_be_elaborated_typet{to_type_expr(declarator.value()).type()};
 
     type_symbolt symbol{full_identifier, symbol_type, mode};
 
@@ -804,15 +805,15 @@ void verilog_typecheckt::collect_symbols(
   {
     auto &parameter_decl = to_verilog_parameter_decl(module_item);
     collect_symbols(parameter_decl.type());
-    for(auto &decl : parameter_decl.declarations())
-      collect_symbols(parameter_decl.type(), decl);
+    for(auto &declarator : parameter_decl.declarators())
+      collect_symbols(parameter_decl.type(), declarator);
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
     auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
     collect_symbols(localparam_decl.type());
-    for(auto &decl : localparam_decl.declarations())
-      collect_symbols(localparam_decl.type(), decl);
+    for(auto &declarator : localparam_decl.declarators())
+      collect_symbols(localparam_decl.type(), declarator);
   }
   else if(module_item.id() == ID_decl)
   {
@@ -987,8 +988,9 @@ verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
   // and the expansion of generate blocks.
 
   // At the top level of the module, include the parameter ports.
-  for(auto &parameter_port_decl : module_source.parameter_port_list())
-    collect_symbols(typet(ID_nil), parameter_port_decl);
+  for(auto &declaration : module_source.parameter_port_decls())
+    for(auto &declarator : declaration.declarators())
+      collect_symbols(declaration.type(), declarator);
 
   // At the top level of the module, include the non-parameter module port
   // module items.

@@ -128,6 +128,9 @@ public:
     wires.clear();
     map.clear();
   }
+
+  std::vector<mapt::const_iterator> sorted() const;
+  std::vector<mapt::iterator> sorted();
 };
  
 #endif

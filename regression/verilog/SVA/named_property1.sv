@@ -12,4 +12,6 @@ module main(input clk);
     x_is_ten
   endsequence
 
+  initial assert(some_sequence);
+
 endmodule

@@ -1,0 +1,10 @@
+MODULE main
+
+-- you can use modules before they are declared
+SPEC sub.something = 123
+
+VAR sub : my-module;
+
+MODULE my-module
+
+DEFINE something := 123;

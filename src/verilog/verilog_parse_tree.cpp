@@ -25,7 +25,7 @@ exprt verilog_parse_treet::create_module(
   irept &attributes,
   irept &module_keyword,
   exprt &name,
-  exprt &parameter_port_list,
+  exprt &parameter_port_decls,
   exprt &ports,
   exprt &module_items)
 {
@@ -35,7 +35,8 @@ exprt verilog_parse_treet::create_module(
 
   verilog_module_sourcet new_module{name.id()};
 
-  new_module.add(ID_parameter_port_list) = std::move(parameter_port_list);
+  new_module.add(ID_verilog_parameter_port_decls) =
+    std::move(parameter_port_decls);
   new_module.add(ID_ports) = std::move(ports);
   new_module.add_source_location() =
     ((const exprt &)module_keyword).source_location();

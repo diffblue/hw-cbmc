@@ -62,17 +62,17 @@ void smv_languaget::dependencies(
   const std::string &module, 
   std::set<std::string> &module_set)
 {
-  smv_parse_treet::modulest::const_iterator
-    m_it=smv_parse_tree.modules.find(module);
+  auto m_it = smv_parse_tree.module_map.find(module);
 
-  if(m_it==smv_parse_tree.modules.end()) return;
+  if(m_it == smv_parse_tree.module_map.end())
+    return;
 
-  const smv_parse_treet::modulet &smv_module=m_it->second;
+  const smv_parse_treet::modulet &smv_module = *m_it->second;
 
   for(auto &element : smv_module.elements)
-    if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
-      module_set.insert(
-        id2string(to_smv_submodule_type(element.expr.type()).identifier()));
+    if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
+      module_set.insert(id2string(
+        to_smv_module_instance_type(element.expr.type()).identifier()));
 }
 
 /*******************************************************************\
@@ -89,10 +89,8 @@ Function: smv_languaget::modules_provided
 
 void smv_languaget::modules_provided(std::set<std::string> &module_set)
 {
-  for(smv_parse_treet::modulest::const_iterator
-      it=smv_parse_tree.modules.begin();
-      it!=smv_parse_tree.modules.end(); it++)
-    module_set.insert(id2string(it->second.name));
+  for(const auto &module : smv_parse_tree.module_list)
+    module_set.insert(id2string(module.name));
 }
 
 /*******************************************************************\
@@ -129,57 +127,7 @@ Function: smv_languaget::show_parse
 
 void smv_languaget::show_parse(std::ostream &out, message_handlert &)
 {
-  for(smv_parse_treet::modulest::const_iterator
-      it=smv_parse_tree.modules.begin();
-      it!=smv_parse_tree.modules.end(); it++)
-  {
-    const smv_parse_treet::modulet &module=it->second;
-    out << "Module: " << module.name << std::endl << std::endl;
-
-    out << "  PARAMETERS:\n";
-
-    for(auto &parameter : module.parameters)
-      out << "    " << parameter << '\n';
-
-    out << '\n';
-
-    out << "  VARIABLES:" << std::endl;
-
-    for(auto &element : module.elements)
-      if(element.is_var() && element.expr.type().id() != ID_smv_submodule)
-      {
-        symbol_tablet symbol_table;
-        namespacet ns{symbol_table};
-        auto identifier = to_smv_identifier_expr(element.expr).identifier();
-        auto msg = type2smv(element.expr.type(), ns);
-        out << "    " << identifier << ": " << msg << ";\n";
-      }
-
-    out << std::endl;
-
-    out << "  SUBMODULES:" << std::endl;
-
-    for(auto &element : module.elements)
-      if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
-      {
-        symbol_tablet symbol_table;
-        namespacet ns(symbol_table);
-        auto identifier = to_smv_identifier_expr(element.expr).identifier();
-        auto msg = type2smv(element.expr.type(), ns);
-        out << "    " << identifier << ": " << msg << ";\n";
-      }
-
-    out << std::endl;
-
-    out << "  ITEMS:" << std::endl;
-
-    for(auto &element : module.elements)
-    {
-      out << "    TYPE: " << to_string(element.element_type) << '\n';
-      out << "    EXPR: " << element.expr.pretty() << '\n';
-      out << std::endl;
-    }
-  }
+  smv_parse_tree.show(out);
 }
 
 /*******************************************************************\

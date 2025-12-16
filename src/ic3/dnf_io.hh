@@ -10,6 +10,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #ifndef DNF_IO_HH
 #define DNF_IO_HH
 
+#include <cstdlib>
 #include <deque>
 #include <iosfwd>
 #include <map>

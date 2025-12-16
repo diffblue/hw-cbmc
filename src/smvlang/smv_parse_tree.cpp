@@ -8,6 +8,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "smv_parse_tree.h"
 
+#include <util/namespace.h>
+#include <util/symbol_table.h>
+
+#include "expr2smv.h"
+#include "smv_expr.h"
+
 /*******************************************************************\
 
 Function: smv_parse_treet::swap
@@ -22,7 +28,9 @@ Function: smv_parse_treet::swap
 
 void smv_parse_treet::swap(smv_parse_treet &smv_parse_tree)
 {
-  smv_parse_tree.modules.swap(modules);
+  smv_parse_tree.module_list.swap(module_list);
+  smv_parse_tree.module_map.swap(module_map);
+  smv_parse_tree.enum_set.swap(enum_set);
 }
 
 /*******************************************************************\
@@ -39,7 +47,8 @@ Function: smv_parse_treet::clear
 
 void smv_parse_treet::clear()
 {
-  modules.clear();
+  module_map.clear();
+  module_list.clear();
 }
 
 /*******************************************************************\
@@ -89,4 +98,61 @@ std::string to_string(smv_parse_treet::modulet::elementt::element_typet i)
   }
   
   return "";
+}
+
+void smv_parse_treet::modulet::elementt::show(std::ostream &out) const
+{
+  out << "    TYPE: " << to_string(element_type) << '\n';
+  out << "    EXPR: " << expr.pretty() << '\n';
+}
+
+void smv_parse_treet::show(std::ostream &out) const
+{
+  for(auto &module : module_list)
+  {
+    out << "Module: " << module.base_name << '\n' << '\n';
+
+    out << "  PARAMETERS:\n";
+
+    for(auto &parameter : module.parameters)
+      out << "    " << parameter << '\n';
+
+    out << '\n';
+
+    out << "  VARIABLES:" << std::endl;
+
+    for(auto &element : module.elements)
+      if(element.is_var() && element.expr.type().id() != ID_smv_module_instance)
+      {
+        symbol_tablet symbol_table;
+        namespacet ns{symbol_table};
+        auto identifier = to_smv_identifier_expr(element.expr).identifier();
+        auto msg = type2smv(element.expr.type(), ns);
+        out << "    " << identifier << ": " << msg << ";\n";
+      }
+
+    out << std::endl;
+
+    out << "  SUBMODULES:" << std::endl;
+
+    for(auto &element : module.elements)
+      if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
+      {
+        symbol_tablet symbol_table;
+        namespacet ns(symbol_table);
+        auto identifier = to_smv_identifier_expr(element.expr).identifier();
+        auto msg = type2smv(element.expr.type(), ns);
+        out << "    " << identifier << ": " << msg << ";\n";
+      }
+
+    out << std::endl;
+
+    out << "  ITEMS:" << std::endl;
+
+    for(auto &element : module.elements)
+    {
+      element.show(out);
+      out << '\n';
+    }
+  }
 }

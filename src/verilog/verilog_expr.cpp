@@ -50,20 +50,30 @@ typet verilog_declaratort::merged_type(const typet &declaration_type) const
   return result;
 }
 
+static bool is_system_function_identifier(const exprt &function)
+{
+  return function.id() == ID_verilog_identifier &&
+         has_prefix(
+           id2string(to_verilog_identifier_expr(function).base_name()), "$");
+}
+
 bool function_call_exprt::is_system_function_call() const
 {
-  return function().id() == ID_symbol &&
-         has_prefix(
-           id2string(to_symbol_expr(function()).get_identifier()), "$");
+  return is_system_function_identifier(function());
+}
+
+bool verilog_function_callt::is_system_function_call() const
+{
+  return is_system_function_identifier(function());
 }
 
 void verilog_module_sourcet::show(std::ostream &out) const
 {
   out << "Module: " << base_name() << '\n';
 
-  out << "  Parameters:\n";
+  out << "  Parameter ports:\n";
 
-  for(auto &parameter : parameter_port_list())
+  for(auto &parameter : parameter_port_decls())
     out << "    " << parameter.pretty() << '\n';
 
   out << '\n';
@@ -146,19 +156,19 @@ static void dependencies_rec(
   else if(module_item.id() == ID_parameter_decl)
   {
     auto &parameter_decl = to_verilog_parameter_decl(module_item);
-    for(auto &decl : parameter_decl.declarations())
+    for(auto &declarator : parameter_decl.declarators())
     {
-      dependencies_rec(decl.type(), dest);
-      dependencies_rec(decl.value(), dest);
+      dependencies_rec(declarator.type(), dest);
+      dependencies_rec(declarator.value(), dest);
     }
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
     auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
-    for(auto &decl : localparam_decl.declarations())
+    for(auto &declarator : localparam_decl.declarators())
     {
-      dependencies_rec(decl.type(), dest);
-      dependencies_rec(decl.value(), dest);
+      dependencies_rec(declarator.type(), dest);
+      dependencies_rec(declarator.value(), dest);
     }
   }
   else if(module_item.id() == ID_decl)

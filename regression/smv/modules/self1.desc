@@ -1,0 +1,9 @@
+KNOWNBUG
+self1.smv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This does not parse.

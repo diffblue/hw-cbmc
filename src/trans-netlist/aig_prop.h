@@ -46,7 +46,10 @@ public:
     PRECONDITION(false);
   }
 
-  literalt new_variable() override { return dest.new_node(); }
+  literalt new_variable() override
+  {
+    return dest.new_var_node();
+  }
 
   size_t no_variables() const override { return dest.number_of_nodes(); }
 
