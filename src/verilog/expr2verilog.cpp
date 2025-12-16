@@ -1540,6 +1540,43 @@ expr2verilogt::resultt expr2verilogt::convert_sequence_property_instance(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_struct
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_struct(const struct_exprt &src)
+{
+  std::string dest = "'{";
+
+  auto &type = to_struct_type(src.type());
+  DATA_INVARIANT(
+    type.components().size() == src.operands().size(),
+    "number of compontents must match");
+
+  for(std::size_t index = 0; index < src.operands().size(); index++)
+  {
+    auto &op = src.operands()[index];
+    if(index != 0)
+      dest += ',';
+    dest += ' ';
+    dest += id2string(type.components()[index].get_name());
+    dest += ": ";
+    dest += convert_rec(op).s;
+  }
+
+  dest += " }";
+
+  return {verilog_precedencet::MAX, dest};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_value_range
 
   Inputs:
@@ -2079,6 +2116,11 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   {
     return convert_sequence_property_instance(
       to_sva_sequence_property_instance_expr(src));
+  }
+
+  else if(src.id() == ID_struct)
+  {
+    return convert_struct(to_struct_expr(src));
   }
 
   // no VERILOG language expression for internal representation
