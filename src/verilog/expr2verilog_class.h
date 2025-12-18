@@ -187,6 +187,8 @@ protected:
   resultt convert_sequence_property_instance(
     const class sva_sequence_property_instance_exprt &);
 
+  resultt convert_struct(const struct_exprt &);
+
 protected:
   const namespacet &ns;
 };

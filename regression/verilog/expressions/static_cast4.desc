@@ -1,6 +1,7 @@
 CORE
 static_cast4.sv
 --module main
+^\[.*\] struct packed'\('\{ a: 1, b: 2 \}\) == main\.some_struct: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
