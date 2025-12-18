@@ -1,0 +1,8 @@
+KNOWNBUG
+instance_array1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This doesn't parse.
