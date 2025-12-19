@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 instance_array1.sv
 
-^EXIT=0$
+^file .* line 9: no support for instance arrays$
+^EXIT=2$
 ^SIGNAL=0$
 --
 --
-This doesn't parse.

@@ -177,6 +177,12 @@ void verilog_typecheckt::interface_inst(
   const verilog_inst_baset &statement,
   const verilog_instt::instancet &op)
 {
+  if(op.instance_array().is_not_nil())
+  {
+    throw errort().with_location(op.source_location())
+      << "no support for instance arrays";
+  }
+
   bool primitive=statement.id()==ID_inst_builtin;
   const exprt &range_expr = static_cast<const exprt &>(op.find(ID_range));
 

@@ -3198,12 +3198,19 @@ hierarchical_instance_brace:
 
 hierarchical_instance:
 	  name_of_instance '(' list_of_module_connections_opt ')'
-		{ init($$, ID_inst); addswap($$, ID_base_name, $1); swapop($$, $3); }
+		{ $$ = $1; swapop($$, $3); }
 	;
 
 name_of_instance:
-	  { init($$, "$_&#ANON" + PARSER.get_next_id());}
-	| TOK_NON_TYPE_IDENTIFIER
+		/* Optional */
+		{ init($$, ID_inst);
+		  stack_expr($$).set(ID_base_name, "$_&#ANON" + PARSER.get_next_id());
+		}
+	| TOK_NON_TYPE_IDENTIFIER unpacked_dimension_brace
+		{ init($$, ID_inst);
+		  addswap($$, ID_base_name, $1);
+		  addswap($$, ID_verilog_instance_array, $2);
+		}
 	;
 
 list_of_module_connections_opt:
