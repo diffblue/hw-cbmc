@@ -3108,20 +3108,31 @@ gate_instance_brace:
 	;
 
 gate_instance:
-	  name_of_gate_instance_opt range_opt '(' list_of_module_connections_opt ')'
-		{ init($$, ID_inst); addswap($$, ID_base_name, $1);
-                  swapop($$, $4);
-                  addswap($$, ID_range, $2);
+	  name_of_gate_instance_opt '(' list_of_module_connections_opt ')'
+		{ $$ = $1;
+                  swapop($$, $3);
                 }
 	;
 
 name_of_gate_instance_opt:
 	  /* Optional */ 
-	        { init($$, "$_&#ANON" + PARSER.get_next_id()); }
+	        { init($$, ID_inst);
+	          stack_expr($$).set(ID_base_name, "$_&#ANON" + PARSER.get_next_id()); }
 	| name_of_gate_instance
 	;
 
-name_of_gate_instance: TOK_NON_TYPE_IDENTIFIER;
+name_of_gate_instance:
+	  TOK_NON_TYPE_IDENTIFIER unpacked_dimension_brace
+	        { init($$, ID_inst);
+	          addswap($$, ID_base_name, $1);
+	          if(stack_expr($2).is_not_nil())
+	          {
+	            auto &range = stack_expr($$).add(ID_range);
+	            range = stack_expr($2).find(ID_range);
+	            range.id(ID_range);
+	          }
+	        }
+	;
 
 // System Verilog standard 1800-2017
 // A.4.1.1 Module instantiation
