@@ -3103,7 +3103,7 @@ pass_switchtype:
 gate_instance_brace:
 	  gate_instance
 		{ init($$); mto($$, $1); }
-	| gate_instance_brace ',' module_instance
+	| gate_instance_brace ',' gate_instance
 		{ $$=$1;    mto($$, $3); }
 	;
 
@@ -3127,7 +3127,7 @@ name_of_gate_instance: TOK_NON_TYPE_IDENTIFIER;
 // A.4.1.1 Module instantiation
 
 module_instantiation:
-	  module_identifier parameter_value_assignment_opt module_instance_brace ';'
+	  module_identifier parameter_value_assignment_opt hierarchical_instance_brace ';'
 		{ init($$, ID_inst);
                   addswap($$, ID_module, $1);
 		  addswap($$, ID_parameter_assignments, $2);
@@ -3189,14 +3189,14 @@ named_parameter_assignment:
 	  	}
 	;
 
-module_instance_brace:
-	  module_instance
+hierarchical_instance_brace:
+	  hierarchical_instance
 		{ init($$); mto($$, $1); }
-	| module_instance_brace ',' module_instance
+	| hierarchical_instance_brace ',' hierarchical_instance
 		{ $$=$1;    mto($$, $3); }
 	;
 
-module_instance:
+hierarchical_instance:
 	  name_of_instance '(' list_of_module_connections_opt ')'
 		{ init($$, ID_inst); addswap($$, ID_base_name, $1); swapop($$, $3); }
 	;
