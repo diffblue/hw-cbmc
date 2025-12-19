@@ -1,0 +1,7 @@
+CORE
+typedef_name_collision3.sv
+
+^file .* line 11: duplicate definition of identifier `some_identifier' in module `main'$
+^EXIT=2$
+^SIGNAL=0$
+--
