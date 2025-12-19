@@ -903,6 +903,16 @@ public:
              connections.front().id() == ID_named_port_connection;
     }
 
+    const typet &instance_array() const
+    {
+      return static_cast<const typet &>(find(ID_verilog_instance_array));
+    }
+
+    typet &instance_array()
+    {
+      return static_cast<typet &>(add(ID_verilog_instance_array));
+    }
+
   protected:
     using exprt::operands;
   };
