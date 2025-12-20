@@ -80,7 +80,7 @@ std::optional<transition_systemt> smv_ebmc_languaget::transition_system()
 
     for(const auto &module : parse_tree.module_list)
       show_modules.modules.emplace_back(
-        module.name, module.base_name, "SMV", module.source_location);
+        module.identifier, module.base_name, "SMV", module.source_location);
 
     auto filename = cmdline.value_opt("outfile").value_or("-");
     output_filet output_file{filename};

@@ -30,7 +30,7 @@ public:
   struct modulet
   {
     source_locationt source_location;
-    irep_idt name, base_name;
+    irep_idt identifier, base_name;
     std::vector<irep_idt> parameters;
 
     struct elementt
@@ -315,6 +315,7 @@ public:
   using module_listt = std::list<modulet>;
   module_listt module_list;
 
+  // map from module base names into the module list
   using module_mapt =
     std::unordered_map<irep_idt, module_listt::iterator, irep_id_hash>;
   module_mapt module_map;
