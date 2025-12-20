@@ -1,5 +1,7 @@
 # EBMC 6.0
 
+* SMV: removed legacy keywords EXTERN and switch
+
 # EBMC 5.11
 
 * SystemVerilog: $unit::
