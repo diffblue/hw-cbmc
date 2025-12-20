@@ -261,6 +261,14 @@ void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
         instance.arguments(),
         instance.source_location());
     }
+
+    if(
+      element.is_var() &&
+      element.expr.type().id() == ID_smv_process_module_instance)
+    {
+      throw errort().with_location(element.expr.source_location())
+        << "no support for asynchronous processes";
+    }
   }
 }
 
@@ -2277,8 +2285,12 @@ void smv_typecheckt::create_var_symbols(
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
 
-      if(symbol.type.id() == ID_smv_module_instance)
+      if(
+        symbol.type.id() == ID_smv_module_instance ||
+        symbol.type.id() == ID_smv_process_module_instance)
+      {
         symbol.is_input = false;
+      }
       else
         symbol.is_input = true;
 

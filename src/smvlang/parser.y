@@ -589,16 +589,26 @@ simple_type_specifier:
            ;
 
 module_type_specifier:
-             module_name
+             module_name parameter_list_paren_opt
            {
              init($$, ID_smv_module_instance);
              to_smv_module_instance_type(stack_type($$)).base_name(stack_expr($1).id());
+             stack_expr($$).operands().swap(stack_expr($2).operands());
            }
-           | module_name '(' parameter_list ')'
+           | process_Token module_name parameter_list_paren_opt
            {
-             init($$, ID_smv_module_instance);
-             to_smv_module_instance_type(stack_type($$)).base_name(stack_expr($1).id());
-             stack_expr($$).operands().swap(stack_expr($3).operands());
+             init($$, ID_smv_process_module_instance);
+           }
+           ;
+
+parameter_list_paren_opt:
+             /* optional */
+           {
+             init($$);
+           }
+           | '(' parameter_list ')'
+           {
+             $$ = $2;
            }
            ;
 

@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 process1.smv
 
-^EXIT=0$
+^file .* line 8: no support for asynchronous processes$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This does not parse.
