@@ -786,9 +786,6 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_smv_setin)
     return convert_binary(to_smv_setin_expr(src), "in", precedencet::IN);
 
-  else if(src.id() == ID_smv_setnotin)
-    return convert_binary(to_binary_expr(src), "notin", precedencet::IN);
-
   else if(src.id() == ID_smv_union)
     return convert_binary(to_smv_union_expr(src), "union", precedencet::UNION);
 
