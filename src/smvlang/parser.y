@@ -556,42 +556,33 @@ type_specifier:
            ;
 
 simple_type_specifier:
-             array_Token NUMBER_Token DOTDOT_Token NUMBER_Token of_Token simple_type_specifier
+             array_Token integer_constant DOTDOT_Token integer_constant of_Token simple_type_specifier
            {
-             init($$, ID_array);
-             int start=atoi(stack_expr($2).id().c_str());
-             int end=atoi(stack_expr($4).id().c_str());
-
-             if(end < start)
-             {
-               yyerror("array must end with number >= `"+std::to_string(start)+"'");
-               YYERROR;
-             }
-
-             stack_type($$).set(ID_size, end-start+1);
-             stack_type($$).set(ID_offset, start);
+             init($$, ID_smv_array);
+             stack_type($$).set(ID_from, stack_expr($2));
+             stack_type($$).set(ID_to, stack_expr($4));
              stack_type($$).add_subtype()=stack_type($6);
            }
            | boolean_Token { init($$, ID_bool); }
-           | word_Token '[' NUMBER_Token ']'
+           | word_Token '[' integer_constant ']'
            {
-             init($$, ID_unsignedbv);
-             stack_type($$).set(ID_width, stack_expr($3).id());
+             init($$, ID_smv_word);
+             stack_type($$).set(ID_width, stack_expr($3));
            }
-           | signed_Token word_Token '[' NUMBER_Token ']'
+           | signed_Token word_Token '[' integer_constant ']'
            {
-             init($$, ID_signedbv);
-             stack_type($$).set(ID_width, stack_expr($4).id());
+             init($$, ID_smv_signed_word);
+             stack_type($$).set(ID_width, stack_expr($4));
            }
-           | unsigned_Token word_Token '[' NUMBER_Token ']'
+           | unsigned_Token word_Token '[' integer_constant ']'
            {
-             init($$, ID_unsignedbv);
-             stack_type($$).set(ID_width, stack_expr($4).id());
+             init($$, ID_smv_unsigned_word);
+             stack_type($$).set(ID_width, stack_expr($4));
            }
            | '{' enum_list '}' { $$=$2; }
-           | NUMBER_Token DOTDOT_Token NUMBER_Token
+           | integer_constant DOTDOT_Token integer_constant
            {
-             init($$, ID_range);
+             init($$, ID_smv_range);
              stack_type($$).set(ID_from, stack_expr($1));
              stack_type($$).set(ID_to, stack_expr($3));
            }
