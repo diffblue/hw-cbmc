@@ -738,6 +738,11 @@ basic_expr : constant
              unary($$, ID_member, $1);
              stack_expr($$).set(ID_component_name, stack_expr($3).id());
            }
+           | self_Token
+           {
+             // This rule is part of "complex_identifier" in the NuSMV manual.
+             init($$, ID_smv_self);
+           }
            | basic_expr '(' basic_expr ')'
            {
              // Not in the NuSMV grammar.

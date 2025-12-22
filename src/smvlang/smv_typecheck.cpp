@@ -1954,6 +1954,11 @@ void smv_typecheckt::convert(exprt &expr)
     tmp.set_identifier(id2string(tmp.get_identifier()) + '.' + index_string);
     expr = tmp;
   }
+  else if(expr.id() == ID_smv_self)
+  {
+    throw errort().with_location(expr.source_location())
+      << "no support for self";
+  }
   else if(expr.id()=="smv_nondet_choice" ||
           expr.id()=="smv_union")
   {

@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 self1.smv
 
-^EXIT=0$
+^file .* line 4: no support for self$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This does not parse.
