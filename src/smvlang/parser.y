@@ -401,7 +401,7 @@ simple_var_list:
            ;
 
 define_declaration:
-             DEFINE_Token defines
+             DEFINE_Token define_body
            | DEFINE_Token
            ;
 
@@ -648,36 +648,27 @@ assignments: assignment
            | assignments assignment
            ;
 
-assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
+assignment : init_Token '(' complex_identifier ')' BECOMES_Token simple_expr ';'
            {
-             if(stack_expr($1).id()==ID_smv_next)
-             {
-               PARSER.module->add_assign_next(
-                 unary_exprt{ID_smv_next, std::move(stack_expr($3))},
-                 std::move(stack_expr($6)));
-             }
-             else
-               PARSER.module->add_assign_init(std::move(stack_expr($3)), std::move(stack_expr($6)));
+             PARSER.module->add_assign_init(std::move(stack_expr($3)), std::move(stack_expr($6)));
            }
-           | assignment_var BECOMES_Token formula ';'
+           | next_Token '(' complex_identifier ')' BECOMES_Token next_expr ';'
+           {
+             PARSER.module->add_assign_next(
+               unary_exprt{ID_smv_next, std::move(stack_expr($3))},
+               std::move(stack_expr($6)));
+           }
+           | complex_identifier BECOMES_Token formula ';'
            {
              PARSER.module->add_assign_current(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
 
-assignment_var: variable_identifier
+define_body: define
+           | define_body define
            ;
 
-assignment_head:
-             init_Token { init($$, ID_init); }
-           | next_Token { init($$, ID_smv_next); }
-           ;
-
-defines:     define
-           | defines define
-           ;
-
-define     : assignment_var BECOMES_Token formula ';'
+define     : complex_identifier BECOMES_Token next_expr ';'
            {
              PARSER.module->add_define(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
@@ -724,6 +715,12 @@ word_constant:
            }
            ;
 
+next_expr  : basic_expr
+           ;
+
+simple_expr: basic_expr
+           ;
+
 basic_expr : constant
            | identifier
            {
@@ -743,7 +740,7 @@ basic_expr : constant
              // This rule is part of "complex_identifier" in the NuSMV manual.
              init($$, ID_smv_self);
            }
-           | basic_expr '(' basic_expr ')'
+           | basic_expr '(' simple_expr ')'
            {
              // Not in the NuSMV grammar.
              binary($$, $1, ID_index, $3);
