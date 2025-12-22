@@ -1060,7 +1060,7 @@ std::string type2smv(const typet &type, const namespacet &ns)
   }
   else if(type.id() == ID_smv_module_instance)
   {
-    auto code = id2string(to_smv_module_instance_type(type).identifier());
+    auto code = id2string(to_smv_module_instance_type(type).base_name());
     const exprt &e=(exprt &)type;
     if(e.has_operands())
     {

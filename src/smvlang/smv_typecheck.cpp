@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
+#include <util/prefix.h>
 #include <util/std_expr.h>
 #include <util/typecheck.h>
 
@@ -32,13 +33,13 @@ public:
   smv_typecheckt(
     smv_parse_treet &_smv_parse_tree,
     symbol_table_baset &_symbol_table,
-    const std::string &_module,
+    const std::string &_module_identifier,
     bool _do_spec,
     message_handlert &_message_handler)
     : typecheckt(_message_handler),
       smv_parse_tree(_smv_parse_tree),
       symbol_table(_symbol_table),
-      module(_module),
+      module_identifier(_module_identifier),
       do_spec(_do_spec)
   {
     nondet_count=0;
@@ -80,7 +81,7 @@ public:
 protected:
   smv_parse_treet &smv_parse_tree;
   symbol_table_baset &symbol_table;
-  const std::string &module;
+  const std::string &module_identifier;
   bool do_spec;
 
   void check_type(typet &);
@@ -104,7 +105,7 @@ protected:
 
   void instantiate(
     smv_parse_treet::modulet &,
-    const irep_idt &identifier,
+    const irep_idt &module_base_name,
     const irep_idt &instance,
     const exprt::operandst &arguments,
     const source_locationt &);
@@ -216,7 +217,7 @@ void smv_typecheckt::convert_ports(
     ports.push_back(exprt(ID_symbol));
     ports.back().set(
       ID_identifier,
-      id2string(smv_module.name) + "::var::" + id2string(port_name));
+      id2string(smv_module.identifier) + "::var::" + id2string(port_name));
   }
 }
 
@@ -249,12 +250,13 @@ void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
       for(auto &argument : instance.arguments())
         convert(argument);
 
+      // the base name of the instance, not the module
       auto instance_base_name =
         to_smv_identifier_expr(element.expr).identifier();
 
       instantiate(
         smv_module,
-        instance.identifier(),
+        instance.base_name(),
         instance_base_name,
         instance.arguments(),
         instance.source_location());
@@ -276,18 +278,18 @@ Function: smv_typecheckt::instantiate
 
 void smv_typecheckt::instantiate(
   smv_parse_treet::modulet &smv_module,
-  const irep_idt &identifier,
+  const irep_idt &module_base_name,
   const irep_idt &instance,
   const exprt::operandst &arguments,
   const source_locationt &location)
 {
   // Find the module
-  auto module_it = smv_parse_tree.module_map.find(identifier);
+  auto module_it = smv_parse_tree.module_map.find(module_base_name);
 
   if(module_it == smv_parse_tree.module_map.end())
   {
     throw errort().with_location(location)
-      << "submodule `" << identifier << "' not found";
+      << "submodule `" << module_base_name << "' not found";
   }
 
   const auto &instantiated_module = *module_it->second;
@@ -297,7 +299,7 @@ void smv_typecheckt::instantiate(
   if(parameters.size() != arguments.size())
   {
     throw errort().with_location(location)
-      << "submodule `" << identifier << "' has wrong number of arguments";
+      << "submodule `" << module_base_name << "' has wrong number of arguments";
   }
 
   rename_mapt parameter_map;
@@ -727,7 +729,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
 
     if(mode == INIT || next)
     {
-      if(symbol.module==module)
+      if(symbol.module == module_identifier)
       {
         symbol.is_input=false;
         symbol.is_state_var=true;
@@ -1716,7 +1718,7 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
       // sets can be assigned to scalars, which yields a nondeterministic
       // choice
       std::string identifier =
-        module + "::var::" + std::to_string(nondet_count++);
+        module_identifier + "::var::" + std::to_string(nondet_count++);
 
       expr.set(ID_identifier, identifier);
       expr.set("#smv_nondet_choice", true);
@@ -1877,7 +1879,7 @@ void smv_typecheckt::convert(exprt &expr)
     if(
       smv_parse_tree.enum_set.find(identifier) == smv_parse_tree.enum_set.end())
     {
-      std::string id = module + "::var::" + identifier;
+      std::string id = module_identifier + "::var::" + identifier;
 
       expr.set(ID_identifier, id);
       expr.id(ID_symbol);
@@ -1927,8 +1929,8 @@ void smv_typecheckt::convert(exprt &expr)
         << "expected operand here";
     }
 
-    std::string identifier=
-      module+"::var::"+std::to_string(nondet_count++);
+    std::string identifier =
+      module_identifier + "::var::" + std::to_string(nondet_count++);
 
     expr.set(ID_identifier, identifier);
     expr.set("#smv_nondet_choice", true);
@@ -2249,7 +2251,8 @@ void smv_typecheckt::create_var_symbols(
     {
       irep_idt base_name = merge_complex_identifier(element.expr);
       auto location = element.expr.source_location();
-      irep_idt identifier = module + "::var::" + id2string(base_name);
+      irep_idt identifier =
+        module_identifier + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
@@ -2266,10 +2269,10 @@ void smv_typecheckt::create_var_symbols(
 
       symbolt symbol{identifier, std::move(type), mode};
 
-      symbol.module = modulep->name;
+      symbol.module = modulep->identifier;
       symbol.base_name = base_name;
 
-      if(module == "smv::main")
+      if(module_identifier == "smv::main")
         symbol.pretty_name = symbol.base_name;
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
@@ -2289,7 +2292,8 @@ void smv_typecheckt::create_var_symbols(
     {
       irep_idt base_name = merge_complex_identifier(element.lhs());
       auto location = to_equal_expr(element.expr).lhs().source_location();
-      irep_idt identifier = module + "::var::" + id2string(base_name);
+      irep_idt identifier =
+        module_identifier + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
@@ -2305,10 +2309,10 @@ void smv_typecheckt::create_var_symbols(
       symbolt symbol{identifier, std::move(type), mode};
 
       symbol.mode = mode;
-      symbol.module = modulep->name;
+      symbol.module = modulep->identifier;
       symbol.base_name = base_name;
 
-      if(module == "smv::main")
+      if(module_identifier == "smv::main")
         symbol.pretty_name = symbol.base_name;
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
@@ -2323,7 +2327,8 @@ void smv_typecheckt::create_var_symbols(
     else if(element.is_enum())
     {
       irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
-      irep_idt identifier = module + "::var::" + id2string(base_name);
+      irep_idt identifier =
+        module_identifier + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
@@ -2537,7 +2542,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
     module_symbol.base_name=smv_module.base_name;
     module_symbol.pretty_name=smv_module.base_name;
-    module_symbol.name=smv_module.name;
+    module_symbol.name = smv_module.identifier;
     module_symbol.module=module_symbol.name;
     module_symbol.type=typet(ID_module);
     module_symbol.mode="SMV";
@@ -2609,9 +2614,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         else
           spec_symbol.base_name = "spec" + std::to_string(nr++);
 
-        spec_symbol.name =
-          id2string(smv_module.name) + "::" + id2string(spec_symbol.base_name);
-        spec_symbol.module = smv_module.name;
+        spec_symbol.name = id2string(smv_module.identifier) +
+                           "::" + id2string(spec_symbol.base_name);
+        spec_symbol.module = smv_module.identifier;
         spec_symbol.type = bool_typet();
         spec_symbol.is_property = true;
         spec_symbol.mode = "SMV";
@@ -2619,7 +2624,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.location = element.location;
         spec_symbol.location.set_comment(to_string(element.expr));
 
-        if(smv_module.name == "smv::main")
+        if(smv_module.identifier == "smv::main")
           spec_symbol.pretty_name = spec_symbol.base_name;
         else
           spec_symbol.pretty_name = strip_smv_prefix(spec_symbol.name);
@@ -2632,8 +2637,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
   }
 
   // lowering
-  for(auto v_it = symbol_table.symbol_module_map.lower_bound(smv_module.name);
-      v_it != symbol_table.symbol_module_map.upper_bound(smv_module.name);
+  for(auto v_it =
+        symbol_table.symbol_module_map.lower_bound(smv_module.identifier);
+      v_it != symbol_table.symbol_module_map.upper_bound(smv_module.identifier);
       v_it++)
   {
     auto &symbol = symbol_table.get_writeable_ref(v_it->second);
@@ -2656,18 +2662,19 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck()
 {
-  if(module != "smv::main")
+  if(module_identifier != "smv::main")
     return;
 
   // check all modules for duplicate identifiers
   for(auto &module : smv_parse_tree.module_list)
     variable_checks(module);
 
-  auto it = smv_parse_tree.module_map.find(module);
+  auto module_base_name = smv_module_base_name(module_identifier);
+  auto it = smv_parse_tree.module_map.find(module_base_name);
 
   if(it == smv_parse_tree.module_map.end())
   {
-    throw errort() << "failed to find module " << module;
+    throw errort() << "failed to find module " << module_base_name;
   }
 
   convert(*it->second);
@@ -2688,12 +2695,12 @@ Function: smv_typecheck
 bool smv_typecheck(
   smv_parse_treet &smv_parse_tree,
   symbol_table_baset &symbol_table,
-  const std::string &module,
+  const std::string &module_identifier,
   message_handlert &message_handler,
   bool do_spec)
 {
   smv_typecheckt smv_typecheck(
-    smv_parse_tree, symbol_table, module, do_spec, message_handler);
+    smv_parse_tree, symbol_table, module_identifier, do_spec, message_handler);
   return smv_typecheck.typecheck_main();
 }
 
@@ -2709,7 +2716,25 @@ Function: smv_module_symbol
 
 \*******************************************************************/
 
-std::string smv_module_symbol(const std::string &module)
+irep_idt smv_module_symbol(const irep_idt &base_name)
 {
-  return "smv::"+module;
+  return "smv::" + id2string(base_name);
+}
+
+/*******************************************************************\
+
+Function: smv_module_base_name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt smv_module_base_name(const irep_idt &identifier)
+{
+  PRECONDITION(has_prefix(id2string(identifier), "smv::"));
+  return id2string(identifier).substr(5, std::string::npos);
 }

@@ -62,7 +62,7 @@ void smv_languaget::dependencies(
   const std::string &module, 
   std::set<std::string> &module_set)
 {
-  auto m_it = smv_parse_tree.module_map.find(module);
+  auto m_it = smv_parse_tree.module_map.find(smv_module_base_name(module));
 
   if(m_it == smv_parse_tree.module_map.end())
     return;
@@ -71,8 +71,11 @@ void smv_languaget::dependencies(
 
   for(auto &element : smv_module.elements)
     if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
-      module_set.insert(id2string(
-        to_smv_module_instance_type(element.expr.type()).identifier()));
+    {
+      auto base_name =
+        to_smv_module_instance_type(element.expr.type()).base_name();
+      module_set.insert(id2string(smv_module_symbol(base_name)));
+    }
 }
 
 /*******************************************************************\
@@ -90,7 +93,7 @@ Function: smv_languaget::modules_provided
 void smv_languaget::modules_provided(std::set<std::string> &module_set)
 {
   for(const auto &module : smv_parse_tree.module_list)
-    module_set.insert(id2string(module.name));
+    module_set.insert(id2string(module.identifier));
 }
 
 /*******************************************************************\

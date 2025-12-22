@@ -145,11 +145,11 @@ Function: new_module
 static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_name)
 {
   auto base_name = stack_expr(module_name).id_string();
-  const std::string identifier=smv_module_symbol(base_name);
+  const auto identifier=smv_module_symbol(base_name);
   PARSER.parse_tree.module_list.push_back(smv_parse_treet::modulet{});
   auto &module=PARSER.parse_tree.module_list.back();
-  PARSER.parse_tree.module_map[identifier] = --PARSER.parse_tree.module_list.end();
-  module.name = identifier;
+  PARSER.parse_tree.module_map[base_name] = --PARSER.parse_tree.module_list.end();
+  module.identifier = identifier;
   module.base_name = base_name;
   module.source_location = stack_expr(location).source_location();
   PARSER.module = &module;
@@ -592,14 +592,12 @@ module_type_specifier:
              module_name
            {
              init($$, ID_smv_module_instance);
-             to_smv_module_instance_type(stack_type($$)).identifier(
-                           smv_module_symbol(stack_expr($1).id_string()));
+             to_smv_module_instance_type(stack_type($$)).base_name(stack_expr($1).id());
            }
            | module_name '(' parameter_list ')'
            {
              init($$, ID_smv_module_instance);
-             to_smv_module_instance_type(stack_type($$)).identifier(
-                           smv_module_symbol(stack_expr($1).id_string()));
+             to_smv_module_instance_type(stack_type($$)).base_name(stack_expr($1).id());
              stack_expr($$).operands().swap(stack_expr($3).operands());
            }
            ;

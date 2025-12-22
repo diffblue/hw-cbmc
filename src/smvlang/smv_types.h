@@ -76,20 +76,21 @@ inline smv_enumeration_typet &to_smv_enumeration_type(typet &type)
 class smv_module_instance_typet : public typet
 {
 public:
-  explicit smv_module_instance_typet(irep_idt _identifier)
+  explicit smv_module_instance_typet(irep_idt _base_name)
     : typet{ID_smv_module_instance}
   {
-    identifier(_identifier);
+    base_name(_base_name);
   }
 
-  irep_idt identifier() const
+  // the base name of the module that is instantiated
+  irep_idt base_name() const
   {
-    return get(ID_identifier);
+    return get(ID_base_name);
   }
 
-  void identifier(irep_idt _identifier)
+  void base_name(irep_idt _base_name)
   {
-    set(ID_identifier, _identifier);
+    set(ID_base_name, _base_name);
   }
 
   const exprt::operandst &arguments() const
