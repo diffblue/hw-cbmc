@@ -144,6 +144,8 @@ protected:
       return id;
   }
 
+  mp_integer require_integer_constant(const irept &) const;
+
   void lower_node(exprt &) const;
 
   void lower(typet &) const;
@@ -363,6 +365,36 @@ void smv_typecheckt::instantiate(
 
 /*******************************************************************\
 
+Function: smv_typecheckt::require_integer_constant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+mp_integer smv_typecheckt::require_integer_constant(const irept &irep) const
+{
+  auto &as_expr = static_cast<const exprt &>(irep);
+  if(as_expr.id() != ID_constant)
+  {
+    throw errort().with_location(as_expr.source_location())
+      << "expected constant expression";
+  }
+
+  if(as_expr.type().id() != ID_integer)
+  {
+    throw errort().with_location(as_expr.source_location())
+      << "expected integer expression";
+  }
+
+  return numeric_cast_v<mp_integer>(to_constant_expr(as_expr));
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::check_type
 
   Inputs:
@@ -377,10 +409,8 @@ void smv_typecheckt::check_type(typet &type)
 {
   if(type.id() == ID_smv_array)
   {
-    auto from = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_from))));
-    auto to = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_to))));
+    auto from = require_integer_constant(type.find(ID_from));
+    auto to = require_integer_constant(type.find(ID_to));
 
     if(to < from)
       throw errort().with_location(type.source_location())
@@ -402,10 +432,8 @@ void smv_typecheckt::check_type(typet &type)
   }
   else if(type.id() == ID_smv_range)
   {
-    auto from = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_from))));
-    auto to = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_to))));
+    auto from = require_integer_constant(type.find(ID_from));
+    auto to = require_integer_constant(type.find(ID_to));
 
     if(from > to)
       throw errort().with_location(type.source_location()) << "range is empty";
@@ -416,8 +444,7 @@ void smv_typecheckt::check_type(typet &type)
   }
   else if(type.id() == ID_smv_signed_word)
   {
-    auto width = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_width))));
+    auto width = require_integer_constant(type.find(ID_width));
 
     if(width < 1)
       throw errort().with_location(type.source_location())
@@ -428,8 +455,7 @@ void smv_typecheckt::check_type(typet &type)
   }
   else if(type.id() == ID_smv_word || type.id() == ID_smv_unsigned_word)
   {
-    auto width = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_width))));
+    auto width = require_integer_constant(type.find(ID_width));
 
     if(width < 1)
       throw errort().with_location(type.source_location())

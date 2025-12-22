@@ -556,7 +556,7 @@ type_specifier:
            ;
 
 simple_type_specifier:
-             array_Token integer_constant DOTDOT_Token integer_constant of_Token simple_type_specifier
+             array_Token basic_expr DOTDOT_Token basic_expr of_Token simple_type_specifier
            {
              init($$, ID_smv_array);
              stack_type($$).set(ID_from, stack_expr($2));
@@ -564,17 +564,17 @@ simple_type_specifier:
              stack_type($$).add_subtype()=stack_type($6);
            }
            | boolean_Token { init($$, ID_bool); }
-           | word_Token '[' integer_constant ']'
+           | word_Token '[' basic_expr ']'
            {
              init($$, ID_smv_word);
              stack_type($$).set(ID_width, stack_expr($3));
            }
-           | signed_Token word_Token '[' integer_constant ']'
+           | signed_Token word_Token '[' basic_expr ']'
            {
              init($$, ID_smv_signed_word);
              stack_type($$).set(ID_width, stack_expr($4));
            }
-           | unsigned_Token word_Token '[' integer_constant ']'
+           | unsigned_Token word_Token '[' basic_expr ']'
            {
              init($$, ID_smv_unsigned_word);
              stack_type($$).set(ID_width, stack_expr($4));
