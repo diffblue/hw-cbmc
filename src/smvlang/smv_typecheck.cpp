@@ -365,17 +365,68 @@ Function: smv_typecheckt::check_type
 
 void smv_typecheckt::check_type(typet &type)
 {
-  if(type.id() == ID_range)
+  if(type.id() == ID_smv_array)
   {
-    auto range = smv_ranget::from_type(to_range_type(type));
+    auto from = numeric_cast_v<mp_integer>(
+      to_constant_expr(static_cast<const exprt &>(type.find(ID_from))));
+    auto to = numeric_cast_v<mp_integer>(
+      to_constant_expr(static_cast<const exprt &>(type.find(ID_to))));
 
-    if(range.from > range.to)
-      throw errort().with_location(type.source_location()) << "range is empty";
+    if(to < from)
+      throw errort().with_location(type.source_location())
+        << "array must end with number >= `" << from << '\'';
+
+    type.id(ID_array);
+    type.remove(ID_from);
+    type.remove(ID_to);
+    type.set(ID_size, integer2string(to - from + 1));
+    type.set(ID_offset, integer2string(from));
+
+    // recursive call
+    check_type(to_type_with_subtype(type).subtype());
   }
   else if(type.id() == ID_smv_enumeration)
   {
     // normalize the ordering of elements
     to_smv_enumeration_type(type).normalize();
+  }
+  else if(type.id() == ID_smv_range)
+  {
+    auto from = numeric_cast_v<mp_integer>(
+      to_constant_expr(static_cast<const exprt &>(type.find(ID_from))));
+    auto to = numeric_cast_v<mp_integer>(
+      to_constant_expr(static_cast<const exprt &>(type.find(ID_to))));
+
+    if(from > to)
+      throw errort().with_location(type.source_location()) << "range is empty";
+
+    type.id(ID_range);
+    type.set(ID_from, integer2string(from));
+    type.set(ID_to, integer2string(to));
+  }
+  else if(type.id() == ID_smv_signed_word)
+  {
+    auto width = numeric_cast_v<mp_integer>(
+      to_constant_expr(static_cast<const exprt &>(type.find(ID_width))));
+
+    if(width < 1)
+      throw errort().with_location(type.source_location())
+        << "word width must be 1 or larger";
+
+    type.id(ID_signedbv);
+    type.set(ID_width, integer2string(width));
+  }
+  else if(type.id() == ID_smv_word || type.id() == ID_smv_unsigned_word)
+  {
+    auto width = numeric_cast_v<mp_integer>(
+      to_constant_expr(static_cast<const exprt &>(type.find(ID_width))));
+
+    if(width < 1)
+      throw errort().with_location(type.source_location())
+        << "word width must be 1 or larger";
+
+    type.id(ID_unsignedbv);
+    type.set(ID_width, integer2string(width));
   }
 }
 
