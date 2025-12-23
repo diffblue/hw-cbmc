@@ -857,15 +857,17 @@ void verilog_typecheckt::convert_continuous_assign(
     exprt &rhs = to_binary_expr(*it).rhs();
 
     // IEEE 1800 2017 6.10 allows implicit declarations of nets when
-    // used as the LHS of a continuous assignment. The type is derived
-    // from the RHS, and hence, we convert that first.
-    convert_expr(rhs);
-
+    // used as the LHS of a continuous assignment. The type is _not_
+    // derived from the RHS, but instead a "scalar net of default net type".
     if(lhs.id() == ID_verilog_identifier)
-      lhs =
-        convert_verilog_identifier(to_verilog_identifier_expr(lhs), rhs.type());
+    {
+      lhs = convert_verilog_identifier(
+        to_verilog_identifier_expr(lhs), unsignedbv_typet{1});
+    }
     else
       convert_expr(lhs);
+
+    convert_expr(rhs);
 
     assignment_conversion(rhs, lhs.type());
 
