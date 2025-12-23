@@ -3,6 +3,7 @@
 * Verilog: fix for four-valued | and &
 * Verilog: fix for typed parameter ports
 * Verilog: fix for the type of implicit nets for continous assignments
+* Verilog: fix for assignments to 1-bit types
 * SystemVerilog: fix for type parameters
 * SystemVerilog: type parameter ports
 * SMV: word constants

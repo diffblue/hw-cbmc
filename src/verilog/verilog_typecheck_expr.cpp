@@ -311,10 +311,18 @@ void verilog_typecheck_exprt::assignment_conversion(
     else
       downwards_type_propagation(rhs, lhs_type);
   }
-  else
+  else if(lhs_width == rhs_width)
   {
-    // no need to enlarge
+    // size stays the same -- this is a reinterpret cast
     rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+  }
+  else // lhs_width < rhs_width
+  {
+    // we shrink -- this is truncation
+    if(lhs_type.id() == ID_bool)
+      rhs = extractbit_exprt{rhs, from_integer(0, integer_typet{})};
+    else
+      rhs = typecast_exprt{rhs, lhs_type};
   }
 }
 
