@@ -19,7 +19,9 @@ class smv_parse_treet;
 class smv_ebmc_languaget : public ebmc_languaget
 {
 public:
-  smv_ebmc_languaget(cmdlinet &_cmdline, message_handlert &_message_handler)
+  smv_ebmc_languaget(
+    const cmdlinet &_cmdline,
+    message_handlert &_message_handler)
     : ebmc_languaget(_cmdline, _message_handler)
   {
   }

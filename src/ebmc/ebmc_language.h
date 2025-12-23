@@ -23,7 +23,7 @@ class ebmc_languaget
 {
 public:
   // constructor / destructor
-  ebmc_languaget(cmdlinet &_cmdline, message_handlert &_message_handler)
+  ebmc_languaget(const cmdlinet &_cmdline, message_handlert &_message_handler)
     : cmdline(_cmdline), message_handler(_message_handler)
   {
   }
@@ -32,10 +32,11 @@ public:
 
   /// Produce the transition system, and return it;
   /// returns {} when diagnostic output was produced instead.
-  virtual std::optional<transition_systemt> transition_system() = 0;
+  [[nodiscard]] virtual std::optional<transition_systemt>
+  transition_system() = 0;
 
 protected:
-  cmdlinet &cmdline;
+  const cmdlinet &cmdline;
   message_handlert &message_handler;
 };
 
