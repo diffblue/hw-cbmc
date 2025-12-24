@@ -836,7 +836,7 @@ public:
     named_port_connectiont(exprt _port, exprt _value)
       : binary_exprt(
           std::move(_port),
-          ID_named_port_connection,
+          ID_verilog_named_port_connection,
           std::move(_value),
           typet{})
     {
@@ -900,7 +900,8 @@ public:
     {
       auto &connections = this->connections();
       return connections.empty() ||
-             connections.front().id() == ID_named_port_connection;
+             (connections.front().id() == ID_verilog_named_port_connection ||
+              connections.front().id() == ID_verilog_wildcard_port_connection);
     }
 
     const typet &instance_array() const
@@ -936,7 +937,7 @@ protected:
 inline const verilog_inst_baset::named_port_connectiont &
 to_verilog_named_port_connection(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_named_port_connection);
+  PRECONDITION(expr.id() == ID_verilog_named_port_connection);
   verilog_inst_baset::named_port_connectiont::check(expr);
   return static_cast<const verilog_inst_baset::named_port_connectiont &>(expr);
 }
@@ -944,7 +945,7 @@ to_verilog_named_port_connection(const exprt &expr)
 inline verilog_inst_baset::named_port_connectiont &
 to_verilog_named_port_connection(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_named_port_connection);
+  PRECONDITION(expr.id() == ID_verilog_named_port_connection);
   verilog_inst_baset::named_port_connectiont::check(expr);
   return static_cast<verilog_inst_baset::named_port_connectiont &>(expr);
 }
