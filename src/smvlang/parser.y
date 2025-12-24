@@ -697,7 +697,9 @@ boolean_constant:
            }
            ;
 
-integer_constant:
+integer_constant: integer_number;
+
+integer_number:
              NUMBER_Token
            {
              init($$, ID_constant);
@@ -849,11 +851,11 @@ basic_expr : constant
            }
            ;
 
-bound      : '[' NUMBER_Token ',' NUMBER_Token ']'
+bound      : '[' integer_number ',' integer_number ']'
            { init($$); mto($$, $2); mto($$, $4); }
            ;
 
-range      : NUMBER_Token DOTDOT_Token NUMBER_Token
+range      : integer_number DOTDOT_Token integer_number
            { init($$); mto($$, $1); mto($$, $3); }
            ;
 
