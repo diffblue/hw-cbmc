@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/expr_util.h>
+#include <util/graph.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
 #include <util/prefix.h>
@@ -2478,6 +2479,22 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
     symbol.type=d.value.type();
 }
 
+class symbol_collectort : public const_expr_visitort
+{
+public:
+  virtual void operator()(const exprt &expr)
+  {
+    if(expr.id() == ID_symbol)
+    {
+      const symbol_exprt &symbol_expr = to_symbol_expr(expr);
+      const irep_idt id = symbol_expr.get_identifier();
+      symbols.insert(id);
+    }
+  }
+
+  std::unordered_set<irep_idt, irep_id_hash> symbols;
+};
+
 /*******************************************************************\
 
 Function: smv_typecheckt::convert_defines
@@ -2492,15 +2509,75 @@ Function: smv_typecheckt::convert_defines
 
 void smv_typecheckt::convert_defines(exprt::operandst &invar)
 {
-  for(auto &define_it : define_map)
-  {
-    convert_define(define_it.first);
+  // create graph of definition dependencies
+  typedef size_t node_indext;
+  std::map<irep_idt, node_indext> id_node_index;
+  std::map<node_indext, irep_idt> index_node_id;
+  grapht<graph_nodet<empty_edget>> definition_graph;
 
-    // generate constraint
-    equal_exprt equality{
-      symbol_exprt{define_it.first, define_it.second.value.type()},
-      define_it.second.value};
-    invar.push_back(equality);
+  for(const auto &p : define_map)
+  {
+    // for each defined symbol, collect all symbols it depends on
+    symbol_collectort visitor;
+    p.second.value.visit(visitor);
+    if(id_node_index.find(p.first) == id_node_index.end())
+    {
+      id_node_index[p.first] = definition_graph.add_node();
+      index_node_id[id_node_index[p.first]] = p.first;
+    }
+    node_indext t = id_node_index[p.first];
+
+    // for each node t add (t, dep) for each definition dep it depends on
+    for(const auto &id : visitor.symbols)
+    {
+      if(id_node_index.find(id) == id_node_index.end())
+      {
+        id_node_index[id] = definition_graph.add_node();
+        index_node_id[id_node_index[id]] = id;
+      }
+      node_indext s = id_node_index[id];
+      definition_graph.add_edge(s, t);
+    }
+  }
+
+  // sort the graph topologically to reduce call depth of `convert_define` and
+  // `typecheck`
+  std::list<node_indext> top_order = definition_graph.topsort();
+  if(top_order.empty())
+  {
+    // in case no topological order exists, fall back on starting with any
+    // defined symbol
+
+    // warn if non-empty graph is not a DAG
+    if(!definition_graph.empty())
+      warning() << "definiton graph is not a DAG";
+
+    for(define_mapt::iterator it = define_map.begin(); it != define_map.end();
+        it++)
+    {
+      convert_define(it->first);
+
+      // generate constraint
+      equal_exprt equality{
+        symbol_exprt{it->first, it->second.value.type()}, it->second.value};
+      invar.push_back(equality);
+    }
+  }
+  else
+  {
+    for(const auto &idx : top_order)
+    {
+      const irep_idt &id = index_node_id[idx];
+      // skip independent defines
+      if(define_map.find(id) == define_map.end())
+        continue;
+      convert_define(id);
+
+      // generate constraint
+      equal_exprt equality{
+        symbol_exprt{id, define_map[id].value.type()}, define_map[id].value};
+      invar.push_back(equality);
+    }
   }
 }
 
