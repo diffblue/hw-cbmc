@@ -5,6 +5,7 @@
 * Verilog: fix for the type of implicit nets for continous assignments
 * SystemVerilog: fix for type parameters
 * SystemVerilog: type parameter ports
+* SystemVerilog: fix for checkers with multiple ports
 * SMV: word constants
 * SMV: IVAR declarations
 * SMV: bit selection operator

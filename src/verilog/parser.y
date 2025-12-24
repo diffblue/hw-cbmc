@@ -794,8 +794,8 @@ checker_port_list_opt:
 checker_port_list:
 	  checker_port_item
 		{ init($$); mts($$, $1); }
-	| checker_port_list checker_port_item
-		{ $$ = $1; mts($$, $2); }
+	| checker_port_list ',' checker_port_item
+		{ $$ = $1; mts($$, $3); }
 	;
 
 checker_port_item:
