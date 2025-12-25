@@ -1085,6 +1085,34 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     // only get added by type checker
     PRECONDITION(false);
   }
+  else if(expr.id() == ID_smv_union)
+  {
+    auto &lhs = to_binary_expr(expr).lhs();
+    auto &rhs = to_binary_expr(expr).rhs();
+
+    // create smv_set expression
+    exprt::operandst elements;
+
+    if(lhs.id() == ID_smv_set)
+    {
+      elements.insert(
+        elements.end(), lhs.operands().begin(), lhs.operands().end());
+    }
+    else
+      elements.push_back(lhs);
+
+    if(rhs.id() == ID_smv_set)
+    {
+      elements.insert(
+        elements.end(), rhs.operands().begin(), rhs.operands().end());
+    }
+    else
+      elements.push_back(rhs);
+
+    expr.id(ID_smv_set);
+    expr.operands() = std::move(elements);
+    expr.type() = smv_set_typet{smv_enumeration_typet{}};
+  }
   else if(expr.id() == ID_smv_setin)
   {
     auto &lhs = to_binary_expr(expr).lhs();
@@ -1481,7 +1509,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
   else if(expr.id() == ID_smv_set)
   {
     // a set literal
-    expr.type() = typet{ID_smv_set};
+    expr.type() = smv_set_typet{smv_enumeration_typet{}};
   }
   else
   {
@@ -1909,24 +1937,7 @@ void smv_typecheckt::convert(exprt &expr)
     throw errort().with_location(expr.source_location())
       << "no support for self";
   }
-  else if(expr.id()=="smv_nondet_choice" ||
-          expr.id()=="smv_union")
-  {
-    if(expr.operands().size()==0)
-    {
-      throw errort().with_location(expr.find_source_location())
-        << "expected operand here";
-    }
-
-    std::string identifier =
-      module_identifier + "::var::" + std::to_string(nondet_count++);
-
-    expr.set(ID_identifier, identifier);
-    expr.set("#smv_nondet_choice", true);
-
-    expr.id(ID_constraint_select_one);
-  }
-  else if(expr.id() == ID_smv_cases) // cases
+  else if(expr.id() == "smv_cases") // cases
   {
     if(expr.operands().size()<1)
     {
