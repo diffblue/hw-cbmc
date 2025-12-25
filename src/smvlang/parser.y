@@ -579,7 +579,7 @@ simple_type_specifier:
              init($$, ID_smv_unsigned_word);
              stack_type($$).set(ID_width, stack_expr($4));
            }
-           | '{' enum_list '}' { $$=$2; }
+           | '{' enumeration_type_body '}' { $$=$2; }
            | integer_constant DOTDOT_Token integer_constant
            {
              init($$, ID_smv_range);
@@ -617,12 +617,12 @@ parameter_list:
            | parameter_list ',' formula { $$=$1; mto($$, $3); }
            ;
 
-enum_list  : enum_element
+enumeration_type_body: enum_element
            {
              init($$, ID_smv_enumeration);
              stack_expr($$).add(ID_elements).get_sub().push_back(irept(stack_expr($1).id()));
            }
-           | enum_list ',' enum_element
+           | enumeration_type_body ',' enum_element
            {
              $$=$1;
              stack_expr($$).add(ID_elements).get_sub().push_back(irept(stack_expr($3).id())); 
