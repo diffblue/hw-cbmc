@@ -1839,21 +1839,19 @@ void smv_typecheckt::typecheck_assignment(exprt &expr)
 
   if(rhs.type().id() == ID_smv_set && rhs.id() == ID_smv_set)
   {
-    // sets can be assigned to scalars, which yields a nondeterministic
-    // choice
-    std::string identifier =
-      module_identifier + "::var::" + std::to_string(nondet_count++);
-
-    rhs.set(ID_identifier, identifier);
-    rhs.set("#smv_nondet_choice", true);
-
-    rhs.id(ID_constraint_select_one);
-    rhs.type() = lhs.type();
-
-    // check the set elements
+    // Sets can be assigned to scalars, which yields a nondeterministic
+    // choice. First check the set elements.
     for(auto &op : rhs.operands())
       convert_expr_to(op, lhs.type());
 
+    // Now turn the nondeterministic choice into a top-level
+    // disjunctive constraint.
+    exprt::operandst disjuncts;
+
+    for(auto &op : rhs.operands())
+      disjuncts.push_back(equal_exprt{lhs, op});
+
+    expr = disjunction(disjuncts);
     return;
   }
 
