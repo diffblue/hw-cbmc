@@ -1439,13 +1439,8 @@ port_expression_opt:
 
 port_reference:
 	  port_identifier
-	| port_identifier constant_bit_select  { make_nil($$); /* Not supported */ }
+	| port_identifier constant_select  { make_nil($$); /* Not supported */ }
 	| port_identifier part_select { make_nil($$); /* Not supported */ }
-	;
-
-constant_bit_select:
-	  '[' expression ']'
-		{ $$ = $2; }
 	;
 
 part_select:
@@ -4610,6 +4605,13 @@ cast:
 	  casting_type '\'' '(' expression ')'
 		{ $$ = $1; mto($$, $4); }
 	;
+
+constant_bit_select:
+	  '[' constant_expression ']'
+		{ $$ = $2; }
+	;
+
+constant_select: constant_bit_select;
 
 // System Verilog standard 1800-2017
 // A.8.5 Expression left-side values
