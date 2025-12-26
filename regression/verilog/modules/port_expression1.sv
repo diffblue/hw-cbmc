@@ -2,7 +2,7 @@
 // from the type of the expression.
 // Not supported by Icarus 12, VCS 2023.03, Xcelium 23.09.
 // Works with Questa 2024.3, Riviera Pro 2023.04.
-module M(input .some_input(data[7:0]));
+module M(.some_input(data[7:0]));
 
   reg [31:0] data;
 

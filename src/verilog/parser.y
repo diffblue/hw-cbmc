@@ -1428,7 +1428,11 @@ port:	  port_expression_opt
 		}
 	| '.' port_identifier '(' port_expression_opt ')'
 		{ init($$, ID_decl);
-		  make_nil($$); /* Not supported */ }
+		  auto &decl = stack_expr($$);
+		  decl.set(ID_class, ID_verilog_port_expression);
+		  addswap($2, ID_value, $4);
+		  decl.add_to_operands(std::move(stack_expr($2)));
+		}
 	;
 
 port_expression_opt:
