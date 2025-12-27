@@ -31,7 +31,7 @@ struct verilog_scopet
     OTHER
   };
 
-  verilog_scopet() : parent(nullptr), prefix("Verilog::"), kind(GLOBAL)
+  verilog_scopet() : parent{nullptr}, prefix{}, kind{GLOBAL}
   {
   }
 

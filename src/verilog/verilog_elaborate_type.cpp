@@ -366,7 +366,8 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
                     ? elaborate_type(enum_type.base_type())
                     : signedbv_typet(32);
     result.set(ID_C_verilog_type, ID_verilog_enum);
-    result.set(ID_C_identifier, enum_type.identifier());
+    const auto identifier = hierarchical_identifier(enum_type.base_name());
+    result.set(ID_C_identifier, identifier);
     return result.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_event)

@@ -1281,7 +1281,10 @@ expr2verilogt::convert_constant(const constant_exprt &src)
     // Find the enum name with the matching value.
     for(auto &enum_name : enum_type.enum_names())
     {
-      auto &enum_symbol = ns.lookup(enum_name.identifier());
+      const auto identifier =
+        "Verilog::" + id2string(enum_name.scope_prefix()) +
+        id2string(enum_name.base_name());
+      auto &enum_symbol = ns.lookup(identifier);
       DATA_INVARIANT(
         enum_symbol.value.id() == ID_constant,
         "enum name value must be constant");

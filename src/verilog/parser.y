@@ -1645,8 +1645,8 @@ data_type:
 
 	          // We attach a dummy id to distinguish two syntactically
 	          // identical enum types.
-	          auto id = PARSER.scopes.current_scope().prefix + "enum-" + PARSER.get_next_id();
-	          stack_expr($$).set(ID_identifier, id);
+	          stack_expr($$).set(ID_base_name, "enum-" + PARSER.get_next_id());
+	          stack_expr($$).set(ID_verilog_scope_prefix, PARSER.scopes.current_scope().prefix);
 	        }
 	| TOK_STRING
 	        { init($$, ID_verilog_string); }
@@ -1684,7 +1684,7 @@ enum_name_declaration:
 	    init($$);
 	    auto &scope = PARSER.scopes.add_name(stack_expr($1).id(), "", verilog_scopet::ENUM_NAME);
 	    stack_expr($$).set(ID_base_name, scope.base_name());
-	    stack_expr($$).set(ID_identifier, scope.identifier());
+	    stack_expr($$).set(ID_verilog_scope_prefix, scope.parent->prefix);
 	    stack_expr($$).add(ID_value).swap(stack_expr($2));
 	  }
 	;
@@ -4728,7 +4728,7 @@ class_identifier: TOK_CLASS_IDENTIFIER
 		  init($$, ID_verilog_class_type);
 		  auto base_name = stack_expr($1).id();
 		  stack_expr($$).set(ID_base_name, base_name);
-		  stack_expr($$).set(ID_identifier, PARSER.scopes.current_scope().prefix+id2string(base_name));
+		  stack_expr($$).set(ID_verilog_scope_prefix, PARSER.scopes.current_scope().prefix);
 		}
 	;
 
