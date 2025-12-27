@@ -1,0 +1,9 @@
+KNOWNBUG
+root1.sv
+--top the_top --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This does not parse
