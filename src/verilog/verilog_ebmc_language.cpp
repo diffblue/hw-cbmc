@@ -13,7 +13,6 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/cmdline.h>
 #include <util/get_module.h>
-#include <util/suffix.h>
 #include <util/unicode.h>
 
 #include <ebmc/ebmc_error.h>
@@ -26,82 +25,71 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "verilog_language.h"
 #include "verilog_parser.h"
+#include "verilog_preprocessor.h"
 #include "verilog_typecheck.h"
 
 #include <fstream>
 #include <iostream>
 
-static void
-preprocess(const cmdlinet &cmdline, message_handlert &message_handler)
+void verilog_ebmc_languaget::preprocess(
+  const std::filesystem::path &path,
+  std::ostream &out)
 {
-  messaget message(message_handler);
+  std::ifstream infile{path};
 
+  if(!infile)
+    throw ebmc_errort{}.with_exit_code(1)
+      << "failed to open input file " << path;
+
+  // do -I and -D
+  auto &include_paths = cmdline.get_values('I');
+  auto &initial_defines = cmdline.get_values('D');
+
+  verilog_preprocessort preprocessor(
+    infile,
+    out,
+    message_handler,
+    path.u8string(),
+    include_paths,
+    initial_defines);
+
+  try
+  {
+    preprocessor.preprocessor();
+  }
+  catch(int e)
+  {
+    throw ebmc_errort{}.with_exit_code(1);
+  }
+}
+
+void verilog_ebmc_languaget::preprocess()
+{
   if(cmdline.args.size() != 1)
     throw ebmc_errort{}.with_exit_code(1)
       << "please give exactly one file to preprocess";
 
-  const auto &filename = cmdline.args.front();
-  std::ifstream infile(widen_if_needed(filename));
+  const auto file_name = widen_if_needed(cmdline.args.front());
 
-  if(!infile)
-    throw ebmc_errort{}.with_exit_code(1)
-      << "failed to open input file `" << filename << "'";
-
-  auto language = new_verilog_language();
-
-  optionst options;
-
-  // do -I
-  if(cmdline.isset('I'))
-    options.set_option("I", cmdline.get_values('I'));
-
-  options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
-
-  // do -D
-  if(cmdline.isset('D'))
-    options.set_option("defines", cmdline.get_values('D'));
-
-  language->set_language_options(options, message_handler);
-
-  if(language->preprocess(infile, filename, std::cout, message_handler))
-    throw ebmc_errort{}.with_exit_code(1);
+  preprocess(file_name, std::cout);
 }
 
-static bool parse(
-  const cmdlinet &cmdline,
-  const std::string &filename,
-  ebmc_language_filest &language_files,
-  message_handlert &message_handler)
+void verilog_ebmc_languaget::parse(
+  const std::filesystem::path &path,
+  ebmc_language_filest &language_files)
 {
   messaget message(message_handler);
 
-  std::ifstream infile(widen_if_needed(filename));
+  message.status() << "Parsing " << path << messaget::eom;
 
-  if(!infile)
-  {
-    message.error() << "failed to open input file `" << filename << "'"
-                    << messaget::eom;
-    return true;
-  }
-
-  auto &lf = language_files.add_file(filename);
-  lf.filename = filename;
-  lf.language = new_verilog_language();
-  languaget &language = *lf.language;
+  auto verilog_language = std::make_unique<verilog_languaget>();
+  verilog_language->get_parse_tree() = parse(path);
 
   optionst options;
-
-  // do -I
-  if(cmdline.isset('I'))
-    options.set_option("I", cmdline.get_values('I'));
 
   options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
   options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
   options.set_option("warn-implicit-nets", cmdline.isset("warn-implicit-nets"));
-
-  // do -D
-  if(cmdline.isset('D'))
-    options.set_option("defines", cmdline.get_values('D'));
 
   // do --ignore-initial
   if(cmdline.isset("ignore-initial"))
@@ -111,32 +99,66 @@ static bool parse(
   if(cmdline.isset("initial-zero"))
     options.set_option("initial-zero", true);
 
-  language.set_language_options(options, message_handler);
+  verilog_language->set_language_options(options, message_handler);
 
-  message.status() << "Parsing " << filename << messaget::eom;
-
-  if(language.parse(infile, filename, message_handler))
-  {
-    message.error() << "PARSING ERROR\n";
-    return true;
-  }
-
+  auto &lf = language_files.add_file(path.u8string());
+  lf.filename = path.u8string();
+  lf.language = std::unique_ptr<languaget>{std::move(verilog_language)};
   lf.get_modules();
-
-  return false;
 }
 
-static bool parse(
-  const cmdlinet &cmdline,
-  ebmc_language_filest &language_files,
-  message_handlert &message_handler)
+verilog_parse_treet
+verilog_ebmc_languaget::parse(const std::filesystem::path &path)
+{
+  verilog_standardt standard;
+
+  if(path.extension() == ".sv" || cmdline.isset("systemverilog"))
+    standard = verilog_standardt::SV2023;
+  else if(cmdline.isset("vl2smv-extensions"))
+    standard = verilog_standardt::V2005_SMV;
+  else
+    standard = verilog_standardt::V2005_SMV;
+
+  std::stringstream preprocessed;
+  preprocess(path, preprocessed);
+
+  verilog_parsert verilog_parser{standard, message_handler};
+
+  verilog_parser.set_file(path.u8string());
+  verilog_parser.in = &preprocessed;
+  verilog_parser.grammar = verilog_parsert::LANGUAGE;
+
+  verilog_scanner_init();
+
+  if(verilog_parser.parse())
+    throw ebmc_errort{}.with_exit_code(1);
+
+  verilog_parser.parse_tree.build_item_map();
+
+  return std::move(verilog_parser.parse_tree);
+}
+
+void verilog_ebmc_languaget::show_parse(const std::filesystem::path &path)
+{
+  messaget message{message_handler};
+
+  message.status() << "Parsing " << path << messaget::eom;
+
+  auto parse_tree = parse(path);
+
+  parse_tree.show(std::cout);
+}
+
+void verilog_ebmc_languaget::show_parse()
 {
   for(auto &arg : cmdline.args)
-  {
-    if(parse(cmdline, arg, language_files, message_handler))
-      return true;
-  }
-  return false;
+    show_parse(widen_if_needed(arg));
+}
+
+void verilog_ebmc_languaget::parse(ebmc_language_filest &language_files)
+{
+  for(auto &arg : cmdline.args)
+    parse(arg, language_files);
 }
 
 static bool get_main(
@@ -185,23 +207,21 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   //
   if(cmdline.isset("preprocess"))
   {
-    preprocess(cmdline, message_handler);
+    preprocess();
     return {};
   }
 
   //
   // parsing
   //
-  ebmc_language_filest language_files;
-
-  if(parse(cmdline, language_files, message_handler))
-    throw ebmc_errort{}.with_exit_code(1);
-
   if(cmdline.isset("show-parse"))
   {
-    language_files.show_parse(std::cout, message_handler);
+    show_parse();
     return {};
   }
+
+  ebmc_language_filest language_files;
+  parse(language_files);
 
   //
   // type checking
