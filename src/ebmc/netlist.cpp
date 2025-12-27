@@ -30,5 +30,8 @@ netlistt make_netlist(
     netlist,
     message_handler);
 
+  // check that the AIG is in dependency order
+  netlist.check_ordering();
+
   return netlist;
 }

@@ -110,3 +110,16 @@ std::ostream &operator<<(std::ostream &out, const aigt &aig) {
   aig.print(out);
   return out;
 }
+
+void aigt::check_ordering() const
+{
+  for(std::size_t node_index = 0; node_index < nodes.size(); node_index++)
+  {
+    auto &node = nodes[node_index];
+    if(node.is_and())
+    {
+      DATA_INVARIANT(node.a.var_no() < node_index, "aig topsort failure");
+      DATA_INVARIANT(node.b.var_no() < node_index, "aig topsort failure");
+    }
+  }
+}

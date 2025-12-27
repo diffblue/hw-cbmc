@@ -56,6 +56,9 @@ public:
 
   typedef aig_nodet nodet;
   typedef std::vector<nodet> nodest;
+
+  // The nodes are expected to be in dependency order,
+  // see check_ordering().
   nodest nodes;
 
   void clear() { nodes.clear(); }
@@ -90,6 +93,10 @@ public:
 
   std::string label(nodest::size_type v) const;
   std::string dot_label(nodest::size_type v) const;
+
+  /// Check that the nodes are in topological order,
+  /// otherwise fails a DATA_INVARIANT.
+  void check_ordering() const;
 };
 
 std::ostream &operator<<(std::ostream &, const aigt &);
