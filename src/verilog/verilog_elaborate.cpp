@@ -31,6 +31,12 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   {
     // done when we see the proper declaration
   }
+  else if(port_class == ID_verilog_port_expression)
+  {
+    // not supported yet
+    throw errort{}.with_location(decl.source_location())
+      << "no support for port expressions";
+  }
   else
   {
     // add the symbol
