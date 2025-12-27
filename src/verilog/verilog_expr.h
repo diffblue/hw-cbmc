@@ -904,6 +904,11 @@ public:
               connections.front().id() == ID_verilog_wildcard_port_connection);
     }
 
+    bool has_instance_array() const
+    {
+      return instance_array().is_not_nil();
+    }
+
     const typet &instance_array() const
     {
       return static_cast<const typet &>(find(ID_verilog_instance_array));

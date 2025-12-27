@@ -177,21 +177,16 @@ void verilog_typecheckt::interface_inst(
   const verilog_inst_baset &statement,
   const verilog_instt::instancet &op)
 {
-  if(op.instance_array().is_not_nil())
+  bool primitive = statement.id() == ID_inst_builtin;
+
+  if(op.has_instance_array() && !primitive)
   {
     throw errort().with_location(op.source_location())
       << "no support for instance arrays";
   }
 
-  bool primitive=statement.id()==ID_inst_builtin;
-  const exprt &range_expr = static_cast<const exprt &>(op.find(ID_range));
-
-  ranget range;
-
-  if(range_expr.is_nil() || range_expr.id().empty())
-    range = ranget{0, 0};
-  else
-    range = convert_range(range_expr);
+  if(op.has_instance_array())
+    (void)elaborate_type(op.instance_array());
 
   irep_idt instantiated_module_identifier =
     verilog_module_symbol(id2string(statement.get(ID_module)));

@@ -3126,12 +3126,7 @@ name_of_gate_instance:
 	  TOK_NON_TYPE_IDENTIFIER unpacked_dimension_brace
 	        { init($$, ID_inst);
 	          addswap($$, ID_base_name, $1);
-	          if(stack_expr($2).is_not_nil())
-	          {
-	            auto &range = stack_expr($$).add(ID_range);
-	            range = stack_expr($2).find(ID_range);
-	            range.id(ID_range);
-	          }
+	          addswap($$, ID_verilog_instance_array, $2);
 	        }
 	;
 

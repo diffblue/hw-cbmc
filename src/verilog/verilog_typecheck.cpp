@@ -223,28 +223,15 @@ Function: verilog_typecheckt::typecheck_builtin_port_connections
 void verilog_typecheckt::typecheck_builtin_port_connections(
   verilog_inst_baset::instancet &inst)
 {
-  exprt &range_expr = static_cast<exprt &>(inst.add(ID_range));
-
-  ranget range;
-
-  if(range_expr.is_nil() || range_expr.id() == irep_idt{})
-    range = ranget{0, 0};
-  else
-    range = convert_range(range_expr);
-
-  if(range.lsb > range.msb)
-    std::swap(range.lsb, range.msb);
-  mp_integer width = range.length();
-
-  inst.remove(ID_range);
-
-  typet &type=inst.type();
-  if(width==1)
-    type.id(ID_bool);
+  if(!inst.has_instance_array())
+    inst.type() = bool_typet{};
   else
   {
-    type.id(ID_unsignedbv);
-    type.set(ID_width, integer2string(width));
+    // We'll turn a one-dimensional array into a bit-vector
+    auto &array_type = to_array_type(inst.instance_array());
+    auto width =
+      numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+    inst.type() = unsignedbv_typet{width};
   }
 
   for(auto &connection : inst.connections())
@@ -264,7 +251,7 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
     }
 
     // like an assignment
-    assignment_conversion(connection, type);
+    assignment_conversion(connection, inst.type());
   }
 }
 
@@ -560,10 +547,16 @@ Function: verilog_typecheckt::convert_inst_builtin
 void verilog_typecheckt::convert_inst_builtin(
   verilog_inst_builtint &inst)
 {
-  const irep_idt &inst_module=inst.get_module();
-
+  const irep_idt &inst_module = inst.get_module();
   for(auto &instance : inst.instances())
   {
+    // typecheck the instance array type, if any
+    if(instance.has_instance_array())
+    {
+      auto &instance_array = instance.instance_array();
+      instance_array = elaborate_type(instance_array);
+    }
+
     typecheck_builtin_port_connections(instance);
 
     // check built-in ones
