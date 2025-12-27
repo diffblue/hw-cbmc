@@ -966,6 +966,7 @@ void bdd_enginet::build_BDDs()
     // A node is either an 'and' or a variable/nondet
     if(n.is_and())
     {
+      // This relies on the dependency ordering of the AIG
       BDD a=aig2bdd(n.a, BDDs);
       BDD b=aig2bdd(n.b, BDDs);
     
@@ -1051,4 +1052,3 @@ property_checker_resultt bdd_engine(
 {
   return bdd_enginet{cmdline, transition_system, properties, message_handler}();
 }
-
