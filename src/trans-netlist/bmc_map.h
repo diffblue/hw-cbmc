@@ -70,16 +70,6 @@ public:
   typedef std::vector<timeframet> timeframe_mapt;
   timeframe_mapt timeframe_map;
 
-  struct reverse_entryt
-  {
-    // this is the netlist literal
-    literalt netlist_literal;
-    std::size_t timeframe;
-  };
-
-  typedef std::map<literalt, reverse_entryt> reverse_mapt;
-  reverse_mapt reverse_map;
-
   std::size_t get_no_timeframes() const
   {
     return timeframe_map.size();
@@ -94,7 +84,6 @@ public:
   void clear()
   {
     timeframe_map.clear();
-    reverse_map.clear();
   }
 };
 

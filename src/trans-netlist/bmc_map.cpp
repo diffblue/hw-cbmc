@@ -40,15 +40,7 @@ bmc_mapt::bmc_mapt(
     for(std::size_t n = 0; n < timeframe.size(); n++)
     {
       literalt solver_literal=solver.new_variable();
-      timeframe[n].solver_literal=solver_literal;
-
-      // keep a reverse map for variable nodes
-      if(netlist.nodes[n].is_var())
-      {
-        reverse_entryt &e=reverse_map[solver_literal];
-        e.timeframe=t;
-        e.netlist_literal=literalt(n, false);
-      }
+      timeframe[n].solver_literal = solver_literal;
     }
   }
 }
