@@ -95,6 +95,7 @@ protected:
   void typecheck(smv_parse_treet::modulet::elementt &);
   void typecheck_expr_rec(exprt &, modet, bool next);
   void convert_expr_to(exprt &, const typet &dest);
+  void typecheck_assignment(exprt &);
   exprt convert_word_constant(const constant_exprt &);
 
   smv_parse_treet::modulet *modulep;
@@ -1697,26 +1698,6 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
 
   if(src_type != dest_type)
   {
-    if(src_type.id() == ID_smv_set && expr.id() == ID_smv_set)
-    {
-      // sets can be assigned to scalars, which yields a nondeterministic
-      // choice
-      std::string identifier =
-        module_identifier + "::var::" + std::to_string(nondet_count++);
-
-      expr.set(ID_identifier, identifier);
-      expr.set("#smv_nondet_choice", true);
-
-      expr.id(ID_constraint_select_one);
-      expr.type() = dest_type;
-
-      // apply recursively
-      for(auto &op : expr.operands())
-        convert_expr_to(op, dest_type);
-
-      return;
-    }
-
     if(dest_type.id() == ID_signedbv || dest_type.id() == ID_unsignedbv)
     {
       // no implicit conversion
@@ -1833,6 +1814,48 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
       << "', but got expression `" << to_string(expr) << "', which is of type `"
       << to_string(src_type) << "'";
   }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::typecheck_assignment
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::typecheck_assignment(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_equal);
+  expr.type() = bool_typet{};
+
+  auto &equal_expr = to_equal_expr(expr);
+  auto &lhs = equal_expr.lhs();
+  auto &rhs = equal_expr.rhs();
+
+  if(rhs.type().id() == ID_smv_set && rhs.id() == ID_smv_set)
+  {
+    // Sets can be assigned to scalars, which yields a nondeterministic
+    // choice. First check the set elements.
+    for(auto &op : rhs.operands())
+      convert_expr_to(op, lhs.type());
+
+    // Now turn the nondeterministic choice into a top-level
+    // disjunctive constraint.
+    exprt::operandst disjuncts;
+
+    for(auto &op : rhs.operands())
+      disjuncts.push_back(equal_exprt{lhs, op});
+
+    expr = disjunction(disjuncts);
+    return;
+  }
+
+  convert_expr_to(rhs, lhs.type());
 }
 
 /*******************************************************************\
@@ -2047,23 +2070,20 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
   case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
     typecheck(element.lhs(), OTHER);
     typecheck(element.rhs(), OTHER);
-    convert_expr_to(element.rhs(), element.lhs().type());
-    element.expr.type() = bool_typet{};
+    typecheck_assignment(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_INIT:
     typecheck(element.lhs(), INIT);
     typecheck(element.rhs(), INIT);
-    convert_expr_to(element.rhs(), element.lhs().type());
     no_next_allowed(element.rhs());
-    element.expr.type() = bool_typet{};
+    typecheck_assignment(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
     typecheck(element.lhs(), TRANS);
     typecheck(element.rhs(), TRANS);
-    convert_expr_to(element.rhs(), element.lhs().type());
-    element.expr.type() = bool_typet{};
+    typecheck_assignment(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::DEFINE:
