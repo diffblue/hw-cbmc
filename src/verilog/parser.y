@@ -822,7 +822,7 @@ checker_port_direction_opt:
 	;
 
 class_declaration:
-	  TOK_CLASS any_identifier
+	  TOK_CLASS new_identifier
 	  ';'
 		{
 		  init($$, ID_verilog_class);
@@ -842,7 +842,7 @@ package_declaration:
           attribute_instance_brace TOK_PACKAGE
 		{ init($$, ID_verilog_package); }
           lifetime_opt
-          any_identifier ';'
+          new_identifier ';'
 		{
 	          push_scope(stack_expr($5).get(ID_base_name), "::", verilog_scopet::PACKAGE);
 	        }
@@ -1536,7 +1536,7 @@ type_declaration:
 		{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_typedef);
 		}
-	   data_type any_identifier ';'
+	   data_type new_identifier ';'
 		{ $$ = $2;
 		  // add to the scope as a type name
 		  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
@@ -1551,7 +1551,7 @@ net_type_declaration:
 		{ init($$, ID_decl);
 		  stack_expr($$).set(ID_class, ID_typedef);
 		}
-	  data_type any_identifier ';'
+	  data_type new_identifier ';'
 		{ $$ = $2;
 		  // add to the scope as a type name
 		  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
@@ -2901,7 +2901,7 @@ expression_or_dist:
 // A.2.11 Covergroup declarations
 
 covergroup_declaration:
-	  TOK_COVERGROUP any_identifier tf_port_list_paren_opt coverage_event_opt ';'
+	  TOK_COVERGROUP new_identifier tf_port_list_paren_opt coverage_event_opt ';'
 	  coverage_spec_or_option_brace TOK_ENDGROUP
 		{ init($$, ID_verilog_covergroup); }
 	;
@@ -3254,9 +3254,9 @@ named_port_connection_brace:
 	;
 
 named_port_connection:
-	  // This needs to be 'any_identifier' to allow identifiers that
+	  // This needs to be 'new_identifier' to allow identifiers that
 	  // are typedefs in the local scope.
-	  '.' any_identifier '(' expression_opt ')'
+	  '.' new_identifier '(' expression_opt ')'
 		{ init($$, ID_verilog_named_port_connection);
                   mto($$, $2);
                   mto($$, $4); }
@@ -3463,13 +3463,13 @@ udp_initial_statement:
 	  TOK_INITIAL output_port_identifier '=' init_val ';'
 	;
 
-output_port_identifier: any_identifier
+output_port_identifier: new_identifier
 	;
 
 init_val:
 	// Really 1'b0 | 1'b1 | 1'bx | 1'bX | 1'B0 | 1'B1 | 1'Bx | 1'BX | 1 | 0
 	  TOK_NUMBER
-	| any_identifier
+	| new_identifier
 	;
 
 sequential_entry_brace:
@@ -3502,7 +3502,7 @@ edge_input_list: level_symbol_brace edge_indicator level_symbol_brace ;
 output_symbol:
 	// Really 0 | 1 | x | X
 	  TOK_NUMBER
-	| any_identifier
+	| new_identifier
 	;
 
 level_symbol_brace:
@@ -3513,13 +3513,13 @@ level_symbol_brace:
 level_symbol:
 	// Really 0 | 1 | x | X | ? | b | B
 	  TOK_NUMBER
-	| any_identifier
+	| new_identifier
 	;
 
 edge_symbol:
 	// Really r | R | f | F | p | P | n | N | *
 	  TOK_NUMBER
-	| any_identifier
+	| new_identifier
 	;
 
 // System Verilog standard 1800-2017
@@ -4709,10 +4709,11 @@ attr_name: identifier
 // An extension of the System Verilog grammar to allow defining new identifiers
 // even if they are already used for a different kind of identifier
 // in a higher scope.
-any_identifier:
+new_identifier:
 	  TOK_TYPE_IDENTIFIER
 		{ new_identifier($$, $1); }
-	| non_type_identifier
+	| TOK_NON_TYPE_IDENTIFIER
+		{ new_identifier($$, $1); }
 	;
 
 non_type_identifier: TOK_NON_TYPE_IDENTIFIER
