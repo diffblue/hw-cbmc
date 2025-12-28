@@ -3122,9 +3122,9 @@ name_of_gate_instance_opt:
 	;
 
 name_of_gate_instance:
-	  TOK_NON_TYPE_IDENTIFIER unpacked_dimension_brace
+	  any_identifier unpacked_dimension_brace
 	        { init($$, ID_inst);
-	          addswap($$, ID_base_name, $1);
+	          stack_expr($$).set(ID_base_name, stack_expr($1).get(ID_base_name));
 	          if(stack_expr($2).is_not_nil())
 	          {
 	            auto &range = stack_expr($$).add(ID_range);
@@ -3217,9 +3217,9 @@ name_of_instance:
 		{ init($$, ID_inst);
 		  stack_expr($$).set(ID_base_name, "$_&#ANON" + PARSER.get_next_id());
 		}
-	| TOK_NON_TYPE_IDENTIFIER unpacked_dimension_brace
+	| any_identifier unpacked_dimension_brace
 		{ init($$, ID_inst);
-		  addswap($$, ID_base_name, $1);
+		  stack_expr($$).set(ID_base_name, stack_expr($1).get(ID_base_name));
 		  addswap($$, ID_verilog_instance_array, $2);
 		}
 	;
