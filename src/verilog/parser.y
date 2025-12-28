@@ -2514,12 +2514,17 @@ assertion_item_declaration:
 	;
 
 property_declaration:
-          TOK_PROPERTY any_identifier property_port_list_paren_opt ';'
+	  TOK_PROPERTY any_identifier
+		{ auto base_name = stack_expr($2).get(ID_base_name);
+		  push_scope(base_name, ".", verilog_scopet::PROPERTY); }
+          property_port_list_paren_opt ';'
           property_spec semicolon_opt
           TOK_ENDPROPERTY property_identifier_opt
 		{ init($$, ID_verilog_property_declaration);
-		  stack_expr($$).set(ID_base_name, stack_expr($2).get(ID_base_name));
-		  mto($$, $5); }
+		  auto base_name = stack_expr($2).get(ID_base_name);
+		  stack_expr($$).set(ID_base_name, base_name);
+		  mto($$, $6);
+		}
         ;
 
 property_identifier_opt:
@@ -2706,12 +2711,16 @@ property_case_item:
 
 sequence_declaration:
 	  "sequence" { init($$, ID_verilog_sequence_declaration); }
-	  any_identifier sequence_port_list_opt ';'
+	  any_identifier
+		{ auto base_name = stack_expr($3).get(ID_base_name);
+		  push_scope(base_name, ".", verilog_scopet::SEQUENCE);
+		}
+	  sequence_port_list_opt ';'
 	  sequence_expr semicolon_opt
 	  "endsequence" sequence_identifier_opt
 		{ $$=$2;
 		  stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
-		  mto($$, $6);
+		  mto($$, $7);
 		}
 	;
 
