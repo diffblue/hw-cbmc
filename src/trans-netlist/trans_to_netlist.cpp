@@ -223,6 +223,10 @@ var_mapt convert_trans_to_netlistt::build_var_map(const irep_idt &module)
     {
       return; // ignore
     }
+    else if(symbol.type.id() == ID_smv_set)
+    {
+      return; // ignore
+    }
     else if(
       symbol.type.id() == ID_module || symbol.type.id() == ID_module_instance ||
       symbol.type.id() == ID_primitive_module_instance ||
