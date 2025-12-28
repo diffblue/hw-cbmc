@@ -1482,7 +1482,35 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
   else if(expr.id() == ID_smv_set)
   {
     // a set literal
-    expr.type() = typet{ID_smv_set};
+    bool first = true;
+    typet union_type;
+
+    for(auto &element : expr.operands())
+    {
+      // SMV set expressions may contain sets, which
+      // is interpreted as union, not as a set of sets.
+      auto &element_type = element.type();
+
+      // word-typed elements are not allowed
+      if(element_type.id() == ID_signedbv || element_type.id() == ID_unsignedbv)
+        throw errort().with_location(expr.find_source_location())
+          << "sets of word-typed elements are not allowed";
+
+      auto decayed_type = element_type.id() == ID_smv_set
+                            ? to_smv_set_type(element_type).subtype()
+                            : element_type;
+
+      if(first)
+      {
+        union_type = decayed_type;
+        first = false;
+      }
+      else
+        union_type =
+          type_union(union_type, decayed_type, expr.source_location());
+    }
+
+    expr.type() = smv_set_typet{union_type};
   }
   else
   {
