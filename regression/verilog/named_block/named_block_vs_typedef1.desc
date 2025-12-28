@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 named_block_vs_typedef1.sv
 
 ^EXIT=10$

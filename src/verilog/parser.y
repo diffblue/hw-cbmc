@@ -3349,13 +3349,14 @@ generate_block:
 	  generate_item
 	| TOK_BEGIN generate_item_brace TOK_END
 		{ init($$, ID_generate_block); swapop($$, $2); }
-	| TOK_BEGIN TOK_COLON generate_block_identifier
-		{ push_scope(stack_expr($3).id(), ".", verilog_scopet::BLOCK); }
+	| TOK_BEGIN TOK_COLON any_identifier
+		{ push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::BLOCK); }
 	  generate_item_brace TOK_END
 		{ pop_scope();
 		  init($$, ID_generate_block);
 		  swapop($$, $5);
-		  stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
+		  stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+		}
 	;
 
 generate_item:
@@ -3662,13 +3663,13 @@ seq_block:
 	  block_item_declaration_or_statement_or_null_brace
 	  TOK_END
 		{ init($$, ID_block); swapop($$, $2); }
-        | TOK_BEGIN TOK_COLON block_identifier
-		{ push_scope(stack_expr($3).id(), ".", verilog_scopet::BLOCK); }
+        | TOK_BEGIN TOK_COLON any_identifier
+		{ push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::BLOCK); }
 	  block_item_declaration_or_statement_or_null_brace
           TOK_END
                 { init($$, ID_block);
                   swapop($$, $5);
-                  addswap($$, ID_base_name, $3);
+                  stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
                   pop_scope();
                 }
 	;
@@ -3676,11 +3677,12 @@ seq_block:
 par_block:
 	  TOK_FORK statement_or_null_brace TOK_JOIN
 		{ init($$, ID_fork); swapop($$, $2); }
-        | TOK_FORK TOK_COLON block_identifier
+        | TOK_FORK TOK_COLON any_identifier
           statement_or_null_brace TOK_JOIN
                 { init($$, ID_block);
                   swapop($$, $4);
-                  addswap($$, ID_base_name, $3); }
+                  stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+                }
 	;
 
 // System Verilog standard 1800-2017
@@ -4811,8 +4813,6 @@ type_identifier: TOK_TYPE_IDENTIFIER
 ps_type_identifier: type_identifier;
 
 parameter_identifier: TOK_NON_TYPE_IDENTIFIER;
-
-generate_block_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 udp_identifier: TOK_NON_TYPE_IDENTIFIER;
 
