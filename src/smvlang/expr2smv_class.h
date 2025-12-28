@@ -18,6 +18,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "expr2smv.h"
 
+class smv_set_exprt;
+
 class expr2smvt
 {
 public:
@@ -86,7 +88,7 @@ protected:
 
   virtual resultt convert_rec(const exprt &);
 
-  resultt convert_smv_set(const exprt &);
+  resultt convert_smv_set(const smv_set_exprt &);
 
   resultt convert_binary(
     const binary_exprt &src,
