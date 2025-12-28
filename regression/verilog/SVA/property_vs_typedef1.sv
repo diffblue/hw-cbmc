@@ -7,6 +7,6 @@ module main;
   // Riviera Pro 2023.04.
   property some_name;
     1
-  endproperty
+  endproperty : some_name
 
 endmodule
