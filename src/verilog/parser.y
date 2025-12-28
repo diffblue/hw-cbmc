@@ -127,7 +127,6 @@ inline static void new_identifier(YYSTYPE &dest, YYSTYPE &src)
 {
   init(dest, ID_verilog_identifier);
   const auto base_name = stack_expr(src).id();
-  stack_expr(dest).set(ID_identifier, base_name);
   stack_expr(dest).set(ID_base_name, base_name);
 }
 

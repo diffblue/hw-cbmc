@@ -1868,7 +1868,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_symbol(src);
 
   else if(src.id() == ID_verilog_identifier)
-    return convert_symbol(to_verilog_identifier_expr(src));
+    return convert_verilog_identifier(to_verilog_identifier_expr(src));
 
   else if(src.id()==ID_nondet_symbol)
     return convert_nondet_symbol(src);
