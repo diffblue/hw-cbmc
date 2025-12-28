@@ -41,19 +41,20 @@ unsigned verilog_scopet::identifier_token() const
   switch(kind)
   {
   // clang-format off
-  case verilog_scopet::GLOBAL:    return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::FILE:      return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::PACKAGE:   return TOK_PACKAGE_IDENTIFIER;
-  case verilog_scopet::MODULE:    return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::CLASS:     return TOK_CLASS_IDENTIFIER;
-  case verilog_scopet::BLOCK:     return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::ENUM_NAME: return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::TASK:      return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::FUNCTION:  return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::TYPEDEF:   return TOK_TYPE_IDENTIFIER;
-  case verilog_scopet::PROPERTY:  return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::SEQUENCE:  return TOK_NON_TYPE_IDENTIFIER;
-  case verilog_scopet::OTHER:     return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::GLOBAL:          return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::FILE:            return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::PACKAGE:         return TOK_PACKAGE_IDENTIFIER;
+  case verilog_scopet::MODULE:          return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::CLASS:           return TOK_CLASS_IDENTIFIER;
+  case verilog_scopet::MODULE_INSTANCE: return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::BLOCK:           return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::ENUM_NAME:       return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::TASK:            return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::FUNCTION:        return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::TYPEDEF:         return TOK_TYPE_IDENTIFIER;
+  case verilog_scopet::PROPERTY:        return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::SEQUENCE:        return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::OTHER:           return TOK_NON_TYPE_IDENTIFIER;
     // clang-format on
   }
 
