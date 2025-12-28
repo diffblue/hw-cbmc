@@ -24,6 +24,7 @@ struct verilog_scopet
     MODULE,
     CLASS,
     ENUM_NAME,
+    MODULE_INSTANCE,
     TASK,
     FUNCTION,
     BLOCK,

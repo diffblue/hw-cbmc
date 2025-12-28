@@ -3134,7 +3134,9 @@ name_of_gate_instance_opt:
 name_of_gate_instance:
           any_identifier unpacked_dimension_brace
                 { init($$, ID_inst);
-                  stack_expr($$).set(ID_base_name, stack_expr($1).get(ID_base_name));
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
+                  PARSER.scopes.add_name(base_name, "", verilog_scopet::MODULE_INSTANCE);
                   if(stack_expr($2).is_not_nil())
                   {
                     auto &range = stack_expr($$).add(ID_range);
@@ -3229,8 +3231,10 @@ name_of_instance:
                 }
         | any_identifier unpacked_dimension_brace
                 { init($$, ID_inst);
-                  stack_expr($$).set(ID_base_name, stack_expr($1).get(ID_base_name));
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
                   addswap($$, ID_verilog_instance_array, $2);
+                  PARSER.scopes.add_name(base_name, "", verilog_scopet::MODULE_INSTANCE);
                 }
         ;
 
