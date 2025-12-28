@@ -1679,10 +1679,10 @@ enum_name_value_opt:
 	;
 
 enum_name_declaration:
-	  TOK_NON_TYPE_IDENTIFIER enum_name_value_opt
+	  any_identifier enum_name_value_opt
 	  {
 	    init($$);
-	    auto &scope = PARSER.scopes.add_name(stack_expr($1).id(), "", verilog_scopet::ENUM_NAME);
+	    auto &scope = PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::ENUM_NAME);
 	    stack_expr($$).set(ID_base_name, scope.base_name());
 	    stack_expr($$).set(ID_verilog_scope_prefix, scope.parent->prefix);
 	    stack_expr($$).add(ID_value).swap(stack_expr($2));
