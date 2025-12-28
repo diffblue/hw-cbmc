@@ -1,0 +1,8 @@
+KNOWNBUG
+assign_set2.smv
+--bdd
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This does not type check.
