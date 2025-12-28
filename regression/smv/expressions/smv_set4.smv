@@ -1,0 +1,5 @@
+MODULE main
+
+-- Set expressions can contain other sets,
+-- which is interpreted as their union.
+SPEC 3 in { 1, { 1, 2, 3 } };
