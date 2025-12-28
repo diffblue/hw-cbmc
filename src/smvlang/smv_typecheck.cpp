@@ -75,8 +75,8 @@ public:
   void typecheck() override;
 
   // These output SMV syntax
-  std::string to_string(const typet &);
-  std::string to_string(const exprt &);
+  std::string to_string(const typet &) const;
+  std::string to_string(const exprt &) const;
 
 protected:
   smv_parse_treet &smv_parse_tree;
@@ -85,9 +85,9 @@ protected:
   bool do_spec;
 
   void check_type(typet &);
-  smv_ranget convert_type(const typet &);
+  smv_ranget convert_type(const typet &) const;
 
-  void variable_checks(const smv_parse_treet::modulet &);
+  void variable_checks(const smv_parse_treet::modulet &) const;
   bool uses_next(const exprt &expr) const;
   void no_next_allowed(const exprt &expr) const;
 
@@ -96,7 +96,7 @@ protected:
   void typecheck_expr_rec(exprt &, modet, bool next);
   void convert_expr_to(exprt &, const typet &dest);
   void typecheck_assignment(exprt &);
-  exprt convert_word_constant(const constant_exprt &);
+  exprt convert_word_constant(const constant_exprt &) const;
 
   smv_parse_treet::modulet *modulep;
 
@@ -111,8 +111,10 @@ protected:
     const exprt::operandst &arguments,
     const source_locationt &);
 
-  typet
-  type_union(const typet &type1, const typet &type2, const source_locationt &);
+  typet type_union(
+    const typet &type1,
+    const typet &type2,
+    const source_locationt &) const;
 
   typedef std::map<irep_idt, exprt> rename_mapt;
 
@@ -479,7 +481,7 @@ Function: smv_typecheckt::convert_type
 
 \*******************************************************************/
 
-smv_ranget smv_typecheckt::convert_type(const typet &src)
+smv_ranget smv_typecheckt::convert_type(const typet &src) const
 {
   if(src.id()==ID_bool)
   {
@@ -527,7 +529,7 @@ Function: smv_typecheckt::type_union
 typet smv_typecheckt::type_union(
   const typet &type1,
   const typet &type2,
-  const source_locationt &source_location)
+  const source_locationt &source_location) const
 {
   if(type1==type2) return type1;
 
@@ -608,7 +610,8 @@ Function: convert_word_constant
 
 \*******************************************************************/
 
-exprt smv_typecheckt::convert_word_constant(const constant_exprt &src_expr)
+exprt smv_typecheckt::convert_word_constant(
+  const constant_exprt &src_expr) const
 {
   auto &src = id2string(src_expr.get_value());
 
@@ -1992,7 +1995,7 @@ Function: smv_typecheckt::to_string
 
 \*******************************************************************/
 
-std::string smv_typecheckt::to_string(const exprt &expr)
+std::string smv_typecheckt::to_string(const exprt &expr) const
 {
   namespacet ns{symbol_table};
   return expr2smv(expr, ns);
@@ -2010,7 +2013,7 @@ Function: smv_typecheckt::to_string
 
 \*******************************************************************/
 
-std::string smv_typecheckt::to_string(const typet &type)
+std::string smv_typecheckt::to_string(const typet &type) const
 {
   namespacet ns{symbol_table};
   return type2smv(type, ns);
@@ -2127,7 +2130,8 @@ Function: smv_typecheckt::variable_checks
 
 \*******************************************************************/
 
-void smv_typecheckt::variable_checks(const smv_parse_treet::modulet &module)
+void smv_typecheckt::variable_checks(
+  const smv_parse_treet::modulet &module) const
 {
   std::unordered_set<irep_idt, irep_id_hash> enums, defines, vars, parameters;
 
