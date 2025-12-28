@@ -369,4 +369,80 @@ inline smv_identifier_exprt &to_smv_identifier_expr(exprt &expr)
   return static_cast<smv_identifier_exprt &>(expr);
 }
 
+/// set constructor expression
+class smv_set_exprt : public multi_ary_exprt
+{
+public:
+  explicit smv_set_exprt(exprt::operandst __elements)
+    : multi_ary_exprt{ID_smv_set, std::move(__elements), typet{ID_smv_set}}
+  {
+  }
+};
+
+inline const smv_set_exprt &to_smv_set_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_set);
+  smv_set_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const smv_set_exprt &>(expr);
+}
+
+inline smv_set_exprt &to_smv_set_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_set);
+  smv_set_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<smv_set_exprt &>(expr);
+}
+
+/// set union expression
+class smv_union_exprt : public binary_exprt
+{
+public:
+  smv_union_exprt(exprt lhs, exprt rhs, typet type)
+    : binary_exprt{
+        std::move(lhs),
+        ID_smv_union,
+        std::move(rhs),
+        std::move(type)}
+  {
+  }
+};
+
+inline const smv_union_exprt &to_smv_union_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_union);
+  smv_union_exprt::check(expr);
+  return static_cast<const smv_union_exprt &>(expr);
+}
+
+inline smv_union_exprt &to_smv_union_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_union);
+  smv_union_exprt::check(expr);
+  return static_cast<smv_union_exprt &>(expr);
+}
+
+/// set inclusion expression
+class smv_setin_exprt : public binary_predicate_exprt
+{
+public:
+  smv_setin_exprt(exprt lhs, exprt rhs)
+    : binary_predicate_exprt{std::move(lhs), ID_smv_setin, std::move(rhs)}
+  {
+  }
+};
+
+inline const smv_setin_exprt &to_smv_setin_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_setin);
+  smv_setin_exprt::check(expr);
+  return static_cast<const smv_setin_exprt &>(expr);
+}
+
+inline smv_setin_exprt &to_smv_setin_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_setin);
+  smv_setin_exprt::check(expr);
+  return static_cast<smv_setin_exprt &>(expr);
+}
+
 #endif // CPROVER_SMV_EXPR_H

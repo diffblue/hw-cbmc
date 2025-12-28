@@ -26,7 +26,7 @@ Function: expr2smvt::convert_smv_set
 
 \*******************************************************************/
 
-expr2smvt::resultt expr2smvt::convert_smv_set(const exprt &src)
+expr2smvt::resultt expr2smvt::convert_smv_set(const smv_set_exprt &src)
 {
   std::string dest = "{ ";
 
@@ -777,16 +777,16 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
     return convert_binary(to_mod_expr(src), src.id_string(), precedencet::MULT);
 
   else if(src.id() == ID_smv_set)
-    return convert_smv_set(src);
+    return convert_smv_set(to_smv_set_expr(src));
 
   else if(src.id() == ID_smv_setin)
-    return convert_binary(to_binary_expr(src), "in", precedencet::IN);
+    return convert_binary(to_smv_setin_expr(src), "in", precedencet::IN);
 
   else if(src.id() == ID_smv_setnotin)
     return convert_binary(to_binary_expr(src), "notin", precedencet::IN);
 
   else if(src.id() == ID_smv_union)
-    return convert_binary(to_binary_expr(src), "union", precedencet::UNION);
+    return convert_binary(to_smv_union_expr(src), "union", precedencet::UNION);
 
   else if(src.id()==ID_lt || src.id()==ID_gt ||
           src.id()==ID_le || src.id()==ID_ge)
@@ -912,13 +912,7 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
     return convert_constant(to_constant_expr(src));
 
   else if(src.id()==ID_nondet_bool)
-  {
-    exprt smv_set_expr(ID_smv_set);
-    smv_set_expr.operands().clear();
-    smv_set_expr.operands().push_back(false_exprt());
-    smv_set_expr.operands().push_back(true_exprt());
-    return convert_smv_set(smv_set_expr);
-  }
+    return convert_smv_set(smv_set_exprt{{false_exprt(), true_exprt()}});
 
   else if(src.id()==ID_cond)
     return convert_cond(src);
