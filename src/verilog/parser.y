@@ -2524,6 +2524,7 @@ property_declaration:
 		  auto base_name = stack_expr($2).get(ID_base_name);
 		  stack_expr($$).set(ID_base_name, base_name);
 		  mto($$, $6);
+		  pop_scope();
 		}
         ;
 
@@ -2721,6 +2722,7 @@ sequence_declaration:
 		{ $$=$2;
 		  stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
 		  mto($$, $7);
+		  pop_scope();
 		}
 	;
 
