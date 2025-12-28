@@ -1,0 +1,5 @@
+MODULE main
+
+-- "in" allows sets on the lhs
+SPEC { 1, 2 } in { 1, 2, 3 }
+SPEC !({ 1, 2, 4 } in { 1, 2, 3 })
