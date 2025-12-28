@@ -1,0 +1,8 @@
+KNOWNBUG
+enum_vs_typedef1.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+This fails to parse.
