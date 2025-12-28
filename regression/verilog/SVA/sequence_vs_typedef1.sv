@@ -7,6 +7,6 @@ module main;
   // Riviera Pro 2023.04.
   sequence some_name;
     1
-  endsequence
+  endsequence : some_name
 
 endmodule
