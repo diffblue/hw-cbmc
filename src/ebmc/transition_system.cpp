@@ -23,7 +23,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/verilog_types.h>
 
 #include "ebmc_error.h"
-#include "ebmc_language_file.h"
 #include "ebmc_version.h"
 #include "output_file.h"
 
