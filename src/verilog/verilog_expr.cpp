@@ -94,9 +94,9 @@ void verilog_module_sourcet::show(std::ostream &out) const
 }
 
 static void
-dependencies_rec(const verilog_module_itemt &, std::vector<irep_idt> &);
+dependencies_rec(const verilog_module_itemt &, std::set<irep_idt> &);
 
-static void dependencies_rec(const exprt &expr, std::vector<irep_idt> &dest)
+static void dependencies_rec(const exprt &expr, std::set<irep_idt> &dest)
 {
   for(const_depth_iteratort it = expr.depth_cbegin(); it != expr.depth_cend();
       ++it)
@@ -104,29 +104,29 @@ static void dependencies_rec(const exprt &expr, std::vector<irep_idt> &dest)
     if(it->id() == ID_verilog_package_scope)
     {
       auto &package_scope_expr = to_verilog_package_scope_expr(*it);
-      dest.push_back(
+      dest.insert(
         verilog_package_identifier(package_scope_expr.package_base_name()));
     }
   }
 }
 
-static void dependencies_rec(const typet &type, std::vector<irep_idt> &dest)
+static void dependencies_rec(const typet &type, std::set<irep_idt> &dest)
 {
   if(type.id() == ID_verilog_package_scope)
   {
     auto &package_scope_type = to_verilog_package_scope_type(type);
-    dest.push_back(
+    dest.insert(
       verilog_package_identifier(package_scope_type.package_base_name()));
   }
 }
 
 static void dependencies_rec(
   const verilog_module_itemt &module_item,
-  std::vector<irep_idt> &dest)
+  std::set<irep_idt> &dest)
 {
   if(module_item.id() == ID_inst)
   {
-    dest.push_back(
+    dest.insert(
       verilog_module_symbol(to_verilog_inst(module_item).get_module()));
   }
   else if(module_item.id() == ID_generate_block)
@@ -149,7 +149,7 @@ static void dependencies_rec(
   {
     for(auto &import_item : module_item.get_sub())
     {
-      dest.push_back(
+      dest.insert(
         verilog_package_identifier(import_item.get(ID_verilog_package)));
     }
   }
@@ -241,9 +241,9 @@ static void dependencies_rec(
   }
 }
 
-std::vector<irep_idt> verilog_item_containert::dependencies() const
+std::set<irep_idt> verilog_item_containert::dependencies() const
 {
-  std::vector<irep_idt> result;
+  std::set<irep_idt> result;
 
   for(auto &item : items())
     dependencies_rec(item, result);
