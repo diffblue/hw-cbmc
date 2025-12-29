@@ -9,4 +9,7 @@ module main;
     1
   endproperty : some_name
 
+  // some_name is usable as a non-type identifier
+  assert property(some_name);
+
 endmodule

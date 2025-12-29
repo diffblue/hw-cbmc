@@ -1,7 +1,7 @@
 CORE
 property_vs_typedef1.sv
 
-^EXIT=10$
+^EXIT=0$
 ^SIGNAL=0$
 --
 --
