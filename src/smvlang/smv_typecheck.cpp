@@ -1868,6 +1868,26 @@ void smv_typecheckt::typecheck_assignment(exprt &expr)
   auto &lhs = equal_expr.lhs();
   auto &rhs = equal_expr.rhs();
 
+  auto check_symbol = [this](const exprt &lhs)
+  {
+    auto &identifier = lhs.get(ID_identifier);
+    auto symbol_ptr = symbol_table.lookup(identifier);
+    CHECK_RETURN(symbol_ptr != nullptr);
+    if(define_map.find(identifier) != define_map.end())
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "variable `" << symbol_ptr->base_name << "' already defined";
+    }
+  };
+
+  // The LHS must not be a define
+  if(lhs.id() == ID_symbol)
+    check_symbol(lhs);
+  else if(lhs.id() == ID_next_symbol)
+    check_symbol(lhs);
+  else
+    PRECONDITION(false);
+
   if(rhs.type().id() == ID_smv_set && rhs.id() == ID_smv_set)
   {
     // Sets can be assigned to scalars, which yields a nondeterministic
@@ -2517,17 +2537,13 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
 
   typecheck(d.value, OTHER);
 
-  if(symbol.type.is_not_nil())
-    convert_expr_to(d.value, symbol.type);
-
   d.in_progress=false;
   d.typechecked=true;
   d.uses_next = uses_next(d.value);
 
-  // VAR x : type; ASSIGN x := ... does come with a type.
   // DEFINE x := ... doesn't come with a type.
-  if(symbol.type.is_nil())
-    symbol.type=d.value.type();
+  // Use the type of the RHS.
+  symbol.type = d.value.type();
 }
 
 /*******************************************************************\
@@ -2602,19 +2618,19 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         convert(element);
 
     // we first need to collect all the defines
-
     for(auto &element : smv_module.elements)
     {
-      if(element.is_define() || element.is_assign_current())
+      if(element.is_define())
         collect_define(element.lhs(), element.rhs());
     }
+
     // now turn them into INVARs
     convert_defines(trans_invar);
 
     // do the rest now: typecheck
     for(auto &element : smv_module.elements)
     {
-      if(!element.is_define() && !element.is_assign_current())
+      if(!element.is_define())
         typecheck(element);
     }
 
@@ -2627,6 +2643,8 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         trans_init.push_back(element.expr);
       else if(element.is_assign_init())
         trans_init.push_back(element.expr);
+      else if(element.is_assign_current())
+        trans_trans.push_back(element.expr);
       else if(element.is_assign_next())
         trans_trans.push_back(element.expr);
       else if(element.is_trans())
