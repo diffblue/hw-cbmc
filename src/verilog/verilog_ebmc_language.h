@@ -14,11 +14,13 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <ebmc/ebmc_language.h>
 
+#include "verilog_parse_tree.h"
+
 #include <filesystem>
 #include <iosfwd>
+#include <map>
 
-class verilog_parse_treet;
-class ebmc_language_filest;
+class symbol_tablet;
 
 class verilog_ebmc_languaget : public ebmc_languaget
 {
@@ -39,8 +41,30 @@ protected:
   verilog_parse_treet parse(const std::filesystem::path &);
   void show_parse(const std::filesystem::path &);
   void show_parse();
-  void parse(const std::filesystem::path &, ebmc_language_filest &);
-  void parse(ebmc_language_filest &);
+
+  using parse_treet = verilog_parse_treet;
+
+  /// a Verilog parse tree forest
+  using parse_treest = std::list<parse_treet>;
+
+  parse_treest parse();
+
+  class modulet
+  {
+  public:
+    irep_idt identifier;
+    bool type_checked = false, in_progress = false;
+    const parse_treet &parse_tree;
+    modulet(irep_idt _identifier, const parse_treet &_parse_tree)
+      : identifier(_identifier), parse_tree(_parse_tree)
+    {
+    }
+  };
+
+  std::map<irep_idt, modulet> module_map;
+
+  transition_systemt typecheck(const parse_treest &);
+  void typecheck_module(modulet &, symbol_tablet &);
 };
 
 #endif // EBMC_VERILOG_LANGUAGE_H
