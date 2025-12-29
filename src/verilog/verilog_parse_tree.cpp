@@ -77,6 +77,29 @@ void verilog_parse_treet::modules_provided(
 
 /*******************************************************************\
 
+Function: verilog_parse_treet::dependencies
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::set<irep_idt>
+verilog_parse_treet::dependencies(irep_idt item_identifier) const
+{
+  verilog_parse_treet::item_mapt::const_iterator it =
+    item_map.find(id2string(verilog_item_key(item_identifier)));
+
+  CHECK_RETURN(it != item_map.end());
+
+  return it->second->dependencies();
+}
+
+/*******************************************************************\
+
 Function: verilog_parse_treet::build_item_map
 
   Inputs:

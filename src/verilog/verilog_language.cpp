@@ -134,18 +134,8 @@ void verilog_languaget::dependencies(
   const std::string &module,
   std::set<std::string> &dependency_set)
 {
-  verilog_parse_treet::item_mapt::const_iterator it =
-    parse_tree.item_map.find(id2string(verilog_item_key(module)));
-
-  if(it != parse_tree.item_map.end())
-  {
-    // dependencies on other Verilog modules or packages
-
-    const auto &item_container = *it->second;
-
-    for(auto &identifier : item_container.dependencies())
-      dependency_set.insert(id2string(identifier));
-  }
+  for(auto identifier : parse_tree.dependencies(module))
+    dependency_set.insert(id2string(identifier));
 }
 
 /*******************************************************************\

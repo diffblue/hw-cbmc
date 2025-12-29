@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+#include <set>
+
 /// A simple Verilog identifier, unqualified
 class verilog_identifier_exprt : public nullary_exprt
 {
@@ -2387,7 +2389,7 @@ public:
 
   // The identifiers of the modules and packages used
   // (not: the identifiers of the module instances)
-  std::vector<irep_idt> dependencies() const;
+  std::set<irep_idt> dependencies() const;
 };
 
 class verilog_interfacet : public verilog_item_containert
