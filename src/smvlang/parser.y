@@ -148,7 +148,6 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_n
   const auto identifier=smv_module_symbol(base_name);
   PARSER.parse_tree.module_list.push_back(smv_parse_treet::modulet{});
   auto &module=PARSER.parse_tree.module_list.back();
-  PARSER.parse_tree.module_map[base_name] = --PARSER.parse_tree.module_list.end();
   module.identifier = identifier;
   module.base_name = base_name;
   module.source_location = stack_expr(location).source_location();
@@ -632,7 +631,6 @@ enumeration_type_body: enum_element
 enum_element: IDENTIFIER_Token
            {
              $$=$1;
-             PARSER.parse_tree.enum_set.insert(stack_expr($1).id_string());
              PARSER.module->add_enum(
                smv_identifier_exprt{stack_expr($1).id(), PARSER.source_location()});
            }

@@ -25,8 +25,6 @@ public:
   // don't copy, contains pointers
   smv_parse_treet(const smv_parse_treet &) = delete;
 
-  typedef std::unordered_set<irep_idt, irep_id_hash> enum_sett;
-
   struct modulet
   {
     source_locationt source_location;
@@ -314,14 +312,6 @@ public:
 
   using module_listt = std::list<modulet>;
   module_listt module_list;
-
-  // map from module base names into the module list
-  using module_mapt =
-    std::unordered_map<irep_idt, module_listt::iterator, irep_id_hash>;
-  module_mapt module_map;
-
-  // enums are global
-  enum_sett enum_set;
 
   void swap(smv_parse_treet &);
   void clear();

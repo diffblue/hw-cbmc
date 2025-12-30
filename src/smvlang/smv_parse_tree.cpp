@@ -29,8 +29,6 @@ Function: smv_parse_treet::swap
 void smv_parse_treet::swap(smv_parse_treet &smv_parse_tree)
 {
   smv_parse_tree.module_list.swap(module_list);
-  smv_parse_tree.module_map.swap(module_map);
-  smv_parse_tree.enum_set.swap(enum_set);
 }
 
 /*******************************************************************\
@@ -47,7 +45,6 @@ Function: smv_parse_treet::clear
 
 void smv_parse_treet::clear()
 {
-  module_map.clear();
   module_list.clear();
 }
 
