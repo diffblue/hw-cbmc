@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "expr2smv.h"
 #include "smv_expr.h"
+#include "smv_index.h"
 #include "smv_range.h"
 #include "smv_types.h"
 
@@ -79,6 +80,7 @@ public:
 protected:
   smv_parse_treet &smv_parse_tree;
   symbol_table_baset &symbol_table;
+  smv_indext index;
   const std::string &module_identifier;
 
   void check_type(typet &);
@@ -308,9 +310,9 @@ void smv_typecheckt::instantiate(
   const source_locationt &location)
 {
   // Find the module
-  auto module_it = smv_parse_tree.module_map.find(module_base_name);
+  auto module_it = index.module_map.find(module_base_name);
 
-  if(module_it == smv_parse_tree.module_map.end())
+  if(module_it == index.module_map.end())
   {
     throw errort().with_location(location)
       << "submodule `" << module_base_name << "' not found";
@@ -357,9 +359,7 @@ void smv_typecheckt::instantiate(
             // It's a parameter
             expr = parameter_it->second;
           }
-          else if(
-            smv_parse_tree.enum_set.find(identifier) !=
-            smv_parse_tree.enum_set.end())
+          else if(index.enum_names.find(identifier) != index.enum_names.end())
           {
             // It's an enum, leave as is
           }
@@ -2005,8 +2005,7 @@ void smv_typecheckt::convert(exprt &expr)
       identifier.find("::") == std::string::npos, "conversion is done once");
 
     // enum or variable?
-    if(
-      smv_parse_tree.enum_set.find(identifier) == smv_parse_tree.enum_set.end())
+    if(index.enum_names.find(identifier) == index.enum_names.end())
     {
       std::string id = module_identifier + "::var::" + identifier;
 
@@ -2801,14 +2800,17 @@ void smv_typecheckt::typecheck()
   if(module_identifier != "smv::main")
     return;
 
+  // build the index
+  index = smv_indext{smv_parse_tree};
+
   // check all modules for duplicate identifiers
   for(auto &module : smv_parse_tree.module_list)
     variable_checks(module);
 
   auto module_base_name = smv_module_base_name(module_identifier);
-  auto it = smv_parse_tree.module_map.find(module_base_name);
+  auto it = index.module_map.find(module_base_name);
 
-  if(it == smv_parse_tree.module_map.end())
+  if(it == index.module_map.end())
   {
     throw errort() << "failed to find module " << module_base_name;
   }
