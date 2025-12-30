@@ -29,6 +29,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_typecheck.h"
 
 #include <fstream>
+#include <functional>
 #include <iostream>
 
 void verilog_ebmc_languaget::preprocess(
@@ -234,24 +235,135 @@ verilog_ebmc_languaget::typecheck(const parse_treest &parse_trees)
   return transition_system;
 }
 
+static void module_dependencies_rec(
+  const verilog_module_itemt &module_item,
+  const std::function<void(irep_idt)> &action)
+{
+  if(module_item.id() == ID_inst)
+  {
+    action(to_verilog_inst(module_item).get_module());
+  }
+  else if(module_item.id() == ID_generate_block)
+  {
+    for(auto &sub_item : to_verilog_generate_block(module_item).module_items())
+      module_dependencies_rec(sub_item, action);
+  }
+  else if(module_item.id() == ID_generate_if)
+  {
+    auto &generate_if = to_verilog_generate_if(module_item);
+    module_dependencies_rec(generate_if.then_case(), action);
+    if(generate_if.has_else_case())
+      module_dependencies_rec(generate_if.else_case(), action);
+  }
+  else if(module_item.id() == ID_generate_for)
+  {
+    module_dependencies_rec(
+      to_verilog_generate_for(module_item).body(), action);
+  }
+}
+
+static void module_dependencies(
+  const verilog_module_sourcet &module_source,
+  const std::function<void(irep_idt)> &action)
+{
+  for(auto &item : module_source.items())
+    module_dependencies_rec(item, action);
+}
+
+irep_idt
+verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
+{
+  // start with a set of all modules, from all the files
+  std::set<irep_idt> all_modules;
+
+  for(auto &parse_tree : parse_trees)
+    for(auto &item : parse_tree.items)
+    {
+      if(item.id() == ID_verilog_module)
+      {
+        auto base_name = to_verilog_module_source(item).base_name();
+        all_modules.insert(base_name);
+      }
+    }
+
+  // Did the user specify one?
+  irep_idt given_module;
+
+  if(cmdline.isset("module"))
+    given_module = cmdline.get_value("module");
+  else if(cmdline.isset("top"))
+    given_module = cmdline.get_value("top");
+
+  if(given_module != irep_idt{})
+  {
+    if(all_modules.find(given_module) == all_modules.end())
+    {
+      messaget log{message_handler};
+      log.error() << "module '" << given_module << "' not found"
+                  << messaget::eom;
+      throw ebmc_errort{}.with_exit_code(2);
+    }
+    else
+      return given_module; // done
+  }
+
+  // start with all modules, and then erase the ones that are
+  // used as a dependency
+  std::set<irep_idt> top_level_modules = all_modules;
+
+  for(auto &parse_tree : parse_trees)
+  {
+    for(auto &item : parse_tree.items)
+    {
+      if(item.id() == ID_verilog_module || item.id() == ID_verilog_program)
+      {
+        auto erase = [&top_level_modules](irep_idt dependency)
+        { top_level_modules.erase(dependency); };
+        module_dependencies(to_verilog_module_source(item), erase);
+      }
+    }
+  }
+
+  if(top_level_modules.empty())
+  {
+    messaget log{message_handler};
+    log.error() << "no module found" << messaget::eom;
+    throw ebmc_errort{}.with_exit_code(1);
+  }
+  else if(top_level_modules.size() >= 2)
+  {
+    // sorted alphabetically
+    std::set<std::string> modules;
+
+    for(const auto &base_name : top_level_modules)
+      modules.insert(id2string(base_name));
+
+    messaget log{message_handler};
+    log.error() << "multiple modules found, please select one:\n";
+
+    for(const auto &module : modules)
+      log.error() << "  " << module << '\n';
+
+    log.error() << messaget::eom;
+    throw ebmc_errort{}.with_exit_code(1);
+  }
+
+  // we have exactly one top-level module
+  return *top_level_modules.begin();
+}
+
 static bool get_main(
-  const cmdlinet &cmdline,
+  irep_idt top_level_module,
   message_handlert &message_handler,
   transition_systemt &transition_system)
 {
-  std::string top_module;
-
-  if(cmdline.isset("module"))
-    top_module = cmdline.get_value("module");
-  else if(cmdline.isset("top"))
-    top_module = cmdline.get_value("top");
-
   try
   {
-    transition_system.main_symbol =
-      &get_module(transition_system.symbol_table, top_module, message_handler);
-    transition_system.trans_expr =
-      to_trans_expr(transition_system.main_symbol->value);
+    auto identifier = verilog_module_symbol(top_level_module);
+    auto symbol_it = transition_system.symbol_table.symbols.find(identifier);
+    CHECK_RETURN(symbol_it != transition_system.symbol_table.symbols.end());
+    transition_system.main_symbol = &symbol_it->second;
+    transition_system.trans_expr = to_trans_expr(symbol_it->second.value);
   }
 
   catch(int e)
@@ -333,9 +445,12 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
     return {};
   }
 
-  // get module name
+  //
+  // determine the top-level module
+  //
+  auto top_level_module = this->top_level_module(parse_trees);
 
-  if(get_main(cmdline, message_handler, transition_system))
+  if(get_main(top_level_module, message_handler, transition_system))
     throw ebmc_errort{}.with_exit_code(1);
 
   if(cmdline.isset("show-module-hierarchy"))

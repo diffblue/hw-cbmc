@@ -1,5 +1,6 @@
 # EBMC 5.9
 
+* Verilog: use top-level module for verification, instead of "main"
 * Verilog: fix for four-valued | and &
 * Verilog: fix for typed parameter ports
 * Verilog: fix for the type of implicit nets for continous assignments
