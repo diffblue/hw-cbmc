@@ -18,8 +18,7 @@ bool smv_typecheck(
   smv_parse_treet &smv_parse_tree,
   symbol_table_baset &,
   const std::string &module_identifier,
-  message_handlert &message_handler,
-  bool do_spec = true);
+  message_handlert &);
 
 /// returns the identifier for the module with given base name
 irep_idt smv_module_symbol(const irep_idt &module_base_name);
