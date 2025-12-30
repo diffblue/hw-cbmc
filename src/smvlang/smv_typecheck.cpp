@@ -95,6 +95,10 @@ protected:
   void typecheck_assignment(exprt &);
   exprt convert_word_constant(const constant_exprt &) const;
 
+  void assignment_lhs_checks(
+    const exprt &lhs,
+    smv_parse_treet::modulet::elementt::element_typet);
+
   smv_parse_treet::modulet *modulep;
 
   unsigned nondet_count;
@@ -135,6 +139,16 @@ protected:
   
   typedef std::unordered_map<irep_idt, definet, irep_id_hash> define_mapt;
   define_mapt define_map;
+
+  // for variables
+  class vart
+  {
+  public:
+    bool assigned_next = false, assigned_init = false, assigned_current = false;
+  };
+
+  using var_mapt = std::unordered_map<irep_idt, vart, irep_id_hash>;
+  var_mapt var_map;
 
   static irep_idt strip_smv_prefix(irep_idt id)
   {
@@ -1846,6 +1860,86 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::assignment_lhs_checks
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::assignment_lhs_checks(
+  const exprt &lhs,
+  smv_parse_treet::modulet::elementt::element_typet element_type)
+{
+  PRECONDITION(lhs.id() == ID_symbol || lhs.id() == ID_next_symbol);
+
+  auto &identifier = lhs.get(ID_identifier);
+
+  // The LHS must not be a define
+  auto symbol_ptr = symbol_table.lookup(identifier);
+  CHECK_RETURN(symbol_ptr != nullptr);
+  if(define_map.find(identifier) != define_map.end())
+  {
+    throw errort{}.with_location(lhs.source_location())
+      << "variable `" << symbol_ptr->base_name << "' already defined";
+  }
+
+  // Check for previous assignments
+  auto &var = var_map[identifier];
+  if(element_type == smv_parse_treet::modulet::elementt::ASSIGN_CURRENT)
+  {
+    if(var.assigned_init)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "init(" << symbol_ptr->base_name << ") is already set";
+    }
+    else if(var.assigned_next)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "next(" << symbol_ptr->base_name << ") is already set ";
+    }
+    else
+      var.assigned_current = true;
+  }
+  else if(element_type == smv_parse_treet::modulet::elementt::ASSIGN_INIT)
+  {
+    if(var.assigned_current)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "variable `" << symbol_ptr->base_name << "' is already assigned";
+    }
+    else if(var.assigned_init)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "init(" << symbol_ptr->base_name << ") is already set";
+    }
+    else
+      var.assigned_init = true;
+  }
+  else if(element_type == smv_parse_treet::modulet::elementt::ASSIGN_NEXT)
+  {
+    if(var.assigned_current)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "variable `" << symbol_ptr->base_name << "' is already assigned";
+    }
+    else if(var.assigned_next)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "next(" << symbol_ptr->base_name << ") is already set";
+    }
+    else
+      var.assigned_next = true;
+  }
+  else
+    PRECONDITION(false);
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::typecheck_assignment
 
   Inputs:
@@ -1864,26 +1958,6 @@ void smv_typecheckt::typecheck_assignment(exprt &expr)
   auto &equal_expr = to_equal_expr(expr);
   auto &lhs = equal_expr.lhs();
   auto &rhs = equal_expr.rhs();
-
-  auto check_symbol = [this](const exprt &lhs)
-  {
-    auto &identifier = lhs.get(ID_identifier);
-    auto symbol_ptr = symbol_table.lookup(identifier);
-    CHECK_RETURN(symbol_ptr != nullptr);
-    if(define_map.find(identifier) != define_map.end())
-    {
-      throw errort{}.with_location(lhs.source_location())
-        << "variable `" << symbol_ptr->base_name << "' already defined";
-    }
-  };
-
-  // The LHS must not be a define
-  if(lhs.id() == ID_symbol)
-    check_symbol(lhs);
-  else if(lhs.id() == ID_next_symbol)
-    check_symbol(lhs);
-  else
-    PRECONDITION(false);
 
   if(rhs.type().id() == ID_smv_set && rhs.id() == ID_smv_set)
   {
@@ -2118,12 +2192,14 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
   case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
     typecheck(element.lhs(), OTHER);
     typecheck(element.rhs(), OTHER);
+    assignment_lhs_checks(element.lhs(), element.element_type);
     typecheck_assignment(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_INIT:
     typecheck(element.lhs(), INIT);
     typecheck(element.rhs(), INIT);
+    assignment_lhs_checks(element.lhs(), element.element_type);
     no_next_allowed(element.rhs());
     typecheck_assignment(element.expr);
     return;
@@ -2131,6 +2207,7 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
   case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
     typecheck(element.lhs(), TRANS);
     typecheck(element.rhs(), TRANS);
+    assignment_lhs_checks(element.lhs(), element.element_type);
     typecheck_assignment(element.expr);
     return;
 
