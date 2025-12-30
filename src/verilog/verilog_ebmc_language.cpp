@@ -16,7 +16,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/unicode.h>
 
 #include <ebmc/ebmc_error.h>
-#include <ebmc/ebmc_language_file.h>
 #include <ebmc/output_file.h>
 #include <ebmc/show_modules.h>
 #include <ebmc/transition_system.h>
@@ -26,6 +25,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_language.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
+#include "verilog_synthesis.h"
 #include "verilog_typecheck.h"
 
 #include <fstream>
@@ -72,39 +72,6 @@ void verilog_ebmc_languaget::preprocess()
   const auto file_name = widen_if_needed(cmdline.args.front());
 
   preprocess(file_name, std::cout);
-}
-
-void verilog_ebmc_languaget::parse(
-  const std::filesystem::path &path,
-  ebmc_language_filest &language_files)
-{
-  messaget message(message_handler);
-
-  message.status() << "Parsing " << path << messaget::eom;
-
-  auto verilog_language = std::make_unique<verilog_languaget>();
-  verilog_language->get_parse_tree() = parse(path);
-
-  optionst options;
-
-  options.set_option("force-systemverilog", cmdline.isset("systemverilog"));
-  options.set_option("vl2smv-extensions", cmdline.isset("vl2smv-extensions"));
-  options.set_option("warn-implicit-nets", cmdline.isset("warn-implicit-nets"));
-
-  // do --ignore-initial
-  if(cmdline.isset("ignore-initial"))
-    options.set_option("ignore-initial", true);
-
-  // do --initial-zero
-  if(cmdline.isset("initial-zero"))
-    options.set_option("initial-zero", true);
-
-  verilog_language->set_language_options(options, message_handler);
-
-  auto &lf = language_files.add_file(path.u8string());
-  lf.filename = path.u8string();
-  lf.language = std::unique_ptr<languaget>{std::move(verilog_language)};
-  lf.get_modules();
 }
 
 verilog_parse_treet
@@ -155,10 +122,116 @@ void verilog_ebmc_languaget::show_parse()
     show_parse(widen_if_needed(arg));
 }
 
-void verilog_ebmc_languaget::parse(ebmc_language_filest &language_files)
+verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
 {
+  parse_treest parse_trees;
+
   for(auto &arg : cmdline.args)
-    parse(arg, language_files);
+    parse_trees.push_back(parse(arg));
+
+  return parse_trees;
+}
+
+void verilog_ebmc_languaget::typecheck_module(
+  modulet &module,
+  symbol_tablet &symbol_table)
+{
+  // already typechecked?
+  if(module.type_checked)
+    return;
+
+  messaget log(message_handler);
+
+  // already in progress?
+
+  if(module.in_progress)
+    throw ebmc_errort{} << "circular dependency in " << module.identifier;
+
+  module.in_progress = true;
+
+  // first get dependencies of current module
+  const auto dependency_set = module.parse_tree.dependencies(module.identifier);
+
+  // type check the dependencies
+  for(auto &dependency : dependency_set)
+  {
+    // look it up
+    auto dependency_it = module_map.find(dependency);
+
+    // might not exist
+    if(dependency_it == module_map.end())
+    {
+      log.error() << "found no file that provides module " << dependency
+                  << messaget::eom;
+      throw ebmc_errort{}.with_exit_code(2);
+    }
+
+    typecheck_module(dependency_it->second, symbol_table);
+  }
+
+  // type check the module
+  log.status() << "Type-checking " << module.identifier << messaget::eom;
+
+  const bool warn_implicit_nets = cmdline.isset("warn-implicit-nets");
+
+  if(verilog_typecheck(
+       module.parse_tree,
+       symbol_table,
+       module.identifier,
+       warn_implicit_nets,
+       message_handler))
+  {
+    log.error() << "CONVERSION ERROR" << messaget::eom;
+    throw ebmc_errort{}.with_exit_code(2);
+  }
+
+  messaget message(message_handler);
+  log.status() << "Synthesis " << module.identifier << messaget::eom;
+
+  const bool ignore_initial = cmdline.isset("ignore-initial");
+  const bool initial_zero = cmdline.isset("initial-zero");
+
+  if(verilog_synthesis(
+       symbol_table,
+       module.identifier,
+       module.parse_tree.standard,
+       ignore_initial,
+       initial_zero,
+       message_handler))
+  {
+    log.error() << "CONVERSION ERROR" << messaget::eom;
+    throw ebmc_errort{}.with_exit_code(2);
+  }
+
+  module.type_checked = true;
+  module.in_progress = false;
+}
+
+transition_systemt
+verilog_ebmc_languaget::typecheck(const parse_treest &parse_trees)
+{
+  // set up the module map
+  for(auto &parse_tree : parse_trees)
+  {
+    std::set<std::string> module_identifiers;
+    parse_tree.modules_provided(module_identifiers);
+
+    for(auto &module_identifier : module_identifiers)
+    {
+      auto identifier = module_identifier;
+      module_map.emplace(identifier, modulet{module_identifier, parse_tree});
+    }
+  }
+
+  // now type check
+  transition_systemt transition_system;
+
+  for(auto &[_, module] : module_map)
+  {
+    typecheck_module(module, transition_system.symbol_table);
+  }
+
+  return transition_system;
 }
 
 static bool get_main(
@@ -220,8 +293,7 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
     return {};
   }
 
-  ebmc_language_filest language_files;
-  parse(language_files);
+  auto parse_trees = parse();
 
   //
   // type checking
@@ -229,13 +301,7 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 
   message.status() << "Converting" << messaget::eom;
 
-  transition_systemt transition_system;
-
-  if(language_files.typecheck(transition_system.symbol_table, message_handler))
-  {
-    message.error() << "CONVERSION ERROR" << messaget::eom;
-    throw ebmc_errort{}.with_exit_code(2);
-  }
+  auto transition_system = typecheck(parse_trees);
 
   if(cmdline.isset("show-modules"))
   {
