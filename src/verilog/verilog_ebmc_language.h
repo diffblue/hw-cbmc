@@ -49,6 +49,9 @@ protected:
 
   parse_treest parse();
 
+  // base_name of the top-level module
+  irep_idt top_level_module(const parse_treest &) const;
+
   class modulet
   {
   public:
