@@ -1472,9 +1472,9 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
         << "signed operand must have unsigned word type";
     }
   }
-  else if(expr.id() == ID_smv_set)
+  else if(expr.id() == ID_smv_set || expr.id() == ID_smv_union)
   {
-    // a set literal
+    // a set literal "{ ... }" or "a union b", which both mean the same
     bool first = true;
     typet union_type;
 
@@ -1992,7 +1992,7 @@ exprt smv_typecheckt::set_to_predicate(
 {
   if(set_expression.type().id() == ID_smv_set)
   {
-    if(set_expression.id() == ID_smv_set)
+    if(set_expression.id() == ID_smv_set || set_expression.id() == ID_smv_union)
     {
       // Turn the nondeterministic choice into a
       // disjunctive constraint.
@@ -2111,23 +2111,6 @@ void smv_typecheckt::convert(exprt &expr)
   {
     throw errort().with_location(expr.source_location())
       << "no support for self";
-  }
-  else if(expr.id()=="smv_nondet_choice" ||
-          expr.id()=="smv_union")
-  {
-    if(expr.operands().size()==0)
-    {
-      throw errort().with_location(expr.find_source_location())
-        << "expected operand here";
-    }
-
-    std::string identifier =
-      module_identifier + "::var::" + std::to_string(nondet_count++);
-
-    expr.set(ID_identifier, identifier);
-    expr.set("#smv_nondet_choice", true);
-
-    expr.id(ID_constraint_select_one);
   }
   else if(expr.id() == ID_smv_cases) // cases
   {
