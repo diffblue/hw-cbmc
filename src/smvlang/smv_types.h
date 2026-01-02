@@ -81,6 +81,11 @@ public:
     : type_with_subtypet(ID_smv_set, std::move(subtype))
   {
   }
+
+  const typet &element_type() const
+  {
+    return subtype();
+  }
 };
 
 /*! \brief Cast a generic typet to a \ref smv_set_typet

@@ -93,8 +93,12 @@ protected:
   void convert(smv_parse_treet::modulet::elementt &);
   void typecheck(smv_parse_treet::modulet::elementt &);
   void typecheck_expr_rec(exprt &, modet, bool next);
-  void convert_expr_to(exprt &, const typet &dest);
+  void convert_expr_to(exprt &, const typet &dest) const;
   void typecheck_assignment(exprt &);
+  exprt set_to_predicate(
+    const exprt &element,
+    const exprt &set_expression,
+    const source_locationt &) const;
   exprt convert_word_constant(const constant_exprt &) const;
 
   void assignment_lhs_checks(
@@ -1102,32 +1106,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
   }
   else if(expr.id() == ID_smv_setin)
   {
-    auto &lhs = to_binary_expr(expr).lhs();
-    auto &rhs = to_binary_expr(expr).rhs();
-
-    // The RHS can be a set or a singleton
-    if(rhs.type().id() == ID_smv_set)
-    {
-      PRECONDITION(rhs.id() == ID_smv_set);
-      // do type union
-      typet op_type = lhs.type();
-      for(auto &op : rhs.operands())
-        op_type = type_union(op_type, op.type(), expr.source_location());
-      // now convert
-      convert_expr_to(lhs, op_type);
-      for(auto &op : rhs.operands())
-        convert_expr_to(op, op_type);
-    }
-    else
-    {
-      typet op_type =
-        type_union(lhs.type(), rhs.type(), expr.source_location());
-
-      convert_expr_to(lhs, op_type);
-      convert_expr_to(rhs, op_type);
-    }
-
-    expr.type() = bool_typet();
+    expr.type() = bool_typet{};
   }
   else if(expr.id() == ID_smv_setnotin)
   {
@@ -1634,6 +1613,16 @@ void smv_typecheckt::lower_node(exprt &expr) const
     auto &smv_resize = to_smv_resize_expr(expr);
     expr = typecast_exprt{smv_resize.lhs(), smv_resize.type()};
   }
+  else if(expr.id() == ID_smv_setin)
+  {
+    auto &setin_expr = to_smv_setin_expr(expr);
+    // lower to a predicate
+
+    auto predicate = set_to_predicate(
+      setin_expr.lhs(), setin_expr.rhs(), setin_expr.source_location());
+
+    expr = predicate;
+  }
   else if(expr.id() == ID_smv_signed_cast)
   {
     expr = typecast_exprt{to_smv_signed_cast_expr(expr).op(), expr.type()};
@@ -1732,7 +1721,7 @@ Function: smv_typecheckt::convert_expr_to
 
 \*******************************************************************/
 
-void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
+void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type) const
 {
   const auto &src_type = expr.type();
 
@@ -1959,25 +1948,95 @@ void smv_typecheckt::typecheck_assignment(exprt &expr)
   auto &lhs = equal_expr.lhs();
   auto &rhs = equal_expr.rhs();
 
-  if(rhs.type().id() == ID_smv_set && rhs.id() == ID_smv_set)
+  if(rhs.type().id() == ID_smv_set)
   {
     // Sets can be assigned to scalars, which yields a nondeterministic
-    // choice. First check the set elements.
-    for(auto &op : rhs.operands())
-      convert_expr_to(op, lhs.type());
+    // choice. First check if the set is contained in the domain of the
+    // variable.
+    auto &element_type = to_smv_set_type(rhs.type()).element_type();
+    auto source_location = lhs.source_location();
+    auto union_type = type_union(element_type, lhs.type(), source_location);
+    if(union_type != lhs.type())
+    {
+      throw errort().with_location(source_location)
+        << "Expected expression of type `" << to_string(lhs.type())
+        << "', but got expression `" << to_string(rhs)
+        << "', which is of type `" << to_string(element_type) << "'";
+    }
 
-    // Now turn the nondeterministic choice into a top-level
-    // disjunctive constraint.
-    exprt::operandst disjuncts;
-
-    for(auto &op : rhs.operands())
-      disjuncts.push_back(equal_exprt{lhs, op});
-
-    expr = disjunction(disjuncts);
-    return;
+    // This converts the rhs into a predicate over the lhs.
+    expr = set_to_predicate(lhs, rhs, source_location);
   }
+  else
+  {
+    convert_expr_to(rhs, lhs.type());
+  }
+}
 
-  convert_expr_to(rhs, lhs.type());
+/*******************************************************************\
+
+Function: smv_typecheckt::set_to_predicate
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt smv_typecheckt::set_to_predicate(
+  const exprt &variable,
+  const exprt &set_expression,
+  const source_locationt &source_location) const
+{
+  if(set_expression.type().id() == ID_smv_set)
+  {
+    if(set_expression.id() == ID_smv_set)
+    {
+      // Turn the nondeterministic choice into a
+      // disjunctive constraint.
+      exprt::operandst disjuncts;
+
+      for(auto &element : set_expression.operands())
+      {
+        auto predicate = set_to_predicate(variable, element, source_location);
+        disjuncts.push_back(std::move(predicate));
+      }
+
+      return disjunction(disjuncts);
+    }
+    else if(set_expression.id() == ID_symbol)
+    {
+      // DEFINEs can have set type. We need to expand, and recurse.
+      auto define_it =
+        define_map.find(to_symbol_expr(set_expression).get_identifier());
+      if(define_it != define_map.end())
+      {
+        auto &value = define_it->second.value;
+        DATA_INVARIANT(
+          value.type() == set_expression.type(), "define type consistency");
+        return set_to_predicate(variable, value, source_location);
+      }
+      else
+        DATA_INVARIANT(false, "set expression symbol that's not a define");
+    }
+    else
+      PRECONDITION(false);
+  }
+  else
+  {
+    auto union_type =
+      type_union(variable.type(), set_expression.type(), source_location);
+
+    exprt copy_variable = variable;
+    exprt copy_set_expression = set_expression;
+
+    convert_expr_to(copy_variable, union_type);
+    convert_expr_to(copy_set_expression, union_type);
+
+    return equal_exprt{copy_variable, copy_set_expression};
+  }
 }
 
 /*******************************************************************\
@@ -2638,10 +2697,13 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
     convert_define(define_it.first);
 
     // generate constraint
-    equal_exprt equality{
-      symbol_exprt{define_it.first, define_it.second.value.type()},
-      define_it.second.value};
-    invar.push_back(equality);
+    if(define_it.second.value.type().id() != ID_smv_set)
+    {
+      equal_exprt equality{
+        symbol_exprt{define_it.first, define_it.second.value.type()},
+        define_it.second.value};
+      invar.push_back(equality);
+    }
   }
 }
 

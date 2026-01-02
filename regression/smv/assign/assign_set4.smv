@@ -1,0 +1,12 @@
+MODULE main
+
+VAR x : 0..6;
+
+-- this is a nondeterministic choice
+DEFINE some_define := { 1, { 4, 5 } };
+
+ASSIGN x := some_define;
+
+SPEC AG x != 2
+SPEC EX x = 1
+SPEC EX x = 5
