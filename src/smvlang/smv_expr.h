@@ -445,4 +445,52 @@ inline smv_setin_exprt &to_smv_setin_expr(exprt &expr)
   return static_cast<smv_setin_exprt &>(expr);
 }
 
+/// range expression
+class smv_range_exprt : public binary_exprt
+{
+public:
+  smv_range_exprt(exprt from, exprt to, typet type)
+    : binary_exprt{
+        std::move(from),
+        ID_smv_range,
+        std::move(to),
+        std::move(type)}
+  {
+  }
+
+  const exprt &from() const
+  {
+    return lhs();
+  }
+
+  exprt &from()
+  {
+    return lhs();
+  }
+
+  const exprt &to() const
+  {
+    return rhs();
+  }
+
+  exprt &to()
+  {
+    return rhs();
+  }
+};
+
+inline const smv_range_exprt &to_smv_range_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_range);
+  smv_range_exprt::check(expr);
+  return static_cast<const smv_range_exprt &>(expr);
+}
+
+inline smv_range_exprt &to_smv_range_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_range);
+  smv_range_exprt::check(expr);
+  return static_cast<smv_range_exprt &>(expr);
+}
+
 #endif // CPROVER_SMV_EXPR_H
