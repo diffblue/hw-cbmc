@@ -12,7 +12,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_ebmc_language.h"
 
 #include <util/cmdline.h>
-#include <util/get_module.h>
 #include <util/unicode.h>
 
 #include <ebmc/ebmc_error.h>
@@ -22,6 +21,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/language_util.h>
 #include <trans-word-level/show_module_hierarchy.h>
 
+#include "verilog_elaborate_unit.h"
 #include "verilog_language.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
@@ -133,106 +133,18 @@ verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
   return parse_trees;
 }
 
-void verilog_ebmc_languaget::typecheck_module(
-  modulet &module,
-  symbol_tablet &symbol_table)
+symbol_tablet
+verilog_ebmc_languaget::elaborate_units(const parse_treest &parse_trees)
 {
-  // already typechecked?
-  if(module.type_checked)
-    return;
+  // elaborate all compilation units, in given order, to yield symbol table
+  symbol_tablet symbol_table;
 
-  messaget log(message_handler);
-
-  // already in progress?
-
-  if(module.in_progress)
-    throw ebmc_errort{} << "circular dependency in " << module.identifier;
-
-  module.in_progress = true;
-
-  // first get dependencies of current module
-  const auto dependency_set = module.parse_tree.dependencies(module.identifier);
-
-  // type check the dependencies
-  for(auto &dependency : dependency_set)
-  {
-    // look it up
-    auto dependency_it = module_map.find(dependency);
-
-    // might not exist
-    if(dependency_it == module_map.end())
-    {
-      log.error() << "found no file that provides module " << dependency
-                  << messaget::eom;
-      throw ebmc_errort{}.with_exit_code(2);
-    }
-
-    typecheck_module(dependency_it->second, symbol_table);
-  }
-
-  // type check the module
-  log.status() << "Type-checking " << module.identifier << messaget::eom;
-
-  const bool warn_implicit_nets = cmdline.isset("warn-implicit-nets");
-
-  if(verilog_typecheck(
-       module.parse_tree,
-       symbol_table,
-       module.identifier,
-       warn_implicit_nets,
-       message_handler))
-  {
-    log.error() << "CONVERSION ERROR" << messaget::eom;
-    throw ebmc_errort{}.with_exit_code(2);
-  }
-
-  messaget message(message_handler);
-  log.status() << "Synthesis " << module.identifier << messaget::eom;
-
-  const bool ignore_initial = cmdline.isset("ignore-initial");
-  const bool initial_zero = cmdline.isset("initial-zero");
-
-  if(verilog_synthesis(
-       symbol_table,
-       module.identifier,
-       module.parse_tree.standard,
-       ignore_initial,
-       initial_zero,
-       message_handler))
-  {
-    log.error() << "CONVERSION ERROR" << messaget::eom;
-    throw ebmc_errort{}.with_exit_code(2);
-  }
-
-  module.type_checked = true;
-  module.in_progress = false;
-}
-
-transition_systemt
-verilog_ebmc_languaget::typecheck(const parse_treest &parse_trees)
-{
-  // set up the module map
   for(auto &parse_tree : parse_trees)
   {
-    std::set<std::string> module_identifiers;
-    parse_tree.modules_provided(module_identifiers);
-
-    for(auto &module_identifier : module_identifiers)
-    {
-      auto identifier = module_identifier;
-      module_map.emplace(identifier, modulet{module_identifier, parse_tree});
-    }
+    verilog_elaborate_unit(parse_tree, symbol_table, message_handler);
   }
 
-  // now type check
-  transition_systemt transition_system;
-
-  for(auto &[_, module] : module_map)
-  {
-    typecheck_module(module, transition_system.symbol_table);
-  }
-
-  return transition_system;
+  return symbol_table;
 }
 
 static void module_dependencies_rec(
@@ -352,26 +264,19 @@ verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
   return *top_level_modules.begin();
 }
 
-static bool get_main(
+transition_systemt verilog_ebmc_languaget::instantiate_top(
   irep_idt top_level_module,
-  message_handlert &message_handler,
-  transition_systemt &transition_system)
+  symbol_tablet symbol_table,
+  message_handlert &message_handler)
 {
-  try
-  {
-    auto identifier = verilog_module_symbol(top_level_module);
-    auto symbol_it = transition_system.symbol_table.symbols.find(identifier);
-    CHECK_RETURN(symbol_it != transition_system.symbol_table.symbols.end());
-    transition_system.main_symbol = &symbol_it->second;
-    transition_system.trans_expr = to_trans_expr(symbol_it->second.value);
-  }
-
-  catch(int e)
-  {
-    return true;
-  }
-
-  return false;
+  auto identifier = verilog_module_symbol(top_level_module);
+  auto symbol_it = symbol_table.symbols.find(identifier);
+  CHECK_RETURN(symbol_it != symbol_table.symbols.end());
+  transition_systemt transition_system;
+  transition_system.symbol_table = std::move(symbol_table);
+  transition_system.main_symbol = &symbol_it->second;
+  transition_system.trans_expr = to_trans_expr(symbol_it->second.value);
+  return transition_system;
 }
 
 static void make_next_state(exprt &expr)
@@ -460,11 +365,11 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 
   message.status() << "Converting" << messaget::eom;
 
-  auto transition_system = typecheck(parse_trees);
+  auto symbol_table = elaborate_units(parse_trees);
 
   if(cmdline.isset("show-symbol-table"))
   {
-    std::cout << transition_system.symbol_table;
+    std::cout << symbol_table;
     return {};
   }
 
@@ -473,8 +378,11 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   //
   auto top_level_module = this->top_level_module(parse_trees);
 
-  if(get_main(top_level_module, message_handler, transition_system))
-    throw ebmc_errort{}.with_exit_code(1);
+  //
+  // instantiate the top-level module to form transition system
+  //
+  auto transition_system =
+    instantiate_top(top_level_module, std::move(symbol_table), message_handler);
 
   if(cmdline.isset("show-module-hierarchy"))
   {

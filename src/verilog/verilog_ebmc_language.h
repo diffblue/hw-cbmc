@@ -65,8 +65,9 @@ protected:
 
   std::map<irep_idt, modulet> module_map;
 
-  transition_systemt typecheck(const parse_treest &);
-  void typecheck_module(modulet &, symbol_tablet &);
+  symbol_tablet elaborate_units(const parse_treest &);
+  transition_systemt
+  instantiate_top(irep_idt top_level_module, symbol_tablet, message_handlert &);
 };
 
 #endif // EBMC_VERILOG_LANGUAGE_H
