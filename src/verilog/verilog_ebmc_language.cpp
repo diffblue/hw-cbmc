@@ -22,6 +22,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <langapi/language_util.h>
 #include <trans-word-level/show_module_hierarchy.h>
 
+#include "verilog_elaborate_compilation_unit.h"
 #include "verilog_language.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
@@ -412,25 +413,16 @@ show_modules(const verilog_ebmc_languaget::parse_treest &parse_trees)
   return result;
 }
 
-void verilog_ebmc_languaget::copy_parse_tree(
-  const parse_treet &parse_tree,
-  symbol_tablet &dest)
+symbol_tablet verilog_ebmc_languaget::elaborate_compilation_units(
+  const parse_treest &parse_trees)
 {
-  for(auto &item : parse_tree.items)
-  {
-    if(item.id() == ID_verilog_module || item.id() == ID_verilog_checker)
-    {
-      auto identifier =
-        verilog_module_symbol(to_verilog_module_source(item).base_name());
-      copy_module_source(item, identifier, dest);
-    }
-    else if(item.id() == ID_verilog_package)
-    {
-      auto identifier =
-        verilog_package_identifier(to_verilog_module_source(item).base_name());
-      copy_module_source(item, identifier, dest);
-    }
-  }
+  symbol_tablet symbol_table;
+
+  for(auto &parse_tree : parse_trees)
+    verilog_elaborate_compilation_unit(
+      parse_tree, symbol_table, message_handler);
+
+  return symbol_table;
 }
 
 std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
@@ -481,10 +473,7 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   //
   // copy the parse trees into the symbol table
   //
-  symbol_tablet symbol_table;
-
-  for(auto &parse_tree : parse_trees)
-    copy_parse_tree(parse_tree, symbol_table);
+  symbol_tablet symbol_table = elaborate_compilation_units(parse_trees);
 
   //
   // type checking
