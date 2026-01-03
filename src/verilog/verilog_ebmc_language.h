@@ -67,6 +67,7 @@ protected:
 
   std::map<irep_idt, modulet> module_map;
 
+  symbol_tablet elaborate_compilation_units(const parse_treest &);
   transition_systemt typecheck(const parse_treest &, symbol_tablet &&);
   void typecheck_module(modulet &, symbol_tablet &);
 };
