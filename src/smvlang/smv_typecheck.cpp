@@ -966,12 +966,24 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     auto &true_case = if_expr.true_case();
     auto &false_case = if_expr.false_case();
 
-    expr.type() =
-      type_union(true_case.type(), false_case.type(), expr.source_location());
-
     convert_expr_to(if_expr.cond(), bool_typet{});
-    convert_expr_to(true_case, expr.type());
-    convert_expr_to(false_case, expr.type());
+
+    // ?: supports sets
+    if(
+      true_case.type().id() == ID_smv_set ||
+      false_case.type().id() == ID_smv_set)
+    {
+      expr.type() = set_type_union(
+        {true_case.type(), false_case.type()}, expr.source_location());
+    }
+    else
+    {
+      expr.type() =
+        type_union(true_case.type(), false_case.type(), expr.source_location());
+
+      convert_expr_to(true_case, expr.type());
+      convert_expr_to(false_case, expr.type());
+    }
   }
   else if(expr.id()==ID_plus || expr.id()==ID_minus ||
           expr.id()==ID_mult || expr.id()==ID_div ||
@@ -2067,6 +2079,15 @@ exprt smv_typecheckt::set_to_predicate(
       }
       else
         DATA_INVARIANT(false, "set expression symbol that's not a define");
+    }
+    else if(set_expression.id() == ID_if)
+    {
+      auto if_expr = to_if_expr(set_expression);
+      // c ? t : f  --->  c? p(t) : p(f)
+      auto t = set_to_predicate(variable, if_expr.true_case(), source_location);
+      auto f =
+        set_to_predicate(variable, if_expr.false_case(), source_location);
+      return if_exprt{if_expr.cond(), std::move(t), std::move(f)};
     }
     else
       PRECONDITION(false);
