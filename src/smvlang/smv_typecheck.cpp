@@ -164,7 +164,7 @@ protected:
       return id;
   }
 
-  mp_integer require_integer_constant(const irept &) const;
+  mp_integer require_integer_constant(const exprt &) const;
 
   void lower_node(exprt &) const;
 
@@ -393,22 +393,21 @@ Function: smv_typecheckt::require_integer_constant
 
 \*******************************************************************/
 
-mp_integer smv_typecheckt::require_integer_constant(const irept &irep) const
+mp_integer smv_typecheckt::require_integer_constant(const exprt &expr) const
 {
-  auto &as_expr = static_cast<const exprt &>(irep);
-  if(as_expr.id() != ID_constant)
+  if(expr.id() != ID_constant)
   {
-    throw errort().with_location(as_expr.source_location())
+    throw errort().with_location(expr.source_location())
       << "expected constant expression";
   }
 
-  if(as_expr.type().id() != ID_integer)
+  if(expr.type().id() != ID_integer)
   {
-    throw errort().with_location(as_expr.source_location())
+    throw errort().with_location(expr.source_location())
       << "expected integer expression";
   }
 
-  return numeric_cast_v<mp_integer>(to_constant_expr(as_expr));
+  return numeric_cast_v<mp_integer>(to_constant_expr(expr));
 }
 
 /*******************************************************************\
@@ -427,21 +426,23 @@ void smv_typecheckt::check_type(typet &type)
 {
   if(type.id() == ID_smv_array)
   {
-    auto from = require_integer_constant(type.find(ID_from));
-    auto to = require_integer_constant(type.find(ID_to));
+    auto &array_type = to_smv_array_type(type);
+
+    auto from = require_integer_constant(array_type.from());
+    auto to = require_integer_constant(array_type.to());
 
     if(to < from)
       throw errort().with_location(type.source_location())
         << "array must end with number >= `" << from << '\'';
+
+    // recursive call
+    check_type(array_type.element_type());
 
     type.id(ID_array);
     type.remove(ID_from);
     type.remove(ID_to);
     type.set(ID_size, integer2string(to - from + 1));
     type.set(ID_offset, integer2string(from));
-
-    // recursive call
-    check_type(to_type_with_subtype(type).subtype());
   }
   else if(type.id() == ID_smv_enumeration)
   {
@@ -450,8 +451,10 @@ void smv_typecheckt::check_type(typet &type)
   }
   else if(type.id() == ID_smv_range)
   {
-    auto from = require_integer_constant(type.find(ID_from));
-    auto to = require_integer_constant(type.find(ID_to));
+    auto &range_type = to_smv_range_type(type);
+
+    auto from = require_integer_constant(range_type.from());
+    auto to = require_integer_constant(range_type.to());
 
     if(from > to)
       throw errort().with_location(type.source_location()) << "range is empty";
@@ -462,7 +465,9 @@ void smv_typecheckt::check_type(typet &type)
   }
   else if(type.id() == ID_smv_signed_word)
   {
-    auto width = require_integer_constant(type.find(ID_width));
+    auto &word_type = to_smv_signed_word_type(type);
+
+    auto width = require_integer_constant(word_type.width());
 
     if(width < 1)
       throw errort().with_location(type.source_location())
@@ -473,7 +478,9 @@ void smv_typecheckt::check_type(typet &type)
   }
   else if(type.id() == ID_smv_word || type.id() == ID_smv_unsigned_word)
   {
-    auto width = require_integer_constant(type.find(ID_width));
+    auto &word_type = to_smv_word_base_type(type);
+
+    auto width = require_integer_constant(word_type.width());
 
     if(width < 1)
       throw errort().with_location(type.source_location())

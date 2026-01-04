@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #define CPROVER_SMV_TYPES_H
 
 #include <util/expr.h>
+#include <util/mp_arith.h>
 #include <util/type.h>
 
 #include <set>
@@ -111,6 +112,226 @@ inline smv_set_typet &to_smv_set_type(typet &type)
 {
   PRECONDITION(type.id() == ID_smv_set);
   return static_cast<smv_set_typet &>(type);
+}
+
+class smv_array_typet : public type_with_subtypet
+{
+public:
+  smv_array_typet(mp_integer from, mp_integer to, typet subtype);
+
+  const exprt &from() const
+  {
+    return static_cast<const exprt &>(find(ID_from));
+  }
+
+  exprt &from()
+  {
+    return static_cast<exprt &>(add(ID_from));
+  }
+
+  const exprt &to() const
+  {
+    return static_cast<const exprt &>(find(ID_to));
+  }
+
+  exprt &to()
+  {
+    return static_cast<exprt &>(add(ID_to));
+  }
+
+  const typet &element_type() const
+  {
+    return subtype();
+  }
+
+  typet &element_type()
+  {
+    return subtype();
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref smv_array_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * smv_array_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref smv_array_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const smv_array_typet &to_smv_array_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_array);
+  return static_cast<const smv_array_typet &>(type);
+}
+
+/*! \copydoc to_smv_array_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline smv_array_typet &to_smv_array_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_array);
+  return static_cast<smv_array_typet &>(type);
+}
+
+class smv_range_typet : public typet
+{
+public:
+  smv_range_typet(mp_integer from, mp_integer to);
+
+  const exprt &from() const
+  {
+    return static_cast<const exprt &>(find(ID_from));
+  }
+
+  exprt &from()
+  {
+    return static_cast<exprt &>(add(ID_from));
+  }
+
+  const exprt &to() const
+  {
+    return static_cast<const exprt &>(find(ID_to));
+  }
+
+  exprt &to()
+  {
+    return static_cast<exprt &>(add(ID_to));
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref smv_range_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * smv_range_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref smv_range_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const smv_range_typet &to_smv_range_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_range);
+  return static_cast<const smv_range_typet &>(type);
+}
+
+/*! \copydoc to_smv_range_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline smv_range_typet &to_smv_range_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_range);
+  return static_cast<smv_range_typet &>(type);
+}
+
+class smv_word_base_typet : public typet
+{
+public:
+  smv_word_base_typet(irep_idt id, mp_integer width);
+
+  const exprt &width() const
+  {
+    return static_cast<const exprt &>(find(ID_width));
+  }
+
+  exprt &width()
+  {
+    return static_cast<exprt &>(add(ID_width));
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref smv_word_base_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * smv_word_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref smv_word_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const smv_word_base_typet &to_smv_word_base_type(const typet &type)
+{
+  return static_cast<const smv_word_base_typet &>(type);
+}
+
+/*! \copydoc to_smv_word_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline smv_word_base_typet &to_smv_word_base_type(typet &type)
+{
+  return static_cast<smv_word_base_typet &>(type);
+}
+
+class smv_signed_word_typet : public smv_word_base_typet
+{
+public:
+  explicit smv_signed_word_typet(mp_integer width)
+    : smv_word_base_typet{ID_smv_signed_word, std::move(width)}
+  {
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref smv_signed_word_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * smv_signed_word_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref smv_signed_word_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const smv_signed_word_typet &to_smv_signed_word_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_signed_word);
+  return static_cast<const smv_signed_word_typet &>(type);
+}
+
+/*! \copydoc to_smv_signed_word_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline smv_signed_word_typet &to_smv_signed_word_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_signed_word);
+  return static_cast<smv_signed_word_typet &>(type);
+}
+
+class smv_unsigned_word_typet : public smv_word_base_typet
+{
+public:
+  explicit smv_unsigned_word_typet(mp_integer width)
+    : smv_word_base_typet{ID_smv_unsigned_word, std::move(width)}
+  {
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref smv_unsigned_word_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * smv_unsigned_word_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref smv_unsigned_word_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const smv_unsigned_word_typet &
+to_smv_unsigned_word_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_unsigned_word);
+  return static_cast<const smv_unsigned_word_typet &>(type);
+}
+
+/*! \copydoc to_smv_unsigned_word_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline smv_unsigned_word_typet &to_smv_unsigned_word_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_smv_unsigned_word);
+  return static_cast<smv_unsigned_word_typet &>(type);
 }
 
 /// The type used for VAR declarations that are in fact module instantiations
