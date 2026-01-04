@@ -1,0 +1,10 @@
+MODULE main
+
+-- no temporal operators in DEFINEs
+DEFINE property := AG x=2;
+
+VAR x : 1..4;
+ASSIGN init(x) := 2;
+ASSIGN next(x) := x;
+
+CTLSPEC property
