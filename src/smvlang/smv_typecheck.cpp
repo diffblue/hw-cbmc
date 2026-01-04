@@ -89,6 +89,8 @@ protected:
   void variable_checks(const smv_parse_treet::modulet &) const;
   bool uses_next(const exprt &expr) const;
   void no_next_allowed(const exprt &expr) const;
+  void no_LTL_allowed(const exprt &expr) const;
+  void no_CTL_allowed(const exprt &expr) const;
 
   void convert(smv_parse_treet::modulet::elementt &);
   void typecheck(smv_parse_treet::modulet::elementt &);
@@ -1040,9 +1042,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     expr.id() == ID_AG || expr.id() == ID_AX || expr.id() == ID_AF ||
     expr.id() == ID_EG || expr.id() == ID_EX || expr.id() == ID_EF)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     expr.type() = bool_typet();
     auto &op = to_unary_expr(expr).op();
     convert_expr_to(op, expr.type());
@@ -1051,18 +1050,12 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     expr.id() == ID_smv_EBF || expr.id() == ID_smv_ABF ||
     expr.id() == ID_smv_EBG || expr.id() == ID_smv_ABG)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     expr.type() = bool_typet();
     auto &op2 = to_ternary_expr(expr).op2();
     convert_expr_to(op2, expr.type());
   }
   else if(expr.id() == ID_smv_ABU || expr.id() == ID_smv_EBU)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     expr.type() = bool_typet();
     for(std::size_t i = 0; i < expr.operands().size(); i++)
     {
@@ -1075,9 +1068,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     expr.id() == ID_smv_H || expr.id() == ID_smv_O || expr.id() == ID_smv_Y ||
     expr.id() == ID_smv_Z)
   {
-    if(mode != LTL)
-      throw errort().with_location(expr.source_location())
-        << "LTL operator not permitted here";
     expr.type() = bool_typet{};
     auto &op = to_unary_expr(expr).op();
     convert_expr_to(op, expr.type());
@@ -1086,9 +1076,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     expr.id() == ID_EU || expr.id() == ID_ER || expr.id() == ID_AU ||
     expr.id() == ID_AR)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet{};
     convert_expr_to(binary_expr.lhs(), expr.type());
@@ -1098,9 +1085,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     expr.id() == ID_U || expr.id() == ID_R || expr.id() == ID_smv_S ||
     expr.id() == ID_smv_T)
   {
-    if(mode != LTL)
-      throw errort().with_location(expr.source_location())
-        << "LTL operator not permitted here";
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet{};
     convert_expr_to(binary_expr.lhs(), expr.type());
@@ -2206,35 +2190,45 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
     typecheck(element.expr, INIT);
     convert_expr_to(element.expr, bool_typet{});
     no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::TRANS:
     typecheck(element.expr, TRANS);
     convert_expr_to(element.expr, bool_typet{});
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::CTLSPEC:
     typecheck(element.expr, CTL);
     convert_expr_to(element.expr, bool_typet{});
     no_next_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::LTLSPEC:
     typecheck(element.expr, LTL);
     convert_expr_to(element.expr, bool_typet{});
     no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::INVAR:
     typecheck(element.expr, INVAR);
     convert_expr_to(element.expr, bool_typet{});
     no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::FAIRNESS:
     typecheck(element.expr, OTHER);
     convert_expr_to(element.expr, bool_typet{});
     no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
@@ -2242,6 +2236,8 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
     typecheck(element.rhs(), OTHER);
     assignment_lhs_checks(element.lhs(), element.element_type);
     typecheck_assignment(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_INIT:
@@ -2250,6 +2246,8 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
     assignment_lhs_checks(element.lhs(), element.element_type);
     no_next_allowed(element.rhs());
     typecheck_assignment(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
@@ -2257,6 +2255,8 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
     typecheck(element.rhs(), TRANS);
     assignment_lhs_checks(element.lhs(), element.element_type);
     typecheck_assignment(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::DEFINE:
@@ -2624,6 +2624,66 @@ void smv_typecheckt::no_next_allowed(const exprt &expr) const
 
 /*******************************************************************\
 
+Function: smv_typecheckt::no_LTL_allowed
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::no_LTL_allowed(const exprt &expr) const
+{
+  if(has_subexpr(
+       expr,
+       [](const exprt &expr)
+       {
+         auto id = expr.id();
+         return id == ID_X || id == ID_F || id == ID_G || id == ID_smv_H ||
+                id == ID_smv_O || id == ID_smv_Y || id == ID_smv_Z ||
+                id == ID_U || id == ID_R || id == ID_smv_S || id == ID_smv_T;
+       }))
+  {
+    throw errort().with_location(expr.find_source_location())
+      << "LTL operator not permitted here";
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::no_CTL_allowed
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::no_CTL_allowed(const exprt &expr) const
+{
+  if(has_subexpr(
+       expr,
+       [](const exprt &expr)
+       {
+         auto id = expr.id();
+         return id == ID_AG || id == ID_AX || id == ID_AF || id == ID_EG ||
+                id == ID_EX || id == ID_EF || id == ID_smv_EBF ||
+                id == ID_smv_ABF || id == ID_smv_EBG || id == ID_smv_ABG ||
+                id == ID_smv_ABU || id == ID_smv_EBU || id == ID_EU ||
+                id == ID_ER || id == ID_AU || id == ID_AR;
+       }))
+  {
+    throw errort().with_location(expr.find_source_location())
+      << "CTL operator not permitted here";
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::convert_define
 
   Inputs:
@@ -2658,6 +2718,9 @@ void smv_typecheckt::convert_define(const irep_idt &identifier)
   d.in_progress=true;
 
   typecheck(d.value, OTHER);
+
+  no_CTL_allowed(d.value);
+  no_LTL_allowed(d.value);
 
   d.in_progress=false;
   d.typechecked=true;
