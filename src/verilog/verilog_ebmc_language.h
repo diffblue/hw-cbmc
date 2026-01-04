@@ -35,17 +35,16 @@ public:
   // produce the transition system, and return it
   std::optional<transition_systemt> transition_system() override;
 
+  /// a Verilog parse tree forest
+  using parse_treet = verilog_parse_treet;
+  using parse_treest = std::list<parse_treet>;
+
 protected:
   void preprocess(const std::filesystem::path &, std::ostream &);
   void preprocess();
   verilog_parse_treet parse(const std::filesystem::path &);
   void show_parse(const std::filesystem::path &);
   void show_parse();
-
-  using parse_treet = verilog_parse_treet;
-
-  /// a Verilog parse tree forest
-  using parse_treest = std::list<parse_treet>;
 
   parse_treest parse();
 

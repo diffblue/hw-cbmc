@@ -383,6 +383,32 @@ static void make_next_state(exprt &expr)
     expr.id(ID_next_symbol);
 }
 
+/// extract the list of modules from the Verilog parse trees
+static show_modulest
+show_modules(const verilog_ebmc_languaget::parse_treest &parse_trees)
+{
+  show_modulest result;
+
+  irep_idt mode = ID_Verilog;
+
+  for(auto &parse_tree : parse_trees)
+  {
+    for(const auto &item : parse_tree.items)
+    {
+      if(item.id() == ID_verilog_module || item.id() == ID_verilog_checker)
+      {
+        auto &verilog_module = to_verilog_module_source(item);
+        auto base_name = verilog_module.base_name();
+        auto identifier = verilog_module_symbol(base_name);
+        result.modules.emplace_back(
+          identifier, base_name, mode, verilog_module.source_location());
+      }
+    }
+  }
+
+  return result;
+}
+
 std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 {
   messaget message(message_handler);
@@ -407,18 +433,9 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 
   auto parse_trees = parse();
 
-  //
-  // type checking
-  //
-
-  message.status() << "Converting" << messaget::eom;
-
-  auto transition_system = typecheck(parse_trees);
-
   if(cmdline.isset("show-modules"))
   {
-    show_modulest::from_symbol_table(transition_system.symbol_table)
-      .plain_text(std::cout);
+    show_modules(parse_trees).plain_text(std::cout);
     return {};
   }
 
@@ -426,18 +443,24 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   {
     auto filename = cmdline.get_value("modules-xml");
     auto out_file = output_filet{filename};
-    show_modulest::from_symbol_table(transition_system.symbol_table)
-      .xml(out_file.stream());
+    show_modules(parse_trees).xml(out_file.stream());
     return {};
   }
 
   if(cmdline.isset("json-modules"))
   {
     auto out_file = output_filet{cmdline.get_value("json-modules")};
-    show_modulest::from_symbol_table(transition_system.symbol_table)
-      .json(out_file.stream());
+    show_modules(parse_trees).json(out_file.stream());
     return {};
   }
+
+  //
+  // type checking
+  //
+
+  message.status() << "Converting" << messaget::eom;
+
+  auto transition_system = typecheck(parse_trees);
 
   if(cmdline.isset("show-symbol-table"))
   {
