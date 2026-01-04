@@ -1,0 +1,5 @@
+MODULE main
+
+-- a .. b denots an integer range
+SPEC 2 in 1..3
+SPEC !(4 in 1..3)
