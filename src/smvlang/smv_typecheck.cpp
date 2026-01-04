@@ -125,6 +125,9 @@ protected:
     const typet &type2,
     const source_locationt &) const;
 
+  smv_set_typet
+  set_type_union(const std::vector<typet> &, const source_locationt &) const;
+
   typedef std::map<irep_idt, exprt> rename_mapt;
 
   void convert_ports(smv_parse_treet::modulet &, typet &dest);
@@ -603,6 +606,51 @@ typet smv_typecheckt::type_union(
   {
     return range1.to_type();
   }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::set_type_union
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+smv_set_typet smv_typecheckt::set_type_union(
+  const std::vector<typet> &types,
+  const source_locationt &source_location) const
+{
+  PRECONDITION(!types.empty());
+
+  typet union_type;
+  bool first = true;
+
+  for(auto &type : types)
+  {
+    // decay sets to their element type
+    auto type_decayed =
+      type.id() == ID_smv_set ? to_smv_set_type(type).element_type() : type;
+
+    if(type_decayed.id() == ID_signedbv || type_decayed.id() == ID_unsignedbv)
+      throw errort{}.with_location(source_location)
+        << "sets of word-typed elements are not allowed";
+
+    if(first)
+    {
+      union_type = type_decayed;
+      first = false;
+    }
+    else
+    {
+      union_type = type_union(union_type, type_decayed, source_location);
+    }
+  }
+
+  return smv_set_typet{union_type};
 }
 
 /*******************************************************************\
@@ -1466,35 +1514,13 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
   else if(expr.id() == ID_smv_set || expr.id() == ID_smv_union)
   {
     // a set literal "{ ... }" or "a union b", which both mean the same
-    bool first = true;
-    typet union_type;
+    std::vector<typet> types;
+    types.reserve(expr.operands().size());
 
     for(auto &element : expr.operands())
-    {
-      // SMV set expressions may contain sets, which
-      // is interpreted as union, not as a set of sets.
-      auto &element_type = element.type();
+      types.push_back(element.type());
 
-      // word-typed elements are not allowed
-      if(element_type.id() == ID_signedbv || element_type.id() == ID_unsignedbv)
-        throw errort().with_location(expr.find_source_location())
-          << "sets of word-typed elements are not allowed";
-
-      auto decayed_type = element_type.id() == ID_smv_set
-                            ? to_smv_set_type(element_type).subtype()
-                            : element_type;
-
-      if(first)
-      {
-        union_type = decayed_type;
-        first = false;
-      }
-      else
-        union_type =
-          type_union(union_type, decayed_type, expr.source_location());
-    }
-
-    expr.type() = smv_set_typet{union_type};
+    expr.type() = set_type_union(types, expr.source_location());
   }
   else
   {
