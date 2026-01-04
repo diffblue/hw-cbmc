@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
+#include <ebmc/ebmc_error.h>
+
 #include "expr2verilog.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
@@ -1997,6 +1999,50 @@ void verilog_typecheckt::typecheck()
 
 /*******************************************************************\
 
+Function: copy_module_source
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbolt &copy_module_source(
+  const verilog_parse_treet::itemt module_item,
+  const irep_idt &module_identifier,
+  symbol_table_baset &symbol_table)
+{
+  auto &verilog_module_source = to_verilog_module_source(module_item);
+
+  // create the symbol
+  irep_idt base_name = verilog_module_source.base_name();
+
+  symbolt symbol{module_identifier, module_typet{}, ID_Verilog};
+
+  symbol.base_name = base_name;
+  symbol.pretty_name = base_name;
+  symbol.module=symbol.name;
+  symbol.location = verilog_module_source.source_location();
+
+  symbol.type.add(ID_module_source) = verilog_module_source;
+
+  // put symbol in symbol_table
+
+  symbolt *new_symbol;
+
+  if(symbol_table.move(symbol, new_symbol))
+  {
+    throw ebmc_errort{}.with_location(verilog_module_source.source_location())
+      << "duplicate definition of module " << symbol.base_name;
+  }
+
+  return *new_symbol;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck
 
   Inputs:
@@ -2025,36 +2071,13 @@ bool verilog_typecheck(
     return true;
   }
 
-  auto &verilog_module_source = to_verilog_module_source(*it->second);
-
-  // create the symbol
-  irep_idt base_name = verilog_module_source.base_name();
-
-  symbolt symbol{module_identifier, module_typet{}, ID_Verilog};
-
-  symbol.base_name = base_name;
-  symbol.pretty_name = base_name;
-  symbol.module=symbol.name;
-  symbol.location = verilog_module_source.source_location();
-
-  symbol.type.add(ID_module_source) = verilog_module_source;
-
-  // put symbol in symbol_table
-
-  symbolt *new_symbol;
-
-  if(symbol_table.move(symbol, new_symbol))
-  {
-    messaget message(message_handler);
-    message.error() << "duplicate definition of module " 
-                    << symbol.base_name << messaget::eom;
-    return true;
-  }
+  auto &new_symbol =
+    copy_module_source(*it->second, module_identifier, symbol_table);
 
   verilog_typecheckt verilog_typecheck(
     parse_tree.standard,
     warn_implicit_nets,
-    *new_symbol,
+    new_symbol,
     symbol_table,
     message_handler);
 
