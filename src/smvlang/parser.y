@@ -304,6 +304,7 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_n
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  union_Token
 %left  in_Token
+%left  DOTDOT_Token /* precedence not documented */
 %left  mod_Token /* Precedence from CMU SMV, different from NuSMV */
 %left  LTLT_Token GTGT_Token
 %left  PLUS_Token MINUS_Token
@@ -786,6 +787,7 @@ basic_expr : constant
            | resize_Token '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_resize, $5); }
            | basic_expr union_Token basic_expr    { binary($$, $1, ID_smv_union, $3); }
            | '{' set_body_expr '}'                { $$=$2; stack_expr($$).id(ID_smv_set); }
+           | basic_expr ".." basic_expr           { binary($$, $1, ID_smv_range, $3); }
            | basic_expr in_Token basic_expr       { binary($$, $1, ID_smv_setin, $3); }
            | basic_expr IF_Token basic_expr ':' basic_expr %prec IF_Token
                                                   { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }

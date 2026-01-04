@@ -776,6 +776,10 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_mod)
     return convert_binary(to_mod_expr(src), src.id_string(), precedencet::MULT);
 
+  else if(src.id() == ID_smv_range)
+    return convert_binary(to_smv_range_expr(src), "..", precedencet::UNION);
+  // precedence is unknown
+
   else if(src.id() == ID_smv_set)
     return convert_smv_set(to_smv_set_expr(src));
 

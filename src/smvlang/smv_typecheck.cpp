@@ -401,7 +401,7 @@ mp_integer smv_typecheckt::require_integer_constant(const exprt &expr) const
       << "expected constant expression";
   }
 
-  if(expr.type().id() != ID_integer)
+  if(expr.type().id() != ID_integer && expr.type().id() != ID_range)
   {
     throw errort().with_location(expr.source_location())
       << "expected integer expression";
@@ -1512,6 +1512,21 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
 
     expr.type() = smv_set_typet{union_type};
   }
+  else if(expr.id() == ID_smv_range)
+  {
+    // an integer set given as range "from .. to"
+    auto &range_expr = to_smv_range_expr(expr);
+
+    auto from = require_integer_constant(range_expr.from());
+    auto to = require_integer_constant(range_expr.to());
+
+    // NuSMV errors empty ranges
+    if(from > to)
+      throw errort().with_location(expr.source_location())
+        << "empty ranges are not allowed";
+
+    expr.type() = smv_set_typet{range_typet{from, to}};
+  }
   else
   {
     throw errort().with_location(expr.find_source_location())
@@ -2012,6 +2027,21 @@ exprt smv_typecheckt::set_to_predicate(
       }
 
       return disjunction(disjuncts);
+    }
+    else if(set_expression.id() == ID_smv_range)
+    {
+      // Turn the nondeterministic choice into a constraint.
+      auto &smv_range = to_smv_range_expr(set_expression);
+      auto element_type = to_smv_set_type(set_expression.type()).element_type();
+      auto union_type = type_union(
+        variable.type(), element_type, set_expression.source_location());
+      auto var_casted = typecast_exprt::conditional_cast(variable, union_type);
+      auto lower =
+        typecast_exprt::conditional_cast(smv_range.from(), union_type);
+      auto upper = typecast_exprt::conditional_cast(smv_range.to(), union_type);
+      return and_exprt{
+        binary_relation_exprt{var_casted, ID_ge, lower},
+        binary_relation_exprt{var_casted, ID_le, upper}};
     }
     else if(set_expression.id() == ID_symbol)
     {

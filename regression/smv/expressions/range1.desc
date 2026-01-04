@@ -1,8 +1,9 @@
-KNOWNBUG
+CORE broken-smt-backend
 range1.smv
 
+^\[.*\] 2 in 1 \.\. 3: PROVED .*$
+^\[.*\] !\(4 in 1 \.\. 3\): PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This does not parse.
