@@ -1,0 +1,4 @@
+MODULE main
+
+-- SMV does not allow equality on set types
+SPEC { 1, 2 } = { 1, 2 };

@@ -1,0 +1,7 @@
+CORE
+equality1.smv
+
+^file .* line 4: operator = does not allow set types$
+^EXIT=2$
+^SIGNAL=0$
+--
