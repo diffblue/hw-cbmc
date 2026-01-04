@@ -1,0 +1,4 @@
+MODULE main
+
+-- NuSMV errors empty ranges
+SPEC 2 in 4..3
