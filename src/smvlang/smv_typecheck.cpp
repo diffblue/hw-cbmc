@@ -893,6 +893,11 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
 
     typet op_type = type_union(op0.type(), op1.type(), expr.source_location());
 
+    // no set types
+    if(op_type.id() == ID_smv_set)
+      throw errort{}.with_location(expr.source_location())
+        << "operator " << expr.id() << " does not allow set types";
+
     convert_expr_to(op0, op_type);
     convert_expr_to(op1, op_type);
 
