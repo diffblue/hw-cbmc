@@ -463,7 +463,8 @@ exprt verilog_synthesist::expand_function_call(
     synth_statement(assignment);
   }
 
-  synth_statement(to_verilog_statement(symbol.value));
+  for(auto &statement : symbol.value.operands())
+    synth_statement(to_verilog_statement(statement));
 
   // replace function call by return value symbol
   const symbolt &return_symbol=
@@ -3139,7 +3140,8 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       }
     }
 
-    synth_statement(to_verilog_statement(symbol.value));
+    for(auto &statement : symbol.value.operands())
+      synth_statement(to_verilog_statement(statement));
 
     // do assignments to output parameters
     for(unsigned i=0; i<parameters.size(); i++)

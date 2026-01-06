@@ -1131,14 +1131,30 @@ public:
     return (const declarationst &)(find(ID_verilog_declarations).get_sub());
   }
 
-  verilog_statementt &body()
+  class bodyt : public exprt
   {
-    return static_cast<verilog_statementt &>(add(ID_body));
+  public:
+    using statementst = std::vector<verilog_statementt>;
+
+    statementst &statements()
+    {
+      return (statementst &)(operands());
+    }
+
+    const statementst &statements() const
+    {
+      return (const statementst &)(operands());
+    }
+  };
+
+  bodyt &body()
+  {
+    return static_cast<bodyt &>(add(ID_body));
   }
 
-  const verilog_statementt &body() const
+  const bodyt &body() const
   {
-    return static_cast<const verilog_statementt &>(find(ID_body));
+    return static_cast<const bodyt &>(find(ID_body));
   }
 };
 

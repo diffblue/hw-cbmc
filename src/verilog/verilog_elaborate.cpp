@@ -633,7 +633,8 @@ void verilog_typecheckt::collect_symbols(
   for(auto &sub_decl : decl.declarations())
     collect_symbols(sub_decl);
 
-  collect_symbols(decl.body());
+  for(auto &statement : decl.body().statements())
+    collect_symbols(statement);
 
   function_or_task_name = "";
 }
