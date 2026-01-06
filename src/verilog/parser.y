@@ -2278,7 +2278,8 @@ function_body_declaration:
           function_identifier
                 { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
           ';'
-          tf_item_declaration_brace statement
+          tf_item_declaration_brace
+          function_statement_or_null_brace
           TOK_ENDFUNCTION
                 { init($$, ID_verilog_function_decl);
                   addswap($$, ID_type, $1);
@@ -2292,7 +2293,8 @@ function_body_declaration:
           function_identifier
                 { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
           '(' tf_port_list_opt ')' ';'
-          tf_item_declaration_brace statement
+          block_item_declaration_brace
+          function_statement_or_null_brace
           TOK_ENDFUNCTION
                 { init($$, ID_verilog_function_decl);
                   addswap($$, ID_type, $1);
@@ -2333,7 +2335,8 @@ task_declaration:
                 { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
           ';'
           tf_item_declaration_brace
-          statement_or_null TOK_ENDTASK
+          task_statement_or_null_brace
+          TOK_ENDTASK
                 { init($$, ID_verilog_task_decl);
                   addswap($$, ID_symbol, $2);
                   addswap($$, ID_verilog_declarations, $5);
@@ -2344,7 +2347,8 @@ task_declaration:
                 { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
           '(' tf_port_list_opt ')' ';'
           tf_item_declaration_brace
-          statement_or_null TOK_ENDTASK
+          task_statement_or_null_brace
+          TOK_ENDTASK
                 { init($$, ID_verilog_task_decl);
                   addswap($$, ID_symbol, $2);
                   addswap($$, ID_ports, $5);
@@ -2352,6 +2356,13 @@ task_declaration:
                   addswap($$, ID_body, $9);
                   pop_scope();
                 }
+        ;
+
+task_statement_or_null_brace:
+          statement_or_null
+                { init($$); mto($$, $1); }
+        | task_statement_or_null_brace statement_or_null
+                { $$ = $1; mto($$, $2); }
         ;
 
 task_prototype: TOK_TASK task_identifier
@@ -3768,6 +3779,25 @@ statement_item:
         ;
 
 function_statement: statement
+        ;
+
+function_statement_or_null:
+          function_statement
+        | attribute_instance_brace ';'
+                { init($$, ID_skip);
+                  add_attributes($$, $1); }
+        ;
+
+function_statement_or_null_brace:
+          function_statement_or_null
+                { init($$); mto($$, $1); }
+        | function_statement_or_null_brace function_statement_or_null
+                { $$ = $1; mto($$, $2); }
+        ;
+
+function_statement_brace:
+          /* optional */
+        | function_statement_brace function_statement
         ;
 
 system_task_name: TOK_SYSIDENT

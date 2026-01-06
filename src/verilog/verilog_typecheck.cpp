@@ -304,7 +304,8 @@ void verilog_typecheckt::convert_function_or_task(
   for(auto &inner_decl : decl.declarations())
     convert_decl(inner_decl);
 
-  convert_statement(decl.body());
+  for(auto &statement : decl.body().statements())
+    convert_statement(statement);
 
   function_or_task_name="";
   
@@ -348,8 +349,9 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   for(auto &inner_decl : decl.declarations())
     convert_decl(inner_decl);
 
-  convert_statement(decl.body());
-  
+  for(auto &statement : decl.body().statements())
+    convert_statement(statement);
+
   const code_typet &code_type=
     to_code_type(function_symbol.type);
 
@@ -387,7 +389,8 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   }
 
   // interpret it
-  verilog_interpreter(decl.body());
+  for(auto &statement : decl.body().statements())
+    verilog_interpreter(statement);
 
   function_or_task_name="";
   
