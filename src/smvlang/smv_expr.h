@@ -493,4 +493,71 @@ inline smv_range_exprt &to_smv_range_expr(exprt &expr)
   return static_cast<smv_range_exprt &>(expr);
 }
 
+/// SMV's case ... esac expression
+class smv_cases_exprt : public multi_ary_exprt
+{
+public:
+  smv_cases_exprt() : multi_ary_exprt{ID_smv_cases, {}, typet{}}
+  {
+  }
+
+  class caset : public binary_exprt
+  {
+  public:
+    caset(exprt _condition, exprt _value)
+      : binary_exprt{std::move(_condition), ID_case, std::move(_value), typet{}}
+    {
+    }
+
+    const exprt &condition() const
+    {
+      return op0();
+    }
+
+    exprt &condition()
+    {
+      return op0();
+    }
+
+    const exprt &value() const
+    {
+      return op1();
+    }
+
+    exprt &value()
+    {
+      return op1();
+    }
+  };
+
+  using casest = std::vector<caset>;
+
+  const casest &cases() const
+  {
+    return (const casest &)(operands());
+  }
+
+  casest &cases()
+  {
+    return (casest &)(operands());
+  }
+
+  /// a lowering to a cond_exprt
+  cond_exprt lower() const;
+};
+
+inline const smv_cases_exprt &to_smv_cases_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_cases);
+  smv_cases_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const smv_cases_exprt &>(expr);
+}
+
+inline smv_cases_exprt &to_smv_cases_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_cases);
+  smv_cases_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<smv_cases_exprt &>(expr);
+}
+
 #endif // CPROVER_SMV_EXPR_H

@@ -2187,32 +2187,16 @@ void smv_typecheckt::convert(exprt &expr)
   }
   else if(expr.id() == ID_smv_cases) // cases
   {
-    if(expr.operands().size()<1)
+    auto &cases_expr = to_smv_cases_expr(expr);
+
+    if(cases_expr.cases().empty())
     {
-      throw errort().with_location(expr.find_source_location())
-        << "Expected at least one operand for " << expr.id() << " expression";
+      throw errort().with_location(cases_expr.source_location())
+        << "Expected at least one case for cases expression";
     }
 
-    exprt tmp;
-    tmp.operands().swap(expr.operands());
-    expr.reserve_operands(tmp.operands().size()*2);
-
-    for(auto &op : tmp.operands())
-    {
-      if(op.operands().size() != 2)
-      {
-        throw errort().with_location(op.find_source_location())
-          << "case expected to have two operands";
-      }
-
-      exprt &condition = to_binary_expr(op).op0();
-      exprt &value = to_binary_expr(op).op1();
-
-      expr.add_to_operands(std::move(condition));
-      expr.add_to_operands(std::move(value));
-    }
-
-    expr.id(ID_cond);
+    // rewrite into a 'cond' expression
+    expr = cases_expr.lower();
   }
 }
 
