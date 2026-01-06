@@ -20,23 +20,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_expr.h"
 
 bool verilog_typecheck(
-  const verilog_parse_treet &parse_tree,
   symbol_table_baset &,
   const irep_idt &module_identifier,
+  verilog_standardt,
   bool warn_implicit_nets,
   message_handlert &message_handler);
-
-bool verilog_typecheck(
-  symbol_table_baset &,
-  const irep_idt &module_identifier,
-  const exprt::operandst &parameters,
-  message_handlert &message_handler);
-
-bool verilog_typecheck(
-  symbol_table_baset &,
-  const verilog_packaget &verilog_package,
-  verilog_standardt,
-  message_handlert &);
 
 /// copies the source of the given Verilog module or package
 /// into the symbol table

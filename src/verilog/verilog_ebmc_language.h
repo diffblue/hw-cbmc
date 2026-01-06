@@ -48,6 +48,8 @@ protected:
 
   parse_treest parse();
 
+  void copy_parse_tree(const parse_treet &, symbol_tablet &);
+
   // base_name of the top-level module
   irep_idt top_level_module(const parse_treest &) const;
 
@@ -65,7 +67,7 @@ protected:
 
   std::map<irep_idt, modulet> module_map;
 
-  transition_systemt typecheck(const parse_treest &);
+  transition_systemt typecheck(const parse_treest &, symbol_tablet &&);
   void typecheck_module(modulet &, symbol_tablet &);
 };
 

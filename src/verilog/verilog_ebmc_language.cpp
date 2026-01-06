@@ -176,9 +176,9 @@ void verilog_ebmc_languaget::typecheck_module(
   const bool warn_implicit_nets = cmdline.isset("warn-implicit-nets");
 
   if(verilog_typecheck(
-       module.parse_tree,
        symbol_table,
        module.identifier,
+       module.parse_tree.standard,
        warn_implicit_nets,
        message_handler))
   {
@@ -208,8 +208,9 @@ void verilog_ebmc_languaget::typecheck_module(
   module.in_progress = false;
 }
 
-transition_systemt
-verilog_ebmc_languaget::typecheck(const parse_treest &parse_trees)
+transition_systemt verilog_ebmc_languaget::typecheck(
+  const parse_treest &parse_trees,
+  symbol_tablet &&symbol_table)
 {
   // set up the module map
   for(auto &parse_tree : parse_trees)
@@ -226,6 +227,8 @@ verilog_ebmc_languaget::typecheck(const parse_treest &parse_trees)
 
   // now type check
   transition_systemt transition_system;
+
+  transition_system.symbol_table = std::move(symbol_table);
 
   for(auto &[_, module] : module_map)
   {
@@ -409,6 +412,27 @@ show_modules(const verilog_ebmc_languaget::parse_treest &parse_trees)
   return result;
 }
 
+void verilog_ebmc_languaget::copy_parse_tree(
+  const parse_treet &parse_tree,
+  symbol_tablet &dest)
+{
+  for(auto &item : parse_tree.items)
+  {
+    if(item.id() == ID_verilog_module || item.id() == ID_verilog_checker)
+    {
+      auto identifier =
+        verilog_module_symbol(to_verilog_module_source(item).base_name());
+      copy_module_source(item, identifier, dest);
+    }
+    else if(item.id() == ID_verilog_package)
+    {
+      auto identifier =
+        verilog_package_identifier(to_verilog_module_source(item).base_name());
+      copy_module_source(item, identifier, dest);
+    }
+  }
+}
+
 std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 {
   messaget message(message_handler);
@@ -455,12 +479,20 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   }
 
   //
+  // copy the parse trees into the symbol table
+  //
+  symbol_tablet symbol_table;
+
+  for(auto &parse_tree : parse_trees)
+    copy_parse_tree(parse_tree, symbol_table);
+
+  //
   // type checking
   //
 
   message.status() << "Converting" << messaget::eom;
 
-  auto transition_system = typecheck(parse_trees);
+  auto transition_system = typecheck(parse_trees, std::move(symbol_table));
 
   if(cmdline.isset("show-symbol-table"))
   {
