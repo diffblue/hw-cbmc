@@ -38,6 +38,13 @@ bool verilog_typecheck(
   verilog_standardt,
   message_handlert &);
 
+/// copies the source of the given Verilog module or package
+/// into the symbol table
+symbolt &copy_module_source(
+  const verilog_parse_treet::itemt module_item,
+  const irep_idt &module_identifier,
+  symbol_table_baset &);
+
 /*******************************************************************\
 
    Class: verilog_typecheckt
