@@ -961,6 +961,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_smv_bool)
     return convert_function_application("bool", src);
 
+  else if(src.id() == ID_smv_cases)
+    return convert_cond(to_smv_cases_expr(src).lower());
+
   else if(src.id() == ID_smv_count)
     return convert_function_application("count", src);
 
