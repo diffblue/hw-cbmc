@@ -647,7 +647,8 @@ module_identifier_with_scope:
           module_identifier
           {
             $$ = $1;
-            push_scope(stack_expr($1).id(), ".", verilog_scopet::MODULE);
+            auto base_name = stack_expr($1).get(ID_base_name);
+            push_scope(base_name, ".", verilog_scopet::MODULE);
           }
         ;
 
@@ -3163,7 +3164,8 @@ name_of_gate_instance:
 module_instantiation:
           module_identifier parameter_value_assignment_opt hierarchical_instance_brace ';'
                 { init($$, ID_inst);
-                  addswap($$, ID_module, $1);
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_module, base_name);
                   addswap($$, ID_parameter_assignments, $2);
                   swapop($$, $3); }
         ;
@@ -4795,7 +4797,7 @@ instance_identifier: TOK_NON_TYPE_IDENTIFIER;
 
 interface_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-module_identifier: TOK_NON_TYPE_IDENTIFIER;
+module_identifier: non_type_identifier;
 
 topmodule_identifier: TOK_NON_TYPE_IDENTIFIER;
 
@@ -4806,7 +4808,7 @@ endmodule_identifier_opt:
 
 clocking_identifier: TOK_NON_TYPE_IDENTIFIER;
 
-checker_identifier: TOK_NON_TYPE_IDENTIFIER;
+checker_identifier: non_type_identifier;
 
 net_identifier: identifier;
 

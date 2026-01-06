@@ -33,7 +33,7 @@ exprt verilog_parse_treet::create_module(
      ports.get_sub().front().is_nil())
     ports.clear();
 
-  verilog_module_sourcet new_module{name.id()};
+  verilog_module_sourcet new_module{name.get(ID_base_name)};
 
   new_module.add(ID_verilog_parameter_port_decls) =
     std::move(parameter_port_decls);
