@@ -1,0 +1,10 @@
+KNOWNBUG
+assignment.sv
+--smv-netlist
+^EXIT=0$
+^SIGNAL=0$
+--
+^LTLSPEC G TRUE$
+--
+Outputs "LTLSPEC G TRUE" despite the property being incorrect.
+

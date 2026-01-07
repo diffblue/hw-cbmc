@@ -1,0 +1,10 @@
+KNOWNBUG
+gen_for_variable_declaration.sv
+
+^EXIT=10$
+^SIGNAL=0$
+^no properties
+--
+-- 
+Does not recognize declaration of genvar inside generate-for header
+
