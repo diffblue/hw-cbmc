@@ -1074,33 +1074,35 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
       PRECONDITION(false);
     }
   }
-  else if(expr.id()==ID_cond)
+  else if(expr.id() == ID_case)
+  {
+    // not typed, operand of smv_cases
+  }
+  else if(expr.id() == ID_smv_cases)
   {
     // case ... esac
-    bool condition = true;
+    auto &cases_expr = to_smv_cases_expr(expr);
 
-    expr.type().make_nil();
-
-    for(auto &op : expr.operands())
+    if(cases_expr.cases().empty())
     {
-      if(!condition)
-        expr.type() =
-          type_union(expr.type(), op.type(), expr.source_location());
+      throw errort().with_location(cases_expr.source_location())
+        << "Expected at least one case for cases expression";
+    }
 
-      condition = !condition;
+    // determine the result type
+    cases_expr.type().make_nil();
+
+    for(auto &case_expr : cases_expr.cases())
+    {
+      cases_expr.type() = type_union(
+        cases_expr.type(), case_expr.value().type(), expr.source_location());
     }
 
     // go again, re-type the operands
-    condition = true;
-
-    for(auto &op : expr.operands())
+    for(auto &case_expr : cases_expr.cases())
     {
-      if(condition)
-        convert_expr_to(op, bool_typet{});
-      else
-        convert_expr_to(op, expr.type());
-
-      condition = !condition;
+      convert_expr_to(case_expr.condition(), bool_typet{});
+      convert_expr_to(case_expr.value(), cases_expr.type());
     }
   }
   else if(
@@ -1732,6 +1734,12 @@ void smv_typecheckt::lower_node(exprt &expr) const
     expr = extractbits_exprt{
       bit_selection.op0(), bit_selection.op2(), bit_selection.type()};
   }
+  else if(expr.id() == ID_smv_cases)
+  {
+    // rewrite into a 'cond' expression
+    auto cond_expr = to_smv_cases_expr(expr).lower();
+    expr = std::move(cond_expr);
+  }
 
   // lower the type
   lower(expr.type());
@@ -2184,19 +2192,6 @@ void smv_typecheckt::convert(exprt &expr)
   {
     throw errort().with_location(expr.source_location())
       << "no support for self";
-  }
-  else if(expr.id() == ID_smv_cases) // cases
-  {
-    auto &cases_expr = to_smv_cases_expr(expr);
-
-    if(cases_expr.cases().empty())
-    {
-      throw errort().with_location(cases_expr.source_location())
-        << "Expected at least one case for cases expression";
-    }
-
-    // rewrite into a 'cond' expression
-    expr = cases_expr.lower();
   }
 }
 
