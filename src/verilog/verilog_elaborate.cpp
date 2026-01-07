@@ -938,9 +938,7 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
     {
       // elaborate_generate_item calls elaborate_level
       // recursively.
-      auto generated_items = elaborate_generate_item(module_item);
-      result.insert(
-        result.end(), generated_items.begin(), generated_items.end());
+      elaborate_generate_item(module_item, result);
     }
     else
       result.push_back(module_item);
