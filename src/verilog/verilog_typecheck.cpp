@@ -2057,32 +2057,17 @@ Function: verilog_typecheck
 \*******************************************************************/
 
 bool verilog_typecheck(
-  const verilog_parse_treet &parse_tree,
   symbol_table_baset &symbol_table,
   const irep_idt &module_identifier,
+  verilog_standardt standard,
   bool warn_implicit_nets,
   message_handlert &message_handler)
 {
-  verilog_parse_treet::item_mapt::const_iterator it =
-    parse_tree.item_map.find(id2string(verilog_item_key(module_identifier)));
-
-  if(it == parse_tree.item_map.end())
-  {
-    messaget message(message_handler);
-    message.error() << "module `" << module_identifier << "' not found"
-                    << messaget::eom;
-    return true;
-  }
-
-  auto &new_symbol =
-    copy_module_source(*it->second, module_identifier, symbol_table);
+  auto symbol = symbol_table.get_writeable(module_identifier);
+  CHECK_RETURN(symbol != nullptr);
 
   verilog_typecheckt verilog_typecheck(
-    parse_tree.standard,
-    warn_implicit_nets,
-    new_symbol,
-    symbol_table,
-    message_handler);
+    standard, warn_implicit_nets, *symbol, symbol_table, message_handler);
 
   return verilog_typecheck.typecheck_main();
 }

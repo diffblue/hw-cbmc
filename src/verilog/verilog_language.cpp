@@ -173,27 +173,7 @@ bool verilog_languaget::typecheck(
   const std::string &module,
   message_handlert &message_handler)
 {
-  if(module=="") return false;
-
-  if(verilog_typecheck(
-       parse_tree, symbol_table, module, warn_implicit_nets, message_handler))
-    return true;
-
-  messaget message(message_handler);
-  message.debug() << "Synthesis " << module << messaget::eom;
-
-  if(verilog_synthesis(
-       symbol_table,
-       module,
-       parse_tree.standard,
-       ignore_initial,
-       initial_zero,
-       message_handler))
-  {
-    return true;
-  }
-
-  return false;
+  return true;
 }
 
 /*******************************************************************\
