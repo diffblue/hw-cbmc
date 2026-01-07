@@ -1,0 +1,10 @@
+KNOWNBUG
+array_assignment.sv
+--reset rst --smv-netlist 
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Outputs an SMV with an undeclared nondet. When declaring the nondet, nuXmv falsifies the property depsite it being correct.
+
