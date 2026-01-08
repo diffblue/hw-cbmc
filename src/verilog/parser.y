@@ -1938,13 +1938,17 @@ delay_value:
 // A.2.3 Declaration lists
 
 list_of_genvar_identifiers:
-          genvar_identifier
+          // must be any_identifier to allow re-use of typedef identifiers
+          any_identifier
                 { init($$);
+                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::OTHER);
                   stack_expr($1).id(ID_declarator);
                   mto($$, $1);
                 }
-        | list_of_genvar_identifiers ',' genvar_identifier
+          // must be any_identifier to allow re-use of typedef identifiers
+        | list_of_genvar_identifiers ',' any_identifier
                 { $$=$1;
+                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::OTHER);
                   stack_expr($3).id(ID_declarator);
                   mto($$, $3);
                 }
