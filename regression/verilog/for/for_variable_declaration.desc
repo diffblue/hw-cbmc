@@ -1,10 +1,8 @@
-KNOWNBUG
+CORE
 for_variable_declaration.sv
 
+^no properties$
 ^EXIT=10$
 ^SIGNAL=0$
-^no properties
 --
 --
-Declaration of loop index in for-loop header is not recognized
-
