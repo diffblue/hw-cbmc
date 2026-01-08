@@ -2922,7 +2922,34 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
   }
 
   for(auto &init : statement.initialization())
-    synth_statement(init);
+  {
+    // either an assignment or a declaration with assignment
+    if(
+      init.id() == ID_verilog_blocking_assign ||
+      init.id() == ID_verilog_non_blocking_assign)
+    {
+      synth_statement(init);
+    }
+    else if(init.id() == ID_decl)
+    {
+      // turn into a blocking assignment
+      auto &decl = to_verilog_decl(init);
+      for(auto &declarator : decl.declarators())
+      {
+        DATA_INVARIANT(
+          declarator.value().is_not_nil(),
+          "for-init declarator must have value");
+        auto assignment = verilog_blocking_assignt{
+          declarator.symbol_expr(), declarator.value()};
+        synth_assign(assignment);
+      }
+    }
+    else
+    {
+      DATA_INVARIANT_WITH_DIAGNOSTICS(
+        false, "unexpected initialization in for loop", init.pretty());
+    }
+  }
 
   while(true)
   {
