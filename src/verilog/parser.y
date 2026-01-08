@@ -3565,6 +3565,13 @@ list_of_net_assignments:
                 { $$=$1;    mto($$, $3); }
         ;
 
+list_of_variable_assignments:
+          variable_assignment
+                { init($$); mto($$, $1); }
+        | list_of_variable_assignments ',' variable_assignment
+                { $$=$1;    mto($$, $3); }
+        ;
+
 net_assignment: net_lvalue '=' expression
                 { init($$, ID_equal); mto($$, $1); mto($$, $3); }
         ;
@@ -4019,7 +4026,14 @@ loop_statement:
                 { init($$, ID_for); mto($$, $3); mto($$, $5); mto($$, $7); mto($$, $9); }
         ;
 
-for_initialization: blocking_assignment
+for_initialization:
+          list_of_variable_assignments
+                { // Turn the variable_assignments into statements
+                  // by changing the id to ID_verilog_blocking_assign
+                  auto &assignments = stack_expr($1).operands();
+                  for(auto &assignment : assignments)
+                    assignment.id(ID_verilog_blocking_assign);
+                }
         ;
 
 for_step: for_step_assignment

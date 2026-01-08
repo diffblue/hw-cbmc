@@ -1391,7 +1391,8 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
       << "for expected to have four operands";
   }
 
-  convert_statement(statement.initialization());
+  for(auto &init : statement.initialization())
+    convert_statement(init);
 
   exprt &condition=statement.condition();
   convert_expr(condition);

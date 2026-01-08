@@ -1601,15 +1601,17 @@ public:
   {
     operands().resize(4);
   }
-  
-  verilog_statementt &initialization()
+
+  using statementst = std::vector<verilog_statementt>;
+
+  statementst &initialization()
   {
-    return static_cast<verilog_statementt &>(op0());
+    return (statementst &)(op0().operands());
   }
 
-  const verilog_statementt &initialization() const
+  const statementst &initialization() const
   {
-    return static_cast<const verilog_statementt &>(op0());
+    return (const statementst &)(op0().operands());
   }
   
   exprt &condition()
