@@ -8,6 +8,7 @@
 * SystemVerilog: fix for type parameters
 * SystemVerilog: type parameter ports
 * SystemVerilog: fix for checkers with multiple ports
+* SystemVerilog: for loops with multiple initializations
 * SMV: word constants
 * SMV: IVAR declarations
 * SMV: bit selection operator

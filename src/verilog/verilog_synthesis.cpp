@@ -2921,7 +2921,8 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
       << "for expected to have four operands";
   }
 
-  synth_statement(statement.initialization());
+  for(auto &init : statement.initialization())
+    synth_statement(init);
 
   while(true)
   {
