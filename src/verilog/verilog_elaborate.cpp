@@ -408,32 +408,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       }
     }
   }
-  else if(decl_class == ID_verilog_genvar)
-  {
-    symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
-
-    symbol.module = module_identifier;
-    symbol.value.make_nil();
-
-    for(auto &declarator : decl.declarators())
-    {
-      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
-
-      symbol.base_name = declarator.base_name();
-      symbol.location = declarator.source_location();
-
-      if(symbol.base_name.empty())
-        throw errort().with_location(decl.source_location())
-          << "empty symbol name";
-
-      symbol.name = hierarchical_identifier(symbol.base_name);
-      symbol.pretty_name = strip_verilog_prefix(symbol.name);
-
-      genvars[symbol.base_name] = -1;
-
-      add_symbol(symbol);
-    }
-  }
   else if(
     decl_class == ID_wire || decl_class == ID_supply0 ||
     decl_class == ID_supply1 || decl_class == ID_triand ||
@@ -832,6 +806,9 @@ void verilog_typecheckt::collect_symbols(
   {
     collect_symbols(to_verilog_function_or_task_decl(module_item));
   }
+  else if(module_item.id() == ID_verilog_generate_decl)
+  {
+  }
   else if(
     module_item.id() == ID_verilog_always ||
     module_item.id() == ID_verilog_always_comb ||
@@ -956,6 +933,7 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
   {
     if(
       module_item.id() == ID_generate_block ||
+      module_item.id() == ID_verilog_generate_decl ||
       module_item.id() == ID_generate_for || module_item.id() == ID_generate_if)
     {
       // elaborate_generate_item calls elaborate_level

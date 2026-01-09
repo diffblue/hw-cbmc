@@ -419,14 +419,6 @@ Function: verilog_typecheckt::convert_decl
 
 void verilog_typecheckt::convert_decl(verilog_declt &decl)
 {
-  irep_idt decl_class=decl.get_class();
-
-  if(decl_class == ID_verilog_genvar)
-  {
-    // ignore here
-    return;
-  }
-
   for(auto &declarator : decl.declarators())
   {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
@@ -1685,6 +1677,9 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id()==ID_decl)
   {
     convert_decl(to_verilog_decl(module_item));
+  }
+  else if(module_item.id() == ID_verilog_generate_decl)
+  {
   }
   else if(
     module_item.id() == ID_verilog_function_decl ||
