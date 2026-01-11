@@ -195,7 +195,7 @@ void verilog_typecheckt::set_parameter_values(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterize_module
+Function: verilog_typecheckt::parameterized_module_identifier
 
   Inputs:
 
@@ -205,31 +205,10 @@ Function: verilog_typecheckt::parameterize_module
 
 \*******************************************************************/
 
-irep_idt verilog_typecheckt::parameterize_module(
-  const source_locationt &location,
+irep_idt verilog_typecheckt::parameterized_module_identifier(
   const irep_idt &module_identifier,
-  const exprt::operandst &parameter_assignments,
-  const std::map<irep_idt, exprt> &instance_defparams)
+  const std::list<exprt> &parameter_values) const
 {
-  // No parameters assigned? Nothing to do.
-  if(parameter_assignments.empty() && instance_defparams.empty())
-    return module_identifier;
-
-  // find base symbol
-  
-  symbol_tablet::symbolst::const_iterator it=
-    symbol_table.symbols.find(module_identifier);
-  
-  if(it==symbol_table.symbols.end())
-    throw errort().with_location(location) << "module not found";
-
-  const symbolt &base_symbol=it->second;
-
-  auto parameter_values = get_parameter_values(
-    to_verilog_module_source(base_symbol.type.find(ID_module_source)),
-    parameter_assignments,
-    instance_defparams);
-
   // Create full parameterized module name by appending a suffix
   // to the name of the instantiated module.
   std::string suffix="(";
@@ -262,7 +241,50 @@ irep_idt verilog_typecheckt::parameterize_module(
 
   suffix+=')';
 
-  irep_idt new_module_identifier=id2string(module_identifier)+suffix;
+  return id2string(module_identifier) + suffix;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::parameterize_module
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt verilog_typecheckt::parameterize_module(
+  const source_locationt &location,
+  const irep_idt &module_identifier,
+  const exprt::operandst &parameter_assignments,
+  const std::map<irep_idt, exprt> &instance_defparams)
+{
+  // No parameters assigned? Nothing to do.
+  if(parameter_assignments.empty() && instance_defparams.empty())
+    return module_identifier;
+
+  // find base symbol
+
+  symbol_tablet::symbolst::const_iterator it =
+    symbol_table.symbols.find(module_identifier);
+
+  if(it == symbol_table.symbols.end())
+    throw errort().with_location(location) << "module not found";
+
+  const symbolt &base_symbol = it->second;
+
+  auto parameter_values = get_parameter_values(
+    to_verilog_module_source(base_symbol.type.find(ID_module_source)),
+    parameter_assignments,
+    instance_defparams);
+
+  // Create full parameterized module name by appending a suffix
+  // to the name of the instantiated module.
+  auto new_module_identifier =
+    parameterized_module_identifier(module_identifier, parameter_values);
 
   if(symbol_table.symbols.find(new_module_identifier)!=
      symbol_table.symbols.end())
@@ -303,4 +325,3 @@ irep_idt verilog_typecheckt::parameterize_module(
 
   return new_module_identifier;
 }
-
