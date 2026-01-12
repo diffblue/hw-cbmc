@@ -331,14 +331,11 @@ void convert_trans_to_netlistt::operator()(
       v_it!=dest.var_map.map.end();
       v_it++)
   {
-    bv_varidt bv_varid;
-    bv_varid.id=v_it->first;
     var_mapt::vart &var=v_it->second;
 
-    for(bv_varid.bit_nr=0;
-        bv_varid.bit_nr<var.bits.size();
-        bv_varid.bit_nr++)
+    for(std::size_t bit_nr = 0; bit_nr < var.bits.size(); bit_nr++)
     {
+      bv_varidt bv_varid{v_it->first, bit_nr};
       var_mapt::vart::bitt &bit=var.bits[bv_varid.bit_nr];
       lhs_entryt &entry=lhs_map[bv_varid];
       entry.bit=&bit;
@@ -395,13 +392,11 @@ void convert_trans_to_netlistt::operator()(
       
       if(it==dest.var_map.reverse_map.end())
       {
-        bv_varidt varid;
-        varid.id="nondet";
-        varid.bit_nr=dest.var_map.nondets.size();
+        bv_varidt varid{"nondet", dest.var_map.nondets.size()};
         var_mapt::vart &var=dest.var_map.map[varid.id];
         var.add_bit().current=literalt(n, false);
         var.vartype=var_mapt::vart::vartypet::NONDET;
-        dest.var_map.reverse_map[n]=varid;
+        dest.var_map.reverse_map.emplace(n, varid);
         dest.var_map.nondets.insert(n);
       }
     }
@@ -603,15 +598,12 @@ void convert_trans_to_netlistt::convert_lhs_rec(
   PRECONDITION(from <= to);
 
   if(expr.id()==ID_symbol)
-  { 
-    bv_varidt bv_varid;
-    
-    bv_varid.id=to_symbol_expr(expr).get_identifier();
+  {
+    auto identifier = to_symbol_expr(expr).get_identifier();
 
-    for(bv_varid.bit_nr=from;
-        bv_varid.bit_nr<=to;
-        bv_varid.bit_nr++)
+    for(std::size_t bit_nr = from; bit_nr <= to; bit_nr++)
     {
+      bv_varidt bv_varid{identifier, bit_nr};
       lhs_mapt::iterator it=lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
@@ -772,14 +764,11 @@ void convert_trans_to_netlistt::add_equality_rec(
      lhs.id()==ID_symbol)
   { 
     bool next=lhs.id()==ID_next_symbol;
+    auto identifier = lhs.get(ID_identifier);
 
-    bv_varidt bv_varid;
-    bv_varid.id=lhs.get(ID_identifier);
-
-    for(bv_varid.bit_nr=lhs_from;
-        bv_varid.bit_nr!=(lhs_to+1);
-        bv_varid.bit_nr++)
+    for(std::size_t bit_nr = lhs_from; bit_nr != (lhs_to + 1); bit_nr++)
     {
+      bv_varidt bv_varid{identifier, bit_nr};
       lhs_mapt::iterator it=
         lhs_map.find(bv_varid);
 
