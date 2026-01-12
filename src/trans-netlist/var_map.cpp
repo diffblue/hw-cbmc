@@ -59,7 +59,7 @@ void var_mapt::add(
   
   if(var.is_latch() || var.is_input())
   {
-    reverse_map.emplace(v_current, bv_varidt{id, bit_nr});
+    reverse_map.emplace(v_current, bv_varidt{id, bit_nr, false});
   }
 }
 
