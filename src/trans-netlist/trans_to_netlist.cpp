@@ -335,7 +335,7 @@ void convert_trans_to_netlistt::operator()(
 
     for(std::size_t bit_nr = 0; bit_nr < var.bits.size(); bit_nr++)
     {
-      bv_varidt bv_varid{v_it->first, bit_nr};
+      bv_varidt bv_varid{v_it->first, bit_nr, false};
       var_mapt::vart::bitt &bit=var.bits[bv_varid.bit_nr];
       lhs_entryt &entry=lhs_map[bv_varid];
       entry.bit=&bit;
@@ -392,7 +392,7 @@ void convert_trans_to_netlistt::operator()(
       
       if(it==dest.var_map.reverse_map.end())
       {
-        bv_varidt varid{"nondet", dest.var_map.nondets.size()};
+        bv_varidt varid{"nondet", dest.var_map.nondets.size(), false};
         var_mapt::vart &var=dest.var_map.map[varid.id];
         var.add_bit().current=literalt(n, false);
         var.vartype=var_mapt::vart::vartypet::NONDET;
@@ -603,7 +603,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
 
     for(std::size_t bit_nr = from; bit_nr <= to; bit_nr++)
     {
-      bv_varidt bv_varid{identifier, bit_nr};
+      bv_varidt bv_varid{identifier, bit_nr, false};
       lhs_mapt::iterator it=lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
@@ -768,7 +768,7 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     for(std::size_t bit_nr = lhs_from; bit_nr != (lhs_to + 1); bit_nr++)
     {
-      bv_varidt bv_varid{identifier, bit_nr};
+      bv_varidt bv_varid{identifier, bit_nr, false};
       lhs_mapt::iterator it=
         lhs_map.find(bv_varid);
 

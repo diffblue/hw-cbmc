@@ -286,7 +286,7 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
           bit_nr<it.second.bits.size();
           bit_nr++)
       {
-        bv_varidt bv_varid(it.first, bit_nr);
+        bv_varidt bv_varid{it.first, bit_nr, false};
         vars[bv_varid].is_input=
           it.second.is_input() || it.second.is_nondet();
       }
