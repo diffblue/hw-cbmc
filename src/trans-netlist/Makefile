@@ -13,6 +13,7 @@ SRC = aig.cpp \
       netlist_boolbv.cpp \
       smv_netlist.cpp \
       trans_to_netlist.cpp \
+      trans_to_netlist_simple.cpp \
       trans_trace.cpp \
       trans_trace_netlist.cpp \
       unwind_netlist.cpp \

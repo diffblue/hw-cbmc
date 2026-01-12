@@ -14,7 +14,10 @@ Author: Daniel Kroening, dkr@amazon.com
 
 class netlistt;
 
-netlistt
-make_netlist(transition_systemt &, ebmc_propertiest &, message_handlert &);
+netlistt make_netlist(
+  transition_systemt &,
+  ebmc_propertiest &,
+  const cmdlinet &,
+  message_handlert &);
 
 #endif // CPROVER_EBMC_NETLIST_H

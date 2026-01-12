@@ -229,7 +229,8 @@ property_checker_resultt bit_level_bmc(
     // make net-list
     message.status() << "Generating Netlist" << messaget::eom;
 
-    auto netlist = make_netlist(transition_system, properties, message_handler);
+    auto netlist =
+      make_netlist(transition_system, properties, cmdline, message_handler);
 
     message.statistics() << "Latches: " << netlist.var_map.latches.size()
                          << ", nodes: " << netlist.number_of_nodes()
