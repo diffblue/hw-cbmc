@@ -17,8 +17,8 @@ class bv_varidt
 {
 public:
   irep_idt id;
-  unsigned bit_nr;
-  
+  std::size_t bit_nr;
+
   friend bool operator==(const bv_varidt &i1, const bv_varidt &i2)
   {
     return i1.id==i2.id && i1.bit_nr==i2.bit_nr;
@@ -31,17 +31,11 @@ public:
 
     return i1.id<i2.id;
   }
-   
-  inline bv_varidt(
-    const irep_idt &_id,
-    unsigned _bit_nr):
-    id(_id),
-    bit_nr(_bit_nr)
+
+  inline bv_varidt(const irep_idt &_id, std::size_t _bit_nr)
+    : id(_id), bit_nr(_bit_nr)
   { }
-   
-  inline bv_varidt():bit_nr(0)
-  { }
-  
+
   std::string as_string() const;
 };
 
