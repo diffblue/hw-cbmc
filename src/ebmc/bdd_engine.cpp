@@ -193,7 +193,7 @@ property_checker_resultt bdd_enginet::operator()()
     message.status() << "Building netlist" << messaget::eom;
 
     netlist = make_netlist(
-      transition_system, properties, message.get_message_handler());
+      transition_system, properties, cmdline, message.get_message_handler());
 
     message.statistics() << "Latches: " << netlist.var_map.latches.size()
                          << ", nodes: " << netlist.number_of_nodes()

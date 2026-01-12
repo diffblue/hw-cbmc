@@ -1,6 +1,6 @@
-CORE
+KNOWNBUG
 always_comb2.sv
---aig --simple-netlist
+--aig
 ^\[main\.p0\] always main\.data == 0 -> main\.decoded == 1: PROVED .*$
 ^\[main\.p1\] always main\.data == 1 -> main\.decoded == 2: PROVED .*$
 ^\[main\.p2\] always main\.data == 2 -> main\.decoded == 4: PROVED .*$
@@ -9,3 +9,4 @@ always_comb2.sv
 --
 ^warning: ignoring
 --
+This segfaults.

@@ -1,10 +1,9 @@
-KNOWNBUG
+CORE
 assignment.sv
---smv-netlist
+--smv-netlist --simple-netlist
+^LTLSPEC G \(\!nondet\[1\]\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^LTLSPEC G TRUE$
 --
-Outputs "LTLSPEC G TRUE" despite the property being incorrect.
-
