@@ -52,6 +52,47 @@ void verilog_typecheckt::elaborate_generate_block(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::elaborate_generate_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::elaborate_generate_decl(
+  const verilog_generate_declt &generate_decl,
+  module_itemst &)
+{
+  symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
+
+  symbol.module = module_identifier;
+  symbol.value.make_nil();
+
+  for(auto &declarator : generate_decl.declarators())
+  {
+    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
+    symbol.base_name = declarator.base_name();
+    symbol.location = declarator.source_location();
+
+    if(symbol.base_name.empty())
+      throw errort().with_location(generate_decl.source_location())
+        << "empty symbol name";
+
+    symbol.name = hierarchical_identifier(symbol.base_name);
+    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+    genvars[symbol.base_name] = -1;
+
+    add_symbol(symbol);
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_generate_item
 
   Inputs:
@@ -71,6 +112,8 @@ verilog_typecheckt::module_itemst verilog_typecheckt::elaborate_generate_item(
     elaborate_generate_block(to_verilog_generate_block(module_item), dest);
   else if(module_item.id() == ID_generate_case)
     elaborate_generate_case(to_verilog_generate_case(module_item), dest);
+  else if(module_item.id() == ID_verilog_generate_decl)
+    elaborate_generate_decl(to_verilog_generate_decl(module_item), dest);
   else if(module_item.id() == ID_generate_if)
     elaborate_generate_if(to_verilog_generate_if(module_item), dest);
   else if(module_item.id() == ID_generate_for)

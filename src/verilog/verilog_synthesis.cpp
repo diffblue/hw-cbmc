@@ -3314,6 +3314,9 @@ void verilog_synthesist::synth_module_item(
   {
     synth_decl(to_verilog_decl(module_item));
   }
+  else if(module_item.id() == ID_verilog_generate_decl)
+  {
+  }
   else if(
     module_item.id() == ID_verilog_function_decl ||
     module_item.id() == ID_verilog_task_decl)

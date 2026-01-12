@@ -443,6 +443,55 @@ inline verilog_module_itemt &to_verilog_module_item(irept &irep)
   return static_cast<verilog_module_itemt &>(irep);
 }
 
+// This class is used for all declarators in the parse tree
+class verilog_declaratort : public exprt
+{
+public:
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  const exprt &value() const
+  {
+    return static_cast<const exprt &>(find(ID_value));
+  }
+
+  exprt &value()
+  {
+    return static_cast<exprt &>(add(ID_value));
+  }
+
+  bool has_value() const
+  {
+    return find(ID_value).is_not_nil();
+  }
+
+  // helper to generate a symbol expression
+  symbol_exprt symbol_expr() const
+  {
+    auto result = symbol_exprt(identifier(), type());
+    result.with_source_location(*this);
+    return result;
+  }
+
+  // Helper to merge the declarator's unpacked array type
+  // with the declaration type.
+  typet merged_type(const typet &declaration_type) const;
+};
+
+using verilog_declaratorst = std::vector<verilog_declaratort>;
+
 class verilog_generate_assignt : public verilog_module_itemt
 {
 public:
@@ -551,6 +600,41 @@ inline verilog_generate_caset &to_verilog_generate_case(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_generate_case);
   return static_cast<verilog_generate_caset &>(expr);
+}
+
+/// a SystemVerilog genvar declaration
+class verilog_generate_declt : public verilog_module_itemt
+{
+public:
+  inline verilog_generate_declt()
+    : verilog_module_itemt(ID_verilog_generate_decl)
+  {
+  }
+
+  using declaratort = verilog_declaratort;
+  using declaratorst = verilog_declaratorst;
+
+  const declaratorst &declarators() const
+  {
+    return (const declaratorst &)operands();
+  }
+
+  declaratorst &declarators()
+  {
+    return (declaratorst &)operands();
+  }
+};
+
+inline const verilog_generate_declt &to_verilog_generate_decl(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_generate_decl);
+  return static_cast<const verilog_generate_declt &>(irep);
+}
+
+inline verilog_generate_declt &to_verilog_generate_decl(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_generate_decl);
+  return static_cast<verilog_generate_declt &>(irep);
 }
 
 class verilog_generate_ift : public verilog_module_itemt
@@ -668,55 +752,6 @@ inline verilog_set_genvarst &to_verilog_set_genvars(exprt &expr)
   PRECONDITION(expr.id() == ID_set_genvars);
   return static_cast<verilog_set_genvarst &>(expr);
 }
-
-// This class is used for all declarators in the parse tree
-class verilog_declaratort : public exprt
-{
-public:
-  const irep_idt &identifier() const
-  {
-    return get(ID_identifier);
-  }
-
-  void identifier(irep_idt _identifier)
-  {
-    set(ID_identifier, _identifier);
-  }
-
-  const irep_idt &base_name() const
-  {
-    return get(ID_base_name);
-  }
-
-  const exprt &value() const
-  {
-    return static_cast<const exprt &>(find(ID_value));
-  }
-
-  exprt &value()
-  {
-    return static_cast<exprt &>(add(ID_value));
-  }
-
-  bool has_value() const
-  {
-    return find(ID_value).is_not_nil();
-  }
-
-  // helper to generate a symbol expression
-  symbol_exprt symbol_expr() const
-  {
-    auto result = symbol_exprt(identifier(), type());
-    result.with_source_location(*this);
-    return result;
-  }
-
-  // Helper to merge the declarator's unpacked array type
-  // with the declaration type.
-  typet merged_type(const typet &declaration_type) const;
-};
-
-using verilog_declaratorst = std::vector<verilog_declaratort>;
 
 /// a SystemVerilog parameter declaration
 class verilog_parameter_declt : public verilog_module_itemt
