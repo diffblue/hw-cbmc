@@ -224,6 +224,20 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   }
 
   out << '\n';
+  out << "-- in-state constraints" << '\n';
+  out << '\n';
+
+  for(auto &constraint_l : netlist.constraints)
+  {
+    if(!constraint_l.is_true())
+    {
+      out << "INVAR ";
+      print_smv(netlist, out, constraint_l);
+      out << '\n';
+    }
+  }
+
+  out << '\n';
   out << "-- TRANS" << '\n';
   out << '\n';
 

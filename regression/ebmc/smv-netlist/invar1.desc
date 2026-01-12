@@ -1,0 +1,9 @@
+CORE
+invar1.smv
+--smv-netlist
+^VAR smv\.main\.var\.x: boolean;$
+^INVAR smv\.main\.var\.x$
+^CTLSPEC AG smv\.main\.var\.x$
+^EXIT=0$
+^SIGNAL=0$
+--
