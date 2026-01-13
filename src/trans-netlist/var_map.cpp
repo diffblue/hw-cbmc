@@ -13,6 +13,28 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: var_mapt::record_as_nondet
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void var_mapt::record_as_nondet(literalt::var_not var_no)
+{
+  bv_varidt varid{"nondet", nondets.size()};
+  var_mapt::vart &var = map[varid.id];
+  var.add_bit().current = literalt(var_no, false);
+  var.vartype = var_mapt::vart::vartypet::NONDET;
+  reverse_map.emplace(var_no, varid);
+  nondets.insert(var_no);
+}
+
+/*******************************************************************\
+
 Function: var_mapt::add
 
   Inputs:
