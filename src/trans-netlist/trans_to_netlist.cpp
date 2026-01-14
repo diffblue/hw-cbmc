@@ -391,14 +391,7 @@ void convert_trans_to_netlistt::operator()(
         dest.var_map.reverse_map.find(n);
       
       if(it==dest.var_map.reverse_map.end())
-      {
-        bv_varidt varid{"nondet", dest.var_map.nondets.size()};
-        var_mapt::vart &var=dest.var_map.map[varid.id];
-        var.add_bit().current=literalt(n, false);
-        var.vartype=var_mapt::vart::vartypet::NONDET;
-        dest.var_map.reverse_map.emplace(n, varid);
-        dest.var_map.nondets.insert(n);
-      }
+        dest.var_map.record_as_nondet(n);
     }
   }
 }

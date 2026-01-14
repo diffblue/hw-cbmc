@@ -55,7 +55,10 @@ public:
     {
     }
   };
-  
+
+  /// record variable given by its number as nondet
+  void record_as_nondet(literalt::var_not);
+
   void add(const irep_idt &id, unsigned bit_nr, const vart &var);
   
   void build_reverse_map();
