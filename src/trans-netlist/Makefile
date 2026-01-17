@@ -2,6 +2,7 @@ SRC = aig.cpp \
       aig_prop.cpp \
       aig_terminals.cpp \
       bmc_map.cpp \
+      build_netlist_var_map.cpp \
       bv_varid.cpp \
       compute_ct.cpp \
       counterexample_netlist.cpp \
