@@ -168,6 +168,26 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
   }
 
   out << '\n';
+  out << "-- Nondeterministic nodes" << '\n';
+  out << '\n';
+
+  for(auto var_it : sorted_var_map)
+  {
+    const var_mapt::vart &var = var_it->second;
+
+    for(std::size_t i = 0; i < var.bits.size(); i++)
+    {
+      if(var.is_nondet())
+      {
+        out << "VAR " << id2smv(var_it->first);
+        if(var.bits.size() != 1)
+          out << "[" << i << "]";
+        out << ": boolean;" << '\n';
+      }
+    }
+  }
+
+  out << '\n';
   out << "-- AND Nodes" << '\n';
   out << '\n';
 
