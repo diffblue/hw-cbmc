@@ -222,7 +222,8 @@ protected:
   void elaborate_generate_block(
     const verilog_generate_blockt &,
     module_itemst &dest);
-  module_itemst elaborate_generate_item(const verilog_module_itemt &);
+  [[nodiscard]] module_itemst
+  elaborate_generate_item(const verilog_module_itemt &);
   void
   elaborate_generate_item(const verilog_module_itemt &src, module_itemst &dest);
   void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
@@ -231,7 +232,8 @@ protected:
   void elaborate_generate_decl(const verilog_generate_declt &, module_itemst &);
   void
   elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);
-  exprt generate_for_loop_index(const exprt &initialization_statement) const;
+  exprt
+  generate_for_loop_index(const verilog_module_itemt &initialization) const;
 
   // generate state
   typedef std::map<irep_idt, mp_integer> genvarst;

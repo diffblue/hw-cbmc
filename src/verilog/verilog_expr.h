@@ -17,14 +17,28 @@ Author: Daniel Kroening, kroening@kroening.com
 class verilog_identifier_exprt : public nullary_exprt
 {
 public:
+  explicit verilog_identifier_exprt(const irep_idt _base_name)
+    : nullary_exprt{ID_verilog_identifier, typet{}}
+  {
+    base_name(_base_name);
+  }
+
   const irep_idt &base_name() const
   {
     return get(ID_base_name);
   }
 
-  void identifier(irep_idt _base_name)
+  void base_name(irep_idt _base_name)
   {
     set(ID_base_name, _base_name);
+  }
+
+  /// Add the source location from \p location, if it is non-nil.
+  verilog_identifier_exprt &&with_source_location(source_locationt location) &&
+  {
+    if(location.is_not_nil())
+      add_source_location() = std::move(location);
+    return std::move(*this);
   }
 };
 
@@ -485,6 +499,13 @@ public:
     return result;
   }
 
+  // helper to generate a verilog_identifier expression
+  verilog_identifier_exprt verilog_identifier_expr() const
+  {
+    return verilog_identifier_exprt{base_name()}.with_source_location(
+      source_location());
+  }
+
   // Helper to merge the declarator's unpacked array type
   // with the declaration type.
   typet merged_type(const typet &declaration_type) const;
@@ -680,9 +701,9 @@ public:
   {
   }
 
-  const verilog_generate_assignt &init() const
+  const verilog_module_itemt &init() const
   {
-    return static_cast<const verilog_generate_assignt &>(op0());
+    return static_cast<const verilog_module_itemt &>(op0());
   }
 
   const exprt &cond() const

@@ -3328,6 +3328,13 @@ genvar_expression: constant_expression;
 genvar_initialization:
           genvar_identifier '=' constant_expression
                 { init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
+        | TOK_GENVAR genvar_identifier '=' constant_expression
+                { init($$, ID_verilog_generate_decl);
+                  PARSER.scopes.add_name(stack_expr($2).get(ID_base_name), "", verilog_scopet::OTHER);
+                  stack_expr($2).id(ID_declarator);
+                  addswap($2, ID_value, $4);
+                  mto($$, $2);
+                }
         ;
 
 genvar_iteration:
