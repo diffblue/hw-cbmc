@@ -2942,12 +2942,11 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
     if(guard_value_opt.value() == 0)
       break;
 
-    // copy the body
-    verilog_statementt tmp_body=statement.body();
-    synth_statement(tmp_body);
+    // execute the body
+    synth_statement(statement.body());
 
-    verilog_statementt tmp_inc=statement.inc_statement();
-    synth_statement(tmp_inc);
+    // execute the step statement
+    synth_statement(statement.inc_statement());
   }
 }
 
@@ -3029,9 +3028,8 @@ void verilog_synthesist::synth_while(
 
     if(tmp_guard.is_false()) break;
 
-    // copy the body!    
-    verilog_statementt tmp_body=statement.body();
-    synth_statement(tmp_body);
+    // execute the body
+    synth_statement(statement.body());
   }
 }
 
