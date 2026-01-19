@@ -442,6 +442,9 @@ void ebmc_parse_optionst::help()
     "\n"
     "Solvers:\n"
     " {y--aig}                       \t bit-level SAT with AIGs\n"
+#if defined(HAVE_CADICAL) && defined(HAVE_MINISAT2)
+    " {y--cadical}                   \t use CaDiCaL as SAT solver\n"
+#endif
     " {y--dimacs}                    \t output bit-level CNF in DIMACS format\n"
     " {y--smt2}                      \t output word-level SMT 2 formula\n"
     " {y--boolector}                 \t use Boolector as solver\n"
