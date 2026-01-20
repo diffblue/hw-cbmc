@@ -726,7 +726,12 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   }
   else if(statement.id() == ID_for)
   {
-    collect_symbols(to_verilog_for(statement).body());
+    auto &for_statement = to_verilog_for(statement);
+
+    for(auto &init_statement : for_statement.initialization())
+      collect_symbols(init_statement);
+
+    collect_symbols(for_statement.body());
   }
   else if(statement.id() == ID_forever)
   {

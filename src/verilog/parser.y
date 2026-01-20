@@ -4045,6 +4045,35 @@ for_initialization:
                   for(auto &assignment : assignments)
                     assignment.id(ID_verilog_blocking_assign);
                 }
+        | for_variable_declaration_brace
+        ;
+
+for_variable_declaration_brace:
+          for_variable_declaration
+                { init($$); mto($$, $1); }
+        | for_variable_declaration_brace ',' for_variable_declaration
+                { $$ = $1; mto($$, $3); }
+        ;
+
+for_variable_declaration:
+          data_type variable_identifier '=' expression
+                { // these create a scope -- unlike for loops without declaration
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_var);
+                  addswap($$, ID_type, $1);
+                  stack_expr($2).id(ID_declarator);
+                  addswap($2, ID_value, $4);
+                  mto($$, $2);
+                }
+        | TOK_VAR data_type variable_identifier '=' expression
+                { // these create a scope -- unlike for loops without declaration
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_var);
+                  addswap($$, ID_type, $2);
+                  stack_expr($3).id(ID_declarator);
+                  addswap($3, ID_value, $5);
+                  mto($$, $3);
+                }
         ;
 
 for_step: for_step_assignment
