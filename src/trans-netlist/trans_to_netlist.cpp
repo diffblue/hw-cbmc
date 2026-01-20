@@ -142,9 +142,15 @@ protected:
 
   literalt convert_rhs(const rhst &);
 
-  void finalize_lhs(lhs_mapt::iterator);
-
-  void convert_lhs_rec(const exprt &expr, std::size_t from, std::size_t to);
+  // The bv_varidts of the definitions that are yet to be processed.
+  using lhs_stackt = std::stack<lhs_mapt::iterator>;
+  void add_to_stack(
+    const exprt &expr,
+    std::size_t from,
+    std::size_t to,
+    lhs_stackt &);
+  void lhs_loop(lhs_stackt &);
+  void finalize_definition(lhs_mapt::iterator);
 
   void convert_constraints();
 
@@ -270,13 +276,14 @@ void convert_trans_to_netlistt::operator()(
   add_constraint(trans.invar());
   add_constraint(trans.trans());
 
-  // do recursive conversion for LHSs
-  for(lhs_mapt::iterator
-      it=lhs_map.begin();
-      it!=lhs_map.end();
-      it++)
   {
-    finalize_lhs(it);
+    // ensure all LHSs will be processed
+    lhs_stackt lhs_stack;
+
+    for(lhs_mapt::iterator it = lhs_map.begin(); it != lhs_map.end(); it++)
+    {
+      lhs_stack.push(it);
+    }
   }
 
   // finish the var_map
@@ -494,7 +501,7 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
 
 /*******************************************************************\
 
-Function: convert_trans_to_netlistt::convert_lhs_rec
+Function: convert_trans_to_netlistt::lhs_loop
 
   Inputs:
 
@@ -504,10 +511,27 @@ Function: convert_trans_to_netlistt::convert_lhs_rec
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::convert_lhs_rec(
+void convert_trans_to_netlistt::lhs_loop(lhs_stackt &lhs_stack)
+{
+}
+
+/*******************************************************************\
+
+Function: convert_trans_to_netlistt::add_to_stack
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void convert_trans_to_netlistt::add_to_stack(
   const exprt &expr,
   std::size_t from,
-  std::size_t to)
+  std::size_t to,
+  lhs_stackt &lhs_stack)
 {
   PRECONDITION(from <= to);
 
@@ -527,7 +551,9 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       // we only need to do wires
       if(!it->second.var->is_wire()) return;
 
-      finalize_lhs(it);
+      // only push if not already done
+      if(!it->second.converted)
+        lhs_stack.push(it);
     }
 
     return;
@@ -539,7 +565,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
          to_extractbit_expr(expr).index(), i)) // constant?
     {
       from = i.to_ulong();
-      convert_lhs_rec(to_extractbit_expr(expr).src(), from, from);
+      add_to_stack(to_extractbit_expr(expr).src(), from, from, lhs_stack);
       return;
     }
   }
@@ -558,7 +584,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       from = new_from.to_ulong();
       to = new_to.to_ulong();
 
-      convert_lhs_rec(to_extractbits_expr(expr).src(), from, to);
+      add_to_stack(to_extractbits_expr(expr).src(), from, to, lhs_stack);
       return;
     }
   }
@@ -578,7 +604,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     if(width==0)
       continue;
 
-    convert_lhs_rec(*it, 0, width - 1);
+    add_to_stack(*it, 0, width - 1, lhs_stack);
   }
 }
 
@@ -602,7 +628,7 @@ literalt convert_trans_to_netlistt::convert_rhs(const rhst &rhs)
   if(!rhs_entry.converted)
   {
     // get all lhs symbols this depends on
-    convert_lhs_rec(rhs_entry.expr, 0, rhs_entry.width - 1);
+    add_to_stack(rhs_entry.expr, 0, rhs_entry.width - 1, lhs_stack);
 
     rhs_entry.converted=true;
 
