@@ -80,6 +80,11 @@ public:
   aiger_languaget()
   {
   }
+
+  struct parse_treet
+  {
+    std::size_t M, I, L, O, A;
+  } parse_tree;
 };
  
 std::unique_ptr<languaget> new_aiger_language();
