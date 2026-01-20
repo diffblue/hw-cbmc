@@ -1166,10 +1166,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
   {
     expr.type() = bool_typet{};
   }
-  else if(expr.id() == ID_smv_setnotin)
-  {
-    expr.type()=bool_typet();
-  }
   else if(expr.id() == ID_unary_minus)
   {
     auto &uminus_expr = to_unary_minus_expr(expr);

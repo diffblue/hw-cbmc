@@ -256,9 +256,6 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_n
 %token min_Token	"min"
 
 /* Not in the NuSMV manual */
-%token EXTERN_Token	"EXTERN"
-%token switch_Token	"switch"
-%token notin_Token	"notin"
 %token R_Token		"R"
 
 %token DOTDOT_Token   ".."
@@ -279,12 +276,7 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_n
 %token NOTEQUAL_Token "!="
 %token LTLT_Token     "<<"
 %token GTGT_Token     ">>"
-
-%token INC_Token
-%token DEC_Token
 %token BECOMES_Token  ":="
-%token ADD_Token
-%token SUB_Token
 
 %token IDENTIFIER_Token   "identifier"
 %token QIDENTIFIER_Token  "quoted identifier"
@@ -360,9 +352,6 @@ module_element:
            | ltl_specification
            | compute_specification
            | isa_declaration
-           /* not in the NuSMV manual */
-           | EXTERN_Token extern_var semi_opt
-           | EXTERN_Token
            ;
 
 var_declaration:
@@ -523,9 +512,6 @@ ltl_specification:
            }
            ;
  
-extern_var : variable_identifier EQUAL_Token STRING_Token
-           ;
-
 var_list   : var_decl
            | var_list var_decl
            ;
@@ -741,11 +727,6 @@ basic_expr : constant
              // This rule is part of "complex_identifier" in the NuSMV manual.
              init($$, ID_smv_self);
            }
-           | basic_expr '(' simple_expr ')'
-           {
-             // Not in the NuSMV grammar.
-             binary($$, $1, ID_index, $3);
-           }
            | '(' formula ')'                      { $$=$2; }
            | NOT_Token basic_expr                 { init($$, ID_not); mto($$, $2); }
            | "abs" '(' basic_expr ')'             { unary($$, ID_smv_abs, $3); }
@@ -793,12 +774,6 @@ basic_expr : constant
                                                   { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
            | case_Token cases esac_Token          { $$=$2; }
            | next_Token '(' basic_expr ')'        { init($$, ID_smv_next); mto($$, $3); }
-           /* Not in NuSMV manual */
-           | INC_Token '(' basic_expr ')'         { init($$, "inc"); mto($$, $3); }
-           | DEC_Token '(' basic_expr ')'         { init($$, "dec"); mto($$, $3); }
-           | ADD_Token '(' basic_expr ',' basic_expr ')' { j_binary($$, $3, ID_plus, $5); }
-           | SUB_Token '(' basic_expr ',' basic_expr ')' { init($$, ID_minus); mto($$, $3); mto($$, $5); }
-           | switch_Token '(' variable_identifier ')' '{' switches '}' { init($$, ID_switch); mto($$, $3); mto($$, $6); }
            /* CTL */
            | AX_Token  basic_expr                 { init($$, ID_AX);  mto($$, $2); }
            | AF_Token  basic_expr                 { init($$, ID_AF);  mto($$, $2); }
@@ -910,11 +885,6 @@ complex_identifier:
            {
              binary($$, $1, ID_index, $3);
            }
-           | complex_identifier '(' basic_expr ')'
-           {
-             // Not in the NuSMV grammar.
-             binary($$, $1, ID_index, $3);
-           }
            ;
 
 cases      :
@@ -925,16 +895,6 @@ cases      :
 
 case       : formula ':' formula ';'
            { binary($$, $1, ID_case, $3); }
-           ;
-
-switches   :
-           { init($$, "switches"); }
-           | switches switch
-           { $$=$1; mto($$, $2); }
-           ;
-
-switch     : NUMBER_Token ':' basic_expr ';'
-           { init($$, ID_switch); mto($$, $1); mto($$, $3); }
            ;
 
 %%

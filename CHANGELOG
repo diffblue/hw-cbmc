@@ -1,3 +1,7 @@
+# EBMC 6.0
+
+* SMV: removed legacy keywords EXTERN and switch
+
 # EBMC 5.9
 
 * Verilog: use top-level module for verification, instead of "main"
