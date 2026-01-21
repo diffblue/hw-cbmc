@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sva_until1.sv
 --buechi
 ^\[main\.p0\] always \(main.a until_with main.b\): REFUTED$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/cycle_delay_plus4.sv
 --buechi
 ^\[main\.p0\] main\.x == 0 ##\[\+\] main\.x == 1: PROVED \(1-induction\)$

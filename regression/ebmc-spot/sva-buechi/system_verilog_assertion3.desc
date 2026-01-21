@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/system_verilog_assertion3.sv
 --buechi --module main
 ^EXIT=0$

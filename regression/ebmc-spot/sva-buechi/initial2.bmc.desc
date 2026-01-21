@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/initial2.sv
 --buechi --module main
 ^\[main\.p0\] main\.counter == 1: PROVED \(1-induction\)$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_within1.sv
 --buechi --bound 20
 ^\[main\.p0\] main\.x == 0 within main\.x == 1: UNSUPPORTED: sva_sequence_within not convertible to Buechi$

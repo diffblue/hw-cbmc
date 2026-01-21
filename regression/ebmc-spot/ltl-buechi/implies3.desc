@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 implies3.smv
 --buechi --bound 5
 ^EXIT=0$

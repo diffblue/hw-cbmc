@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_and3.sv
 --buechi --k-induction --bound 3
 ^\[.*\] \(\(1 or \(##2 1\)\) and 1\) \|-> main\.x == 2: REFUTED$

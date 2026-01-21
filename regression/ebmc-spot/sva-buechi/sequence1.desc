@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence1.sv
 --buechi --bound 20 --numbered-trace
 ^\[main\.p0\] ##\[0:9\] main\.x == 100: REFUTED$

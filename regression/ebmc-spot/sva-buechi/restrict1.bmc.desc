@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/restrict1.sv
 --buechi --module main --bound 10
 ^\[main\.p0\] always main\.x != 5: ASSUMED$

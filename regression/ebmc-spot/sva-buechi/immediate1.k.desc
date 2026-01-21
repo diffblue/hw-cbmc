@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/immediate1.sv
 --buechi --k-induction --bound 1
 ^\[main\.assert\.1\] always main\.x & 1: PROVED$

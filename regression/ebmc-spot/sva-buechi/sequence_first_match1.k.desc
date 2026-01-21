@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_first_match1.sv
 --buechi --k-induction --bound 1
 ^\[.*\] first_match\(main\.x == 0\): PROVED$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 R1.smv
 --bdd --property p2 --buechi
 ^\[p2\] FALSE V x != 4: PROVED$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/case1.sv
 --buechi --bound 20 --numbered-trace
 ^\[main\.p0\] always \(case\(main\.x\) 10: 0; endcase\): REFUTED$

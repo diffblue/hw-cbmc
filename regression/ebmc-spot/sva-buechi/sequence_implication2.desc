@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_implication2.sv
 --buechi --module main
 ^file .* line 4: sequence required, but got property$

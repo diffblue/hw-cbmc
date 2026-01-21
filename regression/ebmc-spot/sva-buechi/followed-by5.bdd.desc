@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/followed-by5.sv
 --buechi --bdd
 ^\[main\.p0\] \(1 \[\*0\]\) #=# main\.x == 0: PROVED$

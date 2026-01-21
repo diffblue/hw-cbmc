@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_or1.sv
 --buechi --bdd
 ^\[main\.p0\] main\.x == 0 or main\.x == 1: PROVED$

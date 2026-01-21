@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence2.sv
 --buechi --k-induction --bound 1
 ^\[main\.p0] weak\(##\[0:\$\] main\.x == 10\): PROVED$

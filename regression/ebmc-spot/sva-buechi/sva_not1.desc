@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sva_not1.sv
 --buechi
 ^\[main\.p0] always not 0: PROVED \(tautology\)$

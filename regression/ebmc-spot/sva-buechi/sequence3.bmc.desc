@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence3.sv
 --buechi --bound 20 --numbered-trace
 ^\[main\.p0\] strong\(##\[\*\] main\.x == 6\): UNSUPPORTED: sva_cycle_delay_star not convertible to Buechi$

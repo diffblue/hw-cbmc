@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_repetition5.sv
 --buechi --k-induction --bound 10
 ^\[.*\] main\.pulse ##1 \(\!main\.pulse \[\*1:9\]\) ##1 main.pulse: PROVED$

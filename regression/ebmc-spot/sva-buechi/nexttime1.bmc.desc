@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/nexttime1.sv
 --buechi --module main --bound 10
 ^\[main\.p1\] s_nexttime\[0\] main\.counter == 0: PROVED up to bound 10$

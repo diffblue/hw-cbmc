@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 and2.smv
 --buechi --bdd
 ^\[.*\] X \(p & q\): PROVED$

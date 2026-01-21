@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_repetition5.sv
 --buechi --bound 20
 ^\[.*\] main\.pulse ##1 \(\!main\.pulse \[\*1:9\]\) ##1 main.pulse: PROVED up to bound 20$

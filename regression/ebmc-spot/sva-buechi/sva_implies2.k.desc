@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sva_implies2.sv
 --buechi --k-induction --bound 2
 ^EXIT=0$

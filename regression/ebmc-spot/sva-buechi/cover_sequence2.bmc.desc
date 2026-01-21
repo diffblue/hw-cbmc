@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/cover_sequence2.sv
 --buechi --bound 5
 ^\[main\.p0\] cover \(main\.x == 2 ##1 main\.x == 3 ##1 main\.x == 100\): REFUTED up to bound 5$

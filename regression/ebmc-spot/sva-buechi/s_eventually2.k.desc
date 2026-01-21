@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/s_eventually2.sv
 --buechi --k-induction --bound 2
 ^\[main\.p0\] always s_eventually main.reset \|\| main\.counter == 10: UNSUPPORTED: unsupported by k-induction$

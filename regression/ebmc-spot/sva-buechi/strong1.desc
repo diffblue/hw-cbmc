@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/strong1.sv
 --buechi --bound 4
 ^\[main\.p0\] strong\(##\[0:9\] main\.x == 5\): UNSUPPORTED: sva_cycle_delay not convertible to Buechi$

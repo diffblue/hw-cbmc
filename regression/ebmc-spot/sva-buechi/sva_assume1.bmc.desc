@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sva_assume1.sv
 --buechi --bound 10
 ^\[main\.assume\.1\] always main\.a: ASSUMED$

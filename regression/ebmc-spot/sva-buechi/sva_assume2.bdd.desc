@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sva_assume2.sv
 --buechi --bdd
 ^\[main\.assume\.1\] always \(main\.a implies \(nexttime main\.a\)\): ASSUMED$

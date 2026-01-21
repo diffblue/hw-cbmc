@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_intersect1.sv
 --buechi --k-induction --bound 4
 ^\[main\.p0\] main\.x == 0 intersect main\.x == 1: REFUTED$

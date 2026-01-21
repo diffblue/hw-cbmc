@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/cover_sequence1.sv
 --buechi --bound 10 --numbered-trace
 ^\[main\.p0\] cover \(main\.x == 2 ##1 main\.x == 3 ##1 main\.x == 4\): PROVED$

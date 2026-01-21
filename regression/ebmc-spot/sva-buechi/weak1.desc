@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/weak1.sv
 --buechi --bound 20
 ^\[main\.p0\] weak\(##\[0:9\] main\.x == 100\): REFUTED$
