@@ -16,6 +16,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <solvers/decision_procedure.h>
 #include <solvers/prop/prop.h>
 
+#include "output_file.h"
+
 #include <fstream>
 #include <memory>
 
@@ -35,9 +37,9 @@ public:
   }
 
   ebmc_solvert(
-    std::unique_ptr<std::ofstream> p1,
+    std::unique_ptr<output_filet> p1,
     std::unique_ptr<decision_proceduret> p2)
-    : ofstream_ptr(std::move(p1)), decision_procedure_ptr(std::move(p2))
+    : output_file_ptr(std::move(p1)), decision_procedure_ptr(std::move(p2))
   {
   }
 
@@ -48,7 +50,7 @@ public:
   }
 
   // the objects are deleted in the opposite order they appear below
-  std::unique_ptr<std::ofstream> ofstream_ptr;
+  std::unique_ptr<output_filet> output_file_ptr;
   std::unique_ptr<propt> prop_ptr;
   std::unique_ptr<decision_proceduret> decision_procedure_ptr;
 };
