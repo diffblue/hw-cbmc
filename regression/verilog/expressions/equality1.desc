@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 equality1.v
 
 ^\[.*\] always 10 == 10 === 1: PROVED .*$

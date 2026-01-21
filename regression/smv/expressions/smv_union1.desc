@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 smv_union1.smv
 
 ^\[spec1\] x != 3: PROVED \(CT=0\)$
