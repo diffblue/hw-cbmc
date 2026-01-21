@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence5.sv
 --buechi
 ^\[main\.p0\] 1: PROVED \(tautology\)$

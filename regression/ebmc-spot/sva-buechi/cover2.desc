@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/cover2.sv
 --buechi --bound 10 --numbered-trace
 ^\[main\.p0\] cover main\.counter == 1: PROVED$

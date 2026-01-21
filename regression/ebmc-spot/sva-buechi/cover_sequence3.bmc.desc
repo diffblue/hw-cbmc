@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG buechi
 ../../verilog/SVA/cover_sequence3.sv
 --buechi --bound 3
 ^\[main\.p0\] cover \(1 \[\*10\]\): REFUTED up to bound 3$

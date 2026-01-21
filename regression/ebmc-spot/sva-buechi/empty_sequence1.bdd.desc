@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/empty_sequence1.sv
 --buechi --bdd
 ^\[main\.p0\] 1 \[\*0\]: REFUTED$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/static_final1.sv
 --buechi
 ^\[full_adder\.p0\] always \{ full_adder\.carry, full_adder\.sum \} == \{ 1'b0, full_adder\.a \} \+ full_adder\.b \+ full_adder\.c: PROVED \(1-induction\)$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sva_assume2.sv
 --buechi --k-induction --bound 1
 ^\[main\.assume\.1\] always \(main\.a implies \(nexttime main\.a\)\): UNSUPPORTED: unsupported by k-induction$

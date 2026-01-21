@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/followed-by4.sv
 --buechi --bdd
 ^\[main\.p1\] always \(main\.x == 0 #-# 1\): REFUTED$

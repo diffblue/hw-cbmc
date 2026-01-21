@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/restrict1.sv
 --buechi --k-induction --bound 1
 ^\[main\.p0\] always main\.x != 5: ASSUMED$

@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG buechi
 ../../verilog/SVA/s_eventually3.sv
 --buechi --module main --bound 11
 ^EXIT=10$

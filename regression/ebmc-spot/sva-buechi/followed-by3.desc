@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/followed-by3.sv
 --buechi --bound 20
 ^\[.*\] \(main\.x == 0 ##1 main\.x == 1\) #-# \(s_eventually main\.x == 10\): PROVED up to bound 20$

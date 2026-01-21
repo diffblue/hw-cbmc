@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/issue669.sv
 --buechi --k-induction --bound 1 --top top
 \[top\.assert\.1\] always not s_eventually 0: PROVED$

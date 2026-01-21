@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG buechi
 GFp1.smv
 --buechi --bdd
 ^\[.*\] G F p: PROVED$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 R1.smv
 --bdd --property p3 --buechi
 ^\[p3\] x = 2 V x = 1: REFUTED$

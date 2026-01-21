@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/eventually2.sv
 --buechi --bound 20
 ^\[main\.p0\] always \(eventually \[0:2\] main\.counter == 3\): REFUTED$

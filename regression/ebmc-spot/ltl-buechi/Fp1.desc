@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 Fp1.smv
 --buechi --bdd
 ^\[.*\] F p: PROVED$

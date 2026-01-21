@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence4.sv
 --buechi --bound 10
 ^EXIT=0$

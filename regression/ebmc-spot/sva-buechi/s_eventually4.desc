@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/s_eventually4.sv
 --buechi --module main --bound 11
 ^\[main\.p0\] always \(\(s_eventually main\.counter == 1\) or \(s_eventually main.counter == 10\)\): PROVED up to bound 11$

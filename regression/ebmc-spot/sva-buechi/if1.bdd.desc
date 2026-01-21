@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/if1.sv
 --buechi --bdd
 ^\[main\.p0\] always \(if\(main\.counter == 0\) nexttime main\.counter == 1\): PROVED$

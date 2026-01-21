@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/cycle_delay2.sv
 --buechi --bound 10
 ^\[.*\] ##\[1:2\] main\.x == 2: PROVED up to bound 10$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/followed-by1.sv
 --buechi --k-induction --bound 1
 ^\[main\.p0\] main\.x == 0 #=# \(main\.x == 1 #=# main\.x == 2\): PROVED$

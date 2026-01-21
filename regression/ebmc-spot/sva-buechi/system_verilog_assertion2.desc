@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/system_verilog_assertion2.sv
 --buechi --module main --bound 20 --trace
 ^EXIT=10$

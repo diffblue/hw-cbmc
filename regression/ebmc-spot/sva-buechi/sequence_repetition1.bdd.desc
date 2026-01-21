@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_repetition1.sv
 --buechi --bdd
 ^\[.*\] main\.half_x == 0 \[\*2\]: PROVED$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/stable1.sv
 --buechi --k-induction --bound 2
 ^\[main\.p0\] always \(\$stable\(main\.data\) \|=> main\.counter >= 1\): PROVED$

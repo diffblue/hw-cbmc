@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_repetition7.sv
 --buechi --bdd
 ^\[.*\] \(main\.a ##1 main\.b\) \[\*5\]: PROVED$

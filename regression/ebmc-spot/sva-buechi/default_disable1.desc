@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/default_disable1.sv
 --buechi
 ^file .* line 5: default disable iff is unsupported$

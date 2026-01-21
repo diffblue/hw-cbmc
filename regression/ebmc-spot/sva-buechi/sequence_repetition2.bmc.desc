@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_repetition2.sv
 --buechi --bound 10
 ^\[main\.p0\] main\.x == 0 \[\*\]: PROVED up to bound 10$

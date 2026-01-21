@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/followed-by2.sv
 --buechi --bdd
 ^\[main\.p0\] always \(\(main\.a #-# main\.b\) iff \(not \(main\.a |-> \(not main\.b\)\)\)\): PROVED$

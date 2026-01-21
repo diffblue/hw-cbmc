@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/cycle_delay_star1.sv
 --buechi --bdd
 ^\[main.p0\] ##\[\*\] main\.x == 2 ##1 main\.x == 3: PROVED$

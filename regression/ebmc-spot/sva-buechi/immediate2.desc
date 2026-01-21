@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/immediate2.sv
 --buechi
 ^\[main\.assume\.1\] assume always 0: ASSUMED$

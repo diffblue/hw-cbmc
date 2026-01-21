@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/s_until1.sv
 --buechi --bdd
 ^\[.*\] \$past\(main\.counter\) <= main\.counter s_until main\.counter == 10: PROVED$

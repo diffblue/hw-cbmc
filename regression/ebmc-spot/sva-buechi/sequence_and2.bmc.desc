@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_and2.sv
 --buechi
 \[.*\] \(1 and \(##2 1\)\) \|-> main\.x == 2: PROVED up to bound 5$

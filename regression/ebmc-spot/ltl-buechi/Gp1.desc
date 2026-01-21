@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 Gp1.smv
 --buechi --bdd
 ^\[.*\] G p: PROVED$

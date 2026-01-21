@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_repetition4.sv
 --buechi --bound 10
 ^\[main\.p0\] \(main\.x == 0 ##1 main\.x == 1\) \[\*2\]: PROVED up to bound \d+$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 iff2.smv
 --buechi --bdd
 ^\[.*\] X \(p <-> q\): PROVED$

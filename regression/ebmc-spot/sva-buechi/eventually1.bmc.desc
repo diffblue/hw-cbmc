@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/eventually1.sv
 --buechi --bound 20
 ^\[main\.p0\] always \(main\.counter == 1 implies \(eventually \[1:2\] main\.counter == 3\)\): PROVED up to bound 20$

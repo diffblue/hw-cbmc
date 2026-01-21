@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/s_always1.sv
 --buechi --k-induction --bound 10
 ^\[main\.p0\] s_always \[0:9\] main\.x < 10: PROVED$

@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_repetition3.sv
 --buechi --bdd
 ^\[main\.p0\] \(main\.x == 0 \[\*1\]\) #=# \(main\.x == 1 \[\*1\]\): PROVED$

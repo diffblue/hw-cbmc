@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 ../../verilog/SVA/sequence_and1.sv
 --buechi --bound 5
 ^\[main\.p0\] main\.x == 0 and main\.x == 1: REFUTED$

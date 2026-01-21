@@ -1,4 +1,4 @@
-CORE
+CORE buechi
 implies1.smv
 --buechi --bdd
 ^\[.*\] X p -> X q: PROVED$
