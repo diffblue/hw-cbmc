@@ -1,0 +1,10 @@
+KNOWNBUG
+given_property1.sv
+
+^\[main\.p0\] 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^\[main\.p1\] .*$
+--
+The second property should not be checked.
