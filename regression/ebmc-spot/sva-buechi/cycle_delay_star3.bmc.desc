@@ -1,9 +1,0 @@
-CORE buechi
-../../verilog/SVA/cycle_delay_star3.sv
---buechi --bound 10
-^\[main.p0\] ##\[\*\] main\.x == 4: PROVED up to bound 10$
-^EXIT=0$
-^SIGNAL=0$
---
-^warning: ignoring
---

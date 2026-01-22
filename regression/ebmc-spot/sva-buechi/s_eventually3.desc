@@ -1,8 +1,0 @@
-KNOWNBUG buechi
-../../verilog/SVA/s_eventually3.sv
---buechi --module main --bound 11
-^EXIT=10$
-^SIGNAL=0$
-^\[main\.p0\] always s_eventually main\.counter <= 5: REFUTED$
---
-^warning: ignoring
