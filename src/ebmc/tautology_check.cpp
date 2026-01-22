@@ -74,9 +74,13 @@ property_checker_resultt tautology_check(
 
   for(auto &property : result.properties)
   {
-    if(is_tautology(property.normalized_expr, solver_factory, message_handler))
+    if(property.is_unknown())
     {
-      property.proved("tautology");
+      if(is_tautology(
+           property.normalized_expr, solver_factory, message_handler))
+      {
+        property.proved("tautology");
+      }
     }
   }
 
