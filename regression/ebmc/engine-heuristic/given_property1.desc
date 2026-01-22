@@ -1,6 +1,6 @@
-KNOWNBUG
+CORE
 given_property1.sv
-
+--property main.p0
 ^\[main\.p0\] 0: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
