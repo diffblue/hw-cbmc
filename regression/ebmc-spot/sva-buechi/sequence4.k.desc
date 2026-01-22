@@ -1,8 +1,0 @@
-CORE buechi
-../../verilog/SVA/sequence4.sv
---buechi --k-induction --bound 1
-^EXIT=0$
-^SIGNAL=0$
---
-^warning: ignoring
---

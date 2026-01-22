@@ -1,8 +1,0 @@
-CORE buechi
-../../verilog/SVA/sva_implies2.sv
---buechi --bound 2
-^EXIT=0$
-^SIGNAL=0$
---
-^warning: ignoring
---

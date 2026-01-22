@@ -216,6 +216,8 @@ jobs:
         run: chmod a+x ./ebmc/ebmc ; ./ebmc/ebmc --version
       - name: put the ebmc binary in place
         run: cp ebmc/ebmc src/ebmc/
+      - name: run the Verilog buechi tests
+        run: make -C regression/verilog test-buechi
       - name: run the ebmc-spot tests
         run: make -C regression/ebmc-spot
 
