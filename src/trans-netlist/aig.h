@@ -78,6 +78,8 @@ public:
   }
 
   literalt new_and_node(literalt a, literalt b) {
+    PRECONDITION(a.var_no() < number_of_nodes());
+    PRECONDITION(b.var_no() < number_of_nodes());
     nodes.emplace_back(a, b);
     return {narrow_cast<literalt::var_not>(nodes.size() - 1), false};
   }
