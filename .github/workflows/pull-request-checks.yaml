@@ -218,8 +218,8 @@ jobs:
         run: cp ebmc/ebmc src/ebmc/
       - name: run the Verilog buechi tests
         run: make -C regression/verilog test-buechi
-      - name: run the ebmc-spot tests
-        run: make -C regression/ebmc-spot
+      - name: run the SMV buechi tests
+        run: make -C regression/smv test-buechi
 
   # This job takes approximately 1 minute
   examples:
