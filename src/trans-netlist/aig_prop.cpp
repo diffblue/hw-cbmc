@@ -112,17 +112,3 @@ literalt aig_prop_baset::lselect(literalt a, literalt b,
 
   return lor(land(a, b), land(neg(a), c));
 }
-
-void aig_prop_baset::set_equal(literalt a, literalt b) {
-#ifdef USE_AIG_COMPACT
-  // The compact encoding should reduce this
-  l_set_to_true(lequal(a, b));
-
-#else
-  // we produce two constraints:
-  // a|!b   !a|b
-
-  l_set_to_true(lor(pos(a), neg(b)));
-  l_set_to_true(lor(neg(a), pos(b)));
-#endif
-}
