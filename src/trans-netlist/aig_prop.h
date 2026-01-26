@@ -39,7 +39,6 @@ public:
   literalt lequal(literalt a, literalt b) override;
   literalt limplies(literalt a, literalt b) override;
   literalt lselect(literalt a, literalt b, literalt c) override; // a?b:c
-  void set_equal(literalt a, literalt b) override;
 
   void l_set_to(literalt a, bool value) override
   {
@@ -71,18 +70,30 @@ protected:
   aigt &dest;
 };
 
-class aig_prop_constraintt : public aig_prop_baset {
+class aig_prop_constraintt : public aig_prop_baset
+{
 public:
-  explicit aig_prop_constraintt(aig_plus_constraintst &_dest,
-                                message_handlert &message_handler)
-      : aig_prop_baset(_dest, message_handler), dest(_dest) {}
+  explicit aig_prop_constraintt(
+    aig_plus_constraintst &_dest,
+    message_handlert &message_handler)
+    : aig_prop_baset(_dest, message_handler), dest(_dest)
+  {
+  }
 
   aig_plus_constraintst &dest;
   bool has_set_to() const override { return true; }
 
   void lcnf(const bvt &clause) override { l_set_to_true(lor(clause)); }
 
-  void l_set_to(literalt a, bool value) override {
+  void set_equal(literalt a, literalt b) override
+  {
+    dest.equivalences.emplace_back(a, b);
+    dest.constraints.push_back(lequal(a, b));
+  }
+
+  void l_set_to(literalt a, bool value) override
+  {
+    dest.equivalences.emplace_back(a, const_literal(value));
     dest.constraints.push_back(a ^ !value);
   }
 

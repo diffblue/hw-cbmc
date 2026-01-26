@@ -154,14 +154,27 @@ protected:
 
 std::ostream &operator<<(std::ostream &, const aigt &);
 
-class aig_plus_constraintst : public aigt {
+class aig_plus_constraintst : public aigt
+{
 public:
   typedef std::vector<literalt> constraintst;
   constraintst constraints;
 
-  void clear() {
+  // An equivalence between two nodes, given as literalt.
+  // This avoids the need to re-discover functionally
+  // equivalent nodes via SAT sweeping or the like.
+  // The use of constants true/false is allowed.
+  // These are redundantly stored as constraints as well.
+  using equivalencet = std::pair<literalt, literalt>;
+  using equivalencest = std::vector<equivalencet>;
+
+  equivalencest equivalences;
+
+  void clear()
+  {
     aigt::clear();
     constraints.clear();
+    equivalences.clear();
   }
 };
 
