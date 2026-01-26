@@ -32,7 +32,8 @@ OBJ += ../src/smvlang/smvlang$(LIBEXT) \
 cprover.dir:
 	$(MAKE) $(MAKEARGS) -C ../src
 
-CPROVER_LIBS = $(CPROVER_DIR)/src/util/util$(LIBEXT) \
+CPROVER_LIBS = $(CPROVER_DIR)/src/solvers/solvers$(LIBEXT) \
+               $(CPROVER_DIR)/src/util/util$(LIBEXT) \
                $(CPROVER_DIR)/src/big-int/big-int$(LIBEXT) \
                # Empty last line
 
