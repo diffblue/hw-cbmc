@@ -29,9 +29,7 @@ SCENARIO("aigt output without labels")
 {
   GIVEN("An AIG with two input nodes")
   {
-    aigt aig;
-    (void)aig.new_var_node();
-    (void)aig.new_var_node();
+    aigt aig{aigt::input_node(), aigt::input_node()};
 
     THEN("print outputs the nodes with numeric identifiers")
     {
@@ -50,10 +48,10 @@ SCENARIO("aigt output without labels")
 
   GIVEN("An AIG with an AND node")
   {
-    aigt aig;
-    auto lit0 = aig.new_var_node();
-    auto lit1 = aig.new_var_node();
-    (void)aig.new_and_node(lit0, lit1);
+    aigt aig{
+      aigt::input_node(),
+      aigt::input_node(),
+      aigt::and_node({0, false}, {1, false})};
 
     THEN("print outputs the AND as a conjunction")
     {
@@ -76,8 +74,8 @@ SCENARIO("aigt output without labels")
   GIVEN("An AIG with negated inputs to AND")
   {
     aigt aig;
-    auto lit0 = aig.new_var_node();
-    auto lit1 = aig.new_var_node();
+    auto lit0 = aig.new_input();
+    auto lit1 = aig.new_input();
     (void)aig.new_and_node(!lit0, lit1);
 
     THEN("print outputs the negation")
@@ -104,10 +102,8 @@ SCENARIO("aigt output with labels")
   GIVEN("An AIG with labeled input nodes")
   {
     aigt aig;
-    auto lit0 = aig.new_var_node();
-    auto lit1 = aig.new_var_node();
-    aig.label(lit0, "a");
-    aig.label(lit1, "b");
+    (void)aig.new_input("a");
+    (void)aig.new_input("b");
 
     THEN("print outputs the nodes with labels")
     {
@@ -127,8 +123,8 @@ SCENARIO("aigt output with labels")
   GIVEN("An AIG with labeled AND node")
   {
     aigt aig;
-    auto lit0 = aig.new_var_node();
-    auto lit1 = aig.new_var_node();
+    auto lit0 = aig.new_input();
+    auto lit1 = aig.new_input();
     auto lit2 = aig.new_and_node(lit0, lit1);
     aig.label(lit0, "a");
     aig.label(lit1, "b");
@@ -155,12 +151,12 @@ SCENARIO("aigt output with labels")
   GIVEN("An AIG with negated labeled literal")
   {
     aigt aig;
-    auto lit0 = aig.new_var_node();
+    auto lit0 = aig.new_input("a");
     aig.label(!lit0, "not_a");
 
     THEN("print outputs the negated label with !")
     {
-      REQUIRE(print_aig(aig) == "n0 = !not_a\n");
+      REQUIRE(print_aig(aig) == "n0 = a,!not_a\n");
     }
 
     THEN("output_dot shows the negated label")
@@ -168,16 +164,16 @@ SCENARIO("aigt output with labels")
       REQUIRE(
         aig_to_dot(aig) ==
         "TRUE [label=\"TRUE\", shape=box]\n"
-        "0 [label=\"!not_a\",shape=box]\n");
+        "0 [label=\"a,!not_a\",shape=box]\n");
     }
   }
 
   GIVEN("An AIG with multiple labels on the same node")
   {
     aigt aig;
-    auto lit0 = aig.new_var_node();
+    auto lit0 = aig.new_input();
     aig.label(lit0, "x");
-    aig.label(lit0, "y");
+    aig.label(!lit0, "y");
 
     THEN("output_dot combines labels with comma")
     {
@@ -185,7 +181,62 @@ SCENARIO("aigt output with labels")
       REQUIRE(
         dot ==
         "TRUE [label=\"TRUE\", shape=box]\n"
-        "0 [label=\"x,y\",shape=box]\n");
+        "0 [label=\"x,!y\",shape=box]\n");
     }
+  }
+}
+
+SCENARIO("aigt convenience helpers")
+{
+  GIVEN("input_node factory")
+  {
+    auto node = aigt::input_node();
+    REQUIRE(node.is_var());
+    REQUIRE(!node.is_and());
+  }
+
+  GIVEN("and_node factory")
+  {
+    auto node = aigt::and_node({0, false}, {1, false});
+    REQUIRE(node.is_and());
+    REQUIRE(!node.is_var());
+    REQUIRE(node.a == literalt{0, false});
+    REQUIRE(node.b == literalt{1, false});
+  }
+
+  GIVEN("and_node factory with literals with different polarity")
+  {
+    auto node = aigt::and_node({0, true}, {1, false});
+    REQUIRE(node.is_and());
+    REQUIRE(node.a == literalt{0, true});
+    REQUIRE(node.b == literalt{1, false});
+  }
+
+  GIVEN("initializer list constructor")
+  {
+    aigt aig{aigt::input_node(), aigt::input_node()};
+    REQUIRE(aig.number_of_nodes() == 2);
+    REQUIRE(aig.nodes[0].is_var());
+    REQUIRE(aig.nodes[1].is_var());
+  }
+
+  GIVEN("initializer list constructor with and nodes")
+  {
+    aigt aig{
+      aigt::input_node(),
+      aigt::input_node(),
+      aigt::and_node({0, false}, {1, false})};
+    REQUIRE(aig.number_of_nodes() == 3);
+    REQUIRE(aig.nodes[0].is_var());
+    REQUIRE(aig.nodes[1].is_var());
+    REQUIRE(aig.nodes[2].is_and());
+    REQUIRE(aig.nodes[2].a == literalt{0, false});
+    REQUIRE(aig.nodes[2].b == literalt{1, false});
+  }
+
+  GIVEN("empty initializer list")
+  {
+    aigt aig{};
+    REQUIRE(aig.empty());
   }
 }

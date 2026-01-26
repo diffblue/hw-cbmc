@@ -22,11 +22,13 @@ class aig_nodet {
 public:
   literalt a, b;
 
-  explicit aig_nodet(literalt::var_not var_no)
-    : a{literalt::unused_var_no(), false}, b{var_no, false}
+  // a primary input
+  aig_nodet()
+    : a{literalt::unused_var_no(), false}, b{literalt::unused_var_no(), false}
   {
   }
 
+  // an 'and' node
   aig_nodet(literalt _a, literalt _b) : a(_a), b(_b)
   {
   }
@@ -41,10 +43,9 @@ public:
     return a.var_no() == literalt::unused_var_no();
   }
 
-  literalt::var_not var_no() const
+  bool is_input() const
   {
-    PRECONDITION(is_var());
-    return b.var_no();
+    return a.var_no() == literalt::unused_var_no();
   }
 };
 
@@ -56,6 +57,23 @@ public:
 
   typedef aig_nodet nodet;
   typedef std::vector<nodet> nodest;
+
+  // convenience constructor
+  explicit aigt(std::initializer_list<nodet> _nodes) : nodes(_nodes)
+  {
+  }
+
+  // factory for a primary input
+  static nodet input_node()
+  {
+    return nodet{};
+  }
+
+  // factory for an 'and' node
+  static nodet and_node(literalt a, literalt b)
+  {
+    return nodet{a, b};
+  }
 
   // The nodes are expected to be in dependency order,
   // see check_ordering().
@@ -79,10 +97,22 @@ public:
 
   void swap(aigt &g) { nodes.swap(g.nodes); }
 
-  literalt new_var_node(literalt::var_not var_no = literalt::unused_var_no())
+  literalt new_input()
   {
-    nodes.emplace_back(var_no);
+    nodes.emplace_back();
     return {narrow_cast<literalt::var_not>(nodes.size() - 1), false};
+  }
+
+  literalt new_input(const std::string &_label)
+  {
+    auto l = new_input();
+    label(l, _label);
+    return l;
+  }
+
+  literalt new_var_node()
+  {
+    return new_input();
   }
 
   // label a node
