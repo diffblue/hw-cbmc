@@ -1,7 +1,7 @@
 CORE
 assignment.sv
 --smv-netlist --simple-netlist
-^LTLSPEC G \(\!nondet\[1\]\)$
+^LTLSPEC G \(\!nondet\[5\]\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
