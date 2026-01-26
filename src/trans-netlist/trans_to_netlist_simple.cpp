@@ -123,12 +123,9 @@ void convert_trans_to_netlist_simplet::allocate_nodes(netlistt &dest)
     {
       bit.current = dest.new_var_node();
 
-      if(var.is_latch())
-      {
-        // use an input as AIG node for the next state value
-        bit.next = dest.new_var_node();
-        dest.var_map.record_as_nondet(bit.next.var_no());
-      }
+      // use a primary input as AIG node for the next state value
+      bit.next = dest.new_var_node();
+      dest.var_map.record_as_nondet(bit.next.var_no());
     }
   }
 }

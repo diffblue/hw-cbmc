@@ -1,11 +1,9 @@
-KNOWNBUG
+CORE
 array_assignment.sv
---reset rst --smv-netlist 
-
+--reset rst --smv-netlist --simple-netlist
+^ASSIGN next\(Verilog\.main\.data\[0\]\):=nondet\[1\];$
+^ASSIGN next\(Verilog\.main\.data\[1\]\):=nondet\[2\];$
 ^EXIT=0$
 ^SIGNAL=0$
 --
-nondet
 --
-Outputs an SMV with an undeclared nondet. When declaring the nondet, nuXmv falsifies the property depsite it being correct.
-
