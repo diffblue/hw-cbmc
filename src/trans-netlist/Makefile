@@ -1,5 +1,6 @@
 SRC = aig.cpp \
       aig_prop.cpp \
+      aig_simplifier.cpp \
       aig_terminals.cpp \
       bmc_map.cpp \
       build_netlist_var_map.cpp \

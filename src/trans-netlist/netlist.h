@@ -58,4 +58,6 @@ public:
   propertiest properties;
 };
 
+void simplify(netlistt &);
+
 #endif
