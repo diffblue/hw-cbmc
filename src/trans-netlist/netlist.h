@@ -34,13 +34,10 @@ public:
   {
     return var_map.get_no_vars();
   }
-  
-  using aigt::print;
-  virtual void print(std::ostream &out) const;
-  virtual void output_dot(std::ostream &out) const;
-  virtual std::string label(unsigned n) const;
-  virtual std::string dot_label(unsigned n) const;
-  
+
+  using aig_plus_constraintst::print;
+  void print(std::ostream &) const;
+
   void swap(netlistt &other)
   {
     aigt::swap(other);
