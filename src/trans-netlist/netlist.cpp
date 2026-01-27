@@ -29,6 +29,8 @@ void netlistt::print(std::ostream &out) const
 {
   var_map.output(out);
 
+  auto reverse_labeling = this->reverse_labeling();
+
   out << '\n';
   out << "Next state functions:" << '\n';
 
@@ -45,7 +47,7 @@ void netlistt::print(std::ostream &out) const
         if(var.bits.size()!=1) out << "[" << i << "]";
         out << ")=";
 
-        print(out, var.bits[i].next);
+        print(out, reverse_labeling, var.bits[i].next);
 
         out << '\n';
       }
@@ -59,7 +61,7 @@ void netlistt::print(std::ostream &out) const
   for(auto &c : initial)
   {
     out << "  ";
-    print(out, c);
+    print(out, reverse_labeling, c);
     out << '\n';
   }
 
@@ -70,7 +72,7 @@ void netlistt::print(std::ostream &out) const
   for(auto &c : constraints)
   {
     out << "  ";
-    print(out, c);
+    print(out, reverse_labeling, c);
     out << '\n';
   }
 
@@ -81,7 +83,7 @@ void netlistt::print(std::ostream &out) const
   for(auto &c : transition)
   {
     out << "  ";
-    print(out, c);
+    print(out, reverse_labeling, c);
     out << '\n';
   }
   

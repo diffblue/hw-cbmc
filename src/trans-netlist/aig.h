@@ -61,7 +61,15 @@ public:
   // see check_ordering().
   nodest nodes;
 
-  void clear() { nodes.clear(); }
+  // An (optional) labeling, mapping labels to nodes or their negation.
+  using labelingt = std::map<std::string, literalt>;
+  labelingt labeling;
+
+  void clear()
+  {
+    nodes.clear();
+    labeling.clear();
+  }
 
   const aig_nodet &get_node(literalt l) const { return nodes[l.var_no()]; }
 
@@ -77,7 +85,14 @@ public:
     return {narrow_cast<literalt::var_not>(nodes.size() - 1), false};
   }
 
-  literalt new_and_node(literalt a, literalt b) {
+  // label a node
+  void label(literalt l, const std::string &label)
+  {
+    labeling[label] = l;
+  }
+
+  literalt new_and_node(literalt a, literalt b)
+  {
     PRECONDITION(a.var_no() < number_of_nodes());
     PRECONDITION(b.var_no() < number_of_nodes());
     nodes.emplace_back(a, b);
@@ -86,19 +101,25 @@ public:
 
   bool empty() const { return nodes.empty(); }
 
-  void print(std::ostream &out) const;
-  void print(std::ostream &out, literalt a) const;
-  void output_dot_node(std::ostream &out, nodest::size_type v) const;
-  void output_dot_edge(std::ostream &out, nodest::size_type v,
-                       literalt l) const;
-  void output_dot(std::ostream &out) const;
-
-  std::string label(nodest::size_type v) const;
-  std::string dot_label(nodest::size_type v) const;
+  void print(std::ostream &) const;
+  void output_dot(std::ostream &) const;
 
   /// Check that the nodes are in topological order,
   /// otherwise fails a DATA_INVARIANT.
   void check_ordering() const;
+
+protected:
+  using reverse_labelingt = std::map<literalt::var_not, std::string>;
+  reverse_labelingt reverse_labeling() const;
+
+  std::string label(literalt::var_not, const reverse_labelingt &) const;
+
+  void print(std::ostream &out, const reverse_labelingt &, literalt) const;
+  void output_dot_node(
+    std::ostream &out,
+    const reverse_labelingt &,
+    literalt::var_not) const;
+  void output_dot_edge(std::ostream &out, literalt::var_not, literalt l) const;
 };
 
 std::ostream &operator<<(std::ostream &, const aigt &);

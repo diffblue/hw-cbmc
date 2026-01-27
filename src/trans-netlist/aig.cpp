@@ -12,19 +12,46 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ostream>
 #include <string>
 
-std::string aigt::label(nodest::size_type v) const {
-  return "var(" + std::to_string(v) + ")";
+aigt::reverse_labelingt aigt::reverse_labeling() const
+{
+  reverse_labelingt result;
+
+  for(auto &[label, literal] : labeling)
+  {
+    auto &labels = result[literal.var_no()];
+    if(!labels.empty())
+      labels += ',';
+    if(literal.sign())
+      labels += '!';
+    labels += label;
+  }
+
+  return result;
 }
 
-std::string aigt::dot_label(nodest::size_type v) const {
-  return "var(" + std::to_string(v) + ")";
+std::string aigt::label(
+  literalt::var_not v,
+  const reverse_labelingt &reverse_labeling) const
+{
+  auto labeling_it = reverse_labeling.find(v);
+  if(labeling_it != reverse_labeling.end())
+    return labeling_it->second;
+  else
+    return std::to_string(v);
 }
 
-void aigt::print(std::ostream &out, literalt a) const {
-  if (a == const_literal(false)) {
+void aigt::print(
+  std::ostream &out,
+  const reverse_labelingt &reverse_labeling,
+  literalt a) const
+{
+  if(a == const_literal(false))
+  {
     out << "FALSE";
     return;
-  } else if (a == const_literal(true)) {
+  }
+  else if(a == const_literal(true))
+  {
     out << "TRUE";
     return;
   }
@@ -34,19 +61,26 @@ void aigt::print(std::ostream &out, literalt a) const {
   {
     const aig_nodet &node = nodes[node_nr];
 
-    if (node.is_and()) {
+    if(node.is_and())
+    {
       if (a.sign())
         out << "!(";
-      print(out, node.a);
+      print(out, reverse_labeling, node.a);
       out << " & ";
-      print(out, node.b);
+      print(out, reverse_labeling, node.b);
       if (a.sign())
-        out << ")";
-    } else if (node.is_var()) {
+        out << ')';
+    }
+    else if(node.is_var())
+    {
       if (a.sign())
-        out << "!";
-      out << label(node_nr);
-    } else {
+        out << "!(";
+      out << label(node_nr, reverse_labeling);
+      if(a.sign())
+        out << ')';
+    }
+    else
+    {
       if (a.sign())
         out << "!";
       out << "unknown(" << node_nr << ")";
@@ -54,54 +88,69 @@ void aigt::print(std::ostream &out, literalt a) const {
   }
 }
 
-void aigt::output_dot_node(std::ostream &out, nodest::size_type v) const {
+void aigt::output_dot_node(
+  std::ostream &out,
+  const reverse_labelingt &reverse_labeling,
+  literalt::var_not v) const
+{
   const aig_nodet &node = nodes[v];
 
-  if (node.is_and()) {
-    out << v << " [label=\"" << v << "\"]"
-        << "\n";
+  if(node.is_and())
+  {
+    out << v << " [label=\"" << label(v, reverse_labeling) << "\"]" << '\n';
     output_dot_edge(out, v, node.a);
     output_dot_edge(out, v, node.b);
-  } else // the node is a terminal
+  }
+  else // the node is a terminal
   {
-    out << v << " [label=\"" << dot_label(v) << "\""
-        << ",shape=box]"
-        << "\n";
+    out << v << " [label=\"" << label(v, reverse_labeling) << "\""
+        << ",shape=box]" << '\n';
   }
 }
 
-void aigt::output_dot_edge(std::ostream &out, nodest::size_type v,
-                           literalt l) const {
-  if (l.is_true()) {
+void aigt::output_dot_edge(std::ostream &out, literalt::var_not v, literalt l)
+  const
+{
+  if(l.is_true())
+  {
     out << "TRUE -> " << v;
-  } else if (l.is_false()) {
+  }
+  else if(l.is_false())
+  {
     out << "TRUE -> " << v;
     out << " [arrowhead=odiamond]";
-  } else {
+  }
+  else
+  {
     out << l.var_no() << " -> " << v;
     if (l.sign())
       out << " [arrowhead=odiamond]";
   }
 
-  out << "\n";
+  out << '\n';
 }
 
-void aigt::output_dot(std::ostream &out) const {
+void aigt::output_dot(std::ostream &out) const
+{
+  auto reverse_labeling = this->reverse_labeling();
+
   // constant TRUE
-  out << "TRUE [label=\"TRUE\", shape=box]"
-      << "\n";
+  out << "TRUE [label=\"TRUE\", shape=box]" << '\n';
 
   // now the nodes
   for (nodest::size_type n = 0; n < number_of_nodes(); n++)
-    output_dot_node(out, n);
+    output_dot_node(out, reverse_labeling, n);
 }
 
-void aigt::print(std::ostream &out) const {
+void aigt::print(std::ostream &out) const
+{
+  auto reverse_labeling = this->reverse_labeling();
+
   for (nodest::size_type n = 0; n < number_of_nodes(); n++) {
     out << "n" << n << " = ";
     literalt l;
     l.set(n, false);
-    print(out, l);
+    print(out, reverse_labeling, l);
     out << "\n";
   }
 }
