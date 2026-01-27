@@ -315,6 +315,24 @@ void convert_trans_to_netlistt::operator()(
         dest.var_map.record_as_nondet(n);
     }
   }
+
+  // label the AIG nodes
+  for(auto var_map_it : dest.var_map.sorted())
+  {
+    auto &var = var_map_it->second;
+
+    for(std::size_t bit_nr = 0; bit_nr < var.bits.size(); bit_nr++)
+    {
+      std::string label = id2string(var_map_it->first);
+      if(var.bits.size() != 1)
+        label += '[' + std::to_string(bit_nr) + ']';
+
+      dest.label(var.bits[bit_nr].current, label);
+
+      if(var.is_latch())
+        dest.label(var.bits[bit_nr].next, label + '\'');
+    }
+  }
 }
 
 /*******************************************************************\
