@@ -11,6 +11,7 @@ SRC += smvlang/expr2smv.cpp \
        temporal-logic/sva_to_ltl.cpp \
        temporal-logic/nnf.cpp \
        temporal-logic/trivial_sva.cpp \
+       trans-netlist/aig.cpp \
        verilog/typename.cpp \
        # Empty last line
 
@@ -25,6 +26,7 @@ CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 OBJ += ../src/smvlang/smvlang$(LIBEXT) \
        ../src/temporal-logic/temporal-logic$(LIBEXT) \
+       ../src/trans-netlist/trans-netlist$(LIBEXT) \
        ../src/verilog/verilog$(LIBEXT)
 
 cprover.dir:
