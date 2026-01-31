@@ -95,6 +95,8 @@ protected:
     const std::string &symbol,
     precedencet);
 
+  resultt convert_binary_ctl(const binary_exprt &, const std::string &symbol);
+
   resultt convert_binary_associative(
     const exprt &src,
     const std::string &symbol,
