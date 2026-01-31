@@ -8,6 +8,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "netlist.h"
 
+#include <util/message.h>
+
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_to_netlist.h>
 #include <trans-netlist/trans_to_netlist_simple.h>
@@ -46,6 +48,23 @@ netlistt make_netlist(
   }
 
   // check that the AIG is in dependency order
+  netlist.check_ordering();
+
+  // simplify using equivalences
+  auto nodes_before = netlist.number_of_nodes();
+  simplify(netlist);
+  auto nodes_after = netlist.number_of_nodes();
+
+  messaget message{message_handler};
+  message.statistics() << "AIG simplifier removed "
+                       << nodes_before - nodes_after << " of "
+                       << nodes_before << " nodes ("
+                       << (nodes_before == 0
+                             ? 0
+                             : (nodes_before - nodes_after) * 100 / nodes_before)
+                       << "%)" << messaget::eom;
+
+  // again, check that the AIG is in dependency order
   netlist.check_ordering();
 
   return netlist;
