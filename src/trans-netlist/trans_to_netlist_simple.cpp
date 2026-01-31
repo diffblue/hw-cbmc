@@ -123,7 +123,9 @@ void convert_trans_to_netlist_simplet::operator()(
         label += '[' + std::to_string(bit_nr) + ']';
 
       dest.label(var.bits[bit_nr].current, label);
-      dest.label(var.bits[bit_nr].next, label + '\'');
+
+      if(var.has_next())
+        dest.label(var.bits[bit_nr].next, label + '\'');
     }
   }
 }
@@ -140,8 +142,11 @@ void convert_trans_to_netlist_simplet::allocate_nodes(netlistt &dest)
       bit.current = dest.new_var_node();
 
       // use a primary input as AIG node for the next state value
-      bit.next = dest.new_var_node();
-      dest.var_map.record_as_nondet(bit.next.var_no());
+      if(var.has_next())
+      {
+        bit.next = dest.new_var_node();
+        dest.var_map.record_as_nondet(bit.next.var_no());
+      }
     }
   }
 }

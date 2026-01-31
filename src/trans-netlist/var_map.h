@@ -33,9 +33,17 @@ public:
     
     inline bool is_latch() const { return vartype==vartypet::LATCH; }
     inline bool is_input() const { return vartype==vartypet::INPUT; }
+    inline bool is_output() const
+    {
+      return vartype == vartypet::OUTPUT;
+    }
     inline bool is_wire() const { return vartype==vartypet::WIRE; }
     inline bool is_nondet() const { return vartype==vartypet::NONDET; }
-    
+    bool has_next() const
+    {
+      return is_latch() || is_input() || is_wire() || is_output();
+    }
+
     struct bitt
     {
       // these are not guaranteed to be positive

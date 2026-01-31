@@ -294,19 +294,22 @@ void var_mapt::output(std::ostream &out) const
         out << l_c.var_no();
       }
 
-      out << "->";
-
-      literalt l_n = var.bits[i].next;
-
-      if(l_n.is_true())
-        out << "true";
-      else if(l_n.is_false())
-        out << "false";
-      else
+      if(var.has_next())
       {
-        if(l_n.sign())
-          out << "!";
-        out << l_n.var_no();
+        out << "->";
+
+        literalt l_n = var.bits[i].next;
+
+        if(l_n.is_true())
+          out << "true";
+        else if(l_n.is_false())
+          out << "false";
+        else
+        {
+          if(l_n.sign())
+            out << "!";
+          out << l_n.var_no();
+        }
       }
        
       out << " ";
