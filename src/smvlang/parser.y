@@ -807,14 +807,16 @@ basic_expr : constant
            | EF_Token  basic_expr                 { init($$, ID_EF);  mto($$, $2); }
            | EG_Token  basic_expr                 { init($$, ID_EG);  mto($$, $2); }
            | A_Token '[' basic_expr U_Token basic_expr ']' { binary($$, $3, ID_AU, $5); }
-           | A_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_AR, $5); }
            | E_Token '[' basic_expr U_Token basic_expr ']' { binary($$, $3, ID_EU, $5); }
+           /* AR and ER are not part of the NuSMV grammar */
+           | A_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_AR, $5); }
            | E_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_ER, $5); }
            /* LTL */
            | F_Token  basic_expr                  { init($$, ID_F);  mto($$, $2); }
            | G_Token  basic_expr                  { init($$, ID_G);  mto($$, $2); }
            | X_Token  basic_expr                  { init($$, ID_X);  mto($$, $2); }
            | basic_expr U_Token basic_expr        { binary($$, $1, ID_U, $3); }
+           /* R is not part of the NuSMV grammar */
            | basic_expr R_Token basic_expr        { binary($$, $1, ID_R, $3); }
            | basic_expr V_Token basic_expr        { binary($$, $1, ID_R, $3); }
            /* LTL PAST */
