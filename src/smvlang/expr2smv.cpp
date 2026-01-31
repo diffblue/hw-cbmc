@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/mathematical_types.h>
 
+#include <temporal-logic/ltl.h>
+
 #include "smv_expr.h"
 #include "smv_types.h"
 
@@ -130,6 +132,34 @@ expr2smvt::resultt expr2smvt::convert_binary(
   }
 
   return {precedence, std::move(dest)};
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_binary_ctl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_binary_ctl(
+  const binary_exprt &src,
+  const std::string &symbol)
+{
+  PRECONDITION(symbol.size() == 2);
+  PRECONDITION(symbol[0] == 'A' || symbol[0] == 'E');
+  /* R is not part of the NuSMV grammar */
+  PRECONDITION(symbol[1] == 'U' || symbol[1] == 'R');
+
+  auto dest =
+    symbol.substr(0, 1) + " [" +
+    convert_binary(src, symbol.substr(1, 1), precedencet::TEMPORAL).s + ']';
+
+  return {precedencet::TEMPORAL, std::move(dest)};
 }
 
 /*******************************************************************\
@@ -862,12 +892,17 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
       precedencet::TEMPORAL);
   }
 
-  else if(
-    src.id() == ID_AU || src.id() == ID_EU || src.id() == ID_AR ||
-    src.id() == ID_ER || src.id() == ID_U)
+  else if(src.id() == ID_U)
   {
     return convert_binary(
-      to_binary_expr(src), src.id_string(), precedencet::TEMPORAL);
+      to_U_expr(src), src.id_string(), precedencet::TEMPORAL);
+  }
+
+  else if(
+    src.id() == ID_AU || src.id() == ID_EU || src.id() == ID_AR ||
+    src.id() == ID_ER)
+  {
+    return convert_binary_ctl(to_binary_expr(src), src.id_string());
   }
 
   else if(
@@ -892,7 +927,7 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_R)
   {
     // LTL release is "V" in NuSMV
-    return convert_binary(to_binary_expr(src), "V", precedencet::TEMPORAL);
+    return convert_binary(to_R_expr(src), "V", precedencet::TEMPORAL);
   }
 
   else if(src.id() == ID_smv_S || src.id() == ID_smv_T)
