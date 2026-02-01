@@ -8,7 +8,6 @@ SRC = aig.cpp \
       counterexample_netlist.cpp \
       instantiate_netlist.cpp \
       ldg.cpp \
-      map_aigs.cpp \
       netlist.cpp \
       netlist_boolbv.cpp \
       smv_netlist.cpp \
