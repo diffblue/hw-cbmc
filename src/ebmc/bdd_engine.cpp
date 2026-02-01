@@ -90,7 +90,8 @@ protected:
   {
   public:
     bool is_input;
-    BDD current, next;
+    BDD current_bdd, next_bdd;
+    literalt current_aig;
   };
   
   // this is our BDD variable ordering
@@ -286,9 +287,10 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
           bit_nr<it.second.bits.size();
           bit_nr++)
       {
-        bv_varidt bv_varid(it.first, bit_nr);
-        vars[bv_varid].is_input=
-          it.second.is_input() || it.second.is_nondet();
+        bv_varidt bv_varid{it.first, bit_nr};
+        auto &var = vars[bv_varid];
+        var.is_input = it.second.is_input() || it.second.is_nondet();
+        var.current_aig = it.second.bits[bit_nr].current;
       }
     }
   }
@@ -297,8 +299,8 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
   for(auto &it : vars)
   {
     std::string s=it.first.as_string();
-    it.second.current=mgr.Var(s);
-    it.second.next=mgr.Var(s+"'");
+    it.second.current_bdd = mgr.Var(s);
+    it.second.next_bdd = mgr.Var(s + "'");
   }
 }
 
@@ -319,7 +321,7 @@ bdd_enginet::BDD bdd_enginet::current_to_next(const BDD &bdd) const
   BDD tmp=bdd;
 
   for(const auto &v : vars)
-    tmp=substitute(tmp, v.second.current.var(), v.second.next);
+    tmp = substitute(tmp, v.second.current_bdd.var(), v.second.next_bdd);
 
   return tmp;
 }
@@ -341,7 +343,7 @@ bdd_enginet::BDD bdd_enginet::next_to_current(const BDD &bdd) const
   BDD tmp=bdd;
 
   for(const auto &v : vars)
-    tmp=substitute(tmp, v.second.next.var(), v.second.current);
+    tmp = substitute(tmp, v.second.next_bdd.var(), v.second.current_bdd);
 
   return tmp;
 }
@@ -363,7 +365,7 @@ bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
   BDD tmp=bdd;
 
   for(const auto &v : vars)
-    tmp=exists(tmp, v.second.next.var());
+    tmp = exists(tmp, v.second.next_bdd.var());
 
   return tmp;
 }
@@ -385,7 +387,7 @@ bdd_enginet::BDD bdd_enginet::project_current(const BDD &bdd) const
   BDD tmp=bdd;
 
   for(const auto &v : vars)
-    tmp=exists(tmp, v.second.current.var());
+    tmp = exists(tmp, v.second.current_bdd.var());
 
   return tmp;
 }
@@ -956,8 +958,18 @@ Function: bdd_enginet::build_BDDs
 
 void bdd_enginet::build_BDDs()
 {
-  std::vector<BDD> BDDs;
-  BDDs.resize(netlist.nodes.size());
+  std::vector<BDD> BDDs(netlist.nodes.size());
+
+  // attach the current-state BDDs to their AIG nodes
+  for(const auto &[_, var] : vars)
+  {
+    auto l = var.current_aig;
+    BDD result = var.current_bdd;
+    if(l.sign())
+      result = !result;
+    DATA_INVARIANT(l.var_no() < BDDs.size(), "AIG node in range");
+    BDDs[l.var_no()] = result;
+  }
 
   for(std::size_t i=0; i<netlist.nodes.size(); i++)
   {
@@ -972,12 +984,10 @@ void bdd_enginet::build_BDDs()
     
       BDDs[i]=a & b;
     }
-    else // current-state variable or nondet
+    else
     {
-      bv_varidt id=netlist.var_map.reverse(i);
-      varst::const_iterator it=vars.find(id);
-      assert(it!=vars.end());
-      BDDs[i]=it->second.current;
+      // already done above
+      DATA_INVARIANT(BDDs[i].is_initialized(), "non-AND BDD already done");
     }
   }
   
@@ -987,7 +997,7 @@ void bdd_enginet::build_BDDs()
     if(!v.second.is_input)
     {
       literalt next=netlist.var_map.get_next(v.first);
-      transition_BDDs.push_back(aig2bdd(next, BDDs)==v.second.next);
+      transition_BDDs.push_back(aig2bdd(next, BDDs) == v.second.next_bdd);
     }
   
   // general AIG conditions
