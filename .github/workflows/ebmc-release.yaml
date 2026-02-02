@@ -321,3 +321,71 @@ jobs:
           \`\`\`
           EOM
           gh release edit ebmc-${{ env.EBMC_VERSION }} --repo ${{ github.repository }} --draft=false --notes-file body
+
+  homebrew-formula-PR:
+    name: create PR for Homebrew formula
+    runs-on: ubuntu-24.04
+    needs: [get-version-information]
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: get on the main branch
+        run: |
+          git fetch origin main
+          git checkout main
+
+      - name: create Homebrew formula
+        env:
+          EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
+        run: |
+          cat << EOM > Formula/ebmc@${{ env.EBMC_VERSION }}.rb
+          class Ebmc < Formula
+            desc "Model Checker for SystemVerilog"
+            homepage "https://www.cprover.org/ebmc/"
+            url "https://github.com/diffblue/hw-cbmc.git",
+              tag: "ebmc-${{ env.EBMC_VERSION }}",
+              revision: "${{ github.sha }}"
+            version "ebmc-${{ env.EBMC_VERSION }}"
+            license "BSD-3-Clause"
+
+            uses_from_macos "flex" => :build
+            uses_from_macos "curl" => :build
+            depends_on "bison" => :build
+
+            def install
+              system "make", "-C", "lib/cbmc/src", "minisat2-download"
+              system "make", "-C", "src"
+              system "mkdir", "-p", "#{prefix}/usr/bin"
+              system "cp", "src/ebmc/ebmc", "#{prefix}/usr/bin/"
+            end
+
+            test do
+              system "make", "-C", "regression/ebmc", "test"
+            end
+          end
+          EOM
+
+      - name: create the commit
+        env:
+          EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
+        run: |
+          FILE=Formula/ebmc@${{ env.EBMC_VERSION }}.rb
+          git add $FILE
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Homebrew formula for ebmc ${{ env.EBMC_VERSION }}" $FILE
+
+      - name: create PR
+        env:
+          EBMC_VERSION: ${{ needs.get-version-information.outputs.version }}
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: ebmc-formula-${{ env.EBMC_VERSION }}
+          base: main
+          title: "Homebrew formula for ebmc ${{ env.EBMC_VERSION }}"
+          body: |
+            Automated update for ebmc Homebrew formula.
+            Created by .github/workflows/ebmc-release.yaml
