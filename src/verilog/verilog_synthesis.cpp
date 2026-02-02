@@ -1768,6 +1768,7 @@ void verilog_synthesist::synth_always_base(
   event_guard=event_guardt::NONE;
 
   value_mapt always_value_map;
+  DATA_INVARIANT(value_map == nullptr, "always/initial must not nest");
   value_map=&always_value_map;
 
   synth_statement(module_item.statement());
@@ -1810,6 +1811,7 @@ void verilog_synthesist::synth_initial(
   event_guard=event_guardt::NONE;
 
   value_mapt initial_value_map;
+  DATA_INVARIANT(value_map == nullptr, "always/initial must not nest");
   value_map=&initial_value_map;
 
   synth_statement(module_item.statement());
@@ -1856,6 +1858,7 @@ void verilog_synthesist::synth_assertion_item(
   event_guard = event_guardt::NONE;
 
   value_mapt always_value_map;
+  DATA_INVARIANT(value_map == nullptr, "always/initial must not nest");
   value_map = &always_value_map;
   synth_statement(assertion_item.statement());
   value_map = NULL;
