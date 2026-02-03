@@ -118,6 +118,7 @@ public:
   // label a node
   void label(literalt l, const std::string &label)
   {
+    PRECONDITION(l.is_constant() || l.var_no() < number_of_nodes());
     labeling[label] = l;
   }
 
