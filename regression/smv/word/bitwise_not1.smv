@@ -1,0 +1,6 @@
+MODULE main
+
+-- The precedence of ! vs = determines the outcome.
+SPEC !(0b_01 = 0b_11) -- passes
+SPEC (!0b_01) = 0b_11 -- fails
+SPEC !0b_01 = 0b_11   -- passes
