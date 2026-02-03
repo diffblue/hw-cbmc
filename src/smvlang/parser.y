@@ -296,21 +296,19 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_n
 %right IMPLIES_Token
 %left  EQUIV_Token
 %left  IF_Token
-%left  xor_Token xnor_Token
-%left  OR_Token
+%left  OR_Token xor_Token xnor_Token
 %left  AND_Token
-%left  NOT_Token
 %left  EX_Token AX_Token EF_Token AF_Token EG_Token AG_Token E_Token A_Token U_Token R_Token V_Token F_Token G_Token H_Token O_Token S_Token T_Token X_Token Y_Token Z_Token EBF_Token ABF_Token EBG_Token ABG_Token
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  union_Token
 %left  in_Token
 %left  DOTDOT_Token /* precedence not documented */
-%left  mod_Token /* Precedence from CMU SMV, different from NuSMV */
 %left  LTLT_Token GTGT_Token
 %left  PLUS_Token MINUS_Token
-%left  TIMES_Token DIVIDE_Token
+%left  TIMES_Token DIVIDE_Token mod_Token /* mod precedence from NuSMV, different from CMU SMV */
 %left  COLONCOLON_Token
 %left  UMINUS           /* supplies precedence for unary minus */
+%left  NOT_Token /* precedence from NuSMV, different from CMU SMV */
 %left  DOT_Token '[' '('
 
 %%

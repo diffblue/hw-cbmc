@@ -37,7 +37,7 @@ protected:
 
   // In NuSMV 2.6., ! (not)  has a high precedence (above ::), whereas
   // in the CMU SMV implementation it has the same as other boolean operators.
-  // We use the CMU SMV precedence for !.
+  // We use the NuSMV precedence for !.
   // Like CMU SMV, we give the same precedence to -> and <->, to avoid ambiguity.
   // Note that the precedence of mod in the CMU SMV differs from NuSMV's.
   // We use NuSMV's.
@@ -45,16 +45,16 @@ protected:
   {
     MAX = 16,
     INDEX = 15,   // [ ] , [ : ]
-    CONCAT = 14,  // ::
+    NOT = 14,     // !
     UMINUS = 13,  // - (unary minus)
-    MULT = 12,    // * / mod
-    PLUS = 11,    // + -
-    SHIFT = 10,   // << >>
-    UNION = 9,    // union
-    IN = 8,       // in
-    REL = 7,      // = != < > <= >=
-    TEMPORAL = 6, // AX, AF, etc.
-    NOT = 5,      // !
+    CONCAT = 12,  // ::
+    MULT = 11,    // * / mod
+    PLUS = 10,    // + -
+    SHIFT = 9,    // << >>
+    UNION = 8,    // union
+    IN = 7,       // in
+    REL = 6,      // = != < > <= >=
+    TEMPORAL = 5, // AX, AF, etc.
     AND = 4,      // &
     OR = 3,       // | xor xnor
     IF = 2,       // (• ? • : •)
@@ -74,6 +74,26 @@ protected:
     &
     |
     -> <->
+  */
+
+  /* From https://nusmv.fbk.eu/userman/v27/nusmv.pdf
+
+  The order of parsing precedence for operators from high to low is:
+    [ ] , [ : ]
+    !
+    - (unary minus)
+    ::
+    * / mod
+    + -
+    << >>
+    union
+    in
+    = != < > <= >=
+    &
+    | xor xnor
+    (• ? • : •)
+    <->
+    ->
   */
 
   struct resultt

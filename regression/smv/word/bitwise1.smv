@@ -1,8 +1,8 @@
 MODULE main
 
 -- negation
-SPEC (!uwconst(123, 8)) = uwconst(132, 8)
-SPEC (!swconst(123, 8)) = swconst(-124, 8)
+SPEC !uwconst(123, 8) = uwconst(132, 8)
+SPEC !swconst(123, 8) = swconst(-124, 8)
 
 -- and
 SPEC (uwconst(123, 8) & uwconst(7, 8)) = uwconst(3, 8)

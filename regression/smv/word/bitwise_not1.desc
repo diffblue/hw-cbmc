@@ -2,8 +2,8 @@ CORE
 bitwise_not1.smv
 
 ^\[spec1\] !\(0ud2_1 = 0ud2_3\): PROVED.*$
-^\[spec2\] \(!0ud2_1\) = 0ud2_3: REFUTED.*$
-^\[spec3\] !\(0ud2_1 = 0ud2_3\): PROVED.*$
+^\[spec2\] !0ud2_1 = 0ud2_3: REFUTED.*$
+^\[spec3\] !0ud2_1 = 0ud2_3: REFUTED.*$
 ^EXIT=10$
 ^SIGNAL=0$
 --
