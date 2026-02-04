@@ -78,8 +78,8 @@ void var_mapt::add(
   default:;
     break;
   }
-  
-  if(var.is_latch() || var.is_input())
+
+  if(var.is_latch() || var.is_input() || var.is_nondet())
   {
     reverse_map.emplace(v_current, bv_varidt{id, bit_nr});
   }
@@ -99,6 +99,13 @@ Function: var_mapt::build_reverse_map
 
 void var_mapt::build_reverse_map()
 {
+  reverse_map.clear();
+  wires.clear();
+  outputs.clear();
+  latches.clear();
+  nondets.clear();
+  inputs.clear();
+
   for(mapt::const_iterator
        it=map.begin();
        it!=map.end();

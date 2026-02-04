@@ -167,8 +167,10 @@ void aigt::check_ordering() const
     auto &node = nodes[node_index];
     if(node.is_and())
     {
-      DATA_INVARIANT(node.a.var_no() < node_index, "aig topsort failure");
-      DATA_INVARIANT(node.b.var_no() < node_index, "aig topsort failure");
+      if(!node.a.is_constant())
+        DATA_INVARIANT(node.a.var_no() < node_index, "aig topsort failure");
+      if(!node.b.is_constant())
+        DATA_INVARIANT(node.b.var_no() < node_index, "aig topsort failure");
     }
   }
 }

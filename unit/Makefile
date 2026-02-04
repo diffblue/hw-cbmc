@@ -12,6 +12,9 @@ SRC += smvlang/expr2smv.cpp \
        temporal-logic/nnf.cpp \
        temporal-logic/trivial_sva.cpp \
        trans-netlist/aig.cpp \
+       trans-netlist/aig_nondet_elimination.cpp \
+       trans-netlist/aig_reorder.cpp \
+       trans-netlist/aig_substitution.cpp \
        verilog/typename.cpp \
        # Empty last line
 
