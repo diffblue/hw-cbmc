@@ -90,7 +90,8 @@ protected:
 
   void convert(smv_parse_treet::modulet::elementt &);
   void typecheck(smv_parse_treet::modulet::elementt &);
-  void typecheck_expr_rec(exprt &, modet, bool next);
+  void typecheck_expr_node(exprt &, modet);
+  void process_smv_next_rec(exprt &expr, bool next);
   void convert_expr_to(exprt &, const typet &dest) const;
   void typecheck_assignment(exprt &);
   exprt set_to_predicate(
@@ -668,7 +669,10 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck(exprt &expr, modet mode)
 {
-  typecheck_expr_rec(expr, mode, false);
+  expr.visit_post([mode, this](exprt &node)
+                  { typecheck_expr_node(node, mode); });
+
+  process_smv_next_rec(expr, false);
 }
 
 /*******************************************************************\
@@ -791,7 +795,7 @@ exprt smv_typecheckt::convert_word_constant(
 
 /*******************************************************************\
 
-Function: smv_typecheckt::typecheck_expr_rec
+Function: smv_typecheckt::process_smv_next_rec
 
   Inputs:
 
@@ -801,7 +805,7 @@ Function: smv_typecheckt::typecheck_expr_rec
 
 \*******************************************************************/
 
-void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
+void smv_typecheckt::process_smv_next_rec(exprt &expr, bool next)
 {
   // pre-traversal
   if(expr.id() == ID_smv_next)
@@ -814,22 +818,18 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
 
     expr = to_unary_expr(expr).op();
 
-    typecheck_expr_rec(expr, mode, true);
+    process_smv_next_rec(expr, true);
     return;
   }
 
   // typecheck all the operands recursively
   for(auto &op : expr.operands())
-    typecheck_expr_rec(op, mode, next);
+    process_smv_next_rec(op, next);
 
   // now post-traversal
-  if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
+  if(expr.id() == ID_symbol)
   {
     const irep_idt &identifier = expr.get(ID_identifier);
-
-    auto define_it = define_map.find(identifier);
-    if(define_it != define_map.end())
-      typecheck_define(define_it);
 
     auto s_it=symbol_table.get_writeable(identifier);
 
@@ -840,14 +840,56 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
     }
 
     if(next)
+    {
       expr.id(ID_next_symbol);
+      symbolt &symbol = *s_it;
+
+      if(symbol.module == module_identifier)
+      {
+        symbol.is_input = false;
+        symbol.is_state_var = true;
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::typecheck_expr_node
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
+{
+  // now post-traversal
+  if(expr.id() == ID_symbol)
+  {
+    const irep_idt &identifier = to_symbol_expr(expr).get_identifier();
+
+    auto define_it = define_map.find(identifier);
+    if(define_it != define_map.end())
+      typecheck_define(define_it);
+
+    auto s_it = symbol_table.get_writeable(identifier);
+
+    if(s_it == nullptr)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "variable `" << identifier << "' not found";
+    }
 
     symbolt &symbol=*s_it;
     
     assert(symbol.type.is_not_nil());
     expr.type()=symbol.type;
 
-    if(mode == INIT || next)
+    if(mode == INIT)
     {
       if(symbol.module == module_identifier)
       {
@@ -855,6 +897,16 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
         symbol.is_state_var=true;
       }
     }
+  }
+  else if(expr.id() == ID_smv_next)
+  {
+    // handled by process_smv_next
+    expr.type() = to_unary_expr(expr).op().type();
+  }
+  else if(expr.id() == ID_next_symbol)
+  {
+    // should not have been generated yet
+    PRECONDITION(false);
   }
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_xor ||
