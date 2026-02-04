@@ -27,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 #include <cassert>
 #include <set>
+#include <stack>
 
 class smv_typecheckt:public typecheckt
 {
@@ -151,6 +152,7 @@ protected:
   void collect_define(const exprt &lhs, const exprt &rhs);
   void typecheck_defines();
   void typecheck_define(define_mapt::iterator);
+  std::vector<define_mapt::iterator> unfinished_defines_used(const exprt &);
   void convert_defines(exprt::operandst &invar);
 
   // for variables
@@ -831,6 +833,12 @@ void smv_typecheckt::process_smv_next_rec(exprt &expr, bool next)
   {
     const irep_idt &identifier = expr.get(ID_identifier);
 
+    auto define_it = define_map.find(identifier);
+    if(define_it != define_map.end())
+      DATA_INVARIANT(
+        define_it->second.typechecked,
+        "defines used must be typechecked already");
+
     auto s_it=symbol_table.get_writeable(identifier);
 
     if(s_it==nullptr)
@@ -874,7 +882,9 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
 
     auto define_it = define_map.find(identifier);
     if(define_it != define_map.end())
-      typecheck_define(define_it);
+      DATA_INVARIANT(
+        define_it->second.typechecked,
+        "defines used must be typechecked already");
 
     auto s_it = symbol_table.get_writeable(identifier);
 
@@ -2813,12 +2823,7 @@ void smv_typecheckt::typecheck_define(define_mapt::iterator define_it)
 {
   definet &d = define_it->second;
 
-  if(d.typechecked) return;
-  
-  if(d.in_progress)
-  {
-    throw errort() << "definition of `" << define_it->first << "' is cyclic";
-  }
+  PRECONDITION(!d.typechecked);
 
   auto it = symbol_table.get_writeable(define_it->first);
 
@@ -2830,15 +2835,11 @@ void smv_typecheckt::typecheck_define(define_mapt::iterator define_it)
 
   symbolt &symbol=*it;
 
-  d.in_progress=true;
-
   typecheck(d.value, OTHER);
 
   no_CTL_allowed(d.value);
   no_LTL_allowed(d.value);
 
-  d.in_progress=false;
-  d.typechecked=true;
   d.uses_next = uses_next(d.value);
 
   // DEFINE x := ... doesn't come with a type.
@@ -2875,6 +2876,39 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::unfinished_defines_used
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<smv_typecheckt::define_mapt::iterator>
+smv_typecheckt::unfinished_defines_used(const exprt &expr)
+{
+  // find any defines used by 'expr', and see if they are done already
+  std::vector<define_mapt::iterator> result;
+
+  expr.visit_pre(
+    [&result, this](const exprt &node)
+    {
+      if(node.id() == ID_symbol)
+      {
+        auto &identifier = to_symbol_expr(node).get_identifier();
+        auto define_it = define_map.find(identifier);
+        if(define_it != define_map.end() && !define_it->second.typechecked)
+          result.push_back(define_it);
+      }
+    });
+
+  return result;
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::typecheck_defines
 
   Inputs:
@@ -2887,10 +2921,52 @@ Function: smv_typecheckt::typecheck_defines
 
 void smv_typecheckt::typecheck_defines()
 {
+  std::stack<define_mapt::iterator> queue;
+
+  // add all defines to the queue
+
   for(auto define_it = define_map.begin(); define_it != define_map.end();
       ++define_it)
   {
-    typecheck_define(define_it);
+    queue.push(define_it);
+  }
+
+  while(!queue.empty())
+  {
+    auto top_it = queue.top();
+
+    // done already?
+    if(top_it->second.typechecked)
+    {
+      queue.pop();
+      continue;
+    }
+
+    top_it->second.in_progress = true;
+
+    // find any unfinished defines used by 'top_it'
+    auto unfinished_defines_used =
+      this->unfinished_defines_used(top_it->second.value);
+
+    // none? go ahead
+    if(unfinished_defines_used.empty())
+    {
+      queue.pop();
+      typecheck_define(top_it);
+      top_it->second.typechecked = true;
+      top_it->second.in_progress = false;
+    }
+    else
+    {
+      // queue them
+      for(auto &define_it : unfinished_defines_used)
+      {
+        if(define_it->second.in_progress)
+          throw errort() << "definition of `" << top_it->first << "' is cyclic";
+
+        queue.push(define_it);
+      }
+    }
   }
 }
 
