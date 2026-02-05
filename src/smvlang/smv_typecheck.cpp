@@ -62,10 +62,6 @@ public:
 
   void create_var_symbols(const smv_parse_treet::modulet::element_listt &);
 
-  void collect_define(const exprt &lhs, const exprt &rhs);
-  void convert_defines(exprt::operandst &invar);
-  void convert_define(const irep_idt &identifier);
-
   void convert(exprt &);
 
   void typecheck(exprt &, modet);
@@ -150,6 +146,11 @@ protected:
   
   typedef std::unordered_map<irep_idt, definet, irep_id_hash> define_mapt;
   define_mapt define_map;
+
+  void collect_define(const exprt &lhs, const exprt &rhs);
+  void typecheck_defines();
+  void typecheck_define(define_mapt::iterator);
+  void convert_defines(exprt::operandst &invar);
 
   // for variables
   class vart
@@ -826,8 +827,9 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode, bool next)
   {
     const irep_idt &identifier = expr.get(ID_identifier);
 
-    if(define_map.find(identifier)!=define_map.end())
-      convert_define(identifier);
+    auto define_it = define_map.find(identifier);
+    if(define_it != define_map.end())
+      typecheck_define(define_it);
 
     auto s_it=symbol_table.get_writeable(identifier);
 
@@ -2745,7 +2747,7 @@ void smv_typecheckt::no_CTL_allowed(const exprt &expr) const
 
 /*******************************************************************\
 
-Function: smv_typecheckt::convert_define
+Function: smv_typecheckt::typecheck_define
 
   Inputs:
 
@@ -2755,23 +2757,23 @@ Function: smv_typecheckt::convert_define
 
 \*******************************************************************/
 
-void smv_typecheckt::convert_define(const irep_idt &identifier)
+void smv_typecheckt::typecheck_define(define_mapt::iterator define_it)
 {
-  definet &d=define_map[identifier];
-  
+  definet &d = define_it->second;
+
   if(d.typechecked) return;
   
   if(d.in_progress)
   {
-    throw errort() << "definition of `" << identifier << "' is cyclic";
+    throw errort() << "definition of `" << define_it->first << "' is cyclic";
   }
-  
-  auto it=symbol_table.get_writeable(identifier);
+
+  auto it = symbol_table.get_writeable(define_it->first);
 
   if(it==nullptr)
   {
-    throw errort() << "convert_define failed to find symbol `" << identifier
-                   << "'";
+    throw errort() << "convert_define failed to find symbol `"
+                   << define_it->first << "'";
   }
 
   symbolt &symbol=*it;
@@ -2808,8 +2810,6 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
 {
   for(auto &define_it : define_map)
   {
-    convert_define(define_it.first);
-
     // generate constraint
     if(define_it.second.value.type().id() != ID_smv_set)
     {
@@ -2818,6 +2818,27 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
         define_it.second.value};
       invar.push_back(equality);
     }
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::typecheck_defines
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::typecheck_defines()
+{
+  for(auto define_it = define_map.begin(); define_it != define_map.end();
+      ++define_it)
+  {
+    typecheck_define(define_it);
   }
 }
 
@@ -2872,6 +2893,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
       if(element.is_define())
         collect_define(element.lhs(), element.rhs());
     }
+
+    // now we type check the defines
+    typecheck_defines();
 
     // now turn them into INVARs
     convert_defines(trans_invar);
