@@ -348,7 +348,7 @@ jobs:
             url "https://github.com/diffblue/hw-cbmc.git",
               tag: "ebmc-${{ env.EBMC_VERSION }}",
               revision: "${{ github.sha }}"
-            version "ebmc-${{ env.EBMC_VERSION }}"
+            version "${{ env.EBMC_VERSION }}"
             license "BSD-3-Clause"
 
             uses_from_macos "flex" => :build
