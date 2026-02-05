@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE broken-smt-backend
 deep_define.smv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This segfaults.
