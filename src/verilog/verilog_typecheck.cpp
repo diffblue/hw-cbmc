@@ -2022,7 +2022,10 @@ symbolt &copy_module_source(
   // create the symbol
   irep_idt base_name = verilog_module_source.base_name();
 
-  symbolt symbol{module_identifier, module_typet{}, ID_Verilog};
+  symbolt symbol{
+    id2string(module_identifier) + "$source",
+    typet{ID_module_source},
+    ID_Verilog};
 
   symbol.base_name = base_name;
   symbol.pretty_name = base_name;
@@ -2063,11 +2066,32 @@ bool verilog_typecheck(
   bool warn_implicit_nets,
   message_handlert &message_handler)
 {
-  auto symbol = symbol_table.get_writeable(module_identifier);
-  CHECK_RETURN(symbol != nullptr);
+  // find module source symbol
+  symbol_tablet::symbolst::const_iterator it =
+    symbol_table.symbols.find(id2string(module_identifier) + "$source");
+
+  PRECONDITION(it != symbol_table.symbols.end());
+
+  const symbolt &source_symbol = it->second;
+
+  PRECONDITION(
+    symbol_table.symbols.find(module_identifier) == symbol_table.symbols.end());
+
+  // copy the symbol
+  symbolt symbol{source_symbol};
+
+  symbol.name = module_identifier;
+  symbol.module = module_identifier;
+  symbol.type.id(ID_module);
+
+  // put symbol in symbol_table
+  symbolt *new_symbol;
+
+  bool move_result = symbol_table.move(symbol, new_symbol);
+  CHECK_RETURN(!move_result);
 
   verilog_typecheckt verilog_typecheck(
-    standard, warn_implicit_nets, *symbol, symbol_table, message_handler);
+    standard, warn_implicit_nets, *new_symbol, symbol_table, message_handler);
 
   return verilog_typecheck.typecheck_main();
 }

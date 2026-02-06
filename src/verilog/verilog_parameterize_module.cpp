@@ -209,6 +209,10 @@ irep_idt verilog_typecheckt::parameterized_module_identifier(
   const irep_idt &module_identifier,
   const std::list<exprt> &parameter_values) const
 {
+  // No actual parameters? No suffix!
+  if(parameter_values.empty())
+    return module_identifier;
+
   // Create full parameterized module name by appending a suffix
   // to the name of the instantiated module.
   std::string suffix="(";
@@ -262,22 +266,19 @@ irep_idt verilog_typecheckt::parameterize_module(
   const exprt::operandst &parameter_assignments,
   const std::map<irep_idt, exprt> &instance_defparams)
 {
-  // No parameters assigned? Nothing to do.
-  if(parameter_assignments.empty() && instance_defparams.empty())
-    return module_identifier;
-
-  // find base symbol
-
+  // find module source symbol
   symbol_tablet::symbolst::const_iterator it =
-    symbol_table.symbols.find(module_identifier);
+    symbol_table.symbols.find(id2string(module_identifier) + "$source");
 
   if(it == symbol_table.symbols.end())
     throw errort().with_location(location) << "module not found";
 
-  const symbolt &base_symbol = it->second;
+  const symbolt &source_symbol = it->second;
+
+  const auto &source = source_symbol.type.find(ID_module_source);
 
   auto parameter_values = get_parameter_values(
-    to_verilog_module_source(base_symbol.type.find(ID_module_source)),
+    to_verilog_module_source(source),
     parameter_assignments,
     instance_defparams);
 
@@ -289,24 +290,20 @@ irep_idt verilog_typecheckt::parameterize_module(
   if(symbol_table.symbols.find(new_module_identifier)!=
      symbol_table.symbols.end())
     return new_module_identifier; // done already
-    
-  // create symbol
-  
-  symbolt symbol(base_symbol);
 
-  symbol.name=new_module_identifier;
-  symbol.module=symbol.name;
-  
+  // copy the symbol
+  symbolt symbol{source_symbol};
+
+  symbol.name = new_module_identifier;
+  symbol.module = new_module_identifier;
+  symbol.type.id(ID_module);
+
   // set parameters
   set_parameter_values(
     to_verilog_module_source(symbol.type.add(ID_module_source)),
     parameter_values);
 
-  // throw away old stuff
-  symbol.value.clear();
-
   // put symbol in symbol_table
-
   symbolt *new_symbol;
 
   if(symbol_table.move(symbol, new_symbol))
