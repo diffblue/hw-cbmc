@@ -102,6 +102,13 @@ protected:
   std::set<irep_idt> let_symbols;
 
   // instances
+  void elaborate_inst(const verilog_inst_baset &);
+
+  void
+  elaborate_inst(const verilog_inst_baset &, const verilog_instt::instancet &);
+
+  void elaborate_module_instances(const verilog_module_itemt &);
+
   irep_idt parameterize_module(
     const source_locationt &location,
     const irep_idt &module_identifier,
@@ -127,10 +134,6 @@ protected:
   // interfaces
   void module_interface(const verilog_module_sourcet &);
   void check_module_ports(const verilog_module_sourcet::port_listt &);
-  void interface_inst(const verilog_inst_baset &);
-  void interface_inst(
-    const verilog_inst_baset &,
-    const verilog_instt::instancet &op);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);

@@ -1982,6 +1982,10 @@ void verilog_typecheckt::typecheck()
   // generate constructs, and add the symbols to the symbol table.
   auto verilog_module_expr = elaborate(module_source);
 
+  // elaborate the module instances
+  for(auto &module_item : verilog_module_expr.module_items())
+    elaborate_module_instances(module_item);
+
   // Create symbols for the functions, tasks, registers/variables and wires.
   for(auto &module_item : verilog_module_expr.module_items())
     interface_module_item(module_item);
