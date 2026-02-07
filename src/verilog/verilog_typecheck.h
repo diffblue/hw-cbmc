@@ -102,6 +102,13 @@ protected:
   std::set<irep_idt> let_symbols;
 
   // instances
+  void process_module_instantiations(verilog_module_exprt &);
+  void process_parameter_override(const class verilog_parameter_overridet &);
+  void process_parameter_override(const verilog_module_itemt &);
+  void parameterize_instantiated_modules(verilog_module_itemt &);
+  void parameterize_instantiated_modules(class verilog_instt &);
+  void parameterize_instantiated_modules(class verilog_inst_builtint &);
+
   void elaborate_inst(const verilog_inst_baset &);
 
   void
@@ -173,8 +180,6 @@ protected:
   // module items
   void convert_decl(class verilog_declt &);
   void convert_function_or_task(class verilog_function_or_task_declt &);
-  void convert_inst(class verilog_instt &);
-  void convert_inst_builtin(class verilog_inst_builtint &);
   void convert_always_base(class verilog_always_baset &);
   void convert_initial(class verilog_initialt &);
   void convert_continuous_assign(class verilog_continuous_assignt &);
@@ -182,7 +187,6 @@ protected:
   void check_lhs(const exprt &lhs, vassignt vassign);
   void convert_assignments(exprt &trans);
   void convert_module_item(class verilog_module_itemt &);
-  void convert_parameter_override(const class verilog_parameter_overridet &);
   void convert_property_declaration(class verilog_property_declarationt &);
   void convert_sequence_declaration(class verilog_sequence_declarationt &);
 
