@@ -760,6 +760,11 @@ public:
   {
     return static_cast<const verilog_module_itemt &>(get_sub()[0]);
   }
+
+  verilog_module_itemt &module_item()
+  {
+    return static_cast<verilog_module_itemt &>(get_sub()[0]);
+  }
 };
 
 inline const verilog_set_genvarst &to_verilog_set_genvars(const exprt &expr)
