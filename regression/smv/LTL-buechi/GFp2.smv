@@ -1,0 +1,8 @@
+MODULE main
+
+VAR valid: boolean;
+VAR in_valid: boolean;
+
+ASSIGN next(valid):=in_valid;
+
+LTLSPEC G (in_valid -> F valid)

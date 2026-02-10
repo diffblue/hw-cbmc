@@ -1,0 +1,10 @@
+KNOWNBUG buechi
+GFp2.smv
+--buechi --bdd
+^\[.*\] G \(in_valid -> F valid\): REFUTED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+BDD engine gives wrong answer.
