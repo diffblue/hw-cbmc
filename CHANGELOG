@@ -1,5 +1,7 @@
 # EBMC 5.10
 
+* cast properties given with -p to Boolean if need be
+
 # EBMC 5.9
 
 * Verilog: use top-level module for verification, instead of "main"
