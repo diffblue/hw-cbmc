@@ -185,8 +185,8 @@ void verilog_typecheckt::process_parameter_override(
   for(auto &assignment : module_item.assignments())
   {
     // Copy the lhs/rhs.
-    exprt lhs = to_binary_expr(assignment).lhs();
-    exprt rhs = to_binary_expr(assignment).rhs();
+    exprt lhs = assignment.lhs();
+    exprt rhs = assignment.rhs();
 
     // The lhs is a sequence of module instance names using
     // hierarchical_identifier expressions.
