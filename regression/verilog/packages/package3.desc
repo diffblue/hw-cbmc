@@ -1,0 +1,7 @@
+CORE
+package3.sv
+
+^file .* line 8: syntax error, unexpected ::, expecting ';' or ',' before '::'$
+^EXIT=1$
+^SIGNAL=0$
+--

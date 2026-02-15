@@ -93,33 +93,6 @@ void verilog_module_sourcet::show(std::ostream &out) const
   out << '\n';
 }
 
-static void
-dependencies_rec(const verilog_module_itemt &, std::set<irep_idt> &);
-
-static void dependencies_rec(const exprt &expr, std::set<irep_idt> &dest)
-{
-  for(const_depth_iteratort it = expr.depth_cbegin(); it != expr.depth_cend();
-      ++it)
-  {
-    if(it->id() == ID_verilog_package_scope)
-    {
-      auto &package_scope_expr = to_verilog_package_scope_expr(*it);
-      dest.insert(
-        verilog_package_identifier(package_scope_expr.package_base_name()));
-    }
-  }
-}
-
-static void dependencies_rec(const typet &type, std::set<irep_idt> &dest)
-{
-  if(type.id() == ID_verilog_package_scope)
-  {
-    auto &package_scope_type = to_verilog_package_scope_type(type);
-    dest.insert(
-      verilog_package_identifier(package_scope_type.package_base_name()));
-  }
-}
-
 static void dependencies_rec(
   const verilog_module_itemt &module_item,
   std::set<irep_idt> &dest)
@@ -147,39 +120,15 @@ static void dependencies_rec(
   }
   else if(module_item.id() == ID_verilog_package_import)
   {
-    for(auto &import_item : module_item.get_sub())
-    {
-      dest.insert(
-        verilog_package_identifier(import_item.get(ID_verilog_package)));
-    }
   }
   else if(module_item.id() == ID_parameter_decl)
   {
-    auto &parameter_decl = to_verilog_parameter_decl(module_item);
-    for(auto &declarator : parameter_decl.declarators())
-    {
-      dependencies_rec(declarator.type(), dest);
-      dependencies_rec(declarator.value(), dest);
-    }
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
-    auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
-    for(auto &declarator : localparam_decl.declarators())
-    {
-      dependencies_rec(declarator.type(), dest);
-      dependencies_rec(declarator.value(), dest);
-    }
   }
   else if(module_item.id() == ID_decl)
   {
-    auto &decl = to_verilog_decl(module_item);
-    dependencies_rec(decl.type(), dest);
-    for(auto &declarator : decl.declarators())
-    {
-      dependencies_rec(declarator.type(), dest);
-      dependencies_rec(declarator.value(), dest);
-    }
   }
   else if(
     module_item.id() == ID_verilog_function_decl ||
@@ -192,11 +141,9 @@ static void dependencies_rec(
     module_item.id() == ID_verilog_always_ff ||
     module_item.id() == ID_verilog_always_latch)
   {
-    dependencies_rec(to_verilog_always_base(module_item).statement(), dest);
   }
   else if(module_item.id() == ID_initial)
   {
-    dependencies_rec(to_verilog_initial(module_item).statement(), dest);
   }
   else if(module_item.id() == ID_inst)
   {
