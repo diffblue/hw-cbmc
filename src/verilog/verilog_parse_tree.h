@@ -70,6 +70,7 @@ public:
     std::swap(parse_tree.standard, standard);
   }
 
+  // returns the set of modules (not: packages) provided
   void modules_provided(
     std::set<std::string> &module_set) const;
 
