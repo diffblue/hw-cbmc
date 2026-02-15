@@ -67,6 +67,11 @@ public:
     return op0();
   }
 
+  exprt &module()
+  {
+    return op0();
+  }
+
   const verilog_identifier_exprt &item() const
   {
     return static_cast<const verilog_identifier_exprt &>(binary_exprt::op1());
@@ -2015,18 +2020,20 @@ inline verilog_continuous_assignt &to_verilog_continuous_assign(exprt &expr)
 class verilog_parameter_overridet : public verilog_module_itemt
 {
 public:
+  using assignmentst = std::vector<binary_exprt>;
+
   verilog_parameter_overridet() : verilog_module_itemt(ID_parameter_override)
   {
   }
 
-  exprt::operandst &assignments()
+  assignmentst &assignments()
   {
-    return operands();
+    return (assignmentst &)operands();
   }
 
-  const exprt::operandst &assignments() const
+  const assignmentst &assignments() const
   {
-    return operands();
+    return (const assignmentst &)operands();
   }
 };
 

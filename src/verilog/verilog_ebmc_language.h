@@ -57,7 +57,6 @@ protected:
   {
   public:
     irep_idt identifier;
-    bool type_checked = false, in_progress = false;
     const parse_treet &parse_tree;
     modulet(irep_idt _identifier, const parse_treet &_parse_tree)
       : identifier(_identifier), parse_tree(_parse_tree)
@@ -65,10 +64,9 @@ protected:
     }
   };
 
-  std::map<irep_idt, modulet> module_map;
-
   symbol_tablet elaborate_compilation_units(const parse_treest &);
-  transition_systemt typecheck(const parse_treest &, symbol_tablet &&);
+  transition_systemt
+  typecheck(const parse_treest &, irep_idt top_level_module, symbol_tablet &&);
   void typecheck_module(modulet &, symbol_tablet &);
 };
 
