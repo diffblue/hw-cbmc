@@ -418,9 +418,11 @@ symbol_tablet verilog_ebmc_languaget::elaborate_compilation_units(
 {
   symbol_tablet symbol_table;
 
+  const bool warn_implicit_nets = cmdline.isset("warn-implicit-nets");
+
   for(auto &parse_tree : parse_trees)
     verilog_elaborate_compilation_unit(
-      parse_tree, symbol_table, message_handler);
+      parse_tree, warn_implicit_nets, symbol_table, message_handler);
 
   return symbol_table;
 }

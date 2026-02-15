@@ -67,11 +67,6 @@ void verilog_parse_treet::modules_provided(
       module_set.insert(id2string(
         verilog_module_symbol(to_verilog_module_source(item).base_name())));
     }
-    else if(item.id() == ID_verilog_package)
-    {
-      module_set.insert(id2string(verilog_package_identifier(
-        to_verilog_module_source(item).base_name())));
-    }
   }
 }
 

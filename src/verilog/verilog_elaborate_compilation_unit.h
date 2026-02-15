@@ -17,6 +17,7 @@ Author: Daniel Kroening, dkr@amazon.com
 /// throws ebmc_errort on failure
 void verilog_elaborate_compilation_unit(
   const verilog_parse_treet &,
+  bool warn_implicit_nets,
   symbol_table_baset &,
   message_handlert &);
 
