@@ -24,7 +24,7 @@ public:
     verilog_indexert &__indexer,
     verilog_standardt standard,
     message_handlert &message_handler)
-    : indexer(__indexer), verilog_parser(standard, message_handler)
+    : indexer(__indexer), verilog_parser(standard, scopes, message_handler)
   {
     verilog_parser.in = &in;
     verilog_parser.grammar = verilog_parsert::LANGUAGE;
@@ -34,6 +34,7 @@ public:
   void rDescription();
 
 protected:
+  verilog_scopest scopes;
   using idt = verilog_indexert::idt;
   verilog_indexert &indexer;
   irep_idt current_module;
