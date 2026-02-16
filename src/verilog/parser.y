@@ -743,7 +743,7 @@ interface_nonansi_header:
           interface_identifier
                 {
                   init($$, ID_verilog_interface);
-                  stack_expr($$).set(ID_base_name, stack_expr($4).id());
+                  stack_expr($$).set(ID_base_name, stack_expr($4).get(ID_base_name));
                 }
           package_import_declaration_brace
           parameter_port_list_opt
@@ -1504,11 +1504,13 @@ package_import_item_brace:
 package_import_item:
           package_identifier "::" identifier
                 { init($$, ID_verilog_import_item);
-                  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
+                  auto base_name = stack_expr($1).id();
+                  stack_expr($$).set(ID_verilog_package, base_name);
                   stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
         | package_identifier "::" "*"
                 { init($$, ID_verilog_import_item);
-                  stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
+                  auto base_name = stack_expr($1).id();
+                  stack_expr($$).set(ID_verilog_package, base_name);
                   stack_expr($$).set(ID_base_name, "*"); }
         ;
 
@@ -2024,7 +2026,7 @@ list_of_param_assignments:
 
 param_assignment: param_identifier '=' constant_param_expression
                 { init($$, ID_parameter);
-                  auto base_name = stack_expr($1).id();
+                  auto base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
                   addswap($$, ID_value, $3); }
         ;
@@ -2038,7 +2040,7 @@ list_of_type_assignments:
 
 type_assignment: param_identifier '=' data_type
                 { init($$, ID_declarator);
-                  auto base_name = stack_expr($1).id();
+                  auto base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
                   stack_expr($$).set(ID_value, type_exprt{stack_type($3)});
                   stack_expr($$).type() = typet{ID_type};
@@ -2436,7 +2438,8 @@ concurrent_assertion_item:
         | block_identifier TOK_COLON concurrent_assertion_statement
                 {
                   $$=$3;
-                  stack_expr($$).set(ID_base_name, stack_expr($1).id());
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
                 }
         ;
 
@@ -2454,19 +2457,21 @@ smv_assertion_statement:
                 { init($$, ID_verilog_smv_assert); stack_expr($$).operands().resize(2);
                   to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
                   to_binary_expr(stack_expr($$)).op1().make_nil();
-                  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+                  auto base_name = stack_expr($2).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
                 }
         | TOK_ASSUME property_identifier TOK_COLON smv_property ';'
                 { init($$, ID_verilog_smv_assume); stack_expr($$).operands().resize(2);
                   to_binary_expr(stack_expr($$)).op0().swap(stack_expr($4));
                   to_binary_expr(stack_expr($$)).op1().make_nil();
-                  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+                  auto base_name = stack_expr($2).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
                 }
         ;
 
 smv_property_identifier_list:
-          TOK_NON_TYPE_IDENTIFIER
-        | smv_property_identifier_list ',' TOK_NON_TYPE_IDENTIFIER
+          non_type_identifier
+        | smv_property_identifier_list ',' non_type_identifier
         ;
 
 smv_using:
@@ -3224,7 +3229,8 @@ param_expression_opt:
 named_parameter_assignment:
           '.' parameter_identifier '(' param_expression_opt ')'
                 { init($$, ID_named_parameter_assignment);
-                  stack_expr($$).add(ID_parameter).swap(stack_expr($2));
+                  auto base_name = stack_expr($2).get(ID_base_name);
+                  stack_expr($$).set(ID_parameter, base_name);
                   stack_expr($$).add(ID_value).swap(stack_expr($4));
                 }
         ;
@@ -3761,7 +3767,8 @@ statement_or_null_brace:
 statement: 
           attribute_instance_brace block_identifier TOK_COLON attribute_instance_brace statement_item
                 { init($$, ID_verilog_label_statement);
-                  stack_expr($$).set(ID_base_name, stack_expr($2).id());
+                  auto base_name = stack_expr($2).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
 
                   // We'll stick the label onto any assertion
                   auto statement = stack_expr($5).id();
@@ -3769,7 +3776,7 @@ statement:
                      statement == ID_verilog_immediate_assume ||
                      statement == ID_verilog_immediate_cover)
                   {
-                    stack_expr($5).set(ID_base_name, stack_expr($2).id());
+                    stack_expr($5).set(ID_base_name, base_name);
                   }
 
                   mto($$, $5);
@@ -4114,7 +4121,8 @@ deferred_immediate_assertion_item:
                 }
         | block_identifier TOK_COLON deferred_immediate_assertion_statement
                 { /* wrap the statement into an item */
-                  stack_expr($3).set(ID_base_name, stack_expr($1).id());
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($3).set(ID_base_name, base_name);
                   init($$, ID_verilog_assertion_item);
                   mto($$, $3);
                 }
@@ -4821,9 +4829,9 @@ non_type_identifier: TOK_NON_TYPE_IDENTIFIER
                 { new_identifier($$, $1); }
         ;
 
-block_identifier: TOK_NON_TYPE_IDENTIFIER;
+block_identifier: non_type_identifier;
 
-cell_identifier: TOK_NON_TYPE_IDENTIFIER;
+cell_identifier: non_type_identifier;
 
 class_identifier: TOK_CLASS_IDENTIFIER
                 {
@@ -4834,9 +4842,9 @@ class_identifier: TOK_CLASS_IDENTIFIER
                 }
         ;
 
-config_identifier: TOK_NON_TYPE_IDENTIFIER;
+config_identifier: non_type_identifier;
 
-constraint_identifier: TOK_NON_TYPE_IDENTIFIER;
+constraint_identifier: non_type_identifier;
 
 edge_identifier: identifier;
 
@@ -4847,20 +4855,20 @@ genvar_identifier: identifier;
 hierarchical_parameter_identifier: hierarchical_identifier
         ;
 
-instance_identifier: TOK_NON_TYPE_IDENTIFIER;
+instance_identifier: non_type_identifier;
 
-interface_identifier: TOK_NON_TYPE_IDENTIFIER;
+interface_identifier: non_type_identifier;
 
 module_identifier: non_type_identifier;
 
-topmodule_identifier: TOK_NON_TYPE_IDENTIFIER;
+topmodule_identifier: non_type_identifier;
 
 endmodule_identifier_opt:
           /* Optional */
         | TOK_COLON module_identifier
         ;
 
-clocking_identifier: TOK_NON_TYPE_IDENTIFIER;
+clocking_identifier: non_type_identifier;
 
 checker_identifier: non_type_identifier;
 
@@ -4872,19 +4880,20 @@ package_scope: package_identifier "::"
                 {
                   init($$, ID_verilog_package_scope);
                   // enter that scope
-                  PARSER.scopes.enter_package_scope(stack_expr($1).id());
+                  auto base_name = stack_expr($1).id();
+                  PARSER.scopes.enter_package_scope(base_name);
                   mto($$, $1);
                 }
         ;
 
-param_identifier: TOK_NON_TYPE_IDENTIFIER;
+param_identifier: non_type_identifier;
 
 port_identifier: identifier;
 
 ps_covergroup_identifier:
         ;
         
-library_identifier: TOK_NON_TYPE_IDENTIFIER;
+library_identifier: non_type_identifier;
 
 memory_identifier: identifier;
 
@@ -4904,9 +4913,9 @@ type_identifier: TOK_TYPE_IDENTIFIER
 
 ps_type_identifier: type_identifier;
 
-parameter_identifier: TOK_NON_TYPE_IDENTIFIER;
+parameter_identifier: non_type_identifier;
 
-udp_identifier: TOK_NON_TYPE_IDENTIFIER;
+udp_identifier: non_type_identifier;
 
 task_identifier: hierarchical_identifier
         ;
@@ -4942,9 +4951,9 @@ net_type_identifier: TOK_TYPE_IDENTIFIER;
 
 identifier: non_type_identifier;
 
-property_identifier: TOK_NON_TYPE_IDENTIFIER;
+property_identifier: non_type_identifier;
 
-sequence_identifier: TOK_NON_TYPE_IDENTIFIER;
+sequence_identifier: non_type_identifier;
 
 variable_identifier: identifier;
 
