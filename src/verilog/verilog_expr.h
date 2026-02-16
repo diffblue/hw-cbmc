@@ -14,12 +14,23 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 /// A simple Verilog identifier, unqualified
+/// The optional scope is the scope in which the identifier was found;
+/// it is not part of the source text.
 class verilog_identifier_exprt : public nullary_exprt
 {
 public:
   explicit verilog_identifier_exprt(const irep_idt _base_name)
     : nullary_exprt{ID_verilog_identifier, typet{}}
   {
+    base_name(_base_name);
+  }
+
+  explicit verilog_identifier_exprt(
+    const irep_idt _scope,
+    const irep_idt _base_name)
+    : nullary_exprt{ID_verilog_identifier, typet{}}
+  {
+    scope(_scope);
     base_name(_base_name);
   }
 
@@ -31,6 +42,16 @@ public:
   void base_name(irep_idt _base_name)
   {
     set(ID_base_name, _base_name);
+  }
+
+  const irep_idt &scope() const
+  {
+    return get(ID_scope);
+  }
+
+  void scope(irep_idt _scope)
+  {
+    set(ID_scope, _scope);
   }
 
   /// Add the source location from \p location, if it is non-nil.
