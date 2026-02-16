@@ -1505,7 +1505,8 @@ package_import_item:
           package_identifier "::" identifier
                 { init($$, ID_verilog_import_item);
                   stack_expr($$).set(ID_verilog_package, stack_expr($1).id());
-                  stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
+                  stack_expr($$).set(ID_base_name, stack_expr($3).id());
+                  PARSER.scopes.import(stack_expr($1).id(), stack_expr($3).id()); }
         | package_identifier "::" "*"
                 { init($$, ID_verilog_import_item);
                   stack_expr($$).set(ID_verilog_package, stack_expr($1).id());

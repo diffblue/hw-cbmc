@@ -132,6 +132,8 @@ public:
     scope_stack.pop_back();
   }
 
+  void import(irep_idt package, irep_idt base_name);
+
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.
   const scopet *lookup(irep_idt base_name) const;
