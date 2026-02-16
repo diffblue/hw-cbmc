@@ -186,20 +186,18 @@ void verilog_typecheckt::process_parameter_override(
   {
     // Copy the lhs/rhs.
     exprt lhs = assignment.lhs();
-    exprt rhs = assignment.rhs();
 
-    // The lhs is a sequence of module instance names using
-    // hierarchical_identifier expressions.
-    convert_expr(lhs);
-
-    // turn into identifier
+    // the lhs must be instance.parameter
     if(lhs.id() != ID_hierarchical_identifier)
     {
       throw errort().with_location(module_item.source_location())
         << "defparam expected to have a hierachical identifier";
     }
 
-    const auto &hierarchical_identifier = to_hierarchical_identifier_expr(lhs);
+    auto &hierarchical_identifier = to_hierarchical_identifier_expr(lhs);
+
+    // convert the instance
+    convert_expr(hierarchical_identifier.module());
 
     if(hierarchical_identifier.module().id() != ID_symbol)
     {
@@ -209,11 +207,12 @@ void verilog_typecheckt::process_parameter_override(
 
     auto module_instance =
       to_symbol_expr(hierarchical_identifier.module()).get_identifier();
+
     auto parameter_base_name = hierarchical_identifier.item().base_name();
 
     // The rhs must be a constant at this point.
-    auto rhs_value =
-      from_integer(convert_integer_constant_expression(rhs), integer_typet());
+    auto rhs_value = from_integer(
+      convert_integer_constant_expression(assignment.rhs()), integer_typet{});
 
     // store the assignment.
     defparams[module_instance][parameter_base_name] = rhs_value;

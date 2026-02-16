@@ -67,6 +67,11 @@ public:
     return op0();
   }
 
+  exprt &module()
+  {
+    return op0();
+  }
+
   const verilog_identifier_exprt &item() const
   {
     return static_cast<const verilog_identifier_exprt &>(binary_exprt::op1());

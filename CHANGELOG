@@ -1,6 +1,7 @@
 # EBMC 5.10
 
 * cast properties given with -p to Boolean if need be
+* SystemVerilog: recursive module definitions
 
 # EBMC 5.9
 
