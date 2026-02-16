@@ -1,0 +1,8 @@
+KNOWNBUG
+import1.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The identifier is not found.
