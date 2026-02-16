@@ -1,7 +1,7 @@
 CORE
 package1.sv
 --show-parse
-^Pacakge: my_pkg$
+^Package: my_pkg$
 ^EXIT=0$
 ^SIGNAL=0$
 --

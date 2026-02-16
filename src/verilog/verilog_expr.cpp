@@ -272,7 +272,7 @@ void verilog_checkert::show(std::ostream &out) const
 
 void verilog_packaget::show(std::ostream &out) const
 {
-  out << "Pacakge: " << base_name() << '\n';
+  out << "Package: " << base_name() << '\n';
 
   out << "  Items:\n";
 
