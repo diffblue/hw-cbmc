@@ -61,6 +61,21 @@ unsigned verilog_scopet::identifier_token() const
   UNREACHABLE;
 }
 
+void verilog_scopest::import(irep_idt package, irep_idt base_name)
+{
+  // find the package in the global scope
+  auto package_it = top_scope.scope_map.find(package);
+  if(package_it == top_scope.scope_map.end())
+    return;
+
+  // find the identifier in the package
+  auto name_it = package_it->second.scope_map.find(base_name);
+  if(name_it != package_it->second.scope_map.end())
+  {
+    add_name(base_name, "", name_it->second.kind);
+  }
+}
+
 void verilog_scopest::enter_package_scope(irep_idt base_name)
 {
   // look in the global scope
