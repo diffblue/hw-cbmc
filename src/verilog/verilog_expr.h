@@ -33,6 +33,16 @@ public:
     set(ID_base_name, _base_name);
   }
 
+  const irep_idt &scope() const
+  {
+    return get(ID_scope);
+  }
+
+  void scope(irep_idt _scope)
+  {
+    set(ID_scope, _scope);
+  }
+
   /// Add the source location from \p location, if it is non-nil.
   verilog_identifier_exprt &&with_source_location(source_locationt location) &&
   {
