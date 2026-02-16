@@ -77,13 +77,15 @@ YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
   else
   {
     dest.set(ID_scope, scope_ptr->prefix);
+    if(!scope_ptr->import.empty())
+      dest.set("import", scope_ptr->import);
     return scope_ptr->identifier_token();
   }
 }
 
 #define IDENTIFIER(text) \
   { newstack(yyveriloglval); \
-    auto base_name = text; /* hashing here */ \
+    irep_idt base_name = text; /* hashing here */ \
     return make_identifier(base_name, stack_expr(yyveriloglval)); \
   }
 #define KEYWORD(s, x) \

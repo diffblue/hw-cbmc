@@ -1383,8 +1383,23 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
   verilog_identifier_exprt expr,
   const std::optional<typet> &implicit_net_type)
 {
+  const symbolt *symbol;
   auto base_name = expr.base_name();
-  auto symbol = resolve(base_name);
+  auto import = expr.get("import");
+
+  if(import != irep_idt{})
+  {
+    auto full_identifier = "Verilog::package::" + id2string(import);
+
+    if(ns.lookup(full_identifier, symbol))
+    {
+      DATA_INVARIANT(false, "failed to find imported identifier");
+    }
+  }
+  else
+  {
+    symbol = resolve(base_name);
+  }
 
   if(symbol != nullptr)
   { 

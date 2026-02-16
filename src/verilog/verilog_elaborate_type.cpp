@@ -343,7 +343,21 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   {
     // Look it up!
     auto base_name = to_verilog_typedef_type(src).base_name();
-    const auto *symbol_ptr = resolve(base_name);
+    const symbolt *symbol_ptr;
+    auto import = src.get("import");
+    if(import != irep_idt{})
+    {
+      auto full_identifier = "Verilog::package::" + id2string(import);
+
+      if(ns.lookup(full_identifier, symbol_ptr))
+      {
+        DATA_INVARIANT(false, "failed to find imported typedef identifier");
+      }
+    }
+    else
+    {
+      symbol_ptr = resolve(base_name);
+    }
 
     if(symbol_ptr == nullptr)
       throw errort().with_location(source_location)
