@@ -29,6 +29,7 @@ struct verilog_scopet
     FUNCTION,
     BLOCK,
     TYPEDEF,
+    PARAMETER,
     PROPERTY,
     SEQUENCE,
     OTHER
@@ -54,6 +55,7 @@ struct verilog_scopet
   irep_idt __base_name;
   std::string prefix;
   kindt kind;
+  irep_idt import;
 
   irep_idt identifier() const
   {
@@ -131,6 +133,8 @@ public:
     PRECONDITION(scope_stack.size() >= 2);
     scope_stack.pop_back();
   }
+
+  void import(irep_idt package, irep_idt base_name);
 
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.
