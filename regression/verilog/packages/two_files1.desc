@@ -1,8 +1,8 @@
-KNOWNBUG
-two_filesA1.sv
+CORE
 two_filesB1.sv
-^EXIT=0$
+two_filesA1.sv --top top
+^no properties$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-Support for typedefs in packages accross compilation units is missing.
