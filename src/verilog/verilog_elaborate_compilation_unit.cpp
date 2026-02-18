@@ -54,5 +54,13 @@ void verilog_elaborate_compilation_unit(
         throw ebmc_errort{}.with_exit_code(2);
       }
     }
+    else if(item.id() == ID_decl)
+    {
+      // compilation-unit scoped nets, variables, typedefs, functions,
+      // tasks, parameters
+      verilog_typecheckt verilog_typecheck(
+        parse_tree.standard, warn_implicit_nets, symbol_table, message_handler);
+      verilog_typecheck.typecheck_decl(to_verilog_decl(item));
+    }
   }
 }

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 global_typedef.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ global_typedef.sv
 --
 ^warning: ignoring
 --
-Global typedefs must be added to the symbol table.
