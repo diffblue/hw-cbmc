@@ -70,6 +70,10 @@ public:
   // checkers, packages, primitives, and configurations)
   void typecheck_design_element(symbolt &);
 
+  // type checking for compilation-unit scoped nets, variables,
+  // typedefs, functions, tasks, parameters
+  void typecheck_decl(const verilog_declt &);
+
 protected:
   const namespacet ns;
 

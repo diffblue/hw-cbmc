@@ -1,6 +1,5 @@
 // The VIS model checker accepts global-scoped typedefs as an extension of
-// Verilog. These are at the top-level scope, which is not permitted by
-// SystemVerilog.  It is not clear whether these are file-local or not.
+// Verilog.  In SystemVerilog, these are in the compilation-unit scope.
 
 typedef bit [31:0] some_word_type;
 

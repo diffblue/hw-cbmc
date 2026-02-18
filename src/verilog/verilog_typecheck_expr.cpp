@@ -53,12 +53,17 @@ verilog_typecheck_exprt::hierarchical_identifier(irep_idt base_name) const
   const std::string named_block =
     named_blocks.empty() ? std::string() : id2string(named_blocks.back());
 
-  if(function_or_task_name.empty())
+  if(!function_or_task_name.empty())
+    return id2string(function_or_task_name) + "." + named_block +
+           id2string(base_name);
+  else if(!module_identifier.empty())
     return id2string(module_identifier) + "." + named_block +
            id2string(base_name);
   else
-    return id2string(function_or_task_name) + "." + named_block +
-           id2string(base_name);
+  {
+    // not in a function/task, not in a module/checker/package etc.
+    return "Verilog::$unit." + id2string(base_name);
+  }
 }
 
 /*******************************************************************\
@@ -1309,6 +1314,12 @@ const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
     id2string(module_identifier) + "." + id2string(base_name);
 
   const symbolt *symbol;
+  if(!ns.lookup(full_identifier, symbol))
+    return symbol; // found!
+
+  // compilation-unit scope?
+  full_identifier = "Verilog::$unit." + id2string(base_name);
+
   if(!ns.lookup(full_identifier, symbol))
     return symbol; // found!
 

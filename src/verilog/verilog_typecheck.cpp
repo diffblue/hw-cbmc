@@ -1761,6 +1761,32 @@ void verilog_typecheckt::typecheck_design_element(symbolt &symbol)
 
   // store the module expression in symbol.value
   symbol.value = std::move(verilog_module_expr);
+
+  module_identifier = irep_idt{};
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::typecheck_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
+{
+  auto decl_class = decl.get_class();
+
+  if(decl_class == ID_typedef)
+  {
+    collect_symbols(decl);
+  }
+  else
+    PRECONDITION(false);
 }
 
 /*******************************************************************\
