@@ -315,10 +315,9 @@ irep_idt verilog_typecheckt::parameterize_module(
   // recursive call
 
   verilog_typecheckt verilog_typecheck(
-    standard, false, *new_symbol, symbol_table, get_message_handler());
+    standard, warn_implicit_nets, symbol_table, get_message_handler());
 
-  if(verilog_typecheck.typecheck_main())
-    throw 0;
+  verilog_typecheck.typecheck_design_element(*new_symbol);
 
   return new_module_identifier;
 }

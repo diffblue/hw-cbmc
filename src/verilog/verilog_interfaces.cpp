@@ -50,7 +50,7 @@ Function: verilog_typecheckt::check_module_ports
 void verilog_typecheckt::check_module_ports(
   const verilog_module_sourcet::port_listt &module_ports)
 {
-  auto &ports = to_module_type(module_symbol.type).ports();
+  auto &ports = to_module_type(module_symbol().type).ports();
   ports.clear();
   ports.reserve(module_ports.size());
   std::map<irep_idt, unsigned> port_names;
@@ -71,7 +71,7 @@ void verilog_typecheckt::check_module_ports(
     if(base_name.empty())
     {
       throw errort().with_location(decl.source_location())
-        << "empty port name (module " << module_symbol.base_name << ')';
+        << "empty port name (module " << module_symbol().base_name << ')';
     }
 
     if(port_names.find(base_name) != port_names.end())
@@ -387,7 +387,7 @@ void verilog_typecheckt::interface_block(
     {
       throw errort().with_location(statement.source_location())
         << "duplicate definition of identifier `" << symbol.base_name
-        << "' in module `" << module_symbol.base_name << '\'';
+        << "' in module `" << module_symbol().base_name << '\'';
     }
 
     enter_named_block(base_name);

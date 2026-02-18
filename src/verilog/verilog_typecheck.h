@@ -53,7 +53,6 @@ public:
   verilog_typecheckt(
     verilog_standardt _standard,
     bool warn_implicit_nets,
-    symbolt &_module_symbol,
     symbol_table_baset &_symbol_table,
     message_handlert &_message_handler)
     : verilog_typecheck_exprt(
@@ -63,15 +62,23 @@ public:
         _message_handler),
       verilog_symbol_tablet(_symbol_table),
       ns(_symbol_table),
-      module_symbol(_module_symbol),
       assertion_counter(0)
   {}
 
-  void typecheck() override;
+  // type checking for all "item containers", which includes
+  // all "design elements" (modules, programs, interfaces,
+  // checkers, packages, primitives, and configurations)
+  void typecheck_design_element(symbolt &);
 
 protected:
   const namespacet ns;
-  symbolt &module_symbol;
+
+  // look up the module symbol
+  symbolt &module_symbol()
+  {
+    PRECONDITION(!module_identifier.empty());
+    return symbol_table_lookup(module_identifier);
+  }
 
   // Parameters.
   // defparam assignments. Map from module instance names
