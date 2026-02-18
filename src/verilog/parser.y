@@ -112,26 +112,6 @@ inline static void init(YYSTYPE &expr, const irep_idt &id)
 
 /*******************************************************************\
 
-Function: new_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-
-\*******************************************************************/
-
-inline static void new_identifier(YYSTYPE &dest, YYSTYPE &src)
-{
-  init(dest, ID_verilog_identifier);
-  const auto base_name = stack_expr(src).id();
-  stack_expr(dest).set(ID_base_name, base_name);
-}
-
-/*******************************************************************\
-
 Function: add_as_subtype
 
   Inputs:
@@ -1504,13 +1484,13 @@ package_import_item_brace:
 package_import_item:
           package_identifier "::" identifier
                 { init($$, ID_verilog_import_item);
-                  auto base_name = stack_expr($1).id();
-                  stack_expr($$).set(ID_verilog_package, base_name);
+                  auto package_base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_verilog_package, package_base_name);
                   stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
         | package_identifier "::" "*"
                 { init($$, ID_verilog_import_item);
-                  auto base_name = stack_expr($1).id();
-                  stack_expr($$).set(ID_verilog_package, base_name);
+                  auto package_base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_verilog_package, package_base_name);
                   stack_expr($$).set(ID_base_name, "*"); }
         ;
 
@@ -3828,7 +3808,6 @@ function_statement_brace:
         ;
 
 system_task_name: TOK_SYSIDENT
-                { new_identifier($$, $1); }
         ;
 
 // System Verilog standard 1800-2017
@@ -4821,12 +4800,10 @@ attr_name: identifier
 // in a higher scope.
 any_identifier:
           TOK_TYPE_IDENTIFIER
-                { new_identifier($$, $1); }
         | non_type_identifier
         ;
 
 non_type_identifier: TOK_NON_TYPE_IDENTIFIER
-                { new_identifier($$, $1); }
         ;
 
 block_identifier: non_type_identifier;
@@ -4880,7 +4857,7 @@ package_scope: package_identifier "::"
                 {
                   init($$, ID_verilog_package_scope);
                   // enter that scope
-                  auto base_name = stack_expr($1).id();
+                  auto base_name = stack_expr($1).get(ID_base_name);
                   PARSER.scopes.enter_package_scope(base_name);
                   mto($$, $1);
                 }
@@ -4905,9 +4882,8 @@ signal_identifier: identifier;
 
 type_identifier: TOK_TYPE_IDENTIFIER
                 {
-                  init($$, ID_typedef_type);
-                  auto base_name = stack_expr($1).id();
-                  stack_expr($$).set(ID_base_name, base_name);
+                  // turn the verilog_identifier into a typedef_type
+                  stack_type($$).id(ID_typedef_type);
                 }
         ;
 
@@ -4926,7 +4902,7 @@ hierarchical_task_or_block_identifier: task_identifier;
 
 hierarchical_tf_identifier: hierarchical_identifier;
 
-specparam_identifier: TOK_NON_TYPE_IDENTIFIER;
+specparam_identifier: non_type_identifier;
 
 function_identifier: hierarchical_identifier
         ;

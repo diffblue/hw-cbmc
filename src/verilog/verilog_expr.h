@@ -3266,7 +3266,8 @@ class verilog_package_scope_exprt : public binary_exprt
 public:
   irep_idt package_base_name() const
   {
-    return op0().id();
+    // this is a verilog_identifier
+    return op0().get(ID_base_name);
   }
 
   const exprt &identifier() const

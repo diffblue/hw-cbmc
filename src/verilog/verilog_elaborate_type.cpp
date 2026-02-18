@@ -171,7 +171,7 @@ typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
     throw errort().with_location(location)
       << "verilog_package_scope expects typedef_type on the rhs";
 
-  auto package_base_name = src.subtypes()[0].id();
+  auto package_base_name = src.subtypes()[0].get(ID_base_name);
   auto typedef_base_name =
     to_verilog_typedef_type(src.subtypes()[1]).base_name();
 
