@@ -2431,7 +2431,8 @@ to_verilog_restrict_statement(verilog_statementt &statement)
   return static_cast<verilog_restrict_statementt &>(statement);
 }
 
-// modules, primitives, programs, interfaces, classes, packages
+// base class for design elements (modules, programs, interfaces,
+// checkers, packages, primitives, configs)
 class verilog_item_containert : public irept
 {
 public:

@@ -114,7 +114,7 @@ void verilog_typecheckt::elaborate_inst(
   {
     throw errort().with_location(op.source_location())
       << "duplicate definition of identifier `" << symbol.base_name
-      << "' in module `" << module_symbol.base_name << '\'';
+      << "' in module `" << module_symbol().base_name << '\'';
   }
 }
 

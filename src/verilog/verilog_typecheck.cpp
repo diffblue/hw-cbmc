@@ -1725,7 +1725,7 @@ bool verilog_typecheckt::implicit_wire(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::typecheck
+Function: verilog_typecheckt::typecheck_design_element
 
   Inputs:
 
@@ -1735,12 +1735,12 @@ Function: verilog_typecheckt::typecheck
 
 \*******************************************************************/
 
-void verilog_typecheckt::typecheck()
+void verilog_typecheckt::typecheck_design_element(symbolt &symbol)
 {
-  module_identifier = module_symbol.name;
+  module_identifier = symbol.name;
 
   const auto &module_source =
-    to_verilog_module_source(module_symbol.type.find(ID_module_source));
+    to_verilog_module_source(symbol.type.find(ID_module_source));
 
   // Elaborate the named constants (parameters, enums),
   // generate constructs, and add the symbols to the symbol table.
@@ -1759,8 +1759,8 @@ void verilog_typecheckt::typecheck()
   // Now typecheck the generated statements.
   convert_statements(verilog_module_expr);
 
-  // store the module expression in module_symbol.value
-  module_symbol.value = std::move(verilog_module_expr);
+  // store the module expression in symbol.value
+  symbol.value = std::move(verilog_module_expr);
 }
 
 /*******************************************************************\
@@ -1854,7 +1854,23 @@ bool verilog_typecheck(
   CHECK_RETURN(!move_result);
 
   verilog_typecheckt verilog_typecheck(
-    standard, warn_implicit_nets, *new_symbol, symbol_table, message_handler);
+    standard, warn_implicit_nets, symbol_table, message_handler);
 
-  return verilog_typecheck.typecheck_main();
+  try
+  {
+    verilog_typecheck.typecheck_design_element(*new_symbol);
+  }
+
+  catch(const typecheckt::errort &e)
+  {
+    if(!e.what().empty())
+    {
+      verilog_typecheck.error().source_location = e.source_location();
+      verilog_typecheck.error() << e.what() << messaget::eom;
+    }
+
+    return true;
+  }
+
+  return false;
 }
