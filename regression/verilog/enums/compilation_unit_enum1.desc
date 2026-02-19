@@ -1,0 +1,13 @@
+KNOWNBUG
+compilation_unit_enum1.sv
+--bound 3 --numbered-trace
+^EXIT=10$
+^SIGNAL=0$
+^\[main\.p1\] always main\.my_light != $unit.YELLOW2: REFUTED$
+^main\.my_light@0 = $unit\.RED$
+^main\.my_light@1 = $unit\.YELLOW1$
+^main\.my_light@2 = $unit\.GREEN$
+^main\.my_light@3 = $unit\.YELLOW2$
+--
+--
+The enum symbol is not added to the right scope.
