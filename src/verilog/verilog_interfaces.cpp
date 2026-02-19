@@ -281,6 +281,12 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_function_call)
   {
   }
+  else if(module_item.id() == ID_verilog_timeunit)
+  {
+  }
+  else if(module_item.id() == ID_verilog_timeprecision)
+  {
+  }
   else
   {
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());

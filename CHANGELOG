@@ -1,6 +1,7 @@
 # EBMC 5.10
 
 * cast properties given with -p to Boolean if need be
+* SystemVerilog: timeunits and timeprecision
 * SystemVerilog: recursive module definitions
 * SystemVerilog: typdefs in compilation-unit scope
 

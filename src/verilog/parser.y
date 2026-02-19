@@ -710,7 +710,6 @@ module_keyword:
 
 interface_declaration:
           interface_nonansi_header
-          timeunits_declaration_opt
           interface_item_brace
           TOK_ENDINTERFACE
                 { $$ = $1; }
@@ -826,13 +825,12 @@ package_declaration:
                 {
                   push_scope(stack_expr($5).get(ID_base_name), "::", verilog_scopet::PACKAGE);
                 }
-          timeunits_declaration_opt
           package_item_brace
           TOK_ENDPACKAGE endpackage_identifier_opt
                 {
                   pop_scope();
                   $$ = $3;
-                  addswap($$, ID_module_items, $9);
+                  addswap($$, ID_module_items, $8);
                   stack_expr($$).set(ID_base_name, stack_expr($5).get(ID_base_name));
                 }
         ;
@@ -842,8 +840,13 @@ endpackage_identifier_opt:
         | TOK_COLON package_identifier
         ;
 
-timeunits_declaration_opt:
-          /* Optional */
+timeunits_declaration:
+          TOK_TIMEUNIT time_literal ';'
+                { init($$, ID_verilog_timeunit); mto($$, $2); }
+        | TOK_TIMEUNIT time_literal TOK_SLASH time_literal ';'
+                { init($$, ID_verilog_timeunit); mto($$, $2); mto($$, $4); }
+        | TOK_TIMEPRECISION time_literal ';'
+                { init($$, ID_verilog_timeprecision); mto($$, $2); }
         ;
 
 // System Verilog standard 1800-2017
@@ -1143,7 +1146,7 @@ non_port_interface_item:
         | program_declaration
         /* | modport_declaration */
         | interface_declaration
-        /* | timeunits_declaration */
+        | timeunits_declaration
         ;
 
 // System Verilog standard 1800-2017
@@ -1339,7 +1342,7 @@ package_item:
           package_or_generate_item_declaration
 //      | anonymous_program
 //      | package_export_declaration
-//      | timeunits_declaration
+        | timeunits_declaration
         ;
 
 package_or_generate_item_declaration:
