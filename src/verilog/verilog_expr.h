@@ -1151,26 +1151,29 @@ inline verilog_declt &to_verilog_decl(exprt &irep)
 }
 
 /// function and task declarations
-class verilog_function_or_task_declt : public verilog_module_itemt
+class verilog_function_or_task_declt : public verilog_declt
 {
 public:
-  verilog_function_or_task_declt(irep_idt __id) : verilog_module_itemt(__id)
+  explicit verilog_function_or_task_declt(irep_idt decl_class)
   {
+    set_class(decl_class);
   }
 
   // Function and task declarations have:
-  // a) an base name and identifier,
+  // a) an operand, which is the declarator (base name and identifier)
   // b) an optional list of ANSI-style ports,
   // c) further declarations,
   // d) a body.
   irep_idt base_name() const
   {
-    return find(ID_symbol).get(ID_base_name);
+    PRECONDITION(declarators().size() == 1);
+    return declarators()[0].base_name();
   }
 
   void set_identifier(const irep_idt &identifier)
   {
-    add(ID_symbol).set(ID_identifier, identifier);
+    PRECONDITION(declarators().size() == 1);
+    return declarators()[0].identifier(identifier);
   }
 
   using portst = std::vector<verilog_declt>;
@@ -1227,16 +1230,14 @@ public:
 inline const verilog_function_or_task_declt &
 to_verilog_function_or_task_decl(const irept &irep)
 {
-  PRECONDITION(
-    irep.id() == ID_verilog_function_decl || irep.id() == ID_verilog_task_decl);
+  PRECONDITION(irep.id() == ID_decl);
   return static_cast<const verilog_function_or_task_declt &>(irep);
 }
 
 inline verilog_function_or_task_declt &
 to_verilog_function_or_task_decl(exprt &irep)
 {
-  PRECONDITION(
-    irep.id() == ID_verilog_function_decl || irep.id() == ID_verilog_task_decl);
+  PRECONDITION(irep.id() == ID_decl);
   return static_cast<verilog_function_or_task_declt &>(irep);
 }
 
