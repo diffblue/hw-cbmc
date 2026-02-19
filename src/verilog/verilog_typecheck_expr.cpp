@@ -642,18 +642,38 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   if(expr.is_system_function_call())
     return convert_system_function(expr);
 
-  if(expr.function().id() != ID_verilog_identifier)
+  exprt &f_op = expr.function();
+  irep_idt base_name;
+  std::string full_identifier;
+
+  if(f_op.id() == ID_verilog_package_scope)
+  {
+    // package-scoped function call, e.g., moo::foo()
+    auto &package_scope = to_verilog_package_scope_expr(f_op);
+
+    if(package_scope.identifier().id() != ID_verilog_identifier)
+    {
+      throw errort().with_location(f_op.source_location())
+        << "expected identifier as function";
+    }
+
+    auto package_base = package_scope.package_base_name();
+    base_name =
+      to_verilog_identifier_expr(package_scope.identifier()).base_name();
+
+    full_identifier = id2string(verilog_package_identifier(package_base)) +
+                      '.' + id2string(base_name);
+  }
+  else if(f_op.id() == ID_verilog_identifier)
+  {
+    base_name = to_verilog_identifier_expr(f_op).base_name();
+    full_identifier = id2string(module_identifier) + "." + id2string(base_name);
+  }
+  else
   {
     throw errort().with_location(expr.source_location())
       << "expected identifier as function";
   }
-
-  exprt &f_op = expr.function();
-
-  const irep_idt &base_name = to_verilog_identifier_expr(f_op).base_name();
-
-  std::string full_identifier =
-    id2string(module_identifier) + "." + id2string(base_name);
 
   const symbolt *symbol;
   if(ns.lookup(full_identifier, symbol))
