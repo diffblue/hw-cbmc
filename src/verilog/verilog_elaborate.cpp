@@ -904,6 +904,12 @@ void verilog_typecheckt::collect_symbols(
   {
     // e.g., $error
   }
+  else if(module_item.id() == ID_verilog_timeunit)
+  {
+  }
+  else if(module_item.id() == ID_verilog_timeprecision)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
 }

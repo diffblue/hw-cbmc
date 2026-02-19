@@ -1587,6 +1587,12 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_function_call)
   {
   }
+  else if(module_item.id() == ID_verilog_timeunit)
+  {
+  }
+  else if(module_item.id() == ID_verilog_timeprecision)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
