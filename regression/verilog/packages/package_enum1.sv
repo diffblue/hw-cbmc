@@ -6,8 +6,6 @@ endpackage
 
 module main;
 
-  import moo::*;
-
   assert final (moo::GREEN == 1);
 
 endmodule

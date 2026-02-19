@@ -504,9 +504,14 @@ public:
       return static_cast<exprt &>(add(ID_value));
     }
 
-    irep_idt scope_prefix() const
+    irep_idt identifier() const
     {
-      return get(ID_verilog_scope_prefix);
+      return get(ID_identifier);
+    }
+
+    void identifier(irep_idt _identifier)
+    {
+      set(ID_identifier, _identifier);
     }
 
     irep_idt base_name() const

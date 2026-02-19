@@ -200,11 +200,21 @@ void verilog_typecheckt::collect_symbols(const typet &type)
           from_integer(1, integer_typet()), tbd_type));
     }
 
+    // copy the type
+    auto enum_type_copy = enum_type;
+
+    for(auto &enum_name : enum_type_copy.enum_names())
+    {
+      const auto base_name = enum_name.base_name();
+      const auto identifier = hierarchical_identifier(base_name);
+      enum_name.identifier(identifier);
+    }
+
     // Add a symbol for the enum to the symbol table.
     // This allows looking up the enum name identifiers.
     {
       const auto identifier = hierarchical_identifier(enum_type.base_name());
-      type_symbolt enum_type_symbol(identifier, enum_type, mode);
+      type_symbolt enum_type_symbol(identifier, enum_type_copy, mode);
       enum_type_symbol.module = module_identifier;
       enum_type_symbol.is_file_local = true;
       enum_type_symbol.location = enum_type.source_location();
