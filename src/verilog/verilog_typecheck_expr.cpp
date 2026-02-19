@@ -644,7 +644,7 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
   exprt &f_op = expr.function();
   irep_idt base_name;
-  std::string full_identifier;
+  const symbolt *symbol;
 
   if(f_op.id() == ID_verilog_package_scope)
   {
@@ -661,25 +661,40 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
     base_name =
       to_verilog_identifier_expr(package_scope.identifier()).base_name();
 
-    full_identifier = id2string(verilog_package_identifier(package_base)) +
-                      '.' + id2string(base_name);
+    auto full_identifier = id2string(verilog_package_identifier(package_base)) +
+                           '.' + id2string(base_name);
+
+    if(ns.lookup(full_identifier, symbol))
+    {
+      throw errort().with_location(f_op.source_location())
+        << "function `" << base_name << "' not known in package `"
+        << package_base << '\'';
+    }
   }
   else if(f_op.id() == ID_verilog_identifier)
   {
     base_name = to_verilog_identifier_expr(f_op).base_name();
-    full_identifier = id2string(module_identifier) + "." + id2string(base_name);
+
+    // first look in the current module
+    irep_idt full_identifier =
+      id2string(module_identifier) + "." + id2string(base_name);
+
+    if(ns.lookup(full_identifier, symbol))
+    {
+      // not there? Try compilation-unit scope.
+      full_identifier = "Verilog::$unit." + id2string(base_name);
+
+      if(ns.lookup(full_identifier, symbol))
+      {
+        throw errort().with_location(f_op.source_location())
+          << "unknown function `" << base_name << "'";
+      }
+    }
   }
   else
   {
     throw errort().with_location(expr.source_location())
       << "expected identifier as function";
-  }
-
-  const symbolt *symbol;
-  if(ns.lookup(full_identifier, symbol))
-  {
-    throw errort().with_location(f_op.source_location())
-      << "unknown function `" << base_name << "'";
   }
 
   if(symbol->type.id()!=ID_code)

@@ -569,6 +569,7 @@ void verilog_typecheckt::collect_symbols(
 
   auto base_name = decl.base_name();
   auto identifier = hierarchical_identifier(base_name);
+
   symbolt symbol{identifier, code_typet{{}, std::move(return_type)}, mode};
 
   symbol.base_name = base_name;

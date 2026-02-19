@@ -1802,6 +1802,10 @@ void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
   {
     collect_symbols(decl);
   }
+  else if(decl_class == ID_function || decl_class == ID_task)
+  {
+    collect_symbols(to_verilog_function_or_task_decl(decl));
+  }
   else
     PRECONDITION(false);
 }
