@@ -419,6 +419,9 @@ Function: verilog_typecheckt::convert_decl
 
 void verilog_typecheckt::convert_decl(verilog_declt &decl)
 {
+  PRECONDITION(decl.get_class() != ID_function);
+  PRECONDITION(decl.get_class() != ID_task);
+
   for(auto &declarator : decl.declarators())
   {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
@@ -1390,7 +1393,14 @@ void verilog_typecheckt::convert_statement(
   else if(statement.id()==ID_function_call)
     convert_function_call_or_task_enable(to_verilog_function_call(statement));
   else if(statement.id()==ID_decl)
-    convert_decl(to_verilog_decl(statement));
+  {
+    auto decl_class = to_verilog_decl(statement).get_class();
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+    }
+    else
+      convert_decl(to_verilog_decl(statement));
+  }
   else if(statement.id()==ID_force)
     convert_force(to_verilog_force(statement));
   else if(statement.id() == ID_verilog_label_statement)
@@ -1455,16 +1465,17 @@ void verilog_typecheckt::convert_module_item(
   }
   else if(module_item.id()==ID_decl)
   {
-    convert_decl(to_verilog_decl(module_item));
+    auto decl_class = to_verilog_decl(module_item).get_class();
+
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+      convert_function_or_task(to_verilog_function_or_task_decl(module_item));
+    }
+    else
+      convert_decl(to_verilog_decl(module_item));
   }
   else if(module_item.id() == ID_verilog_generate_decl)
   {
-  }
-  else if(
-    module_item.id() == ID_verilog_function_decl ||
-    module_item.id() == ID_verilog_task_decl)
-  {
-    convert_function_or_task(to_verilog_function_or_task_decl(module_item));
   }
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
@@ -1790,6 +1801,10 @@ void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
   if(decl_class == ID_typedef)
   {
     collect_symbols(decl);
+  }
+  else if(decl_class == ID_function || decl_class == ID_task)
+  {
+    collect_symbols(to_verilog_function_or_task_decl(decl));
   }
   else
     PRECONDITION(false);

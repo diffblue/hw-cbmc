@@ -2271,10 +2271,11 @@ function_body_declaration:
           tf_item_declaration_brace
           function_statement_or_null_brace
           TOK_ENDFUNCTION
-                { init($$, ID_verilog_function_decl);
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
                   addswap($$, ID_type, $1);
                   add_as_subtype(stack_type($1), stack_type($1));
-                  addswap($$, ID_symbol, $2);
+                  mto($$, $2); // declarator
                   addswap($$, ID_verilog_declarations, $5);
                   addswap($$, ID_body, $6);
                   pop_scope();
@@ -2286,10 +2287,11 @@ function_body_declaration:
           block_item_declaration_brace
           function_statement_or_null_brace
           TOK_ENDFUNCTION
-                { init($$, ID_verilog_function_decl);
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
                   addswap($$, ID_type, $1);
                   add_as_subtype(stack_type($1), stack_type($1));
-                  addswap($$, ID_symbol, $2);
+                  mto($$, $2); // declarator
                   addswap($$, ID_ports, $5);
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);
@@ -2327,8 +2329,9 @@ task_declaration:
           tf_item_declaration_brace
           task_statement_or_null_brace
           TOK_ENDTASK
-                { init($$, ID_verilog_task_decl);
-                  addswap($$, ID_symbol, $2);
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_task);
+                  mto($$, $2); // declarator
                   addswap($$, ID_verilog_declarations, $5);
                   addswap($$, ID_body, $6);
                   pop_scope();
@@ -2339,8 +2342,9 @@ task_declaration:
           tf_item_declaration_brace
           task_statement_or_null_brace
           TOK_ENDTASK
-                { init($$, ID_verilog_task_decl);
-                  addswap($$, ID_symbol, $2);
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_task);
+                  mto($$, $2); // declarator
                   addswap($$, ID_ports, $5);
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);

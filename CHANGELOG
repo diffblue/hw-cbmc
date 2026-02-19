@@ -4,6 +4,7 @@
 * SystemVerilog: timeunits and timeprecision
 * SystemVerilog: recursive module definitions
 * SystemVerilog: typdefs in compilation-unit scope
+* SystemVerilog: functions in package and compilation-unit scopes
 
 # EBMC 5.9
 
