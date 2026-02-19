@@ -4475,7 +4475,7 @@ subroutine_call:
 // Note that this does not affect system function identifiers ($...),
 // which cannot be variables.
 function_subroutine_call:
-          hierarchical_tf_identifier list_of_arguments_paren
+          ps_or_hierarchical_tf_identifier list_of_arguments_paren
                 { init($$, ID_function_call);
                   stack_expr($$).operands().reserve(2);
                   mto($$, $1); mto($$, $2); }
@@ -4904,6 +4904,18 @@ event_identifier: identifier;
 hierarchical_task_or_block_identifier: task_identifier;
 
 hierarchical_tf_identifier: hierarchical_identifier;
+
+tf_identifier: identifier;
+
+ps_or_hierarchical_tf_identifier:
+          package_scope tf_identifier
+                { $$ = $1;
+                  mto($$, $2);
+                  // exit the package scope
+                  pop_scope();
+                }
+        | hierarchical_tf_identifier
+        ;
 
 specparam_identifier: non_type_identifier;
 
