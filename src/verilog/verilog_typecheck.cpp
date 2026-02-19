@@ -1790,6 +1790,9 @@ void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
   if(decl_class == ID_typedef)
   {
     collect_symbols(decl);
+
+    for(auto identifier : symbols_added)
+      elaborate_symbol_rec(identifier);
   }
   else
     PRECONDITION(false);

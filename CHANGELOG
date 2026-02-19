@@ -3,6 +3,7 @@
 * cast properties given with -p to Boolean if need be
 * SystemVerilog: timeunits and timeprecision
 * SystemVerilog: recursive module definitions
+* SystemVerilog: enums in compilation-unit scope
 * SystemVerilog: typdefs in compilation-unit scope
 
 # EBMC 5.9
