@@ -3295,12 +3295,13 @@ void verilog_synthesist::synth_statement(
     synth_prepostincdec(statement);
   else if(statement.id()==ID_decl)
   {
-    synth_decl(to_verilog_decl(statement));
-  }
-  else if(
-    statement.id() == ID_verilog_function_decl ||
-    statement.id() == ID_verilog_task_decl)
-  {
+    auto decl_class = to_verilog_decl(statement).get_class();
+
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+    }
+    else
+      synth_decl(to_verilog_decl(statement));
   }
   else if(statement.id()==ID_skip)
   {
@@ -3340,16 +3341,15 @@ void verilog_synthesist::synth_module_item(
   }
   else if(module_item.id()==ID_decl)
   {
-    synth_decl(to_verilog_decl(module_item));
-  }
-  else if(module_item.id() == ID_verilog_generate_decl)
-  {
-  }
-  else if(
-    module_item.id() == ID_verilog_function_decl ||
-    module_item.id() == ID_verilog_task_decl)
-  {
-    synth_function_or_task_decl(to_verilog_function_or_task_decl(module_item));
+    auto decl_class = to_verilog_decl(module_item).get_class();
+
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+      synth_function_or_task_decl(
+        to_verilog_function_or_task_decl(module_item));
+    }
+    else
+      synth_decl(to_verilog_decl(module_item));
   }
   else if(
     module_item.id() == ID_parameter_decl ||

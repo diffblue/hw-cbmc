@@ -562,7 +562,7 @@ void verilog_typecheckt::collect_symbols(
 {
   typet return_type;
 
-  if(decl.id() == ID_verilog_function_decl)
+  if(decl.get_class() == ID_function)
     return_type = elaborate_type(decl.type());
   else
     return_type = empty_typet();
@@ -593,7 +593,7 @@ void verilog_typecheckt::collect_symbols(
   // add a symbol for the return value of functions, if applicable
 
   if(
-    decl.id() == ID_verilog_function_decl &&
+    decl.get_class() == ID_function &&
     to_code_type(symbol.type).return_type().id() != ID_verilog_void)
   {
     symbolt return_symbol;
@@ -724,7 +724,12 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   }
   else if(statement.id() == ID_decl)
   {
-    collect_symbols(to_verilog_decl(statement));
+    auto decl_class = to_verilog_decl(statement).get_class();
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+    }
+    else
+      collect_symbols(to_verilog_decl(statement));
   }
   else if(statement.id() == ID_delay)
   {
@@ -813,13 +818,14 @@ void verilog_typecheckt::collect_symbols(
   }
   else if(module_item.id() == ID_decl)
   {
-    collect_symbols(to_verilog_decl(module_item));
-  }
-  else if(
-    module_item.id() == ID_verilog_function_decl ||
-    module_item.id() == ID_verilog_task_decl)
-  {
-    collect_symbols(to_verilog_function_or_task_decl(module_item));
+    auto decl_class = to_verilog_decl(module_item).get_class();
+
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+      collect_symbols(to_verilog_function_or_task_decl(module_item));
+    }
+    else
+      collect_symbols(to_verilog_decl(module_item));
   }
   else if(module_item.id() == ID_verilog_generate_decl)
   {

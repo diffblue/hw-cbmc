@@ -131,11 +131,6 @@ static void dependencies_rec(
   {
   }
   else if(
-    module_item.id() == ID_verilog_function_decl ||
-    module_item.id() == ID_verilog_task_decl)
-  {
-  }
-  else if(
     module_item.id() == ID_verilog_always ||
     module_item.id() == ID_verilog_always_comb ||
     module_item.id() == ID_verilog_always_ff ||
