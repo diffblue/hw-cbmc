@@ -1164,6 +1164,14 @@ public:
   {
   }
 
+  sva_cycle_delay_exprt(exprt lhs, constant_exprt cycles, exprt rhs)
+    : exprt{
+        ID_sva_cycle_delay,
+        verilog_sva_sequence_typet{},
+        {std::move(lhs), std::move(cycles), nil_exprt{}, std::move(rhs)}}
+  {
+  }
+
   sva_cycle_delay_exprt(constant_exprt cycles, exprt rhs)
     : exprt{
         ID_sva_cycle_delay,
