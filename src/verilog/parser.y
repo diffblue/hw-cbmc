@@ -1496,7 +1496,8 @@ package_import_item:
                 { init($$, ID_verilog_import_item);
                   auto package_base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_verilog_package, package_base_name);
-                  stack_expr($$).set(ID_base_name, "*"); }
+                  stack_expr($$).set(ID_base_name, "*");
+                  PARSER.scopes.wildcard_import(package_base_name); }
         ;
 
 genvar_declaration:
