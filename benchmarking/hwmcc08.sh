@@ -3,8 +3,8 @@
 # This runs ebmc in BMC mode on the HWMCC08 benchmarks.
 
 if [ ! -e aiger/. ] ; then
-  echo Downloading and building the AIGER tools
-  git clone https://github.com/arminbiere/aiger
+  echo Downloading and building the AIGER tools at version 1.9.20
+  git clone -b rel-1.9.20 https://github.com/arminbiere/aiger
   (cd aiger ; ./configure.sh ; make aigtosmv )
 fi
 
