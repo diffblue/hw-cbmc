@@ -177,8 +177,8 @@ typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
 
   // stitch together
   irep_idt full_identifier =
-    id2string(verilog_package_identifier(package_base_name)) + '.' +
-    id2string(typedef_base_name);
+    id2string(verilog_package_identifier(package_base_name)) +
+    "::" + id2string(typedef_base_name);
 
   // look it up
   const symbolt *symbol_ptr;
@@ -343,7 +343,22 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   {
     // Look it up!
     auto base_name = to_verilog_typedef_type(src).base_name();
-    const auto *symbol_ptr = resolve(base_name);
+    const symbolt *symbol_ptr;
+
+    if(src.get("import") != irep_idt{})
+    {
+      auto full_identifier =
+        "Verilog::package::" + id2string(src.get("import"));
+
+      if(ns.lookup(full_identifier, symbol_ptr))
+      {
+        DATA_INVARIANT(false, "failed to find imported typedef identifier");
+      }
+    }
+    else
+    {
+      symbol_ptr = resolve(base_name);
+    }
 
     if(symbol_ptr == nullptr)
       throw errort().with_location(source_location)

@@ -1488,13 +1488,16 @@ package_import_item:
           package_identifier "::" identifier
                 { init($$, ID_verilog_import_item);
                   auto package_base_name = stack_expr($1).get(ID_base_name);
+                  auto identifier_base_name = stack_expr($3).get(ID_base_name);
                   stack_expr($$).set(ID_verilog_package, package_base_name);
-                  stack_expr($$).set(ID_base_name, stack_expr($3).id()); }
+                  stack_expr($$).set(ID_base_name, identifier_base_name);
+                  PARSER.scopes.import(package_base_name, identifier_base_name); }
         | package_identifier "::" "*"
                 { init($$, ID_verilog_import_item);
                   auto package_base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_verilog_package, package_base_name);
-                  stack_expr($$).set(ID_base_name, "*"); }
+                  stack_expr($$).set(ID_base_name, "*");
+                  PARSER.scopes.wildcard_import(package_base_name); }
         ;
 
 genvar_declaration:
@@ -2010,6 +2013,7 @@ list_of_param_assignments:
 param_assignment: param_identifier '=' constant_param_expression
                 { init($$, ID_parameter);
                   auto base_name = stack_expr($1).get(ID_base_name);
+                  PARSER.scopes.add_name(base_name, "", verilog_scopet::PARAMETER);
                   stack_expr($$).set(ID_base_name, base_name);
                   addswap($$, ID_value, $3); }
         ;
