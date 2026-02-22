@@ -52,6 +52,7 @@ unsigned verilog_scopet::identifier_token() const
   case verilog_scopet::TASK:            return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::FUNCTION:        return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::TYPEDEF:         return TOK_TYPE_IDENTIFIER;
+  case verilog_scopet::PARAMETER:       return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::PROPERTY:        return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::SEQUENCE:        return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::OTHER:           return TOK_NON_TYPE_IDENTIFIER;
@@ -59,6 +60,25 @@ unsigned verilog_scopet::identifier_token() const
   }
 
   UNREACHABLE;
+}
+
+void verilog_scopest::import(irep_idt package, irep_idt base_name)
+{
+  // find the package in the global scope
+  auto package_it = top_scope.scope_map.find(package);
+  if(package_it == top_scope.scope_map.end())
+    return;
+
+  // find the identifier in the package
+  auto name_it = package_it->second.scope_map.find(base_name);
+  if(name_it != package_it->second.scope_map.end())
+  {
+    auto &scope = add_name(base_name, "", name_it->second.kind);
+    scope.import = name_it->second.identifier();
+  }
+  else
+  {
+  }
 }
 
 void verilog_scopest::enter_package_scope(irep_idt base_name)
