@@ -1,0 +1,7 @@
+CORE
+package_typedef2.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+--
