@@ -57,8 +57,18 @@ verilog_typecheck_exprt::hierarchical_identifier(irep_idt base_name) const
     return id2string(function_or_task_name) + "." + named_block +
            id2string(base_name);
   else if(!module_identifier.empty())
-    return id2string(module_identifier) + "." + named_block +
-           id2string(base_name);
+  {
+    if(has_prefix(id2string(module_identifier), "Verilog::package::"))
+    {
+      return id2string(module_identifier) + "::" + named_block +
+             id2string(base_name);
+    }
+    else
+    {
+      return id2string(module_identifier) + "." + named_block +
+             id2string(base_name);
+    }
+  }
   else
   {
     // not in a function/task, not in a module/checker/package etc.
@@ -662,7 +672,7 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
       to_verilog_identifier_expr(package_scope.identifier()).base_name();
 
     full_identifier = id2string(verilog_package_identifier(package_base)) +
-                      '.' + id2string(base_name);
+                      "::" + id2string(base_name);
   }
   else if(f_op.id() == ID_verilog_identifier)
   {
@@ -1316,22 +1326,32 @@ const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
       return symbol; // found!
   }
 
+  // determine the pacakge/module prefix, using the right separator
+  std::string prefix;
+
+  if(has_prefix(id2string(module_identifier), "Verilog::package::"))
+  {
+    prefix = id2string(module_identifier) + "::";
+  }
+  else
+  {
+    prefix = id2string(module_identifier) + '.';
+  }
+
   // try named blocks, beginning with inner one
   for(named_blockst::const_reverse_iterator
       it=named_blocks.rbegin();
       it!=named_blocks.rend();
       it++)
   {
-    auto full_identifier = id2string(module_identifier) + "." + id2string(*it) +
-                           id2string(base_name);
+    irep_idt full_identifier = prefix + id2string(*it) + id2string(base_name);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
       return symbol; // found!
   }
 
-  auto full_identifier =
-    id2string(module_identifier) + "." + id2string(base_name);
+  irep_idt full_identifier = prefix + id2string(base_name);
 
   const symbolt *symbol;
   if(!ns.lookup(full_identifier, symbol))
@@ -3006,8 +3026,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     // stitch together
     irep_idt full_identifier =
-      id2string(verilog_package_identifier(package_base)) + '.' +
-      id2string(rhs_base);
+      id2string(verilog_package_identifier(package_base)) +
+      "::" + id2string(rhs_base);
 
     const symbolt *symbol;
     if(ns.lookup(full_identifier, symbol))

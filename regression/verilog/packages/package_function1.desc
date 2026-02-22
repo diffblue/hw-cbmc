@@ -3,6 +3,6 @@ package_function1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
-^\[main\.assert\.1\] always package::moo\.foo\(\) == 123: PROVED
+^\[main\.assert\.1\] always package::moo::foo\(\) == 123: PROVED
 --
 --
