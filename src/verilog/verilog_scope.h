@@ -79,6 +79,10 @@ struct verilog_scopet
   using scope_mapt = std::map<irep_idt, verilog_scopet>;
   scope_mapt scope_map;
 
+  // wildcard imports, in source order
+  using wildcard_importst = std::vector<const verilog_scopet *>;
+  wildcard_importst wildcard_imports;
+
   //.the scanner token number
   unsigned identifier_token() const;
 };
@@ -135,6 +139,7 @@ public:
   }
 
   void import(irep_idt package, irep_idt base_name);
+  void wildcard_import(irep_idt package);
 
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.
