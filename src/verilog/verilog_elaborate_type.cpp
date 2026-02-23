@@ -177,8 +177,8 @@ typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
 
   // stitch together
   irep_idt full_identifier =
-    id2string(verilog_package_identifier(package_base_name)) + '.' +
-    id2string(typedef_base_name);
+    id2string(verilog_package_identifier(package_base_name)) +
+    "::" + id2string(typedef_base_name);
 
   // look it up
   const symbolt *symbol_ptr;

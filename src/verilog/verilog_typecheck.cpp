@@ -285,8 +285,7 @@ Function: verilog_typecheckt::convert_function_or_task
 void verilog_typecheckt::convert_function_or_task(
   verilog_function_or_task_declt &decl)
 {
-  const std::string identifier =
-    id2string(module_identifier) + "." + id2string(decl.base_name());
+  const auto identifier = hierarchical_identifier(decl.base_name());
 
   auto result=symbol_table.get_writeable(identifier);
 
@@ -423,26 +422,11 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
   {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
-    // in a named block?
-    irep_idt named_block;
-    if(!named_blocks.empty())
-      named_block = named_blocks.back();
+    irep_idt full_identifier = hierarchical_identifier(declarator.base_name());
+    symbolt &symbol = symbol_table_lookup(full_identifier);
 
     // fix the type and identifier
-    irep_idt full_identifier;
-
-    if(!function_or_task_name.empty())
-      full_identifier = id2string(function_or_task_name) + "." +
-                        id2string(named_block) +
-                        id2string(declarator.base_name());
-    else
-      full_identifier = id2string(module_identifier) + "." +
-                        id2string(named_block) +
-                        id2string(declarator.base_name());
-
-    symbolt &symbol = symbol_table_lookup(full_identifier);
     declarator.type() = symbol.type;
-
     declarator.identifier(full_identifier);
 
     if(declarator.has_value())
