@@ -343,7 +343,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
     ns.lookup(to_symbol_expr(function_call.function()));
 
   // typecheck it
-  auto decl = to_verilog_function_or_task_decl(function_symbol.value);
+  auto decl = to_verilog_tf_source(function_symbol.value).decl();
 
   function_or_task_name = function_symbol.name;
 

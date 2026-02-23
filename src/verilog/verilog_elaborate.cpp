@@ -575,7 +575,7 @@ void verilog_typecheckt::collect_symbols(
   symbol.location = decl.source_location();
   symbol.pretty_name = strip_verilog_prefix(symbol.name);
   symbol.module = module_identifier;
-  symbol.value = decl;
+  symbol.value = verilog_tf_sourcet{decl}; // copy the entire declaration
 
   add_symbol(symbol);
 
