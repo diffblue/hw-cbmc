@@ -63,13 +63,28 @@ static void preprocessor()
 
 }
 
+YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
+{
+  dest.id(ID_verilog_identifier);
+  dest.set(ID_base_name, base_name);
+  PARSER.set_source_location(dest);
+  auto scope_ptr = PARSER.scopes.lookup(base_name);
+  if(scope_ptr == nullptr)
+  {
+    dest.set(ID_scope, PARSER.scopes.current_scope().prefix);
+    return TOK_NON_TYPE_IDENTIFIER; // default for unseen identifiers
+  }
+  else
+  {
+    dest.set(ID_scope, scope_ptr->prefix);
+    return scope_ptr->identifier_token();
+  }
+}
+
 #define IDENTIFIER(text) \
   { newstack(yyveriloglval); \
-    irep_idt irep_id = text; \
-    stack_expr(yyveriloglval).id(ID_verilog_identifier); \
-    stack_expr(yyveriloglval).set(ID_base_name, irep_id); \
-    PARSER.set_source_location(stack_expr(yyveriloglval)); \
-    return PARSER.scopes.identifier_token(irep_id); \
+    auto base_name = text; /* hashing here */ \
+    return make_identifier(base_name, stack_expr(yyveriloglval)); \
   }
 #define KEYWORD(s, x) \
   { if(SCANNER.standard >= verilog_standardt::s) \
