@@ -79,7 +79,12 @@ bool admits_empty(const exprt &expr)
     // admits_empty(r[*0]) = 1
     // admits_empty(r[*1:$]) = admits_empty(r)
     auto &repetition_expr = to_sva_sequence_repetition_star_expr(expr);
-    if(repetition_expr.is_range())
+    if(!repetition_expr.repetitions_given())
+    {
+      // s[*], same as s[0:$]
+      return true;
+    }
+    else if(repetition_expr.is_range())
     {
       if(repetition_expr.from().is_zero())
         return true;
@@ -88,6 +93,9 @@ bool admits_empty(const exprt &expr)
     }
     else // singleton
     {
+      DATA_INVARIANT(
+        repetition_expr.is_singleton(),
+        "repetition must be singleton if not range");
       if(repetition_expr.repetitions().is_zero())
         return true;
       else

@@ -7,6 +7,7 @@ SRC = unit_tests.cpp
 SRC += smvlang/expr2smv.cpp \
        temporal-logic/hoa.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
+       temporal-logic/rewrite_sva_sequence.cpp \
        temporal-logic/sva_sequence_match.cpp \
        temporal-logic/sva_to_ltl.cpp \
        temporal-logic/nnf.cpp \
