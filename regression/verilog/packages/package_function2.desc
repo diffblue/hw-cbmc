@@ -1,0 +1,9 @@
+KNOWNBUG
+package_function2.sv
+
+^EXIT=0$
+^SIGNAL=0$
+^\[main\.assert\.1\] always P == 123: PROVED
+--
+--
+This does not type check.
