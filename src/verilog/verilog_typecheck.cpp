@@ -342,23 +342,36 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   const symbolt &function_symbol=
     ns.lookup(to_symbol_expr(function_call.function()));
 
-  // typecheck it
-  auto decl = to_verilog_function_or_task_decl(function_symbol.value);
+  verilog_function_or_task_declt::bodyt function_body;
 
-  function_or_task_name = function_symbol.name;
+  // If the function is in a package, it is already type checked.
+  if(function_symbol.value.id() == ID_verilog_tf_source)
+  {
+    // typecheck it
+    auto decl = to_verilog_tf_source(function_symbol.value).decl();
 
-  for(auto &inner_decl : decl.declarations())
-    convert_decl(inner_decl);
+    function_or_task_name = function_symbol.name;
 
-  for(auto &statement : decl.body().statements())
-    convert_statement(statement);
+    for(auto &inner_decl : decl.declarations())
+      convert_decl(inner_decl);
+
+    for(auto &statement : decl.body().statements())
+      convert_statement(statement);
+
+    function_body = decl.body();
+  }
+  else
+  {
+    function_body = static_cast<const verilog_function_or_task_declt::bodyt &>(
+      function_symbol.value);
+  }
 
   const code_typet &code_type=
     to_code_type(function_symbol.type);
 
   const code_typet::parameterst &parameters=
     code_type.parameters();
-    
+
   if(parameters.size()!=arguments.size())
   {
     throw errort().with_location(function_call.source_location())
@@ -390,7 +403,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   }
 
   // interpret it
-  for(auto &statement : decl.body().statements())
+  for(auto &statement : function_body.statements())
     verilog_interpreter(statement);
 
   function_or_task_name="";

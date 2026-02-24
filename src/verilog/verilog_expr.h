@@ -2578,6 +2578,37 @@ inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
   return static_cast<verilog_module_sourcet &>(irep);
 }
 
+/// used to hold a copy of the declaration of a task or function
+/// in the task/function's symbol until it is typechecked
+class verilog_tf_sourcet : public unary_exprt
+{
+public:
+  explicit verilog_tf_sourcet(verilog_function_or_task_declt _decl)
+    : unary_exprt(ID_verilog_tf_source, std::move(_decl))
+  {
+  }
+
+  const verilog_function_or_task_declt &decl() const
+  {
+    return static_cast<const verilog_function_or_task_declt &>(op());
+  }
+
+  verilog_function_or_task_declt &decl()
+  {
+    return static_cast<verilog_function_or_task_declt &>(op());
+  }
+};
+
+inline const verilog_tf_sourcet &to_verilog_tf_source(const irept &irep)
+{
+  return static_cast<const verilog_tf_sourcet &>(irep);
+}
+
+inline verilog_tf_sourcet &to_verilog_tf_source(irept &irep)
+{
+  return static_cast<verilog_tf_sourcet &>(irep);
+}
+
 class verilog_checkert : public verilog_item_containert
 {
 public:
