@@ -746,14 +746,20 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       to_verilog_identifier_expr(statement.function()).base_name();
 
     // look it up
-    const irep_idt full_identifier =
+    irep_idt full_identifier =
       id2string(module_identifier) + "." + id2string(base_name);
 
     const symbolt *symbol;
     if(ns.lookup(full_identifier, symbol))
     {
-      throw errort().with_location(statement.function().source_location())
-        << "unknown function or task `" << base_name << "'";
+      // not there? Try compilation-unit scope.
+      full_identifier = "Verilog::$unit." + id2string(base_name);
+
+      if(ns.lookup(full_identifier, symbol))
+      {
+        throw errort().with_location(statement.function().source_location())
+          << "unknown function or task `" << base_name << "'";
+      }
     }
 
     if(symbol->type.id() != ID_code)
@@ -1801,6 +1807,15 @@ void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
 
     for(auto identifier : symbols_added)
       elaborate_symbol_rec(identifier);
+  }
+  else if(decl_class == ID_function || decl_class == ID_task)
+  {
+    auto &tf_decl = to_verilog_function_or_task_decl(decl);
+    collect_symbols(tf_decl);
+
+    // copy
+    auto tf_decl_copy = tf_decl;
+    convert_function_or_task(tf_decl_copy);
   }
   else
     PRECONDITION(false);

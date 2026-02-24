@@ -1,5 +1,5 @@
 CORE
-compilation_unit_scope_function.sv
+compilation_unit_scope_task.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
