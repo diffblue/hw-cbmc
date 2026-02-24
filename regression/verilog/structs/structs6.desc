@@ -1,0 +1,8 @@
+KNOWNBUG
+structs6.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This crashes during lowering.
