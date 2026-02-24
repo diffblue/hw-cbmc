@@ -2819,6 +2819,11 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
   convert_expr(op0);
   convert_expr(op1);
 
+  // do enum, union and struct decay on op0
+  enum_decay(op0);
+  struct_decay(op0);
+  union_decay(op0);
+
   if(op0.type().id() == ID_verilog_real)
   {
     throw errort().with_location(op0.source_location())
@@ -3463,6 +3468,11 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     exprt &src = part_select.src();
     convert_expr(src);
 
+    // do enum, union and struct decay
+    enum_decay(src);
+    struct_decay(src);
+    union_decay(src);
+
     if(src.type().id() == ID_array)
     {
       throw errort().with_location(src.source_location())
@@ -3508,6 +3518,11 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
     exprt &src = part_select.src();
     convert_expr(src);
+
+    // do enum, union and struct decay
+    enum_decay(src);
+    struct_decay(src);
+    union_decay(src);
 
     if(src.type().id() == ID_array)
     {

@@ -1,8 +1,11 @@
-KNOWNBUG
+CORE
 structs6.sv
 
+^\[main\.p1\] always 0 == 0: PROVED .*$
+^\[main\.p2\] always main\.s\[6:0\] == 114: PROVED .*$
+^\[main\.p3\] always main\.s\[7\] == 1'b0: PROVED .*$
+^\[main\.p4\] always main\.s\[8\] == 1'b1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This crashes during lowering.
