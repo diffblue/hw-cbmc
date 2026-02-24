@@ -206,6 +206,7 @@ protected:
 
   void require_sva_sequence(exprt &);
   void require_sva_property(exprt &);
+  void require_vector(exprt &);
 
   [[nodiscard]] exprt convert_sva_rec(exprt);
   [[nodiscard]] exprt convert_unary_sva(unary_exprt);

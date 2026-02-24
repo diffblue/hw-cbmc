@@ -1,7 +1,7 @@
 CORE
 mod2.v
 
-^file .* line 4: operand 1\.1 must have a bit vector type$
+^file .* line 4: expected a vector type, but got real$
 ^EXIT=2$
 ^SIGNAL=0$
 --

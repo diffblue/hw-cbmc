@@ -480,6 +480,47 @@ void verilog_typecheck_exprt::must_be_bit_vector(exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::require_vector
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::require_vector(exprt &expr)
+{
+  // The operand is required to be a vector type, defined
+  // as in 1800 2017 Sec. 6.9.  Perform implicit conversions.
+  // Otherwise error.
+
+  // do enum, union and struct decay
+  enum_decay(expr);
+  struct_decay(expr);
+  union_decay(expr);
+
+  if(expr.type().id() == ID_bool)
+  {
+    // A scalar, which is a special case of a vector. Cast to unsignedbv{1}.
+    expr = typecast_exprt{std::move(expr), unsignedbv_typet{1}};
+  }
+  else if(
+    expr.type().id() == ID_verilog_unsignedbv ||
+    expr.type().id() == ID_verilog_signedbv ||
+    expr.type().id() == ID_unsignedbv || expr.type().id() == ID_signedbv)
+  {
+  }
+  else
+  {
+    throw errort{}.with_location(expr.source_location())
+      << "expected a vector type, but got " << to_string(expr.type());
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_expr_concatenation
 
   Inputs:
@@ -2638,7 +2679,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     // these may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op());
-    must_be_bit_vector(expr.op());
+    require_vector(expr.op());
 
     if(
       expr.op().type().id() == ID_verilog_signedbv ||
@@ -2749,7 +2790,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // slice_size is defaulted to 1
     PRECONDITION(expr.op().operands().size() == 1);
     convert_expr(expr.op().operands()[0]);
-    must_be_bit_vector(expr.op().operands()[0]);
+    require_vector(expr.op().operands()[0]);
     expr.type() = expr.op().operands()[0].type();
     return std::move(expr);
   }
@@ -2835,17 +2876,6 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
   convert_expr(op0);
   convert_expr(op1);
 
-  // do enum, union and struct decay on op0
-  enum_decay(op0);
-  struct_decay(op0);
-  union_decay(op0);
-
-  if(op0.type().id() == ID_verilog_real)
-  {
-    throw errort().with_location(op0.source_location())
-      << "bit-select of real is not allowed";
-  }
-
   if(op1.type().id() == ID_verilog_real)
   {
     throw errort().with_location(op1.source_location())
@@ -2863,7 +2893,7 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
   else
   {
     // extractbit works on bit vectors only
-    no_bool_ops(expr);
+    require_vector(expr.op0());
 
     auto width = get_width(op0.type());
     auto offset = op0.type().get_int(ID_C_offset);
@@ -2925,10 +2955,7 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
   exprt &op1=expr.op1();
 
   convert_expr(op1);
-  must_be_bit_vector(op1);
-
-  if(op1.type().id()==ID_bool)
-    op1 = typecast_exprt{op1, unsignedbv_typet{1}};
+  require_vector(op1);
 
   auto width = get_width(expr.op1().type());
 
@@ -2961,7 +2988,7 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::convert_shl_expr
+Function: verilog_typecheck_exprt::convert_power_expr
 
   Inputs:
 
@@ -3014,7 +3041,8 @@ exprt verilog_typecheck_exprt::convert_shl_expr(shl_exprt expr)
   convert_expr(expr.lhs());
   convert_expr(expr.rhs());
 
-  no_bool_ops(expr);
+  require_vector(expr.lhs());
+  require_vector(expr.rhs());
 
   const typet &lhs_type = expr.lhs().type();
   const typet &rhs_type = expr.rhs().type();
@@ -3161,8 +3189,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // a bit-encoding.
     convert_relation(expr);
 
-    must_be_bit_vector(expr.lhs());
-    must_be_bit_vector(expr.rhs());
+    require_vector(expr.lhs());
+    require_vector(expr.rhs());
 
     expr.type() = verilog_unsignedbv_typet{1};
 
@@ -3218,9 +3246,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_bit_vector(expr.lhs());
-    must_be_bit_vector(expr.rhs());
-    no_bool_ops(expr);
+    require_vector(expr.lhs());
+    require_vector(expr.rhs());
 
     const typet &lhs_type = expr.lhs().type();
     const typet &rhs_type = expr.rhs().type();
@@ -3255,8 +3282,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // logical right shift >>
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
-    must_be_bit_vector(expr.lhs());
-    must_be_bit_vector(expr.rhs());
+    require_vector(expr.lhs());
+    require_vector(expr.rhs());
 
     const typet &lhs_type = expr.lhs().type();
     const typet &rhs_type = expr.rhs().type();
@@ -3290,10 +3317,9 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     convert_expr(expr.rhs());
 
     tc_binary_expr(expr);
-    no_bool_ops(expr);
 
-    must_be_bit_vector(expr.lhs());
-    must_be_bit_vector(expr.rhs());
+    require_vector(expr.lhs());
+    require_vector(expr.rhs());
 
     expr.type() = expr.lhs().type();
 
@@ -3484,22 +3510,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     exprt &src = part_select.src();
     convert_expr(src);
 
-    // do enum, union and struct decay
-    enum_decay(src);
-    struct_decay(src);
-    union_decay(src);
-
-    if(src.type().id() == ID_array)
-    {
-      throw errort().with_location(src.source_location())
-        << "array type not allowed in part select";
-    }
-
-    if(src.type().id() == ID_verilog_real)
-    {
-      throw errort().with_location(src.source_location())
-        << "real not allowed in part select";
-    }
+    require_vector(src);
 
     mp_integer src_width = get_width(src.type());
     mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
@@ -3535,22 +3546,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     exprt &src = part_select.src();
     convert_expr(src);
 
-    // do enum, union and struct decay
-    enum_decay(src);
-    struct_decay(src);
-    union_decay(src);
-
-    if(src.type().id() == ID_array)
-    {
-      throw errort().with_location(src.source_location())
-        << "array type not allowed in part select";
-    }
-
-    if(src.type().id() == ID_verilog_real)
-    {
-      throw errort().with_location(src.source_location())
-        << "real not allowed in part select";
-    }
+    require_vector(src);
 
     mp_integer src_width = get_width(src.type());
     mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
