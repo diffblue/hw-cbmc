@@ -629,6 +629,10 @@ void verilog_typecheckt::check_lhs(
     throw errort().with_location(lhs.source_location())
       << "no support for assignment patterns on LHS of an assignment";
   }
+  else if(lhs.id() == ID_typecast)
+  {
+    check_lhs(to_typecast_expr(lhs).op(), vassign);
+  }
   else
   {
     throw errort() << "typechecking: failed to get identifier on LHS "

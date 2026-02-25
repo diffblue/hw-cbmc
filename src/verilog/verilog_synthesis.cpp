@@ -270,6 +270,12 @@ exprt verilog_synthesist::synth_lhs_expr(exprt expr)
     member_expr.struct_op() = synth_lhs_expr(member_expr.struct_op());
     return expr;
   }
+  else if(expr.id() == ID_typecast)
+  {
+    auto &typecast_expr = to_typecast_expr(expr);
+    typecast_expr.op() = synth_lhs_expr(typecast_expr.op());
+    return expr;
+  }
   else
   {
     DATA_INVARIANT_WITH_DIAGNOSTICS(
@@ -855,6 +861,20 @@ exprt verilog_synthesist::assignment_rec(
       throw errort() << "unexpected member lhs: " << lhs_compound.type().id();
     }
   }
+  else if(lhs.id() == ID_typecast)
+  {
+    // The cast is assumed to be a reinterpret cast.
+    // (T)lhs = rhs
+    auto &typecast_expr = to_typecast_expr(lhs);
+
+    // note that the LHS is not yet fully synthesised; we will need to lower
+    // the typecast
+    auto new_rhs = typecast_exprt{rhs, typecast_expr.op().type()};
+
+    auto new_rhs_lowered = verilog_lowering_cast(new_rhs);
+
+    return assignment_rec(typecast_expr.op(), new_rhs_lowered);
+  }
   else
   {
     throw errort() << "unexpected lhs: " << lhs.id();
@@ -1037,6 +1057,10 @@ void verilog_synthesist::assignment_member_rec(
   {
     add_assignment_member(lhs, member, data);
   }
+  else if(lhs.id() == ID_typecast)
+  {
+    add_assignment_member(lhs, member, data);
+  }
   else
   {
     throw errort() << "unexpected lhs: " << lhs.id();
@@ -1172,6 +1196,10 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
     else if(e->id() == ID_member)
     {
       e = &to_member_expr(*e).struct_op();
+    }
+    else if(e->id() == ID_typecast)
+    {
+      e = &to_typecast_expr(*e).op();
     }
     else
     {
