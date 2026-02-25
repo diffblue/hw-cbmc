@@ -540,8 +540,8 @@ Function: verilog_synthesist::assignment_rec
 \*******************************************************************/
 
 void verilog_synthesist::assignment_rec(
-  const exprt &lhs,
-  const exprt &rhs,
+  const exprt &lhs, // synth_lhs_expr applied
+  const exprt &rhs, // synth_expr applied
   bool blocking)
 {
   if(lhs.id()==ID_concatenation) // split it up                                
@@ -686,7 +686,9 @@ Function: verilog_synthesist::assignment_rec
 
 \*******************************************************************/
 
-exprt verilog_synthesist::assignment_rec(const exprt &lhs, const exprt &rhs)
+exprt verilog_synthesist::assignment_rec(
+  const exprt &lhs, // synth_lhs_expr applied
+  const exprt &rhs) // synth_expr applied
 {
   if(lhs.id()==ID_symbol)
   {
@@ -712,9 +714,6 @@ exprt verilog_synthesist::assignment_rec(const exprt &lhs, const exprt &rhs)
 
     // do the array
     new_rhs.old() = synth_expr(new_rhs.old(), symbol_statet::FINAL);
-
-    // do the index
-    new_rhs.where() = synth_expr(new_rhs.where(), symbol_statet::CURRENT);
 
     // do the value
     return assignment_rec(lhs_array, new_rhs); // recursive call
