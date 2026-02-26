@@ -715,7 +715,6 @@ exprt verilog_synthesist::assignment_rec(
     // do the array
     new_rhs.old() = synth_expr(new_rhs.old(), symbol_statet::FINAL);
 
-    // do the value
     return assignment_rec(lhs_array, new_rhs); // recursive call
   }
   else if(lhs.id() == ID_verilog_non_indexed_part_select)
@@ -753,47 +752,27 @@ exprt verilog_synthesist::assignment_rec(
     // turn
     //   a[i]=e
     // into
-    //   a'==a WITH [i:=e]
+    //   a'==a WITH [from:=e[0]] ... WITH [to:=e[to-from]]
 
-    exprt synth_lhs_src(lhs_src);
-
-    // do the array, but just once
-    synth_lhs_src = synth_expr(synth_lhs_src, symbol_statet::FINAL);
-
-    exprt last_value;
-    last_value.make_nil();
-
+    // synthesise 'a'
+    auto new_rhs = synth_expr(lhs_src, symbol_statet::FINAL);
     const auto rhs_width = get_width(lhs_src.type());
 
     // We drop bits that are out of bounds
     auto from_in_range = std::max(mp_integer{0}, from);
     auto to_in_range = std::min(rhs_width - 1, to);
 
-    // now add the indexes in the range
+    // add the WITH expressions for the indexes in the range
     for(mp_integer i = from_in_range; i <= to_in_range; ++i)
     {
-      exprt offset = from_integer(i - from, integer_typet());
-
+      exprt offset = from_integer(i - from, integer_typet{});
       exprt rhs_extractbit = extractbit_exprt{rhs, std::move(offset)};
-
-      exprt count = from_integer(i, integer_typet());
-
-      exprt new_rhs =
-        with_exprt{synth_lhs_src, std::move(count), std::move(rhs_extractbit)};
-
-      // do the value
-      exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
-
-      if(last_value.is_not_nil())
-      {
-        // chain the withs
-        to_with_expr(new_value).old() = std::move(last_value);
-      }
-
-      last_value = std::move(new_value);
+      exprt count = from_integer(i, integer_typet{});
+      new_rhs = with_exprt{
+        std::move(new_rhs), std::move(count), std::move(rhs_extractbit)};
     }
 
-    return last_value;
+    return assignment_rec(lhs_src, new_rhs); // recrusive call
   }
   else if(
     lhs.id() == ID_verilog_indexed_part_select_plus ||
@@ -825,18 +804,12 @@ exprt verilog_synthesist::assignment_rec(
     mp_integer index = *index_opt, width = *width_opt;
 
     // turn
-    //   a[i]=e
+    //   a[i:+w]=e
     // into
-    //   a'==a WITH [i:=e]
+    //   a'==a WITH [i:=e[0]] ... WITH [i+w-1:=e[w-1]]
 
-    exprt synth_lhs_src(lhs_src);
-
-    // do the array, but just once
-    synth_lhs_src = synth_expr(synth_lhs_src, symbol_statet::FINAL);
-
-    exprt last_value;
-    last_value.make_nil();
-
+    // start with 'a'
+    auto new_rhs = synth_expr(lhs_src, symbol_statet::FINAL);
     const auto rhs_width = get_width(lhs_src.type());
 
     // We drop bits that are out of bounds
@@ -846,28 +819,14 @@ exprt verilog_synthesist::assignment_rec(
     // now add the indexes in the range
     for(mp_integer i = from_in_range; i <= to_in_range; ++i)
     {
-      exprt offset = from_integer(i - index, integer_typet());
-
+      exprt offset = from_integer(i - index, integer_typet{});
       exprt rhs_extractbit = extractbit_exprt{rhs, std::move(offset)};
-
-      exprt count = from_integer(i, integer_typet());
-
-      exprt new_rhs =
-        with_exprt{synth_lhs_src, std::move(count), std::move(rhs_extractbit)};
-
-      // do the value
-      exprt new_value = assignment_rec(lhs_src, new_rhs); // recursive call
-
-      if(last_value.is_not_nil())
-      {
-        // chain the withs
-        to_with_expr(new_value).old() = std::move(last_value);
-      }
-
-      last_value = std::move(new_value);
+      exprt count = from_integer(i, integer_typet{});
+      new_rhs = with_exprt{
+        std::move(new_rhs), std::move(count), std::move(rhs_extractbit)};
     }
 
-    return last_value;
+    return assignment_rec(lhs_src, new_rhs); // recursive call
   }
   else if(lhs.id() == ID_member)
   {
