@@ -1,0 +1,10 @@
+KNOWNBUG
+implicit_input1.sv
+
+^\[main\.test16\] always .*: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This segfaults.
