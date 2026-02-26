@@ -256,7 +256,8 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   }
   else if(
     decl_class == ID_input || decl_class == ID_output ||
-    decl_class == ID_output_register || decl_class == ID_inout)
+    decl_class == ID_output_register || decl_class == ID_inout ||
+    decl_class == ID_verilog_no_direction)
   {
     // If these are inputs/outputs of a function/task, then
     // adjust the function/task signature.
@@ -281,6 +282,11 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       {
         symbol.is_input = true;
         symbol.is_output = true;
+      }
+      else if(decl_class == ID_verilog_no_direction)
+      {
+        // functions/tasks only
+        DATA_INVARIANT(false, "unexpected verilog_no_direction");
       }
 
       for(auto &declarator : decl.declarators())
@@ -344,6 +350,16 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     }
     else
     {
+      symbolt &function_or_task_symbol =
+        symbol_table.get_writeable_ref(function_or_task_name);
+
+      // Terminology clash: these aren't called 'parameters'
+      // in Verilog terminology, but inputs and outputs.
+      // We'll use the C terminology, and call them parameters.
+      // Not to be confused with module parameters.
+      code_typet::parameterst &parameters =
+        to_code_type(function_or_task_symbol.type).parameters();
+
       symbolt symbol;
       bool input = false, output = false;
 
@@ -370,6 +386,21 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
         input = true;
         output = true;
       }
+      else if(decl_class == ID_verilog_no_direction)
+      {
+        // Otherwise, use the direction of the previous port.
+        if(parameters.empty())
+        {
+          // For the first port, the default direction is 'input'.
+          input = true;
+        }
+        else
+        {
+          // Otherwise, use the direction of the previous port.
+          input = parameters.back().get_bool(ID_input);
+          output = parameters.back().get_bool(ID_output);
+        }
+      }
 
       for(auto &declarator : decl.declarators())
       {
@@ -390,14 +421,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         if(input || output)
         {
-          // Terminology clash: these aren't called 'parameters'
-          // in Verilog terminology, but inputs and outputs.
-          // We'll use the C terminology, and call them parameters.
-          // Not to be confused with module parameters.
-          symbolt &function_or_task_symbol =
-            symbol_table.get_writeable_ref(function_or_task_name);
-          code_typet::parameterst &parameters =
-            to_code_type(function_or_task_symbol.type).parameters();
           parameters.push_back(code_typet::parametert(symbol.type));
           code_typet::parametert &parameter = parameters.back();
           parameter.set_base_name(symbol.base_name);

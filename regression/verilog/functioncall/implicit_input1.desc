@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 implicit_input1.sv
 
 ^\[main\.test16\] always .*: PROVED .*$
@@ -7,4 +7,3 @@ implicit_input1.sv
 --
 ^warning: ignoring
 --
-This segfaults.
