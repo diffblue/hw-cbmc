@@ -1,5 +1,6 @@
 function int some_int(bit some_input);
-  int data = 456;
+  int data;
+  data = 456;
 
   if(some_input) begin
     data = 0;

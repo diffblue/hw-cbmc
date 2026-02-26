@@ -443,7 +443,21 @@ exprt verilog_synthesist::expand_function_call(
     throw errort().with_location(call.source_location())
       << "function call cannot call task";
   }
-  
+
+  // preserve the previous call frame, if any
+  auto old_tf_frame = tf_frame;
+
+  // remember the guard
+  auto entry_guard = value_map->guard;
+
+  // create a fresh call frame
+  tf_frame = tf_framet{};
+
+  const symbolt &return_symbol =
+    ns.lookup(id2string(symbol.name) + "." + id2string(symbol.base_name));
+
+  tf_frame.value().return_value = return_symbol.symbol_expr();
+
   const code_typet::parameterst &parameters=
     code_type.parameters();
     
@@ -472,13 +486,21 @@ exprt verilog_synthesist::expand_function_call(
   for(auto &statement : symbol.value.operands())
     synth_statement(to_verilog_statement(statement));
 
-  // replace function call by return value symbol
-  const symbolt &return_symbol=
-    ns.lookup(id2string(symbol.name)+"."+
-              id2string(symbol.base_name));
+  // merge in edges from 'return' statements, if any
+  for(auto &state : tf_frame.value().return_statement_states)
+  {
+    auto guard_expr = conjunction(state.guard);
+    merge(
+      guard_expr, state.current, value_map->current, false, value_map->current);
+    merge(guard_expr, state.final, value_map->final, true, value_map->final);
+  }
 
-  // get the current value
+  // replace function call by return value symbol
   auto result = synth_expr(return_symbol.symbol_expr(), symbol_statet::CURRENT);
+
+  // restore the previous task/function frame
+  tf_frame = old_tf_frame;
+  value_map->guard = entry_guard;
 
   return result;
 }
@@ -3076,6 +3098,47 @@ void verilog_synthesist::synth_repeat(
 
 /*******************************************************************\
 
+Function: verilog_synthesist::synth_return
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::synth_return(const verilog_returnt &statement)
+{
+  // There has to be a tf frame
+  PRECONDITION(tf_frame.has_value());
+
+  auto &frame = tf_frame.value();
+
+  // return value?
+  if(statement.has_value())
+  {
+    // assign to the symbol with the function's name
+    DATA_INVARIANT(
+      frame.return_value.has_value(),
+      "return with value requires return value symbol");
+
+    verilog_assignt assignment{
+      ID_verilog_blocking_assign,
+      frame.return_value.value(),
+      statement.value()};
+
+    synth_assign(assignment);
+  }
+
+  frame.return_statement_states.push_back(*value_map);
+
+  // set guard to false
+  value_map->guard.push_back(false_exprt{});
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::synth_forever
 
   Inputs:
@@ -3132,6 +3195,15 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     
     const code_typet &code_type=to_code_type(symbol.type);
 
+    // preserve the previous call frame, if any
+    auto old_tf_frame = tf_frame;
+
+    // remember the guard
+    auto entry_guard = value_map->guard;
+
+    // create a fresh call frame
+    tf_frame = tf_framet{};
+
     const code_typet::parameterst &parameters=
       code_type.parameters();
 
@@ -3157,6 +3229,23 @@ void verilog_synthesist::synth_function_call_or_task_enable(
 
     for(auto &statement : symbol.value.operands())
       synth_statement(to_verilog_statement(statement));
+
+    // merge in edges from 'return' statements, if any
+    for(auto &state : tf_frame.value().return_statement_states)
+    {
+      auto guard_expr = conjunction(state.guard);
+      merge(
+        guard_expr,
+        state.current,
+        value_map->current,
+        false,
+        value_map->current);
+      merge(guard_expr, state.final, value_map->final, true, value_map->final);
+    }
+
+    // restore the previous task/function frame
+    tf_frame = old_tf_frame;
+    value_map->guard = entry_guard;
 
     // do assignments to output parameters
     for(unsigned i=0; i<parameters.size(); i++)
@@ -3266,10 +3355,7 @@ void verilog_synthesist::synth_statement(
   else if(statement.id()==ID_repeat)
     synth_repeat(to_verilog_repeat(statement));
   else if(statement.id() == ID_return)
-  {
-    throw errort().with_location(statement.source_location())
-      << "synthesis of return not supported";
-  }
+    synth_return(to_verilog_return(statement));
   else if(statement.id()==ID_forever)
     synth_forever(to_verilog_forever(statement));
   else if(statement.id()==ID_function_call)
