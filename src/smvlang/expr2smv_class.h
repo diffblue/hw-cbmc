@@ -19,6 +19,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "expr2smv.h"
 
 class smv_set_exprt;
+class smv_word1_exprt;
 
 class expr2smvt
 {
@@ -116,6 +117,8 @@ protected:
   resultt
   convert_unary(const unary_exprt &, const std::string &symbol, precedencet);
 
+  resultt convert_extractbit(const extractbit_exprt &);
+
   resultt convert_extractbits(const extractbits_exprt &);
 
   resultt convert_smv_bit_selection(const ternary_exprt &);
@@ -136,6 +139,14 @@ protected:
   convert_function_application(const std::string &symbol, const exprt &);
 
   resultt convert_typecast(const typecast_exprt &);
+
+  resultt convert_update_bit(const update_bit_exprt &);
+
+  resultt convert_update_bits(const update_bits_exprt &);
+
+  resultt convert_with(const with_exprt &);
+
+  resultt convert_word1(const smv_word1_exprt &);
 
   resultt convert_zero_extend(const zero_extend_exprt &);
 
