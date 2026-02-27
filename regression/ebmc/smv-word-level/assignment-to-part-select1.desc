@@ -1,0 +1,14 @@
+KNOWNBUG
+smv1.smv
+--smv-word-level
+^MODULE main$
+^INVAR main\.data = Verilog::main\.data_aux2$
+^LTLSPEC G main\.data = 0ud32_1076895760$
+^EXIT=0$
+^SIGNAL=0$
+--
+INVAR Verilog::main.data_aux2 = with
+INVAR Verilog::main.data_aux1 = with
+INVAR Verilog::main.data_aux0 = with
+--
+The 'with' expression is not translated to SMV.
