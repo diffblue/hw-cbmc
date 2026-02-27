@@ -1,0 +1,8 @@
+KNOWNBUG
+array_of_boolean1.smv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+This does not typecheck.
