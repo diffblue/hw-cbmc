@@ -2402,9 +2402,10 @@ tf_port_item:
 
 tf_port_direction_opt:
           /* Optional */
+                { init($$, ID_verilog_no_direction); }
         | port_direction
         | TOK_CONST TOK_REF
-                { $$ = $2; }
+                { init($$, ID_verilog_ref); }
         ;
 
 // System Verilog standard 1800-2017
