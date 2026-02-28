@@ -781,6 +781,19 @@ expr2smvt::resultt expr2smvt::convert_constant(const constant_exprt &src)
 {
   const typet &type = src.type();
 
+  auto use_hex = [](const exprt &src)
+  {
+    auto verilog_value = id2string(src.get("#verilog_value"));
+    auto tick_pos = verilog_value.find('\'');
+    if(tick_pos != std::string::npos)
+    {
+      auto base_char = std::string(verilog_value, tick_pos + 1, 1);
+      return base_char == "h" || base_char == "H";
+    }
+    else
+      return false;
+  };
+
   std::string dest;
 
   if(type.id()==ID_bool)
@@ -803,8 +816,17 @@ expr2smvt::resultt expr2smvt::convert_constant(const constant_exprt &src)
     auto minus = value_int < 0 ? "-" : "";
     auto sign_specifier = type.id() == ID_signedbv ? 's' : 'u';
     auto word_width = to_bitvector_type(type).width();
-    dest = minus + std::string("0") + sign_specifier + 'd' +
-           std::to_string(word_width) + '_' + integer2string(value_abs);
+
+    if(use_hex(src))
+    {
+      dest = minus + std::string("0") + sign_specifier + 'h' +
+             std::to_string(word_width) + '_' + integer2string(value_abs, 16);
+    }
+    else
+    {
+      dest = minus + std::string("0") + sign_specifier + 'd' +
+             std::to_string(word_width) + '_' + integer2string(value_abs);
+    }
   }
   else if(type.id() == ID_bv)
   {
