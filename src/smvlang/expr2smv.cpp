@@ -199,9 +199,14 @@ expr2smvt::resultt expr2smvt::convert_binary_associative(
 
     auto op_rec = convert_rec(*it);
 
+    // Special case for bitwise negation (!) vs :: (concatenation).
+    // We always add the parentheses since the precedence has
+    // changed between CMU SMV and NuSMV.
+
     // clang-format off
     bool use_parentheses =
         src.id() == it->id() ? false
+      : src.id() == ID_concatenation && it->id() == ID_bitnot ? true
       : precedence >= op_rec.p;
     // clang-format on
 
@@ -476,6 +481,7 @@ expr2smvt::resultt expr2smvt::convert_unary(
   bool parentheses =
       op.operands().size() == 1 ? false
     : src.id() == ID_not && !op.operands().empty() ? true
+    : op.id() == ID_concatenation ? true
     : precedence >= op_rec.p;
   // clang-format on
 
@@ -959,7 +965,7 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_concatenation)
   {
     return convert_binary_associative(
-      to_binary_expr(src), "::", precedencet::CONCAT);
+      to_concatenation_expr(src), "::", precedencet::CONCAT);
   }
 
   else if(src.id() == ID_shl)
