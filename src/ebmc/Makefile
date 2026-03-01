@@ -1,5 +1,6 @@
 SRC = \
       bdd_engine.cpp \
+      bdd_printer.cpp \
       bmc.cpp \
       build_transition_system.cpp \
       cegar/abstract.cpp \

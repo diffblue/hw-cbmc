@@ -25,6 +25,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 
+#include "bdd_printer.h"
 #include "netlist.h"
 
 #include <algorithm>
@@ -227,14 +228,35 @@ property_checker_resultt bdd_enginet::operator()()
     {
       mgr.DumpTable(std::cout);
       std::cout << '\n';
-      
-      std::cout << "Atomic propositions:\n";
-      for(const auto & a : atomic_propositions)
-      {
-        std::cout << '`' << format(a.first) << "' -> "
-                  << a.second.bdd.node_number() << '\n';
-      }
 
+      std::cout << "Initial states:\n";
+      for(const auto &bdd : initial_BDDs)
+        print_bdd(bdd, std::cout);
+      std::cout << '\n';
+
+      std::cout << "Transition relation:\n";
+      for(const auto &bdd : transition_BDDs)
+        print_bdd(bdd, std::cout);
+      std::cout << '\n';
+
+      std::cout << "Atomic propositions:\n";
+      for(const auto &a : atomic_propositions)
+      {
+        std::cout << '`' << format(a.first) << "':\n";
+        print_bdd(a.second.bdd, std::cout);
+      }
+      std::cout << '\n';
+
+      std::cout << "Properties:\n";
+      for(const auto &property : properties.properties)
+      {
+        if(
+          property.is_disabled() || property.is_assumed() ||
+          property.is_failure())
+          continue;
+        std::cout << property.name << ":\n";
+        print_bdd(CTL(property.normalized_expr), std::cout);
+      }
       std::cout << '\n';
 
       return property_checker_resultt::success();

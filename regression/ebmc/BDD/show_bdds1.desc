@@ -1,0 +1,15 @@
+CORE
+just_p.smv
+--bdd --show-bdds
+^EXIT=0$
+^SIGNAL=0$
+^Initial states:$
+^Transition relation:$
+^Atomic propositions:$
+^`some_var = TRUE':$
+^`some_var = FALSE':$
+^Properties:$
+^spec1:$
+^spec2:$
+--
+^warning: ignoring

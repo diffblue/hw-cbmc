@@ -4,7 +4,8 @@
 SRC = unit_tests.cpp
 
 # Test source files
-SRC += smvlang/expr2smv.cpp \
+SRC += ebmc/bdd_printer.cpp \
+       smvlang/expr2smv.cpp \
        temporal-logic/hoa.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
        temporal-logic/rewrite_sva_sequence.cpp \
@@ -14,6 +15,10 @@ SRC += smvlang/expr2smv.cpp \
        temporal-logic/trivial_sva.cpp \
        trans-netlist/aig.cpp \
        verilog/typename.cpp \
+       # Empty last line
+
+# Implementation files under test (not covered by a library in OBJ)
+SRC += ../src/ebmc/bdd_printer.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src
