@@ -131,6 +131,7 @@ protected:
   BDD next_to_current(const BDD &) const;
   BDD project_next(const BDD &) const;
   BDD project_current(const BDD &) const;
+  BDD project_next_and_inputs(const BDD &) const;
 
   void compute_counterexample(
     propertyt &,
@@ -372,6 +373,32 @@ bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
 
 /*******************************************************************\
 
+Function: bdd_enginet::project_next_and_inputs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_enginet::BDD bdd_enginet::project_next_and_inputs(const BDD &bdd) const
+{
+  BDD tmp=bdd;
+
+  for(const auto &[_, var] : vars)
+    tmp = exists(tmp, var.next_bdd.var());
+
+  for(const auto &[_, var] : vars)
+    if(var.is_input)
+      tmp = exists(tmp, var.current_bdd.var());
+
+  return tmp;
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::project_current
 
   Inputs:
@@ -590,8 +617,8 @@ void bdd_enginet::check_AGp(propertyt &property)
     for(const auto &c : constraints_BDDs)
       conjunction = conjunction & c;
 
-    // now project away 'next' variables
-    BDD pre_image = project_next(conjunction);
+    // now project away 'next' and 'input' variables
+    BDD pre_image = project_next_and_inputs(conjunction);
 
     // compute union
     BDD set_union = states | pre_image;
@@ -783,8 +810,8 @@ bdd_enginet::BDD bdd_enginet::EX(BDD f)
   for(const auto &c : constraints_BDDs)
     conjunction = conjunction & c;
 
-  // now project away 'next' variables
-  BDD pre_image = project_next(conjunction);
+  // now project away 'next' and 'input' variables
+  BDD pre_image = project_next_and_inputs(conjunction);
 
   return pre_image;
 }
