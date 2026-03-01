@@ -227,15 +227,46 @@ property_checker_resultt bdd_enginet::operator()()
     {
       mgr.DumpTable(std::cout);
       std::cout << '\n';
-      
-      std::cout << "Atomic propositions:\n";
-      for(const auto & a : atomic_propositions)
-      {
-        std::cout << '`' << format(a.first) << "' -> "
-                  << a.second.bdd.node_number() << '\n';
-      }
 
+      std::cout << "Variables:\n";
+      for(const auto &[id, var] : vars)
+      {
+        std::cout << id << " <-> " << cubes(var.current_bdd);
+        std::cout << "next(" << id << ") <-> " << cubes(var.next_bdd);
+      }
       std::cout << '\n';
+
+      std::cout << "Initial states:\n";
+      for(const auto &bdd : initial_BDDs)
+        std::cout << cubes(bdd) << '\n';
+
+      std::cout << "In-state constraints:\n";
+      for(const auto &bdd : constraints_BDDs)
+        std::cout << cubes(bdd) << '\n';
+
+      std::cout << "Transition relation:\n";
+      for(const auto &bdd : transition_BDDs)
+        std::cout << cubes(bdd) << '\n';
+
+      std::cout << "Atomic propositions:\n";
+      for(const auto &a : atomic_propositions)
+        std::cout << '`' << format(a.first) << "':\n"
+                  << cubes(a.second.bdd) << '\n';
+
+      std::cout << "Properties:\n";
+      for(const auto &property : properties.properties)
+      {
+        if(
+          property.is_disabled() || property.is_assumed() ||
+          property.is_failure())
+        {
+        }
+        else
+        {
+          auto result = CTL(property.normalized_expr);
+          std::cout << property.name << ":\n" << cubes(result) << '\n';
+        }
+      }
 
       return property_checker_resultt::success();
     }
