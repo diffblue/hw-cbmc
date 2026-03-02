@@ -176,18 +176,19 @@ void report_results(
 
   if(cmdline.isset("vcd"))
   {
+    const auto outfile_prefix = cmdline.get_value("vcd") + '.';
     for(const auto &property : result.properties)
     {
       if(property.has_witness_trace())
       {
-        std::string vcdfile = cmdline.get_value("vcd");
-        auto outfile = output_filet{vcdfile};
-
+        const auto filename =
+          outfile_prefix + id2string(property.name) + "_witness.vcd";
+        auto outfile = output_filet{filename};
         messaget message(message_handler);
+        message.status() << "Writing witness trace VCD file to " << filename
+                         << messaget::eom;
         show_trans_trace_vcd(
           property.witness_trace.value(), message, ns, outfile.stream());
-
-        break;
       }
     }
   }
