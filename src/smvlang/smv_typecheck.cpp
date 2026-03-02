@@ -1221,6 +1221,21 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     convert_expr_to(binary_expr.lhs(), expr.type());
     convert_expr_to(binary_expr.rhs(), expr.type());
   }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+
+    if(index_expr.array().type().id() != ID_array)
+    {
+      throw errort().with_location(expr.source_location())
+        << "Operand to index select operator must be an array, but got "
+        << to_string(index_expr.array().type());
+    }
+
+    auto &array_type = to_array_type(index_expr.array().type());
+
+    index_expr.type() = array_type.element_type();
+  }
   else if(expr.id()==ID_typecast)
   {
     // only get added by type checker
@@ -2241,16 +2256,35 @@ void smv_typecheckt::convert(exprt &expr)
   else if(expr.id() == ID_index)
   {
     auto &index_expr = to_index_expr(expr);
-    DATA_INVARIANT_WITH_DIAGNOSTICS(
-      index_expr.array().id() == ID_symbol,
-      "unexpected complex_identifier",
-      expr.pretty());
-    auto &index = index_expr.index();
-    PRECONDITION(index.is_constant());
-    auto index_string = id2string(to_constant_expr(index).get_value());
-    auto tmp = to_symbol_expr(index_expr.array());
-    tmp.set_identifier(id2string(tmp.get_identifier()) + '.' + index_string);
-    expr = tmp;
+
+    // This could be part of a complex_identifier, or an array index.
+    if(index_expr.array().id() == ID_symbol)
+    {
+      // look that up
+      auto symbol_ptr = symbol_table.lookup(
+        to_symbol_expr(index_expr.array()).get_identifier());
+      if(symbol_ptr != nullptr && symbol_ptr->type.id() == ID_array)
+      {
+        // a proper array -- leave as is
+      }
+      else
+      {
+        auto &index = index_expr.index();
+        if(!index.is_constant())
+          throw errort().with_location(expr.source_location())
+            << "non-constant index for non-array";
+
+        auto index_string = id2string(to_constant_expr(index).get_value());
+        auto tmp = to_symbol_expr(index_expr.array());
+        tmp.set_identifier(
+          id2string(tmp.get_identifier()) + '.' + index_string);
+        expr = tmp;
+      }
+    }
+    else
+    {
+      // leave as is
+    }
   }
   else if(expr.id() == ID_smv_self)
   {
