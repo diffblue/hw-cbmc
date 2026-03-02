@@ -1,14 +1,13 @@
-KNOWNBUG
-smv1.smv
+CORE
+assignment-to-part-select1.sv
 --smv-word-level
 ^MODULE main$
 ^INVAR main\.data = Verilog::main\.data_aux2$
+^INVAR Verilog::main\.data_aux2 = \(\(\(\(\(\(\(\(Verilog::main\.data_aux1
+^INVAR Verilog::main\.data_aux1 = \(\(\(\(\(\(\(\(Verilog::main\.data_aux0
+^INVAR Verilog::main\.data_aux0 = \(\(\(\(\(\(\(\(0ud32_16
 ^LTLSPEC G main\.data = 0ud32_1076895760$
 ^EXIT=0$
 ^SIGNAL=0$
 --
-INVAR Verilog::main.data_aux2 = with
-INVAR Verilog::main.data_aux1 = with
-INVAR Verilog::main.data_aux0 = with
 --
-The 'with' expression is not translated to SMV.

@@ -373,6 +373,35 @@ expr2smvt::resultt expr2smvt::convert_typecast(const typecast_exprt &expr)
       return convert_rec(smv_resize_exprt{expr.op(), dest_width, dest_type});
     }
   }
+  else if(src_type.id() == ID_bv && dest_type.id() == ID_unsignedbv)
+  {
+    // Uninterpreted to unsigned. No change in representation.
+    auto src_width = to_bv_type(src_type).get_width();
+    auto dest_width = to_unsignedbv_type(dest_type).get_width();
+    if(src_width == dest_width)
+      return convert_rec(expr.op());
+    else
+      return convert_norep(expr);
+  }
+  else if(src_type.id() == ID_unsignedbv && dest_type.id() == ID_bv)
+  {
+    // Unsigned to uninterpreted. No change in representation.
+    auto src_width = to_unsignedbv_type(src_type).get_width();
+    auto dest_width = to_bv_type(dest_type).get_width();
+    if(src_width == dest_width)
+      return convert_rec(expr.op());
+    else
+      return convert_norep(expr);
+  }
+  else if(src_type.id() == ID_bool && dest_type.id() == ID_bv)
+  {
+    // Boolean to bit vector -- NuSMV has got the word1 expression for this
+    auto dest_width = to_bv_type(dest_type).get_width();
+    if(dest_width == 1)
+      return convert_rec(smv_word1_exprt{expr.op(), dest_type});
+    else
+      return convert_norep(expr);
+  }
   else if(
     src_type.id() == ID_smv_enumeration && dest_type.id() == ID_smv_enumeration)
   {
@@ -530,6 +559,31 @@ expr2smvt::convert_index(const index_exprt &src, precedencet precedence)
   dest+=']';
 
   return {precedence, std::move(dest)};
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_extractbit
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_extractbit(const extractbit_exprt &expr)
+{
+  // NuSMV doesn't have an operator that extracts one bit from
+  // a word -- the "index subscript" operator applies to arrays only.
+  // We use bool(op[x:x]) instead.
+  auto op_rec = convert_rec(expr.src());
+  auto index_rec = convert_rec(expr.index());
+
+  auto dest = "bool(" + op_rec.s + '[' + index_rec.s + ':' + index_rec.s + "])";
+
+  return {precedencet::MAX, std::move(dest)};
 }
 
 /*******************************************************************\
@@ -754,6 +808,7 @@ expr2smvt::resultt expr2smvt::convert_constant(const constant_exprt &src)
   }
   else if(type.id() == ID_bv)
   {
+    // we encode these uninterpreted bit vectors as 'unsigned'
     auto &bv_type = to_bv_type(type);
     auto width = bv_type.width();
     auto &src_value = src.get_value();
@@ -770,6 +825,85 @@ expr2smvt::resultt expr2smvt::convert_constant(const constant_exprt &src)
     return convert_norep(src);
 
   return {precedencet::MAX, std::move(dest)};
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_update_bit
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_update_bit(const update_bit_exprt &expr)
+{
+  return convert_rec(expr.lower());
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_update_bits
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_update_bits(const update_bits_exprt &expr)
+{
+  return convert_rec(expr.lower());
+}
+
+/*******************************************************************\
+
+Function: expr2smvt::convert_with
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt expr2smvt::convert_with(const with_exprt &expr)
+{
+  auto &type = expr.type();
+
+  // These may be used for updating arrays, or replace pieces of bit-vectors
+  if(
+    type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+    type.id() == ID_bv)
+  {
+    if(expr.new_value().type().id() == ID_bool)
+    {
+      // single bit
+      auto update_bit_expr =
+        update_bit_exprt{expr.old(), expr.where(), expr.new_value()};
+      return convert_rec(update_bit_expr);
+    }
+    else if(
+      expr.new_value().type().id() == ID_unsignedbv ||
+      expr.new_value().type().id() == ID_signedbv ||
+      expr.new_value().type().id() == ID_bv)
+    {
+      // multiple bits
+      auto update_bits_expr =
+        update_bits_exprt{expr.old(), expr.where(), expr.new_value()};
+      return convert_rec(update_bits_expr);
+    }
+    else
+      return convert_norep(expr);
+  }
+  else
+    return convert_norep(expr);
 }
 
 /*******************************************************************\
@@ -978,6 +1112,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
     return convert_binary(to_binary_expr(src), ">>", precedencet::SHIFT);
   }
 
+  else if(src.id() == ID_extractbit)
+    return convert_extractbit(to_extractbit_expr(src));
+
   else if(src.id() == ID_extractbits)
     return convert_extractbits(to_extractbits_expr(src));
 
@@ -1024,6 +1161,15 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   {
     return convert_typecast(to_typecast_expr(src));
   }
+
+  else if(src.id() == ID_update_bit)
+    return convert_update_bit(to_update_bit_expr(src));
+
+  else if(src.id() == ID_update_bits)
+    return convert_update_bits(to_update_bits_expr(src));
+
+  else if(src.id() == ID_with)
+    return convert_with(to_with_expr(src));
 
   else if(src.id() == ID_zero_extend)
     return convert_zero_extend(to_zero_extend_expr(src));
