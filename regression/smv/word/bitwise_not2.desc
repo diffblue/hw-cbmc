@@ -1,0 +1,11 @@
+CORE
+bitwise_not2.smv
+
+^\[spec1\] \(!\(0ud1_1 :: 0ud1_1\)\) = 0ud2_1: REFUTED$
+^\[spec2\] \(!0ud1_1\) :: 0ud1_1 = 0ud2_1: PROVED .*$
+^\[spec3\] \(!\(0ud1_1 :: 0ud1_1\)\) = 0ud2_1: REFUTED$
+^\[spec4\] !\(0ud1_1 :: 0ud1_1 = 0ud2_1\): PROVED .*$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

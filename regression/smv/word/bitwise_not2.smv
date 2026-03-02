@@ -1,0 +1,9 @@
+MODULE main
+
+-- The precedence of ! vs :: determines the outcome.
+SPEC (!(0b_1 :: 0b_1)) = 0b_01 -- fails
+SPEC (!0b_1) :: 0b_1 = 0b_01 -- passes
+SPEC (!0b_1 :: 0b_1) = 0b_01 -- passes
+
+-- The precedence of ! vs = determines the outcome.
+SPEC !0b_1 :: 0b_1 = 0b_01 -- passes
