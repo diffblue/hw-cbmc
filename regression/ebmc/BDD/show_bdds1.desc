@@ -1,0 +1,9 @@
+CORE
+just_p.smv
+--show-bdds
+activate-multi-line-match
+^Properties:\nspec1:\nsmv::main::var::some_var\[0\]\n\nspec2:\n!smv::main::var::some_var\[0\]\n$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
