@@ -1,4 +1,6 @@
 SRC = aig.cpp \
+      aig_nondet_elimination.cpp \
+      aig_reorder.cpp \
       aig_prop.cpp \
       aig_terminals.cpp \
       bmc_map.cpp \

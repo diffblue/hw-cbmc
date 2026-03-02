@@ -86,10 +86,12 @@ void convert_trans_to_netlist_simplet::operator()(
   // finish the var_map
   dest.var_map.build_reverse_map();
 
-  // convert the constraints
+  // convert the initial state constraints
   dest.initial.push_back(solver.convert(trans.init()));
-  dest.constraints.push_back(solver.convert(trans.invar()));
-  dest.constraints.push_back(solver.convert(trans.trans()));
+
+  // invar + trans
+  solver.set_to_true(trans.invar());
+  solver.set_to_true(trans.trans());
 
   // convert the properties
   for(const auto &[id, property_expr] : properties)

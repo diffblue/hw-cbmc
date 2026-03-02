@@ -45,9 +45,16 @@ public:
 protected:
   // disable smart variable allocation,
   // we already have literals for all variables
-  bool boolbv_set_equality_to_true(const equal_exprt &) override
+  bool boolbv_set_equality_to_true(const equal_exprt &expr) override
   {
-    return true;
+    // see if it is an unbounded array
+    if(is_unbounded_array(expr.lhs().type()))
+      return true;
+
+    const bvt &bv_lhs = convert_bv(expr.lhs());
+    const bvt &bv_rhs = convert_bv(expr.rhs());
+    bv_utils.set_equal(bv_lhs, bv_rhs);
+    return false;
   }
   bool set_equality_to_true(const equal_exprt &expr) override
   {
