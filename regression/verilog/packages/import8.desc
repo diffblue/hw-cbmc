@@ -1,7 +1,7 @@
 KNOWNBUG
 import8.sv
 --bound 0
-^EXIT=2$
+^EXIT=6$
 ^SIGNAL=0$
 --
 --

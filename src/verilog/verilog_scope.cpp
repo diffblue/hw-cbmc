@@ -51,6 +51,16 @@ const verilog_scopet *verilog_scopest::lookup(irep_idt base_name) const
   return nullptr;
 }
 
+verilog_scopet &verilog_scopest::add_name(
+  irep_idt _base_name,
+  const std::string &separator,
+  scopet::kindt kind)
+{
+  auto result = current_scope().scope_map.emplace(
+    _base_name, scopet{_base_name, separator, &current_scope(), kind});
+  return result.first->second;
+}
+
 void verilog_scopet::print_rec(std::size_t indent, std::ostream &out) const
 {
   out << std::string(indent, ' ') << prefix << '\n';
@@ -96,6 +106,14 @@ void verilog_scopest::import(irep_idt package, irep_idt base_name)
   auto name_it = package_it->second.scope_map.find(base_name);
   if(name_it != package_it->second.scope_map.end())
   {
+    // Check if the identifier already exists in the current scope
+    auto existing = current_scope().scope_map.find(base_name);
+    if(existing != current_scope().scope_map.end())
+    {
+      throw typecheckt::errort().with_location(source_locationt())
+        << "identifier '" << base_name
+        << "' conflicts with earlier declaration";
+    }
     auto &scope = add_name(base_name, "", name_it->second.kind);
     scope.import = name_it->second.identifier();
   }
