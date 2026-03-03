@@ -8,6 +8,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "verilog_scope.h"
 
+#include <util/typecheck.h>
+
 #include "verilog_y.tab.h"
 
 #include <ostream>
@@ -39,6 +41,7 @@ const verilog_scopet *verilog_scopest::lookup(irep_idt base_name) const
         CHECK_RETURN(result.second);
         auto &new_scope = result.first->second;
         new_scope.import = name_it->second.identifier();
+        new_scope.from_wildcard_import = true;
         return &new_scope;
       }
     }
@@ -49,6 +52,38 @@ const verilog_scopet *verilog_scopest::lookup(irep_idt base_name) const
 
   // not found, give up
   return nullptr;
+}
+
+verilog_scopet &verilog_scopest::add_name(
+  irep_idt _base_name,
+  const std::string &separator,
+  scopet::kindt kind)
+{
+  // Check if trying to declare an identifier that was imported
+  auto existing = current_scope().scope_map.find(_base_name);
+  if(
+    existing != current_scope().scope_map.end() &&
+    !existing->second.import.empty())
+  {
+    // If it's from a wildcard import, we need to check if it was actually used
+    // The heuristic: if it's still marked as from_wildcard_import, it was only
+    // looked up by the scanner, not used in an expression. Allow the declaration.
+    if(existing->second.from_wildcard_import)
+    {
+      // Remove the wildcard import entry to allow the declaration
+      current_scope().scope_map.erase(existing);
+    }
+    else
+    {
+      // Direct import or wildcard import that was used - conflict
+      throw typecheckt::errort().with_location(source_locationt())
+        << "identifier '" << _base_name << "' conflicts with import from "
+        << existing->second.import;
+    }
+  }
+  auto result = current_scope().scope_map.emplace(
+    _base_name, scopet{_base_name, separator, &current_scope(), kind});
+  return result.first->second;
 }
 
 void verilog_scopet::print_rec(std::size_t indent, std::ostream &out) const
@@ -95,6 +130,14 @@ void verilog_scopest::import(irep_idt package, irep_idt base_name)
   auto name_it = package_it->second.scope_map.find(base_name);
   if(name_it != package_it->second.scope_map.end())
   {
+    // Check if the identifier already exists in the current scope
+    auto existing = current_scope().scope_map.find(base_name);
+    if(existing != current_scope().scope_map.end())
+    {
+      throw typecheckt::errort().with_location(source_locationt())
+        << "identifier '" << base_name
+        << "' conflicts with earlier declaration";
+    }
     auto &scope = add_name(base_name, "", name_it->second.kind);
     scope.import = name_it->second.identifier();
   }
@@ -111,6 +154,15 @@ void verilog_scopest::wildcard_import(irep_idt package)
     return;
 
   current_scope().wildcard_imports.push_back(&package_it->second);
+}
+
+void verilog_scopest::mark_as_used(irep_idt base_name)
+{
+  auto existing = current_scope().scope_map.find(base_name);
+  if(existing != current_scope().scope_map.end())
+  {
+    existing->second.from_wildcard_import = false;
+  }
 }
 
 void verilog_scopest::enter_package_scope(irep_idt base_name)
