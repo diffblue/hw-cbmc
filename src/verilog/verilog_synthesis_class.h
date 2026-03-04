@@ -207,7 +207,18 @@ protected:
   }
 
   value_mapt *value_map;
-   
+
+  // task/function call frame
+  class tf_framet
+  {
+  public:
+    std::optional<symbol_exprt> return_value;
+    std::vector<value_mapt> return_statement_states;
+  };
+
+  // the call frame is optional since we might not be in a task or function
+  std::optional<tf_framet> tf_frame;
+
   void merge(
     const exprt &guard,
     const value_mapt::mapt &true_map,
@@ -267,6 +278,7 @@ protected:
   void synth_forever(const verilog_forevert &);
   void synth_while(const verilog_whilet &);
   void synth_repeat(const verilog_repeatt &);
+  void synth_return(const verilog_returnt &);
   void synth_function_call_or_task_enable(const verilog_function_callt &);
   void synth_assign(const verilog_assignt &);
   void
