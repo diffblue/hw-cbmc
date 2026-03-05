@@ -2013,6 +2013,10 @@ list_of_param_assignments:
 param_assignment: param_identifier '=' constant_param_expression
                 { init($$, ID_parameter);
                   auto base_name = stack_expr($1).get(ID_base_name);
+                  // Mark all wildcard imports as used EXCEPT the one being declared
+                  for(auto &entry : PARSER.scopes.current_scope().scope_map)
+                    if(entry.second.from_wildcard_import && entry.first != base_name)
+                      entry.second.from_wildcard_import = false;
                   PARSER.scopes.add_name(base_name, "", verilog_scopet::PARAMETER);
                   stack_expr($$).set(ID_base_name, base_name);
                   addswap($$, ID_value, $3); }
