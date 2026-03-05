@@ -19,6 +19,35 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <ostream>
 
+class smv_expr_printert
+{
+public:
+  smv_expr_printert(const exprt &expr, const namespacet &ns)
+    : _expr(expr), _ns(ns)
+  {
+  }
+
+  const exprt &expr() const
+  {
+    return _expr;
+  }
+
+  const namespacet &ns() const
+  {
+    return _ns;
+  }
+
+protected:
+  const exprt &_expr;
+  const namespacet &_ns;
+};
+
+std::ostream &
+operator<<(std::ostream &out, const smv_expr_printert &expr_printer)
+{
+  return out << expr2smv(expr_printer.expr(), expr_printer.ns());
+}
+
 class smv_type_printert
 {
 public:
@@ -105,7 +134,7 @@ smv_initial_states(const exprt &expr, const namespacet &ns, std::ostream &out)
   }
   else
   {
-    out << "INIT " << expr2smv(expr, ns) << '\n';
+    out << "INIT " << smv_expr_printert(expr, ns) << '\n';
   }
 }
 
@@ -131,7 +160,7 @@ smv_invar(const exprt &expr, const namespacet &ns, std::ostream &out)
   }
   else
   {
-    out << "INVAR " << expr2smv(expr, ns) << '\n';
+    out << "INVAR " << smv_expr_printert(expr, ns) << '\n';
   }
 }
 
@@ -158,7 +187,7 @@ static void smv_transition_relation(
   }
   else
   {
-    out << "TRANS " << expr2smv(expr, ns) << '\n';
+    out << "TRANS " << smv_expr_printert(expr, ns) << '\n';
   }
 }
 
@@ -184,11 +213,11 @@ static void smv_properties(
 
     if(is_CTL(property.normalized_expr))
     {
-      out << "CTLSPEC " << expr2smv(property.normalized_expr, ns);
+      out << "CTLSPEC " << smv_expr_printert(property.normalized_expr, ns);
     }
     else if(is_LTL(property.normalized_expr))
     {
-      out << "LTLSPEC " << expr2smv(property.normalized_expr, ns);
+      out << "LTLSPEC " << smv_expr_printert(property.normalized_expr, ns);
     }
     else if(is_SVA(property.normalized_expr))
     {
