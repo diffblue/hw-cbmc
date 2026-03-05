@@ -818,7 +818,7 @@ void smv_typecheckt::process_smv_next_rec(exprt &expr, bool next)
         << "next(next(...)) encountered";
     }
 
-    expr = to_unary_expr(expr).op();
+    expr = to_smv_next_expr(expr).op();
 
     process_smv_next_rec(expr, true);
     return;
@@ -911,7 +911,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_next)
   {
     // handled by process_smv_next
-    expr.type() = to_unary_expr(expr).op().type();
+    expr.type() = to_smv_next_expr(expr).op().type();
   }
   else if(expr.id() == ID_next_symbol)
   {
