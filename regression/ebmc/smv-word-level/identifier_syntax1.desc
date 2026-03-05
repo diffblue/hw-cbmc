@@ -1,0 +1,14 @@
+CORE
+identifier_syntax1.sv
+--smv-word-level
+^VAR _0 : boolean;$
+^VAR _\$ : boolean;$
+^VAR _# : boolean;$
+^VAR foo_bar : boolean;$
+^VAR foo_bar#2 : boolean;$
+^VAR foo__bar : boolean;$
+^VAR foo_ : boolean;$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

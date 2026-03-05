@@ -332,7 +332,12 @@ class smv_identifier_exprt : public nullary_exprt
 {
 public:
   explicit smv_identifier_exprt(irep_idt _identifier)
-    : nullary_exprt{ID_smv_identifier, typet{}}
+    : smv_identifier_exprt{_identifier, typet{}}
+  {
+  }
+
+  smv_identifier_exprt(irep_idt _identifier, typet type)
+    : nullary_exprt{ID_smv_identifier, std::move(type)}
   {
     identifier(_identifier);
   }

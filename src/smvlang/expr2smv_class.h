@@ -18,6 +18,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "expr2smv.h"
 
+class smv_identifier_exprt;
+class smv_next_exprt;
 class smv_set_exprt;
 class smv_word1_exprt;
 
@@ -126,6 +128,10 @@ protected:
   resultt convert_index(const index_exprt &, precedencet);
 
   resultt convert_if(const if_exprt &, precedencet);
+
+  resultt convert_smv_identifier(const smv_identifier_exprt &);
+
+  resultt convert_smv_next(const smv_next_exprt &);
 
   resultt convert_symbol(const symbol_exprt &);
 
