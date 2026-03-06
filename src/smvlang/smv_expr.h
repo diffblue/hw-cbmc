@@ -560,4 +560,26 @@ inline smv_cases_exprt &to_smv_cases_expr(exprt &expr)
   return static_cast<smv_cases_exprt &>(expr);
 }
 
+class smv_next_exprt : public unary_exprt
+{
+public:
+  explicit smv_next_exprt(exprt _op) : unary_exprt{ID_smv_next, _op, _op.type()}
+  {
+  }
+};
+
+inline const smv_next_exprt &to_smv_next_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_next);
+  smv_next_exprt::check(expr);
+  return static_cast<const smv_next_exprt &>(expr);
+}
+
+inline smv_next_exprt &to_smv_next_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_next);
+  smv_next_exprt::check(expr);
+  return static_cast<smv_next_exprt &>(expr);
+}
+
 #endif // CPROVER_SMV_EXPR_H

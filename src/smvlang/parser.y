@@ -654,7 +654,7 @@ assignment : init_Token '(' complex_identifier ')' BECOMES_Token simple_expr ';'
            | next_Token '(' complex_identifier ')' BECOMES_Token next_expr ';'
            {
              PARSER.module->add_assign_next(
-               unary_exprt{ID_smv_next, std::move(stack_expr($3))},
+               smv_next_exprt{std::move(stack_expr($3))},
                std::move(stack_expr($6)));
            }
            | complex_identifier BECOMES_Token formula ';'
