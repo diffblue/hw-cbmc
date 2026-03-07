@@ -8,9 +8,9 @@ module main(input [31:0] bits);
       if(bits[index])
         break;
 
-     assert final(bits == 'b1 -> index == 0);
-     assert final(bits == 'b1000 -> index == 3);
-     assert final(bits == 0 -> index == 32);
+    p0: assert final(bits == 'b1 -> index == 0);
+    p3: assert final(bits == 'b1000 -> index == 3);
+    p32: assert final(bits == 0 -> index == 32);
   end
 
 endmodule

@@ -8,7 +8,7 @@ module main;
         continue;
       j++;
     end
-    assert(j==9);
+    p0: assert(j==9);
   end
 
 endmodule

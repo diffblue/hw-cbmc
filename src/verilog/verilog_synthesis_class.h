@@ -219,6 +219,16 @@ protected:
   // the call frame is optional since we might not be in a task or function
   std::optional<tf_framet> tf_frame;
 
+  // states for break and continue
+  class loop_framet
+  {
+  public:
+    std::vector<value_mapt> break_statement_states;
+    std::vector<value_mapt> continue_statement_states;
+  };
+
+  std::optional<loop_framet> loop_frame;
+
   void merge(
     const exprt &guard,
     const value_mapt::mapt &true_map,
@@ -268,7 +278,9 @@ protected:
   void synth_decl(const verilog_declt &);
   void synth_function_or_task_decl(const verilog_function_or_task_declt &);
   void synth_block(const verilog_blockt &);
+  void synth_break(const verilog_breakt &);
   void synth_case(const verilog_statementt &);
+  void synth_continue(const verilog_continuet &);
   void synth_if(const verilog_ift &);
   void synth_event_guard(const verilog_event_guardt &);
   void synth_delay(const verilog_delayt &);

@@ -6,7 +6,7 @@ module main;
       if(i == 5)
         break;
     end
-    assert(i==5);
+    loop_exit: assert(i==5);
   end
 
 endmodule
