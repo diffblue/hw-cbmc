@@ -728,6 +728,24 @@ expr2smvt::resultt expr2smvt::convert_norep(const exprt &src)
 
 /*******************************************************************\
 
+Function: expr2smvt::convert_smv_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2smvt::resultt
+expr2smvt::convert_smv_identifier(const smv_identifier_exprt &src)
+{
+  return {precedencet::MAX, id2string(src.identifier())};
+}
+
+/*******************************************************************\
+
 Function: expr2smvt::convert_symbol
 
   Inputs:
@@ -968,6 +986,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_mod)
     return convert_binary(to_mod_expr(src), src.id_string(), precedencet::MULT);
 
+  else if(src.id() == ID_smv_next)
+    return convert_function_application("next", to_smv_next_expr(src));
+
   else if(src.id() == ID_smv_range)
     return convert_binary(to_smv_range_expr(src), "..", precedencet::UNION);
   // precedence is unknown
@@ -1102,6 +1123,9 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_if)
     return convert_if(to_if_expr(src), precedencet::IF);
+
+  else if(src.id() == ID_smv_identifier)
+    return convert_smv_identifier(to_smv_identifier_expr(src));
 
   else if(src.id()==ID_symbol)
     return convert_symbol(to_symbol_expr(src));
