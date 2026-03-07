@@ -1,8 +1,7 @@
 CORE
 break2.sv
 
-^file .* line 10: synthesis of break not supported$
-^EXIT=2$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring

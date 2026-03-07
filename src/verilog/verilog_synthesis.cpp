@@ -2052,6 +2052,50 @@ void verilog_synthesist::synth_block(const verilog_blockt &statement)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::synth_break
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::synth_break(const verilog_breakt &statement)
+{
+  PRECONDITION(loop_frame.has_value());
+
+  loop_frame.value().break_statement_states.push_back(*value_map);
+
+  // set guard to false
+  value_map->guard.push_back(false_exprt{});
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::synth_continue
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::synth_continue(const verilog_continuet &statement)
+{
+  PRECONDITION(loop_frame.has_value());
+
+  loop_frame.value().continue_statement_states.push_back(*value_map);
+
+  // set guard to false
+  value_map->guard.push_back(false_exprt{});
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::synth_continuous_assign
 
   Inputs:
@@ -2932,6 +2976,9 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
       << "for expected to have four operands";
   }
 
+  auto old_loop_frame = std::move(loop_frame);
+  loop_frame = loop_framet{};
+
   for(auto &init : statement.initialization())
   {
     // either an assignment or a declaration with assignment
@@ -2964,6 +3011,8 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
 
   while(true)
   {
+    loop_frame.value().continue_statement_states.clear();
+
     DATA_INVARIANT(
       statement.condition().type().id() == ID_bool,
       "for condition must be Boolean");
@@ -2983,9 +3032,33 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
     // execute the body
     synth_statement(statement.body());
 
+    // merge in edges from 'continue' statements, if any
+    for(auto &state : loop_frame.value().continue_statement_states)
+    {
+      auto guard_expr = conjunction(state.guard);
+      merge(
+        guard_expr,
+        state.current,
+        value_map->current,
+        false,
+        value_map->current);
+      merge(guard_expr, state.final, value_map->final, true, value_map->final);
+    }
+
     // execute the step statement
     synth_statement(statement.inc_statement());
   }
+
+  // merge in edges from 'break' statements, if any
+  for(auto &state : loop_frame.value().break_statement_states)
+  {
+    auto guard_expr = conjunction(state.guard);
+    merge(
+      guard_expr, state.current, value_map->current, false, value_map->current);
+    merge(guard_expr, state.final, value_map->final, true, value_map->final);
+  }
+
+  loop_frame = std::move(old_loop_frame);
 }
 
 /*******************************************************************\
@@ -3050,8 +3123,13 @@ void verilog_synthesist::synth_while(
       << "while expected to have two operands";
   }
 
+  auto old_loop_frame = std::move(loop_frame);
+  loop_frame = loop_framet{};
+
   while(true)
-  {  
+  {
+    loop_frame.value().continue_statement_states.clear();
+
     exprt tmp_guard=statement.condition();
     tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
     tmp_guard = synth_expr(tmp_guard, symbol_statet::CURRENT);
@@ -3068,7 +3146,31 @@ void verilog_synthesist::synth_while(
 
     // execute the body
     synth_statement(statement.body());
+
+    // merge in edges from 'continue' statements, if any
+    for(auto &state : loop_frame.value().continue_statement_states)
+    {
+      auto guard_expr = conjunction(state.guard);
+      merge(
+        guard_expr,
+        state.current,
+        value_map->current,
+        false,
+        value_map->current);
+      merge(guard_expr, state.final, value_map->final, true, value_map->final);
+    }
   }
+
+  // merge in edges from 'break' statements, if any
+  for(auto &state : loop_frame.value().break_statement_states)
+  {
+    auto guard_expr = conjunction(state.guard);
+    merge(
+      guard_expr, state.current, value_map->current, false, value_map->current);
+    merge(guard_expr, state.final, value_map->final, true, value_map->final);
+  }
+
+  loop_frame = std::move(old_loop_frame);
 }
 
 /*******************************************************************\
@@ -3279,10 +3381,7 @@ void verilog_synthesist::synth_statement(
   if(statement.id()==ID_block)
     synth_block(to_verilog_block(statement));
   else if(statement.id() == ID_break)
-  {
-    throw errort().with_location(statement.source_location())
-      << "synthesis of break not supported";
-  }
+    synth_break(to_verilog_break(statement));
   else if(statement.id()==ID_case ||
           statement.id()==ID_casex ||
           statement.id()==ID_casez)
@@ -3305,10 +3404,7 @@ void verilog_synthesist::synth_statement(
     synth_assign(to_verilog_assign(statement));
   }
   else if(statement.id() == ID_continue)
-  {
-    throw errort().with_location(statement.source_location())
-      << "synthesis of continue not supported";
-  }
+    synth_continue(to_verilog_continue(statement));
   else if(statement.id() == ID_procedural_continuous_assign)
   {
     throw errort().with_location(statement.source_location())

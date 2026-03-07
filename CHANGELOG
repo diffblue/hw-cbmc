@@ -1,7 +1,7 @@
 # EBMC 5.10
 
 * cast properties given with -p to Boolean if need be
-* SystemVerilog: return statements
+* SystemVerilog: break, continue and return statements
 * SystemVerilog: assignments to a part-select of a struct
 * SystemVerilog: timeunits and timeprecision
 * SystemVerilog: recursive module definitions
