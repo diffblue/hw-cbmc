@@ -1,0 +1,9 @@
+KNOWNBUG
+assignment-to-indexed-part-select1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The assignments to [15 -: 8] yield the wrong result.
