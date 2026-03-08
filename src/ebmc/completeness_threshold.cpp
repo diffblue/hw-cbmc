@@ -33,9 +33,7 @@ std::optional<mp_integer> completeness_threshold(const exprt &expr)
     else
       return {};
   }
-  else if(
-    expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_nexttime ||
-    expr.id() == ID_sva_s_nexttime)
+  else if(expr.id() == ID_sva_nexttime || expr.id() == ID_sva_s_nexttime)
   {
     // these are rewritten to always/s_always by normalize_property
     PRECONDITION(false);
