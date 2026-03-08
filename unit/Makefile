@@ -13,6 +13,7 @@ SRC += smvlang/expr2smv.cpp \
        temporal-logic/nnf.cpp \
        temporal-logic/trivial_sva.cpp \
        trans-netlist/aig.cpp \
+       verilog/indexed_part_select.cpp \
        verilog/typename.cpp \
        # Empty last line
 
