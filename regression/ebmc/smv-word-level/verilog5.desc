@@ -2,8 +2,8 @@ CORE
 verilog5.sv
 --smv-word-level
 ^INIT ebmc__\$past1_1 = FALSE$
-^TRANS next\(ebmc__\$past1_1\) = in$
-^LTLSPEC G in = \(X ebmc__\$past1_1\)$
+^TRANS next\(ebmc__\$past1_1\) = _in$
+^LTLSPEC G _in = \(X ebmc__\$past1_1\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
