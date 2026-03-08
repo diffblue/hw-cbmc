@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 assignment-to-indexed-part-select1.sv
 
 ^EXIT=0$
@@ -6,4 +6,4 @@ assignment-to-indexed-part-select1.sv
 --
 ^warning: ignoring
 --
-The assignments to [15 -: 8] yield the wrong result.
+The assignments to [15 -: 8] previously yielded the wrong result.

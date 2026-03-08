@@ -832,22 +832,36 @@ exprt verilog_synthesist::assignment_rec(
     mp_integer index = *index_opt, width = *width_opt;
 
     // turn
-    //   a[i:+w]=e
+    //   a[i +: w]=e  (selects bits i to i+w-1)
+    //   a[i -: w]=e  (selects bits i-w+1 to i)
     // into
-    //   a'==a WITH [i:=e[0]] ... WITH [i+w-1:=e[w-1]]
+    //   a'==a WITH [lo:=e[0]] ... WITH [lo+w-1:=e[w-1]]
+
+    mp_integer lo, hi;
+
+    if(lhs.id() == ID_verilog_indexed_part_select_plus)
+    {
+      lo = index;
+      hi = index + width - 1;
+    }
+    else // ID_verilog_indexed_part_select_minus
+    {
+      lo = index - width + 1;
+      hi = index;
+    }
 
     // start with 'a'
     auto new_rhs = synth_expr(lhs_src, symbol_statet::FINAL);
     const auto rhs_width = get_width(lhs_src.type());
 
     // We drop bits that are out of bounds
-    auto from_in_range = std::max(mp_integer{0}, index);
-    auto to_in_range = std::min(rhs_width - 1, index + width - 1);
+    auto from_in_range = std::max(mp_integer{0}, lo);
+    auto to_in_range = std::min(rhs_width - 1, hi);
 
     // now add the indexes in the range
     for(mp_integer i = from_in_range; i <= to_in_range; ++i)
     {
-      exprt offset = from_integer(i - index, integer_typet{});
+      exprt offset = from_integer(i - lo, integer_typet{});
       exprt rhs_extractbit = extractbit_exprt{rhs, std::move(offset)};
       exprt count = from_integer(i, integer_typet{});
       new_rhs = with_exprt{

@@ -389,7 +389,7 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
     }
     else // ID_verilog_indexed_part_select_minus
     {
-      bottom = bottom - width + 1;
+      bottom = index_int - src_offset - width + 1;
     }
 
     return extractbits_exprt{
@@ -400,8 +400,18 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
   {
     // Index not constant.
     // Use logical right-shift followed by (constant) extractbits.
-    auto index_adjusted =
-      minus_exprt{index, from_integer(src_offset, index.type())};
+    exprt index_adjusted;
+
+    if(part_select.id() == ID_verilog_indexed_part_select_plus)
+    {
+      index_adjusted =
+        minus_exprt{index, from_integer(src_offset, index.type())};
+    }
+    else // ID_verilog_indexed_part_select_minus
+    {
+      index_adjusted =
+        minus_exprt{index, from_integer(src_offset + width - 1, index.type())};
+    }
 
     auto src_shifted = lshr_exprt(src, index_adjusted);
 
