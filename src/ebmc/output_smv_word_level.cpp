@@ -13,6 +13,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <smvlang/expr2smv.h>
 #include <smvlang/smv_expr.h>
+#include <smvlang/smv_keywords.h>
 #include <temporal-logic/sva_to_ltl.h>
 #include <trans-word-level/next_symbol.h>
 
@@ -106,6 +107,10 @@ irep_idt create_smv_identifier(const irep_idt &identifier)
     else
       result += '_';
   }
+
+  // avoid SMV keywords
+  if(is_smv_keyword(result))
+    result = '_' + result;
 
   return result;
 }
