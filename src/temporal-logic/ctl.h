@@ -235,4 +235,10 @@ static inline EX_exprt &to_EX_expr(exprt &expr)
   return static_cast<EX_exprt &>(expr);
 }
 
+/// Returns true iff the given expression is AGp
+bool is_AGp(const exprt &);
+
+/// Returns true iff the given expression is AFp
+bool is_AFp(const exprt &);
+
 #endif

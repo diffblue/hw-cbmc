@@ -1,0 +1,10 @@
+CORE
+counter4.sv
+
+^\[main\.p0\] always main\.cnt != 4'b1111: REFUTED$
+^\[main\.p1\] always main\.cnt == main\.shadow: PROVED \(structural CT=255\)$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

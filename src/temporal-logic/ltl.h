@@ -173,4 +173,13 @@ static inline X_exprt &to_X_expr(exprt &expr)
   return static_cast<X_exprt &>(expr);
 }
 
+/// Returns true iff the given expression is of the form Gp
+bool is_Gp(const exprt &);
+
+/// Returns true iff the given expression is of the form Fp
+bool is_Fp(const exprt &);
+
+/// Returns true iff the given expression is GFp
+bool is_GFp(const exprt &);
+
 #endif
