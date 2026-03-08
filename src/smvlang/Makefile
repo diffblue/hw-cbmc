@@ -1,6 +1,7 @@
 SRC = smv_ebmc_language.cpp \
       smv_expr.cpp \
       smv_index.cpp \
+      smv_keywords.cpp \
       smv_language.cpp \
       smv_parser.cpp \
       smv_typecheck.cpp \
