@@ -65,7 +65,6 @@ static bool is_tautology(
 }
 
 property_checker_resultt tautology_check(
-  const cmdlinet &,
   const ebmc_propertiest &properties,
   const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
