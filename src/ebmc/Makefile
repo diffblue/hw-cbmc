@@ -12,6 +12,7 @@ SRC = \
       diameter.cpp \
       diatest.cpp \
       dimacs_writer.cpp \
+      engine_heuristic.cpp \
       ebmc_language.cpp \
       ebmc_languages.cpp \
       ebmc_parse_options.cpp \
