@@ -25,9 +25,6 @@ bool is_exists_path(const exprt &);
 /// Returns true iff the given expression is a CTL formula
 bool is_CTL(const exprt &);
 
-/// Returns true iff the given expression is AGp
-bool is_AGp(const exprt &);
-
 /// Returns true iff the given expression has a CTL operator
 /// as its root
 bool is_CTL_operator(const exprt &);
@@ -45,14 +42,8 @@ bool has_RTCTL_operator(const exprt &);
 /// Returns true iff the given expression is an LTL formula
 bool is_LTL(const exprt &);
 
-/// Returns true iff the given expression is GFp
-bool is_GFp(const exprt &);
-
 /// Returns true iff the given expression is an LTL past formula
 bool is_LTL_past(const exprt &);
-
-/// Returns true iff the given expression is of the form Gp
-bool is_Gp(const exprt &);
 
 /// Returns true iff the given expression has an LTL operator
 /// as its root
@@ -73,6 +64,9 @@ bool is_SVA(const exprt &);
 
 /// Returns true iff the given expression is always p
 bool is_SVA_always_p(const exprt &);
+
+/// Returns true iff the given expression is s_eventually p
+bool is_SVA_s_eventually_p(const exprt &);
 
 /// Returns true iff the given expression is always s_eventually p
 bool is_SVA_always_s_eventually_p(const exprt &);
