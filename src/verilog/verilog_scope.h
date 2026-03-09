@@ -56,6 +56,7 @@ struct verilog_scopet
   std::string prefix;
   kindt kind;
   irep_idt import;
+  bool from_wildcard_import = false;
 
   irep_idt identifier() const
   {
@@ -97,12 +98,7 @@ public:
   scopet &add_name(
     irep_idt _base_name,
     const std::string &separator,
-    scopet::kindt kind)
-  {
-    auto result = current_scope().scope_map.emplace(
-      _base_name, scopet{_base_name, separator, &current_scope(), kind});
-    return result.first->second;
-  }
+    scopet::kindt kind);
 
   // Scope stack
   std::vector<scopet *> scope_stack = {&top_scope};
@@ -140,6 +136,9 @@ public:
 
   void import(irep_idt package, irep_idt base_name);
   void wildcard_import(irep_idt package);
+
+  // Mark an identifier from a wildcard import as used (no longer just potentially visible)
+  void mark_as_used(irep_idt base_name);
 
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.
