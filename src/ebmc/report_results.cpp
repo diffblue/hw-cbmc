@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "report_results.h"
 
+#include <util/console.h>
 #include <util/json.h>
 #include <util/xml.h>
 
@@ -102,8 +103,37 @@ void report_results(
       if(property.is_disabled())
         continue;
 
-      message.result() << "[" << property.name << "] " << property.description
-                       << ": ";
+      if(consolet::is_terminal())
+      {
+        // We format for human readability, hence limit the width
+        // of the line we output. 32 is the budget for the text
+        // that follows the property description.
+        const std::size_t status_width = 32;
+        const std::size_t target_width = consolet::width() >= status_width
+                                           ? consolet::width() - status_width
+                                           : 0;
+        std::size_t width = 0;
+
+        message.result() << "[" << property.name << "] ";
+        width += 1 + property.name.size() + 2;
+
+        if(width + property.description.size() > target_width)
+        {
+          std::size_t length = width >= target_width ? 0 : target_width - width;
+          message.result() << std::string(property.description, 0, length);
+          message.result() << "...";
+        }
+        else
+          message.result() << property.description;
+
+        message.result() << ": ";
+      }
+      else
+      {
+        // not using a terminal
+        message.result() << "[" << property.name << "] " << property.description
+                         << ": ";
+      }
 
       using statust = ebmc_propertiest::propertyt::statust;
 
