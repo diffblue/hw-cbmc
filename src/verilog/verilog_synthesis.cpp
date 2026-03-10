@@ -502,6 +502,18 @@ exprt verilog_synthesist::expand_function_call(
   tf_frame = old_tf_frame;
   value_map->guard = entry_guard;
 
+  // do assignments to output parameters
+  for(unsigned i = 0; i < parameters.size(); i++)
+  {
+    const symbolt &a_symbol = ns.lookup(parameters[i].get_identifier());
+    if(parameters[i].get_bool(ID_output))
+    {
+      verilog_blocking_assignt assignment{actuals[i], a_symbol.symbol_expr()};
+      assignment.add_source_location() = call.source_location();
+      synth_statement(assignment);
+    }
+  }
+
   return result;
 }
 

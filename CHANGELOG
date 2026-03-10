@@ -2,6 +2,7 @@
 
 * cast properties given with -p to Boolean if need be
 * engine heuristic: add structural completeness threshold
+* SystemVerilog: functions with output ports
 * SystemVerilog: break, continue and return statements
 * SystemVerilog: assignments to a part-select of a struct
 * SystemVerilog: timeunits and timeprecision
