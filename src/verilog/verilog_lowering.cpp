@@ -91,6 +91,51 @@ exprt extract(
   }
 }
 
+/// Reconstruct a struct/union value from a bitvector using
+/// CBMC's LSB-first field ordering. This is needed for union
+/// fields so that the solver's convert_struct produces a
+/// bitvector matching the source's bit ordering.
+exprt from_bitvector_cbmc(
+  const exprt &src,
+  const mp_integer &offset,
+  const typet &dest)
+{
+  if(dest.id() == ID_struct)
+  {
+    const auto &struct_type = to_struct_type(dest);
+    exprt::operandst field_values;
+    field_values.reserve(struct_type.components().size());
+
+    // CBMC ordering: first field at offset 0
+    mp_integer component_offset = 0;
+
+    for(auto &component : struct_type.components())
+    {
+      auto width = verilog_bits(component.type());
+      field_values.push_back(
+        from_bitvector_cbmc(src, offset + component_offset, component.type()));
+      component_offset += width;
+    }
+
+    return struct_exprt{std::move(field_values), struct_type};
+  }
+  else if(dest.id() == ID_union)
+  {
+    const auto &union_type = to_union_type(dest);
+    DATA_INVARIANT(
+      !union_type.components().empty(),
+      "union type must have at least one field");
+    auto &field = union_type.components().front();
+    auto field_value =
+      from_bitvector_cbmc(src, offset, field.type());
+    return union_exprt{field.get_name(), std::move(field_value), union_type};
+  }
+  else
+  {
+    return extract(src, offset, dest);
+  }
+}
+
 exprt from_bitvector(
   const exprt &src,
   const mp_integer &offset,
@@ -126,8 +171,10 @@ exprt from_bitvector(
       "union type must have at least one field");
     auto &field = union_type.components().front();
 
-    // rec. call
-    auto field_value = from_bitvector(src, offset, field.type());
+    // Create the field value using CBMC's LSB-first ordering
+    // to match the solver's convert_struct/convert_union.
+    auto field_value =
+      from_bitvector_cbmc(src, offset, field.type());
 
     return union_exprt{field.get_name(), std::move(field_value), union_type};
   }
@@ -160,13 +207,11 @@ exprt to_bitvector(const exprt &src)
   }
   else if(src_type.id() == ID_union)
   {
-    const auto &union_type = to_union_type(src_type);
-    DATA_INVARIANT(
-      !union_type.components().empty(),
-      "union type must have at least one field");
-    auto &field = union_type.components().front();
-    auto member = member_exprt{src, field};
-    return to_bitvector(member); // rec. call
+    // For packed unions, all members share the same bitvector.
+    // Cast directly to bv_typet to avoid reordering through
+    // a specific member's struct layout.
+    auto width_int = numeric_cast_v<std::size_t>(verilog_bits(src));
+    return typecast_exprt{src, bv_typet{width_int}};
   }
   else
   {
@@ -700,6 +745,23 @@ exprt verilog_lowering(exprt expr)
       return aval_bval(to_zero_extend_expr(expr));
     else
       return expr;
+  }
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    auto &compound_type = member_expr.compound().type();
+
+    // Lower member access on packed unions.
+    // In SystemVerilog, all members of a packed union overlay the same
+    // bits. We lower u.field to from_bitvector(to_bitvector(u), field_type),
+    // which correctly maps bits using SystemVerilog's MSB-first ordering.
+    if(compound_type.id() == ID_union)
+    {
+      auto bv = to_bitvector(member_expr.compound());
+      return from_bitvector(bv, 0, member_expr.type());
+    }
+
+    return expr;
   }
   else
     return expr; // leave as is
