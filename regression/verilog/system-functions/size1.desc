@@ -1,0 +1,12 @@
+CORE
+size1.sv
+--module main
+^\[main\.p0\] always \$size\(main\.packed1\) == 32: PROVED .*$
+^\[main\.p1\] always \$size\(main\.packed2\) == 8: PROVED .*$
+^\[main\.p2\] always \$size\(main\.unpacked1\) == 4: PROVED .*$
+^\[main\.p3\] always \$size\(main\.unpacked2\) == 4: PROVED .*$
+^\[main\.p4\] always \$size\(main\.unpacked3\) == 8: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

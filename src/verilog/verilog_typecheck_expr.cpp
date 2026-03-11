@@ -998,6 +998,26 @@ constant_exprt verilog_typecheck_exprt::high(const exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::size
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::size(const exprt &expr)
+{
+  // $size = $high - $low + 1
+  auto h = numeric_cast_v<mp_integer>(high(expr));
+  auto l = numeric_cast_v<mp_integer>(low(expr));
+  return from_integer(h - l + 1, integer_typet{});
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::typename_string
 
   Inputs:
@@ -1117,7 +1137,8 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
   }
   else if(
     base_name == "$bits" || base_name == "$left" || base_name == "$right" ||
-    base_name == "$increment" || base_name == "$low" || base_name == "$high")
+    base_name == "$increment" || base_name == "$low" || base_name == "$high" ||
+    base_name == "$size")
   {
     if(arguments.size() != 1)
     {
@@ -2002,6 +2023,11 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
   {
     DATA_INVARIANT(arguments.size() == 1, "$increment has one argument");
     return increment(arguments[0]);
+  }
+  else if(base_name == "$size")
+  {
+    DATA_INVARIANT(arguments.size() == 1, "$size has one argument");
+    return size(arguments[0]);
   }
   else if(base_name == "$countones")
   {
