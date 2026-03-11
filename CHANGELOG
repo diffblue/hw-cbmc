@@ -11,6 +11,7 @@
 * SystemVerilog: typdefs in compilation-unit scope
 * SystemVerilog: functions in package and compilation-unit scopes
 * SystemVerilog: default direction for task/function ports
+* SystemVerilog: assignment patterns for unions
 
 # EBMC 5.9
 
