@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 unions6.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-Part-select on a union member with a single wide field gives wrong bit mapping.
