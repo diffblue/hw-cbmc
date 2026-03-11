@@ -2910,10 +2910,21 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
 
   if(op0.type().id() == ID_array)
   {
-    typet _index_type = index_type(to_array_type(op0.type()));
+    // This is really an array index
+    auto &array_type = to_array_type(op0.type());
+    typet _index_type = index_type(array_type);
     op1 = typecast_exprt{op1, _index_type};
 
-    expr.type() = to_array_type(op0.type()).element_type();
+    if(
+      array_type.get_bool(ID_C_increasing) &&
+      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array)
+    {
+      expr.op1() = minus_exprt{
+        minus_exprt{typecast_exprt{array_type.size(), _index_type}, expr.op1()},
+        from_integer(1, _index_type)};
+    }
+
+    expr.type() = array_type.element_type();
     expr.id(ID_index);
   }
   else
