@@ -12,6 +12,7 @@
 * SystemVerilog: functions in package and compilation-unit scopes
 * SystemVerilog: default direction for task/function ports
 * SystemVerilog: assignment patterns for unions
+* SystemVerilog: assignment patterns for vectors
 
 # EBMC 5.9
 

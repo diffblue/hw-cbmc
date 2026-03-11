@@ -1,7 +1,6 @@
 CORE
-array_conversion2.sv
+assignment_pattern1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
---
 --
