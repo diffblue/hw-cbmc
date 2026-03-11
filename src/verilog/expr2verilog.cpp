@@ -1611,28 +1611,26 @@ Function: expr2verilogt::convert_rec
 
 expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 {
-  verilog_precedencet precedence = verilog_precedencet::MAX;
-
   if(src.id()==ID_plus)
     return convert_binary(
-      to_multi_ary_expr(src), "+", precedence = verilog_precedencet::ADD);
+      to_multi_ary_expr(src), "+", verilog_precedencet::ADD);
 
   else if(src.id()==ID_if)
-    return convert_if(to_if_expr(src), precedence = verilog_precedencet::IF);
+    return convert_if(to_if_expr(src), verilog_precedencet::IF);
 
   else if(src.id()==ID_concatenation)
     return convert_concatenation(
-      to_concatenation_expr(src), precedence = verilog_precedencet::CONCAT);
+      to_concatenation_expr(src), verilog_precedencet::CONCAT);
 
   else if(src.id()==ID_with)
-    return convert_with(to_with_expr(src), precedence);
+    return convert_with(to_with_expr(src), verilog_precedencet::MAX);
 
   else if(src.id()==ID_replication)
     return convert_replication(
-      to_replication_expr(src), precedence = verilog_precedencet::CONCAT);
+      to_replication_expr(src), verilog_precedencet::CONCAT);
 
   else if(src.id()==ID_array)
-    return convert_array(src, precedence);
+    return convert_array(src, verilog_precedencet::MAX);
 
   else if(src.id()==ID_minus)
   {
@@ -1640,32 +1638,31 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
       return convert_norep(src);
     else
       return convert_binary(
-        to_multi_ary_expr(src), "-", precedence = verilog_precedencet::ADD);
+        to_multi_ary_expr(src), "-", verilog_precedencet::ADD);
   }
 
   else if(src.id()==ID_shl)
     return convert_binary(
-      to_multi_ary_expr(src), "<<", precedence = verilog_precedencet::SHIFT);
+      to_multi_ary_expr(src), "<<", verilog_precedencet::SHIFT);
 
   else if(src.id()==ID_lshr)
     return convert_binary(
-      to_multi_ary_expr(src), ">>", precedence = verilog_precedencet::SHIFT);
+      to_multi_ary_expr(src), ">>", verilog_precedencet::SHIFT);
 
   else if(src.id()==ID_ashr)
     return convert_binary(
-      to_multi_ary_expr(src), ">>>", precedence = verilog_precedencet::SHIFT);
+      to_multi_ary_expr(src), ">>>", verilog_precedencet::SHIFT);
 
   else if(src.id()==ID_unary_minus)
     return convert_unary(
-      to_unary_minus_expr(src), "-", precedence = verilog_precedencet::NOT);
+      to_unary_minus_expr(src), "-", verilog_precedencet::NOT);
 
   else if(src.id()==ID_unary_plus)
     return convert_unary(
-      to_unary_plus_expr(src), "+", precedence = verilog_precedencet::NOT);
+      to_unary_plus_expr(src), "+", verilog_precedencet::NOT);
 
   else if(src.id()==ID_index)
-    return convert_index(
-      to_index_expr(src), precedence = verilog_precedencet::MEMBER);
+    return convert_index(to_index_expr(src), verilog_precedencet::MEMBER);
 
   else if(
     src.id() == ID_verilog_indexed_part_select_plus ||
@@ -1673,33 +1670,32 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
   {
     return convert_indexed_part_select(
       to_verilog_indexed_part_select_plus_or_minus_expr(src),
-      precedence = verilog_precedencet::MEMBER);
+      verilog_precedencet::MEMBER);
   }
 
   else if(src.id() == ID_verilog_non_indexed_part_select)
     return convert_non_indexed_part_select(
       to_verilog_non_indexed_part_select_expr(src),
-      precedence = verilog_precedencet::MEMBER);
+      verilog_precedencet::MEMBER);
 
   else if(src.id()==ID_extractbit)
     return convert_extractbit(
-      to_extractbit_expr(src), precedence = verilog_precedencet::MEMBER);
+      to_extractbit_expr(src), verilog_precedencet::MEMBER);
 
   else if(src.id()==ID_extractbits)
     return convert_extractbits(
-      to_extractbits_expr(src), precedence = verilog_precedencet::MEMBER);
+      to_extractbits_expr(src), verilog_precedencet::MEMBER);
 
   else if(src.id()==ID_member)
-    return convert_member(
-      to_member_expr(src), precedence = verilog_precedencet::MEMBER);
+    return convert_member(to_member_expr(src), verilog_precedencet::MEMBER);
 
   else if(src.id()==ID_mult)
     return convert_binary(
-      to_multi_ary_expr(src), "*", precedence = verilog_precedencet::MULT);
+      to_multi_ary_expr(src), "*", verilog_precedencet::MULT);
 
   else if(src.id()==ID_div)
     return convert_binary(
-      to_multi_ary_expr(src), "/", precedence = verilog_precedencet::MULT);
+      to_multi_ary_expr(src), "/", verilog_precedencet::MULT);
 
   else if(
     src.id() == ID_lt || src.id() == ID_gt || src.id() == ID_le ||
@@ -1708,59 +1704,49 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_binary(
       to_multi_ary_expr(src),
       id2string(src.id()),
-      precedence = verilog_precedencet::RELATION);
+      verilog_precedencet::RELATION);
   }
 
   else if(src.id()==ID_equal)
     return convert_binary(
-      to_multi_ary_expr(src), "==", precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "==", verilog_precedencet::EQUALITY);
 
   else if(src.id() == ID_verilog_logical_equality)
     return convert_binary(
-      to_multi_ary_expr(src), "==", precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "==", verilog_precedencet::EQUALITY);
 
   else if(src.id()==ID_notequal)
     return convert_binary(
-      to_multi_ary_expr(src), "!=", precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "!=", verilog_precedencet::EQUALITY);
 
   else if(src.id() == ID_verilog_logical_inequality)
     return convert_binary(
-      to_multi_ary_expr(src), "!=", precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "!=", verilog_precedencet::EQUALITY);
 
   else if(src.id()==ID_verilog_case_equality)
     return convert_binary(
-      to_multi_ary_expr(src),
-      "===",
-      precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "===", verilog_precedencet::EQUALITY);
 
   else if(src.id()==ID_verilog_case_inequality)
     return convert_binary(
-      to_multi_ary_expr(src),
-      "!==",
-      precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "!==", verilog_precedencet::EQUALITY);
 
   else if(src.id() == ID_verilog_wildcard_equality)
     return convert_binary(
-      to_multi_ary_expr(src),
-      "==?",
-      precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "==?", verilog_precedencet::EQUALITY);
 
   else if(src.id() == ID_verilog_wildcard_inequality)
     return convert_binary(
-      to_multi_ary_expr(src),
-      "!=?",
-      precedence = verilog_precedencet::EQUALITY);
+      to_multi_ary_expr(src), "!=?", verilog_precedencet::EQUALITY);
 
   else if(src.id()==ID_not)
-    return convert_unary(
-      to_not_expr(src), "!", precedence = verilog_precedencet::NOT);
+    return convert_unary(to_not_expr(src), "!", verilog_precedencet::NOT);
 
   else if(src.id() == ID_sva_not)
     return convert_sva_unary("not", to_sva_not_expr(src));
 
   else if(src.id()==ID_bitnot)
-    return convert_unary(
-      to_bitnot_expr(src), "~", precedence = verilog_precedencet::NOT);
+    return convert_unary(to_bitnot_expr(src), "~", verilog_precedencet::NOT);
 
   else if(src.id() == ID_verilog_explicit_const_cast)
     return convert_explicit_const_cast(
@@ -1781,7 +1767,7 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id()==ID_and)
     return convert_binary(
-      to_multi_ary_expr(src), "&&", precedence = verilog_precedencet::AND);
+      to_multi_ary_expr(src), "&&", verilog_precedencet::AND);
 
   else if(src.id() == ID_sva_and)
     return convert_sva_binary("and", to_sva_and_expr(src));
@@ -1794,73 +1780,71 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id()==ID_power)
     return convert_binary(
-      to_multi_ary_expr(src), "**", precedence = verilog_precedencet::POWER);
+      to_multi_ary_expr(src), "**", verilog_precedencet::POWER);
 
   else if(src.id()==ID_bitand)
     return convert_binary(
-      to_multi_ary_expr(src), "&", precedence = verilog_precedencet::BITAND);
+      to_multi_ary_expr(src), "&", verilog_precedencet::BITAND);
 
   else if(src.id()==ID_bitxor)
     return convert_binary(
-      to_multi_ary_expr(src), "^", precedence = verilog_precedencet::XOR);
+      to_multi_ary_expr(src), "^", verilog_precedencet::XOR);
 
   else if(src.id()==ID_bitxnor)
     return convert_binary(
-      to_multi_ary_expr(src), "~^", precedence = verilog_precedencet::XOR);
+      to_multi_ary_expr(src), "~^", verilog_precedencet::XOR);
 
   else if(src.id()==ID_mod)
     return convert_binary(
-      to_multi_ary_expr(src), "%", precedence = verilog_precedencet::MULT);
+      to_multi_ary_expr(src), "%", verilog_precedencet::MULT);
 
   else if(src.id()==ID_or)
     return convert_binary(
-      to_multi_ary_expr(src), "||", precedence = verilog_precedencet::OR);
+      to_multi_ary_expr(src), "||", verilog_precedencet::OR);
 
   else if(src.id() == ID_sva_or)
     return convert_sva_binary("or", to_sva_or_expr(src));
 
   else if(src.id()==ID_bitor)
     return convert_binary(
-      to_multi_ary_expr(src), "|", precedence = verilog_precedencet::BITOR);
+      to_multi_ary_expr(src), "|", verilog_precedencet::BITOR);
 
   else if(src.id() == ID_verilog_implies)
     return convert_binary(
-      to_multi_ary_expr(src), "->", precedence = verilog_precedencet::IMPLIES);
+      to_multi_ary_expr(src), "->", verilog_precedencet::IMPLIES);
 
   else if(src.id() == ID_verilog_iff)
     return convert_binary(
-      to_multi_ary_expr(src), "<->", precedence = verilog_precedencet::IMPLIES);
+      to_multi_ary_expr(src), "<->", verilog_precedencet::IMPLIES);
 
   else if(src.id()==ID_reduction_or)
     return convert_unary(
-      to_reduction_or_expr(src), "|", precedence = verilog_precedencet::NOT);
+      to_reduction_or_expr(src), "|", verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_and)
     return convert_unary(
-      to_reduction_and_expr(src), "&", precedence = verilog_precedencet::NOT);
+      to_reduction_and_expr(src), "&", verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_nor)
     return convert_unary(
-      to_reduction_nor_expr(src), "~|", precedence = verilog_precedencet::NOT);
+      to_reduction_nor_expr(src), "~|", verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_nand)
     return convert_unary(
-      to_reduction_nand_expr(src), "~&", precedence = verilog_precedencet::NOT);
+      to_reduction_nand_expr(src), "~&", verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_xor)
     return convert_unary(
-      to_reduction_xor_expr(src), "^", precedence = verilog_precedencet::NOT);
+      to_reduction_xor_expr(src), "^", verilog_precedencet::NOT);
 
   else if(src.id()==ID_reduction_xnor)
     return convert_unary(
-      to_reduction_xnor_expr(src), "~^", precedence = verilog_precedencet::NOT);
+      to_reduction_xnor_expr(src), "~^", verilog_precedencet::NOT);
 
   else if(src.id()==ID_AG || src.id()==ID_EG ||
           src.id()==ID_AX || src.id()==ID_EX)
     return convert_unary(
-      to_unary_expr(src),
-      src.id_string() + " ",
-      precedence = verilog_precedencet::MIN);
+      to_unary_expr(src), src.id_string() + " ", verilog_precedencet::MIN);
 
   else if(src.id()==ID_symbol)
     return convert_symbol(src);
@@ -1894,12 +1878,10 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_function("$onehot0", src);
 
   else if(src.id()==ID_sva_overlapped_implication)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("|->", to_binary_expr(src));
+    return convert_sva_binary("|->", to_binary_expr(src));
 
   else if(src.id()==ID_sva_non_overlapped_implication)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("|=>", to_binary_expr(src));
+    return convert_sva_binary("|=>", to_binary_expr(src));
 
   else if(src.id() == ID_sva_cycle_delay_star)
     return convert_sva_cycle_delay("##[*]", to_sva_cycle_delay_star_expr(src));
@@ -1908,12 +1890,10 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     return convert_sva_cycle_delay("##[+]", to_sva_cycle_delay_plus_expr(src));
 
   else if(src.id() == ID_sva_overlapped_followed_by)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("#-#", to_binary_expr(src));
+    return convert_sva_binary("#-#", to_binary_expr(src));
 
   else if(src.id() == ID_sva_nonoverlapped_followed_by)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("#=#", to_binary_expr(src));
+    return convert_sva_binary("#=#", to_binary_expr(src));
 
   else if(src.id()==ID_sva_cycle_delay)
     return convert_sva_cycle_delay(to_sva_cycle_delay_expr(src));
@@ -1942,23 +1922,19 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
       to_sva_sequence_first_match_expr(src));
 
   else if(src.id() == ID_sva_sequence_intersect)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("intersect", to_binary_expr(src));
+    return convert_sva_binary("intersect", to_binary_expr(src));
   // not sure about precedence
 
   else if(src.id() == ID_sva_sequence_throughout)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("throughout", to_binary_expr(src));
+    return convert_sva_binary("throughout", to_binary_expr(src));
   // not sure about precedence
 
   else if(src.id() == ID_sva_sequence_within)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("within", to_binary_expr(src));
+    return convert_sva_binary("within", to_binary_expr(src));
   // not sure about precedence
 
   else if(src.id()==ID_sva_always)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary("always", to_sva_always_expr(src));
+    return convert_sva_unary("always", to_sva_always_expr(src));
 
   else if(src.id() == ID_sva_sequence_repetition_plus)
     return convert_sva_sequence_repetition(
@@ -1978,107 +1954,84 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_sva_ranged_always)
   {
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_ranged_predicate(
-             "always", to_sva_ranged_always_expr(src));
+    return convert_sva_ranged_predicate(
+      "always", to_sva_ranged_always_expr(src));
   }
 
   else if(src.id() == ID_sva_s_always)
   {
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_ranged_predicate("s_always", to_sva_s_always_expr(src));
+    return convert_sva_ranged_predicate("s_always", to_sva_s_always_expr(src));
   }
 
   else if(src.id() == ID_sva_cover)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary("cover", to_sva_cover_expr(src));
+    return convert_sva_unary("cover", to_sva_cover_expr(src));
 
   else if(src.id() == ID_sva_assume)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary("assume", to_sva_assume_expr(src));
+    return convert_sva_unary("assume", to_sva_assume_expr(src));
 
   else if(src.id() == ID_sva_accept_on)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_abort("accept_on", to_sva_abort_expr(src));
+    return convert_sva_abort("accept_on", to_sva_abort_expr(src));
 
   else if(src.id() == ID_sva_reject_on)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_abort("reject_on", to_sva_abort_expr(src));
+    return convert_sva_abort("reject_on", to_sva_abort_expr(src));
 
   else if(src.id() == ID_sva_sync_accept_on)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_abort("sync_accept_on", to_sva_abort_expr(src));
+    return convert_sva_abort("sync_accept_on", to_sva_abort_expr(src));
 
   else if(src.id() == ID_sva_sync_reject_on)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_abort("sync_reject_on", to_sva_abort_expr(src));
+    return convert_sva_abort("sync_reject_on", to_sva_abort_expr(src));
 
   else if(src.id()==ID_sva_nexttime)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary("nexttime", to_sva_nexttime_expr(src));
+    return convert_sva_unary("nexttime", to_sva_nexttime_expr(src));
 
   else if(src.id() == ID_sva_indexed_nexttime)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_indexed_binary(
-             "nexttime", to_sva_indexed_nexttime_expr(src));
+    return convert_sva_indexed_binary(
+      "nexttime", to_sva_indexed_nexttime_expr(src));
 
   else if(src.id()==ID_sva_s_nexttime)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary("s_nexttime", to_sva_s_nexttime_expr(src));
+    return convert_sva_unary("s_nexttime", to_sva_s_nexttime_expr(src));
 
   else if(src.id() == ID_sva_indexed_s_nexttime)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_indexed_binary(
-             "s_nexttime", to_sva_indexed_s_nexttime_expr(src));
+    return convert_sva_indexed_binary(
+      "s_nexttime", to_sva_indexed_s_nexttime_expr(src));
 
   else if(src.id() == ID_sva_disable_iff)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_abort("disable iff", to_sva_abort_expr(src));
+    return convert_sva_abort("disable iff", to_sva_abort_expr(src));
 
   else if(src.id() == ID_sva_sequence_disable_iff)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_abort(
-             "disable iff", to_sva_sequence_disable_iff_expr(src));
+    return convert_sva_abort(
+      "disable iff", to_sva_sequence_disable_iff_expr(src));
 
   else if(src.id()==ID_sva_eventually)
   {
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_ranged_predicate(
-             "eventually", to_sva_eventually_expr(src));
+    return convert_sva_ranged_predicate(
+      "eventually", to_sva_eventually_expr(src));
   }
 
   else if(src.id()==ID_sva_s_eventually)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_unary("s_eventually", to_sva_s_eventually_expr(src));
+    return convert_sva_unary("s_eventually", to_sva_s_eventually_expr(src));
 
   else if(src.id() == ID_sva_ranged_s_eventually)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_ranged_predicate(
-             "s_eventually", to_sva_ranged_s_eventually_expr(src));
+    return convert_sva_ranged_predicate(
+      "s_eventually", to_sva_ranged_s_eventually_expr(src));
 
   else if(src.id()==ID_sva_until)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("until", to_sva_until_expr(src));
+    return convert_sva_binary("until", to_sva_until_expr(src));
 
   else if(src.id()==ID_sva_s_until)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("s_until", to_sva_s_until_expr(src));
+    return convert_sva_binary("s_until", to_sva_s_until_expr(src));
 
   else if(src.id()==ID_sva_until_with)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("until_with", to_sva_until_with_expr(src));
+    return convert_sva_binary("until_with", to_sva_until_with_expr(src));
 
   else if(src.id()==ID_sva_s_until_with)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_binary("s_until_with", to_sva_s_until_with_expr(src));
+    return convert_sva_binary("s_until_with", to_sva_s_until_with_expr(src));
 
   else if(src.id() == ID_sva_if)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_if(to_sva_if_expr(src));
+    return convert_sva_if(to_sva_if_expr(src));
 
   else if(src.id() == ID_sva_case)
-    return precedence = verilog_precedencet::MIN,
-           convert_sva_case(to_sva_case_expr(src));
+    return convert_sva_case(to_sva_case_expr(src));
 
   else if(src.id()==ID_function_call)
     return convert_function_call(to_function_call_expr(src));
