@@ -16,6 +16,34 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::is_packed_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static bool is_packed_type(const typet &type)
+{
+  if(type.id() == ID_struct || type.id() == ID_union)
+    return type.get_bool(ID_packed);
+  else if(type.id() == ID_array)
+    return type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+  else if(
+    type.id() == ID_signedbv || type.id() == ID_unsignedbv ||
+    type.id() == ID_bool)
+  {
+    return true;
+  }
+  else
+    return false;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_unpacked_array_type
 
   Inputs:
@@ -447,11 +475,26 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
       }
     }
 
+    bool is_packed = src.get_bool(ID_packed);
+
+    if(is_packed)
+    {
+      // all components must be packed themselves
+      for(auto &component : components)
+      {
+        if(!is_packed_type(component.type()))
+        {
+          throw errort{}.with_location(component.source_location())
+            << "packed compound must not contain unpacked member";
+        }
+      }
+    }
+
     auto result =
       struct_union_typet{src.id(), std::move(components)}.with_source_location(
         src.source_location());
 
-    if(src.get_bool(ID_packed))
+    if(is_packed)
       result.set(ID_packed, true);
 
     return result;
