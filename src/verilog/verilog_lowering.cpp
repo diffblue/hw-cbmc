@@ -60,6 +60,16 @@ exprt extract(
   const mp_integer &offset,
   const typet &dest_type)
 {
+  if(src.type().id() == ID_bool)
+  {
+    // turn into bitvector of size 1
+    return extract(typecast_exprt{src, unsignedbv_typet{1}}, offset, dest_type);
+  }
+
+  PRECONDITION(src.type().id() != ID_array);
+  PRECONDITION(src.type().id() != ID_struct);
+  PRECONDITION(src.type().id() != ID_union);
+
   auto src_width = to_bitvector_type(src.type()).get_width();
   auto dest_width = verilog_bits(dest_type);
 
@@ -131,6 +141,49 @@ exprt from_bitvector(
 
     return union_exprt{field.get_name(), std::move(field_value), union_type};
   }
+  else if(dest.id() == ID_array)
+  {
+    const auto &array_type = to_array_type(dest);
+    auto &element_type = array_type.element_type();
+    auto size_int =
+      numeric_cast_v<std::size_t>(to_constant_expr(array_type.size()));
+    exprt::operandst element_values;
+    element_values.reserve(size_int);
+
+    // For packed arrays, the first element is the most significant.
+    // For unpacked arrays, the first element is the least significant.
+    bool is_packed =
+      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+
+    mp_integer element_width = verilog_bits(element_type);
+
+    if(is_packed)
+    {
+      mp_integer element_offset = verilog_bits(dest);
+
+      for(std::size_t index = 0; index < size_int; index++)
+      {
+        element_offset -= element_width;
+        auto element_value =
+          from_bitvector(src, offset + element_offset, element_type);
+        element_values.push_back(std::move(element_value));
+      }
+    }
+    else
+    {
+      mp_integer element_offset = 0;
+
+      for(std::size_t index = 0; index < size_int; index++)
+      {
+        auto element_value =
+          from_bitvector(src, offset + element_offset, element_type);
+        element_values.push_back(std::move(element_value));
+        element_offset += element_width;
+      }
+    }
+
+    return array_exprt{std::move(element_values), array_type};
+  }
   else
   {
     return extract(src, offset, dest);
@@ -167,6 +220,44 @@ exprt to_bitvector(const exprt &src)
     auto &field = union_type.components().front();
     auto member = member_exprt{src, field};
     return to_bitvector(member); // rec. call
+  }
+  else if(src_type.id() == ID_array)
+  {
+    const auto &array_type = to_array_type(src_type);
+    auto size_int =
+      numeric_cast_v<std::size_t>(to_constant_expr(array_type.size()));
+    exprt::operandst element_values;
+    element_values.reserve(size_int);
+
+    // For packed arrays, the first element is the most significant.
+    // For unpacked arrays, the first element is the least significant.
+    // Concatenation puts the most significant first.
+    bool is_packed =
+      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+
+    if(is_packed)
+    {
+      for(std::size_t index = 0; index < size_int; index++)
+      {
+        auto element_expr =
+          index_exprt{src, from_integer(index, integer_typet{})};
+        auto element_value = to_bitvector(element_expr); // rec. call
+        element_values.push_back(std::move(element_value));
+      }
+    }
+    else
+    {
+      for(std::size_t index = size_int; index > 0; index--)
+      {
+        auto element_expr =
+          index_exprt{src, from_integer(index - 1, integer_typet{})};
+        auto element_value = to_bitvector(element_expr); // rec. call
+        element_values.push_back(std::move(element_value));
+      }
+    }
+
+    auto width_int = numeric_cast_v<std::size_t>(verilog_bits(src));
+    return concatenation_exprt{std::move(element_values), bv_typet{width_int}};
   }
   else
   {
@@ -318,13 +409,17 @@ exprt verilog_lowering_cast(typecast_exprt expr)
       auto aval_bval_type = lower_to_aval_bval(dest_type);
       return aval_bval_conversion(expr.op(), aval_bval_type);
     }
-    else if(dest_type.id() == ID_struct || dest_type.id() == ID_union)
+    else if(
+      dest_type.id() == ID_struct || dest_type.id() == ID_union ||
+      dest_type.id() == ID_array)
     {
       return from_bitvector(expr.op(), 0, dest_type);
     }
     else
     {
-      if(src_type.id() == ID_struct || src_type.id() == ID_union)
+      if(
+        src_type.id() == ID_struct || src_type.id() == ID_union ||
+        src_type.id() == ID_array)
       {
         return extract(to_bitvector(expr.op()), 0, dest_type);
       }
