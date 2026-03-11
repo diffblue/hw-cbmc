@@ -274,9 +274,7 @@ void verilog_typecheck_exprt::assignment_conversion(
   }
 
   // do enum, union and struct decay
-  enum_decay(rhs);
-  struct_decay(rhs);
-  union_decay(rhs);
+  decay_to_vector(rhs);
 
   if(rhs.type().id() == ID_struct || rhs.type().id() == ID_union)
   {
@@ -523,9 +521,7 @@ void verilog_typecheck_exprt::require_vector(exprt &expr)
   // Otherwise error.
 
   // do enum, union and struct decay
-  enum_decay(expr);
-  struct_decay(expr);
-  union_decay(expr);
+  decay_to_vector(expr);
 
   if(expr.type().id() == ID_bool)
   {
@@ -2162,9 +2158,7 @@ void verilog_typecheck_exprt::implicit_typecast(
     return;
 
   // do enum, union and struct decay
-  enum_decay(expr);
-  struct_decay(expr);
-  union_decay(expr);
+  decay_to_vector(expr);
 
   const typet &src_type = expr.type();
 
@@ -2392,6 +2386,25 @@ verilog_typecheck_exprt::convert_range(const exprt &range)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::decay_to_vector
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::decay_to_vector(exprt &expr) const
+{
+  enum_decay(expr);
+  struct_decay(expr);
+  union_decay(expr);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::enum_decay
 
   Inputs:
@@ -2512,14 +2525,8 @@ void verilog_typecheck_exprt::tc_binary_expr(
   // Follows 1800-2017 11.8.2.
 
   // First get the self-determined type and size of both operands
-  union_decay(op0);
-  union_decay(op1);
-
-  enum_decay(op0);
-  enum_decay(op1);
-
-  struct_decay(op0);
-  struct_decay(op1);
+  decay_to_vector(op0);
+  decay_to_vector(op1);
 
   // Now get the max
   const typet new_type = max_type(op0.type(), op1.type());
