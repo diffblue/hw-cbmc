@@ -186,6 +186,32 @@ void verilog_typecheck_exprt::assignment_conversion(
 
       return;
     }
+    else if(lhs_type.id() == ID_union)
+    {
+      if(
+        rhs.operands().size() == 1 &&
+        rhs.operands().front().id() == ID_member_initializer)
+      {
+        // find the named component
+        auto &union_type = to_struct_union_type(lhs_type);
+        auto &initializer = rhs.operands().front();
+        auto member_name = initializer.get(ID_member_name);
+        auto &component = union_type.get_component(member_name);
+        if(component.is_nil())
+        {
+          throw errort().with_location(initializer.source_location())
+            << "union does not have a member `" << member_name << "'";
+        }
+
+        auto value = to_unary_expr(initializer).op();
+
+        // rec. call
+        assignment_conversion(value, component.type());
+        rhs = union_exprt{member_name, std::move(value), union_type}
+                .with_source_location(rhs.source_location());
+        return;
+      }
+    }
     else if(lhs_type.id() == ID_array)
     {
       auto &array_type = to_array_type(lhs_type);
