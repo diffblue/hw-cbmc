@@ -1579,6 +1579,26 @@ expr2verilogt::resultt expr2verilogt::convert_struct(const struct_exprt &src)
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_union
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_union(const union_exprt &src)
+{
+  std::string dest = "'{ " + id2string(src.get_component_name()) + ": " +
+                     convert_rec(src.op()).s + " }";
+
+  return {verilog_precedencet::MAX, dest};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_value_range
 
   Inputs:
@@ -2096,7 +2116,10 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
       to_sva_sequence_property_instance_expr(src)); } },
 
     { ID_struct, [](expr2verilogt &expr2verilog, const exprt &src) { 
-    return expr2verilog.convert_struct(to_struct_expr(src)); } }
+    return expr2verilog.convert_struct(to_struct_expr(src)); } },
+
+    { ID_union, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_union(to_union_expr(src)); } }
   };
 
   auto action = action_table.find(src.id());

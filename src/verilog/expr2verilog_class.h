@@ -189,6 +189,8 @@ protected:
 
   resultt convert_struct(const struct_exprt &);
 
+  resultt convert_union(const union_exprt &);
+
 protected:
   const namespacet &ns;
 };
