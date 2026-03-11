@@ -150,14 +150,13 @@ exprt from_bitvector(
     exprt::operandst element_values;
     element_values.reserve(size_int);
 
-    // For packed arrays, the first element is the most significant.
-    // For unpacked arrays, the first element is the least significant.
+    // For packed arrays, we take the index direction into account.
     bool is_packed =
       array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
 
     mp_integer element_width = verilog_bits(element_type);
 
-    if(is_packed)
+    if(is_packed && array_type.get_bool(ID_C_increasing))
     {
       mp_integer element_offset = verilog_bits(dest);
 
@@ -229,13 +228,12 @@ exprt to_bitvector(const exprt &src)
     exprt::operandst element_values;
     element_values.reserve(size_int);
 
-    // For packed arrays, the first element is the most significant.
-    // For unpacked arrays, the first element is the least significant.
+    // For packed arrays, we take the index direction into account.
     // Concatenation puts the most significant first.
     bool is_packed =
       array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
 
-    if(is_packed)
+    if(is_packed && !array_type.get_bool(ID_C_increasing))
     {
       for(std::size_t index = 0; index < size_int; index++)
       {
@@ -795,6 +793,20 @@ exprt verilog_lowering(exprt expr)
       return aval_bval(to_zero_extend_expr(expr));
     else
       return expr;
+  }
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    auto &compound_type = member_expr.compound().type();
+
+    // Lower member access on packed unions.
+    if(compound_type.id() == ID_union)
+    {
+      auto bv = to_bitvector(member_expr.compound());
+      return from_bitvector(bv, 0, member_expr.type());
+    }
+    else
+      return expr; // leave as is
   }
   else
     return expr; // leave as is
