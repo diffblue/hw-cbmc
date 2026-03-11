@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 #include <cstdlib>
 #include <iomanip>
+#include <map>
 #include <sstream>
 
 std::string verilog_string_literal(const std::string &src)
@@ -1611,474 +1612,504 @@ Function: expr2verilogt::convert_rec
 
 expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 {
-  if(src.id()==ID_plus)
-    return convert_binary(
-      to_multi_ary_expr(src), "+", verilog_precedencet::ADD);
-
-  else if(src.id()==ID_if)
-    return convert_if(to_if_expr(src), verilog_precedencet::IF);
-
-  else if(src.id()==ID_concatenation)
-    return convert_concatenation(
-      to_concatenation_expr(src), verilog_precedencet::CONCAT);
-
-  else if(src.id()==ID_with)
-    return convert_with(to_with_expr(src), verilog_precedencet::MAX);
-
-  else if(src.id()==ID_replication)
-    return convert_replication(
-      to_replication_expr(src), verilog_precedencet::CONCAT);
-
-  else if(src.id()==ID_array)
-    return convert_array(src, verilog_precedencet::MAX);
-
-  else if(src.id()==ID_minus)
+  static const std::map<irep_idt, std::function<resultt(expr2verilogt &, const exprt &)>> action_table =
   {
+    { ID_plus, [](expr2verilogt &expr2verilog, const exprt &src) { return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "+", verilog_precedencet::ADD); } },
+
+    { ID_if, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_if(to_if_expr(src), verilog_precedencet::IF); } },
+
+    { ID_concatenation, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_concatenation(
+      to_concatenation_expr(src), verilog_precedencet::CONCAT); } },
+
+    { ID_with, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_with(to_with_expr(src), verilog_precedencet::MAX); } },
+
+    { ID_replication, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_replication(
+      to_replication_expr(src), verilog_precedencet::CONCAT); } },
+
+    { ID_array, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_array(src, verilog_precedencet::MAX); } },
+
+    { ID_minus, [](expr2verilogt &expr2verilog, const exprt &src) { 
     if(src.operands().size()!=2)
-      return convert_norep(src);
+      return expr2verilog.convert_norep(src);
     else
-      return convert_binary(
-        to_multi_ary_expr(src), "-", verilog_precedencet::ADD);
-  }
+      return expr2verilog.convert_binary(
+        to_multi_ary_expr(src), "-", verilog_precedencet::ADD); } },
 
-  else if(src.id()==ID_shl)
-    return convert_binary(
-      to_multi_ary_expr(src), "<<", verilog_precedencet::SHIFT);
+    { ID_shl, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "<<", verilog_precedencet::SHIFT); } },
 
-  else if(src.id()==ID_lshr)
-    return convert_binary(
-      to_multi_ary_expr(src), ">>", verilog_precedencet::SHIFT);
+    { ID_lshr, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), ">>", verilog_precedencet::SHIFT); } },
 
-  else if(src.id()==ID_ashr)
-    return convert_binary(
-      to_multi_ary_expr(src), ">>>", verilog_precedencet::SHIFT);
+    { ID_ashr, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), ">>>", verilog_precedencet::SHIFT); } },
 
-  else if(src.id()==ID_unary_minus)
-    return convert_unary(
-      to_unary_minus_expr(src), "-", verilog_precedencet::NOT);
+    { ID_unary_minus, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_unary_minus_expr(src), "-", verilog_precedencet::NOT); } },
 
-  else if(src.id()==ID_unary_plus)
-    return convert_unary(
-      to_unary_plus_expr(src), "+", verilog_precedencet::NOT);
+    { ID_unary_plus, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_unary_plus_expr(src), "+", verilog_precedencet::NOT); } },
 
-  else if(src.id()==ID_index)
-    return convert_index(to_index_expr(src), verilog_precedencet::MEMBER);
+    { ID_index, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_index(to_index_expr(src), verilog_precedencet::MEMBER); } },
 
-  else if(
-    src.id() == ID_verilog_indexed_part_select_plus ||
-    src.id() == ID_verilog_indexed_part_select_minus)
-  {
-    return convert_indexed_part_select(
+    { ID_verilog_indexed_part_select_plus, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_indexed_part_select(
       to_verilog_indexed_part_select_plus_or_minus_expr(src),
-      verilog_precedencet::MEMBER);
-  }
+      verilog_precedencet::MEMBER); } },
 
-  else if(src.id() == ID_verilog_non_indexed_part_select)
-    return convert_non_indexed_part_select(
+    { ID_verilog_indexed_part_select_minus, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_indexed_part_select(
+      to_verilog_indexed_part_select_plus_or_minus_expr(src),
+      verilog_precedencet::MEMBER); } },
+
+    { ID_verilog_non_indexed_part_select, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_non_indexed_part_select(
       to_verilog_non_indexed_part_select_expr(src),
-      verilog_precedencet::MEMBER);
+      verilog_precedencet::MEMBER); } },
 
-  else if(src.id()==ID_extractbit)
-    return convert_extractbit(
-      to_extractbit_expr(src), verilog_precedencet::MEMBER);
+    { ID_extractbit, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_extractbit(
+      to_extractbit_expr(src), verilog_precedencet::MEMBER); } },
 
-  else if(src.id()==ID_extractbits)
-    return convert_extractbits(
-      to_extractbits_expr(src), verilog_precedencet::MEMBER);
+    { ID_extractbits, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_extractbits(
+      to_extractbits_expr(src), verilog_precedencet::MEMBER); } },
 
-  else if(src.id()==ID_member)
-    return convert_member(to_member_expr(src), verilog_precedencet::MEMBER);
+    { ID_member, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_member(to_member_expr(src), verilog_precedencet::MEMBER); } },
 
-  else if(src.id()==ID_mult)
-    return convert_binary(
-      to_multi_ary_expr(src), "*", verilog_precedencet::MULT);
+    { ID_mult, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "*", verilog_precedencet::MULT); } },
 
-  else if(src.id()==ID_div)
-    return convert_binary(
-      to_multi_ary_expr(src), "/", verilog_precedencet::MULT);
+    { ID_div, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "/", verilog_precedencet::MULT); } },
 
-  else if(
-    src.id() == ID_lt || src.id() == ID_gt || src.id() == ID_le ||
-    src.id() == ID_ge)
-  {
-    return convert_binary(
+    { ID_lt, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_binary(
       to_multi_ary_expr(src),
       id2string(src.id()),
-      verilog_precedencet::RELATION);
-  }
+      verilog_precedencet::RELATION); } },
 
-  else if(src.id()==ID_equal)
-    return convert_binary(
-      to_multi_ary_expr(src), "==", verilog_precedencet::EQUALITY);
+    { ID_gt, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src),
+      id2string(src.id()),
+      verilog_precedencet::RELATION); } },
 
-  else if(src.id() == ID_verilog_logical_equality)
-    return convert_binary(
-      to_multi_ary_expr(src), "==", verilog_precedencet::EQUALITY);
+    { ID_le, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src),
+      id2string(src.id()),
+      verilog_precedencet::RELATION); } },
 
-  else if(src.id()==ID_notequal)
-    return convert_binary(
-      to_multi_ary_expr(src), "!=", verilog_precedencet::EQUALITY);
+    { ID_ge, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src),
+      id2string(src.id()),
+      verilog_precedencet::RELATION); } },
 
-  else if(src.id() == ID_verilog_logical_inequality)
-    return convert_binary(
-      to_multi_ary_expr(src), "!=", verilog_precedencet::EQUALITY);
+    { ID_equal, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "==", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id()==ID_verilog_case_equality)
-    return convert_binary(
-      to_multi_ary_expr(src), "===", verilog_precedencet::EQUALITY);
+    { ID_verilog_logical_equality, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "==", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id()==ID_verilog_case_inequality)
-    return convert_binary(
-      to_multi_ary_expr(src), "!==", verilog_precedencet::EQUALITY);
+    { ID_notequal, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "!=", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id() == ID_verilog_wildcard_equality)
-    return convert_binary(
-      to_multi_ary_expr(src), "==?", verilog_precedencet::EQUALITY);
+    { ID_verilog_logical_inequality, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "!=", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id() == ID_verilog_wildcard_inequality)
-    return convert_binary(
-      to_multi_ary_expr(src), "!=?", verilog_precedencet::EQUALITY);
+    { ID_verilog_case_equality, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "===", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id()==ID_not)
-    return convert_unary(to_not_expr(src), "!", verilog_precedencet::NOT);
+    { ID_verilog_case_inequality, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "!==", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id() == ID_sva_not)
-    return convert_sva_unary("not", to_sva_not_expr(src));
+    { ID_verilog_wildcard_equality, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "==?", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id()==ID_bitnot)
-    return convert_unary(to_bitnot_expr(src), "~", verilog_precedencet::NOT);
+    { ID_verilog_wildcard_inequality, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "!=?", verilog_precedencet::EQUALITY); } },
 
-  else if(src.id() == ID_verilog_explicit_const_cast)
-    return convert_explicit_const_cast(
-      to_verilog_explicit_const_cast_expr(src));
+    { ID_not, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(to_not_expr(src), "!", verilog_precedencet::NOT); } },
 
-  else if(src.id() == ID_verilog_explicit_size_cast)
-    return convert_explicit_size_cast(to_verilog_explicit_size_cast_expr(src));
+    { ID_sva_not, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary("not", to_sva_not_expr(src)); } },
 
-  else if(src.id() == ID_verilog_explicit_signing_cast)
-    return convert_explicit_signing_cast(
-      to_verilog_explicit_signing_cast_expr(src));
+    { ID_bitnot, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(to_bitnot_expr(src), "~", verilog_precedencet::NOT); } },
 
-  else if(src.id() == ID_verilog_explicit_type_cast)
-    return convert_explicit_type_cast(to_verilog_explicit_type_cast_expr(src));
+    { ID_verilog_explicit_const_cast, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_explicit_const_cast(
+      to_verilog_explicit_const_cast_expr(src)); } },
 
-  else if(src.id()==ID_typecast)
-    return convert_typecast(to_typecast_expr(src));
+    { ID_verilog_explicit_size_cast, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_explicit_size_cast(to_verilog_explicit_size_cast_expr(src)); } },
 
-  else if(src.id()==ID_and)
-    return convert_binary(
-      to_multi_ary_expr(src), "&&", verilog_precedencet::AND);
+    { ID_verilog_explicit_signing_cast, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_explicit_signing_cast(
+      to_verilog_explicit_signing_cast_expr(src)); } },
 
-  else if(src.id() == ID_sva_and)
-    return convert_sva_binary("and", to_sva_and_expr(src));
+    { ID_verilog_explicit_type_cast, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_explicit_type_cast(to_verilog_explicit_type_cast_expr(src)); } },
 
-  else if(src.id() == ID_sva_iff)
-    return convert_sva_binary("iff", to_sva_iff_expr(src));
+    { ID_typecast, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_typecast(to_typecast_expr(src)); } },
 
-  else if(src.id() == ID_sva_implies)
-    return convert_sva_binary("implies", to_sva_implies_expr(src));
+    { ID_and, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "&&", verilog_precedencet::AND); } },
 
-  else if(src.id()==ID_power)
-    return convert_binary(
-      to_multi_ary_expr(src), "**", verilog_precedencet::POWER);
+    { ID_sva_and, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("and", to_sva_and_expr(src)); } },
 
-  else if(src.id()==ID_bitand)
-    return convert_binary(
-      to_multi_ary_expr(src), "&", verilog_precedencet::BITAND);
+    { ID_sva_iff, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("iff", to_sva_iff_expr(src)); } },
 
-  else if(src.id()==ID_bitxor)
-    return convert_binary(
-      to_multi_ary_expr(src), "^", verilog_precedencet::XOR);
+    { ID_sva_implies, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("implies", to_sva_implies_expr(src)); } },
 
-  else if(src.id()==ID_bitxnor)
-    return convert_binary(
-      to_multi_ary_expr(src), "~^", verilog_precedencet::XOR);
+    { ID_power, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "**", verilog_precedencet::POWER); } },
 
-  else if(src.id()==ID_mod)
-    return convert_binary(
-      to_multi_ary_expr(src), "%", verilog_precedencet::MULT);
+    { ID_bitand, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "&", verilog_precedencet::BITAND); } },
 
-  else if(src.id()==ID_or)
-    return convert_binary(
-      to_multi_ary_expr(src), "||", verilog_precedencet::OR);
+    { ID_bitxor, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "^", verilog_precedencet::XOR); } },
 
-  else if(src.id() == ID_sva_or)
-    return convert_sva_binary("or", to_sva_or_expr(src));
+    { ID_bitxnor, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "~^", verilog_precedencet::XOR); } },
 
-  else if(src.id()==ID_bitor)
-    return convert_binary(
-      to_multi_ary_expr(src), "|", verilog_precedencet::BITOR);
+    { ID_mod, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "%", verilog_precedencet::MULT); } },
 
-  else if(src.id() == ID_verilog_implies)
-    return convert_binary(
-      to_multi_ary_expr(src), "->", verilog_precedencet::IMPLIES);
+    { ID_or, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "||", verilog_precedencet::OR); } },
 
-  else if(src.id() == ID_verilog_iff)
-    return convert_binary(
-      to_multi_ary_expr(src), "<->", verilog_precedencet::IMPLIES);
+    { ID_sva_or, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("or", to_sva_or_expr(src)); } },
 
-  else if(src.id()==ID_reduction_or)
-    return convert_unary(
-      to_reduction_or_expr(src), "|", verilog_precedencet::NOT);
+    { ID_bitor, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "|", verilog_precedencet::BITOR); } },
 
-  else if(src.id()==ID_reduction_and)
-    return convert_unary(
-      to_reduction_and_expr(src), "&", verilog_precedencet::NOT);
+    { ID_verilog_implies, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "->", verilog_precedencet::IMPLIES); } },
 
-  else if(src.id()==ID_reduction_nor)
-    return convert_unary(
-      to_reduction_nor_expr(src), "~|", verilog_precedencet::NOT);
+    { ID_verilog_iff, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_binary(
+      to_multi_ary_expr(src), "<->", verilog_precedencet::IMPLIES); } },
 
-  else if(src.id()==ID_reduction_nand)
-    return convert_unary(
-      to_reduction_nand_expr(src), "~&", verilog_precedencet::NOT);
+    { ID_reduction_or, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_reduction_or_expr(src), "|", verilog_precedencet::NOT); } },
 
-  else if(src.id()==ID_reduction_xor)
-    return convert_unary(
-      to_reduction_xor_expr(src), "^", verilog_precedencet::NOT);
+    { ID_reduction_and, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_reduction_and_expr(src), "&", verilog_precedencet::NOT); } },
 
-  else if(src.id()==ID_reduction_xnor)
-    return convert_unary(
-      to_reduction_xnor_expr(src), "~^", verilog_precedencet::NOT);
+    { ID_reduction_nor, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_reduction_nor_expr(src), "~|", verilog_precedencet::NOT); } },
 
-  else if(src.id()==ID_AG || src.id()==ID_EG ||
-          src.id()==ID_AX || src.id()==ID_EX)
-    return convert_unary(
-      to_unary_expr(src), src.id_string() + " ", verilog_precedencet::MIN);
+    { ID_reduction_nand, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_reduction_nand_expr(src), "~&", verilog_precedencet::NOT); } },
 
-  else if(src.id()==ID_symbol)
-    return convert_symbol(src);
+    { ID_reduction_xor, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_reduction_xor_expr(src), "^", verilog_precedencet::NOT); } },
 
-  else if(src.id() == ID_verilog_identifier)
-    return convert_verilog_identifier(to_verilog_identifier_expr(src));
+    { ID_reduction_xnor, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_unary(
+      to_reduction_xnor_expr(src), "~^", verilog_precedencet::NOT); } },
 
-  else if(src.id()==ID_nondet_symbol)
-    return convert_nondet_symbol(src);
-
-  else if(src.id()==ID_next_symbol)
-    return convert_next_symbol(src);
-
-  else if(src.id() == ID_hierarchical_identifier)
-    return convert_hierarchical_identifier(
-      to_hierarchical_identifier_expr(src));
-
-  else if(src.id()==ID_constant)
-    return convert_constant(to_constant_expr(src));
-
-  else if(src.id()==ID_constraint_select_one)
-    return convert_function("$ND", src);
-
-  else if(src.id() == ID_verilog_past)
-    return convert_function("$past", src);
-
-  else if(src.id()==ID_onehot)
-    return convert_function("$onehot", src);
+    { ID_AG, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_unary(
+      to_unary_expr(src), src.id_string() + " ", verilog_precedencet::MIN); } },
     
-  else if(src.id()==ID_onehot0)
-    return convert_function("$onehot0", src);
+    { ID_EG, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_unary(
+      to_unary_expr(src), src.id_string() + " ", verilog_precedencet::MIN); } },
+    
+    { ID_AX, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_unary(
+      to_unary_expr(src), src.id_string() + " ", verilog_precedencet::MIN); } },
+    
+    { ID_EX, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_unary(
+      to_unary_expr(src), src.id_string() + " ", verilog_precedencet::MIN); } },
 
-  else if(src.id()==ID_sva_overlapped_implication)
-    return convert_sva_binary("|->", to_binary_expr(src));
+    { ID_symbol, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_symbol(src); } },
 
-  else if(src.id()==ID_sva_non_overlapped_implication)
-    return convert_sva_binary("|=>", to_binary_expr(src));
+    { ID_verilog_identifier, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_verilog_identifier(to_verilog_identifier_expr(src)); } },
 
-  else if(src.id() == ID_sva_cycle_delay_star)
-    return convert_sva_cycle_delay("##[*]", to_sva_cycle_delay_star_expr(src));
+    { ID_nondet_symbol, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_nondet_symbol(src); } },
 
-  else if(src.id() == ID_sva_cycle_delay_plus)
-    return convert_sva_cycle_delay("##[+]", to_sva_cycle_delay_plus_expr(src));
+    { ID_next_symbol, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_next_symbol(src); } },
 
-  else if(src.id() == ID_sva_overlapped_followed_by)
-    return convert_sva_binary("#-#", to_binary_expr(src));
+    { ID_hierarchical_identifier, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_hierarchical_identifier(
+      to_hierarchical_identifier_expr(src)); } },
 
-  else if(src.id() == ID_sva_nonoverlapped_followed_by)
-    return convert_sva_binary("#=#", to_binary_expr(src));
+    { ID_constant, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_constant(to_constant_expr(src)); } },
 
-  else if(src.id()==ID_sva_cycle_delay)
-    return convert_sva_cycle_delay(to_sva_cycle_delay_expr(src));
+    { ID_constraint_select_one, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function("$ND", src); } },
 
-  else if(src.id() == ID_sva_strong)
-    return convert_function("strong", src);
+    { ID_verilog_past, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function("$past", src); } },
 
-  else if(src.id() == ID_sva_weak)
-    return convert_function("weak", src);
+    { ID_onehot, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function("$onehot", src); } },
+    
+    { ID_onehot0, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function("$onehot0", src); } },
 
-  else if(
-    src.id() == ID_sva_sequence_property ||
-    src.id() == ID_sva_implicit_strong || src.id() == ID_sva_implicit_weak)
-  {
-    return convert_rec(to_sva_sequence_property_expr_base(src).sequence());
-  }
+    { ID_sva_overlapped_implication, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("|->", to_binary_expr(src)); } },
 
-  else if(src.id() == ID_sva_boolean)
-  {
+    { ID_sva_non_overlapped_implication, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("|=>", to_binary_expr(src)); } },
+
+    { ID_sva_cycle_delay_star, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_cycle_delay("##[*]", to_sva_cycle_delay_star_expr(src)); } },
+
+    { ID_sva_cycle_delay_plus, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_cycle_delay("##[+]", to_sva_cycle_delay_plus_expr(src)); } },
+
+    { ID_sva_overlapped_followed_by, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("#-#", to_binary_expr(src)); } },
+
+    { ID_sva_nonoverlapped_followed_by, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("#=#", to_binary_expr(src)); } },
+
+    { ID_sva_cycle_delay, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_cycle_delay(to_sva_cycle_delay_expr(src)); } },
+
+    { ID_sva_strong, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function("strong", src); } },
+
+    { ID_sva_weak, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function("weak", src); } },
+
+    { ID_sva_sequence_property, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_rec(to_sva_sequence_property_expr_base(src).sequence()); } },
+
+    { ID_sva_implicit_strong, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_rec(to_sva_sequence_property_expr_base(src).sequence()); } },
+
+    { ID_sva_implicit_weak, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_rec(to_sva_sequence_property_expr_base(src).sequence()); } },
+
     // These are invisible
-    return convert_rec(to_sva_boolean_expr(src).op());
-  }
+    { ID_sva_boolean, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_rec(to_sva_boolean_expr(src).op()); } },
 
-  else if(src.id() == ID_sva_sequence_first_match)
-    return convert_sva_sequence_first_match(
-      to_sva_sequence_first_match_expr(src));
+    { ID_sva_sequence_first_match, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_sequence_first_match(
+      to_sva_sequence_first_match_expr(src)); } },
 
-  else if(src.id() == ID_sva_sequence_intersect)
-    return convert_sva_binary("intersect", to_binary_expr(src));
-  // not sure about precedence
+    { ID_sva_sequence_intersect, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("intersect", to_binary_expr(src)); } },
+    // not sure about precedence
 
-  else if(src.id() == ID_sva_sequence_throughout)
-    return convert_sva_binary("throughout", to_binary_expr(src));
-  // not sure about precedence
+    { ID_sva_sequence_throughout, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("throughout", to_binary_expr(src)); } },
+    // not sure about precedence
 
-  else if(src.id() == ID_sva_sequence_within)
-    return convert_sva_binary("within", to_binary_expr(src));
-  // not sure about precedence
+    { ID_sva_sequence_within, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("within", to_binary_expr(src)); } },
+    // not sure about precedence
 
-  else if(src.id()==ID_sva_always)
-    return convert_sva_unary("always", to_sva_always_expr(src));
+    { ID_sva_always, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary("always", to_sva_always_expr(src)); } },
 
-  else if(src.id() == ID_sva_sequence_repetition_plus)
-    return convert_sva_sequence_repetition(
-      "+", to_sva_sequence_repetition_plus_expr(src));
+    { ID_sva_sequence_repetition_plus, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_sequence_repetition(
+      "+", to_sva_sequence_repetition_plus_expr(src)); } },
 
-  else if(src.id() == ID_sva_sequence_non_consecutive_repetition)
-    return convert_sva_sequence_repetition(
-      "=", to_sva_sequence_non_consecutive_repetition_expr(src));
+    { ID_sva_sequence_non_consecutive_repetition, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_sequence_repetition(
+      "=", to_sva_sequence_non_consecutive_repetition_expr(src)); } },
 
-  else if(src.id() == ID_sva_sequence_repetition_star)
-    return convert_sva_sequence_repetition(
-      "*", to_sva_sequence_repetition_star_expr(src));
+    { ID_sva_sequence_repetition_star, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_sequence_repetition(
+      "*", to_sva_sequence_repetition_star_expr(src)); } },
 
-  else if(src.id() == ID_sva_sequence_goto_repetition)
-    return convert_sva_sequence_repetition(
-      "->", to_sva_sequence_goto_repetition_expr(src));
+    { ID_sva_sequence_goto_repetition, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_sequence_repetition(
+      "->", to_sva_sequence_goto_repetition_expr(src)); } },
 
-  else if(src.id() == ID_sva_ranged_always)
+    { ID_sva_ranged_always, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_ranged_predicate(
+      "always", to_sva_ranged_always_expr(src)); } },
+
+    { ID_sva_s_always, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_ranged_predicate("s_always", to_sva_s_always_expr(src)); } },
+
+    { ID_sva_cover, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary("cover", to_sva_cover_expr(src)); } },
+
+    { ID_sva_assume, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary("assume", to_sva_assume_expr(src)); } },
+
+    { ID_sva_accept_on, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_abort("accept_on", to_sva_abort_expr(src)); } },
+
+    { ID_sva_reject_on, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_abort("reject_on", to_sva_abort_expr(src)); } },
+
+    { ID_sva_sync_accept_on, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_abort("sync_accept_on", to_sva_abort_expr(src)); } },
+
+    { ID_sva_sync_reject_on, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_abort("sync_reject_on", to_sva_abort_expr(src)); } },
+
+    { ID_sva_nexttime, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary("nexttime", to_sva_nexttime_expr(src)); } },
+
+    { ID_sva_indexed_nexttime, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_indexed_binary(
+      "nexttime", to_sva_indexed_nexttime_expr(src)); } },
+
+    { ID_sva_s_nexttime, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary("s_nexttime", to_sva_s_nexttime_expr(src)); } },
+
+    { ID_sva_indexed_s_nexttime, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_indexed_binary(
+      "s_nexttime", to_sva_indexed_s_nexttime_expr(src)); } },
+
+    { ID_sva_disable_iff, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_abort("disable iff", to_sva_abort_expr(src)); } },
+
+    { ID_sva_sequence_disable_iff, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_abort(
+      "disable iff", to_sva_sequence_disable_iff_expr(src)); } },
+
+    { ID_sva_eventually, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_ranged_predicate(
+      "eventually", to_sva_eventually_expr(src)); } },
+
+    { ID_sva_s_eventually, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary("s_eventually", to_sva_s_eventually_expr(src)); } },
+
+    { ID_sva_ranged_s_eventually, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_ranged_predicate(
+      "s_eventually", to_sva_ranged_s_eventually_expr(src)); } },
+
+    { ID_sva_until, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("until", to_sva_until_expr(src)); } },
+
+    { ID_sva_s_until, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("s_until", to_sva_s_until_expr(src)); } },
+
+    { ID_sva_until_with, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("until_with", to_sva_until_with_expr(src)); } },
+
+    { ID_sva_s_until_with, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_binary("s_until_with", to_sva_s_until_with_expr(src)); } },
+
+    { ID_sva_if, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_if(to_sva_if_expr(src)); } },
+
+    { ID_sva_case, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_case(to_sva_case_expr(src)); } },
+
+    { ID_function_call, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function_call(to_function_call_expr(src)); } },
+
+    { ID_clog2, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_function("$clog2", src); } },
+
+    { ID_verilog_streaming_concatenation_left_to_right, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_streaming_concatenation(
+      ">>", to_verilog_streaming_concatenation_expr(src)); } },
+
+    { ID_verilog_streaming_concatenation_right_to_left, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_streaming_concatenation(
+      "<<", to_verilog_streaming_concatenation_expr(src)); } },
+
+    { ID_verilog_inside, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_inside(to_verilog_inside_expr(src)); } },
+
+    { ID_verilog_value_range, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_value_range(to_verilog_value_range_expr(src)); } },
+
+    { ID_postincrement, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sva_unary(to_unary_expr(src), "++"); } },
+
+    { ID_nand, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_function(src.id_string(), src); } },
+
+    { ID_nor, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_function(src.id_string(), src); } },
+
+    { ID_xnor, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_function(src.id_string(), src); } },
+
+    { ID_xor, [](expr2verilogt &expr2verilog, const exprt &src) {
+    return expr2verilog.convert_function(src.id_string(), src); } },
+
+    { ID_zero_extend, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_rec(to_zero_extend_expr(src).op()); } },
+
+    { ID_sva_sequence_property_instance, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_sequence_property_instance(
+      to_sva_sequence_property_instance_expr(src)); } },
+
+    { ID_struct, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_struct(to_struct_expr(src)); } }
+  };
+
+  auto action = action_table.find(src.id());
+
+  if(action != action_table.end())
   {
-    return convert_sva_ranged_predicate(
-      "always", to_sva_ranged_always_expr(src));
+    return action->second(*this, src);
   }
-
-  else if(src.id() == ID_sva_s_always)
+  else
   {
-    return convert_sva_ranged_predicate("s_always", to_sva_s_always_expr(src));
+    // no VERILOG language expression for internal representation
+    return convert_norep(src);
   }
-
-  else if(src.id() == ID_sva_cover)
-    return convert_sva_unary("cover", to_sva_cover_expr(src));
-
-  else if(src.id() == ID_sva_assume)
-    return convert_sva_unary("assume", to_sva_assume_expr(src));
-
-  else if(src.id() == ID_sva_accept_on)
-    return convert_sva_abort("accept_on", to_sva_abort_expr(src));
-
-  else if(src.id() == ID_sva_reject_on)
-    return convert_sva_abort("reject_on", to_sva_abort_expr(src));
-
-  else if(src.id() == ID_sva_sync_accept_on)
-    return convert_sva_abort("sync_accept_on", to_sva_abort_expr(src));
-
-  else if(src.id() == ID_sva_sync_reject_on)
-    return convert_sva_abort("sync_reject_on", to_sva_abort_expr(src));
-
-  else if(src.id()==ID_sva_nexttime)
-    return convert_sva_unary("nexttime", to_sva_nexttime_expr(src));
-
-  else if(src.id() == ID_sva_indexed_nexttime)
-    return convert_sva_indexed_binary(
-      "nexttime", to_sva_indexed_nexttime_expr(src));
-
-  else if(src.id()==ID_sva_s_nexttime)
-    return convert_sva_unary("s_nexttime", to_sva_s_nexttime_expr(src));
-
-  else if(src.id() == ID_sva_indexed_s_nexttime)
-    return convert_sva_indexed_binary(
-      "s_nexttime", to_sva_indexed_s_nexttime_expr(src));
-
-  else if(src.id() == ID_sva_disable_iff)
-    return convert_sva_abort("disable iff", to_sva_abort_expr(src));
-
-  else if(src.id() == ID_sva_sequence_disable_iff)
-    return convert_sva_abort(
-      "disable iff", to_sva_sequence_disable_iff_expr(src));
-
-  else if(src.id()==ID_sva_eventually)
-  {
-    return convert_sva_ranged_predicate(
-      "eventually", to_sva_eventually_expr(src));
-  }
-
-  else if(src.id()==ID_sva_s_eventually)
-    return convert_sva_unary("s_eventually", to_sva_s_eventually_expr(src));
-
-  else if(src.id() == ID_sva_ranged_s_eventually)
-    return convert_sva_ranged_predicate(
-      "s_eventually", to_sva_ranged_s_eventually_expr(src));
-
-  else if(src.id()==ID_sva_until)
-    return convert_sva_binary("until", to_sva_until_expr(src));
-
-  else if(src.id()==ID_sva_s_until)
-    return convert_sva_binary("s_until", to_sva_s_until_expr(src));
-
-  else if(src.id()==ID_sva_until_with)
-    return convert_sva_binary("until_with", to_sva_until_with_expr(src));
-
-  else if(src.id()==ID_sva_s_until_with)
-    return convert_sva_binary("s_until_with", to_sva_s_until_with_expr(src));
-
-  else if(src.id() == ID_sva_if)
-    return convert_sva_if(to_sva_if_expr(src));
-
-  else if(src.id() == ID_sva_case)
-    return convert_sva_case(to_sva_case_expr(src));
-
-  else if(src.id()==ID_function_call)
-    return convert_function_call(to_function_call_expr(src));
-
-  else if(src.id() == ID_clog2)
-    return convert_function("$clog2", src);
-
-  else if(src.id() == ID_verilog_streaming_concatenation_left_to_right)
-    return convert_streaming_concatenation(
-      ">>", to_verilog_streaming_concatenation_expr(src));
-
-  else if(src.id() == ID_verilog_streaming_concatenation_right_to_left)
-    return convert_streaming_concatenation(
-      "<<", to_verilog_streaming_concatenation_expr(src));
-
-  else if(src.id() == ID_verilog_inside)
-    return convert_inside(to_verilog_inside_expr(src));
-
-  else if(src.id() == ID_verilog_value_range)
-    return convert_value_range(to_verilog_value_range_expr(src));
-
-  else if(src.id() == ID_postincrement)
-    return convert_sva_unary(to_unary_expr(src), "++");
-
-  else if(
-    src.id() == ID_nand || src.id() == ID_nor || src.id() == ID_xnor ||
-    src.id() == ID_xor)
-  {
-    return convert_function(src.id_string(), src);
-  }
-
-  else if(src.id() == ID_zero_extend)
-    return convert_rec(to_zero_extend_expr(src).op());
-
-  else if(src.id() == ID_sva_sequence_property_instance)
-  {
-    return convert_sequence_property_instance(
-      to_sva_sequence_property_instance_expr(src));
-  }
-
-  else if(src.id() == ID_struct)
-  {
-    return convert_struct(to_struct_expr(src));
-  }
-
-  // no VERILOG language expression for internal representation
-  return convert_norep(src);
 }
 
 /*******************************************************************\
