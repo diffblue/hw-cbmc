@@ -9,13 +9,13 @@ array_functions1.sv
 ^\[main\.pP5\] always \$increment\(main\.packed2\) == -1: PROVED .*$
 ^\[main\.pU0\] always \$left\(main\.unpacked1\) == 32 && \$right\(main\.unpacked1\) == 1: PROVED .*$
 ^\[main\.pU1\] always \$left\(main\.unpacked2\) == 0 && \$right\(main\.unpacked2\) == 31: PROVED .*$
-^\[main\.pU2\] always \$left\(main\.unpacked3\) == 31 && \$right\(main\.unpacked3\) == 0: PROVED .*$
+^\[main\.pU2\] always \$left\(main\.unpacked3\) == 0 && \$right\(main\.unpacked3\) == 31: PROVED .*$
 ^\[main\.pU3\] always \$low\(main\.unpacked1\) == 1 && \$high\(main\.unpacked1\) == 32: PROVED .*$
 ^\[main\.pU4\] always \$low\(main\.unpacked2\) == 0 && \$high\(main\.unpacked2\) == 31: PROVED .*$
 ^\[main\.pU5\] always \$low\(main\.unpacked3\) == 0 && \$high\(main\.unpacked3\) == 31: PROVED .*$
 ^\[main\.pU6\] always \$increment\(main\.unpacked1\) == 1: PROVED .*$
 ^\[main\.pU7\] always \$increment\(main\.unpacked2\) == -1: PROVED .*$
-^\[main\.pU8\] always \$increment\(main\.unpacked3\) == 1: PROVED .*$
+^\[main\.pU8\] always \$increment\(main\.unpacked3\) == -1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

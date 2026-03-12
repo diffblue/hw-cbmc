@@ -51,7 +51,8 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   }
   else if(size_expr.is_not_nil())
   {
-    increasing = false;
+    // [size] is syntactic sugar for [0:size-1]
+    increasing = true;
     size = convert_integer_constant_expression(size_expr);
     offset = 0;
     if(size < 0)
