@@ -147,6 +147,7 @@ protected:
   }
 
   static typet enum_decay(const typet &);
+  void decay_to_vector(exprt &) const;
   void enum_decay(exprt &) const;
   void union_decay(exprt &) const;
   void struct_decay(exprt &) const;
