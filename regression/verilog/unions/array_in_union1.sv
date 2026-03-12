@@ -1,7 +1,7 @@
 module main;
 
   union packed {
-    bit array[4];
+    bit [3:0] [0:0] array;
     bit [3:0] as_vector;
   } u;
 
