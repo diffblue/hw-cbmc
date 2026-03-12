@@ -1,0 +1,8 @@
+KNOWNBUG
+packed_direction1.sv
+--module main
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This gives the wrong answer.
