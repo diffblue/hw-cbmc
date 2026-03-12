@@ -236,6 +236,30 @@ void verilog_typecheck_exprt::assignment_conversion(
       rhs.type() = lhs_type;
       return;
     }
+    else if(lhs_type.id() == ID_signedbv || lhs_type.id() == ID_unsignedbv)
+    {
+      auto &bv_type = to_bitvector_type(lhs_type);
+      auto width = bv_type.width();
+
+      if(width != rhs.operands().size())
+      {
+        throw errort().with_location(rhs.source_location())
+          << "number of expressions does not match number of vector elements";
+      }
+
+      // These always come in order from most to least significant,
+      // which matches what concatenation does.
+      for(std::size_t i = 0; i < width; i++)
+      {
+        // rec. call
+        assignment_conversion(rhs.operands()[i], unsignedbv_typet{1});
+      }
+
+      // turn into concatenation
+      rhs.id(ID_concatenation);
+      rhs.type() = lhs_type;
+      return;
+    }
     else
     {
       throw errort().with_location(rhs.source_location())
