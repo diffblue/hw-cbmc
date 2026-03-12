@@ -226,6 +226,7 @@ protected:
   constant_exprt low(const exprt &);
   constant_exprt high(const exprt &);
   constant_exprt increment(const exprt &);
+  constant_exprt size(const exprt &);
   exprt typename_string(const exprt &);
 };
 
