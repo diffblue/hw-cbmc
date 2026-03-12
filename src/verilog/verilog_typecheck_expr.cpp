@@ -2424,6 +2424,7 @@ Function: verilog_typecheck_exprt::decay_to_vector
 
 void verilog_typecheck_exprt::decay_to_vector(exprt &expr) const
 {
+  array_decay(expr);
   enum_decay(expr);
   struct_decay(expr);
   union_decay(expr);
@@ -2454,6 +2455,33 @@ typet verilog_typecheck_exprt::enum_decay(const typet &type)
   }
   else
     return type;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::array_decay
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::array_decay(exprt &expr) const
+{
+  // 1800-2017 7.4.3
+  // Packed arrays can be "treated as an integer in an expression"
+  auto &type = expr.type();
+  if(type.id() == ID_array)
+  {
+    auto new_type =
+      unsignedbv_typet{numeric_cast_v<std::size_t>(get_width(type))};
+    // The synthesis stage turns these typecasts into a concatenation
+    // of index expressions.
+    expr = typecast_exprt{expr, new_type};
+  }
 }
 
 /*******************************************************************\
