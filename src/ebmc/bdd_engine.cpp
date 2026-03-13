@@ -25,6 +25,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 
+#include "bdd_model_checker.h"
 #include "netlist.h"
 
 #include <algorithm>
@@ -136,35 +137,15 @@ protected:
     propertyt &,
     unsigned number_of_timeframes);
 
-  void check_AGp(propertyt &);
-  void check_CTL(propertyt &);
-  BDD CTL(const exprt &);
-  BDD EX(BDD);
-  BDD AX(BDD f)
-  {
-    return !EX(!f);
-  }
-  BDD EF(BDD);
-  BDD AF(BDD f)
-  {
-    return !EG(!f);
-  }
-  BDD EG(BDD);
-  BDD AG(BDD f)
-  {
-    return !EF(!f);
-  }
-  BDD EU(BDD, BDD);
-  BDD AU(BDD, BDD);
-  BDD ER(BDD f1, BDD f2)
-  {
-    return !AU(!f1, !f2);
-  }
-  BDD AR(BDD f1, BDD f2)
-  {
-    return !EU(!f1, !f2);
-  }
-  BDD fixedpoint(std::function<BDD(BDD)>, BDD);
+  /// Build a bdd_modelt from the constructed BDDs.
+  bdd_modelt make_bdd_model();
+
+  /// Build the atomic proposition BDD map for the model checker.
+  std::map<unsigned, mini_bddt> make_atomic_proposition_bdds() const;
+
+  /// Rewrite a property expression to use literal_exprt for
+  /// atomic propositions.
+  exprt property_to_literal_expr(const exprt &) const;
 };
 
 /*******************************************************************\
@@ -263,7 +244,12 @@ property_checker_resultt bdd_enginet::operator()()
         }
         else
         {
-          auto result = CTL(property.normalized_expr);
+          auto literal_property =
+            property_to_literal_expr(property.normalized_expr);
+          auto ap_bdds = make_atomic_proposition_bdds();
+          auto model = make_bdd_model();
+          auto result = bdd_ctl(
+            model, literal_property, ap_bdds, message.get_message_handler());
           std::cout << property.name << ":\n" << cubes(result) << '\n';
         }
       }
@@ -546,387 +532,42 @@ void bdd_enginet::check_property(propertyt &property)
     return;
 
   message.status() << "Checking " << property.name << messaget::eom;
-  property.status=propertyt::statust::UNKNOWN;
+  property.status = propertyt::statust::UNKNOWN;
+
+  auto literal_property = property_to_literal_expr(property.normalized_expr);
+  auto ap_bdds = make_atomic_proposition_bdds();
+  auto model = make_bdd_model();
+
+  bdd_check_resultt result;
 
   if(is_AGp(property.normalized_expr))
   {
-    check_AGp(property);
+    result = bdd_check_AGp(
+      model, literal_property, ap_bdds, message.get_message_handler());
   }
   else if(is_CTL(property.normalized_expr))
   {
-    check_CTL(property);
+    result = bdd_check_ctl(
+      model, literal_property, ap_bdds, message.get_message_handler());
   }
   else
     DATA_INVARIANT(false, "unexpected normalized property");
-}
 
-/*******************************************************************\
-
-Function: bdd_enginet::check_AGp
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void bdd_enginet::check_AGp(propertyt &property)
-{
-  const exprt &sub_expr = to_unary_expr(property.normalized_expr).op();
-  BDD p = CTL(sub_expr);
-
-  // Start with !p, and go backwards until saturation or we hit an
-  // initial state.
-
-  BDD states = !p;
-  unsigned iteration = 0;
-
-  for(const auto &c : constraints_BDDs)
-    states = states & c;
-
-  std::size_t peak_bdd_nodes = 0;
-
-  while(true)
+  switch(result.status)
   {
-    iteration++;
-    message.statistics() << "Iteration " << iteration << messaget::eom;
-
-    // do we have an initial state?
-    BDD intersection = states;
-
-    for(const auto &i : initial_BDDs)
-      intersection = intersection & i;
-
-    peak_bdd_nodes = std::max(peak_bdd_nodes, mgr.number_of_nodes());
-
-    if(!intersection.is_false())
-    {
-      property.refuted();
-      message.status() << "Property refuted" << messaget::eom;
-      compute_counterexample(property, iteration);
-      break;
-    }
-
-    // make the states be expressed in terms of 'next' variables
-    BDD states_next = current_to_next(states);
-
-    // now conjoin with transition relation
-    BDD conjunction = states_next;
-
-    for(const auto &t : transition_BDDs)
-      conjunction = conjunction & t;
-
-    for(const auto &c : constraints_BDDs)
-      conjunction = conjunction & c;
-
-    // now project away 'next' variables
-    BDD pre_image = project_next(conjunction);
-
-    // compute union
-    BDD set_union = states | pre_image;
-
-    // have we saturated?
-    if((set_union == states).is_true())
-    {
-      property.proved("BDD");
-      message.status() << "Property proved" << messaget::eom;
-      break;
-    }
-
-    states = set_union;
-
-    peak_bdd_nodes = std::max(peak_bdd_nodes, mgr.number_of_nodes());
-  }
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::check_CTL
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void bdd_enginet::check_CTL(propertyt &property)
-{
-  // For a CTL formula f, calculate the set of states that satisfy
-  // !f, and then check if that contains any initial state.
-  BDD not_f = !CTL(property.normalized_expr);
-
-  BDD intersection = not_f;
-
-  for(const auto &i : initial_BDDs)
-    intersection = intersection & i;
-
-  for(const auto &c : constraints_BDDs)
-    intersection = intersection & c;
-
-  if(intersection.is_false())
-  {
-    // intersection empty, proved
+  case bdd_check_resultt::statust::PROVED:
     property.proved("BDD");
     message.status() << "Property proved" << messaget::eom;
-  }
-  else
-  {
-    // refuted
+    break;
+  case bdd_check_resultt::statust::REFUTED:
     property.refuted();
     message.status() << "Property refuted" << messaget::eom;
+    if(is_AGp(property.normalized_expr))
+      compute_counterexample(property, result.number_of_timeframes);
+    break;
+  case bdd_check_resultt::statust::UNKNOWN:
+    break;
   }
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::CTL
-
-  Inputs: a CTL expression
-
- Outputs: a BDD for the set of states that satisfies the expression
-
- Purpose: compute states that satisfy a particular property
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::CTL(const exprt &expr)
-{
-  if(expr.is_true())
-    return mgr.True();
-  else if(expr.is_false())
-    return mgr.False();
-  else if(expr.id()==ID_not)
-  {
-    return !CTL(to_not_expr(expr).op());
-  }
-  else if(expr.id() == ID_implies)
-  {
-    return (!CTL(to_binary_expr(expr).lhs())) | CTL(to_binary_expr(expr).rhs());
-  }
-  else if(expr.id()==ID_and)
-  {
-    BDD result=mgr.True();
-    for(const auto & op : expr.operands())
-      result = result & CTL(op);
-    return result;
-  }
-  else if(expr.id()==ID_or)
-  {
-    BDD result=mgr.False();
-    for(const auto & op : expr.operands())
-      result = result | CTL(op);
-    return result;
-  }
-  else if(
-    expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool)
-  {
-    return (
-      !(CTL(to_binary_expr(expr).lhs())) ^ CTL(to_binary_expr(expr).rhs()));
-  }
-  else if(expr.id() == ID_EX)
-  {
-    return EX(CTL(to_EX_expr(expr).op()));
-  }
-  else if(expr.id() == ID_EF)
-  {
-    return EF(CTL(to_EF_expr(expr).op()));
-  }
-  else if(expr.id() == ID_EG)
-  {
-    return EG(CTL(to_EG_expr(expr).op()));
-  }
-  else if(expr.id() == ID_AX)
-  {
-    return AX(CTL(to_AX_expr(expr).op()));
-  }
-  else if(expr.id() == ID_AF)
-  {
-    return AF(CTL(to_AF_expr(expr).op()));
-  }
-  else if(expr.id() == ID_AG)
-  {
-    return AG(CTL(to_AG_expr(expr).op()));
-  }
-  else if(expr.id() == ID_EU)
-  {
-    auto &EU_expr = to_EU_expr(expr);
-    return EU(CTL(EU_expr.lhs()), CTL(EU_expr.rhs()));
-  }
-  else if(expr.id() == ID_AU)
-  {
-    auto &AU_expr = to_AU_expr(expr);
-    return AU(CTL(AU_expr.lhs()), CTL(AU_expr.rhs()));
-  }
-  else if(expr.id() == ID_ER)
-  {
-    auto &ER_expr = to_ER_expr(expr);
-    return ER(CTL(ER_expr.lhs()), CTL(ER_expr.rhs()));
-  }
-  else if(expr.id() == ID_AR)
-  {
-    auto &AR_expr = to_AR_expr(expr);
-    return AR(CTL(AR_expr.lhs()), CTL(AR_expr.rhs()));
-  }
-  else
-  {
-    atomic_propositionst::const_iterator it=
-      atomic_propositions.find(expr);
-    
-    if(it!=atomic_propositions.end())
-      return it->second.bdd;
-  }
-
-  message.error() << "unsupported property -- `" << expr.id()
-                  << "' not implemented" << messaget::eom;
-  throw 0;
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EX
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EX(BDD f)
-{
-  for(const auto &c : constraints_BDDs)
-    f = f & c;
-
-  // make 'f' be expressed in terms of 'next' variables
-  BDD p_next = current_to_next(f);
-
-  // now conjoin with transition relation
-  BDD conjunction = p_next;
-
-  for(const auto &t : transition_BDDs)
-    conjunction = conjunction & t;
-
-  for(const auto &c : constraints_BDDs)
-    conjunction = conjunction & c;
-
-  // now project away 'next' variables
-  BDD pre_image = project_next(conjunction);
-
-  return pre_image;
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::fixedpoint
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::fixedpoint(std::function<BDD(BDD)> tau, BDD x)
-{
-  // Apply tau(x) until saturation.
-  while(true)
-  {
-    BDD image = tau(x);
-
-    // fixpoint?
-    if((image == x).is_true())
-      return x; // done
-
-    x = image;
-  }
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EG
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EG(BDD f)
-{
-  // EG f = f ∧ EX EG f
-  // Iterate x ∧ EX x until saturation.
-  auto tau = [this](BDD x) { return x & EX(x); };
-
-  return fixedpoint(tau, f);
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EF
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EF(BDD f)
-{
-  // EF f ↔ f ∨ EX EF f
-  // Iterate x ∨ EX x until saturation.
-  auto tau = [this](BDD x) { return x | EX(x); };
-
-  return fixedpoint(tau, f);
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EU
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EU(BDD f1, BDD f2)
-{
-  // Iterate x ∨ f2 ∨ (f1 ∧ EX x) until saturation
-  auto tau = [this, f1, f2](BDD x) { return x | f2 | (f1 & EX(x)); };
-
-  return fixedpoint(tau, mgr.False());
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::AU
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::AU(BDD f1, BDD f2)
-{
-  // Iterate x ∨ f2 ∨ (f1 ∧ AX x) until saturation
-  auto tau = [this, f1, f2](BDD x) { return x | f2 | (f1 & AX(x)); };
-
-  return fixedpoint(tau, mgr.False());
 }
 
 /*******************************************************************\
@@ -1071,6 +712,79 @@ void bdd_enginet::build_BDDs()
         constraints_BDDs.push_back(aig2bdd(l, BDDs));
       }
     }
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::make_bdd_model
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bdd_modelt bdd_enginet::make_bdd_model()
+{
+  bdd_modelt model{mgr, {}, initial_BDDs, transition_BDDs, constraints_BDDs};
+
+  for(const auto &[_, var] : vars)
+    model.vars.push_back({var.is_input, var.current_bdd, var.next_bdd});
+
+  return model;
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::make_atomic_proposition_bdds
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::map<unsigned, mini_bddt> bdd_enginet::make_atomic_proposition_bdds() const
+{
+  std::map<unsigned, mini_bddt> result;
+  for(const auto &[expr, ap] : atomic_propositions)
+  {
+    auto var_no = ap.l.var_no();
+    if(ap.l.sign())
+      result[var_no] = !ap.bdd;
+    else
+      result[var_no] = ap.bdd;
+  }
+  return result;
+}
+
+/*******************************************************************\
+
+Function: bdd_enginet::property_to_literal_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: rewrite property to use literal_exprt for atomic propositions
+
+\*******************************************************************/
+
+exprt bdd_enginet::property_to_literal_expr(const exprt &expr) const
+{
+  auto it = atomic_propositions.find(expr);
+  if(it != atomic_propositions.end())
+    return literal_exprt(it->second.l);
+
+  exprt result = expr;
+  for(auto &op : result.operands())
+    if(op.type().id() == ID_bool)
+      op = property_to_literal_expr(op);
+  return result;
 }
 
 /*******************************************************************\
