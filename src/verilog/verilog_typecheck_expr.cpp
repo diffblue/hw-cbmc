@@ -231,6 +231,18 @@ void verilog_typecheck_exprt::assignment_conversion(
         assignment_conversion(rhs.operands()[i], element_type);
       }
 
+      // For packed arrays with descending range (e.g., [3:0]),
+      // the assignment pattern lists elements from the left (highest)
+      // index to the right (lowest), but internally index 0 must
+      // correspond to Verilog index 0 (the lowest). Reverse the
+      // operands so that internal[0] = last element = Verilog index 0.
+      if(
+        array_type.get(ID_C_verilog_type) == ID_verilog_packed_array &&
+        !array_type.get_bool(ID_C_increasing))
+      {
+        std::reverse(rhs.operands().begin(), rhs.operands().end());
+      }
+
       // turn into array expression
       rhs.id(ID_array);
       rhs.type() = lhs_type;
@@ -3000,13 +3012,35 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
     typet _index_type = index_type(array_type);
     op1 = typecast_exprt{op1, _index_type};
 
-    if(
-      array_type.get_bool(ID_C_increasing) &&
-      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array)
+    // For unpacked arrays, the internal representation stores
+    // elements starting from the left index of the range.
+    // We need to adjust the Verilog index to the internal index.
+    if(array_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
     {
-      expr.op1() = minus_exprt{
-        minus_exprt{typecast_exprt{array_type.size(), _index_type}, expr.op1()},
-        from_integer(1, _index_type)};
+      auto offset_expr = static_cast<const exprt &>(array_type.find(ID_offset));
+
+      if(array_type.get_bool(ID_C_increasing))
+      {
+        // ascending range [l:r] with l<r, e.g., [0:4]
+        // internal index = verilog_index - offset
+        if(!offset_expr.is_zero())
+        {
+          expr.op1() =
+            minus_exprt{expr.op1(), typecast_exprt{offset_expr, _index_type}};
+        }
+      }
+      else
+      {
+        // descending range [l:r] with l>=r, e.g., [4:0]
+        // internal index = (offset + size - 1) - verilog_index
+        expr.op1() = minus_exprt{
+          minus_exprt{
+            plus_exprt{
+              typecast_exprt{offset_expr, _index_type},
+              typecast_exprt{array_type.size(), _index_type}},
+            from_integer(1, _index_type)},
+          expr.op1()};
+      }
     }
 
     expr.type() = array_type.element_type();

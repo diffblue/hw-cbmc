@@ -233,7 +233,7 @@ exprt to_bitvector(const exprt &src)
     bool is_packed =
       array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
 
-    if(is_packed && !array_type.get_bool(ID_C_increasing))
+    if(is_packed && array_type.get_bool(ID_C_increasing))
     {
       for(std::size_t index = 0; index < size_int; index++)
       {
