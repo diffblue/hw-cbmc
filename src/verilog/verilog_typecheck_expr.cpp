@@ -3264,9 +3264,16 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
   }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal)
   {
-    expr.type()=bool_typet();
+    // === and !==
+    expr.type() = bool_typet{};
 
-    convert_relation(expr);
+    convert_expr(expr.lhs());
+    convert_expr(expr.rhs());
+
+    // There is no need to decay structs, unions, arrays if
+    // the types are equal.
+    if(expr.lhs().type() != expr.rhs().type())
+      tc_binary_expr(expr);
 
     return std::move(expr);
   }
@@ -3275,7 +3282,13 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.id() == ID_verilog_logical_inequality)
   {
     // == and !=
-    convert_relation(expr);
+    convert_expr(expr.lhs());
+    convert_expr(expr.rhs());
+
+    // There is no need to decay structs, unions, arrays if
+    // the types are equal.
+    if(expr.lhs().type() != expr.rhs().type())
+      tc_binary_expr(expr);
 
     // This returns 'x' if either of the operands contains x or z.
     if(
