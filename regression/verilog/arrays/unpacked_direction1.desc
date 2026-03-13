@@ -1,8 +1,10 @@
-KNOWNBUG
+CORE
 unpacked_direction1.sv
 --module main
+^\[main\.p0\] main\.my_array0\[0\] == 1: PROVED .*$
+^\[main\.p1\] main\.my_array1\[0\] == 1: PROVED .*$
+^\[main\.p2\] main\.my_array2\[0 \+ 5 - 3'b001 - 0\] == 5: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This gives the wrong answer.

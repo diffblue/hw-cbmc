@@ -173,6 +173,7 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
 
     array_typet result{element_type, size};
     result.set(ID_offset, from_integer(offset, integer_typet()));
+    result.set(ID_C_increasing, range.increasing());
     result.set(ID_C_verilog_type, ID_verilog_packed_array);
 
     return std::move(result).with_source_location(source_location);
