@@ -2990,27 +2990,28 @@ Function: verilog_typecheck_exprt::convert_bit_select_expr
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
+exprt verilog_typecheck_exprt::convert_bit_select_expr(
+  verilog_bit_select_exprt expr)
 {
   // Verilog's bit select expression may map onto an extractbit
   // or an array index expression, depending on the type of the first
   // operand.
-  exprt &op0 = expr.op0(), &op1 = expr.op1();
-  convert_expr(op0);
-  convert_expr(op1);
+  exprt &src = expr.src(), &index = expr.index();
+  convert_expr(src);
+  convert_expr(index);
 
-  if(op1.type().id() == ID_verilog_real)
+  if(index.type().id() == ID_verilog_real)
   {
-    throw errort().with_location(op1.source_location())
+    throw errort().with_location(index.source_location())
       << "real number index is not allowed";
   }
 
-  if(op0.type().id() == ID_array)
+  if(src.type().id() == ID_array)
   {
     // This is really an array index
-    auto &array_type = to_array_type(op0.type());
+    auto &array_type = to_array_type(src.type());
     typet _index_type = index_type(array_type);
-    op1 = typecast_exprt{op1, _index_type};
+    index = typecast_exprt{index, _index_type};
 
     // For unpacked arrays, the internal representation stores
     // elements starting from the left index of the range.
@@ -3025,21 +3026,21 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
         // internal index = verilog_index - offset
         if(!offset_expr.is_zero())
         {
-          expr.op1() =
-            minus_exprt{expr.op1(), typecast_exprt{offset_expr, _index_type}};
+          expr.index() =
+            minus_exprt{expr.index(), typecast_exprt{offset_expr, _index_type}};
         }
       }
       else
       {
         // descending range [l:r] with l>=r, e.g., [4:0]
         // internal index = (offset + size - 1) - verilog_index
-        expr.op1() = minus_exprt{
+        expr.index() = minus_exprt{
           minus_exprt{
             plus_exprt{
               typecast_exprt{offset_expr, _index_type},
               typecast_exprt{array_type.size(), _index_type}},
             from_integer(1, _index_type)},
-          expr.op1()};
+          expr.index()};
       }
     }
 
@@ -3049,41 +3050,41 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(binary_exprt expr)
   else
   {
     // extractbit works on bit vectors only
-    require_vector(expr.op0());
+    require_vector(expr.src());
 
-    auto width = get_width(op0.type());
-    auto offset = op0.type().get_int(ID_C_offset);
+    auto width = get_width(src.type());
+    auto offset = src.type().get_int(ID_C_offset);
 
-    auto op1_opt = is_constant_integer_post_convert(op1);
+    auto index_opt = is_constant_integer_post_convert(index);
 
-    if(op1_opt.has_value()) // constant index
+    if(index_opt.has_value()) // constant index
     {
       // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
       // x for 4-state and 0 for 2-state values.
-      auto op1_int = op1_opt.value();
+      auto index_int = index_opt.value();
 
-      if(op1_int < offset || op1_int >= width + offset)
+      if(index_int < offset || index_int >= width + offset)
         return false_exprt().with_source_location(expr);
 
-      op1_int -= offset;
+      index_int -= offset;
 
-      if(op0.type().get_bool(ID_C_increasing))
-        op1_int = width - op1_int - 1;
+      if(src.type().get_bool(ID_C_increasing))
+        index_int = width - index_int - 1;
 
-      expr.op1() = from_integer(op1_int, natural_typet());
+      expr.index() = from_integer(index_int, natural_typet());
     }
     else // non-constant index
     {
       if(offset != 0)
       {
-        expr.op1() =
-          minus_exprt{expr.op1(), from_integer(offset, expr.op1().type())};
+        expr.index() =
+          minus_exprt{expr.index(), from_integer(offset, expr.index().type())};
       }
 
-      if(op0.type().get_bool(ID_C_increasing))
+      if(src.type().get_bool(ID_C_increasing))
       {
-        expr.op1() =
-          minus_exprt{from_integer(width - 1, expr.op1().type()), expr.op1()};
+        expr.index() = minus_exprt{
+          from_integer(width - 1, expr.index().type()), expr.index()};
       }
     }
 
@@ -3230,7 +3231,7 @@ Function: verilog_typecheck_exprt::convert_binary_expr
 exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 {
   if(expr.id() == ID_verilog_bit_select)
-    return convert_bit_select_expr(to_binary_expr(expr));
+    return convert_bit_select_expr(to_verilog_bit_select_expr(expr));
   else if(expr.id() == ID_verilog_package_scope)
   {
     auto location = expr.source_location();

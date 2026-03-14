@@ -2951,6 +2951,57 @@ inline verilog_past_exprt &to_verilog_past_expr(exprt &expr)
   return static_cast<verilog_past_exprt &>(expr);
 }
 
+/// The Verilog expression a[b], used for both vector
+/// and array indexing.  Lowered to either extractbit or index,
+/// depending on the type of src.
+class verilog_bit_select_exprt : public binary_exprt
+{
+public:
+  verilog_bit_select_exprt(exprt src, exprt index, typet type)
+    : binary_exprt(
+        std::move(src),
+        ID_verilog_bit_select,
+        std::move(index),
+        std::move(type))
+  {
+  }
+
+  const exprt &src() const
+  {
+    return op0();
+  }
+
+  exprt &src()
+  {
+    return op0();
+  }
+
+  const exprt &index() const
+  {
+    return op1();
+  }
+
+  exprt &index()
+  {
+    return op1();
+  }
+};
+
+inline const verilog_bit_select_exprt &
+to_verilog_bit_select_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_bit_select);
+  verilog_bit_select_exprt::check(expr);
+  return static_cast<const verilog_bit_select_exprt &>(expr);
+}
+
+inline verilog_bit_select_exprt &to_verilog_bit_select_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_bit_select);
+  verilog_bit_select_exprt::check(expr);
+  return static_cast<verilog_bit_select_exprt &>(expr);
+}
+
 class verilog_non_indexed_part_select_exprt : public ternary_exprt
 {
 public:
