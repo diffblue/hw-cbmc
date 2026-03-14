@@ -2,9 +2,9 @@ CORE
 bit-extract5.sv
 --module main
 ^\[main\.p0\] always main\.w1\[0\] && !main\.w1\[31\]: PROVED .*$
-^\[main\.p1\] always main\.w2\[0\] && !main\.w2\[31\]: PROVED .*$
-^\[main\.p2\] always main\.w3\[0\] && !main\.w3\[31\]: PROVED .*$
-^\[main\.p3\] always main\.w4\[0\] && !main\.w4\[31\]: PROVED .*$
+^\[main\.p1\] always main\.w2\[1\] && !main\.w2\[32\]: PROVED .*$
+^\[main\.p2\] always main\.w3\[31\] && !main\.w3\[0\]: PROVED .*$
+^\[main\.p3\] always main\.w4\[32\] && !main\.w4\[1\]: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

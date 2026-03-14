@@ -1023,6 +1023,38 @@ expr2verilogt::resultt expr2verilogt::convert_indexed_part_select(
 
 /*******************************************************************\
 
+Function: expr2verilogt::convert_bit_select
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+expr2verilogt::resultt expr2verilogt::convert_bit_select(
+  const verilog_bit_select_exprt &src,
+  verilog_precedencet precedence)
+{
+  auto op = convert_rec(src.src());
+
+  std::string dest;
+  if(precedence > op.p)
+    dest += '(';
+  dest += op.s;
+  if(precedence > op.p)
+    dest += ')';
+
+  dest += '[';
+  dest += convert_rec(src.index()).s;
+  dest += ']';
+
+  return {precedence, dest};
+}
+
+/*******************************************************************\
+
 Function: expr2verilogt::convert_extractbit
 
   Inputs:
@@ -1702,6 +1734,10 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
     { ID_extractbit, [](expr2verilogt &expr2verilog, const exprt &src) { 
     return expr2verilog.convert_extractbit(
       to_extractbit_expr(src), verilog_precedencet::MEMBER); } },
+
+    { ID_verilog_bit_select, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_bit_select(
+      to_verilog_bit_select_expr(src), verilog_precedencet::MEMBER); } },
 
     { ID_extractbits, [](expr2verilogt &expr2verilog, const exprt &src) { 
     return expr2verilog.convert_extractbits(

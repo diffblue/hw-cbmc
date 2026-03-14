@@ -794,6 +794,72 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(expr.id() == ID_verilog_bit_select)
+  {
+    auto &bit_select = to_verilog_bit_select_expr(expr);
+    auto &src = bit_select.src();
+
+    if(src.type().id() == ID_array)
+    {
+      // Lower to array index expression
+      auto &array_type = to_array_type(src.type());
+      auto array_size_opt = numeric_cast<mp_integer>(array_type.size());
+      PRECONDITION(array_size_opt.has_value());
+      auto offset_expr = static_cast<const exprt &>(array_type.find(ID_offset));
+      auto offset_opt = numeric_cast<mp_integer>(offset_expr);
+      PRECONDITION(offset_opt.has_value());
+      auto _index_type = unsignedbv_typet(
+        address_bits((*array_size_opt + *offset_opt).to_ulong()));
+      auto index = typecast_exprt{bit_select.index(), _index_type};
+
+      if(array_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+      {
+        if(array_type.get_bool(ID_C_increasing))
+        {
+          if(!offset_expr.is_zero())
+          {
+            index = typecast_exprt{
+              minus_exprt{index, typecast_exprt{offset_expr, _index_type}},
+              _index_type};
+          }
+        }
+        else
+        {
+          index = typecast_exprt{
+            minus_exprt{
+              minus_exprt{
+                plus_exprt{
+                  typecast_exprt{offset_expr, _index_type},
+                  typecast_exprt{array_type.size(), _index_type}},
+                from_integer(1, _index_type)},
+              index},
+            _index_type};
+        }
+      }
+
+      return index_exprt{src, index, array_type.element_type()};
+    }
+    else
+    {
+      // Lower to extractbit
+      auto width = verilog_bits(src.type());
+      auto offset = src.type().get_int(ID_C_offset);
+
+      auto index = bit_select.index();
+
+      if(offset != 0)
+      {
+        index = minus_exprt{index, from_integer(offset, index.type())};
+      }
+
+      if(src.type().get_bool(ID_C_increasing))
+      {
+        index = minus_exprt{from_integer(width - 1, index.type()), index};
+      }
+
+      return extractbit_exprt{src, index};
+    }
+  }
   else if(expr.id() == ID_member)
   {
     auto &member_expr = to_member_expr(expr);
