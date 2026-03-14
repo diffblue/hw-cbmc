@@ -91,6 +91,10 @@ protected:
 
   resultt convert_index(const index_exprt &, verilog_precedencet);
 
+  resultt convert_bit_select(
+    const class verilog_bit_select_exprt &,
+    verilog_precedencet);
+
   resultt convert_extractbit(const extractbit_exprt &, verilog_precedencet);
 
   resultt convert_member(const member_exprt &, verilog_precedencet);
