@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 
 #include "verilog_bits.h"
+#include "verilog_types.h"
 
 // unpacked array: left bound
 // packed array: index of most significant element
@@ -30,17 +31,12 @@ mp_integer verilog_left(const typet &type)
   }
   else if(type.id() == ID_array)
   {
-    auto offset = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-    if(type.get_bool(ID_C_increasing))
+    auto &array_type = to_verilog_array_type(type);
+    auto offset = array_type.offset();
+    if(array_type.increasing())
       return offset;
     else
-    {
-      return offset +
-             numeric_cast_v<mp_integer>(
-               to_constant_expr(to_array_type(type).size())) -
-             1;
-    }
+      return offset + array_type.size_int() - 1;
   }
   else
     return 0;
@@ -64,15 +60,10 @@ mp_integer verilog_right(const typet &type)
   }
   else if(type.id() == ID_array)
   {
-    auto offset = numeric_cast_v<mp_integer>(
-      to_constant_expr(static_cast<const exprt &>(type.find(ID_offset))));
-    if(type.get_bool(ID_C_increasing))
-    {
-      return offset +
-             numeric_cast_v<mp_integer>(
-               to_constant_expr(to_array_type(type).size())) -
-             1;
-    }
+    auto &array_type = to_verilog_array_type(type);
+    auto offset = array_type.offset();
+    if(array_type.increasing())
+      return offset + array_type.size_int() - 1;
     else
       return offset;
   }

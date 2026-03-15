@@ -135,6 +135,68 @@ inline verilog_unsignedbv_typet &to_verilog_unsignedbv_type(typet &type)
   return static_cast<verilog_unsignedbv_typet &>(type);
 }
 
+class verilog_array_typet : public array_typet
+{
+public:
+  verilog_array_typet(
+    irep_idt verilog_type,
+    typet element_type,
+    mp_integer size,
+    mp_integer offset,
+    bool increasing);
+
+  bool is_unpacked() const
+  {
+    return get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+  }
+
+  bool is_packed() const
+  {
+    return !is_unpacked();
+  }
+
+  typet index_type() const;
+  mp_integer size_int() const;
+  mp_integer offset() const;
+  bool increasing() const
+  {
+    return get_bool(ID_C_increasing);
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref verilog_array_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * verilog_array_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref verilog_array_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const verilog_array_typet &to_verilog_array_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_array);
+  auto verilog_type = type.get(ID_C_verilog_type);
+  PRECONDITION(
+    verilog_type == ID_verilog_unpacked_array ||
+    verilog_type == ID_verilog_packed_array);
+  return static_cast<const verilog_array_typet &>(type);
+}
+
+/*! \copydoc to_verilog_array_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline verilog_array_typet &to_verilog_array_type(typet &type)
+{
+  PRECONDITION(type.id() == ID_array);
+  auto verilog_type = type.get(ID_C_verilog_type);
+  PRECONDITION(
+    verilog_type == ID_verilog_unpacked_array ||
+    verilog_type == ID_verilog_packed_array);
+  return static_cast<verilog_array_typet &>(type);
+}
+
 class module_typet:public typet
 {
 public:

@@ -128,57 +128,6 @@ std::string verilog_typecheck_baset::to_string(const exprt &expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_baset::array_size
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-mp_integer verilog_typecheck_baset::array_size(const array_typet &type)
-{
-  auto size_opt = numeric_cast<mp_integer>(type.size());
-
-  if(!size_opt.has_value())
-  {
-    throw errort().with_location(type.source_location())
-      << "failed to get array size of array type";
-  }
-
-  return size_opt.value();
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheck_baset::array_offset
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-mp_integer verilog_typecheck_baset::array_offset(const array_typet &type)
-{
-  mp_integer offset;
-
-  if(to_integer_non_constant(
-       static_cast<const exprt &>(type.find(ID_offset)), offset))
-  {
-    throw errort().with_location(type.source_location())
-      << "failed to get array offset of type `" << type.id() << '\'';
-  }
-
-  return offset;
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheck_baset::get_width
 
   Inputs:
@@ -198,24 +147,6 @@ mp_integer verilog_typecheck_baset::get_width(const typet &type)
   else
     throw errort().with_location(type.source_location())
       << "type `" << type.id() << "' has unknown number of bits";
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheck_baset::index_type
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-typet verilog_typecheck_baset::index_type(const array_typet &array_type)
-{
-  return unsignedbv_typet(address_bits(
-      (array_size(array_type) + array_offset(array_type)).to_ulong()));
 }
 
 /*******************************************************************\
