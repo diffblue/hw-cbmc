@@ -71,7 +71,7 @@ protected:
   [[nodiscard]] typet elaborate_type(const typet &);
   typet elaborate_package_scope_typedef(const verilog_package_scope_typet &);
   typet convert_enum(const class verilog_enum_typet &);
-  array_typet convert_unpacked_array_type(const type_with_subtypet &);
+  verilog_array_typet convert_unpacked_array_type(const type_with_subtypet &);
   typet convert_packed_array_type(const type_with_subtypet &);
 
   struct ranget

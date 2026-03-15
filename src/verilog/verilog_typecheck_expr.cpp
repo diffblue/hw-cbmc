@@ -3009,16 +3009,16 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
   if(src.type().id() == ID_array)
   {
     // This is really an array index
-    auto &array_type = to_array_type(src.type());
-    typet _index_type = index_type(array_type);
-    index = typecast_exprt{index, _index_type};
+    auto &array_type = to_verilog_array_type(src.type());
+    typet index_type = array_type.index_type();
+    index = typecast_exprt{index, index_type};
 
     // For unpacked arrays, the internal representation stores
     // elements starting from the left index of the range.
     // We need to adjust the Verilog index to the internal index.
-    if(array_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+    if(array_type.is_unpacked())
     {
-      auto offset_expr = static_cast<const exprt &>(array_type.find(ID_offset));
+      auto offset_expr = from_integer(array_type.offset(), index_type);
 
       if(array_type.get_bool(ID_C_increasing))
       {
@@ -3027,7 +3027,7 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
         if(!offset_expr.is_zero())
         {
           expr.index() =
-            minus_exprt{expr.index(), typecast_exprt{offset_expr, _index_type}};
+            minus_exprt{expr.index(), typecast_exprt{offset_expr, index_type}};
         }
       }
       else
@@ -3037,9 +3037,9 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
         expr.index() = minus_exprt{
           minus_exprt{
             plus_exprt{
-              typecast_exprt{offset_expr, _index_type},
-              typecast_exprt{array_type.size(), _index_type}},
-            from_integer(1, _index_type)},
+              typecast_exprt{offset_expr, index_type},
+              typecast_exprt{array_type.size(), index_type}},
+            from_integer(1, index_type)},
           expr.index()};
       }
     }

@@ -54,7 +54,7 @@ Function: verilog_typecheck_exprt::convert_unpacked_array_type
 
 \*******************************************************************/
 
-array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
+verilog_array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   const type_with_subtypet &src)
 {
   // int whatnot[x:y];
@@ -98,11 +98,8 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   // recursively convert element_type
   typet element_type = elaborate_type(src.subtype());
 
-  const exprt final_size_expr = from_integer(size, integer_typet());
-  auto result = array_typet{element_type, final_size_expr};
-  result.set(ID_offset, from_integer(offset, integer_typet()));
-  result.set(ID_C_increasing, increasing);
-  result.set(ID_C_verilog_type, ID_verilog_unpacked_array);
+  auto result = verilog_array_typet{
+    ID_verilog_unpacked_array, element_type, size, offset, increasing};
 
   return result;
 }
@@ -161,7 +158,6 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
   {
     // We have a multi-dimensional packed array,
     // and do a recursive call.
-    const exprt size = from_integer(width, integer_typet());
     typet element_type = elaborate_type(subtype);
 
     // the element type must be packed; reject otherwise
@@ -171,12 +167,9 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
         << "packed array must use packed element type";
     }
 
-    array_typet result{element_type, size};
-    result.set(ID_offset, from_integer(offset, integer_typet()));
-    result.set(ID_C_increasing, range.increasing());
-    result.set(ID_C_verilog_type, ID_verilog_packed_array);
-
-    return std::move(result).with_source_location(source_location);
+    return verilog_array_typet{
+      ID_verilog_packed_array, element_type, width, offset, range.increasing()}
+      .with_source_location(source_location);
   }
 }
 

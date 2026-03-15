@@ -52,9 +52,6 @@ protected:
   }
 
   static mp_integer get_width(const typet &);
-  static mp_integer array_size(const array_typet &);
-  static mp_integer array_offset(const array_typet &);
-  static typet index_type(const array_typet &);
 
   /// is the given type four-valued?
   static bool is_four_valued(const typet &);
