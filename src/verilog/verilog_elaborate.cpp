@@ -239,9 +239,9 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       auto base_name = declarator.base_name();
       auto full_identifier = hierarchical_identifier(base_name);
+      auto type = to_be_elaborated_typet{declarator.merged_type(decl.type())};
 
-      symbolt symbol{
-        full_identifier, to_be_elaborated_typet(decl.type()), mode};
+      symbolt symbol{full_identifier, std::move(type), mode};
 
       symbol.module = module_identifier;
       symbol.base_name = base_name;
