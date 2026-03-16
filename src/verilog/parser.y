@@ -1524,12 +1524,13 @@ type_declaration:
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_typedef);
                 }
-           data_type any_identifier ';'
+           data_type any_identifier variable_dimension_brace ';'
                 { $$ = $2;
                   // add to the scope as a type name
                   PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
                   addswap($$, ID_type, $3);
                   stack_expr($4).id(ID_declarator);
+                  addswap($4, ID_type, $5);
                   mto($$, $4);
                 }
         ;
