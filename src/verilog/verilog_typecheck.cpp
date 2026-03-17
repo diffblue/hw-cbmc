@@ -551,6 +551,10 @@ void verilog_typecheckt::check_lhs(
 
     check_lhs(to_extractbit_expr(lhs).src(), vassign);
   }
+  else if(lhs.id() == ID_verilog_bit_select)
+  {
+    check_lhs(to_verilog_bit_select_expr(lhs).src(), vassign);
+  }
   else if(lhs.id() == ID_verilog_non_indexed_part_select)
   {
     auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);

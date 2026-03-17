@@ -3008,44 +3008,8 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
 
   if(src.type().id() == ID_array)
   {
-    // This is really an array index
-    auto &array_type = to_verilog_array_type(src.type());
-    typet index_type = array_type.index_type();
-    index = typecast_exprt{index, index_type};
-
-    // For unpacked arrays, the internal representation stores
-    // elements starting from the left index of the range.
-    // We need to adjust the Verilog index to the internal index.
-    if(array_type.is_unpacked())
-    {
-      auto offset_expr = from_integer(array_type.offset(), index_type);
-
-      if(array_type.get_bool(ID_C_increasing))
-      {
-        // ascending range [l:r] with l<r, e.g., [0:4]
-        // internal index = verilog_index - offset
-        if(!offset_expr.is_zero())
-        {
-          expr.index() =
-            minus_exprt{expr.index(), typecast_exprt{offset_expr, index_type}};
-        }
-      }
-      else
-      {
-        // descending range [l:r] with l>=r, e.g., [4:0]
-        // internal index = (offset + size - 1) - verilog_index
-        expr.index() = minus_exprt{
-          minus_exprt{
-            plus_exprt{
-              typecast_exprt{offset_expr, index_type},
-              typecast_exprt{array_type.size(), index_type}},
-            from_integer(1, index_type)},
-          expr.index()};
-      }
-    }
-
+    auto &array_type = to_array_type(src.type());
     expr.type() = array_type.element_type();
-    expr.id(ID_index);
   }
   else
   {
@@ -3065,31 +3029,9 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
 
       if(index_int < offset || index_int >= width + offset)
         return false_exprt().with_source_location(expr);
-
-      index_int -= offset;
-
-      if(src.type().get_bool(ID_C_increasing))
-        index_int = width - index_int - 1;
-
-      expr.index() = from_integer(index_int, natural_typet());
-    }
-    else // non-constant index
-    {
-      if(offset != 0)
-      {
-        expr.index() =
-          minus_exprt{expr.index(), from_integer(offset, expr.index().type())};
-      }
-
-      if(src.type().get_bool(ID_C_increasing))
-      {
-        expr.index() = minus_exprt{
-          from_integer(width - 1, expr.index().type()), expr.index()};
-      }
     }
 
-    expr.type()=bool_typet();
-    expr.id(ID_extractbit);
+    expr.type() = bool_typet{};
   }
 
   return std::move(expr);

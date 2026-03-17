@@ -794,6 +794,68 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
+  else if(expr.id() == ID_verilog_bit_select)
+  {
+    // This may be an array index or a bit extraction, depending
+    // on the type of the first operand.
+    auto &bit_select = to_verilog_bit_select_expr(expr);
+    auto &src = bit_select.src();
+
+    if(src.type().id() == ID_array)
+    {
+      // Lower to array index expression
+      auto &array_type = to_verilog_array_type(src.type());
+      auto index_type = array_type.index_type();
+      exprt index = typecast_exprt{bit_select.index(), index_type};
+
+      if(array_type.is_unpacked())
+      {
+        // For unpacked arrays, the internal representation stores
+        // elements starting from the left index of the range.
+        // We need to adjust the Verilog index to the internal index.
+        auto array_size = array_type.size_int();
+        auto offset = array_type.offset();
+
+        if(array_type.increasing())
+        {
+          // ascending range [l:r] with l<r, e.g., [0:4]
+          // internal index = verilog_index - offset
+          if(offset != 0)
+            index = minus_exprt{index, from_integer(offset, index_type)};
+        }
+        else
+        {
+          // descending range [l:r] with l>=r, e.g., [4:0]
+          // internal index = (offset + size - 1) - verilog_index
+          index = minus_exprt{
+            minus_exprt{
+              plus_exprt{
+                from_integer(offset, index_type),
+                from_integer(array_size, index_type)},
+              from_integer(1, index_type)},
+            index};
+        }
+      }
+
+      return index_exprt{src, index, array_type.element_type()};
+    }
+    else
+    {
+      // Lower to extractbit
+      auto width = verilog_bits(src.type());
+      auto offset = src.type().get_int(ID_C_offset);
+
+      auto index = bit_select.index();
+
+      if(offset != 0)
+        index = minus_exprt{index, from_integer(offset, index.type())};
+
+      if(src.type().get_bool(ID_C_increasing))
+        index = minus_exprt{from_integer(width - 1, index.type()), index};
+
+      return extractbit_exprt{src, index};
+    }
+  }
   else if(expr.id() == ID_member)
   {
     auto &member_expr = to_member_expr(expr);

@@ -264,6 +264,11 @@ exprt verilog_synthesist::synth_lhs_expr(exprt expr)
       synth_expr(extractbit_expr.index(), symbol_statet::CURRENT);
     return expr;
   }
+  else if(expr.id() == ID_verilog_bit_select)
+  {
+    // Lower to extractbit or index, then process the result.
+    return synth_lhs_expr(verilog_lowering(std::move(expr)));
+  }
   else if(expr.id() == ID_member)
   {
     auto &member_expr = to_member_expr(expr);
@@ -1213,6 +1218,10 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
       }
 
       e = &to_extractbit_expr(*e).src();
+    }
+    else if(e->id() == ID_verilog_bit_select)
+    {
+      e = &to_verilog_bit_select_expr(*e).src();
     }
     else if(e->id() == ID_verilog_non_indexed_part_select)
     {
