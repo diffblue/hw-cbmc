@@ -751,3 +751,35 @@ exprt default_aval_bval_lowering(const exprt &expr)
     make_x(type),
     aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
 }
+
+exprt aval_bval_div_mod(const binary_exprt &expr)
+{
+  auto &type = expr.type();
+
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(expr.id() == ID_div || expr.id() == ID_mod);
+
+  auto rhs_aval = aval_underlying(expr.rhs());
+  auto zero = from_integer(0, rhs_aval.type());
+
+  // The result is 'x' when any operand has x/z or the divisor is zero.
+  auto is_x = disjunction(
+    {has_xz(expr.lhs()), has_xz(expr.rhs()), equal_exprt{rhs_aval, zero}});
+
+  binary_exprt two_valued_expr = expr; // copy
+
+  two_valued_expr.lhs() = aval_underlying(two_valued_expr.lhs());
+  two_valued_expr.rhs() = aval_underlying(two_valued_expr.rhs());
+
+  if(type.id() == ID_verilog_unsignedbv)
+    two_valued_expr.type() = unsignedbv_typet{to_bitvector_type(type).width()};
+  else if(type.id() == ID_verilog_signedbv)
+    two_valued_expr.type() = signedbv_typet{to_bitvector_type(type).width()};
+  else
+    PRECONDITION(false);
+
+  return if_exprt{
+    is_x,
+    make_x(type),
+    aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
+}

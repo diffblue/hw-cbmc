@@ -83,4 +83,8 @@ exprt aval_bval(const zero_extend_exprt &);
 /// of the operands.
 exprt default_aval_bval_lowering(const exprt &);
 
+/// lowering for / and %
+/// If any operand has x/z, or the divisor is zero, the result is 'x'.
+exprt aval_bval_div_mod(const binary_exprt &);
+
 #endif
