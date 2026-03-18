@@ -301,6 +301,12 @@ void verilog_typecheck_exprt::assignment_conversion(
   if(lhs_type == rhs.type())
     return;
 
+  if(lhs_type.id() == ID_verilog_property)
+  {
+    rhs = typecast_exprt::conditional_cast(rhs, lhs_type);
+    return;
+  }
+
   if(lhs_type.id() == ID_struct && !lhs_type.get_bool(ID_packed))
   {
     // assignment of a non-matching type to unpacked struct
