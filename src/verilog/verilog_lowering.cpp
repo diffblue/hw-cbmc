@@ -771,12 +771,17 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
-  else if(
-    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
-    expr.id() == ID_div || expr.id() == ID_mod)
+  else if(expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult)
   {
     if(is_four_valued(expr))
       return default_aval_bval_lowering(expr);
+    else
+      return expr;
+  }
+  else if(expr.id() == ID_div || expr.id() == ID_mod)
+  {
+    if(is_four_valued(expr))
+      return aval_bval_div_mod(to_binary_expr(expr));
     else
       return expr;
   }
