@@ -149,11 +149,33 @@ void verilog_typecheckt::collect_symbols(
 void verilog_typecheckt::collect_symbols(
   const verilog_property_declarationt &declaration)
 {
+  auto base_name = declaration.base_name();
+  auto identifier = hierarchical_identifier(base_name);
+
+  symbolt symbol{identifier, verilog_sva_named_property_typet{}, mode};
+  symbol.module = verilog_root_module_identifier();
+  symbol.base_name = base_name;
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  symbol.value = declaration;
+  symbol.location = declaration.source_location();
+
+  add_symbol(std::move(symbol));
 }
 
 void verilog_typecheckt::collect_symbols(
   const verilog_sequence_declarationt &declaration)
 {
+  auto base_name = declaration.base_name();
+  auto identifier = hierarchical_identifier(base_name);
+
+  symbolt symbol{identifier, verilog_sva_named_sequence_typet{}, mode};
+  symbol.module = verilog_root_module_identifier();
+  symbol.base_name = base_name;
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  symbol.value = declaration;
+  symbol.location = declaration.source_location();
+
+  add_symbol(std::move(symbol));
 }
 
 void verilog_typecheckt::collect_symbols(const typet &type)
