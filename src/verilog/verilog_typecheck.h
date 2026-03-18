@@ -203,10 +203,6 @@ protected:
 
   void integer_expr(exprt &expr);
 
-  void convert_case_values(
-    exprt &values,
-    const exprt &case_operand);
-
   void instantiate_port_connections(
     const std::string &instance,
     const verilog_inst_baset::instancet &,

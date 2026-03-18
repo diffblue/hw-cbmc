@@ -1017,35 +1017,6 @@ void verilog_typecheckt::convert_assume(verilog_assume_statementt &statement)
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_case_values
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::convert_case_values(
-  exprt &values,
-  const exprt &case_operand)
-{
-  if(values.id()==ID_default)
-    return;
-
-  Forall_operands(it, values)
-  {
-    convert_expr(*it);
-
-    // This works like a relational operator, not like an assignment
-    typet t=max_type(it->type(), case_operand.type());
-    downwards_type_propagation(*it, t);
-  }
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::convert_case
 
   Inputs:
@@ -1059,23 +1030,57 @@ Function: verilog_typecheckt::convert_case
 void verilog_typecheckt::convert_case(
   verilog_case_baset &statement)
 {
-  if(statement.operands().size()<1)
+  if(statement.operands().size() < 1)
   {
     throw errort().with_location(statement.source_location())
       << "case statement expected to have at least one operand";
   }
 
-  exprt &case_operand=statement.case_operand();
+  exprt &case_operand = statement.case_operand();
 
   convert_expr(case_operand);
 
-  for(unsigned i=1; i<statement.operands().size(); i++)
-  {
-    verilog_case_itemt &e=
-      to_verilog_case_item(statement.operands()[i]);
+  // Per 1800-2017 12.5, the bit length of all expressions in
+  // a case statement shall be the maximum of all of them.
+  // First pass: typecheck all case item values and find the
+  // maximum type.
+  typet max_t = case_operand.type();
 
-    convert_case_values(e.case_value(), case_operand);
+  for(auto op_it = std::next(statement.operands().begin());
+      op_it != statement.operands().end();
+      ++op_it)
+  {
+    verilog_case_itemt &e = to_verilog_case_item(*op_it);
+
+    auto &values = e.case_value();
+    if(values.id() != ID_default)
+    {
+      for(auto &op : values.operands())
+      {
+        convert_expr(op);
+        max_t = max_type(max_t, op.type());
+      }
+    }
+
     convert_statement(e.case_statement());
+  }
+
+  // Second pass: propagate the maximum type to the case operand
+  // and all case item values.
+  downwards_type_propagation(case_operand, max_t);
+
+  for(auto op_it = std::next(statement.operands().begin());
+      op_it != statement.operands().end();
+      ++op_it)
+  {
+    verilog_case_itemt &e = to_verilog_case_item(*op_it);
+
+    auto &values = e.case_value();
+    if(values.id() != ID_default)
+    {
+      for(auto &op : values.operands())
+        downwards_type_propagation(op, max_t);
+    }
   }
 }
 
