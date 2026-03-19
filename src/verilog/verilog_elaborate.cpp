@@ -223,6 +223,23 @@ void verilog_typecheckt::collect_symbols(const typet &type)
   }
 }
 
+/// Returns true iff the given (pre-elaboration) type is a
+/// two-valued data type, recursing into packed arrays.
+static bool is_two_valued_type(const typet &type)
+{
+  if(
+    type.id() == ID_verilog_bit || type.id() == ID_verilog_byte ||
+    type.id() == ID_verilog_shortint || type.id() == ID_verilog_int ||
+    type.id() == ID_verilog_longint)
+  {
+    return true;
+  }
+  else if(type.id() == ID_verilog_packed_array)
+    return is_two_valued_type(to_type_with_subtype(type).subtype());
+  else
+    return false;
+}
+
 void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 {
   // There may be symbols in the type (say an enum).
@@ -448,6 +465,13 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     decl_class == ID_tri0 || decl_class == ID_tri1 || decl_class == ID_uwire ||
     decl_class == ID_wire || decl_class == ID_wand || decl_class == ID_wor)
   {
+    // IEEE 1800-2017 6.7.1: nets require a four-valued data type
+    if(is_two_valued_type(decl.type()))
+    {
+      throw errort().with_location(decl.source_location())
+        << "nets must have a four-valued data type";
+    }
+
     symbolt symbol;
 
     symbol.mode = mode;
