@@ -953,6 +953,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
     std::string kind = statement.id() == ID_verilog_immediate_assert  ? "assert"
                        : statement.id() == ID_verilog_assert_property ? "assert"
                        : statement.id() == ID_verilog_smv_assert      ? "assert"
+                       : statement.id() == ID_verilog_immediate_cover ? "cover"
                        : statement.id() == ID_verilog_cover_property  ? "cover"
                        : statement.id() == ID_verilog_cover_sequence  ? "cover"
                        : statement.id() == ID_verilog_immediate_assume
@@ -1364,6 +1365,7 @@ void verilog_typecheckt::convert_statement(
     statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_immediate_cover ||
     statement.id() == ID_verilog_cover_property ||
     statement.id() == ID_verilog_cover_sequence)
   {

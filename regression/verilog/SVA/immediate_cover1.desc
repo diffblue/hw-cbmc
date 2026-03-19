@@ -1,0 +1,10 @@
+CORE
+immediate_cover1.sv
+--bound 10 --numbered-trace
+^\[main\.p0\] cover main\.counter == 5: PROVED$
+^\[main\.p1\] cover main\.counter == 200: REFUTED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

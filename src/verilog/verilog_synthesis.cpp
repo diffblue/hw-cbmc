@@ -2403,6 +2403,7 @@ void verilog_synthesist::synth_assert_assume_cover(
       cond_for_comment = sva_assume_exprt(cond_for_comment);
     }
     else if(
+      statement.id() == ID_verilog_immediate_cover ||
       statement.id() == ID_verilog_cover_property ||
       statement.id() == ID_verilog_cover_sequence)
     {
@@ -2461,7 +2462,9 @@ void verilog_synthesist::synth_assert_assume_cover(
   {
     cond = sva_assume_exprt(cond);
   }
-  else if(statement.id() == ID_verilog_cover_property)
+  else if(
+    statement.id() == ID_verilog_immediate_cover ||
+    statement.id() == ID_verilog_cover_property)
   {
     // 'cover' properties are existential
     cond = sva_cover_exprt{cond};
@@ -3449,6 +3452,7 @@ void verilog_synthesist::synth_statement(
     statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_immediate_cover ||
     statement.id() == ID_verilog_cover_property ||
     statement.id() == ID_verilog_cover_sequence)
   {
