@@ -14,6 +14,7 @@
 * SystemVerilog: default direction for task/function ports
 * SystemVerilog: assignment patterns for unions
 * SystemVerilog: assignment patterns for vectors
+* SystemVerilog: immediate cover statement
 
 # EBMC 5.9
 
