@@ -1,14 +1,14 @@
 module main;
 
-  wire [7:0] implicit;
-  wire bit [7:0] some_bits;
-  wire logic [7:0] some_logic;
-  wire unsigned [7:0] implicit_unsigned;
-  wire bit unsigned [7:0] some_bits_unsigned;
-  wire logic unsigned [7:0] some_logic_unsigned;
-  wire signed [7:0] implicit_signed;
-  wire bit signed [7:0] some_bits_signed;
-  wire logic signed [7:0] some_logic_signed;
+  var [7:0] implicit;
+  var bit [7:0] some_bits;
+  var logic [7:0] some_logic;
+  var unsigned [7:0] implicit_unsigned;
+  var bit unsigned [7:0] some_bits_unsigned;
+  var logic unsigned [7:0] some_logic_unsigned;
+  var signed [7:0] implicit_signed;
+  var bit signed [7:0] some_bits_signed;
+  var logic signed [7:0] some_logic_signed;
 
   // expected to pass
   p0: assert final ($bits(implicit) == 8);

@@ -1,6 +1,6 @@
 module main;
 
-  wire bit [7:0] x = 'hff;
+  bit [7:0] x = 'hff;
 
   // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
   // x for 4-state and 0 for 2-state values.
