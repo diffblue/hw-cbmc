@@ -1,7 +1,7 @@
 CORE
 property_and1.sv
 
-^\[.*\] always \(main\.P1 and main\.P1\): PROVED \(structural CT=0\)$
+^\[.*\] always \(main\.P1 and main\.P1\): PROVED \(CT=0\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
