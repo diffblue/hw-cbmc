@@ -585,7 +585,18 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
-    return to_verilog_explicit_signing_cast_expr(expr).lower();
+    auto &signing_cast = to_verilog_explicit_signing_cast_expr(expr);
+    if(is_aval_bval(signing_cast.op()))
+    {
+      // Change the signedness annotation in the aval/bval type.
+      auto result = signing_cast.op();
+      result.type().set(
+        ID_C_verilog_aval_bval,
+        signing_cast.is_signed() ? ID_verilog_signedbv : ID_verilog_unsignedbv);
+      return result;
+    }
+    else
+      return signing_cast.lower();
   }
   else if(expr.id() == ID_verilog_explicit_size_cast)
   {
