@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "completeness_threshold.h"
 
 #include <util/arith_tools.h>
+#include <util/find_symbols.h>
 #include <util/pointer_offset_size.h>
 #include <util/std_types.h>
 
@@ -16,10 +17,13 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <temporal-logic/ltl.h>
 #include <temporal-logic/nnf.h>
 #include <temporal-logic/temporal_logic.h>
+#include <trans-word-level/next_symbol.h>
 #include <verilog/sva_expr.h>
 
 #include "bmc.h"
 #include "transition_system.h"
+
+#include <unordered_set>
 
 /// An upper bound on the recurrence diameter of the state space.
 /// A purely combinational circuit (no state variables) has diameter 0.
@@ -37,6 +41,37 @@ recurrence_diameter(const transition_systemt &transition_system)
     if(!bits.has_value())
       return {};
     total_bits += *bits;
+  }
+
+  // find the variables used in the initial state constraint
+  auto init_vars = find_symbols(transition_system.trans_expr.init());
+
+  // find the variables used as next-state constraint
+  std::unordered_set<symbol_exprt, irep_hash> next_vars;
+
+  transition_system.trans_expr.trans().visit_pre(
+    [&next_vars](const exprt &node)
+    {
+      if(node.id() == ID_next_symbol)
+      {
+        auto &next_symbol = to_next_symbol_expr(node);
+        next_vars.insert({next_symbol.identifier(), next_symbol.type()});
+      }
+    });
+
+  // Inputs that are either mentioned in the initial state constraint
+  // or have a next-state constraint are not unconstraint.
+  for(auto &var : transition_system.inputs())
+  {
+    if(
+      init_vars.find(var) != init_vars.end() ||
+      next_vars.find(var) != next_vars.end())
+    {
+      auto bits = pointer_offset_bits(var.type(), ns);
+      if(!bits.has_value())
+        return {};
+      total_bits += *bits;
+    }
   }
 
   if(total_bits > 8)
