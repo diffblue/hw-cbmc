@@ -15,6 +15,7 @@
 * SystemVerilog: assignment patterns for unions
 * SystemVerilog: assignment patterns for vectors
 * SystemVerilog: immediate cover statement
+* SystemVerilog: fix for SVA ##[a:b]
 
 # EBMC 5.9
 
