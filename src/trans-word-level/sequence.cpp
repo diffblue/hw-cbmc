@@ -376,9 +376,11 @@ sequence_matchest instantiate_sequence_rec(
     return instantiate_sequence_rec(
       repetition.lower(), semantics, t, no_timeframes);
   }
-  else if(expr.id() == ID_sva_sequence_goto_repetition) // [->...]
+  else if(
+    expr.id() == ID_sva_sequence_goto_repetition ||          // [->...]
+    expr.id() == ID_sva_sequence_non_consecutive_repetition) // [=...]
   {
-    auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
+    auto &repetition = to_sva_sequence_repetition_expr(expr);
     auto &condition = repetition.op();
 
     sequence_matchest result;
@@ -400,35 +402,22 @@ sequence_matchest instantiate_sequence_rec(
 
       // We have a match for op[->n] if there is a match in timeframe
       // u and matches is n.
+      // We have a match for op[=n] if matches is n.
       result.emplace_back(u, sequence_count_condition(repetition, matches));
     }
 
-    return result;
-  }
-  else if(expr.id() == ID_sva_sequence_non_consecutive_repetition) // [=...]
-  {
-    auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
-    auto &condition = repetition.op();
-
-    sequence_matchest result;
-
-    // We add up the number of matches of 'op' starting from
-    // timeframe u, until the end of our unwinding.
-    const auto type = sequence_count_type(repetition, no_timeframes);
-    const auto zero = from_integer(0, type);
-    const auto one = from_integer(1, type);
-    exprt matches = zero;
-
-    for(mp_integer u = t; u < no_timeframes; ++u)
+    // Weak semantics: the sequence could still complete beyond the
+    // bound. Add a pending match when the count hasn't yet reached
+    // the required minimum.
+    if(semantics == sva_sequence_semanticst::WEAK)
     {
-      // match of op in timeframe u?
-      auto rec_op = instantiate(condition, u, no_timeframes);
-
-      // add up
-      matches = plus_exprt{matches, if_exprt{rec_op, one, zero}};
-
-      // We have a match for op[=n] if matches is n.
-      result.emplace_back(u, sequence_count_condition(repetition, matches));
+      auto min = repetition.is_range()
+                   ? numeric_cast_v<mp_integer>(repetition.from())
+                   : numeric_cast_v<mp_integer>(repetition.repetitions());
+      result.emplace_back(
+        no_timeframes - 1,
+        binary_relation_exprt{
+          matches, ID_lt, from_integer(min, matches.type())});
     }
 
     return result;

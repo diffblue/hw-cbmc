@@ -16,6 +16,7 @@
 * SystemVerilog: assignment patterns for vectors
 * SystemVerilog: immediate cover statement
 * SystemVerilog: fix for SVA ##[a:b]
+* SystemVerilog: fix for weak [->n] and [=n]
 
 # EBMC 5.9
 

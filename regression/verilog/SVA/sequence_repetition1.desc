@@ -5,8 +5,8 @@ sequence_repetition1.sv
 ^\[.*\] main\.half_x == 0 \[->2\]: PROVED up to bound 10$
 ^\[.*\] main\.half_x == 0 \[=2\]: PROVED up to bound 10$
 ^\[.*\] main\.x == 0 \[\*2\]: REFUTED$
-^\[.*\] main\.x == 0 \[->2\]: REFUTED$
-^\[.*\] main\.x == 0 \[=2\]: REFUTED$
+^\[.*\] main\.x == 0 \[->2\]: PROVED up to bound 10$
+^\[.*\] main\.x == 0 \[=2\]: PROVED up to bound 10$
 ^EXIT=10$
 ^SIGNAL=0$
 --
