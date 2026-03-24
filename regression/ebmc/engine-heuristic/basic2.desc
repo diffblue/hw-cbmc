@@ -3,7 +3,7 @@ basic2.sv
 
 ^\[main\.a0\] always not s_eventually !main\.y: ASSUMED$
 ^\[main\.a1\] always !main\.x: ASSUMED$
-^\[main\.p0\] always !main\.z: PROVED \(structural CT=1\)$
+^\[main\.p0\] always !main\.z: PROVED \(CT=1\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
