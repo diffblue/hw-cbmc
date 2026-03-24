@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 combinational2.sv
 --reset reset
 ^EXIT=10$
@@ -6,4 +6,3 @@ combinational2.sv
 --
 ^warning: ignoring
 --
-This should be refuted.
