@@ -1,0 +1,10 @@
+CORE
+goto_repetition1.sv
+--bound 10
+^\[goto\.assert_goto\] always \(goto\.req \|=> \(goto\.ack \[->1\]\)\): PROVED up to bound 10$
+^\[goto\.assert_equivalent\] always \(goto\.req \|=> \(\(!goto\.ack \[\*0:\$\]\) ##1 goto\.ack\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
