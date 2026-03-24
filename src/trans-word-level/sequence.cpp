@@ -129,7 +129,8 @@ sequence_matchest instantiate_sequence_rec(
       else // ##[from:to] something
       {
         auto to = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.to());
-        t_rhs_to = t_rhs_from + to;
+        DATA_INVARIANT(to >= from, "##[a:b] must have a<=b");
+        t_rhs_to = lhs_match.end_time + to;
       }
 
       // Add a potential match for each timeframe in the range
