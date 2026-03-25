@@ -1,0 +1,12 @@
+KNOWNBUG
+cycle_delay4.sv
+--bound 10
+^\[zero\.a1\] always \(zero\.req \|=> \(\(\!zero\.ack \[\*0:\$\]\) ##1 zero\.ack ##0 zero\.val == 1\)\): PROVED up to bound 10$
+^\[zero\.a2\] always \(zero\.req \|=> \(\(\!zero\.ack \[\*0:\$\]\) ##1 zero\.ack && zero\.val == 1\)\): PROVED up to bound 10$
+^\[zero\.b1\] always \(zero\.req \|=> \(\(zero\.ack \[->1\]\) ##0 zero\.val == 1\)\): PROVED up to bound 10$
+^\[zero\.b2\] always \(\(zero\.req ##1 \(zero\.ack \[->1\]\)\) \|-> zero\.val == 1\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+https://github.com/diffblue/hw-cbmc/issues/1756
