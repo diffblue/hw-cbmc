@@ -559,10 +559,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
   {
-    // ltl2tgba produces the wrong anser for [->n] and [=n]
-    throw ltl_sva_to_string_unsupportedt{expr};
-
     PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+
+    if(mode == SVA_SEQUENCE_STRONG)
+      throw ltl_sva_to_string_unsupportedt{expr};
+
     auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_goto_repetition, repetition.op()};
     if(repetition.is_singleton())
@@ -593,10 +594,11 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(
     expr.id() == ID_sva_sequence_non_consecutive_repetition) // something[=n]
   {
-    // ltl2tgba produces the wrong anser for [->n] and [=n]
-    throw ltl_sva_to_string_unsupportedt{expr};
-
     PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+
+    if(mode == SVA_SEQUENCE_STRONG)
+      throw ltl_sva_to_string_unsupportedt{expr};
+
     auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
     unary_exprt new_expr{
       ID_sva_sequence_non_consecutive_repetition, repetition.op()};
