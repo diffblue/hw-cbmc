@@ -1,0 +1,11 @@
+CORE
+sequence_implication4.sv
+--bound 5
+^\[main\.p0\] \(1 \[\*1:\$\]\) \|=> main\.c: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The sequence 1[*1:$] matches at every cycle; the consequent c
+becomes false at cycle 3, so the property should fail.

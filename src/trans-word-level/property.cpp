@@ -731,8 +731,9 @@ static obligationst property_obligations_rec(
       // Do we exceed the bound? Make it 'true'
       if(t_rhs >= no_timeframes)
       {
-        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        return obligationst{no_timeframes - 1, true_exprt()};
+        // The consequent can't be checked beyond the bound.
+        // The implication is vacuously true for this match point.
+        continue;
       }
 
       // Get obligations for RHS
