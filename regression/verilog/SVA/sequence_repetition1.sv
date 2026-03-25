@@ -14,9 +14,15 @@ module main(input clk);
   initial p1: assert property (half_x==0[->2]);
   initial p2: assert property (half_x==0[=2]);
 
-  // should fail
+  // should fail -- the repetition must be consecutive
   initial p3: assert property (x==0[*2]);
-  initial p4: assert property (x==0[->2]);
-  initial p5: assert property (x==0[=2]);
+
+  // these pass, since the weak variant allows postponing satisfaction
+  initial p4w: assert property (x==0[->2]);
+  initial p5w: assert property (x==0[=2]);
+
+  // these fail, since the strong variant requires the match
+  initial p4s: assert property (strong(x==0[->2]));
+  initial p5s: assert property (strong(x==0[=2]));
 
 endmodule
