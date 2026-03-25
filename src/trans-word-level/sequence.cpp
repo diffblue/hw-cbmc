@@ -403,7 +403,11 @@ sequence_matchest instantiate_sequence_rec(
       // We have a match for op[->n] if there is a match in timeframe
       // u and matches is n.
       // We have a match for op[=n] if matches is n.
-      result.emplace_back(u, sequence_count_condition(repetition, matches));
+      auto count_cond = sequence_count_condition(repetition, matches);
+      if(expr.id() == ID_sva_sequence_goto_repetition)
+        result.emplace_back(u, and_exprt{rec_op, count_cond});
+      else
+        result.emplace_back(u, count_cond);
     }
 
     // Weak semantics: the sequence could still complete beyond the
