@@ -110,6 +110,15 @@ sequence_matchest instantiate_sequence_rec(
       if(lhs_match.empty_match())
         continue; // handled by rewrite_sva_sequence
 
+      // A pending match represents a sequence that may complete beyond
+      // the bound. Propagate without evaluating the RHS.
+      if(lhs_match.is_pending())
+      {
+        if(semantics == sva_sequence_semanticst::WEAK)
+          result.push_back(lhs_match);
+        continue;
+      }
+
       // now delay
       const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
       DATA_INVARIANT(from >= 0, "##n must not be negative");
@@ -140,7 +149,8 @@ sequence_matchest instantiate_sequence_rec(
         if(t_rhs >= no_timeframes)
         {
           if(semantics == sva_sequence_semanticst::WEAK)
-            result.push_back(lhs_match);
+            result.push_back(
+              sequence_matcht::pending_match(lhs_match.condition()));
         }
         else // still inside bound
         {
@@ -418,10 +428,8 @@ sequence_matchest instantiate_sequence_rec(
       auto min = repetition.is_range()
                    ? numeric_cast_v<mp_integer>(repetition.from())
                    : numeric_cast_v<mp_integer>(repetition.repetitions());
-      result.emplace_back(
-        no_timeframes - 1,
-        binary_relation_exprt{
-          matches, ID_lt, from_integer(min, matches.type())});
+      result.push_back(sequence_matcht::pending_match(binary_relation_exprt{
+        matches, ID_lt, from_integer(min, matches.type())}));
     }
 
     return result;
