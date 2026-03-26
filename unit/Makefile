@@ -4,7 +4,8 @@
 SRC = unit_tests.cpp
 
 # Test source files
-SRC += smvlang/expr2smv.cpp \
+SRC += ebmc/bdd_model_checker.cpp \
+       smvlang/expr2smv.cpp \
        temporal-logic/hoa.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
        temporal-logic/rewrite_sva_sequence.cpp \
@@ -26,7 +27,8 @@ include $(CPROVER_DIR)/src/common
 
 CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
-OBJ += ../src/smvlang/smvlang$(LIBEXT) \
+OBJ += ../src/ebmc/bdd_model_checker$(OBJEXT) \
+       ../src/smvlang/smvlang$(LIBEXT) \
        ../src/temporal-logic/temporal-logic$(LIBEXT) \
        ../src/trans-netlist/trans-netlist$(LIBEXT) \
        ../src/verilog/verilog$(LIBEXT)
