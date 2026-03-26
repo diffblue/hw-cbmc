@@ -123,7 +123,7 @@ sequence_matchest instantiate_sequence_rec(
       const auto from = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.from());
       DATA_INVARIANT(from >= 0, "##n must not be negative");
 
-      auto t_rhs_from = lhs_match.end_time + from;
+      auto t_rhs_from = lhs_match.end_time() + from;
       mp_integer t_rhs_to;
 
       if(!sva_cycle_delay_expr.is_range()) // ##1 something
@@ -139,7 +139,7 @@ sequence_matchest instantiate_sequence_rec(
       {
         auto to = numeric_cast_v<mp_integer>(sva_cycle_delay_expr.to());
         DATA_INVARIANT(to >= from, "##[a:b] must have a<=b");
-        t_rhs_to = lhs_match.end_time + to;
+        t_rhs_to = lhs_match.end_time() + to;
       }
 
       // Add a potential match for each timeframe in the range
@@ -164,7 +164,7 @@ sequence_matchest instantiate_sequence_rec(
             {
               auto cond =
                 and_exprt{lhs_match.condition(), rhs_match.condition()};
-              result.emplace_back(rhs_match.end_time, cond);
+              result.emplace_back(rhs_match.end_time(), cond);
             }
           }
         }
@@ -206,10 +206,10 @@ sequence_matchest instantiate_sequence_rec(
       for(auto &rhs_match : rhs_matches)
       {
         // Same length?
-        if(lhs_match.end_time == rhs_match.end_time)
+        if(lhs_match.end_time() == rhs_match.end_time())
         {
           result.emplace_back(
-            lhs_match.end_time,
+            lhs_match.end_time(),
             and_exprt{lhs_match.condition(), rhs_match.condition()});
         }
       }
@@ -230,8 +230,8 @@ sequence_matchest instantiate_sequence_rec(
 
     for(auto &match : matches)
     {
-      if(!earliest.has_value() || earliest.value() > match.end_time)
-        earliest = match.end_time;
+      if(!earliest.has_value() || earliest.value() > match.end_time())
+        earliest = match.end_time();
     }
 
     if(!earliest.has_value())
@@ -242,7 +242,7 @@ sequence_matchest instantiate_sequence_rec(
     for(auto &match : matches)
     {
       // Earliest?
-      if(match.end_time == earliest.value())
+      if(match.end_time() == earliest.value())
       {
         result.push_back(match);
       }
@@ -267,14 +267,14 @@ sequence_matchest instantiate_sequence_rec(
     {
       exprt::operandst conjuncts = {match.condition()};
 
-      for(mp_integer new_t = t; new_t <= match.end_time; ++new_t)
+      for(mp_integer new_t = t; new_t <= match.end_time(); ++new_t)
       {
         auto lhs_inst =
           instantiate_state_predicate(throughout.lhs(), new_t, no_timeframes);
         conjuncts.push_back(lhs_inst);
       }
 
-      result.emplace_back(match.end_time, conjunction(conjuncts));
+      result.emplace_back(match.end_time(), conjunction(conjuncts));
     }
 
     return result;
@@ -292,7 +292,7 @@ sequence_matchest instantiate_sequence_rec(
 
     for(auto &match_rhs : matches_rhs)
     {
-      for(auto start_lhs = t; start_lhs <= match_rhs.end_time; ++start_lhs)
+      for(auto start_lhs = t; start_lhs <= match_rhs.end_time(); ++start_lhs)
       {
         auto matches_lhs = instantiate_sequence_rec(
           within_expr.lhs(), semantics, start_lhs, no_timeframes);
@@ -301,11 +301,11 @@ sequence_matchest instantiate_sequence_rec(
         {
           // The end_time of the lhs match must be no later than the
           // end_time of the rhs match.
-          if(match_lhs.end_time <= match_rhs.end_time)
+          if(match_lhs.end_time() <= match_rhs.end_time())
           {
             // return the rhs end_time
             auto cond = and_exprt{match_lhs.condition(), match_rhs.condition()};
-            result.emplace_back(match_rhs.end_time, std::move(cond));
+            result.emplace_back(match_rhs.end_time(), std::move(cond));
           }
         }
       }
@@ -331,7 +331,7 @@ sequence_matchest instantiate_sequence_rec(
     for(auto &match_lhs : matches_lhs)
       for(auto &match_rhs : matches_rhs)
       {
-        auto end_time = std::max(match_lhs.end_time, match_rhs.end_time);
+        auto end_time = std::max(match_lhs.end_time(), match_rhs.end_time());
         auto cond = and_exprt{match_lhs.condition(), match_rhs.condition()};
         result.emplace_back(std::move(end_time), std::move(cond));
       }
