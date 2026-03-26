@@ -1,0 +1,11 @@
+KNOWNBUG
+pending_throughout1.sv
+--bound 10
+^\[m\.a1\] always \(m\.req \|=> \(\(1 throughout \(m\.ack \[->2\]\)\) ##0 m\.val == 1\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The pending match from ack[->2] passes through 'throughout' without
+retaining its pending status; ##0 then spuriously evaluates val at
+the bound instead of treating the match as vacuous.

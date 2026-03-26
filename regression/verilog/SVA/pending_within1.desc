@@ -1,0 +1,11 @@
+KNOWNBUG
+pending_within1.sv
+--bound 10
+^\[m\.a1\] always \(m\.req \|=> \(\(\(m\.ack \[->1\]\) within \(m\.ack \[->2\]\)\) ##0 m\.val == 1\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The pending match from ack[->2] (RHS of 'within') is used as a concrete
+bound at the boundary timeframe; 'within' creates a non-pending result
+and ##0 then spuriously evaluates val at the bound.

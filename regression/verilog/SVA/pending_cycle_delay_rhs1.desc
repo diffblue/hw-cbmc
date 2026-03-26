@@ -1,0 +1,11 @@
+KNOWNBUG
+pending_cycle_delay_rhs1.sv
+--bound 10
+^\[m\.a1\] always \(m\.req \|=> \(1 ##1 \(m\.ack \[->1\]\) ##0 m\.val == 1\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Pending match from ack[->1] (RHS of ##1) loses its pending flag when
+propagated through the outer ##1 result, so ##0 spuriously evaluates
+val at the bound rather than treating the match as vacuous.
