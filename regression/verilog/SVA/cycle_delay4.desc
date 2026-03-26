@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 cycle_delay4.sv
 --bound 10
 ^\[zero\.a1\] always \(zero\.req \|=> \(\(\!zero\.ack \[\*0:\$\]\) ##1 zero\.ack ##0 zero\.val == 1\)\): PROVED up to bound 10$

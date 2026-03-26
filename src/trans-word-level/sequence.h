@@ -20,6 +20,7 @@ class sequence_matcht
 public:
   sequence_matcht(mp_integer __end_time, exprt __condition)
     : _is_empty_match(false),
+      _is_pending(false),
       _condition(std::move(__condition)),
       end_time(std::move(__end_time))
   {
@@ -35,8 +36,17 @@ public:
     return _is_empty_match;
   }
 
+  /// A pending match represents a sequence that may still complete beyond
+  /// the verification bound. Under weak semantics, such matches are
+  /// vacuously true; the sequence must not be evaluated further.
+  bool is_pending() const
+  {
+    return _is_pending;
+  }
+
 protected:
   bool _is_empty_match;
+  bool _is_pending;
   exprt _condition;
 
 public:
@@ -46,6 +56,15 @@ public:
   {
     auto result = sequence_matcht{end_time, true_exprt{}};
     result._is_empty_match = true;
+    return result;
+  }
+
+  /// A pending match carries no end time: it represents a sequence that
+  /// may complete beyond the verification bound.
+  static sequence_matcht pending_match(exprt condition)
+  {
+    auto result = sequence_matcht{0, std::move(condition)};
+    result._is_pending = true;
     return result;
   }
 };
