@@ -1,0 +1,11 @@
+KNOWNBUG
+pending_and1.sv
+--bound 10
+^\[m\.a1\] always \(m\.req \|=> \(\(\(m\.ack \[->2\]\) and \(m\.ack \[->3\]\)\) ##0 m\.val == 1\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Pending matches from ack[->2] and ack[->3] are combined by the 'and'
+operator (using max end_time) without propagating the pending status,
+so ##0 spuriously evaluates val at the bound.
