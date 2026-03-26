@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 pending_within1.sv
 --bound 10
 ^\[m\.a1\] always \(m\.req \|=> \(\(\(m\.ack \[->1\]\) within \(m\.ack \[->2\]\)\) ##0 m\.val == 1\)\): PROVED up to bound 10$

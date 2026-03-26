@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 pending_throughout1.sv
 --bound 10
 ^\[m\.a1\] always \(m\.req \|=> \(\(1 throughout \(m\.ack \[->2\]\)\) ##0 m\.val == 1\)\): PROVED up to bound 10$

@@ -19,6 +19,15 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "instantiate_word_level.h"
 #include "obligations.h"
 
+// true iff there is a pending match in the given set
+static bool has_pending(const sequence_matchest &matches)
+{
+  for(auto &m : matches)
+    if(m.is_pending())
+      return true;
+  return false;
+}
+
 // condition on counters for ocurrences of non-consecutive repetitions
 exprt sequence_count_condition(
   const sva_sequence_repetition_exprt &expr,
@@ -164,7 +173,14 @@ sequence_matchest instantiate_sequence_rec(
             {
               auto cond =
                 and_exprt{lhs_match.condition(), rhs_match.condition()};
-              result.emplace_back(rhs_match.end_time(), cond);
+              if(rhs_match.is_pending())
+              {
+                if(semantics == sva_sequence_semanticst::WEAK)
+                  result.push_back(
+                    sequence_matcht::pending_match(std::move(cond)));
+              }
+              else
+                result.emplace_back(rhs_match.end_time(), std::move(cond));
             }
           }
         }
@@ -201,17 +217,37 @@ sequence_matchest instantiate_sequence_rec(
 
     sequence_matchest result;
 
+    exprt::operandst concrete_match_conditions;
+
     for(auto &lhs_match : lhs_matches)
     {
       for(auto &rhs_match : rhs_matches)
       {
-        // Same length?
-        if(lhs_match.end_time() == rhs_match.end_time())
+        if(!lhs_match.is_pending() && !rhs_match.is_pending())
         {
-          result.emplace_back(
-            lhs_match.end_time(),
-            and_exprt{lhs_match.condition(), rhs_match.condition()});
+          // Same length?
+          if(lhs_match.end_time() == rhs_match.end_time())
+          {
+            auto cond = and_exprt{lhs_match.condition(), rhs_match.condition()};
+            concrete_match_conditions.push_back(cond);
+            result.emplace_back(lhs_match.end_time(), std::move(cond));
+          }
         }
+      }
+    }
+
+    // If either operand has a pending match, the intersect might
+    // still match beyond the bound. The pending condition is:
+    // no concrete match has fired.
+    if(semantics == sva_sequence_semanticst::WEAK)
+    {
+      if(has_pending(lhs_matches) || has_pending(rhs_matches))
+      {
+        auto no_concrete =
+          concrete_match_conditions.empty()
+            ? static_cast<exprt>(true_exprt{})
+            : not_exprt{disjunction(concrete_match_conditions)};
+        result.push_back(sequence_matcht::pending_match(no_concrete));
       }
     }
 
@@ -224,27 +260,40 @@ sequence_matchest instantiate_sequence_rec(
     const auto matches = instantiate_sequence_rec(
       first_match.sequence(), semantics, t, no_timeframes);
 
-    // the match of seq with the earliest ending clock tick is a
-    // match of first_match (seq)
-    std::optional<mp_integer> earliest;
-
-    for(auto &match : matches)
-    {
-      if(!earliest.has_value() || earliest.value() > match.end_time())
-        earliest = match.end_time();
-    }
-
-    if(!earliest.has_value())
-      return {}; // no match
-
+    // first_match(seq): the match of seq with the earliest ending
+    // clock tick. In the symbolic setting, we must encode that a
+    // match at time t fires only if no earlier match has fired.
     sequence_matchest result;
 
+    // Collect concrete matches sorted by end_time (they already are).
+    // Build an "no earlier match" guard for each match point.
+    exprt no_earlier_match = true_exprt{};
+
+    // Group by end_time and process in order.
+    std::map<mp_integer, exprt::operandst> by_time;
     for(auto &match : matches)
     {
-      // Earliest?
-      if(match.end_time() == earliest.value())
+      if(!match.is_pending())
+        by_time[match.end_time()].push_back(match.condition());
+    }
+
+    for(auto &[end_time, conditions] : by_time)
+    {
+      auto any_match_here = disjunction(conditions);
+      auto guarded = and_exprt{no_earlier_match, any_match_here};
+      result.emplace_back(end_time, std::move(guarded));
+      // For the next time point, add the condition that no match
+      // fired at this time point or earlier.
+      no_earlier_match = and_exprt{no_earlier_match, not_exprt{any_match_here}};
+    }
+
+    // Propagate pending matches, guarded by no concrete match firing.
+    for(auto &match : matches)
+    {
+      if(match.is_pending())
       {
-        result.push_back(match);
+        result.push_back(sequence_matcht::pending_match(
+          and_exprt{no_earlier_match, match.condition()}));
       }
     }
 
@@ -265,6 +314,14 @@ sequence_matchest instantiate_sequence_rec(
 
     for(auto &match : matches)
     {
+      if(match.is_pending())
+      {
+        // Propagate pending status.
+        if(semantics == sva_sequence_semanticst::WEAK)
+          result.push_back(match);
+        continue;
+      }
+
       exprt::operandst conjuncts = {match.condition()};
 
       for(mp_integer new_t = t; new_t <= match.end_time(); ++new_t)
@@ -289,9 +346,17 @@ sequence_matchest instantiate_sequence_rec(
       instantiate_sequence_rec(within_expr.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
+    bool has_pending = false;
+    exprt::operandst concrete_match_conditions;
 
     for(auto &match_rhs : matches_rhs)
     {
+      if(match_rhs.is_pending())
+      {
+        has_pending = true;
+        continue;
+      }
+
       for(auto start_lhs = t; start_lhs <= match_rhs.end_time(); ++start_lhs)
       {
         auto matches_lhs = instantiate_sequence_rec(
@@ -299,15 +364,36 @@ sequence_matchest instantiate_sequence_rec(
 
         for(auto &match_lhs : matches_lhs)
         {
+          if(match_lhs.is_pending())
+          {
+            has_pending = true;
+            continue;
+          }
+
           // The end_time of the lhs match must be no later than the
           // end_time of the rhs match.
           if(match_lhs.end_time() <= match_rhs.end_time())
           {
             // return the rhs end_time
             auto cond = and_exprt{match_lhs.condition(), match_rhs.condition()};
+            concrete_match_conditions.push_back(cond);
             result.emplace_back(match_rhs.end_time(), std::move(cond));
           }
         }
+      }
+    }
+
+    // If either operand has a pending match, 'within' might
+    // still match beyond the bound.
+    if(semantics == sva_sequence_semanticst::WEAK)
+    {
+      if(has_pending)
+      {
+        auto no_concrete =
+          concrete_match_conditions.empty()
+            ? static_cast<exprt>(true_exprt{})
+            : not_exprt{disjunction(concrete_match_conditions)};
+        result.push_back(sequence_matcht::pending_match(no_concrete));
       }
     }
 
@@ -327,14 +413,34 @@ sequence_matchest instantiate_sequence_rec(
       instantiate_sequence_rec(and_expr.rhs(), semantics, t, no_timeframes);
 
     sequence_matchest result;
+    exprt::operandst concrete_match_conditions;
 
     for(auto &match_lhs : matches_lhs)
       for(auto &match_rhs : matches_rhs)
       {
-        auto end_time = std::max(match_lhs.end_time(), match_rhs.end_time());
-        auto cond = and_exprt{match_lhs.condition(), match_rhs.condition()};
-        result.emplace_back(std::move(end_time), std::move(cond));
+        if(!match_lhs.is_pending() && !match_rhs.is_pending())
+        {
+          auto end_time = std::max(match_lhs.end_time(), match_rhs.end_time());
+          auto cond = and_exprt{match_lhs.condition(), match_rhs.condition()};
+          concrete_match_conditions.push_back(cond);
+          result.emplace_back(std::move(end_time), std::move(cond));
+        }
       }
+
+    // If either operand has a pending match, the 'and' might
+    // still match beyond the bound. The pending condition is:
+    // no concrete match has fired.
+    if(semantics == sva_sequence_semanticst::WEAK)
+    {
+      if(has_pending(matches_lhs) || has_pending(matches_rhs))
+      {
+        auto no_concrete =
+          concrete_match_conditions.empty()
+            ? static_cast<exprt>(true_exprt{})
+            : not_exprt{disjunction(concrete_match_conditions)};
+        result.push_back(sequence_matcht::pending_match(no_concrete));
+      }
+    }
 
     return result;
   }
