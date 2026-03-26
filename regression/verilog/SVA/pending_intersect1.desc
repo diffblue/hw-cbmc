@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 pending_intersect1.sv
 --bound 10
 ^\[m\.a1\] always \(m\.req \|=> \(\(\(m\.ack \[->2\]\) intersect \(m\.ack \[->3\]\)\) ##0 m\.val == 1\)\): PROVED up to bound 10$

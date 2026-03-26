@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 pending_cycle_delay_rhs1.sv
 --bound 10
 ^\[m\.a1\] always \(m\.req \|=> \(1 ##1 \(m\.ack \[->1\]\) ##0 m\.val == 1\)\): PROVED up to bound 10$
