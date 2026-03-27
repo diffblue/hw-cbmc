@@ -3996,6 +3996,8 @@ assignment_pattern:
                 { init($$, ID_verilog_assignment_pattern); swapop($$, $3); }
         | '\'' '{' structure_pattern_key_brace '}'
                 { init($$, ID_verilog_assignment_pattern); swapop($$, $3); }
+        | '\'' '{' array_pattern_key_brace '}'
+                { init($$, ID_verilog_assignment_pattern); swapop($$, $3); }
         ;
 
 structure_pattern_key_and_expression:
@@ -4015,6 +4017,30 @@ structure_pattern_key:
                 {
                   init($$, ID_member_initializer);
                   stack_expr($$).set(ID_member_name, stack_expr($1).get(ID_base_name));
+                }
+        ;
+
+array_pattern_key_and_expression:
+          array_pattern_key TOK_COLON expression
+                { $$ = $1; mto($$, $3); }
+        ;
+
+array_pattern_key_brace:
+          array_pattern_key_and_expression
+                { init($$); mto($$, $1); }
+        | array_pattern_key_brace ',' array_pattern_key_and_expression
+                { $$ = $1; mto($$, $3); }
+        ;
+
+array_pattern_key:
+          number
+                {
+                  init($$, ID_verilog_assignment_pattern_index);
+                  mto($$, $1);
+                }
+        | TOK_DEFAULT
+                {
+                  init($$, ID_verilog_assignment_pattern_default);
                 }
         ;
 

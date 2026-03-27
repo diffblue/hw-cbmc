@@ -219,6 +219,69 @@ void verilog_typecheck_exprt::assignment_conversion(
       auto array_size =
         numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
 
+      if(
+        !rhs.operands().empty() &&
+        (rhs.operands().front().id() == ID_verilog_assignment_pattern_index ||
+         rhs.operands().front().id() == ID_verilog_assignment_pattern_default))
+      {
+        // 1800-2017 10.9.2 -- index-keyed assignment pattern
+        exprt::operandst initializers(
+          numeric_cast_v<std::size_t>(array_size), nil_exprt{});
+
+        // Find the default value, if any.
+        std::optional<exprt> default_value;
+        for(auto &op : rhs.operands())
+        {
+          if(op.id() == ID_verilog_assignment_pattern_default)
+          {
+            if(default_value.has_value())
+            {
+              throw errort().with_location(op.source_location())
+                << "duplicate default value in assignment pattern";
+            }
+            default_value = to_unary_expr(op).op();
+            assignment_conversion(*default_value, element_type);
+          }
+        }
+
+        // Apply indexed entries.
+        for(auto &op : rhs.operands())
+        {
+          if(op.id() == ID_verilog_assignment_pattern_index)
+          {
+            auto index = numeric_cast_v<mp_integer>(
+              to_constant_expr(to_binary_expr(op).op0()));
+            if(index < 0 || index >= array_size)
+            {
+              throw errort().with_location(op.source_location())
+                << "array index " << index << " out of range";
+            }
+            auto value = to_binary_expr(op).op1();
+            assignment_conversion(value, element_type);
+            initializers[numeric_cast_v<std::size_t>(index)] = std::move(value);
+          }
+        }
+
+        // Fill remaining entries with default.
+        for(std::size_t i = 0; i < initializers.size(); i++)
+        {
+          if(initializers[i].is_nil())
+          {
+            if(!default_value.has_value())
+            {
+              throw errort().with_location(rhs.source_location())
+                << "array index " << i << " not assigned and no default given";
+            }
+            initializers[i] = *default_value;
+          }
+        }
+
+        auto source_location = rhs.source_location();
+        rhs = array_exprt{std::move(initializers), array_type};
+        rhs.add_source_location() = std::move(source_location);
+        return;
+      }
+
       if(array_size != rhs.operands().size())
       {
         throw errort().with_location(rhs.source_location())
@@ -2965,6 +3028,11 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // assignment patterns, 1800 2017 10.9
     convert_expr(expr.op());
   }
+  else if(expr.id() == ID_verilog_assignment_pattern_default)
+  {
+    // assignment patterns, 1800 2017 10.9
+    convert_expr(expr.op());
+  }
   else if(expr.id() == ID_verilog_tagged_union)
   {
     throw errort{}.with_location(expr.source_location())
@@ -3593,6 +3661,13 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     for(auto &op : expr.operands())
       convert_expr(op);
     expr.type() = expr.op0().type();
+    return std::move(expr);
+  }
+  else if(expr.id() == ID_verilog_assignment_pattern_index)
+  {
+    // assignment patterns, 1800 2017 10.9
+    for(auto &op : expr.operands())
+      convert_expr(op);
     return std::move(expr);
   }
   else
