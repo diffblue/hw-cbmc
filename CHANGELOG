@@ -1,5 +1,7 @@
 # EBMC 5.11
 
+* SystemVerilog: keyed array assignment patterns
+
 # EBMC 5.10
 
 * cast properties given with -p to Boolean if need be
