@@ -25,6 +25,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
 
+#include "bdd_model_checker.h"
 #include "netlist.h"
 
 #include <algorithm>
@@ -82,10 +83,11 @@ protected:
 
   typedef std::map<exprt, atomic_propositiont> atomic_propositionst;
   atomic_propositionst atomic_propositions;
-  
-  std::vector<BDD> constraints_BDDs, initial_BDDs,
-                   transition_BDDs;
-  
+
+  std::vector<BDD> initial_BDDs;
+
+  bdd_transition_relationt transition_relation;
+
   class vart
   {
   public:
@@ -127,44 +129,13 @@ protected:
   void get_atomic_propositions(const exprt &);
   void check_property(propertyt &);
 
-  BDD current_to_next(const BDD &) const;
-  BDD next_to_current(const BDD &) const;
-  BDD project_next(const BDD &) const;
-  BDD project_current(const BDD &) const;
-
   void compute_counterexample(
     propertyt &,
     unsigned number_of_timeframes);
 
   void check_AGp(propertyt &);
   void check_CTL(propertyt &);
-  BDD CTL(const exprt &);
-  BDD EX(BDD);
-  BDD AX(BDD f)
-  {
-    return !EX(!f);
-  }
-  BDD EF(BDD);
-  BDD AF(BDD f)
-  {
-    return !EG(!f);
-  }
-  BDD EG(BDD);
-  BDD AG(BDD f)
-  {
-    return !EF(!f);
-  }
-  BDD EU(BDD, BDD);
-  BDD AU(BDD, BDD);
-  BDD ER(BDD f1, BDD f2)
-  {
-    return !AU(!f1, !f2);
-  }
-  BDD AR(BDD f1, BDD f2)
-  {
-    return !EU(!f1, !f2);
-  }
-  BDD fixedpoint(std::function<BDD(BDD)>, BDD);
+  BDD CTL(const exprt &, bdd_model_checkert &);
 };
 
 /*******************************************************************\
@@ -241,17 +212,19 @@ property_checker_resultt bdd_enginet::operator()()
         std::cout << cubes(bdd) << '\n';
 
       std::cout << "In-state constraints:\n";
-      for(const auto &bdd : constraints_BDDs)
+      for(const auto &bdd : transition_relation.constraint_conjuncts)
         std::cout << cubes(bdd) << '\n';
 
       std::cout << "Transition relation:\n";
-      for(const auto &bdd : transition_BDDs)
+      for(const auto &bdd : transition_relation.transition_conjuncts)
         std::cout << cubes(bdd) << '\n';
 
       std::cout << "Atomic propositions:\n";
       for(const auto &a : atomic_propositions)
         std::cout << '`' << format(a.first) << "':\n"
                   << cubes(a.second.bdd) << '\n';
+
+      bdd_model_checkert model_checker(transition_relation);
 
       std::cout << "Properties:\n";
       for(const auto &property : properties.properties)
@@ -263,7 +236,7 @@ property_checker_resultt bdd_enginet::operator()()
         }
         else
         {
-          auto result = CTL(property.normalized_expr);
+          auto result = CTL(property.normalized_expr, model_checker);
           std::cout << property.name << ":\n" << cubes(result) << '\n';
         }
       }
@@ -333,94 +306,6 @@ void bdd_enginet::allocate_vars(const var_mapt &var_map)
     it.second.current_bdd = mgr.Var(s);
     it.second.next_bdd = mgr.Var(s + "'");
   }
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::current_to_next
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::current_to_next(const BDD &bdd) const
-{
-  BDD tmp=bdd;
-
-  for(const auto &v : vars)
-    tmp = substitute(tmp, v.second.current_bdd.var(), v.second.next_bdd);
-
-  return tmp;
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::next_to_current
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::next_to_current(const BDD &bdd) const
-{
-  BDD tmp=bdd;
-
-  for(const auto &v : vars)
-    tmp = substitute(tmp, v.second.next_bdd.var(), v.second.current_bdd);
-
-  return tmp;
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::project_next
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::project_next(const BDD &bdd) const
-{
-  BDD tmp=bdd;
-
-  for(const auto &v : vars)
-    tmp = exists(tmp, v.second.next_bdd.var());
-
-  return tmp;
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::project_current
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::project_current(const BDD &bdd) const
-{
-  BDD tmp=bdd;
-
-  for(const auto &v : vars)
-    tmp = exists(tmp, v.second.current_bdd.var());
-
-  return tmp;
 }
 
 /*******************************************************************\
@@ -574,8 +459,10 @@ Function: bdd_enginet::check_AGp
 
 void bdd_enginet::check_AGp(propertyt &property)
 {
+  bdd_model_checkert model_checker(transition_relation);
+
   const exprt &sub_expr = to_unary_expr(property.normalized_expr).op();
-  BDD p = CTL(sub_expr);
+  BDD p = CTL(sub_expr, model_checker);
 
   // Start with !p, and go backwards until saturation or we hit an
   // initial state.
@@ -583,7 +470,7 @@ void bdd_enginet::check_AGp(propertyt &property)
   BDD states = !p;
   unsigned iteration = 0;
 
-  for(const auto &c : constraints_BDDs)
+  for(const auto &c : transition_relation.constraint_conjuncts)
     states = states & c;
 
   std::size_t peak_bdd_nodes = 0;
@@ -609,20 +496,8 @@ void bdd_enginet::check_AGp(propertyt &property)
       break;
     }
 
-    // make the states be expressed in terms of 'next' variables
-    BDD states_next = current_to_next(states);
-
-    // now conjoin with transition relation
-    BDD conjunction = states_next;
-
-    for(const auto &t : transition_BDDs)
-      conjunction = conjunction & t;
-
-    for(const auto &c : constraints_BDDs)
-      conjunction = conjunction & c;
-
-    // now project away 'next' variables
-    BDD pre_image = project_next(conjunction);
+    // EX(states) gives us the pre-image
+    BDD pre_image = model_checker.EX(states);
 
     // compute union
     BDD set_union = states | pre_image;
@@ -655,16 +530,18 @@ Function: bdd_enginet::check_CTL
 
 void bdd_enginet::check_CTL(propertyt &property)
 {
+  bdd_model_checkert model_checker(transition_relation);
+
   // For a CTL formula f, calculate the set of states that satisfy
   // !f, and then check if that contains any initial state.
-  BDD not_f = !CTL(property.normalized_expr);
+  BDD not_f = !CTL(property.normalized_expr, model_checker);
 
   BDD intersection = not_f;
 
   for(const auto &i : initial_BDDs)
     intersection = intersection & i;
 
-  for(const auto &c : constraints_BDDs)
+  for(const auto &c : transition_relation.constraint_conjuncts)
     intersection = intersection & c;
 
   if(intersection.is_false())
@@ -693,7 +570,7 @@ Function: bdd_enginet::CTL
 
 \*******************************************************************/
 
-bdd_enginet::BDD bdd_enginet::CTL(const exprt &expr)
+bdd_enginet::BDD bdd_enginet::CTL(const exprt &expr, bdd_model_checkert &mc)
 {
   if(expr.is_true())
     return mgr.True();
@@ -701,75 +578,77 @@ bdd_enginet::BDD bdd_enginet::CTL(const exprt &expr)
     return mgr.False();
   else if(expr.id()==ID_not)
   {
-    return !CTL(to_not_expr(expr).op());
+    return !CTL(to_not_expr(expr).op(), mc);
   }
   else if(expr.id() == ID_implies)
   {
-    return (!CTL(to_binary_expr(expr).lhs())) | CTL(to_binary_expr(expr).rhs());
+    return (!CTL(to_binary_expr(expr).lhs(), mc)) |
+           CTL(to_binary_expr(expr).rhs(), mc);
   }
   else if(expr.id()==ID_and)
   {
     BDD result=mgr.True();
     for(const auto & op : expr.operands())
-      result = result & CTL(op);
+      result = result & CTL(op, mc);
     return result;
   }
   else if(expr.id()==ID_or)
   {
     BDD result=mgr.False();
     for(const auto & op : expr.operands())
-      result = result | CTL(op);
+      result = result | CTL(op, mc);
     return result;
   }
   else if(
     expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool)
   {
     return (
-      !(CTL(to_binary_expr(expr).lhs())) ^ CTL(to_binary_expr(expr).rhs()));
+      !(CTL(to_binary_expr(expr).lhs(), mc)) ^
+      CTL(to_binary_expr(expr).rhs(), mc));
   }
   else if(expr.id() == ID_EX)
   {
-    return EX(CTL(to_EX_expr(expr).op()));
+    return mc.EX(CTL(to_EX_expr(expr).op(), mc));
   }
   else if(expr.id() == ID_EF)
   {
-    return EF(CTL(to_EF_expr(expr).op()));
+    return mc.EF(CTL(to_EF_expr(expr).op(), mc));
   }
   else if(expr.id() == ID_EG)
   {
-    return EG(CTL(to_EG_expr(expr).op()));
+    return mc.EG(CTL(to_EG_expr(expr).op(), mc));
   }
   else if(expr.id() == ID_AX)
   {
-    return AX(CTL(to_AX_expr(expr).op()));
+    return mc.AX(CTL(to_AX_expr(expr).op(), mc));
   }
   else if(expr.id() == ID_AF)
   {
-    return AF(CTL(to_AF_expr(expr).op()));
+    return mc.AF(CTL(to_AF_expr(expr).op(), mc));
   }
   else if(expr.id() == ID_AG)
   {
-    return AG(CTL(to_AG_expr(expr).op()));
+    return mc.AG(CTL(to_AG_expr(expr).op(), mc));
   }
   else if(expr.id() == ID_EU)
   {
     auto &EU_expr = to_EU_expr(expr);
-    return EU(CTL(EU_expr.lhs()), CTL(EU_expr.rhs()));
+    return mc.EU(CTL(EU_expr.lhs(), mc), CTL(EU_expr.rhs(), mc));
   }
   else if(expr.id() == ID_AU)
   {
     auto &AU_expr = to_AU_expr(expr);
-    return AU(CTL(AU_expr.lhs()), CTL(AU_expr.rhs()));
+    return mc.AU(CTL(AU_expr.lhs(), mc), CTL(AU_expr.rhs(), mc));
   }
   else if(expr.id() == ID_ER)
   {
     auto &ER_expr = to_ER_expr(expr);
-    return ER(CTL(ER_expr.lhs()), CTL(ER_expr.rhs()));
+    return mc.ER(CTL(ER_expr.lhs(), mc), CTL(ER_expr.rhs(), mc));
   }
   else if(expr.id() == ID_AR)
   {
     auto &AR_expr = to_AR_expr(expr);
-    return AR(CTL(AR_expr.lhs()), CTL(AR_expr.rhs()));
+    return mc.AR(CTL(AR_expr.lhs(), mc), CTL(AR_expr.rhs(), mc));
   }
   else
   {
@@ -783,150 +662,6 @@ bdd_enginet::BDD bdd_enginet::CTL(const exprt &expr)
   message.error() << "unsupported property -- `" << expr.id()
                   << "' not implemented" << messaget::eom;
   throw 0;
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EX
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EX(BDD f)
-{
-  for(const auto &c : constraints_BDDs)
-    f = f & c;
-
-  // make 'f' be expressed in terms of 'next' variables
-  BDD p_next = current_to_next(f);
-
-  // now conjoin with transition relation
-  BDD conjunction = p_next;
-
-  for(const auto &t : transition_BDDs)
-    conjunction = conjunction & t;
-
-  for(const auto &c : constraints_BDDs)
-    conjunction = conjunction & c;
-
-  // now project away 'next' variables
-  BDD pre_image = project_next(conjunction);
-
-  return pre_image;
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::fixedpoint
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::fixedpoint(std::function<BDD(BDD)> tau, BDD x)
-{
-  // Apply tau(x) until saturation.
-  while(true)
-  {
-    BDD image = tau(x);
-
-    // fixpoint?
-    if((image == x).is_true())
-      return x; // done
-
-    x = image;
-  }
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EG
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EG(BDD f)
-{
-  // EG f = f ∧ EX EG f
-  // Iterate x ∧ EX x until saturation.
-  auto tau = [this](BDD x) { return x & EX(x); };
-
-  return fixedpoint(tau, f);
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EF
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EF(BDD f)
-{
-  // EF f ↔ f ∨ EX EF f
-  // Iterate x ∨ EX x until saturation.
-  auto tau = [this](BDD x) { return x | EX(x); };
-
-  return fixedpoint(tau, f);
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::EU
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::EU(BDD f1, BDD f2)
-{
-  // Iterate x ∨ f2 ∨ (f1 ∧ EX x) until saturation
-  auto tau = [this, f1, f2](BDD x) { return x | f2 | (f1 & EX(x)); };
-
-  return fixedpoint(tau, mgr.False());
-}
-
-/*******************************************************************\
-
-Function: bdd_enginet::AU
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bdd_enginet::BDD bdd_enginet::AU(BDD f1, BDD f2)
-{
-  // Iterate x ∨ f2 ∨ (f1 ∧ AX x) until saturation
-  auto tau = [this, f1, f2](BDD x) { return x | f2 | (f1 & AX(x)); };
-
-  return fixedpoint(tau, mgr.False());
 }
 
 /*******************************************************************\
@@ -1021,27 +756,35 @@ void bdd_enginet::build_BDDs()
       DATA_INVARIANT(BDDs[i].is_initialized(), "non-AND BDD already done");
     }
   }
-  
+
+  // populate the transition relation variable pairs
+  for(const auto &v : vars)
+  {
+    transition_relation.variables.push_back(
+      {v.second.current_bdd, v.second.next_bdd});
+  }
+
   // Add the next-state variable constraints for
   // the state-holding elements.
   for(const auto &v : vars)
     if(!v.second.is_input)
     {
       literalt next=netlist.var_map.get_next(v.first);
-      transition_BDDs.push_back(aig2bdd(next, BDDs) == v.second.next_bdd);
+      transition_relation.transition_conjuncts.push_back(
+        aig2bdd(next, BDDs) == v.second.next_bdd);
     }
   
   // general AIG conditions
   for(literalt l : netlist.constraints)
-    constraints_BDDs.push_back(aig2bdd(l, BDDs));
-    
+    transition_relation.constraint_conjuncts.push_back(aig2bdd(l, BDDs));
+
   // initial state conditions
   for(literalt l : netlist.initial)
     initial_BDDs.push_back(aig2bdd(l, BDDs));
     
   // transition conditions
   for(literalt l : netlist.transition)
-    transition_BDDs.push_back(aig2bdd(l, BDDs));
+    transition_relation.transition_conjuncts.push_back(aig2bdd(l, BDDs));
 
   // atomic propositions
   for(auto & p : atomic_propositions)
@@ -1068,7 +811,7 @@ void bdd_enginet::build_BDDs()
         DATA_INVARIANT(
           p.id() == ID_literal, "assumed property must be G literal");
         auto l = to_literal_expr(p).get_literal();
-        constraints_BDDs.push_back(aig2bdd(l, BDDs));
+        transition_relation.constraint_conjuncts.push_back(aig2bdd(l, BDDs));
       }
     }
 }
