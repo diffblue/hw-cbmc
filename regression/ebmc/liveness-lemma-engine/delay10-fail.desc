@@ -1,0 +1,10 @@
+CORE
+delay10-fail.sv
+
+^\[DELAY\.p1\] always s_eventually DELAY\.done: PROVED up to bound 5$
+^\[DELAY\.lemma\] always \(\!DELAY\.done \|=> DELAY\.rank < \$past\(DELAY\.rank\)\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
