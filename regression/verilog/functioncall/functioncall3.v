@@ -2,7 +2,7 @@ module main;
 
   function reduction_and;
   input [63:0] value;
-  begin
+  begin : blk
     integer i;
     reduction_and = 1;
     for (i = 0; i < 64; i = i + 1)

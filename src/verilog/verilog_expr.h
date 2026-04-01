@@ -1369,6 +1369,17 @@ public:
   {
     return !get(ID_base_name).empty();
   }
+
+  /// Returns the scope identifier for this block.
+  /// Named blocks use their base_name; unnamed blocks
+  /// use a parser-generated block_id.
+  irep_idt block_id() const
+  {
+    if(is_named())
+      return base_name();
+    else
+      return get(ID_block_id);
+  }
 };
 
 inline const verilog_blockt &to_verilog_block(const exprt &expr)
@@ -1730,6 +1741,15 @@ public:
   const verilog_statementt &body() const
   {
     return static_cast<const verilog_statementt &>(op3());
+  }
+
+  // Per IEEE 1800-2017 Section 12.7.1, a for-loop with a variable
+  // declaration in the initialization creates an implicit block scope.
+  bool has_scope() const;
+
+  irep_idt block_id() const
+  {
+    return get(ID_block_id);
   }
 };
 

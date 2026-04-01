@@ -4,7 +4,7 @@ module main(input clk);
 
   initial x=0;
 
-  always @(posedge clk) begin
+  always @(posedge clk) begin : blk
     if(x == 11)
       assert(x & 1); // holds
 

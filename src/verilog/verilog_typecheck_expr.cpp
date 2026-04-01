@@ -1517,6 +1517,17 @@ const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
   // in a task or function? Try local ones first
   if(function_or_task_name!="")
   {
+    // try named blocks within the function, beginning with inner one
+    for(auto it = named_blocks.rbegin(); it != named_blocks.rend(); it++)
+    {
+      auto full_identifier = id2string(function_or_task_name) + "." +
+                             id2string(*it) + id2string(base_name);
+
+      const symbolt *symbol;
+      if(!ns.lookup(full_identifier, symbol))
+        return symbol; // found!
+    }
+
     auto full_identifier =
       id2string(function_or_task_name) + "." + id2string(base_name);
 

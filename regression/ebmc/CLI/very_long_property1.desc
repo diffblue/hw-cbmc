@@ -1,7 +1,7 @@
 CORE
 very_long_property1.sv
 
-^\[main\.a0\] always main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier != 5: REFUTED$
+^\[main\.blk\.a0\] always main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier \+ main\.this_is_a_very_long_and_verbose_identifier != 5: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

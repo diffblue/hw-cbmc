@@ -1,6 +1,6 @@
 module main(input [31:0] index);
 
-  always @index begin
+  always @index begin : blk
     if(index >= 10)
       assume(0);
 

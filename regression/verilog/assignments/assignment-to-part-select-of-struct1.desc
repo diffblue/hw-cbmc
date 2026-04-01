@@ -3,7 +3,7 @@ assignment-to-part-select-of-struct1.sv
 --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
-^\[top\.assert\.1\] always top\.data == 68'h20000000000000000: PROVED .*$
+^\[top\.blk\.assert\.1\] always top\.data == 68'h20000000000000000: PROVED .*$
 --
 ^warning: ignoring
 --

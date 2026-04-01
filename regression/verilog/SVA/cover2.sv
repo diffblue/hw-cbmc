@@ -5,7 +5,7 @@ module main(input clk);
 
   initial counter = 0;
 
-  always @(posedge clk) begin
+  always @(posedge clk) begin : blk
     // expected to pass
     p0: cover property (counter == 1);
 

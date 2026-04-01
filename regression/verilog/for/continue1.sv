@@ -1,6 +1,6 @@
 module main;
 
-  initial begin
+  initial begin : blk
     int i, j;
     j = 0;
     for(i = 0; i < 10; i++) begin

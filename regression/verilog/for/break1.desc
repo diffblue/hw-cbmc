@@ -1,7 +1,7 @@
 CORE
 break1.sv
 
-^\[main\.loop_exit\] main.i == 5: PROVED .*$
+^\[main\.blk\.loop_exit\] main\.blk\.i == 5: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
