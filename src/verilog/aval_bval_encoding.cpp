@@ -783,3 +783,35 @@ exprt aval_bval_div_mod(const binary_exprt &expr)
     make_x(type),
     aval_bval_conversion(two_valued_expr, lower_to_aval_bval(type))};
 }
+
+exprt aval_bval(const if_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+
+  // Is the condition four-valued?
+  if(is_aval_bval(expr.cond().type()))
+  {
+    auto cond_aval = aval(expr.cond());
+
+    auto cond_aval_zero = to_bv_type(cond_aval.type()).all_zeros_expr();
+
+    auto two_valued_if = if_exprt{
+      notequal_exprt{cond_aval, cond_aval_zero},
+      expr.true_case(),
+      expr.false_case()};
+
+    return if_exprt{has_xz(expr.cond()), make_x(type), two_valued_if};
+  }
+  else
+  {
+    DATA_INVARIANT(
+      expr.cond().type().id() == ID_bool,
+      "two-valued if condition must be boolean");
+
+    // adjust type of the expression
+    auto result = expr;
+    result.type() = expr.true_case().type();
+    return result;
+  }
+}
