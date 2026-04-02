@@ -675,6 +675,7 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
         << "unsized literals are not allowed in concatenations";
     }
 
+    decay_to_vector(*it);
     must_be_bit_vector(*it);
 
     const typet &type = it->type();

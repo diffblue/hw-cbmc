@@ -1,0 +1,8 @@
+CORE
+packed_array_concatenation1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Packed arrays should be usable in concatenations (issue #1771).
