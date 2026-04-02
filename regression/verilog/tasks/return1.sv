@@ -7,7 +7,7 @@ module main;
     return;
   endtask
 
-  initial begin
+  initial begin : blk
     some_task();
     assert(some_data == 123);
   end

@@ -8,7 +8,7 @@ module main;
     a0: assert(0);
   endtask
 
-  initial begin
+  initial begin : blk
     some_task();
     // should fail
     a1: assert(0);

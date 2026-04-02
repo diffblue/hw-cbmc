@@ -2,7 +2,7 @@ CORE
 return2.sv
 
 ^\[main\.some_task\.a0\] 0: PROVED .*$
-^\[main\.a1] 0: REFUTED$
+^\[main\.blk\.a1] 0: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

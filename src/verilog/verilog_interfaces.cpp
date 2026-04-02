@@ -366,9 +366,7 @@ Function: verilog_typecheckt::interface_block
 void verilog_typecheckt::interface_block(
   const verilog_blockt &statement)
 {
-  bool is_named=statement.is_named();
-  
-  if(is_named)
+  if(statement.is_named())
   {
     const irep_idt base_name = statement.base_name();
 
@@ -389,9 +387,9 @@ void verilog_typecheckt::interface_block(
         << "duplicate definition of identifier `" << symbol.base_name
         << "' in module `" << module_symbol().base_name << '\'';
     }
-
-    enter_named_block(base_name);
   }
+
+  enter_named_block(statement.block_id());
 
   // do decl
   const exprt &decl=static_cast<const exprt &>(
@@ -406,6 +404,5 @@ void verilog_typecheckt::interface_block(
   for(auto &block_statement : statement.statements())
     interface_statement(block_statement);
 
-  if(is_named)
-    named_blocks.pop_back();
+  named_blocks.pop_back();
 }

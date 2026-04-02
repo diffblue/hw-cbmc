@@ -3696,9 +3696,14 @@ action_block:
 // rule to accept both block_item_declaration and statement_or_null.
 seq_block:
           TOK_BEGIN
+                { auto id = PARSER.get_next_id();
+                  push_scope(id, ".", verilog_scopet::BLOCK);
+                  init($$); stack_expr($$).set(ID_block_id, id); }
           block_item_declaration_or_statement_or_null_brace
           TOK_END
-                { init($$, ID_block); swapop($$, $2); }
+                { init($$, ID_block); swapop($$, $3);
+                  stack_expr($$).set(ID_block_id, stack_expr($2).get(ID_block_id));
+                  pop_scope(); }
         | TOK_BEGIN TOK_COLON any_identifier
                 { push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::BLOCK); }
           block_item_declaration_or_statement_or_null_brace
@@ -4059,7 +4064,8 @@ loop_statement:
         | TOK_WHILE '(' expression ')' statement
                 { init($$, ID_while); mto($$, $3); mto($$, $5); }
         | TOK_FOR '(' for_initialization ';' expression ';' for_step ')' statement
-                { init($$, ID_for); mto($$, $3); mto($$, $5); mto($$, $7); mto($$, $9); }
+                { init($$, ID_for); mto($$, $3); mto($$, $5); mto($$, $7); mto($$, $9);
+                  stack_expr($$).set(ID_block_id, PARSER.get_next_id()); }
         ;
 
 for_initialization:

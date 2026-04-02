@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 for_variable_declaration2.sv
 
 ^no properties$
@@ -6,4 +6,3 @@ for_variable_declaration2.sv
 ^SIGNAL=0$
 --
 --
-This is errored by the type checker.

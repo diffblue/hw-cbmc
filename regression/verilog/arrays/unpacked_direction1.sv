@@ -4,7 +4,7 @@ module main;
   int my_array1[0:4]; // same as [5]
   int my_array2[4:0];
 
-  initial begin
+  initial begin : blk
     my_array0 = '{ 1, 2, 3, 4, 5 };
     my_array1 = '{ 1, 2, 3, 4, 5 };
     my_array2 = '{ 1, 2, 3, 4, 5 };

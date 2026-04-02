@@ -509,17 +509,12 @@ Function: verilog_typecheckt::convert_block
 
 void verilog_typecheckt::convert_block(verilog_blockt &statement)
 {
-  // these may be 'named blocks' with an identifier
-  bool is_named=statement.is_named();
-  
-  if(is_named)
-    enter_named_block(statement.base_name());
+  enter_named_block(statement.block_id());
 
   for(auto &block_statement : statement.statements())
     convert_statement(block_statement);
 
-  if(is_named)
-    named_blocks.pop_back();
+  named_blocks.pop_back();
 }
 
 /*******************************************************************\
@@ -1182,6 +1177,9 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
       << "for expected to have four operands";
   }
 
+  if(statement.has_scope())
+    enter_named_block(statement.block_id());
+
   for(auto &init : statement.initialization())
     convert_statement(init);
 
@@ -1191,6 +1189,9 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
 
   convert_statement(statement.inc_statement());
   convert_statement(statement.body());
+
+  if(statement.has_scope())
+    named_blocks.pop_back();
 }
 
 /*******************************************************************\

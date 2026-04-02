@@ -19,6 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_base.h"
 #include "verilog_types.h"
 
+#include <algorithm>
+
 verilog_wildcard_equality_exprt::verilog_wildcard_equality_exprt(
   exprt lhs,
   exprt rhs)
@@ -507,4 +509,12 @@ exprt verilog_past_exprt::default_value() const
   auto value_opt = verilog_default_initializer(type());
   CHECK_RETURN(value_opt.has_value());
   return *value_opt;
+}
+
+bool verilog_fort::has_scope() const
+{
+  return std::any_of(
+    initialization().begin(),
+    initialization().end(),
+    [](const verilog_statementt &s) { return s.id() == ID_decl; });
 }

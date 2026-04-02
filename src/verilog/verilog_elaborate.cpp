@@ -727,17 +727,14 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   }
   else if(statement.id() == ID_block)
   {
-    // These may be named
     auto &block_statement = to_verilog_block(statement);
 
-    if(block_statement.is_named())
-      enter_named_block(block_statement.base_name());
+    enter_named_block(block_statement.block_id());
 
     for(auto &block_statement : to_verilog_block(statement).operands())
       collect_symbols(to_verilog_statement(block_statement));
 
-    if(block_statement.is_named())
-      named_blocks.pop_back();
+    named_blocks.pop_back();
   }
   else if(
     statement.id() == ID_verilog_blocking_assign ||
@@ -790,10 +787,16 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   {
     auto &for_statement = to_verilog_for(statement);
 
+    if(for_statement.has_scope())
+      enter_named_block(for_statement.block_id());
+
     for(auto &init_statement : for_statement.initialization())
       collect_symbols(init_statement);
 
     collect_symbols(for_statement.body());
+
+    if(for_statement.has_scope())
+      named_blocks.pop_back();
   }
   else if(statement.id() == ID_forever)
   {

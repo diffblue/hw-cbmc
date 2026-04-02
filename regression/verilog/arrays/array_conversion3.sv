@@ -3,7 +3,7 @@ module main;
   bit [0:3] [7:0] array1;
   bit [3:0] [7:0] array2;
 
-  initial begin
+  initial begin : blk
     array1 = '{ 1, 2, 3, 4 };
     array2 = '{ 1, 2, 3, 4 };
   

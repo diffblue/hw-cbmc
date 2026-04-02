@@ -7,7 +7,7 @@ module main;
 
   typedef struct packed { int a, b; } S;
 
-  initial begin
+  initial begin : blk
     S some_struct;
     some_struct.a = 1;
     some_struct.b = 2;

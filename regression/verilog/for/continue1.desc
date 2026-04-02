@@ -1,7 +1,7 @@
 CORE
 continue1.sv
 
-^\[main\.p0\] main\.j == 9: PROVED .*$
+^\[main\.blk\.p0\] main\.blk\.j == 9: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --

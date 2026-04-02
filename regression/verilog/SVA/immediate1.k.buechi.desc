@@ -1,7 +1,7 @@
 CORE buechi
 immediate1.sv
 --buechi --k-induction --bound 1
-^\[main\.assert\.1\] always main\.x & 1: PROVED$
+^\[main\.blk\.assert\.1\] always main\.x & 1: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -1,7 +1,7 @@
 CORE
 return1.sv
 
-^\[main\.assert\.1\] main\.some_data == 123: PROVED .*$
+^\[main\.blk\.assert\.1\] main\.some_data == 123: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
