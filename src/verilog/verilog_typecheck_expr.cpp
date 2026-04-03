@@ -3776,12 +3776,33 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
   else if(expr.id()==ID_if)
   {
     convert_expr(expr.op0());
-    make_boolean(expr.op0());
     convert_expr(expr.op1());
     convert_expr(expr.op2());
 
+    if(!is_four_valued(expr.op0().type()))
+      make_boolean(expr.op0());
+
     tc_binary_expr(expr, expr.op1(), expr.op2());
     expr.type()=expr.op1().type();
+
+    // anything four valued?
+    if(is_four_valued(expr.op0().type()) || is_four_valued(expr.type()))
+    {
+      if(expr.type().id() == ID_signedbv)
+      {
+        expr.type() =
+          verilog_signedbv_typet{to_signedbv_type(expr.type()).get_width()};
+      }
+      else if(expr.type().id() == ID_unsignedbv)
+      {
+        expr.type() =
+          verilog_unsignedbv_typet{to_unsignedbv_type(expr.type()).get_width()};
+      }
+
+      expr.op1() = typecast_exprt::conditional_cast(expr.op1(), expr.type());
+      expr.op2() = typecast_exprt::conditional_cast(expr.op2(), expr.type());
+    }
+
     return std::move(expr);
   }
   else

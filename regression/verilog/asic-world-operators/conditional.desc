@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 conditional.sv
 --module main --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ conditional.sv
 --
 ^warning: ignoring
 --
-Fails an assertion

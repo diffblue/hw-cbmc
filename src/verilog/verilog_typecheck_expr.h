@@ -153,6 +153,11 @@ protected:
   void union_decay(exprt &) const;
   void struct_decay(exprt &) const;
   typet max_type(const typet &t1, const typet &t2);
+  static bool is_four_valued(const typet &type)
+  {
+    return type.id() == ID_verilog_signedbv ||
+           type.id() == ID_verilog_unsignedbv;
+  }
 
   // named blocks
   typedef std::vector<std::string> named_blockst;
