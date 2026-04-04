@@ -1,6 +1,7 @@
 # EBMC 5.11
 
 * SystemVerilog: keyed array assignment patterns
+* Transition property engine
 
 # EBMC 5.10
 
