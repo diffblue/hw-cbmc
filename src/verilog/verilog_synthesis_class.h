@@ -223,6 +223,7 @@ protected:
   class loop_framet
   {
   public:
+    // These are in program order
     std::vector<value_mapt> break_statement_states;
     std::vector<value_mapt> continue_statement_states;
   };

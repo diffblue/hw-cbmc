@@ -3087,9 +3087,14 @@ void verilog_synthesist::synth_for(const verilog_fort &statement)
     synth_statement(statement.inc_statement());
   }
 
-  // merge in edges from 'break' statements, if any
-  for(auto &state : loop_frame.value().break_statement_states)
+  // Merge in edges from 'break' statements, if any. These come
+  // in program order, hence process in reverse order.
+  auto &break_states = loop_frame.value().break_statement_states;
+
+  for(auto state_it = break_states.rbegin(); state_it != break_states.rend();
+      ++state_it)
   {
+    auto &state = *state_it;
     auto guard_expr = conjunction(state.guard);
     merge(
       guard_expr, state.current, value_map->current, false, value_map->current);
@@ -3199,9 +3204,14 @@ void verilog_synthesist::synth_while(
     }
   }
 
-  // merge in edges from 'break' statements, if any
-  for(auto &state : loop_frame.value().break_statement_states)
+  // Merge in edges from 'break' statements, if any. These come
+  // in program order, hence process in reverse order.
+  auto &break_states = loop_frame.value().break_statement_states;
+
+  for(auto state_it = break_states.rbegin(); state_it != break_states.rend();
+      ++state_it)
   {
+    auto &state = *state_it;
     auto guard_expr = conjunction(state.guard);
     merge(
       guard_expr, state.current, value_map->current, false, value_map->current);
