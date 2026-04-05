@@ -54,6 +54,18 @@ public:
     set(ID_scope, _scope);
   }
 
+  // This gives the original package plus base name
+  // if the identifier was imported
+  const irep_idt &import() const
+  {
+    return get(ID_verilog_import);
+  }
+
+  void import_package(irep_idt _import)
+  {
+    set(ID_verilog_import, _import);
+  }
+
   /// Add the source location from \p location, if it is non-nil.
   verilog_identifier_exprt &&with_source_location(source_locationt location) &&
   {

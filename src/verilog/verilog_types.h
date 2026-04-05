@@ -859,6 +859,18 @@ public:
   {
     return get(ID_base_name);
   }
+
+  // This gives the original package plus base name
+  // if the identifier was imported
+  const irep_idt &import() const
+  {
+    return get(ID_verilog_import);
+  }
+
+  void import_package(irep_idt _import)
+  {
+    set(ID_verilog_import, _import);
+  }
 };
 
 /// Cast a generic typet to a \ref verilog_typedef_typet. This is an unchecked

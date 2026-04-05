@@ -1584,7 +1584,7 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
 {
   const symbolt *symbol;
   auto base_name = expr.base_name();
-  auto import = expr.get("import");
+  auto import = expr.import();
 
   if(import != irep_idt{})
   {
