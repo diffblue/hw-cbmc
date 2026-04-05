@@ -1,0 +1,6 @@
+CORE
+checker_scope1.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
