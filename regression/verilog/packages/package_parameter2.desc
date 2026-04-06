@@ -1,5 +1,5 @@
 CORE
-package2.sv
+package_parameter2.sv
 
 ^^\[.*\] always main\.Q == 123: PROVED .*$
 ^EXIT=0$

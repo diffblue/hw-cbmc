@@ -1,5 +1,5 @@
 CORE
-package1.sv
+package_show_parse1.sv
 --show-parse
 ^Package: my_pkg$
 ^EXIT=0$
