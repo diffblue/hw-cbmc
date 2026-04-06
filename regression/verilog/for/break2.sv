@@ -9,10 +9,11 @@ module main(input [31:0] bits);
       if(bits[i])
         break;
 
-     index = i;
-     p0: assert final(bits == 'b1 -> index == 0);
-     p3: assert final(bits == 'b1000 -> index == 3);
-     p32: assert final(bits == 0 -> index == 32);
+    index = i;
+    p0: assert(bits == 'b1 -> index == 0);
+    p3: assert(bits == 'b1000 -> index == 3);
+    p4: assert(bits == 'b11000 -> index == 3);
+    p32: assert(bits == 0 -> index == 32);
   end
 
 endmodule
