@@ -13,6 +13,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_solver_factory.h"
 #include "k_induction.h"
 #include "tautology_check.h"
+#include "transition_property.h"
 
 [[nodiscard]] property_checker_resultt tautology_check_engine(
   const cmdlinet &,           // unused
@@ -33,6 +34,18 @@ Author: Daniel Kroening, dkr@amazon.com
   message_handlert &message_handler)
 {
   return k_induction(1, transition_system, properties, solver, message_handler);
+}
+
+// Transition property engine
+[[nodiscard]] property_checker_resultt transition_property_engine(
+  const cmdlinet &, // unused
+  const transition_systemt &transition_system,
+  const ebmc_propertiest &properties,
+  const ebmc_solver_factoryt &solver,
+  message_handlert &message_handler)
+{
+  return transition_property(
+    transition_system, properties, solver, message_handler);
 }
 
 // BMC with bound 5
@@ -71,6 +84,7 @@ struct enginet
 // engines to try, in given order
 const enginet engines[] = {
   {tautology_check_engine, "tautology check"},
+  {transition_property_engine, "transition property"},
   {completeness_threshold, "completeness threshold"},
   {one_induction_engine, "one induction"},
   {bmc_bound_5_engine, "BMC with bound 5"},

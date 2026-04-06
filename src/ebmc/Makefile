@@ -41,6 +41,7 @@ SRC = \
       show_properties.cpp \
       show_trans.cpp \
       tautology_check.cpp \
+      transition_property.cpp \
       transition_system.cpp \
       waveform.cpp \
       #empty line
