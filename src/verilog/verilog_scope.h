@@ -55,6 +55,8 @@ struct verilog_scopet
   irep_idt __base_name;
   std::string prefix;
   kindt kind;
+
+  // if imported, this is the package and base name of the original
   irep_idt import;
 
   irep_idt identifier() const

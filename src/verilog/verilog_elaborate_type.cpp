@@ -365,9 +365,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_typedef_type)
   {
     // Look it up!
-    auto base_name = to_verilog_typedef_type(src).base_name();
+    auto &typedef_type = to_verilog_typedef_type(src);
+    auto base_name = typedef_type.base_name();
     const symbolt *symbol_ptr;
-    auto import = src.get("import");
+    auto import = typedef_type.import();
     if(import != irep_idt{})
     {
       auto full_identifier = "Verilog::package::" + id2string(import);

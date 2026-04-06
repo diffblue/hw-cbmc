@@ -78,7 +78,7 @@ YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
   {
     dest.set(ID_scope, scope_ptr->prefix);
     if(!scope_ptr->import.empty())
-      dest.set("import", scope_ptr->import);
+      dest.set(ID_verilog_import, scope_ptr->import);
     return scope_ptr->identifier_token();
   }
 }
