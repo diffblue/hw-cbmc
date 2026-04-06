@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 package_var1.sv
 
+^\[.*\] \$bits\(package::my_pkg::my_var\) == 32: PROVED \(.*\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-The identifier my_var is not found.

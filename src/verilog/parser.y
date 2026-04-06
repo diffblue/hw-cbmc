@@ -2144,15 +2144,31 @@ net_decl_assignment:
 
 variable_decl_assignment:
           variable_identifier variable_dimension_brace
-                { $$ = $1; stack_expr($$).id(ID_declarator); addswap($$, ID_type, $2); }
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  $$ = $1;
+                  stack_expr($$).id(ID_declarator);
+                  addswap($$, ID_type, $2);
+                }
         | variable_identifier variable_dimension_brace '=' expression
-                { $$ = $1; stack_expr($$).id(ID_declarator);
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  $$ = $1;
+                  stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
-                  addswap($$, ID_value, $4); }
+                  addswap($$, ID_value, $4);
+                }
         | variable_identifier variable_dimension_brace '=' class_new
-                { $$ = $1; stack_expr($$).id(ID_declarator);
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  $$ = $1;
+                  stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
-                  addswap($$, ID_value, $4); }
+                  addswap($$, ID_value, $4);
+                }
         ;
 
 class_new:
