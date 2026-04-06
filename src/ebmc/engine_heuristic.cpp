@@ -12,6 +12,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "completeness_threshold.h"
 #include "ebmc_solver_factory.h"
 #include "k_induction.h"
+#include "liveness_lemma_engine.h"
 #include "tautology_check.h"
 #include "transition_property.h"
 
@@ -87,6 +88,7 @@ const enginet engines[] = {
   {transition_property_engine, "transition property"},
   {completeness_threshold, "completeness threshold"},
   {one_induction_engine, "one induction"},
+  {liveness_lemma_engine, "liveness lemma"},
   {bmc_bound_5_engine, "BMC with bound 5"},
 };
 

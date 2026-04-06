@@ -1,0 +1,10 @@
+CORE
+lemma1.sv
+
+^\[main\.rank_decreases\] always .*: PROVED.*$
+^\[main\.liveness\] always s_eventually main\.counter == 0: PROVED \(ranking function lemma\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

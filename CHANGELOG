@@ -2,6 +2,7 @@
 
 * SystemVerilog: keyed array assignment patterns
 * Transition property engine
+* Liveness lemma engine
 
 # EBMC 5.10
 
