@@ -79,50 +79,74 @@ property_checker_resultt transition_property(
   const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
 {
-  auto properties = properties_in;
-  messaget message{message_handler};
-  const namespacet ns{transition_system.symbol_table};
+  auto properties = properties_in; // copy
+
+  // Is this engine applicable?
+  bool have_property = false;
 
   for(auto &property : properties.properties)
   {
     if(!property.is_unknown())
       continue;
 
-    if(!is_transition_property(property.normalized_expr))
-    {
+    if(is_transition_property(property.normalized_expr))
+      have_property = true;
+    else
       property.unsupported("unsupported by transition property engine");
-      continue;
-    }
+  }
 
-    // We can prove "transition properties" G Q by checking if the transition
-    // relation implies Q. This uses the standard assumption that the transition
-    // relation is left-total (otherwise there could be initial states without
-    // successsor that yield traces with one state that refute G Q).
-    //
-    // Note that transition properties are not in general transition invariants;
-    // they contain the transition relation, but not the transitive closure of
-    // the transition relation.
+  if(!have_property)
+    return property_checker_resultt{properties};
+
+  messaget message{message_handler};
+  const namespacet ns{transition_system.symbol_table};
+  auto solver_wrapper = solver_factory(ns, message_handler);
+  auto &solver = solver_wrapper.decision_procedure();
+
+  message.status() << "Checking transition properties" << messaget::eom;
+
+  // We can prove "transition properties" G Q by checking if the transition
+  // relation implies Q. This uses the standard assumption that the transition
+  // relation is left-total (otherwise there could be initial states without
+  // successsor that yield traces with one state that refute G Q).
+  //
+  // Note that transition properties are not in general transition invariants;
+  // they contain the transition relation, but not the transitive closure of
+  // the transition relation.
+
+  // One transition: 2 timeframes, no initial state.
+  unwind(
+    transition_system.trans_expr,
+    message_handler,
+    solver,
+    2, // no_timeframes
+    ns,
+    false); // no initial state constraint
+
+  std::map<irep_idt, exprt> handles;
+
+  for(auto &property : properties.properties)
+  {
+    if(!property.is_unknown())
+      continue;
+
+    // Instantiate property, for two timeframes
+    auto obligations = ::property(property.normalized_expr, message_handler, 2);
+    auto constraint = not_exprt{conjunction(obligations)};
+    handles[property.identifier] = solver.handle(constraint);
+  }
+
+  // Check the properties incrementally
+  for(auto &property : properties.properties)
+  {
+    auto handle_it = handles.find(property.identifier);
+    if(handle_it == handles.end())
+      continue;
 
     message.status() << "Checking " << property.name
                      << " using transition property engine" << messaget::eom;
 
-    auto solver_wrapper = solver_factory(ns, message_handler);
-    auto &solver = solver_wrapper.decision_procedure();
-
-    // One transition: 2 timeframes, no initial state.
-    unwind(
-      transition_system.trans_expr,
-      message_handler,
-      solver,
-      2, // no_timeframes
-      ns,
-      false); // no initial state constraint
-
-    // Instantiate property, for two timeframes
-    auto obligations = ::property(property.normalized_expr, message_handler, 2);
-    solver.set_to_false(conjunction(obligations));
-
-    switch(solver())
+    switch(solver(handle_it->second))
     {
     case decision_proceduret::resultt::D_UNSATISFIABLE:
       message.result() << "UNSAT: property holds for all transitions"
