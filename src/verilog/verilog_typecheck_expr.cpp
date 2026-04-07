@@ -835,8 +835,7 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
       to_verilog_identifier_expr(package_scope.identifier()).base_name();
 
     irep_idt full_identifier =
-      id2string(verilog_package_identifier(package_base)) +
-      "::" + id2string(base_name);
+      verilog_package_identifier(package_base, base_name);
 
     if(ns.lookup(full_identifier, symbol))
     {
@@ -3269,8 +3268,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
 
     // stitch together
     irep_idt full_identifier =
-      id2string(verilog_package_identifier(package_base)) +
-      "::" + id2string(rhs_base);
+      verilog_package_identifier(package_base, rhs_base);
 
     const symbolt *symbol;
     if(ns.lookup(full_identifier, symbol))

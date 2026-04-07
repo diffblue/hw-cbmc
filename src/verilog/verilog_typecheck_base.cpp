@@ -55,6 +55,26 @@ irep_idt verilog_package_identifier(const irep_idt &base_name)
 
 /*******************************************************************\
 
+Function: verilog_package_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt verilog_package_identifier(
+  const irep_idt &package_base_name,
+  const irep_idt &item_base_name)
+{
+  return "Verilog::package::" + id2string(package_base_name) +
+         "::" + id2string(item_base_name);
+}
+
+/*******************************************************************\
+
 Function: strip_verilog_prefix
 
   Inputs:
