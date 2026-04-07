@@ -13,5 +13,6 @@ module main(
 
   // expected to pass
   ASSERT_COUNTER_EVENTUALLY_10: assert property (@(posedge clk) disable iff (reset) s_eventually (counter == 10));
+  ASSERT_COUNTER_EVENTUALLY_9: assert property (@(posedge clk) disable iff (reset) s_eventually (counter == 9));
 
 endmodule
