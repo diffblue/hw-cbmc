@@ -32,6 +32,7 @@ struct verilog_scopet
     PARAMETER,
     PROPERTY,
     SEQUENCE,
+    VAR,
     OTHER
   };
 

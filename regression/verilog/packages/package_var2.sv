@@ -1,10 +1,10 @@
 package my_pkg;
-  int my_var;
+  int my_var = 1;
 endpackage
 
 module main;
   import my_pkg::my_var;
 
-  initial assert($bits(my_var) == 32);
+  initial assert(my_var == 1);
 
 endmodule
