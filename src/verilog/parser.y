@@ -1728,7 +1728,7 @@ struct_union_member:
           attribute_instance_brace
           random_qualifier_opt
           data_type_or_void
-          list_of_variable_decl_assignments ';'
+          struct_list_of_variable_decl_assignments ';'
                 { $$=$4;
                   stack_expr($$).id(ID_decl);
                   addswap($$, ID_type, $3);
@@ -1962,6 +1962,15 @@ list_of_variable_decl_assignments:
                 { $$=$1;    mto($$, $3); }
         ;
 
+// This is a copy of "variable_decl_assignments", where the identifiers are not
+// added to the scope.
+struct_list_of_variable_decl_assignments:
+          struct_variable_decl_assignment
+                { init($$); mto($$, $1); }
+        | struct_list_of_variable_decl_assignments ',' struct_variable_decl_assignment
+                { $$=$1;    mto($$, $3); }
+        ;
+
 list_of_variable_identifiers:
           variable_identifier
                 { init($$);
@@ -2140,6 +2149,31 @@ net_decl_assignment:
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
                   addswap($$, ID_value, $4); }
+        ;
+
+// This is a copy of "variable_decl_assignment", but the identifiers
+// aren't added to the scope.
+struct_variable_decl_assignment:
+          variable_identifier variable_dimension_brace
+                {
+                  $$ = $1;
+                  stack_expr($$).id(ID_declarator);
+                  addswap($$, ID_type, $2);
+                }
+        | variable_identifier variable_dimension_brace '=' expression
+                {
+                  $$ = $1;
+                  stack_expr($$).id(ID_declarator);
+                  addswap($$, ID_type, $2);
+                  addswap($$, ID_value, $4);
+                }
+        | variable_identifier variable_dimension_brace '=' class_new
+                {
+                  $$ = $1;
+                  stack_expr($$).id(ID_declarator);
+                  addswap($$, ID_type, $2);
+                  addswap($$, ID_value, $4);
+                }
         ;
 
 variable_decl_assignment:
