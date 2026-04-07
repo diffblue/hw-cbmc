@@ -1,7 +1,7 @@
 CORE
 package_var1.sv
 
-^\[.*\] \$bits\(package::my_pkg::my_var\) == 32: PROVED \(.*\)$
+^\[.*\] \$bits\(my_pkg::my_var\) == 32: PROVED \(.*\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --

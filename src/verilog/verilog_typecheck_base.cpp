@@ -69,7 +69,7 @@ irep_idt verilog_package_identifier(
   const irep_idt &package_base_name,
   const irep_idt &item_base_name)
 {
-  return "Verilog::package::" + id2string(package_base_name) +
+  return "Verilog::" + id2string(package_base_name) +
          "::" + id2string(item_base_name);
 }
 

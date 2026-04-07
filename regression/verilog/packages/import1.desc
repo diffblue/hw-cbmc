@@ -1,6 +1,7 @@
 CORE
 import1.sv
---bound 0
+
+^\[.*\] always my_pkg::my_parameter == 1: PROVED \(.*\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -370,7 +370,7 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     auto import = typedef_type.import();
     if(import != irep_idt{})
     {
-      auto full_identifier = "Verilog::package::" + id2string(import);
+      auto full_identifier = "Verilog::" + id2string(import);
 
       if(ns.lookup(full_identifier, symbol_ptr))
       {
