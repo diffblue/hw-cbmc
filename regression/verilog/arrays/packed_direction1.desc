@@ -1,0 +1,7 @@
+CORE
+packed_direction1.sv
+--module main
+^EXIT=0$
+^SIGNAL=0$
+--
+--

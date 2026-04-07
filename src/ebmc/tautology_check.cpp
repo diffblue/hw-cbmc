@@ -65,7 +65,6 @@ static bool is_tautology(
 }
 
 property_checker_resultt tautology_check(
-  const cmdlinet &,
   const ebmc_propertiest &properties,
   const ebmc_solver_factoryt &solver_factory,
   message_handlert &message_handler)
@@ -74,9 +73,13 @@ property_checker_resultt tautology_check(
 
   for(auto &property : result.properties)
   {
-    if(is_tautology(property.normalized_expr, solver_factory, message_handler))
+    if(property.is_unknown())
     {
-      property.proved("tautology");
+      if(is_tautology(
+           property.normalized_expr, solver_factory, message_handler))
+      {
+        property.proved("tautology");
+      }
     }
   }
 

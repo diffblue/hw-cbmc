@@ -1,0 +1,5 @@
+MODULE main
+
+-- NuSMV does not allow sets of words
+DEFINE set := { 0d8_123, 0d8_124 };
+

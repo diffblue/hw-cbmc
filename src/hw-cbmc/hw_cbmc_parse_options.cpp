@@ -19,12 +19,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/show_properties.h>
 
 #include <ansi-c/goto-conversion/goto_convert_functions.h>
+#include <ebmc/show_modules.h>
 #include <goto-checker/all_properties_verifier_with_trace_storage.h>
 #include <goto-checker/goto_verifier.h>
 #include <goto-checker/multi_path_symex_checker.h>
 #include <goto-checker/solver_factory.h>
 #include <langapi/mode.h>
-#include <trans-word-level/show_modules.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
@@ -246,7 +246,8 @@ int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
   }
   else if(cmdline.isset("show-modules"))
   {
-    show_modules(goto_model.symbol_table, std::cout);
+    show_modulest::from_symbol_table(goto_model.symbol_table)
+      .plain_text(std::cout);
     return 0; // done
   }
     

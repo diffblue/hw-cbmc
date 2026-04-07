@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 xnor4.sv
 
 ^\[main\.xnor_x1_ok\] always ~\(main\.xnor_in1 \^ main\.xnor_in2 \^ main.xnor_in3\) == main.xnor_out: PROVED .*$

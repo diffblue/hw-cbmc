@@ -8,6 +8,9 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "smv_types.h"
 
+#include <util/arith_tools.h>
+#include <util/mathematical_types.h>
+
 #include <algorithm>
 #include <set>
 
@@ -60,6 +63,26 @@ bool smv_enumeration_typet::is_subset_of(
   }
 
   return true;
+}
+
+smv_array_typet::smv_array_typet(mp_integer from, mp_integer to, typet subtype)
+  : type_with_subtypet{ID_smv_array, std::move(subtype)}
+{
+  this->from() = from_integer(from, integer_typet{});
+  this->to() = from_integer(to, integer_typet{});
+}
+
+smv_range_typet::smv_range_typet(mp_integer from, mp_integer to)
+  : typet{ID_smv_range}
+{
+  this->from() = from_integer(from, integer_typet{});
+  this->to() = from_integer(to, integer_typet{});
+}
+
+smv_word_base_typet::smv_word_base_typet(irep_idt id, mp_integer width)
+  : typet{id}
+{
+  this->width() = from_integer(width, integer_typet{});
 }
 
 smv_enumeration_typet type_union(

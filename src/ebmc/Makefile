@@ -1,6 +1,8 @@
 SRC = \
       bdd_engine.cpp \
+      bdd_model_checker.cpp \
       bmc.cpp \
+      build_transition_system.cpp \
       cegar/abstract.cpp \
       cegar/bmc_cegar.cpp \
       cegar/latch_ordering.cpp \
@@ -11,7 +13,8 @@ SRC = \
       diameter.cpp \
       diatest.cpp \
       dimacs_writer.cpp \
-      ebmc_base.cpp \
+      engine_heuristic.cpp \
+      ebmc_language.cpp \
       ebmc_languages.cpp \
       ebmc_parse_options.cpp \
       ebmc_properties.cpp \
@@ -22,6 +25,7 @@ SRC = \
       instrument_buechi.cpp \
       k_induction.cpp \
       liveness_to_safety.cpp \
+      liveness_lemma_engine.cpp \
       live_signal.cpp \
       main.cpp \
       netlist.cpp \
@@ -34,9 +38,11 @@ SRC = \
       ranking_function.cpp \
       report_results.cpp \
       show_formula_solver.cpp \
+      show_modules.cpp \
       show_properties.cpp \
       show_trans.cpp \
       tautology_check.cpp \
+      transition_property.cpp \
       transition_system.cpp \
       waveform.cpp \
       #empty line

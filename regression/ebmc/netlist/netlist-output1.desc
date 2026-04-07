@@ -1,0 +1,27 @@
+CORE
+netlist-output1.v
+--show-netlist
+activate-multi-line-match
+^Variable map:
+  Verilog::main\.clk=0->false \(input\)
+  Verilog::main\.data=1->false \(input\)
+  Verilog::main\.some_register=2->!3 \(latch\)
+  Verilog::main\.some_register_aux0=!3->false \(wire\)
+
+Total no. of variable bits: 3
+Total no. of latch bits: 1
+Total no. of nondet bits: 0
+Total no. of input bits: 2
+Total no. of output bits: 0
+
+Next state functions:
+  NEXT\(Verilog::main\.some_register\)=!\(!\(Verilog::main\.data\) & !\(Verilog::main\.some_register\)\)
+
+Initial state: 
+  !\(Verilog::main\.some_register\)
+
+State invariant constraints: 
+
+Transition constraints: $
+^EXIT=0$
+^SIGNAL=0$

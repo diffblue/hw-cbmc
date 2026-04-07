@@ -1,0 +1,15 @@
+MODULE main
+
+VAR array_of_boolean : array 0..2 of boolean;
+
+INIT array_of_boolean[0] = FALSE
+INIT array_of_boolean[1] = FALSE
+INIT array_of_boolean[2] = TRUE
+
+VAR index : 0..2;
+
+ASSIGN init(index) := 0;
+       next(index) := index = 2 ? 2: index + 1;
+
+-- fails once the index reaches 2
+CTLSPEC AG !array_of_boolean[index]

@@ -1,9 +1,46 @@
+# EBMC 5.11
+
+* SystemVerilog: keyed array assignment patterns
+* Transition property engine
+* Liveness lemma engine
+* Strong SVA sequence semantics for the Buechi instrumentation
+
+# EBMC 5.10
+
+* cast properties given with -p to Boolean if need be
+* engine heuristic: add structural completeness threshold
+* SystemVerilog: functions with output ports
+* SystemVerilog: typedefs with variable dimensions
+* SystemVerilog: break, continue and return statements
+* SystemVerilog: assignments to a part-select of a struct
+* SystemVerilog: timeunits and timeprecision
+* SystemVerilog: recursive module definitions
+* SystemVerilog: enums in compilation-unit scope
+* SystemVerilog: typdefs in compilation-unit scope
+* SystemVerilog: functions in package and compilation-unit scopes
+* SystemVerilog: default direction for task/function ports
+* SystemVerilog: assignment patterns for unions
+* SystemVerilog: assignment patterns for vectors
+* SystemVerilog: immediate cover statement
+* SystemVerilog: fix for SVA ##[a:b]
+* SystemVerilog: fix for weak [->n] and [=n]
+
 # EBMC 5.9
 
+* Verilog: use top-level module for verification, instead of "main"
+* Verilog: fix for four-valued | and &
+* Verilog: fix for typed parameter ports
+* Verilog: fix for the type of implicit nets for continous assignments
+* Verilog: fix for assignments to 1-bit types
 * SystemVerilog: fix for type parameters
+* SystemVerilog: type parameter ports
+* SystemVerilog: fix for checkers with multiple ports
+* SystemVerilog: for loops with multiple initializations
+* SystemVerilog: for loops with variable declarations
 * SMV: word constants
 * SMV: IVAR declarations
 * SMV: bit selection operator
+* SMV: integer range expressions
 
 # EBMC 5.8
 

@@ -1,0 +1,8 @@
+CORE
+wildcard_port_connection1.sv
+
+^file .* line 8: no support for wildcard port connection$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring

@@ -1,0 +1,7 @@
+MODULE main
+
+VAR x : boolean;
+
+INVAR x
+
+SPEC AG x

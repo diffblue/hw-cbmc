@@ -1,6 +1,6 @@
 module main;
 
-  initial begin
+  initial begin : blk
     int i, j;
     j = 0;
     for(i = 0; i < 10; i++) begin
@@ -8,7 +8,7 @@ module main;
         continue;
       j++;
     end
-    assert(j==9);
+    p0: assert(j==9);
   end
 
 endmodule

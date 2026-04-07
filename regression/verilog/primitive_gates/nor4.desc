@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 nor4.sv
 
 ^EXIT=0$

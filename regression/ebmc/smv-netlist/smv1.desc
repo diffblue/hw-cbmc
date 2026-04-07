@@ -5,6 +5,8 @@ smv1.smv
 ^VAR smv\.main\.var\.x: boolean;$
 ^ASSIGN next\(smv\.main\.var\.x\):=\!smv\.main\.var\.x;$
 ^INIT !smv\.main\.var\.x$
+^LTLSPEC G F smv\.main\.var\.x$
+^CTLSPEC smv\.main\.var\.x <-> \!AX smv\.main\.var\.x$
 ^EXIT=0$
 ^SIGNAL=0$
 --

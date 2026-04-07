@@ -10,7 +10,7 @@ jobs:
   check-ubuntu-24_04-make-gcc:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -31,7 +31,7 @@ jobs:
       - name: Log the version of gcc
         run: gcc --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -75,7 +75,7 @@ jobs:
       CC: "ccache clang"
       CXX: "ccache clang++"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -95,7 +95,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -132,19 +132,19 @@ jobs:
       - name: Print ccache stats
         run: ccache -s
       - name: Upload the ebmc binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ebmc-binary
           retention-days: 5
           path: src/ebmc/ebmc
       - name: Upload the hw-cbmc binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: hw-cbmc-binary
           retention-days: 5
           path: src/hw-cbmc/hw-cbmc
       - name: Upload the vlindex binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: vlindex-binary
           retention-days: 5
@@ -155,7 +155,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -174,7 +174,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ebmc-binary
           path: ebmc
@@ -188,7 +188,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -199,7 +199,7 @@ jobs:
         run: |
           # spot
           SPOT_VERSION=2.14.3.16
-          URL=https://download.opensuse.org/repositories/home:/adl/Debian_12/amd64
+          URL=https://www.lre.epita.fr/repo/debian/stable/
           wget ${URL}/libbddx0_${SPOT_VERSION}-1_amd64.deb
           wget ${URL}/libspotgen0_${SPOT_VERSION}-1_amd64.deb
           wget ${URL}/libspot0_${SPOT_VERSION}-1_amd64.deb
@@ -208,7 +208,7 @@ jobs:
       - name: Confirm ltl2tgba is available and log the version installed
         run: ltl2tgba --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ebmc-binary
           path: ebmc
@@ -216,17 +216,19 @@ jobs:
         run: chmod a+x ./ebmc/ebmc ; ./ebmc/ebmc --version
       - name: put the ebmc binary in place
         run: cp ebmc/ebmc src/ebmc/
-      - name: run the ebmc-spot tests
-        run: make -C regression/ebmc-spot
+      - name: run the Verilog buechi tests
+        run: make -C regression/verilog test-buechi
+      - name: run the SMV buechi tests
+        run: make -C regression/smv test-buechi
 
   # This job takes approximately 1 minute
   examples:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ebmc-binary
           path: ebmc
@@ -235,7 +237,7 @@ jobs:
       - name: ebmc on Hazard3
         run: PATH=$PATH:$PWD/ebmc examples/Hazard3/Hazard3-ebmc.sh
       - name: Get the vlindex binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: vlindex-binary
           path: vlindex
@@ -262,13 +264,13 @@ jobs:
           # yum config-manager --set-enabled powertools
           # yum install glibc-static libstdc++-static
       - name: cache for ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /github/home/.cache/ccache
           save-always: true
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
           restore-keys: ${{ runner.os }}-centos8-make-gcc-
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Zero ccache stats and limit in size
@@ -298,7 +300,7 @@ jobs:
   check-macos-15-make-clang:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -306,7 +308,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           save-always: true
           path: .ccache
@@ -348,7 +350,7 @@ jobs:
     name: Emscripten build
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -379,7 +381,7 @@ jobs:
           source ./emsdk_env.sh
           emcc --version
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
           save-always: true
@@ -431,11 +433,11 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
       - name: Fetch dependencies
         run: |
           choco install -y --no-progress winflexbison3 strawberryperl wget
@@ -455,7 +457,7 @@ jobs:
       - name: Initialise Developer Command Line
         uses: ilammy/msvc-dev-cmd@v1
       - name: Prepare ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           save-always: true
           path: .ccache
@@ -491,7 +493,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Fetch dependencies
@@ -510,17 +512,17 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Get the ebmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ebmc-binary
           path: bin
       - name: Get the hw-cbmc binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: hw-cbmc-binary
           path: bin
       - name: Get the vlindex binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: vlindex-binary
           path: bin

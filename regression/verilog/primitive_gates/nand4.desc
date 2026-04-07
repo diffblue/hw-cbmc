@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 nand4.sv
 
 ^EXIT=0$

@@ -59,11 +59,8 @@ void ldgt::compute(
     nodes[*l_it].is_source_latch=true;
 
   // get the next state nodes
-    
-  for(var_mapt::mapt::const_iterator
-      m_it=netlist.var_map.map.begin();
-      m_it!=netlist.var_map.map.end();
-      m_it++)
+
+  for(auto m_it : netlist.var_map.sorted())
   {
     const var_mapt::vart &var=m_it->second;
     if(var.is_latch())
@@ -97,6 +94,33 @@ void ldgt::compute(
         #if 0
         std::cout << "DEP: " << v2 << " -> " << v << std::endl;
         #endif
+      }
+    }
+  }
+}
+
+void ldgt::output(const netlistt &netlist, std::ostream &out) const
+{
+  for(auto var_it : netlist.var_map.sorted())
+  {
+    auto &var = var_it->second;
+
+    for(std::size_t i = 0; i < var.bits.size(); i++)
+    {
+      if(var.is_latch())
+      {
+        literalt::var_not v = var.bits[i].current.var_no();
+
+        out << "  " << var_it->first << "[" << i << "] = " << v << ":";
+
+        const ldg_nodet &node = (*this)[v];
+
+        for(ldg_nodet::edgest::const_iterator i_it = node.in.begin();
+            i_it != node.in.end();
+            i_it++)
+          out << " " << i_it->first;
+
+        out << '\n';
       }
     }
   }

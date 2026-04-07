@@ -1,0 +1,6 @@
+MODULE main
+
+VAR width : 1..10;
+
+-- The width must be constant
+VAR word_var : word[width];

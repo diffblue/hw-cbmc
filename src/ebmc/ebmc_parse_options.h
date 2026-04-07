@@ -44,6 +44,7 @@ public:
         "(smt2)(bitwuzla)(boolector)(cvc3)(cvc4)(cvc5)(mathsat)(yices)(z3)"
         "(minisat)(cadical)"
         "(aig)(stop-induction)(stop-minimize)(start):(coverage)(naive)"
+        "(simple-netlist)"
         "(compute-ct)(dot-netlist)(smv-netlist)(smv-word-level)"
         "(vcd):"
         "(random-traces)(trace-steps):(random-seed):(traces):"

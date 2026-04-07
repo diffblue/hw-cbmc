@@ -16,6 +16,34 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::is_packed_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static bool is_packed_type(const typet &type)
+{
+  if(type.id() == ID_struct || type.id() == ID_union)
+    return type.get_bool(ID_packed);
+  else if(type.id() == ID_array)
+    return type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+  else if(
+    type.id() == ID_signedbv || type.id() == ID_unsignedbv ||
+    type.id() == ID_bool)
+  {
+    return true;
+  }
+  else
+    return false;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_unpacked_array_type
 
   Inputs:
@@ -26,7 +54,7 @@ Function: verilog_typecheck_exprt::convert_unpacked_array_type
 
 \*******************************************************************/
 
-array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
+verilog_array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   const type_with_subtypet &src)
 {
   // int whatnot[x:y];
@@ -51,7 +79,8 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   }
   else if(size_expr.is_not_nil())
   {
-    increasing = false;
+    // [size] is syntactic sugar for [0:size-1]
+    increasing = true;
     size = convert_integer_constant_expression(size_expr);
     offset = 0;
     if(size < 0)
@@ -69,11 +98,8 @@ array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   // recursively convert element_type
   typet element_type = elaborate_type(src.subtype());
 
-  const exprt final_size_expr = from_integer(size, integer_typet());
-  auto result = array_typet{element_type, final_size_expr};
-  result.set(ID_offset, from_integer(offset, integer_typet()));
-  result.set(ID_C_increasing, increasing);
-  result.set(ID_C_verilog_type, ID_verilog_unpacked_array);
+  auto result = verilog_array_typet{
+    ID_verilog_unpacked_array, element_type, size, offset, increasing};
 
   return result;
 }
@@ -132,7 +158,6 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
   {
     // We have a multi-dimensional packed array,
     // and do a recursive call.
-    const exprt size = from_integer(width, integer_typet());
     typet element_type = elaborate_type(subtype);
 
     // the element type must be packed; reject otherwise
@@ -142,11 +167,9 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
         << "packed array must use packed element type";
     }
 
-    array_typet result{element_type, size};
-    result.set(ID_offset, from_integer(offset, integer_typet()));
-    result.set(ID_C_verilog_type, ID_verilog_packed_array);
-
-    return std::move(result).with_source_location(source_location);
+    return verilog_array_typet{
+      ID_verilog_packed_array, element_type, width, offset, range.increasing()}
+      .with_source_location(source_location);
   }
 }
 
@@ -171,19 +194,27 @@ typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
     throw errort().with_location(location)
       << "verilog_package_scope expects typedef_type on the rhs";
 
-  auto package_base_name = src.subtypes()[0].id();
-  auto typedef_base_name = src.subtypes()[1].get(ID_base_name);
+  auto package_base_name = src.subtypes()[0].get(ID_base_name);
+  auto typedef_base_name =
+    to_verilog_typedef_type(src.subtypes()[1]).base_name();
 
   // stitch together
   irep_idt full_identifier =
-    id2string(verilog_package_identifier(package_base_name)) + '.' +
-    id2string(typedef_base_name);
+    id2string(verilog_package_identifier(package_base_name)) +
+    "::" + id2string(typedef_base_name);
 
-  // recursive call
-  verilog_typedef_typet full_typedef_type(full_identifier);
-  full_typedef_type.set(ID_identifier, full_identifier);
+  // look it up
+  const symbolt *symbol_ptr;
 
-  return elaborate_type(full_typedef_type);
+  if(ns.lookup(full_identifier, symbol_ptr))
+    throw errort().with_location(location)
+      << "symbol " << typedef_base_name << " not found in package";
+
+  // must be type
+  if(!symbol_ptr->is_type)
+    throw errort().with_location(location) << "expected a type identifier";
+
+  return symbol_ptr->type;
 }
 
 /*******************************************************************\
@@ -334,18 +365,32 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_typedef_type)
   {
     // Look it up!
+    auto &typedef_type = to_verilog_typedef_type(src);
+    auto base_name = typedef_type.base_name();
     const symbolt *symbol_ptr;
+    auto import = typedef_type.import();
+    if(import != irep_idt{})
+    {
+      auto full_identifier = "Verilog::package::" + id2string(import);
 
-    auto identifier = to_verilog_typedef_type(src).identifier();
+      if(ns.lookup(full_identifier, symbol_ptr))
+      {
+        DATA_INVARIANT(false, "failed to find imported typedef identifier");
+      }
+    }
+    else
+    {
+      symbol_ptr = resolve(base_name);
+    }
 
-    if(ns.lookup(identifier, symbol_ptr))
+    if(symbol_ptr == nullptr)
       throw errort().with_location(source_location)
-        << "type symbol " << identifier << " not found";
+        << "type symbol " << base_name << " not found";
 
     DATA_INVARIANT(symbol_ptr->is_type, "typedef symbols must be types");
 
     // elaborate that typedef symbol, recursively, if needed
-    elaborate_symbol_rec(identifier);
+    elaborate_symbol_rec(symbol_ptr->name);
 
     auto result = symbol_ptr->type; // copy
     return result.with_source_location(source_location);
@@ -359,7 +404,8 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
                     ? elaborate_type(enum_type.base_type())
                     : signedbv_typet(32);
     result.set(ID_C_verilog_type, ID_verilog_enum);
-    result.set(ID_C_identifier, enum_type.identifier());
+    const auto identifier = hierarchical_identifier(enum_type.base_name());
+    result.set(ID_C_identifier, identifier);
     return result.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_event)
@@ -425,11 +471,26 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
       }
     }
 
+    bool is_packed = src.get_bool(ID_packed);
+
+    if(is_packed)
+    {
+      // all components must be packed themselves
+      for(auto &component : components)
+      {
+        if(!is_packed_type(component.type()))
+        {
+          throw errort{}.with_location(component.source_location())
+            << "packed compound must not contain unpacked member";
+        }
+      }
+    }
+
     auto result =
       struct_union_typet{src.id(), std::move(components)}.with_source_location(
         src.source_location());
 
-    if(src.get_bool(ID_packed))
+    if(is_packed)
       result.set(ID_packed, true);
 
     return result;

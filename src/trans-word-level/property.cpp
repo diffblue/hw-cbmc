@@ -660,7 +660,7 @@ static obligationst property_obligations_rec(
       {
         // The sequence must not match.
         if(!match.empty_match())
-          obligations.add(match.end_time, not_exprt{match.condition()});
+          obligations.add(match.end_time(), not_exprt{match.condition()});
       }
 
       return obligations;
@@ -725,14 +725,15 @@ static obligationst property_obligations_rec(
       // The RHS of the non-overlapped implication starts one timeframe later,
       // unless the LHS is an empty match.
       auto t_rhs = !overlapped && !lhs_match_point.empty_match()
-                     ? lhs_match_point.end_time + 1
-                     : lhs_match_point.end_time;
+                     ? lhs_match_point.end_time() + 1
+                     : lhs_match_point.end_time();
 
       // Do we exceed the bound? Make it 'true'
       if(t_rhs >= no_timeframes)
       {
-        DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
-        return obligationst{no_timeframes - 1, true_exprt()};
+        // The consequent can't be checked beyond the bound.
+        // The implication is vacuously true for this match point.
+        continue;
       }
 
       // Get obligations for RHS
@@ -778,7 +779,7 @@ static obligationst property_obligations_rec(
         continue;
       }
 
-      mp_integer property_start = match.end_time;
+      mp_integer property_start = match.end_time();
 
       // #=# advances the clock by one from the sequence match point,
       // unless the LHS is an empty match.
@@ -829,7 +830,7 @@ static obligationst property_obligations_rec(
       if(!match.empty_match())
       {
         disjuncts.push_back(match.condition());
-        max = std::max(max, match.end_time);
+        max = std::max(max, match.end_time());
       }
     }
 

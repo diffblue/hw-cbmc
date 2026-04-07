@@ -1,6 +1,6 @@
 CORE broken-smt-backend
 xnor2.sv
-
+--top main
 ^\[main\.xnor_ok\] always !main\.xnor_in1 == main\.xnor_out: PROVED .*$
 ^\[main\.xnor_is_reduction_xnor\] always ~\^\{ main\.xnor_in1 \} == main\.xnor_out: PROVED .*$
 ^EXIT=0$

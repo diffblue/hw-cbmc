@@ -50,7 +50,7 @@ Function: verilog_typecheckt::check_module_ports
 void verilog_typecheckt::check_module_ports(
   const verilog_module_sourcet::port_listt &module_ports)
 {
-  auto &ports = to_module_type(module_symbol.type).ports();
+  auto &ports = to_module_type(module_symbol().type).ports();
   ports.clear();
   ports.reserve(module_ports.size());
   std::map<irep_idt, unsigned> port_names;
@@ -71,7 +71,7 @@ void verilog_typecheckt::check_module_ports(
     if(base_name.empty())
     {
       throw errort().with_location(decl.source_location())
-        << "empty port name (module " << module_symbol.base_name << ')';
+        << "empty port name (module " << module_symbol().base_name << ')';
     }
 
     if(port_names.find(base_name) != port_names.end())
@@ -144,73 +144,6 @@ void verilog_typecheckt::check_module_ports(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_inst
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::interface_inst(
-  const verilog_inst_baset &inst_module_item)
-{
-  for(auto &instance : inst_module_item.instances())
-    interface_inst(inst_module_item, instance);
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::interface_inst
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::interface_inst(
-  const verilog_inst_baset &statement,
-  const verilog_instt::instancet &op)
-{
-  bool primitive=statement.id()==ID_inst_builtin;
-  const exprt &range_expr = static_cast<const exprt &>(op.find(ID_range));
-
-  ranget range;
-
-  if(range_expr.is_nil() || range_expr.id().empty())
-    range = ranget{0, 0};
-  else
-    range = convert_range(range_expr);
-
-  irep_idt instantiated_module_identifier =
-    verilog_module_symbol(id2string(statement.get(ID_module)));
-
-  // add symbol for the module instance
-  symbolt symbol;
-
-  symbol.mode=mode;
-  symbol.base_name = op.base_name();
-  symbol.type=typet(primitive?ID_primitive_module_instance:ID_module_instance);
-  symbol.module=module_identifier;
-  symbol.name = hierarchical_identifier(symbol.base_name);
-  symbol.pretty_name=strip_verilog_prefix(symbol.name);
-  symbol.value.set(ID_module, instantiated_module_identifier);
-
-  if(symbol_table.add(symbol))
-  {
-    throw errort().with_location(op.source_location())
-      << "duplicate definition of identifier `" << symbol.base_name
-      << "' in module `" << module_symbol.base_name << '\'';
-  }
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::interface_generate_block
 
   Inputs:
@@ -258,10 +191,7 @@ void verilog_typecheckt::interface_module_item(
   if(module_item.id()==ID_decl)
   {
   }
-  else if(module_item.id() == ID_verilog_function_decl)
-  {
-  }
-  else if(module_item.id() == ID_verilog_task_decl)
+  else if(module_item.id() == ID_verilog_generate_decl)
   {
   }
   else if(module_item.id()==ID_parameter_decl ||
@@ -270,9 +200,11 @@ void verilog_typecheckt::interface_module_item(
     // already done by elaborate_parameters
   }
   else if(module_item.id() == ID_inst)
-    interface_inst(to_verilog_inst(module_item));
+  {
+  }
   else if(module_item.id() == ID_inst_builtin)
-    interface_inst(to_verilog_inst_builtin(module_item));
+  {
+  }
   else if(
     module_item.id() == ID_verilog_always ||
     module_item.id() == ID_verilog_always_comb ||
@@ -341,6 +273,12 @@ void verilog_typecheckt::interface_module_item(
   {
   }
   else if(module_item.id() == ID_function_call)
+  {
+  }
+  else if(module_item.id() == ID_verilog_timeunit)
+  {
+  }
+  else if(module_item.id() == ID_verilog_timeprecision)
   {
   }
   else
@@ -428,9 +366,7 @@ Function: verilog_typecheckt::interface_block
 void verilog_typecheckt::interface_block(
   const verilog_blockt &statement)
 {
-  bool is_named=statement.is_named();
-  
-  if(is_named)
+  if(statement.is_named())
   {
     const irep_idt base_name = statement.base_name();
 
@@ -449,11 +385,11 @@ void verilog_typecheckt::interface_block(
     {
       throw errort().with_location(statement.source_location())
         << "duplicate definition of identifier `" << symbol.base_name
-        << "' in module `" << module_symbol.base_name << '\'';
+        << "' in module `" << module_symbol().base_name << '\'';
     }
-
-    enter_named_block(base_name);
   }
+
+  enter_named_block(statement.block_id());
 
   // do decl
   const exprt &decl=static_cast<const exprt &>(
@@ -468,6 +404,5 @@ void verilog_typecheckt::interface_block(
   for(auto &block_statement : statement.statements())
     interface_statement(block_statement);
 
-  if(is_named)
-    named_blocks.pop_back();
+  named_blocks.pop_back();
 }

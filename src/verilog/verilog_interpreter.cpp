@@ -58,8 +58,9 @@ void verilog_typecheckt::verilog_interpreter(
   {
     const verilog_fort &verilog_for=to_verilog_for(statement);
 
-    verilog_interpreter(verilog_for.initialization());
-    
+    for(auto &init : verilog_for.initialization())
+      verilog_interpreter(init);
+
     while(true)
     {
       exprt cond = elaborate_constant_expression(verilog_for.condition());

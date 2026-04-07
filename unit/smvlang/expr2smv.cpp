@@ -13,6 +13,7 @@ Author: Daniel Kroening, Amazon, dkr@amazon.com
 #include <util/symbol_table.h>
 
 #include <smvlang/expr2smv.h>
+#include <temporal-logic/ctl.h>
 #include <testing-utils/use_catch.h>
 
 SCENARIO("Generating SMV expression strings")
@@ -34,5 +35,11 @@ SCENARIO("Generating SMV expression strings")
     auto n = [t](mp_integer i) { return from_integer(i, t); };
     auto expr = plus_exprt{n(3), plus_exprt{n(4), n(2)}};
     REQUIRE(expr2smv(expr, empty_ns) == "3 + 4 + 2");
+  }
+
+  GIVEN("A binary CTL operator")
+  {
+    auto expr = AU_exprt{true_exprt(), false_exprt()};
+    REQUIRE(expr2smv(expr, empty_ns) == "A [TRUE U FALSE]");
   }
 }

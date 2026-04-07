@@ -1,7 +1,7 @@
 CORE
 index-of-real.sv
 
-^file .* line 5: bit-select of real is not allowed$
+^file .* line 5: expected a vector type, but got real$
 ^EXIT=2$
 ^SIGNAL=0$
 --

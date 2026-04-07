@@ -63,11 +63,30 @@ static void preprocessor()
 
 }
 
+YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
+{
+  dest.id(ID_verilog_identifier);
+  dest.set(ID_base_name, base_name);
+  PARSER.set_source_location(dest);
+  auto scope_ptr = PARSER.scopes.lookup(base_name);
+  if(scope_ptr == nullptr)
+  {
+    dest.set(ID_scope, PARSER.scopes.current_scope().prefix);
+    return TOK_NON_TYPE_IDENTIFIER; // default for unseen identifiers
+  }
+  else
+  {
+    dest.set(ID_scope, scope_ptr->prefix);
+    if(!scope_ptr->import.empty())
+      dest.set(ID_verilog_import, scope_ptr->import);
+    return scope_ptr->identifier_token();
+  }
+}
+
 #define IDENTIFIER(text) \
   { newstack(yyveriloglval); \
-    irep_idt irep_id = text; \
-    stack_expr(yyveriloglval).id(irep_id); \
-    return PARSER.scopes.identifier_token(irep_id); \
+    irep_idt base_name = text; /* hashing here */ \
+    return make_identifier(base_name, stack_expr(yyveriloglval)); \
   }
 #define KEYWORD(s, x) \
   { if(SCANNER.standard >= verilog_standardt::s) \
@@ -273,6 +292,8 @@ void verilog_scanner_init()
 "[+"            { SYSTEM_VERILOG_OPERATOR(TOK_LSQPLUS, "[+"); }
 "[="            { SYSTEM_VERILOG_OPERATOR(TOK_LSQEQUAL, "[="); }
 "[->"           { SYSTEM_VERILOG_OPERATOR(TOK_LSQMINUSGREATER, "[->"); }
+                /* port connections, patterns */
+".*"            { SYSTEM_VERILOG_OPERATOR(TOK_DOTASTERIC, ".*"); }
 
                 /* Verilog 1364-1995 keywords */
 
@@ -567,7 +588,11 @@ prove           { VL2SMV_VERILOG_KEYWORD(TOK_PROVE); }
 
                 /* Identifiers and numbers */
 
-\${Word}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_SYSIDENT; }
+\${Word}        { newstack(yyveriloglval);
+                  stack_expr(yyveriloglval).id(ID_verilog_identifier);
+                  stack_expr(yyveriloglval).set(ID_base_name, yytext);
+                  PARSER.set_source_location(stack_expr(yyveriloglval));
+                  return TOK_SYSIDENT; }
 {Binary}        { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Octal}         { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }
 {Decimal}       { newstack(yyveriloglval); stack_expr(yyveriloglval).id(yytext); return TOK_NUMBER; }

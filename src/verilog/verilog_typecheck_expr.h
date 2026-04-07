@@ -71,7 +71,7 @@ protected:
   [[nodiscard]] typet elaborate_type(const typet &);
   typet elaborate_package_scope_typedef(const verilog_package_scope_typet &);
   typet convert_enum(const class verilog_enum_typet &);
-  array_typet convert_unpacked_array_type(const type_with_subtypet &);
+  verilog_array_typet convert_unpacked_array_type(const type_with_subtypet &);
   typet convert_packed_array_type(const type_with_subtypet &);
 
   struct ranget
@@ -147,10 +147,17 @@ protected:
   }
 
   static typet enum_decay(const typet &);
+  void decay_to_vector(exprt &) const;
+  void array_decay(exprt &) const;
   void enum_decay(exprt &) const;
   void union_decay(exprt &) const;
   void struct_decay(exprt &) const;
   typet max_type(const typet &t1, const typet &t2);
+  static bool is_four_valued(const typet &type)
+  {
+    return type.id() == ID_verilog_signedbv ||
+           type.id() == ID_verilog_unsignedbv;
+  }
 
   // named blocks
   typedef std::vector<std::string> named_blockst;
@@ -174,8 +181,10 @@ protected:
 protected:
   [[nodiscard]] exprt convert_expr_rec(exprt expr);
   [[nodiscard]] exprt convert_constant(constant_exprt);
-  [[nodiscard]] exprt
-  convert_symbol(symbol_exprt, const std::optional<typet> &implicit_net_type);
+  [[nodiscard]] const symbolt *resolve(irep_idt base_name);
+  [[nodiscard]] exprt convert_verilog_identifier(
+    verilog_identifier_exprt,
+    const std::optional<typet> &implicit_net_type);
   [[nodiscard]] exprt
     convert_hierarchical_identifier(class hierarchical_identifier_exprt);
   [[nodiscard]] exprt convert_nullary_expr(nullary_exprt);
@@ -184,9 +193,8 @@ protected:
   [[nodiscard]] exprt convert_trinary_expr(ternary_exprt);
   [[nodiscard]] exprt convert_expr_concatenation(concatenation_exprt);
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
-  [[nodiscard]] exprt
-  convert_system_function(const irep_idt &identifier, function_call_exprt);
-  [[nodiscard]] exprt convert_bit_select_expr(binary_exprt);
+  [[nodiscard]] exprt convert_system_function(function_call_exprt);
+  [[nodiscard]] exprt convert_bit_select_expr(verilog_bit_select_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
   [[nodiscard]] exprt convert_power_expr(power_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);
@@ -195,7 +203,7 @@ protected:
   void tc_binary_expr(const exprt &expr, exprt &op0, exprt &op1);
   void convert_relation(binary_exprt &);
   void no_bool_ops(exprt &);
-  void must_be_integral(const exprt &);
+  void must_be_bit_vector(exprt &);
 
   // SVA
   void convert_sva(exprt &expr)
@@ -205,12 +213,15 @@ protected:
 
   void require_sva_sequence(exprt &);
   void require_sva_property(exprt &);
+  void require_vector(exprt &);
 
   [[nodiscard]] exprt convert_sva_rec(exprt);
   [[nodiscard]] exprt convert_unary_sva(unary_exprt);
   [[nodiscard]] exprt convert_binary_sva(binary_exprt);
   [[nodiscard]] exprt convert_ternary_sva(ternary_exprt);
   [[nodiscard]] exprt convert_other_sva(exprt);
+  [[nodiscard]] exprt
+    flatten_named_sequence_property(sva_sequence_property_instance_exprt);
 
   // system functions
   exprt bits(const exprt &);
@@ -222,6 +233,7 @@ protected:
   constant_exprt low(const exprt &);
   constant_exprt high(const exprt &);
   constant_exprt increment(const exprt &);
+  constant_exprt size(const exprt &);
   exprt typename_string(const exprt &);
 };
 

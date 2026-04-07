@@ -1,7 +1,7 @@
-KNOWNBUG
+CORE
 smv_ctlspec3.smv
 
-^file .* line 5: next\(...\) is not allowed here$
+^file .* line 8: next\(...\) is not allowed here$
 ^EXIT=2$
 ^SIGNAL=0$
 --

@@ -14,3 +14,8 @@ bool is_AGp(const exprt &expr)
 {
   return expr.id() == ID_AG && !has_temporal_operator(to_AG_expr(expr).op());
 }
+
+bool is_AFp(const exprt &expr)
+{
+  return expr.id() == ID_AF && !has_temporal_operator(to_AF_expr(expr).op());
+}

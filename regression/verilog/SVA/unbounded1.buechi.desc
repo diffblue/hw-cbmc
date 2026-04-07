@@ -1,0 +1,7 @@
+CORE buechi
+unbounded1.sv
+--buechi --module main --bound 1
+^\[.*\] always \(main\.a ##\[0:main\.upper\] main\.b\): UNSUPPORTED: sva_cycle_delay not convertible to Buechi$
+^EXIT=10$
+^SIGNAL=0$
+--

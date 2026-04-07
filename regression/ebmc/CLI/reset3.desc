@@ -1,0 +1,8 @@
+CORE
+reset3.sv
+--reset rst --aig --simple-netlist --bound 5
+^\[.*\] always \(disable iff \(main\.rst\) main\.data\): PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

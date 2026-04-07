@@ -1,9 +1,9 @@
 CORE
 basic2.sv
 
-^\[main\.a0\] always not s_eventually !main\.y: UNSUPPORTED: unsupported by k-induction$
+^\[main\.a0\] always not s_eventually !main\.y: ASSUMED$
 ^\[main\.a1\] always !main\.x: ASSUMED$
-^\[main\.p0\] always !main\.z: PROVED \(1-induction\)$
+^\[main\.p0\] always !main\.z: PROVED \(CT=1\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --

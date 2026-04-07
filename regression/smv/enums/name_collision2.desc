@@ -1,7 +1,7 @@
 CORE
 name_collision2.smv
 
-^file .* line 8: enum red already declared, at file .* line 3$
+^file .* line 8: identifier red already used as variable$
 ^EXIT=2$
 ^SIGNAL=0$
 --

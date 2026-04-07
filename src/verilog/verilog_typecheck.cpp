@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
+#include <ebmc/ebmc_error.h>
+
 #include "expr2verilog.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
@@ -60,11 +62,12 @@ void verilog_typecheckt::typecheck_port_connection(
   {
     // IEEE 1800 2017 6.10 allows implicit declarations of nets when
     // used in a port connection.
-    if(op.id() == ID_symbol)
+    if(op.id() == ID_verilog_identifier)
     {
       // The type of the implicit net is _not_ the type of the port,
       // but an "implicit scalar net of default net type".
-      op = convert_symbol(to_symbol_expr(op), bool_typet{});
+      op = convert_verilog_identifier(
+        to_verilog_identifier_expr(op), bool_typet{});
     }
     else
     {
@@ -120,10 +123,27 @@ void verilog_typecheckt::typecheck_port_connections(
     // We don't require that all ports are connected.
   
     std::set<irep_idt> assigned_ports;
+    bool wildcard = false;
 
     for(auto &connection : inst.connections())
     {
-      if(connection.id() != ID_named_port_connection)
+      if(connection.id() == ID_verilog_wildcard_port_connection)
+      {
+        // .*
+        if(wildcard)
+        {
+          // .* can only be given once
+          throw errort{}.with_location(connection.source_location())
+            << "wildcard connection given more than once";
+        }
+        else
+        {
+          wildcard = true;
+          continue;
+        }
+      }
+
+      if(connection.id() != ID_verilog_named_port_connection)
       {
         throw errort().with_location(inst.source_location())
           << "expected a named port connection";
@@ -133,25 +153,27 @@ void verilog_typecheckt::typecheck_port_connections(
         to_verilog_named_port_connection(connection);
 
       exprt &value = named_port_connection.value();
-      const irep_idt &name = named_port_connection.port().get(ID_identifier);
+      const irep_idt &base_name =
+        to_verilog_identifier_expr(named_port_connection.port()).base_name();
 
       bool found=false;
 
-      std::string identifier=
-        id2string(symbol.module)+"."+id2string(name);
+      std::string full_identifier =
+        id2string(symbol.module) + "." + id2string(base_name);
 
-      named_port_connection.port().set(ID_identifier, identifier);
+      named_port_connection.port() =
+        symbol_exprt{full_identifier, typet{}}.with_source_location(
+          named_port_connection.port());
 
-      if(assigned_ports.find(name)!=
-         assigned_ports.end())
+      if(assigned_ports.find(base_name) != assigned_ports.end())
       {
         throw errort().with_location(connection.source_location())
-          << "port name " << name << " assigned twice";
+          << "port name " << base_name << " assigned twice";
       }
 
       for(auto &port : ports)
       {
-        if(port.get(ID_identifier) == identifier)
+        if(port.identifier() == full_identifier)
         {
           found=true;
           typecheck_port_connection(value, port);
@@ -163,13 +185,13 @@ void verilog_typecheckt::typecheck_port_connections(
       if(!found)
       {
         throw errort().with_location(connection.source_location())
-          << "port name " << identifier << " not found";
+          << "port name " << base_name << " not found";
       }
 
-      assigned_ports.insert(identifier);
+      assigned_ports.insert(base_name);
     }
   }
-  else // just a list without names
+  else // Positional connections, i.e., just a list without port names
   {
     if(inst.connections().size() != ports.size())
     {
@@ -231,11 +253,12 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
   {
     // IEEE 1800 2017 6.10 allows implicit declarations of nets when
     // used in a port connection.
-    if(connection.id() == ID_symbol)
+    if(connection.id() == ID_verilog_identifier)
     {
       // The type of the implicit net is _not_ the type of the port,
       // but an "implicit scalar net of default net type".
-      connection = convert_symbol(to_symbol_expr(connection), bool_typet{});
+      connection = convert_verilog_identifier(
+        to_verilog_identifier_expr(connection), bool_typet{});
     }
     else
     {
@@ -262,8 +285,7 @@ Function: verilog_typecheckt::convert_function_or_task
 void verilog_typecheckt::convert_function_or_task(
   verilog_function_or_task_declt &decl)
 {
-  const std::string identifier =
-    id2string(module_identifier) + "." + id2string(decl.base_name());
+  const auto identifier = hierarchical_identifier(decl.base_name());
 
   auto result=symbol_table.get_writeable(identifier);
 
@@ -283,7 +305,8 @@ void verilog_typecheckt::convert_function_or_task(
   for(auto &inner_decl : decl.declarations())
     convert_decl(inner_decl);
 
-  convert_statement(decl.body());
+  for(auto &statement : decl.body().statements())
+    convert_statement(statement);
 
   function_or_task_name="";
   
@@ -319,22 +342,36 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   const symbolt &function_symbol=
     ns.lookup(to_symbol_expr(function_call.function()));
 
-  // typecheck it
-  auto decl = to_verilog_function_or_task_decl(function_symbol.value);
+  verilog_function_or_task_declt::bodyt function_body;
 
-  function_or_task_name = function_symbol.name;
+  // If the function is in a package, it is already type checked.
+  if(function_symbol.value.id() == ID_verilog_tf_source)
+  {
+    // typecheck it
+    auto decl = to_verilog_tf_source(function_symbol.value).decl();
 
-  for(auto &inner_decl : decl.declarations())
-    convert_decl(inner_decl);
+    function_or_task_name = function_symbol.name;
 
-  convert_statement(decl.body());
-  
+    for(auto &inner_decl : decl.declarations())
+      convert_decl(inner_decl);
+
+    for(auto &statement : decl.body().statements())
+      convert_statement(statement);
+
+    function_body = decl.body();
+  }
+  else
+  {
+    function_body = static_cast<const verilog_function_or_task_declt::bodyt &>(
+      function_symbol.value);
+  }
+
   const code_typet &code_type=
     to_code_type(function_symbol.type);
 
   const code_typet::parameterst &parameters=
     code_type.parameters();
-    
+
   if(parameters.size()!=arguments.size())
   {
     throw errort().with_location(function_call.source_location())
@@ -366,7 +403,8 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   }
 
   // interpret it
-  verilog_interpreter(decl.body());
+  for(auto &statement : function_body.statements())
+    verilog_interpreter(statement);
 
   function_or_task_name="";
   
@@ -393,38 +431,18 @@ Function: verilog_typecheckt::convert_decl
 
 void verilog_typecheckt::convert_decl(verilog_declt &decl)
 {
-  irep_idt decl_class=decl.get_class();
-
-  if(decl_class == ID_verilog_genvar)
-  {
-    // ignore here
-    return;
-  }
+  PRECONDITION(decl.get_class() != ID_function);
+  PRECONDITION(decl.get_class() != ID_task);
 
   for(auto &declarator : decl.declarators())
   {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
-    // in a named block?
-    irep_idt named_block;
-    if(!named_blocks.empty())
-      named_block = named_blocks.back();
+    irep_idt full_identifier = hierarchical_identifier(declarator.base_name());
+    symbolt &symbol = symbol_table_lookup(full_identifier);
 
     // fix the type and identifier
-    irep_idt full_identifier;
-
-    if(!function_or_task_name.empty())
-      full_identifier = id2string(function_or_task_name) + "." +
-                        id2string(named_block) +
-                        id2string(declarator.base_name());
-    else
-      full_identifier = id2string(module_identifier) + "." +
-                        id2string(named_block) +
-                        id2string(declarator.base_name());
-
-    symbolt &symbol = symbol_table_lookup(full_identifier);
     declarator.type() = symbol.type;
-
     declarator.identifier(full_identifier);
 
     if(declarator.has_value())
@@ -432,160 +450,6 @@ void verilog_typecheckt::convert_decl(verilog_declt &decl)
       auto &rhs = declarator.value();
       convert_expr(rhs);
       assignment_conversion(rhs, symbol.type);
-    }
-  }
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::convert_inst
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::convert_inst(verilog_instt &inst)
-{
-  const irep_idt &inst_module=inst.get_module();
-
-  // The instantiated module must be user-defined.
-
-  const irep_idt module_identifier =
-    verilog_module_symbol(id2string(inst_module));
-
-  exprt::operandst &parameter_assignments=
-    inst.parameter_assignments();
-
-  Forall_expr(it, parameter_assignments)
-  {
-    // These must be constants. Preserve the location.
-    if(it->id()==ID_named_parameter_assignment)
-    {
-      auto &value = static_cast<exprt &>(it->add(ID_value));
-      mp_integer v_int = convert_integer_constant_expression(value);
-      value = from_integer(v_int, integer_typet()).with_source_location(*it);
-    }
-    else
-    {
-      mp_integer v_int = convert_integer_constant_expression(*it);
-      *it = from_integer(v_int, integer_typet()).with_source_location(*it);
-    }
-  }
-
-  // get the instance symbols
-  for(auto &instance : inst.instances())
-  {
-    const auto instance_base_name = instance.base_name();
-
-    const irep_idt instance_identifier =
-      hierarchical_identifier(instance_base_name);
-
-    instance.identifier(instance_identifier);
-
-    // add relevant defparam assignments
-    auto &instance_defparams = defparams[instance_identifier];
-
-    irep_idt new_module_identifier = parameterize_module(
-      inst.source_location(),
-      module_identifier,
-      parameter_assignments,
-      instance_defparams);
-
-    inst.set_module(new_module_identifier);
-
-    symbolt &instance_symbol=symbol_table_lookup(instance_identifier);
-  
-    // fix the module in the instance symbol
-    instance_symbol.value.set(ID_module, new_module_identifier);
-
-    const symbolt &parameterized_module_symbol =
-      symbol_table_lookup(new_module_identifier);
-
-    // check the port connections
-    typecheck_port_connections(instance, parameterized_module_symbol);
-  }
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::convert_inst_builtin
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::convert_inst_builtin(
-  verilog_inst_builtint &inst)
-{
-  const irep_idt &inst_module=inst.get_module();
-
-  for(auto &instance : inst.instances())
-  {
-    typecheck_builtin_port_connections(instance);
-
-    // check built-in ones
-    if(inst_module==ID_bufif0 ||
-       inst_module==ID_bufif1 ||
-       inst_module==ID_notif0 ||
-       inst_module==ID_notif1)
-    {
-    
-    }
-    else if(inst_module==ID_nmos ||
-            inst_module==ID_pmos ||
-            inst_module==ID_rnmos ||
-            inst_module==ID_rpmos)
-    {
-
-    }
-    else if(inst_module==ID_and ||
-            inst_module==ID_nand ||
-            inst_module==ID_or ||
-            inst_module==ID_nor ||
-            inst_module==ID_xor ||
-            inst_module==ID_xnor)
-    {
-      if(instance.connections().size() < 2)
-      {
-        throw errort().with_location(instance.source_location())
-          << "Primitive gate " << inst_module
-          << " expects at least two operands";
-      }
-    }
-    else if(inst_module==ID_buf ||
-            inst_module==ID_not)
-    {
-      if(instance.connections().size() < 2)
-      {
-        throw errort().with_location(instance.source_location())
-          << "Primitive gate " << inst_module
-          << " expects at least two operands";
-      }
-    }
-    else if(inst_module=="tranif0" ||
-            inst_module=="tranif1" ||
-            inst_module=="rtranif1" ||
-            inst_module=="rtranif0")
-    {
-
-    }
-    else if(inst_module=="tran"  ||
-            inst_module=="rtran")
-    {
-
-    }
-    else
-    {
-      throw errort().with_location(inst.source_location())
-        << "Unknown primitive Verilog module " << inst_module;
     }
   }
 }
@@ -645,17 +509,12 @@ Function: verilog_typecheckt::convert_block
 
 void verilog_typecheckt::convert_block(verilog_blockt &statement)
 {
-  // these may be 'named blocks' with an identifier
-  bool is_named=statement.is_named();
-  
-  if(is_named)
-    enter_named_block(statement.base_name());
+  enter_named_block(statement.block_id());
 
   for(auto &block_statement : statement.statements())
     convert_statement(block_statement);
 
-  if(is_named)
-    named_blocks.pop_back();
+  named_blocks.pop_back();
 }
 
 /*******************************************************************\
@@ -686,6 +545,10 @@ void verilog_typecheckt::check_lhs(
     }
 
     check_lhs(to_extractbit_expr(lhs).src(), vassign);
+  }
+  else if(lhs.id() == ID_verilog_bit_select)
+  {
+    check_lhs(to_verilog_bit_select_expr(lhs).src(), vassign);
   }
   else if(lhs.id() == ID_verilog_non_indexed_part_select)
   {
@@ -765,6 +628,10 @@ void verilog_typecheckt::check_lhs(
     throw errort().with_location(lhs.source_location())
       << "no support for assignment patterns on LHS of an assignment";
   }
+  else if(lhs.id() == ID_typecast)
+  {
+    check_lhs(to_typecast_expr(lhs).op(), vassign);
+  }
   else
   {
     throw errort() << "typechecking: failed to get identifier on LHS "
@@ -839,14 +706,17 @@ void verilog_typecheckt::convert_continuous_assign(
     exprt &rhs = to_binary_expr(*it).rhs();
 
     // IEEE 1800 2017 6.10 allows implicit declarations of nets when
-    // used as the LHS of a continuous assignment. The type is derived
-    // from the RHS, and hence, we convert that first.
-    convert_expr(rhs);
-
-    if(lhs.id() == ID_symbol)
-      lhs = convert_symbol(to_symbol_expr(lhs), rhs.type());
+    // used as the LHS of a continuous assignment. The type is _not_
+    // derived from the RHS, but instead a "scalar net of default net type".
+    if(lhs.id() == ID_verilog_identifier)
+    {
+      lhs = convert_verilog_identifier(
+        to_verilog_identifier_expr(lhs), unsignedbv_typet{1});
+    }
     else
       convert_expr(lhs);
+
+    convert_expr(rhs);
 
     assignment_conversion(rhs, lhs.type());
 
@@ -869,26 +739,30 @@ Function: verilog_typecheckt::convert_function_call_or_task_enable
 void verilog_typecheckt::convert_function_call_or_task_enable(
   verilog_function_callt &statement)
 {
-  irep_idt base_name=
-    to_symbol_expr(statement.function()).get_identifier();
-
-  // We ignore everyting that starts with a '$',
-  // e.g., $display etc
-
-  if(!base_name.empty() && base_name[0]=='$')
+  if(statement.is_system_function_call())
   {
+    // we ignore all of these
   }
   else
   {
+    irep_idt base_name =
+      to_verilog_identifier_expr(statement.function()).base_name();
+
     // look it up
-    const irep_idt full_identifier =
+    irep_idt full_identifier =
       id2string(module_identifier) + "." + id2string(base_name);
 
     const symbolt *symbol;
     if(ns.lookup(full_identifier, symbol))
     {
-      throw errort().with_location(statement.function().source_location())
-        << "unknown function or task `" << base_name << "'";
+      // not there? Try compilation-unit scope.
+      full_identifier = "Verilog::$unit." + id2string(base_name);
+
+      if(ns.lookup(full_identifier, symbol))
+      {
+        throw errort().with_location(statement.function().source_location())
+          << "unknown function or task `" << base_name << "'";
+      }
     }
 
     if(symbol->type.id() != ID_code)
@@ -915,61 +789,8 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       assignment_conversion(arguments[i], parameter_types[i].type());
     }
 
-    statement.function().type() = symbol->type;
-    statement.function().set(ID_identifier, symbol->name);
-  }
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::convert_paramter_override
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::convert_parameter_override(
-  const verilog_parameter_overridet &module_item)
-{
-  for(auto &assignment : module_item.assignments())
-  {
-    // Copy the lhs/rhs.
-    exprt lhs = to_binary_expr(assignment).lhs();
-    exprt rhs = to_binary_expr(assignment).rhs();
-
-    // The lhs is a sequence of module instance names using
-    // hierarchical_identifier expressions.
-    convert_expr(lhs);
-
-    // turn into identifier
-    if(lhs.id() != ID_hierarchical_identifier)
-    {
-      throw errort().with_location(module_item.source_location())
-        << "defparam expected to have a hierachical identifier";
-    }
-
-    const auto &hierarchical_identifier = to_hierarchical_identifier_expr(lhs);
-
-    if(hierarchical_identifier.module().id() != ID_symbol)
-    {
-      throw errort().with_location(module_item.source_location())
-        << "defparam expected to have a single level identifier";
-    }
-
-    auto module_instance =
-      to_symbol_expr(hierarchical_identifier.module()).get_identifier();
-    auto parameter_name = hierarchical_identifier.item().get_identifier();
-
-    // The rhs must be a constant at this point.
-    auto rhs_value =
-      from_integer(convert_integer_constant_expression(rhs), integer_typet());
-
-    // store the assignment
-    defparams[module_instance][parameter_name] = rhs_value;
+    statement.function() =
+      symbol->symbol_expr().with_source_location(statement.function());
   }
 }
 
@@ -1054,12 +875,10 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   // We create a symbol for the property.
   // The 'value' of the symbol is set by synthesis.
-  const irep_idt &identifier = module_item.identifier();
-
-  irep_idt base_name;
+  irep_idt base_name = module_item.base_name();
 
   // The label is optional.
-  if(identifier == irep_idt())
+  if(base_name == irep_idt{})
   {
     std::string kind = module_item.id() == ID_verilog_assert_property ? "assert"
                        : module_item.id() == ID_verilog_assume_property
@@ -1069,10 +888,8 @@ void verilog_typecheckt::convert_assert_assume_cover(
                                                                        : "";
 
     assertion_counter++;
-    base_name = kind + "." + std::to_string(assertion_counter);
+    base_name = kind + '.' + std::to_string(assertion_counter);
   }
-  else
-    base_name = identifier;
 
   // The assert/assume/cover module items use the module name space
   std::string full_identifier =
@@ -1124,15 +941,14 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   // We create a symbol for the property.
   // The 'value' is set by synthesis.
-  const irep_idt &identifier = statement.identifier();
+  irep_idt base_name = statement.base_name();
 
-  irep_idt base_name;
-
-  if(identifier == irep_idt())
+  if(base_name == irep_idt{})
   {
     std::string kind = statement.id() == ID_verilog_immediate_assert  ? "assert"
                        : statement.id() == ID_verilog_assert_property ? "assert"
                        : statement.id() == ID_verilog_smv_assert      ? "assert"
+                       : statement.id() == ID_verilog_immediate_cover ? "cover"
                        : statement.id() == ID_verilog_cover_property  ? "cover"
                        : statement.id() == ID_verilog_cover_sequence  ? "cover"
                        : statement.id() == ID_verilog_immediate_assume
@@ -1142,10 +958,8 @@ void verilog_typecheckt::convert_assert_assume_cover(
                                                                       : "";
 
     assertion_counter++;
-    base_name = kind + "." + std::to_string(assertion_counter);
+    base_name = kind + '.' + std::to_string(assertion_counter);
   }
-  else
-    base_name = identifier;
 
   // We produce a full hierarchical identifier for the SystemVerilog immediate
   // and concurrent assertion statements.
@@ -1199,35 +1013,6 @@ void verilog_typecheckt::convert_assume(verilog_assume_statementt &statement)
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::convert_case_values
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::convert_case_values(
-  exprt &values,
-  const exprt &case_operand)
-{
-  if(values.id()==ID_default)
-    return;
-
-  Forall_operands(it, values)
-  {
-    convert_expr(*it);
-
-    // This works like a relational operator, not like an assignment
-    typet t=max_type(it->type(), case_operand.type());
-    downwards_type_propagation(*it, t);
-  }
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::convert_case
 
   Inputs:
@@ -1241,23 +1026,57 @@ Function: verilog_typecheckt::convert_case
 void verilog_typecheckt::convert_case(
   verilog_case_baset &statement)
 {
-  if(statement.operands().size()<1)
+  if(statement.operands().size() < 1)
   {
     throw errort().with_location(statement.source_location())
       << "case statement expected to have at least one operand";
   }
 
-  exprt &case_operand=statement.case_operand();
+  exprt &case_operand = statement.case_operand();
 
   convert_expr(case_operand);
 
-  for(unsigned i=1; i<statement.operands().size(); i++)
-  {
-    verilog_case_itemt &e=
-      to_verilog_case_item(statement.operands()[i]);
+  // Per 1800-2017 12.5, the bit length of all expressions in
+  // a case statement shall be the maximum of all of them.
+  // First pass: typecheck all case item values and find the
+  // maximum type.
+  typet max_t = case_operand.type();
 
-    convert_case_values(e.case_value(), case_operand);
+  for(auto op_it = std::next(statement.operands().begin());
+      op_it != statement.operands().end();
+      ++op_it)
+  {
+    verilog_case_itemt &e = to_verilog_case_item(*op_it);
+
+    auto &values = e.case_value();
+    if(values.id() != ID_default)
+    {
+      for(auto &op : values.operands())
+      {
+        convert_expr(op);
+        max_t = max_type(max_t, op.type());
+      }
+    }
+
     convert_statement(e.case_statement());
+  }
+
+  // Second pass: propagate the maximum type to the case operand
+  // and all case item values.
+  downwards_type_propagation(case_operand, max_t);
+
+  for(auto op_it = std::next(statement.operands().begin());
+      op_it != statement.operands().end();
+      ++op_it)
+  {
+    verilog_case_itemt &e = to_verilog_case_item(*op_it);
+
+    auto &values = e.case_value();
+    if(values.id() != ID_default)
+    {
+      for(auto &op : values.operands())
+        downwards_type_propagation(op, max_t);
+    }
   }
 }
 
@@ -1358,7 +1177,11 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
       << "for expected to have four operands";
   }
 
-  convert_statement(statement.initialization());
+  if(statement.has_scope())
+    enter_named_block(statement.block_id());
+
+  for(auto &init : statement.initialization())
+    convert_statement(init);
 
   exprt &condition=statement.condition();
   convert_expr(condition);
@@ -1366,6 +1189,9 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
 
   convert_statement(statement.inc_statement());
   convert_statement(statement.body());
+
+  if(statement.has_scope())
+    named_blocks.pop_back();
 }
 
 /*******************************************************************\
@@ -1540,6 +1366,7 @@ void verilog_typecheckt::convert_statement(
     statement.id() == ID_verilog_immediate_assert ||
     statement.id() == ID_verilog_assert_property ||
     statement.id() == ID_verilog_smv_assert ||
+    statement.id() == ID_verilog_immediate_cover ||
     statement.id() == ID_verilog_cover_property ||
     statement.id() == ID_verilog_cover_sequence)
   {
@@ -1585,7 +1412,14 @@ void verilog_typecheckt::convert_statement(
   else if(statement.id()==ID_function_call)
     convert_function_call_or_task_enable(to_verilog_function_call(statement));
   else if(statement.id()==ID_decl)
-    convert_decl(to_verilog_decl(statement));
+  {
+    auto decl_class = to_verilog_decl(statement).get_class();
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+    }
+    else
+      convert_decl(to_verilog_decl(statement));
+  }
   else if(statement.id()==ID_force)
     convert_force(to_verilog_force(statement));
   else if(statement.id() == ID_verilog_label_statement)
@@ -1601,7 +1435,7 @@ void verilog_typecheckt::convert_statement(
       sub_statement.id() == ID_verilog_cover_sequence ||
       sub_statement.id() == ID_verilog_cover_property)
     {
-      sub_statement.set(ID_identifier, label_statement.label());
+      sub_statement.set(ID_base_name, label_statement.label());
     }
 
     convert_statement(sub_statement);
@@ -1650,13 +1484,17 @@ void verilog_typecheckt::convert_module_item(
   }
   else if(module_item.id()==ID_decl)
   {
-    convert_decl(to_verilog_decl(module_item));
+    auto decl_class = to_verilog_decl(module_item).get_class();
+
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+      convert_function_or_task(to_verilog_function_or_task_decl(module_item));
+    }
+    else
+      convert_decl(to_verilog_decl(module_item));
   }
-  else if(
-    module_item.id() == ID_verilog_function_decl ||
-    module_item.id() == ID_verilog_task_decl)
+  else if(module_item.id() == ID_verilog_generate_decl)
   {
-    convert_function_or_task(to_verilog_function_or_task_decl(module_item));
   }
   else if(module_item.id()==ID_parameter_decl ||
           module_item.id()==ID_local_parameter_decl)
@@ -1695,9 +1533,11 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id()==ID_continuous_assign)
     convert_continuous_assign(to_verilog_continuous_assign(module_item));
   else if(module_item.id()==ID_inst)
-    convert_inst(to_verilog_inst(module_item));
+  {
+  }
   else if(module_item.id()==ID_inst_builtin)
-    convert_inst_builtin(to_verilog_inst_builtin(module_item));
+  {
+  }
   else if(module_item.id()==ID_generate_block)
   {
     // these introduce a scope, much like a named block
@@ -1777,6 +1617,12 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_function_call)
   {
   }
+  else if(module_item.id() == ID_verilog_timeunit)
+  {
+  }
+  else if(module_item.id() == ID_verilog_timeprecision)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
@@ -1802,17 +1648,19 @@ void verilog_typecheckt::convert_property_declaration(
   auto base_name = declaration.base_name();
   auto full_identifier = hierarchical_identifier(base_name);
 
-  convert_sva(declaration.cond());
-  require_sva_property(declaration.cond());
+  // 1800-2017 F.4.1
+  // Typechecking of the property expression has to be delayed
+  // until the instance is known, owing to untyped ports.
+  declaration.type() = verilog_sva_named_property_typet{};
 
-  auto type = verilog_sva_property_typet{};
+  // The symbol uses the full declaration as value
+  auto type = verilog_sva_named_property_typet{};
   symbolt symbol{full_identifier, type, mode};
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;
   symbol.pretty_name = strip_verilog_prefix(symbol.name);
-  symbol.is_macro = true;
-  symbol.value = declaration.cond();
+  symbol.value = declaration;
   symbol.location = declaration.source_location();
 
   add_symbol(std::move(symbol));
@@ -1836,17 +1684,19 @@ void verilog_typecheckt::convert_sequence_declaration(
   auto base_name = declaration.base_name();
   auto full_identifier = hierarchical_identifier(base_name);
 
-  auto &sequence = declaration.sequence();
-  convert_sva(sequence);
-  require_sva_sequence(sequence);
+  // 1800-2017 F.4.1
+  // Typechecking of the sequence expression has to be delayed
+  // until the instance is known, owing to untyped ports.
+  declaration.type() = verilog_sva_named_sequence_typet{};
 
-  symbolt symbol{full_identifier, sequence.type(), mode};
+  // The symbol uses the full declaration as value
+  auto type = verilog_sva_named_sequence_typet{};
+  symbolt symbol{full_identifier, type, mode};
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;
   symbol.pretty_name = strip_verilog_prefix(symbol.name);
-  symbol.is_macro = true;
-  symbol.value = declaration.sequence();
+  symbol.value = declaration;
   symbol.location = declaration.source_location();
 
   add_symbol(std::move(symbol));
@@ -1867,23 +1717,6 @@ Function: verilog_typecheckt::convert_statements
 void verilog_typecheckt::convert_statements(
   verilog_module_exprt &verilog_module_expr)
 {
-  // Do defparam, also known as 'parameter override'.
-  // These must all be done before any module instantiation,
-  // which use the parameters.
-  for(auto &item : verilog_module_expr.module_items())
-  {
-    if(item.id() == ID_parameter_override)
-      convert_parameter_override(to_verilog_parameter_override(item));
-    else if(item.id() == ID_set_genvars)
-    {
-      for(auto &sub_item : item.operands())
-      {
-        if(sub_item.id() == ID_parameter_override)
-          convert_parameter_override(to_verilog_parameter_override(sub_item));
-      }
-    }
-  }
-
   // typecheck the new module items
   for(auto &item : verilog_module_expr.module_items())
     convert_module_item(item);
@@ -1928,7 +1761,7 @@ bool verilog_typecheckt::implicit_wire(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::typecheck
+Function: verilog_typecheckt::typecheck_design_element
 
   Inputs:
 
@@ -1938,16 +1771,19 @@ Function: verilog_typecheckt::typecheck
 
 \*******************************************************************/
 
-void verilog_typecheckt::typecheck()
+void verilog_typecheckt::typecheck_design_element(symbolt &symbol)
 {
-  module_identifier = module_symbol.name;
+  module_identifier = symbol.name;
 
   const auto &module_source =
-    to_verilog_module_source(module_symbol.type.find(ID_module_source));
+    to_verilog_module_source(symbol.type.find(ID_module_source));
 
   // Elaborate the named constants (parameters, enums),
   // generate constructs, and add the symbols to the symbol table.
   auto verilog_module_expr = elaborate(module_source);
+
+  // submodules
+  process_module_instantiations(verilog_module_expr);
 
   // Create symbols for the functions, tasks, registers/variables and wires.
   for(auto &module_item : verilog_module_expr.module_items())
@@ -1959,8 +1795,93 @@ void verilog_typecheckt::typecheck()
   // Now typecheck the generated statements.
   convert_statements(verilog_module_expr);
 
-  // store the module expression in module_symbol.value
-  module_symbol.value = std::move(verilog_module_expr);
+  // store the module expression in symbol.value
+  symbol.value = std::move(verilog_module_expr);
+
+  module_identifier = irep_idt{};
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::typecheck_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
+{
+  auto decl_class = decl.get_class();
+
+  if(decl_class == ID_typedef)
+  {
+    collect_symbols(decl);
+
+    for(auto identifier : symbols_added)
+      elaborate_symbol_rec(identifier);
+  }
+  else if(decl_class == ID_function || decl_class == ID_task)
+  {
+    auto &tf_decl = to_verilog_function_or_task_decl(decl);
+    collect_symbols(tf_decl);
+
+    // copy
+    auto tf_decl_copy = tf_decl;
+    convert_function_or_task(tf_decl_copy);
+  }
+  else
+    PRECONDITION(false);
+}
+
+/*******************************************************************\
+
+Function: copy_module_source
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbolt &copy_module_source(
+  const verilog_parse_treet::itemt module_item,
+  const irep_idt &module_identifier,
+  symbol_table_baset &symbol_table)
+{
+  auto &verilog_module_source = to_verilog_module_source(module_item);
+
+  // create the symbol
+  irep_idt base_name = verilog_module_source.base_name();
+
+  symbolt symbol{
+    id2string(module_identifier) + "$source",
+    typet{ID_module_source},
+    ID_Verilog};
+
+  symbol.base_name = base_name;
+  symbol.pretty_name = base_name;
+  symbol.module=symbol.name;
+  symbol.location = verilog_module_source.source_location();
+
+  symbol.type.add(ID_module_source) = verilog_module_source;
+
+  // put symbol in symbol_table
+
+  symbolt *new_symbol;
+
+  if(symbol_table.move(symbol, new_symbol))
+  {
+    throw ebmc_errort{}.with_location(verilog_module_source.source_location())
+      << "duplicate definition of module " << symbol.base_name;
+  }
+
+  return *new_symbol;
 }
 
 /*******************************************************************\
@@ -1976,55 +1897,54 @@ Function: verilog_typecheck
 \*******************************************************************/
 
 bool verilog_typecheck(
-  const verilog_parse_treet &parse_tree,
   symbol_table_baset &symbol_table,
   const irep_idt &module_identifier,
+  verilog_standardt standard,
   bool warn_implicit_nets,
   message_handlert &message_handler)
 {
-  verilog_parse_treet::item_mapt::const_iterator it =
-    parse_tree.item_map.find(id2string(verilog_item_key(module_identifier)));
+  // find module source symbol
+  symbol_tablet::symbolst::const_iterator it =
+    symbol_table.symbols.find(id2string(module_identifier) + "$source");
 
-  if(it == parse_tree.item_map.end())
-  {
-    messaget message(message_handler);
-    message.error() << "module `" << module_identifier << "' not found"
-                    << messaget::eom;
-    return true;
-  }
+  PRECONDITION(it != symbol_table.symbols.end());
 
-  auto &verilog_module_source = to_verilog_module_source(*it->second);
+  const symbolt &source_symbol = it->second;
 
-  // create the symbol
-  irep_idt base_name = verilog_module_source.base_name();
+  PRECONDITION(
+    symbol_table.symbols.find(module_identifier) == symbol_table.symbols.end());
 
-  symbolt symbol{module_identifier, module_typet{}, ID_Verilog};
+  // copy the symbol
+  symbolt symbol{source_symbol};
 
-  symbol.base_name = base_name;
-  symbol.pretty_name = base_name;
-  symbol.module=symbol.name;
-  symbol.location = verilog_module_source.source_location();
-
-  symbol.type.add(ID_module_source) = verilog_module_source;
+  symbol.name = module_identifier;
+  symbol.module = module_identifier;
+  symbol.type.id(ID_module);
 
   // put symbol in symbol_table
-
   symbolt *new_symbol;
 
-  if(symbol_table.move(symbol, new_symbol))
+  bool move_result = symbol_table.move(symbol, new_symbol);
+  CHECK_RETURN(!move_result);
+
+  verilog_typecheckt verilog_typecheck(
+    standard, warn_implicit_nets, symbol_table, message_handler);
+
+  try
   {
-    messaget message(message_handler);
-    message.error() << "duplicate definition of module " 
-                    << symbol.base_name << messaget::eom;
+    verilog_typecheck.typecheck_design_element(*new_symbol);
+  }
+
+  catch(const typecheckt::errort &e)
+  {
+    if(!e.what().empty())
+    {
+      verilog_typecheck.error().source_location = e.source_location();
+      verilog_typecheck.error() << e.what() << messaget::eom;
+    }
+
     return true;
   }
 
-  verilog_typecheckt verilog_typecheck(
-    parse_tree.standard,
-    warn_implicit_nets,
-    *new_symbol,
-    symbol_table,
-    message_handler);
-
-  return verilog_typecheck.typecheck_main();
+  return false;
 }

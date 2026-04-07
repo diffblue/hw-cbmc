@@ -33,9 +33,17 @@ public:
     
     inline bool is_latch() const { return vartype==vartypet::LATCH; }
     inline bool is_input() const { return vartype==vartypet::INPUT; }
+    inline bool is_output() const
+    {
+      return vartype == vartypet::OUTPUT;
+    }
     inline bool is_wire() const { return vartype==vartypet::WIRE; }
     inline bool is_nondet() const { return vartype==vartypet::NONDET; }
-    
+    bool has_next() const
+    {
+      return is_latch() || is_input() || is_wire() || is_output();
+    }
+
     struct bitt
     {
       // these are not guaranteed to be positive
@@ -55,7 +63,10 @@ public:
     {
     }
   };
-  
+
+  /// record variable given by its number as nondet
+  void record_as_nondet(literalt::var_not);
+
   void add(const irep_idt &id, unsigned bit_nr, const vart &var);
   
   void build_reverse_map();
@@ -128,6 +139,9 @@ public:
     wires.clear();
     map.clear();
   }
+
+  std::vector<mapt::const_iterator> sorted() const;
+  std::vector<mapt::iterator> sorted();
 };
  
 #endif

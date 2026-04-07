@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 compilation_unit_scope_function.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ compilation_unit_scope_function.sv
 --
 ^warning: ignoring
 --
-The function identifier is not found at the call site.

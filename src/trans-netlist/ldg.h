@@ -9,11 +9,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_TRANS_LDG_H
 #define CPROVER_TRANS_LDG_H
 
-#include <set>
-
 #include <util/graph.h>
 
 #include "netlist.h"
+
+#include <iosfwd>
+#include <set>
 
 struct ldg_nodet:public graph_nodet<>
 {
@@ -35,6 +36,8 @@ public:
   // latches that are to be considered
   void compute(const netlistt &netlist,
                const latchest &localization);
+
+  void output(const netlistt &, std::ostream &) const;
 };
 
 #endif

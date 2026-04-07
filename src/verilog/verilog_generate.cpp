@@ -52,6 +52,61 @@ void verilog_typecheckt::elaborate_generate_block(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::elaborate_generate_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::elaborate_generate_decl(
+  const verilog_generate_declt &generate_decl,
+  module_itemst &)
+{
+  symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
+
+  symbol.module = module_identifier;
+  symbol.value.make_nil();
+
+  for(auto &declarator : generate_decl.declarators())
+  {
+    DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
+
+    symbol.base_name = declarator.base_name();
+    symbol.location = declarator.source_location();
+
+    if(symbol.base_name.empty())
+      throw errort().with_location(generate_decl.source_location())
+        << "empty symbol name";
+
+    symbol.name = hierarchical_identifier(symbol.base_name);
+    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+
+    genvars[symbol.base_name] = -1;
+
+    add_symbol(symbol);
+
+    // When used in a for loop, these come with an initial value.
+    if(declarator.has_value())
+    {
+      mp_integer rhs = convert_integer_constant_expression(declarator.value());
+
+      if(rhs < 0)
+      {
+        throw errort().with_location(declarator.value().source_location())
+          << "must not assign negative value to genvar";
+      }
+
+      genvars[symbol.base_name] = rhs;
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_generate_item
 
   Inputs:
@@ -67,10 +122,14 @@ verilog_typecheckt::module_itemst verilog_typecheckt::elaborate_generate_item(
 {
   module_itemst dest;
 
-  if(module_item.id() == ID_generate_block)
+  if(module_item.id() == ID_generate_assign)
+    elaborate_generate_assign(to_verilog_generate_assign(module_item), dest);
+  else if(module_item.id() == ID_generate_block)
     elaborate_generate_block(to_verilog_generate_block(module_item), dest);
   else if(module_item.id() == ID_generate_case)
     elaborate_generate_case(to_verilog_generate_case(module_item), dest);
+  else if(module_item.id() == ID_verilog_generate_decl)
+    elaborate_generate_decl(to_verilog_generate_decl(module_item), dest);
   else if(module_item.id() == ID_generate_if)
     elaborate_generate_if(to_verilog_generate_if(module_item), dest);
   else if(module_item.id() == ID_generate_for)
@@ -170,13 +229,14 @@ void verilog_typecheckt::elaborate_generate_assign(
   const verilog_generate_assignt &statement,
   module_itemst &dest)
 {
-  if(statement.lhs().id() != ID_symbol)
+  if(statement.lhs().id() != ID_verilog_identifier)
   {
     throw errort().with_location(statement.lhs().source_location())
       << "expected symbol on left hand side of assignment";
   }
 
-  const irep_idt &identifier = to_symbol_expr(statement.lhs()).get_identifier();
+  const irep_idt &identifier =
+    to_verilog_identifier_expr(statement.lhs()).base_name();
 
   genvarst::iterator it=genvars.find(identifier);
   
@@ -210,16 +270,22 @@ Function: verilog_typecheckt::generate_for_loop_index
 \*******************************************************************/
 
 exprt verilog_typecheckt::generate_for_loop_index(
-  const exprt &initialization_statement) const
+  const verilog_module_itemt &initialization) const
 {
-  if(initialization_statement.id() == ID_generate_assign)
+  if(initialization.id() == ID_generate_assign)
   {
-    auto &assignment = to_binary_expr(initialization_statement);
+    auto &assignment = to_verilog_generate_assign(initialization);
     return assignment.lhs();
+  }
+  else if(initialization.id() == ID_verilog_generate_decl)
+  {
+    auto &decl = to_verilog_generate_decl(initialization);
+    PRECONDITION(decl.declarators().size() == 1);
+    return decl.declarators().front().verilog_identifier_expr();
   }
   else
   {
-    throw errort().with_location(initialization_statement.source_location())
+    throw errort().with_location(initialization.source_location())
       << "failed to determine generate loop index";
   }
 }
@@ -240,7 +306,7 @@ void verilog_typecheckt::elaborate_generate_for(
   const verilog_generate_fort &for_statement,
   module_itemst &dest)
 {
-  elaborate_generate_assign(for_statement.init(), dest);
+  elaborate_generate_item(for_statement.init(), dest);
 
   // work out what the loop index is
   auto loop_index = generate_for_loop_index(for_statement.init());

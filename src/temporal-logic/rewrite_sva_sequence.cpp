@@ -74,12 +74,35 @@ bool admits_empty(const exprt &expr)
     return admits_empty(first_match_expr.lhs()) &&
            admits_empty(first_match_expr.rhs());
   }
+  else if(expr.id() == ID_sva_and)
+  {
+    // admits_empty((r1 and r2)) = admits_empty(r1) && admits_empty(r2)
+    auto &and_expr = to_sva_and_expr(expr);
+    return admits_empty(and_expr.lhs()) && admits_empty(and_expr.rhs());
+  }
+  else if(expr.id() == ID_sva_sequence_throughout)
+  {
+    // admits_empty(e throughout r) = admits_empty(r)
+    auto &throughout_expr = to_sva_sequence_throughout_expr(expr);
+    return admits_empty(throughout_expr.sequence());
+  }
+  else if(expr.id() == ID_sva_sequence_within)
+  {
+    // admits_empty((r1 within r2)) = admits_empty(r1) && admits_empty(r2)
+    auto &within_expr = to_sva_sequence_within_expr(expr);
+    return admits_empty(within_expr.lhs()) && admits_empty(within_expr.rhs());
+  }
   else if(expr.id() == ID_sva_sequence_repetition_star)
   {
     // admits_empty(r[*0]) = 1
     // admits_empty(r[*1:$]) = admits_empty(r)
     auto &repetition_expr = to_sva_sequence_repetition_star_expr(expr);
-    if(repetition_expr.is_range())
+    if(!repetition_expr.repetitions_given())
+    {
+      // s[*], same as s[0:$]
+      return true;
+    }
+    else if(repetition_expr.is_range())
     {
       if(repetition_expr.from().is_zero())
         return true;
@@ -88,6 +111,9 @@ bool admits_empty(const exprt &expr)
     }
     else // singleton
     {
+      DATA_INVARIANT(
+        repetition_expr.is_singleton(),
+        "repetition must be singleton if not range");
       if(repetition_expr.repetitions().is_zero())
         return true;
       else

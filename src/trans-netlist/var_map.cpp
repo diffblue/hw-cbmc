@@ -13,6 +13,28 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: var_mapt::record_as_nondet
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void var_mapt::record_as_nondet(literalt::var_not var_no)
+{
+  bv_varidt varid{"nondet", nondets.size()};
+  var_mapt::vart &var = map[varid.id];
+  var.add_bit().current = literalt(var_no, false);
+  var.vartype = var_mapt::vart::vartypet::NONDET;
+  reverse_map.emplace(var_no, varid);
+  nondets.insert(var_no);
+}
+
+/*******************************************************************\
+
 Function: var_mapt::add
 
   Inputs:
@@ -59,9 +81,7 @@ void var_mapt::add(
   
   if(var.is_latch() || var.is_input())
   {
-    bv_varidt &reverse=reverse_map[v_current];
-    reverse.id=id;
-    reverse.bit_nr=bit_nr;
+    reverse_map.emplace(v_current, bv_varidt{id, bit_nr});
   }
 }
 
@@ -179,6 +199,64 @@ const bv_varidt &var_mapt::reverse(unsigned v) const
 
 /*******************************************************************\
 
+Function: var_mapt::sorted
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<var_mapt::mapt::const_iterator> var_mapt::sorted() const
+{
+  using iteratort = mapt::const_iterator;
+  std::vector<iteratort> iterators;
+  iterators.reserve(map.size());
+
+  for(auto it = map.begin(); it != map.end(); it++)
+    iterators.push_back(it);
+
+  std::sort(
+    iterators.begin(),
+    iterators.end(),
+    [](iteratort a, iteratort b) { return a->first.compare(b->first) < 0; });
+
+  return iterators;
+}
+
+/*******************************************************************\
+
+Function: var_mapt::sorted
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<var_mapt::mapt::iterator> var_mapt::sorted()
+{
+  using iteratort = mapt::iterator;
+  std::vector<iteratort> iterators;
+  iterators.reserve(map.size());
+
+  for(auto it = map.begin(); it != map.end(); it++)
+    iterators.push_back(it);
+
+  std::sort(
+    iterators.begin(),
+    iterators.end(),
+    [](iteratort a, iteratort b) { return a->first.compare(b->first) < 0; });
+
+  return iterators;
+}
+
+/*******************************************************************\
+
 Function: var_mapt::output
 
   Inputs:
@@ -193,14 +271,14 @@ void var_mapt::output(std::ostream &out) const
 {
   out << "Variable map:" << '\n';
 
-  for(mapt::const_iterator it=map.begin();
-      it!=map.end(); it++)
+  // sort by identifier to get stable output
+  for(auto map_it : sorted())
   {
-    const vart &var=it->second;
+    const vart &var = map_it->second;
 
     for(std::size_t i=0; i<var.bits.size(); i++)
     {
-      out << "  " << it->first;
+      out << "  " << map_it->first;
       if(var.bits.size()!=1) out << "[" << i << "]";
       out << "=";
 
@@ -215,12 +293,12 @@ void var_mapt::output(std::ostream &out) const
         if(l_c.sign()) out << "!";
         out << l_c.var_no();
       }
-      
-      if(var.vartype==vart::vartypet::LATCH)
+
+      if(var.has_next())
       {
         out << "->";
-        
-        literalt l_n=var.bits[i].next;
+
+        literalt l_n = var.bits[i].next;
 
         if(l_n.is_true())
           out << "true";
@@ -228,7 +306,8 @@ void var_mapt::output(std::ostream &out) const
           out << "false";
         else
         {
-          if(l_n.sign()) out << "!";
+          if(l_n.sign())
+            out << "!";
           out << l_n.var_no();
         }
       }

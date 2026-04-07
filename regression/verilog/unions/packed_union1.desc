@@ -1,0 +1,7 @@
+CORE
+packed_union1.sv
+
+^file .* line 2: error: packed compound must not contain unpacked member$
+^EXIT=6$
+^SIGNAL=0$
+--

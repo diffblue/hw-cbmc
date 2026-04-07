@@ -19,6 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_base.h"
 #include "verilog_types.h"
 
+#include <algorithm>
+
 verilog_wildcard_equality_exprt::verilog_wildcard_equality_exprt(
   exprt lhs,
   exprt rhs)
@@ -50,20 +52,30 @@ typet verilog_declaratort::merged_type(const typet &declaration_type) const
   return result;
 }
 
+static bool is_system_function_identifier(const exprt &function)
+{
+  return function.id() == ID_verilog_identifier &&
+         has_prefix(
+           id2string(to_verilog_identifier_expr(function).base_name()), "$");
+}
+
 bool function_call_exprt::is_system_function_call() const
 {
-  return function().id() == ID_symbol &&
-         has_prefix(
-           id2string(to_symbol_expr(function()).get_identifier()), "$");
+  return is_system_function_identifier(function());
+}
+
+bool verilog_function_callt::is_system_function_call() const
+{
+  return is_system_function_identifier(function());
 }
 
 void verilog_module_sourcet::show(std::ostream &out) const
 {
   out << "Module: " << base_name() << '\n';
 
-  out << "  Parameters:\n";
+  out << "  Parameter ports:\n";
 
-  for(auto &parameter : parameter_port_list())
+  for(auto &parameter : parameter_port_decls())
     out << "    " << parameter.pretty() << '\n';
 
   out << '\n';
@@ -83,40 +95,13 @@ void verilog_module_sourcet::show(std::ostream &out) const
   out << '\n';
 }
 
-static void
-dependencies_rec(const verilog_module_itemt &, std::vector<irep_idt> &);
-
-static void dependencies_rec(const exprt &expr, std::vector<irep_idt> &dest)
-{
-  for(const_depth_iteratort it = expr.depth_cbegin(); it != expr.depth_cend();
-      ++it)
-  {
-    if(it->id() == ID_verilog_package_scope)
-    {
-      auto &package_scope_expr = to_verilog_package_scope_expr(*it);
-      dest.push_back(
-        verilog_package_identifier(package_scope_expr.package_base_name()));
-    }
-  }
-}
-
-static void dependencies_rec(const typet &type, std::vector<irep_idt> &dest)
-{
-  if(type.id() == ID_verilog_package_scope)
-  {
-    auto &package_scope_type = to_verilog_package_scope_type(type);
-    dest.push_back(
-      verilog_package_identifier(package_scope_type.package_base_name()));
-  }
-}
-
 static void dependencies_rec(
   const verilog_module_itemt &module_item,
-  std::vector<irep_idt> &dest)
+  std::set<irep_idt> &dest)
 {
   if(module_item.id() == ID_inst)
   {
-    dest.push_back(
+    dest.insert(
       verilog_module_symbol(to_verilog_inst(module_item).get_module()));
   }
   else if(module_item.id() == ID_generate_block)
@@ -137,43 +122,14 @@ static void dependencies_rec(
   }
   else if(module_item.id() == ID_verilog_package_import)
   {
-    for(auto &import_item : module_item.get_sub())
-    {
-      dest.push_back(
-        verilog_package_identifier(import_item.get(ID_verilog_package)));
-    }
   }
   else if(module_item.id() == ID_parameter_decl)
   {
-    auto &parameter_decl = to_verilog_parameter_decl(module_item);
-    for(auto &decl : parameter_decl.declarations())
-    {
-      dependencies_rec(decl.type(), dest);
-      dependencies_rec(decl.value(), dest);
-    }
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
-    auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
-    for(auto &decl : localparam_decl.declarations())
-    {
-      dependencies_rec(decl.type(), dest);
-      dependencies_rec(decl.value(), dest);
-    }
   }
   else if(module_item.id() == ID_decl)
-  {
-    auto &decl = to_verilog_decl(module_item);
-    dependencies_rec(decl.type(), dest);
-    for(auto &declarator : decl.declarators())
-    {
-      dependencies_rec(declarator.type(), dest);
-      dependencies_rec(declarator.value(), dest);
-    }
-  }
-  else if(
-    module_item.id() == ID_verilog_function_decl ||
-    module_item.id() == ID_verilog_task_decl)
   {
   }
   else if(
@@ -182,11 +138,9 @@ static void dependencies_rec(
     module_item.id() == ID_verilog_always_ff ||
     module_item.id() == ID_verilog_always_latch)
   {
-    dependencies_rec(to_verilog_always_base(module_item).statement(), dest);
   }
   else if(module_item.id() == ID_initial)
   {
-    dependencies_rec(to_verilog_initial(module_item).statement(), dest);
   }
   else if(module_item.id() == ID_inst)
   {
@@ -231,9 +185,9 @@ static void dependencies_rec(
   }
 }
 
-std::vector<irep_idt> verilog_item_containert::dependencies() const
+std::set<irep_idt> verilog_item_containert::dependencies() const
 {
-  std::vector<irep_idt> result;
+  std::set<irep_idt> result;
 
   for(auto &item : items())
     dependencies_rec(item, result);
@@ -262,7 +216,7 @@ void verilog_checkert::show(std::ostream &out) const
 
 void verilog_packaget::show(std::ostream &out) const
 {
-  out << "Pacakge: " << base_name() << '\n';
+  out << "Package: " << base_name() << '\n';
 
   out << "  Items:\n";
 
@@ -437,7 +391,7 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
     }
     else // ID_verilog_indexed_part_select_minus
     {
-      bottom = bottom - width + 1;
+      bottom = index_int - src_offset - width + 1;
     }
 
     return extractbits_exprt{
@@ -448,8 +402,18 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
   {
     // Index not constant.
     // Use logical right-shift followed by (constant) extractbits.
-    auto index_adjusted =
-      minus_exprt{index, from_integer(src_offset, index.type())};
+    exprt index_adjusted;
+
+    if(part_select.id() == ID_verilog_indexed_part_select_plus)
+    {
+      index_adjusted =
+        minus_exprt{index, from_integer(src_offset, index.type())};
+    }
+    else // ID_verilog_indexed_part_select_minus
+    {
+      index_adjusted =
+        minus_exprt{index, from_integer(src_offset + width - 1, index.type())};
+    }
 
     auto src_shifted = lshr_exprt(src, index_adjusted);
 
@@ -545,4 +509,12 @@ exprt verilog_past_exprt::default_value() const
   auto value_opt = verilog_default_initializer(type());
   CHECK_RETURN(value_opt.has_value());
   return *value_opt;
+}
+
+bool verilog_fort::has_scope() const
+{
+  return std::any_of(
+    initialization().begin(),
+    initialization().end(),
+    [](const verilog_statementt &s) { return s.id() == ID_decl; });
 }

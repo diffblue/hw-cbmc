@@ -3,10 +3,10 @@ verilog1.sv
 --smv-word-level
 ^MODULE main$
 ^VAR x : unsigned word\[32\];$
-^INIT main\.x = 0ud32_0$
-^INVAR Verilog::main\.x_aux0 = main\.x \+ unsigned\(0sd32_1\)$
-^TRANS next\(main\.x\) = Verilog::main\.x_aux0$
-^LTLSPEC F main\.x = unsigned\(0sd32_10\)$
+^INIT x = 0ud32_0$
+^INVAR x_aux0 = x \+ unsigned\(0sd32_1\)$
+^TRANS next\(x\) = x_aux0$
+^LTLSPEC F x = unsigned\(0sd32_10\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --

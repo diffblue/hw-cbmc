@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 name_collision3.smv
 
-^EXIT=0$
+^file .* line 8: identifier red already used as enum$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This crashes.

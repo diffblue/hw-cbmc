@@ -1,7 +1,7 @@
 CORE
 already_declared3.smv
 
-^file .* line 8: variable x already declared, at file .* line 5$
+^file .* line 8: identifier x already used as variable$
 ^EXIT=2$
 ^SIGNAL=0$
 --

@@ -1,0 +1,6 @@
+MODULE main
+
+-- the index operator does not work on word types
+DEFINE some_bit := uwconst(123, 8)[0];
+
+SPEC some_bit

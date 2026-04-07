@@ -20,9 +20,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
-#include "ebmc_base.h"
 #include "ebmc_error.h"
 #include "output_file.h"
+#include "transition_system.h"
 #include "waveform.h"
 
 #include <algorithm>
@@ -112,7 +112,10 @@ Function: random_traces
 
 \*******************************************************************/
 
-int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
+int random_traces(
+  const transition_systemt &transition_system,
+  const cmdlinet &cmdline,
+  message_handlert &message_handler)
 {
   const auto number_of_traces = [&cmdline]() -> std::size_t {
     if(cmdline.isset("traces"))
@@ -171,9 +174,6 @@ int random_traces(const cmdlinet &cmdline, message_handlert &message_handler)
       return {};
   }();
 
-  transition_systemt transition_system =
-    get_transition_system(cmdline, message_handler);
-
   if(cmdline.isset("waveform") && cmdline.isset("vcd"))
     throw ebmc_errort() << "cannot do VCD and ASCII waveform simultaneously";
 
@@ -231,7 +231,10 @@ Function: random_trace
 
 \*******************************************************************/
 
-int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
+int random_trace(
+  const transition_systemt &transition_system,
+  const cmdlinet &cmdline,
+  message_handlert &message_handler)
 {
   if(cmdline.isset("traces"))
     throw ebmc_errort() << "must not give number of traces";
@@ -274,9 +277,6 @@ int random_trace(const cmdlinet &cmdline, message_handlert &message_handler)
     else
       return 10; // default
   }();
-
-  transition_systemt transition_system =
-    get_transition_system(cmdline, message_handler);
 
   auto consumer = [&](trans_tracet trace) -> void {
     namespacet ns(transition_system.symbol_table);

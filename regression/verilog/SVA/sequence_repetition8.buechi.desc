@@ -1,0 +1,10 @@
+CORE buechi
+sequence_repetition8.sv
+--buechi --bound 10
+^\[main\.p0\] \(main\.b \[->1\]\) \|=> main\.c: PROVED up to bound 10$
+^\[main\.p1\] \(main\.b \[=1\]\) \|=> main\.c: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

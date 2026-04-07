@@ -1,0 +1,11 @@
+CORE
+pending_intersect1.sv
+--bound 10
+^\[m\.a1\] always \(m\.req \|=> \(\(\(m\.ack \[->2\]\) intersect \(m\.ack \[->3\]\)\) ##0 m\.val == 1\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The two pending matches at the bound (from ack[->2] and ack[->3])
+have equal end_time, so 'intersect' combines them without propagating
+the pending status; ##0 then spuriously evaluates val at the bound.

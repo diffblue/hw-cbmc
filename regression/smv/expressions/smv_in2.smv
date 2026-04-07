@@ -1,0 +1,4 @@
+MODULE main
+
+SPEC 1 in { 1, 2, 3 }
+SPEC !(4 in { 1, 2, 3 })

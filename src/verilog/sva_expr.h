@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+#include "verilog_expr.h"
 #include "verilog_types.h"
 
 /// 1800-2017 16.6 Boolean expressions
@@ -1163,6 +1164,14 @@ public:
   {
   }
 
+  sva_cycle_delay_exprt(exprt lhs, constant_exprt cycles, exprt rhs)
+    : exprt{
+        ID_sva_cycle_delay,
+        verilog_sva_sequence_typet{},
+        {std::move(lhs), std::move(cycles), nil_exprt{}, std::move(rhs)}}
+  {
+  }
+
   sva_cycle_delay_exprt(constant_exprt cycles, exprt rhs)
     : exprt{
         ID_sva_cycle_delay,
@@ -2046,5 +2055,79 @@ enum class sva_sequence_semanticst
   WEAK,
   STRONG
 };
+
+/// a base class for both sequence and property instance expressions
+class sva_sequence_property_instance_exprt : public ternary_exprt
+{
+public:
+  sva_sequence_property_instance_exprt(
+    symbol_exprt _symbol,
+    exprt::operandst _arguments,
+    verilog_sequence_property_declaration_baset _declaration)
+    : ternary_exprt{
+        ID_sva_sequence_property_instance,
+        std::move(_symbol),
+        multi_ary_exprt{ID_arguments, std::move(_arguments), typet{}},
+        std::move(_declaration),
+        typet{}}
+  {
+  }
+
+  const symbol_exprt &symbol() const
+  {
+    return static_cast<const symbol_exprt &>(op0());
+  }
+
+  symbol_exprt &symbol()
+  {
+    return static_cast<symbol_exprt &>(op0());
+  }
+
+  exprt::operandst &arguments()
+  {
+    return op1().operands();
+  }
+
+  const exprt::operandst &arguments() const
+  {
+    return op1().operands();
+  }
+
+  verilog_sequence_property_declaration_baset &declaration()
+  {
+    return static_cast<verilog_sequence_property_declaration_baset &>(op2());
+  }
+
+  const verilog_sequence_property_declaration_baset &declaration() const
+  {
+    return static_cast<const verilog_sequence_property_declaration_baset &>(
+      op2());
+  }
+
+  /// Add the source location from \p other, if it has any.
+  sva_sequence_property_instance_exprt &&
+  with_source_location(const exprt &other) &&
+  {
+    if(other.source_location().is_not_nil())
+      add_source_location() = other.source_location();
+    return std::move(*this);
+  }
+};
+
+inline const sva_sequence_property_instance_exprt &
+to_sva_sequence_property_instance_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property_instance);
+  sva_sequence_property_instance_exprt::check(expr);
+  return static_cast<const sva_sequence_property_instance_exprt &>(expr);
+}
+
+inline sva_sequence_property_instance_exprt &
+to_sva_sequence_property_instance_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_sva_sequence_property_instance);
+  sva_sequence_property_instance_exprt::check(expr);
+  return static_cast<sva_sequence_property_instance_exprt &>(expr);
+}
 
 #endif

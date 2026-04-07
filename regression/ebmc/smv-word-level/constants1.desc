@@ -1,0 +1,8 @@
+CORE
+constants1.sv
+--smv-word-level
+^INVAR w1 = 0uh32_12345678$
+^INVAR w2 = 0ud32_12345678$
+^EXIT=0$
+^SIGNAL=0$
+--

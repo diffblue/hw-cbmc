@@ -1,6 +1,6 @@
 CORE broken-smt-backend
 nand2.sv
-
+--top main
 ^\[main\.nand_ok\] always !main\.nand_in1 == main\.nand_out: PROVED .*$
 ^\[main\.nand_is_reduction_nand\] always ~\&\{ main\.nand_in1 \} == main\.nand_out: PROVED .*$
 ^EXIT=0$

@@ -1,0 +1,9 @@
+KNOWNBUG
+parameter_without_default1.sv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This does not parse.

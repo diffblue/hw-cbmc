@@ -31,6 +31,12 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   {
     // done when we see the proper declaration
   }
+  else if(port_class == ID_verilog_port_expression)
+  {
+    // not supported yet
+    throw errort{}.with_location(decl.source_location())
+      << "no support for port expressions";
+  }
   else
   {
     // add the symbol
@@ -102,7 +108,8 @@ void verilog_typecheckt::collect_symbols(
   if(type.id() == ID_type)
   {
     // much like a typedef
-    auto symbol_type = to_be_elaborated_typet{declarator.type()};
+    auto symbol_type =
+      to_be_elaborated_typet{to_type_expr(declarator.value()).type()};
 
     type_symbolt symbol{full_identifier, symbol_type, mode};
 
@@ -193,17 +200,44 @@ void verilog_typecheckt::collect_symbols(const typet &type)
           from_integer(1, integer_typet()), tbd_type));
     }
 
+    // copy the type
+    auto enum_type_copy = enum_type;
+
+    for(auto &enum_name : enum_type_copy.enum_names())
+    {
+      const auto base_name = enum_name.base_name();
+      const auto identifier = hierarchical_identifier(base_name);
+      enum_name.identifier(identifier);
+    }
+
     // Add a symbol for the enum to the symbol table.
     // This allows looking up the enum name identifiers.
     {
-      auto identifier = enum_type.identifier();
-      type_symbolt enum_type_symbol(identifier, enum_type, mode);
+      const auto identifier = hierarchical_identifier(enum_type.base_name());
+      type_symbolt enum_type_symbol(identifier, enum_type_copy, mode);
       enum_type_symbol.module = module_identifier;
       enum_type_symbol.is_file_local = true;
       enum_type_symbol.location = enum_type.source_location();
       add_symbol(std::move(enum_type_symbol));
     }
   }
+}
+
+/// Returns true iff the given (pre-elaboration) type is a
+/// two-valued data type, recursing into packed arrays.
+static bool is_two_valued_type(const typet &type)
+{
+  if(
+    type.id() == ID_verilog_bit || type.id() == ID_verilog_byte ||
+    type.id() == ID_verilog_shortint || type.id() == ID_verilog_int ||
+    type.id() == ID_verilog_longint)
+  {
+    return true;
+  }
+  else if(type.id() == ID_verilog_packed_array)
+    return is_two_valued_type(to_type_with_subtype(type).subtype());
+  else
+    return false;
 }
 
 void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
@@ -222,9 +256,9 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       auto base_name = declarator.base_name();
       auto full_identifier = hierarchical_identifier(base_name);
+      auto type = to_be_elaborated_typet{declarator.merged_type(decl.type())};
 
-      symbolt symbol{
-        full_identifier, to_be_elaborated_typet(decl.type()), mode};
+      symbolt symbol{full_identifier, std::move(type), mode};
 
       symbol.module = module_identifier;
       symbol.base_name = base_name;
@@ -239,7 +273,8 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   }
   else if(
     decl_class == ID_input || decl_class == ID_output ||
-    decl_class == ID_output_register || decl_class == ID_inout)
+    decl_class == ID_output_register || decl_class == ID_inout ||
+    decl_class == ID_verilog_no_direction)
   {
     // If these are inputs/outputs of a function/task, then
     // adjust the function/task signature.
@@ -264,6 +299,11 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       {
         symbol.is_input = true;
         symbol.is_output = true;
+      }
+      else if(decl_class == ID_verilog_no_direction)
+      {
+        // functions/tasks only
+        DATA_INVARIANT(false, "unexpected verilog_no_direction");
       }
 
       for(auto &declarator : decl.declarators())
@@ -327,6 +367,16 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     }
     else
     {
+      symbolt &function_or_task_symbol =
+        symbol_table.get_writeable_ref(function_or_task_name);
+
+      // Terminology clash: these aren't called 'parameters'
+      // in Verilog terminology, but inputs and outputs.
+      // We'll use the C terminology, and call them parameters.
+      // Not to be confused with module parameters.
+      code_typet::parameterst &parameters =
+        to_code_type(function_or_task_symbol.type).parameters();
+
       symbolt symbol;
       bool input = false, output = false;
 
@@ -353,6 +403,21 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
         input = true;
         output = true;
       }
+      else if(decl_class == ID_verilog_no_direction)
+      {
+        // Otherwise, use the direction of the previous port.
+        if(parameters.empty())
+        {
+          // For the first port, the default direction is 'input'.
+          input = true;
+        }
+        else
+        {
+          // Otherwise, use the direction of the previous port.
+          input = parameters.back().get_bool(ID_input);
+          output = parameters.back().get_bool(ID_output);
+        }
+      }
 
       for(auto &declarator : decl.declarators())
       {
@@ -373,14 +438,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         if(input || output)
         {
-          // Terminology clash: these aren't called 'parameters'
-          // in Verilog terminology, but inputs and outputs.
-          // We'll use the C terminology, and call them parameters.
-          // Not to be confused with module parameters.
-          symbolt &function_or_task_symbol =
-            symbol_table.get_writeable_ref(function_or_task_name);
-          code_typet::parameterst &parameters =
-            to_code_type(function_or_task_symbol.type).parameters();
           parameters.push_back(code_typet::parametert(symbol.type));
           code_typet::parametert &parameter = parameters.back();
           parameter.set_base_name(symbol.base_name);
@@ -401,32 +458,6 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       }
     }
   }
-  else if(decl_class == ID_verilog_genvar)
-  {
-    symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
-
-    symbol.module = module_identifier;
-    symbol.value.make_nil();
-
-    for(auto &declarator : decl.declarators())
-    {
-      DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
-
-      symbol.base_name = declarator.base_name();
-      symbol.location = declarator.source_location();
-
-      if(symbol.base_name.empty())
-        throw errort().with_location(decl.source_location())
-          << "empty symbol name";
-
-      symbol.name = hierarchical_identifier(symbol.base_name);
-      symbol.pretty_name = strip_verilog_prefix(symbol.name);
-
-      genvars[symbol.base_name] = -1;
-
-      add_symbol(symbol);
-    }
-  }
   else if(
     decl_class == ID_wire || decl_class == ID_supply0 ||
     decl_class == ID_supply1 || decl_class == ID_triand ||
@@ -434,6 +465,13 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     decl_class == ID_tri0 || decl_class == ID_tri1 || decl_class == ID_uwire ||
     decl_class == ID_wire || decl_class == ID_wand || decl_class == ID_wor)
   {
+    // IEEE 1800-2017 6.7.1: nets require a four-valued data type
+    if(is_two_valued_type(decl.type()))
+    {
+      throw errort().with_location(decl.source_location())
+        << "nets must have a four-valued data type";
+    }
+
     symbolt symbol;
 
     symbol.mode = mode;
@@ -571,7 +609,7 @@ void verilog_typecheckt::collect_symbols(
 {
   typet return_type;
 
-  if(decl.id() == ID_verilog_function_decl)
+  if(decl.get_class() == ID_function)
     return_type = elaborate_type(decl.type());
   else
     return_type = empty_typet();
@@ -584,7 +622,7 @@ void verilog_typecheckt::collect_symbols(
   symbol.location = decl.source_location();
   symbol.pretty_name = strip_verilog_prefix(symbol.name);
   symbol.module = module_identifier;
-  symbol.value = decl;
+  symbol.value = verilog_tf_sourcet{decl}; // copy the entire declaration
 
   add_symbol(symbol);
 
@@ -602,7 +640,7 @@ void verilog_typecheckt::collect_symbols(
   // add a symbol for the return value of functions, if applicable
 
   if(
-    decl.id() == ID_verilog_function_decl &&
+    decl.get_class() == ID_function &&
     to_code_type(symbol.type).return_type().id() != ID_verilog_void)
   {
     symbolt return_symbol;
@@ -626,7 +664,8 @@ void verilog_typecheckt::collect_symbols(
   for(auto &sub_decl : decl.declarations())
     collect_symbols(sub_decl);
 
-  collect_symbols(decl.body());
+  for(auto &statement : decl.body().statements())
+    collect_symbols(statement);
 
   function_or_task_name = "";
 }
@@ -688,17 +727,14 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   }
   else if(statement.id() == ID_block)
   {
-    // These may be named
     auto &block_statement = to_verilog_block(statement);
 
-    if(block_statement.is_named())
-      enter_named_block(block_statement.base_name());
+    enter_named_block(block_statement.block_id());
 
     for(auto &block_statement : to_verilog_block(statement).operands())
       collect_symbols(to_verilog_statement(block_statement));
 
-    if(block_statement.is_named())
-      named_blocks.pop_back();
+    named_blocks.pop_back();
   }
   else if(
     statement.id() == ID_verilog_blocking_assign ||
@@ -732,7 +768,12 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   }
   else if(statement.id() == ID_decl)
   {
-    collect_symbols(to_verilog_decl(statement));
+    auto decl_class = to_verilog_decl(statement).get_class();
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+    }
+    else
+      collect_symbols(to_verilog_decl(statement));
   }
   else if(statement.id() == ID_delay)
   {
@@ -744,7 +785,18 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   }
   else if(statement.id() == ID_for)
   {
-    collect_symbols(to_verilog_for(statement).body());
+    auto &for_statement = to_verilog_for(statement);
+
+    if(for_statement.has_scope())
+      enter_named_block(for_statement.block_id());
+
+    for(auto &init_statement : for_statement.initialization())
+      collect_symbols(init_statement);
+
+    collect_symbols(for_statement.body());
+
+    if(for_statement.has_scope())
+      named_blocks.pop_back();
   }
   else if(statement.id() == ID_forever)
   {
@@ -804,25 +856,29 @@ void verilog_typecheckt::collect_symbols(
   {
     auto &parameter_decl = to_verilog_parameter_decl(module_item);
     collect_symbols(parameter_decl.type());
-    for(auto &decl : parameter_decl.declarations())
-      collect_symbols(parameter_decl.type(), decl);
+    for(auto &declarator : parameter_decl.declarators())
+      collect_symbols(parameter_decl.type(), declarator);
   }
   else if(module_item.id() == ID_local_parameter_decl)
   {
     auto &localparam_decl = to_verilog_local_parameter_decl(module_item);
     collect_symbols(localparam_decl.type());
-    for(auto &decl : localparam_decl.declarations())
-      collect_symbols(localparam_decl.type(), decl);
+    for(auto &declarator : localparam_decl.declarators())
+      collect_symbols(localparam_decl.type(), declarator);
   }
   else if(module_item.id() == ID_decl)
   {
-    collect_symbols(to_verilog_decl(module_item));
+    auto decl_class = to_verilog_decl(module_item).get_class();
+
+    if(decl_class == ID_function || decl_class == ID_task)
+    {
+      collect_symbols(to_verilog_function_or_task_decl(module_item));
+    }
+    else
+      collect_symbols(to_verilog_decl(module_item));
   }
-  else if(
-    module_item.id() == ID_verilog_function_decl ||
-    module_item.id() == ID_verilog_task_decl)
+  else if(module_item.id() == ID_verilog_generate_decl)
   {
-    collect_symbols(to_verilog_function_or_task_decl(module_item));
   }
   else if(
     module_item.id() == ID_verilog_always ||
@@ -914,6 +970,12 @@ void verilog_typecheckt::collect_symbols(
   {
     // e.g., $error
   }
+  else if(module_item.id() == ID_verilog_timeunit)
+  {
+  }
+  else if(module_item.id() == ID_verilog_timeprecision)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
 }
@@ -948,13 +1010,12 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
   {
     if(
       module_item.id() == ID_generate_block ||
+      module_item.id() == ID_verilog_generate_decl ||
       module_item.id() == ID_generate_for || module_item.id() == ID_generate_if)
     {
       // elaborate_generate_item calls elaborate_level
       // recursively.
-      auto generated_items = elaborate_generate_item(module_item);
-      result.insert(
-        result.end(), generated_items.begin(), generated_items.end());
+      elaborate_generate_item(module_item, result);
     }
     else
       result.push_back(module_item);
@@ -987,8 +1048,9 @@ verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
   // and the expansion of generate blocks.
 
   // At the top level of the module, include the parameter ports.
-  for(auto &parameter_port_decl : module_source.parameter_port_list())
-    collect_symbols(typet(ID_nil), parameter_port_decl);
+  for(auto &declaration : module_source.parameter_port_decls())
+    for(auto &declarator : declaration.declarators())
+      collect_symbols(declaration.type(), declarator);
 
   // At the top level of the module, include the non-parameter module port
   // module items.

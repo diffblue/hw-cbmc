@@ -1,0 +1,7 @@
+CORE
+reset2.sv
+--module top --bound 10 --reset ~reset_n
+^\[top\.p1\] always \(disable iff \(!top\.reset_n\) top\.data >= 0 && top\.data <= 10\): PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--

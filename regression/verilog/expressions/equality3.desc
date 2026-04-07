@@ -1,6 +1,7 @@
 CORE
 equality3.v
 
+^file .* line 4: the case equality operator does not allow real or shortreal$
 ^EXIT=2$
 ^SIGNAL=0$
 --

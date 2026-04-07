@@ -1,0 +1,18 @@
+-- from the NuSMV 2.7 manual
+
+MODULE container(init_value1, init_value2)
+  VAR c1 : counter(init_value1, self);
+  VAR c2 : counter(init_value2, self);
+
+MODULE counter(init_value, my_container)
+  VAR v: 1..100;
+  ASSIGN
+     init(v) := init_value;
+  DEFINE
+     greatestCounterInContainer := v >= my_container.c1.v &
+                                   v >= my_container.c2.v;
+
+MODULE main
+  VAR c : container(14, 7);
+  SPEC
+    c.c1.greatestCounterInContainer;

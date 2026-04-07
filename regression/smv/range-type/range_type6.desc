@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 range_type6.smv
 --bound 10
 ^\[spec1\] G x != 4: REFUTED$

@@ -1,9 +1,8 @@
-KNOWNBUG
-equality4.v
+CORE
+equality4.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-zero_extend doesn't work for four-valued operands.

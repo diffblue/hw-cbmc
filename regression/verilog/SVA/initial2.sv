@@ -3,7 +3,7 @@ module main(input clk);
   // count up from 0 to 10
   reg [7:0] counter;
 
-  initial begin
+  initial begin : blk
     counter = 1;
     // expected to pass
     p0: assert(counter == 1);

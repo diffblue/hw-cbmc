@@ -60,6 +60,16 @@ exprt extract(
   const mp_integer &offset,
   const typet &dest_type)
 {
+  if(src.type().id() == ID_bool)
+  {
+    // turn into bitvector of size 1
+    return extract(typecast_exprt{src, unsignedbv_typet{1}}, offset, dest_type);
+  }
+
+  PRECONDITION(src.type().id() != ID_array);
+  PRECONDITION(src.type().id() != ID_struct);
+  PRECONDITION(src.type().id() != ID_union);
+
   auto src_width = to_bitvector_type(src.type()).get_width();
   auto dest_width = verilog_bits(dest_type);
 
@@ -131,6 +141,48 @@ exprt from_bitvector(
 
     return union_exprt{field.get_name(), std::move(field_value), union_type};
   }
+  else if(dest.id() == ID_array)
+  {
+    const auto &array_type = to_array_type(dest);
+    auto &element_type = array_type.element_type();
+    auto size_int =
+      numeric_cast_v<std::size_t>(to_constant_expr(array_type.size()));
+    exprt::operandst element_values;
+    element_values.reserve(size_int);
+
+    // For packed arrays, we take the index direction into account.
+    bool is_packed =
+      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+
+    mp_integer element_width = verilog_bits(element_type);
+
+    if(is_packed && array_type.get_bool(ID_C_increasing))
+    {
+      mp_integer element_offset = verilog_bits(dest);
+
+      for(std::size_t index = 0; index < size_int; index++)
+      {
+        element_offset -= element_width;
+        auto element_value =
+          from_bitvector(src, offset + element_offset, element_type);
+        element_values.push_back(std::move(element_value));
+      }
+    }
+    else
+    {
+      mp_integer element_offset = 0;
+
+      for(std::size_t index = 0; index < size_int; index++)
+      {
+        auto element_value =
+          from_bitvector(src, offset + element_offset, element_type);
+        element_values.push_back(std::move(element_value));
+        element_offset += element_width;
+      }
+    }
+
+    return array_exprt{std::move(element_values), array_type};
+  }
   else
   {
     return extract(src, offset, dest);
@@ -168,6 +220,43 @@ exprt to_bitvector(const exprt &src)
     auto member = member_exprt{src, field};
     return to_bitvector(member); // rec. call
   }
+  else if(src_type.id() == ID_array)
+  {
+    const auto &array_type = to_array_type(src_type);
+    auto size_int =
+      numeric_cast_v<std::size_t>(to_constant_expr(array_type.size()));
+    exprt::operandst element_values;
+    element_values.reserve(size_int);
+
+    // For packed arrays, we take the index direction into account.
+    // Concatenation puts the most significant first.
+    bool is_packed =
+      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+
+    if(is_packed && array_type.get_bool(ID_C_increasing))
+    {
+      for(std::size_t index = 0; index < size_int; index++)
+      {
+        auto element_expr =
+          index_exprt{src, from_integer(index, integer_typet{})};
+        auto element_value = to_bitvector(element_expr); // rec. call
+        element_values.push_back(std::move(element_value));
+      }
+    }
+    else
+    {
+      for(std::size_t index = size_int; index > 0; index--)
+      {
+        auto element_expr =
+          index_exprt{src, from_integer(index - 1, integer_typet{})};
+        auto element_value = to_bitvector(element_expr); // rec. call
+        element_values.push_back(std::move(element_value));
+      }
+    }
+
+    auto width_int = numeric_cast_v<std::size_t>(verilog_bits(src));
+    return concatenation_exprt{std::move(element_values), bv_typet{width_int}};
+  }
   else
   {
     return src;
@@ -176,20 +265,20 @@ exprt to_bitvector(const exprt &src)
 
 exprt verilog_lowering_system_function(const function_call_exprt &call)
 {
-  auto identifier = to_symbol_expr(call.function()).get_identifier();
+  auto base_name = to_verilog_identifier_expr(call.function()).base_name();
   auto &arguments = call.arguments();
 
-  if(identifier == "$signed" || identifier == "$unsigned")
+  if(base_name == "$signed" || base_name == "$unsigned")
   {
     // lower to typecast
     DATA_INVARIANT(
-      arguments.size() == 1, id2string(identifier) + " takes one argument");
+      arguments.size() == 1, id2string(base_name) + " takes one argument");
     return typecast_exprt{arguments[0], call.type()};
   }
-  else if(identifier == "$rtoi")
+  else if(base_name == "$rtoi")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // These truncate, and do not round.
     return floatbv_typecast_exprt{
       arguments[0],
@@ -197,10 +286,10 @@ exprt verilog_lowering_system_function(const function_call_exprt &call)
         ieee_floatt::rounding_modet::ROUND_TO_ZERO),
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$itor")
+  else if(base_name == "$itor")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // No rounding required, any 32-bit integer will fit into double.
     return floatbv_typecast_exprt{
       arguments[0],
@@ -208,36 +297,36 @@ exprt verilog_lowering_system_function(const function_call_exprt &call)
         ieee_floatt::rounding_modet::ROUND_TO_ZERO),
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$bitstoreal")
+  else if(base_name == "$bitstoreal")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given bit-pattern as a real
     return typecast_exprt{
       zero_extend_exprt{arguments[0], bv_typet{64}},
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$bitstoshortreal")
+  else if(base_name == "$bitstoshortreal")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given bit-pattern as a real
     return typecast_exprt{
       zero_extend_exprt{arguments[0], bv_typet{32}},
       verilog_lowering(call.type())};
   }
-  else if(identifier == "$realtobits")
+  else if(base_name == "$realtobits")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given floating-point bit-pattern as [63:0]
     return zero_extend_exprt{
       typecast_exprt{arguments[0], bv_typet{64}}, call.type()};
   }
-  else if(identifier == "$shortrealtobits")
+  else if(base_name == "$shortrealtobits")
   {
     DATA_INVARIANT(
-      arguments.size(), id2string(identifier) + " takes one argument");
+      arguments.size(), id2string(base_name) + " takes one argument");
     // not a conversion -- this returns the given floating-point bit-pattern as [31:0]
     return zero_extend_exprt{
       typecast_exprt{arguments[0], bv_typet{32}}, call.type()};
@@ -318,13 +407,17 @@ exprt verilog_lowering_cast(typecast_exprt expr)
       auto aval_bval_type = lower_to_aval_bval(dest_type);
       return aval_bval_conversion(expr.op(), aval_bval_type);
     }
-    else if(dest_type.id() == ID_struct || dest_type.id() == ID_union)
+    else if(
+      dest_type.id() == ID_struct || dest_type.id() == ID_union ||
+      dest_type.id() == ID_array)
     {
       return from_bitvector(expr.op(), 0, dest_type);
     }
     else
     {
-      if(src_type.id() == ID_struct || src_type.id() == ID_union)
+      if(
+        src_type.id() == ID_struct || src_type.id() == ID_union ||
+        src_type.id() == ID_array)
       {
         return extract(to_bitvector(expr.op()), 0, dest_type);
       }
@@ -350,8 +443,8 @@ exprt verilog_lowering(exprt expr)
     auto &call = to_function_call_expr(expr);
     if(call.is_system_function_call())
     {
-      auto identifier = to_symbol_expr(call.function()).get_identifier();
-      if(identifier == "$typename")
+      auto base_name = to_verilog_identifier_expr(call.function()).base_name();
+      if(base_name == "$typename")
       {
         // Don't touch.
         // Will be expanded by elaborate_constant_system_function_call,
@@ -492,7 +585,18 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
-    return to_verilog_explicit_signing_cast_expr(expr).lower();
+    auto &signing_cast = to_verilog_explicit_signing_cast_expr(expr);
+    if(is_aval_bval(signing_cast.op()))
+    {
+      // Change the signedness annotation in the aval/bval type.
+      auto result = signing_cast.op();
+      result.type().set(
+        ID_C_verilog_aval_bval,
+        signing_cast.is_signed() ? ID_verilog_signedbv : ID_verilog_unsignedbv);
+      return result;
+    }
+    else
+      return signing_cast.lower();
   }
   else if(expr.id() == ID_verilog_explicit_size_cast)
   {
@@ -570,15 +674,27 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
-  else if(
-    expr.id() == ID_bitand || expr.id() == ID_bitor || expr.id() == ID_bitxor ||
-    expr.id() == ID_bitxnor)
+  else if(expr.id() == ID_bitand)
   {
-    auto &multi_ary_expr = to_multi_ary_expr(expr);
-
     // encode into aval/bval
     if(is_four_valued(expr.type()))
-      return aval_bval_bitwise(multi_ary_expr);
+      return aval_bval_bitand(to_bitand_expr(expr));
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_bitor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_bitor(to_bitor_expr(expr));
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_bitxor || expr.id() == ID_bitxnor)
+  {
+    // encode into aval/bval
+    if(is_four_valued(expr.type()))
+      return aval_bval_xor_xnor(to_multi_ary_expr(expr));
     else
       return expr; // leave as is
   }
@@ -666,12 +782,17 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
-  else if(
-    expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult ||
-    expr.id() == ID_div || expr.id() == ID_mod)
+  else if(expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult)
   {
     if(is_four_valued(expr))
       return default_aval_bval_lowering(expr);
+    else
+      return expr;
+  }
+  else if(expr.id() == ID_div || expr.id() == ID_mod)
+  {
+    if(is_four_valued(expr))
+      return aval_bval_div_mod(to_binary_expr(expr));
     else
       return expr;
   }
@@ -681,6 +802,96 @@ exprt verilog_lowering(exprt expr)
       return aval_bval(to_shift_expr(expr));
     else
       return expr;
+  }
+  else if(expr.id() == ID_zero_extend)
+  {
+    if(is_four_valued(expr.type()))
+      return aval_bval(to_zero_extend_expr(expr));
+    else
+      return expr;
+  }
+  else if(expr.id() == ID_verilog_bit_select)
+  {
+    // This may be an array index or a bit extraction, depending
+    // on the type of the first operand.
+    auto &bit_select = to_verilog_bit_select_expr(expr);
+    auto &src = bit_select.src();
+
+    if(src.type().id() == ID_array)
+    {
+      // Lower to array index expression
+      auto &array_type = to_verilog_array_type(src.type());
+      auto index_type = array_type.index_type();
+      exprt index = typecast_exprt{bit_select.index(), index_type};
+
+      if(array_type.is_unpacked())
+      {
+        // For unpacked arrays, the internal representation stores
+        // elements starting from the left index of the range.
+        // We need to adjust the Verilog index to the internal index.
+        auto array_size = array_type.size_int();
+        auto offset = array_type.offset();
+
+        if(array_type.increasing())
+        {
+          // ascending range [l:r] with l<r, e.g., [0:4]
+          // internal index = verilog_index - offset
+          if(offset != 0)
+            index = minus_exprt{index, from_integer(offset, index_type)};
+        }
+        else
+        {
+          // descending range [l:r] with l>=r, e.g., [4:0]
+          // internal index = (offset + size - 1) - verilog_index
+          index = minus_exprt{
+            minus_exprt{
+              plus_exprt{
+                from_integer(offset, index_type),
+                from_integer(array_size, index_type)},
+              from_integer(1, index_type)},
+            index};
+        }
+      }
+
+      return index_exprt{src, index, array_type.element_type()};
+    }
+    else
+    {
+      // Lower to extractbit
+      auto width = verilog_bits(src.type());
+      auto offset = src.type().get_int(ID_C_offset);
+
+      auto index = bit_select.index();
+
+      if(offset != 0)
+        index = minus_exprt{index, from_integer(offset, index.type())};
+
+      if(src.type().get_bool(ID_C_increasing))
+        index = minus_exprt{from_integer(width - 1, index.type()), index};
+
+      return extractbit_exprt{src, index};
+    }
+  }
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    auto &compound_type = member_expr.compound().type();
+
+    // Lower member access on packed unions.
+    if(compound_type.id() == ID_union)
+    {
+      auto bv = to_bitvector(member_expr.compound());
+      return from_bitvector(bv, 0, member_expr.type());
+    }
+    else
+      return expr; // leave as is
+  }
+  else if(expr.id() == ID_if)
+  {
+    if(is_four_valued(expr.type()))
+      return aval_bval(to_if_expr(expr));
+    else
+      return expr; // leave as is
   }
   else
     return expr; // leave as is

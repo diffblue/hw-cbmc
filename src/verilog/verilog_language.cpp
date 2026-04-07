@@ -74,7 +74,8 @@ bool verilog_languaget::parse(
   else
     standard = verilog_standardt::V2005_SMV;
 
-  verilog_parsert verilog_parser(standard, message_handler);
+  verilog_scopest scopes;
+  verilog_parsert verilog_parser(standard, scopes, message_handler);
 
   verilog_parser.set_file(path);
   verilog_parser.in=&str;
@@ -134,18 +135,8 @@ void verilog_languaget::dependencies(
   const std::string &module,
   std::set<std::string> &dependency_set)
 {
-  verilog_parse_treet::item_mapt::const_iterator it =
-    parse_tree.item_map.find(id2string(verilog_item_key(module)));
-
-  if(it != parse_tree.item_map.end())
-  {
-    // dependencies on other Verilog modules or packages
-
-    const auto &item_container = *it->second;
-
-    for(auto &identifier : item_container.dependencies())
-      dependency_set.insert(id2string(identifier));
-  }
+  for(auto identifier : parse_tree.dependencies(module))
+    dependency_set.insert(id2string(identifier));
 }
 
 /*******************************************************************\
@@ -183,27 +174,7 @@ bool verilog_languaget::typecheck(
   const std::string &module,
   message_handlert &message_handler)
 {
-  if(module=="") return false;
-
-  if(verilog_typecheck(
-       parse_tree, symbol_table, module, warn_implicit_nets, message_handler))
-    return true;
-
-  messaget message(message_handler);
-  message.debug() << "Synthesis " << module << messaget::eom;
-
-  if(verilog_synthesis(
-       symbol_table,
-       module,
-       parse_tree.standard,
-       ignore_initial,
-       initial_zero,
-       message_handler))
-  {
-    return true;
-  }
-
-  return false;
+  return true;
 }
 
 /*******************************************************************\
@@ -310,7 +281,8 @@ bool verilog_languaget::to_expr(
   verilog_standardt standard = verilog_standardt::V2005;
 
   // parsing
-  verilog_parsert verilog_parser(standard, message_handler);
+  verilog_scopest scopes;
+  verilog_parsert verilog_parser(standard, scopes, message_handler);
 
   verilog_parser.set_file("");
   verilog_parser.in=&i_preprocessed;

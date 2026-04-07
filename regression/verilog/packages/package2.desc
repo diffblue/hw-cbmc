@@ -1,7 +1,0 @@
-CORE
-package2.sv
-
-^^\[.*\] always main\.Q == 123: PROVED .*$
-^EXIT=0$
-^SIGNAL=0$
---

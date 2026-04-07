@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 port_connection1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ port_connection1.sv
 --
 ^warning: ignoring
 --
-This does not parse.

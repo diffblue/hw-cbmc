@@ -6,6 +6,6 @@ module main;
   // can be converted implicitly
   wire [63:0] my_word = my_bytes;
 
-  assert final(my_word == 64'h04030201);
+  assert final(my_word == 64'h01020304);
 
 endmodule

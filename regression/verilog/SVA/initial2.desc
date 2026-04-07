@@ -1,7 +1,7 @@
 CORE
 initial2.sv
 --module main
-^\[main\.p0\] main\.counter == 1: PROVED .*$
+^\[main\.blk\.p0\] main\.counter == 1: PROVED .*$
 ^\[main\.p1\] main\.counter == 2: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$

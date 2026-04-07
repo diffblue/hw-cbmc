@@ -20,23 +20,18 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_expr.h"
 
 bool verilog_typecheck(
-  const verilog_parse_treet &parse_tree,
   symbol_table_baset &,
   const irep_idt &module_identifier,
+  verilog_standardt,
   bool warn_implicit_nets,
   message_handlert &message_handler);
 
-bool verilog_typecheck(
-  symbol_table_baset &,
+/// copies the source of the given Verilog module or package
+/// into the symbol table
+symbolt &copy_module_source(
+  const verilog_parse_treet::itemt module_item,
   const irep_idt &module_identifier,
-  const exprt::operandst &parameters,
-  message_handlert &message_handler);
-
-bool verilog_typecheck(
-  symbol_table_baset &,
-  const verilog_packaget &verilog_package,
-  verilog_standardt,
-  message_handlert &);
+  symbol_table_baset &);
 
 /*******************************************************************\
 
@@ -58,7 +53,6 @@ public:
   verilog_typecheckt(
     verilog_standardt _standard,
     bool warn_implicit_nets,
-    symbolt &_module_symbol,
     symbol_table_baset &_symbol_table,
     message_handlert &_message_handler)
     : verilog_typecheck_exprt(
@@ -68,15 +62,27 @@ public:
         _message_handler),
       verilog_symbol_tablet(_symbol_table),
       ns(_symbol_table),
-      module_symbol(_module_symbol),
       assertion_counter(0)
   {}
 
-  void typecheck() override;
+  // type checking for all "item containers", which includes
+  // all "design elements" (modules, programs, interfaces,
+  // checkers, packages, primitives, and configurations)
+  void typecheck_design_element(symbolt &);
+
+  // type checking for compilation-unit scoped nets, variables,
+  // typedefs, functions, tasks, parameters
+  void typecheck_decl(const verilog_declt &);
 
 protected:
   const namespacet ns;
-  symbolt &module_symbol;
+
+  // look up the module symbol
+  symbolt &module_symbol()
+  {
+    PRECONDITION(!module_identifier.empty());
+    return symbol_table_lookup(module_identifier);
+  }
 
   // Parameters.
   // defparam assignments. Map from module instance names
@@ -107,11 +113,29 @@ protected:
   std::set<irep_idt> let_symbols;
 
   // instances
+  void process_module_instantiations(verilog_module_exprt &);
+  void process_parameter_override(const class verilog_parameter_overridet &);
+  void process_parameter_override(const verilog_module_itemt &);
+  void parameterize_instantiated_modules(verilog_module_itemt &);
+  void parameterize_instantiated_modules(class verilog_instt &);
+  void parameterize_instantiated_modules(class verilog_inst_builtint &);
+
+  void elaborate_inst(const verilog_inst_baset &);
+
+  void
+  elaborate_inst(const verilog_inst_baset &, const verilog_instt::instancet &);
+
+  void elaborate_module_instances(const verilog_module_itemt &);
+
   irep_idt parameterize_module(
     const source_locationt &location,
     const irep_idt &module_identifier,
     const exprt::operandst &parameter_assignment,
     const std::map<irep_idt, exprt> &defparams);
+
+  irep_idt parameterized_module_identifier(
+    const irep_idt &module_identifier,
+    const std::list<exprt> &parameter_values) const;
 
   std::vector<verilog_parameter_declt::declaratort>
   get_parameter_declarators(const verilog_module_sourcet &);
@@ -128,10 +152,6 @@ protected:
   // interfaces
   void module_interface(const verilog_module_sourcet &);
   void check_module_ports(const verilog_module_sourcet::port_listt &);
-  void interface_inst(const verilog_inst_baset &);
-  void interface_inst(
-    const verilog_inst_baset &,
-    const verilog_instt::instancet &op);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
@@ -171,8 +191,6 @@ protected:
   // module items
   void convert_decl(class verilog_declt &);
   void convert_function_or_task(class verilog_function_or_task_declt &);
-  void convert_inst(class verilog_instt &);
-  void convert_inst_builtin(class verilog_inst_builtint &);
   void convert_always_base(class verilog_always_baset &);
   void convert_initial(class verilog_initialt &);
   void convert_continuous_assign(class verilog_continuous_assignt &);
@@ -180,15 +198,10 @@ protected:
   void check_lhs(const exprt &lhs, vassignt vassign);
   void convert_assignments(exprt &trans);
   void convert_module_item(class verilog_module_itemt &);
-  void convert_parameter_override(const class verilog_parameter_overridet &);
   void convert_property_declaration(class verilog_property_declarationt &);
   void convert_sequence_declaration(class verilog_sequence_declarationt &);
 
   void integer_expr(exprt &expr);
-
-  void convert_case_values(
-    exprt &values,
-    const exprt &case_operand);
 
   void instantiate_port_connections(
     const std::string &instance,
@@ -223,15 +236,18 @@ protected:
   void elaborate_generate_block(
     const verilog_generate_blockt &,
     module_itemst &dest);
-  module_itemst elaborate_generate_item(const verilog_module_itemt &);
+  [[nodiscard]] module_itemst
+  elaborate_generate_item(const verilog_module_itemt &);
   void
   elaborate_generate_item(const verilog_module_itemt &src, module_itemst &dest);
   void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
   void
   elaborate_generate_case(const verilog_generate_caset &, module_itemst &dest);
+  void elaborate_generate_decl(const verilog_generate_declt &, module_itemst &);
   void
   elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);
-  exprt generate_for_loop_index(const exprt &initialization_statement) const;
+  exprt
+  generate_for_loop_index(const verilog_module_itemt &initialization) const;
 
   // generate state
   typedef std::map<irep_idt, mp_integer> genvarst;

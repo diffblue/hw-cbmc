@@ -1,0 +1,9 @@
+CORE
+module_with_enum2.smv
+
+^file .* line 11: enum a already declared, at file .* line 7$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

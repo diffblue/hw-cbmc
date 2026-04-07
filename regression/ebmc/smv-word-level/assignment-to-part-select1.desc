@@ -1,0 +1,13 @@
+CORE
+assignment-to-part-select1.sv
+--smv-word-level
+^MODULE main$
+^INVAR data = data_aux2$
+^INVAR data_aux2 = \(\(\(\(\(\(\(\(data_aux1
+^INVAR data_aux1 = \(\(\(\(\(\(\(\(data_aux0
+^INVAR data_aux0 = \(\(\(\(\(\(\(\(0uh32_10
+^LTLSPEC G data = 0uh32_40302010$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

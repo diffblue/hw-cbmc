@@ -1,0 +1,16 @@
+CORE buechi
+sequence_repetition1.sv
+--buechi --bound 10
+^\[main\.p0\] main\.half_x == 0 \[\*2\]: PROVED up to bound 10$
+^\[main\.p1\] main\.half_x == 0 \[->2\]: PROVED up to bound 10$
+^\[main\.p2\] main\.half_x == 0 \[=2\]: PROVED up to bound 10$
+^\[main\.p3\] main\.x == 0 \[\*2\]: REFUTED$
+^\[main\.p4w\] main\.x == 0 \[->2\]: PROVED up to bound 10$
+^\[main\.p5w\] main\.x == 0 \[=2\]: PROVED up to bound 10$
+^\[main\.p4s\] strong\(main\.x == 0 \[->2\]\): PROVED up to bound 10$
+^\[main\.p5s\] strong\(main\.x == 0 \[=2\]\): PROVED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

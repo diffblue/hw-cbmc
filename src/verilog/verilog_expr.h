@@ -11,6 +11,85 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+#include <set>
+
+/// A simple Verilog identifier, unqualified
+/// The optional scope is the scope in which the identifier was found;
+/// it is not part of the source text.
+class verilog_identifier_exprt : public nullary_exprt
+{
+public:
+  explicit verilog_identifier_exprt(const irep_idt _base_name)
+    : nullary_exprt{ID_verilog_identifier, typet{}}
+  {
+    base_name(_base_name);
+  }
+
+  explicit verilog_identifier_exprt(
+    const irep_idt _scope,
+    const irep_idt _base_name)
+    : nullary_exprt{ID_verilog_identifier, typet{}}
+  {
+    scope(_scope);
+    base_name(_base_name);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  void base_name(irep_idt _base_name)
+  {
+    set(ID_base_name, _base_name);
+  }
+
+  const irep_idt &scope() const
+  {
+    return get(ID_scope);
+  }
+
+  void scope(irep_idt _scope)
+  {
+    set(ID_scope, _scope);
+  }
+
+  // This gives the original package plus base name
+  // if the identifier was imported
+  const irep_idt &import() const
+  {
+    return get(ID_verilog_import);
+  }
+
+  void import_package(irep_idt _import)
+  {
+    set(ID_verilog_import, _import);
+  }
+
+  /// Add the source location from \p location, if it is non-nil.
+  verilog_identifier_exprt &&with_source_location(source_locationt location) &&
+  {
+    if(location.is_not_nil())
+      add_source_location() = std::move(location);
+    return std::move(*this);
+  }
+};
+
+inline const verilog_identifier_exprt &
+to_verilog_identifier_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_identifier);
+  verilog_identifier_exprt::check(expr);
+  return static_cast<const verilog_identifier_exprt &>(expr);
+}
+
+inline verilog_identifier_exprt &to_verilog_identifier_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_identifier);
+  verilog_identifier_exprt::check(expr);
+  return static_cast<verilog_identifier_exprt &>(expr);
+}
+
 /// The syntax for these A.B, where A is a module identifier and B
 /// is an identifier within that module. B is given als symbol_exprt.
 class hierarchical_identifier_exprt : public binary_exprt
@@ -21,12 +100,17 @@ public:
     return op0();
   }
 
-  const symbol_exprt &item() const
+  exprt &module()
   {
-    return static_cast<const symbol_exprt &>(binary_exprt::op1());
+    return op0();
   }
 
-  const symbol_exprt &rhs() const
+  const verilog_identifier_exprt &item() const
+  {
+    return static_cast<const verilog_identifier_exprt &>(binary_exprt::op1());
+  }
+
+  const verilog_identifier_exprt &rhs() const
   {
     return item();
   }
@@ -393,6 +477,12 @@ public:
   inline verilog_module_itemt()
   {
   }
+
+  static void
+  check(const exprt &expr, validation_modet vm = validation_modet::INVARIANT)
+  {
+    exprt::check(expr, vm);
+  }
 };
 
 inline const verilog_module_itemt &to_verilog_module_item(const irept &irep)
@@ -404,6 +494,62 @@ inline verilog_module_itemt &to_verilog_module_item(irept &irep)
 {
   return static_cast<verilog_module_itemt &>(irep);
 }
+
+// This class is used for all declarators in the parse tree
+class verilog_declaratort : public exprt
+{
+public:
+  const irep_idt &identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  const exprt &value() const
+  {
+    return static_cast<const exprt &>(find(ID_value));
+  }
+
+  exprt &value()
+  {
+    return static_cast<exprt &>(add(ID_value));
+  }
+
+  bool has_value() const
+  {
+    return find(ID_value).is_not_nil();
+  }
+
+  // helper to generate a symbol expression
+  symbol_exprt symbol_expr() const
+  {
+    auto result = symbol_exprt(identifier(), type());
+    result.with_source_location(*this);
+    return result;
+  }
+
+  // helper to generate a verilog_identifier expression
+  verilog_identifier_exprt verilog_identifier_expr() const
+  {
+    return verilog_identifier_exprt{base_name()}.with_source_location(
+      source_location());
+  }
+
+  // Helper to merge the declarator's unpacked array type
+  // with the declaration type.
+  typet merged_type(const typet &declaration_type) const;
+};
+
+using verilog_declaratorst = std::vector<verilog_declaratort>;
 
 class verilog_generate_assignt : public verilog_module_itemt
 {
@@ -515,6 +661,41 @@ inline verilog_generate_caset &to_verilog_generate_case(exprt &expr)
   return static_cast<verilog_generate_caset &>(expr);
 }
 
+/// a SystemVerilog genvar declaration
+class verilog_generate_declt : public verilog_module_itemt
+{
+public:
+  inline verilog_generate_declt()
+    : verilog_module_itemt(ID_verilog_generate_decl)
+  {
+  }
+
+  using declaratort = verilog_declaratort;
+  using declaratorst = verilog_declaratorst;
+
+  const declaratorst &declarators() const
+  {
+    return (const declaratorst &)operands();
+  }
+
+  declaratorst &declarators()
+  {
+    return (declaratorst &)operands();
+  }
+};
+
+inline const verilog_generate_declt &to_verilog_generate_decl(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_generate_decl);
+  return static_cast<const verilog_generate_declt &>(irep);
+}
+
+inline verilog_generate_declt &to_verilog_generate_decl(irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_generate_decl);
+  return static_cast<verilog_generate_declt &>(irep);
+}
+
 class verilog_generate_ift : public verilog_module_itemt
 {
 public:
@@ -558,9 +739,9 @@ public:
   {
   }
 
-  const verilog_generate_assignt &init() const
+  const verilog_module_itemt &init() const
   {
-    return static_cast<const verilog_generate_assignt &>(op0());
+    return static_cast<const verilog_module_itemt &>(op0());
   }
 
   const exprt &cond() const
@@ -617,6 +798,11 @@ public:
   {
     return static_cast<const verilog_module_itemt &>(get_sub()[0]);
   }
+
+  verilog_module_itemt &module_item()
+  {
+    return static_cast<verilog_module_itemt &>(get_sub()[0]);
+  }
 };
 
 inline const verilog_set_genvarst &to_verilog_set_genvars(const exprt &expr)
@@ -631,55 +817,7 @@ inline verilog_set_genvarst &to_verilog_set_genvars(exprt &expr)
   return static_cast<verilog_set_genvarst &>(expr);
 }
 
-// This class is used for all declarators in the parse tree
-class verilog_declaratort : public exprt
-{
-public:
-  const irep_idt &identifier() const
-  {
-    return get(ID_identifier);
-  }
-
-  void identifier(irep_idt _identifier)
-  {
-    set(ID_identifier, _identifier);
-  }
-
-  const irep_idt &base_name() const
-  {
-    return get(ID_base_name);
-  }
-
-  const exprt &value() const
-  {
-    return static_cast<const exprt &>(find(ID_value));
-  }
-
-  exprt &value()
-  {
-    return static_cast<exprt &>(add(ID_value));
-  }
-
-  bool has_value() const
-  {
-    return find(ID_value).is_not_nil();
-  }
-
-  // helper to generate a symbol expression
-  symbol_exprt symbol_expr() const
-  {
-    auto result = symbol_exprt(identifier(), type());
-    result.with_source_location(*this);
-    return result;
-  }
-
-  // Helper to merge the declarator's unpacked array type
-  // with the declaration type.
-  typet merged_type(const typet &declaration_type) const;
-};
-
-using verilog_declaratorst = std::vector<verilog_declaratort>;
-
+/// a SystemVerilog parameter declaration
 class verilog_parameter_declt : public verilog_module_itemt
 {
 public:
@@ -690,12 +828,12 @@ public:
   using declaratort = verilog_declaratort;
   using declaratorst = verilog_declaratorst;
 
-  const declaratorst &declarations() const
+  const declaratorst &declarators() const
   {
     return (const declaratorst &)operands();
   }
 
-  declaratorst &declarations()
+  declaratorst &declarators()
   {
     return (declaratorst &)operands();
   }
@@ -725,12 +863,12 @@ public:
   using declaratort = verilog_declaratort;
   using declaratorst = verilog_declaratorst;
 
-  const declaratorst &declarations() const
+  const declaratorst &declarators() const
   {
     return (const declaratorst &)operands();
   }
 
-  declaratorst &declarations()
+  declaratorst &declarators()
   {
     return (declaratorst &)operands();
   }
@@ -799,7 +937,7 @@ public:
     named_port_connectiont(exprt _port, exprt _value)
       : binary_exprt(
           std::move(_port),
-          ID_named_port_connection,
+          ID_verilog_named_port_connection,
           std::move(_value),
           typet{})
     {
@@ -863,7 +1001,18 @@ public:
     {
       auto &connections = this->connections();
       return connections.empty() ||
-             connections.front().id() == ID_named_port_connection;
+             (connections.front().id() == ID_verilog_named_port_connection ||
+              connections.front().id() == ID_verilog_wildcard_port_connection);
+    }
+
+    const typet &instance_array() const
+    {
+      return static_cast<const typet &>(find(ID_verilog_instance_array));
+    }
+
+    typet &instance_array()
+    {
+      return static_cast<typet &>(add(ID_verilog_instance_array));
     }
 
   protected:
@@ -889,7 +1038,7 @@ protected:
 inline const verilog_inst_baset::named_port_connectiont &
 to_verilog_named_port_connection(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_named_port_connection);
+  PRECONDITION(expr.id() == ID_verilog_named_port_connection);
   verilog_inst_baset::named_port_connectiont::check(expr);
   return static_cast<const verilog_inst_baset::named_port_connectiont &>(expr);
 }
@@ -897,7 +1046,7 @@ to_verilog_named_port_connection(const exprt &expr)
 inline verilog_inst_baset::named_port_connectiont &
 to_verilog_named_port_connection(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_named_port_connection);
+  PRECONDITION(expr.id() == ID_verilog_named_port_connection);
   verilog_inst_baset::named_port_connectiont::check(expr);
   return static_cast<verilog_inst_baset::named_port_connectiont &>(expr);
 }
@@ -1035,26 +1184,29 @@ inline verilog_declt &to_verilog_decl(exprt &irep)
 }
 
 /// function and task declarations
-class verilog_function_or_task_declt : public verilog_module_itemt
+class verilog_function_or_task_declt : public verilog_declt
 {
 public:
-  verilog_function_or_task_declt(irep_idt __id) : verilog_module_itemt(__id)
+  explicit verilog_function_or_task_declt(irep_idt decl_class)
   {
+    set_class(decl_class);
   }
 
   // Function and task declarations have:
-  // a) an base name and identifier,
+  // a) an operand, which is the declarator (base name and identifier)
   // b) an optional list of ANSI-style ports,
   // c) further declarations,
   // d) a body.
   irep_idt base_name() const
   {
-    return find(ID_symbol).get(ID_base_name);
+    PRECONDITION(declarators().size() == 1);
+    return declarators()[0].base_name();
   }
 
   void set_identifier(const irep_idt &identifier)
   {
-    add(ID_symbol).set(ID_identifier, identifier);
+    PRECONDITION(declarators().size() == 1);
+    return declarators()[0].identifier(identifier);
   }
 
   using portst = std::vector<verilog_declt>;
@@ -1081,30 +1233,44 @@ public:
     return (const declarationst &)(find(ID_verilog_declarations).get_sub());
   }
 
-  verilog_statementt &body()
+  class bodyt : public exprt
   {
-    return static_cast<verilog_statementt &>(add(ID_body));
+  public:
+    using statementst = std::vector<verilog_statementt>;
+
+    statementst &statements()
+    {
+      return (statementst &)(operands());
+    }
+
+    const statementst &statements() const
+    {
+      return (const statementst &)(operands());
+    }
+  };
+
+  bodyt &body()
+  {
+    return static_cast<bodyt &>(add(ID_body));
   }
 
-  const verilog_statementt &body() const
+  const bodyt &body() const
   {
-    return static_cast<const verilog_statementt &>(find(ID_body));
+    return static_cast<const bodyt &>(find(ID_body));
   }
 };
 
 inline const verilog_function_or_task_declt &
 to_verilog_function_or_task_decl(const irept &irep)
 {
-  PRECONDITION(
-    irep.id() == ID_verilog_function_decl || irep.id() == ID_verilog_task_decl);
+  PRECONDITION(irep.id() == ID_decl);
   return static_cast<const verilog_function_or_task_declt &>(irep);
 }
 
 inline verilog_function_or_task_declt &
 to_verilog_function_or_task_decl(exprt &irep)
 {
-  PRECONDITION(
-    irep.id() == ID_verilog_function_decl || irep.id() == ID_verilog_task_decl);
+  PRECONDITION(irep.id() == ID_decl);
   return static_cast<verilog_function_or_task_declt &>(irep);
 }
 
@@ -1214,6 +1380,17 @@ public:
   bool is_named() const
   {
     return !get(ID_base_name).empty();
+  }
+
+  /// Returns the scope identifier for this block.
+  /// Named blocks use their base_name; unnamed blocks
+  /// use a parser-generated block_id.
+  irep_idt block_id() const
+  {
+    if(is_named())
+      return base_name();
+    else
+      return get(ID_block_id);
   }
 };
 
@@ -1406,6 +1583,7 @@ inline verilog_ift &to_verilog_if(exprt &expr)
   return static_cast<verilog_ift &>(expr);
 }
 
+/// task or function enable
 class verilog_function_callt:public verilog_statementt
 {
 public:
@@ -1423,7 +1601,9 @@ public:
   {
     return op0();
   }
-  
+
+  bool is_system_function_call() const;
+
   exprt::operandst &arguments()
   {
     return op1().operands();
@@ -1532,15 +1712,17 @@ public:
   {
     operands().resize(4);
   }
-  
-  verilog_statementt &initialization()
+
+  using statementst = std::vector<verilog_statementt>;
+
+  statementst &initialization()
   {
-    return static_cast<verilog_statementt &>(op0());
+    return (statementst &)(op0().operands());
   }
 
-  const verilog_statementt &initialization() const
+  const statementst &initialization() const
   {
-    return static_cast<const verilog_statementt &>(op0());
+    return (const statementst &)(op0().operands());
   }
   
   exprt &condition()
@@ -1571,6 +1753,15 @@ public:
   const verilog_statementt &body() const
   {
     return static_cast<const verilog_statementt &>(op3());
+  }
+
+  // Per IEEE 1800-2017 Section 12.7.1, a for-loop with a variable
+  // declaration in the initialization creates an implicit block scope.
+  bool has_scope() const;
+
+  irep_idt block_id() const
+  {
+    return get(ID_block_id);
   }
 };
 
@@ -1883,18 +2074,20 @@ inline verilog_continuous_assignt &to_verilog_continuous_assign(exprt &expr)
 class verilog_parameter_overridet : public verilog_module_itemt
 {
 public:
+  using assignmentst = std::vector<binary_exprt>;
+
   verilog_parameter_overridet() : verilog_module_itemt(ID_parameter_override)
   {
   }
 
-  exprt::operandst &assignments()
+  assignmentst &assignments()
   {
-    return operands();
+    return (assignmentst &)operands();
   }
 
-  const exprt::operandst &assignments() const
+  const assignmentst &assignments() const
   {
-    return operands();
+    return (const assignmentst &)operands();
   }
 };
 
@@ -2042,6 +2235,7 @@ public:
     return op1();
   }
 
+  // The full identifier created by the type checker
   const irep_idt &identifier() const
   {
     return get(ID_identifier);
@@ -2050,6 +2244,11 @@ public:
   void identifier(irep_idt identifier)
   {
     set(ID_identifier, identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
   }
 };
 
@@ -2111,6 +2310,16 @@ public:
   void identifier(irep_idt _identifier)
   {
     set(ID_identifier, _identifier);
+  }
+
+  const irep_idt &base_name() const
+  {
+    return get(ID_base_name);
+  }
+
+  void base_name(irep_idt _base_name)
+  {
+    set(ID_base_name, _base_name);
   }
 };
 
@@ -2276,7 +2485,8 @@ to_verilog_restrict_statement(verilog_statementt &statement)
   return static_cast<verilog_restrict_statementt &>(statement);
 }
 
-// modules, primitives, programs, interfaces, classes, packages
+// base class for design elements (modules, programs, interfaces,
+// checkers, packages, primitives, configs)
 class verilog_item_containert : public irept
 {
 public:
@@ -2320,7 +2530,7 @@ public:
 
   // The identifiers of the modules and packages used
   // (not: the identifiers of the module instances)
-  std::vector<irep_idt> dependencies() const;
+  std::set<irep_idt> dependencies() const;
 };
 
 class verilog_interfacet : public verilog_item_containert
@@ -2354,17 +2564,18 @@ public:
   {
   }
 
-  using parameter_port_listt = verilog_parameter_declt::declaratorst;
+  using parameter_port_declst = std::vector<verilog_parameter_declt>;
 
-  const parameter_port_listt &parameter_port_list() const
+  const parameter_port_declst &parameter_port_decls() const
   {
-    return (
-      const parameter_port_listt &)(find(ID_parameter_port_list).get_sub());
+    return (const parameter_port_declst &)(find(ID_verilog_parameter_port_decls)
+                                             .get_sub());
   }
 
-  parameter_port_listt &parameter_port_list()
+  parameter_port_declst &parameter_port_decls()
   {
-    return (parameter_port_listt &)(add(ID_parameter_port_list).get_sub());
+    return (
+      parameter_port_declst &)(add(ID_verilog_parameter_port_decls).get_sub());
   }
 
   using port_listt = std::vector<verilog_declt>;
@@ -2397,6 +2608,37 @@ inline const verilog_module_sourcet &to_verilog_module_source(const irept &irep)
 inline verilog_module_sourcet &to_verilog_module_source(irept &irep)
 {
   return static_cast<verilog_module_sourcet &>(irep);
+}
+
+/// used to hold a copy of the declaration of a task or function
+/// in the task/function's symbol until it is typechecked
+class verilog_tf_sourcet : public unary_exprt
+{
+public:
+  explicit verilog_tf_sourcet(verilog_function_or_task_declt _decl)
+    : unary_exprt(ID_verilog_tf_source, std::move(_decl))
+  {
+  }
+
+  const verilog_function_or_task_declt &decl() const
+  {
+    return static_cast<const verilog_function_or_task_declt &>(op());
+  }
+
+  verilog_function_or_task_declt &decl()
+  {
+    return static_cast<verilog_function_or_task_declt &>(op());
+  }
+};
+
+inline const verilog_tf_sourcet &to_verilog_tf_source(const irept &irep)
+{
+  return static_cast<const verilog_tf_sourcet &>(irep);
+}
+
+inline verilog_tf_sourcet &to_verilog_tf_source(irept &irep)
+{
+  return static_cast<verilog_tf_sourcet &>(irep);
 }
 
 class verilog_checkert : public verilog_item_containert
@@ -2741,6 +2983,57 @@ inline verilog_past_exprt &to_verilog_past_expr(exprt &expr)
   return static_cast<verilog_past_exprt &>(expr);
 }
 
+/// The Verilog expression a[b], used for both vector
+/// and array indexing.  Lowered to either extractbit or index,
+/// depending on the type of src.
+class verilog_bit_select_exprt : public binary_exprt
+{
+public:
+  verilog_bit_select_exprt(exprt src, exprt index, typet type)
+    : binary_exprt(
+        std::move(src),
+        ID_verilog_bit_select,
+        std::move(index),
+        std::move(type))
+  {
+  }
+
+  const exprt &src() const
+  {
+    return op0();
+  }
+
+  exprt &src()
+  {
+    return op0();
+  }
+
+  const exprt &index() const
+  {
+    return op1();
+  }
+
+  exprt &index()
+  {
+    return op1();
+  }
+};
+
+inline const verilog_bit_select_exprt &
+to_verilog_bit_select_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_bit_select);
+  verilog_bit_select_exprt::check(expr);
+  return static_cast<const verilog_bit_select_exprt &>(expr);
+}
+
+inline verilog_bit_select_exprt &to_verilog_bit_select_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_bit_select);
+  verilog_bit_select_exprt::check(expr);
+  return static_cast<verilog_bit_select_exprt &>(expr);
+}
+
 class verilog_non_indexed_part_select_exprt : public ternary_exprt
 {
 public:
@@ -2880,9 +3173,16 @@ to_verilog_indexed_part_select_plus_or_minus_expr(exprt &expr)
   return static_cast<verilog_indexed_part_select_plus_or_minus_exprt &>(expr);
 }
 
-class verilog_property_declarationt : public verilog_module_itemt
+/// a base class for both sequence and property declarations
+class verilog_sequence_property_declaration_baset : public verilog_module_itemt
 {
 public:
+  verilog_sequence_property_declaration_baset(irep_idt _id, exprt _cond)
+    : verilog_module_itemt{_id}
+  {
+    add_to_operands(std::move(_cond));
+  }
+
   const irep_idt &base_name() const
   {
     return get(ID_base_name);
@@ -2899,10 +3199,53 @@ public:
   }
 };
 
+inline const verilog_sequence_property_declaration_baset &
+to_verilog_sequence_property_declaration_base(const exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_sequence_declaration ||
+    expr.id() == ID_verilog_property_declaration);
+  verilog_sequence_property_declaration_baset::check(expr);
+  return static_cast<const verilog_sequence_property_declaration_baset &>(expr);
+}
+
+inline verilog_sequence_property_declaration_baset &
+to_verilog_sequence_property_declaration_base(exprt &expr)
+{
+  PRECONDITION(
+    expr.id() == ID_verilog_sequence_declaration ||
+    expr.id() == ID_verilog_property_declaration);
+  verilog_sequence_property_declaration_baset::check(expr);
+  return static_cast<verilog_sequence_property_declaration_baset &>(expr);
+}
+
+class verilog_property_declarationt
+  : public verilog_sequence_property_declaration_baset
+{
+public:
+  explicit verilog_property_declarationt(exprt property)
+    : verilog_sequence_property_declaration_baset{
+        ID_verilog_property_declaration,
+        std::move(property)}
+  {
+  }
+
+  const exprt &property() const
+  {
+    return cond();
+  }
+
+  exprt &property()
+  {
+    return cond();
+  }
+};
+
 inline const verilog_property_declarationt &
 to_verilog_property_declaration(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  verilog_property_declarationt::check(expr);
   return static_cast<const verilog_property_declarationt &>(expr);
 }
 
@@ -2910,30 +3253,29 @@ inline verilog_property_declarationt &
 to_verilog_property_declaration(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_property_declaration);
+  verilog_property_declarationt::check(expr);
   return static_cast<verilog_property_declarationt &>(expr);
 }
 
-class verilog_sequence_declarationt : public verilog_module_itemt
+class verilog_sequence_declarationt
+  : public verilog_sequence_property_declaration_baset
 {
 public:
-  explicit verilog_sequence_declarationt(exprt sequence)
+  explicit verilog_sequence_declarationt(exprt _sequence)
+    : verilog_sequence_property_declaration_baset{
+        ID_verilog_sequence_declaration,
+        std::move(_sequence)}
   {
-    add_to_operands(std::move(sequence));
-  }
-
-  const irep_idt &base_name() const
-  {
-    return get(ID_base_name);
   }
 
   const exprt &sequence() const
   {
-    return op0();
+    return cond();
   }
 
   exprt &sequence()
   {
-    return op0();
+    return cond();
   }
 };
 
@@ -2941,6 +3283,7 @@ inline const verilog_sequence_declarationt &
 to_verilog_sequence_declaration(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  verilog_sequence_declarationt::check(expr);
   return static_cast<const verilog_sequence_declarationt &>(expr);
 }
 
@@ -2948,6 +3291,7 @@ inline verilog_sequence_declarationt &
 to_verilog_sequence_declaration(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_verilog_sequence_declaration);
+  verilog_sequence_declarationt::check(expr);
   return static_cast<verilog_sequence_declarationt &>(expr);
 }
 
@@ -3059,7 +3403,8 @@ class verilog_package_scope_exprt : public binary_exprt
 public:
   irep_idt package_base_name() const
   {
-    return op0().id();
+    // this is a verilog_identifier
+    return op0().get(ID_base_name);
   }
 
   const exprt &identifier() const

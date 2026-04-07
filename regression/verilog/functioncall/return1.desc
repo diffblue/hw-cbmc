@@ -1,8 +1,8 @@
 CORE
 return1.sv
 
-^file .* line 4: synthesis of return not supported$
-^EXIT=2$
+^\[main\.assert\.1\] always main\.some_int\(\) == 123: PROVED .*$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring

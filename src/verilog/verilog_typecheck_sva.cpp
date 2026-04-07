@@ -493,3 +493,26 @@ exprt verilog_typecheck_exprt::convert_sva_rec(exprt expr)
     return convert_other_sva(expr);
   }
 }
+
+/// 1800-2017 F.4.1
+exprt verilog_typecheck_exprt::flatten_named_sequence_property(
+  sva_sequence_property_instance_exprt instance)
+{
+  auto &cond = instance.declaration().cond();
+  convert_sva(cond);
+
+  if(instance.symbol().type().id() == ID_verilog_sva_named_sequence)
+  {
+    require_sva_sequence(cond);
+    instance.type() = verilog_sva_sequence_typet{};
+  }
+  else if(instance.symbol().type().id() == ID_verilog_sva_named_property)
+  {
+    require_sva_property(cond);
+    instance.type() = verilog_sva_property_typet{};
+  }
+  else
+    PRECONDITION(false);
+
+  return instance;
+}

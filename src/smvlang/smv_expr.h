@@ -332,7 +332,12 @@ class smv_identifier_exprt : public nullary_exprt
 {
 public:
   explicit smv_identifier_exprt(irep_idt _identifier)
-    : nullary_exprt{ID_smv_identifier, typet{}}
+    : smv_identifier_exprt{_identifier, typet{}}
+  {
+  }
+
+  smv_identifier_exprt(irep_idt _identifier, typet type)
+    : nullary_exprt{ID_smv_identifier, std::move(type)}
   {
     identifier(_identifier);
   }
@@ -367,6 +372,219 @@ inline smv_identifier_exprt &to_smv_identifier_expr(exprt &expr)
   PRECONDITION(expr.id() == ID_smv_identifier);
   smv_identifier_exprt::check(expr);
   return static_cast<smv_identifier_exprt &>(expr);
+}
+
+/// set constructor expression
+class smv_set_exprt : public multi_ary_exprt
+{
+public:
+  explicit smv_set_exprt(exprt::operandst __elements)
+    : multi_ary_exprt{ID_smv_set, std::move(__elements), typet{ID_smv_set}}
+  {
+  }
+};
+
+inline const smv_set_exprt &to_smv_set_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_set);
+  smv_set_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const smv_set_exprt &>(expr);
+}
+
+inline smv_set_exprt &to_smv_set_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_set);
+  smv_set_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<smv_set_exprt &>(expr);
+}
+
+/// set union expression
+class smv_union_exprt : public binary_exprt
+{
+public:
+  smv_union_exprt(exprt lhs, exprt rhs, typet type)
+    : binary_exprt{
+        std::move(lhs),
+        ID_smv_union,
+        std::move(rhs),
+        std::move(type)}
+  {
+  }
+};
+
+inline const smv_union_exprt &to_smv_union_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_union);
+  smv_union_exprt::check(expr);
+  return static_cast<const smv_union_exprt &>(expr);
+}
+
+inline smv_union_exprt &to_smv_union_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_union);
+  smv_union_exprt::check(expr);
+  return static_cast<smv_union_exprt &>(expr);
+}
+
+/// set inclusion expression
+class smv_setin_exprt : public binary_predicate_exprt
+{
+public:
+  smv_setin_exprt(exprt lhs, exprt rhs)
+    : binary_predicate_exprt{std::move(lhs), ID_smv_setin, std::move(rhs)}
+  {
+  }
+};
+
+inline const smv_setin_exprt &to_smv_setin_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_setin);
+  smv_setin_exprt::check(expr);
+  return static_cast<const smv_setin_exprt &>(expr);
+}
+
+inline smv_setin_exprt &to_smv_setin_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_setin);
+  smv_setin_exprt::check(expr);
+  return static_cast<smv_setin_exprt &>(expr);
+}
+
+/// range expression
+class smv_range_exprt : public binary_exprt
+{
+public:
+  smv_range_exprt(exprt from, exprt to, typet type)
+    : binary_exprt{
+        std::move(from),
+        ID_smv_range,
+        std::move(to),
+        std::move(type)}
+  {
+  }
+
+  const exprt &from() const
+  {
+    return lhs();
+  }
+
+  exprt &from()
+  {
+    return lhs();
+  }
+
+  const exprt &to() const
+  {
+    return rhs();
+  }
+
+  exprt &to()
+  {
+    return rhs();
+  }
+};
+
+inline const smv_range_exprt &to_smv_range_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_range);
+  smv_range_exprt::check(expr);
+  return static_cast<const smv_range_exprt &>(expr);
+}
+
+inline smv_range_exprt &to_smv_range_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_range);
+  smv_range_exprt::check(expr);
+  return static_cast<smv_range_exprt &>(expr);
+}
+
+/// SMV's case ... esac expression
+class smv_cases_exprt : public multi_ary_exprt
+{
+public:
+  smv_cases_exprt() : multi_ary_exprt{ID_smv_cases, {}, typet{}}
+  {
+  }
+
+  class caset : public binary_exprt
+  {
+  public:
+    caset(exprt _condition, exprt _value)
+      : binary_exprt{std::move(_condition), ID_case, std::move(_value), typet{}}
+    {
+    }
+
+    const exprt &condition() const
+    {
+      return op0();
+    }
+
+    exprt &condition()
+    {
+      return op0();
+    }
+
+    const exprt &value() const
+    {
+      return op1();
+    }
+
+    exprt &value()
+    {
+      return op1();
+    }
+  };
+
+  using casest = std::vector<caset>;
+
+  const casest &cases() const
+  {
+    return (const casest &)(operands());
+  }
+
+  casest &cases()
+  {
+    return (casest &)(operands());
+  }
+
+  /// a lowering to a cond_exprt
+  cond_exprt lower() const;
+};
+
+inline const smv_cases_exprt &to_smv_cases_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_cases);
+  smv_cases_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<const smv_cases_exprt &>(expr);
+}
+
+inline smv_cases_exprt &to_smv_cases_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_cases);
+  smv_cases_exprt::check(expr, validation_modet::INVARIANT);
+  return static_cast<smv_cases_exprt &>(expr);
+}
+
+class smv_next_exprt : public unary_exprt
+{
+public:
+  explicit smv_next_exprt(exprt _op) : unary_exprt{ID_smv_next, _op, _op.type()}
+  {
+  }
+};
+
+inline const smv_next_exprt &to_smv_next_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_next);
+  smv_next_exprt::check(expr);
+  return static_cast<const smv_next_exprt &>(expr);
+}
+
+inline smv_next_exprt &to_smv_next_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_smv_next);
+  smv_next_exprt::check(expr);
+  return static_cast<smv_next_exprt &>(expr);
 }
 
 #endif // CPROVER_SMV_EXPR_H

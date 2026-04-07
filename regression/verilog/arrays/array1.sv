@@ -7,10 +7,12 @@ module main;
   reg [7:0] my_array4[-10:-1];
 
   // Icarus Verilog says 8, but that's wrong.
-  always assert p0: ($bits(my_array0) == 8*10);
-  always assert p1: ($bits(my_array1) == 8*10);
-  always assert p2: ($bits(my_array2) == 8*10);
-  always assert p3: ($bits(my_array3) == 8*10);
-  always assert p4: ($bits(my_array4) == 8*10);
+  initial begin
+    p0: assert ($bits(my_array0) == 8*10);
+    p1: assert ($bits(my_array1) == 8*10);
+    p2: assert ($bits(my_array2) == 8*10);
+    p3: assert ($bits(my_array3) == 8*10);
+    p4: assert ($bits(my_array4) == 8*10);
+  end
 
 endmodule

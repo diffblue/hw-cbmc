@@ -1,0 +1,6 @@
+CORE
+genvar-vs-typedef1.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--

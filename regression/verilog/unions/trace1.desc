@@ -1,0 +1,10 @@
+CORE
+trace1.sv
+--trace
+^  main\.u = '\{ field1: 1 \}$
+^  main\.u = '\{ field1: 2 \}$
+^  main\.u = '\{ field1: 3 \}$
+^EXIT=10$
+^SIGNAL=0$
+--
+--

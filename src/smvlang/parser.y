@@ -132,41 +132,6 @@ static void j_binary(YYSTYPE & dest, YYSTYPE & op1, const irep_idt &id, YYSTYPE 
 
 /*******************************************************************\
 
-Function: merge_complex_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-irep_idt merge_complex_identifier(const exprt &expr)
-{
-  if(expr.id() == ID_smv_identifier)
-    return to_smv_identifier_expr(expr).identifier();
-  else if(expr.id() == ID_member)
-  {
-    auto &member_expr = to_member_expr(expr);
-    return id2string(merge_complex_identifier(member_expr.compound())) + '.' + id2string(member_expr.get_component_name());
-  }
-  else if(expr.id() == ID_index)
-  {
-    auto &index_expr = to_index_expr(expr);
-    auto &index = index_expr.index();
-    PRECONDITION(index.is_constant());
-    auto index_string = id2string(to_constant_expr(index).get_value());
-    return id2string(merge_complex_identifier(index_expr.array())) + '.' + index_string;
-  }
-  else
-  {
-    DATA_INVARIANT_WITH_DIAGNOSTICS(false, "unexpected complex_identifier", expr.pretty());
-  }
-}
-
-/*******************************************************************\
-
 Function: new_module
 
   Inputs:
@@ -177,13 +142,15 @@ Function: new_module
 
 \*******************************************************************/
 
-static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
+static smv_parse_treet::modulet &new_module(YYSTYPE &location, YYSTYPE &module_name)
 {
   auto base_name = stack_expr(module_name).id_string();
-  const std::string identifier=smv_module_symbol(base_name);
-  auto &module=PARSER.parse_tree.modules[identifier];
-  module.name = identifier;
+  const auto identifier=smv_module_symbol(base_name);
+  PARSER.parse_tree.module_list.push_back(smv_parse_treet::modulet{});
+  auto &module=PARSER.parse_tree.module_list.back();
+  module.identifier = identifier;
   module.base_name = base_name;
+  module.source_location = stack_expr(location).source_location();
   PARSER.module = &module;
   return module;
 }
@@ -337,6 +304,7 @@ static smv_parse_treet::modulet &new_module(YYSTYPE &module_name)
 %left  EQUAL_Token NOTEQUAL_Token LT_Token GT_Token LE_Token GE_Token
 %left  union_Token
 %left  in_Token
+%left  DOTDOT_Token /* precedence not documented */
 %left  mod_Token /* Precedence from CMU SMV, different from NuSMV */
 %left  LTLT_Token GTGT_Token
 %left  PLUS_Token MINUS_Token
@@ -361,8 +329,11 @@ module_name: IDENTIFIER_Token
            | STRING_Token
            ;
 
-module_head: MODULE_Token module_name { new_module($2); }
-           | MODULE_Token module_name { new_module($2); }
+module_keyword: MODULE_Token { init($$); /* for the location */ }
+           ;
+
+module_head: module_keyword module_name { new_module($1, $2); }
+           | module_keyword module_name { new_module($1, $2); }
              '(' module_parameters_opt ')'
            ;
 
@@ -430,7 +401,7 @@ simple_var_list:
            ;
 
 define_declaration:
-             DEFINE_Token defines
+             DEFINE_Token define_body
            | DEFINE_Token
            ;
 
@@ -585,60 +556,59 @@ type_specifier:
            ;
 
 simple_type_specifier:
-             array_Token NUMBER_Token DOTDOT_Token NUMBER_Token of_Token simple_type_specifier
+             array_Token basic_expr DOTDOT_Token basic_expr of_Token simple_type_specifier
            {
-             init($$, ID_array);
-             int start=atoi(stack_expr($2).id().c_str());
-             int end=atoi(stack_expr($4).id().c_str());
-
-             if(end < start)
-             {
-               yyerror("array must end with number >= `"+std::to_string(start)+"'");
-               YYERROR;
-             }
-
-             stack_type($$).set(ID_size, end-start+1);
-             stack_type($$).set(ID_offset, start);
+             init($$, ID_smv_array);
+             stack_type($$).set(ID_from, stack_expr($2));
+             stack_type($$).set(ID_to, stack_expr($4));
              stack_type($$).add_subtype()=stack_type($6);
            }
            | boolean_Token { init($$, ID_bool); }
-           | word_Token '[' NUMBER_Token ']'
+           | word_Token '[' basic_expr ']'
            {
-             init($$, ID_unsignedbv);
-             stack_type($$).set(ID_width, stack_expr($3).id());
+             init($$, ID_smv_word);
+             stack_type($$).set(ID_width, stack_expr($3));
            }
-           | signed_Token word_Token '[' NUMBER_Token ']'
+           | signed_Token word_Token '[' basic_expr ']'
            {
-             init($$, ID_signedbv);
-             stack_type($$).set(ID_width, stack_expr($4).id());
+             init($$, ID_smv_signed_word);
+             stack_type($$).set(ID_width, stack_expr($4));
            }
-           | unsigned_Token word_Token '[' NUMBER_Token ']'
+           | unsigned_Token word_Token '[' basic_expr ']'
            {
-             init($$, ID_unsignedbv);
-             stack_type($$).set(ID_width, stack_expr($4).id());
+             init($$, ID_smv_unsigned_word);
+             stack_type($$).set(ID_width, stack_expr($4));
            }
-           | '{' enum_list '}' { $$=$2; }
-           | NUMBER_Token DOTDOT_Token NUMBER_Token
+           | '{' enumeration_type_body '}' { $$=$2; }
+           | integer_constant DOTDOT_Token integer_constant
            {
-             init($$, ID_range);
+             init($$, ID_smv_range);
              stack_type($$).set(ID_from, stack_expr($1));
              stack_type($$).set(ID_to, stack_expr($3));
            }
            ;
 
 module_type_specifier:
-             module_name
+             module_name parameter_list_paren_opt
            {
-             init($$, ID_smv_submodule);
-             to_smv_submodule_type(stack_type($$)).identifier(
-                           smv_module_symbol(stack_expr($1).id_string()));
+             init($$, ID_smv_module_instance);
+             to_smv_module_instance_type(stack_type($$)).base_name(stack_expr($1).id());
+             stack_expr($$).operands().swap(stack_expr($2).operands());
            }
-           | module_name '(' parameter_list ')'
+           | process_Token module_name parameter_list_paren_opt
            {
-             init($$, ID_smv_submodule);
-             to_smv_submodule_type(stack_type($$)).identifier(
-                           smv_module_symbol(stack_expr($1).id_string()));
-             stack_expr($$).operands().swap(stack_expr($3).operands());
+             init($$, ID_smv_process_module_instance);
+           }
+           ;
+
+parameter_list_paren_opt:
+             /* optional */
+           {
+             init($$);
+           }
+           | '(' parameter_list ')'
+           {
+             $$ = $2;
            }
            ;
 
@@ -647,12 +617,12 @@ parameter_list:
            | parameter_list ',' formula { $$=$1; mto($$, $3); }
            ;
 
-enum_list  : enum_element
+enumeration_type_body: enum_element
            {
              init($$, ID_smv_enumeration);
              stack_expr($$).add(ID_elements).get_sub().push_back(irept(stack_expr($1).id()));
            }
-           | enum_list ',' enum_element
+           | enumeration_type_body ',' enum_element
            {
              $$=$1;
              stack_expr($$).add(ID_elements).get_sub().push_back(irept(stack_expr($3).id())); 
@@ -662,7 +632,6 @@ enum_list  : enum_element
 enum_element: IDENTIFIER_Token
            {
              $$=$1;
-             PARSER.module->enum_set.insert(stack_expr($1).id_string());
              PARSER.module->add_enum(
                smv_identifier_exprt{stack_expr($1).id(), PARSER.source_location()});
            }
@@ -678,36 +647,27 @@ assignments: assignment
            | assignments assignment
            ;
 
-assignment : assignment_head '(' assignment_var ')' BECOMES_Token formula ';'
+assignment : init_Token '(' complex_identifier ')' BECOMES_Token simple_expr ';'
            {
-             if(stack_expr($1).id()==ID_smv_next)
-             {
-               PARSER.module->add_assign_next(
-                 unary_exprt{ID_smv_next, std::move(stack_expr($3))},
-                 std::move(stack_expr($6)));
-             }
-             else
-               PARSER.module->add_assign_init(std::move(stack_expr($3)), std::move(stack_expr($6)));
+             PARSER.module->add_assign_init(std::move(stack_expr($3)), std::move(stack_expr($6)));
            }
-           | assignment_var BECOMES_Token formula ';'
+           | next_Token '(' complex_identifier ')' BECOMES_Token next_expr ';'
+           {
+             PARSER.module->add_assign_next(
+               smv_next_exprt{std::move(stack_expr($3))},
+               std::move(stack_expr($6)));
+           }
+           | complex_identifier BECOMES_Token formula ';'
            {
              PARSER.module->add_assign_current(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
            ;
 
-assignment_var: variable_identifier
+define_body: define
+           | define_body define
            ;
 
-assignment_head:
-             init_Token { init($$, ID_init); }
-           | next_Token { init($$, ID_smv_next); }
-           ;
-
-defines:     define
-           | defines define
-           ;
-
-define     : assignment_var BECOMES_Token formula ';'
+define     : complex_identifier BECOMES_Token next_expr ';'
            {
              PARSER.module->add_define(std::move(stack_expr($1)), std::move(stack_expr($3)));
            }
@@ -736,7 +696,9 @@ boolean_constant:
            }
            ;
 
-integer_constant:
+integer_constant: integer_number;
+
+integer_number:
              NUMBER_Token
            {
              init($$, ID_constant);
@@ -754,6 +716,12 @@ word_constant:
            }
            ;
 
+next_expr  : basic_expr
+           ;
+
+simple_expr: basic_expr
+           ;
+
 basic_expr : constant
            | identifier
            {
@@ -768,7 +736,12 @@ basic_expr : constant
              unary($$, ID_member, $1);
              stack_expr($$).set(ID_component_name, stack_expr($3).id());
            }
-           | basic_expr '(' basic_expr ')'
+           | self_Token
+           {
+             // This rule is part of "complex_identifier" in the NuSMV manual.
+             init($$, ID_smv_self);
+           }
+           | basic_expr '(' simple_expr ')'
            {
              // Not in the NuSMV grammar.
              binary($$, $1, ID_index, $3);
@@ -814,6 +787,7 @@ basic_expr : constant
            | resize_Token '(' basic_expr ',' basic_expr ')' { binary($$, $3, ID_smv_resize, $5); }
            | basic_expr union_Token basic_expr    { binary($$, $1, ID_smv_union, $3); }
            | '{' set_body_expr '}'                { $$=$2; stack_expr($$).id(ID_smv_set); }
+           | basic_expr ".." basic_expr           { binary($$, $1, ID_smv_range, $3); }
            | basic_expr in_Token basic_expr       { binary($$, $1, ID_smv_setin, $3); }
            | basic_expr IF_Token basic_expr ':' basic_expr %prec IF_Token
                                                   { init($$, ID_if); mto($$, $1); mto($$, $3); mto($$, $5); }
@@ -833,14 +807,16 @@ basic_expr : constant
            | EF_Token  basic_expr                 { init($$, ID_EF);  mto($$, $2); }
            | EG_Token  basic_expr                 { init($$, ID_EG);  mto($$, $2); }
            | A_Token '[' basic_expr U_Token basic_expr ']' { binary($$, $3, ID_AU, $5); }
-           | A_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_AR, $5); }
            | E_Token '[' basic_expr U_Token basic_expr ']' { binary($$, $3, ID_EU, $5); }
+           /* AR and ER are not part of the NuSMV grammar */
+           | A_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_AR, $5); }
            | E_Token '[' basic_expr R_Token basic_expr ']' { binary($$, $3, ID_ER, $5); }
            /* LTL */
            | F_Token  basic_expr                  { init($$, ID_F);  mto($$, $2); }
            | G_Token  basic_expr                  { init($$, ID_G);  mto($$, $2); }
            | X_Token  basic_expr                  { init($$, ID_X);  mto($$, $2); }
            | basic_expr U_Token basic_expr        { binary($$, $1, ID_U, $3); }
+           /* R is not part of the NuSMV grammar */
            | basic_expr R_Token basic_expr        { binary($$, $1, ID_R, $3); }
            | basic_expr V_Token basic_expr        { binary($$, $1, ID_R, $3); }
            /* LTL PAST */
@@ -877,11 +853,11 @@ basic_expr : constant
            }
            ;
 
-bound      : '[' NUMBER_Token ',' NUMBER_Token ']'
+bound      : '[' integer_number ',' integer_number ']'
            { init($$); mto($$, $2); mto($$, $4); }
            ;
 
-range      : NUMBER_Token DOTDOT_Token NUMBER_Token
+range      : integer_number DOTDOT_Token integer_number
            { init($$); mto($$, $1); mto($$, $3); }
            ;
 
@@ -904,11 +880,6 @@ identifier : IDENTIFIER_Token
            ;
 
 variable_identifier: complex_identifier
-           {
-             auto id = merge_complex_identifier(stack_expr($1));
-             init($$, ID_smv_identifier);
-             stack_expr($$).set(ID_identifier, id);
-           }
            | STRING_Token
            {
              // Not in the NuSMV grammar.

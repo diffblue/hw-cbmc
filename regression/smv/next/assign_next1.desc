@@ -1,0 +1,7 @@
+CORE
+assign_next1.smv
+
+^\[.*\] AG x = y: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--

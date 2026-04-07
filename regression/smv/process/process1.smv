@@ -1,0 +1,9 @@
+-- from the NuSMV 2.7 manual
+
+MODULE my_module
+  -- my module definition...
+
+MODULE main
+  VAR
+    p1 : process my_module;
+    p2 : process my_module;

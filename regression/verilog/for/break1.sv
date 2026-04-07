@@ -1,12 +1,12 @@
 module main;
 
-  initial begin
+  initial begin : blk
     int i;
     for(i = 0; i < 10; i++) begin
       if(i == 5)
         break;
     end
-    assert(i==5);
+    loop_exit: assert(i==5);
   end
 
 endmodule

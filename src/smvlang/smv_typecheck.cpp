@@ -14,17 +14,20 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
+#include <util/prefix.h>
 #include <util/std_expr.h>
 #include <util/typecheck.h>
 
 #include "expr2smv.h"
 #include "smv_expr.h"
+#include "smv_index.h"
 #include "smv_range.h"
 #include "smv_types.h"
 
 #include <algorithm>
 #include <cassert>
 #include <set>
+#include <stack>
 
 class smv_typecheckt:public typecheckt
 {
@@ -32,14 +35,12 @@ public:
   smv_typecheckt(
     smv_parse_treet &_smv_parse_tree,
     symbol_table_baset &_symbol_table,
-    const std::string &_module,
-    bool _do_spec,
+    const std::string &_module_identifier,
     message_handlert &_message_handler)
     : typecheckt(_message_handler),
       smv_parse_tree(_smv_parse_tree),
       symbol_table(_symbol_table),
-      module(_module),
-      do_spec(_do_spec)
+      module_identifier(_module_identifier)
   {
     nondet_count=0;
   }
@@ -53,20 +54,14 @@ public:
     INIT,
     INVAR,
     TRANS,
-    TRANS_NEXT,
     OTHER,
     LTL,
     CTL
   } modet;
 
   void convert(smv_parse_treet::modulet &);
-  void create_var_symbols(
-    const smv_parse_treet::modulet::element_listt &,
-    const std::list<irep_idt> &module_parameters);
 
-  void collect_define(const equal_exprt &);
-  void convert_defines(exprt::operandst &invar);
-  void convert_define(const irep_idt &identifier);
+  void create_var_symbols(const smv_parse_treet::modulet::element_listt &);
 
   void convert(exprt &);
 
@@ -76,23 +71,39 @@ public:
   void typecheck() override;
 
   // These output SMV syntax
-  std::string to_string(const typet &);
-  std::string to_string(const exprt &);
+  std::string to_string(const typet &) const;
+  std::string to_string(const exprt &) const;
 
 protected:
   smv_parse_treet &smv_parse_tree;
   symbol_table_baset &symbol_table;
-  const std::string &module;
-  bool do_spec;
+  smv_indext index;
+  const std::string &module_identifier;
 
   void check_type(typet &);
-  smv_ranget convert_type(const typet &);
+  smv_ranget convert_type(const typet &) const;
+
+  void variable_checks(const smv_parse_treet::modulet &) const;
+  bool uses_next(const exprt &expr) const;
+  void no_next_allowed(const exprt &expr) const;
+  void no_LTL_allowed(const exprt &expr) const;
+  void no_CTL_allowed(const exprt &expr) const;
 
   void convert(smv_parse_treet::modulet::elementt &);
   void typecheck(smv_parse_treet::modulet::elementt &);
-  void typecheck_expr_rec(exprt &, modet);
-  void convert_expr_to(exprt &, const typet &dest);
-  exprt convert_word_constant(const constant_exprt &);
+  void typecheck_expr_node(exprt &, modet);
+  void process_smv_next_rec(exprt &expr, bool next);
+  void convert_expr_to(exprt &, const typet &dest) const;
+  void typecheck_assignment(exprt &);
+  exprt set_to_predicate(
+    const exprt &element,
+    const exprt &set_expression,
+    const source_locationt &) const;
+  exprt convert_word_constant(const constant_exprt &) const;
+
+  void assignment_lhs_checks(
+    const exprt &lhs,
+    smv_parse_treet::modulet::elementt::element_typet);
 
   smv_parse_treet::modulet *modulep;
 
@@ -102,17 +113,20 @@ protected:
 
   void instantiate(
     smv_parse_treet::modulet &,
-    const irep_idt &identifier,
+    const irep_idt &module_base_name,
     const irep_idt &instance,
-    const exprt::operandst &operands,
+    const exprt::operandst &arguments,
     const source_locationt &);
 
-  typet
-  type_union(const typet &type1, const typet &type2, const source_locationt &);
+  typet type_union(
+    const typet &type1,
+    const typet &type2,
+    const source_locationt &) const;
+
+  smv_set_typet
+  set_type_union(const std::vector<typet> &, const source_locationt &) const;
 
   typedef std::map<irep_idt, exprt> rename_mapt;
-
-  void instantiate_rename(exprt &, const rename_mapt &rename_map);
 
   void convert_ports(smv_parse_treet::modulet &, typet &dest);
 
@@ -121,19 +135,35 @@ protected:
   {
   public:
     exprt value;
-    bool typechecked, in_progress;
-    
-    explicit definet(const exprt &_v):value(_v), typechecked(false), in_progress(false)
+    bool typechecked = false, in_progress = false, uses_next = false;
+
+    explicit definet(const exprt &_v) : value(_v)
     {
     }
 
-    definet():typechecked(false), in_progress(false)
+    definet()
     {
     }
   };
   
   typedef std::unordered_map<irep_idt, definet, irep_id_hash> define_mapt;
   define_mapt define_map;
+
+  void collect_define(const exprt &lhs, const exprt &rhs);
+  void typecheck_defines();
+  void typecheck_define(define_mapt::iterator);
+  std::vector<define_mapt::iterator> unfinished_defines_used(const exprt &);
+  void convert_defines(exprt::operandst &invar);
+
+  // for variables
+  class vart
+  {
+  public:
+    bool assigned_next = false, assigned_init = false, assigned_current = false;
+  };
+
+  using var_mapt = std::unordered_map<irep_idt, vart, irep_id_hash>;
+  var_mapt var_map;
 
   static irep_idt strip_smv_prefix(irep_idt id)
   {
@@ -142,6 +172,8 @@ protected:
     else
       return id;
   }
+
+  mp_integer require_integer_constant(const exprt &) const;
 
   void lower_node(exprt &) const;
 
@@ -152,6 +184,44 @@ protected:
     expr.visit_post([this](exprt &expr) { lower_node(expr); });
   }
 };
+
+/*******************************************************************\
+
+Function: merge_complex_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt merge_complex_identifier(const exprt &expr)
+{
+  if(expr.id() == ID_smv_identifier)
+    return to_smv_identifier_expr(expr).identifier();
+  else if(expr.id() == ID_member)
+  {
+    auto &member_expr = to_member_expr(expr);
+    return id2string(merge_complex_identifier(member_expr.compound())) + '.' +
+           id2string(member_expr.get_component_name());
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+    auto &index = index_expr.index();
+    PRECONDITION(index.is_constant());
+    auto index_string = id2string(to_constant_expr(index).get_value());
+    return id2string(merge_complex_identifier(index_expr.array())) + '.' +
+           index_string;
+  }
+  else
+  {
+    DATA_INVARIANT_WITH_DIAGNOSTICS(
+      false, "unexpected complex_identifier", expr.pretty());
+  }
+}
 
 /*******************************************************************\
 
@@ -178,7 +248,7 @@ void smv_typecheckt::convert_ports(
     ports.push_back(exprt(ID_symbol));
     ports.back().set(
       ID_identifier,
-      id2string(smv_module.name) + "::var::" + id2string(port_name));
+      id2string(smv_module.identifier) + "::var::" + id2string(port_name));
   }
 }
 
@@ -196,25 +266,39 @@ Function: smv_typecheckt::flatten_hierarchy
 
 void smv_typecheckt::flatten_hierarchy(smv_parse_treet::modulet &smv_module)
 {
-  for(auto &element : smv_module.elements)
+  // Not using ranged for since we will append to the list we are
+  // iterating over! This avoids recursion.
+  for(auto element_it = smv_module.elements.begin();
+      element_it != smv_module.elements.end();
+      ++element_it)
   {
-    if(element.is_var() && element.expr.type().id() == ID_smv_submodule)
+    auto &element = *element_it;
+
+    if(element.is_var() && element.expr.type().id() == ID_smv_module_instance)
     {
-      exprt &inst =
-        static_cast<exprt &>(static_cast<irept &>(element.expr.type()));
+      auto &instance = to_smv_module_instance_type(element.expr.type());
 
-      for(auto &op : inst.operands())
-        convert(op);
+      for(auto &argument : instance.arguments())
+        convert(argument);
 
+      // the base name of the instance, not the module
       auto instance_base_name =
         to_smv_identifier_expr(element.expr).identifier();
 
       instantiate(
         smv_module,
-        inst.get(ID_identifier),
+        instance.base_name(),
         instance_base_name,
-        inst.operands(),
-        inst.find_source_location());
+        instance.arguments(),
+        instance.source_location());
+    }
+
+    if(
+      element.is_var() &&
+      element.expr.type().id() == ID_smv_process_module_instance)
+    {
+      throw errort().with_location(element.expr.source_location())
+        << "no support for asynchronous processes";
     }
   }
 }
@@ -233,152 +317,82 @@ Function: smv_typecheckt::instantiate
 
 void smv_typecheckt::instantiate(
   smv_parse_treet::modulet &smv_module,
-  const irep_idt &identifier,
+  const irep_idt &module_base_name,
   const irep_idt &instance,
-  const exprt::operandst &operands,
+  const exprt::operandst &arguments,
   const source_locationt &location)
 {
-  symbol_table_baset::symbolst::const_iterator s_it =
-    symbol_table.symbols.find(identifier);
+  // Find the module
+  auto module_it = index.module_map.find(module_base_name);
 
-  if(s_it==symbol_table.symbols.end())
+  if(module_it == index.module_map.end())
   {
     throw errort().with_location(location)
-      << "submodule `" << identifier << "' not found";
+      << "submodule `" << module_base_name << "' not found";
   }
 
-  if(s_it->second.type.id()!=ID_module)
+  const auto &instantiated_module = *module_it->second;
+  const auto &parameters = instantiated_module.parameters;
+
+  // map the arguments to parameters
+  if(parameters.size() != arguments.size())
   {
     throw errort().with_location(location)
-      << "submodule `" << identifier << "' not a module";
+      << "submodule `" << module_base_name << "' has wrong number of arguments";
   }
 
-  const irept::subt &ports=s_it->second.type.find(ID_ports).get_sub();
+  rename_mapt parameter_map;
 
-  // do the arguments/ports
-
-  if(ports.size()!=operands.size())
+  for(std::size_t i = 0; i < parameters.size(); i++)
   {
-    throw errort().with_location(location)
-      << "submodule `" << identifier << "' has wrong number of arguments";
+    parameter_map.emplace(parameters[i], arguments[i]);
   }
 
-  std::set<irep_idt> port_identifiers;
-  rename_mapt rename_map;
+  // We add a prefix to all identifiers in the instantiated
+  // module -- this prefix is called "context" in Sec. 2.3.16 in
+  // the NuSMV 2.7 manual.
+  const std::string context = id2string(instance) + '.';
 
-  for(std::size_t i = 0; i < ports.size(); i++)
+  // copy the parse tree elements
+  for(auto &src_element : instantiated_module.elements)
   {
-    const irep_idt &identifier=ports[i].get(ID_identifier);
-    rename_map.insert(std::pair<irep_idt, exprt>(identifier, operands[i]));
-    port_identifiers.insert(identifier);
-  }
+    auto copy = src_element;
 
-  // do the variables
-
-  std::string new_prefix=
-    id2string(smv_module.name)+"::var::"+id2string(instance)+".";
-
-  std::set<irep_idt> var_identifiers;
-
-  for(auto v_it=symbol_table.symbol_module_map.lower_bound(identifier);
-      v_it!=symbol_table.symbol_module_map.upper_bound(identifier);
-      v_it++)
-  {
-    symbol_table_baset::symbolst::const_iterator s_it2 =
-      symbol_table.symbols.find(v_it->second);
-
-    if(s_it2==symbol_table.symbols.end())
-    {
-      throw errort() << "symbol `" << v_it->second << "' not found";
-    }
-
-    if(port_identifiers.find(s_it2->first) != port_identifiers.end())
-    {
-    }
-    else if(s_it2->second.type.id() == ID_module)
-    {
-    }
-    else
-    {
-      symbolt symbol(s_it2->second);
-
-      symbol.name=new_prefix+id2string(symbol.base_name);
-      symbol.module=smv_module.name;
-
-      if(smv_module.name == "smv::main")
+    // replace the parameter identifiers,
+    // and add the context prefix to non-parameter, non-enum identifiers
+    copy.expr.visit_post(
+      [&parameter_map, &context, this](exprt &expr)
       {
-        symbol.pretty_name =
-          id2string(instance) + '.' + id2string(symbol.base_name);
-      }
-      else
-      {
-        symbol.pretty_name = strip_smv_prefix(symbol.name);
-      }
+        if(expr.id() == ID_smv_identifier)
+        {
+          auto identifier = to_smv_identifier_expr(expr).identifier();
+          auto parameter_it = parameter_map.find(identifier);
+          if(parameter_it != parameter_map.end())
+          {
+            // It's a parameter
+            expr = parameter_it->second;
+          }
+          else if(index.enum_names.find(identifier) != index.enum_names.end())
+          {
+            // It's an enum, leave as is
+          }
+          else
+          {
+            // add the context prefix
+            to_smv_identifier_expr(expr).identifier(
+              context + id2string(identifier));
+          }
+        }
+      });
 
-      rename_map.insert(
-          std::pair<irep_idt, exprt>(s_it2->first, symbol.symbol_expr()));
-
-      var_identifiers.insert(symbol.name);
-
-      symbol_table.add(symbol);
-    }
+    // add to main parse tree
+    smv_module.elements.push_back(copy);
   }
-
-  // fix values (macros)
-
-  for(const auto &v_id : var_identifiers)
-  {
-    auto s_it2 = symbol_table.get_writeable(v_id);
-
-    if(s_it2==nullptr)
-    {
-      throw errort() << "symbol `" << v_id << "' not found";
-    }
-
-    symbolt &symbol=*s_it2;
-
-    if(!symbol.value.is_nil())
-    {
-      instantiate_rename(symbol.value, rename_map);
-      typecheck(symbol.value, OTHER);
-      convert_expr_to(symbol.value, symbol.type);
-    }
-  }
-
-  // get the transition system
-
-  const transt &trans=to_trans_expr(s_it->second.value);
-
-  std::string old_prefix=id2string(s_it->first)+"::var::";
-
-  // do the transition system
-
-  if(!trans.invar().is_true())
-  {
-    exprt tmp(trans.invar());
-    instantiate_rename(tmp, rename_map);
-    smv_module.add_invar(tmp);
-  }
-    
-  if(!trans.init().is_true())
-  {
-    exprt tmp(trans.init());
-    instantiate_rename(tmp, rename_map);
-    smv_module.add_init(tmp);
-  }
-    
-  if(!trans.trans().is_true())
-  {
-    exprt tmp(trans.trans());
-    instantiate_rename(tmp, rename_map);
-    smv_module.add_trans(tmp);
-  }
-
 }
 
 /*******************************************************************\
 
-Function: smv_typecheckt::instantiate_rename
+Function: smv_typecheckt::require_integer_constant
 
   Inputs:
 
@@ -388,43 +402,21 @@ Function: smv_typecheckt::instantiate_rename
 
 \*******************************************************************/
 
-void smv_typecheckt::instantiate_rename(
-  exprt &expr,
-  const rename_mapt &rename_map)
+mp_integer smv_typecheckt::require_integer_constant(const exprt &expr) const
 {
-  for(auto &op : expr.operands())
-    instantiate_rename(op, rename_map);
-
-  if(expr.id()==ID_symbol || expr.id()==ID_next_symbol)
+  if(expr.id() != ID_constant)
   {
-    const irep_idt &old_identifier=expr.get(ID_identifier);
-    bool next=expr.id()==ID_next_symbol;
-
-    rename_mapt::const_iterator it=
-      rename_map.find(old_identifier);
-
-    if(it!=rename_map.end())
-    {
-      expr=it->second;
-
-      if(next)
-      {
-        if(expr.id()==ID_symbol)
-        {
-          expr=it->second;
-          expr.id(ID_next_symbol);
-        }
-        else
-        {
-          throw errort().with_location(expr.find_source_location())
-            << "expected symbol expression here, but got "
-            << to_string(it->second);
-        }
-      }
-      else
-        expr=it->second;
-    }
+    throw errort().with_location(expr.source_location())
+      << "expected constant expression";
   }
+
+  if(expr.type().id() != ID_integer && expr.type().id() != ID_range)
+  {
+    throw errort().with_location(expr.source_location())
+      << "expected integer expression";
+  }
+
+  return numeric_cast_v<mp_integer>(to_constant_expr(expr));
 }
 
 /*******************************************************************\
@@ -441,17 +433,70 @@ Function: smv_typecheckt::check_type
 
 void smv_typecheckt::check_type(typet &type)
 {
-  if(type.id() == ID_range)
+  if(type.id() == ID_smv_array)
   {
-    auto range = smv_ranget::from_type(to_range_type(type));
+    auto &array_type = to_smv_array_type(type);
 
-    if(range.from > range.to)
-      throw errort().with_location(type.source_location()) << "range is empty";
+    auto from = require_integer_constant(array_type.from());
+    auto to = require_integer_constant(array_type.to());
+
+    if(to < from)
+      throw errort().with_location(type.source_location())
+        << "array must end with number >= `" << from << '\'';
+
+    // recursive call
+    check_type(array_type.element_type());
+
+    type.id(ID_array);
+    type.remove(ID_from);
+    type.remove(ID_to);
+    type.set(ID_size, integer2string(to - from + 1));
+    type.set(ID_offset, integer2string(from));
   }
   else if(type.id() == ID_smv_enumeration)
   {
     // normalize the ordering of elements
     to_smv_enumeration_type(type).normalize();
+  }
+  else if(type.id() == ID_smv_range)
+  {
+    auto &range_type = to_smv_range_type(type);
+
+    auto from = require_integer_constant(range_type.from());
+    auto to = require_integer_constant(range_type.to());
+
+    if(from > to)
+      throw errort().with_location(type.source_location()) << "range is empty";
+
+    type.id(ID_range);
+    type.set(ID_from, integer2string(from));
+    type.set(ID_to, integer2string(to));
+  }
+  else if(type.id() == ID_smv_signed_word)
+  {
+    auto &word_type = to_smv_signed_word_type(type);
+
+    auto width = require_integer_constant(word_type.width());
+
+    if(width < 1)
+      throw errort().with_location(type.source_location())
+        << "word width must be 1 or larger";
+
+    type.id(ID_signedbv);
+    type.set(ID_width, integer2string(width));
+  }
+  else if(type.id() == ID_smv_word || type.id() == ID_smv_unsigned_word)
+  {
+    auto &word_type = to_smv_word_base_type(type);
+
+    auto width = require_integer_constant(word_type.width());
+
+    if(width < 1)
+      throw errort().with_location(type.source_location())
+        << "word width must be 1 or larger";
+
+    type.id(ID_unsignedbv);
+    type.set(ID_width, integer2string(width));
   }
 }
 
@@ -467,7 +512,7 @@ Function: smv_typecheckt::convert_type
 
 \*******************************************************************/
 
-smv_ranget smv_typecheckt::convert_type(const typet &src)
+smv_ranget smv_typecheckt::convert_type(const typet &src) const
 {
   if(src.id()==ID_bool)
   {
@@ -515,7 +560,7 @@ Function: smv_typecheckt::type_union
 typet smv_typecheckt::type_union(
   const typet &type1,
   const typet &type2,
-  const source_locationt &source_location)
+  const source_locationt &source_location) const
 {
   if(type1==type2) return type1;
 
@@ -569,6 +614,51 @@ typet smv_typecheckt::type_union(
 
 /*******************************************************************\
 
+Function: smv_typecheckt::set_type_union
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+smv_set_typet smv_typecheckt::set_type_union(
+  const std::vector<typet> &types,
+  const source_locationt &source_location) const
+{
+  PRECONDITION(!types.empty());
+
+  typet union_type;
+  bool first = true;
+
+  for(auto &type : types)
+  {
+    // decay sets to their element type
+    auto type_decayed =
+      type.id() == ID_smv_set ? to_smv_set_type(type).element_type() : type;
+
+    if(type_decayed.id() == ID_signedbv || type_decayed.id() == ID_unsignedbv)
+      throw errort{}.with_location(source_location)
+        << "sets of word-typed elements are not allowed";
+
+    if(first)
+    {
+      union_type = type_decayed;
+      first = false;
+    }
+    else
+    {
+      union_type = type_union(union_type, type_decayed, source_location);
+    }
+  }
+
+  return smv_set_typet{union_type};
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::typecheck
 
   Inputs:
@@ -581,7 +671,10 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck(exprt &expr, modet mode)
 {
-  typecheck_expr_rec(expr, mode);
+  expr.visit_post([mode, this](exprt &node)
+                  { typecheck_expr_node(node, mode); });
+
+  process_smv_next_rec(expr, false);
 }
 
 /*******************************************************************\
@@ -596,7 +689,8 @@ Function: convert_word_constant
 
 \*******************************************************************/
 
-exprt smv_typecheckt::convert_word_constant(const constant_exprt &src_expr)
+exprt smv_typecheckt::convert_word_constant(
+  const constant_exprt &src_expr) const
 {
   auto &src = id2string(src_expr.get_value());
 
@@ -703,7 +797,7 @@ exprt smv_typecheckt::convert_word_constant(const constant_exprt &src_expr)
 
 /*******************************************************************\
 
-Function: smv_typecheckt::typecheck_expr_rec
+Function: smv_typecheckt::process_smv_next_rec
 
   Inputs:
 
@@ -713,31 +807,37 @@ Function: smv_typecheckt::typecheck_expr_rec
 
 \*******************************************************************/
 
-void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
+void smv_typecheckt::process_smv_next_rec(exprt &expr, bool next)
 {
+  // pre-traversal
   if(expr.id() == ID_smv_next)
   {
-    if(mode == TRANS_NEXT)
+    if(next)
     {
       throw errort().with_location(expr.find_source_location())
         << "next(next(...)) encountered";
     }
 
-    // next_symbol is only allowed in TRANS mode
-    if(mode != TRANS && mode != OTHER)
-      throw errort().with_location(expr.find_source_location())
-        << "next(...) is not allowed here";
+    expr = to_smv_next_expr(expr).op();
 
-    expr = to_unary_expr(expr).op();
-
-    typecheck_expr_rec(expr, TRANS_NEXT);
+    process_smv_next_rec(expr, true);
+    return;
   }
-  else if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
+
+  // typecheck all the operands recursively
+  for(auto &op : expr.operands())
+    process_smv_next_rec(op, next);
+
+  // now post-traversal
+  if(expr.id() == ID_symbol)
   {
     const irep_idt &identifier = expr.get(ID_identifier);
 
-    if(define_map.find(identifier)!=define_map.end())
-      convert_define(identifier);
+    auto define_it = define_map.find(identifier);
+    if(define_it != define_map.end())
+      DATA_INVARIANT(
+        define_it->second.typechecked,
+        "defines used must be typechecked already");
 
     auto s_it=symbol_table.get_writeable(identifier);
 
@@ -747,31 +847,82 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "variable `" << identifier << "' not found";
     }
 
-    if(mode == TRANS_NEXT)
+    if(next)
+    {
       expr.id(ID_next_symbol);
+      symbolt &symbol = *s_it;
+
+      if(symbol.module == module_identifier)
+      {
+        symbol.is_input = false;
+        symbol.is_state_var = true;
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::typecheck_expr_node
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
+{
+  // now post-traversal
+  if(expr.id() == ID_symbol)
+  {
+    const irep_idt &identifier = to_symbol_expr(expr).get_identifier();
+
+    auto define_it = define_map.find(identifier);
+    if(define_it != define_map.end())
+      DATA_INVARIANT(
+        define_it->second.typechecked,
+        "defines used must be typechecked already");
+
+    auto s_it = symbol_table.get_writeable(identifier);
+
+    if(s_it == nullptr)
+    {
+      throw errort().with_location(expr.find_source_location())
+        << "variable `" << identifier << "' not found";
+    }
 
     symbolt &symbol=*s_it;
     
     assert(symbol.type.is_not_nil());
     expr.type()=symbol.type;
 
-    if(mode == INIT || mode == TRANS_NEXT)
+    if(mode == INIT)
     {
-      if(symbol.module==module)
+      if(symbol.module == module_identifier)
       {
         symbol.is_input=false;
         symbol.is_state_var=true;
       }
     }
   }
+  else if(expr.id() == ID_smv_next)
+  {
+    // handled by process_smv_next
+    expr.type() = to_smv_next_expr(expr).op().type();
+  }
+  else if(expr.id() == ID_next_symbol)
+  {
+    // should not have been generated yet
+    PRECONDITION(false);
+  }
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_xor ||
     expr.id() == ID_xnor || expr.id() == ID_not || expr.id() == ID_implies)
   {
     PRECONDITION(!expr.operands().empty());
-
-    for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
 
     auto &op0_type = to_multi_ary_expr(expr).op0().type();
 
@@ -810,8 +961,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_iff)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
 
     auto &op0_type = binary_expr.op0().type();
 
@@ -833,9 +982,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   }
   else if(expr.id()==ID_constraint_select_one)
   {
-    for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
-
     typet op_type;
     op_type.make_nil();
 
@@ -859,10 +1005,12 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     exprt &op0 = to_binary_expr(expr).op0();
     exprt &op1 = to_binary_expr(expr).op1();
 
-    typecheck_expr_rec(op0, mode);
-    typecheck_expr_rec(op1, mode);
-
     typet op_type = type_union(op0.type(), op1.type(), expr.source_location());
+
+    // no set types
+    if(op_type.id() == ID_smv_set)
+      throw errort{}.with_location(expr.source_location())
+        << "operator " << expr.id() << " does not allow set types";
 
     convert_expr_to(op0, op_type);
     convert_expr_to(op1, op_type);
@@ -886,14 +1034,25 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &if_expr = to_if_expr(expr);
     auto &true_case = if_expr.true_case();
     auto &false_case = if_expr.false_case();
-    typecheck_expr_rec(if_expr.cond(), mode);
+
     convert_expr_to(if_expr.cond(), bool_typet{});
-    typecheck_expr_rec(true_case, mode);
-    typecheck_expr_rec(false_case, mode);
-    expr.type() =
-      type_union(true_case.type(), false_case.type(), expr.source_location());
-    convert_expr_to(true_case, expr.type());
-    convert_expr_to(false_case, expr.type());
+
+    // ?: supports sets
+    if(
+      true_case.type().id() == ID_smv_set ||
+      false_case.type().id() == ID_smv_set)
+    {
+      expr.type() = set_type_union(
+        {true_case.type(), false_case.type()}, expr.source_location());
+    }
+    else
+    {
+      expr.type() =
+        type_union(true_case.type(), false_case.type(), expr.source_location());
+
+      convert_expr_to(true_case, expr.type());
+      convert_expr_to(false_case, expr.type());
+    }
   }
   else if(expr.id()==ID_plus || expr.id()==ID_minus ||
           expr.id()==ID_mult || expr.id()==ID_div ||
@@ -901,9 +1060,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     auto &op0 = to_binary_expr(expr).op0();
     auto &op1 = to_binary_expr(expr).op1();
-
-    typecheck_expr_rec(op0, mode);
-    typecheck_expr_rec(op1, mode);
 
     if(op0.type().id() == ID_range || op0.type().id() == ID_bool)
     {
@@ -920,9 +1076,15 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
       else if(expr.id() == ID_mult)
         new_range = smv_range0 * smv_range1;
       else if(expr.id() == ID_div)
-        new_range = smv_range0;
+      {
+        throw errort().with_location(expr.source_location())
+          << "no support for / on integer operands";
+      }
       else if(expr.id() == ID_mod)
-        new_range = smv_range1;
+      {
+        throw errort().with_location(expr.source_location())
+          << "no support for % on integer operands";
+      }
       else
         assert(false);
 
@@ -976,71 +1138,58 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
       PRECONDITION(false);
     }
   }
-  else if(expr.id()==ID_cond)
+  else if(expr.id() == ID_case)
+  {
+    // not typed, operand of smv_cases
+  }
+  else if(expr.id() == ID_smv_cases)
   {
     // case ... esac
-    for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
+    auto &cases_expr = to_smv_cases_expr(expr);
 
-    bool condition = true;
-
-    expr.type().make_nil();
-
-    for(auto &op : expr.operands())
+    if(cases_expr.cases().empty())
     {
-      if(!condition)
-        expr.type() =
-          type_union(expr.type(), op.type(), expr.source_location());
+      throw errort().with_location(cases_expr.source_location())
+        << "Expected at least one case for cases expression";
+    }
 
-      condition = !condition;
+    // determine the result type
+    cases_expr.type().make_nil();
+
+    for(auto &case_expr : cases_expr.cases())
+    {
+      cases_expr.type() = type_union(
+        cases_expr.type(), case_expr.value().type(), expr.source_location());
     }
 
     // go again, re-type the operands
-    condition = true;
-
-    for(auto &op : expr.operands())
+    for(auto &case_expr : cases_expr.cases())
     {
-      if(condition)
-        convert_expr_to(op, bool_typet{});
-      else
-        convert_expr_to(op, expr.type());
-
-      condition = !condition;
+      convert_expr_to(case_expr.condition(), bool_typet{});
+      convert_expr_to(case_expr.value(), cases_expr.type());
     }
   }
   else if(
     expr.id() == ID_AG || expr.id() == ID_AX || expr.id() == ID_AF ||
     expr.id() == ID_EG || expr.id() == ID_EX || expr.id() == ID_EF)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     expr.type() = bool_typet();
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
     convert_expr_to(op, expr.type());
   }
   else if(
     expr.id() == ID_smv_EBF || expr.id() == ID_smv_ABF ||
     expr.id() == ID_smv_EBG || expr.id() == ID_smv_ABG)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     expr.type() = bool_typet();
     auto &op2 = to_ternary_expr(expr).op2();
-    typecheck_expr_rec(op2, mode);
     convert_expr_to(op2, expr.type());
   }
   else if(expr.id() == ID_smv_ABU || expr.id() == ID_smv_EBU)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     expr.type() = bool_typet();
     for(std::size_t i = 0; i < expr.operands().size(); i++)
     {
-      typecheck_expr_rec(expr.operands()[i], mode);
       if(i == 0 || i == 3)
         convert_expr_to(expr.operands()[i], expr.type());
     }
@@ -1050,25 +1199,16 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     expr.id() == ID_smv_H || expr.id() == ID_smv_O || expr.id() == ID_smv_Y ||
     expr.id() == ID_smv_Z)
   {
-    if(mode != LTL)
-      throw errort().with_location(expr.source_location())
-        << "LTL operator not permitted here";
     expr.type() = bool_typet{};
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
     convert_expr_to(op, expr.type());
   }
   else if(
     expr.id() == ID_EU || expr.id() == ID_ER || expr.id() == ID_AU ||
     expr.id() == ID_AR)
   {
-    if(mode != CTL)
-      throw errort().with_location(expr.source_location())
-        << "CTL operator not permitted here";
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet{};
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
     convert_expr_to(binary_expr.lhs(), expr.type());
     convert_expr_to(binary_expr.rhs(), expr.type());
   }
@@ -1076,15 +1216,25 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     expr.id() == ID_U || expr.id() == ID_R || expr.id() == ID_smv_S ||
     expr.id() == ID_smv_T)
   {
-    if(mode != LTL)
-      throw errort().with_location(expr.source_location())
-        << "LTL operator not permitted here";
     auto &binary_expr = to_binary_expr(expr);
     expr.type() = bool_typet{};
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
     convert_expr_to(binary_expr.lhs(), expr.type());
     convert_expr_to(binary_expr.rhs(), expr.type());
+  }
+  else if(expr.id() == ID_index)
+  {
+    auto &index_expr = to_index_expr(expr);
+
+    if(index_expr.array().type().id() != ID_array)
+    {
+      throw errort().with_location(expr.source_location())
+        << "Operand to index select operator must be an array, but got "
+        << to_string(index_expr.array().type());
+    }
+
+    auto &array_type = to_array_type(index_expr.array().type());
+
+    index_expr.type() = array_type.element_type();
   }
   else if(expr.id()==ID_typecast)
   {
@@ -1093,35 +1243,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   }
   else if(expr.id() == ID_smv_setin)
   {
-    auto &lhs = to_binary_expr(expr).lhs();
-    auto &rhs = to_binary_expr(expr).rhs();
-
-    typecheck_expr_rec(lhs, mode);
-    typecheck_expr_rec(rhs, mode);
-
-    // The RHS can be a set or a singleton
-    if(rhs.type().id() == ID_smv_set)
-    {
-      PRECONDITION(rhs.id() == ID_smv_set);
-      // do type union
-      typet op_type = lhs.type();
-      for(auto &op : rhs.operands())
-        op_type = type_union(op_type, op.type(), expr.source_location());
-      // now convert
-      convert_expr_to(lhs, op_type);
-      for(auto &op : rhs.operands())
-        convert_expr_to(op, op_type);
-    }
-    else
-    {
-      typet op_type =
-        type_union(lhs.type(), rhs.type(), expr.source_location());
-
-      convert_expr_to(lhs, op_type);
-      convert_expr_to(rhs, op_type);
-    }
-
-    expr.type() = bool_typet();
+    expr.type() = bool_typet{};
   }
   else if(expr.id() == ID_smv_setnotin)
   {
@@ -1130,7 +1252,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_unary_minus)
   {
     auto &uminus_expr = to_unary_minus_expr(expr);
-    typecheck_expr_rec(uminus_expr.op(), mode);
     auto &op_type = uminus_expr.op().type();
 
     if(op_type.id() == ID_range)
@@ -1158,8 +1279,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_swconst)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
     PRECONDITION(binary_expr.lhs().is_constant());
     PRECONDITION(binary_expr.rhs().is_constant());
     auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
@@ -1172,8 +1291,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_uwconst)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
     PRECONDITION(binary_expr.lhs().is_constant());
     PRECONDITION(binary_expr.rhs().is_constant());
     auto bits = numeric_cast_v<mp_integer>(to_constant_expr(binary_expr.rhs()));
@@ -1186,7 +1303,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_abs)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
     if(op.type().id() == ID_range)
     {
       // ok
@@ -1210,8 +1326,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     auto &op = to_ternary_expr(expr).op0();
 
-    typecheck_expr_rec(op, mode);
-
     if(op.type().id() != ID_unsignedbv && op.type().id() != ID_signedbv)
     {
       throw errort().with_location(op.source_location())
@@ -1219,8 +1333,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     }
 
     auto &high = to_ternary_expr(expr).op1();
-
-    typecheck_expr_rec(high, OTHER);
 
     // high must be an integer constant
     if(high.type().id() != ID_range && high.type().id() != ID_natural)
@@ -1237,8 +1349,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto high_int = numeric_cast_v<mp_integer>(to_constant_expr(high));
 
     auto &low = to_ternary_expr(expr).op2();
-
-    typecheck_expr_rec(low, OTHER);
 
     // low must be an integer constant
     if(low.type().id() != ID_range && low.type().id() != ID_natural)
@@ -1265,7 +1375,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_bool)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+
     if(
       op.type().id() == ID_bool || op.type().id() == ID_unsignedbv ||
       op.type().id() == ID_signedbv || op.type().id() == ID_range)
@@ -1283,7 +1393,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &multi_ary_expr = to_multi_ary_expr(expr);
     for(auto &op : multi_ary_expr.operands())
     {
-      typecheck_expr_rec(op, mode);
       if(op.type().id() != ID_bool)
         throw errort().with_location(op.source_location())
           << "count expects boolean arguments";
@@ -1293,9 +1402,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_max || expr.id() == ID_smv_min)
   {
     auto &binary_expr = to_binary_expr(expr);
-
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
 
     binary_expr.type() = type_union(
       binary_expr.lhs().type(),
@@ -1316,7 +1422,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_toint)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+
     if(op.type().id() == ID_bool)
     {
       expr.type() = range_typet{0, 1};
@@ -1338,10 +1444,11 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_word1)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+
     if(op.type().id() != ID_bool)
       throw errort().with_location(op.source_location())
         << "word1 expects boolean argument";
+
     expr.type() = unsignedbv_typet{1};
   }
   else if(
@@ -1351,8 +1458,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     auto &binary_expr = to_binary_expr(expr);
 
     // The LHS must be a word type.
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-
     binary_expr.type() = binary_expr.lhs().type();
 
     if(binary_expr.type().id() == ID_signedbv)
@@ -1372,14 +1477,14 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
     }
 
     // The RHS must be an integer constant
-    typecheck_expr_rec(binary_expr.rhs(), mode);
-
     if(
       binary_expr.rhs().type().id() != ID_range &&
       binary_expr.rhs().type().id() != ID_natural)
+    {
       throw errort().with_location(expr.find_source_location())
         << "Shift distance must be integer, but got "
         << to_string(binary_expr.rhs().type());
+    }
 
     if(binary_expr.rhs().id() != ID_constant)
       throw errort().with_location(expr.find_source_location())
@@ -1407,9 +1512,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     auto &binary_expr = to_binary_expr(expr);
 
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
-
     if(
       binary_expr.lhs().type().id() != ID_signedbv &&
       binary_expr.lhs().type().id() != ID_unsignedbv)
@@ -1434,7 +1536,7 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_sizeof)
   {
     auto &op = to_unary_expr(expr).op();
-    typecheck_expr_rec(op, mode);
+
     if(op.type().id() == ID_signedbv || op.type().id() == ID_unsignedbv)
     {
       auto bits = to_bitvector_type(op.type()).get_width();
@@ -1449,8 +1551,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_resize)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
     PRECONDITION(binary_expr.rhs().is_constant());
     auto &lhs_type = binary_expr.lhs().type();
     auto new_bits =
@@ -1469,8 +1569,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   else if(expr.id() == ID_smv_extend)
   {
     auto &binary_expr = to_binary_expr(expr);
-    typecheck_expr_rec(binary_expr.lhs(), mode);
-    typecheck_expr_rec(binary_expr.rhs(), mode);
     PRECONDITION(binary_expr.rhs().is_constant());
     auto &lhs_type = binary_expr.lhs().type();
     auto old_bits = to_bitvector_type(lhs_type).get_width();
@@ -1491,7 +1589,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     // a reinterpret cast
     auto &op = to_smv_unsigned_cast_expr(expr).op();
-    typecheck_expr_rec(op, mode);
     if(op.type().id() == ID_signedbv)
       expr.type() = unsignedbv_typet{to_signedbv_type(op.type()).get_width()};
     else
@@ -1504,7 +1601,6 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
   {
     // a reinterpret cast
     auto &op = to_smv_signed_cast_expr(expr).op();
-    typecheck_expr_rec(op, mode);
     if(op.type().id() == ID_unsignedbv)
       expr.type() = signedbv_typet{to_unsignedbv_type(op.type()).get_width()};
     else
@@ -1513,13 +1609,31 @@ void smv_typecheckt::typecheck_expr_rec(exprt &expr, modet mode)
         << "signed operand must have unsigned word type";
     }
   }
-  else if(expr.id() == ID_smv_set)
+  else if(expr.id() == ID_smv_set || expr.id() == ID_smv_union)
   {
-    // a set literal
-    expr.type() = typet{ID_smv_set};
+    // a set literal "{ ... }" or "a union b", which both mean the same
+    std::vector<typet> types;
+    types.reserve(expr.operands().size());
 
-    for(auto &op : expr.operands())
-      typecheck_expr_rec(op, mode);
+    for(auto &element : expr.operands())
+      types.push_back(element.type());
+
+    expr.type() = set_type_union(types, expr.source_location());
+  }
+  else if(expr.id() == ID_smv_range)
+  {
+    // an integer set given as range "from .. to"
+    auto &range_expr = to_smv_range_expr(expr);
+
+    auto from = require_integer_constant(range_expr.from());
+    auto to = require_integer_constant(range_expr.to());
+
+    // NuSMV errors empty ranges
+    if(from > to)
+      throw errort().with_location(expr.source_location())
+        << "empty ranges are not allowed";
+
+    expr.type() = smv_set_typet{range_typet{from, to}};
   }
   else
   {
@@ -1629,6 +1743,16 @@ void smv_typecheckt::lower_node(exprt &expr) const
     auto &smv_resize = to_smv_resize_expr(expr);
     expr = typecast_exprt{smv_resize.lhs(), smv_resize.type()};
   }
+  else if(expr.id() == ID_smv_setin)
+  {
+    auto &setin_expr = to_smv_setin_expr(expr);
+    // lower to a predicate
+
+    auto predicate = set_to_predicate(
+      setin_expr.lhs(), setin_expr.rhs(), setin_expr.source_location());
+
+    expr = predicate;
+  }
   else if(expr.id() == ID_smv_signed_cast)
   {
     expr = typecast_exprt{to_smv_signed_cast_expr(expr).op(), expr.type()};
@@ -1689,6 +1813,12 @@ void smv_typecheckt::lower_node(exprt &expr) const
     expr = extractbits_exprt{
       bit_selection.op0(), bit_selection.op2(), bit_selection.type()};
   }
+  else if(expr.id() == ID_smv_cases)
+  {
+    // rewrite into a 'cond' expression
+    auto cond_expr = to_smv_cases_expr(expr).lower();
+    expr = std::move(cond_expr);
+  }
 
   // lower the type
   lower(expr.type());
@@ -1727,7 +1857,7 @@ Function: smv_typecheckt::convert_expr_to
 
 \*******************************************************************/
 
-void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
+void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type) const
 {
   const auto &src_type = expr.type();
 
@@ -1735,26 +1865,6 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
 
   if(src_type != dest_type)
   {
-    if(src_type.id() == ID_smv_set && expr.id() == ID_smv_set)
-    {
-      // sets can be assigned to scalars, which yields a nondeterministic
-      // choice
-      std::string identifier =
-        module + "::var::" + std::to_string(nondet_count++);
-
-      expr.set(ID_identifier, identifier);
-      expr.set("#smv_nondet_choice", true);
-
-      expr.id(ID_constraint_select_one);
-      expr.type() = dest_type;
-
-      // apply recursively
-      for(auto &op : expr.operands())
-        convert_expr_to(op, dest_type);
-
-      return;
-    }
-
     if(dest_type.id() == ID_signedbv || dest_type.id() == ID_unsignedbv)
     {
       // no implicit conversion
@@ -1875,6 +1985,222 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::assignment_lhs_checks
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::assignment_lhs_checks(
+  const exprt &lhs,
+  smv_parse_treet::modulet::elementt::element_typet element_type)
+{
+  PRECONDITION(lhs.id() == ID_symbol || lhs.id() == ID_next_symbol);
+
+  auto &identifier = lhs.get(ID_identifier);
+
+  // The LHS must not be a define
+  auto symbol_ptr = symbol_table.lookup(identifier);
+  CHECK_RETURN(symbol_ptr != nullptr);
+  if(define_map.find(identifier) != define_map.end())
+  {
+    throw errort{}.with_location(lhs.source_location())
+      << "variable `" << symbol_ptr->base_name << "' already defined";
+  }
+
+  // Check for previous assignments
+  auto &var = var_map[identifier];
+  if(element_type == smv_parse_treet::modulet::elementt::ASSIGN_CURRENT)
+  {
+    if(var.assigned_init)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "init(" << symbol_ptr->base_name << ") is already set";
+    }
+    else if(var.assigned_next)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "next(" << symbol_ptr->base_name << ") is already set ";
+    }
+    else
+      var.assigned_current = true;
+  }
+  else if(element_type == smv_parse_treet::modulet::elementt::ASSIGN_INIT)
+  {
+    if(var.assigned_current)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "variable `" << symbol_ptr->base_name << "' is already assigned";
+    }
+    else if(var.assigned_init)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "init(" << symbol_ptr->base_name << ") is already set";
+    }
+    else
+      var.assigned_init = true;
+  }
+  else if(element_type == smv_parse_treet::modulet::elementt::ASSIGN_NEXT)
+  {
+    if(var.assigned_current)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "variable `" << symbol_ptr->base_name << "' is already assigned";
+    }
+    else if(var.assigned_next)
+    {
+      throw errort{}.with_location(lhs.source_location())
+        << "next(" << symbol_ptr->base_name << ") is already set";
+    }
+    else
+      var.assigned_next = true;
+  }
+  else
+    PRECONDITION(false);
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::typecheck_assignment
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::typecheck_assignment(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_equal);
+  expr.type() = bool_typet{};
+
+  auto &equal_expr = to_equal_expr(expr);
+  auto &lhs = equal_expr.lhs();
+  auto &rhs = equal_expr.rhs();
+
+  if(rhs.type().id() == ID_smv_set)
+  {
+    // Sets can be assigned to scalars, which yields a nondeterministic
+    // choice. First check if the set is contained in the domain of the
+    // variable.
+    auto &element_type = to_smv_set_type(rhs.type()).element_type();
+    auto source_location = lhs.source_location();
+    auto union_type = type_union(element_type, lhs.type(), source_location);
+    if(union_type != lhs.type())
+    {
+      throw errort().with_location(source_location)
+        << "Expected expression of type `" << to_string(lhs.type())
+        << "', but got expression `" << to_string(rhs)
+        << "', which is of type `" << to_string(element_type) << "'";
+    }
+
+    // This converts the rhs into a predicate over the lhs.
+    expr = set_to_predicate(lhs, rhs, source_location);
+  }
+  else
+  {
+    convert_expr_to(rhs, lhs.type());
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::set_to_predicate
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt smv_typecheckt::set_to_predicate(
+  const exprt &variable,
+  const exprt &set_expression,
+  const source_locationt &source_location) const
+{
+  if(set_expression.type().id() == ID_smv_set)
+  {
+    if(set_expression.id() == ID_smv_set || set_expression.id() == ID_smv_union)
+    {
+      // Turn the nondeterministic choice into a
+      // disjunctive constraint.
+      exprt::operandst disjuncts;
+
+      for(auto &element : set_expression.operands())
+      {
+        auto predicate = set_to_predicate(variable, element, source_location);
+        disjuncts.push_back(std::move(predicate));
+      }
+
+      return disjunction(disjuncts);
+    }
+    else if(set_expression.id() == ID_smv_range)
+    {
+      // Turn the nondeterministic choice into a constraint.
+      auto &smv_range = to_smv_range_expr(set_expression);
+      auto element_type = to_smv_set_type(set_expression.type()).element_type();
+      auto union_type = type_union(
+        variable.type(), element_type, set_expression.source_location());
+      auto var_casted = typecast_exprt::conditional_cast(variable, union_type);
+      auto lower =
+        typecast_exprt::conditional_cast(smv_range.from(), union_type);
+      auto upper = typecast_exprt::conditional_cast(smv_range.to(), union_type);
+      return and_exprt{
+        binary_relation_exprt{var_casted, ID_ge, lower},
+        binary_relation_exprt{var_casted, ID_le, upper}};
+    }
+    else if(set_expression.id() == ID_symbol)
+    {
+      // DEFINEs can have set type. We need to expand, and recurse.
+      auto define_it =
+        define_map.find(to_symbol_expr(set_expression).get_identifier());
+      if(define_it != define_map.end())
+      {
+        auto &value = define_it->second.value;
+        DATA_INVARIANT(
+          value.type() == set_expression.type(), "define type consistency");
+        return set_to_predicate(variable, value, source_location);
+      }
+      else
+        DATA_INVARIANT(false, "set expression symbol that's not a define");
+    }
+    else if(set_expression.id() == ID_if)
+    {
+      auto if_expr = to_if_expr(set_expression);
+      // c ? t : f  --->  c? p(t) : p(f)
+      auto t = set_to_predicate(variable, if_expr.true_case(), source_location);
+      auto f =
+        set_to_predicate(variable, if_expr.false_case(), source_location);
+      return if_exprt{if_expr.cond(), std::move(t), std::move(f)};
+    }
+    else
+      PRECONDITION(false);
+  }
+  else
+  {
+    auto union_type =
+      type_union(variable.type(), set_expression.type(), source_location);
+
+    exprt copy_variable = variable;
+    exprt copy_set_expression = set_expression;
+
+    convert_expr_to(copy_variable, union_type);
+    convert_expr_to(copy_set_expression, union_type);
+
+    return equal_exprt{copy_variable, copy_set_expression};
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::convert
 
   Inputs:
@@ -1898,9 +2224,9 @@ void smv_typecheckt::convert(exprt &expr)
       identifier.find("::") == std::string::npos, "conversion is done once");
 
     // enum or variable?
-    if(modulep->enum_set.find(identifier) == modulep->enum_set.end())
+    if(index.enum_names.find(identifier) == index.enum_names.end())
     {
-      std::string id = module + "::var::" + identifier;
+      std::string id = module_identifier + "::var::" + identifier;
 
       expr.set(ID_identifier, id);
       expr.id(ID_symbol);
@@ -1930,62 +2256,40 @@ void smv_typecheckt::convert(exprt &expr)
   else if(expr.id() == ID_index)
   {
     auto &index_expr = to_index_expr(expr);
-    DATA_INVARIANT_WITH_DIAGNOSTICS(
-      index_expr.array().id() == ID_symbol,
-      "unexpected complex_identifier",
-      expr.pretty());
-    auto &index = index_expr.index();
-    PRECONDITION(index.is_constant());
-    auto index_string = id2string(to_constant_expr(index).get_value());
-    auto tmp = to_symbol_expr(index_expr.array());
-    tmp.set_identifier(id2string(tmp.get_identifier()) + '.' + index_string);
-    expr = tmp;
-  }
-  else if(expr.id()=="smv_nondet_choice" ||
-          expr.id()=="smv_union")
-  {
-    if(expr.operands().size()==0)
+
+    // This could be part of a complex_identifier, or an array index.
+    if(index_expr.array().id() == ID_symbol)
     {
-      throw errort().with_location(expr.find_source_location())
-        << "expected operand here";
-    }
-
-    std::string identifier=
-      module+"::var::"+std::to_string(nondet_count++);
-
-    expr.set(ID_identifier, identifier);
-    expr.set("#smv_nondet_choice", true);
-
-    expr.id(ID_constraint_select_one);
-  }
-  else if(expr.id() == ID_smv_cases) // cases
-  {
-    if(expr.operands().size()<1)
-    {
-      throw errort().with_location(expr.find_source_location())
-        << "Expected at least one operand for " << expr.id() << " expression";
-    }
-
-    exprt tmp;
-    tmp.operands().swap(expr.operands());
-    expr.reserve_operands(tmp.operands().size()*2);
-
-    for(auto &op : tmp.operands())
-    {
-      if(op.operands().size() != 2)
+      // look that up
+      auto symbol_ptr = symbol_table.lookup(
+        to_symbol_expr(index_expr.array()).get_identifier());
+      if(symbol_ptr != nullptr && symbol_ptr->type.id() == ID_array)
       {
-        throw errort().with_location(op.find_source_location())
-          << "case expected to have two operands";
+        // a proper array -- leave as is
       }
+      else
+      {
+        auto &index = index_expr.index();
+        if(!index.is_constant())
+          throw errort().with_location(expr.source_location())
+            << "non-constant index for non-array";
 
-      exprt &condition = to_binary_expr(op).op0();
-      exprt &value = to_binary_expr(op).op1();
-
-      expr.add_to_operands(std::move(condition));
-      expr.add_to_operands(std::move(value));
+        auto index_string = id2string(to_constant_expr(index).get_value());
+        auto tmp = to_symbol_expr(index_expr.array());
+        tmp.set_identifier(
+          id2string(tmp.get_identifier()) + '.' + index_string);
+        expr = tmp;
+      }
     }
-
-    expr.id(ID_cond);
+    else
+    {
+      // leave as is
+    }
+  }
+  else if(expr.id() == ID_smv_self)
+  {
+    throw errort().with_location(expr.source_location())
+      << "no support for self";
   }
 }
 
@@ -2001,7 +2305,7 @@ Function: smv_typecheckt::to_string
 
 \*******************************************************************/
 
-std::string smv_typecheckt::to_string(const exprt &expr)
+std::string smv_typecheckt::to_string(const exprt &expr) const
 {
   namespacet ns{symbol_table};
   return expr2smv(expr, ns);
@@ -2019,7 +2323,7 @@ Function: smv_typecheckt::to_string
 
 \*******************************************************************/
 
-std::string smv_typecheckt::to_string(const typet &type)
+std::string smv_typecheckt::to_string(const typet &type) const
 {
   namespacet ns{symbol_table};
   return type2smv(type, ns);
@@ -2044,60 +2348,79 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
   case smv_parse_treet::modulet::elementt::INIT:
     typecheck(element.expr, INIT);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::TRANS:
     typecheck(element.expr, TRANS);
     convert_expr_to(element.expr, bool_typet{});
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::CTLSPEC:
     typecheck(element.expr, CTL);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::LTLSPEC:
     typecheck(element.expr, LTL);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::INVAR:
     typecheck(element.expr, INVAR);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::FAIRNESS:
     typecheck(element.expr, OTHER);
     convert_expr_to(element.expr, bool_typet{});
+    no_next_allowed(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
-    typecheck(element.equal_expr().lhs(), OTHER);
-    typecheck(element.equal_expr().rhs(), OTHER);
-    convert_expr_to(
-      element.equal_expr().rhs(), element.equal_expr().lhs().type());
-    element.equal_expr().type() = bool_typet{};
+    typecheck(element.lhs(), OTHER);
+    typecheck(element.rhs(), OTHER);
+    assignment_lhs_checks(element.lhs(), element.element_type);
+    typecheck_assignment(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_INIT:
-    typecheck(element.equal_expr().lhs(), INIT);
-    typecheck(element.equal_expr().rhs(), INIT);
-    convert_expr_to(
-      element.equal_expr().rhs(), element.equal_expr().lhs().type());
-    element.equal_expr().type() = bool_typet{};
+    typecheck(element.lhs(), INIT);
+    typecheck(element.rhs(), INIT);
+    assignment_lhs_checks(element.lhs(), element.element_type);
+    no_next_allowed(element.rhs());
+    typecheck_assignment(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::ASSIGN_NEXT:
-    typecheck(element.equal_expr().lhs(), TRANS);
-    typecheck(element.equal_expr().rhs(), TRANS);
-    convert_expr_to(
-      element.equal_expr().rhs(), element.equal_expr().lhs().type());
-    element.equal_expr().type() = bool_typet{};
+    typecheck(element.lhs(), TRANS);
+    typecheck(element.rhs(), TRANS);
+    assignment_lhs_checks(element.lhs(), element.element_type);
+    typecheck_assignment(element.expr);
+    no_CTL_allowed(element.expr);
+    no_LTL_allowed(element.expr);
     return;
 
   case smv_parse_treet::modulet::elementt::DEFINE:
     typecheck(element.expr, OTHER);
-    element.equal_expr().type() = bool_typet{};
+    element.expr.type() = bool_typet{};
     return;
 
   case smv_parse_treet::modulet::elementt::ENUM:
@@ -2126,6 +2449,129 @@ void smv_typecheckt::convert(smv_parse_treet::modulet::elementt &element)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::variable_checks
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::variable_checks(
+  const smv_parse_treet::modulet &module) const
+{
+  std::unordered_set<irep_idt, irep_id_hash> enums, defines, vars, parameters;
+
+  for(const auto &parameter : module.parameters)
+    parameters.insert(parameter);
+
+  for(const auto &element : module.elements)
+  {
+    if(element.is_var() || element.is_ivar())
+    {
+      irep_idt base_name = merge_complex_identifier(element.expr);
+      auto location = element.expr.source_location();
+
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as enum";
+      }
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as a parameter";
+      }
+
+      // already used as variable?
+      if(vars.find(base_name) != vars.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as variable";
+      }
+
+      // already used as define?
+      if(defines.find(base_name) != defines.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as define";
+      }
+
+      vars.insert(base_name);
+    }
+    else if(element.is_define())
+    {
+      irep_idt base_name = merge_complex_identifier(element.lhs());
+      auto location = to_equal_expr(element.expr).lhs().source_location();
+
+      // already used as enum?
+      if(enums.find(base_name) != enums.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as enum";
+      }
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as a parameter";
+      }
+
+      // already used as variable?
+      if(vars.find(base_name) != vars.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as variable";
+      }
+
+      // already used as define?
+      if(defines.find(base_name) != defines.end())
+      {
+        throw errort{}.with_location(location)
+          << "identifier " << base_name << " already used as define";
+      }
+
+      defines.insert(base_name);
+    }
+    else if(element.is_enum())
+    {
+      const auto &identifier_expr = to_smv_identifier_expr(element.expr);
+      irep_idt base_name = identifier_expr.identifier();
+
+      // already used as a parameter?
+      if(parameters.find(base_name) != parameters.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as a parameter";
+      }
+
+      // already used as variable?
+      if(vars.find(base_name) != vars.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as variable";
+      }
+
+      // already used as define?
+      if(defines.find(base_name) != defines.end())
+      {
+        throw errort{}.with_location(identifier_expr.source_location())
+          << "identifier " << base_name << " already used as define";
+      }
+
+      enums.insert(base_name);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::create_var_symbols
 
   Inputs:
@@ -2137,45 +2583,23 @@ Function: smv_typecheckt::create_var_symbols
 \*******************************************************************/
 
 void smv_typecheckt::create_var_symbols(
-  const smv_parse_treet::modulet::element_listt &elements,
-  const std::list<irep_idt> &module_parameters)
+  const smv_parse_treet::modulet::element_listt &elements)
 {
   const irep_idt mode = "SMV";
-
-  // to catch variables that have the same name as enums
-  std::unordered_set<irep_idt, irep_id_hash> enums;
-
-  // to catch re-use of parameter identifiers
-  std::unordered_set<irep_idt, irep_id_hash> parameters;
-
-  for(const auto &parameter : module_parameters)
-    parameters.insert(parameter);
 
   for(const auto &element : elements)
   {
     if(element.is_var() || element.is_ivar())
     {
-      irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
-      irep_idt identifier = module + "::var::" + id2string(base_name);
-
-      // already used as enum?
-      if(enums.find(base_name) != enums.end())
-      {
-        throw errort{}.with_location(element.expr.source_location())
-          << "identifier " << base_name << " already used as enum";
-      }
-
-      // already used as a parameter?
-      if(parameters.find(base_name) != parameters.end())
-      {
-        throw errort{}.with_location(element.expr.source_location())
-          << "identifier " << base_name << " already used as a parameter";
-      }
+      irep_idt base_name = merge_complex_identifier(element.expr);
+      auto location = element.expr.source_location();
+      irep_idt identifier =
+        module_identifier + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
-        throw errort{}.with_location(element.expr.source_location())
+        throw errort{}.with_location(location)
           << "variable " << base_name << " already declared, at "
           << symbol_ptr->location;
       }
@@ -2187,50 +2611,40 @@ void smv_typecheckt::create_var_symbols(
 
       symbolt symbol{identifier, std::move(type), mode};
 
-      symbol.module = modulep->name;
+      symbol.module = modulep->identifier;
       symbol.base_name = base_name;
 
-      if(module == "smv::main")
+      if(module_identifier == "smv::main")
         symbol.pretty_name = symbol.base_name;
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
 
-      if(symbol.type.id() == ID_smv_submodule)
+      if(
+        symbol.type.id() == ID_smv_module_instance ||
+        symbol.type.id() == ID_smv_process_module_instance)
+      {
         symbol.is_input = false;
+      }
       else
         symbol.is_input = true;
 
       symbol.is_state_var = false;
       symbol.value = nil_exprt{};
-      symbol.location = element.expr.source_location();
+      symbol.location = location;
 
       symbol_table.insert(std::move(symbol));
     }
     else if(element.is_define())
     {
-      const auto &identifier_expr =
-        to_smv_identifier_expr(to_equal_expr(element.expr).lhs());
-      irep_idt base_name = identifier_expr.identifier();
-      irep_idt identifier = module + "::var::" + id2string(base_name);
-
-      // already used as enum?
-      if(enums.find(base_name) != enums.end())
-      {
-        throw errort{}.with_location(identifier_expr.source_location())
-          << "identifier " << base_name << " already used as enum";
-      }
-
-      // already used as a parameter?
-      if(parameters.find(base_name) != parameters.end())
-      {
-        throw errort{}.with_location(identifier_expr.source_location())
-          << "identifier " << base_name << " already used as a parameter";
-      }
+      irep_idt base_name = merge_complex_identifier(element.lhs());
+      auto location = to_equal_expr(element.expr).lhs().source_location();
+      irep_idt identifier =
+        module_identifier + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
       {
-        throw errort{}.with_location(identifier_expr.source_location())
+        throw errort{}.with_location(location)
           << "variable `" << base_name << "' already declared, at "
           << symbol_ptr->location;
       }
@@ -2241,10 +2655,10 @@ void smv_typecheckt::create_var_symbols(
       symbolt symbol{identifier, std::move(type), mode};
 
       symbol.mode = mode;
-      symbol.module = modulep->name;
+      symbol.module = modulep->identifier;
       symbol.base_name = base_name;
 
-      if(module == "smv::main")
+      if(module_identifier == "smv::main")
         symbol.pretty_name = symbol.base_name;
       else
         symbol.pretty_name = strip_smv_prefix(symbol.name);
@@ -2252,21 +2666,15 @@ void smv_typecheckt::create_var_symbols(
       symbol.value = nil_exprt{};
       symbol.is_input = true;
       symbol.is_state_var = false;
-      symbol.location = identifier_expr.source_location();
+      symbol.location = location;
 
       symbol_table.insert(std::move(symbol));
     }
     else if(element.is_enum())
     {
       irep_idt base_name = to_smv_identifier_expr(element.expr).identifier();
-      irep_idt identifier = module + "::var::" + id2string(base_name);
-
-      // already used as a parameter?
-      if(parameters.find(base_name) != parameters.end())
-      {
-        throw errort{}.with_location(element.expr.source_location())
-          << "identifier " << base_name << " already used as a parameter";
-      }
+      irep_idt identifier =
+        module_identifier + "::var::" + id2string(base_name);
 
       auto symbol_ptr = symbol_table.lookup(identifier);
       if(symbol_ptr != nullptr)
@@ -2275,8 +2683,6 @@ void smv_typecheckt::create_var_symbols(
           << "enum " << base_name << " already declared, at "
           << symbol_ptr->location;
       }
-
-      enums.insert(base_name);
     }
   }
 }
@@ -2293,11 +2699,8 @@ Function: smv_typecheckt::collect_define
 
 \*******************************************************************/
 
-void smv_typecheckt::collect_define(const equal_exprt &expr)
+void smv_typecheckt::collect_define(const exprt &lhs, const exprt &rhs)
 {
-  const exprt &lhs = expr.lhs();
-  const exprt &rhs = expr.rhs();
-
   if(lhs.id() != ID_symbol)
     throw errort() << "collect_define expects symbol on left hand side";
 
@@ -2323,14 +2726,14 @@ void smv_typecheckt::collect_define(const equal_exprt &expr)
 
   if(!result.second)
   {
-    throw errort().with_location(expr.find_source_location())
+    throw errort().with_location(lhs.source_location())
       << "variable `" << symbol.display_name() << "' already defined";
-  }  
+  }
 }
 
 /*******************************************************************\
 
-Function: smv_typecheckt::convert_define
+Function: smv_typecheckt::uses_next
 
   Inputs:
 
@@ -2340,41 +2743,142 @@ Function: smv_typecheckt::convert_define
 
 \*******************************************************************/
 
-void smv_typecheckt::convert_define(const irep_idt &identifier)
+bool smv_typecheckt::uses_next(const exprt &expr) const
 {
-  definet &d=define_map[identifier];
-  
-  if(d.typechecked) return;
-  
-  if(d.in_progress)
+  if(expr.id() == ID_next_symbol)
+    return true;
+
+  if(expr.id() == ID_symbol)
   {
-    throw errort() << "definition of `" << identifier << "' is cyclic";
+    auto d_it = define_map.find(to_symbol_expr(expr).get_identifier());
+    if(d_it != define_map.end())
+      return d_it->second.uses_next;
   }
-  
-  auto it=symbol_table.get_writeable(identifier);
+
+  for(auto &op : expr.operands())
+    if(uses_next(op))
+      return true;
+
+  return false;
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::no_next_allowed
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::no_next_allowed(const exprt &expr) const
+{
+  if(uses_next(expr))
+    throw errort().with_location(expr.find_source_location())
+      << "next(...) is not allowed here";
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::no_LTL_allowed
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::no_LTL_allowed(const exprt &expr) const
+{
+  if(has_subexpr(
+       expr,
+       [](const exprt &expr)
+       {
+         auto id = expr.id();
+         return id == ID_X || id == ID_F || id == ID_G || id == ID_smv_H ||
+                id == ID_smv_O || id == ID_smv_Y || id == ID_smv_Z ||
+                id == ID_U || id == ID_R || id == ID_smv_S || id == ID_smv_T;
+       }))
+  {
+    throw errort().with_location(expr.find_source_location())
+      << "LTL operator not permitted here";
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::no_CTL_allowed
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::no_CTL_allowed(const exprt &expr) const
+{
+  if(has_subexpr(
+       expr,
+       [](const exprt &expr)
+       {
+         auto id = expr.id();
+         return id == ID_AG || id == ID_AX || id == ID_AF || id == ID_EG ||
+                id == ID_EX || id == ID_EF || id == ID_smv_EBF ||
+                id == ID_smv_ABF || id == ID_smv_EBG || id == ID_smv_ABG ||
+                id == ID_smv_ABU || id == ID_smv_EBU || id == ID_EU ||
+                id == ID_ER || id == ID_AU || id == ID_AR;
+       }))
+  {
+    throw errort().with_location(expr.find_source_location())
+      << "CTL operator not permitted here";
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::typecheck_define
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::typecheck_define(define_mapt::iterator define_it)
+{
+  definet &d = define_it->second;
+
+  PRECONDITION(!d.typechecked);
+
+  auto it = symbol_table.get_writeable(define_it->first);
 
   if(it==nullptr)
   {
-    throw errort() << "convert_define failed to find symbol `" << identifier
-                   << "'";
+    throw errort() << "convert_define failed to find symbol `"
+                   << define_it->first << "'";
   }
 
   symbolt &symbol=*it;
 
-  d.in_progress=true;
-
   typecheck(d.value, OTHER);
 
-  if(symbol.type.is_not_nil())
-    convert_expr_to(d.value, symbol.type);
+  no_CTL_allowed(d.value);
+  no_LTL_allowed(d.value);
 
-  d.in_progress=false;
-  d.typechecked=true;
+  d.uses_next = uses_next(d.value);
 
-  // VAR x : type; ASSIGN x := ... does come with a type.
   // DEFINE x := ... doesn't come with a type.
-  if(symbol.type.is_nil())
-    symbol.type=d.value.type();
+  // Use the type of the RHS.
+  symbol.type = d.value.type();
 }
 
 /*******************************************************************\
@@ -2393,13 +2897,110 @@ void smv_typecheckt::convert_defines(exprt::operandst &invar)
 {
   for(auto &define_it : define_map)
   {
-    convert_define(define_it.first);
-
     // generate constraint
-    equal_exprt equality{
-      symbol_exprt{define_it.first, define_it.second.value.type()},
-      define_it.second.value};
-    invar.push_back(equality);
+    if(define_it.second.value.type().id() != ID_smv_set)
+    {
+      equal_exprt equality{
+        symbol_exprt{define_it.first, define_it.second.value.type()},
+        define_it.second.value};
+      invar.push_back(equality);
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::unfinished_defines_used
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<smv_typecheckt::define_mapt::iterator>
+smv_typecheckt::unfinished_defines_used(const exprt &expr)
+{
+  // find any defines used by 'expr', and see if they are done already
+  std::vector<define_mapt::iterator> result;
+
+  expr.visit_pre(
+    [&result, this](const exprt &node)
+    {
+      if(node.id() == ID_symbol)
+      {
+        auto &identifier = to_symbol_expr(node).get_identifier();
+        auto define_it = define_map.find(identifier);
+        if(define_it != define_map.end() && !define_it->second.typechecked)
+          result.push_back(define_it);
+      }
+    });
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: smv_typecheckt::typecheck_defines
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::typecheck_defines()
+{
+  std::stack<define_mapt::iterator> queue;
+
+  // add all defines to the queue
+
+  for(auto define_it = define_map.begin(); define_it != define_map.end();
+      ++define_it)
+  {
+    queue.push(define_it);
+  }
+
+  while(!queue.empty())
+  {
+    auto top_it = queue.top();
+
+    // done already?
+    if(top_it->second.typechecked)
+    {
+      queue.pop();
+      continue;
+    }
+
+    top_it->second.in_progress = true;
+
+    // find any unfinished defines used by 'top_it'
+    auto unfinished_defines_used =
+      this->unfinished_defines_used(top_it->second.value);
+
+    // none? go ahead
+    if(unfinished_defines_used.empty())
+    {
+      queue.pop();
+      typecheck_define(top_it);
+      top_it->second.typechecked = true;
+      top_it->second.in_progress = false;
+    }
+    else
+    {
+      // queue them
+      for(auto &define_it : unfinished_defines_used)
+      {
+        if(define_it->second.in_progress)
+          throw errort() << "definition of `" << top_it->first << "' is cyclic";
+
+        queue.push(define_it);
+      }
+    }
   }
 }
 
@@ -2421,8 +3022,11 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   define_map.clear();
 
-  // variables/defines first, can be used before their declaration
-  create_var_symbols(smv_module.elements, smv_module.parameters);
+  // expand the module hierarchy
+  flatten_hierarchy(smv_module);
+
+  // Now do variables/defines, which can be used before their declaration
+  create_var_symbols(smv_module.elements);
 
   // transition relation
 
@@ -2431,7 +3035,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
     module_symbol.base_name=smv_module.base_name;
     module_symbol.pretty_name=smv_module.base_name;
-    module_symbol.name=smv_module.name;
+    module_symbol.name = smv_module.identifier;
     module_symbol.module=module_symbol.name;
     module_symbol.type=typet(ID_module);
     module_symbol.mode="SMV";
@@ -2445,22 +3049,23 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
       if(!element.is_var() && !element.is_ivar())
         convert(element);
 
-    flatten_hierarchy(smv_module);
-
     // we first need to collect all the defines
-
     for(auto &element : smv_module.elements)
     {
-      if(element.is_define() || element.is_assign_current())
-        collect_define(element.equal_expr());
+      if(element.is_define())
+        collect_define(element.lhs(), element.rhs());
     }
+
+    // now we type check the defines
+    typecheck_defines();
+
     // now turn them into INVARs
     convert_defines(trans_invar);
 
     // do the rest now: typecheck
     for(auto &element : smv_module.elements)
     {
-      if(!element.is_define() && !element.is_assign_current())
+      if(!element.is_define())
         typecheck(element);
     }
 
@@ -2473,6 +3078,8 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         trans_init.push_back(element.expr);
       else if(element.is_assign_init())
         trans_init.push_back(element.expr);
+      else if(element.is_assign_current())
+        trans_trans.push_back(element.expr);
       else if(element.is_assign_next())
         trans_trans.push_back(element.expr);
       else if(element.is_trans())
@@ -2490,7 +3097,6 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
   // spec
 
-  if(do_spec)
   {
     unsigned nr=1;
 
@@ -2505,9 +3111,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         else
           spec_symbol.base_name = "spec" + std::to_string(nr++);
 
-        spec_symbol.name =
-          id2string(smv_module.name) + "::" + id2string(spec_symbol.base_name);
-        spec_symbol.module = smv_module.name;
+        spec_symbol.name = id2string(smv_module.identifier) +
+                           "::" + id2string(spec_symbol.base_name);
+        spec_symbol.module = smv_module.identifier;
         spec_symbol.type = bool_typet();
         spec_symbol.is_property = true;
         spec_symbol.mode = "SMV";
@@ -2515,7 +3121,7 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
         spec_symbol.location = element.location;
         spec_symbol.location.set_comment(to_string(element.expr));
 
-        if(smv_module.name == "smv::main")
+        if(smv_module.identifier == "smv::main")
           spec_symbol.pretty_name = spec_symbol.base_name;
         else
           spec_symbol.pretty_name = strip_smv_prefix(spec_symbol.name);
@@ -2528,8 +3134,9 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
   }
 
   // lowering
-  for(auto v_it = symbol_table.symbol_module_map.lower_bound(smv_module.name);
-      v_it != symbol_table.symbol_module_map.upper_bound(smv_module.name);
+  for(auto v_it =
+        symbol_table.symbol_module_map.lower_bound(smv_module.identifier);
+      v_it != symbol_table.symbol_module_map.upper_bound(smv_module.identifier);
       v_it++)
   {
     auto &symbol = symbol_table.get_writeable_ref(v_it->second);
@@ -2552,14 +3159,25 @@ Function: smv_typecheckt::typecheck
 
 void smv_typecheckt::typecheck()
 {
-  smv_parse_treet::modulest::iterator it=smv_parse_tree.modules.find(module);
+  if(module_identifier != "smv::main")
+    return;
 
-  if(it==smv_parse_tree.modules.end())
+  // build the index
+  index = smv_indext{smv_parse_tree};
+
+  // check all modules for duplicate identifiers
+  for(auto &module : smv_parse_tree.module_list)
+    variable_checks(module);
+
+  auto module_base_name = smv_module_base_name(module_identifier);
+  auto it = index.module_map.find(module_base_name);
+
+  if(it == index.module_map.end())
   {
-    throw errort() << "failed to find module " << module;
+    throw errort() << "failed to find module " << module_base_name;
   }
 
-  convert(it->second);
+  convert(*it->second);
 }
 
 /*******************************************************************\
@@ -2577,12 +3195,11 @@ Function: smv_typecheck
 bool smv_typecheck(
   smv_parse_treet &smv_parse_tree,
   symbol_table_baset &symbol_table,
-  const std::string &module,
-  message_handlert &message_handler,
-  bool do_spec)
+  const std::string &module_identifier,
+  message_handlert &message_handler)
 {
   smv_typecheckt smv_typecheck(
-    smv_parse_tree, symbol_table, module, do_spec, message_handler);
+    smv_parse_tree, symbol_table, module_identifier, message_handler);
   return smv_typecheck.typecheck_main();
 }
 
@@ -2598,7 +3215,25 @@ Function: smv_module_symbol
 
 \*******************************************************************/
 
-std::string smv_module_symbol(const std::string &module)
+irep_idt smv_module_symbol(const irep_idt &base_name)
 {
-  return "smv::"+module;
+  return "smv::" + id2string(base_name);
+}
+
+/*******************************************************************\
+
+Function: smv_module_base_name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt smv_module_base_name(const irep_idt &identifier)
+{
+  PRECONDITION(has_prefix(id2string(identifier), "smv::"));
+  return id2string(identifier).substr(5, std::string::npos);
 }

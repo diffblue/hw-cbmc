@@ -1,0 +1,17 @@
+CORE
+array_conversion3.sv
+
+^\[main\.blk\.p11\] main\.array1\[0\] == 1: PROVED .*$
+^\[main\.blk\.p12\] main\.array1\[1\] == 2: PROVED .*$
+^\[main\.blk\.p13\] main\.array1\[2\] == 3: PROVED .*$
+^\[main\.blk\.p14\] main\.array1\[3\] == 4: PROVED .*$
+^\[main\.blk\.p15\] main\.array1 == 32'h1020304: PROVED .*$
+^\[main\.blk\.p21\] main\.array2\[0\] == 4: PROVED .*$
+^\[main\.blk\.p22\] main\.array2\[1\] == 3: PROVED .*$
+^\[main\.blk\.p23\] main\.array2\[2\] == 2: PROVED .*$
+^\[main\.blk\.p24\] main\.array2\[3\] == 1: PROVED .*$
+^\[main\.blk\.p25\] main\.array2 == 32'h1020304: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

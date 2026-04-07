@@ -10,7 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/format_expr.h>
 
-#include <temporal-logic/ltl.h>
+#include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl_to_buechi.h>
 #include <temporal-logic/temporal_logic.h>
 
@@ -74,14 +74,16 @@ void instrument_buechi(
       {
         // Note that we have negated the property,
         // so this is the negation of the Buechi acceptance condition.
+        // We generate CTL, which is more broadly supported.
         property_conjuncts.push_back(
-          F_exprt{G_exprt{not_exprt{buechi.liveness_signal}}});
+          AF_exprt{AG_exprt{not_exprt{buechi.liveness_signal}}});
         have_liveness = true;
       }
 
       if(!buechi.error_signal.is_true())
       {
-        property_conjuncts.push_back(G_exprt{not_exprt{buechi.error_signal}});
+        // We generate CTL, which is more broadly supported.
+        property_conjuncts.push_back(AG_exprt{not_exprt{buechi.error_signal}});
         have_safety = true;
       }
 

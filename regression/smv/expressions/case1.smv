@@ -1,0 +1,9 @@
+MODULE main
+
+VAR x : 1..10;
+
+SPEC !(4 in
+  case
+    x=1:  { 2, 3 };
+    TRUE: 1;
+  esac)

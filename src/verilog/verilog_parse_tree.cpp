@@ -25,7 +25,7 @@ exprt verilog_parse_treet::create_module(
   irept &attributes,
   irept &module_keyword,
   exprt &name,
-  exprt &parameter_port_list,
+  exprt &parameter_port_decls,
   exprt &ports,
   exprt &module_items)
 {
@@ -33,9 +33,10 @@ exprt verilog_parse_treet::create_module(
      ports.get_sub().front().is_nil())
     ports.clear();
 
-  verilog_module_sourcet new_module{name.id()};
+  verilog_module_sourcet new_module{name.get(ID_base_name)};
 
-  new_module.add(ID_parameter_port_list) = std::move(parameter_port_list);
+  new_module.add(ID_verilog_parameter_port_decls) =
+    std::move(parameter_port_decls);
   new_module.add(ID_ports) = std::move(ports);
   new_module.add_source_location() =
     ((const exprt &)module_keyword).source_location();
@@ -66,12 +67,30 @@ void verilog_parse_treet::modules_provided(
       module_set.insert(id2string(
         verilog_module_symbol(to_verilog_module_source(item).base_name())));
     }
-    else if(item.id() == ID_verilog_package)
-    {
-      module_set.insert(id2string(verilog_package_identifier(
-        to_verilog_module_source(item).base_name())));
-    }
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_parse_treet::dependencies
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::set<irep_idt>
+verilog_parse_treet::dependencies(irep_idt item_identifier) const
+{
+  verilog_parse_treet::item_mapt::const_iterator it =
+    item_map.find(id2string(verilog_item_key(item_identifier)));
+
+  CHECK_RETURN(it != item_map.end());
+
+  return it->second->dependencies();
 }
 
 /*******************************************************************\

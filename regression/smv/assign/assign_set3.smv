@@ -1,0 +1,10 @@
+MODULE main
+
+VAR x : 0..6;
+
+-- this is a nondeterministic choice
+ASSIGN x := { 1, { 4, 5 } };
+
+SPEC AG x != 2
+SPEC EX x = 1
+SPEC EX x = 5

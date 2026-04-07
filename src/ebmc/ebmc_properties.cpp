@@ -159,6 +159,9 @@ ebmc_propertiest ebmc_propertiest::from_command_line(
       throw ebmc_errort() << "failed to parse the given property expression";
     }
 
+    // We want the property to be boolean.
+    expr = typecast_exprt::conditional_cast(expr, bool_typet{});
+
     // We give it an implict always, as in SVA
 
     if(expr.id() != ID_sva_always)

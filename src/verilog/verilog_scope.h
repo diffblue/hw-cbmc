@@ -24,14 +24,19 @@ struct verilog_scopet
     MODULE,
     CLASS,
     ENUM_NAME,
+    MODULE_INSTANCE,
     TASK,
     FUNCTION,
     BLOCK,
     TYPEDEF,
+    PARAMETER,
+    PROPERTY,
+    SEQUENCE,
+    VAR,
     OTHER
   };
 
-  verilog_scopet() : parent(nullptr), prefix("Verilog::"), kind(GLOBAL)
+  verilog_scopet() : parent{nullptr}, prefix{}, kind{GLOBAL}
   {
   }
 
@@ -51,6 +56,9 @@ struct verilog_scopet
   irep_idt __base_name;
   std::string prefix;
   kindt kind;
+
+  // if imported, this is the package and base name of the original
+  irep_idt import;
 
   irep_idt identifier() const
   {
@@ -73,6 +81,10 @@ struct verilog_scopet
   // sub-scopes
   using scope_mapt = std::map<irep_idt, verilog_scopet>;
   scope_mapt scope_map;
+
+  // wildcard imports, in source order
+  using wildcard_importst = std::vector<const verilog_scopet *>;
+  wildcard_importst wildcard_imports;
 
   //.the scanner token number
   unsigned identifier_token() const;
@@ -128,6 +140,9 @@ public:
     PRECONDITION(scope_stack.size() >= 2);
     scope_stack.pop_back();
   }
+
+  void import(irep_idt package, irep_idt base_name);
+  void wildcard_import(irep_idt package);
 
   // Look up an identifier, starting from the current scope,
   // going upwards until found. Returns nullptr when not found.

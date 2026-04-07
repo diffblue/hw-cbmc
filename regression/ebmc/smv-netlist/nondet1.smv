@@ -1,0 +1,13 @@
+MODULE main
+
+VAR data : boolean;
+
+-- our encoding of 'case' uses nondeterministic choice
+ASSIGN next(data) :=
+  case
+    data: FALSE;
+    TRUE: TRUE;
+  esac;
+
+-- should pass
+LTLSPEC G (data <-> ! X data)

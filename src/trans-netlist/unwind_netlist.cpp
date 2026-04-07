@@ -21,6 +21,40 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: cnf_gate_and
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+// This is a copy of cnft::gate_and, which is protected.
+inline void cnf_gate_and(cnft &cnf, literalt a, literalt b, literalt o)
+{
+  // a*b=c <==> (a + o')( b + o')(a'+b'+o)
+  bvt lits(2);
+
+  lits[0] = pos(a);
+  lits[1] = neg(o);
+  cnf.lcnf(lits);
+
+  lits[0] = pos(b);
+  lits[1] = neg(o);
+  cnf.lcnf(lits);
+
+  lits.clear();
+  lits.reserve(3);
+  lits.push_back(neg(a));
+  lits.push_back(neg(b));
+  lits.push_back(pos(o));
+  cnf.lcnf(lits);
+}
+
+/*******************************************************************\
+
 Function: unwind
 
   Inputs:
@@ -83,10 +117,7 @@ void unwind(
   if(!last)
   {     
     // joining the latches between timeframe and timeframe+1
-    for(var_mapt::mapt::const_iterator
-        v_it=netlist.var_map.map.begin();
-        v_it!=netlist.var_map.map.end();
-        v_it++)
+    for(auto v_it : netlist.var_map.sorted())
     {
       const var_mapt::vart &var=v_it->second;
       if(var.is_latch())

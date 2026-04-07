@@ -1,0 +1,7 @@
+CORE
+import7.sv
+--bound 0
+^EXIT=10$
+^SIGNAL=0$
+--
+--

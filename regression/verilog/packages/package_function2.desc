@@ -1,0 +1,8 @@
+CORE
+package_function2.sv
+
+^EXIT=0$
+^SIGNAL=0$
+^\[main\.assert\.1\] always main\.P == 123: PROVED .*$
+--
+--

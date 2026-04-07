@@ -1,0 +1,13 @@
+MODULE main
+
+-- 6 values, which will be encoded with 3 bits
+VAR x : 1..6;
+
+INVAR x != 1
+INVAR x != 2
+INVAR x != 3
+INVAR x != 4
+INVAR x != 5
+
+-- should hold
+SPEC x = 6

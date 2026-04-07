@@ -26,6 +26,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <verilog/sva_expr.h>
 
 #include "aig_prop.h"
+#include "build_netlist_var_map.h"
 #include "netlist.h"
 #include "netlist_boolbv.h"
 
@@ -149,9 +150,7 @@ protected:
 
   std::optional<exprt> convert_property(const exprt &);
 
-  void map_vars(
-    const irep_idt &module,
-    netlistt &dest);
+  void allocate_state_variables(netlistt &);
 };
 
 /*******************************************************************\
@@ -190,7 +189,7 @@ literalt convert_trans_to_netlistt::new_input()
 
 /*******************************************************************\
 
-Function: convert_trans_to_netlistt::map_vars
+Function: convert_trans_to_netlistt::allocate_state_variables
 
   Inputs:
 
@@ -200,67 +199,25 @@ Function: convert_trans_to_netlistt::map_vars
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::map_vars(
-  const irep_idt &module,
-  netlistt &dest)
+void convert_trans_to_netlistt::allocate_state_variables(netlistt &dest)
 {
-  boolbv_widtht boolbv_width(ns);
+  // we work with the sorted var_map to get a deterministic
+  // allocation for the latches and inputs
 
-  auto update_dest_var_map = [&dest, &boolbv_width](const symbolt &symbol) {
-    var_mapt::vart::vartypet vartype;
+  for(auto var_map_it : dest.var_map.sorted())
+  {
+    auto &var = var_map_it->second;
 
-    if (symbol.is_property)
-      return; // ignore properties
-    else if(
-      symbol.type.id() == ID_verilog_sva_sequence ||
-      symbol.type.id() == ID_verilog_sva_property)
+    for(auto &bit : var.bits)
     {
-      return; // ignore properties
-    }
-    else if(
-      symbol.type.id() == ID_natural || symbol.type.id() == ID_integer ||
-      symbol.type.id() == ID_verilog_genvar)
-    {
-      return; // ignore
-    }
-    else if(
-      symbol.type.id() == ID_module || symbol.type.id() == ID_module_instance ||
-      symbol.type.id() == ID_primitive_module_instance)
-    {
-      return; // ignore modules
-    }
-    else if(symbol.is_type)
-      return; // ignore types
-    else if (symbol.is_input)
-      vartype = var_mapt::vart::vartypet::INPUT;
-    else if (symbol.is_state_var)
-      vartype = var_mapt::vart::vartypet::LATCH;
-    else
-      vartype = var_mapt::vart::vartypet::WIRE;
-
-    std::size_t size = boolbv_width(symbol.type);
-
-    if (size == 0)
-      return;
-
-    var_mapt::vart &var = dest.var_map.map[symbol.name];
-    var.vartype = vartype;
-    var.type = symbol.type;
-    var.mode = symbol.mode;
-    var.bits.resize(size);
-
-    for (std::size_t bit = 0; bit < size; bit++) {
       // just initialize with something
-      var.bits[bit].current = const_literal(false);
-      var.bits[bit].next = const_literal(false);
+      bit.current = const_literal(false);
+      bit.next = const_literal(false);
 
-      // we already know the numbers of inputs and latches
-      if (var.is_input() || var.is_latch())
-        var.bits[bit].current = dest.new_var_node();
+      if(var.is_input() || var.is_latch())
+        bit.current = dest.new_var_node();
     }
-  };
-
-  for_all_module_symbols(symbol_table, module, update_dest_var_map);
+  }
 }
 
 /*******************************************************************\
@@ -284,9 +241,10 @@ void convert_trans_to_netlistt::operator()(
   lhs_map.clear();
   rhs_list.clear();
   constraint_list.clear();
-  
-  map_vars(module, dest);
-  
+
+  dest.var_map = build_netlist_var_map(symbol_table, module);
+  allocate_state_variables(dest);
+
   // setup lhs_map
 
   for(var_mapt::mapt::iterator
@@ -294,14 +252,11 @@ void convert_trans_to_netlistt::operator()(
       v_it!=dest.var_map.map.end();
       v_it++)
   {
-    bv_varidt bv_varid;
-    bv_varid.id=v_it->first;
     var_mapt::vart &var=v_it->second;
 
-    for(bv_varid.bit_nr=0;
-        bv_varid.bit_nr<var.bits.size();
-        bv_varid.bit_nr++)
+    for(std::size_t bit_nr = 0; bit_nr < var.bits.size(); bit_nr++)
     {
+      bv_varidt bv_varid{v_it->first, bit_nr};
       var_mapt::vart::bitt &bit=var.bits[bv_varid.bit_nr];
       lhs_entryt &entry=lhs_map[bv_varid];
       entry.bit=&bit;
@@ -357,16 +312,25 @@ void convert_trans_to_netlistt::operator()(
         dest.var_map.reverse_map.find(n);
       
       if(it==dest.var_map.reverse_map.end())
-      {
-        bv_varidt varid;
-        varid.id="nondet";
-        varid.bit_nr=dest.var_map.nondets.size();
-        var_mapt::vart &var=dest.var_map.map[varid.id];
-        var.add_bit().current=literalt(n, false);
-        var.vartype=var_mapt::vart::vartypet::NONDET;
-        dest.var_map.reverse_map[n]=varid;
-        dest.var_map.nondets.insert(n);
-      }
+        dest.var_map.record_as_nondet(n);
+    }
+  }
+
+  // label the AIG nodes
+  for(auto var_map_it : dest.var_map.sorted())
+  {
+    auto &var = var_map_it->second;
+
+    for(std::size_t bit_nr = 0; bit_nr < var.bits.size(); bit_nr++)
+    {
+      std::string label = id2string(var_map_it->first);
+      if(var.bits.size() != 1)
+        label += '[' + std::to_string(bit_nr) + ']';
+
+      dest.label(var.bits[bit_nr].current, label);
+
+      if(var.is_latch())
+        dest.label(var.bits[bit_nr].next, label + '\'');
     }
   }
 }
@@ -424,7 +388,8 @@ convert_trans_to_netlistt::convert_property(const exprt &expr)
   }
   else if(
     expr.id() == ID_and || expr.id() == ID_or || expr.id() == ID_not ||
-    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor)
+    expr.id() == ID_implies || expr.id() == ID_xor || expr.id() == ID_xnor ||
+    (expr.id() == ID_equal && to_equal_expr(expr).lhs().type().id() == ID_bool))
   {
     exprt copy = expr;
     for(auto &op : copy.operands())
@@ -565,15 +530,12 @@ void convert_trans_to_netlistt::convert_lhs_rec(
   PRECONDITION(from <= to);
 
   if(expr.id()==ID_symbol)
-  { 
-    bv_varidt bv_varid;
-    
-    bv_varid.id=to_symbol_expr(expr).get_identifier();
+  {
+    auto identifier = to_symbol_expr(expr).get_identifier();
 
-    for(bv_varid.bit_nr=from;
-        bv_varid.bit_nr<=to;
-        bv_varid.bit_nr++)
+    for(std::size_t bit_nr = from; bit_nr <= to; bit_nr++)
     {
+      bv_varidt bv_varid{identifier, bit_nr};
       lhs_mapt::iterator it=lhs_map.find(bv_varid);
 
       if(it==lhs_map.end())
@@ -734,14 +696,11 @@ void convert_trans_to_netlistt::add_equality_rec(
      lhs.id()==ID_symbol)
   { 
     bool next=lhs.id()==ID_next_symbol;
+    auto identifier = lhs.get(ID_identifier);
 
-    bv_varidt bv_varid;
-    bv_varid.id=lhs.get(ID_identifier);
-
-    for(bv_varid.bit_nr=lhs_from;
-        bv_varid.bit_nr!=(lhs_to+1);
-        bv_varid.bit_nr++)
+    for(std::size_t bit_nr = lhs_from; bit_nr != (lhs_to + 1); bit_nr++)
     {
+      bv_varidt bv_varid{identifier, bit_nr};
       lhs_mapt::iterator it=
         lhs_map.find(bv_varid);
 

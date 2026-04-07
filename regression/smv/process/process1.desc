@@ -1,0 +1,9 @@
+CORE
+process1.smv
+
+^file .* line 8: no support for asynchronous processes$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

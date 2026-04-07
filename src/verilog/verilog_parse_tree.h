@@ -70,8 +70,12 @@ public:
     std::swap(parse_tree.standard, standard);
   }
 
+  // returns the set of modules (not: packages) provided
   void modules_provided(
     std::set<std::string> &module_set) const;
+
+  /// get the dependencies of the item given by the identifier
+  std::set<irep_idt> dependencies(irep_idt item_identifier) const;
 
   // An index into the items list.
   // The key is

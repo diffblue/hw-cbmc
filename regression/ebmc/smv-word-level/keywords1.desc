@@ -1,0 +1,9 @@
+CORE
+keywords1.sv
+--smv-word-level
+^EXIT=0$
+^SIGNAL=0$
+--
+INVAR MODULE = 0sd32_0
+--
+The SMV keywords must not be used as identifiers.

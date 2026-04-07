@@ -93,7 +93,7 @@ property_checker_resultt ic3_enginet::operator()()
     message.status() << "Generating Netlist" << messaget::eom;
 
     netlist = make_netlist(transition_system, properties,
-      message.get_message_handler());
+      cmdline, message.get_message_handler());
 
     message.statistics() << "Latches: " << netlist.var_map.latches.size()
                          << ", nodes: " << netlist.number_of_nodes()
