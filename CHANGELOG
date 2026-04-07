@@ -3,6 +3,7 @@
 * SystemVerilog: keyed array assignment patterns
 * Transition property engine
 * Liveness lemma engine
+* Strong SVA sequence semantics for the Buechi instrumentation
 
 # EBMC 5.10
 

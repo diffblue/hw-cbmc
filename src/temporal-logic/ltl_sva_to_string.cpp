@@ -316,8 +316,8 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
     auto op_rec = rec(sequence, SVA_SEQUENCE_STRONG);
 
-    // we use the weak closure, and reject cases where this does not work
-    return resultt{precedencet::ATOM, '{' + op_rec.s + '}'};
+    // strong closure
+    return resultt{precedencet::ATOM, "({" + op_rec.s + "}!)"};
   }
   else if(expr.id() == ID_sva_or)
   {
@@ -361,9 +361,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
 
       if(delay.is_range()) // ##[from:to] rhs
       {
-        if(mode == SVA_SEQUENCE_STRONG)
-          throw ltl_sva_to_string_unsupportedt{expr};
-
         auto from = numeric_cast_v<mp_integer>(delay.from());
 
         if(delay.is_unbounded()) // ##[n:$] rhs
@@ -399,9 +396,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
 
       if(delay.is_range())
       {
-        if(mode == SVA_SEQUENCE_STRONG)
-          throw ltl_sva_to_string_unsupportedt{expr};
-
         auto from = numeric_cast_v<mp_integer>(delay.from());
 
         if(from == 0)
@@ -411,9 +405,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
         }
         else if(delay.is_unbounded()) // f ##[n:$] g
         {
-          if(mode == SVA_SEQUENCE_STRONG)
-            throw ltl_sva_to_string_unsupportedt{expr};
-
           return infix(
             " ; 1[*" + integer2string(from - 1) + "..] ; ", new_expr, mode);
         }
@@ -450,9 +441,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     // w ##[*] x ---> w : 1[*] ; x
     PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
 
-    if(mode == SVA_SEQUENCE_STRONG)
-      throw ltl_sva_to_string_unsupportedt{expr};
-
     auto &cycle_delay_expr = to_sva_cycle_delay_star_expr(expr);
     if(cycle_delay_expr.has_lhs())
     {
@@ -474,9 +462,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     // ##[+] x ---> 1[+] ; x
     // w ##[+] x ---> w : 1[+] ; x
     PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
-
-    if(mode == SVA_SEQUENCE_STRONG)
-      throw ltl_sva_to_string_unsupportedt{expr};
 
     auto &cycle_delay_expr = to_sva_cycle_delay_plus_expr(expr);
     if(cycle_delay_expr.has_lhs())
@@ -511,9 +496,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     unary_exprt new_expr{ID_sva_sequence_repetition_star, repetition.op()};
     if(!repetition.repetitions_given())
     {
-      if(mode == SVA_SEQUENCE_STRONG)
-        throw ltl_sva_to_string_unsupportedt{expr};
-
       return suffix("[*]", new_expr, mode);
     }
     else if(repetition.is_empty_match())
@@ -536,9 +518,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_unbounded())
     {
-      if(mode == SVA_SEQUENCE_STRONG)
-        throw ltl_sva_to_string_unsupportedt{expr};
-
       auto from = numeric_cast_v<mp_integer>(repetition.from());
       return suffix("[*" + integer2string(from) + "..]", new_expr, mode);
     }
@@ -561,9 +540,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
 
-    if(mode == SVA_SEQUENCE_STRONG)
-      throw ltl_sva_to_string_unsupportedt{expr};
-
     auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_goto_repetition, repetition.op()};
     if(repetition.is_singleton())
@@ -582,9 +558,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_unbounded())
     {
-      if(mode == SVA_SEQUENCE_STRONG)
-        throw ltl_sva_to_string_unsupportedt{expr};
-
       auto from = numeric_cast_v<mp_integer>(repetition.from());
       return suffix("[->" + integer2string(from) + "..]", new_expr, mode);
     }
@@ -595,9 +568,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     expr.id() == ID_sva_sequence_non_consecutive_repetition) // something[=n]
   {
     PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
-
-    if(mode == SVA_SEQUENCE_STRONG)
-      throw ltl_sva_to_string_unsupportedt{expr};
 
     auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
     unary_exprt new_expr{
@@ -618,9 +588,6 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     }
     else if(repetition.is_unbounded())
     {
-      if(mode == SVA_SEQUENCE_STRONG)
-        throw ltl_sva_to_string_unsupportedt{expr};
-
       auto from = numeric_cast_v<mp_integer>(repetition.from());
       return suffix("[=" + integer2string(from) + "..]", new_expr, mode);
     }
