@@ -888,7 +888,10 @@ ansi_port_declaration_brace:
           // append to last one -- required to make 
           // the grammar LR1
         | ansi_port_declaration_brace ',' port_identifier ansi_port_initializer_opt
-                { $$=$1;
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::VAR);
+                  $$=$1;
                   exprt decl(ID_decl);
                   decl.add_to_operands(std::move(stack_expr($3)));
                   // grab the type and class from previous!
@@ -918,7 +921,10 @@ ansi_port_initializer_opt:
 
 ansi_port_declaration:
           net_port_header port_identifier unpacked_dimension_brace ansi_port_initializer_opt
-                { init($$, ID_decl);
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($2).get(ID_base_name), "", verilog_scopet::VAR);
+                  init($$, ID_decl);
                   stack_expr($$).set(ID_class, to_unary_expr(stack_expr($1)).op().id());
                   // The data_type goes onto the declaration,
                   // and the unpacked_array_type goes onto the declarator.
@@ -927,7 +933,10 @@ ansi_port_declaration:
                   stack_expr($2).set(ID_value, stack_expr($4));
                   mto($$, $2); /* declarator */ }
         | variable_port_header port_identifier unpacked_dimension_brace ansi_port_initializer_opt
-                { init($$, ID_decl);
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($2).get(ID_base_name), "", verilog_scopet::VAR);
+                  init($$, ID_decl);
                   if(to_unary_expr(stack_expr($1)).op().id() == ID_output)
                     stack_expr($$).set(ID_class, ID_output_register);
                   else
@@ -1965,13 +1974,21 @@ list_of_variable_decl_assignments:
 
 list_of_variable_identifiers:
           variable_identifier
-                { init($$);
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  init($$);
                   stack_expr($1).id(ID_declarator);
-                  mto($$, $1); }
+                  mto($$, $1);
+                }
         | list_of_variable_identifiers ',' variable_identifier
-                { $$=$1;
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::VAR);
+                  $$=$1;
                   stack_expr($3).id(ID_declarator);
-                  mto($$, $3); }
+                  mto($$, $3);
+                }
         ;
 
 // This rule is more permissive that the grammar in the standard
@@ -2110,12 +2127,18 @@ automatic_opt:
 
 list_of_port_identifiers:
           port_identifier unpacked_dimension_brace
-                { init($$);
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  init($$);
                   stack_expr($1).id(ID_declarator);
                   addswap($1, ID_type, $2);
                   mto($$, $1); }
         | list_of_port_identifiers ',' port_identifier unpacked_dimension_brace
-                { $$=$1;
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::VAR);
+                  $$=$1;
                   stack_expr($3).id(ID_declarator);
                   addswap($3, ID_type, $4);
                   mto($$, $3); }
@@ -2410,12 +2433,16 @@ tf_port_item:
           data_type_or_implicit
           port_identifier
           variable_dimension_brace
-                { init($$, ID_decl);
+                {
+                  // add to the scope
+                  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::VAR);
+                  init($$, ID_decl);
                   add_attributes($$, $1);
                   addswap($$, ID_class, $2);
                   addswap($$, ID_type, $3);
                   stack_expr($4).id(ID_declarator);
-                  mto($$, $4); }
+                  mto($$, $4);
+                }
         ;
 
 tf_port_direction_opt:

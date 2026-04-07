@@ -1,5 +1,5 @@
 CORE
-task_input_vs_import2.sv
+module_input_vs_import1.sv
 --bound 0
 ^EXIT=0$
 ^SIGNAL=0$
