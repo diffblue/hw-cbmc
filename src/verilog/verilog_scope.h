@@ -125,6 +125,8 @@ public:
     scope_stack.push_back(&scope);
   }
 
+  void enter_unit_scope();
+
   // Create the given sub-scope of the current scope, and enter it.
   void push_scope(
     irep_idt _base_name,
