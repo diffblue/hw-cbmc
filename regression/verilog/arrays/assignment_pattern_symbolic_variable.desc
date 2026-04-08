@@ -1,0 +1,11 @@
+CORE
+assignment_pattern_symbolic_variable.sv
+
+^\[main\.p1\] always main\.array1\[main\.symbolic_index\] == 1: REFUTED$
+^\[main\.p2\] always main\.array2\[main\.symbolic_index\] == 1: REFUTED$
+^\[main\.p3\] always main\.array3\[main\.symbolic_index\] == 1: REFUTED$
+^\[main\.p4\] always main\.array4\[main\.symbolic_index\] == 1: PROVED .*$
+
+^EXIT=10$
+^SIGNAL=0$
+--
