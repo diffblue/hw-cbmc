@@ -342,8 +342,8 @@ protected:
     const verilog_instt::instancet &,
     transt &trans_dest);
 
-  void expand_hierarchical_identifier(
-    class hierarchical_identifier_exprt &expr,
+  exprt expand_hierarchical_identifier(
+    class hierarchical_identifier_exprt expr,
     symbol_statet symbol_state);
 
   exprt

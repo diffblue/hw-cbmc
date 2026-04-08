@@ -80,9 +80,8 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
   }
   else if(expr.id() == ID_hierarchical_identifier)
   {
-    expand_hierarchical_identifier(
-      to_hierarchical_identifier_expr(expr), symbol_state);
-    return expr;
+    return expand_hierarchical_identifier(
+      to_hierarchical_identifier_expr(std::move(expr)), symbol_state);
   }
 
   // Do the operands recursively
@@ -279,22 +278,17 @@ exprt verilog_synthesist::synth_lhs_expr(exprt expr)
   }
   else if(expr.id() == ID_hierarchical_identifier)
   {
-    expand_hierarchical_identifier(
-      to_hierarchical_identifier_expr(expr), symbol_statet::CURRENT);
-    local_symbols.insert(to_symbol_expr(expr).identifier());
-    return expr;
+    auto result = expand_hierarchical_identifier(
+      to_hierarchical_identifier_expr(std::move(expr)), symbol_statet::CURRENT);
+    if(result.id() == ID_symbol)
+      local_symbols.insert(to_symbol_expr(result).identifier());
+    return result;
   }
   else if(expr.id() == ID_typecast)
   {
     auto &typecast_expr = to_typecast_expr(expr);
     typecast_expr.op() = synth_lhs_expr(typecast_expr.op());
     return expr;
-  }
-  else if(expr.id() == ID_hierarchical_identifier)
-  {
-    expand_hierarchical_identifier(
-      to_hierarchical_identifier_expr(expr), symbol_statet::CURRENT);
-    return synth_lhs_expr(std::move(expr));
   }
   else
   {
@@ -561,8 +555,8 @@ Function: verilog_synthesist::expand_hierarchical_identifier
 
 \*******************************************************************/
 
-void verilog_synthesist::expand_hierarchical_identifier(
-  hierarchical_identifier_exprt &expr,
+exprt verilog_synthesist::expand_hierarchical_identifier(
+  hierarchical_identifier_exprt expr,
   symbol_statet symbol_state)
 {
   expr.lhs() = synth_expr(expr.lhs(), symbol_state);
@@ -590,13 +584,26 @@ void verilog_synthesist::expand_hierarchical_identifier(
   irep_idt full_identifier =
     id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
 
+  // The identifier might be a macro, e.g., a parameter of the
+  // module instance. If so, substitute.
   // Note: the instance copy may not yet be in symbol table,
   // as the inst module item may be later.
   // The type checker already checked that it's fine.
+  const symbolt *symbol;
+  if(!ns.lookup(full_identifier, symbol) && symbol->is_macro)
+  {
+    DATA_INVARIANT(symbol->value.is_not_nil(), "macro must have value");
+
+    // These aren't lowered yet
+    auto lowered = verilog_lowering(symbol->value);
+
+    // recursive call
+    return synth_expr_rec(std::move(lowered), symbol_state);
+  }
 
   symbol_exprt new_symbol{full_identifier, expr.type()};
   new_symbol.add_source_location()=expr.source_location();
-  expr.swap(new_symbol);
+  return std::move(new_symbol);
 }
 
 /*******************************************************************\

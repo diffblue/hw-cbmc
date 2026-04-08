@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 root1.sv
 --top the_top --bound 0
 ^EXIT=0$
@@ -6,4 +6,3 @@ root1.sv
 --
 ^warning: ignoring
 --
-This does not parse
