@@ -1,5 +1,6 @@
 # EBMC 5.11
 
+* SystemVerilog: $unit::
 * SystemVerilog: keyed array assignment patterns
 * Transition property engine
 * Liveness lemma engine

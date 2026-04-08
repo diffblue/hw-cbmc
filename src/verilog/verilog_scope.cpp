@@ -124,6 +124,11 @@ void verilog_scopest::enter_package_scope(irep_idt base_name)
     enter_scope(name_it->second); // found it
 }
 
+void verilog_scopest::enter_unit_scope()
+{
+  enter_scope(top_scope);
+}
+
 unsigned verilog_scopest::identifier_token(irep_idt base_name) const
 {
   auto scope = lookup(base_name);

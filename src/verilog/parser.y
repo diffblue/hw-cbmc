@@ -506,6 +506,7 @@ int yyverilogerror(const char *error)
 %token TOK_UNION            "union"
 %token TOK_UNIQUE           "unique"
 %token TOK_UNIQUE0          "unique0"
+%token TOK_UNIT             "$unit"
 %token TOK_UNTIL            "until"
 %token TOK_UNTIL_WITH       "until_with"
 %token TOK_UNTYPED          "untyped"
@@ -4914,12 +4915,20 @@ net_identifier: identifier;
 
 package_identifier: TOK_PACKAGE_IDENTIFIER;
 
-package_scope: package_identifier "::"
+package_scope:
+          package_identifier "::"
                 {
                   init($$, ID_verilog_package_scope);
                   // enter that scope
                   auto base_name = stack_expr($1).get(ID_base_name);
                   PARSER.scopes.enter_package_scope(base_name);
+                  mto($$, $1);
+                }
+        | "$unit" "::"
+                {
+                  init($$, ID_verilog_package_scope);
+                  // enter that scope
+                  PARSER.scopes.enter_unit_scope();
                   mto($$, $1);
                 }
         ;
