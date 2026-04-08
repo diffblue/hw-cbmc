@@ -81,7 +81,7 @@ verilog_typecheck_exprt::hierarchical_identifier(irep_idt base_name) const
   else
   {
     // not in a function/task, not in a module/checker/package etc.
-    return "Verilog::$unit." + id2string(base_name);
+    return verilog_package_identifier("$unit", base_name);
   }
 }
 
@@ -864,7 +864,7 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
     if(ns.lookup(full_identifier, symbol))
     {
       // not there? Try compilation-unit scope.
-      full_identifier = "Verilog::$unit." + id2string(base_name);
+      full_identifier = "Verilog::$unit::" + id2string(base_name);
 
       if(ns.lookup(full_identifier, symbol))
       {
@@ -1580,7 +1580,7 @@ const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
     return symbol; // found!
 
   // compilation-unit scope?
-  full_identifier = "Verilog::$unit." + id2string(base_name);
+  full_identifier = "Verilog::$unit::" + id2string(base_name);
 
   if(!ns.lookup(full_identifier, symbol))
     return symbol; // found!
