@@ -773,9 +773,19 @@ checker_port_list_opt:
 
 checker_port_list:
           checker_port_item
-                { init($$); mts($$, $1); }
+                {
+                  // No direction on declaration? Defaults to 'input'.
+                  auto &decl = stack_expr($1);
+                  if(decl.get(ID_class) == irep_idt{})
+                    decl.set(ID_class, ID_input);
+                  init($$);
+                  mts($$, $1);
+                }
         | checker_port_list ',' checker_port_item
-                { $$ = $1; mts($$, $3); }
+                {
+                  $$ = $1;
+                  mts($$, $3);
+                }
         ;
 
 checker_port_item:
@@ -2585,6 +2595,7 @@ property_port_item:
 property_formal_type:
           sequence_formal_type
         | TOK_PROPERTY
+                { init($$, ID_verilog_property); }
         ;
 
 property_spec:
