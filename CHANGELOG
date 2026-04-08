@@ -1,5 +1,6 @@
 # EBMC 6.0
 
+* Verilog: $root.
 * Verilog: identifiers given on command-line must now include module identifier
 * BMC: strong sequences that exceed the bound are no longer reported as REFUTED
 * VCD traces now written into separate files per property
