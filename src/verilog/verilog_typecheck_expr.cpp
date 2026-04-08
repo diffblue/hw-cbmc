@@ -54,17 +54,26 @@ verilog_typecheck_exprt::hierarchical_identifier(irep_idt base_name) const
     named_blocks.empty() ? std::string() : id2string(named_blocks.back());
 
   if(!function_or_task_name.empty())
+  {
     return id2string(function_or_task_name) + "." + named_block +
            id2string(base_name);
+  }
   else if(!module_identifier.empty())
   {
-    if(has_prefix(id2string(module_identifier), "Verilog::package::"))
+    // used for both modules and packages
+    static const std::string verilog_prefix = "Verilog::";
+    static const std::string package_prefix = "Verilog::package::";
+
+    if(has_prefix(id2string(module_identifier), package_prefix))
     {
-      return id2string(module_identifier) + "::" + named_block +
-             id2string(base_name);
+      auto package_name =
+        std::string{id2string(module_identifier), package_prefix.size()};
+      // Verilog::package_name::base_name
+      return verilog_package_identifier(package_name, base_name);
     }
     else
     {
+      // Verilog::module_name.block.base_name
       return id2string(module_identifier) + "." + named_block +
              id2string(base_name);
     }
@@ -1538,10 +1547,13 @@ const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
 
   // determine the pacakge/module prefix, using the right separator
   std::string prefix;
+  static const std::string package_prefix = "Verilog::package::";
 
-  if(has_prefix(id2string(module_identifier), "Verilog::package::"))
+  if(has_prefix(id2string(module_identifier), package_prefix))
   {
-    prefix = id2string(module_identifier) + "::";
+    auto package_name =
+      std::string{id2string(module_identifier), package_prefix.size()};
+    prefix = "Verilog::" + package_name + "::";
   }
   else
   {
@@ -1599,7 +1611,7 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
 
   if(import != irep_idt{})
   {
-    auto full_identifier = "Verilog::package::" + id2string(import);
+    auto full_identifier = "Verilog::" + id2string(import);
 
     if(ns.lookup(full_identifier, symbol))
     {
