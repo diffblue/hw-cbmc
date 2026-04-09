@@ -41,6 +41,7 @@ public:
 
   // CTL operators
   mini_bddt EX(mini_bddt);
+  mini_bddt EX_monolithic(mini_bddt);
   mini_bddt EF(mini_bddt);
   mini_bddt EG(mini_bddt);
   mini_bddt EU(mini_bddt, mini_bddt);
@@ -60,6 +61,7 @@ protected:
   mini_bddt current_to_next(const mini_bddt &) const;
   mini_bddt project_inputs(const mini_bddt &) const;
   mini_bddt project_next(const mini_bddt &) const;
+  mini_bddt project_next_early(const std::vector<mini_bddt> &) const;
   mini_bddt fixedpoint(std::function<mini_bddt(mini_bddt)>, mini_bddt);
 };
 
