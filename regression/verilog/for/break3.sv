@@ -2,7 +2,7 @@ module main(input [31:0] bits);
 
   var [5:0] index;
 
-  always_comb @bits begin
+  always_comb begin
     // linear loop to find the first bit that is 1
     for(index = 0; index < $bits(bits); index++)
       if(bits[index])

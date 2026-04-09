@@ -1,7 +1,7 @@
 CORE
-continue1.sv
+continue2.sv
 
-^\[main\.blk\.p0\] main\.blk\.j == 9: PROVED .*$
+^\[main\.blk\.p0\] main\.blk\.j == 10: PROVED .*$
 ^\[main\.blk\.p1\] main\.index == 5 -> main\.array\[main\.index\] == 0: PROVED .*$
 ^\[main\.blk\.p2\] main\.index != 5 -> main\.array\[main\.index\] == 1: PROVED .*$
 ^EXIT=0$

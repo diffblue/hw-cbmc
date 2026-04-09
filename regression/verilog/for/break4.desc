@@ -1,10 +1,9 @@
 CORE
-break3.sv
+break4.sv
 
 ^\[main\.0\.p0\] always main\.bits == 1 -> main\.index == 0: PROVED .*$
 ^\[main\.0\.p3\] always main\.bits == 8 -> main\.index == 3: PROVED .*$
-^\[main\.0\.p4\] always main\.bits == 24 -> main\.index == 3: PROVED .*$
-^\[main\.0\.p32\] always main\.bits == 0 -> main\.index == 32: PROVED .*$
+^\[main\.0\.p4\] always main\.bits == 30 -> main\.index == 4: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
