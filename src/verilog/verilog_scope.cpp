@@ -12,6 +12,22 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <ostream>
 
+verilog_scopet &
+verilog_scopest::add_identifier(irep_idt _base_name, scopet::kindt kind)
+{
+  return add_scope(_base_name, std::string{}, kind);
+}
+
+verilog_scopet &verilog_scopest::add_scope(
+  irep_idt _base_name,
+  const std::string &separator,
+  scopet::kindt kind)
+{
+  auto result = current_scope().scope_map.emplace(
+    _base_name, scopet{_base_name, separator, &current_scope(), kind});
+  return result.first->second;
+}
+
 const verilog_scopet *verilog_scopest::lookup(irep_idt base_name) const
 {
   // we start from the current scope, and walk upwards to the root
@@ -96,8 +112,8 @@ void verilog_scopest::import(irep_idt package, irep_idt base_name)
   auto name_it = package_it->second.scope_map.find(base_name);
   if(name_it != package_it->second.scope_map.end())
   {
-    auto &scope = add_name(base_name, "", name_it->second.kind);
-    scope.import = name_it->second.identifier();
+    auto &identifier = add_identifier(base_name, name_it->second.kind);
+    identifier.import = name_it->second.identifier();
   }
   else
   {

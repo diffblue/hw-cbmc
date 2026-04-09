@@ -890,7 +890,7 @@ ansi_port_declaration_brace:
         | ansi_port_declaration_brace ',' port_identifier ansi_port_initializer_opt
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($3).get(ID_base_name), verilog_scopet::VAR);
                   $$=$1;
                   exprt decl(ID_decl);
                   decl.add_to_operands(std::move(stack_expr($3)));
@@ -923,7 +923,7 @@ ansi_port_declaration:
           net_port_header port_identifier unpacked_dimension_brace ansi_port_initializer_opt
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($2).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::VAR);
                   init($$, ID_decl);
                   stack_expr($$).set(ID_class, to_unary_expr(stack_expr($1)).op().id());
                   // The data_type goes onto the declaration,
@@ -935,7 +935,7 @@ ansi_port_declaration:
         | variable_port_header port_identifier unpacked_dimension_brace ansi_port_initializer_opt
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($2).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::VAR);
                   init($$, ID_decl);
                   if(to_unary_expr(stack_expr($1)).op().id() == ID_output)
                     stack_expr($$).set(ID_class, ID_output_register);
@@ -1537,7 +1537,7 @@ type_declaration:
            data_type any_identifier variable_dimension_brace ';'
                 { $$ = $2;
                   // add to the scope as a type name
-                  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
+                  PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::TYPEDEF);
                   addswap($$, ID_type, $3);
                   stack_expr($4).id(ID_declarator);
                   addswap($4, ID_type, $5);
@@ -1553,7 +1553,7 @@ net_type_declaration:
           data_type any_identifier ';'
                 { $$ = $2;
                   // add to the scope as a type name
-                  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::TYPEDEF);
+                  PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::TYPEDEF);
                   addswap($$, ID_type, $3);
                   stack_expr($4).id(ID_declarator);
                   mto($$, $4);
@@ -1681,7 +1681,7 @@ enum_name_declaration:
           any_identifier enum_name_value_opt
           {
             init($$);
-            auto &scope = PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::ENUM_NAME);
+            auto &scope = PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::ENUM_NAME);
             stack_expr($$).set(ID_base_name, scope.base_name());
             stack_expr($$).set(ID_verilog_scope_prefix, scope.parent->prefix);
             stack_expr($$).add(ID_value).swap(stack_expr($2));
@@ -1940,14 +1940,14 @@ list_of_genvar_identifiers:
           // must be any_identifier to allow re-use of typedef identifiers
           any_identifier
                 { init($$);
-                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::OTHER);
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::OTHER);
                   stack_expr($1).id(ID_declarator);
                   mto($$, $1);
                 }
           // must be any_identifier to allow re-use of typedef identifiers
         | list_of_genvar_identifiers ',' any_identifier
                 { $$=$1;
-                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::OTHER);
+                  PARSER.scopes.add_identifier(stack_expr($3).get(ID_base_name), verilog_scopet::OTHER);
                   stack_expr($3).id(ID_declarator);
                   mto($$, $3);
                 }
@@ -1976,7 +1976,7 @@ list_of_variable_identifiers:
           variable_identifier
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::VAR);
                   init($$);
                   stack_expr($1).id(ID_declarator);
                   mto($$, $1);
@@ -1984,7 +1984,7 @@ list_of_variable_identifiers:
         | list_of_variable_identifiers ',' variable_identifier
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($3).get(ID_base_name), verilog_scopet::VAR);
                   $$=$1;
                   stack_expr($3).id(ID_declarator);
                   mto($$, $3);
@@ -2032,7 +2032,7 @@ list_of_param_assignments:
 param_assignment: param_identifier '=' constant_param_expression
                 { init($$, ID_parameter);
                   auto base_name = stack_expr($1).get(ID_base_name);
-                  PARSER.scopes.add_name(base_name, "", verilog_scopet::PARAMETER);
+                  PARSER.scopes.add_identifier(base_name, verilog_scopet::PARAMETER);
                   stack_expr($$).set(ID_base_name, base_name);
                   addswap($$, ID_value, $3); }
         ;
@@ -2052,7 +2052,7 @@ type_assignment: param_identifier '=' data_type
                   stack_expr($$).type() = typet{ID_type};
 
                   // add to the scope as a type name
-                  PARSER.scopes.add_name(base_name, "", verilog_scopet::TYPEDEF);
+                  PARSER.scopes.add_identifier(base_name, verilog_scopet::TYPEDEF);
                 }
         ;
 
@@ -2129,7 +2129,7 @@ list_of_port_identifiers:
           port_identifier unpacked_dimension_brace
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::VAR);
                   init($$);
                   stack_expr($1).id(ID_declarator);
                   addswap($1, ID_type, $2);
@@ -2137,7 +2137,7 @@ list_of_port_identifiers:
         | list_of_port_identifiers ',' port_identifier unpacked_dimension_brace
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($3).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($3).get(ID_base_name), verilog_scopet::VAR);
                   $$=$1;
                   stack_expr($3).id(ID_declarator);
                   addswap($3, ID_type, $4);
@@ -2170,7 +2170,7 @@ variable_decl_assignment:
           variable_identifier variable_dimension_brace
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::VAR);
                   $$ = $1;
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
@@ -2178,7 +2178,7 @@ variable_decl_assignment:
         | variable_identifier variable_dimension_brace '=' expression
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::VAR);
                   $$ = $1;
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
@@ -2187,7 +2187,7 @@ variable_decl_assignment:
         | variable_identifier variable_dimension_brace '=' class_new
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($1).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::VAR);
                   $$ = $1;
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
@@ -2435,7 +2435,7 @@ tf_port_item:
           variable_dimension_brace
                 {
                   // add to the scope
-                  PARSER.scopes.add_name(stack_expr($4).get(ID_base_name), "", verilog_scopet::VAR);
+                  PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::VAR);
                   init($$, ID_decl);
                   add_attributes($$, $1);
                   addswap($$, ID_class, $2);
@@ -3194,7 +3194,7 @@ name_of_gate_instance:
                 { init($$, ID_inst);
                   auto base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
-                  PARSER.scopes.add_name(base_name, "", verilog_scopet::MODULE_INSTANCE);
+                  PARSER.scopes.add_identifier(base_name, verilog_scopet::MODULE_INSTANCE);
                   if(stack_expr($2).is_not_nil())
                   {
                     auto &range = stack_expr($$).add(ID_range);
@@ -3294,7 +3294,7 @@ name_of_instance:
                   auto base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
                   addswap($$, ID_verilog_instance_array, $2);
-                  PARSER.scopes.add_name(base_name, "", verilog_scopet::MODULE_INSTANCE);
+                  PARSER.scopes.add_identifier(base_name, verilog_scopet::MODULE_INSTANCE);
                 }
         ;
 
@@ -3373,7 +3373,7 @@ genvar_initialization:
                 { init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
         | TOK_GENVAR genvar_identifier '=' constant_expression
                 { init($$, ID_verilog_generate_decl);
-                  PARSER.scopes.add_name(stack_expr($2).get(ID_base_name), "", verilog_scopet::OTHER);
+                  PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::OTHER);
                   stack_expr($2).id(ID_declarator);
                   addswap($2, ID_value, $4);
                   mto($$, $2);
