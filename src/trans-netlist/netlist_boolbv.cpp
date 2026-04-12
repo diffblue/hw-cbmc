@@ -11,6 +11,45 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ebmc/ebmc_error.h>
 #include <verilog/sva_expr.h>
 
+void netlist_boolbvt::netlist_set_to(const exprt &expr, bool value, bvt &dest)
+{
+  if(expr.id() == ID_equal && value)
+  {
+    netlist_set_equality_to_true(to_equal_expr(expr), dest);
+  }
+  else if(expr.id() == ID_and && value)
+  {
+    for(auto &conjunct : expr.operands())
+      netlist_set_to(conjunct, true, dest);
+  }
+  else
+  {
+    dest.push_back(convert(expr) ^ !value);
+  }
+}
+
+void netlist_boolbvt::netlist_set_equality_to_true(
+  const equal_exprt &expr,
+  bvt &dest)
+{
+  // see if it is an unbounded array
+  if(is_unbounded_array(expr.lhs().type()))
+  {
+    dest.push_back(convert(expr));
+    return;
+  }
+
+  const bvt &bv_lhs = convert_bv(expr.lhs());
+  const bvt &bv_rhs = convert_bv(expr.rhs());
+
+  PRECONDITION(bv_lhs.size() == bv_rhs.size());
+
+  for(std::size_t i = 0; i < bv_lhs.size(); i++)
+  {
+    dest.push_back(prop.lequal(bv_lhs[i], bv_rhs[i]));
+  }
+}
+
 /*******************************************************************\
 
 Function: netlist_boolbvt::convert_bool
