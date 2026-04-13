@@ -1,4 +1,5 @@
 # EBMC 6.0
+* VCD traces now written into separate files per property
 
 # EBMC 5.11
 
