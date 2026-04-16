@@ -1,0 +1,6 @@
+CORE
+ifdef_include1.sv
+--preprocess
+^EXIT=0$
+^SIGNAL=0$
+--
