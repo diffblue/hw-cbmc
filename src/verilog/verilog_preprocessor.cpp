@@ -600,6 +600,13 @@ void verilog_preprocessort::directive()
   }
   else if(text=="include")
   {
+    if(!condition)
+    {
+      // ignore
+      tokenizer().skip_until_eol();
+      return;
+    }
+
     // skip whitespace
     tokenizer().skip_ws();
 
