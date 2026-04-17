@@ -19,9 +19,11 @@ struct verilog_scopet
 {
   using kindt = enum {
     GLOBAL,
+    UNIT,
     FILE,
     PACKAGE,
     MODULE,
+    CHECKER,
     CLASS,
     ENUM_NAME,
     MODULE_INSTANCE,
@@ -89,6 +91,10 @@ struct verilog_scopet
 
   //.the scanner token number
   unsigned identifier_token() const;
+
+  // add a child scope into this scope
+  verilog_scopet &
+  add_scope(irep_idt base_name, const std::string &separator, kindt kind);
 };
 
 class verilog_scopest
@@ -96,15 +102,29 @@ class verilog_scopest
 public:
   using scopet = verilog_scopet;
 
+  // The "definitions" name space, for module, primitive, program,
+  // and interface identifiers. Identifiers in here are visible in
+  // any subscopes.
   scopet top_scope;
+
+  // The "$unit" scope, for compilation-unit level functions, tasks,
+  // checkers, parameters, named events, net declarations,
+  // variable declarations, and user-defined types
+  scopet unit_scope = {"$unit", "::", &top_scope, scopet::UNIT};
 
   scopet &add_identifier(irep_idt _base_name, scopet::kindt);
 
-  scopet &
-  add_scope(irep_idt _base_name, const std::string &separator, scopet::kindt);
+  // add a scope to the current scope
+  scopet &add_scope(
+    irep_idt base_name,
+    const std::string &separator,
+    scopet::kindt kind)
+  {
+    return current_scope().add_scope(base_name, separator, kind);
+  }
 
   // Scope stack
-  std::vector<scopet *> scope_stack = {&top_scope};
+  std::vector<scopet *> scope_stack = {&top_scope, &unit_scope};
 
   scopet &current_scope() const
   {
