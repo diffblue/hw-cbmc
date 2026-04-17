@@ -739,11 +739,18 @@ program_declaration:
         ;
 
 checker_declaration:
-          TOK_CHECKER { init($$); } checker_identifier
+          TOK_CHECKER { init($$); }
+          checker_identifier
+          {
+            // these create a scope
+            auto base_name = stack_expr($3).get(ID_base_name);
+            push_scope(base_name, ".", verilog_scopet::MODULE);
+          }
           checker_port_list_paren_opt ';'
           checker_or_generate_item_brace
           TOK_ENDCHECKER
                 {
+                  pop_scope();
                   init($$);
                   irept attributes;
                   exprt parameter_port_list;
@@ -752,8 +759,8 @@ checker_declaration:
                     stack_expr($2), // module_keyword
                     stack_expr($3), // name
                     parameter_port_list, // parameter_port_list
-                    stack_expr($4), // ports
-                    stack_expr($6)  // module_items
+                    stack_expr($5), // ports
+                    stack_expr($7)  // module_items
                   );
                   stack_expr($$).id(ID_verilog_checker);
                 }
