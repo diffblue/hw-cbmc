@@ -5,6 +5,8 @@
 
 * SMV: use NuSMV's operator precedence, as opposed to CMU SMV's
 
+* SystemVerilog: semantics fix for cover disable iff
+
 # EBMC 5.11
 
 * SystemVerilog: $unit::
