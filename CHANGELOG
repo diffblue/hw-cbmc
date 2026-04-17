@@ -1,6 +1,8 @@
 # EBMC 6.0
 * VCD traces now written into separate files per property
 
+* SMV: removed legacy keywords EXTERN and switch
+
 # EBMC 5.11
 
 * SystemVerilog: $unit::

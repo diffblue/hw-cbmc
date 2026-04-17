@@ -168,9 +168,6 @@ void newlocation(YYSTYPE &x)
 "min"		token(min_Token);
 
  /* Not in the NuSMV manual */
-"EXTERN"	token(EXTERN_Token);
-"switch"	token(switch_Token);
-"notin"		token(notin_Token);
 "R"		token(R_Token);
 
 [\$A-Za-z_][A-Za-z0-9_\$#-]*	{
