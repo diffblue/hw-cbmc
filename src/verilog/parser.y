@@ -629,7 +629,9 @@ module_identifier_with_scope:
           {
             $$ = $1;
             auto base_name = stack_expr($1).get(ID_base_name);
-            push_scope(base_name, ".", verilog_scopet::MODULE);
+            // modules go into the top scope, not into $unit
+            auto &module_scope = PARSER.scopes.top_scope.add_scope(base_name, ".", verilog_scopet::MODULE);
+            PARSER.scopes.enter_scope(module_scope);
           }
         ;
 
@@ -742,9 +744,9 @@ checker_declaration:
           TOK_CHECKER { init($$); }
           checker_identifier
           {
-            // these create a scope
+            // these create a scope, which goes into the current scope
             auto base_name = stack_expr($3).get(ID_base_name);
-            push_scope(base_name, ".", verilog_scopet::MODULE);
+            push_scope(base_name, ".", verilog_scopet::CHECKER);
           }
           checker_port_list_paren_opt ';'
           checker_or_generate_item_brace
@@ -815,7 +817,9 @@ class_declaration:
                   init($$, ID_verilog_class);
                   auto base_name = stack_expr($2).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
-                  push_scope(base_name, "::", verilog_scopet::CLASS);
+                  // classes go into the top scope, not $unit
+                  auto &class_scope = PARSER.scopes.top_scope.add_scope(base_name, "::", verilog_scopet::CLASS);
+                  PARSER.scopes.enter_scope(class_scope);
                 }
           class_item_brace
           TOK_ENDCLASS
@@ -831,7 +835,10 @@ package_declaration:
           lifetime_opt
           any_identifier ';'
                 {
-                  push_scope(stack_expr($5).get(ID_base_name), "::", verilog_scopet::PACKAGE);
+                  // packages go into the top scope, not $unit
+                  auto base_name = stack_expr($5).get(ID_base_name);
+                  auto &package_scope = PARSER.scopes.top_scope.add_scope(base_name, "::", verilog_scopet::PACKAGE);
+                  PARSER.scopes.enter_scope(package_scope);
                 }
           package_item_brace
           TOK_ENDPACKAGE endpackage_identifier_opt
@@ -2356,7 +2363,8 @@ function_declaration: TOK_FUNCTION lifetime_opt function_body_declaration
 function_body_declaration:
           function_data_type_or_implicit
           function_identifier
-                { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
+                { // functions go into the current scope, say module or $unit
+                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
           ';'
           tf_item_declaration_brace
           function_statement_or_null_brace
@@ -2372,7 +2380,8 @@ function_body_declaration:
                 }
         | function_data_type_or_implicit
           function_identifier
-                { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
+                { // functions go into the current scope, say module or $unit
+                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
           '(' tf_port_list_opt ')' ';'
           block_item_declaration_brace
           function_statement_or_null_brace
@@ -2414,7 +2423,8 @@ function_prototype: TOK_FUNCTION data_type_or_void function_identifier
 
 task_declaration:
           TOK_TASK task_identifier
-                { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
+                { // tasks go into the current scope, module or $unit
+                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
           ';'
           tf_item_declaration_brace
           task_statement_or_null_brace
@@ -2427,7 +2437,8 @@ task_declaration:
                   pop_scope();
                 }
         | TOK_TASK task_identifier
-                { push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
+                { // tasks go into the current scope, module or $unit
+                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::TASK); }
           '(' tf_port_list_opt ')' ';'
           tf_item_declaration_brace
           task_statement_or_null_brace
@@ -2618,7 +2629,8 @@ assertion_item_declaration:
 
 property_declaration:
           TOK_PROPERTY any_identifier
-                { auto base_name = stack_expr($2).get(ID_base_name);
+                { // properties go into the current scope, say module or $unit
+                  auto base_name = stack_expr($2).get(ID_base_name);
                   push_scope(base_name, ".", verilog_scopet::PROPERTY); }
           property_port_list_paren_opt ';'
           property_spec semicolon_opt
@@ -2816,7 +2828,8 @@ property_case_item:
 sequence_declaration:
           "sequence" { init($$, ID_verilog_sequence_declaration); }
           any_identifier
-                { auto base_name = stack_expr($3).get(ID_base_name);
+                { // sequences go into the current scope, module or $unit
+                  auto base_name = stack_expr($3).get(ID_base_name);
                   push_scope(base_name, ".", verilog_scopet::SEQUENCE);
                 }
           sequence_port_list_opt ';'

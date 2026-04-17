@@ -18,13 +18,13 @@ verilog_scopest::add_identifier(irep_idt _base_name, scopet::kindt kind)
   return add_scope(_base_name, std::string{}, kind);
 }
 
-verilog_scopet &verilog_scopest::add_scope(
-  irep_idt _base_name,
+verilog_scopet &verilog_scopet::add_scope(
+  irep_idt base_name,
   const std::string &separator,
-  scopet::kindt kind)
+  kindt kind)
 {
-  auto result = current_scope().scope_map.emplace(
-    _base_name, scopet{_base_name, separator, &current_scope(), kind});
+  auto result = scope_map.emplace(
+    base_name, verilog_scopet{base_name, separator, this, kind});
   return result.first->second;
 }
 
@@ -82,9 +82,11 @@ unsigned verilog_scopet::identifier_token() const
   {
   // clang-format off
   case verilog_scopet::GLOBAL:          return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::UNIT:            return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::FILE:            return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::PACKAGE:         return TOK_PACKAGE_IDENTIFIER;
   case verilog_scopet::MODULE:          return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::CHECKER:         return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::CLASS:           return TOK_CLASS_IDENTIFIER;
   case verilog_scopet::MODULE_INSTANCE: return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::BLOCK:           return TOK_NON_TYPE_IDENTIFIER;
