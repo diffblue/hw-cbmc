@@ -1,0 +1,7 @@
+CORE
+program1.sv
+
+^no module found$
+^EXIT=1$
+^SIGNAL=0$
+--

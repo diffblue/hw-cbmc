@@ -734,8 +734,57 @@ interface_nonansi_header:
                 }
         ;
 
+program_identifier:
+          any_identifier
+                {
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  push_scope(base_name, ".", verilog_scopet::PROGRAM);
+                }
+        ;
+
+program_nonansi_header:
+          attribute_instance_brace
+          TOK_PROGRAM
+          lifetime_opt
+          program_identifier
+          package_import_declaration_brace
+          parameter_port_list_opt
+          list_of_ports
+          ';'
+        ;
+
+program_ansi_header:
+          attribute_instance_brace
+          TOK_PROGRAM
+          lifetime_opt
+          program_identifier
+          package_import_declaration_brace
+          parameter_port_list_opt
+          list_of_port_declarations_opt
+          ';'
+        ;
+
 program_declaration:
-          TOK_PROGRAM TOK_ENDPROGRAM
+          program_nonansi_header
+          program_item_brace
+                { pop_scope(); }
+          TOK_ENDPROGRAM
+          endprogram_identifier_opt
+        | program_ansi_header
+          program_item_brace
+                { pop_scope(); }
+          TOK_ENDPROGRAM
+          endprogram_identifier_opt
+        ;
+
+program_item_brace:
+          /* Optional */
+        | program_item_brace program_item
+        ;
+
+endprogram_identifier_opt:
+          /* Optional */
+        | TOK_COLON non_type_identifier
         ;
 
 checker_declaration:
@@ -881,6 +930,12 @@ list_of_ports_opt:
         ;
 
 list_of_ports: '(' port_brace ')' { $$ = $2; }
+        ;
+
+list_of_port_declarations_opt:
+          /* Optional */
+              { make_nil($$); }
+        | list_of_port_declarations
         ;
 
 list_of_port_declarations: '(' ansi_port_declaration_brace ')' { $$=$2; }
@@ -1164,6 +1219,30 @@ non_port_interface_item:
         /* | modport_declaration */
         | interface_declaration
         | timeunits_declaration
+        ;
+
+// System Verilog standard 1800-2017
+// A.1.7 Program items
+
+program_item:
+          port_declaration ';'
+        | non_port_program_item
+        ;
+
+non_port_program_item:
+          attribute_instance_brace continuous_assign
+        | attribute_instance_brace module_or_generate_item_declaration
+        | attribute_instance_brace initial_construct
+        | attribute_instance_brace final_construct
+        | attribute_instance_brace concurrent_assertion_item
+        | timeunits_declaration
+        | program_generate_item
+        ;
+
+program_generate_item:
+          loop_generate_construct
+        | conditional_generate_construct
+        | generate_region
         ;
 
 // System Verilog standard 1800-2017
