@@ -83,6 +83,7 @@ unsigned verilog_scopet::identifier_token() const
   case verilog_scopet::FILE:            return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::PACKAGE:         return TOK_PACKAGE_IDENTIFIER;
   case verilog_scopet::MODULE:          return TOK_NON_TYPE_IDENTIFIER;
+  case verilog_scopet::PROGRAM:         return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::CLASS:           return TOK_CLASS_IDENTIFIER;
   case verilog_scopet::MODULE_INSTANCE: return TOK_NON_TYPE_IDENTIFIER;
   case verilog_scopet::BLOCK:           return TOK_NON_TYPE_IDENTIFIER;
