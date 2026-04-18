@@ -2172,11 +2172,15 @@ range:  part_select;
 
 net_decl_assignment:
           net_identifier unpacked_dimension_brace
-                { $$ = $1;
+                { // add to the scope
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::NET);
+                  $$ = $1;
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2); }
         | net_identifier unpacked_dimension_brace '=' expression
-                { $$ = $1;
+                { // add to the scope
+                  PARSER.scopes.add_identifier(stack_expr($1).get(ID_base_name), verilog_scopet::NET);
+                  $$ = $1;
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
                   addswap($$, ID_value, $4); }
