@@ -20,12 +20,14 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get remove --purge man-db
-          packages_to_install="ccache z3"
+          packages_to_install="ccache cvc5 z3"
           if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
             # retry after updating package indices
             sudo apt-get update
             sudo apt-get install --no-install-recommends -yq $packages_to_install
           fi
+      - name: Confirm cvc5 solver is available and log the version installed
+        run: cvc5 --version
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Log the version of gcc
@@ -58,14 +60,20 @@ jobs:
           key: ${{ runner.os }}-24.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
       - name: Run the ebmc tests with SAT
         run: make -C regression/ebmc test
+      - name: Run the ebmc tests with CVC5
+        run: make -C regression/ebmc test-cvc5
       - name: Run the ebmc tests with Z3
         run: make -C regression/ebmc test-z3
       - name: Run the verilog tests
         run: make -C regression/verilog test
       - name: Run the verilog tests with Z3
         run: make -C regression/verilog test-z3
+      - name: Run the verilog tests with CVC5
+        run: make -C regression/verilog test-cvc5
       - name: Run the smv tests
         run: make -C regression/smv test
+      - name: Run the smv tests with CVC5
+        run: make -C regression/smv test-cvc5
       - name: Run the smv tests with Z3
         run: make -C regression/smv test-z3
       - name: Run the vlindex tests
