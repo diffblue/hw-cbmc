@@ -1,11 +1,10 @@
 # EBMC 6.0
+
 * VCD traces now written into separate files per property
-
 * SMV: removed legacy keywords EXTERN and switch
-
 * SMV: use NuSMV's operator precedence, as opposed to CMU SMV's
-
 * SystemVerilog: semantics fix for cover disable iff
+* Now uses the FPA theory when emitting SMT-LIB for Z3
 
 # EBMC 5.11
 
