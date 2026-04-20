@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 smv_set2.smv
 
 ^\[spec1\] x in \{ 1, 2 \}: REFUTED$
