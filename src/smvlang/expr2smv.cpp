@@ -1287,7 +1287,7 @@ std::string type2smv(const typet &type, const namespacet &ns)
   }
   else if(type.id() == ID_smv_set)
   {
-    return "set";
+    return "set of " + type2smv(to_smv_set_type(type).subtype(), ns);
   }
   else if(type.id() == ID_smv_module_instance)
   {
