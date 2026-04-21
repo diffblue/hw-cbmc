@@ -17,6 +17,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_bits.h"
 #include "verilog_types.h"
 
+irep_idt verilog_root_module_name()
+{
+  const static irep_idt name = "$root";
+  return name;
+}
+
 /*******************************************************************\
 
 Function: verilog_module_symbol

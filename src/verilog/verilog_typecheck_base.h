@@ -16,6 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_standard.h"
 
+irep_idt verilog_root_module_name(); // $root
+
 irep_idt verilog_module_symbol(const irep_idt &base_name);
 irep_idt verilog_package_identifier(const irep_idt &base_name);
 irep_idt verilog_package_identifier(

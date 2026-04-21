@@ -1,6 +1,6 @@
 CORE
 clock24h.sv
---property main.p_day --ranking-function "{23-hours,59-minutes,59-seconds}"
+--property main.p_day --ranking-function "{23-main.hours,59-main.minutes,59-main.seconds}"
 ^\[main\.p_day\] .*: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$

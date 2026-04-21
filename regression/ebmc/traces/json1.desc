@@ -1,7 +1,7 @@
 CORE
 json1.v
 --bound 10 --json-result -
-^      "identifier": "Verilog::main\.property\.p1",$
+^      "identifier": "Verilog::\$root\.main\.property\.p1",$
 ^      "status": "REFUTED",$
 ^      "trace": \{$
 ^        "states": \[ \[$
