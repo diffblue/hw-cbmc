@@ -1,6 +1,6 @@
 CORE
 array_assignment.sv
---reset rst --smv-netlist --simple-netlist
+--reset main.rst --smv-netlist --simple-netlist
 ^ASSIGN next\(main\.data\[0\]\):=nondet\[1\];$
 ^ASSIGN next\(main\.data\[1\]\):=nondet\[2\];$
 ^EXIT=0$

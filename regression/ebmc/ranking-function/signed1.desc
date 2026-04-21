@@ -1,6 +1,6 @@
 CORE
 signed1.sv
---ranking-function "(-$signed({1'b0,counter}))"
+--ranking-function "(-$signed({1'b0,main.counter}))"
 ^\[main\.p0\] always s_eventually main.counter == 0: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$

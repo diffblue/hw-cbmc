@@ -1,6 +1,6 @@
 CORE
 combinational2.sv
---reset reset
+--reset main.reset
 ^EXIT=10$
 ^SIGNAL=0$
 --

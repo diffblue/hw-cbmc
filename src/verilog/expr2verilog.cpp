@@ -15,11 +15,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/lispexpr.h>
 #include <util/lispirep.h>
 #include <util/namespace.h>
+#include <util/prefix.h>
 #include <util/std_expr.h>
 #include <util/symbol.h>
 
 #include "sva_expr.h"
 #include "verilog_expr.h"
+#include "verilog_typecheck_base.h"
 #include "verilog_types.h"
 
 #include <algorithm>
@@ -1205,6 +1207,15 @@ expr2verilogt::resultt expr2verilogt::convert_symbol(const exprt &src)
  
   if(std::string(dest, 0, 9)=="Verilog::")
     dest.erase(0, 9);
+
+  // We special-case the pretty name for identifiers under $root:
+  // it is customary to use the name of the module only as root
+  // of the hierarchical identifier.
+  const static std::string root_module_prefix =
+    id2string(verilog_root_module_name()) + '.';
+
+  if(has_prefix(dest, root_module_prefix))
+    dest.erase(0, root_module_prefix.size());
 
   return {verilog_precedencet::MAX, dest};
 }

@@ -1,6 +1,6 @@
 CORE
 counter1.sv
---ranking-function counter
+--ranking-function main.counter
 ^\[main\.p0\] always s_eventually main.counter == 0: PROVED$
 ^EXIT=0$
 ^SIGNAL=0$

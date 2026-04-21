@@ -1,6 +1,6 @@
 CORE
 example4.sv
---bound 10 --reset "reset==1"
+--bound 10 --reset "counter.reset==1"
 ^\[counter\.assert\.1\] .* PROVED up to bound 10$
 ^\[counter\.assert\.2\] .* PROVED up to bound 10$
 ^EXIT=0$
