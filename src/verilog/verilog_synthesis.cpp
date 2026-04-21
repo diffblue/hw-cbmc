@@ -1729,7 +1729,10 @@ void verilog_synthesist::expand_module_instance(
       std::string full_identifier =
         id2string(instance.identifier()) + identifier_without_module;
 
-      new_symbol.pretty_name=strip_verilog_prefix(full_identifier);
+      new_symbol.pretty_name =
+        module == verilog_module_symbol("$root")
+          ? symbol.pretty_name
+          : strip_verilog_prefix(full_identifier);
       new_symbol.name=full_identifier;
 
       if(symbol_table.add(new_symbol))

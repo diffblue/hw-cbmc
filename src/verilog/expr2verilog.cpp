@@ -1206,6 +1206,9 @@ expr2verilogt::resultt expr2verilogt::convert_symbol(const exprt &src)
   if(std::string(dest, 0, 9)=="Verilog::")
     dest.erase(0, 9);
 
+  if(std::string(dest, 0, 6) == "$root.")
+    dest.erase(0, 6);
+
   return {verilog_precedencet::MAX, dest};
 }
 

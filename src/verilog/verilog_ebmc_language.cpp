@@ -28,6 +28,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_preprocessor.h"
 #include "verilog_synthesis.h"
 #include "verilog_typecheck.h"
+#include "verilog_types.h"
 
 #include <fstream>
 #include <functional>
@@ -326,14 +327,88 @@ verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
   return *top_level_modules.begin();
 }
 
-static bool get_main(
+/// Create a $root module instance containing the given top-level module,
+/// and synthesize it so that the top-level module is expanded into $root.
+static void create_root_module(
   irep_idt top_level_module,
+  verilog_standardt standard,
+  bool ignore_initial,
+  bool initial_zero,
+  symbol_tablet &symbol_table,
+  message_handlert &message_handler)
+{
+  auto module_identifier = verilog_module_symbol(top_level_module);
+  auto root_identifier = verilog_module_symbol("$root");
+  auto instance_identifier =
+    id2string(root_identifier) + "." + id2string(top_level_module);
+
+  // Create a module instance symbol for the top-level module under $root
+  symbolt instance_symbol;
+  instance_symbol.name = instance_identifier;
+  instance_symbol.base_name = top_level_module;
+  instance_symbol.pretty_name = top_level_module;
+  instance_symbol.mode = ID_Verilog;
+  instance_symbol.module = root_identifier;
+  instance_symbol.type = typet(ID_module_instance);
+  instance_symbol.value.set(ID_module, module_identifier);
+
+  symbol_table.add(instance_symbol);
+
+  // Build a verilog_instt module item for the instantiation
+  verilog_instt inst;
+  inst.set_module(module_identifier);
+  verilog_inst_baset::instancet instance_expr;
+  instance_expr.set(ID_base_name, top_level_module);
+  instance_expr.identifier(instance_identifier);
+  inst.instances().push_back(std::move(instance_expr));
+
+  // Create the $root module symbol with the inst as its only module item.
+  // Copy the type from the top-level module, updating port identifiers.
+  auto &top_symbol = symbol_table.lookup_ref(module_identifier);
+
+  symbolt root_symbol;
+  root_symbol.name = root_identifier;
+  root_symbol.base_name = "$root";
+  root_symbol.pretty_name = "$root";
+  root_symbol.mode = ID_Verilog;
+  root_symbol.module = instance_identifier;
+  root_symbol.type = top_symbol.type;
+  root_symbol.value = verilog_module_exprt({std::move(inst)});
+
+  // Update port identifiers to reflect the $root hierarchy
+  for(auto &port : to_module_type(root_symbol.type).ports())
+  {
+    auto old_id = id2string(port.identifier());
+    // Replace Verilog::MODULE with Verilog::$root.MODULE
+    if(
+      old_id.compare(
+        0, module_identifier.size(), id2string(module_identifier)) == 0)
+    {
+      port.identifier(
+        id2string(instance_identifier) +
+        old_id.substr(module_identifier.size()));
+    }
+  }
+
+  symbol_table.add(root_symbol);
+
+  // Synthesize $root, which expands the top-level module instance
+  verilog_synthesis(
+    symbol_table,
+    root_identifier,
+    standard,
+    ignore_initial,
+    initial_zero,
+    message_handler);
+}
+
+static bool get_main(
   message_handlert &message_handler,
   transition_systemt &transition_system)
 {
   try
   {
-    auto identifier = verilog_module_symbol(top_level_module);
+    auto identifier = verilog_module_symbol("$root");
     auto symbol_it = transition_system.symbol_table.symbols.find(identifier);
     CHECK_RETURN(symbol_it != transition_system.symbol_table.symbols.end());
     transition_system.main_symbol = &symbol_it->second;
@@ -461,13 +536,24 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   auto transition_system =
     typecheck(parse_trees, top_level_module, std::move(symbol_table));
 
+  // Create the $root module instance and synthesize it
+  const bool ignore_initial = cmdline.isset("ignore-initial");
+  const bool initial_zero = cmdline.isset("initial-zero");
+  create_root_module(
+    top_level_module,
+    parse_trees.front().standard,
+    ignore_initial,
+    initial_zero,
+    transition_system.symbol_table,
+    message_handler);
+
   if(cmdline.isset("show-symbol-table"))
   {
     std::cout << transition_system.symbol_table;
     return {};
   }
 
-  if(get_main(top_level_module, message_handler, transition_system))
+  if(get_main(message_handler, transition_system))
     throw ebmc_errort{}.with_exit_code(1);
 
   if(cmdline.isset("show-module-hierarchy"))
