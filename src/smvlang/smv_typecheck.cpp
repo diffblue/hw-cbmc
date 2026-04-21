@@ -1815,6 +1815,33 @@ void smv_typecheckt::lower_node(exprt &expr) const
     auto cond_expr = to_smv_cases_expr(expr).lower();
     expr = std::move(cond_expr);
   }
+  else if(expr.id() == ID_typecast)
+  {
+    auto &typecast_expr = to_typecast_expr(expr);
+    auto &src_type = typecast_expr.op().type();
+    auto &dest_type = typecast_expr.type();
+
+    // enumeration to enumeration -- lower to cond
+    if(src_type.id() == ID_enumeration && dest_type.id() == ID_smv_enumeration)
+    {
+      auto lowered_dest_type = dest_type;
+      lower(lowered_dest_type);
+
+      auto &src_elements = to_enumeration_type(src_type).elements();
+
+      cond_exprt cond_expr{{}, lowered_dest_type};
+      for(auto &element : src_elements)
+      {
+        cond_expr.add_case(
+          equal_exprt{
+            typecast_expr.op(), constant_exprt{element.id(), src_type}},
+          constant_exprt{element.id(), lowered_dest_type});
+      }
+
+      expr = std::move(cond_expr);
+      return; // type already set
+    }
+  }
 
   // lower the type
   lower(expr.type());

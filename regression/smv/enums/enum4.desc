@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 enum4.smv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ enum4.smv
 --
 ^warning: ignoring
 --
-This fails in the decision procedure.
