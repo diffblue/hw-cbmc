@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 array_in_union1.sv
 
 ^EXIT=0$

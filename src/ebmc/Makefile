@@ -56,7 +56,8 @@ OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT) \
       ../aiger/aiger$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT) \
-      ../verilog/verilog$(LIBEXT)
+      ../verilog/verilog$(LIBEXT) \
+      ../new-ic3/new-ic3$(LIBEXT)
 
 ifneq ($(BUILD_ENV),MSVC)
 OBJ += ../ic3/libic3$(LIBEXT)

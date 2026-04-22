@@ -1,5 +1,5 @@
 DIRS = ebmc hw-cbmc temporal-logic trans-word-level trans-netlist \
-       verilog vhdl smvlang ic3 aiger vlindex
+       verilog vhdl smvlang ic3 aiger vlindex new-ic3
 
 CPROVER_DIR:=../lib/cbmc/src
 
@@ -15,7 +15,7 @@ $(patsubst %, %.dir, $(DIRS)):
 vhdl.dir: cprover.dir
 
 ebmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir vhdl.dir \
-      smvlang.dir aiger.dir temporal-logic.dir cprover.dir
+      smvlang.dir aiger.dir temporal-logic.dir cprover.dir new-ic3.dir
 
 ifneq ($(BUILD_ENV),MSVC)
 ebmc.dir: ic3.dir

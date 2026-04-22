@@ -420,6 +420,7 @@ void ebmc_parse_optionst::help()
     "    {y--constr}                 \t use constraints specified in 'file.cnstr'\n"
     "    {y--new-mode}               \t new mode is switched on\n"
     "    {y--aiger}                  \t print out the instance in aiger format\n"
+    " {y--new-ic3}                   \t use new IC3 engine (AIG-based)\n"
     " {y--random-traces}             \t generate random traces\n"
     "    {y--traces} {unumber}       \t generate the given number of traces\n"
     "    {y--random-seed} {unumber}  \t use the given random seed\n"
