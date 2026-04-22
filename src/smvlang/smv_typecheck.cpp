@@ -123,7 +123,8 @@ protected:
     const typet &type2,
     const source_locationt &) const;
 
-  smv_set_typet
+  // a variant of type union that allows set types
+  typet
   set_type_union(const std::vector<typet> &, const source_locationt &) const;
 
   typedef std::map<irep_idt, exprt> rename_mapt;
@@ -562,6 +563,12 @@ typet smv_typecheckt::type_union(
   const typet &type2,
   const source_locationt &source_location) const
 {
+  if(type1.id() == ID_smv_set || type2.id() == ID_smv_set)
+  {
+    throw errort().with_location(source_location)
+      << "set types not allowed here";
+  }
+
   if(type1==type2) return type1;
 
   if(type1.is_nil())
@@ -624,7 +631,7 @@ Function: smv_typecheckt::set_type_union
 
 \*******************************************************************/
 
-smv_set_typet smv_typecheckt::set_type_union(
+typet smv_typecheckt::set_type_union(
   const std::vector<typet> &types,
   const source_locationt &source_location) const
 {
@@ -632,16 +639,20 @@ smv_set_typet smv_typecheckt::set_type_union(
 
   typet union_type;
   bool first = true;
+  bool have_set = false;
 
   for(auto &type : types)
   {
     // decay sets to their element type
-    auto type_decayed =
-      type.id() == ID_smv_set ? to_smv_set_type(type).element_type() : type;
+    typet type_decayed;
 
-    if(type_decayed.id() == ID_signedbv || type_decayed.id() == ID_unsignedbv)
-      throw errort{}.with_location(source_location)
-        << "sets of word-typed elements are not allowed";
+    if(type.id() == ID_smv_set)
+    {
+      type_decayed = to_smv_set_type(type).element_type();
+      have_set = true;
+    }
+    else
+      type_decayed = type;
 
     if(first)
     {
@@ -654,7 +665,10 @@ smv_set_typet smv_typecheckt::set_type_union(
     }
   }
 
-  return smv_set_typet{union_type};
+  if(have_set)
+    return smv_set_typet{union_type};
+  else
+    return union_type;
 }
 
 /*******************************************************************\
@@ -1038,21 +1052,11 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     convert_expr_to(if_expr.cond(), bool_typet{});
 
     // ?: supports sets
-    if(
-      true_case.type().id() == ID_smv_set ||
-      false_case.type().id() == ID_smv_set)
-    {
-      expr.type() = set_type_union(
-        {true_case.type(), false_case.type()}, expr.source_location());
-    }
-    else
-    {
-      expr.type() =
-        type_union(true_case.type(), false_case.type(), expr.source_location());
+    expr.type() = set_type_union(
+      {true_case.type(), false_case.type()}, expr.source_location());
 
-      convert_expr_to(true_case, expr.type());
-      convert_expr_to(false_case, expr.type());
-    }
+    convert_expr_to(true_case, expr.type());
+    convert_expr_to(false_case, expr.type());
   }
   else if(expr.id()==ID_plus || expr.id()==ID_minus ||
           expr.id()==ID_mult || expr.id()==ID_div ||
@@ -1154,13 +1158,13 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     }
 
     // determine the result type
-    cases_expr.type().make_nil();
+    std::vector<typet> operand_types;
 
     for(auto &case_expr : cases_expr.cases())
-    {
-      cases_expr.type() = type_union(
-        cases_expr.type(), case_expr.value().type(), expr.source_location());
-    }
+      operand_types.push_back(case_expr.value().type());
+
+    // smv_cases allows sets
+    cases_expr.type() = set_type_union(operand_types, expr.source_location());
 
     // go again, re-type the operands
     for(auto &case_expr : cases_expr.cases())
@@ -1614,7 +1618,19 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     for(auto &element : expr.operands())
       types.push_back(element.type());
 
-    expr.type() = set_type_union(types, expr.source_location());
+    auto type = set_type_union(types, expr.source_location());
+
+    // This is always a set
+    if(type.id() != ID_smv_set)
+      type = smv_set_typet{std::move(type)};
+
+    auto &element_type = to_smv_set_type(type).element_type();
+
+    if(element_type.id() == ID_signedbv || element_type.id() == ID_unsignedbv)
+      throw errort{}.with_location(expr.source_location())
+        << "sets of word-typed elements are not allowed";
+
+    expr.type() = std::move(type);
   }
   else if(expr.id() == ID_smv_range)
   {
@@ -1998,6 +2014,14 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type) const
         }
       }
     }
+    else if(dest_type.id() == ID_smv_set)
+    {
+      // compute the union type; it must be equal to dest_type
+      auto union_type =
+        set_type_union({dest_type, src_type}, expr.find_source_location());
+      if(union_type == dest_type)
+        return; // ok
+    }
 
     throw errort().with_location(expr.find_source_location())
       << "Expected expression of type `" << to_string(dest_type)
@@ -2203,6 +2227,12 @@ exprt smv_typecheckt::set_to_predicate(
       auto f =
         set_to_predicate(variable, if_expr.false_case(), source_location);
       return if_exprt{if_expr.cond(), std::move(t), std::move(f)};
+    }
+    else if(set_expression.id() == ID_cond)
+    {
+      // we'll use the lowering to if
+      auto lowering = to_cond_expr(set_expression).lower();
+      return set_to_predicate(variable, lowering, source_location);
     }
     else
       PRECONDITION(false);
