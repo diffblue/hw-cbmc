@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 enum7.smv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ enum7.smv
 --
 ^warning: ignoring
 --
-The literal is converted incorrectly.
