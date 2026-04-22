@@ -2,6 +2,7 @@
 
 * Verilog: procedural assignments to hierarchical identifiers
 * SystemVerilog: ports for sequence and property declarations
+* Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
 

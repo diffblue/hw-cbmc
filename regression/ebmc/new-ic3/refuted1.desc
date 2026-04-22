@@ -1,0 +1,8 @@
+CORE
+refuted1.sv
+--new-ic3 --top main
+^Property refuted$
+^\[main\.p0\] always main\.cnt != 3: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

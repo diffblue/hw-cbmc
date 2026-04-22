@@ -1,0 +1,8 @@
+CORE
+cover1.sv
+--new-ic3 --top main
+^\[main\.p0\] cover main\.cnt == 5: PROVED$
+^\[main\.p1\] cover main\.cnt == 8: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
