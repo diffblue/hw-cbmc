@@ -30,10 +30,15 @@ verilog_scopet &verilog_scopest::add_scope(
 
 const verilog_scopet *verilog_scopest::lookup(irep_idt base_name) const
 {
-  // we start from the current scope, and walk upwards to the root
-  auto scope = &current_scope();
-  while(scope != nullptr)
+  // We start from the top of the scope stack, and walk downwards.
+  // Note that this order may differ from the child-parent relationship;
+  // e.g., module scopes are not contained in the $unit scope, but
+  // lookup order is module -> $unit -> $root.
+  for(auto scope_it = scope_stack.rbegin(); scope_it != scope_stack.rend();
+      scope_it++)
   {
+    const auto scope = *scope_it;
+
     auto name_it = scope->scope_map.find(base_name);
     if(name_it != scope->scope_map.end())
       return &name_it->second; // found it
@@ -58,9 +63,6 @@ const verilog_scopet *verilog_scopest::lookup(irep_idt base_name) const
         return &new_scope;
       }
     }
-
-    // go up
-    scope = scope->parent;
   }
 
   // not found, give up
