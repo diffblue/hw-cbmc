@@ -78,5 +78,30 @@ void verilog_elaborate_compilation_unit(
           throw ebmc_errort{};
       }
     }
+    else if(
+      item.id() == ID_parameter_decl || item.id() == ID_local_parameter_decl)
+    {
+      // compilation-unit scoped parameters
+      try
+      {
+        verilog_typecheckt verilog_typecheck(
+          parse_tree.standard,
+          warn_implicit_nets,
+          symbol_table,
+          message_handler);
+        verilog_typecheck.typecheck_parameter_decl(
+          static_cast<const verilog_module_itemt &>(item));
+      }
+      catch(const typecheckt::errort &error)
+      {
+        if(!error.what().empty())
+        {
+          throw ebmc_errort{}.with_location(error.source_location())
+            << error.what();
+        }
+        else
+          throw ebmc_errort{};
+      }
+    }
   }
 }
