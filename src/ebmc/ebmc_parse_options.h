@@ -38,7 +38,7 @@ public:
         "(reset):(ignore-initial)(initial-zero)"
         "(version)(verilog-rtl)(verilog-netlist)"
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"
-        "(ic3)(property):(constr)(h)(new-mode)(aiger)"
+        "(ic3)(new-ic3)(property):(constr)(h)(new-mode)(aiger)"
         "(interpolation-word)(interpolator):(bdd)"
         "(ranking-function):"
         "(smt2)(bitwuzla)(boolector)(cvc3)(cvc4)(cvc5)(mathsat)(yices)(z3)"

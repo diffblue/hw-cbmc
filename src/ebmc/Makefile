@@ -60,6 +60,7 @@ OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       ../verilog/verilog$(LIBEXT)
 
 ifneq ($(BUILD_ENV),MSVC)
+OBJ += ../new-ic3/new-ic3$(LIBEXT)
 OBJ += ../ic3/libic3$(LIBEXT)
 OBJ += ../ic3/minisat/build/release/lib/libminisat.a
 endif
