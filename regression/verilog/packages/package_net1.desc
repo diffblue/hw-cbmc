@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 package_net1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-The identifier my_net is not found.
