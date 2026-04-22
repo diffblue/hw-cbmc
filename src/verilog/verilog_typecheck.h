@@ -73,6 +73,7 @@ public:
   // type checking for compilation-unit scoped nets, variables,
   // typedefs, functions, tasks, parameters
   void typecheck_decl(const verilog_declt &);
+  void typecheck_parameter_decl(const verilog_module_itemt &);
 
 protected:
   const namespacet ns;

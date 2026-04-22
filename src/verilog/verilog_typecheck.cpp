@@ -1839,6 +1839,31 @@ void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::typecheck_parameter_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::typecheck_parameter_decl(
+  const verilog_module_itemt &parameter_decl)
+{
+  PRECONDITION(
+    parameter_decl.id() == ID_parameter_decl ||
+    parameter_decl.id() == ID_local_parameter_decl);
+
+  collect_symbols(parameter_decl);
+
+  for(auto identifier : symbols_added)
+    elaborate_symbol_rec(identifier);
+}
+
+/*******************************************************************\
+
 Function: copy_module_source
 
   Inputs:
