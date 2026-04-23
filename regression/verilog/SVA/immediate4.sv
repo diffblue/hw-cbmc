@@ -6,13 +6,11 @@ module main(input clk);
 
   always @(posedge clk) begin : blk
 
-    // It is unclear whether this should parse
-    // as an if-then-else or as an if followed
-    // by an assertion with an action block.
+    // This is an assertion in an action block of
+    // an assertion.
     if(x != 11)
       P: assert(x & 1); // fails
-    else
-      Q: assert(x & 1); // holds
+         else Q: assert(x & 1); // holds
 
     x<=x+1;
   end

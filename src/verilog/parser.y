@@ -3780,6 +3780,12 @@ subroutine_call_statement:
 // System Verilog standard 1800-2017
 // A.6.3 Parallel and sequential blocks
 
+// When assert is used in an conditional_statement,
+// it is unclear whether the TOK_ELSE is reduced as action_block
+// or as part of the conditional_statement.
+// We follow the "match to most recent" principle, and
+// reduce as part of action_block, i.e., the "else" binds
+// to the assertion.
 action_block:
           statement_or_null %prec LT_TOK_ELSE
                 { init($$, ID_verilog_action_then); mto($$, $1); }
