@@ -367,7 +367,7 @@ exprt verilog_synthesist::expand_function_call(
     }
     else if(base_name == "$past")
     {
-      auto what = call.arguments()[0];
+      auto what = synth_expr_rec(call.arguments()[0], symbol_state);
       auto ticks = call.arguments().size() < 2
                      ? from_integer(1, integer_typet())
                      : call.arguments()[1];
@@ -378,7 +378,7 @@ exprt verilog_synthesist::expand_function_call(
       base_name == "$changed")
     {
       DATA_INVARIANT(call.arguments().size() >= 1, "must have argument");
-      auto what = call.arguments()[0];
+      auto what = synth_expr_rec(call.arguments()[0], symbol_state);
       auto past = verilog_past_exprt{what, from_integer(1, integer_typet())}
                     .with_source_location(call);
 
