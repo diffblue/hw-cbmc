@@ -652,12 +652,16 @@ static obligationst property_obligations_rec(
       auto semantics = sva_sequence_semantics(op.id());
 
       const auto matches =
-        instantiate_sequence(sequence, semantics, current, no_timeframes);
+        instantiate_sequence(sequence, current, no_timeframes);
 
       obligationst obligations;
 
       for(auto &match : matches)
       {
+        // drop pending matches when using strong semantics
+        if(semantics == sva_sequence_semanticst::STRONG && match.is_pending())
+          continue;
+
         // The sequence must not match.
         if(!match.empty_match())
           obligations.add(match.end_time(), not_exprt{match.condition()});
@@ -704,11 +708,8 @@ static obligationst property_obligations_rec(
     // The LHS is a sequence, the RHS is a property.
     // The implication must hold for _all_ (strong) matches on the LHS,
     // i.e., each pair of LHS match and RHS obligation yields an obligation.
-    const auto lhs_match_points = instantiate_sequence(
-      implication.lhs(),
-      sva_sequence_semanticst::STRONG,
-      current,
-      no_timeframes);
+    const auto lhs_match_points =
+      instantiate_sequence(implication.lhs(), current, no_timeframes);
 
     const bool overlapped = property_expr.id() == ID_sva_overlapped_implication;
 
@@ -716,6 +717,10 @@ static obligationst property_obligations_rec(
 
     for(auto &lhs_match_point : lhs_match_points)
     {
+      // drop pending matches
+      if(lhs_match_point.is_pending())
+        continue;
+
       if(lhs_match_point.empty_match() && overlapped)
       {
         // does not yield an obligation
@@ -759,17 +764,18 @@ static obligationst property_obligations_rec(
     auto &followed_by = to_sva_followed_by_expr(property_expr);
 
     // get match points for LHS sequence
-    auto matches = instantiate_sequence(
-      followed_by.antecedent(),
-      sva_sequence_semanticst::STRONG,
-      current,
-      no_timeframes);
+    auto matches =
+      instantiate_sequence(followed_by.antecedent(), current, no_timeframes);
 
     exprt::operandst disjuncts;
     mp_integer t = current;
 
     for(auto &match : matches)
     {
+      // drop pending matches
+      if(match.is_pending())
+        continue;
+
       bool overlapped = property_expr.id() == ID_sva_overlapped_followed_by;
 
       // empty match?
@@ -818,14 +824,17 @@ static obligationst property_obligations_rec(
       to_sva_sequence_property_expr_base(property_expr).sequence();
     auto semantics = sva_sequence_semantics(property_expr.id());
 
-    const auto matches =
-      instantiate_sequence(sequence, semantics, current, no_timeframes);
+    const auto matches = instantiate_sequence(sequence, current, no_timeframes);
     exprt::operandst disjuncts;
     disjuncts.reserve(matches.size());
     mp_integer max = current;
 
     for(auto &match : matches)
     {
+      // drop pending matches when using strong semantics
+      if(semantics == sva_sequence_semanticst::STRONG && match.is_pending())
+        continue;
+
       // empty matches are not considered
       if(!match.empty_match())
       {
