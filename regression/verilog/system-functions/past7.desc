@@ -1,0 +1,11 @@
+KNOWNBUG
+past7.sv
+
+^\[main\.blk\.p1\] always main\.counter == 1 -> \$past\(main\.counter, 1\) == 0: PROVED \(1-induction\)$
+^\[main\.blk\.pn\] always main\.counter >= 2 -> \$past\(main\.counter, 1\) == main\.counter - 2: REFUTED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This gives the wrong answer.
