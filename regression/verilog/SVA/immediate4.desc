@@ -1,0 +1,11 @@
+KNOWNBUG
+immediate4.sv
+
+^\[main\.blk\.P\] always main\.x & 1: REFUTED$
+^\[main\.blk\.Q\] always main\.x & 1: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The second immediate assertion disappears.
