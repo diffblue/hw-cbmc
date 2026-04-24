@@ -1,0 +1,10 @@
+CORE
+immediate5.sv
+
+^\[main\.blk1\.P\] main\.blk1\.x == 1: REFUTED$
+^\[main\.blk2\.P\] main\.blk2\.x == 0: PROVED .*$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
