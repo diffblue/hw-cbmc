@@ -51,8 +51,8 @@ protected:
 
   void copy_parse_tree(const parse_treet &, symbol_tablet &);
 
-  // base_name of the top-level module
-  irep_idt top_level_module(const parse_treest &) const;
+  // base_names of the top-level modules, alphabetical order
+  std::vector<irep_idt> top_level_modules(const parse_treest &) const;
 
   class modulet
   {
@@ -66,8 +66,10 @@ protected:
   };
 
   symbol_tablet elaborate_compilation_units(const parse_treest &);
-  transition_systemt
-  typecheck(const parse_treest &, irep_idt top_level_module, symbol_tablet &&);
+  transition_systemt typecheck(
+    const parse_treest &,
+    const std::vector<irep_idt> top_level_modules,
+    symbol_tablet &&);
   void typecheck_module(modulet &, symbol_tablet &);
 };
 
