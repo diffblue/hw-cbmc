@@ -1,0 +1,11 @@
+CORE buechi
+cover3.sv
+--buechi --bound 10
+^\[main\.p0\] cover \(main\.counter == 1 and \(s_nexttime main\.counter == 2\)\): PROVED$
+^\[main\.p1\] cover \(main\.counter == 1 and \(s_nexttime main\.counter == 3\)\): REFUTED up to bound 10$
+^\[main\.p2\] cover \(disable iff \(main\.counter == 1\) s_nexttime main\.counter == 2\): REFUTED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
