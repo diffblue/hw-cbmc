@@ -87,7 +87,6 @@ typet sequence_count_type(
 
 sequence_matchest instantiate_sequence_rec(
   exprt expr,
-  sva_sequence_semanticst semantics,
   const mp_integer &t,
   const mp_integer &no_timeframes)
 {
@@ -108,8 +107,8 @@ sequence_matchest instantiate_sequence_rec(
     }
     else
     {
-      lhs_matches = instantiate_sequence_rec(
-        sva_cycle_delay_expr.lhs(), semantics, t, no_timeframes);
+      lhs_matches =
+        instantiate_sequence_rec(sva_cycle_delay_expr.lhs(), t, no_timeframes);
     }
 
     sequence_matchest result;
@@ -123,8 +122,7 @@ sequence_matchest instantiate_sequence_rec(
       // the bound. Propagate without evaluating the RHS.
       if(lhs_match.is_pending())
       {
-        if(semantics == sva_sequence_semanticst::WEAK)
-          result.push_back(lhs_match);
+        result.push_back(lhs_match);
         continue;
       }
 
@@ -157,14 +155,13 @@ sequence_matchest instantiate_sequence_rec(
         // Do we exceed the bound?
         if(t_rhs >= no_timeframes)
         {
-          if(semantics == sva_sequence_semanticst::WEAK)
-            result.push_back(
-              sequence_matcht::pending_match(lhs_match.condition()));
+          result.push_back(
+            sequence_matcht::pending_match(lhs_match.condition()));
         }
         else // still inside bound
         {
           const auto rhs_matches = instantiate_sequence_rec(
-            sva_cycle_delay_expr.rhs(), semantics, t_rhs, no_timeframes);
+            sva_cycle_delay_expr.rhs(), t_rhs, no_timeframes);
 
           for(auto &rhs_match : rhs_matches)
           {
@@ -175,9 +172,8 @@ sequence_matchest instantiate_sequence_rec(
                 and_exprt{lhs_match.condition(), rhs_match.condition()};
               if(rhs_match.is_pending())
               {
-                if(semantics == sva_sequence_semanticst::WEAK)
-                  result.push_back(
-                    sequence_matcht::pending_match(std::move(cond)));
+                result.push_back(
+                  sequence_matcht::pending_match(std::move(cond)));
               }
               else
                 result.emplace_back(rhs_match.end_time(), std::move(cond));
@@ -192,14 +188,12 @@ sequence_matchest instantiate_sequence_rec(
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
     auto &cycle_delay_star = to_sva_cycle_delay_star_expr(expr);
-    return instantiate_sequence_rec(
-      cycle_delay_star.lower(), semantics, t, no_timeframes);
+    return instantiate_sequence_rec(cycle_delay_star.lower(), t, no_timeframes);
   }
   else if(expr.id() == ID_sva_cycle_delay_plus) // ##[+] something
   {
     auto &cycle_delay_plus = to_sva_cycle_delay_plus_expr(expr);
-    return instantiate_sequence_rec(
-      cycle_delay_plus.lower(), semantics, t, no_timeframes);
+    return instantiate_sequence_rec(cycle_delay_plus.lower(), t, no_timeframes);
   }
   else if(expr.id() == ID_sva_sequence_intersect)
   {
@@ -211,9 +205,9 @@ sequence_matchest instantiate_sequence_rec(
     auto &intersect = to_sva_sequence_intersect_expr(expr);
 
     const auto lhs_matches =
-      instantiate_sequence_rec(intersect.lhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(intersect.lhs(), t, no_timeframes);
     const auto rhs_matches =
-      instantiate_sequence_rec(intersect.rhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(intersect.rhs(), t, no_timeframes);
 
     sequence_matchest result;
 
@@ -239,16 +233,12 @@ sequence_matchest instantiate_sequence_rec(
     // If either operand has a pending match, the intersect might
     // still match beyond the bound. The pending condition is:
     // no concrete match has fired.
-    if(semantics == sva_sequence_semanticst::WEAK)
+    if(has_pending(lhs_matches) || has_pending(rhs_matches))
     {
-      if(has_pending(lhs_matches) || has_pending(rhs_matches))
-      {
-        auto no_concrete =
-          concrete_match_conditions.empty()
-            ? static_cast<exprt>(true_exprt{})
-            : not_exprt{disjunction(concrete_match_conditions)};
-        result.push_back(sequence_matcht::pending_match(no_concrete));
-      }
+      auto no_concrete = concrete_match_conditions.empty()
+                           ? static_cast<exprt>(true_exprt{})
+                           : not_exprt{disjunction(concrete_match_conditions)};
+      result.push_back(sequence_matcht::pending_match(no_concrete));
     }
 
     return result;
@@ -257,8 +247,8 @@ sequence_matchest instantiate_sequence_rec(
   {
     auto &first_match = to_sva_sequence_first_match_expr(expr);
 
-    const auto matches = instantiate_sequence_rec(
-      first_match.sequence(), semantics, t, no_timeframes);
+    const auto matches =
+      instantiate_sequence_rec(first_match.sequence(), t, no_timeframes);
 
     // first_match(seq): the match of seq with the earliest ending
     // clock tick. In the symbolic setting, we must encode that a
@@ -307,8 +297,8 @@ sequence_matchest instantiate_sequence_rec(
     // - exp evaluates to true at each clock tick of the interval.
     auto &throughout = to_sva_sequence_throughout_expr(expr);
 
-    const auto matches = instantiate_sequence_rec(
-      throughout.sequence(), semantics, t, no_timeframes);
+    const auto matches =
+      instantiate_sequence_rec(throughout.sequence(), t, no_timeframes);
 
     sequence_matchest result;
 
@@ -317,8 +307,7 @@ sequence_matchest instantiate_sequence_rec(
       if(match.is_pending())
       {
         // Propagate pending status.
-        if(semantics == sva_sequence_semanticst::WEAK)
-          result.push_back(match);
+        result.push_back(match);
         continue;
       }
 
@@ -343,7 +332,7 @@ sequence_matchest instantiate_sequence_rec(
 
     auto &within_expr = to_sva_sequence_within_expr(expr);
     const auto matches_rhs =
-      instantiate_sequence_rec(within_expr.rhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(within_expr.rhs(), t, no_timeframes);
 
     sequence_matchest result;
     bool has_pending = false;
@@ -359,8 +348,8 @@ sequence_matchest instantiate_sequence_rec(
 
       for(auto start_lhs = t; start_lhs <= match_rhs.end_time(); ++start_lhs)
       {
-        auto matches_lhs = instantiate_sequence_rec(
-          within_expr.lhs(), semantics, start_lhs, no_timeframes);
+        auto matches_lhs =
+          instantiate_sequence_rec(within_expr.lhs(), start_lhs, no_timeframes);
 
         for(auto &match_lhs : matches_lhs)
         {
@@ -385,16 +374,12 @@ sequence_matchest instantiate_sequence_rec(
 
     // If either operand has a pending match, 'within' might
     // still match beyond the bound.
-    if(semantics == sva_sequence_semanticst::WEAK)
+    if(has_pending)
     {
-      if(has_pending)
-      {
-        auto no_concrete =
-          concrete_match_conditions.empty()
-            ? static_cast<exprt>(true_exprt{})
-            : not_exprt{disjunction(concrete_match_conditions)};
-        result.push_back(sequence_matcht::pending_match(no_concrete));
-      }
+      auto no_concrete = concrete_match_conditions.empty()
+                           ? static_cast<exprt>(true_exprt{})
+                           : not_exprt{disjunction(concrete_match_conditions)};
+      result.push_back(sequence_matcht::pending_match(no_concrete));
     }
 
     return result;
@@ -408,9 +393,9 @@ sequence_matchest instantiate_sequence_rec(
     //    the end time of the operand sequence that completes last.
     auto &and_expr = to_sva_and_expr(expr);
     auto matches_lhs =
-      instantiate_sequence_rec(and_expr.lhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(and_expr.lhs(), t, no_timeframes);
     auto matches_rhs =
-      instantiate_sequence_rec(and_expr.rhs(), semantics, t, no_timeframes);
+      instantiate_sequence_rec(and_expr.rhs(), t, no_timeframes);
 
     sequence_matchest result;
     exprt::operandst concrete_match_conditions;
@@ -430,16 +415,12 @@ sequence_matchest instantiate_sequence_rec(
     // If either operand has a pending match, the 'and' might
     // still match beyond the bound. The pending condition is:
     // no concrete match has fired.
-    if(semantics == sva_sequence_semanticst::WEAK)
+    if(has_pending(matches_lhs) || has_pending(matches_rhs))
     {
-      if(has_pending(matches_lhs) || has_pending(matches_rhs))
-      {
-        auto no_concrete =
-          concrete_match_conditions.empty()
-            ? static_cast<exprt>(true_exprt{})
-            : not_exprt{disjunction(concrete_match_conditions)};
-        result.push_back(sequence_matcht::pending_match(no_concrete));
-      }
+      auto no_concrete = concrete_match_conditions.empty()
+                           ? static_cast<exprt>(true_exprt{})
+                           : not_exprt{disjunction(concrete_match_conditions)};
+      result.push_back(sequence_matcht::pending_match(no_concrete));
     }
 
     return result;
@@ -452,8 +433,7 @@ sequence_matchest instantiate_sequence_rec(
     sequence_matchest result;
 
     for(auto &op : expr.operands())
-      for(auto &match :
-          instantiate_sequence_rec(op, semantics, t, no_timeframes))
+      for(auto &match : instantiate_sequence_rec(op, t, no_timeframes))
       {
         result.push_back(match);
       }
@@ -476,21 +456,18 @@ sequence_matchest instantiate_sequence_rec(
       auto new_repetition = sva_sequence_repetition_star_exprt{
         repetition.op(), repetition.from(), to};
 
-      return instantiate_sequence_rec(
-        new_repetition.lower(), semantics, t, no_timeframes);
+      return instantiate_sequence_rec(new_repetition.lower(), t, no_timeframes);
     }
     else
     {
       // [*], [*n], [*x:y]
-      return instantiate_sequence_rec(
-        repetition.lower(), semantics, t, no_timeframes);
+      return instantiate_sequence_rec(repetition.lower(), t, no_timeframes);
     }
   }
   else if(expr.id() == ID_sva_sequence_repetition_plus) // [+]
   {
     auto &repetition = to_sva_sequence_repetition_plus_expr(expr);
-    return instantiate_sequence_rec(
-      repetition.lower(), semantics, t, no_timeframes);
+    return instantiate_sequence_rec(repetition.lower(), t, no_timeframes);
   }
   else if(
     expr.id() == ID_sva_sequence_goto_repetition ||          // [->...]
@@ -529,14 +506,11 @@ sequence_matchest instantiate_sequence_rec(
     // Weak semantics: the sequence could still complete beyond the
     // bound. Add a pending match when the count hasn't yet reached
     // the required minimum.
-    if(semantics == sva_sequence_semanticst::WEAK)
-    {
-      auto min = repetition.is_range()
-                   ? numeric_cast_v<mp_integer>(repetition.from())
-                   : numeric_cast_v<mp_integer>(repetition.repetitions());
-      result.push_back(sequence_matcht::pending_match(binary_relation_exprt{
-        matches, ID_lt, from_integer(min, matches.type())}));
-    }
+    auto min = repetition.is_range()
+                 ? numeric_cast_v<mp_integer>(repetition.from())
+                 : numeric_cast_v<mp_integer>(repetition.repetitions());
+    result.push_back(sequence_matcht::pending_match(binary_relation_exprt{
+      matches, ID_lt, from_integer(min, matches.type())}));
 
     return result;
   }
@@ -557,10 +531,9 @@ sequence_matchest instantiate_sequence_rec(
 
 sequence_matchest instantiate_sequence(
   exprt expr,
-  sva_sequence_semanticst semantics,
   const mp_integer &t,
   const mp_integer &no_timeframes)
 {
   auto rewritten = rewrite_sva_sequence(expr);
-  return instantiate_sequence_rec(rewritten, semantics, t, no_timeframes);
+  return instantiate_sequence_rec(rewritten, t, no_timeframes);
 }
