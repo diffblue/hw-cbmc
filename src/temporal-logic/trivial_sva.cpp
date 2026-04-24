@@ -134,3 +134,18 @@ exprt trivial_sva(exprt expr)
 
   return expr;
 }
+
+exprt rewrite_disable_iff(exprt expr)
+{
+  expr.visit_post(
+    [](exprt &node)
+    {
+      if(node.id() == ID_sva_disable_iff)
+      {
+        auto &disable_iff = to_sva_disable_iff_expr(node);
+        node = disable_iff.lower();
+      }
+    });
+
+  return expr;
+}

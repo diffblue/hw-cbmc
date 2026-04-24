@@ -28,4 +28,7 @@ Author: Daniel Kroening, dkr@amazon.com
 /// a sva_sync_reject_on b --> ¬a ∧ b
 exprt trivial_sva(exprt);
 
+/// disable_iff (c) φ --> c ∨ φ
+exprt rewrite_disable_iff(exprt);
+
 #endif
