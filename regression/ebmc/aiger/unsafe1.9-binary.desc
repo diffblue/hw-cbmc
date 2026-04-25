@@ -1,0 +1,8 @@
+CORE
+unsafe1.9-binary.aig
+--bound 5 --numbered-trace
+^\[bit1_set\] : REFUTED$
+^bit1@2 = TRUE$
+^EXIT=10$
+^SIGNAL=0$
+--
