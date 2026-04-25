@@ -1,0 +1,12 @@
+KNOWNBUG
+cover3.sv
+--buechi --bdd
+^\[main\.p0\] cover \(main\.counter == 1 and \(s_nexttime main\.counter == 2\)\): PROVED$
+^\[main\.p1\] cover \(main\.counter == 1 and \(s_nexttime main\.counter == 3\)\): REFUTED$
+^\[main\.p2\] cover \(disable iff \(main\.counter == 1\) s_nexttime main\.counter == 2\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This gives the wrong answer.
