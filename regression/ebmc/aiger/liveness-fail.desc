@@ -1,0 +1,9 @@
+CORE
+liveness-fail.aig
+--bound 10 --numbered-trace
+^\[liveness0\] : REFUTED$
+^stuck@0 = FALSE$
+^stuck@1 = FALSE$
+^EXIT=10$
+^SIGNAL=0$
+--

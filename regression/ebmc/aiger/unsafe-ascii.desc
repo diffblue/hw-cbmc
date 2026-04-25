@@ -1,0 +1,7 @@
+CORE
+unsafe.aag
+--bound 5
+^\[bit1_set\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

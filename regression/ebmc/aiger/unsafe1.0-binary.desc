@@ -1,0 +1,7 @@
+CORE
+unsafe1.0-binary.aig
+--bound 10
+^\[output0\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

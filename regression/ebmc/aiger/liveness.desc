@@ -1,0 +1,7 @@
+CORE
+liveness.aig
+--bound 10
+^\[liveness0\] : PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--

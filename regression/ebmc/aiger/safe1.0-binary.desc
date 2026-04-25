@@ -1,0 +1,7 @@
+CORE
+safe1.0-binary.aig
+--bound 5
+^\[output0\] : PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--

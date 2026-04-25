@@ -2,27 +2,12 @@
 
 # This runs ebmc in BMC mode on the HWMCC08 benchmarks.
 
-if [ ! -e aiger/. ] ; then
-  echo Downloading and building the AIGER tools at version 1.9.20
-  git clone -b rel-1.9.20 https://github.com/arminbiere/aiger
-  (cd aiger ; ./configure.sh ; make aigtosmv )
-fi
-
 if [ ! -e hwmcc08/. ] ; then
   echo Downloading HWMCC08 benchmark archive
   wget -q http://fmv.jku.at/hwmcc/hwmcc08public.tar.bz2
   bunzip2 hwmcc08public.tar.bz2
   tar xf hwmcc08public.tar
   rm hwmcc08public.tar
-fi
-
-if [ ! -e hwmcc08public-smv/. ] ; then
-  echo Converting AIGER to SMV
-  mkdir hwmcc08public-smv
-  (cd hwmcc08; for FILE in *.aig ; do
-    SMV=`echo "$FILE" | sed s/.aig/.smv/`
-    ../aiger/aigtosmv -b "$FILE" "../hwmcc08public-smv/$SMV"
-  done)
 fi
 
 # expected answers
@@ -42,12 +27,12 @@ read -r line
 # now process the lines
 while read -r line; do
   BENCHMARK=` echo "$line" | cut -d ',' -f 1 | tr -d '"'`
-  if [ ! -e "hwmcc08public-smv/${BENCHMARK}.smv" ] ; then
+  if [ ! -e "hwmcc08/${BENCHMARK}.aig" ] ; then
     echo benchmark $BENCHMARK not found
   else
     RESULT=` echo "$line" | cut -d ',' -f 3 | tr -d '"'`
     if [ "$RESULT" = "uns" ] ; then
-      ebmc --bound 2 "hwmcc08public-smv/${BENCHMARK}.smv" > ebmc.out
+      ebmc --bound 2 "hwmcc08/${BENCHMARK}.aig" > ebmc.out
       if [ $? = 10 ] ; then
         echo $BENCHMARK: got unexpected counterexample
         exit 1
@@ -60,7 +45,7 @@ while read -r line; do
       if [ "$LENGTH" = "\"*\"" ] ; then
         echo $BENCHMARK: no counterexample length
       else
-        ebmc --bound $LENGTH "hwmcc08public-smv/${BENCHMARK}.smv" > ebmc.out
+        ebmc --bound $LENGTH "hwmcc08/${BENCHMARK}.aig" > ebmc.out
         if [ $? = 10 ] ; then
           echo $BENCHMARK: ok "(SAT $LENGTH)"
         else

@@ -1,0 +1,7 @@
+aig 2 1 1 0 0 0 0 1
+5
+1
+4
+i0 input0
+l0 toggle
+j0 liveness0

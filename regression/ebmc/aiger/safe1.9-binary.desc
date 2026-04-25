@@ -1,0 +1,7 @@
+CORE
+safe1.9-binary.aig
+--bound 5
+^\[both_set\] : PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
