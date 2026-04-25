@@ -1,6 +1,6 @@
-CORE buechi
+CORE
 sequence3.sv
---buechi --bound 20 --numbered-trace
+--bound 20 --numbered-trace
 ^\[main\.ps0\] strong\(##\[\*\] main\.x == 6\): REFUTED$
 ^\[main\.ps1\] strong\(##\[\*\] main\.x == 5\): PROVED up to bound 20$
 ^\[main\.ps2\] strong\(##\[\+\] main\.x == 0\): REFUTED$
