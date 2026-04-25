@@ -1,0 +1,10 @@
+CORE buechi
+cover4.sv
+--buechi --bound 10
+^\[main\.p0\] cover 1: PROVED$
+^\[main\.p1\] cover 0: REFUTED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
