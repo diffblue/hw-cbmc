@@ -593,6 +593,23 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto op_rec = rec(sequence, mode);
     return resultt{precedencet::ATOM, "first_match(" + op_rec.s + ')'};
   }
+  else if(expr.id() == ID_sva_cover)
+  {
+    auto &cover = to_sva_cover_expr(expr);
+    return rec(sva_always_exprt{not_exprt{cover.op()}}, mode);
+  }
+  else if(expr.id() == ID_sva_disable_iff)
+  {
+    PRECONDITION(mode == PROPERTY);
+    auto &disable_iff = to_sva_disable_iff_expr(expr);
+    return rec(disable_iff.lower(), mode);
+  }
+  else if(expr.id() == ID_sva_sequence_disable_iff)
+  {
+    PRECONDITION(mode == SEQUENCE);
+    auto &disable_iff = to_sva_sequence_disable_iff_expr(expr);
+    return rec(disable_iff.lower(), mode);
+  }
   else if(!is_temporal_operator(expr))
   {
     auto number = atoms.number(expr);

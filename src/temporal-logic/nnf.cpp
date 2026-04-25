@@ -167,6 +167,12 @@ std::optional<exprt> negate_property_node(const exprt &expr)
     return sva_followed_by_exprt{
       implication.antecedent(), ID_sva_nonoverlapped_followed_by, not_b};
   }
+  else if(expr.id() == ID_sva_disable_iff)
+  {
+    // not disable iff (a) b   --->  not (a ∨ b)   --->   ¬a ∧ ¬b
+    auto &disable_iff = to_sva_disable_iff_expr(expr);
+    return negate_property_node(disable_iff.lower());
+  }
   else
     return {};
 }

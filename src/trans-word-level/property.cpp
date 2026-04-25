@@ -850,6 +850,25 @@ static obligationst property_obligations_rec(
     // Should have been turned into sva_implict_weak or sva_implict_strong in the type checker.
     PRECONDITION(false);
   }
+  else if(property_expr.id() == ID_sva_cover)
+  {
+    // These are existential properties, i.e., cover φ means
+    // "does there exist a path that satisfies φ".
+    // We go via the negation to turn our universal encoding
+    // into an existential one.
+    return property_obligations_rec(
+      sva_always_exprt{not_exprt{to_sva_cover_expr(property_expr).op()}},
+      current,
+      no_timeframes,
+      lasso);
+  }
+  else if(property_expr.id() == ID_sva_disable_iff)
+  {
+    // assertions pass vacuously when disabled
+    auto &disable_iff = to_sva_disable_iff_expr(property_expr);
+    auto or_expr = disable_iff.lower();
+    return property_obligations_rec(or_expr, current, no_timeframes, lasso);
+  }
   else
   {
     return obligationst{
