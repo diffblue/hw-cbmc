@@ -1,0 +1,10 @@
+CORE
+cover_sequence5.sv
+--bound 10
+^\[main\.p0\] cover \(disable iff \(1\) 1\): REFUTED up to bound 10$
+^\[main\.p1\] cover \(disable iff \(main\.x < 10\) 1\): PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
