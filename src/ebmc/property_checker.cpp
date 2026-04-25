@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/output_file.h>
 #include <util/string2int.h>
 
+#include <new-ic3/new_ic3_engine.h>
 #include <solvers/sat/satcheck.h>
 #include <trans-netlist/trans_trace_netlist.h>
 #include <trans-netlist/unwind_netlist.h>
@@ -368,9 +369,10 @@ property_checker_resultt property_checker(
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
-  bool use_heuristic_engine = !cmdline.isset("bdd") && !cmdline.isset("aig") &&
-                              !cmdline.isset("k-induction") &&
-                              !cmdline.isset("ic3") && !cmdline.isset("bound");
+  bool use_heuristic_engine =
+    !cmdline.isset("bdd") && !cmdline.isset("aig") &&
+    !cmdline.isset("k-induction") && !cmdline.isset("ic3") &&
+    !cmdline.isset("new-ic3") && !cmdline.isset("bound");
 
   if(cmdline.isset("k-induction") || use_heuristic_engine)
   {
@@ -404,6 +406,11 @@ property_checker_resultt property_checker(
       return ic3_engine(
         cmdline, transition_system, properties, message_handler);
 #endif
+    }
+    else if(cmdline.isset("new-ic3"))
+    {
+      return new_ic3_engine(
+        cmdline, transition_system, properties, message_handler);
     }
     else if(cmdline.isset("bound"))
     {

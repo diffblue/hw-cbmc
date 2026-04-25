@@ -1,0 +1,7 @@
+CORE
+proved1.sv
+--new-ic3 --property main.p0
+^\[main\.p0\] always main\.s11: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--

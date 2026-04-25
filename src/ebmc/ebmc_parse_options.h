@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ebmc_version.h"
 
-class ebmc_parse_optionst:public parse_options_baset
+class ebmc_parse_optionst : public parse_options_baset
 {
 public:
   virtual int doit();
@@ -38,7 +38,7 @@ public:
         "(reset):(ignore-initial)(initial-zero)"
         "(version)(verilog-rtl)(verilog-netlist)"
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"
-        "(ic3)(property):(constr)(h)(new-mode)(aiger)"
+        "(ic3)(new-ic3)(property):(constr)(h)(new-mode)(aiger)"
         "(interpolation-word)(interpolator):(bdd)"
         "(ranking-function):"
         "(smt2)(bitwuzla)(boolector)(cvc3)(cvc4)(cvc5)(mathsat)(yices)(z3)"
@@ -60,11 +60,13 @@ public:
   {
   }
 
-  virtual ~ebmc_parse_optionst() { }
-  
+  virtual ~ebmc_parse_optionst()
+  {
+  }
+
 protected:
   void register_languages();
-  
+
   ui_message_handlert ui_message_handler;
 };
 
