@@ -305,7 +305,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     PRECONDITION(mode == PROPERTY);
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
-    auto op_rec = rec(sequence, SVA_SEQUENCE_WEAK);
+    auto op_rec = rec(sequence, SEQUENCE);
 
     // weak closure
     return resultt{precedencet::ATOM, '{' + op_rec.s + '}'};
@@ -314,7 +314,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     PRECONDITION(mode == PROPERTY);
     auto &sequence = to_sva_sequence_property_expr_base(expr).sequence();
-    auto op_rec = rec(sequence, SVA_SEQUENCE_STRONG);
+    auto op_rec = rec(sequence, SEQUENCE);
 
     // strong closure
     return resultt{precedencet::ATOM, "({" + op_rec.s + "}!)"};
@@ -322,36 +322,30 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_or)
   {
     // can be sequence or property
-    PRECONDITION(
-      mode == PROPERTY || mode == SVA_SEQUENCE_STRONG ||
-      mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == PROPERTY || mode == SEQUENCE);
     return infix("|", expr, mode);
   }
   else if(expr.id() == ID_sva_and)
   {
     // can be sequence or property
-    PRECONDITION(
-      mode == PROPERTY || mode == SVA_SEQUENCE_STRONG ||
-      mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == PROPERTY || mode == SEQUENCE);
     // NLM intersection
     return infix("&", expr, mode);
   }
   else if(expr.id() == ID_sva_sequence_intersect)
   {
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
     return infix("&&", expr, mode);
   }
   else if(expr.id() == ID_sva_boolean)
   {
     // can be sequence or property
-    PRECONDITION(
-      mode == PROPERTY || mode == SVA_SEQUENCE_STRONG ||
-      mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == PROPERTY || mode == SEQUENCE);
     return rec(to_sva_boolean_expr(expr).op(), BOOLEAN);
   }
   else if(expr.id() == ID_sva_cycle_delay)
   {
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
 
     auto &delay = to_sva_cycle_delay_expr(expr);
 
@@ -439,7 +433,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     // ##[*] x ---> 1[*] ; x
     // w ##[*] x ---> w : 1[*] ; x
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
 
     auto &cycle_delay_expr = to_sva_cycle_delay_star_expr(expr);
     if(cycle_delay_expr.has_lhs())
@@ -461,7 +455,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   {
     // ##[+] x ---> 1[+] ; x
     // w ##[+] x ---> w : 1[+] ; x
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
 
     auto &cycle_delay_expr = to_sva_cycle_delay_plus_expr(expr);
     if(cycle_delay_expr.has_lhs())
@@ -491,7 +485,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     expr.id() ==
     ID_sva_sequence_repetition_star) // [*] or [*n] or [*x:y] or [*x:$]
   {
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
     auto &repetition = to_sva_sequence_repetition_star_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_repetition_star, repetition.op()};
     if(!repetition.repetitions_given())
@@ -526,10 +520,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_repetition_plus) // something[+]
   {
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
-
-    if(mode == SVA_SEQUENCE_STRONG)
-      throw ltl_sva_to_string_unsupportedt{expr};
+    PRECONDITION(mode == SEQUENCE);
 
     auto new_expr = unary_exprt{
       ID_sva_sequence_repetition_plus,
@@ -538,7 +529,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_goto_repetition) // something[->n]
   {
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
 
     auto &repetition = to_sva_sequence_goto_repetition_expr(expr);
     unary_exprt new_expr{ID_sva_sequence_goto_repetition, repetition.op()};
@@ -567,7 +558,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(
     expr.id() == ID_sva_sequence_non_consecutive_repetition) // something[=n]
   {
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
 
     auto &repetition = to_sva_sequence_non_consecutive_repetition_expr(expr);
     unary_exprt new_expr{
@@ -597,7 +588,7 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   }
   else if(expr.id() == ID_sva_sequence_first_match) // first_match(...)
   {
-    PRECONDITION(mode == SVA_SEQUENCE_STRONG || mode == SVA_SEQUENCE_WEAK);
+    PRECONDITION(mode == SEQUENCE);
     auto &sequence = to_sva_sequence_first_match_expr(expr).sequence();
     auto op_rec = rec(sequence, mode);
     return resultt{precedencet::ATOM, "first_match(" + op_rec.s + ')'};
