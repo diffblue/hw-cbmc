@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 cover1.sv
 --bdd
 ^\[main\.p0\] cover main\.counter == 1: PROVED$
@@ -8,4 +8,3 @@ cover1.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.
