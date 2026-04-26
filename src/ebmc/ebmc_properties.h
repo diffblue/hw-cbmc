@@ -159,6 +159,13 @@ public:
       proof_via = {};
     }
 
+    void refuted(std::string _proof_via)
+    {
+      status = statust::REFUTED;
+      failure_reason = {};
+      proof_via = std::move(_proof_via);
+    }
+
     void refuted_with_bound(std::size_t _bound)
     {
       status = statust::REFUTED_WITH_BOUND;
