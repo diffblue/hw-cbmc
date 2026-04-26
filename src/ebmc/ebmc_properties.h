@@ -35,6 +35,7 @@ public:
     exprt::operandst timeframe_handles; // word level
     std::string description;
 
+    // results
     enum class statust
     {
       UNKNOWN,            // no work done yet
@@ -54,6 +55,8 @@ public:
     std::optional<trans_tracet> witness_trace;
     std::optional<std::string> failure_reason;
     std::optional<std::string> proof_via;
+
+    void copy_results_from(const propertyt &);
 
     bool has_witness_trace() const
     {
