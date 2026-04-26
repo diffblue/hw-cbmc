@@ -1706,6 +1706,13 @@ Function: verilog_typecheck_exprt::convert_hierarchical_identifier
 exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
   hierarchical_identifier_exprt expr)
 {
+  if(
+    expr.lhs().id() == ID_verilog_identifier &&
+    to_verilog_identifier_expr(expr.lhs()).base_name() == "$root")
+  {
+    return convert_root_identifier(expr);
+  }
+
   convert_expr(expr.lhs());
 
   DATA_INVARIANT(
@@ -1817,6 +1824,38 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
       << "expected module instance or named block on left-hand side of dot";
   }
   
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::convert_root_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::convert_root_identifier(
+  hierarchical_identifier_exprt expr)
+{
+  PRECONDITION(expr.lhs().id() == ID_verilog_identifier);
+  PRECONDITION(to_verilog_identifier_expr(expr.lhs()).base_name() == "$root");
+
+  auto module_base_name = expr.rhs().base_name();
+
+  const irep_idt full_identifier = verilog_module_symbol(module_base_name);
+
+  const symbolt *symbol;
+  if(ns.lookup(full_identifier, symbol))
+  {
+    throw errort().with_location(expr.source_location())
+        << "failed to find root module " << module_base_name;
+  }
+
+  return symbol->symbol_expr().with_source_location(expr);
 }
 
 /*******************************************************************\

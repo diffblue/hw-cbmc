@@ -187,6 +187,8 @@ protected:
     const std::optional<typet> &implicit_net_type);
   [[nodiscard]] exprt
     convert_hierarchical_identifier(class hierarchical_identifier_exprt);
+  [[nodiscard]] exprt
+    convert_root_identifier(class hierarchical_identifier_exprt);
   [[nodiscard]] exprt convert_nullary_expr(nullary_exprt);
   [[nodiscard]] exprt convert_unary_expr(unary_exprt);
   [[nodiscard]] exprt convert_binary_expr(binary_exprt);

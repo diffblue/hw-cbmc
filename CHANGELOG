@@ -8,6 +8,7 @@
 
 # EBMC 5.11
 
+* SystemVerilog; $root.
 * SystemVerilog: $unit::
 * SystemVerilog: keyed array assignment patterns
 * Transition property engine

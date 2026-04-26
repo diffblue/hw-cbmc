@@ -588,6 +588,11 @@ prove           { VL2SMV_VERILOG_KEYWORD(TOK_PROVE); }
 
                 /* Identifiers and numbers */
 
+\$root          { newstack(yyveriloglval);
+                  stack_expr(yyveriloglval).id(ID_verilog_identifier);
+                  stack_expr(yyveriloglval).set(ID_base_name, yytext);
+                  PARSER.set_source_location(stack_expr(yyveriloglval));
+                  return TOK_NON_TYPE_IDENTIFIER; }
 \$unit          { newstack(yyveriloglval);
                   stack_expr(yyveriloglval).id(ID_verilog_identifier);
                   stack_expr(yyveriloglval).set(ID_base_name, yytext);
