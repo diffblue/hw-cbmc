@@ -16,6 +16,17 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_error.h"
 
+void ebmc_propertiest::propertyt::copy_results_from(
+  const ebmc_propertiest::propertyt &src)
+{
+  // copy the result fields of the property
+  status = src.status;
+  bound = src.bound;
+  witness_trace = src.witness_trace;
+  failure_reason = src.failure_reason;
+  proof_via = src.proof_via;
+}
+
 std::string ebmc_propertiest::propertyt::status_as_string() const
 {
   auto suffix = failure_reason.has_value() ? ": " + failure_reason.value() : "";

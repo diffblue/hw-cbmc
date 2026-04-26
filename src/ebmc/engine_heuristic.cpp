@@ -92,6 +92,21 @@ const enginet engines[] = {
   {bmc_bound_5_engine, "BMC with bound 5"},
 };
 
+void copy_results_to(
+  ebmc_propertiest::propertiest &src,
+  ebmc_propertiest::propertiest &dest)
+{
+  PRECONDITION(src.size() == dest.size());
+
+  // This could use std::views::zip with C++23
+  for(auto src_it = src.begin(), dest_it = dest.begin(); src_it != src.end();
+      src_it++, dest_it++)
+  {
+    // copy the result fields of the property
+    dest_it->copy_results_from(*src_it);
+  }
+}
+
 property_checker_resultt engine_heuristic(
   const cmdlinet &cmdline,
   transition_systemt &transition_system,
@@ -122,7 +137,7 @@ property_checker_resultt engine_heuristic(
     auto result = engine.f(
       cmdline, transition_system, properties, solver_factory, message_handler);
 
-    properties.properties = result.properties;
+    copy_results_to(result.properties, properties.properties);
 
     if(!properties.has_unfinished_property())
       return result; // done
