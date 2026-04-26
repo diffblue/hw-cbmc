@@ -151,7 +151,10 @@ property_checker_resultt transition_property(
     case decision_proceduret::resultt::D_UNSATISFIABLE:
       message.result() << "UNSAT: property holds for all transitions"
                        << messaget::eom;
-      property.proved("transition property");
+      if(property.is_exists_path())
+        property.refuted("transition property");
+      else
+        property.proved("transition property");
       break;
 
     case decision_proceduret::resultt::D_SATISFIABLE:

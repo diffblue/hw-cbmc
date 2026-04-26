@@ -78,7 +78,10 @@ property_checker_resultt tautology_check(
       if(is_tautology(
            property.normalized_expr, solver_factory, message_handler))
       {
-        property.proved("tautology");
+        if(property.is_exists_path())
+          property.refuted("tautology");
+        else
+          property.proved("tautology");
       }
     }
   }
