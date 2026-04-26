@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 cover4.sv
 --bdd
 ^\[main\.p0\] cover 1: PROVED$
@@ -8,4 +8,3 @@ cover4.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.

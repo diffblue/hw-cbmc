@@ -490,8 +490,16 @@ void bdd_enginet::check_AGp(propertyt &property)
 
     if(!intersection.is_false())
     {
-      property.refuted();
-      message.status() << "Property refuted" << messaget::eom;
+      if(property.is_exists_path())
+      {
+        property.proved("BDD");
+        message.status() << "Path-exists property proved" << messaget::eom;
+      }
+      else
+      {
+        property.refuted("BDD");
+        message.status() << "Property refuted" << messaget::eom;
+      }
       compute_counterexample(property, iteration);
       break;
     }
@@ -505,8 +513,16 @@ void bdd_enginet::check_AGp(propertyt &property)
     // have we saturated?
     if((set_union == states).is_true())
     {
-      property.proved("BDD");
-      message.status() << "Property proved" << messaget::eom;
+      if(property.is_exists_path())
+      {
+        property.refuted("BDD");
+        message.status() << "Path-exists property refuted" << messaget::eom;
+      }
+      else
+      {
+        property.proved("BDD");
+        message.status() << "Property proved" << messaget::eom;
+      }
       break;
     }
 

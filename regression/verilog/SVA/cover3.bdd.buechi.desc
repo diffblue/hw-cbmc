@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE buechi
 cover3.sv
 --buechi --bdd
 ^\[main\.p0\] cover \(main\.counter == 1 and \(s_nexttime main\.counter == 2\)\): PROVED$
@@ -9,4 +9,3 @@ cover3.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.
