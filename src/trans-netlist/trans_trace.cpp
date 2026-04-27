@@ -817,14 +817,17 @@ void show_trans_trace_vcd(
 
   auto &module_symbol = ns.lookup(symbol1.module);
 
-  // print those in the top module
-
-  out << "$scope module " << module_symbol.display_name() << " $end\n";
-
-  // split up into hierarchy
-  vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name) + ".", out, 1);
-
-  out << "$upscope $end\n";  
+  // print those in the top module -- skip $root scope in VCD output
+  if(module_symbol.base_name == "$root")
+  {
+    vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name) + ".", out, 0);
+  }
+  else
+  {
+    out << "$scope module " << module_symbol.display_name() << " $end\n";
+    vcd_hierarchy_rec(ns, ids, id2string(module_symbol.name) + ".", out, 1);
+    out << "$upscope $end\n";
+  }  
 
   out << "$enddefinitions $end\n";
 

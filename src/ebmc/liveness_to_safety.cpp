@@ -170,7 +170,7 @@ void liveness_to_safetyt::operator()()
       transition_system.main_symbol->mode};
 
     save_symbol.is_input = true;
-    save_symbol.module = transition_system.main_symbol->module;
+    save_symbol.module = transition_system.main_symbol->name;
     save_symbol.base_name = "save";
 
     auto result = transition_system.symbol_table.insert(std::move(save_symbol));
@@ -185,7 +185,7 @@ void liveness_to_safetyt::operator()()
       transition_system.main_symbol->mode};
 
     saved_symbol.is_state_var = true;
-    saved_symbol.module = transition_system.main_symbol->module;
+    saved_symbol.module = transition_system.main_symbol->name;
     saved_symbol.base_name = "saved";
 
     auto result =
@@ -223,7 +223,7 @@ void liveness_to_safetyt::operator()()
       transition_system.main_symbol->mode};
 
     looped_symbol.is_state_var = false;
-    looped_symbol.module = transition_system.main_symbol->module;
+    looped_symbol.module = transition_system.main_symbol->name;
 
     auto result =
       transition_system.symbol_table.insert(std::move(looped_symbol));
@@ -278,7 +278,7 @@ void liveness_to_safetyt::translate_GFp(propertyt &property)
       transition_system.main_symbol->mode};
 
     live_symbol.is_state_var = true;
-    live_symbol.module = transition_system.main_symbol->module;
+    live_symbol.module = transition_system.main_symbol->name;
 
     auto result = transition_system.symbol_table.insert(std::move(live_symbol));
     CHECK_RETURN(result.second);

@@ -97,7 +97,7 @@ model_past(const past_sett &past_set, transition_systemt &transition_system)
         symbolt symbol{
           identifier, past_expr.type(), transition_system.main_symbol->mode};
         symbol.is_state_var = true;
-        symbol.module = transition_system.main_symbol->module;
+        symbol.module = transition_system.main_symbol->name;
         transition_system.symbol_table.add(std::move(symbol));
       }
 
