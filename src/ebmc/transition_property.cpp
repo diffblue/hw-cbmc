@@ -131,7 +131,8 @@ property_checker_resultt transition_property(
       continue;
 
     // Instantiate property, for two timeframes
-    auto obligations = ::property(property.normalized_expr, message_handler, 2);
+    auto obligations =
+      ::property(property.normalized_expr, false, message_handler, 2);
     auto constraint = not_exprt{conjunction(obligations)};
     handles[property.identifier] = solver.handle(constraint);
   }

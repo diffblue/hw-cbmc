@@ -25,4 +25,8 @@ module main;
   initial pw2: assert property (weak(##[+] x==0)); // no match
   initial pw3: assert property (weak(##[+] x==5)); // match
 
+  // cover: no witness found (pending matches dropped for cover)
+  initial cs0: cover property (strong(##[*] x==6));
+  initial cs2: cover property (strong(##[+] x==0));
+
 endmodule

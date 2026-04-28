@@ -1,7 +1,7 @@
 CORE
 named_sequence1.sv
 
-^\[main\.assert\.1\] always main\.x_is_ten: PROVED \(transition property\)$
+^\[main\.assert\.1\] always main\.x_is_ten: PROVED up to bound 5$
 ^EXIT=0$
 ^SIGNAL=0$
 --

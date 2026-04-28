@@ -1,5 +1,6 @@
 # EBMC 6.0
 
+* BMC: strong sequences that exceed the bound are no longer reported as REFUTED
 * VCD traces now written into separate files per property
 * SMV: removed legacy keywords EXTERN and switch
 * SMV: use NuSMV's operator precedence, as opposed to CMU SMV's

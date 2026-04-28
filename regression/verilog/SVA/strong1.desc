@@ -1,7 +1,8 @@
 CORE
 strong1.sv
 --bound 4
-^\[main\.p0\] strong\(##\[0:9\] main\.x == 5\): REFUTED$
+^\[main\.p0\] strong\(##\[0:9\] main\.x == 5\): PROVED up to bound 4$
+^\[main\.c0\] cover strong\(##\[0:9\] main\.x == 5\): REFUTED up to bound 4$
 ^EXIT=10$
 ^SIGNAL=0$
 --

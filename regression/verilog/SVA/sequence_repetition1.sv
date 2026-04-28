@@ -21,8 +21,12 @@ module main(input clk);
   initial p4w: assert property (x==0[->2]);
   initial p5w: assert property (x==0[=2]);
 
-  // these fail, since the strong variant requires the match
+  // these are proved up to bound (pending matches suffice for assert)
   initial p4s: assert property (strong(x==0[->2]));
   initial p5s: assert property (strong(x==0[=2]));
+
+  // cover: no witness found (pending matches dropped for cover)
+  initial c4s: cover property (strong(x==0[->2]));
+  initial c5s: cover property (strong(x==0[=2]));
 
 endmodule
