@@ -277,8 +277,11 @@ property_checker_resultt bmc(
       continue;
     }
 
-    auto obligations =
-      ::property(property.normalized_expr, message_handler, no_timeframes);
+    auto obligations = ::property(
+      property.normalized_expr,
+      !property.is_exists_path(),
+      message_handler,
+      no_timeframes);
 
     if(uses_lasso_symbol(obligations))
       requires_lasso_constraints = true;

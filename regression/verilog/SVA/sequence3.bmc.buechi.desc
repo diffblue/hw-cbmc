@@ -9,6 +9,8 @@ sequence3.sv
 ^\[main\.pw1\] weak\(##\[\*\] main\.x == 5\): PROVED up to bound 20$
 ^\[main\.pw2\] weak\(##\[\+\] main\.x == 0\): PROVED up to bound 20$
 ^\[main\.pw3\] weak\(##\[\+\] main\.x == 5\): PROVED up to bound 20$
+^\[main\.cs0\] cover strong\(##\[\*\] main\.x == 6\): REFUTED up to bound 20$
+^\[main\.cs2\] cover strong\(##\[\+\] main\.x == 0\): REFUTED up to bound 20$
 ^EXIT=10$
 ^SIGNAL=0$
 --
