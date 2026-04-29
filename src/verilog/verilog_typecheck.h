@@ -243,7 +243,7 @@ protected:
   elaborate_generate_item(const verilog_module_itemt &src, module_itemst &dest);
   void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
   void
-  elaborate_generate_case(const verilog_generate_caset &, module_itemst &dest);
+  elaborate_case_generate(const verilog_case_generatet &, module_itemst &dest);
   void elaborate_generate_decl(const verilog_generate_declt &, module_itemst &);
   void
   elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);

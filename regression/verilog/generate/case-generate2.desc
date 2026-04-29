@@ -1,0 +1,6 @@
+CORE
+case-generate2.sv
+--module main --bound 0
+^\[main\.property\.p1\] always main\.out == 66: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
