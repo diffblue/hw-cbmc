@@ -4037,15 +4037,15 @@ unique_priority_opt:
 
 case_statement:
           unique_priority_opt TOK_CASE '(' expression ')' case_item_brace TOK_ENDCASE
-                { init($$, ID_case);  mto($$, $4);
+                { init($$, ID_verilog_case);  mto($$, $4);
                   Forall_operands(it, stack_expr($6))
                     stack_expr($$).add_to_operands(std::move(*it)); }
         | unique_priority_opt TOK_CASEX '(' expression ')' case_item_brace TOK_ENDCASE
-                { init($$, ID_casex); mto($$, $4);
+                { init($$, ID_verilog_casex); mto($$, $4);
                   Forall_operands(it, stack_expr($6))
                     stack_expr($$).add_to_operands(std::move(*it)); }
         | unique_priority_opt TOK_CASEZ '(' expression ')' case_item_brace TOK_ENDCASE
-                { init($$, ID_casez); mto($$, $4);
+                { init($$, ID_verilog_casez); mto($$, $4);
                   Forall_operands(it, stack_expr($6))
                     stack_expr($$).add_to_operands(std::move(*it)); }
         ;
