@@ -2722,7 +2722,7 @@ Function: verilog_synthesist::synth_case
 \*******************************************************************/
 
 void verilog_synthesist::synth_case(
-  const verilog_statementt &statement)
+  const verilog_case_statement_baset &statement)
 {
   if(statement.operands().size()<1)
   {
@@ -2731,8 +2731,9 @@ void verilog_synthesist::synth_case(
   }
 
   // do the argument of the case
-  auto case_operand = synth_expr(to_multi_ary_expr(statement).op0(), symbol_statet::CURRENT);
-  
+  auto case_operand =
+    synth_expr(statement.case_operand(), symbol_statet::CURRENT);
+
   // we convert the rest to if-then-else
   exprt start;
   exprt *last_if=&start;
@@ -3430,10 +3431,12 @@ void verilog_synthesist::synth_statement(
     synth_block(to_verilog_block(statement));
   else if(statement.id() == ID_break)
     synth_break(to_verilog_break(statement));
-  else if(statement.id()==ID_case ||
-          statement.id()==ID_casex ||
-          statement.id()==ID_casez)
-    synth_case(statement);
+  else if(
+    statement.id() == ID_verilog_case || statement.id() == ID_verilog_casex ||
+    statement.id() == ID_verilog_casez)
+  {
+    synth_case(to_verilog_case_statement_base(statement));
+  }
   else if(
     statement.id() == ID_verilog_blocking_assign ||
     statement.id() == ID_verilog_blocking_assign_plus ||

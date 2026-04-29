@@ -1406,14 +1406,15 @@ inline verilog_blockt &to_verilog_block(exprt &expr)
   return static_cast<verilog_blockt &>(expr);
 }
 
-class verilog_case_baset:public verilog_statementt
+class verilog_case_statement_baset : public verilog_statementt
 {
 public:
-  verilog_case_baset()
+  verilog_case_statement_baset()
   {
   }
-  
-  explicit verilog_case_baset(const irep_idt &_id):verilog_statementt(_id)
+
+  explicit verilog_case_statement_baset(const irep_idt &_id)
+    : verilog_statementt(_id)
   {
   }
   
@@ -1428,14 +1429,15 @@ public:
   }
 };
 
-inline const verilog_case_baset &to_verilog_case_base(const exprt &expr)
+inline const verilog_case_statement_baset &
+to_verilog_case_statement_base(const exprt &expr)
 {
-  return static_cast<const verilog_case_baset &>(expr);
+  return static_cast<const verilog_case_statement_baset &>(expr);
 }
 
-inline verilog_case_baset &to_verilog_case_base(exprt &expr)
+inline verilog_case_statement_baset &to_verilog_case_statement_base(exprt &expr)
 {
-  return static_cast<verilog_case_baset &>(expr);
+  return static_cast<verilog_case_statement_baset &>(expr);
 }
 
 class verilog_case_itemt : public binary_exprt
@@ -1490,24 +1492,24 @@ inline verilog_case_itemt &to_verilog_case_item(exprt &expr)
   return static_cast<verilog_case_itemt &>(expr);
 }
 
-class verilog_caset:public verilog_case_baset
+class verilog_case_statementt : public verilog_case_statement_baset
 {
 public:
-  verilog_caset():verilog_case_baset(ID_case)
+  verilog_case_statementt() : verilog_case_statement_baset(ID_verilog_case)
   {
   }
 };
 
-inline const verilog_caset &to_verilog_case(const exprt &expr)
+inline const verilog_case_statementt &to_verilog_case(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_case && expr.operands().size() >= 1);
-  return static_cast<const verilog_caset &>(expr);
+  PRECONDITION(expr.id() == ID_verilog_case && expr.operands().size() >= 1);
+  return static_cast<const verilog_case_statementt &>(expr);
 }
 
-inline verilog_caset &to_verilog_case(exprt &expr)
+inline verilog_case_statementt &to_verilog_case(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_case && expr.operands().size() >= 1);
-  return static_cast<verilog_caset &>(expr);
+  PRECONDITION(expr.id() == ID_verilog_case && expr.operands().size() >= 1);
+  return static_cast<verilog_case_statementt &>(expr);
 }
 
 class verilog_ift:public verilog_statementt

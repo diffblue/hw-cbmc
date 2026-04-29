@@ -753,10 +753,10 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   {
   }
   else if(
-    statement.id() == ID_case || statement.id() == ID_casex ||
-    statement.id() == ID_casez)
+    statement.id() == ID_verilog_case || statement.id() == ID_verilog_casex ||
+    statement.id() == ID_verilog_casez)
   {
-    auto &case_statement = to_verilog_case_base(statement);
+    auto &case_statement = to_verilog_case_statement_base(statement);
 
     for(std::size_t i = 1; i < case_statement.operands().size(); i++)
     {
