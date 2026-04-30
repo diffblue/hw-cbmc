@@ -4,3 +4,5 @@ array_in_union1.sv
 ^EXIT=0$
 ^SIGNAL=0$
 --
+--
+This is rejected by CVC5.

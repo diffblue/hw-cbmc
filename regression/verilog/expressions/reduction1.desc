@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 reduction1.v
 
 ^EXIT=0$

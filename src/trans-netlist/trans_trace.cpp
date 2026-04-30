@@ -50,7 +50,7 @@ std::optional<std::size_t> trans_tracet::get_max_failing_timeframe() const
     if(states[t].property_failed)
       max=t;
   }
-  
+
   return max;
 }
 
@@ -124,7 +124,7 @@ void show_trans_state(
     assert(a.lhs.id()==ID_symbol);
 
     const symbolt &symbol=ns.lookup(to_symbol_expr(a.lhs));
-    
+
     if(symbol.is_auxiliary)
       continue;
 
@@ -220,13 +220,13 @@ xmlt xml(const trans_tracet &trace, const namespacet &ns)
   for(std::size_t t = 0; t <= last_time_frame; t++)
   {
     assert(t<trace.states.size());
-  
+
     xmlt &xml_state=dest.new_element("state");
     const trans_tracet::statet &state=trace.states[t];
 
     xml_state.new_element("timeframe").data=std::to_string(t); // will go away
     xml_state.set_attribute("timeframe", t);
-    
+
     for(const auto & a : state.assignments)
     {
       xmlt &xml_assignment=xml_state.new_element("assignment");
@@ -407,7 +407,7 @@ static mp_integer vcd_width(
 
     if(to_integer_non_constant(size, i))
       return -1; // we cannot distinguish the elements
-    
+
     return sub*i;
   }
   else if(type.id()==ID_struct)
@@ -415,9 +415,9 @@ static mp_integer vcd_width(
     const struct_typet &struct_type=to_struct_type(type);
     const struct_typet::componentst &components=
       struct_type.components();
-      
+
     mp_integer result=0;
-    
+
     for(const auto & it : components)
     {
       const typet &subtype=it.type();
@@ -425,7 +425,7 @@ static mp_integer vcd_width(
       if(sub_size==-1) return -1;
       result+=sub_size;
     }
-    
+
     return result;
   }
   else if(type.id()==ID_bool)
@@ -473,7 +473,7 @@ static std::string as_vcd_binary(
 
     forall_operands(it, expr)
       result+=as_vcd_binary(*it, ns);
-    
+
     return result;
   }
   else if(expr.id()==ID_struct)
@@ -482,7 +482,7 @@ static std::string as_vcd_binary(
 
     forall_operands(it, expr)
       result+=as_vcd_binary(*it, ns);
-    
+
     return result;
   }
   else if(expr.id()==ID_union)
@@ -503,7 +503,7 @@ static std::string as_vcd_binary(
 
     return result;
   }
-  
+
   return "";
 }
 
@@ -575,7 +575,7 @@ void show_trans_state_vcd(
 {
   out << "#" << timeframe << '\n';
 
-  // build map for previous state  
+  // build map for previous state
   std::map<irep_idt, exprt> previous_values;
 
   for(const auto & a : previous_state.assignments)
@@ -588,17 +588,17 @@ void show_trans_state_vcd(
 
     const symbolt &symbol=
       ns.lookup(to_symbol_expr(a.lhs));
-    
+
     if(symbol.is_auxiliary)
       continue;
-    
+
     if(timeframe!=0)
       if(previous_values[symbol.name]==a.rhs)
         continue; // value didn't change!
-  
+
     if(a.rhs.is_nil()) // no value
       continue;
-  
+
     std::string display_name=id2string(symbol.display_name());
 
     if(a.lhs.type().id()==ID_bool)
@@ -654,7 +654,7 @@ static std::string vcd_suffix(
 
     if(!type.get_bool(ID_C_increasing))
       std::swap(left_bound, right_bound);
-    
+
     return "["+integer2string(left_bound)+":"+integer2string(right_bound)+"]";
   }
   else if(type.id()==ID_array)
@@ -699,7 +699,7 @@ Function: vcd_hierarchy_rec
 
  Outputs:
 
- Purpose: 
+ Purpose:
 
 \*******************************************************************/
 
@@ -712,7 +712,7 @@ void vcd_hierarchy_rec(
 {
   std::set<std::string> sub_modules;
   std::set<irep_idt> signals;
-  
+
   for(const auto & it : ids)
   {
     if(has_prefix(id2string(it), prefix))
@@ -731,13 +731,13 @@ void vcd_hierarchy_rec(
   for(const auto & it : signals)
   {
     const symbolt &symbol=ns.lookup(it);
-    
+
     if(symbol.is_auxiliary) continue;
 
     std::string display_name = id2string(symbol.display_name());
-    
+
     std::string signal_class;
-    
+
     if(symbol.type.id()==ID_integer)
       signal_class="integer";
     else if(symbol.is_state_var)
@@ -746,16 +746,16 @@ void vcd_hierarchy_rec(
       signal_class="wire";
 
     mp_integer width=vcd_width(symbol.type, ns);
-    
+
     std::string suffix=vcd_suffix(symbol.type, ns);
-    
+
     if(width>=1)
       out << std::string(depth * 2, ' ') << "$var " << signal_class << " "
           << width << " " << vcd_identifier(display_name) << " "
           << vcd_reference(symbol, prefix) << (suffix == "" ? "" : " ")
           << suffix << " $end" << '\n';
   }
-  
+
   // now do sub modules
   for(const auto & identifier : sub_modules)
   {
@@ -764,7 +764,7 @@ void vcd_hierarchy_rec(
 
     // recursive call
     vcd_hierarchy_rec(ns, ids, prefix+identifier+".", out, depth+1);
-    
+
     out << std::string(depth*2, ' ')
         << "$upscope $end\n";
   }
@@ -794,7 +794,7 @@ void show_trans_trace_vcd(
   out << "$date\n  " << ctime(&t) << "$end" << '\n';
 
   out << "$timescale\n  1ns\n$end" << '\n';
-  
+
   if(trace.states.empty()) return;
 
   const trans_tracet::statet &state=trace.states[0];
@@ -803,11 +803,11 @@ void show_trans_trace_vcd(
 
   // get identifiers
   std::set<irep_idt> ids;
-  
+
   for(const auto & a : state.assignments)
   {
     assert(a.lhs.id()==ID_symbol);
-    ids.insert(to_symbol_expr(a.lhs).get_identifier());
+    ids.insert(to_symbol_expr(a.lhs).identifier());
   }
 
   // determine module
@@ -836,7 +836,7 @@ void show_trans_trace_vcd(
   // initial state
 
   show_trans_state_vcd(0, trace.states[0], trace.states[0], ns, out);
-  
+
   // following ones
 
   for(std::size_t t = 1; t <= l; t++)

@@ -111,7 +111,7 @@ void lasso_constraints(
   // We sort the set of variables to compare,
   // to get a deterministic formula
   auto ordering = [](const symbol_exprt &a, const symbol_exprt &b)
-  { return id2string(a.get_identifier()) < id2string(b.get_identifier()); };
+  { return id2string(a.identifier()) < id2string(b.identifier()); };
 
   std::sort(variables_to_compare.begin(), variables_to_compare.end(), ordering);
 
@@ -147,7 +147,7 @@ bool uses_lasso_symbol(const exprt &expr)
       subexpr_it++)
   {
     if(subexpr_it->id() == ID_symbol)
-      if(to_symbol_expr(*subexpr_it).get_identifier().starts_with(LASSO_PREFIX))
+      if(to_symbol_expr(*subexpr_it).identifier().starts_with(LASSO_PREFIX))
       {
         return true;
       }

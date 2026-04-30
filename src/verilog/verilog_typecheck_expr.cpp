@@ -934,7 +934,7 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
   f_op = symbol->symbol_expr().with_source_location(f_op);
   expr.type()=code_type.return_type();
-  
+
   if(code_type.return_type().id()==ID_empty)
   {
     throw errort().with_location(f_op.source_location())
@@ -1209,9 +1209,9 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
       throw errort().with_location(expr.source_location())
         << "$signed takes one argument";
     }
-    
+
     exprt &argument=arguments.front();
-    
+
     if(argument.type().id()==ID_signedbv)
     {
       expr.type() = argument.type();
@@ -1244,7 +1244,7 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
       throw errort().with_location(expr.source_location())
         << "$unsigned takes one argument";
     }
-    
+
     exprt &argument=arguments.front();
 
     if(argument.type().id()==ID_unsignedbv)
@@ -1274,7 +1274,7 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
   else if(base_name == "$ND")
   {
     // this is something from VIS
-    
+
     if(arguments.size()<1)
     {
       throw errort().with_location(expr.source_location())
@@ -1329,7 +1329,7 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
       throw errort().with_location(expr.source_location())
         << "$onehot takes one argument";
     }
-    
+
     // the meaning is 'exactly one bit is high'
     unary_predicate_exprt onehot(ID_onehot, arguments.front());
     onehot.add_source_location()=expr.source_location();
@@ -1708,7 +1708,7 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
   }
 
   if(symbol != nullptr)
-  { 
+  {
     // found!
     if(
       symbol->type.id() == ID_to_be_elaborated ||
@@ -1815,7 +1815,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 
   const irep_idt &lhs_identifier = [](const exprt &lhs) {
     if(lhs.id() == ID_symbol)
-      return to_symbol_expr(lhs).get_identifier();
+      return to_symbol_expr(lhs).identifier();
     else if(lhs.id() == ID_hierarchical_identifier)
       return to_hierarchical_identifier_expr(lhs).identifier();
     else
@@ -1884,12 +1884,11 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
         << "identifier `" << rhs_base_name << "' not found in named block";
     }
   }
-  else  
+  else
   {
     throw errort().with_location(expr.source_location())
       << "expected module instance or named block on left-hand side of dot";
   }
-  
 }
 
 /*******************************************************************\
@@ -2041,7 +2040,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
     return expr;
   else if(expr.id()==ID_symbol)
   {
-    const irep_idt &identifier=to_symbol_expr(expr).get_identifier();
+    const irep_idt &identifier = to_symbol_expr(expr).identifier();
 
     if(has_prefix(id2string(identifier), "$"))
     {
@@ -2061,10 +2060,10 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
     }
 
     exprt value=var_value(identifier);
-    
-    #if 0
+
+#if 0
     status() << "READ " << identifier << " = " << to_string(value) << eom;
-    #endif
+#endif
 
     if(value.is_not_nil())
     {
@@ -2868,12 +2867,12 @@ typet verilog_typecheck_exprt::max_type(
   // If one of the operands is an integer, we return the
   // other type. This may be too small! The standard says
   // one needs 32 bits.
-  
+
   if(vt0.is_integer())
     return t1;
   else if(vt1.is_integer())
     return t0;
-    
+
   // If one of the operands is a real, we return the real.
   if(vt0.is_verilog_real())
     return t0;
@@ -2884,11 +2883,11 @@ typet verilog_typecheck_exprt::max_type(
     vt0.is_verilog_signed() || vt0.is_verilog_unsigned() ||
     vt1.is_verilog_signed() || vt1.is_verilog_unsigned();
 
-  // The result is unsigned if any of the operands is  
+  // The result is unsigned if any of the operands is
   bool is_unsigned=
     vt0.is_unsigned() || vt0.is_bool() || vt0.is_verilog_unsigned() ||
     vt1.is_unsigned() || vt1.is_bool() || vt1.is_verilog_unsigned();
-  
+
   unsigned max_width=std::max(vt0.get_width(), vt1.get_width());
 
   if(is_verilogbv)

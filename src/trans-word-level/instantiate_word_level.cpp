@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: 
+Module:
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -52,8 +52,7 @@ Function: timeframe_symbol
 symbol_exprt timeframe_symbol(const mp_integer &timeframe, symbol_exprt src)
 {
   auto result = std::move(src);
-  result.set_identifier(
-    timeframe_identifier(timeframe, result.get_identifier()));
+  result.identifier(timeframe_identifier(timeframe, result.identifier()));
   return result;
 }
 
