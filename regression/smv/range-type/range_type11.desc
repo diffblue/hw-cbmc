@@ -1,8 +1,9 @@
-KNOWNBUG
+KNOWNBUG broken-smt-backend
 range_type11.smv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-The range constraint is missing.
+The range constraint is missing for the flattening backend.
+Works with SMT.

@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #define CPROVER_SMV_RANGE_H
 
 #include <util/arith_tools.h>
+#include <util/mathematical_types.h>
 
 #include <iosfwd>
 
@@ -45,12 +46,12 @@ public:
 
   typet to_type() const
   {
-    return range_typet{from, to};
+    return integer_range_typet{from, to};
   }
 
-  static smv_ranget from_type(const range_typet &src)
+  static smv_ranget from_type(const integer_range_typet &src)
   {
-    return {src.get_from(), src.get_to()};
+    return {src.from(), src.to()};
   }
 
   bool is_bool() const

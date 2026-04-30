@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 xnor2.sv
 --top main
 ^\[main\.xnor_ok\] always !main\.xnor_in1 == main\.xnor_out: PROVED .*$

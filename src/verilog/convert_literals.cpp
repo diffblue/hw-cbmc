@@ -175,7 +175,8 @@ exprt convert_integral_literal(const irep_idt &value)
   {
     if(rest[0] != '\'')
     {
-      bits = safe_string2size_t(rest);
+      // get the digits for 'bits'
+      bits = safe_string2size_t(rest.substr(0, pos));
       bits_given = true;
     }
 
