@@ -1,0 +1,10 @@
+CORE
+boolean1.btor2
+--bound 0
+^\[bad5\] : PROVED up to bound 0$
+^\[bad8\] : PROVED up to bound 0$
+^\[bad11\] : PROVED up to bound 0$
+^\[bad13\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--

@@ -1,0 +1,12 @@
+; 1-bit state that toggles, constraint keeps it at 0
+1 sort bitvec 1
+2 zero 1
+3 one 1
+4 input 1 clk
+5 state 1 bit
+6 init 1 5 2
+7 not 1 5
+8 next 1 5 7
+; bit AND (NOT bit) is always false
+9 and 1 5 7
+10 bad 9

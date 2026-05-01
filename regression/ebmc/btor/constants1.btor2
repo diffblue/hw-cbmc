@@ -1,0 +1,22 @@
+; Test constant formats: const (binary), consth (hex), ones
+1 sort bitvec 8
+2 sort bitvec 1
+; const 10101010 == 170
+3 const 1 10101010
+4 constd 1 170
+5 neq 2 3 4
+6 bad 5
+; consth FF == 255
+7 consth 1 FF
+8 constd 1 255
+9 neq 2 7 8
+10 bad 9
+; ones (8-bit) == 255
+11 ones 1
+12 neq 2 11 8
+13 bad 12
+; consth a5 == 165
+14 consth 1 a5
+15 constd 1 165
+16 neq 2 14 15
+17 bad 16

@@ -55,6 +55,7 @@ OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT) \
       ../aiger/aiger$(LIBEXT) \
+      ../btor/btor$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT) \
       ../verilog/verilog$(LIBEXT)
 

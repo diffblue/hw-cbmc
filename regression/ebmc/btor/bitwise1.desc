@@ -1,0 +1,11 @@
+CORE
+bitwise1.btor2
+--bound 0
+^\[bad8\] : PROVED up to bound 0$
+^\[bad12\] : PROVED up to bound 0$
+^\[bad16\] : PROVED up to bound 0$
+^\[bad19\] : PROVED up to bound 0$
+^\[bad22\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--

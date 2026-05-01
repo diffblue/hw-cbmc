@@ -1,0 +1,17 @@
+; Test word-level ops: slice, concat, ite
+; 4-bit counter, extract low 2 bits, check if they reach 3
+1 sort bitvec 4
+2 sort bitvec 2
+3 sort bitvec 1
+4 zero 1
+5 one 1
+6 state 1 cnt
+7 init 1 6 4
+8 add 1 6 5
+9 next 1 6 8
+; slice low 2 bits
+10 slice 2 6 1 0
+; bad: low bits == 3
+11 constd 2 3
+12 eq 3 10 11
+13 bad 12

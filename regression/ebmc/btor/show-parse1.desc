@@ -1,0 +1,12 @@
+CORE
+unsafe1.btor2
+--show-parse
+^BTOR2 model$
+^  Sorts: 1$
+^  Nodes: 9$
+^  Bad properties: 1$
+^  Sort 1: bitvec 2$
+^  4 state sort=1 'cnt'$
+^EXIT=0$
+^SIGNAL=0$
+--

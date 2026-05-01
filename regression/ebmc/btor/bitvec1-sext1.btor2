@@ -1,0 +1,10 @@
+; Sign extension from bitvec 1
+1 sort bitvec 1
+2 sort bitvec 4
+3 one 1
+; sext of 1-bit value 1 to 4 bits: sign-extends to 1111 = 15 unsigned
+4 sext 2 3 3
+5 constd 2 15
+6 eq 1 4 5
+7 not 1 6
+8 bad 7

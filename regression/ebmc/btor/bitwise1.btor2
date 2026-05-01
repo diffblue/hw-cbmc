@@ -1,0 +1,29 @@
+; Test binary bitwise operators on 4-bit values
+; 0xA = 1010, 0x5 = 0101
+1 sort bitvec 4
+2 sort bitvec 1
+3 constd 1 10
+4 constd 1 5
+; or(0xA, 0x5) == 0xF
+5 or 1 3 4
+6 constd 1 15
+7 neq 2 5 6
+8 bad 7
+; nand(0xF, 0xA) == 0x5
+9 constd 1 15
+10 nand 1 9 3
+11 neq 2 10 4
+12 bad 11
+; nor(0xA, 0x5) == 0x0
+13 nor 1 3 4
+14 zero 1
+15 neq 2 13 14
+16 bad 15
+; xor(0xA, 0x5) == 0xF
+17 xor 1 3 4
+18 neq 2 17 6
+19 bad 18
+; xnor(0xA, 0xA) == 0xF
+20 xnor 1 3 3
+21 neq 2 20 6
+22 bad 21

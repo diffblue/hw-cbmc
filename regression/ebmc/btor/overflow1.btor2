@@ -1,0 +1,38 @@
+; Test overflow operators on 4-bit values
+1 sort bitvec 4
+2 sort bitvec 1
+; uaddo(15, 1) should overflow (unsigned)
+3 constd 1 15
+4 constd 1 1
+5 uaddo 2 3 4
+6 not 2 5
+7 bad 6
+; uaddo(7, 1) should NOT overflow
+8 constd 1 7
+9 uaddo 2 8 4
+10 bad 9
+; saddo(7, 1) should overflow (signed: 7+1=8 overflows 4-bit signed max=7)
+11 saddo 2 8 4
+12 not 2 11
+13 bad 12
+; usubo(0, 1) should overflow (unsigned: 0-1 wraps)
+14 zero 1
+15 usubo 2 14 4
+16 not 2 15
+17 bad 16
+; ssubo(8, 1) should overflow (signed: -8-1 overflows 4-bit signed min=-8)
+; 8 unsigned = -8 signed in 4 bits
+18 constd 1 8
+19 ssubo 2 18 4
+20 not 2 19
+21 bad 20
+; umulo(8, 2) should overflow (unsigned: 8*2=16 > 15)
+22 constd 1 2
+23 umulo 2 18 22
+24 not 2 23
+25 bad 24
+; smulo(4, 4) should overflow (signed: 4*4=16 overflows 4-bit signed)
+26 constd 1 4
+27 smulo 2 26 26
+28 not 2 27
+29 bad 28

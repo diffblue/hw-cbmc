@@ -1,0 +1,7 @@
+CORE
+array1.btor2
+--bound 0
+^\[bad11\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--

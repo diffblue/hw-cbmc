@@ -1,0 +1,14 @@
+CORE
+comparison1.btor2
+--bound 0
+^\[bad8\] : PROVED up to bound 0$
+^\[bad11\] : PROVED up to bound 0$
+^\[bad14\] : PROVED up to bound 0$
+^\[bad17\] : PROVED up to bound 0$
+^\[bad20\] : PROVED up to bound 0$
+^\[bad23\] : PROVED up to bound 0$
+^\[bad26\] : PROVED up to bound 0$
+^\[bad29\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--

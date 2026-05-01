@@ -1,0 +1,7 @@
+CORE
+word-level1.btor2
+--bound 5
+^\[bad13\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

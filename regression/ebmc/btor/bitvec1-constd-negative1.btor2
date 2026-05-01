@@ -1,0 +1,6 @@
+; constd with negative value on bitvec 1
+; constd 1 -1 should be treated as 1 (LSB of -1)
+1 sort bitvec 1
+2 constd 1 -1
+; -1 masked to 1 bit is 1, so bad should fire
+3 bad 2

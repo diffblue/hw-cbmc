@@ -1,0 +1,7 @@
+CORE
+liveness-fail1.btor2
+--bound 10
+^\[fair6\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

@@ -1,0 +1,10 @@
+CORE
+unsafe1.btor2
+--bound 5 --numbered-trace
+^\[bad10\] : REFUTED$
+^Counterexample with 4 states:$
+^cnt@0 = 0$
+^cnt@3 = 3$
+^EXIT=10$
+^SIGNAL=0$
+--

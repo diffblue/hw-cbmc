@@ -1,0 +1,7 @@
+CORE
+bitvec1-constd-negative1.btor2
+--bound 0
+^\[bad3\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

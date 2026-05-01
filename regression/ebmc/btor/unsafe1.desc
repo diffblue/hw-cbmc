@@ -1,0 +1,7 @@
+CORE
+unsafe1.btor2
+--bound 5
+^\[bad10\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

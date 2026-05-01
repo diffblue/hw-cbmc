@@ -1,0 +1,32 @@
+; Test concat, ite, sext, uext
+1 sort bitvec 4
+2 sort bitvec 8
+3 sort bitvec 1
+; concat(0xA, 0x5) == 0xA5
+4 constd 1 10
+5 constd 1 5
+6 concat 2 4 5
+7 constd 2 165
+8 neq 3 6 7
+9 bad 8
+; ite(1, 10, 5) == 10
+10 one 3
+11 ite 1 10 4 5
+12 neq 3 11 4
+13 bad 12
+; ite(0, 10, 5) == 5
+14 zero 3
+15 ite 1 14 4 5
+16 neq 3 15 5
+17 bad 16
+; uext(0x5, 4) == 0x05 (4-bit to 8-bit zero extension)
+18 uext 2 5 4
+19 constd 2 5
+20 neq 3 18 19
+21 bad 20
+; sext(0xF, 4) == 0xFF (4-bit -1 sign-extended to 8-bit)
+22 constd 1 15
+23 sext 2 22 4
+24 constd 2 255
+25 neq 3 23 24
+26 bad 25

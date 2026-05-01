@@ -1,0 +1,7 @@
+CORE
+bitvec1-signed-comparison1.btor2
+--bound 0
+^\[bad4\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
