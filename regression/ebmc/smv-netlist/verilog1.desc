@@ -2,11 +2,11 @@ CORE
 verilog1.sv
 --smv-netlist
 ^MODULE main$
-^VAR Verilog\.main\.x: boolean;$
-^ASSIGN next\(Verilog\.main\.x\):=\!Verilog\.main\.x;$
-^INIT !Verilog\.main\.x$
+^VAR main\.x: boolean;$
+^ASSIGN next\(main\.x\):=\!main\.x;$
+^INIT !main\.x$
 ^-- Verilog::main.assert.1$
-^LTLSPEC G F Verilog\.main\.x$
+^LTLSPEC G F main\.x$
 ^-- Verilog::main.assert.2$
 ^-- not translated$
 ^EXIT=0$

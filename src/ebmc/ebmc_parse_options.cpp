@@ -317,7 +317,8 @@ int ebmc_parse_optionst::doit()
       outfile.stream() << "-- Generated from "
                        << transition_system.main_symbol->name << '\n';
       outfile.stream() << '\n';
-      smv_netlist(netlist, outfile.stream());
+      namespacet ns{transition_system.symbol_table};
+      smv_netlist(netlist, ns, outfile.stream());
       return 0;
     }
 

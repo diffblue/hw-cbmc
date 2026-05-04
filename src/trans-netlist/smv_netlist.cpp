@@ -129,14 +129,60 @@ void print_smv(
   out << expr2smv_netlistt{ns, netlist, variable_names}.convert(expr);
 }
 
-void smv_netlist(const netlistt &netlist, std::ostream &out)
+std::map<literalt::var_not, std::string> smv_names(
+  const std::vector<var_mapt::mapt::const_iterator> &sorted_identifiers,
+  const namespacet &ns)
+{
+  std::map<literalt::var_not, std::string> smv_names;
+
+  auto map_name = [&smv_names, &ns](var_mapt::mapt::const_iterator var_it)
+  {
+    const var_mapt::vart &var = var_it->second;
+    for(std::size_t i = 0; i < var.bits.size(); i++)
+    {
+      const symbolt *symbol_ptr;
+      irep_idt symbol_name;
+      if(!ns.lookup(var_it->first, symbol_ptr))
+        symbol_name = symbol_ptr->display_name();
+      else
+        symbol_name = var_it->first;
+
+      std::string smv_name = id2smv(symbol_name);
+      if(var_it->second.bits.size() != 1)
+        smv_name += '[' + std::to_string(i) + ']';
+
+      smv_names.emplace(var.bits[i].current.var_no(), smv_name);
+    }
+  };
+
+  for(auto &var_it : sorted_identifiers)
+  {
+    if(var_it->second.is_latch())
+      map_name(var_it);
+  }
+
+  for(auto &var_it : sorted_identifiers)
+  {
+    if(!var_it->second.is_latch())
+      map_name(var_it);
+  }
+
+  return smv_names;
+}
+
+void smv_netlist(
+  const netlistt &netlist,
+  const namespacet &ns,
+  std::ostream &out)
 {
   out << "MODULE main" << '\n';
 
   // We use the sorted var map to get deterministic output
   auto &var_map = netlist.var_map;
   const auto sorted_var_map = var_map.sorted();
-  std::map<literalt::var_not, std::string> variable_names;
+
+  // produce the SMV versions of the identifiers
+  auto variable_names = smv_names(sorted_var_map, ns);
 
   auto declare_var =
     [&variable_names](var_mapt::mapt::const_iterator var_it, std::ostream &out)
@@ -147,8 +193,10 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
       std::string name = id2smv(var_it->first);
       if(var_it->second.bits.size() != 1)
         name += '[' + std::to_string(i) + ']';
-      variable_names[var.bits[i].current.var_no()] = name;
-      out << "VAR " << name << ": boolean;" << '\n';
+      auto name_it = variable_names.find(var.bits[i].current.var_no());
+      DATA_INVARIANT(
+        name_it != variable_names.end(), "must have variable in renaming");
+      out << "VAR " << name_it->second << ": boolean;" << '\n';
     }
   };
 
@@ -214,10 +262,13 @@ void smv_netlist(const netlistt &netlist, std::ostream &out)
     {
       if(var.is_latch())
       {
-        out << "ASSIGN next(" << id2smv(var_it->first);
-        if(var.bits.size() != 1)
-          out << "[" << i << "]";
-        out << "):=";
+        std::string name = id2smv(var_it->first);
+        if(var_it->second.bits.size() != 1)
+          name += '[' + std::to_string(i) + ']';
+        auto name_it = variable_names.find(var.bits[i].current.var_no());
+        DATA_INVARIANT(
+          name_it != variable_names.end(), "must have variable in renaming");
+        out << "ASSIGN next(" << name_it->second << "):=";
         print_smv(netlist, variable_names, out, var.bits[i].next);
         out << ";" << '\n';
       }

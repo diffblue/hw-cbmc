@@ -1,8 +1,8 @@
 CORE
 nondet2.sv
 --smv-netlist
-^VAR nondet: boolean;$
-^LTLSPEC G nondet$
+^VAR main\.some_data: boolean;$
+^LTLSPEC G main\.some_data$
 ^EXIT=0$
 ^SIGNAL=0$
 --

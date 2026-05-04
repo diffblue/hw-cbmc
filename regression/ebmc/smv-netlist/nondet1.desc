@@ -1,8 +1,9 @@
 CORE
 nondet1.smv
 --smv-netlist
+^VAR data: boolean;$
 ^VAR nondet: boolean;$
-^ASSIGN next\(smv\.main\.var\.data\):=nondet;$
+^ASSIGN next\(data\):=nondet;$
 ^EXIT=0$
 ^SIGNAL=0$
 --
