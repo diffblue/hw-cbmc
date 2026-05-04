@@ -1,0 +1,7 @@
+CORE
+class_in_module1.sv
+--show-parse
+^  \* base_name: local_class$
+^EXIT=0$
+^SIGNAL=0$
+--

@@ -1,0 +1,9 @@
+CORE
+interface_class2.sv
+--show-parse
+^Class: ia$
+^Class: ib$
+^Class: ic$
+^EXIT=0$
+^SIGNAL=0$
+--

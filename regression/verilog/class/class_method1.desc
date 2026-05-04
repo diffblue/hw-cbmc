@@ -1,0 +1,7 @@
+CORE
+class_method1.sv
+--show-parse
+^Class: myClass$
+^EXIT=0$
+^SIGNAL=0$
+--

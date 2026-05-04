@@ -1,0 +1,8 @@
+CORE
+class_constructor1.sv
+--show-parse
+^Class: myClass$
+^Class: emptyClass$
+^EXIT=0$
+^SIGNAL=0$
+--
