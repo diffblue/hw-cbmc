@@ -1,0 +1,9 @@
+CORE
+reset4.sv
+--reset some_unknown_identifier
+^line 1: unknown identifier some_unknown_identifier$
+^error: failed to parse reset constraint$
+^EXIT=6$
+^SIGNAL=0$
+--
+--
