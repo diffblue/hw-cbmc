@@ -11,6 +11,6 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "netlist.h"
 
-void smv_netlist(const netlistt &, std::ostream &);
+void smv_netlist(const netlistt &, const namespacet &, std::ostream &);
 
 #endif // CPROVER_TRANS_NETLIST_SMV_NETLIST_H
