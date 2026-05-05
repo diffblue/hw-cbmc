@@ -280,7 +280,7 @@ protected:
   void synth_function_or_task_decl(const verilog_function_or_task_declt &);
   void synth_block(const verilog_blockt &);
   void synth_break(const verilog_breakt &);
-  void synth_case(const verilog_statementt &);
+  void synth_case(const verilog_case_statement_baset &);
   void synth_continue(const verilog_continuet &);
   void synth_if(const verilog_ift &);
   void synth_event_guard(const verilog_event_guardt &);

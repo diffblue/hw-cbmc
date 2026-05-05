@@ -1023,8 +1023,7 @@ Function: verilog_typecheckt::convert_case
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_case(
-  verilog_case_baset &statement)
+void verilog_typecheckt::convert_case(verilog_case_statement_baset &statement)
 {
   if(statement.operands().size() < 1)
   {
@@ -1338,10 +1337,12 @@ void verilog_typecheckt::convert_statement(
 {
   if(statement.id()==ID_block)
     convert_block(to_verilog_block(statement));
-  else if(statement.id()==ID_case ||
-          statement.id()==ID_casex ||
-          statement.id()==ID_casez)
-    convert_case(to_verilog_case_base(statement));
+  else if(
+    statement.id() == ID_verilog_case || statement.id() == ID_verilog_casex ||
+    statement.id() == ID_verilog_casez)
+  {
+    convert_case(to_verilog_case_statement_base(statement));
+  }
   else if(
     statement.id() == ID_verilog_blocking_assign ||
     statement.id() == ID_verilog_blocking_assign_plus ||

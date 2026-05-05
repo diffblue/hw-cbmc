@@ -172,7 +172,7 @@ protected:
   void convert_statement(class verilog_statementt &);
   void convert_function_call_or_task_enable(class verilog_function_callt &);
   void convert_block(class verilog_blockt &);
-  void convert_case(class verilog_case_baset &);
+  void convert_case(class verilog_case_statement_baset &);
   void convert_if(class verilog_ift &);
   void convert_event_guard(class verilog_event_guardt &);
   void convert_delay(class verilog_delayt &);

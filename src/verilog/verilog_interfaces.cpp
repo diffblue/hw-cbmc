@@ -304,9 +304,9 @@ void verilog_typecheckt::interface_statement(
 {
   if(statement.id()==ID_block)
     interface_block(to_verilog_block(statement));
-  else if(statement.id()==ID_case ||
-          statement.id()==ID_casex ||
-          statement.id()==ID_casez)
+  else if(
+    statement.id() == ID_verilog_case || statement.id() == ID_verilog_casex ||
+    statement.id() == ID_verilog_casez)
   {
   }
   else if(statement.id()==ID_if)
