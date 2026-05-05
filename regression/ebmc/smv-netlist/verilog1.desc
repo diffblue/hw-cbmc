@@ -5,9 +5,9 @@ verilog1.sv
 ^VAR main\.x: boolean;$
 ^ASSIGN next\(main\.x\):=\!main\.x;$
 ^INIT !main\.x$
-^-- Verilog::main.assert.1$
+^-- main.assert.1$
 ^LTLSPEC G F main\.x$
-^-- Verilog::main.assert.2$
+^-- main.assert.2$
 ^-- not translated$
 ^EXIT=0$
 ^SIGNAL=0$

@@ -323,23 +323,26 @@ void smv_netlist(
 
   for(auto &[id, netlist_expr] : netlist.properties)
   {
+    auto &symbol = ns.lookup(id);
+    auto display_name = symbol.display_name();
+
     if(!netlist_expr.has_value())
     {
       // translation has failed
-      out << "-- " << id << '\n';
+      out << "-- " << display_name << '\n';
       out << "-- not translated\n";
       out << '\n';
     }
     else if(is_CTL(*netlist_expr))
     {
-      out << "-- " << id << '\n';
+      out << "-- " << display_name << '\n';
       out << "CTLSPEC ";
       print_smv(netlist, variable_names, out, *netlist_expr);
       out << '\n';
     }
     else if(is_LTL(*netlist_expr))
     {
-      out << "-- " << id << '\n';
+      out << "-- " << display_name << '\n';
       out << "LTLSPEC ";
       print_smv(netlist, variable_names, out, *netlist_expr);
       out << '\n';
@@ -352,7 +355,7 @@ void smv_netlist(
     else
     {
       // translated to something we can't print
-      out << "-- " << id << '\n';
+      out << "-- " << display_name << '\n';
       out << "-- cannot output\n";
       out << '\n';
     }
