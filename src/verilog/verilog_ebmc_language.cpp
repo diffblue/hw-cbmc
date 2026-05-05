@@ -19,7 +19,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <ebmc/ebmc_error.h>
 #include <ebmc/show_modules.h>
 #include <ebmc/transition_system.h>
-#include <langapi/language_util.h>
+#include <langapi/mode.h>
 #include <trans-word-level/show_module_hierarchy.h>
 
 #include "verilog_elaborate_compilation_unit.h"
@@ -484,9 +484,19 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   // --reset given?
   if(cmdline.isset("reset"))
   {
-    namespacet ns(transition_system.symbol_table);
-    exprt reset_constraint = to_expr(
-      ns, transition_system.main_symbol->name, cmdline.get_value("reset"));
+    auto language = get_language_from_mode(transition_system.main_symbol->mode);
+    exprt reset_constraint;
+    const namespacet ns{transition_system.symbol_table};
+
+    if(language->to_expr(
+         cmdline.get_value("reset"),
+         id2string(transition_system.main_symbol->module),
+         reset_constraint,
+         ns,
+         message_handler))
+    {
+      throw ebmc_errort{} << "failed to parse reset constraint";
+    }
 
     // true in initial state
     transt new_trans_expr = transition_system.trans_expr;
