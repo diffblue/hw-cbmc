@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 /// returns a vector of obligation expressions, one per timeframe
 exprt::operandst property(
   const exprt &property_expr,
+  bool allow_pending_matches,
   message_handlert &,
   std::size_t no_timeframes);
 

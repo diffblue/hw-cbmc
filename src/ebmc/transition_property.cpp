@@ -73,6 +73,17 @@ bool is_transition_property(const exprt &expr)
     return false;
 }
 
+/// Given a transition property G Q (or sva_always Q),
+/// returns Q in LTL form.
+static exprt transition_property_q(const exprt &expr)
+{
+  if(is_SVA(expr))
+    return transition_property_q(SVA_to_LTL(expr));
+
+  PRECONDITION(expr.id() == ID_G);
+  return to_G_expr(expr).op();
+}
+
 property_checker_resultt transition_property(
   const transition_systemt &transition_system,
   const ebmc_propertiest &properties_in,
@@ -130,8 +141,9 @@ property_checker_resultt transition_property(
     if(!property.is_unknown())
       continue;
 
-    // Instantiate property, for two timeframes
-    auto obligations = ::property(property.normalized_expr, message_handler, 2);
+    // Instantiate Q (not G Q) for two timeframes
+    auto q = transition_property_q(property.normalized_expr);
+    auto obligations = ::property(q, false, message_handler, 2);
     auto constraint = not_exprt{conjunction(obligations)};
     handles[property.identifier] = solver.handle(constraint);
   }
