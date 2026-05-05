@@ -1,0 +1,36 @@
+; Test unary operators on 4-bit values
+; inc(5) == 6, dec(5) == 4, neg(1) == 15 (two's complement)
+; redand(0xF) == 1, redor(0) == 0, redxor(3) == 0
+1 sort bitvec 4
+2 sort bitvec 1
+; inc(5) should be 6
+3 constd 1 5
+4 inc 1 3
+5 constd 1 6
+6 neq 2 4 5
+7 bad 6
+; dec(5) should be 4
+8 dec 1 3
+9 constd 1 4
+10 neq 2 8 9
+11 bad 10
+; neg(1) should be 15 (two's complement of 1 in 4 bits)
+12 constd 1 1
+13 neg 1 12
+14 constd 1 15
+15 neq 2 13 14
+16 bad 15
+; redand(0xF) should be 1
+17 constd 1 15
+18 redand 2 17
+19 zero 2
+20 eq 2 18 19
+21 bad 20
+; redor(0) should be 0
+22 zero 1
+23 redor 2 22
+24 bad 23
+; redxor(0b0011) should be 0 (even number of 1s)
+25 constd 1 3
+26 redxor 2 25
+27 bad 26

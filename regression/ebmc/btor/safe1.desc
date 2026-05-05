@@ -1,0 +1,7 @@
+CORE
+safe1.btor2
+--bound 5
+^\[bad10\] : PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--

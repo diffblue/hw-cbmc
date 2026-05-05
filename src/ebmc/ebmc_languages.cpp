@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include <aiger/aiger_language.h>
+#include <btor/btor_language.h>
 
 #include "ebmc_parse_options.h"
 
@@ -43,5 +44,7 @@ void ebmc_parse_optionst::register_languages()
   #endif
   
   register_language(new_aiger_language);
+
+  register_language(new_btor_language);
 }
 

@@ -1,0 +1,15 @@
+; 3-bit counter mod 5 (wraps 0..4), liveness: counter reaches 4 infinitely often
+1 sort bitvec 3
+2 sort bitvec 1
+3 zero 1
+4 one 1
+5 state 1 cnt
+6 init 1 5 3
+; next = (cnt == 4) ? 0 : cnt + 1
+7 constd 1 4
+8 eq 2 5 7
+9 add 1 5 4
+10 ite 1 8 3 9
+11 next 1 5 10
+; liveness: cnt == 4 infinitely often
+12 fair 8

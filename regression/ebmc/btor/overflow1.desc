@@ -1,0 +1,13 @@
+CORE
+overflow1.btor2
+--bound 0
+^\[bad7\] : PROVED up to bound 0$
+^\[bad10\] : PROVED up to bound 0$
+^\[bad13\] : PROVED up to bound 0$
+^\[bad17\] : PROVED up to bound 0$
+^\[bad21\] : PROVED up to bound 0$
+^\[bad25\] : PROVED up to bound 0$
+^\[bad29\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--

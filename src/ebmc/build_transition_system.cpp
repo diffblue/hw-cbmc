@@ -14,6 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef _MSC_VER
 #  include <aiger/aiger_ebmc_language.h>
 #endif
+#include <btor/btor_ebmc_language.h>
 #include <smvlang/smv_ebmc_language.h>
 #include <verilog/verilog_ebmc_language.h>
 
@@ -56,7 +57,12 @@ std::optional<transition_systemt> ebmc_languagest::transition_system()
   bool have_aiger = false;
 #endif
 
-  if((have_smv ? 1 : 0) + (have_verilog ? 1 : 0) + (have_aiger ? 1 : 0) > 1)
+  bool have_btor = ext_used("btor") || ext_used("btor2");
+
+  if(
+    (have_smv ? 1 : 0) + (have_verilog ? 1 : 0) + (have_aiger ? 1 : 0) +
+      (have_btor ? 1 : 0) >
+    1)
   {
     throw ebmc_errort{} << "no support for mixed-language models";
   }
@@ -74,6 +80,10 @@ std::optional<transition_systemt> ebmc_languagest::transition_system()
 #ifndef _MSC_VER
     return aiger_ebmc_languaget{cmdline, message_handler}.transition_system();
 #endif
+  }
+  else if(have_btor)
+  {
+    return btor_ebmc_languaget{cmdline, message_handler}.transition_system();
   }
   else
   {

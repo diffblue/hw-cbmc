@@ -1,0 +1,8 @@
+; Stuck bit stays false forever
+; Liveness: G(F(stuck)) — fails because stuck is always false
+1 sort bitvec 1
+2 zero 1
+3 state 1 stuck
+4 init 1 3 2
+5 next 1 3 3
+6 fair 3

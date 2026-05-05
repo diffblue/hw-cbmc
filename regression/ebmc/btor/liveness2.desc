@@ -1,0 +1,7 @@
+CORE
+liveness2.btor2
+--bound 10
+^\[fair12\] : PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--

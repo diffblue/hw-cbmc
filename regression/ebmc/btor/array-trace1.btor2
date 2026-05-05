@@ -1,0 +1,15 @@
+; Minimal reproducer for bv_get_cache crash during array trace extraction.
+; An array state with write, where eq(write, write) feeds a bool state's next.
+1 sort bitvec 4
+2 sort bitvec 1
+3 sort array 2 1
+4 zero 2
+5 state 2
+6 init 2 5 4
+7 state 3
+8 state 1
+9 write 3 7 5 8
+10 eq 2 9 9
+11 next 2 5 10
+12 next 3 7 9
+13 bad 5

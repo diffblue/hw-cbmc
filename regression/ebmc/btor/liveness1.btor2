@@ -1,0 +1,9 @@
+; Toggle bit alternates 0/1 each cycle
+; Liveness: G(F(toggle)) — toggle is true infinitely often
+1 sort bitvec 1
+2 zero 1
+3 state 1 toggle
+4 init 1 3 2
+5 not 1 3
+6 next 1 3 5
+7 fair 3

@@ -1,0 +1,9 @@
+KNOWNBUG broken-smt-backend
+array-trace1.btor2
+--bound 1
+^\[bad13\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+bv_get_cache invariant failure during counterexample trace extraction for arrays

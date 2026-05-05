@@ -1,0 +1,9 @@
+KNOWNBUG
+bitvec1-slice1.btor2
+--bound 0
+^\[bad5\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+extractbits on a 1-bit value is silently ignored, producing an incorrect result
