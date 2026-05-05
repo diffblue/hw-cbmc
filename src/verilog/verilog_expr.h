@@ -644,21 +644,91 @@ inline verilog_generate_blockt &to_verilog_generate_block(exprt &expr)
   return static_cast<verilog_generate_blockt &>(expr);
 }
 
-class verilog_generate_caset : public verilog_module_itemt
+class verilog_case_generatet : public verilog_module_itemt
 {
 public:
+  verilog_case_generatet() : verilog_module_itemt(ID_verilog_case_generate)
+  {
+    operands().resize(2);
+  }
+
+  const exprt &case_expr() const
+  {
+    return op0();
+  }
+
+  exprt &case_expr()
+  {
+    return op0();
+  }
+
+  class itemt : irept
+  {
+  public:
+    itemt(exprt::operandst _values, verilog_module_itemt _block)
+      : irept{ID_verilog_case_generate_item}
+    {
+      get_sub().resize(2);
+      get_sub()[1] = std::move(_block);
+    }
+
+    bool is_default() const
+    {
+      return get_sub()[0].id() == ID_default;
+    }
+
+    const exprt::operandst &values() const
+    {
+      return (const exprt::operandst &)(get_sub()[0].get_sub());
+    }
+
+    exprt::operandst &values()
+    {
+      return (exprt::operandst &)(get_sub()[0].get_sub());
+    }
+
+    const verilog_module_itemt &block() const
+    {
+      return static_cast<const verilog_module_itemt &>(get_sub()[1]);
+    }
+
+    verilog_module_itemt &block()
+    {
+      return static_cast<verilog_module_itemt &>(get_sub()[1]);
+    }
+  };
+
+  using itemst = std::vector<class itemt>;
+
+  const itemst &items() const
+  {
+    return (const itemst &)(op1().get_sub());
+  }
+
+  itemst &items()
+  {
+    return (itemst &)(op1().get_sub());
+  }
+
+  static void
+  check(const exprt &expr, validation_modet vm = validation_modet::INVARIANT)
+  {
+    binary_exprt::check(expr);
+  }
 };
 
-inline const verilog_generate_caset &to_verilog_generate_case(const exprt &expr)
+inline const verilog_case_generatet &to_verilog_case_generate(const exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_generate_case);
-  return static_cast<const verilog_generate_caset &>(expr);
+  PRECONDITION(expr.id() == ID_verilog_case_generate);
+  verilog_case_generatet::check(expr);
+  return static_cast<const verilog_case_generatet &>(expr);
 }
 
-inline verilog_generate_caset &to_verilog_generate_case(exprt &expr)
+inline verilog_case_generatet &to_verilog_case_generate(exprt &expr)
 {
-  PRECONDITION(expr.id() == ID_generate_case);
-  return static_cast<verilog_generate_caset &>(expr);
+  PRECONDITION(expr.id() == ID_verilog_case_generate);
+  verilog_case_generatet::check(expr);
+  return static_cast<verilog_case_generatet &>(expr);
 }
 
 /// a SystemVerilog genvar declaration

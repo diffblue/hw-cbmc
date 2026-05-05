@@ -3462,18 +3462,29 @@ if_generate_construct:
 case_generate_construct:
           TOK_CASE '(' constant_expression ')'
           case_generate_item_brace TOK_ENDCASE
-                { init($$, ID_generate_case); mto($$, $3); }
+                { init($$, ID_verilog_case_generate); mto($$, $3); mto($$, $5); }
         ;
 
 case_generate_item_brace:
           case_generate_item
+                { init($$); mto($$, $1); }
         | case_generate_item_brace case_generate_item
+                { $$=$1; mto($$, $2); }
         ;
 
 case_generate_item:
           expression_brace TOK_COLON generate_block
+                { init($$, ID_case_item); mto($$, $1); mto($$, $3); }
         | TOK_DEFAULT TOK_COLON generate_block
+                { init($$, ID_case_item);
+                  stack_expr($$).operands().resize(1);
+                  to_unary_expr(stack_expr($$)).op().id(ID_default);
+                  mto($$, $3); }
         | TOK_DEFAULT generate_block
+                { init($$, ID_case_item);
+                  stack_expr($$).operands().resize(1);
+                  to_unary_expr(stack_expr($$)).op().id(ID_default);
+                  mto($$, $2); }
         ;
 
 generate_block:

@@ -126,8 +126,8 @@ verilog_typecheckt::module_itemst verilog_typecheckt::elaborate_generate_item(
     elaborate_generate_assign(to_verilog_generate_assign(module_item), dest);
   else if(module_item.id() == ID_generate_block)
     elaborate_generate_block(to_verilog_generate_block(module_item), dest);
-  else if(module_item.id() == ID_generate_case)
-    elaborate_generate_case(to_verilog_generate_case(module_item), dest);
+  else if(module_item.id() == ID_verilog_case_generate)
+    elaborate_case_generate(to_verilog_case_generate(module_item), dest);
   else if(module_item.id() == ID_verilog_generate_decl)
     elaborate_generate_decl(to_verilog_generate_decl(module_item), dest);
   else if(module_item.id() == ID_generate_if)
@@ -160,7 +160,7 @@ void verilog_typecheckt::elaborate_generate_item(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::elaborate_generate_case
+Function: verilog_typecheckt::elaborate_case_generate
 
   Inputs:
 
@@ -170,10 +170,43 @@ Function: verilog_typecheckt::elaborate_generate_case
 
 \*******************************************************************/
 
-void verilog_typecheckt::elaborate_generate_case(
-  const verilog_generate_caset &statement,
+void verilog_typecheckt::elaborate_case_generate(
+  const verilog_case_generatet &case_generate,
   module_itemst &dest)
 {
+  // Evaluate the case expression
+  mp_integer case_value =
+    convert_integer_constant_expression(case_generate.case_expr());
+
+  // Find the matching case item
+  for(auto &case_item : case_generate.items())
+  {
+    if(!case_item.is_default())
+    {
+      for(auto &value : case_item.values())
+      {
+        mp_integer item_value = convert_integer_constant_expression(value);
+
+        if(item_value == case_value)
+        {
+          // match
+          elaborate_generate_item(case_item.block(), dest);
+          return; // done
+        }
+      }
+    }
+  }
+
+  // None found. Look for the first 'default'.
+  for(auto &case_item : case_generate.items())
+  {
+    if(case_item.is_default())
+    {
+      // match
+      elaborate_generate_item(case_item.block(), dest);
+      return; // done
+    }
+  }
 }
 
 /*******************************************************************\
