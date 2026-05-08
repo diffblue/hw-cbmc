@@ -11,12 +11,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/expr.h>
 
-/// This applies the following rewrites:
-///
-/// -----Propositional-----
-/// ¬(a ∨ b) --> ¬a ∧ ¬b
-/// ¬(a ∧ b) --> ¬a ∨ ¬b
-/// (a -> b) --> ¬a ∨ b
+/// This applies the following rewrites, in addition to the ones
+/// done by \ref trivial_sva:
 ///
 /// -----SVA-----
 /// a|=>b --> ¬a ∨ always[1:1] b   if a is not an SVA sequence
@@ -25,22 +21,10 @@ Author: Daniel Kroening, dkr@amazon.com
 /// sva_nexttime[i] φ --> sva_always[i:i] φ
 /// sva_s_nexttime φ --> sva_always[1:1] φ
 /// sva_s_nexttime[i] φ --> sva_s_always[i:i] φ
-/// ##[0:$] φ --> s_eventually φ
-/// ##[i:$] φ --> s_nexttime[i] s_eventually φ
-/// ##[*] φ --> s_eventually φ
-/// ##[+] φ --> always[1:1] s_eventually φ
-/// strong(φ) --> φ
-/// weak(φ) --> φ
-/// ¬ sva_s_eventually φ --> sva_always ¬φ
-/// ¬ sva_always φ --> sva_s_eventually ¬φ
 /// cover φ --> sva_always_exprt ¬φ
+/// a sva_disable_iff b --> a ∨ b  unless used in cover φ
+/// a sva_disable_iff b --> ¬a ∧ b  when used in cover φ
 ///
-/// ----LTL-----
-/// ¬Xφ --> X¬φ
-/// ¬¬φ --> φ
-/// ¬Gφ --> F¬φ
-/// ¬Fφ --> G¬φ
-/// false R ψ --> G ψ
 exprt normalize_property(exprt);
 
 #endif
