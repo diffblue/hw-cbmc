@@ -1,0 +1,8 @@
+CORE
+smv_keyword1.sv
+--smv-netlist
+^VAR main\.\\MODULE: boolean;$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
