@@ -27,6 +27,7 @@ SRC = \
       liveness_to_safety.cpp \
       liveness_lemma_engine.cpp \
       live_signal.cpp \
+      liveness_engine.cpp \
       main.cpp \
       netlist.cpp \
       neural_liveness.cpp \
