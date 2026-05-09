@@ -522,6 +522,20 @@ sequence_matchest instantiate_sequence_rec(
       instantiate_state_predicate(predicate, t, no_timeframes);
     return {{t, instantiated}};
   }
+  else if(expr.id() == ID_sva_sequence_disable_iff)
+  {
+    // sequences don't match when disabled
+    auto &disable_iff = to_sva_sequence_disable_iff_expr(expr);
+
+    // a sva_disable_iff b --> ¬a and b
+    auto and_expr = sva_and_exprt{
+      sva_boolean_exprt{
+        not_exprt{disable_iff.lhs()}, verilog_sva_sequence_typet{}},
+      disable_iff.rhs(),
+      verilog_sva_sequence_typet{}};
+
+    return instantiate_sequence_rec(and_expr, t, no_timeframes);
+  }
   else
   {
     DATA_INVARIANT_WITH_DIAGNOSTICS(

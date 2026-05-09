@@ -225,6 +225,13 @@ exprt rewrite_sva_sequence(exprt expr)
     else // neither lhs nor rhs admit an empty match
       return cycle_delay_expr;
   }
+  else if(expr.id() == ID_sva_sequence_disable_iff)
+  {
+    // leave as is
+    auto &disable_expr = to_sva_sequence_disable_iff_expr(expr);
+    disable_expr.sequence() = rewrite_sva_sequence(disable_expr.sequence());
+    return disable_expr;
+  }
   else if(expr.id() == ID_sva_sequence_repetition_star)
   {
     auto &repetition_expr = to_sva_sequence_repetition_star_expr(expr);

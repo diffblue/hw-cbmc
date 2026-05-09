@@ -11,6 +11,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/mathematical_types.h>
 
+exprt sva_sequence_disable_iff_exprt::lower() const
+{
+  // sequences don't match when disabled
+  auto type = verilog_sva_sequence_typet{};
+  return sva_and_exprt{sva_boolean_exprt{condition(), type}, sequence(), type};
+}
+
 exprt sva_iff_exprt::implications() const
 {
   return sva_and_exprt{

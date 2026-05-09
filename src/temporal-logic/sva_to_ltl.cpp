@@ -270,6 +270,11 @@ exprt SVA_to_LTL(exprt expr)
     auto rec_rhs = SVA_to_LTL(sva_iff.rhs());
     return or_exprt{rec_rhs, rec_lhs};
   }
+  else if(expr.id() == ID_sva_disable_iff)
+  {
+    auto &disable_iff = to_sva_disable_iff_expr(expr);
+    return SVA_to_LTL(disable_iff.lower());
+  }
   else if(
     expr.id() == ID_and || expr.id() == ID_implies || expr.id() == ID_or ||
     expr.id() == ID_not ||

@@ -70,6 +70,8 @@ public:
     return op1();
   }
 
+  exprt lower() const;
+
 protected:
   using binary_exprt::op0;
   using binary_exprt::op1;
@@ -148,6 +150,12 @@ public:
         std::move(condition),
         std::move(property))
   {
+  }
+
+  // lhs ∨ rhs
+  exprt lower() const
+  {
+    return or_exprt{lhs(), rhs()};
   }
 };
 

@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <temporal-logic/ctl.h>
 #include <temporal-logic/ltl.h>
 #include <temporal-logic/temporal_logic.h>
+#include <temporal-logic/trivial_sva.h>
 #include <verilog/sva_expr.h>
 
 #include "instantiate_netlist.h"
@@ -143,12 +144,13 @@ bvt unwind_property(const exprt &property_expr, const bmc_mapt &bmc_map)
 {
   bvt prop_bv{bmc_map.timeframe_map.size()};
 
+  auto rewritten = rewrite_disable_iff(property_expr);
+
   // We only do Gp/AGp
   PRECONDITION(
-    is_Gp(property_expr) || is_AGp(property_expr) ||
-    is_SVA_always_p(property_expr));
+    is_Gp(rewritten) || is_AGp(rewritten) || is_SVA_always_p(rewritten));
 
-  auto &p = to_unary_expr(property_expr).op();
+  auto &p = to_unary_expr(rewritten).op();
   PRECONDITION(p.id() == ID_literal);
 
   auto p_node = to_literal_expr(p).get_literal();
@@ -180,13 +182,15 @@ bool netlist_bmc_supports_property(const exprt &expr)
   if(has_subexpr(expr, ID_verilog_past))
     return false;
 
+  auto rewritten = rewrite_disable_iff(expr);
+
   // We do AG p only.
-  if(expr.id() == ID_AG)
-    return !has_temporal_operator(to_AG_expr(expr).op());
-  else if(expr.id() == ID_G)
-    return !has_temporal_operator(to_G_expr(expr).op());
-  else if(expr.id() == ID_sva_always)
-    return !has_temporal_operator(to_sva_always_expr(expr).op());
+  if(rewritten.id() == ID_AG)
+    return !has_temporal_operator(to_AG_expr(rewritten).op());
+  else if(rewritten.id() == ID_G)
+    return !has_temporal_operator(to_G_expr(rewritten).op());
+  else if(rewritten.id() == ID_sva_always)
+    return !has_temporal_operator(to_sva_always_expr(rewritten).op());
   else
     return false;
 }

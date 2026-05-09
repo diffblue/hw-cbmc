@@ -11,6 +11,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <util/string2int.h>
 
 #include <temporal-logic/temporal_logic.h>
+#include <temporal-logic/trivial_sva.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
@@ -69,9 +70,9 @@ protected:
   void induction_base();
   void induction_step();
 
-  static bool supported(const ebmc_propertiest::propertyt &p)
+  static bool supported(const ebmc_propertiest::propertyt &property)
   {
-    auto &expr = p.normalized_expr;
+    auto expr = rewrite_disable_iff(property.normalized_expr);
     if(expr.id() == ID_sva_always || expr.id() == ID_AG || expr.id() == ID_G)
     {
       // Must be AG p or equivalent.
@@ -80,6 +81,14 @@ protected:
     }
     else
       return false;
+  }
+
+  /// extract p from AGp/Gp/always p
+  static exprt extract_p(const ebmc_propertiest::propertyt &property)
+  {
+    PRECONDITION(supported(property));
+    auto expr = rewrite_disable_iff(property.normalized_expr);
+    return to_unary_expr(expr).op();
   }
 };
 
@@ -311,7 +320,7 @@ void k_inductiont::induction_step()
     for(auto &property : properties.properties)
       if(property.is_assumed())
       {
-        const exprt &p = to_unary_expr(property.normalized_expr).op();
+        const exprt p = extract_p(property);
         for(std::size_t c = 0; c < no_timeframes; c++)
         {
           exprt tmp = instantiate(p, c, no_timeframes);
@@ -319,8 +328,7 @@ void k_inductiont::induction_step()
         }
       }
 
-    const exprt property(p_it.normalized_expr);
-    const exprt &p = to_unary_expr(property).op();
+    const exprt p = extract_p(p_it);
 
     // assumption: time frames 0,...,k-1
     for(std::size_t c = 0; c < no_timeframes - 1; c++)

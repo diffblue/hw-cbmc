@@ -29,11 +29,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// ##[i:$] φ --> s_nexttime[i] s_eventually φ
 /// ##[*] φ --> s_eventually φ
 /// ##[+] φ --> always[1:1] s_eventually φ
-/// strong(φ) --> φ
-/// weak(φ) --> φ
 /// ¬ sva_s_eventually φ --> sva_always ¬φ
 /// ¬ sva_always φ --> sva_s_eventually ¬φ
-/// cover φ --> sva_always_exprt ¬φ
 ///
 /// ----LTL-----
 /// ¬Xφ --> X¬φ
