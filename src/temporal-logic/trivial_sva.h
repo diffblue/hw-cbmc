@@ -20,6 +20,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// a sva_and b --> a ∧ b                     if a and b are not sequences
 /// a sva_or b --> a ∨ b                      if a and b are not sequences
 /// sva_overlapped_implication --> a -> b     if a and b are not sequences
+/// strong(φ) --> φ                           if φ is not a sequence
+/// weak(φ) --> φ                             if φ is not a sequence
 /// sva_if --> ? :
 /// sva_case --> ? :
 /// a sva_accept_on b --> a ∨ b
