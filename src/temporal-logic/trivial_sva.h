@@ -14,6 +14,8 @@ Author: Daniel Kroening, dkr@amazon.com
 /// This applies the following rewrites, removing SVA operators
 /// that trivial in the sense that they are state predicates only.
 ///
+/// a|=>b --> ¬a ∨ always[1:1] b              if a is not a sequence
+/// a|->b --> a⇒b                             if a is not a sequence
 /// a sva_iff b --> a <-> b
 /// a sva_implies b --> a -> b
 /// sva_not a --> ¬a

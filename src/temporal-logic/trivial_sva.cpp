@@ -8,6 +8,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "trivial_sva.h"
 
+#include <util/mathematical_types.h>
+
 #include <verilog/sva_expr.h>
 
 #include "temporal_logic.h"
@@ -35,7 +37,7 @@ exprt trivial_sva(exprt expr)
   // post-traversal
   if(expr.id() == ID_sva_overlapped_implication)
   {
-    // Same as regular implication if lhs and rhs are not sequences.
+    // Same as regular implication if lhs is not a proper sequence.
     auto &sva_implication = to_sva_overlapped_implication_expr(expr);
 
     auto lhs = is_state_predicate(sva_implication.lhs());
@@ -43,6 +45,24 @@ exprt trivial_sva(exprt expr)
 
     if(lhs.has_value() && rhs.has_value())
       expr = implies_exprt{*lhs, *rhs};
+    else if(lhs.has_value() && !rhs.has_value())
+      expr = implies_exprt{*lhs, sva_implication.rhs()};
+  }
+  else if(expr.id() == ID_sva_non_overlapped_implication)
+  {
+    // a|=>b is the same as a->always[1:1] b if lhs is not a proper sequence.
+    auto &sva_implication = to_sva_non_overlapped_implication_expr(expr);
+
+    auto lhs = is_state_predicate(sva_implication.lhs());
+
+    if(lhs.has_value())
+    {
+      auto one = natural_typet{}.one_expr();
+      auto ranged_always =
+        sva_ranged_always_exprt{one, one, sva_implication.rhs()};
+      ranged_always.type() = bool_typet{};
+      return or_exprt{not_exprt{*lhs}, ranged_always};
+    }
   }
   else if(expr.id() == ID_sva_iff)
   {
