@@ -15,6 +15,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        temporal-logic/nnf.cpp \
        temporal-logic/trivial_sva.cpp \
        trans-netlist/aig.cpp \
+       trans-netlist/id2smv.cpp \
        verilog/indexed_part_select.cpp \
        verilog/typename.cpp \
        # Empty last line

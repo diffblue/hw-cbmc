@@ -10,8 +10,10 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <smvlang/expr2smv_class.h>
 
 #include <util/namespace.h>
+#include <util/string_utils.h>
 #include <util/symbol_table.h>
 
+#include <smvlang/smv_keywords.h>
 #include <solvers/prop/literal_expr.h>
 #include <temporal-logic/temporal_logic.h>
 #include <verilog/sva_expr.h>
@@ -20,6 +22,7 @@ std::string id2smv(const irep_idt &id)
 {
   std::string result;
 
+  // replace characters that are not allowed in SMV identifiers
   for(std::size_t i = 0; i < id.size(); i++)
   {
     const bool first = i == 0;
@@ -44,7 +47,25 @@ std::string id2smv(const irep_idt &id)
     }
   }
 
-  return result;
+  // escape any dot-separated components that are SMV keywords
+  auto components = split_string(result, '.');
+  std::string escaped;
+  bool first = true;
+
+  for(auto &component : components)
+  {
+    if(first)
+      first = false;
+    else
+      escaped += '.';
+
+    if(is_smv_keyword(component))
+      escaped += '\\';
+
+    escaped += component;
+  }
+
+  return escaped;
 }
 
 void print_smv(
