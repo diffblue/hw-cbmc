@@ -15,8 +15,6 @@ Author: Daniel Kroening, dkr@amazon.com
 /// done by \ref trivial_sva:
 ///
 /// -----SVA-----
-/// a|=>b --> ¬a ∨ always[1:1] b   if a is not an SVA sequence
-/// a|->b --> a⇒b                  if a is not an SVA sequence
 /// sva_nexttime φ --> sva_always[1:1] φ
 /// sva_nexttime[i] φ --> sva_always[i:i] φ
 /// sva_s_nexttime φ --> sva_always[1:1] φ
