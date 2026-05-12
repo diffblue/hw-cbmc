@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ebmc/transition_system.h>
 #include <temporal-logic/ltl.h>
 #include <trans-word-level/next_symbol.h>
+#include <verilog/verilog_expr.h>
 
 #include "btor_parser.h"
 
@@ -188,27 +189,11 @@ static exprt build_op_expr(
   if(tag == "neg")
     return unary_minus_exprt{to_bv(arg(0)), to_bv(arg(0)).type()};
   if(tag == "redand")
-  {
-    auto a = to_bv(arg(0));
-    auto width = to_bitvector_type(a.type()).get_width();
-    return equal_exprt{a, from_integer(power(2, width) - 1, a.type())};
-  }
+    return reduction_and_exprt{to_bv(arg(0))};
   if(tag == "redor")
-  {
-    auto a = to_bv(arg(0));
-    return notequal_exprt{a, from_integer(0, a.type())};
-  }
+    return reduction_or_exprt{to_bv(arg(0))};
   if(tag == "redxor")
-  {
-    // XOR reduction: parity of all bits
-    auto a = to_bv(arg(0));
-    auto width = to_bitvector_type(a.type()).get_width();
-    exprt result = extractbit_exprt{a, from_integer(0, a.type())};
-    for(std::size_t i = 1; i < width; i++)
-      result =
-        xor_exprt{result, extractbit_exprt{a, from_integer(i, a.type())}};
-    return result;
-  }
+    return reduction_xor_exprt{to_bv(arg(0))};
 
   // Binary operators
   if(tag == "iff")

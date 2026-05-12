@@ -1,4 +1,4 @@
-CORE
+CORE broken-smt-backend
 unary1.btor2
 --bound 0
 ^\[bad7\] : PROVED up to bound 0$
