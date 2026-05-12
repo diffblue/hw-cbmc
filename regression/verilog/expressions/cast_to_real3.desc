@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG broken-smt-backend
 cast_to_real3.sv
 
 ^EXIT=0$

@@ -6,6 +6,7 @@
 * SMV: use NuSMV's operator precedence, as opposed to CMU SMV's
 * SystemVerilog: semantics fix for cover disable iff
 * SystemVerilog: nets from package scopes
+* Now uses the FPA theory when emitting SMT-LIB for Z3
 
 # EBMC 5.11
 
