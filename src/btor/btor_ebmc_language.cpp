@@ -369,7 +369,10 @@ static exprt build_op_expr(
   if(tag == "slice")
   {
     auto lower = node.uargs.at(1);
-    return extractbits_exprt{to_bv(arg(0)), lower, type};
+    if(type.id() == ID_bool)
+      return extractbit_exprt{to_bv(arg(0)), lower};
+    else
+      return extractbits_exprt{to_bv(arg(0)), lower, type};
   }
 
   // Overflow operators
