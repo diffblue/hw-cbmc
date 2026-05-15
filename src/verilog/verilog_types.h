@@ -969,4 +969,17 @@ public:
   }
 };
 
+/// The type of a symbol for an instance of a Verilog module
+class verilog_module_instance_typet : public typet
+{
+public:
+  explicit verilog_module_instance_typet() : typet{ID_verilog_module_instance}
+  {
+  }
+
+  explicit verilog_module_instance_typet(irep_idt id) : typet{id}
+  {
+  }
+};
+
 #endif

@@ -545,8 +545,8 @@ void map_varst::map_var_rec(
     }
     
     const symbolt &sub_symbol=sub_symbol_it->second;
-    
-    if(module_instance!=(sub_symbol.type.id()==ID_module_instance))
+
+    if(module_instance != (sub_symbol.type.id() == ID_verilog_module_instance))
     {
       error() << "type inconsistency when mapping `" << full_name << "'" << eom;
       throw 0;

@@ -42,7 +42,8 @@ build_netlist_var_map(symbol_table_baset &symbol_table, const irep_idt &module)
       return; // ignore
     }
     else if(
-      symbol.type.id() == ID_module || symbol.type.id() == ID_module_instance ||
+      symbol.type.id() == ID_module ||
+      symbol.type.id() == ID_verilog_module_instance ||
       symbol.type.id() == ID_primitive_module_instance ||
       symbol.type.id() == ID_smv_module_instance)
     {

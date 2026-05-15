@@ -224,7 +224,7 @@ void gen_interfacet::gen_module(
   {
     const symbolt &symbol=lookup(it->second);
 
-    if(symbol.type.id()==ID_module_instance)
+    if(symbol.type.id() == ID_verilog_module_instance)
     {
       const symbolt &module_symbol=lookup(symbol.value.get(ID_module));
       gen_module(module_symbol, os);
@@ -248,7 +248,7 @@ void gen_interfacet::gen_module(
     if(symbol.name!=id2string(module.name)+"."+id2string(symbol.base_name))
       continue;
 
-    if(symbol.type.id()==ID_module_instance)
+    if(symbol.type.id() == ID_verilog_module_instance)
     {
       const symbolt &module_symbol=lookup(symbol.value.get(ID_module));
 

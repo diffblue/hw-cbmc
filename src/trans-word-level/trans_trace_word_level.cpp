@@ -56,7 +56,7 @@ trans_tracet compute_trans_trace(
       if(
         !symbol.is_type && !symbol.is_property &&
         symbol.type.id() != ID_module &&
-        symbol.type.id() != ID_module_instance &&
+        symbol.type.id() != ID_verilog_module_instance &&
         symbol.type.id() != ID_smv_module_instance)
       {
         if(symbol.is_macro)

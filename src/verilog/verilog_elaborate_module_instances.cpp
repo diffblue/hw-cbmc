@@ -103,12 +103,12 @@ void verilog_typecheckt::elaborate_inst(
 
   symbol.mode = mode;
   symbol.base_name = op.base_name();
-  symbol.type =
-    typet(primitive ? ID_primitive_module_instance : ID_module_instance);
+  symbol.type = typet{
+    primitive ? ID_primitive_module_instance : ID_verilog_module_instance};
   symbol.module = module_identifier;
   symbol.name = hierarchical_identifier(symbol.base_name);
   symbol.pretty_name = strip_verilog_prefix(symbol.name);
-  symbol.value.set(ID_module, instantiated_module_identifier);
+  symbol.value = verilog_module_instancet{instantiated_module_identifier};
 
   if(symbol_table.add(symbol))
   {
