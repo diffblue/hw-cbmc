@@ -553,3 +553,10 @@ verilog_unbased_unsized_literal_exprt::with_context(std::size_t width) const
 
   return copy;
 }
+
+verilog_module_instancet::verilog_module_instancet(
+  const irep_idt _module_identifier)
+  : nullary_exprt{ID_verilog_module_instance, verilog_module_instance_typet{}}
+{
+  module_identifier(_module_identifier);
+}

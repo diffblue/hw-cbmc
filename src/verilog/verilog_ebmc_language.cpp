@@ -341,11 +341,11 @@ void verilog_ebmc_languaget::create_root_module(
 
   // Create a module instance symbol for the top-level module under $root
   symbolt instance_symbol{
-    instance_identifier, typet{ID_module_instance}, ID_Verilog};
+    instance_identifier, verilog_module_instance_typet{}, ID_Verilog};
   instance_symbol.base_name = top_level_module;
   instance_symbol.pretty_name = top_level_module;
   instance_symbol.module = root_identifier;
-  instance_symbol.value.set(ID_module, module_identifier);
+  instance_symbol.value = verilog_module_instancet{module_identifier};
 
   auto add_result_instance = symbol_table.add(instance_symbol);
   CHECK_RETURN(!add_result_instance);

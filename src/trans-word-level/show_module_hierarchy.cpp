@@ -29,7 +29,7 @@ void show_module_hierarchy(
   {
     const auto &symbol = symbol_table.lookup_ref(identifier);
     if(
-      symbol.type.id() == ID_module_instance &&
+      symbol.type.id() == ID_verilog_module_instance &&
       symbol.module == main_symbol.name)
     {
       instances.push_back(identifier);

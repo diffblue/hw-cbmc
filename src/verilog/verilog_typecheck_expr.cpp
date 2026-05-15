@@ -1735,7 +1735,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     }
   }(expr.lhs());
 
-  if(expr.lhs().type().id() == ID_module_instance)
+  if(expr.lhs().type().id() == ID_verilog_module_instance)
   {
     // figure out which module the lhs is
     const symbolt *module_instance_symbol;
@@ -1746,7 +1746,9 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
         << "' on lhs of `.'";
     }
 
-    const irep_idt &module=module_instance_symbol->value.get(ID_module);
+    const irep_idt &module =
+      to_verilog_module_instance(module_instance_symbol->value)
+        .module_identifier();
 
     // the identifier in the module
     const irep_idt full_identifier =

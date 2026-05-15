@@ -3727,4 +3727,37 @@ to_verilog_unbased_unsized_literal_expr(exprt &expr)
   return static_cast<verilog_unbased_unsized_literal_exprt &>(expr);
 }
 
+/// An instance of a Verilog module
+class verilog_module_instancet : public nullary_exprt
+{
+public:
+  // the identifier is the identifier of the module, not the identifier of the instance
+  explicit verilog_module_instancet(const irep_idt _module_identifier);
+
+  const irep_idt &module_identifier() const
+  {
+    return get(ID_module);
+  }
+
+  void module_identifier(irep_idt _module_identifier)
+  {
+    set(ID_module, _module_identifier);
+  }
+};
+
+inline const verilog_module_instancet &
+to_verilog_module_instance(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_module_instance);
+  verilog_module_instancet::check(expr);
+  return static_cast<const verilog_module_instancet &>(expr);
+}
+
+inline verilog_module_instancet &to_verilog_module_instance(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_module_instance);
+  verilog_module_instancet::check(expr);
+  return static_cast<verilog_module_instancet &>(expr);
+}
+
 #endif

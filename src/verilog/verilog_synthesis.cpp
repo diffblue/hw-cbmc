@@ -546,14 +546,14 @@ void verilog_synthesist::expand_hierarchical_identifier(
       << "synthesis expected symbol on lhs of `.'";
   }
 
-  if(expr.lhs().type().id() != ID_module_instance)
+  if(expr.lhs().type().id() != ID_verilog_module_instance)
   {
     throw errort().with_location(expr.source_location())
       << "synthesis expected module instance on lhs of `.', but got `"
       << to_string(expr.lhs().type()) << '\'';
   }
 
-  const irep_idt &lhs_identifier = expr.lhs().get(ID_identifier);
+  const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).get_identifier();
 
   // rhs
   const irep_idt &rhs_base_name = expr.rhs().base_name();
