@@ -1,0 +1,8 @@
+CORE
+multiple_top_level_modules1.sv
+
+^\[moduleA\.a\] 0: REFUTED$
+^\[moduleB\.a\] 1: PROVED .*$
+^EXIT=10$
+^SIGNAL=0$
+--
