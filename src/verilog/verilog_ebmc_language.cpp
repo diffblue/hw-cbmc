@@ -34,6 +34,15 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <functional>
 #include <iostream>
 
+static void sort_alphabetically(std::vector<irep_idt> &names)
+{
+  std::sort(
+    names.begin(),
+    names.end(),
+    [](const irep_idt &a, const irep_idt &b)
+    { return id2string(a) < id2string(b); });
+}
+
 void verilog_ebmc_languaget::preprocess(
   const std::filesystem::path &path,
   std::ostream &out)
@@ -185,7 +194,7 @@ void verilog_ebmc_languaget::typecheck_module(
 
 transition_systemt verilog_ebmc_languaget::typecheck(
   const parse_treest &parse_trees,
-  irep_idt top_level_module,
+  const std::vector<irep_idt> &top_level_modules,
   symbol_tablet &&symbol_table)
 {
   std::map<irep_idt, modulet> module_map;
@@ -203,13 +212,18 @@ transition_systemt verilog_ebmc_languaget::typecheck(
     }
   }
 
-  // now type check the top-level module
-  auto m_it = module_map.find(verilog_module_symbol(top_level_module));
-  CHECK_RETURN(m_it != module_map.end());
-
+  // set up the transition system
   transition_systemt transition_system;
   transition_system.symbol_table = std::move(symbol_table);
-  typecheck_module(m_it->second, transition_system.symbol_table);
+
+  // now type check the top-level modules
+  for(auto &top_level_module : top_level_modules)
+  {
+    auto m_it = module_map.find(verilog_module_symbol(top_level_module));
+    CHECK_RETURN(m_it != module_map.end());
+
+    typecheck_module(m_it->second, transition_system.symbol_table);
+  }
 
   return transition_system;
 }
@@ -249,8 +263,10 @@ static void module_dependencies(
     module_dependencies_rec(item, action);
 }
 
-irep_idt
-verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
+/// Determine the set of top-level modules following 1800 2017 23.3.1,
+/// given via their base names. Sorted alphabetically.
+std::vector<irep_idt>
+verilog_ebmc_languaget::top_level_modules(const parse_treest &parse_trees) const
 {
   // start with a set of all modules, from all the files
   std::set<irep_idt> all_modules;
@@ -265,29 +281,43 @@ verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
       }
     }
 
-  // Did the user specify one?
-  irep_idt given_module;
+  // Did the user specify a set of top level modules?
+  std::vector<irep_idt> given_modules;
 
   if(cmdline.isset("module"))
-    given_module = cmdline.get_value("module");
-  else if(cmdline.isset("top"))
-    given_module = cmdline.get_value("top");
-
-  if(given_module != irep_idt{})
   {
-    if(all_modules.find(given_module) == all_modules.end())
-    {
-      messaget log{message_handler};
-      log.error() << "module '" << given_module << "' not found"
-                  << messaget::eom;
-      throw ebmc_errort{}.with_exit_code(2);
-    }
-    else
-      return given_module; // done
+    for(auto &value : cmdline.get_values("module"))
+      given_modules.push_back(value);
+  }
+  else if(cmdline.isset("top"))
+  {
+    for(auto &value : cmdline.get_values("top"))
+      given_modules.push_back(value);
   }
 
-  // start with all modules, and then erase the ones that are
-  // used as a dependency
+  if(!given_modules.empty())
+  {
+    // first check that all the given modules exist
+    for(const auto &given_module : given_modules)
+    {
+      if(all_modules.find(given_module) == all_modules.end())
+      {
+        messaget log{message_handler};
+        log.error() << "module '" << given_module << "' not found"
+                    << messaget::eom;
+        throw ebmc_errort{}.with_exit_code(2);
+      }
+    }
+
+    // now sort alphabetically
+    sort_alphabetically(given_modules);
+
+    return given_modules; // done
+  }
+
+  // No modules given. Find all modules that are not used
+  // as a submodule. Start with all modules, and then erase
+  // the ones that are used as a submodule.
   std::set<irep_idt> top_level_modules = all_modules;
 
   for(auto &parse_tree : parse_trees)
@@ -309,76 +339,78 @@ verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
     log.error() << "no module found" << messaget::eom;
     throw ebmc_errort{}.with_exit_code(1);
   }
-  else if(top_level_modules.size() >= 2)
-  {
-    // sorted alphabetically
-    std::set<std::string> modules;
 
-    for(const auto &base_name : top_level_modules)
-      modules.insert(id2string(base_name));
+  // sort alphabetically into a vector
+  std::vector<irep_idt> result;
 
-    messaget log{message_handler};
-    log.error() << "multiple modules found, please select one:\n";
+  for(auto &module : top_level_modules)
+    result.push_back(module);
 
-    for(const auto &module : modules)
-      log.error() << "  " << module << '\n';
+  sort_alphabetically(result);
 
-    log.error() << messaget::eom;
-    throw ebmc_errort{}.with_exit_code(1);
-  }
-
-  // we have exactly one top-level module
-  return *top_level_modules.begin();
+  return result; // done
 }
 
 /// Create a $root module instance containing the given top-level module,
 /// and synthesize it so that the top-level module is expanded into $root.
 void verilog_ebmc_languaget::create_root_module(
-  irep_idt top_level_module,
+  const std::vector<irep_idt> &top_level_modules,
   verilog_standardt standard,
   transition_systemt &transition_system)
 {
   auto &symbol_table = transition_system.symbol_table;
 
-  auto module_identifier = verilog_module_symbol(top_level_module);
   auto root_identifier = verilog_module_symbol(verilog_root_module_name());
-  auto instance_identifier =
-    id2string(root_identifier) + "." + id2string(top_level_module);
+  verilog_module_exprt::module_itemst root_items;
 
-  // Create a module instance symbol for the top-level module under $root
-  symbolt instance_symbol{
-    instance_identifier, verilog_module_instance_typet{}, ID_Verilog};
-  instance_symbol.base_name = top_level_module;
-  instance_symbol.pretty_name = top_level_module;
-  instance_symbol.module = root_identifier;
-  instance_symbol.value = verilog_module_instancet{module_identifier};
+  for(auto top_level_module : top_level_modules)
+  {
+    auto module_identifier = verilog_module_symbol(top_level_module);
 
-  auto add_result_instance = symbol_table.add(instance_symbol);
-  CHECK_RETURN(!add_result_instance);
+    auto instance_identifier =
+      id2string(root_identifier) + "." + id2string(top_level_module);
 
-  // Build a verilog_instt module item for the instantiation
-  verilog_instt inst;
-  inst.module_base_name(top_level_module);
-  verilog_inst_baset::instancet instance_expr;
-  instance_expr.base_name(top_level_module);
-  instance_expr.identifier(instance_identifier);
-  instance_expr.module_identifier(module_identifier);
-  inst.instances().push_back(std::move(instance_expr));
+    // Create a module instance symbol for the top-level module under $root
+    symbolt instance_symbol{
+      instance_identifier, verilog_module_instance_typet{}, ID_Verilog};
+    instance_symbol.base_name = top_level_module;
+    instance_symbol.pretty_name = top_level_module;
+    instance_symbol.module = root_identifier;
+    instance_symbol.value = verilog_module_instancet{module_identifier};
 
-  // Create the $root module symbol with the inst as its only module item.
-  auto &top_symbol = symbol_table.lookup_ref(module_identifier);
+    auto add_result_instance = symbol_table.add(instance_symbol);
+    CHECK_RETURN(!add_result_instance);
+
+    // Build a verilog_instt module item for the instantiation
+    verilog_instt inst;
+    inst.module_base_name(top_level_module);
+    verilog_inst_baset::instancet instance_expr;
+    instance_expr.base_name(top_level_module);
+    instance_expr.identifier(instance_identifier);
+    instance_expr.module_identifier(module_identifier);
+    inst.instances().push_back(std::move(instance_expr));
+
+    root_items.push_back(std::move(inst));
+  }
+
+  // Create the $root module symbol with the inst items
 
   symbolt root_symbol{root_identifier, module_typet{}, ID_Verilog};
   root_symbol.base_name = verilog_root_module_name();
   root_symbol.pretty_name = verilog_root_module_name();
   root_symbol.module = root_identifier;
-  root_symbol.value = verilog_module_exprt({std::move(inst)});
+  root_symbol.value = verilog_module_exprt({std::move(root_items)});
 
   // Create the ports for the $root module
   auto &root_ports = to_module_type(root_symbol.type).ports();
 
-  for(auto &top_port : to_module_type(top_symbol.type).ports())
-    root_ports.push_back(top_port);
+  for(auto top_level_module : top_level_modules)
+  {
+    auto module_identifier = verilog_module_symbol(top_level_module);
+    auto &top_symbol = symbol_table.lookup_ref(module_identifier);
+    for(auto &top_port : to_module_type(top_symbol.type).ports())
+      root_ports.push_back(top_port);
+  }
 
   auto add_result_root = symbol_table.add(root_symbol);
   CHECK_RETURN(!add_result_root);
@@ -498,9 +530,9 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   symbol_tablet symbol_table = elaborate_compilation_units(parse_trees);
 
   //
-  // determine the top-level module
+  // determine the top-level modules
   //
-  auto top_level_module = this->top_level_module(parse_trees);
+  auto top_level_modules = this->top_level_modules(parse_trees);
 
   //
   // type checking
@@ -509,11 +541,11 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   message.status() << "Converting" << messaget::eom;
 
   auto transition_system =
-    typecheck(parse_trees, top_level_module, std::move(symbol_table));
+    typecheck(parse_trees, top_level_modules, std::move(symbol_table));
 
   // Create the $root module instance and synthesize it
   create_root_module(
-    top_level_module, parse_trees.front().standard, transition_system);
+    top_level_modules, parse_trees.front().standard, transition_system);
 
   if(cmdline.isset("show-symbol-table"))
   {
