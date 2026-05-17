@@ -334,8 +334,40 @@ void verilog_ebmc_languaget::create_root_module(
   verilog_standardt standard,
   symbol_tablet &symbol_table)
 {
-  auto module_identifier = verilog_module_symbol(top_level_module);
   auto root_identifier = verilog_module_symbol(verilog_root_module_name());
+
+  // create a parse tree for $root
+  verilog_module_sourcet root_source{verilog_root_module_name()};
+
+  // Build a verilog_instt module item for the instantiation
+  verilog_instt inst;
+  inst.set_module(top_level_module);
+  verilog_inst_baset::instancet instance_expr;
+  instance_expr.set(ID_base_name, top_level_module);
+  inst.instances().push_back(std::move(instance_expr));
+
+  // add the module instance for the top-level module
+  root_source.module_items().push_back(std::move(inst));
+
+  // create a symbol for the $root source
+  symbolt root_source_symbol{
+    id2string(root_identifier) + "$source",
+    typet{ID_module_source},
+    ID_Verilog};
+  root_source_symbol.base_name = verilog_root_module_name();
+  root_source_symbol.pretty_name = verilog_root_module_name();
+  root_source_symbol.module = root_source_symbol.name;
+  root_source_symbol.type.set(ID_module_source, root_source);
+
+  auto add_result = symbol_table.add(root_source_symbol);
+  CHECK_RETURN(!add_result);
+
+  verilog_ebmc_languaget::parse_treet parse_tree{standard};
+  verilog_ebmc_languaget::modulet module{root_identifier, parse_tree};
+  typecheck_module(module, symbol_table);
+
+#if 0
+  auto module_identifier = verilog_module_symbol(top_level_module);
   auto instance_identifier =
     id2string(root_identifier) + "." + id2string(top_level_module);
 
@@ -350,13 +382,6 @@ void verilog_ebmc_languaget::create_root_module(
   auto add_result_instance = symbol_table.add(instance_symbol);
   CHECK_RETURN(!add_result_instance);
 
-  // Build a verilog_instt module item for the instantiation
-  verilog_instt inst;
-  inst.set_module(module_identifier);
-  verilog_inst_baset::instancet instance_expr;
-  instance_expr.set(ID_base_name, top_level_module);
-  instance_expr.identifier(instance_identifier);
-  inst.instances().push_back(std::move(instance_expr));
 
   // Create the $root module symbol with the inst as its only module item.
   // Copy the type from the top-level module, updating port identifiers.
@@ -399,6 +424,7 @@ void verilog_ebmc_languaget::create_root_module(
     ignore_initial,
     initial_zero,
     message_handler);
+#endif
 }
 
 static bool get_main(

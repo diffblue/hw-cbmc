@@ -213,6 +213,16 @@ irep_idt verilog_typecheckt::parameterized_module_identifier(
   if(parameter_values.empty())
     return module_identifier;
 
+#if 0
+  // All parameters nil?
+  bool all_nil = true;
+  for(const auto &pv : parameter_values)
+    if(pv.is_not_nil())
+      all_nil = false;
+  if(all_nil)
+    return module_identifier;
+#endif
+
   // Create full parameterized module name by appending a suffix
   // to the name of the instantiated module.
   std::string suffix="(";
