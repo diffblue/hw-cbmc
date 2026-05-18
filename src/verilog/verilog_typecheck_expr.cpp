@@ -561,26 +561,6 @@ void verilog_typecheck_exprt::downwards_type_propagation(
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::no_bool_ops
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheck_exprt::no_bool_ops(exprt &expr)
-{
-  unsignedbv_typet new_type(1);
-
-  Forall_operands(it, expr) if (it->type().id() == ID_bool) *it =
-      typecast_exprt{*it, new_type};
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheck_exprt::must_be_bit_vector
 
   Inputs:
@@ -2903,7 +2883,19 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
           expr.id()==ID_unary_plus)
   {
     convert_expr(expr.op());
-    no_bool_ops(expr);
+
+    // these work on reals and on vectors
+    if(
+      expr.op().type().id() == ID_verilog_real ||
+      expr.op().type().id() == ID_verilog_shortreal)
+    {
+      // leave type as is
+    }
+    else
+    {
+      require_vector(expr.op());
+    }
+
     expr.type() = expr.op().type();
   }
   else if(expr.id() == ID_verilog_explicit_const_cast)
@@ -3193,7 +3185,8 @@ exprt verilog_typecheck_exprt::convert_power_expr(power_exprt expr)
   convert_expr(expr.op0());
   convert_expr(expr.op1());
 
-  no_bool_ops(expr);
+  require_vector(expr.op0());
+  require_vector(expr.op1());
 
   // Is one of the operands four-valued?
   if(is_four_valued(expr.op0().type()))
@@ -3423,7 +3416,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
           expr.id()==ID_le || expr.id()==ID_ge)
   {
     convert_relation(expr);
-    no_bool_ops(expr);
 
     // This returns 'x' if either of the operands contains x or z.
     if(is_four_valued(expr.lhs().type()) || is_four_valued(expr.rhs().type()))
@@ -3507,7 +3499,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
       convert_expr(*it);
 
     tc_binary_expr(expr);
-    no_bool_ops(expr);
 
     expr.type()=expr.op0().type();
 
@@ -3620,8 +3611,6 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
       convert_expr(op);
 
     tc_binary_expr(expr);
-
-    no_bool_ops(expr);
 
     expr.type() = expr.op0().type();
     return std::move(expr);
