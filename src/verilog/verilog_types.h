@@ -108,6 +108,9 @@ public:
     : bitvector_typet(ID_verilog_unsignedbv, width)
   {
   }
+
+  constant_exprt all_x_expr() const;
+  constant_exprt all_z_expr() const;
 };
 
 /*! \brief Cast a generic typet to a \ref verilog_unsignedbv_typet

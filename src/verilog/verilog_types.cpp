@@ -66,3 +66,13 @@ typet verilog_array_typet::index_type() const
   return unsignedbv_typet{
     numeric_cast_v<std::size_t>(address_bits((size_int() + offset())))};
 }
+
+constant_exprt verilog_unsignedbv_typet::all_x_expr() const
+{
+  return constant_exprt{std::string(get_width(), 'x'), *this};
+}
+
+constant_exprt verilog_unsignedbv_typet::all_z_expr() const
+{
+  return constant_exprt{std::string(get_width(), 'z'), *this};
+}

@@ -540,6 +540,20 @@ void verilog_typecheck_exprt::downwards_type_propagation(
     expr.type() = type;
     return;
   }
+  else if(expr.id() == ID_verilog_unbased_unsized_literal)
+  {
+    // '0, '1, 'x, 'z -- these adjust their width to the context
+    if(
+      type.id() == ID_signedbv || type.id() == ID_unsignedbv ||
+      type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+    {
+      auto new_width = numeric_cast_v<std::size_t>(get_width(type));
+      expr = typecast_exprt::conditional_cast(
+        to_verilog_unbased_unsized_literal_expr(expr).with_context(new_width),
+        type);
+      return;
+    }
+  }
 
   // Just cast the expression, leave any operands as they are.
   if(
@@ -1870,7 +1884,7 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
     result.add_source_location() = source_location;
     result.set("#verilog_value", value);
 
-    return std::move(result);
+    return result;
   }
 }
 
