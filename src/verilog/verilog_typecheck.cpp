@@ -756,7 +756,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
     if(ns.lookup(full_identifier, symbol))
     {
       // not there? Try compilation-unit scope.
-      full_identifier = verilog_package_identifier("$unit", base_name);
+      full_identifier = verilog_unit_scope_identifier(base_name);
 
       if(ns.lookup(full_identifier, symbol))
       {
