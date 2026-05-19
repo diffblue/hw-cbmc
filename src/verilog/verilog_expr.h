@@ -991,14 +991,15 @@ public:
   {
   }
 
-  irep_idt get_module() const
+  // The base name of the module/primitive/checker that is instantiated
+  irep_idt module_base_name() const
   {
     return get(ID_module);
   }
 
-  void set_module(const irep_idt &module)
+  void module_base_name(const irep_idt &base_name)
   {
-    return set(ID_module, module);
+    return set(ID_module, base_name);
   }
 
   class named_port_connectiont : public binary_exprt
@@ -1037,11 +1038,25 @@ public:
   class instancet : public exprt
   {
   public:
+    // The full identifier of the module/primitive/checker that is instantiated.
+    // This may be different for each instance, owing to defparam.
+    irep_idt module_identifier() const
+    {
+      return get(ID_module_identifier);
+    }
+
+    void module_identifier(const irep_idt &_identifier)
+    {
+      set(ID_module_identifier, _identifier);
+    }
+
+    // The name of the instance.
     const irep_idt &base_name() const
     {
       return get(ID_base_name);
     }
 
+    // The identifier of the instance.
     const irep_idt &identifier() const
     {
       return get(ID_identifier);
