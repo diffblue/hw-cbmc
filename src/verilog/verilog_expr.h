@@ -2599,10 +2599,6 @@ public:
   {
     return static_cast<source_locationt &>(add(ID_C_source_location));
   }
-
-  // The identifiers of the modules and packages used
-  // (not: the identifiers of the module instances)
-  std::set<irep_idt> dependencies() const;
 };
 
 class verilog_interfacet : public verilog_item_containert
