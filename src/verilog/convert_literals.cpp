@@ -14,6 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <ebmc/ebmc_error.h>
 
+#include "verilog_expr.h"
 #include "verilog_types.h"
 
 constant_exprt convert_string_literal(const irep_idt &value)
@@ -132,14 +133,14 @@ static constant_exprt cond_unsized(constant_exprt expr, bool is_unsized)
     return expr;
 }
 
-constant_exprt convert_integral_literal(const irep_idt &value)
+exprt convert_integral_literal(const irep_idt &value)
 {
   // first, get rid of whitespace and underscores
   // and make everything lower case
   std::string rest;
   rest.reserve(value.size());
 
-  for(unsigned i = 0; i < value.size(); i++)
+  for(std::size_t i = 0; i < value.size(); i++)
   {
     char ch = value[i];
     if(!isspace(ch) && ch != '_')
@@ -149,19 +150,21 @@ constant_exprt convert_integral_literal(const irep_idt &value)
   // special case the "unbased unsized literals"
   if(rest == "'0")
   {
-    return unsized(from_integer(0, unsignedbv_typet{1}));
+    return verilog_unbased_unsized_literal_exprt{ID_0, unsignedbv_typet{1}};
   }
   else if(rest == "'1")
   {
-    return unsized(from_integer(1, unsignedbv_typet{1}));
+    return verilog_unbased_unsized_literal_exprt{ID_1, unsignedbv_typet{1}};
   }
-  else if(rest == "'x" || rest == "'X")
+  else if(rest == "'x")
   {
-    return unsized(constant_exprt{"x", verilog_unsignedbv_typet{1}});
+    return verilog_unbased_unsized_literal_exprt{
+      ID_x, verilog_unsignedbv_typet{1}};
   }
-  else if(rest == "'z" || rest == "'Z")
+  else if(rest == "'z")
   {
-    return unsized(constant_exprt{"z", verilog_unsignedbv_typet{1}});
+    return verilog_unbased_unsized_literal_exprt{
+      ID_z, verilog_unsignedbv_typet{1}};
   }
 
   std::string::size_type pos = rest.find('\'');

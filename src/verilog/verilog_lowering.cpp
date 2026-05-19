@@ -444,7 +444,7 @@ exprt verilog_lowering(exprt expr)
     if(call.is_system_function_call())
     {
       auto base_name = to_verilog_identifier_expr(call.function()).base_name();
-      if(base_name == "$typename")
+      if(base_name == "$bits" || base_name == "$typename")
       {
         // Don't touch.
         // Will be expanded by elaborate_constant_system_function_call,
@@ -892,6 +892,12 @@ exprt verilog_lowering(exprt expr)
       return aval_bval(to_if_expr(expr));
     else
       return expr; // leave as is
+  }
+  else if(expr.id() == ID_verilog_unbased_unsized_literal)
+  {
+    // '0, '1, 'x, 'z
+    return verilog_lowering(
+      to_verilog_unbased_unsized_literal_expr(expr).expand());
   }
   else
     return expr; // leave as is

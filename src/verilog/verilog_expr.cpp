@@ -518,3 +518,38 @@ bool verilog_fort::has_scope() const
     initialization().end(),
     [](const verilog_statementt &s) { return s.id() == ID_decl; });
 }
+
+constant_exprt verilog_unbased_unsized_literal_exprt::expand() const
+{
+  auto &type = this->type();
+  auto &value = this->value();
+  PRECONDITION(
+    type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv);
+
+  if(value == ID_0)
+    return to_unsignedbv_type(type).zero_expr();
+  else if(value == ID_1)
+    return to_unsignedbv_type(type).largest_expr();
+  else if(value == ID_x)
+    return to_verilog_unsignedbv_type(type).all_x_expr();
+  else if(value == ID_z)
+    return to_verilog_unsignedbv_type(type).all_z_expr();
+  else
+    PRECONDITION(false);
+}
+
+verilog_unbased_unsized_literal_exprt
+verilog_unbased_unsized_literal_exprt::with_context(std::size_t width) const
+{
+  verilog_unbased_unsized_literal_exprt copy(*this);
+  auto &type = copy.type();
+  PRECONDITION(
+    type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv);
+
+  if(type.id() == ID_unsignedbv)
+    to_unsignedbv_type(type).set_width(width);
+  else
+    to_verilog_unsignedbv_type(type).set_width(width);
+
+  return copy;
+}

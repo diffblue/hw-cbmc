@@ -13,6 +13,6 @@ Author: Daniel Kroening, dkr@amazon.com
 
 constant_exprt convert_string_literal(const irep_idt &);
 constant_exprt convert_real_literal(const irep_idt &);
-constant_exprt convert_integral_literal(const irep_idt &);
+exprt convert_integral_literal(const irep_idt &);
 
 #endif
