@@ -216,7 +216,7 @@ static void module_dependencies_rec(
 {
   if(module_item.id() == ID_inst)
   {
-    action(to_verilog_inst(module_item).get_module());
+    action(to_verilog_inst(module_item).module_base_name());
   }
   else if(module_item.id() == ID_generate_block)
   {
@@ -352,10 +352,11 @@ void verilog_ebmc_languaget::create_root_module(
 
   // Build a verilog_instt module item for the instantiation
   verilog_instt inst;
-  inst.set_module(module_identifier);
+  inst.module_base_name(top_level_module);
   verilog_inst_baset::instancet instance_expr;
   instance_expr.set(ID_base_name, top_level_module);
   instance_expr.identifier(instance_identifier);
+  instance_expr.module_identifier(module_identifier);
   inst.instances().push_back(std::move(instance_expr));
 
   // Create the $root module symbol with the inst as its only module item.

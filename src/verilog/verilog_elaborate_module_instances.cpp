@@ -96,7 +96,7 @@ void verilog_typecheckt::elaborate_inst(
     range = convert_range(range_expr);
 
   irep_idt instantiated_module_identifier =
-    verilog_module_symbol(id2string(statement.get(ID_module)));
+    verilog_module_symbol(statement.module_base_name());
 
   // add symbol for the module instance
   symbolt symbol;
@@ -315,7 +315,7 @@ Function: verilog_typecheckt::parameterize_instantiated_modules
 
 void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
 {
-  const irep_idt &inst_module = inst.get_module();
+  const irep_idt &inst_module = inst.module_base_name();
 
   // The instantiated module must be user-defined.
 
@@ -373,7 +373,7 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       parameter_assignments,
       instance_defparams);
 
-    inst.set_module(new_module_identifier);
+    instance.module_identifier(new_module_identifier);
 
     symbolt &instance_symbol = symbol_table_lookup(instance_identifier);
 
@@ -403,7 +403,7 @@ Function: verilog_typecheckt::parameterize_instantiated_modules
 void verilog_typecheckt::parameterize_instantiated_modules(
   verilog_inst_builtint &inst)
 {
-  const irep_idt &inst_module = inst.get_module();
+  const irep_idt &inst_module = inst.module_base_name();
 
   for(auto &instance : inst.instances())
   {

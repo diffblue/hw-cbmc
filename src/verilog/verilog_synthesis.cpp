@@ -1511,22 +1511,24 @@ void verilog_synthesist::synth_module_instance(
   const verilog_instt &statement,
   transt &trans)
 {
-  const irep_idt &module_identifier = statement.get_module();
-
-  // must be in symbol_table
-  const symbolt &module_symbol = ns.lookup(module_identifier);
-
-  // make sure the module is synthesized already
-  verilog_synthesis(
-    symbol_table,
-    module_identifier,
-    standard,
-    ignore_initial,
-    initial_zero,
-    get_message_handler());
-
   for(auto &instance : statement.instances())
+  {
+    const irep_idt &module_identifier = instance.module_identifier();
+
+    // must be in symbol_table
+    const symbolt &module_symbol = ns.lookup(module_identifier);
+
+    // make sure the module is synthesized already
+    verilog_synthesis(
+      symbol_table,
+      module_identifier,
+      standard,
+      ignore_initial,
+      initial_zero,
+      get_message_handler());
+
     expand_module_instance(module_symbol, instance, trans);
+  }
 }
 
 /*******************************************************************\
@@ -1545,7 +1547,7 @@ void verilog_synthesist::synth_module_instance_builtin(
   const verilog_inst_builtint &module_item,
   transt &trans)
 {
-  const irep_idt &module=module_item.get_module();
+  const irep_idt &module = module_item.module_base_name();
 
   for(auto &instance : module_item.instances())
   {
