@@ -69,6 +69,11 @@ protected:
   transition_systemt
   typecheck(const parse_treest &, irep_idt top_level_module, symbol_tablet &&);
   void typecheck_module(modulet &, symbol_tablet &);
+
+  void create_root_module(
+    irep_idt top_level_module,
+    verilog_standardt,
+    symbol_tablet &);
 };
 
 #endif // EBMC_VERILOG_LANGUAGE_H

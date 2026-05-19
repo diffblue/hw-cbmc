@@ -329,13 +329,10 @@ verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
 
 /// Create a $root module instance containing the given top-level module,
 /// and synthesize it so that the top-level module is expanded into $root.
-static void create_root_module(
+void verilog_ebmc_languaget::create_root_module(
   irep_idt top_level_module,
   verilog_standardt standard,
-  bool ignore_initial,
-  bool initial_zero,
-  symbol_tablet &symbol_table,
-  message_handlert &message_handler)
+  symbol_tablet &symbol_table)
 {
   auto module_identifier = verilog_module_symbol(top_level_module);
   auto root_identifier = verilog_module_symbol(verilog_root_module_name());
@@ -390,6 +387,9 @@ static void create_root_module(
 
   auto add_result_root = symbol_table.add(root_symbol);
   CHECK_RETURN(!add_result_root);
+
+  const bool ignore_initial = cmdline.isset("ignore-initial");
+  const bool initial_zero = cmdline.isset("initial-zero");
 
   // Synthesize $root, which expands the top-level module instance
   verilog_synthesis(
@@ -536,15 +536,10 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
     typecheck(parse_trees, top_level_module, std::move(symbol_table));
 
   // Create the $root module instance and synthesize it
-  const bool ignore_initial = cmdline.isset("ignore-initial");
-  const bool initial_zero = cmdline.isset("initial-zero");
   create_root_module(
     top_level_module,
     parse_trees.front().standard,
-    ignore_initial,
-    initial_zero,
-    transition_system.symbol_table,
-    message_handler);
+    transition_system.symbol_table);
 
   if(cmdline.isset("show-symbol-table"))
   {
