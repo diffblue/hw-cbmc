@@ -28,34 +28,14 @@ Function: verilog_typecheckt::module_interface
 
 \*******************************************************************/
 
-void verilog_typecheckt::module_interface(
+void verilog_typecheckt::check_module_ports(
   const verilog_module_sourcet &module_source)
 {
-  // Check the typing of the ports
-  check_module_ports(module_source.ports());
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::check_module_ports
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_typecheckt::check_module_ports(
-  const verilog_module_sourcet::port_listt &module_ports)
-{
+  auto &module_ports = module_source.ports();
   auto &ports = to_module_type(module_symbol().type).ports();
   ports.clear();
   ports.reserve(module_ports.size());
-  std::map<irep_idt, unsigned> port_names;
-
-  unsigned nr=0;
+  std::set<irep_idt> port_names;
 
   for(auto &decl : module_ports)
   {
@@ -118,27 +98,36 @@ void verilog_typecheckt::check_module_ports(
     ports.back().set("#name", base_name);
     ports.back().set(ID_C_source_location, declarator.source_location());
 
-    port_names[base_name] = nr;
-
-    nr++;
+    port_names.insert(base_name);
   }
 
   DATA_INVARIANT(ports.size() == module_ports.size(), "number of ports");
 
-  // check that all declared ports are also in the port list
-  
-  for(auto it=symbol_table.symbol_module_map.lower_bound(module_identifier);
-           it!=symbol_table.symbol_module_map.upper_bound(module_identifier);
-           it++)
+  // Check that input/output declarations are in the port list.
+  for(auto &item : module_source.items())
   {
-    const symbolt &symbol=ns.lookup(it->second);
-    
-    if(symbol.is_input || symbol.is_output)
-      if(port_names.find(symbol.base_name)==port_names.end())
+    if(item.id() == ID_decl)
+    {
+      auto &decl = to_verilog_decl(item);
+      auto decl_class = decl.get_class();
+
+      if(
+        decl_class == ID_input || decl_class == ID_output ||
+        decl_class == ID_output_register || decl_class == ID_inout ||
+        decl_class == ID_verilog_no_direction)
       {
-        throw errort().with_location(symbol.location)
-          << "port `" << symbol.base_name << "' not in port list";
+        for(auto &declarator : decl.declarators())
+        {
+          auto base_name = declarator.base_name();
+
+          if(port_names.find(base_name) == port_names.end())
+          {
+            throw errort().with_location(declarator.source_location())
+              << "port `" << base_name << "' not in port list";
+          }
+        }
       }
+    }
   }
 }
 

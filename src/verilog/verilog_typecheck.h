@@ -151,8 +151,7 @@ protected:
     const std::list<exprt> &parameter_values);
 
   // interfaces
-  void module_interface(const verilog_module_sourcet &);
-  void check_module_ports(const verilog_module_sourcet::port_listt &);
+  void check_module_ports(const verilog_module_sourcet &);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);

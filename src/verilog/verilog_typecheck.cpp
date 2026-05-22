@@ -1791,7 +1791,7 @@ void verilog_typecheckt::typecheck_design_element(symbolt &symbol)
     interface_module_item(module_item);
 
   // Check the module interface
-  check_module_ports(module_source.ports());
+  check_module_ports(module_source);
 
   // Now typecheck the generated statements.
   convert_statements(verilog_module_expr);

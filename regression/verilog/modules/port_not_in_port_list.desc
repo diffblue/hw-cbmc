@@ -1,0 +1,7 @@
+CORE
+port_not_in_port_list.v
+
+^file .* line 5: port `other_port' not in port list$
+^EXIT=2$
+^SIGNAL=0$
+--
