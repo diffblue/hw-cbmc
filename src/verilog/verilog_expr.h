@@ -1037,6 +1037,10 @@ public:
   class instancet : public exprt
   {
   public:
+    instancet() : exprt{ID_inst}
+    {
+    }
+
     const irep_idt &base_name() const
     {
       return get(ID_base_name);

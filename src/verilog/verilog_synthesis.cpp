@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/identifier.h>
 #include <util/mathematical_types.h>
+#include <util/prefix.h>
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
@@ -1729,13 +1730,15 @@ void verilog_synthesist::expand_module_instance(
       std::string full_identifier =
         id2string(instance.identifier()) + identifier_without_module;
 
-      // We special-case the pretty name for identifiers under $root:
-      // it is customary to use the name of the module only as root
-      // of the hierarchical identifier.
-      new_symbol.pretty_name =
-        module == verilog_module_symbol(verilog_root_module_name())
-          ? symbol.pretty_name
-          : strip_verilog_prefix(full_identifier);
+      // Strip the Verilog:: prefix, and if present, the $root. prefix
+      // to obtain the pretty_name
+      irep_idt new_pretty_name = strip_verilog_prefix(full_identifier);
+      static const std::string root_prefix =
+        id2string(verilog_root_module_name()) + '.';
+      if(has_prefix(id2string(new_pretty_name), root_prefix))
+        new_pretty_name = id2string(new_pretty_name)
+                            .substr(root_prefix.size(), std::string::npos);
+      new_symbol.pretty_name = new_pretty_name;
       new_symbol.name=full_identifier;
 
       if(symbol_table.add(new_symbol))
