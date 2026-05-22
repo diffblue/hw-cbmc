@@ -81,6 +81,23 @@ irep_idt verilog_package_identifier(
 
 /*******************************************************************\
 
+Function: verilog_unit_scope_identifier
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt verilog_unit_scope_identifier(const irep_idt &base_name)
+{
+  return "Verilog::$unit::" + id2string(base_name);
+}
+
+/*******************************************************************\
+
 Function: strip_verilog_prefix
 
   Inputs:
