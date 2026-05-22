@@ -197,16 +197,17 @@ void verilog_typecheckt::process_parameter_override(
     auto &hierarchical_identifier = to_hierarchical_identifier_expr(lhs);
 
     // convert the instance
-    convert_expr(hierarchical_identifier.module());
+    convert_expr(hierarchical_identifier.module_instance());
 
-    if(hierarchical_identifier.module().id() != ID_symbol)
+    if(hierarchical_identifier.module_instance().id() != ID_symbol)
     {
       throw errort().with_location(module_item.source_location())
         << "defparam expected to have a single level identifier";
     }
 
     auto module_instance =
-      to_symbol_expr(hierarchical_identifier.module()).get_identifier();
+      to_symbol_expr(hierarchical_identifier.module_instance())
+        .get_identifier();
 
     auto parameter_base_name = hierarchical_identifier.item().base_name();
 

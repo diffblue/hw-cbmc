@@ -1289,7 +1289,8 @@ expr2verilogt::resultt expr2verilogt::convert_hierarchical_identifier(
 {
   return {
     verilog_precedencet::MAX,
-    convert_rec(src.module()).s + '.' + src.item().get_string(ID_base_name)};
+    convert_rec(src.module_instance()).s + '.' +
+      id2string(src.item().base_name())};
 }
 
 /*******************************************************************\

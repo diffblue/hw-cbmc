@@ -90,17 +90,17 @@ inline verilog_identifier_exprt &to_verilog_identifier_expr(exprt &expr)
   return static_cast<verilog_identifier_exprt &>(expr);
 }
 
-/// The syntax for these A.B, where A is a module identifier and B
-/// is an identifier within that module. B is given als symbol_exprt.
+/// The syntax for these A.B, where A is a module instance
+/// and B is an identifier within that module. B is given als symbol_exprt.
 class hierarchical_identifier_exprt : public binary_exprt
 {
 public:
-  const exprt &module() const
+  const exprt &module_instance() const
   {
     return op0();
   }
 
-  exprt &module()
+  exprt &module_instance()
   {
     return op0();
   }
