@@ -214,6 +214,7 @@ void verilog_typecheckt::collect_symbols(const typet &type)
     // This allows looking up the enum name identifiers.
     {
       const auto identifier = hierarchical_identifier(enum_type.base_name());
+      enum_type_copy.identifier(identifier);
       type_symbolt enum_type_symbol(identifier, enum_type_copy, mode);
       enum_type_symbol.module = module_identifier;
       enum_type_symbol.is_file_local = true;

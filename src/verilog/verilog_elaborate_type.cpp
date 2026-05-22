@@ -403,7 +403,7 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
                     ? elaborate_type(enum_type.base_type())
                     : signedbv_typet(32);
     result.set(ID_C_verilog_type, ID_verilog_enum);
-    const auto identifier = hierarchical_identifier(enum_type.base_name());
+    const auto identifier = enum_type.identifier();
     result.set(ID_C_identifier, identifier);
     return result.with_source_location(source_location);
   }
