@@ -135,8 +135,6 @@ void verilog_languaget::dependencies(
   const std::string &module,
   std::set<std::string> &dependency_set)
 {
-  for(auto identifier : parse_tree.dependencies(module))
-    dependency_set.insert(id2string(identifier));
 }
 
 /*******************************************************************\
