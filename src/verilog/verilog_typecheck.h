@@ -68,7 +68,10 @@ public:
   // type checking for all "item containers", which includes
   // all "design elements" (modules, programs, interfaces,
   // checkers, packages, primitives, and configurations)
-  void typecheck_design_element(const verilog_module_sourcet &, symbolt &);
+  void typecheck_design_element(
+    const verilog_module_sourcet &,
+    symbolt &,
+    irep_idt module_instance);
 
   // type checking for compilation-unit scoped nets, variables,
   // typedefs, functions, tasks, parameters

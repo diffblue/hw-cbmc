@@ -367,7 +367,7 @@ void verilog_typecheckt::interface_block(
     symbol.type=typet(ID_named_block);
     symbol.module=module_identifier;
     symbol.name = hierarchical_identifier(symbol.base_name);
-    symbol.pretty_name=strip_verilog_prefix(symbol.name);
+    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
     symbol.value=nil_exprt();
 
     if(symbol_table.add(symbol))

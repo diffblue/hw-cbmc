@@ -39,10 +39,12 @@ public:
     verilog_standardt _standard,
     bool _warn_implicit_nets,
     const namespacet &_ns,
-    const std::string &_module_identifier,
+    const irep_idt &_module_identifier,
+    const irep_idt &_module_instance,
     message_handlert &_message_handler)
     : verilog_typecheck_baset(_standard, _ns, _message_handler),
       module_identifier(_module_identifier),
+      module_instance(_module_instance),
       warn_implicit_nets(_warn_implicit_nets)
   { }
 
@@ -56,7 +58,13 @@ public:
   exprt elaborate_constant_system_function_call(function_call_exprt);
 
 protected:
+  // full identifier of module
   irep_idt module_identifier;
+
+  // full identifier of instance
+  irep_idt module_instance;
+
+  // full identifier of function/task
   irep_idt function_or_task_name;
 
   // module_identifier.function.block.base_name
@@ -239,7 +247,8 @@ protected:
 
 bool verilog_typecheck(
   exprt &,
-  const std::string &module_identifier,
+  const irep_idt &module_identifier,
+  const irep_idt &module_instance,
   verilog_standardt,
   message_handlert &,
   const namespacet &);

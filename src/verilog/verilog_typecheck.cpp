@@ -750,7 +750,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
 
     // look it up
     irep_idt full_identifier =
-      id2string(module_identifier) + "." + id2string(base_name);
+      id2string(module_instance) + "." + id2string(base_name);
 
     const symbolt *symbol;
     if(ns.lookup(full_identifier, symbol))
@@ -893,7 +893,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   // The assert/assume/cover module items use the module name space
   std::string full_identifier =
-    id2string(module_identifier) + '.' + id2string(base_name);
+    id2string(module_instance) + '.' + id2string(base_name);
 
   if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
   {
@@ -905,12 +905,12 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   symbolt symbol{full_identifier, bool_typet{}, mode};
 
-  symbol.module = module_identifier;
+  symbol.module = verilog_root_module_identifier();
   symbol.value = nil_exprt{}; // set by synthesis
   symbol.base_name = base_name;
   symbol.is_property = true;
   symbol.location = module_item.find_source_location();
-  symbol.pretty_name = strip_verilog_prefix(full_identifier);
+  symbol.pretty_name = strip_verilog_root_prefix(full_identifier);
 
   symbol_table.insert(std::move(symbol));
 }
@@ -967,7 +967,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
   auto full_identifier =
     statement.id() == ID_verilog_smv_assert ||
         statement.id() == ID_verilog_smv_assume
-      ? id2string(module_identifier) + ".property." + id2string(base_name)
+      ? id2string(module_instance) + ".property." + id2string(base_name)
       : hierarchical_identifier(base_name);
 
   if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
@@ -978,14 +978,14 @@ void verilog_typecheckt::convert_assert_assume_cover(
 
   statement.identifier(full_identifier);
 
-  symbolt symbol{base_name, bool_typet{}, mode};
+  symbolt symbol{full_identifier, bool_typet{}, mode};
 
-  symbol.module = module_identifier;
+  symbol.module = verilog_root_module_identifier();
   symbol.value = nil_exprt{}; // set by synthesis
-  symbol.name = full_identifier;
+  symbol.base_name = base_name;
   symbol.is_property = true;
   symbol.location = statement.find_source_location();
-  symbol.pretty_name = strip_verilog_prefix(full_identifier);
+  symbol.pretty_name = strip_verilog_root_prefix(full_identifier);
 
   symbolt *new_symbol;
   symbol_table.move(symbol, new_symbol);
@@ -1660,7 +1660,7 @@ void verilog_typecheckt::convert_property_declaration(
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;
-  symbol.pretty_name = strip_verilog_prefix(symbol.name);
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
   symbol.value = declaration;
   symbol.location = declaration.source_location();
 
@@ -1696,7 +1696,7 @@ void verilog_typecheckt::convert_sequence_declaration(
 
   symbol.module = module_identifier;
   symbol.base_name = base_name;
-  symbol.pretty_name = strip_verilog_prefix(symbol.name);
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
   symbol.value = declaration;
   symbol.location = declaration.source_location();
 
@@ -1751,7 +1751,7 @@ bool verilog_typecheckt::implicit_wire(
   symbol.base_name=identifier;
   symbol.name=full_identifier;
   symbol.type = net_type;
-  symbol.pretty_name=strip_verilog_prefix(full_identifier);
+  symbol.pretty_name = strip_verilog_root_prefix(full_identifier);
 
   symbolt *new_symbol;
   symbol_table.move(symbol, new_symbol);
@@ -1774,9 +1774,11 @@ Function: verilog_typecheckt::typecheck_design_element
 
 void verilog_typecheckt::typecheck_design_element(
   const verilog_module_sourcet &module_source,
-  symbolt &symbol)
+  symbolt &symbol,
+  irep_idt new_module_instance)
 {
   module_identifier = symbol.name;
+  module_instance = new_module_instance;
 
   // Elaborate the named constants (parameters, enums),
   // generate constructs, and add the symbols to the symbol table.
@@ -1960,7 +1962,10 @@ bool verilog_typecheck(
 
   try
   {
-    verilog_typecheck.typecheck_design_element(module_source, *new_symbol);
+    verilog_typecheck.typecheck_design_element(
+      module_source,
+      *new_symbol,
+      "Verilog::$root." + id2string(source_symbol.base_name));
   }
 
   catch(const typecheckt::errort &e)
