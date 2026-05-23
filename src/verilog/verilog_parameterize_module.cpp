@@ -261,7 +261,8 @@ irep_idt verilog_typecheckt::parameterize_module(
   verilog_typecheckt verilog_typecheck(
     standard, warn_implicit_nets, symbol_table, get_message_handler());
 
-  verilog_typecheck.typecheck_design_element(source_copy, *new_symbol);
+  verilog_typecheck.typecheck_design_element(
+    source_copy, *new_symbol, instance_identifier);
 
   return new_module_identifier;
 }

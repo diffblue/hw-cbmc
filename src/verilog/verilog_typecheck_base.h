@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_standard.h"
 
 irep_idt verilog_root_module_name(); // $root
+irep_idt verilog_root_module_identifier();
 
 irep_idt verilog_module_symbol(const irep_idt &base_name);
 irep_idt verilog_package_identifier(const irep_idt &base_name);
@@ -26,6 +27,7 @@ irep_idt verilog_package_identifier(
 irep_idt verilog_unit_scope_identifier(const irep_idt &item_base_name);
 irep_idt verilog_item_key(const irep_idt &identifier);
 irep_idt strip_verilog_prefix(const irep_idt &identifier);
+irep_idt strip_verilog_root_prefix(const irep_idt &identifier);
 
 class array_typet;
 

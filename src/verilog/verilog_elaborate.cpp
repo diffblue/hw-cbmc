@@ -71,10 +71,10 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
     else
       DATA_INVARIANT(false, "unexpected port class");
 
-    new_symbol.module = module_identifier;
+    new_symbol.module = verilog_root_module_identifier();
     new_symbol.value.make_nil();
     new_symbol.base_name = base_name;
-    new_symbol.pretty_name = strip_verilog_prefix(new_symbol.name);
+    new_symbol.pretty_name = strip_verilog_root_prefix(new_symbol.name);
 
     // When using ANSI style, input ports may have an
     // elaboration-time constant default value
@@ -113,9 +113,9 @@ void verilog_typecheckt::collect_symbols(
 
     type_symbolt symbol{full_identifier, symbol_type, mode};
 
-    symbol.module = module_identifier;
+    symbol.module = verilog_root_module_identifier();
     symbol.base_name = base_name;
-    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
     symbol.is_macro = true;
     symbol.value = nil_exprt{};
     symbol.location = declarator.source_location();
@@ -132,9 +132,9 @@ void verilog_typecheckt::collect_symbols(
 
     symbolt symbol{full_identifier, symbol_type, mode};
 
-    symbol.module = module_identifier;
+    symbol.module = verilog_root_module_identifier();
     symbol.base_name = base_name;
-    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
     symbol.is_macro = true;
     symbol.value = declarator.value();
     symbol.location = declarator.source_location();
@@ -185,8 +185,8 @@ void verilog_typecheckt::collect_symbols(const typet &type)
       const auto identifier = hierarchical_identifier(base_name);
       symbolt enum_name_symbol(identifier, tbd_type, mode);
       enum_name_symbol.pretty_name =
-        strip_verilog_prefix(enum_name_symbol.name);
-      enum_name_symbol.module = module_identifier;
+        strip_verilog_root_prefix(enum_name_symbol.name);
+      enum_name_symbol.module = verilog_root_module_identifier();
       enum_name_symbol.base_name = base_name;
       enum_name_symbol.value = std::move(value);
       enum_name_symbol.is_macro = true;
@@ -215,7 +215,7 @@ void verilog_typecheckt::collect_symbols(const typet &type)
     {
       const auto identifier = hierarchical_identifier(enum_type.base_name());
       type_symbolt enum_type_symbol(identifier, enum_type_copy, mode);
-      enum_type_symbol.module = module_identifier;
+      enum_type_symbol.module = verilog_root_module_identifier();
       enum_type_symbol.is_file_local = true;
       enum_type_symbol.location = enum_type.source_location();
       add_symbol(std::move(enum_type_symbol));
@@ -260,9 +260,9 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       symbolt symbol{full_identifier, std::move(type), mode};
 
-      symbol.module = module_identifier;
+      symbol.module = verilog_root_module_identifier();
       symbol.base_name = base_name;
-      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+      symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
       symbol.is_macro = true;
       symbol.is_type = true;
       symbol.location = declarator.source_location();
@@ -283,7 +283,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbolt symbol;
 
       symbol.mode = mode;
-      symbol.module = module_identifier;
+      symbol.module = verilog_root_module_identifier();
       symbol.value.make_nil();
 
       if(decl_class == ID_input)
@@ -322,7 +322,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
         }
 
         symbol.name = hierarchical_identifier(symbol.base_name);
-        symbol.pretty_name = strip_verilog_prefix(symbol.name);
+        symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
 
         auto result = symbol_table.get_writeable(symbol.name);
 
@@ -381,7 +381,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       bool input = false, output = false;
 
       symbol.mode = mode;
-      symbol.module = module_identifier;
+      symbol.module = verilog_root_module_identifier();
       symbol.value.make_nil();
       symbol.is_lvalue = true; // even inputs can be assigned
 
@@ -433,7 +433,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         symbol.type = elaborate_type(declarator.merged_type(decl.type()));
         symbol.name = hierarchical_identifier(symbol.base_name);
-        symbol.pretty_name = strip_verilog_prefix(symbol.name);
+        symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
 
         if(input || output)
         {
@@ -474,7 +474,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     symbolt symbol;
 
     symbol.mode = mode;
-    symbol.module = module_identifier;
+    symbol.module = verilog_root_module_identifier();
     symbol.value = nil_exprt();
 
     for(auto &declarator : decl.declarators())
@@ -492,7 +492,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       }
 
       symbol.name = hierarchical_identifier(symbol.base_name);
-      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+      symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
 
       auto result = symbol_table.get_writeable(symbol.name);
 
@@ -540,7 +540,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     symbolt symbol;
 
     symbol.mode = mode;
-    symbol.module = module_identifier;
+    symbol.module = verilog_root_module_identifier();
     symbol.value = nil_exprt();
     symbol.is_lvalue = true;
 
@@ -559,7 +559,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       }
 
       symbol.name = hierarchical_identifier(symbol.base_name);
-      symbol.pretty_name = strip_verilog_prefix(symbol.name);
+      symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
 
       auto result = symbol_table.get_writeable(symbol.name);
 
@@ -619,8 +619,8 @@ void verilog_typecheckt::collect_symbols(
 
   symbol.base_name = base_name;
   symbol.location = decl.source_location();
-  symbol.pretty_name = strip_verilog_prefix(symbol.name);
-  symbol.module = module_identifier;
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  symbol.module = verilog_root_module_identifier();
   symbol.value = verilog_tf_sourcet{decl}; // copy the entire declaration
 
   add_symbol(symbol);
@@ -645,7 +645,7 @@ void verilog_typecheckt::collect_symbols(
     symbolt return_symbol;
     return_symbol.is_lvalue = true;
     return_symbol.mode = symbol.mode;
-    return_symbol.module = symbol.module;
+    return_symbol.module = verilog_root_module_identifier();
     return_symbol.base_name = symbol.base_name;
     return_symbol.value = nil_exprt();
     return_symbol.type = to_code_type(symbol.type).return_type();
@@ -653,7 +653,7 @@ void verilog_typecheckt::collect_symbols(
     return_symbol.name =
       id2string(symbol.name) + "." + id2string(symbol.base_name);
 
-    return_symbol.pretty_name = strip_verilog_prefix(return_symbol.name);
+    return_symbol.pretty_name = strip_verilog_root_prefix(return_symbol.name);
 
     symbol_table.add(return_symbol);
   }
@@ -690,11 +690,11 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
   // add the symbol
   symbolt new_symbol(identifier, type, mode);
 
-  new_symbol.module = module_identifier;
+  new_symbol.module = verilog_root_module_identifier();
   new_symbol.is_macro = true;
   new_symbol.value = declarator.value();
   new_symbol.base_name = base_name;
-  new_symbol.pretty_name = strip_verilog_prefix(new_symbol.name);
+  new_symbol.pretty_name = strip_verilog_root_prefix(new_symbol.name);
 
   let_symbols.insert(new_symbol.name);
 

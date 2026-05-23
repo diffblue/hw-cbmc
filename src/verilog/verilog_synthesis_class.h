@@ -343,22 +343,15 @@ protected:
   exprt
   expand_function_call(const class function_call_exprt &call, symbol_statet);
 
-  typedef std::map<irep_idt, exprt> replace_mapt;
-
   void instantiate_ports(
     const irep_idt &instance,
     const verilog_instt::instancet &inst,
     const symbolt &,
-    const replace_mapt &,
     transt &);
-
-  bool replace_symbols(const replace_mapt &what, exprt &dest);
-  void replace_symbols(const irep_idt &target, exprt &dest);
 
   void instantiate_port(
     const module_typet::portt &,
     const exprt &value,
-    const replace_mapt &,
     const source_locationt &,
     transt &);
 

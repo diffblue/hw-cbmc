@@ -1,8 +1,8 @@
 CORE
 port_with_value1.sv
 
-^\[main\.m1\.eq] always main\.m1\$module.in1 == main\.m1\$module\.in2: REFUTED$
-^\[main\.m2\.eq] always main\.m2\$module\.in1 == main\.m2\$module\.in2: PROVED .*$
+^\[main\.m1\.eq] always main\.m1\.in1 == main\.m1\.in2: REFUTED$
+^\[main\.m2\.eq] always main\.m2\.in1 == main\.m2\.in2: PROVED .*$
 ^EXIT=10$
 ^SIGNAL=0$
 --

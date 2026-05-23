@@ -969,6 +969,7 @@ void verilog_synthesist::replace_by_wire(
   new_symbol.location=base.location;
   new_symbol.value=nil_exprt();
   new_symbol.is_auxiliary=true;
+  new_symbol.pretty_name = strip_verilog_root_prefix(new_symbol.name);
 
   symbol_exprt symbol_expr(new_symbol.name, new_symbol.type);
 
@@ -1270,73 +1271,6 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
 /*******************************************************************\
 
-Function: verilog_synthesist::replace_symbols
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool verilog_synthesist::replace_symbols(
-  const replace_mapt &what,
-  exprt &dest)
-{
-  bool result=true;
-
-  if(dest.id()==ID_next_symbol ||
-     dest.id()==ID_symbol)
-  {
-    replace_mapt::const_iterator it=
-      what.find(dest.get(ID_identifier));
-
-    if(it!=what.end())
-    {
-      bool is_next_symbol=dest.id()==ID_next_symbol;
-      dest=it->second;      
-
-      if(is_next_symbol)
-        replace_symbols(ID_next_symbol, dest);
-
-      result=false;
-    }
-  }
-  else
-  {
-    Forall_operands(it, dest)
-      result=replace_symbols(what, *it) && result;
-  }
-
-  return result;
-}
-
-/*******************************************************************\
-
-Function: verilog_synthesist::replace_symbols
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void verilog_synthesist::replace_symbols(
-  const irep_idt &target,
-  exprt &dest)
-{
-  if(dest.id()==ID_symbol)
-    dest.id(target);
-  else
-    Forall_operands(it, dest)
-      replace_symbols(target, *it);
-}
-
-/*******************************************************************\
-
 Function: verilog_synthesist::instantiate_port
 
   Inputs:
@@ -1350,19 +1284,10 @@ Function: verilog_synthesist::instantiate_port
 void verilog_synthesist::instantiate_port(
   const module_typet::portt &port,
   const exprt &value,
-  const replace_mapt &replace_map,
   const source_locationt &source_location,
   transt &trans)
 {
-  irep_idt port_identifier = port.identifier();
-
-  replace_mapt::const_iterator it = replace_map.find(port_identifier);
-
-  if(it==replace_map.end())
-  {
-    throw errort().with_location(source_location)
-      << "failed to find port symbol " << port_identifier << " in replace_map";
-  }
+  symbol_exprt port_symbol{port.identifier(), port.type()};
 
   // Much like
   //   always @(*) port = value for an input, and
@@ -1373,12 +1298,12 @@ void verilog_synthesist::instantiate_port(
   if(port.output())
   {
     lhs = value;
-    rhs = typecast_exprt::conditional_cast(it->second, value.type());
+    rhs = typecast_exprt::conditional_cast(port_symbol, value.type());
   }
   else
   {
-    lhs = it->second;
-    rhs = typecast_exprt::conditional_cast(value, it->second.type());
+    lhs = port_symbol;
+    rhs = typecast_exprt::conditional_cast(value, port_symbol.type());
   }
 
   verilog_forcet assignment{lhs, rhs};
@@ -1409,7 +1334,6 @@ void verilog_synthesist::instantiate_ports(
   const irep_idt &instance,
   const verilog_instt::instancet &inst,
   const symbolt &symbol,
-  const replace_mapt &replace_map,
   transt &trans)
 {
   if(inst.connections().empty())
@@ -1440,8 +1364,7 @@ void verilog_synthesist::instantiate_ports(
 
       if(value.is_not_nil())
       {
-        instantiate_port(
-          port, value, replace_map, inst.source_location(), trans);
+        instantiate_port(port, value, inst.source_location(), trans);
       }
     }
 
@@ -1464,11 +1387,7 @@ void verilog_synthesist::instantiate_ports(
           auto &port_symbol = ns.lookup(identifier);
           if(port_symbol.value.is_not_nil())
             instantiate_port(
-              port,
-              port_symbol.value,
-              replace_map,
-              inst.source_location(),
-              trans);
+              port, port_symbol.value, inst.source_location(), trans);
         }
       }
   }
@@ -1489,8 +1408,7 @@ void verilog_synthesist::instantiate_ports(
     {
       DATA_INVARIANT(connection.is_not_nil(), "all ports must be connected");
 
-      instantiate_port(
-        *p_it, connection, replace_map, inst.source_location(), trans);
+      instantiate_port(*p_it, connection, inst.source_location(), trans);
 
       p_it++;
     }
@@ -1733,81 +1651,11 @@ void verilog_synthesist::expand_module_instance(
 {
   construct=constructt::OTHER;
 
-  replace_mapt replace_map;
-
-  std::list<irep_idt> new_symbols;
-
-  const auto old_symbols = find_module_symbols(module_symbol);
-
-  for(auto &symbol_identifier : old_symbols)
-  {
-    const symbolt &symbol = ns.lookup(symbol_identifier);
-
-    if(symbol.type.id()!=ID_module)
-    {
-      // instantiate the symbol
-
-      symbolt new_symbol(symbol);
-
-      new_symbol.module=module;
-
-      // Identifier Verilog::INSTANTIATED_MODULE.X
-      // is turned into Verilog::MODULE.id.instance::X
-
-      // strip old module      
-      std::string identifier_without_module=
-        std::string(id2string(symbol.name), symbol.module.size());
-
-      std::string full_identifier =
-        id2string(instance.identifier()) + identifier_without_module;
-
-      // We special-case the pretty name for identifiers under $root:
-      // it is customary to use the name of the module only as root
-      // of the hierarchical identifier.
-      new_symbol.pretty_name =
-        module == verilog_module_symbol(verilog_root_module_name())
-          ? symbol.pretty_name
-          : strip_verilog_prefix(full_identifier);
-      new_symbol.name=full_identifier;
-
-      if(symbol_table.add(new_symbol))
-      {
-        throw errort() << "name collision during module instantiation: "
-                       << new_symbol.name;
-      }
-
-      new_symbols.push_back(new_symbol.name);
-
-      // build replace map
-
-      std::pair<irep_idt, exprt> replace_pair;
-      replace_pair.first=symbol.name;
-      replace_pair.second=symbol_expr(new_symbol, CURRENT);
-      replace_map.insert(replace_pair);
-    }
-  }
-
-  // replace identifiers in macros
-
-  for(const auto & it : new_symbols)
-  {
-    symbolt &symbol=symbol_table_lookup(it);
-    replace_symbols(replace_map, symbol.value);
-  }
-
   // do the trans of the instantiated module
+  for(std::size_t i = 0; i < 3; i++)
+    trans_dest.operands()[i].add_to_operands(trans_inst.operands()[i]);
 
-  {
-    transt tmp = trans_inst;
-
-    replace_symbols(replace_map, tmp);
-
-    for(std::size_t i = 0; i < 3; i++)
-      trans_dest.operands()[i].add_to_operands(std::move(tmp.operands()[i]));
-  }
-
-  instantiate_ports(
-    instance.base_name(), instance, module_symbol, replace_map, trans_dest);
+  instantiate_ports(instance.base_name(), instance, module_symbol, trans_dest);
 }
 
 /*******************************************************************\
@@ -2029,6 +1877,8 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
     auto lhs = declarator.symbol_expr();
+
+    local_symbols.insert(lhs.get_identifier());
 
     // This is reg x = ... or wire x = ...
     if(declarator.has_value())
@@ -4044,12 +3894,14 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   assignments.clear();
   invars.clear();
 
-  // find out about symbols of this module
-
-  for(auto it=symbol_table.symbol_module_map.lower_bound(module);
-      it!=symbol_table.symbol_module_map.upper_bound(module);
-      it++)
-    local_symbols.insert(it->second);
+  // Add port-declared symbols to local_symbols, since ANSI-style
+  // port declarations do not appear as decl module items.
+  // Don't do for $root, which uses input identifiers of its submodules.
+  if(symbol.name != verilog_root_module_identifier())
+  {
+    for(const auto &port : to_module_type(symbol.type).ports())
+      local_symbols.insert(port.identifier());
+  }
 
   // now convert the module items
 
