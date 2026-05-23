@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 verilog_function1.sv
 --smv-netlist
 ^EXIT=0$
@@ -7,4 +7,3 @@ verilog_function1.sv
 ^ASSIGN next\(.*\):=.*;$
 ^warning: ignoring
 --
-This yields an error.

@@ -1,7 +1,7 @@
 CORE
 reset4.sv
 --reset main.some_unknown_identifier
-^line 1: identifier `some_unknown_identifier' not found in module `main'$
+^line 1: identifier `some_unknown_identifier' not found in module `Verilog::\$root\.main'$
 ^error: failed to parse reset constraint$
 ^EXIT=6$
 ^SIGNAL=0$

@@ -83,7 +83,7 @@ void verilog_typecheckt::elaborate_generate_decl(
         << "empty symbol name";
 
     symbol.name = hierarchical_identifier(symbol.base_name);
-    symbol.pretty_name = strip_verilog_prefix(symbol.name);
+    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
 
     genvars[symbol.base_name] = -1;
 

@@ -1,7 +1,7 @@
 CORE
 checker7.sv
 --bound 20
-^\[main\.c\.assert\.1\] always main\.c\$module\.data1 != main\.c\$module\.data2: REFUTED$
+^\[main\.c\.assert\.1\] always main\.c\.data1 != main\.c\.data2: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
 --

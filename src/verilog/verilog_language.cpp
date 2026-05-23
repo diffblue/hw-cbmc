@@ -293,7 +293,8 @@ bool verilog_languaget::to_expr(
   expr.swap(verilog_parser.parse_tree.expr);
 
   // typecheck it
-  result = verilog_typecheck(expr, module, standard, message_handler, ns);
+  result =
+    verilog_typecheck(expr, module, module, standard, message_handler, ns);
   if(result)
     return true;
 
