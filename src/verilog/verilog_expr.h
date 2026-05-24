@@ -551,6 +551,54 @@ public:
 
 using verilog_declaratorst = std::vector<verilog_declaratort>;
 
+/// a declaration -- these may be statements or module items
+class verilog_declt : public verilog_module_itemt
+{
+public:
+  verilog_declt() : verilog_module_itemt{ID_decl}
+  {
+  }
+
+  explicit verilog_declt(irep_idt _id) : verilog_module_itemt{_id}
+  {
+  }
+
+  irep_idt get_class() const
+  {
+    return get(ID_class);
+  }
+
+  void set_class(const irep_idt &_class)
+  {
+    set(ID_class, _class);
+  }
+
+  using declaratort = verilog_declaratort;
+  using declaratorst = verilog_declaratorst;
+
+  declaratorst &declarators()
+  {
+    return (declaratorst &)operands();
+  }
+
+  const declaratorst &declarators() const
+  {
+    return (const declaratorst &)operands();
+  }
+};
+
+inline const verilog_declt &to_verilog_decl(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_decl);
+  return static_cast<const verilog_declt &>(irep);
+}
+
+inline verilog_declt &to_verilog_decl(exprt &irep)
+{
+  PRECONDITION(irep.id() == ID_decl);
+  return static_cast<verilog_declt &>(irep);
+}
+
 class verilog_generate_assignt : public verilog_module_itemt
 {
 public:
@@ -732,25 +780,11 @@ inline verilog_case_generatet &to_verilog_case_generate(exprt &expr)
 }
 
 /// a SystemVerilog genvar declaration
-class verilog_generate_declt : public verilog_module_itemt
+class verilog_generate_declt : public verilog_declt
 {
 public:
-  inline verilog_generate_declt()
-    : verilog_module_itemt(ID_verilog_generate_decl)
+  inline verilog_generate_declt() : verilog_declt{ID_verilog_generate_decl}
   {
-  }
-
-  using declaratort = verilog_declaratort;
-  using declaratorst = verilog_declaratorst;
-
-  const declaratorst &declarators() const
-  {
-    return (const declaratorst &)operands();
-  }
-
-  declaratorst &declarators()
-  {
-    return (declaratorst &)operands();
   }
 };
 
@@ -888,24 +922,11 @@ inline verilog_set_genvarst &to_verilog_set_genvars(exprt &expr)
 }
 
 /// a SystemVerilog parameter declaration
-class verilog_parameter_declt : public verilog_module_itemt
+class verilog_parameter_declt : public verilog_declt
 {
 public:
-  inline verilog_parameter_declt() : verilog_module_itemt(ID_parameter_decl)
+  inline verilog_parameter_declt() : verilog_declt(ID_parameter_decl)
   {
-  }
-
-  using declaratort = verilog_declaratort;
-  using declaratorst = verilog_declaratorst;
-
-  const declaratorst &declarators() const
-  {
-    return (const declaratorst &)operands();
-  }
-
-  declaratorst &declarators()
-  {
-    return (declaratorst &)operands();
   }
 };
 
@@ -922,25 +943,12 @@ inline verilog_parameter_declt &to_verilog_parameter_decl(irept &irep)
   return static_cast<verilog_parameter_declt &>(irep);
 }
 
-class verilog_local_parameter_declt : public verilog_module_itemt
+class verilog_local_parameter_declt : public verilog_declt
 {
 public:
   inline verilog_local_parameter_declt()
-    : verilog_module_itemt(ID_local_parameter_decl)
+    : verilog_declt(ID_local_parameter_decl)
   {
-  }
-
-  using declaratort = verilog_declaratort;
-  using declaratorst = verilog_declaratorst;
-
-  const declaratorst &declarators() const
-  {
-    return (const declaratorst &)operands();
-  }
-
-  declaratorst &declarators()
-  {
-    return (declaratorst &)operands();
   }
 };
 
@@ -1223,49 +1231,6 @@ inline verilog_always_baset &to_verilog_always_base(exprt &expr)
 {
   unary_exprt::check(expr);
   return static_cast<verilog_always_baset &>(expr);
-}
-
-class verilog_declt:public verilog_statementt
-{
-public:
-  verilog_declt():verilog_statementt(ID_decl)
-  {
-  }
-
-  irep_idt get_class() const
-  {
-    return get(ID_class);
-  }
-
-  void set_class(const irep_idt &_class)
-  {
-    set(ID_class, _class);
-  }
-
-  using declaratort = verilog_declaratort;
-  using declaratorst = verilog_declaratorst;
-
-  declaratorst &declarators()
-  {
-    return (declaratorst &)operands();
-  }
-
-  const declaratorst &declarators() const
-  {
-    return (const declaratorst &)operands();
-  }
-};
-
-inline const verilog_declt &to_verilog_decl(const irept &irep)
-{
-  PRECONDITION(irep.id() == ID_decl);
-  return static_cast<const verilog_declt &>(irep);
-}
-
-inline verilog_declt &to_verilog_decl(exprt &irep)
-{
-  PRECONDITION(irep.id() == ID_decl);
-  return static_cast<verilog_declt &>(irep);
 }
 
 /// function and task declarations
