@@ -1685,6 +1685,34 @@ void verilog_synthesist::synth_module_instance_builtin(
 
 /*******************************************************************\
 
+Function: verilog_synthesist::find_module_symbols
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::vector<irep_idt>
+verilog_synthesist::find_module_symbols(const symbolt &module_symbol) const
+{
+  std::vector<irep_idt> result;
+
+  auto lower = symbol_table.symbol_module_map.lower_bound(module_symbol.module);
+  auto upper = symbol_table.symbol_module_map.upper_bound(module_symbol.module);
+
+  for(auto it = lower; it != upper; it++)
+  {
+    result.push_back(it->second);
+  }
+
+  return result;
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::expand_module_instance
 
   Inputs:
@@ -1706,13 +1734,12 @@ void verilog_synthesist::expand_module_instance(
 
   std::list<irep_idt> new_symbols;
 
-  for(auto it =
-        symbol_table.symbol_module_map.lower_bound(module_symbol.module);
-      it != symbol_table.symbol_module_map.upper_bound(module_symbol.module);
-      it++)
+  const auto old_symbols = find_module_symbols(module_symbol);
+
+  for(auto &symbol_identifier : old_symbols)
   {
-    const symbolt &symbol=ns.lookup(it->second);
-    
+    const symbolt &symbol = ns.lookup(symbol_identifier);
+
     if(symbol.type.id()!=ID_module)
     {
       // instantiate the symbol

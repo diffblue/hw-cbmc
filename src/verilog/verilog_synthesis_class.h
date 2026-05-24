@@ -323,6 +323,8 @@ protected:
     const exprt &values,
     const exprt &case_operand);
 
+  std::vector<irep_idt> find_module_symbols(const symbolt &module_symbol) const;
+
   void expand_module_instance(
     const symbolt &module_symbol,
     const verilog_instt::instancet &,
