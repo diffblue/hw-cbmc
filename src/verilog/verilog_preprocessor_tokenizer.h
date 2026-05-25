@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef VERILOG_PREPROCESSOR_TOKENIZER_H
 #define VERILOG_PREPROCESSOR_TOKENIZER_H
 
+#include "flex_interface.h"
 #include "verilog_preprocessor_error.h"
 
 #include <vector>
@@ -84,26 +85,23 @@ protected:
   virtual void get_token_from_stream() = 0;
 };
 
+class verilog_preprocessor_flext : public flex_interfacet
+{
+public:
+  int lex() override;
+  void init() override;
+  text_and_lengt text_and_leng() override;
+};
+
 class verilog_preprocessor_tokenizert
   : public verilog_preprocessor_token_sourcet
 {
 public:
-  explicit verilog_preprocessor_tokenizert(std::istream &_in);
+  explicit verilog_preprocessor_tokenizert(std::istream &);
 
-  // for flex
-  std::size_t yy_input(char *buffer, std::size_t max_size);
-  void text(const char *buffer, std::size_t len)
-  {
-    token.text = std::string(buffer, len);
-  }
-
-  void text(char ch)
-  {
-    token.text = std::string(1, ch);
-  }
+  verilog_preprocessor_flext flex;
 
 protected:
-  std::istream &in;
   void get_token_from_stream() override;
 };
 
