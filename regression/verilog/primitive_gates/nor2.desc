@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 nor2.sv
 --top main
 ^\[main\.nor_ok\] always !main\.nor_in1 == main\.nor_out: PROVED .*$

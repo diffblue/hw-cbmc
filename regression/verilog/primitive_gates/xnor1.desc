@@ -1,4 +1,4 @@
-CORE broken-smt-backend
+CORE
 xnor1.sv
 --top main
 ^\[main\.xnor_ok\] always !xor\(xor\(main\.xnor_in1, main\.xnor_in2\), main\.xnor_in3\) == main\.xnor_out: PROVED .*$

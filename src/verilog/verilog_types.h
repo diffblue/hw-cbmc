@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/bitvector_types.h>
 #include <util/ieee_float.h>
+#include <util/std_types.h>
 
 /// Used during elaboration only,
 /// to signal that a symbol is yet to be elaborated.

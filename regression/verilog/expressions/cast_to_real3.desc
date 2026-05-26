@@ -1,4 +1,4 @@
-KNOWNBUG broken-smt-backend
+CORE
 cast_to_real3.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ cast_to_real3.sv
 --
 ^warning: ignoring
 --
-The flattening solver fails with a width error.
