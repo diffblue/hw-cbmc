@@ -275,12 +275,12 @@ irep_idt verilog_typecheckt::parameterize_module(
 
   const symbolt &source_symbol = it->second;
 
-  const auto &source = source_symbol.type.find(ID_module_source);
+  // find the source
+  const auto &module_source =
+    to_verilog_module_source(source_symbol.type.find(ID_module_source));
 
   auto parameter_values = get_parameter_values(
-    to_verilog_module_source(source),
-    parameter_assignments,
-    instance_defparams);
+    module_source, parameter_assignments, instance_defparams);
 
   // Create full parameterized module name by appending a suffix
   // to the name of the instantiated module.
@@ -296,12 +296,13 @@ irep_idt verilog_typecheckt::parameterize_module(
 
   symbol.name = new_module_identifier;
   symbol.module = new_module_identifier;
-  symbol.type.id(ID_module);
+  symbol.type = typet{ID_module};
+
+  // copy the module source
+  verilog_module_sourcet source_copy = module_source;
 
   // set parameters
-  set_parameter_values(
-    to_verilog_module_source(symbol.type.add(ID_module_source)),
-    parameter_values);
+  set_parameter_values(source_copy, parameter_values);
 
   // put symbol in symbol_table
   symbolt *new_symbol;
@@ -317,7 +318,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   verilog_typecheckt verilog_typecheck(
     standard, warn_implicit_nets, symbol_table, get_message_handler());
 
-  verilog_typecheck.typecheck_design_element(*new_symbol);
+  verilog_typecheck.typecheck_design_element(source_copy, *new_symbol);
 
   return new_module_identifier;
 }

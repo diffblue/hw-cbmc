@@ -1772,12 +1772,11 @@ Function: verilog_typecheckt::typecheck_design_element
 
 \*******************************************************************/
 
-void verilog_typecheckt::typecheck_design_element(symbolt &symbol)
+void verilog_typecheckt::typecheck_design_element(
+  const verilog_module_sourcet &module_source,
+  symbolt &symbol)
 {
   module_identifier = symbol.name;
-
-  const auto &module_source =
-    to_verilog_module_source(symbol.type.find(ID_module_source));
 
   // Elaborate the named constants (parameters, enums),
   // generate constructs, and add the symbols to the symbol table.
@@ -1940,12 +1939,15 @@ bool verilog_typecheck(
   PRECONDITION(
     symbol_table.symbols.find(module_identifier) == symbol_table.symbols.end());
 
+  const auto &module_source =
+    to_verilog_module_source(source_symbol.type.find(ID_module_source));
+
   // copy the symbol
   symbolt symbol{source_symbol};
 
   symbol.name = module_identifier;
   symbol.module = module_identifier;
-  symbol.type.id(ID_module);
+  symbol.type = typet{ID_module};
 
   // put symbol in symbol_table
   symbolt *new_symbol;
@@ -1958,7 +1960,7 @@ bool verilog_typecheck(
 
   try
   {
-    verilog_typecheck.typecheck_design_element(*new_symbol);
+    verilog_typecheck.typecheck_design_element(module_source, *new_symbol);
   }
 
   catch(const typecheckt::errort &e)
