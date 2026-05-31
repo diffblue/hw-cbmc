@@ -131,12 +131,9 @@ protected:
   irep_idt parameterize_module(
     const source_locationt &location,
     const irep_idt &module_identifier,
+    const irep_idt &instance_identifier,
     const exprt::operandst &parameter_assignment,
     const std::map<irep_idt, exprt> &defparams);
-
-  irep_idt parameterized_module_identifier(
-    const irep_idt &module_identifier,
-    const std::list<exprt> &parameter_values) const;
 
   std::vector<verilog_parameter_declt::declaratort>
   get_parameter_declarators(const verilog_module_sourcet &);

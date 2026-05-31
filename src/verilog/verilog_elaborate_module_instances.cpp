@@ -362,17 +362,17 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
     const irep_idt instance_identifier =
       hierarchical_identifier(instance_base_name);
 
-    instance.identifier(instance_identifier);
-
     // add relevant defparam assignments
     auto &instance_defparams = defparams[instance_identifier];
 
     irep_idt new_module_identifier = parameterize_module(
       inst.source_location(),
       module_identifier,
+      instance_identifier,
       parameter_assignments,
       instance_defparams);
 
+    instance.identifier(instance_identifier);
     instance.module_identifier(new_module_identifier);
 
     symbolt &instance_symbol = symbol_table_lookup(instance_identifier);

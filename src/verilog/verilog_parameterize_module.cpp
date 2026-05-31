@@ -195,61 +195,6 @@ void verilog_typecheckt::set_parameter_values(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterized_module_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-irep_idt verilog_typecheckt::parameterized_module_identifier(
-  const irep_idt &module_identifier,
-  const std::list<exprt> &parameter_values) const
-{
-  // No actual parameters? No suffix!
-  if(parameter_values.empty())
-    return module_identifier;
-
-  // Create full parameterized module name by appending a suffix
-  // to the name of the instantiated module.
-  std::string suffix="(";
-  
-  bool first=true;
-
-  for(const auto &pv : parameter_values)
-  {
-    if(first)
-      first = false;
-    else
-      suffix += ",";
-
-    if(pv.is_not_nil())
-    {
-      if(pv.id() == ID_type)
-      {
-        suffix += verilog_typename(to_type_expr(pv).type());
-      }
-      else if(pv.id() == ID_constant)
-      {
-        mp_integer i = numeric_cast_v<mp_integer>(to_constant_expr(pv));
-        suffix += integer2string(i);
-      }
-      else
-        DATA_INVARIANT(
-          false, "parameter value expected to be type or constant");
-    }
-  }
-
-  suffix+=')';
-
-  return id2string(module_identifier) + suffix;
-}
-
-/*******************************************************************\
-
 Function: verilog_typecheckt::parameterize_module
 
   Inputs:
@@ -263,6 +208,7 @@ Function: verilog_typecheckt::parameterize_module
 irep_idt verilog_typecheckt::parameterize_module(
   const source_locationt &location,
   const irep_idt &module_identifier,
+  const irep_idt &instance_identifier,
   const exprt::operandst &parameter_assignments,
   const std::map<irep_idt, exprt> &instance_defparams)
 {
@@ -282,14 +228,14 @@ irep_idt verilog_typecheckt::parameterize_module(
   auto parameter_values = get_parameter_values(
     module_source, parameter_assignments, instance_defparams);
 
-  // Create full parameterized module name by appending a suffix
-  // to the name of the instantiated module.
-  auto new_module_identifier =
-    parameterized_module_identifier(module_identifier, parameter_values);
+  // Create full parameterized module name by appending "$module"
+  // to the name of the module instance.
+  auto new_module_identifier = id2string(instance_identifier) + "$module";
 
-  if(symbol_table.symbols.find(new_module_identifier)!=
-     symbol_table.symbols.end())
-    return new_module_identifier; // done already
+  DATA_INVARIANT(
+    symbol_table.symbols.find(new_module_identifier) ==
+      symbol_table.symbols.end(),
+    "instantiated module symbol must not yet exist");
 
   // copy the symbol
   symbolt symbol{source_symbol};
@@ -307,11 +253,8 @@ irep_idt verilog_typecheckt::parameterize_module(
   // put symbol in symbol_table
   symbolt *new_symbol;
 
-  if(symbol_table.move(symbol, new_symbol))
-  {
-    throw errort().with_location(location)
-      << "duplicate definition of parameterized module " << symbol.base_name;
-  }
+  bool move_return = symbol_table.move(symbol, new_symbol);
+  CHECK_RETURN(!move_return);
 
   // recursive call
 
