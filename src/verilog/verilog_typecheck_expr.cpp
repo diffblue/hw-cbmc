@@ -53,34 +53,30 @@ verilog_typecheck_exprt::hierarchical_identifier(irep_idt base_name) const
   const std::string named_block =
     named_blocks.empty() ? std::string() : id2string(named_blocks.back());
 
+  static const std::string verilog_prefix = "Verilog::";
+  static const std::string package_prefix = "Verilog::package::";
+
   if(!function_or_task_name.empty())
   {
     return id2string(function_or_task_name) + "." + named_block +
            id2string(base_name);
   }
-  else if(!module_identifier.empty())
+  else if(has_prefix(id2string(module_identifier), package_prefix))
   {
-    // used for both modules and packages
-    static const std::string verilog_prefix = "Verilog::";
-    static const std::string package_prefix = "Verilog::package::";
-
-    if(has_prefix(id2string(module_identifier), package_prefix))
-    {
-      auto package_name =
-        std::string{id2string(module_identifier), package_prefix.size()};
-      // Verilog::package_name::base_name
-      return verilog_package_identifier(package_name, base_name);
-    }
-    else
-    {
-      // Verilog::module_name.block.base_name
-      return id2string(module_identifier) + "." + named_block +
-             id2string(base_name);
-    }
+    auto package_name =
+      std::string{id2string(module_identifier), package_prefix.size()};
+    // Verilog::package_name::base_name
+    return verilog_package_identifier(package_name, base_name);
+  }
+  else if(!module_instance.empty())
+  {
+    // Verilog::instance.block.base_name
+    return id2string(module_instance) + '.' + named_block +
+           id2string(base_name);
   }
   else
   {
-    // not in a function/task, not in a module/checker/package etc.
+    // not in a function/task, not in a package, not in a module/checker
     return verilog_unit_scope_identifier(base_name);
   }
 }
@@ -853,7 +849,7 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
     // first look in the current module
     irep_idt full_identifier =
-      id2string(module_identifier) + "." + id2string(base_name);
+      id2string(module_instance) + "." + id2string(base_name);
 
     if(ns.lookup(full_identifier, symbol))
     {
@@ -1539,19 +1535,21 @@ const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
       return symbol; // found!
   }
 
-  // determine the pacakge/module prefix, using the right separator
+  // determine the pacakge/module instance prefix, using the right separator
   std::string prefix;
   static const std::string package_prefix = "Verilog::package::";
 
   if(has_prefix(id2string(module_identifier), package_prefix))
   {
+    // In a package
     auto package_name =
       std::string{id2string(module_identifier), package_prefix.size()};
     prefix = "Verilog::" + package_name + "::";
   }
   else
   {
-    prefix = id2string(module_identifier) + '.';
+    // In a module instance
+    prefix = id2string(module_instance) + '.';
   }
 
   // try named blocks, beginning with inner one
@@ -1737,22 +1735,9 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
 
   if(expr.lhs().type().id() == ID_verilog_module_instance)
   {
-    // figure out which module the lhs is
-    const symbolt *module_instance_symbol;
-    if(ns.lookup(lhs_identifier, module_instance_symbol))
-    {
-      throw errort().with_location(expr.source_location())
-        << "failed to find module instance `" << lhs_identifier
-        << "' on lhs of `.'";
-    }
-
-    const irep_idt &module =
-      to_verilog_module_instance(module_instance_symbol->value)
-        .module_identifier();
-
     // the identifier in the module
     const irep_idt full_identifier =
-      id2string(module) + "." + id2string(rhs_base_name);
+      id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))
@@ -1770,8 +1755,7 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     else
     {
       throw errort().with_location(expr.source_location())
-        << "identifier `" << rhs_base_name << "' not found in module `"
-        << module_instance_symbol->pretty_name << "'";
+        << "identifier `" << rhs_base_name << "' not found";
     }
 
     // We remember the identifier of the symbol.
@@ -3841,7 +3825,8 @@ Function: verilog_typecheck
 
 bool verilog_typecheck(
   exprt &expr,
-  const std::string &module_identifier,
+  const irep_idt &module_identifier,
+  const irep_idt &module_instance,
   verilog_standardt standard,
   message_handlert &message_handler,
   const namespacet &ns)
@@ -3850,7 +3835,7 @@ bool verilog_typecheck(
     message_handler.get_message_count(messaget::M_ERROR);
 
   verilog_typecheck_exprt verilog_typecheck_expr(
-    standard, true, ns, module_identifier, message_handler);
+    standard, true, ns, module_identifier, module_instance, message_handler);
 
   try
   {

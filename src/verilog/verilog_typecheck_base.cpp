@@ -23,6 +23,13 @@ irep_idt verilog_root_module_name()
   return name;
 }
 
+irep_idt verilog_root_module_identifier()
+{
+  const static irep_idt identifier =
+    verilog_module_symbol(verilog_root_module_name());
+  return identifier;
+}
+
 /*******************************************************************\
 
 Function: verilog_module_symbol
@@ -116,6 +123,34 @@ irep_idt strip_verilog_prefix(const irep_idt &identifier)
   DATA_INVARIANT(
     identifier.size() >= prefix.size(), "Verilog identifier syntax");
   return identifier.c_str()+prefix.size();
+}
+
+/*******************************************************************\
+
+Function: strip_verilog_root_prefix
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt strip_verilog_root_prefix(const irep_idt &identifier)
+{
+  std::string result = id2string(identifier);
+
+  if(std::string(result, 0, 9) == "Verilog::")
+    result.erase(0, 9);
+
+  const static std::string root_module_prefix =
+    id2string(verilog_root_module_name()) + '.';
+
+  if(has_prefix(result, root_module_prefix))
+    result.erase(0, root_module_prefix.size());
+
+  return result;
 }
 
 /*******************************************************************\

@@ -967,6 +967,7 @@ void verilog_synthesist::replace_by_wire(
   new_symbol.location=base.location;
   new_symbol.value=nil_exprt();
   new_symbol.is_auxiliary=true;
+  new_symbol.pretty_name = strip_verilog_root_prefix(new_symbol.name);
 
   symbol_exprt symbol_expr(new_symbol.name, new_symbol.type);
 
@@ -1352,8 +1353,7 @@ void verilog_synthesist::instantiate_port(
   const source_locationt &source_location,
   transt &trans)
 {
-  irep_idt port_identifier = port.identifier();
-
+#if 0
   replace_mapt::const_iterator it = replace_map.find(port_identifier);
 
   if(it==replace_map.end())
@@ -1361,6 +1361,8 @@ void verilog_synthesist::instantiate_port(
     throw errort().with_location(source_location)
       << "failed to find port symbol " << port_identifier << " in replace_map";
   }
+#endif
+  symbol_exprt port_symbol{port.identifier(), port.type()};
 
   // Much like
   //   always @(*) port = value for an input, and
@@ -1371,12 +1373,12 @@ void verilog_synthesist::instantiate_port(
   if(port.output())
   {
     lhs = value;
-    rhs = typecast_exprt::conditional_cast(it->second, value.type());
+    rhs = typecast_exprt::conditional_cast(port_symbol, value.type());
   }
   else
   {
-    lhs = it->second;
-    rhs = typecast_exprt::conditional_cast(value, it->second.type());
+    lhs = port_symbol;
+    rhs = typecast_exprt::conditional_cast(value, port_symbol.type());
   }
 
   verilog_forcet assignment{lhs, rhs};
@@ -1732,6 +1734,7 @@ void verilog_synthesist::expand_module_instance(
 
   replace_mapt replace_map;
 
+#if 0
   std::list<irep_idt> new_symbols;
 
   const auto old_symbols = find_module_symbols(module_symbol);
@@ -1791,6 +1794,7 @@ void verilog_synthesist::expand_module_instance(
     symbolt &symbol=symbol_table_lookup(it);
     replace_symbols(replace_map, symbol.value);
   }
+#endif
 
   // do the trans
 
@@ -2032,6 +2036,8 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
     auto lhs = declarator.symbol_expr();
+
+    local_symbols.insert(lhs.get_identifier());
 
     // This is reg x = ... or wire x = ...
     if(declarator.has_value())
@@ -4045,12 +4051,14 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   assignments.clear();
   invars.clear();
 
+#if 0
   // find out about symbols of this module
 
   for(auto it=symbol_table.symbol_module_map.lower_bound(module);
       it!=symbol_table.symbol_module_map.upper_bound(module);
       it++)
     local_symbols.insert(it->second);
+#endif
 
   // now convert the module items
 
