@@ -892,8 +892,7 @@ void verilog_typecheckt::convert_assert_assume_cover(
   }
 
   // The assert/assume/cover module items use the module name space
-  std::string full_identifier =
-    id2string(module_identifier) + '.' + id2string(base_name);
+  auto full_identifier = hierarchical_identifier(base_name);
 
   if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
   {
