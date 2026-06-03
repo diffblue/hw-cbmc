@@ -354,7 +354,7 @@ void verilog_ebmc_languaget::create_root_module(
   verilog_instt inst;
   inst.module_base_name(top_level_module);
   verilog_inst_baset::instancet instance_expr;
-  instance_expr.set(ID_base_name, top_level_module);
+  instance_expr.base_name(top_level_module);
   instance_expr.identifier(instance_identifier);
   instance_expr.module_identifier(module_identifier);
   inst.instances().push_back(std::move(instance_expr));
