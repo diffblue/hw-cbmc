@@ -93,9 +93,8 @@ void verilog_typecheckt::check_module_ports(
       direction = ID_output;
     }
 
-    ports.emplace_back(identifier, port_symbol->type, direction);
+    ports.emplace_back(identifier, base_name, port_symbol->type, direction);
 
-    ports.back().set("#name", base_name);
     ports.back().set(ID_C_source_location, declarator.source_location());
 
     port_names.insert(base_name);
