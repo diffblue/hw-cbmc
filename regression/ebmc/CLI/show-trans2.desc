@@ -1,0 +1,11 @@
+CORE
+show-trans2.smv
+--show-trans
+activate-multi-line-match
+^State variables:\n$
+^Initial state constraints:\n\n  TRUE\n$
+^State constraints:\n\n  m\.flag = \(a\.q \| a\.p\)\n$
+^Transition constraints:\n\n  TRUE\n$
+^EXIT=0$
+^SIGNAL=0$
+--

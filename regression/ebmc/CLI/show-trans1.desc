@@ -1,0 +1,11 @@
+CORE
+show-trans1.v
+--show-trans
+activate-multi-line-match
+^State variables:\n\n  main\.some_data\n$
+^Initial state constraints:\n\n  1\n$
+^State constraints:\n\n  main\.some_other_data == main\.some_data \+ main\.some_input\n$
+^Transition constraints:\n\n  next\(main\.some_data\) == main\.some_other_data$
+^EXIT=0$
+^SIGNAL=0$
+--
