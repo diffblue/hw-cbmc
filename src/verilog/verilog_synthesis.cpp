@@ -19,6 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
+#include <ebmc/ebmc_error.h>
+
 #include "aval_bval_encoding.h"
 #include "expr2verilog.h"
 #include "sva_expr.h"
@@ -1509,7 +1511,7 @@ Function: verilog_synthesist::synth_module_instance
 
 void verilog_synthesist::synth_module_instance(
   const verilog_instt &statement,
-  transt &trans)
+  transt &trans_dest)
 {
   for(auto &instance : statement.instances())
   {
@@ -1518,8 +1520,8 @@ void verilog_synthesist::synth_module_instance(
     // must be in symbol_table
     const symbolt &module_symbol = ns.lookup(module_identifier);
 
-    // make sure the module is synthesized already
-    verilog_synthesis(
+    // get the transition relation of the instantiated module
+    auto trans_inst = verilog_synthesis(
       symbol_table,
       module_identifier,
       standard,
@@ -1527,7 +1529,7 @@ void verilog_synthesist::synth_module_instance(
       initial_zero,
       get_message_handler());
 
-    expand_module_instance(module_symbol, instance, trans);
+    expand_module_instance(module_symbol, trans_inst, instance, trans_dest);
   }
 }
 
@@ -1725,8 +1727,9 @@ Function: verilog_synthesist::expand_module_instance
 
 void verilog_synthesist::expand_module_instance(
   const symbolt &module_symbol,
+  const transt &trans_inst,
   const verilog_instt::instancet &instance,
-  transt &trans)
+  transt &trans_dest)
 {
   construct=constructt::OTHER;
 
@@ -1792,25 +1795,19 @@ void verilog_synthesist::expand_module_instance(
     replace_symbols(replace_map, symbol.value);
   }
 
-  // do the trans
+  // do the trans of the instantiated module
 
   {
-    exprt tmp = module_symbol.value;
-
-    if(tmp.id()!=ID_trans || tmp.operands().size()!=3)
-    {
-      throw errort().with_location(instance.source_location())
-        << "Expected transition system, but got `" << tmp.id() << '\'';
-    }
+    transt tmp = trans_inst;
 
     replace_symbols(replace_map, tmp);
 
-    for(unsigned i=0; i<3; i++)
-      trans.operands()[i].add_to_operands(std::move(tmp.operands()[i]));
+    for(std::size_t i = 0; i < 3; i++)
+      trans_dest.operands()[i].add_to_operands(std::move(tmp.operands()[i]));
   }
 
   instantiate_ports(
-    instance.base_name(), instance, module_symbol, replace_map, trans);
+    instance.base_name(), instance, module_symbol, replace_map, trans_dest);
 }
 
 /*******************************************************************\
@@ -4095,7 +4092,7 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
 
 /*******************************************************************\
 
-Function: verilog_synthesist::typecheck
+Function: verilog_synthesist::synthesis
 
   Inputs:
 
@@ -4105,11 +4102,18 @@ Function: verilog_synthesist::typecheck
 
 \*******************************************************************/
 
-void verilog_synthesist::typecheck()
+transt verilog_synthesist::synthesis()
 {
   symbolt &symbol=symbol_table_lookup(module);
-  if(symbol.value.id()==ID_trans) return; // done already
-  convert_module_items(symbol);
+
+  // done already?
+  if(symbol.value.id() != ID_trans)
+  {
+    convert_module_items(symbol);
+    CHECK_RETURN(symbol.value.id() == ID_trans);
+  }
+
+  return to_trans_expr(symbol.value);
 }
 
 /*******************************************************************\
@@ -4124,7 +4128,7 @@ Function: verilog_synthesis
 
 \*******************************************************************/
 
-bool verilog_synthesis(
+transt verilog_synthesis(
   symbol_table_baset &symbol_table,
   const irep_idt &module,
   verilog_standardt standard,
@@ -4133,6 +4137,7 @@ bool verilog_synthesis(
   message_handlert &message_handler)
 {
   const namespacet ns(symbol_table);
+
   verilog_synthesist verilog_synthesis(
     standard,
     ignore_initial,
@@ -4141,7 +4146,25 @@ bool verilog_synthesis(
     symbol_table,
     module,
     message_handler);
-  return verilog_synthesis.typecheck_main();
+
+  try
+  {
+    return verilog_synthesis.synthesis();
+  }
+  catch(verilog_synthesist::errort error)
+  {
+    messaget message{message_handler};
+
+    if(error.what().empty())
+      message.error();
+    else
+    {
+      message.error().source_location = error.source_location();
+      message.error() << error.what() << messaget::eom;
+    }
+
+    throw ebmc_errort{};
+  }
 }
 
 /*******************************************************************\

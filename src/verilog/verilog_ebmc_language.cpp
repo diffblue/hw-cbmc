@@ -166,13 +166,17 @@ void verilog_ebmc_languaget::typecheck_module(
   const bool ignore_initial = cmdline.isset("ignore-initial");
   const bool initial_zero = cmdline.isset("initial-zero");
 
-  if(verilog_synthesis(
-       symbol_table,
-       module.identifier,
-       module.parse_tree.standard,
-       ignore_initial,
-       initial_zero,
-       message_handler))
+  try
+  {
+    verilog_synthesis(
+      symbol_table,
+      module.identifier,
+      module.parse_tree.standard,
+      ignore_initial,
+      initial_zero,
+      message_handler);
+  }
+  catch(ebmc_errort)
   {
     log.error() << "CONVERSION ERROR" << messaget::eom;
     throw ebmc_errort{}.with_exit_code(2);
@@ -332,8 +336,10 @@ verilog_ebmc_languaget::top_level_module(const parse_treest &parse_trees) const
 void verilog_ebmc_languaget::create_root_module(
   irep_idt top_level_module,
   verilog_standardt standard,
-  symbol_tablet &symbol_table)
+  transition_systemt &transition_system)
 {
+  auto &symbol_table = transition_system.symbol_table;
+
   auto module_identifier = verilog_module_symbol(top_level_module);
   auto root_identifier = verilog_module_symbol(verilog_root_module_name());
   auto instance_identifier =
@@ -389,38 +395,19 @@ void verilog_ebmc_languaget::create_root_module(
   auto add_result_root = symbol_table.add(root_symbol);
   CHECK_RETURN(!add_result_root);
 
+  transition_system.main_symbol = symbol_table.lookup(root_identifier);
+
   const bool ignore_initial = cmdline.isset("ignore-initial");
   const bool initial_zero = cmdline.isset("initial-zero");
 
   // Synthesize $root, which expands the top-level module instance
-  verilog_synthesis(
+  transition_system.trans_expr = verilog_synthesis(
     symbol_table,
     root_identifier,
     standard,
     ignore_initial,
     initial_zero,
     message_handler);
-}
-
-static bool get_main(
-  message_handlert &message_handler,
-  transition_systemt &transition_system)
-{
-  try
-  {
-    auto identifier = verilog_module_symbol(verilog_root_module_name());
-    auto symbol_it = transition_system.symbol_table.symbols.find(identifier);
-    CHECK_RETURN(symbol_it != transition_system.symbol_table.symbols.end());
-    transition_system.main_symbol = &symbol_it->second;
-    transition_system.trans_expr = to_trans_expr(symbol_it->second.value);
-  }
-
-  catch(int e)
-  {
-    return true;
-  }
-
-  return false;
 }
 
 static void make_next_state(exprt &expr)
@@ -538,18 +525,13 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 
   // Create the $root module instance and synthesize it
   create_root_module(
-    top_level_module,
-    parse_trees.front().standard,
-    transition_system.symbol_table);
+    top_level_module, parse_trees.front().standard, transition_system);
 
   if(cmdline.isset("show-symbol-table"))
   {
     std::cout << transition_system.symbol_table;
     return {};
   }
-
-  if(get_main(message_handler, transition_system))
-    throw ebmc_errort{}.with_exit_code(1);
 
   if(cmdline.isset("show-module-hierarchy"))
   {
