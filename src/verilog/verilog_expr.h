@@ -1064,6 +1064,11 @@ public:
       return get(ID_base_name);
     }
 
+    void base_name(irep_idt _base_name)
+    {
+      return set(ID_base_name, _base_name);
+    }
+
     // The identifier of the instance.
     const irep_idt &identifier() const
     {
