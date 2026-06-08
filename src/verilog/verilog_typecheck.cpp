@@ -583,7 +583,7 @@ void verilog_typecheckt::check_lhs(
     switch(vassign)
     {
     case A_CONTINUOUS:
-      if(symbol.is_state_var)
+      if(symbol.is_lvalue)
       {
         // Continuous assignments can drive variables.
       }
@@ -596,8 +596,7 @@ void verilog_typecheckt::check_lhs(
 
     case A_BLOCKING:
     case A_NON_BLOCKING:
-      if(!symbol.is_state_var &&
-         !symbol.is_lvalue)
+      if(!symbol.is_lvalue)
       {
         throw errort().with_location(lhs.source_location())
           << "procedural assignment to a net\n"
@@ -608,7 +607,7 @@ void verilog_typecheckt::check_lhs(
       break;
 
     case A_PROCEDURAL_CONTINUOUS:
-      if(!symbol.is_state_var && !symbol.is_lvalue)
+      if(!symbol.is_lvalue)
       {
         throw errort().with_location(lhs.source_location())
           << "procedural continuous assignment to a net\n"
