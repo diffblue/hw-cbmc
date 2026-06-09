@@ -1,0 +1,10 @@
+KNOWNBUG
+verilog_function2.sv
+--smv-netlist
+^EXIT=0$
+^SIGNAL=0$
+--
+^ASSIGN next\(.*\):=.*;$
+^warning: ignoring
+--
+next-state constraints are generated.
