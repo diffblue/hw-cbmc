@@ -59,7 +59,12 @@ public:
   {
   }
 
-  virtual void typecheck();
+  virtual void typecheck()
+  {
+  }
+
+  // throws errort on error
+  transt synthesis();
 
   enum class symbol_statet
   {
@@ -327,8 +332,9 @@ protected:
 
   void expand_module_instance(
     const symbolt &module_symbol,
+    const transt &trans_inst,
     const verilog_instt::instancet &,
-    transt &trans);
+    transt &trans_dest);
 
   void expand_hierarchical_identifier(
     class hierarchical_identifier_exprt &expr,

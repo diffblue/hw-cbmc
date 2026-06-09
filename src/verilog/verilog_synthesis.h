@@ -15,9 +15,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_standard.h"
 
-bool verilog_synthesis(
+class transt;
+
+transt verilog_synthesis(
   symbol_table_baset &,
-  const irep_idt &module,
+  const irep_idt &module_identifier,
   verilog_standardt,
   bool ignore_initial,
   bool initial_zero,

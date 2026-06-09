@@ -73,7 +73,7 @@ protected:
   void create_root_module(
     irep_idt top_level_module,
     verilog_standardt,
-    symbol_tablet &);
+    transition_systemt &);
 };
 
 #endif // EBMC_VERILOG_LANGUAGE_H
