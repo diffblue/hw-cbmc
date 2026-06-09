@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ct2.sv
 
 ^\[main\.a0\] always main\.x == 0: ASSUMED$
@@ -8,4 +8,3 @@ ct2.sv
 --
 ^warning: ignoring
 --
-The CT does not apply, but should.

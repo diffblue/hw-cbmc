@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 verilog_function2.sv
 --smv-netlist
 ^EXIT=0$
@@ -7,4 +7,3 @@ verilog_function2.sv
 ^ASSIGN next\(.*\):=.*;$
 ^warning: ignoring
 --
-next-state constraints are generated.

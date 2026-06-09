@@ -55,7 +55,7 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
     else if(port_class == ID_output_register)
     {
       new_symbol.is_output = true;
-      new_symbol.is_state_var = true;
+      new_symbol.is_lvalue = true;
     }
     else if(port_class == ID_inout)
     {
@@ -66,7 +66,7 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
     {
       new_symbol.is_input = false;
       new_symbol.is_output = false;
-      new_symbol.is_state_var = true;
+      new_symbol.is_lvalue = true;
     }
     else
       DATA_INVARIANT(false, "unexpected port class");
@@ -293,7 +293,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       else if(decl_class == ID_output_register)
       {
         symbol.is_output = true;
-        symbol.is_state_var = true;
+        symbol.is_lvalue = true;
       }
       else if(decl_class == ID_inout)
       {
@@ -351,10 +351,10 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
           osymbol.is_input = symbol.is_input;
           osymbol.is_output = symbol.is_output;
-          osymbol.is_state_var = symbol.is_state_var || osymbol.is_state_var;
+          osymbol.is_lvalue = symbol.is_lvalue || osymbol.is_lvalue;
 
-          // a register can't be an input as well
-          if(osymbol.is_input && osymbol.is_state_var)
+          // a variable can't be an input as well
+          if(osymbol.is_input && osymbol.is_lvalue)
           {
             throw errort().with_location(declarator.source_location())
               << "port `" << symbol.base_name
@@ -383,8 +383,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbol.mode = mode;
       symbol.module = module_identifier;
       symbol.value.make_nil();
-
-      symbol.is_state_var = true;
+      symbol.is_lvalue = true; // even inputs can be assigned
 
       if(decl_class == ID_input)
       {
@@ -543,7 +542,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
     symbol.mode = mode;
     symbol.module = module_identifier;
     symbol.value = nil_exprt();
-    symbol.is_state_var = true;
+    symbol.is_lvalue = true;
 
     for(auto &declarator : decl.declarators())
     {
@@ -585,7 +584,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
               osymbol.type = symbol.type;
           }
 
-          osymbol.is_state_var = true;
+          osymbol.is_lvalue = true;
         }
         else
         {
@@ -644,7 +643,6 @@ void verilog_typecheckt::collect_symbols(
     to_code_type(symbol.type).return_type().id() != ID_verilog_void)
   {
     symbolt return_symbol;
-    return_symbol.is_state_var = true;
     return_symbol.is_lvalue = true;
     return_symbol.mode = symbol.mode;
     return_symbol.module = symbol.module;
