@@ -1,0 +1,9 @@
+KNOWNBUG
+task_ref1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This does not parse.
