@@ -53,11 +53,34 @@ static void output(
   }
 }
 
+static void show_state_variables(
+  const std::vector<symbol_exprt> &state_variables,
+  std::ostream &out,
+  languaget &language,
+  const namespacet &ns)
+{
+  for(auto &state_variable : state_variables)
+  {
+    std::string text;
+
+    if(language.from_expr(state_variable, text, ns))
+    {
+      throw ebmc_errort() << "failed to convert expression";
+    }
+
+    out << "  " << text << '\n' << '\n';
+  }
+}
+
 void transition_systemt::output(std::ostream &out) const
 {
   auto language = get_language_from_mode(main_symbol->mode);
 
   const namespacet ns{symbol_table};
+
+  out << "State variables:\n\n";
+
+  show_state_variables(state_variables(), out, *language, ns);
 
   out << "Initial state constraints:\n\n";
 
