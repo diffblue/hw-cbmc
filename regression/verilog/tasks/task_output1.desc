@@ -1,0 +1,10 @@
+CORE
+task_output1.sv
+
+^\[.*\] main\.some_task\.some_output == 123: REFUTED$
+^\[.*\] main\.some_task\.some_output == 32'hs1C8: PROVED .*$
+^\[.*\] main\.x == 32'hs1C8: PROVED .*$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
