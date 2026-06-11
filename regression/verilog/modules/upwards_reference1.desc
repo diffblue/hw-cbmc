@@ -1,0 +1,8 @@
+KNOWNBUG
+upwards_reference1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This does not typecheck.
