@@ -366,31 +366,19 @@ void verilog_ebmc_languaget::create_root_module(
   inst.instances().push_back(std::move(instance_expr));
 
   // Create the $root module symbol with the inst as its only module item.
-  // Copy the type from the top-level module, updating port identifiers.
   auto &top_symbol = symbol_table.lookup_ref(module_identifier);
 
-  symbolt root_symbol{root_identifier, top_symbol.type, ID_Verilog};
+  symbolt root_symbol{root_identifier, module_typet{}, ID_Verilog};
   root_symbol.base_name = verilog_root_module_name();
   root_symbol.pretty_name = verilog_root_module_name();
   root_symbol.module = root_identifier;
   root_symbol.value = verilog_module_exprt({std::move(inst)});
 
-  const std::string &module_identifier_string = id2string(module_identifier);
+  // Create the ports for the $root module
+  auto &root_ports = to_module_type(root_symbol.type).ports();
 
-  // Update port identifiers to reflect the $root hierarchy
-  for(auto &port : to_module_type(root_symbol.type).ports())
-  {
-    auto old_id = id2string(port.identifier());
-    // Replace Verilog::MODULE with Verilog::$root.MODULE
-    if(
-      old_id.compare(0, module_identifier.size(), module_identifier_string) ==
-      0)
-    {
-      port.identifier(
-        id2string(instance_identifier) +
-        old_id.substr(module_identifier.size()));
-    }
-  }
+  for(auto &top_port : to_module_type(top_symbol.type).ports())
+    root_ports.push_back(top_port);
 
   auto add_result_root = symbol_table.add(root_symbol);
   CHECK_RETURN(!add_result_root);

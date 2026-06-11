@@ -210,10 +210,15 @@ public:
   class portt : public irept
   {
   public:
-    portt(irep_idt _identifier, typet _type, irep_idt _direction)
+    portt(
+      irep_idt _identifier,
+      irep_idt _base_name,
+      typet _type,
+      irep_idt _direction)
       : irept(ID_symbol)
     {
       identifier(_identifier);
+      base_name(_base_name);
       type() = std::move(_type);
       direction(_direction);
     }
@@ -226,6 +231,16 @@ public:
     const typet &type() const
     {
       return static_cast<const typet &>(find(ID_type));
+    }
+
+    irep_idt base_name() const
+    {
+      return get("#name");
+    }
+
+    void base_name(irep_idt _base_name)
+    {
+      return set("#name", _base_name);
     }
 
     irep_idt identifier() const
