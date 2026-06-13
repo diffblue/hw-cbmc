@@ -119,20 +119,6 @@ constant_exprt convert_real_literal(const irep_idt &value)
   return result;
 }
 
-static constant_exprt unsized(constant_exprt expr)
-{
-  expr.set(ID_C_verilog_unsized, true);
-  return expr;
-}
-
-static constant_exprt cond_unsized(constant_exprt expr, bool is_unsized)
-{
-  if(is_unsized)
-    return unsized(std::move(expr));
-  else
-    return expr;
-}
-
 exprt convert_integral_literal(const irep_idt &value)
 {
   // first, get rid of whitespace and underscores
@@ -200,8 +186,8 @@ exprt convert_integral_literal(const irep_idt &value)
     auto type = s_flag_given
                   ? static_cast<typet>(verilog_signedbv_typet{final_bits})
                   : verilog_unsignedbv_typet{final_bits};
-    return cond_unsized(
-      constant_exprt{std::string(final_bits, 'x'), type}, !bits_given);
+    return verilog_based_unsized_literal_exprt{
+      std::string(final_bits, 'x'), type};
   }
   else if(rest == "dz" || rest == "dZ")
   {
@@ -209,8 +195,8 @@ exprt convert_integral_literal(const irep_idt &value)
     auto type = s_flag_given
                   ? static_cast<typet>(verilog_signedbv_typet{final_bits})
                   : verilog_unsignedbv_typet{final_bits};
-    return cond_unsized(
-      constant_exprt{std::string(final_bits, 'z'), type}, !bits_given);
+    return verilog_based_unsized_literal_exprt{
+      std::string(final_bits, 'z'), type};
   }
 
   unsigned base = 10;
@@ -355,13 +341,18 @@ exprt convert_integral_literal(const irep_idt &value)
       // we do a 32-bit minimum if the number of bits isn't given
       if(!bits_given)
       {
-        if(bits < 32)
-        {
-          // do sign extension
-          char extension = is_signed ? fvalue.front() : '0';
-          fvalue = std::string(32 - bits, extension) + fvalue;
-          bits = 32;
-        }
+        // Based unsized literal -- extends MSB (x/z) to context width.
+        // Use 32-bit minimum as the self-determined default.
+        auto type_bits = std::max(bits, std::size_t(32));
+
+        typet type;
+
+        if(is_signed)
+          type = verilog_signedbv_typet{type_bits};
+        else
+          type = verilog_unsignedbv_typet{type_bits};
+
+        return verilog_based_unsized_literal_exprt{fvalue, type};
       }
 
       typet type;
@@ -372,16 +363,26 @@ exprt convert_integral_literal(const irep_idt &value)
         type = verilog_unsignedbv_typet(bits);
 
       // stored as individual bits
-      return cond_unsized(constant_exprt{fvalue, type}, !bits_given);
+      return constant_exprt{fvalue, type};
     }
     else // two valued
     {
-      mp_integer int_value = binary2integer(fvalue, is_signed);
-
-      // we do a 32-bit minimum if the number of bits isn't given
       if(!bits_given)
-        if(bits < 32)
-          bits = 32;
+      {
+        // Based unsized literal with self-determined 32-bit minimum
+        auto type_bits = std::max(bits, std::size_t(32));
+
+        typet type;
+
+        if(is_signed)
+          type = signedbv_typet{type_bits};
+        else
+          type = unsignedbv_typet{type_bits};
+
+        return verilog_based_unsized_literal_exprt{fvalue, type};
+      }
+
+      mp_integer int_value = binary2integer(fvalue, is_signed);
 
       typet type;
 
@@ -391,8 +392,7 @@ exprt convert_integral_literal(const irep_idt &value)
         type = unsignedbv_typet(bits);
 
       // stored as bvrep
-      return cond_unsized(
-        constant_exprt{integer2bvrep(int_value, bits), type}, !bits_given);
+      return constant_exprt{integer2bvrep(int_value, bits), type};
     }
   }
   else
@@ -415,8 +415,13 @@ exprt convert_integral_literal(const irep_idt &value)
     else
       type = unsignedbv_typet(bits);
 
-    return cond_unsized(
-      constant_exprt{integer2bvrep(int_value, bits), type}, !bits_given);
+    if(!bits_given && based)
+    {
+      auto bit_value = integer2binary(int_value, bits);
+      return verilog_based_unsized_literal_exprt{bit_value, type};
+    }
+    else
+      return constant_exprt{integer2bvrep(int_value, bits), type};
   }
 
   UNREACHABLE;

@@ -550,6 +550,20 @@ void verilog_typecheck_exprt::downwards_type_propagation(
       return;
     }
   }
+  else if(expr.id() == ID_verilog_based_unsized_literal)
+  {
+    // 'hxx, 'b1x0, etc. -- extend x/z MSB to context width
+    if(
+      type.id() == ID_signedbv || type.id() == ID_unsignedbv ||
+      type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+    {
+      auto new_width = numeric_cast_v<std::size_t>(get_width(type));
+      expr = typecast_exprt::conditional_cast(
+        to_verilog_based_unsized_literal_expr(expr).with_context(new_width),
+        type);
+      return;
+    }
+  }
 
   // Just cast the expression, leave any operands as they are.
   if(
@@ -668,7 +682,9 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
     convert_expr(*it);
 
     // check if there's an unsized literal (1800-2017 11.4.12)
-    if(it->get_bool(ID_C_verilog_unsized))
+    if(
+      it->id() == ID_verilog_based_unsized_literal ||
+      it->id() == ID_verilog_unbased_unsized_literal)
     {
       throw errort().with_location(it->source_location())
         << "unsized literals are not allowed in concatenations";

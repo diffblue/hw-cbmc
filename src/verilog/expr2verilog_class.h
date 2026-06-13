@@ -21,6 +21,7 @@ class sva_sequence_property_instance_exprt;
 class sva_sequence_repetition_exprt;
 class verilog_identifier_exprt;
 class verilog_unbased_unsized_literal_exprt;
+class verilog_based_unsized_literal_exprt;
 
 // Precedences (higher means binds more strongly).
 // Follows Table 11-2 in IEEE 1800-2017.
@@ -196,6 +197,9 @@ protected:
 
   resultt convert_unbased_unsized_literal(
     const verilog_unbased_unsized_literal_exprt &);
+
+  resultt
+  convert_based_unsized_literal(const verilog_based_unsized_literal_exprt &);
 
   resultt convert_union(const union_exprt &);
 

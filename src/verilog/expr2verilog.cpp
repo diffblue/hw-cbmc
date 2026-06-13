@@ -1660,6 +1660,12 @@ expr2verilogt::resultt expr2verilogt::convert_unbased_unsized_literal(
     verilog_precedencet::MAX, std::string(1, '\'') + id2string(src.value())};
 }
 
+expr2verilogt::resultt expr2verilogt::convert_based_unsized_literal(
+  const verilog_based_unsized_literal_exprt &src)
+{
+  return convert_constant(src.lower());
+}
+
 /*******************************************************************\
 
 Function: expr2verilogt::convert_value_range
@@ -2187,6 +2193,9 @@ expr2verilogt::resultt expr2verilogt::convert_rec(const exprt &src)
 
     { ID_verilog_unbased_unsized_literal, [](expr2verilogt &expr2verilog, const exprt &src) { 
     return expr2verilog.convert_unbased_unsized_literal(to_verilog_unbased_unsized_literal_expr(src)); } },
+
+    { ID_verilog_based_unsized_literal, [](expr2verilogt &expr2verilog, const exprt &src) { 
+    return expr2verilog.convert_based_unsized_literal(to_verilog_based_unsized_literal_expr(src)); } },
 
     { ID_union, [](expr2verilogt &expr2verilog, const exprt &src) {
     return expr2verilog.convert_union(to_union_expr(src)); } }

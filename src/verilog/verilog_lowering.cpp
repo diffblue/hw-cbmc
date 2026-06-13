@@ -899,6 +899,11 @@ exprt verilog_lowering(exprt expr)
     return verilog_lowering(
       to_verilog_unbased_unsized_literal_expr(expr).expand());
   }
+  else if(expr.id() == ID_verilog_based_unsized_literal)
+  {
+    return verilog_lowering(
+      to_verilog_based_unsized_literal_expr(expr).expand());
+  }
   else
     return expr; // leave as is
 
