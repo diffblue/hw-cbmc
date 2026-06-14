@@ -134,7 +134,7 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
         << "too many parameter assignments";
     }
   }
-  
+
   return parameter_values;
 }
 
@@ -152,6 +152,7 @@ Function: verilog_typecheckt::set_parameter_values
 
 void verilog_typecheckt::set_parameter_values(
   verilog_module_sourcet &module_source,
+  const source_locationt &instance_location,
   const std::list<exprt> &parameter_values)
 {
   auto p_it=parameter_values.begin();
@@ -167,6 +168,13 @@ void verilog_typecheckt::set_parameter_values(
       // only overwrite when actually assigned
       if(p_it->is_not_nil())
         declarator.value() = *p_it;
+
+      // check that we do have a value (the default value is optional)
+      if(declarator.value().is_nil())
+      {
+        throw errort().with_location(instance_location)
+          << "parameter port " << declarator.base_name() << " without value";
+      }
 
       p_it++;
     }
@@ -248,7 +256,7 @@ irep_idt verilog_typecheckt::parameterize_module(
   verilog_module_sourcet source_copy = module_source;
 
   // set parameters
-  set_parameter_values(source_copy, parameter_values);
+  set_parameter_values(source_copy, location, parameter_values);
 
   // put symbol in symbol_table
   symbolt *new_symbol;

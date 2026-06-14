@@ -124,9 +124,12 @@ void verilog_typecheckt::collect_symbols(
   }
   else // It's a value parameter.
   {
-    // If there's no type, parameters take the type of the
-    // value. We signal this using the special type "derive_from_value".
+    // The default value is optional, and then it's an error if it is not
+    // supplied in the instantiation.  This is checked in set_parameter_values(...).
+    PRECONDITION(declarator.value().is_not_nil());
 
+    // If there's no type, parameters take the type of the final
+    // value. We signal this using the special type "derive_from_value".
     auto symbol_type =
       to_be_elaborated_typet(type.is_nil() ? derive_from_value_typet() : type);
 
