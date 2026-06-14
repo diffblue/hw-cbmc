@@ -1,6 +1,6 @@
-CORE buechi
+CORE
 cover_sequence3.sv
---buechi --bound 3 --numbered-trace
+--bound 3 --numbered-trace
 ^\[main\.p0\] cover \(main\.c \[\*10\]\): REFUTED up to bound 3$
 ^\[main\.p1\] cover \(main\.c \[\*4:10\]\): PROVED$
 ^Trace with 4 states:$
