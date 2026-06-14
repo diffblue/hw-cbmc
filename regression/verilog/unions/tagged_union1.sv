@@ -8,4 +8,8 @@ module main;
 
   initial v = tagged Invalid;
 
+  VInt i;
+
+  initial i = tagged Valid 123;
+
 endmodule

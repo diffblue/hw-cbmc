@@ -578,6 +578,8 @@ int yyverilogerror(const char *error)
 %left "*" "/" "%"
 %left "**"
 %nonassoc UNARY_PLUS UNARY_MINUS "!" "~" "&~" "++" "--"
+// tagged union expressions bind stronger than anything else
+%left "tagged"
 
 // Statements
 %nonassoc LT_TOK_ELSE
@@ -4774,6 +4776,8 @@ expression:
 tagged_union_expression:
           TOK_TAGGED member_identifier
                 { init($$, ID_verilog_tagged_union); mto($$, $2); }
+        | TOK_TAGGED member_identifier expression %prec TOK_TAGGED
+                { init($$, ID_verilog_tagged_union); mto($$, $2); mto($$, $3); }
         ;
 
 inside_expression:
