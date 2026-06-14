@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 integer_literals4.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ integer_literals4.sv
 --
 ^warning: ignoring
 --
-The extension of the unsigned literal is not implemented.

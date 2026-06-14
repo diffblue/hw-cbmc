@@ -3708,6 +3708,56 @@ to_verilog_unbased_unsized_literal_expr(exprt &expr)
   return static_cast<verilog_unbased_unsized_literal_exprt &>(expr);
 }
 
+/// A based unsized literal, e.g., 'hxx or 'b1x0.
+/// When the MSB is x or z, it is extended to the width of the context
+/// expression (IEEE 1800-2017 5.7.1).
+class verilog_based_unsized_literal_exprt : public nullary_exprt
+{
+public:
+  verilog_based_unsized_literal_exprt(const irep_idt &_value, typet type)
+    : nullary_exprt(ID_verilog_based_unsized_literal, std::move(type))
+  {
+    value(_value);
+  }
+
+  /// The value in binary, using characters '0', '1', 'x', 'z'.
+  /// Examples: 'hx0 → "xxxx0000", 'b1x → "1x", 'o7z → "111zzz"
+  const irep_idt &value() const
+  {
+    return get(ID_value);
+  }
+
+  void value(const irep_idt &value)
+  {
+    set(ID_value, value);
+  }
+
+  // adjust the type to accommodate the width given by the evaluation context
+  verilog_based_unsized_literal_exprt with_context(std::size_t width) const;
+
+  // expand to a constant_exprt with the width given by type()
+  constant_exprt expand() const;
+
+  // return a constant_exprt with the stored value and type directly
+  constant_exprt lower() const;
+};
+
+inline const verilog_based_unsized_literal_exprt &
+to_verilog_based_unsized_literal_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_based_unsized_literal);
+  verilog_based_unsized_literal_exprt::check(expr);
+  return static_cast<const verilog_based_unsized_literal_exprt &>(expr);
+}
+
+inline verilog_based_unsized_literal_exprt &
+to_verilog_based_unsized_literal_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_based_unsized_literal);
+  verilog_based_unsized_literal_exprt::check(expr);
+  return static_cast<verilog_based_unsized_literal_exprt &>(expr);
+}
+
 /// An instance of a Verilog module
 class verilog_module_instancet : public nullary_exprt
 {

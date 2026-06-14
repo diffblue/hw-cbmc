@@ -1,0 +1,9 @@
+CORE
+concatenation7.v
+
+^file .* line 5: unsized literals are not allowed in concatenations$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

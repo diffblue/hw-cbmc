@@ -16,8 +16,10 @@ SRC += ebmc/bdd_model_checker.cpp \
        temporal-logic/trivial_sva.cpp \
        trans-netlist/aig.cpp \
        trans-netlist/id2smv.cpp \
+       verilog/convert_literals.cpp \
        verilog/indexed_part_select.cpp \
        verilog/typename.cpp \
+       verilog/verilog_expr.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src

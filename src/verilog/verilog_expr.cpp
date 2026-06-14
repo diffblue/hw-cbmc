@@ -454,6 +454,72 @@ verilog_unbased_unsized_literal_exprt::with_context(std::size_t width) const
   return copy;
 }
 
+constant_exprt verilog_based_unsized_literal_exprt::expand() const
+{
+  return lower();
+}
+
+constant_exprt verilog_based_unsized_literal_exprt::lower() const
+{
+  auto &t = type();
+  auto width = numeric_cast_v<std::size_t>(to_bitvector_type(t).get_width());
+  auto bit_value = id2string(value());
+  bool is_signed = t.id() == ID_signedbv || t.id() == ID_verilog_signedbv;
+
+  // Extend to type width
+  if(bit_value.size() < width)
+  {
+    auto self_determined = std::max(bit_value.size(), std::size_t(32));
+
+    char ext;
+
+    if(bit_value.empty())
+      ext = '0';
+    else
+    {
+      if(is_signed)
+        ext = bit_value[0];
+      else if(
+        width > self_determined && (bit_value[0] == 'x' || bit_value[0] == 'z'))
+      {
+        // IEEE 1800-2017 5.7.1: context extension with x/z MSB
+        ext = bit_value[0];
+      }
+      else
+        ext = '0';
+    }
+
+    bit_value = std::string(width - bit_value.size(), ext) + bit_value;
+  }
+
+  if(t.id() == ID_unsignedbv || t.id() == ID_signedbv)
+  {
+    auto int_value = binary2integer(bit_value, t.id() == ID_signedbv);
+    return constant_exprt{integer2bvrep(int_value, width), t};
+  }
+  else
+  {
+    return constant_exprt{bit_value, t};
+  }
+}
+
+verilog_based_unsized_literal_exprt
+verilog_based_unsized_literal_exprt::with_context(std::size_t width) const
+{
+  auto type = this->type();
+
+  if(type.id() == ID_unsignedbv)
+    to_unsignedbv_type(type).set_width(width);
+  else if(type.id() == ID_verilog_unsignedbv)
+    to_verilog_unsignedbv_type(type).set_width(width);
+  else if(type.id() == ID_signedbv)
+    to_signedbv_type(type).set_width(width);
+  else
+    to_verilog_signedbv_type(type).set_width(width);
+
+  return verilog_based_unsized_literal_exprt{value(), type};
+}
+
 verilog_module_instancet::verilog_module_instancet(
   const irep_idt _module_identifier)
   : nullary_exprt{ID_verilog_module_instance, verilog_module_instance_typet{}}
