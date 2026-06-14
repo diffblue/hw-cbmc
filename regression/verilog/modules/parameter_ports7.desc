@@ -1,0 +1,10 @@
+KNOWNBUG
+parameter_ports7.sv
+
+^file .* line 8: expected constant expression, but got `int'$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The error message doesn't format the type correctly.
