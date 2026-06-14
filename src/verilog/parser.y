@@ -4170,6 +4170,9 @@ array_pattern_key:
                 }
         ;
 
+// The following rule is missing the case
+//   assignment_pattern_expression_type assignment_pattern
+// owing to a conflict with cast expressions.
 assignment_pattern_expression:
           assignment_pattern
         ;

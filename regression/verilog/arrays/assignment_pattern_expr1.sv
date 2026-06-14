@@ -6,6 +6,8 @@ module main;
 
   typedef int twoarr[1:0];
   
+  // The RHS in the assertion is an assignment_pattern_expression
+  // (1800 2017 10.9) with a type.
   initial begin
     array1 = '{ 0, 1, 2, 3 };
     assert(array1[0:1] == twoarr'{ 0, 1 });
