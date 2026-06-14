@@ -974,6 +974,12 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_timeprecision)
   {
   }
+  else if(module_item.id() == ID_verilog_module)
+  {
+    // a nested module, 1800 2017 23.4
+    throw errort{}.with_location(module_item.source_location())
+      << "no support for nested modules";
+  }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
 }
