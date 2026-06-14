@@ -1,6 +1,7 @@
-KNOWNBUG
+CORE
 nested1.sv
 
-^EXIT=0$
+^file .* line 3: no support for nested modules$
+^EXIT=2$
 ^SIGNAL=0$
 --
