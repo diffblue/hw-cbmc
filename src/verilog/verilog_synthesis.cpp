@@ -2425,6 +2425,9 @@ void verilog_synthesist::synth_assert_assume_cover(
 
   auto cond = synth_expr(module_item.condition(), symbol_statet::SYMBOL);
 
+  // defaults apply
+  apply_defaults(cond);
+
   if(module_item.id() == ID_verilog_assert_property)
   {
     // Concurrent assertions come with an implicit 'always'
@@ -3481,13 +3484,24 @@ void verilog_synthesist::synth_module_item(
     synth_module_instance_builtin(to_verilog_inst_builtin(module_item), trans);
   else if(module_item.id()==ID_generate_block)
   {
+    auto &block_items = to_verilog_generate_block(module_item).module_items();
+
+    // These may have separate default disable iff conditions.
+    auto old_default_disable_iff = default_disable_iff;
+    default_disable_iff = {};
+
+    for(auto &block_item : block_items)
+      find_defaults(block_item);
+
     // These are retained to record the scope.
     // Synthesis treats them like a block statement.
-    for(auto &block_item :
-        to_verilog_generate_block(module_item).module_items())
+    for(auto &block_item : block_items)
     {
       synth_module_item(block_item, trans);
     }
+
+    // restore previous default disable iff
+    default_disable_iff = old_default_disable_iff;
   }
   else if(
     module_item.id() == ID_verilog_assert_property ||
@@ -3538,8 +3552,7 @@ void verilog_synthesist::synth_module_item(
   }
   else if(module_item.id() == ID_verilog_default_disable)
   {
-    throw errort().with_location(module_item.source_location())
-      << "default disable iff is unsupported";
+    // handled by find_defaults
   }
   else if(module_item.id() == ID_verilog_property_declaration)
   {
@@ -3560,6 +3573,58 @@ void verilog_synthesist::synth_module_item(
   {
     throw errort().with_location(module_item.source_location())
       << "unexpected module item during synthesis: " << module_item.id();
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::find_defaults
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::find_defaults(const verilog_module_itemt &module_item)
+{
+  if(module_item.id() == ID_verilog_default_clocking)
+  {
+  }
+  else if(module_item.id() == ID_verilog_default_disable)
+  {
+    if(default_disable_iff.has_value())
+    {
+      // it's an error to set the default more than once
+      throw errort().with_location(module_item.source_location())
+        << "default disable iff already set";
+    }
+    else
+    {
+      default_disable_iff = to_verilog_default_disable(module_item).cond();
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::apply_defaults
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::apply_defaults(exprt &expr)
+{
+  if(default_disable_iff.has_value() && expr.id() != ID_sva_disable_iff)
+  {
+    expr = sva_disable_iff_exprt{default_disable_iff.value(), std::move(expr)};
   }
 }
 
@@ -3914,6 +3979,11 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   transt trans{ID_trans, conjunction({}), conjunction({}), conjunction({}),
                symbol.type};
 
+  // first find any default disable iff at this level
+  for(const auto &module_item : verilog_module.module_items())
+    find_defaults(module_item);
+
+  // now synthesise
   for(const auto &module_item : verilog_module.module_items())
     synth_module_item(module_item, trans);
 

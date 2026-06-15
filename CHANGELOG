@@ -3,6 +3,7 @@
 * Verilog: unconnected module ports
 * Verilog: based unsized literals now extend x/z MSB to context width
 * Verilog: identifiers given on command-line must now include module identifier
+* SystemVerilog: default disable iff
 * BMC: strong sequences that exceed the bound are no longer reported as REFUTED
 * VCD traces now written into separate files per property
 * SMV: removed legacy keywords EXTERN and switch

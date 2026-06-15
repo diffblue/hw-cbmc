@@ -235,6 +235,12 @@ protected:
 
   std::optional<loop_framet> loop_frame;
 
+  // for concurrent assertions
+  std::optional<exprt> default_disable_iff;
+
+  void find_defaults(const verilog_module_itemt &);
+  void apply_defaults(exprt &);
+
   void merge(
     const exprt &guard,
     const value_mapt::mapt &true_map,
