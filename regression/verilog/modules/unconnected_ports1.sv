@@ -12,14 +12,14 @@ module main();
   // This is 'x for logic types.
   // However, Icarus Verilog, VCS, Questa, Xcelium use 'z.
 
-  initial assert (m1.x == 1);
-  initial assert (m1.y === 'z);
-  initial assert (m1.z == 5);
+  initial assert (m1.x == 1);   // holds
+  initial assert (m1.y === 'z); // fails
+  initial assert (m1.z == 5);   // fails
 
   my_module m2(/* blank */, 1, /* blank */);
 
-  initial assert (m2.x === 'z);
-  initial assert (m2.y == 1);
-  initial assert (m2.z == 5);
+  initial assert (m2.x === 'z); // fails
+  initial assert (m2.y == 1);   // holds
+  initial assert (m2.z == 5);   // fails
 
 endmodule

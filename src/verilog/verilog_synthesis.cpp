@@ -1406,9 +1406,15 @@ void verilog_synthesist::instantiate_ports(
 
     for(const auto &connection : inst.connections())
     {
-      DATA_INVARIANT(connection.is_not_nil(), "all ports must be connected");
-
-      instantiate_port(*p_it, connection, inst.source_location(), trans);
+      // 1800-2017 23.3.3.2 says
+      // "If left unconnected, the port shall have the default
+      // initial value corresponding to the data type."
+      // Simulators don't agree on this, and we hence leave the port
+      // unconstrained.
+      if(connection.is_not_nil())
+      {
+        instantiate_port(*p_it, connection, inst.source_location(), trans);
+      }
 
       p_it++;
     }
