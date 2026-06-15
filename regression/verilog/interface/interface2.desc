@@ -1,0 +1,8 @@
+KNOWNBUG
+interface2.sv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+This should be errored.
