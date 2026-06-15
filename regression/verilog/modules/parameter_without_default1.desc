@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 parameter_without_default1.sv
 
+^file .* line 9: parameter port P without value$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This does not parse.

@@ -1,0 +1,9 @@
+CORE
+type_parameter_port6.sv
+
+^file .* line 10: parameter port T without value$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

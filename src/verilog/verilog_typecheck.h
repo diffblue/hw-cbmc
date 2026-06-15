@@ -148,6 +148,7 @@ protected:
 
   void set_parameter_values(
     verilog_module_sourcet &,
+    const source_locationt &instance_location,
     const std::list<exprt> &parameter_values);
 
   // interfaces
