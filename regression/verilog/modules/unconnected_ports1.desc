@@ -1,8 +1,13 @@
-KNOWNBUG
-unconnected_ports1.v
---bound 0
-^EXIT=0$
+CORE
+unconnected_ports1.sv
+
+^\[.*\] main\.m1\.x == 1: PROVED .*$
+^\[.*\] main\.m1\.y === 'z: REFUTED$
+^\[.*\] main\.m1\.z == 5: REFUTED$
+^\[.*\] main\.m2\.x === 'z: REFUTED$
+^\[.*\] main\.m2\.y == 1: PROVED .*$
+^\[.*\] main\.m2\.z == 5: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-This fails an assertion.
