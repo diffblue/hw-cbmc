@@ -1,0 +1,8 @@
+KNOWNBUG
+parameter_ports8.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The constant folding lowers the type of the parameter.

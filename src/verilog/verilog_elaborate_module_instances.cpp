@@ -336,8 +336,10 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       }
       else
       {
-        mp_integer v_int = convert_integer_constant_expression(value);
-        value = from_integer(v_int, integer_typet()).with_source_location(*it);
+        // constant-fold
+        convert_expr(value);
+        value =
+          elaborate_constant_expression_check(value).with_source_location(*it);
       }
     }
     else
@@ -348,8 +350,10 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       }
       else
       {
-        mp_integer v_int = convert_integer_constant_expression(*it);
-        *it = from_integer(v_int, integer_typet()).with_source_location(*it);
+        // constant-fold
+        convert_expr(*it);
+        *it =
+          elaborate_constant_expression_check(*it).with_source_location(*it);
       }
     }
   }
