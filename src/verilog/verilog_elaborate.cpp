@@ -1123,6 +1123,35 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
 
       symbol.type = symbol.value.type();
     }
+    else if(
+      (to_type_with_subtype(symbol.type).subtype().id() == ID_unsigned ||
+       to_type_with_subtype(symbol.type).subtype().id() == ID_signed) &&
+      to_type_with_subtype(to_type_with_subtype(symbol.type).subtype())
+        .subtype()
+        .is_nil())
+    {
+      // A signing keyword without an explicit range.
+      // Derive the width from the value, then apply the signedness.
+      auto is_unsigned =
+        to_type_with_subtype(symbol.type).subtype().id() == ID_unsigned;
+
+      convert_expr(symbol.value);
+
+      if(!is_let)
+        symbol.value = elaborate_constant_expression_check(symbol.value);
+
+      auto value_type = symbol.value.type();
+
+      if(value_type.id() == ID_signedbv || value_type.id() == ID_unsignedbv)
+      {
+        auto width = to_bitvector_type(value_type).get_width();
+        symbol.type = is_unsigned ? typet{unsignedbv_typet{width}}
+                                  : typet{signedbv_typet{width}};
+        symbol.value = typecast_exprt{symbol.value, symbol.type};
+      }
+      else
+        symbol.type = value_type;
+    }
     else
     {
       // No, elaborate the type.
