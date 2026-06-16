@@ -5,3 +5,5 @@ parameters5.v
 ^SIGNAL=0$
 --
 ^warning: ignoring
+--
+The parameter definitions in the assertions are not expanded.
