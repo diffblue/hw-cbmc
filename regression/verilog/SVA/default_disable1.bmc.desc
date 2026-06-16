@@ -1,6 +1,6 @@
-CORE buechi
+CORE
 default_disable1.sv
---buechi
+
 ^\[main\.p0\] always main\.reset: PROVED .*$
 ^\[main\.p1\] always \(disable iff \(0\) main\.reset\): REFUTED
 ^EXIT=10$

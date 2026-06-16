@@ -1601,7 +1601,7 @@ void verilog_typecheckt::convert_module_item(
   }
   else if(module_item.id() == ID_verilog_default_disable)
   {
-    exprt &cond = to_unary_expr(module_item).op();
+    exprt &cond = to_verilog_default_disable(module_item).cond();
     convert_expr(cond);
     make_boolean(cond);
   }

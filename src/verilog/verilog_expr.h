@@ -599,6 +599,37 @@ inline verilog_declt &to_verilog_decl(exprt &irep)
   return static_cast<verilog_declt &>(irep);
 }
 
+class verilog_default_disablet : public verilog_module_itemt
+{
+public:
+  verilog_default_disablet() : verilog_module_itemt{ID_verilog_default_disable}
+  {
+  }
+
+  exprt &cond()
+  {
+    return op0();
+  }
+
+  const exprt &cond() const
+  {
+    return op0();
+  }
+};
+
+inline const verilog_default_disablet &
+to_verilog_default_disable(const irept &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_default_disable);
+  return static_cast<const verilog_default_disablet &>(irep);
+}
+
+inline verilog_default_disablet &to_verilog_default_disable(exprt &irep)
+{
+  PRECONDITION(irep.id() == ID_verilog_default_disable);
+  return static_cast<verilog_default_disablet &>(irep);
+}
+
 class verilog_generate_assignt : public verilog_module_itemt
 {
 public:
