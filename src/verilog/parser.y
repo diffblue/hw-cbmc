@@ -4873,10 +4873,22 @@ hierarchical_identifier_select:
 
 hierarchical_identifier_bit_select_brace:
           hierarchical_variable_identifier
-        | hierarchical_identifier_bit_select_brace constant_bit_select
+        | hierarchical_identifier_bit_select_plus
+        ;
+
+// This matches when at least one bit_select has been applied,
+// allowing subsequent '.' member access without conflicting with
+// hierarchical_identifier's own '.' rule.
+hierarchical_identifier_bit_select_plus:
+          hierarchical_identifier_bit_select_brace constant_bit_select
                 { init($$, ID_verilog_bit_select);
                   mto($$, $1);
                   mto($$, $2); }
+        | hierarchical_identifier_bit_select_plus '.' identifier
+                { init($$, ID_hierarchical_identifier);
+                  stack_expr($$).reserve_operands(2);
+                  mto($$, $1);
+                  mto($$, $3); }
         ;
 
 time_literal: TOK_TIME_LITERAL

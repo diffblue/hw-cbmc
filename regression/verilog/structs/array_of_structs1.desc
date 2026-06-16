@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 array_of_structs1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This does not parse.
