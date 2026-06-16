@@ -124,6 +124,45 @@ void verilog_typecheck_exprt::assignment_conversion(
   exprt &rhs,
   const typet &lhs_type)
 {
+  // 1800-2017 10.10
+  if(
+    rhs.id() == ID_concatenation && lhs_type.id() == ID_array &&
+    lhs_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+  {
+    // Turn the { ....} concatenation into an array constructor.
+    auto &array_type = to_array_type(lhs_type);
+    auto array_size = array_type.size();
+    // The array must be fixed-size
+
+    if(!array_size.is_constant())
+    {
+      throw errort{}.with_location(rhs.source_location())
+        << "array concatenation requires a fixed-size array";
+    }
+
+    auto array_size_int =
+      numeric_cast_v<mp_integer>(to_constant_expr(array_size));
+    if(array_size_int != rhs.operands().size())
+    {
+      throw errort{}.with_location(rhs.source_location())
+        << "expected " << array_size_int << " elements, but got "
+        << rhs.operands().size();
+    }
+
+    rhs.id(ID_array);
+    rhs.type() = lhs_type;
+
+    // type-check the elements
+    auto &element_type = array_type.element_type();
+
+    for(auto &element : rhs.operands())
+    {
+      // These must have a self-determined type, which can be converted
+      // to the element type.  This is not another assignment context.
+      implicit_typecast(element, element_type);
+    }
+  }
+
   // 1800-2017 10.9
   if(rhs.type().id() == ID_verilog_assignment_pattern)
   {
