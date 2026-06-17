@@ -1295,6 +1295,15 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
         << base_name << " takes one argument";
     }
 
+    // Check that the argument type is valid for these functions.
+    if(
+      base_name == "$bits" &&
+      !verilog_bits_opt(arguments[0].type()).has_value())
+    {
+      throw errort().with_location(arguments[0].source_location())
+        << "cannot determine the number of bits of " << to_string(arguments[0]);
+    }
+
     // The return type is integer.
     expr.type() = integer_typet();
 
