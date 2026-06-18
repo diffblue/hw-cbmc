@@ -1,0 +1,9 @@
+CORE
+instance3.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Multiple interface instances with logic members.

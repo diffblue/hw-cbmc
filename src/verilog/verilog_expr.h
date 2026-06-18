@@ -2621,7 +2621,7 @@ class verilog_interfacet : public verilog_item_containert
 {
 public:
   explicit verilog_interfacet(irep_idt _base_name)
-    : verilog_item_containert(ID_verilog_module, _base_name)
+    : verilog_item_containert(ID_verilog_interface, _base_name)
   {
   }
 

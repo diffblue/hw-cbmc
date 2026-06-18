@@ -631,6 +631,11 @@ void verilog_typecheckt::check_lhs(
   {
     check_lhs(to_typecast_expr(lhs).op(), vassign);
   }
+  else if(lhs.id() == ID_hierarchical_identifier)
+  {
+    // hierarchical identifiers (e.g., interface_instance.i)
+    // are already resolved by convert_expr
+  }
   else
   {
     throw errort() << "typechecking: failed to get identifier on LHS "
@@ -1622,6 +1627,9 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_verilog_timeprecision)
   {
   }
+  else if(module_item.id() == ID_verilog_modport_declaration)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
@@ -1903,7 +1911,9 @@ symbolt &copy_module_source(
   if(symbol_table.move(symbol, new_symbol))
   {
     throw ebmc_errort{}.with_location(verilog_module_source.source_location())
-      << "duplicate definition of module " << symbol.base_name;
+      << "duplicate definition of "
+      << (module_item.id() == ID_verilog_interface ? "interface" : "module")
+      << " " << symbol.base_name;
   }
 
   return *new_symbol;

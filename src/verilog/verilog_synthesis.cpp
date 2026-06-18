@@ -283,6 +283,12 @@ exprt verilog_synthesist::synth_lhs_expr(exprt expr)
     typecast_expr.op() = synth_lhs_expr(typecast_expr.op());
     return expr;
   }
+  else if(expr.id() == ID_hierarchical_identifier)
+  {
+    expand_hierarchical_identifier(
+      to_hierarchical_identifier_expr(expr), symbol_statet::CURRENT);
+    return synth_lhs_expr(std::move(expr));
+  }
   else
   {
     DATA_INVARIANT_WITH_DIAGNOSTICS(
@@ -3579,6 +3585,9 @@ void verilog_synthesist::synth_module_item(
   {
   }
   else if(module_item.id() == ID_verilog_timeprecision)
+  {
+  }
+  else if(module_item.id() == ID_verilog_modport_declaration)
   {
   }
   else

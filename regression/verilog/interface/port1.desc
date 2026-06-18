@@ -5,4 +5,4 @@ port1.sv
 ^SIGNAL=0$
 --
 --
-This does not parse.
+Interface port binding is not yet implemented.

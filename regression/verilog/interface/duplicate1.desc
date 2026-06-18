@@ -1,0 +1,9 @@
+CORE
+duplicate1.sv
+--top foo
+^file .* line 5: error: duplicate definition of module foo$
+^EXIT=6$
+^SIGNAL=0$
+--
+--
+Duplicate name detection between modules and interfaces.

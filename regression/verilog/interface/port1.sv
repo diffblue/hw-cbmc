@@ -4,7 +4,7 @@ interface myInterface;
 endinterface
 
 module sub(myInterface bus);
-  always @bus.i
+  always @(bus.i)
     assert(bus.i == 123);
 endmodule
 

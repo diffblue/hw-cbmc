@@ -514,6 +514,12 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   {
     return src;
   }
+  else if(src.id() == ID_verilog_interface)
+  {
+    // interface type used as a port or variable type
+    return verilog_module_instance_typet{}.with_source_location(
+      source_location);
+  }
   else if(src.id() == ID_verilog_package_scope)
   {
     // package::typedef
