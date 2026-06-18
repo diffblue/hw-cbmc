@@ -1179,7 +1179,7 @@ Function: verilog_typecheck_exprt::typename_string
 
 exprt verilog_typecheck_exprt::typename_string(const exprt &expr)
 {
-  auto s = verilog_typename(expr.type());
+  auto s = verilog_typename(expr.type(), ns);
   return convert_string_literal(s).with_source_location(expr);
 }
 
