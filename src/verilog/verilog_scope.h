@@ -23,6 +23,7 @@ struct verilog_scopet
     FILE,
     PACKAGE,
     MODULE,
+    INTERFACE,
     CHECKER,
     PROGRAM,
     CLASS,

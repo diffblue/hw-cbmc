@@ -1,8 +1,9 @@
-KNOWNBUG
+CORE
 instance2.sv
 
+^\[main\.assert\.1\] always main\.interface_instance\.i == 123: PROVED
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This does not parse.
+Interface instantiation with assertion.

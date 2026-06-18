@@ -1,0 +1,9 @@
+CORE
+instance4.sv
+--bound 5
+^\[main\.p1\] always main\.ctr\.count <= 15: PROVED up to bound 5
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Interface instance with behavioral access and property checking.

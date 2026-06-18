@@ -156,6 +156,7 @@ protected:
 
   // interfaces
   void check_module_ports(const verilog_module_sourcet &);
+  void instantiate_interface_ports(const verilog_module_sourcet &);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
