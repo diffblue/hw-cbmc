@@ -114,14 +114,9 @@ public:
 
   scopet &add_identifier(irep_idt _base_name, scopet::kindt);
 
-  // add a scope to the current scope
-  scopet &add_scope(
-    irep_idt base_name,
-    const std::string &separator,
-    scopet::kindt kind)
-  {
-    return current_scope().add_scope(base_name, separator, kind);
-  }
+  scopet &add_package_scope(irep_idt base_name);
+  scopet &add_module_scope(irep_idt base_name);
+  scopet &add_class_scope(irep_idt base_name);
 
   // Scope stack
   std::vector<scopet *> scope_stack = {&top_scope, &unit_scope};
@@ -149,7 +144,8 @@ public:
     const std::string &separator,
     scopet::kindt kind)
   {
-    enter_scope(add_scope(_base_name, separator, kind));
+    auto &scope = current_scope().add_scope(_base_name, separator, kind);
+    enter_scope(scope);
   }
 
   void pop_scope()

@@ -632,7 +632,7 @@ module_identifier_with_scope:
             $$ = $1;
             auto base_name = stack_expr($1).get(ID_base_name);
             // modules go into the top scope, not into $unit
-            auto &module_scope = PARSER.scopes.top_scope.add_scope(base_name, ".", verilog_scopet::MODULE);
+            auto &module_scope = PARSER.scopes.add_module_scope(base_name);
             PARSER.scopes.enter_scope(module_scope);
           }
         ;
@@ -820,7 +820,7 @@ class_declaration:
                   auto base_name = stack_expr($2).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
                   // classes go into the top scope, not $unit
-                  auto &class_scope = PARSER.scopes.top_scope.add_scope(base_name, "::", verilog_scopet::CLASS);
+                  auto &class_scope = PARSER.scopes.add_class_scope(base_name);
                   PARSER.scopes.enter_scope(class_scope);
                 }
           class_item_brace
@@ -839,7 +839,7 @@ package_declaration:
                 {
                   // packages go into the top scope, not $unit
                   auto base_name = stack_expr($5).get(ID_base_name);
-                  auto &package_scope = PARSER.scopes.top_scope.add_scope(base_name, "::", verilog_scopet::PACKAGE);
+                  auto &package_scope = PARSER.scopes.add_package_scope(base_name);
                   PARSER.scopes.enter_scope(package_scope);
                 }
           package_item_brace

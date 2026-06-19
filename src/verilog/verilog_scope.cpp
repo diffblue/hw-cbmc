@@ -15,7 +15,7 @@ Author: Daniel Kroening, dkr@amazon.com
 verilog_scopet &
 verilog_scopest::add_identifier(irep_idt _base_name, scopet::kindt kind)
 {
-  return add_scope(_base_name, std::string{}, kind);
+  return current_scope().add_scope(_base_name, std::string{}, kind);
 }
 
 verilog_scopet &verilog_scopet::add_scope(
@@ -26,6 +26,24 @@ verilog_scopet &verilog_scopet::add_scope(
   auto result = scope_map.emplace(
     base_name, verilog_scopet{base_name, separator, this, kind});
   return result.first->second;
+}
+
+verilog_scopet &verilog_scopest::add_package_scope(irep_idt base_name)
+{
+  // packages go into the top scope, not $unit
+  return top_scope.add_scope(base_name, "::", scopet::PACKAGE);
+}
+
+verilog_scopet &verilog_scopest::add_module_scope(irep_idt base_name)
+{
+  // modules go into the top scope, not into $unit
+  return top_scope.add_scope(base_name, ".", scopet::MODULE);
+}
+
+verilog_scopet &verilog_scopest::add_class_scope(irep_idt base_name)
+{
+  // classes go into the top scope, not $unit
+  return top_scope.add_scope(base_name, "::", scopet::CLASS);
 }
 
 const verilog_scopet *verilog_scopest::lookup(irep_idt base_name) const
