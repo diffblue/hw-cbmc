@@ -71,12 +71,14 @@ YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
   auto scope_ptr = PARSER.scopes.lookup(base_name);
   if(scope_ptr == nullptr)
   {
-    dest.set(ID_scope, PARSER.scopes.current_scope().prefix);
+    dest.set(ID_scope, PARSER.scopes.current_scope().prefix + id2string(base_name));
     return TOK_NON_TYPE_IDENTIFIER; // default for unseen identifiers
   }
   else
   {
-    dest.set(ID_scope, scope_ptr->prefix);
+    if(scope_ptr->parent != nullptr)
+      dest.set(ID_scope, scope_ptr->identifier());
+    //dest.set(ID_scope, scope_ptr->prefix);
     if(!scope_ptr->import.empty())
       dest.set(ID_verilog_import, scope_ptr->import);
     return scope_ptr->identifier_token();
