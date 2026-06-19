@@ -5,6 +5,7 @@
 * Verilog: multiple top-level modules
 * Verilog: identifiers given on command-line must now include module identifier
 * SystemVerilog: default disable iff
+* SystemVerilog: $typename for enum types
 * BMC: strong sequences that exceed the bound are no longer reported as REFUTED
 * VCD traces now written into separate files per property
 * SMV: removed legacy keywords EXTERN and switch

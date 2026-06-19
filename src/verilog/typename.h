@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/mp_arith.h>
 
+class namespacet;
 class typet;
 
 /// Verilog's $left
@@ -20,6 +21,6 @@ mp_integer verilog_left(const typet &);
 mp_integer verilog_right(const typet &);
 
 /// Verilog's $typename
-std::string verilog_typename(const typet &);
+std::string verilog_typename(const typet &, const namespacet &);
 
 #endif

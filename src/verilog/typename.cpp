@@ -9,6 +9,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "typename.h"
 
 #include <util/arith_tools.h>
+#include <util/namespace.h>
+#include <util/symbol.h>
 
 #include "verilog_bits.h"
 #include "verilog_types.h"
@@ -71,7 +73,7 @@ mp_integer verilog_right(const typet &type)
     return 0;
 }
 
-std::string verilog_typename(const typet &type)
+std::string verilog_typename(const typet &type, const namespacet &ns)
 {
   const auto verilog_type = type.get(ID_C_verilog_type);
 
@@ -80,7 +82,25 @@ std::string verilog_typename(const typet &type)
   auto right = [](const typet &type)
   { return integer2string(verilog_right(type)); };
 
-  if(type.id() == ID_unsignedbv)
+  if(type.get(ID_C_verilog_type) == ID_verilog_enum)
+  {
+    auto identifier = type.get(ID_C_identifier);
+    auto &enum_symbol = ns.lookup(identifier);
+    auto &enum_type = to_verilog_enum_type(enum_symbol.type);
+    std::string result = "enum{";
+    bool first = true;
+    for(auto &name : enum_type.enum_names())
+    {
+      if(first)
+        first = false;
+      else
+        result += ',';
+      result += id2string(name.base_name());
+    }
+    result += '}';
+    return result;
+  }
+  else if(type.id() == ID_unsignedbv)
   {
     if(verilog_type == ID_verilog_byte)
       return "byte unsigned";
