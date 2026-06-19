@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 guard1.sv
 
 ^EXIT=10$
 ^SIGNAL=0$
 --
 --
-This does not parse.

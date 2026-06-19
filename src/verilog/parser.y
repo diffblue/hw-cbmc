@@ -3993,7 +3993,7 @@ delay_control:
         ;
 
 event_control:
-          '@' event_identifier
+          '@' hierarchical_identifier
                 { init($$, ID_event_guard); mto($$, $2); }
         | '@' '(' ored_event_expression ')'
                 { init($$, ID_event_guard); mto($$, $3); }
