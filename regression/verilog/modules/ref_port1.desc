@@ -1,5 +1,5 @@
 CORE
-ref1.sv
+ref_port1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
