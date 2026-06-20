@@ -76,6 +76,8 @@ protected:
     const std::vector<irep_idt> &top_level_modules,
     verilog_standardt,
     transition_systemt &);
+
+  void create_reset_logic(const std::string &, transition_systemt &);
 };
 
 #endif // EBMC_VERILOG_LANGUAGE_H
