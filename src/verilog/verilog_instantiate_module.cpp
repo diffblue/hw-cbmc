@@ -203,7 +203,7 @@ void verilog_typecheckt::set_parameter_values(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterize_module
+Function: verilog_typecheckt::instantiate_module
 
   Inputs:
 
@@ -213,7 +213,7 @@ Function: verilog_typecheckt::parameterize_module
 
 \*******************************************************************/
 
-irep_idt verilog_typecheckt::parameterize_module(
+irep_idt verilog_typecheckt::instantiate_module(
   const source_locationt &location,
   const irep_idt &module_identifier,
   const irep_idt &module_base_name,

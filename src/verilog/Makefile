@@ -11,13 +11,13 @@ SRC = aval_bval_encoding.cpp \
       verilog_elaborate_type.cpp \
       verilog_expr.cpp \
       verilog_generate.cpp \
+      verilog_instantiate_module.cpp \
       verilog_initializer.cpp \
       verilog_interfaces.cpp \
       verilog_interpreter.cpp \
       verilog_language.cpp \
       verilog_lex.yy.cpp \
       verilog_lowering.cpp \
-      verilog_parameterize_module.cpp \
       verilog_parse_tree.cpp \
       verilog_parser.cpp \
       verilog_preprocessor.cpp \
