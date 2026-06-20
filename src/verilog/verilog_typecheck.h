@@ -205,6 +205,9 @@ protected:
   void convert_property_declaration(class verilog_property_declarationt &);
   void convert_sequence_declaration(class verilog_sequence_declarationt &);
 
+  // identifiers
+  void preresolve_identifiers(exprt &);
+
   void integer_expr(exprt &expr);
 
   void instantiate_port_connections(

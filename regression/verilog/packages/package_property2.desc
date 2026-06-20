@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 package_property2.sv
 
 ^EXIT=10$
 ^SIGNAL=0$
 --
 --
-The identifier in the property does not resolve.

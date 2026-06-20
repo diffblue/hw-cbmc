@@ -1702,7 +1702,8 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
 {
   const symbolt *symbol;
   auto base_name = expr.base_name();
-  auto import = expr.import();
+  const auto import = expr.import();
+  const auto preresolved = expr.preresolved();
 
   if(import != irep_idt{})
   {
@@ -1711,6 +1712,13 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
     if(ns.lookup(full_identifier, symbol))
     {
       DATA_INVARIANT(false, "failed to find imported identifier");
+    }
+  }
+  else if(preresolved != irep_idt{})
+  {
+    if(ns.lookup(preresolved, symbol))
+    {
+      DATA_INVARIANT(false, "failed to find preresolved identifier");
     }
   }
   else

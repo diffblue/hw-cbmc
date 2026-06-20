@@ -73,6 +73,16 @@ public:
       add_source_location() = std::move(location);
     return std::move(*this);
   }
+
+  irep_idt preresolved() const
+  {
+    return get(ID_preresolved);
+  }
+
+  void preresolved(irep_idt identifier)
+  {
+    set(ID_preresolved, identifier);
+  }
 };
 
 inline const verilog_identifier_exprt &
