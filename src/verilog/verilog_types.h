@@ -997,4 +997,60 @@ public:
   }
 };
 
+class verilog_let_typet : public type_with_subtypest
+{
+public:
+  class portt : irept
+  {
+  public:
+    typet &type()
+    {
+      return static_cast<typet &>(add(ID_type));
+    }
+
+    const typet &type() const
+    {
+      return static_cast<const typet &>(find(ID_type));
+    }
+
+    irep_idt base_name() const
+    {
+      return get(ID_base_name);
+    }
+
+    void base_name(irep_idt _base_name)
+    {
+      return set(ID_base_name, _base_name);
+    }
+
+    irep_idt identifier() const
+    {
+      return get(ID_identifier);
+    }
+
+    void identifier(irep_idt _identifier)
+    {
+      set(ID_identifier, _identifier);
+    }
+  };
+
+  using portst = std::vector<portt>;
+
+  explicit verilog_let_typet(portst _ports)
+    : type_with_subtypest{ID_verilog_let_type, {}}
+  {
+    ports() = std::move(_ports);
+  }
+
+  const portst &ports() const
+  {
+    return (const portst &)subtypes();
+  }
+
+  portst &ports()
+  {
+    return (portst &)subtypes();
+  }
+};
+
 #endif
