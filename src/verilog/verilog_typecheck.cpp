@@ -1634,6 +1634,41 @@ void verilog_typecheckt::convert_module_item(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::preresolve_identifiers
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::preresolve_identifiers(exprt &expr)
+{
+  expr.visit_pre(
+    [this](exprt &node)
+    {
+      if(node.id() == ID_verilog_identifier)
+      {
+        auto &identifier_expr = to_verilog_identifier_expr(node);
+        auto base_name = identifier_expr.base_name();
+        auto symbol_ptr = resolve(base_name);
+        if(symbol_ptr != nullptr)
+        {
+          identifier_expr.preresolved(symbol_ptr->name);
+        }
+        else
+        {
+          throw errort().with_location(node.source_location())
+            << "unknown identifier " << base_name;
+        }
+      }
+    });
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::convert_property_declaration
 
   Inputs:
@@ -1654,6 +1689,9 @@ void verilog_typecheckt::convert_property_declaration(
   // Typechecking of the property expression has to be delayed
   // until the instance is known, owing to untyped ports.
   declaration.type() = verilog_sva_named_property_typet{};
+
+  // We'll annotate the scope of the identifiers
+  preresolve_identifiers(declaration.cond());
 
   // The symbol uses the full declaration as value
   auto type = verilog_sva_named_property_typet{};
@@ -1690,6 +1728,9 @@ void verilog_typecheckt::convert_sequence_declaration(
   // Typechecking of the sequence expression has to be delayed
   // until the instance is known, owing to untyped ports.
   declaration.type() = verilog_sva_named_sequence_typet{};
+
+  // We'll annotate the scope of the identifiers
+  preresolve_identifiers(declaration.cond());
 
   // The symbol uses the full declaration as value
   auto type = verilog_sva_named_sequence_typet{};
