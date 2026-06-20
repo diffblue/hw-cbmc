@@ -1672,10 +1672,13 @@ data_type:
         | type_identifier packed_dimension_brace
                 { add_as_subtype(stack_type($2), stack_type($1));
                   $$ = $2; }
-        | package_scope type_identifier packed_dimension_brace
+        | package_scope
+          type_identifier
+                { pop_scope(); /* exit the package scope */ }
+          packed_dimension_brace
                 { mto($1, $2);
-                  add_as_subtype(stack_type($3), stack_type($1));
-                  $$ = $3; }
+                  add_as_subtype(stack_type($4), stack_type($1));
+                  $$ = $4; }
         | class_type
         | TOK_EVENT
                 { init($$, ID_verilog_event); }
