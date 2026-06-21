@@ -1,0 +1,7 @@
+CORE
+counter1.sv
+--aiger --top main
+^aag 8 1 2 0 5$
+^EXIT=0$
+^SIGNAL=0$
+--
