@@ -846,6 +846,33 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::replace_let_port
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Replace occurrences of a let port name with the argument
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::replace_let_port(
+  exprt &expr,
+  const irep_idt &port_name,
+  const exprt &arg)
+{
+  if(expr.id() == ID_verilog_identifier && expr.get(ID_base_name) == port_name)
+  {
+    expr = arg;
+    return;
+  }
+
+  for(auto &op : expr.operands())
+    replace_let_port(op, port_name, arg);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_expr_function_call
 
   Inputs:
@@ -926,6 +953,33 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
   if(symbol->type.id()!=ID_code)
   {
+    // Is this a let expression with ports?
+    if(symbol->is_macro && symbol->value.find(ID_ports).is_not_nil())
+    {
+      auto &ports = symbol->value.find(ID_ports).get_sub();
+
+      if(arguments.size() != ports.size())
+      {
+        throw errort().with_location(expr.source_location())
+          << "let `" << base_name << "' expects " << ports.size()
+          << " arguments, but got " << arguments.size();
+      }
+
+      // Substitute port names with arguments in the let body
+      exprt body = symbol->value;
+      body.remove(ID_ports);
+
+      for(std::size_t i = 0; i < ports.size(); i++)
+      {
+        irep_idt port_name = ports[i].id();
+        replace_let_port(body, port_name, arguments[i]);
+      }
+
+      // Convert the substituted body
+      convert_expr(body);
+      return body;
+    }
+
     throw errort().with_location(f_op.source_location())
       << "expected function name";
   }
