@@ -70,6 +70,11 @@ void verilog_typecheck_exprt::require_sva_property(exprt &expr)
   {
     // good as is
   }
+  else if(type.id() == ID_verilog_property)
+  {
+    // checker property formal port -- treat as SVA property
+    expr.type() = verilog_sva_property_typet{};
+  }
   else if(
     type.id() == ID_bool || type.id() == ID_unsignedbv ||
     type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
