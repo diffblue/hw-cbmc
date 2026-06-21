@@ -408,6 +408,12 @@ exprt verilog_synthesist::expand_function_call(
       auto what = synth_expr(call.arguments()[0], symbol_state); // rec. call
       return popcount_exprt{what, call.type()};
     }
+    else if(base_name == "$value$plusargs")
+    {
+      // IEEE 1800-2017 section 21.6
+      // Return 0, indicating plusarg not found, keeping the default.
+      return from_integer(0, call.type()).with_source_location(call);
+    }
     else
     {
       // Attempt to constant fold.
