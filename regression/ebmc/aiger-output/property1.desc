@@ -1,0 +1,7 @@
+CORE
+property1.sv
+--aiger --top main
+^aag 9 1 2 0 6 1$
+^EXIT=0$
+^SIGNAL=0$
+--
