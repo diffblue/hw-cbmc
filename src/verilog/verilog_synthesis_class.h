@@ -28,11 +28,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
    Class: verilog_synthesist
 
-  Inputs:
-
- Outputs:
-
- Purpose:
+ Purpose: Synthesizes Verilog modules into transition systems.
+          Behavioral state (value maps, call frames) is grouped in
+          verilog_synthesis_behavioral_statet.
+          Structural synthesis (module instances, ports) is in
+          verilog_synthesis_structural.cpp.
 
 \*******************************************************************/
 
@@ -53,7 +53,6 @@ public:
       verilog_symbol_tablet(_symbol_table),
       ignore_initial(_ignore_initial),
       initial_zero(_initial_zero),
-      value_map(NULL),
       module(_module),
       temporary_counter(0)
   {
@@ -85,22 +84,23 @@ protected:
   // For $ND(...)
   std::size_t nondet_count = 0;
 
+  // --- Shared types and state ---
+
   enum class event_guardt { NONE, CLOCK, COMBINATIONAL };
-  
+
   inline std::string as_string(event_guardt g)
   {
     return g==event_guardt::CLOCK?"clocked":
            g==event_guardt::COMBINATIONAL?"combinational":
            "";
   }
-  
+
   // list of vector-indices or array indices
   typedef std::list<mp_integer> membert;
-
   typedef std::list<membert> member_listt;
-  
+
   static bool disjoint(const membert &a, const membert &b);
-  
+
   // global assignment map
   class assignmentt
   {
@@ -111,16 +111,15 @@ protected:
 
       // array/bv indices that are already assigned to
       member_listt assigned_previous, assigned_current;
-      
+
       datat():value(nil_exprt()) { }
-      
+
       void move_assignments()
       {
         assigned_previous.splice(
           assigned_previous.end(),
           assigned_current);
       }
-      
     } init, next;
 
     // only relevant for 'next'
@@ -131,13 +130,20 @@ protected:
     {
     }
   };
-   
+
   typedef std::map<irep_idt, assignmentt> assignmentst;
   assignmentst assignments;
-  
+
   // for assumes
   typedef std::list<exprt> invarst;
   invarst invars;
+
+  const irep_idt &module;
+
+  typedef std::unordered_set<irep_idt, irep_id_hash> local_symbolst;
+  local_symbolst local_symbols, new_wires;
+
+  // --- Behavioral synthesis state ---
 
   enum class constructt
   {
@@ -151,7 +157,7 @@ protected:
 
   constructt construct;
   event_guardt event_guard;
- 
+
   // current value map
   class value_mapt
   {
@@ -163,13 +169,12 @@ protected:
       symbol_mapt symbol_map;
 
       std::set<irep_idt> changed;
-      
+
       void assign(const irep_idt &symbol, const exprt &rhs)
       {
         changed.insert(symbol);
         symbol_map[symbol]=rhs;
       }
-
     } current, final;
 
     void clear_changed()
@@ -184,34 +189,7 @@ protected:
     exprt guarded_expr(exprt) const;
   };
 
-  // expressions
-  [[nodiscard]] exprt synth_lhs_expr(exprt expr);
-  [[nodiscard]] std::optional<mp_integer> synthesis_constant(const exprt &);
-
-  exprt current_value(
-    const value_mapt::mapt &map,
-    const symbolt &,
-    bool use_previous_assignments) const;
-
-  exprt guarded_expr(exprt expr) const
-  {
-    PRECONDITION(value_map != NULL);
-    return value_map->guarded_expr(expr);
-  }
-
-  inline exprt current_value(const symbolt &symbol) const
-  {
-    PRECONDITION(value_map != NULL);
-    return current_value(value_map->current, symbol, false);
-  }
-
-  inline exprt final_value(const symbolt &symbol) const
-  {
-    PRECONDITION(value_map != NULL);
-    return current_value(value_map->final, symbol, true);
-  }
-
-  value_mapt *value_map;
+  value_mapt *value_map = nullptr;
 
   // task/function call frame
   class tf_framet
@@ -235,11 +213,33 @@ protected:
 
   std::optional<loop_framet> loop_frame;
 
-  // for concurrent assertions
-  std::optional<exprt> default_disable_iff;
+  // --- Behavioral synthesis: expressions ---
 
-  void find_defaults(const verilog_module_itemt &);
-  void apply_defaults(exprt &);
+  [[nodiscard]] exprt synth_lhs_expr(exprt expr);
+  [[nodiscard]] std::optional<mp_integer> synthesis_constant(const exprt &);
+
+  exprt current_value(
+    const value_mapt::mapt &map,
+    const symbolt &,
+    bool use_previous_assignments) const;
+
+  exprt guarded_expr(exprt expr) const
+  {
+    PRECONDITION(value_map != nullptr);
+    return value_map->guarded_expr(expr);
+  }
+
+  inline exprt current_value(const symbolt &symbol) const
+  {
+    PRECONDITION(value_map != nullptr);
+    return current_value(value_map->current, symbol, false);
+  }
+
+  inline exprt final_value(const symbolt &symbol) const
+  {
+    PRECONDITION(value_map != nullptr);
+    return current_value(value_map->final, symbol, true);
+  }
 
   void merge(
     const exprt &guard,
@@ -247,15 +247,98 @@ protected:
     const value_mapt::mapt &false_map,
     bool use_previous_assignments,
     value_mapt::mapt &dest);
-                                             
-  const irep_idt &module;
 
-  typedef std::unordered_set<irep_idt, irep_id_hash> local_symbolst;
-  local_symbolst local_symbols, new_wires;
+  // --- Behavioral synthesis: statements ---
+  // (implemented in verilog_synthesis_behavioral.cpp)
+
+  void synth_statement(const verilog_statementt &);
+  void synth_block(const verilog_blockt &);
+  void synth_break(const verilog_breakt &);
+  void synth_case(const verilog_case_statement_baset &);
+  void synth_continue(const verilog_continuet &);
+  void synth_if(const verilog_ift &);
+  void synth_event_guard(const verilog_event_guardt &);
+  void synth_delay(const verilog_delayt &);
+  void synth_for(const verilog_fort &);
+  void synth_forever(const verilog_forevert &);
+  void synth_while(const verilog_whilet &);
+  void synth_repeat(const verilog_repeatt &);
+  void synth_return(const verilog_returnt &);
+  void synth_function_call_or_task_enable(const verilog_function_callt &);
+  void synth_assign(const verilog_assignt &);
+  void synth_prepostincdec(const verilog_statementt &);
+  void
+  synth_assert_assume_cover(const verilog_assert_assume_cover_statementt &);
+  void synth_assume(const verilog_assume_statementt &);
 
   void assignment_rec(const exprt &lhs, const exprt &rhs, bool blocking);
-
   exprt assignment_rec(const exprt &lhs, const exprt &rhs);
+
+  exprt
+  expand_function_call(const class function_call_exprt &call, symbol_statet);
+
+  exprt case_comparison(const exprt &case_operand, const exprt &pattern);
+
+  exprt synth_case_values(
+    const exprt &values,
+    const exprt &case_operand);
+
+  // Mark the local variables of a function or task as cycle local.
+  void function_locality(const symbolt &);
+
+  // --- Structural synthesis: module instances ---
+  // (implemented in verilog_synthesis_structural.cpp)
+
+  void synth_module_instance(const verilog_instt &, transt &);
+  void synth_module_instance_builtin(const verilog_inst_builtint &, transt &);
+
+  std::vector<irep_idt> find_module_symbols(const symbolt &module_symbol) const;
+
+  void expand_module_instance(
+    const symbolt &module_symbol,
+    const transt &trans_inst,
+    const verilog_instt::instancet &,
+    transt &trans_dest);
+
+  void instantiate_ports(
+    const irep_idt &instance,
+    const verilog_instt::instancet &inst,
+    const symbolt &,
+    transt &);
+
+  void instantiate_port(
+    const module_typet::portt &,
+    const exprt &value,
+    const source_locationt &,
+    transt &);
+
+  // --- Module item synthesis ---
+  // (implemented in verilog_synthesis.cpp)
+
+  virtual void convert_module_items(symbolt &);
+  void synth_module_item(const verilog_module_itemt &, transt &);
+  void synth_always_base(const verilog_always_baset &);
+  void synth_assertion_item(const verilog_assertion_itemt &);
+  void synth_initial(const verilog_initialt &);
+  void
+  synth_assert_assume_cover(const verilog_assert_assume_cover_module_itemt &);
+  void synth_assume(const verilog_assert_assume_cover_module_itemt &);
+  void synth_continuous_assign(const verilog_continuous_assignt &);
+  void synth_decl(const verilog_declt &);
+  void synth_function_or_task_decl(const verilog_function_or_task_declt &);
+  void synth_force(const verilog_forcet &);
+  void synth_force_rec(const exprt &lhs, const exprt &rhs);
+  void synth_force_rec(exprt &lhs, exprt &rhs, transt &);
+  void synth_assignments(transt &);
+
+  exprt make_supply_value(const irep_idt &decl_class, const typet &);
+
+  // for concurrent assertions
+  std::optional<exprt> default_disable_iff;
+  void find_defaults(const verilog_module_itemt &);
+  void apply_defaults(exprt &);
+
+  // --- Helpers ---
 
   const symbolt &assignment_symbol(const exprt &lhs);
 
@@ -271,54 +354,14 @@ protected:
 
   static void set_default_sequence_semantics(exprt &, sva_sequence_semanticst);
 
-  // module items
-  virtual void convert_module_items(symbolt &);
-  void synth_module_item(const verilog_module_itemt &, transt &);
-  void synth_always_base(const verilog_always_baset &);
-  void synth_assertion_item(const verilog_assertion_itemt &);
-  void synth_initial(const verilog_initialt &);
-  void
-  synth_assert_assume_cover(const verilog_assert_assume_cover_module_itemt &);
-  void synth_assume(const verilog_assert_assume_cover_module_itemt &);
-  void synth_continuous_assign(const verilog_continuous_assignt &);
-  void synth_force_rec(exprt &lhs, exprt &rhs, transt &);
-  void synth_module_instance(const verilog_instt &, transt &);
-  void synth_module_instance_builtin(const verilog_inst_builtint &, transt &);
-
-  // statements
-  void synth_statement(const verilog_statementt &);
-  void synth_decl(const verilog_declt &);
-  void synth_function_or_task_decl(const verilog_function_or_task_declt &);
-  void synth_block(const verilog_blockt &);
-  void synth_break(const verilog_breakt &);
-  void synth_case(const verilog_case_statement_baset &);
-  void synth_continue(const verilog_continuet &);
-  void synth_if(const verilog_ift &);
-  void synth_event_guard(const verilog_event_guardt &);
-  void synth_delay(const verilog_delayt &);
-  void synth_for(const verilog_fort &);
-  void synth_force(const verilog_forcet &);
-  void synth_force_rec(const exprt &lhs, const exprt &rhs);
-  void synth_forever(const verilog_forevert &);
-  void synth_while(const verilog_whilet &);
-  void synth_repeat(const verilog_repeatt &);
-  void synth_return(const verilog_returnt &);
-  void synth_function_call_or_task_enable(const verilog_function_callt &);
-  void synth_assign(const verilog_assignt &);
-  void
-  synth_assert_assume_cover(const verilog_assert_assume_cover_statementt &);
-  void synth_assume(const verilog_assume_statementt &);
-  void synth_prepostincdec(const verilog_statementt &);
-  void synth_assignments(transt &);
-
-  exprt make_supply_value(const irep_idt &decl_class, const typet &);
-
   void post_process_initial(exprt &constraints);
   void post_process_wire(const irep_idt &identifier, exprt &expr);
-  
-  exprt case_comparison(const exprt &case_operand, const exprt &pattern);
-  
-  typedef enum { CURRENT, NEXT } curr_or_nextt;
+
+  typedef enum
+  {
+    CURRENT,
+    NEXT
+  } curr_or_nextt;
 
   exprt symbol_expr(const symbolt &, curr_or_nextt curr_or_next) const;
 
@@ -330,44 +373,13 @@ protected:
     exprt &new_value,
     exprt &constraints);
 
-  exprt synth_case_values(
-    const exprt &values,
-    const exprt &case_operand);
-
-  std::vector<irep_idt> find_module_symbols(const symbolt &module_symbol) const;
-
-  void expand_module_instance(
-    const symbolt &module_symbol,
-    const transt &trans_inst,
-    const verilog_instt::instancet &,
-    transt &trans_dest);
-
   void expand_hierarchical_identifier(
     class hierarchical_identifier_exprt &expr,
     symbol_statet symbol_state);
 
-  exprt
-  expand_function_call(const class function_call_exprt &call, symbol_statet);
-
-  void instantiate_ports(
-    const irep_idt &instance,
-    const verilog_instt::instancet &inst,
-    const symbolt &,
-    transt &);
-
-  void instantiate_port(
-    const module_typet::portt &,
-    const exprt &value,
-    const source_locationt &,
-    transt &);
-
   void replace_by_wire(exprt &expr, const symbolt &base);
-
-  // Mark the local variables of a function or task
-  // as cycle local.
-  void function_locality(const symbolt &);
 
   unsigned temporary_counter;
 };
 
-#endif
+#endif // CPROVER_VERILOG_SYNTHESIS_CLASS_H
