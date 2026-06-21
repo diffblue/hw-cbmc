@@ -29,6 +29,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "liveness_to_safety.h"
 #include "netlist.h"
 #include "neural_liveness.h"
+#include "output_aiger.h"
 #include "output_smv_word_level.h"
 #include "property_checker.h"
 #include "random_traces.h"
@@ -322,6 +323,20 @@ int ebmc_parse_optionst::doit()
       return 0;
     }
 
+    if(cmdline.isset("aiger"))
+    {
+#ifdef _WIN32
+      throw ebmc_errort() << "No support for AIGER on Windows";
+#else
+      auto netlist = make_netlist(
+        transition_system, properties, cmdline, ui_message_handler);
+      auto filename = cmdline.value_opt("outfile").value_or("-");
+      output_filet output_file{filename};
+      output_aiger(netlist, output_file.stream());
+      return 0;
+#endif
+    }
+
     if(cmdline.isset("cegar"))
     {
       auto netlist = make_netlist(
@@ -420,7 +435,6 @@ void ebmc_parse_optionst::help()
     " {y--ic3}                       \t use IC3 engine with options described below\n"
     "    {y--constr}                 \t use constraints specified in 'file.cnstr'\n"
     "    {y--new-mode}               \t new mode is switched on\n"
-    "    {y--aiger}                  \t print out the instance in aiger format\n"
     " {y--new-ic3}                   \t use new IC3 engine (AIG-based)\n"
     " {y--random-traces}             \t generate random traces\n"
     "    {y--traces} {unumber}       \t generate the given number of traces\n"
@@ -470,6 +484,7 @@ void ebmc_parse_optionst::help()
     " {y--show-module-hierarchy}     \t show the hierarchy of module instantiations\n"
     " {y--show-varmap}               \t show variable map\n"
     " {y--show-netlist}              \t show netlist\n"
+    " {y--aiger}                     \t output netlist in AIGER format\n"
     " {y--show-ldg}                  \t show latch dependencies\n"
     " {y--show-formula}              \t show the formula that is generated\n"
     " {y--smv-netlist}               \t show netlist in SMV format\n"

@@ -46,6 +46,10 @@ SRC = \
       waveform.cpp \
       #empty line
 
+ifneq ($(BUILD_ENV),MSVC)
+SRC += output_aiger.cpp
+endif
+
 OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       $(CPROVER_DIR)/big-int/big-int$(LIBEXT) \
       $(CPROVER_DIR)/langapi/langapi$(LIBEXT) \

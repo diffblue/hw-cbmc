@@ -1,0 +1,7 @@
+CORE
+verilog1.sv
+--aiger --top main
+^aag 3 2 1 0 0$
+^EXIT=0$
+^SIGNAL=0$
+--
