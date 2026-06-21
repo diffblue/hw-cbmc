@@ -13,13 +13,11 @@ static int isatty(int) { return 0; }
 
 #include "verilog_preprocessor_tokenizer.h"
 
-extern verilog_preprocessor_tokenizert *verilog_preprocessor_tokenizer;
+extern flex_interfacet *verilog_preprocessor_flex;
 using tokent = verilog_preprocessor_tokenizert::tokent;
 
-#define TOKENIZER (*verilog_preprocessor_tokenizer)
-
 #define YY_INPUT(buf, result, max_size) \
-  { result = TOKENIZER.yy_input(buf, max_size); }
+  { result = verilog_preprocessor_flex->yy_input(buf, max_size); }
 %}
 
 %s SLCOMMENT
@@ -33,13 +31,13 @@ String		\"(\\.|[^"\\])*\"
 
 <INITIAL>"//"		{ BEGIN SLCOMMENT; /* single-line comment */ }
 <INITIAL>"/*"           { BEGIN MLCOMMENT; /* multi-line comment */ }
-<INITIAL>{String}	{ TOKENIZER.text(yytext, yyleng); return tokent::STRING_LITERAL; }
-<INITIAL>{Identifier}	{ TOKENIZER.text(yytext, yyleng); return tokent::IDENTIFIER; }
-<INITIAL>.|\n		{ TOKENIZER.text(yytext[0]); return yytext[0]; /* anything else */ }
-<SLCOMMENT>\n		{ BEGIN INITIAL; TOKENIZER.text('\n'); return '\n'; }
+<INITIAL>{String}	{ return tokent::STRING_LITERAL; }
+<INITIAL>{Identifier}	{ return tokent::IDENTIFIER; }
+<INITIAL>.|\n		{ return yytext[0]; /* anything else */ }
+<SLCOMMENT>\n		{ BEGIN INITIAL; return '\n'; }
 <SLCOMMENT>.		{ /* just eat up */ }
 <SLCOMMENT><<EOF>>      { /* we allow that */ BEGIN INITIAL; }
-<MLCOMMENT>\n		{ TOKENIZER.text('\n'); return '\n'; }
+<MLCOMMENT>\n		{ return '\n'; }
 <MLCOMMENT>"*/"         { BEGIN INITIAL; /* comment done */ }
 <MLCOMMENT>.		{ /* just eat up */ }
 <MLCOMMENT><<EOF>>      { throw verilog_preprocessor_errort() << "EOF inside a comment"; }
@@ -48,8 +46,19 @@ String		\"(\\.|[^"\\])*\"
 
 int yywrap() { return 1; }
 
-void verilog_preprocessor_tokenizer_init()
+void verilog_preprocessor_flext::init()
 {
   YY_FLUSH_BUFFER;
   BEGIN INITIAL;
+}
+
+int verilog_preprocessor_flext::lex()
+{
+  return yylex();
+}
+
+verilog_preprocessor_flext::text_and_lengt
+verilog_preprocessor_flext::text_and_leng()
+{
+  return {yytext, yyleng};
 }

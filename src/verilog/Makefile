@@ -1,6 +1,7 @@
 SRC = aval_bval_encoding.cpp \
       convert_literals.cpp \
       expr2verilog.cpp \
+      flex_interface.cpp \
       sva_expr.cpp \
       typename.cpp \
       verilog_bits.cpp \
