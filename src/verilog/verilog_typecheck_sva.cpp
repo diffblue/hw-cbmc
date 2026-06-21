@@ -16,6 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_expr.h"
 #include "verilog_types.h"
 
+#include <map>
+
 void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
 {
   auto &type = expr.type();
@@ -107,7 +109,6 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
   }
   else
   {
-    // not SVA
     return convert_expr_rec(std::move(expr));
   }
 }
@@ -323,7 +324,6 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
   }
   else
   {
-    // not SVA
     return convert_expr_rec(std::move(expr));
   }
 }
@@ -433,9 +433,13 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_sequence_property_instance)
+  {
+    return flatten_named_sequence_property(
+      to_sva_sequence_property_instance_expr(std::move(expr)));
+  }
   else
   {
-    // not SVA
     return convert_expr_rec(std::move(expr));
   }
 }
@@ -475,7 +479,6 @@ exprt verilog_typecheck_exprt::convert_other_sva(exprt expr)
   }
   else
   {
-    // not SVA
     return convert_expr_rec(std::move(expr));
   }
 }
@@ -500,7 +503,79 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
   sva_sequence_property_instance_exprt instance)
 {
   auto &cond = instance.declaration().cond();
+
+  // Substitute port parameters by actual arguments
+  auto &arguments = instance.arguments();
+  const auto &ports = instance.declaration().ports();
+
+  // Count expected ports
+  std::size_t expected_args = 0;
+  std::size_t required_args = 0;
+  for(auto &port : ports)
+  {
+    for(auto &declarator : port.declarators())
+    {
+      expected_args++;
+      if(!declarator.has_value())
+        required_args++;
+    }
+  }
+
+  if(arguments.size() > expected_args)
+  {
+    throw errort().with_location(instance.symbol().source_location())
+      << "too many arguments for " << instance.symbol().get_identifier()
+      << " (expected " << expected_args << ", got " << arguments.size() << ")";
+  }
+
+  if(arguments.size() < required_args)
+  {
+    throw errort().with_location(instance.symbol().source_location())
+      << "too few arguments for " << instance.symbol().get_identifier()
+      << " (expected at least " << required_args << ", got " << arguments.size()
+      << ")";
+  }
+
+  // Build a map from port identifier to unconverted argument.
+  // Both arguments and default values are not yet converted.
+  auto symbol_name = instance.symbol().get_identifier();
+  std::map<irep_idt, exprt> substitution_map;
+  std::size_t arg_index = 0;
+  for(auto &port : ports)
+  {
+    for(auto &declarator : port.declarators())
+    {
+      auto port_identifier =
+        id2string(symbol_name) + "." + id2string(declarator.base_name());
+      if(arg_index < arguments.size())
+        substitution_map[port_identifier] = arguments[arg_index];
+      else if(declarator.has_value())
+        substitution_map[port_identifier] = declarator.value();
+      arg_index++;
+    }
+  }
+
+  // Substitute port identifiers with actual arguments
+  cond.visit_post(
+    [&](exprt &expr)
+    {
+      if(expr.id() == ID_verilog_identifier)
+      {
+        auto &identifier_expr = to_verilog_identifier_expr(expr);
+        auto it = substitution_map.find(identifier_expr.preresolved());
+        if(it != substitution_map.end())
+        {
+          expr = it->second;
+          return;
+        }
+      }
+    });
+
   convert_sva(cond);
+
+  // Convert the arguments for display purposes
+  for(auto &arg : instance.arguments())
+    convert_expr(arg);
 
   if(instance.symbol().type().id() == ID_verilog_sva_named_sequence)
   {

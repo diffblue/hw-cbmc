@@ -1,6 +1,7 @@
 # EBMC 6.1
 
 * Verilog: procedural assignments to hierarchical identifiers
+* SystemVerilog: ports for sequence and property declarations
 
 # EBMC 6.0
 
