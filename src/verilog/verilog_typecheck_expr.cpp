@@ -874,15 +874,15 @@ Function: verilog_typecheck_exprt::convert_expr_function_call
 exprt verilog_typecheck_exprt::convert_expr_function_call(
   function_call_exprt expr)
 {
-  // convert the arguments
   auto &arguments = expr.arguments();
-
-  Forall_expr(it, arguments)
-    convert_expr(*it);
 
   // built-in functions
   if(expr.is_system_function_call())
+  {
+    Forall_expr(it, arguments)
+      convert_expr(*it);
     return convert_system_function(expr);
+  }
 
   exprt &f_op = expr.function();
   irep_idt base_name;
@@ -938,6 +938,26 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
     throw errort().with_location(expr.source_location())
       << "expected identifier as function";
   }
+
+  if(
+    symbol->type.id() == ID_verilog_sva_named_property ||
+    symbol->type.id() == ID_verilog_sva_named_sequence)
+  {
+    // Property/sequence instantiation: arguments are passed unconverted
+    // and substituted into the property body before conversion.
+    auto symbol_expr = symbol->symbol_expr().with_source_location(f_op);
+    auto &declaration =
+      to_verilog_sequence_property_declaration_base(symbol->value);
+    auto instance =
+      sva_sequence_property_instance_exprt{
+        symbol_expr, std::move(arguments), declaration}
+        .with_source_location(expr);
+    return flatten_named_sequence_property(instance);
+  }
+
+  // convert the arguments for regular function calls
+  Forall_expr(it, arguments)
+    convert_expr(*it);
 
   if(symbol->type.id()!=ID_code)
   {
@@ -1598,6 +1618,11 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   {
     return constant_exprt{ID_NULL, typet{ID_verilog_null}}.with_source_location(
       expr.source_location());
+  }
+  else if(expr.id() == ID_symbol)
+  {
+    // Already resolved (e.g., substituted property port argument)
+    return std::move(expr);
   }
   else
   {

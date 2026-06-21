@@ -181,11 +181,67 @@ void verilog_typecheckt::collect_symbols(
 void verilog_typecheckt::collect_symbols(
   const verilog_property_declarationt &declaration)
 {
+  auto base_name = declaration.base_name();
+  auto identifier = hierarchical_identifier(base_name);
+
+  symbolt symbol{identifier, verilog_sva_named_property_typet{}, mode};
+  symbol.base_name = base_name;
+  symbol.location = declaration.source_location();
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  symbol.module = verilog_root_module_identifier();
+  symbol.value = nil_exprt();
+
+  add_symbol(symbol);
+
+  function_or_task_name = symbol.name;
+
+  for(auto &port : declaration.ports())
+    for(auto &declarator : port.declarators())
+    {
+      auto port_identifier = hierarchical_identifier(declarator.base_name());
+      symbolt port_symbol{port_identifier, typet{ID_verilog_untyped}, mode};
+      port_symbol.base_name = declarator.base_name();
+      port_symbol.location = declarator.source_location();
+      port_symbol.pretty_name = strip_verilog_root_prefix(port_symbol.name);
+      port_symbol.module = verilog_root_module_identifier();
+      port_symbol.value.make_nil();
+      symbol_table.add(port_symbol);
+    }
+
+  function_or_task_name = "";
 }
 
 void verilog_typecheckt::collect_symbols(
   const verilog_sequence_declarationt &declaration)
 {
+  auto base_name = declaration.base_name();
+  auto identifier = hierarchical_identifier(base_name);
+
+  symbolt symbol{identifier, verilog_sva_named_sequence_typet{}, mode};
+  symbol.base_name = base_name;
+  symbol.location = declaration.source_location();
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  symbol.module = verilog_root_module_identifier();
+  symbol.value = nil_exprt();
+
+  add_symbol(symbol);
+
+  function_or_task_name = symbol.name;
+
+  for(auto &port : declaration.ports())
+    for(auto &declarator : port.declarators())
+    {
+      auto port_identifier = hierarchical_identifier(declarator.base_name());
+      symbolt port_symbol{port_identifier, typet{ID_verilog_untyped}, mode};
+      port_symbol.base_name = declarator.base_name();
+      port_symbol.location = declarator.source_location();
+      port_symbol.pretty_name = strip_verilog_root_prefix(port_symbol.name);
+      port_symbol.module = verilog_root_module_identifier();
+      port_symbol.value.make_nil();
+      symbol_table.add(port_symbol);
+    }
+
+  function_or_task_name = "";
 }
 
 void verilog_typecheckt::collect_symbols(const verilog_classt &class_decl)

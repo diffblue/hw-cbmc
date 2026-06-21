@@ -1807,20 +1807,15 @@ void verilog_typecheckt::convert_property_declaration(
   // until the instance is known, owing to untyped ports.
   declaration.type() = verilog_sva_named_property_typet{};
 
-  // We'll annotate the scope of the identifiers
+  // We'll annotate the scope of the identifiers.
+  // Set function_or_task_name so that resolve() finds the port symbols.
+  function_or_task_name = full_identifier;
   preresolve_identifiers(declaration.cond());
+  function_or_task_name = "";
 
-  // The symbol uses the full declaration as value
-  auto type = verilog_sva_named_property_typet{};
-  symbolt symbol{full_identifier, type, mode};
-
-  symbol.module = module_identifier;
-  symbol.base_name = base_name;
-  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  // Update the symbol (already created by collect_symbols)
+  symbolt &symbol = symbol_table_lookup(full_identifier);
   symbol.value = declaration;
-  symbol.location = declaration.source_location();
-
-  add_symbol(std::move(symbol));
 }
 
 /*******************************************************************\
@@ -1846,20 +1841,15 @@ void verilog_typecheckt::convert_sequence_declaration(
   // until the instance is known, owing to untyped ports.
   declaration.type() = verilog_sva_named_sequence_typet{};
 
-  // We'll annotate the scope of the identifiers
+  // We'll annotate the scope of the identifiers.
+  // Set function_or_task_name so that resolve() finds the port symbols.
+  function_or_task_name = full_identifier;
   preresolve_identifiers(declaration.cond());
+  function_or_task_name = "";
 
-  // The symbol uses the full declaration as value
-  auto type = verilog_sva_named_sequence_typet{};
-  symbolt symbol{full_identifier, type, mode};
-
-  symbol.module = module_identifier;
-  symbol.base_name = base_name;
-  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  // Update the symbol (already created by collect_symbols)
+  symbolt &symbol = symbol_table_lookup(full_identifier);
   symbol.value = declaration;
-  symbol.location = declaration.source_location();
-
-  add_symbol(std::move(symbol));
 }
 
 /*******************************************************************\

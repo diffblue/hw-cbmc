@@ -3297,10 +3297,16 @@ to_verilog_indexed_part_select_plus_or_minus_expr(exprt &expr)
 class verilog_sequence_property_declaration_baset : public verilog_module_itemt
 {
 public:
-  verilog_sequence_property_declaration_baset(irep_idt _id, exprt _cond)
+  using portst = std::vector<verilog_declt>;
+
+  verilog_sequence_property_declaration_baset(
+    irep_idt _id,
+    portst _ports,
+    exprt _cond)
     : verilog_module_itemt{_id}
   {
     add_to_operands(std::move(_cond));
+    ports() = std::move(_ports);
   }
 
   const irep_idt &base_name() const
@@ -3316,6 +3322,16 @@ public:
   exprt &cond()
   {
     return op0();
+  }
+
+  const portst &ports() const
+  {
+    return (const portst &)(find(ID_ports).get_sub());
+  }
+
+  portst &ports()
+  {
+    return (portst &)(add(ID_ports).get_sub());
   }
 };
 
@@ -3343,9 +3359,10 @@ class verilog_property_declarationt
   : public verilog_sequence_property_declaration_baset
 {
 public:
-  explicit verilog_property_declarationt(exprt property)
+  verilog_property_declarationt(portst _ports, exprt property)
     : verilog_sequence_property_declaration_baset{
         ID_verilog_property_declaration,
+        std::move(_ports),
         std::move(property)}
   {
   }
@@ -3381,9 +3398,10 @@ class verilog_sequence_declarationt
   : public verilog_sequence_property_declaration_baset
 {
 public:
-  explicit verilog_sequence_declarationt(exprt _sequence)
+  verilog_sequence_declarationt(portst _ports, exprt _sequence)
     : verilog_sequence_property_declaration_baset{
         ID_verilog_sequence_declaration,
+        std::move(_ports),
         std::move(_sequence)}
   {
   }
