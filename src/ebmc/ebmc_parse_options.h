@@ -40,6 +40,7 @@ public:
         "(compute-interpolant)(interpolation)(interpolation-vmcai)"
         "(ic3)(property):(constr)(h)(new-mode)(aiger)"
         "(interpolation-word)(interpolator):(bdd)"
+        "(liveness)"
         "(ranking-function):"
         "(smt2)(bitwuzla)(boolector)(cvc3)(cvc4)(cvc5)(mathsat)(yices)(z3)"
         "(minisat)(cadical)"
