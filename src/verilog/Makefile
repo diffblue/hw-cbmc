@@ -28,6 +28,8 @@ SRC = aval_bval_encoding.cpp \
       verilog_standard.cpp \
       verilog_symbol_table.cpp \
       verilog_synthesis.cpp \
+      verilog_synthesis_behavioral.cpp \
+      verilog_synthesis_structural.cpp \
       verilog_typecheck.cpp \
       verilog_typecheck_base.cpp \
       verilog_typecheck_expr.cpp \
