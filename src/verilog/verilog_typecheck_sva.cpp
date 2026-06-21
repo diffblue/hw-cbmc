@@ -15,6 +15,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_expr.h"
 #include "verilog_types.h"
 
+#include <functional>
+#include <map>
+
 void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
 {
   auto &type = expr.type();
@@ -106,7 +109,9 @@ exprt verilog_typecheck_exprt::convert_unary_sva(unary_exprt expr)
   }
   else
   {
-    // not SVA
+    // not SVA -- if already converted (has a type), return as-is
+    if(expr.type().id() != ID_nil && expr.type().id() != ID_empty_string)
+      return std::move(expr);
     return convert_expr_rec(std::move(expr));
   }
 }
@@ -322,7 +327,9 @@ exprt verilog_typecheck_exprt::convert_binary_sva(binary_exprt expr)
   }
   else
   {
-    // not SVA
+    // not SVA -- if already converted (has a type), return as-is
+    if(expr.type().id() != ID_nil && expr.type().id() != ID_empty_string)
+      return std::move(expr);
     return convert_expr_rec(std::move(expr));
   }
 }
@@ -432,6 +439,14 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
 
     return std::move(expr);
   }
+  else if(expr.id() == ID_sva_sequence_property_instance)
+  {
+    // Already converted (e.g., substituted from a property port argument)
+    if(expr.type().is_not_nil())
+      return std::move(expr);
+    return flatten_named_sequence_property(
+      to_sva_sequence_property_instance_expr(std::move(expr)));
+  }
   else
   {
     // not SVA
@@ -474,7 +489,9 @@ exprt verilog_typecheck_exprt::convert_other_sva(exprt expr)
   }
   else
   {
-    // not SVA
+    // not SVA -- if already converted (has a type), return as-is
+    if(expr.type().id() != ID_nil && expr.type().id() != ID_empty_string)
+      return expr;
     return convert_expr_rec(std::move(expr));
   }
 }
@@ -499,6 +516,48 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
   sva_sequence_property_instance_exprt instance)
 {
   auto &cond = instance.declaration().cond();
+
+  // Substitute port parameters by actual arguments
+  auto &arguments = instance.arguments();
+  const auto &ports = instance.declaration().ports();
+
+  // Build a map from port base_name to argument
+  std::map<irep_idt, exprt> substitution_map;
+  std::size_t arg_index = 0;
+  for(auto &port : ports)
+  {
+    // Each port is a verilog_declt with one declarator
+    for(auto &declarator : port.declarators())
+    {
+      if(arg_index < arguments.size())
+        substitution_map[declarator.base_name()] = arguments[arg_index];
+      else if(declarator.has_value())
+      {
+        // Use default value
+        exprt default_val = declarator.value();
+        convert_expr(default_val);
+        substitution_map[declarator.base_name()] = default_val;
+      }
+      arg_index++;
+    }
+  }
+
+  // Recursively substitute identifiers in cond
+  cond.visit_post(
+    [&](exprt &expr)
+    {
+      if(expr.id() == ID_verilog_identifier)
+      {
+        auto base_name = expr.get(ID_base_name);
+        auto it = substitution_map.find(base_name);
+        if(it != substitution_map.end())
+        {
+          expr = it->second;
+          return;
+        }
+      }
+    });
+
   convert_sva(cond);
 
   if(instance.symbol().type().id() == ID_verilog_sva_named_sequence)

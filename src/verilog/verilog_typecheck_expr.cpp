@@ -924,6 +924,22 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
       << "expected identifier as function";
   }
 
+  if(
+    symbol->type.id() == ID_verilog_sva_named_property ||
+    symbol->type.id() == ID_verilog_sva_named_sequence)
+  {
+    // This is an instantiation of a named property/sequence with
+    // property ports.
+    auto symbol_expr = symbol->symbol_expr().with_source_location(f_op);
+    auto &declaration =
+      to_verilog_sequence_property_declaration_base(symbol->value);
+    auto instance =
+      sva_sequence_property_instance_exprt{
+        symbol_expr, std::move(arguments), declaration}
+        .with_source_location(expr);
+    return flatten_named_sequence_property(instance);
+  }
+
   if(symbol->type.id()!=ID_code)
   {
     throw errort().with_location(f_op.source_location())
@@ -1583,6 +1599,11 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   {
     return constant_exprt{ID_NULL, typet{ID_verilog_null}}.with_source_location(
       expr.source_location());
+  }
+  else if(expr.id() == ID_symbol)
+  {
+    // Already resolved (e.g., substituted property port argument)
+    return std::move(expr);
   }
   else
   {
