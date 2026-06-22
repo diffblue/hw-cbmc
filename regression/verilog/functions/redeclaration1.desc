@@ -1,0 +1,10 @@
+KNOWNBUG
+redeclaration1.sv
+
+^file .* line 5: error: variable `myfunc' is already declared, at file .* line 1$
+^EXIT=6$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The location of the original declaration is missing.
