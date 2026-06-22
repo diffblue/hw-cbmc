@@ -19,6 +19,7 @@ src/**/*.d
 src/**/*.o
 src/ebmc/ebmc
 src/hw-cbmc/hw-cbmc
+src/fastppa/fastppa
 src/vlindex/vlindex
 unit/**/*.d
 unit/**/*.o
