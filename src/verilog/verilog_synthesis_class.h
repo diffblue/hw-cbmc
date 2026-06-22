@@ -272,7 +272,7 @@ protected:
   static void set_default_sequence_semantics(exprt &, sva_sequence_semanticst);
 
   // module items
-  virtual void convert_module_items(symbolt &);
+  transt convert_module_items(const symbolt &);
   void synth_module_item(const verilog_module_itemt &, transt &);
   void synth_always_base(const verilog_always_baset &);
   void synth_assertion_item(const verilog_assertion_itemt &);

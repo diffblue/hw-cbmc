@@ -3955,7 +3955,7 @@ Function: verilog_synthesist::convert_module_items
 
 \*******************************************************************/
 
-void verilog_synthesist::convert_module_items(symbolt &symbol)
+transt verilog_synthesist::convert_module_items(const symbolt &symbol)
 {
   PRECONDITION(symbol.value.id() == ID_verilog_module);
 
@@ -4017,7 +4017,7 @@ void verilog_synthesist::convert_module_items(symbolt &symbol)
   }
   #endif
 
-  symbol.value = std::move(trans);
+  return trans;
 }
 
 /*******************************************************************\
@@ -4037,13 +4037,14 @@ transt verilog_synthesist::synthesis()
   symbolt &symbol=symbol_table_lookup(module);
 
   // done already?
-  if(symbol.value.id() != ID_trans)
+  if(symbol.value.id() == ID_trans)
+    return to_trans_expr(symbol.value);
+  else
   {
-    convert_module_items(symbol);
-    CHECK_RETURN(symbol.value.id() == ID_trans);
+    auto result = convert_module_items(symbol);
+    symbol.value = result;
+    return result;
   }
-
-  return to_trans_expr(symbol.value);
 }
 
 /*******************************************************************\
