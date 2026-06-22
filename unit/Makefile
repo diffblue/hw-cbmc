@@ -6,6 +6,8 @@ SRC = unit_tests.cpp
 # Test source files
 SRC += ebmc/bdd_model_checker.cpp \
        ebmc/transition_property.cpp \
+       fastppa/estimate.cpp \
+       fastppa/technology_db.cpp \
        smvlang/expr2smv.cpp \
        temporal-logic/hoa.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
@@ -33,6 +35,9 @@ CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
 OBJ += ../src/ebmc/bdd_model_checker$(OBJEXT) \
        ../src/ebmc/transition_property$(OBJEXT) \
+       ../src/ebmc/transition_system$(OBJEXT) \
+       ../src/fastppa/estimate$(OBJEXT) \
+       ../src/fastppa/technology_db$(OBJEXT) \
        ../src/smvlang/smvlang$(LIBEXT) \
        ../src/temporal-logic/temporal-logic$(LIBEXT) \
        ../src/trans-netlist/trans-netlist$(LIBEXT) \
