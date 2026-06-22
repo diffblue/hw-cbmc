@@ -1,0 +1,7 @@
+CORE
+struct_packet.sv
+--top struct_packet --process 45nm
+^  Register bits:       257$
+^  Total:               1991\.2 um2$
+^EXIT=0$
+^SIGNAL=0$

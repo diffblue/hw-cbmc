@@ -1,0 +1,8 @@
+CORE
+comb_mux.sv
+--top comb_mux --process 45nm
+^  Register bits:       0$
+^  Operators:           3$
+^  Total:               50\.4 um2$
+^EXIT=0$
+^SIGNAL=0$
