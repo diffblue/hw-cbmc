@@ -216,6 +216,7 @@ Function: verilog_typecheckt::parameterize_module
 irep_idt verilog_typecheckt::parameterize_module(
   const source_locationt &location,
   const irep_idt &module_identifier,
+  const irep_idt &module_base_name,
   const irep_idt &instance_identifier,
   const exprt::operandst &parameter_assignments,
   const std::map<irep_idt, exprt> &instance_defparams)
@@ -225,7 +226,8 @@ irep_idt verilog_typecheckt::parameterize_module(
     symbol_table.symbols.find(id2string(module_identifier) + "$source");
 
   if(it == symbol_table.symbols.end())
-    throw errort().with_location(location) << "module not found";
+    throw errort().with_location(location)
+      << "module `" << module_base_name << "' not found";
 
   const symbolt &source_symbol = it->second;
 

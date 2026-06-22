@@ -134,6 +134,7 @@ protected:
   irep_idt parameterize_module(
     const source_locationt &location,
     const irep_idt &module_identifier,
+    const irep_idt &module_base_name,
     const irep_idt &instance_identifier,
     const exprt::operandst &parameter_assignment,
     const std::map<irep_idt, exprt> &defparams);
