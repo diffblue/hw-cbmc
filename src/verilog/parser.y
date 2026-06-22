@@ -813,8 +813,8 @@ checker_port_direction_opt:
         ;
 
 class_declaration:
-          TOK_CLASS any_identifier
-          ';'
+          TOK_CLASS lifetime_opt
+          any_identifier
                 {
                   init($$, ID_verilog_class);
                   auto base_name = stack_expr($2).get(ID_base_name);
@@ -823,12 +823,32 @@ class_declaration:
                   auto &class_scope = PARSER.scopes.add_class_scope(base_name);
                   PARSER.scopes.enter_scope(class_scope);
                 }
+          parameter_port_list_opt
+          extends_opt
+          implements_opt
+          ';'
           class_item_brace
           TOK_ENDCLASS
                 {
                   $$ = $4;
                   pop_scope();
                 }
+          class_identifier_opt
+        ;
+
+extends_opt:
+          /* optional */
+        | TOK_EXTENDS class_identifier
+        ;
+
+implements_opt:
+          /* optional */
+        | TOK_IMPLEMENTS class_identifier
+        ;
+
+class_identifier_opt:
+          /* optional */
+        | TOK_COLON any_identifier
         ;
 
 package_declaration:
@@ -1224,11 +1244,11 @@ class_item_brace:
 
 // classes are yet to be implemented
 class_item:
-//        attribute_instance_brace class_property
-//              { add_attributes($2, $1); $$=$2; }
-//      | attribute_instance_brace class_method
-//              { add_attributes($2, $1); $$=$2; }
-          attribute_instance_brace class_constraint
+          attribute_instance_brace class_property
+                { add_attributes($2, $1); $$=$2; }
+//        | attribute_instance_brace class_method
+//                { add_attributes($2, $1); $$=$2; }
+        | attribute_instance_brace class_constraint
                 { add_attributes($2, $1); $$=$2; }
         | attribute_instance_brace class_declaration
                 { add_attributes($2, $1); $$=$2; }
@@ -1240,9 +1260,9 @@ class_item:
         ;
 
 class_property:
-          property_qualifier_brace data_declaration
-        | TOK_CONST class_item_qualifier_brace data_type identifier ';'
-        | TOK_CONST class_item_qualifier_brace data_type identifier '=' constant_expression ';'
+          data_declaration
+//        | TOK_CONST class_item_qualifier_brace data_type identifier ';'
+//        | TOK_CONST class_item_qualifier_brace data_type identifier '=' constant_expression ';'
         ;
 
 class_method:
