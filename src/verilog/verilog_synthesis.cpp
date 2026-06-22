@@ -414,6 +414,12 @@ exprt verilog_synthesist::expand_function_call(
       // Return 0, indicating plusarg not found, keeping the default.
       return from_integer(0, call.type()).with_source_location(call);
     }
+    else if(base_name == "$test$plusargs")
+    {
+      // IEEE 1800-2017 section 21.6
+      // Return 0, indicating plusarg not found.
+      return from_integer(0, call.type()).with_source_location(call);
+    }
     else
     {
       // Attempt to constant fold.
