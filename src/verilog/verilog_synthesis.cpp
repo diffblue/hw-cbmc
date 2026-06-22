@@ -1621,6 +1621,8 @@ Function: verilog_synthesist::find_module_symbols
 
 \*******************************************************************/
 
+#include <iostream>
+
 std::vector<irep_idt>
 verilog_synthesist::find_module_symbols(const symbolt &module_symbol) const
 {
@@ -1632,6 +1634,18 @@ verilog_synthesist::find_module_symbols(const symbolt &module_symbol) const
   for(auto it = lower; it != upper; it++)
   {
     result.push_back(it->second);
+  }
+
+  auto &module_type = to_module_type(module_symbol.type);
+  auto &symbols = module_type.symbols();
+  std::set<irep_idt> symbol_set;
+  for(auto &s : symbols)
+    symbol_set.insert(static_cast<const symbol_exprt &>(s).get_identifier());
+
+  for(auto id : result)
+  {
+    if(symbol_set.find(id) != symbol_set.end())
+      std::cerr << "MISSING: " << id << "\n";
   }
 
   return result;

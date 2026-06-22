@@ -1798,6 +1798,14 @@ void verilog_typecheckt::typecheck_design_element(
   // store the module expression in symbol.value
   symbol.value = std::move(verilog_module_expr);
 
+  auto &module_type = to_module_type(symbol.type);
+
+  for(auto id : symbols_added)
+  {
+    auto &symbol = ns.lookup(id);
+    module_type.add_symbol(symbol.symbol_expr());
+  }
+
   module_identifier = irep_idt{};
 }
 
