@@ -1,7 +1,6 @@
 CORE
 module_not_found1.v
 --bound 1 --top main
-^file .* line 3: module not found$
+^file .* line 3: module `some_module_that_does_not_exist' not found$
 ^EXIT=2$
 ^SIGNAL=0$
---
