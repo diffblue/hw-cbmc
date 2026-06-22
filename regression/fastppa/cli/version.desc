@@ -1,0 +1,6 @@
+CORE
+test.desc
+--version
+^fastppa 0\.1$
+^EXIT=0$
+^SIGNAL=0$
