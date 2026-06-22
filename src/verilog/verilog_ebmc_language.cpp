@@ -479,6 +479,37 @@ symbol_tablet verilog_ebmc_languaget::elaborate_compilation_units(
   return symbol_table;
 }
 
+void verilog_ebmc_languaget::create_reset_logic(
+  const std::string &reset_constraint_string,
+  transition_systemt &transition_system)
+{
+  auto language = get_language_from_mode(transition_system.main_symbol->mode);
+  exprt reset_constraint;
+  const namespacet ns{transition_system.symbol_table};
+
+  if(language->to_expr(
+       reset_constraint_string,
+       id2string(transition_system.main_symbol->module),
+       reset_constraint,
+       ns,
+       message_handler))
+  {
+    throw ebmc_errort{} << "failed to parse reset constraint";
+  }
+
+  // true in initial state
+  transt new_trans_expr = transition_system.trans_expr;
+  new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
+
+  // and not anymore afterwards
+  exprt reset_next_state = reset_constraint;
+  make_next_state(reset_next_state);
+
+  new_trans_expr.trans() =
+    and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
+  transition_system.trans_expr = new_trans_expr;
+}
+
 std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 {
   messaget message(message_handler);
@@ -566,33 +597,7 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 
   // --reset given?
   if(cmdline.isset("reset"))
-  {
-    auto language = get_language_from_mode(transition_system.main_symbol->mode);
-    exprt reset_constraint;
-    const namespacet ns{transition_system.symbol_table};
-
-    if(language->to_expr(
-         cmdline.get_value("reset"),
-         id2string(transition_system.main_symbol->module),
-         reset_constraint,
-         ns,
-         message_handler))
-    {
-      throw ebmc_errort{} << "failed to parse reset constraint";
-    }
-
-    // true in initial state
-    transt new_trans_expr = transition_system.trans_expr;
-    new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
-
-    // and not anymore afterwards
-    exprt reset_next_state = reset_constraint;
-    make_next_state(reset_next_state);
-
-    new_trans_expr.trans() =
-      and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
-    transition_system.trans_expr = new_trans_expr;
-  }
+    create_reset_logic(cmdline.get_value("reset"), transition_system);
 
   // done with the transition system
   return transition_system;
