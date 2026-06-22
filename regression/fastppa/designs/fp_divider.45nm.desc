@@ -1,0 +1,7 @@
+CORE
+fp_divider.sv
+--top divider --process 45nm
+^  Register bits:       453$
+^  Total:               4213\.7 um2$
+^EXIT=0$
+^SIGNAL=0$

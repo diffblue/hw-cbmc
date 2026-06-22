@@ -1,0 +1,7 @@
+CORE
+fp_multiplier.sv
+--top multiplier --process 45nm
+^  Register bits:       291$
+^  Total:               3461\.2 um2$
+^EXIT=0$
+^SIGNAL=0$
