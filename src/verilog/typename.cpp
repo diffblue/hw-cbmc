@@ -84,6 +84,7 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
 
   if(type.get(ID_C_verilog_type) == ID_verilog_enum)
   {
+    // not well standardised; tool-specific
     auto identifier = type.get(ID_C_identifier);
     auto &enum_symbol = ns.lookup(identifier);
     auto &enum_type = to_verilog_enum_type(enum_symbol.type);
@@ -96,6 +97,21 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
       else
         result += ',';
       result += id2string(name.base_name());
+    }
+    result += '}';
+    return result;
+  }
+  else if(type.id() == ID_struct)
+  {
+    // not well standardised; tool-specific
+    auto &struct_type = to_struct_type(type);
+    std::string result = "struct{";
+    for(auto &component : struct_type.components())
+    {
+      result += verilog_typename(component.type(), ns);
+      result += ' ';
+      result += id2string(component.get_name());
+      result += ';'; // no newline or the like
     }
     result += '}';
     return result;
