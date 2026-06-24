@@ -15,7 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_expr.h"
 #include "verilog_types.h"
 
-#include <functional>
 #include <map>
 
 void verilog_typecheck_exprt::require_sva_sequence(exprt &expr)
@@ -442,7 +441,7 @@ exprt verilog_typecheck_exprt::convert_ternary_sva(ternary_exprt expr)
   else if(expr.id() == ID_sva_sequence_property_instance)
   {
     // Already converted (e.g., substituted from a property port argument)
-    if(expr.type().is_not_nil())
+    if(expr.type().id() != ID_nil && expr.type().id() != ID_empty_string)
       return std::move(expr);
     return flatten_named_sequence_property(
       to_sva_sequence_property_instance_expr(std::move(expr)));
@@ -521,12 +520,42 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
   auto &arguments = instance.arguments();
   const auto &ports = instance.declaration().ports();
 
+  // Count expected ports
+  std::size_t expected_args = 0;
+  std::size_t required_args = 0;
+  for(auto &port : ports)
+  {
+    for(auto &declarator : port.declarators())
+    {
+      expected_args++;
+      if(!declarator.has_value())
+        required_args++;
+    }
+  }
+
+  if(arguments.size() > expected_args)
+  {
+    throw errort().with_location(instance.symbol().source_location())
+      << "too many arguments for "
+      << instance.symbol().get_identifier()
+      << " (expected " << expected_args
+      << ", got " << arguments.size() << ")";
+  }
+
+  if(arguments.size() < required_args)
+  {
+    throw errort().with_location(instance.symbol().source_location())
+      << "too few arguments for "
+      << instance.symbol().get_identifier()
+      << " (expected at least " << required_args
+      << ", got " << arguments.size() << ")";
+  }
+
   // Build a map from port base_name to argument
   std::map<irep_idt, exprt> substitution_map;
   std::size_t arg_index = 0;
   for(auto &port : ports)
   {
-    // Each port is a verilog_declt with one declarator
     for(auto &declarator : port.declarators())
     {
       if(arg_index < arguments.size())

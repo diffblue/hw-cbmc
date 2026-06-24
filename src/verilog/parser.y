@@ -2904,6 +2904,7 @@ sequence_declaration:
           "endsequence" sequence_identifier_opt
                 { $$=$2;
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+                  addswap($$, ID_ports, $5);
                   mto($$, $7);
                   pop_scope();
                 }
