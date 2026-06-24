@@ -1705,6 +1705,43 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
   else
   {
     symbol = resolve(base_name);
+
+    if(symbol != nullptr)
+    {
+      auto &s = id2string(expr.scope());
+      irep_idt identifier;
+
+      if(has_prefix(s, "$unit::"))
+      {
+        // compilation unit scope
+        identifier = "Verilog::" + s;
+      }
+      else if(s.find("::") != std::string::npos)
+      {
+        // package
+        identifier = "Verilog::" + s;
+      }
+      else
+      {
+        // identifier in a module instance
+        auto dot_pos = s.find('.');
+        if(dot_pos == std::string::npos)
+        {
+          throw errort{} << "unexpected scope on identifier: " << expr.pretty();
+        }
+
+        identifier = id2string(module_instance) + '.' + s.substr(dot_pos + 1);
+      }
+
+      if(identifier != symbol->name)
+      {
+        throw errort{} << "symbol:            " << symbol->name << "\n"
+                       << "identifier:        " << identifier << "\n"
+                       << "base_name:         " << base_name << "\n"
+                       << "module_identifier: " << module_identifier << "\n"
+                       << "module_instance:   " << module_instance;
+      }    
+    }
   }
 
   if(symbol != nullptr)
