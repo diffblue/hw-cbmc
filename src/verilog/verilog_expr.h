@@ -3290,12 +3290,12 @@ public:
 
   const portst &ports() const
   {
-    return (const portst &)(find(ID_ports));
+    return (const portst &)(find(ID_ports).get_sub());
   }
 
   portst &ports()
   {
-    return (portst &)(add(ID_ports));
+    return (portst &)(add(ID_ports).get_sub());
   }
 };
 
