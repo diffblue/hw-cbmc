@@ -75,16 +75,17 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
 
   // Are the parameter values given with the instantiation
   // statement named or ordered?
-  if(!parameter_assignment.empty() &&
-     parameter_assignment.front().id()==ID_named_parameter_assignment)
+  if(
+    !parameter_assignment.empty() &&
+    parameter_assignment.front().id() == ID_named_parameter_assignment)
   {
     // named
     std::map<irep_idt, exprt> map; // base name to values
 
     forall_expr(it, parameter_assignment)
     {
-      irep_idt parameter=it->get(ID_parameter);
-      map[parameter]=static_cast<const exprt &>(it->find(ID_value));
+      irep_idt parameter = it->get(ID_parameter);
+      map[parameter] = static_cast<const exprt &>(it->find(ID_value));
     }
 
     for(auto &decl : parameter_declarators)
@@ -107,7 +108,7 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
   else
   {
     // ordered
-    exprt::operandst::const_iterator p_it=parameter_assignment.begin();
+    exprt::operandst::const_iterator p_it = parameter_assignment.begin();
 
     for(auto &decl : parameter_declarators)
     {
@@ -128,7 +129,7 @@ std::list<exprt> verilog_typecheckt::get_parameter_values(
       parameter_values.push_back(value);
     }
 
-    if(p_it!=parameter_assignment.end())
+    if(p_it != parameter_assignment.end())
     {
       throw errort().with_location(p_it->source_location())
         << "too many parameter assignments";
@@ -155,7 +156,7 @@ void verilog_typecheckt::set_parameter_values(
   const source_locationt &instance_location,
   const std::list<exprt> &parameter_values)
 {
-  auto p_it=parameter_values.begin();
+  auto p_it = parameter_values.begin();
 
   auto &parameter_port_decls = module_source.parameter_port_decls();
 
@@ -187,9 +188,10 @@ void verilog_typecheckt::set_parameter_values(
       for(auto &declarator :
           to_verilog_parameter_decl(module_item).declarators())
       {
-        if(p_it!=parameter_values.end())
+        if(p_it != parameter_values.end())
         {
-          DATA_INVARIANT(p_it != parameter_values.end(), "have enough parameter values");
+          DATA_INVARIANT(
+            p_it != parameter_values.end(), "have enough parameter values");
 
           // only overwrite when actually assigned
           if(p_it->is_not_nil())
@@ -203,7 +205,7 @@ void verilog_typecheckt::set_parameter_values(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterize_module
+Function: verilog_typecheckt::instantiate_module
 
   Inputs:
 
@@ -213,7 +215,7 @@ Function: verilog_typecheckt::parameterize_module
 
 \*******************************************************************/
 
-irep_idt verilog_typecheckt::parameterize_module(
+irep_idt verilog_typecheckt::instantiate_module(
   const source_locationt &location,
   const irep_idt &module_identifier,
   const irep_idt &module_base_name,

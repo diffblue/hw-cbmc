@@ -1077,8 +1077,8 @@ public:
   class instancet : public exprt
   {
   public:
-    // The full identifier of the module/primitive/checker that is instantiated.
-    // This may be different for each instance, owing to defparam.
+    // The full identifier of the module/primitive/checker that is specialised
+    // to the instance.  This is unique per instance.
     irep_idt module_identifier() const
     {
       return get(ID_module_identifier);

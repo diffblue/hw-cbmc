@@ -131,7 +131,9 @@ protected:
 
   void elaborate_module_instances(const verilog_module_itemt &);
 
-  irep_idt parameterize_module(
+  // Specialize a module to a given instance identifier
+  // and parameter assignment
+  irep_idt instantiate_module(
     const source_locationt &location,
     const irep_idt &module_identifier,
     const irep_idt &module_base_name,

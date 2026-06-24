@@ -369,7 +369,7 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
     // add relevant defparam assignments
     auto &instance_defparams = defparams[instance_identifier];
 
-    irep_idt new_module_identifier = parameterize_module(
+    irep_idt new_module_identifier = instantiate_module(
       inst.source_location(),
       module_identifier,
       inst_module,
