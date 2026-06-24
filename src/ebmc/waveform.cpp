@@ -29,7 +29,7 @@ lhs_symbols(const trans_tracet &trace, const namespacet &ns)
       auto &lhs = assignment.lhs;
       if(lhs.id() == ID_symbol)
       {
-        auto identifier = to_symbol_expr(lhs).get_identifier();
+        auto identifier = to_symbol_expr(lhs).identifier();
         auto &symbol = ns.lookup(identifier);
         if(!symbol.is_auxiliary)
           identifier_set.insert(identifier);
@@ -90,7 +90,7 @@ void show_waveform(const trans_tracet &trace, const namespacet &ns)
       auto &lhs = assignment.lhs;
       if(lhs.id() == ID_symbol)
       {
-        auto identifier = to_symbol_expr(lhs).get_identifier();
+        auto identifier = to_symbol_expr(lhs).identifier();
         if(assignment.rhs.is_not_nil())
         {
           auto as_string = from_expr(ns, identifier, assignment.rhs);

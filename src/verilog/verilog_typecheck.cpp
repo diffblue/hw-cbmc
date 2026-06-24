@@ -121,7 +121,7 @@ void verilog_typecheckt::typecheck_port_connections(
   if(inst.named_port_connections())
   {
     // We don't require that all ports are connected.
-  
+
     std::set<irep_idt> assigned_ports;
     bool wildcard = false;
 
@@ -295,9 +295,9 @@ void verilog_typecheckt::convert_function_or_task(
       << "expected to find " << decl.id() << " symbol `" << identifier
       << "' in symbol_table";
   }
-  
+
   symbolt &symbol=*result;
-  
+
   decl.set_identifier(symbol.name);
 
   function_or_task_name = symbol.name;
@@ -309,7 +309,7 @@ void verilog_typecheckt::convert_function_or_task(
     convert_statement(statement);
 
   function_or_task_name="";
-  
+
   symbol.value=decl.body();
 }
 
@@ -377,11 +377,11 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
     throw errort().with_location(function_call.source_location())
       << "function call has wrong number of arguments";
   }
-  
+
   // elaborate the arguments of the call and assign to parameter
-  
+
   varst old_vars;
-  
+
   for(std::size_t i=0; i<arguments.size(); i++)
   {
     exprt value = elaborate_constant_expression(arguments[i]);
@@ -391,15 +391,15 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
       throw errort().with_location(arguments[i].source_location())
         << "constant function argument is not constant";
     }
-    
+
     irep_idt p_identifier=parameters[i].get_identifier();
 
     old_vars[p_identifier]=var_value(p_identifier);
     vars[p_identifier]=value;
-    
-    #if 0
+
+#if 0
     status() << "ASSIGN " << p_identifier << " <- " << to_string(value) << eom;
-    #endif
+#endif
   }
 
   // interpret it
@@ -407,7 +407,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
     verilog_interpreter(statement);
 
   function_or_task_name="";
-  
+
   // get return value
 
   exprt return_value=var_value(
@@ -775,7 +775,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
     // check arguments
     const code_typet::parameterst &parameter_types=code_type.parameters();
     exprt::operandst &arguments=statement.arguments();
-    
+
     if(parameter_types.size()!=arguments.size())
     {
       throw errort().with_location(statement.source_location())
@@ -1563,7 +1563,7 @@ void verilog_typecheckt::convert_module_item(
     {
       throw errort() << "set_genvars expects one operand";
     }
-      
+
     exprt tmp;
     tmp.swap(to_unary_expr(module_item).op());
     module_item.swap(tmp);

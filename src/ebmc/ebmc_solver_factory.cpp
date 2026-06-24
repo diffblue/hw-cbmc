@@ -57,8 +57,6 @@ ebmc_solver_factoryt ebmc_solver_factory(const cmdlinet &cmdline)
   std::optional<smt2_convt::solvert> smt2_solver =
     cmdline.isset("bitwuzla")    ? smt2_convt::solvert::BITWUZLA
     : cmdline.isset("boolector") ? smt2_convt::solvert::BOOLECTOR
-    : cmdline.isset("cvc3")      ? smt2_convt::solvert::CVC3
-    : cmdline.isset("cvc4")      ? smt2_convt::solvert::CVC4
     : cmdline.isset("cvc5")      ? smt2_convt::solvert::CVC5
     : cmdline.isset("mathsat")   ? smt2_convt::solvert::MATHSAT
     : cmdline.isset("yices")     ? smt2_convt::solvert::YICES

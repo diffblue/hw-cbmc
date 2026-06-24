@@ -448,13 +448,13 @@ exprt verilog_synthesist::expand_function_call(
   const symbol_exprt &function=to_symbol_expr(call.function());
 
   const symbolt &symbol=ns.lookup(function);
-  
+
   if(symbol.type.id()!=ID_code)
   {
     throw errort().with_location(call.source_location())
       << "function call expects function argument";
   }
-  
+
   const code_typet &code_type=to_code_type(symbol.type);
 
   if(code_type.return_type()==empty_typet())
@@ -479,10 +479,10 @@ exprt verilog_synthesist::expand_function_call(
 
   const code_typet::parameterst &parameters=
     code_type.parameters();
-    
+
   const exprt::operandst &actuals=
     call.op1().operands();
-    
+
   if(parameters.size()!=actuals.size())
   {
     throw errort().with_location(call.source_location())
@@ -567,7 +567,7 @@ void verilog_synthesist::expand_hierarchical_identifier(
       << to_string(expr.lhs().type()) << '\'';
   }
 
-  const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).get_identifier();
+  const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).identifier();
 
   // rhs
   const irep_idt &rhs_base_name = expr.rhs().base_name();
@@ -603,14 +603,14 @@ void verilog_synthesist::assignment_rec(
   const exprt &rhs, // synth_expr applied
   bool blocking)
 {
-  if(lhs.id()==ID_concatenation) // split it up                                
+  if(lhs.id() == ID_concatenation) // split it up
   {
     // TODO: split it up more intelligently;
     // bit-wise is wasteful.
     mp_integer offset = 0;
 
     // do it from right to left
-    
+
     for(exprt::operandst::const_reverse_iterator
         it=lhs.operands().rbegin();
         it!=lhs.operands().rend();
@@ -642,13 +642,13 @@ void verilog_synthesist::assignment_rec(
           << "' not supported";
       }
     }
-    
+
     return;
   }
-  
+
   // get identifier
   const symbolt &symbol=assignment_symbol(lhs);
-  
+
   if(symbol.type.id()==ID_verilog_realtime)
   {
     // we silently ignore these
@@ -966,7 +966,7 @@ void verilog_synthesist::replace_by_wire(
   PRECONDITION(what.is_not_nil());
 
   symbolt new_symbol;
-  
+
   do
   {
     unsigned c=temporary_counter++;
@@ -988,12 +988,12 @@ void verilog_synthesist::replace_by_wire(
   assignmentt &assignment=assignments[new_symbol.name];
   assignment.next.value=what;
   new_wires.insert(new_symbol.name);
-  
+
   if(symbol_table.add(new_symbol))
   {
     throw errort() << "failed to add replace_by_wire symbol";
   }
-    
+
   what=symbol_expr;
 }
 
@@ -1079,7 +1079,7 @@ void verilog_synthesist::assignment_member_rec(
       member.back()=i;
       assignment_member_rec(lhs_bv, member, data);
     }
-    
+
     member.pop_back();
   }
   else if(
@@ -1153,13 +1153,13 @@ bool verilog_synthesist::disjoint(
 {
   membert::const_iterator a_it=a.begin();
   membert::const_iterator b_it=b.begin();
-  
+
   while(a_it!=a.end() && b_it!=b.end())
   {
     if(*a_it!=*b_it) return true;
     a_it++, b_it++;
   }
-  
+
   return false;
 }
 
@@ -1369,7 +1369,7 @@ void verilog_synthesist::instantiate_ports(
 
       auto &named_connection = to_verilog_named_port_connection(connection);
       auto port_it =
-        port_map.find(to_symbol_expr(named_connection.port()).get_identifier());
+        port_map.find(to_symbol_expr(named_connection.port()).identifier());
       CHECK_RETURN(port_it != port_map.end());
       auto &port = port_it->second;
       const exprt &value = named_connection.value();
@@ -1386,7 +1386,7 @@ void verilog_synthesist::instantiate_ports(
     {
       auto &named_connection = to_verilog_named_port_connection(connection);
       connected_ports.insert(
-        to_symbol_expr(named_connection.port()).get_identifier());
+        to_symbol_expr(named_connection.port()).identifier());
     }
 
     // unconnected inputs may be given a default value
@@ -1501,7 +1501,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
-    
+
       assert(trans.operands().size()==3);
       trans.invar().add_to_operands(std::move(constraint));
     }
@@ -1516,7 +1516,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
-    
+
       assert(trans.operands().size()==3);
       trans.invar().add_to_operands(std::move(constraint));
     }
@@ -1596,7 +1596,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
-    
+
       assert(trans.operands().size()==3);
       trans.invar().add_to_operands(std::move(constraint));
     }
@@ -1609,7 +1609,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       constraint.id("verilog-primitive-module");
       constraint.type()=bool_typet();
       constraint.set(ID_module, module);
-    
+
       assert(trans.operands().size()==3);
       trans.invar().add_to_operands(std::move(constraint));
     }
@@ -1756,12 +1756,12 @@ void verilog_synthesist::synth_initial(
   value_map=&initial_value_map;
 
   synth_statement(module_item.statement());
-  
+
   for(const auto & it : value_map->final.changed)
   {
     assignmentt &assignment=assignments[it];
     assignment.init.value=value_map->final.symbol_map[it];
-    assignment.init.move_assignments();    
+    assignment.init.move_assignments();
   }
 
   value_map=NULL;
@@ -1896,7 +1896,7 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
 
     auto lhs = declarator.symbol_expr();
 
-    local_symbols.insert(lhs.get_identifier());
+    local_symbols.insert(lhs.identifier());
 
     // This is reg x = ... or wire x = ...
     if(declarator.has_value())
@@ -2060,8 +2060,8 @@ void verilog_synthesist::synth_continuous_assign(
 
     assignment.lhs() = to_equal_expr(*it).lhs();
     assignment.rhs() = to_equal_expr(*it).rhs();
-    assignment.add_source_location()=module_item.source_location();    
-    
+    assignment.add_source_location() = module_item.source_location();
+
     verilog_event_guardt event_guard;
     event_guard.add_source_location()=module_item.source_location();
     event_guard.body() = assignment;
@@ -2111,7 +2111,7 @@ void verilog_synthesist::synth_force_rec(
     mp_integer offset = 0;
 
     // do it from right to left
-    
+
     for(exprt::operandst::const_reverse_iterator
         it=lhs.operands().rbegin();
         it!=lhs.operands().rend();
@@ -2140,7 +2140,7 @@ void verilog_synthesist::synth_force_rec(
           << "' not supported";
       }
     }
-    
+
     return;
   }
 
@@ -2600,7 +2600,7 @@ exprt verilog_synthesist::synth_case_values(
     return true_exprt();
 
   exprt::operandst op;
-  
+
   op.reserve(values.operands().size());
 
   forall_operands(it, values)
@@ -2773,7 +2773,7 @@ void verilog_synthesist::merge(
 
     exprt true_value=current_value(true_map, symbol, use_previous_assignments);
     exprt false_value=current_value(false_map, symbol, use_previous_assignments);
-    
+
     // this is a phi-node equivalent
     if_exprt value{guard, true_value, false_value, symbol.type};
 
@@ -2814,7 +2814,7 @@ void verilog_synthesist::synth_event_guard(
   bool edge=false;
 
   // these guards are ORed
-  exprt::operandst guards; 
+  exprt::operandst guards;
 
   forall_operands(it, event_guard_expr)
     if(it->id()==ID_posedge || it->id()==ID_negedge)
@@ -3046,7 +3046,7 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
   verilog_blocking_assignt assignment{op, rhs};
   assignment.add_source_location()=statement.source_location();
 
-  synth_statement(assignment);  
+  synth_statement(assignment);
 }
 
 /*******************************************************************\
@@ -3081,7 +3081,7 @@ void verilog_synthesist::synth_while(
     tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
     tmp_guard = synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
- 
+
     if(!tmp_guard.is_constant())
     {
       throw errort().with_location(statement.body().source_location())
@@ -3246,7 +3246,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       throw errort().with_location(statement.source_location())
         << "expected function or task as first operand";
     }
-    
+
     const code_typet &code_type=to_code_type(symbol.type);
 
     // preserve the previous call frame, if any
@@ -3268,7 +3268,7 @@ void verilog_synthesist::synth_function_call_or_task_enable(
       throw errort().with_location(statement.source_location())
         << "wrong number of arguments";
     }
-    
+
     // do assignments to input parameters
     for(unsigned i=0; i<parameters.size(); i++)
     {
@@ -3685,7 +3685,7 @@ void verilog_synthesist::synth_assignments(
 {
   if(new_value.is_nil())
     new_value=symbol_expr(symbol, CURRENT);
-  
+
   // see if wire is used to define itself
   if(!symbol.is_lvalue)
   {
@@ -3818,10 +3818,10 @@ exprt verilog_synthesist::current_value(
   {
     value_mapt::mapt::symbol_mapt::const_iterator it=
       map.symbol_map.find(symbol.name);
-      
+
     if(it!=map.symbol_map.end())
       return it->second; // found
-    
+
     if(use_previous_assignments)
     {
       // see if we have a previous assignment
@@ -3895,7 +3895,7 @@ Function: verilog_synthesist::post_process_initial
 void verilog_synthesist::post_process_initial(exprt &constraints)
 {
   // look for unused non-determinism constraints
-  
+
   std::multiset<exprt> counters;
 
   forall_operands(it, constraints)
@@ -3908,12 +3908,11 @@ void verilog_synthesist::post_process_initial(exprt &constraints)
       exprt &lhs = to_equal_expr(*it).lhs(), &rhs = to_equal_expr(*it).rhs();
 
 #if 0
-      if(lhs.id()==ID_symbol && 
+      if(lhs.id()==ID_symbol &&
          rhs.id()==ID_nondet_symbol &&
          lhs.get(ID_identifier)==rhs.get(ID_identifier))
 #else
-      if(lhs.id()==ID_symbol && 
-         rhs.id()==ID_nondet_symbol)
+      if(lhs.id() == ID_symbol && rhs.id() == ID_nondet_symbol)
 #endif
       {
         if(counters.count(rhs)==1)
@@ -3947,8 +3946,7 @@ void verilog_synthesist::post_process_wire(
   Forall_operands(it, expr)
     post_process_wire(identifier, *it);
 
-  if(expr.id()==ID_symbol && 
-     expr.get(ID_identifier)==identifier)
+  if(expr.id() == ID_symbol && expr.get(ID_identifier) == identifier)
   {
     expr.id(ID_nondet_symbol);
   }
@@ -4000,15 +3998,15 @@ transt verilog_synthesist::convert_module_items(const symbolt &symbol)
     synth_module_item(module_item, trans);
 
   synth_assignments(trans);
-  
+
   for(const auto & it : invars)
     trans.invar().add_to_operands(it);
 
   trans.invar()=conjunction(trans.invar().operands());
   trans.init()=conjunction(trans.init().operands());
   trans.trans()=conjunction(trans.trans().operands());
-  
-  #if 0
+
+#if 0
   // debug
   forall_operands(it, trans.invar())
   {
@@ -4027,7 +4025,7 @@ transt verilog_synthesist::convert_module_items(const symbolt &symbol)
     error() << "TRANS: " << to_string(*it) << eom;
     warning();
   }
-  #endif
+#endif
 
   return trans;
 }

@@ -206,8 +206,7 @@ void verilog_typecheckt::process_parameter_override(
     }
 
     auto module_instance =
-      to_symbol_expr(hierarchical_identifier.module_instance())
-        .get_identifier();
+      to_symbol_expr(hierarchical_identifier.module_instance()).identifier();
 
     auto parameter_base_name = hierarchical_identifier.item().base_name();
 

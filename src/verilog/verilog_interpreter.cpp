@@ -40,13 +40,12 @@ void verilog_typecheckt::verilog_interpreter(
 
     if(assign.lhs().id()==ID_symbol)
     {
-      const irep_idt &identifier=
-        to_symbol_expr(assign.lhs()).get_identifier();
+      const irep_idt &identifier = to_symbol_expr(assign.lhs()).identifier();
       vars[identifier]=rhs;
-      
-      #if 0
+
+#if 0
       status() << "ASSIGN " << identifier << " <- " << to_string(rhs) << eom;
-      #endif
+#endif
     }
   }
   else if(statement.id()==ID_block)

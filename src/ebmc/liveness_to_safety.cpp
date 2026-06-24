@@ -47,7 +47,7 @@ protected:
   static symbol_exprt loop_variable(const symbol_exprt &symbol_expr)
   {
     return symbol_exprt{
-      id2string(symbol_expr.get_identifier()) + "#loop", symbol_expr.type()};
+      id2string(symbol_expr.identifier()) + "#loop", symbol_expr.type()};
   }
 
   exprt state_is_loop() const
@@ -150,7 +150,7 @@ void liveness_to_safetyt::operator()()
     auto &var_symbol = ns.lookup(symbol_expr);
 
     auxiliary_symbolt loop_symbol{
-      loop_variable(symbol_expr).get_identifier(),
+      loop_variable(symbol_expr).identifier(),
       var_symbol.type,
       var_symbol.mode};
 
@@ -165,7 +165,7 @@ void liveness_to_safetyt::operator()()
   // create 'save' symbol (an input)
   {
     auxiliary_symbolt save_symbol{
-      this->save_symbol().get_identifier(),
+      this->save_symbol().identifier(),
       this->save_symbol().type(),
       transition_system.main_symbol->mode};
 
@@ -180,7 +180,7 @@ void liveness_to_safetyt::operator()()
   // create 'saved' symbol (a state variable)
   {
     auxiliary_symbolt saved_symbol{
-      this->saved_symbol().get_identifier(),
+      this->saved_symbol().identifier(),
       this->saved_symbol().type(),
       transition_system.main_symbol->mode};
 
@@ -218,7 +218,7 @@ void liveness_to_safetyt::operator()()
   // create the 'looped' symbol, a wire
   {
     auxiliary_symbolt looped_symbol{
-      this->looped_symbol().get_identifier(),
+      this->looped_symbol().identifier(),
       this->looped_symbol().type(),
       transition_system.main_symbol->mode};
 
@@ -273,7 +273,7 @@ void liveness_to_safetyt::translate_GFp(propertyt &property)
   // create the 'live' symbol, one for each liveness property
   {
     auxiliary_symbolt live_symbol{
-      this->live_symbol(property.name).get_identifier(),
+      this->live_symbol(property.name).identifier(),
       this->live_symbol(property.name).type(),
       transition_system.main_symbol->mode};
 

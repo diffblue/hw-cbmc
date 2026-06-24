@@ -39,10 +39,10 @@ std::size_t output_verilog_baset::width(const typet &type)
 {
   if(type.id()==ID_bool)
     return 1;
-    
+
   if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
     return to_bitvector_type(type).get_width();
-  
+
   std::cerr << type.id() << '\n';
   PRECONDITION(false);
 
@@ -75,7 +75,7 @@ bool output_verilog_netlistt::is_symbol(const exprt &expr) const
   {
     return true;
   }
-  
+
   return false;
 }
 
@@ -106,11 +106,11 @@ std::string output_verilog_netlistt::make_symbol_expr(
       error() << "failed to convert constant: " << expr.pretty() << eom;
       throw 0;
     }
-    
+
     std::size_t w=width(expr);
     return std::to_string(w)+"'b"+integer2binary(i, w);
   }
-  
+
   return "TODO";
 }
 
@@ -174,13 +174,13 @@ void output_verilog_netlistt::assign_symbol(
       lhs.type().id() == ID_bool, "boolean equivalence lhs must be boolean");
 
     std::string tmp;
-    
+
     forall_operands(it, rhs)
     {
       tmp+=", ";
       tmp+=make_symbol_expr(*it, "");
     }
-    
+
     out << "  " << rhs.id() << " g" << (++count) << "("
         << symbol_string(lhs) << tmp
         << ");" << '\n' << '\n';
@@ -198,9 +198,7 @@ void output_verilog_netlistt::assign_symbol(
         << symbol_string(lhs) << tmp
         << ");" << '\n' << '\n';
   }
-  else if(rhs.id()==ID_plus || 
-          rhs.id()==ID_minus ||
-          rhs.id()==ID_mult)
+  else if(rhs.id() == ID_plus || rhs.id() == ID_minus || rhs.id() == ID_mult)
   {
     if(rhs.operands().size()==1)
       assign_symbol(lhs, to_multi_ary_expr(rhs).op0());
@@ -222,7 +220,7 @@ void output_verilog_netlistt::assign_symbol(
         tmp = make_symbol_expr(to_multi_ary_expr(rhs).op0(), "") + ", " +
               make_symbol_expr(tmp_rhs, "");
       }
-    
+
       out << "  RTL_";
 
       if(rhs.id()==ID_plus)
@@ -232,9 +230,9 @@ void output_verilog_netlistt::assign_symbol(
       else
         out << "mult";
 
-      out << " #(" 
-          << width(rhs) << ") m" << (++count) << "(" << tmp 
-          << ");" << '\n' << '\n';        
+      out << " #(" << width(rhs) << ") m" << (++count) << "(" << tmp << ");"
+          << '\n'
+          << '\n';
     }
   }
   else
@@ -245,16 +243,16 @@ void output_verilog_netlistt::assign_symbol(
     {
       if(rhs.id()==subst_map->a)
       {
-        out << "  RTL_" << subst_map->b << " #(" 
-            << width(rhs) << ") m" << (++count) << "(";
-            
+        out << "  RTL_" << subst_map->b << " #(" << width(rhs) << ") m"
+            << (++count) << "(";
+
         forall_operands(it, rhs)
         {
           if(it!=rhs.operands().begin()) out << ", ";
           make_symbol_expr(*it, "");
         }
-        
-        out << ");" << '\n' << '\n';        
+
+        out << ");" << '\n' << '\n';
       }
 
       p++;
@@ -336,10 +334,10 @@ void output_verilog_rtlt::assign_symbol(
             << expr2verilog(symbol_expr, ns) << "'" << eom;
     throw 0;
   }
-  
+
   const symbolt &symbol=
     namespacet(symbol_table).lookup(symbol_expr.get(ID_identifier));
-  
+
   if(symbol.is_state_var)
   {
     out << "  always @(";
@@ -369,7 +367,7 @@ void output_verilog_rtlt::assign_symbol(
     convert_expr(rhs);
     out << ';' << '\n';
   }
-  
+
   out << '\n';
 }
 
@@ -393,7 +391,7 @@ void output_verilog_rtlt::convert_expr(const exprt &expr)
   // simplify first
   exprt tmp(expr);
   simplify(tmp,ns);
-  
+
   out << expr2verilog.convert(tmp);
 }
 
@@ -412,7 +410,7 @@ Function: output_verilog_netlistt::symbol_string
 std::string output_verilog_netlistt::symbol_string(const exprt &expr)
 {
   std::string result;
-  
+
   if(expr.id()==ID_extractbit)
   {
     auto &src = to_extractbit_expr(expr).src();
@@ -458,10 +456,10 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
   }
   else if(expr.id()==ID_symbol)
   {
-    const irep_idt &identifier = to_symbol_expr(expr).get_identifier();
+    const irep_idt &identifier = to_symbol_expr(expr).identifier();
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(identifier);
-    
+
     if(s_it==symbol_table.symbols.end())
     {
       error().source_location=expr.find_source_location();
@@ -469,7 +467,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
               << eom;
       throw 0;
     }
-    
+
     const symbolt &symbol=s_it->second;
     return id2string(symbol.base_name);
   }
@@ -483,7 +481,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
     const irep_idt &identifier=expr.get(ID_identifier);
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(identifier);
-    
+
     if(s_it==symbol_table.symbols.end())
     {
       error().source_location=expr.find_source_location();
@@ -491,7 +489,7 @@ std::string output_verilog_netlistt::symbol_string(const exprt &expr)
               << eom;
       throw 0;
     }
-    
+
     const symbolt &symbol=s_it->second;
     return "next_"+id2string(symbol.base_name);
   }
@@ -523,7 +521,7 @@ std::string output_verilog_baset::type_string_base(const typet &type)
   {
     std::size_t width=to_unsignedbv_type(type).get_width();
     std::size_t offset=atoi(type.get("#offset").c_str());
-    
+
     type_string='['+std::to_string(width-1+offset)+':'+
                     std::to_string(offset)+']';
 
@@ -622,7 +620,7 @@ void output_verilog_baset::module_header(const symbolt &symbol)
     bool is_output = port.output();
 
     out << "  ";
-    
+
     if(is_input && is_output)
       out << "inout";
     else if(is_input)
@@ -644,7 +642,7 @@ void output_verilog_baset::module_header(const symbolt &symbol)
   }
 
   out << '\n';
-}                        
+}
 
 /*******************************************************************\
 
@@ -667,10 +665,10 @@ void output_verilog_netlistt::latches(const irep_idt &module)
       m_it++)
   {
     const irep_idt &identifier=m_it->second;
-    
+
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(identifier);
-    
+
     if(s_it==symbol_table.symbols.end())
     {
       error() << "failed to find symbol " << identifier << eom;
@@ -678,7 +676,7 @@ void output_verilog_netlistt::latches(const irep_idt &module)
     }
 
     const symbolt &symbol=s_it->second;
-    
+
     if(symbol.is_state_var)
     {
       out << "  ";
@@ -688,13 +686,13 @@ void output_verilog_netlistt::latches(const irep_idt &module)
       out << " (" << symbol.base_name; // D
       out << ", next_" << symbol.base_name; // Q
       out << ", "; // clk
-      
+
       out << ");" << '\n';
-      
+
       found=true;
     }
   }
-  
+
   if(found) out << '\n';
 }
 
@@ -719,10 +717,10 @@ void output_verilog_rtlt::latches(const irep_idt &module)
       m_it++)
   {
     const irep_idt &identifier=m_it->second;
-    
+
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(identifier);
-    
+
     if(s_it==symbol_table.symbols.end())
     {
       error() << "failed to find symbol " << identifier << eom;
@@ -730,20 +728,20 @@ void output_verilog_rtlt::latches(const irep_idt &module)
     }
 
     const symbolt &symbol=s_it->second;
-    
+
     if(symbol.is_state_var)
     {
       const std::string type_base=type_string_base(symbol.type);
       const std::string type_array=type_string_array(symbol.type);
-    
+
       out << "  reg " << type_base;
       if(type_base!="") out << " ";
-      
+
       out << symbol.base_name << type_array << ';' << '\n';
       found=true;
     }
   }
-  
+
   if(found) out << '\n';
 }
 
@@ -768,10 +766,10 @@ void output_verilog_baset::wires(const irep_idt &module)
       m_it++)
   {
     const irep_idt &identifier=m_it->second;
-    
+
     symbol_tablet::symbolst::const_iterator s_it=
       symbol_table.symbols.find(identifier);
-    
+
     if(s_it==symbol_table.symbols.end())
     {
       error() << "failed to find symbol " << identifier << eom;
@@ -795,7 +793,7 @@ void output_verilog_baset::wires(const irep_idt &module)
       found=true;
     }
   }
-  
+
   if(found) out << '\n';
 }
 
@@ -817,14 +815,14 @@ void output_verilog_baset::module_instantiation(const exprt &expr)
 
   std::list<std::string> argument_strings;
 
-  #if 0  
+#if 0
   std::string hint("argument");
   const irep_idt &instance=expr.get("instance");
   if(!instance.empty()) hint+="_"+id2string(instance);
-  
+
   forall_operands(it, expr)
     argument_strings.push_back(make_symbol_expr(*it, hint));
-  #endif
+#endif
 
   out << "  // Module instantiation " << expr.source_location() << '\n';
   out << "  " << expr.get(ID_module) << " ";
@@ -839,10 +837,10 @@ void output_verilog_baset::module_instantiation(const exprt &expr)
   {
     if(it!=argument_strings.begin())
       out << ", ";
-      
+
     out << *it;
   }
-  
+
   out << ");" << '\n';
   out << '\n';
 }
@@ -980,17 +978,17 @@ void output_verilog_netlistt::netlist(const symbolt &symbol)
   out << "// " << symbol.location << '\n';
   out << "//" << '\n';
   out << '\n';
-  
+
   source_files(symbol);
   module_header(symbol);
   wires(symbol.module);
   latches(symbol.module);
-  invariants(symbol);  
+  invariants(symbol);
   next_state(symbol);
 
   out << "endmodule // end of " << symbol.base_name << '\n';
   out << '\n';
-}                        
+}
 
 /*******************************************************************\
 
@@ -1018,12 +1016,12 @@ void output_verilog_rtlt::rtl(const symbolt &symbol)
   module_header(symbol);
   wires(symbol.module);
   latches(symbol.module);
-  invariants(symbol);  
+  invariants(symbol);
   next_state(symbol);
 
   out << "endmodule // end of " << symbol.base_name << '\n';
   out << '\n';
-}                        
+}
 
 /*******************************************************************\
 
@@ -1043,7 +1041,7 @@ void output_verilog_baset::source_files(
   filest files;
 
   get_source_files(symbol.value, files);
-  
+
   if(symbol.location.get_file()!="")
     files.insert(symbol.location.get_file());
 
@@ -1058,7 +1056,7 @@ void output_verilog_baset::source_files(
       out << "//   " << *it << '\n';
   }
 
-  out << '\n';  
+  out << '\n';
 }
 
 /*******************************************************************\
@@ -1078,7 +1076,7 @@ void output_verilog_baset::get_source_files(
   filest &files)
 {
   const irep_idt &file=expr.source_location().get_file();
-  
+
   if(file!="")
     files.insert(file);
 

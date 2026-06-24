@@ -431,7 +431,7 @@ std::string
 expr2vhdlt::convert_symbol(const symbol_exprt &src, unsigned &precedence)
 {
   precedence=22;
-  std::string dest = id2string(src.get_identifier());
+  std::string dest = id2string(src.identifier());
 
   if(std::string(dest, 0, 9)=="Verilog::")
     dest.erase(0, 9);
@@ -553,7 +553,7 @@ expr2vhdlt::convert_array(const array_exprt &src, unsigned precedence)
   forall_operands(it, src)
   {
     std::string tmp=convert(*it, precedence);
-      
+
     exprt::operandst::const_iterator next_it=it;
     next_it++;
 
@@ -611,7 +611,7 @@ std::string expr2vhdlt::convert(
   {
     if(src.operands().size()<2)
       return convert_norep(src, precedence);
-    else     
+    else
       return convert_binary(src, "-", precedence=14);
   }
 
@@ -704,7 +704,7 @@ std::string expr2vhdlt::convert(
     return width+"'b"+src.get_string(ID_value);
   }
 
-  // no VERILOG language expression for internal representation 
+  // no VERILOG language expression for internal representation
   return convert_norep(src, precedence);
 }
 

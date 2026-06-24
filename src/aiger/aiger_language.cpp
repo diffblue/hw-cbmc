@@ -26,7 +26,7 @@ bool aiger_languaget::from_expr(
     code = "!" + op_code;
   }
   else if(expr.id() == ID_symbol)
-    code = id2string(to_symbol_expr(expr).get_identifier());
+    code = id2string(to_symbol_expr(expr).identifier());
   else
     code = expr.pretty();
   return false;

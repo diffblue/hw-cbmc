@@ -146,7 +146,7 @@ protected:
     {
     }
   };
-  
+
   typedef std::unordered_map<irep_idt, definet, irep_id_hash> define_mapt;
   define_mapt define_map;
 
@@ -521,7 +521,7 @@ smv_ranget smv_typecheckt::convert_type(const typet &src) const
   }
   else if(src.id()==ID_range)
   {
-    return smv_ranget::from_type(to_range_type(src));
+    return smv_ranget::from_type(to_integer_range_type(src));
   }
   else if(src.id() == ID_smv_enumeration)
   {
@@ -607,7 +607,7 @@ typet smv_typecheckt::type_union(
   smv_ranget range2=convert_type(type2);
 
   range1.make_union(range2);
-  
+
   if((type1.id()==ID_bool || type2.id()==ID_bool) &&
      range1.is_bool())
   {
@@ -892,7 +892,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
   // now post-traversal
   if(expr.id() == ID_symbol)
   {
-    const irep_idt &identifier = to_symbol_expr(expr).get_identifier();
+    const irep_idt &identifier = to_symbol_expr(expr).identifier();
 
     auto define_it = define_map.find(identifier);
     if(define_it != define_map.end())
@@ -909,7 +909,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     }
 
     symbolt &symbol=*s_it;
-    
+
     assert(symbol.type.is_not_nil());
     expr.type()=symbol.type;
 
@@ -1121,7 +1121,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     if(type.id() == ID_integer)
     {
       mp_integer int_value = string2integer(id2string(value));
-      expr.type() = range_typet{int_value, int_value};
+      expr.type() = integer_range_typet{int_value, int_value};
     }
     else if(type.id() == ID_smv_enumeration)
     {
@@ -1257,7 +1257,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     if(op_type.id() == ID_range)
     {
       uminus_expr.type() =
-        (-smv_ranget::from_type(to_range_type(op_type))).to_type();
+        (-smv_ranget::from_type(to_integer_range_type(op_type))).to_type();
     }
     else if(op_type.id() == ID_signedbv || op_type.id() == ID_unsignedbv)
     {
@@ -1306,7 +1306,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     if(op.type().id() == ID_range)
     {
       // ok
-      auto &range_type = to_range_type(op.type());
+      auto &range_type = to_integer_range_type(op.type());
       auto abs = [](mp_integer i)
       {
         if(i < 0)
@@ -1314,7 +1314,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
         return i;
       };
       expr.type() =
-        range_typet{abs(range_type.get_from()), abs(range_type.get_to())};
+        integer_range_typet{abs(range_type.from()), abs(range_type.to())};
     }
     else
     {
@@ -1397,7 +1397,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
         throw errort().with_location(op.source_location())
           << "count expects boolean arguments";
     }
-    expr.type() = range_typet{0, multi_ary_expr.operands().size()};
+    expr.type() = integer_range_typet{0, multi_ary_expr.operands().size()};
   }
   else if(expr.id() == ID_smv_max || expr.id() == ID_smv_min)
   {
@@ -1425,12 +1425,12 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
 
     if(op.type().id() == ID_bool)
     {
-      expr.type() = range_typet{0, 1};
+      expr.type() = integer_range_typet{0, 1};
     }
     else if(op.type().id() == ID_unsignedbv || op.type().id() == ID_signedbv)
     {
       auto &op_type = to_integer_bitvector_type(op.type());
-      expr.type() = range_typet{op_type.smallest(), op_type.largest()};
+      expr.type() = integer_range_typet{op_type.smallest(), op_type.largest()};
     }
     else if(op.type().id() == ID_range)
     {
@@ -1540,7 +1540,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
     if(op.type().id() == ID_signedbv || op.type().id() == ID_unsignedbv)
     {
       auto bits = to_bitvector_type(op.type()).get_width();
-      expr = from_integer(bits, range_typet{bits, bits});
+      expr = from_integer(bits, integer_range_typet{bits, bits});
     }
     else
     {
@@ -1645,7 +1645,7 @@ void smv_typecheckt::typecheck_expr_node(exprt &expr, modet mode)
       throw errort().with_location(expr.source_location())
         << "empty ranges are not allowed";
 
-    expr.type() = smv_set_typet{range_typet{from, to}};
+    expr.type() = smv_set_typet{integer_range_typet{from, to}};
   }
   else
   {
@@ -1673,10 +1673,10 @@ void smv_typecheckt::lower_node(exprt &expr) const
     // turn into if
     auto &op = to_smv_abs_expr(expr).op();
     PRECONDITION(op.type().id() == ID_range);
-    auto &range_type = to_range_type(op.type());
-    if(range_type.get_from() >= 0)
+    auto &range_type = to_integer_range_type(op.type());
+    if(range_type.from() >= 0)
       expr = op; // no change
-    else if(range_type.get_to() < 0)
+    else if(range_type.to() < 0)
     {
       // always negative
       expr = unary_minus_exprt{op, expr.type()};
@@ -1698,9 +1698,9 @@ void smv_typecheckt::lower_node(exprt &expr) const
       expr = op;
     else if(op.type().id() == ID_range)
     {
-      auto &range = to_range_type(op.type());
+      auto &range = to_integer_range_type(op.type());
       if(range.includes(0))
-        expr = notequal_exprt{op, to_range_type(op.type()).zero_expr()};
+        expr = notequal_exprt{op, to_integer_range_type(op.type()).zero_expr()};
       else
         expr = true_exprt{};
     }
@@ -1917,7 +1917,7 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type) const
         {
           // re-type the constant
           auto value = numeric_cast_v<mp_integer>(to_constant_expr(expr));
-          if(to_range_type(dest_type).includes(value))
+          if(to_integer_range_type(dest_type).includes(value))
           {
             expr = from_integer(value, dest_type);
             return;
@@ -1951,7 +1951,7 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type) const
         {
           // re-type the constant
           auto value = numeric_cast_v<mp_integer>(to_constant_expr(expr));
-          if(to_range_type(dest_type).includes(value))
+          if(to_integer_range_type(dest_type).includes(value))
           {
             expr = from_integer(value, dest_type);
             return;
@@ -1964,13 +1964,13 @@ void smv_typecheckt::convert_expr_to(exprt &expr, const typet &dest_type) const
       // legacy -- convert 0/1 to false/true
       if(src_type.id() == ID_range)
       {
-        auto &range_type = to_range_type(src_type);
-        if(range_type.get_from() == 0 && range_type.get_to() == 0)
+        auto &range_type = to_integer_range_type(src_type);
+        if(range_type.from() == 0 && range_type.to() == 0)
         {
           expr = false_exprt{};
           return;
         }
-        else if(range_type.get_from() == 1 && range_type.get_to() == 1)
+        else if(range_type.from() == 1 && range_type.to() == 1)
         {
           expr = true_exprt{};
           return;
@@ -2208,7 +2208,7 @@ exprt smv_typecheckt::set_to_predicate(
     {
       // DEFINEs can have set type. We need to expand, and recurse.
       auto define_it =
-        define_map.find(to_symbol_expr(set_expression).get_identifier());
+        define_map.find(to_symbol_expr(set_expression).identifier());
       if(define_it != define_map.end())
       {
         auto &value = define_it->second.value;
@@ -2301,8 +2301,8 @@ void smv_typecheckt::convert(exprt &expr)
       expr.pretty());
 
     auto tmp = to_symbol_expr(member_expr.compound());
-    tmp.set_identifier(
-      id2string(tmp.get_identifier()) + '.' +
+    tmp.identifier(
+      id2string(tmp.identifier()) + '.' +
       id2string(member_expr.get_component_name()));
     expr = tmp;
   }
@@ -2314,8 +2314,8 @@ void smv_typecheckt::convert(exprt &expr)
     if(index_expr.array().id() == ID_symbol)
     {
       // look that up
-      auto symbol_ptr = symbol_table.lookup(
-        to_symbol_expr(index_expr.array()).get_identifier());
+      auto symbol_ptr =
+        symbol_table.lookup(to_symbol_expr(index_expr.array()).identifier());
       if(symbol_ptr != nullptr && symbol_ptr->type.id() == ID_array)
       {
         // a proper array -- leave as is
@@ -2329,8 +2329,7 @@ void smv_typecheckt::convert(exprt &expr)
 
         auto index_string = id2string(to_constant_expr(index).get_value());
         auto tmp = to_symbol_expr(index_expr.array());
-        tmp.set_identifier(
-          id2string(tmp.get_identifier()) + '.' + index_string);
+        tmp.identifier(id2string(tmp.identifier()) + '.' + index_string);
         expr = tmp;
       }
     }
@@ -2757,7 +2756,7 @@ void smv_typecheckt::collect_define(const exprt &lhs, const exprt &rhs)
   if(lhs.id() != ID_symbol)
     throw errort() << "collect_define expects symbol on left hand side";
 
-  const irep_idt &identifier = to_symbol_expr(lhs).get_identifier();
+  const irep_idt &identifier = to_symbol_expr(lhs).identifier();
 
   auto it=symbol_table.get_writeable(identifier);
 
@@ -2803,7 +2802,7 @@ bool smv_typecheckt::uses_next(const exprt &expr) const
 
   if(expr.id() == ID_symbol)
   {
-    auto d_it = define_map.find(to_symbol_expr(expr).get_identifier());
+    auto d_it = define_map.find(to_symbol_expr(expr).identifier());
     if(d_it != define_map.end())
       return d_it->second.uses_next;
   }
@@ -2984,7 +2983,7 @@ smv_typecheckt::unfinished_defines_used(const exprt &expr)
     {
       if(node.id() == ID_symbol)
       {
-        auto &identifier = to_symbol_expr(node).get_identifier();
+        auto &identifier = to_symbol_expr(node).identifier();
         auto define_it = define_map.find(identifier);
         if(define_it != define_map.end() && !define_it->second.typechecked)
           result.push_back(define_it);

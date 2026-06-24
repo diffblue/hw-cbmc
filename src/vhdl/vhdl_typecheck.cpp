@@ -72,18 +72,18 @@ void vhdl_typecheckt::typecheck_architecture_decl(irept &decl)
     {
       typet &type=static_cast<typet &>(d.add(ID_type));
       typecheck_type(type);
-    
+
       for(auto & s : d.get_sub())
       {
         symbolt new_symbol;
-      
+
         new_symbol.base_name=s.get(ID_identifier);
         new_symbol.name=
           id2string(module_symbol->name)+"."+
           id2string(new_symbol.base_name);
         new_symbol.type=type;
         new_symbol.mode=module_symbol->mode;
-      
+
         symbol_table.add(new_symbol);
       }
     }
@@ -134,9 +134,9 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
   else if(expr.id()==ID_symbol)
   {
     symbol_exprt &symbol_expr=to_symbol_expr(expr);
-    irep_idt identifier=symbol_expr.get_identifier();
+    irep_idt identifier = symbol_expr.identifier();
     irep_idt to_lower_identifier=to_lower(identifier);
-    
+
     // look up in symbol table
     irep_idt full_identifier=
       id2string(module_symbol->name)+"."+
@@ -152,7 +152,7 @@ void vhdl_typecheckt::typecheck_expr(exprt &expr)
       throw 0;
     }
 
-    symbol_expr.set_identifier(full_identifier);
+    symbol_expr.identifier(full_identifier);
     symbol_expr.type()=s_it->second.type;
   }
   else if(expr.id()==ID_constant)
@@ -321,7 +321,7 @@ Function: vhdl_typecheckt::typecheck_code
 void vhdl_typecheckt::typecheck_code(codet &code)
 {
   irep_idt statement=code.get_statement();
-  
+
   if(statement==ID_assert)
     typecheck_code_assert(code);
   else if(statement==ID_assign)
@@ -394,7 +394,7 @@ void vhdl_typecheckt::typecheck_architecture(
   // create symbol
 
   symbolt symbol;
-  
+
   symbol.mode=ID_VHDL;
   symbol.name="vhdl::"+id2string(module_name);
   symbol.type=typet(ID_module);
@@ -409,21 +409,20 @@ void vhdl_typecheckt::typecheck_architecture(
 
   if(symbol_table.move(symbol, new_symbol))
   {
-    error() << "duplicate definition of module " 
-            << symbol.base_name << eom;
+    error() << "duplicate definition of module " << symbol.base_name << eom;
     throw 0;
   }
-  
+
   module_symbol=new_symbol;
-  
+
   irept entity=item.find(ID_entity);
   irept decl=item.find(ID_decl);
   exprt body=static_cast<const exprt &>(item.find(ID_body));
-  
+
   typecheck_architecture_entity(entity);
   typecheck_architecture_decl(decl);
   typecheck_architecture_body(body);
-  
+
   new_symbol->value.id(ID_module);
   new_symbol->value.set(ID_body, body);
 }
@@ -443,7 +442,7 @@ Function: vhdl_typecheckt::operator()
 bool vhdl_typecheckt::operator()()
 {
   // find the module in the parse tree
-  
+
   try
   {
     for(const auto & item : parse_tree.items)
@@ -457,7 +456,7 @@ bool vhdl_typecheckt::operator()()
   catch(...)
   {
   }
-  
+
   return true;
 }
 

@@ -91,7 +91,7 @@ protected:
 
   typedef std::list<rhs_entryt> rhs_listt;
   rhs_listt rhs_list;
-  
+
   typedef std::list<exprt> constraint_listt;
   constraint_listt constraint_list;
 
@@ -102,7 +102,7 @@ protected:
   public:
     rhs_entryt *entry;
     std::size_t bit_number;
-    
+
     rhst():entry(0)
     {
     }
@@ -111,7 +111,7 @@ protected:
     {
     }
   };
-  
+
   class lhs_entryt
   {
   public:
@@ -122,7 +122,7 @@ protected:
     // link to varmap
     var_mapt::vart *var;
     var_mapt::vart::bitt *bit;
-    
+
     lhs_entryt():converted(false), in_progress(false), l(const_literal(false))
     {
     }
@@ -292,7 +292,7 @@ void convert_trans_to_netlistt::operator()(
     dest.transition.end(),
     transition_constraints.begin(),
     transition_constraints.end());
-  
+
   // initial state
   dest.initial.push_back(solver.convert(trans.init()));
 
@@ -310,7 +310,7 @@ void convert_trans_to_netlistt::operator()(
     {
       const var_mapt::reverse_mapt::const_iterator it=
         dest.var_map.reverse_map.find(n);
-      
+
       if(it==dest.var_map.reverse_map.end())
         dest.var_map.record_as_nondet(n);
     }
@@ -460,7 +460,7 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
   lhs_entryt &lhs=lhs_it->second;
 
   if(lhs.converted) return;
-  
+
   if(lhs.in_progress) // cycle found?
     return;
 
@@ -481,7 +481,7 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
 
     return;
   }
-    
+
   // do first one by setting the node appropriately
 
   lhs.in_progress=true;
@@ -531,7 +531,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
 
   if(expr.id()==ID_symbol)
   {
-    auto identifier = to_symbol_expr(expr).get_identifier();
+    auto identifier = to_symbol_expr(expr).identifier();
 
     for(std::size_t bit_nr = from; bit_nr <= to; bit_nr++)
     {
@@ -580,7 +580,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       return;
     }
   }
-  
+
   boolbv_widtht boolbv_width(ns);
 
   // default
@@ -592,7 +592,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       continue;
 
     std::size_t width=boolbv_width(it->type());
-    
+
     if(width==0)
       continue;
 
@@ -615,7 +615,7 @@ Function: convert_trans_to_netlistt::convert_rhs
 literalt convert_trans_to_netlistt::convert_rhs(const rhst &rhs)
 {
   rhs_entryt &rhs_entry=*rhs.entry;
-  
+
   // done already?
   if(!rhs_entry.converted)
   {
@@ -653,10 +653,10 @@ void convert_trans_to_netlistt::add_equality(const equal_exprt &src)
 
   rhs_list.push_back(rhs_entryt(rhs));
   rhs_entryt &rhs_entry=rhs_list.back();
-  
+
   boolbv_widtht boolbv_width(ns);
   rhs_entry.width=boolbv_width(rhs.type());
-  
+
   if(rhs_entry.width==0)
   {
     constraint_list.push_back(src);
@@ -694,7 +694,7 @@ void convert_trans_to_netlistt::add_equality_rec(
 
   if(lhs.id()==ID_next_symbol ||
      lhs.id()==ID_symbol)
-  { 
+  {
     bool next=lhs.id()==ID_next_symbol;
     auto identifier = lhs.get(ID_identifier);
 
@@ -710,7 +710,7 @@ void convert_trans_to_netlistt::add_equality_rec(
 
       lhs_entryt &lhs_entry=it->second;
       const var_mapt::vart &var=*lhs_entry.var;
-    
+
       if((next && !var.is_latch()) ||
          (!next && !var.is_wire()))
       {

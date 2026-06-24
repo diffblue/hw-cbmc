@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
 #include <util/format_expr.h>
+#include <util/mathematical_types.h>
 #include <util/message.h>
 #include <util/replace_expr.h>
 #include <util/run.h>
@@ -29,9 +30,9 @@ Author: Daniel Kroening, dkr@amazon.com
 void buechi_transt::rename_state_symbol(const symbol_exprt &new_state_symbol)
 {
   next_symbol_exprt old_next_symbol{
-    state_symbol.get_identifier(), state_symbol.type()};
+    state_symbol.identifier(), state_symbol.type()};
   next_symbol_exprt new_next_symbol{
-    new_state_symbol.get_identifier(), state_symbol.type()};
+    new_state_symbol.identifier(), state_symbol.type()};
 
   replace_mapt replace_map;
   replace_map.insert({state_symbol, new_state_symbol});
@@ -162,7 +163,7 @@ ltl_to_buechi(const exprt &property, message_handlert &message_handler)
 
     auto max_state_number = hoa.max_state_number();
     auto ap_map = hoa.parse_AP();
-    auto state_type = range_typet{0, max_state_number};
+    auto state_type = integer_range_typet{0, max_state_number};
     const auto buechi_state = symbol_exprt{"buechi::state", state_type};
     const auto buechi_next_state =
       next_symbol_exprt{"buechi::state", state_type};

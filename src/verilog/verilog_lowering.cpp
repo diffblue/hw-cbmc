@@ -503,13 +503,12 @@ exprt verilog_lowering(exprt expr)
     if(expr.type().id() == ID_verilog_chandle)
     {
       auto &chandle_type = to_verilog_chandle_type(expr.type());
-      return symbol_exprt{
-        symbol_expr.get_identifier(), chandle_type.encoding()};
+      return symbol_exprt{symbol_expr.identifier(), chandle_type.encoding()};
     }
     else if(expr.type().id() == ID_verilog_event)
     {
       auto &event_type = to_verilog_event_type(expr.type());
-      return symbol_exprt{symbol_expr.get_identifier(), event_type.encoding()};
+      return symbol_exprt{symbol_expr.identifier(), event_type.encoding()};
     }
     else
       return expr;

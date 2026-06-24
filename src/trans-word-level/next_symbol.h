@@ -21,7 +21,7 @@ public:
   }
 
   explicit next_symbol_exprt(const symbol_exprt &symbol_expr)
-    : next_symbol_exprt(symbol_expr.get_identifier(), symbol_expr.type())
+    : next_symbol_exprt(symbol_expr.identifier(), symbol_expr.type())
   {
   }
 
