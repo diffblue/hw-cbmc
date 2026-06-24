@@ -11,10 +11,6 @@ endmodule
 module main;
 
   myInterface interface_instance();
-  sub sub(interface_instance);
-
-  initial begin
-    myInterface i;
-  end
+  sub sub_inst(interface_instance);
 
 endmodule

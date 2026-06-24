@@ -1305,6 +1305,45 @@ void verilog_synthesist::instantiate_port(
   const source_locationt &source_location,
   transt &trans)
 {
+  // Interface ports: connect corresponding members between the
+  // port's interface and the bound interface instance.
+  if(port.type().id() == ID_verilog_module_instance)
+  {
+    if(value.id() != ID_symbol)
+      return;
+
+    auto &bound_instance_id = to_symbol_expr(value).identifier();
+    auto port_prefix = id2string(port.identifier()) + ".";
+    auto bound_prefix = id2string(bound_instance_id) + ".";
+
+    for(auto &entry : symbol_table.symbols)
+    {
+      auto id = id2string(entry.first);
+      if(
+        id.size() > port_prefix.size() &&
+        id.substr(0, port_prefix.size()) == port_prefix &&
+        id.find('.', port_prefix.size()) == std::string::npos)
+      {
+        auto member_name = id.substr(port_prefix.size());
+        auto bound_id = bound_prefix + member_name;
+
+        const symbolt *bound_sym;
+        if(ns.lookup(bound_id, bound_sym))
+          continue;
+
+        if(bound_sym->type.id() == ID_verilog_module_instance)
+          continue;
+
+        symbol_exprt port_member{entry.first, entry.second.type};
+        symbol_exprt bound_member{bound_id, bound_sym->type};
+
+        equal_exprt invar_expr{port_member, bound_member};
+        trans.invar().add_to_operands(std::move(invar_expr));
+      }
+    }
+    return;
+  }
+
   symbol_exprt port_symbol{port.identifier(), port.type()};
 
   // Much like
@@ -3589,6 +3628,10 @@ void verilog_synthesist::synth_module_item(
   }
   else if(module_item.id() == ID_verilog_modport_declaration)
   {
+  }
+  else if(module_item.id() == ID_verilog_interface)
+  {
+    // nested interface, 1800-2017 25.3
   }
   else
   {

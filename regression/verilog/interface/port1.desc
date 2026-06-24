@@ -1,8 +1,9 @@
-KNOWNBUG
+CORE
 port1.sv
 
+^\[main\.sub_inst\.assert\.1\] always main\.sub_inst\.bus\.i == 123: PROVED
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-Interface port binding is not yet implemented.
+Interface port binding: passing an interface instance to a module port.
