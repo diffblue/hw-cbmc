@@ -686,9 +686,8 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
   const irep_idt &base_name = declarator.base_name();
   irep_idt identifier = hierarchical_identifier(base_name);
 
-  // The range type is always derived from the type of the
-  // value expression.
-  auto type = to_be_elaborated_typet(derive_from_value_typet());
+  // These are typechecked when used, owing to untyped ports
+  auto type = verilog_let_typet{{}};
 
   // add the symbol
   symbolt new_symbol(identifier, type, mode);
