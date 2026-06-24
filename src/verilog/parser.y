@@ -525,6 +525,7 @@ int yyverilogerror(const char *error)
 %token TOK_CLASS_IDENTIFIER
 %token TOK_PACKAGE_IDENTIFIER
 %token TOK_TYPE_IDENTIFIER
+%token TOK_INTERFACE_IDENTIFIER
 %token TOK_NUMBER           // number, any base
 %token TOK_TIME_LITERAL     // number followed by time unit
 %token TOK_QSTRING          // quoted string
@@ -635,6 +636,14 @@ module_identifier_with_scope:
             auto &module_scope = PARSER.scopes.add_module_scope(base_name);
             PARSER.scopes.enter_scope(module_scope);
           }
+        | TOK_INTERFACE_IDENTIFIER
+          {
+            init($$, ID_verilog_identifier);
+            auto base_name = stack_expr($1).get(ID_base_name);
+            stack_expr($$).set(ID_base_name, base_name);
+            auto &module_scope = PARSER.scopes.top_scope.add_scope(base_name, ".", verilog_scopet::MODULE);
+            PARSER.scopes.enter_scope(module_scope);
+          }
         ;
 
 module_nonansi_header:
@@ -717,7 +726,18 @@ interface_declaration:
           interface_nonansi_header
           interface_item_brace
           TOK_ENDINTERFACE
-                { $$ = $1; }
+                {
+                  pop_scope();
+                  init($$);
+                  stack_expr($$) = verilog_parse_treet::create_module(
+                    stack_expr($1).operands()[0], // attributes
+                    stack_expr($1).operands()[1], // module_keyword (interface)
+                    stack_expr($1).operands()[2], // name
+                    stack_expr($1).operands()[3], // parameter_port_list
+                    stack_expr($1).operands()[4], // ports
+                    stack_expr($2));              // module_items
+                  stack_expr($$).id(ID_verilog_interface);
+                }
         ;
 
 interface_nonansi_header:
@@ -726,15 +746,22 @@ interface_nonansi_header:
           lifetime_opt
           interface_identifier
                 {
-                  init($$, ID_verilog_interface);
-                  stack_expr($$).set(ID_base_name, stack_expr($4).get(ID_base_name));
+                  // interfaces go into the top scope
+                  auto base_name = stack_expr($4).get(ID_base_name);
+                  auto &interface_scope = PARSER.scopes.top_scope.add_scope(base_name, ".", verilog_scopet::INTERFACE);
+                  PARSER.scopes.enter_scope(interface_scope);
                 }
           package_import_declaration_brace
           parameter_port_list_opt
           list_of_ports_opt
           ';'
                 {
-                  $$ = $5;
+                  init($$); stack_expr($$).operands().resize(5);
+                  stack_expr($$).operands()[0].swap(stack_expr($1));
+                  stack_expr($$).operands()[1].swap(stack_expr($2));
+                  stack_expr($$).operands()[2].swap(stack_expr($4));
+                  stack_expr($$).operands()[3].swap(stack_expr($7));
+                  stack_expr($$).operands()[4].swap(stack_expr($8));
                 }
         ;
 
@@ -963,6 +990,27 @@ ansi_port_declaration:
                   addswap($2, ID_type, $3);
                   stack_expr($2).set(ID_value, stack_expr($4));
                   mto($$, $2); /* declarator */ }
+        | TOK_INTERFACE_IDENTIFIER port_identifier
+                {
+                  // Interface port: myInterface bus
+                  PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::VAR);
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_inout);
+                  auto interface_base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).type() = typet(ID_verilog_interface);
+                  stack_expr($$).type().set(ID_base_name, interface_base_name);
+                  mto($$, $2); /* declarator */ }
+        | TOK_INTERFACE_IDENTIFIER '.' non_type_identifier port_identifier
+                {
+                  // Interface port with modport: myInterface.some_port bus
+                  PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::VAR);
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_inout);
+                  auto interface_base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).type() = typet(ID_verilog_interface);
+                  stack_expr($$).type().set(ID_base_name, interface_base_name);
+                  stack_expr($$).type().set(ID_verilog_modport, stack_expr($3).get(ID_base_name));
+                  mto($$, $4); /* declarator */ }
         ;
 
 net_port_header:
@@ -1029,6 +1077,8 @@ module_or_generate_item:
         // | attribute_instance_brace udp_instantiation
         //      { add_attributes($2, $1); $$=$2; }
         | attribute_instance_brace module_instantiation
+                { add_attributes($2, $1); $$=$2; }
+        | attribute_instance_brace interface_instantiation_or_variable_declaration
                 { add_attributes($2, $1); $$=$2; }
         | attribute_instance_brace smv_using
                 { add_attributes($2, $1); $$=$2; }
@@ -1148,7 +1198,9 @@ bind_directive:
 
 interface_or_generate_item:
           attribute_instance_brace module_common_item
+                { add_attributes($2, $1); $$=$2; }
         | attribute_instance_brace extern_tf_declaration
+                { add_attributes($2, $1); $$=$2; }
         ;
 
 extern_tf_declaration:
@@ -1158,7 +1210,9 @@ extern_tf_declaration:
 
 interface_item_brace:
           /* Optional */
+                { init($$); }
         | interface_item_brace interface_item
+                { $$=$1; mts($$, $2); }
         ;
 
 interface_item:
@@ -1170,9 +1224,52 @@ non_port_interface_item:
           generate_region
         | interface_or_generate_item
         | program_declaration
-        /* | modport_declaration */
+        | modport_declaration
         | interface_declaration
         | timeunits_declaration
+        ;
+
+// System Verilog standard 1800-2017
+// A.2.9 Interface declarations
+
+modport_declaration:
+          TOK_MODPORT modport_item_brace ';'
+                { init($$, ID_verilog_modport_declaration);
+                  swapop($$, $2); }
+        ;
+
+modport_item_brace:
+          modport_item
+                { init($$); mts($$, $1); }
+        | modport_item_brace ',' modport_item
+                { $$ = $1; mts($$, $3); }
+        ;
+
+modport_item:
+          non_type_identifier '(' modport_ports_declaration_brace ')'
+                { init($$, ID_verilog_modport_item);
+                  stack_expr($$).set(ID_base_name, stack_expr($1).get(ID_base_name));
+                  swapop($$, $3); }
+        ;
+
+modport_ports_declaration_brace:
+          modport_ports_declaration
+                { init($$); mts($$, $1); }
+        | modport_ports_declaration_brace ',' modport_ports_declaration
+                { $$ = $1; mts($$, $3); }
+        ;
+
+// Each element in a modport port list is either a direction followed by a
+// port name (starting a new group) or just a port name (continuing the
+// previous direction group). We flatten into single items to avoid a
+// shift/reduce conflict between the inner and outer comma-separated lists.
+modport_ports_declaration:
+          port_direction non_type_identifier
+                { $$ = $1;
+                  mto($$, $2); }
+        | non_type_identifier
+                { init($$, ID_nil);
+                  mto($$, $1); }
         ;
 
 // System Verilog standard 1800-2017
@@ -3299,6 +3396,42 @@ module_instantiation:
                   swapop($$, $3); }
         ;
 
+// An interface identifier can be either an instantiation (with port connections)
+// or a variable declaration. Both start with TOK_INTERFACE_IDENTIFIER followed
+// by an identifier, which is LALR(1)-ambiguous with data_type and module_identifier.
+// We handle both cases in a unified rule to avoid the conflict.
+interface_instantiation_or_variable_declaration:
+          TOK_INTERFACE_IDENTIFIER '#' '(' list_of_parameter_assignments_opt ')' hierarchical_instance_brace ';'
+                { init($$, ID_inst);
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_module, base_name);
+                  addswap($$, ID_parameter_assignments, $4);
+                  swapop($$, $6); }
+        | TOK_INTERFACE_IDENTIFIER interface_instance_item_brace ';'
+                { init($$, ID_inst);
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_module, base_name);
+                  stack_expr($$).add(ID_parameter_assignments).make_nil();
+                  swapop($$, $2); }
+        ;
+
+interface_instance_item_brace:
+          interface_instance_item
+                { init($$); mto($$, $1); }
+        | interface_instance_item_brace ',' interface_instance_item
+                { $$=$1; mto($$, $3); }
+        ;
+
+interface_instance_item:
+          non_type_identifier unpacked_dimension_brace '(' list_of_module_connections_opt ')'
+                { init($$, ID_inst);
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
+                  addswap($$, ID_verilog_instance_array, $2);
+                  PARSER.scopes.add_identifier(base_name, verilog_scopet::MODULE_INSTANCE);
+                  swapop($$, $4); }
+        ;
+
 parameter_value_assignment_opt:
           /* Optional */
                 { make_nil($$); }
@@ -5040,9 +5173,16 @@ hierarchical_parameter_identifier: hierarchical_identifier
 
 instance_identifier: non_type_identifier;
 
-interface_identifier: non_type_identifier;
+interface_identifier: non_type_identifier
+        | TOK_INTERFACE_IDENTIFIER
+                {
+                  init($$, ID_verilog_identifier);
+                  stack_expr($$).set(ID_base_name, stack_expr($1).get(ID_base_name));
+                }
+        ;
 
-module_identifier: non_type_identifier;
+module_identifier: non_type_identifier
+        ;
 
 topmodule_identifier: non_type_identifier;
 

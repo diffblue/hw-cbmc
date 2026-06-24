@@ -132,6 +132,64 @@ void verilog_typecheckt::check_module_ports(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::instantiate_interface_ports
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For each port that has an interface type, instantiate
+          the interface under the port's identifier so that
+          hierarchical member access (e.g., bus.i) works.
+
+\*******************************************************************/
+
+void verilog_typecheckt::instantiate_interface_ports(
+  const verilog_module_sourcet &module_source)
+{
+  for(auto &decl : module_source.ports())
+  {
+    DATA_INVARIANT(decl.id() == ID_decl, "port declaration id");
+
+    const auto &declarator = decl.declarators().front();
+    const irep_idt &base_name = declarator.base_name();
+    irep_idt port_identifier = hierarchical_identifier(base_name);
+
+    const symbolt *port_symbol;
+    if(ns.lookup(port_identifier, port_symbol))
+      continue;
+
+    // Check if this port has an interface type
+    if(port_symbol->type.id() != ID_verilog_module_instance)
+      continue;
+
+    irep_idt interface_base_name = port_symbol->type.get(ID_base_name);
+    if(interface_base_name.empty())
+      continue;
+
+    // Find the interface source and instantiate it under this port
+    irep_idt interface_module_id = verilog_module_symbol(interface_base_name);
+
+    exprt::operandst no_parameters;
+    std::map<irep_idt, exprt> no_defparams;
+
+    instantiate_module(
+      port_symbol->location,
+      interface_module_id,
+      interface_base_name,
+      port_identifier,
+      no_parameters,
+      no_defparams);
+
+    // Update the instance symbol value to record the module binding
+    symbolt &port_sym = symbol_table_lookup(port_identifier);
+    port_sym.value = verilog_module_instancet{
+      id2string(port_identifier) + "$module"};
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::interface_generate_block
 
   Inputs:
@@ -268,6 +326,13 @@ void verilog_typecheckt::interface_module_item(
   }
   else if(module_item.id() == ID_verilog_timeprecision)
   {
+  }
+  else if(module_item.id() == ID_verilog_modport_declaration)
+  {
+  }
+  else if(module_item.id() == ID_verilog_interface)
+  {
+    // nested interface, 1800-2017 25.3
   }
   else
   {
