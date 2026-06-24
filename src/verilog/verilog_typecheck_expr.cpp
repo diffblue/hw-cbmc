@@ -1499,6 +1499,34 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
 
     return std::move(expr);
   }
+  else if(base_name == "$value$plusargs")
+  {
+    // IEEE 1800-2017 section 21.6
+    if(arguments.size() != 2)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$value$plusargs takes two arguments";
+    }
+
+    // Returns integer: 1 if plusarg found, 0 otherwise.
+    expr.type() = integer_typet();
+
+    return std::move(expr);
+  }
+  else if(base_name == "$test$plusargs")
+  {
+    // IEEE 1800-2017 section 21.6
+    if(arguments.size() != 1)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$test$plusargs takes one argument";
+    }
+
+    // Returns integer: 1 if plusarg found, 0 otherwise.
+    expr.type() = integer_typet();
+
+    return std::move(expr);
+  }
   else
   {
     throw errort().with_location(expr.function().source_location())
