@@ -1,0 +1,8 @@
+CORE
+slice-oob1.btor2
+--bound 0
+^error: BTOR2: slice upper index 100 exceeds source width 8$
+^EXIT=6$
+^SIGNAL=0$
+--
+--

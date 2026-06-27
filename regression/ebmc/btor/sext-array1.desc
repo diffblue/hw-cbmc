@@ -1,0 +1,8 @@
+CORE
+sext-array1.btor2
+--bound 0
+^error: BTOR2: operator 'sext' requires bitvector operands$
+^EXIT=6$
+^SIGNAL=0$
+--
+--

@@ -172,6 +172,13 @@ static exprt build_op_expr(
   auto arg = [&](std::size_t i) -> exprt
   { return node_to_expr(node.args.at(i), model, expr_map); };
 
+  auto require_bv = [&](const exprt &e)
+  {
+    if(e.type().id() == ID_array)
+      throw ebmc_errort{} << "BTOR2: operator '" << node.tag
+                          << "' requires bitvector operands";
+  };
+
   const auto &tag = node.tag;
 
   // Unary operators
@@ -183,18 +190,35 @@ static exprt build_op_expr(
       return bitnot_exprt{arg(0)};
   }
   if(tag == "inc")
+  {
+    require_bv(arg(0));
     return plus_exprt{to_bv(arg(0)), from_integer(1, to_bv(arg(0)).type())};
+  }
   if(tag == "dec")
+  {
+    require_bv(arg(0));
     return minus_exprt{to_bv(arg(0)), from_integer(1, to_bv(arg(0)).type())};
+  }
   if(tag == "neg")
+  {
+    require_bv(arg(0));
     return unary_minus_exprt{to_bv(arg(0)), to_bv(arg(0)).type()};
+  }
   if(tag == "redand")
+  {
+    require_bv(arg(0));
     return reduction_and_exprt{to_bv(arg(0))};
+  }
   if(tag == "redor")
+  {
+    require_bv(arg(0));
     return reduction_or_exprt{to_bv(arg(0))};
+  }
   if(tag == "redxor")
+  {
+    require_bv(arg(0));
     return reduction_xor_exprt{to_bv(arg(0))};
-
+  }
   // Binary operators
   if(tag == "iff")
     return equal_exprt{arg(0), arg(1)};
@@ -208,6 +232,8 @@ static exprt build_op_expr(
   // Signed/unsigned comparisons
   if(tag == "sgt" || tag == "sgte" || tag == "slt" || tag == "slte")
   {
+    require_bv(arg(0));
+    require_bv(arg(1));
     auto sa = to_signed(arg(0));
     auto sb = to_signed(arg(1));
     irep_idt rel_id = tag == "sgt"    ? ID_gt
@@ -217,14 +243,29 @@ static exprt build_op_expr(
     return binary_relation_exprt{sa, rel_id, sb};
   }
   if(tag == "ugt")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return binary_relation_exprt{to_bv(arg(0)), ID_gt, to_bv(arg(1))};
+  }
   if(tag == "ugte")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return binary_relation_exprt{to_bv(arg(0)), ID_ge, to_bv(arg(1))};
+  }
   if(tag == "ult")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return binary_relation_exprt{to_bv(arg(0)), ID_lt, to_bv(arg(1))};
+  }
   if(tag == "ulte")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return binary_relation_exprt{to_bv(arg(0)), ID_le, to_bv(arg(1))};
-
+  }
   // Bitwise operators
   if(tag == "and")
   {
@@ -271,43 +312,85 @@ static exprt build_op_expr(
 
   // Shift and rotate
   if(tag == "sll")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return shl_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "srl")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return lshr_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "sra")
   {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return typecast_exprt{ashr_exprt{to_signed(arg(0)), to_bv(arg(1))}, type};
   }
   if(tag == "rol")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return shift_exprt{to_bv(arg(0)), ID_rol, to_bv(arg(1))};
+  }
   if(tag == "ror")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return shift_exprt{to_bv(arg(0)), ID_ror, to_bv(arg(1))};
-
+  }
   // Arithmetic
   if(tag == "add")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return plus_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "sub")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return minus_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "mul")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return mult_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "udiv")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return div_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "sdiv")
   {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return typecast_exprt{
       div_exprt{to_signed(arg(0)), to_signed(arg(1))}, type};
   }
   if(tag == "urem")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return mod_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "srem")
   {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return typecast_exprt{
       mod_exprt{to_signed(arg(0)), to_signed(arg(1))}, type};
   }
   if(tag == "smod")
   {
+    require_bv(arg(0));
+    require_bv(arg(1));
     // smod: result has sign of divisor
-    // smod(a,b) = srem(a,b)==0 ? 0 : (sign(srem)!=sign(b) ? srem+b : srem)
     auto a = to_signed(arg(0));
     auto b = to_signed(arg(1));
     auto signed_type = a.type();
@@ -325,8 +408,11 @@ static exprt build_op_expr(
 
   // Concatenation
   if(tag == "concat")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return concatenation_exprt{to_bv(arg(0)), to_bv(arg(1)), type};
-
+  }
   // Array operations
   if(tag == "read")
     return index_exprt{arg(0), arg(1)};
@@ -340,6 +426,7 @@ static exprt build_op_expr(
   // Indexed operators
   if(tag == "sext")
   {
+    require_bv(arg(0));
     auto a = to_bv(arg(0));
     auto w = get_width(arg(0));
     auto new_width = w + node.uargs.at(0);
@@ -348,12 +435,22 @@ static exprt build_op_expr(
   }
   if(tag == "uext")
   {
+    require_bv(arg(0));
     auto new_width = get_width(arg(0)) + node.uargs.at(0);
     return typecast_exprt{to_bv(arg(0)), unsignedbv_typet{new_width}};
   }
   if(tag == "slice")
   {
+    require_bv(arg(0));
+    auto upper = node.uargs.at(0);
     auto lower = node.uargs.at(1);
+    auto src_width = get_width(arg(0));
+    if(upper >= src_width)
+      throw ebmc_errort{} << "BTOR2: slice upper index " << upper
+                          << " exceeds source width " << src_width;
+    if(lower > upper)
+      throw ebmc_errort{} << "BTOR2: slice lower index " << lower
+                          << " exceeds upper index " << upper;
     if(type.id() == ID_bool)
       return extractbit_exprt{to_bv(arg(0)), lower};
     else
@@ -362,18 +459,41 @@ static exprt build_op_expr(
 
   // Overflow operators
   if(tag == "uaddo")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return plus_overflow_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "saddo")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return plus_overflow_exprt{to_signed(arg(0)), to_signed(arg(1))};
+  }
   if(tag == "usubo")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return minus_overflow_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "ssubo")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return minus_overflow_exprt{to_signed(arg(0)), to_signed(arg(1))};
+  }
   if(tag == "umulo")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return mult_overflow_exprt{to_bv(arg(0)), to_bv(arg(1))};
+  }
   if(tag == "smulo")
+  {
+    require_bv(arg(0));
+    require_bv(arg(1));
     return mult_overflow_exprt{to_signed(arg(0)), to_signed(arg(1))};
-
+  }
   throw ebmc_errort{} << "BTOR2: unsupported operator '" << tag << "'";
 }
 
