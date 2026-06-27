@@ -319,6 +319,13 @@ static transition_systemt build_transition_system(const struct aiger &model)
     CHECK_RETURN(!add_result);
   }
 
+  // Constraints (environment assumptions)
+  for(std::size_t i = 0; i < model.num_constraints; i++)
+  {
+    exprt constraint_expr = lit_to_expr(model.constraints[i].lit, var_map);
+    invar_exprs.push_back(constraint_expr);
+  }
+
   // Module symbol
   typet module_type(ID_module);
 
