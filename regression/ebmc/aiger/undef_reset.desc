@@ -1,9 +1,7 @@
-KNOWNBUG
+CORE
 undef_reset.aag
 --bound 2
-^EXIT=0$
+^\[bad0\] : REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
---
-Latch with reset equal to its own literal means non-deterministic initial
-value per the AIGER specification. EBMC should handle this gracefully.

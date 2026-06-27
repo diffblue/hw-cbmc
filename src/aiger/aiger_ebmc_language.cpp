@@ -203,6 +203,10 @@ static transition_systemt build_transition_system(const struct aiger &model)
       init_exprs.push_back(equal_exprt{latch_sym, false_exprt{}});
     else if(reset == 1)
       init_exprs.push_back(equal_exprt{latch_sym, true_exprt{}});
+    else if(reset == model.latches[i].lit)
+    {
+      // non-deterministic initial value, no constraint
+    }
     else
       throw ebmc_errort{} << "unexpected AIGER reset value";
 
