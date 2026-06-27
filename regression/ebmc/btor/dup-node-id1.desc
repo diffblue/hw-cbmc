@@ -1,0 +1,7 @@
+CORE
+dup-node-id1.btor2
+--bound 0
+^error: BTOR2: duplicate node ID 3 on line 5$
+^EXIT=6$
+^SIGNAL=0$
+--
