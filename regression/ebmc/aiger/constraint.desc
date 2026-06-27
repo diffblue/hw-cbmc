@@ -1,0 +1,11 @@
+KNOWNBUG
+constraint.aag
+--bound 5
+^\[bad0\] : PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The constraint (literal 3 = NOT input) forces the input to be 0 in all
+reachable states. This makes the bad state (input AND latch) unreachable.
+EBMC currently ignores AIGER constraints entirely.

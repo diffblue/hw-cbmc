@@ -1,0 +1,10 @@
+KNOWNBUG
+duplicate_names.aag
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Two inputs with the same name should not crash. The AIGER format does not
+prohibit duplicate names. EBMC should handle this gracefully rather than
+aborting with an invariant violation.
