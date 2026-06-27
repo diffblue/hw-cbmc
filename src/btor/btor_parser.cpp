@@ -81,6 +81,9 @@ btor2_modelt btor2_parse(std::istream &in)
                             << "' on line " << line_number;
       }
 
+      if(model.sorts.count(id))
+        throw ebmc_errort{} << "BTOR2: duplicate sort ID " << id << " on line "
+                            << line_number;
       model.sorts[id] = sort;
       continue;
     }
@@ -196,6 +199,9 @@ btor2_modelt btor2_parse(std::istream &in)
         node.symbol = sym;
     }
 
+    if(model.nodes.count(id))
+      throw ebmc_errort{} << "BTOR2: duplicate node ID " << id << " on line "
+                          << line_number;
     model.nodes[id] = std::move(node);
   }
 
