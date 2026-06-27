@@ -170,7 +170,12 @@ static exprt build_op_expr(
   const std::map<std::size_t, exprt> &expr_map)
 {
   auto arg = [&](std::size_t i) -> exprt
-  { return node_to_expr(node.args.at(i), model, expr_map); };
+  {
+    if(i >= node.args.size())
+      throw ebmc_errort{} << "BTOR2: operator '" << node.tag
+                          << "' requires at least " << (i + 1) << " operand(s)";
+    return node_to_expr(node.args[i], model, expr_map);
+  };
 
   auto require_bv = [&](const exprt &e)
   {
