@@ -1008,9 +1008,8 @@ void verilog_typecheckt::collect_symbols(
     throw errort{}.with_location(module_item.source_location())
       << "no support for nested modules";
   }
-  else if(module_item.id().empty())
+  else if(module_item.id() == ID_verilog_specparam_decl)
   {
-    // silently ignore items with no id (e.g., specparam with no action)
   }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());

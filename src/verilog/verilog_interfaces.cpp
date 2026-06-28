@@ -269,9 +269,8 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_verilog_timeprecision)
   {
   }
-  else if(module_item.id().empty())
+  else if(module_item.id() == ID_verilog_specparam_decl)
   {
-    // silently ignore items with no id (e.g., specparam)
   }
   else
   {

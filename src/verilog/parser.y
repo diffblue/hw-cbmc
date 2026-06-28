@@ -1418,6 +1418,9 @@ parameter_declaration:
 
 specparam_declaration:
           TOK_SPECPARAM data_type_or_implicit list_of_specparam_assignments ';'
+                { init($$, ID_verilog_specparam_decl);
+                  stack_expr($$).type() = std::move(stack_type($2));
+                  swapop($$, $3); }
         ;
 
 // System Verilog standard 1800-2017

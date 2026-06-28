@@ -1,0 +1,10 @@
+KNOWNBUG
+specparam2.v
+--bound 0
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The specify block is parsed but its items are discarded. The specparam_declaration
+inside a specify block needs a parser action to be retained as a specify_item.
