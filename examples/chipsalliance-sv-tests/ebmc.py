@@ -42,7 +42,7 @@ class ebmc(BaseRunner):
         version = super().get_version()
 
         # The full version is the 1st line
-        version = version.splitlines()[0]
+        version = version.splitlines()[0].split()
 
         version.insert(0, self.name)
 
