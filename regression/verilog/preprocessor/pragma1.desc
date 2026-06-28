@@ -1,0 +1,7 @@
+CORE
+pragma1.sv
+--preprocess
+^EXIT=0$
+^SIGNAL=0$
+--
+^PREPROCESSING FAILED$
