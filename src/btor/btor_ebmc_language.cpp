@@ -563,6 +563,10 @@ static transition_systemt build_transition_system(const btor2_modelt &model)
       // next <sid> <state_nid> <next_value_nid>
       auto state_expr = node_to_expr(node.args[0], model, expr_map);
       auto next_value = node_to_expr(node.args[1], model, expr_map);
+      if(state_expr.id() != ID_symbol)
+        throw ebmc_errort{} << "BTOR2: first argument of 'next' must be a "
+                               "state variable (node "
+                            << id << ")";
       next_symbol_exprt next_state{to_symbol_expr(state_expr)};
       trans_exprs.push_back(equal_exprt{next_state, next_value});
     }
