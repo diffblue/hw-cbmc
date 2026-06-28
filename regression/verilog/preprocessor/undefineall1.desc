@@ -1,0 +1,13 @@
+CORE
+undefineall1.v
+--preprocess
+activate-multi-line-match
+`line 1 "undefineall1.v" 0
+
+
+
+PASS
+^EXIT=0$
+^SIGNAL=0$
+--
+^PREPROCESSING FAILED$

@@ -503,6 +503,13 @@ void verilog_preprocessort::directive()
       defines.erase(it);
     }
   }
+  else if(text == "undefineall")
+  {
+    if(!condition)
+      return;
+
+    defines.clear();
+  }
   else if(text=="ifdef" || text=="ifndef")
   {
     bool ifdef = text == "ifdef";
