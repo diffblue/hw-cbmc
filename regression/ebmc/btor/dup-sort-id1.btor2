@@ -1,0 +1,5 @@
+; duplicate sort ID should produce an error
+1 sort bitvec 4
+1 sort bitvec 8
+2 input 1
+3 bad 2
