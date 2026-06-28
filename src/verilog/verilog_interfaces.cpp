@@ -269,6 +269,9 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_verilog_timeprecision)
   {
   }
+  else if(module_item.id() == ID_verilog_specparam_decl)
+  {
+  }
   else
   {
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());

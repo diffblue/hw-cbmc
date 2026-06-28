@@ -3581,6 +3581,9 @@ void verilog_synthesist::synth_module_item(
   else if(module_item.id() == ID_verilog_timeprecision)
   {
   }
+  else if(module_item.id() == ID_verilog_specparam_decl)
+  {
+  }
   else
   {
     throw errort().with_location(module_item.source_location())
