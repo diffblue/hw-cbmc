@@ -831,6 +831,31 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(statement.id() == ID_procedural_continuous_assign)
   {
   }
+  else if(statement.id() == ID_deassign)
+  {
+  }
+  else if(statement.id() == ID_force)
+  {
+  }
+  else if(statement.id() == ID_repeat)
+  {
+    collect_symbols(to_verilog_repeat(statement).body());
+  }
+  else if(statement.id() == ID_while)
+  {
+    collect_symbols(to_verilog_while(statement).body());
+  }
+  else if(statement.id() == ID_fork)
+  {
+    for(auto &operand : statement.operands())
+      collect_symbols(to_verilog_statement(operand));
+  }
+  else if(statement.id() == ID_disable)
+  {
+  }
+  else if(statement.id() == ID_parameter_decl)
+  {
+  }
   else if(statement.id() == ID_break)
   {
   }
@@ -982,6 +1007,10 @@ void verilog_typecheckt::collect_symbols(
     // a nested module, 1800 2017 23.4
     throw errort{}.with_location(module_item.source_location())
       << "no support for nested modules";
+  }
+  else if(module_item.id().empty())
+  {
+    // silently ignore items with no id (e.g., specparam with no action)
   }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
