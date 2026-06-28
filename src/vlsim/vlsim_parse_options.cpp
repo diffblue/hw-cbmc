@@ -15,7 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ebmc/ebmc_error.h>
 #include <ebmc/ebmc_version.h>
 #include <ebmc/transition_system.h>
-
 #include <verilog/verilog_ebmc_language.h>
 #include <verilog/verilog_typecheck.h>
 #include <verilog/verilog_typecheck_base.h>
@@ -43,9 +42,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class vlsim_languaget : public verilog_ebmc_languaget
 {
 public:
-  vlsim_languaget(
-    const cmdlinet &_cmdline,
-    message_handlert &_message_handler)
+  vlsim_languaget(const cmdlinet &_cmdline, message_handlert &_message_handler)
     : verilog_ebmc_languaget(_cmdline, _message_handler)
   {
   }

@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <testing-utils/use_catch.h>
-
 #include <util/arith_tools.h>
 #include <util/bitvector_types.h>
 #include <util/mathematical_types.h>
@@ -15,8 +13,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
+#include <testing-utils/use_catch.h>
 #include <verilog/verilog_types.h>
-
 #include <vlsim/vl_simulator.h>
 
 static mp_integer eval(const exprt &expr)
@@ -196,7 +194,9 @@ SCENARIO("vl_simulatort evaluates four-valued constants with x bits")
     REQUIRE(eval(c) == 0);
   }
 
-  GIVEN("4-bit 4'b1x1x: known 1-bits contribute, x treated as 0, result is 10 (binary 1010)")
+  GIVEN(
+    "4-bit 4'b1x1x: known 1-bits contribute, x treated as 0, result is 10 "
+    "(binary 1010)")
   {
     constant_exprt c{"1x1x", verilog_unsignedbv_typet{4}};
     REQUIRE(eval(c) == 10);

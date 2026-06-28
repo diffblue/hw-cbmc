@@ -184,14 +184,13 @@ void vl_simulatort::run_statement(const verilog_statementt &statement)
     const auto &call = to_verilog_function_call(statement);
     if(call.is_system_function_call())
     {
-      const auto base_name = id2string(
-        to_verilog_identifier_expr(call.function()).base_name());
+      const auto base_name =
+        id2string(to_verilog_identifier_expr(call.function()).base_name());
       run_system_task(base_name, call.arguments());
     }
   }
   else if(
-    id == ID_verilog_immediate_assert ||
-    id == ID_verilog_assert_property ||
+    id == ID_verilog_immediate_assert || id == ID_verilog_assert_property ||
     id == ID_verilog_smv_assert)
   {
     // Nothing to simulate here; assertions are handled by the model checker.
@@ -266,8 +265,9 @@ void vl_simulatort::run_system_task(
   const std::string &name,
   const exprt::operandst &args)
 {
-  if(name == "$display" || name == "$displayb" || name == "$displayh" ||
-     name == "$displayo")
+  if(
+    name == "$display" || name == "$displayb" || name == "$displayh" ||
+    name == "$displayo")
   {
     std::string output;
     if(!args.empty() && args[0].type().id() == ID_string)
@@ -289,8 +289,9 @@ void vl_simulatort::run_system_task(
     }
     std::cout << output << '\n';
   }
-  else if(name == "$write" || name == "$writeb" || name == "$writeh" ||
-          name == "$writeo")
+  else if(
+    name == "$write" || name == "$writeb" || name == "$writeh" ||
+    name == "$writeo")
   {
     if(!args.empty() && args[0].type().id() == ID_string)
     {
@@ -496,8 +497,7 @@ mp_integer vl_simulatort::eval_expr(const exprt &expr)
     // Try the Verilog::$root. prefix first, then the scope as-is.
     if(!vid.scope().empty())
     {
-      auto full_id =
-        irep_idt{"Verilog::$root." + id2string(vid.scope())};
+      auto full_id = irep_idt{"Verilog::$root." + id2string(vid.scope())};
       auto it = state.find(full_id);
       if(it != state.end())
         return it->second;
@@ -660,7 +660,7 @@ mp_integer vl_simulatort::eval_expr(const exprt &expr)
     for(const auto &op : expr.operands())
     {
       std::size_t width = type_width(op.type());
-      result = logic_left_shift(result, mp_integer{width}, 128) ;
+      result = logic_left_shift(result, mp_integer{width}, 128);
       result = bitwise_or(result, eval_expr(op));
     }
     return result;
@@ -681,7 +681,8 @@ mp_integer vl_simulatort::eval_expr(const exprt &expr)
   {
     // Ternary: condition ? then : else
     mp_integer cond = eval_expr(expr.operands()[0]);
-    return cond != 0 ? eval_expr(expr.operands()[1]) : eval_expr(expr.operands()[2]);
+    return cond != 0 ? eval_expr(expr.operands()[1])
+                     : eval_expr(expr.operands()[2]);
   }
   // Unknown expression: return 0
   return 0;
