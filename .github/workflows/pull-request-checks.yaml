@@ -264,7 +264,7 @@ jobs:
       - name: vlindex on Hazard3
         run: PATH=$PATH:$PWD/vlindex examples/Hazard3/Hazard3-vlindex.sh
 
-  # This job takes approximately 5 minutes
+  # This job takes approximately 1 minute
   sv-tests:
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
