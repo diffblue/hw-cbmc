@@ -1,0 +1,8 @@
+; redand applied to array-typed operand should produce an error
+1 sort bitvec 4
+2 sort bitvec 8
+3 sort array 1 2
+4 input 3
+5 sort bitvec 1
+6 redand 5 4
+7 bad 6

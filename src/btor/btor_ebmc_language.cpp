@@ -172,6 +172,13 @@ static exprt build_op_expr(
   auto arg = [&](std::size_t i) -> exprt
   { return node_to_expr(node.args.at(i), model, expr_map); };
 
+  auto require_bv = [&](const exprt &e)
+  {
+    if(e.type().id() == ID_array)
+      throw ebmc_errort{} << "BTOR2: operator '" << node.tag
+                          << "' requires bitvector operands";
+  };
+
   const auto &tag = node.tag;
 
   // Unary operators
@@ -182,28 +189,101 @@ static exprt build_op_expr(
     else
       return bitnot_exprt{arg(0)};
   }
-  if(tag == "inc")
-    return plus_exprt{to_bv(arg(0)), from_integer(1, to_bv(arg(0)).type())};
-  if(tag == "dec")
-    return minus_exprt{to_bv(arg(0)), from_integer(1, to_bv(arg(0)).type())};
-  if(tag == "neg")
-    return unary_minus_exprt{to_bv(arg(0)), to_bv(arg(0)).type()};
-  if(tag == "redand")
-    return reduction_and_exprt{to_bv(arg(0))};
-  if(tag == "redor")
-    return reduction_or_exprt{to_bv(arg(0))};
-  if(tag == "redxor")
-    return reduction_xor_exprt{to_bv(arg(0))};
 
-  // Binary operators
+  // Boolean operators
   if(tag == "iff")
     return equal_exprt{arg(0), arg(1)};
+
   if(tag == "implies")
     return implies_exprt{arg(0), arg(1)};
+
   if(tag == "eq")
     return equal_exprt{arg(0), arg(1)};
+
   if(tag == "neq")
     return notequal_exprt{arg(0), arg(1)};
+
+  // Bitwise operators
+  if(tag == "and")
+  {
+    if(type.id() == ID_bool)
+      return and_exprt{arg(0), arg(1)};
+    else
+      return bitand_exprt{arg(0), arg(1)};
+  }
+
+  if(tag == "nand")
+  {
+    if(type.id() == ID_bool)
+      return not_exprt{and_exprt{arg(0), arg(1)}};
+    else
+      return bitnand_exprt{arg(0), arg(1)};
+  }
+
+  if(tag == "nor")
+  {
+    if(type.id() == ID_bool)
+      return not_exprt{or_exprt{arg(0), arg(1)}};
+    else
+      return bitnor_exprt{arg(0), arg(1)};
+  }
+
+  if(tag == "or")
+  {
+    if(type.id() == ID_bool)
+      return or_exprt{arg(0), arg(1)};
+    else
+      return bitor_exprt{arg(0), arg(1)};
+  }
+
+  if(tag == "xnor")
+  {
+    if(type.id() == ID_bool)
+      return equal_exprt{arg(0), arg(1)};
+    else
+      return bitxnor_exprt{arg(0), arg(1)};
+  }
+
+  if(tag == "xor")
+  {
+    if(type.id() == ID_bool)
+      return notequal_exprt{arg(0), arg(1)};
+    else
+      return bitxor_exprt{arg(0), arg(1)};
+  }
+
+  // Array operations
+  if(tag == "read")
+    return index_exprt{arg(0), arg(1)};
+
+  if(tag == "write")
+    return with_exprt{arg(0), arg(1), arg(2)};
+
+  // Ternary
+  if(tag == "ite")
+    return if_exprt{arg(0), arg(1), arg(2)};
+
+  // from here onwards, all operators require all arguments to have vector type
+  for(std::size_t i = 0; i < node.args.size(); i++)
+    require_bv(arg(i));
+
+  if(tag == "inc")
+    return plus_exprt{to_bv(arg(0)), from_integer(1, to_bv(arg(0)).type())};
+
+  if(tag == "dec")
+    return minus_exprt{to_bv(arg(0)), from_integer(1, to_bv(arg(0)).type())};
+
+  if(tag == "neg")
+    return unary_minus_exprt{to_bv(arg(0)), to_bv(arg(0)).type()};
+
+  if(tag == "redand")
+    return reduction_and_exprt{to_bv(arg(0))};
+
+  if(tag == "redor")
+    return reduction_or_exprt{to_bv(arg(0))};
+
+  if(tag == "redxor")
+    return reduction_xor_exprt{to_bv(arg(0))};
 
   // Signed/unsigned comparisons
   if(tag == "sgt" || tag == "sgte" || tag == "slt" || tag == "slte")
@@ -216,94 +296,63 @@ static exprt build_op_expr(
                                       : ID_le;
     return binary_relation_exprt{sa, rel_id, sb};
   }
+
   if(tag == "ugt")
     return binary_relation_exprt{to_bv(arg(0)), ID_gt, to_bv(arg(1))};
+
   if(tag == "ugte")
     return binary_relation_exprt{to_bv(arg(0)), ID_ge, to_bv(arg(1))};
+
   if(tag == "ult")
     return binary_relation_exprt{to_bv(arg(0)), ID_lt, to_bv(arg(1))};
+
   if(tag == "ulte")
     return binary_relation_exprt{to_bv(arg(0)), ID_le, to_bv(arg(1))};
-
-  // Bitwise operators
-  if(tag == "and")
-  {
-    if(type.id() == ID_bool)
-      return and_exprt{arg(0), arg(1)};
-    else
-      return bitand_exprt{arg(0), arg(1)};
-  }
-  if(tag == "nand")
-  {
-    if(type.id() == ID_bool)
-      return not_exprt{and_exprt{arg(0), arg(1)}};
-    else
-      return bitnand_exprt{arg(0), arg(1)};
-  }
-  if(tag == "nor")
-  {
-    if(type.id() == ID_bool)
-      return not_exprt{or_exprt{arg(0), arg(1)}};
-    else
-      return bitnor_exprt{arg(0), arg(1)};
-  }
-  if(tag == "or")
-  {
-    if(type.id() == ID_bool)
-      return or_exprt{arg(0), arg(1)};
-    else
-      return bitor_exprt{arg(0), arg(1)};
-  }
-  if(tag == "xnor")
-  {
-    if(type.id() == ID_bool)
-      return equal_exprt{arg(0), arg(1)};
-    else
-      return bitxnor_exprt{arg(0), arg(1)};
-  }
-  if(tag == "xor")
-  {
-    if(type.id() == ID_bool)
-      return notequal_exprt{arg(0), arg(1)};
-    else
-      return bitxor_exprt{arg(0), arg(1)};
-  }
 
   // Shift and rotate
   if(tag == "sll")
     return shl_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "srl")
     return lshr_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "sra")
-  {
     return typecast_exprt{ashr_exprt{to_signed(arg(0)), to_bv(arg(1))}, type};
-  }
+
   if(tag == "rol")
     return shift_exprt{to_bv(arg(0)), ID_rol, to_bv(arg(1))};
+
   if(tag == "ror")
     return shift_exprt{to_bv(arg(0)), ID_ror, to_bv(arg(1))};
 
   // Arithmetic
   if(tag == "add")
     return plus_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "sub")
     return minus_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "mul")
     return mult_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "udiv")
     return div_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "sdiv")
   {
     return typecast_exprt{
       div_exprt{to_signed(arg(0)), to_signed(arg(1))}, type};
   }
+
   if(tag == "urem")
     return mod_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "srem")
   {
     return typecast_exprt{
       mod_exprt{to_signed(arg(0)), to_signed(arg(1))}, type};
   }
+
   if(tag == "smod")
   {
     // smod: result has sign of divisor
@@ -313,6 +362,7 @@ static exprt build_op_expr(
     auto signed_type = a.type();
     auto rem = mod_exprt{a, b};
     auto zero = from_integer(0, signed_type);
+
     // Check if signs differ: (rem < 0) != (b < 0)
     auto rem_neg = binary_relation_exprt{rem, ID_lt, zero};
     auto b_neg = binary_relation_exprt{b, ID_lt, zero};
@@ -327,16 +377,6 @@ static exprt build_op_expr(
   if(tag == "concat")
     return concatenation_exprt{to_bv(arg(0)), to_bv(arg(1)), type};
 
-  // Array operations
-  if(tag == "read")
-    return index_exprt{arg(0), arg(1)};
-  if(tag == "write")
-    return with_exprt{arg(0), arg(1), arg(2)};
-
-  // Ternary
-  if(tag == "ite")
-    return if_exprt{arg(0), arg(1), arg(2)};
-
   // Indexed operators
   if(tag == "sext")
   {
@@ -346,14 +386,24 @@ static exprt build_op_expr(
     return typecast_exprt{
       typecast_exprt{a, signedbv_typet{w}}, unsignedbv_typet{new_width}};
   }
+
   if(tag == "uext")
   {
     auto new_width = get_width(arg(0)) + node.uargs.at(0);
     return typecast_exprt{to_bv(arg(0)), unsignedbv_typet{new_width}};
   }
+
   if(tag == "slice")
   {
+    auto upper = node.uargs.at(0);
     auto lower = node.uargs.at(1);
+    auto src_width = get_width(arg(0));
+    if(upper >= src_width)
+      throw ebmc_errort{} << "BTOR2: slice upper index " << upper
+                          << " exceeds source width " << src_width;
+    if(lower > upper)
+      throw ebmc_errort{} << "BTOR2: slice lower index " << lower
+                          << " exceeds upper index " << upper;
     if(type.id() == ID_bool)
       return extractbit_exprt{to_bv(arg(0)), lower};
     else
@@ -363,14 +413,19 @@ static exprt build_op_expr(
   // Overflow operators
   if(tag == "uaddo")
     return plus_overflow_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "saddo")
     return plus_overflow_exprt{to_signed(arg(0)), to_signed(arg(1))};
+
   if(tag == "usubo")
     return minus_overflow_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "ssubo")
     return minus_overflow_exprt{to_signed(arg(0)), to_signed(arg(1))};
+
   if(tag == "umulo")
     return mult_overflow_exprt{to_bv(arg(0)), to_bv(arg(1))};
+
   if(tag == "smulo")
     return mult_overflow_exprt{to_signed(arg(0)), to_signed(arg(1))};
 
