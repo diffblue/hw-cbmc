@@ -34,31 +34,32 @@ if not os.path.exists(logs_dir):
 passed = []
 failed = []
 
-for fn in sorted(os.listdir(logs_dir)):
-    path = os.path.join(logs_dir, fn)
-    if not os.path.getsize(path):
-        continue  # skipped test
+for dirpath, _, filenames in os.walk(logs_dir):
+    for fn in sorted(filenames):
+        path = os.path.join(dirpath, fn)
+        if not os.path.getsize(path):
+            continue  # skipped test
 
-    params = {}
-    with open(path) as f:
-        for line in f:
-            line = line.rstrip()
-            if not line:
-                break
-            key, _, val = line.partition(': ')
-            params[key] = val
+        params = {}
+        with open(path) as f:
+            for line in f:
+                line = line.rstrip()
+                if not line:
+                    break
+                key, _, val = line.partition(': ')
+                params[key] = val
 
-    tool_success = params.get('tool_success') == '1'
-    should_fail = params.get('should_fail') == '1'
-    tool_crashed = int(params.get('rc', 0)) >= 126
+        tool_success = params.get('tool_success') == '1'
+        should_fail = params.get('should_fail') == '1'
+        tool_crashed = int(params.get('rc', 0)) >= 126
 
-    test_passed = not tool_crashed and (should_fail != tool_success)
+        test_passed = not tool_crashed and (should_fail != tool_success)
 
-    name = params.get('name', fn)
-    if test_passed:
-        passed.append(name)
-    else:
-        failed.append(name)
+        name = params.get('name', fn)
+        if test_passed:
+            passed.append(name)
+        else:
+            failed.append(name)
 
 for name in failed:
     print(f'FAIL: {name}')
