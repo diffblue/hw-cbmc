@@ -3081,10 +3081,13 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     expr.id() == ID_verilog_streaming_concatenation_right_to_left)
   {
     // slice_size is defaulted to 1
-    PRECONDITION(expr.op().operands().size() == 1);
-    convert_expr(expr.op().operands()[0]);
-    require_vector(expr.op().operands()[0]);
-    expr.type() = expr.op().operands()[0].type();
+    for(auto &op : expr.op().operands())
+    {
+      convert_expr(op);
+      require_vector(op);
+    }
+    if(!expr.op().operands().empty())
+      expr.type() = expr.op().operands().front().type();
     return std::move(expr);
   }
   else if(expr.id() == ID_bitnot)
@@ -3672,10 +3675,10 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.op0() = from_integer(slice_size, natural_typet());
 
     convert_expr(expr.op0());
-    PRECONDITION(expr.op1().operands().size() == 1);
     for(auto &op : expr.op1().operands())
       convert_expr(op);
-    expr.type() = expr.op1().operands().front().type();
+    if(!expr.op1().operands().empty())
+      expr.type() = expr.op1().operands().front().type();
 
     return std::move(expr);
   }
