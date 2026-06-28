@@ -742,6 +742,10 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
   {
     // we ignore all of these
   }
+  else if(statement.function().id() != ID_verilog_identifier)
+  {
+    // method call (e.g., a.itoa(), q.push_back()) — not yet supported
+  }
   else
   {
     irep_idt base_name =
