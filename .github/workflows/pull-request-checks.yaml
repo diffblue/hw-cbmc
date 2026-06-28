@@ -289,6 +289,13 @@ jobs:
         run: chmod a+x ./ebmc/ebmc ; ./ebmc/ebmc --version
       - name: Run sv-tests with ebmc
         run: PATH=$PATH:$PWD/ebmc examples/chipsalliance-sv-tests/sv-tests.sh
+      - name: Upload sv-tests report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sv-tests-report
+          path: sv-tests/out/report/
+          retention-days: 5
 
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:

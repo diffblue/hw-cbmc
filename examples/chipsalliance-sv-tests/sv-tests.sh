@@ -11,16 +11,16 @@ if [ ! -e sv-tests/.git ] ; then
   (cd sv-tests && git checkout cbe02cf550b1345f5b75fee0c85145b1b68f379e)
 fi
 
-# install Python dependencies needed by the runner
-pip3 install psutil
+# install Python dependencies needed by the runner and report generator
+pip3 install psutil pygments jinja2 markupsafe
 
 # copy the ebmc runner
 cp "$SCRIPT_DIR/ebmc.py" sv-tests/tools/runners/
 
 cd sv-tests
 
-# run the sv-tests
-make tests
+# run the sv-tests and generate the HTML report
+make report
 
 # print a summary of pass/fail results
 python3 - <<'EOF'
