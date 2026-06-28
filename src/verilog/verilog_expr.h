@@ -1768,6 +1768,16 @@ public:
     operands().resize(2);
   }
 
+  exprt &delay_value()
+  {
+    return op0();
+  }
+
+  const exprt &delay_value() const
+  {
+    return op0();
+  }
+
   verilog_statementt &body()
   {
     return static_cast<verilog_statementt &>(op1());
