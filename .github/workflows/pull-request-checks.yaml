@@ -296,6 +296,26 @@ jobs:
           name: sv-tests-report
           path: sv-tests/out/report/
           retention-days: 5
+      - name: Upload sv-tests report for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: sv-tests/out/report/
+
+  deploy-sv-tests-report:
+    runs-on: ubuntu-24.04
+    needs: sv-tests
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:
