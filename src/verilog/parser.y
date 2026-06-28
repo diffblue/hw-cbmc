@@ -2364,7 +2364,7 @@ queue_dimension:
         ;
 
 unsized_dimension: '[' ']'
-                { init($$, "unsized"); }
+                { init($$, "unsized"); stack_type($$).add_subtype().make_nil(); }
         ;
 
 struct_union:
