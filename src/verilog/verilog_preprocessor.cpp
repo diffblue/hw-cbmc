@@ -695,6 +695,11 @@ void verilog_preprocessort::directive()
     // ignored
     tokenizer().skip_until_eol();
   }
+  else if(text == "pragma")
+  {
+    // ignored
+    tokenizer().skip_until_eol();
+  }
   else if(text == "default_nettype")
   {
     // pass through
