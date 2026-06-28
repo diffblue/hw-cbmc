@@ -1,0 +1,7 @@
+CORE
+undef_reset.aag
+--bound 2
+^\[bad0\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
