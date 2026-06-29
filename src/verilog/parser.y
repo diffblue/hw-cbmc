@@ -3865,8 +3865,24 @@ seq_block:
 par_block:
           TOK_FORK statement_or_null_brace TOK_JOIN
                 { init($$, ID_fork); swapop($$, $2); }
+        | TOK_FORK statement_or_null_brace TOK_JOIN_ANY
+                { init($$, ID_fork); swapop($$, $2); }
+        | TOK_FORK statement_or_null_brace TOK_JOIN_NONE
+                { init($$, ID_fork); swapop($$, $2); }
         | TOK_FORK TOK_COLON any_identifier
           statement_or_null_brace TOK_JOIN
+                { init($$, ID_block);
+                  swapop($$, $4);
+                  stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+                }
+        | TOK_FORK TOK_COLON any_identifier
+          statement_or_null_brace TOK_JOIN_ANY
+                { init($$, ID_block);
+                  swapop($$, $4);
+                  stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+                }
+        | TOK_FORK TOK_COLON any_identifier
+          statement_or_null_brace TOK_JOIN_NONE
                 { init($$, ID_block);
                   swapop($$, $4);
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
