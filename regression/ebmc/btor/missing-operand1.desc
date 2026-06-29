@@ -1,0 +1,7 @@
+CORE
+missing-operand1.btor2
+--bound 0
+^error: BTOR2: operator 'add' requires at least 2 operand\(s\)$
+^EXIT=6$
+^SIGNAL=0$
+--
