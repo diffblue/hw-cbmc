@@ -33,7 +33,7 @@ jobs:
       - name: Log the version of gcc
         run: gcc --version
       - name: Prepare ccache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: .ccache
           key: ${{ runner.os }}-24.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
@@ -53,7 +53,7 @@ jobs:
       - name: Run unit tests
         run: make -C unit -j4 CXX="ccache g++"
       - name: Save ccache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: always()
         with:
           path: .ccache
@@ -108,7 +108,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: .ccache
           key: ${{ runner.os }}-24.04-make-clang-${{ github.ref }}-${{ github.sha }}-PR
@@ -128,7 +128,7 @@ jobs:
       - name: Run unit tests
         run: make -C unit -j4 CXX="ccache clang++"
       - name: Save ccache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: always()
         with:
           path: .ccache
@@ -282,7 +282,7 @@ jobs:
           # yum config-manager --set-enabled powertools
           # yum install glibc-static libstdc++-static
       - name: cache for ccache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: /github/home/.cache/ccache
           key: ${{ runner.os }}-centos8-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
@@ -301,7 +301,7 @@ jobs:
       - name: Run unit tests
         run: make -C unit -j4 CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs"
       - name: Save ccache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: always()
         with:
           path: /github/home/.cache/ccache
@@ -331,7 +331,7 @@ jobs:
       - name: Confirm z3 solver is available and log the version installed
         run: z3 --version
       - name: Prepare ccache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: .ccache
           key: ${{ runner.os }}-make-${{ github.ref }}-${{ github.sha }}-PR
@@ -351,7 +351,7 @@ jobs:
       - name: Run unit tests
         run: make -C unit -j3 CXX="ccache g++"
       - name: Save ccache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: always()
         with:
           path: .ccache
@@ -409,7 +409,7 @@ jobs:
           source ./emsdk_env.sh
           emcc --version
       - name: Prepare ccache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: .ccache
           key: ${{ runner.os }}-24.04-make-emcc-${{ github.ref }}-${{ github.sha }}-PR
@@ -454,7 +454,7 @@ jobs:
       - name: Run unit tests
         run:  node --experimental-wasm-exnref unit/unit_tests.js
       - name: Save ccache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: always()
         with:
           path: .ccache
@@ -491,7 +491,7 @@ jobs:
       - name: Initialise Developer Command Line
         uses: ilammy/msvc-dev-cmd@v1
       - name: Prepare ccache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: .ccache
           key: ${{ runner.os }}-msbuild-make-${{ github.ref }}-${{ github.sha }}-PR
@@ -519,7 +519,7 @@ jobs:
           MSYS2_ARG_CONV_EXCL: "*"
         run: make CXX=clcache BUILD_ENV=MSVC -j4 -C unit
       - name: Save ccache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         if: always()
         with:
           path: .ccache
