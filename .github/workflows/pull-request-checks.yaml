@@ -1,4 +1,4 @@
-name: Build and Test HW-CBMC
+name: Pull request checks
 on:
   push:
     branches: [ main ]
@@ -8,6 +8,7 @@ on:
 jobs:
   # This job takes approximately 15 minutes
   check-ubuntu-24_04-make-gcc:
+    name: Build+test ebmc (Ubuntu/gcc)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -83,6 +84,7 @@ jobs:
 
   # This job takes approximately 15 minutes
   check-ubuntu-24_04-make-clang:
+    name: Build+test ebmc (Ubuntu/clang)
     runs-on: ubuntu-24.04
     env:
       CC: "ccache clang"
@@ -170,6 +172,7 @@ jobs:
 
   # This job takes approximately 4 minutes
   benchmarking:
+    name: ebmc Benchmarking
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
@@ -203,6 +206,7 @@ jobs:
 
   # This job takes approximately 1 minute
   ebmc-spot:
+    name: Run ebmc/Spot tests
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
@@ -241,6 +245,7 @@ jobs:
 
   # This job takes approximately 1 minute
   examples:
+    name: Run ebmc examples
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
@@ -266,7 +271,7 @@ jobs:
 
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:
-    name: CentOS 8
+    name: Build+test ebmc (CentOS 8)
     runs-on: ubuntu-22.04
     container:
       image: centos:8
@@ -321,6 +326,7 @@ jobs:
 
   # This job takes approximately 20 minutes
   check-macos-15-make-clang:
+    name: Build+test ebmc (Mac/clang)
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
@@ -375,7 +381,7 @@ jobs:
 
   # This job takes approximately 17 minutes
   check-ubuntu-24_04-make-emcc:
-    name: Emscripten build
+    name: Build (Emscripten)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -463,6 +469,7 @@ jobs:
         run: ccache -s
 
   check-vs-2022-make-build-and-test:
+    name: Build+test ebmc (Windows/VS)
     runs-on: windows-2022
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -529,6 +536,7 @@ jobs:
 
   # This job takes approximately 2 minutes
   check-ubuntu-24_04-make-clang-KNOWNBUG:
+    name: KNOWNBUG checks
     runs-on: ubuntu-24.04
     needs: check-ubuntu-24_04-make-clang
     steps:
