@@ -434,6 +434,24 @@ static exprt build_op_expr(
   if(tag == "smulo")
     return mult_overflow_exprt{to_signed(arg(0)), to_signed(arg(1))};
 
+  if(tag == "udivo")
+  {
+    // unsigned division overflows iff divisor is zero
+    auto b = to_bv(arg(1));
+    return equal_exprt{b, from_integer(0, b.type())};
+  }
+
+  if(tag == "sdivo")
+  {
+    // signed division overflows iff dividend == INT_MIN and divisor == -1
+    auto sa = to_signed(arg(0));
+    auto sb = to_signed(arg(1));
+    auto w = to_bitvector_type(sa.type()).get_width();
+    auto min_int = from_integer(-power(2, w - 1), sa.type());
+    auto neg_one = from_integer(-1, sb.type());
+    return and_exprt{equal_exprt{sa, min_int}, equal_exprt{sb, neg_one}};
+  }
+
   throw ebmc_errort{} << "BTOR2: unsupported operator '" << tag << "'";
 }
 

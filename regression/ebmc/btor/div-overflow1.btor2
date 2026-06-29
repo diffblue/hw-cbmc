@@ -1,0 +1,24 @@
+; Test sdivo and udivo overflow detection operators on 4-bit values
+1 sort bitvec 4
+2 sort bitvec 1
+; udivo(a, 0) == true (dividing by zero always overflows)
+3 constd 1 7
+4 zero 1
+5 udivo 2 3 4
+6 not 2 5
+7 bad 6
+; udivo(a, nonzero) == false (no overflow with nonzero divisor)
+8 constd 1 3
+9 udivo 2 3 8
+10 bad 9
+; sdivo(INT_MIN, -1) == true (signed division overflows: -8/(-1)=8 unrepresentable)
+; -8 is 0b1000 = unsigned 8 in 4 bits; -1 is 0b1111 = unsigned 15
+11 constd 1 8
+12 constd 1 15
+13 sdivo 2 11 12
+14 not 2 13
+15 bad 14
+; sdivo(INT_MIN, 1) == false (dividing by 1 does not overflow)
+16 constd 1 1
+17 sdivo 2 11 16
+18 bad 17

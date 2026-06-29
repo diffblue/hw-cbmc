@@ -1,0 +1,10 @@
+CORE
+div-overflow1.btor2
+--bound 0
+^\[bad7\] : PROVED up to bound 0$
+^\[bad10\] : PROVED up to bound 0$
+^\[bad15\] : PROVED up to bound 0$
+^\[bad18\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
