@@ -2666,6 +2666,7 @@ property_declaration:
                 { init($$, ID_verilog_property_declaration);
                   auto base_name = stack_expr($2).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
+                  addswap($$, ID_ports, $4);
                   mto($$, $6);
                   pop_scope();
                 }
@@ -2678,26 +2679,67 @@ property_identifier_opt:
 
 property_port_list_paren_opt:
           /* optional */
+                { init($$); }
         | '(' property_port_list_opt ')'
+                { $$=$2; }
         ;
 
 property_port_list_opt:
           /* optional */
+                { init($$); }
         | property_port_list
         ;
 
 property_port_list:
           property_port_item
-        | property_port_list_opt ',' property_port_item
+                { init($$); mts($$, $1); }
+        | property_port_list ',' property_port_item
+                { $$=$1; mts($$, $3); }
         ;
 
 property_port_item:
-          attribute_instance_brace property_formal_type formal_port_identifier variable_dimension_brace
+          attribute_instance_brace property_port_direction_opt property_formal_type formal_port_identifier variable_dimension_brace property_port_default_opt
+                {
+                  PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::VAR);
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, stack_expr($2).id());
+                  addswap($$, ID_type, $3);
+                  stack_expr($4).id(ID_declarator);
+                  if(stack_expr($6).is_not_nil())
+                    stack_expr($4).add(ID_value) = stack_expr($6);
+                  mto($$, $4);
+                }
+        | attribute_instance_brace property_port_direction_opt formal_port_identifier variable_dimension_brace property_port_default_opt
+                {
+                  PARSER.scopes.add_identifier(stack_expr($3).get(ID_base_name), verilog_scopet::VAR);
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, stack_expr($2).id());
+                  stack_expr($$).add(ID_type).id(ID_verilog_untyped);
+                  stack_expr($3).id(ID_declarator);
+                  if(stack_expr($5).is_not_nil())
+                    stack_expr($3).add(ID_value) = stack_expr($5);
+                  mto($$, $3);
+                }
+        ;
+
+property_port_direction_opt:
+          /* optional */
+                { init($$); }
+        | TOK_INPUT
+                { init($$, ID_input); }
+        ;
+
+property_port_default_opt:
+          /* optional */
+                { make_nil($$); }
+        | '=' expression
+                { $$=$2; }
         ;
 
 property_formal_type:
           sequence_formal_type
         | TOK_PROPERTY
+                { init($$, ID_verilog_property); }
         ;
 
 property_spec:
@@ -2865,6 +2907,7 @@ sequence_declaration:
           "endsequence" sequence_identifier_opt
                 { $$=$2;
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+                  addswap($$, ID_ports, $5);
                   mto($$, $7);
                   pop_scope();
                 }

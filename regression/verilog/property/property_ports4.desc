@@ -1,9 +1,8 @@
-KNOWNBUG
+CORE
 property_ports4.sv
 
+^\[main\.assert\.1\] always main\.or_property\(main\.x_is\(10\), main\.x == 20\): PROVED
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
---
-property ports are not yet implemented
