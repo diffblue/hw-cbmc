@@ -2,6 +2,7 @@ SRC = aval_bval_encoding.cpp \
       convert_literals.cpp \
       expr2verilog.cpp \
       sva_expr.cpp \
+      top_level_modules.cpp \
       typename.cpp \
       verilog_bits.cpp \
       verilog_ebmc_language.cpp \
@@ -34,6 +35,7 @@ SRC = aval_bval_encoding.cpp \
       verilog_typecheck_sva.cpp \
       verilog_types.cpp \
       verilog_y.tab.cpp \
+      vl_simulator_state.cpp \
       vtype.cpp
 
 include ../config.inc

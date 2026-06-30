@@ -1,9 +1,9 @@
 DIRS = ebmc hw-cbmc temporal-logic trans-word-level trans-netlist \
-       verilog vhdl smvlang ic3 aiger btor vlindex
+       verilog vhdl smvlang ic3 aiger btor vlindex vlsim
 
 CPROVER_DIR:=../lib/cbmc/src
 
-all: hw-cbmc.dir ebmc.dir vlindex.dir
+all: hw-cbmc.dir ebmc.dir vlindex.dir vlsim.dir
 
 .PHONY: $(patsubst %, %.dir, $(DIRS))
 $(patsubst %, %.dir, $(DIRS)):
@@ -25,6 +25,8 @@ hw-cbmc.dir: ebmc.dir trans-word-level.dir trans-netlist.dir verilog.dir \
          vhdl.dir smvlang.dir cprover.dir temporal-logic.dir
 
 vlindex.dir: ebmc.dir cprover.dir verilog.dir
+
+vlsim.dir: ebmc.dir trans-word-level.dir cprover.dir verilog.dir
 
 # building cbmc proper
 .PHONY: cprover.dir
