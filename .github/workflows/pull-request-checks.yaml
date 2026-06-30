@@ -269,6 +269,46 @@ jobs:
       - name: vlindex on Hazard3
         run: PATH=$PATH:$PWD/vlindex examples/Hazard3/Hazard3-vlindex.sh
 
+  # This job takes approximately 1 minute
+  check-fastppa:
+    name: Build+test fastppa
+    runs-on: ubuntu-24.04
+    needs: check-ubuntu-24_04-make-clang
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get remove --purge man-db
+          packages_to_install="ccache"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
+      - name: Prepare ccache
+        uses: actions/cache/restore@v5
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-clang-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-clang-${{ github.ref }}
+            ${{ runner.os }}-24.04-make-clang
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
+      - name: Build dependencies
+        run: make CXX="ccache clang++" -C src -j4 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+      - name: Build fastppa
+        run: make CXX="ccache clang++" -C src/fastppa -j4 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+      - name: Run the fastppa tests
+        run: make -C regression/fastppa test
+
   # This job takes approximately 15 minutes
   check-centos8-make-gcc:
     name: Build+test ebmc (CentOS 8)

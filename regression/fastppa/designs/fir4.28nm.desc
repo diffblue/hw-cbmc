@@ -1,0 +1,7 @@
+CORE
+fir4.sv
+--top fir4 --process 28nm
+^  Register bits:       80$
+^  Total:               952\.2 um2$
+^EXIT=0$
+^SIGNAL=0$

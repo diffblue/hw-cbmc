@@ -1,0 +1,7 @@
+CORE
+shifter.sv
+--top shifter --process 28nm
+^  Register bits:       32$
+^  Total:               151\.4 um2$
+^EXIT=0$
+^SIGNAL=0$

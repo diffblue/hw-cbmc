@@ -1,0 +1,7 @@
+CORE
+mux.sv
+--top mux_tree --process 28nm
+^  Register bits:       8$
+^  Total:               48\.1 um2$
+^EXIT=0$
+^SIGNAL=0$

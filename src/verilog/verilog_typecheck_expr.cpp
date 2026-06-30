@@ -1502,6 +1502,7 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
   else if(base_name == "$value$plusargs")
   {
     // IEEE 1800-2017 section 21.6
+
     if(arguments.size() != 2)
     {
       throw errort().with_location(expr.source_location())
