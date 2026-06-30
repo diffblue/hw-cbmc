@@ -1,0 +1,6 @@
+CORE
+finish-code1.v
+
+^done$
+^EXIT=0$
+^SIGNAL=0$
