@@ -51,9 +51,6 @@ protected:
 
   void copy_parse_tree(const parse_treet &, symbol_tablet &);
 
-  // base_names of the top-level modules, alphabetical order
-  std::vector<irep_idt> top_level_modules(const parse_treest &) const;
-
   class modulet
   {
   public:
