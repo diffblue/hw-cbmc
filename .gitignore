@@ -20,6 +20,7 @@ src/**/*.o
 src/ebmc/ebmc
 src/hw-cbmc/hw-cbmc
 src/vlindex/vlindex
+src/vlsim/vlsim
 unit/**/*.d
 unit/**/*.o
 unit/unit_tests
