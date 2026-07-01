@@ -1,0 +1,11 @@
+; sdivo on bitvec 1
+; In 1-bit signed: value 1 represents INT_MIN (-1, which is the minimum
+; for 1-bit signed). sdivo(INT_MIN, -1) should be true (overflow).
+; Here both operands are 1 (representing -1), and -1 is INT_MIN in 1-bit.
+; sdiv(-1, -1) = 1, which cannot be represented in 1-bit signed -> overflow.
+1 sort bitvec 1
+2 one 1
+; sdivo(1, 1) on 1-bit: sdivo(INT_MIN, -1) = true (overflow)
+3 sdivo 1 2 2
+4 not 1 3
+5 bad 4
