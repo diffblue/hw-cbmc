@@ -1,0 +1,11 @@
+KNOWNBUG
+define-with-comment1.v
+--preprocess
+activate-multi-line-match
+^BAR1 \n  \n  BAR2$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The multi-line define can be extended with a line that has a single-line
+comment.
