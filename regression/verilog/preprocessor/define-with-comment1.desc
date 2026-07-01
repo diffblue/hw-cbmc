@@ -1,0 +1,9 @@
+KNOWNBUG
+define-with-comment1.v
+--preprocess
+activate-multi-line-match
+^  BAR1\n\n  BAR2$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
