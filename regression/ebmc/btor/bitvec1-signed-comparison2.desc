@@ -1,0 +1,12 @@
+KNOWNBUG
+bitvec1-signed-comparison2.btor2
+--bound 0
+^\[bad6\] : PROVED up to bound 0$
+^\[bad9\] : PROVED up to bound 0$
+^\[bad12\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+to_signed() zero-extends 1-bit values to 2 bits, losing the sign bit.
+slt/sgt/sgte on 1-bit values with value 1 (representing -1) produce wrong results.
