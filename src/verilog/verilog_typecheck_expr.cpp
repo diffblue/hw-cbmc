@@ -1740,15 +1740,8 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
       symbol->type.id() == ID_verilog_sva_named_sequence ||
       symbol->type.id() == ID_verilog_sva_named_property)
     {
-      // A named sequence or property. Create an instance expression,
-      // and then flatten it.
-      auto symbol_expr = symbol->symbol_expr().with_source_location(expr);
-      auto &declaration =
-        to_verilog_sequence_property_declaration_base(symbol->value);
-      auto instance =
-        sva_sequence_property_instance_exprt{symbol_expr, {}, declaration}
-          .with_source_location(expr);
-      return flatten_named_sequence_property(instance);
+      return instantiate_named_sequence_property(
+        *symbol, expr.source_location());
     }
     else
     {
@@ -3376,8 +3369,17 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     }
 
     // found!
-    return symbol_exprt{full_identifier, symbol->type}.with_source_location(
-      location);
+    if(
+      symbol->type.id() == ID_verilog_sva_named_sequence ||
+      symbol->type.id() == ID_verilog_sva_named_property)
+    {
+      return instantiate_named_sequence_property(*symbol, location);
+    }
+    else
+    {
+      return symbol_exprt{full_identifier, symbol->type}.with_source_location(
+        location);
+    }
   }
   else if(expr.id()==ID_replication)
     return convert_replication_expr(to_replication_expr(expr));

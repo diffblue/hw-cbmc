@@ -230,6 +230,8 @@ protected:
   [[nodiscard]] exprt convert_other_sva(exprt);
   [[nodiscard]] exprt
     flatten_named_sequence_property(sva_sequence_property_instance_exprt);
+  [[nodiscard]] exprt
+  instantiate_named_sequence_property(const symbolt &, source_locationt);
 
   // system functions
   exprt bits(const exprt &);
