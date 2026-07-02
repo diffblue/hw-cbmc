@@ -1,0 +1,18 @@
+; Signed comparisons on bitvec 1
+; In 1-bit signed: value 1 represents -1, value 0 represents 0.
+; So -1 < 0, meaning slt(1, 0) should be true.
+1 sort bitvec 1
+2 one 1
+3 zero 1
+; slt(1, 0): -1 < 0 is true
+4 slt 1 2 3
+5 not 1 4
+6 bad 5
+; sgt(0, 1): 0 > -1 is true
+7 sgt 1 3 2
+8 not 1 7
+9 bad 8
+; sgte(0, 1): 0 >= -1 is true
+10 sgte 1 3 2
+11 not 1 10
+12 bad 11

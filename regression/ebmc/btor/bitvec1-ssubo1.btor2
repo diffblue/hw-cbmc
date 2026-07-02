@@ -1,0 +1,12 @@
+; ssubo on bitvec 1
+; In 1-bit signed: value 0 represents 0, value 1 represents -1.
+; Range of 1-bit signed is {-1, 0}.
+; ssubo(0, 1): signed subtraction 0 - (-1) = +1, which overflows 1-bit signed.
+; So ssubo should be true.
+1 sort bitvec 1
+2 zero 1
+3 one 1
+; ssubo(0, 1) on 1-bit: 0 - (-1) = +1 overflows -> true
+4 ssubo 1 2 3
+5 not 1 4
+6 bad 5

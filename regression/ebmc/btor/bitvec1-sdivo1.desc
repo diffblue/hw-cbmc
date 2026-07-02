@@ -1,0 +1,10 @@
+KNOWNBUG
+bitvec1-sdivo1.btor2
+--bound 0
+^\[bad5\] : PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+to_signed() zero-extends 1-bit values to 2 bits, losing the sign bit.
+sdivo on 1-bit values fails to detect overflow (INT_MIN / -1).

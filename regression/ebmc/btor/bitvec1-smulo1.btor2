@@ -1,0 +1,10 @@
+; smulo on bitvec 1
+; In 1-bit signed: value 1 represents -1.
+; smulo(1, 1): signed multiplication (-1) * (-1) = +1, which overflows
+; 1-bit signed (range is {-1, 0}). So smulo should be true.
+1 sort bitvec 1
+2 one 1
+; smulo(1, 1) on 1-bit: (-1) * (-1) = +1 overflows -> true
+3 smulo 1 2 2
+4 not 1 3
+5 bad 4
