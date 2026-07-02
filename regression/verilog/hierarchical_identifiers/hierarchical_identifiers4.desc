@@ -1,0 +1,9 @@
+KNOWNBUG
+hierarchical_identifiers4.v
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Procedural assignment to a hierarchical identifier is not supported.
