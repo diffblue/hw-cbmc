@@ -679,6 +679,17 @@ void verilog_typecheck_exprt::require_vector(exprt &expr)
     // A scalar, which is a special case of a vector. Cast to unsignedbv{1}.
     expr = typecast_exprt{std::move(expr), unsignedbv_typet{1}};
   }
+  else if(expr.type().id() == ID_verilog_integer)
+  {
+    // integer is a 32-bit signed integral type (1800-2017 Sec. 6.11).
+    // Cast to signedbv{32}.
+    expr = typecast_exprt{std::move(expr), signedbv_typet{32}};
+  }
+  else if(expr.type().id() == ID_integer)
+  {
+    // Mathematical integer, e.g., from $clog2. Cast to signedbv{32}.
+    expr = typecast_exprt{std::move(expr), signedbv_typet{32}};
+  }
   else if(
     expr.type().id() == ID_verilog_unsignedbv ||
     expr.type().id() == ID_verilog_signedbv ||

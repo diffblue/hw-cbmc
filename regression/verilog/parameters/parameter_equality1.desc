@@ -1,0 +1,9 @@
+CORE
+parameter_equality1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Parameter using $clog2 result in shift and equality expressions.
