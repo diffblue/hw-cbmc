@@ -207,19 +207,13 @@ void verilog_preprocessort::preprocessor()
     // the first context is the input file
     context_stack.emplace_back(false, &in, widen_if_needed(filename));
 
+    // tell the parser the file name
+    emit_line_directive(0); // 'neither'
+
     while(!context_stack.empty())
     {
       while(!tokenizer().eof())
       {
-        // Emit line directive to get parser line count
-        // back in sync with preprocessor line count.
-        if(
-          condition && context().is_file() &&
-          parser_line_no != tokenizer().line_no())
-        {
-          emit_line_directive(0); // 'neither'
-        }
-
         // Read a token.
         auto token = tokenizer().next_token();
         if(token == '`')
@@ -245,7 +239,16 @@ void verilog_preprocessort::preprocessor()
 
             // track parser line number
             if(token == '\n')
+            {
               parser_line_no++;
+
+              // Emit line directive to get parser line count
+              // back in sync with preprocessor line count.
+              if(context().is_file() && parser_line_no != tokenizer().line_no())
+              {
+                emit_line_directive(0); // 'neither'
+              }
+            }
           }
           else
           {
@@ -456,10 +459,11 @@ void verilog_preprocessort::directive()
       auto token = tokenizer().next_token();
       if(token == '\\' && tokenizer().peek() == '\n')
       {
-        // Eat the newline, which is escaped.
-        // We rely on the sync_line_no mechanism to
-        // get the parser's line count back in sync.
-        tokenizer().next_token();
+        // 1800-2017 22.5.1: "The newline character preceded by a
+        // backslash shall be replaced in the expanded macro with a
+        // newline character (but without the preceding backslash
+        // character)."
+        define.tokens.push_back(tokenizer().next_token());
       }
       else
         define.tokens.push_back(std::move(token));

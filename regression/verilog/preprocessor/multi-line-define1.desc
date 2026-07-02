@@ -1,7 +1,8 @@
 CORE
 multi-line-define1.v
 --preprocess
-^A B C$
+activate-multi-line-match
+^A \nB \nC$
 ^EXIT=0$
 ^SIGNAL=0$
 --
