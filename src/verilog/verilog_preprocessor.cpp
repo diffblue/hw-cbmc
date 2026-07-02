@@ -454,6 +454,10 @@ void verilog_preprocessort::directive()
     // but note that \n can be escaped with a backslash.
     // Note that any defines in this sequence
     // are not expanded at this point.
+    // One-line comments ending in a backslash also continue
+    // the macro text on the next line (1800-2017 22.5.1).
+    tokenizer().in_macro_text = true;
+
     while(!tokenizer().eof() && tokenizer().peek() != '\n')
     {
       auto token = tokenizer().next_token();
@@ -468,6 +472,8 @@ void verilog_preprocessort::directive()
       else
         define.tokens.push_back(std::move(token));
     }
+
+    tokenizer().in_macro_text = false;
 
 #ifdef DEBUG
     std::cout << "DEFINE: >" << identifier << "< = >";

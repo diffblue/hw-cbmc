@@ -64,6 +64,11 @@ public:
   void skip_ws();
   void skip_until_eol();
 
+  // 1800-2017 22.5.1: While reading `define macro text, a one-line
+  // comment ending in a backslash continues the macro text on the
+  // next line.
+  bool in_macro_text = false;
+
   // get the next token from the stream
   const tokent &next_token();
 
