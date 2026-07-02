@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 bitvec1-signed-comparison2.btor2
 --bound 0
 ^\[bad6\] : PROVED up to bound 0$

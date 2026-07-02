@@ -99,18 +99,10 @@ static std::size_t get_width(const exprt &e)
   return to_bitvector_type(e.type()).get_width();
 }
 
-/// Cast to signed, widening to at least 2 bits to satisfy CBMC's
-/// lt_or_le precondition (signed bitvectors need >= 2 bits).
+/// Cast to signed bitvector type.
 static exprt to_signed(const exprt &e)
 {
-  auto a = to_bv(e);
-  auto w = get_width(e);
-  if(w < 2)
-  {
-    a = typecast_exprt{a, unsignedbv_typet{2}};
-    w = 2;
-  }
-  return typecast_exprt{a, signedbv_typet{w}};
+  return typecast_exprt{to_bv(e), signedbv_typet{get_width(e)}};
 }
 
 /// Parse a binary constant string to a CBMC constant expression
