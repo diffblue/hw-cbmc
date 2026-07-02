@@ -44,6 +44,11 @@ static std::set<std::string> file_extensions(const cmdlinet::argst &args)
 
 std::optional<transition_systemt> ebmc_languagest::transition_system()
 {
+  if(cmdline.args.empty())
+  {
+    throw ebmc_errort{} << "no input file given";
+  }
+
   auto extensions = file_extensions(cmdline.args);
   auto ext_used = [&extensions](const char *ext)
   { return extensions.find(ext) != extensions.end(); };
