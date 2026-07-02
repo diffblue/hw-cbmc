@@ -3,6 +3,7 @@ SRC = \
       bdd_model_checker.cpp \
       bmc.cpp \
       build_transition_system.cpp \
+      command_file.cpp \
       cegar/abstract.cpp \
       cegar/bmc_cegar.cpp \
       cegar/latch_ordering.cpp \
