@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/arith_tools.h>
 #include <util/mathematical_types.h>
+#include <util/symbol.h>
 
 #include <temporal-logic/temporal_logic.h>
 
@@ -515,4 +516,17 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
     PRECONDITION(false);
 
   return instance;
+}
+
+exprt verilog_typecheck_exprt::instantiate_named_sequence_property(
+  const symbolt &symbol,
+  source_locationt location)
+{
+  auto symbol_expr = symbol.symbol_expr().with_source_location(location);
+  auto &declaration =
+    to_verilog_sequence_property_declaration_base(symbol.value);
+  auto instance =
+    sva_sequence_property_instance_exprt{symbol_expr, {}, declaration};
+  instance.add_source_location() = std::move(location);
+  return flatten_named_sequence_property(std::move(instance));
 }
