@@ -1,3 +1,7 @@
+# EBMC 6.1
+
+* Verilog: procedural assignments to hierarchical identifiers
+
 # EBMC 6.0
 
 * Verilog: unconnected module ports
