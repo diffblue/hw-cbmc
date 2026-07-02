@@ -1,0 +1,7 @@
+CORE
+duplicate_names.aag
+--bound 1
+^\[output0\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

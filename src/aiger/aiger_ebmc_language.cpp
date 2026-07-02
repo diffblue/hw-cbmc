@@ -117,6 +117,27 @@ static transition_systemt build_transition_system(const struct aiger &model)
   // Map from AIGER variable index to symbol identifier
   std::map<unsigned, irep_idt> var_map;
 
+  // Helper to add a symbol, appending a numeric suffix on name collision.
+  auto add_symbol = [&](symbolt symbol) -> irep_idt
+  {
+    auto id = symbol.name;
+    auto base = symbol.base_name;
+    auto result_pair = result.symbol_table.add(symbol);
+    if(!result_pair)
+      return id;
+    // Name collision — append suffix
+    for(unsigned suffix = 0;; ++suffix)
+    {
+      auto new_name = id2string(base) + "$" + std::to_string(suffix);
+      symbol.name = id2string(module_id) + "::" + new_name;
+      symbol.base_name = new_name;
+      symbol.pretty_name = new_name;
+      auto retry = result.symbol_table.add(symbol);
+      if(!retry)
+        return symbol.name;
+    }
+  };
+
   // Inputs
   for(std::size_t i = 0; i < model.num_inputs; i++)
   {
@@ -130,10 +151,8 @@ static transition_systemt build_transition_system(const struct aiger &model)
     symbol.is_input = true;
     symbol.is_state_var = false;
 
-    auto add_result = result.symbol_table.add(symbol);
-    CHECK_RETURN(!add_result);
-
-    var_map[model.inputs[i].lit >> 1] = id;
+    auto added_id = add_symbol(std::move(symbol));
+    var_map[model.inputs[i].lit >> 1] = added_id;
   }
 
   // Latches
@@ -149,10 +168,8 @@ static transition_systemt build_transition_system(const struct aiger &model)
     symbol.is_input = false;
     symbol.is_state_var = true;
 
-    auto add_result = result.symbol_table.add(symbol);
-    CHECK_RETURN(!add_result);
-
-    var_map[model.latches[i].lit >> 1] = id;
+    auto added_id = add_symbol(std::move(symbol));
+    var_map[model.latches[i].lit >> 1] = added_id;
   }
 
   // AND gates
@@ -168,10 +185,8 @@ static transition_systemt build_transition_system(const struct aiger &model)
     symbol.is_input = false;
     symbol.is_state_var = false;
 
-    auto add_result = result.symbol_table.add(symbol);
-    CHECK_RETURN(!add_result);
-
-    var_map[lhs_var] = id;
+    auto added_id = add_symbol(std::move(symbol));
+    var_map[lhs_var] = added_id;
   }
 
   // Build transition relation components
@@ -203,6 +218,10 @@ static transition_systemt build_transition_system(const struct aiger &model)
       init_exprs.push_back(equal_exprt{latch_sym, false_exprt{}});
     else if(reset == 1)
       init_exprs.push_back(equal_exprt{latch_sym, true_exprt{}});
+    else if(reset == model.latches[i].lit)
+    {
+      // non-deterministic initial value, no constraint
+    }
     else
       throw ebmc_errort{} << "unexpected AIGER reset value";
 
@@ -229,8 +248,8 @@ static transition_systemt build_transition_system(const struct aiger &model)
     symbol.is_state_var = false;
 
     {
-      auto add_result = result.symbol_table.add(symbol);
-      CHECK_RETURN(!add_result);
+      auto added_id = add_symbol(std::move(symbol));
+      id = added_id;
     }
 
     exprt out_val = lit_to_expr(model.outputs[i].lit, var_map);
@@ -249,8 +268,7 @@ static transition_systemt build_transition_system(const struct aiger &model)
       prop_symbol.is_property = true;
       prop_symbol.value = G_exprt{not_exprt{symbol_exprt{id, bool_typet{}}}};
 
-      auto add_result = result.symbol_table.add(prop_symbol);
-      CHECK_RETURN(!add_result);
+      add_symbol(std::move(prop_symbol));
     }
   }
 
@@ -269,8 +287,7 @@ static transition_systemt build_transition_system(const struct aiger &model)
     prop_symbol.is_property = true;
     prop_symbol.value = G_exprt{not_exprt{bad_expr}};
 
-    auto add_result = result.symbol_table.add(prop_symbol);
-    CHECK_RETURN(!add_result);
+    add_symbol(std::move(prop_symbol));
   }
 
   // Justice properties (liveness): GF(l1 ∧ l2 ∧ ...)
@@ -291,8 +308,7 @@ static transition_systemt build_transition_system(const struct aiger &model)
     prop_symbol.is_property = true;
     prop_symbol.value = G_exprt{F_exprt{conjunction(conjuncts)}};
 
-    auto add_result = result.symbol_table.add(prop_symbol);
-    CHECK_RETURN(!add_result);
+    add_symbol(std::move(prop_symbol));
   }
 
   // Fairness properties (liveness): GF(lit)
@@ -311,8 +327,14 @@ static transition_systemt build_transition_system(const struct aiger &model)
     prop_symbol.is_property = true;
     prop_symbol.value = G_exprt{F_exprt{fair_expr}};
 
-    auto add_result = result.symbol_table.add(prop_symbol);
-    CHECK_RETURN(!add_result);
+    add_symbol(std::move(prop_symbol));
+  }
+
+  // Constraints (environment assumptions)
+  for(std::size_t i = 0; i < model.num_constraints; i++)
+  {
+    exprt constraint_expr = lit_to_expr(model.constraints[i].lit, var_map);
+    invar_exprs.push_back(constraint_expr);
   }
 
   // Module symbol
