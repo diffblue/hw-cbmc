@@ -618,6 +618,54 @@ void verilog_typecheckt::check_lhs(
       break;
     }
   }
+  else if(lhs.id() == ID_hierarchical_identifier)
+  {
+    auto &hi = to_hierarchical_identifier_expr(lhs);
+    const symbolt &symbol = ns.lookup(hi.identifier());
+
+    if(symbol.type.get_bool(ID_C_const))
+    {
+      throw errort().with_location(lhs.source_location())
+        << "assignment to const";
+    }
+
+    switch(vassign)
+    {
+    case A_CONTINUOUS:
+      if(symbol.is_lvalue)
+      {
+      }
+      else if(symbol.is_input && !symbol.is_output)
+      {
+        throw errort().with_location(lhs.source_location())
+          << "continuous assignment to input";
+      }
+      break;
+
+    case A_BLOCKING:
+    case A_NON_BLOCKING:
+      if(!symbol.is_lvalue)
+      {
+        throw errort().with_location(lhs.source_location())
+          << "procedural assignment to a net\n"
+          << "Identifier " << symbol.display_name() << " is declared as "
+          << to_string(symbol.type) << " on line " << symbol.location.get_line()
+          << '.';
+      }
+      break;
+
+    case A_PROCEDURAL_CONTINUOUS:
+      if(!symbol.is_lvalue)
+      {
+        throw errort().with_location(lhs.source_location())
+          << "procedural continuous assignment to a net\n"
+          << "Identifier " << symbol.display_name() << " is declared as "
+          << to_string(symbol.type) << " on line " << symbol.location.get_line()
+          << '.';
+      }
+      break;
+    }
+  }
   else if(lhs.id() == ID_member)
   {
     check_lhs(to_member_expr(lhs).struct_op(), vassign);

@@ -277,6 +277,13 @@ exprt verilog_synthesist::synth_lhs_expr(exprt expr)
     member_expr.struct_op() = synth_lhs_expr(member_expr.struct_op());
     return expr;
   }
+  else if(expr.id() == ID_hierarchical_identifier)
+  {
+    expand_hierarchical_identifier(
+      to_hierarchical_identifier_expr(expr), symbol_statet::CURRENT);
+    local_symbols.insert(to_symbol_expr(expr).identifier());
+    return expr;
+  }
   else if(expr.id() == ID_typecast)
   {
     auto &typecast_expr = to_typecast_expr(expr);

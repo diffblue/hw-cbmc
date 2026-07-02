@@ -1,9 +1,9 @@
-KNOWNBUG
-hierarchical_identifiers4.v
+CORE
+hierarchical_identifiers4.sv
 --module main --bound 0
+^\[main\.p0\] always main\.s\.value == 171: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-Procedural assignment to a hierarchical identifier is not supported.
