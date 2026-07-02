@@ -51,6 +51,7 @@ public:
         "(random-trace)(random-waveform)"
         "(bmc-with-assumptions)"
         "(liveness-to-safety)(buechi)"
+        "f:"
         "I:D:(preprocess)(systemverilog)(vl2smv-extensions)"
         "(warn-implicit-nets)",
         argc,

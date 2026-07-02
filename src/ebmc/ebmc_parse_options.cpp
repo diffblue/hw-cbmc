@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/smv_netlist.h>
 
 #include "build_transition_system.h"
+#include "command_file.h"
 #include "diatest.h"
 #include "ebmc_error.h"
 #include "ebmc_language.h"
@@ -87,6 +88,8 @@ int ebmc_parse_optionst::doit()
 
   try
   {
+    expand_command_files(cmdline);
+
     if(cmdline.isset("diatest"))
     {
       if(!cmdline.isset("statebits"))
@@ -412,6 +415,7 @@ void ebmc_parse_optionst::help()
     "\n"
     " {bebmc} [{y-?}] [{y-h}] [{y--help}] \t show help\n"
     " {bebmc} {ufile} {u...}         \t source file names\n"
+    " {y-f} {ufile}                  \t read command-line arguments from file\n"
     "\n"
     "Additonal options:\n"
     " {y--bound} {unr}               \t set bound (default: 1)\n"
