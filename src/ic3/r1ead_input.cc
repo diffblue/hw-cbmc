@@ -40,7 +40,9 @@ void ic3_enginet::find_prop_lit()
   bool found = find_prop(Prop);
 
   assert(found);
-  assert(Prop.normalized_expr.id() == ID_sva_always);
+  assert(
+    Prop.normalized_expr.id() == ID_sva_always ||
+    Prop.normalized_expr.id() == ID_AG || Prop.normalized_expr.id() == ID_G);
 
   exprt Oper = to_unary_expr(Prop.normalized_expr).op();
 
