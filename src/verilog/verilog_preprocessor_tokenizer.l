@@ -37,6 +37,22 @@ String		\"(\\.|[^"\\])*\"
 <INITIAL>{Identifier}	{ TOKENIZER.text(yytext, yyleng); return tokent::IDENTIFIER; }
 <INITIAL>.|\n		{ TOKENIZER.text(yytext[0]); return yytext[0]; /* anything else */ }
 <SLCOMMENT>\n		{ BEGIN INITIAL; TOKENIZER.text('\n'); return '\n'; }
+<SLCOMMENT>\\\n		{
+			  /* 1800-2017 22.5.1: a one-line comment ending in a
+			     backslash continues a `define on the next line */
+			  if(TOKENIZER.in_macro_text)
+			  {
+			    yyless(1); /* return the \n to the input */
+			    TOKENIZER.text('\\');
+			    return '\\';
+			  }
+			  else
+			  {
+			    BEGIN INITIAL;
+			    TOKENIZER.text('\n');
+			    return '\n';
+			  }
+			}
 <SLCOMMENT>.		{ /* just eat up */ }
 <SLCOMMENT><<EOF>>      { /* we allow that */ BEGIN INITIAL; }
 <MLCOMMENT>\n		{ TOKENIZER.text('\n'); return '\n'; }

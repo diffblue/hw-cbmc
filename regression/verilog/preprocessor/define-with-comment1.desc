@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 define-with-comment1.v
 --preprocess
 activate-multi-line-match
