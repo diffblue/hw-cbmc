@@ -1,0 +1,8 @@
+KNOWNBUG
+package_sequence2.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The identifier in the sequence does not resolve.
