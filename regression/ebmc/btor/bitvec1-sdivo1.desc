@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 bitvec1-sdivo1.btor2
 --bound 0
 ^\[bad5\] : PROVED up to bound 0$
