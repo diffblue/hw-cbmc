@@ -1,0 +1,9 @@
+KNOWNBUG
+package_var3.sv
+--module main --bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Procedural assignment to an imported package variable is not supported.
