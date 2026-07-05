@@ -661,6 +661,10 @@ void verilog_synthesist::assignment_rec(
       << "assignment to non-variable";
   }
 
+  // Ensure the symbol is in local_symbols so that synth_assignments
+  // processes it. This is needed for imported package variables.
+  local_symbols.insert(symbol.name);
+
   if(construct==constructt::ALWAYS &&
      event_guard==event_guardt::NONE)
   {
