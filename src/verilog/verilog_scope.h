@@ -24,6 +24,7 @@ struct verilog_scopet
     PACKAGE,
     MODULE,
     CHECKER,
+    PROGRAM,
     CLASS,
     ENUM_NAME,
     MODULE_INSTANCE,
