@@ -901,7 +901,7 @@ ansi_port_declaration_brace:
         | ansi_port_declaration_brace ',' attribute_instance_brace ansi_port_declaration
                 { $$=$1; mts($$, $4); }
 
-          // append to last one -- required to make 
+          // append to last one -- required to make
           // the grammar LR1
         | ansi_port_declaration_brace ',' port_identifier ansi_port_initializer_opt
                 {
@@ -1213,7 +1213,7 @@ checker_generate_item:
         | conditional_generate_construct
         | generate_region
         ;
-        
+
 // System Verilog standard 1800-2017
 // A.1.9 Class items
 
@@ -1648,7 +1648,7 @@ data_type:
                   $$ = $2;
                 }
         | non_integer_type
-        | struct_union packed_opt signing_opt 
+        | struct_union packed_opt signing_opt
           '{' struct_union_member_brace '}' packed_dimension_brace
                 { $$=$1;
                   if(stack_expr($2).id() == ID_packed)
@@ -1690,7 +1690,7 @@ data_type:
         */
         | type_reference
         ;
-        
+
 enum_name_value_opt:
           /* optional */
           {
@@ -1709,7 +1709,7 @@ enum_name_declaration:
             stack_expr($$).add(ID_value).swap(stack_expr($2));
           }
         ;
-        
+
 enum_name_declaration_list:
           enum_name_declaration
                 { init($$); mts($$, $1); }
@@ -1729,13 +1729,13 @@ integer_type:
           integer_vector_type
         | integer_atom_type
         ;
-        
+
 integer_vector_type:
           TOK_BIT { init($$, ID_verilog_bit); }
         | TOK_LOGIC { init($$, ID_verilog_logic); }
         | TOK_REG { init($$, ID_reg); }
         ;
-        
+
 integer_atom_type:
           TOK_BYTE { init($$, ID_verilog_byte); }
         | TOK_SHORTINT { init($$, ID_verilog_shortint); }
@@ -1744,10 +1744,10 @@ integer_atom_type:
         | TOK_INTEGER { init($$, ID_verilog_integer); }
         | TOK_TIME { init($$, ID_verilog_time); }
         ;
-        
+
 class_type: class_identifier
         ;
-        
+
 struct_union_member_brace:
           /* Not optional! No empty structs. */
           struct_union_member
@@ -1766,7 +1766,7 @@ struct_union_member:
                   addswap($$, ID_type, $3);
                   add_attributes($$, $1); }
         ;
-        
+
 enum_base_type_opt:
           /* Optional */
                 { init($$, ID_nil); }
@@ -1844,7 +1844,7 @@ interface_opt:
           { make_nil($$); }
         | TOK_INTERFACE { init($$, ID_interface); }
         ;
-        
+
 scope_opt:
           /* Optional */
           { make_nil($$); }
@@ -1853,7 +1853,7 @@ scope_opt:
 
 scope:
         ;
-        
+
 packed_opt:
           /* Optional */
           { make_nil($$); }
@@ -2156,7 +2156,7 @@ inout_declaration:
 
 signing_opt:
           /* Optional */
-                { make_nil($$); } 
+                { make_nil($$); }
         | signing
         ;
 
@@ -2171,7 +2171,7 @@ signing:
 
 automatic_opt:
           /* Optional */
-                { make_nil($$); } 
+                { make_nil($$); }
         | TOK_AUTOMATIC
                 { init($$, ID_automatic); }
         ;
@@ -2375,7 +2375,7 @@ struct_union:
         | TOK_UNION { init($$, ID_union); }
         | TOK_UNION TOK_TAGGED { init($$, ID_union); }
         ;
-        
+
 // System Verilog standard 1800-2017
 // A.2.6 Function declarations
 
@@ -3269,7 +3269,7 @@ gate_instance:
         ;
 
 name_of_gate_instance_opt:
-          /* Optional */ 
+          /* Optional */
                 { init($$, ID_inst);
                   stack_expr($$).set(ID_base_name, "$_&#ANON" + PARSER.get_next_id()); }
         | name_of_gate_instance
@@ -3830,7 +3830,7 @@ action_block:
                 { init($$, ID_verilog_action_then); mto($$, $1); }
         | TOK_ELSE statement
                 { init($$, ID_verilog_action_else); mto($$, $2); }
-        | statement_or_null TOK_ELSE statement 
+        | statement_or_null TOK_ELSE statement
                 { init($$, ID_verilog_action_then_else); mto2($$, $1, $3); }
         ;
 
@@ -3909,7 +3909,7 @@ statement_or_null_brace:
 
 // The rule in 1800-2017 does not have the attribute_instance_brace before
 // the label. We allow this to avoid a shift/reduce conflict.
-statement: 
+statement:
           attribute_instance_brace block_identifier TOK_COLON attribute_instance_brace statement_item
                 { init($$, ID_verilog_label_statement);
                   auto base_name = stack_expr($2).get(ID_base_name);
@@ -4451,7 +4451,7 @@ cycle_delay:
 // A.7.1 Specify block declaration
 
 specify_block: TOK_SPECIFY specify_item_brace TOK_ENDSPECIFY
-                { init($$, ID_specify); } 
+                { init($$, ID_specify); }
         ;
 
 specify_item_brace:
@@ -4479,7 +4479,7 @@ simple_path_declaration:
           full_path_description '=' '(' path_delay_value ')'
         | parallel_path_description '=' '(' list_path_delay_value ')'
         ;
-        
+
 list_path_delay_value:
         ;
 
@@ -4494,7 +4494,7 @@ parallel_path_description:
           specify_output_terminal_descriptor ')'
         ;
 
-full_path_description: 
+full_path_description:
           '(' port_brace polarity_operator TOK_ASTERIC
           TOK_GREATER port_brace ')'
         ;
@@ -4510,14 +4510,14 @@ path_delay_value:
 specify_input_terminal_descriptor: port_identifier range_opt;
 specify_output_terminal_descriptor: port_identifier range_opt;
 
-polarity_operator: 
+polarity_operator:
           /* nothing */
         | TOK_PLUS
         | TOK_MINUS
         ;
 
-list_of_specparam_assignments: 
-          specparam_assignment 
+list_of_specparam_assignments:
+          specparam_assignment
         | list_of_specparam_assignments ',' specparam_assignment
         ;
 
@@ -4528,8 +4528,8 @@ specparam_assignment:
 system_timing_check: timing_3 ';'
         ;
 
-timing_3: 
-          timing_type '(' event_expression ',' 
+timing_3:
+          timing_type '(' event_expression ','
           event_expression ',' expression ',' variable_identifier ')'
         ;
 
@@ -4843,7 +4843,7 @@ primary:  primary_literal
                   // exit the package scope
                   pop_scope();
                 }
-        | concatenation 
+        | concatenation
         | multiple_concatenation
         | function_subroutine_call
         | '(' mintypmax_expression ')'
@@ -4930,7 +4930,7 @@ variable_lvalue:
         */
         | assignment_pattern
         ;
-        
+
 variable_concatenation_lvalue_brace:
           variable_lvalue
                 { init($$); mto($$, $1); }
@@ -5086,7 +5086,7 @@ port_identifier: identifier;
 
 ps_covergroup_identifier:
         ;
-        
+
 library_identifier: non_type_identifier;
 
 memory_identifier: identifier;
@@ -5149,7 +5149,7 @@ hierarchical_identifier:
                   mto($$, $3);
                 }
         ;
-        
+
 hierarchical_variable_identifier: hierarchical_identifier;
 
 net_type_identifier: TOK_TYPE_IDENTIFIER;
