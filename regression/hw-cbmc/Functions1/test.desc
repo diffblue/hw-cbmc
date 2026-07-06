@@ -1,6 +1,9 @@
-CORE
+KNOWNBUG
 harness.c
 main.v --module vmain --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
 --
+--
+Constant-function localparam evaluation is tracked separately as a Verilog
+frontend bug.

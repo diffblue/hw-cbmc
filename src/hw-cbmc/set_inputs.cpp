@@ -39,7 +39,12 @@ void add_set_inputs(
   const symbolt &array_symbol=ns.lookup(id2string(struct_identifier)+"_array");
   const symbolt &timeframe_symbol=ns.lookup("hw-cbmc::timeframe");
 
-  const struct_typet &struct_type = to_struct_type(struct_symbol.type);
+  const typet &struct_symbol_type =
+    struct_symbol.type.id() == ID_struct_tag
+      ? static_cast<const typet &>(
+          ns.follow_tag(to_struct_tag_type(struct_symbol.type)))
+      : struct_symbol.type;
+  const struct_typet &struct_type = to_struct_type(struct_symbol_type);
 
   // We now assume current input values to be equal,
   // with the goal of adding assumptions on inputs.
