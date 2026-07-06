@@ -3219,6 +3219,12 @@ let_port_list:
 let_port_item:
           attribute_instance_brace let_formal_type formal_port_identifier
           variable_dimension_brace let_port_initializer_opt
+                {
+                  init($$, ID_decl);
+                  addswap($$, ID_type, $2);
+                  stack_expr($3).id(ID_declarator);
+                  mto($$, $3);
+                }
         ;
 
 let_port_initializer_opt:

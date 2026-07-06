@@ -676,13 +676,6 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
   // These have one declarator.
   auto &declarator = let.declarator();
 
-  // We don't currently do let ports
-  if(declarator.type().is_not_nil())
-  {
-    throw errort().with_location(let.source_location())
-      << "let ports not supported yet";
-  }
-
   const irep_idt &base_name = declarator.base_name();
   irep_idt identifier = hierarchical_identifier(base_name);
 
@@ -698,6 +691,24 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
   new_symbol.value = declarator.value();
   new_symbol.base_name = base_name;
   new_symbol.pretty_name = strip_verilog_root_prefix(new_symbol.name);
+
+  // Store port names in the value expression if there are ports
+  if(declarator.type().is_not_nil())
+  {
+    auto &ports = declarator.type();
+    irept::subt port_names;
+    for(auto &port_item : ports.get_sub())
+    {
+      // Each port_item is ID_decl with a declarator operand
+      auto &port_decl = static_cast<const exprt &>(port_item);
+      if(port_decl.operands().size() >= 1)
+      {
+        auto &port_declarator = port_decl.operands()[0];
+        port_names.push_back(irept(port_declarator.get(ID_base_name)));
+      }
+    }
+    new_symbol.value.add(ID_ports).get_sub() = std::move(port_names);
+  }
 
   let_symbols.insert(new_symbol.name);
 
@@ -1115,13 +1126,26 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
     // Is the type derived from the value (e.g., parameters)?
     if(to_type_with_subtype(symbol.type).subtype().id() == ID_derive_from_value)
     {
-      // First elaborate the value, possibly recursively.
-      convert_expr(symbol.value);
+      // Let expressions with ports are not elaborated until call site.
+      bool is_let_with_ports =
+        is_let && symbol.value.find(ID_ports).is_not_nil();
 
-      if(!is_let)
-        symbol.value = elaborate_constant_expression_check(symbol.value);
+      if(is_let_with_ports)
+      {
+        // Use a placeholder type; the actual type is determined at the
+        // call site after argument substitution.
+        symbol.type = typet(ID_nil);
+      }
+      else
+      {
+        // First elaborate the value, possibly recursively.
+        convert_expr(symbol.value);
 
-      symbol.type = symbol.value.type();
+        if(!is_let)
+          symbol.value = elaborate_constant_expression_check(symbol.value);
+
+        symbol.type = symbol.value.type();
+      }
     }
     else
     {

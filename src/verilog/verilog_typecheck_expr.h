@@ -201,6 +201,7 @@ protected:
   [[nodiscard]] exprt convert_trinary_expr(ternary_exprt);
   [[nodiscard]] exprt convert_expr_concatenation(concatenation_exprt);
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
+  void replace_let_port(exprt &, const irep_idt &port_name, const exprt &arg);
   [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(verilog_bit_select_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
