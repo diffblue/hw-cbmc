@@ -1,0 +1,12 @@
+CORE
+main.v
+--module top --gen-interface
+^struct module_top \{$
+^  _Bool clk;$
+^  _u64 counter;$
+^\};$
+^extern struct module_top top;$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include "map_vars.h"
+
 #include <util/c_types.h>
 #include <util/config.h>
 #include <util/ebmc_util.h>
@@ -15,8 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 #include <trans-word-level/instantiate_word_level.h>
+#include <verilog/verilog_types.h>
 
-#include "map_vars.h"
 #include "next_timeframe.h"
 #include "set_inputs.h"
 
@@ -180,14 +182,39 @@ void map_varst::set_transition(exprt &expr, std::size_t transition)
       index_expr.array().id() == ID_symbol,
       "must have index into array symbol");
 
-    symbol_exprt &symbol=to_symbol_expr(index_expr.array());
-
-    // rename that symbol!
-    symbol.set_identifier(
-      id2string(symbol.get_identifier())+"#0");
-
-    index_expr.index()=from_integer(transition, index_expr.index().type());
+    index_expr.index() = from_integer(transition, index_expr.index().type());
   }
+}
+
+exprt normalise_verilog_array_expr(const exprt &expr)
+{
+  if(
+    expr.type().id() != ID_array ||
+    expr.type().get(ID_C_verilog_type) != ID_verilog_unpacked_array ||
+    expr.type().get_bool(ID_C_increasing))
+  {
+    return expr;
+  }
+
+  mp_integer size;
+  if(to_integer_non_constant(to_array_type(expr.type()).size(), size))
+    return expr;
+
+  const auto &array_type = to_array_type(expr.type());
+  const auto index_type = to_verilog_array_type(expr.type()).index_type();
+
+  exprt::operandst operands;
+  operands.reserve(numeric_cast_v<std::size_t>(size));
+
+  for(mp_integer i = 0; i < size; ++i)
+  {
+    exprt element = index_exprt(
+      expr, from_integer(size - i - 1, index_type), array_type.element_type());
+    operands.push_back(normalise_verilog_array_expr(element));
+  }
+
+  return array_exprt(std::move(operands), array_type)
+    .with_source_location(expr);
 }
 
 /*******************************************************************\
@@ -400,7 +427,8 @@ void map_varst::map_var(
   namespacet ns(symbol_table);
   ns.follow_macros(e2);
   instantiate_symbol(e2, transition);
-  
+  e2 = normalise_verilog_array_expr(e2);
+
   add_constraint_rec(e1, e2);
 }
 
@@ -420,7 +448,10 @@ const symbolt &map_varst::add_array(symbolt &symbol)
 {
   const namespacet ns(symbol_table);
 
-  const typet &full_type = symbol.type;
+  const typet &full_type = symbol.type.id() == ID_struct_tag
+                             ? static_cast<const typet &>(
+                                 ns.follow_tag(to_struct_tag_type(symbol.type)))
+                             : symbol.type;
 
   if(full_type.id()==ID_incomplete_array)
   {
@@ -508,7 +539,10 @@ void map_varst::map_var_rec(
   const irep_idt &prefix)
 {
   const namespacet ns(symbol_table);
-  const typet &expr_type = expr.type();
+  const typet &expr_type = expr.type().id() == ID_struct_tag
+                             ? static_cast<const typet &>(
+                                 ns.follow_tag(to_struct_tag_type(expr.type())))
+                             : expr.type();
   const struct_typet &struct_type=to_struct_type(expr_type);
   const struct_typet::componentst &components=struct_type.components();
 
@@ -529,7 +563,8 @@ void map_varst::map_var_rec(
     else
       base_name=name;
 
-    bool module_instance = c_it->type().id() == ID_struct;
+    bool module_instance =
+      c_it->type().id() == ID_struct || c_it->type().id() == ID_struct_tag;
 
     irep_idt full_name=id2string(prefix)+"."+id2string(base_name);
 
@@ -660,6 +695,7 @@ void map_varst::map_vars(const irep_idt &top_module)
 
     timeframe_symbol.base_name="timeframe";
     timeframe_symbol.name="hw-cbmc::timeframe";
+    timeframe_symbol.mode = ID_C;
     timeframe_symbol.type = c_index_type();
     timeframe_symbol.is_static_lifetime=true;
     timeframe_symbol.is_lvalue=true;
@@ -669,7 +705,18 @@ void map_varst::map_vars(const irep_idt &top_module)
   }
 
   const symbolt &top_module_symbol=lookup(top_module);
-  
+  irep_idt mapping_module = top_module_symbol.name;
+
+  for(const auto &symbol :
+      symbol_table.match_name_or_base_name(top_module_symbol.base_name))
+  {
+    if(symbol->second.type.id() == ID_verilog_module_instance)
+    {
+      mapping_module = symbol->first;
+      break;
+    }
+  }
+
   irep_idt struct_symbol;
 
   for (auto &entry : symbol_table) {
@@ -705,6 +752,9 @@ void map_varst::map_vars(const irep_idt &top_module)
       throw 0;
     }
 
+    if(s.type.id() == ID_struct_tag)
+      s.type = ns.follow_tag(to_struct_tag_type(s.type));
+
     const symbolt &array_symbol=add_array(s);
 
     symbol_exprt symbol_expr(array_symbol.type);
@@ -719,7 +769,7 @@ void map_varst::map_vars(const irep_idt &top_module)
 
     top_level_inputs.clear();
 
-    map_var_rec(top_module_symbol.name, expr, id2string(top_module_symbol.name));
+    map_var_rec(mapping_module, expr, id2string(mapping_module));
   }
 
   for (const auto &entry : symbol_table) {
@@ -727,7 +777,7 @@ void map_varst::map_vars(const irep_idt &top_module)
       const irep_idt &base_name = entry.second.base_name;
       symbolt &symbol = symbol_table.get_writeable_ref(entry.first);
       if (symbol.type.id() == ID_struct_tag)
-        symbol.type = symbol.type;
+        symbol.type = ns.follow_tag(to_struct_tag_type(symbol.type));
       if (base_name == "next_timeframe" && symbol.type.id() == ID_code) {
         namespacet ns(symbol_table);
         add_next_timeframe(symbol, struct_symbol, top_level_inputs, ns);

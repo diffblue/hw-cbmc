@@ -23,10 +23,6 @@ module top(Din, En, CLK, Dout);
 endmodule
 
 module ff(input Din, CLK, output Dout);
-  input CLK;
-  input Din;
-  output Dout;
-
   reg q;
   assign Dout = q;
 

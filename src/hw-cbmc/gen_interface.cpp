@@ -41,7 +41,8 @@ protected:
   const symbolt &lookup(const irep_idt &identifier);
   std::string gen_declaration(const symbolt &symbol);
 
-  void gen_module(const symbolt &module, std::ostream& os);
+  irep_idt find_instance(const symbolt &module) const;
+  void gen_module(const symbolt &module, std::ostream &os);
 
   std::string type_to_string(const typet& type);
 };
@@ -191,7 +192,34 @@ std::string gen_interfacet::type_to_string(const typet& type)
 
 /*******************************************************************\
 
-Function: gen_interfacet::module_struct
+Function: gen_interfacet::find_instance
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Find the elaborated instance for a module type symbol.
+
+\*******************************************************************/
+
+irep_idt gen_interfacet::find_instance(const symbolt &module) const
+{
+  const std::string &name = id2string(module.name);
+  const std::string suffix = "$module";
+
+  if(
+    name.size() > suffix.size() &&
+    name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0)
+  {
+    return name.substr(0, name.size() - suffix.size());
+  }
+
+  return "Verilog::$root." + id2string(module.base_name);
+}
+
+/*******************************************************************\
+
+Function: gen_interfacet::gen_module
 
   Inputs:
 
@@ -218,45 +246,63 @@ void gen_interfacet::gen_module(
   std::set<irep_idt>::iterator
     in_progress_it=modules_in_progress.insert(module.name).first;
 
-  for(auto it=symbol_table.symbol_module_map.lower_bound(module.name);
-           it!=symbol_table.symbol_module_map.upper_bound(module.name);
-           it++)
+  irep_idt instance_name = find_instance(module);
+  std::string instance_prefix = id2string(instance_name) + ".";
+
+  // First pass: recurse into sub-module instances
+  for(const auto &entry : symbol_table.symbols)
   {
-    const symbolt &symbol=lookup(it->second);
+    const symbolt &symbol = entry.second;
+    const std::string &name = id2string(entry.first);
+
+    if(name.substr(0, instance_prefix.size()) != instance_prefix)
+      continue;
+
+    // Only direct children (no further dots)
+    if(name.find('.', instance_prefix.size()) != std::string::npos)
+      continue;
 
     if(symbol.type.id() == ID_verilog_module_instance)
     {
-      const symbolt &module_symbol=lookup(symbol.value.get(ID_module));
-      gen_module(module_symbol, os);
+      irep_idt sub_module_name = id2string(entry.first) + "$module";
+      if(symbol_table.has_symbol(sub_module_name))
+      {
+        const symbolt &module_symbol = lookup(sub_module_name);
+        gen_module(module_symbol, os);
+      }
     }
   }
 
   os << "// Module " << module.name << '\n'
       << "\n";
 
-  os << "struct module_" << module.base_name << " {\n";    
+  os << "struct module_" << module.base_name << " {\n";
 
-  for(auto it=symbol_table.symbol_module_map.lower_bound(module.name);
-           it!=symbol_table.symbol_module_map.upper_bound(module.name);
-           it++)
+  for(const auto &entry : symbol_table.symbols)
   {
-    const symbolt &symbol=lookup(it->second);
-    
-    if(symbol.is_auxiliary)
+    const symbolt &symbol = entry.second;
+    const std::string &name = id2string(entry.first);
+
+    if(name.substr(0, instance_prefix.size()) != instance_prefix)
       continue;
-    
-    if(symbol.name!=id2string(module.name)+"."+id2string(symbol.base_name))
+
+    // Only direct children
+    if(name.find('.', instance_prefix.size()) != std::string::npos)
+      continue;
+
+    if(symbol.is_auxiliary)
       continue;
 
     if(symbol.type.id() == ID_verilog_module_instance)
     {
-      const symbolt &module_symbol=lookup(symbol.value.get(ID_module));
-
-      os << "  struct module_"
-         << module_symbol.base_name
-         << " " << symbol.base_name;
-
-      os << ";\n";
+      irep_idt sub_module_name = id2string(entry.first) + "$module";
+      if(symbol_table.has_symbol(sub_module_name))
+      {
+        const symbolt &module_symbol = lookup(sub_module_name);
+        os << "  struct module_" << module_symbol.base_name << " "
+           << symbol.base_name;
+        os << ";\n";
+      }
     }
     else if(symbol.type.id()==ID_primitive_module_instance)
     {
