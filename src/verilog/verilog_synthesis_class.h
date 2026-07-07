@@ -361,6 +361,9 @@ protected:
     const source_locationt &,
     transt &);
 
+  void
+  setup_property_port_macros(const verilog_instt::instancet &, const symbolt &);
+
   void replace_by_wire(exprt &expr, const symbolt &base);
 
   // Mark the local variables of a function or task

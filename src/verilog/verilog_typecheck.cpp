@@ -1741,17 +1741,9 @@ void verilog_typecheckt::convert_property_declaration(
   // We'll annotate the scope of the identifiers
   preresolve_identifiers(declaration.cond());
 
-  // The symbol uses the full declaration as value
-  auto type = verilog_sva_named_property_typet{};
-  symbolt symbol{full_identifier, type, mode};
-
-  symbol.module = module_identifier;
-  symbol.base_name = base_name;
-  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  // Update the symbol that was created during elaboration.
+  symbolt &symbol = symbol_table_lookup(full_identifier);
   symbol.value = declaration;
-  symbol.location = declaration.source_location();
-
-  add_symbol(std::move(symbol));
 }
 
 /*******************************************************************\
@@ -1780,17 +1772,9 @@ void verilog_typecheckt::convert_sequence_declaration(
   // We'll annotate the scope of the identifiers
   preresolve_identifiers(declaration.cond());
 
-  // The symbol uses the full declaration as value
-  auto type = verilog_sva_named_sequence_typet{};
-  symbolt symbol{full_identifier, type, mode};
-
-  symbol.module = module_identifier;
-  symbol.base_name = base_name;
-  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  // Update the symbol that was created during elaboration.
+  symbolt &symbol = symbol_table_lookup(full_identifier);
   symbol.value = declaration;
-  symbol.location = declaration.source_location();
-
-  add_symbol(std::move(symbol));
 }
 
 /*******************************************************************\

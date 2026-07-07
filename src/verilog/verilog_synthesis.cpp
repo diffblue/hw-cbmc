@@ -1310,6 +1310,16 @@ void verilog_synthesist::instantiate_port(
   const source_locationt &source_location,
   transt &trans)
 {
+  // Property-typed ports are handled by making the port symbol a macro
+  // that expands to the connected property expression.
+  if(port.type().id() == ID_verilog_property)
+  {
+    symbolt &port_sym = symbol_table_lookup(port.identifier());
+    port_sym.is_macro = true;
+    port_sym.value = value;
+    return;
+  }
+
   symbol_exprt port_symbol{port.identifier(), port.type()};
 
   // Much like
@@ -1467,6 +1477,11 @@ void verilog_synthesist::synth_module_instance(
     // must be in symbol_table
     const symbolt &module_symbol = ns.lookup(module_identifier);
 
+    // Property-typed ports must be set up as macros before the module
+    // body is synthesized, so that assertions referencing property
+    // ports get the connected property expression inlined.
+    setup_property_port_macros(instance, module_symbol);
+
     // get the transition relation of the instantiated module
     auto trans_inst = verilog_synthesis(
       symbol_table,
@@ -1477,6 +1492,71 @@ void verilog_synthesist::synth_module_instance(
       get_message_handler());
 
     expand_module_instance(module_symbol, trans_inst, instance, trans_dest);
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::setup_property_port_macros
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_synthesist::setup_property_port_macros(
+  const verilog_instt::instancet &instance,
+  const symbolt &module_symbol)
+{
+  auto &module_type = to_module_type(module_symbol.type);
+  const auto &ports = module_type.ports();
+
+  if(instance.named_port_connections())
+  {
+    auto port_map = module_type.port_map();
+
+    for(const auto &connection : instance.connections())
+    {
+      if(connection.id() == ID_verilog_wildcard_port_connection)
+        continue;
+
+      auto &named_connection = to_verilog_named_port_connection(connection);
+      auto port_it =
+        port_map.find(to_symbol_expr(named_connection.port()).identifier());
+      CHECK_RETURN(port_it != port_map.end());
+      auto &port = port_it->second;
+
+      if(port.type().id() == ID_verilog_property)
+      {
+        const exprt &value = named_connection.value();
+        if(value.is_not_nil())
+        {
+          symbolt &port_sym = symbol_table_lookup(port.identifier());
+          port_sym.is_macro = true;
+          port_sym.value = value;
+        }
+      }
+    }
+  }
+  else
+  {
+    if(instance.connections().size() != ports.size())
+      return;
+
+    auto p_it = ports.begin();
+    for(const auto &connection : instance.connections())
+    {
+      if(p_it->type().id() == ID_verilog_property && connection.is_not_nil())
+      {
+        symbolt &port_sym = symbol_table_lookup(p_it->identifier());
+        port_sym.is_macro = true;
+        port_sym.value = connection;
+      }
+      p_it++;
+    }
   }
 }
 
