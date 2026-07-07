@@ -1011,6 +1011,13 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_specparam_decl)
   {
   }
+  else if(module_item.id() == ID_verilog_interface)
+  {
+    // a nested interface, 1800 2017 25.3
+  }
+  else if(module_item.id() == ID_verilog_modport_declaration)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());
 }

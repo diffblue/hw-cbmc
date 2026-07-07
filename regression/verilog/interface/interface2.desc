@@ -1,8 +1,9 @@
-KNOWNBUG
+CORE
 interface2.sv
 
+^error: duplicate definition of interface foobar$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 --
-This should be errored.
+Module and interface with the same name should be rejected.

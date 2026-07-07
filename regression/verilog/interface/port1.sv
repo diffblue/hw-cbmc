@@ -4,17 +4,12 @@ interface myInterface;
 endinterface
 
 module sub(myInterface bus);
-  always @bus.i
+  always @(bus.i)
     assert(bus.i == 123);
 endmodule
 
 module main;
 
   myInterface interface_instance();
-  sub sub(interface_instance);
-
-  initial begin
-    myInterface i;
-  end
-
+  sub sub_inst(interface_instance);
 endmodule

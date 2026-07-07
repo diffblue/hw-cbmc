@@ -1,8 +1,9 @@
-KNOWNBUG
+CORE
 interface3.sv
 
-^EXIT=0$
+^no properties$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-This crashes.
+Interface declared inside a module (1800-2017 25.3).

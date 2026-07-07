@@ -62,7 +62,9 @@ void verilog_parse_treet::modules_provided(
 {
   for(auto &item : items)
   {
-    if(item.id() == ID_verilog_module || item.id() == ID_verilog_checker)
+    if(
+      item.id() == ID_verilog_module || item.id() == ID_verilog_checker ||
+      item.id() == ID_verilog_interface)
     {
       module_set.insert(id2string(
         verilog_module_symbol(to_verilog_module_source(item).base_name())));
@@ -88,7 +90,9 @@ void verilog_parse_treet::build_item_map()
 
   for(const auto &item : items)
   {
-    if(item.id() == ID_verilog_module || item.id() == ID_verilog_checker)
+    if(
+      item.id() == ID_verilog_module || item.id() == ID_verilog_checker ||
+      item.id() == ID_verilog_interface)
     {
       auto &verilog_module = to_verilog_module_source(item);
       item_map[verilog_module.base_name()] = &verilog_module;

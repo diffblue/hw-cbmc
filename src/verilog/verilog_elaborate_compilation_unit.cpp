@@ -26,6 +26,12 @@ void verilog_elaborate_compilation_unit(
         verilog_module_symbol(to_verilog_module_source(item).base_name());
       copy_module_source(item, identifier, symbol_table);
     }
+    else if(item.id() == ID_verilog_interface)
+    {
+      auto identifier =
+        verilog_module_symbol(to_verilog_interface(item).base_name());
+      copy_module_source(item, identifier, symbol_table);
+    }
     else if(item.id() == ID_verilog_package)
     {
       // IEEE 1800 2017 26.3 Referencing data in packages

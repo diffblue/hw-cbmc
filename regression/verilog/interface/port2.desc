@@ -1,0 +1,10 @@
+CORE
+port2.sv
+--bound 5
+^\[main\.c\.p1\] always main\.c\.bus\.data == 171: PROVED up to bound 5
+^\[main\.c\.p2\] always main\.c\.bus\.valid == 1: PROVED up to bound 5
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Named port connection with interface having multiple members.
