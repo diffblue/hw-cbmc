@@ -283,6 +283,10 @@ protected:
   void synth_continuous_assign(const verilog_continuous_assignt &);
   void synth_force_rec(exprt &lhs, exprt &rhs, transt &);
   void synth_module_instance(const verilog_instt &, transt &);
+  void synth_module_instance_array(
+    const verilog_instt &,
+    const verilog_instt::instancet &,
+    transt &);
   void synth_module_instance_builtin(const verilog_inst_builtint &, transt &);
 
   // statements

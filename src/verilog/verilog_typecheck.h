@@ -123,11 +123,20 @@ protected:
   void parameterize_instantiated_modules(verilog_module_itemt &);
   void parameterize_instantiated_modules(class verilog_instt &);
   void parameterize_instantiated_modules(class verilog_inst_builtint &);
+  void parameterize_instance_array(
+    class verilog_instt &,
+    verilog_instt::instancet &,
+    const irep_idt &module_identifier,
+    exprt::operandst &parameter_assignments);
 
   void elaborate_inst(const verilog_inst_baset &);
 
   void
   elaborate_inst(const verilog_inst_baset &, const verilog_instt::instancet &);
+
+  void elaborate_instance_array(
+    const verilog_inst_baset &,
+    const verilog_instt::instancet &);
 
   void elaborate_module_instances(const verilog_module_itemt &);
 

@@ -565,37 +565,44 @@ void verilog_synthesist::expand_hierarchical_identifier(
   hierarchical_identifier_exprt &expr,
   symbol_statet symbol_state)
 {
-  expr.lhs() = synth_expr(expr.lhs(), symbol_state);
+  // The type checker has already resolved the full identifier
+  // for hierarchical references into module instances.
+  // Use it directly when available.
+  irep_idt full_identifier = expr.identifier();
 
-  if(expr.lhs().id() != ID_symbol)
+  if(full_identifier.empty())
   {
-    throw errort().with_location(expr.source_location())
-      << "synthesis expected symbol on lhs of `.'";
+    expr.lhs() = synth_expr(expr.lhs(), symbol_state);
+
+    if(expr.lhs().id() != ID_symbol)
+    {
+      throw errort().with_location(expr.source_location())
+        << "synthesis expected symbol on lhs of `.'";
+    }
+
+    if(expr.lhs().type().id() != ID_verilog_module_instance)
+    {
+      throw errort().with_location(expr.source_location())
+        << "synthesis expected module instance on lhs of `.', but got `"
+        << to_string(expr.lhs().type()) << '\'';
+    }
+
+    const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).identifier();
+
+    // rhs
+    const irep_idt &rhs_base_name = expr.rhs().base_name();
+
+    // just patch together
+    full_identifier =
+      id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
   }
-
-  if(expr.lhs().type().id() != ID_verilog_module_instance)
-  {
-    throw errort().with_location(expr.source_location())
-      << "synthesis expected module instance on lhs of `.', but got `"
-      << to_string(expr.lhs().type()) << '\'';
-  }
-
-  const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).identifier();
-
-  // rhs
-  const irep_idt &rhs_base_name = expr.rhs().base_name();
-
-  // just patch together
-
-  irep_idt full_identifier =
-    id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
 
   // Note: the instance copy may not yet be in symbol table,
   // as the inst module item may be later.
   // The type checker already checked that it's fine.
 
   symbol_exprt new_symbol{full_identifier, expr.type()};
-  new_symbol.add_source_location()=expr.source_location();
+  new_symbol.add_source_location() = expr.source_location();
   expr.swap(new_symbol);
 }
 
@@ -1507,21 +1514,92 @@ void verilog_synthesist::synth_module_instance(
 {
   for(auto &instance : statement.instances())
   {
-    const irep_idt &module_identifier = instance.module_identifier();
+    if(instance.instance_array().is_not_nil())
+    {
+      synth_module_instance_array(statement, instance, trans_dest);
+    }
+    else
+    {
+      const irep_idt &module_identifier = instance.module_identifier();
 
-    // must be in symbol_table
-    const symbolt &module_symbol = ns.lookup(module_identifier);
+      // must be in symbol_table
+      const symbolt &module_symbol = ns.lookup(module_identifier);
 
-    // get the transition relation of the instantiated module
+      // get the transition relation of the instantiated module
+      auto trans_inst = verilog_synthesis(
+        symbol_table,
+        module_identifier,
+        standard,
+        ignore_initial,
+        initial_zero,
+        get_message_handler());
+
+      expand_module_instance(module_symbol, trans_inst, instance, trans_dest);
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::synth_module_instance_array
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Synthesizes each element of an instance array.
+
+\*******************************************************************/
+
+void verilog_synthesist::synth_module_instance_array(
+  const verilog_instt &statement,
+  const verilog_instt::instancet &instance,
+  transt &trans_dest)
+{
+  // The array parent identifier was stored during parameterization.
+  const irep_idt &array_identifier = instance.identifier();
+  const symbolt &array_symbol = ns.lookup(array_identifier);
+  auto &array_type = to_array_type(array_symbol.type);
+  auto size_opt = numeric_cast<mp_integer>(array_type.size());
+  PRECONDITION(size_opt.has_value());
+  auto size = *size_opt;
+
+  // Determine the start index (offset).
+  mp_integer offset = 0;
+  if(array_type.get(ID_offset) != irep_idt{})
+  {
+    offset = string2integer(id2string(array_type.get(ID_offset)));
+  }
+
+  for(mp_integer i = 0; i < size; ++i)
+  {
+    mp_integer index = offset + i;
+    std::string indexed_identifier =
+      id2string(array_identifier) + '[' + integer2string(index) + ']';
+
+    // Look up the instance symbol to get its module.
+    const symbolt &instance_symbol = ns.lookup(indexed_identifier);
+    irep_idt inst_module_identifier =
+      to_verilog_module_instance(instance_symbol.value).module_identifier();
+
+    const symbolt &inst_module_symbol = ns.lookup(inst_module_identifier);
+
+    // Synthesize the module.
     auto trans_inst = verilog_synthesis(
       symbol_table,
-      module_identifier,
+      inst_module_identifier,
       standard,
       ignore_initial,
       initial_zero,
       get_message_handler());
 
-    expand_module_instance(module_symbol, trans_inst, instance, trans_dest);
+    // Add the module's transition relation.
+    for(std::size_t j = 0; j < 3; j++)
+      trans_dest.operands()[j].add_to_operands(trans_inst.operands()[j]);
+
+    // Instantiate port connections for this array element.
+    instantiate_ports(
+      indexed_identifier, instance, inst_module_symbol, trans_dest);
   }
 }
 
