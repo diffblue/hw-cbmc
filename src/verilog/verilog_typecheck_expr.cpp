@@ -1853,6 +1853,19 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
       }
       else
       {
+        // Modport port expressions (IEEE 1800-2017 25.5.2) have
+        // a type-checked expression stored in their value. Return
+        // that expression directly so the expression tree contains
+        // the underlying signal reference.
+        if(
+          symbol->value.is_not_nil() &&
+          symbol->value.id() != ID_verilog_module_instance &&
+          symbol->value.id() != ID_trans &&
+          symbol->value.id() != ID_verilog_tf_source)
+        {
+          return symbol->value;
+        }
+
         expr.type()=symbol->type;
       }
     }
