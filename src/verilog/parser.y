@@ -738,19 +738,39 @@ interface_declaration:
                     stack_expr($2));              // module_items
                   stack_expr($$).id(ID_verilog_interface);
                 }
+        | interface_ansi_header
+          interface_item_brace
+          TOK_ENDINTERFACE
+                {
+                  pop_scope();
+                  init($$);
+                  stack_expr($$) = verilog_parse_treet::create_module(
+                    stack_expr($1).operands()[0], // attributes
+                    stack_expr($1).operands()[1], // module_keyword (interface)
+                    stack_expr($1).operands()[2], // name
+                    stack_expr($1).operands()[3], // parameter_port_list
+                    stack_expr($1).operands()[4], // ports
+                    stack_expr($2));              // module_items
+                  stack_expr($$).id(ID_verilog_interface);
+                }
+        ;
+
+interface_identifier_with_scope:
+          interface_identifier
+                {
+                  $$ = $1;
+                  // interfaces go into the top scope
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  auto &interface_scope = PARSER.scopes.top_scope.add_scope(base_name, ".", verilog_scopet::INTERFACE);
+                  PARSER.scopes.enter_scope(interface_scope);
+                }
         ;
 
 interface_nonansi_header:
           attribute_instance_brace
           TOK_INTERFACE
           lifetime_opt
-          interface_identifier
-                {
-                  // interfaces go into the top scope
-                  auto base_name = stack_expr($4).get(ID_base_name);
-                  auto &interface_scope = PARSER.scopes.top_scope.add_scope(base_name, ".", verilog_scopet::INTERFACE);
-                  PARSER.scopes.enter_scope(interface_scope);
-                }
+          interface_identifier_with_scope
           package_import_declaration_brace
           parameter_port_list_opt
           list_of_ports_opt
@@ -760,8 +780,27 @@ interface_nonansi_header:
                   stack_expr($$).operands()[0].swap(stack_expr($1));
                   stack_expr($$).operands()[1].swap(stack_expr($2));
                   stack_expr($$).operands()[2].swap(stack_expr($4));
-                  stack_expr($$).operands()[3].swap(stack_expr($7));
-                  stack_expr($$).operands()[4].swap(stack_expr($8));
+                  stack_expr($$).operands()[3].swap(stack_expr($6));
+                  stack_expr($$).operands()[4].swap(stack_expr($7));
+                }
+        ;
+
+interface_ansi_header:
+          attribute_instance_brace
+          TOK_INTERFACE
+          lifetime_opt
+          interface_identifier_with_scope
+          package_import_declaration_brace
+          parameter_port_list_opt
+          list_of_port_declarations
+          ';'
+                {
+                  init($$); stack_expr($$).operands().resize(5);
+                  stack_expr($$).operands()[0].swap(stack_expr($1));
+                  stack_expr($$).operands()[1].swap(stack_expr($2));
+                  stack_expr($$).operands()[2].swap(stack_expr($4));
+                  stack_expr($$).operands()[3].swap(stack_expr($6));
+                  stack_expr($$).operands()[4].swap(stack_expr($7));
                 }
         ;
 
